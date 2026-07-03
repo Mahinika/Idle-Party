@@ -1,0 +1,26 @@
+[
+  {
+    "id": "event_none",
+    "name": "Standard Day",
+    "gold_multiplier": 1.0,
+    "xp_multiplier": 1.0,
+    "duration": 3600.0,
+    "description": "Just another day of adventuring."
+  },
+  {
+    "id": "event_gold_rush",
+    "name": "Gold Rush",
+    "gold_multiplier": 2.0,
+    "xp_multiplier": 1.0,
+    "duration": 600.0,
+    "description": "Double gold drops from all enemies!"
+  },
+  {
+    "id": "event_frenzy",
+    "name": "Battle Frenzy",
+    "gold_multiplier": 1.0,
+    "xp_multiplier": 2.5,
+    "duration": 300.0,
+    "description": "Massive boost to experience points."
+  }
+]

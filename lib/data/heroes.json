@@ -1,0 +1,38 @@
+[
+  {
+    "id": "hero_warrior",
+    "name": "Valiant Warrior",
+    "element": "Physical",
+    "base_hp": 500.0,
+    "base_attack": 40.0,
+    "base_defense": 20.0,
+    "base_speed": 1.0,
+    "base_crit_rate": 0.1,
+    "base_crit_damage": 1.5,
+    "skills": ["shield_bash", "heavy_strike"]
+  },
+  {
+    "id": "hero_mage",
+    "name": "Fire Mage",
+    "element": "Fire",
+    "base_hp": 300.0,
+    "base_attack": 65.0,
+    "base_defense": 8.0,
+    "base_speed": 1.2,
+    "base_crit_rate": 0.15,
+    "base_crit_damage": 1.7,
+    "skills": ["fireball", "scorch"]
+  },
+  {
+    "id": "hero_rogue",
+    "name": "Shadow Rogue",
+    "element": "Dark",
+    "base_hp": 350.0,
+    "base_attack": 55.0,
+    "base_defense": 10.0,
+    "base_speed": 1.5,
+    "base_crit_rate": 0.25,
+    "base_crit_damage": 2.0,
+    "skills": ["shadow_stab", "poison_strike"]
+  }
+]

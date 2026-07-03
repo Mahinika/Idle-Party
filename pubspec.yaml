@@ -1,0 +1,11 @@
+name: idle_party
+description: A modular, scalable Dart-based idle RPG game engine.
+version: 1.0.0
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  meta: ^1.10.0
+
+dev_dependencies:
+  test: ^1.24.0

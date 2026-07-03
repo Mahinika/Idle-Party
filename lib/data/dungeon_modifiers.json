@@ -1,0 +1,26 @@
+[
+  {
+    "id": "modifier_easy",
+    "name": "Bountiful Fields",
+    "hp_multiplier": 1.0,
+    "damage_multiplier": 1.0,
+    "gold_multiplier": 1.5,
+    "description": "A peaceful area overflowing with gold."
+  },
+  {
+    "id": "modifier_hard",
+    "name": "Chilled Caverns",
+    "hp_multiplier": 1.5,
+    "damage_multiplier": 1.2,
+    "gold_multiplier": 2.0,
+    "description": "High danger, but higher rewards."
+  },
+  {
+    "id": "modifier_nightmare",
+    "name": "Hellfire Abyss",
+    "hp_multiplier": 2.5,
+    "damage_multiplier": 2.0,
+    "gold_multiplier": 5.0,
+    "description": "Extremely lethal environment."
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "shield_bash",
+    "name": "Shield Bash",
+    "cooldown": 4.0,
+    "damage_multiplier": 1.2,
+    "effect_type": "buff",
+    "effect_id": "defense_boost",
+    "effect_duration": 3.0,
+    "description": "Deals moderate damage and increases defense."
+  },
+  {
+    "id": "heavy_strike",
+    "name": "Heavy Strike",
+    "cooldown": 6.0,
+    "damage_multiplier": 2.2,
+    "effect_type": "none",
+    "effect_id": "",
+    "effect_duration": 0.0,
+    "description": "Deals heavy damage to a single target."
+  },
+  {
+    "id": "fireball",
+    "name": "Fireball",
+    "cooldown": 5.0,
+    "damage_multiplier": 1.8,
+    "effect_type": "debuff",
+    "effect_id": "burn",
+    "effect_duration": 4.0,
+    "description": "Throws a fireball that burns the enemy."
+  },
+  {
+    "id": "scorch",
+    "name": "Scorch",
+    "cooldown": 8.0,
+    "damage_multiplier": 1.5,
+    "effect_type": "debuff",
+    "effect_id": "scorch_vulnerability",
+    "effect_duration": 5.0,
+    "description": "Burns the enemy and increases damage taken."
+  },
+  {
+    "id": "shadow_stab",
+    "name": "Shadow Stab",
+    "cooldown": 3.0,
+    "damage_multiplier": 1.6,
+    "effect_type": "none",
+    "effect_id": "",
+    "effect_duration": 0.0,
+    "description": "Quickly stab the target from behind."
+  },
+  {
+    "id": "poison_strike",
+    "name": "Poison Strike",
+    "cooldown": 7.0,
+    "damage_multiplier": 1.3,
+    "effect_type": "debuff",
+    "effect_id": "poison",
+    "effect_duration": 6.0,
+    "description": "Strikes with a poisoned blade, dealing damage over time."
+  }
+]
