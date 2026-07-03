@@ -11,6 +11,9 @@ import 'skill_system.dart';
 import 'dungeon_system.dart';
 import 'weather_system.dart';
 import 'event_system.dart';
+import 'rune_system.dart';
+import 'inventory_system.dart';
+import 'skill_tree_system.dart';
 
 class CombatSystem {
   final DpsPipeline dpsPipeline;
@@ -18,6 +21,9 @@ class CombatSystem {
   final CapsManager capsManager;
   final BuffManager buffManager;
   final DebuffManager debuffManager;
+  final RuneSystem? runeSystem;
+  final InventorySystem? inventorySystem;
+  final SkillTreeSystem? skillTreeSystem;
   final Random _random = Random();
 
   CombatSystem({
@@ -26,6 +32,9 @@ class CombatSystem {
     required this.capsManager,
     required this.buffManager,
     required this.debuffManager,
+    this.runeSystem,
+    this.inventorySystem,
+    this.skillTreeSystem,
   });
 
   /// Processes hero decisions and handles enemy retaliation.
@@ -52,11 +61,14 @@ class CombatSystem {
       double actionMultiplier = 1.0;
 
       if (decision.actionType == 'skill' && decision.skillId != null) {
+        final cdMultiplier = skillTreeSystem?.getCooldownReductionMultiplier(decision.actor.id) ?? 1.0;
         actionMultiplier = skillSystem.tryCastSkill(
           decision.actor,
           decision.skillId!,
           enemies,
           budget,
+          heroes,
+          cdMultiplier,
         );
         if (actionMultiplier == 0.0) {
           // If cast failed (e.g. cooldown/budget), fallback to normal attack
@@ -88,6 +100,21 @@ class CombatSystem {
       double vulnerability = debuffManager.getMultiplierBonus(decision.target, 'scorch_vulnerability', 0.20);
       dpsPipeline.addBonus(MultiplierCategory.debuff, vulnerability);
 
+      // Category Rune: Rune bonuses from direct socketing and equipped items
+      double runeFireBonus = runeSystem?.getFireDamageBonus(decision.actor.id) ?? 0.0;
+      double equippedRuneFire = 0.0;
+      if (inventorySystem != null) {
+        final equippedItems = inventorySystem!.getEquippedItems(decision.actor.id);
+        for (var item in equippedItems) {
+          for (var rune in item.socketedRunes) {
+            if (rune.type == RuneType.fire) {
+              equippedRuneFire += rune.power;
+            }
+          }
+        }
+      }
+      dpsPipeline.addBonus(MultiplierCategory.rune, runeFireBonus + equippedRuneFire);
+
       // Process raw damage from pipeline
       double calculatedDmg = dpsPipeline.process(baseDmg);
 
@@ -103,6 +130,12 @@ class CombatSystem {
 
       // Enemy Effective HP Cap Check (via caps manager)
       finalDamage = capsManager.clampHeroStat(finalDamage);
+
+      // Poison on attack from Skill Tree
+      final poisonChance = skillTreeSystem?.getPoisonChance(decision.actor.id) ?? 0.0;
+      if (poisonChance > 0.0 && _random.nextDouble() < poisonChance) {
+        debuffManager.applyDebuff(decision.target, 'poison', 4.0);
+      }
 
       // Apply Damage
       decision.target.takeDamage(finalDamage);

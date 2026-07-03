@@ -58,5 +58,15 @@
     "effect_id": "poison",
     "effect_duration": 6.0,
     "description": "Strikes with a poisoned blade, dealing damage over time."
+  },
+  {
+    "id": "healing_touch",
+    "name": "Healing Touch",
+    "cooldown": 8.0,
+    "damage_multiplier": 0.0,
+    "effect_type": "heal",
+    "effect_id": "heal_30",
+    "effect_duration": 0.0,
+    "description": "Heals the most wounded ally for 30% of their max HP."
   }
 ]

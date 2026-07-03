@@ -83,8 +83,10 @@ class SkillSystem {
     HeroModel hero,
     String skillId,
     List<EnemyModel> enemies,
-    SkillTriggerBudget budget,
-  ) {
+    SkillTriggerBudget budget, [
+    List<HeroModel>? heroes,
+    double cooldownMultiplier = 1.0,
+  ]) {
     if (hero.isDead) return 0.0;
     
     // Check cooldown
@@ -102,7 +104,7 @@ class SkillSystem {
     }
 
     // Set skill on cooldown
-    hero.skillCooldowns[skillId] = def.cooldown;
+    hero.skillCooldowns[skillId] = def.cooldown * cooldownMultiplier;
 
     // Apply special effects
     if (def.effectType == 'buff') {
@@ -113,6 +115,20 @@ class SkillSystem {
         // Apply debuff to a random living enemy
         final target = activeEnemies[0];
         debuffManager.applyDebuff(target, def.effectId, def.effectDuration);
+      }
+    } else if (def.effectType == 'heal') {
+      if (heroes != null && heroes.isNotEmpty) {
+        final livingHeroes = heroes.where((h) => !h.isDead).toList();
+        if (livingHeroes.isNotEmpty) {
+          // Find the hero with lowest HP percentage
+          livingHeroes.sort((a, b) => (a.currentStats.hp / a.currentStats.maxHp)
+              .compareTo(b.currentStats.hp / b.currentStats.maxHp));
+          final targetHero = livingHeroes.first;
+          final healAmount = targetHero.currentStats.maxHp * 0.30;
+          final newHp = (targetHero.currentStats.hp + healAmount)
+              .clamp(0.0, targetHero.currentStats.maxHp);
+          targetHero.currentStats = targetHero.currentStats.copyWith(hp: newHp);
+        }
       }
     }
 

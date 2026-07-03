@@ -34,5 +34,17 @@
     "base_crit_rate": 0.25,
     "base_crit_damage": 2.0,
     "skills": ["shadow_stab", "poison_strike"]
+  },
+  {
+    "id": "hero_cleric",
+    "name": "Holy Cleric",
+    "element": "Light",
+    "base_hp": 400.0,
+    "base_attack": 30.0,
+    "base_defense": 15.0,
+    "base_speed": 1.1,
+    "base_crit_rate": 0.12,
+    "base_crit_damage": 1.5,
+    "skills": ["healing_touch", "shield_bash"]
   }
 ]

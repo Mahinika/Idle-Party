@@ -10,6 +10,7 @@ class HeroModel implements Buffable {
   int level;
   double xp;
   int ascension;
+  int skillPoints;
   
   Stats currentStats;
   List<String> skills;
@@ -29,6 +30,7 @@ class HeroModel implements Buffable {
     this.level = 1,
     this.xp = 0.0,
     this.ascension = 0,
+    this.skillPoints = 0,
     List<String>? skills,
     Stats? currentStats,
   })  : skills = skills ?? [],
@@ -68,6 +70,7 @@ class HeroModel implements Buffable {
 
   void levelUp() {
     level++;
+    skillPoints++; // Gained 1 skill point per level up
     recalculateStats();
     // Heal to full on level up
     healFully();
@@ -77,6 +80,12 @@ class HeroModel implements Buffable {
     ascension++;
     level = 1;
     xp = 0.0;
+    skillPoints = 0; // Reset skill points on ascend
+    skillCooldowns.clear();
+    buffDurations.clear();
+    buffStacks.clear();
+    debuffDurations.clear();
+    debuffStacks.clear();
     recalculateStats();
     healFully();
   }

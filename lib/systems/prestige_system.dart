@@ -40,7 +40,12 @@ class PrestigeSystem {
     for (var hero in heroes) {
       hero.level = 1;
       hero.xp = 0.0;
+      hero.skillPoints = 0;
       hero.skillCooldowns.clear();
+      hero.buffDurations.clear();
+      hero.buffStacks.clear();
+      hero.debuffDurations.clear();
+      hero.debuffStacks.clear();
       hero.recalculateStats();
       hero.healFully();
     }

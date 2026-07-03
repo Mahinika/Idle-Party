@@ -24,6 +24,8 @@ import '../systems/pet_system.dart';
 import '../systems/rune_system.dart';
 import '../systems/artifact_system.dart';
 import '../systems/team_dps_system.dart';
+import '../systems/inventory_system.dart';
+import '../systems/skill_tree_system.dart';
 import 'dps_pipeline.dart';
 
 class GameDirector {
@@ -56,6 +58,8 @@ class GameDirector {
   late final PetSystem petSystem;
   late final RuneSystem runeSystem;
   late final ArtifactSystem artifactSystem;
+  late final InventorySystem inventorySystem;
+  late final SkillTreeSystem skillTreeSystem;
 
   // Raw item templates for Loot System
   List<dynamic> _itemTemplates = [];
@@ -75,6 +79,11 @@ class GameDirector {
     debuffSystem = DebuffSystem(debuffManager);
     skillSystem = SkillSystem(buffManager, debuffManager);
     aiSystem = AiSystem(skillSystem);
+
+    inventorySystem = InventorySystem();
+    skillTreeSystem = SkillTreeSystem();
+    runeSystem = RuneSystem();
+    artifactSystem = ArtifactSystem();
     
     final dpsPipeline = DpsPipeline();
     combatSystem = CombatSystem(
@@ -83,6 +92,9 @@ class GameDirector {
       capsManager: capsManager,
       buffManager: buffManager,
       debuffManager: debuffManager,
+      runeSystem: runeSystem,
+      inventorySystem: inventorySystem,
+      skillTreeSystem: skillTreeSystem,
     );
 
     economySystem = EconomySystem();
@@ -94,8 +106,6 @@ class GameDirector {
     formationSystem = FormationSystem();
     relicSystem = RelicSystem();
     petSystem = PetSystem();
-    runeSystem = RuneSystem();
-    artifactSystem = ArtifactSystem();
   }
 
   /// Registers a UI/listener callback to be triggered in Step 15.
@@ -138,6 +148,39 @@ class GameDirector {
     // 7. Store enemy metadata & Spawn first wave
     _enemyTemplates = jsonDecode(enemiesJson) as List;
     spawnNextWave();
+  }
+
+  /// Performs a full prestige reset via GameDirector.
+  bool triggerPrestige() {
+    final success = prestigeSystem.performPrestige(
+      heroes: heroes,
+      dungeonSystem: dungeonSystem,
+      economySystem: economySystem,
+    );
+    if (success) {
+      // Clear inventory
+      inventorySystem.clearAll();
+      // Respawn first wave of enemies
+      spawnNextWave();
+    }
+    return success;
+  }
+
+  /// Performs a full ascension reset via GameDirector.
+  bool triggerAscension() {
+    final success = ascensionSystem.performAscension(
+      heroes: heroes,
+      dungeonSystem: dungeonSystem,
+      economySystem: economySystem,
+      prestigeSystem: prestigeSystem,
+    );
+    if (success) {
+      // Clear inventory
+      inventorySystem.clearAll();
+      // Respawn first wave of enemies
+      spawnNextWave();
+    }
+    return success;
   }
 
   List<dynamic> _enemyTemplates = [];
@@ -326,16 +369,39 @@ class GameDirector {
       final hpMultiplier = 1.0 + prestigeHp + ascensionHp + petHp;
       final defMultiplier = 1.0 + relicDefense + formationSystem.getDefenseMultiplierBonus(hero.id);
 
+      final equipmentAtk = inventorySystem.getHeroAttackBoost(hero.id);
+      final equipmentDef = inventorySystem.getHeroDefenseBoost(hero.id);
+
       // Re-apply adjusted values dynamically
-      final baseAtk = hero.baseStats.attack * baseMultiplier * dmgMultiplier;
+      final baseAtk = (hero.baseStats.attack + equipmentAtk) * baseMultiplier * dmgMultiplier;
       final baseMaxHp = hero.baseStats.maxHp * baseMultiplier * hpMultiplier;
-      final baseDef = hero.baseStats.defense * baseMultiplier * defMultiplier;
+      final baseDef = (hero.baseStats.defense + equipmentDef) * baseMultiplier * defMultiplier;
+
+      // Rune speed and crit rate adjustments
+      final runeSpeedBonus = runeSystem.getSpeedBonus(hero.id);
+      final runeCritBonus = runeSystem.getCritRateBonus(hero.id);
+      final skillTreeCritBonus = skillTreeSystem.getCritRateBonus(hero.id);
+
+      double equippedRuneSpeed = 0.0;
+      double equippedRuneCrit = 0.0;
+      final equippedItems = inventorySystem.getEquippedItems(hero.id);
+      for (var item in equippedItems) {
+        for (var rune in item.socketedRunes) {
+          if (rune.type == RuneType.speed) equippedRuneSpeed += rune.power;
+          if (rune.type == RuneType.focus) equippedRuneCrit += rune.power;
+        }
+      }
+
+      final finalSpeed = (hero.baseStats.speed * baseMultiplier) + runeSpeedBonus + equippedRuneSpeed;
+      final finalCritRate = hero.baseStats.critRate + runeCritBonus + equippedRuneCrit + skillTreeCritBonus;
 
       // Caps Manager check
       hero.currentStats = hero.currentStats.copyWith(
         attack: capsManager.clampHeroStat(baseAtk),
         maxHp: capsManager.clampHeroStat(baseMaxHp),
         defense: capsManager.clampHeroStat(baseDef),
+        speed: finalSpeed,
+        critRate: finalCritRate.clamp(0.0, 1.0),
       );
     }
   }

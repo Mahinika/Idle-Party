@@ -23,6 +23,19 @@ class RuneSystem {
 
   RuneSystem();
 
+  /// Fuses two identical or same-type runes to unlock higher power synergy.
+  Rune? fuseRunes(Rune rune1, Rune rune2) {
+    if (rune1.type != rune2.type) return null;
+
+    final newPower = (rune1.power + rune2.power) * 1.25; // 25% synergy bonus
+    return Rune(
+      id: '${rune1.id}_fused',
+      name: 'Greater ${rune1.name}',
+      type: rune1.type,
+      power: double.parse(newPower.toStringAsFixed(4)), // Avoid precision float issues
+    );
+  }
+
   void socketRune(String heroId, Rune rune) {
     _heroRunes.putIfAbsent(heroId, () => []).add(rune);
   }

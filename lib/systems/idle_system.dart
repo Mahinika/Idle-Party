@@ -17,8 +17,26 @@ class IdleReward {
 class IdleSystem {
   final TeamDpsSystem teamDpsSystem;
   final CapsManager capsManager;
+  DateTime? _lastSavedTimestamp;
 
   IdleSystem(this.teamDpsSystem, this.capsManager);
+
+  /// Saves the current timestamp for offline progress calculation on next launch.
+  void saveTimestamp(DateTime timestamp) {
+    _lastSavedTimestamp = timestamp;
+  }
+
+  /// Calculates elapsed seconds since last saved timestamp, and clears the timestamp.
+  double getElapsedOfflineSeconds(DateTime currentTimestamp) {
+    if (_lastSavedTimestamp == null) return 0.0;
+    final elapsed = currentTimestamp.difference(_lastSavedTimestamp!).inSeconds.toDouble();
+    return elapsed;
+  }
+
+  /// Clears the saved timestamp.
+  void clearTimestamp() {
+    _lastSavedTimestamp = null;
+  }
 
   /// Calculates offline progress rewards given elapsed offline time in seconds.
   /// Uses CapsManager to limit offline time to the configured maximum duration.
