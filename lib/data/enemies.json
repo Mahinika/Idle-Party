@@ -1,0 +1,57 @@
+[
+  {
+    "id": "enemy_slime",
+    "name": "Green Slime",
+    "element": "Earth",
+    "base_hp": 80.0,
+    "base_attack": 8.0,
+    "base_defense": 2.0,
+    "base_speed": 0.8,
+    "gold_reward": 5.0,
+    "is_boss": false
+  },
+  {
+    "id": "enemy_goblin",
+    "name": "Goblin Raider",
+    "element": "Physical",
+    "base_hp": 150.0,
+    "base_attack": 18.0,
+    "base_defense": 5.0,
+    "base_speed": 1.1,
+    "gold_reward": 15.0,
+    "is_boss": false
+  },
+  {
+    "id": "enemy_dragon",
+    "name": "Infernal Dragon",
+    "element": "Fire",
+    "base_hp": 1500.0,
+    "base_attack": 80.0,
+    "base_defense": 30.0,
+    "base_speed": 1.3,
+    "gold_reward": 200.0,
+    "is_boss": true
+  },
+  {
+    "id": "enemy_skeleton",
+    "name": "Skeleton Warrior",
+    "element": "Physical",
+    "base_hp": 220.0,
+    "base_attack": 22.0,
+    "base_defense": 10.0,
+    "base_speed": 0.9,
+    "gold_reward": 25.0,
+    "is_boss": false
+  },
+  {
+    "id": "enemy_lich",
+    "name": "Lich King",
+    "element": "Dark",
+    "base_hp": 3000.0,
+    "base_attack": 120.0,
+    "base_defense": 50.0,
+    "base_speed": 1.1,
+    "gold_reward": 500.0,
+    "is_boss": true
+  }
+]

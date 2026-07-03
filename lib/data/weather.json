@@ -1,0 +1,30 @@
+[
+  {
+    "id": "weather_sunny",
+    "name": "Sunny",
+    "dps_multiplier": 1.1,
+    "defense_multiplier": 1.0,
+    "description": "Clear skies boost offensive performance slightly."
+  },
+  {
+    "id": "weather_rainy",
+    "name": "Rainy",
+    "dps_multiplier": 0.9,
+    "defense_multiplier": 1.1,
+    "description": "Rain dampens fire attacks and increases defenses."
+  },
+  {
+    "id": "weather_stormy",
+    "name": "Stormy",
+    "dps_multiplier": 1.2,
+    "defense_multiplier": 0.8,
+    "description": "Electricity in the air increases DPS but lowers defense."
+  },
+  {
+    "id": "weather_snowy",
+    "name": "Blizzard",
+    "dps_multiplier": 0.8,
+    "defense_multiplier": 1.2,
+    "description": "A harsh blizzard slows attacks but boosts defense."
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "sword_common",
+    "name": "Rusty Sword",
+    "slot": "Weapon",
+    "attack_boost": 5.0,
+    "defense_boost": 0.0,
+    "rarity": "Common",
+    "gold_value": 10.0
+  },
+  {
+    "id": "shield_common",
+    "name": "Wooden Shield",
+    "slot": "Offhand",
+    "attack_boost": 0.0,
+    "defense_boost": 6.0,
+    "rarity": "Common",
+    "gold_value": 10.0
+  },
+  {
+    "id": "sword_epic",
+    "name": "Dragontooth Blade",
+    "slot": "Weapon",
+    "attack_boost": 50.0,
+    "defense_boost": 10.0,
+    "rarity": "Epic",
+    "gold_value": 500.0
+  }
+]
