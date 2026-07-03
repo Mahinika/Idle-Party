@@ -1,0 +1,92 @@
+[
+  {
+    "id": "skill_strike",
+    "name": "Power Strike",
+    "triggerType": "onAttack",
+    "triggerChance": 0.25,
+    "dpsMult": 1.5,
+    "applyBuffId": null,
+    "buffDuration": 0
+  },
+  {
+    "id": "skill_shield_bash",
+    "name": "Shield Bash",
+    "triggerType": "onAttack",
+    "triggerChance": 0.15,
+    "dpsMult": 1.2,
+    "applyBuffId": "buff_stun",
+    "buffDuration": 2.0
+  },
+  {
+    "id": "skill_fireball",
+    "name": "Fireball",
+    "triggerType": "onAttack",
+    "triggerChance": 0.3,
+    "dpsMult": 2.0,
+    "applyBuffId": "buff_burn",
+    "buffDuration": 4.0
+  },
+  {
+    "id": "skill_arcane_surge",
+    "name": "Arcane Surge",
+    "triggerType": "passive",
+    "triggerChance": 1.0,
+    "dpsMult": 1.15,
+    "applyBuffId": null,
+    "buffDuration": 0
+  },
+  {
+    "id": "skill_multishot",
+    "name": "Multishot",
+    "triggerType": "onAttack",
+    "triggerChance": 0.2,
+    "dpsMult": 1.8,
+    "applyBuffId": null,
+    "buffDuration": 0
+  },
+  {
+    "id": "skill_hunters_mark",
+    "name": "Hunter's Mark",
+    "triggerType": "onCrit",
+    "triggerChance": 0.5,
+    "dpsMult": 1.3,
+    "applyBuffId": "buff_marked",
+    "buffDuration": 6.0
+  },
+  {
+    "id": "skill_heal",
+    "name": "Holy Heal",
+    "triggerType": "passive",
+    "triggerChance": 1.0,
+    "dpsMult": 1.0,
+    "applyBuffId": "buff_regenerate",
+    "buffDuration": 5.0
+  },
+  {
+    "id": "skill_blessing",
+    "name": "Divine Blessing",
+    "triggerType": "onAttack",
+    "triggerChance": 0.1,
+    "dpsMult": 1.25,
+    "applyBuffId": "buff_blessed",
+    "buffDuration": 8.0
+  },
+  {
+    "id": "skill_taunt",
+    "name": "Taunt",
+    "triggerType": "passive",
+    "triggerChance": 1.0,
+    "dpsMult": 1.05,
+    "applyBuffId": null,
+    "buffDuration": 0
+  },
+  {
+    "id": "skill_fortress",
+    "name": "Fortress Stance",
+    "triggerType": "onAttack",
+    "triggerChance": 0.3,
+    "dpsMult": 1.1,
+    "applyBuffId": "buff_fortress",
+    "buffDuration": 5.0
+  }
+]

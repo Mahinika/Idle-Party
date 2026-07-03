@@ -1,0 +1,78 @@
+[
+  {
+    "id": "hero_warrior_01",
+    "name": "Aldric the Bold",
+    "class": "warrior",
+    "baseStats": {
+      "maxHp": 500,
+      "attack": 45,
+      "defense": 20,
+      "speed": 1.0,
+      "critChance": 0.08,
+      "critMultiplier": 1.8
+    },
+    "skillIds": ["skill_strike", "skill_shield_bash"],
+    "unlockCost": 0
+  },
+  {
+    "id": "hero_mage_01",
+    "name": "Lyria Spellweave",
+    "class": "mage",
+    "baseStats": {
+      "maxHp": 280,
+      "attack": 90,
+      "defense": 8,
+      "speed": 0.9,
+      "critChance": 0.12,
+      "critMultiplier": 2.0
+    },
+    "skillIds": ["skill_fireball", "skill_arcane_surge"],
+    "unlockCost": 500
+  },
+  {
+    "id": "hero_ranger_01",
+    "name": "Fenn Swiftarrow",
+    "class": "ranger",
+    "baseStats": {
+      "maxHp": 360,
+      "attack": 70,
+      "defense": 12,
+      "speed": 1.3,
+      "critChance": 0.18,
+      "critMultiplier": 2.5,
+      "evasion": 0.08
+    },
+    "skillIds": ["skill_multishot", "skill_hunters_mark"],
+    "unlockCost": 800
+  },
+  {
+    "id": "hero_healer_01",
+    "name": "Sister Maevis",
+    "class": "healer",
+    "baseStats": {
+      "maxHp": 320,
+      "attack": 30,
+      "defense": 15,
+      "speed": 0.95,
+      "critChance": 0.05,
+      "critMultiplier": 1.5
+    },
+    "skillIds": ["skill_heal", "skill_blessing"],
+    "unlockCost": 600
+  },
+  {
+    "id": "hero_tank_01",
+    "name": "Garrock Ironshield",
+    "class": "tank",
+    "baseStats": {
+      "maxHp": 900,
+      "attack": 25,
+      "defense": 45,
+      "speed": 0.7,
+      "critChance": 0.03,
+      "critMultiplier": 1.3
+    },
+    "skillIds": ["skill_taunt", "skill_fortress"],
+    "unlockCost": 1000
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "id": "item_iron_sword",
+    "name": "Iron Sword",
+    "type": "weapon",
+    "cost": 100,
+    "attackBonus": 10
+  },
+  {
+    "id": "item_steel_shield",
+    "name": "Steel Shield",
+    "type": "armor",
+    "cost": 150,
+    "defenseBonus": 15
+  },
+  {
+    "id": "item_health_potion",
+    "name": "Health Potion",
+    "type": "consumable",
+    "cost": 50,
+    "healAmount": 200
+  },
+  {
+    "id": "item_mana_crystal",
+    "name": "Mana Crystal",
+    "type": "consumable",
+    "cost": 75,
+    "skillCooldownReduction": 0.1
+  },
+  {
+    "id": "relic_ancient_tome",
+    "name": "Ancient Tome",
+    "type": "relic",
+    "cost": 2000,
+    "dpsMult": 1.2
+  },
+  {
+    "id": "relic_dragons_eye",
+    "name": "Dragon's Eye",
+    "type": "relic",
+    "cost": 5000,
+    "dpsMult": 1.5
+  },
+  {
+    "id": "rune_fire",
+    "name": "Fire Rune",
+    "type": "rune",
+    "cost": 800,
+    "dpsMult": 1.1,
+    "tier": 1
+  },
+  {
+    "id": "rune_storm",
+    "name": "Storm Rune",
+    "type": "rune",
+    "cost": 2500,
+    "dpsMult": 1.25,
+    "tier": 2
+  },
+  {
+    "id": "artifact_soulstone",
+    "name": "Soulstone",
+    "type": "artifact",
+    "cost": 10000,
+    "dpsMult": 1.08,
+    "maxLevel": 10
+  },
+  {
+    "id": "artifact_void_crystal",
+    "name": "Void Crystal",
+    "type": "artifact",
+    "cost": 50000,
+    "dpsMult": 1.12,
+    "maxLevel": 20
+  },
+  {
+    "id": "pet_fire_fox",
+    "name": "Fire Fox",
+    "type": "pet",
+    "cost": 3000,
+    "idleBonus": 0.15,
+    "attackBonus": 5
+  },
+  {
+    "id": "pet_ice_wolf",
+    "name": "Ice Wolf",
+    "type": "pet",
+    "cost": 4500,
+    "idleBonus": 0.1,
+    "attackBonus": 12
+  }
+]
