@@ -1,0 +1,37 @@
+[
+  {
+    "id": "weather_clear",
+    "name": "Clear Skies",
+    "dpsMult": 1.0,
+    "rewardMult": 1.0,
+    "duration": 120
+  },
+  {
+    "id": "weather_rain",
+    "name": "Heavy Rain",
+    "dpsMult": 0.9,
+    "rewardMult": 1.1,
+    "duration": 90
+  },
+  {
+    "id": "weather_storm",
+    "name": "Thunderstorm",
+    "dpsMult": 1.15,
+    "rewardMult": 1.2,
+    "duration": 60
+  },
+  {
+    "id": "weather_blizzard",
+    "name": "Blizzard",
+    "dpsMult": 0.8,
+    "rewardMult": 0.8,
+    "duration": 75
+  },
+  {
+    "id": "weather_eclipse",
+    "name": "Solar Eclipse",
+    "dpsMult": 1.5,
+    "rewardMult": 1.5,
+    "duration": 45
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "event_double_gold",
+    "name": "Double Gold Rush",
+    "dpsMult": 1.0,
+    "rewardMult": 2.0,
+    "cooldown": 600
+  },
+  {
+    "id": "event_monster_surge",
+    "name": "Monster Surge",
+    "dpsMult": 0.85,
+    "rewardMult": 1.5,
+    "cooldown": 900
+  },
+  {
+    "id": "event_power_hour",
+    "name": "Power Hour",
+    "dpsMult": 1.5,
+    "rewardMult": 1.25,
+    "cooldown": 3600
+  },
+  {
+    "id": "event_ancient_blessing",
+    "name": "Ancient Blessing",
+    "dpsMult": 1.2,
+    "rewardMult": 1.2,
+    "cooldown": 1800
+  },
+  {
+    "id": "event_cursed_dungeon",
+    "name": "Cursed Dungeon",
+    "dpsMult": 0.7,
+    "rewardMult": 3.0,
+    "cooldown": 2700
+  }
+]

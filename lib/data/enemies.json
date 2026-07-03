@@ -1,0 +1,86 @@
+[
+  {
+    "id": "enemy_goblin",
+    "name": "Goblin Skirmisher",
+    "isBoss": false,
+    "baseStats": {
+      "maxHp": 120,
+      "attack": 15,
+      "defense": 3,
+      "speed": 1.2
+    },
+    "skillIds": [],
+    "xpReward": 8,
+    "goldReward": 4
+  },
+  {
+    "id": "enemy_orc",
+    "name": "Orc Warrior",
+    "isBoss": false,
+    "baseStats": {
+      "maxHp": 250,
+      "attack": 28,
+      "defense": 10,
+      "speed": 0.9
+    },
+    "skillIds": ["skill_cleave"],
+    "xpReward": 18,
+    "goldReward": 10
+  },
+  {
+    "id": "enemy_skeleton",
+    "name": "Skeleton Archer",
+    "isBoss": false,
+    "baseStats": {
+      "maxHp": 90,
+      "attack": 22,
+      "defense": 2,
+      "speed": 1.5
+    },
+    "skillIds": [],
+    "xpReward": 12,
+    "goldReward": 7
+  },
+  {
+    "id": "enemy_troll",
+    "name": "Cave Troll",
+    "isBoss": false,
+    "baseStats": {
+      "maxHp": 600,
+      "attack": 40,
+      "defense": 18,
+      "speed": 0.6
+    },
+    "skillIds": ["skill_regenerate"],
+    "xpReward": 45,
+    "goldReward": 25
+  },
+  {
+    "id": "boss_dungeon_01",
+    "name": "Dungeon Warden Groth",
+    "isBoss": true,
+    "baseStats": {
+      "maxHp": 3000,
+      "attack": 80,
+      "defense": 30,
+      "speed": 0.8
+    },
+    "skillIds": ["skill_enrage", "skill_ground_smash"],
+    "xpReward": 200,
+    "goldReward": 150
+  },
+  {
+    "id": "boss_dragon",
+    "name": "Ashwing the Devourer",
+    "isBoss": true,
+    "baseStats": {
+      "maxHp": 15000,
+      "attack": 200,
+      "defense": 80,
+      "speed": 1.0
+    },
+    "skillIds": ["skill_fire_breath", "skill_wing_buffet"],
+    "xpReward": 1000,
+    "goldReward": 750
+  }
+]

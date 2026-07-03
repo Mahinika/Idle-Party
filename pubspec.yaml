@@ -1,0 +1,27 @@
+name: idle_party
+description: Advanced Idle RPG Game Engine - modular, scalable Flutter/Dart.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - lib/data/heroes.json
+    - lib/data/enemies.json
+    - lib/data/skills.json
+    - lib/data/items.json
+    - lib/data/dungeon_modifiers.json
+    - lib/data/weather.json
+    - lib/data/events.json
