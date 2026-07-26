@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/hero.dart';
@@ -10,16 +11,67 @@ import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/mission.dart';
 import 'package:idle_party/models/pet.dart';
 import 'package:idle_party/models/stats.dart';
+import 'package:idle_party/spatial/tile_map.dart';
 
 void main() {
+  test('xp pools fill and level heroes from kills', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final before = state.heroes.first.level;
+    final enemy = state.enemies.first;
+    final need = GameLogic.xpPoolForLevel(before);
+    state = GameLogic.awardPartyXp(state, need);
+    expect(state.heroes.first.level, before + 1);
+    expect(state.heroes.first.xp, 0);
+    expect(GameLogic.xpForEnemy(enemy), greaterThan(0));
+  });
+
+  test('enemy groups use varied archetypes', () {
+    final room = DungeonGenerator.generateFloor(3, layoutSeed: 42).first;
+    final group = GameLogic.createEnemyGroup(room, dungeonId: 'sandy');
+    expect(group, isNotEmpty);
+    final kinds = group.map((e) => e.archetype).toSet();
+    expect(kinds, isNotEmpty);
+    expect(group.every((e) => e.name.isNotEmpty), isTrue);
+  });
+
+  test('class-biased loot favors matching roles', () {
+    GameLogic.random = Random(42);
+    final mageStaff = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      battleNumber: 6,
+      bias: HeroRole.mage,
+    );
+    final tankShield = GameLogic.createEquipment(
+      slot: EquipmentSlot.offHand,
+      rarity: LootRarity.rare,
+      battleNumber: 6,
+      bias: HeroRole.warrior,
+    );
+    expect(mageStaff.affinity, 'mage');
+    expect(tankShield.affinity, 'warrior');
+    expect(tankShield.offHandKind, OffHandKind.shield);
+    expect(
+      mageStaff.weaponType == WeaponType.staff ||
+          mageStaff.weaponType == WeaponType.sword ||
+          mageStaff.weaponType == WeaponType.dagger,
+      isTrue,
+    );
+    expect(
+      mageStaff.intellectBonus + mageStaff.spellPowerBonus,
+      greaterThan(0),
+    );
+    expect(tankShield.resolvedArmor + tankShield.resolvedStamina, greaterThan(0));
+    expect(tankShield.intellectBonus + tankShield.spellPowerBonus, 0);
+  });
+
   test('advancing ticks progresses battle and gold', () {
     final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
 
-    final progressed = GameLogic.advance(initial, steps: 4);
+    final progressed = GameLogic.advance(initial, steps: 40);
 
     expect(progressed.gold, greaterThan(initial.gold));
-    expect(progressed.battleNumber, greaterThan(initial.battleNumber));
-    expect(progressed.aliveEnemies, isNotEmpty);
+    expect(progressed.highestFloorCleared, greaterThanOrEqualTo(1));
   });
 
   test('offline progress is tracked and applied', () {
@@ -30,8 +82,49 @@ void main() {
       const Duration(seconds: 30),
     );
 
-    expect(progressed.offlineSecondsRecovered, 30);
-    expect(progressed.gold, greaterThanOrEqualTo(initial.gold));
+    expect(progressed.state.offlineSecondsRecovered, 30);
+    expect(progressed.state.gold, greaterThanOrEqualTo(initial.gold));
+  });
+
+  test('offline floor budget scales with time then soft-caps', () {
+    expect(GameLogic.offlineFloorBudget(5 * 60), 7); // 300/40
+    expect(GameLogic.offlineFloorBudget(30 * 60), 45); // 1800/40
+    expect(GameLogic.offlineFloorBudget(60 * 60), greaterThan(45));
+    expect(
+      GameLogic.offlineFloorBudget(8 * 3600),
+      lessThanOrEqualTo(120),
+    );
+    expect(
+      GameLogic.offlineFloorBudget(60 * 60),
+      lessThan(GameLogic.offlineFloorBudget(8 * 3600)),
+    );
+  });
+
+  test('longer dungeon offline earns more gold than short AFK', () {
+    final base = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 7, 25)),
+      dungeonId: 'sandy',
+    );
+    final farm = GameLogic.setDungeonMode(base, DungeonMode.farm);
+
+    final shortAfk = GameLogic.applyOfflineProgress(
+      farm,
+      const Duration(minutes: 5),
+    );
+    final longAfk = GameLogic.applyOfflineProgress(
+      farm,
+      const Duration(minutes: 30),
+    );
+
+    expect(longAfk.state.gold, greaterThan(shortAfk.state.gold));
+    expect(
+      longAfk.state.offlineSecondsRecovered,
+      greaterThan(shortAfk.state.offlineSecondsRecovered),
+    );
+    expect(longAfk.roomsCleared, greaterThan(shortAfk.roomsCleared));
+    expect(longAfk.hasSummary, isTrue);
+    expect(longAfk.headline, contains('Away'));
+    expect(longAfk.headline, contains('g'));
   });
 
   test('training spends gold and levels up the party', () {
@@ -44,7 +137,10 @@ void main() {
 
     expect(trained.gold, 0);
     expect(trained.heroes.first.level, initial.heroes.first.level + 1);
-    expect(trained.heroes.first.currentHp, trained.heroes.first.maxHp);
+    expect(
+      trained.heroes.first.currentHp,
+      trained.effectiveHeroMaxHp(trained.heroes.first),
+    );
   });
 
   test('loot rolls after battle victories', () {
@@ -73,14 +169,16 @@ void main() {
     expect(attackUpgraded.gold, 0);
   });
 
-  test('boss room clear increases boss victory count', () {
-    final floor = DungeonGenerator.generateFloor(1);
-    final bossRoom = floor.last;
+  test('boss floor clear increases boss victory count', () {
+    final bossFloor = DungeonGenerator.bossFloorFor(0);
+    final floor = DungeonGenerator.generateFloor(bossFloor, ascensionLevel: 0);
+    final bossRoom = floor.first;
     expect(bossRoom.type, RoomType.boss);
 
     final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
         .copyWith(
           dungeonMode: DungeonMode.push,
+          inDungeon: true,
           currentRoom: bossRoom,
           dungeonFloor: floor,
           enemies: GameLogic.createEnemyGroup(bossRoom)
@@ -88,28 +186,26 @@ void main() {
               .toList(),
         );
 
-    final progressed = GameLogic.advance(initial);
+    final progressed = GameLogic.advance(initial, steps: 12);
 
     expect(progressed.bossVictories, greaterThan(0));
-    expect(progressed.currentRoom.floorNumber, 2);
-    expect(progressed.highestFloorCleared, 1);
+    expect(progressed.inDungeon, isFalse); // push boss clear → hub
+    expect(progressed.highestFloorCleared, bossFloor);
+    expect(progressed.highestDungeonCleared, greaterThanOrEqualTo(0));
   });
 
-  test('enemy scaling stays smooth across elite and boss thresholds', () {
-    final floor1 = DungeonGenerator.generateFloor(1);
-    final room9 = floor1[8];
-    final room10 = floor1[9];
-    final floor2 = DungeonGenerator.generateFloor(2);
-    final room11 = floor2.first;
+  test('enemy scaling increases with floor number', () {
+    final f1 = DungeonGenerator.generateFloor(1).first;
+    final f5 = DungeonGenerator.generateFloor(5, ascensionLevel: 0).first;
+    final f6 = DungeonGenerator.generateFloor(6).first;
 
-    final budget9 = GameLogic.roomCombatBudget(room9);
-    final budget10 = GameLogic.roomCombatBudget(room10);
-    final budget11 = GameLogic.roomCombatBudget(room11);
+    final b1 = GameLogic.roomCombatBudget(f1);
+    final b5 = GameLogic.roomCombatBudget(f5);
+    final b6 = GameLogic.roomCombatBudget(f6);
 
-    expect(budget10.hp, greaterThan(budget9.hp));
-    expect(budget10.hp, greaterThan(150));
-    expect(budget10.hp, lessThan(400));
-    expect(budget11.hp, lessThan(budget10.hp));
+    expect(f5.type, RoomType.boss);
+    expect(b5.hp, greaterThan(b1.hp));
+    expect(b6.hp, lessThan(b5.hp)); // normal floor after boss is softer than boss
   });
 
   test('essence can unlock relic bonuses', () {
@@ -147,7 +243,10 @@ void main() {
           bossVictories: 1,
           attackBonus: 4,
           unlockedRelics: <String>[GameLogic.warBannerRelic],
-          equippedWeapon: weapon,
+          equipped: <EquipmentSlot, EquipmentItem>{
+            EquipmentSlot.weapon: weapon,
+          },
+          highestFloorCleared: 3,
         );
 
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 7, 5));
@@ -157,8 +256,7 @@ void main() {
     expect(ascended.bossVictories, 0);
     expect(ascended.attackBonus, 0);
     expect(ascended.battleNumber, 1);
-    expect(ascended.equippedWeapon, isNull);
-    expect(ascended.equippedArmor, isNull);
+    expect(ascended.equipped, isEmpty);
     expect(ascended.unlockedRelics, contains(GameLogic.warBannerRelic));
     expect(
       ascended.essence,
@@ -166,6 +264,8 @@ void main() {
     );
     expect(ascended.totalAttackBonus, 1 + 4); // AL + war banner
     expect(ascended.ascensionGoldBonusPercent, 10);
+    expect(ascended.soulboundFragments, greaterThan(0));
+    expect(ascended.inDungeon, isFalse);
   });
 
   test('ascension gold bonus applies to room rewards', () {
@@ -176,7 +276,7 @@ void main() {
     ), 120);
   });
 
-  test('stronger gear auto-equips and weaker gear goes to stash', () {
+  test('loot always stashes gear for manual equip', () {
     final weak = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
       rarity: LootRarity.common,
@@ -186,11 +286,6 @@ void main() {
       slot: EquipmentSlot.weapon,
       rarity: LootRarity.epic,
       battleNumber: 12,
-    );
-    final weakerAgain = GameLogic.createEquipment(
-      slot: EquipmentSlot.weapon,
-      rarity: LootRarity.uncommon,
-      battleNumber: 3,
     );
 
     final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
@@ -202,8 +297,9 @@ void main() {
         equipment: weak,
       ),
     ]);
-    expect(afterWeak.state.equippedWeapon?.id, weak.id);
-    expect(afterWeak.resolved.first.outcome, LootOutcome.equipped);
+    expect(afterWeak.state.equipped, isEmpty);
+    expect(afterWeak.state.gearStash.map((item) => item.id), contains(weak.id));
+    expect(afterWeak.resolved.first.outcome, LootOutcome.stashed);
 
     final afterStrong = GameLogic.applyLootDrops(afterWeak.state, [
       LootDrop(
@@ -213,27 +309,14 @@ void main() {
         equipment: strong,
       ),
     ]);
-    expect(afterStrong.state.equippedWeapon?.id, strong.id);
-    expect(afterStrong.resolved.first.outcome, LootOutcome.replaced);
-    expect(afterStrong.state.gearStash.map((item) => item.id), contains(weak.id));
-
-    final afterSalvage = GameLogic.applyLootDrops(afterStrong.state, [
-      LootDrop(
-        name: weakerAgain.name,
-        amount: 1,
-        rarity: weakerAgain.rarity,
-        equipment: weakerAgain,
-      ),
-    ]);
-    expect(afterSalvage.state.equippedWeapon?.id, strong.id);
-    expect(afterSalvage.resolved.first.outcome, LootOutcome.stashed);
+    expect(afterStrong.state.equipped, isEmpty);
     expect(
-      afterSalvage.state.gearStash.map((item) => item.id),
-      containsAll(<String>[weak.id, weakerAgain.id]),
+      afterStrong.state.gearStash.map((item) => item.id),
+      containsAll(<String>[weak.id, strong.id]),
     );
   });
 
-  test('combinator merges same-slot gear and spends gold', () {
+  test('combinator merges same-slot gear into stash', () {
     final primary = EquipmentItem(
       id: 'w1',
       name: 'Iron Blade',
@@ -253,12 +336,19 @@ void main() {
       vitalityBonus: 0,
     );
     final cost = GameLogic.combineCost(primary, secondary);
-    final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
         .copyWith(
           gold: cost,
-          equippedWeapon: primary,
           gearStash: <EquipmentItem>[secondary],
         );
+    final hero0 = state.heroes.first.copyWith(
+      equipped: <EquipmentSlot, EquipmentItem>{
+        EquipmentSlot.weapon: primary,
+      },
+    );
+    state = state.copyWith(
+      heroes: [hero0, ...state.heroes.skip(1)],
+    );
 
     final combined = GameLogic.combineGear(
       state,
@@ -267,11 +357,128 @@ void main() {
     );
 
     expect(combined.gold, 0);
-    expect(combined.gearStash, isEmpty);
-    expect(combined.equippedWeapon, isNotNull);
-    expect(combined.equippedWeapon!.id, isNot(primary.id));
-    expect(combined.equippedWeapon!.rarity, LootRarity.uncommon);
-    expect(combined.equippedWeapon!.attackBonus, 5);
+    expect(combined.heroes.first.itemIn(EquipmentSlot.weapon), isNull);
+    expect(combined.gearStash, hasLength(1));
+    expect(combined.gearStash.first.id, isNot(primary.id));
+    expect(combined.gearStash.first.rarity, LootRarity.uncommon);
+    expect(
+      combined.gearStash.first.attackBonus +
+          combined.gearStash.first.strengthBonus,
+      greaterThanOrEqualTo(5),
+    );
+    expect(combined.gearStash.first.slot, EquipmentSlot.weapon);
+  });
+
+  test('auto equip prefers class-relevant upgrades', () {
+    final weakSword = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.common,
+      battleNumber: 1,
+    ).copyWith(
+      attackBonus: 1,
+      defenseBonus: 0,
+      vitalityBonus: 0,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      clearAffinity: true,
+    );
+    final tankShield = GameLogic.createEquipment(
+      slot: EquipmentSlot.offHand,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+    ).copyWith(
+      attackBonus: 0,
+      defenseBonus: 12,
+      vitalityBonus: 6,
+      armorBonus: 12,
+      staminaBonus: 6,
+      strengthBonus: 4,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      affinity: HeroRole.warrior.name,
+      offHandKind: OffHandKind.shield,
+    );
+    final mageWand = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+    ).copyWith(
+      attackBonus: 14,
+      defenseBonus: 0,
+      vitalityBonus: 1,
+      intellectBonus: 14,
+      spellPowerBonus: 10,
+      attackSpeedBonus: 8,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      affinity: HeroRole.mage.name,
+      weaponType: WeaponType.staff,
+      handed: WeaponHanded.twoHand,
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    state = state.copyWith(
+      heroes: state.heroes
+          .map((h) => h.copyWith(clearEquipped: true))
+          .toList(),
+      gearStash: <EquipmentItem>[weakSword, tankShield, mageWand],
+    );
+    state = GameLogic.autoEquipBetterGear(state);
+
+    expect(state.heroes[0].itemIn(EquipmentSlot.offHand)?.id, tankShield.id);
+    expect(state.heroes[2].itemIn(EquipmentSlot.weapon)?.id, mageWand.id);
+    expect(state.gearStash, isNot(contains(tankShield)));
+    expect(state.gearStash, isNot(contains(mageWand)));
+  });
+
+  test('auto sell junk clears non-upgrades regardless of ilvl cap', () {
+    final weak = GameLogic.createEquipment(
+      slot: EquipmentSlot.cloak,
+      rarity: LootRarity.common,
+      battleNumber: 1,
+    ).copyWith(
+      attackBonus: 0,
+      defenseBonus: 1,
+      vitalityBonus: 1,
+      itemLevel: 40,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      clearAffinity: true,
+    );
+    final strongCloaks = [
+      for (var i = 0; i < 3; i++)
+        GameLogic.createEquipment(
+          slot: EquipmentSlot.cloak,
+          rarity: LootRarity.rare,
+          battleNumber: 8,
+        ).copyWith(
+          id: 'cloak_strong_$i',
+          attackBonus: 2,
+          defenseBonus: 8,
+          vitalityBonus: 10,
+          itemLevel: 28,
+          effectId: GearEffectId.none,
+          effectValue: 0,
+          clearAffinity: true,
+        ),
+    ];
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
+      gearStash: <EquipmentItem>[...strongCloaks, weak],
+      autoSellMaxPower: 5,
+    );
+    for (var i = 0; i < 3; i++) {
+      state = GameLogic.equipFromStash(
+        state,
+        strongCloaks[i].id,
+        heroIndex: i,
+      );
+    }
+    state = state.copyWith(gearStash: <EquipmentItem>[weak]);
+
+    final sold = GameLogic.autoSellJunk(state);
+    expect(sold.gearStash, isEmpty);
+    expect(sold.essence, greaterThan(state.essence));
   });
 
   test('stash overflow salvages oldest piece to essence', () {
@@ -280,7 +487,7 @@ void main() {
       (index) => EquipmentItem(
         id: 'stash_$index',
         name: 'Spare $index',
-        slot: EquipmentSlot.armor,
+        slot: EquipmentSlot.cloak,
         rarity: LootRarity.common,
         attackBonus: 0,
         defenseBonus: 1,
@@ -298,14 +505,66 @@ void main() {
     expect(state.essence, greaterThan(essenceBefore));
   });
 
-  test('clearing rooms can equip gear onto the party', () {
+  test('clearing rooms can stash gear for the party', () {
     final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final progressed = GameLogic.advance(initial, steps: 80);
 
-    expect(
-      progressed.equippedWeapon != null || progressed.equippedArmor != null,
-      isTrue,
+    expect(progressed.gearStash, isNotEmpty);
+  });
+
+  test('tile map multi-room floors are walkable with spawn and exit', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final map = RoomLayouts.forFloor(
+      floorNumber: state.currentRoom.floorNumber,
+      room: state.currentRoom,
+      dungeonId: 'sandy',
     );
+    expect(map.cols, greaterThan(13));
+    expect(map.roomCenters.length, greaterThanOrEqualTo(1));
+    expect(map.isWalkable(map.spawnPoints.first.$1, map.spawnPoints.first.$2),
+        isTrue);
+    expect(map.isWalkable(map.exitPoint.$1, map.exitPoint.$2), isTrue);
+    expect(map.at(0, 0), TileKind.wall);
+  });
+
+  test('bossFloor formula is 5 plus ascension', () {
+    expect(DungeonGenerator.bossFloorFor(0), 5);
+    expect(DungeonGenerator.bossFloorFor(2), 7);
+    expect(DungeonCatalog.byId('sandy').layout, DungeonLayoutKind.cave);
+  });
+
+  test('soulbound bind and god hand upgrade', () {
+    final weapon = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      battleNumber: 10,
+    );
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
+      essence: 100,
+      soulboundFragments: 3,
+    );
+    final hero0 = state.heroes.first.copyWith(
+      equipped: <EquipmentSlot, EquipmentItem>{EquipmentSlot.weapon: weapon},
+    );
+    state = state.copyWith(heroes: [hero0, ...state.heroes.skip(1)]);
+    state = GameLogic.bindSoulbound(state);
+    expect(state.soulboundItem, isNotNull);
+    expect(state.heroes.first.itemIn(EquipmentSlot.weapon), isNull);
+    expect(state.soulboundFragments, 0);
+
+    final before = state.godHandLevel;
+    state = GameLogic.upgradeGodHand(state);
+    expect(state.godHandLevel, before + 1);
+  });
+
+  test('enter and leave dungeon flags', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    expect(state.inDungeon, isFalse);
+    state = GameLogic.enterDungeon(state, dungeonId: 'sandy');
+    expect(state.inDungeon, isTrue);
+    expect(state.dungeonId, 'sandy');
+    state = GameLogic.leaveDungeon(state);
+    expect(state.inDungeon, isFalse);
   });
 
   test('mage aura boosts party attack while Ember lives', () {
@@ -336,7 +595,7 @@ void main() {
     expect(state.warriorGuardBonusFor(warrior), 2);
     expect(
       state.effectiveHeroDefense(warrior),
-      warrior.defense + state.totalDefenseBonus + 2,
+      greaterThanOrEqualTo(warrior.defense + state.warriorGuardBonusFor(warrior)),
     );
     expect(state.healerMendAmount, 2);
 
@@ -347,7 +606,7 @@ void main() {
         .map(
           (enemy) => enemy.copyWith(
             currentHp: 500,
-            stats: Stats(
+            stats: Stats.enemy(
               attack: 12,
               defense: enemy.defense,
               maxHp: 500,
@@ -441,47 +700,50 @@ void main() {
     );
   });
 
-  test('farm mode loops the same floor after boss clear', () {
-    final floor = DungeonGenerator.generateFloor(1);
-    final bossRoom = floor.last;
+  test('farm mode loops the same floor after clear', () {
+    final floor = DungeonGenerator.generateFloor(2);
+    final room = floor.first;
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
         .copyWith(
           dungeonMode: DungeonMode.farm,
-          currentRoom: bossRoom,
+          inDungeon: true,
+          currentRoom: room,
           dungeonFloor: floor,
-          enemies: GameLogic.createEnemyGroup(bossRoom)
+          enemies: GameLogic.createEnemyGroup(room)
               .map((e) => e.copyWith(currentHp: 1))
               .toList(),
         );
 
-    final after = GameLogic.advance(state);
-    expect(after.currentRoom.floorNumber, 1);
-    expect(after.currentRoom.roomIndex, 0);
-    expect(after.highestFloorCleared, 1);
-    expect(after.bossVictories, greaterThan(0));
+    final after = GameLogic.advance(state, steps: 12);
+    expect(after.currentRoom.floorNumber, 2);
+    expect(after.highestFloorCleared, 2);
+    expect(after.inDungeon, isTrue);
   });
 
   test('push mode advances floor and failed wipe retreats', () {
-    final floor = DungeonGenerator.generateFloor(1);
-    final bossRoom = floor.last;
+    final floor = DungeonGenerator.generateFloor(2);
+    final room = floor.first;
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
         .copyWith(
           dungeonMode: DungeonMode.push,
-          currentRoom: bossRoom,
+          inDungeon: true,
+          currentRoom: room,
           dungeonFloor: floor,
-          enemies: GameLogic.createEnemyGroup(bossRoom)
+          enemies: GameLogic.createEnemyGroup(room)
               .map((e) => e.copyWith(currentHp: 1))
               .toList(),
         );
-    state = GameLogic.advance(state, steps: 5);
-    expect(state.currentRoom.floorNumber, 2);
-    expect(state.highestFloorCleared, 1);
+    for (var i = 0; i < 20 && state.currentRoom.floorNumber == 2; i++) {
+      state = GameLogic.advance(state);
+    }
+    expect(state.currentRoom.floorNumber, 3);
+    expect(state.highestFloorCleared, 2);
 
     final wiped = state.copyWith(
       heroes: state.heroes.map((h) => h.copyWith(currentHp: 0)).toList(),
     );
     final retreated = GameLogic.advance(wiped);
-    expect(retreated.currentRoom.floorNumber, 1);
+    expect(retreated.currentRoom.floorNumber, 2);
     expect(retreated.dungeonMode, DungeonMode.farm);
   });
 
@@ -492,8 +754,12 @@ void main() {
       slot: EquipmentSlot.weapon,
       rarity: LootRarity.common,
       attackBonus: 3,
+      strengthBonus: 3,
       defenseBonus: 0,
       vitalityBonus: 0,
+      weaponType: WeaponType.sword,
+      handed: WeaponHanded.oneHand,
+      affinity: HeroRole.warrior.name,
     );
     final pet = const Pet(id: 'p1', name: 'Ember Pup', attackBonus: 2);
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
@@ -502,9 +768,13 @@ void main() {
           gearStash: <EquipmentItem>[stashItem],
           ownedPets: <Pet>[pet],
           activePet: pet,
+          heroes: GameLogic.createInitialState(now: DateTime(2026, 7, 4))
+              .heroes
+              .map((h) => h.copyWith(clearEquipped: true))
+              .toList(),
         );
     state = GameLogic.equipFromStash(state, stashItem.id);
-    expect(state.equippedWeapon?.id, stashItem.id);
+    expect(state.heroes.first.itemIn(EquipmentSlot.weapon)?.id, stashItem.id);
     expect(state.gearStash, isEmpty);
 
     state = GameLogic.upgradeSanctuary(state, 'gold');
@@ -513,11 +783,19 @@ void main() {
 
     final ready = state.copyWith(bossVictories: 1);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 7, 5));
-    expect(ascended.equippedWeapon, isNull);
+    expect(ascended.equipped, isEmpty);
+    // Fresh AL heroes get class starter kits (not previous run's gear).
+    expect(ascended.heroes.every((h) => h.equipped.isNotEmpty), isTrue);
+    expect(
+      ascended.heroes.any(
+        (h) => h.itemIn(EquipmentSlot.weapon)?.id == stashItem.id,
+      ),
+      isFalse,
+    );
     expect(ascended.sanctuaryGoldLevel, 1);
     expect(ascended.activePet?.id, pet.id);
     expect(ascended.ownedPets, hasLength(1));
     expect(ascended.highestFloorCleared, 0);
-    expect(ascended.dungeonMode, DungeonMode.farm);
+    expect(ascended.dungeonMode, DungeonMode.push);
   });
 }

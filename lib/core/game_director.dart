@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/dungeon_mode.dart';
 import '../models/loot.dart';
 import '../spatial/spatial_combat.dart';
+import '../ui/game_audio.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 
@@ -65,7 +66,9 @@ class GameDirector extends ChangeNotifier {
     this._storage, {
     GameState? initialState,
     this.enableSpatialLoop = true,
-  }) : _state = initialState ?? GameLogic.createInitialState();
+  }) : _state = initialState ?? GameLogic.createInitialState() {
+    GameAudio.muted = _state.soundMuted;
+  }
 
   factory GameDirector.persistent() {
     return GameDirector(SharedPreferencesGameStorage());
@@ -87,9 +90,18 @@ class GameDirector extends ChangeNotifier {
   bool _isLoading = true;
   SpatialWorld? _spatial;
   Timer? _spatialTimer;
+  Timer? _uiTimer;
   int _roomGold = 0;
   int _battleToken = 0;
   int _uiThrottle = 0;
+  bool _awaitingWipeChoice = false;
+  String? _toast;
+  double _toastLife = 0;
+  String? _clearSummary;
+  double _clearSummaryLife = 0;
+  OfflineProgressResult? _offlineSummary;
+  double _offlineSummaryLife = 0;
+  int _lastHighestDungeon = -1;
 
   GameState get state => _state;
 
@@ -97,21 +109,79 @@ class GameDirector extends ChangeNotifier {
 
   SpatialWorld? get spatial => _spatial;
 
+  bool get awaitingWipeChoice => _awaitingWipeChoice;
+
+  String? get toast => _toastLife > 0 ? _toast : null;
+
+  String? get clearSummary => _clearSummaryLife > 0 ? _clearSummary : null;
+
+  OfflineProgressResult? get offlineSummary =>
+      _offlineSummaryLife > 0 ? _offlineSummary : null;
+
+  void showToast(String message, {double life = 2.4}) {
+    _toast = message;
+    _toastLife = life;
+    _ensureUiTimer();
+    notifyListeners();
+  }
+
+  void dismissOfflineSummary() {
+    _offlineSummary = null;
+    _offlineSummaryLife = 0;
+    notifyListeners();
+  }
+
+  void _ensureUiTimer() {
+    if (_uiTimer != null) return;
+    _uiTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+      final had =
+          _toastLife > 0 || _clearSummaryLife > 0 || _offlineSummaryLife > 0;
+      if (!had) return;
+      _tickUiTimers(0.2);
+      notifyListeners();
+    });
+  }
+
+  void _tickUiTimers(double dt) {
+    if (_toastLife > 0) {
+      _toastLife = (_toastLife - dt).clamp(0, 99);
+      if (_toastLife <= 0) _toast = null;
+    }
+    if (_clearSummaryLife > 0) {
+      _clearSummaryLife = (_clearSummaryLife - dt).clamp(0, 99);
+      if (_clearSummaryLife <= 0) _clearSummary = null;
+    }
+    if (_offlineSummaryLife > 0) {
+      _offlineSummaryLife = (_offlineSummaryLife - dt).clamp(0, 99);
+      if (_offlineSummaryLife <= 0) _offlineSummary = null;
+    }
+  }
+
   Future<void> boot() async {
     final saved = await _storage.load();
     if (saved == null) {
       _state = GameLogic.createInitialState();
     } else {
-      _state = GameLogic.applyOfflineProgress(
-        saved,
-        DateTime.now().difference(saved.lastUpdated),
-      );
+      final elapsed = DateTime.now().difference(saved.lastUpdated);
+      final offline = GameLogic.applyOfflineProgress(saved, elapsed);
+      _state = offline.state;
+      if (offline.hasSummary) {
+        _offlineSummary = offline;
+        _offlineSummaryLife = 10;
+        showToast(offline.headline, life: 5);
+      }
     }
+    _state = GameLogic.ensureRogueHero(_state);
+    _lastHighestDungeon = _state.highestDungeonCleared;
+    GameAudio.muted = _state.soundMuted;
+    _ensureUiTimer();
 
     _isLoading = false;
-    _rebuildSpatial();
-    if (enableSpatialLoop) {
-      _startSpatialLoop();
+    if (_state.inDungeon) {
+      _rebuildSpatial();
+      if (enableSpatialLoop) {
+        _startSpatialLoop();
+      }
     }
     notifyListeners();
     await _storage.save(_state);
@@ -131,9 +201,9 @@ class GameDirector extends ChangeNotifier {
     _battleToken = _state.battleNumber;
   }
 
-  /// Real-time spatial combat step (~20 Hz).
+  /// Real-time spatial combat step (~30 Hz). Only while in a dungeon.
   void spatialTick() {
-    if (_isLoading || _spatial == null) {
+    if (_isLoading || !_state.inDungeon || _spatial == null) {
       return;
     }
 
@@ -146,25 +216,46 @@ class GameDirector extends ChangeNotifier {
     _spatial = result.world;
     _state = result.state;
     _roomGold += result.goldFromKills;
+    _tickUiTimers(0.033);
 
     if (result.partyWiped) {
-      _handleWipe();
+      _awaitingWipeChoice = true;
+      showToast('PARTY WIPED', life: 3);
+      notifyListeners();
       return;
     }
 
     if (result.roomCleared) {
+      final floorNo = _state.currentRoom.floorNumber;
       final wasTreasure = _spatial?.isTreasure ?? false;
       final gold = wasTreasure
           ? GameLogic.roomCombatBudget(_state.currentRoom).gold
           : (_roomGold > 0
                 ? _roomGold
                 : _state.enemies.fold<int>(0, (s, e) => s + e.rewardGold));
+      final beforeDungeon = _state.highestDungeonCleared;
       _state = GameLogic.completeCurrentRoom(
         _state,
         goldGain: gold,
         skipLootRoll: false,
       ).copyWith(lastUpdated: DateTime.now());
-      _rebuildSpatial();
+      _clearSummary = 'FLOOR $floorNo CLEAR  +${gold}g';
+      _clearSummaryLife = 2.2;
+      showToast(_clearSummary!, life: 2.0);
+      if (_state.highestDungeonCleared > beforeDungeon) {
+        showToast('UNLOCKED NEXT ZONE!', life: 3.2);
+        _lastHighestDungeon = _state.highestDungeonCleared;
+      } else if (_state.highestDungeonCleared > _lastHighestDungeon) {
+        _lastHighestDungeon = _state.highestDungeonCleared;
+        showToast('DUNGEON CLEARED!', life: 3);
+      }
+      if (_state.inDungeon) {
+        _rebuildSpatial();
+      } else {
+        _spatialTimer?.cancel();
+        _spatial = null;
+        showToast('DUNGEON COMPLETE', life: 3);
+      }
       notifyListeners();
       unawaited(_storage.save(_state));
       return;
@@ -177,6 +268,7 @@ class GameDirector extends ChangeNotifier {
   }
 
   void _handleWipe() {
+    _awaitingWipeChoice = false;
     if (_state.dungeonMode == DungeonMode.push &&
         _state.currentRoom.floorNumber > _state.highestFloorCleared) {
       _state = GameLogic.retreatFromFailedPush(
@@ -192,23 +284,78 @@ class GameDirector extends ChangeNotifier {
     unawaited(_storage.save(_state));
   }
 
+  void retryAfterWipe() {
+    if (!_awaitingWipeChoice) return;
+    _handleWipe();
+  }
+
+  void hubAfterWipe() {
+    if (!_awaitingWipeChoice) return;
+    _awaitingWipeChoice = false;
+    _state = GameLogic.leaveDungeon(_state);
+    _spatialTimer?.cancel();
+    _spatial = null;
+    notifyListeners();
+    unawaited(_storage.save(_state));
+  }
+
   /// God Hand tap — AOE damage at normalized dungeon coords (0..1).
   void godHandAt(double nx, double ny) {
-    if (_isLoading || _spatial == null || _state.isPartyDefeated) {
+    if (_spatial == null) {
       return;
     }
-    final tileX = nx.clamp(0.0, 1.0) * SpatialCombat.cols;
-    final tileY = ny.clamp(0.0, 1.0) * SpatialCombat.rows;
+    godHandAtWorld(
+      nx.clamp(0.0, 1.0) * _spatial!.cols,
+      ny.clamp(0.0, 1.0) * _spatial!.rows,
+    );
+  }
+
+  /// God Hand tap at world-tile coordinates.
+  void godHandAtWorld(double tileX, double tileY) {
+    if (_isLoading ||
+        !_state.inDungeon ||
+        _spatial == null ||
+        _state.isPartyDefeated) {
+      return;
+    }
     final result = SpatialCombat.godHand(
       _spatial!,
       _state,
-      tileX: tileX,
-      tileY: tileY,
+      tileX: tileX.clamp(0.0, _spatial!.cols.toDouble()).toDouble(),
+      tileY: tileY.clamp(0.0, _spatial!.rows.toDouble()).toDouble(),
     );
     _spatial = result.world;
     _state = result.state;
     _roomGold += result.goldFromKills;
     notifyListeners();
+  }
+
+  void enterDungeon({String dungeonId = 'sandy'}) {
+    if (_isLoading) return;
+    _state = GameLogic.enterDungeon(_state, dungeonId: dungeonId);
+    _rebuildSpatial();
+    if (enableSpatialLoop) {
+      _startSpatialLoop();
+    }
+    notifyListeners();
+    unawaited(_storage.save(_state));
+  }
+
+  void leaveDungeon() {
+    if (_isLoading) return;
+    _state = GameLogic.leaveDungeon(_state);
+    _spatialTimer?.cancel();
+    _spatial = null;
+    notifyListeners();
+    unawaited(_storage.save(_state));
+  }
+
+  void upgradeGodHand() {
+    _applyUpgrade(GameLogic.upgradeGodHand(_state));
+  }
+
+  void bindSoulbound({int? heroIndex}) {
+    _applyUpgrade(GameLogic.bindSoulbound(_state, heroIndex: heroIndex));
   }
 
   /// Legacy single abstract tick (tests / debug). Prefer spatialTick.
@@ -260,10 +407,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.claimMission(_state, missionId));
   }
 
-  void combineGear({
-    required String primaryId,
-    required String secondaryId,
-  }) {
+  void combineGear({required String primaryId, required String secondaryId}) {
     _applyUpgrade(
       GameLogic.combineGear(
         _state,
@@ -281,12 +425,37 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.travelToFloor(_state, floorNumber));
   }
 
-  void equipFromStash(String itemId) {
-    _applyUpgrade(GameLogic.equipFromStash(_state, itemId));
+  void equipFromStash(String itemId, {int heroIndex = 0}) {
+    _applyUpgrade(
+      GameLogic.equipFromStash(_state, itemId, heroIndex: heroIndex),
+    );
   }
 
-  void unequipSlot(EquipmentSlot slot) {
-    _applyUpgrade(GameLogic.unequipSlot(_state, slot));
+  void autoEquipBetterGear() {
+    _applyUpgrade(GameLogic.autoEquipBetterGear(_state));
+  }
+
+  void autoSellJunk() {
+    _applyUpgrade(GameLogic.autoSellJunk(_state));
+  }
+
+  void setSoundMuted(bool muted) {
+    GameAudio.muted = muted;
+    _applyUpgrade(_state.copyWith(soundMuted: muted));
+  }
+
+  void setReducedVfx(bool value) {
+    _applyUpgrade(_state.copyWith(reducedVfx: value));
+  }
+
+  void setAutoSellMaxPower(int value) {
+    _applyUpgrade(_state.copyWith(autoSellMaxPower: value.clamp(0, 80)));
+  }
+
+  void unequipSlot(EquipmentSlot slot, {int heroIndex = 0}) {
+    _applyUpgrade(
+      GameLogic.unequipSlot(_state, slot, heroIndex: heroIndex),
+    );
   }
 
   void sellGear(String itemId) {
@@ -297,8 +466,16 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.hatchPet(_state));
   }
 
+  void levelUpPet(String petId) {
+    _applyUpgrade(GameLogic.levelUpPet(_state, petId));
+  }
+
   void setActivePet(String petId) {
     _applyUpgrade(GameLogic.setActivePet(_state, petId));
+  }
+
+  void useConsumable({int? heroIndex}) {
+    _applyUpgrade(GameLogic.useConsumable(_state, heroIndex: heroIndex));
   }
 
   void upgradeSanctuary(String track) {
@@ -310,23 +487,43 @@ class GameDirector extends ChangeNotifier {
       return;
     }
 
+    final hadRogue = _state.rogueUnlocked;
     final updated = GameLogic.ascend(_state);
     if (identical(updated, _state)) {
       return;
     }
 
     _state = updated;
-    _rebuildSpatial();
+    if (!hadRogue && _state.rogueUnlocked) {
+      showToast('SHADE THE ROGUE JOINS!', life: 3.5);
+    }
+    if (_state.inDungeon) {
+      _rebuildSpatial();
+    } else {
+      _spatial = null;
+    }
     notifyListeners();
     unawaited(_storage.save(_state));
   }
 
   void reviveParty() {
-    if (_isLoading || !_state.isPartyDefeated) {
+    if (_isLoading) return;
+    if (_awaitingWipeChoice || _state.isPartyDefeated) {
+      retryAfterWipe();
+    }
+  }
+
+  Future<void> reset() async {
+    if (_isLoading) {
       return;
     }
-
-    _handleWipe();
+    _awaitingWipeChoice = false;
+    _state = GameLogic.createInitialState();
+    GameAudio.muted = false;
+    _spatialTimer?.cancel();
+    _spatial = null;
+    notifyListeners();
+    await _storage.save(_state);
   }
 
   void _applyUpgrade(GameState updated) {
@@ -335,24 +532,19 @@ class GameDirector extends ChangeNotifier {
     }
 
     _state = updated;
-    // Keep positions; refresh combat stats from new bonuses
-    _rebuildSpatial();
+    if (_state.inDungeon) {
+      _rebuildSpatial();
+    } else {
+      _spatial = null;
+    }
     notifyListeners();
     unawaited(_storage.save(_state));
-  }
-
-  Future<void> reset() async {
-    _state = GameLogic.createInitialState();
-    _state = _state.copyWith(lastUpdated: DateTime.now());
-    _isLoading = false;
-    _rebuildSpatial();
-    notifyListeners();
-    await _storage.save(_state);
   }
 
   @override
   void dispose() {
     _spatialTimer?.cancel();
+    _uiTimer?.cancel();
     super.dispose();
   }
 }

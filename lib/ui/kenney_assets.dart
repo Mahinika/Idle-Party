@@ -1,45 +1,144 @@
 import '../core/game_logic.dart';
+import '../models/dungeon_def.dart';
 import '../models/enemy.dart';
+import '../models/hero.dart';
 import '../models/loot.dart';
+import '../spatial/tile_map.dart';
 
+/// Central Kenney Tiny Dungeon + UI asset catalog.
+///
+/// Tiny Dungeon files are kept as original `tile_XXXX.png` IDs (Kenney sheet
+/// is 12×11). Semantic getters below map roles → tile indices so art cannot
+/// drift from misnamed copies again. Rebuild with:
+/// `powershell -File tool/rebuild_tiny_dungeon_assets.ps1`
 abstract final class KenneyAssets {
   static const String _tiny = 'assets/kenney/tiny_dungeon';
+  static const String _extras = 'assets/kenney/extras';
   static const String _ui = 'assets/kenney/ui_adventure';
   static const String _bars = 'assets/kenney/ui_bars';
   static const String _icons = 'assets/kenney/icons';
   static const String _runes = 'assets/kenney/runes';
 
-  // Tiny Dungeon sprites
-  static const String floorStone = '$_tiny/floor_stone.png';
-  static const String floorDirt = '$_tiny/floor_dirt.png';
-  static const String wallStone = '$_tiny/wall_stone.png';
-  static const String corridorActive = '$_tiny/corridor_active.png';
-  static const String corridorInactive = '$_tiny/corridor_inactive.png';
-  static const String doorClosed = '$_tiny/door_closed.png';
-  static const String doorOpen = '$_tiny/door_open.png';
-  static const String stairsBoss = '$_tiny/stairs_boss.png';
-  static const String roomCleared = '$_tiny/room_cleared.png';
-  static const String chestClosed = '$_tiny/chest_closed.png';
-  static const String chestOpen = '$_tiny/chest_open.png';
+  /// Original Kenney tile path (`tile_0000` … `tile_0131`).
+  static String tile(int id) {
+    assert(id >= 0 && id < 132, 'Tiny Dungeon tile id out of range: $id');
+    final n = id.toString().padLeft(4, '0');
+    return '$_tiny/tile_$n.png';
+  }
 
-  static const String heroKnight = '$_tiny/hero_knight.png';
-  static const String heroWizard = '$_tiny/hero_wizard.png';
-  static const String heroRogue = '$_tiny/hero_rogue.png';
-  static const String heroHealer = '$_tiny/hero_healer.png';
+  // —— Floors (verified unique sheet cells) ——
+  static String get floorDirt => tile(0);
+  static String get floorDirtAlt1 => tile(1);
+  static String get floorDirtAlt2 => tile(2);
+  static String get floorDirtAlt3 => tile(3);
+  static String get floorSand => tile(30);
+  static String get floorSandAlt1 => tile(31);
+  static String get floorSandAlt2 => tile(32);
+  static String get floorStone => tile(42);
+  static String get floorStoneAlt1 => tile(43);
+  static String get floorStoneAlt2 => tile(44);
 
-  static const String enemySlime = '$_tiny/enemy_slime.png';
-  static const String enemyGolem = '$_tiny/enemy_golem.png';
-  static const String enemyBoss = '$_tiny/enemy_boss.png';
+  // —— Walls / doors / stairs ——
+  static String get wallStone => tile(40);
+  static String get wallStoneAlt1 => tile(39);
+  static String get wallBanner => tile(29);
+  static String get wallBannerAlt => tile(28);
+  static String get doorArch => tile(6);
+  static String get doorClosed => tile(45);
+  static String get doorVariant => tile(46);
+  static String get doorOpen => tile(47);
+  static String get stairsDown => tile(17);
+  static String get stairs => tile(18);
+  static String get stairsBoss => tile(18);
+  static String get exitPad => tile(19);
+  static String get trapSpikes => tile(41);
 
-  static const String sword = '$_tiny/sword.png';
-  static const String shield = '$_tiny/shield.png';
-  static const String potionRed = '$_tiny/potion_red.png';
-  static const String potionBlue = '$_tiny/potion_blue.png';
-  static const String coinGold = '$_tiny/coin_gold.png';
-  static const String meat = '$_tiny/meat.png';
-  static const String book = '$_tiny/book.png';
+  // —— Hazards / rails / markers ——
+  static String get hazardWater => tile(50);
+  static String get hazardLava => tile(55);
+  static String get corridorActive => tile(60);
+  static String get corridorInactive => tile(61);
+  static String get target => tile(60);
+  static String get slash => tile(61);
+  static String get claw => tile(62);
+  static String get gravestone => tile(64);
+  static String get hatch => tile(66);
 
-  // UI panels & buttons
+  // —— Props ——
+  static String get crate => tile(72);
+  static String get anvil => tile(74);
+  static String get barrel => tile(82);
+  static String get propPot => tile(83);
+  static String get propBones => tile(81);
+  static String get fountainSlime => tile(75);
+  static String get chestClosed => tile(89);
+  static String get chestOpen => tile(90);
+  static String get chestMimic => tile(92);
+  static String get torch => tile(70);
+  static String get torchAlt => tile(71);
+
+  // —— Heroes (sample map / sheet character band) ——
+  static String get heroWizard => tile(84);
+  static String get heroVillager => tile(85);
+  static String get heroBearded => tile(86);
+  static String get heroSoldier => tile(87);
+  static String get heroRogue => tile(88);
+  static String get heroKnight => tile(96);
+  static String get heroKnightAlt => tile(97);
+  static String get heroWoman => tile(98);
+  static String get heroHealer => tile(99);
+  static String get heroElder => tile(100);
+
+  // —— Enemies ——
+  static String get enemySlime => tile(108);
+  static String get enemyCyclops => tile(109);
+  static String get enemyCrab => tile(110);
+  static String get enemyBoss => tile(111);
+  static String get enemyCultist => tile(112);
+  static String get enemyBat => tile(120);
+  static String get enemyGhost => tile(121);
+  static String get enemySpider => tile(122);
+  static String get enemyRat => tile(123);
+  static String get enemySnake => tile(124);
+  /// Golem uses unused brute variant (distinct from cyclops).
+  static String get enemyGolem => tile(109);
+
+  // —— Gear / consumables ——
+  static String get shieldRound => tile(101);
+  static String get shield => tile(102);
+  static String get dagger => tile(103);
+  static String get sword => tile(104);
+  static String get swordAlt => tile(106);
+  static String get hammer => tile(117);
+  static String get axe => tile(118);
+  static String get potionGrey => tile(113);
+  static String get potionGreen => tile(114);
+  static String get potionRed => tile(115);
+  static String get potionBlue => tile(116);
+  static String get vialGrey => tile(125);
+  static String get vialGreen => tile(126);
+  static String get vialRed => tile(127);
+  static String get vialBlue => tile(128);
+  static String get staff => tile(129);
+  static String get staffBlue => tile(130);
+  static String get spear => tile(131);
+  static String get boots => tile(105);
+  /// Cloak uses fabric banner art (Tiny Dungeon has no cloak item).
+  static String get cloak => relicWarBanner;
+  /// Helmet stand-in until a dedicated helm tile is imported.
+  static String get helmet => iconCrown;
+  static String get meat => potionGreen;
+  static String get roomCleared => doorArch; // legacy alias; unused in painter
+  static String get propSkull => tile(63);
+  static String get wallStoneAlt2 => trapSpikes; // legacy — do not use as wall
+  static String get stairsAlt => stairsDown;
+
+  // —— Extras (not from Tiny Dungeon sheet) ——
+  static const String book = '$_extras/book.png';
+  static const String coinGold = '$_extras/coin_gold.png';
+  static const String ring = '$_extras/ring.png';
+
+  // —— UI panels & buttons ——
   static const String panelBrown = '$_ui/panel_brown.png';
   static const String panelBeige = '$_ui/panel_beige.png';
   static const String panelInsetBrown = '$_ui/panelInset_brown.png';
@@ -50,7 +149,7 @@ abstract final class KenneyAssets {
   static const String hexagonBrown = '$_ui/hexagon_brown.png';
   static const String hexagonBrownDark = '$_ui/hexagon_brown_dark.png';
 
-  // Progress bars (rounded, ui_adventure)
+  // —— Progress bars (rounded) ——
   static const String progressGreen = '$_ui/progress_green.png';
   static const String progressGreenBorder = '$_ui/progress_green_border.png';
   static const String progressRed = '$_ui/progress_red.png';
@@ -59,7 +158,7 @@ abstract final class KenneyAssets {
   static const String progressBlueBorder = '$_ui/progress_blue_border.png';
   static const String progressWhite = '$_ui/progress_white.png';
 
-  // HP bar segments
+  // —— HP bar segments ——
   static const String barBackLeft = '$_bars/barBack_horizontalLeft.png';
   static const String barBackMid = '$_bars/barBack_horizontalMid.png';
   static const String barBackRight = '$_bars/barBack_horizontalRight.png';
@@ -73,7 +172,7 @@ abstract final class KenneyAssets {
   static const String barYellowMid = '$_bars/barYellow_horizontalMid.png';
   static const String barYellowRight = '$_bars/barYellow_horizontalRight.png';
 
-  // Icons
+  // —— Icons ——
   static const String iconCoin = '$_icons/coin.png';
   static const String iconSword = '$_icons/sword.png';
   static const String iconCrown = '$_icons/crown.png';
@@ -84,68 +183,311 @@ abstract final class KenneyAssets {
   static const String iconStar = '$_icons/star.png';
   static const String iconHeart = '$_icons/heart.png';
   static const String iconSkull = '$_icons/skull.png';
+  static const String iconBow = '$_icons/bow.png';
 
-  // Relics
+  // —— Relics ——
   static const String relicWarBanner = '$_runes/war_banner.png';
   static const String relicIronWard = '$_runes/iron_ward.png';
   static const String relicPhoenixEmber = '$_runes/phoenix_ember.png';
 
+  static String heroSpriteForRole(HeroRole role) => switch (role) {
+        HeroRole.warrior => heroKnight,
+        HeroRole.healer => heroHealer,
+        HeroRole.mage => heroWizard,
+        HeroRole.rogue => heroRogue,
+      };
+
   static String heroSpriteFor(int index) => switch (index) {
-    0 => heroKnight,
-    1 => heroHealer,
-    2 => heroWizard,
-    _ => heroRogue,
-  };
+        0 => heroKnight,
+        1 => heroHealer,
+        2 => heroWizard,
+        _ => heroRogue,
+      };
 
   static String heroPortraitFor(int index) => heroSpriteFor(index);
 
-  static String enemySpriteFor(EnemyUnit enemy) => switch (enemy.role) {
-    EnemyRole.boss => enemyBoss,
-    EnemyRole.elite => enemyGolem,
-    EnemyRole.normal => enemySlime,
-  };
+  static String floorForDungeon(String dungeonId) {
+    final def = DungeonCatalog.byId(dungeonId);
+    return switch (def.layout) {
+      DungeonLayoutKind.cave => floorSand,
+      DungeonLayoutKind.hideout => floorDirt,
+      DungeonLayoutKind.fort => floorStone,
+      DungeonLayoutKind.arena => floorStone,
+    };
+  }
+
+  /// Floor tiles — only verified base floors (alts stay available via getters).
+  static List<String> floorVariantsForDungeon(String dungeonId) {
+    final primary = floorForDungeon(dungeonId);
+    final secondary = switch (DungeonCatalog.byId(dungeonId).layout) {
+      DungeonLayoutKind.cave => floorDirt,
+      DungeonLayoutKind.hideout => floorStone,
+      DungeonLayoutKind.fort || DungeonLayoutKind.arena => floorDirt,
+    };
+    return <String>[primary, primary, primary, secondary];
+  }
+
+  static String wallForDungeon(String dungeonId) {
+    return switch (dungeonId) {
+      'king' => wallBanner,
+      _ => wallStone,
+    };
+  }
+
+  static List<String> wallVariantsForDungeon(String dungeonId) {
+    return switch (dungeonId) {
+      'king' => [wallStone, wallStone, wallStone, wallBanner],
+      _ => [wallStone],
+    };
+  }
+
+  static String exitSpriteFor({required bool boss}) =>
+      boss ? stairsBoss : stairs;
+
+  static String gateSprite({required bool open}) =>
+      open ? doorOpen : doorClosed;
+
+  static String propAsset(MapPropKind kind) => switch (kind) {
+        MapPropKind.barrel => barrel,
+        MapPropKind.crate => crate,
+        MapPropKind.torch => torch,
+        MapPropKind.torchAlt => torchAlt,
+        MapPropKind.gravestone => gravestone,
+        MapPropKind.fountain => fountainSlime,
+        MapPropKind.trap => trapSpikes,
+        MapPropKind.pot => propPot,
+        MapPropKind.bones => propBones,
+        MapPropKind.skull => propSkull,
+        MapPropKind.hatch => hatch,
+        MapPropKind.water => hazardWater,
+        MapPropKind.lava => hazardLava,
+        MapPropKind.anvil => anvil,
+      };
+
+  static List<MapPropKind> propPoolForDungeon(String dungeonId) =>
+      switch (dungeonId) {
+        'sandy' => const [MapPropKind.barrel, MapPropKind.crate, MapPropKind.torch],
+        'goblin' => const [MapPropKind.barrel, MapPropKind.crate, MapPropKind.pot],
+        'king' => const [MapPropKind.torch, MapPropKind.crate, MapPropKind.anvil],
+        'underworld' => const [MapPropKind.torch, MapPropKind.barrel],
+        'dead' => const [MapPropKind.gravestone, MapPropKind.torch],
+        'hell' => const [MapPropKind.torch, MapPropKind.barrel],
+        _ => const [MapPropKind.barrel, MapPropKind.crate],
+      };
+
+  static String dungeonIconFor(String dungeonId) => switch (dungeonId) {
+        // Prefer entrance/prop icons — floor tiles look like clipboard blobs on the hub map.
+        'sandy' => hatch,
+        'goblin' => doorClosed,
+        'king' => wallBanner,
+        'underworld' => stairs,
+        'dead' => gravestone,
+        'hell' => doorOpen,
+        _ => iconDoor,
+      };
+
+  /// Hub detail portrait for the selected dungeon (boss / theme).
+  static String dungeonPortraitFor(String dungeonId) =>
+      enemySpriteForRole(EnemyRole.boss, dungeonId: dungeonId);
+
+  static String enemySpriteForRole(EnemyRole role, {String? dungeonId}) {
+    if (role == EnemyRole.boss) {
+      return switch (dungeonId) {
+        'sandy' => enemyCrab,
+        'goblin' => enemyCyclops,
+        'king' => enemyBoss,
+        'underworld' => enemyCultist,
+        'dead' => enemyGhost,
+        'hell' => enemyBoss,
+        _ => enemyBoss,
+      };
+    }
+    if (role == EnemyRole.elite) {
+      return switch (dungeonId) {
+        'dead' => enemyGhost,
+        'underworld' => enemySpider,
+        'hell' => enemyCultist,
+        _ => enemyCyclops,
+      };
+    }
+    return switch (dungeonId) {
+      'sandy' => enemySlime,
+      'goblin' => enemyRat,
+      'king' => enemyBat,
+      'underworld' => enemySpider,
+      'dead' => enemyGhost,
+      'hell' => enemyCultist,
+      _ => enemySlime,
+    };
+  }
+
+  static String enemySpriteFor(
+    EnemyUnit enemy, {
+    String? dungeonId,
+  }) {
+    if (enemy.role == EnemyRole.boss) {
+      return enemySpriteForRole(EnemyRole.boss, dungeonId: dungeonId);
+    }
+    return switch (enemy.archetype) {
+      EnemyArchetype.swarm => switch (dungeonId) {
+          'sandy' => enemySlime,
+          'goblin' => enemyRat,
+          'king' => enemyBat,
+          'underworld' => enemySpider,
+          'dead' => enemyGhost,
+          _ => enemyRat,
+        },
+      EnemyArchetype.brute => switch (dungeonId) {
+          'sandy' => enemyCrab,
+          'goblin' => enemyCyclops,
+          'king' => enemyCyclops,
+          'hell' => enemyBoss,
+          _ => enemyCyclops,
+        },
+      EnemyArchetype.tank => switch (dungeonId) {
+          'sandy' => enemyCrab,
+          'dead' => enemyGhost,
+          'hell' => enemyBoss,
+          _ => enemyGolem,
+        },
+      EnemyArchetype.ranged => switch (dungeonId) {
+          'dead' => enemyGhost,
+          'underworld' => enemySpider,
+          'hell' => enemyCultist,
+          _ => enemyBat,
+        },
+      EnemyArchetype.glass => switch (dungeonId) {
+          'dead' => enemyGhost,
+          'underworld' => enemySpider,
+          _ => enemyRat,
+        },
+      EnemyArchetype.support => enemyCultist,
+    };
+  }
+
+  static List<String> get enemySpriteCatalog => [
+        enemySlime,
+        enemyRat,
+        enemyBat,
+        enemySpider,
+        enemyGhost,
+        enemyCultist,
+        enemyCyclops,
+        enemyCrab,
+        enemyGolem,
+        enemyBoss,
+      ];
+
+  static int enemySpriteCatalogIndex(String asset) {
+    final i = enemySpriteCatalog.indexOf(asset);
+    return i < 0 ? 0 : i;
+  }
 
   static String lootIconFor(LootRarity rarity) => switch (rarity) {
-    LootRarity.common => coinGold,
-    LootRarity.uncommon => meat,
-    LootRarity.rare => potionBlue,
-    LootRarity.epic => chestClosed,
-  };
+        LootRarity.common => coinGold,
+        LootRarity.uncommon => potionGreen,
+        LootRarity.rare => vialBlue,
+        LootRarity.epic => chestClosed,
+      };
 
-  static String equipmentIconFor(EquipmentItem item) => switch (item.slot) {
-    EquipmentSlot.weapon => sword,
-    EquipmentSlot.armor => shield,
-  };
+  static String equipmentIconFor(EquipmentItem item) {
+    if (item.iconId != null) {
+      switch (item.iconId) {
+        case 'bow':
+          return iconBow;
+        case 'book':
+          return book;
+        default:
+          break;
+      }
+    }
+
+    if (item.slot == EquipmentSlot.offHand) {
+      if (item.offHandKind == OffHandKind.frill) return book;
+      return item.rarity.index >= 1 ? shield : shieldRound;
+    }
+
+    if (item.slot == EquipmentSlot.weapon || item.slot == EquipmentSlot.ranged) {
+      return switch (item.weaponType) {
+        WeaponType.axe => axe,
+        WeaponType.sword =>
+          item.rarity.index >= 2 ? swordAlt : sword,
+        WeaponType.mace => hammer,
+        WeaponType.dagger || WeaponType.fist => dagger,
+        WeaponType.staff =>
+          item.rarity.index >= 2 ? staffBlue : staff,
+        WeaponType.polearm => spear,
+        WeaponType.bow ||
+        WeaponType.crossbow ||
+        WeaponType.gun ||
+        WeaponType.thrown =>
+          iconBow,
+        WeaponType.wand => staffBlue,
+        null => switch (item.affinity) {
+            'mage' => item.rarity.index >= 2 ? staffBlue : staff,
+            'rogue' => dagger,
+            'healer' => item.rarity.index >= 2 ? staffBlue : spear,
+            'warrior' => item.rarity.index >= 3
+                ? axe
+                : (item.rarity.index >= 2 ? swordAlt : sword),
+            _ => sword,
+          },
+      };
+    }
+
+    return switch (item.slot) {
+      EquipmentSlot.head ||
+      EquipmentSlot.shoulder ||
+      EquipmentSlot.chest ||
+      EquipmentSlot.waist ||
+      EquipmentSlot.legs ||
+      EquipmentSlot.wrist ||
+      EquipmentSlot.hands =>
+        helmet,
+      EquipmentSlot.cloak => cloak,
+      EquipmentSlot.boots => boots,
+      EquipmentSlot.ring ||
+      EquipmentSlot.ring2 ||
+      EquipmentSlot.neck ||
+      EquipmentSlot.trinket ||
+      EquipmentSlot.trinket2 =>
+        ring,
+      EquipmentSlot.consumable => switch (item.rarity) {
+          LootRarity.common => potionRed,
+          LootRarity.uncommon => potionGreen,
+          LootRarity.rare => potionBlue,
+          LootRarity.epic => vialBlue,
+        },
+      _ => sword,
+    };
+  }
 
   static String lootDropIconFor(LootDrop drop) {
     final item = drop.equipment;
-    if (item != null) {
-      return equipmentIconFor(item);
-    }
+    if (item != null) return equipmentIconFor(item);
+    final name = drop.name.toLowerCase();
+    if (name.contains('gold')) return coinGold;
+    if (name.contains('essence')) return vialBlue;
+    if (name.contains('relic') || name.contains('shard')) return ring;
+    if (name.contains('sigil')) return iconTrophy;
+    if (name.contains('dust')) return potionGreen;
     return lootIconFor(drop.rarity);
   }
 
   static String relicIconFor(String relicId) => switch (relicId) {
-    GameLogic.warBannerRelic => relicWarBanner,
-    GameLogic.ironWardRelic => relicIronWard,
-    GameLogic.phoenixEmberRelic => relicPhoenixEmber,
-    _ => relicWarBanner,
-  };
+        GameLogic.warBannerRelic => relicWarBanner,
+        GameLogic.ironWardRelic => relicIronWard,
+        GameLogic.phoenixEmberRelic => relicPhoenixEmber,
+        _ => relicWarBanner,
+      };
 
   static String forgeIconFor(String title) {
     final upper = title.toUpperCase();
-    if (upper.contains('ATTACK')) {
-      return sword;
-    }
-    if (upper.contains('DEFENSE')) {
-      return shield;
-    }
-    if (upper.contains('VITALITY')) {
-      return potionRed;
-    }
-    if (upper.contains('TRAIN')) {
-      return book;
-    }
-    return meat;
+    if (upper.contains('ATTACK')) return sword;
+    if (upper.contains('DEFENSE')) return shield;
+    if (upper.contains('VITALITY')) return potionRed;
+    if (upper.contains('TRAIN')) return book;
+    if (upper.contains('FORGE') || upper.contains('ANVIL')) return anvil;
+    return hammer;
   }
 }

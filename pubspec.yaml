@@ -61,10 +61,12 @@ flutter:
 
   assets:
     - assets/kenney/tiny_dungeon/
+    - assets/kenney/extras/
     - assets/kenney/ui_adventure/
     - assets/kenney/ui_bars/
     - assets/kenney/icons/
     - assets/kenney/runes/
+    - assets/kenney/roguelike_char/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

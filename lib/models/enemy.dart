@@ -3,6 +3,27 @@ import 'stats.dart';
 /// Visual/combat role of an enemy within a room group.
 enum EnemyRole { normal, elite, boss }
 
+/// Combat identity — drives stats skew, AI, and sprite.
+enum EnemyArchetype {
+  /// Many weak melee bodies.
+  swarm,
+
+  /// Balanced frontliner.
+  brute,
+
+  /// High HP / DEF, slow melee.
+  tank,
+
+  /// Keeps distance, moderate HP.
+  ranged,
+
+  /// High ATK, low HP, fast.
+  glass,
+
+  /// Soft support caster (ranged, low HP).
+  support,
+}
+
 class EnemyUnit {
   const EnemyUnit({
     required this.name,
@@ -11,6 +32,7 @@ class EnemyUnit {
     required this.stats,
     required this.rewardGold,
     this.role = EnemyRole.normal,
+    this.archetype = EnemyArchetype.brute,
   });
 
   final String name;
@@ -19,6 +41,7 @@ class EnemyUnit {
   final Stats stats;
   final int rewardGold;
   final EnemyRole role;
+  final EnemyArchetype archetype;
 
   // All stat scaling is baked into [stats] by `GameLogic.createEnemyGroup`
   // (single source of truth — avoids double level scaling).
@@ -44,6 +67,7 @@ class EnemyUnit {
     int? rewardGold,
     String? name,
     EnemyRole? role,
+    EnemyArchetype? archetype,
   }) {
     return EnemyUnit(
       name: name ?? this.name,
@@ -52,6 +76,7 @@ class EnemyUnit {
       stats: stats ?? this.stats,
       rewardGold: rewardGold ?? this.rewardGold,
       role: role ?? this.role,
+      archetype: archetype ?? this.archetype,
     );
   }
 
@@ -62,10 +87,12 @@ class EnemyUnit {
     'stats': stats.toJson(),
     'rewardGold': rewardGold,
     'role': role.name,
+    'archetype': archetype.name,
   };
 
   factory EnemyUnit.fromJson(Map<String, dynamic> json) {
     final roleName = json['role'] as String?;
+    final archName = json['archetype'] as String?;
     return EnemyUnit(
       name: json['name'] as String,
       level: json['level'] as int,
@@ -75,6 +102,9 @@ class EnemyUnit {
       role: roleName == null
           ? EnemyRole.normal
           : EnemyRole.values.byName(roleName),
+      archetype: archName == null
+          ? EnemyArchetype.brute
+          : EnemyArchetype.values.byName(archName),
     );
   }
 }

@@ -43,3 +43,33 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# --- Legal hygiene: never commit other games' binaries or dumps ---
+*.apk
+*.aab
+*.ipa
+*.obb
+*.swf
+*.dex
+.tmp_is2_apk/
+.tmp_is2_ui/
+.tmp_*_apk/
+.tmp_*_dump/
+idle-sword*
+IdleSword*
+# Large Kenney all-in-one archives (shipped art lives under assets/kenney/)
+/Kenney Game Assets*.zip
+/2D assets/
+/3D assets/
+/Archive/
+/Audio/
+/Early access/
+/Goodies/
+/Icons/
+/Other/
+/UI assets/
+/Overview.html
+/Readme.html
+/Visit Kenney*
+/assets.json
+.cursor/

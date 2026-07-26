@@ -1,85 +1,84 @@
 import 'dart:math';
 
+import '../models/dungeon_def.dart';
 import '../models/dungeon_room.dart';
 
 class DungeonGenerator {
-  static const _roomsPerFloor = 10;
-  static const _eliteRoomChance = 0.2; // 20% elite rooms
+  /// Boss floor: early floors then a boss every few floors; scales with ascension.
+  static int bossFloorFor(int ascensionLevel) =>
+      DungeonCatalog.bossFloor(ascensionLevel);
 
-  /// Generate a full floor (10 rooms) - deterministic based on floor number
-  static List<DungeonRoom> generateFloor(int floorNumber) {
-    final rooms = <DungeonRoom>[];
-    final baseLevelForFloor = (floorNumber - 1) * 3 + 1;
-    // Seed random with floor number for consistency
+  /// Build the single combat encounter that represents [floorNumber].
+  static DungeonRoom generateFloorRoom({
+    required int floorNumber,
+    required int ascensionLevel,
+    required String dungeonId,
+    int layoutSeed = 0,
+  }) {
     final random = Random(
-      floorNumber * 7919,
-    ); // Use prime for seed distribution
+      floorNumber * 7919 + dungeonId.hashCode + layoutSeed,
+    );
+    final bossFloor = bossFloorFor(ascensionLevel);
+    final isBoss = floorNumber == bossFloor;
+    final isTreasure = !isBoss && floorNumber % 4 == 0;
+    final type = isBoss
+        ? RoomType.boss
+        : (isTreasure
+            ? RoomType.treasure
+            : (random.nextDouble() < 0.22 ? RoomType.elite : RoomType.normal));
 
-    for (int i = 0; i < _roomsPerFloor; i++) {
-      final type = _determineRoomType(i, random);
-      final enemyLevel = baseLevelForFloor + random.nextInt(4);
-      final enemyCount = _enemyCountForType(type, random);
+    final baseLevel = (floorNumber - 1) * 2 + 1;
+    final enemyLevel = baseLevel + random.nextInt(3);
+    final enemyCount = _enemyCountForType(type, random, floorNumber);
 
-      rooms.add(
-        DungeonRoom(
-          floorNumber: floorNumber,
-          roomIndex: i,
-          type: type,
-          enemyLevel: enemyLevel,
-          isCleared: false,
-          enemyCount: enemyCount,
-        ),
-      );
-    }
-
-    return rooms;
+    return DungeonRoom(
+      floorNumber: floorNumber,
+      roomIndex: 0,
+      type: type,
+      enemyLevel: enemyLevel,
+      enemyCount: enemyCount,
+    );
   }
 
-  /// Group size per room type (deterministic via the floor-seeded random).
-  static int _enemyCountForType(RoomType type, Random random) {
+  /// Compatibility: returns a 1-element floor list (the current wave).
+  static List<DungeonRoom> generateFloor(
+    int floorNumber, {
+    int ascensionLevel = 0,
+    String dungeonId = 'sandy',
+    int layoutSeed = 0,
+  }) {
+    return <DungeonRoom>[
+      generateFloorRoom(
+        floorNumber: floorNumber,
+        ascensionLevel: ascensionLevel,
+        dungeonId: dungeonId,
+        layoutSeed: layoutSeed,
+      ),
+    ];
+  }
+
+  static int _enemyCountForType(RoomType type, Random random, int floor) {
     return switch (type) {
-      RoomType.boss => 3, // 1 boss + 2 guards
-      RoomType.elite => 2 + random.nextInt(2), // 2-3
-      RoomType.treasure => 0, // combat-free chest room
-      RoomType.normal => 1 + (random.nextDouble() < 0.45 ? 1 : 0), // 1-2
+      RoomType.boss => 5 + random.nextInt(2),
+      RoomType.elite => 5 + random.nextInt(3),
+      RoomType.treasure => 0,
+      RoomType.normal => 4 + (floor ~/ 2).clamp(0, 5) + random.nextInt(3),
     };
   }
 
-  /// Thematic zone name per floor range (Idle Sword 2 homage).
-  static String zoneNameForFloor(int floorNumber) {
-    if (floorNumber <= 3) return 'Sandy Caverns';
-    if (floorNumber <= 6) return "Goblin's Hideout";
-    if (floorNumber <= 9) return "King's Fort";
-    if (floorNumber <= 12) return 'Underworld';
-    if (floorNumber <= 15) return 'City of Dead';
-    return "Hell's Door";
+  static String zoneNameForFloor(int floorNumber, {String dungeonId = 'sandy'}) {
+    return DungeonCatalog.byId(dungeonId).name;
   }
 
-  /// Determine room type based on position in floor
-  static RoomType _determineRoomType(int roomIndex, Random random) {
-    // Boss room is always last (room 10)
-    if (roomIndex == _roomsPerFloor - 1) return RoomType.boss;
-
-    // Treasure rooms at indices 4, 9 (every 5 rooms)
-    if (roomIndex % 5 == 4) return RoomType.treasure;
-
-    // Random elite rooms (deterministic based on seeded random)
-    if (random.nextDouble() < _eliteRoomChance) return RoomType.elite;
-
-    return RoomType.normal;
-  }
-
-  /// Get visual representation of room layout for mini-map
   static String getRoomVisualType(RoomType type) {
     return switch (type) {
-      RoomType.boss => '👑',
-      RoomType.elite => '⚔️',
-      RoomType.treasure => '💎',
-      RoomType.normal => '🗡️',
+      RoomType.boss => 'B',
+      RoomType.elite => 'E',
+      RoomType.treasure => 'T',
+      RoomType.normal => 'N',
     };
   }
 
-  /// Difficulty multiplier for room type
   static double getDifficultyMultiplier(RoomType type) {
     return switch (type) {
       RoomType.boss => 1.8,

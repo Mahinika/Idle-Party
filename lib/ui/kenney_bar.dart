@@ -132,13 +132,14 @@ class RpgProgressBar extends StatelessWidget {
 
   String get _borderAsset => switch (color) {
     KenneyBarColor.green => KenneyAssets.progressGreenBorder,
+    // No yellow rounded fill in the pack — use white border + yellow tint in paint.
     KenneyBarColor.yellow => KenneyAssets.progressBlueBorder,
     KenneyBarColor.red => KenneyAssets.progressRedBorder,
   };
 
   String get _fillAsset => switch (color) {
     KenneyBarColor.green => KenneyAssets.progressGreen,
-    KenneyBarColor.yellow => KenneyAssets.progressBlue,
+    KenneyBarColor.yellow => KenneyAssets.progressWhite,
     KenneyBarColor.red => KenneyAssets.progressRed,
   };
 
@@ -161,12 +162,25 @@ class RpgProgressBar extends StatelessWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 widthFactor: clamped,
-                child: Image.asset(
-                  _fillAsset,
-                  fit: BoxFit.fill,
-                  filterQuality: FilterQuality.none,
-                  isAntiAlias: false,
-                ),
+                child: color == KenneyBarColor.yellow
+                    ? ColorFiltered(
+                        colorFilter: const ColorFilter.mode(
+                          Color(0xFFFFD54A),
+                          BlendMode.modulate,
+                        ),
+                        child: Image.asset(
+                          _fillAsset,
+                          fit: BoxFit.fill,
+                          filterQuality: FilterQuality.none,
+                          isAntiAlias: false,
+                        ),
+                      )
+                    : Image.asset(
+                        _fillAsset,
+                        fit: BoxFit.fill,
+                        filterQuality: FilterQuality.none,
+                        isAntiAlias: false,
+                      ),
               ),
             ),
         ],
