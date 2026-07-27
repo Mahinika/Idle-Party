@@ -32,10 +32,16 @@ jobs:
         run: flutter pub get
 
       - name: Decode release keystore (optional)
-        if: ${{ secrets.KEYSTORE_BASE64 != '' && secrets.KEY_PROPERTIES != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_PROPERTIES: ${{ secrets.KEY_PROPERTIES }}
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
-          echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEY_PROPERTIES" ]; then
+            echo "No upload keystore secrets; Flutter will use debug signing."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          printf '%s\n' "$KEY_PROPERTIES" > android/key.properties
 
       - name: Build release APK
         run: flutter build apk --release
