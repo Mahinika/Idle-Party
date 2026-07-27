@@ -31,6 +31,12 @@ jobs:
       - name: Dependencies
         run: flutter pub get
 
+      - name: Decode release keystore (optional)
+        if: ${{ secrets.KEYSTORE_BASE64 != '' && secrets.KEY_PROPERTIES != '' }}
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
+          echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
+
       - name: Build release APK
         run: flutter build apk --release
 

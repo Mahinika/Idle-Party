@@ -1,94 +1,45 @@
-# Idle Party - Advanced Idle RPG Engine
+# Idle Party
 
-A modular, scalable Flutter/Dart-based idle RPG game engine with:
-- **Modular Architecture**: Clean separation of concerns with isolated systems and managers
-- **Null-Safe Dart**: Complete null-safety implementation
-- **JSON-Driven Data**: All game data loaded from JSON files
-- **Centralized Orchestration**: GameDirector controls the entire game loop
-- **Strict Update Order**: 15-step update pipeline ensuring consistent game state
-- **Zero Circular Dependencies**: Clean dependency tree throughout
-- **High Performance**: Efficient DPS pipeline with category-based multipliers
-- **Easy to Extend**: Clear patterns for adding new systems, heroes, skills, and progression
+A Flutter idle RPG: party combat on a spatial dungeon map, Farm/Push modes, gear, pets, sanctuary, and Ascend prestige.
 
-## Project Structure
+Art uses [Kenney](https://kenney.nl) CC0 assets. Game systems and code are original to this project.
+
+## Play
+
+```bash
+flutter pub get
+flutter run -d web-server --web-hostname=localhost --web-port=8080
+# or
+flutter run -d chrome
+flutter run   # Android / desktop
+```
+
+## Build APK
+
+```bash
+flutter build apk --release
+```
+
+Without `android/key.properties`, release APKs are **debug-signed** (fine for sideload). For Play / proper release:
+
+1. Create a keystore and copy `android/key.properties.example` → `android/key.properties`
+2. Point `storeFile` at your `.jks` (path relative to `android/app/`)
+3. Rebuild — Gradle picks up the release signing config automatically
+
+GitHub Actions builds an APK on tags matching `v*` (see `.github/workflows/build-apk.yml`). Optional secrets `KEYSTORE_BASE64`, `KEY_PROPERTIES` enable release signing in CI. Push also runs analyze + tests (`.github/workflows/ci.yml`).
+
+## Layout
 
 ```
 lib/
-├── core/
-│   ├── game_director.dart      # Central game orchestrator
-│   └── dps_pipeline.dart       # Category-based DPS multiplier system
-├── models/
-│   ├── hero.dart               # Hero data model
-│   ├── enemy.dart              # Enemy data model
-│   └── stats.dart              # Character statistics
-├── systems/                    # Game systems (each isolated)
-│   ├── weather_system.dart
-│   ├── event_system.dart
-│   ├── dungeon_system.dart
-│   ├── buff_system.dart
-│   ├── debuff_system.dart
-│   ├── skill_system.dart
-│   ├── ai_system.dart
-│   ├── combat_system.dart
-│   ├── economy_system.dart
-│   ├── idle_system.dart
-│   ├── prestige_system.dart
-│   ├── ascension_system.dart
-│   ├── formation_system.dart
-│   ├── team_dps_system.dart
-│   ├── relic_system.dart
-│   ├── pet_system.dart
-│   ├── rune_system.dart
-│   └── artifact_system.dart
-├── managers/                   # Game managers
-│   ├── buff_manager.dart
-│   ├── debuff_manager.dart
-│   ├── skill_trigger_budget.dart
-│   └── caps_manager.dart
-├── data/                       # JSON game data
-│   ├── heroes.json
-│   ├── enemies.json
-│   ├── skills.json
-│   ├── items.json
-│   ├── dungeon_modifiers.json
-│   ├── weather.json
-│   └── events.json
-└── main.dart
+├── core/          # GameDirector, GameLogic, GameState
+├── models/        # Heroes, loot, rooms, pets
+├── spatial/       # Tile combat simulation
+└── ui/            # Shell, dungeon view, hub overlays
 ```
 
-## Update Order (Strict)
+## Notes
 
-1. Weather
-2. Events
-3. Dungeon Modifiers
-4. Buffs
-5. Debuffs
-6. Skills
-7. AI
-8. Combat
-9. Economy
-10. Idle
-11. Prestige
-12. Ascension
-13. Meta Progression
-14. Loot
-15. UI
-
-## Architecture Principles
-
-- **Isolation**: All systems operate independently with clear contracts
-- **Data-Driven**: Game mechanics defined in JSON, not hardcoded
-- **Dependency Injection**: Systems accept their dependencies as parameters
-- **No Global State**: Everything flows through GameDirector
-- **Testable**: Each system can be tested independently
-- **Extensible**: New systems follow the same pattern
-
-## Getting Started
-
-1. Clone the repository
-2. Run `flutter pub get`
-3. Run `flutter run`
-
-## Development
-
-See ARCHITECTURE.md for detailed design patterns and guidelines.
+- Saves use SharedPreferences (`idle_party_save_v2`).
+- Mute in Settings silences system SFX / haptics.
+- Android application id: `com.idleparty.app`.

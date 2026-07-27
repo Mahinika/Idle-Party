@@ -1,10 +1,14 @@
+﻿import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'core/equipment_factory.dart';
 import 'core/game_director.dart';
 import 'ui/game_audio.dart';
 import 'ui/game_theme.dart';
 import 'ui/hub_screen.dart';
+import 'ui/intro_screen.dart';
 import 'ui/is2_shell.dart';
 
 void main() {
@@ -12,10 +16,18 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, this.director, this.autoStartLoop = true});
+  const MyApp({
+    super.key,
+    this.director,
+    this.autoStartLoop = true,
+    this.showIntro = true,
+  });
 
   final GameDirector? director;
   final bool autoStartLoop;
+
+  /// Cold-start title card. Tests set this false to land on the hub immediately.
+  final bool showIntro;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +53,7 @@ class MyApp extends StatelessWidget {
       home: GameHomePage(
         director: director ?? GameDirector.persistent(),
         autoStartLoop: autoStartLoop,
+        showIntro: showIntro,
       ),
     );
   }
@@ -51,10 +64,12 @@ class GameHomePage extends StatefulWidget {
     super.key,
     required this.director,
     required this.autoStartLoop,
+    this.showIntro = true,
   });
 
   final GameDirector director;
   final bool autoStartLoop;
+  final bool showIntro;
 
   @override
   State<GameHomePage> createState() => _GameHomePageState();
@@ -63,14 +78,17 @@ class GameHomePage extends StatefulWidget {
 class _GameHomePageState extends State<GameHomePage> {
   GameDirector get _director => widget.director;
   Is2Overlay? _hubOverlay;
+  late bool _showIntro;
 
   @override
   void initState() {
     super.initState();
+    _showIntro = widget.showIntro;
     _bootstrap();
   }
 
   Future<void> _bootstrap() async {
+    unawaited(EquipmentFactory.loadAffixes());
     await _director.boot();
     GameAudio.muted = _director.state.soundMuted;
   }
@@ -86,62 +104,93 @@ class _GameHomePageState extends State<GameHomePage> {
     return AnimatedBuilder(
       animation: _director,
       builder: (context, _) {
-        return Scaffold(
-          body: SafeArea(
-            child: _director.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _director.state.inDungeon
-                    ? Is2Shell(
-                        director: _director,
-                        pulse: 0.5,
-                        onLeaveDungeon: _director.leaveDungeon,
-                      )
-                    : Stack(
-                        children: [
-                          HubScreen(
-                            director: _director,
-                            onEnterDungeon: (id) =>
-                                _director.enterDungeon(dungeonId: id),
-                            onOpenInventory: () => setState(
-                              () => _hubOverlay = Is2Overlay.inventory,
-                            ),
-                            onOpenForge: () => setState(
-                              () => _hubOverlay = Is2Overlay.forge,
-                            ),
-                            onOpenJobs: () => setState(
-                              () => _hubOverlay = Is2Overlay.jobs,
-                            ),
-                            onOpenSanctuary: () => setState(
-                              () => _hubOverlay = Is2Overlay.sanctuary,
-                            ),
-                            onOpenMarket: () => setState(
-                              () => _hubOverlay = Is2Overlay.market,
-                            ),
-                            onOpenBeast: () => setState(
-                              () => _hubOverlay = Is2Overlay.beast,
-                            ),
-                            onOpenSettings: () => setState(
-                              () => _hubOverlay = Is2Overlay.settings,
-                            ),
-                          ),
-                          if (_hubOverlay != null)
-                            Positioned.fill(
-                              child: Material(
-                                color: const Color(0xF20A0806),
-                                child: Is2Shell(
-                                  key: ValueKey(_hubOverlay),
-                                  director: _director,
-                                  pulse: 0.5,
-                                  hubMode: true,
-                                  initialOverlay: _hubOverlay!,
-                                  onLeaveDungeon: () => setState(
-                                    () => _hubOverlay = null,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
+        final loading = _director.isLoading;
+        final showIntro = !loading && _showIntro;
+
+        Widget body;
+        if (loading) {
+          body = const Center(
+            child: SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: GameTheme.torch,
+              ),
+            ),
+          );
+        } else if (showIntro) {
+          body = IntroScreen(
+            onFinished: () => setState(() => _showIntro = false),
+          );
+        } else if (_director.state.inDungeon) {
+          body = Is2Shell(
+            director: _director,
+            pulse: 0.5,
+            onLeaveDungeon: _director.leaveDungeon,
+          );
+        } else {
+          body = Stack(
+            children: [
+              HubScreen(
+                director: _director,
+                onEnterDungeon: (id) =>
+                    _director.enterDungeon(dungeonId: id),
+                onOpenInventory: () => setState(
+                  () => _hubOverlay = Is2Overlay.inventory,
+                ),
+                onOpenForge: () => setState(
+                  () => _hubOverlay = Is2Overlay.forge,
+                ),
+                onOpenJobs: () => setState(
+                  () => _hubOverlay = Is2Overlay.jobs,
+                ),
+                onOpenSanctuary: () => setState(
+                  () => _hubOverlay = Is2Overlay.sanctuary,
+                ),
+                onOpenMarket: () => setState(
+                  () => _hubOverlay = Is2Overlay.market,
+                ),
+                onOpenBeast: () => setState(
+                  () => _hubOverlay = Is2Overlay.beast,
+                ),
+                onOpenSettings: () => setState(
+                  () => _hubOverlay = Is2Overlay.settings,
+                ),
+              ),
+              if (_hubOverlay != null)
+                Positioned.fill(
+                  child: Material(
+                    color: const Color(0xF20A0806),
+                    child: Is2Shell(
+                      key: ValueKey(_hubOverlay),
+                      director: _director,
+                      pulse: 0.5,
+                      hubMode: true,
+                      initialOverlay: _hubOverlay!,
+                      onLeaveDungeon: () => setState(
+                        () => _hubOverlay = null,
                       ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        }
+
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(
+              loading ? 1.0 : _director.state.uiTextScale,
+            ),
+          ),
+          child: Scaffold(
+            body: SafeArea(
+              // Intro paints its own SafeArea so vignette can go edge-to-edge.
+              top: !showIntro,
+              bottom: !showIntro,
+              child: body,
+            ),
           ),
         );
       },

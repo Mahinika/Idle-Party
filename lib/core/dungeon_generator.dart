@@ -20,12 +20,17 @@ class DungeonGenerator {
     );
     final bossFloor = bossFloorFor(ascensionLevel);
     final isBoss = floorNumber == bossFloor;
-    final isTreasure = !isBoss && floorNumber % 4 == 0;
+    final isTreasure = !isBoss && floorNumber % 6 == 0;
+    // Elites often; guaranteed mini-boss every 3rd combat floor.
+    final eliteRoll = random.nextDouble() < 0.38;
+    final guaranteedElite = !isBoss && !isTreasure && floorNumber % 3 == 0;
     final type = isBoss
         ? RoomType.boss
         : (isTreasure
             ? RoomType.treasure
-            : (random.nextDouble() < 0.22 ? RoomType.elite : RoomType.normal));
+            : ((eliteRoll || guaranteedElite)
+                ? RoomType.elite
+                : RoomType.normal));
 
     final baseLevel = (floorNumber - 1) * 2 + 1;
     final enemyLevel = baseLevel + random.nextInt(3);
@@ -59,10 +64,10 @@ class DungeonGenerator {
 
   static int _enemyCountForType(RoomType type, Random random, int floor) {
     return switch (type) {
-      RoomType.boss => 5 + random.nextInt(2),
-      RoomType.elite => 5 + random.nextInt(3),
+      RoomType.boss => 6 + random.nextInt(2),
+      RoomType.elite => 6 + random.nextInt(2) + (floor ~/ 4).clamp(0, 2),
       RoomType.treasure => 0,
-      RoomType.normal => 4 + (floor ~/ 2).clamp(0, 5) + random.nextInt(3),
+      RoomType.normal => 5 + (floor ~/ 3).clamp(0, 4) + random.nextInt(2),
     };
   }
 
@@ -81,10 +86,10 @@ class DungeonGenerator {
 
   static double getDifficultyMultiplier(RoomType type) {
     return switch (type) {
-      RoomType.boss => 1.8,
-      RoomType.elite => 1.4,
+      RoomType.boss => 2.1,
+      RoomType.elite => 1.55,
       RoomType.treasure => 0.9,
-      RoomType.normal => 1.0,
+      RoomType.normal => 1.15,
     };
   }
 }

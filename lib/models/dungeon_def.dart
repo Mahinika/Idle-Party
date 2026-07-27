@@ -77,6 +77,15 @@ abstract final class DungeonCatalog {
       bossName: 'Chtulu',
       unlockPrice: 200000,
     ),
+    DungeonDef(
+      number: 6,
+      id: 'crystal',
+      name: 'Crystal Spire',
+      layout: DungeonLayoutKind.arena,
+      bossId: 'crystal_warden',
+      bossName: 'Crystal Warden',
+      unlockPrice: 400000,
+    ),
   ];
 
   static DungeonDef byId(String id) {

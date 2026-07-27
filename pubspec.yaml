@@ -1,5 +1,5 @@
 name: idle_party
-description: "A new Flutter project."
+description: "Idle Party — spatial idle RPG with party combat, dungeons, and Kenney art."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -67,6 +67,12 @@ flutter:
     - assets/kenney/icons/
     - assets/kenney/runes/
     - assets/kenney/roguelike_char/
+    - assets/custom/pets/
+    - assets/custom/icons/
+    - assets/custom/portraits/
+    - assets/custom/enemies/
+    - assets/custom/ui/
+    - assets/data/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

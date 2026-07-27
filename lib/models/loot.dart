@@ -19,7 +19,7 @@ enum WeaponType {
 
 enum WeaponHanded { oneHand, twoHand }
 
-enum OffHandKind { shield, frill }
+enum OffHandKind { shield, frill, weapon }
 
 enum EquipmentSlot {
   weapon,
@@ -182,7 +182,11 @@ class EquipmentItem {
 
   String get typeLabel {
     if (slot == EquipmentSlot.offHand) {
-      return (offHandKind ?? OffHandKind.shield).name;
+      return switch (offHandKind ?? OffHandKind.shield) {
+        OffHandKind.shield => 'shield',
+        OffHandKind.frill => 'tome',
+        OffHandKind.weapon => 'weapon',
+      };
     }
     if (weaponType != null) {
       final h = handed;

@@ -34,14 +34,18 @@ class CombatRatings {
   static const int kAp = 4;
 
   static int roleHpBase(HeroRole role) => switch (role) {
-        HeroRole.warrior => 0,
-        HeroRole.healer => 4,
-        HeroRole.mage => 0,
-        HeroRole.rogue => 2,
+        HeroRole.warrior => 28,
+        HeroRole.healer => 16,
+        HeroRole.mage => 12,
+        HeroRole.rogue => 14,
       };
 
-  static int roleBaseArmor(HeroRole role) =>
-      role == HeroRole.warrior ? 2 : 0;
+  static int roleBaseArmor(HeroRole role) => switch (role) {
+        HeroRole.warrior => 6,
+        HeroRole.rogue => 3,
+        HeroRole.healer => 1,
+        HeroRole.mage => 1,
+      };
 
   static int roleBaseCrit(HeroRole role) =>
       role == HeroRole.rogue ? 12 : 5;

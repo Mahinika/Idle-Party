@@ -44,6 +44,11 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Release signing (never commit secrets)
+/android/key.properties
+*.jks
+*.keystore
+
 # --- Legal hygiene: never commit other games' binaries or dumps ---
 *.apk
 *.aab

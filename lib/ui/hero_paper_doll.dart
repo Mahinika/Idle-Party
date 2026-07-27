@@ -127,7 +127,9 @@ class HeroPaperDoll {
 
   static DollLayer? shieldFor(PartyHero hero) {
     final shield = hero.itemIn(EquipmentSlot.offHand);
-    if (shield == null || shield.offHandKind == OffHandKind.frill) {
+    if (shield == null ||
+        shield.offHandKind == OffHandKind.frill ||
+        shield.offHandKind == OffHandKind.weapon) {
       return null;
     }
     final tier = _rarityTier(shield.rarity);

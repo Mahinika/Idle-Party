@@ -8,11 +8,14 @@ import '../core/dungeon_generator.dart';
 import '../core/game_state.dart';
 import '../models/dungeon_def.dart';
 import '../models/dungeon_room.dart';
+import 'confirm_dialogs.dart';
+import 'dungeon_environment.dart';
 import 'game_theme.dart';
 import 'kenney_assets.dart';
 import 'kenney_button.dart';
 import 'kenney_panel.dart';
 import 'kenney_sprite.dart';
+import 'meta_overlays.dart';
 
 /// Idle Party hub: dungeon select / meta / ascend.
 class HubScreen extends StatefulWidget {
@@ -47,6 +50,7 @@ class _HubScreenState extends State<HubScreen>
     with SingleTickerProviderStateMixin {
   late String _selectedId;
   late final AnimationController _torch;
+  bool _offlineDialogShown = false;
 
   GameDirector get director => widget.director;
   GameState get state => director.state;
@@ -59,6 +63,15 @@ class _HubScreenState extends State<HubScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     )..repeat(reverse: true);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOffline());
+  }
+
+  Future<void> _maybeShowOffline() async {
+    if (_offlineDialogShown || !mounted || director.offlineSummary == null) {
+      return;
+    }
+    _offlineDialogShown = true;
+    await showOfflineProgressDialog(context, director);
   }
 
   @override
@@ -94,8 +107,17 @@ class _HubScreenState extends State<HubScreen>
                   radius: 1.15,
                   colors: [
                     Color.lerp(
-                      const Color(0xFF2A2214),
-                      const Color(0xFF3A2E18),
+                      Color.lerp(
+                        const Color(0xFF2A2214),
+                        DungeonEnvironment.ambient(_selectedId),
+                        0.65,
+                      )!,
+                      Color.lerp(
+                        const Color(0xFF3A2E18),
+                        DungeonEnvironment.atmosphereWash(_selectedId)
+                            .withValues(alpha: 1),
+                        0.35,
+                      )!,
                       flicker,
                     )!,
                     GameTheme.ink,
@@ -105,7 +127,10 @@ class _HubScreenState extends State<HubScreen>
             ),
             Positioned.fill(
               child: CustomPaint(
-                painter: _HubAtmospherePainter(pulse: _torch.value),
+                painter: _HubAtmospherePainter(
+                  pulse: _torch.value,
+                  dungeonId: _selectedId,
+                ),
               ),
             ),
             SafeArea(
@@ -126,7 +151,8 @@ class _HubScreenState extends State<HubScreen>
                       const SizedBox(height: 8),
                       _OfflineBanner(
                         text: director.offlineSummary!.headline,
-                        onDismiss: director.dismissOfflineSummary,
+                        onDismiss: () =>
+                            showOfflineProgressDialog(context, director),
                       ),
                     ],
                     if (director.toast != null) ...[
@@ -220,7 +246,7 @@ class _HubScreenState extends State<HubScreen>
                                 Text(
                                   unlockedSelected
                                       ? 'Boss: ${selected.bossName}'
-                                      : 'Locked · ${selected.unlockPrice}g',
+                                      : 'Needs ${selected.unlockPrice} lifetime gold',
                                   style: GameTheme.body(
                                     size: 14,
                                     color: GameTheme.parchmentDim,
@@ -239,7 +265,9 @@ class _HubScreenState extends State<HubScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
+                    ChallengeToggles(director: director),
+                    const SizedBox(height: 8),
                     Transform.scale(
                       scale: 1.0 + (_torch.value * 0.012),
                       child: KenneyButton(
@@ -250,6 +278,18 @@ class _HubScreenState extends State<HubScreen>
                             : null,
                       ),
                     ),
+                    const SizedBox(height: 6),
+                    KenneyButton(
+                      label: director.isDailyClaimedToday
+                          ? 'DAILY RUN · claimed today'
+                          : 'DAILY RUN · clear 1 floor → +25e',
+                      style: director.isDailyClaimedToday
+                          ? KenneyButtonStyle.grey
+                          : KenneyButtonStyle.brown,
+                      onPressed: director.enterDaily,
+                    ),
+                    const SizedBox(height: 8),
+                    AscendMilestonesStrip(state: state),
                     const SizedBox(height: 8),
                     KenneyButton(
                       label: canAscend
@@ -258,19 +298,21 @@ class _HubScreenState extends State<HubScreen>
                       style: canAscend
                           ? KenneyButtonStyle.red
                           : KenneyButtonStyle.grey,
-                      onPressed: canAscend ? director.ascend : null,
+                      onPressed: canAscend
+                          ? () => confirmAscend(context, director)
+                          : null,
                     ),
-                    if (!canAscend) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} bosses needed',
-                        textAlign: TextAlign.center,
-                        style: GameTheme.body(
-                          size: 13,
-                          color: GameTheme.parchmentDim,
-                        ),
+                    const SizedBox(height: 4),
+                    Text(
+                      canAscend
+                          ? 'Ready · AL${state.ascensionLevel} → ${state.ascensionLevel + 1}'
+                          : 'Bosses ${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} this run',
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(
+                        size: 13,
+                        color: GameTheme.parchmentDim,
                       ),
-                    ],
+                    ),
                     const SizedBox(height: 4),
                     Align(
                       alignment: Alignment.center,
@@ -561,12 +603,13 @@ class _ZonePathMap extends StatelessWidget {
 
   /// Zigzag path positions as fractions of width/height.
   static const List<Offset> _anchors = <Offset>[
-    Offset(0.22, 0.88),
-    Offset(0.72, 0.74),
-    Offset(0.28, 0.58),
-    Offset(0.70, 0.42),
-    Offset(0.30, 0.26),
-    Offset(0.66, 0.10),
+    Offset(0.20, 0.92),
+    Offset(0.74, 0.79),
+    Offset(0.24, 0.66),
+    Offset(0.74, 0.53),
+    Offset(0.24, 0.40),
+    Offset(0.70, 0.24),
+    Offset(0.28, 0.08),
   ];
 
   @override
@@ -577,8 +620,8 @@ class _ZonePathMap extends StatelessWidget {
         final points = <Offset>[
           for (var i = 0; i < dungeons.length; i++)
             Offset(
-              _anchors[i].dx * size.width,
-              _anchors[i].dy * size.height,
+              _anchors[i % _anchors.length].dx * size.width,
+              _anchors[i % _anchors.length].dy * size.height,
             ),
         ];
         return Stack(
@@ -767,7 +810,7 @@ class _ZoneNode extends StatelessWidget {
                     )
                   else if (!unlocked)
                     Text(
-                      '${def.unlockPrice ~/ 1000}k',
+                      '${def.unlockPrice ~/ 1000}k life',
                       style: GameTheme.pixel(
                         size: 6,
                         color: const Color(0xFF666055),
@@ -860,11 +903,22 @@ class _ZoneTrailPainter extends CustomPainter {
 }
 
 class _HubAtmospherePainter extends CustomPainter {
-  _HubAtmospherePainter({required this.pulse});
+  _HubAtmospherePainter({
+    required this.pulse,
+    required this.dungeonId,
+  });
+
   final double pulse;
+  final String dungeonId;
 
   @override
   void paint(Canvas canvas, Size size) {
+    final wash = DungeonEnvironment.atmosphereWash(dungeonId);
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = wash.withValues(alpha: wash.a * 0.85 + pulse * 0.04),
+    );
+
     final vignette = Paint()
       ..shader = RadialGradient(
         colors: [
@@ -885,5 +939,5 @@ class _HubAtmospherePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _HubAtmospherePainter oldDelegate) =>
-      oldDelegate.pulse != pulse;
+      oldDelegate.pulse != pulse || oldDelegate.dungeonId != dungeonId;
 }

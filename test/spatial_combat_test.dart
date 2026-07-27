@@ -72,23 +72,33 @@ void main() {
       slot: EquipmentSlot.weapon,
       rarity: LootRarity.uncommon,
       battleNumber: 5,
-      bias: HeroRole.rogue,
+      bias: HeroRole.mage,
     ).copyWith(pattern: ProjectilePattern.spread);
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final heroes = [...state.heroes];
-    heroes[0] = heroes[0].copyWith(
-      equipped: {EquipmentSlot.weapon: weapon},
+    final mageIndex = heroes.indexWhere((h) => h.role == HeroRole.mage);
+    expect(mageIndex, greaterThanOrEqualTo(0));
+    heroes[mageIndex] = heroes[mageIndex].copyWith(
+      equipped: {
+        ...heroes[mageIndex].equipped,
+        EquipmentSlot.weapon: weapon,
+      },
     );
     state = state.copyWith(heroes: heroes, attackBonus: 20);
     var world = SpatialCombat.build(state);
-    // Bring the warrior on top of a living enemy so fire is guaranteed.
-    final target = world.enemies.firstWhere((e) => e.hp > 0);
+    // Soften the room so the mage lives long enough to cast.
+    for (final e in world.enemies) {
+      e.hp = 1;
+      e.dormant = true;
+    }
+    final target = world.enemies.first;
     target.dormant = false;
-    world.heroes.first
-      ..x = target.x - 0.4
+    final mage = world.heroes.firstWhere((h) => h.heroRole == HeroRole.mage);
+    mage
+      ..x = target.x - 2.2
       ..y = target.y
       ..fireCooldown = 0;
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 30; i++) {
       final step = SpatialCombat.step(world, state, dt: 0.05);
       world = step.world;
       state = step.state;
@@ -322,19 +332,22 @@ void main() {
     state = GameLogic.ensureRogueHero(state);
     expect(state.heroes, hasLength(4));
 
-    // Empty combat room so we go straight to awaitingExit.
-    state = state.copyWith(enemies: const []);
+    // Keep enemies in state so build creates a combat map (not treasure).
     var world = SpatialCombat.build(state);
+    expect(world.isTreasure, isFalse);
     expect(world.map.spawnPoints.length, greaterThanOrEqualTo(4));
 
-    // Force exit walk: kill any enemies and mark awaiting.
     for (final e in world.enemies) {
       e.hp = 0;
     }
     world.awaitingExit = true;
+    world.exitWaitTimer = 0;
     world.clearedChambers.addAll(
       world.map.chambers.map((c) => c.index),
     );
+    for (final gate in world.map.gates) {
+      world.openGateIds.add(gate.id);
+    }
 
     // Park party near exit with natural spread (simulates arrival).
     final ex = world.map.exitPoint.$1 + 0.5;
@@ -361,5 +374,70 @@ void main() {
       }
     }
     expect(cleared, isTrue);
+  });
+
+  test('exit clears when one hero reaches stairs while others are far', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
+        .copyWith(rogueUnlocked: true);
+    state = GameLogic.ensureRogueHero(state);
+    var world = SpatialCombat.build(state);
+    expect(world.isTreasure, isFalse);
+    for (final e in world.enemies) {
+      e.hp = 0;
+    }
+    world.awaitingExit = true;
+    world.exitWaitTimer = 0;
+    for (final gate in world.map.gates) {
+      world.openGateIds.add(gate.id);
+    }
+
+    final ex = world.map.exitPoint.$1 + 0.5;
+    final ey = world.map.exitPoint.$2 + 0.5;
+    final spawn = world.map.spawnPoints.first;
+    // One on stairs, three stuck far away near spawn.
+    world.heroes[0].x = ex;
+    world.heroes[0].y = ey;
+    world.heroes[0].hp = world.heroes[0].maxHp;
+    for (var i = 1; i < world.heroes.length; i++) {
+      world.heroes[i].x = spawn.$1 + 0.5 + i * 0.2;
+      world.heroes[i].y = spawn.$2 + 0.5;
+      world.heroes[i].hp = world.heroes[i].maxHp;
+    }
+
+    var cleared = false;
+    for (var i = 0; i < 30; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      if (step.roomCleared) {
+        cleared = true;
+        break;
+      }
+    }
+    expect(cleared, isTrue);
+  });
+
+  test('exit force-clears after long stuck wait', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
+        .copyWith(rogueUnlocked: true);
+    state = GameLogic.ensureRogueHero(state);
+    var world = SpatialCombat.build(state);
+    expect(world.isTreasure, isFalse);
+    for (final e in world.enemies) {
+      e.hp = 0;
+    }
+    world.awaitingExit = true;
+    world.exitWaitTimer = 10.1; // already past failsafe
+    for (final gate in world.map.gates) {
+      world.openGateIds.add(gate.id);
+    }
+    final spawn = world.map.spawnPoints.first;
+    for (final hero in world.heroes) {
+      hero.x = spawn.$1 + 0.5;
+      hero.y = spawn.$2 + 0.5;
+      hero.hp = hero.maxHp;
+    }
+
+    final step = SpatialCombat.step(world, state, dt: 0.05);
+    expect(step.roomCleared, isTrue);
   });
 }

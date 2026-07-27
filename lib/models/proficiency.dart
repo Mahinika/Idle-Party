@@ -74,7 +74,7 @@ class ClassProficiency {
     return switch (role) {
       HeroRole.warrior => kind == OffHandKind.shield,
       HeroRole.healer || HeroRole.mage => kind == OffHandKind.frill,
-      HeroRole.rogue => false,
+      HeroRole.rogue => kind == OffHandKind.weapon,
     };
   }
 
@@ -91,9 +91,20 @@ class ClassProficiency {
       if (!canEquipOffHand(role, kind)) {
         return switch (role) {
           HeroRole.warrior => 'Warriors need a Shield off-hand',
-          HeroRole.healer || HeroRole.mage => 'Casters need an Off-hand frill',
-          HeroRole.rogue => 'Rogues cannot equip off-hand (yet)',
+          HeroRole.healer || HeroRole.mage => 'Casters need an Off-hand tome',
+          HeroRole.rogue => 'Rogues need a dual-wield off-hand weapon',
         };
+      }
+      if (kind == OffHandKind.weapon) {
+        final wt = item.weaponType;
+        if (wt == null) return 'Off-hand weapon missing type';
+        final handed = item.handed ?? defaultHanded(wt);
+        if (handed == WeaponHanded.twoHand) {
+          return 'Off-hand must be one-handed';
+        }
+        if (!canEquipWeapon(role, wt, handed, rangedSlot: false)) {
+          return '${role.name} cannot dual-wield ${wt.name}';
+        }
       }
       return null;
     }

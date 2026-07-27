@@ -4,6 +4,7 @@ import '../models/combat_ratings.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
+import '../models/gear_loadout.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
 import '../models/mission.dart';
@@ -48,6 +49,18 @@ class GameState {
     this.reducedVfx = false,
     this.autoSellMaxPower = 24,
     this.rogueUnlocked = false,
+    this.seenTips = const <String>[],
+    this.loadouts = const <GearLoadout>[],
+    this.achievements = const <String>[],
+    this.codexEnemies = const <String>[],
+    this.codexItems = const <String>[],
+    this.challengeBossRush = false,
+    this.challengeNoFlask = false,
+    this.colorblindMode = false,
+    this.uiTextScale = 1.0,
+    this.lastDailyDate,
+    this.dailyClaimed = false,
+    this.seenChangelogVersion = '',
   });
 
   final List<PartyHero> heroes;
@@ -131,6 +144,44 @@ class GameState {
   /// Fourth hero (Rogue) unlocked after first Ascend.
   final bool rogueUnlocked;
 
+  /// Dismissed first-run tip ids (survives Ascend).
+  final List<String> seenTips;
+
+  /// Up to 3 saved gear presets (survives Ascend).
+  final List<GearLoadout> loadouts;
+
+  /// Unlocked local achievement ids (survives Ascend / hard reset persists
+  /// only via save — no server, purely cosmetic).
+  final List<String> achievements;
+
+  /// Discovered enemy display names for the Codex (survives Ascend).
+  final List<String> codexEnemies;
+
+  /// Discovered equipment display names for the Codex (survives Ascend).
+  final List<String> codexItems;
+
+  /// Challenge toggle: packs skew to elite/boss-heavy mixes. Chosen before
+  /// entering a dungeon; survives Ascend as a standing preference.
+  final bool challengeBossRush;
+
+  /// Challenge toggle: flasks are disabled entirely.
+  final bool challengeNoFlask;
+
+  /// Accessibility: colorblind-friendly combat floater palette.
+  final bool colorblindMode;
+
+  /// Accessibility: UI text scale multiplier.
+  final double uiTextScale;
+
+  /// Last UTC calendar date (`yyyy-mm-dd`) the Daily Run was entered.
+  final String? lastDailyDate;
+
+  /// Whether today's Daily Run reward has already been claimed.
+  final bool dailyClaimed;
+
+  /// Highest changelog version the player has seen in Settings → What's New.
+  final String seenChangelogVersion;
+
   /// Global room counter derived from the authoritative room position.
   int get battleNumber => currentRoom.globalBattleNumber;
 
@@ -162,6 +213,26 @@ class GameState {
   int get sanctuaryVitalityBonus => sanctuaryVitalityLevel * 2;
 
   int get petAttackBonus => activePet?.totalAttackBonus ?? 0;
+
+  /// Loot Sprite (and upgrades) grant gold find; other pets stay ATK-focused.
+  int get petGoldFindPercent {
+    final pet = activePet;
+    if (pet == null) return 0;
+    if (pet.id.startsWith('loot_sprite')) {
+      return 8 + pet.level * 2;
+    }
+    return 0;
+  }
+
+  /// Mild drop-rate help from Loot Sprite.
+  int get petLootFindPercent {
+    final pet = activePet;
+    if (pet == null) return 0;
+    if (pet.id.startsWith('loot_sprite')) {
+      return 6 + pet.level;
+    }
+    return 0;
+  }
 
   int get soulboundAttackBonus => soulboundItem?.attackBonus ?? 0;
 
@@ -412,6 +483,18 @@ class GameState {
     bool? reducedVfx,
     int? autoSellMaxPower,
     bool? rogueUnlocked,
+    List<String>? seenTips,
+    List<GearLoadout>? loadouts,
+    List<String>? achievements,
+    List<String>? codexEnemies,
+    List<String>? codexItems,
+    bool? challengeBossRush,
+    bool? challengeNoFlask,
+    bool? colorblindMode,
+    double? uiTextScale,
+    String? lastDailyDate,
+    bool? dailyClaimed,
+    String? seenChangelogVersion,
     bool clearEquipped = false,
     bool clearActivePet = false,
     bool clearSoulboundItem = false,
@@ -461,6 +544,18 @@ class GameState {
       reducedVfx: reducedVfx ?? this.reducedVfx,
       autoSellMaxPower: autoSellMaxPower ?? this.autoSellMaxPower,
       rogueUnlocked: rogueUnlocked ?? this.rogueUnlocked,
+      seenTips: seenTips ?? this.seenTips,
+      loadouts: loadouts ?? this.loadouts,
+      achievements: achievements ?? this.achievements,
+      codexEnemies: codexEnemies ?? this.codexEnemies,
+      codexItems: codexItems ?? this.codexItems,
+      challengeBossRush: challengeBossRush ?? this.challengeBossRush,
+      challengeNoFlask: challengeNoFlask ?? this.challengeNoFlask,
+      colorblindMode: colorblindMode ?? this.colorblindMode,
+      uiTextScale: uiTextScale ?? this.uiTextScale,
+      lastDailyDate: lastDailyDate ?? this.lastDailyDate,
+      dailyClaimed: dailyClaimed ?? this.dailyClaimed,
+      seenChangelogVersion: seenChangelogVersion ?? this.seenChangelogVersion,
     );
   }
 
@@ -506,6 +601,18 @@ class GameState {
     'reducedVfx': reducedVfx,
     'autoSellMaxPower': autoSellMaxPower,
     'rogueUnlocked': rogueUnlocked,
+    'seenTips': seenTips,
+    'loadouts': loadouts.map((l) => l.toJson()).toList(),
+    'achievements': achievements,
+    'codexEnemies': codexEnemies,
+    'codexItems': codexItems,
+    'challengeBossRush': challengeBossRush,
+    'challengeNoFlask': challengeNoFlask,
+    'colorblindMode': colorblindMode,
+    'uiTextScale': uiTextScale,
+    if (lastDailyDate != null) 'lastDailyDate': lastDailyDate,
+    'dailyClaimed': dailyClaimed,
+    'seenChangelogVersion': seenChangelogVersion,
   };
 
   /// Parses a v2-v4 save. Legacy fields are migrated.
@@ -626,6 +733,33 @@ class GameState {
       reducedVfx: (json['reducedVfx'] as bool?) ?? false,
       autoSellMaxPower: (json['autoSellMaxPower'] as int?) ?? 24,
       rogueUnlocked: (json['rogueUnlocked'] as bool?) ?? false,
+      seenTips: (json['seenTips'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const <String>[],
+      loadouts: (json['loadouts'] as List<dynamic>?)
+              ?.map((e) => GearLoadout.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <GearLoadout>[],
+      achievements: (json['achievements'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const <String>[],
+      codexEnemies: (json['codexEnemies'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const <String>[],
+      codexItems: (json['codexItems'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const <String>[],
+      challengeBossRush: (json['challengeBossRush'] as bool?) ?? false,
+      challengeNoFlask: (json['challengeNoFlask'] as bool?) ?? false,
+      colorblindMode: (json['colorblindMode'] as bool?) ?? false,
+      uiTextScale: (json['uiTextScale'] as num?)?.toDouble() ?? 1.0,
+      lastDailyDate: json['lastDailyDate'] as String?,
+      dailyClaimed: (json['dailyClaimed'] as bool?) ?? false,
+      seenChangelogVersion: (json['seenChangelogVersion'] as String?) ?? '',
     );
   }
 }

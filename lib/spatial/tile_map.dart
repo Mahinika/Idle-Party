@@ -9,6 +9,8 @@ enum TileKind { wall, floor, spawn, exit, gate }
 enum MapPropKind {
   barrel,
   crate,
+  table,
+  stool,
   torch,
   torchAlt,
   gravestone,
@@ -503,8 +505,34 @@ abstract final class RoomLayouts {
             for (var i = 1; i < rooms.length; i++) (i, rooms[i]),
           ];
 
+    // Pack the first combat chamber hard — gated maps must hurt immediately.
     var placed = 0;
-    for (final entry in combatRooms) {
+    if (combatRooms.isNotEmpty) {
+      final first = combatRooms.first;
+      final firstPack = (enemyCount * 0.55).ceil().clamp(3, enemyCount);
+      final r = first.$2;
+      final idx = first.$1;
+      final offsets = <(int, int)>[
+        (0, 0),
+        (1, 0),
+        (-1, 0),
+        (0, 1),
+        (0, -1),
+        (1, 1),
+        (-1, 1),
+        (1, -1),
+        (-1, -1),
+        (2, 0),
+        (-2, 0),
+        (0, 2),
+      ];
+      for (var i = 0; i < firstPack && i < offsets.length; i++) {
+        enemySpawns.add((r.cx + offsets[i].$1, r.cy + offsets[i].$2));
+        enemyChambers.add(idx);
+        placed++;
+      }
+    }
+    for (final entry in combatRooms.skip(1)) {
       if (placed >= enemyCount) break;
       final idx = entry.$1;
       final r = entry.$2;
@@ -588,7 +616,7 @@ abstract final class RoomLayouts {
       }
     }
 
-    final target = (floorCells.length * 0.015).floor().clamp(0, 14);
+    final target = (floorCells.length * 0.028).floor().clamp(3, 18);
     final props = <MapProp>[];
     final used = <String>{};
 

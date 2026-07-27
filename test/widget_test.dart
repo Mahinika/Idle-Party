@@ -8,7 +8,7 @@ void main() {
   testWidgets('renders the idle party hub', (WidgetTester tester) async {
     final director = GameDirector.preview();
 
-    await tester.pumpWidget(MyApp(director: director, autoStartLoop: false));
+    await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('IDLE PARTY'), findsOneWidget);
@@ -26,7 +26,7 @@ void main() {
     await director.boot();
     director.enterDungeon();
 
-    await tester.pumpWidget(MyApp(director: director, autoStartLoop: false));
+    await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.textContaining('PUSH'), findsWidgets);
@@ -38,8 +38,8 @@ void main() {
     await tester.tap(find.text('PARTY'));
     await tester.pumpAndSettle();
     expect(find.textContaining('EQUIP PARTY'), findsOneWidget);
-    expect(find.textContaining('DAMAGE'), findsWidgets);
-    expect(find.textContaining('own gear'), findsOneWidget);
+    expect(find.textContaining('DMG'), findsWidgets);
+    expect(find.textContaining('iLvl'), findsWidgets);
 
     await tester.tap(find.text('CLOSE'));
     await tester.pumpAndSettle();
@@ -65,7 +65,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(MyApp(director: director, autoStartLoop: false));
+    await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(GameTheme.isCompactWidth(tester.element(find.text('PARTY'))), isTrue);
@@ -92,7 +92,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(MyApp(director: director, autoStartLoop: false));
+    await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(GameTheme.isCompactWidth(tester.element(find.text('PARTY'))), isFalse);

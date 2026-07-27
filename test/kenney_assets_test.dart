@@ -19,11 +19,6 @@ void main() {
       KenneyAssets.heroWizard,
       KenneyAssets.heroHealer,
       KenneyAssets.heroRogue,
-      KenneyAssets.enemySlime,
-      KenneyAssets.enemyCyclops,
-      KenneyAssets.enemyCrab,
-      KenneyAssets.enemyBoss,
-      KenneyAssets.enemyCultist,
       KenneyAssets.sword,
       KenneyAssets.staff,
       KenneyAssets.potionRed,
@@ -33,8 +28,12 @@ void main() {
       KenneyAssets.coinGold,
       KenneyAssets.ring,
       for (final role in HeroRole.values) KenneyAssets.heroSpriteForRole(role),
+      // Enemies are custom PNGs (still must exist on disk).
+      ...KenneyAssets.enemySpriteCatalog,
       for (final role in EnemyRole.values)
         KenneyAssets.enemySpriteForRole(role, dungeonId: 'sandy'),
+      KenneyAssets.enemySpriteForCodexName('Goblin Scout'),
+      KenneyAssets.enemySpriteForCodexName('Crystal Warden'),
     };
 
     for (final path in paths) {
@@ -47,6 +46,14 @@ void main() {
     expect(KenneyAssets.enemyCultist, isNot(KenneyAssets.enemyBoss));
     expect(KenneyAssets.heroWizard, isNot(KenneyAssets.propSkull));
     expect(KenneyAssets.boots, isNot(KenneyAssets.stairs));
+    expect(KenneyAssets.boots, startsWith('assets/custom/'));
     expect(KenneyAssets.sword, isNot(KenneyAssets.torch));
+  });
+
+  test('dungeon portraits use custom art', () {
+    expect(
+      KenneyAssets.dungeonPortraitFor('sandy'),
+      startsWith('assets/custom/portraits/'),
+    );
   });
 }

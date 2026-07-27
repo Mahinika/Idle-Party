@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'dart:math';
+
+import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 
 import '../models/hero.dart';
 import '../models/loot.dart';
@@ -11,6 +14,47 @@ class EquipmentFactory {
   static Random get random => _random;
   static Random _random = Random();
   static set random(Random value) => _random = value;
+
+  /// Hardcoded fallback used until (or unless) `assets/data/item_affixes.json`
+  /// loads successfully — keeps loot naming working offline / in tests.
+  static const List<String> _fallbackAffixes = <String>[
+    'Ancient',
+    'Cursed',
+    'Gleaming',
+    'Feral',
+    'Sacred',
+    'Ashen',
+    'Frozen',
+    'Runed',
+    'Savage',
+    'Blessed',
+  ];
+
+  static List<String> _affixPrefixes = _fallbackAffixes;
+
+  /// Currently active affix prefix pool (data-driven when the load succeeds).
+  static List<String> get affixPrefixes => _affixPrefixes;
+
+  /// Loads `assets/data/item_affixes.json` into the affix prefix pool.
+  /// Safe to call multiple times; falls back silently to the hardcoded
+  /// list on any parse/asset error (offline-first, no crash risk).
+  static Future<void> loadAffixes({AssetBundle? bundle}) async {
+    try {
+      final raw =
+          await (bundle ?? rootBundle).loadString('assets/data/item_affixes.json');
+      final decoded = jsonDecode(raw);
+      final list = decoded is Map<String, dynamic>
+          ? decoded['prefixes'] as List<dynamic>?
+          : (decoded is List<dynamic> ? decoded : null);
+      if (list != null && list.isNotEmpty) {
+        _affixPrefixes = List<String>.unmodifiable(
+          list.map((e) => e.toString()),
+        );
+      }
+    } catch (_) {
+      _affixPrefixes = _fallbackAffixes;
+    }
+  }
 
   static int itemLevelFor({
     required int battleNumber,
@@ -142,6 +186,7 @@ class EquipmentFactory {
   static List<double> _offHandWeights(OffHandKind kind) => switch (kind) {
         OffHandKind.shield => [0.25, 0, 0.50, 0, 0, 0],
         OffHandKind.frill => [0, 0, 0.15, 0.35, 0.25, 0.25],
+        OffHandKind.weapon => [0.15, 0.50, 0.20, 0, 0, 0],
       };
 
   static List<double> _jewelryWeights(HeroRole bias) => switch (bias) {
@@ -192,6 +237,7 @@ class EquipmentFactory {
     WeaponType? weaponType,
     OffHandKind? offHandKind,
     WeaponHanded? handed,
+    String? affixWord,
   }) {
     final rolePrefix = switch (bias) {
       HeroRole.warrior => switch (rarity) {
@@ -237,6 +283,9 @@ class EquipmentFactory {
     final noun = () {
       if (offHandKind == OffHandKind.shield) return 'Tower Shield';
       if (offHandKind == OffHandKind.frill) return 'Tome';
+      if (offHandKind == OffHandKind.weapon && weaponType != null) {
+        return 'Off-hand ${_weaponNoun(weaponType)}';
+      }
       if (weaponType != null) {
         final hand = handed == WeaponHanded.twoHand ? '2H ' : '';
         return '$hand${_weaponNoun(weaponType)}';
@@ -266,12 +315,10 @@ class EquipmentFactory {
       };
     }();
 
-    if (material != null &&
-        !noun.contains(material) &&
-        slot.isArmorSlot) {
-      return '$rolePrefix $material $noun';
-    }
-    return '$rolePrefix $noun';
+    final base = (material != null && !noun.contains(material) && slot.isArmorSlot)
+        ? '$rolePrefix $material $noun'
+        : '$rolePrefix $noun';
+    return affixWord == null ? base : '$affixWord $base';
   }
 
   static String _weaponNoun(WeaponType t) => switch (t) {
@@ -318,18 +365,23 @@ class EquipmentFactory {
       handed = ClassProficiency.defaultHanded(weaponType);
       weights = _weaponWeights(weaponType, classBias);
     } else if (slot == EquipmentSlot.offHand) {
-      offHandKind = classBias == HeroRole.warrior
-          ? OffHandKind.shield
-          : (classBias == HeroRole.rogue
-              ? OffHandKind.shield // won't equip; still roll shield-ish rare
-              : OffHandKind.frill);
-      if (classBias == HeroRole.rogue) {
-        // Rogues can't use off-hand — bias toward jewelry-like if rolled;
-        // keep frill stats unused; prefer converting slot for rogue bias.
-        offHandKind = OffHandKind.frill;
-        weights = _jewelryWeights(classBias);
+      if (classBias == HeroRole.warrior) {
+        offHandKind = OffHandKind.shield;
+        weights = _offHandWeights(OffHandKind.shield);
+      } else if (classBias == HeroRole.rogue) {
+        offHandKind = OffHandKind.weapon;
+        final opts = [
+          WeaponType.dagger,
+          WeaponType.sword,
+          WeaponType.fist,
+          WeaponType.mace,
+        ];
+        weaponType = opts[_random.nextInt(opts.length)];
+        handed = WeaponHanded.oneHand;
+        weights = _offHandWeights(OffHandKind.weapon);
       } else {
-        weights = _offHandWeights(offHandKind);
+        offHandKind = OffHandKind.frill;
+        weights = _offHandWeights(OffHandKind.frill);
       }
     } else if (slot == EquipmentSlot.cloak ||
         slot == EquipmentSlot.neck ||
@@ -343,16 +395,17 @@ class EquipmentFactory {
       weights = _jewelryWeights(classBias);
     }
 
-    // Fix rogue offHand: re-roll as ring instead conceptually — keep slot but
-    // use agi weights (already jewelry). Warriors get shield weights above.
-
     if (slot == EquipmentSlot.offHand && classBias == HeroRole.warrior) {
       offHandKind = OffHandKind.shield;
+      weaponType = null;
+      handed = null;
       weights = _offHandWeights(OffHandKind.shield);
     }
     if (slot == EquipmentSlot.offHand &&
         (classBias == HeroRole.healer || classBias == HeroRole.mage)) {
       offHandKind = OffHandKind.frill;
+      weaponType = null;
+      handed = null;
       weights = _offHandWeights(OffHandKind.frill);
     }
 
@@ -445,6 +498,16 @@ class EquipmentFactory {
           }
         : ProjectilePattern.single;
 
+    String? affixWord;
+    final affixChance = switch (rarity) {
+      LootRarity.rare => 0.3,
+      LootRarity.epic => 0.65,
+      _ => 0.0,
+    };
+    if (affixChance > 0 && _random.nextDouble() < affixChance) {
+      affixWord = _affixPrefixes[_random.nextInt(_affixPrefixes.length)];
+    }
+
     final name = equipmentNameFor(
       slot: slot,
       rarity: rarity,
@@ -453,6 +516,7 @@ class EquipmentFactory {
       weaponType: weaponType,
       offHandKind: offHandKind,
       handed: handed,
+      affixWord: affixWord,
     );
 
     return EquipmentItem(

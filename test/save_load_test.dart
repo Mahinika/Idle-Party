@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/loot.dart';
@@ -37,8 +38,13 @@ void main() {
       jsonDecode(encoded) as Map<String, dynamic>,
     );
 
+    // Load re-evaluates achievements and grants essence for unmet unlocks.
+    final grant = (AchievementCatalog.byId('first_floor')?.essenceReward ?? 0) +
+        (AchievementCatalog.byId('first_ascend')?.essenceReward ?? 0) +
+        (AchievementCatalog.byId('full_party')?.essenceReward ?? 0);
     expect(decoded.gold, 777);
-    expect(decoded.essence, 12);
+    expect(decoded.essence, 12 + grant);
+    expect(decoded.achievements, containsAll(['first_floor', 'first_ascend', 'full_party']));
     expect(decoded.attackBonus, 4);
     expect(decoded.defenseBonus, 3);
     expect(decoded.vitalityBonus, 12);
@@ -103,7 +109,11 @@ void main() {
     final loaded = await storage.load();
     expect(loaded, isNotNull);
     expect(loaded!.gold, 321);
-    expect(loaded.essence, 7);
+    expect(
+      loaded.essence,
+      7 + (AchievementCatalog.byId('first_floor')?.essenceReward ?? 0),
+    );
+    expect(loaded.achievements, contains('first_floor'));
     expect(loaded.highestFloorCleared, 2);
   });
 

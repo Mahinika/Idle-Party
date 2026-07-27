@@ -4,6 +4,7 @@ import '../models/enemy.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
 import '../spatial/tile_map.dart';
+import 'custom_assets.dart';
 
 /// Central Kenney Tiny Dungeon + UI asset catalog.
 ///
@@ -11,6 +12,8 @@ import '../spatial/tile_map.dart';
 /// is 12×11). Semantic getters below map roles → tile indices so art cannot
 /// drift from misnamed copies again. Rebuild with:
 /// `powershell -File tool/rebuild_tiny_dungeon_assets.ps1`
+///
+/// Identity art (pets, armor icons, dungeon portraits) prefers [CustomAssets].
 abstract final class KenneyAssets {
   static const String _tiny = 'assets/kenney/tiny_dungeon';
   static const String _extras = 'assets/kenney/extras';
@@ -26,21 +29,25 @@ abstract final class KenneyAssets {
     return '$_tiny/tile_$n.png';
   }
 
-  // —— Floors (verified unique sheet cells) ——
+  // —— Floors (verified sheet cells) ——
   static String get floorDirt => tile(0);
   static String get floorDirtAlt1 => tile(1);
   static String get floorDirtAlt2 => tile(2);
   static String get floorDirtAlt3 => tile(3);
-  static String get floorSand => tile(30);
-  static String get floorSandAlt1 => tile(31);
-  static String get floorSandAlt2 => tile(32);
+  /// Pebbled dirt — preferred when we want readable texture.
+  static String get floorDirtDetail => tile(24);
+  /// Clean sand (no baked wall-lip). Legacy edged sand is tile 30 — do not use as floor fill.
+  static String get floorSand => tile(48);
+  static String get floorSandWorn => tile(49);
+  static String get floorSandAlt1 => tile(49);
+  static String get floorSandAlt2 => tile(49);
   static String get floorStone => tile(42);
-  static String get floorStoneAlt1 => tile(43);
-  static String get floorStoneAlt2 => tile(44);
+  static String get floorStoneAlt1 => tile(42);
+  static String get floorStoneAlt2 => tile(42);
 
   // —— Walls / doors / stairs ——
   static String get wallStone => tile(40);
-  static String get wallStoneAlt1 => tile(39);
+  static String get wallStoneAlt1 => tile(57);
   static String get wallBanner => tile(29);
   static String get wallBannerAlt => tile(28);
   static String get doorArch => tile(6);
@@ -53,29 +60,33 @@ abstract final class KenneyAssets {
   static String get exitPad => tile(19);
   static String get trapSpikes => tile(41);
 
-  // —— Hazards / rails / markers ——
-  static String get hazardWater => tile(50);
-  static String get hazardLava => tile(55);
+  // —— Hazards / markers ——
+  static String get hazardWater => tile(32);
+  static String get hazardLava => tile(41);
   static String get corridorActive => tile(60);
   static String get corridorInactive => tile(61);
   static String get target => tile(60);
   static String get slash => tile(61);
   static String get claw => tile(62);
   static String get gravestone => tile(64);
+  static String get gravestoneAlt => tile(65);
   static String get hatch => tile(66);
 
-  // —— Props ——
-  static String get crate => tile(72);
+  // —— Props (verified against Tiny Dungeon sheet) ——
+  static String get crate => tile(63);
+  static String get table => tile(72);
+  static String get stool => tile(73);
   static String get anvil => tile(74);
   static String get barrel => tile(82);
-  static String get propPot => tile(83);
-  static String get propBones => tile(81);
-  static String get fountainSlime => tile(75);
+  static String get propPot => tile(73);
+  static String get propBones => tile(56);
+  static String get fountainSlime => tile(20);
   static String get chestClosed => tile(89);
   static String get chestOpen => tile(90);
   static String get chestMimic => tile(92);
-  static String get torch => tile(70);
-  static String get torchAlt => tile(71);
+  /// Wall fountain / glow — Tiny Dungeon has no free-standing torch sprite.
+  static String get torch => tile(8);
+  static String get torchAlt => tile(20);
 
   // —— Heroes (sample map / sheet character band) ——
   static String get heroWizard => tile(84);
@@ -89,19 +100,19 @@ abstract final class KenneyAssets {
   static String get heroHealer => tile(99);
   static String get heroElder => tile(100);
 
-  // —— Enemies ——
-  static String get enemySlime => tile(108);
-  static String get enemyCyclops => tile(109);
-  static String get enemyCrab => tile(110);
-  static String get enemyBoss => tile(111);
-  static String get enemyCultist => tile(112);
-  static String get enemyBat => tile(120);
-  static String get enemyGhost => tile(121);
-  static String get enemySpider => tile(122);
-  static String get enemyRat => tile(123);
-  static String get enemySnake => tile(124);
-  /// Golem uses unused brute variant (distinct from cyclops).
-  static String get enemyGolem => tile(109);
+  // —— Enemies (custom identity sprites; Tiny Dungeon tiles kept as fallback IDs) ——
+  static String get enemySlime => CustomAssets.enemySlime;
+  static String get enemyCyclops => CustomAssets.enemyCyclops;
+  static String get enemyCrab => CustomAssets.enemyCrab;
+  static String get enemyBoss => CustomAssets.enemyBossKing;
+  static String get enemyHellBoss => CustomAssets.enemyBossHell;
+  static String get enemyCultist => CustomAssets.enemyCultist;
+  static String get enemyBat => CustomAssets.enemyBat;
+  static String get enemyGhost => CustomAssets.enemyGhost;
+  static String get enemySpider => CustomAssets.enemySpider;
+  static String get enemyRat => CustomAssets.enemyRat;
+  static String get enemySnake => CustomAssets.enemySpider;
+  static String get enemyGolem => CustomAssets.enemyGolem;
 
   // —— Gear / consumables ——
   static String get shieldRound => tile(101);
@@ -122,14 +133,16 @@ abstract final class KenneyAssets {
   static String get staff => tile(129);
   static String get staffBlue => tile(130);
   static String get spear => tile(131);
-  static String get boots => tile(105);
-  /// Cloak uses fabric banner art (Tiny Dungeon has no cloak item).
-  static String get cloak => relicWarBanner;
-  /// Helmet stand-in until a dedicated helm tile is imported.
-  static String get helmet => iconCrown;
+  static String get boots => CustomAssets.iconBoots;
+  static String get cloak => CustomAssets.iconCloak;
+  static String get helmet => CustomAssets.iconHelm;
+  static String get chestArmor => CustomAssets.iconChest;
+  static String get gloves => CustomAssets.iconGloves;
+  static String get shoulders => CustomAssets.iconShoulders;
+  static String get belt => CustomAssets.iconBelt;
   static String get meat => potionGreen;
   static String get roomCleared => doorArch; // legacy alias; unused in painter
-  static String get propSkull => tile(63);
+  static String get propSkull => gravestoneAlt;
   static String get wallStoneAlt2 => trapSpikes; // legacy — do not use as wall
   static String get stairsAlt => stairsDown;
 
@@ -207,24 +220,34 @@ abstract final class KenneyAssets {
   static String heroPortraitFor(int index) => heroSpriteFor(index);
 
   static String floorForDungeon(String dungeonId) {
-    final def = DungeonCatalog.byId(dungeonId);
-    return switch (def.layout) {
-      DungeonLayoutKind.cave => floorSand,
-      DungeonLayoutKind.hideout => floorDirt,
-      DungeonLayoutKind.fort => floorStone,
-      DungeonLayoutKind.arena => floorStone,
+    // Prefer textured floors so maps don't read as flat color slabs.
+    return switch (dungeonId) {
+      'sandy' => floorSand,
+      'goblin' => floorDirtDetail,
+      'king' => floorStone,
+      'underworld' => floorDirtDetail,
+      'dead' => floorStone,
+      'hell' => floorSand,
+      'crystal' => floorStone,
+      _ => switch (DungeonCatalog.byId(dungeonId).layout) {
+          DungeonLayoutKind.cave => floorSand,
+          DungeonLayoutKind.hideout => floorDirtDetail,
+          DungeonLayoutKind.fort || DungeonLayoutKind.arena => floorStone,
+        },
     };
   }
 
-  /// Floor tiles — only verified base floors (alts stay available via getters).
+  /// Single verified floor per dungeon — sand uses a clean + worn pair (no wall-lip tiles).
   static List<String> floorVariantsForDungeon(String dungeonId) {
-    final primary = floorForDungeon(dungeonId);
-    final secondary = switch (DungeonCatalog.byId(dungeonId).layout) {
-      DungeonLayoutKind.cave => floorDirt,
-      DungeonLayoutKind.hideout => floorStone,
-      DungeonLayoutKind.fort || DungeonLayoutKind.arena => floorDirt,
+    return switch (dungeonId) {
+      'sandy' || 'hell' => <String>[
+          floorSand,
+          floorSand,
+          floorSand,
+          floorSandWorn,
+        ],
+      _ => <String>[floorForDungeon(dungeonId)],
     };
-    return <String>[primary, primary, primary, secondary];
   }
 
   static String wallForDungeon(String dungeonId) {
@@ -234,9 +257,13 @@ abstract final class KenneyAssets {
     };
   }
 
+  /// Rim wall sprites only (deep walls paint as void).
   static List<String> wallVariantsForDungeon(String dungeonId) {
     return switch (dungeonId) {
       'king' => [wallStone, wallStone, wallStone, wallBanner],
+      'hell' => [wallStone, wallStone, wallBanner],
+      'dead' => [wallStone, wallStone, wallBannerAlt],
+      'crystal' => [wallStone, wallStoneAlt1],
       _ => [wallStone],
     };
   }
@@ -250,6 +277,8 @@ abstract final class KenneyAssets {
   static String propAsset(MapPropKind kind) => switch (kind) {
         MapPropKind.barrel => barrel,
         MapPropKind.crate => crate,
+        MapPropKind.table => table,
+        MapPropKind.stool => stool,
         MapPropKind.torch => torch,
         MapPropKind.torchAlt => torchAlt,
         MapPropKind.gravestone => gravestone,
@@ -257,7 +286,7 @@ abstract final class KenneyAssets {
         MapPropKind.trap => trapSpikes,
         MapPropKind.pot => propPot,
         MapPropKind.bones => propBones,
-        MapPropKind.skull => propSkull,
+        MapPropKind.skull => gravestoneAlt,
         MapPropKind.hatch => hatch,
         MapPropKind.water => hazardWater,
         MapPropKind.lava => hazardLava,
@@ -266,13 +295,49 @@ abstract final class KenneyAssets {
 
   static List<MapPropKind> propPoolForDungeon(String dungeonId) =>
       switch (dungeonId) {
-        'sandy' => const [MapPropKind.barrel, MapPropKind.crate, MapPropKind.torch],
-        'goblin' => const [MapPropKind.barrel, MapPropKind.crate, MapPropKind.pot],
-        'king' => const [MapPropKind.torch, MapPropKind.crate, MapPropKind.anvil],
-        'underworld' => const [MapPropKind.torch, MapPropKind.barrel],
-        'dead' => const [MapPropKind.gravestone, MapPropKind.torch],
-        'hell' => const [MapPropKind.torch, MapPropKind.barrel],
-        _ => const [MapPropKind.barrel, MapPropKind.crate],
+        'sandy' => const [
+            MapPropKind.barrel,
+            MapPropKind.crate,
+            MapPropKind.table,
+            MapPropKind.stool,
+          ],
+        'goblin' => const [
+            MapPropKind.barrel,
+            MapPropKind.crate,
+            MapPropKind.table,
+            MapPropKind.bones,
+          ],
+        'king' => const [
+            MapPropKind.torch,
+            MapPropKind.crate,
+            MapPropKind.anvil,
+            MapPropKind.table,
+            MapPropKind.barrel,
+          ],
+        'underworld' => const [
+            MapPropKind.torch,
+            MapPropKind.barrel,
+            MapPropKind.fountain,
+            MapPropKind.crate,
+          ],
+        'dead' => const [
+            MapPropKind.gravestone,
+            MapPropKind.bones,
+            MapPropKind.crate,
+            MapPropKind.torch,
+          ],
+        'hell' => const [
+            MapPropKind.torch,
+            MapPropKind.torchAlt,
+            MapPropKind.barrel,
+            MapPropKind.trap,
+          ],
+        'crystal' => const [
+            MapPropKind.torch,
+            MapPropKind.fountain,
+            MapPropKind.crate,
+          ],
+        _ => const [MapPropKind.barrel, MapPropKind.crate, MapPropKind.table],
       };
 
   static String dungeonIconFor(String dungeonId) => switch (dungeonId) {
@@ -283,12 +348,13 @@ abstract final class KenneyAssets {
         'underworld' => stairs,
         'dead' => gravestone,
         'hell' => doorOpen,
+        'crystal' => doorVariant,
         _ => iconDoor,
       };
 
   /// Hub detail portrait for the selected dungeon (boss / theme).
   static String dungeonPortraitFor(String dungeonId) =>
-      enemySpriteForRole(EnemyRole.boss, dungeonId: dungeonId);
+      CustomAssets.dungeonPortrait(dungeonId);
 
   static String enemySpriteForRole(EnemyRole role, {String? dungeonId}) {
     if (role == EnemyRole.boss) {
@@ -298,7 +364,8 @@ abstract final class KenneyAssets {
         'king' => enemyBoss,
         'underworld' => enemyCultist,
         'dead' => enemyGhost,
-        'hell' => enemyBoss,
+        'hell' => enemyHellBoss,
+        'crystal' => enemyBoss,
         _ => enemyBoss,
       };
     }
@@ -307,6 +374,7 @@ abstract final class KenneyAssets {
         'dead' => enemyGhost,
         'underworld' => enemySpider,
         'hell' => enemyCultist,
+        'crystal' => enemyCyclops,
         _ => enemyCyclops,
       };
     }
@@ -317,6 +385,7 @@ abstract final class KenneyAssets {
       'underworld' => enemySpider,
       'dead' => enemyGhost,
       'hell' => enemyCultist,
+      'crystal' => enemySlime,
       _ => enemySlime,
     };
   }
@@ -376,11 +445,20 @@ abstract final class KenneyAssets {
         enemyCrab,
         enemyGolem,
         enemyBoss,
+        enemyHellBoss,
       ];
 
   static int enemySpriteCatalogIndex(String asset) {
     final i = enemySpriteCatalog.indexOf(asset);
     return i < 0 ? 0 : i;
+  }
+
+  /// Stable cosmetic sprite for a codex enemy name (no combat coupling).
+  static String enemySpriteForCodexName(String name) {
+    final catalog = enemySpriteCatalog;
+    if (catalog.isEmpty) return enemyRat;
+    final hash = name.hashCode & 0x7fffffff;
+    return catalog[hash % catalog.length];
   }
 
   static String lootIconFor(LootRarity rarity) => switch (rarity) {
@@ -396,14 +474,22 @@ abstract final class KenneyAssets {
         case 'bow':
           return iconBow;
         case 'book':
-          return book;
+          return CustomAssets.iconTome;
         default:
           break;
       }
     }
 
     if (item.slot == EquipmentSlot.offHand) {
-      if (item.offHandKind == OffHandKind.frill) return book;
+      if (item.offHandKind == OffHandKind.frill) return CustomAssets.iconTome;
+      if (item.offHandKind == OffHandKind.weapon) {
+        return switch (item.weaponType) {
+          WeaponType.dagger => dagger,
+          WeaponType.axe => axe,
+          WeaponType.mace || WeaponType.fist => hammer,
+          _ => sword,
+        };
+      }
       return item.rarity.index >= 1 ? shield : shieldRound;
     }
 
@@ -436,22 +522,18 @@ abstract final class KenneyAssets {
     }
 
     return switch (item.slot) {
-      EquipmentSlot.head ||
-      EquipmentSlot.shoulder ||
-      EquipmentSlot.chest ||
-      EquipmentSlot.waist ||
-      EquipmentSlot.legs ||
-      EquipmentSlot.wrist ||
-      EquipmentSlot.hands =>
-        helmet,
+      EquipmentSlot.head => helmet,
+      EquipmentSlot.shoulder => shoulders,
+      EquipmentSlot.chest => chestArmor,
+      EquipmentSlot.waist => belt,
+      EquipmentSlot.legs => CustomAssets.iconLegs,
+      EquipmentSlot.wrist => CustomAssets.iconWrist,
+      EquipmentSlot.hands => gloves,
       EquipmentSlot.cloak => cloak,
       EquipmentSlot.boots => boots,
-      EquipmentSlot.ring ||
-      EquipmentSlot.ring2 ||
-      EquipmentSlot.neck ||
-      EquipmentSlot.trinket ||
-      EquipmentSlot.trinket2 =>
-        ring,
+      EquipmentSlot.neck => CustomAssets.iconNeck,
+      EquipmentSlot.ring || EquipmentSlot.ring2 => CustomAssets.iconRing,
+      EquipmentSlot.trinket || EquipmentSlot.trinket2 => CustomAssets.iconTrinket,
       EquipmentSlot.consumable => switch (item.rarity) {
           LootRarity.common => potionRed,
           LootRarity.uncommon => potionGreen,
