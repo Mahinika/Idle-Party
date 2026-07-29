@@ -317,7 +317,8 @@ void main() {
       battleNumber: 12,
     );
 
-    final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
+        .copyWith(autoSellMaxPower: 0);
     final afterWeak = GameLogic.applyLootDrops(initial, [
       LootDrop(
         name: weak.name,
@@ -693,6 +694,216 @@ void main() {
     final sold = GameLogic.autoSellJunk(state);
     // Plate is kept only if some hero can wear it — none can at low level.
     expect(sold.gearStash.any((g) => g.id == plate.id), isFalse);
+  });
+
+  test('auto equip fills both empty ring slots from stash (BiS dual)', () {
+    EquipmentItem ring({
+      required String id,
+      required int str,
+      required int sta,
+    }) {
+      return GameLogic.createEquipment(
+        slot: EquipmentSlot.ring,
+        rarity: LootRarity.rare,
+        battleNumber: 5,
+      ).copyWith(
+        id: id,
+        strengthBonus: str,
+        agilityBonus: 0,
+        staminaBonus: sta,
+        intellectBonus: 0,
+        spiritBonus: 0,
+        spellPowerBonus: 0,
+        armorBonus: 0,
+        mp5Bonus: 0,
+        attackBonus: 0,
+        defenseBonus: 0,
+        vitalityBonus: 0,
+        critChanceBonus: 0,
+        attackSpeedBonus: 0,
+        moveSpeedBonus: 0,
+        itemLevel: 18,
+        effectId: GearEffectId.none,
+        effectValue: 0,
+        affinity: HeroRole.warrior.name,
+      );
+    }
+
+    final strong = ring(id: 'dual_r_strong', str: 10, sta: 8);
+    final mild = ring(id: 'dual_r_mild', str: 5, sta: 4);
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    // Lock other heroes' rings so only warrior claims these.
+    final heroes = [
+      for (var i = 0; i < state.heroes.length; i++)
+        if (i == 0)
+          state.heroes[i].copyWith(
+            equipped: {
+              for (final e in state.heroes[i].equipped.entries)
+                if (e.key != EquipmentSlot.ring && e.key != EquipmentSlot.ring2)
+                  e.key: e.value,
+            },
+          )
+        else
+          state.heroes[i].copyWith(
+            equipped: {
+              for (final e in state.heroes[i].equipped.entries)
+                if (e.key != EquipmentSlot.ring && e.key != EquipmentSlot.ring2)
+                  e.key: e.value,
+              EquipmentSlot.ring: ring(id: 'lock_r1_$i', str: 30, sta: 30),
+              EquipmentSlot.ring2: ring(id: 'lock_r2_$i', str: 30, sta: 30),
+            },
+          ),
+    ];
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[strong, mild],
+    );
+
+    state = GameLogic.autoEquipBetterGear(state);
+    final ids = {
+      state.heroes[0].itemIn(EquipmentSlot.ring)?.id,
+      state.heroes[0].itemIn(EquipmentSlot.ring2)?.id,
+    };
+    expect(ids, containsAll(<String>[strong.id, mild.id]));
+    expect(state.gearStash, isEmpty);
+  });
+
+  test('auto equip keeps 1H+offhand when 2H net score is worse', () {
+    final oneHand = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.uncommon,
+      battleNumber: 4,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'net_1h',
+      weaponType: WeaponType.sword,
+      handed: WeaponHanded.oneHand,
+      strengthBonus: 6,
+      staminaBonus: 4,
+      attackBonus: 4,
+      clearAffinity: true,
+    );
+    final shield = GameLogic.createEquipment(
+      slot: EquipmentSlot.offHand,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'net_shield',
+      offHandKind: OffHandKind.shield,
+      defenseBonus: 20,
+      armorBonus: 18,
+      staminaBonus: 14,
+      strengthBonus: 4,
+      clearAffinity: true,
+    );
+    final twoHand = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      battleNumber: 6,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'net_2h',
+      weaponType: WeaponType.sword,
+      handed: WeaponHanded.twoHand,
+      strengthBonus: 10,
+      staminaBonus: 6,
+      attackBonus: 8,
+      clearAffinity: true,
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final heroes = [...state.heroes];
+    heroes[0] = heroes[0].copyWith(
+      equipped: {
+        EquipmentSlot.weapon: oneHand,
+        EquipmentSlot.offHand: shield,
+      },
+    );
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[twoHand],
+    );
+
+    final cmp = GameLogic.compareForHero(state.heroes[0], twoHand);
+    expect(cmp.isUpgrade, isFalse);
+
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(state.heroes[0].itemIn(EquipmentSlot.weapon)?.id, oneHand.id);
+    expect(state.heroes[0].itemIn(EquipmentSlot.offHand)?.id, shield.id);
+    expect(state.gearStash.any((g) => g.id == twoHand.id), isTrue);
+  });
+
+  test('auto equip gives contested item to largest delta hero', () {
+    EquipmentItem cloak({
+      required String id,
+      required int armor,
+      required int sta,
+    }) {
+      return GameLogic.createEquipment(
+        slot: EquipmentSlot.cloak,
+        rarity: LootRarity.rare,
+        battleNumber: 5,
+      ).copyWith(
+        id: id,
+        armorBonus: armor,
+        staminaBonus: sta,
+        strengthBonus: 2,
+        defenseBonus: armor,
+        vitalityBonus: sta,
+        effectId: GearEffectId.none,
+        effectValue: 0,
+        clearAffinity: true,
+      );
+    }
+
+    final prize = cloak(id: 'prize_cloak', armor: 16, sta: 14);
+    final runnerUp = cloak(id: 'runner_cloak', armor: 10, sta: 8);
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final w = state.heroes.indexWhere((h) => h.role == HeroRole.warrior);
+    final m = state.heroes.indexWhere((h) => h.role == HeroRole.mage);
+    expect(w, greaterThanOrEqualTo(0));
+    expect(m, greaterThanOrEqualTo(0));
+
+    // Empty cloaks on W/M; lock other heroes so they cannot claim.
+    final heroes = [
+      for (var i = 0; i < state.heroes.length; i++)
+        if (i == w || i == m)
+          state.heroes[i].copyWith(
+            equipped: {
+              for (final e in state.heroes[i].equipped.entries)
+                if (e.key != EquipmentSlot.cloak) e.key: e.value,
+            },
+          )
+        else
+          state.heroes[i].copyWith(
+            equipped: {
+              ...state.heroes[i].equipped,
+              EquipmentSlot.cloak: cloak(
+                id: 'lock_$i',
+                armor: 40,
+                sta: 40,
+              ),
+            },
+          ),
+    ];
+
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[prize, runnerUp],
+    );
+
+    final deltaW = GameLogic.compareForHero(state.heroes[w], prize).powerDelta;
+    final deltaM = GameLogic.compareForHero(state.heroes[m], prize).powerDelta;
+    expect(deltaW, greaterThan(deltaM));
+    expect(deltaW, greaterThan(0));
+    expect(deltaM, greaterThan(0));
+
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(state.heroes[w].itemIn(EquipmentSlot.cloak)?.id, prize.id);
+    expect(state.heroes[m].itemIn(EquipmentSlot.cloak)?.id, runnerUp.id);
   });
 
 

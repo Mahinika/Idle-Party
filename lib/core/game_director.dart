@@ -13,6 +13,8 @@ import '../ui/game_audio.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'meta_systems.dart';
+import 'story_lore.dart';
+import '../models/dungeon_def.dart';
 
 abstract class GameStorage {
   Future<GameState?> load();
@@ -103,6 +105,7 @@ class GameDirector extends ChangeNotifier {
   int _roomGold = 0;
   int _battleToken = 0;
   int _uiThrottle = 0;
+  int _visualFrame = 0;
   bool _awaitingWipeChoice = false;
   String? _toast;
   double _toastLife = 0;
@@ -120,6 +123,9 @@ class GameDirector extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   SpatialWorld? get spatial => _spatial;
+
+  /// Increments each spatial sim step — used by combat painter dirty-checks.
+  int get visualFrame => _visualFrame;
 
   /// Test helper: put items in the bag without rebuilding combat.
   @visibleForTesting
@@ -177,7 +183,7 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  Future<void> boot() async {
+  Future<void> boot({bool deferCombatLoop = false}) async {
     try {
       final saved = await _storage.load();
       late GameState loaded;
@@ -192,12 +198,16 @@ class GameDirector extends ChangeNotifier {
         _ensureUiTimer();
         if (_state.inDungeon) {
           _rebuildSpatial();
-          if (enableSpatialLoop) {
+          if (enableSpatialLoop && !deferCombatLoop) {
             _startSpatialLoop();
           }
         }
-        _isLoading = false;
-        notifyListeners();
+        // Keep loading flag true until finally{} when intro is deferred —
+        // early notify would flash hub/dungeon under the title card.
+        if (!deferCombatLoop) {
+          _isLoading = false;
+          notifyListeners();
+        }
 
         final elapsed = DateTime.now().difference(saved.lastUpdated);
         final offline = GameLogic.applyOfflineProgress(saved, elapsed);
@@ -215,10 +225,12 @@ class GameDirector extends ChangeNotifier {
       _ensureUiTimer();
       if (_state.inDungeon) {
         _rebuildSpatial();
-        if (enableSpatialLoop) {
+        if (enableSpatialLoop && !deferCombatLoop) {
           _startSpatialLoop();
         }
-        showToast('Floor combat restarted (positions reset)', life: 3.2);
+        if (!deferCombatLoop) {
+          showToast('Floor combat restarted (positions reset)', life: 3.2);
+        }
       } else {
         _spatialTimer?.cancel();
         _spatialTimer = null;
@@ -234,6 +246,18 @@ class GameDirector extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Start spatial combat after the cold-start intro (if already in a dungeon).
+  void ensureCombatLoop() {
+    if (!enableSpatialLoop || !_state.inDungeon) return;
+    if (_spatial == null) {
+      _rebuildSpatial();
+    }
+    if (_spatialTimer == null) {
+      _startSpatialLoop();
+      showToast('Floor combat restarted (positions reset)', life: 3.2);
     }
   }
 
@@ -269,6 +293,7 @@ class GameDirector extends ChangeNotifier {
     _roomGold += result.goldFromKills;
     _tickUiTimers(0.033);
     _announceAbilityUnlocks(before, _state);
+    _announceAchievementUnlocks(before, _state);
 
     if (result.goldFromKills > 0) {
       GameAudio.hit();
@@ -317,6 +342,7 @@ class GameDirector extends ChangeNotifier {
         skipLootRoll: false,
       ).copyWith(lastUpdated: DateTime.now());
       _announceAbilityUnlocks(beforeClear, _state);
+      _announceAchievementUnlocks(beforeClear, _state);
       if (wasBoss) {
         GameAudio.boss();
       } else {
@@ -327,18 +353,30 @@ class GameDirector extends ChangeNotifier {
       showToast(_clearSummary!, life: 2.0);
       if (_state.highestDungeonCleared > beforeDungeon) {
         GameAudio.unlock();
-        showToast('UNLOCKED NEXT ZONE!', life: 3.2);
+        String? nextId;
+        for (final d in DungeonCatalog.all) {
+          if (d.number == _state.highestDungeonCleared + 1) {
+            nextId = d.id;
+            break;
+          }
+        }
+        showToast(
+          nextId != null
+              ? StoryLore.unlockedNextZone(nextId)
+              : StoryLore.dungeonCleared(beforeClear.dungeonId),
+          life: 3.2,
+        );
         _lastHighestDungeon = _state.highestDungeonCleared;
       } else if (_state.highestDungeonCleared > _lastHighestDungeon) {
         _lastHighestDungeon = _state.highestDungeonCleared;
-        showToast('DUNGEON CLEARED!', life: 3);
+        showToast(StoryLore.dungeonCleared(beforeClear.dungeonId), life: 3.2);
       }
       if (_state.inDungeon) {
         _rebuildSpatial();
       } else {
         _spatialTimer?.cancel();
         _spatial = null;
-        showToast('DUNGEON COMPLETE', life: 3);
+        showToast(StoryLore.dungeonCleared(beforeClear.dungeonId), life: 3.2);
       }
       notifyListeners();
       unawaited(_storage.save(_state));
@@ -346,6 +384,8 @@ class GameDirector extends ChangeNotifier {
     }
 
     _uiThrottle++;
+    _visualFrame++;
+    // ~15 Hz UI rebuilds (sim stays 30 Hz).
     if (_uiThrottle % 2 == 0) {
       notifyListeners();
     }
@@ -428,6 +468,7 @@ class GameDirector extends ChangeNotifier {
     if (enableSpatialLoop) {
       _startSpatialLoop();
     }
+    showToast(StoryLore.enterDungeon(dungeonId), life: 2.8);
     notifyListeners();
     unawaited(_storage.save(_state));
   }
@@ -622,6 +663,10 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(_state.copyWith(challengeNoFlask: value));
   }
 
+  void setHardmodeLevel(int level) {
+    _applyUpgrade(_state.copyWith(hardmodeLevel: level.clamp(0, 10)));
+  }
+
   void markChangelogSeen() {
     if (_state.seenChangelogVersion == MetaSystems.currentVersion) return;
     _applyUpgrade(
@@ -657,7 +702,7 @@ class GameDirector extends ChangeNotifier {
     if (enableSpatialLoop) {
       _startSpatialLoop();
     }
-    showToast('Daily Run — clear 1 floor for +25 essence', life: 3.2);
+    showToast(StoryLore.dailyRun(_state.dungeonId), life: 3.2);
     notifyListeners();
     unawaited(_storage.save(_state));
   }
@@ -765,12 +810,11 @@ class GameDirector extends ChangeNotifier {
     _state = updated;
     GameAudio.unlock();
     showToast(
-      'ASCENDED · AL${_state.ascensionLevel}'
-      '${milestone > 0 ? ' · +${milestone}e milestone' : ''}',
+      StoryLore.ascendToast(al: _state.ascensionLevel, milestoneBonus: milestone),
       life: 3,
     );
     if (!hadRogue && _state.rogueUnlocked) {
-      showToast('SHADE THE ROGUE JOINS!', life: 3.5);
+      showToast(StoryLore.shadeJoins, life: 3.5);
     }
     if (_state.inDungeon) {
       _rebuildSpatial();
@@ -809,6 +853,7 @@ class GameDirector extends ChangeNotifier {
     final before = _state;
     _state = updated;
     _announceAbilityUnlocks(before, _state);
+    _announceAchievementUnlocks(before, _state);
     if (!_state.inDungeon) {
       _spatial = null;
     } else if (_spatial != null &&
@@ -836,6 +881,17 @@ class GameDirector extends ChangeNotifier {
         GameAudio.unlock();
         showToast('${hero.name}: ${ability.shortLabel}!', life: 2.6);
       }
+    }
+  }
+
+  void _announceAchievementUnlocks(GameState before, GameState after) {
+    if (after.achievements.length <= before.achievements.length) return;
+    final known = before.achievements.toSet();
+    for (final id in after.achievements) {
+      if (known.contains(id)) continue;
+      GameAudio.unlock();
+      showToast('Achievement unlocked!', life: 2.8);
+      break;
     }
   }
 

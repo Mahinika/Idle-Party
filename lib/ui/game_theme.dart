@@ -9,6 +9,8 @@ abstract final class GameTheme {
   static const Color stoneRaised = Color(0xFF2A241A);
   static const Color panel = Color(0xFF221C14);
   static const Color panelInset = Color(0xFF16120E);
+  /// Translucent list/card fill used inside overlays.
+  static const Color menuCard = Color(0xB816120E);
   static const Color moss = Color(0xFF3D4A32);
   static const Color mossLit = Color(0xFF8FA070);
   static const Color torch = Color(0xFFE8B84A);
@@ -38,37 +40,66 @@ abstract final class GameTheme {
   }
 
   /// Headers / titles (pixel).
+  static final Map<int, TextStyle> _pixelCache = <int, TextStyle>{};
+  static final Map<int, TextStyle> _bodyCache = <int, TextStyle>{};
+  static final Map<int, TextStyle> _buttonCache = <int, TextStyle>{};
+
   static TextStyle pixel({
     double size = 11,
     Color color = torchHot,
     double height = 1.4,
   }) =>
-      GoogleFonts.pressStart2p(
+      pixelCached(size: size, color: color, height: height);
+
+  /// Same as [pixel] — explicit name for hot paint paths.
+  static TextStyle pixelCached({
+    double size = 11,
+    Color color = torchHot,
+    double height = 1.4,
+  }) {
+    final key = Object.hash(size, color.toARGB32(), height);
+    return _pixelCache.putIfAbsent(
+      key,
+      () => GoogleFonts.pressStart2p(
         fontSize: size,
         color: color,
         height: height,
         shadows: const [
-          Shadow(color: Color(0xCC000000), offset: Offset(1, 1), blurRadius: 0),
+          Shadow(
+            color: Color(0xCC000000),
+            offset: Offset(1, 1),
+            blurRadius: 0,
+          ),
         ],
-      );
+      ),
+    );
+  }
 
   /// Readable body / HUD copy.
   static TextStyle body({
     double size = 17,
     Color color = parchment,
-  }) =>
-      GoogleFonts.vt323(
+  }) {
+    final key = Object.hash(size, color.toARGB32());
+    return _bodyCache.putIfAbsent(
+      key,
+      () => GoogleFonts.vt323(
         fontSize: size,
         color: color,
         height: 1.15,
-      );
+      ),
+    );
+  }
 
   /// Button labels — large VT323 so long words stay legible.
   static TextStyle button({
     double size = 20,
     Color color = parchment,
-  }) =>
-      GoogleFonts.vt323(
+  }) {
+    final key = Object.hash(size, color.toARGB32());
+    return _buttonCache.putIfAbsent(
+      key,
+      () => GoogleFonts.vt323(
         fontSize: size,
         color: color,
         height: 1.05,
@@ -83,5 +114,7 @@ abstract final class GameTheme {
                   blurRadius: 0,
                 ),
               ],
-      );
+      ),
+    );
+  }
 }

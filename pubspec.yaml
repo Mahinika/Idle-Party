@@ -71,7 +71,9 @@ flutter:
     - assets/custom/icons/
     - assets/custom/portraits/
     - assets/custom/enemies/
+    - assets/custom/heroes/
     - assets/custom/ui/
+    - assets/custom/ui/backdrops/
     - assets/data/
 
   # An image asset can refer to one or more resolution-specific "variants", see

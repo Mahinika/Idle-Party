@@ -8,6 +8,9 @@ void main() {
   testWidgets('renders the idle party hub', (WidgetTester tester) async {
     final director = GameDirector.preview();
 
+    await tester.binding.setSurfaceSize(const Size(400, 860));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
 

@@ -65,14 +65,26 @@ class EquipmentFactory {
   static int _budget({
     required LootRarity rarity,
     required int battleNumber,
+    EquipmentSlot? slot,
   }) {
     final floorBonus = (battleNumber - 1) ~/ 8;
-    return switch (rarity) {
+    final base = switch (rarity) {
       LootRarity.common => 6 + floorBonus * 2,
       LootRarity.uncommon => 10 + floorBonus * 2,
       LootRarity.rare => 16 + floorBonus * 3,
       LootRarity.epic => 24 + floorBonus * 4,
+      LootRarity.legendary => 36 + floorBonus * 5,
     };
+    // Jewelry / cloak used to be empty→full power spikes; keep them weaker.
+    if (slot == EquipmentSlot.cloak ||
+        slot == EquipmentSlot.neck ||
+        slot == EquipmentSlot.ring ||
+        slot == EquipmentSlot.ring2 ||
+        slot == EquipmentSlot.trinket ||
+        slot == EquipmentSlot.trinket2) {
+      return max(3, (base * 0.62).round());
+    }
+    return base;
   }
 
   static ArmorType armorTypeFor(HeroRole bias, int level) {
@@ -245,30 +257,35 @@ class EquipmentFactory {
           LootRarity.uncommon => 'Bulwark',
           LootRarity.rare => 'Aegis',
           LootRarity.epic => 'Titan',
+          LootRarity.legendary => 'Eternal',
         },
       HeroRole.healer => switch (rarity) {
           LootRarity.common => 'Soft',
           LootRarity.uncommon => 'Mending',
           LootRarity.rare => 'Sanctum',
           LootRarity.epic => 'Aurora',
+          LootRarity.legendary => 'Celestial',
         },
       HeroRole.mage => switch (rarity) {
           LootRarity.common => 'Spark',
           LootRarity.uncommon => 'Arcane',
           LootRarity.rare => 'Runic',
           LootRarity.epic => 'Astral',
+          LootRarity.legendary => 'Voidforged',
         },
       HeroRole.rogue => switch (rarity) {
           LootRarity.common => 'Swift',
           LootRarity.uncommon => 'Shadow',
           LootRarity.rare => 'Viper',
           LootRarity.epic => 'Night',
+          LootRarity.legendary => 'Assassin',
         },
       null => switch (rarity) {
           LootRarity.common => 'Iron',
           LootRarity.uncommon => 'Hunter',
           LootRarity.rare => 'Rune',
           LootRarity.epic => 'Mythic',
+          LootRarity.legendary => 'Legendary',
         },
     };
 
@@ -343,7 +360,11 @@ class EquipmentFactory {
     HeroRole? bias,
   }) {
     final classBias = bias ?? HeroRole.values[_random.nextInt(4)];
-    final budget = _budget(rarity: rarity, battleNumber: battleNumber);
+    final budget = _budget(
+      rarity: rarity,
+      battleNumber: battleNumber,
+      slot: slot,
+    );
     final iLvl = itemLevelFor(battleNumber: battleNumber, rarity: rarity);
 
     ArmorType? armorType;
@@ -451,10 +472,11 @@ class EquipmentFactory {
     var effectId = GearEffectId.none;
     var effectValue = 0;
     final effectChance = switch (rarity) {
-      LootRarity.common => 0.4,
-      LootRarity.uncommon => 0.75,
-      LootRarity.rare => 0.92,
-      LootRarity.epic => 1.0,
+      LootRarity.common => 0.28,
+      LootRarity.uncommon => 0.55,
+      LootRarity.rare => 0.78,
+      LootRarity.epic => 0.92,
+      LootRarity.legendary => 1.0,
     };
     if (_random.nextDouble() < effectChance) {
       effectId = switch (classBias) {
@@ -474,11 +496,11 @@ class EquipmentFactory {
             : (_random.nextBool() ? GearEffectId.haste : GearEffectId.lifesteal),
       };
       effectValue = switch (effectId) {
-        GearEffectId.lifesteal => 5 + rarity.index * 3,
+        GearEffectId.lifesteal => 3 + rarity.index * 2,
         GearEffectId.pierce => 1,
         GearEffectId.goldFind => 6 + rarity.index * 4,
-        GearEffectId.crit => 4 + rarity.index * 2,
-        GearEffectId.haste => 5 + rarity.index * 2,
+        GearEffectId.crit => 3 + rarity.index * 2,
+        GearEffectId.haste => 3 + rarity.index * 2,
         GearEffectId.none => 0,
       };
     }
@@ -502,6 +524,7 @@ class EquipmentFactory {
     final affixChance = switch (rarity) {
       LootRarity.rare => 0.3,
       LootRarity.epic => 0.65,
+      LootRarity.legendary => 0.9,
       _ => 0.0,
     };
     if (affixChance > 0 && _random.nextDouble() < affixChance) {

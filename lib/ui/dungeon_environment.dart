@@ -6,35 +6,59 @@ import '../spatial/tile_map.dart';
 abstract final class DungeonEnvironment {
   /// Deep void behind carved space — not walkable brick fill.
   static Color ambient(String dungeonId) => switch (dungeonId) {
-        'sandy' => const Color(0xFF14100A),
-        'goblin' => const Color(0xFF100E0A),
-        'king' => const Color(0xFF0A0C12),
-        'underworld' => const Color(0xFF0C0812),
-        'dead' => const Color(0xFF080A09),
-        'hell' => const Color(0xFF160808),
-        'crystal' => const Color(0xFF0A1420),
-        _ => const Color(0xFF0C0B09),
+        'sandy' => const Color(0xFF0C0A08),
+        'goblin' => const Color(0xFF0A0C09),
+        'king' => const Color(0xFF080A10),
+        'underworld' => const Color(0xFF0A0810),
+        'dead' => const Color(0xFF070908),
+        'hell' => const Color(0xFF120606),
+        'crystal' => const Color(0xFF081018),
+        _ => const Color(0xFF080706),
       };
 
   /// Soft full-frame wash so each dungeon reads differently.
   static Color atmosphereWash(String dungeonId) => switch (dungeonId) {
-        'sandy' => const Color(0x18C88840),
-        'goblin' => const Color(0x1428A050),
-        'king' => const Color(0x143060A0),
-        'underworld' => const Color(0x1A7040B0),
-        'dead' => const Color(0x16305040),
-        'hell' => const Color(0x22A02018),
-        'crystal' => const Color(0x1850A0F0),
-        _ => const Color(0x10000000),
+        'sandy' => const Color(0x38C88840),
+        'goblin' => const Color(0x3028A050),
+        'king' => const Color(0x303060A0),
+        'underworld' => const Color(0x387040B0),
+        'dead' => const Color(0x30305040),
+        'hell' => const Color(0x40A02018),
+        'crystal' => const Color(0x3850A0F0),
+        _ => const Color(0x22000000),
+      };
+
+  /// Per-tile mute + zone tint so Kenney floors sit in the painted cave.
+  static Color floorBlend(String dungeonId) => switch (dungeonId) {
+        'sandy' => const Color(0x66A07038),
+        'goblin' => const Color(0x5A284828),
+        'king' => const Color(0x5A203048),
+        'underworld' => const Color(0x66281840),
+        'dead' => const Color(0x5A182028),
+        'hell' => const Color(0x6A401010),
+        'crystal' => const Color(0x5A183050),
+        _ => const Color(0x55050403),
+      };
+
+  /// Opaque tint mixed into combat projectiles so bolts read with the zone.
+  static Color projectileTint(String dungeonId) => switch (dungeonId) {
+        'sandy' => const Color(0xFFE0A050),
+        'goblin' => const Color(0xFF60C070),
+        'king' => const Color(0xFF70A0E0),
+        'underworld' => const Color(0xFFA070E0),
+        'dead' => const Color(0xFF70A090),
+        'hell' => const Color(0xFFE05040),
+        'crystal' => const Color(0xFF80D0FF),
+        _ => const Color(0xFFE0C080),
       };
 
   /// Dim corridors vs room floors.
   static Color corridorShade(String dungeonId) => switch (dungeonId) {
-        'hell' => const Color(0x28000000),
-        'underworld' => const Color(0x22000000),
-        'dead' => const Color(0x20000000),
-        'crystal' => const Color(0x22001018),
-        _ => const Color(0x18000000),
+        'hell' => const Color(0x40000000),
+        'underworld' => const Color(0x38000000),
+        'dead' => const Color(0x34000000),
+        'crystal' => const Color(0x38001020),
+        _ => const Color(0x2C000000),
       };
 
   /// Rare luminance jitter (not a checkerboard).

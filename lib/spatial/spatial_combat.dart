@@ -179,7 +179,7 @@ class SpatialActor {
 
   double get moveSpeedMul {
     var m = 1.0;
-    if (sprintTimer > 0) m *= 1.55;
+    if (sprintTimer > 0) m *= 1.28;
     if (enrageTimer > 0 && team == SpatialTeam.enemy) m *= 1.25;
     if (rootTimer > 0) m = 0;
     if (iceBlockTimer > 0) m = 0;
@@ -264,7 +264,7 @@ class GroundLoot {
 
   GroundLootKind get kind {
     if (drop.isEquipment) {
-      return drop.rarity == LootRarity.epic
+      return drop.rarity.index >= LootRarity.epic.index
           ? GroundLootKind.chest
           : GroundLootKind.gear;
     }
@@ -1606,22 +1606,39 @@ abstract final class SpatialCombat {
       }
     }
 
-    if (can(AbilityId.sprint) &&
-        focusEnemy != null &&
-        _dist(rogue, focusEnemy) > rogue.attackRange * 1.1) {
-      final def = ClassKits.defFor(AbilityId.sprint)!;
-      _spendRage(rogue, def.resourceCost);
-      _startAbilityCd(rogue, AbilityId.sprint, def.cooldown);
-      rogue.sprintTimer = 4;
-      if (!reducedVfx) {
-        _spawnFloater(
-          world,
-          x: rogue.x,
-          y: rogue.y - 0.45,
-          text: 'SPRINT',
-          argb: 0xFF90FF90,
-          life: 0.45,
-        );
+    if (can(AbilityId.sprint) && focusEnemy != null) {
+      SpatialActor? packLeader;
+      for (final h in world.heroes) {
+        if (h.hp > 0 && h.heroRole == HeroRole.warrior) {
+          packLeader = h;
+          break;
+        }
+      }
+      if (packLeader == null) {
+        for (final h in world.heroes) {
+          if (h.hp > 0 && h.id != rogue.id) {
+            packLeader = h;
+            break;
+          }
+        }
+      }
+      final nearPack =
+          packLeader == null || _dist(rogue, packLeader) < 2.5;
+      if (nearPack && _dist(rogue, focusEnemy) > rogue.attackRange * 1.85) {
+        final def = ClassKits.defFor(AbilityId.sprint)!;
+        _spendRage(rogue, def.resourceCost);
+        _startAbilityCd(rogue, AbilityId.sprint, def.cooldown);
+        rogue.sprintTimer = 4;
+        if (!reducedVfx) {
+          _spawnFloater(
+            world,
+            x: rogue.x,
+            y: rogue.y - 0.45,
+            text: 'SPRINT',
+            argb: 0xFF90FF90,
+            life: 0.45,
+          );
+        }
       }
     }
 
@@ -1776,6 +1793,7 @@ abstract final class SpatialCombat {
       room: room,
       dungeonId: state.dungeonId,
       layoutSeed: state.layoutSeed,
+      enemyCountOverride: state.enemies.length,
     );
     final isTreasure =
         room.type == RoomType.treasure || state.enemies.isEmpty;
@@ -1787,13 +1805,13 @@ abstract final class SpatialCombat {
           ? map.spawnPoints[i]
           : map.spawnPoints[i % map.spawnPoints.length];
       final pattern = _patternForHero(hero, state);
-      final ranged = hero.role != HeroRole.warrior;
-      // Tank leads up front; casters hang at preferred range.
+      final ranged = hero.role == HeroRole.mage || hero.role == HeroRole.healer;
+      // Tank leads up front; casters hang at preferred range; rogue stays near melee.
       final preferred = switch (hero.role) {
         HeroRole.warrior => 1.15,
         HeroRole.healer => 3.2,
         HeroRole.mage => 4.0,
-        HeroRole.rogue => 1.6,
+        HeroRole.rogue => 1.25,
       };
       // Spread party so 4 heroes don't stack on one cell.
       final ox = switch (i) {
@@ -1823,7 +1841,7 @@ abstract final class SpatialCombat {
           attackRange: switch (hero.role) {
             HeroRole.mage => 5.0,
             HeroRole.healer => 4.0,
-            HeroRole.rogue => 2.4,
+            HeroRole.rogue => 1.85,
             HeroRole.warrior => 1.7,
           },
           attackCooldown: 1.0 / state.effectiveHeroAttackSpeed(hero),
@@ -1848,15 +1866,48 @@ abstract final class SpatialCombat {
     }
 
     final firstCombat = map.chambers.length <= 1 ? 0 : 1;
+    final floorPool = map.spawnableCells(combatOnly: map.chambers.length > 1);
+    final overflowSpawns = List<(int, int)>.from(floorPool);
+    // Stable shuffle from layout seed so overflow doesn't jitter every rebuild.
+    overflowSpawns.shuffle(math.Random(state.layoutSeed ^ 0xE2E2));
+    var overflowIdx = 0;
+    final used = <String>{};
+
+    (int, int) placeEnemy(int i) {
+      (int, int) candidate;
+      if (i < map.enemySpawns.length) {
+        candidate = map.enemySpawns[i];
+      } else if (overflowSpawns.isNotEmpty) {
+        candidate = overflowSpawns[overflowIdx % overflowSpawns.length];
+        overflowIdx++;
+      } else {
+        candidate = (
+          (map.cols / 2).floor(),
+          (map.rows / 2).floor(),
+        );
+      }
+      var snapped = map.snapToSpawnable(candidate.$1, candidate.$2);
+      // Prefer unique cells when the map has room.
+      final key = '${snapped.$1},${snapped.$2}';
+      if (used.contains(key) && overflowSpawns.isNotEmpty) {
+        for (var k = 0; k < overflowSpawns.length; k++) {
+          final alt = overflowSpawns[(overflowIdx + k) % overflowSpawns.length];
+          final altSnap = map.snapToSpawnable(alt.$1, alt.$2);
+          final altKey = '${altSnap.$1},${altSnap.$2}';
+          if (!used.contains(altKey)) {
+            snapped = altSnap;
+            break;
+          }
+        }
+      }
+      used.add('${snapped.$1},${snapped.$2}');
+      return snapped;
+    }
+
     final enemies = <SpatialActor>[];
     for (var i = 0; i < state.enemies.length; i++) {
       final enemy = state.enemies[i];
-      final spawn = i < map.enemySpawns.length
-          ? map.enemySpawns[i]
-          : (
-              map.cols - 3,
-              2 + (i % (map.rows - 4)),
-            );
+      final spawn = placeEnemy(i);
       final ranged = enemy.archetype == EnemyArchetype.ranged ||
           enemy.archetype == EnemyArchetype.support ||
           (enemy.role == EnemyRole.elite &&
@@ -1968,12 +2019,12 @@ abstract final class SpatialCombat {
         }
       }
       final pattern = _patternForHero(hero, state);
-      final ranged = hero.role != HeroRole.warrior;
+      final ranged = hero.role == HeroRole.mage || hero.role == HeroRole.healer;
       final preferred = switch (hero.role) {
         HeroRole.warrior => 1.15,
         HeroRole.healer => 3.2,
         HeroRole.mage => 4.0,
-        HeroRole.rogue => 1.6,
+        HeroRole.rogue => 1.25,
       };
       final spawn = i < world.map.spawnPoints.length
           ? world.map.spawnPoints[i]
@@ -2007,7 +2058,7 @@ abstract final class SpatialCombat {
         attackRange: switch (hero.role) {
           HeroRole.mage => 5.0,
           HeroRole.healer => 4.0,
-          HeroRole.rogue => 2.4,
+          HeroRole.rogue => 1.85,
           HeroRole.warrior => 1.7,
         },
         attackCooldown: 1.0 / state.effectiveHeroAttackSpeed(hero),
@@ -2368,13 +2419,23 @@ abstract final class SpatialCombat {
         final ox = switch (hero.heroRole) {
           HeroRole.mage => -0.9,
           HeroRole.healer => -0.55,
-          HeroRole.rogue => 0.35,
+          HeroRole.rogue => -0.2,
           _ => -0.4,
         };
         final oy = (i - 1) * 0.55;
         tx = leader.x + ox;
         ty = leader.y + oy;
         hold = 0.45;
+      }
+
+      // Keep melee DPS from racing a chamber ahead of the tank.
+      if (leader != null &&
+          hero.id != leader.id &&
+          hero.heroRole == HeroRole.rogue &&
+          _dist(hero, leader) > 2.15) {
+        tx = leader.x;
+        ty = leader.y;
+        hold = 0.55;
       }
 
       _steerActor(
@@ -3215,6 +3276,8 @@ abstract final class SpatialCombat {
     final drops = GameLogic.rollLoot(
       state.battleNumber,
       ascensionLevel: state.ascensionLevel,
+      lootFindPercent: state.petLootFindPercent,
+      hardmodeLevel: state.hardmodeLevel,
     );
     final drop = drops.isEmpty
         ? const LootDrop(

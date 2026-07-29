@@ -4,17 +4,18 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
-import '../core/dungeon_generator.dart';
 import '../core/game_state.dart';
 import '../models/dungeon_def.dart';
-import '../models/dungeon_room.dart';
 import 'confirm_dialogs.dart';
+import 'custom_assets.dart';
+import 'cave_atmosphere.dart';
 import 'dungeon_environment.dart';
 import 'game_theme.dart';
 import 'kenney_assets.dart';
 import 'kenney_button.dart';
 import 'kenney_panel.dart';
 import 'kenney_sprite.dart';
+import 'menu_chrome.dart';
 import 'meta_overlays.dart';
 
 /// Idle Party hub: dungeon select / meta / ascend.
@@ -30,6 +31,9 @@ class HubScreen extends StatefulWidget {
     required this.onOpenMarket,
     required this.onOpenBeast,
     required this.onOpenSettings,
+    this.onOpenAchievements,
+    this.onOpenCodex,
+    this.onOpenLoadouts,
   });
 
   final GameDirector director;
@@ -41,6 +45,9 @@ class HubScreen extends StatefulWidget {
   final VoidCallback onOpenMarket;
   final VoidCallback onOpenBeast;
   final VoidCallback onOpenSettings;
+  final VoidCallback? onOpenAchievements;
+  final VoidCallback? onOpenCodex;
+  final VoidCallback? onOpenLoadouts;
 
   @override
   State<HubScreen> createState() => _HubScreenState();
@@ -80,7 +87,8 @@ class _HubScreenState extends State<HubScreen>
     super.dispose();
   }
 
-  String _dungeonIcon(DungeonDef def) => KenneyAssets.dungeonIconFor(def.id);
+  String _dungeonIcon(DungeonDef def) =>
+      KenneyAssets.dungeonPortraitFor(def.id);
 
   @override
   Widget build(BuildContext context) {
@@ -93,60 +101,45 @@ class _HubScreenState extends State<HubScreen>
       state.highestDungeonCleared,
     );
 
-    return AnimatedBuilder(
-      animation: _torch,
-      builder: (context, _) {
-        final flicker = 0.55 + (_torch.value * 0.45);
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0, -0.35),
-                  radius: 1.15,
-                  colors: [
-                    Color.lerp(
-                      Color.lerp(
-                        const Color(0xFF2A2214),
-                        DungeonEnvironment.ambient(_selectedId),
-                        0.65,
-                      )!,
-                      Color.lerp(
-                        const Color(0xFF3A2E18),
-                        DungeonEnvironment.atmosphereWash(_selectedId)
-                            .withValues(alpha: 1),
-                        0.35,
-                      )!,
-                      flicker,
-                    )!,
-                    GameTheme.ink,
-                  ],
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        RepaintBoundary(
+          child: const _HubSceneBackdrop(),
+        ),
+        AnimatedBuilder(
+          animation: _torch,
+          builder: (context, _) {
+            final flicker = 0.55 + (_torch.value * 0.45);
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                CaveAtmosphere.torchBloom(
+                  intensity: flicker,
+                  alignment: const Alignment(0, 0.15),
+                  sizeFactor: 0.7,
                 ),
-              ),
-            ),
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _HubAtmospherePainter(
-                  pulse: _torch.value,
-                  dungeonId: _selectedId,
-                ),
-              ),
-            ),
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _HubHeader(
-                      ascensionLevel: state.ascensionLevel,
-                      bossFloor: bossFloor,
-                      gold: state.gold,
-                      essence: state.essence,
-                      soulbound: state.soulboundFragments,
-                      torch: flicker,
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: ColoredBox(
+                      color: DungeonEnvironment.atmosphereWash(_selectedId),
                     ),
+                  ),
+                ),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _HubHeader(
+                          ascensionLevel: state.ascensionLevel,
+                          bossFloor: bossFloor,
+                          gold: state.gold,
+                          essence: state.essence,
+                          soulbound: state.soulboundFragments,
+                          torch: flicker,
+                        ),
                     if (director.offlineSummary != null) ...[
                       const SizedBox(height: 8),
                       _OfflineBanner(
@@ -160,75 +153,83 @@ class _HubScreenState extends State<HubScreen>
                       Text(
                         director.toast!,
                         textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: GameTheme.pixel(
                           size: GameTheme.hudPixel,
                           color: GameTheme.mossLit,
                         ),
                       ),
                     ],
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Expanded(
+                      flex: 5,
                       child: KenneyPanel(
                         style: KenneyPanelStyle.brown,
-                        padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
+                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+                        child: LayoutBuilder(
+                          builder: (context, panelConstraints) {
+                            if (panelConstraints.maxHeight < 48) {
+                              return const SizedBox.shrink();
+                            }
+                            final showHeader = panelConstraints.maxHeight > 72;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                KenneySprite(
-                                  asset: KenneyAssets.iconDoor,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'WORLD PATH',
-                                  style: GameTheme.pixel(
-                                    size: 9,
-                                    color: GameTheme.torchHot,
+                                if (showHeader) ...[
+                                  Row(
+                                    children: [
+                                      KenneySprite(
+                                        asset: KenneyAssets.iconDoor,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'WORLD PATH',
+                                        style: GameTheme.pixel(
+                                          size: 9,
+                                          color: GameTheme.torchHot,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        'Boss F $bossFloor',
+                                        style: GameTheme.body(
+                                          size: 14,
+                                          color: GameTheme.parchmentDim,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  'BF $bossFloor',
-                                  style: GameTheme.body(
-                                    size: 14,
-                                    color: GameTheme.parchmentDim,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Expanded(
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  return _ZonePathMap(
+                                  const SizedBox(height: 4),
+                                ],
+                                Expanded(
+                                  child: _ZonePathMap(
                                     dungeons: DungeonCatalog.all,
                                     selectedId: _selectedId,
                                     lifetimeGold: state.lifetimeGoldEarned,
                                     highestCleared: state.highestDungeonCleared,
-                                    ascensionLevel: state.ascensionLevel,
                                     pulse: _torch.value,
                                     iconFor: _dungeonIcon,
                                     onSelect: (id) =>
                                         setState(() => _selectedId = id),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     KenneyPanel(
                       style: KenneyPanelStyle.inset,
-                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
                       child: Row(
                         children: [
                           KenneySprite(
                             asset: KenneyAssets.dungeonPortraitFor(_selectedId),
-                            size: 44,
+                            size: 40,
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -242,7 +243,7 @@ class _HubScreenState extends State<HubScreen>
                                     color: GameTheme.torchHot,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 2),
                                 Text(
                                   unlockedSelected
                                       ? 'Boss: ${selected.bossName}'
@@ -252,22 +253,28 @@ class _HubScreenState extends State<HubScreen>
                                     color: GameTheme.parchmentDim,
                                   ),
                                 ),
-                                Text(
-                                  'Layout ${selected.layout.name}',
-                                  style: GameTheme.body(
-                                    size: 13,
-                                    color: GameTheme.mossLit,
+                                if (unlockedSelected &&
+                                    selected.blurb.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    selected.blurb,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GameTheme.body(
+                                      size: 13,
+                                      color: GameTheme.mossLit,
+                                    ),
                                   ),
-                                ),
+                                ],
                               ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     ChallengeToggles(director: director),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Transform.scale(
                       scale: 1.0 + (_torch.value * 0.012),
                       child: KenneyButton(
@@ -278,7 +285,7 @@ class _HubScreenState extends State<HubScreen>
                             : null,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     KenneyButton(
                       label: director.isDailyClaimedToday
                           ? 'DAILY RUN · claimed today'
@@ -288,9 +295,11 @@ class _HubScreenState extends State<HubScreen>
                           : KenneyButtonStyle.brown,
                       onPressed: director.enterDaily,
                     ),
-                    const SizedBox(height: 8),
-                    AscendMilestonesStrip(state: state),
-                    const SizedBox(height: 8),
+                    if (canAscend || state.bossVictories > 0) ...[
+                      const SizedBox(height: 6),
+                      AscendMilestonesStrip(state: state),
+                    ],
+                    const SizedBox(height: 6),
                     KenneyButton(
                       label: canAscend
                           ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1)}e'
@@ -302,7 +311,7 @@ class _HubScreenState extends State<HubScreen>
                           ? () => confirmAscend(context, director)
                           : null,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       canAscend
                           ? 'Ready · AL${state.ascensionLevel} → ${state.ascensionLevel + 1}'
@@ -313,7 +322,6 @@ class _HubScreenState extends State<HubScreen>
                         color: GameTheme.parchmentDim,
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Align(
                       alignment: Alignment.center,
                       child: TextButton(
@@ -331,106 +339,51 @@ class _HubScreenState extends State<HubScreen>
                 ),
               ),
             ),
-          ],
-        );
-      },
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 
   void _showHubMore(BuildContext context) {
-    final items = <({String label, VoidCallback onTap})>[
-      (label: 'BAG', onTap: widget.onOpenInventory),
-      (label: 'FORGE', onTap: widget.onOpenForge),
-      (label: 'JOBS', onTap: widget.onOpenJobs),
-      (label: 'SANCTUARY', onTap: widget.onOpenSanctuary),
-      (label: 'MARKET', onTap: widget.onOpenMarket),
-      (label: 'BEAST PEN', onTap: widget.onOpenBeast),
-      (label: 'SETTINGS', onTap: widget.onOpenSettings),
-    ];
-    showModalBottomSheet<void>(
+    MenuChrome.showMenuSheet(
       context: context,
-      backgroundColor: GameTheme.stoneDeep,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 10),
-                    decoration: BoxDecoration(
-                      color: GameTheme.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                Text(
-                  'HUB',
-                  style: GameTheme.pixel(size: GameTheme.hudPixelComfort),
-                ),
-                const SizedBox(height: 8),
-                for (final item in items)
-                  _HubMoreRow(
-                    label: item.label,
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      item.onTap();
-                    },
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
+      title: 'HUB',
+      items: [
+        (label: 'BAG', onTap: widget.onOpenInventory),
+        (label: 'FORGE', onTap: widget.onOpenForge),
+        (label: 'JOBS', onTap: widget.onOpenJobs),
+        (label: 'SANCTUARY', onTap: widget.onOpenSanctuary),
+        (label: 'MARKET', onTap: widget.onOpenMarket),
+        (label: 'BEAST PEN', onTap: widget.onOpenBeast),
+        if (widget.onOpenLoadouts != null)
+          (label: 'LOADOUTS', onTap: widget.onOpenLoadouts!),
+        if (widget.onOpenAchievements != null)
+          (label: 'ACHIEVEMENTS', onTap: widget.onOpenAchievements!),
+        if (widget.onOpenCodex != null)
+          (label: 'CODEX', onTap: widget.onOpenCodex!),
+        (label: 'SETTINGS', onTap: widget.onOpenSettings),
+      ],
     );
   }
 }
 
-class _HubMoreRow extends StatelessWidget {
-  const _HubMoreRow({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback onTap;
+class _HubSceneBackdrop extends StatelessWidget {
+  const _HubSceneBackdrop();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(4),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [GameTheme.stoneRaised, GameTheme.stone],
-              ),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: GameTheme.borderLit.withValues(alpha: 0.7),
-              ),
-            ),
-            alignment: Alignment.centerLeft,
-            child: Text(
-              label,
-              style: GameTheme.pixel(size: GameTheme.hudPixel),
-            ),
-          ),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        CaveAtmosphere.fullBleedScene(
+          CustomAssets.hubScene,
+          alignment: const Alignment(0, -0.08),
         ),
-      ),
+        CaveAtmosphere.readabilityScrim(top: 0.38, bottom: 0.42),
+      ],
     );
   }
 }
@@ -444,18 +397,14 @@ class _OfflineBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xEE1A2030),
-      borderRadius: BorderRadius.circular(6),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onDismiss,
         borderRadius: BorderRadius.circular(6),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: GameTheme.mossLit),
-          ),
+          decoration: MenuChrome.cardBox(),
           child: Row(
             children: [
               Expanded(
@@ -469,10 +418,7 @@ class _OfflineBanner extends StatelessWidget {
               ),
               Text(
                 'TAP',
-                style: GameTheme.pixel(
-                  size: 7,
-                  color: GameTheme.parchmentDim,
-                ),
+                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
               ),
             ],
           ),
@@ -545,9 +491,9 @@ class _StatPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: GameTheme.stone.withValues(alpha: 0.92),
+        color: GameTheme.stone.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: GameTheme.border),
+        border: Border.all(color: GameTheme.border.withValues(alpha: 0.75)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -567,7 +513,6 @@ class _ZonePathMap extends StatelessWidget {
     required this.selectedId,
     required this.lifetimeGold,
     required this.highestCleared,
-    required this.ascensionLevel,
     required this.pulse,
     required this.iconFor,
     required this.onSelect,
@@ -577,98 +522,128 @@ class _ZonePathMap extends StatelessWidget {
   final String selectedId;
   final int lifetimeGold;
   final int highestCleared;
-  final int ascensionLevel;
   final double pulse;
   final String Function(DungeonDef) iconFor;
   final ValueChanged<String> onSelect;
 
-  static List<({int floor, RoomType type})> _notableFloors(
-    String dungeonId,
-    int ascensionLevel,
-  ) {
-    final boss = DungeonGenerator.bossFloorFor(ascensionLevel);
-    final out = <({int floor, RoomType type})>[];
-    for (var f = 1; f <= boss + 1; f++) {
-      final room = DungeonGenerator.generateFloorRoom(
-        floorNumber: f,
-        ascensionLevel: ascensionLevel,
-        dungeonId: dungeonId,
-      );
-      if (room.type != RoomType.normal) {
-        out.add((floor: f, type: room.type));
-      }
-    }
-    return out;
-  }
-
-  /// Zigzag path positions as fractions of width/height.
-  static const List<Offset> _anchors = <Offset>[
-    Offset(0.20, 0.92),
-    Offset(0.74, 0.79),
-    Offset(0.24, 0.66),
-    Offset(0.74, 0.53),
-    Offset(0.24, 0.40),
-    Offset(0.70, 0.24),
-    Offset(0.28, 0.08),
+  /// Horizontal wobble as fraction of width (±0.06). Alternating keeps labels clear.
+  static const List<double> _xWobble = [
+    0.00,
+    0.06,
+    -0.05,
+    0.06,
+    -0.05,
+    0.06,
+    0.00,
   ];
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        final w = constraints.maxWidth;
+        final viewH = constraints.maxHeight;
+        if (w < 8 || viewH < 8) return const SizedBox.shrink();
+
+        final n = dungeons.length;
+        const labelBudget = 38.0;
+
+        // Fit all nodes without overlap; scroll if the panel is too short.
+        var portrait = 64.0;
+        var nodeH = portrait + labelBudget;
+        // Gap between consecutive node tops must clear most of the portrait.
+        var gap = nodeH * 0.92;
+        final neededH = nodeH + gap * (n - 1);
+        if (neededH > viewH && n > 1) {
+          gap = ((viewH - labelBudget) / n).clamp(44.0, nodeH);
+          portrait = (gap - 6).clamp(40.0, 64.0);
+          nodeH = portrait + labelBudget;
+        }
+        final contentH = math.max(viewH, nodeH + gap * (n - 1));
+        final nodeW = math.min(w * 0.46, math.max(96.0, portrait + 52));
+
+        final unlockedThrough = dungeons
+            .where(
+              (d) => DungeonCatalog.isUnlocked(
+                d.id,
+                lifetimeGold,
+                highestCleared,
+              ),
+            )
+            .map((d) => d.number)
+            .fold<int>(-1, (a, b) => a > b ? a : b);
+
+        // Portrait centers — evenly spaced, never clamped into each other.
         final points = <Offset>[
-          for (var i = 0; i < dungeons.length; i++)
+          for (var i = 0; i < n; i++)
             Offset(
-              _anchors[i % _anchors.length].dx * size.width,
-              _anchors[i % _anchors.length].dy * size.height,
+              w * (0.5 + _xWobble[i.clamp(0, _xWobble.length - 1)]),
+              portrait * 0.5 + i * gap,
             ),
         ];
-        return Stack(
+
+        Widget map = Stack(
           clipBehavior: Clip.none,
           children: [
             Positioned.fill(
               child: CustomPaint(
                 painter: _ZoneTrailPainter(
                   points: points,
-                  unlockedThrough: highestCleared,
+                  unlockedThrough: unlockedThrough,
                   pulse: pulse,
                 ),
               ),
             ),
-            for (var i = 0; i < dungeons.length; i++)
-              _ZoneNode(
-                left: points[i].dx - 34,
-                top: points[i].dy - 28,
-                def: dungeons[i],
-                icon: iconFor(dungeons[i]),
-                notableFloors: _notableFloors(dungeons[i].id, ascensionLevel),
-                unlocked: DungeonCatalog.isUnlocked(
-                  dungeons[i].id,
-                  lifetimeGold,
-                  highestCleared,
-                ),
-                selected: dungeons[i].id == selectedId,
-                cleared: highestCleared >= dungeons[i].number,
-                isFrontier:
-                    DungeonCatalog.isUnlocked(
-                      dungeons[i].id,
-                      lifetimeGold,
-                      highestCleared,
-                    ) &&
-                    highestCleared < dungeons[i].number &&
-                    dungeons[i].number == highestCleared + 1,
-                pulse: pulse,
-                onTap: DungeonCatalog.isUnlocked(
-                      dungeons[i].id,
-                      lifetimeGold,
-                      highestCleared,
-                    )
-                    ? () => onSelect(dungeons[i].id)
-                    : null,
+            for (var i = 0; i < n; i++)
+              Builder(
+                builder: (_) {
+                  final d = dungeons[i];
+                  final unlocked = DungeonCatalog.isUnlocked(
+                    d.id,
+                    lifetimeGold,
+                    highestCleared,
+                  );
+                  final cleared = highestCleared >= d.number;
+                  final prevUnlocked = d.number == 0 ||
+                      DungeonCatalog.isUnlocked(
+                        dungeons[d.number - 1].id,
+                        lifetimeGold,
+                        highestCleared,
+                      );
+                  final isNext = !unlocked && prevUnlocked;
+                  final isFrontier =
+                      unlocked && !cleared && d.number == highestCleared + 1;
+                  final selected = d.id == selectedId;
+                  final pt = points[i];
+                  return Positioned(
+                    left: (pt.dx - nodeW / 2).clamp(0.0, w - nodeW),
+                    top: pt.dy - portrait * 0.5,
+                    width: nodeW,
+                    height: nodeH,
+                    child: _ZoneNode(
+                      def: d,
+                      icon: iconFor(d),
+                      portraitSize: portrait,
+                      unlocked: unlocked,
+                      cleared: cleared,
+                      isNext: isNext,
+                      isFrontier: isFrontier,
+                      selected: selected,
+                      pulse: pulse,
+                      onTap: () => onSelect(d.id),
+                    ),
+                  );
+                },
               ),
           ],
         );
+
+        if (contentH > viewH + 1) {
+          return SingleChildScrollView(
+            child: SizedBox(width: w, height: contentH, child: map),
+          );
+        }
+        return SizedBox(width: w, height: viewH, child: map);
       },
     );
   }
@@ -676,166 +651,153 @@ class _ZonePathMap extends StatelessWidget {
 
 class _ZoneNode extends StatelessWidget {
   const _ZoneNode({
-    required this.left,
-    required this.top,
     required this.def,
     required this.icon,
-    required this.notableFloors,
+    required this.portraitSize,
     required this.unlocked,
-    required this.selected,
     required this.cleared,
+    required this.isNext,
     required this.isFrontier,
+    required this.selected,
     required this.pulse,
-    this.onTap,
+    required this.onTap,
   });
 
-  final double left;
-  final double top;
   final DungeonDef def;
   final String icon;
-  final List<({int floor, RoomType type})> notableFloors;
+  final double portraitSize;
   final bool unlocked;
-  final bool selected;
   final bool cleared;
+  final bool isNext;
   final bool isFrontier;
+  final bool selected;
   final double pulse;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
-  String _floorBadge(({int floor, RoomType type}) entry) {
-    final tag = switch (entry.type) {
-      RoomType.boss => 'B',
-      RoomType.elite => 'E',
-      RoomType.treasure => 'T',
-      RoomType.normal => '',
+  static String shortName(DungeonDef def) {
+    return switch (def.id) {
+      'sandy' => 'Sandy',
+      'goblin' => 'Goblin Hideout',
+      'king' => "King's Fort",
+      'underworld' => 'Underworld',
+      'dead' => 'City of Dead',
+      'hell' => 'Hell',
+      'crystal' => 'Crystal',
+      _ => def.name,
     };
-    return '$tag${entry.floor}';
   }
 
-  Color _badgeColor(RoomType type) => switch (type) {
-    RoomType.boss => GameTheme.bloodLit,
-    RoomType.elite => GameTheme.torch,
-    RoomType.treasure => GameTheme.clear,
-    RoomType.normal => GameTheme.parchmentDim,
-  };
+  static String unlockGoldLabel(int price) {
+    if (price >= 1000) return '${price ~/ 1000}k gold';
+    if (price <= 0) return 'NEXT';
+    return '$price gold';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final ring = selected
+        ? Color.lerp(GameTheme.torch, GameTheme.torchHot, pulse)!
+        : isFrontier
+            ? GameTheme.torch
+            : unlocked
+                ? GameTheme.borderLit
+                : GameTheme.stoneDeep;
+
+    final status = cleared
+        ? 'CLEAR'
+        : unlocked
+            ? 'NEXT'
+            : unlockGoldLabel(def.unlockPrice);
+
     final scale = selected
-        ? 1.0 + pulse * 0.04
-        : (isFrontier ? 1.0 + pulse * 0.08 : 1.0);
-    return Positioned(
-      left: left,
-      top: top,
+        ? 1.0 + pulse * 0.03
+        : (isFrontier ? 1.0 + pulse * 0.06 : 1.0);
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Transform.scale(
         scale: scale,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              width: GameTheme.isCompactWidth(context) ? 76 : 68,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: GameTheme.isCompactWidth(context) ? 56 : 52,
-                    height: GameTheme.isCompactWidth(context) ? 56 : 52,
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? const Color(0xFF4A3420)
-                          : GameTheme.stone.withValues(
-                              alpha: unlocked ? 0.95 : 0.45,
-                            ),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: selected
-                            ? GameTheme.torchHot
-                            : (cleared
-                                  ? GameTheme.clear
-                                  : (isFrontier
-                                        ? GameTheme.torch
-                                        : (unlocked
-                                              ? GameTheme.borderLit
-                                              : const Color(0xFF3A3528)))),
-                        width: selected ? 2.5 : (isFrontier ? 2.2 : 1.5),
-                      ),
-                      boxShadow: selected
-                          ? [
-                              BoxShadow(
-                                color: GameTheme.torch.withValues(alpha: 0.35),
-                                blurRadius: 10,
-                                spreadRadius: 1,
-                              ),
-                            ]
-                          : (isFrontier
-                                ? [
-                                    BoxShadow(
-                                      color: GameTheme.torch.withValues(
-                                        alpha: 0.2 + pulse * 0.25,
-                                      ),
-                                      blurRadius: 8 + pulse * 4,
-                                      spreadRadius: 0.5,
-                                    ),
-                                  ]
-                                : null),
-                    ),
-                    child: Opacity(
-                      opacity: unlocked ? 1 : 0.35,
-                      child: Center(
-                        child: KenneySprite(
-                          asset: icon,
-                          size: GameTheme.isCompactWidth(context) ? 36 : 34,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: portraitSize,
+              height: portraitSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: GameTheme.stone.withValues(alpha: unlocked ? 0.92 : 0.55),
+                border: Border.all(
+                  color: ring,
+                  width: selected ? 2.5 : (isFrontier ? 2.2 : 1.5),
+                ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: GameTheme.torch.withValues(alpha: 0.35),
+                          blurRadius: 10,
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    def.name.split(' ').first,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.pixel(
-                      size: 7,
-                      color: unlocked
-                          ? (selected ? GameTheme.torchHot : GameTheme.parchment)
-                          : const Color(0xFF666055),
-                    ),
-                  ),
-                  if (cleared)
-                    Text(
-                      'CLEAR',
-                      style: GameTheme.pixel(size: 6, color: GameTheme.clear),
-                    )
-                  else if (!unlocked)
-                    Text(
-                      '${def.unlockPrice ~/ 1000}k life',
-                      style: GameTheme.pixel(
-                        size: 6,
-                        color: const Color(0xFF666055),
-                      ),
-                    ),
-                  if (unlocked && notableFloors.isNotEmpty)
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 2,
-                      runSpacing: 1,
-                      children: [
-                        for (final entry in notableFloors.take(4))
-                          Text(
-                            _floorBadge(entry),
-                            style: GameTheme.pixel(
-                              size: 5,
-                              color: _badgeColor(entry.type),
+                      ]
+                    : (isFrontier
+                        ? [
+                            BoxShadow(
+                              color: GameTheme.torch.withValues(
+                                alpha: 0.2 + pulse * 0.25,
+                              ),
+                              blurRadius: 8 + pulse * 4,
+                              spreadRadius: 0.5,
                             ),
-                          ),
-                      ],
-                    ),
-                ],
+                          ]
+                        : null),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Opacity(
+                opacity: unlocked ? 1 : 0.4,
+                child: ColorFiltered(
+                  colorFilter: unlocked
+                      ? const ColorFilter.mode(
+                          Colors.transparent,
+                          BlendMode.dst,
+                        )
+                      : const ColorFilter.matrix(<double>[
+                          0.22, 0.22, 0.22, 0, 8,
+                          0.22, 0.22, 0.22, 0, 8,
+                          0.22, 0.22, 0.22, 0, 8,
+                          0, 0, 0, 0.85, 0,
+                        ]),
+                  child: KenneySprite(asset: icon, size: portraitSize),
+                ),
               ),
             ),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              shortName(def),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GameTheme.pixel(
+                size: 7,
+                color: unlocked
+                    ? (selected ? GameTheme.torchHot : GameTheme.parchment)
+                    : GameTheme.parchmentDim,
+                height: 1.15,
+              ),
+            ),
+            Text(
+              status,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GameTheme.body(
+                size: 11,
+                color: cleared
+                    ? GameTheme.mossLit
+                    : (isFrontier || isNext)
+                        ? GameTheme.torchHot
+                        : GameTheme.parchmentDim,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -859,7 +821,7 @@ class _ZoneTrailPainter extends CustomPainter {
 
     final ground = Paint()
       ..color = const Color(0xFF2A2418)
-      ..strokeWidth = 10
+      ..strokeWidth = 7
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
@@ -868,30 +830,31 @@ class _ZoneTrailPainter extends CustomPainter {
       ..color = Color.lerp(
         const Color(0xFF6A5030),
         GameTheme.torch,
-        0.25 + pulse * 0.35,
+        0.35 + pulse * 0.4,
       )!
-      ..strokeWidth = 3.5
+      ..strokeWidth = 2.6
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final dim = Paint()
-      ..color = const Color(0xFF3A3528)
-      ..strokeWidth = 2.5
+      ..color = const Color(0xFF3A3528).withValues(alpha: 0.7)
+      ..strokeWidth = 1.8
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
+
+    // Lit through the frontier (unlockedThrough + 1), dim past it.
+    final litThrough = unlockedThrough + 1;
 
     for (var i = 0; i < points.length - 1; i++) {
       final a = points[i];
       final b = points[i + 1];
-      final mid = Offset(
-        (a.dx + b.dx) / 2 + (i.isEven ? 18 : -18),
-        (a.dy + b.dy) / 2,
-      );
+      final wobble = i.isEven ? 8.0 : -8.0;
+      final mid = Offset((a.dx + b.dx) / 2 + wobble, (a.dy + b.dy) / 2);
       final path = Path()
         ..moveTo(a.dx, a.dy)
         ..quadraticBezierTo(mid.dx, mid.dy, b.dx, b.dy);
       canvas.drawPath(path, ground);
-      canvas.drawPath(path, i < unlockedThrough ? lit : dim);
+      canvas.drawPath(path, i < litThrough ? lit : dim);
     }
   }
 
@@ -900,44 +863,4 @@ class _ZoneTrailPainter extends CustomPainter {
       oldDelegate.pulse != pulse ||
       oldDelegate.unlockedThrough != unlockedThrough ||
       oldDelegate.points.length != points.length;
-}
-
-class _HubAtmospherePainter extends CustomPainter {
-  _HubAtmospherePainter({
-    required this.pulse,
-    required this.dungeonId,
-  });
-
-  final double pulse;
-  final String dungeonId;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final wash = DungeonEnvironment.atmosphereWash(dungeonId);
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = wash.withValues(alpha: wash.a * 0.85 + pulse * 0.04),
-    );
-
-    final vignette = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          Colors.transparent,
-          GameTheme.ink.withValues(alpha: 0.55 + pulse * 0.1),
-        ],
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, vignette);
-
-    final dust = Paint()..color = GameTheme.torch.withValues(alpha: 0.04);
-    final rng = math.Random(7);
-    for (var i = 0; i < 28; i++) {
-      final x = rng.nextDouble() * size.width;
-      final y = (rng.nextDouble() * size.height + pulse * 12) % size.height;
-      canvas.drawCircle(Offset(x, y), 1.2, dust);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _HubAtmospherePainter oldDelegate) =>
-      oldDelegate.pulse != pulse || oldDelegate.dungeonId != dungeonId;
 }

@@ -9,9 +9,11 @@ import 'game_state.dart';
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Bump alongside [changelog] entries.
-  static const String currentVersion = '1.1.0';
+  static const String currentVersion = '1.1.2';
 
   static const List<String> changelog = <String>[
+    'Light story layer: dungeon blurbs, enter/clear/ascend flavor, intro will.',
+    'Smarter Auto Equip: BiS slot fill, 2H net score, party conflict resolution.',
     'Loot Sprite pet: gold find + loot find passives that scale with level.',
     'Achievements and ascend milestones grant essence rewards.',
     'Challenge clears: +2e per active toggle; Daily Run clear awards +25e.',
@@ -119,11 +121,12 @@ abstract final class MetaSystems {
     return total;
   }
 
-  /// Extra essence on floor clear while challenge toggles are on.
+  /// Extra essence on floor clear while challenge toggles / hardmode are on.
   static int challengeClearEssenceBonus(GameState state) {
     var bonus = 0;
     if (state.challengeBossRush) bonus += 2;
     if (state.challengeNoFlask) bonus += 2;
+    bonus += state.hardmodeLevel.clamp(0, 10);
     return bonus;
   }
 

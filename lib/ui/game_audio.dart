@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 
 /// Lightweight SFX via system sounds + haptics (no asset pack required).
 /// Respects [muted] so Settings mute actually works.
+/// Hit/crit stay light clicks; loot/level/unlock lean on alert + stronger haptics.
 abstract final class GameAudio {
   static bool muted = false;
 
@@ -17,6 +18,9 @@ abstract final class GameAudio {
       case 'loot':
         SystemSound.play(SystemSoundType.click);
         HapticFeedback.lightImpact();
+        Future<void>.delayed(const Duration(milliseconds: 40), () {
+          if (!muted) SystemSound.play(SystemSoundType.click);
+        });
       case 'level':
         SystemSound.play(SystemSoundType.alert);
         HapticFeedback.mediumImpact();

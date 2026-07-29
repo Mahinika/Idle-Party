@@ -8,6 +8,7 @@ import 'game_theme.dart';
 import 'hero_doll_sprite.dart';
 import 'kenney_assets.dart';
 import 'kenney_sprite.dart';
+import 'menu_chrome.dart';
 
 /// WoW-style character sheet: equipment slots around a paper-doll, stats below.
 class CharacterEquipPanel extends StatelessWidget {
@@ -151,15 +152,7 @@ class CharacterEquipPanel extends StatelessWidget {
                 onTap: () => onSelectHero(i),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: active
-                        ? const Color(0xFF5A3828)
-                        : const Color(0xFF2A2418),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: active ? GameTheme.torch : const Color(0xFF7A6840),
-                    ),
-                  ),
+                  decoration: MenuChrome.cardBox(selected: active),
                   child: Row(
                     children: [
                       HeroDollSprite(hero: h, partyIndex: i, size: 24),
@@ -388,11 +381,7 @@ class PaperDollSlot extends StatelessWidget {
         child: Container(
           width: size,
           height: size,
-          decoration: BoxDecoration(
-            color: selected
-                ? const Color(0xFF4A3820)
-                : const Color(0xFF12100C),
-            borderRadius: BorderRadius.circular(3),
+          decoration: MenuChrome.cardBox(selected: selected).copyWith(
             border: Border.all(
               color: selected ? GameTheme.torch : border,
               width: selected ? 2 : 1.5,
@@ -460,11 +449,7 @@ class _MiniStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1610),
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: const Color(0xFF4A4030)),
-      ),
+      decoration: MenuChrome.cardBox(inset: true),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -485,4 +470,5 @@ Color _rarityColor(LootRarity rarity) => switch (rarity) {
       LootRarity.uncommon => const Color(0xFF3DD68C),
       LootRarity.rare => const Color(0xFF4A9EFF),
       LootRarity.epic => const Color(0xFFC060FF),
+      LootRarity.legendary => const Color(0xFFFF8C40),
     };

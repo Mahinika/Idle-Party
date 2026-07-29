@@ -1,0 +1,24 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/story_lore.dart';
+import 'package:idle_party/models/dungeon_def.dart';
+
+void main() {
+  test('every dungeon has a hub blurb', () {
+    for (final def in DungeonCatalog.all) {
+      expect(def.blurb, isNotEmpty, reason: def.id);
+      expect(StoryLore.dungeonBlurb(def.id), def.blurb);
+      expect(StoryLore.enterDungeon(def.id), isNotEmpty);
+      expect(StoryLore.dungeonCleared(def.id), isNotEmpty);
+      expect(StoryLore.dungeonCleared(def.id).length, lessThan(80));
+    }
+  });
+
+  test('intro and ascend copy stay short and present', () {
+    expect(StoryLore.introTagline, contains('party'));
+    expect(StoryLore.introSubline, contains('will'));
+    expect(
+      StoryLore.ascendConfirmBody(rewardEssence: 7, nextAl: 1),
+      contains('+7e'),
+    );
+  });
+}

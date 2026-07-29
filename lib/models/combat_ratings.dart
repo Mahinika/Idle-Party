@@ -147,7 +147,10 @@ class CombatRatings {
       level: hero.level,
     );
     final physical = max(1, (ap / kAp).round()) + gearFlatAttack;
-    final sp = intel + gearSpellPower;
+    // Casters: Int fully, Spell Power at half — was 1:1 and outscaled melee gear ROI.
+    final spPool = intel + gearSpellPower;
+    final casterAtk = max(1, intel + (gearSpellPower ~/ 2));
+    final sp = spPool;
 
     final isCaster =
         hero.role == HeroRole.mage || hero.role == HeroRole.healer;
@@ -170,6 +173,7 @@ class CombatRatings {
             .round();
 
     final physicalWithMeta = physical + metaAttack + auraBonus;
+    final casterWithMeta = casterAtk + metaAttack + auraBonus;
     final spWithMeta = sp + (isCaster ? metaAttack + auraBonus : 0);
 
     return CombatRatings(
@@ -179,7 +183,7 @@ class CombatRatings {
       intellect: intel,
       spirit: spi,
       attackPower: ap,
-      physicalAttack: isCaster ? spWithMeta : physicalWithMeta,
+      physicalAttack: isCaster ? casterWithMeta : physicalWithMeta,
       spellPower: spWithMeta,
       maxHp: maxHpFinal,
       defense: defense,

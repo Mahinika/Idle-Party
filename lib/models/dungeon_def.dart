@@ -10,6 +10,7 @@ class DungeonDef {
     required this.bossId,
     required this.bossName,
     this.unlockPrice = 0,
+    this.blurb = '',
   });
 
   final int number;
@@ -19,6 +20,9 @@ class DungeonDef {
   final String bossId;
   final String bossName;
   final int unlockPrice;
+
+  /// Short hub flavor line (also mirrored in [StoryLore.dungeonBlurb]).
+  final String blurb;
 }
 
 abstract final class DungeonCatalog {
@@ -31,6 +35,7 @@ abstract final class DungeonCatalog {
       bossId: 'kraken',
       bossName: 'Earth Kraken',
       unlockPrice: 0,
+      blurb: 'Where the sand first whispered of something deeper.',
     ),
     DungeonDef(
       number: 1,
@@ -40,6 +45,7 @@ abstract final class DungeonCatalog {
       bossId: 'hobgoblin',
       bossName: 'Hobgoblin Lord',
       unlockPrice: 5000,
+      blurb: 'Raiders nest above a wound they do not understand.',
     ),
     DungeonDef(
       number: 2,
@@ -49,6 +55,7 @@ abstract final class DungeonCatalog {
       bossId: 'king',
       bossName: 'Corrupt King',
       unlockPrice: 20000,
+      blurb: 'A throne bent toward the same light that calls downward.',
     ),
     DungeonDef(
       number: 3,
@@ -58,6 +65,7 @@ abstract final class DungeonCatalog {
       bossId: 'eyes',
       bossName: 'Beholder',
       unlockPrice: 50000,
+      blurb: 'Eyes open in the dark between kingdoms.',
     ),
     DungeonDef(
       number: 4,
@@ -67,6 +75,7 @@ abstract final class DungeonCatalog {
       bossId: 'no_one',
       bossName: 'The No-One',
       unlockPrice: 100000,
+      blurb: 'A city that forgot its living names.',
     ),
     DungeonDef(
       number: 5,
@@ -76,6 +85,7 @@ abstract final class DungeonCatalog {
       bossId: 'chtulu',
       bossName: 'Chtulu',
       unlockPrice: 200000,
+      blurb: 'The gate that should never have been named.',
     ),
     DungeonDef(
       number: 6,
@@ -85,6 +95,7 @@ abstract final class DungeonCatalog {
       bossId: 'crystal_warden',
       bossName: 'Crystal Warden',
       unlockPrice: 400000,
+      blurb: 'The Spire remembers every will that climbed it.',
     ),
   ];
 

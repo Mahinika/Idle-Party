@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/story_lore.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
+import 'menu_chrome.dart';
 
 /// First-session coaching tips. Persist via [GameState.seenTips].
 class FirstSessionTips extends StatelessWidget {
@@ -13,9 +15,15 @@ class FirstSessionTips extends StatelessWidget {
 
   static const _tips = <({String id, String title, String body})>[
     (
+      id: 'lore_descent',
+      title: StoryLore.loreTipTitle,
+      body: StoryLore.loreTipBody,
+    ),
+    (
       id: 'godhand',
       title: 'GOD HAND',
-      body: 'Tap the dungeon to smash foes. Cooldown shows as a ring top-right.',
+      body:
+          'Your distant will. Tap the dungeon to smash foes. Cooldown is the ring top-right.',
     ),
     (
       id: 'farm_push',
@@ -28,9 +36,31 @@ class FirstSessionTips extends StatelessWidget {
       body: 'Open BAG to equip upgrades. Long-press a hero to open their gear.',
     ),
     (
+      id: 'sanctuary',
+      title: 'SANCTUARY',
+      body:
+          'Spend essence here for idle gold and party power that persists between runs.',
+    ),
+    (
+      id: 'market',
+      title: 'MARKET',
+      body: 'Buy flasks and sell stash junk for gold when the bag gets full.',
+    ),
+    (
+      id: 'forge',
+      title: 'FORGE',
+      body: 'Train the party and buy relics. Power here stacks with gear.',
+    ),
+    (
+      id: 'pets',
+      title: 'BEAST PEN',
+      body: 'Hatch pets with essence. Loot Sprite boosts gold find; others add ATK.',
+    ),
+    (
       id: 'ascend',
       title: 'ASCEND',
-      body: 'When Ascend unlocks in the hub, prestige for essence and keep pets.',
+      body:
+          'When Ascend unlocks, prestige: the will withdraws and returns with essence and pets.',
     ),
   ];
 
@@ -51,6 +81,18 @@ class FirstSessionTips extends StatelessWidget {
           director.state.gold < 10) {
         continue;
       }
+      if ((tip.id == 'sanctuary' ||
+              tip.id == 'market' ||
+              tip.id == 'forge' ||
+              tip.id == 'pets') &&
+          inDungeon) {
+        continue;
+      }
+      if (tip.id == 'pets' &&
+          director.state.ownedPets.isEmpty &&
+          director.state.essence < 3) {
+        continue;
+      }
       return tip.id;
     }
     return null;
@@ -67,15 +109,10 @@ class FirstSessionTips extends StatelessWidget {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 72),
-          child: Material(
-            color: const Color(0xF214110C),
-            borderRadius: BorderRadius.circular(6),
-            child: Container(
+          child: DecoratedBox(
+            decoration: MenuChrome.panel(),
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: GameTheme.torchHot),
-              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,

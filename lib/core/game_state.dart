@@ -56,6 +56,7 @@ class GameState {
     this.codexItems = const <String>[],
     this.challengeBossRush = false,
     this.challengeNoFlask = false,
+    this.hardmodeLevel = 0,
     this.colorblindMode = false,
     this.uiTextScale = 1.0,
     this.lastDailyDate,
@@ -166,6 +167,9 @@ class GameState {
 
   /// Challenge toggle: flasks are disabled entirely.
   final bool challengeNoFlask;
+
+  /// Hardmode key 0–10. Scales enemy power and loot (legendary chance best at 10).
+  final int hardmodeLevel;
 
   /// Accessibility: colorblind-friendly combat floater palette.
   final bool colorblindMode;
@@ -355,7 +359,7 @@ class GameState {
     }
     if (mage == null) return 0;
     final mageSp = mage.grownPrimaries.intel + mage.gearSpellPowerBonus;
-    return max(2, (mageSp * 15) ~/ 100);
+    return max(2, (mageSp * 12) ~/ 100);
   }
 
   /// Warrior Defensive Stance: base guard DEF, scales lightly with level.
@@ -431,7 +435,7 @@ class GameState {
 
   double effectiveHeroMoveSpeed(PartyHero hero) {
     final base = switch (hero.role) {
-      HeroRole.rogue => 3.6,
+      HeroRole.rogue => 3.25,
       HeroRole.healer => 3.2,
       HeroRole.warrior => 3.1,
       HeroRole.mage => 3.0,
@@ -490,6 +494,7 @@ class GameState {
     List<String>? codexItems,
     bool? challengeBossRush,
     bool? challengeNoFlask,
+    int? hardmodeLevel,
     bool? colorblindMode,
     double? uiTextScale,
     String? lastDailyDate,
@@ -551,6 +556,7 @@ class GameState {
       codexItems: codexItems ?? this.codexItems,
       challengeBossRush: challengeBossRush ?? this.challengeBossRush,
       challengeNoFlask: challengeNoFlask ?? this.challengeNoFlask,
+      hardmodeLevel: hardmodeLevel ?? this.hardmodeLevel,
       colorblindMode: colorblindMode ?? this.colorblindMode,
       uiTextScale: uiTextScale ?? this.uiTextScale,
       lastDailyDate: lastDailyDate ?? this.lastDailyDate,
@@ -608,6 +614,7 @@ class GameState {
     'codexItems': codexItems,
     'challengeBossRush': challengeBossRush,
     'challengeNoFlask': challengeNoFlask,
+    'hardmodeLevel': hardmodeLevel,
     'colorblindMode': colorblindMode,
     'uiTextScale': uiTextScale,
     if (lastDailyDate != null) 'lastDailyDate': lastDailyDate,
@@ -755,6 +762,7 @@ class GameState {
           const <String>[],
       challengeBossRush: (json['challengeBossRush'] as bool?) ?? false,
       challengeNoFlask: (json['challengeNoFlask'] as bool?) ?? false,
+      hardmodeLevel: ((json['hardmodeLevel'] as num?)?.toInt() ?? 0).clamp(0, 10),
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
       uiTextScale: (json['uiTextScale'] as num?)?.toDouble() ?? 1.0,
       lastDailyDate: json['lastDailyDate'] as String?,

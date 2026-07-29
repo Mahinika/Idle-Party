@@ -36,7 +36,7 @@ void main() {
             enemies: GameLogic.createEnemyGroup(
               state.currentRoom,
               dungeonId: 'sandy',
-              bossRush: state.challengeBossRush,
+              fromState: state,
             ),
           );
           final r = _simulateFloor(state);
@@ -65,6 +65,7 @@ void main() {
     final fresh = GameLogic.createInitialState(now: DateTime(2026, 7, 27));
     probe('FRESH', fresh);
     probe('LIGHT', _lightForge(fresh));
+    probe('GEAR10', _tenLootUpgrades(fresh));
     probe('MID', _midPower(fresh));
 
     final room = GameLogic.enterDungeon(fresh, dungeonId: 'sandy').currentRoom;
@@ -77,6 +78,12 @@ void main() {
       'fresh party ATK=${_partyAtk(fresh)} DEF=${_partyDef(fresh)} '
       'HP=${_partyHp(fresh)}',
     );
+    report.writeln(
+      'gearPressure FRESH='
+      '${GameLogic.partyGearPressure(fresh).toStringAsFixed(2)} '
+      'GEAR10=${GameLogic.partyGearPressure(_tenLootUpgrades(fresh)).toStringAsFixed(2)} '
+      'MID=${GameLogic.partyGearPressure(_midPower(fresh)).toStringAsFixed(2)}',
+    );
     // ignore: avoid_print
     print(report.toString());
 
@@ -86,6 +93,8 @@ void main() {
     // —— CI gates (attrition difficulty, not one-shots / not trivia) ——
     final freshF1 = rates['FRESH']![1]!;
     final freshBoss = rates['FRESH']![GameLogic.bossFloorFor(fresh)]!;
+    final gear10F1 = rates['GEAR10']![1]!;
+    final gear10Boss = rates['GEAR10']![GameLogic.bossFloorFor(fresh)]!;
     final midF1 = rates['MID']![1]!;
     final midBoss = rates['MID']![GameLogic.bossFloorFor(fresh)]!;
 
@@ -93,6 +102,9 @@ void main() {
     expect(freshF1, greaterThanOrEqualTo(0.2));
     // Boss remains a wall for fresh parties.
     expect(freshBoss, lessThanOrEqualTo(0.3));
+    // ~10 loot upgrades: early floors OK, boss not free.
+    expect(gear10F1, greaterThanOrEqualTo(0.4));
+    expect(gear10Boss, lessThanOrEqualTo(0.7));
     // Mid-power party can clear early floors.
     expect(midF1, greaterThanOrEqualTo(0.5));
     // Mid can at least sometimes clear boss (gear+forge matter).
@@ -111,6 +123,34 @@ GameState _lightForge(GameState s) {
     next = GameLogic.upgradeVitality(next);
   }
   return next;
+}
+
+/// ~10 real loot upgrades on a fresh party (the "suddenly too easy" spike).
+GameState _tenLootUpgrades(GameState s) {
+  final stash = <EquipmentItem>[];
+  final slots = [
+    EquipmentSlot.weapon,
+    EquipmentSlot.offHand,
+    EquipmentSlot.cloak,
+    EquipmentSlot.ring,
+    EquipmentSlot.trinket,
+    EquipmentSlot.chest,
+    EquipmentSlot.hands,
+    EquipmentSlot.boots,
+    EquipmentSlot.neck,
+    EquipmentSlot.head,
+  ];
+  for (var i = 0; i < slots.length; i++) {
+    stash.add(
+      GameLogic.createEquipment(
+        slot: slots[i],
+        rarity: i < 4 ? LootRarity.uncommon : LootRarity.common,
+        battleNumber: 4 + (i % 3),
+        bias: HeroRole.values[i % 3],
+      ),
+    );
+  }
+  return GameLogic.autoEquipBetterGear(s.copyWith(gearStash: stash));
 }
 
 GameState _midPower(GameState s) {

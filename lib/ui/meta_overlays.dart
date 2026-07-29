@@ -11,6 +11,7 @@ import 'game_theme.dart';
 import 'kenney_assets.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
+import 'menu_chrome.dart';
 
 /// Local achievements list — unlocked ids come from `GameState.achievements`.
 class AchievementsOverlay extends StatelessWidget {
@@ -43,7 +44,7 @@ class AchievementsOverlay extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF14120D),
+                  color: GameTheme.menuCard,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: done ? GameTheme.clear : GameTheme.border,
@@ -51,9 +52,10 @@ class AchievementsOverlay extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      done ? Icons.emoji_events : Icons.lock_outline,
-                      color: done ? GameTheme.clear : GameTheme.parchmentDim,
+                    KenneySprite(
+                      asset: done
+                          ? KenneyAssets.iconTrophy
+                          : KenneyAssets.iconSkull,
                       size: 22,
                     ),
                     const SizedBox(width: 10),
@@ -165,21 +167,19 @@ class _CodexOverlayState extends State<CodexOverlay> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF14120D),
+                          color: GameTheme.menuCard,
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(color: GameTheme.border),
                         ),
                         child: Row(
                           children: [
-                            if (_showEnemies) ...[
-                              KenneySprite(
-                                asset: KenneyAssets.enemySpriteForCodexName(
-                                  name,
-                                ),
-                                size: 28,
-                              ),
-                              const SizedBox(width: 10),
-                            ],
+                            KenneySprite(
+                              asset: _showEnemies
+                                  ? KenneyAssets.enemySpriteForCodexName(name)
+                                  : KenneyAssets.codexItemIconFor(name),
+                              size: 28,
+                            ),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 name,
@@ -207,9 +207,9 @@ class LoadoutsOverlay extends StatelessWidget {
     final controller = TextEditingController(text: 'Loadout $slotId');
     final name = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: GameTheme.stoneDeep,
-        title: Text('Save loadout $slotId', style: GameTheme.pixel(size: 8)),
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Save loadout $slotId',
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -219,7 +219,10 @@ class LoadoutsOverlay extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('CANCEL'),
+            child: Text(
+              'CANCEL',
+              style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+            ),
           ),
           KenneyButton(
             label: 'SAVE',
@@ -290,7 +293,7 @@ class _LoadoutSlotRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFF14120D),
+        color: GameTheme.menuCard,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: GameTheme.border),
       ),
@@ -347,9 +350,9 @@ Future<void> showOfflineProgressDialog(
   if (summary == null) return;
   await showDialog<void>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: GameTheme.stoneDeep,
-      title: Text('Welcome back!', style: GameTheme.pixel(size: 9)),
+    barrierColor: MenuChrome.scrim,
+    builder: (ctx) => MenuChrome.dialog(
+      title: 'Welcome back!',
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -503,13 +506,85 @@ class ChallengeToggles extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 8),
+        _HardmodeStepper(
+          level: state.hardmodeLevel,
+          onChanged: director.setHardmodeLevel,
+        ),
         const SizedBox(height: 4),
         Text(
-          'Active challenges: +2e per clear each (Boss Rush also boosts gold).',
+          state.hardmodeLevel <= 0
+              ? 'Hardmode off. Raise +1..+10 — at +10: 1000% HP, damage, and enemy count.'
+              : 'HM +${state.hardmodeLevel}: HP/ATK/pack +${state.hardmodeLevel * 90}% '
+                  '(${(1.0 + state.hardmodeLevel * 0.9).toStringAsFixed(1)}×) · '
+                  'gold +${state.hardmodeLevel * 15}% · '
+                  'leg ~${(0.4 + state.hardmodeLevel * 1.1).toStringAsFixed(1)}%',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
+        const SizedBox(height: 2),
+        Text(
+          'Boss Rush / No Flask: +2e each clear. Hardmode: +1e per HM level.',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
       ],
+    );
+  }
+}
+
+class _HardmodeStepper extends StatelessWidget {
+  const _HardmodeStepper({required this.level, required this.onChanged});
+  final int level;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: MenuChrome.cardBox(selected: level > 0),
+      child: Row(
+        children: [
+          TextButton(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(36, 36),
+              padding: EdgeInsets.zero,
+              foregroundColor: GameTheme.parchment,
+            ),
+            onPressed: level > 0 ? () => onChanged(level - 1) : null,
+            child: Text('-', style: GameTheme.pixel(size: 10)),
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  level <= 0 ? 'HARDMODE  OFF' : 'HARDMODE  +$level',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.pixel(
+                    size: 7,
+                    color: level > 0 ? GameTheme.torchHot : GameTheme.parchmentDim,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '0 = easy  ·  10 = 1000% HP / ATK / count',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(36, 36),
+              padding: EdgeInsets.zero,
+              foregroundColor: GameTheme.parchment,
+            ),
+            onPressed: level < 10 ? () => onChanged(level + 1) : null,
+            child: Text('+', style: GameTheme.pixel(size: 10)),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -537,8 +612,8 @@ class _ChallengeChip extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: active
-                ? const Color(0xFF4A3420)
-                : const Color(0xFF14120D),
+                ? GameTheme.stoneRaised.withValues(alpha: 0.9)
+                : GameTheme.menuCard,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
               color: active ? GameTheme.torchHot : GameTheme.border,
@@ -566,30 +641,22 @@ class SaveTransferSection extends StatelessWidget {
   Future<void> _export(BuildContext context) async {
     final json = director.exportSaveJson();
     await Clipboard.setData(ClipboardData(text: json));
-    if (context.mounted) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Save copied to clipboard')),
-      );
-    }
+    director.showToast('Save copied to clipboard');
   }
 
   Future<void> _import(BuildContext context) async {
     final data = await Clipboard.getData('text/plain');
     final raw = data?.text;
     if (raw == null || raw.isEmpty) {
-      if (context.mounted) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Clipboard is empty')),
-        );
-      }
+      director.showToast('Clipboard is empty');
       return;
     }
     if (!context.mounted) return;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: GameTheme.stoneDeep,
-        title: Text('Import save?', style: GameTheme.pixel(size: 8)),
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Import save?',
         content: Text(
           'This replaces your current save with the clipboard contents. '
           'This cannot be undone.',
@@ -598,7 +665,10 @@ class SaveTransferSection extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('CANCEL'),
+            child: Text(
+              'CANCEL',
+              style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+            ),
           ),
           KenneyButton(
             label: 'IMPORT',
@@ -611,13 +681,9 @@ class SaveTransferSection extends StatelessWidget {
     );
     if (ok != true) return;
     final success = director.importSaveJson(raw);
-    if (context.mounted) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(
-          content: Text(success ? 'Save imported' : 'Could not read that save'),
-        ),
-      );
-    }
+    director.showToast(
+      success ? 'Save imported' : 'Could not read that save',
+    );
   }
 
   @override
@@ -676,8 +742,8 @@ class AscendMilestonesStrip extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: reached
-                    ? const Color(0xFF4A3420)
-                    : const Color(0xFF14120D),
+                    ? GameTheme.stoneRaised.withValues(alpha: 0.9)
+                    : GameTheme.menuCard,
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
                   color: reached ? GameTheme.torchHot : GameTheme.border,

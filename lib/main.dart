@@ -5,17 +5,20 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'core/equipment_factory.dart';
 import 'core/game_director.dart';
+import 'ui/custom_assets.dart';
+import 'ui/first_session_tips.dart';
 import 'ui/game_audio.dart';
 import 'ui/game_theme.dart';
 import 'ui/hub_screen.dart';
 import 'ui/intro_screen.dart';
 import 'ui/is2_shell.dart';
+import 'ui/kenney_sprite.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({
     super.key,
     this.director,
@@ -28,6 +31,20 @@ class MyApp extends StatelessWidget {
 
   /// Cold-start title card. Tests set this false to land on the hub immediately.
   final bool showIntro;
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final GameDirector _director;
+
+  @override
+  void initState() {
+    super.initState();
+    // Stable for the app lifetime — never recreate on MaterialApp rebuilds.
+    _director = widget.director ?? GameDirector.persistent();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,13 +68,16 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: GameTheme.ink,
       ),
       home: GameHomePage(
-        director: director ?? GameDirector.persistent(),
-        autoStartLoop: autoStartLoop,
-        showIntro: showIntro,
+        key: const ValueKey('game-home'),
+        director: _director,
+        autoStartLoop: widget.autoStartLoop,
+        showIntro: widget.showIntro,
       ),
     );
   }
 }
+
+enum _AppPhase { loading, intro, play }
 
 class GameHomePage extends StatefulWidget {
   const GameHomePage({
@@ -78,19 +98,32 @@ class GameHomePage extends StatefulWidget {
 class _GameHomePageState extends State<GameHomePage> {
   GameDirector get _director => widget.director;
   Is2Overlay? _hubOverlay;
-  late bool _showIntro;
+  _AppPhase _phase = _AppPhase.loading;
 
   @override
   void initState() {
     super.initState();
-    _showIntro = widget.showIntro;
     _bootstrap();
   }
 
   Future<void> _bootstrap() async {
     unawaited(EquipmentFactory.loadAffixes());
-    await _director.boot();
+    // Defer combat loop until after intro so dungeon ticks cannot steal focus.
+    await _director.boot(deferCombatLoop: widget.showIntro);
     GameAudio.muted = _director.state.soundMuted;
+    if (!mounted) return;
+    setState(() {
+      _phase = widget.showIntro ? _AppPhase.intro : _AppPhase.play;
+    });
+    if (_phase == _AppPhase.play) {
+      _director.ensureCombatLoop();
+    }
+  }
+
+  void _finishIntro() {
+    if (_phase != _AppPhase.intro) return;
+    setState(() => _phase = _AppPhase.play);
+    _director.ensureCombatLoop();
   }
 
   @override
@@ -101,29 +134,51 @@ class _GameHomePageState extends State<GameHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Intro is outside the director AnimatedBuilder so toast/combat notifies
+    // cannot rebuild or accidentally dismiss the title card.
+    if (_phase == _AppPhase.loading) {
+      return Scaffold(
+        backgroundColor: GameTheme.ink,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            ColoredBox(color: GameTheme.ink),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  KenneySprite(asset: CustomAssets.introLogo, size: 96),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: GameTheme.torch.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_phase == _AppPhase.intro) {
+      return Scaffold(
+        body: IntroScreen(
+          key: const ValueKey('cold-intro'),
+          onFinished: _finishIntro,
+        ),
+      );
+    }
+
     return AnimatedBuilder(
       animation: _director,
       builder: (context, _) {
-        final loading = _director.isLoading;
-        final showIntro = !loading && _showIntro;
-
-        Widget body;
-        if (loading) {
-          body = const Center(
-            child: SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: GameTheme.torch,
-              ),
-            ),
-          );
-        } else if (showIntro) {
-          body = IntroScreen(
-            onFinished: () => setState(() => _showIntro = false),
-          );
-        } else if (_director.state.inDungeon) {
+        final Widget body;
+        if (_director.state.inDungeon) {
           body = Is2Shell(
             director: _director,
             pulse: 0.5,
@@ -157,7 +212,18 @@ class _GameHomePageState extends State<GameHomePage> {
                 onOpenSettings: () => setState(
                   () => _hubOverlay = Is2Overlay.settings,
                 ),
+                onOpenAchievements: () => setState(
+                  () => _hubOverlay = Is2Overlay.achievements,
+                ),
+                onOpenCodex: () => setState(
+                  () => _hubOverlay = Is2Overlay.codex,
+                ),
+                onOpenLoadouts: () => setState(
+                  () => _hubOverlay = Is2Overlay.loadouts,
+                ),
               ),
+              if (_hubOverlay == null)
+                FirstSessionTips(director: _director),
               if (_hubOverlay != null)
                 Positioned.fill(
                   child: Material(
@@ -180,17 +246,10 @@ class _GameHomePageState extends State<GameHomePage> {
 
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(
-              loading ? 1.0 : _director.state.uiTextScale,
-            ),
+            textScaler: TextScaler.linear(_director.state.uiTextScale),
           ),
           child: Scaffold(
-            body: SafeArea(
-              // Intro paints its own SafeArea so vignette can go edge-to-edge.
-              top: !showIntro,
-              bottom: !showIntro,
-              child: body,
-            ),
+            body: SafeArea(child: body),
           ),
         );
       },

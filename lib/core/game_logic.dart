@@ -35,6 +35,7 @@ class GameLogic {
     LootRarity.uncommon: 'Uncommon',
     LootRarity.rare: 'Rare',
     LootRarity.epic: 'Epic',
+    LootRarity.legendary: 'Legendary',
   };
   static const Map<String, String> relicNames = <String, String>{
     warBannerRelic: 'War Banner',
@@ -160,7 +161,7 @@ class GameLogic {
       enemies: createEnemyGroup(
         room,
         dungeonId: dungeonId,
-        bossRush: state.challengeBossRush,
+        fromState: state,
       ),
       layoutSeed: layoutSeed,
       heroes: state.heroes
@@ -448,7 +449,7 @@ class GameLogic {
       enemies: createEnemyGroup(
         firstRoom,
         dungeonId: state.dungeonId,
-        bossRush: state.challengeBossRush,
+        fromState: state,
       ),
       layoutSeed: layoutSeed,
       heroes: state.heroes
@@ -649,6 +650,7 @@ class GameLogic {
       codexItems: List<String>.from(state.codexItems),
       challengeBossRush: state.challengeBossRush,
       challengeNoFlask: state.challengeNoFlask,
+      hardmodeLevel: state.hardmodeLevel,
       colorblindMode: state.colorblindMode,
       uiTextScale: state.uiTextScale,
       lastDailyDate: state.lastDailyDate,
@@ -991,9 +993,15 @@ class GameLogic {
 
   /// Combat budget for a room: total effective attack/HP/gold the enemy
   /// group should add up to. Tuned so fresh parties barely scrape early floors.
+  ///
+  /// Mid-game pressure: [ascensionLevel] and [gearPressure] scale threat so
+  /// filling empty slots does not trivialize the same floors.
   static ({int attack, int hp, int gold}) roomCombatBudget(
     DungeonRoom room, {
     String? dungeonId,
+    int hardmodeLevel = 0,
+    int ascensionLevel = 0,
+    double gearPressure = 1.0,
   }) {
     final level = room.globalBattleNumber;
     final isBoss = room.type == RoomType.boss;
@@ -1001,25 +1009,70 @@ class GameLogic {
     final diff = DungeonGenerator.getDifficultyMultiplier(room.type);
     final zone = DungeonCatalog.byId(dungeonId ?? 'sandy').number;
     final zoneMult = 1.0 + zone * 0.28;
+    final hm = hardmodeLevel.clamp(0, 10);
+    // Linear to HM+10 = 10× (1000%) enemy HP/ATK.
+    final hmThreat = 1.0 + hm * 0.9;
+    final hmGold = 1.0 + hm * 0.15;
+    final alThreat = 1.0 + ascensionLevel.clamp(0, 40) * 0.08;
+    final gp = gearPressure.clamp(1.0, 2.5);
+    final threat = hmThreat * alThreat;
 
     // Attrition curve: packs hurt over time, not via one-shots.
+    // Extra quadratic after F2 so geared mid-run parties still feel pressure.
     final curve = level + ((level * level) ~/ 12);
-    final attack = (((42 + (isBoss ? 22 : 0) + (isElite ? 10 : 0)) +
-                curve * 5.5) *
-            diff *
-            zoneMult)
+    final midFloor = max(0, level - 2);
+    final midHpBump = midFloor * midFloor * 12;
+    final attack = ((((42 + (isBoss ? 22 : 0) + (isElite ? 10 : 0)) +
+                    curve * 5.5) *
+                diff *
+                zoneMult) *
+            threat *
+            (1.0 + (gp - 1.0) * 0.7))
         .round();
-    final hp = (((380 +
-                    level * 62 +
-                    (level ~/ 2) * 55) +
-                (isBoss ? 600 : 0) +
-                (isElite ? 180 : 0)) *
-            diff *
-            zoneMult)
+    final hp = ((((380 +
+                        level * 62 +
+                        (level ~/ 2) * 55 +
+                        midHpBump) +
+                    (isBoss ? 600 : 0) +
+                    (isElite ? 180 : 0)) *
+                diff *
+                zoneMult) *
+            threat *
+            gp)
         .round();
-    final gold = ((12 + level * 2.5) * (isBoss ? 3.4 : 1.0) * diff).round();
+    final gold =
+        (((12 + level * 2.5) * (isBoss ? 3.4 : 1.0) * diff) * hmGold).round();
 
     return (attack: attack, hp: hp, gold: gold);
+  }
+
+  /// How much equipped loot should pull dungeon threat.
+  /// Starters barely register; ~8–12 real upgrades is where pressure bites.
+  static double partyGearPressure(GameState state) {
+    var meaningful = 0;
+    var primaryScore = 0;
+    for (final hero in state.heroes) {
+      for (final item in hero.equipped.values) {
+        // Ignore class starters / fill-ins — only real drops pull threat.
+        if (item.id.startsWith('start_') || item.id.contains('_fill')) {
+          continue;
+        }
+        final primary = item.strengthBonus +
+            item.agilityBonus +
+            item.staminaBonus +
+            item.intellectBonus +
+            item.spiritBonus +
+            item.spellPowerBonus;
+        if (primary >= 4 || item.rarity.index >= LootRarity.uncommon.index) {
+          meaningful++;
+          primaryScore += primary;
+        }
+      }
+    }
+    // ~4 pieces ≈ mild; ~10 pieces ≈ +70–100% HP threat.
+    final pieceRamp = max(0, meaningful - 2) * 0.085;
+    final scoreRamp = (primaryScore * 0.0028).clamp(0.0, 1.15);
+    return (1.0 + pieceRamp + scoreRamp).clamp(1.0, 2.85);
   }
 
   /// XP required to go from [level] → level+1.
@@ -1085,19 +1138,45 @@ class GameLogic {
 
   /// Builds the enemy group for a room. Treasure rooms have no enemies.
   /// [threatScale] < 1 softens packs (used for AFK spatial sim).
+  /// Pass [fromState] to apply AL + gear-pressure scaling automatically.
   static List<EnemyUnit> createEnemyGroup(
     DungeonRoom room, {
     String? dungeonId,
     bool bossRush = false,
     double threatScale = 1.0,
+    int hardmodeLevel = 0,
+    int ascensionLevel = 0,
+    double gearPressure = 1.0,
+    GameState? fromState,
   }) {
     if (room.type == RoomType.treasure || room.enemyCount == 0) {
       return <EnemyUnit>[];
     }
 
-    final id = dungeonId ?? 'sandy';
-    final budget = roomCombatBudget(room, dungeonId: id);
-    final count = room.enemyCount;
+    final id = dungeonId ?? fromState?.dungeonId ?? 'sandy';
+    final hm = fromState?.hardmodeLevel ?? hardmodeLevel;
+    final al = fromState?.ascensionLevel ?? ascensionLevel;
+    final rush = fromState?.challengeBossRush ?? bossRush;
+    final gp =
+        fromState != null ? partyGearPressure(fromState) : gearPressure;
+    final budget = roomCombatBudget(
+      room,
+      dungeonId: id,
+      hardmodeLevel: hm,
+      ascensionLevel: al,
+      gearPressure: gp,
+    );
+    // Hardmode densifies packs: HM+10 = 10× (1000%) enemy count.
+    final baseCount = max(1, room.enemyCount);
+    final count = min(
+      80,
+      max(1, (baseCount * (1.0 + hm * 0.9)).round()),
+    );
+    // Full density keep: each body still carries HM-scaled HP/ATK (not diluted).
+    final density = count / baseCount;
+    final packAttack = (budget.attack * density).round();
+    final packHp = (budget.hp * density).round();
+    final packGold = (budget.gold * (1.0 + (density - 1.0) * 0.25)).round();
     final level = room.globalBattleNumber;
     final bossName = DungeonCatalog.byId(id).bossName;
     final rng = Random(level * 9173 + id.hashCode + room.type.index * 41);
@@ -1105,7 +1184,7 @@ class GameLogic {
 
     final archetypes = <EnemyArchetype>[
       for (var i = 0; i < count; i++)
-        bossRush && !(isBossRoom && i == 0)
+        rush && !(isBossRoom && i == 0)
             ? (i == 0
                 ? EnemyArchetype.tank
                 : _pickArchetype(RoomType.elite, isBossUnit: false, rng: rng))
@@ -1127,9 +1206,9 @@ class GameLogic {
     final shares = rawShares.map((w) => w / shareSum).toList();
 
     final group = <EnemyUnit>[];
-    var hpLeft = budget.hp;
-    var attackLeft = budget.attack;
-    var goldLeft = budget.gold;
+    var hpLeft = packHp;
+    var attackLeft = packAttack;
+    var goldLeft = packGold;
 
     // Front-load threat: early indices (first chambers) eat more of the budget
     // so gated maps still hurt before the whole pack wakes.
@@ -1142,8 +1221,16 @@ class GameLogic {
 
     // Absolute floor so a single woken mob is never free.
     // Absolute floor: dangerous, but a tank should soak several hits.
-    final minHp = max(110, 90 + level * 42 + (isBossRoom ? 140 : 0));
-    final minAtk = max(28, 24 + level * 8 + (isBossRoom ? 12 : 0));
+    final minHp = max(
+      110,
+      ((90 + level * 42 + (isBossRoom ? 140 : 0)) * (0.75 + gp * 0.25))
+          .round(),
+    );
+    final minAtk = max(
+      28,
+      ((24 + level * 8 + (isBossRoom ? 12 : 0)) * (0.85 + (gp - 1.0) * 0.4))
+          .round(),
+    );
 
     for (var i = 0; i < count; i++) {
       final isLast = i == count - 1;
@@ -1151,19 +1238,19 @@ class GameLogic {
       final skew = _archetypeStatSkew(archetype);
       final baseHp = isLast
           ? hpLeft
-          : max(1, (budget.hp * adjShares[i]).round());
+          : max(1, (packHp * adjShares[i]).round());
       final baseAtk = isLast
           ? max(1, attackLeft)
-          : max(1, (budget.attack * adjShares[i]).round());
+          : max(1, (packAttack * adjShares[i]).round());
       final gold = isLast
           ? max(0, goldLeft)
-          : (budget.gold * adjShares[i]).round();
+          : (packGold * adjShares[i]).round();
       hpLeft -= baseHp;
       attackLeft -= baseAtk;
       goldLeft -= gold;
 
       // Boss Rush: every non-boss pack fights like an elite pull.
-      final rushMult = bossRush && !(isBossRoom && i == 0) ? 1.6 : 1.0;
+      final rushMult = rush && !(isBossRoom && i == 0) ? 1.6 : 1.0;
       final hp = max(
         (minHp * threatScale).round(),
         (baseHp * skew.hp * rushMult * threatScale).round(),
@@ -1177,17 +1264,19 @@ class GameLogic {
       final isBossUnit = isBossRoom && i == 0;
       final role = isBossUnit
           ? EnemyRole.boss
-          : (bossRush || room.type == RoomType.boss || room.type == RoomType.elite)
+          : (rush || room.type == RoomType.boss || room.type == RoomType.elite)
           ? EnemyRole.elite
           : EnemyRole.normal;
-      final defense = skew.def +
-          (partyLevel ~/ 3) +
-          (isBossUnit ? 6 : 0) +
-          (role == EnemyRole.elite ? 2 : 0) +
-          (bossRush && !isBossUnit ? 2 : 0);
+      final defense = ((skew.def +
+                  (partyLevel ~/ 3) +
+                  (isBossUnit ? 6 : 0) +
+                  (role == EnemyRole.elite ? 2 : 0) +
+                  (rush && !isBossUnit ? 2 : 0)) *
+              (0.7 + gp * 0.3))
+          .round();
 
       final namingType =
-          bossRush && !isBossUnit ? RoomType.elite : room.type;
+          rush && !isBossUnit ? RoomType.elite : room.type;
 
       group.add(
         EnemyUnit(
@@ -1202,7 +1291,7 @@ class GameLogic {
           level: level,
           currentHp: hp,
           stats: Stats.enemy(attack: attack, defense: defense, maxHp: hp),
-          rewardGold: bossRush ? (gold * 3) ~/ 2 : gold,
+          rewardGold: rush ? (gold * 3) ~/ 2 : gold,
           role: role,
           archetype: archetype,
         ),
@@ -1381,7 +1470,7 @@ class GameLogic {
       enemies: createEnemyGroup(
         firstRoom,
         dungeonId: state.dungeonId,
-        bossRush: state.challengeBossRush,
+        fromState: state,
       ),
       currentRoom: firstRoom,
       dungeonFloor: floor,
@@ -1648,10 +1737,12 @@ class GameLogic {
     int battleNumber, {
     int ascensionLevel = 0,
     int lootFindPercent = 0,
+    int hardmodeLevel = 0,
   }) {
     final floorNumber = max(1, battleNumber);
     final bossFloor = DungeonGenerator.bossFloorFor(ascensionLevel);
     final isBoss = floorNumber == bossFloor;
+    final hm = hardmodeLevel.clamp(0, 10);
 
     final floor = DungeonGenerator.generateFloor(
       floorNumber,
@@ -1662,7 +1753,8 @@ class GameLogic {
 
     // AL drop penalty: chance to skip gear entirely (pets can blunt this).
     final skipChance = (ascensionLevel * ascensionDropPenalty -
-            lootFindPercent / 100.0)
+            lootFindPercent / 100.0 -
+            hm * 0.01)
         .clamp(0.0, 0.75);
     if (random.nextDouble() < skipChance) {
       return <LootDrop>[
@@ -1674,7 +1766,7 @@ class GameLogic {
       ];
     }
 
-    final primaryRarity = _rarityForBattle(battleNumber);
+    final primaryRarity = _rarityForBattle(battleNumber, hardmodeLevel: hm);
     final slots = EquipmentSlot.values
         .where((s) => s != EquipmentSlot.consumable)
         .toList();
@@ -1694,9 +1786,12 @@ class GameLogic {
       ),
     ];
 
-    // Chance at a second class-biased piece on higher floors / elites.
-    final secondChance = (0.28 + lootFindPercent / 200.0).clamp(0.0, 0.55);
-    if (battleNumber >= 3 && random.nextDouble() < secondChance) {
+    // Chance at a second class-biased piece — delayed so early clears don't
+    // fill every jewelry slot in one boss cycle.
+    final secondChance = battleNumber >= 6
+        ? (0.22 + lootFindPercent / 200.0).clamp(0.0, 0.48)
+        : (0.08 + lootFindPercent / 250.0).clamp(0.0, 0.22);
+    if (battleNumber >= 4 && random.nextDouble() < secondChance) {
       final slot2 = slots[random.nextInt(slots.length)];
       final bias2 = HeroRole.values[random.nextInt(HeroRole.values.length)];
       final rarity2 = primaryRarity.index > 0
@@ -1808,6 +1903,7 @@ class GameLogic {
       LootRarity.uncommon => 5,
       LootRarity.rare => 9,
       LootRarity.epic => 16,
+      LootRarity.legendary => 28,
     };
 
     return perItem * drop.amount;
@@ -1819,6 +1915,7 @@ class GameLogic {
       LootRarity.uncommon => 5,
       LootRarity.rare => 9,
       LootRarity.epic => 16,
+      LootRarity.legendary => 28,
     };
     return base + (item.powerScore ~/ 4);
   }
@@ -1830,6 +1927,7 @@ class GameLogic {
       LootRarity.uncommon => 18,
       LootRarity.rare => 40,
       LootRarity.epic => 90,
+      LootRarity.legendary => 160,
     };
     return base + item.powerScore + (item.effectiveItemLevel * 2);
   }
@@ -2117,6 +2215,45 @@ class GameLogic {
       secondary.powerScore +
       ((primary.rarity.index + secondary.rarity.index) * 5);
 
+  /// Slot groups for BiS planning: dual ring/trinket, then singletons.
+  static List<List<EquipmentSlot>> equipSlotGroups() {
+    return <List<EquipmentSlot>>[
+      <EquipmentSlot>[EquipmentSlot.ring, EquipmentSlot.ring2],
+      <EquipmentSlot>[EquipmentSlot.trinket, EquipmentSlot.trinket2],
+      for (final slot in EquipmentSlot.values)
+        if (slot != EquipmentSlot.ring &&
+            slot != EquipmentSlot.ring2 &&
+            slot != EquipmentSlot.trinket &&
+            slot != EquipmentSlot.trinket2 &&
+            slot != EquipmentSlot.consumable)
+          <EquipmentSlot>[slot],
+    ];
+  }
+
+  /// Net score for putting [item] into [slot] on [hero].
+  ///
+  /// Two-hand weapons subtract the currently worn off-hand so Auto Equip
+  /// does not drop a strong shield/tome for a marginally better 2H.
+  static int slotEquipScore(
+    PartyHero hero,
+    EquipmentItem? item, {
+    required EquipmentSlot slot,
+  }) {
+    if (item == null) return 0;
+    if (!canHeroReceive(hero, item, slot: slot)) {
+      return -999999;
+    }
+    var score = roleEquipScore(hero.role, item);
+    if (slot == EquipmentSlot.weapon &&
+        ClassProficiency.weaponBlocksOffHand(item)) {
+      final off = hero.itemIn(EquipmentSlot.offHand);
+      if (off != null) {
+        score -= roleEquipScore(hero.role, off);
+      }
+    }
+    return score;
+  }
+
   /// Class-aware score for deciding whether gear is an upgrade for a hero.
   static int roleEquipScore(HeroRole role, EquipmentItem item) {
     if (!ClassProficiency.canEquip(role: role, level: 60, item: item) &&
@@ -2246,8 +2383,8 @@ class GameLogic {
       );
     }
     final current = hero.itemIn(slot);
-    final curScore = current == null ? 0 : roleEquipScore(hero.role, current);
-    final newScore = roleEquipScore(hero.role, candidate);
+    final curScore = slotEquipScore(hero, current, slot: slot);
+    final newScore = slotEquipScore(hero, candidate, slot: slot);
     final curAtk = (current?.strengthBonus ?? 0) +
         (current?.agilityBonus ?? 0) +
         (current?.spellPowerBonus ?? 0) +
@@ -2268,43 +2405,177 @@ class GameLogic {
     );
   }
 
-  /// Equip every stash piece that is a class-aware upgrade for some hero.
-  static GameState autoEquipBetterGear(GameState state) {
-    var next = state;
-    var guard = 0;
-    final maxSteps =
-        (next.gearStash.length + 1) * next.heroes.length * EquipmentSlot.values.length;
-    while (guard < maxSteps) {
-      guard++;
-      String? bestItemId;
-      var bestHero = -1;
-      var bestDelta = 0;
-      EquipmentSlot? bestSlot;
-      for (final item in next.gearStash) {
-        for (var i = 0; i < next.heroes.length; i++) {
-          final hero = next.heroes[i];
-          final cmp = compareForHero(hero, item);
-          if (cmp.powerDelta > bestDelta) {
-            bestDelta = cmp.powerDelta;
-            bestItemId = item.id;
-            bestHero = i;
-            bestSlot = cmp.intoSlot;
+  /// Planned stash→slot upgrades from BiS assignment (shared by Auto Equip / Sell Junk).
+  static List<({int heroIndex, EquipmentSlot slot, String itemId, int delta})>
+      planBiSAssignments(GameState state) {
+    final stashById = <String, EquipmentItem>{
+      for (final item in state.gearStash) item.id: item,
+    };
+    if (stashById.isEmpty) return const [];
+
+    final reserved = <String>{};
+    final plan =
+        <({int heroIndex, EquipmentSlot slot, String itemId, int delta})>[];
+    final filledSlots = <String>{};
+
+    String slotKey(int heroIndex, EquipmentSlot slot) =>
+        '$heroIndex:${slot.name}';
+
+    for (var round = 0; round < 6; round++) {
+      final proposals =
+          <({int heroIndex, EquipmentSlot slot, String itemId, int delta})>[];
+
+      for (var hi = 0; hi < state.heroes.length; hi++) {
+        final hero = state.heroes[hi];
+        String? plannedWeaponId;
+        for (final p in plan) {
+          if (p.heroIndex == hi && p.slot == EquipmentSlot.weapon) {
+            plannedWeaponId = p.itemId;
+            break;
+          }
+        }
+        final plannedWeapon = plannedWeaponId == null
+            ? hero.itemIn(EquipmentSlot.weapon)
+            : stashById[plannedWeaponId] ?? hero.itemIn(EquipmentSlot.weapon);
+        final blocksOffHand =
+            ClassProficiency.weaponBlocksOffHand(plannedWeapon);
+
+        for (final group in equipSlotGroups()) {
+          if (blocksOffHand &&
+              group.length == 1 &&
+              group.first == EquipmentSlot.offHand) {
+            continue;
+          }
+
+          final available = <EquipmentItem>[
+            for (final item in state.gearStash)
+              if (!reserved.contains(item.id)) item,
+          ];
+
+          final scored = <({EquipmentItem item, int score})>[];
+          for (final item in available) {
+            if (!equipTargetsFor(item).any(group.contains)) continue;
+            var best = -999999;
+            for (final slot in group) {
+              if (filledSlots.contains(slotKey(hi, slot))) continue;
+              if (!canHeroReceive(hero, item, slot: slot)) continue;
+              best = max(best, slotEquipScore(hero, item, slot: slot));
+            }
+            if (best > -999999) {
+              scored.add((item: item, score: best));
+            }
+          }
+          scored.sort((a, b) => b.score.compareTo(a.score));
+
+          final slots = [...group]..sort((a, b) {
+              final sa = filledSlots.contains(slotKey(hi, a))
+                  ? 999999
+                  : slotEquipScore(hero, hero.itemIn(a), slot: a);
+              final sb = filledSlots.contains(slotKey(hi, b))
+                  ? 999999
+                  : slotEquipScore(hero, hero.itemIn(b), slot: b);
+              return sa.compareTo(sb);
+            });
+
+          final usedLocal = <String>{};
+          for (final slot in slots) {
+            if (filledSlots.contains(slotKey(hi, slot))) continue;
+            final cur = hero.itemIn(slot);
+            final curScore = slotEquipScore(hero, cur, slot: slot);
+            for (final entry in scored) {
+              if (usedLocal.contains(entry.item.id)) continue;
+              if (reserved.contains(entry.item.id)) continue;
+              if (!canHeroReceive(hero, entry.item, slot: slot)) continue;
+              final sc = slotEquipScore(hero, entry.item, slot: slot);
+              if (sc > curScore) {
+                usedLocal.add(entry.item.id);
+                proposals.add((
+                  heroIndex: hi,
+                  slot: slot,
+                  itemId: entry.item.id,
+                  delta: sc - curScore,
+                ));
+                break;
+              }
+            }
           }
         }
       }
-      if (bestItemId == null || bestHero < 0 || bestSlot == null) {
-        break;
+
+      if (proposals.isEmpty) break;
+
+      final bestByItem = <String,
+          ({int heroIndex, EquipmentSlot slot, String itemId, int delta})>{};
+      for (final p in proposals) {
+        final prev = bestByItem[p.itemId];
+        if (prev == null || p.delta > prev.delta) {
+          bestByItem[p.itemId] = p;
+        }
       }
+
+      final bestBySlot = <String,
+          ({int heroIndex, EquipmentSlot slot, String itemId, int delta})>{};
+      for (final p in bestByItem.values) {
+        final key = slotKey(p.heroIndex, p.slot);
+        final prev = bestBySlot[key];
+        if (prev == null || p.delta > prev.delta) {
+          bestBySlot[key] = p;
+        }
+      }
+
+      var added = 0;
+      final winners = bestBySlot.values.toList()
+        ..sort((a, b) => b.delta.compareTo(a.delta));
+      final claimedThisRound = <String>{};
+      for (final w in winners) {
+        if (reserved.contains(w.itemId)) continue;
+        if (claimedThisRound.contains(w.itemId)) continue;
+        final key = slotKey(w.heroIndex, w.slot);
+        if (filledSlots.contains(key)) continue;
+        reserved.add(w.itemId);
+        claimedThisRound.add(w.itemId);
+        filledSlots.add(key);
+        plan.add(w);
+        added++;
+      }
+      if (added == 0) break;
+    }
+
+    return plan;
+  }
+
+  /// Equip every stash piece that is a class-aware upgrade for some hero.
+  ///
+  /// Uses per-hero BiS slot fill with party-wide conflict resolution (largest
+  /// power delta wins contested items; losers re-pick next round).
+  static GameState autoEquipBetterGear(GameState state) {
+    var next = state;
+    final plan = planBiSAssignments(next);
+    final ordered = [...plan]..sort((a, b) {
+        final aw = a.slot == EquipmentSlot.weapon ? 0 : 1;
+        final bw = b.slot == EquipmentSlot.weapon ? 0 : 1;
+        return aw.compareTo(bw);
+      });
+    for (final step in ordered) {
+      EquipmentItem? item;
+      for (final g in next.gearStash) {
+        if (g.id == step.itemId) {
+          item = g;
+          break;
+        }
+      }
+      if (item == null) continue;
+      final hero = next.heroes[step.heroIndex];
+      if (!canHeroReceive(hero, item, slot: step.slot)) continue;
       final beforeLen = next.gearStash.length;
       next = equipFromStash(
         next,
-        bestItemId,
-        heroIndex: bestHero,
-        intoSlot: bestSlot,
+        step.itemId,
+        heroIndex: step.heroIndex,
+        intoSlot: step.slot,
       );
-      // Safety: never spin if equip was rejected.
       if (next.gearStash.length >= beforeLen) {
-        break;
+        continue;
       }
     }
     return next.copyWith(lastUpdated: DateTime.now());
@@ -2324,7 +2595,7 @@ class GameLogic {
       return secondary;
     }
     if (secondary.index == primary.index &&
-        primary.index < LootRarity.epic.index) {
+        primary.index < LootRarity.legendary.index) {
       return LootRarity.values[primary.index + 1];
     }
     return primary;
@@ -2501,30 +2772,20 @@ class GameLogic {
     return !_shouldKeepInBag(state, item);
   }
 
-  /// Keep bag piece if it upgrades an equipped slot, or is the best stash
-  /// option for at least one hero who can actually wear it in an empty slot.
+  /// Keep bag piece if BiS planning would equip it, or it still upgrades a worn slot.
   static bool _shouldKeepInBag(GameState state, EquipmentItem item) {
+    final plan = planBiSAssignments(state);
+    if (plan.any((p) => p.itemId == item.id)) {
+      return true;
+    }
     for (final hero in state.heroes) {
       for (final slot in equipTargetsFor(item)) {
         if (!canHeroReceive(hero, item, slot: slot)) {
           continue;
         }
-        final cur = hero.itemIn(slot);
-        if (cur != null) {
-          if (_compareForHeroSlot(hero, item, slot).isUpgrade) {
-            return true;
-          }
-          continue;
+        if (_compareForHeroSlot(hero, item, slot).isUpgrade) {
+          return true;
         }
-        final score = roleEquipScore(hero.role, item);
-        var bestOther = 0;
-        for (final other in state.gearStash) {
-          if (other.id == item.id) continue;
-          if (!equipTargetsFor(other).contains(slot)) continue;
-          if (!canHeroReceive(hero, other, slot: slot)) continue;
-          bestOther = max(bestOther, roleEquipScore(hero.role, other));
-        }
-        if (score > bestOther) return true;
       }
     }
     return false;
@@ -2584,17 +2845,38 @@ class GameLogic {
     return max(0, gap.ceil());
   }
 
-  static LootRarity _rarityForBattle(int battleNumber) {
+  static LootRarity _rarityForBattle(
+    int battleNumber, {
+    int hardmodeLevel = 0,
+  }) {
+    final hm = hardmodeLevel.clamp(0, 10);
+    // Direct legendary roll — worst at +0, best at +10.
+    final legendaryChance = 0.004 + hm * 0.011;
+    if (random.nextDouble() < legendaryChance) {
+      return LootRarity.legendary;
+    }
+
+    var rarity = LootRarity.common;
     if (battleNumber % 12 == 0) {
-      return LootRarity.epic;
+      rarity = LootRarity.epic;
+    } else if (battleNumber % 6 == 0) {
+      rarity = LootRarity.rare;
+    } else if (battleNumber % 3 == 0) {
+      rarity = LootRarity.uncommon;
     }
-    if (battleNumber % 6 == 0) {
-      return LootRarity.rare;
+
+    // Hardmode can bump the base tier (never past legendary).
+    final bumpChance = hm * 0.04;
+    if (rarity.index < LootRarity.legendary.index &&
+        random.nextDouble() < bumpChance) {
+      rarity = LootRarity.values[rarity.index + 1];
     }
-    if (battleNumber % 3 == 0) {
-      return LootRarity.uncommon;
+    if (rarity.index < LootRarity.legendary.index &&
+        hm >= 7 &&
+        random.nextDouble() < bumpChance * 0.5) {
+      rarity = LootRarity.values[rarity.index + 1];
     }
-    return LootRarity.common;
+    return rarity;
   }
 
   static GameState _advanceOneTick(GameState state) {
@@ -2748,6 +3030,7 @@ class GameLogic {
         room.globalBattleNumber,
         ascensionLevel: state.ascensionLevel,
         lootFindPercent: state.petLootFindPercent,
+        hardmodeLevel: state.hardmodeLevel,
       );
       final lootResult = applyLootDrops(state, rawDrops);
       awarded = lootResult.state;
@@ -2802,7 +3085,7 @@ class GameLogic {
       enemies: createEnemyGroup(
         nextRoom,
         dungeonId: awarded.dungeonId,
-        bossRush: awarded.challengeBossRush,
+        fromState: awarded,
       ),
       currentRoom: nextRoom,
       dungeonFloor: nextFloor,
@@ -2884,7 +3167,7 @@ class GameLogic {
       enemies: createEnemyGroup(
         room,
         dungeonId: dungeonId,
-        bossRush: state.challengeBossRush,
+        fromState: state,
       ),
       layoutSeed: seed,
       lastDailyDate: dateKey,

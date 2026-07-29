@@ -1,4 +1,4 @@
-enum LootRarity { common, uncommon, rare, epic }
+enum LootRarity { common, uncommon, rare, epic, legendary }
 
 enum ArmorType { cloth, leather, mail, plate }
 

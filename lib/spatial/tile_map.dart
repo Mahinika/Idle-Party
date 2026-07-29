@@ -147,6 +147,57 @@ class TileMap {
   }) =>
       isWalkable(x.floor(), y.floor(), openGateIds: openGateIds);
 
+  /// Walkable cells suitable for combat spawns (floor/spawn, not exit/gate).
+  bool isSpawnable(int x, int y) {
+    if (!inBounds(x, y)) return false;
+    final t = at(x, y);
+    return t == TileKind.floor || t == TileKind.spawn;
+  }
+
+  /// Snap tile coords to nearest spawnable cell (spiral search).
+  (int, int) snapToSpawnable(int x, int y) {
+    if (isSpawnable(x, y)) return (x, y);
+    for (var r = 1; r <= 14; r++) {
+      for (var dy = -r; dy <= r; dy++) {
+        for (var dx = -r; dx <= r; dx++) {
+          if (dx.abs() != r && dy.abs() != r) continue;
+          final nx = x + dx;
+          final ny = y + dy;
+          if (isSpawnable(nx, ny)) return (nx, ny);
+        }
+      }
+    }
+    for (var yy = 0; yy < rows; yy++) {
+      for (var xx = 0; xx < cols; xx++) {
+        if (isSpawnable(xx, yy)) return (xx, yy);
+      }
+    }
+    return (x.clamp(1, cols - 2), y.clamp(1, rows - 2));
+  }
+
+  /// Spawnable tiles; [combatOnly] skips the party staging chamber when multi-room.
+  List<(int, int)> spawnableCells({bool combatOnly = true}) {
+    final out = <(int, int)>[];
+    for (var y = 0; y < rows; y++) {
+      for (var x = 0; x < cols; x++) {
+        if (!isSpawnable(x, y)) continue;
+        if (combatOnly && chambers.length > 1) {
+          final ci = chamberIndexAt(x + 0.5, y + 0.5);
+          if (ci < 1) continue;
+        }
+        out.add((x, y));
+      }
+    }
+    if (out.isEmpty) {
+      for (var y = 0; y < rows; y++) {
+        for (var x = 0; x < cols; x++) {
+          if (isSpawnable(x, y)) out.add((x, y));
+        }
+      }
+    }
+    return out;
+  }
+
   int chamberIndexAt(double wx, double wy) {
     for (final c in chambers) {
       if (c.containsWorld(wx, wy)) return c.index;
@@ -196,6 +247,7 @@ abstract final class RoomLayouts {
     required DungeonRoom room,
     required String dungeonId,
     int layoutSeed = 0,
+    int? enemyCountOverride,
   }) {
     final def = DungeonCatalog.byId(dungeonId);
     final seed =
@@ -204,6 +256,7 @@ abstract final class RoomLayouts {
         room.type.index * 131 +
         layoutSeed;
     final rng = Random(seed);
+    final enemyCount = max(room.enemyCount, enemyCountOverride ?? 0);
 
     if (room.type == RoomType.treasure) {
       return _singleChamber(
@@ -216,7 +269,12 @@ abstract final class RoomLayouts {
       );
     }
     if (room.type == RoomType.boss) {
-      return _bossArena(rng, dungeonId: dungeonId, layoutSeed: seed);
+      return _bossArena(
+        rng,
+        dungeonId: dungeonId,
+        layoutSeed: seed,
+        enemyCount: enemyCount,
+      );
     }
 
     final roomCount = switch (def.layout) {
@@ -232,7 +290,7 @@ abstract final class RoomLayouts {
       roomCount: roomCount,
       rng: rng,
       fortStyle: def.layout == DungeonLayoutKind.fort,
-      enemyCount: room.enemyCount,
+      enemyCount: enemyCount,
       dungeonId: dungeonId,
       layoutSeed: seed,
     );
@@ -242,6 +300,7 @@ abstract final class RoomLayouts {
     Random rng, {
     required String dungeonId,
     required int layoutSeed,
+    int enemyCount = 6,
   }) {
     const cols = 25;
     const rows = 19;
@@ -287,14 +346,55 @@ abstract final class RoomLayouts {
       anchorY: rows ~/ 2,
     );
     const exitPoint = (cols - 3, rows ~/ 2);
-    final enemySpawns = <(int, int)>[
+
+    bool spawnable(int x, int y) {
+      if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
+      final t = tiles[y * cols + x];
+      return t == TileKind.floor || t == TileKind.spawn;
+    }
+
+    final preferred = <(int, int)>[
       (cols ~/ 2, rows ~/ 2),
       (cols ~/ 2 - 3, rows ~/ 2 - 2),
       (cols ~/ 2 + 3, rows ~/ 2 + 2),
       (cols ~/ 2 - 2, rows ~/ 2 + 3),
       (cols ~/ 2 + 2, rows ~/ 2 - 3),
       (cols ~/ 2 + 4, rows ~/ 2),
+      (cols ~/ 2 - 4, rows ~/ 2),
+      (cols ~/ 2, rows ~/ 2 - 4),
+      (cols ~/ 2, rows ~/ 2 + 4),
     ];
+    final enemySpawns = <(int, int)>[];
+    final seen = <String>{};
+    void tryAdd(int x, int y) {
+      if (!spawnable(x, y)) return;
+      final key = '$x,$y';
+      if (seen.contains(key)) return;
+      seen.add(key);
+      enemySpawns.add((x, y));
+    }
+
+    for (final p in preferred) {
+      if (enemySpawns.length >= enemyCount) break;
+      tryAdd(p.$1, p.$2);
+    }
+    // Fill remaining from floor ring around arena center.
+    for (var r = 1; enemySpawns.length < enemyCount && r < 10; r++) {
+      for (var a = 0; a < 16 && enemySpawns.length < enemyCount; a++) {
+        final ang = a * pi / 8;
+        tryAdd(
+          (cols / 2 + cos(ang) * r * 1.4).round(),
+          (rows / 2 + sin(ang) * r * 1.1).round(),
+        );
+      }
+    }
+    for (var y = 2; y < rows - 2 && enemySpawns.length < enemyCount; y++) {
+      for (var x = 4; x < cols - 4 && enemySpawns.length < enemyCount; x++) {
+        tryAdd(x, y);
+      }
+    }
+
+    final chambersIdx = List<int>.filled(enemySpawns.length, 0);
 
     return TileMap(
       cols: cols,
@@ -305,7 +405,7 @@ abstract final class RoomLayouts {
       enemySpawns: enemySpawns,
       roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
       chambers: <Chamber>[chamber],
-      enemyChamberIndices: const <int>[0, 0, 0, 0, 0, 0],
+      enemyChamberIndices: chambersIdx,
       props: _scatterProps(
         cols: cols,
         rows: rows,
@@ -497,21 +597,34 @@ abstract final class RoomLayouts {
     ];
 
     // Enemies in chambers after the first (chamber 0 = spawn staging).
+    // Only place on walkable floor — HM packs can request dozens of spawns.
     final enemySpawns = <(int, int)>[];
     final enemyChambers = <int>[];
+    final seenSpawns = <String>{};
     final combatRooms = rooms.length == 1
         ? <(int, _Rect)>[(0, rooms.first)]
         : [
             for (var i = 1; i < rooms.length; i++) (i, rooms[i]),
           ];
 
-    // Pack the first combat chamber hard — gated maps must hurt immediately.
-    var placed = 0;
-    if (combatRooms.isNotEmpty) {
-      final first = combatRooms.first;
-      final firstPack = (enemyCount * 0.55).ceil().clamp(3, enemyCount);
-      final r = first.$2;
-      final idx = first.$1;
+    bool tileSpawnable(int x, int y) {
+      if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
+      final t = tiles[y * cols + x];
+      return t == TileKind.floor || t == TileKind.spawn;
+    }
+
+    bool tryPlace(int x, int y, int chamberIdx) {
+      if (!tileSpawnable(x, y)) return false;
+      final key = '$x,$y';
+      if (seenSpawns.contains(key)) return false;
+      seenSpawns.add(key);
+      enemySpawns.add((x, y));
+      enemyChambers.add(chamberIdx);
+      return true;
+    }
+
+    void fillRoom(_Rect r, int chamberIdx, int want) {
+      if (want <= 0) return;
       final offsets = <(int, int)>[
         (0, 0),
         (1, 0),
@@ -525,36 +638,60 @@ abstract final class RoomLayouts {
         (2, 0),
         (-2, 0),
         (0, 2),
+        (0, -2),
+        (2, 1),
+        (-2, 1),
+        (1, 2),
+        (-1, 2),
       ];
-      for (var i = 0; i < firstPack && i < offsets.length; i++) {
-        enemySpawns.add((r.cx + offsets[i].$1, r.cy + offsets[i].$2));
-        enemyChambers.add(idx);
-        placed++;
+      var added = 0;
+      for (final o in offsets) {
+        if (added >= want) break;
+        if (tryPlace(r.cx + o.$1, r.cy + o.$2, chamberIdx)) added++;
+      }
+      // Sweep room interior for remaining slots.
+      for (var y = r.y + 1; y < r.y + r.h - 1 && added < want; y++) {
+        for (var x = r.x + 1; x < r.x + r.w - 1 && added < want; x++) {
+          if (tryPlace(x, y, chamberIdx)) added++;
+        }
       }
     }
-    for (final entry in combatRooms.skip(1)) {
-      if (placed >= enemyCount) break;
-      final idx = entry.$1;
-      final r = entry.$2;
-      enemySpawns.add((r.cx, r.cy));
-      enemyChambers.add(idx);
-      placed++;
-      if (placed < enemyCount) {
-        enemySpawns.add((r.cx + 1, r.cy));
-        enemyChambers.add(idx);
-        placed++;
+
+    if (combatRooms.isNotEmpty) {
+      final first = combatRooms.first;
+      final firstPack = (enemyCount * 0.55).ceil().clamp(1, enemyCount);
+      fillRoom(first.$2, first.$1, firstPack);
+      for (final entry in combatRooms.skip(1)) {
+        if (enemySpawns.length >= enemyCount) break;
+        final remaining = enemyCount - enemySpawns.length;
+        final share = max(1, remaining ~/ max(1, combatRooms.length - 1));
+        fillRoom(entry.$2, entry.$1, share);
       }
     }
-    while (enemySpawns.length < enemyCount && combatRooms.isNotEmpty) {
-      final entry = combatRooms[rng.nextInt(combatRooms.length)];
-      enemySpawns.add(
-        (entry.$2.cx + rng.nextInt(2), entry.$2.cy + rng.nextInt(2)),
-      );
-      enemyChambers.add(entry.$1);
+
+    // Leftover: round-robin walkable cells in combat rooms.
+    if (enemySpawns.length < enemyCount) {
+      final pool = <(int x, int y, int ci)>[];
+      for (final entry in combatRooms) {
+        final r = entry.$2;
+        for (var y = r.y + 1; y < r.y + r.h - 1; y++) {
+          for (var x = r.x + 1; x < r.x + r.w - 1; x++) {
+            if (tileSpawnable(x, y) && !seenSpawns.contains('$x,$y')) {
+              pool.add((x, y, entry.$1));
+            }
+          }
+        }
+      }
+      pool.shuffle(rng);
+      for (final p in pool) {
+        if (enemySpawns.length >= enemyCount) break;
+        tryPlace(p.$1, p.$2, p.$3);
+      }
     }
 
     final exitPoint = (end.cx, end.cy);
     final finalEnemySpawns = enemySpawns.take(enemyCount).toList();
+    final finalChambers = enemyChambers.take(finalEnemySpawns.length).toList();
 
     return TileMap(
       cols: cols,
@@ -566,7 +703,7 @@ abstract final class RoomLayouts {
       roomCenters: rooms.map((r) => (r.cx, r.cy)).toList(),
       chambers: chambers,
       gates: gateList,
-      enemyChamberIndices: enemyChambers.take(enemyCount).toList(),
+      enemyChamberIndices: finalChambers,
       props: _scatterProps(
         cols: cols,
         rows: rows,

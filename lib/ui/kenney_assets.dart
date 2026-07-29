@@ -88,16 +88,16 @@ abstract final class KenneyAssets {
   static String get torch => tile(8);
   static String get torchAlt => tile(20);
 
-  // —— Heroes (sample map / sheet character band) ——
-  static String get heroWizard => tile(84);
+  // —— Heroes (custom intro-matched pixel art) ——
+  static String get heroWizard => CustomAssets.heroWizard;
   static String get heroVillager => tile(85);
   static String get heroBearded => tile(86);
   static String get heroSoldier => tile(87);
-  static String get heroRogue => tile(88);
-  static String get heroKnight => tile(96);
-  static String get heroKnightAlt => tile(97);
+  static String get heroRogue => CustomAssets.heroRogue;
+  static String get heroKnight => CustomAssets.heroKnight;
+  static String get heroKnightAlt => CustomAssets.heroKnight;
   static String get heroWoman => tile(98);
-  static String get heroHealer => tile(99);
+  static String get heroHealer => CustomAssets.heroHealer;
   static String get heroElder => tile(100);
 
   // —— Enemies (custom identity sprites; Tiny Dungeon tiles kept as fallback IDs) ——
@@ -113,6 +113,9 @@ abstract final class KenneyAssets {
   static String get enemyRat => CustomAssets.enemyRat;
   static String get enemySnake => CustomAssets.enemySpider;
   static String get enemyGolem => CustomAssets.enemyGolem;
+  static String get enemyCrystalBoss => CustomAssets.enemyCrystalBoss;
+  static String get enemyCrystalWraith => CustomAssets.enemyCrystalWraith;
+  static String get enemyCrystalMite => CustomAssets.enemyCrystalMite;
 
   // —— Gear / consumables ——
   static String get shieldRound => tile(101);
@@ -365,7 +368,7 @@ abstract final class KenneyAssets {
         'underworld' => enemyCultist,
         'dead' => enemyGhost,
         'hell' => enemyHellBoss,
-        'crystal' => enemyBoss,
+        'crystal' => enemyCrystalBoss,
         _ => enemyBoss,
       };
     }
@@ -374,7 +377,7 @@ abstract final class KenneyAssets {
         'dead' => enemyGhost,
         'underworld' => enemySpider,
         'hell' => enemyCultist,
-        'crystal' => enemyCyclops,
+        'crystal' => enemyCrystalWraith,
         _ => enemyCyclops,
       };
     }
@@ -385,7 +388,7 @@ abstract final class KenneyAssets {
       'underworld' => enemySpider,
       'dead' => enemyGhost,
       'hell' => enemyCultist,
-      'crystal' => enemySlime,
+      'crystal' => enemyCrystalMite,
       _ => enemySlime,
     };
   }
@@ -404,6 +407,7 @@ abstract final class KenneyAssets {
           'king' => enemyBat,
           'underworld' => enemySpider,
           'dead' => enemyGhost,
+          'crystal' => enemyCrystalMite,
           _ => enemyRat,
         },
       EnemyArchetype.brute => switch (dungeonId) {
@@ -411,26 +415,31 @@ abstract final class KenneyAssets {
           'goblin' => enemyCyclops,
           'king' => enemyCyclops,
           'hell' => enemyBoss,
+          'crystal' => enemyCrystalBoss,
           _ => enemyCyclops,
         },
       EnemyArchetype.tank => switch (dungeonId) {
           'sandy' => enemyCrab,
           'dead' => enemyGhost,
           'hell' => enemyBoss,
+          'crystal' => enemyCrystalBoss,
           _ => enemyGolem,
         },
       EnemyArchetype.ranged => switch (dungeonId) {
           'dead' => enemyGhost,
           'underworld' => enemySpider,
           'hell' => enemyCultist,
+          'crystal' => enemyCrystalWraith,
           _ => enemyBat,
         },
       EnemyArchetype.glass => switch (dungeonId) {
           'dead' => enemyGhost,
           'underworld' => enemySpider,
+          'crystal' => enemyCrystalWraith,
           _ => enemyRat,
         },
-      EnemyArchetype.support => enemyCultist,
+      EnemyArchetype.support =>
+        dungeonId == 'crystal' ? enemyCrystalWraith : enemyCultist,
     };
   }
 
@@ -446,6 +455,9 @@ abstract final class KenneyAssets {
         enemyGolem,
         enemyBoss,
         enemyHellBoss,
+        enemyCrystalBoss,
+        enemyCrystalWraith,
+        enemyCrystalMite,
       ];
 
   static int enemySpriteCatalogIndex(String asset) {
@@ -466,6 +478,7 @@ abstract final class KenneyAssets {
         LootRarity.uncommon => potionGreen,
         LootRarity.rare => vialBlue,
         LootRarity.epic => chestClosed,
+        LootRarity.legendary => chestClosed,
       };
 
   static String equipmentIconFor(EquipmentItem item) {
@@ -539,6 +552,7 @@ abstract final class KenneyAssets {
           LootRarity.uncommon => potionGreen,
           LootRarity.rare => potionBlue,
           LootRarity.epic => vialBlue,
+          LootRarity.legendary => vialBlue,
         },
       _ => sword,
     };
@@ -571,5 +585,48 @@ abstract final class KenneyAssets {
     if (upper.contains('TRAIN')) return book;
     if (upper.contains('FORGE') || upper.contains('ANVIL')) return anvil;
     return hammer;
+  }
+
+  /// Best-effort icon for a discovered Codex item name (cosmetic only).
+  static String codexItemIconFor(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('gold') || lower.contains('coin')) return coinGold;
+    if (lower.contains('potion') || lower.contains('flask')) return potionRed;
+    if (lower.contains('essence') || lower.contains('vial')) return vialBlue;
+    if (lower.contains('helm') || lower.contains('hood') || lower.contains('crown')) {
+      return helmet;
+    }
+    if (lower.contains('boot') || lower.contains('greave')) return boots;
+    if (lower.contains('glove') || lower.contains('gaunt')) return gloves;
+    if (lower.contains('cloak') || lower.contains('cape')) return cloak;
+    if (lower.contains('shield') || lower.contains('buckler')) return shield;
+    if (lower.contains('bow') || lower.contains('crossbow')) return iconBow;
+    if (lower.contains('staff') || lower.contains('wand') || lower.contains('tome')) {
+      return staff;
+    }
+    if (lower.contains('dagger') || lower.contains('knife')) return dagger;
+    if (lower.contains('axe')) return axe;
+    if (lower.contains('hammer') || lower.contains('mace')) return hammer;
+    if (lower.contains('ring') || lower.contains('band')) return CustomAssets.iconRing;
+    if (lower.contains('amulet') || lower.contains('neck') || lower.contains('pendant')) {
+      return CustomAssets.iconNeck;
+    }
+    if (lower.contains('chest') || lower.contains('mail') || lower.contains('plate')) {
+      return chestArmor;
+    }
+    final catalog = <String>[
+      sword,
+      shield,
+      helmet,
+      chestArmor,
+      boots,
+      gloves,
+      staff,
+      dagger,
+      CustomAssets.iconRing,
+      potionGreen,
+    ];
+    final hash = name.hashCode & 0x7fffffff;
+    return catalog[hash % catalog.length];
   }
 }

@@ -142,29 +142,45 @@ class PartyHero {
 
   int get gearVitalityBonus => gearStaminaBonus * 10;
 
-  int get gearCritChance => equipped.values.fold<int>(
-        0,
-        (s, i) =>
-            s +
-            i.critChanceBonus +
-            (i.effectId == GearEffectId.crit ? i.effectValue : 0),
-      );
+  int get gearCritChance {
+    final raw = equipped.values.fold<int>(
+      0,
+      (s, i) =>
+          s +
+          i.critChanceBonus +
+          (i.effectId == GearEffectId.crit ? i.effectValue : 0),
+    );
+    return _softCapStat(raw, soft: 18, hard: 40);
+  }
 
-  int get gearAttackSpeedBonus => equipped.values.fold<int>(
-        0,
-        (s, i) =>
-            s +
-            i.attackSpeedBonus +
-            (i.effectId == GearEffectId.haste ? i.effectValue : 0),
-      );
+  int get gearAttackSpeedBonus {
+    final raw = equipped.values.fold<int>(
+      0,
+      (s, i) =>
+          s +
+          i.attackSpeedBonus +
+          (i.effectId == GearEffectId.haste ? i.effectValue : 0),
+    );
+    return _softCapStat(raw, soft: 22, hard: 50);
+  }
 
   int get gearMoveSpeedBonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.moveSpeedBonus);
 
-  int get gearLifestealPercent => equipped.values.fold<int>(0, (s, i) {
-        if (i.effectId == GearEffectId.lifesteal) return s + i.effectValue;
-        return s;
-      });
+  int get gearLifestealPercent {
+    final raw = equipped.values.fold<int>(0, (s, i) {
+      if (i.effectId == GearEffectId.lifesteal) return s + i.effectValue;
+      return s;
+    });
+    return _softCapStat(raw, soft: 10, hard: 22);
+  }
+
+  /// Compress stacking above [soft]; never exceed [hard].
+  static int _softCapStat(int value, {required int soft, required int hard}) {
+    if (value <= soft) return value;
+    final compressed = soft + ((value - soft) * 0.45).round();
+    return compressed > hard ? hard : compressed;
+  }
 
   bool get gearHasPierce =>
       equipped.values.any((i) => i.effectId == GearEffectId.pierce) ||

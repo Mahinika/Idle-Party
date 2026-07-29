@@ -21,27 +21,27 @@ class KenneyPanel extends StatelessWidget {
   final Rect centerSlice;
 
   ({Color fill, Color border, Color highlight}) get _palette => switch (style) {
-    KenneyPanelStyle.brown => (
-      fill: GameTheme.panel,
-      border: GameTheme.border,
-      highlight: GameTheme.borderLit.withValues(alpha: 0.35),
-    ),
-    KenneyPanelStyle.beige => (
-      fill: const Color(0xFF2E2618),
-      border: GameTheme.borderLit,
-      highlight: GameTheme.torch.withValues(alpha: 0.25),
-    ),
-    KenneyPanelStyle.inset => (
-      fill: GameTheme.panelInset,
-      border: const Color(0xFF4A4030),
-      highlight: const Color(0x22000000),
-    ),
-    KenneyPanelStyle.border => (
-      fill: GameTheme.stone,
-      border: GameTheme.borderLit,
-      highlight: GameTheme.torch.withValues(alpha: 0.2),
-    ),
-  };
+        KenneyPanelStyle.brown => (
+          fill: GameTheme.panel.withValues(alpha: 0.55),
+          border: GameTheme.borderLit.withValues(alpha: 0.8),
+          highlight: GameTheme.torch.withValues(alpha: 0.14),
+        ),
+        KenneyPanelStyle.beige => (
+          fill: const Color(0x992E2618),
+          border: GameTheme.borderLit.withValues(alpha: 0.85),
+          highlight: GameTheme.torch.withValues(alpha: 0.18),
+        ),
+        KenneyPanelStyle.inset => (
+          fill: GameTheme.panelInset.withValues(alpha: 0.62),
+          border: GameTheme.border.withValues(alpha: 0.7),
+          highlight: const Color(0x22000000),
+        ),
+        KenneyPanelStyle.border => (
+          fill: GameTheme.stone.withValues(alpha: 0.58),
+          border: GameTheme.borderLit.withValues(alpha: 0.85),
+          highlight: GameTheme.torch.withValues(alpha: 0.12),
+        ),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -56,10 +56,10 @@ class KenneyPanel extends StatelessWidget {
             color: palette.highlight,
             blurRadius: 0,
             spreadRadius: 1,
-            offset: const Offset(0, 0),
+            offset: Offset.zero,
           ),
           const BoxShadow(
-            color: Color(0x66000000),
+            color: Color(0x55000000),
             offset: Offset(0, 3),
             blurRadius: 0,
           ),

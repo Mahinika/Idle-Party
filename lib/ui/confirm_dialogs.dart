@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/story_lore.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
+import 'menu_chrome.dart';
 
 Future<void> confirmAscend(BuildContext context, GameDirector director) async {
   final state = director.state;
@@ -12,13 +14,14 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
   final reward = GameLogic.ascendEssenceReward(state.ascensionLevel + 1);
   final ok = await showDialog<bool>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: GameTheme.stoneDeep,
-      title: Text('Ascend?', style: GameTheme.pixel(size: 8)),
+    barrierColor: MenuChrome.scrim,
+    builder: (ctx) => MenuChrome.dialog(
+      title: 'Ascend?',
       content: Text(
-        'Reset this run (gear, levels, stash, floor).\n'
-        'Keep essence, relics, pets, sanctuary, soulbound.\n\n'
-        'Reward: +${reward}e · AL → ${state.ascensionLevel + 1}',
+        StoryLore.ascendConfirmBody(
+          rewardEssence: reward,
+          nextAl: state.ascensionLevel + 1,
+        ),
         style: GameTheme.body(size: 15, color: GameTheme.parchment),
       ),
       actions: [
@@ -49,9 +52,9 @@ Future<void> confirmLeaveDungeon(
 ) async {
   final ok = await showDialog<bool>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: GameTheme.stoneDeep,
-      title: Text('Return to hub?', style: GameTheme.pixel(size: 8)),
+    barrierColor: MenuChrome.scrim,
+    builder: (ctx) => MenuChrome.dialog(
+      title: 'Return to hub?',
       content: Text(
         'Leave the dungeon and return to the hub. '
         'Mid-floor combat progress on this room is lost.',
