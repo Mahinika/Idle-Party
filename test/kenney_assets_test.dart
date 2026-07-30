@@ -56,4 +56,23 @@ void main() {
       startsWith('assets/custom/portraits/'),
     );
   });
+
+  test('Crystal Spire codex names map to crystal sprites', () {
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Crystal Warden'),
+      KenneyAssets.enemyCrystalBoss,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Crystal Golem'),
+      KenneyAssets.enemyCrystalBoss,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Frost Wisp'),
+      KenneyAssets.enemyCrystalMite,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Ice Caster'),
+      KenneyAssets.enemyCrystalWraith,
+    );
+  });
 }

@@ -21,9 +21,11 @@ class DungeonGenerator {
     final bossFloor = bossFloorFor(ascensionLevel);
     final isBoss = floorNumber == bossFloor;
     final isTreasure = !isBoss && floorNumber % 6 == 0;
-    // Elites often; guaranteed mini-boss every 3rd combat floor.
-    final eliteRoll = random.nextDouble() < 0.38;
-    final guaranteedElite = !isBoss && !isTreasure && floorNumber % 3 == 0;
+    // Elites often after the early ramp; rare before F4.
+    final eliteChance = floorNumber <= 3 ? 0.14 : 0.38;
+    final eliteRoll = random.nextDouble() < eliteChance;
+    final guaranteedElite =
+        !isBoss && !isTreasure && floorNumber >= 6 && floorNumber % 3 == 0;
     final type = isBoss
         ? RoomType.boss
         : (isTreasure
@@ -63,11 +65,14 @@ class DungeonGenerator {
   }
 
   static int _enemyCountForType(RoomType type, Random random, int floor) {
+    final earlyCut = floor <= 3 ? 1 : 0;
     return switch (type) {
       RoomType.boss => 6 + random.nextInt(2),
-      RoomType.elite => 6 + random.nextInt(2) + (floor ~/ 4).clamp(0, 2),
+      RoomType.elite =>
+        max(4, 6 + random.nextInt(2) + (floor ~/ 4).clamp(0, 2) - earlyCut),
       RoomType.treasure => 0,
-      RoomType.normal => 5 + (floor ~/ 3).clamp(0, 4) + random.nextInt(2),
+      RoomType.normal =>
+        max(3, 5 + (floor ~/ 3).clamp(0, 4) + random.nextInt(2) - earlyCut),
     };
   }
 

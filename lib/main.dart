@@ -221,6 +221,9 @@ class _GameHomePageState extends State<GameHomePage> {
                 onOpenLoadouts: () => setState(
                   () => _hubOverlay = Is2Overlay.loadouts,
                 ),
+                onOpenGuides: () => setState(
+                  () => _hubOverlay = Is2Overlay.guides,
+                ),
               ),
               if (_hubOverlay == null)
                 FirstSessionTips(director: _director),

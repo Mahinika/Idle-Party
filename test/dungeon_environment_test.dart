@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:idle_party/models/dungeon_def.dart';
+import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/spatial/tile_map.dart';
 import 'package:idle_party/ui/dungeon_environment.dart';
 import 'package:idle_party/ui/kenney_assets.dart';
@@ -45,5 +46,32 @@ void main() {
     expect(DungeonEnvironment.inChamber(map, 2, 2), isTrue);
     expect(DungeonEnvironment.inChamber(map, 3, 2), isFalse);
     expect(DungeonEnvironment.gateRunsEastWest(map, 3, 2), isTrue);
+  });
+
+  test('Crystal Spire arena keeps spawn, exit, and enemies apart', () {
+    final map = RoomLayouts.forFloor(
+      floorNumber: 2,
+      room: const DungeonRoom(
+        floorNumber: 2,
+        roomIndex: 0,
+        type: RoomType.normal,
+        enemyLevel: 10,
+        enemyCount: 10,
+      ),
+      dungeonId: 'crystal',
+    );
+    expect(map.spawnPoints, isNotEmpty);
+    expect(
+      map.spawnPoints.first,
+      isNot((map.exitPoint.$1, map.exitPoint.$2)),
+    );
+    expect(map.exitPoint.$2, lessThan(map.spawnPoints.first.$2));
+    final spawnPad = {
+      for (final p in map.spawnPoints) '${p.$1},${p.$2}',
+    };
+    for (final e in map.enemySpawns) {
+      expect(spawnPad.contains('${e.$1},${e.$2}'), isFalse);
+      expect(map.at(e.$1, e.$2), TileKind.floor);
+    }
   });
 }

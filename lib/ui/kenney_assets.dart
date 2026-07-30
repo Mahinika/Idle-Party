@@ -467,6 +467,43 @@ abstract final class KenneyAssets {
 
   /// Stable cosmetic sprite for a codex enemy name (no combat coupling).
   static String enemySpriteForCodexName(String name) {
+    final key = name.trim().toLowerCase();
+    final mapped = switch (key) {
+      'crystal warden' ||
+      'crystal golem' ||
+      'frozen bulwark' ||
+      'glacial brute' ||
+      'shard brawler' =>
+        enemyCrystalBoss,
+      'crystal wraith' ||
+      'ice caster' ||
+      'frost slinger' ||
+      'rime chanter' ||
+      'frost adept' ||
+      'splinter blade' ||
+      'shatter fang' =>
+        enemyCrystalWraith,
+      'crystal mite' || 'frost wisp' || 'rime bat' => enemyCrystalMite,
+      'chtulu' || 'king crab' || 'cave king' => enemyBoss,
+      'hell lord' || 'hellgate tyrant' => enemyHellBoss,
+      _ => null,
+    };
+    if (mapped != null) return mapped;
+    if (key.contains('crystal') || key.contains('frost') || key.contains('rime') || key.contains('glacial') || key.contains('shard') || key.contains('splinter') || key.contains('shatter')) {
+      if (key.contains('wisp') || key.contains('mite') || key.contains('bat')) {
+        return enemyCrystalMite;
+      }
+      if (key.contains('wraith') ||
+          key.contains('caster') ||
+          key.contains('adept') ||
+          key.contains('chanter') ||
+          key.contains('slinger') ||
+          key.contains('blade') ||
+          key.contains('fang')) {
+        return enemyCrystalWraith;
+      }
+      return enemyCrystalBoss;
+    }
     final catalog = enemySpriteCatalog;
     if (catalog.isEmpty) return enemyRat;
     final hash = name.hashCode & 0x7fffffff;

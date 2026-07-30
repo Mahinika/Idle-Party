@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../spatial/tile_map.dart';
 
-/// Visual theme for dungeon combat maps (all six zones).
+/// Visual theme for dungeon combat maps (all catalog zones).
 abstract final class DungeonEnvironment {
   /// Deep void behind carved space — not walkable brick fill.
   static Color ambient(String dungeonId) => switch (dungeonId) {

@@ -1014,8 +1014,20 @@ class GameLogic {
     final hmThreat = 1.0 + hm * 0.9;
     final hmGold = 1.0 + hm * 0.15;
     final alThreat = 1.0 + ascensionLevel.clamp(0, 40) * 0.08;
-    final gp = gearPressure.clamp(1.0, 2.5);
+    final gpRaw = gearPressure.clamp(1.0, 2.5);
+    // Fresh early floors: don't let gear-pressure spike packs before F5.
+    final gp = level <= 4
+        ? 1.0 + (gpRaw - 1.0) * (0.25 + level * 0.12)
+        : gpRaw;
     final threat = hmThreat * alThreat;
+    // Early attrition ramp: F1–F3 should be clearable for fresh parties.
+    final earlyEase = switch (level) {
+      1 => 0.94,
+      2 => 0.90,
+      3 => 0.86,
+      4 => 0.92,
+      _ => 1.0,
+    };
 
     // Attrition curve: packs hurt over time, not via one-shots.
     // Extra quadratic after F2 so geared mid-run parties still feel pressure.
@@ -1025,7 +1037,8 @@ class GameLogic {
     final attack = ((((42 + (isBoss ? 22 : 0) + (isElite ? 10 : 0)) +
                     curve * 5.5) *
                 diff *
-                zoneMult) *
+                zoneMult *
+                earlyEase) *
             threat *
             (1.0 + (gp - 1.0) * 0.7))
         .round();
@@ -1036,7 +1049,8 @@ class GameLogic {
                     (isBoss ? 600 : 0) +
                     (isElite ? 180 : 0)) *
                 diff *
-                zoneMult) *
+                zoneMult *
+                earlyEase) *
             threat *
             gp)
         .round();
@@ -1157,14 +1171,19 @@ class GameLogic {
     final hm = fromState?.hardmodeLevel ?? hardmodeLevel;
     final al = fromState?.ascensionLevel ?? ascensionLevel;
     final rush = fromState?.challengeBossRush ?? bossRush;
-    final gp =
-        fromState != null ? partyGearPressure(fromState) : gearPressure;
+    final level = room.globalBattleNumber;
+    final gpRaw =
+        (fromState != null ? partyGearPressure(fromState) : gearPressure)
+            .clamp(1.0, 2.5);
+    final gp = level <= 4
+        ? 1.0 + (gpRaw - 1.0) * (0.25 + level * 0.12)
+        : gpRaw;
     final budget = roomCombatBudget(
       room,
       dungeonId: id,
       hardmodeLevel: hm,
       ascensionLevel: al,
-      gearPressure: gp,
+      gearPressure: fromState != null ? partyGearPressure(fromState) : gearPressure,
     );
     // Hardmode densifies packs: HM+10 = 10× (1000%) enemy count.
     final baseCount = max(1, room.enemyCount);
@@ -1177,7 +1196,6 @@ class GameLogic {
     final packAttack = (budget.attack * density).round();
     final packHp = (budget.hp * density).round();
     final packGold = (budget.gold * (1.0 + (density - 1.0) * 0.25)).round();
-    final level = room.globalBattleNumber;
     final bossName = DungeonCatalog.byId(id).bossName;
     final rng = Random(level * 9173 + id.hashCode + room.type.index * 41);
     final isBossRoom = room.type == RoomType.boss;
@@ -1220,15 +1238,26 @@ class GameLogic {
     final adjShares = frontWeights.map((w) => w / frontSum).toList();
 
     // Absolute floor so a single woken mob is never free.
-    // Absolute floor: dangerous, but a tank should soak several hits.
+    // Early floors ease the floor so fresh parties aren't deleted by min-stats.
+    final earlyMinEase = switch (level) {
+      1 => 0.52,
+      2 => 0.60,
+      3 => 0.68,
+      4 => 0.80,
+      _ => 1.0,
+    };
     final minHp = max(
-      110,
-      ((90 + level * 42 + (isBossRoom ? 140 : 0)) * (0.75 + gp * 0.25))
+      (55 * earlyMinEase).round().clamp(28, 110),
+      ((90 + level * 42 + (isBossRoom ? 140 : 0)) *
+              (0.75 + gp * 0.25) *
+              earlyMinEase)
           .round(),
     );
     final minAtk = max(
-      28,
-      ((24 + level * 8 + (isBossRoom ? 12 : 0)) * (0.85 + (gp - 1.0) * 0.4))
+      (12 * earlyMinEase).round().clamp(6, 28),
+      ((24 + level * 8 + (isBossRoom ? 12 : 0)) *
+              (0.85 + (gp - 1.0) * 0.4) *
+              earlyMinEase)
           .round(),
     );
 

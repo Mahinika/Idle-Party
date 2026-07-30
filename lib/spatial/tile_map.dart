@@ -277,11 +277,21 @@ abstract final class RoomLayouts {
       );
     }
 
+    if (def.layout == DungeonLayoutKind.arena) {
+      return _combatArena(
+        rng,
+        dungeonId: dungeonId,
+        layoutSeed: seed,
+        enemyCount: enemyCount,
+      );
+    }
+
     final roomCount = switch (def.layout) {
       DungeonLayoutKind.cave => 6 + rng.nextInt(3),
       DungeonLayoutKind.hideout => 5 + rng.nextInt(3),
       DungeonLayoutKind.fort => 6 + rng.nextInt(3),
-      DungeonLayoutKind.arena => 1,
+      // Arena handled above; keep a safe multi-room fallback.
+      DungeonLayoutKind.arena => 5 + rng.nextInt(2),
     };
 
     return _multiRoomFloor(
@@ -350,7 +360,14 @@ abstract final class RoomLayouts {
     bool spawnable(int x, int y) {
       if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
       final t = tiles[y * cols + x];
-      return t == TileKind.floor || t == TileKind.spawn;
+      if (t != TileKind.floor) return false;
+      for (final p in spawnPoints) {
+        if ((p.$1 - x).abs() <= 2 && (p.$2 - y).abs() <= 2) return false;
+      }
+      if ((x - exitPoint.$1).abs() + (y - exitPoint.$2).abs() <= 1) {
+        return false;
+      }
+      return true;
     }
 
     final preferred = <(int, int)>[
@@ -396,6 +413,148 @@ abstract final class RoomLayouts {
 
     final chambersIdx = List<int>.filled(enemySpawns.length, 0);
 
+    return TileMap(
+      cols: cols,
+      rows: rows,
+      tiles: tiles,
+      spawnPoints: spawnPoints,
+      exitPoint: exitPoint,
+      enemySpawns: enemySpawns,
+      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
+      chambers: <Chamber>[chamber],
+      enemyChamberIndices: chambersIdx,
+      props: _scatterProps(
+        cols: cols,
+        rows: rows,
+        tiles: tiles,
+        spawnPoints: spawnPoints,
+        exitPoint: exitPoint,
+        enemySpawns: enemySpawns,
+        dungeonId: dungeonId,
+        layoutSeed: layoutSeed,
+        rng: rng,
+      ),
+      layoutSeed: layoutSeed,
+    );
+  }
+
+  /// Crystal Spire-style arena: spawn south, exit north, enemies mid-floor.
+  /// Avoids the old roomCount=1 bug where spawn and exit shared one cell.
+  static TileMap _combatArena(
+    Random rng, {
+    required String dungeonId,
+    required int layoutSeed,
+    int enemyCount = 8,
+  }) {
+    const cols = 23;
+    const rows = 29;
+    final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
+    void set(int x, int y, TileKind k) {
+      if (x >= 0 && y >= 0 && x < cols && y < rows) {
+        tiles[y * cols + x] = k;
+      }
+    }
+
+    for (var y = 2; y < rows - 2; y++) {
+      for (var x = 2; x < cols - 2; x++) {
+        set(x, y, TileKind.floor);
+      }
+    }
+    // Crystal pillars — leave a clear vertical lane for the climb.
+    for (final p in <(int, int)>[
+      (6, 8),
+      (16, 8),
+      (5, 14),
+      (17, 14),
+      (6, 20),
+      (16, 20),
+      (11, 11),
+      (11, 17),
+    ]) {
+      set(p.$1, p.$2, TileKind.wall);
+    }
+
+    const spawnX = cols ~/ 2;
+    const spawnY = rows - 4;
+    const exitX = cols ~/ 2;
+    const exitY = 3;
+    set(spawnX, spawnY, TileKind.spawn);
+    set(exitX, exitY, TileKind.exit);
+    _carveExitPlaza(tiles, cols, rows, exitX, exitY);
+
+    final chamber = Chamber(
+      index: 0,
+      x: 2,
+      y: 2,
+      w: cols - 4,
+      h: rows - 4,
+    );
+    final spawnPoints = _partySpawnCluster(
+      tiles: tiles,
+      cols: cols,
+      rows: rows,
+      anchorX: spawnX,
+      anchorY: spawnY,
+    );
+    const exitPoint = (exitX, exitY);
+    final reserved = <String>{
+      for (final p in spawnPoints) '${p.$1},${p.$2}',
+      '$exitX,$exitY',
+      // Keep a small pad clear around party start.
+      for (var dy = -2; dy <= 2; dy++)
+        for (var dx = -2; dx <= 2; dx++) '${spawnX + dx},${spawnY + dy}',
+    };
+
+    bool spawnable(int x, int y) {
+      if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
+      if (reserved.contains('$x,$y')) return false;
+      return tiles[y * cols + x] == TileKind.floor;
+    }
+
+    final preferred = <(int, int)>[
+      (cols ~/ 2, rows ~/ 2),
+      (cols ~/ 2 - 3, rows ~/ 2 - 2),
+      (cols ~/ 2 + 3, rows ~/ 2 + 2),
+      (cols ~/ 2 - 2, rows ~/ 2 + 3),
+      (cols ~/ 2 + 2, rows ~/ 2 - 3),
+      (cols ~/ 2 + 4, rows ~/ 2),
+      (cols ~/ 2 - 4, rows ~/ 2),
+      (7, 12),
+      (15, 12),
+      (7, 18),
+      (15, 18),
+      (cols ~/ 2, 10),
+      (cols ~/ 2, 16),
+    ];
+    final enemySpawns = <(int, int)>[];
+    final seen = <String>{};
+    void tryAdd(int x, int y) {
+      if (!spawnable(x, y)) return;
+      final key = '$x,$y';
+      if (!seen.add(key)) return;
+      enemySpawns.add((x, y));
+    }
+
+    for (final p in preferred) {
+      if (enemySpawns.length >= enemyCount) break;
+      tryAdd(p.$1, p.$2);
+    }
+    for (var r = 1; enemySpawns.length < enemyCount && r < 12; r++) {
+      for (var a = 0; a < 16 && enemySpawns.length < enemyCount; a++) {
+        final ang = a * pi / 8;
+        tryAdd(
+          (cols / 2 + cos(ang) * r * 1.3).round(),
+          (rows / 2 + sin(ang) * r * 1.5).round(),
+        );
+      }
+    }
+    for (var y = 5; y < rows - 6 && enemySpawns.length < enemyCount; y++) {
+      for (var x = 3; x < cols - 3 && enemySpawns.length < enemyCount; x++) {
+        tryAdd(x, y);
+      }
+    }
+
+    final chambersIdx = List<int>.filled(enemySpawns.length, 0);
     return TileMap(
       cols: cols,
       rows: rows,
@@ -607,10 +766,19 @@ abstract final class RoomLayouts {
             for (var i = 1; i < rooms.length; i++) (i, rooms[i]),
           ];
 
+    final partyPad = <String>{
+      for (final p in spawnPoints) '${p.$1},${p.$2}',
+      for (var dy = -1; dy <= 1; dy++)
+        for (var dx = -1; dx <= 1; dx++)
+          '${start.cx + dx},${start.cy + dy}',
+    };
+
     bool tileSpawnable(int x, int y) {
       if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
+      if (partyPad.contains('$x,$y')) return false;
+      // Never place enemies on party spawn tiles or the exit.
       final t = tiles[y * cols + x];
-      return t == TileKind.floor || t == TileKind.spawn;
+      return t == TileKind.floor;
     }
 
     bool tryPlace(int x, int y, int chamberIdx) {

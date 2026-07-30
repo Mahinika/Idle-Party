@@ -29,6 +29,9 @@ enemies = {
     "enemy_golem.png": "enemies/golem.png",
     "enemy_boss_king.png": "enemies/boss_king.png",
     "enemy_boss_hell.png": "enemies/boss_hell.png",
+    "enemy_crystal_boss.png": "enemies/crystal_boss.png",
+    "enemy_crystal_mite.png": "enemies/crystal_mite.png",
+    "enemy_crystal_wraith.png": "enemies/crystal_wraith.png",
 }
 
 

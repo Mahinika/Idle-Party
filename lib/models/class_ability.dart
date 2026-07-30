@@ -1,40 +1,42 @@
 import 'hero.dart';
 
-/// Combat abilities unlocked by hero level (all roles).
+/// Combat abilities unlocked by hero level (WotLK-inspired kits).
 enum AbilityId {
-  // Warrior — Protection
+  // Warrior — Protection (WotLK)
   defensiveStance,
   shieldBlock,
   thunderClap,
-  sunderArmor,
+  devastate,
   taunt,
   demoralizingShout,
   shieldSlam,
   revenge,
+  shockwave,
   lastStand,
   shieldWall,
 
-  // Healer — Discipline Priest
-  atonement,
+  // Healer — Discipline Priest (WotLK)
+  innerFire,
   powerWordShield,
-  shadowWordPain,
+  prayerOfMending,
   penance,
   powerWordFortitude,
   flashHeal,
   painSuppression,
-  rapture,
+  powerInfusion,
 
-  // Mage — Arcane / Fire hybrid
+  // Mage — Fire (WotLK)
   arcaneIntellect,
   fireball,
+  livingBomb,
   frostNova,
-  arcaneExplosion,
+  blastWave,
   blink,
   combustion,
-  iceBlock,
   pyroblast,
+  iceBlock,
 
-  // Rogue — Assassination / Combat hybrid
+  // Rogue — Combat (WotLK)
   sinisterStrike,
   sliceAndDice,
   eviscerate,
@@ -42,7 +44,7 @@ enum AbilityId {
   bladeFlurry,
   sprint,
   vanish,
-  adrenalineRush,
+  killingSpree,
 }
 
 class ClassAbilityDef {
@@ -69,9 +71,21 @@ class ClassAbilityDef {
   final int resourceCost;
   final bool requiresShield;
   final bool showInHud;
+
+  /// Hover / long-press chip text for the party HUD.
+  String get tooltipMessage {
+    final cd = cooldown <= 0
+        ? 'Passive'
+        : cooldown == cooldown.roundToDouble()
+            ? 'CD ${cooldown.round()}s'
+            : 'CD ${cooldown.toStringAsFixed(1)}s';
+    final cost = resourceCost > 0 ? ' · Cost $resourceCost' : '';
+    final gate = requiresShield ? ' · Needs shield' : '';
+    return '$name\n$description\n$cd$cost$gate';
+  }
 }
 
-/// Class kits adapted for Idle Party auto-combat.
+/// Class kits adapted for Idle Party auto-combat (Wrath of the Lich King).
 class ClassKits {
   ClassKits._();
 
@@ -109,14 +123,15 @@ class ClassKits {
       resourceCost: 20,
     ),
     ClassAbilityDef(
-      id: AbilityId.sunderArmor,
+      id: AbilityId.devastate,
       role: HeroRole.warrior,
-      name: 'Sunder Armor',
-      shortLabel: 'Sunder',
-      description: 'Stack armor shred on the focus target.',
+      name: 'Devastate',
+      shortLabel: 'Dev',
+      description: 'Strike that applies Sunder Armor stacks.',
       unlockLevel: 6,
-      cooldown: 3.2,
-      resourceCost: 12,
+      cooldown: 2.8,
+      resourceCost: 15,
+      requiresShield: true,
     ),
     ClassAbilityDef(
       id: AbilityId.taunt,
@@ -160,12 +175,22 @@ class ClassKits {
       showInHud: false,
     ),
     ClassAbilityDef(
+      id: AbilityId.shockwave,
+      role: HeroRole.warrior,
+      name: 'Shockwave',
+      shortLabel: 'Shock',
+      description: 'Cone smash — AoE damage and stun.',
+      unlockLevel: 13,
+      cooldown: 16,
+      resourceCost: 22,
+    ),
+    ClassAbilityDef(
       id: AbilityId.lastStand,
       role: HeroRole.warrior,
       name: 'Last Stand',
       shortLabel: 'Stand',
       description: 'Emergency temporary bonus health.',
-      unlockLevel: 13,
+      unlockLevel: 14,
       cooldown: 45,
     ),
     ClassAbilityDef(
@@ -179,13 +204,13 @@ class ClassKits {
       requiresShield: true,
     ),
 
-    // —— Disc Priest ——
+    // —— Disc Priest (WotLK) ——
     ClassAbilityDef(
-      id: AbilityId.atonement,
+      id: AbilityId.innerFire,
       role: HeroRole.healer,
-      name: 'Atonement',
-      shortLabel: 'Atone',
-      description: 'Damage you deal heals the most injured ally.',
+      name: 'Inner Fire',
+      shortLabel: 'Inner',
+      description: 'Always on: tougher shields and stronger heals.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: false,
@@ -201,21 +226,21 @@ class ClassKits {
       resourceCost: 20,
     ),
     ClassAbilityDef(
-      id: AbilityId.shadowWordPain,
+      id: AbilityId.prayerOfMending,
       role: HeroRole.healer,
-      name: 'Shadow Word: Pain',
-      shortLabel: 'Pain',
-      description: 'DoT on the focus enemy — fuels Atonement.',
+      name: 'Prayer of Mending',
+      shortLabel: 'PoM',
+      description: 'Bounce heal that triggers when an ally is hit.',
       unlockLevel: 5,
-      cooldown: 4.5,
-      resourceCost: 15,
+      cooldown: 9,
+      resourceCost: 18,
     ),
     ClassAbilityDef(
       id: AbilityId.penance,
       role: HeroRole.healer,
       name: 'Penance',
       shortLabel: 'Penance',
-      description: 'Burst holy bolts that hit hard and heal via Atonement.',
+      description: 'Channel holy bolts — damages foes or tops allies.',
       unlockLevel: 7,
       cooldown: 8,
       resourceCost: 28,
@@ -251,16 +276,17 @@ class ClassKits {
       resourceCost: 10,
     ),
     ClassAbilityDef(
-      id: AbilityId.rapture,
+      id: AbilityId.powerInfusion,
       role: HeroRole.healer,
-      name: 'Rapture',
-      shortLabel: 'Rapture',
-      description: 'Big free shield wave across the party.',
+      name: 'Power Infusion',
+      shortLabel: 'PI',
+      description: 'Haste buff on your strongest damage dealer.',
       unlockLevel: 15,
       cooldown: 55,
+      resourceCost: 15,
     ),
 
-    // —— Mage ——
+    // —— Mage (Fire) ——
     ClassAbilityDef(
       id: AbilityId.arcaneIntellect,
       role: HeroRole.mage,
@@ -282,23 +308,33 @@ class ClassKits {
       resourceCost: 18,
     ),
     ClassAbilityDef(
+      id: AbilityId.livingBomb,
+      role: HeroRole.mage,
+      name: 'Living Bomb',
+      shortLabel: 'Bomb',
+      description: 'DoT that explodes for splash damage.',
+      unlockLevel: 5,
+      cooldown: 8,
+      resourceCost: 22,
+    ),
+    ClassAbilityDef(
       id: AbilityId.frostNova,
       role: HeroRole.mage,
       name: 'Frost Nova',
       shortLabel: 'Nova',
       description: 'Freeze nearby enemies in place briefly.',
-      unlockLevel: 5,
+      unlockLevel: 7,
       cooldown: 10,
       resourceCost: 20,
     ),
     ClassAbilityDef(
-      id: AbilityId.arcaneExplosion,
+      id: AbilityId.blastWave,
       role: HeroRole.mage,
-      name: 'Arcane Explosion',
-      shortLabel: 'AoE',
-      description: 'Arcane burst around you when surrounded.',
-      unlockLevel: 7,
-      cooldown: 6,
+      name: 'Blast Wave',
+      shortLabel: 'Blast',
+      description: 'Fire AoE knock — burns packs around you.',
+      unlockLevel: 9,
+      cooldown: 8,
       resourceCost: 25,
     ),
     ClassAbilityDef(
@@ -307,7 +343,7 @@ class ClassKits {
       name: 'Blink',
       shortLabel: 'Blink',
       description: 'Teleport toward preferred casting range.',
-      unlockLevel: 9,
+      unlockLevel: 10,
       cooldown: 12,
       resourceCost: 10,
     ),
@@ -326,7 +362,7 @@ class ClassKits {
       role: HeroRole.mage,
       name: 'Pyroblast',
       shortLabel: 'Pyro',
-      description: 'Huge fire nuke on cooldown.',
+      description: 'Huge fire nuke (Hot Streak style).',
       unlockLevel: 13,
       cooldown: 14,
       resourceCost: 35,
@@ -341,7 +377,7 @@ class ClassKits {
       cooldown: 50,
     ),
 
-    // —— Rogue ——
+    // —— Rogue (Combat) ——
     ClassAbilityDef(
       id: AbilityId.sinisterStrike,
       role: HeroRole.rogue,
@@ -411,13 +447,14 @@ class ClassKits {
       cooldown: 40,
     ),
     ClassAbilityDef(
-      id: AbilityId.adrenalineRush,
+      id: AbilityId.killingSpree,
       role: HeroRole.rogue,
-      name: 'Adrenaline Rush',
-      shortLabel: 'AR',
-      description: 'Energy surge and faster attacks.',
+      name: 'Killing Spree',
+      shortLabel: 'Spree',
+      description: 'Dash between foes with a flurry of strikes.',
       unlockLevel: 15,
       cooldown: 55,
+      resourceCost: 0,
     ),
   ];
 

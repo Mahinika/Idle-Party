@@ -1115,14 +1115,27 @@ class _TileRoomPainter extends CustomPainter {
         );
       }
       if (enemy.isAlive) {
-        if (enemy.swPainTimer > 0) {
+        if (enemy.livingBombTimer > 0) {
+          final pulse =
+              0.85 + 0.15 * math.sin(enemy.livingBombTimer * 10);
           canvas.drawCircle(
             c,
-            tile * 0.48,
+            tile * 0.5 * pulse,
+            Paint()..color = const Color(0x66FF5020),
+          );
+          canvas.drawCircle(
+            c,
+            tile * 0.5 * pulse,
             Paint()
-              ..color = const Color(0x88B060E0)
+              ..color = const Color(0xCCFF7030)
               ..style = PaintingStyle.stroke
-              ..strokeWidth = math.max(1.5, tile * 0.06),
+              ..strokeWidth = math.max(1.5, tile * 0.07),
+          );
+          // Fuse spark
+          canvas.drawCircle(
+            Offset(c.dx, c.dy - tile * 0.42),
+            tile * 0.1,
+            Paint()..color = const Color(0xFFFFF0A0),
           );
         }
         if (enemy.sunderStacks > 0 && enemy.sunderTimer > 0) {
@@ -1141,6 +1154,18 @@ class _TileRoomPainter extends CustomPainter {
             tile * 0.36,
             Paint()..color = const Color(0x6680D0FF),
           );
+          // Stun stars
+          for (var i = 0; i < 3; i++) {
+            final a = enemy.rootTimer * 4 + i * 2.1;
+            canvas.drawCircle(
+              Offset(
+                c.dx + math.cos(a) * tile * 0.42,
+                c.dy + math.sin(a) * tile * 0.28 - tile * 0.35,
+              ),
+              tile * 0.07,
+              Paint()..color = const Color(0xFFFFF0A0),
+            );
+          }
         }
         drawBar(c, enemy.hp, enemy.maxHp, tile * 0.85);
       }
@@ -1290,6 +1315,65 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(1.5, tile * 0.05),
         );
       }
+      if (hero.killingSpreeTimer > 0) {
+        final pulse = 0.9 + 0.1 * math.sin(hero.killingSpreeTimer * 14);
+        canvas.drawCircle(
+          c,
+          tile * 0.65 * pulse,
+          Paint()
+            ..color = const Color(0x88FF3030)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(2, tile * 0.08),
+        );
+      }
+      if (hero.powerInfusionTimer > 0) {
+        canvas.drawCircle(
+          c,
+          tile * 0.58,
+          Paint()
+            ..color = const Color(0x88C070FF)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(2, tile * 0.07),
+        );
+        canvas.drawCircle(
+          c,
+          tile * 0.35,
+          Paint()..color = const Color(0x44E0A0FF),
+        );
+      }
+      if (hero.pomCharges > 0) {
+        for (var i = 0; i < hero.pomCharges.clamp(0, 5); i++) {
+          final a = hero.x + i * 1.25 + hero.pomCharges;
+          canvas.drawCircle(
+            Offset(
+              c.dx + math.cos(a) * tile * 0.48,
+              c.dy + math.sin(a) * tile * 0.48,
+            ),
+            tile * 0.08,
+            Paint()..color = const Color(0xFFFFF0A0),
+          );
+        }
+      }
+      if (hero.innerFireActive && hero.heroRole == HeroRole.healer) {
+        canvas.drawCircle(
+          c,
+          tile * 0.38,
+          Paint()
+            ..color = const Color(0x55FFE8A0)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(1.2, tile * 0.05),
+        );
+      }
+      if (hero.sliceAndDiceTimer > 0) {
+        canvas.drawCircle(
+          c,
+          tile * 0.46,
+          Paint()
+            ..color = const Color(0x88FFD070)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(1.4, tile * 0.05),
+        );
+      }
       if (hero.sprintTimer > 0) {
         canvas.drawCircle(
           c,
@@ -1353,7 +1437,8 @@ class _TileRoomPainter extends CustomPainter {
 
     if (!reducedVfx) {
       for (final burst in world.bursts) {
-        if (burst.slash && burst.angle != null) {
+        final kind = burst.slash ? SpatialBurstKind.slash : burst.kind;
+        if (kind == SpatialBurstKind.slash && burst.angle != null) {
           // Prefer longer slash window for readability.
           final alpha = (burst.life / 0.42).clamp(0.0, 1.0);
           final c = center(burst.x, burst.y);
@@ -1391,6 +1476,78 @@ class _TileRoomPainter extends CustomPainter {
             math.max(2.0, tile * 0.08),
             Paint()..color = Colors.white.withValues(alpha: alpha * 0.9),
           );
+        } else if (kind == SpatialBurstKind.ring) {
+          final alpha = (burst.life / 0.5).clamp(0.0, 1.0);
+          final c = center(burst.x, burst.y);
+          final r = tile * burst.radius * (0.55 + (1 - alpha) * 0.7);
+          canvas.drawCircle(
+            c,
+            r,
+            Paint()
+              ..color = Color(burst.argb).withValues(alpha: alpha * 0.85)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(2.5, tile * 0.12),
+          );
+          canvas.drawCircle(
+            c,
+            r * 0.72,
+            Paint()
+              ..color = Colors.white.withValues(alpha: alpha * 0.35)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(1.5, tile * 0.06),
+          );
+        } else if (kind == SpatialBurstKind.cone && burst.angle != null) {
+          final alpha = (burst.life / 0.45).clamp(0.0, 1.0);
+          final c = center(burst.x, burst.y);
+          final r = tile * burst.radius * (0.85 + (1 - alpha) * 0.35);
+          final sweep = 1.15;
+          final start = burst.angle! - sweep * 0.5;
+          final path = Path()
+            ..moveTo(c.dx, c.dy)
+            ..arcTo(
+              Rect.fromCircle(center: c, radius: r),
+              start,
+              sweep,
+              false,
+            )
+            ..close();
+          canvas.drawPath(
+            path,
+            Paint()..color = Color(burst.argb).withValues(alpha: alpha * 0.45),
+          );
+          canvas.drawPath(
+            path,
+            Paint()
+              ..color = Color(burst.argb).withValues(alpha: alpha * 0.9)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(2, tile * 0.08),
+          );
+        } else if (kind == SpatialBurstKind.spark) {
+          final alpha = (burst.life / 0.35).clamp(0.0, 1.0);
+          final c = center(burst.x, burst.y);
+          final r = tile * burst.radius * (0.4 + alpha * 0.4);
+          canvas.drawCircle(
+            c,
+            r,
+            Paint()..color = Color(burst.argb).withValues(alpha: alpha * 0.9),
+          );
+          canvas.drawCircle(
+            c,
+            r * 0.4,
+            Paint()..color = Colors.white.withValues(alpha: alpha),
+          );
+          for (var i = 0; i < 4; i++) {
+            final a = i * math.pi / 2 + burst.life * 8;
+            canvas.drawCircle(
+              Offset(
+                c.dx + math.cos(a) * r * 1.3,
+                c.dy + math.sin(a) * r * 1.3,
+              ),
+              r * 0.25,
+              Paint()
+                ..color = Color(burst.argb).withValues(alpha: alpha * 0.7),
+            );
+          }
         } else {
           final maxLife = 0.45;
           final alpha = (burst.life / maxLife).clamp(0.0, 1.0);

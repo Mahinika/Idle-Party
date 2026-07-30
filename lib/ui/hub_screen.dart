@@ -34,6 +34,7 @@ class HubScreen extends StatefulWidget {
     this.onOpenAchievements,
     this.onOpenCodex,
     this.onOpenLoadouts,
+    this.onOpenGuides,
   });
 
   final GameDirector director;
@@ -48,6 +49,7 @@ class HubScreen extends StatefulWidget {
   final VoidCallback? onOpenAchievements;
   final VoidCallback? onOpenCodex;
   final VoidCallback? onOpenLoadouts;
+  final VoidCallback? onOpenGuides;
 
   @override
   State<HubScreen> createState() => _HubScreenState();
@@ -364,6 +366,8 @@ class _HubScreenState extends State<HubScreen>
           (label: 'ACHIEVEMENTS', onTap: widget.onOpenAchievements!),
         if (widget.onOpenCodex != null)
           (label: 'CODEX', onTap: widget.onOpenCodex!),
+        if (widget.onOpenGuides != null)
+          (label: 'GUIDES', onTap: widget.onOpenGuides!),
         (label: 'SETTINGS', onTap: widget.onOpenSettings),
       ],
     );

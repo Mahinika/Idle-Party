@@ -104,29 +104,38 @@ class SpatialActor {
   double shieldWallTimer = 0;
   double lastStandTimer = 0;
   int bonusMaxHp = 0;
+  /// Brief VFX/HUD flag after Shockwave.
+  double shockwaveFlash = 0;
 
   /// Next melee is Shield Slam / Revenge empowered.
   bool queuedShieldSlam = false;
   bool revengeReady = false;
 
-  // —— Disc Priest ——
+  // —— Disc Priest (WotLK) ——
   int absorbShield = 0;
   double painSuppressionTimer = 0;
   double fortitudeTimer = 0;
+  int pomCharges = 0;
+  int pomHeal = 0;
+  double powerInfusionTimer = 0;
+  /// Inner Fire glow (always-on visual while unlocked & alive).
+  bool innerFireActive = false;
 
-  // —— Mage ——
+  // —— Mage (Fire) ——
   bool queuedFireball = false;
   bool queuedPyroblast = false;
   double combustionTimer = 0;
   double iceBlockTimer = 0;
+  /// While a Living Bomb you cast is still ticking on any foe.
+  double livingBombArmed = 0;
 
-  // —— Rogue ——
+  // —— Rogue (Combat) ——
   int comboPoints = 0;
   double sliceAndDiceTimer = 0;
   double bladeFlurryTimer = 0;
   double sprintTimer = 0;
   double vanishTimer = 0;
-  double adrenalineTimer = 0;
+  double killingSpreeTimer = 0;
 
   /// Enemy: forced to attack [forcedTargetId] while timer > 0.
   String? forcedTargetId;
@@ -148,10 +157,14 @@ class SpatialActor {
   /// Demoralizing Shout: reduced attack while > 0.
   double demoShoutTimer = 0;
 
-  /// Shadow Word: Pain DoT.
-  double swPainTimer = 0;
-  double swPainDps = 0;
-  double swPainAcc = 0;
+  /// Living Bomb DoT (Fire Mage).
+  double livingBombTimer = 0;
+  double livingBombDps = 0;
+  double livingBombAcc = 0;
+  String? livingBombCasterId;
+
+  /// Cumulative damage dealt this floor (heroes only; for DPS meter).
+  int damageDealt = 0;
 
   /// Root / stun (Frost Nova, Kidney Shot).
   double rootTimer = 0;
@@ -190,7 +203,8 @@ class SpatialActor {
   double get attackSpeedMul {
     var m = 1.0;
     if (sliceAndDiceTimer > 0) m *= 1.35;
-    if (adrenalineTimer > 0) m *= 1.45;
+    if (killingSpreeTimer > 0) m *= 1.55;
+    if (powerInfusionTimer > 0) m *= 1.4;
     if (combustionTimer > 0) m *= 1.25;
     if (iceBlockTimer > 0) m = 0;
     return m;
@@ -244,7 +258,7 @@ class SpatialProjectile {
   final double radius;
   /// Seconds before the bolt starts moving (staggered casts like Penance).
   double delay;
-  /// Disc: bolt damage feeds Atonement when it lands.
+  /// Disc: bolt damage lightly tops the party when it lands.
   final bool onHitHealCaster;
   final String? casterId;
 }
@@ -305,6 +319,7 @@ class SpatialBurst {
     this.radius = 0.55,
     this.angle,
     this.slash = false,
+    this.kind = SpatialBurstKind.blast,
   });
 
   double x;
@@ -312,9 +327,23 @@ class SpatialBurst {
   double life;
   final int argb;
   final double radius;
-  /// Radians; used when [slash] is true (swing direction).
+  /// Radians; used when [slash] is true or [kind] is cone.
   final double? angle;
   final bool slash;
+  final SpatialBurstKind kind;
+}
+
+enum SpatialBurstKind {
+  /// Soft filled disc (default impact).
+  blast,
+  /// Weapon swing arc.
+  slash,
+  /// Expanding hollow ring (Blast Wave, Nova, Shockwave).
+  ring,
+  /// Forward cone wedge (Shockwave).
+  cone,
+  /// Tiny spark ticks (PoM bounce, Living Bomb fuse).
+  spark,
 }
 
 class SpatialWorld {
@@ -344,6 +373,7 @@ class SpatialWorld {
     this.bossBannerTimer = 0,
     this.bossBannerName = '',
     this.afkAssist = false,
+    this.combatElapsed = 0,
     List<SpatialFloater>? floaters,
     List<SpatialBurst>? bursts,
   })  : openGateIds = openGateIds ?? <int>{},
@@ -380,6 +410,9 @@ class SpatialWorld {
   double pulseTimer;
   double bossBannerTimer;
   String bossBannerName;
+
+  /// Seconds of active combat this floor (for DPS meter).
+  double combatElapsed;
 
   int get cols => map.cols;
   int get rows => map.rows;
@@ -472,8 +505,9 @@ abstract final class SpatialCombat {
     double? angle,
     bool slash = false,
     double life = 0.35,
+    SpatialBurstKind kind = SpatialBurstKind.blast,
   }) {
-    if (world.bursts.length > 18) {
+    if (world.bursts.length > 28) {
       world.bursts.removeAt(0);
     }
     world.bursts.add(
@@ -483,9 +517,69 @@ abstract final class SpatialCombat {
         argb: argb,
         radius: radius,
         angle: angle,
-        slash: slash,
+        slash: slash || kind == SpatialBurstKind.slash,
         life: life,
+        kind: slash ? SpatialBurstKind.slash : kind,
       ),
+    );
+  }
+
+  static void _spawnRing(
+    SpatialWorld world, {
+    required double x,
+    required double y,
+    required int argb,
+    double radius = 1.2,
+    double life = 0.4,
+  }) {
+    _spawnBurst(
+      world,
+      x: x,
+      y: y,
+      argb: argb,
+      radius: radius,
+      life: life,
+      kind: SpatialBurstKind.ring,
+    );
+  }
+
+  static void _spawnCone(
+    SpatialWorld world, {
+    required double x,
+    required double y,
+    required double angle,
+    required int argb,
+    double radius = 1.6,
+    double life = 0.38,
+  }) {
+    _spawnBurst(
+      world,
+      x: x,
+      y: y,
+      argb: argb,
+      radius: radius,
+      angle: angle,
+      life: life,
+      kind: SpatialBurstKind.cone,
+    );
+  }
+
+  static void _spawnSpark(
+    SpatialWorld world, {
+    required double x,
+    required double y,
+    required int argb,
+    double radius = 0.35,
+    double life = 0.28,
+  }) {
+    _spawnBurst(
+      world,
+      x: x,
+      y: y,
+      argb: argb,
+      radius: radius,
+      life: life,
+      kind: SpatialBurstKind.spark,
     );
   }
 
@@ -577,9 +671,12 @@ abstract final class SpatialCombat {
       if (a.demoShoutTimer > 0) {
         a.demoShoutTimer = math.max(0, a.demoShoutTimer - dt);
       }
-      if (a.swPainTimer > 0) {
-        a.swPainTimer = math.max(0, a.swPainTimer - dt);
-        if (a.swPainTimer <= 0) a.swPainDps = 0;
+      if (a.livingBombTimer > 0) {
+        a.livingBombTimer = math.max(0, a.livingBombTimer - dt);
+        if (a.livingBombTimer <= 0) {
+          a.livingBombDps = 0;
+          a.livingBombCasterId = null;
+        }
       }
       if (a.rootTimer > 0) {
         a.rootTimer = math.max(0, a.rootTimer - dt);
@@ -589,6 +686,9 @@ abstract final class SpatialCombat {
       }
       if (a.fortitudeTimer > 0) {
         a.fortitudeTimer = math.max(0, a.fortitudeTimer - dt);
+      }
+      if (a.powerInfusionTimer > 0) {
+        a.powerInfusionTimer = math.max(0, a.powerInfusionTimer - dt);
       }
       if (a.combustionTimer > 0) {
         a.combustionTimer = math.max(0, a.combustionTimer - dt);
@@ -608,8 +708,14 @@ abstract final class SpatialCombat {
       if (a.vanishTimer > 0) {
         a.vanishTimer = math.max(0, a.vanishTimer - dt);
       }
-      if (a.adrenalineTimer > 0) {
-        a.adrenalineTimer = math.max(0, a.adrenalineTimer - dt);
+      if (a.killingSpreeTimer > 0) {
+        a.killingSpreeTimer = math.max(0, a.killingSpreeTimer - dt);
+      }
+      if (a.shockwaveFlash > 0) {
+        a.shockwaveFlash = math.max(0, a.shockwaveFlash - dt);
+      }
+      if (a.livingBombArmed > 0) {
+        a.livingBombArmed = math.max(0, a.livingBombArmed - dt);
       }
       if (a.abilityCd.isNotEmpty) {
         final keys = a.abilityCd.keys.toList(growable: false);
@@ -710,6 +816,9 @@ abstract final class SpatialCombat {
       if (dealt <= 0) return absorbed;
     }
     hero.hp = math.max(0, hero.hp - dealt);
+    if (dealt > 0) {
+      _triggerPrayerOfMending(world, hero);
+    }
     if (hero.heroRole == HeroRole.warrior) {
       _gainRage(hero, 2.5 + dealt * 0.35);
     }
@@ -726,14 +835,13 @@ abstract final class SpatialCombat {
     return dealt;
   }
 
-  static void _atonementHeal(
+  /// Direct heal to the lowest ally (used by Penance side-heal in WotLK kit).
+  static void _healLowestAlly(
     SpatialWorld world,
-    SpatialActor priest,
-    int damageDealt, {
+    int amount, {
     required bool reducedVfx,
   }) {
-    if (!ClassKits.isUnlocked(AbilityId.atonement, priest.heroLevel)) return;
-    final heal = math.max(1, (damageDealt * 0.45).round());
+    final heal = math.max(1, amount);
     SpatialActor? lowest;
     var worst = 2.0;
     for (final h in world.heroes) {
@@ -758,6 +866,57 @@ abstract final class SpatialCombat {
         life: 0.5,
       );
     }
+  }
+
+  static void _triggerPrayerOfMending(SpatialWorld world, SpatialActor hit) {
+    if (hit.pomCharges <= 0 || hit.pomHeal <= 0) return;
+    final heal = hit.pomHeal;
+    hit.pomCharges -= 1;
+    final before = hit.hp;
+    hit.hp = math.min(hit.effectiveMaxHp, hit.hp + heal);
+    final gained = hit.hp - before;
+    if (gained > 0) {
+      _spawnFloater(
+        world,
+        x: hit.x,
+        y: hit.y - 0.35,
+        text: '+$gained',
+        argb: _floaterHeal,
+        life: 0.45,
+      );
+      _spawnSpark(
+        world,
+        x: hit.x,
+        y: hit.y,
+        argb: 0xFFFFF0A0,
+        radius: 0.5,
+        life: 0.3,
+      );
+    }
+    if (hit.pomCharges <= 0) {
+      hit.pomHeal = 0;
+      return;
+    }
+    // Bounce to another injured ally.
+    SpatialActor? next;
+    var worst = 1.0;
+    for (final h in world.heroes) {
+      if (!h.isAlive || h.id == hit.id || h.pomCharges > 0) continue;
+      final frac = h.hp / math.max(1, h.effectiveMaxHp);
+      if (frac < worst) {
+        worst = frac;
+        next = h;
+      }
+    }
+    if (next == null) {
+      hit.pomCharges = 0;
+      hit.pomHeal = 0;
+      return;
+    }
+    next.pomCharges = hit.pomCharges;
+    next.pomHeal = heal;
+    hit.pomCharges = 0;
+    hit.pomHeal = 0;
   }
 
   /// Protection Warrior auto-cast priority (idle-friendly).
@@ -940,6 +1099,7 @@ abstract final class SpatialCombat {
           final wasAlive = e.hp > 0;
           final dealt = math.max(1, clapDmg - e.effectiveDefense);
           e.hp = math.max(0, e.hp - dealt);
+          _recordHeroDamage(warrior, dealt);
           e.attackSlowTimer = math.max(e.attackSlowTimer, 3.2);
           _spawnFloater(
             world,
@@ -956,14 +1116,6 @@ abstract final class SpatialCombat {
           }
         }
         if (!reducedVfx) {
-          _spawnFloater(
-            world,
-            x: warrior.x,
-            y: warrior.y - 0.55,
-            text: 'THUNDER CLAP',
-            argb: 0xFFFFE08A,
-            life: 0.6,
-          );
           _spawnBurst(
             world,
             x: warrior.x,
@@ -972,33 +1124,66 @@ abstract final class SpatialCombat {
             radius: 1.35,
             life: 0.3,
           );
+          _spawnRing(
+            world,
+            x: warrior.x,
+            y: warrior.y,
+            argb: 0x88FFE08A,
+            radius: 1.5,
+            life: 0.35,
+          );
+          _spawnFloater(
+            world,
+            x: warrior.x,
+            y: warrior.y - 0.55,
+            text: 'THUNDER CLAP',
+            argb: 0xFFFFE08A,
+            life: 0.6,
+          );
         }
         _gainRage(warrior, 8);
       }
     }
 
-    // Sunder Armor on focus target (keep stacks up).
+    // Devastate on focus target (applies Sunder Armor stacks + hit).
     if (focusEnemy != null &&
         focusEnemy.hp > 0 &&
         !focusEnemy.dormant &&
         _dist(warrior, focusEnemy) <= warrior.attackRange + 0.35 &&
-        can(AbilityId.sunderArmor) &&
+        can(AbilityId.devastate) &&
         (focusEnemy.sunderStacks < 5 || focusEnemy.sunderTimer < 4)) {
-      final def = WarriorAbilities.defFor(AbilityId.sunderArmor)!;
+      final def = WarriorAbilities.defFor(AbilityId.devastate)!;
       _spendRage(warrior, def.resourceCost);
-      _startAbilityCd(warrior, AbilityId.sunderArmor, def.cooldown);
+      _startAbilityCd(warrior, AbilityId.devastate, def.cooldown);
       focusEnemy.sunderStacks = math.min(5, focusEnemy.sunderStacks + 1);
       focusEnemy.sunderTimer = 14;
-      warrior.attackFlash = 0.12;
-      if (!reducedVfx) {
-        _spawnFloater(
-          world,
-          x: focusEnemy.x,
-          y: focusEnemy.y - 0.4,
-          text: 'SUNDER ${focusEnemy.sunderStacks}',
-          argb: 0xFFC0A070,
-          life: 0.55,
-        );
+      final wasAlive = focusEnemy.hp > 0;
+      final dmg = math.max(2, (warrior.attack * 0.55).round());
+      final dealt = math.max(1, dmg - focusEnemy.effectiveDefense);
+      focusEnemy.hp = math.max(0, focusEnemy.hp - dealt);
+      _recordHeroDamage(warrior, dealt);
+      warrior.attackFlash = 0.14;
+      _setAttackAnim(warrior, focusEnemy, 0.22);
+      _spawnSlash(world, from: warrior, to: focusEnemy, isCrit: false);
+      _spawnSpark(
+        world,
+        x: focusEnemy.x,
+        y: focusEnemy.y,
+        argb: 0xFFC0A070,
+        radius: 0.45,
+      );
+      _spawnFloater(
+        world,
+        x: focusEnemy.x,
+        y: focusEnemy.y - 0.4,
+        text: 'DEV ${focusEnemy.sunderStacks}',
+        argb: 0xFFC0A070,
+        life: 0.55,
+      );
+      if (wasAlive && focusEnemy.hp <= 0) {
+        final killed = _onEnemyKilled(world, nextState, focusEnemy, rng);
+        gold += killed.gold;
+        nextState = killed.state;
       }
     }
 
@@ -1019,6 +1204,79 @@ abstract final class SpatialCombat {
         burstArgb: 0x8890C0FF,
         burstRadius: 0.5,
       );
+    }
+
+    // Shockwave — frontal AoE stun (WotLK Prot signature).
+    if (can(AbilityId.shockwave)) {
+      final nearby = <SpatialActor>[
+        for (final e in world.enemies)
+          if (e.hp > 0 && !e.dormant && _dist(warrior, e) <= 2.8) e,
+      ];
+      if (nearby.length >= 2 ||
+          (nearby.length == 1 && nearby.first.role == EnemyRole.boss)) {
+        final def = WarriorAbilities.defFor(AbilityId.shockwave)!;
+        _spendRage(warrior, def.resourceCost);
+        _startAbilityCd(warrior, AbilityId.shockwave, def.cooldown);
+        warrior.attackFlash = 0.22;
+        warrior.shockwaveFlash = 0.6;
+        final aim = nearby.first;
+        final ang = math.atan2(aim.y - warrior.y, aim.x - warrior.x);
+        _spawnCone(
+          world,
+          x: warrior.x,
+          y: warrior.y,
+          angle: ang,
+          argb: 0xFFFFA040,
+          radius: 1.8,
+          life: 0.42,
+        );
+        _spawnRing(
+          world,
+          x: warrior.x,
+          y: warrior.y,
+          argb: 0x88FFC070,
+          radius: 1.5,
+          life: 0.3,
+        );
+        final waveDmg = math.max(3, (warrior.attack * 0.9).round());
+        for (final e in nearby) {
+          final wasAlive = e.hp > 0;
+          final dealt = math.max(1, waveDmg - e.effectiveDefense);
+          e.hp = math.max(0, e.hp - dealt);
+          _recordHeroDamage(warrior, dealt);
+          e.rootTimer = math.max(e.rootTimer, 2.2);
+          _spawnFloater(
+            world,
+            x: e.x,
+            y: e.y - 0.25,
+            text: '$dealt',
+            argb: _floaterDamage,
+            life: 0.55,
+          );
+          _spawnSpark(
+            world,
+            x: e.x,
+            y: e.y,
+            argb: 0xFFFFE080,
+            radius: 0.4,
+          );
+          if (wasAlive && e.hp <= 0) {
+            final killed = _onEnemyKilled(world, nextState, e, rng);
+            gold += killed.gold;
+            nextState = killed.state;
+          }
+        }
+        if (!reducedVfx) {
+          _spawnFloater(
+            world,
+            x: warrior.x,
+            y: warrior.y - 0.55,
+            text: 'SHOCKWAVE',
+            argb: 0xFFFFC070,
+            life: 0.7,
+          );
+        }
+      }
     }
 
     return (state: nextState, gold: gold);
@@ -1070,44 +1328,53 @@ abstract final class SpatialCombat {
     required bool reducedVfx,
   }) {
     if (priest.heroRole != HeroRole.healer || !priest.isAlive) return;
+    priest.innerFireActive =
+        ClassKits.isUnlocked(AbilityId.innerFire, priest.heroLevel);
     if (focusEnemy != null) _gainRage(priest, 7 * dt);
     _gainRage(priest, (priest.spiritRegenBonus + priest.mp5RegenBonus) * dt);
     bool can(AbilityId id) => _canCast(priest, id);
 
-    // Rapture — party-wide shields.
-    if (can(AbilityId.rapture)) {
-      final injured = world.heroes.any(
-        (h) => h.isAlive && h.hp < h.effectiveMaxHp * 0.7,
-      );
-      if (injured) {
-        final def = ClassKits.defFor(AbilityId.rapture)!;
-        _spendRage(priest, def.resourceCost);
-        _startAbilityCd(priest, AbilityId.rapture, def.cooldown);
-        final shield = math.max(12, (priest.attack * 2.2).round());
-        for (final h in world.heroes) {
-          if (!h.isAlive) continue;
-          h.absorbShield = math.max(h.absorbShield, shield);
+    // Power Infusion — haste the best living DPS.
+    if (can(AbilityId.powerInfusion)) {
+      SpatialActor? dps;
+      var bestAtk = -1;
+      for (final h in world.heroes) {
+        if (!h.isAlive || h.heroRole == HeroRole.healer) continue;
+        if (h.powerInfusionTimer > 1) continue;
+        if (h.attack > bestAtk) {
+          bestAtk = h.attack;
+          dps = h;
         }
+      }
+      if (dps != null && focusEnemy != null) {
+        final def = ClassKits.defFor(AbilityId.powerInfusion)!;
+        _spendRage(priest, def.resourceCost);
+        _startAbilityCd(priest, AbilityId.powerInfusion, def.cooldown);
+        dps.powerInfusionTimer = 8;
         if (!reducedVfx) {
           _spawnFloater(
             world,
-            x: priest.x,
-            y: priest.y - 0.55,
-            text: 'RAPTURE',
-            argb: 0xFFB0E0FF,
-            life: 0.9,
+            x: dps.x,
+            y: dps.y - 0.5,
+            text: 'POWER INFUSION',
+            argb: 0xFFE0A0FF,
+            life: 0.8,
           );
-          for (final h in world.heroes) {
-            if (!h.isAlive) continue;
-            _spawnBurst(
-              world,
-              x: h.x,
-              y: h.y,
-              argb: 0xAAB0E0FF,
-              radius: 0.85,
-              life: 0.4,
-            );
-          }
+          _spawnRing(
+            world,
+            x: dps.x,
+            y: dps.y,
+            argb: 0xAAC080FF,
+            radius: 1.0,
+            life: 0.45,
+          );
+          _spawnSpark(
+            world,
+            x: dps.x,
+            y: dps.y - 0.2,
+            argb: 0xFFE8C0FF,
+            radius: 0.55,
+          );
         }
       }
     }
@@ -1200,7 +1467,11 @@ abstract final class SpatialCombat {
         final def = ClassKits.defFor(AbilityId.powerWordShield)!;
         _spendRage(priest, def.resourceCost);
         _startAbilityCd(priest, AbilityId.powerWordShield, def.cooldown);
-        final shield = math.max(8, (priest.attack * 1.6).round());
+        final inner =
+            ClassKits.isUnlocked(AbilityId.innerFire, priest.heroLevel)
+                ? 1.2
+                : 1.0;
+        final shield = math.max(8, (priest.attack * 1.6 * inner).round());
         target.absorbShield = math.max(target.absorbShield, shield);
         priest.attackFlash = 0.2;
         priest.attackAimX = target.x;
@@ -1286,37 +1557,58 @@ abstract final class SpatialCombat {
       }
     }
 
-    // Shadow Word: Pain
-    if (focusEnemy != null &&
-        focusEnemy.hp > 0 &&
-        can(AbilityId.shadowWordPain) &&
-        focusEnemy.swPainTimer < 3) {
-      final def = ClassKits.defFor(AbilityId.shadowWordPain)!;
-      _spendRage(priest, def.resourceCost);
-      _startAbilityCd(priest, AbilityId.shadowWordPain, def.cooldown);
-      focusEnemy.swPainTimer = 10;
-      focusEnemy.swPainDps = math.max(2.0, priest.attack * 0.35);
-      if (!reducedVfx) {
-        _spawnFloater(
-          world,
-          x: focusEnemy.x,
-          y: focusEnemy.y - 0.4,
-          text: 'SW:P',
-          argb: 0xFFB060E0,
-          life: 0.5,
-        );
-        _spawnBurst(
-          world,
-          x: focusEnemy.x,
-          y: focusEnemy.y,
-          argb: 0xAA9030C0,
-          radius: 0.55,
-          life: 0.25,
-        );
+    // Prayer of Mending — bounce heal on the most injured ally.
+    if (can(AbilityId.prayerOfMending)) {
+      SpatialActor? target;
+      var worst = 1.0;
+      for (final h in world.heroes) {
+        if (!h.isAlive || h.pomCharges > 0) continue;
+        final frac = h.hp / math.max(1, h.effectiveMaxHp);
+        if (frac < worst) {
+          worst = frac;
+          target = h;
+        }
+      }
+      if (target != null && worst < 0.95) {
+        final def = ClassKits.defFor(AbilityId.prayerOfMending)!;
+        _spendRage(priest, def.resourceCost);
+        _startAbilityCd(priest, AbilityId.prayerOfMending, def.cooldown);
+        final inner =
+            ClassKits.isUnlocked(AbilityId.innerFire, priest.heroLevel)
+                ? 1.15
+                : 1.0;
+        target.pomCharges = 5;
+        target.pomHeal = math.max(4, (priest.attack * 0.85 * inner).round());
+        if (!reducedVfx) {
+          _spawnFloater(
+            world,
+            x: target.x,
+            y: target.y - 0.4,
+            text: 'PRAYER OF MENDING',
+            argb: 0xFFFFE8A0,
+            life: 0.65,
+          );
+          _spawnSpark(
+            world,
+            x: target.x,
+            y: target.y,
+            argb: 0xFFFFF0A0,
+            radius: 0.7,
+            life: 0.4,
+          );
+          _spawnRing(
+            world,
+            x: target.x,
+            y: target.y,
+            argb: 0x88FFE080,
+            radius: 0.85,
+            life: 0.35,
+          );
+        }
       }
     }
 
-    // Penance — three holy bolts (WoW channel feel via stagger).
+    // Penance — three holy bolts; side-heals the party (WotLK dual-purpose).
     if (focusEnemy != null &&
         focusEnemy.hp > 0 &&
         _dist(priest, focusEnemy) <= priest.attackRange + 1.5 &&
@@ -1339,6 +1631,11 @@ abstract final class SpatialCombat {
           ),
         );
       }
+      _healLowestAlly(
+        world,
+        math.max(4, (bolt * 1.2).round()),
+        reducedVfx: reducedVfx,
+      );
       _announceCast(
         world,
         priest,
@@ -1385,6 +1682,23 @@ abstract final class SpatialCombat {
       _spendRage(mage, def.resourceCost);
       _startAbilityCd(mage, AbilityId.combustion, def.cooldown);
       mage.combustionTimer = 8;
+      if (!reducedVfx) {
+        _spawnRing(
+          world,
+          x: mage.x,
+          y: mage.y,
+          argb: 0xFFFF5020,
+          radius: 1.1,
+          life: 0.5,
+        );
+        _spawnSpark(
+          world,
+          x: mage.x,
+          y: mage.y,
+          argb: 0xFFFF8040,
+          radius: 0.7,
+        );
+      }
       _announceCast(
         world,
         mage,
@@ -1416,8 +1730,16 @@ abstract final class SpatialCombat {
         );
       }
       if (len > 0.1) {
-        mage.x += (dx / len) * 2.2;
-        mage.y += (dy / len) * 2.2;
+        final nx = mage.x + (dx / len) * 2.2;
+        final ny = mage.y + (dy / len) * 2.2;
+        final snapped = _snapToWalkable(
+          world.map,
+          world.openGateIds,
+          nx,
+          ny,
+        );
+        mage.x = snapped.$1;
+        mage.y = snapped.$2;
       }
       _announceCast(
         world,
@@ -1428,6 +1750,45 @@ abstract final class SpatialCombat {
         burstArgb: 0xAAC080FF,
         burstRadius: 0.55,
       );
+    }
+
+    if (can(AbilityId.livingBomb) &&
+        focusEnemy != null &&
+        focusEnemy.hp > 0 &&
+        focusEnemy.livingBombTimer < 2) {
+      final def = ClassKits.defFor(AbilityId.livingBomb)!;
+      _spendRage(mage, def.resourceCost);
+      _startAbilityCd(mage, AbilityId.livingBomb, def.cooldown);
+      focusEnemy.livingBombTimer = 8;
+      focusEnemy.livingBombDps = math.max(3.0, mage.attack * 0.45);
+      focusEnemy.livingBombCasterId = mage.id;
+      mage.livingBombArmed = 8;
+      if (!reducedVfx) {
+        _spawnFloater(
+          world,
+          x: focusEnemy.x,
+          y: focusEnemy.y - 0.4,
+          text: 'LIVING BOMB',
+          argb: 0xFFFF7030,
+          life: 0.55,
+        );
+        _spawnSpark(
+          world,
+          x: focusEnemy.x,
+          y: focusEnemy.y,
+          argb: 0xFFFF5020,
+          radius: 0.65,
+          life: 0.4,
+        );
+        _spawnRing(
+          world,
+          x: focusEnemy.x,
+          y: focusEnemy.y,
+          argb: 0x88FF4010,
+          radius: 0.7,
+          life: 0.35,
+        );
+      }
     }
 
     if (can(AbilityId.frostNova)) {
@@ -1443,6 +1804,14 @@ abstract final class SpatialCombat {
           e.rootTimer = math.max(e.rootTimer, 2.4);
           e.attackSlowTimer = math.max(e.attackSlowTimer, 3);
         }
+        _spawnRing(
+          world,
+          x: mage.x,
+          y: mage.y,
+          argb: 0xFF60C0FF,
+          radius: 1.6,
+          life: 0.45,
+        );
         _announceCast(
           world,
           mage,
@@ -1455,36 +1824,54 @@ abstract final class SpatialCombat {
       }
     }
 
-    if (can(AbilityId.arcaneExplosion)) {
+    if (can(AbilityId.blastWave)) {
       final nearby = [
         for (final e in world.enemies)
           if (e.hp > 0 && !e.dormant && _dist(mage, e) <= 2.8) e,
       ];
       if (nearby.length >= 2) {
-        final def = ClassKits.defFor(AbilityId.arcaneExplosion)!;
+        final def = ClassKits.defFor(AbilityId.blastWave)!;
         _spendRage(mage, def.resourceCost);
-        _startAbilityCd(mage, AbilityId.arcaneExplosion, def.cooldown);
-        final dmg = math.max(2, (mage.attack * 0.7).round());
+        _startAbilityCd(mage, AbilityId.blastWave, def.cooldown);
+        final dmg = math.max(2, (mage.attack * 0.75).round());
         for (final e in nearby) {
           final dealt = math.max(1, dmg - e.effectiveDefense);
           e.hp = math.max(0, e.hp - dealt);
+          _recordHeroDamage(mage, dealt);
+          e.attackSlowTimer = math.max(e.attackSlowTimer, 2.5);
           _spawnFloater(
             world,
             x: e.x,
             y: e.y - 0.25,
             text: '$dealt',
-            argb: 0xFFC070FF,
+            argb: 0xFFFF7030,
             life: 0.45,
           );
         }
         if (!reducedVfx) {
+          _spawnRing(
+            world,
+            x: mage.x,
+            y: mage.y,
+            argb: 0xFFFF5020,
+            radius: 1.7,
+            life: 0.42,
+          );
           _spawnBurst(
             world,
             x: mage.x,
             y: mage.y,
-            argb: 0xFFA050FF,
-            radius: 1.4,
+            argb: 0xFFFF8040,
+            radius: 1.1,
             life: 0.28,
+          );
+          _spawnFloater(
+            world,
+            x: mage.x,
+            y: mage.y - 0.5,
+            text: 'BLAST WAVE',
+            argb: 0xFFFF8040,
+            life: 0.5,
           );
         }
       }
@@ -1561,7 +1948,7 @@ abstract final class SpatialCombat {
     if (rogue.heroRole != HeroRole.rogue || !rogue.isAlive) return;
     if (focusEnemy != null) {
       _gainRage(rogue, 10 * dt);
-      if (rogue.adrenalineTimer > 0) _gainRage(rogue, 12 * dt);
+      if (rogue.killingSpreeTimer > 0) _gainRage(rogue, 14 * dt);
     }
     bool can(AbilityId id) => _canCast(rogue, id);
 
@@ -1588,20 +1975,65 @@ abstract final class SpatialCombat {
       );
     }
 
-    if (can(AbilityId.adrenalineRush) && focusEnemy != null) {
-      final def = ClassKits.defFor(AbilityId.adrenalineRush)!;
+    if (can(AbilityId.killingSpree) && focusEnemy != null) {
+      final def = ClassKits.defFor(AbilityId.killingSpree)!;
       _spendRage(rogue, def.resourceCost);
-      _startAbilityCd(rogue, AbilityId.adrenalineRush, def.cooldown);
-      rogue.adrenalineTimer = 8;
-      rogue.rage = math.min(100, rogue.rage + 40);
+      _startAbilityCd(rogue, AbilityId.killingSpree, def.cooldown);
+      rogue.killingSpreeTimer = 3.5;
+      rogue.rage = math.min(100, rogue.rage + 35);
+      // Instant dash strike on up to 3 nearby foes.
+      final targets = <SpatialActor>[
+        for (final e in world.enemies)
+          if (e.hp > 0 && !e.dormant && _dist(rogue, e) <= 4.5) e,
+      ];
+      targets.sort((a, b) => _dist(rogue, a).compareTo(_dist(rogue, b)));
+      var prevX = rogue.x;
+      var prevY = rogue.y;
+      for (final e in targets.take(3)) {
+        if (!reducedVfx) {
+          _spawnBurst(
+            world,
+            x: (prevX + e.x) * 0.5,
+            y: (prevY + e.y) * 0.5,
+            argb: 0x88FF6060,
+            radius: 0.55,
+            life: 0.22,
+            kind: SpatialBurstKind.spark,
+          );
+        }
+        final dealt = math.max(2, (rogue.attack * 1.1).round());
+        e.hp = math.max(0, e.hp - dealt);
+        _recordHeroDamage(rogue, dealt);
+        rogue.x = e.x;
+        rogue.y = e.y;
+        prevX = e.x;
+        prevY = e.y;
+        _spawnSlash(world, from: rogue, to: e, isCrit: true);
+        _spawnFloater(
+          world,
+          x: e.x,
+          y: e.y - 0.3,
+          text: '$dealt',
+          argb: 0xFFFF8060,
+          life: 0.45,
+        );
+      }
       if (!reducedVfx) {
+        _spawnRing(
+          world,
+          x: rogue.x,
+          y: rogue.y,
+          argb: 0xFFFF4040,
+          radius: 1.1,
+          life: 0.4,
+        );
         _spawnFloater(
           world,
           x: rogue.x,
           y: rogue.y - 0.5,
-          text: 'ADRENALINE',
-          argb: 0xFFFFE060,
-          life: 0.7,
+          text: 'KILLING SPREE',
+          argb: 0xFFFF6060,
+          life: 0.75,
         );
       }
     }
@@ -1630,6 +2062,13 @@ abstract final class SpatialCombat {
         _startAbilityCd(rogue, AbilityId.sprint, def.cooldown);
         rogue.sprintTimer = 4;
         if (!reducedVfx) {
+          _spawnSpark(
+            world,
+            x: rogue.x,
+            y: rogue.y,
+            argb: 0xFF90FF90,
+            radius: 0.55,
+          );
           _spawnFloater(
             world,
             x: rogue.x,
@@ -1653,6 +2092,14 @@ abstract final class SpatialCombat {
         _startAbilityCd(rogue, AbilityId.bladeFlurry, def.cooldown);
         rogue.bladeFlurryTimer = 6;
         if (!reducedVfx) {
+          _spawnRing(
+            world,
+            x: rogue.x,
+            y: rogue.y,
+            argb: 0xFFFFAA40,
+            radius: 1.2,
+            life: 0.4,
+          );
           _spawnFloater(
             world,
             x: rogue.x,
@@ -1676,6 +2123,14 @@ abstract final class SpatialCombat {
       focusEnemy.rootTimer = 2.0 + rogue.comboPoints * 0.25;
       rogue.comboPoints = 0;
       if (!reducedVfx) {
+        _spawnSpark(
+          world,
+          x: focusEnemy.x,
+          y: focusEnemy.y,
+          argb: 0xFFFFE080,
+          radius: 0.6,
+          life: 0.4,
+        );
         _spawnFloater(
           world,
           x: focusEnemy.x,
@@ -1696,6 +2151,13 @@ abstract final class SpatialCombat {
       rogue.sliceAndDiceTimer = 6 + rogue.comboPoints * 1.5;
       rogue.comboPoints = 0;
       if (!reducedVfx) {
+        _spawnSpark(
+          world,
+          x: rogue.x,
+          y: rogue.y,
+          argb: 0xFFFFD070,
+          radius: 0.5,
+        );
         _spawnFloater(
           world,
           x: rogue.x,
@@ -2145,6 +2607,7 @@ abstract final class SpatialCombat {
       bossBannerTimer: world.bossBannerTimer,
       bossBannerName: world.bossBannerName,
       afkAssist: world.afkAssist,
+      combatElapsed: world.combatElapsed,
       floaters: world.floaters,
       bursts: world.bursts,
     );
@@ -2164,29 +2627,37 @@ abstract final class SpatialCombat {
     to.bonusMaxHp = from.bonusMaxHp;
     to.queuedShieldSlam = from.queuedShieldSlam;
     to.revengeReady = from.revengeReady;
+    to.shockwaveFlash = from.shockwaveFlash;
     to.absorbShield = from.absorbShield;
     to.painSuppressionTimer = from.painSuppressionTimer;
     to.fortitudeTimer = from.fortitudeTimer;
+    to.pomCharges = from.pomCharges;
+    to.pomHeal = from.pomHeal;
+    to.powerInfusionTimer = from.powerInfusionTimer;
+    to.innerFireActive = from.innerFireActive;
     to.queuedFireball = from.queuedFireball;
     to.queuedPyroblast = from.queuedPyroblast;
     to.combustionTimer = from.combustionTimer;
     to.iceBlockTimer = from.iceBlockTimer;
+    to.livingBombArmed = from.livingBombArmed;
     to.comboPoints = from.comboPoints;
     to.sliceAndDiceTimer = from.sliceAndDiceTimer;
     to.bladeFlurryTimer = from.bladeFlurryTimer;
     to.sprintTimer = from.sprintTimer;
     to.vanishTimer = from.vanishTimer;
-    to.adrenalineTimer = from.adrenalineTimer;
+    to.killingSpreeTimer = from.killingSpreeTimer;
     to.forcedTargetId = from.forcedTargetId;
     to.forcedTargetTimer = from.forcedTargetTimer;
     to.attackSlowTimer = from.attackSlowTimer;
     to.sunderStacks = from.sunderStacks;
     to.sunderTimer = from.sunderTimer;
     to.demoShoutTimer = from.demoShoutTimer;
-    to.swPainTimer = from.swPainTimer;
-    to.swPainDps = from.swPainDps;
-    to.swPainAcc = from.swPainAcc;
+    to.livingBombTimer = from.livingBombTimer;
+    to.livingBombDps = from.livingBombDps;
+    to.livingBombAcc = from.livingBombAcc;
+    to.livingBombCasterId = from.livingBombCasterId;
     to.rootTimer = from.rootTimer;
+    to.damageDealt = from.damageDealt;
   }
 
   static ProjectilePattern _patternForHero(PartyHero hero, GameState state) {
@@ -2197,6 +2668,19 @@ abstract final class SpatialCombat {
       return ProjectilePattern.single;
     }
     return hero.weaponPattern;
+  }
+
+  static void _recordHeroDamage(SpatialActor hero, int dealt) {
+    if (dealt <= 0 || hero.isPet || hero.team != SpatialTeam.hero) return;
+    hero.damageDealt += dealt;
+  }
+
+  static SpatialActor? _heroById(SpatialWorld world, String? id) {
+    if (id == null) return null;
+    for (final h in world.heroes) {
+      if (h.id == id) return h;
+    }
+    return null;
   }
 
   /// Advances spatial combat by [dt] seconds and syncs HP into [state].
@@ -2213,6 +2697,13 @@ abstract final class SpatialCombat {
     world.pulseTimer = math.max(0, world.pulseTimer - dt);
     world.guideTimer = math.max(0, world.guideTimer - dt);
     _updateChambers(world);
+
+    final inFight = !world.awaitingExit &&
+        !world.isTreasure &&
+        world.enemies.any((e) => e.hp > 0 && !e.dormant);
+    if (inFight) {
+      world.combatElapsed += dt;
+    }
 
     if (world.isTreasure) {
       world.treasureTimer -= dt;
@@ -2537,6 +3028,7 @@ abstract final class SpatialCombat {
           if (world.afkAssist) hitDmg = (hitDmg * 2.4).round();
           final dealt = math.max(1, hitDmg - target.effectiveDefense ~/ (world.afkAssist ? 3 : 1));
           target.hp = math.max(0, target.hp - dealt);
+          _recordHeroDamage(hero, dealt);
           if (hero.heroRole == HeroRole.warrior) {
             _gainRage(hero, 4 + dealt * 0.15);
             // Soft threat: briefly pull this target onto the tank.
@@ -2546,7 +3038,11 @@ abstract final class SpatialCombat {
             }
           }
           if (hero.heroRole == HeroRole.healer) {
-            _atonementHeal(world, hero, dealt, reducedVfx: state.reducedVfx);
+            _healLowestAlly(
+              world,
+              math.max(1, (dealt * 0.35).round()),
+              reducedVfx: state.reducedVfx,
+            );
             _gainRage(hero, 3);
           }
           if (hero.heroRole == HeroRole.mage) {
@@ -2560,6 +3056,7 @@ abstract final class SpatialCombat {
                 if (_dist(hero, e) > 2.2) continue;
                 final cleave = math.max(1, (dealt * 0.55).round());
                 e.hp = math.max(0, e.hp - cleave);
+                _recordHeroDamage(hero, cleave);
                 if (!state.reducedVfx) {
                   _spawnFloater(
                     world,
@@ -2707,34 +3204,76 @@ abstract final class SpatialCombat {
     // Enemies: prefer the tank, kite if ranged, path around walls.
     for (final enemy in world.enemies) {
       if (enemy.hp <= 0 || enemy.dormant) continue;
-      // Shadow Word: Pain ticks.
-      if (enemy.swPainTimer > 0 && enemy.swPainDps > 0) {
-        enemy.swPainAcc += enemy.swPainDps * dt;
-        if (enemy.swPainAcc >= 1) {
-          final tick = enemy.swPainAcc.floor();
-          enemy.swPainAcc -= tick;
+      // Living Bomb ticks + splash explode when the fuse ends.
+      if (enemy.livingBombTimer > 0 && enemy.livingBombDps > 0) {
+        enemy.livingBombAcc += enemy.livingBombDps * dt;
+        if (enemy.livingBombAcc >= 1) {
+          final tick = enemy.livingBombAcc.floor();
+          enemy.livingBombAcc -= tick;
           final wasAlive = enemy.hp > 0;
           enemy.hp = math.max(0, enemy.hp - tick);
+          final caster = _heroById(world, enemy.livingBombCasterId);
+          if (caster != null) _recordHeroDamage(caster, tick);
           if (!state.reducedVfx) {
             _spawnFloater(
               world,
               x: enemy.x,
               y: enemy.y - 0.25,
               text: '$tick',
-              argb: 0xFFB060E0,
+              argb: 0xFFFF6030,
               life: 0.4,
             );
-          }
-          for (final h in world.heroes) {
-            if (h.heroRole == HeroRole.healer && h.isAlive) {
-              _atonementHeal(world, h, tick, reducedVfx: state.reducedVfx);
-              break;
-            }
           }
           if (wasAlive && enemy.hp <= 0) {
             final killed = _onEnemyKilled(world, nextState, enemy, rng);
             goldFromKills += killed.gold;
             nextState = killed.state;
+          }
+        }
+        if (enemy.livingBombTimer <= dt && enemy.hp > 0) {
+          // Explode for splash.
+          final boom = math.max(4, (enemy.livingBombDps * 3).round());
+          final caster = _heroById(world, enemy.livingBombCasterId);
+          for (final e in world.enemies) {
+            if (e.hp <= 0 || e.dormant) continue;
+            if (_dist(enemy, e) > 2.2) continue;
+            final wasAlive = e.hp > 0;
+            final dealt = math.max(1, boom - e.effectiveDefense ~/ 2);
+            e.hp = math.max(0, e.hp - dealt);
+            if (caster != null) _recordHeroDamage(caster, dealt);
+            if (!state.reducedVfx) {
+              _spawnFloater(
+                world,
+                x: e.x,
+                y: e.y - 0.2,
+                text: '$dealt',
+                argb: 0xFFFF5020,
+                life: 0.45,
+              );
+            }
+            if (wasAlive && e.hp <= 0) {
+              final killed = _onEnemyKilled(world, nextState, e, rng);
+              goldFromKills += killed.gold;
+              nextState = killed.state;
+            }
+          }
+          if (!state.reducedVfx) {
+            _spawnBurst(
+              world,
+              x: enemy.x,
+              y: enemy.y,
+              argb: 0xFFFF4010,
+              radius: 1.4,
+              life: 0.35,
+            );
+            _spawnRing(
+              world,
+              x: enemy.x,
+              y: enemy.y,
+              argb: 0xFFFF6020,
+              radius: 1.8,
+              life: 0.45,
+            );
           }
         }
       }
@@ -2866,6 +3405,8 @@ abstract final class SpatialCombat {
               hitDmg - v.effectiveDefense ~/ (world.afkAssist ? 3 : 1),
             );
             v.hp = math.max(0, v.hp - dealt);
+            final caster = _heroById(world, p.casterId);
+            if (caster != null) _recordHeroDamage(caster, dealt);
           }
           final label = p.label;
           _spawnFloater(
@@ -2883,7 +3424,11 @@ abstract final class SpatialCombat {
           if (p.onHitHealCaster && p.casterId != null && dealt > 0) {
             for (final h in world.heroes) {
               if (h.id == p.casterId && h.isAlive) {
-                _atonementHeal(world, h, dealt, reducedVfx: state.reducedVfx);
+                _healLowestAlly(
+                  world,
+                  math.max(1, (dealt * 0.4).round()),
+                  reducedVfx: state.reducedVfx,
+                );
                 _gainRage(h, 2);
                 break;
               }

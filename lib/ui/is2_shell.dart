@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -24,6 +26,7 @@ import 'menu_chrome.dart';
 import 'meta_overlays.dart';
 import 'spatial_dungeon_view.dart';
 import 'first_session_tips.dart';
+import 'guides_overlay.dart';
 
 Color _rarityBorderColor(LootRarity rarity) => switch (rarity) {
   LootRarity.common => const Color(0xFF5A5040),
@@ -108,6 +111,7 @@ enum Is2Overlay {
   achievements,
   codex,
   loadouts,
+  guides,
 }
 
 class _Is2ShellState extends State<Is2Shell> {
@@ -278,6 +282,10 @@ class _Is2ShellState extends State<Is2Shell> {
         onTap: () => _openOverlay(Is2Overlay.codex),
       ),
       (
+        label: 'GUIDES',
+        onTap: () => _openOverlay(Is2Overlay.guides),
+      ),
+      (
         label: 'SETTINGS',
         onTap: () => _openOverlay(Is2Overlay.settings),
       ),
@@ -411,6 +419,11 @@ class _Is2ShellState extends State<Is2Shell> {
                   SpatialDungeonView(director: d),
                   Positioned(
                     left: 6,
+                    top: 6,
+                    child: _DpsMeter(director: d),
+                  ),
+                  Positioned(
+                    left: 6,
                     bottom: 8,
                     child: _PartyCornerHud(
                       director: d,
@@ -462,6 +475,7 @@ class _Is2ShellState extends State<Is2Shell> {
         Is2Overlay.achievements => 'ACHIEVEMENTS',
         Is2Overlay.codex => 'CODEX',
         Is2Overlay.loadouts => 'GEAR LOADOUTS',
+        Is2Overlay.guides => 'GUIDES',
         Is2Overlay.none => '',
       },
       onClose: () => setState(() => _overlay = Is2Overlay.none),
@@ -503,6 +517,7 @@ class _Is2ShellState extends State<Is2Shell> {
         Is2Overlay.achievements => AchievementsOverlay(director: d),
         Is2Overlay.codex => CodexOverlay(director: d),
         Is2Overlay.loadouts => LoadoutsOverlay(director: d),
+        Is2Overlay.guides => const GuidesOverlay(),
         Is2Overlay.none => const SizedBox.shrink(),
       },
     );
@@ -776,7 +791,7 @@ class _MissionClaimChip extends StatelessWidget {
   }
 }
 
-class _PartyCornerHud extends StatelessWidget {
+class _PartyCornerHud extends StatefulWidget {
   const _PartyCornerHud({
     required this.director,
     required this.selectedHeroIndex,
@@ -790,6 +805,46 @@ class _PartyCornerHud extends StatelessWidget {
   final VoidCallback onOpenEquip;
   final VoidCallback onUseConsumable;
 
+  @override
+  State<_PartyCornerHud> createState() => _PartyCornerHudState();
+}
+
+class _PartyCornerHudState extends State<_PartyCornerHud> {
+  static const _idleFade = Duration(seconds: 5);
+  static const _fullOpacity = 1.0;
+  static const _dimOpacity = 0.1;
+  static const _hudScale = 0.5;
+
+  Timer? _fadeTimer;
+  double _opacity = _fullOpacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleFade();
+  }
+
+  @override
+  void dispose() {
+    _fadeTimer?.cancel();
+    super.dispose();
+  }
+
+  void _bump() {
+    _fadeTimer?.cancel();
+    if (_opacity < _fullOpacity) {
+      setState(() => _opacity = _fullOpacity);
+    }
+    _scheduleFade();
+  }
+
+  void _scheduleFade() {
+    _fadeTimer = Timer(_idleFade, () {
+      if (!mounted) return;
+      setState(() => _opacity = _dimOpacity);
+    });
+  }
+
   SpatialActor? _spatialFor(SpatialWorld? world, int i) {
     if (world == null) return null;
     for (final a in world.heroes) {
@@ -800,12 +855,14 @@ class _PartyCornerHud extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = director.state;
-    final world = director.spatial;
+    final state = widget.director.state;
+    final world = widget.director.spatial;
     final canUseFlask = GameLogic.canUseConsumable(state);
     final compact = GameTheme.isCompactWidth(context);
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: compact ? 196 : 240),
+    final fullWidth = compact ? 196.0 : 240.0;
+
+    final panel = ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: fullWidth),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -815,13 +872,19 @@ class _PartyCornerHud extends StatelessWidget {
             Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () => onSelectHero(i),
-                onLongPress: onOpenEquip,
+                onTap: () {
+                  _bump();
+                  widget.onSelectHero(i);
+                },
+                onLongPress: () {
+                  _bump();
+                  widget.onOpenEquip();
+                },
                 borderRadius: BorderRadius.circular(4),
                 child: _PartyRow(
                   index: i,
                   hero: state.heroes[i],
-                  selected: selectedHeroIndex == i,
+                  selected: widget.selectedHeroIndex == i,
                   compact: compact,
                   liveHp: () {
                     final s = _spatialFor(world, i);
@@ -831,7 +894,7 @@ class _PartyCornerHud extends StatelessWidget {
                     final s = _spatialFor(world, i);
                     return s?.maxHp ?? state.heroes[i].maxHp;
                   }(),
-                  spatial: selectedHeroIndex == i
+                  spatial: widget.selectedHeroIndex == i
                       ? _spatialFor(world, i)
                       : null,
                 ),
@@ -840,9 +903,31 @@ class _PartyCornerHud extends StatelessWidget {
           ],
           if (canUseFlask) ...[
             const SizedBox(height: 4),
-            _FlaskQuickSlot(onTap: onUseConsumable),
+            _FlaskQuickSlot(
+              onTap: () {
+                _bump();
+                widget.onUseConsumable();
+              },
+            ),
           ],
         ],
+      ),
+    );
+
+    return AnimatedOpacity(
+      opacity: _opacity,
+      duration: const Duration(milliseconds: 400),
+      child: Listener(
+        behavior: HitTestBehavior.deferToChild,
+        onPointerDown: (_) => _bump(),
+        child: SizedBox(
+          width: fullWidth * _hudScale,
+          child: FittedBox(
+            fit: BoxFit.fitWidth,
+            alignment: Alignment.bottomLeft,
+            child: SizedBox(width: fullWidth, child: panel),
+          ),
+        ),
       ),
     );
   }
@@ -905,17 +990,22 @@ class _PartyRow extends StatelessWidget {
       AbilityId.shieldWall => s.shieldWallTimer > 0,
       AbilityId.lastStand => s.lastStandTimer > 0,
       AbilityId.shieldSlam => s.queuedShieldSlam,
+      AbilityId.shockwave => s.shockwaveFlash > 0,
       AbilityId.powerWordShield => s.absorbShield > 0,
+      AbilityId.prayerOfMending => s.pomCharges > 0,
       AbilityId.painSuppression => s.painSuppressionTimer > 0,
+      AbilityId.powerInfusion => s.powerInfusionTimer > 0,
+      AbilityId.innerFire => s.innerFireActive,
       AbilityId.combustion => s.combustionTimer > 0,
       AbilityId.iceBlock => s.iceBlockTimer > 0,
       AbilityId.fireball => s.queuedFireball,
       AbilityId.pyroblast => s.queuedPyroblast,
+      AbilityId.livingBomb => s.livingBombArmed > 0,
       AbilityId.sliceAndDice => s.sliceAndDiceTimer > 0,
       AbilityId.bladeFlurry => s.bladeFlurryTimer > 0,
       AbilityId.sprint => s.sprintTimer > 0,
       AbilityId.vanish => s.vanishTimer > 0,
-      AbilityId.adrenalineRush => s.adrenalineTimer > 0,
+      AbilityId.killingSpree => s.killingSpreeTimer > 0,
       _ => false,
     };
   }
@@ -1120,29 +1210,140 @@ class _InlineAbilityChip extends StatelessWidget {
             ? cdLeft.toStringAsFixed(1)
             : cdLeft.round().toString())
         : ability.shortLabel;
-    return Opacity(
-      opacity: gated ? 0.4 : (ready || activeBuff ? 1 : 0.7),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        decoration: BoxDecoration(
-          color: activeBuff
-              ? const Color(0xFF3A2A14)
-              : const Color(0xFF221810),
-          borderRadius: BorderRadius.circular(2),
-          border: Border.all(
-            color: border,
-            width: activeBuff || ready ? 1.2 : 1,
+    return Tooltip(
+      message: ability.tooltipMessage,
+      waitDuration: const Duration(milliseconds: 350),
+      child: Opacity(
+        opacity: gated ? 0.4 : (ready || activeBuff ? 1 : 0.7),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          decoration: BoxDecoration(
+            color: activeBuff
+                ? const Color(0xFF3A2A14)
+                : const Color(0xFF221810),
+            borderRadius: BorderRadius.circular(2),
+            border: Border.all(
+              color: border,
+              width: activeBuff || ready ? 1.2 : 1,
+            ),
+          ),
+          child: Text(
+            gated ? '${ability.shortLabel}!' : label,
+            style: GameTheme.pixel(
+              size: 5,
+              color: gated
+                  ? GameTheme.bloodLit
+                  : onCd
+                      ? GameTheme.parchmentDim
+                      : GameTheme.parchment,
+            ),
           ),
         ),
-        child: Text(
-          gated ? '${ability.shortLabel}!' : label,
-          style: GameTheme.pixel(
-            size: 5,
-            color: gated
-                ? GameTheme.bloodLit
-                : onCd
-                    ? GameTheme.parchmentDim
-                    : GameTheme.parchment,
+      ),
+    );
+  }
+}
+
+class _DpsMeter extends StatelessWidget {
+  const _DpsMeter({required this.director});
+  final GameDirector director;
+
+  static String _roleTag(HeroRole? role) => switch (role) {
+        HeroRole.warrior => 'WAR',
+        HeroRole.healer => 'DISC',
+        HeroRole.mage => 'MAGE',
+        HeroRole.rogue => 'ROG',
+        null => '???',
+      };
+
+  static String _fmt(num n) {
+    if (n >= 10000) return '${(n / 1000).toStringAsFixed(1)}k';
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
+    return n.round().toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final world = director.spatial;
+    if (world == null) return const SizedBox.shrink();
+
+    final rows = <({String tag, int dmg, double dps})>[
+      for (final h in world.heroes)
+        if (!h.isPet)
+          (
+            tag: _roleTag(h.heroRole),
+            dmg: h.damageDealt,
+            dps: world.combatElapsed > 0.25
+                ? h.damageDealt / world.combatElapsed
+                : 0.0,
+          ),
+    ];
+    if (rows.every((r) => r.dmg == 0)) return const SizedBox.shrink();
+
+    rows.sort((a, b) => b.dmg.compareTo(a.dmg));
+    final peak = rows.first.dmg.clamp(1, 1 << 30);
+
+    return IgnorePointer(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 128),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
+          decoration: BoxDecoration(
+            color: const Color(0xCC14110C),
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: const Color(0x665A5040)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'DPS',
+                style: GameTheme.pixel(
+                  size: 7,
+                  color: GameTheme.parchmentDim,
+                ),
+              ),
+              const SizedBox(height: 3),
+              for (final row in rows) ...[
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 32,
+                      child: Text(
+                        row.tag,
+                        style: GameTheme.pixel(
+                          size: GameTheme.hudPixel,
+                          color: row.dmg == peak
+                              ? GameTheme.torchHot
+                              : GameTheme.parchment,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        _fmt(row.dps),
+                        textAlign: TextAlign.right,
+                        style: GameTheme.pixel(size: GameTheme.hudPixel),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(1),
+                  child: LinearProgressIndicator(
+                    value: (row.dmg / peak).clamp(0.0, 1.0),
+                    minHeight: 3,
+                    backgroundColor: const Color(0xFF2A241C),
+                    color: row.dmg == peak
+                        ? GameTheme.torchHot
+                        : GameTheme.mossLit,
+                  ),
+                ),
+                const SizedBox(height: 3),
+              ],
+            ],
           ),
         ),
       ),
