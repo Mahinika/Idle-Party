@@ -1849,7 +1849,9 @@ class _InventoryDock extends StatelessWidget {
             const SizedBox(height: 4),
           ],
           KenneyButton(
-            label: 'GOD HAND Lv${state.godHandLevel}  ${ghCost}e',
+            label:
+                'GOD HAND Lv${state.godHandLevel}  '
+                'CD Lv${state.metaDepth.godHandCdLevel}  ${ghCost}e',
             onPressed: state.essence >= ghCost ? onUpgradeGodHand : null,
           ),
           Text(
@@ -1862,9 +1864,13 @@ class _InventoryDock extends StatelessWidget {
             label: 'SOULBIND  3 frag',
             onPressed:
                 state.soulboundFragments >= 3 &&
-                    state.heroes.any(
-                      (h) => h.itemIn(EquipmentSlot.weapon) != null,
-                    )
+                    state.heroes.any((h) {
+                      if (state.metaDepth.soulboundIsArmor) {
+                        return h.itemIn(EquipmentSlot.chest) != null ||
+                            h.itemIn(EquipmentSlot.cloak) != null;
+                      }
+                      return h.itemIn(EquipmentSlot.weapon) != null;
+                    })
                 ? onBindSoulbound
                 : null,
             style: KenneyButtonStyle.grey,
@@ -2984,6 +2990,33 @@ class _SanctuaryOverlay extends StatelessWidget {
                         size: 13,
                         color: GameTheme.clear,
                       ),
+                    )
+                  else if (track == 'power')
+                    Text(
+                      'Now +${state.sanctuaryAttackBonus} ATK  ·  '
+                      '+$nextLevel party attack',
+                      style: GameTheme.body(
+                        size: 13,
+                        color: GameTheme.clear,
+                      ),
+                    )
+                  else if (track == 'vitality')
+                    Text(
+                      'Now +${state.sanctuaryVitalityBonus} HP  ·  '
+                      '+${nextLevel * 2} max HP',
+                      style: GameTheme.body(
+                        size: 13,
+                        color: GameTheme.clear,
+                      ),
+                    )
+                  else if (track == 'xp')
+                    Text(
+                      'Now +${state.sanctuaryXpBonusPercent}% XP  ·  '
+                      '+${nextLevel * 4}% XP find',
+                      style: GameTheme.body(
+                        size: 13,
+                        color: GameTheme.clear,
+                      ),
                     ),
                   Text(
                     'Prestige $prestige  ·  Next: $nextBonus  ·  $cost essence',
@@ -3537,7 +3570,7 @@ class _BeastOverlayState extends State<_BeastOverlay> {
         if (state.metaDepth.favoritePetSpecies.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text(
-            'Favorite: ${state.metaDepth.favoritePetSpecies}',
+            'Favorite: ${PetCatalog.byId(state.metaDepth.favoritePetSpecies)?.name ?? state.metaDepth.favoritePetSpecies}',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),

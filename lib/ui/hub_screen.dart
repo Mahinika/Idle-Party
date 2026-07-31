@@ -144,6 +144,7 @@ class _HubScreenState extends State<HubScreen>
                           soulbound: state.soulboundFragments,
                           willRank: state.willRankTitle,
                           collectionScore: state.collectionScore,
+                          displayTitle: state.displayTitle,
                           zoneTrophies: state.metaDepth.zoneTrophies.length,
                           torch: flicker,
                         ),
@@ -499,6 +500,7 @@ class _HubHeader extends StatelessWidget {
     required this.soulbound,
     required this.willRank,
     required this.collectionScore,
+    required this.displayTitle,
     required this.zoneTrophies,
     required this.torch,
   });
@@ -510,6 +512,7 @@ class _HubHeader extends StatelessWidget {
   final int soulbound;
   final String willRank;
   final int collectionScore;
+  final String displayTitle;
   final int zoneTrophies;
   final double torch;
 
@@ -544,7 +547,9 @@ class _HubHeader extends StatelessWidget {
             _StatPill(icon: KenneyAssets.iconStar, label: 'SB $soulbound'),
             _StatPill(
               icon: KenneyAssets.iconTrophy,
-              label: '$willRank · $collectionScore',
+              label: displayTitle.isEmpty
+                  ? '$willRank · $collectionScore'
+                  : '$willRank · $displayTitle · $collectionScore',
             ),
           ],
         ),

@@ -295,6 +295,16 @@ class GameDirector extends ChangeNotifier {
     _spatial = result.world;
     _state = result.state;
     _roomGold += result.goldFromKills;
+    if (result.abilityCasts > 0) {
+      _state = MetaSystems.evaluateAchievements(
+        _state.copyWith(
+          metaDepth: _state.metaDepth.copyWith(
+            lifetimeAbilityCasts:
+                _state.metaDepth.lifetimeAbilityCasts + result.abilityCasts,
+          ),
+        ),
+      );
+    }
     _tickUiTimers(0.033);
     _announceAbilityUnlocks(before, _state);
     _announceAchievementUnlocks(before, _state);
@@ -554,6 +564,8 @@ class GameDirector extends ChangeNotifier {
     int? goldReward;
     int? essenceReward;
     String? title;
+    final beforeChain = _state.metaDepth.jobChainCount;
+    final beforeEssence = _state.essence;
     for (final m in _state.missions) {
       if (m.id == missionId && m.isComplete) {
         goldReward = m.goldReward;
@@ -565,10 +577,20 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.claimMission(_state, missionId));
     if (goldReward != null && essenceReward != null && title != null) {
       GameAudio.loot();
-      showToast(
-        '$title: +${goldReward}g +${essenceReward}e',
-        life: 2.6,
-      );
+      final chainBonus =
+          _state.essence - beforeEssence - essenceReward;
+      if (chainBonus > 0 ||
+          (beforeChain == 2 && _state.metaDepth.jobChainCount == 0)) {
+        showToast(
+          '$title: +${goldReward}g +${essenceReward}e · chain +5e!',
+          life: 2.8,
+        );
+      } else {
+        showToast(
+          '$title: +${goldReward}g +${essenceReward}e',
+          life: 2.6,
+        );
+      }
     }
   }
 
@@ -784,6 +806,14 @@ class GameDirector extends ChangeNotifier {
   }
 
   void hatchPet() {
+    if (_state.ownedPets.length >= _state.metaDepth.basePetRosterCap) {
+      showToast('Roster full', life: 1.8);
+      return;
+    }
+    if (_state.essence < GameLogic.hatchPetCost(_state)) {
+      showToast('Need essence', life: 1.8);
+      return;
+    }
     final beforeCount = _state.ownedPets.length;
     _applyUpgrade(GameLogic.hatchPet(_state));
     if (_state.ownedPets.length > beforeCount) {
@@ -794,6 +824,21 @@ class GameDirector extends ChangeNotifier {
   }
 
   void mergePets(String petIdA, String petIdB) {
+    Pet? a;
+    Pet? b;
+    for (final pet in _state.ownedPets) {
+      if (pet.id == petIdA) a = pet;
+      if (pet.id == petIdB) b = pet;
+    }
+    if (a == null || b == null) return;
+    if (a.resolvedSpecies != b.resolvedSpecies) {
+      showToast('Need same species', life: 1.8);
+      return;
+    }
+    if (a.rarity == PetRarity.legendary && b.rarity == PetRarity.legendary) {
+      showToast('Already legendary', life: 1.8);
+      return;
+    }
     final before = _state.ownedPets.length;
     _applyUpgrade(GameLogic.mergePets(_state, petIdA, petIdB));
     if (_state.ownedPets.length < before) {
@@ -807,6 +852,14 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.setFavoritePetSpecies(_state, speciesId));
     GameAudio.ui();
     showToast('Favorite species set', life: 1.6);
+  }
+
+  void setActiveTitle(String title) {
+    _applyUpgrade(GameLogic.setActiveTitle(_state, title));
+    if (_state.metaDepth.activeTitle == title) {
+      GameAudio.ui();
+      showToast('Title: $title', life: 1.8);
+    }
   }
 
   void buyPetFrame(String petId, PetFrame frame) {
@@ -827,6 +880,11 @@ class GameDirector extends ChangeNotifier {
         name = pet.name;
         break;
       }
+    }
+    if (beforeBond < 0) return;
+    if (_state.essence < GameLogic.bondPetCost(beforeBond)) {
+      showToast('Need essence', life: 1.8);
+      return;
     }
     _applyUpgrade(GameLogic.bondPet(_state, petId));
     for (final pet in _state.ownedPets) {
@@ -949,6 +1007,20 @@ class GameDirector extends ChangeNotifier {
 
   void buyPrestigeShopItem(String id) {
     final before = _state.essence;
+    final md = _state.metaDepth;
+    final atCap = switch (id) {
+      'stash_slot' => md.stashBonusSlots >= 20,
+      'combine_luck' => md.combinatorLuck >= 5,
+      'torch_keep' => md.torchKeepLevel >= 10,
+      'gh_cdr' => md.godHandCdLevel >= 8,
+      'roster_cap' => md.petRosterCapBonus >= 10,
+      'legacy_spark' => md.legacyPoints >= 20,
+      _ => false,
+    };
+    if (atCap) {
+      showToast('At cap', life: 1.8);
+      return;
+    }
     _applyUpgrade(GameLogic.buyPrestigeShopItem(_state, id));
     if (_state.essence < before) {
       String name = id;

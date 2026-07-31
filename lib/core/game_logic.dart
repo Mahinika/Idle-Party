@@ -461,8 +461,25 @@ class GameLogic {
   }
 
   /// Merge two same-species pets into one higher-rarity result.
+  static bool canMergePets(GameState state, String petIdA, String petIdB) {
+    if (petIdA == petIdB) return false;
+    Pet? a;
+    Pet? b;
+    for (final pet in state.ownedPets) {
+      if (pet.id == petIdA) a = pet;
+      if (pet.id == petIdB) b = pet;
+    }
+    if (a == null || b == null) return false;
+    if (a.resolvedSpecies != b.resolvedSpecies) return false;
+    if (a.rarity == PetRarity.legendary && b.rarity == PetRarity.legendary) {
+      return false;
+    }
+    return true;
+  }
+
+  /// Merge two same-species pets into one higher-rarity result.
   static GameState mergePets(GameState state, String petIdA, String petIdB) {
-    if (petIdA == petIdB) return state;
+    if (!canMergePets(state, petIdA, petIdB)) return state;
     Pet? a;
     Pet? b;
     for (final pet in state.ownedPets) {
@@ -470,7 +487,6 @@ class GameLogic {
       if (pet.id == petIdB) b = pet;
     }
     if (a == null || b == null) return state;
-    if (a.resolvedSpecies != b.resolvedSpecies) return state;
     final species = PetCatalog.byId(a.resolvedSpecies);
     final maxIdx = max(a.rarity.index, b.rarity.index);
     final nextIdx = min(PetRarity.values.length - 1, maxIdx + 1);
@@ -515,6 +531,15 @@ class GameLogic {
         metaDepth: state.metaDepth.copyWith(favoritePetSpecies: speciesId),
         lastUpdated: DateTime.now(),
       ),
+    );
+  }
+
+  static GameState setActiveTitle(GameState state, String title) {
+    if (title.isEmpty) return state;
+    if (!state.metaDepth.titles.contains(title)) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(activeTitle: title),
+      lastUpdated: DateTime.now(),
     );
   }
 
@@ -815,11 +840,19 @@ class GameLogic {
       ascensionLevel: state.ascensionLevel,
     );
 
+    var nextChain = state.metaDepth.jobChainCount + 1;
+    var chainBonus = 0;
+    if (nextChain >= 3) {
+      chainBonus = 5;
+      nextChain = 0;
+    }
+
     return state.copyWith(
       gold: state.gold + mission.goldReward,
       lifetimeGoldEarned: state.lifetimeGoldEarned + mission.goldReward,
-      essence: state.essence + mission.essenceReward,
+      essence: state.essence + mission.essenceReward + chainBonus,
       missions: missions,
+      metaDepth: state.metaDepth.copyWith(jobChainCount: nextChain),
       lastUpdated: DateTime.now(),
     );
   }
@@ -894,7 +927,6 @@ class GameLogic {
       legacyPoints: state.metaDepth.legacyPoints + legacyGain,
       heirloomAlBonus: nextLevel ~/ 5,
       zoneTrophies: trophies,
-      weeklyProgress: state.metaDepth.weeklyProgress + 1,
       noWipeAscendReady: true,
     );
 
@@ -1398,6 +1430,10 @@ class GameLogic {
   /// Awards [amount] XP to every living hero; levels up when pools fill.
   static GameState awardPartyXp(GameState state, int amount) {
     if (amount <= 0) return state;
+    final boosted = amount +
+        (amount *
+                (state.sanctuaryXpBonusPercent + state.petXpFindPercent)) ~/
+            100;
     final heroes = <PartyHero>[];
     var leveled = false;
     for (final hero in state.heroes) {
@@ -1406,7 +1442,7 @@ class GameLogic {
         continue;
       }
       var level = hero.level;
-      var xp = hero.xp + amount;
+      var xp = hero.xp + boosted;
       var hp = hero.currentHp;
       var guard = 0;
       while (guard < 40) {
@@ -1452,6 +1488,7 @@ class GameLogic {
     final hm = fromState?.hardmodeLevel ?? hardmodeLevel;
     final al = fromState?.ascensionLevel ?? ascensionLevel;
     final rush = fromState?.challengeBossRush ?? bossRush;
+    final weeklyMod = fromState?.metaDepth.weeklyModifier ?? '';
     final level = room.globalBattleNumber;
     final gpRaw =
         (fromState != null ? partyGearPressure(fromState) : gearPressure)
@@ -1459,27 +1496,43 @@ class GameLogic {
     final gp = level <= 4
         ? 1.0 + (gpRaw - 1.0) * (0.25 + level * 0.12)
         : gpRaw;
-    final budget = roomCombatBudget(
+    var budget = roomCombatBudget(
       room,
       dungeonId: id,
       hardmodeLevel: hm,
       ascensionLevel: al,
       gearPressure: fromState != null ? partyGearPressure(fromState) : gearPressure,
     );
+    // Weekly modifiers apply after reading fromState.
+    final glassWeek = weeklyMod == 'glass';
+    final swarmWeek = weeklyMod == 'swarm';
+    final eliteWeek = weeklyMod == 'elite';
+    if (eliteWeek) {
+      budget = (
+        attack: (budget.attack * 1.15).round(),
+        hp: (budget.hp * 1.2).round(),
+        gold: (budget.gold * 1.1).round(),
+      );
+    }
     // Hardmode densifies packs: HM+10 = 10× (1000%) enemy count.
-    final baseCount = max(1, room.enemyCount);
+    // Swarm weekly multiplies count before HM density.
+    final baseCount = max(
+      1,
+      (room.enemyCount * (swarmWeek ? 1.35 : 1.0)).round(),
+    );
     final count = min(
       80,
       max(1, (baseCount * (1.0 + hm * 0.9)).round()),
     );
     // Full density keep: each body still carries HM-scaled HP/ATK (not diluted).
     final density = count / baseCount;
-    final packAttack = (budget.attack * density).round();
-    final packHp = (budget.hp * density).round();
+    var packAttack = (budget.attack * density).round();
+    var packHp = (budget.hp * density).round();
     final packGold = (budget.gold * (1.0 + (density - 1.0) * 0.25)).round();
     final bossName = DungeonCatalog.byId(id).bossName;
     final rng = Random(level * 9173 + id.hashCode + room.type.index * 41);
     final isBossRoom = room.type == RoomType.boss;
+    final pickType = eliteWeek && !isBossRoom ? RoomType.elite : room.type;
 
     final archetypes = <EnemyArchetype>[
       for (var i = 0; i < count; i++)
@@ -1488,7 +1541,7 @@ class GameLogic {
                 ? EnemyArchetype.tank
                 : _pickArchetype(RoomType.elite, isBossUnit: false, rng: rng))
             : _pickArchetype(
-                room.type,
+                pickType,
                 isBossUnit: isBossRoom && i == 0,
                 rng: rng,
               ),
@@ -1561,20 +1614,25 @@ class GameLogic {
 
       // Boss Rush: every non-boss pack fights like an elite pull.
       final rushMult = rush && !(isBossRoom && i == 0) ? 1.6 : 1.0;
-      final hp = max(
+      final hpRaw = max(
         (minHp * threatScale).round(),
         (baseHp * skew.hp * rushMult * threatScale).round(),
       );
-      final attack = max(
+      final atkRaw = max(
         (minAtk * threatScale).round(),
         (baseAtk * skew.atk * rushMult * threatScale).round(),
       );
+      final hp = glassWeek ? max(1, (hpRaw * 0.75).round()) : hpRaw;
+      final attack = glassWeek ? max(1, (atkRaw * 1.2).round()) : atkRaw;
       // DEF scales hard so fights aren't melted by raw ATK.
       final partyLevel = max(1, level);
       final isBossUnit = isBossRoom && i == 0;
       final role = isBossUnit
           ? EnemyRole.boss
-          : (rush || room.type == RoomType.boss || room.type == RoomType.elite)
+          : (rush ||
+                  eliteWeek ||
+                  room.type == RoomType.boss ||
+                  room.type == RoomType.elite)
           ? EnemyRole.elite
           : EnemyRole.normal;
       final defense = ((skew.def +
@@ -1585,8 +1643,9 @@ class GameLogic {
               (0.7 + gp * 0.3))
           .round();
 
-      final namingType =
-          rush && !isBossUnit ? RoomType.elite : room.type;
+      final namingType = (rush && !isBossUnit) || (eliteWeek && !isBossUnit)
+          ? RoomType.elite
+          : room.type;
 
       group.add(
         EnemyUnit(
@@ -1855,7 +1914,10 @@ class GameLogic {
         state.ascensionLevel +
         (state.highestDungeonCleared + 1);
     final rawGold = max(0, (seconds * perMinute) ~/ 60);
-    final gold = applyGoldGain(state, rawGold);
+    final gold = applyGoldGain(
+      state,
+      rawGold + (rawGold * state.torchOfflineGoldPercent) ~/ 100,
+    );
     final essence = seconds >= 600
         ? (seconds ~/ 900) + (state.sanctuaryPowerLevel ~/ 2)
         : 0;
@@ -2092,6 +2154,7 @@ class GameLogic {
   static int godHandCdUpgradeCost(int level) => 12 + level * 10;
 
   static GameState upgradeGodHandCd(GameState state) {
+    if (state.metaDepth.godHandCdLevel >= 8) return state;
     final cost = godHandCdUpgradeCost(state.metaDepth.godHandCdLevel);
     if (state.essence < cost) return state;
     return MetaSystems.evaluateAchievements(
@@ -2117,24 +2180,42 @@ class GameLogic {
     if (state.ascensionLevel < item.minAl) return state;
     if (state.essence < item.cost) return state;
 
-    var md = state.metaDepth.copyWith(
-      prestigePurchases: [...state.metaDepth.prestigePurchases, id],
-    );
-    md = switch (id) {
+    final md = state.metaDepth;
+    final atCap = switch (id) {
+      'stash_slot' => md.stashBonusSlots >= 20,
+      'combine_luck' => md.combinatorLuck >= 5,
+      'torch_keep' => md.torchKeepLevel >= 10,
+      'gh_cdr' => md.godHandCdLevel >= 8,
+      'roster_cap' => md.petRosterCapBonus >= 10,
+      'legacy_spark' => md.legacyPoints >= 20,
+      _ => false,
+    };
+    if (atCap) return state;
+
+    var nextMd = switch (id) {
       'stash_slot' =>
-        md.copyWith(stashBonusSlots: md.stashBonusSlots + 2),
+        md.copyWith(stashBonusSlots: min(20, md.stashBonusSlots + 2)),
       'combine_luck' =>
-        md.copyWith(combinatorLuck: md.combinatorLuck + 1),
-      'torch_keep' => md.copyWith(torchKeepLevel: md.torchKeepLevel + 1),
-      'gh_cdr' => md.copyWith(godHandCdLevel: md.godHandCdLevel + 1),
+        md.copyWith(combinatorLuck: min(5, md.combinatorLuck + 1)),
+      'torch_keep' =>
+        md.copyWith(torchKeepLevel: min(10, md.torchKeepLevel + 1)),
+      'gh_cdr' =>
+        md.copyWith(godHandCdLevel: min(8, md.godHandCdLevel + 1)),
       'roster_cap' =>
-        md.copyWith(petRosterCapBonus: md.petRosterCapBonus + 2),
-      'legacy_spark' => md.copyWith(legacyPoints: md.legacyPoints + 1),
+        md.copyWith(petRosterCapBonus: min(10, md.petRosterCapBonus + 2)),
+      'legacy_spark' =>
+        md.copyWith(legacyPoints: min(20, md.legacyPoints + 1)),
       _ => md,
     };
+    // Track ownership once via levels; keep a de-duplicated purchase mark.
+    if (!nextMd.prestigePurchases.contains(id)) {
+      nextMd = nextMd.copyWith(
+        prestigePurchases: [...nextMd.prestigePurchases, id],
+      );
+    }
     return state.copyWith(
       essence: state.essence - item.cost,
-      metaDepth: md,
+      metaDepth: nextMd,
       lastUpdated: DateTime.now(),
     );
   }
@@ -2179,7 +2260,7 @@ class GameLogic {
     return MetaSystems.evaluateAchievements(next);
   }
 
-  /// Soft expected codex size for percentage milestone claims.
+  /// Soft expected codex size for percentage milestone claims (soft goal).
   static const int expectedCodexEntries = 60;
 
   static const Map<String, ({int pct, int reward})> codexRewardTiers =
@@ -3633,11 +3714,15 @@ class GameLogic {
       metaDepth: next.metaDepth.copyWith(
         lifetimeFloorClears: next.metaDepth.lifetimeFloorClears + 1,
         lifetimeBossKills: next.metaDepth.lifetimeBossKills + bossKill,
-        lifetimeAbilityCasts: next.metaDepth.lifetimeAbilityCasts + 1,
         zoneTrophies: trophies,
       ),
     );
     next = ensureWeeklyContract(next);
+    next = next.copyWith(
+      metaDepth: next.metaDepth.copyWith(
+        weeklyProgress: min(3, next.metaDepth.weeklyProgress + 1),
+      ),
+    );
     next = MetaSystems.evaluateAchievements(next);
     return next;
   }

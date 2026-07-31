@@ -40,7 +40,8 @@ abstract final class GameGuides {
           'You are the distant will. Tap the dungeon floor to strike.\n\n'
           '• Deals area damage and briefly steers the party toward the tap.\n'
           '• Cooldown ring is top-right of the dungeon view.\n'
-          '• Upgrade God Hand with essence (meta) for more damage.',
+          '• Upgrade God Hand damage with essence (meta).\n'
+          '• Upgrade God Hand CD (Forge / Prestige) to shorten the cooldown.',
     ),
     GuideTopic(
       id: 'farm_push',
@@ -142,8 +143,17 @@ abstract final class GameGuides {
           'MORE → JOBS.\n\n'
           '• Complete mission goals (kills, floors, gold, etc.).\n'
           '• Claim rewards when a job shows complete.\n'
-          '• Weekly contract: clear 3 times under the week’s modifier, then claim essence.\n'
+          '• Claim 3 jobs in a row for a +5e chain bonus.\n'
           '• The MORE button may show JOBS (n) when claims are ready.',
+    ),
+    GuideTopic(
+      id: 'weekly',
+      title: 'WEEKLY',
+      body:
+          'Each ISO week rolls a dungeon modifier (glass / swarm / elite).\n\n'
+          '• Clear 3 floors under that week’s modifier to fill progress.\n'
+          '• Claim the weekly essence reward once progress hits 3/3.\n'
+          '• Progress resets when the week key rolls over.',
     ),
     GuideTopic(
       id: 'loadouts',
@@ -159,6 +169,7 @@ abstract final class GameGuides {
       title: 'HARDMODE & CHALLENGES',
       body:
           'Set before entering a dungeon (hub challenge panel).\n\n'
+          '• Hardmode is AL-gated: max HM = min(10, 3 + AL÷2).\n'
           '• Hardmode +1…+10: huge enemy HP, damage, and pack size.\n'
           '• At HM+10: about 1000% (10×) HP, ATK, and enemy count.\n'
           '• Boss Rush / No Flask: harder clears, extra essence.\n'

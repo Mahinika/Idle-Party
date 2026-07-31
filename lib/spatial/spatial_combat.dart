@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
@@ -94,10 +94,10 @@ class SpatialActor {
   double attackAimX = 0;
   double attackAimY = 0;
 
-  /// Class resource 0–100 (rage / mana / energy).
+  /// Class resource 0?100 (rage / mana / energy).
   double rage = 0;
 
-  /// Per-ability cooldown remaining (AbilityId.name â†’ seconds).
+  /// Per-ability cooldown remaining (AbilityId.name ? seconds).
   final Map<String, double> abilityCd = <String, double>{};
 
   double shieldBlockTimer = 0;
@@ -111,7 +111,7 @@ class SpatialActor {
   bool queuedShieldSlam = false;
   bool revengeReady = false;
 
-  // —— Disc Priest (WotLK) ——
+  // ?? Disc Priest (WotLK) ??
   int absorbShield = 0;
   double painSuppressionTimer = 0;
   double fortitudeTimer = 0;
@@ -121,7 +121,7 @@ class SpatialActor {
   /// Inner Fire glow (always-on visual while unlocked & alive).
   bool innerFireActive = false;
 
-  // —— Mage (Fire) ——
+  // ?? Mage (Fire) ??
   bool queuedFireball = false;
   bool queuedPyroblast = false;
   double combustionTimer = 0;
@@ -129,7 +129,7 @@ class SpatialActor {
   /// While a Living Bomb you cast is still ticking on any foe.
   double livingBombArmed = 0;
 
-  // —— Rogue (Combat) ——
+  // ?? Rogue (Combat) ??
   int comboPoints = 0;
   double sliceAndDiceTimer = 0;
   double bladeFlurryTimer = 0;
@@ -374,6 +374,9 @@ class SpatialWorld {
     this.bossBannerName = '',
     this.afkAssist = false,
     this.combatElapsed = 0,
+    this.petMitigateFlat = 0,
+    this.petHealBoost = 0,
+    this.pendingAbilityCasts = 0,
     List<SpatialFloater>? floaters,
     List<SpatialBurst>? bursts,
   })  : openGateIds = openGateIds ?? <int>{},
@@ -414,6 +417,15 @@ class SpatialWorld {
   /// Seconds of active combat this floor (for DPS meter).
   double combatElapsed;
 
+  /// Flat incoming damage reduction from mitigate pets.
+  int petMitigateFlat;
+
+  /// Extra heal potency from heal-boost pets.
+  int petHealBoost;
+
+  /// Ability casts this [SpatialCombat.step] (flushed into [SpatialStepResult]).
+  int pendingAbilityCasts;
+
   int get cols => map.cols;
   int get rows => map.rows;
 
@@ -453,6 +465,7 @@ class SpatialStepResult {
     this.roomCleared = false,
     this.partyWiped = false,
     this.goldFromKills = 0,
+    this.abilityCasts = 0,
   });
 
   final SpatialWorld world;
@@ -460,6 +473,7 @@ class SpatialStepResult {
   final bool roomCleared;
   final bool partyWiped;
   final int goldFromKills;
+  final int abilityCasts;
 }
 
 abstract final class SpatialCombat {
@@ -734,8 +748,14 @@ abstract final class SpatialCombat {
   static double _abilityCdLeft(SpatialActor a, AbilityId id) =>
       a.abilityCd[id.name] ?? 0;
 
-  static void _startAbilityCd(SpatialActor a, AbilityId id, double cd) {
+  static void _startAbilityCd(
+    SpatialWorld world,
+    SpatialActor a,
+    AbilityId id,
+    double cd,
+  ) {
     if (cd > 0) a.abilityCd[id.name] = cd;
+    world.pendingAbilityCasts++;
   }
 
   static bool _canCast(
@@ -799,6 +819,9 @@ abstract final class SpatialCombat {
     if (blocked && hero.blockValue > 0) {
       dealt = math.max(1, dealt - hero.blockValue);
     }
+    if (world.petMitigateFlat > 0) {
+      dealt = math.max(1, dealt - world.petMitigateFlat);
+    }
     if (hero.absorbShield > 0) {
       final absorbed = math.min(hero.absorbShield, dealt);
       hero.absorbShield -= absorbed;
@@ -841,7 +864,7 @@ abstract final class SpatialCombat {
     int amount, {
     required bool reducedVfx,
   }) {
-    final heal = math.max(1, amount);
+    final heal = math.max(1, amount + world.petHealBoost);
     SpatialActor? lowest;
     var worst = 2.0;
     for (final h in world.heroes) {
@@ -947,11 +970,11 @@ abstract final class SpatialCombat {
 
     bool can(AbilityId id) => _canCast(warrior, id, hasShield: hasShield);
 
-    // Shield Wall — emergency DR.
+    // Shield Wall ? emergency DR.
     if (hpFrac <= 0.28 && can(AbilityId.shieldWall)) {
       final def = WarriorAbilities.defFor(AbilityId.shieldWall)!;
       _spendRage(warrior, def.resourceCost);
-      _startAbilityCd(warrior, AbilityId.shieldWall, def.cooldown);
+      _startAbilityCd(world, warrior, AbilityId.shieldWall, def.cooldown);
       warrior.shieldWallTimer = 5.0;
       if (!reducedVfx) {
         _spawnFloater(
@@ -973,11 +996,11 @@ abstract final class SpatialCombat {
       }
     }
 
-    // Last Stand — emergency HP.
+    // Last Stand ? emergency HP.
     if (hpFrac <= 0.4 && can(AbilityId.lastStand)) {
       final def = WarriorAbilities.defFor(AbilityId.lastStand)!;
       _spendRage(warrior, def.resourceCost);
-      _startAbilityCd(warrior, AbilityId.lastStand, def.cooldown);
+      _startAbilityCd(world, warrior, AbilityId.lastStand, def.cooldown);
       final bonus = math.max(8, (warrior.maxHp * 0.3).round());
       warrior.bonusMaxHp = bonus;
       warrior.lastStandTimer = 6.0;
@@ -1000,7 +1023,7 @@ abstract final class SpatialCombat {
         can(AbilityId.shieldBlock)) {
       final def = WarriorAbilities.defFor(AbilityId.shieldBlock)!;
       _spendRage(warrior, def.resourceCost);
-      _startAbilityCd(warrior, AbilityId.shieldBlock, def.cooldown);
+      _startAbilityCd(world, warrior, AbilityId.shieldBlock, def.cooldown);
       warrior.shieldBlockTimer = 2.5;
       if (!reducedVfx) {
         _spawnFloater(
@@ -1032,7 +1055,7 @@ abstract final class SpatialCombat {
       if (loose != null) {
         final def = WarriorAbilities.defFor(AbilityId.taunt)!;
         _spendRage(warrior, def.resourceCost);
-        _startAbilityCd(warrior, AbilityId.taunt, def.cooldown);
+        _startAbilityCd(world, warrior, AbilityId.taunt, def.cooldown);
         loose.forcedTargetId = warrior.id;
         loose.forcedTargetTimer = 4.0;
         if (!reducedVfx) {
@@ -1048,7 +1071,7 @@ abstract final class SpatialCombat {
       }
     }
 
-    // Demoralizing Shout — AoE attack down.
+    // Demoralizing Shout ? AoE attack down.
     if (can(AbilityId.demoralizingShout)) {
       final nearby = <SpatialActor>[
         for (final e in world.enemies)
@@ -1057,7 +1080,7 @@ abstract final class SpatialCombat {
       if (nearby.isNotEmpty) {
         final def = WarriorAbilities.defFor(AbilityId.demoralizingShout)!;
         _spendRage(warrior, def.resourceCost);
-        _startAbilityCd(warrior, AbilityId.demoralizingShout, def.cooldown);
+        _startAbilityCd(world, warrior, AbilityId.demoralizingShout, def.cooldown);
         for (final e in nearby) {
           e.demoShoutTimer = math.max(e.demoShoutTimer, 6.5);
         }
@@ -1092,7 +1115,7 @@ abstract final class SpatialCombat {
           (nearby.length == 1 && nearby.first.role == EnemyRole.boss)) {
         final def = WarriorAbilities.defFor(AbilityId.thunderClap)!;
         _spendRage(warrior, def.resourceCost);
-        _startAbilityCd(warrior, AbilityId.thunderClap, def.cooldown);
+        _startAbilityCd(world, warrior, AbilityId.thunderClap, def.cooldown);
         warrior.attackFlash = 0.18;
         final clapDmg = math.max(2, (warrior.attack * 0.55).round());
         for (final e in nearby) {
@@ -1154,7 +1177,7 @@ abstract final class SpatialCombat {
         (focusEnemy.sunderStacks < 5 || focusEnemy.sunderTimer < 4)) {
       final def = WarriorAbilities.defFor(AbilityId.devastate)!;
       _spendRage(warrior, def.resourceCost);
-      _startAbilityCd(warrior, AbilityId.devastate, def.cooldown);
+      _startAbilityCd(world, warrior, AbilityId.devastate, def.cooldown);
       focusEnemy.sunderStacks = math.min(5, focusEnemy.sunderStacks + 1);
       focusEnemy.sunderTimer = 14;
       final wasAlive = focusEnemy.hp > 0;
@@ -1193,7 +1216,7 @@ abstract final class SpatialCombat {
         can(AbilityId.shieldSlam)) {
       final def = WarriorAbilities.defFor(AbilityId.shieldSlam)!;
       _spendRage(warrior, def.resourceCost);
-      _startAbilityCd(warrior, AbilityId.shieldSlam, def.cooldown);
+      _startAbilityCd(world, warrior, AbilityId.shieldSlam, def.cooldown);
       warrior.queuedShieldSlam = true;
       _announceCast(
         world,
@@ -1206,7 +1229,7 @@ abstract final class SpatialCombat {
       );
     }
 
-    // Shockwave — frontal AoE stun (WotLK Prot signature).
+    // Shockwave ? frontal AoE stun (WotLK Prot signature).
     if (can(AbilityId.shockwave)) {
       final nearby = <SpatialActor>[
         for (final e in world.enemies)
@@ -1216,7 +1239,7 @@ abstract final class SpatialCombat {
           (nearby.length == 1 && nearby.first.role == EnemyRole.boss)) {
         final def = WarriorAbilities.defFor(AbilityId.shockwave)!;
         _spendRage(warrior, def.resourceCost);
-        _startAbilityCd(warrior, AbilityId.shockwave, def.cooldown);
+        _startAbilityCd(world, warrior, AbilityId.shockwave, def.cooldown);
         warrior.attackFlash = 0.22;
         warrior.shockwaveFlash = 0.6;
         final aim = nearby.first;
@@ -1334,7 +1357,7 @@ abstract final class SpatialCombat {
     _gainRage(priest, (priest.spiritRegenBonus + priest.mp5RegenBonus) * dt);
     bool can(AbilityId id) => _canCast(priest, id);
 
-    // Power Infusion — haste the best living DPS.
+    // Power Infusion ? haste the best living DPS.
     if (can(AbilityId.powerInfusion)) {
       SpatialActor? dps;
       var bestAtk = -1;
@@ -1349,7 +1372,7 @@ abstract final class SpatialCombat {
       if (dps != null && focusEnemy != null) {
         final def = ClassKits.defFor(AbilityId.powerInfusion)!;
         _spendRage(priest, def.resourceCost);
-        _startAbilityCd(priest, AbilityId.powerInfusion, def.cooldown);
+        _startAbilityCd(world, priest, AbilityId.powerInfusion, def.cooldown);
         dps.powerInfusionTimer = 8;
         if (!reducedVfx) {
           _spawnFloater(
@@ -1394,7 +1417,7 @@ abstract final class SpatialCombat {
       if (target != null) {
         final def = ClassKits.defFor(AbilityId.painSuppression)!;
         _spendRage(priest, def.resourceCost);
-        _startAbilityCd(priest, AbilityId.painSuppression, def.cooldown);
+        _startAbilityCd(world, priest, AbilityId.painSuppression, def.cooldown);
         target.painSuppressionTimer = 5.5;
         if (!reducedVfx) {
           _spawnFloater(
@@ -1422,7 +1445,7 @@ abstract final class SpatialCombat {
         world.heroes.any((h) => h.isAlive && h.fortitudeTimer < 2)) {
       final def = ClassKits.defFor(AbilityId.powerWordFortitude)!;
       _spendRage(priest, def.resourceCost);
-      _startAbilityCd(priest, AbilityId.powerWordFortitude, def.cooldown);
+      _startAbilityCd(world, priest, AbilityId.powerWordFortitude, def.cooldown);
       for (final h in world.heroes) {
         if (!h.isAlive) continue;
         h.fortitudeTimer = 20;
@@ -1466,7 +1489,7 @@ abstract final class SpatialCombat {
       if (target != null && worst < 0.92) {
         final def = ClassKits.defFor(AbilityId.powerWordShield)!;
         _spendRage(priest, def.resourceCost);
-        _startAbilityCd(priest, AbilityId.powerWordShield, def.cooldown);
+        _startAbilityCd(world, priest, AbilityId.powerWordShield, def.cooldown);
         final inner =
             ClassKits.isUnlocked(AbilityId.innerFire, priest.heroLevel)
                 ? 1.2
@@ -1521,7 +1544,7 @@ abstract final class SpatialCombat {
       if (target != null && worst < 0.75) {
         final def = ClassKits.defFor(AbilityId.flashHeal)!;
         _spendRage(priest, def.resourceCost);
-        _startAbilityCd(priest, AbilityId.flashHeal, def.cooldown);
+        _startAbilityCd(world, priest, AbilityId.flashHeal, def.cooldown);
         final heal = math.max(6, (priest.attack * 1.4).round());
         final before = target.hp;
         target.hp = math.min(target.effectiveMaxHp, target.hp + heal);
@@ -1557,7 +1580,7 @@ abstract final class SpatialCombat {
       }
     }
 
-    // Prayer of Mending — bounce heal on the most injured ally.
+    // Prayer of Mending ? bounce heal on the most injured ally.
     if (can(AbilityId.prayerOfMending)) {
       SpatialActor? target;
       var worst = 1.0;
@@ -1572,7 +1595,7 @@ abstract final class SpatialCombat {
       if (target != null && worst < 0.95) {
         final def = ClassKits.defFor(AbilityId.prayerOfMending)!;
         _spendRage(priest, def.resourceCost);
-        _startAbilityCd(priest, AbilityId.prayerOfMending, def.cooldown);
+        _startAbilityCd(world, priest, AbilityId.prayerOfMending, def.cooldown);
         final inner =
             ClassKits.isUnlocked(AbilityId.innerFire, priest.heroLevel)
                 ? 1.15
@@ -1608,14 +1631,14 @@ abstract final class SpatialCombat {
       }
     }
 
-    // Penance — three holy bolts; side-heals the party (WotLK dual-purpose).
+    // Penance ? three holy bolts; side-heals the party (WotLK dual-purpose).
     if (focusEnemy != null &&
         focusEnemy.hp > 0 &&
         _dist(priest, focusEnemy) <= priest.attackRange + 1.5 &&
         can(AbilityId.penance)) {
       final def = ClassKits.defFor(AbilityId.penance)!;
       _spendRage(priest, def.resourceCost);
-      _startAbilityCd(priest, AbilityId.penance, def.cooldown);
+      _startAbilityCd(world, priest, AbilityId.penance, def.cooldown);
       priest.attackFlash = 0.2;
       final bolt = math.max(2, (priest.attack * 0.75).round());
       for (var i = 0; i < 3; i++) {
@@ -1664,7 +1687,7 @@ abstract final class SpatialCombat {
         can(AbilityId.iceBlock)) {
       final def = ClassKits.defFor(AbilityId.iceBlock)!;
       _spendRage(mage, def.resourceCost);
-      _startAbilityCd(mage, AbilityId.iceBlock, def.cooldown);
+      _startAbilityCd(world, mage, AbilityId.iceBlock, def.cooldown);
       mage.iceBlockTimer = 4.0;
       _announceCast(
         world,
@@ -1680,7 +1703,7 @@ abstract final class SpatialCombat {
     if (can(AbilityId.combustion) && focusEnemy != null) {
       final def = ClassKits.defFor(AbilityId.combustion)!;
       _spendRage(mage, def.resourceCost);
-      _startAbilityCd(mage, AbilityId.combustion, def.cooldown);
+      _startAbilityCd(world, mage, AbilityId.combustion, def.cooldown);
       mage.combustionTimer = 8;
       if (!reducedVfx) {
         _spawnRing(
@@ -1715,7 +1738,7 @@ abstract final class SpatialCombat {
         _dist(mage, focusEnemy) < (mage.preferredRange ?? 3) * 0.55) {
       final def = ClassKits.defFor(AbilityId.blink)!;
       _spendRage(mage, def.resourceCost);
-      _startAbilityCd(mage, AbilityId.blink, def.cooldown);
+      _startAbilityCd(world, mage, AbilityId.blink, def.cooldown);
       final dx = mage.x - focusEnemy.x;
       final dy = mage.y - focusEnemy.y;
       final len = math.sqrt(dx * dx + dy * dy);
@@ -1758,7 +1781,7 @@ abstract final class SpatialCombat {
         focusEnemy.livingBombTimer < 2) {
       final def = ClassKits.defFor(AbilityId.livingBomb)!;
       _spendRage(mage, def.resourceCost);
-      _startAbilityCd(mage, AbilityId.livingBomb, def.cooldown);
+      _startAbilityCd(world, mage, AbilityId.livingBomb, def.cooldown);
       focusEnemy.livingBombTimer = 8;
       focusEnemy.livingBombDps = math.max(3.0, mage.attack * 0.45);
       focusEnemy.livingBombCasterId = mage.id;
@@ -1799,7 +1822,7 @@ abstract final class SpatialCombat {
       if (nearby.isNotEmpty) {
         final def = ClassKits.defFor(AbilityId.frostNova)!;
         _spendRage(mage, def.resourceCost);
-        _startAbilityCd(mage, AbilityId.frostNova, def.cooldown);
+        _startAbilityCd(world, mage, AbilityId.frostNova, def.cooldown);
         for (final e in nearby) {
           e.rootTimer = math.max(e.rootTimer, 2.4);
           e.attackSlowTimer = math.max(e.attackSlowTimer, 3);
@@ -1832,7 +1855,7 @@ abstract final class SpatialCombat {
       if (nearby.length >= 2) {
         final def = ClassKits.defFor(AbilityId.blastWave)!;
         _spendRage(mage, def.resourceCost);
-        _startAbilityCd(mage, AbilityId.blastWave, def.cooldown);
+        _startAbilityCd(world, mage, AbilityId.blastWave, def.cooldown);
         final dmg = math.max(2, (mage.attack * 0.75).round());
         for (final e in nearby) {
           final dealt = math.max(1, dmg - e.effectiveDefense);
@@ -1883,7 +1906,7 @@ abstract final class SpatialCombat {
         can(AbilityId.pyroblast)) {
       final def = ClassKits.defFor(AbilityId.pyroblast)!;
       _spendRage(mage, def.resourceCost);
-      _startAbilityCd(mage, AbilityId.pyroblast, def.cooldown);
+      _startAbilityCd(world, mage, AbilityId.pyroblast, def.cooldown);
       mage.attackFlash = 0.22;
       var dmg = math.max(3, (mage.attack * 2.4).round());
       if (mage.combustionTimer > 0) dmg = (dmg * 1.45).round();
@@ -1912,7 +1935,7 @@ abstract final class SpatialCombat {
         can(AbilityId.fireball)) {
       final def = ClassKits.defFor(AbilityId.fireball)!;
       _spendRage(mage, def.resourceCost);
-      _startAbilityCd(mage, AbilityId.fireball, def.cooldown);
+      _startAbilityCd(world, mage, AbilityId.fireball, def.cooldown);
       mage.attackFlash = 0.18;
       var dmg = math.max(2, (mage.attack * 1.7).round());
       if (mage.combustionTimer > 0) dmg = (dmg * 1.45).round();
@@ -1956,7 +1979,7 @@ abstract final class SpatialCombat {
         can(AbilityId.vanish)) {
       final def = ClassKits.defFor(AbilityId.vanish)!;
       _spendRage(rogue, def.resourceCost);
-      _startAbilityCd(rogue, AbilityId.vanish, def.cooldown);
+      _startAbilityCd(world, rogue, AbilityId.vanish, def.cooldown);
       rogue.vanishTimer = 3.5;
       for (final e in world.enemies) {
         if (e.forcedTargetId == rogue.id) {
@@ -1978,7 +2001,7 @@ abstract final class SpatialCombat {
     if (can(AbilityId.killingSpree) && focusEnemy != null) {
       final def = ClassKits.defFor(AbilityId.killingSpree)!;
       _spendRage(rogue, def.resourceCost);
-      _startAbilityCd(rogue, AbilityId.killingSpree, def.cooldown);
+      _startAbilityCd(world, rogue, AbilityId.killingSpree, def.cooldown);
       rogue.killingSpreeTimer = 3.5;
       rogue.rage = math.min(100, rogue.rage + 35);
       // Instant dash strike on up to 3 nearby foes.
@@ -2059,7 +2082,7 @@ abstract final class SpatialCombat {
       if (nearPack && _dist(rogue, focusEnemy) > rogue.attackRange * 1.85) {
         final def = ClassKits.defFor(AbilityId.sprint)!;
         _spendRage(rogue, def.resourceCost);
-        _startAbilityCd(rogue, AbilityId.sprint, def.cooldown);
+        _startAbilityCd(world, rogue, AbilityId.sprint, def.cooldown);
         rogue.sprintTimer = 4;
         if (!reducedVfx) {
           _spawnSpark(
@@ -2089,7 +2112,7 @@ abstract final class SpatialCombat {
       if (nearby.length >= 2) {
         final def = ClassKits.defFor(AbilityId.bladeFlurry)!;
         _spendRage(rogue, def.resourceCost);
-        _startAbilityCd(rogue, AbilityId.bladeFlurry, def.cooldown);
+        _startAbilityCd(world, rogue, AbilityId.bladeFlurry, def.cooldown);
         rogue.bladeFlurryTimer = 6;
         if (!reducedVfx) {
           _spawnRing(
@@ -2119,7 +2142,7 @@ abstract final class SpatialCombat {
         focusEnemy.rootTimer < 0.5) {
       final def = ClassKits.defFor(AbilityId.kidneyShot)!;
       _spendRage(rogue, def.resourceCost);
-      _startAbilityCd(rogue, AbilityId.kidneyShot, def.cooldown);
+      _startAbilityCd(world, rogue, AbilityId.kidneyShot, def.cooldown);
       focusEnemy.rootTimer = 2.0 + rogue.comboPoints * 0.25;
       rogue.comboPoints = 0;
       if (!reducedVfx) {
@@ -2147,7 +2170,7 @@ abstract final class SpatialCombat {
         can(AbilityId.sliceAndDice)) {
       final def = ClassKits.defFor(AbilityId.sliceAndDice)!;
       _spendRage(rogue, def.resourceCost);
-      _startAbilityCd(rogue, AbilityId.sliceAndDice, def.cooldown);
+      _startAbilityCd(world, rogue, AbilityId.sliceAndDice, def.cooldown);
       rogue.sliceAndDiceTimer = 6 + rogue.comboPoints * 1.5;
       rogue.comboPoints = 0;
       if (!reducedVfx) {
@@ -2171,6 +2194,7 @@ abstract final class SpatialCombat {
   }
 
   static ({int damage, String? tag, int tagArgb}) _classAttackMods(
+    SpatialWorld world,
     SpatialActor hero,
     int baseDamage,
   ) {
@@ -2210,8 +2234,7 @@ abstract final class SpatialCombat {
             ClassKits.defFor(AbilityId.eviscerate)?.resourceCost ?? 25;
         if (_abilityCdLeft(hero, AbilityId.eviscerate) <= 0) {
           _spendRage(hero, cost);
-          _startAbilityCd(
-            hero,
+          _startAbilityCd(world,             hero,
             AbilityId.eviscerate,
             ClassKits.defFor(AbilityId.eviscerate)?.cooldown ?? 1.2,
           );
@@ -2461,6 +2484,8 @@ abstract final class SpatialCombat {
       clearedChambers: <int>{0},
       pets: pets,
       afkAssist: threatScale < 0.99,
+      petMitigateFlat: state.petMitigateFlat,
+      petHealBoost: state.petHealBoost,
       bossBannerTimer: room.type == RoomType.boss ? 2.4 : 0,
       bossBannerName: room.type == RoomType.boss
           ? (enemies.isNotEmpty ? enemies.first.name : 'BOSS')
@@ -2608,6 +2633,9 @@ abstract final class SpatialCombat {
       bossBannerName: world.bossBannerName,
       afkAssist: world.afkAssist,
       combatElapsed: world.combatElapsed,
+      petMitigateFlat: state.petMitigateFlat,
+      petHealBoost: state.petHealBoost,
+      pendingAbilityCasts: world.pendingAbilityCasts,
       floaters: world.floaters,
       bursts: world.bursts,
     );
@@ -2683,6 +2711,25 @@ abstract final class SpatialCombat {
     return null;
   }
 
+  static SpatialStepResult _stepResult(
+    SpatialWorld world,
+    GameState state, {
+    bool roomCleared = false,
+    bool partyWiped = false,
+    int goldFromKills = 0,
+  }) {
+    final casts = world.pendingAbilityCasts;
+    world.pendingAbilityCasts = 0;
+    return SpatialStepResult(
+      world: world,
+      state: state,
+      roomCleared: roomCleared,
+      partyWiped: partyWiped,
+      goldFromKills: goldFromKills,
+      abilityCasts: casts,
+    );
+  }
+
   /// Advances spatial combat by [dt] seconds and syncs HP into [state].
   static SpatialStepResult step(
     SpatialWorld world,
@@ -2709,14 +2756,14 @@ abstract final class SpatialCombat {
       world.treasureTimer -= dt;
       if (world.treasureTimer <= 0) {
         world.treasureOpen = true;
-        return SpatialStepResult(
-          world: world,
-          state: nextState,
+        return _stepResult(
+          world,
+          nextState,
           roomCleared: true,
           goldFromKills: GameLogic.roomCombatBudget(state.currentRoom).gold,
         );
       }
-      return SpatialStepResult(world: world, state: nextState);
+      return _stepResult(world, nextState);
     }
 
     // Cleared: walk to exit. ONE living hero on the stairs clears the floor.
@@ -2788,7 +2835,7 @@ abstract final class SpatialCombat {
       }
 
       // Failsafe: if pathing totally fails, warp stragglers after a few seconds
-      // once someone is already on the stairs — then clear.
+      // once someone is already on the stairs ? then clear.
       if (anyOnStairs && world.exitWaitTimer > 2.5) {
         for (final hero in livingHeroes) {
           if (_distPoint(hero.x, hero.y, exitX, exitY) > 3.4) {
@@ -2822,15 +2869,15 @@ abstract final class SpatialCombat {
         final gold = goldFromKills > 0
             ? goldFromKills
             : state.enemies.fold<int>(0, (s, e) => s + e.rewardGold);
-        return SpatialStepResult(
-          world: world,
-          state: nextState,
+        return _stepResult(
+          world,
+          nextState,
           roomCleared: true,
           goldFromKills: gold,
         );
       }
       nextState = _syncHp(nextState, world);
-      return SpatialStepResult(world: world, state: nextState);
+      return _stepResult(world, nextState);
     }
 
     final guiding = world.guideTimer > 0 &&
@@ -2902,7 +2949,7 @@ abstract final class SpatialCombat {
         } else {
           tx = target.x;
           ty = target.y;
-          // No LOS at hold range â†’ close in so shots/melee aren't wall-blocked.
+          // No LOS at hold range ? close in so shots/melee aren't wall-blocked.
           hold = hasLos ? preferred : 0;
         }
       } else if (leader != null && hero.id != leader.id) {
@@ -3004,7 +3051,7 @@ abstract final class SpatialCombat {
         var damage = executeBonus ? (hero.attack * 1.4).round() : hero.attack;
         String? abilityTag;
         var abilityTagArgb = _floaterDamage;
-        final mods = _classAttackMods(hero, damage);
+        final mods = _classAttackMods(world, hero, damage);
         damage = mods.damage;
         abilityTag = mods.tag;
         abilityTagArgb = mods.tagArgb;
@@ -3302,7 +3349,7 @@ abstract final class SpatialCombat {
       final slowRate = enemy.attackSlowTimer > 0 ? 0.8 : 1.0;
       enemy.fireCooldown -= dt * slowRate;
 
-      // —— Enemy specials (heal / enrage / slow / execute / boss pulse) ——
+      // ?? Enemy specials (heal / enrage / slow / execute / boss pulse) ??
       _tickEnemySpecials(
         world,
         enemy,
@@ -3530,7 +3577,7 @@ abstract final class SpatialCombat {
           world,
           x: loot.x,
           y: loot.y - 0.2,
-          text: label.length > 14 ? '${label.substring(0, 12)}…' : label,
+          text: label.length > 14 ? '${label.substring(0, 12)}?' : label,
           argb: loot.drop.isEquipment
               ? _floaterGear
               : (loot.kind == GroundLootKind.gold
@@ -3551,9 +3598,9 @@ abstract final class SpatialCombat {
     nextState = _syncHp(nextState, world);
 
     if (world.allHeroesDead) {
-      return SpatialStepResult(
-        world: world,
-        state: nextState,
+      return _stepResult(
+        world,
+        nextState,
         partyWiped: true,
         goldFromKills: goldFromKills,
       );
@@ -3580,9 +3627,9 @@ abstract final class SpatialCombat {
       }
     }
 
-    return SpatialStepResult(
-      world: world,
-      state: nextState,
+    return _stepResult(
+      world,
+      nextState,
       goldFromKills: goldFromKills,
     );
   }
@@ -3978,7 +4025,7 @@ abstract final class SpatialCombat {
     if (step <= 0) return;
     final dist = _distPoint(a.x, a.y, tx, ty);
     if (holdDistance > 0 && dist <= holdDistance) {
-      // Soft orbit / idle — only apply separation.
+      // Soft orbit / idle ? only apply separation.
       _applySeparation(
         a,
         world,
@@ -4279,7 +4326,7 @@ abstract final class SpatialCombat {
     final sy = fy.floor().clamp(0, map.rows - 1);
     var gx = tx.floor().clamp(0, map.cols - 1);
     var gy = ty.floor().clamp(0, map.rows - 1);
-    // Approach offsets can land on walls — path to nearest walkable instead.
+    // Approach offsets can land on walls ? path to nearest walkable instead.
     final goal = _nearestWalkableTile(map, openGateIds, gx, gy);
     gx = goal.$1;
     gy = goal.$2;

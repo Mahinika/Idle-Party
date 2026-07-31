@@ -234,41 +234,57 @@ class GameState {
   int get sanctuaryXpBonusPercent =>
       metaDepth.sanctuaryXpLevel * 4 + metaDepth.sanctuaryXpPrestige * 2;
 
-  int get petAttackBonus => activePet?.totalAttackBonus ?? 0;
+  int get petAttackBonus {
+    final pet = activePet;
+    if (pet == null) return 0;
+    final fav = metaDepth.favoritePetSpecies.isNotEmpty &&
+        pet.resolvedSpecies == metaDepth.favoritePetSpecies;
+    return pet.totalAttackBonus + (fav ? 1 : 0);
+  }
+
+  bool get _favoritePetActive =>
+      activePet != null &&
+      metaDepth.favoritePetSpecies.isNotEmpty &&
+      activePet!.resolvedSpecies == metaDepth.favoritePetSpecies;
+
+  int _favoritePassiveBoost(int value) {
+    if (!_favoritePetActive || value <= 0) return value;
+    return value + (value * 5) ~/ 100;
+  }
 
   /// Gold-find pets grant percent gold via [Pet.passiveValue].
   int get petGoldFindPercent {
     final pet = activePet;
     if (pet == null || pet.passive != PetPassive.goldFind) return 0;
-    return pet.passiveValue(dungeonId: dungeonId);
+    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
   }
 
   /// Loot-find pets grant drop-rate help via [Pet.passiveValue].
   int get petLootFindPercent {
     final pet = activePet;
     if (pet == null || pet.passive != PetPassive.lootFind) return 0;
-    return pet.passiveValue(dungeonId: dungeonId);
+    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
   }
 
   /// XP-find pets grant percent XP via [Pet.passiveValue].
   int get petXpFindPercent {
     final pet = activePet;
     if (pet == null || pet.passive != PetPassive.xpFind) return 0;
-    return pet.passiveValue(dungeonId: dungeonId);
+    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
   }
 
   /// Mitigate pets grant flat damage reduction via [Pet.passiveValue].
   int get petMitigateFlat {
     final pet = activePet;
     if (pet == null || pet.passive != PetPassive.mitigate) return 0;
-    return pet.passiveValue(dungeonId: dungeonId);
+    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
   }
 
   /// Heal-boost pets grant heal potency via [Pet.passiveValue].
   int get petHealBoost {
     final pet = activePet;
     if (pet == null || pet.passive != PetPassive.healBoost) return 0;
-    return pet.passiveValue(dungeonId: dungeonId);
+    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
   }
 
   int get soulboundAttackBonus => soulboundItem?.attackBonus ?? 0;
@@ -305,6 +321,13 @@ class GameState {
       metaDepth.titles.length;
 
   String get willRankTitle => WillRanks.titleForScore(collectionScore);
+
+  /// Active ascend title, else the latest unlocked title.
+  String get displayTitle {
+    if (metaDepth.activeTitle.isNotEmpty) return metaDepth.activeTitle;
+    if (metaDepth.titles.isNotEmpty) return metaDepth.titles.last;
+    return '';
+  }
 
   /// AL-gated hardmode cap (0–10).
   int get effectiveMaxHardmode => min(10, 3 + ascensionLevel ~/ 2);
@@ -358,6 +381,7 @@ class GameState {
       sanctuaryAttackBonus +
       petAttackBonus +
       soulboundAttackBonus +
+      soulboundRefineBonus +
       legacyAttackBonus +
       heirloomAttackBonus;
 
@@ -365,7 +389,8 @@ class GameState {
       defenseBonus +
       relicDefenseBonus +
       ascensionDefenseBonus +
-      soulboundDefenseBonus;
+      soulboundDefenseBonus +
+      soulboundRefineBonus;
 
   int get metaVitalityBonus =>
       vitalityBonus +

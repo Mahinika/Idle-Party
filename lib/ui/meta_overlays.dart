@@ -46,6 +46,33 @@ class AchievementsOverlay extends StatelessWidget {
           textAlign: TextAlign.center,
           style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
         ),
+        if (state.metaDepth.titles.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Titles',
+            textAlign: TextAlign.center,
+            style: GameTheme.pixel(size: 7, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            alignment: WrapAlignment.center,
+            children: [
+              for (final title in state.metaDepth.titles)
+                KenneyButton(
+                  label: state.metaDepth.activeTitle == title
+                      ? '★ $title'
+                      : title,
+                  expanded: false,
+                  style: state.metaDepth.activeTitle == title
+                      ? KenneyButtonStyle.brown
+                      : KenneyButtonStyle.grey,
+                  onPressed: () => director.setActiveTitle(title),
+                ),
+            ],
+          ),
+        ],
         const SizedBox(height: 4),
         Text(
           '${unlocked.length}/${AchievementCatalog.all.length} UNLOCKED',
@@ -186,7 +213,8 @@ class _CodexOverlayState extends State<CodexOverlay> {
         const SizedBox(height: 8),
         Text(
           'Codex ${GameLogic.codexCompletionPercent(state)}%  ·  '
-          '${state.codexEnemies.length + state.codexItems.length} discovered',
+          '${state.codexEnemies.length + state.codexItems.length} discovered '
+          '(soft goal ${GameLogic.expectedCodexEntries})',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
@@ -920,11 +948,26 @@ class PrestigeShopOverlay extends StatelessWidget {
             itemBuilder: (context, i) {
               final item = PrestigeShopCatalog.all[i];
               final locked = state.ascensionLevel < item.minAl;
+              final ownedCount = switch (item.id) {
+                'stash_slot' => state.metaDepth.stashBonusSlots ~/ 2,
+                'combine_luck' => state.metaDepth.combinatorLuck,
+                'torch_keep' => state.metaDepth.torchKeepLevel,
+                'gh_cdr' => state.metaDepth.godHandCdLevel,
+                'roster_cap' => state.metaDepth.petRosterCapBonus ~/ 2,
+                'legacy_spark' => state.metaDepth.legacyPoints,
+                _ => 0,
+              };
+              final atCap = switch (item.id) {
+                'stash_slot' => state.metaDepth.stashBonusSlots >= 20,
+                'combine_luck' => state.metaDepth.combinatorLuck >= 5,
+                'torch_keep' => state.metaDepth.torchKeepLevel >= 10,
+                'gh_cdr' => state.metaDepth.godHandCdLevel >= 8,
+                'roster_cap' => state.metaDepth.petRosterCapBonus >= 10,
+                'legacy_spark' => state.metaDepth.legacyPoints >= 20,
+                _ => false,
+              };
               final canBuy =
-                  !locked && state.essence >= item.cost;
-              final ownedCount = state.metaDepth.prestigePurchases
-                  .where((id) => id == item.id)
-                  .length;
+                  !locked && !atCap && state.essence >= item.cost;
               return Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -959,8 +1002,10 @@ class PrestigeShopOverlay extends StatelessWidget {
                           child: Text(
                             locked
                                 ? 'Needs AL${item.minAl}'
-                                : '${item.cost}e'
-                                    '${ownedCount > 0 ? ' · x$ownedCount' : ''}',
+                                : atCap
+                                    ? 'MAX'
+                                    : '${item.cost}e'
+                                        '${ownedCount > 0 ? ' · x$ownedCount' : ''}',
                             style: GameTheme.body(
                               size: 13,
                               color: GameTheme.parchmentDim,

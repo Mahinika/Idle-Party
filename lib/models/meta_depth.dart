@@ -311,19 +311,21 @@ class MetaDepthState {
       }
     }
     return MetaDepthState(
-      sanctuaryXpLevel: (json['sanctuaryXpLevel'] as int?) ?? 0,
-      sanctuaryGoldPrestige: (json['sanctuaryGoldPrestige'] as int?) ?? 0,
-      sanctuaryPowerPrestige: (json['sanctuaryPowerPrestige'] as int?) ?? 0,
+      sanctuaryXpLevel: (json['sanctuaryXpLevel'] as num?)?.toInt() ?? 0,
+      sanctuaryGoldPrestige:
+          (json['sanctuaryGoldPrestige'] as num?)?.toInt() ?? 0,
+      sanctuaryPowerPrestige:
+          (json['sanctuaryPowerPrestige'] as num?)?.toInt() ?? 0,
       sanctuaryVitalityPrestige:
-          (json['sanctuaryVitalityPrestige'] as int?) ?? 0,
-      sanctuaryXpPrestige: (json['sanctuaryXpPrestige'] as int?) ?? 0,
-      stashBonusSlots: (json['stashBonusSlots'] as int?) ?? 0,
-      combinatorLuck: (json['combinatorLuck'] as int?) ?? 0,
-      godHandCdLevel: (json['godHandCdLevel'] as int?) ?? 0,
-      torchKeepLevel: (json['torchKeepLevel'] as int?) ?? 0,
-      legacyPoints: (json['legacyPoints'] as int?) ?? 0,
-      ascendStreak: (json['ascendStreak'] as int?) ?? 0,
-      bestAscendStreak: (json['bestAscendStreak'] as int?) ?? 0,
+          (json['sanctuaryVitalityPrestige'] as num?)?.toInt() ?? 0,
+      sanctuaryXpPrestige: (json['sanctuaryXpPrestige'] as num?)?.toInt() ?? 0,
+      stashBonusSlots: (json['stashBonusSlots'] as num?)?.toInt() ?? 0,
+      combinatorLuck: (json['combinatorLuck'] as num?)?.toInt() ?? 0,
+      godHandCdLevel: (json['godHandCdLevel'] as num?)?.toInt() ?? 0,
+      torchKeepLevel: (json['torchKeepLevel'] as num?)?.toInt() ?? 0,
+      legacyPoints: (json['legacyPoints'] as num?)?.toInt() ?? 0,
+      ascendStreak: (json['ascendStreak'] as num?)?.toInt() ?? 0,
+      bestAscendStreak: (json['bestAscendStreak'] as num?)?.toInt() ?? 0,
       titles: (json['titles'] as List<dynamic>?)?.cast<String>() ?? const [],
       activeTitle: (json['activeTitle'] as String?) ?? '',
       relicTiers: tiers,
@@ -331,27 +333,29 @@ class MetaDepthState {
           (json['prestigePurchases'] as List<dynamic>?)?.cast<String>() ??
               const [],
       weeklyKey: (json['weeklyKey'] as String?) ?? '',
-      weeklyProgress: (json['weeklyProgress'] as int?) ?? 0,
+      weeklyProgress: (json['weeklyProgress'] as num?)?.toInt() ?? 0,
       weeklyClaimed: (json['weeklyClaimed'] as bool?) ?? false,
       weeklyModifier: (json['weeklyModifier'] as String?) ?? '',
       favoritePetSpecies: (json['favoritePetSpecies'] as String?) ?? '',
-      petRosterCapBonus: (json['petRosterCapBonus'] as int?) ?? 0,
+      petRosterCapBonus: (json['petRosterCapBonus'] as num?)?.toInt() ?? 0,
       zoneTrophies:
           (json['zoneTrophies'] as List<dynamic>?)?.cast<String>() ?? const [],
-      jobChainCount: (json['jobChainCount'] as int?) ?? 0,
-      lifetimeFloorClears: (json['lifetimeFloorClears'] as int?) ?? 0,
-      lifetimeBossKills: (json['lifetimeBossKills'] as int?) ?? 0,
-      lifetimeAbilityCasts: (json['lifetimeAbilityCasts'] as int?) ?? 0,
-      lifetimePetHatches: (json['lifetimePetHatches'] as int?) ?? 0,
-      lifetimePetMerges: (json['lifetimePetMerges'] as int?) ?? 0,
-      lifetimeAscends: (json['lifetimeAscends'] as int?) ?? 0,
+      jobChainCount: (json['jobChainCount'] as num?)?.toInt() ?? 0,
+      lifetimeFloorClears:
+          (json['lifetimeFloorClears'] as num?)?.toInt() ?? 0,
+      lifetimeBossKills: (json['lifetimeBossKills'] as num?)?.toInt() ?? 0,
+      lifetimeAbilityCasts:
+          (json['lifetimeAbilityCasts'] as num?)?.toInt() ?? 0,
+      lifetimePetHatches: (json['lifetimePetHatches'] as num?)?.toInt() ?? 0,
+      lifetimePetMerges: (json['lifetimePetMerges'] as num?)?.toInt() ?? 0,
+      lifetimeAscends: (json['lifetimeAscends'] as num?)?.toInt() ?? 0,
       codexClaims:
           (json['codexClaims'] as List<dynamic>?)?.cast<String>() ?? const [],
-      soulboundRefine: (json['soulboundRefine'] as int?) ?? 0,
+      soulboundRefine: (json['soulboundRefine'] as num?)?.toInt() ?? 0,
       soulboundIsArmor: (json['soulboundIsArmor'] as bool?) ?? false,
-      heirloomAlBonus: (json['heirloomAlBonus'] as int?) ?? 0,
+      heirloomAlBonus: (json['heirloomAlBonus'] as num?)?.toInt() ?? 0,
       noWipeAscendReady: (json['noWipeAscendReady'] as bool?) ?? true,
-      relicRespecs: (json['relicRespecs'] as int?) ?? 0,
+      relicRespecs: (json['relicRespecs'] as num?)?.toInt() ?? 0,
     );
   }
 }
