@@ -57,11 +57,18 @@ abstract final class StoryLore {
   static String ascendConfirmBody({
     required int rewardEssence,
     required int nextAl,
+    int milestoneBonus = 0,
+    int godHandLevel = 0,
+    int soulboundFragments = 0,
   }) {
+    final rewardLine = milestoneBonus > 0
+        ? 'Reward: +${rewardEssence}e (+${milestoneBonus}e milestone) · AL → $nextAl'
+        : 'Reward: +${rewardEssence}e · AL → $nextAl';
     return 'The will withdraws and returns stronger.\n'
         'Reset this run (gear, levels, stash, floor).\n'
-        'Keep essence, relics, pets, sanctuary, soulbound.\n\n'
-        'Reward: +${rewardEssence}e · AL → $nextAl';
+        'Keep essence, relics, pets, sanctuary, soulbound, God Hand.\n\n'
+        '$rewardLine\n'
+        'God Hand Lv$godHandLevel kept · $soulboundFragments soulbound frag';
   }
 
   static String ascendToast({

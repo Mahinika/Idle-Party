@@ -35,6 +35,7 @@ class HubScreen extends StatefulWidget {
     this.onOpenCodex,
     this.onOpenLoadouts,
     this.onOpenGuides,
+    this.onOpenPrestigeShop,
   });
 
   final GameDirector director;
@@ -50,6 +51,7 @@ class HubScreen extends StatefulWidget {
   final VoidCallback? onOpenCodex;
   final VoidCallback? onOpenLoadouts;
   final VoidCallback? onOpenGuides;
+  final VoidCallback? onOpenPrestigeShop;
 
   @override
   State<HubScreen> createState() => _HubScreenState();
@@ -140,6 +142,9 @@ class _HubScreenState extends State<HubScreen>
                           gold: state.gold,
                           essence: state.essence,
                           soulbound: state.soulboundFragments,
+                          willRank: state.willRankTitle,
+                          collectionScore: state.collectionScore,
+                          zoneTrophies: state.metaDepth.zoneTrophies.length,
                           torch: flicker,
                         ),
                     if (director.offlineSummary != null) ...[
@@ -249,7 +254,7 @@ class _HubScreenState extends State<HubScreen>
                                 Text(
                                   unlockedSelected
                                       ? 'Boss: ${selected.bossName}'
-                                      : 'Needs ${selected.unlockPrice} lifetime gold',
+                                      : _lockedZoneHint(selected, state),
                                   style: GameTheme.body(
                                     size: 14,
                                     color: GameTheme.parchmentDim,
@@ -267,6 +272,17 @@ class _HubScreenState extends State<HubScreen>
                                       color: GameTheme.mossLit,
                                     ),
                                   ),
+                                ] else if (!unlockedSelected) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _lockedZoneAlt(selected),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GameTheme.body(
+                                      size: 13,
+                                      color: GameTheme.mossLit,
+                                    ),
+                                  ),
                                 ],
                               ],
                             ),
@@ -276,6 +292,15 @@ class _HubScreenState extends State<HubScreen>
                     ),
                     const SizedBox(height: 6),
                     ChallengeToggles(director: director),
+                    if (state.metaDepth.weeklyProgress >= 3 &&
+                        !state.metaDepth.weeklyClaimed) ...[
+                      const SizedBox(height: 4),
+                      KenneyButton(
+                        label:
+                            'CLAIM WEEKLY  +${GameLogic.weeklyClaimEssence}e',
+                        onPressed: director.claimWeekly,
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Transform.scale(
                       scale: 1.0 + (_torch.value * 0.012),
@@ -350,16 +375,23 @@ class _HubScreenState extends State<HubScreen>
   }
 
   void _showHubMore(BuildContext context) {
+    final claimable =
+        widget.director.state.missions.where((m) => m.isComplete).length;
     MenuChrome.showMenuSheet(
       context: context,
       title: 'HUB',
       items: [
         (label: 'BAG', onTap: widget.onOpenInventory),
         (label: 'FORGE', onTap: widget.onOpenForge),
-        (label: 'JOBS', onTap: widget.onOpenJobs),
+        (
+          label: claimable > 0 ? 'JOBS ($claimable)' : 'JOBS',
+          onTap: widget.onOpenJobs,
+        ),
         (label: 'SANCTUARY', onTap: widget.onOpenSanctuary),
         (label: 'MARKET', onTap: widget.onOpenMarket),
         (label: 'BEAST PEN', onTap: widget.onOpenBeast),
+        if (widget.onOpenPrestigeShop != null)
+          (label: 'PRESTIGE SHOP', onTap: widget.onOpenPrestigeShop!),
         if (widget.onOpenLoadouts != null)
           (label: 'LOADOUTS', onTap: widget.onOpenLoadouts!),
         if (widget.onOpenAchievements != null)
@@ -371,6 +403,32 @@ class _HubScreenState extends State<HubScreen>
         (label: 'SETTINGS', onTap: widget.onOpenSettings),
       ],
     );
+  }
+
+  static String _shortGold(int n) {
+    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}m';
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(n >= 10000 ? 0 : 1)}k';
+    return '$n';
+  }
+
+  static String _lockedZoneHint(DungeonDef selected, GameState state) {
+    final need = selected.unlockPrice;
+    if (need <= 0) return 'Locked';
+    final have = state.lifetimeGoldEarned;
+    return 'Lifetime ${_shortGold(have)} / ${_shortGold(need)}';
+  }
+
+  static String _lockedZoneAlt(DungeonDef selected) {
+    if (selected.number <= 0) return 'Start zone';
+    DungeonDef? prev;
+    for (final d in DungeonCatalog.all) {
+      if (d.number == selected.number - 1) {
+        prev = d;
+        break;
+      }
+    }
+    if (prev == null) return 'Clear the prior zone';
+    return 'Or clear ${_ZoneNode.shortName(prev)}';
   }
 }
 
@@ -439,6 +497,9 @@ class _HubHeader extends StatelessWidget {
     required this.gold,
     required this.essence,
     required this.soulbound,
+    required this.willRank,
+    required this.collectionScore,
+    required this.zoneTrophies,
     required this.torch,
   });
 
@@ -447,6 +508,9 @@ class _HubHeader extends StatelessWidget {
   final int gold;
   final int essence;
   final int soulbound;
+  final String willRank;
+  final int collectionScore;
+  final int zoneTrophies;
   final double torch;
 
   @override
@@ -478,8 +542,20 @@ class _HubHeader extends StatelessWidget {
             _StatPill(icon: KenneyAssets.vialBlue, label: '$essence'),
             _StatPill(icon: KenneyAssets.iconCrown, label: 'AL$ascensionLevel'),
             _StatPill(icon: KenneyAssets.iconStar, label: 'SB $soulbound'),
+            _StatPill(
+              icon: KenneyAssets.iconTrophy,
+              label: '$willRank · $collectionScore',
+            ),
           ],
         ),
+        if (zoneTrophies > 0) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Zone trophies $zoneTrophies — clear every dungeon for more',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+          ),
+        ],
       ],
     );
   }

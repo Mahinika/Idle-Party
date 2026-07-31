@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/meta_systems.dart';
 import '../core/story_lore.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
@@ -11,7 +12,12 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
   final state = director.state;
   if (!GameLogic.canAscend(state)) return;
 
-  final reward = GameLogic.ascendEssenceReward(state.ascensionLevel + 1);
+  final nextAl = state.ascensionLevel + 1;
+  final baseReward = GameLogic.ascendEssenceReward(nextAl);
+  final milestone = MetaSystems.ascendMilestoneReward(
+    state.ascensionLevel,
+    nextAl,
+  );
   final ok = await showDialog<bool>(
     context: context,
     barrierColor: MenuChrome.scrim,
@@ -19,8 +25,11 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
       title: 'Ascend?',
       content: Text(
         StoryLore.ascendConfirmBody(
-          rewardEssence: reward,
-          nextAl: state.ascensionLevel + 1,
+          rewardEssence: baseReward + milestone,
+          nextAl: nextAl,
+          milestoneBonus: milestone,
+          godHandLevel: state.godHandLevel,
+          soulboundFragments: state.soulboundFragments,
         ),
         style: GameTheme.body(size: 15, color: GameTheme.parchment),
       ),

@@ -8,11 +8,11 @@ import '../models/enemy.dart';
 import '../models/gear_loadout.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
+import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
 import '../models/proficiency.dart';
 import '../models/stats.dart';
-import '../spatial/spatial_combat.dart';
 import 'dungeon_generator.dart';
 import 'equipment_factory.dart';
 import 'game_state.dart';
@@ -109,6 +109,7 @@ class GameLogic {
       sanctuaryGoldLevel: 0,
       sanctuaryPowerLevel: 0,
       sanctuaryVitalityLevel: 0,
+      metaDepth: MetaDepthState.empty,
       inDungeon: false,
       dungeonId: 'sandy',
       soulboundFragments: 0,
@@ -184,44 +185,88 @@ class GameLogic {
     if (state.essence < cost) {
       return state;
     }
-    return state.copyWith(
-      essence: state.essence - cost,
-      godHandLevel: state.godHandLevel + 1,
-      lastUpdated: DateTime.now(),
+    return MetaSystems.evaluateAchievements(
+      state.copyWith(
+        essence: state.essence - cost,
+        godHandLevel: state.godHandLevel + 1,
+        lastUpdated: DateTime.now(),
+      ),
     );
   }
 
-  /// Bind an equipped weapon into the permanent soulbound slot.
+  /// Bind an equipped weapon (or armor when preferred) into the permanent
+  /// soulbound slot.
   static GameState bindSoulbound(GameState state, {int? heroIndex}) {
     if (state.soulboundFragments < 3) {
       return state;
     }
+    final preferArmor = state.metaDepth.soulboundIsArmor;
+    final preferredSlots = preferArmor
+        ? <EquipmentSlot>[EquipmentSlot.chest, EquipmentSlot.cloak]
+        : <EquipmentSlot>[EquipmentSlot.weapon];
+    final fallbackSlots = preferArmor
+        ? <EquipmentSlot>[EquipmentSlot.weapon]
+        : <EquipmentSlot>[EquipmentSlot.chest, EquipmentSlot.cloak];
+
     var sourceIndex = heroIndex;
-    EquipmentItem? weapon;
+    EquipmentItem? piece;
+    EquipmentSlot? pieceSlot;
+
+    EquipmentItem? findOnHero(int i, List<EquipmentSlot> slots) {
+      for (final slot in slots) {
+        final candidate = state.heroes[i].itemIn(slot);
+        if (candidate != null) return candidate;
+      }
+      return null;
+    }
+
+    EquipmentSlot? slotOf(PartyHero hero, EquipmentItem item) {
+      for (final e in hero.equipped.entries) {
+        if (e.value.id == item.id) return e.key;
+      }
+      return null;
+    }
+
     if (sourceIndex != null &&
         sourceIndex >= 0 &&
         sourceIndex < state.heroes.length) {
-      weapon = state.heroes[sourceIndex].itemIn(EquipmentSlot.weapon);
+      piece = findOnHero(sourceIndex, preferredSlots) ??
+          findOnHero(sourceIndex, fallbackSlots);
+      if (piece != null) {
+        pieceSlot = slotOf(state.heroes[sourceIndex], piece);
+      }
     } else {
       for (var i = 0; i < state.heroes.length; i++) {
-        final candidate = state.heroes[i].itemIn(EquipmentSlot.weapon);
-        if (candidate != null) {
-          weapon = candidate;
+        piece = findOnHero(i, preferredSlots);
+        if (piece != null) {
           sourceIndex = i;
+          pieceSlot = slotOf(state.heroes[i], piece);
           break;
         }
       }
+      if (piece == null) {
+        for (var i = 0; i < state.heroes.length; i++) {
+          piece = findOnHero(i, fallbackSlots);
+          if (piece != null) {
+            sourceIndex = i;
+            pieceSlot = slotOf(state.heroes[i], piece);
+            break;
+          }
+        }
+      }
     }
-    if (weapon == null || sourceIndex == null) {
+    if (piece == null || sourceIndex == null || pieceSlot == null) {
       return state;
     }
-    final bound = weapon.copyWith(
-      id: 'soulbound_${weapon.id}',
-      name: 'Soulbound ${weapon.name}',
+    final isArmor = pieceSlot == EquipmentSlot.chest ||
+        pieceSlot == EquipmentSlot.cloak;
+    final bound = piece.copyWith(
+      id: 'soulbound_${piece.id}',
+      name: 'Soulbound ${piece.name}',
     );
     final hero = state.heroes[sourceIndex];
     final nextHeroGear = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped)
-      ..remove(EquipmentSlot.weapon);
+      ..remove(pieceSlot);
     final heroes = [...state.heroes];
     heroes[sourceIndex] = hero.copyWith(equipped: nextHeroGear);
     return state.copyWith(
@@ -229,6 +274,23 @@ class GameLogic {
       equipped: const <EquipmentSlot, EquipmentItem>{},
       soulboundItem: bound,
       soulboundFragments: state.soulboundFragments - 3,
+      metaDepth: state.metaDepth.copyWith(soulboundIsArmor: isArmor),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// Spend soulbound fragments to refine the bound piece (+1 refine).
+  static int refineSoulboundCost(int refineLevel) => 2 + (refineLevel ~/ 3);
+
+  static GameState refineSoulbound(GameState state) {
+    if (state.soulboundItem == null) return state;
+    final cost = refineSoulboundCost(state.metaDepth.soulboundRefine);
+    if (state.soulboundFragments < cost) return state;
+    return state.copyWith(
+      soulboundFragments: state.soulboundFragments - cost,
+      metaDepth: state.metaDepth.copyWith(
+        soulboundRefine: state.metaDepth.soulboundRefine + 1,
+      ),
       lastUpdated: DateTime.now(),
     );
   }
@@ -237,6 +299,7 @@ class GameLogic {
     'gold': 'Gold Find',
     'power': 'War Altar',
     'vitality': 'Life Well',
+    'xp': 'Lore Font',
   };
 
   static int sanctuaryCost(int level) => 15 + (level * 12);
@@ -246,6 +309,7 @@ class GameLogic {
       'gold' => '+${level * 5}% gold find',
       'power' => '+$level party attack',
       'vitality' => '+${level * 2} max HP',
+      'xp' => '+${level * 4}% XP find',
       _ => '',
     };
   }
@@ -255,6 +319,7 @@ class GameLogic {
       'gold' => state.sanctuaryGoldLevel,
       'power' => state.sanctuaryPowerLevel,
       'vitality' => state.sanctuaryVitalityLevel,
+      'xp' => state.metaDepth.sanctuaryXpLevel,
       _ => -1,
     };
     if (level < 0) {
@@ -269,6 +334,9 @@ class GameLogic {
       'gold' => next.copyWith(sanctuaryGoldLevel: level + 1),
       'power' => next.copyWith(sanctuaryPowerLevel: level + 1),
       'vitality' => next.copyWith(sanctuaryVitalityLevel: level + 1),
+      'xp' => next.copyWith(
+          metaDepth: next.metaDepth.copyWith(sanctuaryXpLevel: level + 1),
+        ),
       _ => state,
     };
     if (track == 'vitality') {
@@ -285,30 +353,98 @@ class GameLogic {
             .toList(),
       );
     }
-    return next.copyWith(lastUpdated: DateTime.now());
+    return MetaSystems.evaluateAchievements(
+      next.copyWith(lastUpdated: DateTime.now()),
+    );
   }
 
-  static const List<({String id, String name, int attack})> petCatalog =
-      <({String id, String name, int attack})>[
-        (id: 'ember_pup', name: 'Ember Pup', attack: 2),
-        (id: 'cave_bat', name: 'Cave Bat', attack: 3),
-        (id: 'loot_sprite', name: 'Loot Sprite', attack: 1),
-        (id: 'warden_cub', name: 'Warden Cub', attack: 4),
-      ];
+  /// Prestige a sanctuary track at level 12+: reset to 0, +1 prestige, essence.
+  static GameState prestigeSanctuaryTrack(GameState state, String track) {
+    final level = switch (track) {
+      'gold' => state.sanctuaryGoldLevel,
+      'power' => state.sanctuaryPowerLevel,
+      'vitality' => state.sanctuaryVitalityLevel,
+      'xp' => state.metaDepth.sanctuaryXpLevel,
+      _ => -1,
+    };
+    if (level < 12) return state;
+    final essenceGain = 25 + level;
+    final md = state.metaDepth;
+    final nextMd = switch (track) {
+      'gold' => md.copyWith(sanctuaryGoldPrestige: md.sanctuaryGoldPrestige + 1),
+      'power' =>
+        md.copyWith(sanctuaryPowerPrestige: md.sanctuaryPowerPrestige + 1),
+      'vitality' => md.copyWith(
+          sanctuaryVitalityPrestige: md.sanctuaryVitalityPrestige + 1,
+        ),
+      'xp' => md.copyWith(
+          sanctuaryXpLevel: 0,
+          sanctuaryXpPrestige: md.sanctuaryXpPrestige + 1,
+        ),
+      _ => md,
+    };
+    final next = switch (track) {
+      'gold' => state.copyWith(
+          sanctuaryGoldLevel: 0,
+          essence: state.essence + essenceGain,
+          metaDepth: nextMd,
+        ),
+      'power' => state.copyWith(
+          sanctuaryPowerLevel: 0,
+          essence: state.essence + essenceGain,
+          metaDepth: nextMd,
+        ),
+      'vitality' => state.copyWith(
+          sanctuaryVitalityLevel: 0,
+          essence: state.essence + essenceGain,
+          metaDepth: nextMd,
+        ),
+      'xp' => state.copyWith(
+          essence: state.essence + essenceGain,
+          metaDepth: nextMd,
+        ),
+      _ => state,
+    };
+    return MetaSystems.evaluateAchievements(
+      next.copyWith(lastUpdated: DateTime.now()),
+    );
+  }
+
+  static PetRarity _rollPetRarity() {
+    final total = PetRarity.values.fold<int>(
+      0,
+      (sum, r) => sum + PetCatalog.rarityWeight(r),
+    );
+    var roll = random.nextInt(total);
+    for (final r in PetRarity.values) {
+      roll -= PetCatalog.rarityWeight(r);
+      if (roll < 0) return r;
+    }
+    return PetRarity.common;
+  }
 
   static int hatchPetCost(GameState state) =>
       20 + (state.ownedPets.length * 15);
 
   static GameState hatchPet(GameState state) {
+    if (state.ownedPets.length >= state.metaDepth.basePetRosterCap) {
+      return state;
+    }
     final cost = hatchPetCost(state);
     if (state.essence < cost) {
       return state;
     }
-    final template = petCatalog[random.nextInt(petCatalog.length)];
+    final species = PetCatalog.all[random.nextInt(PetCatalog.all.length)];
+    final rarity = _rollPetRarity();
     final pet = Pet(
-      id: '${template.id}_${random.nextInt(100000)}',
-      name: template.name,
-      attackBonus: template.attack + state.ascensionLevel,
+      id: '${species.id}_${random.nextInt(100000)}',
+      name: species.name,
+      attackBonus: species.baseAttack + state.ascensionLevel,
+      speciesId: species.id,
+      rarity: rarity,
+      passive: species.passive,
+      affinityDungeonId: species.affinityDungeonId,
+      passivePerLevel: species.passivePerLevel,
     );
     final pets = List<Pet>.from(state.ownedPets)..add(pet);
     return MetaSystems.evaluateAchievements(
@@ -316,8 +452,117 @@ class GameLogic {
         essence: state.essence - cost,
         ownedPets: pets,
         activePet: state.activePet ?? pet,
+        metaDepth: state.metaDepth.copyWith(
+          lifetimePetHatches: state.metaDepth.lifetimePetHatches + 1,
+        ),
         lastUpdated: DateTime.now(),
       ),
+    );
+  }
+
+  /// Merge two same-species pets into one higher-rarity result.
+  static GameState mergePets(GameState state, String petIdA, String petIdB) {
+    if (petIdA == petIdB) return state;
+    Pet? a;
+    Pet? b;
+    for (final pet in state.ownedPets) {
+      if (pet.id == petIdA) a = pet;
+      if (pet.id == petIdB) b = pet;
+    }
+    if (a == null || b == null) return state;
+    if (a.resolvedSpecies != b.resolvedSpecies) return state;
+    final species = PetCatalog.byId(a.resolvedSpecies);
+    final maxIdx = max(a.rarity.index, b.rarity.index);
+    final nextIdx = min(PetRarity.values.length - 1, maxIdx + 1);
+    final rarity = PetRarity.values[nextIdx];
+    final bond = max(a.bondLevel, b.bondLevel);
+    final level = max(a.level, b.level);
+    final merged = Pet(
+      id: '${a.resolvedSpecies}_${random.nextInt(100000)}',
+      name: species?.name ?? a.name,
+      attackBonus: max(a.attackBonus, b.attackBonus),
+      level: level,
+      speciesId: a.resolvedSpecies,
+      rarity: rarity,
+      passive: species?.passive ?? a.passive,
+      affinityDungeonId: species?.affinityDungeonId ?? a.affinityDungeonId,
+      bondLevel: bond,
+      frame: a.frame.index >= b.frame.index ? a.frame : b.frame,
+      passivePerLevel: species?.passivePerLevel ?? a.passivePerLevel,
+    );
+    final pets = state.ownedPets
+        .where((p) => p.id != petIdA && p.id != petIdB)
+        .toList()
+      ..add(merged);
+    final activeWasMerged =
+        state.activePet?.id == petIdA || state.activePet?.id == petIdB;
+    return MetaSystems.evaluateAchievements(
+      state.copyWith(
+        ownedPets: pets,
+        activePet: activeWasMerged ? merged : state.activePet,
+        metaDepth: state.metaDepth.copyWith(
+          lifetimePetMerges: state.metaDepth.lifetimePetMerges + 1,
+        ),
+        lastUpdated: DateTime.now(),
+      ),
+    );
+  }
+
+  static GameState setFavoritePetSpecies(GameState state, String speciesId) {
+    if (speciesId.isEmpty) return state;
+    return MetaSystems.evaluateAchievements(
+      state.copyWith(
+        metaDepth: state.metaDepth.copyWith(favoritePetSpecies: speciesId),
+        lastUpdated: DateTime.now(),
+      ),
+    );
+  }
+
+  static int petFrameCost(PetFrame frame) => switch (frame) {
+        PetFrame.none => 0,
+        PetFrame.bronze => 5,
+        PetFrame.silver => 12,
+        PetFrame.gold => 22,
+        PetFrame.crystal => 35,
+      };
+
+  static GameState buyPetFrame(GameState state, String petId, PetFrame frame) {
+    if (frame == PetFrame.none) return state;
+    final cost = petFrameCost(frame);
+    if (state.essence < cost) return state;
+    final idx = state.ownedPets.indexWhere((p) => p.id == petId);
+    if (idx < 0) return state;
+    final pet = state.ownedPets[idx];
+    if (pet.frame.index >= frame.index) return state;
+    final pets = List<Pet>.from(state.ownedPets);
+    pets[idx] = pet.copyWith(frame: frame);
+    Pet? active = state.activePet;
+    if (active?.id == petId) active = pets[idx];
+    return state.copyWith(
+      essence: state.essence - cost,
+      ownedPets: pets,
+      activePet: active,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  static int bondPetCost(int bondLevel) => 5 + bondLevel * 3;
+
+  static GameState bondPet(GameState state, String petId) {
+    final idx = state.ownedPets.indexWhere((p) => p.id == petId);
+    if (idx < 0) return state;
+    final pet = state.ownedPets[idx];
+    final cost = bondPetCost(pet.bondLevel);
+    if (state.essence < cost) return state;
+    final pets = List<Pet>.from(state.ownedPets);
+    pets[idx] = pet.copyWith(bondLevel: pet.bondLevel + 1);
+    Pet? active = state.activePet;
+    if (active?.id == petId) active = pets[idx];
+    return state.copyWith(
+      essence: state.essence - cost,
+      ownedPets: pets,
+      activePet: active,
+      lastUpdated: DateTime.now(),
     );
   }
 
@@ -465,7 +710,10 @@ class GameLogic {
   static GameState retreatFromFailedPush(GameState state) {
     final safeFloor = max(1, state.highestFloorCleared);
     return travelToFloor(
-      state.copyWith(dungeonMode: DungeonMode.farm),
+      state.copyWith(
+        dungeonMode: DungeonMode.farm,
+        metaDepth: state.metaDepth.copyWith(noWipeAscendReady: false),
+      ),
       safeFloor,
     );
   }
@@ -620,7 +868,38 @@ class GameLogic {
     final preservedRelics = List<String>.from(state.unlockedRelics);
     final fragmentGain = 1 + (state.highestFloorCleared ~/ 3);
 
+    final streak = state.metaDepth.noWipeAscendReady
+        ? state.metaDepth.ascendStreak + 1
+        : 0;
+    final bestStreak = max(state.metaDepth.bestAscendStreak, streak);
+    final legacyGain = (nextLevel ~/ 5) - (state.ascensionLevel ~/ 5);
+    final titles = List<String>.from(state.metaDepth.titles);
+    for (final entry in AscendTitles.byAl.entries) {
+      if (nextLevel >= entry.key && !titles.contains(entry.value)) {
+        titles.add(entry.value);
+      }
+    }
+    final trophies = List<String>.from(state.metaDepth.zoneTrophies);
+    for (final d in DungeonCatalog.all) {
+      if (d.number <= state.highestDungeonCleared &&
+          !trophies.contains(d.id)) {
+        trophies.add(d.id);
+      }
+    }
+    final nextMeta = state.metaDepth.copyWith(
+      ascendStreak: streak,
+      bestAscendStreak: bestStreak,
+      lifetimeAscends: state.metaDepth.lifetimeAscends + 1,
+      titles: titles,
+      legacyPoints: state.metaDepth.legacyPoints + legacyGain,
+      heirloomAlBonus: nextLevel ~/ 5,
+      zoneTrophies: trophies,
+      weeklyProgress: state.metaDepth.weeklyProgress + 1,
+      noWipeAscendReady: true,
+    );
+
     final fresh = createInitialState(now: now);
+    final hmCap = min(10, 3 + nextLevel ~/ 2);
     var withMeta = fresh.copyWith(
       essence: preservedEssence,
       lifetimeGoldEarned: state.lifetimeGoldEarned,
@@ -632,6 +911,7 @@ class GameLogic {
       sanctuaryGoldLevel: state.sanctuaryGoldLevel,
       sanctuaryPowerLevel: state.sanctuaryPowerLevel,
       sanctuaryVitalityLevel: state.sanctuaryVitalityLevel,
+      metaDepth: nextMeta,
       dungeonMode: state.dungeonMode,
       highestFloorCleared: 0,
       highestDungeonCleared: state.highestDungeonCleared,
@@ -650,7 +930,7 @@ class GameLogic {
       codexItems: List<String>.from(state.codexItems),
       challengeBossRush: state.challengeBossRush,
       challengeNoFlask: state.challengeNoFlask,
-      hardmodeLevel: state.hardmodeLevel,
+      hardmodeLevel: state.hardmodeLevel.clamp(0, hmCap),
       colorblindMode: state.colorblindMode,
       uiTextScale: state.uiTextScale,
       lastDailyDate: state.lastDailyDate,
@@ -667,6 +947,7 @@ class GameLogic {
           )
           .toList(),
     );
+    withMeta = ensureWeeklyContract(withMeta, now: now);
     return MetaSystems.evaluateAchievements(withMeta);
   }
 
@@ -1504,6 +1785,7 @@ class GameLogic {
       currentRoom: firstRoom,
       dungeonFloor: floor,
       layoutSeed: layoutSeed,
+      metaDepth: state.metaDepth.copyWith(noWipeAscendReady: false),
     );
   }
 
@@ -1741,6 +2023,8 @@ class GameLogic {
 
     final unlockedRelics = List<String>.from(state.unlockedRelics)
       ..add(relicId);
+    final tiers = Map<String, int>.from(state.metaDepth.relicTiers);
+    tiers[relicId] = max(1, tiers[relicId] ?? 0);
     final healedHeroes = state.heroes
         .map(
           (hero) => hero.copyWith(
@@ -1754,11 +2038,183 @@ class GameLogic {
         )
         .toList();
 
+    return MetaSystems.evaluateAchievements(
+      state.copyWith(
+        essence: state.essence - cost,
+        heroes: healedHeroes,
+        unlockedRelics: unlockedRelics,
+        metaDepth: state.metaDepth.copyWith(relicTiers: tiers),
+        lastUpdated: DateTime.now(),
+      ),
+    );
+  }
+
+  static int relicTierUpgradeCost(int nextTier) => 12 + nextTier * 14;
+
+  static GameState upgradeRelicTier(GameState state, String relicId) {
+    if (!state.hasRelic(relicId) || !relicCosts.containsKey(relicId)) {
+      return state;
+    }
+    final current = max(1, state.metaDepth.relicTierOf(relicId));
+    if (current >= 3) return state;
+    final nextTier = current + 1;
+    final cost = relicTierUpgradeCost(nextTier);
+    if (state.essence < cost) return state;
+    final tiers = Map<String, int>.from(state.metaDepth.relicTiers);
+    tiers[relicId] = nextTier;
     return state.copyWith(
       essence: state.essence - cost,
-      heroes: healedHeroes,
-      unlockedRelics: unlockedRelics,
+      metaDepth: state.metaDepth.copyWith(relicTiers: tiers),
       lastUpdated: DateTime.now(),
+    );
+  }
+
+  static int respecRelicsCost(GameState state) =>
+      40 + state.metaDepth.relicRespecs * 25;
+
+  static GameState respecRelics(GameState state) {
+    if (state.unlockedRelics.isEmpty && state.metaDepth.relicTiers.isEmpty) {
+      return state;
+    }
+    final cost = respecRelicsCost(state);
+    if (state.essence < cost) return state;
+    return state.copyWith(
+      essence: state.essence - cost,
+      unlockedRelics: const <String>[],
+      metaDepth: state.metaDepth.copyWith(
+        relicTiers: const <String, int>{},
+        relicRespecs: state.metaDepth.relicRespecs + 1,
+      ),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  static int godHandCdUpgradeCost(int level) => 12 + level * 10;
+
+  static GameState upgradeGodHandCd(GameState state) {
+    final cost = godHandCdUpgradeCost(state.metaDepth.godHandCdLevel);
+    if (state.essence < cost) return state;
+    return MetaSystems.evaluateAchievements(
+      state.copyWith(
+        essence: state.essence - cost,
+        metaDepth: state.metaDepth.copyWith(
+          godHandCdLevel: state.metaDepth.godHandCdLevel + 1,
+        ),
+        lastUpdated: DateTime.now(),
+      ),
+    );
+  }
+
+  static GameState buyPrestigeShopItem(GameState state, String id) {
+    PrestigeShopItem? item;
+    for (final candidate in PrestigeShopCatalog.all) {
+      if (candidate.id == id) {
+        item = candidate;
+        break;
+      }
+    }
+    if (item == null) return state;
+    if (state.ascensionLevel < item.minAl) return state;
+    if (state.essence < item.cost) return state;
+
+    var md = state.metaDepth.copyWith(
+      prestigePurchases: [...state.metaDepth.prestigePurchases, id],
+    );
+    md = switch (id) {
+      'stash_slot' =>
+        md.copyWith(stashBonusSlots: md.stashBonusSlots + 2),
+      'combine_luck' =>
+        md.copyWith(combinatorLuck: md.combinatorLuck + 1),
+      'torch_keep' => md.copyWith(torchKeepLevel: md.torchKeepLevel + 1),
+      'gh_cdr' => md.copyWith(godHandCdLevel: md.godHandCdLevel + 1),
+      'roster_cap' =>
+        md.copyWith(petRosterCapBonus: md.petRosterCapBonus + 2),
+      'legacy_spark' => md.copyWith(legacyPoints: md.legacyPoints + 1),
+      _ => md,
+    };
+    return state.copyWith(
+      essence: state.essence - item.cost,
+      metaDepth: md,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// ISO week key (`yyyy-Www`) for weekly contract rotation.
+  static String isoWeekKey(DateTime utc) {
+    final d = DateTime.utc(utc.year, utc.month, utc.day);
+    final thursday = d.add(Duration(days: 4 - d.weekday));
+    final yearStart = DateTime.utc(thursday.year, 1, 1);
+    final week = (thursday.difference(yearStart).inDays ~/ 7) + 1;
+    return '${thursday.year}-W${week.toString().padLeft(2, '0')}';
+  }
+
+  static const List<String> weeklyModifiers = <String>['glass', 'swarm', 'elite'];
+
+  static GameState ensureWeeklyContract(GameState state, {DateTime? now}) {
+    final t = (now ?? DateTime.now()).toUtc();
+    final key = isoWeekKey(t);
+    if (state.metaDepth.weeklyKey == key) return state;
+    final mod = weeklyModifiers[(key.hashCode & 0x7fffffff) % weeklyModifiers.length];
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        weeklyKey: key,
+        weeklyProgress: 0,
+        weeklyClaimed: false,
+        weeklyModifier: mod,
+      ),
+    );
+  }
+
+  static int weeklyClaimEssence = 18;
+
+  static GameState claimWeekly(GameState state) {
+    var next = ensureWeeklyContract(state);
+    final md = next.metaDepth;
+    if (md.weeklyProgress < 3 || md.weeklyClaimed) return next;
+    next = next.copyWith(
+      essence: next.essence + weeklyClaimEssence,
+      metaDepth: md.copyWith(weeklyClaimed: true),
+      lastUpdated: DateTime.now(),
+    );
+    return MetaSystems.evaluateAchievements(next);
+  }
+
+  /// Soft expected codex size for percentage milestone claims.
+  static const int expectedCodexEntries = 60;
+
+  static const Map<String, ({int pct, int reward})> codexRewardTiers =
+      <String, ({int pct, int reward})>{
+    'codex_25pct': (pct: 25, reward: 8),
+    'codex_50pct': (pct: 50, reward: 15),
+    'codex_75pct': (pct: 75, reward: 22),
+    'codex_100pct': (pct: 100, reward: 30),
+  };
+
+  static int codexCompletionPercent(GameState state) {
+    final discovered = state.codexEnemies.length + state.codexItems.length;
+    return min(100, (discovered * 100) ~/ expectedCodexEntries);
+  }
+
+  static GameState claimCodexReward(GameState state, String tierId) {
+    final tier = codexRewardTiers[tierId];
+    if (tier == null) return state;
+    if (state.metaDepth.codexClaims.contains(tierId)) return state;
+    if (codexCompletionPercent(state) < tier.pct) return state;
+    final claims = List<String>.from(state.metaDepth.codexClaims)..add(tierId);
+    return MetaSystems.evaluateAchievements(
+      state.copyWith(
+        essence: state.essence + tier.reward,
+        metaDepth: state.metaDepth.copyWith(codexClaims: claims),
+        lastUpdated: DateTime.now(),
+      ),
+    );
+  }
+
+  /// Clamp hardmode to the AL-gated effective max.
+  static GameState setHardmodeLevel(GameState state, int level) {
+    final capped = level.clamp(0, state.effectiveMaxHardmode);
+    return MetaSystems.evaluateAchievements(
+      state.copyWith(hardmodeLevel: capped, lastUpdated: DateTime.now()),
     );
   }
 
@@ -2020,11 +2476,15 @@ class GameLogic {
 
   static const int maxGearStash = 50;
 
+  static int maxGearStashFor(GameState state) =>
+      maxGearStash + state.metaDepth.stashBonusSlots;
+
   /// Puts gear into the inventory stash. Overflow salvages the oldest piece.
   static GameState stashEquipment(GameState state, EquipmentItem item) {
     final stash = List<EquipmentItem>.from(state.gearStash);
     var essence = state.essence;
-    if (stash.length >= maxGearStash) {
+    final cap = maxGearStashFor(state);
+    if (stash.length >= cap) {
       final overflow = stash.removeAt(0);
       essence += equipmentEssenceValue(overflow);
     }
@@ -2238,11 +2698,19 @@ class GameLogic {
     );
   }
 
-  static int combineCost(EquipmentItem primary, EquipmentItem secondary) =>
-      20 +
-      primary.powerScore +
-      secondary.powerScore +
-      ((primary.rarity.index + secondary.rarity.index) * 5);
+  static int combineCost(
+    EquipmentItem primary,
+    EquipmentItem secondary, {
+    int combinatorLuck = 0,
+  }) =>
+      max(
+        1,
+        20 +
+            primary.powerScore +
+            secondary.powerScore +
+            ((primary.rarity.index + secondary.rarity.index) * 5) -
+            combinatorLuck * 3,
+      );
 
   /// Slot groups for BiS planning: dual ring/trinket, then singletons.
   static List<List<EquipmentSlot>> equipSlotGroups() {
@@ -2737,7 +3205,11 @@ class GameLogic {
     if (!canCombine(primary, secondary)) {
       return state;
     }
-    final cost = combineCost(primary, secondary);
+    final cost = combineCost(
+      primary,
+      secondary,
+      combinatorLuck: state.metaDepth.combinatorLuck,
+    );
     if (state.gold < cost) {
       return state;
     }
@@ -3152,6 +3624,20 @@ class GameLogic {
     if (challengeBonus > 0) {
       next = next.copyWith(essence: next.essence + challengeBonus);
     }
+    final bossKill = before.currentRoom.type == RoomType.boss ? 1 : 0;
+    final trophies = List<String>.from(next.metaDepth.zoneTrophies);
+    if (bossKill > 0 && !trophies.contains(before.dungeonId)) {
+      trophies.add(before.dungeonId);
+    }
+    next = next.copyWith(
+      metaDepth: next.metaDepth.copyWith(
+        lifetimeFloorClears: next.metaDepth.lifetimeFloorClears + 1,
+        lifetimeBossKills: next.metaDepth.lifetimeBossKills + bossKill,
+        lifetimeAbilityCasts: next.metaDepth.lifetimeAbilityCasts + 1,
+        zoneTrophies: trophies,
+      ),
+    );
+    next = ensureWeeklyContract(next);
     next = MetaSystems.evaluateAchievements(next);
     return next;
   }

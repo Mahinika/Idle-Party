@@ -7,6 +7,7 @@ import '../core/game_state.dart';
 import '../core/meta_systems.dart';
 import '../models/achievement_def.dart';
 import '../models/gear_loadout.dart';
+import '../models/meta_depth.dart';
 import 'game_theme.dart';
 import 'kenney_assets.dart';
 import 'kenney_button.dart';
@@ -18,82 +19,121 @@ class AchievementsOverlay extends StatelessWidget {
   const AchievementsOverlay({super.key, required this.director});
   final GameDirector director;
 
+  static String _categoryLabel(AchievementCategory c) => switch (c) {
+        AchievementCategory.combat => 'COMBAT',
+        AchievementCategory.meta => 'META',
+        AchievementCategory.explorer => 'EXPLORER',
+        AchievementCategory.collector => 'COLLECTOR',
+      };
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
     final unlocked = state.achievements.toSet();
+    final byCategory = <AchievementCategory, List<AchievementDef>>{};
+    for (final def in AchievementCatalog.all) {
+      byCategory.putIfAbsent(def.category, () => <AchievementDef>[]).add(def);
+    }
+    final categories = AchievementCategory.values
+        .where((c) => byCategory.containsKey(c))
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${unlocked.length}/${AchievementCatalog.all.length} UNLOCKED',
+          '${state.willRankTitle}  ·  score ${state.collectionScore}',
           textAlign: TextAlign.center,
           style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
         ),
+        const SizedBox(height: 4),
+        Text(
+          '${unlocked.length}/${AchievementCatalog.all.length} UNLOCKED',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+        ),
         const SizedBox(height: 10),
         Expanded(
-          child: ListView.separated(
-            itemCount: AchievementCatalog.all.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 8),
-            itemBuilder: (context, i) {
-              final def = AchievementCatalog.all[i];
-              final done = unlocked.contains(def.id);
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: GameTheme.menuCard,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: done ? GameTheme.clear : GameTheme.border,
+          child: ListView(
+            children: [
+              for (final cat in categories) ...[
+                Text(
+                  _categoryLabel(cat),
+                  style: GameTheme.pixel(
+                    size: 7,
+                    color: GameTheme.parchmentDim,
                   ),
                 ),
-                child: Row(
-                  children: [
-                    KenneySprite(
-                      asset: done
-                          ? KenneyAssets.iconTrophy
-                          : KenneyAssets.iconSkull,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            def.title,
-                            style: GameTheme.pixel(
-                              size: 7,
-                              color: done
-                                  ? GameTheme.torchHot
-                                  : GameTheme.parchmentDim,
-                            ),
+                const SizedBox(height: 6),
+                for (final def in byCategory[cat]!) ...[
+                  Builder(
+                    builder: (context) {
+                      final done = unlocked.contains(def.id);
+                      final hide = def.hidden && !done;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: GameTheme.menuCard,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: done ? GameTheme.clear : GameTheme.border,
                           ),
-                          const SizedBox(height: 3),
-                          Text(
-                            def.description,
-                            style: GameTheme.body(
-                              size: 14,
-                              color: GameTheme.parchmentDim,
+                        ),
+                        child: Row(
+                          children: [
+                            KenneySprite(
+                              asset: done
+                                  ? KenneyAssets.iconTrophy
+                                  : KenneyAssets.iconSkull,
+                              size: 22,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '+${def.essenceReward}e',
-                      style: GameTheme.pixel(
-                        size: 6,
-                        color: done ? GameTheme.clear : GameTheme.parchmentDim,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    hide ? '???' : def.title,
+                                    style: GameTheme.pixel(
+                                      size: 7,
+                                      color: done
+                                          ? GameTheme.torchHot
+                                          : GameTheme.parchmentDim,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    hide ? 'Hidden achievement' : def.description,
+                                    style: GameTheme.body(
+                                      size: 14,
+                                      color: GameTheme.parchmentDim,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              hide ? '???' : '+${def.essenceReward}e',
+                              style: GameTheme.pixel(
+                                size: 6,
+                                color: done
+                                    ? GameTheme.clear
+                                    : GameTheme.parchmentDim,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+                const SizedBox(height: 6),
+              ],
+            ],
           ),
         ),
       ],
@@ -141,6 +181,43 @@ class _CodexOverlayState extends State<CodexOverlay> {
                 onPressed: () => setState(() => _showEnemies = false),
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Codex ${GameLogic.codexCompletionPercent(state)}%  ·  '
+          '${state.codexEnemies.length + state.codexItems.length} discovered',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          alignment: WrapAlignment.center,
+          children: [
+            for (final entry in GameLogic.codexRewardTiers.entries)
+              Builder(
+                builder: (context) {
+                  final claimed =
+                      state.metaDepth.codexClaims.contains(entry.key);
+                  final ready = GameLogic.codexCompletionPercent(state) >=
+                          entry.value.pct &&
+                      !claimed;
+                  return KenneyButton(
+                    label: claimed
+                        ? '${entry.value.pct}% ✓'
+                        : '${entry.value.pct}% +${entry.value.reward}e',
+                    expanded: false,
+                    style: claimed
+                        ? KenneyButtonStyle.grey
+                        : KenneyButtonStyle.brown,
+                    onPressed: ready
+                        ? () => widget.director.claimCodexReward(entry.key)
+                        : null,
+                  );
+                },
+              ),
           ],
         ),
         const SizedBox(height: 10),
@@ -479,9 +556,19 @@ class ChallengeToggles extends StatelessWidget {
   const ChallengeToggles({super.key, required this.director});
   final GameDirector director;
 
+  static String _weeklyLabel(String mod) => switch (mod) {
+        'glass' => 'Glass (fragile foes)',
+        'swarm' => 'Swarm (more enemies)',
+        'elite' => 'Elite (tougher packs)',
+        _ => mod.isEmpty ? 'Rotating…' : mod,
+      };
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    final md = state.metaDepth;
+    final maxHm = state.effectiveMaxHardmode;
+    final weeklyReady = md.weeklyProgress >= 3 && !md.weeklyClaimed;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -509,18 +596,52 @@ class ChallengeToggles extends StatelessWidget {
         const SizedBox(height: 8),
         _HardmodeStepper(
           level: state.hardmodeLevel,
+          maxLevel: maxHm,
           onChanged: director.setHardmodeLevel,
         ),
         const SizedBox(height: 4),
         Text(
           state.hardmodeLevel <= 0
-              ? 'Hardmode off. Raise +1..+10 — at +10: 1000% HP, damage, and enemy count.'
+              ? 'Hardmode off. Cap +$maxHm (AL gates higher).'
               : 'HM +${state.hardmodeLevel}: HP/ATK/pack +${state.hardmodeLevel * 90}% '
                   '(${(1.0 + state.hardmodeLevel * 0.9).toStringAsFixed(1)}×) · '
                   'gold +${state.hardmodeLevel * 15}% · '
                   'leg ~${(0.4 + state.hardmodeLevel * 1.1).toStringAsFixed(1)}%',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: MenuChrome.cardBox(selected: weeklyReady),
+          child: Column(
+            children: [
+              Text(
+                'WEEKLY · ${_weeklyLabel(md.weeklyModifier)}',
+                textAlign: TextAlign.center,
+                style: GameTheme.pixel(
+                  size: 6,
+                  color: weeklyReady ? GameTheme.torchHot : GameTheme.parchmentDim,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                md.weeklyClaimed
+                    ? 'Claimed this week'
+                    : 'Clears ${md.weeklyProgress}/3'
+                        '${weeklyReady ? ' · ready' : ''}',
+                textAlign: TextAlign.center,
+                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              ),
+              if (weeklyReady) ...[
+                const SizedBox(height: 6),
+                KenneyButton(
+                  label: 'CLAIM WEEKLY  +${GameLogic.weeklyClaimEssence}e',
+                  onPressed: director.claimWeekly,
+                ),
+              ],
+            ],
+          ),
         ),
         const SizedBox(height: 2),
         Text(
@@ -534,8 +655,13 @@ class ChallengeToggles extends StatelessWidget {
 }
 
 class _HardmodeStepper extends StatelessWidget {
-  const _HardmodeStepper({required this.level, required this.onChanged});
+  const _HardmodeStepper({
+    required this.level,
+    required this.maxLevel,
+    required this.onChanged,
+  });
   final int level;
+  final int maxLevel;
   final ValueChanged<int> onChanged;
 
   @override
@@ -567,7 +693,7 @@ class _HardmodeStepper extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '0 = easy  ·  10 = 1000% HP / ATK / count',
+                  '0 = easy  ·  max +$maxLevel (AL)',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
                 ),
@@ -580,7 +706,7 @@ class _HardmodeStepper extends StatelessWidget {
               padding: EdgeInsets.zero,
               foregroundColor: GameTheme.parchment,
             ),
-            onPressed: level < 10 ? () => onChanged(level + 1) : null,
+            onPressed: level < maxLevel ? () => onChanged(level + 1) : null,
             child: Text('+', style: GameTheme.pixel(size: 10)),
           ),
         ],
@@ -760,6 +886,103 @@ class AscendMilestonesStrip extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+/// AL-gated essence sinks that survive Ascend.
+class PrestigeShopOverlay extends StatelessWidget {
+  const PrestigeShopOverlay({super.key, required this.director});
+  final GameDirector director;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = director.state;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'PRESTIGE SHOP',
+          textAlign: TextAlign.center,
+          style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Essence ${state.essence}  ·  AL${state.ascensionLevel}',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 10),
+        Expanded(
+          child: ListView.separated(
+            itemCount: PrestigeShopCatalog.all.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, i) {
+              final item = PrestigeShopCatalog.all[i];
+              final locked = state.ascensionLevel < item.minAl;
+              final canBuy =
+                  !locked && state.essence >= item.cost;
+              final ownedCount = state.metaDepth.prestigePurchases
+                  .where((id) => id == item.id)
+                  .length;
+              return Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: GameTheme.menuCard,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: GameTheme.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      item.name,
+                      style: GameTheme.pixel(
+                        size: 7,
+                        color: locked
+                            ? GameTheme.parchmentDim
+                            : GameTheme.torchHot,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.description,
+                      style: GameTheme.body(
+                        size: 14,
+                        color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            locked
+                                ? 'Needs AL${item.minAl}'
+                                : '${item.cost}e'
+                                    '${ownedCount > 0 ? ' · x$ownedCount' : ''}',
+                            style: GameTheme.body(
+                              size: 13,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ),
+                        KenneyButton(
+                          label: 'BUY',
+                          expanded: false,
+                          onPressed: canBuy
+                              ? () => director.buyPrestigeShopItem(item.id)
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

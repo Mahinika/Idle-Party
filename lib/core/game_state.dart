@@ -7,6 +7,7 @@ import '../models/enemy.dart';
 import '../models/gear_loadout.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
+import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
 
@@ -39,6 +40,7 @@ class GameState {
     this.sanctuaryGoldLevel = 0,
     this.sanctuaryPowerLevel = 0,
     this.sanctuaryVitalityLevel = 0,
+    this.metaDepth = MetaDepthState.empty,
     this.inDungeon = false,
     this.dungeonId = 'sandy',
     this.soulboundFragments = 0,
@@ -116,6 +118,9 @@ class GameState {
   final int sanctuaryPowerLevel;
   final int sanctuaryVitalityLevel;
 
+  /// Meta-depth prestige progress (survives Ascend).
+  final MetaDepthState metaDepth;
+
   /// Hub vs dungeon: combat loop only runs while in dungeon.
   final bool inDungeon;
 
@@ -191,11 +196,18 @@ class GameState {
 
   bool hasRelic(String relicId) => unlockedRelics.contains(relicId);
 
-  int get relicAttackBonus => hasRelic('war_banner') ? 4 : 0;
+  /// Relic tier from meta-depth; owned relics with no tier recorded count as 1.
+  int relicTierOf(String relicId) {
+    final tier = metaDepth.relicTierOf(relicId);
+    if (tier > 0) return tier;
+    return hasRelic(relicId) ? 1 : 0;
+  }
 
-  int get relicDefenseBonus => hasRelic('iron_ward') ? 2 : 0;
+  int get relicAttackBonus => 4 * relicTierOf('war_banner');
 
-  int get relicVitalityBonus => hasRelic('phoenix_ember') ? 10 : 0;
+  int get relicDefenseBonus => 2 * relicTierOf('iron_ward');
+
+  int get relicVitalityBonus => 10 * relicTierOf('phoenix_ember');
 
   /// Flat attack from Ascension Level (+1 ATK per AL).
   int get ascensionAttackBonus => ascensionLevel;
@@ -209,33 +221,54 @@ class GameState {
   /// Extra gold percent from Ascension Level (+10% per AL).
   int get ascensionGoldBonusPercent => ascensionLevel * 10;
 
-  /// Sanctuary gold find (+5% per level).
-  int get sanctuaryGoldBonusPercent => sanctuaryGoldLevel * 5;
+  /// Sanctuary gold find (+5% per level, +3% per prestige).
+  int get sanctuaryGoldBonusPercent =>
+      sanctuaryGoldLevel * 5 + metaDepth.sanctuaryGoldPrestige * 3;
 
-  int get sanctuaryAttackBonus => sanctuaryPowerLevel;
+  int get sanctuaryAttackBonus =>
+      sanctuaryPowerLevel + metaDepth.sanctuaryPowerPrestige;
 
-  int get sanctuaryVitalityBonus => sanctuaryVitalityLevel * 2;
+  int get sanctuaryVitalityBonus =>
+      sanctuaryVitalityLevel * 2 + metaDepth.sanctuaryVitalityPrestige;
+
+  int get sanctuaryXpBonusPercent =>
+      metaDepth.sanctuaryXpLevel * 4 + metaDepth.sanctuaryXpPrestige * 2;
 
   int get petAttackBonus => activePet?.totalAttackBonus ?? 0;
 
-  /// Loot Sprite (and upgrades) grant gold find; other pets stay ATK-focused.
+  /// Gold-find pets grant percent gold via [Pet.passiveValue].
   int get petGoldFindPercent {
     final pet = activePet;
-    if (pet == null) return 0;
-    if (pet.id.startsWith('loot_sprite')) {
-      return 8 + pet.level * 2;
-    }
-    return 0;
+    if (pet == null || pet.passive != PetPassive.goldFind) return 0;
+    return pet.passiveValue(dungeonId: dungeonId);
   }
 
-  /// Mild drop-rate help from Loot Sprite.
+  /// Loot-find pets grant drop-rate help via [Pet.passiveValue].
   int get petLootFindPercent {
     final pet = activePet;
-    if (pet == null) return 0;
-    if (pet.id.startsWith('loot_sprite')) {
-      return 6 + pet.level;
-    }
-    return 0;
+    if (pet == null || pet.passive != PetPassive.lootFind) return 0;
+    return pet.passiveValue(dungeonId: dungeonId);
+  }
+
+  /// XP-find pets grant percent XP via [Pet.passiveValue].
+  int get petXpFindPercent {
+    final pet = activePet;
+    if (pet == null || pet.passive != PetPassive.xpFind) return 0;
+    return pet.passiveValue(dungeonId: dungeonId);
+  }
+
+  /// Mitigate pets grant flat damage reduction via [Pet.passiveValue].
+  int get petMitigateFlat {
+    final pet = activePet;
+    if (pet == null || pet.passive != PetPassive.mitigate) return 0;
+    return pet.passiveValue(dungeonId: dungeonId);
+  }
+
+  /// Heal-boost pets grant heal potency via [Pet.passiveValue].
+  int get petHealBoost {
+    final pet = activePet;
+    if (pet == null || pet.passive != PetPassive.healBoost) return 0;
+    return pet.passiveValue(dungeonId: dungeonId);
   }
 
   int get soulboundAttackBonus => soulboundItem?.attackBonus ?? 0;
@@ -243,6 +276,38 @@ class GameState {
   int get soulboundDefenseBonus => soulboundItem?.defenseBonus ?? 0;
 
   int get soulboundVitalityBonus => soulboundItem?.vitalityBonus ?? 0;
+
+  int get soulboundRefineBonus => metaDepth.soulboundRefine;
+
+  int get legacyAttackBonus => metaDepth.legacyPoints;
+
+  int get torchOfflineGoldPercent => metaDepth.torchKeepLevel * 8;
+
+  /// Heirloom AL bonus applied to ATK when soulbound weapon is set.
+  int get heirloomAttackBonus {
+    if (soulboundItem == null || metaDepth.soulboundIsArmor) return 0;
+    return metaDepth.heirloomAlBonus;
+  }
+
+  /// Heirloom AL bonus applied to VIT when soulbound armor is set.
+  int get heirloomVitalityBonus {
+    if (soulboundItem == null || !metaDepth.soulboundIsArmor) return 0;
+    return metaDepth.heirloomAlBonus;
+  }
+
+  /// Collection score for Will ranks.
+  int get collectionScore =>
+      achievements.length * 2 +
+      ownedPets.length +
+      unlockedRelics.length * 3 +
+      (codexEnemies.length + codexItems.length) ~/ 2 +
+      metaDepth.zoneTrophies.length * 3 +
+      metaDepth.titles.length;
+
+  String get willRankTitle => WillRanks.titleForScore(collectionScore);
+
+  /// AL-gated hardmode cap (0–10).
+  int get effectiveMaxHardmode => min(10, 3 + ascensionLevel ~/ 2);
 
   /// Sum of all heroes' gear attack (UI / power checks).
   int get equipmentAttackBonus => heroes.fold<int>(
@@ -292,7 +357,9 @@ class GameState {
       ascensionAttackBonus +
       sanctuaryAttackBonus +
       petAttackBonus +
-      soulboundAttackBonus;
+      soulboundAttackBonus +
+      legacyAttackBonus +
+      heirloomAttackBonus;
 
   int get metaDefenseBonus =>
       defenseBonus +
@@ -305,7 +372,8 @@ class GameState {
       relicVitalityBonus +
       ascensionVitalityBonus +
       sanctuaryVitalityBonus +
-      soulboundVitalityBonus;
+      soulboundVitalityBonus +
+      heirloomVitalityBonus;
 
   int get totalAttackBonus => metaAttackBonus +
       heroes.fold<int>(0, (s, h) => s + h.gearAttackBonus);
@@ -477,6 +545,7 @@ class GameState {
     int? sanctuaryGoldLevel,
     int? sanctuaryPowerLevel,
     int? sanctuaryVitalityLevel,
+    MetaDepthState? metaDepth,
     bool? inDungeon,
     String? dungeonId,
     int? soulboundFragments,
@@ -537,6 +606,7 @@ class GameState {
       sanctuaryPowerLevel: sanctuaryPowerLevel ?? this.sanctuaryPowerLevel,
       sanctuaryVitalityLevel:
           sanctuaryVitalityLevel ?? this.sanctuaryVitalityLevel,
+      metaDepth: metaDepth ?? this.metaDepth,
       inDungeon: inDungeon ?? this.inDungeon,
       dungeonId: dungeonId ?? this.dungeonId,
       soulboundFragments: soulboundFragments ?? this.soulboundFragments,
@@ -597,6 +667,7 @@ class GameState {
     'sanctuaryGoldLevel': sanctuaryGoldLevel,
     'sanctuaryPowerLevel': sanctuaryPowerLevel,
     'sanctuaryVitalityLevel': sanctuaryVitalityLevel,
+    'metaDepth': metaDepth.toJson(),
     'inDungeon': inDungeon,
     'dungeonId': dungeonId,
     'soulboundFragments': soulboundFragments,
@@ -728,6 +799,9 @@ class GameState {
       sanctuaryGoldLevel: (json['sanctuaryGoldLevel'] as int?) ?? 0,
       sanctuaryPowerLevel: (json['sanctuaryPowerLevel'] as int?) ?? 0,
       sanctuaryVitalityLevel: (json['sanctuaryVitalityLevel'] as int?) ?? 0,
+      metaDepth: MetaDepthState.fromJson(
+        json['metaDepth'] as Map<String, dynamic>?,
+      ),
       inDungeon: (json['inDungeon'] as bool?) ?? false,
       dungeonId: (json['dungeonId'] as String?) ?? 'sandy',
       soulboundFragments: (json['soulboundFragments'] as int?) ?? 0,

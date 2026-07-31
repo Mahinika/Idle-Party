@@ -224,6 +224,9 @@ class _GameHomePageState extends State<GameHomePage> {
                 onOpenGuides: () => setState(
                   () => _hubOverlay = Is2Overlay.guides,
                 ),
+                onOpenPrestigeShop: () => setState(
+                  () => _hubOverlay = Is2Overlay.prestigeShop,
+                ),
               ),
               if (_hubOverlay == null)
                 FirstSessionTips(director: _director),

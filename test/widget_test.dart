@@ -18,8 +18,9 @@ void main() {
     expect(find.textContaining('ENTER DUNGEON'), findsOneWidget);
     expect(find.textContaining("Hero's Keep"), findsOneWidget);
     expect(find.textContaining('Sandy Caverns'), findsWidgets);
-    expect(find.textContaining('BF '), findsWidgets);
+    expect(find.textContaining('Boss F'), findsWidgets);
     expect(find.textContaining('Boss:'), findsOneWidget);
+    expect(find.textContaining('Will'), findsWidgets);
     expect(find.textContaining('MORE'), findsOneWidget);
     expect(find.textContaining('ASCEND'), findsOneWidget);
   });

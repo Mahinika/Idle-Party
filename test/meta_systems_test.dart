@@ -122,15 +122,29 @@ void main() {
 
     test('Loot Sprite grants gold and loot find', () {
       var state = GameLogic.createInitialState(now: DateTime(2026, 7, 25));
-      final pet = Pet(
+      final lootPet = Pet(
         id: 'loot_sprite_1',
         name: 'Loot Sprite',
         attackBonus: 1,
         level: 2,
+        speciesId: 'loot_sprite',
+        passive: PetPassive.lootFind,
+        passivePerLevel: 2,
       );
-      state = state.copyWith(activePet: pet, ownedPets: [pet]);
+      final goldPet = Pet(
+        id: 'gold_grub_1',
+        name: 'Gold Grub',
+        attackBonus: 1,
+        level: 2,
+        speciesId: 'gold_grub',
+        passive: PetPassive.goldFind,
+        passivePerLevel: 2,
+      );
+      state = state.copyWith(activePet: goldPet, ownedPets: [goldPet, lootPet]);
       expect(state.petGoldFindPercent, greaterThan(0));
+      state = state.copyWith(activePet: lootPet);
       expect(state.petLootFindPercent, greaterThan(0));
+      state = state.copyWith(activePet: goldPet);
       final gained = GameLogic.applyGoldGain(state, 100);
       expect(gained, greaterThan(100));
     });

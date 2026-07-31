@@ -8,6 +8,8 @@ import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/class_ability.dart';
 import '../models/loot.dart';
+import '../models/meta_depth.dart';
+import '../models/pet.dart';
 import '../spatial/spatial_combat.dart';
 import '../ui/game_audio.dart';
 import 'game_logic.dart';
@@ -218,7 +220,9 @@ class GameDirector extends ChangeNotifier {
           showToast(offline.headline, life: 5);
         }
       }
-      _state = GameLogic.ensureRogueHero(loaded);
+      _state = GameLogic.ensureWeeklyContract(
+        GameLogic.ensureRogueHero(loaded),
+      );
       _lastHighestDungeon = _state.highestDungeonCleared;
       GameAudio.muted = _state.soundMuted;
       SpatialCombat.colorblindMode = _state.colorblindMode;
@@ -475,7 +479,7 @@ class GameDirector extends ChangeNotifier {
 
   void leaveDungeon() {
     if (_isLoading) return;
-    _state = GameLogic.leaveDungeon(_state);
+    _state = GameLogic.ensureWeeklyContract(GameLogic.leaveDungeon(_state));
     _spatialTimer?.cancel();
     _spatial = null;
     notifyListeners();
@@ -483,7 +487,15 @@ class GameDirector extends ChangeNotifier {
   }
 
   void upgradeGodHand() {
+    final before = _state.godHandLevel;
     _applyUpgrade(GameLogic.upgradeGodHand(_state));
+    if (_state.godHandLevel > before) {
+      GameAudio.unlock();
+      showToast(
+        'God Hand Lv${_state.godHandLevel} · AOE ${_state.godHandBaseDamage}',
+        life: 2.4,
+      );
+    }
   }
 
   void bindSoulbound({int? heroIndex}) {
@@ -664,7 +676,7 @@ class GameDirector extends ChangeNotifier {
   }
 
   void setHardmodeLevel(int level) {
-    _applyUpgrade(_state.copyWith(hardmodeLevel: level.clamp(0, 10)));
+    _applyUpgrade(GameLogic.setHardmodeLevel(_state, level));
   }
 
   void markChangelogSeen() {
@@ -772,11 +784,78 @@ class GameDirector extends ChangeNotifier {
   }
 
   void hatchPet() {
+    final beforeCount = _state.ownedPets.length;
     _applyUpgrade(GameLogic.hatchPet(_state));
+    if (_state.ownedPets.length > beforeCount) {
+      final pet = _state.ownedPets.last;
+      GameAudio.unlock();
+      showToast('Hatched ${pet.name}!', life: 2.6);
+    }
+  }
+
+  void mergePets(String petIdA, String petIdB) {
+    final before = _state.ownedPets.length;
+    _applyUpgrade(GameLogic.mergePets(_state, petIdA, petIdB));
+    if (_state.ownedPets.length < before) {
+      final pet = _state.ownedPets.last;
+      GameAudio.unlock();
+      showToast('Merged ${pet.name} · ${pet.rarity.name}!', life: 2.6);
+    }
+  }
+
+  void setFavoritePetSpecies(String speciesId) {
+    _applyUpgrade(GameLogic.setFavoritePetSpecies(_state, speciesId));
+    GameAudio.ui();
+    showToast('Favorite species set', life: 1.6);
+  }
+
+  void buyPetFrame(String petId, PetFrame frame) {
+    final before = _state.essence;
+    _applyUpgrade(GameLogic.buyPetFrame(_state, petId, frame));
+    if (_state.essence < before) {
+      GameAudio.unlock();
+      showToast('Frame · ${frame.name}', life: 1.8);
+    }
+  }
+
+  void bondPet(String petId) {
+    var beforeBond = -1;
+    String? name;
+    for (final pet in _state.ownedPets) {
+      if (pet.id == petId) {
+        beforeBond = pet.bondLevel;
+        name = pet.name;
+        break;
+      }
+    }
+    _applyUpgrade(GameLogic.bondPet(_state, petId));
+    for (final pet in _state.ownedPets) {
+      if (pet.id == petId && pet.bondLevel > beforeBond) {
+        GameAudio.unlock();
+        showToast('${name ?? pet.name} bond Lv${pet.bondLevel}', life: 2.0);
+        break;
+      }
+    }
   }
 
   void levelUpPet(String petId) {
+    var beforeLevel = -1;
+    String? name;
+    for (final pet in _state.ownedPets) {
+      if (pet.id == petId) {
+        beforeLevel = pet.level;
+        name = pet.name;
+        break;
+      }
+    }
     _applyUpgrade(GameLogic.levelUpPet(_state, petId));
+    for (final pet in _state.ownedPets) {
+      if (pet.id == petId && pet.level > beforeLevel) {
+        GameAudio.unlock();
+        showToast('${name ?? pet.name} · Lv${pet.level}!', life: 2.2);
+        break;
+      }
+    }
   }
 
   void setActivePet(String petId) {
@@ -788,7 +867,124 @@ class GameDirector extends ChangeNotifier {
   }
 
   void upgradeSanctuary(String track) {
+    final before = switch (track) {
+      'gold' => _state.sanctuaryGoldLevel,
+      'power' => _state.sanctuaryPowerLevel,
+      'vitality' => _state.sanctuaryVitalityLevel,
+      'xp' => _state.metaDepth.sanctuaryXpLevel,
+      _ => -1,
+    };
     _applyUpgrade(GameLogic.upgradeSanctuary(_state, track));
+    final after = switch (track) {
+      'gold' => _state.sanctuaryGoldLevel,
+      'power' => _state.sanctuaryPowerLevel,
+      'vitality' => _state.sanctuaryVitalityLevel,
+      'xp' => _state.metaDepth.sanctuaryXpLevel,
+      _ => -1,
+    };
+    if (after > before) {
+      final name = GameLogic.sanctuaryNames[track] ?? track;
+      final bonus = GameLogic.sanctuaryBonusLabel(track, after);
+      GameAudio.unlock();
+      showToast('$name Lv$after · $bonus', life: 2.4);
+    }
+  }
+
+  void prestigeSanctuaryTrack(String track) {
+    final beforeEssence = _state.essence;
+    _applyUpgrade(GameLogic.prestigeSanctuaryTrack(_state, track));
+    if (_state.essence > beforeEssence) {
+      final name = GameLogic.sanctuaryNames[track] ?? track;
+      GameAudio.unlock();
+      showToast(
+        '$name prestiged · +${_state.essence - beforeEssence}e',
+        life: 2.6,
+      );
+    }
+  }
+
+  void upgradeRelicTier(String relicId) {
+    final before = _state.metaDepth.relicTierOf(relicId);
+    _applyUpgrade(GameLogic.upgradeRelicTier(_state, relicId));
+    final after = _state.metaDepth.relicTierOf(relicId);
+    if (after > before) {
+      final name = GameLogic.relicNames[relicId] ?? relicId;
+      GameAudio.unlock();
+      showToast('$name · Tier $after', life: 2.2);
+    }
+  }
+
+  void respecRelics() {
+    final beforeEssence = _state.essence;
+    _applyUpgrade(GameLogic.respecRelics(_state));
+    if (_state.essence < beforeEssence) {
+      GameAudio.ui();
+      showToast('Relics reset', life: 2.0);
+    }
+  }
+
+  void refineSoulbound() {
+    final before = _state.metaDepth.soulboundRefine;
+    _applyUpgrade(GameLogic.refineSoulbound(_state));
+    if (_state.metaDepth.soulboundRefine > before) {
+      GameAudio.unlock();
+      showToast(
+        'Soulbound refine +${_state.metaDepth.soulboundRefine}',
+        life: 2.2,
+      );
+    }
+  }
+
+  void upgradeGodHandCd() {
+    final before = _state.metaDepth.godHandCdLevel;
+    _applyUpgrade(GameLogic.upgradeGodHandCd(_state));
+    if (_state.metaDepth.godHandCdLevel > before) {
+      GameAudio.unlock();
+      showToast(
+        'God Hand CD Lv${_state.metaDepth.godHandCdLevel}',
+        life: 2.2,
+      );
+    }
+  }
+
+  void buyPrestigeShopItem(String id) {
+    final before = _state.essence;
+    _applyUpgrade(GameLogic.buyPrestigeShopItem(_state, id));
+    if (_state.essence < before) {
+      String name = id;
+      for (final item in PrestigeShopCatalog.all) {
+        if (item.id == id) {
+          name = item.name;
+          break;
+        }
+      }
+      GameAudio.unlock();
+      showToast('Bought $name', life: 2.2);
+    }
+  }
+
+  void claimWeekly() {
+    final before = _state.essence;
+    _applyUpgrade(GameLogic.claimWeekly(_state));
+    if (_state.essence > before) {
+      GameAudio.unlock();
+      showToast(
+        'Weekly claimed · +${_state.essence - before}e',
+        life: 2.4,
+      );
+    }
+  }
+
+  void claimCodexReward(String tierId) {
+    final before = _state.essence;
+    _applyUpgrade(GameLogic.claimCodexReward(_state, tierId));
+    if (_state.essence > before) {
+      GameAudio.unlock();
+      showToast(
+        'Codex reward · +${_state.essence - before}e',
+        life: 2.2,
+      );
+    }
   }
 
   void ascend() {

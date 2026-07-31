@@ -3602,8 +3602,10 @@ abstract final class SpatialCombat {
     world.guideY = tileY;
     world.guideTimer = 1.35;
     world.godHandCooldown = math.max(
-      0.55,
-      1.1 - state.godHandLevel * 0.05,
+      0.45,
+      1.1 -
+          state.godHandLevel * 0.05 -
+          state.metaDepth.godHandCdLevel * 0.06,
     );
     world.pulseX = tileX;
     world.pulseY = tileY;

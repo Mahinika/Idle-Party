@@ -112,6 +112,7 @@ enum Is2Overlay {
   codex,
   loadouts,
   guides,
+  prestigeShop,
 }
 
 class _Is2ShellState extends State<Is2Shell> {
@@ -121,6 +122,8 @@ class _Is2ShellState extends State<Is2Shell> {
   late Is2Overlay _overlay;
   int _equipHeroIndex = 0;
   int _abilityHeroIndex = 0;
+  String? _petMergeA;
+  String? _petMergeB;
 
   GameState get state => widget.director.state;
 
@@ -222,11 +225,40 @@ class _Is2ShellState extends State<Is2Shell> {
       onSetPet: d.setActivePet,
       onLevelUpPet: (id) {
         d.levelUpPet(id);
-        final leveled = d.state.ownedPets.where((p) => p.id == id);
-        if (leveled.isNotEmpty) {
-          d.showToast('${leveled.first.name} ? Lv${leveled.first.level}!');
-        }
       },
+      onTogglePetMerge: (id) {
+        setState(() {
+          if (_petMergeA == id) {
+            _petMergeA = null;
+            return;
+          }
+          if (_petMergeB == id) {
+            _petMergeB = null;
+            return;
+          }
+          if (_petMergeA == null) {
+            _petMergeA = id;
+          } else if (_petMergeB == null) {
+            _petMergeB = id;
+          } else {
+            _petMergeA = _petMergeB;
+            _petMergeB = id;
+          }
+        });
+      },
+      petMergeA: _petMergeA,
+      petMergeB: _petMergeB,
+      onConfirmPetMerge: () {
+        if (_petMergeA == null || _petMergeB == null) return;
+        d.mergePets(_petMergeA!, _petMergeB!);
+        setState(() {
+          _petMergeA = null;
+          _petMergeB = null;
+        });
+      },
+      onFavoritePet: (species) => d.setFavoritePetSpecies(species),
+      onBondPet: d.bondPet,
+      onBuyPetFrame: (id, frame) => d.buyPetFrame(id, frame),
       onUseConsumable: () => d.useConsumable(heroIndex: _equipHeroIndex),
       onBindSoulbound: () => d.bindSoulbound(heroIndex: _equipHeroIndex),
       onUpgradeGodHand: d.upgradeGodHand,
@@ -268,6 +300,10 @@ class _Is2ShellState extends State<Is2Shell> {
       (
         label: 'BEAST PEN',
         onTap: () => _openOverlay(Is2Overlay.beast),
+      ),
+      (
+        label: 'PRESTIGE SHOP',
+        onTap: () => _openOverlay(Is2Overlay.prestigeShop),
       ),
       (
         label: 'LOADOUTS',
@@ -476,6 +512,7 @@ class _Is2ShellState extends State<Is2Shell> {
         Is2Overlay.codex => 'CODEX',
         Is2Overlay.loadouts => 'GEAR LOADOUTS',
         Is2Overlay.guides => 'GUIDES',
+        Is2Overlay.prestigeShop => 'PRESTIGE SHOP',
         Is2Overlay.none => '',
       },
       onClose: () => setState(() => _overlay = Is2Overlay.none),
@@ -513,11 +550,14 @@ class _Is2ShellState extends State<Is2Shell> {
         ),
         Is2Overlay.settings => _SettingsOverlay(director: d),
         Is2Overlay.market => _MarketOverlay(director: d),
-        Is2Overlay.beast => _BeastOverlay(director: d),
+        Is2Overlay.beast => SingleChildScrollView(
+          child: _BeastOverlay(director: d),
+        ),
         Is2Overlay.achievements => AchievementsOverlay(director: d),
         Is2Overlay.codex => CodexOverlay(director: d),
         Is2Overlay.loadouts => LoadoutsOverlay(director: d),
         Is2Overlay.guides => const GuidesOverlay(),
+        Is2Overlay.prestigeShop => PrestigeShopOverlay(director: d),
         Is2Overlay.none => const SizedBox.shrink(),
       },
     );
@@ -1517,6 +1557,13 @@ class _InventoryDock extends StatelessWidget {
     required this.onHatchPet,
     required this.onSetPet,
     required this.onLevelUpPet,
+    required this.onTogglePetMerge,
+    required this.petMergeA,
+    required this.petMergeB,
+    required this.onConfirmPetMerge,
+    required this.onFavoritePet,
+    required this.onBondPet,
+    required this.onBuyPetFrame,
     required this.onUseConsumable,
     required this.onBindSoulbound,
     required this.onUpgradeGodHand,
@@ -1542,6 +1589,13 @@ class _InventoryDock extends StatelessWidget {
   final VoidCallback onHatchPet;
   final void Function(String id) onSetPet;
   final void Function(String id) onLevelUpPet;
+  final void Function(String id) onTogglePetMerge;
+  final String? petMergeA;
+  final String? petMergeB;
+  final VoidCallback onConfirmPetMerge;
+  final void Function(String speciesId) onFavoritePet;
+  final void Function(String petId) onBondPet;
+  final void Function(String petId, PetFrame frame) onBuyPetFrame;
   final VoidCallback onUseConsumable;
   final VoidCallback onBindSoulbound;
   final VoidCallback onUpgradeGodHand;
@@ -1614,7 +1668,7 @@ class _InventoryDock extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'BAG  ${state.gearStash.length}/${GameLogic.maxGearStash}',
+          'BAG  ${state.gearStash.length}/${GameLogic.maxGearStashFor(state)}',
           style: GameTheme.pixel(size: GameTheme.hudPixel),
         ),
         const SizedBox(height: 4),
@@ -1731,7 +1785,7 @@ class _InventoryDock extends StatelessWidget {
           ),
         ] else
           Text(
-            'Tap item ? choose hero  ?  Hold ? combinator',
+            'Tap item · choose hero  ·  Hold · combinator',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
       ],
@@ -1775,7 +1829,7 @@ class _InventoryDock extends StatelessWidget {
           const SizedBox(height: 6),
           if (preview != null) ...[
             Text(
-              '? ${GameLogic.rarityNames[preview.rarity]} i${preview.effectiveItemLevel}',
+              '→ ${GameLogic.rarityNames[preview.rarity]} i${preview.effectiveItemLevel}',
               textAlign: TextAlign.center,
               style: GameTheme.body(size: 11, color: GameTheme.torchHot),
             ),
@@ -1795,8 +1849,13 @@ class _InventoryDock extends StatelessWidget {
             const SizedBox(height: 4),
           ],
           KenneyButton(
-            label: 'GOD HAND  ${ghCost}e',
+            label: 'GOD HAND Lv${state.godHandLevel}  ${ghCost}e',
             onPressed: state.essence >= ghCost ? onUpgradeGodHand : null,
+          ),
+          Text(
+            'AOE ${state.godHandBaseDamage} · r${state.godHandRadius.toStringAsFixed(1)}',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 4),
           KenneyButton(
@@ -1822,18 +1881,38 @@ class _InventoryDock extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: KenneyButton(
-                  label: 'HATCH PET  ${GameLogic.hatchPetCost(state)}e',
-                  onPressed: state.essence >= GameLogic.hatchPetCost(state)
+                  label: state.ownedPets.length >=
+                          state.metaDepth.basePetRosterCap
+                      ? 'ROSTER FULL'
+                      : 'HATCH PET  ${GameLogic.hatchPetCost(state)}e',
+                  onPressed: state.ownedPets.length <
+                              state.metaDepth.basePetRosterCap &&
+                          state.essence >= GameLogic.hatchPetCost(state)
                       ? onHatchPet
                       : null,
                 ),
               ),
             ],
           ),
+          Text(
+            'Pets ${state.ownedPets.length}/'
+            '${state.metaDepth.basePetRosterCap}',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          ),
           if (state.ownedPets.isNotEmpty) ...[
             const SizedBox(height: 4),
+            if (petMergeA != null && petMergeB != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: KenneyButton(
+                  label: 'CONFIRM MERGE',
+                  style: KenneyButtonStyle.red,
+                  onPressed: onConfirmPetMerge,
+                ),
+              ),
             SizedBox(
-              height: GameTheme.minTouch,
+              height: 56,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
@@ -1842,6 +1921,7 @@ class _InventoryDock extends StatelessWidget {
                       padding: const EdgeInsets.only(right: 4),
                       child: InkWell(
                         onTap: () => onSetPet(pet.id),
+                        onLongPress: () => onTogglePetMerge(pet.id),
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(
                             minHeight: GameTheme.minTouch,
@@ -1850,24 +1930,41 @@ class _InventoryDock extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
-                              vertical: 6,
+                              vertical: 4,
                             ),
                             decoration: MenuChrome.cardBox(
-                              selected: state.activePet?.id == pet.id,
+                              selected: state.activePet?.id == pet.id ||
+                                  pet.id == petMergeA ||
+                                  pet.id == petMergeB,
                             ),
                             alignment: Alignment.center,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                KenneySprite(
-                                  asset:
-                                      CustomAssets.petForInstanceId(pet.id),
-                                  size: 18,
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    KenneySprite(
+                                      asset: CustomAssets.petForInstanceId(
+                                        pet.id,
+                                      ),
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      pet.name,
+                                      style: GameTheme.body(size: 11),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 6),
                                 Text(
-                                  pet.name,
-                                  style: GameTheme.body(size: 11),
+                                  '${pet.rarity.name} · '
+                                  '${pet.passive.name} · '
+                                  '${pet.affinityDungeonId}',
+                                  style: GameTheme.body(
+                                    size: 9,
+                                    color: GameTheme.parchmentDim,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1880,29 +1977,96 @@ class _InventoryDock extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             if (state.activePet != null) ...[
-              if (state.petGoldFindPercent > 0 ||
-                  state.petLootFindPercent > 0)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    'Passive: +${state.petGoldFindPercent}% gold'
-                    ' ? +${state.petLootFindPercent}% loot find',
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
-                  ),
-                ),
-              KenneyButton(
-                label:
-                    'LEVEL UP ${GameLogic.petLevelUpCost(state.activePet!)}e',
-                onPressed:
-                    state.essence >=
-                        GameLogic.petLevelUpCost(state.activePet!)
-                    ? () => onLevelUpPet(state.activePet!.id)
-                    : null,
-                style: KenneyButtonStyle.grey,
+              Builder(
+                builder: (context) {
+                  final pet = state.activePet!;
+                  final nextFrameIdx =
+                      (pet.frame.index + 1) % PetFrame.values.length;
+                  final nextFrame = PetFrame.values[
+                      nextFrameIdx == 0 ? 1 : nextFrameIdx];
+                  final frameCost = GameLogic.petFrameCost(nextFrame);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (state.petGoldFindPercent > 0 ||
+                          state.petLootFindPercent > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            'Passive: +${state.petGoldFindPercent}% gold'
+                            ' · +${state.petLootFindPercent}% loot find',
+                            textAlign: TextAlign.center,
+                            style: GameTheme.body(
+                              size: 11,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: KenneyButton(
+                              label:
+                                  'LVL ${GameLogic.petLevelUpCost(pet)}e',
+                              onPressed: state.essence >=
+                                      GameLogic.petLevelUpCost(pet)
+                                  ? () => onLevelUpPet(pet.id)
+                                  : null,
+                              style: KenneyButtonStyle.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: KenneyButton(
+                              label: 'MERGE',
+                              style: KenneyButtonStyle.grey,
+                              onPressed: () => onTogglePetMerge(pet.id),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: KenneyButton(
+                              label: 'FAV',
+                              style: KenneyButtonStyle.grey,
+                              onPressed: () =>
+                                  onFavoritePet(pet.resolvedSpecies),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: KenneyButton(
+                              label:
+                                  'BOND ${GameLogic.bondPetCost(pet.bondLevel)}e',
+                              style: KenneyButtonStyle.grey,
+                              onPressed: state.essence >=
+                                      GameLogic.bondPetCost(pet.bondLevel)
+                                  ? () => onBondPet(pet.id)
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: KenneyButton(
+                              label: pet.frame == PetFrame.crystal
+                                  ? 'FRAME MAX'
+                                  : 'FRAME ${frameCost}e',
+                              style: KenneyButtonStyle.grey,
+                              onPressed: pet.frame == PetFrame.crystal ||
+                                      state.essence < frameCost
+                                  ? null
+                                  : () =>
+                                      onBuyPetFrame(pet.id, nextFrame),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ],
@@ -1924,7 +2088,7 @@ class _InventoryDock extends StatelessWidget {
         ? GameLogic.previewCombine(primary, secondary)
         : null;
     final slots = List<EquipmentItem?>.generate(
-      GameLogic.maxGearStash,
+      GameLogic.maxGearStashFor(state),
       (i) => i < state.gearStash.length ? state.gearStash[i] : null,
     );
     final ghCost = GameLogic.godHandUpgradeCost(state.godHandLevel);
@@ -2314,7 +2478,7 @@ class _EquipOverlay extends StatelessWidget {
               child: KenneyButton(
                 label: selectedId == null
                     ? 'EQUIP'
-                    : 'EQUIP ? ${state.heroes[selectedHeroIndex.clamp(0, state.heroes.length - 1)].roleLabel}',
+                    : 'EQUIP · ${state.heroes[selectedHeroIndex.clamp(0, state.heroes.length - 1)].roleLabel}',
                 onPressed: selectedId == null ? null : onEquipSelected,
               ),
             ),
@@ -2526,7 +2690,7 @@ class _ForgeOverlay extends StatelessWidget {
         const SizedBox(height: 8),
         KenneyButton(
           label: canAscend
-              ? 'ASCEND ? AL${state.ascensionLevel + 1}'
+              ? 'ASCEND · AL${state.ascensionLevel + 1}'
               : 'ASCEND  ${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} bosses',
           onPressed: canAscend
               ? () => confirmAscend(context, director)
@@ -2605,6 +2769,13 @@ class _ForgeOverlay extends StatelessWidget {
               final cost = GameLogic.relicCosts[relicId] ?? 0;
               final desc =
                   GameLogic.relicDescriptions[relicId] ?? '';
+              final tier = owned
+                  ? (state.metaDepth.relicTierOf(relicId) < 1
+                      ? 1
+                      : state.metaDepth.relicTierOf(relicId))
+                  : 0;
+              final nextTier = tier + 1;
+              final tierCost = GameLogic.relicTierUpgradeCost(nextTier);
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -2617,7 +2788,9 @@ class _ForgeOverlay extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: KenneyButton(
-                          label: owned ? '$name  ?  OWNED' : '$name  ${cost}e',
+                          label: owned
+                              ? '$name  ·  T$tier'
+                              : '$name  ${cost}e',
                           onPressed: owned || state.essence < cost
                               ? null
                               : () => director.unlockRelic(relicId),
@@ -2626,6 +2799,16 @@ class _ForgeOverlay extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (owned && tier < 3) ...[
+                    const SizedBox(height: 4),
+                    KenneyButton(
+                      label: 'UPGRADE TIER  T$nextTier  ${tierCost}e',
+                      style: KenneyButtonStyle.grey,
+                      onPressed: state.essence >= tierCost
+                          ? () => director.upgradeRelicTier(relicId)
+                          : null,
+                    ),
+                  ],
                   if (desc.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 4, bottom: 6),
@@ -2646,6 +2829,56 @@ class _ForgeOverlay extends StatelessWidget {
             },
           ),
         ],
+        const SizedBox(height: 8),
+        KenneyButton(
+          label: 'RESPEC RELICS  ${GameLogic.respecRelicsCost(state)}e',
+          style: KenneyButtonStyle.grey,
+          onPressed: (state.unlockedRelics.isNotEmpty ||
+                  state.metaDepth.relicTiers.isNotEmpty) &&
+                  state.essence >= GameLogic.respecRelicsCost(state)
+              ? director.respecRelics
+              : null,
+        ),
+        const SizedBox(height: 10),
+        Text('SOULBOUND', style: GameTheme.pixel(size: 8)),
+        const SizedBox(height: 6),
+        if (state.soulboundItem == null)
+          Text(
+            'Bind a weapon in the bag Tools tab (3 fragments).',
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          )
+        else ...[
+          Text(
+            '${state.soulboundItem!.name}  ·  refine '
+            '${state.metaDepth.soulboundRefine}',
+            style: GameTheme.body(size: 14, color: GameTheme.mossLit),
+          ),
+          const SizedBox(height: 6),
+          KenneyButton(
+            label:
+                'REFINE  ${GameLogic.refineSoulboundCost(state.metaDepth.soulboundRefine)} frag',
+            onPressed: state.soulboundFragments >=
+                    GameLogic.refineSoulboundCost(
+                      state.metaDepth.soulboundRefine,
+                    )
+                ? director.refineSoulbound
+                : null,
+          ),
+        ],
+        const SizedBox(height: 10),
+        Text('GOD HAND CD', style: GameTheme.pixel(size: 8)),
+        const SizedBox(height: 6),
+        KenneyButton(
+          label:
+              'CD Lv${state.metaDepth.godHandCdLevel}  '
+              '${GameLogic.godHandCdUpgradeCost(state.metaDepth.godHandCdLevel)}e',
+          onPressed: state.essence >=
+                  GameLogic.godHandCdUpgradeCost(
+                    state.metaDepth.godHandCdLevel,
+                  )
+              ? director.upgradeGodHandCd
+              : null,
+        ),
       ],
     );
   }
@@ -2686,7 +2919,7 @@ class _JobsOverlay extends StatelessWidget {
                   ),
                 ),
                 KenneyButton(
-                  label: mission.isComplete ? 'CLAIM' : '...',
+                  label: mission.isComplete ? 'CLAIM' : 'WAIT',
                   onPressed: mission.isComplete
                       ? () => director.claimMission(mission.id)
                       : null,
@@ -2704,6 +2937,22 @@ class _SanctuaryOverlay extends StatelessWidget {
   const _SanctuaryOverlay({required this.director});
   final GameDirector director;
 
+  int _prestigeOf(GameState state, String track) => switch (track) {
+        'gold' => state.metaDepth.sanctuaryGoldPrestige,
+        'power' => state.metaDepth.sanctuaryPowerPrestige,
+        'vitality' => state.metaDepth.sanctuaryVitalityPrestige,
+        'xp' => state.metaDepth.sanctuaryXpPrestige,
+        _ => 0,
+      };
+
+  int _levelOf(GameState state, String track) => switch (track) {
+        'gold' => state.sanctuaryGoldLevel,
+        'power' => state.sanctuaryPowerLevel,
+        'vitality' => state.sanctuaryVitalityLevel,
+        'xp' => state.metaDepth.sanctuaryXpLevel,
+        _ => 0,
+      };
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
@@ -2715,14 +2964,11 @@ class _SanctuaryOverlay extends StatelessWidget {
           style: TextStyle(fontSize: 15, color: Color(0xFFD7CAA0)),
         ),
         const SizedBox(height: 10),
-        for (final track in <String>['gold', 'power', 'vitality']) ...[
+        for (final track in <String>['gold', 'power', 'vitality', 'xp']) ...[
           Builder(
             builder: (context) {
-              final level = switch (track) {
-                'gold' => state.sanctuaryGoldLevel,
-                'power' => state.sanctuaryPowerLevel,
-                _ => state.sanctuaryVitalityLevel,
-              };
+              final level = _levelOf(state, track);
+              final prestige = _prestigeOf(state, track);
               final nextLevel = level + 1;
               final cost = GameLogic.sanctuaryCost(level);
               final nextBonus =
@@ -2732,7 +2978,7 @@ class _SanctuaryOverlay extends StatelessWidget {
                 children: [
                   if (track == 'gold')
                     Text(
-                      'Now +${state.sanctuaryGoldBonusPercent}% gold  ?  '
+                      'Now +${state.sanctuaryGoldBonusPercent}% gold  ·  '
                       '+${nextLevel * 5}% gold',
                       style: GameTheme.body(
                         size: 13,
@@ -2740,7 +2986,7 @@ class _SanctuaryOverlay extends StatelessWidget {
                       ),
                     ),
                   Text(
-                    'Next: $nextBonus  ?  $cost essence',
+                    'Prestige $prestige  ·  Next: $nextBonus  ·  $cost essence',
                     style: GameTheme.body(
                       size: 13,
                       color: GameTheme.parchmentDim,
@@ -2765,6 +3011,15 @@ class _SanctuaryOverlay extends StatelessWidget {
                         ? () => director.upgradeSanctuary(track)
                         : null,
                   ),
+                  if (level >= 12) ...[
+                    const SizedBox(height: 4),
+                    KenneyButton(
+                      label: 'PRESTIGE  +${25 + level}e  reset Lv0',
+                      style: KenneyButtonStyle.brown,
+                      onPressed: () =>
+                          director.prestigeSanctuaryTrack(track),
+                    ),
+                  ],
                   const SizedBox(height: 6),
                 ],
               );
@@ -3201,30 +3456,116 @@ class _MarketOverlay extends StatelessWidget {
   }
 }
 
-class _BeastOverlay extends StatelessWidget {
+class _BeastOverlay extends StatefulWidget {
   const _BeastOverlay({required this.director});
   final GameDirector director;
 
   @override
+  State<_BeastOverlay> createState() => _BeastOverlayState();
+}
+
+class _BeastOverlayState extends State<_BeastOverlay> {
+  String? _mergeA;
+  String? _mergeB;
+
+  GameDirector get director => widget.director;
+  GameState get state => director.state;
+
+  void _toggleMerge(String petId) {
+    setState(() {
+      if (_mergeA == petId) {
+        _mergeA = null;
+        return;
+      }
+      if (_mergeB == petId) {
+        _mergeB = null;
+        return;
+      }
+      if (_mergeA == null) {
+        _mergeA = petId;
+      } else if (_mergeB == null) {
+        _mergeB = petId;
+      } else {
+        _mergeA = _mergeB;
+        _mergeB = petId;
+      }
+    });
+  }
+
+  void _doMerge() {
+    final a = _mergeA;
+    final b = _mergeB;
+    if (a == null || b == null) return;
+    director.mergePets(a, b);
+    setState(() {
+      _mergeA = null;
+      _mergeB = null;
+    });
+  }
+
+  PetFrame _nextFrame(PetFrame current) {
+    final idx = (current.index + 1) % PetFrame.values.length;
+    final next = PetFrame.values[idx == 0 ? 1 : idx];
+    return next;
+  }
+
+  static String _passiveLabel(Pet pet) {
+    final name = switch (pet.passive) {
+      PetPassive.attack => 'ATK',
+      PetPassive.goldFind => 'GOLD',
+      PetPassive.lootFind => 'LOOT',
+      PetPassive.xpFind => 'XP',
+      PetPassive.mitigate => 'MIT',
+      PetPassive.healBoost => 'HEAL',
+    };
+    final v = pet.passiveValue(dungeonId: pet.affinityDungeonId);
+    return '$name${v > 0 ? ' +$v' : ''}';
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final state = director.state;
+    final cap = state.metaDepth.basePetRosterCap;
+    final canMerge = _mergeA != null && _mergeB != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'BEAST PEN',
+          'BEAST PEN  ${state.ownedPets.length}/$cap',
           textAlign: TextAlign.center,
           style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
         ),
+        if (state.metaDepth.favoritePetSpecies.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Favorite: ${state.metaDepth.favoritePetSpecies}',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+        ],
         const SizedBox(height: 8),
         if (state.ownedPets.isEmpty)
           Text(
-            'No beasts yet. Hatch an egg with essence ? '
+            'No beasts yet. Hatch an egg with essence — '
             'companions fight beside the party.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
           )
         else ...[
+          Text(
+            canMerge
+                ? 'Tap MERGE to combine same-species pets'
+                : 'Tap MERGE on two same-species pets',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 6),
+          if (canMerge)
+            KenneyButton(
+              label: 'CONFIRM MERGE',
+              style: KenneyButtonStyle.red,
+              onPressed: _doMerge,
+            ),
+          const SizedBox(height: 8),
           for (final pet in state.ownedPets)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -3236,9 +3577,11 @@ class _BeastOverlay extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: state.activePet?.id == pet.id
-                          ? GameTheme.torch
-                          : const Color(0xFF595033),
+                      color: pet.id == _mergeA || pet.id == _mergeB
+                          ? GameTheme.clear
+                          : state.activePet?.id == pet.id
+                              ? GameTheme.torch
+                              : const Color(0xFF595033),
                     ),
                   ),
                   child: Column(
@@ -3255,12 +3598,18 @@ class _BeastOverlay extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(pet.name, style: GameTheme.pixel(size: 7)),
                                 Text(
-                                  'Lv${pet.level}  ATK +${pet.totalAttackBonus}'
-                                  '${_petPassiveLabel(pet)}',
+                                  '${pet.name}  ·  ${pet.rarity.name}'
+                                  '${pet.frame != PetFrame.none ? '  [${pet.frame.name}]' : ''}',
+                                  style: GameTheme.pixel(size: 7),
+                                ),
+                                Text(
+                                  'Lv${pet.level}  ATK +${pet.totalAttackBonus}  '
+                                  '${_passiveLabel(pet)}  ·  '
+                                  '${pet.affinityDungeonId}'
+                                  '${pet.bondLevel > 0 ? '  bond${pet.bondLevel}' : ''}',
                                   style: GameTheme.body(
-                                    size: 14,
+                                    size: 13,
                                     color: GameTheme.parchmentDim,
                                   ),
                                 ),
@@ -3291,7 +3640,7 @@ class _BeastOverlay extends StatelessWidget {
                                   : () => director.setActivePet(pet.id),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: KenneyButton(
                               label:
@@ -3300,6 +3649,68 @@ class _BeastOverlay extends StatelessWidget {
                                       GameLogic.petLevelUpCost(pet)
                                   ? () => director.levelUpPet(pet.id)
                                   : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: KenneyButton(
+                              label: pet.id == _mergeA || pet.id == _mergeB
+                                  ? 'MERGE ✓'
+                                  : 'MERGE',
+                              style: KenneyButtonStyle.grey,
+                              onPressed: () => _toggleMerge(pet.id),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: KenneyButton(
+                              label: state.metaDepth.favoritePetSpecies ==
+                                      pet.resolvedSpecies
+                                  ? 'FAV ✓'
+                                  : 'FAVORITE',
+                              style: KenneyButtonStyle.grey,
+                              onPressed: () => director
+                                  .setFavoritePetSpecies(pet.resolvedSpecies),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: KenneyButton(
+                              label:
+                                  'BOND ${GameLogic.bondPetCost(pet.bondLevel)}e',
+                              style: KenneyButtonStyle.grey,
+                              onPressed: state.essence >=
+                                      GameLogic.bondPetCost(pet.bondLevel)
+                                  ? () => director.bondPet(pet.id)
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Builder(
+                              builder: (context) {
+                                final next = _nextFrame(pet.frame);
+                                final cost = GameLogic.petFrameCost(next);
+                                return KenneyButton(
+                                  label: pet.frame == PetFrame.crystal
+                                      ? 'FRAME MAX'
+                                      : 'FRAME ${next.name} ${cost}e',
+                                  style: KenneyButtonStyle.grey,
+                                  onPressed: pet.frame == PetFrame.crystal ||
+                                          state.essence < cost
+                                      ? null
+                                      : () =>
+                                          director.buyPetFrame(pet.id, next),
+                                );
+                              },
                             ),
                           ),
                         ],
@@ -3317,8 +3728,11 @@ class _BeastOverlay extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: KenneyButton(
-                label: 'HATCH ${GameLogic.hatchPetCost(state)}e',
-                onPressed: state.essence >= GameLogic.hatchPetCost(state)
+                label: state.ownedPets.length >= cap
+                    ? 'ROSTER FULL'
+                    : 'HATCH ${GameLogic.hatchPetCost(state)}e',
+                onPressed: state.ownedPets.length < cap &&
+                        state.essence >= GameLogic.hatchPetCost(state)
                     ? director.hatchPet
                     : null,
               ),
@@ -3327,14 +3741,5 @@ class _BeastOverlay extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  static String _petPassiveLabel(Pet pet) {
-    if (pet.id.startsWith('loot_sprite')) {
-      final gold = 8 + pet.level * 2;
-      final loot = 6 + pet.level;
-      return '  ?  +$gold% gold  ?  +$loot% loot';
-    }
-    return '';
   }
 }

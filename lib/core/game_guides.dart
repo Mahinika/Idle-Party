@@ -18,6 +18,7 @@ abstract final class GameGuides {
           'The hub map lists every dungeon from Sand Caverns to Crystal Spire.\n\n'
           '• Tap an unlocked zone to enter.\n'
           '• Unlock the next zone by clearing the previous boss, or by earning enough lifetime gold.\n'
+          '• Locked zones show lifetime gold progress (have / need) on the hub.\n'
           '• Lifetime gold (not wallet gold) counts for gold unlocks.\n'
           '• Boss floor is shown on each node (Boss F n).',
     ),
@@ -91,7 +92,8 @@ abstract final class GameGuides {
           'MORE → FORGE.\n\n'
           '• Train party power with gold / run resources.\n'
           '• Buy relics that permanently boost combat or economy.\n'
-          '• Forge power stacks with equipped gear.\n'
+          '• Upgrade relic tiers and respec if you change builds.\n'
+          '• Refine soulbound gear and speed God Hand cooldown.\n'
           '• Check “What’s New” / changelog for balance notes.',
     ),
     GuideTopic(
@@ -99,7 +101,8 @@ abstract final class GameGuides {
       title: 'SANCTUARY',
       body:
           'MORE → SANCTUARY. Spend essence on permanent tracks.\n\n'
-          '• Idle gold, party stats, and other long-term bonuses.\n'
+          '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
+          '• At level 12+, prestige a track for essence and a lasting bonus.\n'
           '• Survives Ascend (meta progress).\n'
           '• Invest early — sanctuary compounds over many runs.',
     ),
@@ -118,9 +121,19 @@ abstract final class GameGuides {
       body:
           'MORE → BEAST PEN.\n\n'
           '• Hatch and level pets with essence.\n'
+          '• Merge two same-species pets into a higher rarity.\n'
+          '• Favorite a species, bond for power, buy portrait frames.\n'
           '• Active pet follows in combat and chips damage.\n'
-          '• Loot Sprite boosts gold find; others add attack.\n'
           '• Pets are meta — they survive Ascend.',
+    ),
+    GuideTopic(
+      id: 'prestige_shop',
+      title: 'PRESTIGE SHOP',
+      body:
+          'MORE → PRESTIGE SHOP (AL-gated).\n\n'
+          '• Spend essence on permanent stash slots, pet roster, GH CD, and more.\n'
+          '• Purchases survive Ascend.\n'
+          '• Unlock higher offerings as Ascension Level rises.',
     ),
     GuideTopic(
       id: 'jobs',
@@ -129,6 +142,7 @@ abstract final class GameGuides {
           'MORE → JOBS.\n\n'
           '• Complete mission goals (kills, floors, gold, etc.).\n'
           '• Claim rewards when a job shows complete.\n'
+          '• Weekly contract: clear 3 times under the week’s modifier, then claim essence.\n'
           '• The MORE button may show JOBS (n) when claims are ready.',
     ),
     GuideTopic(
