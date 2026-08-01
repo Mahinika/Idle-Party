@@ -2689,10 +2689,8 @@ abstract final class SpatialCombat {
   }
 
   static ProjectilePattern _patternForHero(PartyHero hero, GameState state) {
-    if (hero.role == HeroRole.mage) {
-      return ProjectilePattern.arc;
-    }
-    if (hero.role == HeroRole.healer) {
+    // Casters: one bolt per auto (mage used to arc-fire 4 and dominate DPS).
+    if (hero.role == HeroRole.mage || hero.role == HeroRole.healer) {
       return ProjectilePattern.single;
     }
     return hero.weaponPattern;
