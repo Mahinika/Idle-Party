@@ -11,10 +11,11 @@ abstract final class CustomAssets {
   static const String petWardenCub = '$_root/pets/warden_cub.png';
 
   static String petForTemplateId(String templateId) => switch (templateId) {
-        'ember_pup' => petEmberPup,
-        'cave_bat' => petCaveBat,
-        'loot_sprite' => petLootSprite,
-        'warden_cub' => petWardenCub,
+        'ember_pup' || 'ash_fox' || 'spark_pup' => petEmberPup,
+        'cave_bat' || 'spirit_moth' || 'xp_wisp' || 'shrine_owl' => petCaveBat,
+        'loot_sprite' || 'gold_grub' || 'coin_imp' || 'vault_beetle' =>
+          petLootSprite,
+        'warden_cub' || 'mire_toad' => petWardenCub,
         _ => petEgg,
       };
 
@@ -22,9 +23,18 @@ abstract final class CustomAssets {
   static String petForInstanceId(String petId) {
     for (final key in const [
       'ember_pup',
+      'ash_fox',
+      'spark_pup',
       'cave_bat',
+      'spirit_moth',
+      'xp_wisp',
+      'shrine_owl',
       'loot_sprite',
+      'gold_grub',
+      'coin_imp',
+      'vault_beetle',
       'warden_cub',
+      'mire_toad',
     ]) {
       if (petId == key || petId.startsWith('${key}_')) {
         return petForTemplateId(key);

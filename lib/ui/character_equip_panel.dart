@@ -159,7 +159,7 @@ class CharacterEquipPanel extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '${h.roleLabel} ${h.level}',
-                        style: GameTheme.pixel(size: 5),
+                        style: GameTheme.pixel(size: 8),
                       ),
                     ],
                   ),
@@ -170,10 +170,10 @@ class CharacterEquipPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${hero.roleLabel}  ·  Lv${hero.level}  ·  iLvl ${_avgItemLevel(hero)}'
-          '  ·  HP ${hero.currentHp}/$maxHp',
+          '${hero.roleLabel}  |  Lv${hero.level}  |  iLvl ${_avgItemLevel(hero)}'
+          '  |  HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
           textAlign: TextAlign.center,
-          style: GameTheme.pixel(size: 6, color: GameTheme.torchHot),
+          style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
         ),
         const SizedBox(height: 6),
         // WoW paper doll: armor columns + model with weapons under feet.
@@ -252,7 +252,7 @@ class CharacterEquipPanel extends StatelessWidget {
                 ),
                 Text(
                   '${slotLabels[selected.slot] ?? selected.slot.name}'
-                  ' · i${selected.effectiveItemLevel} · ${selected.statsLine}',
+                  ' | i${selected.effectiveItemLevel} | ${selected.statsLine}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(

@@ -465,7 +465,7 @@ abstract final class KenneyAssets {
     return i < 0 ? 0 : i;
   }
 
-  /// Stable cosmetic sprite for a codex enemy name (no combat coupling).
+  /// Stable cosmetic sprite for a codex enemy name (aligned with combat families).
   static String enemySpriteForCodexName(String name) {
     final key = name.trim().toLowerCase();
     final mapped = switch (key) {
@@ -484,12 +484,52 @@ abstract final class KenneyAssets {
       'shatter fang' =>
         enemyCrystalWraith,
       'crystal mite' || 'frost wisp' || 'rime bat' => enemyCrystalMite,
-      'chtulu' || 'king crab' || 'cave king' => enemyBoss,
+      'chtulu' || 'king crab' || 'cave king' || 'earth kraken' => enemyBoss,
       'hell lord' || 'hellgate tyrant' => enemyHellBoss,
+      'cave slime' || 'drip ooze' || 'sand mite' => enemySlime,
+      'spit bat' || 'cavern spitter' || 'drill bat' => enemyBat,
+      'needle rat' || 'glass skitter' || 'fort rat' || 'sneak rat' || 'pest' ||
+      'cinder rat' =>
+        enemyRat,
+      'rock crab' || 'shellback' || 'stone maw' => enemyCrab,
+      'cave brute' || 'goblin thug' || 'clubber' || 'fort sentry' ||
+      'hall guard' || 'elite brute' || 'bone brute' || 'crypt brute' ||
+      'infernal brute' || 'flame guard' =>
+        enemyCyclops,
+      'bulwark golem' || 'obsidian golem' || 'molten golem' || 'ash colossus' ||
+      'iron ward' || 'gate knight' || 'hideout guard' || 'scrap shield' ||
+      'tomb shield' || 'ossuary guard' || 'pit guard' =>
+        enemyGolem,
+      'hex cultist' || 'glow cultist' || 'mire shaman' || 'hex witch' ||
+      'totem caller' || 'court mage' || 'banner cleric' || 'cult chanter' ||
+      'rift adept' || 'necro acolyte' || 'death chanter' || 'fire cultist' ||
+      'hell chanter' || 'rift priest' =>
+        enemyCultist,
+      'hex spider' || 'imp swarm' || 'ash tick' => enemySpider,
+      'wailing ghost' || 'risen husk' || 'bone swarm' || 'specter blade' ||
+      'pale reaper' || 'grave knight' =>
+        enemyGhost,
+      'blood stalker' || 'cutthroat' || 'knife kin' || 'royal assassin' ||
+      'blade page' || 'shade stalker' || 'wisp blade' || 'flame assassin' ||
+      'cinder blade' =>
+        enemyRat,
+      'goblin scrapper' || 'goblin slinger' || 'dart rascal' => enemyRat,
+      'crossbowman' || 'tower archer' || 'ember archer' || 'bone archer' ||
+      'warden archer' =>
+        enemyBat,
+      'underworld imp' || 'hellspawn' => enemyCultist,
+      'warden shield' || 'warden guard' || 'warden adept' => enemyGolem,
       _ => null,
     };
     if (mapped != null) return mapped;
-    if (key.contains('crystal') || key.contains('frost') || key.contains('rime') || key.contains('glacial') || key.contains('shard') || key.contains('splinter') || key.contains('shatter')) {
+
+    if (key.contains('crystal') ||
+        key.contains('frost') ||
+        key.contains('rime') ||
+        key.contains('glacial') ||
+        key.contains('shard') ||
+        key.contains('splinter') ||
+        key.contains('shatter')) {
       if (key.contains('wisp') || key.contains('mite') || key.contains('bat')) {
         return enemyCrystalMite;
       }
@@ -504,10 +544,71 @@ abstract final class KenneyAssets {
       }
       return enemyCrystalBoss;
     }
-    final catalog = enemySpriteCatalog;
-    if (catalog.isEmpty) return enemyRat;
-    final hash = name.hashCode & 0x7fffffff;
-    return catalog[hash % catalog.length];
+    if (key.contains('slime') || key.contains('ooze') || key.contains('mite')) {
+      return enemySlime;
+    }
+    if (key.contains('spider') || key.contains('tick') || key.contains('imp')) {
+      return enemySpider;
+    }
+    if (key.contains('ghost') ||
+        key.contains('specter') ||
+        key.contains('wailing') ||
+        key.contains('risen') ||
+        key.contains('bone') ||
+        key.contains('tomb') ||
+        key.contains('grave') ||
+        key.contains('necro') ||
+        key.contains('pale')) {
+      return enemyGhost;
+    }
+    if (key.contains('cult') ||
+        key.contains('shaman') ||
+        key.contains('witch') ||
+        key.contains('mage') ||
+        key.contains('chanter') ||
+        key.contains('cleric') ||
+        key.contains('priest') ||
+        key.contains('adept')) {
+      return enemyCultist;
+    }
+    if (key.contains('golem') ||
+        key.contains('ward') ||
+        key.contains('shield') ||
+        key.contains('knight') ||
+        key.contains('colossus') ||
+        key.contains('guard')) {
+      return enemyGolem;
+    }
+    if (key.contains('crab') || key.contains('shell') || key.contains('maw')) {
+      return enemyCrab;
+    }
+    if (key.contains('bat') ||
+        key.contains('spit') ||
+        key.contains('archer') ||
+        key.contains('slinger') ||
+        key.contains('crossbow')) {
+      return enemyBat;
+    }
+    if (key.contains('brute') ||
+        key.contains('thug') ||
+        key.contains('cyclops') ||
+        key.contains('sentry')) {
+      return enemyCyclops;
+    }
+    if (key.contains('hell') || key.contains('infernal') || key.contains('flame')) {
+      return enemyCultist;
+    }
+    if (key.contains('rat') ||
+        key.contains('skitter') ||
+        key.contains('stalker') ||
+        key.contains('assassin') ||
+        key.contains('blade') ||
+        key.contains('scrapper') ||
+        key.contains('pest')) {
+      return enemyRat;
+    }
+    // Prefer dungeon-default slime over hash lottery for unknown names.
+    return enemySlime;
   }
 
   static String lootIconFor(LootRarity rarity) => switch (rarity) {

@@ -284,6 +284,10 @@ class GameDirector extends ChangeNotifier {
     if (_isLoading || !_state.inDungeon || _spatial == null) {
       return;
     }
+    // Freeze sim while wipe modal is up (avoids toast/SFX spam).
+    if (_awaitingWipeChoice) {
+      return;
+    }
 
     // Room changed externally (travel / ascend / restart)
     if (_battleToken != _state.battleNumber) {
@@ -294,7 +298,12 @@ class GameDirector extends ChangeNotifier {
     final before = _state;
     _spatial = result.world;
     _state = result.state;
-    _roomGold += result.goldFromKills;
+    // Only bank this-tick kill gold — clear-frame must not re-fold the room.
+    if (!result.roomCleared) {
+      _roomGold += result.goldFromKills;
+    } else if (result.goldFromKills > 0) {
+      _roomGold += result.goldFromKills;
+    }
     if (result.abilityCasts > 0) {
       _state = MetaSystems.evaluateAchievements(
         _state.copyWith(
@@ -325,6 +334,8 @@ class GameDirector extends ChangeNotifier {
 
     if (result.partyWiped) {
       _awaitingWipeChoice = true;
+      _spatialTimer?.cancel();
+      _spatialTimer = null;
       GameAudio.wipe();
       final floor = _state.currentRoom.floorNumber;
       final pushFail = _state.dungeonMode == DungeonMode.push &&
@@ -350,10 +361,12 @@ class GameDirector extends ChangeNotifier {
       final beforeDungeon = _state.highestDungeonCleared;
       final wasBoss = _state.currentRoom.type == RoomType.boss;
       final beforeClear = _state;
+      // Combat floors already dropped kill loot on the ground; treasure still
+      // needs a clear roll.
       _state = GameLogic.completeCurrentRoom(
         _state,
         goldGain: gold,
-        skipLootRoll: false,
+        skipLootRoll: !wasTreasure,
       ).copyWith(lastUpdated: DateTime.now());
       _announceAbilityUnlocks(beforeClear, _state);
       _announceAchievementUnlocks(beforeClear, _state);
@@ -421,6 +434,9 @@ class GameDirector extends ChangeNotifier {
     }
     GameAudio.ui();
     _rebuildSpatial();
+    if (enableSpatialLoop) {
+      _startSpatialLoop();
+    }
     notifyListeners();
     unawaited(_storage.save(_state));
   }
@@ -433,8 +449,16 @@ class GameDirector extends ChangeNotifier {
   void hubAfterWipe() {
     if (!_awaitingWipeChoice) return;
     _awaitingWipeChoice = false;
-    _state = GameLogic.leaveDungeon(_state);
+    // Heal so hub HP bars are not stuck at 0 until next enter.
+    final left = GameLogic.leaveDungeon(_state);
+    _state = left.copyWith(
+      heroes: [
+        for (final h in left.heroes)
+          h.copyWith(currentHp: left.effectiveHeroMaxHp(h)),
+      ],
+    );
     _spatialTimer?.cancel();
+    _spatialTimer = null;
     _spatial = null;
     showToast('Returned to hub', life: 2);
     GameAudio.ui();
@@ -475,6 +499,7 @@ class GameDirector extends ChangeNotifier {
 
   void enterDungeon({String dungeonId = 'sandy'}) {
     if (_isLoading) return;
+    _awaitingWipeChoice = false;
     _state = GameLogic.enterDungeon(_state, dungeonId: dungeonId);
     _lastStashLen = _state.gearStash.length;
     _autosaveAccum = 0;
@@ -489,8 +514,10 @@ class GameDirector extends ChangeNotifier {
 
   void leaveDungeon() {
     if (_isLoading) return;
+    _awaitingWipeChoice = false;
     _state = GameLogic.ensureWeeklyContract(GameLogic.leaveDungeon(_state));
     _spatialTimer?.cancel();
+    _spatialTimer = null;
     _spatial = null;
     notifyListeners();
     unawaited(_storage.save(_state));

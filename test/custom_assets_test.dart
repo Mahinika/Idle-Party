@@ -62,6 +62,14 @@ void main() {
       CustomAssets.petForInstanceId('ember_pup_42'),
       CustomAssets.petEmberPup,
     );
+    expect(
+      CustomAssets.petForInstanceId('ash_fox_9'),
+      CustomAssets.petEmberPup,
+    );
+    expect(
+      CustomAssets.petForTemplateId('gold_grub'),
+      CustomAssets.petLootSprite,
+    );
   });
 
   test('hell and king bosses use distinct combat sprites', () {

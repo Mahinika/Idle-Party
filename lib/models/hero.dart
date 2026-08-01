@@ -251,6 +251,13 @@ class PartyHero {
       };
 
   factory PartyHero.fromJson(Map<String, dynamic> json) {
+    int asInt(dynamic v, [int fallback = 0]) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse('$v') ?? fallback;
+    }
+
     final roleRaw = json['role'] as String?;
     final name = json['name'] as String;
     final role = roleRaw == null
@@ -283,9 +290,9 @@ class PartyHero {
         );
       }
     } else {
-      final atk = (statsJson['attack'] as int?) ?? 1;
-      final def = (statsJson['defense'] as int?) ?? 1;
-      final hp = (statsJson['maxHp'] as int?) ?? 10;
+      final atk = asInt(statsJson['attack'], 1);
+      final def = asInt(statsJson['defense'], 1);
+      final hp = asInt(statsJson['maxHp'], 10);
       final sta = (hp / 10).ceil().clamp(1, 999);
       stats = switch (role) {
         HeroRole.warrior => Stats(
@@ -314,12 +321,12 @@ class PartyHero {
 
     return PartyHero(
       name: name,
-      level: json['level'] as int,
-      currentHp: json['currentHp'] as int,
+      level: asInt(json['level'], 1),
+      currentHp: asInt(json['currentHp']),
       stats: stats,
       role: role,
       equipped: equipped,
-      xp: (json['xp'] as int?) ?? 0,
+      xp: asInt(json['xp']),
     );
   }
 }

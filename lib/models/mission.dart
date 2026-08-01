@@ -55,14 +55,21 @@ class Mission {
   };
 
   factory Mission.fromJson(Map<String, dynamic> json) {
+    int asInt(dynamic v, [int fallback = 0]) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse('$v') ?? fallback;
+    }
+
     return Mission(
       id: json['id'] as String,
       type: MissionType.values.byName(json['type'] as String),
       title: json['title'] as String,
-      target: json['target'] as int,
-      progress: json['progress'] as int,
-      goldReward: json['goldReward'] as int,
-      essenceReward: json['essenceReward'] as int,
+      target: asInt(json['target']),
+      progress: asInt(json['progress']),
+      goldReward: asInt(json['goldReward']),
+      essenceReward: asInt(json['essenceReward']),
     );
   }
 }

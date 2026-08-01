@@ -75,4 +75,23 @@ void main() {
       KenneyAssets.enemyCrystalWraith,
     );
   });
+
+  test('sandy swarm codex names map to slime not hash lottery', () {
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Cave Slime'),
+      KenneyAssets.enemySlime,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Drip Ooze'),
+      KenneyAssets.enemySlime,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Spit Bat'),
+      KenneyAssets.enemyBat,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Blood Stalker'),
+      KenneyAssets.enemyRat,
+    );
+  });
 }

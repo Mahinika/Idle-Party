@@ -138,13 +138,14 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'jobs',
-      title: 'JOBS / CONTRACTS',
+      title: 'CONTRACTS',
       body:
-          'MORE → JOBS.\n\n'
+          'MORE → CONTRACTS.\n\n'
           '• Complete mission goals (kills, floors, gold, etc.).\n'
-          '• Claim rewards when a job shows complete.\n'
-          '• Claim 3 jobs in a row for a +5e chain bonus.\n'
-          '• The MORE button may show JOBS (n) when claims are ready.',
+          '• Claim rewards when a contract shows complete.\n'
+          '• Claim 3 contracts in a row for a +5e chain bonus.\n'
+          '• The MORE menu may show CONTRACTS (n) when claims are ready.\n'
+          '• The top CLAIM chip claims all ready contracts at once.',
     ),
     GuideTopic(
       id: 'weekly',

@@ -43,6 +43,21 @@ String _patternGlyph(ProjectilePattern pattern) => switch (pattern) {
   ProjectilePattern.pierce => 'X',
 };
 
+String _formatCount(int n) {
+  if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
+  if (n >= 10000) return '${(n / 1000).toStringAsFixed(1)}k';
+  if (n >= 1000) {
+    final s = n.toString();
+    final buf = StringBuffer();
+    for (var i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+      buf.write(s[i]);
+    }
+    return buf.toString();
+  }
+  return '$n';
+}
+
 String _archetypeLabel(EnemyArchetype archetype) => switch (archetype) {
   EnemyArchetype.swarm => 'SWARM',
   EnemyArchetype.brute => 'BRUTE',
@@ -286,7 +301,7 @@ class _Is2ShellState extends State<Is2Shell> {
         onTap: () => _openOverlay(Is2Overlay.forge),
       ),
       (
-        label: claimable > 0 ? 'JOBS ($claimable)' : 'JOBS',
+        label: claimable > 0 ? 'CONTRACTS ($claimable)' : 'CONTRACTS',
         onTap: () => _openOverlay(Is2Overlay.jobs),
       ),
       (
@@ -596,11 +611,10 @@ class _TopHud extends StatelessWidget {
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenMore;
 
-  void _claimFirstMission() {
+  void _claimAllReadyMissions() {
     for (final mission in state.missions) {
       if (mission.isComplete) {
         director.claimMission(mission.id);
-        return;
       }
     }
   }
@@ -638,7 +652,7 @@ class _TopHud extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$dungeonName · F$floor${state.hardmodeLevel > 0 ? '  HM+${state.hardmodeLevel}' : ''}',
+                  '$dungeonName | F$floor${state.hardmodeLevel > 0 ? '  HM+${state.hardmodeLevel}' : ''}',
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(
                     size: 14,
@@ -651,22 +665,22 @@ class _TopHud extends StatelessWidget {
           if (claimable > 0) ...[
             _MissionClaimChip(
               count: claimable,
-              onTap: _claimFirstMission,
+              onTap: _claimAllReadyMissions,
             ),
             const SizedBox(width: 5),
           ],
-          _Chip(icon: KenneyAssets.coinGold, label: '${state.gold}'),
+          _Chip(icon: KenneyAssets.coinGold, label: _formatCount(state.gold)),
           const SizedBox(width: 5),
-          _Chip(icon: KenneyAssets.vialBlue, label: '${state.essence}'),
+          _Chip(icon: KenneyAssets.vialBlue, label: _formatCount(state.essence)),
           SizedBox(
             width: GameTheme.minTouch,
             height: GameTheme.minTouch,
             child: IconButton(
               padding: EdgeInsets.zero,
               onPressed: onOpenMore,
-              icon: Text(
-                '???',
-                style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
+              icon: const KenneySprite(
+                asset: KenneyAssets.iconDoor,
+                size: 18,
               ),
               tooltip: 'More',
             ),
@@ -677,7 +691,10 @@ class _TopHud extends StatelessWidget {
             child: IconButton(
               padding: EdgeInsets.zero,
               onPressed: onOpenSettings,
-              icon: KenneySprite(asset: KenneyAssets.iconSkull, size: 18),
+              icon: const KenneySprite(
+                asset: KenneyAssets.iconShield,
+                size: 18,
+              ),
               tooltip: 'Settings',
             ),
           ),
@@ -932,7 +949,8 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
                   }(),
                   maxHp: () {
                     final s = _spatialFor(world, i);
-                    return s?.maxHp ?? state.heroes[i].maxHp;
+                    return s?.effectiveMaxHp ??
+                        state.effectiveHeroMaxHp(state.heroes[i]);
                   }(),
                   spatial: widget.selectedHeroIndex == i
                       ? _spatialFor(world, i)
@@ -1290,10 +1308,10 @@ class _DpsMeter extends StatelessWidget {
 
   static String _roleTag(HeroRole? role) => switch (role) {
         HeroRole.warrior => 'WAR',
-        HeroRole.healer => 'DISC',
+        HeroRole.healer => 'HEAL',
         HeroRole.mage => 'MAGE',
         HeroRole.rogue => 'ROG',
-        null => '???',
+        null => '---',
       };
 
   static String _fmt(num n) {
@@ -1338,7 +1356,7 @@ class _DpsMeter extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'DPS',
+                'DMG SHARE',
                 style: GameTheme.pixel(
                   size: 7,
                   color: GameTheme.parchmentDim,
@@ -1635,7 +1653,7 @@ class _InventoryDock extends StatelessWidget {
             const SizedBox(width: 4),
             Expanded(
               child: KenneyButton(
-                label: 'AUTO',
+                label: 'AUTO EQUIP',
                 onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
                 style: KenneyButtonStyle.grey,
               ),
@@ -1652,7 +1670,7 @@ class _InventoryDock extends StatelessWidget {
             const SizedBox(width: 4),
             Expanded(
               child: KenneyButton(
-                label: 'JUNK',
+                label: 'SELL JUNK',
                 onPressed: state.gearStash.isEmpty ? null : onAutoSell,
                 style: KenneyButtonStyle.grey,
               ),
@@ -1785,7 +1803,7 @@ class _InventoryDock extends StatelessWidget {
           ),
         ] else
           Text(
-            'Tap item · choose hero  ·  Hold · combinator',
+            'Tap item | choose hero | Hold | combinator',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
       ],
@@ -1849,13 +1867,12 @@ class _InventoryDock extends StatelessWidget {
             const SizedBox(height: 4),
           ],
           KenneyButton(
-            label:
-                'GOD HAND Lv${state.godHandLevel}  '
-                'CD Lv${state.metaDepth.godHandCdLevel}  ${ghCost}e',
+            label: 'GOD HAND Lv${state.godHandLevel}  ${ghCost}e',
             onPressed: state.essence >= ghCost ? onUpgradeGodHand : null,
           ),
           Text(
-            'AOE ${state.godHandBaseDamage} · r${state.godHandRadius.toStringAsFixed(1)}',
+            'AOE ${state.godHandBaseDamage} | r${state.godHandRadius.toStringAsFixed(1)}'
+            ' | CD Lv${state.metaDepth.godHandCdLevel} in Forge',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
           ),
@@ -1864,19 +1881,23 @@ class _InventoryDock extends StatelessWidget {
             label: 'SOULBIND  3 frag',
             onPressed:
                 state.soulboundFragments >= 3 &&
-                    state.heroes.any((h) {
-                      if (state.metaDepth.soulboundIsArmor) {
-                        return h.itemIn(EquipmentSlot.chest) != null ||
-                            h.itemIn(EquipmentSlot.cloak) != null;
-                      }
-                      return h.itemIn(EquipmentSlot.weapon) != null;
-                    })
+                    state.heroes.any(
+                      (h) =>
+                          h.itemIn(EquipmentSlot.weapon) != null ||
+                          h.itemIn(EquipmentSlot.chest) != null ||
+                          h.itemIn(EquipmentSlot.cloak) != null,
+                    )
                 ? onBindSoulbound
                 : null,
             style: KenneyButtonStyle.grey,
           ),
           Text(
-            'Need $fragmentsNeeded fragments (have ${state.soulboundFragments})',
+            fragmentsNeeded == 0
+                ? 'Binds weapon or chest/cloak from any hero | '
+                    '${state.soulboundFragments} frag'
+                : 'Need $fragmentsNeeded more'
+                    '${fragmentsNeeded == 1 ? ' fragment' : ' fragments'}'
+                    ' (have ${state.soulboundFragments})',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
           ),
@@ -2470,7 +2491,7 @@ class _EquipOverlay extends StatelessWidget {
             children: [
               for (var i = 0; i < state.heroes.length; i++)
                 KenneyButton(
-                  label: '? ${state.heroes[i].roleLabel}',
+                  label: state.heroes[i].roleLabel,
                   onPressed: () => onEquipToHero(i),
                   expanded: false,
                 ),
@@ -2484,14 +2505,14 @@ class _EquipOverlay extends StatelessWidget {
               child: KenneyButton(
                 label: selectedId == null
                     ? 'EQUIP'
-                    : 'EQUIP · ${state.heroes[selectedHeroIndex.clamp(0, state.heroes.length - 1)].roleLabel}',
+                    : 'EQUIP | ${state.heroes[selectedHeroIndex.clamp(0, state.heroes.length - 1)].roleLabel}',
                 onPressed: selectedId == null ? null : onEquipSelected,
               ),
             ),
             const SizedBox(width: 6),
             Expanded(
               child: KenneyButton(
-                label: 'AUTO',
+                label: 'AUTO EQUIP',
                 onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
                 style: KenneyButtonStyle.grey,
               ),
@@ -2665,7 +2686,7 @@ class _ForgeOverlay extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 4),
             child: Text(
-              '? BEST',
+              'BEST',
               style: GameTheme.pixel(size: GameTheme.hudPixel, color: GameTheme.clear),
             ),
           ),
@@ -2773,13 +2794,23 @@ class _ForgeOverlay extends StatelessWidget {
               final owned = state.hasRelic(relicId);
               final name = GameLogic.relicNames[relicId] ?? relicId;
               final cost = GameLogic.relicCosts[relicId] ?? 0;
-              final desc =
-                  GameLogic.relicDescriptions[relicId] ?? '';
               final tier = owned
                   ? (state.metaDepth.relicTierOf(relicId) < 1
                       ? 1
                       : state.metaDepth.relicTierOf(relicId))
                   : 0;
+              final desc = switch (relicId) {
+                GameLogic.warBannerRelic => owned
+                    ? 'Permanent +${state.relicAttackBonus} team attack aura (T$tier).'
+                    : 'Permanent +4 team attack aura per tier.',
+                GameLogic.ironWardRelic => owned
+                    ? 'Permanent +${state.relicDefenseBonus} team defense aura (T$tier).'
+                    : 'Permanent +2 team defense aura per tier.',
+                GameLogic.phoenixEmberRelic => owned
+                    ? 'Permanent +${state.relicVitalityBonus} max HP for every hero (T$tier).'
+                    : 'Permanent +10 max HP per hero per tier.',
+                _ => GameLogic.relicDescriptions[relicId] ?? '',
+              };
               final nextTier = tier + 1;
               final tierCost = GameLogic.relicTierUpgradeCost(nextTier);
               return Column(
@@ -2850,7 +2881,9 @@ class _ForgeOverlay extends StatelessWidget {
         const SizedBox(height: 6),
         if (state.soulboundItem == null)
           Text(
-            'Bind a weapon in the bag Tools tab (3 fragments).',
+            'Bind a weapon or chest/cloak from bag Tools (3 fragments). '
+            'Prefers ${state.metaDepth.soulboundIsArmor ? 'armor' : 'weapon'} '
+            'if available.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           )
         else ...[
@@ -2875,15 +2908,18 @@ class _ForgeOverlay extends StatelessWidget {
         Text('GOD HAND CD', style: GameTheme.pixel(size: 8)),
         const SizedBox(height: 6),
         KenneyButton(
-          label:
-              'CD Lv${state.metaDepth.godHandCdLevel}  '
-              '${GameLogic.godHandCdUpgradeCost(state.metaDepth.godHandCdLevel)}e',
-          onPressed: state.essence >=
-                  GameLogic.godHandCdUpgradeCost(
-                    state.metaDepth.godHandCdLevel,
-                  )
-              ? director.upgradeGodHandCd
-              : null,
+          label: state.metaDepth.godHandCdLevel >= 8
+              ? 'CD Lv${state.metaDepth.godHandCdLevel}  MAX'
+              : 'CD Lv${state.metaDepth.godHandCdLevel}  '
+                  '${GameLogic.godHandCdUpgradeCost(state.metaDepth.godHandCdLevel)}e',
+          onPressed: state.metaDepth.godHandCdLevel >= 8
+              ? null
+              : (state.essence >=
+                      GameLogic.godHandCdUpgradeCost(
+                        state.metaDepth.godHandCdLevel,
+                      )
+                  ? director.upgradeGodHandCd
+                  : null),
         ),
       ],
     );
@@ -2925,7 +2961,7 @@ class _JobsOverlay extends StatelessWidget {
                   ),
                 ),
                 KenneyButton(
-                  label: mission.isComplete ? 'CLAIM' : 'WAIT',
+                  label: mission.isComplete ? 'CLAIM' : '${mission.progress}/${mission.target}',
                   onPressed: mission.isComplete
                       ? () => director.claimMission(mission.id)
                       : null,
@@ -2982,44 +3018,9 @@ class _SanctuaryOverlay extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (track == 'gold')
-                    Text(
-                      'Now +${state.sanctuaryGoldBonusPercent}% gold  ·  '
-                      '+${nextLevel * 5}% gold',
-                      style: GameTheme.body(
-                        size: 13,
-                        color: GameTheme.clear,
-                      ),
-                    )
-                  else if (track == 'power')
-                    Text(
-                      'Now +${state.sanctuaryAttackBonus} ATK  ·  '
-                      '+$nextLevel party attack',
-                      style: GameTheme.body(
-                        size: 13,
-                        color: GameTheme.clear,
-                      ),
-                    )
-                  else if (track == 'vitality')
-                    Text(
-                      'Now +${state.sanctuaryVitalityBonus} HP  ·  '
-                      '+${nextLevel * 2} max HP',
-                      style: GameTheme.body(
-                        size: 13,
-                        color: GameTheme.clear,
-                      ),
-                    )
-                  else if (track == 'xp')
-                    Text(
-                      'Now +${state.sanctuaryXpBonusPercent}% XP  ·  '
-                      '+${nextLevel * 4}% XP find',
-                      style: GameTheme.body(
-                        size: 13,
-                        color: GameTheme.clear,
-                      ),
-                    ),
                   Text(
-                    'Prestige $prestige  ·  Next: $nextBonus  ·  $cost essence',
+                    'Lv$level | Next $nextBonus | ${cost}e'
+                    '${prestige > 0 ? ' | Prestige $prestige' : ''}',
                     style: GameTheme.body(
                       size: 13,
                       color: GameTheme.parchmentDim,
@@ -3037,12 +3038,15 @@ class _SanctuaryOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   KenneyButton(
-                    label:
-                        '${GameLogic.sanctuaryNames[track]} Lv$level  '
-                        '$nextBonus  ${cost}e',
-                    onPressed: state.essence >= cost
-                        ? () => director.upgradeSanctuary(track)
-                        : null,
+                    label: level >= 12
+                        ? '${GameLogic.sanctuaryNames[track]} Lv$level  MAX'
+                        : '${GameLogic.sanctuaryNames[track]} Lv$level  '
+                            '$nextBonus  ${cost}e',
+                    onPressed: level >= 12
+                        ? null
+                        : (state.essence >= cost
+                            ? () => director.upgradeSanctuary(track)
+                            : null),
                   ),
                   if (level >= 12) ...[
                     const SizedBox(height: 4),
@@ -3154,7 +3158,7 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
           ],
         ),
         const SizedBox(height: 12),
-        Text('Auto-sell drops = iLvl', style: GameTheme.pixel(size: 7)),
+        Text('Auto-sell max iLvl', style: GameTheme.pixel(size: 8)),
         const SizedBox(height: 6),
         Row(
           children: [
@@ -3275,28 +3279,31 @@ class _CaveSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 140),
-      width: 44,
-      height: 24,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: value
-            ? GameTheme.mossLit.withValues(alpha: 0.55)
-            : GameTheme.stone.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: value ? GameTheme.torchHot : GameTheme.border,
-          width: value ? 1.5 : 1,
-        ),
-      ),
-      alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        width: 16,
-        height: 16,
+    return Semantics(
+      toggled: value,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        width: 44,
+        height: 24,
+        padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
-          color: value ? GameTheme.torchHot : GameTheme.parchmentDim,
-          borderRadius: BorderRadius.circular(3),
+          color: value
+              ? GameTheme.mossLit.withValues(alpha: 0.55)
+              : GameTheme.stone.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: value ? GameTheme.torchHot : GameTheme.border,
+            width: value ? 1.5 : 1,
+          ),
+        ),
+        alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: value ? GameTheme.torchHot : GameTheme.parchmentDim,
+            borderRadius: BorderRadius.circular(3),
+          ),
         ),
       ),
     );
@@ -3394,13 +3401,7 @@ class _MarketOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'TRAVELING MERCHANT',
-          textAlign: TextAlign.center,
-          style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Gold ${state.gold}  ?  Essence ${state.essence}',
+          'Gold ${_formatCount(state.gold)} / Essence ${_formatCount(state.essence)}',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
@@ -3543,6 +3544,7 @@ class _BeastOverlayState extends State<_BeastOverlay> {
   }
 
   static String _passiveLabel(Pet pet) {
+    if (pet.passive == PetPassive.attack) return '';
     final name = switch (pet.passive) {
       PetPassive.attack => 'ATK',
       PetPassive.goldFind => 'GOLD',
@@ -3563,7 +3565,7 @@ class _BeastOverlayState extends State<_BeastOverlay> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'BEAST PEN  ${state.ownedPets.length}/$cap',
+          'Roster ${state.ownedPets.length}/$cap',
           textAlign: TextAlign.center,
           style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
         ),
@@ -3596,7 +3598,11 @@ class _BeastOverlayState extends State<_BeastOverlay> {
             KenneyButton(
               label: 'CONFIRM MERGE',
               style: KenneyButtonStyle.red,
-              onPressed: _doMerge,
+              onPressed: _mergeA != null &&
+                      _mergeB != null &&
+                      GameLogic.canMergePets(state, _mergeA!, _mergeB!)
+                  ? _doMerge
+                  : null,
             ),
           const SizedBox(height: 8),
           for (final pet in state.ownedPets)
@@ -3628,25 +3634,30 @@ class _BeastOverlayState extends State<_BeastOverlay> {
                           ),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${pet.name}  ·  ${pet.rarity.name}'
-                                  '${pet.frame != PetFrame.none ? '  [${pet.frame.name}]' : ''}',
-                                  style: GameTheme.pixel(size: 7),
-                                ),
-                                Text(
-                                  'Lv${pet.level}  ATK +${pet.totalAttackBonus}  '
-                                  '${_passiveLabel(pet)}  ·  '
-                                  '${pet.affinityDungeonId}'
-                                  '${pet.bondLevel > 0 ? '  bond${pet.bondLevel}' : ''}',
-                                  style: GameTheme.body(
-                                    size: 13,
-                                    color: GameTheme.parchmentDim,
-                                  ),
-                                ),
-                              ],
+                            child: Builder(
+                              builder: (context) {
+                                final passive = _passiveLabel(pet);
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${pet.name}  |  ${pet.rarity.name}'
+                                      '${pet.frame != PetFrame.none ? '  [${pet.frame.name}]' : ''}',
+                                      style: GameTheme.pixel(size: 8),
+                                    ),
+                                    Text(
+                                      'Lv${pet.level}  ATK +${pet.totalAttackBonus}'
+                                      '${passive.isEmpty ? '' : '  $passive'}'
+                                      '  |  ${pet.affinityDungeonId}'
+                                      '${pet.bondLevel > 0 ? '  bond${pet.bondLevel}' : ''}',
+                                      style: GameTheme.body(
+                                        size: 13,
+                                        color: GameTheme.parchmentDim,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                           ),
                           if (state.activePet?.id == pet.id)

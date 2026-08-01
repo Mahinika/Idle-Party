@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/meta_systems.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
 import 'custom_assets.dart';
@@ -293,15 +294,6 @@ class _HubScreenState extends State<HubScreen>
                     ),
                     const SizedBox(height: 6),
                     ChallengeToggles(director: director),
-                    if (state.metaDepth.weeklyProgress >= 3 &&
-                        !state.metaDepth.weeklyClaimed) ...[
-                      const SizedBox(height: 4),
-                      KenneyButton(
-                        label:
-                            'CLAIM WEEKLY  +${GameLogic.weeklyClaimEssence}e',
-                        onPressed: director.claimWeekly,
-                      ),
-                    ],
                     const SizedBox(height: 6),
                     Transform.scale(
                       scale: 1.0 + (_torch.value * 0.012),
@@ -321,7 +313,9 @@ class _HubScreenState extends State<HubScreen>
                       style: director.isDailyClaimedToday
                           ? KenneyButtonStyle.grey
                           : KenneyButtonStyle.brown,
-                      onPressed: director.enterDaily,
+                      onPressed: director.isDailyClaimedToday
+                          ? null
+                          : director.enterDaily,
                     ),
                     if (canAscend || state.bossVictories > 0) ...[
                       const SizedBox(height: 6),
@@ -330,7 +324,7 @@ class _HubScreenState extends State<HubScreen>
                     const SizedBox(height: 6),
                     KenneyButton(
                       label: canAscend
-                          ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1)}e'
+                          ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
                           : 'ASCEND',
                       style: canAscend
                           ? KenneyButtonStyle.red
@@ -385,7 +379,7 @@ class _HubScreenState extends State<HubScreen>
         (label: 'BAG', onTap: widget.onOpenInventory),
         (label: 'FORGE', onTap: widget.onOpenForge),
         (
-          label: claimable > 0 ? 'JOBS ($claimable)' : 'JOBS',
+          label: claimable > 0 ? 'CONTRACTS ($claimable)' : 'CONTRACTS',
           onTap: widget.onOpenJobs,
         ),
         (label: 'SANCTUARY', onTap: widget.onOpenSanctuary),

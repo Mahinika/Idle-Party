@@ -34,11 +34,26 @@ Contact sheet (indexed): `tool/_tiny_dungeon_sheet.png`
 
 `assets/kenney/extras/` — `book.png`, `coin_gold.png`, `ring.png`
 
+## Custom identity art (`assets/custom/`)
+
+Preferred over Tiny Dungeon for heroes, enemies, pets, gear slot icons, dungeon portraits, and painted backdrops.
+
+| Folder | Use |
+|--------|-----|
+| `custom/heroes/` | Party dolls (knight/healer/wizard/rogue) |
+| `custom/enemies/` | Combat + Codex sprites (slime, rat, bat, spider, ghost, cultist, cyclops, crab, golem, bosses, crystal_*) |
+| `custom/pets/` | Egg + ember_pup / cave_bat / loot_sprite / warden_cub (other species remap to nearest) |
+| `custom/icons/` | Armor/jewelry slot icons + tome |
+| `custom/portraits/` + `custom/ui/backdrops/` | Per-dungeon hub identity |
+| `custom/ui/` | intro/hub/dungeon scenes |
+
+Codex names resolve via `KenneyAssets.enemySpriteForCodexName` (keyword + exact maps; no hash lottery).
+
 ## UI packs (unchanged)
 
 - `ui_adventure/` panels & buttons
 - `ui_bars/` HP bar slices
-- `icons/` HUD icons
+- `icons/` HUD icons (`door` = More, `shield_icon` = Settings)
 - `runes/` relics
 
 ## Why tile IDs

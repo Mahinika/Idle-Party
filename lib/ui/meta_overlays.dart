@@ -124,7 +124,7 @@ class AchievementsOverlay extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    hide ? '???' : def.title,
+                                    hide ? 'Hidden' : def.title,
                                     style: GameTheme.pixel(
                                       size: 7,
                                       color: done
@@ -144,7 +144,11 @@ class AchievementsOverlay extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              hide ? '???' : '+${def.essenceReward}e',
+                              hide
+                                  ? '---'
+                                  : done
+                                      ? 'AWARDED'
+                                      : '+${def.essenceReward}e',
                               style: GameTheme.pixel(
                                 size: 6,
                                 color: done
@@ -212,9 +216,9 @@ class _CodexOverlayState extends State<CodexOverlay> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Codex ${GameLogic.codexCompletionPercent(state)}%  ·  '
+          'Codex ${GameLogic.codexCompletionPercent(state)}%  |  '
           '${state.codexEnemies.length + state.codexItems.length} discovered '
-          '(soft goal ${GameLogic.expectedCodexEntries})',
+          '(goal ${GameLogic.expectedCodexEntries} entries)',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
@@ -229,17 +233,19 @@ class _CodexOverlayState extends State<CodexOverlay> {
                 builder: (context) {
                   final claimed =
                       state.metaDepth.codexClaims.contains(entry.key);
-                  final ready = GameLogic.codexCompletionPercent(state) >=
-                          entry.value.pct &&
-                      !claimed;
+                  final pct = GameLogic.codexCompletionPercent(state);
+                  final ready = pct >= entry.value.pct && !claimed;
+                  final locked = pct < entry.value.pct;
                   return KenneyButton(
                     label: claimed
-                        ? '${entry.value.pct}% ✓'
-                        : '${entry.value.pct}% +${entry.value.reward}e',
+                        ? '${entry.value.pct}% done'
+                        : locked
+                            ? '${entry.value.pct}% Need ${entry.value.pct}%'
+                            : '${entry.value.pct}% +${entry.value.reward}e',
                     expanded: false,
-                    style: claimed
-                        ? KenneyButtonStyle.grey
-                        : KenneyButtonStyle.brown,
+                    style: ready
+                        ? KenneyButtonStyle.brown
+                        : KenneyButtonStyle.grey,
                     onPressed: ready
                         ? () => widget.director.claimCodexReward(entry.key)
                         : null,
@@ -342,6 +348,36 @@ class LoadoutsOverlay extends StatelessWidget {
     }
   }
 
+  Future<void> _confirmDelete(BuildContext context, String slotId) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Delete loadout?',
+        content: Text(
+          'Remove saved gear preset $slotId. This cannot be undone.',
+          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'CANCEL',
+              style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+            ),
+          ),
+          KenneyButton(
+            label: 'DELETE',
+            expanded: false,
+            style: KenneyButtonStyle.red,
+            onPressed: () => Navigator.pop(ctx, true),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) director.deleteLoadout(slotId);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
@@ -361,7 +397,7 @@ class LoadoutsOverlay extends StatelessWidget {
             loadout: _findLoadout(state, slotId),
             onSave: () => _promptSave(context, slotId),
             onApply: () => director.applyLoadout(slotId),
-            onDelete: () => director.deleteLoadout(slotId),
+            onDelete: () => _confirmDelete(context, slotId),
           ),
           const SizedBox(height: 8),
         ],
@@ -929,14 +965,16 @@ class PrestigeShopOverlay extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (state.ascensionLevel < 3) ...[
+          Text(
+            'Most upgrades unlock at AL3. Ascend to open the shop.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+          ),
+          const SizedBox(height: 8),
+        ],
         Text(
-          'PRESTIGE SHOP',
-          textAlign: TextAlign.center,
-          style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Essence ${state.essence}  ·  AL${state.ascensionLevel}',
+          'Essence ${state.essence}  |  AL${state.ascensionLevel}',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),

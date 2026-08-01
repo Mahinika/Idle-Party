@@ -51,12 +51,12 @@ class SpatialActor {
   double x;
   double y;
   int hp;
-  final int maxHp;
-  final int attack;
-  final int defense;
-  final double moveSpeed;
+  int maxHp;
+  int attack;
+  int defense;
+  double moveSpeed;
   final double attackRange;
-  final double attackCooldown;
+  double attackCooldown;
   final int assetIndex;
   final EnemyRole role;
   final EnemyArchetype archetype;
@@ -66,7 +66,7 @@ class SpatialActor {
   final int? partyIndex;
 
   /// Snapshot of hero level for ability unlock checks.
-  final int heroLevel;
+  int heroLevel;
 
   double fireCooldown;
   final ProjectilePattern pattern;
@@ -700,6 +700,9 @@ abstract final class SpatialCombat {
       }
       if (a.fortitudeTimer > 0) {
         a.fortitudeTimer = math.max(0, a.fortitudeTimer - dt);
+        if (a.fortitudeTimer <= 0 && a.hp > a.effectiveMaxHp) {
+          a.hp = a.effectiveMaxHp;
+        }
       }
       if (a.powerInfusionTimer > 0) {
         a.powerInfusionTimer = math.max(0, a.powerInfusionTimer - dt);
@@ -2537,7 +2540,12 @@ abstract final class SpatialCombat {
         team: SpatialTeam.hero,
         x: prev?.x ?? (spawn.$1 + 0.5 + ox),
         y: prev?.y ?? (spawn.$2 + 0.5 + oy),
-        hp: hero.isAlive ? hero.currentHp.clamp(0, maxHp) : 0,
+        // Prefer live spatial HP (keeps fortitude surplus); fall back to state.
+        hp: hero.isAlive
+            ? (prev != null
+                ? prev.hp.clamp(0, math.max(prev.effectiveMaxHp, maxHp))
+                : hero.currentHp.clamp(0, maxHp))
+            : 0,
         maxHp: maxHp,
         attack: state.effectiveHeroAttack(hero),
         defense: state.effectiveHeroDefense(hero),
@@ -2864,9 +2872,7 @@ abstract final class SpatialCombat {
             hero.y = pad.$2;
           }
         }
-        final gold = goldFromKills > 0
-            ? goldFromKills
-            : state.enemies.fold<int>(0, (s, e) => s + e.rewardGold);
+        final gold = goldFromKills;
         return _stepResult(
           world,
           nextState,
@@ -3697,8 +3703,12 @@ abstract final class SpatialCombat {
     for (var i = 0; i < state.heroes.length; i++) {
       final h = state.heroes[i];
       final spatial = i < world.heroes.length ? world.heroes[i] : null;
+      // Persist against base max (not fortitude-buffed spatial max).
+      final baseMax = state.effectiveHeroMaxHp(h);
       heroes.add(
-        h.copyWith(currentHp: spatial?.hp.clamp(0, spatial.effectiveMaxHp) ?? 0),
+        h.copyWith(
+          currentHp: spatial?.hp.clamp(0, baseMax) ?? 0,
+        ),
       );
     }
     final enemies = <EnemyUnit>[];
@@ -3930,6 +3940,21 @@ abstract final class SpatialCombat {
             argb: _floaterXp,
             life: 1.2,
           );
+          if (i < world.heroes.length) {
+            final h = next.heroes[i];
+            final a = world.heroes[i];
+            final newMax = next.effectiveHeroMaxHp(h);
+            final delta = newMax - a.maxHp;
+            a.maxHp = newMax;
+            if (a.hp > 0 && delta > 0) {
+              a.hp = math.min(a.effectiveMaxHp, a.hp + delta);
+            }
+            a.attack = next.effectiveHeroAttack(h);
+            a.defense = next.effectiveHeroDefense(h);
+            a.heroLevel = h.level;
+            a.moveSpeed = next.effectiveHeroMoveSpeed(h);
+            a.attackCooldown = 1.0 / next.effectiveHeroAttackSpeed(h);
+          }
         }
       }
     }

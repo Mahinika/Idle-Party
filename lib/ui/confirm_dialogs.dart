@@ -78,7 +78,7 @@ Future<void> confirmLeaveDungeon(
           ),
         ),
         KenneyButton(
-          label: 'HUB',
+          label: 'RETURN',
           style: KenneyButtonStyle.grey,
           expanded: false,
           onPressed: () => Navigator.pop(ctx, true),

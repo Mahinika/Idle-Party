@@ -11,6 +11,13 @@ import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
 
+int _jsonInt(dynamic value, [int fallback = 0]) {
+  if (value == null) return fallback;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse('$value') ?? fallback;
+}
+
 class GameState {
   const GameState({
     required this.heroes,
@@ -249,7 +256,8 @@ class GameState {
 
   int _favoritePassiveBoost(int value) {
     if (!_favoritePetActive || value <= 0) return value;
-    return value + (value * 5) ~/ 100;
+    final bump = max(1, (value * 5 + 99) ~/ 100); // ceil 5%, min +1
+    return value + bump;
   }
 
   /// Gold-find pets grant percent gold via [Pet.passiveValue].
@@ -729,6 +737,26 @@ class GameState {
     final modeRaw = json['dungeonMode'] as String?;
     final soulboundJson = json['soulboundItem'] as Map<String, dynamic>?;
 
+    final ownedPetsRaw = petsJson == null
+        ? <Pet>[]
+        : petsJson.cast<Map<String, dynamic>>().map(Pet.fromJson).toList();
+    final activePetRaw =
+        activePetJson == null ? null : Pet.fromJson(activePetJson);
+    // Keep active pet in roster (and drop orphan active if roster empty).
+    final syncedOwnedPets = activePetRaw == null
+        ? ownedPetsRaw
+        : ownedPetsRaw.any((p) => p.id == activePetRaw.id)
+            ? ownedPetsRaw
+            : [...ownedPetsRaw, activePetRaw];
+    final syncedActivePet = activePetRaw == null
+        ? null
+        : () {
+            for (final p in syncedOwnedPets) {
+              if (p.id == activePetRaw.id) return p;
+            }
+            return syncedOwnedPets.isEmpty ? null : syncedOwnedPets.first;
+          }();
+
     final equipped = <EquipmentSlot, EquipmentItem>{};
     final equippedJson = json['equipped'] as Map<String, dynamic>?;
     if (equippedJson != null) {
@@ -773,15 +801,15 @@ class GameState {
           .cast<Map<String, dynamic>>()
           .map(EnemyUnit.fromJson)
           .toList(),
-      gold: json['gold'] as int,
-      lifetimeGoldEarned: (json['lifetimeGoldEarned'] as int?) ?? 0,
-      essence: (json['essence'] as int?) ?? 0,
-      bossVictories: (json['bossVictories'] as int?) ?? 0,
+      gold: _jsonInt(json['gold']),
+      lifetimeGoldEarned: _jsonInt(json['lifetimeGoldEarned']),
+      essence: _jsonInt(json['essence']),
+      bossVictories: _jsonInt(json['bossVictories']),
       lastUpdated: DateTime.parse(json['lastUpdated'] as String),
-      offlineSecondsRecovered: json['offlineSecondsRecovered'] as int,
-      attackBonus: (json['attackBonus'] as int?) ?? 0,
-      defenseBonus: (json['defenseBonus'] as int?) ?? 0,
-      vitalityBonus: (json['vitalityBonus'] as int?) ?? 0,
+      offlineSecondsRecovered: _jsonInt(json['offlineSecondsRecovered']),
+      attackBonus: _jsonInt(json['attackBonus']),
+      defenseBonus: _jsonInt(json['defenseBonus']),
+      vitalityBonus: _jsonInt(json['vitalityBonus']),
       recentLoot: recentLootJson == null
           ? <LootDrop>[]
           : recentLootJson
@@ -798,7 +826,7 @@ class GameState {
           .cast<Map<String, dynamic>>()
           .map(DungeonRoom.fromJson)
           .toList(),
-      ascensionLevel: (json['ascensionLevel'] as int?) ?? 0,
+      ascensionLevel: _jsonInt(json['ascensionLevel']),
       equipped: legacyEquipped,
       missions: missionsJson == null
           ? <Mission>[]
@@ -815,29 +843,27 @@ class GameState {
       dungeonMode: modeRaw == null
           ? DungeonMode.push
           : DungeonMode.values.byName(modeRaw),
-      highestFloorCleared: (json['highestFloorCleared'] as int?) ?? 0,
-      highestDungeonCleared: (json['highestDungeonCleared'] as int?) ?? -1,
-      activePet: activePetJson == null ? null : Pet.fromJson(activePetJson),
-      ownedPets: petsJson == null
-          ? <Pet>[]
-          : petsJson.cast<Map<String, dynamic>>().map(Pet.fromJson).toList(),
-      sanctuaryGoldLevel: (json['sanctuaryGoldLevel'] as int?) ?? 0,
-      sanctuaryPowerLevel: (json['sanctuaryPowerLevel'] as int?) ?? 0,
-      sanctuaryVitalityLevel: (json['sanctuaryVitalityLevel'] as int?) ?? 0,
+      highestFloorCleared: _jsonInt(json['highestFloorCleared']),
+      highestDungeonCleared: _jsonInt(json['highestDungeonCleared'], -1),
+      activePet: syncedActivePet,
+      ownedPets: syncedOwnedPets,
+      sanctuaryGoldLevel: _jsonInt(json['sanctuaryGoldLevel']),
+      sanctuaryPowerLevel: _jsonInt(json['sanctuaryPowerLevel']),
+      sanctuaryVitalityLevel: _jsonInt(json['sanctuaryVitalityLevel']),
       metaDepth: MetaDepthState.fromJson(
         json['metaDepth'] as Map<String, dynamic>?,
       ),
       inDungeon: (json['inDungeon'] as bool?) ?? false,
       dungeonId: (json['dungeonId'] as String?) ?? 'sandy',
-      soulboundFragments: (json['soulboundFragments'] as int?) ?? 0,
+      soulboundFragments: _jsonInt(json['soulboundFragments']),
       soulboundItem: soulboundJson == null
           ? null
           : EquipmentItem.fromJson(soulboundJson),
-      godHandLevel: (json['godHandLevel'] as int?) ?? 0,
-      layoutSeed: (json['layoutSeed'] as int?) ?? 0,
+      godHandLevel: _jsonInt(json['godHandLevel']),
+      layoutSeed: _jsonInt(json['layoutSeed']),
       soundMuted: (json['soundMuted'] as bool?) ?? false,
       reducedVfx: (json['reducedVfx'] as bool?) ?? false,
-      autoSellMaxPower: (json['autoSellMaxPower'] as int?) ?? 24,
+      autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 24),
       rogueUnlocked: (json['rogueUnlocked'] as bool?) ?? false,
       seenTips: (json['seenTips'] as List<dynamic>?)
               ?.map((e) => e.toString())

@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/models/pet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -144,5 +146,26 @@ void main() {
     director.dismissOfflineSummary();
     expect(director.offlineSummary, isNull);
     director.dispose();
+  });
+
+  test('fromJson merges orphan activePet into ownedPets', () {
+    final pet = Pet(
+      id: 'ash_fox_1',
+      name: 'Ash Fox',
+      attackBonus: 3,
+      speciesId: 'ash_fox',
+      rarity: PetRarity.rare,
+      affinityDungeonId: 'hell',
+    );
+    final json = GameLogic.createInitialState(now: DateTime(2026, 8, 1))
+        .copyWith(activePet: pet, ownedPets: const <Pet>[])
+        .toJson();
+    // Simulate desync: active present, roster empty.
+    json['ownedPets'] = <dynamic>[];
+    json['activePet'] = pet.toJson();
+    final loaded = GameState.fromJson(json);
+    expect(loaded.ownedPets, hasLength(1));
+    expect(loaded.activePet?.id, pet.id);
+    expect(loaded.ownedPets.first.id, pet.id);
   });
 }

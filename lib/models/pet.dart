@@ -288,18 +288,20 @@ class Pet {
     return Pet(
       id: id,
       name: json['name'] as String,
-      attackBonus: json['attackBonus'] as int,
-      level: (json['level'] as int?) ?? 1,
+      attackBonus: (json['attackBonus'] as num?)?.toInt() ?? 0,
+      level: (json['level'] as num?)?.toInt() ?? 1,
       speciesId: (json['speciesId'] as String?) ?? species?.id ?? '',
       rarity: rarity,
       passive: passive,
       affinityDungeonId: (json['affinityDungeonId'] as String?) ??
           species?.affinityDungeonId ??
           'sandy',
-      bondLevel: (json['bondLevel'] as int?) ?? 0,
+      bondLevel: (json['bondLevel'] as num?)?.toInt() ?? 0,
       frame: frame,
       passivePerLevel:
-          (json['passivePerLevel'] as int?) ?? species?.passivePerLevel ?? 1,
+          (json['passivePerLevel'] as num?)?.toInt() ??
+              species?.passivePerLevel ??
+              1,
     );
   }
 }

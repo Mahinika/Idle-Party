@@ -175,7 +175,17 @@ class GameLogic {
   }
 
   static GameState leaveDungeon(GameState state) {
-    return state.copyWith(inDungeon: false, lastUpdated: DateTime.now());
+    final heroes = [
+      for (final h in state.heroes)
+        h.copyWith(
+          currentHp: h.currentHp.clamp(0, state.effectiveHeroMaxHp(h)),
+        ),
+    ];
+    return state.copyWith(
+      inDungeon: false,
+      heroes: heroes,
+      lastUpdated: DateTime.now(),
+    );
   }
 
   static int godHandUpgradeCost(int level) => 10 + level * 8;
@@ -235,7 +245,9 @@ class GameLogic {
       if (piece != null) {
         pieceSlot = slotOf(state.heroes[sourceIndex], piece);
       }
-    } else {
+    }
+    // Fall back to any hero if the selected one has nothing bindable.
+    if (piece == null) {
       for (var i = 0; i < state.heroes.length; i++) {
         piece = findOnHero(i, preferredSlots);
         if (piece != null) {
@@ -244,14 +256,14 @@ class GameLogic {
           break;
         }
       }
-      if (piece == null) {
-        for (var i = 0; i < state.heroes.length; i++) {
-          piece = findOnHero(i, fallbackSlots);
-          if (piece != null) {
-            sourceIndex = i;
-            pieceSlot = slotOf(state.heroes[i], piece);
-            break;
-          }
+    }
+    if (piece == null) {
+      for (var i = 0; i < state.heroes.length; i++) {
+        piece = findOnHero(i, fallbackSlots);
+        if (piece != null) {
+          sourceIndex = i;
+          pieceSlot = slotOf(state.heroes[i], piece);
+          break;
         }
       }
     }
@@ -323,6 +335,10 @@ class GameLogic {
       _ => -1,
     };
     if (level < 0) {
+      return state;
+    }
+    // Soft-cap at Lv12 — prestige to reset and keep investing.
+    if (level >= 12) {
       return state;
     }
     final cost = sanctuaryCost(level);
@@ -2061,15 +2077,17 @@ class GameLogic {
           lastUpdated: DateTime.now(),
         );
       case PartyUpgradeType.vitality:
+        final nextVit = state.vitalityBonus + 6;
+        final probe = state.copyWith(vitalityBonus: nextVit);
         final healedHeroes = state.heroes
             .map(
               (hero) => hero.copyWith(
-                currentHp: hero.maxHp + state.vitalityBonus + 6,
+                currentHp: probe.effectiveHeroMaxHp(hero),
               ),
             )
             .toList();
         return state.copyWith(
-          vitalityBonus: state.vitalityBonus + 6,
+          vitalityBonus: nextVit,
           heroes: healedHeroes,
           gold: state.gold - cost,
           lastUpdated: DateTime.now(),
@@ -3532,17 +3550,20 @@ class GameLogic {
       final defender = heroes[defenderIndex];
       // Abstract/tick combat is far softer than live spatial.
       final softAtk = max(1, (enemy.attack * 0.12).round());
-      final damageTaken = max(
+      final mitigated = max(
         1,
-        softAtk - next.effectiveHeroDefense(defender),
+        softAtk -
+            next.effectiveHeroDefense(defender) -
+            next.petMitigateFlat,
       );
+      final damageTaken = mitigated;
       heroes[defenderIndex] = defender.copyWith(
         currentHp: max(0, defender.currentHp - damageTaken),
       );
     }
 
     // Healer passive: mend living allies after the exchange.
-    final mend = next.healerMendAmount;
+    final mend = next.healerMendAmount + next.petHealBoost;
     if (mend > 0 && heroes.any((hero) => hero.isAlive)) {
       for (var i = 0; i < heroes.length; i++) {
         final hero = heroes[i];
@@ -3706,9 +3727,12 @@ class GameLogic {
       next = next.copyWith(essence: next.essence + challengeBonus);
     }
     final bossKill = before.currentRoom.type == RoomType.boss ? 1 : 0;
+    // Zone trophies granted when a dungeon is fully cleared (push boss → hub).
     final trophies = List<String>.from(next.metaDepth.zoneTrophies);
-    if (bossKill > 0 && !trophies.contains(before.dungeonId)) {
-      trophies.add(before.dungeonId);
+    if (after.highestDungeonCleared > before.highestDungeonCleared) {
+      if (!trophies.contains(before.dungeonId)) {
+        trophies.add(before.dungeonId);
+      }
     }
     next = next.copyWith(
       metaDepth: next.metaDepth.copyWith(
@@ -3733,6 +3757,8 @@ class GameLogic {
     final todayKey = MetaSystems.dailyDateKey(now);
     if (state.lastDailyDate != todayKey) return state;
     if (state.dungeonId != MetaSystems.dailyDungeonId(now)) return state;
+    // Must still be on today's Daily layout seed (not a normal re-enter).
+    if (state.layoutSeed != MetaSystems.dailySeed(now)) return state;
     const dailyEssenceReward = 25;
     return state.copyWith(
       dailyClaimed: true,
@@ -3746,6 +3772,9 @@ class GameLogic {
   /// floor/boss while inside claims today's reward exactly once.
   static GameState enterDaily(GameState state, {DateTime? now}) {
     final t = now ?? DateTime.now().toUtc();
+    if (MetaSystems.isDailyClaimedToday(state, now: t)) {
+      return state;
+    }
     final dateKey = MetaSystems.dailyDateKey(t);
     final seed = MetaSystems.dailySeed(t);
     final dungeonId = MetaSystems.dailyDungeonId(t);

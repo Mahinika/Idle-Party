@@ -249,6 +249,13 @@ class EquipmentItem {
       };
 
   factory EquipmentItem.fromJson(Map<String, dynamic> json) {
+    int asInt(dynamic v, [int fallback = 0]) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse('$v') ?? fallback;
+    }
+
     final slot = EquipmentSlotX.parse(json['slot'] as String);
     final patternRaw = json['pattern'] as String?;
     final effectRaw = json['effectId'] as String?;
@@ -257,16 +264,16 @@ class EquipmentItem {
     final handedRaw = json['handed'] as String?;
     final offHandRaw = json['offHandKind'] as String?;
 
-    var strength = (json['strengthBonus'] as int?) ?? 0;
-    var agility = (json['agilityBonus'] as int?) ?? 0;
-    var stamina = (json['staminaBonus'] as int?) ?? 0;
-    var intellect = (json['intellectBonus'] as int?) ?? 0;
-    var spirit = (json['spiritBonus'] as int?) ?? 0;
-    var spellPower = (json['spellPowerBonus'] as int?) ?? 0;
-    var armor = (json['armorBonus'] as int?) ?? 0;
-    final attack = (json['attackBonus'] as int?) ?? 0;
-    final defense = (json['defenseBonus'] as int?) ?? 0;
-    final vitality = (json['vitalityBonus'] as int?) ?? 0;
+    var strength = asInt(json['strengthBonus']);
+    var agility = asInt(json['agilityBonus']);
+    var stamina = asInt(json['staminaBonus']);
+    var intellect = asInt(json['intellectBonus']);
+    var spirit = asInt(json['spiritBonus']);
+    var spellPower = asInt(json['spellPowerBonus']);
+    var armor = asInt(json['armorBonus']);
+    final attack = asInt(json['attackBonus']);
+    final defense = asInt(json['defenseBonus']);
+    final vitality = asInt(json['vitalityBonus']);
 
     // Legacy-only piece: fold old flats into new fields.
     final hasPrimaries = json.containsKey('strengthBonus') ||
@@ -308,22 +315,22 @@ class EquipmentItem {
       spiritBonus: spirit,
       spellPowerBonus: spellPower,
       armorBonus: armor,
-      mp5Bonus: (json['mp5Bonus'] as int?) ?? 0,
+      mp5Bonus: asInt(json['mp5Bonus']),
       attackBonus: attack,
       defenseBonus: defense,
       vitalityBonus: vitality,
-      critChanceBonus: (json['critChanceBonus'] as int?) ?? 0,
-      attackSpeedBonus: (json['attackSpeedBonus'] as int?) ?? 0,
-      moveSpeedBonus: (json['moveSpeedBonus'] as int?) ?? 0,
+      critChanceBonus: asInt(json['critChanceBonus']),
+      attackSpeedBonus: asInt(json['attackSpeedBonus']),
+      moveSpeedBonus: asInt(json['moveSpeedBonus']),
       pattern: patternRaw == null
           ? ProjectilePattern.single
           : ProjectilePattern.values.byName(patternRaw),
       effectId: effectRaw == null
           ? GearEffectId.none
           : GearEffectId.values.byName(effectRaw),
-      effectValue: (json['effectValue'] as int?) ?? 0,
+      effectValue: asInt(json['effectValue']),
       affinity: json['affinity'] as String?,
-      itemLevel: (json['itemLevel'] as int?) ?? 0,
+      itemLevel: asInt(json['itemLevel']),
       armorType: armorRaw == null ? null : ArmorType.values.byName(armorRaw),
       weaponType:
           weaponRaw == null ? null : WeaponType.values.byName(weaponRaw),
@@ -426,11 +433,18 @@ class LootDrop {
       };
 
   factory LootDrop.fromJson(Map<String, dynamic> json) {
+    int asInt(dynamic v, [int fallback = 0]) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse('$v') ?? fallback;
+    }
+
     final equipmentJson = json['equipment'] as Map<String, dynamic>?;
     final outcomeRaw = json['outcome'] as String?;
     return LootDrop(
       name: json['name'] as String,
-      amount: json['amount'] as int,
+      amount: asInt(json['amount']),
       rarity: LootRarity.values.byName(json['rarity'] as String),
       equipment: equipmentJson == null
           ? null
@@ -438,7 +452,7 @@ class LootDrop {
       outcome: outcomeRaw == null
           ? LootOutcome.essence
           : LootOutcome.values.byName(outcomeRaw),
-      essenceGained: (json['essenceGained'] as int?) ?? 0,
+      essenceGained: asInt(json['essenceGained']),
     );
   }
 

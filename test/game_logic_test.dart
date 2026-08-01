@@ -993,6 +993,20 @@ void main() {
     expect(state.inDungeon, isFalse);
   });
 
+  test('leaveDungeon clamps over-max HP from fortitude sync', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final hero = state.heroes.first;
+    final maxHp = state.effectiveHeroMaxHp(hero);
+    state = state.copyWith(
+      heroes: [
+        hero.copyWith(currentHp: maxHp + 200),
+        ...state.heroes.skip(1),
+      ],
+    );
+    state = GameLogic.leaveDungeon(state);
+    expect(state.heroes.first.currentHp, maxHp);
+  });
+
   test('mage aura boosts party attack while Ember lives', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final aegis = state.heroes.first;

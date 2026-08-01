@@ -97,23 +97,30 @@ class Stats {
   /// Parses v5 primaries or legacy `{attack,defense,maxHp}` as enemy flat sheet.
   /// Hero legacy migration is done in [PartyHero.fromJson].
   factory Stats.fromJson(Map<String, dynamic> json) {
+    int asInt(dynamic v, [int fallback = 0]) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse('$v') ?? fallback;
+    }
+
     if (json.containsKey('strength')) {
       return Stats(
-        strength: json['strength'] as int,
-        agility: json['agility'] as int,
-        stamina: json['stamina'] as int,
-        intellect: json['intellect'] as int,
-        spirit: json['spirit'] as int,
-        flatAttack: json['attack'] as int?,
-        flatDefense: json['defense'] as int?,
-        flatMaxHp: json['maxHp'] as int?,
+        strength: asInt(json['strength']),
+        agility: asInt(json['agility']),
+        stamina: asInt(json['stamina']),
+        intellect: asInt(json['intellect']),
+        spirit: asInt(json['spirit']),
+        flatAttack: json['attack'] == null ? null : asInt(json['attack']),
+        flatDefense: json['defense'] == null ? null : asInt(json['defense']),
+        flatMaxHp: json['maxHp'] == null ? null : asInt(json['maxHp']),
       );
     }
 
     return Stats.enemy(
-      attack: (json['attack'] as int?) ?? 1,
-      defense: (json['defense'] as int?) ?? 1,
-      maxHp: (json['maxHp'] as int?) ?? 10,
+      attack: asInt(json['attack'], 1),
+      defense: asInt(json['defense'], 1),
+      maxHp: asInt(json['maxHp'], 10),
     );
   }
 }
