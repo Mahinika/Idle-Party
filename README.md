@@ -1,45 +1,80 @@
 # Idle Party
 
-A Flutter idle RPG: party combat on a spatial dungeon map, Farm/Push modes, gear, pets, sanctuary, and Ascend prestige.
+**Your party keeps fighting while you watch — or while you’re away.**
 
-Art uses [Kenney](https://kenney.nl) CC0 assets. Game systems and code are original to this project.
+Idle Party is a cozy-but-crunchy **idle RPG**: a four-hero party crawls spatial dungeon floors, clears chambers, farms loot, and grows stronger between runs. Tap in for God Hand moments, or let the corridor combat cook offline.
 
-## Play
+<p align="center">
+  <img src="assets/custom/ui/app_icon.png" alt="Idle Party app icon" width="160" />
+</p>
+
+**[Download Android APK (v1.3.0)](https://github.com/Mahinika/Idle-Party/releases/download/v1.3.0/app-release.apk)** · **[All releases](https://github.com/Mahinika/Idle-Party/releases)**
+
+---
+
+## Why you’ll want to try it
+
+- **Real dungeon crawling, not a fake progress bar** — multi-chamber maps, gates that open after clears, and a party that actually walks the floor.
+- **A full party with class kits** — Protection Warrior, Disc Priest, Fire Mage, Combat Rogue. Abilities, buffs, and a live DPS share meter.
+- **Farm or Push** — milk a floor for loot, or shove deeper until the wipe. Your call.
+- **God Hand** — tap the map to steer and smash. Upgrade it with essence.
+- **Gear that feels good** — equip, auto-equip, sell junk, merge in the combinator, save loadouts.
+- **Meta that survives Ascend** — sanctuary, relics, pets, prestige shop, contracts, weekly modifiers, achievements, codex.
+- **Offline progress that respects the dungeon** — come back to gold, floors, and a clear summary.
+
+Pixel art vibe powered by [Kenney](https://kenney.nl) (CC0) plus custom Idle Party identity art. Game systems and code are original.
+
+---
+
+## Quick start
+
+### Android
+Grab the latest APK from [Releases](https://github.com/Mahinika/Idle-Party/releases) and sideload it. No account. No ads in the build.
+
+### From source (web / desktop / device)
 
 ```bash
 flutter pub get
-flutter run -d web-server --web-hostname=localhost --web-port=8080
-# or
 flutter run -d chrome
-flutter run   # Android / desktop
+# or local web server:
+flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
 
-## Build APK
+---
+
+## What’s in the loop
+
+| Layer | What you do |
+|--------|-------------|
+| **Hub** | Pick a zone, Hardmode, Boss Rush / No Flask, daily run, Ascend when ready |
+| **Dungeon** | Clear chambers → loot → stairs. Watch the party fight live |
+| **Bag & Forge** | Gear, combinator, training, relics, sanctuary |
+| **Meta** | Pets, prestige sinks, contracts, weekly challenge, Will rank & titles |
+
+Zones stretch from sandy caverns to hell and crystal — each with its own look, packs, and bosses.
+
+---
+
+## Build notes (devs)
 
 ```bash
 flutter build apk --release
 ```
 
-Without `android/key.properties`, release APKs are **debug-signed** (fine for sideload). For Play / proper release:
+Without `android/key.properties`, release APKs are **debug-signed** (fine for sideload). For Play Store signing, copy `android/key.properties.example` → `android/key.properties` and point at your keystore.
 
-1. Create a keystore and copy `android/key.properties.example` → `android/key.properties`
-2. Point `storeFile` at your `.jks` (path relative to `android/app/`)
-3. Rebuild — Gradle picks up the release signing config automatically
+CI builds an APK on tags matching `v*` (`.github/workflows/build-apk.yml`). Push runs analyze + tests (`.github/workflows/ci.yml`).
 
-GitHub Actions builds an APK on tags matching `v*` (see `.github/workflows/build-apk.yml`). Optional secrets `KEYSTORE_BASE64`, `KEY_PROPERTIES` enable release signing in CI. Push also runs analyze + tests (`.github/workflows/ci.yml`).
+**Package id:** `com.idleparty.app` · **Saves:** SharedPreferences (`idle_party_save_v2`)
 
-## Layout
+---
 
-```
-lib/
-├── core/          # GameDirector, GameLogic, GameState
-├── models/        # Heroes, loot, rooms, pets
-├── spatial/       # Tile combat simulation
-└── ui/            # Shell, dungeon view, hub overlays
-```
+## License & art
 
-## Notes
+- Game code: see repository license / project terms.
+- Kenney assets: [CC0](https://kenney.nl/license).
+- Do not drop commercial game dumps, APKs from other titles, or ripped sprites into this repo.
 
-- Saves use SharedPreferences (`idle_party_save_v2`).
-- Mute in Settings silences system SFX / haptics.
-- Android application id: `com.idleparty.app`.
+---
+
+*Clear one more floor. Claim the contracts. Ascend when the bosses say you’re ready.*
