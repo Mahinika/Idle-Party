@@ -21,7 +21,7 @@ class HeroDollSprite extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final asset = CustomAssets.heroForIndex(partyIndex);
+    final asset = CustomAssets.heroForClass(hero.spec.classId);
     final alive = hero.currentHp > 0;
     return Opacity(
       opacity: alive ? 1 : 0.35,

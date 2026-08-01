@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/class_ability.dart';
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/meta_depth.dart';
 import '../models/pet.dart';
@@ -22,6 +23,11 @@ abstract class GameStorage {
   Future<GameState?> load();
 
   Future<void> save(GameState state);
+
+  /// True when a persisted save blob exists.
+  Future<bool> hasSave();
+
+  Future<void> clear();
 }
 
 class SharedPreferencesGameStorage implements GameStorage {
@@ -47,7 +53,10 @@ class SharedPreferencesGameStorage implements GameStorage {
     try {
       return GameLogic.stateFromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (e, st) {
-      debugPrint('save load failed: $e\n$st');
+      // Corrupt blob would otherwise keep showing Continue forever.
+      debugPrint('save load failed (cleared): $e\n$st');
+      await prefs.remove(_saveKey);
+      await prefs.remove(_legacySaveKey);
       return null;
     }
   }
@@ -56,6 +65,20 @@ class SharedPreferencesGameStorage implements GameStorage {
   Future<void> save(GameState state) async {
     final prefs = await _prefs;
     await prefs.setString(_saveKey, jsonEncode(state.toJson()));
+  }
+
+  @override
+  Future<bool> hasSave() async {
+    final prefs = await _prefs;
+    final raw = prefs.getString(_saveKey) ?? prefs.getString(_legacySaveKey);
+    return raw != null && raw.isNotEmpty;
+  }
+
+  @override
+  Future<void> clear() async {
+    final prefs = await _prefs;
+    await prefs.remove(_saveKey);
+    await prefs.remove(_legacySaveKey);
   }
 }
 
@@ -70,6 +93,14 @@ class InMemoryGameStorage implements GameStorage {
   @override
   Future<void> save(GameState state) async {
     _state = state;
+  }
+
+  @override
+  Future<bool> hasSave() async => _state != null;
+
+  @override
+  Future<void> clear() async {
+    _state = null;
   }
 }
 
@@ -101,6 +132,7 @@ class GameDirector extends ChangeNotifier {
 
   GameState _state;
   bool _isLoading = true;
+  bool _hasExistingSave = false;
   SpatialWorld? _spatial;
   Timer? _spatialTimer;
   Timer? _uiTimer;
@@ -120,9 +152,29 @@ class GameDirector extends ChangeNotifier {
   int _lastStashLen = 0;
   static const double _autosaveIntervalSec = 25;
 
+  /// Serializes SharedPreferences writes so overlapping unawaited saves cannot
+  /// last-write-wins with a stale snapshot.
+  Future<void> _saveChain = Future.value();
+
+  void _persist() {
+    _saveChain = _saveChain
+        .then((_) => _storage.save(_state))
+        .catchError((Object e, StackTrace st) {
+      debugPrint('save failed: $e\n$st');
+    });
+  }
+
+  Future<void> _persistFlush() {
+    _persist();
+    return _saveChain;
+  }
+
   GameState get state => _state;
 
   bool get isLoading => _isLoading;
+
+  /// True after [boot] if a save was loaded (Continue available).
+  bool get hasExistingSave => _hasExistingSave;
 
   SpatialWorld? get spatial => _spatial;
 
@@ -188,8 +240,10 @@ class GameDirector extends ChangeNotifier {
   Future<void> boot({bool deferCombatLoop = false}) async {
     try {
       final saved = await _storage.load();
+      _hasExistingSave = saved != null;
       late GameState loaded;
       if (saved == null) {
+        // Placeholder only — do not persist until New Game / Continue path.
         loaded = GameLogic.createInitialState();
       } else {
         // Paint immediately — AFK spatial sim must not hold the spinner.
@@ -240,9 +294,13 @@ class GameDirector extends ChangeNotifier {
         _spatialTimer = null;
         _spatial = null;
       }
-      await _storage.save(_state);
+      // Only persist when continuing an existing save (offline catch-up).
+      if (_hasExistingSave) {
+        await _persistFlush();
+      }
     } catch (e, st) {
       debugPrint('boot failed: $e\n$st');
+      _hasExistingSave = false;
       _state = GameLogic.createInitialState();
       _spatialTimer?.cancel();
       _spatialTimer = null;
@@ -251,6 +309,32 @@ class GameDirector extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Hard start: wipe save and create a fresh party from [partySpecs] (3 heroes).
+  Future<void> startNewGame(List<HeroSpecId> partySpecs) async {
+    _awaitingWipeChoice = false;
+    _offlineSummary = null;
+    _offlineSummaryLife = 0;
+    _spatialTimer?.cancel();
+    _spatial = null;
+    _state = GameLogic.createInitialState(
+      partySpecs: GameLogic.normalizeNewGameParty(partySpecs),
+    );
+    _hasExistingSave = true;
+    GameAudio.muted = false;
+    SpatialCombat.colorblindMode = _state.colorblindMode;
+    _lastHighestDungeon = _state.highestDungeonCleared;
+    _ensureUiTimer();
+    notifyListeners();
+    await _persistFlush();
+  }
+
+  /// Continue from the loaded save into play (no-op if already ready).
+  void continueGame() {
+    if (!_hasExistingSave) return;
+    ensureCombatLoop();
+    notifyListeners();
   }
 
   /// Start spatial combat after the cold-start intro (if already in a dungeon).
@@ -329,7 +413,7 @@ class GameDirector extends ChangeNotifier {
     _autosaveAccum += 0.033;
     if (_autosaveAccum >= _autosaveIntervalSec) {
       _autosaveAccum = 0;
-      unawaited(_storage.save(_state));
+      _persist();
     }
 
     if (result.partyWiped) {
@@ -406,7 +490,7 @@ class GameDirector extends ChangeNotifier {
         showToast(StoryLore.dungeonCleared(beforeClear.dungeonId), life: 3.2);
       }
       notifyListeners();
-      unawaited(_storage.save(_state));
+      unawaited(_persistFlush());
       return;
     }
 
@@ -438,7 +522,7 @@ class GameDirector extends ChangeNotifier {
       _startSpatialLoop();
     }
     notifyListeners();
-    unawaited(_storage.save(_state));
+    unawaited(_persistFlush());
   }
 
   void retryAfterWipe() {
@@ -463,7 +547,7 @@ class GameDirector extends ChangeNotifier {
     showToast('Returned to hub', life: 2);
     GameAudio.ui();
     notifyListeners();
-    unawaited(_storage.save(_state));
+    unawaited(_persistFlush());
   }
 
   /// God Hand tap — AOE damage at normalized dungeon coords (0..1).
@@ -509,7 +593,7 @@ class GameDirector extends ChangeNotifier {
     }
     showToast(StoryLore.enterDungeon(dungeonId), life: 2.8);
     notifyListeners();
-    unawaited(_storage.save(_state));
+    unawaited(_persistFlush());
   }
 
   void leaveDungeon() {
@@ -520,7 +604,7 @@ class GameDirector extends ChangeNotifier {
     _spatialTimer = null;
     _spatial = null;
     notifyListeners();
-    unawaited(_storage.save(_state));
+    unawaited(_persistFlush());
   }
 
   void upgradeGodHand() {
@@ -549,7 +633,7 @@ class GameDirector extends ChangeNotifier {
     _state = _state.copyWith(lastUpdated: DateTime.now());
     _rebuildSpatial();
     notifyListeners();
-    unawaited(_storage.save(_state));
+    unawaited(_persistFlush());
   }
 
   void applyTraining() {
@@ -739,17 +823,51 @@ class GameDirector extends ChangeNotifier {
 
   void saveLoadout({required String id, required String name}) {
     _applyUpgrade(GameLogic.saveLoadout(_state, id: id, name: name));
-    showToast('Loadout "$name" saved', life: 1.8);
+    showToast('Gear set "$name" saved', life: 1.8);
   }
 
   void applyLoadout(String id) {
     _applyUpgrade(GameLogic.applyLoadout(_state, id));
     GameAudio.ui();
-    showToast('Loadout applied', life: 1.6);
+    showToast('Gear set applied', life: 1.6);
   }
 
   void deleteLoadout(String id) {
     _applyUpgrade(GameLogic.deleteLoadout(_state, id));
+  }
+
+  // —— Team composition ————————————————————————————————————————
+
+  void setActiveParty(List<String> heroIds) {
+    if (_state.inDungeon) {
+      showToast('Leave dungeon to change team', life: 2);
+      return;
+    }
+    final before = _state.activeHeroIds.join(',');
+    _applyUpgrade(GameLogic.setActiveParty(_state, heroIds));
+    if (_state.activeHeroIds.join(',') != before) {
+      showToast('Team updated', life: 1.6);
+    }
+  }
+
+  void unlockPartySlot5() {
+    final before = _state.metaDepth.partySlot5Unlocked;
+    _applyUpgrade(GameLogic.unlockPartySlot5(_state));
+    if (_state.metaDepth.partySlot5Unlocked && !before) {
+      showToast('5th party slot unlocked', life: 2.2);
+    }
+  }
+
+  void unlockSpec(HeroSpecId specId) {
+    if (!GameLogic.canUnlockSpec(_state, specId)) {
+      showToast(HeroSpecs.def(specId).unlockHint, life: 2.4);
+      return;
+    }
+    final before = _state.isSpecUnlocked(specId);
+    _applyUpgrade(GameLogic.unlockSpec(_state, specId));
+    if (_state.isSpecUnlocked(specId) && !before) {
+      showToast('${HeroSpecs.def(specId).name} joined roster', life: 2.2);
+    }
   }
 
   // —— Daily run ——————————————————————————————————————————————
@@ -765,7 +883,7 @@ class GameDirector extends ChangeNotifier {
     }
     showToast(StoryLore.dailyRun(_state.dungeonId), life: 3.2);
     notifyListeners();
-    unawaited(_storage.save(_state));
+    unawaited(_persistFlush());
   }
 
   bool get isDailyClaimedToday => MetaSystems.isDailyClaimedToday(_state);
@@ -787,10 +905,12 @@ class GameDirector extends ChangeNotifier {
     if (_state.inDungeon) {
       _rebuildSpatial();
     } else {
+      _spatialTimer?.cancel();
+      _spatialTimer = null;
       _spatial = null;
     }
     notifyListeners();
-    unawaited(_storage.save(_state));
+    unawaited(_persistFlush());
     return true;
   }
 
@@ -829,7 +949,7 @@ class GameDirector extends ChangeNotifier {
     if (identical(updated, _state)) return;
     _state = updated;
     notifyListeners();
-    unawaited(_storage.save(_state));
+    unawaited(_persistFlush());
   }
 
   void hatchPet() {
@@ -1114,10 +1234,12 @@ class GameDirector extends ChangeNotifier {
     if (_state.inDungeon) {
       _rebuildSpatial();
     } else {
+      _spatialTimer?.cancel();
+      _spatialTimer = null;
       _spatial = null;
     }
     notifyListeners();
-    unawaited(_storage.save(_state));
+    unawaited(_persistFlush());
   }
 
   void reviveParty() {
@@ -1127,17 +1249,27 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
+  bool _pendingStartMenu = false;
+
+  bool get pendingStartMenu => _pendingStartMenu;
+
+  void clearPendingStartMenu() {
+    _pendingStartMenu = false;
+  }
+
   Future<void> reset() async {
     if (_isLoading) {
       return;
     }
     _awaitingWipeChoice = false;
+    await _storage.clear();
     _state = GameLogic.createInitialState();
+    _hasExistingSave = false;
+    _pendingStartMenu = true;
     GameAudio.muted = false;
     _spatialTimer?.cancel();
     _spatial = null;
     notifyListeners();
-    await _storage.save(_state);
   }
 
   void _applyUpgrade(GameState updated) {
@@ -1161,7 +1293,7 @@ class GameDirector extends ChangeNotifier {
       _rebuildSpatial();
     }
     notifyListeners();
-    unawaited(_storage.save(_state));
+    unawaited(_persistFlush());
   }
 
   void _announceAbilityUnlocks(GameState before, GameState after) {
@@ -1169,7 +1301,7 @@ class GameDirector extends ChangeNotifier {
       final hero = after.heroes[i];
       final oldLevel = i < before.heroes.length ? before.heroes[i].level : 0;
       if (hero.level <= oldLevel) continue;
-      final unlocked = ClassKits.unlockedAt(hero.role, hero.level).where(
+      final unlocked = ClassKits.unlockedAtSpec(hero.specId, hero.level).where(
             (d) => d.unlockLevel > oldLevel && d.unlockLevel <= hero.level,
           );
       for (final ability in unlocked) {

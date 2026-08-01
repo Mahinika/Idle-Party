@@ -1,4 +1,5 @@
 import 'hero.dart';
+import 'hero_spec.dart';
 import 'loot.dart';
 
 /// Classic-style armor / weapon proficiency for Idle Party roles.
@@ -12,6 +13,17 @@ class ClassProficiency {
         type == ArmorType.cloth || type == ArmorType.leather,
       HeroRole.healer || HeroRole.mage => type == ArmorType.cloth,
     };
+  }
+
+  static bool canEquipArmorForSpec(HeroSpecDef spec, int level, ArmorType type) {
+    if (!spec.armorTypes.contains(type)) return false;
+    // Plate unlocks at 40 except Death Knights (start in plate).
+    if (type == ArmorType.plate &&
+        level < 40 &&
+        spec.classId != HeroClassId.deathKnight) {
+      return false;
+    }
+    return true;
   }
 
   static bool canEquipWeapon(
@@ -70,6 +82,96 @@ class ClassProficiency {
     };
   }
 
+  /// Class-aware weapons (falls back to [legacyRole] rules when unspecified).
+  static bool canEquipWeaponForSpec(
+    HeroSpecDef spec,
+    WeaponType type,
+    WeaponHanded handed, {
+    required bool rangedSlot,
+  }) {
+    if (rangedSlot) {
+      return switch (spec.classId) {
+        HeroClassId.hunter =>
+          type == WeaponType.bow ||
+              type == WeaponType.crossbow ||
+              type == WeaponType.gun ||
+              type == WeaponType.thrown,
+        HeroClassId.warrior ||
+        HeroClassId.rogue ||
+        HeroClassId.deathKnight ||
+        HeroClassId.paladin ||
+        HeroClassId.shaman ||
+        HeroClassId.druid =>
+          type == WeaponType.bow ||
+              type == WeaponType.crossbow ||
+              type == WeaponType.gun ||
+              type == WeaponType.thrown,
+        HeroClassId.priest ||
+        HeroClassId.mage ||
+        HeroClassId.warlock =>
+          type == WeaponType.wand,
+      };
+    }
+
+    return switch (spec.classId) {
+      HeroClassId.hunter => switch (type) {
+          WeaponType.axe ||
+          WeaponType.sword ||
+          WeaponType.polearm ||
+          WeaponType.staff ||
+          WeaponType.dagger ||
+          WeaponType.fist =>
+            true,
+          _ => false,
+        },
+      HeroClassId.shaman => switch (type) {
+          WeaponType.axe ||
+          WeaponType.mace ||
+          WeaponType.staff ||
+          WeaponType.dagger ||
+          WeaponType.fist =>
+            true,
+          _ => false,
+        },
+      HeroClassId.deathKnight => switch (type) {
+          WeaponType.axe ||
+          WeaponType.sword ||
+          WeaponType.mace ||
+          WeaponType.polearm =>
+            true,
+          _ => false,
+        },
+      HeroClassId.paladin => switch (type) {
+          WeaponType.axe ||
+          WeaponType.sword ||
+          WeaponType.mace ||
+          WeaponType.polearm =>
+            true,
+          _ => false,
+        },
+      HeroClassId.druid => switch (type) {
+          WeaponType.staff ||
+          WeaponType.dagger ||
+          WeaponType.mace ||
+          WeaponType.fist ||
+          WeaponType.polearm =>
+            true,
+          _ => false,
+        },
+      HeroClassId.warlock => switch (type) {
+          WeaponType.sword => handed == WeaponHanded.oneHand,
+          WeaponType.dagger || WeaponType.staff => true,
+          _ => false,
+        },
+      _ => canEquipWeapon(
+          spec.legacyRole,
+          type,
+          handed,
+          rangedSlot: false,
+        ),
+    };
+  }
+
   static bool canEquipOffHand(HeroRole role, OffHandKind kind) {
     return switch (role) {
       HeroRole.warrior => kind == OffHandKind.shield,
@@ -78,22 +180,54 @@ class ClassProficiency {
     };
   }
 
+  static bool canEquipOffHandForSpec(HeroSpecDef spec, OffHandKind kind) {
+    return switch (spec.classId) {
+      HeroClassId.warrior || HeroClassId.deathKnight =>
+        kind == OffHandKind.shield ||
+            (spec.roleTag == SpecRoleTag.meleeDps &&
+                kind == OffHandKind.weapon),
+      HeroClassId.paladin =>
+        kind == OffHandKind.shield ||
+            (spec.isHealer && kind == OffHandKind.frill) ||
+            (spec.roleTag == SpecRoleTag.meleeDps &&
+                kind == OffHandKind.weapon),
+      HeroClassId.shaman =>
+        kind == OffHandKind.shield ||
+            kind == OffHandKind.frill ||
+            (spec.id == HeroSpecId.enhancement &&
+                kind == OffHandKind.weapon),
+      HeroClassId.rogue => kind == OffHandKind.weapon,
+      HeroClassId.hunter =>
+        kind == OffHandKind.weapon || kind == OffHandKind.frill,
+      HeroClassId.druid =>
+        spec.isTank
+            ? kind == OffHandKind.frill
+            : (kind == OffHandKind.frill || kind == OffHandKind.weapon),
+      HeroClassId.priest ||
+      HeroClassId.mage ||
+      HeroClassId.warlock =>
+        kind == OffHandKind.frill,
+    };
+  }
+
   /// Returns null if OK, otherwise a short reject reason.
   static String? rejectReason({
     required HeroRole role,
     required int level,
     required EquipmentItem item,
+    HeroSpecId? specId,
   }) {
+    final spec = specId == null ? null : HeroSpecs.def(specId);
+    final label = spec?.shortLabel ?? role.name;
     final slot = item.slot;
 
     if (slot == EquipmentSlot.offHand) {
       final kind = item.offHandKind ?? OffHandKind.shield;
-      if (!canEquipOffHand(role, kind)) {
-        return switch (role) {
-          HeroRole.warrior => 'Warriors need a Shield off-hand',
-          HeroRole.healer || HeroRole.mage => 'Casters need an Off-hand tome',
-          HeroRole.rogue => 'Rogues need a dual-wield off-hand weapon',
-        };
+      final ok = spec == null
+          ? canEquipOffHand(role, kind)
+          : canEquipOffHandForSpec(spec, kind);
+      if (!ok) {
+        return '$label cannot use this off-hand';
       }
       if (kind == OffHandKind.weapon) {
         final wt = item.weaponType;
@@ -102,8 +236,11 @@ class ClassProficiency {
         if (handed == WeaponHanded.twoHand) {
           return 'Off-hand must be one-handed';
         }
-        if (!canEquipWeapon(role, wt, handed, rangedSlot: false)) {
-          return '${role.name} cannot dual-wield ${wt.name}';
+        final weaponOk = spec == null
+            ? canEquipWeapon(role, wt, handed, rangedSlot: false)
+            : canEquipWeaponForSpec(spec, wt, handed, rangedSlot: false);
+        if (!weaponOk) {
+          return '$label cannot dual-wield ${wt.name}';
         }
       }
       return null;
@@ -111,11 +248,16 @@ class ClassProficiency {
 
     if (slot.isArmorSlot) {
       final armor = item.armorType ?? ArmorType.cloth;
-      if (!canEquipArmor(role, level, armor)) {
-        if (armor == ArmorType.plate && role == HeroRole.warrior) {
-          return 'Requires Plate (Warrior 40+)';
+      final ok = spec == null
+          ? canEquipArmor(role, level, armor)
+          : canEquipArmorForSpec(spec, level, armor);
+      if (!ok) {
+        if (armor == ArmorType.plate &&
+            (role == HeroRole.warrior ||
+                spec?.armorTypes.contains(ArmorType.plate) == true)) {
+          return 'Requires Plate (40+)';
         }
-        return '${role.name} cannot equip ${armor.name}';
+        return '$label cannot equip ${armor.name}';
       }
       return null;
     }
@@ -124,13 +266,12 @@ class ClassProficiency {
       final wt = item.weaponType;
       if (wt == null) return null;
       final handed = item.handed ?? defaultHanded(wt);
-      if (!canEquipWeapon(
-        role,
-        wt,
-        handed,
-        rangedSlot: slot == EquipmentSlot.ranged,
-      )) {
-        return '${role.name} cannot equip ${wt.name}';
+      final ranged = slot == EquipmentSlot.ranged;
+      final ok = spec == null
+          ? canEquipWeapon(role, wt, handed, rangedSlot: ranged)
+          : canEquipWeaponForSpec(spec, wt, handed, rangedSlot: ranged);
+      if (!ok) {
+        return '$label cannot equip ${wt.name}';
       }
       return null;
     }
@@ -142,8 +283,15 @@ class ClassProficiency {
     required HeroRole role,
     required int level,
     required EquipmentItem item,
+    HeroSpecId? specId,
   }) =>
-      rejectReason(role: role, level: level, item: item) == null;
+      rejectReason(
+        role: role,
+        level: level,
+        item: item,
+        specId: specId,
+      ) ==
+      null;
 
   /// Two-handed main-hand conflicts with off-hand.
   static bool weaponBlocksOffHand(EquipmentItem? weapon) {

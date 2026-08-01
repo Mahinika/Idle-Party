@@ -108,8 +108,7 @@ void main() {
       ..hp = 500
       ..x = warrior.x + 1.4
       ..y = warrior.y + 0.3;
-    warrior
-      ..rage = 100;
+    warrior.rage = 100;
     _padAbilityCds(warrior, except: AbilityId.shockwave);
 
     var waved = false;

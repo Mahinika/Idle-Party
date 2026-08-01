@@ -87,15 +87,29 @@ class EquipmentFactory {
     return base;
   }
 
-  static ArmorType armorTypeFor(HeroRole bias, int level) {
+  static ArmorType armorTypeFor(
+    HeroRole bias,
+    int level, {
+    ArmorType? preferred,
+  }) {
+    if (preferred != null && _random.nextDouble() < 0.82) {
+      return preferred;
+    }
     return switch (bias) {
       HeroRole.warrior =>
         level >= 40 && _random.nextDouble() < 0.55
             ? ArmorType.plate
             : (_random.nextDouble() < 0.7 ? ArmorType.mail : ArmorType.leather),
-      HeroRole.rogue =>
-        _random.nextDouble() < 0.85 ? ArmorType.leather : ArmorType.cloth,
-      HeroRole.healer || HeroRole.mage => ArmorType.cloth,
+      HeroRole.rogue => preferred == ArmorType.mail && _random.nextDouble() < 0.8
+          ? ArmorType.mail
+          : (_random.nextDouble() < 0.85 ? ArmorType.leather : ArmorType.cloth),
+      HeroRole.healer || HeroRole.mage =>
+        (preferred == ArmorType.mail ||
+                preferred == ArmorType.plate ||
+                preferred == ArmorType.leather) &&
+            _random.nextDouble() < 0.8
+        ? preferred!
+        : ArmorType.cloth,
     };
   }
 
@@ -166,12 +180,30 @@ class EquipmentFactory {
     };
   }
 
-  /// Weights: Str, Agi, Sta, Int, Spi, SP (sum ≈ 1).
-  static List<double> _armorWeights(ArmorType type) => switch (type) {
+  /// Weights: Str, Agi, Sta, Int, Spi, SP (sum ≈ 1). Bias shapes hybrid armor.
+  static List<double> _armorWeights(ArmorType type, HeroRole bias) =>
+      switch (type) {
         ArmorType.cloth => [0, 0, 0.15, 0.40, 0.30, 0.25],
-        ArmorType.leather => [0.15, 0.45, 0.25, 0, 0, 0],
-        ArmorType.mail => [0.35, 0.10, 0.40, 0, 0, 0],
-        ArmorType.plate => [0.30, 0.05, 0.45, 0, 0, 0],
+        ArmorType.leather => switch (bias) {
+            HeroRole.mage || HeroRole.healer =>
+              [0, 0, 0.18, 0.35, 0.27, 0.20], // Balance / Resto Druid
+            HeroRole.warrior =>
+              [0.30, 0.08, 0.52, 0, 0, 0], // Guardian
+            _ => [0.15, 0.45, 0.25, 0, 0, 0],
+          },
+        ArmorType.mail => switch (bias) {
+            HeroRole.mage || HeroRole.healer =>
+              [0, 0, 0.22, 0.35, 0.23, 0.20], // Ele / Resto Sham
+            HeroRole.rogue =>
+              [0.10, 0.45, 0.35, 0, 0, 0], // Hunter / Enhancement
+            _ => [0.28, 0.12, 0.45, 0.05, 0.05, 0.05],
+          },
+        ArmorType.plate => switch (bias) {
+            HeroRole.healer =>
+              [0, 0, 0.25, 0.30, 0.25, 0.20], // Holy Paladin
+            HeroRole.mage => [0, 0, 0.20, 0.35, 0.20, 0.25],
+            _ => [0.30, 0.05, 0.45, 0, 0, 0],
+          },
       };
 
   static List<double> _weaponWeights(WeaponType type, HeroRole bias) {
@@ -358,6 +390,7 @@ class EquipmentFactory {
     required LootRarity rarity,
     required int battleNumber,
     HeroRole? bias,
+    ArmorType? preferredArmor,
   }) {
     final classBias = bias ?? HeroRole.values[_random.nextInt(4)];
     final budget = _budget(
@@ -374,8 +407,12 @@ class EquipmentFactory {
     List<double> weights;
 
     if (slot.isArmorSlot) {
-      armorType = armorTypeFor(classBias, max(1, battleNumber));
-      weights = _armorWeights(armorType);
+      armorType = armorTypeFor(
+        classBias,
+        max(1, battleNumber),
+        preferred: preferredArmor,
+      );
+      weights = _armorWeights(armorType, classBias);
     } else if (slot == EquipmentSlot.weapon) {
       final mh = mainHandFor(classBias);
       weaponType = mh.$1;

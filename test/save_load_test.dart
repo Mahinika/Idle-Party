@@ -63,7 +63,11 @@ void main() {
     expect(decoded.dungeonMode, DungeonMode.farm);
     expect(decoded.inDungeon, isTrue);
     expect(decoded.heroes.length, state.heroes.length);
-    expect(decoded.lastUpdated, state.lastUpdated);
+    // Load may run syncSpecUnlocks and bump lastUpdated.
+    expect(
+      !decoded.lastUpdated.isBefore(state.lastUpdated),
+      isTrue,
+    );
   });
 
   test('equipped gear and stash survive serialization', () {
@@ -167,5 +171,17 @@ void main() {
     expect(loaded.ownedPets, hasLength(1));
     expect(loaded.activePet?.id, pet.id);
     expect(loaded.ownedPets.first.id, pet.id);
+  });
+
+  test('corrupt SharedPreferences save is cleared on load', () async {
+    SharedPreferences.setMockInitialValues({
+      'idle_party_save_v2': '{not-json',
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final storage = SharedPreferencesGameStorage(preferences: prefs);
+
+    expect(await storage.hasSave(), isTrue);
+    expect(await storage.load(), isNull);
+    expect(await storage.hasSave(), isFalse);
   });
 }

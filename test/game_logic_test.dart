@@ -147,6 +147,19 @@ void main() {
     expect(longAfk.headline, contains('g'));
   });
 
+  test('dungeon offline catch-up clears rooms via SpatialCombat', () {
+    final farm = GameLogic.setDungeonMode(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime(2026, 8, 1)),
+        dungeonId: 'sandy',
+      ),
+      DungeonMode.farm,
+    );
+    final sim = GameLogic.simulateSpatialOffline(farm, 5 * 60);
+    expect(sim.roomsCleared, greaterThan(0));
+    expect(sim.state.gold, greaterThanOrEqualTo(farm.gold));
+  });
+
   test('training spends gold and levels up the party', () {
     final seeded = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final initial = seeded.copyWith(
@@ -295,6 +308,42 @@ void main() {
     expect(ascended.ascensionGoldBonusPercent, 10);
     expect(ascended.soulboundFragments, greaterThan(0));
     expect(ascended.inDungeon, isFalse);
+  });
+
+  test('ascend keeps hero levels and meta, clears run loadouts', () {
+    final pet = const Pet(id: 'p_meta', name: 'Cub', attackBonus: 1);
+    var ready = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
+      bossVictories: 1,
+      essence: 20,
+      lifetimeGoldEarned: 12000,
+      highestDungeonCleared: 1,
+      godHandLevel: 3,
+      soulboundFragments: 5,
+      sanctuaryPowerLevel: 2,
+      ownedPets: <Pet>[pet],
+      activePet: pet,
+      heroes: GameLogic.createInitialState(now: DateTime(2026, 7, 4))
+          .heroes
+          .map((h) => h.copyWith(level: 12, xp: 40))
+          .toList(),
+    );
+    ready = GameLogic.saveLoadout(ready, id: 'bis', name: 'BIS');
+    expect(ready.loadouts, hasLength(1));
+
+    final ascended = GameLogic.ascend(ready, now: DateTime(2026, 7, 5));
+    expect(ascended.lifetimeGoldEarned, 12000);
+    expect(ascended.highestDungeonCleared, 1);
+    expect(ascended.godHandLevel, 3);
+    expect(ascended.soulboundFragments, greaterThanOrEqualTo(5));
+    expect(ascended.sanctuaryPowerLevel, 2);
+    expect(ascended.activePet?.id, pet.id);
+    expect(ascended.loadouts, isEmpty);
+    expect(ascended.gearStash, isEmpty);
+    final kept = ascended.heroRoster.where(
+      (h) => ready.heroRoster.any((r) => r.id == h.id),
+    );
+    expect(kept, isNotEmpty);
+    expect(kept.every((h) => h.level == 12 && h.xp == 40), isTrue);
   });
 
   test('ascension gold bonus applies to room rewards', () {
@@ -1024,7 +1073,7 @@ void main() {
     final withoutMage = mageDown.effectiveHeroAttack(aegis);
 
     expect(withMage, greaterThan(withoutMage));
-    expect(state.mageAuraBonusFor(aegis), greaterThanOrEqualTo(2));
+    expect(state.casterAuraBonusFor(aegis), greaterThanOrEqualTo(2));
   });
 
   test('warrior guard and healer mend passives apply', () {
@@ -1032,10 +1081,10 @@ void main() {
     final warrior = state.heroes.firstWhere(
       (hero) => hero.role == HeroRole.warrior,
     );
-    expect(state.warriorGuardBonusFor(warrior), 2);
+    expect(state.tankGuardBonusFor(warrior), 2);
     expect(
       state.effectiveHeroDefense(warrior),
-      greaterThanOrEqualTo(warrior.defense + state.warriorGuardBonusFor(warrior)),
+      greaterThanOrEqualTo(warrior.defense + state.tankGuardBonusFor(warrior)),
     );
     expect(state.healerMendAmount, 2);
 

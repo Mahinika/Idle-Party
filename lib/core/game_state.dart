@@ -6,6 +6,7 @@ import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
 import '../models/gear_loadout.dart';
 import '../models/hero.dart';
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/meta_depth.dart';
 import '../models/mission.dart';
@@ -20,7 +21,8 @@ int _jsonInt(dynamic value, [int fallback = 0]) {
 
 class GameState {
   const GameState({
-    required this.heroes,
+    required this.heroRoster,
+    required this.activeHeroIds,
     required this.enemies,
     required this.gold,
     this.lifetimeGoldEarned = 0,
@@ -73,7 +75,25 @@ class GameState {
     this.seenChangelogVersion = '',
   });
 
-  final List<PartyHero> heroes;
+  /// All unlocked heroes (bench + active).
+  final List<PartyHero> heroRoster;
+
+  /// Ordered ids of the active party (subset of [heroRoster]).
+  final List<String> activeHeroIds;
+
+  /// Active party resolved from [activeHeroIds]. Falls back to full roster
+  /// when the active list is empty.
+  List<PartyHero> get heroes {
+    if (activeHeroIds.isEmpty) return heroRoster;
+    final byId = <String, PartyHero>{
+      for (final h in heroRoster) h.id: h,
+    };
+    return [
+      for (final id in activeHeroIds)
+        if (byId[id] != null) byId[id]!,
+    ];
+  }
+
   final List<EnemyUnit> enemies;
   final int gold;
 
@@ -202,6 +222,22 @@ class GameState {
   int get battleNumber => currentRoom.globalBattleNumber;
 
   bool hasRelic(String relicId) => unlockedRelics.contains(relicId);
+
+  /// Whether [specId] is unlocked for the roster (meta list or already owned).
+  bool isSpecUnlocked(HeroSpecId specId) =>
+      metaDepth.unlockedSpecs.contains(specId.name) ||
+      heroRoster.any((h) => h.specId == specId);
+
+  /// Max active party size (4, or 5 when slot 5 is unlocked).
+  int get maxActivePartySize => metaDepth.partySlot5Unlocked ? 5 : 4;
+
+  /// Looks up a roster hero by stable [id].
+  PartyHero? rosterHero(String id) {
+    for (final h in heroRoster) {
+      if (h.id == id) return h;
+    }
+    return null;
+  }
 
   /// Relic tier from meta-depth; owned relics with no tier recorded count as 1.
   int relicTierOf(String relicId) {
@@ -434,45 +470,46 @@ class GameState {
 
   bool get isPartyDefeated => aliveHeroes == 0;
 
-  bool get hasLivingMage =>
-      heroes.any((hero) => hero.isAlive && hero.role == HeroRole.mage);
+  bool get hasLivingCaster => heroes.any(
+        (hero) => hero.isAlive && hero.spec.roleTag == SpecRoleTag.caster,
+      );
 
   bool get hasLivingHealer =>
-      heroes.any((hero) => hero.isAlive && hero.role == HeroRole.healer);
+      heroes.any((hero) => hero.isAlive && hero.spec.isHealer);
 
-  bool get hasLivingWarrior =>
-      heroes.any((hero) => hero.isAlive && hero.role == HeroRole.warrior);
+  bool get hasLivingTank =>
+      heroes.any((hero) => hero.isAlive && hero.spec.isTank);
 
   /// Max floor the party may enter (cleared + frontier).
   int get maxReachableFloor => max(1, highestFloorCleared + 1);
 
-  /// Mage aura: +15% of mage spell power (min +2) while a mage lives.
-  int mageAuraBonusFor(PartyHero hero) {
-    if (!hasLivingMage) {
+  /// Caster aura: +15% of caster spell power (min +2) while a caster lives.
+  int casterAuraBonusFor(PartyHero hero) {
+    if (!hasLivingCaster) {
       return 0;
     }
-    PartyHero? mage;
+    PartyHero? caster;
     for (final h in heroes) {
-      if (h.isAlive && h.role == HeroRole.mage) {
-        mage = h;
+      if (h.isAlive && h.spec.roleTag == SpecRoleTag.caster) {
+        caster = h;
         break;
       }
     }
-    if (mage == null) return 0;
-    final mageSp = mage.grownPrimaries.intel + mage.gearSpellPowerBonus;
+    if (caster == null) return 0;
+    final mageSp = caster.grownPrimaries.intel + caster.gearSpellPowerBonus;
     return max(2, (mageSp * 12) ~/ 100);
   }
 
-  /// Warrior Defensive Stance: base guard DEF, scales lightly with level.
-  int warriorGuardBonusFor(PartyHero hero) {
-    if (hero.role != HeroRole.warrior || !hero.isAlive) return 0;
+  /// Tank guard DEF — only true tanks (not Arms/Fury/Ret DPS).
+  int tankGuardBonusFor(PartyHero hero) {
+    if (!hero.spec.isTank || !hero.isAlive) return 0;
     return 2 + (hero.level ~/ 5);
   }
 
   /// Healer mend amount per tick (scales lightly with healer level).
   int get healerMendAmount {
     for (final hero in heroes) {
-      if (hero.isAlive && hero.role == HeroRole.healer) {
+      if (hero.isAlive && hero.spec.isHealer) {
         return 2 + (hero.level ~/ 2);
       }
     }
@@ -507,8 +544,8 @@ class GameState {
       metaAttack: metaAttackBonus,
       metaDefense: metaDefenseBonus,
       metaVitality: metaVitalityBonus,
-      guardBonus: warriorGuardBonusFor(hero),
-      auraBonus: mageAuraBonusFor(hero),
+      guardBonus: tankGuardBonusFor(hero),
+      auraBonus: casterAuraBonusFor(hero),
     );
   }
 
@@ -552,6 +589,8 @@ class GameState {
 
   GameState copyWith({
     List<PartyHero>? heroes,
+    List<PartyHero>? heroRoster,
+    List<String>? activeHeroIds,
     List<EnemyUnit>? enemies,
     int? gold,
     int? lifetimeGoldEarned,
@@ -606,8 +645,15 @@ class GameState {
     bool clearActivePet = false,
     bool clearSoulboundItem = false,
   }) {
+    var nextRoster = heroRoster ?? this.heroRoster;
+    var nextActive = activeHeroIds ?? this.activeHeroIds;
+    if (heroes != null) {
+      nextRoster = _mergeHeroesIntoRoster(nextRoster, heroes);
+      nextActive = [for (final h in heroes) h.id];
+    }
     return GameState(
-      heroes: heroes ?? this.heroes,
+      heroRoster: nextRoster,
+      activeHeroIds: nextActive,
       enemies: enemies ?? this.enemies,
       gold: gold ?? this.gold,
       lifetimeGoldEarned: lifetimeGoldEarned ?? this.lifetimeGoldEarned,
@@ -668,8 +714,33 @@ class GameState {
     );
   }
 
+  /// Merges [updates] into [roster] by hero id (order preserved; new ids append).
+  static List<PartyHero> _mergeHeroesIntoRoster(
+    List<PartyHero> roster,
+    List<PartyHero> updates,
+  ) {
+    final byId = <String, PartyHero>{
+      for (final h in roster) h.id: h,
+    };
+    for (final h in updates) {
+      byId[h.id] = h;
+    }
+    final seen = <String>{};
+    final merged = <PartyHero>[];
+    for (final h in roster) {
+      merged.add(byId[h.id]!);
+      seen.add(h.id);
+    }
+    for (final h in updates) {
+      if (seen.add(h.id)) merged.add(h);
+    }
+    return merged;
+  }
+
   Map<String, dynamic> toJson() => <String, dynamic>{
     'version': 4,
+    'heroRoster': heroRoster.map((hero) => hero.toJson()).toList(),
+    'activeHeroIds': activeHeroIds,
     'heroes': heroes.map((hero) => hero.toJson()).toList(),
     'enemies': enemies.map((enemy) => enemy.toJson()).toList(),
     'gold': gold,
@@ -778,25 +849,56 @@ class GameState {
       }
     }
 
-    var heroes = (json['heroes'] as List<dynamic>)
-        .cast<Map<String, dynamic>>()
-        .map(PartyHero.fromJson)
-        .toList();
+    var heroes = (json['heroes'] as List<dynamic>?)
+            ?.cast<Map<String, dynamic>>()
+            .map(PartyHero.fromJson)
+            .toList() ??
+        const <PartyHero>[];
+    final rosterJson = json['heroRoster'] as List<dynamic>?;
+    var heroRoster = rosterJson == null
+        ? List<PartyHero>.from(heroes)
+        : rosterJson
+            .cast<Map<String, dynamic>>()
+            .map(PartyHero.fromJson)
+            .toList();
     // Migrate legacy party loadout onto first hero without per-hero gear.
-    final anyHeroGear = heroes.any((h) => h.equipped.isNotEmpty);
+    final anyHeroGear = heroRoster.any((h) => h.equipped.isNotEmpty);
     var legacyEquipped = equipped;
-    if (!anyHeroGear && equipped.isNotEmpty && heroes.isNotEmpty) {
-      heroes = [
-        heroes.first.copyWith(
+    if (!anyHeroGear && equipped.isNotEmpty && heroRoster.isNotEmpty) {
+      heroRoster = [
+        heroRoster.first.copyWith(
           equipped: Map<EquipmentSlot, EquipmentItem>.from(equipped),
         ),
-        ...heroes.skip(1),
+        ...heroRoster.skip(1),
       ];
       legacyEquipped = const <EquipmentSlot, EquipmentItem>{};
     }
 
+    final activeRaw = json['activeHeroIds'] as List<dynamic>?;
+    var activeHeroIds = activeRaw?.map((e) => e.toString()).toList() ??
+        [for (final h in heroRoster) h.id];
+    // Old saves only had `heroes` — treat that list as both roster and active.
+    if (rosterJson == null && heroes.isNotEmpty) {
+      heroRoster = heroes;
+      activeHeroIds = [for (final h in heroes) h.id];
+    }
+
+    final rogueUnlocked = (json['rogueUnlocked'] as bool?) ?? false;
+    var metaDepth = MetaDepthState.fromJson(
+      json['metaDepth'] as Map<String, dynamic>?,
+    );
+    if (metaDepth.unlockedSpecs.isEmpty) {
+      final specs = <String>{
+        for (final s in HeroSpecs.starterUnlocked) s.name,
+        for (final h in heroRoster) h.specId.name,
+        if (rogueUnlocked) HeroSpecId.combat.name,
+      };
+      metaDepth = metaDepth.copyWith(unlockedSpecs: specs.toList());
+    }
+
     return GameState(
-      heroes: heroes,
+      heroRoster: heroRoster,
+      activeHeroIds: activeHeroIds,
       enemies: (json['enemies'] as List<dynamic>)
           .cast<Map<String, dynamic>>()
           .map(EnemyUnit.fromJson)
@@ -850,9 +952,7 @@ class GameState {
       sanctuaryGoldLevel: _jsonInt(json['sanctuaryGoldLevel']),
       sanctuaryPowerLevel: _jsonInt(json['sanctuaryPowerLevel']),
       sanctuaryVitalityLevel: _jsonInt(json['sanctuaryVitalityLevel']),
-      metaDepth: MetaDepthState.fromJson(
-        json['metaDepth'] as Map<String, dynamic>?,
-      ),
+      metaDepth: metaDepth,
       inDungeon: (json['inDungeon'] as bool?) ?? false,
       dungeonId: (json['dungeonId'] as String?) ?? 'sandy',
       soulboundFragments: _jsonInt(json['soulboundFragments']),
@@ -864,7 +964,7 @@ class GameState {
       soundMuted: (json['soundMuted'] as bool?) ?? false,
       reducedVfx: (json['reducedVfx'] as bool?) ?? false,
       autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 24),
-      rogueUnlocked: (json['rogueUnlocked'] as bool?) ?? false,
+      rogueUnlocked: rogueUnlocked,
       seenTips: (json['seenTips'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??

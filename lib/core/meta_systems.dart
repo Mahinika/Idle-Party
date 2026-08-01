@@ -1,6 +1,7 @@
 import '../models/achievement_def.dart';
 import '../models/dungeon_def.dart';
 import '../models/enemy.dart';
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/pet.dart';
 import 'game_state.dart';
@@ -10,9 +11,12 @@ import 'game_state.dart';
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Bump alongside [changelog] entries.
-  static const String currentVersion = '1.3.0';
+  static const String currentVersion = '1.4.0';
 
   static const List<String> changelog = <String>[
+    'Team Composition: unlock WotLK-style specs and field 4–5 active heroes.',
+    'All talent-tree kits (~30) with abilities via the shared effect runner.',
+    'Gear Sets renamed (was Loadouts); 5th party slot for essence at AL 2+.',
     'Meta depth: prestige shop, sanctuary XP/prestige, relic tiers, weekly contracts.',
     'Expanded pet roster (12 species), rarity merges, bonding, and frames.',
     'Codex milestone claims, ascend titles, zone trophies, and Will ranks.',
@@ -23,7 +27,7 @@ abstract final class MetaSystems {
     'Achievements and ascend milestones grant essence rewards.',
     'Challenge clears: +2e per active toggle; Daily Run clear awards +25e.',
     'Auto Equip / Sell Junk report what they did via toasts.',
-    'Offline AFK copy clarifies abstract combat (not live spatial).',
+    'In-dungeon offline catch-up runs SpatialCombat (AFK assist + reduced VFX).',
     'Codex monsters show sprites; difficulty CI gates for attrition balance.',
     'Rich offline progress summary dialog on return to the hub.',
     'Save up to 3 named gear loadouts and swap them instantly.',
@@ -103,6 +107,11 @@ abstract final class MetaSystems {
         s.ownedPets.isNotEmpty || s.metaDepth.lifetimePetHatches >= 1,
     'daily_clear': (s) => s.dailyClaimed,
     'full_party': (s) => s.heroes.length >= 4,
+    'party_five': (s) =>
+        s.metaDepth.partySlot5Unlocked && s.heroes.length >= 5,
+    'specs_10': (s) => s.metaDepth.unlockedSpecs.length >= 10,
+    'specs_all': (s) =>
+        s.metaDepth.unlockedSpecs.length >= HeroSpecId.values.length,
     'clear_sandy': (s) => s.highestDungeonCleared >= 0,
     'clear_king': (s) => s.highestDungeonCleared >= 2,
     'clear_underworld': (s) => s.highestDungeonCleared >= 3,
@@ -182,7 +191,12 @@ abstract final class MetaSystems {
   }
 
   /// Extra essence on floor clear while challenge toggles / hardmode are on.
-  static int challengeClearEssenceBonus(GameState state) {
+  /// Farm loops must not mint this (would be unbounded AFK essence).
+  static int challengeClearEssenceBonus(
+    GameState state, {
+    bool farmLoop = false,
+  }) {
+    if (farmLoop) return 0;
     var bonus = 0;
     if (state.challengeBossRush) bonus += 2;
     if (state.challengeNoFlask) bonus += 2;

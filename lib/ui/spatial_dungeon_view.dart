@@ -9,6 +9,7 @@ import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
 import '../models/hero.dart';
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../spatial/spatial_combat.dart';
 import '../spatial/tile_map.dart';
@@ -47,6 +48,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   ui.Image? _hero1;
   ui.Image? _hero2;
   ui.Image? _hero3;
+  final Map<HeroClassId, ui.Image?> _heroesByClass = {};
   ui.Image? _charAtlas;
   ui.Image? _chest;
   ui.Image? _coin;
@@ -147,6 +149,12 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         load(KenneyAssets.heroHealer, targetWidth: 128),
         load(KenneyAssets.heroWizard, targetWidth: 128),
         load(KenneyAssets.heroRogue, targetWidth: 128),
+        load(CustomAssets.heroPaladin, targetWidth: 128),
+        load(CustomAssets.heroHunter, targetWidth: 128),
+        load(CustomAssets.heroDeathKnight, targetWidth: 128),
+        load(CustomAssets.heroShaman, targetWidth: 128),
+        load(CustomAssets.heroWarlock, targetWidth: 128),
+        load(CustomAssets.heroDruid, targetWidth: 128),
         load(RoguelikeCharAtlas.assetPath, targetWidth: 512),
         ...enemyAssets.map((a) => load(a, targetWidth: 128)),
         load(KenneyAssets.chestClosed, targetWidth: 64),
@@ -167,6 +175,18 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       _hero1 = shared[i++];
       _hero2 = shared[i++];
       _hero3 = shared[i++];
+      _heroesByClass
+        ..clear()
+        ..[HeroClassId.warrior] = _hero0
+        ..[HeroClassId.priest] = _hero1
+        ..[HeroClassId.mage] = _hero2
+        ..[HeroClassId.rogue] = _hero3
+        ..[HeroClassId.paladin] = shared[i++]
+        ..[HeroClassId.hunter] = shared[i++]
+        ..[HeroClassId.deathKnight] = shared[i++]
+        ..[HeroClassId.shaman] = shared[i++]
+        ..[HeroClassId.warlock] = shared[i++]
+        ..[HeroClassId.druid] = shared[i++];
       _charAtlas = shared[i++];
       _enemySprites = shared.sublist(i, i + enemyAssets.length);
       i += enemyAssets.length;
@@ -391,6 +411,9 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                   _hero2,
                                   _hero3,
                                 ],
+                                heroesByClass: Map<HeroClassId, ui.Image?>.from(
+                                  _heroesByClass,
+                                ),
                                 enemies: _enemySprites,
                                 chest: _chest!,
                                 coin: _coin!,
@@ -752,6 +775,7 @@ class _TileRoomPainter extends CustomPainter {
     required this.clearedChambers,
     required this.charAtlas,
     required this.heroes,
+    required this.heroesByClass,
     required this.enemies,
     required this.chest,
     required this.coin,
@@ -779,6 +803,7 @@ class _TileRoomPainter extends CustomPainter {
   final Set<int> clearedChambers;
   final ui.Image charAtlas;
   final List<ui.Image?> heroes;
+  final Map<HeroClassId, ui.Image?> heroesByClass;
   final List<ui.Image?> enemies;
   final ui.Image chest;
   final ui.Image coin;
@@ -1021,6 +1046,8 @@ class _TileRoomPainter extends CustomPainter {
         SpellBoltStyle.arcane => const Color(0xFFC070FF),
         SpellBoltStyle.shadow => const Color(0xFFB060E0),
         SpellBoltStyle.nature => const Color(0xFF70D070),
+        SpellBoltStyle.lightning => const Color(0xFFB8F0FF),
+        SpellBoltStyle.arrow => const Color(0xFFD8C070),
         SpellBoltStyle.weapon => p.team == SpatialTeam.hero
             ? (p.isCrit ? const Color(0xFFFFF0C0) : const Color(0xFFFFE08A))
             : const Color(0xFFFF6A4A),
@@ -1032,36 +1059,22 @@ class _TileRoomPainter extends CustomPainter {
       canvas.save();
       canvas.translate(c.dx, c.dy);
       canvas.rotate(angle);
-      if (p.style == SpellBoltStyle.fire) {
-        // Fireball / Pyro: glowing orb + trail
+
+      void drawOrb({required double core, Color? glow}) {
         canvas.drawCircle(
-          Offset(-len * 0.2, 0),
-          thick * 1.6,
-          Paint()..color = color.withValues(alpha: 0.25),
+          Offset(-len * 0.15, 0),
+          thick * 1.5,
+          Paint()..color = (glow ?? color).withValues(alpha: 0.22),
         );
-        canvas.drawCircle(
-          Offset.zero,
-          thick * (p.label == 'PYRO' ? 1.35 : 1.05),
-          Paint()..color = color,
-        );
-        canvas.drawCircle(
-          Offset.zero,
-          thick * 0.45,
-          Paint()..color = const Color(0xFFFFF0C0),
-        );
-      } else if (p.style == SpellBoltStyle.holy) {
-        canvas.drawCircle(
-          Offset.zero,
-          thick * 1.1,
-          Paint()..color = color.withValues(alpha: 0.9),
-        );
+        canvas.drawCircle(Offset.zero, thick * core, Paint()..color = color);
         canvas.drawCircle(
           Offset.zero,
           thick * 0.4,
-          Paint()..color = Colors.white,
+          Paint()..color = Colors.white.withValues(alpha: 0.9),
         );
-      } else {
-        // Soft trail
+      }
+
+      void drawTrailBolt() {
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTWH(-len * 0.85, -thick * 0.9, len * 1.1, thick * 1.8),
@@ -1069,7 +1082,6 @@ class _TileRoomPainter extends CustomPainter {
           ),
           Paint()..color = color.withValues(alpha: 0.28),
         );
-        // Core bolt
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTWH(-len * 0.55, -thick * 0.45, len, thick * 0.9),
@@ -1077,12 +1089,120 @@ class _TileRoomPainter extends CustomPainter {
           ),
           Paint()..color = color,
         );
-        // Tip spark
         canvas.drawCircle(
           Offset(len * 0.45, 0),
           thick * 0.7,
           Paint()..color = Colors.white.withValues(alpha: 0.85),
         );
+      }
+
+      switch (p.style) {
+        case SpellBoltStyle.fire:
+          drawOrb(core: p.label == 'PYRO' ? 1.35 : 1.05);
+        case SpellBoltStyle.holy:
+          drawOrb(core: 1.1, glow: const Color(0xFFFFF8D0));
+        case SpellBoltStyle.frost:
+          // Icy shard / frostbolt orb
+          canvas.drawCircle(
+            Offset(-len * 0.2, 0),
+            thick * 1.4,
+            Paint()..color = color.withValues(alpha: 0.2),
+          );
+          final ice = Path()
+            ..moveTo(len * 0.55, 0)
+            ..lineTo(-len * 0.35, -thick * 1.1)
+            ..lineTo(-len * 0.15, 0)
+            ..lineTo(-len * 0.35, thick * 1.1)
+            ..close();
+          canvas.drawPath(ice, Paint()..color = color);
+          canvas.drawCircle(
+            Offset.zero,
+            thick * 0.55,
+            Paint()..color = const Color(0xFFE8F8FF),
+          );
+        case SpellBoltStyle.arcane:
+          drawOrb(core: 1.15, glow: const Color(0xFFE0A0FF));
+          canvas.drawCircle(
+            Offset.zero,
+            thick * 1.35,
+            Paint()
+              ..color = color.withValues(alpha: 0.35)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(1.2, thick * 0.25),
+          );
+        case SpellBoltStyle.shadow:
+          canvas.drawCircle(
+            Offset(-len * 0.25, 0),
+            thick * 1.7,
+            Paint()..color = const Color(0x66201040),
+          );
+          drawOrb(core: 1.05, glow: const Color(0xFF602090));
+        case SpellBoltStyle.nature:
+          drawOrb(core: 1.05, glow: const Color(0xFFA0E080));
+          // Leaf tip
+          canvas.drawOval(
+            Rect.fromCenter(
+              center: Offset(len * 0.35, 0),
+              width: thick * 1.4,
+              height: thick * 0.7,
+            ),
+            Paint()..color = const Color(0xFFB8F090),
+          );
+        case SpellBoltStyle.lightning:
+          // Zigzag bolt
+          final zig = Path()
+            ..moveTo(-len * 0.55, -thick * 0.2)
+            ..lineTo(-len * 0.1, thick * 0.9)
+            ..lineTo(len * 0.05, -thick * 0.6)
+            ..lineTo(len * 0.55, thick * 0.15);
+          canvas.drawPath(
+            zig,
+            Paint()
+              ..color = color.withValues(alpha: 0.45)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = thick * 1.6
+              ..strokeCap = StrokeCap.round,
+          );
+          canvas.drawPath(
+            zig,
+            Paint()
+              ..color = Colors.white
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = thick * 0.55
+              ..strokeCap = StrokeCap.round,
+          );
+          canvas.drawCircle(
+            Offset(len * 0.55, 0),
+            thick * 0.65,
+            Paint()..color = Colors.white,
+          );
+        case SpellBoltStyle.arrow:
+          // Shaft
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(-len * 0.65, -thick * 0.28, len * 1.05, thick * 0.56),
+              Radius.circular(thick * 0.2),
+            ),
+            Paint()..color = const Color(0xFF8A6230),
+          );
+          // Fletching
+          final fletch = Path()
+            ..moveTo(-len * 0.55, 0)
+            ..lineTo(-len * 0.85, -thick * 1.15)
+            ..lineTo(-len * 0.4, 0)
+            ..lineTo(-len * 0.85, thick * 1.15)
+            ..close();
+          canvas.drawPath(fletch, Paint()..color = const Color(0xFFC05040));
+          // Arrowhead
+          final head = Path()
+            ..moveTo(len * 0.55, 0)
+            ..lineTo(len * 0.15, -thick * 1.05)
+            ..lineTo(len * 0.2, 0)
+            ..lineTo(len * 0.15, thick * 1.05)
+            ..close();
+          canvas.drawPath(head, Paint()..color = const Color(0xFFD0D4D8));
+        case SpellBoltStyle.weapon:
+          drawTrailBolt();
       }
       canvas.restore();
     }
@@ -1197,8 +1317,12 @@ class _TileRoomPainter extends CustomPainter {
               flash *
                   (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
       final alpha = hero.isAlive ? 1.0 : 0.25;
-      // Prefer custom painted heroes (intro style) over Kenney paper-doll.
-      final img = heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
+      // Prefer class sprite from active party hero when available.
+      ui.Image? img;
+      if (partyHero != null) {
+        img = heroesByClass[partyHero.spec.classId];
+      }
+      img ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
       if (img != null) {
         drawSprite(
           img,
@@ -1570,13 +1694,16 @@ class _TileRoomPainter extends CustomPainter {
     }
 
     if (!reducedVfx) {
-      for (final floater in world.floaters) {
-        final alpha = (floater.life / 0.9).clamp(0.0, 1.0);
+      final floaters = world.floaters;
+      final start = floaters.length > 10 ? floaters.length - 10 : 0;
+      for (var i = start; i < floaters.length; i++) {
+        final floater = floaters[i];
+        final alpha = (floater.life / 0.7).clamp(0.0, 1.0);
         final tp = TextPainter(
           text: TextSpan(
             text: floater.text,
             style: GameTheme.pixelCached(
-              size: math.max(9, tile * 0.38),
+              size: math.max(8, tile * 0.32),
               color: Color(floater.argb).withValues(alpha: alpha),
             ),
           ),
@@ -1584,6 +1711,7 @@ class _TileRoomPainter extends CustomPainter {
         )..layout();
         final c = center(floater.x, floater.y);
         tp.paint(canvas, Offset(c.dx - tp.width / 2, c.dy - tp.height / 2));
+        tp.dispose();
       }
     }
   }

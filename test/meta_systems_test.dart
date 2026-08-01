@@ -118,6 +118,10 @@ void main() {
       expect(MetaSystems.challengeClearEssenceBonus(state), 0);
       state = state.copyWith(challengeBossRush: true, challengeNoFlask: true);
       expect(MetaSystems.challengeClearEssenceBonus(state), 4);
+      expect(
+        MetaSystems.challengeClearEssenceBonus(state, farmLoop: true),
+        0,
+      );
     });
 
     test('Loot Sprite grants gold and loot find', () {

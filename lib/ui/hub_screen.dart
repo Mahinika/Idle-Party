@@ -35,6 +35,7 @@ class HubScreen extends StatefulWidget {
     this.onOpenAchievements,
     this.onOpenCodex,
     this.onOpenLoadouts,
+    this.onOpenTeam,
     this.onOpenGuides,
     this.onOpenPrestigeShop,
   });
@@ -51,6 +52,7 @@ class HubScreen extends StatefulWidget {
   final VoidCallback? onOpenAchievements;
   final VoidCallback? onOpenCodex;
   final VoidCallback? onOpenLoadouts;
+  final VoidCallback? onOpenTeam;
   final VoidCallback? onOpenGuides;
   final VoidCallback? onOpenPrestigeShop;
 
@@ -388,7 +390,9 @@ class _HubScreenState extends State<HubScreen>
         if (widget.onOpenPrestigeShop != null)
           (label: 'PRESTIGE SHOP', onTap: widget.onOpenPrestigeShop!),
         if (widget.onOpenLoadouts != null)
-          (label: 'LOADOUTS', onTap: widget.onOpenLoadouts!),
+          (label: 'GEAR SETS', onTap: widget.onOpenLoadouts!),
+        if (widget.onOpenTeam != null)
+          (label: 'TEAM', onTap: widget.onOpenTeam!),
         if (widget.onOpenAchievements != null)
           (label: 'ACHIEVEMENTS', onTap: widget.onOpenAchievements!),
         if (widget.onOpenCodex != null)

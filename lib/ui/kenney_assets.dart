@@ -1,7 +1,7 @@
 import '../core/game_logic.dart';
 import '../models/dungeon_def.dart';
 import '../models/enemy.dart';
-import '../models/hero.dart';
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../spatial/tile_map.dart';
 import 'custom_assets.dart';
@@ -206,21 +206,21 @@ abstract final class KenneyAssets {
   static const String relicIronWard = '$_runes/iron_ward.png';
   static const String relicPhoenixEmber = '$_runes/phoenix_ember.png';
 
-  static String heroSpriteForRole(HeroRole role) => switch (role) {
-        HeroRole.warrior => heroKnight,
-        HeroRole.healer => heroHealer,
-        HeroRole.mage => heroWizard,
-        HeroRole.rogue => heroRogue,
+  static String heroSpriteForClass(HeroClassId classId) => switch (classId) {
+        HeroClassId.warrior => CustomAssets.heroKnight,
+        HeroClassId.paladin => CustomAssets.heroPaladin,
+        HeroClassId.hunter => CustomAssets.heroHunter,
+        HeroClassId.rogue => CustomAssets.heroRogue,
+        HeroClassId.priest => CustomAssets.heroHealer,
+        HeroClassId.deathKnight => CustomAssets.heroDeathKnight,
+        HeroClassId.shaman => CustomAssets.heroShaman,
+        HeroClassId.mage => CustomAssets.heroWizard,
+        HeroClassId.warlock => CustomAssets.heroWarlock,
+        HeroClassId.druid => CustomAssets.heroDruid,
       };
 
-  static String heroSpriteFor(int index) => switch (index) {
-        0 => heroKnight,
-        1 => heroHealer,
-        2 => heroWizard,
-        _ => heroRogue,
-      };
-
-  static String heroPortraitFor(int index) => heroSpriteFor(index);
+  static String heroSpriteForSpec(HeroSpecId specId) =>
+      heroSpriteForClass(HeroSpecs.def(specId).classId);
 
   static String floorForDungeon(String dungeonId) {
     // Prefer textured floors so maps don't read as flat color slabs.
@@ -469,6 +469,13 @@ abstract final class KenneyAssets {
   static String enemySpriteForCodexName(String name) {
     final key = name.trim().toLowerCase();
     final mapped = switch (key) {
+      // Catalog bosses — must match enemySpriteForRole(boss, dungeonId:).
+      'earth kraken' => enemyCrab,
+      'hobgoblin lord' => enemyCyclops,
+      'corrupt king' => enemyBoss,
+      'beholder' => enemyCultist,
+      'the no-one' => enemyGhost,
+      'chtulu' => enemyHellBoss,
       'crystal warden' ||
       'crystal golem' ||
       'frozen bulwark' ||
@@ -484,7 +491,7 @@ abstract final class KenneyAssets {
       'shatter fang' =>
         enemyCrystalWraith,
       'crystal mite' || 'frost wisp' || 'rime bat' => enemyCrystalMite,
-      'chtulu' || 'king crab' || 'cave king' || 'earth kraken' => enemyBoss,
+      'king crab' || 'cave king' => enemyCrab,
       'hell lord' || 'hellgate tyrant' => enemyHellBoss,
       'cave slime' || 'drip ooze' || 'sand mite' => enemySlime,
       'spit bat' || 'cavern spitter' || 'drill bat' => enemyBat,

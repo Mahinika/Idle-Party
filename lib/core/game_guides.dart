@@ -54,17 +54,18 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'party',
-      title: 'PARTY & ABILITIES',
+      title: 'PARTY & SPECS',
       body:
-          'Four heroes with Wrath of the Lich King kits:\n'
-          'Warrior (Protection), Disc Priest, Fire Mage, Combat Rogue.\n\n'
-          '• Tap a hero in the party HUD to select them and see abilities.\n'
-          '• Hover or long-press an ability chip for name, effect, and cooldown.\n'
-          '• Long-press a hero to open Equip.\n'
-          '• Resources: Rage / Mana / Energy — abilities spend these.\n'
-          '• Skills unlock as heroes level (Prot Shockwave, PoM, Living Bomb, '
-          'Killing Spree, and more).\n'
-          '• Flask button appears when you have a potion; tap to heal the party.',
+          'Unlock WotLK-style specs and build your own party.\n\n'
+          '• MORE → TEAM to set active heroes from your roster (4 slots, '
+          '5th unlockable with essence at AL 2+).\n'
+          '• New Game: pick 3 from the starter specs (Protection, Disc, Fire).\n'
+          '• Combat Rogue unlocks after first Ascend; more kits via clears.\n'
+          '• More specs unlock via Ascend level and dungeon clears.\n'
+          '• Tap a hero in the HUD for abilities; chips show cooldowns.\n'
+          '• Resources: Rage / Mana / Energy / Runic — kits spend these.\n'
+          '• Roster levels persist on Ascend; run gear still resets.\n'
+          '• Flask heals the party when you have a potion.',
     ),
     GuideTopic(
       id: 'bag_equip',
@@ -158,12 +159,13 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'loadouts',
-      title: 'GEAR LOADOUTS',
+      title: 'GEAR SETS',
       body:
-          'MORE → LOADOUTS.\n\n'
-          '• Save up to 3 named gear presets.\n'
-          '• Apply a loadout to swap party gear quickly.\n'
-          '• Handy when switching Farm vs Push or Hardmode setups.',
+          'MORE → GEAR SETS.\n\n'
+          '• Save up to 3 named gear presets (by hero id).\n'
+          '• Apply a set to swap equipped gear quickly.\n'
+          '• Handy when switching Farm vs Push or Hardmode setups.\n'
+          '• Team lineup is separate — use MORE → TEAM for composition.',
     ),
     GuideTopic(
       id: 'hardmode',
@@ -181,9 +183,10 @@ abstract final class GameGuides {
       title: 'ASCEND',
       body:
           'Prestige when Ascend unlocks in the hub.\n\n'
-          '• Resets run gear, hero levels, stash, and floor progress.\n'
+          '• Resets run gear, stash, and floor progress.\n'
           '• Keeps: essence, relics, sanctuary, pets, soulbound, God Hand, '
-          'highest dungeon cleared, lifetime gold.\n'
+          'highest dungeon cleared, lifetime gold, unlocked specs, '
+          'roster levels/XP, and 5th party slot.\n'
           '• Grants essence and raises Ascension Level (AL).\n'
           '• AL makes later runs tougher but richer in meta power.',
     ),

@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/models/hero.dart';
+import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/proficiency.dart';
 
@@ -20,9 +22,59 @@ void main() {
             role: hero.role,
             level: hero.level,
             item: item,
+            specId: hero.specId,
           ),
           isTrue,
           reason: '${hero.role} cannot wear ${item.name} (${item.slot})',
+        );
+      }
+    }
+  });
+
+  test('every HeroSpecId has an ability kit and legal starter gear', () {
+    final fillers = <HeroSpecId>[
+      HeroSpecId.protection,
+      HeroSpecId.discipline,
+      HeroSpecId.fire,
+    ];
+    for (final id in HeroSpecId.values) {
+      expect(
+        ClassKits.forSpec(id),
+        isNotEmpty,
+        reason: '$id missing kit',
+      );
+      expect(
+        ClassKits.forSpec(id).every((d) => d.specId == id),
+        isTrue,
+        reason: '$id kit fell back to legacy role',
+      );
+
+      final party = <HeroSpecId>[id];
+      for (final f in fillers) {
+        if (party.length >= GameLogic.starterPartySize) break;
+        if (!party.contains(f)) party.add(f);
+      }
+      // Ensure unique fill if id was a filler.
+      for (final f in HeroSpecId.values) {
+        if (party.length >= GameLogic.starterPartySize) break;
+        if (!party.contains(f)) party.add(f);
+      }
+
+      final state = GameLogic.createInitialState(
+        now: DateTime(2026, 8, 1),
+        partySpecs: party,
+      );
+      final hero = state.heroes.firstWhere((h) => h.specId == id);
+      for (final item in hero.equipped.values) {
+        expect(
+          ClassProficiency.canEquip(
+            role: hero.role,
+            level: hero.level,
+            item: item,
+            specId: id,
+          ),
+          isTrue,
+          reason: '$id cannot wear ${item.name} (${item.slot} ${item.typeLabel})',
         );
       }
     }

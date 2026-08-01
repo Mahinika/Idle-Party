@@ -1,44 +1,55 @@
 import 'class_ability.dart';
 import 'combat_ratings.dart';
+import 'hero_spec.dart';
 import 'loot.dart';
 import 'stats.dart';
 
+/// Legacy combat family used by ratings / existing ability tickers.
+/// Prefer [HeroSpecId] for identity; [HeroRole] remains the combat archetype.
 enum HeroRole { warrior, healer, mage, rogue }
 
 class PartyHero {
   const PartyHero({
+    required this.id,
     required this.name,
     required this.level,
     required this.currentHp,
     required this.stats,
-    this.role = HeroRole.rogue,
+    required this.specId,
     this.equipped = const <EquipmentSlot, EquipmentItem>{},
     this.xp = 0,
   });
 
   factory PartyHero.starting({
     required String name,
-    required Stats stats,
-    HeroRole? role,
+    required HeroSpecId specId,
+    String? id,
+    Stats? stats,
     Map<EquipmentSlot, EquipmentItem>? equipped,
   }) {
-    final r = role ?? roleForName(name);
+    final def = HeroSpecs.def(specId);
+    final sheetStats = stats ?? def.startingStats;
+    final role = def.legacyRole;
     final sheet = CombatRatings.grownPrimaries(
-      base: stats,
-      role: r,
+      base: sheetStats,
+      role: role,
       level: 1,
     );
-    final hp = CombatRatings.roleHpBase(r) + 10 * sheet.sta;
+    final hp = CombatRatings.roleHpBase(role) + 10 * sheet.sta;
     return PartyHero(
+      id: id ?? _stableIdFor(specId, name),
       name: name,
       level: 1,
       currentHp: hp,
-      stats: stats,
-      role: r,
+      stats: sheetStats,
+      specId: specId,
       equipped: equipped ?? const <EquipmentSlot, EquipmentItem>{},
       xp: 0,
     );
   }
+
+  static String _stableIdFor(HeroSpecId specId, String name) =>
+      '${specId.name}_${name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_')}';
 
   static HeroRole roleForName(String name) => switch (name) {
         'Aegis' => HeroRole.warrior,
@@ -47,45 +58,34 @@ class PartyHero {
         _ => HeroRole.rogue,
       };
 
-  /// Locked starting primary sheets from the Classic stats plan.
-  static Stats startingStatsFor(HeroRole role) => switch (role) {
-        HeroRole.warrior => const Stats(
-            strength: 14,
-            agility: 7,
-            stamina: 8,
-            intellect: 1,
-            spirit: 2,
-          ),
-        HeroRole.healer => const Stats(
-            strength: 2,
-            agility: 3,
-            stamina: 5,
-            intellect: 7,
-            spirit: 7,
-          ),
-        HeroRole.mage => const Stats(
-            strength: 1,
-            agility: 3,
-            stamina: 5,
-            intellect: 7,
-            spirit: 4,
-          ),
-        HeroRole.rogue => const Stats(
-            strength: 8,
-            agility: 15,
-            stamina: 5,
-            intellect: 1,
-            spirit: 2,
-          ),
+  static HeroSpecId specForName(String name) => switch (name) {
+        'Aegis' => HeroSpecId.protection,
+        'Vale' => HeroSpecId.discipline,
+        'Ember' => HeroSpecId.fire,
+        'Shade' => HeroSpecId.combat,
+        _ => HeroSpecId.combat,
       };
 
+  /// Locked starting primary sheets from the Classic stats plan.
+  static Stats startingStatsFor(HeroRole role) =>
+      HeroSpecs.def(HeroSpecs.fromLegacyRole(role)).startingStats;
+
+  static Stats startingStatsForSpec(HeroSpecId specId) =>
+      HeroSpecs.def(specId).startingStats;
+
+  final String id;
   final String name;
   final int level;
   final int currentHp;
   final Stats stats;
-  final HeroRole role;
+  final HeroSpecId specId;
   final Map<EquipmentSlot, EquipmentItem> equipped;
   final int xp;
+
+  HeroSpecDef get spec => HeroSpecs.def(specId);
+
+  /// Combat archetype for ratings / spatial tickers.
+  HeroRole get role => spec.legacyRole;
 
   ({int str, int agi, int sta, int intel, int spi}) get grownPrimaries =>
       CombatRatings.grownPrimaries(base: stats, role: role, level: level);
@@ -134,7 +134,6 @@ class PartyHero {
   int get gearMp5Bonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.mp5Bonus);
 
-  /// Flat AP from legacy attackBonus on melee gear.
   int get gearAttackBonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.attackBonus);
 
@@ -175,7 +174,6 @@ class PartyHero {
     return _softCapStat(raw, soft: 10, hard: 22);
   }
 
-  /// Compress stacking above [soft]; never exceed [hard].
   static int _softCapStat(int value, {required int soft, required int hard}) {
     if (value <= soft) return value;
     final compressed = soft + ((value - soft) * 0.45).round();
@@ -196,14 +194,9 @@ class PartyHero {
 
   EquipmentItem? itemIn(EquipmentSlot slot) => equipped[slot];
 
-  String get roleLabel => switch (role) {
-        HeroRole.warrior => 'WARRIOR',
-        HeroRole.healer => 'DISC PRIEST',
-        HeroRole.mage => 'MAGE',
-        HeroRole.rogue => 'ROGUE',
-      };
+  String get roleLabel => spec.shortLabel;
 
-  String get passiveLabel => ClassKits.kitSummary(role, level);
+  String get passiveLabel => ClassKits.kitSummaryForSpec(specId, level);
 
   PartyHero takeDamage(int damage) {
     final nextHp = currentHp - damage;
@@ -217,20 +210,26 @@ class PartyHero {
   PartyHero train() => levelUp();
 
   PartyHero copyWith({
+    String? id,
+    String? name,
     int? level,
     int? currentHp,
     Stats? stats,
-    HeroRole? role,
+    HeroSpecId? specId,
     Map<EquipmentSlot, EquipmentItem>? equipped,
     int? xp,
     bool clearEquipped = false,
+    @Deprecated('Use specId') HeroRole? role,
   }) {
+    final nextSpec = specId ??
+        (role != null ? HeroSpecs.fromLegacyRole(role) : this.specId);
     return PartyHero(
-      name: name,
+      id: id ?? this.id,
+      name: name ?? this.name,
       level: level ?? this.level,
       currentHp: currentHp ?? this.currentHp,
       stats: stats ?? this.stats,
-      role: role ?? this.role,
+      specId: nextSpec,
       equipped: clearEquipped
           ? const <EquipmentSlot, EquipmentItem>{}
           : (equipped ?? this.equipped),
@@ -239,10 +238,13 @@ class PartyHero {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
         'name': name,
         'level': level,
         'currentHp': currentHp,
         'stats': stats.toJson(),
+        'specId': specId.name,
+        // Legacy key for older readers.
         'role': role.name,
         'xp': xp,
         'equipped': equipped.map(
@@ -258,11 +260,14 @@ class PartyHero {
       return int.tryParse('$v') ?? fallback;
     }
 
-    final roleRaw = json['role'] as String?;
     final name = json['name'] as String;
-    final role = roleRaw == null
-        ? roleForName(name)
-        : HeroRole.values.byName(roleRaw);
+    final specRaw = json['specId'] as String?;
+    final roleRaw = json['role'] as String?;
+    final specId = HeroSpecs.tryParse(specRaw) ??
+        (roleRaw != null
+            ? HeroSpecs.fromLegacyRoleName(roleRaw)
+            : specForName(name));
+    final role = HeroSpecs.def(specId).legacyRole;
 
     final equipped = <EquipmentSlot, EquipmentItem>{};
     final equippedJson = json['equipped'] as Map<String, dynamic>?;
@@ -279,7 +284,6 @@ class PartyHero {
     Stats stats;
     if (statsJson.containsKey('strength')) {
       stats = Stats.fromJson(statsJson);
-      // Drop enemy flat overrides if present on a hero sheet.
       if (stats.isEnemySheet) {
         stats = Stats(
           strength: stats.strength,
@@ -319,12 +323,16 @@ class PartyHero {
       };
     }
 
+    final id = (json['id'] as String?) ??
+        PartyHero._stableIdFor(specId, name);
+
     return PartyHero(
+      id: id,
       name: name,
       level: asInt(json['level'], 1),
       currentHp: asInt(json['currentHp']),
       stats: stats,
-      role: role,
+      specId: specId,
       equipped: equipped,
       xp: asInt(json['xp']),
     );

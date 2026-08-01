@@ -943,14 +943,14 @@ abstract final class RoomLayouts {
     return props;
   }
 
-  /// Ensure at least 4 walkable spawn cells around the party start.
+  /// Ensure at least [count] walkable spawn cells around the party start.
   static List<(int, int)> _partySpawnCluster({
     required List<TileKind> tiles,
     required int cols,
     required int rows,
     required int anchorX,
     required int anchorY,
-    int count = 4,
+    int count = 5,
   }) {
     bool walkable(int x, int y) {
       if (x < 0 || y < 0 || x >= cols || y >= rows) return false;

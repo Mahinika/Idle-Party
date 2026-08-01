@@ -43,6 +43,16 @@ void main() {
       CustomAssets.enemyGolem,
       CustomAssets.enemyBossKing,
       CustomAssets.enemyBossHell,
+      CustomAssets.heroKnight,
+      CustomAssets.heroHealer,
+      CustomAssets.heroWizard,
+      CustomAssets.heroRogue,
+      CustomAssets.heroPaladin,
+      CustomAssets.heroHunter,
+      CustomAssets.heroDeathKnight,
+      CustomAssets.heroShaman,
+      CustomAssets.heroWarlock,
+      CustomAssets.heroDruid,
     };
 
     for (final path in paths) {

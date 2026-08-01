@@ -9,6 +9,7 @@ import '../core/game_state.dart';
 import '../models/class_ability.dart';
 import '../models/enemy.dart';
 import '../models/hero.dart';
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/pet.dart';
 import '../spatial/spatial_combat.dart';
@@ -126,6 +127,7 @@ enum Is2Overlay {
   achievements,
   codex,
   loadouts,
+  teamComposition,
   guides,
   prestigeShop,
 }
@@ -321,7 +323,11 @@ class _Is2ShellState extends State<Is2Shell> {
         onTap: () => _openOverlay(Is2Overlay.prestigeShop),
       ),
       (
-        label: 'LOADOUTS',
+        label: 'TEAM',
+        onTap: () => _openOverlay(Is2Overlay.teamComposition),
+      ),
+      (
+        label: 'GEAR SETS',
         onTap: () => _openOverlay(Is2Overlay.loadouts),
       ),
       (
@@ -525,7 +531,8 @@ class _Is2ShellState extends State<Is2Shell> {
         Is2Overlay.beast => 'BEAST PEN',
         Is2Overlay.achievements => 'ACHIEVEMENTS',
         Is2Overlay.codex => 'CODEX',
-        Is2Overlay.loadouts => 'GEAR LOADOUTS',
+        Is2Overlay.loadouts => 'GEAR SETS',
+        Is2Overlay.teamComposition => 'TEAM COMPOSITION',
         Is2Overlay.guides => 'GUIDES',
         Is2Overlay.prestigeShop => 'PRESTIGE SHOP',
         Is2Overlay.none => '',
@@ -571,6 +578,9 @@ class _Is2ShellState extends State<Is2Shell> {
         Is2Overlay.achievements => AchievementsOverlay(director: d),
         Is2Overlay.codex => CodexOverlay(director: d),
         Is2Overlay.loadouts => LoadoutsOverlay(director: d),
+        Is2Overlay.teamComposition => SingleChildScrollView(
+          child: TeamCompositionOverlay(director: d),
+        ),
         Is2Overlay.guides => const GuidesOverlay(),
         Is2Overlay.prestigeShop => PrestigeShopOverlay(director: d),
         Is2Overlay.none => const SizedBox.shrink(),
@@ -1080,7 +1090,7 @@ class _PartyRow extends StatelessWidget {
     final off = hero.itemIn(EquipmentSlot.offHand);
     final hasShield = off?.offHandKind == OffHandKind.shield;
     final abilities = showKit
-        ? ClassKits.hudAbilitiesAt(hero.role, hero.level)
+        ? ClassKits.hudAbilitiesAtSpec(hero.specId, hero.level)
         : const <ClassAbilityDef>[];
 
     return Container(
@@ -1135,7 +1145,7 @@ class _PartyRow extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            ClassKits.resourceLabel(hero.role),
+                            ClassKits.resourceLabelForSpec(hero.specId),
                             style: GameTheme.body(
                               size: 11,
                               color: GameTheme.parchmentDim,
@@ -1150,7 +1160,7 @@ class _PartyRow extends StatelessWidget {
                                 minHeight: 4,
                                 backgroundColor: const Color(0xFF2A1810),
                                 color: Color(
-                                  ClassKits.resourceColor(hero.role),
+                                  ClassKits.resourceColorForSpec(hero.specId),
                                 ),
                               ),
                             ),
@@ -1306,13 +1316,17 @@ class _DpsMeter extends StatelessWidget {
   const _DpsMeter({required this.director});
   final GameDirector director;
 
-  static String _roleTag(HeroRole? role) => switch (role) {
-        HeroRole.warrior => 'WAR',
-        HeroRole.healer => 'HEAL',
-        HeroRole.mage => 'MAGE',
-        HeroRole.rogue => 'ROG',
-        null => '---',
-      };
+  static String _heroTag(SpatialActor h) {
+    final specId = h.heroSpecId;
+    if (specId != null) return HeroSpecs.def(specId).shortLabel;
+    return switch (h.heroRole) {
+      HeroRole.warrior => 'WAR',
+      HeroRole.healer => 'HEAL',
+      HeroRole.mage => 'MAGE',
+      HeroRole.rogue => 'ROG',
+      null => '---',
+    };
+  }
 
   static String _fmt(num n) {
     if (n >= 10000) return '${(n / 1000).toStringAsFixed(1)}k';
@@ -1329,7 +1343,7 @@ class _DpsMeter extends StatelessWidget {
       for (final h in world.heroes)
         if (!h.isPet)
           (
-            tag: _roleTag(h.heroRole),
+            tag: _heroTag(h),
             dmg: h.damageDealt,
             dps: world.combatElapsed > 0.25
                 ? h.damageDealt / world.combatElapsed
@@ -3123,7 +3137,7 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
         ),
         const SizedBox(height: 8),
         _SettingsToggle(
-          label: 'Reduced VFX',
+          label: 'Reduced VFX (less lag / calmer combat)',
           value: state.reducedVfx,
           onChanged: director.setReducedVfx,
         ),

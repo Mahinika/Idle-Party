@@ -17,17 +17,17 @@ Contact sheet (indexed): `tool/_tiny_dungeon_sheet.png`
 
 | Category | Tile IDs | Getters |
 |----------|----------|---------|
-| Floors dirt | 0–3 | `floorDirt*` |
-| Floors sand | 30–32 | `floorSand*` |
-| Floors stone | 42–44 | `floorStone*` |
-| Walls | 28–29, 39–40 | `wallBanner*`, `wallStone*` |
+| Floors dirt | 0–3, 24 | `floorDirt*`, `floorDirtDetail` |
+| Floors sand | 48–49 | `floorSand*` (avoid legacy edged sand tile 30 as fill) |
+| Floors stone | 42 | `floorStone*` |
+| Walls | 28–29, 40, 57 | `wallBanner*`, `wallStone*` |
 | Doors | 6, 45–47 | `doorArch`, `doorClosed/Open/Variant` |
 | Stairs / exit | 17–19 | `stairsDown`, `stairs`, `exitPad` |
-| Hazards | 41, 50, 55 | `trapSpikes`, `hazardWater/Lava` |
-| Markers | 60–62 | `target`, `slash`, `claw` |
-| Props | 63–66, 70–75, 81–83, 89–92 | graves, torches, chests, barrel… |
-| Heroes | 84–88, 96–100 | wizard → elder |
-| Enemies | 108–112, 120–124 | slime → snake |
+| Hazards | 32, 41 | `hazardWater`, `hazardLava` / `trapSpikes` |
+| Markers | 60–62 | `corridor*`, `target`, `slash`, `claw` |
+| Props | 8, 20, 56, 63–66, 72–74, 82, 89–92 | torch, crate, graves, chests, barrel… |
+| Heroes (fallback tiles) | 85–87, 98, 100 | villager / bearded / soldier / woman / elder |
+| Enemies (fallback tiles) | unused in combat | combat uses `assets/custom/enemies/` |
 | Gear | 101–106, 113–119, 125–131 | shields, weapons, potions, staves |
 
 ## Extras (not Tiny Dungeon)
@@ -36,18 +36,20 @@ Contact sheet (indexed): `tool/_tiny_dungeon_sheet.png`
 
 ## Custom identity art (`assets/custom/`)
 
-Preferred over Tiny Dungeon for heroes, enemies, pets, gear slot icons, dungeon portraits, and painted backdrops.
+Owned Idle Party pixel art. Preferred over Tiny Dungeon for heroes, enemies, pets, gear slot icons, dungeon portraits, and painted backdrops.
 
 | Folder | Use |
 |--------|-----|
-| `custom/heroes/` | Party dolls (knight/healer/wizard/rogue) |
+| `custom/heroes/` | 10 class dolls: knight, paladin, hunter, rogue, healer, deathknight, shaman, wizard, warlock, druid |
 | `custom/enemies/` | Combat + Codex sprites (slime, rat, bat, spider, ghost, cultist, cyclops, crab, golem, bosses, crystal_*) |
 | `custom/pets/` | Egg + ember_pup / cave_bat / loot_sprite / warden_cub (other species remap to nearest) |
 | `custom/icons/` | Armor/jewelry slot icons + tome |
-| `custom/portraits/` + `custom/ui/backdrops/` | Per-dungeon hub identity |
-| `custom/ui/` | intro/hub/dungeon scenes |
+| `custom/portraits/` + `custom/ui/backdrops/` | Per-dungeon hub identity (7 zones) |
+| `custom/ui/` | intro/hub/dungeon scenes; `app_icon.png` for store/launcher branding |
 
 Codex names resolve via `KenneyAssets.enemySpriteForCodexName` (keyword + exact maps; no hash lottery).
+
+Integrity gate: `test/asset_catalog_test.dart`.
 
 ## UI packs (unchanged)
 
@@ -55,6 +57,7 @@ Codex names resolve via `KenneyAssets.enemySpriteForCodexName` (keyword + exact 
 - `ui_bars/` HP bar slices
 - `icons/` HUD icons (`door` = More, `shield_icon` = Settings)
 - `runes/` relics
+- `roguelike_char/` paper-doll sheet (`HeroPaperDoll`)
 
 ## Why tile IDs
 

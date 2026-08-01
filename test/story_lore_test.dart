@@ -27,5 +27,7 @@ void main() {
     expect(body, contains('milestone'));
     expect(body, contains('God Hand'));
     expect(body, contains('Lv3'));
+    expect(body, contains('levels/XP'));
+    expect(body, isNot(contains('Reset this run (gear, levels,')));
   });
 }

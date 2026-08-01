@@ -37,7 +37,7 @@ void main() {
     expect(find.textContaining('BAG'), findsWidgets);
     expect(find.text('PARTY'), findsOneWidget);
     expect(find.text('MORE'), findsWidgets);
-    expect(find.textContaining('WAR'), findsWidgets);
+    expect(find.textContaining('PROT'), findsWidgets);
 
     await tester.tap(find.text('PARTY'));
     await tester.pumpAndSettle();

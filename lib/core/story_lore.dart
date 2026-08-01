@@ -65,9 +65,9 @@ abstract final class StoryLore {
         ? 'Reward: +${rewardEssence}e (+${milestoneBonus}e milestone) · AL → $nextAl'
         : 'Reward: +${rewardEssence}e · AL → $nextAl';
     return 'The will withdraws and returns stronger.\n'
-        'Reset this run (gear, levels, stash, floor).\n'
-        'Keep essence, relics, pets, sanctuary, soulbound, God Hand, '
-        'prestige shop, and meta-depth progress.\n\n'
+        'Reset this run (gear, stash, floor progress).\n'
+        'Keep hero levels/XP, essence, relics, pets, sanctuary, soulbound, '
+        'God Hand, prestige shop, and meta-depth progress.\n\n'
         '$rewardLine\n'
         'God Hand Lv$godHandLevel kept · $soulboundFragments soulbound frag';
   }

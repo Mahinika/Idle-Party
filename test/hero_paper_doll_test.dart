@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/hero.dart';
+import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/ui/hero_paper_doll.dart';
 
@@ -8,8 +9,8 @@ void main() {
   test('naked hero is body + hair only', () {
     final warrior = PartyHero.starting(
       name: 'Aegis',
-      role: HeroRole.warrior,
-      stats: PartyHero.startingStatsFor(HeroRole.warrior),
+      specId: HeroSpecId.protection,
+      stats: PartyHero.startingStatsForSpec(HeroSpecId.protection),
     );
     expect(warrior.equipped, isEmpty);
     final layers = HeroPaperDoll.layersFor(warrior);

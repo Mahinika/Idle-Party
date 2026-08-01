@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/enemy.dart';
-import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/ui/kenney_assets.dart';
 
 void main() {
@@ -27,7 +26,6 @@ void main() {
       KenneyAssets.book,
       KenneyAssets.coinGold,
       KenneyAssets.ring,
-      for (final role in HeroRole.values) KenneyAssets.heroSpriteForRole(role),
       // Enemies are custom PNGs (still must exist on disk).
       ...KenneyAssets.enemySpriteCatalog,
       for (final role in EnemyRole.values)

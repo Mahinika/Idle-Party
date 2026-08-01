@@ -1,3 +1,5 @@
+import '../models/hero_spec.dart';
+
 /// Original Idle Party art (AI-generated pixel icons/portraits).
 /// Prefer these for identity; fall back to Kenney for world tiles.
 abstract final class CustomAssets {
@@ -111,12 +113,24 @@ abstract final class CustomAssets {
   static const String heroHealer = '$_root/heroes/healer.png';
   static const String heroWizard = '$_root/heroes/wizard.png';
   static const String heroRogue = '$_root/heroes/rogue.png';
+  static const String heroPaladin = '$_root/heroes/paladin.png';
+  static const String heroHunter = '$_root/heroes/hunter.png';
+  static const String heroDeathKnight = '$_root/heroes/deathknight.png';
+  static const String heroShaman = '$_root/heroes/shaman.png';
+  static const String heroWarlock = '$_root/heroes/warlock.png';
+  static const String heroDruid = '$_root/heroes/druid.png';
 
-  static String heroForIndex(int index) => switch (index) {
-        0 => heroKnight,
-        1 => heroHealer,
-        2 => heroWizard,
-        _ => heroRogue,
+  static String heroForClass(HeroClassId classId) => switch (classId) {
+        HeroClassId.warrior => heroKnight,
+        HeroClassId.paladin => heroPaladin,
+        HeroClassId.hunter => heroHunter,
+        HeroClassId.rogue => heroRogue,
+        HeroClassId.priest => heroHealer,
+        HeroClassId.deathKnight => heroDeathKnight,
+        HeroClassId.shaman => heroShaman,
+        HeroClassId.mage => heroWizard,
+        HeroClassId.warlock => heroWarlock,
+        HeroClassId.druid => heroDruid,
       };
 
   // —— Combat enemies / bosses ——

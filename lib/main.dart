@@ -5,14 +5,18 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'core/equipment_factory.dart';
 import 'core/game_director.dart';
+import 'models/hero_spec.dart';
 import 'ui/custom_assets.dart';
 import 'ui/first_session_tips.dart';
 import 'ui/game_audio.dart';
 import 'ui/game_theme.dart';
 import 'ui/hub_screen.dart';
-import 'ui/intro_screen.dart';
 import 'ui/is2_shell.dart';
+import 'ui/kenney_button.dart';
 import 'ui/kenney_sprite.dart';
+import 'ui/menu_chrome.dart';
+import 'ui/new_game_party_picker.dart';
+import 'ui/start_menu_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -77,7 +81,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-enum _AppPhase { loading, intro, play }
+enum _AppPhase { loading, startMenu, newGamePicker, play }
 
 class GameHomePage extends StatefulWidget {
   const GameHomePage({
@@ -108,20 +112,66 @@ class _GameHomePageState extends State<GameHomePage> {
 
   Future<void> _bootstrap() async {
     unawaited(EquipmentFactory.loadAffixes());
-    // Defer combat loop until after intro so dungeon ticks cannot steal focus.
+    // Defer combat loop until after start menu so dungeon ticks cannot steal focus.
     await _director.boot(deferCombatLoop: widget.showIntro);
     GameAudio.muted = _director.state.soundMuted;
     if (!mounted) return;
     setState(() {
-      _phase = widget.showIntro ? _AppPhase.intro : _AppPhase.play;
+      _phase = widget.showIntro ? _AppPhase.startMenu : _AppPhase.play;
     });
     if (_phase == _AppPhase.play) {
       _director.ensureCombatLoop();
     }
   }
 
-  void _finishIntro() {
-    if (_phase != _AppPhase.intro) return;
+  void _continueGame() {
+    if (_phase != _AppPhase.startMenu) return;
+    _director.continueGame();
+    setState(() => _phase = _AppPhase.play);
+    _director.ensureCombatLoop();
+  }
+
+  void _openNewGamePicker() {
+    if (_phase != _AppPhase.startMenu) return;
+    setState(() => _phase = _AppPhase.newGamePicker);
+  }
+
+  Future<void> _confirmNewGame(List<HeroSpecId> specs) async {
+    if (_director.hasExistingSave) {
+      final ok = await showDialog<bool>(
+        context: context,
+        barrierColor: MenuChrome.scrim,
+        builder: (ctx) => MenuChrome.dialog(
+          title: 'Overwrite save?',
+          content: Text(
+            'Starting a new game erases your current progress.',
+            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(
+                'CANCEL',
+                style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+              ),
+            ),
+            KenneyButton(
+              label: 'OVERWRITE',
+              expanded: false,
+              style: KenneyButtonStyle.red,
+              onPressed: () => Navigator.pop(ctx, true),
+            ),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) {
+        setState(() => _phase = _AppPhase.startMenu);
+        return;
+      }
+    }
+    await _director.startNewGame(specs);
+    if (!mounted) return;
+    _director.clearPendingStartMenu();
     setState(() => _phase = _AppPhase.play);
     _director.ensureCombatLoop();
   }
@@ -165,18 +215,37 @@ class _GameHomePageState extends State<GameHomePage> {
       );
     }
 
-    if (_phase == _AppPhase.intro) {
+    if (_phase == _AppPhase.startMenu) {
       return Scaffold(
-        body: IntroScreen(
-          key: const ValueKey('cold-intro'),
-          onFinished: _finishIntro,
+        body: StartMenuScreen(
+          key: const ValueKey('start-menu'),
+          canContinue: _director.hasExistingSave,
+          onContinue: _continueGame,
+          onNewGame: _openNewGamePicker,
         ),
+      );
+    }
+
+    if (_phase == _AppPhase.newGamePicker) {
+      return NewGamePartyPicker(
+        key: const ValueKey('new-game-picker'),
+        onBack: () => setState(() => _phase = _AppPhase.startMenu),
+        onConfirm: _confirmNewGame,
       );
     }
 
     return AnimatedBuilder(
       animation: _director,
       builder: (context, _) {
+        if (_director.pendingStartMenu && _phase == _AppPhase.play) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            if (!_director.pendingStartMenu) return;
+            _director.clearPendingStartMenu();
+            setState(() => _phase = _AppPhase.startMenu);
+          });
+        }
+
         final Widget body;
         if (_director.state.inDungeon) {
           body = Is2Shell(
@@ -220,6 +289,9 @@ class _GameHomePageState extends State<GameHomePage> {
                 ),
                 onOpenLoadouts: () => setState(
                   () => _hubOverlay = Is2Overlay.loadouts,
+                ),
+                onOpenTeam: () => setState(
+                  () => _hubOverlay = Is2Overlay.teamComposition,
                 ),
                 onOpenGuides: () => setState(
                   () => _hubOverlay = Is2Overlay.guides,

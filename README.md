@@ -2,20 +2,20 @@
 
 **Your party keeps fighting while you watch — or while you’re away.**
 
-Idle Party is a cozy-but-crunchy **idle RPG**: a four-hero party crawls spatial dungeon floors, clears chambers, farms loot, and grows stronger between runs. Tap in for God Hand moments, or let the corridor combat cook offline.
+Idle Party is a cozy-but-crunchy **idle RPG**: a hero party crawls spatial dungeon floors, clears chambers, farms loot, and grows stronger between runs. Tap in for God Hand moments, or let the corridor combat cook offline.
 
 <p align="center">
   <img src="assets/custom/ui/app_icon.png" alt="Idle Party app icon" width="160" />
 </p>
 
-**[Download Android APK (v1.3.1)](https://github.com/Mahinika/Idle-Party/releases/download/v1.3.1/app-release.apk)** · **[All releases](https://github.com/Mahinika/Idle-Party/releases)**
+**[Download Android APK (v1.4.0)](https://github.com/Mahinika/Idle-Party/releases/download/v1.4.0/app-release.apk)** · **[All releases](https://github.com/Mahinika/Idle-Party/releases)**
 
 ---
 
 ## Why you’ll want to try it
 
 - **Real dungeon crawling, not a fake progress bar** — multi-chamber maps, gates that open after clears, and a party that actually walks the floor.
-- **A full party with class kits** — Protection Warrior, Disc Priest, Fire Mage, Combat Rogue. Abilities, buffs, and a live DPS share meter.
+- **A full party with class kits** — 10 classes and ~30 talent specs (Warrior through Druid). Pick your starters on New Game; unlock more via Ascend and clears. Abilities, buffs, and a live DPS share meter.
 - **Farm or Push** — milk a floor for loot, or shove deeper until the wipe. Your call.
 - **God Hand** — tap the map to steer and smash. Upgrade it with essence.
 - **Gear that feels good** — equip, auto-equip, sell junk, merge in the combinator, save loadouts.

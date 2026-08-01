@@ -135,6 +135,8 @@ class MetaDepthState {
     this.heirloomAlBonus = 0,
     this.noWipeAscendReady = true,
     this.relicRespecs = 0,
+    this.partySlot5Unlocked = false,
+    this.unlockedSpecs = const <String>[],
   });
 
   final int sanctuaryXpLevel;
@@ -173,6 +175,12 @@ class MetaDepthState {
   final int heirloomAlBonus;
   final bool noWipeAscendReady;
   final int relicRespecs;
+
+  /// Fifth active party slot (essence + AL gated).
+  final bool partySlot5Unlocked;
+
+  /// Unlocked [HeroSpecId.name] strings (roster eligibility).
+  final List<String> unlockedSpecs;
 
   static const empty = MetaDepthState();
 
@@ -219,6 +227,8 @@ class MetaDepthState {
     int? heirloomAlBonus,
     bool? noWipeAscendReady,
     int? relicRespecs,
+    bool? partySlot5Unlocked,
+    List<String>? unlockedSpecs,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -259,6 +269,8 @@ class MetaDepthState {
       heirloomAlBonus: heirloomAlBonus ?? this.heirloomAlBonus,
       noWipeAscendReady: noWipeAscendReady ?? this.noWipeAscendReady,
       relicRespecs: relicRespecs ?? this.relicRespecs,
+      partySlot5Unlocked: partySlot5Unlocked ?? this.partySlot5Unlocked,
+      unlockedSpecs: unlockedSpecs ?? this.unlockedSpecs,
     );
   }
 
@@ -299,6 +311,8 @@ class MetaDepthState {
         'heirloomAlBonus': heirloomAlBonus,
         'noWipeAscendReady': noWipeAscendReady,
         'relicRespecs': relicRespecs,
+        'partySlot5Unlocked': partySlot5Unlocked,
+        'unlockedSpecs': unlockedSpecs,
       };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -356,6 +370,10 @@ class MetaDepthState {
       heirloomAlBonus: (json['heirloomAlBonus'] as num?)?.toInt() ?? 0,
       noWipeAscendReady: (json['noWipeAscendReady'] as bool?) ?? true,
       relicRespecs: (json['relicRespecs'] as num?)?.toInt() ?? 0,
+      partySlot5Unlocked: (json['partySlot5Unlocked'] as bool?) ?? false,
+      unlockedSpecs:
+          (json['unlockedSpecs'] as List<dynamic>?)?.cast<String>() ??
+              const [],
     );
   }
 }

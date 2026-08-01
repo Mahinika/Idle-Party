@@ -73,6 +73,27 @@ abstract final class AchievementCatalog {
       essenceReward: 5,
       category: AchievementCategory.meta,
     ),
+    AchievementDef(
+      id: 'party_five',
+      title: 'Five Strong',
+      description: 'Unlock and field a 5-hero party.',
+      essenceReward: 12,
+      category: AchievementCategory.meta,
+    ),
+    AchievementDef(
+      id: 'specs_10',
+      title: 'Spec Collector',
+      description: 'Unlock 10 different hero specs.',
+      essenceReward: 15,
+      category: AchievementCategory.collector,
+    ),
+    AchievementDef(
+      id: 'specs_all',
+      title: 'Full Grimoire',
+      description: 'Unlock every hero spec.',
+      essenceReward: 40,
+      category: AchievementCategory.collector,
+    ),
     // —— Zone clears ——
     AchievementDef(
       id: 'clear_sandy',
