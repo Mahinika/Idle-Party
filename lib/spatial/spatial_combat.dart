@@ -1470,7 +1470,7 @@ abstract final class SpatialCombat {
     priest.innerFireActive =
         ClassKits.isUnlocked(AbilityId.innerFire, priest.heroLevel);
     if (priest.innerFireActive) {
-      priest.kitHealMul = 1.15;
+      priest.kitHealMul = 1.28;
       priest.kitInMul = 0.94;
     }
     if (focusEnemy != null) _gainRage(priest, 7 * dt);
@@ -1804,7 +1804,7 @@ abstract final class SpatialCombat {
     if (mage.heroRole != HeroRole.mage || !mage.isAlive) return;
     // Arcane Intellect — personal spell power (party aura is GameState caster aura).
     if (ClassKits.isUnlocked(AbilityId.arcaneIntellect, mage.heroLevel)) {
-      mage.kitOutMul = 1.08;
+      mage.kitOutMul = 1.02;
     }
     if (focusEnemy != null) _gainRage(mage, 8 * dt);
     _gainRage(mage, (mage.spiritRegenBonus + mage.mp5RegenBonus) * dt);
@@ -1910,7 +1910,8 @@ abstract final class SpatialCombat {
       _spendRage(mage, def.resourceCost);
       _startAbilityCd(world, mage, AbilityId.livingBomb, def.cooldown);
       focusEnemy.livingBombTimer = 8;
-      focusEnemy.livingBombDps = math.max(3.0, mage.attack * 0.45);
+      focusEnemy.livingBombDps =
+          math.max(3.0, mage.attack * 0.38 * mage.kitOutMul * 0.85);
       focusEnemy.livingBombCasterId = mage.id;
       mage.livingBombArmed = 8;
       if (!reducedVfx) {
@@ -1983,7 +1984,8 @@ abstract final class SpatialCombat {
         final def = ClassKits.defFor(AbilityId.blastWave)!;
         _spendRage(mage, def.resourceCost);
         _startAbilityCd(world, mage, AbilityId.blastWave, def.cooldown);
-        final dmg = math.max(2, (mage.attack * 0.75).round());
+        final dmg =
+            math.max(2, (mage.attack * 0.62 * mage.kitOutMul * 0.85).round());
         for (final e in nearby) {
           final dealt = math.max(1, dmg - e.effectiveDefense);
           e.hp = math.max(0, e.hp - dealt);
@@ -2035,7 +2037,8 @@ abstract final class SpatialCombat {
       _spendRage(mage, def.resourceCost);
       _startAbilityCd(world, mage, AbilityId.pyroblast, def.cooldown);
       mage.attackFlash = 0.22;
-      var dmg = math.max(3, (mage.attack * 2.4).round());
+      var dmg =
+          math.max(3, (mage.attack * 2.0 * mage.kitOutMul * 0.85).round());
       if (mage.combustionTimer > 0) dmg = (dmg * 1.45).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
@@ -2064,7 +2067,8 @@ abstract final class SpatialCombat {
       _spendRage(mage, def.resourceCost);
       _startAbilityCd(world, mage, AbilityId.fireball, def.cooldown);
       mage.attackFlash = 0.18;
-      var dmg = math.max(2, (mage.attack * 1.7).round());
+      var dmg =
+          math.max(2, (mage.attack * 1.4 * mage.kitOutMul * 0.85).round());
       if (mage.combustionTimer > 0) dmg = (dmg * 1.45).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
@@ -2096,6 +2100,10 @@ abstract final class SpatialCombat {
     required bool reducedVfx,
   }) {
     if (rogue.heroRole != HeroRole.rogue || !rogue.isAlive) return;
+    if (rogue.heroSpecId == HeroSpecId.combat ||
+        rogue.heroSpecId == null) {
+      rogue.kitOutMul = 1.22;
+    }
     if (focusEnemy != null) {
       _gainRage(rogue, 10 * dt);
       if (rogue.killingSpreeTimer > 0) _gainRage(rogue, 14 * dt);

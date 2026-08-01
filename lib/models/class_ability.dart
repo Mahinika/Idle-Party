@@ -2022,7 +2022,7 @@ class ClassKits {
       resourceCost: 14,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 0.9,
+      coeff: 1.35,
     ),
     ClassAbilityDef(
       id: AbilityId.holyPriestFlash,
@@ -2036,7 +2036,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 1.25,
+      coeff: 1.55,
     ),
     ClassAbilityDef(
       id: AbilityId.circleOfHealing,
@@ -2050,7 +2050,7 @@ class ClassKits {
       resourceCost: 24,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 1.1,
+      coeff: 1.4,
     ),
     ClassAbilityDef(
       id: AbilityId.guardianSpirit,
@@ -2064,7 +2064,7 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.absorb,
       tier: AbilityCastTier.signature,
-      coeff: 1.5,
+      coeff: 1.9,
     ),
     ClassAbilityDef(
       id: AbilityId.holyPriestNova,
@@ -2078,7 +2078,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.45,
+      coeff: 0.55,
     ),
     ClassAbilityDef(
       id: AbilityId.divineHymn,
@@ -2092,7 +2092,7 @@ class ClassKits {
       resourceCost: 30,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.signature,
-      coeff: 1.8,
+      coeff: 2.1,
     ),
     ClassAbilityDef(
       id: AbilityId.desperatePrayer,
@@ -2105,7 +2105,7 @@ class ClassKits {
       cooldown: 50,
       effect: AbilityEffectKind.emergencyHeal,
       tier: AbilityCastTier.emergency,
-      coeff: 2.0,
+      coeff: 2.4,
     ),
 
     // —— shadow ——
@@ -2802,7 +2802,7 @@ class ClassKits {
       resourceCost: 14,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 1.0,
+      coeff: 1.15,
     ),
     ClassAbilityDef(
       id: AbilityId.healingWave,
@@ -2816,7 +2816,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 1.35,
+      coeff: 1.55,
     ),
     ClassAbilityDef(
       id: AbilityId.chainHeal,
@@ -2830,7 +2830,7 @@ class ClassKits {
       resourceCost: 24,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 1.15,
+      coeff: 1.35,
     ),
     ClassAbilityDef(
       id: AbilityId.earthShield,
@@ -2844,7 +2844,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.absorb,
       tier: AbilityCastTier.filler,
-      coeff: 1.2,
+      coeff: 1.4,
     ),
     ClassAbilityDef(
       id: AbilityId.healingRain,
@@ -2858,7 +2858,7 @@ class ClassKits {
       resourceCost: 28,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 0.9,
+      coeff: 1.1,
     ),
     ClassAbilityDef(
       id: AbilityId.spiritLink,
@@ -2872,7 +2872,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.signature,
-      coeff: 1.6,
+      coeff: 1.85,
     ),
     ClassAbilityDef(
       id: AbilityId.natureSwiftness,

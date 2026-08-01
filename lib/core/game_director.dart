@@ -199,7 +199,14 @@ class GameDirector extends ChangeNotifier {
       _offlineSummaryLife > 0 ? _offlineSummary : null;
 
   void showToast(String message, {double life = 2.4}) {
-    _toast = message;
+    if (_toast != null &&
+        _toastLife > 0.35 &&
+        _toast != message &&
+        (_toast!.length + message.length) < 72) {
+      _toast = '$_toast · $message';
+    } else {
+      _toast = message;
+    }
     _toastLife = life;
     _ensureUiTimer();
     notifyListeners();

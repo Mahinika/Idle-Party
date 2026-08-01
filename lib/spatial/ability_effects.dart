@@ -242,7 +242,7 @@ abstract final class AbilityEffectRunner {
     switch (ability.id) {
       // —— tanks ——
       case AbilityId.righteousFury:
-        hero.kitInMul *= 0.94;
+        hero.kitInMul *= 0.82;
         hero.kitOutMul *= 0.97;
       case AbilityId.bloodPresence:
         hero.kitInMul *= 0.90;
@@ -255,66 +255,68 @@ abstract final class AbilityEffectRunner {
       case AbilityId.holyLightAura:
       case AbilityId.spiritOfRedemption:
       case AbilityId.ancestralAwakening:
-        hero.kitHealMul *= 1.12;
+        hero.kitHealMul *= 1.32;
       case AbilityId.treeOfLife:
-        hero.kitHealMul *= 1.15;
+        hero.kitHealMul *= 1.18;
 
       // —— melee DPS ——
       case AbilityId.armsStance:
-        hero.kitOutMul *= 1.10;
+        hero.kitOutMul *= 1.38;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
-        hero.kitOutMul *= 1.06;
+        hero.kitOutMul *= 1.18;
         hero.kitHasteMul *= 1.10;
         hero.kitInMul *= 1.06;
       case AbilityId.sealOfCommand:
-        hero.kitOutMul *= 1.10;
+        hero.kitOutMul *= 1.38;
       case AbilityId.improvedPoisons:
-        hero.kitOutMul *= 1.09;
+        hero.kitOutMul *= 1.40;
       case AbilityId.masterOfSubtlety:
-        hero.kitOutMul *= 1.11;
+        hero.kitOutMul *= 1.40;
       case AbilityId.frostPresence:
-        hero.kitOutMul *= 1.08;
+        hero.kitOutMul *= 1.35;
         hero.kitInMul *= 0.97;
       case AbilityId.unholyPresence:
-        hero.kitOutMul *= 1.05;
+        hero.kitOutMul *= 1.35;
         hero.kitHasteMul *= 1.12;
       case AbilityId.enhancementWeapons:
-        hero.kitOutMul *= 1.10;
+        hero.kitOutMul *= 1.38;
       case AbilityId.catForm:
-        hero.kitOutMul *= 1.08;
+        hero.kitOutMul *= 1.28;
         hero.kitHasteMul *= 1.10;
 
       // —— ranged ——
       case AbilityId.aspectOfHawk:
-        hero.kitOutMul *= 1.10;
+        hero.kitOutMul *= 1.18;
       case AbilityId.trueshotAura:
-        hero.kitOutMul *= 1.08;
+        hero.kitOutMul *= 1.14;
         hero.kitHasteMul *= 1.06;
       case AbilityId.trapMastery:
+        hero.kitOutMul *= 1.30;
         hero.kitRootBonus += 1.0;
 
-      // —— casters ——
+      // —— casters (mid-band ability spam outpaced melee ~2–3×) ——
       case AbilityId.shadowform:
-        hero.kitOutMul *= 1.12;
+        hero.kitOutMul *= 0.68;
         hero.kitInMul *= 1.04;
       case AbilityId.elementalFocus:
-        hero.kitOutMul *= 1.10;
+        hero.kitOutMul *= 0.68;
         hero.kitHasteMul *= 1.05;
       case AbilityId.arcanePowerPassive:
-        hero.kitOutMul *= 1.10;
+        hero.kitOutMul *= 0.68;
       case AbilityId.frostArmor:
         hero.kitInMul *= 0.92;
+        hero.kitOutMul *= 0.65;
         hero.kitRootBonus += 0.5;
       case AbilityId.soulSiphon:
-        hero.kitOutMul *= 1.08;
+        hero.kitOutMul *= 0.70;
         hero.kitHealMul *= 1.06;
       case AbilityId.demonicKnowledge:
-        hero.kitOutMul *= 1.10;
+        hero.kitOutMul *= 0.65;
       case AbilityId.cataclysm:
-        hero.kitOutMul *= 1.12;
+        hero.kitOutMul *= 0.66;
       case AbilityId.moonkinForm:
-        hero.kitOutMul *= 1.10;
+        hero.kitOutMul *= 0.72;
 
       // Legacy kit passives are handled in dedicated tickers.
       case AbilityId.defensiveStance:
@@ -459,6 +461,17 @@ abstract final class AbilityEffectRunner {
   static String _abilityKey(ClassAbilityDef def) =>
       '${def.id.name} ${def.shortLabel} ${def.name}'.toLowerCase();
 
+  /// Outgoing scale for kit casts. Casters get an extra tax because Int-based
+  /// ability spam outpaced melee Str kits on mid-band sims (~2–3× raw DPS).
+  static double _abilityOutScale(SpatialActor hero) {
+    var scale = hero.kitOutMul;
+    final id = hero.heroSpecId;
+    if (id != null && HeroSpecs.def(id).roleTag == SpecRoleTag.caster) {
+      scale *= 0.70;
+    }
+    return scale;
+  }
+
   static void _castDamage(
     SpatialWorld world,
     SpatialActor hero,
@@ -469,7 +482,7 @@ abstract final class AbilityEffectRunner {
   }) {
     final raw = math.max(
       2,
-      (hero.attack * def.coeff * hero.kitOutMul).round(),
+      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
     );
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
     final useBolt = hero.ranged || SpatialCombat._dist(hero, enemy) > 2.2;
@@ -606,7 +619,7 @@ abstract final class AbilityEffectRunner {
   }) {
     const style = SpellBoltStyle.lightning;
     final base =
-        math.max(2, (hero.attack * def.coeff * hero.kitOutMul).round());
+        math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
     final targets = <SpatialActor>[];
     SpatialActor? cursor = focus != null && focus.hp > 0 && !focus.dormant
         ? focus
@@ -686,7 +699,7 @@ abstract final class AbilityEffectRunner {
     required bool reducedVfx,
   }) {
     final raw =
-        math.max(2, (hero.attack * def.coeff * hero.kitOutMul).round());
+        math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
     final enemies = world.enemies
         .where((e) => e.hp > 0 && !e.dormant)
         .toList()
@@ -722,7 +735,7 @@ abstract final class AbilityEffectRunner {
   }) {
     final radius = style == SpellBoltStyle.lightning ? 3.0 : 2.6;
     final raw =
-        math.max(2, (hero.attack * def.coeff * hero.kitOutMul).round());
+        math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.18;
 
@@ -814,7 +827,7 @@ abstract final class AbilityEffectRunner {
   }) {
     final radius = style == SpellBoltStyle.lightning ? 3.2 : 2.9;
     final raw =
-        math.max(2, (hero.attack * def.coeff * hero.kitOutMul).round());
+        math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
 
@@ -874,7 +887,7 @@ abstract final class AbilityEffectRunner {
   }) {
     final radius = style == SpellBoltStyle.lightning ? 3.0 : 2.7;
     final raw =
-        math.max(2, (hero.attack * def.coeff * hero.kitOutMul).round());
+        math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
 

@@ -65,12 +65,12 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
                                 ),
                               ),
                             ),
-                            Icon(
-                              open
-                                  ? Icons.expand_less
-                                  : Icons.expand_more,
-                              color: GameTheme.parchmentDim,
-                              size: 18,
+                            Text(
+                              open ? '▾' : '▸',
+                              style: GameTheme.pixel(
+                                size: 10,
+                                color: GameTheme.parchmentDim,
+                              ),
                             ),
                           ],
                         ),

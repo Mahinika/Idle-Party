@@ -732,10 +732,19 @@ class _LoadoutSlotRow extends StatelessWidget {
               ),
               if (saved) ...[
                 const SizedBox(width: 8),
-                IconButton(
-                  visualDensity: VisualDensity.compact,
+                TextButton(
                   onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline, size: 20),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
+                    padding: EdgeInsets.zero,
+                  ),
+                  child: Text(
+                    'DEL',
+                    style: GameTheme.pixel(
+                      size: 8,
+                      color: GameTheme.bloodLit,
+                    ),
+                  ),
                 ),
               ],
             ],
@@ -881,9 +890,27 @@ class WhatsNewOverlay extends StatelessWidget {
 }
 
 /// Boss Rush + No-Flask challenge toggles — set before entering a dungeon.
-class ChallengeToggles extends StatelessWidget {
-  const ChallengeToggles({super.key, required this.director});
+class ChallengeToggles extends StatefulWidget {
+  const ChallengeToggles({
+    super.key,
+    required this.director,
+    this.collapsed = false,
+  });
   final GameDirector director;
+  final bool collapsed;
+
+  @override
+  State<ChallengeToggles> createState() => _ChallengeTogglesState();
+}
+
+class _ChallengeTogglesState extends State<ChallengeToggles> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = !widget.collapsed;
+  }
 
   static String _weeklyLabel(String mod) => switch (mod) {
         'glass' => 'Glass (fragile foes)',
@@ -894,90 +921,130 @@ class ChallengeToggles extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final director = widget.director;
     final state = director.state;
     final md = state.metaDepth;
     final maxHm = state.effectiveMaxHardmode;
     final weeklyReady = md.weeklyProgress >= 3 && !md.weeklyClaimed;
+    final activeBits = <String>[
+      if (state.challengeBossRush) 'Boss Rush',
+      if (state.challengeNoFlask) 'No Flask',
+      if (state.hardmodeLevel > 0) 'HM+${state.hardmodeLevel}',
+      if (weeklyReady) 'Weekly ready',
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _ChallengeChip(
-                label: 'BOSS RUSH',
-                active: state.challengeBossRush,
-                onTap: () =>
-                    director.setChallengeBossRush(!state.challengeBossRush),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _ChallengeChip(
-                label: 'NO FLASK',
-                active: state.challengeNoFlask,
-                onTap: () =>
-                    director.setChallengeNoFlask(!state.challengeNoFlask),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        _HardmodeStepper(
-          level: state.hardmodeLevel,
-          maxLevel: maxHm,
-          onChanged: director.setHardmodeLevel,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          state.hardmodeLevel <= 0
-              ? 'Hardmode off. Cap +$maxHm (AL gates higher).'
-              : 'HM +${state.hardmodeLevel}: HP/ATK/pack +${state.hardmodeLevel * 90}% '
-                  '(${(1.0 + state.hardmodeLevel * 0.9).toStringAsFixed(1)}×) · '
-                  'gold +${state.hardmodeLevel * 15}% · '
-                  'leg ~${(0.4 + state.hardmodeLevel * 1.1).toStringAsFixed(1)}%',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: MenuChrome.cardBox(selected: weeklyReady),
-          child: Column(
-            children: [
-              Text(
-                'WEEKLY · ${_weeklyLabel(md.weeklyModifier)}',
-                textAlign: TextAlign.center,
-                style: GameTheme.pixel(
-                  size: 6,
-                  color: weeklyReady ? GameTheme.torchHot : GameTheme.parchmentDim,
+        InkWell(
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Text(
+                  _expanded ? '▾ CHALLENGES' : '▸ CHALLENGES',
+                  style: GameTheme.pixel(
+                    size: 8,
+                    color: GameTheme.torchHot,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                md.weeklyClaimed
-                    ? 'Claimed this week'
-                    : 'Clears ${md.weeklyProgress}/3'
-                        '${weeklyReady ? ' · ready' : ''}',
-                textAlign: TextAlign.center,
-                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-              ),
-              if (weeklyReady) ...[
-                const SizedBox(height: 6),
-                KenneyButton(
-                  label: 'CLAIM WEEKLY  +${GameLogic.weeklyClaimEssence}e',
-                  onPressed: director.claimWeekly,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    activeBits.isEmpty
+                        ? 'off'
+                        : activeBits.join(' · '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
                 ),
               ],
-            ],
+            ),
           ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          'Boss Rush / No Flask: +2e each clear. Hardmode: +1e per HM level.',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
+        if (_expanded) ...[
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: _ChallengeChip(
+                  label: 'BOSS RUSH',
+                  active: state.challengeBossRush,
+                  onTap: () =>
+                      director.setChallengeBossRush(!state.challengeBossRush),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ChallengeChip(
+                  label: 'NO FLASK',
+                  active: state.challengeNoFlask,
+                  onTap: () =>
+                      director.setChallengeNoFlask(!state.challengeNoFlask),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _HardmodeStepper(
+            level: state.hardmodeLevel,
+            maxLevel: maxHm,
+            onChanged: director.setHardmodeLevel,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            state.hardmodeLevel <= 0
+                ? 'Hardmode off. Cap +$maxHm (AL gates higher).'
+                : 'HM +${state.hardmodeLevel}: tougher packs, more gold & legendaries.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: MenuChrome.cardBox(selected: weeklyReady),
+            child: Column(
+              children: [
+                Text(
+                  'WEEKLY · ${_weeklyLabel(md.weeklyModifier)}',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.pixel(
+                    size: 8,
+                    color:
+                        weeklyReady ? GameTheme.torchHot : GameTheme.parchmentDim,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  md.weeklyClaimed
+                      ? 'Claimed this week'
+                      : 'Clears ${md.weeklyProgress}/3'
+                          '${weeklyReady ? ' · ready' : ''}',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                ),
+                if (weeklyReady) ...[
+                  const SizedBox(height: 6),
+                  KenneyButton(
+                    label: 'CLAIM WEEKLY  +${GameLogic.weeklyClaimEssence}e',
+                    onPressed: director.claimWeekly,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Boss Rush / No Flask: +2e each clear. Hardmode: +1e per level.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          ),
+        ],
       ],
     );
   }

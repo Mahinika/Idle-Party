@@ -307,7 +307,7 @@ class _GameHomePageState extends State<GameHomePage> {
                   child: Material(
                     color: const Color(0xF20A0806),
                     child: Is2Shell(
-                      key: ValueKey(_hubOverlay),
+                      key: const ValueKey('hub-meta-shell'),
                       director: _director,
                       pulse: 0.5,
                       hubMode: true,

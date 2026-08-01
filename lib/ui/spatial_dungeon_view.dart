@@ -22,6 +22,7 @@ import 'hero_paper_doll.dart';
 import 'kenney_assets.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
+import 'meta_overlays.dart';
 
 /// Top-down tile dungeon — painted, not 100+ Image widgets.
 class SpatialDungeonView extends StatefulWidget {
@@ -240,8 +241,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     final state = widget.director.state;
     final world = widget.director.spatial;
     final room = state.currentRoom;
-    final dungeonName =
-        GameLogic.dungeonNames[state.dungeonId] ?? state.dungeonId;
     final farm = state.dungeonMode == DungeonMode.farm;
 
     final frameColor = room.type == RoomType.boss
@@ -276,15 +275,14 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             child: Row(
               children: [
-                Expanded(
-                  child: Text(
-                    '$dungeonName  F${room.floorNumber}'
-                    '${room.type == RoomType.boss ? '  BOSS' : ''}'
-                    '${room.type == RoomType.elite ? '  ELITE' : ''}'
-                    '${room.type == RoomType.treasure ? '  LOOT' : ''}',
-                    style: GameTheme.pixel(size: GameTheme.hudPixel),
+                Text(
+                  'STAGE',
+                  style: GameTheme.pixel(
+                    size: GameTheme.hudPixel,
+                    color: GameTheme.parchmentDim,
                   ),
                 ),
+                const Spacer(),
                 _ModeChip(
                   label: 'FARM',
                   selected: farm,
@@ -311,10 +309,12 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                   child: PopupMenuButton<String>(
                     tooltip: 'Floor travel',
                     padding: EdgeInsets.zero,
-                    icon: const Icon(
-                      Icons.more_horiz,
-                      color: GameTheme.torchHot,
-                      size: 22,
+                    icon: Text(
+                      'F±',
+                      style: GameTheme.pixel(
+                        size: GameTheme.hudPixel,
+                        color: GameTheme.torchHot,
+                      ),
                     ),
                     color: GameTheme.stoneDeep,
                     onSelected: (value) {
@@ -476,7 +476,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                       Align(
                         alignment: const Alignment(0, -0.55),
                         child: GestureDetector(
-                          onTap: widget.director.dismissOfflineSummary,
+                          onTap: () => showOfflineProgressDialog(
+                            context,
+                            widget.director,
+                          ),
                           child: Container(
                             margin: const EdgeInsets.symmetric(horizontal: 16),
                             padding: const EdgeInsets.symmetric(
@@ -488,13 +491,26 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(color: GameTheme.mossLit),
                             ),
-                            child: Text(
-                              widget.director.offlineSummary!.headline,
-                              textAlign: TextAlign.center,
-                              style: GameTheme.pixel(
-                                size: GameTheme.hudPixel,
-                                color: GameTheme.mossLit,
-                              ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  widget.director.offlineSummary!.headline,
+                                  textAlign: TextAlign.center,
+                                  style: GameTheme.pixel(
+                                    size: GameTheme.hudPixel,
+                                    color: GameTheme.mossLit,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Tap for details',
+                                  style: GameTheme.body(
+                                    size: 12,
+                                    color: GameTheme.parchmentDim,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -583,7 +599,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Text(
                 state.isPartyDefeated
-                    ? 'WIPED — choose Retry Floor or Hub'
+                    ? 'WIPED — use the Retry / Hub panel'
                     : 'STAIRS OPEN — party advances when someone reaches exit',
                 textAlign: TextAlign.center,
                 style: GameTheme.body(
@@ -689,7 +705,7 @@ class _GodHandRing extends StatelessWidget {
         child: Center(
           child: Text(
             'GH',
-            style: GameTheme.pixel(size: 6, color: color),
+            style: GameTheme.pixel(size: 8, color: color),
           ),
         ),
       ),

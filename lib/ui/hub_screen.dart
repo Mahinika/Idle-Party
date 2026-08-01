@@ -133,8 +133,7 @@ class _HubScreenState extends State<HubScreen>
                     ),
                   ),
                 ),
-                SafeArea(
-                  child: Padding(
+                Padding(
                     padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -294,9 +293,7 @@ class _HubScreenState extends State<HubScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    ChallengeToggles(director: director),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Transform.scale(
                       scale: 1.0 + (_torch.value * 0.012),
                       child: KenneyButton(
@@ -307,51 +304,39 @@ class _HubScreenState extends State<HubScreen>
                             : null,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    KenneyButton(
-                      label: director.isDailyClaimedToday
-                          ? 'DAILY RUN · claimed today'
-                          : 'DAILY RUN · clear 1 floor → +25e',
-                      style: director.isDailyClaimedToday
-                          ? KenneyButtonStyle.grey
-                          : KenneyButtonStyle.brown,
-                      onPressed: director.isDailyClaimedToday
-                          ? null
-                          : director.enterDaily,
-                    ),
-                    if (canAscend || state.bossVictories > 0) ...[
-                      const SizedBox(height: 6),
-                      AscendMilestonesStrip(state: state),
-                    ],
                     const SizedBox(height: 6),
-                    KenneyButton(
-                      label: canAscend
+                    _HubUrgentRow(
+                      claimable: state.missions
+                          .where((m) => m.isComplete)
+                          .length,
+                      canAscend: canAscend,
+                      ascendLabel: canAscend
                           ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
-                          : 'ASCEND',
-                      style: canAscend
-                          ? KenneyButtonStyle.red
-                          : KenneyButtonStyle.grey,
-                      onPressed: canAscend
-                          ? () => confirmAscend(context, director)
                           : null,
+                      onContracts: widget.onOpenJobs,
+                      onAscend: () => confirmAscend(context, director),
+                      dailyClaimed: director.isDailyClaimedToday,
+                      onDaily: director.enterDaily,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      canAscend
-                          ? 'Ready · AL${state.ascensionLevel} → ${state.ascensionLevel + 1}'
-                          : 'Bosses ${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} this run',
-                      textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 13,
-                        color: GameTheme.parchmentDim,
+                    if (!canAscend) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Bosses ${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} this run · Ascend when ready',
+                        textAlign: TextAlign.center,
+                        style: GameTheme.body(
+                          size: 13,
+                          color: GameTheme.parchmentDim,
+                        ),
                       ),
-                    ),
+                    ],
+                    const SizedBox(height: 4),
+                    ChallengeToggles(director: director, collapsed: true),
                     Align(
                       alignment: Alignment.center,
                       child: TextButton(
                         onPressed: () => _showHubMore(context),
                         child: Text(
-                          'MORE · bag forge jobs…',
+                          'MORE · bag forge sanctuary…',
                           style: GameTheme.body(
                             size: 16,
                             color: GameTheme.parchmentDim,
@@ -362,7 +347,6 @@ class _HubScreenState extends State<HubScreen>
                   ],
                 ),
               ),
-            ),
               ],
             );
           },
@@ -428,6 +412,66 @@ class _HubScreenState extends State<HubScreen>
     }
     if (prev == null) return 'Clear the prior zone';
     return 'Or clear ${_ZoneNode.shortName(prev)}';
+  }
+}
+
+class _HubUrgentRow extends StatelessWidget {
+  const _HubUrgentRow({
+    required this.claimable,
+    required this.canAscend,
+    required this.ascendLabel,
+    required this.onContracts,
+    required this.onAscend,
+    required this.dailyClaimed,
+    required this.onDaily,
+  });
+
+  final int claimable;
+  final bool canAscend;
+  final String? ascendLabel;
+  final VoidCallback onContracts;
+  final VoidCallback onAscend;
+  final bool dailyClaimed;
+  final VoidCallback onDaily;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (canAscend && ascendLabel != null) ...[
+          KenneyButton(
+            label: ascendLabel!,
+            style: KenneyButtonStyle.red,
+            onPressed: onAscend,
+          ),
+          const SizedBox(height: 4),
+        ],
+        Row(
+          children: [
+            if (claimable > 0) ...[
+              Expanded(
+                child: KenneyButton(
+                  label: 'CLAIM ($claimable)',
+                  style: KenneyButtonStyle.brown,
+                  onPressed: onContracts,
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Expanded(
+              child: KenneyButton(
+                label: dailyClaimed ? 'DAILY · done' : 'DAILY RUN',
+                style: dailyClaimed
+                    ? KenneyButtonStyle.grey
+                    : KenneyButtonStyle.grey,
+                onPressed: dailyClaimed ? null : onDaily,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }
 
@@ -529,7 +573,7 @@ class _HubHeader extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Hero\'s Keep',
+          'Hero\'s Keep · Boss F$bossFloor',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 16, color: GameTheme.parchmentDim),
         ),
