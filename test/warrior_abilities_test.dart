@@ -33,8 +33,10 @@ void main() {
 
   test('warrior abilities unlock on the Protection curve', () {
     expect(WarriorAbilities.isUnlocked(AbilityId.defensiveStance, 1), isTrue);
+    expect(WarriorAbilities.isUnlocked(AbilityId.charge, 4), isTrue);
     expect(WarriorAbilities.isUnlocked(AbilityId.devastate, 6), isTrue);
     expect(WarriorAbilities.isUnlocked(AbilityId.demoralizingShout, 8), isTrue);
+    expect(WarriorAbilities.isUnlocked(AbilityId.commandingShout, 10), isTrue);
     expect(WarriorAbilities.isUnlocked(AbilityId.shockwave, 13), isTrue);
     expect(WarriorAbilities.unlockedAt(15).length, WarriorAbilities.all.length);
   });

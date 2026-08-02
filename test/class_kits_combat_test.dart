@@ -21,7 +21,12 @@ void main() {
   test('HUD kits at 15 expose signature abilities', () {
     expect(
       ClassKits.hudAbilitiesAt(HeroRole.warrior, 15).map((d) => d.id),
-      containsAll([AbilityId.shockwave, AbilityId.devastate]),
+      containsAll([
+        AbilityId.shockwave,
+        AbilityId.devastate,
+        AbilityId.charge,
+        AbilityId.commandingShout,
+      ]),
     );
     expect(
       ClassKits.hudAbilitiesAt(HeroRole.healer, 15).map((d) => d.id),
@@ -181,6 +186,60 @@ void main() {
       rogue.rage = 100;
     }
     expect(active, isTrue);
+  });
+
+  test('Charge gap-closes Prot warrior onto a distant foe', () {
+    final state = _partyAtLevel(15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final warrior =
+        world.heroes.firstWhere((h) => h.heroRole == HeroRole.warrior);
+    warrior
+      ..rage = 100
+      ..x = target.x - 5.5
+      ..y = target.y;
+    _padAbilityCds(warrior, except: AbilityId.charge);
+
+    final startDist =
+        ((warrior.x - target.x).abs() + (warrior.y - target.y).abs());
+    var charged = false;
+    for (var i = 0; i < 40; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      final dist =
+          ((warrior.x - target.x).abs() + (warrior.y - target.y).abs());
+      if (dist + 0.5 < startDist || target.rootTimer > 0) {
+        charged = true;
+        break;
+      }
+      warrior.rage = 100;
+    }
+    expect(charged, isTrue);
+  });
+
+  test('Commanding Shout buffs living party heroes', () {
+    final state = _partyAtLevel(15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final warrior =
+        world.heroes.firstWhere((h) => h.heroRole == HeroRole.warrior);
+    warrior
+      ..rage = 100
+      ..x = target.x - 1.2
+      ..y = target.y;
+    _padAbilityCds(warrior, except: AbilityId.commandingShout);
+
+    var shouted = false;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (world.heroes.any(
+        (h) => !h.isPet && (h.buffTimers['atkShout'] ?? 0) > 0,
+      )) {
+        shouted = true;
+        break;
+      }
+      warrior.rage = 100;
+    }
+    expect(shouted, isTrue);
   });
 }
 

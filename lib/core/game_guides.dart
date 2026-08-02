@@ -31,7 +31,7 @@ abstract final class GameGuides {
           '• Pick up ground loot (or wait for auto-timeout), then walk to the stairs.\n'
           '• Boss floors use a special arena.\n'
           '• Party HP bars are bottom-left. Target info is bottom-right.\n'
-          '• Party meter (top-left) shows damage %, heals (H), and tank taken (T).',
+          '• Party meter (top-left) shows DPS, heals/sec (H), and tank taken/sec (T).',
     ),
     GuideTopic(
       id: 'god_hand',

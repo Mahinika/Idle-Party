@@ -1129,6 +1129,54 @@ abstract final class SpatialCombat {
 
     bool can(AbilityId id) => _canCast(warrior, id, hasShield: hasShield);
 
+    // Charge — gap-close when focus is far (WotLK Prot mobility beat).
+    if (focusEnemy != null &&
+        focusEnemy.hp > 0 &&
+        !focusEnemy.dormant &&
+        can(AbilityId.charge) &&
+        _dist(warrior, focusEnemy) > 3.5) {
+      final def = WarriorAbilities.defFor(AbilityId.charge)!;
+      _spendRage(warrior, def.resourceCost);
+      _startAbilityCd(world, warrior, AbilityId.charge, def.cooldown);
+      final dx = focusEnemy.x - warrior.x;
+      final dy = focusEnemy.y - warrior.y;
+      final len = math.sqrt(dx * dx + dy * dy);
+      if (!reducedVfx) {
+        _spawnBurst(
+          world,
+          x: warrior.x,
+          y: warrior.y,
+          argb: 0xAAC0A070,
+          radius: 0.55,
+          life: 0.22,
+        );
+      }
+      if (len > 0.1) {
+        final targetDist = math.max(0.55, warrior.attackRange * 0.85);
+        final nx = focusEnemy.x - (dx / len) * targetDist;
+        final ny = focusEnemy.y - (dy / len) * targetDist;
+        final snapped = _snapToWalkable(
+          world.map,
+          world.openGateIds,
+          nx,
+          ny,
+        );
+        warrior.x = snapped.$1;
+        warrior.y = snapped.$2;
+      }
+      focusEnemy.rootTimer = math.max(focusEnemy.rootTimer, 0.85);
+      _gainRage(warrior, 8);
+      _announceCast(
+        world,
+        warrior,
+        text: 'CHARGE',
+        argb: 0xFFE0C070,
+        reducedVfx: reducedVfx,
+        burstArgb: 0x88D0A050,
+        burstRadius: 0.7,
+      );
+    }
+
     // Shield Wall ? emergency DR.
     if (hpFrac <= 0.28 && can(AbilityId.shieldWall)) {
       final def = WarriorAbilities.defFor(AbilityId.shieldWall)!;
@@ -1184,6 +1232,21 @@ abstract final class SpatialCombat {
       _spendRage(warrior, def.resourceCost);
       _startAbilityCd(world, warrior, AbilityId.shieldBlock, def.cooldown);
       warrior.shieldBlockTimer = 2.5;
+      // Sword and Board–lite: chance to reset Shield Slam CD.
+      if (WarriorAbilities.isUnlocked(AbilityId.shieldSlam, warrior.heroLevel) &&
+          rng.nextDouble() < 0.4) {
+        warrior.abilityCd.remove(AbilityId.shieldSlam.name);
+        if (!reducedVfx) {
+          _spawnFloater(
+            world,
+            x: warrior.x,
+            y: warrior.y - 0.7,
+            text: 'SWORD & BOARD',
+            argb: 0xFFFFE090,
+            life: 0.7,
+          );
+        }
+      }
       if (!reducedVfx) {
         _spawnFloater(
           world,
@@ -1241,6 +1304,38 @@ abstract final class SpatialCombat {
             life: 0.28,
           );
         }
+      }
+    }
+
+    // Commanding Shout — mild party damage buff.
+    if (focusEnemy != null &&
+        can(AbilityId.commandingShout) &&
+        (warrior.buffTimers['atkShout'] ?? 0) < 2) {
+      final def = WarriorAbilities.defFor(AbilityId.commandingShout)!;
+      _spendRage(warrior, def.resourceCost);
+      _startAbilityCd(world, warrior, AbilityId.commandingShout, def.cooldown);
+      for (final h in world.heroes) {
+        if (h.isAlive && !h.isPet) {
+          h.buffTimers['atkShout'] = 14;
+        }
+      }
+      if (!reducedVfx) {
+        _spawnFloater(
+          world,
+          x: warrior.x,
+          y: warrior.y - 0.55,
+          text: 'COMMANDING',
+          argb: 0xFFFFD070,
+          life: 0.75,
+        );
+        _spawnRing(
+          world,
+          x: warrior.x,
+          y: warrior.y,
+          argb: 0x88FFE080,
+          radius: 1.6,
+          life: 0.4,
+        );
       }
     }
 
@@ -1354,6 +1449,12 @@ abstract final class SpatialCombat {
         final killed = _onEnemyKilled(world, nextState, focusEnemy, rng);
         gold += killed.gold;
         nextState = killed.state;
+      }
+      // Mild Sword and Board chance off Devastate.
+      if (focusEnemy.hp > 0 &&
+          WarriorAbilities.isUnlocked(AbilityId.shieldSlam, warrior.heroLevel) &&
+          rng.nextDouble() < 0.18) {
+        warrior.abilityCd.remove(AbilityId.shieldSlam.name);
       }
     }
 
@@ -2394,13 +2495,19 @@ abstract final class SpatialCombat {
     // Other warrior-legacy DPS use ClassKits + kitOutMul only.
     if (hero.heroSpecId == HeroSpecId.protection) {
       final w = _warriorAttackMods(hero, baseDamage);
-      final scaled = math.max(1, (w.damage * hero.kitOutMul).round());
+      var scaled = math.max(1, (w.damage * hero.kitOutMul).round());
+      if ((hero.buffTimers['atkShout'] ?? 0) > 0) {
+        scaled = math.max(1, (scaled * 1.08).round());
+      }
       return (damage: scaled, tag: w.tag, tagArgb: w.tagArgb);
     }
     var damage = math.max(1, (baseDamage * hero.kitOutMul).round());
     String? tag;
     var tagArgb = _floaterDamage;
 
+    if ((hero.buffTimers['atkShout'] ?? 0) > 0) {
+      damage = math.max(1, (damage * 1.08).round());
+    }
     if (hero.heroSpecId == HeroSpecId.fire) {
       if (hero.combustionTimer > 0) {
         damage = (damage * 1.45).round();
