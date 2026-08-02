@@ -475,7 +475,7 @@ abstract final class KenneyAssets {
       'corrupt king' => enemyBoss,
       'beholder' => enemyCultist,
       'the no-one' => enemyGhost,
-      'chtulu' => enemyHellBoss,
+      'cthulhu' || 'chtulu' => enemyHellBoss,
       'crystal warden' ||
       'crystal golem' ||
       'frozen bulwark' ||
