@@ -42,7 +42,7 @@ void main() {
     var world = SpatialCombat.build(state);
     world = SpatialCombat.step(world, state, dt: 0.1).world;
     final mage = world.heroes.firstWhere((h) => !h.isPet);
-    expect(mage.kitOutMul, closeTo(1.02, 0.001));
+    expect(mage.kitOutMul, closeTo(0.72, 0.001));
   });
 
   test('Inner Fire sets disc heal mul', () {

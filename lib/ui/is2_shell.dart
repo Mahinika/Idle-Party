@@ -777,7 +777,7 @@ class _TopHud extends StatelessWidget {
               child: IconButton(
                 padding: EdgeInsets.zero,
                 onPressed: onOpenSettings,
-                icon: const KenneySprite(
+                icon: KenneySprite(
                   asset: KenneyAssets.iconDoor,
                   size: 18,
                 ),
@@ -961,7 +961,7 @@ class _TopHud extends StatelessWidget {
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         onPressed: onOpenSettings,
-                        icon: const KenneySprite(
+                        icon: KenneySprite(
                           asset: KenneyAssets.iconDoor,
                           size: 18,
                         ),

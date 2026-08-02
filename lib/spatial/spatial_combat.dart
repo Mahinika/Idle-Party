@@ -95,6 +95,8 @@ class SpatialActor {
     this.preferredRange,
     this.chamberIndex = 0,
     this.isPet = false,
+    this.petOwnerId,
+    this.petLifeTimer = 0,
     this.dormant = false,
     this.blockValue = 0,
     this.spiritRegenBonus = 0,
@@ -133,6 +135,10 @@ class SpatialActor {
   final double? preferredRange;
   final int chamberIndex;
   final bool isPet;
+  /// Hero id that owns a temporary summon (Army / Spirit Wolves).
+  final String? petOwnerId;
+  /// Seconds remaining for temporary pets; 0 = permanent companion.
+  double petLifeTimer;
 
   /// Flat damage blocked while Shield Block is active (Str/20).
   final int blockValue;
@@ -229,6 +235,12 @@ class SpatialActor {
   double livingBombAcc = 0;
   String? livingBombCasterId;
 
+  /// Generic bleed DoT (Rip / Rake / Rend).
+  double bleedTimer = 0;
+  double bleedDps = 0;
+  double bleedAcc = 0;
+  String? bleedCasterId;
+
   /// Cumulative combat stats this floor (heroes only; for party meter).
   int damageDealt = 0;
   int healingDone = 0;
@@ -276,9 +288,12 @@ class SpatialActor {
     var m = kitHasteMul;
     if (sliceAndDiceTimer > 0) m *= 1.35;
     if (killingSpreeTimer > 0) m *= 1.55;
-    if (powerInfusionTimer > 0) m *= 1.4;
+    if (powerInfusionTimer > 0) {
+      final caster = heroSpecId != null &&
+          HeroSpecs.def(heroSpecId!).roleTag == SpecRoleTag.caster;
+      m *= caster ? 1.22 : 1.4;
+    }
     if (combustionTimer > 0) m *= 1.08;
-    if ((buffTimers['haste'] ?? 0) > 0) m *= 1.28;
     if (iceBlockTimer > 0) m = 0;
     return m;
   }
@@ -825,6 +840,13 @@ abstract final class SpatialCombat {
         if (a.livingBombTimer <= 0) {
           a.livingBombDps = 0;
           a.livingBombCasterId = null;
+        }
+      }
+      if (a.bleedTimer > 0) {
+        a.bleedTimer = math.max(0, a.bleedTimer - dt);
+        if (a.bleedTimer <= 0) {
+          a.bleedDps = 0;
+          a.bleedCasterId = null;
         }
       }
       if (a.rootTimer > 0) {
@@ -1989,8 +2011,9 @@ abstract final class SpatialCombat {
   }) {
     if (mage.heroRole != HeroRole.mage || !mage.isAlive) return;
     // Arcane Intellect — personal spell power (party aura is GameState caster aura).
+    // Fire's dedicated ticker bypasses SpecKit _abilityOutScale; keep a hard tax.
     if (ClassKits.isUnlocked(AbilityId.arcaneIntellect, mage.heroLevel)) {
-      mage.kitOutMul = 1.02;
+      mage.kitOutMul = 0.72;
     }
     if (focusEnemy != null) _gainRage(mage, 8 * dt);
     _gainRage(mage, (mage.spiritRegenBonus + mage.mp5RegenBonus) * dt);
@@ -2018,7 +2041,7 @@ abstract final class SpatialCombat {
       final def = ClassKits.defFor(AbilityId.combustion)!;
       _spendRage(mage, def.resourceCost);
       _startAbilityCd(world, mage, AbilityId.combustion, def.cooldown);
-      mage.combustionTimer = 5;
+      mage.combustionTimer = 4;
       if (!reducedVfx) {
         _spawnRing(
           world,
@@ -2098,7 +2121,7 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.livingBomb, def.cooldown);
       focusEnemy.livingBombTimer = 8;
       focusEnemy.livingBombDps =
-          math.max(3.0, mage.attack * 0.22 * mage.kitOutMul * 0.85);
+          math.max(3.0, mage.attack * 0.22 * mage.kitOutMul * 0.70);
       focusEnemy.livingBombCasterId = mage.id;
       mage.livingBombArmed = 8;
       if (!reducedVfx) {
@@ -2178,7 +2201,7 @@ abstract final class SpatialCombat {
         _spendRage(mage, def.resourceCost);
         _startAbilityCd(world, mage, AbilityId.blastWave, def.cooldown);
         final dmg =
-            math.max(2, (mage.attack * 0.42 * mage.kitOutMul * 0.85).round());
+            math.max(2, (mage.attack * 0.42 * mage.kitOutMul * 0.70).round());
         for (final e in nearby) {
           final dealt = math.max(1, dmg - e.effectiveDefense);
           e.hp = math.max(0, e.hp - dealt);
@@ -2231,8 +2254,8 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.pyroblast, def.cooldown);
       mage.attackFlash = 0.22;
       var dmg =
-          math.max(3, (mage.attack * 1.35 * mage.kitOutMul * 0.85).round());
-      if (mage.combustionTimer > 0) dmg = (dmg * 1.1).round();
+          math.max(3, (mage.attack * 1.35 * mage.kitOutMul * 0.70).round());
+      if (mage.combustionTimer > 0) dmg = (dmg * 1.05).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
           from: mage,
@@ -2261,8 +2284,8 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.fireball, def.cooldown);
       mage.attackFlash = 0.18;
       var dmg =
-          math.max(2, (mage.attack * 0.95 * mage.kitOutMul * 0.85).round());
-      if (mage.combustionTimer > 0) dmg = (dmg * 1.1).round();
+          math.max(2, (mage.attack * 0.95 * mage.kitOutMul * 0.70).round());
+      if (mage.combustionTimer > 0) dmg = (dmg * 1.05).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
           from: mage,
@@ -2860,6 +2883,7 @@ abstract final class SpatialCombat {
           attackRange: 1.4,
           attackCooldown: 0.85,
           isPet: true,
+          petOwnerId: h.id,
           fireCooldown: 0.2,
         ),
       );
@@ -2884,6 +2908,49 @@ abstract final class SpatialCombat {
           ? (enemies.isNotEmpty ? enemies.first.name : 'BOSS')
           : '',
     );
+  }
+
+  /// Temporary summons (Army of the Dead / Feral Spirit). Caps per owner.
+  static void spawnTempPets(
+    SpatialWorld world, {
+    required SpatialActor owner,
+    required int count,
+    required double duration,
+    required double atkScale,
+    required String namePrefix,
+    required String idPrefix,
+  }) {
+    world.pets.removeWhere(
+      (p) =>
+          p.petOwnerId == owner.id &&
+          p.petLifeTimer > 0 &&
+          p.id.startsWith('temppet_${idPrefix}_'),
+    );
+    final softCap = math.min(count, 5);
+    for (var i = 0; i < softCap; i++) {
+      final ox = (i % 3) * 0.35 - 0.35;
+      final oy = (i ~/ 3) * 0.35 + 0.35;
+      world.pets.add(
+        SpatialActor(
+          id: 'temppet_${idPrefix}_${owner.id}_$i',
+          name: softCap == 1 ? namePrefix : '$namePrefix ${i + 1}',
+          team: SpatialTeam.hero,
+          x: owner.x - 0.4 + ox,
+          y: owner.y + 0.35 + oy,
+          hp: 1,
+          maxHp: 1,
+          attack: math.max(1, (owner.attack * atkScale).round()),
+          defense: 0,
+          moveSpeed: 3.7,
+          attackRange: 1.35,
+          attackCooldown: 0.75,
+          isPet: true,
+          petOwnerId: owner.id,
+          petLifeTimer: duration,
+          fireCooldown: 0.1 + i * 0.05,
+        ),
+      );
+    }
   }
 
   /// Refresh party combat stats after gear/forge/train without resetting the floor.
@@ -2967,7 +3034,7 @@ abstract final class SpatialCombat {
     if (pet != null && heroes.isNotEmpty) {
       SpatialActor? prevPet;
       for (final p in world.pets) {
-        if (p.isPet) {
+        if (p.id.startsWith('pet_')) {
           prevPet = p;
           break;
         }
@@ -2994,6 +3061,52 @@ abstract final class SpatialCombat {
           fireCooldown: prevPet?.fireCooldown ?? 0.25,
         ),
       );
+    }
+    // Rebuild class companions after gear sync.
+    for (final h in heroes) {
+      final spec = h.heroSpecId;
+      if (spec != HeroSpecId.beastMastery &&
+          spec != HeroSpecId.demonology &&
+          spec != HeroSpecId.unholy) {
+        continue;
+      }
+      SpatialActor? prevClass;
+      for (final p in world.pets) {
+        if (p.id == 'classpet_${h.id}') {
+          prevClass = p;
+          break;
+        }
+      }
+      final label = switch (spec) {
+        HeroSpecId.beastMastery => 'Beast',
+        HeroSpecId.demonology => 'Demon',
+        _ => 'Ghoul',
+      };
+      pets.add(
+        SpatialActor(
+          id: 'classpet_${h.id}',
+          name: label,
+          team: SpatialTeam.hero,
+          x: prevClass?.x ?? (h.x - 0.45),
+          y: prevClass?.y ?? (h.y + 0.4),
+          hp: 1,
+          maxHp: 1,
+          attack: math.max(2, (h.attack * 0.55).round()),
+          defense: 0,
+          moveSpeed: 3.6,
+          attackRange: 1.4,
+          attackCooldown: 0.85,
+          isPet: true,
+          petOwnerId: h.id,
+          fireCooldown: prevClass?.fireCooldown ?? 0.2,
+        ),
+      );
+    }
+    // Preserve temporary summons across sync.
+    for (final p in world.pets) {
+      if (p.petLifeTimer > 0 && p.id.startsWith('temppet_')) {
+        pets.add(p);
+      }
     }
 
     return SpatialWorld(
@@ -3079,6 +3192,10 @@ abstract final class SpatialCombat {
     to.livingBombDps = from.livingBombDps;
     to.livingBombAcc = from.livingBombAcc;
     to.livingBombCasterId = from.livingBombCasterId;
+    to.bleedTimer = from.bleedTimer;
+    to.bleedDps = from.bleedDps;
+    to.bleedAcc = from.bleedAcc;
+    to.bleedCasterId = from.bleedCasterId;
     to.rootTimer = from.rootTimer;
     to.damageDealt = from.damageDealt;
     to.healingDone = from.healingDone;
@@ -3914,6 +4031,11 @@ abstract final class SpatialCombat {
 
     // Pets follow the leader and chip at the nearest unlocked enemy.
     final petLeader = world.leader;
+    world.pets.removeWhere((p) {
+      if (p.petLifeTimer <= 0) return false;
+      p.petLifeTimer -= dt;
+      return p.petLifeTimer <= 0;
+    });
     for (final pet in world.pets) {
       if (petLeader == null) break;
       final target = _nearestActiveEnemy(pet, world.enemies);
@@ -3948,6 +4070,16 @@ abstract final class SpatialCombat {
         final petHit = math.max(1, pet.attack - target.effectiveDefense);
         target.hp = math.max(0, target.hp - petHit);
         pet.attackFlash = 0.14;
+        final owner = _heroById(world, pet.petOwnerId) ??
+            (pet.id.startsWith('classpet_')
+                ? _heroById(
+                    world,
+                    pet.id.replaceFirst('classpet_', ''),
+                  )
+                : null);
+        if (owner != null) {
+          _recordHeroDamage(owner, petHit);
+        }
         if (!state.reducedVfx) {
           _spawnSlash(world, from: pet, to: target, isCrit: false);
         }
@@ -4040,6 +4172,33 @@ abstract final class SpatialCombat {
               radius: 1.8,
               life: 0.45,
             );
+          }
+        }
+      }
+      // Bleed DoT ticks (Rip / Rake / Rend).
+      if (enemy.bleedTimer > 0 && enemy.bleedDps > 0 && enemy.hp > 0) {
+        enemy.bleedAcc += enemy.bleedDps * dt;
+        if (enemy.bleedAcc >= 1) {
+          final tick = enemy.bleedAcc.floor();
+          enemy.bleedAcc -= tick;
+          final wasAlive = enemy.hp > 0;
+          enemy.hp = math.max(0, enemy.hp - tick);
+          final caster = _heroById(world, enemy.bleedCasterId);
+          if (caster != null) _recordHeroDamage(caster, tick);
+          if (!state.reducedVfx) {
+            _spawnFloater(
+              world,
+              x: enemy.x,
+              y: enemy.y - 0.2,
+              text: '$tick',
+              argb: 0xFFC05050,
+              life: 0.4,
+            );
+          }
+          if (wasAlive && enemy.hp <= 0) {
+            final killed = _onEnemyKilled(world, nextState, enemy, rng);
+            goldFromKills += killed.gold;
+            nextState = killed.state;
           }
         }
       }

@@ -18,7 +18,6 @@ abstract final class KenneyAssets {
   static const String _tiny = 'assets/kenney/tiny_dungeon';
   static const String _ui = 'assets/kenney/ui_adventure';
   static const String _bars = 'assets/kenney/ui_bars';
-  static const String _icons = 'assets/kenney/icons';
 
   /// Original Kenney tile path (`tile_0000` … `tile_0131`).
   static String tile(int id) {
@@ -195,14 +194,14 @@ abstract final class KenneyAssets {
   // —— Icons ——
   static String get iconCoin => CustomAssets.iconCoinGold;
   static String get iconSword => CustomAssets.iconSword;
-  static const String iconCrown = '$_icons/crown.png';
-  static const String iconCampfire = '$_icons/campfire.png';
+  static String get iconCrown => CustomAssets.iconCrown;
+  static String get iconCampfire => CustomAssets.iconCampfire;
   static String get iconShield => CustomAssets.iconShield;
-  static const String iconTrophy = '$_icons/trophy.png';
-  static const String iconDoor = '$_icons/door.png';
-  static const String iconStar = '$_icons/star.png';
-  static const String iconHeart = '$_icons/heart.png';
-  static const String iconSkull = '$_icons/skull.png';
+  static String get iconTrophy => CustomAssets.iconTrophy;
+  static String get iconDoor => CustomAssets.iconDoor;
+  static String get iconStar => CustomAssets.iconStar;
+  static String get iconHeart => CustomAssets.iconHeart;
+  static String get iconSkull => CustomAssets.iconSkull;
   static String get iconBow => CustomAssets.iconBow;
 
   // —— Relics ——

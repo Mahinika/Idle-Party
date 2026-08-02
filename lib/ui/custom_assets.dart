@@ -86,6 +86,13 @@ abstract final class CustomAssets {
   static const String iconRelicWarBanner = '$_root/icons/relic_war_banner.png';
   static const String iconRelicIronWard = '$_root/icons/relic_iron_ward.png';
   static const String iconRelicPhoenixEmber = '$_root/icons/relic_phoenix_ember.png';
+  static const String iconCrown = '$_root/icons/crown.png';
+  static const String iconCampfire = '$_root/icons/campfire.png';
+  static const String iconTrophy = '$_root/icons/trophy.png';
+  static const String iconDoor = '$_root/icons/door.png';
+  static const String iconStar = '$_root/icons/star.png';
+  static const String iconHeart = '$_root/icons/heart.png';
+  static const String iconSkull = '$_root/icons/skull.png';
 
   // —— Hub dungeon portraits ——
   static const String portraitSandy = '$_root/portraits/sandy.png';
