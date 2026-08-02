@@ -94,10 +94,10 @@ class CharacterEquipPanel extends StatelessWidget {
         EquipmentSlot.trinket ||
         EquipmentSlot.trinket2 =>
           CustomAssets.iconTrinket,
-        EquipmentSlot.weapon => KenneyAssets.sword,
-        EquipmentSlot.offHand => KenneyAssets.shield,
-        EquipmentSlot.ranged => KenneyAssets.iconBow,
-        EquipmentSlot.consumable => KenneyAssets.potionRed,
+        EquipmentSlot.weapon => CustomAssets.iconSword,
+        EquipmentSlot.offHand => CustomAssets.iconShield,
+        EquipmentSlot.ranged => CustomAssets.iconBow,
+        EquipmentSlot.consumable => CustomAssets.iconFlask,
       };
 
   @override

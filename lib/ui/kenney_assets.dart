@@ -16,11 +16,9 @@ import 'custom_assets.dart';
 /// Identity art (pets, armor icons, dungeon portraits) prefers [CustomAssets].
 abstract final class KenneyAssets {
   static const String _tiny = 'assets/kenney/tiny_dungeon';
-  static const String _extras = 'assets/kenney/extras';
   static const String _ui = 'assets/kenney/ui_adventure';
   static const String _bars = 'assets/kenney/ui_bars';
   static const String _icons = 'assets/kenney/icons';
-  static const String _runes = 'assets/kenney/runes';
 
   /// Original Kenney tile path (`tile_0000` … `tile_0131`).
   static String tile(int id) {
@@ -117,25 +115,31 @@ abstract final class KenneyAssets {
   static String get enemyCrystalWraith => CustomAssets.enemyCrystalWraith;
   static String get enemyCrystalMite => CustomAssets.enemyCrystalMite;
 
-  // —— Gear / consumables ——
-  static String get shieldRound => tile(101);
-  static String get shield => tile(102);
-  static String get dagger => tile(103);
-  static String get sword => tile(104);
-  static String get swordAlt => tile(106);
-  static String get hammer => tile(117);
-  static String get axe => tile(118);
+  // —— Gear / consumables (custom identity icons; Tiny Dungeon tiles kept as fallback) ——
+  static String get shieldRound => CustomAssets.iconShieldRound;
+  static String get shield => CustomAssets.iconShield;
+  static String get dagger => CustomAssets.iconDagger;
+  static String get sword => CustomAssets.iconSword;
+  static String get swordAlt => CustomAssets.iconSwordAlt;
+  static String get hammer => CustomAssets.iconMace;
+  static String get axe => CustomAssets.iconAxe;
   static String get potionGrey => tile(113);
-  static String get potionGreen => tile(114);
-  static String get potionRed => tile(115);
-  static String get potionBlue => tile(116);
+  static String get potionGreen => CustomAssets.iconFlaskGreen;
+  static String get potionRed => CustomAssets.iconFlask;
+  static String get potionBlue => CustomAssets.iconFlaskBlue;
   static String get vialGrey => tile(125);
-  static String get vialGreen => tile(126);
-  static String get vialRed => tile(127);
-  static String get vialBlue => tile(128);
-  static String get staff => tile(129);
-  static String get staffBlue => tile(130);
-  static String get spear => tile(131);
+  static String get vialGreen => CustomAssets.iconFlaskGreen;
+  static String get vialRed => CustomAssets.iconFlask;
+  static String get vialBlue => CustomAssets.iconFlaskPurple;
+  static String get staff => CustomAssets.iconStaff;
+  static String get staffBlue => CustomAssets.iconStaffBlue;
+  static String get spear => CustomAssets.iconSpear;
+  static String get bow => CustomAssets.iconBow;
+  static String get crossbow => CustomAssets.iconCrossbow;
+  static String get gun => CustomAssets.iconGun;
+  static String get wand => CustomAssets.iconWand;
+  static String get fist => CustomAssets.iconFist;
+  static String get thrown => CustomAssets.iconThrown;
   static String get boots => CustomAssets.iconBoots;
   static String get cloak => CustomAssets.iconCloak;
   static String get helmet => CustomAssets.iconHelm;
@@ -149,10 +153,10 @@ abstract final class KenneyAssets {
   static String get wallStoneAlt2 => trapSpikes; // legacy — do not use as wall
   static String get stairsAlt => stairsDown;
 
-  // —— Extras (not from Tiny Dungeon sheet) ——
-  static const String book = '$_extras/book.png';
-  static const String coinGold = '$_extras/coin_gold.png';
-  static const String ring = '$_extras/ring.png';
+  // —— Extras (custom identity; Kenney extras kept on disk as legacy) ——
+  static String get book => CustomAssets.iconBook;
+  static String get coinGold => CustomAssets.iconCoinGold;
+  static String get ring => CustomAssets.iconRing;
 
   // —— UI panels & buttons ——
   static const String panelBrown = '$_ui/panel_brown.png';
@@ -189,22 +193,22 @@ abstract final class KenneyAssets {
   static const String barYellowRight = '$_bars/barYellow_horizontalRight.png';
 
   // —— Icons ——
-  static const String iconCoin = '$_icons/coin.png';
-  static const String iconSword = '$_icons/sword.png';
+  static String get iconCoin => CustomAssets.iconCoinGold;
+  static String get iconSword => CustomAssets.iconSword;
   static const String iconCrown = '$_icons/crown.png';
   static const String iconCampfire = '$_icons/campfire.png';
-  static const String iconShield = '$_icons/shield_icon.png';
+  static String get iconShield => CustomAssets.iconShield;
   static const String iconTrophy = '$_icons/trophy.png';
   static const String iconDoor = '$_icons/door.png';
   static const String iconStar = '$_icons/star.png';
   static const String iconHeart = '$_icons/heart.png';
   static const String iconSkull = '$_icons/skull.png';
-  static const String iconBow = '$_icons/bow.png';
+  static String get iconBow => CustomAssets.iconBow;
 
   // —— Relics ——
-  static const String relicWarBanner = '$_runes/war_banner.png';
-  static const String relicIronWard = '$_runes/iron_ward.png';
-  static const String relicPhoenixEmber = '$_runes/phoenix_ember.png';
+  static String get relicWarBanner => CustomAssets.iconRelicWarBanner;
+  static String get relicIronWard => CustomAssets.iconRelicIronWard;
+  static String get relicPhoenixEmber => CustomAssets.iconRelicPhoenixEmber;
 
   static String heroSpriteForClass(HeroClassId classId) => switch (classId) {
         HeroClassId.warrior => CustomAssets.heroKnight,
@@ -630,7 +634,7 @@ abstract final class KenneyAssets {
     if (item.iconId != null) {
       switch (item.iconId) {
         case 'bow':
-          return iconBow;
+          return bow;
         case 'book':
           return CustomAssets.iconTome;
         default:
@@ -644,7 +648,8 @@ abstract final class KenneyAssets {
         return switch (item.weaponType) {
           WeaponType.dagger => dagger,
           WeaponType.axe => axe,
-          WeaponType.mace || WeaponType.fist => hammer,
+          WeaponType.mace => hammer,
+          WeaponType.fist => fist,
           _ => sword,
         };
       }
@@ -657,16 +662,16 @@ abstract final class KenneyAssets {
         WeaponType.sword =>
           item.rarity.index >= 2 ? swordAlt : sword,
         WeaponType.mace => hammer,
-        WeaponType.dagger || WeaponType.fist => dagger,
+        WeaponType.dagger => dagger,
+        WeaponType.fist => fist,
         WeaponType.staff =>
           item.rarity.index >= 2 ? staffBlue : staff,
         WeaponType.polearm => spear,
-        WeaponType.bow ||
-        WeaponType.crossbow ||
-        WeaponType.gun ||
-        WeaponType.thrown =>
-          iconBow,
-        WeaponType.wand => staffBlue,
+        WeaponType.bow => bow,
+        WeaponType.crossbow => crossbow,
+        WeaponType.gun => gun,
+        WeaponType.thrown => thrown,
+        WeaponType.wand => wand,
         null => switch (item.affinity) {
             'mage' => item.rarity.index >= 2 ? staffBlue : staff,
             'rogue' => dagger,
@@ -745,10 +750,16 @@ abstract final class KenneyAssets {
     if (lower.contains('glove') || lower.contains('gaunt')) return gloves;
     if (lower.contains('cloak') || lower.contains('cape')) return cloak;
     if (lower.contains('shield') || lower.contains('buckler')) return shield;
-    if (lower.contains('bow') || lower.contains('crossbow')) return iconBow;
-    if (lower.contains('staff') || lower.contains('wand') || lower.contains('tome')) {
+    if (lower.contains('crossbow')) return crossbow;
+    if (lower.contains('gun') || lower.contains('pistol') || lower.contains('rifle')) {
+      return gun;
+    }
+    if (lower.contains('bow')) return bow;
+    if (lower.contains('wand')) return wand;
+    if (lower.contains('staff') || lower.contains('tome')) {
       return staff;
     }
+    if (lower.contains('fist') || lower.contains('knuckle')) return fist;
     if (lower.contains('dagger') || lower.contains('knife')) return dagger;
     if (lower.contains('axe')) return axe;
     if (lower.contains('hammer') || lower.contains('mace')) return hammer;

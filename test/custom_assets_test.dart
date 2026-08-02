@@ -25,6 +25,19 @@ void main() {
       CustomAssets.iconWrist,
       CustomAssets.iconLegs,
       CustomAssets.iconTrinket,
+      CustomAssets.iconTome,
+      CustomAssets.iconSword,
+      CustomAssets.iconDagger,
+      CustomAssets.iconAxe,
+      CustomAssets.iconMace,
+      CustomAssets.iconStaff,
+      CustomAssets.iconBow,
+      CustomAssets.iconShield,
+      CustomAssets.iconFlask,
+      CustomAssets.iconThrown,
+      CustomAssets.iconCoinGold,
+      CustomAssets.iconBook,
+      CustomAssets.iconRelicWarBanner,
       CustomAssets.portraitSandy,
       CustomAssets.portraitGoblin,
       CustomAssets.portraitKing,
@@ -64,6 +77,14 @@ void main() {
     expect(KenneyAssets.helmet, CustomAssets.iconHelm);
     expect(KenneyAssets.boots, CustomAssets.iconBoots);
     expect(KenneyAssets.cloak, CustomAssets.iconCloak);
+    expect(KenneyAssets.sword, CustomAssets.iconSword);
+    expect(KenneyAssets.dagger, CustomAssets.iconDagger);
+    expect(KenneyAssets.bow, CustomAssets.iconBow);
+    expect(KenneyAssets.shield, CustomAssets.iconShield);
+    expect(KenneyAssets.potionRed, CustomAssets.iconFlask);
+    expect(KenneyAssets.thrown, CustomAssets.iconThrown);
+    expect(KenneyAssets.coinGold, CustomAssets.iconCoinGold);
+    expect(KenneyAssets.relicWarBanner, CustomAssets.iconRelicWarBanner);
     expect(
       KenneyAssets.dungeonPortraitFor('goblin'),
       CustomAssets.portraitGoblin,

@@ -60,6 +60,33 @@ abstract final class CustomAssets {
   static const String iconTrinket = '$_root/icons/trinket.png';
   static const String iconTome = '$_root/icons/tome.png';
 
+  // —— Weapons / off-hand / consumable ——
+  static const String iconSword = '$_root/icons/sword.png';
+  static const String iconSwordAlt = '$_root/icons/sword_alt.png';
+  static const String iconDagger = '$_root/icons/dagger.png';
+  static const String iconAxe = '$_root/icons/axe.png';
+  static const String iconMace = '$_root/icons/mace.png';
+  static const String iconStaff = '$_root/icons/staff.png';
+  static const String iconStaffBlue = '$_root/icons/staff_blue.png';
+  static const String iconSpear = '$_root/icons/spear.png';
+  static const String iconBow = '$_root/icons/bow.png';
+  static const String iconCrossbow = '$_root/icons/crossbow.png';
+  static const String iconGun = '$_root/icons/gun.png';
+  static const String iconWand = '$_root/icons/wand.png';
+  static const String iconFist = '$_root/icons/fist.png';
+  static const String iconThrown = '$_root/icons/thrown.png';
+  static const String iconShield = '$_root/icons/shield.png';
+  static const String iconShieldRound = '$_root/icons/shield_round.png';
+  static const String iconFlask = '$_root/icons/flask.png';
+  static const String iconFlaskGreen = '$_root/icons/flask_green.png';
+  static const String iconFlaskBlue = '$_root/icons/flask_blue.png';
+  static const String iconFlaskPurple = '$_root/icons/flask_purple.png';
+  static const String iconCoinGold = '$_root/icons/coin_gold.png';
+  static const String iconBook = '$_root/icons/book.png';
+  static const String iconRelicWarBanner = '$_root/icons/relic_war_banner.png';
+  static const String iconRelicIronWard = '$_root/icons/relic_iron_ward.png';
+  static const String iconRelicPhoenixEmber = '$_root/icons/relic_phoenix_ember.png';
+
   // —— Hub dungeon portraits ——
   static const String portraitSandy = '$_root/portraits/sandy.png';
   static const String portraitGoblin = '$_root/portraits/goblin.png';
