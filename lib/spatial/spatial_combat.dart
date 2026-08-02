@@ -277,7 +277,7 @@ class SpatialActor {
     if (sliceAndDiceTimer > 0) m *= 1.35;
     if (killingSpreeTimer > 0) m *= 1.55;
     if (powerInfusionTimer > 0) m *= 1.4;
-    if (combustionTimer > 0) m *= 1.25;
+    if (combustionTimer > 0) m *= 1.12;
     if ((buffTimers['haste'] ?? 0) > 0) m *= 1.28;
     if (iceBlockTimer > 0) m = 0;
     return m;
@@ -1970,7 +1970,7 @@ abstract final class SpatialCombat {
       final def = ClassKits.defFor(AbilityId.combustion)!;
       _spendRage(mage, def.resourceCost);
       _startAbilityCd(world, mage, AbilityId.combustion, def.cooldown);
-      mage.combustionTimer = 8;
+      mage.combustionTimer = 6;
       if (!reducedVfx) {
         _spawnRing(
           world,
@@ -2050,7 +2050,7 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.livingBomb, def.cooldown);
       focusEnemy.livingBombTimer = 8;
       focusEnemy.livingBombDps =
-          math.max(3.0, mage.attack * 0.38 * mage.kitOutMul * 0.85);
+          math.max(3.0, mage.attack * 0.26 * mage.kitOutMul * 0.85);
       focusEnemy.livingBombCasterId = mage.id;
       mage.livingBombArmed = 8;
       if (!reducedVfx) {
@@ -2130,7 +2130,7 @@ abstract final class SpatialCombat {
         _spendRage(mage, def.resourceCost);
         _startAbilityCd(world, mage, AbilityId.blastWave, def.cooldown);
         final dmg =
-            math.max(2, (mage.attack * 0.62 * mage.kitOutMul * 0.85).round());
+            math.max(2, (mage.attack * 0.48 * mage.kitOutMul * 0.85).round());
         for (final e in nearby) {
           final dealt = math.max(1, dmg - e.effectiveDefense);
           e.hp = math.max(0, e.hp - dealt);
@@ -2183,8 +2183,8 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.pyroblast, def.cooldown);
       mage.attackFlash = 0.22;
       var dmg =
-          math.max(3, (mage.attack * 2.0 * mage.kitOutMul * 0.85).round());
-      if (mage.combustionTimer > 0) dmg = (dmg * 1.45).round();
+          math.max(3, (mage.attack * 1.55 * mage.kitOutMul * 0.85).round());
+      if (mage.combustionTimer > 0) dmg = (dmg * 1.15).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
           from: mage,
@@ -2213,8 +2213,8 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.fireball, def.cooldown);
       mage.attackFlash = 0.18;
       var dmg =
-          math.max(2, (mage.attack * 1.4 * mage.kitOutMul * 0.85).round());
-      if (mage.combustionTimer > 0) dmg = (dmg * 1.45).round();
+          math.max(2, (mage.attack * 1.1 * mage.kitOutMul * 0.85).round());
+      if (mage.combustionTimer > 0) dmg = (dmg * 1.15).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
           from: mage,
@@ -2510,16 +2510,16 @@ abstract final class SpatialCombat {
     }
     if (hero.heroSpecId == HeroSpecId.fire) {
       if (hero.combustionTimer > 0) {
-        damage = (damage * 1.45).round();
+        damage = (damage * 1.12).round();
       }
       if (hero.queuedPyroblast) {
         hero.queuedPyroblast = false;
-        damage = (damage * 2.4).round();
+        damage = (damage * 2.0).round();
         tag = 'PYRO';
         tagArgb = 0xFFFF5020;
       } else if (hero.queuedFireball) {
         hero.queuedFireball = false;
-        damage = (damage * 1.7).round();
+        damage = (damage * 1.45).round();
         tag = 'FIREBALL';
         tagArgb = 0xFFFF8040;
       }
