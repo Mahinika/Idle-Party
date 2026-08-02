@@ -1603,7 +1603,7 @@ abstract final class SpatialCombat {
     priest.innerFireActive =
         ClassKits.isUnlocked(AbilityId.innerFire, priest.heroLevel);
     if (priest.innerFireActive) {
-      priest.kitHealMul = 1.28;
+      priest.kitHealMul = 1.36;
       priest.kitInMul = 0.94;
     }
     if (focusEnemy != null) _gainRage(priest, 7 * dt);
@@ -1700,9 +1700,9 @@ abstract final class SpatialCombat {
         _startAbilityCd(world, priest, AbilityId.powerWordShield, def.cooldown);
         final inner =
             ClassKits.isUnlocked(AbilityId.innerFire, priest.heroLevel)
-                ? 1.2
+                ? 1.25
                 : 1.0;
-        final shield = math.max(8, (priest.attack * 1.6 * inner).round());
+        final shield = math.max(10, (priest.attack * 2.0 * inner).round());
         target.absorbShield = math.max(target.absorbShield, shield);
         priest.attackFlash = 0.2;
         priest.attackAimX = target.x;
@@ -1749,13 +1749,13 @@ abstract final class SpatialCombat {
           target = h;
         }
       }
-      if (target != null && worst < 0.75) {
+      if (target != null && worst < 0.88) {
         final def = ClassKits.defFor(AbilityId.flashHeal)!;
         _spendRage(priest, def.resourceCost);
         _startAbilityCd(world, priest, AbilityId.flashHeal, def.cooldown);
         final heal = math.max(
-          6,
-          (priest.attack * 1.4 * priest.kitHealMul).round(),
+          8,
+          (priest.attack * 1.55 * priest.kitHealMul).round(),
         );
         final before = target.hp;
         target.hp = math.min(target.effectiveMaxHp, target.hp + heal);
@@ -1812,7 +1812,7 @@ abstract final class SpatialCombat {
                 ? 1.15
                 : 1.0;
         target.pomCharges = 5;
-        target.pomHeal = math.max(4, (priest.attack * 0.85 * inner).round());
+        target.pomHeal = math.max(5, (priest.attack * 1.0 * inner).round());
         if (!reducedVfx) {
           _spawnFloater(
             world,
@@ -1891,35 +1891,83 @@ abstract final class SpatialCombat {
       }
     }
 
-    // Penance ? three holy bolts; side-heals the party (WotLK dual-purpose).
-    if (focusEnemy != null &&
+    // Penance — heal channel when allies are hurt; damage channel when stable.
+    SpatialActor? penanceAlly;
+    var penanceWorst = 1.0;
+    for (final h in world.heroes) {
+      if (!h.isAlive) continue;
+      final frac = h.hp / math.max(1, h.effectiveMaxHp);
+      if (frac < penanceWorst) {
+        penanceWorst = frac;
+        penanceAlly = h;
+      }
+    }
+    final wantHealPenance = penanceAlly != null && penanceWorst < 0.85;
+    final canDamagePenance = focusEnemy != null &&
         focusEnemy.hp > 0 &&
-        _dist(priest, focusEnemy) <= priest.attackRange + 1.5 &&
-        can(AbilityId.penance)) {
+        _dist(priest, focusEnemy) <= priest.attackRange + 1.5;
+    if (can(AbilityId.penance) && (wantHealPenance || canDamagePenance)) {
       final def = ClassKits.defFor(AbilityId.penance)!;
       _spendRage(priest, def.resourceCost);
       _startAbilityCd(world, priest, AbilityId.penance, def.cooldown);
       priest.attackFlash = 0.2;
-      final bolt = math.max(2, (priest.attack * 0.75).round());
-      for (var i = 0; i < 3; i++) {
-        SpatialCombat._addProjectile(world, 
-          _spellBolt(
-            from: priest,
-            to: focusEnemy,
-            damage: bolt,
-            style: SpellBoltStyle.holy,
-            label: i == 0 ? 'PENANCE' : null,
-            labelArgb: 0xFFFFF0A0,
-            delay: i * 0.18,
-          ),
+      if (wantHealPenance && penanceAlly != null) {
+        final tick = math.max(
+          5,
+          (priest.attack * 0.62 * priest.kitHealMul).round(),
+        );
+        for (var i = 0; i < 3; i++) {
+          final before = penanceAlly.hp;
+          penanceAlly.hp =
+              math.min(penanceAlly.effectiveMaxHp, penanceAlly.hp + tick);
+          final gained = penanceAlly.hp - before;
+          if (gained > 0) {
+            _recordHeroHeal(priest, gained);
+            if (!reducedVfx) {
+              _spawnFloater(
+                world,
+                x: penanceAlly.x,
+                y: penanceAlly.y - 0.35 - i * 0.08,
+                text: '+$gained',
+                argb: _floaterHeal,
+                life: 0.55,
+              );
+            }
+          }
+        }
+        if (!reducedVfx) {
+          _spawnBurst(
+            world,
+            x: penanceAlly.x,
+            y: penanceAlly.y,
+            argb: 0xAAFFE080,
+            radius: 0.8,
+            life: 0.35,
+          );
+        }
+      } else if (canDamagePenance && focusEnemy != null) {
+        final bolt = math.max(2, (priest.attack * 0.7).round());
+        for (var i = 0; i < 3; i++) {
+          SpatialCombat._addProjectile(
+            world,
+            _spellBolt(
+              from: priest,
+              to: focusEnemy,
+              damage: bolt,
+              style: SpellBoltStyle.holy,
+              label: i == 0 ? 'PENANCE' : null,
+              labelArgb: 0xFFFFF0A0,
+              delay: i * 0.18,
+            ),
+          );
+        }
+        _healLowestAlly(
+          world,
+          math.max(4, (bolt * 0.9 * priest.kitHealMul).round()),
+          reducedVfx: reducedVfx,
+          healer: priest,
         );
       }
-      _healLowestAlly(
-        world,
-        math.max(4, (bolt * 1.2).round()),
-        reducedVfx: reducedVfx,
-        healer: priest,
-      );
       _announceCast(
         world,
         priest,
