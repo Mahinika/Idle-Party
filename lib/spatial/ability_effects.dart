@@ -427,7 +427,7 @@ abstract final class AbilityEffectRunner {
         break;
       case AbilityId.arcaneIntellect:
         // Fire's dedicated ticker bypasses _abilityOutScale — tax here.
-        hero.kitOutMul *= 0.55;
+        hero.kitOutMul *= 0.72;
       default:
         // Fallback: mild role-appropriate crumb if a new passive is added.
         if (spec.isTank) {

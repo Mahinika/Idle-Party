@@ -2013,7 +2013,7 @@ abstract final class SpatialCombat {
     // Arcane Intellect — personal spell power (party aura is GameState caster aura).
     // Fire's dedicated ticker bypasses SpecKit _abilityOutScale; keep a hard tax.
     if (ClassKits.isUnlocked(AbilityId.arcaneIntellect, mage.heroLevel)) {
-      mage.kitOutMul = 0.58;
+      mage.kitOutMul = 0.72;
     }
     if (focusEnemy != null) _gainRage(mage, 8 * dt);
     _gainRage(mage, (mage.spiritRegenBonus + mage.mp5RegenBonus) * dt);

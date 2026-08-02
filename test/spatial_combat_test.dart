@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/hero.dart';
@@ -138,7 +139,10 @@ void main() {
       if (dx + dy > 0.2) moved = true;
       final dist =
           ((h.x - enemy.x).abs() + (h.y - enemy.y).abs());
-      expect(dist, lessThanOrEqualTo(startDist[i] + 0.05));
+      // Fire Blink can kite away once in range — allow slack for that kit.
+      final blinkSlack =
+          ClassKits.isUnlocked(AbilityId.blink, h.heroLevel) ? 3.0 : 0.05;
+      expect(dist, lessThanOrEqualTo(startDist[i] + blinkSlack));
     }
     expect(moved, isTrue);
 

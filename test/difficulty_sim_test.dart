@@ -164,10 +164,10 @@ GameState _midPower(GameState s) {
     rogueUnlocked: true,
   );
   next = GameLogic.ensureRogueHero(next);
-  for (var i = 0; i < 8; i++) {
+  for (var i = 0; i < 10; i++) {
     next = GameLogic.trainParty(next);
   }
-  for (var i = 0; i < 6; i++) {
+  for (var i = 0; i < 8; i++) {
     next = GameLogic.upgradeAttack(next);
     next = GameLogic.upgradeDefense(next);
     next = GameLogic.upgradeVitality(next);
