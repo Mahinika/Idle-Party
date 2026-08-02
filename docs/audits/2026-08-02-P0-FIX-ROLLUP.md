@@ -20,8 +20,5 @@ Batch fix after parallel class audits. Scope: wiring/identity P0s (not full reba
 
 ## Still backlog (not this batch)
 
-- True multi-pet Army / Feral Spirit wolves
-- Feral Rip maintain
-- Arms mid share tune
-- Systemic mid caster ceiling beyond haste unstack
 - Full live VFX pass per WIP kit
+- Fine mid-share retune after live FARM feedback

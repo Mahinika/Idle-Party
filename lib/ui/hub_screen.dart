@@ -624,7 +624,7 @@ class _HubHeader extends StatelessWidget {
               child: IconButton(
                 padding: EdgeInsets.zero,
                 onPressed: onOpenSettings,
-                icon: const KenneySprite(
+                icon: KenneySprite(
                   asset: KenneyAssets.iconDoor,
                   size: 18,
                 ),

@@ -214,6 +214,18 @@ abstract final class AbilityEffectRunner {
           focusHpFrac > 0.4) {
         return false;
       }
+      // Hold Rip when a strong bleed is already rolling.
+      if (d.id == AbilityId.rip &&
+          focus != null &&
+          focus.bleedTimer > 2.5) {
+        return false;
+      }
+      // Rake refresh when bleed is missing/about to fall.
+      if (d.id == AbilityId.rake &&
+          focus != null &&
+          focus.bleedTimer > 3.5) {
+        return false;
+      }
       return true;
     }
 
@@ -349,7 +361,7 @@ abstract final class AbilityEffectRunner {
 
       // —— melee DPS ——
       case AbilityId.armsStance:
-        hero.kitOutMul *= 1.38;
+        hero.kitOutMul *= 1.55;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
         hero.kitOutMul *= 1.18;
@@ -386,34 +398,36 @@ abstract final class AbilityEffectRunner {
 
       // —— casters (mid-band ability spam outpaced melee ~2–3×) ——
       case AbilityId.shadowform:
-        hero.kitOutMul *= 0.68;
+        hero.kitOutMul *= 0.62;
         hero.kitInMul *= 1.04;
       case AbilityId.elementalFocus:
-        hero.kitOutMul *= 0.68;
+        hero.kitOutMul *= 0.62;
         hero.kitHasteMul *= 1.05;
       case AbilityId.arcanePowerPassive:
-        hero.kitOutMul *= 0.68;
+        hero.kitOutMul *= 0.62;
       case AbilityId.frostArmor:
         hero.kitInMul *= 0.92;
-        hero.kitOutMul *= 0.65;
+        hero.kitOutMul *= 0.60;
         hero.kitRootBonus += 0.5;
       case AbilityId.soulSiphon:
-        hero.kitOutMul *= 0.70;
+        hero.kitOutMul *= 0.64;
         hero.kitHealMul *= 1.06;
       case AbilityId.demonicKnowledge:
-        hero.kitOutMul *= 0.65;
+        hero.kitOutMul *= 0.60;
       case AbilityId.cataclysm:
-        hero.kitOutMul *= 0.66;
+        hero.kitOutMul *= 0.60;
       case AbilityId.moonkinForm:
-        hero.kitOutMul *= 0.72;
+        hero.kitOutMul *= 0.66;
 
       // Legacy kit passives are handled in dedicated tickers.
       case AbilityId.defensiveStance:
       case AbilityId.revenge:
       case AbilityId.innerFire:
-      case AbilityId.arcaneIntellect:
       case AbilityId.sinisterStrike:
         break;
+      case AbilityId.arcaneIntellect:
+        // Fire's dedicated ticker bypasses _abilityOutScale — tax here.
+        hero.kitOutMul *= 0.55;
       default:
         // Fallback: mild role-appropriate crumb if a new passive is added.
         if (spec.isTank) {
@@ -436,6 +450,45 @@ abstract final class AbilityEffectRunner {
     required math.Random rng,
     required bool reducedVfx,
   }) {
+    if (def.id == AbilityId.armyOfDead) {
+      _spendAndCd(world, hero, def);
+      SpatialCombat.spawnTempPets(
+        world,
+        owner: hero,
+        count: 4,
+        duration: 16,
+        atkScale: 0.28,
+        namePrefix: 'Ghoul',
+        idPrefix: 'army',
+      );
+      _castAoe(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+      return true;
+    }
+    if (def.id == AbilityId.feralSpirit) {
+      _spendAndCd(world, hero, def);
+      SpatialCombat.spawnTempPets(
+        world,
+        owner: hero,
+        count: 2,
+        duration: 30,
+        atkScale: 0.42,
+        namePrefix: 'Spirit Wolf',
+        idPrefix: 'wolf',
+      );
+      _announce(world, hero, def.shortLabel, 0xFF90E0FF, reducedVfx);
+      if (!reducedVfx) {
+        SpatialCombat._spawnRing(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: 0xFF90E0FF,
+          radius: 0.95,
+          life: 0.4,
+        );
+      }
+      return true;
+    }
+
     switch (def.effect) {
       case AbilityEffectKind.passive:
         return false;
@@ -583,7 +636,7 @@ abstract final class AbilityEffectRunner {
     var scale = hero.kitOutMul;
     final id = hero.heroSpecId;
     if (id != null && HeroSpecs.def(id).roleTag == SpecRoleTag.caster) {
-      scale *= 0.70;
+      scale *= 0.62;
     }
     return scale;
   }
@@ -608,6 +661,7 @@ abstract final class AbilityEffectRunner {
     SpatialCombat._setAttackAnim(hero, enemy, 0.22);
     _announce(world, hero, def.shortLabel, tint, reducedVfx);
     _applyDamageSideEffects(world, hero, def, rawEstimate: raw);
+    _applyBleedIfNeeded(world, hero, enemy, def, raw);
 
     if (useBolt) {
       SpatialCombat._addProjectile(world, 
@@ -1313,6 +1367,46 @@ abstract final class AbilityEffectRunner {
     }
     if (def.id == AbilityId.vampiricTouch) {
       SpatialCombat._gainRage(hero, 12);
+    }
+  }
+
+  static void _applyBleedIfNeeded(
+    SpatialWorld world,
+    SpatialActor hero,
+    SpatialActor enemy,
+    ClassAbilityDef def,
+    int raw,
+  ) {
+    if (def.id != AbilityId.rip &&
+        def.id != AbilityId.rake &&
+        def.id != AbilityId.rend) {
+      return;
+    }
+    final duration = switch (def.id) {
+      AbilityId.rip => 12.0,
+      AbilityId.rake => 8.0,
+      _ => 9.0,
+    };
+    final dpsFrac = switch (def.id) {
+      AbilityId.rip => 0.22,
+      AbilityId.rake => 0.14,
+      _ => 0.12,
+    };
+    final fromHit = raw * 0.08;
+    enemy.bleedTimer = duration;
+    enemy.bleedDps =
+        math.max(1.5, hero.attack * dpsFrac * hero.kitOutMul + fromHit);
+    enemy.bleedAcc = 0;
+    enemy.bleedCasterId = hero.id;
+    if (def.id == AbilityId.rip) {
+      SpatialCombat._spawnFloater(
+        world,
+        x: enemy.x,
+        y: enemy.y - 0.55,
+        text: 'RIP',
+        argb: 0xFFC05050,
+        life: 0.45,
+      );
     }
   }
 
