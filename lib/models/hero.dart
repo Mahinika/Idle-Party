@@ -26,20 +26,22 @@ class PartyHero {
     String? id,
     Stats? stats,
     Map<EquipmentSlot, EquipmentItem>? equipped,
+    int level = 1,
   }) {
+    final startLevel = level < 1 ? 1 : level;
     final def = HeroSpecs.def(specId);
     final sheetStats = stats ?? def.startingStats;
     final role = def.legacyRole;
     final sheet = CombatRatings.grownPrimaries(
       base: sheetStats,
       role: role,
-      level: 1,
+      level: startLevel,
     );
     final hp = CombatRatings.roleHpBase(role) + 10 * sheet.sta;
     return PartyHero(
       id: id ?? _stableIdFor(specId, name),
       name: name,
-      level: 1,
+      level: startLevel,
       currentHp: hp,
       stats: sheetStats,
       specId: specId,

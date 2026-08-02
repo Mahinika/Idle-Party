@@ -324,10 +324,14 @@ class _GameHomePageState extends State<GameHomePage> {
 
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(_director.state.uiTextScale),
+            textScaler: GameTheme.composeTextScaler(
+              platform: MediaQuery.textScalerOf(context),
+              gameScale: _director.state.uiTextScale,
+            ),
           ),
           child: Scaffold(
-            body: SafeArea(child: body),
+            // Shells apply SafeArea around chrome so dungeon art can full-bleed.
+            body: body,
           ),
         );
       },

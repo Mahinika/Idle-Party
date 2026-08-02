@@ -26,17 +26,58 @@ abstract final class GameTheme {
   /// Dark ink for light Kenney button faces.
   static const Color onLight = Color(0xFF1A120A);
 
-  /// Minimum interactive target (Material / iOS HIG floor).
+  /// Cross-platform comfort floor (Apple HIG / WCAG 2.5.5 AAA).
   static const double minTouch = 44;
+
+  /// Primary CTAs (Material ~9mm / 48dp): ENTER, Ascend, MERGE.
+  static const double primaryTouch = 48;
+
+  /// Gap from screen / safe edge to HUD clusters.
+  static const double edgeGap = 12;
+
+  /// Gap between interactive clusters (Material ≥8dp).
+  static const double clusterGap = 8;
+
+  /// Bottom nav chrome height (minTouch + label padding).
+  static const double bottomNavHeight = minTouch + 10;
+
+  /// Clearance above bottom nav for floating combat HUD.
+  static const double hudAboveNav = clusterGap + 4;
 
   /// HUD pixel labels — keep readable on mobile chrome.
   static const double hudPixel = 9;
   static const double hudPixelComfort = 11;
 
-  /// Phone / narrow layout: shortest side under tablet, or width under ~700.
+  /// Phone / narrow layout: Android Compact width (~600) or width under ~700.
   static bool isCompactWidth(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return size.shortestSide < 600 || size.width < 700;
+  }
+
+  /// Short phone / landscape-short: hub CTAs must collapse.
+  static bool isShortHeight(BuildContext context) {
+    return MediaQuery.sizeOf(context).height < 720;
+  }
+
+  /// Bottom inset for [Positioned] combat HUD inside the stage stack
+  /// (above the bottom nav, with Material-friendly gap).
+  static double combatHudBottom(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(1.0);
+    // Stage [Expanded] already sits above the nav; only need cluster gap.
+    return hudAboveNav + (scale > 1.05 ? 4.0 : 0.0);
+  }
+
+  /// Side inset for corner HUD.
+  static double combatHudSide(BuildContext context) => edgeGap;
+
+  /// Compose OS Dynamic Type with in-game slider (do not replace OS alone).
+  static TextScaler composeTextScaler({
+    required TextScaler platform,
+    required double gameScale,
+  }) {
+    final os = platform.scale(1.0);
+    final combined = (os * gameScale).clamp(0.85, 1.4);
+    return TextScaler.linear(combined);
   }
 
   /// Headers / titles (pixel).
@@ -57,11 +98,13 @@ abstract final class GameTheme {
     Color color = torchHot,
     double height = 1.4,
   }) {
-    final key = Object.hash(size, color.toARGB32(), height);
+    // Press Start below hudPixel turns to glitter on phone DPI.
+    final clamped = size < hudPixel ? hudPixel : size;
+    final key = Object.hash(clamped, color.toARGB32(), height);
     return _pixelCache.putIfAbsent(
       key,
       () => GoogleFonts.pressStart2p(
-        fontSize: size,
+        fontSize: clamped,
         color: color,
         height: height,
         shadows: const [

@@ -140,7 +140,11 @@ class GameDirector extends ChangeNotifier {
   int _battleToken = 0;
   int _uiThrottle = 0;
   int _visualFrame = 0;
+  /// Combat map + corner HUD; bumps every spatial tick (~60 Hz).
+  final ValueNotifier<int> combatFrame = ValueNotifier(0);
   bool _awaitingWipeChoice = false;
+  /// Soft-pause spatial sim while inventory / meta menus are open.
+  bool _uiPaused = false;
   String? _toast;
   double _toastLife = 0;
   String? _clearSummary;
@@ -181,6 +185,11 @@ class GameDirector extends ChangeNotifier {
   /// Increments each spatial sim step — used by combat painter dirty-checks.
   int get visualFrame => _visualFrame;
 
+  static const double _spatialDt = 1 / 60;
+  static const Duration _spatialPeriod = Duration(milliseconds: 16);
+  /// Full shell rebuild cadence while fighting (~10 Hz).
+  static const int _shellNotifyEvery = 6;
+
   /// Test helper: put items in the bag without rebuilding combat.
   @visibleForTesting
   void debugInjectStash(List<EquipmentItem> items) {
@@ -190,6 +199,13 @@ class GameDirector extends ChangeNotifier {
   }
 
   bool get awaitingWipeChoice => _awaitingWipeChoice;
+  bool get uiPaused => _uiPaused;
+
+  /// Freeze dungeon combat while the player is in inventory / overlays.
+  void setUiPaused(bool paused) {
+    if (_uiPaused == paused) return;
+    _uiPaused = paused;
+  }
 
   String? get toast => _toastLife > 0 ? _toast : null;
 
@@ -278,11 +294,16 @@ class GameDirector extends ChangeNotifier {
         if (offline.hasSummary) {
           _offlineSummary = offline;
           _offlineSummaryLife = 10;
-          showToast(offline.headline, life: 5);
+          // Hub shows a tappable banner; toast only when loading mid-dungeon.
+          if (saved.inDungeon) {
+            showToast(offline.headline, life: 5);
+          }
         }
       }
-      _state = GameLogic.ensureWeeklyContract(
-        GameLogic.ensureRogueHero(loaded),
+      _state = GameLogic.backfillCodexFromInventory(
+        GameLogic.ensureWeeklyContract(
+          GameLogic.ensureRogueHero(loaded),
+        ),
       );
       _lastHighestDungeon = _state.highestDungeonCleared;
       GameAudio.muted = _state.soundMuted;
@@ -358,8 +379,8 @@ class GameDirector extends ChangeNotifier {
 
   void _startSpatialLoop() {
     _spatialTimer?.cancel();
-    // 30 Hz sim is enough; UI notifies every other tick (~15 fps).
-    _spatialTimer = Timer.periodic(const Duration(milliseconds: 33), (_) {
+    // ~60 Hz sim; combatFrame drives map paint; shell HUD is throttled.
+    _spatialTimer = Timer.periodic(_spatialPeriod, (_) {
       spatialTick();
     });
   }
@@ -370,7 +391,12 @@ class GameDirector extends ChangeNotifier {
     _battleToken = _state.battleNumber;
   }
 
-  /// Real-time spatial combat step (~30 Hz). Only while in a dungeon.
+  void _bumpCombatFrame() {
+    _visualFrame++;
+    combatFrame.value = _visualFrame;
+  }
+
+  /// Real-time spatial combat step (~60 Hz). Only while in a dungeon.
   void spatialTick() {
     if (_isLoading || !_state.inDungeon || _spatial == null) {
       return;
@@ -379,13 +405,17 @@ class GameDirector extends ChangeNotifier {
     if (_awaitingWipeChoice) {
       return;
     }
+    // Soft-pause while inventory / meta menus cover the fight.
+    if (_uiPaused) {
+      return;
+    }
 
     // Room changed externally (travel / ascend / restart)
     if (_battleToken != _state.battleNumber) {
       _rebuildSpatial();
     }
 
-    final result = SpatialCombat.step(_spatial!, _state, dt: 0.033);
+    final result = SpatialCombat.step(_spatial!, _state, dt: _spatialDt);
     final before = _state;
     _spatial = result.world;
     _state = result.state;
@@ -395,17 +425,16 @@ class GameDirector extends ChangeNotifier {
     } else if (result.goldFromKills > 0) {
       _roomGold += result.goldFromKills;
     }
+    // Count casts live; defer achievement scan to room clear / discrete events.
     if (result.abilityCasts > 0) {
-      _state = MetaSystems.evaluateAchievements(
-        _state.copyWith(
-          metaDepth: _state.metaDepth.copyWith(
-            lifetimeAbilityCasts:
-                _state.metaDepth.lifetimeAbilityCasts + result.abilityCasts,
-          ),
+      _state = _state.copyWith(
+        metaDepth: _state.metaDepth.copyWith(
+          lifetimeAbilityCasts:
+              _state.metaDepth.lifetimeAbilityCasts + result.abilityCasts,
         ),
       );
     }
-    _tickUiTimers(0.033);
+    _tickUiTimers(_spatialDt);
     _announceAbilityUnlocks(before, _state);
     _announceAchievementUnlocks(before, _state);
 
@@ -415,9 +444,14 @@ class GameDirector extends ChangeNotifier {
     if (result.state.gearStash.length > _lastStashLen) {
       GameAudio.loot();
     }
+    final stashCap = GameLogic.maxGearStashFor(_state);
+    if (before.gearStash.length < stashCap &&
+        _state.gearStash.length >= stashCap) {
+      showToast('Bag full — oldest loot salvages to essence', life: 2.4);
+    }
     _lastStashLen = result.state.gearStash.length;
 
-    _autosaveAccum += 0.033;
+    _autosaveAccum += _spatialDt;
     if (_autosaveAccum >= _autosaveIntervalSec) {
       _autosaveAccum = 0;
       _persist();
@@ -433,7 +467,7 @@ class GameDirector extends ChangeNotifier {
           floor > _state.highestFloorCleared;
       showToast(
         pushFail
-            ? 'WIPED — Retry farms this floor, or Hub'
+            ? 'WIPED — Retry retreats to cleared floor (still PUSH), or Hub'
             : 'WIPED — Retry restarts the floor',
         life: 4,
       );
@@ -466,9 +500,10 @@ class GameDirector extends ChangeNotifier {
       } else {
         GameAudio.clear();
       }
+      _state = MetaSystems.evaluateAchievements(_state);
       _clearSummary = 'FLOOR $floorNo CLEAR  +${gold}g';
-      _clearSummaryLife = 2.2;
-      showToast(_clearSummary!, life: 2.0);
+      // Short enough to fade before the next floor's first fight reads clearly.
+      _clearSummaryLife = 1.35;
       if (_state.highestDungeonCleared > beforeDungeon) {
         GameAudio.unlock();
         String? nextId;
@@ -496,15 +531,16 @@ class GameDirector extends ChangeNotifier {
         _spatial = null;
         showToast(StoryLore.dungeonCleared(beforeClear.dungeonId), life: 3.2);
       }
+      _bumpCombatFrame();
       notifyListeners();
       unawaited(_persistFlush());
       return;
     }
 
     _uiThrottle++;
-    _visualFrame++;
-    // ~15 Hz UI rebuilds (sim stays 30 Hz).
-    if (_uiThrottle % 2 == 0) {
+    _bumpCombatFrame();
+    // Shell chrome (~10 Hz); map/HUD corners listen to [combatFrame] at 60 Hz.
+    if (_uiThrottle % _shellNotifyEvery == 0) {
       notifyListeners();
     }
   }
@@ -516,7 +552,10 @@ class GameDirector extends ChangeNotifier {
       _state = GameLogic.retreatFromFailedPush(
         _state,
       ).copyWith(lastUpdated: DateTime.now());
-      showToast('Switched to FARM on cleared floor', life: 3);
+      showToast(
+        'Retreated to floor ${_state.currentRoom.floorNumber} — still PUSH',
+        life: 3,
+      );
     } else {
       _state = GameLogic.restartFloor(
         _state,
@@ -627,7 +666,17 @@ class GameDirector extends ChangeNotifier {
   }
 
   void bindSoulbound({int? heroIndex}) {
+    final beforeFrags = _state.soulboundFragments;
     _applyUpgrade(GameLogic.bindSoulbound(_state, heroIndex: heroIndex));
+    if (_state.soulboundFragments < beforeFrags) {
+      GameAudio.unlock();
+      final name = _state.soulboundItem?.name ?? 'gear';
+      showToast('Soulbound: $name', life: 2.2);
+    } else if (beforeFrags < 3) {
+      showToast('Need 3 soulbound fragments', life: 1.8);
+    } else {
+      showToast('No gear to bind on this hero', life: 1.8);
+    }
   }
 
   /// Legacy single abstract tick (tests / debug). Prefer spatialTick.
@@ -737,7 +786,12 @@ class GameDirector extends ChangeNotifier {
   }
 
   void travelToFloor(int floorNumber) {
+    final before = _state.currentRoom.floorNumber;
     _applyUpgrade(GameLogic.travelToFloor(_state, floorNumber));
+    final after = _state.currentRoom.floorNumber;
+    if (after != before) {
+      showToast('Floor $after', life: 1.6);
+    }
   }
 
   void equipFromStash(
@@ -781,8 +835,24 @@ class GameDirector extends ChangeNotifier {
         life: 1.9,
       );
     } else {
-      showToast('No junk to sell', life: 1.5);
+      showToast('No junk — try AUTO MERGE', life: 1.8);
     }
+  }
+
+  /// Merge junk bag pairs (same slot, not BiS/upgrades) while gold lasts.
+  void autoMergeJunk() {
+    final result = GameLogic.autoMergeJunk(_state);
+    if (result.merges <= 0) {
+      showToast('No junk pairs to merge', life: 1.5);
+      return;
+    }
+    _applyUpgrade(result.state);
+    showToast(
+      result.merges == 1
+          ? 'Auto-merged 1 pair'
+          : 'Auto-merged ${result.merges} pairs',
+      life: 1.9,
+    );
   }
 
   void setSoundMuted(bool muted) {
@@ -953,6 +1023,14 @@ class GameDirector extends ChangeNotifier {
 
   void dismissTip(String tipId) {
     final updated = GameLogic.dismissTip(_state, tipId);
+    if (identical(updated, _state)) return;
+    _state = updated;
+    notifyListeners();
+    unawaited(_persistFlush());
+  }
+
+  void dismissAllTips(Iterable<String> tipIds) {
+    final updated = GameLogic.dismissTips(_state, tipIds);
     if (identical(updated, _state)) return;
     _state = updated;
     notifyListeners();
@@ -1333,6 +1411,7 @@ class GameDirector extends ChangeNotifier {
   void dispose() {
     _spatialTimer?.cancel();
     _uiTimer?.cancel();
+    combatFrame.dispose();
     super.dispose();
   }
 }

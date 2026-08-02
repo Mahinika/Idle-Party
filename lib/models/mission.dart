@@ -1,4 +1,10 @@
-enum MissionType { defeatEnemies, clearBosses, earnGold }
+enum MissionType {
+  defeatEnemies,
+  clearBosses,
+  earnGold,
+  clearFloors,
+  defeatElites,
+}
 
 class Mission {
   const Mission({
@@ -9,6 +15,7 @@ class Mission {
     required this.progress,
     required this.goldReward,
     required this.essenceReward,
+    this.tier = 0,
   });
 
   final String id;
@@ -18,6 +25,9 @@ class Mission {
   final int progress;
   final int goldReward;
   final int essenceReward;
+
+  /// 0 normal · 1 hard · 2 brutal (affects targets + rewards).
+  final int tier;
 
   bool get isComplete => progress >= target;
 
@@ -32,6 +42,7 @@ class Mission {
     int? progress,
     int? goldReward,
     int? essenceReward,
+    int? tier,
   }) {
     return Mission(
       id: id ?? this.id,
@@ -41,6 +52,7 @@ class Mission {
       progress: progress ?? this.progress,
       goldReward: goldReward ?? this.goldReward,
       essenceReward: essenceReward ?? this.essenceReward,
+      tier: tier ?? this.tier,
     );
   }
 
@@ -52,6 +64,7 @@ class Mission {
     'progress': progress,
     'goldReward': goldReward,
     'essenceReward': essenceReward,
+    'tier': tier,
   };
 
   factory Mission.fromJson(Map<String, dynamic> json) {
@@ -62,14 +75,21 @@ class Mission {
       return int.tryParse('$v') ?? fallback;
     }
 
+    final typeName = json['type'] as String? ?? MissionType.defeatEnemies.name;
+    final type = MissionType.values.firstWhere(
+      (t) => t.name == typeName,
+      orElse: () => MissionType.defeatEnemies,
+    );
+
     return Mission(
-      id: json['id'] as String,
-      type: MissionType.values.byName(json['type'] as String),
-      title: json['title'] as String,
-      target: asInt(json['target']),
+      id: json['id'] as String? ?? type.name,
+      type: type,
+      title: json['title'] as String? ?? type.name,
+      target: asInt(json['target'], 1),
       progress: asInt(json['progress']),
       goldReward: asInt(json['goldReward']),
       essenceReward: asInt(json['essenceReward']),
+      tier: asInt(json['tier']).clamp(0, 2),
     );
   }
 }

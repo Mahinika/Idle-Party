@@ -4,7 +4,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
-import '../core/game_logic.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
@@ -250,110 +249,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: frameColor.withValues(alpha: 0.85), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: GameTheme.torch.withValues(alpha: 0.12),
-            blurRadius: 0,
-            spreadRadius: 1,
-          ),
-        ],
       ),
       clipBehavior: Clip.hardEdge,
       child: Column(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  GameTheme.ink.withValues(alpha: 0.72),
-                  GameTheme.stoneDeep.withValues(alpha: 0.45),
-                ],
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            child: Row(
-              children: [
-                Text(
-                  'STAGE',
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
-                    color: GameTheme.parchmentDim,
-                  ),
-                ),
-                const Spacer(),
-                _ModeChip(
-                  label: 'FARM',
-                  selected: farm,
-                  onTap: () =>
-                      widget.director.setDungeonMode(DungeonMode.farm),
-                ),
-                const SizedBox(width: 4),
-                _ModeChip(
-                  label: 'PUSH',
-                  selected: !farm,
-                  onTap: () =>
-                      widget.director.setDungeonMode(DungeonMode.push),
-                ),
-                const SizedBox(width: 6),
-                if (world != null) ...[
-                  _ChamberDots(world: world),
-                  const SizedBox(width: 6),
-                  _GodHandRing(cooldown: world.godHandCooldown),
-                  const SizedBox(width: 4),
-                ],
-                SizedBox(
-                  width: GameTheme.minTouch,
-                  height: GameTheme.minTouch,
-                  child: PopupMenuButton<String>(
-                    tooltip: 'Floor travel',
-                    padding: EdgeInsets.zero,
-                    icon: Text(
-                      'F±',
-                      style: GameTheme.pixel(
-                        size: GameTheme.hudPixel,
-                        color: GameTheme.torchHot,
-                      ),
-                    ),
-                    color: GameTheme.stoneDeep,
-                    onSelected: (value) {
-                      switch (value) {
-                        case 'down':
-                          widget.director.travelToFloor(room.floorNumber - 1);
-                        case 'up':
-                          widget.director.travelToFloor(room.floorNumber + 1);
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'down',
-                        enabled: GameLogic.canTravelToFloor(
-                          state,
-                          room.floorNumber - 1,
-                        ),
-                        child: Text(
-                          'FLOOR −1',
-                          style: GameTheme.pixel(size: GameTheme.hudPixel),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'up',
-                        enabled: GameLogic.canTravelToFloor(
-                          state,
-                          room.floorNumber + 1,
-                        ),
-                        child: Text(
-                          'FLOOR +1',
-                          style: GameTheme.pixel(size: GameTheme.hudPixel),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -361,7 +260,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                 return Stack(
                   fit: StackFit.expand,
                   children: [
-                    GestureDetector(
+                    Semantics(
+                      button: true,
+                      label: 'Dungeon map — tap to use God Hand',
+                      child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTapDown: (details) {
                         if (widget.director.awaitingWipeChoice) return;
@@ -411,9 +313,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                   _hero2,
                                   _hero3,
                                 ],
-                                heroesByClass: Map<HeroClassId, ui.Image?>.from(
-                                  _heroesByClass,
-                                ),
+                                heroesByClass: _heroesByClass,
                                 enemies: _enemySprites,
                                 chest: _chest!,
                                 coin: _coin!,
@@ -427,6 +327,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                               ),
                             ),
                             ),
+                      ),
                     ),
                     if (world != null && world.bossBannerTimer > 0)
                       Align(
@@ -517,21 +418,25 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                       ),
                     if (widget.director.toast != null)
                       Align(
-                        alignment: const Alignment(0, 0.72),
+                        // Keep clear of bottom party HUD on phones.
+                        alignment: const Alignment(0, -0.42),
                         child: Container(
-                          margin: const EdgeInsets.all(8),
+                          margin: const EdgeInsets.symmetric(horizontal: 12),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xEE14110C),
+                            color: const Color(0xF214110C),
                             borderRadius: BorderRadius.circular(3),
                             border: Border.all(color: GameTheme.borderLit),
                           ),
                           child: Text(
                             widget.director.toast!,
-                            style: GameTheme.body(size: 16),
+                            textAlign: TextAlign.center,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.body(size: 15),
                           ),
                         ),
                       ),
@@ -559,7 +464,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                     Text(
                                       farm
                                           ? 'RETRY restarts this floor. HUB ends the run.'
-                                          : 'RETRY farms the last cleared floor. HUB ends the run.',
+                                          : 'RETRY retreats to your last cleared floor (still PUSH). HUB ends the run.',
                                       textAlign: TextAlign.center,
                                       style: GameTheme.body(
                                         size: 15,
@@ -569,12 +474,14 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                     const SizedBox(height: 14),
                                     KenneyButton(
                                       label: 'RETRY FLOOR',
+                                      primary: true,
                                       onPressed: widget.director.retryAfterWipe,
                                     ),
                                     const SizedBox(height: 8),
                                     KenneyButton(
                                       label: 'RETURN TO HUB',
                                       style: KenneyButtonStyle.grey,
+                                      primary: true,
                                       onPressed: widget.director.hubAfterWipe,
                                     ),
                                   ],
@@ -616,8 +523,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   }
 }
 
-class _ChamberDots extends StatelessWidget {
-  const _ChamberDots({required this.world});
+class ChamberDots extends StatelessWidget {
+  const ChamberDots({super.key, required this.world});
   final SpatialWorld world;
 
   @override
@@ -646,16 +553,19 @@ class _ChamberDots extends StatelessWidget {
   }
 }
 
-class _ModeChip extends StatelessWidget {
-  const _ModeChip({
+class DungeonModeChip extends StatelessWidget {
+  const DungeonModeChip({
+    super.key,
     required this.label,
     required this.selected,
     required this.onTap,
+    this.dense = false,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -666,8 +576,10 @@ class _ModeChip extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(3),
         child: Container(
-          constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          constraints: BoxConstraints(
+            minHeight: dense ? 36 : GameTheme.minTouch,
+          ),
+          padding: EdgeInsets.symmetric(horizontal: dense ? 6 : 8),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(3),
@@ -688,24 +600,54 @@ class _ModeChip extends StatelessWidget {
   }
 }
 
-class _GodHandRing extends StatelessWidget {
-  const _GodHandRing({required this.cooldown});
+class GodHandRing extends StatelessWidget {
+  const GodHandRing({
+    super.key,
+    required this.cooldown,
+    this.onTap,
+  });
   final double cooldown;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final ready = cooldown <= 0;
     final t = ready ? 1.0 : (1.0 - (cooldown / 1.1).clamp(0.0, 1.0));
     final color = ready ? GameTheme.torchHot : GameTheme.parchmentDim;
-    return SizedBox(
-      width: 24,
-      height: 24,
-      child: CustomPaint(
-        painter: _GodHandRingPainter(progress: t, color: color, ready: ready),
-        child: Center(
-          child: Text(
-            'GH',
-            style: GameTheme.pixel(size: 8, color: color),
+    final label = ready ? 'God Hand ready' : 'God Hand cooling down';
+    return Material(
+      color: Colors.transparent,
+      child: Tooltip(
+        message: label,
+        excludeFromSemantics: true,
+        child: InkWell(
+          onTap: onTap != null && ready ? onTap : null,
+          borderRadius: BorderRadius.circular(14),
+          child: Semantics(
+            button: true,
+            enabled: onTap != null && ready,
+            label: label,
+            excludeSemantics: true,
+            child: SizedBox(
+              width: 28,
+              height: 28,
+              child: CustomPaint(
+                painter: _GodHandRingPainter(
+                  progress: t,
+                  color: color,
+                  ready: ready,
+                ),
+                child: Center(
+                  child: Text(
+                    'GH',
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: color,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -833,11 +775,20 @@ class _TileRoomPainter extends CustomPainter {
 
   Size? _vignetteSize;
   Paint? _vignettePaint;
+  final Paint _fillPaint = Paint();
+  final Paint _strokePaint = Paint()..style = PaintingStyle.stroke;
 
   static int _hashPick(int x, int y, int seed, int len) {
     if (len <= 0) return 0;
     final h = x * 73856093 ^ y * 19349663 ^ seed;
     return ((h % len) + len) % len;
+  }
+
+  bool _inView(double tx, double ty, {double pad = 1.25}) {
+    return tx >= camera.camX - pad &&
+        tx <= camera.camX + camera.visibleCols + pad &&
+        ty >= camera.camY - pad &&
+        ty <= camera.camY + camera.visibleRows + pad;
   }
 
   @override
@@ -847,15 +798,16 @@ class _TileRoomPainter extends CustomPainter {
     final originY = -camera.camY * tile;
     final ambient = DungeonEnvironment.ambient(dungeonId);
     // Let the painted zone backdrop show through void / wall space.
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = ambient.withValues(alpha: 0.55),
-    );
+    _fillPaint.color = ambient.withValues(alpha: 0.55);
+    canvas.drawRect(Offset.zero & size, _fillPaint);
 
     final startX = camera.camX.floor().clamp(0, world.cols - 1);
     final endX = (camera.camX + camera.visibleCols).ceil().clamp(0, world.cols);
     final startY = camera.camY.floor().clamp(0, world.rows - 1);
     final endY = (camera.camY + camera.visibleRows).ceil().clamp(0, world.rows);
+
+    final floorBlend = DungeonEnvironment.floorBlend(dungeonId);
+    final corridorShade = DungeonEnvironment.corridorShade(dungeonId);
 
     for (var y = startY; y < endY; y++) {
       for (var x = startX; x < endX; x++) {
@@ -885,23 +837,20 @@ class _TileRoomPainter extends CustomPainter {
             _hashPick(x, y, layoutSeed, floorVariants.length)];
         _drawImage(canvas, floorImg, dst);
         // Mute Kenney tile chroma so painted backdrop + zone wash dominate.
-        canvas.drawRect(
-          dst,
-          Paint()..color = DungeonEnvironment.floorBlend(dungeonId),
-        );
+        _fillPaint.color = floorBlend;
+        canvas.drawRect(dst, _fillPaint);
 
         final noise = DungeonEnvironment.floorNoise(x, y, layoutSeed);
         if (noise.a > 0) {
-          canvas.drawRect(dst, Paint()..color = noise);
+          _fillPaint.color = noise;
+          canvas.drawRect(dst, _fillPaint);
         }
 
         if (!DungeonEnvironment.inChamber(world.map, x, y) &&
             kind != TileKind.spawn &&
             kind != TileKind.exit) {
-          canvas.drawRect(
-            dst,
-            Paint()..color = DungeonEnvironment.corridorShade(dungeonId),
-          );
+          _fillPaint.color = corridorShade;
+          canvas.drawRect(dst, _fillPaint);
         }
 
         if (kind == TileKind.gate) {
@@ -912,26 +861,27 @@ class _TileRoomPainter extends CustomPainter {
                 DungeonEnvironment.gateRunsEastWest(world.map, x, y);
             _drawOrientedDoor(canvas, door, dst, rotate: eastWest);
             if (!gateOpen) {
-              canvas.drawRect(dst, Paint()..color = const Color(0x44000000));
+              _fillPaint.color = const Color(0x44000000);
+              canvas.drawRect(dst, _fillPaint);
             }
           } else if (!gateOpen) {
             // Side cells: sealed stubs, not extra door panels.
-            canvas.drawRect(dst, Paint()..color = const Color(0x55000000));
+            _fillPaint.color = const Color(0x55000000);
+            canvas.drawRect(dst, _fillPaint);
           }
         } else if (kind == TileKind.exit) {
           final exitImg = roomType == RoomType.boss ? stairsBoss : stairs;
           _drawImage(canvas, exitImg, dst);
         } else if (kind == TileKind.spawn) {
-          canvas.drawRect(dst, Paint()..color = const Color(0x14C88840));
+          _fillPaint.color = const Color(0x14C88840);
+          canvas.drawRect(dst, _fillPaint);
         }
       }
     }
 
     // Zone atmosphere wash over terrain (under actors).
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = DungeonEnvironment.atmosphereWash(dungeonId),
-    );
+    _fillPaint.color = DungeonEnvironment.atmosphereWash(dungeonId);
+    canvas.drawRect(Offset.zero & size, _fillPaint);
 
     // Soft vignette so the play space feels framed by the cave.
     if (_vignettePaint == null || _vignetteSize != size) {
@@ -975,6 +925,7 @@ class _TileRoomPainter extends CustomPainter {
     }
 
     for (final prop in world.map.props) {
+      if (!_inView(prop.x + 0.5, prop.y + 0.5, pad: 0.75)) continue;
       final img = propImages[prop.kind];
       if (img == null) continue;
       drawSprite(img, center(prop.x + 0.5, prop.y + 0.5), 0.55);
@@ -1001,6 +952,7 @@ class _TileRoomPainter extends CustomPainter {
     }
 
     for (final loot in world.groundLoot) {
+      if (!_inView(loot.x, loot.y)) continue;
       final bob = math.sin(loot.age * 9) * 0.12;
       final path = KenneyAssets.lootDropIconFor(loot.drop);
       final img = lootByPath[path] ??
@@ -1018,21 +970,20 @@ class _TileRoomPainter extends CustomPainter {
         LootRarity.epic => const Color(0xBBFFE08A),
         LootRarity.legendary => const Color(0xDDFF8C40),
       };
-      final pulse = 0.85 + 0.15 * math.sin(loot.age * 6);
+      final pulse = reducedVfx
+          ? 1.0
+          : 0.85 + 0.15 * math.sin(loot.age * 6);
+      _fillPaint.color = glow;
       canvas.drawCircle(
         c,
         tile * (0.32 + loot.drop.rarity.index * 0.04) * pulse,
-        Paint()..color = glow,
+        _fillPaint,
       );
-      if (loot.drop.rarity.index >= LootRarity.rare.index) {
-        canvas.drawCircle(
-          c,
-          tile * 0.42 * pulse,
-          Paint()
-            ..color = glow.withValues(alpha: 0.35)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2,
-        );
+      if (!reducedVfx && loot.drop.rarity.index >= LootRarity.rare.index) {
+        _strokePaint
+          ..color = glow.withValues(alpha: 0.35)
+          ..strokeWidth = 2;
+        canvas.drawCircle(c, tile * 0.42 * pulse, _strokePaint);
       }
       drawSprite(img, c, loot.kind == GroundLootKind.chest ? 0.55 : 0.48);
     }
@@ -1051,6 +1002,7 @@ class _TileRoomPainter extends CustomPainter {
 
     for (final p in world.projectiles) {
       if (p.delay > 0) continue;
+      if (!_inView(p.x, p.y)) continue;
       final c = center(p.x, p.y);
       final speed = math.sqrt(p.vx * p.vx + p.vy * p.vy);
       final angle = speed > 0.01 ? math.atan2(p.vy, p.vx) : 0.0;
@@ -1229,6 +1181,7 @@ class _TileRoomPainter extends CustomPainter {
     }
 
     for (final enemy in world.enemies) {
+      if (enemy.dormant || !_inView(enemy.x, enemy.y)) continue;
       final img = enemies.isEmpty
           ? null
           : enemies[enemy.assetIndex.clamp(0, enemies.length - 1)];
@@ -1711,24 +1664,24 @@ class _TileRoomPainter extends CustomPainter {
 
     if (!reducedVfx) {
       final floaters = world.floaters;
-      final start = floaters.length > 10 ? floaters.length - 10 : 0;
+      final start = floaters.length > 8 ? floaters.length - 8 : 0;
+      final tp = TextPainter(textDirection: TextDirection.ltr);
       for (var i = start; i < floaters.length; i++) {
         final floater = floaters[i];
+        if (!_inView(floater.x, floater.y, pad: 0.5)) continue;
         final alpha = (floater.life / 0.7).clamp(0.0, 1.0);
-        final tp = TextPainter(
-          text: TextSpan(
-            text: floater.text,
-            style: GameTheme.pixelCached(
-              size: math.max(8, tile * 0.32),
-              color: Color(floater.argb).withValues(alpha: alpha),
-            ),
+        tp.text = TextSpan(
+          text: floater.text,
+          style: GameTheme.pixelCached(
+            size: math.max(8, tile * 0.32),
+            color: Color(floater.argb).withValues(alpha: alpha),
           ),
-          textDirection: TextDirection.ltr,
-        )..layout();
+        );
+        tp.layout();
         final c = center(floater.x, floater.y);
         tp.paint(canvas, Offset(c.dx - tp.width / 2, c.dy - tp.height / 2));
-        tp.dispose();
       }
+      tp.dispose();
     }
   }
 
@@ -1753,12 +1706,11 @@ class _TileRoomPainter extends CustomPainter {
   ) {
     final map = world.map;
     final t = tile * 0.34;
+    // Filled strips are cheaper than clip+blit per edge.
     void strip(Rect r) {
-      canvas.save();
-      canvas.clipRect(r);
-      _drawImage(canvas, wall, dst);
-      canvas.drawRect(r, Paint()..color = const Color(0x66000000));
-      canvas.restore();
+      _drawImage(canvas, wall, r);
+      _fillPaint.color = const Color(0x66000000);
+      canvas.drawRect(r, _fillPaint);
     }
 
     if (DungeonEnvironment.isCarved(map.at(x, y + 1))) {

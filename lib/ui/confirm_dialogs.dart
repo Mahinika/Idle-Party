@@ -90,3 +90,41 @@ Future<void> confirmLeaveDungeon(
     onLeave();
   }
 }
+
+Future<void> confirmDailyRun(
+  BuildContext context,
+  GameDirector director,
+) async {
+  if (director.isDailyClaimedToday) return;
+  final dungeonId = director.dailyDungeonId;
+  final ok = await showDialog<bool>(
+    context: context,
+    barrierColor: MenuChrome.scrim,
+    builder: (ctx) => MenuChrome.dialog(
+      title: 'Daily Run?',
+      content: Text(
+        '${StoryLore.dailyRun(dungeonId)}\n\n'
+        'Starts a free seeded floor in PUSH. Leave mid-run from MORE.',
+        style: GameTheme.body(size: 15, color: GameTheme.parchment),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(
+            'CANCEL',
+            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+          ),
+        ),
+        KenneyButton(
+          label: 'START',
+          style: KenneyButtonStyle.brown,
+          expanded: false,
+          onPressed: () => Navigator.pop(ctx, true),
+        ),
+      ],
+    ),
+  );
+  if (ok == true && context.mounted) {
+    director.enterDaily();
+  }
+}

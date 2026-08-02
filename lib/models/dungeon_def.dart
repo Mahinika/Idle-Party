@@ -83,7 +83,7 @@ abstract final class DungeonCatalog {
       name: "Hell's Gate",
       layout: DungeonLayoutKind.cave,
       bossId: 'chtulu',
-      bossName: 'Chtulu',
+      bossName: 'Cthulhu',
       unlockPrice: 200000,
       blurb: 'The gate that should never have been named.',
     ),

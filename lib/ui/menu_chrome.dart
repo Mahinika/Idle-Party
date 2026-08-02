@@ -4,7 +4,7 @@ import 'game_theme.dart';
 
 /// Shared cave-menu chrome — translucent panels, torch edges, soft scrims.
 abstract final class MenuChrome {
-  static const Color scrim = Color(0xB3050403);
+  static const Color scrim = Color(0xE6050403);
   static const Color card = Color(0xB816120E);
   static const Color cardRaised = Color(0xCC221C14);
   static const Color sheet = Color(0xE012100C);
@@ -13,15 +13,20 @@ abstract final class MenuChrome {
   static BorderRadius get sheetRadius =>
       const BorderRadius.vertical(top: Radius.circular(14));
 
-  static BoxDecoration panel({BorderRadius? borderRadius}) {
+  static BoxDecoration panel({
+    BorderRadius? borderRadius,
+    bool opaque = false,
+  }) {
     return BoxDecoration(
       gradient: LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          GameTheme.panel.withValues(alpha: 0.88),
-          GameTheme.stoneDeep.withValues(alpha: 0.92),
-        ],
+        colors: opaque
+            ? [GameTheme.panel, GameTheme.stoneDeep]
+            : [
+                GameTheme.panel.withValues(alpha: 0.88),
+                GameTheme.stoneDeep.withValues(alpha: 0.92),
+              ],
       ),
       borderRadius: borderRadius ?? panelRadius,
       border: Border.all(color: GameTheme.borderLit.withValues(alpha: 0.9), width: 2),
@@ -85,11 +90,21 @@ abstract final class MenuChrome {
   }
 
   /// Cave-styled modal bottom sheet (MORE menus, etc.).
+  ///
+  /// Pass either a flat [items] list or grouped [sections] (preferred).
   static Future<void> showMenuSheet({
     required BuildContext context,
     required String title,
-    required List<({String label, VoidCallback onTap})> items,
+    List<({String label, VoidCallback onTap})>? items,
+    List<({String header, List<({String label, VoidCallback onTap})> items})>?
+        sections,
   }) {
+    assert(
+      items != null || sections != null,
+      'showMenuSheet requires items or sections',
+    );
+    final resolved = sections ??
+        [(header: '', items: items!)];
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -100,7 +115,7 @@ abstract final class MenuChrome {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
             child: DecoratedBox(
-              decoration: panel(borderRadius: sheetRadius),
+              decoration: panel(borderRadius: sheetRadius, opaque: true),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                 child: Column(
@@ -119,14 +134,32 @@ abstract final class MenuChrome {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            for (final item in items)
-                              menuRow(
-                                label: item.label,
-                                onTap: () {
-                                  Navigator.pop(ctx);
-                                  item.onTap();
-                                },
-                              ),
+                            for (var s = 0; s < resolved.length; s++) ...[
+                              if (resolved[s].header.isNotEmpty) ...[
+                                if (s > 0) const SizedBox(height: 6),
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 4,
+                                    bottom: 6,
+                                  ),
+                                  child: Text(
+                                    resolved[s].header,
+                                    style: GameTheme.body(
+                                      size: 12,
+                                      color: GameTheme.parchmentDim,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              for (final item in resolved[s].items)
+                                menuRow(
+                                  label: item.label,
+                                  onTap: () {
+                                    Navigator.pop(ctx);
+                                    item.onTap();
+                                  },
+                                ),
+                            ],
                           ],
                         ),
                       ),
@@ -195,8 +228,10 @@ abstract final class MenuChrome {
         borderRadius: panelRadius,
         side: BorderSide(color: GameTheme.borderLit.withValues(alpha: 0.85), width: 2),
       ),
-      title: Text(title, style: GameTheme.pixel(size: 8)),
+      title: Text(title, style: GameTheme.pixel(size: GameTheme.hudPixelComfort)),
       content: content,
+      actionsAlignment: MainAxisAlignment.spaceBetween,
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       actions: actions,
     );
   }

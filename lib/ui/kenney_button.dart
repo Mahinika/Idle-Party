@@ -11,12 +11,15 @@ class KenneyButton extends StatelessWidget {
     required this.onPressed,
     this.style = KenneyButtonStyle.brown,
     this.expanded = true,
+    this.primary = false,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final KenneyButtonStyle style;
   final bool expanded;
+  /// Material-sized primary CTA (ENTER / Ascend / MERGE).
+  final bool primary;
 
   ({Color top, Color bottom, Color border, Color text}) get _palette =>
       switch (style) {
@@ -93,7 +96,10 @@ class KenneyButton extends StatelessWidget {
                 : null,
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+            constraints: BoxConstraints(
+              minHeight:
+                  primary ? GameTheme.primaryTouch : GameTheme.minTouch,
+            ),
             child: expanded
                 ? SizedBox(
                     width: double.infinity,

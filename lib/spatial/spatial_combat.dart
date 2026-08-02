@@ -34,6 +34,27 @@ bool _actorIsMeleeDps(SpatialActor h) {
   return HeroSpecs.def(id).roleTag == SpecRoleTag.meleeDps;
 }
 
+/// Resource return on a successful combat hit (melee direct or projectile).
+/// [skipRageTank] when the caller already applied tank/rage-from-dealt.
+void _grantCombatResource(
+  SpatialActor hero, {
+  required int dealt,
+  bool skipRageTank = false,
+}) {
+  final resource = _actorResource(hero);
+  if (!skipRageTank) {
+    if (_actorIsTank(hero) || resource == SpecResource.rage) {
+      SpatialCombat._gainRage(hero, 4 + dealt * 0.15);
+    }
+  }
+  if (resource == SpecResource.mana && !_actorIsHealer(hero)) {
+    SpatialCombat._gainRage(hero, 4);
+  }
+  if (resource == SpecResource.energy || resource == SpecResource.runic) {
+    SpatialCombat._gainRage(hero, 5);
+  }
+}
+
 SpecResource? _actorResource(SpatialActor h) {
   final id = h.heroSpecId;
   if (id != null) return HeroSpecs.def(id).resource;
@@ -208,8 +229,10 @@ class SpatialActor {
   double livingBombAcc = 0;
   String? livingBombCasterId;
 
-  /// Cumulative damage dealt this floor (heroes only; for DPS meter).
+  /// Cumulative combat stats this floor (heroes only; for party meter).
   int damageDealt = 0;
+  int healingDone = 0;
+  int damageTaken = 0;
 
   /// Root / stun (Frost Nova, Kidney Shot).
   double rootTimer = 0;
@@ -948,10 +971,12 @@ abstract final class SpatialCombat {
     if (world.petMitigateFlat > 0) {
       dealt = math.max(1, dealt - world.petMitigateFlat);
     }
+    var held = 0;
     if (hero.absorbShield > 0) {
       final absorbed = math.min(hero.absorbShield, dealt);
       hero.absorbShield -= absorbed;
       dealt -= absorbed;
+      held += absorbed;
       if (!reducedVfx && absorbed > 0) {
         _spawnFloater(
           world,
@@ -962,9 +987,14 @@ abstract final class SpatialCombat {
           life: 0.4,
         );
       }
-      if (dealt <= 0) return absorbed;
+      if (dealt <= 0) {
+        _recordHeroTaken(hero, held);
+        return absorbed;
+      }
     }
     hero.hp = math.max(0, hero.hp - dealt);
+    held += dealt;
+    _recordHeroTaken(hero, held);
     if (dealt > 0) {
       _triggerPrayerOfMending(world, hero);
     }
@@ -990,6 +1020,7 @@ abstract final class SpatialCombat {
     SpatialWorld world,
     int amount, {
     required bool reducedVfx,
+    SpatialActor? healer,
   }) {
     final heal = math.max(1, amount + world.petHealBoost);
     SpatialActor? lowest;
@@ -1006,6 +1037,7 @@ abstract final class SpatialCombat {
     final before = lowest.hp;
     lowest.hp = math.min(lowest.effectiveMaxHp, lowest.hp + heal);
     final gained = lowest.hp - before;
+    _recordHeroHeal(healer, gained);
     if (gained > 0 && !reducedVfx) {
       _spawnFloater(
         world,
@@ -1477,51 +1509,6 @@ abstract final class SpatialCombat {
     _gainRage(priest, (priest.spiritRegenBonus + priest.mp5RegenBonus) * dt);
     bool can(AbilityId id) => _canCast(priest, id);
 
-    // Power Infusion ? haste the best living DPS.
-    if (can(AbilityId.powerInfusion)) {
-      SpatialActor? dps;
-      var bestAtk = -1;
-      for (final h in world.heroes) {
-        if (!h.isAlive || _actorIsHealer(h)) continue;
-        if (h.powerInfusionTimer > 1) continue;
-        if (h.attack > bestAtk) {
-          bestAtk = h.attack;
-          dps = h;
-        }
-      }
-      if (dps != null && focusEnemy != null) {
-        final def = ClassKits.defFor(AbilityId.powerInfusion)!;
-        _spendRage(priest, def.resourceCost);
-        _startAbilityCd(world, priest, AbilityId.powerInfusion, def.cooldown);
-        dps.powerInfusionTimer = 8;
-        if (!reducedVfx) {
-          _spawnFloater(
-            world,
-            x: dps.x,
-            y: dps.y - 0.5,
-            text: 'POWER INFUSION',
-            argb: 0xFFE0A0FF,
-            life: 0.8,
-          );
-          _spawnRing(
-            world,
-            x: dps.x,
-            y: dps.y,
-            argb: 0xAAC080FF,
-            radius: 1.0,
-            life: 0.45,
-          );
-          _spawnSpark(
-            world,
-            x: dps.x,
-            y: dps.y - 0.2,
-            argb: 0xFFE8C0FF,
-            radius: 0.55,
-          );
-        }
-      }
-    }
-
     // Pain Suppression on critically low ally.
     if (can(AbilityId.painSuppression)) {
       SpatialActor? target;
@@ -1754,6 +1741,55 @@ abstract final class SpatialCombat {
       }
     }
 
+    // Power Infusion after triage — haste DPS once allies are stable.
+    final partyStable = !world.heroes.any((h) {
+      if (!h.isAlive) return false;
+      return h.hp / math.max(1, h.effectiveMaxHp) < 0.55;
+    });
+    if (partyStable && can(AbilityId.powerInfusion)) {
+      SpatialActor? dps;
+      var bestAtk = -1;
+      for (final h in world.heroes) {
+        if (!h.isAlive || _actorIsHealer(h)) continue;
+        if (h.powerInfusionTimer > 1) continue;
+        if (h.attack > bestAtk) {
+          bestAtk = h.attack;
+          dps = h;
+        }
+      }
+      if (dps != null && focusEnemy != null) {
+        final def = ClassKits.defFor(AbilityId.powerInfusion)!;
+        _spendRage(priest, def.resourceCost);
+        _startAbilityCd(world, priest, AbilityId.powerInfusion, def.cooldown);
+        dps.powerInfusionTimer = 8;
+        if (!reducedVfx) {
+          _spawnFloater(
+            world,
+            x: dps.x,
+            y: dps.y - 0.5,
+            text: 'POWER INFUSION',
+            argb: 0xFFE0A0FF,
+            life: 0.8,
+          );
+          _spawnRing(
+            world,
+            x: dps.x,
+            y: dps.y,
+            argb: 0xAAC080FF,
+            radius: 1.0,
+            life: 0.45,
+          );
+          _spawnSpark(
+            world,
+            x: dps.x,
+            y: dps.y - 0.2,
+            argb: 0xFFE8C0FF,
+            radius: 0.55,
+          );
+        }
+      }
+    }
+
     // Penance ? three holy bolts; side-heals the party (WotLK dual-purpose).
     if (focusEnemy != null &&
         focusEnemy.hp > 0 &&
@@ -1781,6 +1817,7 @@ abstract final class SpatialCombat {
         world,
         math.max(4, (bolt * 1.2).round()),
         reducedVfx: reducedVfx,
+        healer: priest,
       );
       _announceCast(
         world,
@@ -1827,6 +1864,7 @@ abstract final class SpatialCombat {
       );
     }
 
+    // Combustion is Fire's main burst — allow whenever fighting.
     if (can(AbilityId.combustion) && focusEnemy != null) {
       final def = ClassKits.defFor(AbilityId.combustion)!;
       _spendRage(mage, def.resourceCost);
@@ -1947,7 +1985,9 @@ abstract final class SpatialCombat {
         for (final e in world.enemies)
           if (e.hp > 0 && !e.dormant && _dist(mage, e) <= 2.4) e,
       ];
-      if (nearby.isNotEmpty) {
+      // Pack CC, or self-peel when a melee is in face.
+      final peel = nearby.any((e) => _dist(mage, e) <= 1.6);
+      if (nearby.length >= 2 || peel) {
         final def = ClassKits.defFor(AbilityId.frostNova)!;
         _spendRage(mage, def.resourceCost);
         _startAbilityCd(world, mage, AbilityId.frostNova, def.cooldown);
@@ -1980,7 +2020,11 @@ abstract final class SpatialCombat {
         for (final e in world.enemies)
           if (e.hp > 0 && !e.dormant && _dist(mage, e) <= 2.8) e,
       ];
-      if (nearby.length >= 2) {
+      // AoE only on packs (or lone boss/elite in melee).
+      if (nearby.length >= 2 ||
+          (nearby.length == 1 &&
+              (nearby.first.role == EnemyRole.boss ||
+                  nearby.first.role == EnemyRole.elite))) {
         final def = ClassKits.defFor(AbilityId.blastWave)!;
         _spendRage(mage, def.resourceCost);
         _startAbilityCd(world, mage, AbilityId.blastWave, def.cooldown);
@@ -2109,6 +2153,13 @@ abstract final class SpatialCombat {
       if (rogue.killingSpreeTimer > 0) _gainRage(rogue, 14 * dt);
     }
     bool can(AbilityId id) => _canCast(rogue, id);
+    final nearbyCount = _countNearbyEnemies(rogue, world, radius: 3.0);
+    final focusElite = focusEnemy != null &&
+        (focusEnemy.role == EnemyRole.boss ||
+            focusEnemy.role == EnemyRole.elite);
+    final focusHpFrac = focusEnemy == null || focusEnemy.maxHp <= 0
+        ? 1.0
+        : focusEnemy.hp / focusEnemy.maxHp;
 
     if (rogue.hp / math.max(1, rogue.effectiveMaxHp) <= 0.3 &&
         can(AbilityId.vanish)) {
@@ -2133,7 +2184,10 @@ abstract final class SpatialCombat {
       );
     }
 
-    if (can(AbilityId.killingSpree) && focusEnemy != null) {
+    // Killing Spree: hold for elite/boss, packs, or low-HP finish.
+    if (can(AbilityId.killingSpree) &&
+        focusEnemy != null &&
+        (focusElite || nearbyCount >= 2 || focusHpFrac <= 0.35)) {
       final def = ClassKits.defFor(AbilityId.killingSpree)!;
       _spendRage(rogue, def.resourceCost);
       _startAbilityCd(world, rogue, AbilityId.killingSpree, def.cooldown);
@@ -2244,7 +2298,10 @@ abstract final class SpatialCombat {
         for (final e in world.enemies)
           if (e.hp > 0 && !e.dormant && _dist(rogue, e) <= 2.5) e,
       ];
-      if (nearby.length >= 2) {
+      if (nearby.length >= 2 ||
+          (nearby.length == 1 &&
+              (nearby.first.role == EnemyRole.boss ||
+                  nearby.first.role == EnemyRole.elite))) {
         final def = ClassKits.defFor(AbilityId.bladeFlurry)!;
         _spendRage(rogue, def.resourceCost);
         _startAbilityCd(world, rogue, AbilityId.bladeFlurry, def.cooldown);
@@ -2402,10 +2459,19 @@ abstract final class SpatialCombat {
       b.life -= dt;
     }
     world.bursts.removeWhere((b) => b.life <= 0);
-    for (final a in [...world.heroes, ...world.enemies, ...world.pets]) {
+    void tickFlash(SpatialActor a) {
       if (a.attackFlash > 0) {
         a.attackFlash = (a.attackFlash - dt).clamp(0, 1);
       }
+    }
+    for (final a in world.heroes) {
+      tickFlash(a);
+    }
+    for (final a in world.enemies) {
+      tickFlash(a);
+    }
+    for (final a in world.pets) {
+      tickFlash(a);
     }
     if (world.bossBannerTimer > 0) {
       world.bossBannerTimer = math.max(0, world.bossBannerTimer - dt);
@@ -2821,6 +2887,8 @@ abstract final class SpatialCombat {
     to.livingBombCasterId = from.livingBombCasterId;
     to.rootTimer = from.rootTimer;
     to.damageDealt = from.damageDealt;
+    to.healingDone = from.healingDone;
+    to.damageTaken = from.damageTaken;
     to.buffTimers
       ..clear()
       ..addAll(from.buffTimers);
@@ -3121,6 +3189,21 @@ abstract final class SpatialCombat {
     hero.damageDealt += dealt;
   }
 
+  static void _recordHeroHeal(SpatialActor? healer, int gained) {
+    if (healer == null ||
+        gained <= 0 ||
+        healer.isPet ||
+        healer.team != SpatialTeam.hero) {
+      return;
+    }
+    healer.healingDone += gained;
+  }
+
+  static void _recordHeroTaken(SpatialActor hero, int taken) {
+    if (taken <= 0 || hero.isPet || hero.team != SpatialTeam.hero) return;
+    hero.damageTaken += taken;
+  }
+
   static SpatialActor? _heroById(SpatialWorld world, String? id) {
     if (id == null) return null;
     for (final h in world.heroes) {
@@ -3270,8 +3353,9 @@ abstract final class SpatialCombat {
       }
 
       final living = livingHeroes.length;
+      // Live play soft-locks feel bad if pathing jams; keep AFK snappy.
       final forceClear =
-          living > 0 && world.exitWaitTimer > (world.afkAssist ? 2.8 : 10.0);
+          living > 0 && world.exitWaitTimer > (world.afkAssist ? 2.8 : 5.0);
       if (living > 0 && (anyOnStairs || forceClear)) {
         if (forceClear && !anyOnStairs) {
           for (final hero in livingHeroes) {
@@ -3334,13 +3418,30 @@ abstract final class SpatialCombat {
 
     // Heroes: formation + role ranges + optional God Hand steering.
     final leader = world.leader;
+    SpatialActor? tankAnchor;
+    for (final h in world.heroes) {
+      if (h.isAlive && _actorIsTank(h)) {
+        tankAnchor = h;
+        break;
+      }
+    }
+    final packAnchor = tankAnchor ?? leader;
+
     for (var i = 0; i < world.heroes.length; i++) {
       final hero = world.heroes[i];
       if (!hero.isAlive) continue;
-      final target = _nearestActiveEnemy(hero, world.enemies);
+      final target = _pickSmartFocus(hero, world);
       var tx = hero.x;
       var ty = hero.y;
       var hold = 0.0;
+      final roleTag = hero.heroSpecId != null
+          ? HeroSpecs.def(hero.heroSpecId!).roleTag
+          : null;
+      final isHealer = _actorIsHealer(hero) || roleTag == SpecRoleTag.healer;
+      final isBackliner = isHealer ||
+          hero.ranged ||
+          roleTag == SpecRoleTag.caster ||
+          roleTag == SpecRoleTag.rangedDps;
 
       if (guiding) {
         // God Hand: tap pulls the party toward the point.
@@ -3349,7 +3450,10 @@ abstract final class SpatialCombat {
         hold = 0.35;
       } else if (target != null) {
         final dist = _dist(hero, target);
-        final preferred = hero.preferredRange ?? (hero.attackRange * 0.7);
+        var preferred = hero.preferredRange ?? (hero.attackRange * 0.7);
+        if (isHealer) {
+          preferred = math.max(preferred, hero.attackRange * 0.92);
+        }
         final hasLos = _hasClearCorridor(
           world.map,
           world.openGateIds,
@@ -3358,7 +3462,21 @@ abstract final class SpatialCombat {
           target.x.floor(),
           target.y.floor(),
         );
-        if (hero.ranged && dist < preferred * 0.72 && hasLos) {
+
+        if (isHealer && packAnchor != null && packAnchor.id != hero.id) {
+          // Stay slightly behind the tank, not deep in the pack.
+          final dx = packAnchor.x - target.x;
+          final dy = packAnchor.y - target.y;
+          final len = math.sqrt(dx * dx + dy * dy);
+          if (len > 0.15) {
+            tx = packAnchor.x + (dx / len) * 0.75;
+            ty = packAnchor.y + (dy / len) * 0.75;
+          } else {
+            tx = packAnchor.x - 0.7;
+            ty = packAnchor.y;
+          }
+          hold = 0.3;
+        } else if (isBackliner && dist < preferred * (isHealer ? 0.88 : 0.72) && hasLos) {
           // Kite away while keeping LOS toward target.
           tx = hero.x - (target.x - hero.x);
           ty = hero.y - (target.y - hero.y);
@@ -3369,36 +3487,44 @@ abstract final class SpatialCombat {
           // No LOS at hold range ? close in so shots/melee aren't wall-blocked.
           hold = hasLos ? preferred : 0;
         }
-      } else if (leader != null && hero.id != leader.id) {
+      } else if (packAnchor != null && hero.id != packAnchor.id) {
         // Idle pack: trail the tank/leader with light formation offsets.
-        final ox = switch (hero.heroSpecId != null
-            ? HeroSpecs.def(hero.heroSpecId!).roleTag
-            : null) {
-          SpecRoleTag.caster || SpecRoleTag.rangedDps => -0.9,
-          SpecRoleTag.healer => -0.55,
-          SpecRoleTag.meleeDps => -0.2,
+        final ox = switch (roleTag) {
+          SpecRoleTag.caster || SpecRoleTag.rangedDps => -1.05,
+          SpecRoleTag.healer => -1.15,
+          SpecRoleTag.meleeDps => -0.25,
           SpecRoleTag.tank => -0.4,
           null => switch (hero.heroRole) {
-              HeroRole.mage => -0.9,
-              HeroRole.healer => -0.55,
-              HeroRole.rogue => -0.2,
+              HeroRole.mage => -1.05,
+              HeroRole.healer => -1.15,
+              HeroRole.rogue => -0.25,
               _ => -0.4,
             },
         };
         final oy = (i - 1) * 0.55;
-        tx = leader.x + ox;
-        ty = leader.y + oy;
+        tx = packAnchor.x + ox;
+        ty = packAnchor.y + oy;
         hold = 0.45;
       }
 
       // Keep melee DPS from racing a chamber ahead of the tank.
-      if (leader != null &&
-          hero.id != leader.id &&
+      if (packAnchor != null &&
+          hero.id != packAnchor.id &&
           _actorIsMeleeDps(hero) &&
-          _dist(hero, leader) > 2.15) {
-        tx = leader.x;
-        ty = leader.y;
-        hold = 0.55;
+          _dist(hero, packAnchor) > 1.7) {
+        tx = packAnchor.x;
+        ty = packAnchor.y;
+        hold = 0.45;
+      }
+
+      // Healers that drifted into the pack: snap back toward tank.
+      if (packAnchor != null &&
+          isHealer &&
+          hero.id != packAnchor.id &&
+          _dist(hero, packAnchor) > 3.2) {
+        tx = packAnchor.x;
+        ty = packAnchor.y;
+        hold = 0.75;
       }
 
       _steerActor(
@@ -3489,32 +3615,28 @@ abstract final class SpatialCombat {
               world,
               math.max(1, (dealt * 0.35).round()),
               reducedVfx: state.reducedVfx,
+              healer: hero,
             );
             _gainRage(hero, 3);
           }
-          if (resource == SpecResource.mana && !_actorIsHealer(hero)) {
-            _gainRage(hero, 4);
-          }
-          if (resource == SpecResource.energy ||
-              resource == SpecResource.runic) {
-            _gainRage(hero, 5);
-            if (hero.bladeFlurryTimer > 0) {
-              for (final e in world.enemies) {
-                if (e.id == target.id || e.hp <= 0 || e.dormant) continue;
-                if (_dist(hero, e) > 2.2) continue;
-                final cleave = math.max(1, (dealt * 0.55).round());
-                e.hp = math.max(0, e.hp - cleave);
-                _recordHeroDamage(hero, cleave);
-                if (!state.reducedVfx) {
-                  _spawnFloater(
-                    world,
-                    x: e.x,
-                    y: e.y - 0.2,
-                    text: '$cleave',
-                    argb: 0xFFFF8060,
-                    life: 0.4,
-                  );
-                }
+          _grantCombatResource(hero, dealt: dealt, skipRageTank: true);
+          if (hero.bladeFlurryTimer > 0 &&
+              _actorResource(hero) == SpecResource.energy) {
+            for (final e in world.enemies) {
+              if (e.id == target.id || e.hp <= 0 || e.dormant) continue;
+              if (_dist(hero, e) > 2.2) continue;
+              final cleave = math.max(1, (dealt * 0.55).round());
+              e.hp = math.max(0, e.hp - cleave);
+              _recordHeroDamage(hero, cleave);
+              if (!state.reducedVfx) {
+                _spawnFloater(
+                  world,
+                  x: e.x,
+                  y: e.y - 0.2,
+                  text: '$cleave',
+                  argb: 0xFFFF8060,
+                  life: 0.4,
+                );
               }
             }
           }
@@ -3859,6 +3981,11 @@ abstract final class SpatialCombat {
             if (caster != null) {
               _recordHeroDamage(caster, dealt);
               _applyTankSoftThreat(caster, v);
+              // Ranged autos/abilities use projectiles — grant resource like
+              // melee direct hits so casters/hunters aren't passive-only.
+              if (dealt > 0) {
+                _grantCombatResource(caster, dealt: dealt);
+              }
             }
           }
           if (dealt > 0 && !state.reducedVfx) {
@@ -3881,6 +4008,7 @@ abstract final class SpatialCombat {
                   world,
                   math.max(1, (dealt * 0.4).round()),
                   reducedVfx: state.reducedVfx,
+                  healer: h,
                 );
                 _gainRage(h, 2);
                 break;
@@ -3975,25 +4103,33 @@ abstract final class SpatialCombat {
         }
       }
       if (nearHero || loot.age > 4.5) {
-        final applied =
-            GameLogic.applyLootDrops(nextState, [loot.drop]).state;
-        nextState = applied;
-        final label = loot.drop.isEquipment
-            ? loot.drop.name
-            : (loot.kind == GroundLootKind.gold
-                ? '+${loot.drop.amount}g'
-                : '+essence');
+        final applied = GameLogic.applyLootDrops(nextState, [loot.drop]);
+        nextState = applied.state;
+        final resolved =
+            applied.resolved.isEmpty ? null : applied.resolved.first;
+        final salvaged = resolved != null &&
+            resolved.outcome == LootOutcome.stashed &&
+            resolved.essenceGained > 0;
+        final label = salvaged
+            ? 'BAG FULL +${resolved.essenceGained}e'
+            : (loot.drop.isEquipment
+                ? loot.drop.name
+                : (loot.kind == GroundLootKind.gold
+                    ? '+${loot.drop.amount}g'
+                    : '+essence'));
         _spawnFloater(
           world,
           x: loot.x,
           y: loot.y - 0.2,
-          text: label.length > 14 ? '${label.substring(0, 12)}?' : label,
-          argb: loot.drop.isEquipment
-              ? _floaterGear
-              : (loot.kind == GroundLootKind.gold
-                    ? _floaterGold
-                    : _floaterEssence),
-          life: 1.05,
+          text: label.length > 16 ? '${label.substring(0, 14)}…' : label,
+          argb: salvaged
+              ? _floaterEssence
+              : (loot.drop.isEquipment
+                  ? _floaterGear
+                  : (loot.kind == GroundLootKind.gold
+                        ? _floaterGold
+                        : _floaterEssence)),
+          life: salvaged ? 1.4 : 1.05,
         );
       } else {
         stillOnGround.add(loot);
@@ -4107,25 +4243,51 @@ abstract final class SpatialCombat {
   }
 
   static GameState _syncHp(GameState state, SpatialWorld world) {
-    final heroes = <PartyHero>[];
+    var heroesDirty = false;
     for (var i = 0; i < state.heroes.length; i++) {
       final h = state.heroes[i];
       final spatial = i < world.heroes.length ? world.heroes[i] : null;
-      // Persist against base max (not fortitude-buffed spatial max).
       final baseMax = state.effectiveHeroMaxHp(h);
-      heroes.add(
-        h.copyWith(
-          currentHp: spatial?.hp.clamp(0, baseMax) ?? 0,
-        ),
-      );
+      final nextHp = spatial?.hp.clamp(0, baseMax) ?? 0;
+      if (nextHp != h.currentHp) {
+        heroesDirty = true;
+        break;
+      }
     }
-    final enemies = <EnemyUnit>[];
+    var enemiesDirty = false;
     for (var i = 0; i < state.enemies.length; i++) {
       final e = state.enemies[i];
       final spatial = i < world.enemies.length ? world.enemies[i] : null;
-      enemies.add(
-        e.copyWith(currentHp: spatial?.hp.clamp(0, e.maxHp) ?? 0),
-      );
+      final nextHp = spatial?.hp.clamp(0, e.maxHp) ?? 0;
+      if (nextHp != e.currentHp) {
+        enemiesDirty = true;
+        break;
+      }
+    }
+    if (!heroesDirty && !enemiesDirty) return state;
+
+    List<PartyHero>? heroes;
+    if (heroesDirty) {
+      heroes = <PartyHero>[];
+      for (var i = 0; i < state.heroes.length; i++) {
+        final h = state.heroes[i];
+        final spatial = i < world.heroes.length ? world.heroes[i] : null;
+        final baseMax = state.effectiveHeroMaxHp(h);
+        heroes.add(
+          h.copyWith(currentHp: spatial?.hp.clamp(0, baseMax) ?? 0),
+        );
+      }
+    }
+    List<EnemyUnit>? enemies;
+    if (enemiesDirty) {
+      enemies = <EnemyUnit>[];
+      for (var i = 0; i < state.enemies.length; i++) {
+        final e = state.enemies[i];
+        final spatial = i < world.enemies.length ? world.enemies[i] : null;
+        enemies.add(
+          e.copyWith(currentHp: spatial?.hp.clamp(0, e.maxHp) ?? 0),
+        );
+      }
     }
     return state.copyWith(heroes: heroes, enemies: enemies);
   }
@@ -4395,6 +4557,103 @@ abstract final class SpatialCombat {
       }
     }
     return best;
+  }
+
+  /// Role-aware focus: boss/elite, low HP, tank's target, threats on backline.
+  /// Falls back to nearest (incl. dormant) when nothing is scored.
+  static SpatialActor? _pickSmartFocus(
+    SpatialActor self,
+    SpatialWorld world,
+  ) {
+    SpatialActor? tank;
+    SpatialActor? tankFocus;
+    for (final h in world.heroes) {
+      if (!h.isAlive || !_actorIsTank(h)) continue;
+      tank = h;
+      tankFocus = _nearestActiveEnemy(h, world.enemies);
+      break;
+    }
+
+    var anyActive = false;
+    for (final e in world.enemies) {
+      if (e.hp > 0 && !e.dormant) {
+        anyActive = true;
+        break;
+      }
+    }
+
+    SpatialActor? best;
+    var bestScore = -1e12;
+    for (final e in world.enemies) {
+      if (e.hp <= 0) continue;
+      if (anyActive && e.dormant) continue;
+
+      final d = _dist(self, e);
+      final maxHp = math.max(1, e.maxHp);
+      final hpFrac = e.hp / maxHp;
+      final inRange = d <= self.attackRange + 1.4;
+
+      var score = 0.0;
+      if (inRange) {
+        score += 45;
+      } else {
+        score -= d * 3.5;
+      }
+
+      score += switch (e.role) {
+        EnemyRole.boss => 130,
+        EnemyRole.elite => 55,
+        EnemyRole.normal => 0,
+      };
+      // Finish wounded targets.
+      score += (1.0 - hpFrac) * 60;
+
+      if (tankFocus != null && e.id == tankFocus.id) score += 40;
+
+      // Threat on backline.
+      if (e.forcedTargetTimer > 0 && e.forcedTargetId != null) {
+        for (final h in world.heroes) {
+          if (!h.isAlive || h.id != e.forcedTargetId) continue;
+          if (_actorIsHealer(h)) {
+            score += 50;
+          } else if (h.ranged ||
+              (h.heroSpecId != null &&
+                  HeroSpecs.def(h.heroSpecId!).roleTag == SpecRoleTag.caster)) {
+            score += 28;
+          }
+          break;
+        }
+      }
+
+      if (_actorIsTank(self)) {
+        // Peel: prefer enemies hitting allies over ones already on us.
+        if (e.forcedTargetId != null && e.forcedTargetId != self.id) {
+          score += 42;
+        }
+      } else if (tank != null && self.id != tank.id) {
+        // Non-tanks lightly prefer staying on the tank's fight.
+        if (tankFocus != null && e.id == tankFocus.id) score += 12;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        best = e;
+      }
+    }
+    return best ?? _nearestActiveEnemy(self, world.enemies);
+  }
+
+  static int _countNearbyEnemies(
+    SpatialActor self,
+    SpatialWorld world, {
+    double radius = 3.2,
+  }) {
+    var n = 0;
+    for (final e in world.enemies) {
+      if (e.hp <= 0 || e.dormant) continue;
+      if (_dist(self, e) <= radius) n++;
+    }
+    return n;
   }
 
   static void _applyTankSoftThreat(SpatialActor tank, SpatialActor enemy) {

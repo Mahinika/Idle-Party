@@ -31,7 +31,7 @@ abstract final class GameGuides {
           '• Pick up ground loot (or wait for auto-timeout), then walk to the stairs.\n'
           '• Boss floors use a special arena.\n'
           '• Party HP bars are bottom-left. Target info is bottom-right.\n'
-          '• DPS meter (top-left) shows damage per hero this floor.',
+          '• Party meter (top-left) shows damage %, heals (H), and tank taken (T).',
     ),
     GuideTopic(
       id: 'god_hand',
@@ -54,10 +54,10 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'party',
-      title: 'PARTY & SPECS',
+      title: 'PARTY',
       body:
           'Unlock WotLK-style specs and build your own party.\n\n'
-          '• MORE → TEAM to set active heroes from your roster (4 slots, '
+          '• MORE → PARTY to set active heroes from your roster (4 slots, '
           '5th unlockable with essence at AL 2+).\n'
           '• New Game: pick 3 from the starter specs (Protection, Disc, Fire).\n'
           '• Combat Rogue unlocks after first Ascend; more kits via clears.\n'
@@ -69,11 +69,11 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'bag_equip',
-      title: 'BAG & EQUIP',
+      title: 'BAG & GEAR',
       body:
           'Loot drops on the floor, then goes to your stash (BAG).\n\n'
           '• BAG: view, sell, or equip stash gear.\n'
-          '• EQUIP / PARTY: manage each hero’s slots.\n'
+          '• GEAR: manage each hero’s slots (bottom nav or dock tab).\n'
           '• Auto-Equip picks clear upgrades.\n'
           '• Auto-sell (Settings) can trash weak drops on pickup.\n'
           '• Compare stats before equipping — iLevel and rarity matter.',
@@ -82,21 +82,24 @@ abstract final class GameGuides {
       id: 'combinator',
       title: 'COMBINATOR',
       body:
-          'In the inventory dock, combine two gear pieces into one stronger item.\n\n'
-          '• Put two items into the combinator slots, then combine.\n'
-          '• Useful for upgrading junk into something wearable.\n'
-          '• Soulbound gear follows special rules — check the item text.',
+          'Merge two same-slot gear pieces into one stronger item.\n\n'
+          '• In BAG: select an item → ADD TO MERGE (or long-press).\n'
+          '• Add a second item of the same slot; TOOLS opens when ready.\n'
+          '• Check RESULT preview and gold cost, then MERGE.\n'
+          '• AUTO MERGE: repeatedly merges junk pairs of the same slot '
+          '(skips BiS / clear upgrades) while you can afford the cost.\n'
+          '• Both inputs are consumed. Soulbind is separate (3 fragments).',
     ),
     GuideTopic(
       id: 'forge',
-      title: 'FORGE & RELICS',
+      title: 'FORGE',
       body:
           'MORE → FORGE.\n\n'
           '• Train party power with gold / run resources.\n'
           '• Buy relics that permanently boost combat or economy.\n'
           '• Upgrade relic tiers and respec if you change builds.\n'
-          '• Refine soulbound gear and speed God Hand cooldown.\n'
-          '• Check “What’s New” / changelog for balance notes.',
+          '• Refine soulbound gear; upgrade God Hand power and cooldown.\n'
+          '• Ascend from the Hub when ready (not from Forge).',
     ),
     GuideTopic(
       id: 'sanctuary',
@@ -104,7 +107,7 @@ abstract final class GameGuides {
       body:
           'MORE → SANCTUARY. Spend essence on permanent tracks.\n\n'
           '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
-          '• At level 12+, prestige a track for essence and a lasting bonus.\n'
+          '• At level 12+, reset a track for essence and a lasting bonus.\n'
           '• Survives Ascend (meta progress).\n'
           '• Invest early — sanctuary compounds over many runs.',
     ),
@@ -130,9 +133,9 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'prestige_shop',
-      title: 'PRESTIGE SHOP',
+      title: 'ESSENCE SHOP',
       body:
-          'MORE → PRESTIGE SHOP (AL-gated).\n\n'
+          'MORE → ESSENCE SHOP (AL-gated).\n\n'
           '• Spend essence on permanent stash slots, pet roster, GH CD, and more.\n'
           '• Purchases survive Ascend.\n'
           '• Unlock higher offerings as Ascension Level rises.',
@@ -142,11 +145,14 @@ abstract final class GameGuides {
       title: 'CONTRACTS',
       body:
           'MORE → CONTRACTS.\n\n'
-          '• Complete mission goals (kills, floors, gold, etc.).\n'
-          '• Claim rewards when a contract shows complete.\n'
-          '• Claim 3 contracts in a row for a +5e chain bonus.\n'
+          '• Goals rotate: kills, elites, floors, bosses, gold.\n'
+          '• Hard / Brutal variants pay more and take longer.\n'
+          '• Targets scale with Ascension, zones cleared, and hardmode.\n'
+          '• Claiming rolls a new contract (usually a different type).\n'
+          '• Claim 3 in a row for a +5e chain bonus.\n'
           '• The MORE menu may show CONTRACTS (n) when claims are ready.\n'
-          '• The top CLAIM chip claims all ready contracts at once.',
+          '• The top CLAIM chip claims all ready contracts at once '
+          '(long-press opens the list).',
     ),
     GuideTopic(
       id: 'weekly',
@@ -165,7 +171,7 @@ abstract final class GameGuides {
           '• Save up to 3 named gear presets (by hero id).\n'
           '• Apply a set to swap equipped gear quickly.\n'
           '• Handy when switching Farm vs Push or Hardmode setups.\n'
-          '• Team lineup is separate — use MORE → TEAM for composition.',
+          '• Party lineup is separate — use MORE → PARTY.',
     ),
     GuideTopic(
       id: 'hardmode',
@@ -213,7 +219,7 @@ abstract final class GameGuides {
       title: 'UI TIPS',
       body:
           '• Party frame (bottom-left) shrinks on phones and fades after idle — tap to wake.\n'
-          '• DPS meter appears once heroes deal damage.\n'
+          '• Party meter appears once heroes fight, heal, or take hits.\n'
           '• Settings: text scale, reduced VFX, colorblind floaters, auto-sell.\n'
           '• MORE → GUIDES brings you back here anytime.\n'
           '• Escape / back closes overlays.',

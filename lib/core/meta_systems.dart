@@ -14,7 +14,7 @@ abstract final class MetaSystems {
   static const String currentVersion = '1.4.0';
 
   static const List<String> changelog = <String>[
-    'Team Composition: unlock WotLK-style specs and field 4–5 active heroes.',
+    'Party: unlock WotLK-style specs and field 4–5 active heroes.',
     'All talent-tree kits (~30) with abilities via the shared effect runner.',
     'Gear Sets renamed (was Loadouts); 5th party slot for essence at AL 2+.',
     'Meta depth: prestige shop, sanctuary XP/prestige, relic tiers, weekly contracts.',
@@ -230,10 +230,19 @@ abstract final class MetaSystems {
     List<LootDrop> drops,
   ) {
     if (drops.isEmpty) return state;
-    Set<String>? known;
+    final names = <String>{};
     for (final drop in drops) {
       final item = drop.equipment;
-      final key = item != null ? item.name : drop.name;
+      names.add(item != null ? item.name : drop.name);
+    }
+    return registerItemNames(state, names);
+  }
+
+  /// Adds item display names to the Codex (used by drops and inventory backfill).
+  static GameState registerItemNames(GameState state, Iterable<String> names) {
+    Set<String>? known;
+    for (final key in names) {
+      if (key.isEmpty) continue;
       if (!state.codexItems.contains(key)) {
         known ??= Set<String>.from(state.codexItems);
         known.add(key);

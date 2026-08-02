@@ -108,33 +108,36 @@ class _HubScreenState extends State<HubScreen>
       state.highestDungeonCleared,
     );
 
+    final short = GameTheme.isShortHeight(context);
+
     return Stack(
       fit: StackFit.expand,
       children: [
         RepaintBoundary(
           child: const _HubSceneBackdrop(),
         ),
-        AnimatedBuilder(
-          animation: _torch,
-          builder: (context, _) {
-            final flicker = 0.55 + (_torch.value * 0.45);
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                CaveAtmosphere.torchBloom(
-                  intensity: flicker,
-                  alignment: const Alignment(0, 0.15),
-                  sizeFactor: 0.7,
-                ),
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: ColoredBox(
-                      color: DungeonEnvironment.atmosphereWash(_selectedId),
+        SafeArea(
+          child: AnimatedBuilder(
+            animation: _torch,
+            builder: (context, _) {
+              final flicker = 0.55 + (_torch.value * 0.45);
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  CaveAtmosphere.torchBloom(
+                    intensity: flicker,
+                    alignment: const Alignment(0, 0.15),
+                    sizeFactor: 0.7,
+                  ),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: ColoredBox(
+                        color: DungeonEnvironment.atmosphereWash(_selectedId),
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -149,207 +152,228 @@ class _HubScreenState extends State<HubScreen>
                           displayTitle: state.displayTitle,
                           zoneTrophies: state.metaDepth.zoneTrophies.length,
                           torch: flicker,
+                          onOpenSettings: widget.onOpenSettings,
                         ),
-                    if (director.offlineSummary != null) ...[
-                      const SizedBox(height: 8),
-                      _OfflineBanner(
-                        text: director.offlineSummary!.headline,
-                        onDismiss: () =>
-                            showOfflineProgressDialog(context, director),
-                      ),
-                    ],
-                    if (director.toast != null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        director.toast!,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.pixel(
-                          size: GameTheme.hudPixel,
-                          color: GameTheme.mossLit,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 8),
-                    Expanded(
-                      flex: 5,
-                      child: KenneyPanel(
-                        style: KenneyPanelStyle.brown,
-                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
-                        child: LayoutBuilder(
-                          builder: (context, panelConstraints) {
-                            if (panelConstraints.maxHeight < 48) {
-                              return const SizedBox.shrink();
-                            }
-                            final showHeader = panelConstraints.maxHeight > 72;
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (showHeader) ...[
-                                  Row(
-                                    children: [
-                                      KenneySprite(
-                                        asset: KenneyAssets.iconDoor,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'WORLD PATH',
-                                        style: GameTheme.pixel(
-                                          size: 9,
-                                          color: GameTheme.torchHot,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        'Boss F $bossFloor',
-                                        style: GameTheme.body(
-                                          size: 14,
-                                          color: GameTheme.parchmentDim,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                ],
-                                Expanded(
-                                  child: _ZonePathMap(
-                                    dungeons: DungeonCatalog.all,
-                                    selectedId: _selectedId,
-                                    lifetimeGold: state.lifetimeGoldEarned,
-                                    highestCleared: state.highestDungeonCleared,
-                                    pulse: _torch.value,
-                                    iconFor: _dungeonIcon,
-                                    onSelect: (id) =>
-                                        setState(() => _selectedId = id),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    KenneyPanel(
-                      style: KenneyPanelStyle.inset,
-                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                      child: Row(
-                        children: [
-                          KenneySprite(
-                            asset: KenneyAssets.dungeonPortraitFor(_selectedId),
-                            size: 40,
+                        if (director.offlineSummary != null) ...[
+                          const SizedBox(height: 8),
+                          _OfflineBanner(
+                            text: director.offlineSummary!.headline,
+                            onDismiss: () =>
+                                showOfflineProgressDialog(context, director),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  selected.name,
-                                  style: GameTheme.pixel(
-                                    size: 9,
-                                    color: GameTheme.torchHot,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  unlockedSelected
-                                      ? 'Boss: ${selected.bossName}'
-                                      : _lockedZoneHint(selected, state),
-                                  style: GameTheme.body(
-                                    size: 14,
-                                    color: GameTheme.parchmentDim,
-                                  ),
-                                ),
-                                if (unlockedSelected &&
-                                    selected.blurb.isNotEmpty) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    selected.blurb,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GameTheme.body(
-                                      size: 13,
-                                      color: GameTheme.mossLit,
-                                    ),
-                                  ),
-                                ] else if (!unlockedSelected) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    _lockedZoneAlt(selected),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GameTheme.body(
-                                      size: 13,
-                                      color: GameTheme.mossLit,
-                                    ),
-                                  ),
-                                ],
-                              ],
+                        ],
+                        if (director.toast != null) ...[
+                          const SizedBox(height: 6),
+                          Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: GameTheme.ink.withValues(alpha: 0.93),
+                                borderRadius: BorderRadius.circular(3),
+                                border: Border.all(color: GameTheme.borderLit),
+                              ),
+                              child: Text(
+                                director.toast!,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.body(size: 16),
+                              ),
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Transform.scale(
-                      scale: 1.0 + (_torch.value * 0.012),
-                      child: KenneyButton(
-                        label: 'ENTER DUNGEON',
-                        style: KenneyButtonStyle.brown,
-                        onPressed: unlockedSelected
-                            ? () => widget.onEnterDungeon(_selectedId)
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    _HubUrgentRow(
-                      claimable: state.missions
-                          .where((m) => m.isComplete)
-                          .length,
-                      canAscend: canAscend,
-                      ascendLabel: canAscend
-                          ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
-                          : null,
-                      onContracts: widget.onOpenJobs,
-                      onAscend: () => confirmAscend(context, director),
-                      dailyClaimed: director.isDailyClaimedToday,
-                      onDaily: director.enterDaily,
-                    ),
-                    if (!canAscend) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Bosses ${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} this run · Ascend when ready',
-                        textAlign: TextAlign.center,
-                        style: GameTheme.body(
-                          size: 13,
-                          color: GameTheme.parchmentDim,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 4),
-                    ChallengeToggles(director: director, collapsed: true),
-                    Align(
-                      alignment: Alignment.center,
-                      child: TextButton(
-                        onPressed: () => _showHubMore(context),
-                        child: Text(
-                          'MORE · bag forge sanctuary…',
-                          style: GameTheme.body(
-                            size: 16,
-                            color: GameTheme.parchmentDim,
+                        const SizedBox(height: 8),
+                        Expanded(
+                          flex: 5,
+                          child: KenneyPanel(
+                            style: KenneyPanelStyle.brown,
+                            padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+                            child: LayoutBuilder(
+                              builder: (context, panelConstraints) {
+                                if (panelConstraints.maxHeight < 48) {
+                                  return const SizedBox.shrink();
+                                }
+                                final showHeader =
+                                    !short && panelConstraints.maxHeight > 72;
+                                return Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    if (showHeader) ...[
+                                      Row(
+                                        children: [
+                                          KenneySprite(
+                                            asset: KenneyAssets.iconDoor,
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'WORLD PATH',
+                                            style: GameTheme.pixel(
+                                              size: GameTheme.hudPixel,
+                                              color: GameTheme.torchHot,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                    ],
+                                    Expanded(
+                                      child: _ZonePathMap(
+                                        dungeons: DungeonCatalog.all,
+                                        selectedId: _selectedId,
+                                        lifetimeGold: state.lifetimeGoldEarned,
+                                        highestCleared:
+                                            state.highestDungeonCleared,
+                                        pulse: _torch.value,
+                                        iconFor: _dungeonIcon,
+                                        onSelect: (id) =>
+                                            setState(() => _selectedId = id),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        KenneyPanel(
+                          style: KenneyPanelStyle.inset,
+                          padding: EdgeInsets.fromLTRB(
+                            10,
+                            short ? 6 : 8,
+                            10,
+                            short ? 6 : 8,
+                          ),
+                          child: Row(
+                            children: [
+                              KenneySprite(
+                                asset: KenneyAssets.dungeonPortraitFor(
+                                  _selectedId,
+                                ),
+                                size: short ? 32 : 40,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      selected.name,
+                                      style: GameTheme.pixel(
+                                        size: 9,
+                                        color: GameTheme.torchHot,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      unlockedSelected
+                                          ? 'Boss: ${selected.bossName}'
+                                          : _lockedZoneHint(selected, state),
+                                      style: GameTheme.body(
+                                        size: 14,
+                                        color: GameTheme.parchmentDim,
+                                      ),
+                                    ),
+                                    if (!short &&
+                                        unlockedSelected &&
+                                        selected.blurb.isNotEmpty) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        selected.blurb,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GameTheme.body(
+                                          size: 13,
+                                          color: GameTheme.mossLit,
+                                        ),
+                                      ),
+                                    ] else if (!short && !unlockedSelected) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _lockedZoneAlt(selected),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GameTheme.body(
+                                          size: 13,
+                                          color: GameTheme.mossLit,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Transform.scale(
+                          scale: 1.0 + (_torch.value * 0.012),
+                          child: KenneyButton(
+                            label: 'ENTER DUNGEON',
+                            style: KenneyButtonStyle.brown,
+                            primary: true,
+                            onPressed: unlockedSelected
+                                ? () => widget.onEnterDungeon(_selectedId)
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        _HubUrgentRow(
+                          claimable: state.missions
+                              .where((m) => m.isComplete)
+                              .length,
+                          canAscend: canAscend,
+                          ascendLabel: canAscend
+                              ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
+                              : null,
+                          onContracts: () {
+                            for (final m in director.state.missions) {
+                              if (m.isComplete) {
+                                director.claimMission(m.id);
+                              }
+                            }
+                            widget.onOpenJobs();
+                          },
+                          onAscend: () => confirmAscend(context, director),
+                          dailyClaimed: director.isDailyClaimedToday,
+                          onDaily: () => confirmDailyRun(context, director),
+                        ),
+                        if (!short && !canAscend) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Bosses ${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} · keep clearing',
+                            textAlign: TextAlign.center,
+                            style: GameTheme.body(
+                              size: 13,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ],
+                        if (!short) ...[
+                          const SizedBox(height: 4),
+                          ChallengeToggles(
+                            director: director,
+                            collapsed: true,
+                          ),
+                        ],
+                        const SizedBox(height: 4),
+                        KenneyButton(
+                          label: 'MORE',
+                          style: KenneyButtonStyle.grey,
+                          onPressed: () => _showHubMore(context),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              ],
-            );
-          },
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ],
     );
@@ -361,29 +385,43 @@ class _HubScreenState extends State<HubScreen>
     MenuChrome.showMenuSheet(
       context: context,
       title: 'HUB',
-      items: [
-        (label: 'BAG', onTap: widget.onOpenInventory),
-        (label: 'FORGE', onTap: widget.onOpenForge),
+      sections: [
         (
-          label: claimable > 0 ? 'CONTRACTS ($claimable)' : 'CONTRACTS',
-          onTap: widget.onOpenJobs,
+          header: 'GEAR',
+          items: [
+            (label: 'BAG', onTap: widget.onOpenInventory),
+            (label: 'FORGE', onTap: widget.onOpenForge),
+            if (widget.onOpenLoadouts != null)
+              (label: 'GEAR SETS', onTap: widget.onOpenLoadouts!),
+            if (widget.onOpenTeam != null)
+              (label: 'PARTY', onTap: widget.onOpenTeam!),
+          ],
         ),
-        (label: 'SANCTUARY', onTap: widget.onOpenSanctuary),
-        (label: 'MARKET', onTap: widget.onOpenMarket),
-        (label: 'BEAST PEN', onTap: widget.onOpenBeast),
-        if (widget.onOpenPrestigeShop != null)
-          (label: 'PRESTIGE SHOP', onTap: widget.onOpenPrestigeShop!),
-        if (widget.onOpenLoadouts != null)
-          (label: 'GEAR SETS', onTap: widget.onOpenLoadouts!),
-        if (widget.onOpenTeam != null)
-          (label: 'TEAM', onTap: widget.onOpenTeam!),
-        if (widget.onOpenAchievements != null)
-          (label: 'ACHIEVEMENTS', onTap: widget.onOpenAchievements!),
-        if (widget.onOpenCodex != null)
-          (label: 'CODEX', onTap: widget.onOpenCodex!),
-        if (widget.onOpenGuides != null)
-          (label: 'GUIDES', onTap: widget.onOpenGuides!),
-        (label: 'SETTINGS', onTap: widget.onOpenSettings),
+        (
+          header: 'PROGRESS',
+          items: [
+            (
+              label: claimable > 0 ? 'CONTRACTS ($claimable)' : 'CONTRACTS',
+              onTap: widget.onOpenJobs,
+            ),
+            (label: 'SANCTUARY', onTap: widget.onOpenSanctuary),
+            (label: 'MARKET', onTap: widget.onOpenMarket),
+            (label: 'BEAST PEN', onTap: widget.onOpenBeast),
+            if (widget.onOpenPrestigeShop != null)
+              (label: 'ESSENCE SHOP', onTap: widget.onOpenPrestigeShop!),
+          ],
+        ),
+        (
+          header: 'INFO',
+          items: [
+            if (widget.onOpenAchievements != null)
+              (label: 'ACHIEVEMENTS', onTap: widget.onOpenAchievements!),
+            if (widget.onOpenCodex != null)
+              (label: 'CODEX', onTap: widget.onOpenCodex!),
+            if (widget.onOpenGuides != null)
+              (label: 'GUIDES', onTap: widget.onOpenGuides!),
+          ],
+        ),
       ],
     );
   }
@@ -443,6 +481,7 @@ class _HubUrgentRow extends StatelessWidget {
           KenneyButton(
             label: ascendLabel!,
             style: KenneyButtonStyle.red,
+            primary: true,
             onPressed: onAscend,
           ),
           const SizedBox(height: 4),
@@ -545,6 +584,7 @@ class _HubHeader extends StatelessWidget {
     required this.displayTitle,
     required this.zoneTrophies,
     required this.torch,
+    required this.onOpenSettings,
   });
 
   final int ascensionLevel;
@@ -557,19 +597,41 @@ class _HubHeader extends StatelessWidget {
   final String displayTitle;
   final int zoneTrophies;
   final double torch;
+  final VoidCallback onOpenSettings;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          'IDLE PARTY',
-          textAlign: TextAlign.center,
-          style: GameTheme.pixel(
-            size: 20,
-            color: Color.lerp(GameTheme.torch, GameTheme.torchHot, torch)!,
-            height: 1.25,
-          ),
+        Row(
+          children: [
+            const Spacer(),
+            Expanded(
+              flex: 6,
+              child: Text(
+                'IDLE PARTY',
+                textAlign: TextAlign.center,
+                style: GameTheme.pixel(
+                  size: 20,
+                  color: Color.lerp(GameTheme.torch, GameTheme.torchHot, torch)!,
+                  height: 1.25,
+                ),
+              ),
+            ),
+            SizedBox(
+              width: GameTheme.minTouch,
+              height: GameTheme.minTouch,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                onPressed: onOpenSettings,
+                icon: const KenneySprite(
+                  asset: KenneyAssets.iconDoor,
+                  size: 18,
+                ),
+                tooltip: 'Settings',
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         Text(
@@ -586,19 +648,27 @@ class _HubHeader extends StatelessWidget {
             _StatPill(icon: KenneyAssets.coinGold, label: '$gold'),
             _StatPill(icon: KenneyAssets.vialBlue, label: '$essence'),
             _StatPill(icon: KenneyAssets.iconCrown, label: 'AL$ascensionLevel'),
-            _StatPill(icon: KenneyAssets.iconStar, label: 'SB $soulbound'),
-            _StatPill(
-              icon: KenneyAssets.iconTrophy,
-              label: displayTitle.isEmpty
-                  ? '$willRank · $collectionScore'
-                  : '$willRank · $displayTitle · $collectionScore',
-            ),
+            if (soulbound > 0)
+              _StatPill(
+                icon: KenneyAssets.iconTrophy,
+                label: 'SB $soulbound',
+              ),
           ],
         ),
-        if (zoneTrophies > 0) ...[
-          const SizedBox(height: 6),
+        if (displayTitle.isNotEmpty || collectionScore > 0) ...[
+          const SizedBox(height: 4),
           Text(
-            'Zone trophies $zoneTrophies — clear every dungeon for more',
+            displayTitle.isEmpty
+                ? '$willRank · $collectionScore'
+                : '$willRank · $displayTitle',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+        ],
+        if (zoneTrophies > 0) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Zone trophies $zoneTrophies',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.mossLit),
           ),
@@ -673,21 +743,18 @@ class _ZonePathMap extends StatelessWidget {
         if (w < 8 || viewH < 8) return const SizedBox.shrink();
 
         final n = dungeons.length;
-        const labelBudget = 38.0;
-
-        // Fit all nodes without overlap; scroll if the panel is too short.
-        var portrait = 64.0;
-        var nodeH = portrait + labelBudget;
-        // Gap between consecutive node tops must clear most of the portrait.
-        var gap = nodeH * 0.92;
-        final neededH = nodeH + gap * (n - 1);
-        if (neededH > viewH && n > 1) {
-          gap = ((viewH - labelBudget) / n).clamp(44.0, nodeH);
-          portrait = (gap - 6).clamp(40.0, 64.0);
-          nodeH = portrait + labelBudget;
-        }
-        final contentH = math.max(viewH, nodeH + gap * (n - 1));
-        final nodeW = math.min(w * 0.46, math.max(96.0, portrait + 52));
+        const labelBudget = 36.0;
+        final narrow = w < 360;
+        // Never crush nodes into each other — scroll when the panel is short.
+        final portrait = narrow ? 48.0 : 56.0;
+        final nodeH = portrait + labelBudget;
+        final gap = nodeH;
+        final contentH = math.max(viewH, nodeH + gap * (n - 1) + 28);
+        final nodeW = math.min(
+          w * (narrow ? 0.42 : 0.46),
+          math.max(88.0, portrait + 44),
+        );
+        final wobbleScale = narrow ? 0.55 : 1.0;
 
         final unlockedThrough = dungeons
             .where(
@@ -704,7 +771,9 @@ class _ZonePathMap extends StatelessWidget {
         final points = <Offset>[
           for (var i = 0; i < n; i++)
             Offset(
-              w * (0.5 + _xWobble[i.clamp(0, _xWobble.length - 1)]),
+              w *
+                  (0.5 +
+                      _xWobble[i.clamp(0, _xWobble.length - 1)] * wobbleScale),
               portrait * 0.5 + i * gap,
             ),
         ];
@@ -757,6 +826,7 @@ class _ZonePathMap extends StatelessWidget {
                       isFrontier: isFrontier,
                       selected: selected,
                       pulse: pulse,
+                      compact: narrow,
                       onTap: () => onSelect(d.id),
                     ),
                   );
@@ -767,10 +837,15 @@ class _ZonePathMap extends StatelessWidget {
 
         if (contentH > viewH + 1) {
           return SingleChildScrollView(
+            // Extra bottom padding so lower nodes clear the ENTER CTA below.
+            padding: const EdgeInsets.only(bottom: 72),
             child: SizedBox(width: w, height: contentH, child: map),
           );
         }
-        return SizedBox(width: w, height: viewH, child: map);
+        return SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 48),
+          child: SizedBox(width: w, height: math.max(viewH, contentH), child: map),
+        );
       },
     );
   }
@@ -788,6 +863,7 @@ class _ZoneNode extends StatelessWidget {
     required this.selected,
     required this.pulse,
     required this.onTap,
+    this.compact = false,
   });
 
   final DungeonDef def;
@@ -800,8 +876,21 @@ class _ZoneNode extends StatelessWidget {
   final bool selected;
   final double pulse;
   final VoidCallback onTap;
+  final bool compact;
 
-  static String shortName(DungeonDef def) {
+  static String shortName(DungeonDef def, {bool compact = false}) {
+    if (compact) {
+      return switch (def.id) {
+        'sandy' => 'Sandy',
+        'goblin' => 'Goblin',
+        'king' => 'King',
+        'underworld' => 'Under',
+        'dead' => 'Dead',
+        'hell' => 'Hell',
+        'crystal' => 'Crystal',
+        _ => def.name,
+      };
+    }
     return switch (def.id) {
       'sandy' => 'Sandy',
       'goblin' => 'Goblin Hideout',
@@ -898,8 +987,8 @@ class _ZoneNode extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              shortName(def),
-              maxLines: 2,
+              shortName(def, compact: compact),
+              maxLines: compact ? 1 : 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: GameTheme.pixel(

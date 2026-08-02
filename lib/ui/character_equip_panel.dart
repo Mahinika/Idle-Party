@@ -158,7 +158,7 @@ class CharacterEquipPanel extends StatelessWidget {
                       HeroDollSprite(hero: h, partyIndex: i, size: 24),
                       const SizedBox(width: 4),
                       Text(
-                        '${h.roleLabel} ${h.level}',
+                        '${h.roleLabel} · L${h.level}',
                         style: GameTheme.pixel(size: 8),
                       ),
                     ],

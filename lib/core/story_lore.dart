@@ -38,7 +38,7 @@ abstract final class StoryLore {
       'king' => 'The crown cracks. Deeper still.',
       'underworld' => 'The Beholder closes. For now.',
       'dead' => 'The No-One fades. Names return briefly.',
-      'hell' => 'Chtulu sinks. The Gate stays ajar.',
+      'hell' => 'Cthulhu sinks. The Gate stays ajar.',
       'crystal' => 'The Warden yields. Ascension waits in the hub.',
       _ => '${def.name} cleared.',
     };
@@ -76,7 +76,7 @@ abstract final class StoryLore {
     required int al,
     required int milestoneBonus,
   }) {
-    final base = 'Reborn · AL$al';
+    final base = 'Reborn · AL$al · Farm early floors before pushing deep';
     if (milestoneBonus > 0) {
       return '$base · +${milestoneBonus}e milestone';
     }

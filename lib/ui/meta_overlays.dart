@@ -242,7 +242,7 @@ class _CodexOverlayState extends State<CodexOverlay> {
                     label: claimed
                         ? '${entry.value.pct}% done'
                         : locked
-                            ? '${entry.value.pct}% Need ${entry.value.pct}%'
+                            ? 'Need ${entry.value.pct}%'
                             : '${entry.value.pct}% +${entry.value.reward}e',
                     expanded: false,
                     style: ready
@@ -408,7 +408,6 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
                     state.essence >= GameLogic.partySlot5EssenceCost
                 ? () {
                     director.unlockPartySlot5();
-                    _toast('5th party slot unlocked');
                   }
                 : null,
           ),
@@ -431,7 +430,6 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
               disabled: state.inDungeon,
               onUnlock: () {
                 director.unlockSpec(specId);
-                _toast('${HeroSpecs.def(specId).name} unlocked');
               },
               onAdd: () {
                 PartyHero? hero;
@@ -548,7 +546,7 @@ class _RosterSpecRow extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              '${def.shortLabel}  ${def.name}\n$status',
+              '${def.name}\n$status',
               style: GameTheme.body(
                 size: 12,
                 color: unlocked ? GameTheme.parchment : GameTheme.parchmentDim,
@@ -779,7 +777,7 @@ Future<void> showOfflineProgressDialog(
           const SizedBox(height: 6),
           Text(
             summary.state.inDungeon
-                ? 'AFK uses a fast abstract combat sim (not live spatial).'
+                ? 'AFK runs spatial combat with assist (faster, softer packs).'
                 : 'Hub AFK earns sanctuary idle gold only.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
@@ -1299,7 +1297,7 @@ class PrestigeShopOverlay extends StatelessWidget {
       children: [
         if (state.ascensionLevel < 3) ...[
           Text(
-            'Most upgrades unlock at AL3. Ascend to open the shop.',
+            'Browse freely — purchases unlock at AL3+.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 14, color: GameTheme.torchHot),
           ),

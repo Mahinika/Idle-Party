@@ -8,8 +8,11 @@ void main() {
   testWidgets('renders the idle party hub', (WidgetTester tester) async {
     final director = GameDirector.preview();
 
-    await tester.binding.setSurfaceSize(const Size(400, 860));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    // Tall phone: short-height collapse is off so ascend progress stays visible.
+    tester.view.physicalSize = const Size(400, 860);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
@@ -20,9 +23,25 @@ void main() {
     expect(find.textContaining('Sandy Caverns'), findsWidgets);
     expect(find.textContaining('Boss F'), findsWidgets);
     expect(find.textContaining('Boss:'), findsOneWidget);
-    expect(find.textContaining('Will'), findsWidgets);
     expect(find.textContaining('MORE'), findsOneWidget);
-    expect(find.textContaining('ASCEND'), findsOneWidget);
+    expect(find.textContaining('Bosses'), findsWidgets);
+  });
+
+  testWidgets('short hub height hides secondary chrome', (WidgetTester tester) async {
+    final director = GameDirector.preview();
+
+    tester.view.physicalSize = const Size(390, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(GameTheme.isShortHeight(tester.element(find.textContaining('ENTER DUNGEON'))), isTrue);
+    expect(find.textContaining('ENTER DUNGEON'), findsOneWidget);
+    expect(find.textContaining('MORE'), findsOneWidget);
+    expect(find.textContaining('Bosses'), findsNothing);
   });
 
   testWidgets('entering dungeon shows mobile shell chrome', (WidgetTester tester) async {
@@ -35,13 +54,13 @@ void main() {
 
     expect(find.textContaining('PUSH'), findsWidgets);
     expect(find.textContaining('BAG'), findsWidgets);
-    expect(find.text('PARTY'), findsOneWidget);
+    expect(find.text('GEAR'), findsOneWidget);
     expect(find.text('MORE'), findsWidgets);
     expect(find.textContaining('PROT'), findsWidgets);
 
-    await tester.tap(find.text('PARTY'));
+    await tester.tap(find.text('GEAR'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('EQUIP PARTY'), findsOneWidget);
+    expect(find.textContaining('GEAR'), findsWidgets);
     expect(find.textContaining('DMG'), findsWidgets);
     expect(find.textContaining('iLvl'), findsWidgets);
 
@@ -50,8 +69,7 @@ void main() {
 
     await tester.tap(find.textContaining('BAG').first);
     await tester.pumpAndSettle();
-    expect(find.textContaining('INVENTORY'), findsWidgets);
-    expect(find.text('EQUIP'), findsWidgets);
+    expect(find.text('BAG'), findsWidgets);
     expect(find.text('TOOLS'), findsOneWidget);
 
     await tester.tap(find.text('TOOLS'));
@@ -72,18 +90,18 @@ void main() {
     await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(GameTheme.isCompactWidth(tester.element(find.text('PARTY'))), isTrue);
+    expect(GameTheme.isCompactWidth(tester.element(find.text('GEAR'))), isTrue);
 
-    await tester.tap(find.text('PARTY'));
+    await tester.tap(find.text('GEAR'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('EQUIP PARTY'), findsOneWidget);
+    expect(find.textContaining('GEAR'), findsWidgets);
 
     await tester.tap(find.text('CLOSE'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.textContaining('BAG').first);
     await tester.pumpAndSettle();
-    expect(find.textContaining('INVENTORY'), findsWidgets);
+    expect(find.textContaining('BAG'), findsWidgets);
   });
 
   testWidgets('wide desktop viewport still opens overlays', (WidgetTester tester) async {
@@ -99,10 +117,10 @@ void main() {
     await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(GameTheme.isCompactWidth(tester.element(find.text('PARTY'))), isFalse);
+    expect(GameTheme.isCompactWidth(tester.element(find.text('GEAR'))), isFalse);
 
     await tester.tap(find.textContaining('BAG').first);
     await tester.pumpAndSettle();
-    expect(find.textContaining('INVENTORY'), findsWidgets);
+    expect(find.textContaining('BAG'), findsWidgets);
   });
 }

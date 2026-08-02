@@ -38,7 +38,7 @@ abstract final class AbilityEffectRunner {
 
     final before = world.pendingAbilityCasts;
     final specId = hero.heroSpecId;
-    final focus = SpatialCombat._nearestActiveEnemy(hero, world.enemies);
+    final focus = SpatialCombat._pickSmartFocus(hero, world);
 
     if (_useLegacyTicker(specId)) {
       _tickLegacy(
@@ -143,10 +143,12 @@ abstract final class AbilityEffectRunner {
     // Passive resource while near combat.
     if (focus != null) {
       final rate = switch (def.resource) {
-        SpecResource.rage => 6.0,
-        SpecResource.mana => 7.0,
-        SpecResource.energy => 10.0,
-        SpecResource.runic => 8.0,
+        // Kit-path regen (legacy tickers keep their own rates).
+        // Rage/mana bumped so mid-kit spenders can fire between openers.
+        SpecResource.rage => 8.0,
+        SpecResource.mana => 9.0,
+        SpecResource.energy => 11.0,
+        SpecResource.runic => 9.0,
       };
       SpatialCombat._gainRage(hero, rate * dt);
     }
@@ -190,8 +192,33 @@ abstract final class AbilityEffectRunner {
       return true;
     }
 
+    final nearby = SpatialCombat._countNearbyEnemies(hero, world);
+    final focusHpFrac = focus == null || focus.maxHp <= 0
+        ? 1.0
+        : focus.hp / focus.maxHp;
+    final focusElite = focus != null &&
+        (focus.role == EnemyRole.boss || focus.role == EnemyRole.elite);
+
+    bool contextOk(ClassAbilityDef d) {
+      // AoE only when a pack is present (still allow on lone boss).
+      if (d.effect == AbilityEffectKind.aoe) {
+        if (nearby < 2 && !(nearby == 1 && focusElite)) return false;
+      }
+      // Execute-style finishers.
+      if (_isExecuteAbility(d) && focusHpFrac > 0.25) return false;
+      // Hold long CDs for elite/boss, packs, or execute windows.
+      if (d.tier == AbilityCastTier.signature &&
+          d.cooldown >= 30 &&
+          !focusElite &&
+          nearby < 3 &&
+          focusHpFrac > 0.4) {
+        return false;
+      }
+      return true;
+    }
+
     bool tryCast(ClassAbilityDef d) {
-      if (!can(d)) return false;
+      if (!can(d) || !contextOk(d)) return false;
       return _resolveEffect(
         world,
         hero,
@@ -215,21 +242,72 @@ abstract final class AbilityEffectRunner {
       }
     }
 
-    // 2) Signature when fighting.
-    if (focus != null) {
+    // 1.5) Kit tanks: hard-taunt before signature/filler DPS.
+    if (_actorIsTank(hero) && focus != null) {
       for (final d in castable) {
-        if (d.tier != AbilityCastTier.signature) continue;
+        if (d.effect != AbilityEffectKind.taunt) continue;
         if (tryCast(d)) break;
       }
     }
 
-    // 3) One filler on cooldown.
-    if (focus != null || def.isHealer) {
-      for (final d in castable) {
-        if (d.tier != AbilityCastTier.filler) continue;
+    // 2) Signature when fighting — prefer the priciest ready signature so
+    // big spenders beat cheap utility buffs when both are up.
+    if (focus != null) {
+      final sigs = <ClassAbilityDef>[
+        for (final d in castable)
+          if (d.tier == AbilityCastTier.signature &&
+              d.effect != AbilityEffectKind.taunt &&
+              can(d) &&
+              contextOk(d))
+            d,
+      ];
+      sigs.sort((a, b) {
+        final byCost = b.resourceCost.compareTo(a.resourceCost);
+        if (byCost != 0) return byCost;
+        return b.coeff.compareTo(a.coeff);
+      });
+      for (final d in sigs) {
         if (tryCast(d)) break;
       }
     }
+
+    // 3) One filler — prefer highest-cost ready ability so cheap openers
+    // don't starve the rest of the kit (Arms Overpower, Steady Shot, etc.).
+    if (focus != null || def.isHealer) {
+      final fillers = <ClassAbilityDef>[
+        for (final d in castable)
+          if (d.tier == AbilityCastTier.filler &&
+              d.effect != AbilityEffectKind.taunt &&
+              can(d) &&
+              contextOk(d))
+            d,
+      ];
+      fillers.sort((a, b) {
+        // Prefer AoE in packs, ST otherwise.
+        final aAoe = a.effect == AbilityEffectKind.aoe;
+        final bAoe = b.effect == AbilityEffectKind.aoe;
+        if (nearby >= 2 && aAoe != bAoe) return aAoe ? -1 : 1;
+        if (nearby < 2 && aAoe != bAoe) return aAoe ? 1 : -1;
+        final byCost = b.resourceCost.compareTo(a.resourceCost);
+        if (byCost != 0) return byCost;
+        final byCoeff = b.coeff.compareTo(a.coeff);
+        if (byCoeff != 0) return byCoeff;
+        return b.unlockLevel.compareTo(a.unlockLevel);
+      });
+      for (final d in fillers) {
+        if (tryCast(d)) break;
+      }
+    }
+  }
+
+  static bool _isExecuteAbility(ClassAbilityDef d) {
+    if (d.id == AbilityId.armsExecute || d.id == AbilityId.hammerOfWrath) {
+      return true;
+    }
+    final key = _abilityKey(d);
+    return key.contains('execute') ||
+        key.contains('hammer of wrath') ||
+        key.contains('kill shot');
   }
 
   /// Applies always-on kit passive bonuses from [ability.id].
@@ -360,6 +438,13 @@ abstract final class AbilityEffectRunner {
         _castAoe(world, hero, focus, def, rng, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.heal:
+        final ally = _lowestAlly(world, hero);
+        if (ally == null) return false;
+        // Skip overheal when nobody is meaningfully hurt (Disc-style triage).
+        if (!_allyNeedsHeal(ally)) return false;
+        _spendAndCd(world, hero, def);
+        _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
+        return true;
       case AbilityEffectKind.emergencyHeal:
         final ally = _lowestAlly(world, hero);
         if (ally == null) return false;
@@ -369,6 +454,7 @@ abstract final class AbilityEffectRunner {
       case AbilityEffectKind.absorb:
         final ally = _lowestAlly(world, hero);
         if (ally == null) return false;
+        if (!_allyNeedsAbsorb(ally)) return false;
         _spendAndCd(world, hero, def);
         _castAbsorb(world, hero, ally, def, reducedVfx: reducedVfx);
         return true;
@@ -1094,6 +1180,22 @@ abstract final class AbilityEffectRunner {
     return best ?? (self.isAlive ? self : null);
   }
 
+  /// Kit heal filler/signature — only spend mana when someone is hurt.
+  static bool _allyNeedsHeal(SpatialActor ally) {
+    if (ally.effectiveMaxHp <= 0) return false;
+    return ally.hp / ally.effectiveMaxHp < 0.92;
+  }
+
+  /// Kit absorb — cast when hurt or when the bubble is gone.
+  static bool _allyNeedsAbsorb(SpatialActor ally) {
+    if (ally.absorbShield <= 4) {
+      if (ally.effectiveMaxHp <= 0) return true;
+      return ally.hp / ally.effectiveMaxHp < 0.98;
+    }
+    if (ally.effectiveMaxHp <= 0) return false;
+    return ally.hp / ally.effectiveMaxHp < 0.85;
+  }
+
   static void _healLowest(
     SpatialWorld world,
     SpatialActor caster,
@@ -1107,6 +1209,7 @@ abstract final class AbilityEffectRunner {
     ally.hp = math.min(ally.effectiveMaxHp, ally.hp + amount);
     final gained = ally.hp - before;
     if (gained > 0) {
+      caster.healingDone += gained;
       SpatialCombat._spawnFloater(
         world,
         x: ally.x,

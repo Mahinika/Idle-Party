@@ -32,8 +32,8 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'bag',
-      title: 'BAG & EQUIP',
-      body: 'Open BAG to equip upgrades. Long-press a hero to open their gear.',
+      title: 'BAG & GEAR',
+      body: 'Open BAG or GEAR to equip upgrades. Long-press a hero for gear.',
     ),
     (
       id: 'sanctuary',
@@ -60,7 +60,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'ascend',
       title: 'ASCEND',
       body:
-          'When Ascend unlocks, prestige: the will withdraws and returns with essence and pets.',
+          'When Ascend unlocks, prestige for essence. Gear resets — Farm early floors to re-kit before Pushing deep zones.',
     ),
   ];
 
@@ -138,6 +138,15 @@ class FirstSessionTips extends StatelessWidget {
                   KenneyButton(
                     label: 'GOT IT',
                     onPressed: () => director.dismissTip(tip.id),
+                    primary: true,
+                  ),
+                  const SizedBox(height: 6),
+                  KenneyButton(
+                    label: 'SKIP ALL TIPS',
+                    onPressed: () => director.dismissAllTips(
+                      _tips.map((t) => t.id),
+                    ),
+                    style: KenneyButtonStyle.grey,
                   ),
                 ],
               ),

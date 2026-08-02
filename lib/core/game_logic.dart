@@ -794,60 +794,197 @@ class GameLogic {
   }
 
   /// Failed push: retreat to the highest cleared floor (or floor 1).
+  /// Keeps PUSH mode so Retry does not silently switch to FARM.
   static GameState retreatFromFailedPush(GameState state) {
     final safeFloor = max(1, state.highestFloorCleared);
     return travelToFloor(
       state.copyWith(
-        dungeonMode: DungeonMode.farm,
         metaDepth: state.metaDepth.copyWith(noWipeAscendReady: false),
       ),
       safeFloor,
     );
   }
 
-  /// Builds the standard 3-contract board scaled by Ascension Level.
-  static List<Mission> createMissionBoard({required int ascensionLevel}) {
-    return MissionType.values
-        .map(
-          (type) => createMission(type: type, ascensionLevel: ascensionLevel),
-        )
-        .toList();
+  /// Builds a 3-contract board from a shuffled type pool, scaled by progress.
+  static List<Mission> createMissionBoard({
+    required int ascensionLevel,
+    int highestDungeonCleared = 0,
+    int highestFloorCleared = 1,
+    int hardmodeLevel = 0,
+    Random? random,
+  }) {
+    final rng = random ?? GameLogic.random;
+    final pool = List<MissionType>.from(MissionType.values)..shuffle(rng);
+    final picked = pool.take(3).toList();
+    return [
+      for (var i = 0; i < picked.length; i++)
+        createMission(
+          type: picked[i],
+          ascensionLevel: ascensionLevel,
+          highestDungeonCleared: highestDungeonCleared,
+          highestFloorCleared: highestFloorCleared,
+          hardmodeLevel: hardmodeLevel,
+          random: rng,
+          slot: i,
+        ),
+    ];
+  }
+
+  static List<Mission> createMissionBoardFor(
+    GameState state, {
+    Random? random,
+  }) {
+    return createMissionBoard(
+      ascensionLevel: state.ascensionLevel,
+      highestDungeonCleared: state.highestDungeonCleared,
+      highestFloorCleared: state.highestFloorCleared,
+      hardmodeLevel: state.hardmodeLevel,
+      random: random,
+    );
+  }
+
+  /// Depth score used to scale contract targets with real account progress.
+  static int missionDepthScore({
+    required int ascensionLevel,
+    int highestDungeonCleared = 0,
+    int highestFloorCleared = 1,
+    int hardmodeLevel = 0,
+  }) {
+    final floorBand = highestFloorCleared ~/ 4;
+    return ascensionLevel +
+        highestDungeonCleared * 2 +
+        (floorBand < 0 ? 0 : floorBand) +
+        hardmodeLevel;
   }
 
   static Mission createMission({
     required MissionType type,
     required int ascensionLevel,
+    int highestDungeonCleared = 0,
+    int highestFloorCleared = 1,
+    int hardmodeLevel = 0,
+    Random? random,
+    int slot = 0,
   }) {
-    final al = ascensionLevel;
+    final rng = random ?? GameLogic.random;
+    final depth = missionDepthScore(
+      ascensionLevel: ascensionLevel,
+      highestDungeonCleared: highestDungeonCleared,
+      highestFloorCleared: highestFloorCleared,
+      hardmodeLevel: hardmodeLevel,
+    );
+
+    // Bias toward harder contracts as the account deepens.
+    final roll = rng.nextInt(100);
+    final hardBias = min(25, depth * 2);
+    final brutalBias = min(15, depth);
+    final tier = roll < (50 - hardBias)
+        ? 0
+        : (roll < (85 - brutalBias) ? 1 : 2);
+    final targetMul = switch (tier) {
+      1 => 1.55,
+      2 => 2.25,
+      _ => 1.0,
+    };
+    final rewardMul = switch (tier) {
+      1 => 1.45,
+      2 => 2.1,
+      _ => 1.0,
+    };
+    final prefix = switch (tier) {
+      1 => 'Hard: ',
+      2 => 'Brutal: ',
+      _ => '',
+    };
+
+    int scaleTarget(int base) => max(1, (base * targetMul).round());
+    int scaleGold(int base) => max(1, (base * rewardMul).round());
+    int scaleEssence(int base) => max(1, (base * rewardMul).round());
+
+    final id = '${type.name}_s${slot}_${rng.nextInt(1 << 20)}';
+
     return switch (type) {
       MissionType.defeatEnemies => Mission(
-        id: 'defeat_enemies',
+        id: id,
         type: type,
-        title: 'Slay foes',
-        target: 8 + (al * 4),
+        title: '${prefix}Slay foes',
+        target: scaleTarget(18 + depth * 6),
         progress: 0,
-        goldReward: 20 + (al * 12),
-        essenceReward: 2 + al,
+        goldReward: scaleGold(28 + depth * 14),
+        essenceReward: scaleEssence(3 + depth),
+        tier: tier,
       ),
       MissionType.clearBosses => Mission(
-        id: 'clear_bosses',
+        id: id,
         type: type,
-        title: 'Fell wardens',
-        target: max(1, 1 + (al ~/ 2)),
+        title: '${prefix}Fell wardens',
+        target: scaleTarget(max(2, 2 + depth ~/ 3)),
         progress: 0,
-        goldReward: 35 + (al * 18),
-        essenceReward: 3 + al,
+        goldReward: scaleGold(45 + depth * 20),
+        essenceReward: scaleEssence(4 + depth),
+        tier: tier,
       ),
       MissionType.earnGold => Mission(
-        id: 'earn_gold',
+        id: id,
         type: type,
-        title: 'Gather gold',
-        target: 40 + (al * 35),
+        title: '${prefix}Gather gold',
+        target: scaleTarget(90 + depth * 55),
         progress: 0,
-        goldReward: 15 + (al * 10),
-        essenceReward: 2 + (al ~/ 2),
+        goldReward: scaleGold(22 + depth * 12),
+        essenceReward: scaleEssence(2 + depth ~/ 2),
+        tier: tier,
+      ),
+      MissionType.clearFloors => Mission(
+        id: id,
+        type: type,
+        title: '${prefix}Clear floors',
+        target: scaleTarget(5 + depth ~/ 2),
+        progress: 0,
+        goldReward: scaleGold(30 + depth * 15),
+        essenceReward: scaleEssence(3 + depth ~/ 2),
+        tier: tier,
+      ),
+      MissionType.defeatElites => Mission(
+        id: id,
+        type: type,
+        title: '${prefix}Hunt elites',
+        target: scaleTarget(4 + depth),
+        progress: 0,
+        goldReward: scaleGold(40 + depth * 16),
+        essenceReward: scaleEssence(4 + depth ~/ 2),
+        tier: tier,
       ),
     };
+  }
+
+  /// Picks a replacement contract, preferring a different type than [avoid].
+  static Mission rollReplacementMission(
+    GameState state, {
+    MissionType? avoid,
+    int slot = 0,
+    Random? random,
+  }) {
+    final rng = random ?? GameLogic.random;
+    final pool = List<MissionType>.from(MissionType.values);
+    if (avoid != null && pool.length > 1) {
+      pool.remove(avoid);
+    }
+    // Prefer types not already on the board.
+    final occupied = state.missions.map((m) => m.type).toSet();
+    if (avoid != null) occupied.remove(avoid);
+    final fresh = pool.where((t) => !occupied.contains(t)).toList();
+    final type = (fresh.isNotEmpty ? fresh : pool)[rng.nextInt(
+      (fresh.isNotEmpty ? fresh : pool).length,
+    )];
+    return createMission(
+      type: type,
+      ascensionLevel: state.ascensionLevel,
+      highestDungeonCleared: state.highestDungeonCleared,
+      highestFloorCleared: state.highestFloorCleared,
+      hardmodeLevel: state.hardmodeLevel,
+      random: rng,
+      slot: slot,
+    );
   }
 
   static GameState applyMissionProgress(
@@ -855,11 +992,17 @@ class GameLogic {
     int enemiesDefeated = 0,
     int bossesCleared = 0,
     int goldEarned = 0,
+    int floorsCleared = 0,
+    int elitesDefeated = 0,
   }) {
     if (state.missions.isEmpty) {
       return state;
     }
-    if (enemiesDefeated <= 0 && bossesCleared <= 0 && goldEarned <= 0) {
+    if (enemiesDefeated <= 0 &&
+        bossesCleared <= 0 &&
+        goldEarned <= 0 &&
+        floorsCleared <= 0 &&
+        elitesDefeated <= 0) {
       return state;
     }
 
@@ -871,6 +1014,8 @@ class GameLogic {
         MissionType.defeatEnemies => enemiesDefeated,
         MissionType.clearBosses => bossesCleared,
         MissionType.earnGold => goldEarned,
+        MissionType.clearFloors => floorsCleared,
+        MissionType.defeatElites => elitesDefeated,
       };
       if (add <= 0) {
         return mission;
@@ -897,9 +1042,10 @@ class GameLogic {
     }
 
     final missions = List<Mission>.from(state.missions);
-    missions[index] = createMission(
-      type: mission.type,
-      ascensionLevel: state.ascensionLevel,
+    missions[index] = rollReplacementMission(
+      state,
+      avoid: mission.type,
+      slot: index,
     );
 
     var nextChain = state.metaDepth.jobChainCount + 1;
@@ -1006,6 +1152,15 @@ class GameLogic {
       for (final h in state.heroRoster) h.copyWith(clearEquipped: true),
     ];
     if (!preservedRoster.any((h) => h.specId == HeroSpecs.ascendUnlockSpec)) {
+      final seedPool = preservedRoster.isNotEmpty
+          ? preservedRoster
+          : state.heroes;
+      final seedLevel = seedPool.isEmpty
+          ? 1
+          : max(
+              1,
+              seedPool.fold<int>(0, (s, h) => s + h.level) ~/ seedPool.length,
+            );
       preservedRoster = [
         ...preservedRoster,
         PartyHero.starting(
@@ -1013,6 +1168,7 @@ class GameLogic {
           specId: HeroSpecs.ascendUnlockSpec,
           stats: PartyHero.startingStatsForSpec(HeroSpecs.ascendUnlockSpec),
           equipped: _starterGear(HeroRole.rogue),
+          level: seedLevel,
         ),
       ];
     }
@@ -1035,7 +1191,7 @@ class GameLogic {
       lifetimeGoldEarned: state.lifetimeGoldEarned,
       unlockedRelics: preservedRelics,
       ascensionLevel: nextLevel,
-      missions: createMissionBoard(ascensionLevel: nextLevel),
+      missions: createMissionBoardFor(state.copyWith(ascensionLevel: nextLevel)),
       activePet: state.activePet,
       ownedPets: List<Pet>.from(state.ownedPets),
       sanctuaryGoldLevel: state.sanctuaryGoldLevel,
@@ -1084,6 +1240,14 @@ class GameLogic {
     return MetaSystems.evaluateAchievements(withMeta);
   }
 
+  /// Mean level used when seeding a newly unlocked roster hero.
+  static int rosterSeedLevel(GameState state) {
+    final pool = state.heroes.isNotEmpty ? state.heroes : state.heroRoster;
+    if (pool.isEmpty) return 1;
+    final sum = pool.fold<int>(0, (s, h) => s + h.level);
+    return max(1, (sum / pool.length).round());
+  }
+
   /// Unlocks Shade (Combat) on the roster when [rogueUnlocked].
   static GameState ensureRogueHero(GameState state) {
     if (!state.rogueUnlocked) {
@@ -1104,6 +1268,7 @@ class GameLogic {
         specId: HeroSpecs.ascendUnlockSpec,
         stats: PartyHero.startingStatsForSpec(HeroSpecs.ascendUnlockSpec),
         equipped: _starterGear(HeroRole.rogue),
+        level: rosterSeedLevel(next),
       );
       final roster = [...next.heroRoster, rogue];
       var active = List<String>.from(next.activeHeroIds);
@@ -1237,6 +1402,7 @@ class GameLogic {
       specId: specId,
       stats: PartyHero.startingStatsForSpec(specId),
       equipped: _starterGearForSpec(def.id),
+      level: rosterSeedLevel(next),
     );
     return next.copyWith(
       heroRoster: [...next.heroRoster, hero],
@@ -1756,7 +1922,11 @@ class GameLogic {
     // Linear to HM+10 = 10× (1000%) enemy HP/ATK.
     final hmThreat = 1.0 + hm * 0.9;
     final hmGold = 1.0 + hm * 0.15;
-    final alThreat = 1.0 + ascensionLevel.clamp(0, 40) * 0.08;
+    final alThreatRaw = 1.0 + ascensionLevel.clamp(0, 40) * 0.08;
+    // Fresh post-ascend (gear wiped) — soften AL threat until kit rebuilds.
+    final freshAscendEase =
+        gearPressure <= 1.08 && ascensionLevel > 0 ? 0.65 : 1.0;
+    final alThreat = alThreatRaw * freshAscendEase;
     final gpRaw = gearPressure.clamp(1.0, 2.5);
     // Fresh early floors: don't let gear-pressure spike packs before F5.
     final gp = level <= 4
@@ -1764,11 +1934,13 @@ class GameLogic {
         : gpRaw;
     final threat = hmThreat * alThreat;
     // Early attrition ramp: F1–F3 should be clearable for fresh parties.
+    // After ascend with empty kit, ease a couple more floors.
     final earlyEase = switch (level) {
       1 => 0.94,
       2 => 0.90,
       3 => 0.86,
       4 => 0.92,
+      5 || 6 when freshAscendEase < 1.0 => 0.94,
       _ => 1.0,
     };
 
@@ -1857,22 +2029,29 @@ class GameLogic {
     return xp;
   }
 
-  /// Awards [amount] XP to every living hero; levels up when pools fill.
+  /// Awards [amount] XP to every hero (living or downed); levels up when pools fill.
+  /// Heroes 3+ levels behind party mean get a soft catch-up bonus.
   static GameState awardPartyXp(GameState state, int amount) {
     if (amount <= 0) return state;
     final boosted = amount +
         (amount *
                 (state.sanctuaryXpBonusPercent + state.petXpFindPercent)) ~/
             100;
+    final meanLevel = state.heroes.isEmpty
+        ? 1
+        : max(
+            1,
+            state.heroes.fold<int>(0, (s, h) => s + h.level) ~/
+                state.heroes.length,
+          );
     final heroes = <PartyHero>[];
     var leveled = false;
     for (final hero in state.heroes) {
-      if (!hero.isAlive) {
-        heroes.add(hero);
-        continue;
-      }
+      final gain = hero.level + 3 < meanLevel
+          ? (boosted * 1.4).round()
+          : boosted;
       var level = hero.level;
-      var xp = hero.xp + boosted;
+      var xp = hero.xp + gain;
       var hp = hero.currentHp;
       var guard = 0;
       while (guard < 40) {
@@ -1883,10 +2062,12 @@ class GameLogic {
         level += 1;
         leveled = true;
         final grown = hero.copyWith(level: level);
-        hp = min(
-          state.effectiveHeroMaxHp(grown),
-          hp + 5 + state.vitalityBonus ~/ 4,
-        );
+        if (hero.isAlive) {
+          hp = min(
+            state.effectiveHeroMaxHp(grown),
+            hp + 5 + state.vitalityBonus ~/ 4,
+          );
+        }
       }
       heroes.add(hero.copyWith(level: level, xp: xp, currentHp: hp));
     }
@@ -2731,7 +2912,7 @@ class GameLogic {
   }
 
   /// Soft expected codex size for percentage milestone claims (soft goal).
-  static const int expectedCodexEntries = 60;
+  static const int expectedCodexEntries = 120;
 
   static const Map<String, ({int pct, int reward})> codexRewardTiers =
       <String, ({int pct, int reward})>{
@@ -2744,6 +2925,24 @@ class GameLogic {
   static int codexCompletionPercent(GameState state) {
     final discovered = state.codexEnemies.length + state.codexItems.length;
     return min(100, (discovered * 100) ~/ expectedCodexEntries);
+  }
+
+  /// Discover names already worn or sitting in the bag (older saves).
+  static GameState backfillCodexFromInventory(GameState state) {
+    final names = <String>{};
+    for (final item in state.gearStash) {
+      names.add(item.name);
+    }
+    for (final hero in state.heroes) {
+      for (final item in hero.equipped.values) {
+        names.add(item.name);
+      }
+    }
+    if (state.soulboundItem != null) {
+      names.add(state.soulboundItem!.name);
+    }
+    if (names.isEmpty) return state;
+    return MetaSystems.registerItemNames(state, names);
   }
 
   static GameState claimCodexReward(GameState state, String tierId) {
@@ -3053,6 +3252,19 @@ class GameLogic {
     );
   }
 
+  static GameState dismissTips(GameState state, Iterable<String> tipIds) {
+    final seen = {...state.seenTips};
+    var changed = false;
+    for (final id in tipIds) {
+      if (seen.add(id)) changed = true;
+    }
+    if (!changed) return state;
+    return state.copyWith(
+      seenTips: seen.toList(),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
   static const int maxGearStash = 50;
 
   static int maxGearStashFor(GameState state) =>
@@ -3060,15 +3272,29 @@ class GameLogic {
 
   /// Puts gear into the inventory stash. Overflow salvages the oldest piece.
   static GameState stashEquipment(GameState state, EquipmentItem item) {
+    return stashEquipmentDetailed(state, item).state;
+  }
+
+  /// Like [stashEquipment], also reporting overflow salvage for UI feedback.
+  static ({GameState state, int overflowEssence, String? overflowName})
+      stashEquipmentDetailed(GameState state, EquipmentItem item) {
     final stash = List<EquipmentItem>.from(state.gearStash);
     var essence = state.essence;
+    var overflowEssence = 0;
+    String? overflowName;
     final cap = maxGearStashFor(state);
     if (stash.length >= cap) {
       final overflow = stash.removeAt(0);
-      essence += equipmentEssenceValue(overflow);
+      overflowEssence = equipmentEssenceValue(overflow);
+      overflowName = overflow.name;
+      essence += overflowEssence;
     }
     stash.add(item);
-    return state.copyWith(gearStash: stash, essence: essence);
+    return (
+      state: state.copyWith(gearStash: stash, essence: essence),
+      overflowEssence: overflowEssence,
+      overflowName: overflowName,
+    );
   }
 
   static EquipmentItem? findGear(GameState state, String id) {
@@ -3417,15 +3643,16 @@ class GameLogic {
     var score = core +
         effect +
         item.rarity.index * 2 +
+        item.effectiveItemLevel +
         (item.affinity == role.name ? 8 : 0);
     // Prefer the heaviest armor the spec can wear (stops cloth beating mail).
     if (specId != null && item.armorType != null) {
       final preferred = preferredArmorForSpec(HeroSpecs.def(specId), level);
       if (preferred != null) {
         if (item.armorType == preferred) {
-          score += 48;
+          score += 32;
         } else {
-          score -= 22;
+          score -= 12;
         }
       }
     }
@@ -3665,7 +3892,20 @@ class GameLogic {
   ///
   /// Uses per-hero BiS slot fill with party-wide conflict resolution (largest
   /// power delta wins contested items; losers re-pick next round).
+  /// Multi-pass so leftovers can fill after contested items resolve.
   static GameState autoEquipBetterGear(GameState state) {
+    var next = state;
+    for (var pass = 0; pass < 8; pass++) {
+      final beforeLen = next.gearStash.length;
+      next = _autoEquipPass(next);
+      if (next.gearStash.length >= beforeLen) {
+        break;
+      }
+    }
+    return next.copyWith(lastUpdated: DateTime.now());
+  }
+
+  static GameState _autoEquipPass(GameState state) {
     var next = state;
     final plan = planBiSAssignments(next);
     final ordered = [...plan]..sort((a, b) {
@@ -3695,7 +3935,7 @@ class GameLogic {
         continue;
       }
     }
-    return next.copyWith(lastUpdated: DateTime.now());
+    return next;
   }
 
   static String formatDelta(int value) {
@@ -3874,16 +4114,18 @@ class GameLogic {
         continue;
       }
 
-      final essenceBefore = next.essence;
-      next = stashEquipment(next, item);
+      final stashed = stashEquipmentDetailed(next, item);
+      next = stashed.state;
       resolved.add(
         drop.copyWith(
           outcome: LootOutcome.stashed,
-          essenceGained: max(0, next.essence - essenceBefore),
+          essenceGained: stashed.overflowEssence,
         ),
       );
     }
 
+    // Live spatial loot never goes through completeCurrentRoom meta progress.
+    next = MetaSystems.registerItemDrops(next, drops);
     return (state: next, resolved: resolved);
   }
 
@@ -3912,21 +4154,120 @@ class GameLogic {
     return false;
   }
 
-  /// Sell every stash piece that is not worth keeping for any hero.
+  /// Keep BiS/upgrades normally. Rare+ kept when bag has room.
+  /// [unstickBag] (near-full sell pass): keep only the strongest piece per slot.
+  static bool _shouldKeepWhenSellingJunk(
+    GameState state,
+    EquipmentItem item, {
+    bool unstickBag = false,
+  }) {
+    if (unstickBag) {
+      if (item.id.contains('soulbound') ||
+          item.name.toLowerCase().startsWith('soulbound')) {
+        return true;
+      }
+      EquipmentItem? best;
+      for (final other in state.gearStash) {
+        if (other.slot != item.slot) continue;
+        if (best == null || other.powerScore > best.powerScore) {
+          best = other;
+        }
+      }
+      return best?.id == item.id;
+    }
+    if (_shouldKeepInBag(state, item)) {
+      return true;
+    }
+    if (item.rarity.index >= LootRarity.rare.index) {
+      return true;
+    }
+    return false;
+  }
+
+  /// Auto-merge junk pairs in the bag: same slot, neither is a BiS/upgrade keep,
+  /// while gold covers [combineCost]. Stronger piece is base; weaker is fuel.
   ///
-  /// The settings ilvl cap only gates *pickup* autosell; this button clears
-  /// bag junk even when power/ilvl is above the cap (that was the old bug).
+  /// Returns the updated state and how many merges ran (0 if none possible).
+  static ({GameState state, int merges}) autoMergeJunk(
+    GameState state, {
+    int maxMerges = 40,
+  }) {
+    var next = state;
+    var merges = 0;
+    while (merges < maxMerges) {
+      EquipmentItem? base;
+      EquipmentItem? fuel;
+      var bestScore = 1 << 30;
+      for (var i = 0; i < next.gearStash.length; i++) {
+        final a = next.gearStash[i];
+        if (_shouldKeepInBag(next, a)) {
+          continue;
+        }
+        for (var j = i + 1; j < next.gearStash.length; j++) {
+          final b = next.gearStash[j];
+          if (a.slot != b.slot || _shouldKeepInBag(next, b)) {
+            continue;
+          }
+          final cost = combineCost(
+            a,
+            b,
+            combinatorLuck: next.metaDepth.combinatorLuck,
+          );
+          if (next.gold < cost) {
+            continue;
+          }
+          final score = a.powerScore + b.powerScore;
+          if (score >= bestScore) {
+            continue;
+          }
+          bestScore = score;
+          if (a.powerScore >= b.powerScore) {
+            base = a;
+            fuel = b;
+          } else {
+            base = b;
+            fuel = a;
+          }
+        }
+      }
+      if (base == null || fuel == null) {
+        break;
+      }
+      final goldBefore = next.gold;
+      next = combineGear(
+        next,
+        primaryId: base.id,
+        secondaryId: fuel.id,
+      );
+      if (next.gold >= goldBefore) {
+        break;
+      }
+      merges++;
+    }
+    return (state: next, merges: merges);
+  }
+
+  /// Sell common / weak uncommon stash pieces that are not BiS or upgrades.
+  ///
+  /// Rare+ kept when bag has room. Starting at ≥90% capacity runs an unstick
+  /// pass that keeps only the strongest piece per slot (plus soulbound).
   static GameState autoSellJunk(GameState state) {
     var essence = state.essence;
     // Multi-pass: after selling, another piece may become "best for empty".
     var stash = List<EquipmentItem>.from(state.gearStash);
+    final cap = maxGearStashFor(state);
+    final unstickBag = stash.length >= (cap * 0.9).ceil();
     var guard = 0;
     while (guard < 64) {
       guard++;
       final probe = state.copyWith(gearStash: stash);
       EquipmentItem? sellId;
       for (final item in stash) {
-        if (!_shouldKeepInBag(probe, item)) {
+        if (!_shouldKeepWhenSellingJunk(
+          probe,
+          item,
+          unstickBag: unstickBag,
+        )) {
           sellId = item;
           break;
         }
@@ -4143,6 +4484,9 @@ class GameLogic {
     final room = state.currentRoom;
     final enemiesDefeated = state.enemies.length;
     final bossesCleared = room.type == RoomType.boss ? 1 : 0;
+    final elitesDefeated = state.enemies
+        .where((e) => e.role == EnemyRole.elite || e.role == EnemyRole.boss)
+        .length;
 
     late GameState awarded;
     late List<LootDrop> drops;
@@ -4190,6 +4534,8 @@ class GameLogic {
         enemiesDefeated: enemiesDefeated,
         bossesCleared: bossesCleared,
         goldEarned: goldAwarded,
+        floorsCleared: 1,
+        elitesDefeated: elitesDefeated,
       );
     }
 
@@ -4230,6 +4576,8 @@ class GameLogic {
       enemiesDefeated: enemiesDefeated,
       bossesCleared: bossesCleared,
       goldEarned: goldAwarded,
+      floorsCleared: 1,
+      elitesDefeated: elitesDefeated,
     );
   }
 
@@ -4340,10 +4688,21 @@ class GameLogic {
     final loaded = json.containsKey('enemies')
         ? GameState.fromJson(json)
         : _migrateV1(json);
-    var next = loaded.missions.isNotEmpty
+    final legacyBoard = loaded.missions.any(
+      (m) =>
+          m.id == 'defeat_enemies' ||
+          m.id == 'clear_bosses' ||
+          m.id == 'earn_gold',
+    );
+    var next = loaded.missions.isNotEmpty && !legacyBoard
         ? loaded
         : loaded.copyWith(
-            missions: createMissionBoard(ascensionLevel: loaded.ascensionLevel),
+            missions: createMissionBoard(
+              ascensionLevel: loaded.ascensionLevel,
+              highestDungeonCleared: loaded.highestDungeonCleared,
+              highestFloorCleared: loaded.highestFloorCleared,
+              hardmodeLevel: loaded.hardmodeLevel,
+            ),
           );
     if (next.ascensionLevel > 0) {
       next = next.copyWith(rogueUnlocked: true);
