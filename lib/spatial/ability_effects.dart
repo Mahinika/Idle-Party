@@ -283,6 +283,14 @@ abstract final class AbilityEffectRunner {
             d,
       ];
       fillers.sort((a, b) {
+        // Healers: prefer party/ST heals over enemy AoE when someone is hurt.
+        if (def.isHealer && _partyNeedsHeal(world)) {
+          final aHeal = a.effect == AbilityEffectKind.heal ||
+              a.effect == AbilityEffectKind.absorb;
+          final bHeal = b.effect == AbilityEffectKind.heal ||
+              b.effect == AbilityEffectKind.absorb;
+          if (aHeal != bHeal) return aHeal ? -1 : 1;
+        }
         // Prefer AoE in packs, ST otherwise.
         final aAoe = a.effect == AbilityEffectKind.aoe;
         final bAoe = b.effect == AbilityEffectKind.aoe;
@@ -301,11 +309,13 @@ abstract final class AbilityEffectRunner {
   }
 
   static bool _isExecuteAbility(ClassAbilityDef d) {
+    // Rampage keeps id furyExecute but is not an execute finisher.
+    if (d.id == AbilityId.furyExecute) return false;
     if (d.id == AbilityId.armsExecute || d.id == AbilityId.hammerOfWrath) {
       return true;
     }
     final key = _abilityKey(d);
-    return key.contains('execute') ||
+    return key.contains('arms execute') ||
         key.contains('hammer of wrath') ||
         key.contains('kill shot');
   }
@@ -335,7 +345,7 @@ abstract final class AbilityEffectRunner {
       case AbilityId.ancestralAwakening:
         hero.kitHealMul *= 1.32;
       case AbilityId.treeOfLife:
-        hero.kitHealMul *= 1.18;
+        hero.kitHealMul *= 1.30;
 
       // —— melee DPS ——
       case AbilityId.armsStance:
@@ -357,6 +367,7 @@ abstract final class AbilityEffectRunner {
       case AbilityId.unholyPresence:
         hero.kitOutMul *= 1.35;
         hero.kitHasteMul *= 1.12;
+        // Ghoul companion spawned in SpatialCombat.build.
       case AbilityId.enhancementWeapons:
         hero.kitOutMul *= 1.38;
       case AbilityId.catForm:
@@ -438,6 +449,12 @@ abstract final class AbilityEffectRunner {
         _castAoe(world, hero, focus, def, rng, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.heal:
+        if (_isPartyHeal(def)) {
+          if (!_partyNeedsHeal(world)) return false;
+          _spendAndCd(world, hero, def);
+          _castPartyHeal(world, hero, def, reducedVfx: reducedVfx);
+          return true;
+        }
         final ally = _lowestAlly(world, hero);
         if (ally == null) return false;
         // Skip overheal when nobody is meaningfully hurt (Disc-style triage).
@@ -446,6 +463,11 @@ abstract final class AbilityEffectRunner {
         _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.emergencyHeal:
+        if (_isPartyHeal(def)) {
+          _spendAndCd(world, hero, def);
+          _castPartyHeal(world, hero, def, reducedVfx: reducedVfx);
+          return true;
+        }
         final ally = _lowestAlly(world, hero);
         if (ally == null) return false;
         _spendAndCd(world, hero, def);
@@ -488,10 +510,17 @@ abstract final class AbilityEffectRunner {
         return true;
       case AbilityEffectKind.emergencyDefend:
         _spendAndCd(world, hero, def);
-        hero.shieldWallTimer = math.max(hero.shieldWallTimer, 3.5);
-        // Prot Warrior Shield Block uses shieldBlockTimer for blockValue;
-        // kit tanks (Holy Shield, Barkskin, …) share that window.
-        if (_actorIsTank(hero)) {
+        final lowest = _lowestAlly(world, hero);
+        final lowestFrac = lowest == null || lowest.effectiveMaxHp <= 0
+            ? 1.0
+            : lowest.hp / lowest.effectiveMaxHp;
+        final defendTarget =
+            (!_actorIsTank(hero) && lowest != null && lowestFrac <= 0.32)
+                ? lowest
+                : hero;
+        defendTarget.shieldWallTimer =
+            math.max(defendTarget.shieldWallTimer, 3.5);
+        if (_actorIsTank(hero) && identical(defendTarget, hero)) {
           hero.shieldBlockTimer = math.max(hero.shieldBlockTimer, 3.5);
           SpatialCombat._tauntLooseEnemies(
             world,
@@ -499,8 +528,9 @@ abstract final class AbilityEffectRunner {
             reducedVfx: reducedVfx,
           );
         }
-        hero.buffTimers['shield'] = 3.5;
-        if (hero.hp / math.max(1, hero.effectiveMaxHp) <= 0.4) {
+        defendTarget.buffTimers['shield'] = 3.5;
+        if (identical(defendTarget, hero) &&
+            hero.hp / math.max(1, hero.effectiveMaxHp) <= 0.4) {
           final bonus = math.max(6, (hero.maxHp * 0.2).round());
           hero.bonusMaxHp = math.max(hero.bonusMaxHp, bonus);
           hero.lastStandTimer = math.max(hero.lastStandTimer, 4.0);
@@ -517,8 +547,8 @@ abstract final class AbilityEffectRunner {
         if (!reducedVfx) {
           SpatialCombat._spawnRing(
             world,
-            x: hero.x,
-            y: hero.y,
+            x: defendTarget.x,
+            y: defendTarget.y,
             argb: 0xFFB8D4FF,
             radius: 1.0,
             life: 0.4,
@@ -577,6 +607,7 @@ abstract final class AbilityEffectRunner {
     hero.attackFlash = 0.16;
     SpatialCombat._setAttackAnim(hero, enemy, 0.22);
     _announce(world, hero, def.shortLabel, tint, reducedVfx);
+    _applyDamageSideEffects(world, hero, def, rawEstimate: raw);
 
     if (useBolt) {
       SpatialCombat._addProjectile(world, 
@@ -1186,6 +1217,105 @@ abstract final class AbilityEffectRunner {
     return ally.hp / ally.effectiveMaxHp < 0.92;
   }
 
+  static bool _isPartyHeal(ClassAbilityDef def) {
+    switch (def.id) {
+      case AbilityId.chainHeal ||
+          AbilityId.healingRain ||
+          AbilityId.spiritLink ||
+          AbilityId.wildGrowth ||
+          AbilityId.tranquility ||
+          AbilityId.divineHymn ||
+          AbilityId.holyPriestNova:
+        return true;
+      default:
+        final key = _abilityKey(def);
+        return key.contains('chain heal') ||
+            key.contains('rain') ||
+            key.contains('spirit link') ||
+            key.contains('wild growth') ||
+            key.contains('tranquility') ||
+            key.contains('hymn') ||
+            key.contains('holy nova');
+    }
+  }
+
+  static bool _partyNeedsHeal(SpatialWorld world) {
+    for (final h in world.heroes) {
+      if (h.isAlive && _allyNeedsHeal(h)) return true;
+    }
+    return false;
+  }
+
+  static void _castPartyHeal(
+    SpatialWorld world,
+    SpatialActor caster,
+    ClassAbilityDef def, {
+    required bool reducedVfx,
+  }) {
+    final living = [
+      for (final h in world.heroes)
+        if (h.isAlive) h,
+    ];
+    if (living.isEmpty) return;
+    living.sort((a, b) {
+      final af = a.effectiveMaxHp <= 0 ? 1.0 : a.hp / a.effectiveMaxHp;
+      final bf = b.effectiveMaxHp <= 0 ? 1.0 : b.hp / b.effectiveMaxHp;
+      return af.compareTo(bf);
+    });
+    var bounce = def.coeff;
+    final maxTargets = living.length.clamp(1, 4);
+    for (var i = 0; i < maxTargets; i++) {
+      final ally = living[i];
+      _healLowest(world, caster, ally, bounce, def.shortLabel);
+      bounce *= 0.72;
+    }
+    _announce(
+      world,
+      caster,
+      def.shortLabel,
+      SpatialCombat._floaterHeal,
+      reducedVfx,
+    );
+    if (!reducedVfx) {
+      SpatialCombat._spawnRing(
+        world,
+        x: caster.x,
+        y: caster.y,
+        argb: 0x887AAB6E,
+        radius: 1.4,
+        life: 0.4,
+      );
+    }
+  }
+
+  static void _applyDamageSideEffects(
+    SpatialWorld world,
+    SpatialActor hero,
+    ClassAbilityDef def, {
+    required int rawEstimate,
+  }) {
+    if (def.id == AbilityId.drainLife || def.id == AbilityId.deathStrike) {
+      final heal = math.max(3, (rawEstimate * 0.55 * hero.kitHealMul).round());
+      final before = hero.hp;
+      hero.hp = math.min(hero.effectiveMaxHp, hero.hp + heal);
+      final gained = hero.hp - before;
+      if (gained > 0) {
+        hero.healingDone += gained;
+        SpatialCombat._spawnFloater(
+          world,
+          x: hero.x,
+          y: hero.y - 0.4,
+          text: '+$gained',
+          argb: SpatialCombat._floaterHeal,
+          life: 0.45,
+        );
+      }
+    }
+    if (def.id == AbilityId.vampiricTouch) {
+      SpatialCombat._gainRage(hero, 12);
+    }
+  }
+
   /// Kit absorb — cast when hurt or when the bubble is gone.
   static bool _allyNeedsAbsorb(SpatialActor ally) {
     if (ally.absorbShield <= 4) {
@@ -1262,7 +1392,6 @@ abstract final class AbilityEffectRunner {
         name.contains('presence') ||
         name.contains('mastery') ||
         name.contains('favor') ||
-        name.contains('beacon') ||
         name.contains('spirit') ||
         name.contains('gargoyle') ||
         name.contains('water') ||
@@ -1270,8 +1399,8 @@ abstract final class AbilityEffectRunner {
         name.contains('step') ||
         name.contains('sprint') ||
         name.contains('disengage')) {
+      // One haste channel only — stacking PI × buffTimers['haste'] was ~1.79×.
       hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 6.0);
-      hero.buffTimers['haste'] = 6.0;
       return;
     }
     if (name.contains('shield') ||

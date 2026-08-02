@@ -277,7 +277,7 @@ class SpatialActor {
     if (sliceAndDiceTimer > 0) m *= 1.35;
     if (killingSpreeTimer > 0) m *= 1.55;
     if (powerInfusionTimer > 0) m *= 1.4;
-    if (combustionTimer > 0) m *= 1.12;
+    if (combustionTimer > 0) m *= 1.08;
     if ((buffTimers['haste'] ?? 0) > 0) m *= 1.28;
     if (iceBlockTimer > 0) m = 0;
     return m;
@@ -1911,7 +1911,7 @@ abstract final class SpatialCombat {
       _spendRage(priest, def.resourceCost);
       _startAbilityCd(world, priest, AbilityId.penance, def.cooldown);
       priest.attackFlash = 0.2;
-      if (wantHealPenance && penanceAlly != null) {
+      if (wantHealPenance) {
         final tick = math.max(
           5,
           (priest.attack * 0.62 * priest.kitHealMul).round(),
@@ -1945,7 +1945,7 @@ abstract final class SpatialCombat {
             life: 0.35,
           );
         }
-      } else if (canDamagePenance && focusEnemy != null) {
+      } else if (canDamagePenance) {
         final bolt = math.max(2, (priest.attack * 0.7).round());
         for (var i = 0; i < 3; i++) {
           SpatialCombat._addProjectile(
@@ -2018,7 +2018,7 @@ abstract final class SpatialCombat {
       final def = ClassKits.defFor(AbilityId.combustion)!;
       _spendRage(mage, def.resourceCost);
       _startAbilityCd(world, mage, AbilityId.combustion, def.cooldown);
-      mage.combustionTimer = 6;
+      mage.combustionTimer = 5;
       if (!reducedVfx) {
         _spawnRing(
           world,
@@ -2098,7 +2098,7 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.livingBomb, def.cooldown);
       focusEnemy.livingBombTimer = 8;
       focusEnemy.livingBombDps =
-          math.max(3.0, mage.attack * 0.26 * mage.kitOutMul * 0.85);
+          math.max(3.0, mage.attack * 0.22 * mage.kitOutMul * 0.85);
       focusEnemy.livingBombCasterId = mage.id;
       mage.livingBombArmed = 8;
       if (!reducedVfx) {
@@ -2178,7 +2178,7 @@ abstract final class SpatialCombat {
         _spendRage(mage, def.resourceCost);
         _startAbilityCd(world, mage, AbilityId.blastWave, def.cooldown);
         final dmg =
-            math.max(2, (mage.attack * 0.48 * mage.kitOutMul * 0.85).round());
+            math.max(2, (mage.attack * 0.42 * mage.kitOutMul * 0.85).round());
         for (final e in nearby) {
           final dealt = math.max(1, dmg - e.effectiveDefense);
           e.hp = math.max(0, e.hp - dealt);
@@ -2231,8 +2231,8 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.pyroblast, def.cooldown);
       mage.attackFlash = 0.22;
       var dmg =
-          math.max(3, (mage.attack * 1.55 * mage.kitOutMul * 0.85).round());
-      if (mage.combustionTimer > 0) dmg = (dmg * 1.15).round();
+          math.max(3, (mage.attack * 1.35 * mage.kitOutMul * 0.85).round());
+      if (mage.combustionTimer > 0) dmg = (dmg * 1.1).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
           from: mage,
@@ -2261,8 +2261,8 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.fireball, def.cooldown);
       mage.attackFlash = 0.18;
       var dmg =
-          math.max(2, (mage.attack * 1.1 * mage.kitOutMul * 0.85).round());
-      if (mage.combustionTimer > 0) dmg = (dmg * 1.15).round();
+          math.max(2, (mage.attack * 0.95 * mage.kitOutMul * 0.85).round());
+      if (mage.combustionTimer > 0) dmg = (dmg * 1.1).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
           from: mage,
@@ -2476,36 +2476,6 @@ abstract final class SpatialCombat {
       }
     }
 
-    if (focusEnemy != null &&
-        focusEnemy.hp > 0 &&
-        rogue.comboPoints >= 3 &&
-        can(AbilityId.kidneyShot) &&
-        focusEnemy.rootTimer < 0.5) {
-      final def = ClassKits.defFor(AbilityId.kidneyShot)!;
-      _spendRage(rogue, def.resourceCost);
-      _startAbilityCd(world, rogue, AbilityId.kidneyShot, def.cooldown);
-      focusEnemy.rootTimer = 2.0 + rogue.comboPoints * 0.25;
-      rogue.comboPoints = 0;
-      if (!reducedVfx) {
-        _spawnSpark(
-          world,
-          x: focusEnemy.x,
-          y: focusEnemy.y,
-          argb: 0xFFFFE080,
-          radius: 0.6,
-          life: 0.4,
-        );
-        _spawnFloater(
-          world,
-          x: focusEnemy.x,
-          y: focusEnemy.y - 0.4,
-          text: 'KIDNEY',
-          argb: 0xFFFF7070,
-          life: 0.55,
-        );
-      }
-    }
-
     if (rogue.comboPoints >= 3 &&
         rogue.sliceAndDiceTimer < 2 &&
         can(AbilityId.sliceAndDice)) {
@@ -2529,6 +2499,38 @@ abstract final class SpatialCombat {
           text: 'SnD',
           argb: 0xFFFFD070,
           life: 0.5,
+        );
+      }
+    }
+
+    // Kidney after SnD — only at 5 CP so Evis (≥4) is not starved.
+    if (focusEnemy != null &&
+        focusEnemy.hp > 0 &&
+        rogue.comboPoints >= 5 &&
+        rogue.sliceAndDiceTimer >= 2 &&
+        can(AbilityId.kidneyShot) &&
+        focusEnemy.rootTimer < 0.5) {
+      final def = ClassKits.defFor(AbilityId.kidneyShot)!;
+      _spendRage(rogue, def.resourceCost);
+      _startAbilityCd(world, rogue, AbilityId.kidneyShot, def.cooldown);
+      focusEnemy.rootTimer = 2.0 + rogue.comboPoints * 0.25;
+      rogue.comboPoints = 0;
+      if (!reducedVfx) {
+        _spawnSpark(
+          world,
+          x: focusEnemy.x,
+          y: focusEnemy.y,
+          argb: 0xFFFFE080,
+          radius: 0.6,
+          life: 0.4,
+        );
+        _spawnFloater(
+          world,
+          x: focusEnemy.x,
+          y: focusEnemy.y - 0.4,
+          text: 'KIDNEY',
+          argb: 0xFFFF7070,
+          life: 0.55,
         );
       }
     }
@@ -2557,46 +2559,51 @@ abstract final class SpatialCombat {
       damage = math.max(1, (damage * 1.08).round());
     }
     if (hero.heroSpecId == HeroSpecId.fire) {
-      if (hero.combustionTimer > 0) {
-        damage = (damage * 1.12).round();
-      }
+      // Combustion amps kit spells only — whites stay baseline so mid gear
+      // does not double-dip haste+amp autos with Fireball/Pyro.
       if (hero.queuedPyroblast) {
         hero.queuedPyroblast = false;
         damage = (damage * 2.0).round();
         tag = 'PYRO';
         tagArgb = 0xFFFF5020;
+        if (hero.combustionTimer > 0) {
+          damage = (damage * 1.1).round();
+        }
       } else if (hero.queuedFireball) {
         hero.queuedFireball = false;
         damage = (damage * 1.45).round();
         tag = 'FIREBALL';
         tagArgb = 0xFFFF8040;
+        if (hero.combustionTimer > 0) {
+          damage = (damage * 1.1).round();
+        }
       }
     }
 
-    if (hero.heroSpecId == HeroSpecId.combat) {
-      if (ClassKits.isUnlocked(AbilityId.sinisterStrike, hero.heroLevel)) {
+    if (hero.heroSpecId == HeroSpecId.combat ||
+        hero.heroSpecId == HeroSpecId.subtlety) {
+      final buildsCombo = hero.heroSpecId == HeroSpecId.combat
+          ? ClassKits.isUnlocked(AbilityId.sinisterStrike, hero.heroLevel)
+          : ClassKits.isUnlocked(AbilityId.masterOfSubtlety, hero.heroLevel);
+      if (buildsCombo) {
         hero.comboPoints = math.min(5, hero.comboPoints + 1);
       }
+      final evisId = hero.heroSpecId == HeroSpecId.subtlety
+          ? AbilityId.eviscerateSub
+          : AbilityId.eviscerate;
+      final evisDef = ClassKits.defFor(evisId);
       if (hero.comboPoints >= 4 &&
-          ClassKits.isUnlocked(AbilityId.eviscerate, hero.heroLevel) &&
-          hero.rage + 0.001 >=
-              (ClassKits.defFor(AbilityId.eviscerate)?.resourceCost ?? 25)) {
-        final cost =
-            ClassKits.defFor(AbilityId.eviscerate)?.resourceCost ?? 25;
-        if (_abilityCdLeft(hero, AbilityId.eviscerate) <= 0) {
-          _spendRage(hero, cost);
-          _startAbilityCd(
-            world,
-            hero,
-            AbilityId.eviscerate,
-            ClassKits.defFor(AbilityId.eviscerate)?.cooldown ?? 1.2,
-          );
-          final pts = hero.comboPoints;
-          hero.comboPoints = 0;
-          damage = (damage * (1.2 + pts * 0.35)).round();
-          tag = 'EVIS';
-          tagArgb = 0xFFFF4060;
-        }
+          evisDef != null &&
+          hero.heroLevel >= evisDef.unlockLevel &&
+          hero.rage + 0.001 >= evisDef.resourceCost &&
+          _abilityCdLeft(hero, evisId) <= 0) {
+        _spendRage(hero, evisDef.resourceCost);
+        _startAbilityCd(world, hero, evisId, evisDef.cooldown);
+        final pts = hero.comboPoints;
+        hero.comboPoints = 0;
+        damage = (damage * (1.2 + pts * 0.35)).round();
+        tag = 'EVIS';
+        tagArgb = 0xFFFF4060;
       }
     }
 
@@ -2822,6 +2829,38 @@ abstract final class SpatialCombat {
           attackCooldown: 0.8,
           isPet: true,
           fireCooldown: 0.25,
+        ),
+      );
+    }
+    // Class companions (BM / Demo / Unholy) — reuse pet combat AI.
+    for (final h in heroes) {
+      final spec = h.heroSpecId;
+      if (spec != HeroSpecId.beastMastery &&
+          spec != HeroSpecId.demonology &&
+          spec != HeroSpecId.unholy) {
+        continue;
+      }
+      final label = switch (spec) {
+        HeroSpecId.beastMastery => 'Beast',
+        HeroSpecId.demonology => 'Demon',
+        _ => 'Ghoul',
+      };
+      pets.add(
+        SpatialActor(
+          id: 'classpet_${h.id}',
+          name: label,
+          team: SpatialTeam.hero,
+          x: h.x - 0.45,
+          y: h.y + 0.4,
+          hp: 1,
+          maxHp: 1,
+          attack: math.max(2, (h.attack * 0.55).round()),
+          defense: 0,
+          moveSpeed: 3.6,
+          attackRange: 1.4,
+          attackCooldown: 0.85,
+          isPet: true,
+          fireCooldown: 0.2,
         ),
       );
     }
