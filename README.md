@@ -1,94 +1,80 @@
-# Idle Party - Advanced Idle RPG Engine
+# Idle Party
 
-A modular, scalable Flutter/Dart-based idle RPG game engine with:
-- **Modular Architecture**: Clean separation of concerns with isolated systems and managers
-- **Null-Safe Dart**: Complete null-safety implementation
-- **JSON-Driven Data**: All game data loaded from JSON files
-- **Centralized Orchestration**: GameDirector controls the entire game loop
-- **Strict Update Order**: 15-step update pipeline ensuring consistent game state
-- **Zero Circular Dependencies**: Clean dependency tree throughout
-- **High Performance**: Efficient DPS pipeline with category-based multipliers
-- **Easy to Extend**: Clear patterns for adding new systems, heroes, skills, and progression
+**Your party keeps fighting while you watch — or while you’re away.**
 
-## Project Structure
+Idle Party is a cozy-but-crunchy **idle RPG**: a hero party crawls spatial dungeon floors, clears chambers, farms loot, and grows stronger between runs. Tap in for God Hand moments, or let the corridor combat cook offline.
 
-```
-lib/
-├── core/
-│   ├── game_director.dart      # Central game orchestrator
-│   └── dps_pipeline.dart       # Category-based DPS multiplier system
-├── models/
-│   ├── hero.dart               # Hero data model
-│   ├── enemy.dart              # Enemy data model
-│   └── stats.dart              # Character statistics
-├── systems/                    # Game systems (each isolated)
-│   ├── weather_system.dart
-│   ├── event_system.dart
-│   ├── dungeon_system.dart
-│   ├── buff_system.dart
-│   ├── debuff_system.dart
-│   ├── skill_system.dart
-│   ├── ai_system.dart
-│   ├── combat_system.dart
-│   ├── economy_system.dart
-│   ├── idle_system.dart
-│   ├── prestige_system.dart
-│   ├── ascension_system.dart
-│   ├── formation_system.dart
-│   ├── team_dps_system.dart
-│   ├── relic_system.dart
-│   ├── pet_system.dart
-│   ├── rune_system.dart
-│   └── artifact_system.dart
-├── managers/                   # Game managers
-│   ├── buff_manager.dart
-│   ├── debuff_manager.dart
-│   ├── skill_trigger_budget.dart
-│   └── caps_manager.dart
-├── data/                       # JSON game data
-│   ├── heroes.json
-│   ├── enemies.json
-│   ├── skills.json
-│   ├── items.json
-│   ├── dungeon_modifiers.json
-│   ├── weather.json
-│   └── events.json
-└── main.dart
+<p align="center">
+  <img src="assets/custom/ui/app_icon.png" alt="Idle Party app icon" width="160" />
+</p>
+
+**[Download Android APK (v1.4.0)](https://github.com/Mahinika/Idle-Party/releases/download/v1.4.0/app-release.apk)** · **[All releases](https://github.com/Mahinika/Idle-Party/releases)**
+
+---
+
+## Why you’ll want to try it
+
+- **Real dungeon crawling, not a fake progress bar** — multi-chamber maps, gates that open after clears, and a party that actually walks the floor.
+- **A full party with class kits** — 10 classes and ~30 talent specs (Warrior through Druid). Pick your starters on New Game; unlock more via Ascend and clears. Abilities, buffs, and a live DPS share meter.
+- **Farm or Push** — milk a floor for loot, or shove deeper until the wipe. Your call.
+- **God Hand** — tap the map to steer and smash. Upgrade it with essence.
+- **Gear that feels good** — equip, auto-equip, sell junk, merge in the combinator, save loadouts.
+- **Meta that survives Ascend** — sanctuary, relics, pets, prestige shop, contracts, weekly modifiers, achievements, codex.
+- **Offline progress that respects the dungeon** — come back to gold, floors, and a clear summary.
+
+Pixel art vibe powered by [Kenney](https://kenney.nl) (CC0) plus custom Idle Party identity art. Game systems and code are original.
+
+---
+
+## Quick start
+
+### Android
+Grab the latest APK from [Releases](https://github.com/Mahinika/Idle-Party/releases) and sideload it. No account. No ads in the build.
+
+### From source (web / desktop / device)
+
+```bash
+flutter pub get
+flutter run -d chrome
+# or local web server:
+flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
 
-## Update Order (Strict)
+---
 
-1. Weather
-2. Events
-3. Dungeon Modifiers
-4. Buffs
-5. Debuffs
-6. Skills
-7. AI
-8. Combat
-9. Economy
-10. Idle
-11. Prestige
-12. Ascension
-13. Meta Progression
-14. Loot
-15. UI
+## What’s in the loop
 
-## Architecture Principles
+| Layer | What you do |
+|--------|-------------|
+| **Hub** | Pick a zone, Hardmode, Boss Rush / No Flask, daily run, Ascend when ready |
+| **Dungeon** | Clear chambers → loot → stairs. Watch the party fight live |
+| **Bag & Forge** | Gear, combinator, training, relics, sanctuary |
+| **Meta** | Pets, prestige sinks, contracts, weekly challenge, Will rank & titles |
 
-- **Isolation**: All systems operate independently with clear contracts
-- **Data-Driven**: Game mechanics defined in JSON, not hardcoded
-- **Dependency Injection**: Systems accept their dependencies as parameters
-- **No Global State**: Everything flows through GameDirector
-- **Testable**: Each system can be tested independently
-- **Extensible**: New systems follow the same pattern
+Zones stretch from sandy caverns to hell and crystal — each with its own look, packs, and bosses.
 
-## Getting Started
+---
 
-1. Clone the repository
-2. Run `flutter pub get`
-3. Run `flutter run`
+## Build notes (devs)
 
-## Development
+```bash
+flutter build apk --release
+```
 
-See ARCHITECTURE.md for detailed design patterns and guidelines.
+Without `android/key.properties`, release APKs are **debug-signed** (fine for sideload). For Play Store signing, copy `android/key.properties.example` → `android/key.properties` and point at your keystore.
+
+CI builds an APK on tags matching `v*` (`.github/workflows/build-apk.yml`). Push runs analyze + tests (`.github/workflows/ci.yml`).
+
+**Package id:** `com.idleparty.app` · **Saves:** SharedPreferences (`idle_party_save_v2`)
+
+---
+
+## License & art
+
+- Game code: see repository license / project terms.
+- Kenney assets: [CC0](https://kenney.nl/license).
+- Do not drop commercial game dumps, APKs from other titles, or ripped sprites into this repo.
+
+---
+
+*Clear one more floor. Claim the contracts. Ascend when the bosses say you’re ready.*
