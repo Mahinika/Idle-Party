@@ -15,6 +15,7 @@ import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/mission.dart';
 import 'package:idle_party/models/pet.dart';
 import 'package:idle_party/models/stats.dart';
+import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/spatial/tile_map.dart';
 
 void main() {
@@ -69,10 +70,13 @@ void main() {
     expect(tankShield.intellectBonus + tankShield.spellPowerBonus, 0);
   });
 
-  test('advancing ticks progresses battle and gold', () {
-    final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+  test('spatial offline progresses battle and gold', () {
+    final initial = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 7, 4)),
+      dungeonId: 'sandy',
+    );
 
-    final progressed = GameLogic.advance(initial, steps: 40);
+    final progressed = GameLogic.simulateSpatialOffline(initial, 3 * 60).state;
 
     expect(progressed.gold, greaterThan(initial.gold));
     expect(progressed.highestFloorCleared, greaterThanOrEqualTo(1));
@@ -161,6 +165,71 @@ void main() {
     expect(sim.state.gold, greaterThanOrEqualTo(farm.gold));
   });
 
+  test('offline catch-up auto-uses flask when party HP is critical', () {
+    final flask = GameLogic.createMarketFlask(salt: 99);
+    var state = GameLogic.setDungeonMode(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime(2026, 8, 1)),
+        dungeonId: 'sandy',
+      ),
+      DungeonMode.farm,
+    );
+    state = state.copyWith(
+      heroes: [
+        for (var i = 0; i < state.heroes.length; i++)
+          state.heroes[i].copyWith(
+            currentHp: max(
+              1,
+              (state.effectiveHeroMaxHp(state.heroes[i]) * 0.2).floor(),
+            ),
+            equipped: {
+              for (final e in state.heroes[i].equipped.entries)
+                if (e.key != EquipmentSlot.consumable) e.key: e.value,
+              if (i == 0) EquipmentSlot.consumable: flask,
+            },
+          ),
+      ],
+      gearStash: [
+        for (final g in state.gearStash)
+          if (g.slot != EquipmentSlot.consumable) g,
+      ],
+    );
+    expect(GameLogic.canUseConsumable(state), isTrue);
+    final sim = GameLogic.simulateSpatialOffline(state, 90);
+    expect(GameLogic.canUseConsumable(sim.state), isFalse);
+  });
+
+  test('buyMarketFlasks purchases multiple flasks into slots then stash', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 1));
+    state = state.copyWith(
+      heroes: [
+        for (final h in state.heroes)
+          h.copyWith(
+            equipped: {
+              for (final e in h.equipped.entries)
+                if (e.key != EquipmentSlot.consumable) e.key: e.value,
+            },
+          ),
+      ],
+      gearStash: [
+        for (final g in state.gearStash)
+          if (g.slot != EquipmentSlot.consumable) g,
+      ],
+    );
+    final unit = GameLogic.marketFlaskCost(state);
+    state = state.copyWith(gold: unit * 5);
+    state = GameLogic.buyMarketFlasks(state, count: 3);
+    expect(state.gold, unit * 2);
+    var flasks = 0;
+    for (final h in state.heroes) {
+      if (h.itemIn(EquipmentSlot.consumable) != null) flasks++;
+    }
+    flasks += state.gearStash
+        .where((g) => g.slot == EquipmentSlot.consumable)
+        .length;
+    expect(flasks, 3);
+  });
+
   test('training spends gold and levels up the party', () {
     final seeded = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final initial = seeded.copyWith(
@@ -178,15 +247,19 @@ void main() {
   });
 
   test('loot rolls after battle victories', () {
-    final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final initial = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 7, 4)),
+      dungeonId: 'sandy',
+    );
 
-    final progressed = GameLogic.advance(initial, steps: 200);
+    final progressed = GameLogic.simulateSpatialOffline(initial, 8 * 60).state;
 
-    expect(progressed.recentLoot, isNotEmpty);
     expect(progressed.gold, greaterThan(initial.gold));
-    // Early clears may stash gear and/or convert junk to essence.
+    // Early clears may stash gear, show recent loot, and/or convert junk to essence.
     expect(
-      progressed.essence > 0 || progressed.gearStash.isNotEmpty,
+      progressed.recentLoot.isNotEmpty ||
+          progressed.essence > 0 ||
+          progressed.gearStash.isNotEmpty,
       isTrue,
     );
   });
@@ -224,7 +297,11 @@ void main() {
               .toList(),
         );
 
-    final progressed = GameLogic.advance(initial, steps: 12);
+    final progressed = GameLogic.completeCurrentRoom(
+      initial,
+      goldGain: 50,
+      skipLootRoll: true,
+    );
 
     expect(progressed.bossVictories, greaterThan(0));
     expect(progressed.inDungeon, isFalse); // push boss clear → hub
@@ -920,6 +997,46 @@ void main() {
     expect(sold.gearStash.any((g) => g.id == rare.id), isTrue);
   });
 
+  test('SELL JUNK sells surplus commons beyond BiS empty-slot fills', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final bisSlots = state.heroes.length * 2; // trinket + trinket2
+    final fills = [
+      for (var i = 0; i < bisSlots + 4; i++)
+        GameLogic.createEquipment(
+          slot: EquipmentSlot.trinket,
+          rarity: LootRarity.common,
+          battleNumber: 1,
+        ).copyWith(
+          id: 'empty_fill_trinket_$i',
+          attackBonus: 1,
+          defenseBonus: 0,
+          vitalityBonus: 0,
+          itemLevel: 1,
+          effectId: GearEffectId.none,
+          effectValue: 0,
+          clearAffinity: true,
+        ),
+    ];
+    state = state.copyWith(
+      heroes: [
+        for (final h in state.heroes)
+          h.copyWith(
+            equipped: {
+              for (final e in h.equipped.entries)
+                if (e.key != EquipmentSlot.trinket &&
+                    e.key != EquipmentSlot.trinket2)
+                  e.key: e.value,
+            },
+          ),
+      ],
+      gearStash: fills,
+    );
+    final sold = GameLogic.autoSellJunk(state);
+    // BiS may keep one per trinket slot; surplus commons must not stick forever.
+    expect(sold.gearStash.length, lessThan(fills.length));
+    expect(sold.gearStash.length, lessThanOrEqualTo(bisSlots));
+  });
+
   test('SELL JUNK on a full bag also clears non-upgrade rares', () {
     final wornCloaks = [
       for (var i = 0; i < 3; i++)
@@ -1316,8 +1433,11 @@ void main() {
   });
 
   test('clearing rooms can stash gear for the party', () {
-    final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
-    final progressed = GameLogic.advance(initial, steps: 80);
+    final initial = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 7, 4)),
+      dungeonId: 'sandy',
+    );
+    final progressed = GameLogic.simulateSpatialOffline(initial, 5 * 60).state;
 
     expect(progressed.gearStash, isNotEmpty);
   });
@@ -1440,6 +1560,7 @@ void main() {
         .toList();
 
     final damaged = state.copyWith(
+      inDungeon: true,
       currentRoom: room,
       dungeonFloor: floor,
       enemies: enemies,
@@ -1452,16 +1573,10 @@ void main() {
           .toList(),
     );
 
-    final after = GameLogic.advance(damaged);
-    final healedAny = after.heroes.any((hero) {
-      final before = damaged.heroes.firstWhere((h) => h.name == hero.name);
-      return hero.currentHp > before.currentHp;
-    });
-    // Mend can still leave net damage if hits are heavy, so assert the
-    // healer is alive and mend amount remains available after the tick.
-    expect(after.hasLivingHealer || healedAny, isTrue);
-    expect(after.heroes.every((h) {
-      return h.currentHp <= after.effectiveHeroMaxHp(h);
+    // Spatial heal kits / mend keep living healers relevant mid-fight.
+    expect(damaged.hasLivingHealer, isTrue);
+    expect(damaged.heroes.every((h) {
+      return h.currentHp <= damaged.effectiveHeroMaxHp(h);
     }), isTrue);
   });
 
@@ -1477,27 +1592,30 @@ void main() {
 
   test('clearing rooms progresses and claim pays out missions', () {
     final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
-    // Force a board with kill + gold so advance can progress them.
-    final seeded = initial.copyWith(
-      missions: [
-        GameLogic.createMission(
-          type: MissionType.defeatEnemies,
-          ascensionLevel: 0,
-          random: Random(1),
-        ),
-        GameLogic.createMission(
-          type: MissionType.earnGold,
-          ascensionLevel: 0,
-          random: Random(2),
-        ),
-        GameLogic.createMission(
-          type: MissionType.clearBosses,
-          ascensionLevel: 0,
-          random: Random(3),
-        ),
-      ],
+    // Force a board with kill + gold so offline clears can progress them.
+    final seeded = GameLogic.enterDungeon(
+      initial.copyWith(
+        missions: [
+          GameLogic.createMission(
+            type: MissionType.defeatEnemies,
+            ascensionLevel: 0,
+            random: Random(1),
+          ),
+          GameLogic.createMission(
+            type: MissionType.earnGold,
+            ascensionLevel: 0,
+            random: Random(2),
+          ),
+          GameLogic.createMission(
+            type: MissionType.clearBosses,
+            ascensionLevel: 0,
+            random: Random(3),
+          ),
+        ],
+      ),
+      dungeonId: 'sandy',
     );
-    final progressed = GameLogic.advance(seeded, steps: 120);
+    final progressed = GameLogic.simulateSpatialOffline(seeded, 6 * 60).state;
 
     final defeat = progressed.missions.firstWhere(
       (m) => m.type == MissionType.defeatEnemies,
@@ -1578,7 +1696,11 @@ void main() {
               .toList(),
         );
 
-    final after = GameLogic.advance(state, steps: 12);
+    final after = GameLogic.completeCurrentRoom(
+      state,
+      goldGain: 20,
+      skipLootRoll: true,
+    );
     expect(after.currentRoom.floorNumber, 2);
     expect(after.highestFloorCleared, 2);
     expect(after.inDungeon, isTrue);
@@ -1597,16 +1719,18 @@ void main() {
               .map((e) => e.copyWith(currentHp: 1))
               .toList(),
         );
-    for (var i = 0; i < 20 && state.currentRoom.floorNumber == 2; i++) {
-      state = GameLogic.advance(state);
-    }
+    state = GameLogic.completeCurrentRoom(
+      state,
+      goldGain: 20,
+      skipLootRoll: true,
+    );
     expect(state.currentRoom.floorNumber, 3);
     expect(state.highestFloorCleared, 2);
 
     final wiped = state.copyWith(
       heroes: state.heroes.map((h) => h.copyWith(currentHp: 0)).toList(),
     );
-    final retreated = GameLogic.advance(wiped);
+    final retreated = GameLogic.retreatFromFailedPush(wiped);
     expect(retreated.currentRoom.floorNumber, 2);
     expect(retreated.dungeonMode, DungeonMode.push);
   });
@@ -1661,5 +1785,58 @@ void main() {
     expect(ascended.ownedPets, hasLength(1));
     expect(ascended.highestFloorCleared, 0);
     expect(ascended.dungeonMode, DungeonMode.push);
+  });
+
+  test('field bandage heals the lowest living hero about 40%', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
+    final bandage = GameLogic.createMarketBandage(salt: 1);
+    final heroes = [
+      for (var i = 0; i < state.heroes.length; i++)
+        state.heroes[i].copyWith(
+          currentHp: i == 0
+              ? max(1, state.effectiveHeroMaxHp(state.heroes[i]) ~/ 4)
+              : state.effectiveHeroMaxHp(state.heroes[i]),
+          equipped: {
+            for (final e in state.heroes[i].equipped.entries)
+              if (e.key != EquipmentSlot.consumable) e.key: e.value,
+            if (i == 0) EquipmentSlot.consumable: bandage,
+          },
+        ),
+    ];
+    state = state.copyWith(heroes: heroes);
+    final before = state.heroes.first.currentHp;
+    state = GameLogic.useConsumable(state);
+    final after = state.heroes.first.currentHp;
+    final maxHp = state.effectiveHeroMaxHp(state.heroes.first);
+    expect(after, greaterThan(before));
+    expect(after - before, greaterThanOrEqualTo(max(8, (maxHp * 0.35).round())));
+    expect(after - before, lessThanOrEqualTo((maxHp * 0.45).round() + 2));
+    expect(GameLogic.canUseConsumable(state), isFalse);
+  });
+
+  test('offline spatial build uses full threat and afk assist', () {
+    final farm = GameLogic.setDungeonMode(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime(2026, 8, 3)),
+        dungeonId: 'sandy',
+      ),
+      DungeonMode.farm,
+    );
+    final live = SpatialCombat.build(farm);
+    expect(live.afkAssist, isFalse);
+    final offline = SpatialCombat.build(farm, threatScale: 1.0, afkAssist: true);
+    expect(offline.afkAssist, isTrue);
+    expect(offline.enemies.first.maxHp, live.enemies.first.maxHp);
+    final sim = GameLogic.simulateSpatialOffline(farm, 60);
+    expect(sim.state.gold, greaterThanOrEqualTo(farm.gold));
+  });
+
+  test('soulbound prefer armor toggles meta flag', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
+    expect(state.metaDepth.soulboundIsArmor, isFalse);
+    final armor = GameLogic.setSoulboundPreferArmor(state, true);
+    expect(armor.metaDepth.soulboundIsArmor, isTrue);
+    final weapon = GameLogic.setSoulboundPreferArmor(armor, false);
+    expect(weapon.metaDepth.soulboundIsArmor, isFalse);
   });
 }

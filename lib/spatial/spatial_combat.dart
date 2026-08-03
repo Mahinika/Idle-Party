@@ -2663,7 +2663,11 @@ abstract final class SpatialCombat {
     }
   }
 
-  static SpatialWorld build(GameState state, {double threatScale = 1.0}) {
+  static SpatialWorld build(
+    GameState state, {
+    double threatScale = 1.0,
+    bool? afkAssist,
+  }) {
     final room = state.currentRoom;
     final map = RoomLayouts.forFloor(
       floorNumber: room.floorNumber,
@@ -2900,7 +2904,7 @@ abstract final class SpatialCombat {
       activeChamber: firstCombat,
       clearedChambers: <int>{0},
       pets: pets,
-      afkAssist: threatScale < 0.99,
+      afkAssist: afkAssist ?? false,
       petMitigateFlat: state.petMitigateFlat,
       petHealBoost: state.petHealBoost,
       bossBannerTimer: room.type == RoomType.boss ? 2.4 : 0,
@@ -2994,10 +2998,14 @@ abstract final class SpatialCombat {
         team: SpatialTeam.hero,
         x: prev?.x ?? (spawn.$1 + 0.5 + ox),
         y: prev?.y ?? (spawn.$2 + 0.5 + oy),
-        // Prefer live spatial HP (keeps fortitude surplus); fall back to state.
+        // Prefer live spatial HP (keeps fortitude surplus), but take state HP
+        // when higher so flask / hub heals are not overwritten on sync.
         hp: hero.isAlive
             ? (prev != null
-                ? prev.hp.clamp(0, math.max(prev.effectiveMaxHp, maxHp))
+                ? (hero.currentHp > prev.hp
+                        ? hero.currentHp
+                        : prev.hp)
+                    .clamp(0, math.max(prev.effectiveMaxHp, maxHp))
                 : hero.currentHp.clamp(0, maxHp))
             : 0,
         maxHp: maxHp,
@@ -4804,21 +4812,43 @@ abstract final class SpatialCombat {
       lootFindPercent: state.petLootFindPercent,
       hardmodeLevel: state.hardmodeLevel,
       party: state.heroes,
+      dungeonId: state.dungeonId,
     );
-    final drop = drops.isEmpty
-        ? const LootDrop(
+    if (drops.isEmpty) {
+      world.groundLoot.add(
+        GroundLoot(
+          x: enemy.x + (rng.nextDouble() - 0.5) * 0.4,
+          y: enemy.y + (rng.nextDouble() - 0.5) * 0.4,
+          drop: const LootDrop(
             name: 'Gold Pouch',
             amount: 1,
             rarity: LootRarity.common,
-          )
-        : drops.first;
-    world.groundLoot.add(
-      GroundLoot(
-        x: enemy.x + (rng.nextDouble() - 0.5) * 0.4,
-        y: enemy.y + (rng.nextDouble() - 0.5) * 0.4,
-        drop: drop,
-      ),
-    );
+          ),
+        ),
+      );
+    } else {
+      for (var i = 0; i < drops.length; i++) {
+        final drop = drops[i];
+        final angle = (i / math.max(1, drops.length)) * math.pi * 2;
+        world.groundLoot.add(
+          GroundLoot(
+            x: enemy.x + math.cos(angle) * 0.35 * (0.6 + i * 0.15),
+            y: enemy.y + math.sin(angle) * 0.35 * (0.6 + i * 0.15),
+            drop: drop,
+          ),
+        );
+        if (drop.isEquipment) {
+          _spawnFloater(
+            world,
+            x: enemy.x + 0.2 + i * 0.05,
+            y: enemy.y - 0.15,
+            text: 'LOOT!',
+            argb: _floaterGear,
+            life: 0.7,
+          );
+        }
+      }
+    }
     if (rewardGold > 0) {
       _spawnFloater(
         world,
@@ -4827,16 +4857,6 @@ abstract final class SpatialCombat {
         text: '+${rewardGold}g',
         argb: _floaterGold,
         life: 1.0,
-      );
-    }
-    if (drop.isEquipment) {
-      _spawnFloater(
-        world,
-        x: enemy.x + 0.2,
-        y: enemy.y - 0.15,
-        text: 'LOOT!',
-        argb: _floaterGear,
-        life: 0.7,
       );
     }
     var next = state;

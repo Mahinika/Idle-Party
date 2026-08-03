@@ -13,13 +13,39 @@ abstract final class CustomAssets {
   static const String petWardenCub = '$_root/pets/warden_cub.png';
 
   static String petForTemplateId(String templateId) => switch (templateId) {
-        'ember_pup' || 'ash_fox' || 'spark_pup' => petEmberPup,
-        'cave_bat' || 'spirit_moth' || 'xp_wisp' || 'shrine_owl' => petCaveBat,
-        'loot_sprite' || 'gold_grub' || 'coin_imp' || 'vault_beetle' =>
-          petLootSprite,
-        'warden_cub' || 'mire_toad' => petWardenCub,
+        'ember_pup' => petEmberPup,
+        'cave_bat' => petCaveBat,
+        'loot_sprite' => petLootSprite,
+        'warden_cub' => petWardenCub,
+        'ash_fox' => enemySpider,
+        'spark_pup' => enemySlime,
+        'spirit_moth' => enemyGhost,
+        'xp_wisp' => enemyCrystalMite,
+        'shrine_owl' => enemyBat,
+        'gold_grub' => enemyRat,
+        'coin_imp' => enemyCultist,
+        'vault_beetle' => enemyCrystalWraith,
+        'mire_toad' => enemyCrab,
         _ => petEgg,
       };
+
+  /// Unique portrait paths used by [petForTemplateId] (preload set).
+  static List<String> get petPortraitPaths => const [
+        petEmberPup,
+        petCaveBat,
+        petLootSprite,
+        petWardenCub,
+        petEgg,
+        enemySpider,
+        enemySlime,
+        enemyGhost,
+        enemyCrystalMite,
+        enemyBat,
+        enemyRat,
+        enemyCultist,
+        enemyCrystalWraith,
+        enemyCrab,
+      ];
 
   /// Pet instance ids look like `ember_pup_12345`.
   static String petForInstanceId(String petId) {

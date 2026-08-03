@@ -636,6 +636,10 @@ abstract final class KenneyAssets {
           return bow;
         case 'book':
           return CustomAssets.iconTome;
+        case 'bandage':
+          return potionGreen;
+        case 'flask':
+          return potionRed;
         default:
           break;
       }

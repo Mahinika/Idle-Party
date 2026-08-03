@@ -172,6 +172,7 @@ class GameState {
 
   /// Auto-sell *drops on pickup* when itemLevel ≤ this (0 = off).
   /// Bag AUTO SELL button ignores this and sells all non-upgrades.
+  /// Auto-sell pickup threshold as **item level** (legacy field name).
   final int autoSellMaxPower;
 
   /// Fourth hero (Rogue) unlocked after first Ascend.
@@ -331,11 +332,27 @@ class GameState {
     return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
   }
 
-  int get soulboundAttackBonus => soulboundItem?.attackBonus ?? 0;
+  /// Soulbound primaries → flat ATK (melee AP path or caster Int+SP/2).
+  int get soulboundAttackBonus {
+    final item = soulboundItem;
+    if (item == null) return 0;
+    final meleeAp = 2 * item.strengthBonus + item.agilityBonus;
+    final meleeAtk = (meleeAp / CombatRatings.kAp).round();
+    final casterAtk = item.intellectBonus + (item.spellPowerBonus ~/ 2);
+    return item.attackBonus + max(meleeAtk, casterAtk);
+  }
 
-  int get soulboundDefenseBonus => soulboundItem?.defenseBonus ?? 0;
+  int get soulboundDefenseBonus {
+    final item = soulboundItem;
+    if (item == null) return 0;
+    return item.resolvedArmor;
+  }
 
-  int get soulboundVitalityBonus => soulboundItem?.vitalityBonus ?? 0;
+  int get soulboundVitalityBonus {
+    final item = soulboundItem;
+    if (item == null) return 0;
+    return item.resolvedStamina * 10;
+  }
 
   int get soulboundRefineBonus => metaDepth.soulboundRefine;
 

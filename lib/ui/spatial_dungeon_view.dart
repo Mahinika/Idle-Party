@@ -59,6 +59,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   List<ui.Image?> _enemySprites = const [];
   String? _loadedDungeonId;
   bool _sharedLoaded = false;
+  bool _offlineDialogShown = false;
 
   bool get _tilesReady =>
       _floorReady.isNotEmpty &&
@@ -72,6 +73,15 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   void initState() {
     super.initState();
     _loadImages(widget.director.state.dungeonId);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOffline());
+  }
+
+  Future<void> _maybeShowOffline() async {
+    if (_offlineDialogShown || !mounted || widget.director.offlineSummary == null) {
+      return;
+    }
+    _offlineDialogShown = true;
+    await showOfflineProgressDialog(context, widget.director);
   }
 
   @override
@@ -143,13 +153,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         KenneyAssets.iconBow,
       }.toList();
 
-      final petPaths = <String>[
-        CustomAssets.petEmberPup,
-        CustomAssets.petCaveBat,
-        CustomAssets.petLootSprite,
-        CustomAssets.petWardenCub,
-        CustomAssets.petEgg,
-      ];
+      final petPaths = CustomAssets.petPortraitPaths;
 
       final shared = await Future.wait([
         load(KenneyAssets.stairs, targetWidth: 64),
@@ -580,29 +584,35 @@ class DungeonModeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? const Color(0xFF3A2810) : const Color(0xFF1A1610),
-      borderRadius: BorderRadius.circular(3),
-      child: InkWell(
-        onTap: onTap,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$label dungeon mode',
+      excludeSemantics: true,
+      child: Material(
+        color: selected ? const Color(0xFF3A2810) : const Color(0xFF1A1610),
         borderRadius: BorderRadius.circular(3),
-        child: Container(
-          constraints: BoxConstraints(
-            minHeight: dense ? 36 : GameTheme.minTouch,
-          ),
-          padding: EdgeInsets.symmetric(horizontal: dense ? 6 : 8),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(3),
-            border: Border.all(
-              color: selected ? GameTheme.torchHot : const Color(0xFF4A4030),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(3),
+          child: Container(
+            constraints: BoxConstraints(
+              minHeight: dense ? 36 : GameTheme.minTouch,
             ),
-          ),
-          child: Text(
-            label,
-            style: GameTheme.pixel(
-              size: GameTheme.hudPixel,
-              color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
+            padding: EdgeInsets.symmetric(horizontal: dense ? 6 : 8),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(3),
+              border: Border.all(
+                color: selected ? GameTheme.torchHot : const Color(0xFF4A4030),
+              ),
+            ),
+            child: Text(
+              label,
+              style: GameTheme.pixel(
+                size: GameTheme.hudPixel,
+                color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
+              ),
             ),
           ),
         ),
@@ -640,20 +650,26 @@ class GodHandRing extends StatelessWidget {
             label: label,
             excludeSemantics: true,
             child: SizedBox(
-              width: 28,
-              height: 28,
-              child: CustomPaint(
-                painter: _GodHandRingPainter(
-                  progress: t,
-                  color: color,
-                  ready: ready,
-                ),
-                child: Center(
-                  child: Text(
-                    'GH',
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
+              width: GameTheme.minTouch,
+              height: GameTheme.minTouch,
+              child: Center(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CustomPaint(
+                    painter: _GodHandRingPainter(
+                      progress: t,
                       color: color,
+                      ready: ready,
+                    ),
+                    child: Center(
+                      child: Text(
+                        'GH',
+                        style: GameTheme.pixel(
+                          size: GameTheme.hudPixel,
+                          color: color,
+                        ),
+                      ),
                     ),
                   ),
                 ),

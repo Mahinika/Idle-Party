@@ -10,6 +10,7 @@ import '../models/class_ability.dart';
 import '../models/dungeon_def.dart';
 import '../models/dungeon_mode.dart';
 import '../models/enemy.dart';
+import '../models/gear_set.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
@@ -475,7 +476,7 @@ class _Is2ShellState extends State<Is2Shell> {
           state.inDungeon &&
           !state.isPartyDefeated &&
           _overlay == Is2Overlay.none) {
-        widget.director.godHandAt(0.5, 0.5);
+        widget.director.godHandAtFocus();
         return KeyEventResult.handled;
       }
     }
@@ -831,7 +832,7 @@ class _TopHud extends StatelessWidget {
                   const SizedBox(width: 4),
                   GodHandRing(
                     cooldown: world.godHandCooldown,
-                    onTap: () => director.godHandAt(0.5, 0.5),
+                    onTap: () => director.godHandAtFocus(),
                   ),
                 ],
                 const Spacer(),
@@ -990,7 +991,7 @@ class _TopHud extends StatelessWidget {
                       const SizedBox(width: 6),
                       GodHandRing(
                         cooldown: world.godHandCooldown,
-                        onTap: () => director.godHandAt(0.5, 0.5),
+                        onTap: () => director.godHandAtFocus(),
                       ),
                     ],
                     const Spacer(),
@@ -1136,30 +1137,36 @@ class _BottomNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = selected ? GameTheme.torchHot : GameTheme.parchmentDim;
-    return InkWell(
-      onTap: onTap,
-      child: SizedBox(
-        height: GameTheme.minTouch,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            KenneySprite(asset: icon, size: 18),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: GameTheme.pixel(size: GameTheme.hudPixel, color: color),
-            ),
-            const SizedBox(height: 2),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              height: 2,
-              width: selected ? 28 : 0,
-              decoration: BoxDecoration(
-                color: GameTheme.torchHot,
-                borderRadius: BorderRadius.circular(1),
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          height: GameTheme.minTouch,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              KenneySprite(asset: icon, size: 18),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: GameTheme.pixel(size: GameTheme.hudPixel, color: color),
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                height: 2,
+                width: selected ? 28 : 0,
+                decoration: BoxDecoration(
+                  color: GameTheme.torchHot,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1180,30 +1187,35 @@ class _MissionClaimChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(3),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: dense ? 6 : 8,
-              vertical: dense ? 4 : 6,
-            ),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: const Color(0xFF3A5018),
-              borderRadius: BorderRadius.circular(3),
-              border: Border.all(color: GameTheme.clear),
-            ),
-            child: Text(
-              dense ? 'C$count' : 'CLAIM $count',
-              style: GameTheme.pixel(
-                size: GameTheme.hudPixel,
-                color: GameTheme.clear,
+    return Semantics(
+      button: true,
+      label: count == 1 ? 'Claim 1 mission' : 'Claim $count missions',
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          borderRadius: BorderRadius.circular(3),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: dense ? 6 : 8,
+                vertical: dense ? 4 : 6,
+              ),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3A5018),
+                borderRadius: BorderRadius.circular(3),
+                border: Border.all(color: GameTheme.clear),
+              ),
+              child: Text(
+                dense ? 'C$count' : 'CLAIM $count',
+                style: GameTheme.pixel(
+                  size: GameTheme.hudPixel,
+                  color: GameTheme.clear,
+                ),
               ),
             ),
           ),
@@ -1350,7 +1362,7 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
     );
 
     return AnimatedOpacity(
-      opacity: _opacity,
+      opacity: partyCritical ? _fullOpacity : _opacity,
       duration: const Duration(milliseconds: 400),
       child: Listener(
         behavior: HitTestBehavior.deferToChild,
@@ -1378,37 +1390,42 @@ class _FlaskQuickSlot extends StatelessWidget {
     final borderColor = urgent
         ? GameTheme.torchHot
         : GameTheme.bloodLit.withValues(alpha: 0.8);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 280),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          decoration: BoxDecoration(
-            color: urgent
-                ? const Color(0xEE4A2010)
-                : const Color(0xDD2A1810),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(
-              color: borderColor,
-              width: urgent ? 2 : 1,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              KenneySprite(asset: KenneyAssets.potionRed, size: 16),
-              const SizedBox(width: 5),
-              Text(
-                urgent ? 'FLASK!' : 'FLASK',
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: urgent ? GameTheme.torchHot : GameTheme.parchment,
-                ),
+    return Semantics(
+      button: true,
+      label: urgent ? 'Use healing flask, party critical' : 'Use healing flask',
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(4),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 280),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            decoration: BoxDecoration(
+              color: urgent
+                  ? const Color(0xEE4A2010)
+                  : const Color(0xDD2A1810),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: borderColor,
+                width: urgent ? 2 : 1,
               ),
-            ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                KenneySprite(asset: KenneyAssets.potionRed, size: 16),
+                const SizedBox(width: 5),
+                Text(
+                  urgent ? 'FLASK!' : 'FLASK',
+                  style: GameTheme.pixel(
+                    size: GameTheme.hudPixel,
+                    color: urgent ? GameTheme.torchHot : GameTheme.parchment,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1486,7 +1503,7 @@ class _PartyRow extends StatelessWidget {
         : const <ClassAbilityDef>[];
 
     return Container(
-      constraints: BoxConstraints(minHeight: compact ? 32 : GameTheme.minTouch),
+      constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
       padding: EdgeInsets.fromLTRB(4, compact ? 3 : 5, 6, compact ? 3 : 5),
       decoration: BoxDecoration(
         color: const Color(0xDD14110C),
@@ -2233,8 +2250,8 @@ class _InventoryDockState extends State<_InventoryDock>
           nearFull && filled >= cap
               ? 'BAG FULL  $filled/$cap — oldest salvages to essence'
               : nearFull
-                  ? 'BAG  $filled/$cap — nearly full'
-                  : 'BAG  $filled/$cap',
+                  ? 'BAG  $filled/$cap — nearly full (SELL JUNK dumps non-BiS rares)'
+                  : 'BAG  $filled/$cap · SELL = essence · Market = gold',
           style: GameTheme.pixel(
             size: GameTheme.hudPixel,
             color: nearFull ? GameTheme.torchHot : GameTheme.parchment,
@@ -2326,6 +2343,34 @@ class _InventoryDockState extends State<_InventoryDock>
                       color: GameTheme.torchHot,
                     ),
                   ),
+                  if (selected.setId != null && selected.setId!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      () {
+                        final best = state.heroes
+                            .map(
+                              (h) => (
+                                h,
+                                GearSets.wornCount(h.equipped, selected.setId!),
+                              ),
+                            )
+                            .reduce((a, b) => a.$2 >= b.$2 ? a : b);
+                        final n = best.$2;
+                        final label = selected.setLabel;
+                        if (n <= 0) return '$label · 0/4';
+                        final bonus = n >= 4
+                            ? '4pc active'
+                            : (n >= 2 ? '2pc active' : 'set');
+                        return '$label · $n/4 · $bonus';
+                      }(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(
+                        size: 11,
+                        color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                  ],
                   if (_isSoulboundItem(selected)) ...[
                     const SizedBox(height: 2),
                     Text(
@@ -3306,11 +3351,34 @@ class _ForgeOverlay extends StatelessWidget {
         const SizedBox(height: 10),
         Text('SOULBOUND', style: GameTheme.pixel(size: 8)),
         const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: KenneyButton(
+                label: 'PREFER WEAPON',
+                style: state.metaDepth.soulboundIsArmor
+                    ? KenneyButtonStyle.grey
+                    : KenneyButtonStyle.brown,
+                onPressed: () => director.setSoulboundPreferArmor(false),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: KenneyButton(
+                label: 'PREFER ARMOR',
+                style: state.metaDepth.soulboundIsArmor
+                    ? KenneyButtonStyle.brown
+                    : KenneyButtonStyle.grey,
+                onPressed: () => director.setSoulboundPreferArmor(true),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
         if (state.soulboundItem == null)
           Text(
             'Bind a weapon or chest/cloak from bag TOOLS (3 fragments). '
-            'Prefers ${state.metaDepth.soulboundIsArmor ? 'armor' : 'weapon'} '
-            'if available.',
+            'Currently prefers ${state.metaDepth.soulboundIsArmor ? 'armor' : 'weapon'}.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           )
         else ...[
@@ -3636,7 +3704,7 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
           children: [
             TextButton(
               style: TextButton.styleFrom(
-                minimumSize: const Size(36, 36),
+                minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
                 padding: EdgeInsets.zero,
                 foregroundColor: GameTheme.parchment,
               ),
@@ -3656,7 +3724,7 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
             ),
             TextButton(
               style: TextButton.styleFrom(
-                minimumSize: const Size(36, 36),
+                minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
                 padding: EdgeInsets.zero,
                 foregroundColor: GameTheme.parchment,
               ),
@@ -3669,8 +3737,9 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
         ),
         Text(
           'Pickup: auto-sell drops at or below i${state.autoSellMaxPower} '
-          'if not an upgrade (0 = off). Bag SELL JUNK clears commons / '
-          'non-upgrade uncommons; when FULL it also dumps non-BiS rares.',
+          '(item level cap) if not an upgrade (0 = off). Bag SELL JUNK clears '
+          'commons / non-upgrade uncommons; at ≥90% full it also dumps non-BiS rares. '
+          'Bag SELL = essence; Market tap-sell = gold.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 16),
@@ -3878,10 +3947,30 @@ class _MarketOverlay extends StatelessWidget {
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
+        const SizedBox(height: 8),
+        Text(
+          'Buy flasks for mid-run recovery (gold). Tap stash pieces here to sell for gold. '
+          'Bag SELL / SELL JUNK pay essence — rare+ kept until bag ≥90% full.',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
         const SizedBox(height: 12),
         KenneyButton(
           label: 'BUY FLASK  ${flaskCost}g',
           onPressed: state.gold >= flaskCost ? director.buyMarketFlask : null,
+        ),
+        const SizedBox(height: 6),
+        KenneyButton(
+          label: 'BUY 3 FLASKS  ${flaskCost * 3}g',
+          onPressed:
+              state.gold >= flaskCost ? () => director.buyMarketFlasks() : null,
+        ),
+        const SizedBox(height: 6),
+        KenneyButton(
+          label: 'BUY BANDAGE  ${GameLogic.marketBandageCost(state)}g',
+          onPressed: state.gold >= GameLogic.marketBandageCost(state)
+              ? director.buyMarketBandage
+              : null,
         ),
         const SizedBox(height: 6),
         Row(
@@ -3890,7 +3979,7 @@ class _MarketOverlay extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Restores party HP mid-run. Price scales with purchases.',
+                'Flask: whole party (~30% HP). Bandage: lowest hero (~40% HP).',
                 style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
               ),
             ),
@@ -3898,13 +3987,13 @@ class _MarketOverlay extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'SELL STASH (gold)',
+          'SELL STASH (tap for gold)',
           style: GameTheme.pixel(size: GameTheme.hudPixel, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         if (stash.isEmpty)
           Text(
-            'Bag is empty. Clear rooms for gear, then sell junk here.',
+            'Bag is empty. Clear rooms for gear. Sell here for gold, or SELL JUNK in the bag for essence.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
           )

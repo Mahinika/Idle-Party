@@ -36,6 +36,7 @@ class SharedPreferencesGameStorage implements GameStorage {
 
   static const String _saveKey = 'idle_party_save_v2';
   static const String _legacySaveKey = 'idle_party_save_v1';
+  static const String _corruptSaveKey = 'idle_party_save_v2_corrupt';
 
   final SharedPreferences? _preferences;
 
@@ -53,8 +54,9 @@ class SharedPreferencesGameStorage implements GameStorage {
     try {
       return GameLogic.stateFromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (e, st) {
-      // Corrupt blob would otherwise keep showing Continue forever.
-      debugPrint('save load failed (cleared): $e\n$st');
+      // Quarantine corrupt blob so Continue is not stuck; keep a copy for debug.
+      debugPrint('save load failed (quarantined): $e\n$st');
+      await prefs.setString(_corruptSaveKey, raw);
       await prefs.remove(_saveKey);
       await prefs.remove(_legacySaveKey);
       return null;
@@ -79,6 +81,7 @@ class SharedPreferencesGameStorage implements GameStorage {
     final prefs = await _prefs;
     await prefs.remove(_saveKey);
     await prefs.remove(_legacySaveKey);
+    await prefs.remove(_corruptSaveKey);
   }
 }
 
@@ -607,6 +610,42 @@ class GameDirector extends ChangeNotifier {
     );
   }
 
+  /// God Hand aimed at the nearest live enemy to the party, else party center.
+  void godHandAtFocus() {
+    final spatial = _spatial;
+    if (spatial == null) return;
+    final aliveHeroes = spatial.heroes.where((h) => h.hp > 0).toList();
+    var cx = spatial.cols / 2.0;
+    var cy = spatial.rows / 2.0;
+    if (aliveHeroes.isNotEmpty) {
+      cx = 0;
+      cy = 0;
+      for (final h in aliveHeroes) {
+        cx += h.x;
+        cy += h.y;
+      }
+      cx /= aliveHeroes.length;
+      cy /= aliveHeroes.length;
+    }
+    SpatialActor? best;
+    var bestD2 = double.infinity;
+    for (final e in spatial.enemies) {
+      if (e.hp <= 0 || e.dormant) continue;
+      final dx = e.x - cx;
+      final dy = e.y - cy;
+      final d2 = dx * dx + dy * dy;
+      if (d2 < bestD2) {
+        bestD2 = d2;
+        best = e;
+      }
+    }
+    if (best != null) {
+      godHandAtWorld(best.x, best.y);
+    } else {
+      godHandAtWorld(cx, cy);
+    }
+  }
+
   /// God Hand tap at world-tile coordinates.
   void godHandAtWorld(double tileX, double tileY) {
     if (_isLoading ||
@@ -677,19 +716,6 @@ class GameDirector extends ChangeNotifier {
     } else {
       showToast('No gear to bind on this hero', life: 1.8);
     }
-  }
-
-  /// Legacy single abstract tick (tests / debug). Prefer spatialTick.
-  void tick() {
-    if (_isLoading) {
-      return;
-    }
-
-    _state = GameLogic.advance(_state);
-    _state = _state.copyWith(lastUpdated: DateTime.now());
-    _rebuildSpatial();
-    notifyListeners();
-    unawaited(_persistFlush());
   }
 
   void applyTraining() {
@@ -835,7 +861,15 @@ class GameDirector extends ChangeNotifier {
         life: 1.9,
       );
     } else {
-      showToast('No junk — try AUTO MERGE', life: 1.8);
+      final rarePlus = _state.gearStash.any(
+        (g) => g.rarity.index >= LootRarity.rare.index,
+      );
+      showToast(
+        rarePlus
+            ? 'Keeping rare+ until bag ≥90% — Market sells for gold'
+            : 'No junk — try AUTO MERGE',
+        life: 2.0,
+      );
     }
   }
 
@@ -904,9 +938,22 @@ class GameDirector extends ChangeNotifier {
   }
 
   void applyLoadout(String id) {
-    _applyUpgrade(GameLogic.applyLoadout(_state, id));
+    final result = GameLogic.applyLoadout(_state, id);
+    _applyUpgrade(result.state);
     GameAudio.ui();
-    showToast('Gear set applied', life: 1.6);
+    if (result.skipped > 0) {
+      showToast(
+        'Gear set applied · ${result.skipped} slot'
+        '${result.skipped == 1 ? '' : 's'} skipped',
+        life: 2.0,
+      );
+    } else {
+      showToast('Gear set applied', life: 1.6);
+    }
+  }
+
+  void setSoulboundPreferArmor(bool preferArmor) {
+    _applyUpgrade(GameLogic.setSoulboundPreferArmor(_state, preferArmor));
   }
 
   void deleteLoadout(String id) {
@@ -998,7 +1045,13 @@ class GameDirector extends ChangeNotifier {
   }
 
   void sellGear(String itemId) {
+    final before = _state.essence;
     _applyUpgrade(GameLogic.sellGear(_state, itemId));
+    final gained = _state.essence - before;
+    if (gained > 0) {
+      GameAudio.loot();
+      showToast('+$gained ess', life: 1.5);
+    }
   }
 
   void sellGearForGold(String itemId) {
@@ -1019,6 +1072,48 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.buyMarketFlask(_state));
     GameAudio.loot();
     showToast('Flask acquired', life: 1.8);
+  }
+
+  void buyMarketFlasks({int count = 3}) {
+    final unit = GameLogic.marketFlaskCost(_state);
+    final need = unit * count;
+    if (_state.gold < unit) {
+      showToast('Need ${unit}g for flask', life: 2);
+      return;
+    }
+    final beforeGold = _state.gold;
+    final beforeFlasks = _countFlasks(_state);
+    _applyUpgrade(GameLogic.buyMarketFlasks(_state, count: count));
+    final bought = _countFlasks(_state) - beforeFlasks;
+    final spent = beforeGold - _state.gold;
+    if (bought <= 0) {
+      showToast('Need ${need}g for $count flasks', life: 2);
+      return;
+    }
+    GameAudio.loot();
+    showToast('+$bought flask${bought == 1 ? '' : 's'} (−${spent}g)', life: 1.8);
+  }
+
+  void buyMarketBandage() {
+    final cost = GameLogic.marketBandageCost(_state);
+    if (_state.gold < cost) {
+      showToast('Need ${cost}g for bandage', life: 2);
+      return;
+    }
+    _applyUpgrade(GameLogic.buyMarketBandage(_state));
+    GameAudio.loot();
+    showToast('Field Bandage acquired', life: 1.8);
+  }
+
+  static int _countFlasks(GameState state) {
+    var n = 0;
+    for (final h in state.heroes) {
+      if (h.itemIn(EquipmentSlot.consumable) != null) n++;
+    }
+    for (final g in state.gearStash) {
+      if (g.slot == EquipmentSlot.consumable) n++;
+    }
+    return n;
   }
 
   void dismissTip(String tipId) {

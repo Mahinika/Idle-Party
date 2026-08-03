@@ -111,6 +111,12 @@ class KenneyButton extends StatelessWidget {
       ),
     );
 
-    return button;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: label,
+      excludeSemantics: true,
+      child: button,
+    );
   }
 }

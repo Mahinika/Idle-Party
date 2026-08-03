@@ -129,6 +129,7 @@ class MetaDepthState {
     this.lifetimePetHatches = 0,
     this.lifetimePetMerges = 0,
     this.lifetimeAscends = 0,
+    this.highestHardmodeCleared = 0,
     this.codexClaims = const <String>[],
     this.soulboundRefine = 0,
     this.soulboundIsArmor = false,
@@ -169,6 +170,9 @@ class MetaDepthState {
   final int lifetimePetHatches;
   final int lifetimePetMerges;
   final int lifetimeAscends;
+
+  /// Highest Hardmode level at which a floor was cleared (not dial-only).
+  final int highestHardmodeCleared;
   final List<String> codexClaims;
   final int soulboundRefine;
   final bool soulboundIsArmor;
@@ -221,6 +225,7 @@ class MetaDepthState {
     int? lifetimePetHatches,
     int? lifetimePetMerges,
     int? lifetimeAscends,
+    int? highestHardmodeCleared,
     List<String>? codexClaims,
     int? soulboundRefine,
     bool? soulboundIsArmor,
@@ -263,6 +268,8 @@ class MetaDepthState {
       lifetimePetHatches: lifetimePetHatches ?? this.lifetimePetHatches,
       lifetimePetMerges: lifetimePetMerges ?? this.lifetimePetMerges,
       lifetimeAscends: lifetimeAscends ?? this.lifetimeAscends,
+      highestHardmodeCleared:
+          highestHardmodeCleared ?? this.highestHardmodeCleared,
       codexClaims: codexClaims ?? this.codexClaims,
       soulboundRefine: soulboundRefine ?? this.soulboundRefine,
       soulboundIsArmor: soulboundIsArmor ?? this.soulboundIsArmor,
@@ -305,6 +312,7 @@ class MetaDepthState {
         'lifetimePetHatches': lifetimePetHatches,
         'lifetimePetMerges': lifetimePetMerges,
         'lifetimeAscends': lifetimeAscends,
+        'highestHardmodeCleared': highestHardmodeCleared,
         'codexClaims': codexClaims,
         'soulboundRefine': soulboundRefine,
         'soulboundIsArmor': soulboundIsArmor,
@@ -363,6 +371,8 @@ class MetaDepthState {
       lifetimePetHatches: (json['lifetimePetHatches'] as num?)?.toInt() ?? 0,
       lifetimePetMerges: (json['lifetimePetMerges'] as num?)?.toInt() ?? 0,
       lifetimeAscends: (json['lifetimeAscends'] as num?)?.toInt() ?? 0,
+      highestHardmodeCleared:
+          ((json['highestHardmodeCleared'] as num?)?.toInt() ?? 0).clamp(0, 10),
       codexClaims:
           (json['codexClaims'] as List<dynamic>?)?.cast<String>() ?? const [],
       soulboundRefine: (json['soulboundRefine'] as num?)?.toInt() ?? 0,

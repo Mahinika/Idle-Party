@@ -28,14 +28,14 @@ main.dart
       ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
       └─ Inventory dock (equip / bag / combinator / GH / pets / flask)
 
-GameDirector → SpatialCombat.step @ ~30Hz (live dungeon)
-             → GameLogic.simulateSpatialOffline → SpatialCombat.step (AFK catch-up)
+GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
+             → GameLogic.simulateSpatialOffline → SpatialCombat.step (AFK; auto-flask + God Hand)
 GameLogic + GameState   (rules / persistence)
 DungeonCatalog          (named dungeons, bossFloor = 5 + AL)
 RoomLayouts (tile_map)  (multi-chamber maps + gates)
 ```
 
-**SpatialCombat is the combat authority** for live play and in-dungeon offline catch-up (offline uses `threatScale` AFK assist + `reducedVfx` for boot speed; same kits/abilities/chambers).
+**SpatialCombat is the combat authority** for live play and in-dungeon offline catch-up (offline uses full enemy stats + independent `afkAssist` + `reducedVfx` for boot speed, auto-flask at low HP, and God Hand off cooldown; same kits/abilities/chambers).
 
 Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat.
 

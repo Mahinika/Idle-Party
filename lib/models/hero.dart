@@ -1,5 +1,6 @@
 import 'class_ability.dart';
 import 'combat_ratings.dart';
+import 'gear_set.dart';
 import 'hero_spec.dart';
 import 'loot.dart';
 import 'stats.dart';
@@ -124,13 +125,16 @@ class PartyHero {
   int get gearAgilityBonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.agilityBonus);
   int get gearStaminaBonus =>
-      equipped.values.fold<int>(0, (s, i) => s + i.resolvedStamina);
+      equipped.values.fold<int>(0, (s, i) => s + i.resolvedStamina) +
+      GearSets.setStaminaBonus(equipped);
   int get gearIntellectBonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.intellectBonus);
   int get gearSpiritBonus =>
-      equipped.values.fold<int>(0, (s, i) => s + i.spiritBonus);
+      equipped.values.fold<int>(0, (s, i) => s + i.spiritBonus) +
+      GearSets.setSpiritBonus(equipped);
   int get gearSpellPowerBonus =>
-      equipped.values.fold<int>(0, (s, i) => s + i.spellPowerBonus);
+      equipped.values.fold<int>(0, (s, i) => s + i.spellPowerBonus) +
+      GearSets.setSpellPowerBonus(equipped);
   int get gearArmorBonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.resolvedArmor);
   int get gearMp5Bonus =>
@@ -145,12 +149,13 @@ class PartyHero {
 
   int get gearCritChance {
     final raw = equipped.values.fold<int>(
-      0,
-      (s, i) =>
-          s +
-          i.critChanceBonus +
-          (i.effectId == GearEffectId.crit ? i.effectValue : 0),
-    );
+          0,
+          (s, i) =>
+              s +
+              i.critChanceBonus +
+              (i.effectId == GearEffectId.crit ? i.effectValue : 0),
+        ) +
+        GearSets.setCritBonus(equipped);
     return _softCapStat(raw, soft: 18, hard: 40);
   }
 

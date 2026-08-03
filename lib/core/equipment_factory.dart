@@ -3,69 +3,205 @@ import 'dart:math';
 
 import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 
+import '../models/dungeon_def.dart';
+import '../models/gear_set.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
+
+/// Affix definition loaded from `item_affixes.json`.
+class ItemAffixDef {
+  const ItemAffixDef({
+    required this.id,
+    required this.name,
+    this.str = 0,
+    this.agi = 0,
+    this.sta = 0,
+    this.intel = 0,
+    this.spi = 0,
+    this.sp = 0,
+    this.crit = 0,
+    this.aspd = 0,
+  });
+
+  final String id;
+  final String name;
+  final int str;
+  final int agi;
+  final int sta;
+  final int intel;
+  final int spi;
+  final int sp;
+  final int crit;
+  final int aspd;
+
+  double get weightSum =>
+      (str + agi + sta + intel + spi + sp + crit + aspd).toDouble();
+
+  factory ItemAffixDef.fromJson(Map<String, dynamic> json) {
+    int asInt(dynamic v) {
+      if (v == null) return 0;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse('$v') ?? 0;
+    }
+
+    return ItemAffixDef(
+      id: (json['id'] ?? json['name'] ?? 'affix').toString(),
+      name: (json['name'] ?? json['id'] ?? 'Affix').toString(),
+      str: asInt(json['str']),
+      agi: asInt(json['agi']),
+      sta: asInt(json['sta']),
+      intel: asInt(json['int'] ?? json['intel']),
+      spi: asInt(json['spi']),
+      sp: asInt(json['sp']),
+      crit: asInt(json['crit']),
+      aspd: asInt(json['aspd']),
+    );
+  }
+}
 
 /// Typed Classic-style equipment rolls (stat budgets by armor/weapon type).
 class EquipmentFactory {
   EquipmentFactory._();
 
-  static Random get random => _random;
-  static Random _random = Random();
-  static set random(Random value) => _random = value;
+  static Random random = Random();
 
-  /// Hardcoded fallback used until (or unless) `assets/data/item_affixes.json`
-  /// loads successfully — keeps loot naming working offline / in tests.
-  static const List<String> _fallbackAffixes = <String>[
-    'Ancient',
-    'Cursed',
-    'Gleaming',
-    'Feral',
-    'Sacred',
-    'Ashen',
-    'Frozen',
-    'Runed',
-    'Savage',
-    'Blessed',
+  static const List<ItemAffixDef> _fallbackPrefixes = <ItemAffixDef>[
+    ItemAffixDef(id: 'savage', name: 'Savage', agi: 1, str: 1),
+    ItemAffixDef(id: 'blessed', name: 'Blessed', spi: 1, sta: 1),
+    ItemAffixDef(id: 'runed', name: 'Runed', sp: 1, intel: 1),
+    ItemAffixDef(id: 'ashen', name: 'Ashen', str: 1),
+    ItemAffixDef(id: 'feral', name: 'Feral', agi: 1),
   ];
 
-  static List<String> _affixPrefixes = _fallbackAffixes;
+  static const List<ItemAffixDef> _fallbackSuffixes = <ItemAffixDef>[
+    ItemAffixDef(id: 'of_the_bear', name: 'of the Bear', sta: 1),
+    ItemAffixDef(id: 'of_the_tiger', name: 'of the Tiger', agi: 1),
+    ItemAffixDef(id: 'of_power', name: 'of Power', sp: 1),
+    ItemAffixDef(id: 'of_the_owl', name: 'of the Owl', intel: 1),
+  ];
 
-  /// Currently active affix prefix pool (data-driven when the load succeeds).
-  static List<String> get affixPrefixes => _affixPrefixes;
+  static List<ItemAffixDef> _prefixes = _fallbackPrefixes;
+  static List<ItemAffixDef> _suffixes = _fallbackSuffixes;
 
-  /// Loads `assets/data/item_affixes.json` into the affix prefix pool.
-  /// Safe to call multiple times; falls back silently to the hardcoded
-  /// list on any parse/asset error (offline-first, no crash risk).
+  /// Legacy string list for tests that inspect prefix names.
+  static List<String> get affixPrefixes =>
+      List<String>.unmodifiable(_prefixes.map((a) => a.name));
+
+  static List<ItemAffixDef> get affixPrefixDefs => _prefixes;
+  static List<ItemAffixDef> get affixSuffixDefs => _suffixes;
+
+  static String? affixNameById(String? id) {
+    if (id == null || id.isEmpty) return null;
+    for (final a in _prefixes) {
+      if (a.id == id) return a.name;
+    }
+    for (final a in _suffixes) {
+      if (a.id == id) return a.name;
+    }
+    return null;
+  }
+
+  /// Loads `assets/data/item_affixes.json`. Falls back silently on error.
   static Future<void> loadAffixes({AssetBundle? bundle}) async {
     try {
       final raw =
           await (bundle ?? rootBundle).loadString('assets/data/item_affixes.json');
       final decoded = jsonDecode(raw);
-      final list = decoded is Map<String, dynamic>
-          ? decoded['prefixes'] as List<dynamic>?
-          : (decoded is List<dynamic> ? decoded : null);
-      if (list != null && list.isNotEmpty) {
-        _affixPrefixes = List<String>.unmodifiable(
-          list.map((e) => e.toString()),
-        );
+      if (decoded is! Map<String, dynamic>) {
+        _prefixes = _fallbackPrefixes;
+        _suffixes = _fallbackSuffixes;
+        return;
+      }
+      final prefixRaw = decoded['prefixes'];
+      final suffixRaw = decoded['suffixes'];
+      final parsedPrefixes = _parseAffixList(prefixRaw);
+      final parsedSuffixes = _parseAffixList(suffixRaw);
+      if (parsedPrefixes.isNotEmpty) {
+        _prefixes = List<ItemAffixDef>.unmodifiable(parsedPrefixes);
+      }
+      if (parsedSuffixes.isNotEmpty) {
+        _suffixes = List<ItemAffixDef>.unmodifiable(parsedSuffixes);
       }
     } catch (_) {
-      _affixPrefixes = _fallbackAffixes;
+      _prefixes = _fallbackPrefixes;
+      _suffixes = _fallbackSuffixes;
     }
   }
+
+  static List<ItemAffixDef> _parseAffixList(dynamic raw) {
+    if (raw is! List) return const <ItemAffixDef>[];
+    final out = <ItemAffixDef>[];
+    for (final e in raw) {
+      if (e is String) {
+        final id = e.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+        out.add(ItemAffixDef(id: id, name: e, sta: 1));
+      } else if (e is Map) {
+        out.add(ItemAffixDef.fromJson(Map<String, dynamic>.from(e)));
+      }
+    }
+    return out;
+  }
+
+  /// Zone mult matching [GameLogic.roomCombatBudget] enemy scaling.
+  static double zoneMultFor(String? dungeonId) {
+    final zone = DungeonCatalog.byId(dungeonId ?? 'sandy').number;
+    return 1.0 + zone * 0.28;
+  }
+
+  /// Soft AL loot mult (half of enemy AL threat; AL already has drop skip).
+  static double alLootMult(int ascensionLevel) =>
+      1.0 + ascensionLevel.clamp(0, 40) * 0.05;
 
   static int itemLevelFor({
     required int battleNumber,
     required LootRarity rarity,
-  }) =>
-      max(1, battleNumber * 2 + rarity.index * 4 + 3);
+    String? dungeonId,
+    int ascensionLevel = 0,
+  }) {
+    final zone = DungeonCatalog.byId(dungeonId ?? 'sandy').number;
+    final base = max(1, battleNumber * 2 + rarity.index * 4 + 3);
+    return max(1, base + zone * 4 + ascensionLevel.clamp(0, 40) * 2);
+  }
+
+  /// Classic-style slot budget multipliers (MH full; jewelry/wrist softer).
+  static double slotMult(EquipmentSlot slot, {WeaponHanded? handed}) {
+    if (slot == EquipmentSlot.weapon && handed == WeaponHanded.twoHand) {
+      return 1.15;
+    }
+    return switch (slot) {
+      EquipmentSlot.head ||
+      EquipmentSlot.chest ||
+      EquipmentSlot.legs ||
+      EquipmentSlot.weapon =>
+        1.0,
+      EquipmentSlot.shoulder ||
+      EquipmentSlot.hands ||
+      EquipmentSlot.waist ||
+      EquipmentSlot.boots =>
+        0.75,
+      EquipmentSlot.offHand => 0.55,
+      EquipmentSlot.ranged => 0.50,
+      EquipmentSlot.wrist ||
+      EquipmentSlot.cloak ||
+      EquipmentSlot.neck ||
+      EquipmentSlot.ring ||
+      EquipmentSlot.ring2 ||
+      EquipmentSlot.trinket ||
+      EquipmentSlot.trinket2 =>
+        0.55,
+      EquipmentSlot.consumable => 0.40,
+    };
+  }
 
   static int _budget({
     required LootRarity rarity,
     required int battleNumber,
     EquipmentSlot? slot,
+    WeaponHanded? handed,
+    String? dungeonId,
+    int ascensionLevel = 0,
   }) {
     final floorBonus = (battleNumber - 1) ~/ 8;
     final base = switch (rarity) {
@@ -75,16 +211,12 @@ class EquipmentFactory {
       LootRarity.epic => 24 + floorBonus * 4,
       LootRarity.legendary => 36 + floorBonus * 5,
     };
-    // Jewelry / cloak used to be empty→full power spikes; keep them weaker.
-    if (slot == EquipmentSlot.cloak ||
-        slot == EquipmentSlot.neck ||
-        slot == EquipmentSlot.ring ||
-        slot == EquipmentSlot.ring2 ||
-        slot == EquipmentSlot.trinket ||
-        slot == EquipmentSlot.trinket2) {
-      return max(3, (base * 0.62).round());
-    }
-    return base;
+    final slotM = slot == null ? 1.0 : slotMult(slot, handed: handed);
+    final scaled = base *
+        slotM *
+        zoneMultFor(dungeonId) *
+        alLootMult(ascensionLevel);
+    return max(3, scaled.round());
   }
 
   static ArmorType armorTypeFor(
@@ -92,22 +224,22 @@ class EquipmentFactory {
     int level, {
     ArmorType? preferred,
   }) {
-    if (preferred != null && _random.nextDouble() < 0.82) {
+    if (preferred != null && random.nextDouble() < 0.82) {
       return preferred;
     }
     return switch (bias) {
       HeroRole.warrior =>
-        level >= 40 && _random.nextDouble() < 0.55
+        level >= 40 && random.nextDouble() < 0.55
             ? ArmorType.plate
-            : (_random.nextDouble() < 0.7 ? ArmorType.mail : ArmorType.leather),
-      HeroRole.rogue => preferred == ArmorType.mail && _random.nextDouble() < 0.8
+            : (random.nextDouble() < 0.7 ? ArmorType.mail : ArmorType.leather),
+      HeroRole.rogue => preferred == ArmorType.mail && random.nextDouble() < 0.8
           ? ArmorType.mail
-          : (_random.nextDouble() < 0.85 ? ArmorType.leather : ArmorType.cloth),
+          : (random.nextDouble() < 0.85 ? ArmorType.leather : ArmorType.cloth),
       HeroRole.healer || HeroRole.mage =>
         (preferred == ArmorType.mail ||
                 preferred == ArmorType.plate ||
                 preferred == ArmorType.leather) &&
-            _random.nextDouble() < 0.8
+            random.nextDouble() < 0.8
         ? preferred!
         : ArmorType.cloth,
     };
@@ -116,7 +248,7 @@ class EquipmentFactory {
   static (WeaponType, WeaponHanded) mainHandFor(HeroRole bias) {
     return switch (bias) {
       HeroRole.warrior => () {
-          final roll = _random.nextDouble();
+          final roll = random.nextDouble();
           if (roll < 0.35) {
             return (WeaponType.mace, WeaponHanded.oneHand);
           }
@@ -134,30 +266,30 @@ class EquipmentFactory {
           return (WeaponType.fist, WeaponHanded.oneHand);
         }(),
       HeroRole.rogue => () {
-          final roll = _random.nextDouble();
+          final roll = random.nextDouble();
           if (roll < 0.45) {
             return (WeaponType.dagger, WeaponHanded.oneHand);
           }
           if (roll < 0.7) {
             return (WeaponType.sword, WeaponHanded.oneHand);
           }
-          if (roll < 0.85) {
+          if (roll < 0.88) {
             return (WeaponType.fist, WeaponHanded.oneHand);
           }
           return (WeaponType.mace, WeaponHanded.oneHand);
         }(),
       HeroRole.healer => () {
-          final roll = _random.nextDouble();
+          final roll = random.nextDouble();
           if (roll < 0.55) return (WeaponType.staff, WeaponHanded.twoHand);
-          if (roll < 0.8) {
+          if (roll < 0.85) {
             return (WeaponType.mace, WeaponHanded.oneHand);
           }
           return (WeaponType.dagger, WeaponHanded.oneHand);
         }(),
       HeroRole.mage => () {
-          final roll = _random.nextDouble();
+          final roll = random.nextDouble();
           if (roll < 0.55) return (WeaponType.staff, WeaponHanded.twoHand);
-          if (roll < 0.8) {
+          if (roll < 0.85) {
             return (WeaponType.sword, WeaponHanded.oneHand);
           }
           return (WeaponType.dagger, WeaponHanded.oneHand);
@@ -168,41 +300,31 @@ class EquipmentFactory {
   static WeaponType rangedFor(HeroRole bias) {
     return switch (bias) {
       HeroRole.healer || HeroRole.mage => WeaponType.wand,
-      HeroRole.warrior || HeroRole.rogue => () {
-          final opts = [
-            WeaponType.bow,
-            WeaponType.crossbow,
-            WeaponType.gun,
-            WeaponType.thrown,
-          ];
-          return opts[_random.nextInt(opts.length)];
-        }(),
+      _ => [
+          WeaponType.bow,
+          WeaponType.crossbow,
+          WeaponType.gun,
+          WeaponType.thrown,
+        ][random.nextInt(4)],
     };
   }
 
-  /// Weights: Str, Agi, Sta, Int, Spi, SP (sum ≈ 1). Bias shapes hybrid armor.
   static List<double> _armorWeights(ArmorType type, HeroRole bias) =>
       switch (type) {
         ArmorType.cloth => [0, 0, 0.15, 0.40, 0.30, 0.25],
         ArmorType.leather => switch (bias) {
-            HeroRole.mage || HeroRole.healer =>
-              [0, 0, 0.18, 0.35, 0.27, 0.20], // Balance / Resto Druid
-            HeroRole.warrior =>
-              [0.30, 0.08, 0.52, 0, 0, 0], // Guardian
-            _ => [0.15, 0.45, 0.25, 0, 0, 0],
+            HeroRole.rogue => [0.15, 0.45, 0.25, 0.05, 0.05, 0.05],
+            HeroRole.warrior => [0.35, 0.25, 0.30, 0, 0.05, 0.05],
+            _ => [0.10, 0.30, 0.25, 0.15, 0.10, 0.10],
           },
         ArmorType.mail => switch (bias) {
-            HeroRole.mage || HeroRole.healer =>
-              [0, 0, 0.22, 0.35, 0.23, 0.20], // Ele / Resto Sham
-            HeroRole.rogue =>
-              [0.10, 0.45, 0.35, 0, 0, 0], // Hunter / Enhancement
-            _ => [0.28, 0.12, 0.45, 0.05, 0.05, 0.05],
+            HeroRole.mage || HeroRole.healer => [0.05, 0.05, 0.20, 0.30, 0.20, 0.20],
+            HeroRole.rogue => [0.20, 0.35, 0.30, 0.05, 0.05, 0.05],
+            _ => [0.40, 0.15, 0.35, 0, 0.05, 0.05],
           },
         ArmorType.plate => switch (bias) {
-            HeroRole.healer =>
-              [0, 0, 0.25, 0.30, 0.25, 0.20], // Holy Paladin
-            HeroRole.mage => [0, 0, 0.20, 0.35, 0.20, 0.25],
-            _ => [0.30, 0.05, 0.45, 0, 0, 0],
+            HeroRole.mage || HeroRole.healer => [0.10, 0, 0.35, 0.20, 0.20, 0.15],
+            _ => [0.45, 0.10, 0.40, 0, 0.05, 0],
           },
       };
 
@@ -213,17 +335,19 @@ class EquipmentFactory {
       WeaponType.mace ||
       WeaponType.polearm ||
       WeaponType.fist =>
-        [0.45, 0.10, 0.35, 0, 0, 0],
+        bias == HeroRole.healer || bias == HeroRole.mage
+            ? [0.10, 0.05, 0.20, 0.25, 0.20, 0.20]
+            : [0.40, 0.25, 0.25, 0, 0.05, 0.05],
       WeaponType.dagger => bias == HeroRole.healer || bias == HeroRole.mage
-          ? [0, 0, 0.15, 0.35, 0.20, 0.30]
-          : [0.15, 0.50, 0.25, 0, 0, 0],
+          ? [0.05, 0.10, 0.15, 0.30, 0.20, 0.20]
+          : [0.20, 0.45, 0.25, 0, 0.05, 0.05],
       WeaponType.staff => [0, 0, 0.15, 0.35, 0.25, 0.25],
       WeaponType.wand => [0, 0, 0.10, 0.25, 0.15, 0.50],
       WeaponType.bow ||
       WeaponType.crossbow ||
       WeaponType.gun ||
       WeaponType.thrown =>
-        [0.05, 0.50, 0.25, 0, 0, 0],
+        [0.15, 0.45, 0.25, 0.05, 0.05, 0.05],
     };
   }
 
@@ -234,20 +358,16 @@ class EquipmentFactory {
       };
 
   static List<double> _jewelryWeights(HeroRole bias) => switch (bias) {
-        HeroRole.warrior => [0.35, 0.10, 0.40, 0, 0, 0],
-        HeroRole.rogue => [0.15, 0.50, 0.25, 0, 0, 0],
-        HeroRole.healer => [0, 0, 0.15, 0.30, 0.35, 0.30],
-        HeroRole.mage => [0, 0, 0.10, 0.40, 0.20, 0.35],
+        HeroRole.warrior => [0.35, 0.15, 0.35, 0, 0.10, 0.05],
+        HeroRole.rogue => [0.20, 0.40, 0.25, 0.05, 0.05, 0.05],
+        HeroRole.healer => [0, 0.05, 0.20, 0.25, 0.30, 0.20],
+        HeroRole.mage => [0, 0.05, 0.15, 0.35, 0.15, 0.30],
       };
 
-  static ({
-    int str,
-    int agi,
-    int sta,
-    int intel,
-    int spi,
-    int sp,
-  }) _distribute(int budget, List<double> w) {
+  static ({int str, int agi, int sta, int intel, int spi, int sp}) _distribute(
+    int budget,
+    List<double> w,
+  ) {
     final sum = w.fold<double>(0, (a, b) => a + b);
     if (sum <= 0 || budget <= 0) {
       return (str: 0, agi: 0, sta: 0, intel: 0, spi: 0, sp: 0);
@@ -273,6 +393,53 @@ class EquipmentFactory {
     };
   }
 
+  static List<ItemAffixDef> _affixesForBias(
+    List<ItemAffixDef> pool,
+    HeroRole bias,
+  ) {
+    bool matches(ItemAffixDef a) {
+      final melee = a.str + a.agi + a.sta + a.crit + a.aspd;
+      final caster = a.intel + a.spi + a.sp;
+      return switch (bias) {
+        HeroRole.warrior => melee >= caster,
+        HeroRole.rogue => a.agi + a.str + a.crit + a.aspd + a.sta >= caster,
+        HeroRole.healer || HeroRole.mage => caster >= melee || caster > 0,
+      };
+    }
+
+    final filtered = [for (final a in pool) if (matches(a)) a];
+    return filtered.isNotEmpty ? filtered : pool;
+  }
+
+  /// Apply affix weights as a slice of [affixBudget] (stat points).
+  static ({
+    int str,
+    int agi,
+    int sta,
+    int intel,
+    int spi,
+    int sp,
+    int crit,
+    int aspd,
+  }) _affixStats(ItemAffixDef affix, int affixBudget) {
+    final w = affix.weightSum;
+    if (w <= 0 || affixBudget <= 0) {
+      return (str: 0, agi: 0, sta: 0, intel: 0, spi: 0, sp: 0, crit: 0, aspd: 0);
+    }
+    int part(int weight) =>
+        weight <= 0 ? 0 : max(1, (affixBudget * weight / w).round());
+    return (
+      str: part(affix.str),
+      agi: part(affix.agi),
+      sta: part(affix.sta),
+      intel: part(affix.intel),
+      spi: part(affix.spi),
+      sp: part(affix.sp),
+      crit: part(affix.crit),
+      aspd: part(affix.aspd),
+    );
+  }
+
   static String equipmentNameFor({
     required EquipmentSlot slot,
     required LootRarity rarity,
@@ -281,7 +448,8 @@ class EquipmentFactory {
     WeaponType? weaponType,
     OffHandKind? offHandKind,
     WeaponHanded? handed,
-    String? affixWord,
+    String? affixPrefix,
+    String? affixSuffix,
   }) {
     final rolePrefix = switch (bias) {
       HeroRole.warrior => switch (rarity) {
@@ -367,7 +535,8 @@ class EquipmentFactory {
     final base = (material != null && !noun.contains(material) && slot.isArmorSlot)
         ? '$rolePrefix $material $noun'
         : '$rolePrefix $noun';
-    return affixWord == null ? base : '$affixWord $base';
+    final withPrefix = affixPrefix == null ? base : '$affixPrefix $base';
+    return affixSuffix == null ? withPrefix : '$withPrefix $affixSuffix';
   }
 
   static String _weaponNoun(WeaponType t) => switch (t) {
@@ -391,14 +560,11 @@ class EquipmentFactory {
     required int battleNumber,
     HeroRole? bias,
     ArmorType? preferredArmor,
+    String? dungeonId,
+    int ascensionLevel = 0,
   }) {
-    final classBias = bias ?? HeroRole.values[_random.nextInt(4)];
-    final budget = _budget(
-      rarity: rarity,
-      battleNumber: battleNumber,
-      slot: slot,
-    );
-    final iLvl = itemLevelFor(battleNumber: battleNumber, rarity: rarity);
+    final classBias = bias ?? HeroRole.values[random.nextInt(4)];
+    final dungeon = dungeonId ?? 'sandy';
 
     ArmorType? armorType;
     WeaponType? weaponType;
@@ -434,7 +600,7 @@ class EquipmentFactory {
           WeaponType.fist,
           WeaponType.mace,
         ];
-        weaponType = opts[_random.nextInt(opts.length)];
+        weaponType = opts[random.nextInt(opts.length)];
         handed = WeaponHanded.oneHand;
         weights = _offHandWeights(OffHandKind.weapon);
       } else {
@@ -449,7 +615,6 @@ class EquipmentFactory {
         slot == EquipmentSlot.trinket2) {
       weights = _jewelryWeights(classBias);
     } else {
-      // consumable
       weights = _jewelryWeights(classBias);
     }
 
@@ -467,20 +632,94 @@ class EquipmentFactory {
       weights = _offHandWeights(OffHandKind.frill);
     }
 
-    final dist = _distribute(budget, weights);
+    // Pick affixes first so their budget slice can be reserved.
+    ItemAffixDef? prefix;
+    ItemAffixDef? suffix;
+    final prefixChance = switch (rarity) {
+      LootRarity.rare => 0.40,
+      LootRarity.epic => 0.70,
+      LootRarity.legendary => 0.92,
+      _ => 0.0,
+    };
+    final suffixChance = switch (rarity) {
+      LootRarity.rare => 0.35,
+      LootRarity.epic => 0.60,
+      LootRarity.legendary => 0.85,
+      _ => 0.0,
+    };
+    final prefixPool = _affixesForBias(_prefixes, classBias);
+    final suffixPool = _affixesForBias(_suffixes, classBias);
+    if (prefixChance > 0 &&
+        prefixPool.isNotEmpty &&
+        random.nextDouble() < prefixChance) {
+      prefix = prefixPool[random.nextInt(prefixPool.length)];
+    }
+    if (suffixChance > 0 &&
+        suffixPool.isNotEmpty &&
+        random.nextDouble() < suffixChance) {
+      suffix = suffixPool[random.nextInt(suffixPool.length)];
+    }
+
+    final rawBudget = _budget(
+      rarity: rarity,
+      battleNumber: battleNumber,
+      slot: slot,
+      handed: handed,
+      dungeonId: dungeon,
+      ascensionLevel: ascensionLevel,
+    );
+    final affixCount = (prefix != null ? 1 : 0) + (suffix != null ? 1 : 0);
+    final affixFrac = affixCount == 0
+        ? 0.0
+        : (0.15 + rarity.index * 0.02).clamp(0.15, 0.25);
+    final affixPool = (rawBudget * affixFrac).round();
+    final primaryBudget = max(1, rawBudget - affixPool);
+    final perAffix = affixCount == 0 ? 0 : max(1, affixPool ~/ affixCount);
+
+    final iLvl = itemLevelFor(
+      battleNumber: battleNumber,
+      rarity: rarity,
+      dungeonId: dungeon,
+      ascensionLevel: ascensionLevel,
+    );
+
+    // Armor density reserved from primary budget (not stacked on top).
     final armorPts = slot.isArmorSlot ||
             (slot == EquipmentSlot.offHand && offHandKind == OffHandKind.shield)
         ? _armorPoints(
             armorType ??
                 (offHandKind == OffHandKind.shield ? ArmorType.plate : null),
-            budget,
+            primaryBudget,
           )
         : 0;
+    final distributeBudget = max(1, primaryBudget - armorPts);
 
+    final dist = _distribute(distributeBudget, weights);
+    var str = dist.str;
+    var agi = dist.agi;
+    var sta = dist.sta;
+    var intel = dist.intel;
+    var spi = dist.spi;
+    var sp = dist.sp;
     var crit = 0;
     var aspd = 0;
     var move = 0;
     var mp5 = 0;
+
+    void applyAffix(ItemAffixDef a) {
+      final s = _affixStats(a, perAffix);
+      str += s.str;
+      agi += s.agi;
+      sta += s.sta;
+      intel += s.intel;
+      spi += s.spi;
+      sp += s.sp;
+      crit += s.crit;
+      aspd += s.aspd;
+    }
+
+    if (prefix != null) applyAffix(prefix);
+    if (suffix != null) applyAffix(suffix);
 
     if (armorType == ArmorType.leather ||
         weaponType == WeaponType.dagger ||
@@ -489,18 +728,18 @@ class EquipmentFactory {
         weaponType == WeaponType.gun ||
         weaponType == WeaponType.thrown ||
         classBias == HeroRole.rogue) {
-      crit = rarity.index + (_random.nextDouble() < 0.5 ? 1 : 0);
+      crit = max(crit, rarity.index + (random.nextDouble() < 0.5 ? 1 : 0));
     }
     if (armorType == ArmorType.cloth ||
         weaponType == WeaponType.staff ||
         weaponType == WeaponType.wand ||
         offHandKind == OffHandKind.frill) {
       mp5 = rarity.index >= 1 ? 1 + rarity.index : 0;
-      if (_random.nextDouble() < 0.4) crit = max(crit, rarity.index);
+      if (random.nextDouble() < 0.4) crit = max(crit, rarity.index);
     }
     if (slot == EquipmentSlot.boots) {
       move = 3 + rarity.index * 2;
-      aspd = 1 + rarity.index;
+      aspd = max(aspd, 1 + rarity.index);
     }
     if (slot == EquipmentSlot.weapon || slot == EquipmentSlot.hands) {
       aspd = max(aspd, 1 + rarity.index);
@@ -515,22 +754,22 @@ class EquipmentFactory {
       LootRarity.epic => 0.92,
       LootRarity.legendary => 1.0,
     };
-    if (_random.nextDouble() < effectChance) {
+    if (random.nextDouble() < effectChance) {
       effectId = switch (classBias) {
-        HeroRole.warrior => _random.nextDouble() < 0.55
+        HeroRole.warrior => random.nextDouble() < 0.55
             ? GearEffectId.lifesteal
-            : (_random.nextBool() ? GearEffectId.goldFind : GearEffectId.haste),
-        HeroRole.healer => _random.nextDouble() < 0.55
+            : (random.nextBool() ? GearEffectId.goldFind : GearEffectId.haste),
+        HeroRole.healer => random.nextDouble() < 0.55
             ? GearEffectId.haste
-            : (_random.nextBool()
+            : (random.nextBool()
                 ? GearEffectId.lifesteal
                 : GearEffectId.goldFind),
-        HeroRole.mage => _random.nextDouble() < 0.5
+        HeroRole.mage => random.nextDouble() < 0.5
             ? GearEffectId.pierce
-            : (_random.nextBool() ? GearEffectId.haste : GearEffectId.crit),
-        HeroRole.rogue => _random.nextDouble() < 0.55
+            : (random.nextBool() ? GearEffectId.haste : GearEffectId.crit),
+        HeroRole.rogue => random.nextDouble() < 0.55
             ? GearEffectId.crit
-            : (_random.nextBool() ? GearEffectId.haste : GearEffectId.lifesteal),
+            : (random.nextBool() ? GearEffectId.haste : GearEffectId.lifesteal),
       };
       effectValue = switch (effectId) {
         GearEffectId.lifesteal => 3 + rarity.index * 2,
@@ -557,17 +796,6 @@ class EquipmentFactory {
           }
         : ProjectilePattern.single;
 
-    String? affixWord;
-    final affixChance = switch (rarity) {
-      LootRarity.rare => 0.3,
-      LootRarity.epic => 0.65,
-      LootRarity.legendary => 0.9,
-      _ => 0.0,
-    };
-    if (affixChance > 0 && _random.nextDouble() < affixChance) {
-      affixWord = _affixPrefixes[_random.nextInt(_affixPrefixes.length)];
-    }
-
     final name = equipmentNameFor(
       slot: slot,
       rarity: rarity,
@@ -576,20 +804,30 @@ class EquipmentFactory {
       weaponType: weaponType,
       offHandKind: offHandKind,
       handed: handed,
-      affixWord: affixWord,
+      affixPrefix: prefix?.name,
+      affixSuffix: suffix?.name,
     );
 
+    final setId = armorType == null
+        ? null
+        : GearSets.setIdFor(
+            dungeonId: dungeon,
+            armorType: armorType,
+            rarity: rarity,
+            slot: slot,
+          );
+
     return EquipmentItem(
-      id: '${slot.name}_${rarity.name}_${battleNumber}_${_random.nextInt(100000)}',
+      id: '${slot.name}_${rarity.name}_${battleNumber}_${random.nextInt(100000)}',
       name: name,
       slot: slot,
       rarity: rarity,
-      strengthBonus: dist.str,
-      agilityBonus: dist.agi,
-      staminaBonus: dist.sta,
-      intellectBonus: dist.intel,
-      spiritBonus: dist.spi,
-      spellPowerBonus: dist.sp,
+      strengthBonus: str,
+      agilityBonus: agi,
+      staminaBonus: sta,
+      intellectBonus: intel,
+      spiritBonus: spi,
+      spellPowerBonus: sp,
       armorBonus: armorPts,
       mp5Bonus: mp5,
       critChanceBonus: crit,
@@ -604,6 +842,9 @@ class EquipmentFactory {
       weaponType: weaponType,
       handed: handed,
       offHandKind: offHandKind,
+      affixPrefixId: prefix?.id,
+      affixSuffixId: suffix?.id,
+      setId: setId,
     );
   }
 }
