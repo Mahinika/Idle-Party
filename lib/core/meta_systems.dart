@@ -23,7 +23,7 @@ abstract final class MetaSystems {
     'Codex milestone claims, ascend titles, zone trophies, and Will ranks.',
     'Dozens of new local achievements across zones, hardmode, gold, and pets.',
     'Light story layer: dungeon blurbs, enter/clear/ascend flavor, intro will.',
-    'Smarter Auto Equip: BiS slot fill, 2H net score, party conflict resolution.',
+    'Smarter Auto Equip: clear upgrades only, role-gated empty fills, live/AFK sync.',
     'Loot Sprite pet: gold find + loot find passives that scale with level.',
     'Achievements and ascend milestones grant essence rewards.',
     'Challenge clears: +2e per active toggle; Daily Run clear awards +25e.',

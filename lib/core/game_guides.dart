@@ -74,7 +74,7 @@ abstract final class GameGuides {
           'Loot drops on the floor, then goes to your stash (BAG).\n\n'
           '• BAG: view, sell, or equip stash gear.\n'
           '• GEAR: manage each hero’s slots (bottom nav or dock tab).\n'
-          '• Auto-Equip picks clear upgrades.\n'
+          '• Auto-Equip picks clear class upgrades (skips junk empty-fills).\n'
           '• Auto-sell (Settings) can trash weak drops on pickup.\n'
           '• Compare stats before equipping — iLevel and rarity matter.',
     ),

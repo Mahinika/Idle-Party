@@ -643,6 +643,103 @@ void main() {
     expect(state.gearStash, isEmpty);
   });
 
+  test('auto equip skips wrong-role junk on empty slots', () {
+    final junkStaff = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.common,
+      battleNumber: 2,
+      bias: HeroRole.mage,
+    ).copyWith(
+      id: 'junk_int_staff',
+      attackBonus: 0,
+      intellectBonus: 3,
+      spellPowerBonus: 2,
+      spiritBonus: 2,
+      affinity: HeroRole.mage.name,
+      weaponType: WeaponType.staff,
+      handed: WeaponHanded.twoHand,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      itemLevel: 4,
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    // Only Prot has an empty weapon; lock others so they cannot claim.
+    final heroes = [
+      for (var i = 0; i < state.heroes.length; i++)
+        if (i == 0)
+          state.heroes[i].copyWith(
+            equipped: {
+              for (final e in state.heroes[i].equipped.entries)
+                if (e.key != EquipmentSlot.weapon &&
+                    e.key != EquipmentSlot.offHand)
+                  e.key: e.value,
+            },
+          )
+        else
+          state.heroes[i],
+    ];
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[junkStaff],
+    );
+    state = GameLogic.autoEquipBetterGear(state);
+
+    expect(state.heroes[0].itemIn(EquipmentSlot.weapon), isNull);
+    expect(state.gearStash.map((e) => e.id), contains(junkStaff.id));
+  });
+
+  test('auto equip ignores tiny worn-slot sidegrades', () {
+    final worn = GameLogic.createEquipment(
+      slot: EquipmentSlot.cloak,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'worn_cloak',
+      strengthBonus: 12,
+      staminaBonus: 10,
+      armorBonus: 14,
+      affinity: HeroRole.warrior.name,
+      itemLevel: 24,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+    );
+    final side = worn.copyWith(
+      id: 'side_cloak',
+      // Same combat stats — only a soft ilvl crumb (+1 score).
+      itemLevel: 28,
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final heroes = [
+      for (var i = 0; i < state.heroes.length; i++)
+        if (i == 0)
+          state.heroes[i].copyWith(
+            equipped: {
+              for (final e in state.heroes[i].equipped.entries)
+                if (e.key != EquipmentSlot.cloak) e.key: e.value,
+              EquipmentSlot.cloak: worn,
+            },
+          )
+        else
+          state.heroes[i].copyWith(
+            equipped: {
+              ...state.heroes[i].equipped,
+              EquipmentSlot.cloak: worn.copyWith(id: 'lock_cloak_$i'),
+            },
+          ),
+    ];
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[side],
+    );
+    final before = state.heroes[0].itemIn(EquipmentSlot.cloak)!.id;
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(state.heroes[0].itemIn(EquipmentSlot.cloak)?.id, before);
+    expect(state.gearStash.map((e) => e.id), contains(side.id));
+  });
+
   test('auto sell junk clears non-upgrades regardless of ilvl cap', () {
     final weak = GameLogic.createEquipment(
       slot: EquipmentSlot.cloak,

@@ -507,7 +507,25 @@ class GameDirector extends ChangeNotifier {
           playedLoot = true;
         }
         // Auto-wear upgrades so bag loot actually powers the party.
+        // Must sync spatial (same as bag AUTO) or mid-fight ATK/DEF stay stale.
+        final stashBeforeEquip = _state.gearStash.length;
         _state = GameLogic.autoEquipBetterGear(_state);
+        if (_spatial != null &&
+            _state.inDungeon &&
+            before.inDungeon &&
+            before.battleNumber == _state.battleNumber &&
+            before.layoutSeed == _state.layoutSeed) {
+          _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
+        }
+        final equippedN = stashBeforeEquip - _state.gearStash.length;
+        if (equippedN > 0) {
+          showToast(
+            equippedN == 1
+                ? 'Equipped 1 upgrade'
+                : 'Equipped $equippedN upgrades',
+            life: 1.4,
+          );
+        }
       }
       final stashCap = GameLogic.maxGearStashFor(_state);
       if (before.gearStash.length < stashCap &&
@@ -519,7 +537,7 @@ class GameDirector extends ChangeNotifier {
         GameLogic.lastAutoSellCount = 0;
         showToast('Bag unstuck · sold $sold', life: 1.5);
       }
-      _lastStashLen = result.state.gearStash.length;
+      _lastStashLen = _state.gearStash.length;
 
       _autosaveAccum += _spatialDt;
       if (_autosaveAccum >= _autosaveIntervalSec) {

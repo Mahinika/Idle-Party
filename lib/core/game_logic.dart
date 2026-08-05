@@ -3289,11 +3289,17 @@ class GameLogic {
     for (var step = 0; step < maxSteps; step++) {
       if (!current.inDungeon || floorsCleared >= maxFloors) break;
 
+      final stashLenBefore = current.gearStash.length;
       final result = SpatialCombat.step(world, current, dt: dt);
       world = result.world;
       current = result.state;
       roomGold += result.goldFromKills;
       abilityCasts += result.abilityCasts;
+      // Live parity: wear clear upgrades mid-floor and sync actor sheets.
+      if (current.gearStash.length > stashLenBefore) {
+        current = autoEquipBetterGear(current);
+        world = SpatialCombat.syncPartyFromState(world, current);
+      }
 
       // Keep AFK sim lean — strip accumulated VFX lists periodically.
       if (step % 40 == 0) {
@@ -4865,8 +4871,66 @@ class GameLogic {
       atkDelta: newAtk - curAtk,
       defDelta: candidate.resolvedArmor - curDef,
       vitDelta: candidate.resolvedStamina - curVit,
-      isUpgrade: powerDelta > 0,
+      isUpgrade: isMeaningfulEquipUpgrade(
+        hero: hero,
+        item: candidate,
+        curScore: curScore,
+        newScore: newScore,
+        slotEmpty: current == null,
+      ),
     );
+  }
+
+  /// Role-weighted primary mass (excludes rarity / ilvl / affinity crumbs).
+  static double roleRelevantStatMass(PartyHero hero, EquipmentItem item) {
+    final w = EquipStatWeights.forSpec(hero.spec);
+    return item.strengthBonus * w.str +
+        item.agilityBonus * w.agi +
+        item.resolvedStamina * w.sta +
+        item.intellectBonus * w.intel +
+        item.spiritBonus * w.spi +
+        item.spellPowerBonus * w.sp +
+        item.resolvedArmor * w.armor +
+        item.critChanceBonus * w.crit +
+        item.attackSpeedBonus * w.aspd +
+        item.attackBonus * w.flatAtk;
+  }
+
+  /// Empty slots only fill role-plausible gear (not every wearable crumb).
+  static bool emptySlotWorthFilling(PartyHero hero, EquipmentItem item, int score) {
+    final spec = hero.spec;
+    if (item.affinity != null && item.affinity == spec.gearAffinity.name) {
+      return true;
+    }
+    final preferred = preferredArmorForSpec(spec, hero.level);
+    if (preferred != null && item.armorType == preferred) {
+      return true;
+    }
+    final mass = roleRelevantStatMass(hero, item);
+    // Real primary stack for this role, or an obviously strong piece.
+    if (mass >= 28) return true;
+    if (score >= 90 && mass >= 12) return true;
+    return false;
+  }
+
+  /// Clear upgrade bar shared by Auto Equip, UI badges, and keep/sell helpers.
+  ///
+  /// Empty slots use [emptySlotWorthFilling]. Worn slots need a meaningful
+  /// delta so +1 rarity/ilvl noise does not thrash gear.
+  static bool isMeaningfulEquipUpgrade({
+    required PartyHero hero,
+    required EquipmentItem item,
+    required int curScore,
+    required int newScore,
+    required bool slotEmpty,
+  }) {
+    final delta = newScore - curScore;
+    if (delta <= 0) return false;
+    if (slotEmpty) {
+      return emptySlotWorthFilling(hero, item, newScore);
+    }
+    final minDelta = max(6, (curScore * 0.03).ceil());
+    return delta >= minDelta;
   }
 
   /// Planned stash→slot upgrades from BiS assignment (shared by Auto Equip / Sell Junk).
@@ -4951,7 +5015,13 @@ class GameLogic {
               if (reserved.contains(entry.item.id)) continue;
               if (!canHeroReceive(hero, entry.item, slot: slot)) continue;
               final sc = slotEquipScore(hero, entry.item, slot: slot);
-              if (sc > curScore) {
+              if (isMeaningfulEquipUpgrade(
+                hero: hero,
+                item: entry.item,
+                curScore: curScore,
+                newScore: sc,
+                slotEmpty: cur == null,
+              )) {
                 usedLocal.add(entry.item.id);
                 proposals.add((
                   heroIndex: hi,
