@@ -11,6 +11,7 @@ import '../models/enemy.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
 import '../spatial/tile_map.dart';
 import 'custom_assets.dart';
@@ -339,7 +340,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                 lootByPath: _lootByPath,
                                 petsByPath: _petsByPath,
                                 camera: camera,
-                                reducedVfx: state.reducedVfx,
+                                vfxQuality: state.vfxQuality,
                                 visualFrame: widget.director.visualFrame,
                               ),
                             ),
@@ -827,7 +828,7 @@ class _TileRoomPainter extends CustomPainter {
     required this.lootByPath,
     required this.petsByPath,
     required this.camera,
-    this.reducedVfx = false,
+    this.vfxQuality = VfxQuality.full,
     required this.visualFrame,
   });
 
@@ -855,8 +856,12 @@ class _TileRoomPainter extends CustomPainter {
   final Map<String, ui.Image> lootByPath;
   final Map<String, ui.Image> petsByPath;
   final _TileCamera camera;
-  final bool reducedVfx;
+  final VfxQuality vfxQuality;
   final int visualFrame;
+
+  bool get reducedVfx => vfxQuality.reduced;
+  bool get showAuras => vfxQuality.showActorAuras;
+  bool get showGuide => vfxQuality.showGuideAndPulse;
 
   Size? _vignetteSize;
   Paint? _vignettePaint;
@@ -957,6 +962,23 @@ class _TileRoomPainter extends CustomPainter {
         } else if (kind == TileKind.exit) {
           final exitImg = roomType == RoomType.boss ? stairsBoss : stairs;
           _drawImage(canvas, exitImg, dst);
+          if (world.awaitingExit && showGuide) {
+            final pulse =
+                0.75 + 0.25 * math.sin(visualFrame * 0.18);
+            canvas.drawCircle(
+              dst.center,
+              tile * 0.55 * pulse,
+              Paint()
+                ..color = const Color(0x6670E0A0)
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = math.max(2, tile * 0.08),
+            );
+            canvas.drawCircle(
+              dst.center,
+              tile * 0.32 * pulse,
+              Paint()..color = const Color(0x3380FFB0),
+            );
+          }
         } else if (kind == TileKind.spawn) {
           _fillPaint.color = const Color(0x14C88840);
           canvas.drawRect(dst, _fillPaint);
@@ -995,6 +1017,29 @@ class _TileRoomPainter extends CustomPainter {
       );
     }
 
+    // Lasting ground discs under actors (Consecration / Bladestorm / etc.).
+    if (!reducedVfx) {
+      for (final g in world.groundFx) {
+        if (!_inView(g.x, g.y, pad: g.radius)) continue;
+        final frac = (g.life / g.maxLife).clamp(0.0, 1.0);
+        final c = Offset(originX + g.x * tile, originY + g.y * tile);
+        final r = tile * g.radius;
+        canvas.drawCircle(
+          c,
+          r,
+          Paint()..color = Color(g.argb).withValues(alpha: 0.22 * frac),
+        );
+        canvas.drawCircle(
+          c,
+          r,
+          Paint()
+            ..color = Color(g.argb).withValues(alpha: 0.55 * frac)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(1.5, tile * 0.06),
+        );
+      }
+    }
+
     Offset center(double tx, double ty) =>
         Offset(originX + tx * tile, originY + ty * tile);
 
@@ -1020,6 +1065,9 @@ class _TileRoomPainter extends CustomPainter {
       final frac = maxHp <= 0 ? 0.0 : (hp / maxHp).clamp(0.0, 1.0);
       final top = c.dy - tile * 0.55;
       final left = c.dx - width / 2;
+      final fill = SpatialCombat.colorblindMode
+          ? const Color(0xFFD55E00)
+          : const Color(0xFFE05050);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(left, top, width, 4),
@@ -1032,7 +1080,7 @@ class _TileRoomPainter extends CustomPainter {
           Rect.fromLTWH(left, top, width * frac, 4),
           const Radius.circular(1),
         ),
-        Paint()..color = const Color(0xFFE05050),
+        Paint()..color = fill,
       );
     }
 
@@ -1073,7 +1121,10 @@ class _TileRoomPainter extends CustomPainter {
       drawSprite(img, c, loot.kind == GroundLootKind.chest ? 0.55 : 0.48);
     }
 
-    if (world.pulseTimer > 0 && world.pulseX != null && world.pulseY != null) {
+    if (showGuide &&
+        world.pulseTimer > 0 &&
+        world.pulseX != null &&
+        world.pulseY != null) {
       final progress = (1 - world.pulseTimer / 0.35).clamp(0.0, 1.0);
       canvas.drawCircle(
         center(world.pulseX!, world.pulseY!),
@@ -1082,6 +1133,34 @@ class _TileRoomPainter extends CustomPainter {
           ..color = const Color(0xDFFFF0A0)
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(2, tile * 0.1),
+      );
+    }
+
+    // God Hand aim marker + radius while guiding the party.
+    if (showGuide &&
+        world.guideTimer > 0 &&
+        world.guideX != null &&
+        world.guideY != null) {
+      final gc = center(world.guideX!, world.guideY!);
+      final pulse = 0.85 + 0.15 * math.sin(world.guideTimer * 10);
+      final r = tile * world.godHandRadius * pulse;
+      canvas.drawCircle(
+        gc,
+        r,
+        Paint()
+          ..color = const Color(0x55FFE080)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(1.5, tile * 0.06),
+      );
+      canvas.drawCircle(
+        gc,
+        tile * 0.22 * pulse,
+        Paint()..color = const Color(0xAAFFF0A0),
+      );
+      canvas.drawCircle(
+        gc,
+        tile * 0.1,
+        Paint()..color = const Color(0xFFFFF8D0),
       );
     }
 
@@ -1341,6 +1420,22 @@ class _TileRoomPainter extends CustomPainter {
             );
           }
         }
+        if (showAuras && enemy.enrageTimer > 0) {
+          final pulse = 0.9 + 0.1 * math.sin(enemy.enrageTimer * 12);
+          canvas.drawCircle(
+            c,
+            tile * 0.52 * pulse,
+            Paint()
+              ..color = const Color(0xAAFF3030)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(2, tile * 0.08),
+          );
+          canvas.drawCircle(
+            c,
+            tile * 0.28,
+            Paint()..color = const Color(0x44FF5020),
+          );
+        }
         drawBar(c, enemy.hp, enemy.maxHp, tile * 0.85);
       }
     }
@@ -1400,7 +1495,7 @@ class _TileRoomPainter extends CustomPainter {
         );
       }
       // WoW-style persistent auras
-      if (hero.iceBlockTimer > 0) {
+      if (showAuras && hero.iceBlockTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.62,
@@ -1416,7 +1511,7 @@ class _TileRoomPainter extends CustomPainter {
         );
       }
       // Power Word: Shield — physical bubble around the target (WoW-style).
-      if (hero.absorbShield > 0) {
+      if (showAuras && hero.absorbShield > 0) {
         final pulse =
             0.92 + 0.08 * math.sin(hero.x * 3 + hero.absorbShield * 0.2);
         final br = tile * 0.72 * pulse;
@@ -1453,7 +1548,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeCap = StrokeCap.round,
         );
       }
-      if (hero.combustionTimer > 0) {
+      if (showAuras && hero.combustionTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.5,
@@ -1463,7 +1558,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(2, tile * 0.07),
         );
       }
-      if (hero.painSuppressionTimer > 0) {
+      if (showAuras && hero.painSuppressionTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.52,
@@ -1473,7 +1568,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(1.5, tile * 0.06),
         );
       }
-      if (hero.fortitudeTimer > 0) {
+      if (showAuras && hero.fortitudeTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.44,
@@ -1483,7 +1578,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(1.2, tile * 0.05),
         );
       }
-      if (hero.bladeFlurryTimer > 0) {
+      if (showAuras && hero.bladeFlurryTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.7,
@@ -1493,7 +1588,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(1.5, tile * 0.05),
         );
       }
-      if (hero.killingSpreeTimer > 0) {
+      if (showAuras && hero.killingSpreeTimer > 0) {
         final pulse = 0.9 + 0.1 * math.sin(hero.killingSpreeTimer * 14);
         canvas.drawCircle(
           c,
@@ -1504,7 +1599,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(2, tile * 0.08),
         );
       }
-      if (hero.powerInfusionTimer > 0) {
+      if (showAuras && hero.powerInfusionTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.58,
@@ -1519,7 +1614,7 @@ class _TileRoomPainter extends CustomPainter {
           Paint()..color = const Color(0x44E0A0FF),
         );
       }
-      if (hero.pomCharges > 0) {
+      if (showAuras && hero.pomCharges > 0) {
         for (var i = 0; i < hero.pomCharges.clamp(0, 5); i++) {
           final a = hero.x + i * 1.25 + hero.pomCharges;
           canvas.drawCircle(
@@ -1532,7 +1627,9 @@ class _TileRoomPainter extends CustomPainter {
           );
         }
       }
-      if (hero.innerFireActive && hero.heroRole == HeroRole.healer) {
+      if (showAuras &&
+          hero.innerFireActive &&
+          hero.heroRole == HeroRole.healer) {
         canvas.drawCircle(
           c,
           tile * 0.38,
@@ -1542,7 +1639,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(1.2, tile * 0.05),
         );
       }
-      if (hero.sliceAndDiceTimer > 0) {
+      if (showAuras && hero.sliceAndDiceTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.46,
@@ -1552,14 +1649,14 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(1.4, tile * 0.05),
         );
       }
-      if (hero.sprintTimer > 0) {
+      if (showAuras && hero.sprintTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.4,
           Paint()..color = const Color(0x44FFFFA0),
         );
       }
-      if (hero.shieldWallTimer > 0) {
+      if (showAuras && hero.shieldWallTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.55,
@@ -1568,7 +1665,7 @@ class _TileRoomPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = math.max(2, tile * 0.08),
         );
-      } else if (hero.shieldBlockTimer > 0) {
+      } else if (showAuras && hero.shieldBlockTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.48,
@@ -1577,6 +1674,46 @@ class _TileRoomPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = math.max(1.5, tile * 0.06),
         );
+      }
+      if (showAuras && hero.lastStandTimer > 0) {
+        canvas.drawCircle(
+          c,
+          tile * 0.6,
+          Paint()
+            ..color = const Color(0x88FFA040)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(2, tile * 0.08),
+        );
+      }
+      // Generic kit buffTimers (shield / buff) when no dedicated aura fired.
+      if (showAuras) {
+        final shieldT = hero.buffTimers['shield'] ?? 0;
+        final buffT = hero.buffTimers['buff'] ?? 0;
+        if (shieldT > 0 &&
+            hero.shieldBlockTimer <= 0 &&
+            hero.shieldWallTimer <= 0 &&
+            hero.absorbShield <= 0) {
+          canvas.drawCircle(
+            c,
+            tile * 0.5,
+            Paint()
+              ..color = const Color(0x7790C0FF)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(1.5, tile * 0.06),
+          );
+        }
+        if (buffT > 0 &&
+            hero.combustionTimer <= 0 &&
+            hero.powerInfusionTimer <= 0) {
+          canvas.drawCircle(
+            c,
+            tile * 0.46,
+            Paint()
+              ..color = const Color(0x66E0A060)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(1.4, tile * 0.05),
+          );
+        }
       }
       if (flash > 0.02) {
         canvas.drawCircle(
@@ -1596,8 +1733,12 @@ class _TileRoomPainter extends CustomPainter {
     for (final pet in world.pets) {
       final flash = pet.attackFlash;
       final c = center(pet.x, pet.y);
-      final petKey = pet.id.startsWith('pet_') ? pet.id.substring(4) : pet.id;
-      final petPath = CustomAssets.petForInstanceId(petKey);
+      final petPath = pet.id.startsWith('classpet_') ||
+              pet.id.startsWith('temppet_')
+          ? CustomAssets.petForCombatActorId(pet.id, pet.name)
+          : CustomAssets.petForInstanceId(
+              pet.id.startsWith('pet_') ? pet.id.substring(4) : pet.id,
+            );
       final petImg = petsByPath[petPath];
       drawSprite(
         petImg ?? coin,
@@ -1889,6 +2030,7 @@ class _TileRoomPainter extends CustomPainter {
     return visualFrame != oldDelegate.visualFrame ||
         dungeonId != oldDelegate.dungeonId ||
         reducedVfx != oldDelegate.reducedVfx ||
+        vfxQuality != oldDelegate.vfxQuality ||
         camera.camX != oldDelegate.camera.camX ||
         camera.camY != oldDelegate.camera.camY ||
         camera.tileSize != oldDelegate.camera.tileSize ||

@@ -12,6 +12,7 @@ import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/meta_depth.dart';
 import '../models/pet.dart';
+import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
 import '../ui/game_audio.dart';
 import 'game_logic.dart';
@@ -492,6 +493,10 @@ class GameDirector extends ChangeNotifier {
             if (!identical(drank, _state)) {
               _state = drank;
               _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
+              SpatialCombat.spawnFlaskHealFx(
+                _spatial!,
+                reducedVfx: _state.reducedVfx,
+              );
             }
           }
         }
@@ -1086,11 +1091,24 @@ class GameDirector extends ChangeNotifier {
   }
 
   void setReducedVfx(bool value) {
-    _applyUpgrade(_state.copyWith(reducedVfx: value));
+    _applyUpgrade(
+      _state.copyWith(
+        vfxQuality: value ? VfxQuality.lite : VfxQuality.full,
+      ),
+    );
+  }
+
+  void setVfxQuality(VfxQuality value) {
+    _applyUpgrade(_state.copyWith(vfxQuality: value));
+  }
+
+  void cycleVfxQuality() {
+    setVfxQuality(_state.vfxQuality.next);
   }
 
   void setAutoSellMaxPower(int value) {
-    _applyUpgrade(_state.copyWith(autoSellMaxPower: value.clamp(0, 80)));
+    final cap = GameLogic.maxAutoSellIlvlCap(_state);
+    _applyUpgrade(_state.copyWith(autoSellMaxPower: value.clamp(0, cap)));
   }
 
   void setColorblindMode(bool value) {
@@ -1481,7 +1499,16 @@ class GameDirector extends ChangeNotifier {
   }
 
   void useConsumable({int? heroIndex}) {
-    _applyUpgrade(GameLogic.useConsumable(_state, heroIndex: heroIndex));
+    final before = _state;
+    final next = GameLogic.useConsumable(_state, heroIndex: heroIndex);
+    _applyUpgrade(next);
+    if (!identical(next, before) && _spatial != null && _state.inDungeon) {
+      _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
+      SpatialCombat.spawnFlaskHealFx(
+        _spatial!,
+        reducedVfx: _state.reducedVfx,
+      );
+    }
   }
 
   void upgradeSanctuary(String track) {

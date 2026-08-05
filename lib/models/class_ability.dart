@@ -1,5 +1,7 @@
+import 'ability_vfx.dart';
 import 'hero.dart';
 import 'hero_spec.dart';
+import 'spell_bolt_style.dart';
 
 /// How an ability resolves in the generic [AbilityEffectRunner] path.
 enum AbilityEffectKind {
@@ -366,6 +368,8 @@ class ClassAbilityDef {
     this.effect = AbilityEffectKind.damage,
     this.tier = AbilityCastTier.filler,
     this.coeff = 1.0,
+    this.boltStyle,
+    this.vfx,
   });
 
   final AbilityId id;
@@ -384,6 +388,12 @@ class ClassAbilityDef {
   final AbilityCastTier tier;
   /// Damage / heal / absorb multiplier vs attack (or resource grant amount).
   final double coeff;
+
+  /// Prefer this bolt theme when set (overrides id/keyword maps).
+  final SpellBoltStyle? boltStyle;
+
+  /// Optional cast / ground / aura VFX overrides.
+  final AbilityVfxSpec? vfx;
 
   /// Hover / long-press chip text for the party HUD.
   String get tooltipMessage {
@@ -944,7 +954,7 @@ class ClassKits {
       shortLabel: 'Mortal',
       description: 'Heavy single-target strike.',
       unlockLevel: 3,
-      cooldown: 4.2,
+      cooldown: 3.4,
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
@@ -958,11 +968,11 @@ class ClassKits {
       shortLabel: 'Over',
       description: 'Quick follow-up slash.',
       unlockLevel: 5,
-      cooldown: 4.5,
+      cooldown: 3.5,
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.15,
+      coeff: 1.25,
     ),
     ClassAbilityDef(
       id: AbilityId.rend,
@@ -1005,6 +1015,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
       coeff: 1.0,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFFD070,
+        groundDisc: true,
+        groundLife: 3.2,
+        groundArgb: 0x88FFE08A,
+        groundRadius: 2.8,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.armsExecute,
@@ -1321,6 +1340,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.55,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFE080,
+        groundDisc: true,
+        groundLife: 6.0,
+        groundArgb: 0x66FFE080,
+        groundRadius: 2.7,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.shieldOfRighteousness,
@@ -3439,6 +3467,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.7,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFB060E0,
+        groundDisc: true,
+        groundLife: 1.4,
+        groundArgb: 0x88A040D0,
+        groundRadius: 3.0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.backdraft,

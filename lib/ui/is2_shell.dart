@@ -1576,7 +1576,12 @@ class _PartyRow extends StatelessWidget {
       AbilityId.sprint => s.sprintTimer > 0,
       AbilityId.vanish => s.vanishTimer > 0,
       AbilityId.killingSpree => s.killingSpreeTimer > 0,
-      _ => false,
+      _ => ability.effect == AbilityEffectKind.selfBuff &&
+          ((s.buffTimers['buff'] ?? 0) > 0 ||
+              (s.buffTimers['shield'] ?? 0) > 0 ||
+              s.powerInfusionTimer > 0 ||
+              s.shieldBlockTimer > 0 ||
+              s.combustionTimer > 0),
     };
   }
 
@@ -1647,11 +1652,22 @@ class _PartyRow extends StatelessWidget {
                         value: frac,
                         minHeight: compact ? 4 : 5,
                         backgroundColor: const Color(0xFF2A2218),
-                        color: liveHp <= 0
-                            ? GameTheme.blood
-                            : (frac <= 0.35
-                                ? GameTheme.bloodLit
-                                : GameTheme.clear),
+                        color: () {
+                          final cb = SpatialCombat.colorblindMode;
+                          if (liveHp <= 0) {
+                            return cb
+                                ? const Color(0xFFD55E00)
+                                : GameTheme.blood;
+                          }
+                          if (frac <= 0.35) {
+                            return cb
+                                ? const Color(0xFFE69F00)
+                                : GameTheme.bloodLit;
+                          }
+                          return cb
+                              ? const Color(0xFF009E73)
+                              : GameTheme.clear;
+                        }(),
                       ),
                     ),
                     if (showKit) ...[
@@ -2371,7 +2387,7 @@ class _InventoryDockState extends State<_InventoryDock>
           nearFull && filled >= cap
               ? 'BAG FULL  $filled/$cap — oldest salvages to essence'
               : nearFull
-                  ? 'BAG  $filled/$cap — nearly full (SELL JUNK dumps non-BiS rares)'
+                  ? 'BAG  $filled/$cap — nearly full (SELL JUNK dumps non-BiS + under iLvl cap)'
                   : 'BAG  $filled/$cap · SELL = essence · Market = gold',
           style: GameTheme.pixel(
             size: GameTheme.hudPixel,
@@ -3899,10 +3915,10 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
           onChanged: director.setSoundMuted,
         ),
         const SizedBox(height: 8),
-        _SettingsToggle(
-          label: 'Reduced VFX (less lag / calmer combat)',
-          value: state.reducedVfx,
-          onChanged: director.setReducedVfx,
+        _SettingsCycle(
+          label: state.vfxQuality.settingsLabel,
+          hint: state.vfxQuality.settingsHint,
+          onCycle: director.cycleVfxQuality,
         ),
         const SizedBox(height: 8),
         _SettingsToggle(
@@ -3937,46 +3953,57 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
         const SizedBox(height: 12),
         Text('Auto-sell max iLvl', style: GameTheme.pixel(size: 8)),
         const SizedBox(height: 6),
-        Row(
-          children: [
-            TextButton(
-              style: TextButton.styleFrom(
-                minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
-                padding: EdgeInsets.zero,
-                foregroundColor: GameTheme.parchment,
-              ),
-              onPressed: state.autoSellMaxPower > 0
-                  ? () => director.setAutoSellMaxPower(state.autoSellMaxPower - 1)
-                  : null,
-              child: Text('-', style: GameTheme.pixel(size: 10)),
-            ),
-            Expanded(
-              child: _CaveSlider(
-                value: state.autoSellMaxPower.toDouble().clamp(0, 80),
-                min: 0,
-                max: 80,
-                divisions: 80,
-                onChanged: (v) => director.setAutoSellMaxPower(v.round()),
-              ),
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
-                padding: EdgeInsets.zero,
-                foregroundColor: GameTheme.parchment,
-              ),
-              onPressed: state.autoSellMaxPower < 80
-                  ? () => director.setAutoSellMaxPower(state.autoSellMaxPower + 1)
-                  : null,
-              child: Text('+', style: GameTheme.pixel(size: 10)),
-            ),
-          ],
+        Builder(
+          builder: (context) {
+            final sellCap = GameLogic.maxAutoSellIlvlCap(state);
+            return Row(
+              children: [
+                TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize:
+                        const Size(GameTheme.minTouch, GameTheme.minTouch),
+                    padding: EdgeInsets.zero,
+                    foregroundColor: GameTheme.parchment,
+                  ),
+                  onPressed: state.autoSellMaxPower > 0
+                      ? () => director
+                          .setAutoSellMaxPower(state.autoSellMaxPower - 1)
+                      : null,
+                  child: Text('-', style: GameTheme.pixel(size: 10)),
+                ),
+                Expanded(
+                  child: _CaveSlider(
+                    value: state.autoSellMaxPower
+                        .toDouble()
+                        .clamp(0, sellCap.toDouble()),
+                    min: 0,
+                    max: sellCap.toDouble(),
+                    divisions: sellCap.clamp(1, 200),
+                    onChanged: (v) => director.setAutoSellMaxPower(v.round()),
+                  ),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize:
+                        const Size(GameTheme.minTouch, GameTheme.minTouch),
+                    padding: EdgeInsets.zero,
+                    foregroundColor: GameTheme.parchment,
+                  ),
+                  onPressed: state.autoSellMaxPower < sellCap
+                      ? () => director
+                          .setAutoSellMaxPower(state.autoSellMaxPower + 1)
+                      : null,
+                  child: Text('+', style: GameTheme.pixel(size: 10)),
+                ),
+              ],
+            );
+          },
         ),
         Text(
-          'Pickup: auto-sell drops at or below i${state.autoSellMaxPower} '
-          '(item level cap) if not an upgrade (0 = off). Bag SELL JUNK clears '
-          'commons / non-upgrade uncommons; at ≥90% full it also dumps non-BiS rares. '
-          'Bag SELL = essence; Market tap-sell = gold.',
+          'Pickup & bag SELL JUNK: sell at or below i${state.autoSellMaxPower} '
+          'if not BiS/upgrade (0 = off). Cap scales with dungeon clears / AL '
+          '(max i${GameLogic.maxAutoSellIlvlCap(state)}). Rare+ above the cap '
+          'kept until bag ≥90% full. Bag SELL = essence; Market = gold.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 16),
@@ -4066,6 +4093,57 @@ class _SettingsToggle extends StatelessWidget {
               child: Text(label, style: GameTheme.body(size: 16)),
             ),
             _CaveSwitch(value: value),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsCycle extends StatelessWidget {
+  const _SettingsCycle({
+    required this.label,
+    required this.hint,
+    required this.onCycle,
+  });
+
+  final String label;
+  final String hint;
+  final VoidCallback onCycle;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onCycle,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: MenuChrome.cardBox(),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: GameTheme.body(size: 16)),
+                  const SizedBox(height: 2),
+                  Text(
+                    hint,
+                    style: GameTheme.body(
+                      size: 12,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              'TAP',
+              style: GameTheme.pixel(
+                size: 7,
+                color: GameTheme.parchmentDim,
+              ),
+            ),
           ],
         ),
       ),

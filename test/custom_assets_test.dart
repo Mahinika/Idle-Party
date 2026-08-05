@@ -102,6 +102,14 @@ void main() {
       CustomAssets.petForTemplateId('gold_grub'),
       CustomAssets.enemyRat,
     );
+    expect(
+      CustomAssets.petForCombatActorId('temppet_water_h1_0', 'Water Elemental'),
+      CustomAssets.enemyCrystalWraith,
+    );
+    expect(
+      CustomAssets.petForInstanceId('classpet_hero1'),
+      isNot(CustomAssets.petEgg),
+    );
   });
 
   test('each pet species maps to a unique portrait path', () {
