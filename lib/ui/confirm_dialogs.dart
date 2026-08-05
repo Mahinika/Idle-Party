@@ -7,10 +7,18 @@ import '../core/story_lore.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
+import 'web_click_bridge.dart';
 
 Future<void> confirmAscend(BuildContext context, GameDirector director) async {
   final state = director.state;
   if (!GameLogic.canAscend(state)) return;
+  if (_ascendDialogOpen) return;
+  _ascendDialogOpen = true;
+
+  // Drop any MORE/HUB bottom sheet so Ascend is the only modal (avoids
+  // stacked routes where pop hits the sheet and Ascend stays underneath).
+  final nav = Navigator.of(context);
+  nav.popUntil((route) => route is! ModalBottomSheetRoute);
 
   final nextAl = state.ascensionLevel + 1;
   final baseReward = GameLogic.ascendEssenceReward(nextAl);
@@ -18,42 +26,69 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
     state.ascensionLevel,
     nextAl,
   );
-  final ok = await showDialog<bool>(
-    context: context,
-    barrierColor: MenuChrome.scrim,
-    builder: (ctx) => MenuChrome.dialog(
-      title: 'Ascend?',
-      content: Text(
-        StoryLore.ascendConfirmBody(
-          rewardEssence: baseReward + milestone,
-          nextAl: nextAl,
-          milestoneBonus: milestone,
-          godHandLevel: state.godHandLevel,
-          soulboundFragments: state.soulboundFragments,
-        ),
-        style: GameTheme.body(size: 15, color: GameTheme.parchment),
+  WebClickBridge.pushLayer();
+  try {
+    final ok = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: false,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => ListenableBuilder(
+        listenable: director,
+        builder: (ctx, _) {
+          // Autopilot / double-open can ascend underneath — dismiss stale dialog.
+          if (!GameLogic.canAscend(director.state)) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (ctx.mounted &&
+                  Navigator.of(ctx, rootNavigator: true).canPop()) {
+                Navigator.of(ctx, rootNavigator: true).pop(false);
+              }
+            });
+          }
+          return MenuChrome.dialog(
+            title: 'Ascend?',
+            content: Text(
+              StoryLore.ascendConfirmBody(
+                rewardEssence: baseReward + milestone,
+                nextAl: nextAl,
+                milestoneBonus: milestone,
+                godHandLevel: state.godHandLevel,
+                soulboundFragments: state.soulboundFragments,
+              ),
+              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            ),
+            actions: [
+              KenneyButton(
+                label: 'CANCEL',
+                style: KenneyButtonStyle.grey,
+                expanded: false,
+                onPressed: () =>
+                    Navigator.of(ctx, rootNavigator: true).pop(false),
+              ),
+              KenneyButton(
+                label: 'CONFIRM ASCEND',
+                style: KenneyButtonStyle.red,
+                expanded: false,
+                onPressed: () =>
+                    Navigator.of(ctx, rootNavigator: true).pop(true),
+              ),
+            ],
+          );
+        },
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: Text(
-            'CANCEL',
-            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-          ),
-        ),
-        KenneyButton(
-          label: 'ASCEND',
-          style: KenneyButtonStyle.red,
-          expanded: false,
-          onPressed: () => Navigator.pop(ctx, true),
-        ),
-      ],
-    ),
-  );
-  if (ok == true && context.mounted) {
-    director.ascend();
+    );
+    if (ok == true &&
+        context.mounted &&
+        GameLogic.canAscend(director.state)) {
+      director.ascend();
+    }
+  } finally {
+    WebClickBridge.popLayer();
+    _ascendDialogOpen = false;
   }
 }
+
+bool _ascendDialogOpen = false;
 
 Future<void> confirmLeaveDungeon(
   BuildContext context,
@@ -88,6 +123,47 @@ Future<void> confirmLeaveDungeon(
   );
   if (ok == true && context.mounted) {
     onLeave();
+  }
+}
+
+Future<void> confirmGauntletRun(
+  BuildContext context,
+  GameDirector director,
+) async {
+  final state = director.state;
+  if (!GameLogic.canEnterGauntlet(state)) return;
+  final best = state.metaDepth.gauntletBestFloor;
+  final ok = await showDialog<bool>(
+    context: context,
+    barrierColor: MenuChrome.scrim,
+    builder: (ctx) => MenuChrome.dialog(
+      title: 'Infinity Gauntlet?',
+      content: Text(
+        'AL${GameLogic.gauntletMinAscension}+ endgame climb in the Crystal Spire.\n\n'
+        'Floors escalate forever — harder packs, bigger gold & essence. '
+        'Boss every 5 floors. Wipe or leave returns to hub.\n\n'
+        'Best clear: F$best',
+        style: GameTheme.body(size: 15, color: GameTheme.parchment),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(
+            'CANCEL',
+            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+          ),
+        ),
+        KenneyButton(
+          label: 'ENTER',
+          style: KenneyButtonStyle.red,
+          expanded: false,
+          onPressed: () => Navigator.pop(ctx, true),
+        ),
+      ],
+    ),
+  );
+  if (ok == true && context.mounted) {
+    director.enterGauntlet();
   }
 }
 

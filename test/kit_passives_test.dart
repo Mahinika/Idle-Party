@@ -59,7 +59,7 @@ GameState _soloSpecParty(HeroSpecId specId, {required int level}) {
   var state = GameLogic.createInitialState(now: DateTime(2026, 8, 1));
   state = GameLogic.enterDungeon(state, dungeonId: 'sandy');
   final base = state.heroes.first;
-  var hero = base.copyWith(specId: specId, role: HeroSpecs.def(specId).legacyRole);
+  var hero = base.copyWith(specId: specId);
   while (hero.level < level) {
     hero = hero.levelUp();
   }

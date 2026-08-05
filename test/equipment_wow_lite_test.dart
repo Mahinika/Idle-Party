@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/dungeon_room.dart';
+import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/gear_set.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
@@ -208,7 +210,7 @@ void main() {
     var multi = <LootDrop>[];
     for (var seed = 0; seed < 40; seed++) {
       GameLogic.random = Random(seed);
-      final drops = GameLogic.rollLoot(
+      final drops = GameLogic.rollKillLoot(
         10,
         party: GameLogic.createInitialState().heroes,
         dungeonId: 'sandy',
@@ -244,26 +246,30 @@ void main() {
     expect(again.setLabel, 'Cavern Plate');
   });
 
-  test('boss loot keeps Boss Sigil even when many drops stack', () {
-    // Floor 8 = boss at AL3, also %4 gold pouch; seed until 2 gear pieces.
-    var found = false;
-    for (var seed = 0; seed < 80; seed++) {
-      GameLogic.random = Random(seed);
-      final drops = GameLogic.rollLoot(
-        8,
-        ascensionLevel: 3,
-        party: GameLogic.createInitialState().heroes,
-        dungeonId: 'sandy',
-      );
-      final hasSigil = drops.any((d) => d.name == 'Boss Sigil');
-      final gearCount = drops.where((d) => d.isEquipment).length;
-      if (hasSigil && gearCount >= 1) {
-        found = true;
-        expect(hasSigil, isTrue);
-        break;
-      }
-    }
-    expect(found, isTrue);
+  test('boss floor clear keeps Boss Sigil; kill loot does not', () {
+    final floor = GameLogic.rollFloorClearLoot(8, roomType: RoomType.boss);
+    expect(floor.any((d) => d.name == 'Boss Sigil'), isTrue);
+
+    GameLogic.random = Random(1);
+    final kill = GameLogic.rollKillLoot(
+      8,
+      ascensionLevel: 3,
+      party: GameLogic.createInitialState().heroes,
+      dungeonId: 'sandy',
+      enemyRole: EnemyRole.boss,
+    );
+    expect(kill.any((d) => d.name == 'Boss Sigil'), isFalse);
+
+    // Combined helper still soft-caps important fillers.
+    GameLogic.random = Random(7);
+    final combined = GameLogic.rollLoot(
+      8,
+      ascensionLevel: 3,
+      party: GameLogic.createInitialState().heroes,
+      dungeonId: 'sandy',
+      roomType: RoomType.boss,
+    );
+    expect(combined.any((d) => d.name == 'Boss Sigil'), isTrue);
   });
 
   test('merge rebuilds affix names from ids', () async {

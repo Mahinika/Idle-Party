@@ -19,6 +19,15 @@ int _jsonInt(dynamic value, [int fallback = 0]) {
   return int.tryParse('$value') ?? fallback;
 }
 
+Map<String, int> _jsonStringIntMap(dynamic raw) {
+  final out = <String, int>{};
+  if (raw is! Map) return out;
+  for (final e in raw.entries) {
+    out['${e.key}'] = _jsonInt(e.value);
+  }
+  return out;
+}
+
 class GameState {
   const GameState({
     required this.heroRoster,
@@ -33,6 +42,9 @@ class GameState {
     required this.attackBonus,
     required this.defenseBonus,
     required this.vitalityBonus,
+    this.moveSpeedBonus = 0,
+    this.attackSpeedBonus = 0,
+    this.critBonus = 0,
     required this.recentLoot,
     required this.unlockedRelics,
     required this.currentRoom,
@@ -51,9 +63,13 @@ class GameState {
     this.sanctuaryVitalityLevel = 0,
     this.metaDepth = MetaDepthState.empty,
     this.inDungeon = false,
+    this.inGauntlet = false,
     this.dungeonId = 'sandy',
     this.soulboundFragments = 0,
     this.soulboundItem,
+    this.craftMaterials = const <String, int>{},
+    this.craftPity = const <String, int>{},
+    this.apexVault = const <EquipmentItem>[],
     this.godHandLevel = 0,
     this.layoutSeed = 0,
     this.soundMuted = false,
@@ -107,6 +123,16 @@ class GameState {
   final int attackBonus;
   final int defenseBonus;
   final int vitalityBonus;
+
+  /// Forge move-speed points (≈% before soft-cap). Cleared on Ascend.
+  final int moveSpeedBonus;
+
+  /// Forge attack-speed points (≈% before soft-cap). Cleared on Ascend.
+  final int attackSpeedBonus;
+
+  /// Forge crit-chance points (≈% before soft-cap). Cleared on Ascend.
+  final int critBonus;
+
   final List<LootDrop> recentLoot;
   final List<String> unlockedRelics;
   final DungeonRoom currentRoom;
@@ -151,6 +177,9 @@ class GameState {
   /// Hub vs dungeon: combat loop only runs while in dungeon.
   final bool inDungeon;
 
+  /// Infinity Gauntlet run (AL10+ endless climb). Cleared when leaving hub.
+  final bool inGauntlet;
+
   /// Named dungeon id (e.g. sandy).
   final String dungeonId;
 
@@ -159,6 +188,15 @@ class GameState {
 
   /// Optional permanent soulbound gear piece (survives Ascend).
   final EquipmentItem? soulboundItem;
+
+  /// Apex crafting Materials Bag (survives Ascend). Never mixed with gear stash.
+  final Map<String, int> craftMaterials;
+
+  /// Soft/hard pity dry-streak counters per mat family (survives Ascend).
+  final Map<String, int> craftPity;
+
+  /// Unequipped Apex pieces (survives Ascend).
+  final List<EquipmentItem> apexVault;
 
   /// God Hand upgrade level (survives Ascend).
   final int godHandLevel;
@@ -265,18 +303,22 @@ class GameState {
   /// Extra gold percent from Ascension Level (+10% per AL).
   int get ascensionGoldBonusPercent => ascensionLevel * 10;
 
-  /// Sanctuary gold find (+5% per level, +3% per prestige).
+  /// Sanctuary gold find (+5% per level soft-capped, +3% per prestige).
   int get sanctuaryGoldBonusPercent =>
-      sanctuaryGoldLevel * 5 + metaDepth.sanctuaryGoldPrestige * 3;
+      softForgePercent(sanctuaryGoldLevel * 5, softAt: 100).round() +
+      metaDepth.sanctuaryGoldPrestige * 3;
 
   int get sanctuaryAttackBonus =>
-      sanctuaryPowerLevel + metaDepth.sanctuaryPowerPrestige;
+      softForgePercent(sanctuaryPowerLevel, softAt: 40).round() +
+      metaDepth.sanctuaryPowerPrestige;
 
   int get sanctuaryVitalityBonus =>
-      sanctuaryVitalityLevel * 2 + metaDepth.sanctuaryVitalityPrestige;
+      softForgePercent(sanctuaryVitalityLevel * 2, softAt: 80).round() +
+      metaDepth.sanctuaryVitalityPrestige;
 
   int get sanctuaryXpBonusPercent =>
-      metaDepth.sanctuaryXpLevel * 4 + metaDepth.sanctuaryXpPrestige * 2;
+      softForgePercent(metaDepth.sanctuaryXpLevel * 4, softAt: 80).round() +
+      metaDepth.sanctuaryXpPrestige * 2;
 
   int get petAttackBonus {
     final pet = activePet;
@@ -572,30 +614,44 @@ class GameState {
 
   int effectiveHeroMaxHp(PartyHero hero) => ratingsFor(hero).maxHp;
 
-  int effectiveHeroCrit(PartyHero hero) => ratingsFor(hero).critChance;
+  int effectiveHeroCrit(PartyHero hero) {
+    final forge = softForgePercent(critBonus, softAt: 25).round();
+    return (ratingsFor(hero).critChance + forge).clamp(0, 75);
+  }
 
   int effectiveHeroSpirit(PartyHero hero) => ratingsFor(hero).spirit;
 
   int effectiveHeroStrength(PartyHero hero) => ratingsFor(hero).strength;
 
+  /// Soft-caps forge % so infinite buys stay useful but don't explode combat.
+  static double softForgePercent(int points, {double softAt = 40}) {
+    if (points <= 0) return 0;
+    final p = points.toDouble();
+    if (p <= softAt) return p;
+    return softAt + (p - softAt) * 0.35;
+  }
+
   double effectiveHeroAttackSpeed(PartyHero hero) {
-    final base = switch (hero.role) {
+    final base = switch (hero.gearAffinity) {
       HeroRole.mage => 1.82,
       HeroRole.rogue => 1.55,
       HeroRole.healer => 1.43,
       HeroRole.warrior => 1.35,
     };
-    return base * (1 + hero.gearAttackSpeedBonus / 100);
+    final pct =
+        hero.gearAttackSpeedBonus + softForgePercent(attackSpeedBonus);
+    return base * (1 + pct / 100);
   }
 
   double effectiveHeroMoveSpeed(PartyHero hero) {
-    final base = switch (hero.role) {
+    final base = switch (hero.gearAffinity) {
       HeroRole.rogue => 3.25,
       HeroRole.healer => 3.2,
       HeroRole.warrior => 3.1,
       HeroRole.mage => 3.0,
     };
-    return base * (1 + hero.gearMoveSpeedBonus / 100);
+    final pct = hero.gearMoveSpeedBonus + softForgePercent(moveSpeedBonus);
+    return base * (1 + pct / 100);
   }
 
   /// God Hand AOE radius in tiles.
@@ -618,6 +674,9 @@ class GameState {
     int? attackBonus,
     int? defenseBonus,
     int? vitalityBonus,
+    int? moveSpeedBonus,
+    int? attackSpeedBonus,
+    int? critBonus,
     List<LootDrop>? recentLoot,
     List<String>? unlockedRelics,
     DungeonRoom? currentRoom,
@@ -636,9 +695,13 @@ class GameState {
     int? sanctuaryVitalityLevel,
     MetaDepthState? metaDepth,
     bool? inDungeon,
+    bool? inGauntlet,
     String? dungeonId,
     int? soulboundFragments,
     EquipmentItem? soulboundItem,
+    Map<String, int>? craftMaterials,
+    Map<String, int>? craftPity,
+    List<EquipmentItem>? apexVault,
     int? godHandLevel,
     int? layoutSeed,
     bool? soundMuted,
@@ -682,6 +745,9 @@ class GameState {
       attackBonus: attackBonus ?? this.attackBonus,
       defenseBonus: defenseBonus ?? this.defenseBonus,
       vitalityBonus: vitalityBonus ?? this.vitalityBonus,
+      moveSpeedBonus: moveSpeedBonus ?? this.moveSpeedBonus,
+      attackSpeedBonus: attackSpeedBonus ?? this.attackSpeedBonus,
+      critBonus: critBonus ?? this.critBonus,
       recentLoot: recentLoot ?? this.recentLoot,
       unlockedRelics: unlockedRelics ?? this.unlockedRelics,
       currentRoom: currentRoom ?? this.currentRoom,
@@ -704,11 +770,15 @@ class GameState {
           sanctuaryVitalityLevel ?? this.sanctuaryVitalityLevel,
       metaDepth: metaDepth ?? this.metaDepth,
       inDungeon: inDungeon ?? this.inDungeon,
+      inGauntlet: inGauntlet ?? this.inGauntlet,
       dungeonId: dungeonId ?? this.dungeonId,
       soulboundFragments: soulboundFragments ?? this.soulboundFragments,
       soulboundItem: clearSoulboundItem
           ? null
           : (soulboundItem ?? this.soulboundItem),
+      craftMaterials: craftMaterials ?? this.craftMaterials,
+      craftPity: craftPity ?? this.craftPity,
+      apexVault: apexVault ?? this.apexVault,
       godHandLevel: godHandLevel ?? this.godHandLevel,
       layoutSeed: layoutSeed ?? this.layoutSeed,
       soundMuted: soundMuted ?? this.soundMuted,
@@ -770,6 +840,9 @@ class GameState {
     'attackBonus': attackBonus,
     'defenseBonus': defenseBonus,
     'vitalityBonus': vitalityBonus,
+    'moveSpeedBonus': moveSpeedBonus,
+    'attackSpeedBonus': attackSpeedBonus,
+    'critBonus': critBonus,
     'recentLoot': recentLoot.map((loot) => loot.toJson()).toList(),
     'unlockedRelics': unlockedRelics,
     'currentRoom': currentRoom.toJson(),
@@ -790,9 +863,13 @@ class GameState {
     'sanctuaryVitalityLevel': sanctuaryVitalityLevel,
     'metaDepth': metaDepth.toJson(),
     'inDungeon': inDungeon,
+    'inGauntlet': inGauntlet,
     'dungeonId': dungeonId,
     'soulboundFragments': soulboundFragments,
     if (soulboundItem != null) 'soulboundItem': soulboundItem!.toJson(),
+    'craftMaterials': craftMaterials,
+    'craftPity': craftPity,
+    'apexVault': apexVault.map((item) => item.toJson()).toList(),
     'godHandLevel': godHandLevel,
     'layoutSeed': layoutSeed,
     'soundMuted': soundMuted,
@@ -929,6 +1006,9 @@ class GameState {
       attackBonus: _jsonInt(json['attackBonus']),
       defenseBonus: _jsonInt(json['defenseBonus']),
       vitalityBonus: _jsonInt(json['vitalityBonus']),
+      moveSpeedBonus: _jsonInt(json['moveSpeedBonus']),
+      attackSpeedBonus: _jsonInt(json['attackSpeedBonus']),
+      critBonus: _jsonInt(json['critBonus']),
       recentLoot: recentLootJson == null
           ? <LootDrop>[]
           : recentLootJson
@@ -971,11 +1051,19 @@ class GameState {
       sanctuaryVitalityLevel: _jsonInt(json['sanctuaryVitalityLevel']),
       metaDepth: metaDepth,
       inDungeon: (json['inDungeon'] as bool?) ?? false,
+      inGauntlet: (json['inGauntlet'] as bool?) ?? false,
       dungeonId: (json['dungeonId'] as String?) ?? 'sandy',
       soulboundFragments: _jsonInt(json['soulboundFragments']),
       soulboundItem: soulboundJson == null
           ? null
           : EquipmentItem.fromJson(soulboundJson),
+      craftMaterials: _jsonStringIntMap(json['craftMaterials']),
+      craftPity: _jsonStringIntMap(json['craftPity']),
+      apexVault: (json['apexVault'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>()
+              .map(EquipmentItem.fromJson)
+              .toList() ??
+          const <EquipmentItem>[],
       godHandLevel: _jsonInt(json['godHandLevel']),
       layoutSeed: _jsonInt(json['layoutSeed']),
       soundMuted: (json['soundMuted'] as bool?) ?? false,

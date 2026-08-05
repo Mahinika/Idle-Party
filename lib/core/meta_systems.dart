@@ -1,3 +1,4 @@
+import '../models/apex_craft.dart';
 import '../models/achievement_def.dart';
 import '../models/dungeon_def.dart';
 import '../models/enemy.dart';
@@ -138,6 +139,9 @@ abstract final class MetaSystems {
     'ascend_streak_3': (s) => s.metaDepth.ascendStreak >= 3,
     'al_5': (s) => s.ascensionLevel >= 5,
     'al_10': (s) => s.ascensionLevel >= 10,
+    'gauntlet_enter': (s) =>
+        s.inGauntlet || s.metaDepth.lifetimeGauntletFloors > 0,
+    'gauntlet_10': (s) => s.metaDepth.gauntletBestFloor >= 10,
     'casts_100': (s) => s.metaDepth.lifetimeAbilityCasts >= 100,
     'floors_50': (s) => s.metaDepth.lifetimeFloorClears >= 50,
     'relic_all': (s) =>
@@ -151,8 +155,45 @@ abstract final class MetaSystems {
         s.metaDepth.sanctuaryXpLevel >= 12,
     'god_hand_5': (s) => s.godHandLevel >= 5,
     'weekly_clear': (s) => s.metaDepth.weeklyClaimed,
+    'apex_first': (s) => _apexPieces(s).isNotEmpty,
+    'apex_set_r1': (s) => _hasFullApexSetR1(s),
+    'apex_r3': (s) => _apexPieces(s).any((i) => i.apexRank >= 3),
     'hidden_egg': (s) => s.metaDepth.lifetimePetHatches >= 10,
   };
+
+  static List<EquipmentItem> _apexPieces(GameState s) {
+    final out = <EquipmentItem>[];
+    for (final h in s.heroRoster) {
+      for (final i in h.equipped.values) {
+        if (i.isApex) out.add(i);
+      }
+    }
+    out.addAll(s.apexVault.where((i) => i.isApex));
+    out.addAll(s.gearStash.where((i) => i.isApex));
+    return out;
+  }
+
+  static bool _hasFullApexSetR1(GameState s) {
+    final pieces = _apexPieces(s);
+    for (final classId in HeroClassId.values) {
+      for (final role in ApexCraft.validRolesFor(classId)) {
+        var ok = true;
+        for (final slot in ApexCraft.craftSlots) {
+          final id = ApexCraft.pieceId(
+            classId: classId,
+            role: role,
+            slot: slot,
+          );
+          if (!pieces.any((p) => p.id == id && p.apexRank >= 1)) {
+            ok = false;
+            break;
+          }
+        }
+        if (ok) return true;
+      }
+    }
+    return false;
+  }
 
   /// Pure: adds any newly-met achievement ids and grants their essence reward.
   /// Never removes an id, so it's safe to call repeatedly.

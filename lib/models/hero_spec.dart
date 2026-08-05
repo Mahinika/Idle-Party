@@ -16,7 +16,7 @@ enum HeroClassId {
   druid,
 }
 
-/// Party role tags used for composition hints and spawn preference.
+/// Party role tags — use these for tank/healer/DPS identity (not [HeroRole]).
 enum SpecRoleTag { tank, healer, meleeDps, rangedDps, caster }
 
 /// Resource type for HUD / regen.
@@ -75,7 +75,7 @@ class HeroSpecDef {
     required this.shortLabel,
     required this.roleTag,
     required this.resource,
-    required this.legacyRole,
+    required this.gearAffinity,
     required this.armorTypes,
     required this.ranged,
     required this.preferredRange,
@@ -91,8 +91,8 @@ class HeroSpecDef {
   final String shortLabel;
   final SpecRoleTag roleTag;
   final SpecResource resource;
-  /// Maps onto existing combat tickers / ratings until a dedicated kit runs.
-  final HeroRole legacyRole;
+  /// Gear/ratings affinity bucket — not tank/healer/DPS. Prefer [roleTag].
+  final HeroRole gearAffinity;
   final Set<ArmorType> armorTypes;
   final bool ranged;
   final double preferredRange;
@@ -169,15 +169,15 @@ abstract final class HeroSpecs {
     return null;
   }
 
-  /// Migrate legacy `HeroRole.name` / affinity strings.
-  static HeroSpecId fromLegacyRole(HeroRole role) => switch (role) {
+  /// Maps save-era HeroRole / affinity names onto a default starter spec.
+  static HeroSpecId fromGearAffinity(HeroRole affinity) => switch (affinity) {
         HeroRole.warrior => HeroSpecId.protection,
         HeroRole.healer => HeroSpecId.discipline,
         HeroRole.mage => HeroSpecId.fire,
         HeroRole.rogue => HeroSpecId.combat,
       };
 
-  static HeroSpecId fromLegacyRoleName(String? raw) {
+  static HeroSpecId fromGearAffinityName(String? raw) {
     final parsed = tryParse(raw);
     if (parsed != null) return parsed;
     return switch (raw) {
@@ -213,7 +213,7 @@ abstract final class HeroSpecs {
       shortLabel: 'ARMS',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.rage,
-      legacyRole: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       armorTypes: _plate,
       ranged: false,
       preferredRange: 1.2,
@@ -229,7 +229,7 @@ abstract final class HeroSpecs {
       shortLabel: 'FURY',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.rage,
-      legacyRole: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       armorTypes: _plate,
       ranged: false,
       preferredRange: 1.15,
@@ -245,7 +245,7 @@ abstract final class HeroSpecs {
       shortLabel: 'PROT',
       roleTag: SpecRoleTag.tank,
       resource: SpecResource.rage,
-      legacyRole: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       armorTypes: _plate,
       ranged: false,
       preferredRange: 1.15,
@@ -261,7 +261,7 @@ abstract final class HeroSpecs {
       shortLabel: 'HOLY',
       roleTag: SpecRoleTag.healer,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       armorTypes: _plate,
       ranged: true,
       preferredRange: 3.0,
@@ -277,7 +277,7 @@ abstract final class HeroSpecs {
       shortLabel: 'PPROT',
       roleTag: SpecRoleTag.tank,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       armorTypes: _plate,
       ranged: false,
       preferredRange: 1.2,
@@ -293,7 +293,7 @@ abstract final class HeroSpecs {
       shortLabel: 'RET',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       armorTypes: _plate,
       ranged: false,
       preferredRange: 1.25,
@@ -310,7 +310,7 @@ abstract final class HeroSpecs {
       shortLabel: 'BM',
       roleTag: SpecRoleTag.rangedDps,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       armorTypes: _mail,
       ranged: true,
       preferredRange: 4.2,
@@ -326,7 +326,7 @@ abstract final class HeroSpecs {
       shortLabel: 'MM',
       roleTag: SpecRoleTag.rangedDps,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       armorTypes: _mail,
       ranged: true,
       preferredRange: 4.5,
@@ -342,7 +342,7 @@ abstract final class HeroSpecs {
       shortLabel: 'SV',
       roleTag: SpecRoleTag.rangedDps,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       armorTypes: _mail,
       ranged: true,
       preferredRange: 3.6,
@@ -359,7 +359,7 @@ abstract final class HeroSpecs {
       shortLabel: 'ASSN',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
-      legacyRole: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       armorTypes: _leather,
       ranged: false,
       preferredRange: 1.2,
@@ -375,7 +375,7 @@ abstract final class HeroSpecs {
       shortLabel: 'COMBAT',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
-      legacyRole: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       armorTypes: _leather,
       ranged: false,
       preferredRange: 1.25,
@@ -391,7 +391,7 @@ abstract final class HeroSpecs {
       shortLabel: 'SUB',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
-      legacyRole: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       armorTypes: _leather,
       ranged: false,
       preferredRange: 1.2,
@@ -408,7 +408,7 @@ abstract final class HeroSpecs {
       shortLabel: 'DISC',
       roleTag: SpecRoleTag.healer,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       armorTypes: _cloth,
       ranged: true,
       preferredRange: 3.2,
@@ -423,7 +423,7 @@ abstract final class HeroSpecs {
       shortLabel: 'HPR',
       roleTag: SpecRoleTag.healer,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       armorTypes: _cloth,
       ranged: true,
       preferredRange: 3.4,
@@ -439,7 +439,7 @@ abstract final class HeroSpecs {
       shortLabel: 'SPRI',
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       armorTypes: _cloth,
       ranged: true,
       preferredRange: 4.0,
@@ -456,7 +456,7 @@ abstract final class HeroSpecs {
       shortLabel: 'BLOOD',
       roleTag: SpecRoleTag.tank,
       resource: SpecResource.runic,
-      legacyRole: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       armorTypes: _plate,
       ranged: false,
       preferredRange: 1.2,
@@ -472,7 +472,7 @@ abstract final class HeroSpecs {
       shortLabel: 'FDK',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.runic,
-      legacyRole: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       armorTypes: _plate,
       ranged: false,
       preferredRange: 1.2,
@@ -488,7 +488,7 @@ abstract final class HeroSpecs {
       shortLabel: 'UH',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.runic,
-      legacyRole: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       armorTypes: _plate,
       ranged: false,
       preferredRange: 1.25,
@@ -505,7 +505,7 @@ abstract final class HeroSpecs {
       shortLabel: 'ELE',
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       armorTypes: _mail,
       ranged: true,
       preferredRange: 4.0,
@@ -521,7 +521,7 @@ abstract final class HeroSpecs {
       shortLabel: 'ENH',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       armorTypes: _mail,
       ranged: false,
       preferredRange: 1.3,
@@ -537,7 +537,7 @@ abstract final class HeroSpecs {
       shortLabel: 'RSHA',
       roleTag: SpecRoleTag.healer,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       armorTypes: _mail,
       ranged: true,
       preferredRange: 3.2,
@@ -554,7 +554,7 @@ abstract final class HeroSpecs {
       shortLabel: 'ARC',
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       armorTypes: _cloth,
       ranged: true,
       preferredRange: 4.0,
@@ -570,7 +570,7 @@ abstract final class HeroSpecs {
       shortLabel: 'FIRE',
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       armorTypes: _cloth,
       ranged: true,
       preferredRange: 4.0,
@@ -585,7 +585,7 @@ abstract final class HeroSpecs {
       shortLabel: 'FRST',
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       armorTypes: _cloth,
       ranged: true,
       preferredRange: 4.0,
@@ -602,7 +602,7 @@ abstract final class HeroSpecs {
       shortLabel: 'AFF',
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       armorTypes: _cloth,
       ranged: true,
       preferredRange: 4.0,
@@ -618,7 +618,7 @@ abstract final class HeroSpecs {
       shortLabel: 'DEMO',
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       armorTypes: _cloth,
       ranged: true,
       preferredRange: 3.8,
@@ -634,7 +634,7 @@ abstract final class HeroSpecs {
       shortLabel: 'DESTRO',
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       armorTypes: _cloth,
       ranged: true,
       preferredRange: 4.2,
@@ -651,7 +651,7 @@ abstract final class HeroSpecs {
       shortLabel: 'BAL',
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       armorTypes: _leather,
       ranged: true,
       preferredRange: 4.0,
@@ -667,7 +667,7 @@ abstract final class HeroSpecs {
       shortLabel: 'FERAL',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
-      legacyRole: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       armorTypes: _leather,
       ranged: false,
       preferredRange: 1.2,
@@ -683,7 +683,7 @@ abstract final class HeroSpecs {
       shortLabel: 'GUARD',
       roleTag: SpecRoleTag.tank,
       resource: SpecResource.rage,
-      legacyRole: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       armorTypes: _leather,
       ranged: false,
       preferredRange: 1.15,
@@ -699,7 +699,7 @@ abstract final class HeroSpecs {
       shortLabel: 'RDRU',
       roleTag: SpecRoleTag.healer,
       resource: SpecResource.mana,
-      legacyRole: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       armorTypes: _leather,
       ranged: true,
       preferredRange: 3.2,

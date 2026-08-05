@@ -9,17 +9,22 @@ class DungeonGenerator {
       DungeonCatalog.bossFloor(ascensionLevel);
 
   /// Build the single combat encounter that represents [floorNumber].
+  /// When [bossEvery] is set (e.g. 5 for Infinity Gauntlet), bosses land on
+  /// every Nth floor instead of the single AL-scaled boss floor.
   static DungeonRoom generateFloorRoom({
     required int floorNumber,
     required int ascensionLevel,
     required String dungeonId,
     int layoutSeed = 0,
+    int? bossEvery,
   }) {
     final random = Random(
       floorNumber * 7919 + dungeonId.hashCode + layoutSeed,
     );
     final bossFloor = bossFloorFor(ascensionLevel);
-    final isBoss = floorNumber == bossFloor;
+    final isBoss = bossEvery != null && bossEvery > 0
+        ? floorNumber > 0 && floorNumber % bossEvery == 0
+        : floorNumber == bossFloor;
     final isTreasure = !isBoss && floorNumber % 6 == 0;
     // Elites often after the early ramp; rare before F4.
     final eliteChance = floorNumber <= 3 ? 0.14 : 0.38;
@@ -53,6 +58,7 @@ class DungeonGenerator {
     int ascensionLevel = 0,
     String dungeonId = 'sandy',
     int layoutSeed = 0,
+    int? bossEvery,
   }) {
     return <DungeonRoom>[
       generateFloorRoom(
@@ -60,6 +66,7 @@ class DungeonGenerator {
         ascensionLevel: ascensionLevel,
         dungeonId: dungeonId,
         layoutSeed: layoutSeed,
+        bossEvery: bossEvery,
       ),
     ];
   }
