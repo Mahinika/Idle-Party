@@ -638,6 +638,7 @@ void main() {
     expect(state.heroes[0].role, HeroRole.warrior);
     expect(state.heroes[2].role, HeroRole.mage);
     expect(state.heroes[0].itemIn(EquipmentSlot.offHand)?.id, tankShield.id);
+    // Mage-affinity Int staff must prefer Fire over Disc (healer SP weights).
     expect(state.heroes[2].itemIn(EquipmentSlot.weapon)?.id, mageWand.id);
     expect(state.gearStash, isEmpty);
   });

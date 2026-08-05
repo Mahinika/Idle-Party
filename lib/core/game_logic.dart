@@ -4705,12 +4705,15 @@ class GameLogic {
             mp5 * w.mp5)
         .round() +
         (item.attackBonus * w.flatAtk).round();
+    // Affinity is a strong class-identity signal so mage-tagged Int weapons
+    // land on casters even when healer SP weights score nearly the same.
+    final affinityRole = spec?.gearAffinity ?? role;
     var score = core +
         effect +
         item.rarity.index * 2 +
         // Soft ilvl tie-break — stats/rarity/set dominate BiS.
         (item.effectiveItemLevel ~/ 4) +
-        (item.affinity == role.name ? 8 : 0);
+        (item.affinity == affinityRole.name ? 24 : 0);
     // Prefer the heaviest armor the spec can wear (stops cloth beating mail).
     if (spec != null && item.armorType != null) {
       final preferred = preferredArmorForSpec(spec, level);
