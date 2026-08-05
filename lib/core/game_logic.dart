@@ -850,14 +850,37 @@ class GameLogic {
 
   static int sanctuaryCost(int level) => 15 + (level * 12);
 
-  static String sanctuaryBonusLabel(String track, int level) {
+  /// Softcapped track bonus only (no prestige). Used for "next level" labels.
+  static int sanctuaryTrackBonusAt(String track, int level) {
     return switch (track) {
-      'gold' => '+${level * 5}% gold find',
-      'power' => '+$level party attack',
-      'vitality' => '+${level * 2} max HP',
-      'xp' => '+${level * 4}% XP find',
+      'gold' => GameState.softForgePercent(level * 5, softAt: 100).round(),
+      'power' => GameState.softForgePercent(level, softAt: 40).round(),
+      'vitality' => GameState.softForgePercent(level * 2, softAt: 80).round(),
+      'xp' => GameState.softForgePercent(level * 4, softAt: 80).round(),
+      _ => 0,
+    };
+  }
+
+  static String sanctuaryBonusLabel(String track, int level, {int prestige = 0}) {
+    final soft = sanctuaryTrackBonusAt(track, level);
+    final prestBonus = switch (track) {
+      'gold' => prestige * 3,
+      'xp' => prestige * 2,
+      'power' || 'vitality' => prestige,
+      _ => 0,
+    };
+    final total = soft + prestBonus;
+    final unit = switch (track) {
+      'gold' => '% gold find',
+      'power' => ' party attack',
+      'vitality' => ' max HP',
+      'xp' => '% XP find',
       _ => '',
     };
+    if (prestige > 0) {
+      return '+$total$unit (Lv$level + P$prestige)';
+    }
+    return '+$total$unit';
   }
 
   static GameState upgradeSanctuary(GameState state, String track) {
@@ -1801,7 +1824,13 @@ class GameLogic {
       lifetimeGoldEarned: state.lifetimeGoldEarned,
       unlockedRelics: preservedRelics,
       ascensionLevel: nextLevel,
-      missions: createMissionBoardFor(state.copyWith(ascensionLevel: nextLevel)),
+      // Size board off post-Ascend progress (HFC resets) — not pre-Ascend depth.
+      missions: createMissionBoardFor(
+        state.copyWith(
+          ascensionLevel: nextLevel,
+          highestFloorCleared: 0,
+        ),
+      ),
       activePet: state.activePet,
       ownedPets: List<Pet>.from(state.ownedPets),
       sanctuaryGoldLevel: state.sanctuaryGoldLevel,
@@ -3007,7 +3036,9 @@ class GameLogic {
         EnemyArchetype.tank => 'Bulwark Golem',
         EnemyArchetype.ranged => 'Hex Cultist',
         EnemyArchetype.glass => 'Blood Stalker',
-        _ => 'Elite Brute',
+        EnemyArchetype.support => 'Rift Adept',
+        EnemyArchetype.swarm => 'Pack Alpha',
+        EnemyArchetype.brute => 'Elite Brute',
       };
     }
     if (type == RoomType.boss) {
@@ -3015,7 +3046,9 @@ class GameLogic {
         EnemyArchetype.ranged => 'Warden Archer',
         EnemyArchetype.tank => 'Warden Shield',
         EnemyArchetype.support => 'Warden Adept',
-        _ => 'Warden Guard',
+        EnemyArchetype.glass => 'Warden Blade',
+        EnemyArchetype.swarm => 'Warden Pack',
+        EnemyArchetype.brute => 'Warden Guard',
       };
     }
     return _zoneArchetypeName(dungeonId, archetype, index);
@@ -3236,10 +3269,11 @@ class GameLogic {
     const threatScale = 1.0;
     const afkAssist = true;
     const dt = 0.12;
-    // Budget enough steps to actually clear floors (dt*350 ≈ 42s/floor).
+    // Cap steps to floor budget (+ headroom) so long AFK can't burn CPU past
+    // what [offlineFloorBudget] will award.
     final maxSteps = min(
       12000,
-      max(240, max(maxFloors * 350, (seconds / dt).ceil())),
+      max(240, maxFloors * 420),
     );
 
     var current = state.copyWith(vfxQuality: VfxQuality.minimal);
@@ -3318,7 +3352,8 @@ class GameLogic {
       }
 
       // God Hand toward nearest live enemy when ready.
-      if (step % 18 == 0 && world.godHandCooldown <= 0) {
+      // Soft cadence: every ~4.3s of sim time so AFK doesn't hard-carry mid PUSH.
+      if (step % 36 == 0 && world.godHandCooldown <= 0) {
         final aim = _offlineGodHandAim(world);
         if (aim != null) {
           final gh = SpatialCombat.godHand(
@@ -5576,10 +5611,14 @@ class GameLogic {
         : 1.0;
     final goldAwarded =
         applyGoldGain(awarded, (goldGain * goldMul).round());
-    final highest = max(awarded.highestFloorCleared, room.floorNumber);
     final farmLoop = awarded.dungeonMode == DungeonMode.farm;
     final clearedBoss = bossesCleared > 0;
     final gauntlet = awarded.inGauntlet;
+    // Zone HFC only — Gauntlet climb lives on metaDepth.gauntletBestFloor
+    // so Ascend fragments keep using real zone clears.
+    final highest = gauntlet
+        ? awarded.highestFloorCleared
+        : max(awarded.highestFloorCleared, room.floorNumber);
     awarded = grantBossCraftMats(awarded, clearedBoss: clearedBoss);
     // Auto-wear clear upgrades so bag loot powers the party every Ascension.
     awarded = autoEquipBetterGear(awarded);

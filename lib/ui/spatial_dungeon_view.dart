@@ -434,30 +434,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                           ),
                         ),
                       ),
-                    if (widget.director.toast != null)
-                      Align(
-                        // Keep clear of bottom party HUD on phones.
-                        alignment: const Alignment(0, -0.42),
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 12),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xF214110C),
-                            borderRadius: BorderRadius.circular(3),
-                            border: Border.all(color: GameTheme.borderLit),
-                          ),
-                          child: Text(
-                            widget.director.toast!,
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: GameTheme.body(size: 15),
-                          ),
-                        ),
-                      ),
                     if (widget.director.awaitingWipeChoice)
                       ColoredBox(
                         color: MenuChrome.scrim,
@@ -649,7 +625,7 @@ class DungeonModeChip extends StatelessWidget {
             borderRadius: BorderRadius.circular(3),
             child: Container(
               constraints: BoxConstraints(
-                minHeight: dense ? 36 : GameTheme.minTouch,
+                minHeight: GameTheme.minTouch,
               ),
               padding: EdgeInsets.symmetric(horizontal: dense ? 6 : 8),
               alignment: Alignment.center,
@@ -1065,9 +1041,15 @@ class _TileRoomPainter extends CustomPainter {
       final frac = maxHp <= 0 ? 0.0 : (hp / maxHp).clamp(0.0, 1.0);
       final top = c.dy - tile * 0.55;
       final left = c.dx - width / 2;
-      final fill = SpatialCombat.colorblindMode
-          ? const Color(0xFFD55E00)
-          : const Color(0xFFE05050);
+      final cb = SpatialCombat.colorblindMode;
+      final Color fill;
+      if (hp <= 0) {
+        fill = cb ? const Color(0xFFD55E00) : const Color(0xFFE05050);
+      } else if (frac <= 0.35) {
+        fill = cb ? const Color(0xFFE69F00) : const Color(0xFFE87850);
+      } else {
+        fill = cb ? const Color(0xFF009E73) : const Color(0xFFE05050);
+      }
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(left, top, width, 4),

@@ -126,7 +126,7 @@ abstract final class AchievementCatalog {
     AchievementDef(
       id: 'clear_hell',
       title: 'Ashwalker',
-      description: 'Clear Hell.',
+      description: "Clear Hell's Gate.",
       essenceReward: 14,
       category: AchievementCategory.explorer,
     ),

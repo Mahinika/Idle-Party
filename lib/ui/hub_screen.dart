@@ -11,6 +11,7 @@ import 'confirm_dialogs.dart';
 import 'custom_assets.dart';
 import 'cave_atmosphere.dart';
 import 'dungeon_environment.dart';
+import 'feedback_toast.dart';
 import 'game_theme.dart';
 import 'kenney_assets.dart';
 import 'kenney_button.dart';
@@ -18,6 +19,7 @@ import 'kenney_panel.dart';
 import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
 import 'meta_overlays.dart';
+import 'web_click_bridge.dart';
 
 /// Idle Party hub: dungeon select / meta / ascend.
 class HubScreen extends StatefulWidget {
@@ -223,29 +225,6 @@ class _HubScreenState extends State<HubScreen>
                                 showOfflineProgressDialog(context, director),
                           ),
                         ],
-                        if (director.toast != null) ...[
-                          const SizedBox(height: 6),
-                          Center(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: GameTheme.ink.withValues(alpha: 0.93),
-                                borderRadius: BorderRadius.circular(3),
-                                border: Border.all(color: GameTheme.borderLit),
-                              ),
-                              child: Text(
-                                director.toast!,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GameTheme.body(size: 16),
-                              ),
-                            ),
-                          ),
-                        ],
                         const SizedBox(height: 8),
                         Expanded(
                           flex: 5,
@@ -343,6 +322,22 @@ class _HubScreenState extends State<HubScreen>
                                       ),
                                     ),
                                     if (!short &&
+                                        unlockedSelected &&
+                                        _goldUnlockedSkipClear(
+                                          selected,
+                                          state,
+                                        )) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Gold unlock — clear prior zone for an easier path',
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GameTheme.body(
+                                          size: 13,
+                                          color: GameTheme.torchHot,
+                                        ),
+                                      ),
+                                    ] else if (!short &&
                                         unlockedSelected &&
                                         selected.blurb.isNotEmpty) ...[
                                       const SizedBox(height: 2),
@@ -444,6 +439,14 @@ class _HubScreenState extends State<HubScreen>
             },
           ),
         ),
+        if (director.toast != null)
+          Positioned.fill(
+            child: FeedbackToast(
+              message: director.toast!,
+              maxLines: 2,
+              alignment: const Alignment(0, -0.72),
+            ),
+          ),
       ],
     );
   }
@@ -508,6 +511,13 @@ class _HubScreenState extends State<HubScreen>
     return 'Lifetime ${_shortGold(have)} / ${_shortGold(need)}';
   }
 
+  /// OPEN via lifetime gold without clearing the prior zone.
+  static bool _goldUnlockedSkipClear(DungeonDef selected, GameState state) {
+    if (selected.number <= 0) return false;
+    if (state.highestDungeonCleared >= selected.number - 1) return false;
+    return state.lifetimeGoldEarned >= selected.unlockPrice;
+  }
+
   static String _lockedZoneAlt(DungeonDef selected) {
     if (selected.number <= 0) return 'Start zone';
     DungeonDef? prev;
@@ -518,7 +528,7 @@ class _HubScreenState extends State<HubScreen>
       }
     }
     if (prev == null) return 'Clear the prior zone';
-    return 'Or clear ${_ZoneNode.shortName(prev)}';
+    return 'Or clear ${prev.name}';
   }
 }
 
@@ -1027,27 +1037,11 @@ class _ZoneNode extends StatelessWidget {
 
   static String shortName(DungeonDef def, {bool compact = false}) {
     if (compact) {
-      return switch (def.id) {
-        'sandy' => 'Sandy',
-        'goblin' => 'Goblin',
-        'king' => 'King',
-        'underworld' => 'Under',
-        'dead' => 'Dead',
-        'hell' => 'Hell',
-        'crystal' => 'Crystal',
-        _ => def.name,
-      };
+      // Compact path nodes — still derived from catalog names.
+      final words = def.name.replaceAll("'s", '').split(RegExp(r'\s+'));
+      return words.first;
     }
-    return switch (def.id) {
-      'sandy' => 'Sandy',
-      'goblin' => 'Goblin Hideout',
-      'king' => "King's Fort",
-      'underworld' => 'Underworld',
-      'dead' => 'City of Dead',
-      'hell' => 'Hell',
-      'crystal' => 'Crystal',
-      _ => def.name,
-    };
+    return def.name;
   }
 
   static String unlockGoldLabel(int price) {
@@ -1078,91 +1072,107 @@ class _ZoneNode extends StatelessWidget {
         ? 1.0 + pulse * 0.03
         : (isFrontier ? 1.0 + pulse * 0.06 : 1.0);
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Transform.scale(
-        scale: scale,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: portraitSize,
-              height: portraitSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: GameTheme.stone.withValues(alpha: unlocked ? 0.92 : 0.55),
-                border: Border.all(
-                  color: ring,
-                  width: selected ? 2.5 : (isFrontier ? 2.2 : 1.5),
-                ),
-                boxShadow: selected
-                    ? [
-                        BoxShadow(
-                          color: GameTheme.torch.withValues(alpha: 0.35),
-                          blurRadius: 10,
-                        ),
-                      ]
-                    : (isFrontier
+    final semanticsLabel =
+        '${def.name}, $status${selected ? ', selected' : ''}';
+
+    return WebClickScope(
+      label: semanticsLabel,
+      onPressed: onTap,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        enabled: unlocked,
+        label: semanticsLabel,
+        onTap: onTap,
+        excludeSemantics: true,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Transform.scale(
+            scale: scale,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: portraitSize,
+                  height: portraitSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: GameTheme.stone
+                        .withValues(alpha: unlocked ? 0.92 : 0.55),
+                    border: Border.all(
+                      color: ring,
+                      width: selected ? 2.5 : (isFrontier ? 2.2 : 1.5),
+                    ),
+                    boxShadow: selected
                         ? [
                             BoxShadow(
-                              color: GameTheme.torch.withValues(
-                                alpha: 0.2 + pulse * 0.25,
-                              ),
-                              blurRadius: 8 + pulse * 4,
-                              spreadRadius: 0.5,
+                              color: GameTheme.torch.withValues(alpha: 0.35),
+                              blurRadius: 10,
                             ),
                           ]
-                        : null),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Opacity(
-                opacity: unlocked ? 1 : 0.4,
-                child: ColorFiltered(
-                  colorFilter: unlocked
-                      ? const ColorFilter.mode(
-                          Colors.transparent,
-                          BlendMode.dst,
-                        )
-                      : const ColorFilter.matrix(<double>[
-                          0.22, 0.22, 0.22, 0, 8,
-                          0.22, 0.22, 0.22, 0, 8,
-                          0.22, 0.22, 0.22, 0, 8,
-                          0, 0, 0, 0.85, 0,
-                        ]),
-                  child: KenneySprite(asset: icon, size: portraitSize),
+                        : (isFrontier
+                            ? [
+                                BoxShadow(
+                                  color: GameTheme.torch.withValues(
+                                    alpha: 0.2 + pulse * 0.25,
+                                  ),
+                                  blurRadius: 8 + pulse * 4,
+                                  spreadRadius: 0.5,
+                                ),
+                              ]
+                            : null),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Opacity(
+                    opacity: unlocked ? 1 : 0.4,
+                    child: ColorFiltered(
+                      colorFilter: unlocked
+                          ? const ColorFilter.mode(
+                              Colors.transparent,
+                              BlendMode.dst,
+                            )
+                          : const ColorFilter.matrix(<double>[
+                              0.22, 0.22, 0.22, 0, 8,
+                              0.22, 0.22, 0.22, 0, 8,
+                              0.22, 0.22, 0.22, 0, 8,
+                              0, 0, 0, 0.85, 0,
+                            ]),
+                      child: KenneySprite(asset: icon, size: portraitSize),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              shortName(def, compact: compact),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: GameTheme.pixel(
-                size: 7,
-                color: unlocked
-                    ? (selected ? GameTheme.torchHot : GameTheme.parchment)
-                    : GameTheme.parchmentDim,
-                height: 1.1,
-              ),
-            ),
-            Text(
-              status,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: GameTheme.body(
-                size: 11,
-                color: cleared
-                    ? GameTheme.mossLit
-                    : (isFrontier || isNext)
-                        ? GameTheme.torchHot
+                const SizedBox(height: 2),
+                Text(
+                  shortName(def, compact: compact),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: GameTheme.pixel(
+                    size: 7,
+                    color: unlocked
+                        ? (selected ? GameTheme.torchHot : GameTheme.parchment)
                         : GameTheme.parchmentDim,
-              ),
+                    height: 1.1,
+                  ),
+                ),
+                Text(
+                  status,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(
+                    size: 11,
+                    color: cleared
+                        ? GameTheme.mossLit
+                        : (isFrontier || isNext)
+                            ? GameTheme.torchHot
+                            : GameTheme.parchmentDim,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

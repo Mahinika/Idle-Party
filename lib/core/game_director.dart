@@ -292,17 +292,12 @@ class GameDirector extends ChangeNotifier {
         loaded = GameLogic.createInitialState();
       } else {
         // Paint immediately — AFK spatial sim must not hold the spinner.
+        // Do NOT start the live spatial loop until after offline catch-up.
         _state = GameLogic.ensureRogueHero(saved);
         _lastHighestDungeon = _state.highestDungeonCleared;
         GameAudio.muted = _state.soundMuted;
         SpatialCombat.colorblindMode = _state.colorblindMode;
         _ensureUiTimer();
-        if (_state.inDungeon) {
-          _rebuildSpatial();
-          if (enableSpatialLoop && !deferCombatLoop) {
-            _startSpatialLoop();
-          }
-        }
         // Keep loading flag true until finally{} when intro is deferred —
         // early notify would flash hub/dungeon under the title card.
         if (!deferCombatLoop) {
@@ -1274,11 +1269,15 @@ class GameDirector extends ChangeNotifier {
   bool importSaveJson(String raw) {
     final imported = GameLogic.importSaveJson(raw);
     if (imported == null) return false;
+    _awaitingWipeChoice = false;
     _state = GameLogic.ensureRogueHero(imported);
     GameAudio.muted = _state.soundMuted;
     SpatialCombat.colorblindMode = _state.colorblindMode;
     if (_state.inDungeon) {
       _rebuildSpatial();
+      if (enableSpatialLoop) {
+        _startSpatialLoop();
+      }
     } else {
       _spatialTimer?.cancel();
       _spatialTimer = null;
@@ -1529,7 +1528,18 @@ class GameDirector extends ChangeNotifier {
     };
     if (after > before) {
       final name = GameLogic.sanctuaryNames[track] ?? track;
-      final bonus = GameLogic.sanctuaryBonusLabel(track, after);
+      final prestige = switch (track) {
+        'gold' => _state.metaDepth.sanctuaryGoldPrestige,
+        'power' => _state.metaDepth.sanctuaryPowerPrestige,
+        'vitality' => _state.metaDepth.sanctuaryVitalityPrestige,
+        'xp' => _state.metaDepth.sanctuaryXpPrestige,
+        _ => 0,
+      };
+      final bonus = GameLogic.sanctuaryBonusLabel(
+        track,
+        after,
+        prestige: prestige,
+      );
       GameAudio.unlock();
       showToast('$name Lv$after · $bonus', life: 2.4);
     }
@@ -1669,6 +1679,7 @@ class GameDirector extends ChangeNotifier {
         al: _state.ascensionLevel,
         milestoneBonus: milestone,
       ),
+      'Gear wiped · Apex kept',
     ];
     if (_state.essence >= 20) {
       parts.add('Forge → META for essence');

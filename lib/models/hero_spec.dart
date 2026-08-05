@@ -220,7 +220,7 @@ abstract final class HeroSpecs {
       attackRange: 1.75,
       startingStats: _meleeStats,
       defaultName: 'Cleaver',
-      unlockHint: 'Clear Goblin Den or Ascend once',
+      unlockHint: 'Clear Goblin\'s Hideout or Ascend once',
     ),
     HeroSpecDef(
       id: HeroSpecId.fury,
@@ -236,7 +236,7 @@ abstract final class HeroSpecs {
       attackRange: 1.7,
       startingStats: _meleeStats,
       defaultName: 'Rager',
-      unlockHint: 'AL 2 or clear Sandy Crypt',
+      unlockHint: 'AL 2 or clear Sandy Caverns',
     ),
     HeroSpecDef(
       id: HeroSpecId.protection,
@@ -300,7 +300,7 @@ abstract final class HeroSpecs {
       attackRange: 1.8,
       startingStats: _meleeStats,
       defaultName: 'Judicar',
-      unlockHint: 'Clear King\'s Tomb',
+      unlockHint: 'Clear King\'s Fort',
     ),
     // —— Hunter ——
     HeroSpecDef(
@@ -398,7 +398,7 @@ abstract final class HeroSpecs {
       attackRange: 1.8,
       startingStats: _agiMelee,
       defaultName: 'Shadeveil',
-      unlockHint: 'Clear Dead Marsh',
+      unlockHint: 'Clear City of Dead',
     ),
     // —— Priest ——
     HeroSpecDef(
@@ -446,7 +446,7 @@ abstract final class HeroSpecs {
       attackRange: 5.0,
       startingStats: _casterStats,
       defaultName: 'Umbral',
-      unlockHint: 'Clear Hell Maw',
+      unlockHint: 'Clear Hell\'s Gate',
     ),
     // —— Death Knight ——
     HeroSpecDef(
@@ -641,7 +641,7 @@ abstract final class HeroSpecs {
       attackRange: 5.2,
       startingStats: _casterStats,
       defaultName: 'Ash',
-      unlockHint: 'Clear Hell Maw',
+      unlockHint: 'Clear Hell\'s Gate',
     ),
     // —— Druid ——
     HeroSpecDef(

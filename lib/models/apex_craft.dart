@@ -69,7 +69,7 @@ abstract final class ApexCraft {
       id: 'shard_hell',
       name: 'Ashen Shard',
       family: CraftMatFamily.shard,
-      bossSources: 'Hell boss',
+      bossSources: "Hell's Gate boss",
     ),
     CraftMatDef(
       id: 'shard_crystal',

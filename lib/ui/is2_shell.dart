@@ -22,6 +22,7 @@ import 'confirm_dialogs.dart';
 import 'character_equip_panel.dart';
 import 'cave_atmosphere.dart';
 import 'custom_assets.dart';
+import 'feedback_toast.dart';
 import 'game_theme.dart';
 import 'hero_doll_sprite.dart';
 import 'kenney_assets.dart';
@@ -582,6 +583,10 @@ class _Is2ShellState extends State<Is2Shell> {
               _overlay != Is2Overlay.inventory)
             _metaOverlay(d),
           FirstSessionTips(director: d),
+          if (d.toast != null)
+            Positioned.fill(
+              child: FeedbackToast(message: d.toast!),
+            ),
         ],
       );
     }
@@ -658,6 +663,10 @@ class _Is2ShellState extends State<Is2Shell> {
         ),
         if (_overlay != Is2Overlay.none) _metaOverlay(d),
         FirstSessionTips(director: d),
+        if (d.toast != null)
+          Positioned.fill(
+            child: FeedbackToast(message: d.toast!),
+          ),
       ],
     );
   }
@@ -1568,8 +1577,6 @@ class _PartyRow extends StatelessWidget {
       AbilityId.innerFire => s.innerFireActive,
       AbilityId.combustion => s.combustionTimer > 0,
       AbilityId.iceBlock => s.iceBlockTimer > 0,
-      AbilityId.fireball => s.queuedFireball,
-      AbilityId.pyroblast => s.queuedPyroblast,
       AbilityId.livingBomb => s.livingBombArmed > 0,
       AbilityId.sliceAndDice => s.sliceAndDiceTimer > 0,
       AbilityId.bladeFlurry => s.bladeFlurryTimer > 0,
@@ -1890,14 +1897,6 @@ class _DpsMeter extends StatelessWidget {
     };
   }
 
-  static bool _isTank(SpatialActor h) =>
-      h.heroSpecId == HeroSpecId.protection ||
-      h.heroRole == HeroRole.warrior;
-
-  static bool _isHealer(SpatialActor h) =>
-      h.heroSpecId == HeroSpecId.discipline ||
-      h.heroRole == HeroRole.healer;
-
   static String _compact(int n) {
     if (n >= 10000) return '${(n / 1000).round()}k';
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
@@ -1912,132 +1911,107 @@ class _DpsMeter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (director.state.reducedVfx) return const SizedBox.shrink();
+    // Meter is HUD chrome — keep visible under Lite/Minimal VFX.
     final world = director.spatial;
     if (world == null) return const SizedBox.shrink();
 
     final elapsed = world.combatElapsed;
     final rows = <({String tag, String value, double bar, bool highlight})>[];
     var peakDps = 0;
-    var peakHps = 0;
-    var peakTps = 0;
     for (final h in world.heroes) {
       if (h.isPet) continue;
       final dps = _perSecond(h.damageDealt, elapsed);
-      final hps = _perSecond(h.healingDone, elapsed);
-      final tps = _perSecond(h.damageTaken, elapsed);
       if (dps > peakDps) peakDps = dps;
-      if (hps > peakHps) peakHps = hps;
-      if (tps > peakTps) peakTps = tps;
     }
-    if (peakDps == 0 && peakHps == 0 && peakTps == 0) {
+    if (peakDps == 0) {
       return const SizedBox.shrink();
     }
     peakDps = peakDps.clamp(1, 1 << 30);
-    peakHps = peakHps.clamp(1, 1 << 30);
-    peakTps = peakTps.clamp(1, 1 << 30);
 
     for (final h in world.heroes) {
       if (h.isPet) continue;
-      final tag = _heroTag(h);
-      if (_isHealer(h) && h.healingDone > 0) {
-        final hps = _perSecond(h.healingDone, elapsed);
-        if (hps < 1) continue;
-        rows.add((
-          tag: tag,
-          value: '${_compact(hps)} hps',
-          bar: hps / peakHps,
-          highlight: hps == peakHps,
-        ));
-      } else if (_isTank(h) && h.damageTaken > 0) {
-        final tps = _perSecond(h.damageTaken, elapsed);
-        if (tps < 1) continue;
-        rows.add((
-          tag: tag,
-          value: '${_compact(tps)} thr',
-          bar: tps / peakTps,
-          highlight: tps == peakTps,
-        ));
-      } else if (h.damageDealt > 0) {
-        final dps = _perSecond(h.damageDealt, elapsed);
-        if (dps < 1) continue;
-        rows.add((
-          tag: tag,
-          value: '${_compact(dps)} dps',
-          bar: dps / peakDps,
-          highlight: dps == peakDps,
-        ));
-      }
+      if (h.damageDealt <= 0) continue;
+      final dps = _perSecond(h.damageDealt, elapsed);
+      if (dps < 1) continue;
+      rows.add((
+        tag: _heroTag(h),
+        value: '${_compact(dps)} dps',
+        bar: dps / peakDps,
+        highlight: dps == peakDps,
+      ));
     }
     if (rows.isEmpty) return const SizedBox.shrink();
 
     return IgnorePointer(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 152),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
-          decoration: BoxDecoration(
-            color: const Color(0xCC14110C),
-            borderRadius: BorderRadius.circular(3),
-            border: Border.all(color: const Color(0x665A5040)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'COMBAT',
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: GameTheme.parchmentDim,
-                ),
-              ),
-              const SizedBox(height: 3),
-              for (final row in rows) ...[
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 44,
-                      child: Text(
-                        row.tag,
-                        maxLines: 1,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.pixel(
-                          size: GameTheme.hudPixel,
-                          color: row.highlight
-                              ? GameTheme.torchHot
-                              : GameTheme.parchment,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        row.value,
-                        textAlign: TextAlign.right,
-                        maxLines: 1,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.pixel(size: GameTheme.hudPixel),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(1),
-                  child: LinearProgressIndicator(
-                    value: row.bar.clamp(0.0, 1.0),
-                    minHeight: 3,
-                    backgroundColor: const Color(0xFF2A241C),
-                    color: row.highlight
-                        ? GameTheme.torchHot
-                        : GameTheme.mossLit,
+      child: Semantics(
+        label: 'Party DPS meter',
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 152),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
+            decoration: BoxDecoration(
+              color: const Color(0xCC14110C),
+              borderRadius: BorderRadius.circular(3),
+              border: Border.all(color: const Color(0x665A5040)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'DPS',
+                  style: GameTheme.pixel(
+                    size: GameTheme.hudPixel,
+                    color: GameTheme.parchmentDim,
                   ),
                 ),
                 const SizedBox(height: 3),
+                for (final row in rows) ...[
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 44,
+                        child: Text(
+                          row.tag,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.pixel(
+                            size: GameTheme.hudPixel,
+                            color: row.highlight
+                                ? GameTheme.torchHot
+                                : GameTheme.parchment,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          row.value,
+                          textAlign: TextAlign.right,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.pixel(size: GameTheme.hudPixel),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(1),
+                    child: LinearProgressIndicator(
+                      value: row.bar.clamp(0.0, 1.0),
+                      minHeight: 3,
+                      backgroundColor: const Color(0xFF2A241C),
+                      color: row.highlight
+                          ? GameTheme.torchHot
+                          : GameTheme.mossLit,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -3601,13 +3575,16 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const Divider(height: 16, color: Color(0x665A5040)),
         _sectionTitle(
           'SOULBOUND',
-          'Bind one weapon or armor from bag TOOLS · survives Ascend.',
+          'Bind one weapon or armor from bag TOOLS · survives Ascend. '
+              'Prefer picks the slot when you tap BIND on a hero.',
         ),
         Row(
           children: [
             Expanded(
               child: KenneyButton(
-                label: 'PREFER WEAPON',
+                label: state.metaDepth.soulboundIsArmor
+                    ? 'WEAPON'
+                    : 'WEAPON ✓',
                 style: state.metaDepth.soulboundIsArmor
                     ? KenneyButtonStyle.grey
                     : KenneyButtonStyle.brown,
@@ -3617,7 +3594,9 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
             const SizedBox(width: 6),
             Expanded(
               child: KenneyButton(
-                label: 'PREFER ARMOR',
+                label: state.metaDepth.soulboundIsArmor
+                    ? 'ARMOR ✓'
+                    : 'ARMOR',
                 style: state.metaDepth.soulboundIsArmor
                     ? KenneyButtonStyle.brown
                     : KenneyButtonStyle.grey,
@@ -3629,8 +3608,8 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const SizedBox(height: 6),
         if (state.soulboundItem == null)
           Text(
-            'Bind a weapon or chest/cloak from bag TOOLS (3 fragments). '
-            'Currently prefers ${state.metaDepth.soulboundIsArmor ? 'armor' : 'weapon'}.',
+            'No soulbound yet. Open a hero → TOOLS → BIND (3 fragments). '
+            'Preference: ${state.metaDepth.soulboundIsArmor ? 'armor' : 'weapon'}.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           )
         else ...[
@@ -3795,8 +3774,16 @@ class _SanctuaryOverlay extends StatelessWidget {
               final prestige = _prestigeOf(state, track);
               final nextLevel = level + 1;
               final cost = GameLogic.sanctuaryCost(level);
-              final nextBonus =
-                  GameLogic.sanctuaryBonusLabel(track, nextLevel);
+              final nextBonus = GameLogic.sanctuaryBonusLabel(
+                track,
+                nextLevel,
+                prestige: prestige,
+              );
+              final currentBonus = GameLogic.sanctuaryBonusLabel(
+                track,
+                level,
+                prestige: prestige,
+              );
               final cycle = level <= 0 ? 0.0 : ((level - 1) % 12 + 1) / 12.0;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3810,11 +3797,18 @@ class _SanctuaryOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Lv$level  ·  Next $nextBonus'
+                    'Lv$level  ·  $currentBonus'
                     '${prestige > 0 ? '  ·  Prestige $prestige' : ''}',
                     style: GameTheme.body(
                       size: 13,
                       color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                  Text(
+                    'Next $nextBonus',
+                    style: GameTheme.body(
+                      size: 12,
+                      color: GameTheme.mossLit,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -3929,26 +3923,31 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
         const SizedBox(height: 12),
         Text('UI text scale', style: GameTheme.pixel(size: 7)),
         const SizedBox(height: 6),
-        Row(
-          children: [
-            Expanded(
-              child: _CaveSlider(
-                value: state.uiTextScale.clamp(0.85, 1.3),
-                min: 0.85,
-                max: 1.3,
-                divisions: 9,
-                onChanged: director.setUiTextScale,
+        Semantics(
+          slider: true,
+          label: 'UI text scale',
+          value: '${(state.uiTextScale * 100).round()} percent',
+          child: Row(
+            children: [
+              Expanded(
+                child: _CaveSlider(
+                  value: state.uiTextScale.clamp(0.85, 1.3),
+                  min: 0.85,
+                  max: 1.3,
+                  divisions: 9,
+                  onChanged: director.setUiTextScale,
+                ),
               ),
-            ),
-            SizedBox(
-              width: 46,
-              child: Text(
-                '${(state.uiTextScale * 100).round()}%',
-                textAlign: TextAlign.right,
-                style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
+              SizedBox(
+                width: 46,
+                child: Text(
+                  '${(state.uiTextScale * 100).round()}%',
+                  textAlign: TextAlign.right,
+                  style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         Text('Auto-sell max iLvl', style: GameTheme.pixel(size: 8)),
@@ -4081,19 +4080,26 @@ class _SettingsToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return Semantics(
+      toggled: value,
+      button: true,
+      label: label,
       onTap: () => onChanged(!value),
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: MenuChrome.cardBox(),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(label, style: GameTheme.body(size: 16)),
-            ),
-            _CaveSwitch(value: value),
-          ],
+      child: InkWell(
+        onTap: () => onChanged(!value),
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: MenuChrome.cardBox(),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(label, style: GameTheme.body(size: 16)),
+              ),
+              ExcludeSemantics(child: _CaveSwitch(value: value)),
+            ],
+          ),
         ),
       ),
     );
@@ -4113,38 +4119,44 @@ class _SettingsCycle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return Semantics(
+      button: true,
+      label: '$label. $hint. Tap to cycle',
       onTap: onCycle,
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: MenuChrome.cardBox(),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: GameTheme.body(size: 16)),
-                  const SizedBox(height: 2),
-                  Text(
-                    hint,
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.parchmentDim,
+      child: InkWell(
+        onTap: onCycle,
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: MenuChrome.cardBox(),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: GameTheme.body(size: 16)),
+                    const SizedBox(height: 2),
+                    Text(
+                      hint,
+                      style: GameTheme.body(
+                        size: 12,
+                        color: GameTheme.parchmentDim,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Text(
-              'TAP',
-              style: GameTheme.pixel(
-                size: 7,
-                color: GameTheme.parchmentDim,
+              Text(
+                'TAP',
+                style: GameTheme.pixel(
+                  size: 7,
+                  color: GameTheme.parchmentDim,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -4457,18 +4469,9 @@ class _BeastOverlayState extends State<_BeastOverlay> {
 
   static String _affinityLabel(String dungeonId) {
     if (dungeonId.isEmpty) return '';
+    // Compact first word from catalog name (never invent aliases).
     final name = DungeonCatalog.byId(dungeonId).name;
-    // Compact zone tag so "dead" never reads as a pet status.
-    return switch (dungeonId) {
-      'sandy' => 'Sandy',
-      'goblin' => 'Goblin',
-      'king' => 'King',
-      'underworld' => 'Under',
-      'dead' => 'Dead',
-      'hell' => 'Hell',
-      'crystal' => 'Crystal',
-      _ => name,
-    };
+    return name.replaceAll("'s", '').split(RegExp(r'\s+')).first;
   }
 
   @override

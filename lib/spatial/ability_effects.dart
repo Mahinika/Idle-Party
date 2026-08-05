@@ -426,8 +426,8 @@ abstract final class AbilityEffectRunner {
       case AbilityId.sinisterStrike:
         break;
       case AbilityId.arcaneIntellect:
-        // Fire's dedicated ticker bypasses _abilityOutScale — tax here.
-        hero.kitOutMul *= 0.72;
+        // Personal spell power is applied via GameState caster aura / kit path.
+        break;
       default:
         // Fallback: mild role-appropriate crumb if a new passive is added.
         if (spec.isTank) {
@@ -659,13 +659,13 @@ abstract final class AbilityEffectRunner {
   static String _abilityKey(ClassAbilityDef def) =>
       '${def.id.name} ${def.shortLabel} ${def.name}'.toLowerCase();
 
-  /// Outgoing scale for kit casts. Casters get an extra tax because Int-based
-  /// ability spam outpaced melee Str kits on mid-band sims (~2–3× raw DPS).
+  /// Outgoing scale for kit casts. Casters get [SpatialCombat.casterAbilityTax]
+  /// because Int-based ability spam outpaced melee Str kits on mid-band sims.
   static double _abilityOutScale(SpatialActor hero) {
     var scale = hero.kitOutMul;
     final id = hero.heroSpecId;
     if (id != null && HeroSpecs.def(id).roleTag == SpecRoleTag.caster) {
-      scale *= 0.62;
+      scale *= SpatialCombat.casterAbilityTax;
     }
     return scale;
   }

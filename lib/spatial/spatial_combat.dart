@@ -197,8 +197,6 @@ class SpatialActor {
   double kitRootBonus = 0.0;
 
   // ?? Mage (Fire) ??
-  bool queuedFireball = false;
-  bool queuedPyroblast = false;
   double combustionTimer = 0;
   double iceBlockTimer = 0;
   /// While a Living Bomb you cast is still ticking on any foe.
@@ -2104,6 +2102,10 @@ abstract final class SpatialCombat {
     }
   }
 
+  /// Single caster outgoing tax (Int kits spam harder than Str melee).
+  /// Used by AbilityEffectRunner and Fire's dedicated ticker — keep in sync.
+  static const double casterAbilityTax = 0.62;
+
   static void _tickMageAbilities(
     SpatialWorld world,
     SpatialActor mage,
@@ -2113,10 +2115,7 @@ abstract final class SpatialCombat {
   }) {
     if (mage.heroRole != HeroRole.mage || !mage.isAlive) return;
     // Arcane Intellect — personal spell power (party aura is GameState caster aura).
-    // Fire's dedicated ticker bypasses SpecKit _abilityOutScale; keep a hard tax.
-    if (ClassKits.isUnlocked(AbilityId.arcaneIntellect, mage.heroLevel)) {
-      mage.kitOutMul = 0.72;
-    }
+    // Fire ticker bypasses SpecKit _abilityOutScale; apply [casterAbilityTax] on hits.
     if (focusEnemy != null) _gainRage(mage, 8 * dt);
     _gainRage(mage, (mage.spiritRegenBonus + mage.mp5RegenBonus) * dt);
     bool can(AbilityId id) => _canCast(mage, id);
@@ -2223,7 +2222,7 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.livingBomb, def.cooldown);
       focusEnemy.livingBombTimer = 8;
       focusEnemy.livingBombDps =
-          math.max(3.0, mage.attack * 0.22 * mage.kitOutMul * 0.70);
+          math.max(3.0, mage.attack * 0.22 * mage.kitOutMul * casterAbilityTax);
       focusEnemy.livingBombCasterId = mage.id;
       mage.livingBombArmed = 8;
       if (!reducedVfx) {
@@ -2303,7 +2302,7 @@ abstract final class SpatialCombat {
         _spendRage(mage, def.resourceCost);
         _startAbilityCd(world, mage, AbilityId.blastWave, def.cooldown);
         final dmg =
-            math.max(2, (mage.attack * 0.42 * mage.kitOutMul * 0.70).round());
+            math.max(2, (mage.attack * 0.42 * mage.kitOutMul * casterAbilityTax).round());
         for (final e in nearby) {
           final dealt = math.max(1, dmg - e.effectiveDefense);
           e.hp = math.max(0, e.hp - dealt);
@@ -2356,7 +2355,7 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.pyroblast, def.cooldown);
       mage.attackFlash = 0.22;
       var dmg =
-          math.max(3, (mage.attack * 1.35 * mage.kitOutMul * 0.70).round());
+          math.max(3, (mage.attack * 1.35 * mage.kitOutMul * casterAbilityTax).round());
       if (mage.combustionTimer > 0) dmg = (dmg * 1.05).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
@@ -2386,7 +2385,7 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.fireball, def.cooldown);
       mage.attackFlash = 0.18;
       var dmg =
-          math.max(2, (mage.attack * 0.95 * mage.kitOutMul * 0.70).round());
+          math.max(2, (mage.attack * 0.95 * mage.kitOutMul * casterAbilityTax).round());
       if (mage.combustionTimer > 0) dmg = (dmg * 1.05).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
@@ -2601,7 +2600,8 @@ abstract final class SpatialCombat {
       }
     }
 
-    if (rogue.comboPoints >= 3 &&
+    // Maintain SnD early (≥2 CP) so short FARM waves still get the buff.
+    if (rogue.comboPoints >= 2 &&
         rogue.sliceAndDiceTimer < 2 &&
         can(AbilityId.sliceAndDice)) {
       final def = ClassKits.defFor(AbilityId.sliceAndDice)!;
@@ -2684,25 +2684,7 @@ abstract final class SpatialCombat {
       damage = math.max(1, (damage * 1.08).round());
     }
     if (hero.heroSpecId == HeroSpecId.fire) {
-      // Combustion amps kit spells only — whites stay baseline so mid gear
-      // does not double-dip haste+amp autos with Fireball/Pyro.
-      if (hero.queuedPyroblast) {
-        hero.queuedPyroblast = false;
-        damage = (damage * 2.0).round();
-        tag = 'PYRO';
-        tagArgb = 0xFFFF5020;
-        if (hero.combustionTimer > 0) {
-          damage = (damage * 1.1).round();
-        }
-      } else if (hero.queuedFireball) {
-        hero.queuedFireball = false;
-        damage = (damage * 1.45).round();
-        tag = 'FIREBALL';
-        tagArgb = 0xFFFF8040;
-        if (hero.combustionTimer > 0) {
-          damage = (damage * 1.1).round();
-        }
-      }
+      // Whites stay baseline; kit spells apply Combustion in the Fire ticker.
     }
 
     if (hero.heroSpecId == HeroSpecId.combat ||
@@ -2963,6 +2945,7 @@ abstract final class SpatialCombat {
           attackRange: 1.35,
           attackCooldown: 0.8,
           isPet: true,
+          petOwnerId: leader.id,
           fireCooldown: 0.25,
         ),
       );
@@ -3174,6 +3157,7 @@ abstract final class SpatialCombat {
           attackRange: 1.35,
           attackCooldown: 0.8,
           isPet: true,
+          petOwnerId: leader.id,
           fireCooldown: prevPet?.fireCooldown ?? 0.25,
         ),
       );
@@ -3289,8 +3273,6 @@ abstract final class SpatialCombat {
     to.kitHealMul = from.kitHealMul;
     to.kitHasteMul = from.kitHasteMul;
     to.kitRootBonus = from.kitRootBonus;
-    to.queuedFireball = from.queuedFireball;
-    to.queuedPyroblast = from.queuedPyroblast;
     to.combustionTimer = from.combustionTimer;
     to.iceBlockTimer = from.iceBlockTimer;
     to.livingBombArmed = from.livingBombArmed;
@@ -4287,7 +4269,7 @@ abstract final class SpatialCombat {
       }
     }
 
-    // Pets follow the leader and chip at the nearest unlocked enemy.
+    // Pets follow their owner (meta pet / class pet) when set, else party leader.
     final petLeader = world.leader;
     world.pets.removeWhere((p) {
       if (p.petLifeTimer <= 0) return false;
@@ -4296,12 +4278,13 @@ abstract final class SpatialCombat {
     });
     for (final pet in world.pets) {
       if (petLeader == null) break;
+      final leashOwner = _heroById(world, pet.petOwnerId) ?? petLeader;
       final target = _nearestActiveEnemy(pet, world.enemies);
       if (target == null) {
         _steerActor(
           pet,
-          petLeader.x - 0.55,
-          petLeader.y + 0.45,
+          leashOwner.x - 0.55,
+          leashOwner.y + 0.45,
           pet.moveSpeed * dt,
           world,
           holdDistance: 0.35,

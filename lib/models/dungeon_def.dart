@@ -81,7 +81,7 @@ abstract final class DungeonCatalog {
       number: 5,
       id: 'hell',
       name: "Hell's Gate",
-      layout: DungeonLayoutKind.cave,
+      layout: DungeonLayoutKind.hideout,
       bossId: 'chtulu',
       bossName: 'Cthulhu',
       unlockPrice: 200000,
