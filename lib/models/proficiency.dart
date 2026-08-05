@@ -82,7 +82,7 @@ class ClassProficiency {
     };
   }
 
-  /// Class-aware weapons (falls back to [legacyRole] rules when unspecified).
+  /// Class-aware weapons (falls back to [HeroSpecDef.gearAffinity] rules when unspecified).
   static bool canEquipWeaponForSpec(
     HeroSpecDef spec,
     WeaponType type,
@@ -164,7 +164,7 @@ class ClassProficiency {
           _ => false,
         },
       _ => canEquipWeapon(
-          spec.legacyRole,
+          spec.gearAffinity,
           type,
           handed,
           rangedSlot: false,

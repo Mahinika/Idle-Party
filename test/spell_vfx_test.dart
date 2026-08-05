@@ -17,7 +17,7 @@ SpatialActor _hero(HeroSpecId spec, {bool ranged = true}) {
     moveSpeed: 1,
     attackRange: ranged ? 5 : 1.2,
     attackCooldown: 1,
-    heroRole: HeroSpecs.def(spec).legacyRole,
+    heroRole: HeroSpecs.def(spec).gearAffinity,
     heroSpecId: spec,
     ranged: ranged,
   );

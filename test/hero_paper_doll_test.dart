@@ -20,7 +20,7 @@ void main() {
 
   test('equipped weapon and shield add visible layers', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
-    var warrior = state.heroes.firstWhere((h) => h.role == HeroRole.warrior);
+    var warrior = state.heroes.firstWhere((h) => h.gearAffinity == HeroRole.warrior);
     final sword = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
       rarity: LootRarity.rare,
@@ -48,7 +48,7 @@ void main() {
 
   test('cloak and boots add torso and pants layers', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
-    var warrior = state.heroes.firstWhere((h) => h.role == HeroRole.warrior);
+    var warrior = state.heroes.firstWhere((h) => h.gearAffinity == HeroRole.warrior);
     warrior = warrior.copyWith(
       equipped: {
         EquipmentSlot.cloak: GameLogic.createEquipment(

@@ -1,11 +1,16 @@
 import 'class_ability.dart';
 import 'combat_ratings.dart';
+import 'gear_set.dart';
 import 'hero_spec.dart';
 import 'loot.dart';
 import 'stats.dart';
 
-/// Legacy combat family used by ratings / existing ability tickers.
-/// Prefer [HeroSpecId] for identity; [HeroRole] remains the combat archetype.
+/// Gear / combat-ratings affinity bucket (NOT party role).
+///
+/// Use [SpecRoleTag] / [HeroSpecDef.isTank] / [HeroSpecDef.isHealer] for
+/// tank/healer/DPS identity. These four values are leftover “family” buckets
+/// for ratings, paper-doll, and ability tickers:
+/// `warrior` ≈ plate/melee, `rogue` ≈ phys DPS, `mage` ≈ caster, `healer` ≈ heal.
 enum HeroRole { warrior, healer, mage, rogue }
 
 class PartyHero {
@@ -31,13 +36,13 @@ class PartyHero {
     final startLevel = level < 1 ? 1 : level;
     final def = HeroSpecs.def(specId);
     final sheetStats = stats ?? def.startingStats;
-    final role = def.legacyRole;
+    final affinity = def.gearAffinity;
     final sheet = CombatRatings.grownPrimaries(
       base: sheetStats,
-      role: role,
+      role: affinity,
       level: startLevel,
     );
-    final hp = CombatRatings.roleHpBase(role) + 10 * sheet.sta;
+    final hp = CombatRatings.roleHpBase(affinity) + 10 * sheet.sta;
     return PartyHero(
       id: id ?? _stableIdFor(specId, name),
       name: name,
@@ -70,7 +75,7 @@ class PartyHero {
 
   /// Locked starting primary sheets from the Classic stats plan.
   static Stats startingStatsFor(HeroRole role) =>
-      HeroSpecs.def(HeroSpecs.fromLegacyRole(role)).startingStats;
+      HeroSpecs.def(HeroSpecs.fromGearAffinity(role)).startingStats;
 
   static Stats startingStatsForSpec(HeroSpecId specId) =>
       HeroSpecs.def(specId).startingStats;
@@ -86,20 +91,28 @@ class PartyHero {
 
   HeroSpecDef get spec => HeroSpecs.def(specId);
 
-  /// Combat archetype for ratings / spatial tickers.
-  HeroRole get role => spec.legacyRole;
+  /// Gear/ratings affinity bucket — not tank/healer/DPS. Prefer [spec.roleTag].
+  HeroRole get gearAffinity => spec.gearAffinity;
+
+  /// Deprecated alias for [gearAffinity]. Do not use for tank checks.
+  @Deprecated('Use gearAffinity, or spec.roleTag / isTank / isHealer')
+  HeroRole get role => gearAffinity;
 
   ({int str, int agi, int sta, int intel, int spi}) get grownPrimaries =>
-      CombatRatings.grownPrimaries(base: stats, role: role, level: level);
+      CombatRatings.grownPrimaries(
+        base: stats,
+        role: gearAffinity,
+        level: level,
+      );
 
   /// Base attack without gear/meta (AP/4 or Int for casters).
   int get attack {
     final g = grownPrimaries;
-    if (role == HeroRole.mage || role == HeroRole.healer) {
+    if (gearAffinity == HeroRole.mage || gearAffinity == HeroRole.healer) {
       return g.intel;
     }
     final ap = CombatRatings.meleeAttackPower(
-      role: role,
+      role: gearAffinity,
       strength: g.str,
       agility: g.agi,
       level: level,
@@ -109,12 +122,12 @@ class PartyHero {
 
   int get defense {
     final g = grownPrimaries;
-    return CombatRatings.roleBaseArmor(role) + 2 * g.agi;
+    return CombatRatings.roleBaseArmor(gearAffinity) + 2 * g.agi;
   }
 
   int get maxHp {
     final g = grownPrimaries;
-    return CombatRatings.roleHpBase(role) + 10 * g.sta;
+    return CombatRatings.roleHpBase(gearAffinity) + 10 * g.sta;
   }
 
   bool get isAlive => currentHp > 0;
@@ -124,13 +137,16 @@ class PartyHero {
   int get gearAgilityBonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.agilityBonus);
   int get gearStaminaBonus =>
-      equipped.values.fold<int>(0, (s, i) => s + i.resolvedStamina);
+      equipped.values.fold<int>(0, (s, i) => s + i.resolvedStamina) +
+      GearSets.setStaminaBonus(equipped);
   int get gearIntellectBonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.intellectBonus);
   int get gearSpiritBonus =>
-      equipped.values.fold<int>(0, (s, i) => s + i.spiritBonus);
+      equipped.values.fold<int>(0, (s, i) => s + i.spiritBonus) +
+      GearSets.setSpiritBonus(equipped);
   int get gearSpellPowerBonus =>
-      equipped.values.fold<int>(0, (s, i) => s + i.spellPowerBonus);
+      equipped.values.fold<int>(0, (s, i) => s + i.spellPowerBonus) +
+      GearSets.setSpellPowerBonus(equipped);
   int get gearArmorBonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.resolvedArmor);
   int get gearMp5Bonus =>
@@ -145,12 +161,13 @@ class PartyHero {
 
   int get gearCritChance {
     final raw = equipped.values.fold<int>(
-      0,
-      (s, i) =>
-          s +
-          i.critChanceBonus +
-          (i.effectId == GearEffectId.crit ? i.effectValue : 0),
-    );
+          0,
+          (s, i) =>
+              s +
+              i.critChanceBonus +
+              (i.effectId == GearEffectId.crit ? i.effectValue : 0),
+        ) +
+        GearSets.setCritBonus(equipped);
     return _softCapStat(raw, soft: 18, hard: 40);
   }
 
@@ -224,7 +241,7 @@ class PartyHero {
     @Deprecated('Use specId') HeroRole? role,
   }) {
     final nextSpec = specId ??
-        (role != null ? HeroSpecs.fromLegacyRole(role) : this.specId);
+        (role != null ? HeroSpecs.fromGearAffinity(role) : this.specId);
     return PartyHero(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -246,8 +263,8 @@ class PartyHero {
         'currentHp': currentHp,
         'stats': stats.toJson(),
         'specId': specId.name,
-        // Legacy key for older readers.
-        'role': role.name,
+        // Legacy save key (gear affinity name); prefer specId for identity.
+        'role': gearAffinity.name,
         'xp': xp,
         'equipped': equipped.map(
           (slot, item) => MapEntry(slot.name, item.toJson()),
@@ -267,9 +284,9 @@ class PartyHero {
     final roleRaw = json['role'] as String?;
     final specId = HeroSpecs.tryParse(specRaw) ??
         (roleRaw != null
-            ? HeroSpecs.fromLegacyRoleName(roleRaw)
+            ? HeroSpecs.fromGearAffinityName(roleRaw)
             : specForName(name));
-    final role = HeroSpecs.def(specId).legacyRole;
+    final affinity = HeroSpecs.def(specId).gearAffinity;
 
     final equipped = <EquipmentSlot, EquipmentItem>{};
     final equippedJson = json['equipped'] as Map<String, dynamic>?;
@@ -300,7 +317,7 @@ class PartyHero {
       final def = asInt(statsJson['defense'], 1);
       final hp = asInt(statsJson['maxHp'], 10);
       final sta = (hp / 10).ceil().clamp(1, 999);
-      stats = switch (role) {
+      stats = switch (affinity) {
         HeroRole.warrior => Stats(
             strength: atk.clamp(1, 999),
             agility: def.clamp(1, 999),

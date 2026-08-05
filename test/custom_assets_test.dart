@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/enemy.dart';
+import 'package:idle_party/models/pet.dart';
 import 'package:idle_party/ui/custom_assets.dart';
 import 'package:idle_party/ui/kenney_assets.dart';
 
@@ -95,11 +96,23 @@ void main() {
     );
     expect(
       CustomAssets.petForInstanceId('ash_fox_9'),
-      CustomAssets.petEmberPup,
+      CustomAssets.enemySpider,
     );
     expect(
       CustomAssets.petForTemplateId('gold_grub'),
-      CustomAssets.petLootSprite,
+      CustomAssets.enemyRat,
+    );
+  });
+
+  test('each pet species maps to a unique portrait path', () {
+    final paths = {
+      for (final species in PetCatalog.all)
+        species.id: CustomAssets.petForTemplateId(species.id),
+    };
+    expect(paths.values.toSet().length, paths.length);
+    expect(
+      CustomAssets.petPortraitPaths.toSet().length,
+      CustomAssets.petPortraitPaths.length,
     );
   });
 

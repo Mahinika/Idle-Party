@@ -14,18 +14,18 @@ void main() {
       expect(
         hero.equipped.keys.toSet(),
         EquipmentSlot.values.toSet(),
-        reason: '${hero.role} missing slots',
+        reason: '${hero.gearAffinity} missing slots',
       );
       for (final item in hero.equipped.values) {
         expect(
           ClassProficiency.canEquip(
-            role: hero.role,
+            role: hero.gearAffinity,
             level: hero.level,
             item: item,
             specId: hero.specId,
           ),
           isTrue,
-          reason: '${hero.role} cannot wear ${item.name} (${item.slot})',
+          reason: '${hero.gearAffinity} cannot wear ${item.name} (${item.slot})',
         );
       }
     }
@@ -68,7 +68,7 @@ void main() {
       for (final item in hero.equipped.values) {
         expect(
           ClassProficiency.canEquip(
-            role: hero.role,
+            role: hero.gearAffinity,
             level: hero.level,
             item: item,
             specId: id,

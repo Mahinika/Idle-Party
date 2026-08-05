@@ -75,7 +75,7 @@ void main() {
         gearStash: [...state.gearStash, weapon],
       );
 
-      state = GameLogic.applyLoadout(state, '1');
+      state = GameLogic.applyLoadout(state, '1').state;
       expect(state.heroes.first.equipped[EquipmentSlot.weapon]?.id, weapon.id);
 
       state = GameLogic.deleteLoadout(state, '1');
@@ -105,6 +105,20 @@ void main() {
       state = state.copyWith(dailyClaimed: false);
       state = MetaSystems.evaluateAchievements(state);
       expect(state.achievements, contains('daily_clear'));
+    });
+
+    test('hardmode achievements require a clear, not dial alone', () {
+      var state = GameLogic.createInitialState(now: DateTime(2026, 7, 25))
+          .copyWith(hardmodeLevel: 5);
+      state = MetaSystems.evaluateAchievements(state);
+      expect(state.achievements.contains('hm_1'), isFalse);
+
+      state = state.copyWith(
+        metaDepth: state.metaDepth.copyWith(highestHardmodeCleared: 5),
+      );
+      state = MetaSystems.evaluateAchievements(state);
+      expect(state.achievements, containsAll(['hm_1', 'hm_5']));
+      expect(state.achievements.contains('hm_10'), isFalse);
     });
   });
 

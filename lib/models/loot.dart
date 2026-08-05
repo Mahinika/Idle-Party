@@ -70,7 +70,7 @@ enum ProjectilePattern { single, spread, arc, pierce }
 /// Unique gear effect ids (data-driven).
 enum GearEffectId { none, lifesteal, pierce, goldFind, crit, haste }
 
-enum LootOutcome { essence, equipped, replaced, stashed }
+enum LootOutcome { essence, equipped, replaced, stashed, gold }
 
 class EquipmentItem {
   const EquipmentItem({
@@ -102,6 +102,13 @@ class EquipmentItem {
     this.handed,
     this.offHandKind,
     this.iconId,
+    this.affixPrefixId,
+    this.affixSuffixId,
+    this.setId,
+    this.isApex = false,
+    this.apexClassId,
+    this.apexRoleTag,
+    this.apexRank = 0,
   });
 
   final String id;
@@ -148,15 +155,30 @@ class EquipmentItem {
   /// Optional Kenney icon key override.
   final String? iconId;
 
+  /// Data-driven affix ids from `item_affixes.json` (null = none).
+  final String? affixPrefixId;
+  final String? affixSuffixId;
+
+  /// Dungeon armor set id (`{dungeonId}_{armorType}`), rare+ set slots only.
+  final String? setId;
+
+  /// Crafted Apex BiS (forge-only). Survives Ascend when equipped / vaulted.
+  final bool isApex;
+
+  /// [HeroClassId.name] this Apex piece is bound to.
+  final String? apexClassId;
+
+  /// [SpecRoleTag.name] this Apex piece was crafted for.
+  final String? apexRoleTag;
+
+  /// Apex upgrade rank (1–3). 0 when not Apex.
+  final int apexRank;
+
   int get resolvedArmor => armorBonus + defenseBonus;
   int get resolvedStamina => staminaBonus + vitalityBonus;
 
-  int get effectiveItemLevel {
-    if (itemLevel > 0) return itemLevel;
-    return (powerScore ~/ 3) + rarity.index * 2 + 1;
-  }
-
-  int get powerScore =>
+  /// Stat-only value (no ilvl) — junk/gold helpers and fallback ilvl.
+  int get statPowerScore =>
       (strengthBonus * 3) +
       (agilityBonus * 3) +
       (resolvedStamina * 2) +
@@ -170,6 +192,15 @@ class EquipmentItem {
       attackSpeedBonus +
       moveSpeedBonus +
       effectValue;
+
+  int get effectiveItemLevel {
+    if (itemLevel > 0) return itemLevel;
+    return (statPowerScore ~/ 3) + rarity.index * 2 + 1;
+  }
+
+  /// Neutral item value for junk / merge / gold (includes ilvl).
+  /// Equip/BiS uses [GameLogic.roleEquipScore] / [GameLogic.specEquipScore] instead.
+  int get powerScore => statPowerScore + effectiveItemLevel;
 
   String get effectLabel => switch (effectId) {
         GearEffectId.lifesteal => 'Lifesteal $effectValue%',
@@ -214,7 +245,34 @@ class EquipmentItem {
     if (attackSpeedBonus != 0) parts.add('+$attackSpeedBonus% ASPD');
     if (moveSpeedBonus != 0) parts.add('+$moveSpeedBonus% MOVE');
     if (effectLabel.isNotEmpty) parts.add(effectLabel);
+    if (setId != null && setId!.isNotEmpty) {
+      parts.add(setLabel);
+    }
+    if (isApex) parts.add('APEX R$apexRank');
     return parts.join(' · ');
+  }
+
+  /// Human-readable set tag for tooltips (e.g. "Cavern Plate").
+  String get setLabel {
+    final id = setId;
+    if (id == null || id.isEmpty) return '';
+    final parts = id.split('_');
+    if (parts.length < 2) return id;
+    final zone = switch (parts.first) {
+      'sandy' => 'Cavern',
+      'goblin' => 'Hideout',
+      'king' => 'Fort',
+      'underworld' => 'Underworld',
+      'dead' => 'Necropolis',
+      'hell' => 'Infernal',
+      'crystal' => 'Spire',
+      _ => parts.first,
+    };
+    final armor = parts.sublist(1).join(' ');
+    final armorTitle = armor.isEmpty
+        ? ''
+        : '${armor[0].toUpperCase()}${armor.substring(1)}';
+    return '$zone $armorTitle'.trim();
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -246,6 +304,13 @@ class EquipmentItem {
         if (handed != null) 'handed': handed!.name,
         if (offHandKind != null) 'offHandKind': offHandKind!.name,
         if (iconId != null) 'iconId': iconId,
+        if (affixPrefixId != null) 'affixPrefixId': affixPrefixId,
+        if (affixSuffixId != null) 'affixSuffixId': affixSuffixId,
+        if (setId != null) 'setId': setId,
+        if (isApex) 'isApex': true,
+        if (apexClassId != null) 'apexClassId': apexClassId,
+        if (apexRoleTag != null) 'apexRoleTag': apexRoleTag,
+        if (apexRank != 0) 'apexRank': apexRank,
       };
 
   factory EquipmentItem.fromJson(Map<String, dynamic> json) {
@@ -337,6 +402,13 @@ class EquipmentItem {
       handed: handedRaw == null ? null : WeaponHanded.values.byName(handedRaw),
       offHandKind: offKind,
       iconId: json['iconId'] as String?,
+      affixPrefixId: json['affixPrefixId'] as String?,
+      affixSuffixId: json['affixSuffixId'] as String?,
+      setId: json['setId'] as String?,
+      isApex: json['isApex'] as bool? ?? false,
+      apexClassId: json['apexClassId'] as String?,
+      apexRoleTag: json['apexRoleTag'] as String?,
+      apexRank: asInt(json['apexRank']),
     );
   }
 
@@ -370,6 +442,16 @@ class EquipmentItem {
     WeaponHanded? handed,
     OffHandKind? offHandKind,
     String? iconId,
+    String? affixPrefixId,
+    String? affixSuffixId,
+    String? setId,
+    bool clearSetId = false,
+    bool? isApex,
+    String? apexClassId,
+    String? apexRoleTag,
+    int? apexRank,
+    bool clearApexClassId = false,
+    bool clearApexRoleTag = false,
   }) {
     return EquipmentItem(
       id: id ?? this.id,
@@ -400,6 +482,15 @@ class EquipmentItem {
       handed: handed ?? this.handed,
       offHandKind: offHandKind ?? this.offHandKind,
       iconId: iconId ?? this.iconId,
+      affixPrefixId: affixPrefixId ?? this.affixPrefixId,
+      affixSuffixId: affixSuffixId ?? this.affixSuffixId,
+      setId: clearSetId ? null : (setId ?? this.setId),
+      isApex: isApex ?? this.isApex,
+      apexClassId:
+          clearApexClassId ? null : (apexClassId ?? this.apexClassId),
+      apexRoleTag:
+          clearApexRoleTag ? null : (apexRoleTag ?? this.apexRoleTag),
+      apexRank: apexRank ?? this.apexRank,
     );
   }
 }

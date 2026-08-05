@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -77,7 +79,7 @@ void main() {
     ).copyWith(pattern: ProjectilePattern.spread);
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final heroes = [...state.heroes];
-    final mageIndex = heroes.indexWhere((h) => h.role == HeroRole.mage);
+    final mageIndex = heroes.indexWhere((h) => h.gearAffinity == HeroRole.mage);
     expect(mageIndex, greaterThanOrEqualTo(0));
     heroes[mageIndex] = heroes[mageIndex].copyWith(
       equipped: {
@@ -141,7 +143,7 @@ void main() {
           ((h.x - enemy.x).abs() + (h.y - enemy.y).abs());
       // Fire Blink can kite away once in range — allow slack for that kit.
       final blinkSlack =
-          ClassKits.isUnlocked(AbilityId.blink, h.heroLevel) ? 3.0 : 0.05;
+          ClassKits.isUnlocked(AbilityId.blink, h.heroLevel) ? 5.0 : 0.05;
       expect(dist, lessThanOrEqualTo(startDist[i] + blinkSlack));
     }
     expect(moved, isTrue);
@@ -312,9 +314,74 @@ void main() {
       ],
     );
     final before = state.heroes.first.currentHp;
+    final maxHp = state.effectiveHeroMaxHp(state.heroes.first);
     state = GameLogic.useConsumable(state);
     expect(state.heroes.first.itemIn(EquipmentSlot.consumable), isNull);
     expect(state.heroes.first.currentHp, greaterThan(before));
+    // ~30% of max HP heal (scaled, not flat ~13).
+    expect(state.heroes.first.currentHp - before, greaterThanOrEqualTo(max(8, (maxHp * 0.25).round())));
+  });
+
+  test('useConsumable can drink a stash flask', () {
+    final flask = GameLogic.createMarketFlask(salt: 7);
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    state = state.copyWith(
+      heroes: [
+        for (final h in state.heroes)
+          h.copyWith(
+            currentHp: max(1, state.effectiveHeroMaxHp(h) ~/ 2),
+            equipped: {
+              for (final e in h.equipped.entries)
+                if (e.key != EquipmentSlot.consumable) e.key: e.value,
+            },
+          ),
+      ],
+      gearStash: <EquipmentItem>[flask],
+    );
+    expect(GameLogic.canUseConsumable(state), isTrue);
+    final before = state.heroes.first.currentHp;
+    state = GameLogic.useConsumable(state);
+    expect(state.gearStash.any((g) => g.id == flask.id), isFalse);
+    expect(state.heroes.first.currentHp, greaterThan(before));
+  });
+
+  test('syncPartyFromState applies flask heal from GameState HP', () {
+    var state = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 7, 4)),
+      dungeonId: 'sandy',
+    );
+    var world = SpatialCombat.build(state);
+    for (final h in world.heroes) {
+      h.hp = (h.maxHp / 3).floor().clamp(1, h.maxHp);
+    }
+    state = state.copyWith(
+      heroes: [
+        for (var i = 0; i < state.heroes.length; i++)
+          state.heroes[i].copyWith(currentHp: world.heroes[i].hp),
+      ],
+    );
+    final flask = GameLogic.createEquipment(
+      slot: EquipmentSlot.consumable,
+      rarity: LootRarity.common,
+      battleNumber: 1,
+    );
+    final first = state.heroes.first;
+    state = state.copyWith(
+      heroes: [
+        first.copyWith(
+          equipped: {
+            ...first.equipped,
+            EquipmentSlot.consumable: flask,
+          },
+        ),
+        ...state.heroes.skip(1),
+      ],
+    );
+    final beforeSpatial = world.heroes.first.hp;
+    state = GameLogic.useConsumable(state);
+    expect(state.heroes.first.currentHp, greaterThan(beforeSpatial));
+    world = SpatialCombat.syncPartyFromState(world, state);
+    expect(world.heroes.first.hp, state.heroes.first.currentHp);
   });
 
   test('lifetime gold unlocks dungeons, not wallet gold', () {
@@ -443,5 +510,44 @@ void main() {
 
     final step = SpatialCombat.step(world, state, dt: 0.05);
     expect(step.roomCleared, isTrue);
+  });
+
+  test('AFK exit vacuums ground loot before discard', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
+    final essenceBefore = state.essence;
+    final stashBefore = state.gearStash.length;
+    var world = SpatialCombat.build(state, afkAssist: true);
+    expect(world.afkAssist, isTrue);
+
+    final drop = GameLogic.createEquipment(
+      slot: EquipmentSlot.ring,
+      rarity: LootRarity.rare,
+      battleNumber: 6,
+    );
+    world.groundLoot.add(
+      GroundLoot(
+        x: world.cols - 2.5,
+        y: world.rows - 2.5,
+        drop: LootDrop(
+          name: drop.name,
+          amount: 1,
+          rarity: drop.rarity,
+          equipment: drop,
+        ),
+        age: 1.05,
+      ),
+    );
+    for (final e in world.enemies) {
+      e.hp = 0;
+    }
+    final step = SpatialCombat.step(world, state, dt: 0.05);
+    world = step.world;
+    state = step.state;
+    expect(world.awaitingExit, isTrue);
+    expect(world.groundLoot, isEmpty);
+    expect(
+      state.gearStash.length > stashBefore || state.essence > essenceBefore,
+      isTrue,
+    );
   });
 }

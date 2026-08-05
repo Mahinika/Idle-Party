@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../models/hero.dart';
 import '../models/loot.dart';
+import 'decoded_image_cache.dart';
+import 'hero_doll_sprite.dart';
 
 /// Kenney Roguelike Characters atlas (16×16 tiles, 1px margin).
 class RoguelikeCharAtlas {
@@ -38,7 +40,7 @@ class HeroPaperDoll {
 
   /// Skin row on body columns 0–1.
   static int skinRowFor(PartyHero hero, int partyIndex) {
-    return switch (hero.role) {
+    return switch (hero.gearAffinity) {
       HeroRole.warrior => 0,
       HeroRole.healer => 1,
       HeroRole.mage => 2,
@@ -49,7 +51,7 @@ class HeroPaperDoll {
   /// Hair style when not wearing a helmet.
   static DollLayer hairFor(PartyHero hero) {
     // cols 19–22 are top hair; rows by color bands.
-    return switch (hero.role) {
+    return switch (hero.gearAffinity) {
       HeroRole.warrior => const DollLayer(19, 0), // brown short
       HeroRole.healer => const DollLayer(21, 8), // white — Disc Priest
       HeroRole.mage => const DollLayer(20, 8),
@@ -79,7 +81,7 @@ class HeroPaperDoll {
     if (cloak == null) return null;
     final tier = _rarityTier(cloak.rarity);
     // Armor columns 6–17: pick role palette × rarity.
-    return switch (hero.role) {
+    return switch (hero.gearAffinity) {
       HeroRole.warrior => DollLayer(
           tier >= 2 ? 10 : 6,
           tier >= 2 ? 5 : tier.clamp(0, 4).toInt(),
@@ -96,7 +98,7 @@ class HeroPaperDoll {
     if (cloak == null || cloak.rarity.index < LootRarity.uncommon.index) {
       return null;
     }
-    return switch (hero.role) {
+    return switch (hero.gearAffinity) {
       HeroRole.warrior => const DollLayer(28, 7),
       HeroRole.healer => const DollLayer(29, 7),
       HeroRole.mage => const DollLayer(30, 7),
@@ -110,14 +112,14 @@ class HeroPaperDoll {
     final tier = _rarityTier(head.rarity);
     // Helmets / hats in cols 28–31.
     if (tier >= 2) {
-      return switch (hero.role) {
+      return switch (hero.gearAffinity) {
         HeroRole.warrior => const DollLayer(28, 6), // heavy
         HeroRole.healer => const DollLayer(29, 8), // hat
         HeroRole.mage => const DollLayer(30, 8),
         HeroRole.rogue => const DollLayer(31, 8),
       };
     }
-    return switch (hero.role) {
+    return switch (hero.gearAffinity) {
       HeroRole.warrior => const DollLayer(28, 0),
       HeroRole.healer => const DollLayer(29, 0),
       HeroRole.mage => const DollLayer(30, 0),
@@ -149,8 +151,8 @@ class HeroPaperDoll {
     final wt = weapon.weaponType;
     if (wt == WeaponType.staff ||
         wt == WeaponType.wand ||
-        hero.role == HeroRole.mage ||
-        hero.role == HeroRole.healer) {
+        hero.gearAffinity == HeroRole.mage ||
+        hero.gearAffinity == HeroRole.healer) {
       return switch (tier) {
         0 => const DollLayer(42, 0),
         1 => const DollLayer(44, 0),
@@ -160,7 +162,7 @@ class HeroPaperDoll {
     }
     if (wt == WeaponType.dagger ||
         wt == WeaponType.fist ||
-        hero.role == HeroRole.rogue) {
+        hero.gearAffinity == HeroRole.rogue) {
       return switch (tier) {
         0 => const DollLayer(48, 0),
         1 => const DollLayer(49, 0),
@@ -247,4 +249,85 @@ class HeroPaperDoll {
       );
     }
   }
+}
+
+/// Equip-panel paper doll: layered Roguelike tiles from worn gear.
+///
+/// Falls back to the custom class sprite while the atlas loads.
+class HeroPaperDollView extends StatelessWidget {
+  const HeroPaperDollView({
+    super.key,
+    required this.hero,
+    this.partyIndex = 0,
+    this.size = 64,
+    this.walkFrame = 0,
+  });
+
+  final PartyHero hero;
+  final int partyIndex;
+  final double size;
+  final int walkFrame;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<ui.Image>(
+      future: DecodedImageCache.load(
+        RoguelikeCharAtlas.assetPath,
+        targetWidth: 512,
+      ),
+      builder: (context, snap) {
+        if (!snap.hasData) {
+          return HeroDollSprite(
+            hero: hero,
+            partyIndex: partyIndex,
+            size: size,
+            walkFrame: walkFrame,
+          );
+        }
+        return CustomPaint(
+          size: Size(size, size),
+          painter: _HeroPaperDollPainter(
+            atlas: snap.data!,
+            hero: hero,
+            partyIndex: partyIndex,
+            walkFrame: walkFrame,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HeroPaperDollPainter extends CustomPainter {
+  const _HeroPaperDollPainter({
+    required this.atlas,
+    required this.hero,
+    required this.partyIndex,
+    required this.walkFrame,
+  });
+
+  final ui.Image atlas;
+  final PartyHero hero;
+  final int partyIndex;
+  final int walkFrame;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    HeroPaperDoll.paint(
+      canvas,
+      atlas,
+      Offset(size.width / 2, size.height / 2),
+      size.shortestSide,
+      hero: hero,
+      partyIndex: partyIndex,
+      walkFrame: walkFrame,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _HeroPaperDollPainter old) =>
+      old.atlas != atlas ||
+      old.hero != hero ||
+      old.partyIndex != partyIndex ||
+      old.walkFrame != walkFrame;
 }

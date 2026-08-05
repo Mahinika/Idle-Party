@@ -26,16 +26,19 @@ main.dart
  ├─ Hub (inDungeon=false) → HubScreen + optional Is2Shell overlays
  └─ Dungeon (inDungeon=true) → Is2Shell
       ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
-      └─ Inventory dock (equip / bag / combinator / GH / pets / flask)
+      └─ Dungeon chrome (FARM/PUSH, God Hand ring, party HUD + flask,
+         target panel, bottom nav: GEAR / BAG / MORE)
 
-GameDirector → SpatialCombat.step @ ~30Hz (live dungeon)
-             → GameLogic.simulateSpatialOffline → SpatialCombat.step (AFK catch-up)
+GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
+             → GameLogic.simulateSpatialOffline → SpatialCombat.step (AFK; auto-flask + God Hand)
 GameLogic + GameState   (rules / persistence)
 DungeonCatalog          (named dungeons, bossFloor = 5 + AL)
 RoomLayouts (tile_map)  (multi-chamber maps + gates)
 ```
 
-**SpatialCombat is the combat authority** for live play and in-dungeon offline catch-up (offline uses `threatScale` AFK assist + `reducedVfx` for boot speed; same kits/abilities/chambers).
+**SpatialCombat is the combat authority** for live play and in-dungeon offline catch-up (offline uses full enemy stats + independent `afkAssist` + `reducedVfx` for boot speed, auto-flask at low HP, and God Hand off cooldown; same kits/abilities/chambers).
+
+**Infinity Gauntlet** (AL10+): endless Crystal Spire climb from Hub; floor threat/rewards scale; wipe/leave returns to hub; best floor survives Ascend.
 
 Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat.
 
@@ -70,8 +73,8 @@ Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat.
 
 ## Meta (survives Ascend)
 
-- Essence, relics, sanctuary tracks, pets, soulbound, God Hand level, `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex/settings, `metaDepth`
-- Ascend resets wallet gold, run gear/stash/loadouts, floor progress, gold party upgrades (ATK/DEF/VIT); **keeps hero levels/XP** and meta above
+- Essence, relics, sanctuary tracks (infinite levels + optional prestige), pets, soulbound, God Hand level, `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex/settings, `metaDepth`
+- Ascend resets wallet gold, run gear/stash/loadouts, floor progress, gold party upgrades (ATK/DEF/VIT/move/haste/crit); **keeps hero levels/XP** and meta above
 - Dungeon unlock uses **lifetime gold** (and prior dungeon clears), not wallet gold
 
 ## God Hand

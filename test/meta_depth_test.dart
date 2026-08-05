@@ -99,8 +99,9 @@ void main() {
   });
 
   test('weekly progress increments on floor clear path', () {
-    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 31));
-    state = GameLogic.ensureWeeklyContract(state);
+    final now = DateTime.now();
+    var state = GameLogic.createInitialState(now: now);
+    state = GameLogic.ensureWeeklyContract(state, now: now);
     expect(state.metaDepth.weeklyProgress, 0);
     state = GameLogic.completeCurrentRoom(state, goldGain: 10, skipLootRoll: true);
     expect(state.metaDepth.weeklyProgress, 1);
@@ -111,8 +112,25 @@ void main() {
       metaDepth: state.metaDepth.copyWith(weeklyProgress: 2),
     );
     final beforeWeekly = state.metaDepth.weeklyProgress;
-    state = GameLogic.ascend(state, now: DateTime(2026, 7, 31));
+    state = GameLogic.ascend(state, now: now);
     expect(state.metaDepth.weeklyProgress, beforeWeekly);
+  });
+
+  test('weekly rollover keeps first clear progress of the new week', () {
+    var state = GameLogic.createInitialState(now: DateTime.now());
+    // Stale prior-week key with leftover progress that would be wiped on rotate.
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        weeklyKey: '2020-W01',
+        weeklyProgress: 2,
+        weeklyClaimed: false,
+        weeklyModifier: 'swarm',
+      ),
+    );
+    state = GameLogic.completeCurrentRoom(state, goldGain: 10, skipLootRoll: true);
+    final key = GameLogic.isoWeekKey(DateTime.now().toUtc());
+    expect(state.metaDepth.weeklyKey, key);
+    expect(state.metaDepth.weeklyProgress, 1);
   });
 
   test('createEnemyGroup glass modifier shrinks HP and boosts ATK', () {

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../core/game_state.dart';
+import '../models/gear_set.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
 import 'custom_assets.dart';
 import 'game_theme.dart';
 import 'hero_doll_sprite.dart';
+import 'hero_paper_doll.dart';
 import 'kenney_assets.dart';
 import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
@@ -170,8 +172,11 @@ class CharacterEquipPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${hero.roleLabel}  |  Lv${hero.level}  |  iLvl ${_avgItemLevel(hero)}'
-          '  |  HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
+          state.isPartyDefeated
+              ? '${hero.roleLabel}  |  Lv${hero.level}  |  iLvl ${_avgItemLevel(hero)}'
+                  '  |  WIPED  (max $maxHp)'
+              : '${hero.roleLabel}  |  Lv${hero.level}  |  iLvl ${_avgItemLevel(hero)}'
+                  '  |  HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
           textAlign: TextAlign.center,
           style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
         ),
@@ -204,12 +209,26 @@ class CharacterEquipPanel extends StatelessWidget {
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: HeroDollSprite(
+                    child: HeroPaperDollView(
                       hero: hero,
                       partyIndex: index,
                       size: dollSize,
                     ),
                   ),
+                  if (state.soulboundItem != null) ...[
+                    SizedBox(height: slotGap),
+                    Text(
+                      'SB ${state.soulboundItem!.name}'
+                      ' · r${state.metaDepth.soulboundRefine}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(
+                        size: 11,
+                        color: GameTheme.mossLit,
+                      ),
+                    ),
+                  ],
                   SizedBox(height: slotGap),
                   // Weapon / off-hand / ranged / flask under the model (WoW).
                   Wrap(
@@ -260,6 +279,24 @@ class CharacterEquipPanel extends StatelessWidget {
                     color: GameTheme.parchment,
                   ),
                 ),
+                if (selected.setId != null && selected.setId!.isNotEmpty)
+                  Text(
+                    () {
+                      final piece = selected!;
+                      final setId = piece.setId!;
+                      final n = GearSets.wornCount(hero.equipped, setId);
+                      final bonus = n >= 4
+                          ? '4pc'
+                          : (n >= 2 ? '2pc' : 'set');
+                      return '${piece.setLabel} · $n/4 · $bonus';
+                    }(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -373,67 +410,74 @@ class PaperDollSlot extends StatelessWidget {
     final emptyIcon = CharacterEquipPanel.emptyIconFor(slot);
     final short = CharacterEquipPanel.slotLabels[slot] ?? slot.name;
 
+    final hit = size < GameTheme.minTouch ? GameTheme.minTouch : size;
     return Tooltip(
       message: item?.name ?? short,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onUnequip,
-        child: Container(
-          width: size,
-          height: size,
-          decoration: MenuChrome.cardBox(selected: selected).copyWith(
-            border: Border.all(
-              color: selected ? GameTheme.torch : border,
-              width: selected ? 2 : 1.5,
-            ),
-          ),
-          clipBehavior: Clip.hardEdge,
-          child: item != null
-              ? Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: KenneySprite(
-                        asset: KenneyAssets.equipmentIconFor(item!),
-                        size: size - 8,
-                      ),
-                    ),
-                    if (item!.effectiveItemLevel > 0)
-                      Positioned(
-                        right: 2,
-                        bottom: 1,
-                        child: Text(
-                          '${item!.effectiveItemLevel}',
-                          style: GameTheme.pixel(
-                            size: 5,
-                            color: GameTheme.parchment,
+      child: SizedBox(
+        width: hit,
+        height: hit,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onUnequip,
+          child: Center(
+            child: Container(
+              width: size,
+              height: size,
+              decoration: MenuChrome.cardBox(selected: selected).copyWith(
+                border: Border.all(
+                  color: selected ? GameTheme.torch : border,
+                  width: selected ? 2 : 1.5,
+                ),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: item != null
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: KenneySprite(
+                            asset: KenneyAssets.equipmentIconFor(item!),
+                            size: size - 8,
                           ),
                         ),
-                      ),
-                  ],
-                )
-              : emptyIcon != null
-                  ? Opacity(
-                      opacity: 0.28,
-                      child: Padding(
-                        padding: const EdgeInsets.all(6),
-                        child: KenneySprite(
-                          asset: emptyIcon,
-                          size: size - 12,
-                        ),
-                      ),
+                        if (item!.effectiveItemLevel > 0)
+                          Positioned(
+                            right: 2,
+                            bottom: 1,
+                            child: Text(
+                              '${item!.effectiveItemLevel}',
+                              style: GameTheme.pixel(
+                                size: 5,
+                                color: GameTheme.parchment,
+                              ),
+                            ),
+                          ),
+                      ],
                     )
-                  : Center(
-                      child: Text(
-                        short.length <= 4 ? short : short.substring(0, 3),
-                        textAlign: TextAlign.center,
-                        style: GameTheme.pixel(
-                          size: 5,
-                          color: GameTheme.parchmentDim,
+                  : emptyIcon != null
+                      ? Opacity(
+                          opacity: 0.28,
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: KenneySprite(
+                              asset: emptyIcon,
+                              size: size - 12,
+                            ),
+                          ),
+                        )
+                      : Center(
+                          child: Text(
+                            short.length <= 4 ? short : short.substring(0, 3),
+                            textAlign: TextAlign.center,
+                            style: GameTheme.pixel(
+                              size: 5,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+            ),
+          ),
         ),
       ),
     );

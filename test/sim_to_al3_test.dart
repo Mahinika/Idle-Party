@@ -100,6 +100,9 @@ GameState _spendGold(GameState state) {
           PartyUpgradeType.attack => GameLogic.upgradeAttack(s),
           PartyUpgradeType.defense => GameLogic.upgradeDefense(s),
           PartyUpgradeType.vitality => GameLogic.upgradeVitality(s),
+          PartyUpgradeType.moveSpeed => GameLogic.upgradeMoveSpeed(s),
+          PartyUpgradeType.attackSpeed => GameLogic.upgradeAttackSpeed(s),
+          PartyUpgradeType.crit => GameLogic.upgradeCrit(s),
         };
         spent = true;
         break;

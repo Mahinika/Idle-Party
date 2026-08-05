@@ -398,6 +398,7 @@ class SpatialFloater {
     required this.text,
     required this.argb,
     this.life = 0.55,
+    this.vx = 0,
     this.vy = -2.1,
     this.priority = 0,
   });
@@ -405,6 +406,7 @@ class SpatialFloater {
   double x;
   double y;
   double life;
+  double vx;
   double vy;
   final String text;
   final int argb;
@@ -568,6 +570,7 @@ class SpatialStepResult {
     this.roomCleared = false,
     this.partyWiped = false,
     this.goldFromKills = 0,
+    this.kills = 0,
     this.abilityCasts = 0,
   });
 
@@ -576,6 +579,8 @@ class SpatialStepResult {
   final bool roomCleared;
   final bool partyWiped;
   final int goldFromKills;
+  /// Enemies slain this result (God Hand / step kill bank).
+  final int kills;
   final int abilityCasts;
 }
 
@@ -612,17 +617,37 @@ abstract final class SpatialCombat {
   }) {
     // Skip empty / whitespace-only.
     if (text.isEmpty) return;
+    // Stagger stack at the same tile so gold/XP/loot don't fully overlap.
+    var nearby = 0;
+    for (final f in world.floaters) {
+      if ((f.x - x).abs() < 0.7 && (f.y - y).abs() < 1.0) nearby++;
+    }
+    final lane = nearby % 5;
+    final jx = (lane - 2) * 0.22;
+    final jy = (lane % 3) * 0.12;
     world.floaters.add(
       SpatialFloater(
-        x: x,
-        y: y,
+        x: x + jx,
+        y: y - jy,
         text: text,
         argb: argb,
         life: life,
+        vx: jx * 0.35,
+        vy: -2.1 - lane * 0.08,
         priority: priority,
       ),
     );
     _trimFloaters(world);
+  }
+
+  /// Prefer a word-boundary cut so loot names stay readable.
+  static String _shortFloaterLabel(String text, {int max = 20}) {
+    final t = text.trim();
+    if (t.length <= max) return t;
+    final cut = t.substring(0, max - 1);
+    final sp = cut.lastIndexOf(' ');
+    if (sp >= 6) return '${cut.substring(0, sp)}…';
+    return '$cut…';
   }
 
   static void _trimFloaters(SpatialWorld world) {
@@ -890,6 +915,16 @@ abstract final class SpatialCombat {
       }
       if (a.livingBombArmed > 0) {
         a.livingBombArmed = math.max(0, a.livingBombArmed - dt);
+        // Desync guard: no live bomb on any foe → clear armed chip.
+        if (a.livingBombArmed > 0 &&
+            !world.enemies.any(
+              (e) =>
+                  e.hp > 0 &&
+                  e.livingBombTimer > 0 &&
+                  e.livingBombCasterId == a.id,
+            )) {
+          a.livingBombArmed = 0;
+        }
       }
       if (a.abilityCd.isNotEmpty) {
         final keys = a.abilityCd.keys.toList(growable: false);
@@ -2636,7 +2671,9 @@ abstract final class SpatialCombat {
   static void _tickFloaters(SpatialWorld world, double dt) {
     for (final f in world.floaters) {
       f.life -= dt;
+      f.x += f.vx * dt;
       f.y += f.vy * dt;
+      f.vx *= 0.92;
       f.vy *= 0.94;
     }
     world.floaters.removeWhere((f) => f.life <= 0);
@@ -2663,7 +2700,11 @@ abstract final class SpatialCombat {
     }
   }
 
-  static SpatialWorld build(GameState state, {double threatScale = 1.0}) {
+  static SpatialWorld build(
+    GameState state, {
+    double threatScale = 1.0,
+    bool? afkAssist,
+  }) {
     final room = state.currentRoom;
     final map = RoomLayouts.forFloor(
       floorNumber: room.floorNumber,
@@ -2714,7 +2755,7 @@ abstract final class SpatialCombat {
           attackRange: hero.spec.attackRange,
           attackCooldown: 1.0 / state.effectiveHeroAttackSpeed(hero),
           assetIndex: i,
-          heroRole: hero.role,
+          heroRole: hero.gearAffinity,
           heroSpecId: hero.specId,
           partyIndex: i,
           heroLevel: hero.level,
@@ -2900,7 +2941,7 @@ abstract final class SpatialCombat {
       activeChamber: firstCombat,
       clearedChambers: <int>{0},
       pets: pets,
-      afkAssist: threatScale < 0.99,
+      afkAssist: afkAssist ?? false,
       petMitigateFlat: state.petMitigateFlat,
       petHealBoost: state.petHealBoost,
       bossBannerTimer: room.type == RoomType.boss ? 2.4 : 0,
@@ -2994,10 +3035,14 @@ abstract final class SpatialCombat {
         team: SpatialTeam.hero,
         x: prev?.x ?? (spawn.$1 + 0.5 + ox),
         y: prev?.y ?? (spawn.$2 + 0.5 + oy),
-        // Prefer live spatial HP (keeps fortitude surplus); fall back to state.
+        // Prefer live spatial HP (keeps fortitude surplus), but take state HP
+        // when higher so flask / hub heals are not overwritten on sync.
         hp: hero.isAlive
             ? (prev != null
-                ? prev.hp.clamp(0, math.max(prev.effectiveMaxHp, maxHp))
+                ? (hero.currentHp > prev.hp
+                        ? hero.currentHp
+                        : prev.hp)
+                    .clamp(0, math.max(prev.effectiveMaxHp, maxHp))
                 : hero.currentHp.clamp(0, maxHp))
             : 0,
         maxHp: maxHp,
@@ -3007,7 +3052,7 @@ abstract final class SpatialCombat {
         attackRange: hero.spec.attackRange,
         attackCooldown: 1.0 / state.effectiveHeroAttackSpeed(hero),
         assetIndex: i,
-        heroRole: hero.role,
+        heroRole: hero.gearAffinity,
         heroSpecId: hero.specId,
         partyIndex: i,
         heroLevel: hero.level,
@@ -3680,6 +3725,7 @@ abstract final class SpatialCombat {
             hero.y = pad.$2;
           }
         }
+        nextState = _vacuumGroundLoot(world, nextState);
         final gold = goldFromKills;
         return _stepResult(
           world,
@@ -4463,23 +4509,24 @@ abstract final class SpatialCombat {
         final salvaged = resolved != null &&
             resolved.outcome == LootOutcome.stashed &&
             resolved.essenceGained > 0;
+        final goldPickup = resolved?.outcome == LootOutcome.gold;
         final label = salvaged
             ? 'BAG FULL +${resolved.essenceGained}e'
             : (loot.drop.isEquipment
                 ? loot.drop.name
-                : (loot.kind == GroundLootKind.gold
+                : (goldPickup || loot.kind == GroundLootKind.gold
                     ? '+${loot.drop.amount}g'
                     : '+essence'));
         _spawnFloater(
           world,
           x: loot.x,
           y: loot.y - 0.2,
-          text: label.length > 16 ? '${label.substring(0, 14)}…' : label,
+          text: _shortFloaterLabel(label),
           argb: salvaged
               ? _floaterEssence
               : (loot.drop.isEquipment
                   ? _floaterGear
-                  : (loot.kind == GroundLootKind.gold
+                  : (goldPickup || loot.kind == GroundLootKind.gold
                         ? _floaterGold
                         : _floaterEssence)),
           life: salvaged ? 1.4 : 1.05,
@@ -4523,6 +4570,9 @@ abstract final class SpatialCombat {
               (loot) => loot.age > (world.afkAssist ? 1.0 : 4.5),
             ))) {
       if (!world.awaitingExit) {
+        // AFK exit gate (1s) is earlier than auto-pickup (4.5s) — vacuum now
+        // so ground loot is never discarded on rebuild.
+        nextState = _vacuumGroundLoot(world, nextState);
         world.awaitingExit = true;
         world.exitWaitTimer = 0;
       }
@@ -4564,6 +4614,7 @@ abstract final class SpatialCombat {
         (state.totalAttack ~/ 8);
     final radius = state.godHandRadius;
     var gold = 0;
+    var kills = 0;
     var nextState = state;
     final rng = GameLogic.random;
     for (final enemy in world.enemies) {
@@ -4582,6 +4633,7 @@ abstract final class SpatialCombat {
         if (wasAlive && enemy.hp <= 0) {
           final killed = _onEnemyKilled(world, nextState, enemy, rng);
           gold += killed.gold;
+          kills += 1;
           nextState = killed.state;
         }
       }
@@ -4592,6 +4644,7 @@ abstract final class SpatialCombat {
       world: world,
       state: synced,
       goldFromKills: gold,
+      kills: kills,
     );
   }
 
@@ -4787,38 +4840,70 @@ abstract final class SpatialCombat {
     return false;
   }
 
+  /// Apply any remaining ground loot into state and clear the pile.
+  /// Used when exit starts early (AFK) or right before roomCleared.
+  static GameState _vacuumGroundLoot(SpatialWorld world, GameState state) {
+    if (world.groundLoot.isEmpty) return state;
+    final drops = <LootDrop>[
+      for (final loot in world.groundLoot) loot.drop,
+    ];
+    world.groundLoot.clear();
+    return GameLogic.applyLootDrops(state, drops).state;
+  }
+
   static ({int gold, GameState state}) _onEnemyKilled(
     SpatialWorld world,
     GameState state,
     SpatialActor enemy,
     math.Random rng,
   ) {
+    // Clear Living Bomb HUD if this was the armed target.
+    final bombCasterId = enemy.livingBombCasterId;
+    if (enemy.livingBombTimer > 0 || bombCasterId != null) {
+      enemy.livingBombTimer = 0;
+      enemy.livingBombDps = 0;
+      enemy.livingBombAcc = 0;
+      enemy.livingBombCasterId = null;
+      if (bombCasterId != null) {
+        final caster = _heroById(world, bombCasterId);
+        if (caster != null) caster.livingBombArmed = 0;
+      }
+    }
     final index = world.enemies.indexOf(enemy);
     final unit = index >= 0 && index < state.enemies.length
         ? state.enemies[index]
         : null;
     final rewardGold = unit?.rewardGold ?? 0;
-    final drops = GameLogic.rollLoot(
+    final drops = GameLogic.rollKillLoot(
       state.battleNumber,
       ascensionLevel: state.ascensionLevel,
       lootFindPercent: state.petLootFindPercent,
       hardmodeLevel: state.hardmodeLevel,
       party: state.heroes,
+      dungeonId: state.dungeonId,
+      enemyRole: enemy.role,
     );
-    final drop = drops.isEmpty
-        ? const LootDrop(
-            name: 'Gold Pouch',
-            amount: 1,
-            rarity: LootRarity.common,
-          )
-        : drops.first;
-    world.groundLoot.add(
-      GroundLoot(
-        x: enemy.x + (rng.nextDouble() - 0.5) * 0.4,
-        y: enemy.y + (rng.nextDouble() - 0.5) * 0.4,
-        drop: drop,
-      ),
-    );
+    for (var i = 0; i < drops.length; i++) {
+      final drop = drops[i];
+      final angle = (i / math.max(1, drops.length)) * math.pi * 2;
+      world.groundLoot.add(
+        GroundLoot(
+          x: enemy.x + math.cos(angle) * 0.35 * (0.6 + i * 0.15),
+          y: enemy.y + math.sin(angle) * 0.35 * (0.6 + i * 0.15),
+          drop: drop,
+        ),
+      );
+      if (drop.isEquipment) {
+        _spawnFloater(
+          world,
+          x: enemy.x + 0.2 + i * 0.05,
+          y: enemy.y - 0.15,
+          text: 'LOOT!',
+          argb: _floaterGear,
+          life: 0.7,
+        );
+      }
+    }
     if (rewardGold > 0) {
       _spawnFloater(
         world,
@@ -4827,16 +4912,6 @@ abstract final class SpatialCombat {
         text: '+${rewardGold}g',
         argb: _floaterGold,
         life: 1.0,
-      );
-    }
-    if (drop.isEquipment) {
-      _spawnFloater(
-        world,
-        x: enemy.x + 0.2,
-        y: enemy.y - 0.15,
-        text: 'LOOT!',
-        argb: _floaterGear,
-        life: 0.7,
       );
     }
     var next = state;

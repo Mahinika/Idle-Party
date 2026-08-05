@@ -649,7 +649,7 @@ class LoadoutsOverlay extends StatelessWidget {
       children: [
         Text(
           'Capture each hero\'s equipped gear into a preset, then swap '
-          'instantly later. Sold items are silently skipped on apply.',
+          'instantly later. Missing items are skipped (toast shows count).',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),

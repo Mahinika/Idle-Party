@@ -353,7 +353,7 @@ enum AbilityId {
 class ClassAbilityDef {
   const ClassAbilityDef({
     required this.id,
-    required this.role,
+    required this.gearAffinity,
     required this.name,
     required this.shortLabel,
     required this.description,
@@ -369,8 +369,8 @@ class ClassAbilityDef {
   });
 
   final AbilityId id;
-  /// Legacy combat family (ratings / original four kits).
-  final HeroRole role;
+  /// Gear/ratings affinity bucket (not SpecRoleTag).
+  final HeroRole gearAffinity;
   final HeroSpecId? specId;
   final String name;
   final String shortLabel;
@@ -407,7 +407,7 @@ class ClassKits {
     // —— Warrior (Protection) ——
     ClassAbilityDef(
       id: AbilityId.defensiveStance,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Defensive Stance',
       shortLabel: 'Stance',
@@ -420,7 +420,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.charge,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Charge',
       shortLabel: 'Charge',
@@ -433,7 +433,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shieldBlock,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Shield Block',
       shortLabel: 'Block',
@@ -448,7 +448,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.thunderClap,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Thunder Clap',
       shortLabel: 'Clap',
@@ -462,7 +462,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.devastate,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Devastate',
       shortLabel: 'Dev',
@@ -477,7 +477,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.taunt,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Taunt',
       shortLabel: 'Taunt',
@@ -489,7 +489,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.demoralizingShout,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Demoralizing Shout',
       shortLabel: 'Demo',
@@ -503,7 +503,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shieldSlam,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Shield Slam',
       shortLabel: 'Slam',
@@ -518,7 +518,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.commandingShout,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Commanding Shout',
       shortLabel: 'Shout',
@@ -531,7 +531,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.revenge,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Revenge',
       shortLabel: 'Revenge',
@@ -545,7 +545,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shockwave,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Shockwave',
       shortLabel: 'Shock',
@@ -559,7 +559,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.lastStand,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Last Stand',
       shortLabel: 'Stand',
@@ -571,7 +571,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shieldWall,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Shield Wall',
       shortLabel: 'Wall',
@@ -586,7 +586,7 @@ class ClassKits {
     // —— Disc Priest ——
     ClassAbilityDef(
       id: AbilityId.innerFire,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.discipline,
       name: 'Inner Fire',
       shortLabel: 'Inner',
@@ -599,7 +599,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.powerWordShield,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.discipline,
       name: 'Power Word: Shield',
       shortLabel: 'Shield',
@@ -613,7 +613,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.prayerOfMending,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.discipline,
       name: 'Prayer of Mending',
       shortLabel: 'PoM',
@@ -627,7 +627,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.penance,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.discipline,
       name: 'Penance',
       shortLabel: 'Penance',
@@ -641,7 +641,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.powerWordFortitude,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.discipline,
       name: 'Power Word: Fortitude',
       shortLabel: 'Fort',
@@ -654,7 +654,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.flashHeal,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.discipline,
       name: 'Flash Heal',
       shortLabel: 'Flash',
@@ -668,7 +668,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.painSuppression,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.discipline,
       name: 'Pain Suppression',
       shortLabel: 'PS',
@@ -681,7 +681,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.powerInfusion,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.discipline,
       name: 'Power Infusion',
       shortLabel: 'PI',
@@ -696,7 +696,7 @@ class ClassKits {
     // —— Mage (Fire) ——
     ClassAbilityDef(
       id: AbilityId.arcaneIntellect,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Arcane Intellect',
       shortLabel: 'Intellect',
@@ -709,7 +709,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.fireball,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Fireball',
       shortLabel: 'Fireball',
@@ -723,7 +723,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.livingBomb,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Living Bomb',
       shortLabel: 'Bomb',
@@ -737,7 +737,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.frostNova,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Frost Nova',
       shortLabel: 'Nova',
@@ -750,7 +750,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.blastWave,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Blast Wave',
       shortLabel: 'Blast',
@@ -764,7 +764,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.blink,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Blink',
       shortLabel: 'Blink',
@@ -777,7 +777,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.combustion,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Combustion',
       shortLabel: 'Combust',
@@ -790,7 +790,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.pyroblast,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Pyroblast',
       shortLabel: 'Pyro',
@@ -804,7 +804,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.iceBlock,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Ice Block',
       shortLabel: 'Ice Block',
@@ -818,7 +818,7 @@ class ClassKits {
     // —— Rogue (Combat) ——
     ClassAbilityDef(
       id: AbilityId.sinisterStrike,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Sinister Strike',
       shortLabel: 'Strike',
@@ -831,7 +831,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.sliceAndDice,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Slice and Dice',
       shortLabel: 'SnD',
@@ -844,7 +844,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.eviscerate,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Eviscerate',
       shortLabel: 'Evis',
@@ -858,7 +858,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.kidneyShot,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Kidney Shot',
       shortLabel: 'Kidney',
@@ -871,7 +871,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.bladeFlurry,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Blade Flurry',
       shortLabel: 'Flurry',
@@ -885,7 +885,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.sprint,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Sprint',
       shortLabel: 'Sprint',
@@ -897,7 +897,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.vanish,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Vanish',
       shortLabel: 'Vanish',
@@ -909,7 +909,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.killingSpree,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Killing Spree',
       shortLabel: 'Spree',
@@ -925,7 +925,7 @@ class ClassKits {
     // —— arms ——
     ClassAbilityDef(
       id: AbilityId.armsStance,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.arms,
       name: 'Battle Stance',
       shortLabel: 'Stance',
@@ -938,7 +938,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.mortalStrike,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.arms,
       name: 'Mortal Strike',
       shortLabel: 'Mortal',
@@ -952,7 +952,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.overpower,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.arms,
       name: 'Overpower',
       shortLabel: 'Over',
@@ -966,7 +966,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.rend,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.arms,
       name: 'Rend',
       shortLabel: 'Rend',
@@ -980,7 +980,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.sweepingStrikes,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.arms,
       name: 'Sweeping Strikes',
       shortLabel: 'Sweep',
@@ -994,7 +994,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.bladestorm,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.arms,
       name: 'Bladestorm',
       shortLabel: 'Storm',
@@ -1008,7 +1008,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.armsExecute,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.arms,
       name: 'Execute',
       shortLabel: 'Exec',
@@ -1022,7 +1022,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.armsRally,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.arms,
       name: 'Rallying Cry',
       shortLabel: 'Rally',
@@ -1037,7 +1037,7 @@ class ClassKits {
     // —— fury ——
     ClassAbilityDef(
       id: AbilityId.berserkerStance,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.fury,
       name: 'Berserker Stance',
       shortLabel: 'Stance',
@@ -1050,7 +1050,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.bloodthirst,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.fury,
       name: 'Bloodthirst',
       shortLabel: 'Thirst',
@@ -1064,7 +1064,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.whirlwind,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.fury,
       name: 'Whirlwind',
       shortLabel: 'Whirl',
@@ -1078,7 +1078,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.ragingBlow,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.fury,
       name: 'Raging Blow',
       shortLabel: 'Rage',
@@ -1092,7 +1092,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.enrageBuff,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.fury,
       name: 'Enrage',
       shortLabel: 'Enrage',
@@ -1104,7 +1104,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.deathWish,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.fury,
       name: 'Death Wish',
       shortLabel: 'Wish',
@@ -1117,7 +1117,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.furyExecute,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.fury,
       name: 'Rampage',
       shortLabel: 'Ramp',
@@ -1131,7 +1131,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.furyRecklessness,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.fury,
       name: 'Recklessness',
       shortLabel: 'Reck',
@@ -1145,7 +1145,7 @@ class ClassKits {
     // —— holyPaladin ——
     ClassAbilityDef(
       id: AbilityId.holyLightAura,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Devotion',
       shortLabel: 'Aura',
@@ -1158,7 +1158,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.holyShock,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Holy Shock',
       shortLabel: 'Shock',
@@ -1172,7 +1172,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.flashOfLight,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Flash of Light',
       shortLabel: 'Flash',
@@ -1186,7 +1186,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.sacredShield,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Sacred Shield',
       shortLabel: 'SShield',
@@ -1200,7 +1200,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.holyLight,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Holy Light',
       shortLabel: 'Light',
@@ -1214,7 +1214,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.beaconOfLight,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Beacon',
       shortLabel: 'Beacon',
@@ -1228,7 +1228,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.divineFavor,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Divine Favor',
       shortLabel: 'Favor',
@@ -1241,7 +1241,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.layOnHands,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Lay on Hands',
       shortLabel: 'LoH',
@@ -1256,7 +1256,7 @@ class ClassKits {
     // —— protPaladin ——
     ClassAbilityDef(
       id: AbilityId.righteousFury,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Righteous Fury',
       shortLabel: 'Fury',
@@ -1269,7 +1269,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.avengersShield,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Avenger\'s Shield',
       shortLabel: 'AShield',
@@ -1283,7 +1283,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.holyShield,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Holy Shield',
       shortLabel: 'HShield',
@@ -1296,7 +1296,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.hammerOfTheRighteous,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Hammer of the Righteous',
       shortLabel: 'HotR',
@@ -1310,7 +1310,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.consecration,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Consecration',
       shortLabel: 'Cons',
@@ -1324,7 +1324,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shieldOfRighteousness,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Shield of Righteousness',
       shortLabel: 'SoR',
@@ -1338,7 +1338,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.holyWrath,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Holy Wrath',
       shortLabel: 'Wrath',
@@ -1352,7 +1352,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.divineProtection,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Divine Protection',
       shortLabel: 'DProt',
@@ -1364,7 +1364,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.handOfReckoning,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Hand of Reckoning',
       shortLabel: 'HoR',
@@ -1379,7 +1379,7 @@ class ClassKits {
     // —— retribution ——
     ClassAbilityDef(
       id: AbilityId.sealOfCommand,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.retribution,
       name: 'Seal of Command',
       shortLabel: 'Seal',
@@ -1392,7 +1392,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.crusaderStrike,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.retribution,
       name: 'Crusader Strike',
       shortLabel: 'CS',
@@ -1406,7 +1406,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.judgment,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.retribution,
       name: 'Judgment',
       shortLabel: 'Judge',
@@ -1420,7 +1420,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.divineStorm,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.retribution,
       name: 'Divine Storm',
       shortLabel: 'Storm',
@@ -1434,7 +1434,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.hammerOfWrath,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.retribution,
       name: 'Hammer of Wrath',
       shortLabel: 'HoW',
@@ -1448,7 +1448,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.zealotry,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.retribution,
       name: 'Zealotry',
       shortLabel: 'Zeal',
@@ -1461,7 +1461,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.templarsVerdict,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.retribution,
       name: 'Templar\'s Verdict',
       shortLabel: 'TV',
@@ -1475,7 +1475,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.divineShield,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.retribution,
       name: 'Divine Shield',
       shortLabel: 'Bubble',
@@ -1489,7 +1489,7 @@ class ClassKits {
     // —— beastMastery ——
     ClassAbilityDef(
       id: AbilityId.aspectOfHawk,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.beastMastery,
       name: 'Aspect of the Hawk',
       shortLabel: 'Hawk',
@@ -1502,7 +1502,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneShot,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.beastMastery,
       name: 'Arcane Shot',
       shortLabel: 'ArcShot',
@@ -1516,7 +1516,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.killCommand,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.beastMastery,
       name: 'Kill Command',
       shortLabel: 'KC',
@@ -1530,7 +1530,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.multiShot,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.beastMastery,
       name: 'Multi-Shot',
       shortLabel: 'Multi',
@@ -1544,7 +1544,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.bestialWrath,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.beastMastery,
       name: 'Bestial Wrath',
       shortLabel: 'Wrath',
@@ -1557,7 +1557,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.intimidation,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.beastMastery,
       name: 'Intimidation',
       shortLabel: 'Intim',
@@ -1570,7 +1570,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.beastWithin,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.beastMastery,
       name: 'The Beast Within',
       shortLabel: 'Beast',
@@ -1583,7 +1583,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.feignDeath,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.beastMastery,
       name: 'Feign Death',
       shortLabel: 'Feign',
@@ -1597,7 +1597,7 @@ class ClassKits {
     // —— marksmanship ——
     ClassAbilityDef(
       id: AbilityId.trueshotAura,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.marksmanship,
       name: 'Trueshot Aura',
       shortLabel: 'Aura',
@@ -1610,7 +1610,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.steadyShot,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.marksmanship,
       name: 'Steady Shot',
       shortLabel: 'Steady',
@@ -1624,7 +1624,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.aimedShot,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.marksmanship,
       name: 'Aimed Shot',
       shortLabel: 'Aimed',
@@ -1638,7 +1638,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.chimeraShot,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.marksmanship,
       name: 'Chimera Shot',
       shortLabel: 'Chim',
@@ -1652,7 +1652,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.scatterShot,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.marksmanship,
       name: 'Scatter Shot',
       shortLabel: 'Scatter',
@@ -1665,7 +1665,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.rapidFire,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.marksmanship,
       name: 'Rapid Fire',
       shortLabel: 'Rapid',
@@ -1678,7 +1678,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.trueshot,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.marksmanship,
       name: 'Trueshot',
       shortLabel: 'True',
@@ -1691,7 +1691,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.deterrence,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.marksmanship,
       name: 'Deterrence',
       shortLabel: 'Deter',
@@ -1705,7 +1705,7 @@ class ClassKits {
     // —— survival ——
     ClassAbilityDef(
       id: AbilityId.trapMastery,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.survival,
       name: 'Trap Mastery',
       shortLabel: 'Traps',
@@ -1718,7 +1718,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.explosiveShot,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.survival,
       name: 'Explosive Shot',
       shortLabel: 'Expl',
@@ -1732,7 +1732,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.serpentSting,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.survival,
       name: 'Serpent Sting',
       shortLabel: 'Sting',
@@ -1746,7 +1746,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.explosiveTrap,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.survival,
       name: 'Explosive Trap',
       shortLabel: 'ETrap',
@@ -1760,7 +1760,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.freezingTrap,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.survival,
       name: 'Freezing Trap',
       shortLabel: 'Freeze',
@@ -1773,7 +1773,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.mongooseBite,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.survival,
       name: 'Mongoose Bite',
       shortLabel: 'Mongo',
@@ -1787,7 +1787,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.blackArrow,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.survival,
       name: 'Black Arrow',
       shortLabel: 'BArrow',
@@ -1801,7 +1801,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.disengage,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.survival,
       name: 'Disengage',
       shortLabel: 'Dis',
@@ -1815,7 +1815,7 @@ class ClassKits {
     // —— assassination ——
     ClassAbilityDef(
       id: AbilityId.improvedPoisons,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.assassination,
       name: 'Improved Poisons',
       shortLabel: 'Poison',
@@ -1828,7 +1828,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.mutilate,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.assassination,
       name: 'Mutilate',
       shortLabel: 'Mut',
@@ -1842,7 +1842,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.envenom,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.assassination,
       name: 'Envenom',
       shortLabel: 'Env',
@@ -1856,7 +1856,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.garrote,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.assassination,
       name: 'Garrote',
       shortLabel: 'Gar',
@@ -1870,7 +1870,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.rupture,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.assassination,
       name: 'Rupture',
       shortLabel: 'Rupt',
@@ -1884,7 +1884,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.coldBlood,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.assassination,
       name: 'Cold Blood',
       shortLabel: 'Cold',
@@ -1896,7 +1896,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.vendetta,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.assassination,
       name: 'Vendetta',
       shortLabel: 'Vend',
@@ -1909,7 +1909,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.cloakOfShadows,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.assassination,
       name: 'Cloak of Shadows',
       shortLabel: 'Cloak',
@@ -1923,7 +1923,7 @@ class ClassKits {
     // —— subtlety ——
     ClassAbilityDef(
       id: AbilityId.masterOfSubtlety,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.subtlety,
       name: 'Master of Subtlety',
       shortLabel: 'MoS',
@@ -1936,7 +1936,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.hemorrhage,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.subtlety,
       name: 'Hemorrhage',
       shortLabel: 'Hemo',
@@ -1950,7 +1950,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.backstab,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.subtlety,
       name: 'Backstab',
       shortLabel: 'Stab',
@@ -1964,7 +1964,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shadowstep,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.subtlety,
       name: 'Shadowstep',
       shortLabel: 'Step',
@@ -1977,7 +1977,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.premeditation,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.subtlety,
       name: 'Premeditation',
       shortLabel: 'Prem',
@@ -1990,7 +1990,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shadowDance,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.subtlety,
       name: 'Shadow Dance',
       shortLabel: 'Dance',
@@ -2003,7 +2003,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.eviscerateSub,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.subtlety,
       name: 'Eviscerate',
       shortLabel: 'Evis',
@@ -2018,7 +2018,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.cheapShot,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.subtlety,
       name: 'Cheap Shot',
       shortLabel: 'Cheap',
@@ -2031,7 +2031,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.preparation,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.subtlety,
       name: 'Preparation',
       shortLabel: 'Prep',
@@ -2045,7 +2045,7 @@ class ClassKits {
     // —— holyPriest ——
     ClassAbilityDef(
       id: AbilityId.spiritOfRedemption,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPriest,
       name: 'Spirit of Redemption',
       shortLabel: 'Spirit',
@@ -2058,7 +2058,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.renew,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPriest,
       name: 'Renew',
       shortLabel: 'Renew',
@@ -2072,7 +2072,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.holyPriestFlash,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPriest,
       name: 'Flash Heal',
       shortLabel: 'Flash',
@@ -2086,7 +2086,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.circleOfHealing,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPriest,
       name: 'Circle of Healing',
       shortLabel: 'CoH',
@@ -2100,7 +2100,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.guardianSpirit,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPriest,
       name: 'Guardian Spirit',
       shortLabel: 'GS',
@@ -2114,7 +2114,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.holyPriestNova,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPriest,
       name: 'Holy Nova',
       shortLabel: 'Nova',
@@ -2128,7 +2128,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.divineHymn,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPriest,
       name: 'Divine Hymn',
       shortLabel: 'Hymn',
@@ -2142,7 +2142,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.desperatePrayer,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPriest,
       name: 'Desperate Prayer',
       shortLabel: 'DP',
@@ -2157,7 +2157,7 @@ class ClassKits {
     // —— shadow ——
     ClassAbilityDef(
       id: AbilityId.shadowform,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.shadow,
       name: 'Shadowform',
       shortLabel: 'Form',
@@ -2170,7 +2170,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.mindFlay,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.shadow,
       name: 'Mind Flay',
       shortLabel: 'Flay',
@@ -2184,7 +2184,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.vampiricTouch,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.shadow,
       name: 'Vampiric Touch',
       shortLabel: 'VT',
@@ -2198,7 +2198,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.devouringPlague,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.shadow,
       name: 'Devouring Plague',
       shortLabel: 'DP',
@@ -2212,7 +2212,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shadowWordPain,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.shadow,
       name: 'Shadow Word: Pain',
       shortLabel: 'SWP',
@@ -2226,7 +2226,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.psychicScream,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.shadow,
       name: 'Psychic Scream',
       shortLabel: 'Fear',
@@ -2239,7 +2239,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.mindBlast,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.shadow,
       name: 'Mind Blast',
       shortLabel: 'Blast',
@@ -2253,7 +2253,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.dispersion,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.shadow,
       name: 'Dispersion',
       shortLabel: 'Disp',
@@ -2267,7 +2267,7 @@ class ClassKits {
     // —— blood ——
     ClassAbilityDef(
       id: AbilityId.bloodPresence,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Blood Presence',
       shortLabel: 'Pres',
@@ -2280,7 +2280,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.deathStrike,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Death Strike',
       shortLabel: 'DS',
@@ -2294,7 +2294,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.heartStrike,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Heart Strike',
       shortLabel: 'HS',
@@ -2308,7 +2308,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.runeTap,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Rune Tap',
       shortLabel: 'Tap',
@@ -2322,7 +2322,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.bloodBoil,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Blood Boil',
       shortLabel: 'Boil',
@@ -2336,7 +2336,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.vampiricBlood,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Vampiric Blood',
       shortLabel: 'VB',
@@ -2348,7 +2348,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.dancingRuneWeapon,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Dancing Rune Weapon',
       shortLabel: 'DRW',
@@ -2361,7 +2361,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.iceboundFortitude,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Icebound Fortitude',
       shortLabel: 'IBF',
@@ -2373,7 +2373,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.darkCommand,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Dark Command',
       shortLabel: 'DC',
@@ -2388,7 +2388,7 @@ class ClassKits {
     // —— frostDk ——
     ClassAbilityDef(
       id: AbilityId.frostPresence,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.frostDk,
       name: 'Frost Presence',
       shortLabel: 'Pres',
@@ -2401,7 +2401,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.obliterate,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.frostDk,
       name: 'Obliterate',
       shortLabel: 'Oblit',
@@ -2415,7 +2415,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.frostStrike,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.frostDk,
       name: 'Frost Strike',
       shortLabel: 'FS',
@@ -2429,7 +2429,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.howlingBlast,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.frostDk,
       name: 'Howling Blast',
       shortLabel: 'Howl',
@@ -2443,7 +2443,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.chainsOfIce,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.frostDk,
       name: 'Chains of Ice',
       shortLabel: 'Chains',
@@ -2456,7 +2456,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.pillarOfFrost,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.frostDk,
       name: 'Pillar of Frost',
       shortLabel: 'Pillar',
@@ -2469,7 +2469,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.hungeringCold,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.frostDk,
       name: 'Hungering Cold',
       shortLabel: 'Hunger',
@@ -2483,7 +2483,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.frostDkIbf,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.frostDk,
       name: 'Icebound Fortitude',
       shortLabel: 'IBF',
@@ -2497,7 +2497,7 @@ class ClassKits {
     // —— unholy ——
     ClassAbilityDef(
       id: AbilityId.unholyPresence,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.unholy,
       name: 'Unholy Presence',
       shortLabel: 'Pres',
@@ -2510,7 +2510,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.scourgeStrike,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.unholy,
       name: 'Scourge Strike',
       shortLabel: 'Scourge',
@@ -2524,7 +2524,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.deathCoil,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.unholy,
       name: 'Death Coil',
       shortLabel: 'Coil',
@@ -2538,7 +2538,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.bloodBoilUnholy,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.unholy,
       name: 'Blood Boil',
       shortLabel: 'Boil',
@@ -2552,7 +2552,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.gargoyle,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.unholy,
       name: 'Summon Gargoyle',
       shortLabel: 'Garg',
@@ -2565,7 +2565,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.antiMagicShell,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.unholy,
       name: 'Anti-Magic Shell',
       shortLabel: 'AMS',
@@ -2579,7 +2579,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.armyOfDead,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.unholy,
       name: 'Army of the Dead',
       shortLabel: 'Army',
@@ -2593,7 +2593,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.unholyIbf,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.unholy,
       name: 'Icebound Fortitude',
       shortLabel: 'IBF',
@@ -2607,7 +2607,7 @@ class ClassKits {
     // —— elemental ——
     ClassAbilityDef(
       id: AbilityId.elementalFocus,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.elemental,
       name: 'Elemental Focus',
       shortLabel: 'Focus',
@@ -2620,7 +2620,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.lightningBolt,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.elemental,
       name: 'Lightning Bolt',
       shortLabel: 'Bolt',
@@ -2634,7 +2634,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.lavaBurst,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.elemental,
       name: 'Lava Burst',
       shortLabel: 'Lava',
@@ -2648,7 +2648,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.chainLightning,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.elemental,
       name: 'Chain Lightning',
       shortLabel: 'Chain',
@@ -2662,7 +2662,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.thunderstorm,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.elemental,
       name: 'Thunderstorm',
       shortLabel: 'Storm',
@@ -2676,7 +2676,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.elementalMastery,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.elemental,
       name: 'Elemental Mastery',
       shortLabel: 'EM',
@@ -2689,7 +2689,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.earthShock,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.elemental,
       name: 'Earth Shock',
       shortLabel: 'Shock',
@@ -2703,7 +2703,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.astralShift,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.elemental,
       name: 'Astral Shift',
       shortLabel: 'Shift',
@@ -2717,7 +2717,7 @@ class ClassKits {
     // —— enhancement ——
     ClassAbilityDef(
       id: AbilityId.enhancementWeapons,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.enhancement,
       name: 'Enhanced Weapons',
       shortLabel: 'Weap',
@@ -2730,7 +2730,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.stormstrike,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.enhancement,
       name: 'Stormstrike',
       shortLabel: 'Storm',
@@ -2744,7 +2744,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.lavaLash,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.enhancement,
       name: 'Lava Lash',
       shortLabel: 'Lash',
@@ -2758,7 +2758,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.fireNova,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.enhancement,
       name: 'Fire Nova',
       shortLabel: 'Nova',
@@ -2772,7 +2772,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.feralSpirit,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.enhancement,
       name: 'Feral Spirit',
       shortLabel: 'Spirits',
@@ -2785,7 +2785,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.frostShock,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.enhancement,
       name: 'Frost Shock',
       shortLabel: 'FShock',
@@ -2798,7 +2798,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shamanisticRage,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.enhancement,
       name: 'Shamanistic Rage',
       shortLabel: 'SRage',
@@ -2811,7 +2811,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.enhancementAstral,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.enhancement,
       name: 'Astral Shift',
       shortLabel: 'Shift',
@@ -2825,7 +2825,7 @@ class ClassKits {
     // —— restorationShaman ——
     ClassAbilityDef(
       id: AbilityId.ancestralAwakening,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationShaman,
       name: 'Ancestral Awakening',
       shortLabel: 'Awake',
@@ -2838,7 +2838,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.riptide,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationShaman,
       name: 'Riptide',
       shortLabel: 'Rip',
@@ -2852,7 +2852,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.healingWave,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationShaman,
       name: 'Healing Wave',
       shortLabel: 'Wave',
@@ -2866,7 +2866,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.chainHeal,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationShaman,
       name: 'Chain Heal',
       shortLabel: 'Chain',
@@ -2880,7 +2880,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.earthShield,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationShaman,
       name: 'Earth Shield',
       shortLabel: 'EShield',
@@ -2894,7 +2894,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.healingRain,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationShaman,
       name: 'Healing Rain',
       shortLabel: 'Rain',
@@ -2908,7 +2908,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.spiritLink,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationShaman,
       name: 'Spirit Link',
       shortLabel: 'Link',
@@ -2922,7 +2922,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.natureSwiftness,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationShaman,
       name: 'Nature\'s Swiftness',
       shortLabel: 'NS',
@@ -2937,7 +2937,7 @@ class ClassKits {
     // —— arcane ——
     ClassAbilityDef(
       id: AbilityId.arcanePowerPassive,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.arcane,
       name: 'Arcane Brilliance',
       shortLabel: 'Brill',
@@ -2950,7 +2950,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneBlast,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.arcane,
       name: 'Arcane Blast',
       shortLabel: 'ABlast',
@@ -2964,7 +2964,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneMissiles,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.arcane,
       name: 'Arcane Missiles',
       shortLabel: 'Missiles',
@@ -2978,7 +2978,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneExplosion,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.arcane,
       name: 'Arcane Explosion',
       shortLabel: 'AE',
@@ -2992,7 +2992,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.slow,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.arcane,
       name: 'Slow',
       shortLabel: 'Slow',
@@ -3005,7 +3005,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.presenceOfMind,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.arcane,
       name: 'Presence of Mind',
       shortLabel: 'PoM',
@@ -3018,7 +3018,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.arcanePower,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.arcane,
       name: 'Arcane Power',
       shortLabel: 'AP',
@@ -3031,7 +3031,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneIceBlock,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.arcane,
       name: 'Ice Block',
       shortLabel: 'Block',
@@ -3045,7 +3045,7 @@ class ClassKits {
     // —— frostMage ——
     ClassAbilityDef(
       id: AbilityId.frostArmor,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.frostMage,
       name: 'Frost Armor',
       shortLabel: 'Armor',
@@ -3058,7 +3058,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.frostbolt,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.frostMage,
       name: 'Frostbolt',
       shortLabel: 'Bolt',
@@ -3072,7 +3072,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.iceLance,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.frostMage,
       name: 'Ice Lance',
       shortLabel: 'Lance',
@@ -3086,7 +3086,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.coneOfCold,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.frostMage,
       name: 'Cone of Cold',
       shortLabel: 'Cone',
@@ -3100,7 +3100,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.frostNovaMage,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.frostMage,
       name: 'Frost Nova',
       shortLabel: 'Nova',
@@ -3113,7 +3113,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.icyVeins,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.frostMage,
       name: 'Icy Veins',
       shortLabel: 'Veins',
@@ -3126,7 +3126,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.summonWaterElemental,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.frostMage,
       name: 'Water Elemental',
       shortLabel: 'Water',
@@ -3139,7 +3139,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.frostMageIceBlock,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.frostMage,
       name: 'Ice Block',
       shortLabel: 'Block',
@@ -3153,7 +3153,7 @@ class ClassKits {
     // —— affliction ——
     ClassAbilityDef(
       id: AbilityId.soulSiphon,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.affliction,
       name: 'Soul Siphon',
       shortLabel: 'Siphon',
@@ -3166,7 +3166,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.corruption,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.affliction,
       name: 'Corruption',
       shortLabel: 'Corr',
@@ -3180,7 +3180,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.unstableAffliction,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.affliction,
       name: 'Unstable Affliction',
       shortLabel: 'UA',
@@ -3194,7 +3194,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.haunt,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.affliction,
       name: 'Haunt',
       shortLabel: 'Haunt',
@@ -3208,7 +3208,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.drainLife,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.affliction,
       name: 'Drain Life',
       shortLabel: 'Drain',
@@ -3222,7 +3222,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.curseOfAgony,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.affliction,
       name: 'Curse of Agony',
       shortLabel: 'Agony',
@@ -3236,7 +3236,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.hauntBurst,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.affliction,
       name: 'Haunt Burst',
       shortLabel: 'Burst',
@@ -3250,7 +3250,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.soulburn,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.affliction,
       name: 'Soulburn',
       shortLabel: 'Burn',
@@ -3264,7 +3264,7 @@ class ClassKits {
     // —— demonology ——
     ClassAbilityDef(
       id: AbilityId.demonicKnowledge,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.demonology,
       name: 'Demonic Knowledge',
       shortLabel: 'Know',
@@ -3277,7 +3277,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shadowBolt,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.demonology,
       name: 'Shadow Bolt',
       shortLabel: 'SBolt',
@@ -3291,7 +3291,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.handOfGuldan,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.demonology,
       name: 'Hand of Gul\'dan',
       shortLabel: 'HoG',
@@ -3305,7 +3305,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.immolateDemo,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.demonology,
       name: 'Immolate',
       shortLabel: 'Immo',
@@ -3319,7 +3319,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.metamorphosis,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.demonology,
       name: 'Metamorphosis',
       shortLabel: 'Meta',
@@ -3332,7 +3332,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.demonCharge,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.demonology,
       name: 'Demon Charge',
       shortLabel: 'Charge',
@@ -3345,7 +3345,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.chaosBoltDemo,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.demonology,
       name: 'Chaos Bolt',
       shortLabel: 'Chaos',
@@ -3359,7 +3359,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.sacrifice,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.demonology,
       name: 'Demonic Sacrifice',
       shortLabel: 'Sac',
@@ -3373,7 +3373,7 @@ class ClassKits {
     // —— destruction ——
     ClassAbilityDef(
       id: AbilityId.cataclysm,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.destruction,
       name: 'Cataclysm',
       shortLabel: 'Cata',
@@ -3386,7 +3386,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.incinerate,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.destruction,
       name: 'Incinerate',
       shortLabel: 'Incin',
@@ -3400,7 +3400,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.conflagrate,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.destruction,
       name: 'Conflagrate',
       shortLabel: 'Conf',
@@ -3414,7 +3414,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.immolateDestro,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.destruction,
       name: 'Immolate',
       shortLabel: 'Immo',
@@ -3428,7 +3428,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shadowfury,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.destruction,
       name: 'Shadowfury',
       shortLabel: 'Fury',
@@ -3442,7 +3442,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.backdraft,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.destruction,
       name: 'Backdraft',
       shortLabel: 'Draft',
@@ -3455,7 +3455,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.chaosBolt,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.destruction,
       name: 'Chaos Bolt',
       shortLabel: 'Chaos',
@@ -3469,7 +3469,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shadowWard,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.destruction,
       name: 'Shadow Ward',
       shortLabel: 'Ward',
@@ -3483,7 +3483,7 @@ class ClassKits {
     // —— balance ——
     ClassAbilityDef(
       id: AbilityId.moonkinForm,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.balance,
       name: 'Moonkin Form',
       shortLabel: 'Form',
@@ -3496,7 +3496,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.wrath,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.balance,
       name: 'Wrath',
       shortLabel: 'Wrath',
@@ -3510,7 +3510,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.starfire,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.balance,
       name: 'Starfire',
       shortLabel: 'Star',
@@ -3524,7 +3524,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.moonfire,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.balance,
       name: 'Moonfire',
       shortLabel: 'Moon',
@@ -3538,7 +3538,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.hurricane,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.balance,
       name: 'Hurricane',
       shortLabel: 'Hurri',
@@ -3552,7 +3552,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.typhoon,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.balance,
       name: 'Typhoon',
       shortLabel: 'Typh',
@@ -3565,7 +3565,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.starfall,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.balance,
       name: 'Starfall',
       shortLabel: 'Fall',
@@ -3579,7 +3579,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.barkskinBal,
-      role: HeroRole.mage,
+      gearAffinity: HeroRole.mage,
       specId: HeroSpecId.balance,
       name: 'Barkskin',
       shortLabel: 'Bark',
@@ -3593,7 +3593,7 @@ class ClassKits {
     // —— feral ——
     ClassAbilityDef(
       id: AbilityId.catForm,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Cat Form',
       shortLabel: 'Cat',
@@ -3606,7 +3606,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.shred,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Shred',
       shortLabel: 'Shred',
@@ -3620,7 +3620,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.rake,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Rake',
       shortLabel: 'Rake',
@@ -3634,7 +3634,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.ferociousBite,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Ferocious Bite',
       shortLabel: 'Bite',
@@ -3648,7 +3648,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.tigersFury,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Tiger\'s Fury',
       shortLabel: 'TF',
@@ -3661,7 +3661,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.berserk,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Berserk',
       shortLabel: 'Berserk',
@@ -3674,7 +3674,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.rip,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Rip',
       shortLabel: 'Rip',
@@ -3688,7 +3688,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.survivalInstincts,
-      role: HeroRole.rogue,
+      gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Survival Instincts',
       shortLabel: 'SI',
@@ -3702,7 +3702,7 @@ class ClassKits {
     // —— guardian ——
     ClassAbilityDef(
       id: AbilityId.bearForm,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Bear Form',
       shortLabel: 'Bear',
@@ -3715,7 +3715,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.mangleBear,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Mangle',
       shortLabel: 'Mangle',
@@ -3729,7 +3729,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.swipe,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Swipe',
       shortLabel: 'Swipe',
@@ -3743,7 +3743,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.maul,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Maul',
       shortLabel: 'Maul',
@@ -3757,7 +3757,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.frenziedRegen,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Frenzied Regeneration',
       shortLabel: 'FR',
@@ -3771,7 +3771,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.barkskinGuard,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Barkskin',
       shortLabel: 'Bark',
@@ -3783,7 +3783,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.berserkGuard,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Berserk',
       shortLabel: 'Berserk',
@@ -3796,7 +3796,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.survivalInstinctsGuard,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Survival Instincts',
       shortLabel: 'SI',
@@ -3808,7 +3808,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.growl,
-      role: HeroRole.warrior,
+      gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Growl',
       shortLabel: 'Growl',
@@ -3823,7 +3823,7 @@ class ClassKits {
     // —— restorationDruid ——
     ClassAbilityDef(
       id: AbilityId.treeOfLife,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationDruid,
       name: 'Tree of Life',
       shortLabel: 'Tree',
@@ -3836,7 +3836,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.rejuvenation,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationDruid,
       name: 'Rejuvenation',
       shortLabel: 'Rejuv',
@@ -3850,7 +3850,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.regrowth,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationDruid,
       name: 'Regrowth',
       shortLabel: 'Regrow',
@@ -3864,7 +3864,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.wildGrowth,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationDruid,
       name: 'Wild Growth',
       shortLabel: 'WG',
@@ -3878,7 +3878,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.lifebloom,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationDruid,
       name: 'Lifebloom',
       shortLabel: 'Bloom',
@@ -3892,7 +3892,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.nourish,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationDruid,
       name: 'Nourish',
       shortLabel: 'Nourish',
@@ -3906,7 +3906,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.tranquility,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationDruid,
       name: 'Tranquility',
       shortLabel: 'Tranq',
@@ -3920,7 +3920,7 @@ class ClassKits {
     ),
     ClassAbilityDef(
       id: AbilityId.barkskinResto,
-      role: HeroRole.healer,
+      gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationDruid,
       name: 'Barkskin',
       shortLabel: 'Bark',
@@ -3947,9 +3947,9 @@ class ClassKits {
 
   /// Legacy role kits (original four specs only).
   static List<ClassAbilityDef> forRole(HeroRole role) {
-    final legacySpec = HeroSpecs.fromLegacyRole(role);
+    final legacySpec = HeroSpecs.fromGearAffinity(role);
     return all
-        .where((d) => d.specId == legacySpec || (d.specId == null && d.role == role))
+        .where((d) => d.specId == legacySpec || (d.specId == null && d.gearAffinity == role))
         .toList(growable: false);
   }
 
@@ -4068,7 +4068,7 @@ class WarriorAbilities {
   static List<ClassAbilityDef> get all =>
       ClassKits.forRole(HeroRole.warrior);
   static List<ClassAbilityDef> forHero(PartyHero hero) =>
-      hero.role == HeroRole.warrior
+      hero.gearAffinity == HeroRole.warrior
           ? ClassKits.unlockedAtSpec(hero.specId, hero.level)
           : const [];
 }

@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
+import '../core/game_logic.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
@@ -22,6 +23,7 @@ import 'kenney_assets.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
 import 'meta_overlays.dart';
+import 'web_click_bridge.dart';
 
 /// Top-down tile dungeon — painted, not 100+ Image widgets.
 class SpatialDungeonView extends StatefulWidget {
@@ -59,6 +61,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   List<ui.Image?> _enemySprites = const [];
   String? _loadedDungeonId;
   bool _sharedLoaded = false;
+  bool _offlineDialogShown = false;
 
   bool get _tilesReady =>
       _floorReady.isNotEmpty &&
@@ -72,6 +75,15 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   void initState() {
     super.initState();
     _loadImages(widget.director.state.dungeonId);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOffline());
+  }
+
+  Future<void> _maybeShowOffline() async {
+    if (_offlineDialogShown || !mounted || widget.director.offlineSummary == null) {
+      return;
+    }
+    _offlineDialogShown = true;
+    await showOfflineProgressDialog(context, widget.director);
   }
 
   @override
@@ -143,13 +155,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         KenneyAssets.iconBow,
       }.toList();
 
-      final petPaths = <String>[
-        CustomAssets.petEmberPup,
-        CustomAssets.petCaveBat,
-        CustomAssets.petLootSprite,
-        CustomAssets.petWardenCub,
-        CustomAssets.petEgg,
-      ];
+      final petPaths = CustomAssets.petPortraitPaths;
 
       final shared = await Future.wait([
         load(KenneyAssets.stairs, targetWidth: 64),
@@ -473,9 +479,21 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                     ),
                                     const SizedBox(height: 10),
                                     Text(
-                                      farm
-                                          ? 'RETRY restarts this floor. HUB ends the run.'
-                                          : 'RETRY retreats to your last cleared floor (still PUSH). HUB ends the run.',
+                                      state.inGauntlet
+                                          ? 'Gauntlet run ends here. Best floor is saved. Return to hub to climb again.'
+                                          : farm
+                                          ? 'RETRY restarts this floor (F${state.currentRoom.floorNumber}). HUB ends the run.'
+                                          : () {
+                                              final safe = state
+                                                  .highestFloorCleared
+                                                  .clamp(1, 999);
+                                              final cur =
+                                                  state.currentRoom.floorNumber;
+                                              if (safe >= cur) {
+                                                return 'RETRY restarts this floor (F$cur, still PUSH). HUB ends the run.';
+                                              }
+                                              return 'RETRY retreats to F$safe (last cleared, still PUSH). HUB ends the run.';
+                                            }(),
                                       textAlign: TextAlign.center,
                                       style: GameTheme.body(
                                         size: 15,
@@ -483,14 +501,43 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                       ),
                                     ),
                                     const SizedBox(height: 14),
+                                    if (!state.inGauntlet)
+                                      KenneyButton(
+                                        label: farm
+                                            ? 'RETRY FLOOR'
+                                            : () {
+                                                final safe = state
+                                                    .highestFloorCleared
+                                                    .clamp(1, 999);
+                                                final cur =
+                                                    state.currentRoom.floorNumber;
+                                                return safe < cur
+                                                    ? 'RETRY → F$safe'
+                                                    : 'RETRY FLOOR';
+                                              }(),
+                                        primary: true,
+                                        onPressed: widget.director.retryAfterWipe,
+                                      ),
+                                    if (!state.inGauntlet &&
+                                        state.gearStash.length >=
+                                            GameLogic.maxGearStashFor(
+                                              state,
+                                            )) ...[
+                                      const SizedBox(height: 8),
+                                      KenneyButton(
+                                        label: 'SELL JUNK',
+                                        style: KenneyButtonStyle.grey,
+                                        onPressed: () {
+                                          widget.director.autoSellJunk();
+                                        },
+                                      ),
+                                    ],
+                                    if (!state.inGauntlet)
+                                      const SizedBox(height: 8),
                                     KenneyButton(
-                                      label: 'RETRY FLOOR',
-                                      primary: true,
-                                      onPressed: widget.director.retryAfterWipe,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    KenneyButton(
-                                      label: 'RETURN TO HUB',
+                                      label: state.inGauntlet
+                                          ? 'END RUN → HUB'
+                                          : 'RETURN TO HUB',
                                       style: KenneyButtonStyle.grey,
                                       primary: true,
                                       onPressed: widget.director.hubAfterWipe,
@@ -517,7 +564,9 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Text(
                 state.isPartyDefeated
-                    ? 'WIPED — use the Retry / Hub panel'
+                    ? (state.inGauntlet
+                        ? 'WIPED — End Run returns to hub'
+                        : 'WIPED — use the Retry / Hub panel')
                     : 'STAIRS OPEN — party advances when someone reaches exit',
                 textAlign: TextAlign.center,
                 style: GameTheme.body(
@@ -580,29 +629,42 @@ class DungeonModeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? const Color(0xFF3A2810) : const Color(0xFF1A1610),
-      borderRadius: BorderRadius.circular(3),
-      child: InkWell(
+    final semanticsLabel = '$label dungeon mode';
+    return WebClickScope(
+      label: semanticsLabel,
+      onPressed: onTap,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        inMutuallyExclusiveGroup: true,
+        label: semanticsLabel,
         onTap: onTap,
-        borderRadius: BorderRadius.circular(3),
-        child: Container(
-          constraints: BoxConstraints(
-            minHeight: dense ? 36 : GameTheme.minTouch,
-          ),
-          padding: EdgeInsets.symmetric(horizontal: dense ? 6 : 8),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
+        excludeSemantics: true,
+        child: Material(
+          color: selected ? const Color(0xFF3A2810) : const Color(0xFF1A1610),
+          borderRadius: BorderRadius.circular(3),
+          child: InkWell(
+            onTap: onTap,
             borderRadius: BorderRadius.circular(3),
-            border: Border.all(
-              color: selected ? GameTheme.torchHot : const Color(0xFF4A4030),
-            ),
-          ),
-          child: Text(
-            label,
-            style: GameTheme.pixel(
-              size: GameTheme.hudPixel,
-              color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
+            child: Container(
+              constraints: BoxConstraints(
+                minHeight: dense ? 36 : GameTheme.minTouch,
+              ),
+              padding: EdgeInsets.symmetric(horizontal: dense ? 6 : 8),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(3),
+                border: Border.all(
+                  color: selected ? GameTheme.torchHot : const Color(0xFF4A4030),
+                ),
+              ),
+              child: Text(
+                label,
+                style: GameTheme.pixel(
+                  size: GameTheme.hudPixel,
+                  color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
+                ),
+              ),
             ),
           ),
         ),
@@ -626,34 +688,45 @@ class GodHandRing extends StatelessWidget {
     final t = ready ? 1.0 : (1.0 - (cooldown / 1.1).clamp(0.0, 1.0));
     final color = ready ? GameTheme.torchHot : GameTheme.parchmentDim;
     final label = ready ? 'God Hand ready' : 'God Hand cooling down';
-    return Material(
+    final action = onTap != null && ready ? onTap : null;
+    return WebClickScope(
+      label: label,
+      onPressed: action,
+      child: Material(
       color: Colors.transparent,
       child: Tooltip(
         message: label,
         excludeFromSemantics: true,
         child: InkWell(
-          onTap: onTap != null && ready ? onTap : null,
+          onTap: action,
           borderRadius: BorderRadius.circular(14),
           child: Semantics(
             button: true,
-            enabled: onTap != null && ready,
+            enabled: action != null,
             label: label,
+            onTap: action,
             excludeSemantics: true,
             child: SizedBox(
-              width: 28,
-              height: 28,
-              child: CustomPaint(
-                painter: _GodHandRingPainter(
-                  progress: t,
-                  color: color,
-                  ready: ready,
-                ),
-                child: Center(
-                  child: Text(
-                    'GH',
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
+              width: GameTheme.minTouch,
+              height: GameTheme.minTouch,
+              child: Center(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CustomPaint(
+                    painter: _GodHandRingPainter(
+                      progress: t,
                       color: color,
+                      ready: ready,
+                    ),
+                    child: Center(
+                      child: Text(
+                        'GH',
+                        style: GameTheme.pixel(
+                          size: GameTheme.hudPixel,
+                          color: color,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -661,6 +734,7 @@ class GodHandRing extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -1677,6 +1751,7 @@ class _TileRoomPainter extends CustomPainter {
       final floaters = world.floaters;
       final start = floaters.length > 8 ? floaters.length - 8 : 0;
       final tp = TextPainter(textDirection: TextDirection.ltr);
+      final maxW = tile * 3.6;
       for (var i = start; i < floaters.length; i++) {
         final floater = floaters[i];
         if (!_inView(floater.x, floater.y, pad: 0.5)) continue;
@@ -1688,7 +1763,7 @@ class _TileRoomPainter extends CustomPainter {
             color: Color(floater.argb).withValues(alpha: alpha),
           ),
         );
-        tp.layout();
+        tp.layout(maxWidth: maxW);
         final c = center(floater.x, floater.y);
         tp.paint(canvas, Offset(c.dx - tp.width / 2, c.dy - tp.height / 2));
       }

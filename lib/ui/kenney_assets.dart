@@ -636,6 +636,10 @@ abstract final class KenneyAssets {
           return bow;
         case 'book':
           return CustomAssets.iconTome;
+        case 'bandage':
+          return potionGreen;
+        case 'flask':
+          return potionRed;
         default:
           break;
       }
@@ -728,6 +732,11 @@ abstract final class KenneyAssets {
 
   static String forgeIconFor(String title) {
     final upper = title.toUpperCase();
+    if (upper.contains('ATTACK SPEED') || upper.contains('HASTE')) {
+      return dagger;
+    }
+    if (upper.contains('MOVE') || upper.contains('SPEED')) return boots;
+    if (upper.contains('CRIT')) return iconStar;
     if (upper.contains('ATTACK')) return sword;
     if (upper.contains('DEFENSE')) return shield;
     if (upper.contains('VITALITY')) return potionRed;

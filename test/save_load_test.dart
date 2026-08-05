@@ -173,7 +173,7 @@ void main() {
     expect(loaded.ownedPets.first.id, pet.id);
   });
 
-  test('corrupt SharedPreferences save is cleared on load', () async {
+  test('corrupt SharedPreferences save is quarantined on load', () async {
     SharedPreferences.setMockInitialValues({
       'idle_party_save_v2': '{not-json',
     });
@@ -183,5 +183,6 @@ void main() {
     expect(await storage.hasSave(), isTrue);
     expect(await storage.load(), isNull);
     expect(await storage.hasSave(), isFalse);
+    expect(prefs.getString('idle_party_save_v2_corrupt'), '{not-json');
   });
 }
