@@ -359,65 +359,65 @@ abstract final class AbilityEffectRunner {
       case AbilityId.treeOfLife:
         hero.kitHealMul *= 1.30;
 
-      // —— melee DPS ——
+      // —— melee DPS (target ~1.22–1.30; Arms was wildly overtuned at 1.55) ——
       case AbilityId.armsStance:
-        hero.kitOutMul *= 1.55;
+        hero.kitOutMul *= 1.26;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
-        hero.kitOutMul *= 1.18;
+        hero.kitOutMul *= 1.22;
         hero.kitHasteMul *= 1.10;
         hero.kitInMul *= 1.06;
       case AbilityId.sealOfCommand:
-        hero.kitOutMul *= 1.38;
+        hero.kitOutMul *= 1.26;
       case AbilityId.improvedPoisons:
-        hero.kitOutMul *= 1.40;
+        hero.kitOutMul *= 1.36;
       case AbilityId.masterOfSubtlety:
-        hero.kitOutMul *= 1.40;
+        hero.kitOutMul *= 1.28;
       case AbilityId.frostPresence:
-        hero.kitOutMul *= 1.35;
+        hero.kitOutMul *= 1.26;
         hero.kitInMul *= 0.97;
       case AbilityId.unholyPresence:
-        hero.kitOutMul *= 1.35;
+        hero.kitOutMul *= 1.28;
         hero.kitHasteMul *= 1.12;
         // Ghoul companion spawned in SpatialCombat.build.
       case AbilityId.enhancementWeapons:
-        hero.kitOutMul *= 1.38;
+        hero.kitOutMul *= 1.26;
       case AbilityId.catForm:
         hero.kitOutMul *= 1.28;
         hero.kitHasteMul *= 1.10;
 
-      // —— ranged ——
+      // —— ranged (MM/Surv/BM were low share) ——
       case AbilityId.aspectOfHawk:
-        hero.kitOutMul *= 1.18;
+        hero.kitOutMul *= 1.38;
       case AbilityId.trueshotAura:
-        hero.kitOutMul *= 1.14;
-        hero.kitHasteMul *= 1.06;
+        hero.kitOutMul *= 1.36;
+        hero.kitHasteMul *= 1.10;
       case AbilityId.trapMastery:
-        hero.kitOutMul *= 1.30;
+        hero.kitOutMul *= 1.40;
         hero.kitRootBonus += 1.0;
 
-      // —— casters (mid-band ability spam outpaced melee ~2–3×) ——
+      // —— casters: identity buffs; spam tax is casterAbilityTax only ——
       case AbilityId.shadowform:
-        hero.kitOutMul *= 0.62;
+        hero.kitOutMul *= 1.12;
         hero.kitInMul *= 1.04;
       case AbilityId.elementalFocus:
-        hero.kitOutMul *= 0.62;
-        hero.kitHasteMul *= 1.05;
+        hero.kitOutMul *= 1.12;
+        hero.kitHasteMul *= 1.06;
       case AbilityId.arcanePowerPassive:
-        hero.kitOutMul *= 0.62;
+        hero.kitOutMul *= 1.14;
       case AbilityId.frostArmor:
         hero.kitInMul *= 0.92;
-        hero.kitOutMul *= 0.60;
+        hero.kitOutMul *= 1.10;
         hero.kitRootBonus += 0.5;
       case AbilityId.soulSiphon:
-        hero.kitOutMul *= 0.64;
+        hero.kitOutMul *= 1.12;
         hero.kitHealMul *= 1.06;
       case AbilityId.demonicKnowledge:
-        hero.kitOutMul *= 0.60;
+        hero.kitOutMul *= 1.10;
       case AbilityId.cataclysm:
-        hero.kitOutMul *= 0.60;
+        hero.kitOutMul *= 1.14;
       case AbilityId.moonkinForm:
-        hero.kitOutMul *= 0.66;
+        hero.kitOutMul *= 1.14;
 
       // Legacy kit passives are handled in dedicated tickers.
       case AbilityId.defensiveStance:

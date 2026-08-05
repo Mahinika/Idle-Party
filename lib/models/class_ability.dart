@@ -725,11 +725,11 @@ class ClassKits {
       shortLabel: 'Fireball',
       description: 'Hurls a heavy fire bolt at your focus.',
       unlockLevel: 3,
-      cooldown: 6.5,
+      cooldown: 5.8,
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 0.95,
+      coeff: 1.08,
     ),
     ClassAbilityDef(
       id: AbilityId.livingBomb,
@@ -864,7 +864,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.2,
+      coeff: 1.05,
     ),
     ClassAbilityDef(
       id: AbilityId.kidneyShot,
@@ -891,7 +891,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.6,
+      coeff: 0.48,
     ),
     ClassAbilityDef(
       id: AbilityId.sprint,
@@ -958,7 +958,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.7,
+      coeff: 1.45,
     ),
     ClassAbilityDef(
       id: AbilityId.overpower,
@@ -1658,11 +1658,11 @@ class ClassKits {
       shortLabel: 'Aimed',
       description: 'Heavy carefully aimed bolt.',
       unlockLevel: 5,
-      cooldown: 7,
+      cooldown: 6.5,
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.55,
+      coeff: 1.85,
     ),
     ClassAbilityDef(
       id: AbilityId.chimeraShot,
@@ -1784,7 +1784,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.75,
+      coeff: 0.90,
     ),
     ClassAbilityDef(
       id: AbilityId.freezingTrap,
@@ -1866,7 +1866,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.3,
+      coeff: 1.45,
     ),
     ClassAbilityDef(
       id: AbilityId.envenom,
@@ -1880,7 +1880,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.4,
+      coeff: 1.55,
     ),
     ClassAbilityDef(
       id: AbilityId.garrote,

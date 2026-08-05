@@ -42,10 +42,9 @@ void main() {
     var world = SpatialCombat.build(state);
     world = SpatialCombat.step(world, state, dt: 0.1).world;
     final mage = world.heroes.firstWhere((h) => !h.isPet);
-    // Arcane Intellect no longer crushes kitOutMul — Fire's dedicated ticker
-    // applies SpatialCombat.casterAbilityTax on spell hits instead.
-    expect(mage.kitOutMul, closeTo(1.0, 0.001));
-    expect(SpatialCombat.casterAbilityTax, closeTo(0.62, 0.001));
+    // Fire ticker sets mild personal heat; spam tax stays on spell hits.
+    expect(mage.kitOutMul, closeTo(1.22, 0.001));
+    expect(SpatialCombat.casterAbilityTax, closeTo(0.72, 0.001));
   });
 
   test('Inner Fire sets disc heal mul', () {

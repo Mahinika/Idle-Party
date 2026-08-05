@@ -14,6 +14,12 @@ import 'sim_harness.dart';
 /// ```
 /// Quick: pass `--dart-define=QUICK=1` or edit args in the test.
 ///
+/// Modes (`--mode=`):
+/// - `live` (default): 60 Hz, flask @35%, God Hand on CD, auto-equip — mirrors
+///   an attentive live run without manual pathing.
+/// - `afk`: offline catch-up parity (`afkAssist` + soft GH cadence).
+/// - `bare`: SpatialCombat only (legacy harness).
+///
 /// Direct (may fail outside Flutter embedder on some SDKs):
 /// ```
 /// dart run tool/sim_class_balance.dart --quick
@@ -28,6 +34,7 @@ String runClassBalanceSim(List<String> args) {
   final quick = args.contains('--quick');
   final partyLevel = _argInt(args, 'level', 12);
   final dungeonId = _argString(args, 'dungeon') ?? 'sandy';
+  final mode = _parseMode(_argString(args, 'mode') ?? 'live');
 
   seedEquipmentRng(42);
 
@@ -56,6 +63,7 @@ String runClassBalanceSim(List<String> args) {
   log('- party level: $partyLevel');
   log('- bands: ${bands.join(', ')}');
   log('- dungeon: $dungeonId');
+  log('- mode: ${mode.name} (flask+GH+auto-equip unless bare)');
   log('- quick: $quick');
   log('');
 
@@ -90,7 +98,7 @@ String runClassBalanceSim(List<String> args) {
           ),
       };
       for (final floor in floorList) {
-        log('## DPS · $band · ${anchor.$1} · F$floor');
+        log('## DPS · $band · ${anchor.$1} · F$floor · ${mode.name}');
         log('');
         final rows = <_AggRow>[];
         for (final dps in dpsSpecs) {
@@ -104,6 +112,7 @@ String runClassBalanceSim(List<String> args) {
               floor: floor,
               partyLevel: partyLevel,
               trials: trials,
+              mode: mode,
             ),
           );
         }
@@ -125,7 +134,7 @@ String runClassBalanceSim(List<String> args) {
   if (!quick) {
     for (final band in bands.where((b) => b == 'light' || b == 'mid')) {
       const floor = 5;
-      log('## Tank · $band · Disc+Fire · F$floor');
+      log('## Tank · $band · Disc+Fire · F$floor · ${mode.name}');
       log('');
       final rows = <_AggRow>[];
       for (final tank in tankSpecs) {
@@ -139,6 +148,7 @@ String runClassBalanceSim(List<String> args) {
             floor: floor,
             partyLevel: partyLevel,
             trials: trials,
+            mode: mode,
           ),
         );
       }
@@ -151,7 +161,7 @@ String runClassBalanceSim(List<String> args) {
 
     for (final band in bands.where((b) => b == 'light' || b == 'mid')) {
       const floor = 5;
-      log('## Healer · $band · Prot+Fire · F$floor');
+      log('## Healer · $band · Prot+Fire · F$floor · ${mode.name}');
       log('');
       final rows = <_AggRow>[];
       for (final heal in healerSpecs) {
@@ -165,6 +175,7 @@ String runClassBalanceSim(List<String> args) {
             floor: floor,
             partyLevel: partyLevel,
             trials: trials,
+            mode: mode,
           ),
         );
       }
@@ -223,6 +234,7 @@ _AggRow _runAgg({
   required int floor,
   required int partyLevel,
   required int trials,
+  required SimPlayMode mode,
 }) {
   var clears = 0;
   var wipes = 0;
@@ -236,15 +248,14 @@ _AggRow _runAgg({
   for (var t = 0; t < trials; t++) {
     seedEquipmentRng(42 + t);
     var state = createPartyState(partySpecs: partySpecs);
-    state = applyPowerBand(state, band);
-    state = levelPartyTo(state, partyLevel);
+    state = prepareSimParty(state, band: band, partyLevel: partyLevel);
     state = enterFloor(
       state,
       dungeonId: dungeonId,
       floor: floor,
       seed: 1000 + t * 97 + floor * 13 + focusSpec.index * 3,
     );
-    final r = simulateFloor(state);
+    final r = simulateFloor(state, mode: mode);
     if (r.cleared) {
       clears++;
       clearTimes.add(r.seconds);
@@ -399,40 +410,42 @@ void _flagTankOutliers(void Function(String) log, List<_AggRow> rows) {
   );
   log('');
   log(
-    '### Outliers (tank wipe≤${(wipeMed + 15).toStringAsFixed(0)}pp; '
-    'HP≥${(hpMed - 10).toStringAsFixed(0)}%)',
+    '### Tank outliers (wipe med ${wipeMed.toStringAsFixed(0)}%, '
+    'HP med ${hpMed.toStringAsFixed(0)}%)',
   );
   for (final r in rows) {
-    if (r.wipePct * 100 > wipeMed + 15) {
-      log('- **HIGH WIPE** ${r.label}: ${_pct(r.wipePct)}');
+    final wipe = r.wipePct * 100;
+    if (wipe > wipeMed + 20) {
+      log('- **FRAGILE** ${r.label}: wipe ${_pct(r.wipePct)}');
     }
-    if (r.clearPct > 0 && r.hpMedian < hpMed - 10) {
-      log('- **LOW HP** ${r.label}: ${r.hpMedian.toStringAsFixed(0)}%');
+    if (r.clearPct > 0 && r.hpMedian < hpMed - 15) {
+      log('- **LOW HP** ${r.label}: party ${r.hpMedian.toStringAsFixed(0)}%');
     }
   }
 }
 
 void _flagHealerOutliers(void Function(String) log, List<_AggRow> rows) {
-  final clearMed = medianOf(rows.map((r) => r.clearPct * 100).toList());
+  final wipeMed = medianOf(rows.map((r) => r.wipePct * 100).toList());
   final hpMed = medianOf(
     rows.where((r) => r.clearPct > 0).map((r) => r.hpMedian).toList(),
   );
   log('');
   log(
-    '### Outliers (healer clear≥${(clearMed - 10).toStringAsFixed(0)}%; '
-    'HP≥${(hpMed - 10).toStringAsFixed(0)}%)',
+    '### Healer outliers (wipe med ${wipeMed.toStringAsFixed(0)}%, '
+    'HP med ${hpMed.toStringAsFixed(0)}%)',
   );
   for (final r in rows) {
-    if (r.clearPct * 100 < clearMed - 10) {
-      log('- **LOW CLEAR** ${r.label}: ${_pct(r.clearPct)}');
+    final wipe = r.wipePct * 100;
+    if (wipe > wipeMed + 20) {
+      log('- **WEAK HEALS** ${r.label}: wipe ${_pct(r.wipePct)}');
     }
-    if (r.clearPct > 0 && r.hpMedian < hpMed - 10) {
-      log('- **LOW HP** ${r.label}: ${r.hpMedian.toStringAsFixed(0)}%');
+    if (r.clearPct > 0 && r.hpMedian < hpMed - 15) {
+      log('- **LOW HP** ${r.label}: party ${r.hpMedian.toStringAsFixed(0)}%');
     }
   }
 }
 
-String _pct(double f) => '${(f * 100).toStringAsFixed(0)}%';
+String _pct(double frac) => '${(frac * 100).toStringAsFixed(0)}%';
 
 int _argInt(List<String> args, String name, int fallback) {
   final prefix = '--$name=';
@@ -447,7 +460,20 @@ int _argInt(List<String> args, String name, int fallback) {
 String? _argString(List<String> args, String name) {
   final prefix = '--$name=';
   for (final a in args) {
-    if (a.startsWith(prefix)) return a.substring(prefix.length);
+    if (a.startsWith(prefix)) {
+      return a.substring(prefix.length);
+    }
   }
   return null;
+}
+
+SimPlayMode _parseMode(String raw) {
+  return switch (raw.toLowerCase()) {
+    'bare' => SimPlayMode.bare,
+    'afk' => SimPlayMode.afk,
+    'live' => SimPlayMode.live,
+    _ => throw ArgumentError(
+        'Unknown --mode=$raw (expected live|afk|bare)',
+      ),
+  };
 }

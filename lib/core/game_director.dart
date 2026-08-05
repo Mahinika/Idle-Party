@@ -141,7 +141,6 @@ class GameDirector extends ChangeNotifier {
   SpatialWorld? _spatial;
   Timer? _spatialTimer;
   Timer? _uiTimer;
-  int _roomGold = 0;
   int _battleToken = 0;
   int _uiThrottle = 0;
   int _visualFrame = 0;
@@ -404,7 +403,6 @@ class GameDirector extends ChangeNotifier {
 
   void _rebuildSpatial() {
     _spatial = SpatialCombat.build(_state);
-    _roomGold = 0;
     _battleToken = _state.battleNumber;
   }
 
@@ -451,10 +449,10 @@ class GameDirector extends ChangeNotifier {
       _spatial = result.world;
       _state = result.state;
       // Only bank this-tick kill gold — clear-frame must not re-fold the room.
-      if (!result.roomCleared) {
-        _roomGold += result.goldFromKills;
-      } else if (result.goldFromKills > 0) {
-        _roomGold += result.goldFromKills;
+      // Kill gold is credited immediately below (survives wipe).
+      // Credit kill gold immediately so wipe cannot erase floater "+Ng".
+      if (result.goldFromKills > 0) {
+        _state = GameLogic.creditCombatGold(_state, result.goldFromKills);
       }
       // Count casts live; defer achievement scan to room clear / discrete events.
       if (result.abilityCasts > 0) {
@@ -573,11 +571,8 @@ class GameDirector extends ChangeNotifier {
       if (result.roomCleared) {
         final floorNo = _state.currentRoom.floorNumber;
         final wasTreasure = _spatial?.isTreasure ?? false;
-        final gold = wasTreasure
-            ? GameLogic.roomCombatBudget(_state.currentRoom).gold
-            : (_roomGold > 0
-                  ? _roomGold
-                  : _state.enemies.fold<int>(0, (s, e) => s + e.rewardGold));
+        // Combat gold already credited per kill; treasure pays scaled chest budget.
+        final gold = wasTreasure ? GameLogic.treasureGoldBudget(_state) : 0;
         final beforeDungeon = _state.highestDungeonCleared;
         final wasBoss = _state.currentRoom.type == RoomType.boss;
         final beforeClear = _state;
@@ -596,13 +591,15 @@ class GameDirector extends ChangeNotifier {
           GameAudio.clear();
         }
         _state = MetaSystems.evaluateAchievements(_state);
-        _clearSummary = 'FLOOR $floorNo CLEAR  +${gold}g';
+        final goldDelta = _state.gold - beforeClear.gold;
+        final essDelta = _state.essence - beforeClear.essence;
+        _clearSummary = goldDelta > 0
+            ? 'FLOOR $floorNo CLEAR  +${goldDelta}g'
+            : 'FLOOR $floorNo CLEAR';
         if (beforeClear.inGauntlet) {
-          final ess = GameLogic.gauntletEssenceForFloor(
-            floorNo,
-            boss: wasBoss,
-          );
-          _clearSummary = 'GAUNTLET F$floorNo  +${gold}g  +${ess}e';
+          _clearSummary = essDelta > 0
+              ? 'GAUNTLET F$floorNo  +${goldDelta}g  +${essDelta}e'
+              : 'GAUNTLET F$floorNo  +${goldDelta}g';
         }
         final matGrants = GameLogic.takeCraftMatGrants();
         if (matGrants.isNotEmpty) {
@@ -783,7 +780,9 @@ class GameDirector extends ChangeNotifier {
     );
     _spatial = result.world;
     _state = result.state;
-    _roomGold += result.goldFromKills;
+    if (result.goldFromKills > 0) {
+      _state = GameLogic.creditCombatGold(_state, result.goldFromKills);
+    }
     if (result.kills > 0) {
       final g = result.goldFromKills;
       showToast(

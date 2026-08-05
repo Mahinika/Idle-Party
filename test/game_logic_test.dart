@@ -382,6 +382,33 @@ void main() {
     expect(b6.hp, lessThan(b5.hp)); // normal floor after boss is softer than boss
   });
 
+  test('treasure gold scales with zone HM and AL', () {
+    final room = DungeonGenerator.generateFloor(6).first;
+    expect(room.type, RoomType.treasure);
+    final base = GameLogic.roomCombatBudget(room, dungeonId: 'sandy');
+    final hell = GameLogic.roomCombatBudget(room, dungeonId: 'hell');
+    final hm = GameLogic.roomCombatBudget(
+      room,
+      dungeonId: 'sandy',
+      hardmodeLevel: 5,
+    );
+    final al = GameLogic.roomCombatBudget(
+      room,
+      dungeonId: 'sandy',
+      ascensionLevel: 8,
+    );
+    expect(hell.gold, greaterThan(base.gold));
+    expect(hm.gold, greaterThan(base.gold));
+    expect(al.gold, greaterThan(base.gold));
+  });
+
+  test('creditCombatGold banks kill gold immediately', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final next = GameLogic.creditCombatGold(state, 40);
+    expect(next.gold, greaterThan(state.gold));
+    expect(next.lifetimeGoldEarned, greaterThan(state.lifetimeGoldEarned));
+  });
+
   test('essence can unlock relic bonuses', () {
     final initial = GameLogic.createInitialState(
       now: DateTime(2026, 7, 4),

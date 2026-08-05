@@ -2104,7 +2104,8 @@ abstract final class SpatialCombat {
 
   /// Single caster outgoing tax (Int kits spam harder than Str melee).
   /// Used by AbilityEffectRunner and Fire's dedicated ticker — keep in sync.
-  static const double casterAbilityTax = 0.62;
+  /// Passives must NOT also crush kitOutMul (would double-tax SpecKit casters).
+  static const double casterAbilityTax = 0.72;
 
   static void _tickMageAbilities(
     SpatialWorld world,
@@ -2116,6 +2117,8 @@ abstract final class SpatialCombat {
     if (mage.heroRole != HeroRole.mage || !mage.isAlive) return;
     // Arcane Intellect — personal spell power (party aura is GameState caster aura).
     // Fire ticker bypasses SpecKit _abilityOutScale; apply [casterAbilityTax] on hits.
+    // Mild personal heat so Fire keeps pace with SpecKit casters (~1.12×tax).
+    mage.kitOutMul = 1.22;
     if (focusEnemy != null) _gainRage(mage, 8 * dt);
     _gainRage(mage, (mage.spiritRegenBonus + mage.mp5RegenBonus) * dt);
     bool can(AbilityId id) => _canCast(mage, id);
@@ -2419,7 +2422,8 @@ abstract final class SpatialCombat {
     if (rogue.heroRole != HeroRole.rogue || !rogue.isAlive) return;
     if (rogue.heroSpecId == HeroSpecId.combat ||
         rogue.heroSpecId == null) {
-      rogue.kitOutMul = 1.22;
+      // Combo + Blade Flurry inflate share; keep below melee band.
+      rogue.kitOutMul = 0.90;
     }
     if (focusEnemy != null) {
       _gainRage(rogue, 10 * dt);
@@ -3807,11 +3811,12 @@ abstract final class SpatialCombat {
       world.treasureTimer -= dt;
       if (world.treasureTimer <= 0) {
         world.treasureOpen = true;
+        // Chest gold paid once in completeCurrentRoom via treasureGoldBudget.
         return _stepResult(
           world,
           nextState,
           roomCleared: true,
-          goldFromKills: GameLogic.roomCombatBudget(state.currentRoom).gold,
+          goldFromKills: 0,
         );
       }
       return _stepResult(world, nextState);

@@ -171,7 +171,8 @@ class GameLogic {
 
   static int newLayoutSeed() => random.nextInt(0x3fffffff);
 
-  static const double ascensionDropPenalty = 0.15;
+  /// AL gear skip per level — blunted by loot-find / HM / elite-boss relief.
+  static const double ascensionDropPenalty = 0.10;
 
   static Map<String, String> get dungeonNames => {
     for (final d in DungeonCatalog.all) d.id: d.name,
@@ -1716,6 +1717,34 @@ class GameLogic {
     return baseGold + (baseGold * percent) ~/ 100;
   }
 
+  /// Credit kill / God Hand gold immediately (survives wipe; matches floaters).
+  /// Includes Gauntlet floor mul + [applyGoldGain] bonuses.
+  static GameState creditCombatGold(GameState state, int baseGold) {
+    if (baseGold <= 0) return state;
+    final mul = state.inGauntlet
+        ? gauntletGoldMul(state.currentRoom.floorNumber)
+        : 1.0;
+    final gained = applyGoldGain(state, (baseGold * mul).round());
+    if (gained <= 0) return state;
+    final paid = state.copyWith(
+      gold: state.gold + gained,
+      lifetimeGoldEarned: state.lifetimeGoldEarned + gained,
+    );
+    // Earn-gold missions previously tracked clear-time awards only.
+    return applyMissionProgress(paid, goldEarned: gained);
+  }
+
+  /// Treasure / chest gold budget using full zone · HM · AL · gear pressure.
+  static int treasureGoldBudget(GameState state) {
+    return roomCombatBudget(
+      state.currentRoom,
+      dungeonId: state.dungeonId,
+      hardmodeLevel: state.hardmodeLevel,
+      ascensionLevel: state.ascensionLevel,
+      gearPressure: partyGearPressure(state),
+    ).gold;
+  }
+
   /// Prestige: reset the run, keep essence/relics/sanctuary/pets/soulbound, bump AL.
   /// Returns [state] unchanged if Ascend is locked.
   static GameState ascend(GameState state, {DateTime? now}) {
@@ -2640,7 +2669,13 @@ class GameLogic {
             gp)
         .round();
     final gold =
-        (((12 + level * 2.5) * (isBoss ? 3.4 : 1.0) * diff) * hmGold).round();
+        (((12 + level * 2.5) *
+                    (isBoss ? 3.4 : 1.0) *
+                    diff *
+                    zoneMult *
+                    (1.0 + ascensionLevel.clamp(0, 20) * 0.025)) *
+                hmGold)
+            .round();
 
     return (attack: attack, hp: hp, gold: gold);
   }
@@ -3282,7 +3317,6 @@ class GameLogic {
       threatScale: threatScale,
       afkAssist: afkAssist,
     );
-    var roomGold = 0;
     var floorsCleared = 0;
     var abilityCasts = 0;
 
@@ -3293,7 +3327,9 @@ class GameLogic {
       final result = SpatialCombat.step(world, current, dt: dt);
       world = result.world;
       current = result.state;
-      roomGold += result.goldFromKills;
+      if (result.goldFromKills > 0) {
+        current = creditCombatGold(current, result.goldFromKills);
+      }
       abilityCasts += result.abilityCasts;
       // Live parity: wear clear upgrades mid-floor and sync actor sheets.
       if (current.gearStash.length > stashLenBefore) {
@@ -3330,7 +3366,6 @@ class GameLogic {
           threatScale: threatScale,
           afkAssist: afkAssist,
         );
-        roomGold = 0;
         continue;
       }
 
@@ -3370,25 +3405,23 @@ class GameLogic {
           );
           world = gh.world;
           current = gh.state;
-          roomGold += gh.goldFromKills;
+          if (gh.goldFromKills > 0) {
+            current = creditCombatGold(current, gh.goldFromKills);
+          }
         }
       }
 
       if (!result.roomCleared) continue;
 
       final wasTreasure = world.isTreasure;
-      final gold = wasTreasure
-          ? roomCombatBudget(current.currentRoom).gold
-          : (roomGold > 0
-              ? roomGold
-              : current.enemies.fold<int>(0, (s, e) => s + e.rewardGold));
+      // Combat gold already credited per kill; treasure pays scaled chest budget.
+      final gold = wasTreasure ? treasureGoldBudget(current) : 0;
       current = completeCurrentRoom(
         current,
         goldGain: gold,
         skipLootRoll: !wasTreasure,
       );
       floorsCleared++;
-      roomGold = 0;
       if (!current.inDungeon || floorsCleared >= maxFloors) break;
       world = SpatialCombat.build(
         current,
@@ -3410,6 +3443,12 @@ class GameLogic {
       state: current.copyWith(vfxQuality: preferVfx),
       roomsCleared: floorsCleared,
     );
+  }
+
+  /// Nearest awake enemy to living party centroid, or null if none.
+  /// Shared by AFK catch-up and balance sims (live/AFK assist aim).
+  static (double, double)? godHandAim(SpatialWorld world) {
+    return _offlineGodHandAim(world);
   }
 
   /// Nearest awake enemy to living party centroid, or null if none.
@@ -3834,9 +3873,9 @@ class GameLogic {
     // AL drop penalty: chance to skip gear entirely (pets / HM / elites blunt).
     final skipChance = (ascensionLevel * ascensionDropPenalty -
             lootFindPercent / 100.0 -
-            hm * 0.01 -
+            hm * 0.012 -
             roleSkipRelief)
-        .clamp(0.0, 0.75);
+        .clamp(0.0, 0.55);
     if (random.nextDouble() < skipChance) {
       return <LootDrop>[
         const LootDrop(
@@ -5679,6 +5718,8 @@ class GameLogic {
     final goldMul = awarded.inGauntlet
         ? gauntletGoldMul(room.floorNumber)
         : 1.0;
+    // Combat kill gold is credited live via [creditCombatGold]. Clear only
+    // pays treasure/chest budgets (and any explicit leftover goldGain).
     final goldAwarded =
         applyGoldGain(awarded, (goldGain * goldMul).round());
     final farmLoop = awarded.dungeonMode == DungeonMode.farm;
