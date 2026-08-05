@@ -48,7 +48,11 @@ abstract final class CustomAssets {
       ];
 
   /// Pet instance ids look like `ember_pup_12345`.
+  /// Combat actors use `classpet_*` / `temppet_*` — map by name theme.
   static String petForInstanceId(String petId) {
+    if (petId.startsWith('classpet_') || petId.startsWith('temppet_')) {
+      return petForCombatActorId(petId);
+    }
     for (final key in const [
       'ember_pup',
       'ash_fox',
@@ -69,6 +73,32 @@ abstract final class CustomAssets {
       }
     }
     return petEgg;
+  }
+
+  /// Class / temp combat pets (`classpet_*`, `temppet_water_*`, …).
+  static String petForCombatActorId(String petId, [String? displayName]) {
+    final key = '${petId}_${displayName ?? ''}'.toLowerCase();
+    if (key.contains('water') || key.contains('elemental')) {
+      return enemyCrystalWraith;
+    }
+    if (key.contains('wolf') ||
+        key.contains('spirit') ||
+        key.contains('feral')) {
+      return petWardenCub;
+    }
+    if (key.contains('ghoul') ||
+        key.contains('army') ||
+        key.contains('dead') ||
+        key.contains('skel')) {
+      return enemyGhost;
+    }
+    if (key.contains('demon') || key.contains('imp') || key.contains('fel')) {
+      return enemyCultist;
+    }
+    if (key.contains('beast') || key.contains('pet')) {
+      return petCaveBat;
+    }
+    return petEmberPup;
   }
 
   // —— Armor / jewelry slot icons ——

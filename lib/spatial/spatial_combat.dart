@@ -9,8 +9,11 @@ import '../models/enemy.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import '../models/spell_bolt_style.dart';
 import '../ui/kenney_assets.dart';
 import 'tile_map.dart';
+
+export '../models/spell_bolt_style.dart';
 
 part 'ability_effects.dart';
 
@@ -194,8 +197,6 @@ class SpatialActor {
   double kitRootBonus = 0.0;
 
   // ?? Mage (Fire) ??
-  bool queuedFireball = false;
-  bool queuedPyroblast = false;
   double combustionTimer = 0;
   double iceBlockTimer = 0;
   /// While a Living Bomb you cast is still ticking on any foe.
@@ -293,31 +294,10 @@ class SpatialActor {
           HeroSpecs.def(heroSpecId!).roleTag == SpecRoleTag.caster;
       m *= caster ? 1.22 : 1.4;
     }
-    if (combustionTimer > 0) m *= 1.08;
+    // Combustion amps spell damage elsewhere — do not also haste whites.
     if (iceBlockTimer > 0) m = 0;
     return m;
   }
-}
-
-enum SpellBoltStyle {
-  /// Generic yellow weapon bolt / enemy shot.
-  weapon,
-  /// Fireball orb (Fire Mage, Lava Burst, Destruction).
-  fire,
-  /// Icy bolt (Frost Mage).
-  frost,
-  /// Holy spark (Priest / Paladin).
-  holy,
-  /// Arcane orb (Arcane Mage).
-  arcane,
-  /// Shadow bolt (Warlock / Shadow Priest).
-  shadow,
-  /// Nature / balance starfire-style.
-  nature,
-  /// Hunter arrow.
-  arrow,
-  /// Shaman lightning bolt.
-  lightning,
 }
 
 class SpatialProjectile {
@@ -451,6 +431,25 @@ enum SpatialBurstKind {
   spark,
 }
 
+/// Lasting ground disc (Consecration / Bladestorm / Shadowfury).
+class SpatialGroundFx {
+  SpatialGroundFx({
+    required this.x,
+    required this.y,
+    required this.radius,
+    required this.argb,
+    required this.life,
+    required this.maxLife,
+  });
+
+  double x;
+  double y;
+  double radius;
+  int argb;
+  double life;
+  double maxLife;
+}
+
 class SpatialWorld {
   SpatialWorld({
     required this.map,
@@ -482,12 +481,15 @@ class SpatialWorld {
     this.petMitigateFlat = 0,
     this.petHealBoost = 0,
     this.pendingAbilityCasts = 0,
+    this.godHandRadius = 1.8,
     List<SpatialFloater>? floaters,
     List<SpatialBurst>? bursts,
+    List<SpatialGroundFx>? groundFx,
   })  : openGateIds = openGateIds ?? <int>{},
         clearedChambers = clearedChambers ?? <int>{},
         floaters = floaters ?? <SpatialFloater>[],
-        bursts = bursts ?? <SpatialBurst>[];
+        bursts = bursts ?? <SpatialBurst>[],
+        groundFx = groundFx ?? <SpatialGroundFx>[];
 
   final TileMap map;
   final List<SpatialActor> heroes;
@@ -497,6 +499,7 @@ class SpatialWorld {
   final List<SpatialActor> pets;
   final List<SpatialFloater> floaters;
   final List<SpatialBurst> bursts;
+  final List<SpatialGroundFx> groundFx;
   final bool isTreasure;
   /// When true, enemy outgoing damage is softened (offline AFK sim).
   final bool afkAssist;
@@ -530,6 +533,9 @@ class SpatialWorld {
 
   /// Ability casts this [SpatialCombat.step] (flushed into [SpatialStepResult]).
   int pendingAbilityCasts;
+
+  /// Cached God Hand radius for guide ring paint (set on cast).
+  double godHandRadius;
 
   int get cols => map.cols;
   int get rows => map.rows;
@@ -605,6 +611,7 @@ abstract final class SpatialCombat {
   static const int _maxFloaters = 12;
   static const int _maxBursts = 14;
   static const int _maxProjectiles = 36;
+  static const int _maxGroundFx = 6;
 
   static void _spawnFloater(
     SpatialWorld world, {
@@ -730,6 +737,64 @@ abstract final class SpatialCombat {
       life: life,
       kind: SpatialBurstKind.ring,
     );
+  }
+
+  static void _spawnGroundFx(
+    SpatialWorld world, {
+    required double x,
+    required double y,
+    required int argb,
+    double radius = 2.7,
+    double life = 4.5,
+  }) {
+    if (world.groundFx.length >= _maxGroundFx) {
+      world.groundFx.removeAt(0);
+    }
+    world.groundFx.add(
+      SpatialGroundFx(
+        x: x,
+        y: y,
+        radius: radius,
+        argb: argb,
+        life: life,
+        maxLife: life,
+      ),
+    );
+  }
+
+  /// Mid-fight flask heal feedback on living heroes.
+  static void spawnFlaskHealFx(
+    SpatialWorld world, {
+    required bool reducedVfx,
+  }) {
+    if (reducedVfx) return;
+    for (final h in world.heroes) {
+      if (!h.isAlive) continue;
+      _spawnRing(
+        world,
+        x: h.x,
+        y: h.y,
+        argb: 0xFF60E080,
+        radius: 0.95,
+        life: 0.45,
+      );
+      _spawnSpark(
+        world,
+        x: h.x,
+        y: h.y - 0.15,
+        argb: 0xFFA0FFB0,
+        radius: 0.4,
+      );
+      _spawnFloater(
+        world,
+        x: h.x,
+        y: h.y - 0.45,
+        text: 'FLASK',
+        argb: 0xFF70F090,
+        life: 0.55,
+        priority: 1,
+      );
+    }
   }
 
   static void _spawnCone(
@@ -2037,6 +2102,10 @@ abstract final class SpatialCombat {
     }
   }
 
+  /// Single caster outgoing tax (Int kits spam harder than Str melee).
+  /// Used by AbilityEffectRunner and Fire's dedicated ticker — keep in sync.
+  static const double casterAbilityTax = 0.62;
+
   static void _tickMageAbilities(
     SpatialWorld world,
     SpatialActor mage,
@@ -2046,10 +2115,7 @@ abstract final class SpatialCombat {
   }) {
     if (mage.heroRole != HeroRole.mage || !mage.isAlive) return;
     // Arcane Intellect — personal spell power (party aura is GameState caster aura).
-    // Fire's dedicated ticker bypasses SpecKit _abilityOutScale; keep a hard tax.
-    if (ClassKits.isUnlocked(AbilityId.arcaneIntellect, mage.heroLevel)) {
-      mage.kitOutMul = 0.72;
-    }
+    // Fire ticker bypasses SpecKit _abilityOutScale; apply [casterAbilityTax] on hits.
     if (focusEnemy != null) _gainRage(mage, 8 * dt);
     _gainRage(mage, (mage.spiritRegenBonus + mage.mp5RegenBonus) * dt);
     bool can(AbilityId id) => _canCast(mage, id);
@@ -2156,7 +2222,7 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.livingBomb, def.cooldown);
       focusEnemy.livingBombTimer = 8;
       focusEnemy.livingBombDps =
-          math.max(3.0, mage.attack * 0.22 * mage.kitOutMul * 0.70);
+          math.max(3.0, mage.attack * 0.22 * mage.kitOutMul * casterAbilityTax);
       focusEnemy.livingBombCasterId = mage.id;
       mage.livingBombArmed = 8;
       if (!reducedVfx) {
@@ -2236,7 +2302,7 @@ abstract final class SpatialCombat {
         _spendRage(mage, def.resourceCost);
         _startAbilityCd(world, mage, AbilityId.blastWave, def.cooldown);
         final dmg =
-            math.max(2, (mage.attack * 0.42 * mage.kitOutMul * 0.70).round());
+            math.max(2, (mage.attack * 0.42 * mage.kitOutMul * casterAbilityTax).round());
         for (final e in nearby) {
           final dealt = math.max(1, dmg - e.effectiveDefense);
           e.hp = math.max(0, e.hp - dealt);
@@ -2289,7 +2355,7 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.pyroblast, def.cooldown);
       mage.attackFlash = 0.22;
       var dmg =
-          math.max(3, (mage.attack * 1.35 * mage.kitOutMul * 0.70).round());
+          math.max(3, (mage.attack * 1.35 * mage.kitOutMul * casterAbilityTax).round());
       if (mage.combustionTimer > 0) dmg = (dmg * 1.05).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
@@ -2319,7 +2385,7 @@ abstract final class SpatialCombat {
       _startAbilityCd(world, mage, AbilityId.fireball, def.cooldown);
       mage.attackFlash = 0.18;
       var dmg =
-          math.max(2, (mage.attack * 0.95 * mage.kitOutMul * 0.70).round());
+          math.max(2, (mage.attack * 0.95 * mage.kitOutMul * casterAbilityTax).round());
       if (mage.combustionTimer > 0) dmg = (dmg * 1.05).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
@@ -2534,7 +2600,8 @@ abstract final class SpatialCombat {
       }
     }
 
-    if (rogue.comboPoints >= 3 &&
+    // Maintain SnD early (≥2 CP) so short FARM waves still get the buff.
+    if (rogue.comboPoints >= 2 &&
         rogue.sliceAndDiceTimer < 2 &&
         can(AbilityId.sliceAndDice)) {
       final def = ClassKits.defFor(AbilityId.sliceAndDice)!;
@@ -2617,25 +2684,7 @@ abstract final class SpatialCombat {
       damage = math.max(1, (damage * 1.08).round());
     }
     if (hero.heroSpecId == HeroSpecId.fire) {
-      // Combustion amps kit spells only — whites stay baseline so mid gear
-      // does not double-dip haste+amp autos with Fireball/Pyro.
-      if (hero.queuedPyroblast) {
-        hero.queuedPyroblast = false;
-        damage = (damage * 2.0).round();
-        tag = 'PYRO';
-        tagArgb = 0xFFFF5020;
-        if (hero.combustionTimer > 0) {
-          damage = (damage * 1.1).round();
-        }
-      } else if (hero.queuedFireball) {
-        hero.queuedFireball = false;
-        damage = (damage * 1.45).round();
-        tag = 'FIREBALL';
-        tagArgb = 0xFFFF8040;
-        if (hero.combustionTimer > 0) {
-          damage = (damage * 1.1).round();
-        }
-      }
+      // Whites stay baseline; kit spells apply Combustion in the Fire ticker.
     }
 
     if (hero.heroSpecId == HeroSpecId.combat ||
@@ -2681,6 +2730,10 @@ abstract final class SpatialCombat {
       b.life -= dt;
     }
     world.bursts.removeWhere((b) => b.life <= 0);
+    for (final g in world.groundFx) {
+      g.life -= dt;
+    }
+    world.groundFx.removeWhere((g) => g.life <= 0);
     void tickFlash(SpatialActor a) {
       if (a.attackFlash > 0) {
         a.attackFlash = (a.attackFlash - dt).clamp(0, 1);
@@ -2892,6 +2945,7 @@ abstract final class SpatialCombat {
           attackRange: 1.35,
           attackCooldown: 0.8,
           isPet: true,
+          petOwnerId: leader.id,
           fireCooldown: 0.25,
         ),
       );
@@ -3103,6 +3157,7 @@ abstract final class SpatialCombat {
           attackRange: 1.35,
           attackCooldown: 0.8,
           isPet: true,
+          petOwnerId: leader.id,
           fireCooldown: prevPet?.fireCooldown ?? 0.25,
         ),
       );
@@ -3186,6 +3241,8 @@ abstract final class SpatialCombat {
       pendingAbilityCasts: world.pendingAbilityCasts,
       floaters: world.floaters,
       bursts: world.bursts,
+      groundFx: world.groundFx,
+      godHandRadius: world.godHandRadius,
     );
   }
 
@@ -3216,8 +3273,6 @@ abstract final class SpatialCombat {
     to.kitHealMul = from.kitHealMul;
     to.kitHasteMul = from.kitHasteMul;
     to.kitRootBonus = from.kitRootBonus;
-    to.queuedFireball = from.queuedFireball;
-    to.queuedPyroblast = from.queuedPyroblast;
     to.combustionTimer = from.combustionTimer;
     to.iceBlockTimer = from.iceBlockTimer;
     to.livingBombArmed = from.livingBombArmed;
@@ -3301,6 +3356,9 @@ abstract final class SpatialCombat {
     String? label,
     ClassAbilityDef? def,
   }) {
+    final fromVfx = def?.vfx?.boltStyle ?? def?.boltStyle;
+    if (fromVfx != null) return fromVfx;
+
     final classId = hero.heroSpecId != null
         ? HeroSpecs.def(hero.heroSpecId!).classId
         : null;
@@ -3372,13 +3430,16 @@ abstract final class SpatialCombat {
           'smite',
           'penance',
           'flash',
-          'heal',
           'light',
           'consecrat',
           'exorcism',
           'divine',
           'hammer of wrath',
         ]) ||
+        // 'heal' → holy only for priest/paladin (shaman/druid stay nature).
+        (_keyHasAny(key, const ['heal']) &&
+            (classId == HeroClassId.priest ||
+                classId == HeroClassId.paladin)) ||
         (key.contains('nova') && classId == HeroClassId.priest) ||
         (key.contains('wrath') && classId == HeroClassId.paladin) ||
         (key.contains('storm') && classId == HeroClassId.paladin)) {
@@ -3393,23 +3454,43 @@ abstract final class SpatialCombat {
           'rejuve',
           'regrowth',
           'nourish',
+          'riptide',
+          'chain heal',
+          'healing rain',
+          'wild growth',
+          'tranquility',
+          'lifebloom',
         ]) ||
-        (key.contains('wrath') && classId == HeroClassId.druid)) {
+        (key.contains('wrath') && classId == HeroClassId.druid) ||
+        (key.contains('heal') &&
+            (classId == HeroClassId.shaman ||
+                classId == HeroClassId.druid))) {
       return SpellBoltStyle.nature;
     }
+    // Hunter shots / traps — avoid matching rogue *Shot / killingSpree.
     if (classId == HeroClassId.hunter ||
         _keyHasAny(key, const [
           'arrow',
-          'shot',
           'aimed',
           'multi',
           'steady',
           'chimera',
           'chim',
-          'kill',
           'serpent',
-          'trap',
-        ])) {
+          'kill command',
+          'black arrow',
+        ]) ||
+        (key.contains('shot') &&
+            !key.contains('cheap') &&
+            !key.contains('kidney') &&
+            (classId == HeroClassId.hunter ||
+                key.contains('arcane shot') ||
+                key.contains('aimed') ||
+                key.contains('multi') ||
+                key.contains('steady') ||
+                key.contains('chimera') ||
+                key.contains('scatter') ||
+                key.contains('explosive')))) {
       return SpellBoltStyle.arrow;
     }
     if (_keyHasAny(key, const [
@@ -3433,6 +3514,7 @@ abstract final class SpatialCombat {
 
   static SpellBoltStyle? _boltStyleForAbilityId(AbilityId id) {
     return switch (id) {
+      // —— Fire ——
       AbilityId.immolateDemo ||
       AbilityId.immolateDestro ||
       AbilityId.incinerate ||
@@ -3446,8 +3528,12 @@ abstract final class SpatialCombat {
       AbilityId.livingBomb ||
       AbilityId.fireball ||
       AbilityId.pyroblast ||
-      AbilityId.combustion =>
+      AbilityId.combustion ||
+      AbilityId.explosiveTrap ||
+      AbilityId.explosiveShot =>
         SpellBoltStyle.fire,
+
+      // —— Frost ——
       AbilityId.frostShock ||
       AbilityId.howlingBlast ||
       AbilityId.frostbolt ||
@@ -3457,8 +3543,12 @@ abstract final class SpatialCombat {
       AbilityId.frostNovaMage ||
       AbilityId.hungeringCold ||
       AbilityId.chainsOfIce ||
-      AbilityId.frostStrike =>
+      AbilityId.frostStrike ||
+      AbilityId.freezingTrap ||
+      AbilityId.iceBlock =>
         SpellBoltStyle.frost,
+
+      // —— Lightning ——
       AbilityId.thunderClap ||
       AbilityId.chainLightning ||
       AbilityId.lightningBolt ||
@@ -3466,6 +3556,8 @@ abstract final class SpatialCombat {
       AbilityId.earthShock ||
       AbilityId.stormstrike =>
         SpellBoltStyle.lightning,
+
+      // —— Holy ——
       AbilityId.holyPriestNova ||
       AbilityId.holyWrath ||
       AbilityId.divineStorm ||
@@ -3475,23 +3567,58 @@ abstract final class SpatialCombat {
       AbilityId.hammerOfTheRighteous ||
       AbilityId.judgment ||
       AbilityId.crusaderStrike ||
+      AbilityId.templarsVerdict ||
+      AbilityId.avengersShield ||
+      AbilityId.shieldOfRighteousness ||
       AbilityId.penance ||
       AbilityId.flashHeal ||
       AbilityId.flashOfLight ||
-      AbilityId.holyLight =>
+      AbilityId.holyLight ||
+      AbilityId.divineHymn ||
+      AbilityId.circleOfHealing ||
+      AbilityId.powerWordShield ||
+      AbilityId.prayerOfMending ||
+      AbilityId.renew ||
+      AbilityId.guardianSpirit ||
+      AbilityId.beaconOfLight ||
+      AbilityId.layOnHands =>
         SpellBoltStyle.holy,
+
+      // —— Nature (resto sham / balance / resto druid / poisons) ——
       AbilityId.hurricane ||
       AbilityId.starfall ||
       AbilityId.starfire ||
       AbilityId.wrath ||
       AbilityId.moonfire ||
-      AbilityId.typhoon =>
+      AbilityId.typhoon ||
+      AbilityId.riptide ||
+      AbilityId.healingWave ||
+      AbilityId.chainHeal ||
+      AbilityId.earthShield ||
+      AbilityId.healingRain ||
+      AbilityId.spiritLink ||
+      AbilityId.natureSwiftness ||
+      AbilityId.rejuvenation ||
+      AbilityId.regrowth ||
+      AbilityId.wildGrowth ||
+      AbilityId.lifebloom ||
+      AbilityId.nourish ||
+      AbilityId.tranquility ||
+      AbilityId.envenom ||
+      AbilityId.garrote =>
         SpellBoltStyle.nature,
+
+      // —— Arcane ——
       AbilityId.arcaneBlast ||
       AbilityId.arcaneMissiles ||
       AbilityId.arcaneExplosion ||
-      AbilityId.arcanePower =>
+      AbilityId.arcanePower ||
+      AbilityId.slow ||
+      AbilityId.antiMagicShell ||
+      AbilityId.presenceOfMind =>
         SpellBoltStyle.arcane,
+
+      // —— Arrow (hunter ranged) ——
       AbilityId.arcaneShot ||
       AbilityId.multiShot ||
       AbilityId.aimedShot ||
@@ -3499,11 +3626,12 @@ abstract final class SpatialCombat {
       AbilityId.chimeraShot ||
       AbilityId.scatterShot ||
       AbilityId.killCommand ||
-      AbilityId.explosiveShot ||
       AbilityId.serpentSting ||
-      AbilityId.explosiveTrap ||
-      AbilityId.blackArrow =>
+      AbilityId.blackArrow ||
+      AbilityId.bestialWrath =>
         SpellBoltStyle.arrow,
+
+      // —— Shadow ——
       AbilityId.shadowBolt ||
       AbilityId.haunt ||
       AbilityId.hauntBurst ||
@@ -3516,8 +3644,15 @@ abstract final class SpatialCombat {
       AbilityId.shadowWordPain ||
       AbilityId.handOfGuldan ||
       AbilityId.shadowfury ||
-      AbilityId.deathCoil =>
+      AbilityId.deathCoil ||
+      AbilityId.vampiricTouch ||
+      AbilityId.curseOfAgony ||
+      AbilityId.armyOfDead ||
+      AbilityId.runeTap ||
+      AbilityId.psychicScream =>
         SpellBoltStyle.shadow,
+
+      // —— Weapon / physical ——
       AbilityId.bladestorm ||
       AbilityId.whirlwind ||
       AbilityId.mortalStrike ||
@@ -3527,8 +3662,67 @@ abstract final class SpatialCombat {
       AbilityId.deathStrike ||
       AbilityId.scourgeStrike ||
       AbilityId.bloodBoil ||
-      AbilityId.bloodBoilUnholy =>
+      AbilityId.bloodBoilUnholy ||
+      AbilityId.cheapShot ||
+      AbilityId.kidneyShot ||
+      AbilityId.killingSpree ||
+      AbilityId.mongooseBite ||
+      AbilityId.shred ||
+      AbilityId.rake ||
+      AbilityId.ferociousBite ||
+      AbilityId.rip ||
+      AbilityId.mangleBear ||
+      AbilityId.swipe ||
+      AbilityId.maul ||
+      AbilityId.overpower ||
+      AbilityId.rend ||
+      AbilityId.armsExecute ||
+      AbilityId.ragingBlow ||
+      AbilityId.furyExecute ||
+      AbilityId.devastate ||
+      AbilityId.shieldSlam ||
+      AbilityId.revenge ||
+      AbilityId.shockwave ||
+      AbilityId.eviscerate ||
+      AbilityId.sinisterStrike ||
+      AbilityId.bladeFlurry ||
+      AbilityId.hemorrhage ||
+      AbilityId.backstab ||
+      AbilityId.sweepingStrikes =>
         SpellBoltStyle.weapon,
+      _ => null,
+    };
+  }
+
+  /// Lasting ground disc defaults for signature AOEs (life seconds).
+  static double? groundDiscLifeFor(AbilityId id) {
+    return switch (id) {
+      AbilityId.consecration => 6.0,
+      AbilityId.healingRain || AbilityId.tranquility => 5.5,
+      AbilityId.explosiveTrap => 4.0,
+      AbilityId.handOfGuldan || AbilityId.wildGrowth => 3.5,
+      AbilityId.bladestorm ||
+      AbilityId.bladeFlurry ||
+      AbilityId.divineStorm =>
+        3.2,
+      AbilityId.bloodBoil ||
+      AbilityId.bloodBoilUnholy ||
+      AbilityId.whirlwind ||
+      AbilityId.holyPriestNova ||
+      AbilityId.circleOfHealing =>
+        2.5,
+      AbilityId.fireNova ||
+      AbilityId.frostNova ||
+      AbilityId.frostNovaMage ||
+      AbilityId.hungeringCold ||
+      AbilityId.thunderClap =>
+        2.2,
+      AbilityId.blastWave ||
+      AbilityId.shockwave ||
+      AbilityId.arcaneExplosion ||
+      AbilityId.shadowfury =>
+        1.6,
+      AbilityId.swipe => 1.5,
       _ => null,
     };
   }
@@ -3600,7 +3794,7 @@ abstract final class SpatialCombat {
     world.godHandCooldown = math.max(0, world.godHandCooldown - dt);
     world.pulseTimer = math.max(0, world.pulseTimer - dt);
     world.guideTimer = math.max(0, world.guideTimer - dt);
-    _updateChambers(world);
+    _updateChambers(world, reducedVfx: state.reducedVfx);
 
     final inFight = !world.awaitingExit &&
         !world.isTreasure &&
@@ -4075,7 +4269,7 @@ abstract final class SpatialCombat {
       }
     }
 
-    // Pets follow the leader and chip at the nearest unlocked enemy.
+    // Pets follow their owner (meta pet / class pet) when set, else party leader.
     final petLeader = world.leader;
     world.pets.removeWhere((p) {
       if (p.petLifeTimer <= 0) return false;
@@ -4084,12 +4278,13 @@ abstract final class SpatialCombat {
     });
     for (final pet in world.pets) {
       if (petLeader == null) break;
+      final leashOwner = _heroById(world, pet.petOwnerId) ?? petLeader;
       final target = _nearestActiveEnemy(pet, world.enemies);
       if (target == null) {
         _steerActor(
           pet,
-          petLeader.x - 0.55,
-          petLeader.y + 0.45,
+          leashOwner.x - 0.55,
+          leashOwner.y + 0.45,
           pet.moveSpeed * dt,
           world,
           holdDistance: 0.35,
@@ -4552,7 +4747,7 @@ abstract final class SpatialCombat {
       );
     }
 
-    _updateChambers(world);
+    _updateChambers(world, reducedVfx: state.reducedVfx);
     // Proximity wake: don't leave later chambers forever dormant.
     for (final enemy in world.enemies) {
       if (!enemy.dormant || enemy.hp <= 0) continue;
@@ -4575,6 +4770,26 @@ abstract final class SpatialCombat {
         nextState = _vacuumGroundLoot(world, nextState);
         world.awaitingExit = true;
         world.exitWaitTimer = 0;
+        if (!state.reducedVfx) {
+          final ex = world.map.exitPoint.$1 + 0.5;
+          final ey = world.map.exitPoint.$2 + 0.5;
+          _spawnRing(
+            world,
+            x: ex,
+            y: ey,
+            argb: 0xFF70E0A0,
+            radius: 1.4,
+            life: 0.65,
+          );
+          _spawnBurst(
+            world,
+            x: ex,
+            y: ey,
+            argb: 0x88A0FFC0,
+            radius: 0.7,
+            life: 0.4,
+          );
+        }
       }
     }
 
@@ -4608,11 +4823,31 @@ abstract final class SpatialCombat {
     world.pulseX = tileX;
     world.pulseY = tileY;
     world.pulseTimer = 0.35;
+    world.godHandRadius = state.godHandRadius;
 
     final damage = (baseDamage ?? state.godHandBaseDamage) +
         state.ascensionLevel +
         (state.totalAttack ~/ 8);
     final radius = state.godHandRadius;
+    final reduced = state.reducedVfx;
+    if (!reduced) {
+      _spawnRing(
+        world,
+        x: tileX,
+        y: tileY,
+        argb: 0xFFFFE080,
+        radius: radius * 0.55,
+        life: 0.42,
+      );
+      _spawnBurst(
+        world,
+        x: tileX,
+        y: tileY,
+        argb: 0xAAFFF0A0,
+        radius: radius * 0.35,
+        life: 0.28,
+      );
+    }
     var gold = 0;
     var kills = 0;
     var nextState = state;
@@ -4622,14 +4857,16 @@ abstract final class SpatialCombat {
       if (_distPoint(tileX, tileY, enemy.x, enemy.y) <= radius) {
         final wasAlive = enemy.hp > 0;
         enemy.hp = math.max(0, enemy.hp - damage);
-        _spawnFloater(
-          world,
-          x: enemy.x,
-          y: enemy.y - 0.35,
-          text: '$damage',
-          argb: _floaterDamage,
-          life: 0.75,
-        );
+        if (!reduced) {
+          _spawnFloater(
+            world,
+            x: enemy.x,
+            y: enemy.y - 0.35,
+            text: '$damage',
+            argb: _floaterDamage,
+            life: 0.75,
+          );
+        }
         if (wasAlive && enemy.hp <= 0) {
           final killed = _onEnemyKilled(world, nextState, enemy, rng);
           gold += killed.gold;
@@ -4638,7 +4875,7 @@ abstract final class SpatialCombat {
         }
       }
     }
-    _updateChambers(world);
+    _updateChambers(world, reducedVfx: reduced);
     final synced = _syncHp(nextState, world);
     return SpatialStepResult(
       world: world,
@@ -4698,7 +4935,10 @@ abstract final class SpatialCombat {
     return state.copyWith(heroes: heroes, enemies: enemies);
   }
 
-  static void _updateChambers(SpatialWorld world) {
+  static void _updateChambers(
+    SpatialWorld world, {
+    bool reducedVfx = false,
+  }) {
     if (world.map.chambers.isEmpty) return;
 
     final chamberCount = world.map.chambers.length;
@@ -4715,11 +4955,42 @@ abstract final class SpatialCombat {
       );
       if (hasLivingEnemy) break;
       world.clearedChambers.add(next);
+      if (!reducedVfx) {
+        for (final chamber in world.map.chambers) {
+          if (chamber.index != next) continue;
+          _spawnRing(
+            world,
+            x: chamber.x + chamber.w * 0.5,
+            y: chamber.y + chamber.h * 0.5,
+            argb: 0xFF50C070,
+            radius: math.min(chamber.w, chamber.h) * 0.35,
+            life: 0.55,
+          );
+          break;
+        }
+      }
     }
 
     for (final gate in world.map.gates) {
-      if (world.clearedChambers.contains(gate.opensAfterChamber)) {
-        world.openGateIds.add(gate.id);
+      if (!world.clearedChambers.contains(gate.opensAfterChamber)) continue;
+      final wasOpen = world.openGateIds.contains(gate.id);
+      world.openGateIds.add(gate.id);
+      if (!wasOpen && !reducedVfx) {
+        _spawnRing(
+          world,
+          x: gate.x + 0.5,
+          y: gate.y + 0.5,
+          argb: 0xFFFFD070,
+          radius: 1.35,
+          life: 0.5,
+        );
+        _spawnSpark(
+          world,
+          x: gate.x + 0.5,
+          y: gate.y + 0.5,
+          argb: 0xFFFFF0A0,
+          radius: 0.55,
+        );
       }
     }
 
@@ -5743,17 +6014,17 @@ abstract final class SpatialCombat {
     double burstRadius = 0.7,
     bool showText = false,
   }) {
+    final tint = burstArgb ?? argb;
     if (reducedVfx) {
-      if (burstArgb != null) {
-        _spawnBurst(
-          world,
-          x: caster.x,
-          y: caster.y,
-          argb: burstArgb,
-          radius: burstRadius * 0.7,
-          life: 0.22,
-        );
-      }
+      // Tiny cast pulse so legacy kits aren't fully silent offline.
+      _spawnBurst(
+        world,
+        x: caster.x,
+        y: caster.y,
+        argb: (tint & 0x00FFFFFF) | 0x66000000,
+        radius: burstRadius * 0.55,
+        life: 0.18,
+      );
       return;
     }
     // Ability-name floaters clutter the stage — default to burst-only.
@@ -5768,15 +6039,13 @@ abstract final class SpatialCombat {
         priority: 1,
       );
     }
-    if (burstArgb != null) {
-      _spawnBurst(
-        world,
-        x: caster.x,
-        y: caster.y,
-        argb: burstArgb,
-        radius: burstRadius,
-        life: 0.28,
-      );
-    }
+    _spawnBurst(
+      world,
+      x: caster.x,
+      y: caster.y,
+      argb: tint,
+      radius: burstRadius,
+      life: 0.28,
+    );
   }
 }

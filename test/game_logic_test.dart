@@ -638,6 +638,7 @@ void main() {
     expect(state.heroes[0].role, HeroRole.warrior);
     expect(state.heroes[2].role, HeroRole.mage);
     expect(state.heroes[0].itemIn(EquipmentSlot.offHand)?.id, tankShield.id);
+    // Mage-affinity Int staff must prefer Fire over Disc (healer SP weights).
     expect(state.heroes[2].itemIn(EquipmentSlot.weapon)?.id, mageWand.id);
     expect(state.gearStash, isEmpty);
   });
@@ -975,6 +976,54 @@ void main() {
     expect(sold.gearStash.any((g) => g.id == plate.id), isTrue);
   });
 
+  test('SELL JUNK sells rare gear at or below the auto-sell iLvl cap', () {
+    final rareUnderCap = GameLogic.createEquipment(
+      slot: EquipmentSlot.cloak,
+      rarity: LootRarity.rare,
+      battleNumber: 4,
+    ).copyWith(
+      id: 'rare_under_cap',
+      attackBonus: 1,
+      defenseBonus: 3,
+      vitalityBonus: 3,
+      itemLevel: 12,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      clearAffinity: true,
+    );
+    final wornCloaks = [
+      for (var i = 0; i < 3; i++)
+        GameLogic.createEquipment(
+          slot: EquipmentSlot.cloak,
+          rarity: LootRarity.rare,
+          battleNumber: 10,
+        ).copyWith(
+          id: 'worn_strong_$i',
+          attackBonus: 4,
+          defenseBonus: 12,
+          vitalityBonus: 14,
+          itemLevel: 40,
+          effectId: GearEffectId.none,
+          effectValue: 0,
+          clearAffinity: true,
+        ),
+    ];
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
+      gearStash: <EquipmentItem>[...wornCloaks, rareUnderCap],
+      autoSellMaxPower: 20,
+    );
+    for (var i = 0; i < 3; i++) {
+      state = GameLogic.equipFromStash(
+        state,
+        wornCloaks[i].id,
+        heroIndex: i,
+      );
+    }
+    state = state.copyWith(gearStash: <EquipmentItem>[rareUnderCap]);
+    final sold = GameLogic.autoSellJunk(state);
+    expect(sold.gearStash.any((g) => g.id == rareUnderCap.id), isFalse);
+  });
+
   test('SELL JUNK sells non-upgrade uncommons but keeps rare gear', () {
     final junk = GameLogic.createEquipment(
       slot: EquipmentSlot.cloak,
@@ -1038,6 +1087,8 @@ void main() {
 
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
       gearStash: <EquipmentItem>[...wornCloaks, junk, spareUncommon, rare],
+      // Cap below rare ilvl so rare+ above the gate is kept (matches pickup).
+      autoSellMaxPower: 10,
     );
     for (var i = 0; i < 3; i++) {
       state = GameLogic.equipFromStash(
@@ -1520,6 +1571,73 @@ void main() {
     expect(DungeonGenerator.bossFloorFor(0), 5);
     expect(DungeonGenerator.bossFloorFor(2), 7);
     expect(DungeonCatalog.byId('sandy').layout, DungeonLayoutKind.cave);
+    // Hell must not share Sandy's cave layout (different chamber footprint).
+    expect(DungeonCatalog.byId('hell').layout, isNot(DungeonLayoutKind.cave));
+  });
+
+  test('dungeon zone names are catalog-canonical', () {
+    const banned = [
+      'Goblin Den',
+      'Sandy Crypt',
+      'Hell Maw',
+      'Dead Marsh',
+      "King's Tomb",
+    ];
+    for (final d in DungeonCatalog.all) {
+      expect(d.name, isNotEmpty);
+      for (final bad in banned) {
+        expect(d.name, isNot(bad));
+      }
+    }
+    expect(DungeonCatalog.byId('sandy').name, 'Sandy Caverns');
+    expect(DungeonCatalog.byId('goblin').name, "Goblin's Hideout");
+    expect(DungeonCatalog.byId('hell').name, "Hell's Gate");
+    expect(DungeonCatalog.byId('dead').name, 'City of Dead');
+    for (final hint in HeroSpecs.all.map((s) => s.unlockHint)) {
+      for (final bad in banned) {
+        expect(hint, isNot(contains(bad)), reason: hint);
+      }
+    }
+    for (final a in AchievementCatalog.all) {
+      for (final bad in banned) {
+        expect(a.description, isNot(contains(bad)), reason: a.id);
+      }
+      if (a.id == 'clear_hell') {
+        expect(a.description, contains("Hell's Gate"));
+      }
+    }
+  });
+
+  test('sanctuary bonus labels use softcapped totals', () {
+    final raw = 40 * 5; // would be 200% without softcap
+    final soft = GameLogic.sanctuaryTrackBonusAt('gold', 40);
+    expect(soft, lessThan(raw));
+    final label = GameLogic.sanctuaryBonusLabel('gold', 40, prestige: 2);
+    expect(label, contains('+${soft + 6}%'));
+    expect(label, contains('P2'));
+  });
+
+  test('ascend mission board ignores pre-ascend highestFloorCleared', () {
+    final deep = GameLogic.createMissionBoard(
+      ascensionLevel: 3,
+      highestFloorCleared: 40,
+    );
+    final fresh = GameLogic.createMissionBoard(
+      ascensionLevel: 3,
+      highestFloorCleared: 0,
+    );
+    // Depth score includes floorBand — fresh board must not inherit deep HFC.
+    final deepScore = GameLogic.missionDepthScore(
+      ascensionLevel: 3,
+      highestFloorCleared: 40,
+    );
+    final freshScore = GameLogic.missionDepthScore(
+      ascensionLevel: 3,
+      highestFloorCleared: 0,
+    );
+    expect(freshScore, lessThan(deepScore));
+    expect(deep, hasLength(3));
+    expect(fresh, hasLength(3));
   });
 
   test('soulbound bind and god hand upgrade', () {
@@ -1866,7 +1984,10 @@ void main() {
     expect(GameLogic.canEnterGauntlet(locked), isFalse);
     expect(GameLogic.enterGauntlet(locked).inGauntlet, isFalse);
 
-    var state = locked.copyWith(ascensionLevel: 10);
+    var state = locked.copyWith(
+      ascensionLevel: 10,
+      highestFloorCleared: 27,
+    );
     expect(GameLogic.canEnterGauntlet(state), isTrue);
     state = GameLogic.enterGauntlet(state);
     expect(state.inGauntlet, isTrue);
@@ -1875,6 +1996,8 @@ void main() {
     expect(state.dungeonMode, DungeonMode.push);
     expect(state.currentRoom.floorNumber, 1);
     expect(state.achievements, contains('gauntlet_enter'));
+    // Gauntlet must not wipe zone highestFloorCleared (Ascend fragments).
+    expect(state.highestFloorCleared, 27);
 
     final f1 = GameLogic.createEnemyGroup(
       state.currentRoom,
@@ -1918,6 +2041,8 @@ void main() {
     expect(state.inGauntlet, isTrue);
     expect(state.currentRoom.floorNumber, 2);
     expect(state.metaDepth.gauntletBestFloor, greaterThanOrEqualTo(1));
+    // Gauntlet must NOT bump zone highestFloorCleared (Ascend fragments).
+    expect(state.highestFloorCleared, 27);
     expect(state.essence, greaterThan(locked.essence));
     // Single gold mul on clear (F1 → mul 1.0).
     expect(state.gold - goldBefore, expectedGold);
@@ -2099,5 +2224,76 @@ void main() {
       skipLootRoll: true,
     );
     expect(roomState.recentLoot.any((d) => d.name == 'Gold Pouch'), isTrue);
+  });
+
+  test('Apex gear does not cancel fresh-AL gear pressure ease', () {
+    final fresh = GameLogic.createInitialState(now: DateTime(2026, 8, 5))
+        .copyWith(ascensionLevel: 3);
+    final apex = EquipmentItem(
+      id: 'apex_keep',
+      name: 'Apex Blade',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.legendary,
+      strengthBonus: 30,
+      staminaBonus: 20,
+      isApex: true,
+      itemLevel: 90,
+    );
+    final withApex = fresh.copyWith(
+      heroes: [
+        fresh.heroes.first.copyWith(
+          equipped: {
+            ...fresh.heroes.first.equipped,
+            EquipmentSlot.weapon: apex,
+          },
+        ),
+        ...fresh.heroes.skip(1),
+      ],
+    );
+    expect(GameLogic.partyGearPressure(withApex), lessThanOrEqualTo(1.08));
+  });
+
+  test('pickup auto-sell keeps BiS candidate not yet in stash', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 5))
+        .copyWith(autoSellMaxPower: 80);
+    // Empty cloak slots: keep-on-upgrade path cannot fire; BiS probe must.
+    state = state.copyWith(
+      heroes: [
+        for (final h in state.heroes)
+          h.copyWith(
+            equipped: {
+              for (final e in h.equipped.entries)
+                if (e.key != EquipmentSlot.cloak) e.key: e.value,
+            },
+          ),
+      ],
+    );
+    final upgrade = EquipmentItem(
+      id: 'bis_cloak_pickup',
+      name: 'Better Cloak',
+      slot: EquipmentSlot.cloak,
+      rarity: LootRarity.rare,
+      staminaBonus: 12,
+      armorBonus: 18,
+      strengthBonus: 8,
+      itemLevel: 40,
+    );
+    final after = GameLogic.applyLootDrops(state, [
+      LootDrop(
+        name: upgrade.name,
+        rarity: upgrade.rarity,
+        amount: 1,
+        equipment: upgrade,
+      ),
+    ]);
+    expect(
+      after.resolved.single.outcome,
+      LootOutcome.stashed,
+      reason: 'BiS fill must not auto-sell on pickup',
+    );
+    expect(
+      after.state.gearStash.any((g) => g.id == upgrade.id),
+      isTrue,
+    );
   });
 }

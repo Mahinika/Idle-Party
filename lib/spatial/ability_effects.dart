@@ -426,8 +426,8 @@ abstract final class AbilityEffectRunner {
       case AbilityId.sinisterStrike:
         break;
       case AbilityId.arcaneIntellect:
-        // Fire's dedicated ticker bypasses _abilityOutScale — tax here.
-        hero.kitOutMul *= 0.72;
+        // Personal spell power is applied via GameState caster aura / kit path.
+        break;
       default:
         // Fallback: mild role-appropriate crumb if a new passive is added.
         if (spec.isTank) {
@@ -488,12 +488,41 @@ abstract final class AbilityEffectRunner {
       }
       return true;
     }
+    if (def.id == AbilityId.summonWaterElemental) {
+      _spendAndCd(world, hero, def);
+      SpatialCombat.spawnTempPets(
+        world,
+        owner: hero,
+        count: 1,
+        duration: 28,
+        atkScale: 0.40,
+        namePrefix: 'Water Elemental',
+        idPrefix: 'water',
+      );
+      _announce(world, hero, def.shortLabel, 0xFF80D0FF, reducedVfx);
+      if (!reducedVfx) {
+        SpatialCombat._spawnRing(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: 0xFF80D0FF,
+          radius: 1.0,
+          life: 0.45,
+        );
+      }
+      return true;
+    }
 
     switch (def.effect) {
       case AbilityEffectKind.passive:
         return false;
       case AbilityEffectKind.damage:
         if (focus == null || focus.hp <= 0) return false;
+        // Mongoose Bite is a melee snap — skip when out of reach.
+        if (def.id == AbilityId.mongooseBite &&
+            SpatialCombat._dist(hero, focus) > 1.85) {
+          return false;
+        }
         _spendAndCd(world, hero, def);
         _castDamage(world, hero, focus, def, rng, reducedVfx: reducedVfx);
         return true;
@@ -630,13 +659,13 @@ abstract final class AbilityEffectRunner {
   static String _abilityKey(ClassAbilityDef def) =>
       '${def.id.name} ${def.shortLabel} ${def.name}'.toLowerCase();
 
-  /// Outgoing scale for kit casts. Casters get an extra tax because Int-based
-  /// ability spam outpaced melee Str kits on mid-band sims (~2–3× raw DPS).
+  /// Outgoing scale for kit casts. Casters get [SpatialCombat.casterAbilityTax]
+  /// because Int-based ability spam outpaced melee Str kits on mid-band sims.
   static double _abilityOutScale(SpatialActor hero) {
     var scale = hero.kitOutMul;
     final id = hero.heroSpecId;
     if (id != null && HeroSpecs.def(id).roleTag == SpecRoleTag.caster) {
-      scale *= 0.62;
+      scale *= SpatialCombat.casterAbilityTax;
     }
     return scale;
   }
@@ -649,12 +678,23 @@ abstract final class AbilityEffectRunner {
     math.Random rng, {
     required bool reducedVfx,
   }) {
-    final raw = math.max(
+    var raw = math.max(
       2,
       (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
     );
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
-    final useBolt = hero.ranged || SpatialCombat._dist(hero, enemy) > 2.2;
+    final pet = def.id == AbilityId.killCommand
+        ? _ownedCombatPet(world, hero)
+        : null;
+    if (pet != null) {
+      raw = (raw * 1.35).round();
+    }
+    // Mongoose Bite is always melee; Kill Command snaps melee when pet is up.
+    final useBolt = def.id == AbilityId.mongooseBite
+        ? false
+        : (pet != null
+            ? false
+            : (hero.ranged || SpatialCombat._dist(hero, enemy) > 2.2));
     final tint = SpatialCombat.burstArgbForStyle(style);
 
     hero.attackFlash = 0.16;
@@ -768,10 +808,24 @@ abstract final class AbilityEffectRunner {
         def.id == AbilityId.divineStorm ||
         def.id == AbilityId.thunderClap ||
         def.id == AbilityId.shockwave ||
+        def.id == AbilityId.shadowfury ||
+        def.id == AbilityId.fireNova ||
+        def.id == AbilityId.blastWave ||
+        def.id == AbilityId.arcaneExplosion ||
+        def.id == AbilityId.frostNova ||
+        def.id == AbilityId.frostNovaMage ||
+        def.id == AbilityId.hungeringCold ||
+        def.id == AbilityId.bladeFlurry ||
+        def.id == AbilityId.swipe ||
+        def.id == AbilityId.handOfGuldan ||
+        def.id == AbilityId.explosiveTrap ||
+        def.vfx?.groundDisc == true ||
+        SpatialCombat.groundDiscLifeFor(def.id) != null ||
         key.contains('consecrat') ||
         key.contains('bloodboil') ||
         key.contains('bladestorm') ||
-        key.contains('whirlwind')) {
+        key.contains('whirlwind') ||
+        key.contains('shadowfury')) {
       _groundNova(world, hero, def, style, rng, reducedVfx: reducedVfx);
       return;
     }
@@ -1087,6 +1141,45 @@ abstract final class AbilityEffectRunner {
         radius: radius * 0.35,
         life: 0.3,
       );
+      // Signature spin arcs for Bladestorm.
+      if (def.id == AbilityId.bladestorm) {
+        for (var i = 0; i < 3; i++) {
+          SpatialCombat._spawnBurst(
+            world,
+            x: hero.x,
+            y: hero.y,
+            argb: 0xCCFFE08A,
+            radius: radius * (0.45 + i * 0.12),
+            angle: i * 2.1,
+            slash: true,
+            life: 0.34 + i * 0.04,
+          );
+        }
+      }
+      // Purple nova pop for Shadowfury.
+      if (def.id == AbilityId.shadowfury) {
+        SpatialCombat._spawnRing(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: 0xFFB060E0,
+          radius: radius * 0.9,
+          life: 0.55,
+        );
+      }
+      final vfx = def.vfx;
+      final discLife =
+          vfx?.groundLife ?? SpatialCombat.groundDiscLifeFor(def.id);
+      if (vfx?.groundDisc == true || discLife != null) {
+        SpatialCombat._spawnGroundFx(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: vfx?.groundArgb ?? ((argb & 0x00FFFFFF) | 0x55000000),
+          radius: vfx?.groundRadius ?? radius,
+          life: discLife ?? 2.5,
+        );
+      }
     }
 
     var hitCount = 0;
@@ -1172,27 +1265,23 @@ abstract final class AbilityEffectRunner {
     ClassAbilityDef def, {
     required bool reducedVfx,
   }) {
+    final style = SpatialCombat.boltStyleForAbility(caster, def: def);
+    final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
     _healLowest(world, caster, ally, def.coeff, def.shortLabel);
-    _announce(
-      world,
-      caster,
-      def.shortLabel,
-      SpatialCombat._floaterHeal,
-      reducedVfx,
-    );
+    _announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
       SpatialCombat._spawnSpark(
         world,
         x: ally.x,
         y: ally.y,
-        argb: SpatialCombat._floaterHeal,
+        argb: tint,
         radius: 0.55,
       );
       SpatialCombat._spawnRing(
         world,
         x: ally.x,
         y: ally.y,
-        argb: 0x887AAB6E,
+        argb: (tint & 0x00FFFFFF) | 0x88000000,
         radius: 0.65,
         life: 0.35,
       );
@@ -1206,14 +1295,16 @@ abstract final class AbilityEffectRunner {
     ClassAbilityDef def, {
     required bool reducedVfx,
   }) {
+    final style = SpatialCombat.boltStyleForAbility(caster, def: def);
+    final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
     _absorbLowest(world, caster, ally, def.coeff, def.shortLabel);
-    _announce(world, caster, def.shortLabel, 0xFF90C0FF, reducedVfx);
+    _announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
       SpatialCombat._spawnRing(
         world,
         x: ally.x,
         y: ally.y,
-        argb: 0xAA90C0FF,
+        argb: (tint & 0x00FFFFFF) | 0xAA000000,
         radius: 0.75,
         life: 0.4,
       );
@@ -1237,7 +1328,18 @@ abstract final class AbilityEffectRunner {
     bool reducedVfx, {
     bool important = false,
   }) {
-    // Routine ability-name shoutouts drown the stage; keep bursts/sparks instead.
+    // Always give a small style-colored cast burst so kits aren't silent.
+    if (!reducedVfx) {
+      SpatialCombat._spawnBurst(
+        world,
+        x: hero.x,
+        y: hero.y,
+        argb: argb,
+        radius: important ? 0.85 : 0.55,
+        life: important ? 0.32 : 0.22,
+      );
+    }
+    // Routine ability-name shoutouts drown the stage.
     if (reducedVfx || !important) return;
     SpatialCombat._spawnFloater(
       world,
@@ -1306,6 +1408,8 @@ abstract final class AbilityEffectRunner {
     ClassAbilityDef def, {
     required bool reducedVfx,
   }) {
+    final style = SpatialCombat.boltStyleForAbility(caster, def: def);
+    final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
     final living = [
       for (final h in world.heroes)
         if (h.isAlive) h,
@@ -1327,7 +1431,7 @@ abstract final class AbilityEffectRunner {
       world,
       caster,
       def.shortLabel,
-      SpatialCombat._floaterHeal,
+      tint,
       reducedVfx,
     );
     if (!reducedVfx) {
@@ -1335,10 +1439,21 @@ abstract final class AbilityEffectRunner {
         world,
         x: caster.x,
         y: caster.y,
-        argb: 0x887AAB6E,
+        argb: (tint & 0x00FFFFFF) | 0x88000000,
         radius: 1.4,
         life: 0.4,
       );
+      final discLife = SpatialCombat.groundDiscLifeFor(def.id);
+      if (discLife != null || def.vfx?.groundDisc == true) {
+        SpatialCombat._spawnGroundFx(
+          world,
+          x: caster.x,
+          y: caster.y,
+          argb: (tint & 0x00FFFFFF) | 0x55000000,
+          radius: def.vfx?.groundRadius ?? 2.8,
+          life: def.vfx?.groundLife ?? discLife ?? 4.0,
+        );
+      }
     }
   }
 
@@ -1377,19 +1492,41 @@ abstract final class AbilityEffectRunner {
     ClassAbilityDef def,
     int raw,
   ) {
-    if (def.id != AbilityId.rip &&
-        def.id != AbilityId.rake &&
-        def.id != AbilityId.rend) {
-      return;
-    }
+    final isBleed = switch (def.id) {
+      AbilityId.rip ||
+      AbilityId.rake ||
+      AbilityId.rend ||
+      AbilityId.garrote ||
+      AbilityId.rupture ||
+      AbilityId.serpentSting ||
+      AbilityId.corruption ||
+      AbilityId.moonfire ||
+      AbilityId.immolateDemo ||
+      AbilityId.immolateDestro ||
+      AbilityId.shadowWordPain =>
+        true,
+      _ => false,
+    };
+    if (!isBleed) return;
     final duration = switch (def.id) {
       AbilityId.rip => 12.0,
-      AbilityId.rake => 8.0,
+      AbilityId.rake || AbilityId.garrote => 8.0,
+      AbilityId.serpentSting || AbilityId.moonfire => 10.0,
+      AbilityId.corruption ||
+      AbilityId.immolateDemo ||
+      AbilityId.immolateDestro ||
+      AbilityId.shadowWordPain =>
+        11.0,
       _ => 9.0,
     };
     final dpsFrac = switch (def.id) {
       AbilityId.rip => 0.22,
-      AbilityId.rake => 0.14,
+      AbilityId.rake || AbilityId.garrote => 0.14,
+      AbilityId.rupture => 0.18,
+      AbilityId.serpentSting => 0.12,
+      AbilityId.corruption || AbilityId.shadowWordPain => 0.13,
+      AbilityId.immolateDemo || AbilityId.immolateDestro => 0.15,
+      AbilityId.moonfire => 0.11,
       _ => 0.12,
     };
     final fromHit = raw * 0.08;
@@ -1408,6 +1545,13 @@ abstract final class AbilityEffectRunner {
         life: 0.45,
       );
     }
+  }
+
+  static SpatialActor? _ownedCombatPet(SpatialWorld world, SpatialActor hero) {
+    for (final p in world.pets) {
+      if (p.hp > 0 && p.petOwnerId == hero.id) return p;
+    }
+    return null;
   }
 
   /// Kit absorb — cast when hurt or when the bubble is gone.
@@ -1488,7 +1632,6 @@ abstract final class AbilityEffectRunner {
         name.contains('favor') ||
         name.contains('spirit') ||
         name.contains('gargoyle') ||
-        name.contains('water') ||
         name.contains('charge') ||
         name.contains('step') ||
         name.contains('sprint') ||

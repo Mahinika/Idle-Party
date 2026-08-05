@@ -12,6 +12,7 @@ import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/meta_depth.dart';
 import '../models/pet.dart';
+import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
 import '../ui/game_audio.dart';
 import 'game_logic.dart';
@@ -291,17 +292,12 @@ class GameDirector extends ChangeNotifier {
         loaded = GameLogic.createInitialState();
       } else {
         // Paint immediately — AFK spatial sim must not hold the spinner.
+        // Do NOT start the live spatial loop until after offline catch-up.
         _state = GameLogic.ensureRogueHero(saved);
         _lastHighestDungeon = _state.highestDungeonCleared;
         GameAudio.muted = _state.soundMuted;
         SpatialCombat.colorblindMode = _state.colorblindMode;
         _ensureUiTimer();
-        if (_state.inDungeon) {
-          _rebuildSpatial();
-          if (enableSpatialLoop && !deferCombatLoop) {
-            _startSpatialLoop();
-          }
-        }
         // Keep loading flag true until finally{} when intro is deferred —
         // early notify would flash hub/dungeon under the title card.
         if (!deferCombatLoop) {
@@ -492,6 +488,10 @@ class GameDirector extends ChangeNotifier {
             if (!identical(drank, _state)) {
               _state = drank;
               _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
+              SpatialCombat.spawnFlaskHealFx(
+                _spatial!,
+                reducedVfx: _state.reducedVfx,
+              );
             }
           }
         }
@@ -1086,11 +1086,24 @@ class GameDirector extends ChangeNotifier {
   }
 
   void setReducedVfx(bool value) {
-    _applyUpgrade(_state.copyWith(reducedVfx: value));
+    _applyUpgrade(
+      _state.copyWith(
+        vfxQuality: value ? VfxQuality.lite : VfxQuality.full,
+      ),
+    );
+  }
+
+  void setVfxQuality(VfxQuality value) {
+    _applyUpgrade(_state.copyWith(vfxQuality: value));
+  }
+
+  void cycleVfxQuality() {
+    setVfxQuality(_state.vfxQuality.next);
   }
 
   void setAutoSellMaxPower(int value) {
-    _applyUpgrade(_state.copyWith(autoSellMaxPower: value.clamp(0, 80)));
+    final cap = GameLogic.maxAutoSellIlvlCap(_state);
+    _applyUpgrade(_state.copyWith(autoSellMaxPower: value.clamp(0, cap)));
   }
 
   void setColorblindMode(bool value) {
@@ -1256,11 +1269,15 @@ class GameDirector extends ChangeNotifier {
   bool importSaveJson(String raw) {
     final imported = GameLogic.importSaveJson(raw);
     if (imported == null) return false;
+    _awaitingWipeChoice = false;
     _state = GameLogic.ensureRogueHero(imported);
     GameAudio.muted = _state.soundMuted;
     SpatialCombat.colorblindMode = _state.colorblindMode;
     if (_state.inDungeon) {
       _rebuildSpatial();
+      if (enableSpatialLoop) {
+        _startSpatialLoop();
+      }
     } else {
       _spatialTimer?.cancel();
       _spatialTimer = null;
@@ -1481,7 +1498,16 @@ class GameDirector extends ChangeNotifier {
   }
 
   void useConsumable({int? heroIndex}) {
-    _applyUpgrade(GameLogic.useConsumable(_state, heroIndex: heroIndex));
+    final before = _state;
+    final next = GameLogic.useConsumable(_state, heroIndex: heroIndex);
+    _applyUpgrade(next);
+    if (!identical(next, before) && _spatial != null && _state.inDungeon) {
+      _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
+      SpatialCombat.spawnFlaskHealFx(
+        _spatial!,
+        reducedVfx: _state.reducedVfx,
+      );
+    }
   }
 
   void upgradeSanctuary(String track) {
@@ -1502,7 +1528,18 @@ class GameDirector extends ChangeNotifier {
     };
     if (after > before) {
       final name = GameLogic.sanctuaryNames[track] ?? track;
-      final bonus = GameLogic.sanctuaryBonusLabel(track, after);
+      final prestige = switch (track) {
+        'gold' => _state.metaDepth.sanctuaryGoldPrestige,
+        'power' => _state.metaDepth.sanctuaryPowerPrestige,
+        'vitality' => _state.metaDepth.sanctuaryVitalityPrestige,
+        'xp' => _state.metaDepth.sanctuaryXpPrestige,
+        _ => 0,
+      };
+      final bonus = GameLogic.sanctuaryBonusLabel(
+        track,
+        after,
+        prestige: prestige,
+      );
       GameAudio.unlock();
       showToast('$name Lv$after · $bonus', life: 2.4);
     }
@@ -1642,6 +1679,7 @@ class GameDirector extends ChangeNotifier {
         al: _state.ascensionLevel,
         milestoneBonus: milestone,
       ),
+      'Gear wiped · Apex kept',
     ];
     if (_state.essence >= 20) {
       parts.add('Forge → META for essence');
