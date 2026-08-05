@@ -131,7 +131,7 @@ class CombatRatings {
   }) {
     final grown = grownPrimaries(
       base: hero.stats,
-      role: hero.role,
+      role: hero.gearAffinity,
       level: hero.level,
     );
     final str = grown.str + gearStrength;
@@ -141,7 +141,7 @@ class CombatRatings {
     final spi = grown.spi + gearSpirit;
 
     final ap = meleeAttackPower(
-      role: hero.role,
+      role: hero.gearAffinity,
       strength: str,
       agility: agi,
       level: hero.level,
@@ -153,22 +153,22 @@ class CombatRatings {
     final sp = spPool;
 
     final isCaster =
-        hero.role == HeroRole.mage || hero.role == HeroRole.healer;
+        hero.gearAffinity == HeroRole.mage || hero.gearAffinity == HeroRole.healer;
 
-    final defense = roleBaseArmor(hero.role) +
+    final defense = roleBaseArmor(hero.gearAffinity) +
         2 * agi +
         gearArmor +
         metaDefense +
         guardBonus;
 
     final maxHpFinal =
-        roleHpBase(hero.role) + 10 * sta + metaVitality;
+        roleHpBase(hero.gearAffinity) + 10 * sta + metaVitality;
 
     final crit = isCaster
-        ? (5 + intel / spellCritDivisor(hero.role, hero.level) + gearCrit)
+        ? (5 + intel / spellCritDivisor(hero.gearAffinity, hero.level) + gearCrit)
             .round()
-        : (roleBaseCrit(hero.role) +
-                agi / critDivisor(hero.role, hero.level) +
+        : (roleBaseCrit(hero.gearAffinity) +
+                agi / critDivisor(hero.gearAffinity, hero.level) +
                 gearCrit)
             .round();
 

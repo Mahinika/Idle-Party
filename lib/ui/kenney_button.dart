@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'game_theme.dart';
+import 'web_click_bridge.dart';
 
 enum KenneyButtonStyle { brown, grey, red }
 
@@ -111,12 +112,17 @@ class KenneyButton extends StatelessWidget {
       ),
     );
 
-    return Semantics(
-      button: true,
-      enabled: enabled,
+    return WebClickScope(
       label: label,
-      excludeSemantics: true,
-      child: button,
+      onPressed: onPressed,
+      child: Semantics(
+        button: true,
+        enabled: enabled,
+        label: label,
+        onTap: onPressed,
+        excludeSemantics: true,
+        child: button,
+      ),
     );
   }
 }

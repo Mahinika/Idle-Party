@@ -70,7 +70,7 @@ enum ProjectilePattern { single, spread, arc, pierce }
 /// Unique gear effect ids (data-driven).
 enum GearEffectId { none, lifesteal, pierce, goldFind, crit, haste }
 
-enum LootOutcome { essence, equipped, replaced, stashed }
+enum LootOutcome { essence, equipped, replaced, stashed, gold }
 
 class EquipmentItem {
   const EquipmentItem({
@@ -105,6 +105,10 @@ class EquipmentItem {
     this.affixPrefixId,
     this.affixSuffixId,
     this.setId,
+    this.isApex = false,
+    this.apexClassId,
+    this.apexRoleTag,
+    this.apexRank = 0,
   });
 
   final String id;
@@ -157,6 +161,18 @@ class EquipmentItem {
 
   /// Dungeon armor set id (`{dungeonId}_{armorType}`), rare+ set slots only.
   final String? setId;
+
+  /// Crafted Apex BiS (forge-only). Survives Ascend when equipped / vaulted.
+  final bool isApex;
+
+  /// [HeroClassId.name] this Apex piece is bound to.
+  final String? apexClassId;
+
+  /// [SpecRoleTag.name] this Apex piece was crafted for.
+  final String? apexRoleTag;
+
+  /// Apex upgrade rank (1–3). 0 when not Apex.
+  final int apexRank;
 
   int get resolvedArmor => armorBonus + defenseBonus;
   int get resolvedStamina => staminaBonus + vitalityBonus;
@@ -232,6 +248,7 @@ class EquipmentItem {
     if (setId != null && setId!.isNotEmpty) {
       parts.add(setLabel);
     }
+    if (isApex) parts.add('APEX R$apexRank');
     return parts.join(' · ');
   }
 
@@ -290,6 +307,10 @@ class EquipmentItem {
         if (affixPrefixId != null) 'affixPrefixId': affixPrefixId,
         if (affixSuffixId != null) 'affixSuffixId': affixSuffixId,
         if (setId != null) 'setId': setId,
+        if (isApex) 'isApex': true,
+        if (apexClassId != null) 'apexClassId': apexClassId,
+        if (apexRoleTag != null) 'apexRoleTag': apexRoleTag,
+        if (apexRank != 0) 'apexRank': apexRank,
       };
 
   factory EquipmentItem.fromJson(Map<String, dynamic> json) {
@@ -384,6 +405,10 @@ class EquipmentItem {
       affixPrefixId: json['affixPrefixId'] as String?,
       affixSuffixId: json['affixSuffixId'] as String?,
       setId: json['setId'] as String?,
+      isApex: json['isApex'] as bool? ?? false,
+      apexClassId: json['apexClassId'] as String?,
+      apexRoleTag: json['apexRoleTag'] as String?,
+      apexRank: asInt(json['apexRank']),
     );
   }
 
@@ -421,6 +446,12 @@ class EquipmentItem {
     String? affixSuffixId,
     String? setId,
     bool clearSetId = false,
+    bool? isApex,
+    String? apexClassId,
+    String? apexRoleTag,
+    int? apexRank,
+    bool clearApexClassId = false,
+    bool clearApexRoleTag = false,
   }) {
     return EquipmentItem(
       id: id ?? this.id,
@@ -454,6 +485,12 @@ class EquipmentItem {
       affixPrefixId: affixPrefixId ?? this.affixPrefixId,
       affixSuffixId: affixSuffixId ?? this.affixSuffixId,
       setId: clearSetId ? null : (setId ?? this.setId),
+      isApex: isApex ?? this.isApex,
+      apexClassId:
+          clearApexClassId ? null : (apexClassId ?? this.apexClassId),
+      apexRoleTag:
+          clearApexRoleTag ? null : (apexRoleTag ?? this.apexRoleTag),
+      apexRank: apexRank ?? this.apexRank,
     );
   }
 }

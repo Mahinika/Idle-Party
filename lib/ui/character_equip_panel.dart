@@ -172,8 +172,11 @@ class CharacterEquipPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${hero.roleLabel}  |  Lv${hero.level}  |  iLvl ${_avgItemLevel(hero)}'
-          '  |  HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
+          state.isPartyDefeated
+              ? '${hero.roleLabel}  |  Lv${hero.level}  |  iLvl ${_avgItemLevel(hero)}'
+                  '  |  WIPED  (max $maxHp)'
+              : '${hero.roleLabel}  |  Lv${hero.level}  |  iLvl ${_avgItemLevel(hero)}'
+                  '  |  HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
           textAlign: TextAlign.center,
           style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
         ),

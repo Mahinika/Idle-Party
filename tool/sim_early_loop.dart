@@ -46,6 +46,10 @@ void main() {
             PartyUpgradeType.attack => GameLogic.upgradeAttack(state),
             PartyUpgradeType.defense => GameLogic.upgradeDefense(state),
             PartyUpgradeType.vitality => GameLogic.upgradeVitality(state),
+            PartyUpgradeType.moveSpeed => GameLogic.upgradeMoveSpeed(state),
+            PartyUpgradeType.attackSpeed =>
+              GameLogic.upgradeAttackSpeed(state),
+            PartyUpgradeType.crit => GameLogic.upgradeCrit(state),
           };
           spent = true;
           break;

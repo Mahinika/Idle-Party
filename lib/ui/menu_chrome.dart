@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'game_theme.dart';
+import 'kenney_button.dart';
+import 'web_click_bridge.dart';
 
 /// Shared cave-menu chrome — translucent panels, torch edges, soft scrims.
 abstract final class MenuChrome {
@@ -105,6 +107,7 @@ abstract final class MenuChrome {
     );
     final resolved = sections ??
         [(header: '', items: items!)];
+    WebClickBridge.pushLayer();
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -164,6 +167,12 @@ abstract final class MenuChrome {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    KenneyButton(
+                      label: 'CLOSE',
+                      style: KenneyButtonStyle.grey,
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
                   ],
                 ),
               ),
@@ -171,7 +180,7 @@ abstract final class MenuChrome {
           ),
         );
       },
-    );
+    ).whenComplete(WebClickBridge.popLayer);
   }
 
   static Widget menuRow({
@@ -181,33 +190,44 @@ abstract final class MenuChrome {
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
+      child: WebClickScope(
+        label: label,
+        onPressed: onTap,
+        child: Semantics(
+          button: true,
+          label: label,
           onTap: onTap,
-          borderRadius: BorderRadius.circular(4),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: rowTile(),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: GameTheme.pixel(size: GameTheme.hudPixel),
-                  ),
-                ),
-                if (trailing != null)
-                  Text(
-                    trailing,
-                    style: GameTheme.body(
-                      size: 14,
-                      color: GameTheme.parchmentDim,
+          excludeSemantics: true,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(4),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: rowTile(),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: GameTheme.pixel(size: GameTheme.hudPixel),
+                      ),
                     ),
-                  ),
-              ],
+                    if (trailing != null)
+                      Text(
+                        trailing,
+                        style: GameTheme.body(
+                          size: 14,
+                          color: GameTheme.parchmentDim,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

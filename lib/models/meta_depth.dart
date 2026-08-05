@@ -130,6 +130,8 @@ class MetaDepthState {
     this.lifetimePetMerges = 0,
     this.lifetimeAscends = 0,
     this.highestHardmodeCleared = 0,
+    this.gauntletBestFloor = 0,
+    this.lifetimeGauntletFloors = 0,
     this.codexClaims = const <String>[],
     this.soulboundRefine = 0,
     this.soulboundIsArmor = false,
@@ -173,6 +175,13 @@ class MetaDepthState {
 
   /// Highest Hardmode level at which a floor was cleared (not dial-only).
   final int highestHardmodeCleared;
+
+  /// Best Infinity Gauntlet floor cleared (meta — survives Ascend).
+  final int gauntletBestFloor;
+
+  /// Lifetime gauntlet floor clears.
+  final int lifetimeGauntletFloors;
+
   final List<String> codexClaims;
   final int soulboundRefine;
   final bool soulboundIsArmor;
@@ -226,6 +235,8 @@ class MetaDepthState {
     int? lifetimePetMerges,
     int? lifetimeAscends,
     int? highestHardmodeCleared,
+    int? gauntletBestFloor,
+    int? lifetimeGauntletFloors,
     List<String>? codexClaims,
     int? soulboundRefine,
     bool? soulboundIsArmor,
@@ -270,6 +281,9 @@ class MetaDepthState {
       lifetimeAscends: lifetimeAscends ?? this.lifetimeAscends,
       highestHardmodeCleared:
           highestHardmodeCleared ?? this.highestHardmodeCleared,
+      gauntletBestFloor: gauntletBestFloor ?? this.gauntletBestFloor,
+      lifetimeGauntletFloors:
+          lifetimeGauntletFloors ?? this.lifetimeGauntletFloors,
       codexClaims: codexClaims ?? this.codexClaims,
       soulboundRefine: soulboundRefine ?? this.soulboundRefine,
       soulboundIsArmor: soulboundIsArmor ?? this.soulboundIsArmor,
@@ -313,6 +327,8 @@ class MetaDepthState {
         'lifetimePetMerges': lifetimePetMerges,
         'lifetimeAscends': lifetimeAscends,
         'highestHardmodeCleared': highestHardmodeCleared,
+        'gauntletBestFloor': gauntletBestFloor,
+        'lifetimeGauntletFloors': lifetimeGauntletFloors,
         'codexClaims': codexClaims,
         'soulboundRefine': soulboundRefine,
         'soulboundIsArmor': soulboundIsArmor,
@@ -373,6 +389,9 @@ class MetaDepthState {
       lifetimeAscends: (json['lifetimeAscends'] as num?)?.toInt() ?? 0,
       highestHardmodeCleared:
           ((json['highestHardmodeCleared'] as num?)?.toInt() ?? 0).clamp(0, 10),
+      gauntletBestFloor: (json['gauntletBestFloor'] as num?)?.toInt() ?? 0,
+      lifetimeGauntletFloors:
+          (json['lifetimeGauntletFloors'] as num?)?.toInt() ?? 0,
       codexClaims:
           (json['codexClaims'] as List<dynamic>?)?.cast<String>() ?? const [],
       soulboundRefine: (json['soulboundRefine'] as num?)?.toInt() ?? 0,

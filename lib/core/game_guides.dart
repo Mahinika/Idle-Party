@@ -107,9 +107,31 @@ abstract final class GameGuides {
       body:
           'MORE → SANCTUARY. Spend essence on permanent tracks.\n\n'
           '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
-          '• At level 12+, reset a track for essence and a lasting bonus.\n'
+          '• Tracks level infinitely — cost scales with level.\n'
+          '• Optional prestige from level 12+: reset for essence + lasting bonus.\n'
           '• Survives Ascend (meta progress).\n'
           '• Invest early — sanctuary compounds over many runs.',
+    ),
+    GuideTopic(
+      id: 'gauntlet',
+      title: 'INFINITY GAUNTLET',
+      body:
+          'Unlocks at Ascension Level 10 (Spireborn).\n\n'
+          '• Endless Crystal Spire climb — each floor gets harder.\n'
+          '• Gold and essence scale with floor; boss every 5 floors.\n'
+          '• Wipe or leave returns to hub; best floor is saved.\n'
+          '• Does not count toward Ascend boss requirements.',
+    ),
+    GuideTopic(
+      id: 'apex',
+      title: 'APEX FORGE',
+      body:
+          'FORGE → MATERIALS / APEX.\n\n'
+          '• Craft the strongest class/role gear from boss-only materials.\n'
+          '• Materials live in a separate bag (not gear stash) and survive Ascend.\n'
+          '• Farm bosses on each dungeon — trash packs never drop mats.\n'
+          '• Craft weapon R1 first, then armor; upgrade pieces in place to R3.\n'
+          '• Apex gear stays equipped through Ascend.',
     ),
     GuideTopic(
       id: 'market',
@@ -152,7 +174,7 @@ abstract final class GameGuides {
           '• Claim 3 in a row for a +5e chain bonus.\n'
           '• The MORE menu may show CONTRACTS (n) when claims are ready.\n'
           '• The top CLAIM chip claims all ready contracts at once '
-          '(long-press opens the list).',
+          '(visible in combat too; long-press opens the list).',
     ),
     GuideTopic(
       id: 'weekly',

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_def.dart';
@@ -278,6 +279,64 @@ void main() {
     expect(defenseUpgraded.defenseBonus, 1);
     expect(vitalityUpgraded.vitalityBonus, 6);
     expect(attackUpgraded.gold, 0);
+  });
+
+  test('forge haste tracks are infinite and scale combat speed', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
+    final hero = state.heroes.first;
+    final baseMove = state.effectiveHeroMoveSpeed(hero);
+    final baseAtkSpd = state.effectiveHeroAttackSpeed(hero);
+    final baseCrit = state.effectiveHeroCrit(hero);
+
+    for (var i = 0; i < 12; i++) {
+      final cost = GameLogic.upgradeCostFor(state, PartyUpgradeType.moveSpeed) +
+          GameLogic.upgradeCostFor(state, PartyUpgradeType.attackSpeed) +
+          GameLogic.upgradeCostFor(state, PartyUpgradeType.crit);
+      state = state.copyWith(gold: cost);
+      state = GameLogic.upgradeMoveSpeed(state);
+      state = GameLogic.upgradeAttackSpeed(state);
+      state = GameLogic.upgradeCrit(state);
+    }
+
+    expect(state.moveSpeedBonus, 24);
+    expect(state.attackSpeedBonus, 24);
+    expect(state.critBonus, 12);
+    expect(state.effectiveHeroMoveSpeed(hero), greaterThan(baseMove));
+    expect(state.effectiveHeroAttackSpeed(hero), greaterThan(baseAtkSpd));
+    expect(state.effectiveHeroCrit(hero), greaterThan(baseCrit));
+    // Soft-cap keeps absurd stacks from exploding.
+    expect(GameState.softForgePercent(100), lessThan(100));
+  });
+
+  test('ascend clears forge haste tracks with ATK/DEF/VIT', () {
+    final ready = GameLogic.createInitialState(now: DateTime(2026, 8, 3))
+        .copyWith(
+          bossVictories: 1,
+          attackBonus: 4,
+          moveSpeedBonus: 10,
+          attackSpeedBonus: 8,
+          critBonus: 5,
+        );
+    final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 4));
+    expect(ascended.attackBonus, 0);
+    expect(ascended.moveSpeedBonus, 0);
+    expect(ascended.attackSpeedBonus, 0);
+    expect(ascended.critBonus, 0);
+  });
+
+  test('recommendedDungeonId prefers frontier; ascend updates dungeonId', () {
+    final initial = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
+    expect(GameLogic.recommendedDungeonId(initial), 'sandy');
+
+    final mid = initial.copyWith(highestDungeonCleared: 0);
+    expect(GameLogic.recommendedDungeonId(mid), 'goblin');
+
+    final allClear = initial.copyWith(highestDungeonCleared: 6);
+    expect(GameLogic.recommendedDungeonId(allClear), 'crystal');
+
+    final ready = mid.copyWith(bossVictories: 1);
+    final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 4));
+    expect(ascended.dungeonId, 'goblin');
   });
 
   test('boss floor clear increases boss victory count', () {
@@ -850,7 +909,7 @@ void main() {
 
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final mageIndex =
-        state.heroes.indexWhere((h) => h.role == HeroRole.mage);
+        state.heroes.indexWhere((h) => h.gearAffinity == HeroRole.mage);
     expect(mageIndex, greaterThanOrEqualTo(0));
 
     // Strip mage gear then put 2H staff on; give other heroes strong frills.
@@ -1363,8 +1422,8 @@ void main() {
     final runnerUp = cloak(id: 'runner_cloak', armor: 10, sta: 8);
 
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
-    final w = state.heroes.indexWhere((h) => h.role == HeroRole.warrior);
-    final m = state.heroes.indexWhere((h) => h.role == HeroRole.mage);
+    final w = state.heroes.indexWhere((h) => h.gearAffinity == HeroRole.warrior);
+    final m = state.heroes.indexWhere((h) => h.gearAffinity == HeroRole.mage);
     expect(w, greaterThanOrEqualTo(0));
     expect(m, greaterThanOrEqualTo(0));
 
@@ -1519,7 +1578,7 @@ void main() {
     final mageDown = state.copyWith(
       heroes: state.heroes
           .map(
-            (hero) => hero.role == HeroRole.mage
+            (hero) => hero.gearAffinity == HeroRole.mage
                 ? hero.copyWith(currentHp: 0)
                 : hero,
           )
@@ -1534,7 +1593,7 @@ void main() {
   test('warrior guard and healer mend passives apply', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final warrior = state.heroes.firstWhere(
-      (hero) => hero.role == HeroRole.warrior,
+      (hero) => hero.gearAffinity == HeroRole.warrior,
     );
     expect(state.tankGuardBonusFor(warrior), 2);
     expect(
@@ -1787,6 +1846,154 @@ void main() {
     expect(ascended.dungeonMode, DungeonMode.push);
   });
 
+  test('sanctuary tracks level infinitely past 12', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 3))
+        .copyWith(sanctuaryGoldLevel: 12, essence: 5000);
+    final beforeBonus = state.sanctuaryGoldBonusPercent;
+    state = GameLogic.upgradeSanctuary(state, 'gold');
+    expect(state.sanctuaryGoldLevel, 13);
+    expect(state.sanctuaryGoldBonusPercent, greaterThanOrEqualTo(beforeBonus));
+
+    // Prestige remains optional compress from Lv12+.
+    final prestiged = GameLogic.prestigeSanctuaryTrack(state, 'gold');
+    expect(prestiged.sanctuaryGoldLevel, 0);
+    expect(prestiged.metaDepth.sanctuaryGoldPrestige, 1);
+    expect(prestiged.essence, greaterThan(state.essence));
+  });
+
+  test('infinity gauntlet unlocks at AL10 and escalates', () {
+    final locked = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
+    expect(GameLogic.canEnterGauntlet(locked), isFalse);
+    expect(GameLogic.enterGauntlet(locked).inGauntlet, isFalse);
+
+    var state = locked.copyWith(ascensionLevel: 10);
+    expect(GameLogic.canEnterGauntlet(state), isTrue);
+    state = GameLogic.enterGauntlet(state);
+    expect(state.inGauntlet, isTrue);
+    expect(state.inDungeon, isTrue);
+    expect(state.dungeonId, 'crystal');
+    expect(state.dungeonMode, DungeonMode.push);
+    expect(state.currentRoom.floorNumber, 1);
+    expect(state.achievements, contains('gauntlet_enter'));
+
+    final f1 = GameLogic.createEnemyGroup(
+      state.currentRoom,
+      dungeonId: state.dungeonId,
+      fromState: state,
+    );
+    final f10Room = DungeonGenerator.generateFloor(
+      10,
+      ascensionLevel: state.ascensionLevel,
+      dungeonId: 'crystal',
+      bossEvery: GameLogic.gauntletBossEvery,
+    ).first;
+    expect(f10Room.type, RoomType.boss);
+    final f10 = GameLogic.createEnemyGroup(
+      f10Room,
+      dungeonId: 'crystal',
+      fromState: state.copyWith(currentRoom: f10Room),
+    );
+    final f1Hp = f1.fold<int>(0, (s, e) => s + e.maxHp);
+    final f10Hp = f10.fold<int>(0, (s, e) => s + e.maxHp);
+    expect(f10Hp, greaterThan(f1Hp));
+    expect(GameLogic.gauntletEssenceForFloor(10, boss: false), greaterThan(1));
+    expect(
+      DungeonGenerator.generateFloor(
+        15,
+        bossEvery: GameLogic.gauntletBossEvery,
+      ).first.type,
+      RoomType.boss,
+    );
+
+    final goldBefore = state.gold;
+    final expectedGold = GameLogic.applyGoldGain(
+      state,
+      (100 * GameLogic.gauntletGoldMul(1)).round(),
+    );
+    state = GameLogic.completeCurrentRoom(
+      state,
+      goldGain: 100,
+      skipLootRoll: true,
+    );
+    expect(state.inGauntlet, isTrue);
+    expect(state.currentRoom.floorNumber, 2);
+    expect(state.metaDepth.gauntletBestFloor, greaterThanOrEqualTo(1));
+    expect(state.essence, greaterThan(locked.essence));
+    // Single gold mul on clear (F1 → mul 1.0).
+    expect(state.gold - goldBefore, expectedGold);
+
+    // Challenge/weekly mint suppressed in gauntlet (HM clear still unlocks hm_1).
+    final weeklyBefore = state.metaDepth.weeklyProgress;
+    final withChallenges = state.copyWith(
+      challengeBossRush: true,
+      hardmodeLevel: 3,
+      essence: 0,
+    );
+    expect(
+      MetaSystems.challengeClearEssenceBonus(withChallenges),
+      greaterThan(0),
+    );
+    final afterClear = GameLogic.completeCurrentRoom(
+      withChallenges,
+      goldGain: 10,
+      skipLootRoll: true,
+    );
+    final hmReward = AchievementCatalog.byId('hm_1')?.essenceReward ?? 0;
+    expect(afterClear.achievements, contains('hm_1'));
+    // Gauntlet floor essence only + new achievement — no rush/HM clear mint.
+    expect(afterClear.essence, 1 + (2 ~/ 2) + hmReward);
+    expect(afterClear.metaDepth.weeklyProgress, weeklyBefore);
+
+    final left = GameLogic.leaveDungeon(state);
+    expect(left.inGauntlet, isFalse);
+    expect(left.inDungeon, isFalse);
+    expect(left.metaDepth.gauntletBestFloor, greaterThanOrEqualTo(1));
+
+    // Offline soft-cap: even long AFK clears at most 6 gauntlet floors.
+    final afk = GameLogic.enterGauntlet(
+      locked.copyWith(ascensionLevel: 10),
+    );
+    final sim = GameLogic.simulateSpatialOffline(afk, 60 * 60);
+    expect(sim.roomsCleared, lessThanOrEqualTo(6));
+  });
+
+  test('gauntlet wipe exits to hub healed (live helper + offline)', () {
+    final base = GameLogic.createInitialState(
+      now: DateTime(2026, 8, 3),
+    ).copyWith(ascensionLevel: 10);
+    var state = GameLogic.enterGauntlet(base);
+    expect(state.inGauntlet, isTrue);
+    state = state.copyWith(
+      heroes: [
+        for (final h in state.heroes) h.copyWith(currentHp: 0),
+      ],
+    );
+    final left = GameLogic.exitToHubHealed(state);
+    expect(left.inGauntlet, isFalse);
+    expect(left.inDungeon, isFalse);
+    expect(
+      left.heroes.every((h) => h.currentHp == left.effectiveHeroMaxHp(h)),
+      isTrue,
+    );
+
+    // Offline sim with a wiped party must not soft-lock in Gauntlet.
+    var afk = GameLogic.enterGauntlet(base);
+    afk = afk.copyWith(
+      heroes: [
+        for (final h in afk.heroes) h.copyWith(currentHp: 0),
+      ],
+    );
+    final sim = GameLogic.simulateSpatialOffline(afk, 5);
+    expect(sim.state.inDungeon, isFalse);
+    expect(sim.state.inGauntlet, isFalse);
+    expect(
+      sim.state.heroes.every(
+        (h) => h.currentHp == sim.state.effectiveHeroMaxHp(h),
+      ),
+      isTrue,
+    );
+  });
+
   test('field bandage heals the lowest living hero about 40%', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
     final bandage = GameLogic.createMarketBandage(salt: 1);
@@ -1838,5 +2045,59 @@ void main() {
     expect(armor.metaDepth.soulboundIsArmor, isTrue);
     final weapon = GameLogic.setSoulboundPreferArmor(armor, false);
     expect(weapon.metaDepth.soulboundIsArmor, isFalse);
+  });
+
+  test('loot: kill has no fillers; clear grants gold pouch as wallet gold', () {
+    GameLogic.random = Random(3);
+    final kill = GameLogic.rollKillLoot(
+      4,
+      party: GameLogic.createInitialState(now: DateTime(2026, 8, 3)).heroes,
+    );
+    expect(kill.any((d) => d.name == 'Gold Pouch'), isFalse);
+    expect(kill.any((d) => d.name == 'Boss Sigil'), isFalse);
+
+    final fillers = GameLogic.rollFloorClearLoot(4, roomType: RoomType.normal);
+    expect(fillers.any((d) => d.name == 'Gold Pouch'), isTrue);
+    final pouch = fillers.firstWhere((d) => d.name == 'Gold Pouch');
+    expect(pouch.amount, GameLogic.goldPouchBaseGold(4));
+
+    final before = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
+    final applied = GameLogic.applyLootDrops(before, [pouch]);
+    expect(applied.resolved.first.outcome, LootOutcome.gold);
+    expect(applied.state.gold, greaterThan(before.gold));
+    expect(applied.state.essence, before.essence);
+
+    final bossFillers = GameLogic.rollFloorClearLoot(
+      10,
+      roomType: RoomType.boss,
+    );
+    expect(bossFillers.any((d) => d.name == 'Boss Sigil'), isTrue);
+
+    // Combat clear applies floor fillers into recentLoot.
+    var roomState = before.copyWith(
+      inDungeon: true,
+      currentRoom: DungeonRoom(
+        floorNumber: 4,
+        roomIndex: 0,
+        type: RoomType.normal,
+        enemyLevel: 4,
+        enemyCount: 3,
+      ),
+      dungeonFloor: [
+        DungeonRoom(
+          floorNumber: 4,
+          roomIndex: 0,
+          type: RoomType.normal,
+          enemyLevel: 4,
+          enemyCount: 3,
+        ),
+      ],
+    );
+    roomState = GameLogic.completeCurrentRoom(
+      roomState,
+      goldGain: 0,
+      skipLootRoll: true,
+    );
+    expect(roomState.recentLoot.any((d) => d.name == 'Gold Pouch'), isTrue);
   });
 }

@@ -9,22 +9,26 @@ abstract final class CaveAtmosphere {
     String asset, {
     Alignment alignment = Alignment.center,
   }) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const ColoredBox(color: GameTheme.ink),
-        Image.asset(
-          asset,
-          fit: BoxFit.cover,
-          alignment: alignment,
-          filterQuality: FilterQuality.none,
-          isAntiAlias: false,
-          gaplessPlayback: true,
-          // Cap decode size — painted scenes are huge on disk.
-          cacheWidth: 960,
-          cacheHeight: 960,
-        ),
-      ],
+    // Decorative — keep out of the semantics hit tree so automation / a11y
+    // clicks reach real buttons instead of a full-bleed image node.
+    return ExcludeSemantics(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const ColoredBox(color: GameTheme.ink),
+          Image.asset(
+            asset,
+            fit: BoxFit.cover,
+            alignment: alignment,
+            filterQuality: FilterQuality.none,
+            isAntiAlias: false,
+            gaplessPlayback: true,
+            // Cap decode size — painted scenes are huge on disk.
+            cacheWidth: 960,
+            cacheHeight: 960,
+          ),
+        ],
+      ),
     );
   }
 

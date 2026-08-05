@@ -1,6 +1,8 @@
 ﻿import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/equipment_factory.dart';
@@ -17,9 +19,18 @@ import 'ui/kenney_sprite.dart';
 import 'ui/menu_chrome.dart';
 import 'ui/new_game_party_picker.dart';
 import 'ui/start_menu_screen.dart';
+import 'ui/web_click_bridge.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
+  // Expose the semantics DOM overlay on web so browser automation / a11y
+  // tools can click buttons (CanvasKit has no real DOM widgets otherwise).
+  // Must run after runApp — see flutter.dev accessibility-on-the-web.
+  if (kIsWeb) {
+    SemanticsBinding.instance.ensureSemantics();
+    WebClickBridge.install();
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -115,6 +126,12 @@ class _GameHomePageState extends State<GameHomePage> {
     // Defer combat loop until after start menu so dungeon ticks cannot steal focus.
     await _director.boot(deferCombatLoop: widget.showIntro);
     GameAudio.muted = _director.state.soundMuted;
+    if (kIsWeb) {
+      WebClickBridge.bindSpeedControls(
+        getSpeed: () => _director.debugTimeScale,
+        setSpeed: _director.setDebugTimeScale,
+      );
+    }
     if (!mounted) return;
     setState(() {
       _phase = widget.showIntro ? _AppPhase.startMenu : _AppPhase.play;
@@ -256,48 +273,51 @@ class _GameHomePageState extends State<GameHomePage> {
         } else {
           body = Stack(
             children: [
-              HubScreen(
-                director: _director,
-                onEnterDungeon: (id) =>
-                    _director.enterDungeon(dungeonId: id),
-                onOpenInventory: () => setState(
-                  () => _hubOverlay = Is2Overlay.inventory,
-                ),
-                onOpenForge: () => setState(
-                  () => _hubOverlay = Is2Overlay.forge,
-                ),
-                onOpenJobs: () => setState(
-                  () => _hubOverlay = Is2Overlay.jobs,
-                ),
-                onOpenSanctuary: () => setState(
-                  () => _hubOverlay = Is2Overlay.sanctuary,
-                ),
-                onOpenMarket: () => setState(
-                  () => _hubOverlay = Is2Overlay.market,
-                ),
-                onOpenBeast: () => setState(
-                  () => _hubOverlay = Is2Overlay.beast,
-                ),
-                onOpenSettings: () => setState(
-                  () => _hubOverlay = Is2Overlay.settings,
-                ),
-                onOpenAchievements: () => setState(
-                  () => _hubOverlay = Is2Overlay.achievements,
-                ),
-                onOpenCodex: () => setState(
-                  () => _hubOverlay = Is2Overlay.codex,
-                ),
-                onOpenLoadouts: () => setState(
-                  () => _hubOverlay = Is2Overlay.loadouts,
-                ),
-                onOpenTeam: () => setState(
-                  () => _hubOverlay = Is2Overlay.teamComposition,
-                ),
-                onOpenGuides: () => setState(
-                  () => _hubOverlay = Is2Overlay.guides,
-                ),
-                onOpenPrestigeShop: () => setState(
-                  () => _hubOverlay = Is2Overlay.prestigeShop,
+              IgnorePointer(
+                ignoring: _hubOverlay != null,
+                child: HubScreen(
+                  director: _director,
+                  onEnterDungeon: (id) =>
+                      _director.enterDungeon(dungeonId: id),
+                  onOpenInventory: () => setState(
+                    () => _hubOverlay = Is2Overlay.inventory,
+                  ),
+                  onOpenForge: () => setState(
+                    () => _hubOverlay = Is2Overlay.forge,
+                  ),
+                  onOpenJobs: () => setState(
+                    () => _hubOverlay = Is2Overlay.jobs,
+                  ),
+                  onOpenSanctuary: () => setState(
+                    () => _hubOverlay = Is2Overlay.sanctuary,
+                  ),
+                  onOpenMarket: () => setState(
+                    () => _hubOverlay = Is2Overlay.market,
+                  ),
+                  onOpenBeast: () => setState(
+                    () => _hubOverlay = Is2Overlay.beast,
+                  ),
+                  onOpenSettings: () => setState(
+                    () => _hubOverlay = Is2Overlay.settings,
+                  ),
+                  onOpenAchievements: () => setState(
+                    () => _hubOverlay = Is2Overlay.achievements,
+                  ),
+                  onOpenCodex: () => setState(
+                    () => _hubOverlay = Is2Overlay.codex,
+                  ),
+                  onOpenLoadouts: () => setState(
+                    () => _hubOverlay = Is2Overlay.loadouts,
+                  ),
+                  onOpenTeam: () => setState(
+                    () => _hubOverlay = Is2Overlay.teamComposition,
+                  ),
+                  onOpenGuides: () => setState(
+                    () => _hubOverlay = Is2Overlay.guides,
+                  ),
+                  onOpenPrestigeShop: () => setState(
+                    () => _hubOverlay = Is2Overlay.prestigeShop,
+                  ),
                 ),
               ),
               if (_hubOverlay == null)

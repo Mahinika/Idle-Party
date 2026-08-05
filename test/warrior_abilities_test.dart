@@ -25,7 +25,7 @@ void main() {
 
   test('healer role label is Disc Priest', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
-    final priest = state.heroes.firstWhere((h) => h.role == HeroRole.healer);
+    final priest = state.heroes.firstWhere((h) => h.gearAffinity == HeroRole.healer);
     expect(priest.roleLabel, 'DISC');
     expect(priest.spec.name, 'Discipline Priest');
     expect(priest.passiveLabel.toLowerCase(), contains('inner'));

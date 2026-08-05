@@ -65,14 +65,62 @@ class _HubScreenState extends State<HubScreen>
   late String _selectedId;
   late final AnimationController _torch;
   bool _offlineDialogShown = false;
+  bool _userPickedZone = false;
+  int? _trackedAscension;
+  int? _trackedHighestCleared;
 
   GameDirector get director => widget.director;
   GameState get state => director.state;
+
+  /// Unlocked uncleared frontier zone (World Path NEXT), if any.
+  static String? frontierDungeonId(GameState state) {
+    final highest = state.highestDungeonCleared;
+    for (final d in DungeonCatalog.all) {
+      final unlocked = DungeonCatalog.isUnlocked(
+        d.id,
+        state.lifetimeGoldEarned,
+        highest,
+      );
+      final cleared = highest >= d.number;
+      if (unlocked && !cleared && d.number == highest + 1) {
+        return d.id;
+      }
+    }
+    return null;
+  }
+
+  void _syncSelection({required bool force}) {
+    final preferred = GameLogic.recommendedDungeonId(state);
+    if (force) {
+      _userPickedZone = false;
+      _selectedId = preferred;
+      return;
+    }
+    if (_userPickedZone) {
+      // Still snap off a CLEAR node when a NEXT frontier exists.
+      final frontier = frontierDungeonId(state);
+      if (frontier != null) {
+        final sel = DungeonCatalog.byId(_selectedId);
+        if (state.highestDungeonCleared >= sel.number &&
+            _selectedId != frontier) {
+          _selectedId = frontier;
+          _userPickedZone = false;
+        }
+      }
+      return;
+    }
+    if (_selectedId != preferred) {
+      _selectedId = preferred;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _selectedId = state.dungeonId;
+    _trackedAscension = state.ascensionLevel;
+    _trackedHighestCleared = state.highestDungeonCleared;
+    _syncSelection(force: true);
     _torch = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1600),
@@ -99,6 +147,19 @@ class _HubScreenState extends State<HubScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_trackedAscension != state.ascensionLevel ||
+        _trackedHighestCleared != state.highestDungeonCleared) {
+      final ascended = _trackedAscension != null &&
+          _trackedAscension != state.ascensionLevel;
+      _trackedAscension = state.ascensionLevel;
+      _trackedHighestCleared = state.highestDungeonCleared;
+      // After Ascend / new clear, prefer NEXT (or deepest unlocked).
+      _syncSelection(force: ascended || !_userPickedZone);
+    } else if (!_userPickedZone &&
+        _selectedId != GameLogic.recommendedDungeonId(state)) {
+      // Keep detail panel aligned with glowing NEXT / recommended node.
+      _selectedId = GameLogic.recommendedDungeonId(state);
+    }
     final selected = DungeonCatalog.byId(_selectedId);
     final canAscend = GameLogic.canAscend(state);
     final bossFloor = GameLogic.bossFloorFor(state);
@@ -230,8 +291,10 @@ class _HubScreenState extends State<HubScreen>
                                             state.highestDungeonCleared,
                                         pulse: _torch.value,
                                         iconFor: _dungeonIcon,
-                                        onSelect: (id) =>
-                                            setState(() => _selectedId = id),
+                                        onSelect: (id) => setState(() {
+                                          _userPickedZone = true;
+                                          _selectedId = id;
+                                        }),
                                       ),
                                     ),
                                   ],
@@ -342,6 +405,12 @@ class _HubScreenState extends State<HubScreen>
                           onAscend: () => confirmAscend(context, director),
                           dailyClaimed: director.isDailyClaimedToday,
                           onDaily: () => confirmDailyRun(context, director),
+                          showGauntlet: GameLogic.canEnterGauntlet(state) ||
+                              state.ascensionLevel >=
+                                  GameLogic.gauntletMinAscension,
+                          gauntletBest: state.metaDepth.gauntletBestFloor,
+                          onGauntlet: () =>
+                              confirmGauntletRun(context, director),
                         ),
                         if (!short && !canAscend) ...[
                           const SizedBox(height: 4),
@@ -462,6 +531,9 @@ class _HubUrgentRow extends StatelessWidget {
     required this.onAscend,
     required this.dailyClaimed,
     required this.onDaily,
+    required this.showGauntlet,
+    required this.gauntletBest,
+    required this.onGauntlet,
   });
 
   final int claimable;
@@ -471,6 +543,9 @@ class _HubUrgentRow extends StatelessWidget {
   final VoidCallback onAscend;
   final bool dailyClaimed;
   final VoidCallback onDaily;
+  final bool showGauntlet;
+  final int gauntletBest;
+  final VoidCallback onGauntlet;
 
   @override
   Widget build(BuildContext context) {
@@ -501,14 +576,22 @@ class _HubUrgentRow extends StatelessWidget {
             Expanded(
               child: KenneyButton(
                 label: dailyClaimed ? 'DAILY · done' : 'DAILY RUN',
-                style: dailyClaimed
-                    ? KenneyButtonStyle.grey
-                    : KenneyButtonStyle.grey,
+                style: KenneyButtonStyle.grey,
                 onPressed: dailyClaimed ? null : onDaily,
               ),
             ),
           ],
         ),
+        if (showGauntlet) ...[
+          const SizedBox(height: 6),
+          KenneyButton(
+            label: gauntletBest > 0
+                ? 'GAUNTLET  ·  best F$gauntletBest'
+                : 'INFINITY GAUNTLET',
+            style: KenneyButtonStyle.red,
+            onPressed: onGauntlet,
+          ),
+        ],
       ],
     );
   }
@@ -704,7 +787,7 @@ class _StatPill extends StatelessWidget {
   }
 }
 
-class _ZonePathMap extends StatelessWidget {
+class _ZonePathMap extends StatefulWidget {
   const _ZonePathMap({
     required this.dungeons,
     required this.selectedId,
@@ -735,7 +818,61 @@ class _ZonePathMap extends StatelessWidget {
   ];
 
   @override
+  State<_ZonePathMap> createState() => _ZonePathMapState();
+}
+
+class _ZonePathMapState extends State<_ZonePathMap> {
+  final ScrollController _scroll = ScrollController();
+  String? _scrolledTo;
+
+  @override
+  void didUpdateWidget(covariant _ZonePathMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedId != widget.selectedId) {
+      _scrolledTo = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _ensureSelectedVisible({
+    required double gap,
+    required double portrait,
+    required double viewH,
+    required double contentH,
+  }) {
+    if (!_scroll.hasClients) return;
+    if (_scrolledTo == widget.selectedId) return;
+    final idx = widget.dungeons.indexWhere((d) => d.id == widget.selectedId);
+    if (idx < 0) return;
+    final targetY = portrait * 0.5 + idx * gap - viewH * 0.35;
+    final maxScroll = math.max(0.0, contentH - viewH);
+    final offset = targetY.clamp(0.0, maxScroll);
+    _scrolledTo = widget.selectedId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scroll.hasClients) return;
+      _scroll.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final dungeons = widget.dungeons;
+    final selectedId = widget.selectedId;
+    final lifetimeGold = widget.lifetimeGold;
+    final highestCleared = widget.highestCleared;
+    final pulse = widget.pulse;
+    final iconFor = widget.iconFor;
+    final onSelect = widget.onSelect;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
@@ -743,12 +880,14 @@ class _ZonePathMap extends StatelessWidget {
         if (w < 8 || viewH < 8) return const SizedBox.shrink();
 
         final n = dungeons.length;
-        const labelBudget = 36.0;
+        // Label column (name + status) — keep ≥40 to avoid 1px Text overflow banners.
+        const labelBudget = 40.0;
         final narrow = w < 360;
         // Never crush nodes into each other — scroll when the panel is short.
         final portrait = narrow ? 48.0 : 56.0;
         final nodeH = portrait + labelBudget;
         final gap = nodeH;
+        final bottomPad = 72.0;
         final contentH = math.max(viewH, nodeH + gap * (n - 1) + 28);
         final nodeW = math.min(
           w * (narrow ? 0.42 : 0.46),
@@ -773,10 +912,19 @@ class _ZonePathMap extends StatelessWidget {
             Offset(
               w *
                   (0.5 +
-                      _xWobble[i.clamp(0, _xWobble.length - 1)] * wobbleScale),
+                      _ZonePathMap._xWobble[
+                              i.clamp(0, _ZonePathMap._xWobble.length - 1)] *
+                          wobbleScale),
               portrait * 0.5 + i * gap,
             ),
         ];
+
+        _ensureSelectedVisible(
+          gap: gap,
+          portrait: portrait,
+          viewH: viewH,
+          contentH: contentH,
+        );
 
         Widget map = Stack(
           clipBehavior: Clip.none,
@@ -816,18 +964,23 @@ class _ZonePathMap extends StatelessWidget {
                     top: pt.dy - portrait * 0.5,
                     width: nodeW,
                     height: nodeH,
-                    child: _ZoneNode(
-                      def: d,
-                      icon: iconFor(d),
-                      portraitSize: portrait,
-                      unlocked: unlocked,
-                      cleared: cleared,
-                      isNext: isNext,
-                      isFrontier: isFrontier,
-                      selected: selected,
-                      pulse: pulse,
-                      compact: narrow,
-                      onTap: () => onSelect(d.id),
+                    child: SizedBox(
+                      height: nodeH,
+                      child: ClipRect(
+                        child: _ZoneNode(
+                          def: d,
+                          icon: iconFor(d),
+                          portraitSize: portrait,
+                          unlocked: unlocked,
+                          cleared: cleared,
+                          isNext: isNext,
+                          isFrontier: isFrontier,
+                          selected: selected,
+                          pulse: pulse,
+                          compact: true,
+                          onTap: () => onSelect(d.id),
+                        ),
+                      ),
                     ),
                   );
                 },
@@ -835,16 +988,10 @@ class _ZonePathMap extends StatelessWidget {
           ],
         );
 
-        if (contentH > viewH + 1) {
-          return SingleChildScrollView(
-            // Extra bottom padding so lower nodes clear the ENTER CTA below.
-            padding: const EdgeInsets.only(bottom: 72),
-            child: SizedBox(width: w, height: contentH, child: map),
-          );
-        }
         return SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 48),
-          child: SizedBox(width: w, height: math.max(viewH, contentH), child: map),
+          controller: _scroll,
+          padding: EdgeInsets.only(bottom: bottomPad),
+          child: SizedBox(width: w, height: contentH, child: map),
         );
       },
     );
@@ -921,9 +1068,11 @@ class _ZoneNode extends StatelessWidget {
 
     final status = cleared
         ? 'CLEAR'
-        : unlocked
+        : isFrontier
             ? 'NEXT'
-            : unlockGoldLabel(def.unlockPrice);
+            : unlocked
+                ? 'OPEN'
+                : unlockGoldLabel(def.unlockPrice);
 
     final scale = selected
         ? 1.0 + pulse * 0.03
@@ -985,10 +1134,10 @@ class _ZoneNode extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               shortName(def, compact: compact),
-              maxLines: compact ? 1 : 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: GameTheme.pixel(
@@ -996,7 +1145,7 @@ class _ZoneNode extends StatelessWidget {
                 color: unlocked
                     ? (selected ? GameTheme.torchHot : GameTheme.parchment)
                     : GameTheme.parchmentDim,
-                height: 1.15,
+                height: 1.1,
               ),
             ),
             Text(

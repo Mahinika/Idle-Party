@@ -79,7 +79,7 @@ void main() {
     ).copyWith(pattern: ProjectilePattern.spread);
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final heroes = [...state.heroes];
-    final mageIndex = heroes.indexWhere((h) => h.role == HeroRole.mage);
+    final mageIndex = heroes.indexWhere((h) => h.gearAffinity == HeroRole.mage);
     expect(mageIndex, greaterThanOrEqualTo(0));
     heroes[mageIndex] = heroes[mageIndex].copyWith(
       equipped: {
@@ -510,5 +510,44 @@ void main() {
 
     final step = SpatialCombat.step(world, state, dt: 0.05);
     expect(step.roomCleared, isTrue);
+  });
+
+  test('AFK exit vacuums ground loot before discard', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
+    final essenceBefore = state.essence;
+    final stashBefore = state.gearStash.length;
+    var world = SpatialCombat.build(state, afkAssist: true);
+    expect(world.afkAssist, isTrue);
+
+    final drop = GameLogic.createEquipment(
+      slot: EquipmentSlot.ring,
+      rarity: LootRarity.rare,
+      battleNumber: 6,
+    );
+    world.groundLoot.add(
+      GroundLoot(
+        x: world.cols - 2.5,
+        y: world.rows - 2.5,
+        drop: LootDrop(
+          name: drop.name,
+          amount: 1,
+          rarity: drop.rarity,
+          equipment: drop,
+        ),
+        age: 1.05,
+      ),
+    );
+    for (final e in world.enemies) {
+      e.hp = 0;
+    }
+    final step = SpatialCombat.step(world, state, dt: 0.05);
+    world = step.world;
+    state = step.state;
+    expect(world.awaitingExit, isTrue);
+    expect(world.groundLoot, isEmpty);
+    expect(
+      state.gearStash.length > stashBefore || state.essence > essenceBefore,
+      isTrue,
+    );
   });
 }

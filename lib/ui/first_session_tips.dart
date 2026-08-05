@@ -62,6 +62,13 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'When Ascend unlocks, prestige for essence. Gear resets — Farm early floors to re-kit before Pushing deep zones.',
     ),
+    (
+      id: 'post_ascend',
+      title: 'AFTER ASCEND',
+      body:
+          'Gold & forge tracks wiped. Farm Sandy for gold → Forge GOLD upgrades → Market flasks. '
+          'Spend essence under Forge → META (relics / God Hand). Apex mats survive.',
+    ),
   ];
 
   String? _nextTipId() {
@@ -70,6 +77,10 @@ class FirstSessionTips extends StatelessWidget {
     for (final tip in _tips) {
       if (seen.contains(tip.id)) continue;
       if (tip.id == 'ascend' && !GameLogic.canAscend(director.state)) {
+        continue;
+      }
+      if (tip.id == 'post_ascend' &&
+          (director.state.ascensionLevel < 1 || inDungeon)) {
         continue;
       }
       if ((tip.id == 'godhand' || tip.id == 'farm_push') && !inDungeon) {
@@ -109,48 +120,56 @@ class FirstSessionTips extends StatelessWidget {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 72),
-          child: DecoratedBox(
-            decoration: MenuChrome.panel(),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    tip.title,
-                    textAlign: TextAlign.center,
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixelComfort,
-                      color: GameTheme.torchHot,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxH = MediaQuery.sizeOf(context).height * 0.42;
+              return ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxH),
+                child: DecoratedBox(
+                  decoration: MenuChrome.panel(),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          tip.title,
+                          textAlign: TextAlign.center,
+                          style: GameTheme.pixel(
+                            size: GameTheme.hudPixelComfort,
+                            color: GameTheme.torchHot,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          tip.body,
+                          textAlign: TextAlign.center,
+                          style: GameTheme.body(
+                            size: 14,
+                            color: GameTheme.parchment,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        KenneyButton(
+                          label: 'GOT IT',
+                          onPressed: () => director.dismissTip(tip.id),
+                          primary: true,
+                        ),
+                        const SizedBox(height: 6),
+                        KenneyButton(
+                          label: 'SKIP ALL TIPS',
+                          onPressed: () => director.dismissAllTips(
+                            _tips.map((t) => t.id),
+                          ),
+                          style: KenneyButtonStyle.grey,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    tip.body,
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 14,
-                      color: GameTheme.parchment,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  KenneyButton(
-                    label: 'GOT IT',
-                    onPressed: () => director.dismissTip(tip.id),
-                    primary: true,
-                  ),
-                  const SizedBox(height: 6),
-                  KenneyButton(
-                    label: 'SKIP ALL TIPS',
-                    onPressed: () => director.dismissAllTips(
-                      _tips.map((t) => t.id),
-                    ),
-                    style: KenneyButtonStyle.grey,
-                  ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
