@@ -1,0 +1,48 @@
+# Idle Party — distribution & Play Store
+
+Package id: **`com.idleparty.app`**
+
+## Current decision (2026-08)
+
+**Primary distribution: GitHub Releases (sideload).**  
+Tag pushes `v*` publish signed APK + AAB via `.github/workflows/build-apk.yml`. Play Console production listing is **optional / deferred** until privacy URL hosting, IARC, screenshots, and store listing copy are ready.
+
+When you choose to publish on Play, complete the checklists below. Until then, treat this file as operator prep — not a blocker for GitHub releases.
+
+## Signing
+
+- [ ] Create an upload keystore (or use Play App Signing with an upload key).
+- [ ] Copy `android/key.properties.example` → `android/key.properties` and fill in passwords / alias / `storeFile`.
+- [ ] For CI: set secrets `KEYSTORE_BASE64` (base64 of the `.jks`) and `KEY_PROPERTIES` (full `key.properties` contents), same pattern as `.github/workflows/build-apk.yml`.
+- [ ] Locally: `flutter build appbundle --release` → `build/app/outputs/bundle/release/app-release.aab`.
+
+## Play Console — internal track (optional)
+
+- [ ] Create the app in Play Console with application id `com.idleparty.app`.
+- [ ] Enable Play App Signing if prompted.
+- [ ] Create an **Internal testing** release and upload the AAB (from CI tag `v*` artifacts/release assets, or a local build).
+- [ ] Add testers (email list or Google Group) and share the opt-in link.
+- [ ] Smoke-test install → hub → short dungeon → leave → relaunch (save persists).
+
+## Privacy / Data safety
+
+- [ ] Privacy policy URL pointing at this repo’s  
+  `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md`  
+  (or the equivalent branch/raw URL you publish).
+- [ ] Data safety form: **no accounts**, **no ads**, **no analytics collection to Idle Party servers**, **local-only save**; clipboard export/import is optional and user-initiated (see [PRIVACY.md](PRIVACY.md)).
+
+## Content rating / store listing notes
+
+- [ ] Complete the content rating questionnaire (IARC). Expect a general / mild fantasy violence rating for an idle RPG with combat; no real-world gambling, no user-generated chat, no ads in the build described in PRIVACY.
+- [ ] Short description / full description: use product name **Idle Party**; avoid placeholder Flutter text.
+- [ ] Screenshots and feature graphic from current hub/dungeon UI; icon from `assets/custom/ui/app_icon.png` (or Play-exported adaptive icon).
+- [ ] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*`.
+
+## Production listing
+
+- [ ] Promote internal → closed/open testing → production when ready.
+- [ ] Or keep **sideload-only** (GitHub Releases) indefinitely — this is an explicit, valid ship path for Idle Party.
+
+## CI reminder
+
+Tag push `v*` runs the Android workflow: release APK + AAB (when the AAB path exists), attached to the GitHub Release when secrets allow signed builds.

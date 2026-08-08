@@ -22,13 +22,13 @@ enum VfxQuality {
   String get settingsLabel => switch (this) {
         VfxQuality.full => 'Full VFX',
         VfxQuality.lite => 'Lite VFX',
-        VfxQuality.minimal => 'Minimal VFX',
+        VfxQuality.minimal => 'Minimal VFX (reduce motion)',
       };
 
   String get settingsHint => switch (this) {
         VfxQuality.full => 'All combat effects',
         VfxQuality.lite => 'Less lag — no floaters/bursts',
-        VfxQuality.minimal => 'Calmest — auras off too',
+        VfxQuality.minimal => 'Reduce motion — auras off too',
       };
 
   VfxQuality get next => switch (this) {

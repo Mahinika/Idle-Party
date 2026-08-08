@@ -297,6 +297,15 @@ class GameState {
 
   int get relicVitalityBonus => 10 * relicTierOf('phoenix_ember');
 
+  /// Flat God Hand damage from the God Hand Focus relic.
+  int get relicGodHandDamageBonus => 3 * relicTierOf('god_hand_focus');
+
+  /// Loot-find percent from Chamber Luck relic.
+  int get relicLootFindPercent => 5 * relicTierOf('chamber_luck');
+
+  /// Flat incoming damage mitigate from Iron Will relic.
+  int get relicMitigateFlat => 1 * relicTierOf('iron_will');
+
   /// Flat attack from Ascension Level (+1 ATK per AL).
   int get ascensionAttackBonus => ascensionLevel;
 
@@ -355,8 +364,11 @@ class GameState {
   /// Loot-find pets grant drop-rate help via [Pet.passiveValue].
   int get petLootFindPercent {
     final pet = activePet;
-    if (pet == null || pet.passive != PetPassive.lootFind) return 0;
-    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
+    if (pet == null || pet.passive != PetPassive.lootFind) {
+      return relicLootFindPercent;
+    }
+    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId)) +
+        relicLootFindPercent;
   }
 
   /// XP-find pets grant percent XP via [Pet.passiveValue].
@@ -369,8 +381,10 @@ class GameState {
   /// Mitigate pets grant flat damage reduction via [Pet.passiveValue].
   int get petMitigateFlat {
     final pet = activePet;
-    if (pet == null || pet.passive != PetPassive.mitigate) return 0;
-    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
+    final relic = relicMitigateFlat;
+    if (pet == null || pet.passive != PetPassive.mitigate) return relic;
+    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId)) +
+        relic;
   }
 
   /// Heal-boost pets grant heal potency via [Pet.passiveValue].

@@ -6,6 +6,7 @@ import '../models/class_ability.dart';
 import '../models/combat_ratings.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
+import '../models/gear_set.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
@@ -195,6 +196,11 @@ class SpatialActor {
   double kitHealMul = 1.0;
   double kitHasteMul = 1.0;
   double kitRootBonus = 0.0;
+
+  /// Dungeon armor 4pc on-hit proc (from [GearSets.fourPieceProc]).
+  double setProcChance = 0;
+  String? setProcTag;
+  int setProcArgb = 0xFFFFD070;
 
   // ?? Mage (Fire) ??
   double combustionTimer = 0;
@@ -2718,6 +2724,13 @@ abstract final class SpatialCombat {
       }
     }
 
+    if (hero.setProcChance > 0 &&
+        GameLogic.random.nextDouble() < hero.setProcChance) {
+      damage = math.max(1, (damage * 1.35).round());
+      tag = hero.setProcTag ?? 'SET';
+      tagArgb = hero.setProcArgb;
+    }
+
     return (damage: damage, tag: tag, tagArgb: tagArgb);
   }
 
@@ -2967,6 +2980,12 @@ abstract final class SpatialCombat {
         HeroSpecId.demonology => 'Demon',
         _ => 'Ghoul',
       };
+      final atkScale = switch (spec) {
+        HeroSpecId.beastMastery => 0.72,
+        HeroSpecId.unholy => 0.68,
+        // Demo personal kit was HIGH; companion contributes without dominating.
+        _ => 0.36,
+      };
       pets.add(
         SpatialActor(
           id: 'classpet_${h.id}',
@@ -2976,7 +2995,7 @@ abstract final class SpatialCombat {
           y: h.y + 0.4,
           hp: 1,
           maxHp: 1,
-          attack: math.max(2, (h.attack * 0.55).round()),
+          attack: math.max(2, (h.attack * atkScale).round()),
           defense: 0,
           moveSpeed: 3.6,
           attackRange: 1.4,
@@ -3129,6 +3148,15 @@ abstract final class SpatialCombat {
       if (prev != null) {
         _copyHeroRuntime(prev, actor);
       }
+      final setProc = GearSets.fourPieceProc(hero.equipped);
+      if (setProc != null) {
+        actor.setProcChance = setProc.chance;
+        actor.setProcTag = setProc.tag;
+        actor.setProcArgb = setProc.argb;
+      } else {
+        actor.setProcChance = 0;
+        actor.setProcTag = null;
+      }
       heroes.add(actor);
     }
 
@@ -3186,6 +3214,11 @@ abstract final class SpatialCombat {
         HeroSpecId.demonology => 'Demon',
         _ => 'Ghoul',
       };
+      final atkScale = switch (spec) {
+        HeroSpecId.beastMastery => 0.72,
+        HeroSpecId.unholy => 0.68,
+        _ => 0.36,
+      };
       pets.add(
         SpatialActor(
           id: 'classpet_${h.id}',
@@ -3195,7 +3228,7 @@ abstract final class SpatialCombat {
           y: prevClass?.y ?? (h.y + 0.4),
           hp: 1,
           maxHp: 1,
-          attack: math.max(2, (h.attack * 0.55).round()),
+          attack: math.max(2, (h.attack * atkScale).round()),
           defense: 0,
           moveSpeed: 3.6,
           attackRange: 1.4,
@@ -3277,6 +3310,9 @@ abstract final class SpatialCombat {
     to.kitHealMul = from.kitHealMul;
     to.kitHasteMul = from.kitHasteMul;
     to.kitRootBonus = from.kitRootBonus;
+    to.setProcChance = from.setProcChance;
+    to.setProcTag = from.setProcTag;
+    to.setProcArgb = from.setProcArgb;
     to.combustionTimer = from.combustionTimer;
     to.iceBlockTimer = from.iceBlockTimer;
     to.livingBombArmed = from.livingBombArmed;
@@ -4830,10 +4866,22 @@ abstract final class SpatialCombat {
     world.pulseTimer = 0.35;
     world.godHandRadius = state.godHandRadius;
 
-    final damage = (baseDamage ?? state.godHandBaseDamage) +
+    var damage = (baseDamage ?? state.godHandBaseDamage) +
         state.ascensionLevel +
-        (state.totalAttack ~/ 8);
-    final radius = state.godHandRadius;
+        (state.totalAttack ~/ 8) +
+        state.relicGodHandDamageBonus;
+    var radius = state.godHandRadius;
+    switch (state.metaDepth.godHandStyle) {
+      case 1: // focus — tighter, harder
+        damage = (damage * 1.22).round();
+        radius *= 0.82;
+      case 2: // wide — broader, softer
+        damage = (damage * 0.88).round();
+        radius *= 1.22;
+      default: // balanced
+        break;
+    }
+    world.godHandRadius = radius;
     final reduced = state.reducedVfx;
     if (!reduced) {
       _spawnRing(

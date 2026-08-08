@@ -15,7 +15,8 @@ abstract final class GameGuides {
       id: 'world_path',
       title: 'WORLD PATH',
       body:
-          'The hub map lists every dungeon from Sand Caverns to Crystal Spire.\n\n'
+          'The hub map lists every dungeon from Sand Caverns through Crystal Spire, '
+          'Sunken Tidehold, and Ashen Vault.\n\n'
           '• Tap an unlocked zone to enter.\n'
           '• Unlock the next zone by clearing the previous boss, or by earning enough lifetime gold.\n'
           '• Locked zones show lifetime gold progress (have / need) on the hub.\n'
@@ -41,7 +42,8 @@ abstract final class GameGuides {
           '• Deals area damage and briefly steers the party toward the tap.\n'
           '• Cooldown ring is top-right of the dungeon view.\n'
           '• Upgrade God Hand damage with essence (meta).\n'
-          '• Upgrade God Hand CD (Forge / Prestige) to shorten the cooldown.',
+          '• Upgrade God Hand CD (Forge / Prestige) to shorten the cooldown.\n'
+          '• Styles under Forge → META: BALANCED, FOCUS (+damage −radius), WIDE (+radius −damage).',
     ),
     GuideTopic(
       id: 'farm_push',
@@ -180,20 +182,33 @@ abstract final class GameGuides {
       id: 'weekly',
       title: 'WEEKLY',
       body:
-          'Each ISO week rolls a dungeon modifier (glass / swarm / elite).\n\n'
-          '• Clear 3 floors under that week’s modifier to fill progress.\n'
+          'Each ISO week rolls a dungeon modifier (glass / swarm / elite / fortune / iron).\n\n'
+          '• Clear 3 floors under that week’s modifier to fill progress (hub shows n/3).\n'
           '• Claim the weekly essence reward once progress hits 3/3.\n'
-          '• Progress resets when the week key rolls over.',
+          '• First claim of each calendar month also pays a season bonus.\n'
+          '• Progress resets when the week key rolls over.\n'
+          '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
     ),
     GuideTopic(
       id: 'loadouts',
-      title: 'GEAR SETS',
+      title: 'LOADOUTS',
       body:
-          'MORE → GEAR SETS.\n\n'
-          '• Save up to 3 named gear presets (by hero id).\n'
-          '• Apply a set to swap equipped gear quickly.\n'
+          'MORE → LOADOUTS (named gear presets).\n\n'
+          '• Save up to 3 named presets (by hero id).\n'
+          '• Apply a loadout to swap equipped gear quickly.\n'
           '• Handy when switching Farm vs Push or Hardmode setups.\n'
-          '• Party lineup is separate — use MORE → PARTY.',
+          '• Party lineup is separate — use MORE → PARTY.\n'
+          '• Not the same as dungeon armor sets (2pc/4pc bonuses + combat procs).',
+    ),
+    GuideTopic(
+      id: 'armor_sets',
+      title: 'ARMOR SETS',
+      body:
+          'Rare+ armor from a zone can form a dungeon set (head / shoulder / chest / legs).\n\n'
+          '• 2pc: flat stamina (or spirit on cloth).\n'
+          '• 4pc: more stats + role fantasy + a chance for a tagged set proc on autos.\n'
+          '• Set names follow the zone (Tidehold, Ashen, Spire, …).\n'
+          '• Loadouts are separate presets — see LOADOUTS.',
     ),
     GuideTopic(
       id: 'hardmode',

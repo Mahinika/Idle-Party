@@ -67,7 +67,7 @@ abstract final class ApexCraft {
     ),
     CraftMatDef(
       id: 'shard_hell',
-      name: 'Ashen Shard',
+      name: 'Hellgate Shard',
       family: CraftMatFamily.shard,
       bossSources: "Hell's Gate boss",
     ),
@@ -76,6 +76,18 @@ abstract final class ApexCraft {
       name: 'Spire Shard',
       family: CraftMatFamily.shard,
       bossSources: 'Crystal Spire boss',
+    ),
+    CraftMatDef(
+      id: 'shard_tide',
+      name: 'Tidehold Shard',
+      family: CraftMatFamily.shard,
+      bossSources: 'Sunken Tidehold boss',
+    ),
+    CraftMatDef(
+      id: 'shard_ember',
+      name: 'Ashen Shard',
+      family: CraftMatFamily.shard,
+      bossSources: 'Ashen Vault boss',
     ),
     CraftMatDef(
       id: 'core_tank',

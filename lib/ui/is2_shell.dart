@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/meta_systems.dart';
 import '../models/class_ability.dart';
 import '../models/dungeon_def.dart';
 import '../models/dungeon_mode.dart';
@@ -383,7 +384,7 @@ class _Is2ShellState extends State<Is2Shell> {
             onTap: () => _openOverlay(Is2Overlay.forge),
           ),
           (
-            label: 'GEAR SETS',
+            label: 'LOADOUTS',
             onTap: () => _openOverlay(Is2Overlay.loadouts),
           ),
           (
@@ -687,7 +688,7 @@ class _Is2ShellState extends State<Is2Shell> {
         Is2Overlay.beast => 'BEAST PEN',
         Is2Overlay.achievements => 'ACHIEVEMENTS',
         Is2Overlay.codex => 'CODEX',
-        Is2Overlay.loadouts => 'GEAR SETS',
+        Is2Overlay.loadouts => 'LOADOUTS',
         Is2Overlay.teamComposition => 'PARTY',
         Is2Overlay.guides => 'GUIDES',
         Is2Overlay.prestigeShop => 'ESSENCE SHOP',
@@ -3505,6 +3506,15 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
                 GameLogic.phoenixEmberRelic => owned
                     ? 'Permanent +${state.relicVitalityBonus} max HP for every hero (T$tier).'
                     : 'Permanent +10 max HP per hero per tier.',
+                GameLogic.godHandFocusRelic => owned
+                    ? '+${state.relicGodHandDamageBonus} God Hand damage (T$tier).'
+                    : '+3 God Hand damage per tier.',
+                GameLogic.chamberLuckRelic => owned
+                    ? '+${state.relicLootFindPercent}% loot find (T$tier).'
+                    : '+5% loot find per tier.',
+                GameLogic.ironWillRelic => owned
+                    ? '+${state.relicMitigateFlat} flat mitigate (T$tier).'
+                    : '+1 flat mitigate per tier.',
                 _ => GameLogic.relicDescriptions[relicId] ?? '',
               };
               final nextTier = tier + 1;
@@ -3663,6 +3673,32 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
                       )
                   ? director.upgradeGodHandCd
                   : null),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Style · BAL / FOCUS / WIDE (tip: God Hand styles)',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            for (final entry in const <(int, String)>[
+              (0, 'BAL'),
+              (1, 'FOCUS'),
+              (2, 'WIDE'),
+            ]) ...[
+              if (entry.$1 > 0) const SizedBox(width: 6),
+              Expanded(
+                child: KenneyButton(
+                  label: entry.$2,
+                  style: state.metaDepth.godHandStyle == entry.$1
+                      ? KenneyButtonStyle.brown
+                      : KenneyButtonStyle.grey,
+                  onPressed: () => director.setGodHandStyle(entry.$1),
+                ),
+              ),
+            ],
+          ],
         ),
       ],
     );
@@ -4009,9 +4045,11 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
         SaveTransferSection(director: director),
         const SizedBox(height: 16),
         KenneyButton(
-          label: "WHAT'S NEW",
+          label: MetaSystems.hasUnseenChangelog(state)
+              ? "WHAT'S NEW ★"
+              : "WHAT'S NEW",
           style: KenneyButtonStyle.grey,
-          onPressed: () => _showWhatsNew(context),
+          onPressed: () => WhatsNewOverlay.show(context, director),
         ),
         if (kDebugMode) ...[
           const SizedBox(height: 8),
@@ -4045,26 +4083,6 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
     );
   }
 
-  void _showWhatsNew(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      barrierColor: MenuChrome.scrim,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: DecoratedBox(
-          decoration: MenuChrome.panel(),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: 420,
-              height: 420,
-              child: WhatsNewOverlay(director: director),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _SettingsToggle extends StatelessWidget {

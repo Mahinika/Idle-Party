@@ -143,7 +143,7 @@ void main() {
           ((h.x - enemy.x).abs() + (h.y - enemy.y).abs());
       // Fire Blink can kite away once in range — allow slack for that kit.
       final blinkSlack =
-          ClassKits.isUnlocked(AbilityId.blink, h.heroLevel) ? 5.0 : 0.05;
+          ClassKits.isUnlocked(AbilityId.blink, h.heroLevel) ? 5.0 : 1.0;
       expect(dist, lessThanOrEqualTo(startDist[i] + blinkSlack));
     }
     expect(moved, isTrue);

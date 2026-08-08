@@ -31,10 +31,16 @@ class GameLogic {
   static const String warBannerRelic = 'war_banner';
   static const String ironWardRelic = 'iron_ward';
   static const String phoenixEmberRelic = 'phoenix_ember';
+  static const String godHandFocusRelic = 'god_hand_focus';
+  static const String chamberLuckRelic = 'chamber_luck';
+  static const String ironWillRelic = 'iron_will';
   static const List<String> relicOrder = <String>[
     warBannerRelic,
     ironWardRelic,
     phoenixEmberRelic,
+    godHandFocusRelic,
+    chamberLuckRelic,
+    ironWillRelic,
   ];
   static const Map<LootRarity, String> rarityNames = <LootRarity, String>{
     LootRarity.common: 'Common',
@@ -47,16 +53,25 @@ class GameLogic {
     warBannerRelic: 'War Banner',
     ironWardRelic: 'Iron Ward',
     phoenixEmberRelic: 'Phoenix Ember',
+    godHandFocusRelic: 'God Hand Focus',
+    chamberLuckRelic: 'Chamber Luck',
+    ironWillRelic: 'Iron Will',
   };
   static const Map<String, String> relicDescriptions = <String, String>{
     warBannerRelic: 'Permanent +4 team attack aura.',
     ironWardRelic: 'Permanent +2 team defense aura.',
     phoenixEmberRelic: 'Permanent +10 max HP for every hero.',
+    godHandFocusRelic: '+3 God Hand damage per tier.',
+    chamberLuckRelic: '+5% loot find per tier.',
+    ironWillRelic: '+1 flat damage mitigate per tier.',
   };
   static const Map<String, int> relicCosts = <String, int>{
     warBannerRelic: 6,
     ironWardRelic: 14,
     phoenixEmberRelic: 28,
+    godHandFocusRelic: 36,
+    chamberLuckRelic: 42,
+    ironWillRelic: 48,
   };
 
   static const int starterPartySize = 3;
@@ -129,6 +144,8 @@ class GameLogic {
       heroes: state.heroes
           .map((h) => h.copyWith(currentHp: state.effectiveHeroMaxHp(h)))
           .toList(),
+      // Fresh saves already know this build — What's New is for upgrades.
+      seenChangelogVersion: MetaSystems.currentVersion,
     );
   }
 
@@ -262,9 +279,10 @@ class GameLogic {
   static double gauntletThreatMul(int floor) =>
       1.0 + max(0, floor - 1) * 0.10;
 
-  /// Escalating gold: +8% per floor beyond 1.
-  static double gauntletGoldMul(int floor) =>
-      1.0 + max(0, floor - 1) * 0.08;
+  /// Escalating gold: +8% per floor beyond 1, plus prestige Spire Purse.
+  static double gauntletGoldMul(int floor, {int prestigeBonusLevel = 0}) =>
+      (1.0 + max(0, floor - 1) * 0.08) *
+      (1.0 + prestigeBonusLevel * 0.04);
 
   static int gauntletEssenceForFloor(int floor, {required bool boss}) =>
       1 + (floor ~/ 2) + (boss ? 4 : 0);
@@ -276,9 +294,13 @@ class GameLogic {
   }) {
     final cleared = max(0, reachedFloor - 1);
     final best = max(state.metaDepth.gauntletBestFloor, cleared);
-    if (best == state.metaDepth.gauntletBestFloor) return state;
-    return state.copyWith(
-      metaDepth: state.metaDepth.copyWith(gauntletBestFloor: best),
+    if (best == state.metaDepth.gauntletBestFloor) {
+      return syncMetaPayoffs(state);
+    }
+    return syncMetaPayoffs(
+      state.copyWith(
+        metaDepth: state.metaDepth.copyWith(gauntletBestFloor: best),
+      ),
     );
   }
 
@@ -330,6 +352,15 @@ class GameLogic {
   static List<String> takeCraftMatGrants() {
     final out = List<String>.from(lastCraftMatGrants);
     lastCraftMatGrants = <String>[];
+    return out;
+  }
+
+  /// Notices from the last [syncMetaPayoffs] (Will / Gauntlet / season). Cleared on read.
+  static List<String> lastMetaPayoffNotices = <String>[];
+
+  static List<String> takeMetaPayoffNotices() {
+    final out = List<String>.from(lastMetaPayoffNotices);
+    lastMetaPayoffNotices = <String>[];
     return out;
   }
 
@@ -1722,7 +1753,10 @@ class GameLogic {
   static GameState creditCombatGold(GameState state, int baseGold) {
     if (baseGold <= 0) return state;
     final mul = state.inGauntlet
-        ? gauntletGoldMul(state.currentRoom.floorNumber)
+        ? gauntletGoldMul(
+            state.currentRoom.floorNumber,
+            prestigeBonusLevel: state.metaDepth.gauntletGoldBonusLevel,
+          )
         : 1.0;
     final gained = applyGoldGain(state, (baseGold * mul).round());
     if (gained <= 0) return state;
@@ -1757,8 +1791,6 @@ class GameLogic {
       state.ascensionLevel,
       nextLevel,
     );
-    final preservedEssence =
-        state.essence + ascendEssenceReward(nextLevel) + milestoneBonus;
     final preservedRelics = List<String>.from(state.unlockedRelics);
     final fragmentGain = 1 + (state.highestFloorCleared ~/ 3);
 
@@ -1766,6 +1798,12 @@ class GameLogic {
         ? state.metaDepth.ascendStreak + 1
         : 0;
     final bestStreak = max(state.metaDepth.bestAscendStreak, streak);
+    final streakEssence =
+        streak > 0 && streak % 3 == 0 ? (10 + streak * 2) : 0;
+    final preservedEssence = state.essence +
+        ascendEssenceReward(nextLevel) +
+        milestoneBonus +
+        streakEssence;
     final legacyGain = (nextLevel ~/ 5) - (state.ascensionLevel ~/ 5);
     final titles = List<String>.from(state.metaDepth.titles);
     for (final entry in AscendTitles.byAl.entries) {
@@ -1914,6 +1952,7 @@ class GameLogic {
     );
     withMeta = ensureWeeklyContract(withMeta, now: now);
     withMeta = MetaSystems.evaluateAchievements(withMeta);
+    withMeta = syncMetaPayoffs(withMeta);
     // Point hub ENTER at frontier / deepest unlocked — not always Sandy.
     final recommend = recommendedDungeonId(withMeta);
     if (recommend != withMeta.dungeonId) {
@@ -2827,11 +2866,27 @@ class GameLogic {
     final glassWeek = weeklyMod == 'glass';
     final swarmWeek = weeklyMod == 'swarm';
     final eliteWeek = weeklyMod == 'elite';
+    final fortuneWeek = weeklyMod == 'fortune';
+    final ironWeek = weeklyMod == 'iron';
     if (eliteWeek) {
       budget = (
         attack: (budget.attack * 1.15).round(),
         hp: (budget.hp * 1.2).round(),
         gold: (budget.gold * 1.1).round(),
+      );
+    }
+    if (ironWeek) {
+      budget = (
+        attack: (budget.attack * 1.1).round(),
+        hp: (budget.hp * 1.25).round(),
+        gold: (budget.gold * 1.2).round(),
+      );
+    }
+    if (fortuneWeek) {
+      budget = (
+        attack: budget.attack,
+        hp: budget.hp,
+        gold: (budget.gold * 1.15).round(),
       );
     }
     // Hardmode densifies packs: HM+10 = 10× (1000%) enemy count.
@@ -3150,6 +3205,22 @@ class GameLogic {
         EnemyArchetype.ranged: ['Ice Caster', 'Frost Slinger'],
         EnemyArchetype.glass: ['Splinter Blade', 'Shatter Fang'],
         EnemyArchetype.support: ['Rime Chanter', 'Frost Adept'],
+      },
+      'tide' => const {
+        EnemyArchetype.swarm: ['Brine Mite', 'Reef Tick'],
+        EnemyArchetype.brute: ['Tide Brute', 'Coral Crusher'],
+        EnemyArchetype.tank: ['Shell Leviathan', 'Barnacle Guard'],
+        EnemyArchetype.ranged: ['Spume Spitter', 'Salt Slinger'],
+        EnemyArchetype.glass: ['Razor Eel', 'Needle Urchin'],
+        EnemyArchetype.support: ['Depth Chanter', 'Tide Adept'],
+      },
+      'ember' => const {
+        EnemyArchetype.swarm: ['Ash Mite', 'Cinder Tick'],
+        EnemyArchetype.brute: ['Vault Brute', 'Slag Brawler'],
+        EnemyArchetype.tank: ['Basalt Golem', 'Ember Bulwark'],
+        EnemyArchetype.ranged: ['Spark Caster', 'Cinder Slinger'],
+        EnemyArchetype.glass: ['Char Blade', 'Soot Fang'],
+        EnemyArchetype.support: ['Ash Chanter', 'Ember Adept'],
       },
       _ => const {
         EnemyArchetype.swarm: ['Cave Slime', 'Sand Mite'],
@@ -3713,6 +3784,8 @@ class GameLogic {
       'gh_cdr' => md.godHandCdLevel >= 8,
       'roster_cap' => md.petRosterCapBonus >= 10,
       'legacy_spark' => md.legacyPoints >= 20,
+      'daily_essence' => md.dailyEssenceBonusLevel >= 5,
+      'gauntlet_gold' => md.gauntletGoldBonusLevel >= 5,
       _ => false,
     };
     if (atCap) return state;
@@ -3730,6 +3803,12 @@ class GameLogic {
         md.copyWith(petRosterCapBonus: min(10, md.petRosterCapBonus + 2)),
       'legacy_spark' =>
         md.copyWith(legacyPoints: min(20, md.legacyPoints + 1)),
+      'daily_essence' => md.copyWith(
+          dailyEssenceBonusLevel: min(5, md.dailyEssenceBonusLevel + 1),
+        ),
+      'gauntlet_gold' => md.copyWith(
+          gauntletGoldBonusLevel: min(5, md.gauntletGoldBonusLevel + 1),
+        ),
       _ => md,
     };
     // Track ownership once via levels; keep a de-duplicated purchase mark.
@@ -3745,7 +3824,7 @@ class GameLogic {
     );
   }
 
-  /// ISO week key (`yyyy-Www`) for weekly contract rotation.
+  /// ISO week key (`yyyy-Www`) for weekly contract / local season rotation.
   static String isoWeekKey(DateTime utc) {
     final d = DateTime.utc(utc.year, utc.month, utc.day);
     final thursday = d.add(Duration(days: 4 - d.weekday));
@@ -3754,33 +3833,132 @@ class GameLogic {
     return '${thursday.year}-W${week.toString().padLeft(2, '0')}';
   }
 
-  static const List<String> weeklyModifiers = <String>['glass', 'swarm', 'elite'];
+  /// Calendar-month season key (`yyyy-MM`) for local offline seasons.
+  static String isoMonthKey(DateTime utc) {
+    final y = utc.year.toString().padLeft(4, '0');
+    final m = utc.month.toString().padLeft(2, '0');
+    return '$y-$m';
+  }
+
+  /// Display season label (ISO week + month), e.g. `2026-W32 · 2026-08`.
+  static String seasonLabel(DateTime utc) =>
+      '${isoWeekKey(utc)} · ${isoMonthKey(utc)}';
+
+  static const List<String> weeklyModifiers = <String>[
+    'glass',
+    'swarm',
+    'elite',
+    'fortune',
+    'iron',
+  ];
 
   static GameState ensureWeeklyContract(GameState state, {DateTime? now}) {
     final t = (now ?? DateTime.now()).toUtc();
     final key = isoWeekKey(t);
-    if (state.metaDepth.weeklyKey == key) return state;
-    final mod = weeklyModifiers[(key.hashCode & 0x7fffffff) % weeklyModifiers.length];
+    final season = seasonLabel(t);
+    if (state.metaDepth.weeklyKey == key &&
+        state.metaDepth.seasonKey == season) {
+      return state;
+    }
+    final mod =
+        weeklyModifiers[(key.hashCode & 0x7fffffff) % weeklyModifiers.length];
+    final sameWeek = state.metaDepth.weeklyKey == key;
     return state.copyWith(
       metaDepth: state.metaDepth.copyWith(
         weeklyKey: key,
-        weeklyProgress: 0,
-        weeklyClaimed: false,
-        weeklyModifier: mod,
+        weeklyProgress: sameWeek ? state.metaDepth.weeklyProgress : 0,
+        weeklyClaimed: sameWeek ? state.metaDepth.weeklyClaimed : false,
+        weeklyModifier: sameWeek ? state.metaDepth.weeklyModifier : mod,
+        seasonKey: season,
       ),
     );
   }
 
-  static int weeklyClaimEssence = 18;
+  static int weeklyClaimEssence = 32;
+  static const int weeklyClearTarget = 3;
+
+  /// One-time essence when claiming the first weekly of a calendar month.
+  static const int seasonWeeklyBonusEssence = 12;
 
   static GameState claimWeekly(GameState state) {
     var next = ensureWeeklyContract(state);
     final md = next.metaDepth;
-    if (md.weeklyProgress < 3 || md.weeklyClaimed) return next;
+    if (md.weeklyProgress < weeklyClearTarget || md.weeklyClaimed) return next;
+    var essenceGain = weeklyClaimEssence;
+    final seasonClaims = List<String>.from(md.claimedSeasonRewards);
+    final month = isoMonthKey(DateTime.now().toUtc());
+    final notices = <String>[];
+    if (month.isNotEmpty && !seasonClaims.contains(month)) {
+      seasonClaims.add(month);
+      essenceGain += seasonWeeklyBonusEssence;
+      notices.add('Season $month · +${seasonWeeklyBonusEssence}e');
+    }
+    lastMetaPayoffNotices = notices;
     next = next.copyWith(
-      essence: next.essence + weeklyClaimEssence,
-      metaDepth: md.copyWith(weeklyClaimed: true),
+      essence: next.essence + essenceGain,
+      metaDepth: md.copyWith(
+        weeklyClaimed: true,
+        claimedSeasonRewards: seasonClaims,
+      ),
       lastUpdated: DateTime.now(),
+    );
+    return MetaSystems.evaluateAchievements(next);
+  }
+
+  /// God Hand style: 0 balanced, 1 focus, 2 wide.
+  static GameState setGodHandStyle(GameState state, int style) {
+    final next = style.clamp(0, 2);
+    if (state.metaDepth.godHandStyle == next) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(godHandStyle: next),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// Claim Will-rank + Gauntlet milestone essence when thresholds are met.
+  static GameState syncMetaPayoffs(GameState state) {
+    var next = state;
+    var essenceGain = 0;
+    final notices = <String>[];
+    final willClaims = List<String>.from(next.metaDepth.claimedWillRanks);
+    final score = next.collectionScore;
+    for (final threshold in WillRanks.claimableThresholds) {
+      final id = '$threshold';
+      if (score >= threshold && !willClaims.contains(id)) {
+        willClaims.add(id);
+        final gain = WillRanks.essenceForThreshold(threshold);
+        essenceGain += gain;
+        notices.add(
+          'Will · ${WillRanks.titleForScore(threshold)} +${gain}e',
+        );
+      }
+    }
+    final gauntletClaims =
+        List<String>.from(next.metaDepth.claimedGauntletMilestones);
+    final best = next.metaDepth.gauntletBestFloor;
+    for (final floor in GauntletMilestones.floors) {
+      final id = GauntletMilestones.claimId(floor);
+      if (best >= floor && !gauntletClaims.contains(id)) {
+        gauntletClaims.add(id);
+        final gain = GauntletMilestones.essenceForFloor(floor);
+        essenceGain += gain;
+        notices.add('Gauntlet F$floor · +${gain}e');
+      }
+    }
+    if (essenceGain == 0 &&
+        willClaims.length == next.metaDepth.claimedWillRanks.length &&
+        gauntletClaims.length ==
+            next.metaDepth.claimedGauntletMilestones.length) {
+      lastMetaPayoffNotices = const [];
+      return MetaSystems.evaluateAchievements(next);
+    }
+    lastMetaPayoffNotices = notices;
+    next = next.copyWith(
+      essence: next.essence + essenceGain,
+      metaDepth: next.metaDepth.copyWith(
+        claimedWillRanks: willClaims,
+        claimedGauntletMilestones: gauntletClaims,
+      ),
     );
     return MetaSystems.evaluateAchievements(next);
   }
@@ -5716,7 +5894,10 @@ class GameLogic {
       drops = recentLoot;
     }
     final goldMul = awarded.inGauntlet
-        ? gauntletGoldMul(room.floorNumber)
+        ? gauntletGoldMul(
+            room.floorNumber,
+            prestigeBonusLevel: awarded.metaDepth.gauntletGoldBonusLevel,
+          )
         : 1.0;
     // Combat kill gold is credited live via [creditCombatGold]. Clear only
     // pays treasure/chest budgets (and any explicit leftover goldGain).
@@ -5853,8 +6034,12 @@ class GameLogic {
         trophies.add(before.dungeonId);
       }
     }
-    // Weekly: push clears (or any boss) so farm/gauntlet can't finish in loops.
-    final weeklyBump = (!suppressMetaMint || bossKill > 0) && !before.inGauntlet
+    // Weekly: push clears (or any boss). Gauntlet clears count at AL10+.
+    // Farm loops never mint weekly progress.
+    final gauntletWeekly =
+        before.inGauntlet && before.ascensionLevel >= gauntletMinAscension;
+    final weeklyBump = (!farmLoop && (!before.inGauntlet || gauntletWeekly)) ||
+            (bossKill > 0 && !before.inGauntlet)
         ? 1
         : 0;
     final hmCleared = before.hardmodeLevel.clamp(0, 10);
@@ -5868,10 +6053,14 @@ class GameLogic {
           hmCleared,
         ),
         zoneTrophies: trophies,
-        weeklyProgress: min(3, next.metaDepth.weeklyProgress + weeklyBump),
+        weeklyProgress: min(
+          weeklyClearTarget,
+          next.metaDepth.weeklyProgress + weeklyBump,
+        ),
       ),
     );
     next = MetaSystems.evaluateAchievements(next);
+    next = syncMetaPayoffs(next);
     return next;
   }
 
@@ -5883,7 +6072,8 @@ class GameLogic {
     if (state.dungeonId != MetaSystems.dailyDungeonId(now)) return state;
     // Must still be on today's Daily layout seed (not a normal re-enter).
     if (state.layoutSeed != MetaSystems.dailySeed(now)) return state;
-    const dailyEssenceReward = 25;
+    final dailyEssenceReward =
+        25 + state.metaDepth.dailyEssenceBonusLevel * 5;
     return state.copyWith(
       dailyClaimed: true,
       essence: state.essence + dailyEssenceReward,

@@ -113,6 +113,14 @@ void main() {
     );
     expect(GearSets.setStaminaBonus(full.equipped), 6);
     expect(GearSets.setCritBonus(full.equipped), 2);
+    expect(GearSets.setRoleArmorBonus(full.equipped, HeroRole.warrior), 4);
+    expect(GearSets.setRoleHasteBonus(full.equipped, HeroRole.rogue), 2);
+    expect(GearSets.setRoleHasteBonus(full.equipped, HeroRole.warrior), 0);
+    final proc = GearSets.fourPieceProc(full.equipped);
+    expect(proc, isNotNull);
+    expect(proc!.tag, 'CAVERN');
+    expect(proc.chance, greaterThan(0));
+    expect(GearSets.setBonusBlurb(full.equipped), contains('4pc'));
   });
 
   test('soulbound primaries feed meta attack', () {

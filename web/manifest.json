@@ -1,11 +1,11 @@
 {
-    "name": "idle_party",
-    "short_name": "idle_party",
+    "name": "Idle Party",
+    "short_name": "Idle Party",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#12100C",
+    "theme_color": "#E8B84A",
+    "description": "Idle Party — a cozy idle RPG. Your party crawls spatial dungeons while you watch or AFK.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

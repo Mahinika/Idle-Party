@@ -26,6 +26,8 @@ abstract final class StoryLore {
       'dead' => 'Footsteps echo where no one walks.',
       'hell' => "Hell's Gate breathes heat. Do not linger.",
       'crystal' => 'The Spire sings. Climb anyway.',
+      'tide' => 'Salt water fills the hold. Hold your breath.',
+      'ember' => 'Ash drifts in the vault. The crown still smolders.',
       _ => 'Entering ${def.name}…',
     };
   }
@@ -40,6 +42,8 @@ abstract final class StoryLore {
       'dead' => 'The No-One fades. Names return briefly.',
       'hell' => 'Cthulhu sinks. The Gate stays ajar.',
       'crystal' => 'The Warden yields. Ascension waits in the hub.',
+      'tide' => 'The Leviathan sinks. Pressure eases — briefly.',
+      'ember' => 'The Sovereign cools. Embers still whisper.',
       _ => '${def.name} cleared.',
     };
   }
@@ -88,5 +92,5 @@ abstract final class StoryLore {
 
   static const String loreTipTitle = 'THE DESCENT';
   static const String loreTipBody =
-      'Seven gates. One wrongness below. Clear deeper zones, then Ascend.';
+      'Nine gates. One wrongness below. Clear deeper zones, then Ascend.';
 }
