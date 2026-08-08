@@ -73,6 +73,8 @@ Play ops status: `docs/PLAY_STORE.md` (operator table) + skill `play-store-prep`
   `flutter analyze lib test` (and changelog sync when version/What’s New files touched).
 - Ship bar: `.cursor/rules/definition-of-done.mdc`.
 - Fast honesty: `flutter test test/ship_smoke_test.dart`.
+- MCP: `.cursor/mcp.json` → **`idle-party`** (`tool/mcp_idle_party/`) — balance_share,
+  changelog_check, flutter_analyze/test, zone_identity, hub smoke helpers.
 
 ## Architecture
 
