@@ -1,25 +1,20 @@
 ---
 name: suggesting-skills
 description: >-
-  When the user struggles with a task that an Idle Party or Cursor skill
-  already covers, suggest the matching skill once (don't spam).
+  Map tasks to Idle Party skills. Under vibe-coder mode: follow the right skill
+  silently — do not ask the user which skill to use.
 ---
 
 # Suggesting skills (Idle Party)
 
-Watch for moments where an existing skill would make the work faster. Suggest it briefly; if declined, don't repeat.
+**Default for this repo:** the human vibe-codes. **Load and follow** the matching skill yourself. Do **not** ask “vill du använda skill X?”.
 
-## How to suggest
-
-```
-There's a skill for that — `spatial-combat-change` is the path when combat/chamber/AFK
-behavior is involved. Want me to follow it?
-```
+Only *mention* a skill name if they explicitly ask how you work, or when creating a new skill via `building-skills-from-patterns`.
 
 ## Idle Party skill map
 
-| User is doing… | Suggest… |
-|----------------|----------|
+| User is doing… | You follow… |
+|----------------|-------------|
 | Combat / chambers / AFK / gates | `spatial-combat-change` |
 | New ability / kit wiring / HUD but no cast | `add-ability` |
 | New dungeon / zone / boss unlock | `new-dungeon` + `zone-art-identity` |
@@ -28,22 +23,17 @@ behavior is involved. Want me to follow it?
 | Analyze / test / verify before PR | `flutter-verify` |
 | Art / sprites / Kenney paths | `assets-legal` |
 | Playtest hub/dungeon in browser | `browser-playtest` or `hub-smoke` |
-| Kit DPS HIGH / balance iterate | `grinding-until-pass` + `flutter test test/class_balance_share_fast_test.dart` |
-| What’s New vs code / version drift | `screenshotting-changelog` + `test/changelog_sync_test.dart` |
+| Kit DPS too strong/weak | `grinding-until-pass` + share-fast / gate tests |
+| What’s New vs code / version drift | `screenshotting-changelog` + `changelog_sync_test` |
 | Open PR CI failures | `babysitting-pr` / `parallel-ci-triage` |
-| Hard bug, don't guess | `systematic-debugging` |
+| Hard bug | `systematic-debugging` |
 | Code review of a diff | `reviewing-code` |
 | Same workflow 3× | `building-skills-from-patterns` |
-
-## Generic Cursor skills (if installed)
-
-| User is doing… | Suggest… |
-|----------------|----------|
-| Creating a PR | user PR rules / `creating-pr` |
-| Writing commit messages | user commit rules |
+| A11y / reduce motion / labels | `accessibility-auditing` |
+| UI change “does it look ok?” | `verifying-in-browser` |
 
 ## Rules
 
-- One suggestion per conversation unless asked
-- Prefer **project** skills under `.cursor/skills/` over generic web/auth/Stripe skills
-- Don't suggest analytics/auth/Tailwind skills for this Flutter offline RPG
+- Act; don't quiz them on tooling
+- Prefer **project** skills over generic web/auth/Stripe skills
+- One optional tip max if they're curious — never block work on skill consent

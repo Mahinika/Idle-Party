@@ -2,6 +2,13 @@
 
 Idle Party is a **working Flutter idle RPG** with original Dart gameplay code, **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
+## Human (vibe-coder)
+
+The owner describes goals in plain language and does not pick tools/skills.
+Agents **must** choose methods, skills, and verify steps themselves — see
+`.cursor/rules/vibe-coder-autopilot.mdc`. Talk plainly; ask only product/risk
+questions, never “which file/skill/command?”.
+
 ## Legal / IP policy (mandatory)
 
 - **Do not** add, keep, or commit APKs, IPA/AAB, SWF, DEX, or dumps from other commercial games.
