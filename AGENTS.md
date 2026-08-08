@@ -6,8 +6,9 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code, *
 
 The owner describes goals in plain language and does not pick tools/skills.
 Agents **must** choose methods, skills, and verify steps themselves — see
-`.cursor/rules/vibe-coder-autopilot.mdc`. Talk plainly; ask only product/risk
-questions, never “which file/skill/command?”.
+`.cursor/rules/vibe-coder-autopilot.mdc` and `.cursor/rules/owner-preferences.mdc`
+(Play Store soon, big batches, cozy idle, English UI, propose commit/PR/tag).
+Talk plainly; ask only product/risk questions, never “which file/skill/command?”.
 
 ## Legal / IP policy (mandatory)
 
