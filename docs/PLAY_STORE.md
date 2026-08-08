@@ -2,6 +2,23 @@
 
 Package id: **`com.idleparty.app`**
 
+## Operator status (keep honest)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
+| Play Console app | ⏳ | Create when ready; id `com.idleparty.app` |
+| CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
+| Privacy URL opens in browser | ⏳ | Prep URL: repo `docs/PRIVACY.md` on main |
+| Data safety form | ⏳ | Match PRIVACY: local save, no ads/accounts/analytics servers |
+| IARC / content rating | ❌ | Mild fantasy combat; no chat / gambling / ads |
+| Store listing copy (EN) | ⏳ | Idle Party short + full; no Flutter placeholders |
+| Screenshots + feature graphic | ❌ | Hub + dungeon; icon `assets/custom/ui/app_icon.png` |
+| Internal testing track | ❌ | Upload AAB; smoke hub → dungeon → leave → relaunch |
+| Production listing | ❌ | Optional; GitHub Releases remains valid forever |
+
+Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
+
 ## Current decision (2026-08)
 
 **Primary distribution: GitHub Releases (sideload).**  

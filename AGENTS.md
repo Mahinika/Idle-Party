@@ -51,6 +51,9 @@ flutter test test/class_balance_gate_test.dart
 
 # What’s New ↔ pubspec ↔ shipped zones
 flutter test test/changelog_sync_test.dart
+
+# Fast world-path / unlock / guides honesty
+flutter test test/ship_smoke_test.dart
 ```
 
 Skills under `.cursor/skills/`: domain (`spatial-combat-change`, `add-ability`,
@@ -62,6 +65,14 @@ Skills under `.cursor/skills/`: domain (`spatial-combat-change`, `add-ability`,
 `systematic-debugging`, `reviewing-code`, `accessibility-auditing`).
 
 Cadence: `docs/CONTENT_CADENCE.md`. Roadmap: `docs/ROADMAP.md`.
+Play ops status: `docs/PLAY_STORE.md` (operator table) + skill `play-store-prep`.
+
+### Cursor automation
+
+- Project hooks: `.cursor/hooks.json` — after game/docs edits, **stop** runs
+  `flutter analyze lib test` (and changelog sync when version/What’s New files touched).
+- Ship bar: `.cursor/rules/definition-of-done.mdc`.
+- Fast honesty: `flutter test test/ship_smoke_test.dart`.
 
 ## Architecture
 

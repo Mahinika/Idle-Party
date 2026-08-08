@@ -1,0 +1,17 @@
+---
+description: >-
+  Ship bar for Idle Party agent work — verify, honesty, propose commit/push.
+alwaysApply: true
+---
+
+# Definition of done (Idle Party)
+
+Before telling the owner a coding task is finished:
+
+1. **Analyze** — `flutter analyze lib test --no-fatal-infos` clean (or project stop-hook already did).
+2. **Tests that match the change** — combat/kit → share-fast / gate as needed; What’s New / version → `changelog_sync_test`; hub labels / unlock / guides → `ship_smoke_test` or targeted unit tests.
+3. **Player-visible honesty** — if they can see it in-game, What’s New / guides / labels match reality (English copy).
+4. **No legal junk** — no foreign APKs/dumps; art only via Kenney/custom helpers.
+5. **Propose ship steps** — when the batch is ship-shaped, ask once: commit? push? PR? tag? Clear yes/no. Do not push silently; do not forget to offer.
+
+Skip heavy mid-band balance sims unless the task is balance. Skip browser playtest for pure logic unless UI chrome changed.

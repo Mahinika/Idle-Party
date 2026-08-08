@@ -31,6 +31,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | Same workflow 3× | `building-skills-from-patterns` |
 | A11y / reduce motion / labels | `accessibility-auditing` |
 | UI change “does it look ok?” | `verifying-in-browser` |
+| Play Store / listing / privacy / IARC | `play-store-prep` |
 
 ## Rules
 
