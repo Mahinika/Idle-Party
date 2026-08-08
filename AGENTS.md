@@ -32,7 +32,7 @@ flutter test test/class_balance_gate_test.dart
 flutter test test/changelog_sync_test.dart
 ```
 
-Skills: `.cursor/skills/hub-smoke`, `zone-art-identity`, `browser-playtest`, `flutter-verify`.
+Skills: `.cursor/skills/` — domain (`spatial-combat-change`, `add-ability`, `new-dungeon`, `zone-art-identity`, `save-migrate`, `class-audit`, `assets-legal`, `flutter-verify`, `browser-playtest`, `hub-smoke`) and Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`, `grinding-until-pass`, `babysitting-pr`, `parallel-ci-triage`, `verifying-in-browser`, `screenshotting-changelog`, `recording-browser-flow-as-test`, `systematic-debugging`, `reviewing-code`, `accessibility-auditing`).
 
 ## Architecture
 

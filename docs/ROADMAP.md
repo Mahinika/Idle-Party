@@ -175,7 +175,7 @@ flowchart LR
 | Cadence | [CONTENT_CADENCE.md](CONTENT_CADENCE.md) |
 | Baseline audit | [audits/2026-08-03-full-game.md](audits/2026-08-03-full-game.md) |
 | Class audits | [audits/](audits/) (2026-08-02-*.md) |
-| Skills | `.cursor/skills/` — `new-dungeon`, `zone-art-identity`, `hub-smoke`, `add-ability`, `class-audit`, `flutter-verify`, `save-migrate`, `browser-playtest` |
+| Skills | `.cursor/skills/` — domain + Cursor workflows (see AGENTS.md “Agent tooling”) |
 
 ---
 
