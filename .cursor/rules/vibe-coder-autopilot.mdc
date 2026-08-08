@@ -28,6 +28,7 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 | What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
 | PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
 | polish hub / weekly / tips | `hub-smoke`, `browser-playtest` |
+| **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules` with how the game works now |
 
 5. **`suggesting-skills`**: prefer **silently following** the right skill over asking “vill du att jag använder skill X?”. Only mention a skill name if teaching them later helps — default is just do it.
 6. **After UI/meta changes**: verify somehow (tests and/or short browser check) without asking permission.

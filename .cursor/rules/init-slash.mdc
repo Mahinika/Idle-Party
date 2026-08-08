@@ -1,0 +1,12 @@
+---
+description: When the user types /init, run the init skill — resync AGENTS.md + rules with how Idle Party works now.
+alwaysApply: true
+---
+
+# /init → resync agent docs
+
+If the user message is exactly **`/init`**, or clearly means that slash command, **immediately** follow `.cursor/skills/init/SKILL.md`:
+
+> Gå igenom spelet och uppdatera `AGENTS.md` + regler så de stämmer med hur spelet funkar nu.
+
+Do not ask which skill to use. Do not treat `/init` as a vague “start coding” request.

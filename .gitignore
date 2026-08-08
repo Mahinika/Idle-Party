@@ -90,6 +90,8 @@ IdleSword*
 !.cursor/skills/**/
 !.cursor/rules/
 !.cursor/rules/**/
+!.cursor/commands/
+!.cursor/commands/**/
 !.cursor/mcp.json
 
 # Local MCP venv
