@@ -50,5 +50,7 @@ Never invent a public privacy host or Play listing URL.
 ## Related
 
 - Privacy copy: `docs/PRIVACY.md`
+- Listing pack (copy, IARC, data safety, screenshot index): `docs/store/LISTING.md`
+- Recapture screenshots: `py -3 tool/capture_store_screenshots.py` (web on `:8080`)
 - Tag → APK/AAB: `.github/workflows/build-apk.yml`
 - Hub chrome before screenshots: `hub-smoke` / `screenshotting-changelog`
