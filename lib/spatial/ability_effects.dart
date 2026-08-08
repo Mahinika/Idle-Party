@@ -345,8 +345,10 @@ abstract final class AbilityEffectRunner {
         hero.kitInMul *= 0.82;
         hero.kitOutMul *= 0.97;
       case AbilityId.bloodPresence:
-        hero.kitInMul *= 0.90;
-        hero.kitHealMul *= 1.08;
+        // Self-heal tank: stronger DR + heal amp than presence-only peers.
+        hero.kitInMul *= 0.85;
+        hero.kitHealMul *= 1.18;
+        hero.kitOutMul *= 0.98;
       case AbilityId.bearForm:
         hero.kitInMul *= 0.88;
         hero.kitOutMul *= 0.95;
@@ -357,67 +359,73 @@ abstract final class AbilityEffectRunner {
       case AbilityId.ancestralAwakening:
         hero.kitHealMul *= 1.32;
       case AbilityId.treeOfLife:
-        hero.kitHealMul *= 1.30;
+        // HoT healer amp — match / slightly lead peer healer passives.
+        hero.kitHealMul *= 1.34;
 
-      // —— melee DPS ——
+      // —— melee DPS (target ~1.22–1.30; Arms was wildly overtuned at 1.55) ——
       case AbilityId.armsStance:
-        hero.kitOutMul *= 1.55;
+        hero.kitOutMul *= 1.26;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
-        hero.kitOutMul *= 1.18;
-        hero.kitHasteMul *= 1.10;
+        hero.kitOutMul *= 1.30;
+        hero.kitHasteMul *= 1.12;
         hero.kitInMul *= 1.06;
       case AbilityId.sealOfCommand:
-        hero.kitOutMul *= 1.38;
+        hero.kitOutMul *= 1.26;
       case AbilityId.improvedPoisons:
-        hero.kitOutMul *= 1.40;
+        hero.kitOutMul *= 1.36;
       case AbilityId.masterOfSubtlety:
-        hero.kitOutMul *= 1.40;
+        // Opener fantasy: damage + slight haste for ambush windows.
+        hero.kitOutMul *= 1.34;
+        hero.kitHasteMul *= 1.08;
       case AbilityId.frostPresence:
-        hero.kitOutMul *= 1.35;
+        hero.kitOutMul *= 1.26;
         hero.kitInMul *= 0.97;
       case AbilityId.unholyPresence:
-        hero.kitOutMul *= 1.35;
-        hero.kitHasteMul *= 1.12;
+        hero.kitOutMul *= 1.34;
+        hero.kitHasteMul *= 1.14;
         // Ghoul companion spawned in SpatialCombat.build.
       case AbilityId.enhancementWeapons:
-        hero.kitOutMul *= 1.38;
+        hero.kitOutMul *= 1.26;
       case AbilityId.catForm:
         hero.kitOutMul *= 1.28;
         hero.kitHasteMul *= 1.10;
 
-      // —— ranged ——
+      // —— ranged (MM/Surv/BM were low share) ——
       case AbilityId.aspectOfHawk:
-        hero.kitOutMul *= 1.18;
+        hero.kitOutMul *= 1.46;
       case AbilityId.trueshotAura:
-        hero.kitOutMul *= 1.14;
-        hero.kitHasteMul *= 1.06;
+        hero.kitOutMul *= 1.36;
+        hero.kitHasteMul *= 1.10;
       case AbilityId.trapMastery:
-        hero.kitOutMul *= 1.30;
+        hero.kitOutMul *= 1.40;
         hero.kitRootBonus += 1.0;
 
-      // —— casters (mid-band ability spam outpaced melee ~2–3×) ——
+      // —— casters: identity buffs; spam tax is casterAbilityTax only ——
+      // Mild trim so live-light gate stays inside ±20% (aff/demo/destro tip HIGH).
       case AbilityId.shadowform:
-        hero.kitOutMul *= 0.62;
+        hero.kitOutMul *= 1.02;
         hero.kitInMul *= 1.04;
       case AbilityId.elementalFocus:
-        hero.kitOutMul *= 0.62;
-        hero.kitHasteMul *= 1.05;
+        hero.kitOutMul *= 0.98;
+        hero.kitHasteMul *= 1.04;
       case AbilityId.arcanePowerPassive:
-        hero.kitOutMul *= 0.62;
+        hero.kitOutMul *= 0.98;
       case AbilityId.frostArmor:
         hero.kitInMul *= 0.92;
-        hero.kitOutMul *= 0.60;
+        hero.kitOutMul *= 1.00;
         hero.kitRootBonus += 0.5;
       case AbilityId.soulSiphon:
-        hero.kitOutMul *= 0.64;
-        hero.kitHealMul *= 1.06;
+        hero.kitOutMul *= 1.02;
+        hero.kitHealMul *= 1.08;
       case AbilityId.demonicKnowledge:
-        hero.kitOutMul *= 0.60;
+        // Pet-family identity: modest personal power + haste; pet AA/empower carries share.
+        hero.kitOutMul *= 0.90;
+        hero.kitHasteMul *= 1.04;
       case AbilityId.cataclysm:
-        hero.kitOutMul *= 0.60;
+        hero.kitOutMul *= 0.95;
       case AbilityId.moonkinForm:
-        hero.kitOutMul *= 0.66;
+        hero.kitOutMul *= 0.96;
 
       // Legacy kit passives are handled in dedicated tickers.
       case AbilityId.defensiveStance:
@@ -426,8 +434,8 @@ abstract final class AbilityEffectRunner {
       case AbilityId.sinisterStrike:
         break;
       case AbilityId.arcaneIntellect:
-        // Fire's dedicated ticker bypasses _abilityOutScale — tax here.
-        hero.kitOutMul *= 0.72;
+        // Personal spell power is applied via GameState caster aura / kit path.
+        break;
       default:
         // Fallback: mild role-appropriate crumb if a new passive is added.
         if (spec.isTank) {
@@ -457,7 +465,7 @@ abstract final class AbilityEffectRunner {
         owner: hero,
         count: 4,
         duration: 16,
-        atkScale: 0.28,
+        atkScale: 0.38,
         namePrefix: 'Ghoul',
         idPrefix: 'army',
       );
@@ -488,12 +496,41 @@ abstract final class AbilityEffectRunner {
       }
       return true;
     }
+    if (def.id == AbilityId.summonWaterElemental) {
+      _spendAndCd(world, hero, def);
+      SpatialCombat.spawnTempPets(
+        world,
+        owner: hero,
+        count: 1,
+        duration: 28,
+        atkScale: 0.40,
+        namePrefix: 'Water Elemental',
+        idPrefix: 'water',
+      );
+      _announce(world, hero, def.shortLabel, 0xFF80D0FF, reducedVfx);
+      if (!reducedVfx) {
+        SpatialCombat._spawnRing(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: 0xFF80D0FF,
+          radius: 1.0,
+          life: 0.45,
+        );
+      }
+      return true;
+    }
 
     switch (def.effect) {
       case AbilityEffectKind.passive:
         return false;
       case AbilityEffectKind.damage:
         if (focus == null || focus.hp <= 0) return false;
+        // Mongoose Bite is a melee snap — skip when out of reach.
+        if (def.id == AbilityId.mongooseBite &&
+            SpatialCombat._dist(hero, focus) > 1.85) {
+          return false;
+        }
         _spendAndCd(world, hero, def);
         _castDamage(world, hero, focus, def, rng, reducedVfx: reducedVfx);
         return true;
@@ -502,6 +539,13 @@ abstract final class AbilityEffectRunner {
         _castAoe(world, hero, focus, def, rng, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.heal:
+        // Blood Rune Tap is self-sustain, not party triage.
+        if (def.id == AbilityId.runeTap) {
+          if (!_allyNeedsHeal(hero)) return false;
+          _spendAndCd(world, hero, def);
+          _castHeal(world, hero, hero, def, reducedVfx: reducedVfx);
+          return true;
+        }
         if (_isPartyHeal(def)) {
           if (!_partyNeedsHeal(world)) return false;
           _spendAndCd(world, hero, def);
@@ -630,13 +674,13 @@ abstract final class AbilityEffectRunner {
   static String _abilityKey(ClassAbilityDef def) =>
       '${def.id.name} ${def.shortLabel} ${def.name}'.toLowerCase();
 
-  /// Outgoing scale for kit casts. Casters get an extra tax because Int-based
-  /// ability spam outpaced melee Str kits on mid-band sims (~2–3× raw DPS).
+  /// Outgoing scale for kit casts. Casters get [SpatialCombat.casterAbilityTax]
+  /// because Int-based ability spam outpaced melee Str kits on mid-band sims.
   static double _abilityOutScale(SpatialActor hero) {
     var scale = hero.kitOutMul;
     final id = hero.heroSpecId;
     if (id != null && HeroSpecs.def(id).roleTag == SpecRoleTag.caster) {
-      scale *= 0.62;
+      scale *= SpatialCombat.casterAbilityTax;
     }
     return scale;
   }
@@ -649,12 +693,25 @@ abstract final class AbilityEffectRunner {
     math.Random rng, {
     required bool reducedVfx,
   }) {
-    final raw = math.max(
+    var raw = math.max(
       2,
       (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
     );
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
-    final useBolt = hero.ranged || SpatialCombat._dist(hero, enemy) > 2.2;
+    final pet = _petEmpoweredAbility(def)
+        ? _ownedCombatPet(world, hero)
+        : null;
+    if (pet != null) {
+      // BM Kill Command / Demo pet-lean nukes hit harder with companion up.
+      final petMul = def.id == AbilityId.killCommand ? 1.55 : 1.22;
+      raw = (raw * petMul).round();
+    }
+    // Mongoose Bite is always melee; Kill Command snaps melee when pet is up.
+    final useBolt = def.id == AbilityId.mongooseBite
+        ? false
+        : (def.id == AbilityId.killCommand && pet != null
+            ? false
+            : (hero.ranged || SpatialCombat._dist(hero, enemy) > 2.2));
     final tint = SpatialCombat.burstArgbForStyle(style);
 
     hero.attackFlash = 0.16;
@@ -768,10 +825,24 @@ abstract final class AbilityEffectRunner {
         def.id == AbilityId.divineStorm ||
         def.id == AbilityId.thunderClap ||
         def.id == AbilityId.shockwave ||
+        def.id == AbilityId.shadowfury ||
+        def.id == AbilityId.fireNova ||
+        def.id == AbilityId.blastWave ||
+        def.id == AbilityId.arcaneExplosion ||
+        def.id == AbilityId.frostNova ||
+        def.id == AbilityId.frostNovaMage ||
+        def.id == AbilityId.hungeringCold ||
+        def.id == AbilityId.bladeFlurry ||
+        def.id == AbilityId.swipe ||
+        def.id == AbilityId.handOfGuldan ||
+        def.id == AbilityId.explosiveTrap ||
+        def.vfx?.groundDisc == true ||
+        SpatialCombat.groundDiscLifeFor(def.id) != null ||
         key.contains('consecrat') ||
         key.contains('bloodboil') ||
         key.contains('bladestorm') ||
-        key.contains('whirlwind')) {
+        key.contains('whirlwind') ||
+        key.contains('shadowfury')) {
       _groundNova(world, hero, def, style, rng, reducedVfx: reducedVfx);
       return;
     }
@@ -1087,6 +1158,45 @@ abstract final class AbilityEffectRunner {
         radius: radius * 0.35,
         life: 0.3,
       );
+      // Signature spin arcs for Bladestorm.
+      if (def.id == AbilityId.bladestorm) {
+        for (var i = 0; i < 3; i++) {
+          SpatialCombat._spawnBurst(
+            world,
+            x: hero.x,
+            y: hero.y,
+            argb: 0xCCFFE08A,
+            radius: radius * (0.45 + i * 0.12),
+            angle: i * 2.1,
+            slash: true,
+            life: 0.34 + i * 0.04,
+          );
+        }
+      }
+      // Purple nova pop for Shadowfury.
+      if (def.id == AbilityId.shadowfury) {
+        SpatialCombat._spawnRing(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: 0xFFB060E0,
+          radius: radius * 0.9,
+          life: 0.55,
+        );
+      }
+      final vfx = def.vfx;
+      final discLife =
+          vfx?.groundLife ?? SpatialCombat.groundDiscLifeFor(def.id);
+      if (vfx?.groundDisc == true || discLife != null) {
+        SpatialCombat._spawnGroundFx(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: vfx?.groundArgb ?? ((argb & 0x00FFFFFF) | 0x55000000),
+          radius: vfx?.groundRadius ?? radius,
+          life: discLife ?? 2.5,
+        );
+      }
     }
 
     var hitCount = 0;
@@ -1172,27 +1282,23 @@ abstract final class AbilityEffectRunner {
     ClassAbilityDef def, {
     required bool reducedVfx,
   }) {
+    final style = SpatialCombat.boltStyleForAbility(caster, def: def);
+    final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
     _healLowest(world, caster, ally, def.coeff, def.shortLabel);
-    _announce(
-      world,
-      caster,
-      def.shortLabel,
-      SpatialCombat._floaterHeal,
-      reducedVfx,
-    );
+    _announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
       SpatialCombat._spawnSpark(
         world,
         x: ally.x,
         y: ally.y,
-        argb: SpatialCombat._floaterHeal,
+        argb: tint,
         radius: 0.55,
       );
       SpatialCombat._spawnRing(
         world,
         x: ally.x,
         y: ally.y,
-        argb: 0x887AAB6E,
+        argb: (tint & 0x00FFFFFF) | 0x88000000,
         radius: 0.65,
         life: 0.35,
       );
@@ -1206,14 +1312,16 @@ abstract final class AbilityEffectRunner {
     ClassAbilityDef def, {
     required bool reducedVfx,
   }) {
+    final style = SpatialCombat.boltStyleForAbility(caster, def: def);
+    final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
     _absorbLowest(world, caster, ally, def.coeff, def.shortLabel);
-    _announce(world, caster, def.shortLabel, 0xFF90C0FF, reducedVfx);
+    _announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
       SpatialCombat._spawnRing(
         world,
         x: ally.x,
         y: ally.y,
-        argb: 0xAA90C0FF,
+        argb: (tint & 0x00FFFFFF) | 0xAA000000,
         radius: 0.75,
         life: 0.4,
       );
@@ -1237,7 +1345,18 @@ abstract final class AbilityEffectRunner {
     bool reducedVfx, {
     bool important = false,
   }) {
-    // Routine ability-name shoutouts drown the stage; keep bursts/sparks instead.
+    // Always give a small style-colored cast burst so kits aren't silent.
+    if (!reducedVfx) {
+      SpatialCombat._spawnBurst(
+        world,
+        x: hero.x,
+        y: hero.y,
+        argb: argb,
+        radius: important ? 0.85 : 0.55,
+        life: important ? 0.32 : 0.22,
+      );
+    }
+    // Routine ability-name shoutouts drown the stage.
     if (reducedVfx || !important) return;
     SpatialCombat._spawnFloater(
       world,
@@ -1306,6 +1425,8 @@ abstract final class AbilityEffectRunner {
     ClassAbilityDef def, {
     required bool reducedVfx,
   }) {
+    final style = SpatialCombat.boltStyleForAbility(caster, def: def);
+    final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
     final living = [
       for (final h in world.heroes)
         if (h.isAlive) h,
@@ -1327,7 +1448,7 @@ abstract final class AbilityEffectRunner {
       world,
       caster,
       def.shortLabel,
-      SpatialCombat._floaterHeal,
+      tint,
       reducedVfx,
     );
     if (!reducedVfx) {
@@ -1335,10 +1456,21 @@ abstract final class AbilityEffectRunner {
         world,
         x: caster.x,
         y: caster.y,
-        argb: 0x887AAB6E,
+        argb: (tint & 0x00FFFFFF) | 0x88000000,
         radius: 1.4,
         life: 0.4,
       );
+      final discLife = SpatialCombat.groundDiscLifeFor(def.id);
+      if (discLife != null || def.vfx?.groundDisc == true) {
+        SpatialCombat._spawnGroundFx(
+          world,
+          x: caster.x,
+          y: caster.y,
+          argb: (tint & 0x00FFFFFF) | 0x55000000,
+          radius: def.vfx?.groundRadius ?? 2.8,
+          life: def.vfx?.groundLife ?? discLife ?? 4.0,
+        );
+      }
     }
   }
 
@@ -1349,7 +1481,9 @@ abstract final class AbilityEffectRunner {
     required int rawEstimate,
   }) {
     if (def.id == AbilityId.drainLife || def.id == AbilityId.deathStrike) {
-      final heal = math.max(3, (rawEstimate * 0.55 * hero.kitHealMul).round());
+      // Blood Death Strike leans harder into self-heal fantasy than Affliction drain.
+      final ratio = def.id == AbilityId.deathStrike ? 0.75 : 0.65;
+      final heal = math.max(3, (rawEstimate * ratio * hero.kitHealMul).round());
       final before = hero.hp;
       hero.hp = math.min(hero.effectiveMaxHp, hero.hp + heal);
       final gained = hero.hp - before;
@@ -1377,19 +1511,48 @@ abstract final class AbilityEffectRunner {
     ClassAbilityDef def,
     int raw,
   ) {
-    if (def.id != AbilityId.rip &&
-        def.id != AbilityId.rake &&
-        def.id != AbilityId.rend) {
-      return;
-    }
+    final isBleed = switch (def.id) {
+      AbilityId.rip ||
+      AbilityId.rake ||
+      AbilityId.rend ||
+      AbilityId.garrote ||
+      AbilityId.rupture ||
+      AbilityId.serpentSting ||
+      AbilityId.corruption ||
+      AbilityId.unstableAffliction ||
+      AbilityId.curseOfAgony ||
+      AbilityId.moonfire ||
+      AbilityId.immolateDemo ||
+      AbilityId.immolateDestro ||
+      AbilityId.shadowWordPain =>
+        true,
+      _ => false,
+    };
+    if (!isBleed) return;
     final duration = switch (def.id) {
       AbilityId.rip => 12.0,
-      AbilityId.rake => 8.0,
+      AbilityId.rake || AbilityId.garrote => 8.0,
+      AbilityId.serpentSting || AbilityId.moonfire => 10.0,
+      AbilityId.corruption ||
+      AbilityId.unstableAffliction ||
+      AbilityId.curseOfAgony ||
+      AbilityId.immolateDemo ||
+      AbilityId.immolateDestro ||
+      AbilityId.shadowWordPain =>
+        12.0,
       _ => 9.0,
     };
     final dpsFrac = switch (def.id) {
       AbilityId.rip => 0.22,
-      AbilityId.rake => 0.14,
+      AbilityId.rake || AbilityId.garrote => 0.14,
+      AbilityId.rupture => 0.18,
+      AbilityId.serpentSting => 0.12,
+      AbilityId.corruption => 0.18,
+      AbilityId.unstableAffliction => 0.20,
+      AbilityId.curseOfAgony => 0.17,
+      AbilityId.shadowWordPain => 0.13,
+      AbilityId.immolateDemo || AbilityId.immolateDestro => 0.15,
+      AbilityId.moonfire => 0.11,
       _ => 0.12,
     };
     final fromHit = raw * 0.08;
@@ -1407,6 +1570,27 @@ abstract final class AbilityEffectRunner {
         argb: 0xFFC05050,
         life: 0.45,
       );
+    }
+  }
+
+  static SpatialActor? _ownedCombatPet(SpatialWorld world, SpatialActor hero) {
+    for (final p in world.pets) {
+      if (p.hp > 0 && p.petOwnerId == hero.id) return p;
+    }
+    return null;
+  }
+
+  /// Abilities that gain a damage bump when the hero's combat pet is alive.
+  static bool _petEmpoweredAbility(ClassAbilityDef def) {
+    switch (def.id) {
+      case AbilityId.killCommand ||
+          AbilityId.shadowBolt ||
+          AbilityId.handOfGuldan ||
+          AbilityId.immolateDemo ||
+          AbilityId.chaosBoltDemo:
+        return true;
+      default:
+        return false;
     }
   }
 
@@ -1488,7 +1672,6 @@ abstract final class AbilityEffectRunner {
         name.contains('favor') ||
         name.contains('spirit') ||
         name.contains('gargoyle') ||
-        name.contains('water') ||
         name.contains('charge') ||
         name.contains('step') ||
         name.contains('sprint') ||

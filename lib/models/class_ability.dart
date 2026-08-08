@@ -1,5 +1,7 @@
+import 'ability_vfx.dart';
 import 'hero.dart';
 import 'hero_spec.dart';
+import 'spell_bolt_style.dart';
 
 /// How an ability resolves in the generic [AbilityEffectRunner] path.
 enum AbilityEffectKind {
@@ -366,6 +368,8 @@ class ClassAbilityDef {
     this.effect = AbilityEffectKind.damage,
     this.tier = AbilityCastTier.filler,
     this.coeff = 1.0,
+    this.boltStyle,
+    this.vfx,
   });
 
   final AbilityId id;
@@ -384,6 +388,12 @@ class ClassAbilityDef {
   final AbilityCastTier tier;
   /// Damage / heal / absorb multiplier vs attack (or resource grant amount).
   final double coeff;
+
+  /// Prefer this bolt theme when set (overrides id/keyword maps).
+  final SpellBoltStyle? boltStyle;
+
+  /// Optional cast / ground / aura VFX overrides.
+  final AbilityVfxSpec? vfx;
 
   /// Hover / long-press chip text for the party HUD.
   String get tooltipMessage {
@@ -715,11 +725,11 @@ class ClassKits {
       shortLabel: 'Fireball',
       description: 'Hurls a heavy fire bolt at your focus.',
       unlockLevel: 3,
-      cooldown: 6.5,
+      cooldown: 5.8,
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 0.95,
+      coeff: 1.08,
     ),
     ClassAbilityDef(
       id: AbilityId.livingBomb,
@@ -854,7 +864,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.2,
+      coeff: 1.05,
     ),
     ClassAbilityDef(
       id: AbilityId.kidneyShot,
@@ -881,7 +891,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.6,
+      coeff: 0.48,
     ),
     ClassAbilityDef(
       id: AbilityId.sprint,
@@ -944,11 +954,11 @@ class ClassKits {
       shortLabel: 'Mortal',
       description: 'Heavy single-target strike.',
       unlockLevel: 3,
-      cooldown: 4.2,
+      cooldown: 3.4,
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.7,
+      coeff: 1.45,
     ),
     ClassAbilityDef(
       id: AbilityId.overpower,
@@ -958,11 +968,11 @@ class ClassKits {
       shortLabel: 'Over',
       description: 'Quick follow-up slash.',
       unlockLevel: 5,
-      cooldown: 4.5,
+      cooldown: 3.5,
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.15,
+      coeff: 1.25,
     ),
     ClassAbilityDef(
       id: AbilityId.rend,
@@ -1005,6 +1015,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
       coeff: 1.0,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFFD070,
+        groundDisc: true,
+        groundLife: 3.2,
+        groundArgb: 0x88FFE08A,
+        groundRadius: 2.8,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.armsExecute,
@@ -1060,7 +1079,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.2,
+      coeff: 1.3,
     ),
     ClassAbilityDef(
       id: AbilityId.whirlwind,
@@ -1074,7 +1093,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.7,
+      coeff: 0.78,
     ),
     ClassAbilityDef(
       id: AbilityId.ragingBlow,
@@ -1084,11 +1103,11 @@ class ClassKits {
       shortLabel: 'Rage',
       description: 'Empowered twin strike.',
       unlockLevel: 7,
-      cooldown: 5,
+      cooldown: 4.5,
       resourceCost: 15,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.35,
+      coeff: 1.55,
     ),
     ClassAbilityDef(
       id: AbilityId.enrageBuff,
@@ -1123,11 +1142,11 @@ class ClassKits {
       shortLabel: 'Ramp',
       description: 'Burst finisher flurry.',
       unlockLevel: 13,
-      cooldown: 12,
+      cooldown: 10,
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 1.7,
+      coeff: 2.1,
     ),
     ClassAbilityDef(
       id: AbilityId.furyRecklessness,
@@ -1321,6 +1340,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.55,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFE080,
+        groundDisc: true,
+        groundLife: 6.0,
+        groundArgb: 0x66FFE080,
+        groundRadius: 2.7,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.shieldOfRighteousness,
@@ -1512,7 +1540,7 @@ class ClassKits {
       resourceCost: 12,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.1,
+      coeff: 1.2,
     ),
     ClassAbilityDef(
       id: AbilityId.killCommand,
@@ -1522,11 +1550,11 @@ class ClassKits {
       shortLabel: 'KC',
       description: 'Pet-style heavy hit.',
       unlockLevel: 5,
-      cooldown: 6,
+      cooldown: 5.5,
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.4,
+      coeff: 1.65,
     ),
     ClassAbilityDef(
       id: AbilityId.multiShot,
@@ -1540,7 +1568,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.7,
+      coeff: 0.82,
     ),
     ClassAbilityDef(
       id: AbilityId.bestialWrath,
@@ -1630,11 +1658,11 @@ class ClassKits {
       shortLabel: 'Aimed',
       description: 'Heavy carefully aimed bolt.',
       unlockLevel: 5,
-      cooldown: 7,
+      cooldown: 6.5,
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.55,
+      coeff: 1.85,
     ),
     ClassAbilityDef(
       id: AbilityId.chimeraShot,
@@ -1756,7 +1784,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.75,
+      coeff: 0.90,
     ),
     ClassAbilityDef(
       id: AbilityId.freezingTrap,
@@ -1838,7 +1866,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.3,
+      coeff: 1.45,
     ),
     ClassAbilityDef(
       id: AbilityId.envenom,
@@ -1852,7 +1880,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.4,
+      coeff: 1.55,
     ),
     ClassAbilityDef(
       id: AbilityId.garrote,
@@ -1927,7 +1955,7 @@ class ClassKits {
       specId: HeroSpecId.subtlety,
       name: 'Master of Subtlety',
       shortLabel: 'MoS',
-      description: 'Always on: opener power.',
+      description: 'Always on: opener power + haste.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: false,
@@ -1946,7 +1974,7 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.15,
+      coeff: 1.28,
     ),
     ClassAbilityDef(
       id: AbilityId.backstab,
@@ -1960,7 +1988,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.45,
+      coeff: 1.60,
     ),
     ClassAbilityDef(
       id: AbilityId.shadowstep,
@@ -2013,7 +2041,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.4,
+      coeff: 1.65,
       showInHud: false,
     ),
     ClassAbilityDef(
@@ -2024,7 +2052,7 @@ class ClassKits {
       shortLabel: 'Cheap',
       description: 'Stun nearest foe.',
       unlockLevel: 13,
-      cooldown: 16,
+      cooldown: 14,
       resourceCost: 20,
       effect: AbilityEffectKind.root,
       tier: AbilityCastTier.filler,
@@ -2271,7 +2299,7 @@ class ClassKits {
       specId: HeroSpecId.blood,
       name: 'Blood Presence',
       shortLabel: 'Pres',
-      description: 'Always on: tankier.',
+      description: 'Always on: tankier + self-heal.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: false,
@@ -2290,7 +2318,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.15,
+      coeff: 1.28,
     ),
     ClassAbilityDef(
       id: AbilityId.heartStrike,
@@ -2304,7 +2332,7 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.05,
+      coeff: 1.22,
     ),
     ClassAbilityDef(
       id: AbilityId.runeTap,
@@ -2312,13 +2340,13 @@ class ClassKits {
       specId: HeroSpecId.blood,
       name: 'Rune Tap',
       shortLabel: 'Tap',
-      description: 'Convert runes to heal.',
+      description: 'Convert runes to self heal.',
       unlockLevel: 7,
       cooldown: 12,
       resourceCost: 10,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 1.2,
+      coeff: 1.45,
     ),
     ClassAbilityDef(
       id: AbilityId.bloodBoil,
@@ -2332,7 +2360,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.65,
+      coeff: 0.78,
     ),
     ClassAbilityDef(
       id: AbilityId.vampiricBlood,
@@ -2520,7 +2548,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.3,
+      coeff: 1.45,
     ),
     ClassAbilityDef(
       id: AbilityId.deathCoil,
@@ -2534,7 +2562,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.2,
+      coeff: 1.35,
     ),
     ClassAbilityDef(
       id: AbilityId.bloodBoilUnholy,
@@ -2548,7 +2576,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.7,
+      coeff: 0.82,
     ),
     ClassAbilityDef(
       id: AbilityId.gargoyle,
@@ -2589,7 +2617,7 @@ class ClassKits {
       resourceCost: 30,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
-      coeff: 0.55,
+      coeff: 0.7,
     ),
     ClassAbilityDef(
       id: AbilityId.unholyIbf,
@@ -3130,7 +3158,7 @@ class ClassKits {
       specId: HeroSpecId.frostMage,
       name: 'Water Elemental',
       shortLabel: 'Water',
-      description: 'Signature damage window.',
+      description: 'Summon a Water Elemental ally for 28s.',
       unlockLevel: 13,
       cooldown: 40,
       resourceCost: 20,
@@ -3176,7 +3204,7 @@ class ClassKits {
       resourceCost: 12,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 0.9,
+      coeff: 1.05,
     ),
     ClassAbilityDef(
       id: AbilityId.unstableAffliction,
@@ -3190,7 +3218,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.35,
+      coeff: 1.38,
     ),
     ClassAbilityDef(
       id: AbilityId.haunt,
@@ -3204,7 +3232,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.45,
+      coeff: 1.38,
     ),
     ClassAbilityDef(
       id: AbilityId.drainLife,
@@ -3218,7 +3246,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 0.95,
+      coeff: 1.05,
     ),
     ClassAbilityDef(
       id: AbilityId.curseOfAgony,
@@ -3232,7 +3260,7 @@ class ClassKits {
       resourceCost: 14,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.0,
+      coeff: 1.12,
     ),
     ClassAbilityDef(
       id: AbilityId.hauntBurst,
@@ -3246,7 +3274,7 @@ class ClassKits {
       resourceCost: 28,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 1.8,
+      coeff: 1.75,
     ),
     ClassAbilityDef(
       id: AbilityId.soulburn,
@@ -3268,7 +3296,7 @@ class ClassKits {
       specId: HeroSpecId.demonology,
       name: 'Demonic Knowledge',
       shortLabel: 'Know',
-      description: 'Always on: pet lean.',
+      description: 'Always on: pet lean + haste.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: false,
@@ -3287,7 +3315,7 @@ class ClassKits {
       resourceCost: 14,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.15,
+      coeff: 1.05,
     ),
     ClassAbilityDef(
       id: AbilityId.handOfGuldan,
@@ -3301,7 +3329,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.85,
+      coeff: 0.78,
     ),
     ClassAbilityDef(
       id: AbilityId.immolateDemo,
@@ -3315,7 +3343,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.0,
+      coeff: 0.98,
     ),
     ClassAbilityDef(
       id: AbilityId.metamorphosis,
@@ -3355,7 +3383,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 1.85,
+      coeff: 1.62,
     ),
     ClassAbilityDef(
       id: AbilityId.sacrifice,
@@ -3396,7 +3424,7 @@ class ClassKits {
       resourceCost: 14,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.2,
+      coeff: 1.08,
     ),
     ClassAbilityDef(
       id: AbilityId.conflagrate,
@@ -3410,7 +3438,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.4,
+      coeff: 1.25,
     ),
     ClassAbilityDef(
       id: AbilityId.immolateDestro,
@@ -3424,7 +3452,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 0.95,
+      coeff: 0.85,
     ),
     ClassAbilityDef(
       id: AbilityId.shadowfury,
@@ -3439,6 +3467,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.7,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFB060E0,
+        groundDisc: true,
+        groundLife: 1.4,
+        groundArgb: 0x88A040D0,
+        groundRadius: 3.0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.backdraft,
@@ -3465,7 +3502,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 2.0,
+      coeff: 1.64,
     ),
     ClassAbilityDef(
       id: AbilityId.shadowWard,
@@ -3846,7 +3883,7 @@ class ClassKits {
       resourceCost: 12,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 0.95,
+      coeff: 1.15,
     ),
     ClassAbilityDef(
       id: AbilityId.regrowth,
@@ -3860,7 +3897,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 1.25,
+      coeff: 1.35,
     ),
     ClassAbilityDef(
       id: AbilityId.wildGrowth,
@@ -3874,7 +3911,7 @@ class ClassKits {
       resourceCost: 24,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 1.1,
+      coeff: 1.25,
     ),
     ClassAbilityDef(
       id: AbilityId.lifebloom,
@@ -3888,7 +3925,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.absorb,
       tier: AbilityCastTier.filler,
-      coeff: 1.0,
+      coeff: 1.15,
     ),
     ClassAbilityDef(
       id: AbilityId.nourish,
@@ -3902,7 +3939,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
-      coeff: 1.4,
+      coeff: 1.55,
     ),
     ClassAbilityDef(
       id: AbilityId.tranquility,
@@ -3916,19 +3953,20 @@ class ClassKits {
       resourceCost: 35,
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.signature,
-      coeff: 1.9,
+      coeff: 2.1,
     ),
     ClassAbilityDef(
       id: AbilityId.barkskinResto,
       gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationDruid,
-      name: 'Barkskin',
-      shortLabel: 'Bark',
-      description: 'Emergency DR.',
+      name: 'Nature\'s Swiftness',
+      shortLabel: 'NS',
+      description: 'Emergency big heal.',
       unlockLevel: 15,
       cooldown: 45,
-      effect: AbilityEffectKind.emergencyDefend,
+      effect: AbilityEffectKind.emergencyHeal,
       tier: AbilityCastTier.emergency,
+      coeff: 2.2,
     ),
   ];
 

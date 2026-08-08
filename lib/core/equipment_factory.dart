@@ -4,8 +4,10 @@ import 'dart:math';
 import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 
 import '../models/dungeon_def.dart';
+import '../models/equip_stat_weights.dart';
 import '../models/gear_set.dart';
 import '../models/hero.dart';
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
 
@@ -159,10 +161,22 @@ class EquipmentFactory {
     required LootRarity rarity,
     String? dungeonId,
     int ascensionLevel = 0,
+    int hardmodeLevel = 0,
   }) {
     final zone = DungeonCatalog.byId(dungeonId ?? 'sandy').number;
     final base = max(1, battleNumber * 2 + rarity.index * 4 + 3);
-    return max(1, base + zone * 4 + ascensionLevel.clamp(0, 40) * 2);
+    var ilvl = max(
+      1,
+      base +
+          zone * 4 +
+          ascensionLevel.clamp(0, 40) * 2 +
+          hardmodeLevel.clamp(0, 10) ~/ 2,
+    );
+    // Soft-cap endless Crystal/Gauntlet display so auto-sell stays usable.
+    if (ilvl > 100) {
+      ilvl = 100 + ((ilvl - 100) * 0.35).round();
+    }
+    return ilvl;
   }
 
   /// Classic-style slot budget multipliers (MH full; jewelry/wrist softer).
@@ -202,20 +216,33 @@ class EquipmentFactory {
     WeaponHanded? handed,
     String? dungeonId,
     int ascensionLevel = 0,
+    int hardmodeLevel = 0,
   }) {
-    final floorBonus = (battleNumber - 1) ~/ 8;
-    final base = switch (rarity) {
-      LootRarity.common => 6 + floorBonus * 2,
-      LootRarity.uncommon => 10 + floorBonus * 2,
-      LootRarity.rare => 16 + floorBonus * 3,
-      LootRarity.epic => 24 + floorBonus * 4,
-      LootRarity.legendary => 36 + floorBonus * 5,
+    // Continuous floor growth (aligned with ilvl +2/floor pacing).
+    // Old band was ~/8; per-floor rates keep the same milestone averages.
+    final floorProgress = max(0, battleNumber - 1);
+    final perFloor = switch (rarity) {
+      LootRarity.common => 0.25,
+      LootRarity.uncommon => 0.25,
+      LootRarity.rare => 0.375,
+      LootRarity.epic => 0.5,
+      LootRarity.legendary => 0.625,
     };
+    final base = switch (rarity) {
+          LootRarity.common => 6.0,
+          LootRarity.uncommon => 10.0,
+          LootRarity.rare => 16.0,
+          LootRarity.epic => 24.0,
+          LootRarity.legendary => 36.0,
+        } +
+        floorProgress * perFloor;
     final slotM = slot == null ? 1.0 : slotMult(slot, handed: handed);
+    final hmMult = 1.0 + hardmodeLevel.clamp(0, 10) * 0.025;
     final scaled = base *
         slotM *
         zoneMultFor(dungeonId) *
-        alLootMult(ascensionLevel);
+        alLootMult(ascensionLevel) *
+        hmMult;
     return max(3, scaled.round());
   }
 
@@ -309,60 +336,66 @@ class EquipmentFactory {
     };
   }
 
-  static List<double> _armorWeights(ArmorType type, HeroRole bias) =>
-      switch (type) {
-        ArmorType.cloth => [0, 0, 0.15, 0.40, 0.30, 0.25],
-        ArmorType.leather => switch (bias) {
-            HeroRole.rogue => [0.15, 0.45, 0.25, 0.05, 0.05, 0.05],
-            HeroRole.warrior => [0.35, 0.25, 0.30, 0, 0.05, 0.05],
-            _ => [0.10, 0.30, 0.25, 0.15, 0.10, 0.10],
-          },
-        ArmorType.mail => switch (bias) {
-            HeroRole.mage || HeroRole.healer => [0.05, 0.05, 0.20, 0.30, 0.20, 0.20],
-            HeroRole.rogue => [0.20, 0.35, 0.30, 0.05, 0.05, 0.05],
-            _ => [0.40, 0.15, 0.35, 0, 0.05, 0.05],
-          },
-        ArmorType.plate => switch (bias) {
-            HeroRole.mage || HeroRole.healer => [0.10, 0, 0.35, 0.20, 0.20, 0.15],
-            _ => [0.45, 0.10, 0.40, 0, 0.05, 0],
-          },
-      };
-
-  static List<double> _weaponWeights(WeaponType type, HeroRole bias) {
-    return switch (type) {
-      WeaponType.axe ||
-      WeaponType.sword ||
-      WeaponType.mace ||
-      WeaponType.polearm ||
-      WeaponType.fist =>
-        bias == HeroRole.healer || bias == HeroRole.mage
-            ? [0.10, 0.05, 0.20, 0.25, 0.20, 0.20]
-            : [0.40, 0.25, 0.25, 0, 0.05, 0.05],
-      WeaponType.dagger => bias == HeroRole.healer || bias == HeroRole.mage
-          ? [0.05, 0.10, 0.15, 0.30, 0.20, 0.20]
-          : [0.20, 0.45, 0.25, 0, 0.05, 0.05],
-      WeaponType.staff => [0, 0, 0.15, 0.35, 0.25, 0.25],
-      WeaponType.wand => [0, 0, 0.10, 0.25, 0.15, 0.50],
-      WeaponType.bow ||
-      WeaponType.crossbow ||
-      WeaponType.gun ||
-      WeaponType.thrown =>
-        [0.15, 0.45, 0.25, 0.05, 0.05, 0.05],
-    };
+  static List<double> _armorWeights(
+    ArmorType type,
+    HeroRole bias, {
+    SpecRoleTag? roleTag,
+  }) {
+    // Plate tanks get a touch more Sta; cloth casters keep Int/SP from shares.
+    if (type == ArmorType.plate && roleTag == SpecRoleTag.tank) {
+      return const [0.25, 0.10, 0.55, 0.0, 0.05, 0.05];
+    }
+    return EquipStatWeights.lootShares(bias: bias, roleTag: roleTag);
   }
 
-  static List<double> _offHandWeights(OffHandKind kind) => switch (kind) {
-        OffHandKind.shield => [0.25, 0, 0.50, 0, 0, 0],
-        OffHandKind.frill => [0, 0, 0.15, 0.35, 0.25, 0.25],
-        OffHandKind.weapon => [0.15, 0.50, 0.20, 0, 0, 0],
+  static List<double> _weaponWeights(
+    WeaponType type,
+    HeroRole bias, {
+    SpecRoleTag? roleTag,
+  }) {
+    if (type == WeaponType.staff || type == WeaponType.wand) {
+      return EquipStatWeights.lootShares(
+        bias: HeroRole.mage,
+        roleTag: roleTag ?? SpecRoleTag.caster,
+      );
+    }
+    if (type == WeaponType.bow ||
+        type == WeaponType.crossbow ||
+        type == WeaponType.gun ||
+        type == WeaponType.thrown) {
+      return EquipStatWeights.lootShares(
+        bias: HeroRole.rogue,
+        roleTag: roleTag ?? SpecRoleTag.rangedDps,
+      );
+    }
+    return EquipStatWeights.lootShares(bias: bias, roleTag: roleTag);
+  }
+
+  static List<double> _offHandWeights(
+    OffHandKind kind, {
+    HeroRole bias = HeroRole.warrior,
+    SpecRoleTag? roleTag,
+  }) =>
+      switch (kind) {
+        OffHandKind.shield => const [0.25, 0.10, 0.55, 0.0, 0.05, 0.05],
+        OffHandKind.weapon => EquipStatWeights.lootShares(
+            bias: bias,
+            roleTag: roleTag ?? SpecRoleTag.meleeDps,
+          ),
+        OffHandKind.frill => EquipStatWeights.lootShares(
+            bias: bias == HeroRole.rogue ? HeroRole.healer : bias,
+            roleTag: roleTag ??
+                (bias == HeroRole.mage
+                    ? SpecRoleTag.caster
+                    : SpecRoleTag.healer),
+          ),
       };
 
-  static List<double> _jewelryWeights(HeroRole bias) => switch (bias) {
-        HeroRole.warrior => [0.35, 0.15, 0.35, 0, 0.10, 0.05],
-        HeroRole.rogue => [0.20, 0.40, 0.25, 0.05, 0.05, 0.05],
-        HeroRole.healer => [0, 0.05, 0.20, 0.25, 0.30, 0.20],
-        HeroRole.mage => [0, 0.05, 0.15, 0.35, 0.15, 0.30],
-      };
+  static List<double> _jewelryWeights(
+    HeroRole bias, {
+    SpecRoleTag? roleTag,
+  }) =>
+      EquipStatWeights.lootShares(bias: bias, roleTag: roleTag);
 
   static ({int str, int agi, int sta, int intel, int spi, int sp}) _distribute(
     int budget,
@@ -395,21 +428,38 @@ class EquipmentFactory {
 
   static List<ItemAffixDef> _affixesForBias(
     List<ItemAffixDef> pool,
-    HeroRole bias,
-  ) {
+    HeroRole bias, {
+    SpecRoleTag? roleTag,
+  }) {
     bool matches(ItemAffixDef a) {
       final melee = a.str + a.agi + a.sta + a.crit + a.aspd;
-      final caster = a.intel + a.spi + a.sp;
-      return switch (bias) {
-        HeroRole.warrior => melee >= caster,
-        HeroRole.rogue => a.agi + a.str + a.crit + a.aspd + a.sta >= caster,
-        HeroRole.healer || HeroRole.mage => caster >= melee || caster > 0,
-      };
+      final caster = a.intel + a.sp; // Spirit is regen — don't require it
+      final spiHeavy = a.spi > a.intel + a.sp;
+      return switch (roleTag ?? _fallbackTag(bias)) {
+        SpecRoleTag.tank => melee >= caster && a.sta + a.str >= a.agi,
+        SpecRoleTag.healer =>
+          (a.intel + a.sp + a.spi) >= melee || caster > 0,
+        SpecRoleTag.caster => caster >= melee || a.intel + a.sp > 0,
+        SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
+          bias == HeroRole.warrior
+              ? a.str + a.sta + a.crit >= caster
+              : a.agi + a.str + a.crit + a.aspd >= caster,
+      } &&
+          // Prefer throughput affixes over pure Spirit for casters/healers.
+          !(spiHeavy &&
+              (roleTag == SpecRoleTag.caster || roleTag == SpecRoleTag.healer));
     }
 
     final filtered = [for (final a in pool) if (matches(a)) a];
     return filtered.isNotEmpty ? filtered : pool;
   }
+
+  static SpecRoleTag _fallbackTag(HeroRole bias) => switch (bias) {
+        HeroRole.warrior => SpecRoleTag.meleeDps,
+        HeroRole.rogue => SpecRoleTag.meleeDps,
+        HeroRole.healer => SpecRoleTag.healer,
+        HeroRole.mage => SpecRoleTag.caster,
+      };
 
   /// Apply affix weights as a slice of [affixBudget] (stat points).
   static ({
@@ -560,8 +610,10 @@ class EquipmentFactory {
     required int battleNumber,
     HeroRole? bias,
     ArmorType? preferredArmor,
+    SpecRoleTag? roleTag,
     String? dungeonId,
     int ascensionLevel = 0,
+    int hardmodeLevel = 0,
   }) {
     final classBias = bias ?? HeroRole.values[random.nextInt(4)];
     final dungeon = dungeonId ?? 'sandy';
@@ -578,20 +630,24 @@ class EquipmentFactory {
         max(1, battleNumber),
         preferred: preferredArmor,
       );
-      weights = _armorWeights(armorType, classBias);
+      weights = _armorWeights(armorType, classBias, roleTag: roleTag);
     } else if (slot == EquipmentSlot.weapon) {
       final mh = mainHandFor(classBias);
       weaponType = mh.$1;
       handed = mh.$2;
-      weights = _weaponWeights(weaponType, classBias);
+      weights = _weaponWeights(weaponType, classBias, roleTag: roleTag);
     } else if (slot == EquipmentSlot.ranged) {
       weaponType = rangedFor(classBias);
       handed = ClassProficiency.defaultHanded(weaponType);
-      weights = _weaponWeights(weaponType, classBias);
+      weights = _weaponWeights(weaponType, classBias, roleTag: roleTag);
     } else if (slot == EquipmentSlot.offHand) {
       if (classBias == HeroRole.warrior) {
         offHandKind = OffHandKind.shield;
-        weights = _offHandWeights(OffHandKind.shield);
+        weights = _offHandWeights(
+          OffHandKind.shield,
+          bias: classBias,
+          roleTag: roleTag,
+        );
       } else if (classBias == HeroRole.rogue) {
         offHandKind = OffHandKind.weapon;
         final opts = [
@@ -602,10 +658,18 @@ class EquipmentFactory {
         ];
         weaponType = opts[random.nextInt(opts.length)];
         handed = WeaponHanded.oneHand;
-        weights = _offHandWeights(OffHandKind.weapon);
+        weights = _offHandWeights(
+          OffHandKind.weapon,
+          bias: classBias,
+          roleTag: roleTag,
+        );
       } else {
         offHandKind = OffHandKind.frill;
-        weights = _offHandWeights(OffHandKind.frill);
+        weights = _offHandWeights(
+          OffHandKind.frill,
+          bias: classBias,
+          roleTag: roleTag,
+        );
       }
     } else if (slot == EquipmentSlot.cloak ||
         slot == EquipmentSlot.neck ||
@@ -613,23 +677,31 @@ class EquipmentFactory {
         slot == EquipmentSlot.ring2 ||
         slot == EquipmentSlot.trinket ||
         slot == EquipmentSlot.trinket2) {
-      weights = _jewelryWeights(classBias);
+      weights = _jewelryWeights(classBias, roleTag: roleTag);
     } else {
-      weights = _jewelryWeights(classBias);
+      weights = _jewelryWeights(classBias, roleTag: roleTag);
     }
 
     if (slot == EquipmentSlot.offHand && classBias == HeroRole.warrior) {
       offHandKind = OffHandKind.shield;
       weaponType = null;
       handed = null;
-      weights = _offHandWeights(OffHandKind.shield);
+      weights = _offHandWeights(
+        OffHandKind.shield,
+        bias: classBias,
+        roleTag: roleTag,
+      );
     }
     if (slot == EquipmentSlot.offHand &&
         (classBias == HeroRole.healer || classBias == HeroRole.mage)) {
       offHandKind = OffHandKind.frill;
       weaponType = null;
       handed = null;
-      weights = _offHandWeights(OffHandKind.frill);
+      weights = _offHandWeights(
+        OffHandKind.frill,
+        bias: classBias,
+        roleTag: roleTag,
+      );
     }
 
     // Pick affixes first so their budget slice can be reserved.
@@ -647,8 +719,8 @@ class EquipmentFactory {
       LootRarity.legendary => 0.85,
       _ => 0.0,
     };
-    final prefixPool = _affixesForBias(_prefixes, classBias);
-    final suffixPool = _affixesForBias(_suffixes, classBias);
+    final prefixPool = _affixesForBias(_prefixes, classBias, roleTag: roleTag);
+    final suffixPool = _affixesForBias(_suffixes, classBias, roleTag: roleTag);
     if (prefixChance > 0 &&
         prefixPool.isNotEmpty &&
         random.nextDouble() < prefixChance) {
@@ -667,6 +739,7 @@ class EquipmentFactory {
       handed: handed,
       dungeonId: dungeon,
       ascensionLevel: ascensionLevel,
+      hardmodeLevel: hardmodeLevel,
     );
     final affixCount = (prefix != null ? 1 : 0) + (suffix != null ? 1 : 0);
     final affixFrac = affixCount == 0
@@ -681,6 +754,7 @@ class EquipmentFactory {
       rarity: rarity,
       dungeonId: dungeon,
       ascensionLevel: ascensionLevel,
+      hardmodeLevel: hardmodeLevel,
     );
 
     // Armor density reserved from primary budget (not stacked on top).

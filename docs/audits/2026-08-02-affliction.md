@@ -1,5 +1,7 @@
 # Class audit report — Affliction Warlock
 
+> **Status (2026-08):** Roadmap graduated Affliction (coeffs + Drain damage path). This audit is **historical** — re-run class-audit before treating Verdict WIP as current.
+
 **Date:** 2026-08-02  
 **Auditor:** Cursor agent (class-audit skill)  
 **Depth:** full (code-primary; mid-band sim notes; no fresh browser playtest)  

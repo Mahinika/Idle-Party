@@ -48,7 +48,11 @@ abstract final class CustomAssets {
       ];
 
   /// Pet instance ids look like `ember_pup_12345`.
+  /// Combat actors use `classpet_*` / `temppet_*` — map by name theme.
   static String petForInstanceId(String petId) {
+    if (petId.startsWith('classpet_') || petId.startsWith('temppet_')) {
+      return petForCombatActorId(petId);
+    }
     for (final key in const [
       'ember_pup',
       'ash_fox',
@@ -69,6 +73,35 @@ abstract final class CustomAssets {
       }
     }
     return petEgg;
+  }
+
+  /// Class / temp combat pets (`classpet_*`, `temppet_water_*`, …).
+  static String petForCombatActorId(String petId, [String? displayName]) {
+    final key = '${petId}_${displayName ?? ''}'.toLowerCase();
+    if (key.contains('water') || key.contains('elemental')) {
+      return enemyCrystalWraith;
+    }
+    if (key.contains('wolf') ||
+        key.contains('spirit') ||
+        key.contains('feral')) {
+      return petWardenCub;
+    }
+    if (key.contains('ghoul') ||
+        key.contains('army') ||
+        key.contains('dead') ||
+        key.contains('skel')) {
+      return enemyGhost;
+    }
+    if (key.contains('demon') || key.contains('imp') || key.contains('fel')) {
+      return enemySpider;
+    }
+    if (key.contains('beast') || key.contains('pet') || key.contains('hunter')) {
+      return petCaveBat;
+    }
+    if (key.contains('totem') || key.contains('element')) {
+      return enemyGolem;
+    }
+    return petEmberPup;
   }
 
   // —— Armor / jewelry slot icons ——
@@ -128,6 +161,10 @@ abstract final class CustomAssets {
   static const String portraitDead = '$_root/portraits/dead.png';
   static const String portraitHell = '$_root/portraits/hell.png';
   static const String portraitCrystal = '$_root/portraits/crystal.png';
+  /// Tidehold uses underworld portrait tint-adjacent art (distinct from Spire).
+  static const String portraitTide = portraitUnderworld;
+  /// Ashen Vault uses dead-city portrait (distinct from Hell's Gate).
+  static const String portraitEmber = portraitDead;
 
   static String dungeonPortrait(String dungeonId) => switch (dungeonId) {
         'sandy' => portraitSandy,
@@ -137,6 +174,8 @@ abstract final class CustomAssets {
         'dead' => portraitDead,
         'hell' => portraitHell,
         'crystal' => portraitCrystal,
+        'tide' => portraitTide,
+        'ember' => portraitEmber,
         _ => portraitSandy,
       };
 
@@ -156,6 +195,10 @@ abstract final class CustomAssets {
   static const String backdropDead = '$_root/ui/backdrops/dead.png';
   static const String backdropHell = '$_root/ui/backdrops/hell.png';
   static const String backdropCrystal = '$_root/ui/backdrops/crystal.png';
+  /// Tidehold: underworld backdrop (teal wash separates from Spire).
+  static const String backdropTide = backdropUnderworld;
+  /// Ashen Vault: dead backdrop (ember wash separates from Hell).
+  static const String backdropEmber = backdropDead;
 
   static String dungeonBackdropFor(String dungeonId) => switch (dungeonId) {
         'sandy' => backdropSandy,
@@ -165,6 +208,8 @@ abstract final class CustomAssets {
         'dead' => backdropDead,
         'hell' => backdropHell,
         'crystal' => backdropCrystal,
+        'tide' => backdropTide,
+        'ember' => backdropEmber,
         _ => dungeonBackdrop,
       };
 

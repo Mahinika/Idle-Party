@@ -7,7 +7,20 @@ import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/models/proficiency.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
+
+/// How closely the floor runner mirrors live / AFK director loops.
+enum SimPlayMode {
+  /// SpatialCombat only — no flask, God Hand, or mid-fight auto-equip.
+  bare,
+
+  /// Live director parity: 60 Hz, flask @35% HP, GH on CD, auto-equip loot.
+  live,
+
+  /// Offline catch-up parity: afkAssist, soft GH cadence, flask, auto-equip.
+  afk,
+}
 
 /// Shared SpatialCombat floor runner for balance / difficulty tools.
 class FloorSimResult {
@@ -24,6 +37,8 @@ class FloorSimResult {
     required this.hpPctByHeroId,
     required this.hpPctBySpec,
     required this.state,
+    this.godHandCasts = 0,
+    this.flaskUses = 0,
   });
 
   final bool cleared;
@@ -38,6 +53,8 @@ class FloorSimResult {
   final Map<String, double> hpPctByHeroId;
   final Map<HeroSpecId, double> hpPctBySpec;
   final GameState state;
+  final int godHandCasts;
+  final int flaskUses;
 }
 
 /// Seed equipment rolls so forge/gear presets are deterministic across runs.
@@ -91,8 +108,7 @@ GameState withLightForge(GameState state) {
   return next;
 }
 
-/// Mid power without forcing a 4th (rogue) hero — keeps party size stable.
-GameState withMidPower(GameState state) {
+GameState withMidForge(GameState state) {
   var next = withLightForge(state).copyWith(gold: 200000, essence: 80);
   for (var i = 0; i < 8; i++) {
     next = GameLogic.trainParty(next);
@@ -102,32 +118,103 @@ GameState withMidPower(GameState state) {
     next = GameLogic.upgradeDefense(next);
     next = GameLogic.upgradeVitality(next);
   }
-  final stash = <EquipmentItem>[];
-  for (final role in HeroRole.values) {
-    for (final slot in [
-      EquipmentSlot.weapon,
-      EquipmentSlot.offHand,
-      EquipmentSlot.cloak,
-    ]) {
-      stash.add(
-        GameLogic.createEquipment(
-          slot: slot,
-          rarity: LootRarity.rare,
-          battleNumber: 8,
-          bias: role,
-        ),
-      );
-    }
-  }
-  next = next.copyWith(gearStash: stash);
-  return GameLogic.autoEquipBetterGear(next);
+  return next;
 }
 
+/// Outfit each hero with a full role-tagged kit (forced equip for sims).
+///
+/// Bypasses Auto Equip gates / stash caps so mid-band kits always land.
+GameState outfitPartyGear(
+  GameState state, {
+  required int battleNumber,
+  required LootRarity rarity,
+}) {
+  final bn = max(1, battleNumber);
+  final slots = [
+    for (final s in EquipmentSlot.values)
+      if (s != EquipmentSlot.consumable) s,
+  ];
+  final heroes = <PartyHero>[];
+  for (final hero in state.heroes) {
+    final preferred = GameLogic.preferredArmorForSpec(hero.spec, hero.level);
+    final eq = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped);
+    EquipmentItem? weapon;
+    for (final slot in slots) {
+      final piece = GameLogic.createEquipment(
+        slot: slot,
+        rarity: rarity,
+        battleNumber: bn,
+        bias: hero.gearAffinity,
+        preferredArmor: preferred,
+        roleTag: hero.spec.roleTag,
+      );
+      if (slot == EquipmentSlot.offHand &&
+          weapon != null &&
+          ClassProficiency.weaponBlocksOffHand(weapon)) {
+        continue;
+      }
+      eq[slot] = piece;
+      if (slot == EquipmentSlot.weapon) weapon = piece;
+    }
+    heroes.add(hero.copyWith(equipped: eq));
+  }
+  return state.copyWith(heroes: heroes);
+}
+
+/// Flask on every hero + stash reserve (live/AFK mid-fight drinks).
+GameState ensureCombatConsumables(
+  GameState state, {
+  int stashFlasks = 8,
+}) {
+  var salt = 0;
+  final heroes = <PartyHero>[];
+  for (final h in state.heroes) {
+    final eq = Map<EquipmentSlot, EquipmentItem>.from(h.equipped);
+    final cur = eq[EquipmentSlot.consumable];
+    if (cur == null || cur.slot != EquipmentSlot.consumable) {
+      eq[EquipmentSlot.consumable] =
+          GameLogic.createMarketFlask(salt: salt++);
+    }
+    heroes.add(h.copyWith(equipped: eq));
+  }
+  final stash = <EquipmentItem>[...state.gearStash];
+  for (var i = 0; i < stashFlasks; i++) {
+    stash.add(GameLogic.createMarketFlask(salt: salt++));
+  }
+  return state.copyWith(
+    heroes: heroes,
+    gearStash: stash,
+    gold: max(state.gold, 5000),
+  );
+}
+
+/// Forge / train only — gear applied later at the party's actual level.
 GameState applyPowerBand(GameState state, String band) {
   return switch (band) {
     'fresh' => state,
     'light' => withLightForge(state),
-    'mid' => withMidPower(state),
+    'mid' => withMidForge(state),
+    _ => throw ArgumentError('Unknown band: $band'),
+  };
+}
+
+/// Level-scaled kits after [levelPartyTo] so ilvl matches the sweep.
+///
+/// - fresh: starter kits only
+/// - light: early forge power (no full stash outfit) — matches first-dungeon gear
+/// - mid: full rare role-tagged kits at party level — mid push reality
+GameState applyGearBand(
+  GameState state,
+  String band, {
+  required int battleNumber,
+}) {
+  return switch (band) {
+    'fresh' || 'light' => state,
+    'mid' => outfitPartyGear(
+        state,
+        battleNumber: battleNumber,
+        rarity: LootRarity.rare,
+      ),
     _ => throw ArgumentError('Unknown band: $band'),
   };
 }
@@ -157,15 +244,46 @@ GameState enterFloor(
   return fullHeal(state);
 }
 
+/// Prepare a party the way live/AFK combat actually sees it.
+GameState prepareSimParty(
+  GameState state, {
+  required String band,
+  required int partyLevel,
+}) {
+  var next = applyPowerBand(state, band);
+  next = levelPartyTo(next, partyLevel);
+  next = applyGearBand(next, band, battleNumber: partyLevel);
+  next = ensureCombatConsumables(next);
+  return next;
+}
+
 FloorSimResult simulateFloor(
   GameState state, {
   double maxSeconds = 90,
-  double dt = 0.05,
+  double? dt,
+  SimPlayMode mode = SimPlayMode.live,
 }) {
-  var world = SpatialCombat.build(state);
+  final useAssist = mode == SimPlayMode.afk;
+  final stepDt = dt ??
+      (mode == SimPlayMode.afk
+          ? 0.12
+          : mode == SimPlayMode.live
+              ? 1 / 60
+              : 0.05);
+  // Attentive GH whenever ready (mirrors live director). Offline soft cadence
+  // lives in GameLogic.simulateSpatialOffline, not this floor harness.
+  final ghIntervalSteps = 1;
+  final flaskIntervalSteps = mode == SimPlayMode.afk
+      ? max(1, (1.44 / stepDt).round())
+      : max(1, (1.0 / stepDt).round());
+
+  var world = SpatialCombat.build(state, afkAssist: useAssist);
   var current = state;
   var elapsed = 0.0;
   var gold = 0;
+  var stepIndex = 0;
+  var godHandCasts = 0;
+  var flaskUses = 0;
 
   Map<String, int> damageMap() => {
         for (final h in world.heroes) h.id: h.damageDealt,
@@ -236,15 +354,64 @@ FloorSimResult simulateFloor(
       hpPctByHeroId: heroHpPct(),
       hpPctBySpec: hpBySpec(),
       state: current,
+      godHandCasts: godHandCasts,
+      flaskUses: flaskUses,
     );
   }
 
+  bool tryFlask() {
+    if (!GameLogic.canUseConsumable(current)) return false;
+    final living = <PartyHero>[
+      for (final h in current.heroes)
+        if (h.currentHp > 0) h,
+    ];
+    if (living.isEmpty) return false;
+    var ratioSum = 0.0;
+    for (final h in living) {
+      final maxHp = current.effectiveHeroMaxHp(h);
+      ratioSum += maxHp > 0 ? h.currentHp / maxHp : 0;
+    }
+    if (ratioSum / living.length >= 0.35) return false;
+    final before = current;
+    current = GameLogic.useConsumable(current);
+    if (identical(current, before)) return false;
+    world = SpatialCombat.syncPartyFromState(world, current);
+    flaskUses++;
+    return true;
+  }
+
+  bool tryGodHand() {
+    if (world.godHandCooldown > 0) return false;
+    final aim = GameLogic.godHandAim(world);
+    if (aim == null) return false;
+    final gh = SpatialCombat.godHand(
+      world,
+      current,
+      tileX: aim.$1,
+      tileY: aim.$2,
+    );
+    world = gh.world;
+    current = gh.state;
+    gold += gh.goldFromKills;
+    godHandCasts++;
+    return true;
+  }
+
   while (elapsed < maxSeconds) {
-    final step = SpatialCombat.step(world, current, dt: dt);
+    final stashLenBefore = current.gearStash.length;
+    final step = SpatialCombat.step(world, current, dt: stepDt);
     world = step.world;
     current = step.state;
     gold += step.goldFromKills;
-    elapsed += dt;
+    elapsed += stepDt;
+    stepIndex++;
+
+    if (mode != SimPlayMode.bare &&
+        current.gearStash.length > stashLenBefore) {
+      current = GameLogic.autoEquipBetterGear(current);
+      world = SpatialCombat.syncPartyFromState(world, current);
+    }
+
     if (step.roomCleared) {
       return finish(
         cleared: true,
@@ -262,6 +429,15 @@ FloorSimResult simulateFloor(
         timedOut: false,
         hpPct: 0,
       );
+    }
+
+    if (mode != SimPlayMode.bare) {
+      if (stepIndex % flaskIntervalSteps == 0) {
+        tryFlask();
+      }
+      if (stepIndex % ghIntervalSteps == 0) {
+        tryGodHand();
+      }
     }
   }
   return finish(

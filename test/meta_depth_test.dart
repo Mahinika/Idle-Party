@@ -238,9 +238,93 @@ void main() {
       'weeklyProgress': 2.0,
       'torchKeepLevel': 3,
       'lifetimeAbilityCasts': 12.5,
+      'godHandStyle': 1.0,
+      'dailyEssenceBonusLevel': 2,
+      'gauntletGoldBonusLevel': 1,
     });
     expect(md.weeklyProgress, 2);
     expect(md.torchKeepLevel, 3);
     expect(md.lifetimeAbilityCasts, 12);
+    expect(md.godHandStyle, 1);
+    expect(md.dailyEssenceBonusLevel, 2);
+    expect(md.gauntletGoldBonusLevel, 1);
+    expect(md.claimedWillRanks, isEmpty);
+    expect(md.claimedGauntletMilestones, isEmpty);
+  });
+
+  test('legacy metaDepth json omits Q2-Q3 fields safely', () {
+    final md = MetaDepthState.fromJson(<String, dynamic>{
+      'weeklyProgress': 1,
+      'torchKeepLevel': 1,
+    });
+    expect(md.godHandStyle, 0);
+    expect(md.seasonKey, '');
+    expect(md.claimedWillRanks, isEmpty);
+    expect(md.claimedGauntletMilestones, isEmpty);
+    expect(md.dailyEssenceBonusLevel, 0);
+    expect(md.gauntletGoldBonusLevel, 0);
+  });
+
+  test('weekly claim pays raised essence and seasons rotate', () {
+    final now = DateTime.utc(2026, 8, 7);
+    final key = GameLogic.isoWeekKey(now);
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      metaDepth: MetaDepthState(
+        weeklyKey: key,
+        weeklyProgress: 3,
+        weeklyModifier: 'glass',
+        seasonKey: GameLogic.seasonLabel(now),
+      ),
+    );
+    expect(state.metaDepth.seasonKey, contains('2026-W'));
+    expect(state.metaDepth.seasonKey, contains('2026-08'));
+    expect(GameLogic.weeklyClaimEssence, greaterThanOrEqualTo(30));
+    final before = state.essence;
+    state = GameLogic.claimWeekly(state);
+    expect(state.metaDepth.weeklyClaimed, isTrue);
+    expect(state.essence, greaterThanOrEqualTo(before + GameLogic.weeklyClaimEssence));
+    expect(state.metaDepth.claimedSeasonRewards, contains('2026-08'));
+    expect(state.achievements, contains('weekly_clear'));
+  });
+
+  test('will ranks and gauntlet milestones claim once', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 7));
+    state = state.copyWith(
+      achievements: List.generate(20, (i) => 'a$i'),
+      unlockedRelics: ['war_banner', 'iron_ward'],
+      metaDepth: state.metaDepth.copyWith(gauntletBestFloor: 50),
+    );
+    final before = state.essence;
+    state = GameLogic.syncMetaPayoffs(state);
+    expect(state.metaDepth.claimedWillRanks, isNotEmpty);
+    expect(state.metaDepth.claimedGauntletMilestones, containsAll(['f25', 'f50']));
+    expect(state.metaDepth.claimedGauntletMilestones.contains('f100'), isFalse);
+    expect(state.essence, greaterThan(before));
+    final mid = state.essence;
+    state = GameLogic.syncMetaPayoffs(state);
+    expect(state.essence, mid);
+  });
+
+  test('new relics and prestige sinks wire through', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 7))
+        .copyWith(essence: 500, ascensionLevel: 12);
+    expect(GameLogic.relicOrder, contains(GameLogic.godHandFocusRelic));
+    state = GameLogic.unlockRelic(state, GameLogic.godHandFocusRelic);
+    expect(state.hasRelic(GameLogic.godHandFocusRelic), isTrue);
+    expect(state.relicGodHandDamageBonus, 3);
+    state = GameLogic.unlockRelic(state, GameLogic.chamberLuckRelic);
+    expect(state.relicLootFindPercent, 5);
+    state = GameLogic.unlockRelic(state, GameLogic.ironWillRelic);
+    expect(state.relicMitigateFlat, 1);
+    state = GameLogic.setGodHandStyle(state, 2);
+    expect(state.metaDepth.godHandStyle, 2);
+    state = GameLogic.buyPrestigeShopItem(state, 'daily_essence');
+    expect(state.metaDepth.dailyEssenceBonusLevel, 1);
+    state = GameLogic.buyPrestigeShopItem(state, 'gauntlet_gold');
+    expect(state.metaDepth.gauntletGoldBonusLevel, 1);
+    expect(
+      GameLogic.gauntletGoldMul(1, prestigeBonusLevel: 1),
+      greaterThan(GameLogic.gauntletGoldMul(1)),
+    );
   });
 }

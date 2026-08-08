@@ -37,12 +37,14 @@ void main() {
     }
   });
 
-  test('legacy Arcane Intellect sets fire mage kitOutMul', () {
+  test('legacy Fire keeps kitOutMul honest; tax is on ability hits', () {
     final state = _soloSpecParty(HeroSpecId.fire, level: 5);
     var world = SpatialCombat.build(state);
     world = SpatialCombat.step(world, state, dt: 0.1).world;
     final mage = world.heroes.firstWhere((h) => !h.isPet);
-    expect(mage.kitOutMul, closeTo(0.72, 0.001));
+    // Fire ticker sets mild personal heat; spam tax stays on spell hits.
+    expect(mage.kitOutMul, closeTo(1.22, 0.001));
+    expect(SpatialCombat.casterAbilityTax, closeTo(0.72, 0.001));
   });
 
   test('Inner Fire sets disc heal mul', () {

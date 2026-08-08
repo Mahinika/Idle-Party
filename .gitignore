@@ -80,4 +80,19 @@ IdleSword*
 /Readme.html
 /Visit Kenney*
 /assets.json
-.cursor/
+# Keep kenney-preview / local Cursor junk out of git; ship project skills + rules + hooks.
+.cursor/*
+!.cursor/hooks.json
+!.cursor/hooks/
+!.cursor/hooks/**
+.cursor/hooks/.verify-dirty
+!.cursor/skills/
+!.cursor/skills/**/
+!.cursor/rules/
+!.cursor/rules/**/
+!.cursor/commands/
+!.cursor/commands/**/
+!.cursor/mcp.json
+
+# Local MCP venv
+/tool/mcp_idle_party/.venv/

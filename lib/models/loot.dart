@@ -266,6 +266,8 @@ class EquipmentItem {
       'dead' => 'Necropolis',
       'hell' => 'Infernal',
       'crystal' => 'Spire',
+      'tide' => 'Tidehold',
+      'ember' => 'Ashen',
       _ => parts.first,
     };
     final armor = parts.sublist(1).join(' ');

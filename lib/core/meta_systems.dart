@@ -7,41 +7,115 @@ import '../models/loot.dart';
 import '../models/pet.dart';
 import 'game_state.dart';
 
+/// One versioned What's New block (newest releases first in [MetaSystems.releases]).
+class ChangelogRelease {
+  const ChangelogRelease({required this.version, required this.bullets});
+  final String version;
+  final List<String> bullets;
+}
+
 /// Free, offline meta systems: daily run seeding, local achievements,
 /// codex discovery tracking, and the in-app changelog. No servers, no
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
-  /// Current build's changelog version. Bump alongside [changelog] entries.
-  static const String currentVersion = '1.4.0';
+  /// Current build's changelog version. Keep in sync with pubspec version.
+  static const String currentVersion = '1.9.3';
 
-  static const List<String> changelog = <String>[
-    'Party: unlock WotLK-style specs and field 4–5 active heroes.',
-    'All talent-tree kits (~30) with abilities via the shared effect runner.',
-    'Gear Sets renamed (was Loadouts); 5th party slot for essence at AL 2+.',
-    'Meta depth: prestige shop, sanctuary XP/prestige, relic tiers, weekly contracts.',
-    'Expanded pet roster (12 species), rarity merges, bonding, and frames.',
-    'Codex milestone claims, ascend titles, zone trophies, and Will ranks.',
-    'Dozens of new local achievements across zones, hardmode, gold, and pets.',
-    'Light story layer: dungeon blurbs, enter/clear/ascend flavor, intro will.',
-    'Smarter Auto Equip: BiS slot fill, 2H net score, party conflict resolution.',
-    'Loot Sprite pet: gold find + loot find passives that scale with level.',
-    'Achievements and ascend milestones grant essence rewards.',
-    'Challenge clears: +2e per active toggle; Daily Run clear awards +25e.',
-    'Auto Equip / Sell Junk report what they did via toasts.',
-    'In-dungeon offline catch-up runs SpatialCombat (AFK assist + reduced VFX).',
-    'Codex monsters show sprites; difficulty CI gates for attrition balance.',
-    'Rich offline progress summary dialog on return to the hub.',
-    'Save up to 3 named gear loadouts and swap them instantly.',
-    'Boss Rush and No-Flask challenge toggles before entering a dungeon.',
-    'Daily Run: a free seeded challenge floor with one reward per day.',
-    'Ascend milestones strip on the hub screen.',
-    'A 7th dungeon, the Crystal Spire, joins the world path.',
-    'Colorblind-friendly combat floater palette option.',
-    'UI text scale and colorblind mode settings.',
-    'Export / import your save as clipboard JSON.',
-    'Local achievements and a monster/item codex.',
-    'Keyboard shortcuts: Space (God Hand), Esc (close), B (bag), H (hub).',
+  /// Structured releases, newest first. Older highlights are condensed.
+  static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.9.3',
+      bullets: <String>[
+        'New zones: Sunken Tidehold and Ashen Vault (World Path gates 8–9).',
+        'Meta: Will/Gauntlet milestone essence, God Hand BAL/FOCUS/WIDE, Iron Will & Chamber Luck relics.',
+        'Weekly fortune/iron mods, monthly season bonus on first weekly claim, dungeon armor 4pc combat procs.',
+        'Hub weekly progress, What’s New + mid-meta tips, guides for Tide/Ember & loadouts vs armor sets.',
+        'A11y: toast dedupe, Minimal VFX = reduce motion, save backup hint in Settings.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.2',
+      bullets: <String>[
+        'Economy: live kill gold, scaled treasure gold, softer AL loot skip, caster tax fix.',
+        'DPS kit rebalance + live/AFK class-balance sims (flask, God Hand, gear bands).',
+        'Loot Sprite pet: gold find + loot find passives that scale with level.',
+        'Achievements and ascend milestones grant essence rewards.',
+        'Challenge clears: +2e per active toggle; Daily Run clear awards +25e.',
+        'Auto Equip / Sell Junk report what they did via toasts.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.1',
+      bullets: <String>[
+        'Smarter Auto Equip: clear upgrades only, role-gated empty fills, live/AFK sync.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.0',
+      bullets: <String>[
+        'Party: unlock WotLK-style specs and field 4–5 active heroes.',
+        'All talent-tree kits (~30) with abilities via the shared effect runner.',
+        'Gear Sets renamed (was Loadouts); 5th party slot for essence at AL 2+.',
+        'Meta depth: prestige shop, sanctuary XP/prestige, relic tiers, weekly contracts.',
+        'Expanded pet roster, codex milestones, ascend titles, zone trophies, Will ranks.',
+        'Local achievements across zones, hardmode, gold, and pets.',
+        'Light story layer: dungeon blurbs, enter/clear/ascend flavor.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.8.x',
+      bullets: <String>[
+        'In-dungeon offline catch-up runs SpatialCombat (AFK assist + reduced VFX).',
+        'Named gear loadouts, Boss Rush / No-Flask, Daily Run, Ascend milestones.',
+        'Crystal Spire joins the world path; offline progress summary on hub return.',
+        'Achievements, monster/item codex, export/import save, a11y text scale & colorblind.',
+        'Keyboard shortcuts: Space (God Hand), Esc (close), B (bag), H (hub).',
+      ],
+    ),
   ];
+
+  /// Flat bullets for backward compat — all releases, newest first.
+  static List<String> get changelog => [
+        for (final r in releases) ...r.bullets,
+      ];
+
+  /// True when the player has not acknowledged [currentVersion].
+  static bool hasUnseenChangelog(GameState s) =>
+      s.seenChangelogVersion != currentVersion;
+
+  /// Releases newer than [GameState.seenChangelogVersion].
+  /// Empty/unknown seen → current only; older major.minor → current + previous.
+  static List<ChangelogRelease> unseenReleases(GameState s) {
+    if (!hasUnseenChangelog(s) || releases.isEmpty) return const [];
+    final current = releases.first;
+    final seen = s.seenChangelogVersion;
+    if (seen.isEmpty) return <ChangelogRelease>[current];
+    if (_isOlderMajorMinor(seen, currentVersion)) {
+      return releases.take(2).toList(growable: false);
+    }
+    return <ChangelogRelease>[current];
+  }
+
+  /// Compares `major.minor` (patch ignored). Non-semver [seen] counts as older.
+  static bool _isOlderMajorMinor(String seen, String current) {
+    final a = _versionMajorMinor(seen);
+    final b = _versionMajorMinor(current);
+    if (a == null || b == null) return true;
+    if (a.$1 != b.$1) return a.$1 < b.$1;
+    return a.$2 < b.$2;
+  }
+
+  static (int, int)? _versionMajorMinor(String version) {
+    final cleaned = version.endsWith('.x')
+        ? version.substring(0, version.length - 2)
+        : version;
+    final parts = cleaned.split('.');
+    if (parts.length < 2) return null;
+    final major = int.tryParse(parts[0]);
+    final minor = int.tryParse(parts[1]);
+    if (major == null || minor == null) return null;
+    return (major, minor);
+  }
 
   // —— Daily run ——————————————————————————————————————————————
 
@@ -119,6 +193,8 @@ abstract final class MetaSystems {
     'clear_dead': (s) => s.highestDungeonCleared >= 4,
     'clear_hell': (s) => s.highestDungeonCleared >= 5,
     'clear_crystal': (s) => s.highestDungeonCleared >= 6,
+    'clear_tide': (s) => s.highestDungeonCleared >= 7,
+    'clear_ember': (s) => s.highestDungeonCleared >= 8,
     'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
     'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
     'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,
@@ -147,7 +223,10 @@ abstract final class MetaSystems {
     'relic_all': (s) =>
         s.hasRelic('war_banner') &&
         s.hasRelic('iron_ward') &&
-        s.hasRelic('phoenix_ember'),
+        s.hasRelic('phoenix_ember') &&
+        s.hasRelic('god_hand_focus') &&
+        s.hasRelic('chamber_luck') &&
+        s.hasRelic('iron_will'),
     'sanctuary_12': (s) =>
         s.sanctuaryGoldLevel >= 12 ||
         s.sanctuaryPowerLevel >= 12 ||
@@ -155,6 +234,9 @@ abstract final class MetaSystems {
         s.metaDepth.sanctuaryXpLevel >= 12,
     'god_hand_5': (s) => s.godHandLevel >= 5,
     'weekly_clear': (s) => s.metaDepth.weeklyClaimed,
+    'gauntlet_25': (s) => s.metaDepth.gauntletBestFloor >= 25,
+    'gauntlet_50': (s) => s.metaDepth.gauntletBestFloor >= 50,
+    'gauntlet_100': (s) => s.metaDepth.gauntletBestFloor >= 100,
     'apex_first': (s) => _apexPieces(s).isNotEmpty,
     'apex_set_r1': (s) => _hasFullApexSetR1(s),
     'apex_r3': (s) => _apexPieces(s).any((i) => i.apexRank >= 3),

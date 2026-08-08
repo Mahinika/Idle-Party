@@ -59,6 +59,20 @@ abstract final class PrestigeShopCatalog {
       cost: 60,
       minAl: 10,
     ),
+    PrestigeShopItem(
+      id: 'daily_essence',
+      name: 'Dawn Tithe',
+      description: '+5 essence on Daily Run claim per level.',
+      cost: 50,
+      minAl: 8,
+    ),
+    PrestigeShopItem(
+      id: 'gauntlet_gold',
+      name: 'Spire Purse',
+      description: '+4% Gauntlet gold per level.',
+      cost: 55,
+      minAl: 10,
+    ),
   ];
 }
 
@@ -73,6 +87,15 @@ abstract final class WillRanks {
     (320, 'Eternal Will'),
   ];
 
+  /// Thresholds that grant a one-time essence claim (excludes Wandering).
+  static List<int> get claimableThresholds => [
+        for (final t in thresholds)
+          if (t.$1 > 0) t.$1,
+      ];
+
+  /// Essence for crossing a Will threshold (claimed once via metaDepth).
+  static int essenceForThreshold(int score) => 6 + (score ~/ 25);
+
   static String titleForScore(int score) {
     var title = thresholds.first.$2;
     for (final t in thresholds) {
@@ -80,6 +103,20 @@ abstract final class WillRanks {
     }
     return title;
   }
+}
+
+/// Infinity Gauntlet floor milestones (one-time essence + achievements).
+abstract final class GauntletMilestones {
+  static const floors = <int>[25, 50, 100];
+
+  static int essenceForFloor(int floor) => switch (floor) {
+        25 => 22,
+        50 => 45,
+        100 => 90,
+        _ => 10,
+      };
+
+  static String claimId(int floor) => 'f$floor';
 }
 
 /// Ascend titles unlocked at AL milestones.
@@ -140,6 +177,13 @@ class MetaDepthState {
     this.relicRespecs = 0,
     this.partySlot5Unlocked = false,
     this.unlockedSpecs = const <String>[],
+    this.claimedWillRanks = const <String>[],
+    this.claimedGauntletMilestones = const <String>[],
+    this.godHandStyle = 0,
+    this.dailyEssenceBonusLevel = 0,
+    this.gauntletGoldBonusLevel = 0,
+    this.seasonKey = '',
+    this.claimedSeasonRewards = const <String>[],
   });
 
   final int sanctuaryXpLevel;
@@ -195,6 +239,27 @@ class MetaDepthState {
   /// Unlocked [HeroSpecId.name] strings (roster eligibility).
   final List<String> unlockedSpecs;
 
+  /// Will-rank score thresholds already claimed for essence (e.g. `"25"`).
+  final List<String> claimedWillRanks;
+
+  /// Gauntlet milestone claim ids (`f25` / `f50` / `f100`).
+  final List<String> claimedGauntletMilestones;
+
+  /// God Hand expression: 0 balanced, 1 focus (dmg), 2 wide (radius).
+  final int godHandStyle;
+
+  /// Prestige: extra essence on Daily Run claim (+5e per level).
+  final int dailyEssenceBonusLevel;
+
+  /// Prestige: extra Gauntlet gold (+4% per level).
+  final int gauntletGoldBonusLevel;
+
+  /// Local season key (ISO week + month); shown on weekly UI.
+  final String seasonKey;
+
+  /// Calendar months (`yyyy-MM`) that already paid the season weekly bonus.
+  final List<String> claimedSeasonRewards;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -245,6 +310,13 @@ class MetaDepthState {
     int? relicRespecs,
     bool? partySlot5Unlocked,
     List<String>? unlockedSpecs,
+    List<String>? claimedWillRanks,
+    List<String>? claimedGauntletMilestones,
+    int? godHandStyle,
+    int? dailyEssenceBonusLevel,
+    int? gauntletGoldBonusLevel,
+    String? seasonKey,
+    List<String>? claimedSeasonRewards,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -292,6 +364,16 @@ class MetaDepthState {
       relicRespecs: relicRespecs ?? this.relicRespecs,
       partySlot5Unlocked: partySlot5Unlocked ?? this.partySlot5Unlocked,
       unlockedSpecs: unlockedSpecs ?? this.unlockedSpecs,
+      claimedWillRanks: claimedWillRanks ?? this.claimedWillRanks,
+      claimedGauntletMilestones:
+          claimedGauntletMilestones ?? this.claimedGauntletMilestones,
+      godHandStyle: godHandStyle ?? this.godHandStyle,
+      dailyEssenceBonusLevel:
+          dailyEssenceBonusLevel ?? this.dailyEssenceBonusLevel,
+      gauntletGoldBonusLevel:
+          gauntletGoldBonusLevel ?? this.gauntletGoldBonusLevel,
+      seasonKey: seasonKey ?? this.seasonKey,
+      claimedSeasonRewards: claimedSeasonRewards ?? this.claimedSeasonRewards,
     );
   }
 
@@ -337,6 +419,13 @@ class MetaDepthState {
         'relicRespecs': relicRespecs,
         'partySlot5Unlocked': partySlot5Unlocked,
         'unlockedSpecs': unlockedSpecs,
+        'claimedWillRanks': claimedWillRanks,
+        'claimedGauntletMilestones': claimedGauntletMilestones,
+        'godHandStyle': godHandStyle,
+        'dailyEssenceBonusLevel': dailyEssenceBonusLevel,
+        'gauntletGoldBonusLevel': gauntletGoldBonusLevel,
+        'seasonKey': seasonKey,
+        'claimedSeasonRewards': claimedSeasonRewards,
       };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -402,6 +491,22 @@ class MetaDepthState {
       partySlot5Unlocked: (json['partySlot5Unlocked'] as bool?) ?? false,
       unlockedSpecs:
           (json['unlockedSpecs'] as List<dynamic>?)?.cast<String>() ??
+              const [],
+      claimedWillRanks:
+          (json['claimedWillRanks'] as List<dynamic>?)?.cast<String>() ??
+              const [],
+      claimedGauntletMilestones:
+          (json['claimedGauntletMilestones'] as List<dynamic>?)
+                  ?.cast<String>() ??
+              const [],
+      godHandStyle: ((json['godHandStyle'] as num?)?.toInt() ?? 0).clamp(0, 2),
+      dailyEssenceBonusLevel:
+          (json['dailyEssenceBonusLevel'] as num?)?.toInt() ?? 0,
+      gauntletGoldBonusLevel:
+          (json['gauntletGoldBonusLevel'] as num?)?.toInt() ?? 0,
+      seasonKey: (json['seasonKey'] as String?) ?? '',
+      claimedSeasonRewards:
+          (json['claimedSeasonRewards'] as List<dynamic>?)?.cast<String>() ??
               const [],
     );
   }

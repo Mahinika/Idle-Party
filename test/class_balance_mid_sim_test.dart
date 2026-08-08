@@ -8,8 +8,10 @@ void main() {
     final report = runClassBalanceSim(const [
       '--trials=12',
       '--band=mid',
+      '--mode=live',
     ]);
     expect(report, contains('mid'));
+    expect(report, contains('mode: live'));
     expect(report, contains('DPS'));
   }, timeout: const Timeout(Duration(minutes: 60)));
 }

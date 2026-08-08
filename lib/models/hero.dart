@@ -143,12 +143,15 @@ class PartyHero {
       equipped.values.fold<int>(0, (s, i) => s + i.intellectBonus);
   int get gearSpiritBonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.spiritBonus) +
-      GearSets.setSpiritBonus(equipped);
+      GearSets.setSpiritBonus(equipped) +
+      GearSets.setRoleSpiritBonus(equipped, gearAffinity);
   int get gearSpellPowerBonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.spellPowerBonus) +
-      GearSets.setSpellPowerBonus(equipped);
+      GearSets.setSpellPowerBonus(equipped) +
+      GearSets.setRoleSpellPowerBonus(equipped, gearAffinity);
   int get gearArmorBonus =>
-      equipped.values.fold<int>(0, (s, i) => s + i.resolvedArmor);
+      equipped.values.fold<int>(0, (s, i) => s + i.resolvedArmor) +
+      GearSets.setRoleArmorBonus(equipped, gearAffinity);
   int get gearMp5Bonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.mp5Bonus);
 
@@ -173,12 +176,13 @@ class PartyHero {
 
   int get gearAttackSpeedBonus {
     final raw = equipped.values.fold<int>(
-      0,
-      (s, i) =>
-          s +
-          i.attackSpeedBonus +
-          (i.effectId == GearEffectId.haste ? i.effectValue : 0),
-    );
+          0,
+          (s, i) =>
+              s +
+              i.attackSpeedBonus +
+              (i.effectId == GearEffectId.haste ? i.effectValue : 0),
+        ) +
+        GearSets.setRoleHasteBonus(equipped, gearAffinity);
     return _softCapStat(raw, soft: 22, hard: 50);
   }
 

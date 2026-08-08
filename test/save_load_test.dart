@@ -56,6 +56,7 @@ void main() {
     expect(decoded.autoSellMaxPower, 30);
     expect(decoded.soundMuted, isTrue);
     expect(decoded.reducedVfx, isTrue);
+    expect(decoded.vfxQuality.name, 'lite');
     expect(decoded.rogueUnlocked, isTrue);
     expect(decoded.offlineSecondsRecovered, 90);
     expect(decoded.layoutSeed, 4242);

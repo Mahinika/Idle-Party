@@ -46,17 +46,30 @@ jobs:
       - name: Build release APK
         run: flutter build apk --release
 
+      - name: Build release App Bundle
+        run: flutter build appbundle --release
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: idle-party-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Attach APK to GitHub Release
+      - name: Upload AAB artifact
+        if: hashFiles('build/app/outputs/bundle/release/app-release.aab') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: idle-party-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+
+      - name: Attach APK and AAB to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+          fail_on_unmatched_files: false
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

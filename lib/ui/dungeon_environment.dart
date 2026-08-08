@@ -13,6 +13,8 @@ abstract final class DungeonEnvironment {
         'dead' => const Color(0xFF070908),
         'hell' => const Color(0xFF120606),
         'crystal' => const Color(0xFF081018),
+        'tide' => const Color(0xFF041820),
+        'ember' => const Color(0xFF1A1004),
         _ => const Color(0xFF080706),
       };
 
@@ -25,6 +27,8 @@ abstract final class DungeonEnvironment {
         'dead' => const Color(0x30305040),
         'hell' => const Color(0x40A02018),
         'crystal' => const Color(0x3850A0F0),
+        'tide' => const Color(0x4820C0B8),
+        'ember' => const Color(0x48E07020),
         _ => const Color(0x22000000),
       };
 
@@ -37,6 +41,8 @@ abstract final class DungeonEnvironment {
         'dead' => const Color(0x5A182028),
         'hell' => const Color(0x6A401010),
         'crystal' => const Color(0x5A183050),
+        'tide' => const Color(0x5A184848),
+        'ember' => const Color(0x6A402818),
         _ => const Color(0x55050403),
       };
 
@@ -49,6 +55,8 @@ abstract final class DungeonEnvironment {
         'dead' => const Color(0xFF70A090),
         'hell' => const Color(0xFFE05040),
         'crystal' => const Color(0xFF80D0FF),
+        'tide' => const Color(0xFF40C0B0),
+        'ember' => const Color(0xFFE09040),
         _ => const Color(0xFFE0C080),
       };
 
@@ -58,6 +66,8 @@ abstract final class DungeonEnvironment {
         'underworld' => const Color(0x38000000),
         'dead' => const Color(0x34000000),
         'crystal' => const Color(0x38001020),
+        'tide' => const Color(0x38001820),
+        'ember' => const Color(0x3C100800),
         _ => const Color(0x2C000000),
       };
 

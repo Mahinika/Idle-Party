@@ -188,11 +188,29 @@ void main() {
     });
   });
 
-  group('7th dungeon', () {
-    test('Crystal Spire is registered in the dungeon catalog', () {
+  group('tide and ember dungeons', () {
+    test('Sunken Tidehold and Ashen Vault are registered after Crystal Spire', () {
       final crystal = DungeonCatalog.byId('crystal');
-      expect(crystal.bossName, 'Crystal Warden');
-      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(7));
+      final tide = DungeonCatalog.byId('tide');
+      final ember = DungeonCatalog.byId('ember');
+      expect(crystal.number, 6);
+      expect(tide.number, 7);
+      expect(tide.bossName, 'Tide Leviathan');
+      expect(ember.number, 8);
+      expect(ember.bossName, 'Cinder Sovereign');
+      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(9));
+      expect(
+        DungeonCatalog.isUnlocked('tide', 0, 6),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('ember', 0, 7),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('ember', 0, 6),
+        isFalse,
+      );
     });
   });
 

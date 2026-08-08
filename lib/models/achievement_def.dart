@@ -126,7 +126,7 @@ abstract final class AchievementCatalog {
     AchievementDef(
       id: 'clear_hell',
       title: 'Ashwalker',
-      description: 'Clear Hell.',
+      description: "Clear Hell's Gate.",
       essenceReward: 14,
       category: AchievementCategory.explorer,
     ),
@@ -135,6 +135,20 @@ abstract final class AchievementCatalog {
       title: 'Spire Climber',
       description: 'Clear Crystal Spire.',
       essenceReward: 18,
+      category: AchievementCategory.explorer,
+    ),
+    AchievementDef(
+      id: 'clear_tide',
+      title: 'Tidebreaker',
+      description: 'Clear Sunken Tidehold.',
+      essenceReward: 22,
+      category: AchievementCategory.explorer,
+    ),
+    AchievementDef(
+      id: 'clear_ember',
+      title: 'Vault Breaker',
+      description: 'Clear Ashen Vault.',
+      essenceReward: 26,
       category: AchievementCategory.explorer,
     ),
     // —— Hardmode ——
@@ -269,6 +283,27 @@ abstract final class AchievementCatalog {
       category: AchievementCategory.combat,
     ),
     AchievementDef(
+      id: 'gauntlet_25',
+      title: 'Quarter Spire',
+      description: 'Clear floor 25 of the Infinity Gauntlet.',
+      essenceReward: 18,
+      category: AchievementCategory.combat,
+    ),
+    AchievementDef(
+      id: 'gauntlet_50',
+      title: 'Halfway Spire',
+      description: 'Clear floor 50 of the Infinity Gauntlet.',
+      essenceReward: 28,
+      category: AchievementCategory.combat,
+    ),
+    AchievementDef(
+      id: 'gauntlet_100',
+      title: 'Century Spire',
+      description: 'Clear floor 100 of the Infinity Gauntlet.',
+      essenceReward: 50,
+      category: AchievementCategory.combat,
+    ),
+    AchievementDef(
       id: 'casts_100',
       title: 'Spellweaver',
       description: 'Cast 100 class abilities (lifetime).',
@@ -285,8 +320,8 @@ abstract final class AchievementCatalog {
     AchievementDef(
       id: 'relic_all',
       title: 'Reliquary',
-      description: 'Unlock all base relics.',
-      essenceReward: 12,
+      description: 'Unlock all Forge relics.',
+      essenceReward: 18,
       category: AchievementCategory.meta,
     ),
     AchievementDef(

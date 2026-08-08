@@ -1,53 +1,140 @@
 # AGENTS.md
 
-Idle Party is a **working Flutter idle RPG** with original Dart gameplay code, **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
+Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
+**Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
+
+**Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
+in sync (currently **1.9.3**). What’s New lives in `lib/core/meta_systems.dart`.
+
+## Human (vibe-coder)
+
+The owner describes goals in plain language and does not pick tools/skills.
+Agents **must** choose methods, skills, and verify steps themselves — see
+`.cursor/rules/vibe-coder-autopilot.mdc` and `.cursor/rules/owner-preferences.mdc`.
+
+Preferences (do not re-ask): Play Store goal soon, **large batches**, **cozy idle**,
+**English in-game copy**, **fairness-first** balance, **propose** commit / push / PR / tag
+(with a clear yes/no). Chat in plain Swedish; ask only product/risk questions.
+
+**Distribution today:** GitHub Releases APK/AAB is the live path (`docs/PLAY_STORE.md`).
+Play Console app exists (`com.idleparty.app`): listing + closed Alpha in progress;
+production still needs 12 closed testers × 14 days. Do not assume Play is the
+primary install channel yet.
 
 ## Legal / IP policy (mandatory)
 
 - **Do not** add, keep, or commit APKs, IPA/AAB, SWF, DEX, or dumps from other commercial games.
 - **Do not** copy sprites, audio, code, or text from other games into this repo.
-- Shipped art must come from `assets/kenney/` (CC0) or `assets/custom/` (owned Idle Party art) — not third-party commercial dumps.
-- Gameplay may follow common idle-RPG *ideas*; implement them as original code — never paste or translate decompiled sources.
+- Shipped art must come from `assets/kenney/` (CC0) or `assets/custom/` (owned Idle Party art).
+- Gameplay may follow common idle-RPG *ideas*; implement as original Dart — never paste
+  or translate decompiled sources.
 - If a third-party binary appears locally, delete it and ensure `.gitignore` covers it.
 
 ## Build & Test
 
 ```bash
 flutter pub get
-flutter analyze          # hold to zero issues
+flutter analyze          # project target: zero issues on lib/test
 flutter test
 flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
+
+CI uses `flutter analyze lib test --no-fatal-infos` then `flutter test` (includes balance gate).
+
+### Agent tooling (balance / honesty / QA)
+
+```bash
+# Fast DPS share board (writes tool/out/class_balance_share.json, gitignored)
+flutter test test/class_balance_share_fast_test.dart --reporter expanded
+
+# CI gate: live light, fail on DPS HIGH (±20% share band)
+flutter test test/class_balance_gate_test.dart
+
+# What’s New ↔ pubspec ↔ shipped zones
+flutter test test/changelog_sync_test.dart
+
+# Fast world-path / unlock / guides honesty
+flutter test test/ship_smoke_test.dart
+```
+
+Skills under `.cursor/skills/`: domain (`spatial-combat-change`, `add-ability`,
+`new-dungeon`, `zone-art-identity`, `save-migrate`, `class-audit`, `assets-legal`,
+`flutter-verify`, `browser-playtest`, `hub-smoke`, `play-store-prep`, `init`)
+and Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
+`grinding-until-pass`, `babysitting-pr`, `parallel-ci-triage`,
+`verifying-in-browser`, `screenshotting-changelog`,
+`recording-browser-flow-as-test`, `systematic-debugging`, `reviewing-code`,
+`accessibility-auditing`).
+
+Cadence: `docs/CONTENT_CADENCE.md`. Roadmap: `docs/ROADMAP.md` (implementation
+checklist is current; the research-baseline gap table can lag — prefer this
+file + code). Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`.
+
+### Cursor automation
+
+- Project hooks: `.cursor/hooks.json` — after game/docs edits, **stop** runs
+  `flutter analyze lib test` (and changelog sync when version/What’s New files touched).
+- Ship bar: `.cursor/rules/definition-of-done.mdc`.
+- Fast honesty: `flutter test test/ship_smoke_test.dart`.
+- MCP: `.cursor/mcp.json` → **`idle-party`** (`tool/mcp_idle_party/`) — tools:
+  `balance_share`, `read_balance_share`, `changelog_check`, `flutter_analyze`,
+  `flutter_test`, `zone_identity`, `hub_smoke_checklist`, `playtest_bridge_snippet`.
+  Cursor may show the server as `user-idle-party` if also configured in the
+  user MCP file. `flutter_*` / `changelog_check` need Flutter on the process PATH.
 
 ## Architecture
 
 ```
 main.dart
- ├─ Hub (inDungeon=false) → HubScreen + optional Is2Shell overlays
+ ├─ loading → startMenu → optional newGamePicker → play
+ ├─ Hub (inDungeon=false) → HubScreen + optional Is2Shell(hubMode) overlays
  └─ Dungeon (inDungeon=true) → Is2Shell
       ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
       └─ Dungeon chrome (FARM/PUSH, God Hand ring, party HUD + flask,
          target panel, bottom nav: GEAR / BAG / MORE)
 
 GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
-             → GameLogic.simulateSpatialOffline → SpatialCombat.step (AFK; auto-flask + God Hand)
+             → GameLogic.simulateSpatialOffline → SpatialCombat.step
+               (AFK: afkAssist + reducedVfx, auto-flask, God Hand)
 GameLogic + GameState   (rules / persistence)
-DungeonCatalog          (named dungeons, bossFloor = 5 + AL)
+DungeonCatalog          (9 named zones, bossFloor = 5 + AL)
 RoomLayouts (tile_map)  (multi-chamber maps + gates)
 ```
 
-**SpatialCombat is the combat authority** for live play and in-dungeon offline catch-up (offline uses full enemy stats + independent `afkAssist` + `reducedVfx` for boot speed, auto-flask at low HP, and God Hand off cooldown; same kits/abilities/chambers).
+**SpatialCombat is the combat authority** for live play and in-dungeon offline
+catch-up (full enemy stats; same kits/abilities/chambers).
 
-**Infinity Gauntlet** (AL10+): endless Crystal Spire climb from Hub; floor threat/rewards scale; wipe/leave returns to hub; best floor survives Ascend.
+**Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = AL10+): endless Crystal
+Spire climb from Hub; wipe/leave → hub; `metaDepth.gauntletBestFloor` survives Ascend.
 
 Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat.
+
+Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
+
+## World path (9 zones)
+
+| # | id | Name |
+|---|-----|------|
+| 0 | sandy | Sandy Caverns |
+| 1 | goblin | Goblin's Hideout |
+| 2 | king | King's Fort |
+| 3 | underworld | Underworld |
+| 4 | dead | City of Dead |
+| 5 | hell | Hell's Gate |
+| 6 | crystal | Crystal Spire |
+| 7 | tide | Sunken Tidehold |
+| 8 | ember | Ashen Vault |
+
+Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 
 ## Floor / chamber model
 
 - One **combat wave per floor**; boss on floor `5 + ascensionLevel`.
-- Maps are **multi-chamber** with corridor **gates** that open after a chamber is cleared.
-- Enemies start **dormant** in later chambers; wake when prior chambers clear.
-- After all enemies die and loot is picked up (or times out), party walks to **stairs/exit** → `completeCurrentRoom`.
+- Maps are **multi-chamber** with corridor **gates** after a chamber clears.
+- Enemies in later chambers start **dormant**; wake when prior chambers clear
+  (and can wake on **proximity** so soft-locks are rare).
+- After all enemies die and loot is picked up (or times out), party walks to
+  **stairs/exit** → `completeCurrentRoom`.
 
 ## Key files
 
@@ -56,12 +143,17 @@ Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat.
 | Orchestration | `lib/core/game_director.dart` |
 | Rules | `lib/core/game_logic.dart` |
 | State | `lib/core/game_state.dart` |
+| Changelog / meta helpers | `lib/core/meta_systems.dart` |
+| Meta blob | `lib/models/meta_depth.dart` |
+| Dungeon catalog | `lib/models/dungeon_def.dart` |
 | Spatial sim | `lib/spatial/spatial_combat.dart` |
+| Ability runtime | `lib/spatial/ability_effects.dart` |
 | Tile maps | `lib/spatial/tile_map.dart` |
 | Hub | `lib/ui/hub_screen.dart` |
-| Dungeon shell | `lib/ui/is2_shell.dart` |
+| Dungeon / hub shell | `lib/ui/is2_shell.dart` |
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
-| Assets | `lib/ui/kenney_assets.dart` |
+| Kenney helpers | `lib/ui/kenney_assets.dart` |
+| Custom art helpers | `lib/ui/custom_assets.dart` |
 
 ## Conventions
 
@@ -70,13 +162,42 @@ Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat.
 - `GameDirector.preview()` for tests (no SharedPreferences / no spatial timer).
 - Asset paths only through `KenneyAssets` / `CustomAssets` (no raw `assets/...` in UI).
 - Pixel sprites: `filterQuality: FilterQuality.none`.
+- Loadouts UI label = **LOADOUTS**; dungeon armor 2pc/4pc = **armor sets** (not the same).
+- Apex craft mats: Hell’s Gate → **Hellgate Shard**; Ashen Vault → **Ashen Shard**.
+- 5th party slot: 80 essence, AL ≥ 2 (`partySlot5Unlocked` in `metaDepth`).
 
 ## Meta (survives Ascend)
 
-- Essence, relics, sanctuary tracks (infinite levels + optional prestige), pets, soulbound, God Hand level, `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex/settings, `metaDepth`
-- Ascend resets wallet gold, run gear/stash/loadouts, floor progress, gold party upgrades (ATK/DEF/VIT/move/haste/crit); **keeps hero levels/XP** and meta above
-- Dungeon unlock uses **lifetime gold** (and prior dungeon clears), not wallet gold
+**Keeps:** essence (and rewards), relics, sanctuary tracks + prestige, pets,
+soulbound (item may rescale for new AL), God Hand level + style/CD in `metaDepth`,
+`highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
+(mute/VFX/colorblind/text scale/auto-sell), full `metaDepth` (Gauntlet best, Will /
+Gauntlet claims, weekly/season, prestige shop, unlocked specs, party slot 5, …),
+**hero levels/XP**, **Apex** vault + equipped apex, craft mats/pity, hardmode
+(clamped) + challenge toggles.
+
+**Resets:** wallet gold, floor progress, gold party upgrades (ATK/DEF/VIT/move/haste/crit),
+non-Apex gear/stash, **loadouts**, leave dungeon; mission board rebuilt for new AL.
+
+Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
+
+### Meta loops (player-facing)
+
+- **Weekly:** hub progress `n/3` clears → claim (`weeklyClaimEssence` + optional
+  **season** +12e on first claim of the ISO month). Mods rotate per week.
+- **Will:** titles from `collectionScore`; one-time essence via `syncMetaPayoffs`
+  at claimable thresholds (excludes Wandering).
+- **Gauntlet milestones:** one-time essence at best floors **25 / 50 / 100**
+  (`GauntletMilestones`, also via `syncMetaPayoffs`).
+- Notices surface as hub/MORE toasts (`lastMetaPayoffNotices`).
 
 ## God Hand
 
-Tap steers the party briefly and deals AOE; has cooldown. Upgrade with essence.
+Tap steers the party briefly and deals AOE; has cooldown. Damage upgrades with essence.
+Styles under Forge → META: **BAL** / **FOCUS** (+dmg −radius) / **WIDE** (+radius −dmg).
+Optional CD upgrades: `metaDepth.godHandCdLevel`.
+
+## Balance policy
+
+Owner: **fairness first**. Live-light CI gate fails on DPS `HIGH` (±20% vs median share).
+Iterate with share-fast / `--focus=` before declaring kit work done.

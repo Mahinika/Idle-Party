@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "dart .cursor/hooks/mark_dirty.dart",
+        "timeout": 15
+      }
+    ],
+    "stop": [
+      {
+        "command": "dart .cursor/hooks/stop_verify.dart",
+        "timeout": 180,
+        "loop_limit": 2
+      }
+    ]
+  }
+}

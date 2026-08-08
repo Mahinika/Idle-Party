@@ -113,6 +113,14 @@ void main() {
     );
     expect(GearSets.setStaminaBonus(full.equipped), 6);
     expect(GearSets.setCritBonus(full.equipped), 2);
+    expect(GearSets.setRoleArmorBonus(full.equipped, HeroRole.warrior), 4);
+    expect(GearSets.setRoleHasteBonus(full.equipped, HeroRole.rogue), 2);
+    expect(GearSets.setRoleHasteBonus(full.equipped, HeroRole.warrior), 0);
+    final proc = GearSets.fourPieceProc(full.equipped);
+    expect(proc, isNotNull);
+    expect(proc!.tag, 'CAVERN');
+    expect(proc.chance, greaterThan(0));
+    expect(GearSets.setBonusBlurb(full.equipped), contains('4pc'));
   });
 
   test('soulbound primaries feed meta attack', () {
@@ -320,6 +328,135 @@ void main() {
     final expected = 40 + item.statPowerScore + 80;
     expect(gold, expected);
     expect(gold, lessThan(40 + item.powerScore + 80));
+  });
+
+  test('itemLevelFor matrix: zone, AL, rarity, soft-cap', () {
+    final sandyCommon = EquipmentFactory.itemLevelFor(
+      battleNumber: 1,
+      rarity: LootRarity.common,
+      dungeonId: 'sandy',
+    );
+    expect(sandyCommon, 5);
+
+    final sandyF10Rare = EquipmentFactory.itemLevelFor(
+      battleNumber: 10,
+      rarity: LootRarity.rare,
+      dungeonId: 'sandy',
+    );
+    expect(sandyF10Rare, 31);
+
+    final crystal = EquipmentFactory.itemLevelFor(
+      battleNumber: 10,
+      rarity: LootRarity.rare,
+      dungeonId: 'crystal',
+      ascensionLevel: 0,
+    );
+    expect(crystal, greaterThan(sandyF10Rare));
+    expect(crystal, 55);
+
+    final withAl = EquipmentFactory.itemLevelFor(
+      battleNumber: 10,
+      rarity: LootRarity.rare,
+      dungeonId: 'crystal',
+      ascensionLevel: 10,
+    );
+    expect(withAl, greaterThan(crystal));
+
+    final withHm = EquipmentFactory.itemLevelFor(
+      battleNumber: 10,
+      rarity: LootRarity.rare,
+      dungeonId: 'sandy',
+      hardmodeLevel: 10,
+    );
+    expect(withHm, greaterThan(sandyF10Rare));
+
+    // Endless Spire soft-cap: raw would be huge, capped growth after 100.
+    final deep = EquipmentFactory.itemLevelFor(
+      battleNumber: 80,
+      rarity: LootRarity.common,
+      dungeonId: 'crystal',
+      ascensionLevel: 20,
+    );
+    final raw = 80 * 2 + 0 + 3 + 6 * 4 + 20 * 2; // 163
+    expect(deep, lessThan(raw));
+    expect(deep, lessThanOrEqualTo(150));
+  });
+
+  test('budget grows continuously within a rarity band', () {
+    EquipmentFactory.random = Random(3);
+    final early = EquipmentFactory.create(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 1,
+      bias: HeroRole.warrior,
+      dungeonId: 'sandy',
+    );
+    EquipmentFactory.random = Random(3);
+    final late = EquipmentFactory.create(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.warrior,
+      dungeonId: 'sandy',
+    );
+    expect(late.effectiveItemLevel, greaterThan(early.effectiveItemLevel));
+    final earlyPower =
+        early.strengthBonus + early.staminaBonus + early.armorBonus;
+    final latePower = late.strengthBonus + late.staminaBonus + late.armorBonus;
+    expect(latePower, greaterThan(earlyPower));
+  });
+
+  test('hardmode bumps same-tier budget', () {
+    EquipmentFactory.random = Random(9);
+    final base = EquipmentFactory.create(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 12,
+      bias: HeroRole.warrior,
+      dungeonId: 'sandy',
+      hardmodeLevel: 0,
+    );
+    EquipmentFactory.random = Random(9);
+    final hm = EquipmentFactory.create(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 12,
+      bias: HeroRole.warrior,
+      dungeonId: 'sandy',
+      hardmodeLevel: 10,
+    );
+    final basePower = base.strengthBonus + base.staminaBonus + base.armorBonus;
+    final hmPower = hm.strengthBonus + hm.staminaBonus + hm.armorBonus;
+    expect(hmPower, greaterThanOrEqualTo(basePower));
+    expect(hm.effectiveItemLevel, greaterThanOrEqualTo(base.effectiveItemLevel));
+  });
+
+  test('soulbound scales ilvl and primaries on Ascend AL', () {
+    final bound = EquipmentItem(
+      id: 'soulbound_sword',
+      name: 'Soulbound Sword',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      strengthBonus: 4,
+      staminaBonus: 2,
+      critChanceBonus: 2,
+      attackSpeedBonus: 3,
+      mp5Bonus: 1,
+      itemLevel: 20,
+    );
+    final scaled = GameLogic.scaleSoulboundForAl(bound, 10);
+    expect(scaled.effectiveItemLevel, greaterThanOrEqualTo(50));
+    expect(scaled.strengthBonus, greaterThanOrEqualTo(bound.strengthBonus));
+    expect(scaled.critChanceBonus, greaterThan(bound.critChanceBonus));
+    expect(scaled.attackSpeedBonus, greaterThan(bound.attackSpeedBonus));
+    expect(scaled.mp5Bonus, greaterThanOrEqualTo(bound.mp5Bonus));
+  });
+
+  test('auto-sell cap scales with dungeon clears and AL', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 5));
+    expect(GameLogic.maxAutoSellIlvlCap(state), 60);
+    state = state.copyWith(highestDungeonCleared: 6, ascensionLevel: 10);
+    expect(GameLogic.maxAutoSellIlvlCap(state), 200);
   });
 
   test('affix load parses structured prefixes and suffixes', () async {

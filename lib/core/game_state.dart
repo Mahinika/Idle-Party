@@ -11,6 +11,7 @@ import '../models/loot.dart';
 import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
+import '../models/vfx_quality.dart';
 
 int _jsonInt(dynamic value, [int fallback = 0]) {
   if (value == null) return fallback;
@@ -73,7 +74,7 @@ class GameState {
     this.godHandLevel = 0,
     this.layoutSeed = 0,
     this.soundMuted = false,
-    this.reducedVfx = false,
+    this.vfxQuality = VfxQuality.full,
     this.autoSellMaxPower = 24,
     this.rogueUnlocked = false,
     this.seenTips = const <String>[],
@@ -206,7 +207,12 @@ class GameState {
 
   /// Settings — survive Ascend.
   final bool soundMuted;
-  final bool reducedVfx;
+
+  /// Combat VFX detail (full / lite / minimal).
+  final VfxQuality vfxQuality;
+
+  /// True when VFX is lite or minimal (spawn gates skip bursts/floaters).
+  bool get reducedVfx => vfxQuality.reduced;
 
   /// Auto-sell *drops on pickup* when itemLevel ≤ this (0 = off).
   /// Bag AUTO SELL button ignores this and sells all non-upgrades.
@@ -291,6 +297,15 @@ class GameState {
 
   int get relicVitalityBonus => 10 * relicTierOf('phoenix_ember');
 
+  /// Flat God Hand damage from the God Hand Focus relic.
+  int get relicGodHandDamageBonus => 3 * relicTierOf('god_hand_focus');
+
+  /// Loot-find percent from Chamber Luck relic.
+  int get relicLootFindPercent => 5 * relicTierOf('chamber_luck');
+
+  /// Flat incoming damage mitigate from Iron Will relic.
+  int get relicMitigateFlat => 1 * relicTierOf('iron_will');
+
   /// Flat attack from Ascension Level (+1 ATK per AL).
   int get ascensionAttackBonus => ascensionLevel;
 
@@ -349,8 +364,11 @@ class GameState {
   /// Loot-find pets grant drop-rate help via [Pet.passiveValue].
   int get petLootFindPercent {
     final pet = activePet;
-    if (pet == null || pet.passive != PetPassive.lootFind) return 0;
-    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
+    if (pet == null || pet.passive != PetPassive.lootFind) {
+      return relicLootFindPercent;
+    }
+    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId)) +
+        relicLootFindPercent;
   }
 
   /// XP-find pets grant percent XP via [Pet.passiveValue].
@@ -363,8 +381,10 @@ class GameState {
   /// Mitigate pets grant flat damage reduction via [Pet.passiveValue].
   int get petMitigateFlat {
     final pet = activePet;
-    if (pet == null || pet.passive != PetPassive.mitigate) return 0;
-    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
+    final relic = relicMitigateFlat;
+    if (pet == null || pet.passive != PetPassive.mitigate) return relic;
+    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId)) +
+        relic;
   }
 
   /// Heal-boost pets grant heal potency via [Pet.passiveValue].
@@ -705,6 +725,7 @@ class GameState {
     int? godHandLevel,
     int? layoutSeed,
     bool? soundMuted,
+    VfxQuality? vfxQuality,
     bool? reducedVfx,
     int? autoSellMaxPower,
     bool? rogueUnlocked,
@@ -782,7 +803,10 @@ class GameState {
       godHandLevel: godHandLevel ?? this.godHandLevel,
       layoutSeed: layoutSeed ?? this.layoutSeed,
       soundMuted: soundMuted ?? this.soundMuted,
-      reducedVfx: reducedVfx ?? this.reducedVfx,
+      vfxQuality: vfxQuality ??
+          (reducedVfx == null
+              ? this.vfxQuality
+              : (reducedVfx ? VfxQuality.lite : VfxQuality.full)),
       autoSellMaxPower: autoSellMaxPower ?? this.autoSellMaxPower,
       rogueUnlocked: rogueUnlocked ?? this.rogueUnlocked,
       seenTips: seenTips ?? this.seenTips,
@@ -873,6 +897,7 @@ class GameState {
     'godHandLevel': godHandLevel,
     'layoutSeed': layoutSeed,
     'soundMuted': soundMuted,
+    'vfxQuality': vfxQuality.name,
     'reducedVfx': reducedVfx,
     'autoSellMaxPower': autoSellMaxPower,
     'rogueUnlocked': rogueUnlocked,
@@ -1067,7 +1092,10 @@ class GameState {
       godHandLevel: _jsonInt(json['godHandLevel']),
       layoutSeed: _jsonInt(json['layoutSeed']),
       soundMuted: (json['soundMuted'] as bool?) ?? false,
-      reducedVfx: (json['reducedVfx'] as bool?) ?? false,
+      vfxQuality: VfxQuality.fromJson(
+        json['vfxQuality'],
+        legacyReduced: json['reducedVfx'] as bool?,
+      ),
       autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 24),
       rogueUnlocked: rogueUnlocked,
       seenTips: (json['seenTips'] as List<dynamic>?)

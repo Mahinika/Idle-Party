@@ -8,7 +8,9 @@ Idle Party is a cozy-but-crunchy **idle RPG**: a hero party crawls spatial dunge
   <img src="assets/custom/ui/app_icon.png" alt="Idle Party app icon" width="160" />
 </p>
 
-**[Download Android APK (v1.8.0)](https://github.com/Mahinika/Idle-Party/releases/download/v1.8.0/app-release.apk)** · **[All releases](https://github.com/Mahinika/Idle-Party/releases)**
+**[Download Android APK (latest)](https://github.com/Mahinika/Idle-Party/releases/latest)** · **[All releases](https://github.com/Mahinika/Idle-Party/releases)**
+
+Primary Android distribution is **GitHub Releases (sideload)**; Play Store is optional (see [docs/PLAY_STORE.md](docs/PLAY_STORE.md)).
 
 ---
 
@@ -63,16 +65,17 @@ flutter build apk --release
 
 Without `android/key.properties`, release APKs are **debug-signed** (fine for sideload). For Play Store signing, copy `android/key.properties.example` → `android/key.properties` and point at your keystore.
 
-CI builds an APK on tags matching `v*` (`.github/workflows/build-apk.yml`). Push runs analyze + tests (`.github/workflows/ci.yml`).
+CI builds an APK (+ App Bundle) on tags matching `v*` (`.github/workflows/build-apk.yml`). Push runs analyze + tests (`.github/workflows/ci.yml`).
 
 **Package id:** `com.idleparty.app` · **Saves:** SharedPreferences (`idle_party_save_v2`)
+
+Privacy: [docs/PRIVACY.md](docs/PRIVACY.md) · Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md) · Play checklist: [docs/PLAY_STORE.md](docs/PLAY_STORE.md)
 
 ---
 
 ## License & art
 
-- Game code: see repository license / project terms.
-- Kenney assets: [CC0](https://kenney.nl/license).
+- Game code: [MIT](LICENSE); Kenney under `assets/kenney/`: [CC0](https://kenney.nl/license); custom art under `assets/custom/`: all rights reserved.
 - Do not drop commercial game dumps, APKs from other titles, or ripped sprites into this repo.
 
 ---

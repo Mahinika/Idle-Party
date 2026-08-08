@@ -235,6 +235,8 @@ abstract final class KenneyAssets {
       'dead' => floorStone,
       'hell' => floorSand,
       'crystal' => floorStone,
+      'tide' => floorStone,
+      'ember' => floorSand,
       _ => switch (DungeonCatalog.byId(dungeonId).layout) {
           DungeonLayoutKind.cave => floorSand,
           DungeonLayoutKind.hideout => floorDirtDetail,
@@ -246,7 +248,7 @@ abstract final class KenneyAssets {
   /// Single verified floor per dungeon — sand uses a clean + worn pair (no wall-lip tiles).
   static List<String> floorVariantsForDungeon(String dungeonId) {
     return switch (dungeonId) {
-      'sandy' || 'hell' => <String>[
+      'sandy' || 'hell' || 'ember' => <String>[
           floorSand,
           floorSand,
           floorSand,
@@ -267,9 +269,9 @@ abstract final class KenneyAssets {
   static List<String> wallVariantsForDungeon(String dungeonId) {
     return switch (dungeonId) {
       'king' => [wallStone, wallStone, wallStone, wallBanner],
-      'hell' => [wallStone, wallStone, wallBanner],
+      'hell' || 'ember' => [wallStone, wallStone, wallBanner],
       'dead' => [wallStone, wallStone, wallBannerAlt],
-      'crystal' => [wallStone, wallStoneAlt1],
+      'crystal' || 'tide' => [wallStone, wallStoneAlt1],
       _ => [wallStone],
     };
   }
@@ -343,6 +345,18 @@ abstract final class KenneyAssets {
             MapPropKind.fountain,
             MapPropKind.crate,
           ],
+        'tide' => const [
+            MapPropKind.water,
+            MapPropKind.barrel,
+            MapPropKind.fountain,
+            MapPropKind.crate,
+          ],
+        'ember' => const [
+            MapPropKind.torch,
+            MapPropKind.torchAlt,
+            MapPropKind.lava,
+            MapPropKind.anvil,
+          ],
         _ => const [MapPropKind.barrel, MapPropKind.crate, MapPropKind.table],
       };
 
@@ -355,6 +369,8 @@ abstract final class KenneyAssets {
         'dead' => gravestone,
         'hell' => doorOpen,
         'crystal' => doorVariant,
+        'tide' => doorClosed,
+        'ember' => hatch,
         _ => iconDoor,
       };
 
@@ -372,6 +388,8 @@ abstract final class KenneyAssets {
         'dead' => enemyGhost,
         'hell' => enemyHellBoss,
         'crystal' => enemyCrystalBoss,
+        'tide' => enemyCrab,
+        'ember' => enemyCyclops,
         _ => enemyBoss,
       };
     }
@@ -380,7 +398,9 @@ abstract final class KenneyAssets {
         'dead' => enemyGhost,
         'underworld' => enemySpider,
         'hell' => enemyCultist,
+        'ember' => enemyGolem,
         'crystal' => enemyCrystalWraith,
+        'tide' => enemyCrab,
         _ => enemyCyclops,
       };
     }
@@ -391,7 +411,9 @@ abstract final class KenneyAssets {
       'underworld' => enemySpider,
       'dead' => enemyGhost,
       'hell' => enemyCultist,
+      'ember' => enemyRat,
       'crystal' => enemyCrystalMite,
+      'tide' => enemySlime,
       _ => enemySlime,
     };
   }
@@ -411,6 +433,8 @@ abstract final class KenneyAssets {
           'underworld' => enemySpider,
           'dead' => enemyGhost,
           'crystal' => enemyCrystalMite,
+          'tide' => enemySlime,
+          'ember' => enemyRat,
           _ => enemyRat,
         },
       EnemyArchetype.brute => switch (dungeonId) {
@@ -418,31 +442,44 @@ abstract final class KenneyAssets {
           'goblin' => enemyCyclops,
           'king' => enemyCyclops,
           'hell' => enemyBoss,
+          'ember' => enemyCyclops,
           'crystal' => enemyCrystalBoss,
+          'tide' => enemyCrab,
           _ => enemyCyclops,
         },
       EnemyArchetype.tank => switch (dungeonId) {
           'sandy' => enemyCrab,
           'dead' => enemyGhost,
           'hell' => enemyBoss,
+          'ember' => enemyGolem,
           'crystal' => enemyCrystalBoss,
+          'tide' => enemyCrab,
           _ => enemyGolem,
         },
       EnemyArchetype.ranged => switch (dungeonId) {
           'dead' => enemyGhost,
           'underworld' => enemySpider,
           'hell' => enemyCultist,
+          'ember' => enemyBat,
           'crystal' => enemyCrystalWraith,
+          'tide' => enemyBat,
           _ => enemyBat,
         },
       EnemyArchetype.glass => switch (dungeonId) {
           'dead' => enemyGhost,
           'underworld' => enemySpider,
+          'hell' => enemyCultist,
+          'ember' => enemyRat,
           'crystal' => enemyCrystalWraith,
-          _ => enemyRat,
+          'tide' => enemySlime,
+          _ => enemyBat,
         },
-      EnemyArchetype.support =>
-        dungeonId == 'crystal' ? enemyCrystalWraith : enemyCultist,
+      EnemyArchetype.support => switch (dungeonId) {
+          'crystal' => enemyCrystalWraith,
+          'tide' => enemyCrab,
+          'ember' => enemyCultist,
+          _ => enemyCultist,
+        },
     };
   }
 
@@ -479,11 +516,17 @@ abstract final class KenneyAssets {
       'beholder' => enemyCultist,
       'the no-one' => enemyGhost,
       'cthulhu' || 'chtulu' => enemyHellBoss,
+      'tide leviathan' => enemyCrab,
+      'cinder sovereign' => enemyCyclops,
       'crystal warden' ||
       'crystal golem' ||
       'frozen bulwark' ||
       'glacial brute' ||
-      'shard brawler' =>
+      'shard brawler' ||
+      'shell leviathan' ||
+      'barnacle guard' ||
+      'tide brute' ||
+      'coral crusher' =>
         enemyCrystalBoss,
       'crystal wraith' ||
       'ice caster' ||
@@ -491,11 +534,35 @@ abstract final class KenneyAssets {
       'rime chanter' ||
       'frost adept' ||
       'splinter blade' ||
-      'shatter fang' =>
+      'shatter fang' ||
+      'spume spitter' ||
+      'salt slinger' ||
+      'depth chanter' ||
+      'tide adept' ||
+      'razor eel' ||
+      'needle urchin' =>
         enemyCrystalWraith,
-      'crystal mite' || 'frost wisp' || 'rime bat' => enemyCrystalMite,
+      'crystal mite' ||
+      'frost wisp' ||
+      'rime bat' ||
+      'brine mite' ||
+      'reef tick' =>
+        enemyCrystalMite,
       'king crab' || 'cave king' => enemyCrab,
       'hell lord' || 'hellgate tyrant' => enemyHellBoss,
+      'vault brute' ||
+      'slag brawler' ||
+      'basalt golem' ||
+      'ember bulwark' =>
+        enemyBoss,
+      'spark caster' ||
+      'cinder slinger' ||
+      'ash chanter' ||
+      'ember adept' ||
+      'ash mite' ||
+      'cinder tick' =>
+        enemyCultist,
+      'char blade' || 'soot fang' => enemyRat,
       'cave slime' || 'drip ooze' || 'sand mite' => enemySlime,
       'spit bat' || 'cavern spitter' || 'drill bat' => enemyBat,
       'needle rat' || 'glass skitter' || 'fort rat' || 'sneak rat' || 'pest' ||
@@ -539,8 +606,17 @@ abstract final class KenneyAssets {
         key.contains('glacial') ||
         key.contains('shard') ||
         key.contains('splinter') ||
-        key.contains('shatter')) {
-      if (key.contains('wisp') || key.contains('mite') || key.contains('bat')) {
+        key.contains('shatter') ||
+        key.contains('tide') ||
+        key.contains('brine') ||
+        key.contains('reef') ||
+        key.contains('coral') ||
+        key.contains('barnacle') ||
+        key.contains('spume')) {
+      if (key.contains('wisp') ||
+          key.contains('mite') ||
+          key.contains('bat') ||
+          key.contains('tick')) {
         return enemyCrystalMite;
       }
       if (key.contains('wraith') ||
@@ -548,8 +624,11 @@ abstract final class KenneyAssets {
           key.contains('adept') ||
           key.contains('chanter') ||
           key.contains('slinger') ||
+          key.contains('spitter') ||
           key.contains('blade') ||
-          key.contains('fang')) {
+          key.contains('fang') ||
+          key.contains('eel') ||
+          key.contains('urchin')) {
         return enemyCrystalWraith;
       }
       return enemyCrystalBoss;
@@ -605,7 +684,28 @@ abstract final class KenneyAssets {
         key.contains('sentry')) {
       return enemyCyclops;
     }
-    if (key.contains('hell') || key.contains('infernal') || key.contains('flame')) {
+    if (key.contains('hell') ||
+        key.contains('infernal') ||
+        key.contains('flame') ||
+        key.contains('cinder') ||
+        key.contains('ember') ||
+        key.contains('ash') ||
+        key.contains('slag') ||
+        key.contains('basalt') ||
+        key.contains('soot') ||
+        key.contains('char')) {
+      if (key.contains('sovereign') || key.contains('lord')) {
+        return enemyHellBoss;
+      }
+      if (key.contains('brute') ||
+          key.contains('brawler') ||
+          key.contains('golem') ||
+          key.contains('bulwark')) {
+        return enemyBoss;
+      }
+      if (key.contains('blade') || key.contains('fang')) {
+        return enemyRat;
+      }
       return enemyCultist;
     }
     if (key.contains('rat') ||
@@ -727,6 +827,9 @@ abstract final class KenneyAssets {
         GameLogic.warBannerRelic => relicWarBanner,
         GameLogic.ironWardRelic => relicIronWard,
         GameLogic.phoenixEmberRelic => relicPhoenixEmber,
+        GameLogic.godHandFocusRelic => relicPhoenixEmber,
+        GameLogic.chamberLuckRelic => relicWarBanner,
+        GameLogic.ironWillRelic => relicIronWard,
         _ => relicWarBanner,
       };
 

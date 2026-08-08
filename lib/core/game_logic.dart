@@ -8,6 +8,7 @@ import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
 import '../models/gear_loadout.dart';
 import '../models/gear_set.dart';
+import '../models/equip_stat_weights.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
@@ -16,6 +17,7 @@ import '../models/mission.dart';
 import '../models/pet.dart';
 import '../models/proficiency.dart';
 import '../models/stats.dart';
+import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
 import 'dungeon_generator.dart';
 import 'equipment_factory.dart';
@@ -29,10 +31,16 @@ class GameLogic {
   static const String warBannerRelic = 'war_banner';
   static const String ironWardRelic = 'iron_ward';
   static const String phoenixEmberRelic = 'phoenix_ember';
+  static const String godHandFocusRelic = 'god_hand_focus';
+  static const String chamberLuckRelic = 'chamber_luck';
+  static const String ironWillRelic = 'iron_will';
   static const List<String> relicOrder = <String>[
     warBannerRelic,
     ironWardRelic,
     phoenixEmberRelic,
+    godHandFocusRelic,
+    chamberLuckRelic,
+    ironWillRelic,
   ];
   static const Map<LootRarity, String> rarityNames = <LootRarity, String>{
     LootRarity.common: 'Common',
@@ -45,16 +53,25 @@ class GameLogic {
     warBannerRelic: 'War Banner',
     ironWardRelic: 'Iron Ward',
     phoenixEmberRelic: 'Phoenix Ember',
+    godHandFocusRelic: 'God Hand Focus',
+    chamberLuckRelic: 'Chamber Luck',
+    ironWillRelic: 'Iron Will',
   };
   static const Map<String, String> relicDescriptions = <String, String>{
     warBannerRelic: 'Permanent +4 team attack aura.',
     ironWardRelic: 'Permanent +2 team defense aura.',
     phoenixEmberRelic: 'Permanent +10 max HP for every hero.',
+    godHandFocusRelic: '+3 God Hand damage per tier.',
+    chamberLuckRelic: '+5% loot find per tier.',
+    ironWillRelic: '+1 flat damage mitigate per tier.',
   };
   static const Map<String, int> relicCosts = <String, int>{
     warBannerRelic: 6,
     ironWardRelic: 14,
     phoenixEmberRelic: 28,
+    godHandFocusRelic: 36,
+    chamberLuckRelic: 42,
+    ironWillRelic: 48,
   };
 
   static const int starterPartySize = 3;
@@ -127,6 +144,8 @@ class GameLogic {
       heroes: state.heroes
           .map((h) => h.copyWith(currentHp: state.effectiveHeroMaxHp(h)))
           .toList(),
+      // Fresh saves already know this build — What's New is for upgrades.
+      seenChangelogVersion: MetaSystems.currentVersion,
     );
   }
 
@@ -169,7 +188,8 @@ class GameLogic {
 
   static int newLayoutSeed() => random.nextInt(0x3fffffff);
 
-  static const double ascensionDropPenalty = 0.15;
+  /// AL gear skip per level — blunted by loot-find / HM / elite-boss relief.
+  static const double ascensionDropPenalty = 0.10;
 
   static Map<String, String> get dungeonNames => {
     for (final d in DungeonCatalog.all) d.id: d.name,
@@ -259,9 +279,10 @@ class GameLogic {
   static double gauntletThreatMul(int floor) =>
       1.0 + max(0, floor - 1) * 0.10;
 
-  /// Escalating gold: +8% per floor beyond 1.
-  static double gauntletGoldMul(int floor) =>
-      1.0 + max(0, floor - 1) * 0.08;
+  /// Escalating gold: +8% per floor beyond 1, plus prestige Spire Purse.
+  static double gauntletGoldMul(int floor, {int prestigeBonusLevel = 0}) =>
+      (1.0 + max(0, floor - 1) * 0.08) *
+      (1.0 + prestigeBonusLevel * 0.04);
 
   static int gauntletEssenceForFloor(int floor, {required bool boss}) =>
       1 + (floor ~/ 2) + (boss ? 4 : 0);
@@ -273,9 +294,13 @@ class GameLogic {
   }) {
     final cleared = max(0, reachedFloor - 1);
     final best = max(state.metaDepth.gauntletBestFloor, cleared);
-    if (best == state.metaDepth.gauntletBestFloor) return state;
-    return state.copyWith(
-      metaDepth: state.metaDepth.copyWith(gauntletBestFloor: best),
+    if (best == state.metaDepth.gauntletBestFloor) {
+      return syncMetaPayoffs(state);
+    }
+    return syncMetaPayoffs(
+      state.copyWith(
+        metaDepth: state.metaDepth.copyWith(gauntletBestFloor: best),
+      ),
     );
   }
 
@@ -300,7 +325,8 @@ class GameLogic {
         inGauntlet: true,
         dungeonId: dungeonId,
         dungeonMode: DungeonMode.push,
-        highestFloorCleared: 0,
+        // Keep zone highestFloorCleared — Ascend fragments + softcaps use it.
+        // Gauntlet climb progress lives on metaDepth.gauntletBestFloor.
         currentRoom: room,
         dungeonFloor: floor,
         enemies: createEnemyGroup(
@@ -326,6 +352,15 @@ class GameLogic {
   static List<String> takeCraftMatGrants() {
     final out = List<String>.from(lastCraftMatGrants);
     lastCraftMatGrants = <String>[];
+    return out;
+  }
+
+  /// Notices from the last [syncMetaPayoffs] (Will / Gauntlet / season). Cleared on read.
+  static List<String> lastMetaPayoffNotices = <String>[];
+
+  static List<String> takeMetaPayoffNotices() {
+    final out = List<String>.from(lastMetaPayoffNotices);
+    lastMetaPayoffNotices = <String>[];
     return out;
   }
 
@@ -847,14 +882,37 @@ class GameLogic {
 
   static int sanctuaryCost(int level) => 15 + (level * 12);
 
-  static String sanctuaryBonusLabel(String track, int level) {
+  /// Softcapped track bonus only (no prestige). Used for "next level" labels.
+  static int sanctuaryTrackBonusAt(String track, int level) {
     return switch (track) {
-      'gold' => '+${level * 5}% gold find',
-      'power' => '+$level party attack',
-      'vitality' => '+${level * 2} max HP',
-      'xp' => '+${level * 4}% XP find',
+      'gold' => GameState.softForgePercent(level * 5, softAt: 100).round(),
+      'power' => GameState.softForgePercent(level, softAt: 40).round(),
+      'vitality' => GameState.softForgePercent(level * 2, softAt: 80).round(),
+      'xp' => GameState.softForgePercent(level * 4, softAt: 80).round(),
+      _ => 0,
+    };
+  }
+
+  static String sanctuaryBonusLabel(String track, int level, {int prestige = 0}) {
+    final soft = sanctuaryTrackBonusAt(track, level);
+    final prestBonus = switch (track) {
+      'gold' => prestige * 3,
+      'xp' => prestige * 2,
+      'power' || 'vitality' => prestige,
+      _ => 0,
+    };
+    final total = soft + prestBonus;
+    final unit = switch (track) {
+      'gold' => '% gold find',
+      'power' => ' party attack',
+      'vitality' => ' max HP',
+      'xp' => '% XP find',
       _ => '',
     };
+    if (prestige > 0) {
+      return '+$total$unit (Lv$level + P$prestige)';
+    }
+    return '+$total$unit';
   }
 
   static GameState upgradeSanctuary(GameState state, String track) {
@@ -1690,6 +1748,37 @@ class GameLogic {
     return baseGold + (baseGold * percent) ~/ 100;
   }
 
+  /// Credit kill / God Hand gold immediately (survives wipe; matches floaters).
+  /// Includes Gauntlet floor mul + [applyGoldGain] bonuses.
+  static GameState creditCombatGold(GameState state, int baseGold) {
+    if (baseGold <= 0) return state;
+    final mul = state.inGauntlet
+        ? gauntletGoldMul(
+            state.currentRoom.floorNumber,
+            prestigeBonusLevel: state.metaDepth.gauntletGoldBonusLevel,
+          )
+        : 1.0;
+    final gained = applyGoldGain(state, (baseGold * mul).round());
+    if (gained <= 0) return state;
+    final paid = state.copyWith(
+      gold: state.gold + gained,
+      lifetimeGoldEarned: state.lifetimeGoldEarned + gained,
+    );
+    // Earn-gold missions previously tracked clear-time awards only.
+    return applyMissionProgress(paid, goldEarned: gained);
+  }
+
+  /// Treasure / chest gold budget using full zone · HM · AL · gear pressure.
+  static int treasureGoldBudget(GameState state) {
+    return roomCombatBudget(
+      state.currentRoom,
+      dungeonId: state.dungeonId,
+      hardmodeLevel: state.hardmodeLevel,
+      ascensionLevel: state.ascensionLevel,
+      gearPressure: partyGearPressure(state),
+    ).gold;
+  }
+
   /// Prestige: reset the run, keep essence/relics/sanctuary/pets/soulbound, bump AL.
   /// Returns [state] unchanged if Ascend is locked.
   static GameState ascend(GameState state, {DateTime? now}) {
@@ -1702,8 +1791,6 @@ class GameLogic {
       state.ascensionLevel,
       nextLevel,
     );
-    final preservedEssence =
-        state.essence + ascendEssenceReward(nextLevel) + milestoneBonus;
     final preservedRelics = List<String>.from(state.unlockedRelics);
     final fragmentGain = 1 + (state.highestFloorCleared ~/ 3);
 
@@ -1711,6 +1798,12 @@ class GameLogic {
         ? state.metaDepth.ascendStreak + 1
         : 0;
     final bestStreak = max(state.metaDepth.bestAscendStreak, streak);
+    final streakEssence =
+        streak > 0 && streak % 3 == 0 ? (10 + streak * 2) : 0;
+    final preservedEssence = state.essence +
+        ascendEssenceReward(nextLevel) +
+        milestoneBonus +
+        streakEssence;
     final legacyGain = (nextLevel ~/ 5) - (state.ascensionLevel ~/ 5);
     final titles = List<String>.from(state.metaDepth.titles);
     for (final entry in AscendTitles.byAl.entries) {
@@ -1798,7 +1891,13 @@ class GameLogic {
       lifetimeGoldEarned: state.lifetimeGoldEarned,
       unlockedRelics: preservedRelics,
       ascensionLevel: nextLevel,
-      missions: createMissionBoardFor(state.copyWith(ascensionLevel: nextLevel)),
+      // Size board off post-Ascend progress (HFC resets) — not pre-Ascend depth.
+      missions: createMissionBoardFor(
+        state.copyWith(
+          ascensionLevel: nextLevel,
+          highestFloorCleared: 0,
+        ),
+      ),
       activePet: state.activePet,
       ownedPets: List<Pet>.from(state.ownedPets),
       sanctuaryGoldLevel: state.sanctuaryGoldLevel,
@@ -1810,13 +1909,15 @@ class GameLogic {
       highestDungeonCleared: state.highestDungeonCleared,
       inDungeon: false,
       soulboundFragments: state.soulboundFragments + fragmentGain,
-      soulboundItem: state.soulboundItem,
+      soulboundItem: state.soulboundItem == null
+          ? null
+          : scaleSoulboundForAl(state.soulboundItem!, nextLevel),
       craftMaterials: Map<String, int>.from(state.craftMaterials),
       craftPity: Map<String, int>.from(state.craftPity),
       apexVault: preservedVault,
       godHandLevel: state.godHandLevel,
       soundMuted: state.soundMuted,
-      reducedVfx: state.reducedVfx,
+      vfxQuality: state.vfxQuality,
       autoSellMaxPower: state.autoSellMaxPower,
       rogueUnlocked: true,
       seenTips: [
@@ -1851,6 +1952,7 @@ class GameLogic {
     );
     withMeta = ensureWeeklyContract(withMeta, now: now);
     withMeta = MetaSystems.evaluateAchievements(withMeta);
+    withMeta = syncMetaPayoffs(withMeta);
     // Point hub ENTER at frontier / deepest unlocked — not always Sandy.
     final recommend = recommendedDungeonId(withMeta);
     if (recommend != withMeta.dungeonId) {
@@ -2037,14 +2139,18 @@ class GameLogic {
       final starter = _starterGearForSpec(hero.specId);
       final next = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped);
       var heroChanged = false;
+      final blocksOh = ClassProficiency.weaponBlocksOffHand(
+        next[EquipmentSlot.weapon],
+      );
       for (final entry in starter.entries) {
-        if (!next.containsKey(entry.key)) {
-          next[entry.key] = entry.value.copyWith(
-            id: '${entry.value.id}_fill',
-          );
-          heroChanged = true;
-          changed = true;
-        }
+        if (next.containsKey(entry.key)) continue;
+        // Never put a starter OH under a kept Apex (or any) 2H weapon.
+        if (blocksOh && entry.key == EquipmentSlot.offHand) continue;
+        next[entry.key] = entry.value.copyWith(
+          id: '${entry.value.id}_fill',
+        );
+        heroChanged = true;
+        changed = true;
       }
       rebuilt.add(heroChanged ? hero.copyWith(equipped: next) : hero);
     }
@@ -2113,6 +2219,7 @@ class GameLogic {
           staminaBonus: 1,
           spiritBonus: spec.isHealer ? 1 : 0,
           spellPowerBonus: spec.isHealer || spec.roleTag == SpecRoleTag.caster ? 1 : 0,
+          itemLevel: 5,
         );
       } else if (ClassProficiency.canEquipOffHandForSpec(
         spec,
@@ -2128,6 +2235,7 @@ class GameLogic {
           handed: WeaponHanded.oneHand,
           agilityBonus: 1,
           staminaBonus: 1,
+          itemLevel: 5,
         );
       } else {
         out.remove(EquipmentSlot.offHand);
@@ -2162,6 +2270,7 @@ class GameLogic {
         spellPowerBonus: preferWand ? 2 : 0,
         strengthBonus: preferWand ? 0 : 1,
         agilityBonus: preferWand ? 0 : 1,
+        itemLevel: 5,
       );
     }
 
@@ -2200,6 +2309,7 @@ class GameLogic {
         spellPowerBonus: spec.isHealer || spec.roleTag == SpecRoleTag.caster ? 1 : 0,
         strengthBonus: useMace && !spec.isHealer ? 2 : 0,
         staminaBonus: 1,
+        itemLevel: 5,
       );
       if (useStaff) {
         out.remove(EquipmentSlot.offHand);
@@ -2598,7 +2708,13 @@ class GameLogic {
             gp)
         .round();
     final gold =
-        (((12 + level * 2.5) * (isBoss ? 3.4 : 1.0) * diff) * hmGold).round();
+        (((12 + level * 2.5) *
+                    (isBoss ? 3.4 : 1.0) *
+                    diff *
+                    zoneMult *
+                    (1.0 + ascensionLevel.clamp(0, 20) * 0.025)) *
+                hmGold)
+            .round();
 
     return (attack: attack, hp: hp, gold: gold);
   }
@@ -2614,6 +2730,8 @@ class GameLogic {
         if (item.id.startsWith('start_') || item.id.contains('_fill')) {
           continue;
         }
+        // Apex kept through Ascend must not cancel fresh-AL threat ease.
+        if (item.isApex) continue;
         final primary = item.strengthBonus +
             item.agilityBonus +
             item.staminaBonus +
@@ -2748,11 +2866,27 @@ class GameLogic {
     final glassWeek = weeklyMod == 'glass';
     final swarmWeek = weeklyMod == 'swarm';
     final eliteWeek = weeklyMod == 'elite';
+    final fortuneWeek = weeklyMod == 'fortune';
+    final ironWeek = weeklyMod == 'iron';
     if (eliteWeek) {
       budget = (
         attack: (budget.attack * 1.15).round(),
         hp: (budget.hp * 1.2).round(),
         gold: (budget.gold * 1.1).round(),
+      );
+    }
+    if (ironWeek) {
+      budget = (
+        attack: (budget.attack * 1.1).round(),
+        hp: (budget.hp * 1.25).round(),
+        gold: (budget.gold * 1.2).round(),
+      );
+    }
+    if (fortuneWeek) {
+      budget = (
+        attack: budget.attack,
+        hp: budget.hp,
+        gold: (budget.gold * 1.15).round(),
       );
     }
     // Hardmode densifies packs: HM+10 = 10× (1000%) enemy count.
@@ -2992,7 +3126,9 @@ class GameLogic {
         EnemyArchetype.tank => 'Bulwark Golem',
         EnemyArchetype.ranged => 'Hex Cultist',
         EnemyArchetype.glass => 'Blood Stalker',
-        _ => 'Elite Brute',
+        EnemyArchetype.support => 'Rift Adept',
+        EnemyArchetype.swarm => 'Pack Alpha',
+        EnemyArchetype.brute => 'Elite Brute',
       };
     }
     if (type == RoomType.boss) {
@@ -3000,7 +3136,9 @@ class GameLogic {
         EnemyArchetype.ranged => 'Warden Archer',
         EnemyArchetype.tank => 'Warden Shield',
         EnemyArchetype.support => 'Warden Adept',
-        _ => 'Warden Guard',
+        EnemyArchetype.glass => 'Warden Blade',
+        EnemyArchetype.swarm => 'Warden Pack',
+        EnemyArchetype.brute => 'Warden Guard',
       };
     }
     return _zoneArchetypeName(dungeonId, archetype, index);
@@ -3067,6 +3205,22 @@ class GameLogic {
         EnemyArchetype.ranged: ['Ice Caster', 'Frost Slinger'],
         EnemyArchetype.glass: ['Splinter Blade', 'Shatter Fang'],
         EnemyArchetype.support: ['Rime Chanter', 'Frost Adept'],
+      },
+      'tide' => const {
+        EnemyArchetype.swarm: ['Brine Mite', 'Reef Tick'],
+        EnemyArchetype.brute: ['Tide Brute', 'Coral Crusher'],
+        EnemyArchetype.tank: ['Shell Leviathan', 'Barnacle Guard'],
+        EnemyArchetype.ranged: ['Spume Spitter', 'Salt Slinger'],
+        EnemyArchetype.glass: ['Razor Eel', 'Needle Urchin'],
+        EnemyArchetype.support: ['Depth Chanter', 'Tide Adept'],
+      },
+      'ember' => const {
+        EnemyArchetype.swarm: ['Ash Mite', 'Cinder Tick'],
+        EnemyArchetype.brute: ['Vault Brute', 'Slag Brawler'],
+        EnemyArchetype.tank: ['Basalt Golem', 'Ember Bulwark'],
+        EnemyArchetype.ranged: ['Spark Caster', 'Cinder Slinger'],
+        EnemyArchetype.glass: ['Char Blade', 'Soot Fang'],
+        EnemyArchetype.support: ['Ash Chanter', 'Ember Adept'],
       },
       _ => const {
         EnemyArchetype.swarm: ['Cave Slime', 'Sand Mite'],
@@ -3216,74 +3370,55 @@ class GameLogic {
       return (state: state, roomsCleared: 0);
     }
 
-    final preferReducedVfx = state.reducedVfx;
+    final preferVfx = state.vfxQuality;
     // Full enemy stats; AFK assist keeps boot catch-up responsive.
     const threatScale = 1.0;
     const afkAssist = true;
     const dt = 0.12;
-    final maxSteps = min(8000, max(240, maxFloors * 100));
+    // Cap steps to floor budget (+ headroom) so long AFK can't burn CPU past
+    // what [offlineFloorBudget] will award.
+    final maxSteps = min(
+      12000,
+      max(240, maxFloors * 420),
+    );
 
-    var current = state.copyWith(reducedVfx: true);
+    var current = state.copyWith(vfxQuality: VfxQuality.minimal);
     var world = SpatialCombat.build(
       current,
       threatScale: threatScale,
       afkAssist: afkAssist,
     );
-    var roomGold = 0;
     var floorsCleared = 0;
+    var abilityCasts = 0;
 
     for (var step = 0; step < maxSteps; step++) {
       if (!current.inDungeon || floorsCleared >= maxFloors) break;
 
+      final stashLenBefore = current.gearStash.length;
       final result = SpatialCombat.step(world, current, dt: dt);
       world = result.world;
       current = result.state;
-      roomGold += result.goldFromKills;
+      if (result.goldFromKills > 0) {
+        current = creditCombatGold(current, result.goldFromKills);
+      }
+      abilityCasts += result.abilityCasts;
+      // Live parity: wear clear upgrades mid-floor and sync actor sheets.
+      if (current.gearStash.length > stashLenBefore) {
+        current = autoEquipBetterGear(current);
+        world = SpatialCombat.syncPartyFromState(world, current);
+      }
 
       // Keep AFK sim lean — strip accumulated VFX lists periodically.
       if (step % 40 == 0) {
         world.floaters.clear();
         world.bursts.clear();
+        world.groundFx.clear();
         if (world.projectiles.length > 24) {
           world.projectiles.removeRange(0, world.projectiles.length - 24);
         }
       }
 
-      // Mid-fight flask when living party avg HP drops below 35%.
-      if (step % 12 == 0 && canUseConsumable(current)) {
-        final living = <PartyHero>[
-          for (final h in current.heroes)
-            if (h.currentHp > 0) h,
-        ];
-        if (living.isNotEmpty) {
-          var ratioSum = 0.0;
-          for (final h in living) {
-            final maxHp = current.effectiveHeroMaxHp(h);
-            ratioSum += maxHp > 0 ? h.currentHp / maxHp : 0;
-          }
-          if (ratioSum / living.length < 0.35) {
-            current = useConsumable(current);
-            world = SpatialCombat.syncPartyFromState(world, current);
-          }
-        }
-      }
-
-      // God Hand toward nearest live enemy when ready.
-      if (step % 18 == 0 && world.godHandCooldown <= 0) {
-        final aim = _offlineGodHandAim(world);
-        if (aim != null) {
-          final gh = SpatialCombat.godHand(
-            world,
-            current,
-            tileX: aim.$1,
-            tileY: aim.$2,
-          );
-          world = gh.world;
-          current = gh.state;
-          roomGold += gh.goldFromKills;
-        }
-      }
-
+      // Wipe before flask/God Hand — avoid post-wipe loot/XP from assist.
       if (result.partyWiped) {
         // Gauntlet wipe always ends the run (same as live hub exit).
         if (current.inGauntlet) {
@@ -3302,25 +3437,62 @@ class GameLogic {
           threatScale: threatScale,
           afkAssist: afkAssist,
         );
-        roomGold = 0;
         continue;
+      }
+
+      // Mid-fight flask when living party avg HP drops below 35%.
+      if (step % 12 == 0 && canUseConsumable(current)) {
+        final living = <PartyHero>[
+          for (final h in current.heroes)
+            if (h.currentHp > 0) h,
+        ];
+        if (living.isNotEmpty) {
+          var ratioSum = 0.0;
+          for (final h in living) {
+            final maxHp = current.effectiveHeroMaxHp(h);
+            ratioSum += maxHp > 0 ? h.currentHp / maxHp : 0;
+          }
+          if (ratioSum / living.length < 0.35) {
+            current = useConsumable(current);
+            world = SpatialCombat.syncPartyFromState(world, current);
+            SpatialCombat.spawnFlaskHealFx(
+              world,
+              reducedVfx: current.reducedVfx,
+            );
+          }
+        }
+      }
+
+      // God Hand toward nearest live enemy when ready.
+      // Soft cadence: every ~4.3s of sim time so AFK doesn't hard-carry mid PUSH.
+      if (step % 36 == 0 && world.godHandCooldown <= 0) {
+        final aim = _offlineGodHandAim(world);
+        if (aim != null) {
+          final gh = SpatialCombat.godHand(
+            world,
+            current,
+            tileX: aim.$1,
+            tileY: aim.$2,
+          );
+          world = gh.world;
+          current = gh.state;
+          if (gh.goldFromKills > 0) {
+            current = creditCombatGold(current, gh.goldFromKills);
+          }
+        }
       }
 
       if (!result.roomCleared) continue;
 
       final wasTreasure = world.isTreasure;
-      final gold = wasTreasure
-          ? roomCombatBudget(current.currentRoom).gold
-          : (roomGold > 0
-              ? roomGold
-              : current.enemies.fold<int>(0, (s, e) => s + e.rewardGold));
+      // Combat gold already credited per kill; treasure pays scaled chest budget.
+      final gold = wasTreasure ? treasureGoldBudget(current) : 0;
       current = completeCurrentRoom(
         current,
         goldGain: gold,
         skipLootRoll: !wasTreasure,
       );
       floorsCleared++;
-      roomGold = 0;
       if (!current.inDungeon || floorsCleared >= maxFloors) break;
       world = SpatialCombat.build(
         current,
@@ -3329,10 +3501,25 @@ class GameLogic {
       );
     }
 
+    if (abilityCasts > 0) {
+      current = current.copyWith(
+        metaDepth: current.metaDepth.copyWith(
+          lifetimeAbilityCasts:
+              current.metaDepth.lifetimeAbilityCasts + abilityCasts,
+        ),
+      );
+    }
+
     return (
-      state: current.copyWith(reducedVfx: preferReducedVfx),
+      state: current.copyWith(vfxQuality: preferVfx),
       roomsCleared: floorsCleared,
     );
+  }
+
+  /// Nearest awake enemy to living party centroid, or null if none.
+  /// Shared by AFK catch-up and balance sims (live/AFK assist aim).
+  static (double, double)? godHandAim(SpatialWorld world) {
+    return _offlineGodHandAim(world);
   }
 
   /// Nearest awake enemy to living party centroid, or null if none.
@@ -3597,6 +3784,8 @@ class GameLogic {
       'gh_cdr' => md.godHandCdLevel >= 8,
       'roster_cap' => md.petRosterCapBonus >= 10,
       'legacy_spark' => md.legacyPoints >= 20,
+      'daily_essence' => md.dailyEssenceBonusLevel >= 5,
+      'gauntlet_gold' => md.gauntletGoldBonusLevel >= 5,
       _ => false,
     };
     if (atCap) return state;
@@ -3614,6 +3803,12 @@ class GameLogic {
         md.copyWith(petRosterCapBonus: min(10, md.petRosterCapBonus + 2)),
       'legacy_spark' =>
         md.copyWith(legacyPoints: min(20, md.legacyPoints + 1)),
+      'daily_essence' => md.copyWith(
+          dailyEssenceBonusLevel: min(5, md.dailyEssenceBonusLevel + 1),
+        ),
+      'gauntlet_gold' => md.copyWith(
+          gauntletGoldBonusLevel: min(5, md.gauntletGoldBonusLevel + 1),
+        ),
       _ => md,
     };
     // Track ownership once via levels; keep a de-duplicated purchase mark.
@@ -3629,7 +3824,7 @@ class GameLogic {
     );
   }
 
-  /// ISO week key (`yyyy-Www`) for weekly contract rotation.
+  /// ISO week key (`yyyy-Www`) for weekly contract / local season rotation.
   static String isoWeekKey(DateTime utc) {
     final d = DateTime.utc(utc.year, utc.month, utc.day);
     final thursday = d.add(Duration(days: 4 - d.weekday));
@@ -3638,33 +3833,132 @@ class GameLogic {
     return '${thursday.year}-W${week.toString().padLeft(2, '0')}';
   }
 
-  static const List<String> weeklyModifiers = <String>['glass', 'swarm', 'elite'];
+  /// Calendar-month season key (`yyyy-MM`) for local offline seasons.
+  static String isoMonthKey(DateTime utc) {
+    final y = utc.year.toString().padLeft(4, '0');
+    final m = utc.month.toString().padLeft(2, '0');
+    return '$y-$m';
+  }
+
+  /// Display season label (ISO week + month), e.g. `2026-W32 · 2026-08`.
+  static String seasonLabel(DateTime utc) =>
+      '${isoWeekKey(utc)} · ${isoMonthKey(utc)}';
+
+  static const List<String> weeklyModifiers = <String>[
+    'glass',
+    'swarm',
+    'elite',
+    'fortune',
+    'iron',
+  ];
 
   static GameState ensureWeeklyContract(GameState state, {DateTime? now}) {
     final t = (now ?? DateTime.now()).toUtc();
     final key = isoWeekKey(t);
-    if (state.metaDepth.weeklyKey == key) return state;
-    final mod = weeklyModifiers[(key.hashCode & 0x7fffffff) % weeklyModifiers.length];
+    final season = seasonLabel(t);
+    if (state.metaDepth.weeklyKey == key &&
+        state.metaDepth.seasonKey == season) {
+      return state;
+    }
+    final mod =
+        weeklyModifiers[(key.hashCode & 0x7fffffff) % weeklyModifiers.length];
+    final sameWeek = state.metaDepth.weeklyKey == key;
     return state.copyWith(
       metaDepth: state.metaDepth.copyWith(
         weeklyKey: key,
-        weeklyProgress: 0,
-        weeklyClaimed: false,
-        weeklyModifier: mod,
+        weeklyProgress: sameWeek ? state.metaDepth.weeklyProgress : 0,
+        weeklyClaimed: sameWeek ? state.metaDepth.weeklyClaimed : false,
+        weeklyModifier: sameWeek ? state.metaDepth.weeklyModifier : mod,
+        seasonKey: season,
       ),
     );
   }
 
-  static int weeklyClaimEssence = 18;
+  static int weeklyClaimEssence = 32;
+  static const int weeklyClearTarget = 3;
+
+  /// One-time essence when claiming the first weekly of a calendar month.
+  static const int seasonWeeklyBonusEssence = 12;
 
   static GameState claimWeekly(GameState state) {
     var next = ensureWeeklyContract(state);
     final md = next.metaDepth;
-    if (md.weeklyProgress < 3 || md.weeklyClaimed) return next;
+    if (md.weeklyProgress < weeklyClearTarget || md.weeklyClaimed) return next;
+    var essenceGain = weeklyClaimEssence;
+    final seasonClaims = List<String>.from(md.claimedSeasonRewards);
+    final month = isoMonthKey(DateTime.now().toUtc());
+    final notices = <String>[];
+    if (month.isNotEmpty && !seasonClaims.contains(month)) {
+      seasonClaims.add(month);
+      essenceGain += seasonWeeklyBonusEssence;
+      notices.add('Season $month · +${seasonWeeklyBonusEssence}e');
+    }
+    lastMetaPayoffNotices = notices;
     next = next.copyWith(
-      essence: next.essence + weeklyClaimEssence,
-      metaDepth: md.copyWith(weeklyClaimed: true),
+      essence: next.essence + essenceGain,
+      metaDepth: md.copyWith(
+        weeklyClaimed: true,
+        claimedSeasonRewards: seasonClaims,
+      ),
       lastUpdated: DateTime.now(),
+    );
+    return MetaSystems.evaluateAchievements(next);
+  }
+
+  /// God Hand style: 0 balanced, 1 focus, 2 wide.
+  static GameState setGodHandStyle(GameState state, int style) {
+    final next = style.clamp(0, 2);
+    if (state.metaDepth.godHandStyle == next) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(godHandStyle: next),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// Claim Will-rank + Gauntlet milestone essence when thresholds are met.
+  static GameState syncMetaPayoffs(GameState state) {
+    var next = state;
+    var essenceGain = 0;
+    final notices = <String>[];
+    final willClaims = List<String>.from(next.metaDepth.claimedWillRanks);
+    final score = next.collectionScore;
+    for (final threshold in WillRanks.claimableThresholds) {
+      final id = '$threshold';
+      if (score >= threshold && !willClaims.contains(id)) {
+        willClaims.add(id);
+        final gain = WillRanks.essenceForThreshold(threshold);
+        essenceGain += gain;
+        notices.add(
+          'Will · ${WillRanks.titleForScore(threshold)} +${gain}e',
+        );
+      }
+    }
+    final gauntletClaims =
+        List<String>.from(next.metaDepth.claimedGauntletMilestones);
+    final best = next.metaDepth.gauntletBestFloor;
+    for (final floor in GauntletMilestones.floors) {
+      final id = GauntletMilestones.claimId(floor);
+      if (best >= floor && !gauntletClaims.contains(id)) {
+        gauntletClaims.add(id);
+        final gain = GauntletMilestones.essenceForFloor(floor);
+        essenceGain += gain;
+        notices.add('Gauntlet F$floor · +${gain}e');
+      }
+    }
+    if (essenceGain == 0 &&
+        willClaims.length == next.metaDepth.claimedWillRanks.length &&
+        gauntletClaims.length ==
+            next.metaDepth.claimedGauntletMilestones.length) {
+      lastMetaPayoffNotices = const [];
+      return MetaSystems.evaluateAchievements(next);
+    }
+    lastMetaPayoffNotices = notices;
+    next = next.copyWith(
+      essence: next.essence + essenceGain,
+      metaDepth: next.metaDepth.copyWith(
+        claimedWillRanks: willClaims,
+        claimedGauntletMilestones: gauntletClaims,
+      ),
     );
     return MetaSystems.evaluateAchievements(next);
   }
@@ -3757,9 +4051,9 @@ class GameLogic {
     // AL drop penalty: chance to skip gear entirely (pets / HM / elites blunt).
     final skipChance = (ascensionLevel * ascensionDropPenalty -
             lootFindPercent / 100.0 -
-            hm * 0.01 -
+            hm * 0.012 -
             roleSkipRelief)
-        .clamp(0.0, 0.75);
+        .clamp(0.0, 0.55);
     if (random.nextDouble() < skipChance) {
       return <LootDrop>[
         const LootDrop(
@@ -3786,30 +4080,34 @@ class GameLogic {
         .where((s) => s != EquipmentSlot.consumable)
         .toList();
 
-    (HeroRole bias, ArmorType? preferred) pickBias() {
+    (HeroRole bias, ArmorType? preferred, SpecRoleTag? roleTag) pickBias() {
       final target = _lootTargetHero(party);
       if (target != null) {
         return (
           _equipScoreRole(target.spec),
           preferredArmorForSpec(target.spec, max(1, battleNumber)),
+          target.spec.roleTag,
         );
       }
       return (
         HeroRole.values[random.nextInt(HeroRole.values.length)],
         null,
+        null,
       );
     }
 
     final slot = slots[random.nextInt(slots.length)];
-    final (bias, preferredArmor) = pickBias();
+    final (bias, preferredArmor, roleTag) = pickBias();
     final piece = createEquipment(
       slot: slot,
       rarity: primaryRarity,
       battleNumber: battleNumber,
       bias: bias,
       preferredArmor: preferredArmor,
+      roleTag: roleTag,
       dungeonId: dungeonId,
       ascensionLevel: ascensionLevel,
+      hardmodeLevel: hardmodeLevel,
     );
     final drops = <LootDrop>[
       LootDrop(
@@ -3833,7 +4131,7 @@ class GameLogic {
     if (battleNumber >= 4 &&
         random.nextDouble() < secondChance.clamp(0.0, secondCap)) {
       final slot2 = slots[random.nextInt(slots.length)];
-      final (bias2, preferred2) = pickBias();
+      final (bias2, preferred2, roleTag2) = pickBias();
       final rarity2 = primaryRarity.index > 0
           ? LootRarity.values[primaryRarity.index - 1]
           : LootRarity.common;
@@ -3843,8 +4141,10 @@ class GameLogic {
         battleNumber: battleNumber,
         bias: bias2,
         preferredArmor: preferred2,
+        roleTag: roleTag2,
         dungeonId: dungeonId,
         ascensionLevel: ascensionLevel,
+        hardmodeLevel: hardmodeLevel,
       );
       drops.add(
         LootDrop(
@@ -3977,8 +4277,10 @@ class GameLogic {
     required int battleNumber,
     HeroRole? bias,
     ArmorType? preferredArmor,
+    SpecRoleTag? roleTag,
     String? dungeonId,
     int ascensionLevel = 0,
+    int hardmodeLevel = 0,
   }) {
     EquipmentFactory.random = random;
     return EquipmentFactory.create(
@@ -3987,24 +4289,71 @@ class GameLogic {
       battleNumber: battleNumber,
       bias: bias,
       preferredArmor: preferredArmor,
+      roleTag: roleTag,
       dungeonId: dungeonId,
       ascensionLevel: ascensionLevel,
+      hardmodeLevel: hardmodeLevel,
     );
   }
 
-  /// Item level from floor + rarity + dungeon/AL band.
+  /// Item level from floor + rarity + dungeon/AL/HM band (soft-capped late).
   static int itemLevelFor({
     required int battleNumber,
     required LootRarity rarity,
     String? dungeonId,
     int ascensionLevel = 0,
+    int hardmodeLevel = 0,
   }) =>
       EquipmentFactory.itemLevelFor(
         battleNumber: battleNumber,
         rarity: rarity,
         dungeonId: dungeonId,
         ascensionLevel: ascensionLevel,
+        hardmodeLevel: hardmodeLevel,
       );
+
+  /// Recommended auto-sell iLvl ceiling for the player's progression.
+  static int maxAutoSellIlvlCap(GameState state) {
+    final fromDungeon = state.highestDungeonCleared * 22;
+    final fromAl = state.ascensionLevel * 4;
+    return (60 + fromDungeon + fromAl).clamp(60, 200);
+  }
+
+  /// Scale a soulbound piece so Ascend AL keeps it relevant vs new drops.
+  static EquipmentItem scaleSoulboundForAl(
+    EquipmentItem item,
+    int ascensionLevel,
+  ) {
+    final al = ascensionLevel.clamp(0, 40);
+    final targetIlvl = max(item.effectiveItemLevel, 20 + al * 3);
+    if (targetIlvl <= item.effectiveItemLevel) {
+      return item.copyWith(itemLevel: item.effectiveItemLevel);
+    }
+    final ratio = targetIlvl / max(1, item.effectiveItemLevel);
+    int bump(int v) {
+      if (v <= 0) return 0;
+      return max(v, (v * ratio).round());
+    }
+
+    return item.copyWith(
+      itemLevel: targetIlvl,
+      strengthBonus: bump(item.strengthBonus),
+      agilityBonus: bump(item.agilityBonus),
+      staminaBonus: bump(item.staminaBonus),
+      intellectBonus: bump(item.intellectBonus),
+      spiritBonus: bump(item.spiritBonus),
+      spellPowerBonus: bump(item.spellPowerBonus),
+      armorBonus: bump(item.armorBonus),
+      attackBonus: bump(item.attackBonus),
+      defenseBonus: bump(item.defenseBonus),
+      vitalityBonus: bump(item.vitalityBonus),
+      mp5Bonus: bump(item.mp5Bonus),
+      critChanceBonus: bump(item.critChanceBonus),
+      attackSpeedBonus: bump(item.attackSpeedBonus),
+      moveSpeedBonus: bump(item.moveSpeedBonus),
+      effectValue: bump(item.effectValue),
+    );
+  }
 
   static String _equipmentNameFor(
     EquipmentSlot slot,
@@ -4548,12 +4897,20 @@ class GameLogic {
   }
 
   /// Class-aware score for deciding whether gear is an upgrade for a hero.
+  ///
+  /// When [specId] is set, weights follow [EquipStatWeights.forSpec] so BiS
+  /// matches CombatRatings (tank Sta/Armor, Str-DPS, Agi-DPS, Int>SP casters).
   static int roleEquipScore(
     HeroRole role,
     EquipmentItem item, {
     HeroSpecId? specId,
     int level = 60,
   }) {
+    final spec = specId != null ? HeroSpecs.def(specId) : null;
+    final w = spec != null
+        ? EquipStatWeights.forSpec(spec)
+        : EquipStatWeights.forRole(role);
+    final roleTag = spec?.roleTag;
     final str = item.strengthBonus;
     final agi = item.agilityBonus;
     final sta = item.resolvedStamina;
@@ -4566,51 +4923,58 @@ class GameLogic {
     final move = item.moveSpeedBonus;
     final mp5 = item.mp5Bonus;
     final effect = switch (item.effectId) {
-      GearEffectId.lifesteal => switch (role) {
-          HeroRole.warrior => item.effectValue * 4,
-          HeroRole.rogue => item.effectValue * 2,
+      GearEffectId.lifesteal => switch (roleTag ?? _tagForRole(role)) {
+          SpecRoleTag.tank => item.effectValue * 5,
+          SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
+            item.effectValue * 3,
           _ => item.effectValue,
         },
-      GearEffectId.pierce => switch (role) {
-          HeroRole.mage => 24,
-          HeroRole.rogue => 12,
+      GearEffectId.pierce => switch (roleTag ?? _tagForRole(role)) {
+          SpecRoleTag.caster => 24,
+          SpecRoleTag.meleeDps || SpecRoleTag.rangedDps => 12,
           _ => 6,
         },
-      GearEffectId.crit => switch (role) {
-          HeroRole.rogue => item.effectValue * 4,
-          HeroRole.mage => item.effectValue * 2,
+      GearEffectId.crit => switch (roleTag ?? _tagForRole(role)) {
+          SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
+            item.effectValue * 4,
+          SpecRoleTag.caster => item.effectValue * 3,
+          SpecRoleTag.healer => item.effectValue * 2,
           _ => item.effectValue,
         },
-      GearEffectId.haste => switch (role) {
-          HeroRole.mage || HeroRole.healer => item.effectValue * 3,
-          HeroRole.rogue => item.effectValue * 2,
+      GearEffectId.haste => switch (roleTag ?? _tagForRole(role)) {
+          SpecRoleTag.caster || SpecRoleTag.healer => item.effectValue * 3,
+          SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
+            item.effectValue * 2,
           _ => item.effectValue,
         },
       GearEffectId.goldFind => item.effectValue,
       GearEffectId.none => 0,
     };
-    final core = switch (role) {
-      HeroRole.warrior =>
-        (sta * 10 + armor * 9 + str * 8.5 + agi * 4.5 + spi).round() +
-            item.attackBonus * 2,
-      HeroRole.healer =>
-        (sp * 10 + spi * 9.5 + intel * 8.5 + mp5 * 7 + sta * 4 + crit * 3.5)
-            .round(),
-      HeroRole.mage =>
-        (intel * 10 + sp * 9.5 + crit * 8.5 + spi * 5.5 + sta * 3.5).round(),
-      HeroRole.rogue =>
-        (agi * 10 + str * 7.5 + crit * 7 + sta * 4 + aspd * 5 + move * 3)
-            .round() +
-            item.attackBonus * 2,
-    };
+    final core = (str * w.str +
+            agi * w.agi +
+            sta * w.sta +
+            intel * w.intel +
+            spi * w.spi +
+            sp * w.sp +
+            armor * w.armor +
+            crit * w.crit +
+            aspd * w.aspd +
+            move * w.move +
+            mp5 * w.mp5)
+        .round() +
+        (item.attackBonus * w.flatAtk).round();
+    // Affinity is a strong class-identity signal so mage-tagged Int weapons
+    // land on casters even when healer SP weights score nearly the same.
+    final affinityRole = spec?.gearAffinity ?? role;
     var score = core +
         effect +
         item.rarity.index * 2 +
-        item.effectiveItemLevel +
-        (item.affinity == role.name ? 8 : 0);
+        // Soft ilvl tie-break — stats/rarity/set dominate BiS.
+        (item.effectiveItemLevel ~/ 4) +
+        (item.affinity == affinityRole.name ? 24 : 0);
     // Prefer the heaviest armor the spec can wear (stops cloth beating mail).
-    if (specId != null && item.armorType != null) {
-      final preferred = preferredArmorForSpec(HeroSpecs.def(specId), level);
+    if (spec != null && item.armorType != null) {
+      final preferred = preferredArmorForSpec(spec, level);
       if (preferred != null) {
         if (item.armorType == preferred) {
           score += 32;
@@ -4621,6 +4985,13 @@ class GameLogic {
     }
     return score;
   }
+
+  static SpecRoleTag _tagForRole(HeroRole role) => switch (role) {
+        HeroRole.warrior => SpecRoleTag.meleeDps,
+        HeroRole.rogue => SpecRoleTag.meleeDps,
+        HeroRole.healer => SpecRoleTag.healer,
+        HeroRole.mage => SpecRoleTag.caster,
+      };
 
   /// Compare a bag candidate against what a hero wears in that slot family.
   ///
@@ -4717,8 +5088,66 @@ class GameLogic {
       atkDelta: newAtk - curAtk,
       defDelta: candidate.resolvedArmor - curDef,
       vitDelta: candidate.resolvedStamina - curVit,
-      isUpgrade: powerDelta > 0,
+      isUpgrade: isMeaningfulEquipUpgrade(
+        hero: hero,
+        item: candidate,
+        curScore: curScore,
+        newScore: newScore,
+        slotEmpty: current == null,
+      ),
     );
+  }
+
+  /// Role-weighted primary mass (excludes rarity / ilvl / affinity crumbs).
+  static double roleRelevantStatMass(PartyHero hero, EquipmentItem item) {
+    final w = EquipStatWeights.forSpec(hero.spec);
+    return item.strengthBonus * w.str +
+        item.agilityBonus * w.agi +
+        item.resolvedStamina * w.sta +
+        item.intellectBonus * w.intel +
+        item.spiritBonus * w.spi +
+        item.spellPowerBonus * w.sp +
+        item.resolvedArmor * w.armor +
+        item.critChanceBonus * w.crit +
+        item.attackSpeedBonus * w.aspd +
+        item.attackBonus * w.flatAtk;
+  }
+
+  /// Empty slots only fill role-plausible gear (not every wearable crumb).
+  static bool emptySlotWorthFilling(PartyHero hero, EquipmentItem item, int score) {
+    final spec = hero.spec;
+    if (item.affinity != null && item.affinity == spec.gearAffinity.name) {
+      return true;
+    }
+    final preferred = preferredArmorForSpec(spec, hero.level);
+    if (preferred != null && item.armorType == preferred) {
+      return true;
+    }
+    final mass = roleRelevantStatMass(hero, item);
+    // Real primary stack for this role, or an obviously strong piece.
+    if (mass >= 28) return true;
+    if (score >= 90 && mass >= 12) return true;
+    return false;
+  }
+
+  /// Clear upgrade bar shared by Auto Equip, UI badges, and keep/sell helpers.
+  ///
+  /// Empty slots use [emptySlotWorthFilling]. Worn slots need a meaningful
+  /// delta so +1 rarity/ilvl noise does not thrash gear.
+  static bool isMeaningfulEquipUpgrade({
+    required PartyHero hero,
+    required EquipmentItem item,
+    required int curScore,
+    required int newScore,
+    required bool slotEmpty,
+  }) {
+    final delta = newScore - curScore;
+    if (delta <= 0) return false;
+    if (slotEmpty) {
+      return emptySlotWorthFilling(hero, item, newScore);
+    }
+    final minDelta = max(6, (curScore * 0.03).ceil());
+    return delta >= minDelta;
   }
 
   /// Planned stash→slot upgrades from BiS assignment (shared by Auto Equip / Sell Junk).
@@ -4803,7 +5232,13 @@ class GameLogic {
               if (reserved.contains(entry.item.id)) continue;
               if (!canHeroReceive(hero, entry.item, slot: slot)) continue;
               final sc = slotEquipScore(hero, entry.item, slot: slot);
-              if (sc > curScore) {
+              if (isMeaningfulEquipUpgrade(
+                hero: hero,
+                item: entry.item,
+                curScore: curScore,
+                newScore: sc,
+                slotEmpty: cur == null,
+              )) {
                 usedLocal.add(entry.item.id);
                 proposals.add((
                   heroIndex: hi,
@@ -5140,7 +5575,12 @@ class GameLogic {
   /// Empty slots alone do not keep forever — BiS plan covers meaningful fills.
   static bool _shouldKeepInBag(GameState state, EquipmentItem item) {
     if (item.isApex) return true;
-    final plan = planBiSAssignments(state);
+    // Pickup path: candidate is not in stash yet — probe as if stashed so BiS
+    // planning can claim it before auto-sell.
+    final probe = state.gearStash.any((g) => g.id == item.id)
+        ? state
+        : state.copyWith(gearStash: [...state.gearStash, item]);
+    final plan = planBiSAssignments(probe);
     if (plan.any((p) => p.itemId == item.id)) {
       return true;
     }
@@ -5180,15 +5620,16 @@ class GameLogic {
       }
       EquipmentItem? best;
       var bestScore = -999999;
-      var bestPower = -1;
+      var bestIlvl = -1;
       for (final other in state.gearStash) {
         if (other.slot != item.slot) continue;
         final score = _partySlotScore(state, other);
+        final ilvl = other.effectiveItemLevel;
         if (score > bestScore ||
-            (score == bestScore && other.powerScore > bestPower)) {
+            (score == bestScore && ilvl > bestIlvl)) {
           best = other;
           bestScore = score;
-          bestPower = other.powerScore;
+          bestIlvl = ilvl;
         }
       }
       return best?.id == item.id;
@@ -5196,6 +5637,12 @@ class GameLogic {
     if (_shouldKeepInBag(state, item)) {
       return true;
     }
+    // Unify with pickup auto-sell: at/below iLvl cap → junk unless BiS/upgrade.
+    if (state.autoSellMaxPower > 0 &&
+        item.effectiveItemLevel <= state.autoSellMaxPower) {
+      return false;
+    }
+    // Above the cap: keep rare+ while the bag still has room.
     if (item.rarity.index >= LootRarity.rare.index) {
       return true;
     }
@@ -5280,10 +5727,12 @@ class GameLogic {
   /// Last [autoSellJunk] sell count (consumed by UI toasts).
   static int lastAutoSellCount = 0;
 
-  /// Sell common / weak uncommon stash pieces that are not BiS or upgrades.
+  /// Sell stash pieces that are not BiS/upgrades.
   ///
-  /// Rare+ kept when bag has room. Starting at ≥90% capacity runs an unstick
-  /// pass that keeps only the strongest piece per slot (plus soulbound).
+  /// Matches pickup auto-sell: at/below [GameState.autoSellMaxPower] iLvl is
+  /// junk (unless BiS/upgrade). Rare+ above the cap are kept while the bag has
+  /// room. At ≥90% capacity an unstick pass keeps only BiS/soulbound/apex and
+  /// the strongest piece per slot.
   static GameState autoSellJunk(GameState state) {
     var essence = state.essence;
     // Multi-pass: after selling, another piece may become "best for empty".
@@ -5445,14 +5894,23 @@ class GameLogic {
       drops = recentLoot;
     }
     final goldMul = awarded.inGauntlet
-        ? gauntletGoldMul(room.floorNumber)
+        ? gauntletGoldMul(
+            room.floorNumber,
+            prestigeBonusLevel: awarded.metaDepth.gauntletGoldBonusLevel,
+          )
         : 1.0;
+    // Combat kill gold is credited live via [creditCombatGold]. Clear only
+    // pays treasure/chest budgets (and any explicit leftover goldGain).
     final goldAwarded =
         applyGoldGain(awarded, (goldGain * goldMul).round());
-    final highest = max(awarded.highestFloorCleared, room.floorNumber);
     final farmLoop = awarded.dungeonMode == DungeonMode.farm;
     final clearedBoss = bossesCleared > 0;
     final gauntlet = awarded.inGauntlet;
+    // Zone HFC only — Gauntlet climb lives on metaDepth.gauntletBestFloor
+    // so Ascend fragments keep using real zone clears.
+    final highest = gauntlet
+        ? awarded.highestFloorCleared
+        : max(awarded.highestFloorCleared, room.floorNumber);
     awarded = grantBossCraftMats(awarded, clearedBoss: clearedBoss);
     // Auto-wear clear upgrades so bag loot powers the party every Ascension.
     awarded = autoEquipBetterGear(awarded);
@@ -5576,8 +6034,12 @@ class GameLogic {
         trophies.add(before.dungeonId);
       }
     }
-    // Weekly: push clears (or any boss) so farm/gauntlet can't finish in loops.
-    final weeklyBump = (!suppressMetaMint || bossKill > 0) && !before.inGauntlet
+    // Weekly: push clears (or any boss). Gauntlet clears count at AL10+.
+    // Farm loops never mint weekly progress.
+    final gauntletWeekly =
+        before.inGauntlet && before.ascensionLevel >= gauntletMinAscension;
+    final weeklyBump = (!farmLoop && (!before.inGauntlet || gauntletWeekly)) ||
+            (bossKill > 0 && !before.inGauntlet)
         ? 1
         : 0;
     final hmCleared = before.hardmodeLevel.clamp(0, 10);
@@ -5591,10 +6053,14 @@ class GameLogic {
           hmCleared,
         ),
         zoneTrophies: trophies,
-        weeklyProgress: min(3, next.metaDepth.weeklyProgress + weeklyBump),
+        weeklyProgress: min(
+          weeklyClearTarget,
+          next.metaDepth.weeklyProgress + weeklyBump,
+        ),
       ),
     );
     next = MetaSystems.evaluateAchievements(next);
+    next = syncMetaPayoffs(next);
     return next;
   }
 
@@ -5606,7 +6072,8 @@ class GameLogic {
     if (state.dungeonId != MetaSystems.dailyDungeonId(now)) return state;
     // Must still be on today's Daily layout seed (not a normal re-enter).
     if (state.layoutSeed != MetaSystems.dailySeed(now)) return state;
-    const dailyEssenceReward = 25;
+    final dailyEssenceReward =
+        25 + state.metaDepth.dailyEssenceBonusLevel * 5;
     return state.copyWith(
       dailyClaimed: true,
       essence: state.essence + dailyEssenceReward,
