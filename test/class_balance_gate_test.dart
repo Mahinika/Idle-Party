@@ -9,7 +9,8 @@ void main() {
   test('live light class balance gate', () {
     final report = runClassBalanceSim(const [
       '--quick',
-      '--trials=4',
+      // Slightly more trials than the old 4 — cuts CI noise on ±20% edge kits.
+      '--trials=6',
       '--mode=live',
     ]);
     expect(report, contains('Class balance simulation'));

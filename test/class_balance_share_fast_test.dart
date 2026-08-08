@@ -11,10 +11,13 @@ void main() {
       '--share-only',
       '--trials=2',
       '--mode=live',
-      '--focus=demonology,affliction,elemental,balance',
+      '--focus=demonology,affliction,destruction,combat',
     ]);
     expect(report, contains('share-only: true'));
-    expect(report, contains('focus: demonology, affliction, elemental, balance'));
+    expect(
+      report,
+      contains('focus: demonology, affliction, destruction, combat'),
+    );
     expect(report, contains('| spec | share% | vs med | flag |'));
     expect(report, contains('Wrote tool/out/class_balance_share.json'));
   }, timeout: const Timeout(Duration(minutes: 4)));

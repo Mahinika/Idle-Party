@@ -3502,7 +3502,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 1.78,
+      coeff: 1.64,
     ),
     ClassAbilityDef(
       id: AbilityId.shadowWard,

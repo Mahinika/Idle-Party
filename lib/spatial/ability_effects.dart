@@ -402,7 +402,7 @@ abstract final class AbilityEffectRunner {
         hero.kitRootBonus += 1.0;
 
       // —— casters: identity buffs; spam tax is casterAbilityTax only ——
-      // Mild ~8–12% trim on top live-light HIGH casters (Destro/Demo/Arcane/Frost/Shadow/Balance).
+      // Mild trim so live-light gate stays inside ±20% (aff/demo/destro tip HIGH).
       case AbilityId.shadowform:
         hero.kitOutMul *= 1.02;
         hero.kitInMul *= 1.04;
@@ -410,20 +410,20 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 0.98;
         hero.kitHasteMul *= 1.04;
       case AbilityId.arcanePowerPassive:
-        hero.kitOutMul *= 1.04;
+        hero.kitOutMul *= 0.98;
       case AbilityId.frostArmor:
         hero.kitInMul *= 0.92;
         hero.kitOutMul *= 1.00;
         hero.kitRootBonus += 0.5;
       case AbilityId.soulSiphon:
-        hero.kitOutMul *= 1.10;
-        hero.kitHealMul *= 1.10;
+        hero.kitOutMul *= 1.02;
+        hero.kitHealMul *= 1.08;
       case AbilityId.demonicKnowledge:
         // Pet-family identity: modest personal power + haste; pet AA/empower carries share.
-        hero.kitOutMul *= 0.94;
+        hero.kitOutMul *= 0.90;
         hero.kitHasteMul *= 1.04;
       case AbilityId.cataclysm:
-        hero.kitOutMul *= 1.02;
+        hero.kitOutMul *= 0.95;
       case AbilityId.moonkinForm:
         hero.kitOutMul *= 0.96;
 

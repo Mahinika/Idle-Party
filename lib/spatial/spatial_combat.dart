@@ -2429,7 +2429,7 @@ abstract final class SpatialCombat {
     if (rogue.heroSpecId == HeroSpecId.combat ||
         rogue.heroSpecId == null) {
       // Combo + Blade Flurry inflate share; keep below melee band.
-      rogue.kitOutMul = 0.90;
+      rogue.kitOutMul = 0.86;
     }
     if (focusEnemy != null) {
       _gainRage(rogue, 10 * dt);

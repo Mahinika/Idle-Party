@@ -292,14 +292,16 @@ _AggRow _runAgg({
   final focusHp = <double>[];
 
   for (var t = 0; t < trials; t++) {
+    final trialSeed = 1000 + t * 97 + floor * 13 + focusSpec.index * 3;
     seedEquipmentRng(42 + t);
+    GameLogic.random = Random(trialSeed ^ 0x5EED);
     var state = createPartyState(partySpecs: partySpecs);
     state = prepareSimParty(state, band: band, partyLevel: partyLevel);
     state = enterFloor(
       state,
       dungeonId: dungeonId,
       floor: floor,
-      seed: 1000 + t * 97 + floor * 13 + focusSpec.index * 3,
+      seed: trialSeed,
     );
     final r = simulateFloor(state, mode: mode);
     if (r.cleared) {
