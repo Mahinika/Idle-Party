@@ -10,12 +10,14 @@ Package id: **`com.idleparty.app`**
 | Play Console app | ⏳ | Create when ready; id `com.idleparty.app` |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ⏳ | Prep URL: repo `docs/PRIVACY.md` on main |
-| Data safety form | ⏳ | Match PRIVACY: local save, no ads/accounts/analytics servers |
-| IARC / content rating | ❌ | Mild fantasy combat; no chat / gambling / ads |
-| Store listing copy (EN) | ⏳ | Idle Party short + full; no Flutter placeholders |
-| Screenshots + feature graphic | ❌ | Hub + dungeon; icon `assets/custom/ui/app_icon.png` |
+| Data safety form | ✅ draft | Answers in [`docs/store/LISTING.md`](store/LISTING.md) (paste into Console) |
+| IARC / content rating | ✅ draft | Questionnaire answers in `docs/store/LISTING.md` — submit in Console |
+| Store listing copy (EN) | ✅ draft | Short + full description in `docs/store/LISTING.md` |
+| Screenshots + feature graphic | ✅ draft | `docs/store/screenshots/` + `feature_graphic.png` / `icon_512.png` |
 | Internal testing track | ❌ | Upload AAB; smoke hub → dungeon → leave → relaunch |
 | Production listing | ❌ | Optional; GitHub Releases remains valid forever |
+
+Listing pack: [`docs/store/LISTING.md`](store/LISTING.md). Recapture phone shots: `py -3 tool/capture_store_screenshots.py` (Flutter web on `:8080`).
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
 
@@ -50,9 +52,11 @@ When you choose to publish on Play, complete the checklists below. Until then, t
 
 ## Content rating / store listing notes
 
-- [ ] Complete the content rating questionnaire (IARC). Expect a general / mild fantasy violence rating for an idle RPG with combat; no real-world gambling, no user-generated chat, no ads in the build described in PRIVACY.
-- [ ] Short description / full description: use product name **Idle Party**; avoid placeholder Flutter text.
-- [ ] Screenshots and feature graphic from current hub/dungeon UI; icon from `assets/custom/ui/app_icon.png` (or Play-exported adaptive icon).
+- [x] Draft IARC answers + listing copy: [`docs/store/LISTING.md`](store/LISTING.md) (still submit/paste in Play Console).
+- [x] Screenshots + feature graphic prepared under `docs/store/` (re-run `tool/capture_store_screenshots.py` after big UI changes).
+- [ ] Complete the content rating questionnaire (IARC) **in Play Console** using the draft answers.
+- [ ] Paste short / full description from LISTING.md; avoid placeholder Flutter text.
+- [ ] Upload icon (`docs/store/icon_512.png` or `assets/custom/ui/app_icon.png`), feature graphic, and phone screenshots.
 - [ ] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*`.
 
 ## Production listing
