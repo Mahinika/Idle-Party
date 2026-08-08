@@ -32,7 +32,7 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 5. **`suggesting-skills`**: prefer **silently following** the right skill over asking “vill du att jag använder skill X?”. Only mention a skill name if teaching them later helps — default is just do it.
 6. **After UI/meta changes**: verify somehow (tests and/or short browser check) without asking permission.
 7. **After kit number tweaks**: run the fast balance check; if CI gate would fail, keep fixing (`grinding-until-pass`) before declaring done.
-8. **Commits / push / PR**: still only when they ask (unless they already asked in this chat).
+8. **Commits / push / PR / tags:** when work is ship-shaped, **propose** them once with a clear yes/no (see `owner-preferences`). Do not push silently; do not wait forever without offering.
 
 ## Questions you MAY ask
 

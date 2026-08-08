@@ -13,7 +13,7 @@ Source: owner answers (vibe-coder). Agents follow these without re-asking.
 
 - Goal: **Google Play “for real” soon** (not sideload-only forever).
 - Prefer work that unblocks Play: signing secrets checklist, privacy URL, listing copy, screenshots, IARC, internal testing → production path in `docs/PLAY_STORE.md`.
-- GitHub Releases remain useful, but **do not treat sideload-only as the end state**.
+- **Current fact:** GitHub Releases (APK/AAB) is the primary install path until Play ships — follow `docs/PLAY_STORE.md` for operator checklists. Do not pretend the Play listing already exists.
 
 ## Work style
 
