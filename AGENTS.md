@@ -19,6 +19,21 @@ flutter test
 flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
 
+### Agent tooling (balance / honesty / QA)
+
+```bash
+# Fast DPS share board while nerfing kits (writes tool/out/class_balance_share.json)
+flutter test test/class_balance_share_fast_test.dart --reporter expanded
+
+# CI gate: live light, fail on DPS HIGH
+flutter test test/class_balance_gate_test.dart
+
+# What’s New ↔ pubspec ↔ shipped zones
+flutter test test/changelog_sync_test.dart
+```
+
+Skills: `.cursor/skills/hub-smoke`, `zone-art-identity`, `browser-playtest`, `flutter-verify`.
+
 ## Architecture
 
 ```
