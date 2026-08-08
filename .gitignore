@@ -81,3 +81,5 @@ IdleSword*
 /Visit Kenney*
 /assets.json
 .cursor/
+!.cursor/skills/
+!.cursor/skills/**/
