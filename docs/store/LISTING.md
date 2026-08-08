@@ -41,13 +41,16 @@ Idle Party is a single-player game. Sit back, peek in, and nudge the party when 
 
 ## App category / tags (suggestion)
 
-- Category: **Game → Role Playing** (or Idle / Casual if Console prompts)
-- Tags: idle, RPG, party, cozy, offline
+- Category: **Game → Role Playing**
+- Tags (Play Console, up to 5): **Clicker-rollspel**, **Rollspel**, **Clicker-spel**, **Rogue-liknande spel**, **Actionrollspel**
 
-## Contact / privacy URL (prep)
+## Contact / privacy URL
 
-- Privacy: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md`
-- Prefer a stable raw or Pages URL later if Console rejects blob links.
+- Privacy (prefer raw; repo is public):  
+  `https://raw.githubusercontent.com/Mahinika/Idle-Party/main/docs/PRIVACY.md`
+- Blob also works when public:  
+  `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md`
+- Closed testing opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
 ## Data safety (match PRIVACY.md)
 
@@ -101,9 +104,10 @@ Icon source: `assets/custom/ui/app_icon.png`.
 
 ## Operator paste order
 
-1. Create app `com.idleparty.app` in Play Console  
-2. Paste short + full description  
-3. Upload icon, feature graphic, screenshots  
-4. Set privacy URL + Data safety from the table above  
-5. Run IARC questionnaire with the answers above  
-6. Upload AAB from GitHub Release `v*` (when signing secrets are set) → Internal testing  
+Most of this is **done** in Console (see [`docs/PLAY_STORE.md`](../PLAY_STORE.md)). Remaining ops focus:
+
+1. Closed Alpha: keep ≥12 testers opted in for 14 days  
+2. Smoke-install when Play shows the listing  
+3. Optional: CI signing secrets for tagged AAB builds  
+4. After 14 days: apply for production access  
+5. On each new Play upload: bump `pubspec` `+versionCode` (Play rejects reused codes)  

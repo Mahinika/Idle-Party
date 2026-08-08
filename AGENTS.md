@@ -17,8 +17,9 @@ Preferences (do not re-ask): Play Store goal soon, **large batches**, **cozy idl
 (with a clear yes/no). Chat in plain Swedish; ask only product/risk questions.
 
 **Distribution today:** GitHub Releases APK/AAB is the live path (`docs/PLAY_STORE.md`).
-Play Console is the goal — prepare listing/privacy/IARC, but do not assume Play is
-already the primary install channel.
+Play Console app exists (`com.idleparty.app`): listing + closed Alpha in progress;
+production still needs 12 closed testers × 14 days. Do not assume Play is the
+primary install channel yet.
 
 ## Legal / IP policy (mandatory)
 
@@ -58,14 +59,16 @@ flutter test test/ship_smoke_test.dart
 
 Skills under `.cursor/skills/`: domain (`spatial-combat-change`, `add-ability`,
 `new-dungeon`, `zone-art-identity`, `save-migrate`, `class-audit`, `assets-legal`,
-`flutter-verify`, `browser-playtest`, `hub-smoke`) and Cursor workflows
-(`suggesting-skills`, `building-skills-from-patterns`, `grinding-until-pass`,
-`babysitting-pr`, `parallel-ci-triage`, `verifying-in-browser`,
-`screenshotting-changelog`, `recording-browser-flow-as-test`,
-`systematic-debugging`, `reviewing-code`, `accessibility-auditing`).
+`flutter-verify`, `browser-playtest`, `hub-smoke`, `play-store-prep`, `init`)
+and Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
+`grinding-until-pass`, `babysitting-pr`, `parallel-ci-triage`,
+`verifying-in-browser`, `screenshotting-changelog`,
+`recording-browser-flow-as-test`, `systematic-debugging`, `reviewing-code`,
+`accessibility-auditing`).
 
-Cadence: `docs/CONTENT_CADENCE.md`. Roadmap: `docs/ROADMAP.md`.
-Play ops status: `docs/PLAY_STORE.md` (operator table) + skill `play-store-prep`.
+Cadence: `docs/CONTENT_CADENCE.md`. Roadmap: `docs/ROADMAP.md` (implementation
+checklist is current; the research-baseline gap table can lag — prefer this
+file + code). Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`.
 
 ### Cursor automation
 
@@ -73,8 +76,11 @@ Play ops status: `docs/PLAY_STORE.md` (operator table) + skill `play-store-prep`
   `flutter analyze lib test` (and changelog sync when version/What’s New files touched).
 - Ship bar: `.cursor/rules/definition-of-done.mdc`.
 - Fast honesty: `flutter test test/ship_smoke_test.dart`.
-- MCP: `.cursor/mcp.json` → **`idle-party`** (`tool/mcp_idle_party/`) — balance_share,
-  changelog_check, flutter_analyze/test, zone_identity, hub smoke helpers.
+- MCP: `.cursor/mcp.json` → **`idle-party`** (`tool/mcp_idle_party/`) — tools:
+  `balance_share`, `read_balance_share`, `changelog_check`, `flutter_analyze`,
+  `flutter_test`, `zone_identity`, `hub_smoke_checklist`, `playtest_bridge_snippet`.
+  Cursor may show the server as `user-idle-party` if also configured in the
+  user MCP file. `flutter_*` / `changelog_check` need Flutter on the process PATH.
 
 ## Architecture
 
@@ -157,6 +163,8 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 - Asset paths only through `KenneyAssets` / `CustomAssets` (no raw `assets/...` in UI).
 - Pixel sprites: `filterQuality: FilterQuality.none`.
 - Loadouts UI label = **LOADOUTS**; dungeon armor 2pc/4pc = **armor sets** (not the same).
+- Apex craft mats: Hell’s Gate → **Hellgate Shard**; Ashen Vault → **Ashen Shard**.
+- 5th party slot: 80 essence, AL ≥ 2 (`partySlot5Unlocked` in `metaDepth`).
 
 ## Meta (survives Ascend)
 
@@ -172,6 +180,16 @@ Gauntlet claims, weekly/season, prestige shop, unlocked specs, party slot 5, …
 non-Apex gear/stash, **loadouts**, leave dungeon; mission board rebuilt for new AL.
 
 Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
+
+### Meta loops (player-facing)
+
+- **Weekly:** hub progress `n/3` clears → claim (`weeklyClaimEssence` + optional
+  **season** +12e on first claim of the ISO month). Mods rotate per week.
+- **Will:** titles from `collectionScore`; one-time essence via `syncMetaPayoffs`
+  at claimable thresholds (excludes Wandering).
+- **Gauntlet milestones:** one-time essence at best floors **25 / 50 / 100**
+  (`GauntletMilestones`, also via `syncMetaPayoffs`).
+- Notices surface as hub/MORE toasts (`lastMetaPayoffNotices`).
 
 ## God Hand
 
