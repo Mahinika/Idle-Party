@@ -81,11 +81,8 @@ abstract final class WebClickBridge {
 
   static void unregister(String label) {
     if (!kIsWeb) return;
-    final key = _key(label);
-    final existing = _byKey[key];
-    if (existing != null && existing.layer == _layer) {
-      _byKey.remove(key);
-    }
+    // Always drop by label — dispose may run after popLayer moved _layer.
+    _byKey.remove(_key(label));
   }
 
   static Iterable<_Entry> get _activeEntries =>

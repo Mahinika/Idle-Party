@@ -74,11 +74,14 @@ abstract final class GameGuides {
       title: 'BAG & GEAR',
       body:
           'Loot drops on the floor, then goes to your stash (BAG).\n\n'
-          '• BAG: view, sell, or equip stash gear.\n'
+          '• BAG: view, sell, scrap, or equip stash gear.\n'
           '• GEAR: manage each hero’s slots (bottom nav or dock tab).\n'
-          '• Auto-Equip picks clear class upgrades (skips junk empty-fills).\n'
-          '• Auto-sell (Settings) can trash weak drops on pickup.\n'
-          '• Compare stats before equipping — iLevel and rarity matter.',
+          '• Auto-Equip picks clear class upgrades (skips low-iLvl affinity crumbs '
+          'on empty slots; worn slots need a meaningful score delta).\n'
+          '• Settings / Bag FILTERS: auto-sell weak drops for gold, '
+          'auto-disassemble for essence (iLvl + rarity filters).\n'
+          '• Near-full bag: merge → sell → scrap automatically.\n'
+          '• Compare shows Score (BiS) — swapped pieces return to the bag.',
     ),
     GuideTopic(
       id: 'combinator',
@@ -185,6 +188,7 @@ abstract final class GameGuides {
           'Each ISO week rolls a dungeon modifier (glass / swarm / elite / fortune / iron).\n\n'
           '• Clear 3 floors under that week’s modifier to fill progress (hub shows n/3).\n'
           '• Claim the weekly essence reward once progress hits 3/3.\n'
+          '• Hub TODAY card points at your next chase (weekly, daily, Will, Gauntlet, zone).\n'
           '• First claim of each calendar month also pays a season bonus.\n'
           '• Progress resets when the week key rolls over.\n'
           '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
@@ -257,7 +261,8 @@ abstract final class GameGuides {
       body:
           '• Party frame (bottom-left) shrinks on phones and fades after idle — tap to wake.\n'
           '• Party meter appears once heroes fight, heal, or take hits.\n'
-          '• Settings: text scale, reduced VFX, colorblind floaters, auto-sell.\n'
+          '• Settings: text scale, reduced VFX, colorblind floaters, '
+          'bag auto-sell / auto-disassemble.\n'
           '• MORE → GUIDES brings you back here anytime.\n'
           '• Escape / back closes overlays.',
     ),

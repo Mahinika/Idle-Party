@@ -5,8 +5,11 @@ import '../core/game_logic.dart';
 import '../models/apex_craft.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import 'character_equip_panel.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
+import 'kenney_sprite.dart';
+import 'kenney_assets.dart';
 import 'menu_chrome.dart';
 
 /// Materials Bag browser (boss-only craft mats).
@@ -28,15 +31,12 @@ class ApexMaterialsPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Boss mats for Apex gear (not gold / not essence).\n'
-          'Survives Ascend. Never stored in the gear bag.',
+          'Boss mats for Apex craft. Survive Ascend. Not in the gear bag.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Text(
-          'Farm tip: each dungeon boss drops its zone shard. '
-          'Cores / catalysts drop from any boss (party bias). '
-          'Apex Slag from Gauntlet / Crystal Spire.',
+          'Zone shards from that boss · cores any boss · Slag from Gauntlet/Spire.',
           style: GameTheme.body(size: 12, color: GameTheme.torchHot),
         ),
         const SizedBox(height: 10),
@@ -69,6 +69,12 @@ class ApexMaterialsPanel extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          KenneySprite(
+            asset: KenneyAssets.ring,
+            size: 22,
+            color: owned ? null : GameTheme.parchmentDim,
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,8 +204,7 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Craft Apex BiS from boss mats (MATERIALS tab) — not gold.\n'
-          'Weapon R1 unlocks armor. Upgrade in place to R3. Survives Ascend.',
+          'Craft Apex BiS from MATS (not gold). Weapon R1 unlocks armor · survives Ascend.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (nextFarm != null) ...[
@@ -239,7 +244,7 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
           children: [
             for (final r in roles)
               ChoiceChip(
-                label: Text(r.name, style: GameTheme.body(size: 12)),
+                label: Text(_roleLabel(r), style: GameTheme.body(size: 12)),
                 selected: _apexRole == r,
                 onSelected: (_) => setState(() => _apexRole = r),
               ),
@@ -252,7 +257,7 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
           children: [
             for (final s in ApexCraft.craftSlots)
               ChoiceChip(
-                label: Text(s.name, style: GameTheme.body(size: 12)),
+                label: Text(_slotLabel(s), style: GameTheme.body(size: 12)),
                 selected: _apexSlot == s,
                 onSelected: (_) => setState(() => _apexSlot = s),
               ),
@@ -368,4 +373,15 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
       ],
     );
   }
+
+  static String _roleLabel(SpecRoleTag r) => switch (r) {
+        SpecRoleTag.tank => 'Tank',
+        SpecRoleTag.healer => 'Healer',
+        SpecRoleTag.meleeDps => 'Melee DPS',
+        SpecRoleTag.rangedDps => 'Ranged DPS',
+        SpecRoleTag.caster => 'Caster',
+      };
+
+  static String _slotLabel(EquipmentSlot s) =>
+      CharacterEquipPanel.slotLabels[s] ?? s.name;
 }

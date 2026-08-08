@@ -94,35 +94,39 @@ Future<void> confirmLeaveDungeon(
   BuildContext context,
   VoidCallback onLeave,
 ) async {
-  final ok = await showDialog<bool>(
-    context: context,
-    barrierColor: MenuChrome.scrim,
-    builder: (ctx) => MenuChrome.dialog(
-      title: 'Return to hub?',
-      content: Text(
-        'Leave the dungeon and return to the hub. '
-        'Mid-floor combat progress on this room is lost.',
-        style: GameTheme.body(size: 15, color: GameTheme.parchment),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: Text(
-            'STAY',
-            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+  WebClickBridge.pushLayer();
+  try {
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Return to hub?',
+        content: Text(
+          'Leave the dungeon and return to the hub. '
+          'Mid-floor combat progress on this room is lost.',
+          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        ),
+        actions: [
+          KenneyButton(
+            label: 'STAY',
+            style: KenneyButtonStyle.grey,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, false),
           ),
-        ),
-        KenneyButton(
-          label: 'RETURN',
-          style: KenneyButtonStyle.grey,
-          expanded: false,
-          onPressed: () => Navigator.pop(ctx, true),
-        ),
-      ],
-    ),
-  );
-  if (ok == true && context.mounted) {
-    onLeave();
+          KenneyButton(
+            label: 'RETURN',
+            style: KenneyButtonStyle.brown,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, true),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) {
+      onLeave();
+    }
+  } finally {
+    WebClickBridge.popLayer();
   }
 }
 
@@ -133,37 +137,41 @@ Future<void> confirmGauntletRun(
   final state = director.state;
   if (!GameLogic.canEnterGauntlet(state)) return;
   final best = state.metaDepth.gauntletBestFloor;
-  final ok = await showDialog<bool>(
-    context: context,
-    barrierColor: MenuChrome.scrim,
-    builder: (ctx) => MenuChrome.dialog(
-      title: 'Infinity Gauntlet?',
-      content: Text(
-        'AL${GameLogic.gauntletMinAscension}+ endgame climb in the Crystal Spire.\n\n'
-        'Floors escalate forever — harder packs, bigger gold & essence. '
-        'Boss every 5 floors. Wipe or leave returns to hub.\n\n'
-        'Best clear: F$best',
-        style: GameTheme.body(size: 15, color: GameTheme.parchment),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: Text(
-            'CANCEL',
-            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+  WebClickBridge.pushLayer();
+  try {
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Infinity Gauntlet?',
+        content: Text(
+          'AL${GameLogic.gauntletMinAscension}+ endgame climb in the Crystal Spire.\n\n'
+          'Floors escalate forever — harder packs, bigger gold & essence. '
+          'Boss every 5 floors. Wipe or leave returns to hub.\n\n'
+          'Best clear: F$best',
+          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        ),
+        actions: [
+          KenneyButton(
+            label: 'CANCEL',
+            style: KenneyButtonStyle.grey,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, false),
           ),
-        ),
-        KenneyButton(
-          label: 'ENTER',
-          style: KenneyButtonStyle.red,
-          expanded: false,
-          onPressed: () => Navigator.pop(ctx, true),
-        ),
-      ],
-    ),
-  );
-  if (ok == true && context.mounted) {
-    director.enterGauntlet();
+          KenneyButton(
+            label: 'ENTER',
+            style: KenneyButtonStyle.red,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, true),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) {
+      director.enterGauntlet();
+    }
+  } finally {
+    WebClickBridge.popLayer();
   }
 }
 
@@ -173,34 +181,38 @@ Future<void> confirmDailyRun(
 ) async {
   if (director.isDailyClaimedToday) return;
   final dungeonId = director.dailyDungeonId;
-  final ok = await showDialog<bool>(
-    context: context,
-    barrierColor: MenuChrome.scrim,
-    builder: (ctx) => MenuChrome.dialog(
-      title: 'Daily Run?',
-      content: Text(
-        '${StoryLore.dailyRun(dungeonId)}\n\n'
-        'Starts a free seeded floor in PUSH. Leave mid-run from MORE.',
-        style: GameTheme.body(size: 15, color: GameTheme.parchment),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: Text(
-            'CANCEL',
-            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+  WebClickBridge.pushLayer();
+  try {
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Daily Run?',
+        content: Text(
+          '${StoryLore.dailyRun(dungeonId)}\n\n'
+          'Starts a free seeded floor in PUSH. Leave mid-run from MORE.',
+          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        ),
+        actions: [
+          KenneyButton(
+            label: 'CANCEL',
+            style: KenneyButtonStyle.grey,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, false),
           ),
-        ),
-        KenneyButton(
-          label: 'START',
-          style: KenneyButtonStyle.brown,
-          expanded: false,
-          onPressed: () => Navigator.pop(ctx, true),
-        ),
-      ],
-    ),
-  );
-  if (ok == true && context.mounted) {
-    director.enterDaily();
+          KenneyButton(
+            label: 'START',
+            style: KenneyButtonStyle.brown,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, true),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) {
+      director.enterDaily();
+    }
+  } finally {
+    WebClickBridge.popLayer();
   }
 }

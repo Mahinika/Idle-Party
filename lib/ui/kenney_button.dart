@@ -57,7 +57,7 @@ class KenneyButton extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: GameTheme.button(
           size: label.length > 14 ? 17 : 20,
-          color: enabled ? palette.text : GameTheme.parchmentDim,
+          color: enabled ? palette.text : const Color(0xFF6A6458),
         ),
       ),
     );
@@ -76,14 +76,14 @@ class KenneyButton extends StatelessWidget {
               colors: enabled
                   ? [palette.top, palette.bottom]
                   : [
-                      palette.top.withValues(alpha: 0.45),
-                      palette.bottom.withValues(alpha: 0.45),
+                      const Color(0xFF1A1816),
+                      const Color(0xFF121110),
                     ],
             ),
             border: Border.all(
               color: enabled
                   ? palette.border
-                  : palette.border.withValues(alpha: 0.4),
+                  : const Color(0xFF4A443C),
               width: 2,
             ),
             boxShadow: enabled

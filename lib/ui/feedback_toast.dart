@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'game_theme.dart';
 
-/// Shared feedback toast — keep above meta overlays / hub scrims so players
-/// always see director messages (equip, ascend, save, unlock, etc.).
+/// Shared feedback toast for director messages (equip, claim, unlock, etc.).
+/// Callers should hide this while full-screen meta overlays are open so it
+/// does not cover Contracts / Forge chrome.
 class FeedbackToast extends StatelessWidget {
   const FeedbackToast({
     super.key,

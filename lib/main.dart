@@ -155,32 +155,37 @@ class _GameHomePageState extends State<GameHomePage> {
 
   Future<void> _confirmNewGame(List<HeroSpecId> specs) async {
     if (_director.hasExistingSave) {
-      final ok = await showDialog<bool>(
-        context: context,
-        barrierColor: MenuChrome.scrim,
-        builder: (ctx) => MenuChrome.dialog(
-          title: 'Overwrite save?',
-          content: Text(
-            'Starting a new game erases your current progress.',
-            style: GameTheme.body(size: 15, color: GameTheme.parchment),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(
-                'CANCEL',
-                style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+      WebClickBridge.pushLayer();
+      bool? ok;
+      try {
+        ok = await showDialog<bool>(
+          context: context,
+          barrierColor: MenuChrome.scrim,
+          builder: (ctx) => MenuChrome.dialog(
+            title: 'Overwrite save?',
+            content: Text(
+              'Starting a new game erases your current progress.',
+              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            ),
+            actions: [
+              KenneyButton(
+                label: 'CANCEL',
+                style: KenneyButtonStyle.grey,
+                expanded: false,
+                onPressed: () => Navigator.pop(ctx, false),
               ),
-            ),
-            KenneyButton(
-              label: 'OVERWRITE',
-              expanded: false,
-              style: KenneyButtonStyle.red,
-              onPressed: () => Navigator.pop(ctx, true),
-            ),
-          ],
-        ),
-      );
+              KenneyButton(
+                label: 'OVERWRITE',
+                expanded: false,
+                style: KenneyButtonStyle.red,
+                onPressed: () => Navigator.pop(ctx, true),
+              ),
+            ],
+          ),
+        );
+      } finally {
+        WebClickBridge.popLayer();
+      }
       if (ok != true || !mounted) {
         setState(() => _phase = _AppPhase.startMenu);
         return;

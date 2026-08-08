@@ -15,6 +15,7 @@ import 'kenney_assets.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
+import 'web_click_bridge.dart';
 
 /// Local achievements list — unlocked ids come from `GameState.achievements`.
 class AchievementsOverlay extends StatelessWidget {
@@ -500,11 +501,13 @@ class _ActiveSlotChip extends StatelessWidget {
           onPressed: onTap,
         ),
         if (onClear != null && !locked)
-          TextButton(
-            onPressed: onClear,
-            child: Text(
-              'CLEAR',
-              style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: KenneyButton(
+              label: 'CLEAR',
+              style: KenneyButtonStyle.grey,
+              expanded: false,
+              onPressed: onClear,
             ),
           ),
       ],
@@ -648,8 +651,8 @@ class LoadoutsOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Capture each hero\'s equipped gear into a preset, then swap '
-          'instantly later. Missing items are skipped (toast shows count).',
+          'Save equipped gear into a preset, then swap instantly. '
+          'Empty slots: SAVE first — APPLY stays off until something is saved.',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
@@ -664,6 +667,15 @@ class LoadoutsOverlay extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
+        if (state.loadouts.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Tip: gear up in BAG, then SAVE Slot 1 before a tough zone.',
+              textAlign: TextAlign.center,
+              style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+            ),
+          ),
       ],
     );
   }
@@ -725,6 +737,9 @@ class _LoadoutSlotRow extends StatelessWidget {
               Expanded(
                 child: KenneyButton(
                   label: 'APPLY',
+                  style: saved
+                      ? KenneyButtonStyle.brown
+                      : KenneyButtonStyle.grey,
                   onPressed: saved ? onApply : null,
                 ),
               ),
@@ -981,37 +996,54 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
       if (weeklyReady) 'Weekly ready',
     ];
 
+    final headerLabel = _expanded
+        ? (activeBits.isEmpty
+            ? '▾ CHALLENGES off'
+            : '▾ CHALLENGES ${activeBits.join(' · ')}')
+        : (activeBits.isEmpty
+            ? '▸ CHALLENGES off'
+            : '▸ CHALLENGES ${activeBits.join(' · ')}');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InkWell(
-          onTap: () => setState(() => _expanded = !_expanded),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Text(
-                  _expanded ? '▾ CHALLENGES' : '▸ CHALLENGES',
-                  style: GameTheme.pixel(
-                    size: 8,
-                    color: GameTheme.torchHot,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    activeBits.isEmpty
-                        ? 'off'
-                        : activeBits.join(' · '),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchmentDim,
+        WebClickScope(
+          label: headerLabel,
+          onPressed: () => setState(() => _expanded = !_expanded),
+          child: Semantics(
+            button: true,
+            label: headerLabel,
+            excludeSemantics: true,
+            child: InkWell(
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Text(
+                      _expanded ? '▾ CHALLENGES' : '▸ CHALLENGES',
+                      style: GameTheme.pixel(
+                        size: 8,
+                        color: GameTheme.torchHot,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        activeBits.isEmpty
+                            ? 'off'
+                            : activeBits.join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.body(
+                          size: 13,
+                          color: GameTheme.parchmentDim,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -1130,7 +1162,11 @@ class _HardmodeStepper extends StatelessWidget {
               foregroundColor: GameTheme.parchment,
             ),
             onPressed: level > 0 ? () => onChanged(level - 1) : null,
-            child: Text('-', style: GameTheme.pixel(size: 10)),
+            child: WebClickScope(
+              label: 'HARDMODE -',
+              onPressed: level > 0 ? () => onChanged(level - 1) : null,
+              child: Text('-', style: GameTheme.pixel(size: 10)),
+            ),
           ),
           Expanded(
             child: Column(
@@ -1159,7 +1195,12 @@ class _HardmodeStepper extends StatelessWidget {
               foregroundColor: GameTheme.parchment,
             ),
             onPressed: level < maxLevel ? () => onChanged(level + 1) : null,
-            child: Text('+', style: GameTheme.pixel(size: 10)),
+            child: WebClickScope(
+              label: 'HARDMODE +',
+              onPressed:
+                  level < maxLevel ? () => onChanged(level + 1) : null,
+              child: Text('+', style: GameTheme.pixel(size: 10)),
+            ),
           ),
         ],
       ),
@@ -1180,29 +1221,38 @@ class _ChallengeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: active
-                ? GameTheme.stoneRaised.withValues(alpha: 0.9)
-                : GameTheme.menuCard,
+    return WebClickScope(
+      label: label,
+      onPressed: onTap,
+      child: Semantics(
+        button: true,
+        label: label,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
             borderRadius: BorderRadius.circular(4),
-            border: Border.all(
-              color: active ? GameTheme.torchHot : GameTheme.border,
-              width: active ? 2 : 1,
-            ),
-          ),
-          child: Text(
-            label,
-            style: GameTheme.pixel(
-              size: 6,
-              color: active ? GameTheme.torchHot : GameTheme.parchmentDim,
+            child: Container(
+              constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: active
+                    ? GameTheme.stoneRaised.withValues(alpha: 0.9)
+                    : GameTheme.menuCard,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: active ? GameTheme.torchHot : GameTheme.border,
+                  width: active ? 2 : 1,
+                ),
+              ),
+              child: Text(
+                label,
+                style: GameTheme.pixel(
+                  size: 6,
+                  color: active ? GameTheme.torchHot : GameTheme.parchmentDim,
+                ),
+              ),
             ),
           ),
         ),
@@ -1448,7 +1498,11 @@ class PrestigeShopOverlay extends StatelessWidget {
                           ),
                         ),
                         KenneyButton(
-                          label: 'BUY',
+                          label: locked
+                              ? 'AL${item.minAl}+'
+                              : atCap
+                                  ? 'MAX'
+                                  : 'BUY ${item.cost}e',
                           expanded: false,
                           onPressed: canBuy
                               ? () => director.buyPrestigeShopItem(item.id)

@@ -827,9 +827,9 @@ abstract final class KenneyAssets {
         GameLogic.warBannerRelic => relicWarBanner,
         GameLogic.ironWardRelic => relicIronWard,
         GameLogic.phoenixEmberRelic => relicPhoenixEmber,
-        GameLogic.godHandFocusRelic => relicPhoenixEmber,
-        GameLogic.chamberLuckRelic => relicWarBanner,
-        GameLogic.ironWillRelic => relicIronWard,
+        GameLogic.godHandFocusRelic => fist,
+        GameLogic.chamberLuckRelic => iconStar,
+        GameLogic.ironWillRelic => iconTrophy,
         _ => relicWarBanner,
       };
 

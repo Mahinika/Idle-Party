@@ -1,31 +1,47 @@
 ---
 description: >-
-  Owner product preferences for Idle Party — Play Store soon, big batches,
-  cozy idle, English UI, agent proposes commit/PR/tag.
+  Owner product preferences for Idle Party — content focus, progression fantasy,
+  polish kits, more zones, big batches, English UI, propose commit/PR/tag.
 alwaysApply: true
 ---
 
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
+Last preference sync: **2026-08-08** (10 product Q&A).
+
+## Near-term focus
+
+- Prefer **game feel / content** over Play ops busywork (closed-test recruitment can idle in background).
+- Play production remains a goal, but day-to-day work defaults to **content + feel** unless the owner asks about Play.
 
 ## Distribution
 
 - Goal: **Google Play “for real” soon** (not sideload-only forever).
-- Prefer work that unblocks Play: signing secrets checklist, privacy URL, listing copy, screenshots, IARC, internal testing → production path in `docs/PLAY_STORE.md`.
-- **Current fact:** GitHub Releases (APK/AAB) is the primary install path until Play ships — follow `docs/PLAY_STORE.md` for operator checklists. Do not pretend the Play listing already exists.
+- Prefer work that unblocks Play when touching store: CI signing secrets, closed-test 12×14, production access — see `docs/PLAY_STORE.md`.
+- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha); **production is not live**.
+- **Platforms now:** Android (+ existing web playtest tooling OK). **No iOS** and **no shipping web as a product** for now.
 
 ## Work style
 
-- Prefer **large batches** when the user says to implement (“gör allt”, big features) — fewer tiny back-and-forths.
+- Prefer **large batches** (“gör allt X”) — fewer tiny back-and-forths.
 - Still verify (analyze/tests / hub smoke as needed) before calling done.
 - **Propose** commit, push, PR, and release tags when something is ship-shaped — ask once with a clear yes/no, don’t wait silently.
 
-## Game feel
+## Game feel & fantasy
 
-- Priority: **cozy idle** — watch the party, light steering (God Hand), readable hub, low panic UI.
-- Prefer clarity and calm over sweaty min-max chrome, dense dashboards, or “esports” pressure.
-- Challenges/Gauntlet OK as optional depth; don’t make the first hour feel like a raid.
+- First-hour / player fantasy priority: **progression / power** (grow the party, feel stronger).
+- Keep hub/UI **readable and low-panic** (not sweaty esports chrome).
+- **Early game:** approachable. **Endgame** (high AL / Gauntlet / late zones): OK to be **competitive / grindy**.
+- Challenges/Gauntlet are welcome depth; don’t make the first hour feel like a raid.
+
+## Content priorities
+
+- **Kits:** polish what exists (fairness + clarity + fantasy) before adding many new specs.
+- **Zones:** prefer **more zones** when adding content (still use `zone-art-identity` so they don’t feel like reskins).
+- **Meta loops** (Weekly / Will / Gauntlet / season): push toward **“I always know what I’m chasing today”** — clearer hub goals, claims, next targets.
+- **God Hand:** owner undecided (fun steer vs deeper strategy) — don’t redesign GH direction without asking.
+- **Monetization:** **no IAP / no paid store** for a while longer (stay free, no ads unless owner revisits).
 
 ## Language
 

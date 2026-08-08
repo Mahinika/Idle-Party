@@ -160,6 +160,8 @@ class GameDirector extends ChangeNotifier {
   int _lastHighestDungeon = -1;
   double _autosaveAccum = 0;
   int _lastStashLen = 0;
+  /// Loot pickups since last mid-fight auto-equip (debounce thrash).
+  int _lootSinceAutoEquip = 0;
   static const double _autosaveIntervalSec = 25;
 
   /// Serializes SharedPreferences writes so overlapping unawaited saves cannot
@@ -250,13 +252,33 @@ class GameDirector extends ChangeNotifier {
     if (_toast != null &&
         _toastLife > 0.35 &&
         _toast != message &&
-        (_toast!.length + message.length) < 72) {
+        (_toast!.length + message.length) < 72 &&
+        !_isCleanupToast(_toast!) &&
+        !_isCleanupToast(message)) {
       _toast = '$_toast · $message';
     } else {
       _toast = message;
     }
     _toastLife = life;
     _ensureUiTimer();
+    notifyListeners();
+  }
+
+  static bool _isCleanupToast(String m) {
+    final lower = m.toLowerCase();
+    return lower.contains('junk') ||
+        lower.contains('scrap') ||
+        lower.contains('disassemble') ||
+        lower.contains('cleaned') ||
+        lower.contains('sold ') ||
+        lower.contains('ilvl');
+  }
+
+  /// Drop the active toast (e.g. when opening a modal that would cover it).
+  void clearToast() {
+    if (_toast == null && _toastLife <= 0) return;
+    _toast = null;
+    _toastLife = 0;
     notifyListeners();
   }
 
@@ -515,25 +537,33 @@ class GameDirector extends ChangeNotifier {
           GameAudio.loot();
           playedLoot = true;
         }
-        // Auto-wear upgrades so bag loot actually powers the party.
-        // Must sync spatial (same as bag AUTO) or mid-fight ATK/DEF stay stale.
-        final stashBeforeEquip = _state.gearStash.length;
-        _state = GameLogic.autoEquipBetterGear(_state);
-        if (_spatial != null &&
-            _state.inDungeon &&
-            before.inDungeon &&
-            before.battleNumber == _state.battleNumber &&
-            before.layoutSeed == _state.layoutSeed) {
-          _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
-        }
-        final equippedN = stashBeforeEquip - _state.gearStash.length;
-        if (equippedN > 0) {
-          showToast(
-            equippedN == 1
-                ? 'Equipped 1 upgrade'
-                : 'Equipped $equippedN upgrades',
-            life: 1.4,
-          );
+        // Debounce mid-fight auto-equip: every few pickups, or when bag is
+        // nearly full. Floor clear still auto-equips in GameLogic.
+        _lootSinceAutoEquip++;
+        final stashCap = GameLogic.maxGearStashFor(_state);
+        final nearFull =
+            _state.gearStash.length >= (stashCap * 0.85).ceil();
+        final shouldEquip = nearFull || _lootSinceAutoEquip >= 3;
+        if (shouldEquip) {
+          _lootSinceAutoEquip = 0;
+          final stashBeforeEquip = _state.gearStash.length;
+          _state = GameLogic.autoEquipBetterGear(_state);
+          if (_spatial != null &&
+              _state.inDungeon &&
+              before.inDungeon &&
+              before.battleNumber == _state.battleNumber &&
+              before.layoutSeed == _state.layoutSeed) {
+            _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
+          }
+          final equippedN = stashBeforeEquip - _state.gearStash.length;
+          if (equippedN > 0) {
+            showToast(
+              equippedN == 1
+                  ? 'Equipped 1 upgrade'
+                  : 'Equipped $equippedN upgrades',
+              life: 1.4,
+            );
+          }
         }
       }
       final stashCap = GameLogic.maxGearStashFor(_state);
@@ -541,10 +571,21 @@ class GameDirector extends ChangeNotifier {
           _state.gearStash.length >= stashCap) {
         showToast('Bag full — oldest loot salvages to essence', life: 2.4);
       }
-      if (GameLogic.lastAutoSellCount > 0) {
+      if (GameLogic.lastAutoSellCount > 0 ||
+          GameLogic.lastAutoDisassembleCount > 0) {
         final sold = GameLogic.lastAutoSellCount;
+        final gold = GameLogic.lastAutoSellGold;
+        final scraped = GameLogic.lastAutoDisassembleCount;
+        final ess = GameLogic.lastAutoDisassembleEssence;
         GameLogic.lastAutoSellCount = 0;
-        showToast('Bag unstuck · sold $sold', life: 1.5);
+        GameLogic.lastAutoSellGold = 0;
+        GameLogic.lastAutoDisassembleCount = 0;
+        GameLogic.lastAutoDisassembleEssence = 0;
+        final bits = <String>[
+          if (sold > 0) 'sold $sold (+${gold}g)',
+          if (scraped > 0) 'scrap $scraped (+${ess}e)',
+        ];
+        showToast('Bag unstuck · ${bits.join(' · ')}', life: 1.8);
       }
       _lastStashLen = _state.gearStash.length;
 
@@ -580,6 +621,7 @@ class GameDirector extends ChangeNotifier {
       }
 
       if (result.roomCleared) {
+        _lootSinceAutoEquip = 0;
         final floorNo = _state.currentRoom.floorNumber;
         final wasTreasure = _spatial?.isTreasure ?? false;
         // Combat gold already credited per kill; treasure pays scaled chest budget.
@@ -1089,24 +1131,70 @@ class GameDirector extends ChangeNotifier {
 
   void autoSellJunk() {
     final beforeLen = _state.gearStash.length;
-    final beforeEss = _state.essence;
-    _applyUpgrade(GameLogic.autoSellJunk(_state));
+    final beforeGold = _state.gold;
+    final cap = GameLogic.maxGearStashFor(_state);
+    final unstick = beforeLen >= (cap * 0.9).ceil();
+    _applyUpgrade(GameLogic.autoSellJunk(_state, unstickBag: unstick));
     GameLogic.lastAutoSellCount = 0;
+    GameLogic.lastAutoSellGold = 0;
     final sold = beforeLen - _state.gearStash.length;
-    final gained = _state.essence - beforeEss;
+    final gold = _state.gold - beforeGold;
     if (sold > 0) {
+      showToast('Sold $sold junk · +${gold}g', life: 1.9);
+    } else {
+      showToast('No junk to sell (check iLvl/rarity)', life: 1.5);
+    }
+  }
+
+  void autoDisassembleJunk() {
+    final beforeLen = _state.gearStash.length;
+    final beforeEss = _state.essence;
+    final cap = GameLogic.maxGearStashFor(_state);
+    final unstick = beforeLen >= (cap * 0.9).ceil();
+    _applyUpgrade(
+      GameLogic.autoDisassembleJunk(_state, unstickBag: unstick),
+    );
+    GameLogic.lastAutoDisassembleCount = 0;
+    GameLogic.lastAutoDisassembleEssence = 0;
+    final scraped = beforeLen - _state.gearStash.length;
+    final gained = _state.essence - beforeEss;
+    if (scraped > 0) {
+      showToast('Disassembled $scraped · +$gained ess', life: 1.9);
+    } else {
+      showToast('No junk to disassemble (check iLvl/rarity)', life: 1.5);
+    }
+  }
+
+  /// Merge → sell gold → disassemble essence (bag cleanup / near-full).
+  void cleanBagJunk() {
+    final beforeLen = _state.gearStash.length;
+    final beforeGold = _state.gold;
+    final beforeEss = _state.essence;
+    final cap = GameLogic.maxGearStashFor(_state);
+    final unstick = beforeLen >= (cap * 0.9).ceil();
+    _applyUpgrade(
+      GameLogic.cleanBagJunk(_state, unstickBag: unstick, mergeFirst: true),
+    );
+    GameLogic.lastAutoSellCount = 0;
+    GameLogic.lastAutoSellGold = 0;
+    GameLogic.lastAutoDisassembleCount = 0;
+    GameLogic.lastAutoDisassembleEssence = 0;
+    final cleared = beforeLen - _state.gearStash.length;
+    final gold = _state.gold - beforeGold;
+    final ess = _state.essence - beforeEss;
+    if (cleared > 0) {
+      final bits = <String>[
+        if (gold > 0) '+${gold}g',
+        if (ess > 0) '+${ess}e',
+      ];
       showToast(
-        'Sold $sold junk · +$gained ess',
+        bits.isEmpty
+            ? 'Cleaned $cleared junk'
+            : 'Cleaned $cleared · ${bits.join(' · ')}',
         life: 1.9,
       );
     } else {
-      final rarePlus = _state.gearStash.any(
-        (g) => g.rarity.index >= LootRarity.rare.index,
-      );
-      showToast(
-        rarePlus ? 'No junk left (rare+ kept)' : 'No junk — try AUTO MERGE',
-        life: 1.5,
-      );
+      showToast('No junk for sell/disassemble filters', life: 1.5);
     }
   }
 
@@ -1150,6 +1238,23 @@ class GameDirector extends ChangeNotifier {
   void setAutoSellMaxPower(int value) {
     final cap = GameLogic.maxAutoSellIlvlCap(_state);
     _applyUpgrade(_state.copyWith(autoSellMaxPower: value.clamp(0, cap)));
+  }
+
+  void setAutoSellMaxRarity(int value) {
+    _applyUpgrade(_state.copyWith(autoSellMaxRarity: value.clamp(0, 4)));
+  }
+
+  void setAutoDisassembleMaxIlvl(int value) {
+    final cap = GameLogic.maxAutoSellIlvlCap(_state);
+    _applyUpgrade(
+      _state.copyWith(autoDisassembleMaxIlvl: value.clamp(0, cap)),
+    );
+  }
+
+  void setAutoDisassembleMaxRarity(int value) {
+    _applyUpgrade(
+      _state.copyWith(autoDisassembleMaxRarity: value.clamp(0, 4)),
+    );
   }
 
   void setColorblindMode(bool value) {

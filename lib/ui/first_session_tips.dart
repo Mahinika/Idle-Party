@@ -122,6 +122,10 @@ class FirstSessionTips extends StatelessWidget {
     final s = director.state;
     for (final tip in _tips) {
       if (seen.contains(tip.id)) continue;
+      // Live combat: only God Hand + FARM/PUSH tips — avoid tip spam mid-fight.
+      if (inDungeon && tip.id != 'godhand' && tip.id != 'farm_push') {
+        continue;
+      }
       if (tip.id == 'first_run' && inDungeon) {
         continue;
       }

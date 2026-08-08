@@ -163,7 +163,7 @@ class _Is2ShellState extends State<Is2Shell> {
   }
 
   bool _overlayHoldsBridge(Is2Overlay overlay) =>
-      overlay != Is2Overlay.none && overlay != Is2Overlay.inventory;
+      overlay != Is2Overlay.none;
 
   void _equipSelectedTo(int heroIndex) {
     final id = _selectedId;
@@ -302,6 +302,9 @@ class _Is2ShellState extends State<Is2Shell> {
       },
       onBindSoulbound: () => d.bindSoulbound(heroIndex: _equipHeroIndex),
       onAutoSell: d.autoSellJunk,
+      onAutoDisassemble: d.autoDisassembleJunk,
+      onCleanBag: d.cleanBagJunk,
+      onOpenFilters: () => _openOverlay(Is2Overlay.settings),
       onAutoMerge: () {
         d.autoMergeJunk();
         setState(() {
@@ -345,6 +348,10 @@ class _Is2ShellState extends State<Is2Shell> {
   void _openOverlay(Is2Overlay overlay) => _setOverlay(overlay);
 
   void _setOverlay(Is2Overlay overlay) {
+    if (overlay != Is2Overlay.none &&
+        overlay != Is2Overlay.inventory) {
+      widget.director.clearToast();
+    }
     setState(() => _overlay = overlay);
     if (!widget.hubMode) {
       _ensureBridgeLayer(_overlayHoldsBridge(overlay));
@@ -372,8 +379,12 @@ class _Is2ShellState extends State<Is2Shell> {
     }
   }
 
-  List<({String header, List<({String label, VoidCallback onTap})> items})>
-      _moreSections({required bool includeSettings}) {
+  List<
+          ({
+            String header,
+            List<({String label, VoidCallback onTap, String? icon})> items,
+          })>
+      _moreSections() {
     final claimable = state.missions.where((m) => m.isComplete).length;
     return [
       (
@@ -381,14 +392,17 @@ class _Is2ShellState extends State<Is2Shell> {
         items: [
           (
             label: 'FORGE',
+            icon: CustomAssets.iconAxe,
             onTap: () => _openOverlay(Is2Overlay.forge),
           ),
           (
             label: 'LOADOUTS',
+            icon: KenneyAssets.shield,
             onTap: () => _openOverlay(Is2Overlay.loadouts),
           ),
           (
             label: 'PARTY',
+            icon: KenneyAssets.helmet,
             onTap: () => _openOverlay(Is2Overlay.teamComposition),
           ),
         ],
@@ -398,22 +412,27 @@ class _Is2ShellState extends State<Is2Shell> {
         items: [
           (
             label: claimable > 0 ? 'CONTRACTS ($claimable)' : 'CONTRACTS',
+            icon: KenneyAssets.book,
             onTap: () => _openOverlay(Is2Overlay.jobs),
           ),
           (
             label: 'SANCTUARY',
+            icon: CustomAssets.iconCampfire,
             onTap: () => _openOverlay(Is2Overlay.sanctuary),
           ),
           (
             label: 'MARKET',
+            icon: KenneyAssets.coinGold,
             onTap: () => _openOverlay(Is2Overlay.market),
           ),
           (
             label: 'BEAST PEN',
+            icon: CustomAssets.petEgg,
             onTap: () => _openOverlay(Is2Overlay.beast),
           ),
           (
             label: 'ESSENCE SHOP',
+            icon: KenneyAssets.vialBlue,
             onTap: () => _openOverlay(Is2Overlay.prestigeShop),
           ),
         ],
@@ -422,22 +441,32 @@ class _Is2ShellState extends State<Is2Shell> {
         header: 'INFO',
         items: [
           (
+            label: MetaSystems.hasUnseenChangelog(state)
+                ? "WHAT'S NEW ★"
+                : "WHAT'S NEW",
+            icon: CustomAssets.iconTome,
+            onTap: () => WhatsNewOverlay.show(context, widget.director),
+          ),
+          (
+            label: 'SETTINGS',
+            icon: KenneyAssets.iconDoor,
+            onTap: () => _openOverlay(Is2Overlay.settings),
+          ),
+          (
             label: 'ACHIEVEMENTS',
+            icon: KenneyAssets.iconTrophy,
             onTap: () => _openOverlay(Is2Overlay.achievements),
           ),
           (
             label: 'CODEX',
+            icon: KenneyAssets.book,
             onTap: () => _openOverlay(Is2Overlay.codex),
           ),
           (
             label: 'GUIDES',
+            icon: KenneyAssets.iconStar,
             onTap: () => _openOverlay(Is2Overlay.guides),
           ),
-          if (includeSettings)
-            (
-              label: 'SETTINGS',
-              onTap: () => _openOverlay(Is2Overlay.settings),
-            ),
         ],
       ),
     ];
@@ -449,19 +478,22 @@ class _Is2ShellState extends State<Is2Shell> {
       widget.onLeaveDungeon?.call();
       return;
     }
+    widget.director.clearToast();
+    // EXIT first so RETURN TO HUB is not buried under INFO rows.
     final sections = [
-      ..._moreSections(includeSettings: false),
       if (widget.onLeaveDungeon != null)
         (
-          header: '',
+          header: 'EXIT',
           items: [
             (
               label: 'RETURN TO HUB',
+              icon: KenneyAssets.iconDoor,
               onTap: () =>
                   confirmLeaveDungeon(context, widget.onLeaveDungeon!),
             ),
           ],
         ),
+      ..._moreSections(),
     ];
     MenuChrome.showMenuSheet(
       context: context,
@@ -586,7 +618,12 @@ class _Is2ShellState extends State<Is2Shell> {
           FirstSessionTips(director: d),
           if (d.toast != null)
             Positioned.fill(
-              child: FeedbackToast(message: d.toast!),
+              child: FeedbackToast(
+                message: d.toast!,
+                alignment: _overlay != Is2Overlay.none
+                    ? const Alignment(0, -0.82)
+                    : const Alignment(0, -0.42),
+              ),
             ),
         ],
       );
@@ -666,13 +703,26 @@ class _Is2ShellState extends State<Is2Shell> {
         FirstSessionTips(director: d),
         if (d.toast != null)
           Positioned.fill(
-            child: FeedbackToast(message: d.toast!),
+            child: FeedbackToast(
+              message: d.toast!,
+              alignment: _overlay != Is2Overlay.none
+                  ? const Alignment(0, -0.82)
+                  : const Alignment(0, -0.42),
+            ),
           ),
       ],
     );
   }
 
   Widget _metaOverlay(GameDirector d) {
+    final shortSheet = switch (_overlay) {
+      Is2Overlay.jobs ||
+      Is2Overlay.market ||
+      Is2Overlay.beast ||
+      Is2Overlay.prestigeShop =>
+        true,
+      _ => false,
+    };
     return _OverlayScrim(
       title: switch (_overlay) {
         Is2Overlay.forge => 'FORGE',
@@ -694,6 +744,7 @@ class _Is2ShellState extends State<Is2Shell> {
         Is2Overlay.prestigeShop => 'ESSENCE SHOP',
         Is2Overlay.none => '',
       },
+      heightFactor: shortSheet ? 0.58 : 0.85,
       onClose: _closeOverlayOrLeaveHub,
       child: switch (_overlay) {
         Is2Overlay.forge => SingleChildScrollView(
@@ -710,7 +761,9 @@ class _Is2ShellState extends State<Is2Shell> {
               director: d,
               onClose: () => _setOverlay(Is2Overlay.none),
             ),
-        Is2Overlay.market => _MarketOverlay(director: d),
+        Is2Overlay.market => SingleChildScrollView(
+          child: _MarketOverlay(director: d),
+        ),
         Is2Overlay.beast => SingleChildScrollView(
           child: _BeastOverlay(director: d),
         ),
@@ -1158,11 +1211,13 @@ class _BottomNav extends StatelessWidget {
     final nearlyFull = !full &&
         stashCap != null &&
         stashCount >= (stashCap! * 0.9).ceil();
-    final bagLabel = full
-        ? 'BAG FULL'
-        : nearlyFull
-            ? 'BAG $stashCount!'
-            : 'BAG $stashCount';
+    final bagLabel = stashCap == null
+        ? 'BAG $stashCount'
+        : full
+            ? 'BAG FULL $stashCount/$stashCap'
+            : nearlyFull
+                ? 'BAG $stashCount/$stashCap!'
+                : 'BAG $stashCount/$stashCap';
     return Material(
       color: GameTheme.ink.withValues(alpha: 0.78),
       child: Container(
@@ -1613,7 +1668,7 @@ class _PartyRow extends StatelessWidget {
             spatial: spatial!,
             resource: resource,
             hasShield: hasShield,
-            maxChips: compact ? 4 : 6,
+            maxChips: compact ? 3 : 4,
           )
         : const <ClassAbilityDef>[];
 
@@ -1898,6 +1953,12 @@ class _DpsMeter extends StatelessWidget {
     };
   }
 
+  static SpecRoleTag? _roleTag(SpatialActor h) {
+    final specId = h.heroSpecId;
+    if (specId == null) return null;
+    return HeroSpecs.def(specId).roleTag;
+  }
+
   static String _compact(int n) {
     if (n >= 10000) return '${(n / 1000).round()}k';
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
@@ -1910,6 +1971,17 @@ class _DpsMeter extends StatelessWidget {
     return (total / t).round();
   }
 
+  static ({int rate, String unit}) _metric(SpatialActor h, double elapsed) {
+    final tag = _roleTag(h);
+    if (tag == SpecRoleTag.tank) {
+      return (rate: _perSecond(h.damageTaken, elapsed), unit: 'dtps');
+    }
+    if (tag == SpecRoleTag.healer) {
+      return (rate: _perSecond(h.healingDone, elapsed), unit: 'hps');
+    }
+    return (rate: _perSecond(h.damageDealt, elapsed), unit: 'dps');
+  }
+
   @override
   Widget build(BuildContext context) {
     // Meter is HUD chrome — keep visible under Lite/Minimal VFX.
@@ -1918,36 +1990,35 @@ class _DpsMeter extends StatelessWidget {
 
     final elapsed = world.combatElapsed;
     final rows = <({String tag, String value, double bar, bool highlight})>[];
-    var peakDps = 0;
+    var peak = 0;
     for (final h in world.heroes) {
       if (h.isPet) continue;
-      final dps = _perSecond(h.damageDealt, elapsed);
-      if (dps > peakDps) peakDps = dps;
+      final m = _metric(h, elapsed);
+      if (m.rate > peak) peak = m.rate;
     }
-    if (peakDps == 0) {
+    if (peak == 0) {
       return const SizedBox.shrink();
     }
-    peakDps = peakDps.clamp(1, 1 << 30);
+    peak = peak.clamp(1, 1 << 30);
 
     for (final h in world.heroes) {
       if (h.isPet) continue;
-      if (h.damageDealt <= 0) continue;
-      final dps = _perSecond(h.damageDealt, elapsed);
-      if (dps < 1) continue;
+      final m = _metric(h, elapsed);
+      if (m.rate < 1) continue;
       rows.add((
         tag: _heroTag(h),
-        value: '${_compact(dps)} dps',
-        bar: dps / peakDps,
-        highlight: dps == peakDps,
+        value: '${_compact(m.rate)} ${m.unit}',
+        bar: m.rate / peak,
+        highlight: m.rate == peak,
       ));
     }
     if (rows.isEmpty) return const SizedBox.shrink();
 
     return IgnorePointer(
       child: Semantics(
-        label: 'Party DPS meter',
+        label: 'Party combat meter',
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 152),
+          constraints: const BoxConstraints(maxWidth: 160),
           child: Container(
             padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
             decoration: BoxDecoration(
@@ -1960,7 +2031,7 @@ class _DpsMeter extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'DPS',
+                  'PARTY',
                   style: GameTheme.pixel(
                     size: GameTheme.hudPixel,
                     color: GameTheme.parchmentDim,
@@ -2202,6 +2273,9 @@ class _InventoryDock extends StatefulWidget {
     required this.onCombine,
     required this.onBindSoulbound,
     required this.onAutoSell,
+    required this.onAutoDisassemble,
+    required this.onCleanBag,
+    required this.onOpenFilters,
     required this.onAutoMerge,
   });
 
@@ -2225,6 +2299,9 @@ class _InventoryDock extends StatefulWidget {
   final VoidCallback onCombine;
   final VoidCallback onBindSoulbound;
   final VoidCallback onAutoSell;
+  final VoidCallback onAutoDisassemble;
+  final VoidCallback onCleanBag;
+  final VoidCallback onOpenFilters;
   final VoidCallback onAutoMerge;
 
   @override
@@ -2253,6 +2330,9 @@ class _InventoryDockState extends State<_InventoryDock>
   VoidCallback get onCombine => widget.onCombine;
   VoidCallback get onBindSoulbound => widget.onBindSoulbound;
   VoidCallback get onAutoSell => widget.onAutoSell;
+  VoidCallback get onAutoDisassemble => widget.onAutoDisassemble;
+  VoidCallback get onCleanBag => widget.onCleanBag;
+  VoidCallback get onOpenFilters => widget.onOpenFilters;
   VoidCallback get onAutoMerge => widget.onAutoMerge;
 
   @override
@@ -2319,7 +2399,7 @@ class _InventoryDockState extends State<_InventoryDock>
             const SizedBox(width: 4),
             Expanded(
               child: KenneyButton(
-                label: 'AUTO',
+                label: 'AUTO EQUIP',
                 onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
                 style: KenneyButtonStyle.grey,
               ),
@@ -2327,25 +2407,10 @@ class _InventoryDockState extends State<_InventoryDock>
           ],
         ),
         const SizedBox(height: 4),
-        Row(
-          children: [
-            Expanded(
-              child: KenneyButton(
-                label: 'SELL',
-                onPressed:
-                    selectedId == null && combineA == null ? null : onSell,
-                style: KenneyButtonStyle.grey,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: KenneyButton(
-                label: 'SELL JUNK',
-                onPressed: state.gearStash.isEmpty ? null : onAutoSell,
-                style: KenneyButtonStyle.grey,
-              ),
-            ),
-          ],
+        KenneyButton(
+          label: 'SELL',
+          onPressed: selectedId == null && combineA == null ? null : onSell,
+          style: KenneyButtonStyle.grey,
         ),
       ],
     );
@@ -2360,10 +2425,10 @@ class _InventoryDockState extends State<_InventoryDock>
       children: [
         Text(
           nearFull && filled >= cap
-              ? 'BAG FULL  $filled/$cap — oldest salvages to essence'
+              ? 'FULL $filled/$cap · CLEAN merges → sells gold → scraps'
               : nearFull
-                  ? 'BAG  $filled/$cap — nearly full (SELL JUNK dumps non-BiS + under iLvl cap)'
-                  : 'BAG  $filled/$cap · SELL = essence · Market = gold',
+                  ? '$filled/$cap nearly full · CLEAN uses Settings filters'
+                  : '$filled/$cap · junk→gold · scrap→essence · FILTERS for caps',
           style: GameTheme.pixel(
             size: GameTheme.hudPixel,
             color: nearFull ? GameTheme.torchHot : GameTheme.parchment,
@@ -2377,7 +2442,7 @@ class _InventoryDockState extends State<_InventoryDock>
               crossAxisCount: 4,
               mainAxisSpacing: 4,
               crossAxisSpacing: 4,
-              mainAxisExtent: GameTheme.minTouch,
+              mainAxisExtent: 56,
             ),
             itemBuilder: (context, index) {
               final item = slots[index];
@@ -2403,18 +2468,44 @@ class _InventoryDockState extends State<_InventoryDock>
         ),
         const SizedBox(height: 4),
         KenneyButton(
-          label: 'ADD TO MERGE',
-          onPressed: selectedId == null
-              ? null
-              : () => onPutCombine(selectedId!),
-          style: KenneyButtonStyle.grey,
+          label: 'CLEAN BAG',
+          onPressed: state.gearStash.isEmpty ? null : onCleanBag,
+          style: KenneyButtonStyle.brown,
         ),
         const SizedBox(height: 4),
         Row(
           children: [
             Expanded(
               child: KenneyButton(
-                label: 'AUTO',
+                label: 'SELL JUNK',
+                onPressed: state.gearStash.isEmpty ? null : onAutoSell,
+                style: KenneyButtonStyle.grey,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: KenneyButton(
+                label: 'SCRAP',
+                onPressed: state.gearStash.isEmpty ? null : onAutoDisassemble,
+                style: KenneyButtonStyle.grey,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: KenneyButton(
+                label: 'FILTERS',
+                onPressed: onOpenFilters,
+                style: KenneyButtonStyle.grey,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Expanded(
+              child: KenneyButton(
+                label: 'AUTO EQUIP',
                 onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
                 style: KenneyButtonStyle.grey,
               ),
@@ -2422,18 +2513,14 @@ class _InventoryDockState extends State<_InventoryDock>
             const SizedBox(width: 4),
             Expanded(
               child: KenneyButton(
-                label: 'AUTO MERGE',
-                onPressed: state.gearStash.length < 2 ? null : onAutoMerge,
+                label: selectedId == null ? 'AUTO MERGE' : 'ADD TO MERGE',
+                onPressed: selectedId != null
+                    ? () => onPutCombine(selectedId!)
+                    : (state.gearStash.length < 2 ? null : onAutoMerge),
                 style: KenneyButtonStyle.grey,
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 4),
-        KenneyButton(
-          label: 'SELL JUNK',
-          onPressed: state.gearStash.isEmpty ? null : onAutoSell,
-          style: KenneyButtonStyle.grey,
         ),
         if (selectedId != null) ...[
           const SizedBox(height: 4),
@@ -2537,8 +2624,7 @@ class _InventoryDockState extends State<_InventoryDock>
           ),
         ] else
           Text(
-            'Tap an item to equip it, or ADD TO MERGE / long-press '
-            'to feed the TOOLS combinator (same slot only).',
+            'Tap item to equip · long-press / ADD TO MERGE for TOOLS.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         if (state.gearStash.isEmpty)
@@ -2888,15 +2974,21 @@ class _EquipHeroChip extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'P ${GameLogic.formatDelta(cmp.powerDelta)}',
+                'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
                 style: GameTheme.pixel(size: GameTheme.hudPixel, color: deltaColor),
               ),
-              Text(
-                'A${GameLogic.formatDelta(cmp.atkDelta)} '
-                'D${GameLogic.formatDelta(cmp.defDelta)} '
-                'V${GameLogic.formatDelta(cmp.vitDelta)}',
-                style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
-              ),
+              if (cmp.isUpgrade)
+                Text(
+                  'UPGRADE',
+                  style: GameTheme.body(size: 10, color: GameTheme.clear),
+                )
+              else
+                Text(
+                  'raw A${GameLogic.formatDelta(cmp.atkDelta)} '
+                  'D${GameLogic.formatDelta(cmp.defDelta)} '
+                  'V${GameLogic.formatDelta(cmp.vitDelta)}',
+                  style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+                ),
             ],
           ),
         ),
@@ -2922,6 +3014,27 @@ class _BagSlot extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
+  static String _slotHint(EquipmentSlot slot) {
+    return switch (slot) {
+      EquipmentSlot.weapon => 'MH',
+      EquipmentSlot.offHand => 'OH',
+      EquipmentSlot.ranged => 'Rng',
+      EquipmentSlot.head => 'Head',
+      EquipmentSlot.shoulder => 'Shldr',
+      EquipmentSlot.chest => 'Chest',
+      EquipmentSlot.hands => 'Hand',
+      EquipmentSlot.waist => 'Belt',
+      EquipmentSlot.legs => 'Legs',
+      EquipmentSlot.boots => 'Feet',
+      EquipmentSlot.wrist => 'Wrist',
+      EquipmentSlot.cloak => 'Back',
+      EquipmentSlot.neck => 'Neck',
+      EquipmentSlot.ring || EquipmentSlot.ring2 => 'Ring',
+      EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'Trink',
+      EquipmentSlot.consumable => 'Flask',
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final rarityColor = item == null
@@ -2946,6 +3059,13 @@ class _BagSlot extends StatelessWidget {
               color: highlight ? GameTheme.torchHot : rarityColor,
               width: item != null ? 1.5 : 1,
             ),
+            color: item == null
+                ? null
+                : Color.lerp(
+                    const Color(0xFF1A1612),
+                    rarityColor,
+                    0.12,
+                  ),
           ),
           clipBehavior: Clip.hardEdge,
           child: item == null
@@ -2954,9 +3074,25 @@ class _BagSlot extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     Center(
-                      child: KenneySprite(
-                        asset: KenneyAssets.equipmentIconFor(item!),
-                        size: 22,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: KenneySprite(
+                          asset: KenneyAssets.equipmentIconFor(item!),
+                          size: 26,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 1,
+                      left: 2,
+                      child: ExcludeSemantics(
+                        child: Text(
+                          _slotHint(item!.slot),
+                          style: GameTheme.body(
+                            size: 10,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
                       ),
                     ),
                     Positioned(
@@ -2966,8 +3102,8 @@ class _BagSlot extends StatelessWidget {
                         child: Text(
                           'i${item!.effectiveItemLevel}',
                           style: GameTheme.body(
-                            size: 12,
-                            color: GameTheme.parchmentDim,
+                            size: 11,
+                            color: GameTheme.parchment,
                           ),
                         ),
                       ),
@@ -2975,7 +3111,7 @@ class _BagSlot extends StatelessWidget {
                     if (isBest)
                       Positioned(
                         top: 1,
-                        left: 1,
+                        right: 1,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 3,
@@ -2985,7 +3121,7 @@ class _BagSlot extends StatelessWidget {
                           child: Text(
                             'BEST',
                             style: GameTheme.body(
-                              size: 11,
+                              size: 10,
                               color: GameTheme.clear,
                             ),
                           ),
@@ -2993,17 +3129,18 @@ class _BagSlot extends StatelessWidget {
                       ),
                     if (_isSoulboundItem(item!))
                       Positioned(
-                        top: 0,
+                        bottom: 1,
                         right: 2,
                         child: Text(
                           'SB',
                           style: GameTheme.body(
-                            size: 11,
+                            size: 10,
                             color: GameTheme.torchHot,
                           ),
                         ),
                       ),
-                    if (item!.slot == EquipmentSlot.weapon)
+                    if (item!.slot == EquipmentSlot.weapon &&
+                        !_isSoulboundItem(item!))
                       Positioned(
                         bottom: 1,
                         right: 2,
@@ -3119,11 +3256,13 @@ class _OverlayScrim extends StatelessWidget {
     required this.title,
     required this.onClose,
     required this.child,
+    this.heightFactor = 0.85,
   });
 
   final String title;
   final VoidCallback onClose;
   final Widget child;
+  final double heightFactor;
 
   @override
   Widget build(BuildContext context) {
@@ -3147,16 +3286,21 @@ class _OverlayScrim extends StatelessWidget {
               ),
             ),
             compact
-                ? _MobileSheet(title: title, onClose: onClose, child: child)
+                ? _MobileSheet(
+                    title: title,
+                    onClose: onClose,
+                    heightFactor: heightFactor,
+                    child: child,
+                  )
                 : Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(
+                      constraints: BoxConstraints(
                         maxWidth: 520,
-                        maxHeight: 560,
+                        maxHeight: heightFactor < 0.7 ? 420 : 560,
                       ),
                       child: SizedBox(
                         width: 520,
-                        height: 560,
+                        height: heightFactor < 0.7 ? 420 : 560,
                         child: _OverlayPanel(
                           title: title,
                           onClose: onClose,
@@ -3177,18 +3321,20 @@ class _MobileSheet extends StatelessWidget {
     required this.title,
     required this.onClose,
     required this.child,
+    this.heightFactor = 0.85,
   });
 
   final String title;
   final VoidCallback onClose;
   final Widget child;
+  final double heightFactor;
 
   @override
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.bottomCenter,
       child: FractionallySizedBox(
-        heightFactor: GameTheme.isCompactWidth(context) ? 0.85 : 0.94,
+        heightFactor: heightFactor,
         widthFactor: 1,
         // Absorb taps so scrim-dismiss behind the sheet does not fire.
         child: GestureDetector(
@@ -3394,15 +3540,14 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Gold for party ATK/DEF/VIT/etc this run (wipes on Ascend).\n'
-          'Essence spends are under META — not here.',
+          'Gold upgrades this run (wipe on Ascend). Essence spends → META.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         Text(
           'ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
           'VIT +${state.totalVitalityBonus}\n'
-          'SPD +${state.moveSpeedBonus}%  HASTE +${state.attackSpeedBonus}%  '
+          'MOVE +${state.moveSpeedBonus}%  HASTE +${state.attackSpeedBonus}%  '
           'CRIT +${state.critBonus}%',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
@@ -3415,14 +3560,14 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
               : (director.state.inDungeon
                   ? 'Ascend on Hub · '
                       '${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} bosses'
-                  : '${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} bosses · keep clearing'),
+                  : 'Ascend ${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} bosses · keep clearing'),
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _sectionTitle(
           'GOLD UPGRADES',
-          'Infinite tracks · wipe on Ascend. BEST marks the cheapest relative gain.',
+          'Infinite · wipe on Ascend. BEST = cheapest relative gain.',
         ),
         KenneyButton(
           label: state.gold >= training
@@ -3457,11 +3602,6 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
           ),
           const SizedBox(height: 6),
         ],
-        Text(
-          'Gold forge tracks are infinite (cost scales) and wipe on Ascend.\n'
-          'Relics / Soulbound / God Hand live under META.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
       ],
     );
   }
@@ -3472,18 +3612,17 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${state.essence} essence · spends here survive Ascend',
+          '${state.essence} essence · permanent (survives Ascend)',
           style: GameTheme.body(size: 14, color: GameTheme.torchHot),
         ),
         Text(
-          'Relics, sanctuary tracks, soulbound & God Hand use essence. '
-          'Run gold upgrades stay on the GOLD tab.',
+          'Relics · Soulbound · God Hand. Run gold stays on FORGE tab.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _sectionTitle(
           'RELICS',
-          'Essence · permanent party auras.',
+          'Permanent party auras.',
         ),
         for (final relicId in GameLogic.relicOrder) ...[
           Builder(
@@ -3752,9 +3891,25 @@ class _JobsOverlay extends StatelessWidget {
                         '+${mission.goldReward}g +${mission.essenceReward}e',
                         style: GameTheme.body(size: 14),
                       ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: LinearProgressIndicator(
+                          value: mission.target <= 0
+                              ? 0
+                              : (mission.progress / mission.target)
+                                  .clamp(0.0, 1.0),
+                          minHeight: 8,
+                          backgroundColor: const Color(0xFF5A5040),
+                          color: mission.isComplete
+                              ? GameTheme.mossLit
+                              : GameTheme.torchHot,
+                        ),
+                      ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 KenneyButton(
                   label: mission.isComplete ? 'CLAIM' : 'IN PROGRESS',
                   onPressed: mission.isComplete
@@ -3798,9 +3953,9 @@ class _SanctuaryOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Permanent essence tracks — infinite levels (cost scales). '
-          'Survive Ascend. Optional reset from Lv12 converts into prestige.',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          'Permanent essence tracks (infinite · survive Ascend). '
+          'From Lv12 you can prestige a track for bonus.',
+          style: GameTheme.body(size: 14, color: GameTheme.parchment),
         ),
         const SizedBox(height: 10),
         for (final track in <String>['gold', 'power', 'vitality', 'xp']) ...[
@@ -3986,60 +4141,49 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
           ),
         ),
         const SizedBox(height: 12),
-        Text('Auto-sell max iLvl', style: GameTheme.pixel(size: 8)),
-        const SizedBox(height: 6),
-        Builder(
-          builder: (context) {
-            final sellCap = GameLogic.maxAutoSellIlvlCap(state);
-            return Row(
-              children: [
-                TextButton(
-                  style: TextButton.styleFrom(
-                    minimumSize:
-                        const Size(GameTheme.minTouch, GameTheme.minTouch),
-                    padding: EdgeInsets.zero,
-                    foregroundColor: GameTheme.parchment,
-                  ),
-                  onPressed: state.autoSellMaxPower > 0
-                      ? () => director
-                          .setAutoSellMaxPower(state.autoSellMaxPower - 1)
-                      : null,
-                  child: Text('-', style: GameTheme.pixel(size: 10)),
-                ),
-                Expanded(
-                  child: _CaveSlider(
-                    value: state.autoSellMaxPower
-                        .toDouble()
-                        .clamp(0, sellCap.toDouble()),
-                    min: 0,
-                    max: sellCap.toDouble(),
-                    divisions: sellCap.clamp(1, 200),
-                    onChanged: (v) => director.setAutoSellMaxPower(v.round()),
-                  ),
-                ),
-                TextButton(
-                  style: TextButton.styleFrom(
-                    minimumSize:
-                        const Size(GameTheme.minTouch, GameTheme.minTouch),
-                    padding: EdgeInsets.zero,
-                    foregroundColor: GameTheme.parchment,
-                  ),
-                  onPressed: state.autoSellMaxPower < sellCap
-                      ? () => director
-                          .setAutoSellMaxPower(state.autoSellMaxPower + 1)
-                      : null,
-                  child: Text('+', style: GameTheme.pixel(size: 10)),
-                ),
-              ],
-            );
-          },
-        ),
+        Text('BAG CLEANUP', style: GameTheme.pixel(size: 8)),
+        const SizedBox(height: 4),
         Text(
-          'Pickup & bag SELL JUNK: sell at or below i${state.autoSellMaxPower} '
-          'if not BiS/upgrade (0 = off). Cap scales with dungeon clears / AL '
-          '(max i${GameLogic.maxAutoSellIlvlCap(state)}). Rare+ above the cap '
-          'kept until bag ≥90% full. Bag SELL = essence; Market = gold.',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          'Near-full bag: merge → sell gold → scrap essence. '
+          'BiS / upgrades are never cleaned. Bag → FILTERS opens these controls.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 10),
+        Text('Auto-sell (gold)', style: GameTheme.pixel(size: 7)),
+        const SizedBox(height: 6),
+        _IlvlFilterRow(
+          value: state.autoSellMaxPower,
+          max: GameLogic.maxAutoSellIlvlCap(state),
+          onChanged: director.setAutoSellMaxPower,
+          offLabel: 'Off',
+        ),
+        const SizedBox(height: 6),
+        _RarityFilterRow(
+          value: state.autoSellMaxRarity,
+          onChanged: director.setAutoSellMaxRarity,
+          enabled: state.autoSellMaxPower > 0,
+        ),
+        const SizedBox(height: 12),
+        Text('Auto-disassemble (essence)', style: GameTheme.pixel(size: 7)),
+        const SizedBox(height: 6),
+        _IlvlFilterRow(
+          value: state.autoDisassembleMaxIlvl,
+          max: GameLogic.maxAutoSellIlvlCap(state),
+          onChanged: director.setAutoDisassembleMaxIlvl,
+          offLabel: 'Off',
+        ),
+        const SizedBox(height: 6),
+        _RarityFilterRow(
+          value: state.autoDisassembleMaxRarity,
+          onChanged: director.setAutoDisassembleMaxRarity,
+          enabled: state.autoDisassembleMaxIlvl > 0,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity), then scrap '
+          'leftovers that match disassemble filters. Single-item SELL = essence. '
+          'Market tap = gold.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 16),
         SaveTransferSection(director: director),
@@ -4083,6 +4227,119 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
     );
   }
 
+}
+
+class _IlvlFilterRow extends StatelessWidget {
+  const _IlvlFilterRow({
+    required this.value,
+    required this.max,
+    required this.onChanged,
+    required this.offLabel,
+  });
+
+  final int value;
+  final int max;
+  final ValueChanged<int> onChanged;
+  final String offLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        TextButton(
+          style: TextButton.styleFrom(
+            minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
+            padding: EdgeInsets.zero,
+            foregroundColor: GameTheme.parchment,
+          ),
+          onPressed: value > 0 ? () => onChanged(value - 1) : null,
+          child: Text('-', style: GameTheme.pixel(size: 10)),
+        ),
+        Expanded(
+          child: _CaveSlider(
+            value: value.toDouble().clamp(0, max.toDouble()),
+            min: 0,
+            max: max.toDouble(),
+            divisions: max.clamp(1, 200),
+            onChanged: (v) => onChanged(v.round()),
+          ),
+        ),
+        TextButton(
+          style: TextButton.styleFrom(
+            minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
+            padding: EdgeInsets.zero,
+            foregroundColor: GameTheme.parchment,
+          ),
+          onPressed: value < max ? () => onChanged(value + 1) : null,
+          child: Text('+', style: GameTheme.pixel(size: 10)),
+        ),
+        SizedBox(
+          width: 52,
+          child: Text(
+            value <= 0 ? offLabel : 'i$value',
+            textAlign: TextAlign.right,
+            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RarityFilterRow extends StatelessWidget {
+  const _RarityFilterRow({
+    required this.value,
+    required this.onChanged,
+    required this.enabled,
+  });
+
+  final int value;
+  final ValueChanged<int> onChanged;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = GameLogic.rarityFilterLabel(value);
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: Row(
+        children: [
+          Text(
+            'Max rarity',
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+          const Spacer(),
+          TextButton(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
+              padding: EdgeInsets.zero,
+              foregroundColor: GameTheme.parchment,
+            ),
+            onPressed: enabled && value > 0 ? () => onChanged(value - 1) : null,
+            child: Text('-', style: GameTheme.pixel(size: 10)),
+          ),
+          SizedBox(
+            width: 88,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: GameTheme.pixel(size: 7, color: GameTheme.torchHot),
+            ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
+              padding: EdgeInsets.zero,
+              foregroundColor: GameTheme.parchment,
+            ),
+            onPressed:
+                enabled && value < 4 ? () => onChanged(value + 1) : null,
+            child: Text('+', style: GameTheme.pixel(size: 10)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SettingsToggle extends StatelessWidget {
@@ -4315,25 +4572,32 @@ class _MarketOverlay extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Buy flasks for mid-run recovery (gold). Tap stash pieces here to sell for gold. '
-          'Bag SELL / SELL JUNK pay essence — rare+ kept until bag ≥90% full.',
+          'Flasks for gold · tap stash to sell for gold. '
+          'Bag SELL JUNK = gold · SCRAP = essence (Settings filters).',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 12),
         KenneyButton(
-          label: 'BUY FLASK  ${flaskCost}g',
+          label: state.gold >= flaskCost
+              ? 'BUY FLASK  ${flaskCost}g'
+              : 'BUY FLASK  ${flaskCost}g · need gold',
           onPressed: state.gold >= flaskCost ? director.buyMarketFlask : null,
         ),
         const SizedBox(height: 6),
         KenneyButton(
-          label: 'BUY 3 FLASKS  ${flaskCost * 3}g',
-          onPressed:
-              state.gold >= flaskCost ? () => director.buyMarketFlasks() : null,
+          label: state.gold >= flaskCost * 3
+              ? 'BUY 3 FLASKS  ${flaskCost * 3}g'
+              : 'BUY 3 FLASKS  ${flaskCost * 3}g · need gold',
+          onPressed: state.gold >= flaskCost * 3
+              ? () => director.buyMarketFlasks()
+              : null,
         ),
         const SizedBox(height: 6),
         KenneyButton(
-          label: 'BUY BANDAGE  ${GameLogic.marketBandageCost(state)}g',
+          label: state.gold >= GameLogic.marketBandageCost(state)
+              ? 'BUY BANDAGE  ${GameLogic.marketBandageCost(state)}g'
+              : 'BUY BANDAGE  ${GameLogic.marketBandageCost(state)}g · need gold',
           onPressed: state.gold >= GameLogic.marketBandageCost(state)
               ? director.buyMarketBandage
               : null,
@@ -4513,14 +4777,26 @@ class _BeastOverlayState extends State<_BeastOverlay> {
           ),
         ],
         const SizedBox(height: 8),
-        if (state.ownedPets.isEmpty)
+        if (state.ownedPets.isEmpty) ...[
+          const SizedBox(height: 8),
+          Center(
+            child: KenneySprite(asset: CustomAssets.petEgg, size: 56),
+          ),
+          const SizedBox(height: 10),
           Text(
-            'No beasts yet. Hatch an egg with essence — '
-            'companions fight beside the party.',
+            'No beasts yet',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
-          )
-        else ...[
+            style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Hatch an egg with essence — companions fight beside the party '
+            'and grant passives (gold, loot, mitigate…).',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 12),
+        ] else ...[
           Text(
             canMerge
                 ? 'Tap MERGE to combine same-species pets'

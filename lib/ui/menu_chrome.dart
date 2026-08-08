@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'game_theme.dart';
 import 'kenney_button.dart';
+import 'kenney_sprite.dart';
 import 'web_click_bridge.dart';
 
 /// Shared cave-menu chrome — translucent panels, torch edges, soft scrims.
@@ -94,11 +95,16 @@ abstract final class MenuChrome {
   /// Cave-styled modal bottom sheet (MORE menus, etc.).
   ///
   /// Pass either a flat [items] list or grouped [sections] (preferred).
+  /// Optional [icon] is a Kenney/Custom asset path shown left of the label.
   static Future<void> showMenuSheet({
     required BuildContext context,
     required String title,
-    List<({String label, VoidCallback onTap})>? items,
-    List<({String header, List<({String label, VoidCallback onTap})> items})>?
+    List<({String label, VoidCallback onTap, String? icon})>? items,
+    List<
+            ({
+              String header,
+              List<({String label, VoidCallback onTap, String? icon})> items,
+            })>?
         sections,
   }) {
     assert(
@@ -157,6 +163,7 @@ abstract final class MenuChrome {
                               for (final item in resolved[s].items)
                                 menuRow(
                                   label: item.label,
+                                  icon: item.icon,
                                   onTap: () {
                                     Navigator.pop(ctx);
                                     item.onTap();
@@ -187,6 +194,7 @@ abstract final class MenuChrome {
     required String label,
     required VoidCallback onTap,
     String? trailing,
+    String? icon,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -211,6 +219,10 @@ abstract final class MenuChrome {
                 decoration: rowTile(),
                 child: Row(
                   children: [
+                    if (icon != null) ...[
+                      KenneySprite(asset: icon, size: 20),
+                      const SizedBox(width: 10),
+                    ],
                     Expanded(
                       child: Text(
                         label,

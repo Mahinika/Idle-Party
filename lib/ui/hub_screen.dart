@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/hub_chase.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
@@ -381,6 +382,10 @@ class _HubScreenState extends State<HubScreen>
                           ),
                         ),
                         const SizedBox(height: 8),
+                        if (!short) ...[
+                          _HubTodayCard(chase: HubChase.forState(state)),
+                          const SizedBox(height: 8),
+                        ],
                         Transform.scale(
                           scale: 1.0 + (_torch.value * 0.012),
                           child: KenneyButton(
@@ -392,6 +397,17 @@ class _HubScreenState extends State<HubScreen>
                                 : null,
                           ),
                         ),
+                        if (!short && !canAscend) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Ascend ${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} bosses · keep clearing',
+                            textAlign: TextAlign.center,
+                            style: GameTheme.body(
+                              size: 13,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 6),
                         _HubUrgentRow(
                           claimable: state.missions
@@ -402,12 +418,12 @@ class _HubScreenState extends State<HubScreen>
                               ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
                               : null,
                           onContracts: () {
+                            // Claim rewards + toast only — don't force Contracts overlay.
                             for (final m in director.state.missions) {
                               if (m.isComplete) {
                                 director.claimMission(m.id);
                               }
                             }
-                            widget.onOpenJobs();
                           },
                           onAscend: () => confirmAscend(context, director),
                           dailyClaimed: director.isDailyClaimedToday,
@@ -426,17 +442,6 @@ class _HubScreenState extends State<HubScreen>
                           weeklyModifier: state.metaDepth.weeklyModifier,
                           onClaimWeekly: director.claimWeekly,
                         ),
-                        if (!short && !canAscend) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Bosses ${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} · keep clearing',
-                            textAlign: TextAlign.center,
-                            style: GameTheme.body(
-                              size: 13,
-                              color: GameTheme.parchmentDim,
-                            ),
-                          ),
-                        ],
                         if (!short) ...[
                           const SizedBox(height: 4),
                           ChallengeToggles(
@@ -485,6 +490,7 @@ class _HubScreenState extends State<HubScreen>
   }
 
   void _showHubMore(BuildContext context) {
+    widget.director.clearToast();
     final claimable =
         widget.director.state.missions.where((m) => m.isComplete).length;
     MenuChrome.showMenuSheet(
@@ -494,12 +500,28 @@ class _HubScreenState extends State<HubScreen>
         (
           header: 'GEAR',
           items: [
-            (label: 'BAG', onTap: widget.onOpenInventory),
-            (label: 'FORGE', onTap: widget.onOpenForge),
+            (
+              label: 'BAG',
+              icon: CustomAssets.iconChest,
+              onTap: widget.onOpenInventory,
+            ),
+            (
+              label: 'FORGE',
+              icon: CustomAssets.iconAxe,
+              onTap: widget.onOpenForge,
+            ),
             if (widget.onOpenLoadouts != null)
-              (label: 'LOADOUTS', onTap: widget.onOpenLoadouts!),
+              (
+                label: 'LOADOUTS',
+                icon: KenneyAssets.shield,
+                onTap: widget.onOpenLoadouts!,
+              ),
             if (widget.onOpenTeam != null)
-              (label: 'PARTY', onTap: widget.onOpenTeam!),
+              (
+                label: 'PARTY',
+                icon: KenneyAssets.helmet,
+                onTap: widget.onOpenTeam!,
+              ),
           ],
         ),
         (
@@ -507,24 +529,66 @@ class _HubScreenState extends State<HubScreen>
           items: [
             (
               label: claimable > 0 ? 'CONTRACTS ($claimable)' : 'CONTRACTS',
+              icon: KenneyAssets.book,
               onTap: widget.onOpenJobs,
             ),
-            (label: 'SANCTUARY', onTap: widget.onOpenSanctuary),
-            (label: 'MARKET', onTap: widget.onOpenMarket),
-            (label: 'BEAST PEN', onTap: widget.onOpenBeast),
+            (
+              label: 'SANCTUARY',
+              icon: CustomAssets.iconCampfire,
+              onTap: widget.onOpenSanctuary,
+            ),
+            (
+              label: 'MARKET',
+              icon: KenneyAssets.coinGold,
+              onTap: widget.onOpenMarket,
+            ),
+            (
+              label: 'BEAST PEN',
+              icon: CustomAssets.petEgg,
+              onTap: widget.onOpenBeast,
+            ),
             if (widget.onOpenPrestigeShop != null)
-              (label: 'ESSENCE SHOP', onTap: widget.onOpenPrestigeShop!),
+              (
+                label: 'ESSENCE SHOP',
+                icon: KenneyAssets.vialBlue,
+                onTap: widget.onOpenPrestigeShop!,
+              ),
           ],
         ),
         (
           header: 'INFO',
           items: [
+            (
+              label: MetaSystems.hasUnseenChangelog(widget.director.state)
+                  ? "WHAT'S NEW ★"
+                  : "WHAT'S NEW",
+              icon: CustomAssets.iconTome,
+              onTap: () =>
+                  WhatsNewOverlay.show(context, widget.director),
+            ),
+            (
+              label: 'SETTINGS',
+              icon: KenneyAssets.iconDoor,
+              onTap: widget.onOpenSettings,
+            ),
             if (widget.onOpenAchievements != null)
-              (label: 'ACHIEVEMENTS', onTap: widget.onOpenAchievements!),
+              (
+                label: 'ACHIEVEMENTS',
+                icon: KenneyAssets.iconTrophy,
+                onTap: widget.onOpenAchievements!,
+              ),
             if (widget.onOpenCodex != null)
-              (label: 'CODEX', onTap: widget.onOpenCodex!),
+              (
+                label: 'CODEX',
+                icon: KenneyAssets.book,
+                onTap: widget.onOpenCodex!,
+              ),
             if (widget.onOpenGuides != null)
-              (label: 'GUIDES', onTap: widget.onOpenGuides!),
+              (
+                label: 'GUIDES',
+                icon: KenneyAssets.iconStar,
+                onTap: widget.onOpenGuides!,
+              ),
           ],
         ),
       ],
@@ -562,6 +626,79 @@ class _HubScreenState extends State<HubScreen>
     }
     if (prev == null) return 'Clear the prior zone';
     return 'Or clear ${prev.name}';
+  }
+}
+
+class _HubTodayCard extends StatelessWidget {
+  const _HubTodayCard({required this.chase});
+
+  final HubChase chase;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'TODAY chase: ${chase.title}. ${chase.detail}',
+      child: KenneyPanel(
+        style: KenneyPanelStyle.inset,
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            KenneySprite(
+              asset: KenneyAssets.iconStar,
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'TODAY',
+                        style: GameTheme.pixel(
+                          size: 8,
+                          color: GameTheme.torchHot,
+                        ),
+                      ),
+                      if (chase.progressLabel != null) ...[
+                        const Spacer(),
+                        Text(
+                          chase.progressLabel!,
+                          style: GameTheme.pixel(
+                            size: 8,
+                            color: GameTheme.mossLit,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    chase.title,
+                    style: GameTheme.body(
+                      size: 15,
+                      color: GameTheme.parchment,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    chase.detail,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -777,14 +914,18 @@ class _HubHeader extends StatelessWidget {
             SizedBox(
               width: GameTheme.minTouch,
               height: GameTheme.minTouch,
-              child: IconButton(
-                padding: EdgeInsets.zero,
+              child: WebClickScope(
+                label: 'Settings',
                 onPressed: onOpenSettings,
-                icon: KenneySprite(
-                  asset: KenneyAssets.iconDoor,
-                  size: 18,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: onOpenSettings,
+                  icon: KenneySprite(
+                    asset: KenneyAssets.iconDoor,
+                    size: 18,
+                  ),
+                  tooltip: 'Settings',
                 ),
-                tooltip: 'Settings',
               ),
             ),
           ],
@@ -803,7 +944,10 @@ class _HubHeader extends StatelessWidget {
           children: [
             _StatPill(icon: KenneyAssets.coinGold, label: '$gold'),
             _StatPill(icon: KenneyAssets.vialBlue, label: '$essence'),
-            _StatPill(icon: KenneyAssets.iconCrown, label: 'AL$ascensionLevel'),
+            _StatPill(
+              icon: KenneyAssets.iconCrown,
+              label: 'Ascend $ascensionLevel',
+            ),
             if (soulbound > 0)
               _StatPill(
                 icon: KenneyAssets.iconTrophy,
@@ -1125,11 +1269,13 @@ class _ZoneNode extends StatelessWidget {
 
     final status = cleared
         ? 'CLEAR'
-        : isFrontier
-            ? 'NEXT'
-            : unlocked
-                ? 'OPEN'
-                : unlockGoldLabel(def.unlockPrice);
+        : selected
+            ? 'HERE'
+            : isFrontier
+                ? 'NEXT'
+                : unlocked
+                    ? 'OPEN'
+                    : unlockGoldLabel(def.unlockPrice);
 
     final scale = selected
         ? 1.0 + pulse * 0.03

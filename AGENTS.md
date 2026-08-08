@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.9.3**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.9.9**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -12,13 +12,20 @@ The owner describes goals in plain language and does not pick tools/skills.
 Agents **must** choose methods, skills, and verify steps themselves — see
 `.cursor/rules/vibe-coder-autopilot.mdc` and `.cursor/rules/owner-preferences.mdc`.
 
-Preferences (do not re-ask): Play Store goal soon, **large batches**, **cozy idle**,
-**English in-game copy**, **fairness-first** balance, **propose** commit / push / PR / tag
-(with a clear yes/no). Chat in plain Swedish; ask only product/risk questions.
+Preferences (do not re-ask): **content/feel over Play busywork**, first-hour
+**progression/power**, early calm / **endgame grindy OK**, **polish kits** before
+many new specs, **more zones**, clearer “what am I chasing today” meta, **no IAP
+for now**, **Android-first** (no iOS/web product), **large batches**, English
+in-game copy, fairness-first balance, **propose** commit / push / PR / tag.
+Chat in plain Swedish; ask only product/risk questions. Full detail:
+`.cursor/rules/owner-preferences.mdc`.
 
-**Distribution today:** GitHub Releases APK/AAB is the live path (`docs/PLAY_STORE.md`).
-Play Console is the goal — prepare listing/privacy/IARC, but do not assume Play is
-already the primary install channel.
+**Distribution today:** GitHub Releases APK/AAB is the live install path
+(`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
+closed Alpha (AAB **14 / 1.9.3**); production still needs **12 closed testers × 14
+days**. Do not treat Play as the primary install channel yet.
+
+Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
 ## Legal / IP policy (mandatory)
 
@@ -161,15 +168,16 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 ## Meta (survives Ascend)
 
 **Keeps:** essence (and rewards), relics, sanctuary tracks + prestige, pets,
-soulbound (item may rescale for new AL), God Hand level + style/CD in `metaDepth`,
+soulbound item (may rescale) + fragments, God Hand level + style/CD in `metaDepth`,
 `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
 (mute/VFX/colorblind/text scale/auto-sell), full `metaDepth` (Gauntlet best, Will /
-Gauntlet claims, weekly/season, prestige shop, unlocked specs, party slot 5, …),
-**hero levels/XP**, **Apex** vault + equipped apex, craft mats/pity, hardmode
-(clamped) + challenge toggles.
+Gauntlet claims, weekly/season, prestige shop, unlocked specs, party slot 5,
+ascend streak/titles/trophies, …), **hero levels/XP**, **Apex** vault + equipped
+apex, craft mats/pity, hardmode (clamped) + challenge toggles, FARM/PUSH preference.
 
-**Resets:** wallet gold, floor progress, gold party upgrades (ATK/DEF/VIT/move/haste/crit),
-non-Apex gear/stash, **loadouts**, leave dungeon; mission board rebuilt for new AL.
+**Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades
+(ATK/DEF/VIT/move/haste/crit), non-Apex gear/stash, **loadouts**, leave dungeon
+(`inDungeon=false`); mission board rebuilt for new AL.
 
 Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
 

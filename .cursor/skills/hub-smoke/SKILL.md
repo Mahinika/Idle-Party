@@ -25,6 +25,7 @@ Open `http://localhost:8080/` → `CONTINUE` or `NEW GAME` → dismiss tips (`SK
 |---|--------|-----|
 | 1 | Hub loads | World Path nodes visible; `ENTER DUNGEON` present |
 | 2 | Weekly progress | With `weeklyProgress` 1–2: hub shows `Weekly … · n/3` (not only claim) |
+| 2b | TODAY chase | Hub shows a **TODAY** card above ENTER DUNGEON with next goal |
 | 3 | Weekly claim | At 3/3 unclaimed: `CLAIM WEEKLY` button; toast includes essence / season |
 | 4 | MORE badge | Unseen changelog → `MORE · NEW`; claimable jobs / weekly mid → `MORE · !` |
 | 5 | What’s New | Open MORE → Settings / changelog path; bullets match `MetaSystems.currentVersion` |

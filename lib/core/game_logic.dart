@@ -1919,6 +1919,9 @@ class GameLogic {
       soundMuted: state.soundMuted,
       vfxQuality: state.vfxQuality,
       autoSellMaxPower: state.autoSellMaxPower,
+      autoSellMaxRarity: state.autoSellMaxRarity,
+      autoDisassembleMaxIlvl: state.autoDisassembleMaxIlvl,
+      autoDisassembleMaxRarity: state.autoDisassembleMaxRarity,
       rogueUnlocked: true,
       seenTips: [
         for (final t in state.seenTips)
@@ -4973,18 +4976,32 @@ class GameLogic {
         (item.effectiveItemLevel ~/ 4) +
         (item.affinity == affinityRole.name ? 24 : 0);
     // Prefer the heaviest armor the spec can wear (stops cloth beating mail).
+    // One step below preferred (mail under plate) is a soft penalty, not a dump.
     if (spec != null && item.armorType != null) {
       final preferred = preferredArmorForSpec(spec, level);
       if (preferred != null) {
-        if (item.armorType == preferred) {
+        final delta =
+            _armorWeightRank(preferred) - _armorWeightRank(item.armorType!);
+        if (delta == 0) {
           score += 32;
-        } else {
+        } else if (delta == 1) {
+          score -= 4;
+        } else if (delta > 1) {
           score -= 12;
+        } else {
+          score -= 6;
         }
       }
     }
     return score;
   }
+
+  static int _armorWeightRank(ArmorType t) => switch (t) {
+        ArmorType.cloth => 0,
+        ArmorType.leather => 1,
+        ArmorType.mail => 2,
+        ArmorType.plate => 3,
+      };
 
   static SpecRoleTag _tagForRole(HeroRole role) => switch (role) {
         HeroRole.warrior => SpecRoleTag.meleeDps,
@@ -5114,19 +5131,35 @@ class GameLogic {
   }
 
   /// Empty slots only fill role-plausible gear (not every wearable crumb).
-  static bool emptySlotWorthFilling(PartyHero hero, EquipmentItem item, int score) {
-    final spec = hero.spec;
-    if (item.affinity != null && item.affinity == spec.gearAffinity.name) {
-      return true;
-    }
-    final preferred = preferredArmorForSpec(spec, hero.level);
-    if (preferred != null && item.armorType == preferred) {
-      return true;
-    }
+  ///
+  /// Affinity / preferred armor alone is not enough — low-iLvl tagged junk was
+  /// filling empty slots, then BiS-keep blocked auto-sell and clogged the bag.
+  static bool emptySlotWorthFilling(
+    PartyHero hero,
+    EquipmentItem item,
+    int score,
+  ) {
     final mass = roleRelevantStatMass(hero, item);
-    // Real primary stack for this role, or an obviously strong piece.
-    if (mass >= 28) return true;
-    if (score >= 90 && mass >= 12) return true;
+    final minIlvl = max(6, (hero.level * 0.55).floor());
+    final ilvl = item.effectiveItemLevel;
+    // Soft ilvl floor vs hero level — early crumbs (i5 on L20) stay in bag.
+    // Strong mass still needs to be near the floor (not outleveled tank armor).
+    final nearLevel = ilvl >= minIlvl - 2;
+
+    if (mass >= 28 && nearLevel) return true;
+    if (score >= 90 && mass >= 12 && nearLevel) return true;
+
+    final spec = hero.spec;
+    final affinityOk =
+        item.affinity != null && item.affinity == spec.gearAffinity.name;
+    final preferred = preferredArmorForSpec(spec, hero.level);
+    final armorOk = preferred != null && item.armorType == preferred;
+    if (!affinityOk && !armorOk) return false;
+
+    if (ilvl >= minIlvl && mass >= 10) return true;
+    if (ilvl >= minIlvl + 4 && mass >= 6) return true;
+    // Preferred armor with decent mass even if slightly under ilvl floor.
+    if (armorOk && nearLevel && mass >= 16) return true;
     return false;
   }
 
@@ -5503,8 +5536,8 @@ class GameLogic {
   }
 
   /// Gear always goes to stash (manual equip). Non-gear → essence.
-  /// Weak junk is auto-sold on pickup when [autoSellMaxPower] > 0
-  /// (ilvl cap — field name kept for save compatibility; treat as autoSellMaxItemLevel).
+  /// Weak junk is auto-sold for **gold** or auto-disassembled for **essence**
+  /// on pickup when filters match (sell checked first).
   static ({GameState state, List<LootDrop> resolved}) applyLootDrops(
     GameState state,
     List<LootDrop> drops,
@@ -5537,6 +5570,18 @@ class GameLogic {
       }
 
       if (_shouldAutoSellOnPickup(next, item)) {
+        final value = equipmentGoldValue(item);
+        next = next.copyWith(
+          gold: next.gold + value,
+          lifetimeGoldEarned: next.lifetimeGoldEarned + value,
+        );
+        resolved.add(
+          drop.copyWith(outcome: LootOutcome.gold, essenceGained: 0),
+        );
+        continue;
+      }
+
+      if (_shouldAutoDisassembleOnPickup(next, item)) {
         final value = equipmentEssenceValue(item);
         next = next.copyWith(essence: next.essence + value);
         resolved.add(
@@ -5557,17 +5602,69 @@ class GameLogic {
 
     // Live spatial loot never goes through completeCurrentRoom meta progress.
     next = MetaSystems.registerItemDrops(next, drops);
-    // Near-full bag: dump junk automatically so fights aren't loot-blocked.
-    final cap = maxGearStashFor(next);
-    if (next.gearStash.length >= (cap * 0.9).ceil()) {
-      next = autoSellJunk(next);
-    }
+    // Near-full bag: merge → sell gold → disassemble essence.
+    next = unstickBagIfNeeded(next);
     return (state: next, resolved: resolved);
   }
 
+  /// Run merge + auto-sell + auto-disassemble when stash is ≥90% full.
+  static GameState unstickBagIfNeeded(GameState state) {
+    final cap = maxGearStashFor(state);
+    if (state.gearStash.length < (cap * 0.9).ceil()) {
+      return state;
+    }
+    return cleanBagJunk(state, unstickBag: true);
+  }
+
+  /// Merge junk (optional), then auto-sell for gold, then auto-disassemble
+  /// for essence. [unstickBag] keeps only BiS/soulbound/best-per-slot.
+  static GameState cleanBagJunk(
+    GameState state, {
+    bool unstickBag = false,
+    bool mergeFirst = true,
+  }) {
+    var next = state;
+    if (mergeFirst) {
+      next = autoMergeJunk(next).state;
+    }
+    next = autoSellJunk(next, unstickBag: unstickBag);
+    next = autoDisassembleJunk(next, unstickBag: unstickBag);
+    return next;
+  }
+
+  static bool _matchesIlvlRarityFilter(
+    EquipmentItem item, {
+    required int maxIlvl,
+    required int maxRarity,
+  }) {
+    if (maxIlvl <= 0) return false;
+    if (item.effectiveItemLevel > maxIlvl) return false;
+    if (item.rarity.index > maxRarity.clamp(0, 4)) return false;
+    return true;
+  }
+
   static bool _shouldAutoSellOnPickup(GameState state, EquipmentItem item) {
-    if (state.autoSellMaxPower <= 0) return false;
-    if (item.effectiveItemLevel > state.autoSellMaxPower) return false;
+    if (!_matchesIlvlRarityFilter(
+      item,
+      maxIlvl: state.autoSellMaxPower,
+      maxRarity: state.autoSellMaxRarity,
+    )) {
+      return false;
+    }
+    return !_shouldKeepInBag(state, item);
+  }
+
+  static bool _shouldAutoDisassembleOnPickup(
+    GameState state,
+    EquipmentItem item,
+  ) {
+    if (!_matchesIlvlRarityFilter(
+      item,
+      maxIlvl: state.autoDisassembleMaxIlvl,
+      maxRarity: state.autoDisassembleMaxRarity,
+    )) {
+      return false;
+    }
     return !_shouldKeepInBag(state, item);
   }
 
@@ -5600,12 +5697,14 @@ class GameLogic {
     return false;
   }
 
-  /// Keep BiS/upgrades normally. Rare+ kept when bag has room.
-  /// [unstickBag] (near-full sell pass): keep BiS-planned + soulbound, else
-  /// the strongest role/spec-scored piece per slot.
-  static bool _shouldKeepWhenSellingJunk(
+  /// Whether [item] should stay when cleaning the bag.
+  ///
+  /// [mode] `sell` uses gold filters; `disassemble` uses essence filters.
+  /// [unstickBag]: keep BiS/soulbound/apex and the strongest piece per slot.
+  static bool _shouldKeepWhenCleaning(
     GameState state,
     EquipmentItem item, {
+    required bool forSell,
     bool unstickBag = false,
   }) {
     if (unstickBag) {
@@ -5637,16 +5736,27 @@ class GameLogic {
     if (_shouldKeepInBag(state, item)) {
       return true;
     }
-    // Unify with pickup auto-sell: at/below iLvl cap → junk unless BiS/upgrade.
-    if (state.autoSellMaxPower > 0 &&
-        item.effectiveItemLevel <= state.autoSellMaxPower) {
-      return false;
-    }
-    // Above the cap: keep rare+ while the bag still has room.
+    final matches = forSell
+        ? _matchesIlvlRarityFilter(
+            item,
+            maxIlvl: state.autoSellMaxPower,
+            maxRarity: state.autoSellMaxRarity,
+          )
+        : _matchesIlvlRarityFilter(
+            item,
+            maxIlvl: state.autoDisassembleMaxIlvl,
+            maxRarity: state.autoDisassembleMaxRarity,
+          );
+    // Matching filter → eligible to clean (do not keep).
+    if (matches) return false;
+    // Outside filter: keep rare+ while bag has room; commons may still go in
+    // unstick-only passes.
     if (item.rarity.index >= LootRarity.rare.index) {
       return true;
     }
-    return false;
+    // Non-matching common/uncommon: keep unless filters are off entirely
+    // (manual clean with filters off should not dump everything).
+    return true;
   }
 
   /// Best slotEquipScore for [item] across heroes who can wear it.
@@ -5724,47 +5834,106 @@ class GameLogic {
     return (state: next, merges: merges);
   }
 
-  /// Last [autoSellJunk] sell count (consumed by UI toasts).
+  /// Last [autoSellJunk] counts (consumed by UI toasts).
   static int lastAutoSellCount = 0;
+  static int lastAutoSellGold = 0;
 
-  /// Sell stash pieces that are not BiS/upgrades.
-  ///
-  /// Matches pickup auto-sell: at/below [GameState.autoSellMaxPower] iLvl is
-  /// junk (unless BiS/upgrade). Rare+ above the cap are kept while the bag has
-  /// room. At ≥90% capacity an unstick pass keeps only BiS/soulbound/apex and
-  /// the strongest piece per slot.
-  static GameState autoSellJunk(GameState state) {
-    var essence = state.essence;
-    // Multi-pass: after selling, another piece may become "best for empty".
+  /// Last [autoDisassembleJunk] counts (consumed by UI toasts).
+  static int lastAutoDisassembleCount = 0;
+  static int lastAutoDisassembleEssence = 0;
+
+  /// Sell stash junk for **gold** (iLvl + rarity filters; BiS kept).
+  static GameState autoSellJunk(
+    GameState state, {
+    bool unstickBag = false,
+  }) {
+    var gold = state.gold;
+    var lifetime = state.lifetimeGoldEarned;
     var stash = List<EquipmentItem>.from(state.gearStash);
     final beforeLen = stash.length;
-    final cap = maxGearStashFor(state);
-    final unstickBag = stash.length >= (cap * 0.9).ceil();
+    var gained = 0;
     var guard = 0;
     while (guard < 64) {
       guard++;
-      final probe = state.copyWith(gearStash: stash);
-      EquipmentItem? sellId;
+      final probe = state.copyWith(gearStash: stash, gold: gold);
+      EquipmentItem? sellItem;
       for (final item in stash) {
-        if (!_shouldKeepWhenSellingJunk(
+        if (!_shouldKeepWhenCleaning(
           probe,
           item,
+          forSell: true,
           unstickBag: unstickBag,
         )) {
-          sellId = item;
+          sellItem = item;
           break;
         }
       }
-      if (sellId == null) break;
-      essence += equipmentEssenceValue(sellId);
-      stash = stash.where((g) => g.id != sellId!.id).toList();
+      if (sellItem == null) break;
+      final value = equipmentGoldValue(sellItem);
+      gold += value;
+      lifetime += value;
+      gained += value;
+      stash = stash.where((g) => g.id != sellItem!.id).toList();
     }
     lastAutoSellCount = beforeLen - stash.length;
+    lastAutoSellGold = gained;
+    return state.copyWith(
+      gearStash: stash,
+      gold: gold,
+      lifetimeGoldEarned: lifetime,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// Disassemble stash junk for **essence** (iLvl + rarity filters; BiS kept).
+  static GameState autoDisassembleJunk(
+    GameState state, {
+    bool unstickBag = false,
+  }) {
+    var essence = state.essence;
+    var stash = List<EquipmentItem>.from(state.gearStash);
+    final beforeLen = stash.length;
+    var gained = 0;
+    var guard = 0;
+    while (guard < 64) {
+      guard++;
+      final probe = state.copyWith(gearStash: stash, essence: essence);
+      EquipmentItem? scrap;
+      for (final item in stash) {
+        if (!_shouldKeepWhenCleaning(
+          probe,
+          item,
+          forSell: false,
+          unstickBag: unstickBag,
+        )) {
+          scrap = item;
+          break;
+        }
+      }
+      if (scrap == null) break;
+      final value = equipmentEssenceValue(scrap);
+      essence += value;
+      gained += value;
+      stash = stash.where((g) => g.id != scrap!.id).toList();
+    }
+    lastAutoDisassembleCount = beforeLen - stash.length;
+    lastAutoDisassembleEssence = gained;
     return state.copyWith(
       gearStash: stash,
       essence: essence,
       lastUpdated: DateTime.now(),
     );
+  }
+
+  static String rarityFilterLabel(int rarityIndex) {
+    final i = rarityIndex.clamp(0, LootRarity.values.length - 1);
+    return switch (LootRarity.values[i]) {
+      LootRarity.common => 'Common',
+      LootRarity.uncommon => 'Uncommon',
+      LootRarity.rare => 'Rare',
+      LootRarity.epic => 'Epic',
+      LootRarity.legendary => 'Legendary',
+    };
   }
 
   static int recommendedForgeUpgrade(GameState state) {

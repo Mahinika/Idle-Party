@@ -76,6 +76,9 @@ class GameState {
     this.soundMuted = false,
     this.vfxQuality = VfxQuality.full,
     this.autoSellMaxPower = 24,
+    this.autoSellMaxRarity = 1,
+    this.autoDisassembleMaxIlvl = 24,
+    this.autoDisassembleMaxRarity = 2,
     this.rogueUnlocked = false,
     this.seenTips = const <String>[],
     this.loadouts = const <GearLoadout>[],
@@ -214,10 +217,18 @@ class GameState {
   /// True when VFX is lite or minimal (spawn gates skip bursts/floaters).
   bool get reducedVfx => vfxQuality.reduced;
 
-  /// Auto-sell *drops on pickup* when itemLevel ≤ this (0 = off).
-  /// Bag AUTO SELL button ignores this and sells all non-upgrades.
-  /// Auto-sell pickup threshold as **item level** (legacy field name).
+  /// Auto-sell *drops on pickup* / bag cleanup when itemLevel ≤ this (0 = off).
+  /// Legacy field name — treat as auto-sell max item level. Pays **gold**.
   final int autoSellMaxPower;
+
+  /// Max [LootRarity.index] inclusive for auto-sell gold (0=common … 4=legendary).
+  final int autoSellMaxRarity;
+
+  /// Auto-disassemble junk to **essence** when itemLevel ≤ this (0 = off).
+  final int autoDisassembleMaxIlvl;
+
+  /// Max [LootRarity.index] inclusive for auto-disassemble.
+  final int autoDisassembleMaxRarity;
 
   /// Fourth hero (Rogue) unlocked after first Ascend.
   final bool rogueUnlocked;
@@ -728,6 +739,9 @@ class GameState {
     VfxQuality? vfxQuality,
     bool? reducedVfx,
     int? autoSellMaxPower,
+    int? autoSellMaxRarity,
+    int? autoDisassembleMaxIlvl,
+    int? autoDisassembleMaxRarity,
     bool? rogueUnlocked,
     List<String>? seenTips,
     List<GearLoadout>? loadouts,
@@ -808,6 +822,11 @@ class GameState {
               ? this.vfxQuality
               : (reducedVfx ? VfxQuality.lite : VfxQuality.full)),
       autoSellMaxPower: autoSellMaxPower ?? this.autoSellMaxPower,
+      autoSellMaxRarity: autoSellMaxRarity ?? this.autoSellMaxRarity,
+      autoDisassembleMaxIlvl:
+          autoDisassembleMaxIlvl ?? this.autoDisassembleMaxIlvl,
+      autoDisassembleMaxRarity:
+          autoDisassembleMaxRarity ?? this.autoDisassembleMaxRarity,
       rogueUnlocked: rogueUnlocked ?? this.rogueUnlocked,
       seenTips: seenTips ?? this.seenTips,
       loadouts: loadouts ?? this.loadouts,
@@ -900,6 +919,9 @@ class GameState {
     'vfxQuality': vfxQuality.name,
     'reducedVfx': reducedVfx,
     'autoSellMaxPower': autoSellMaxPower,
+    'autoSellMaxRarity': autoSellMaxRarity,
+    'autoDisassembleMaxIlvl': autoDisassembleMaxIlvl,
+    'autoDisassembleMaxRarity': autoDisassembleMaxRarity,
     'rogueUnlocked': rogueUnlocked,
     'seenTips': seenTips,
     'loadouts': loadouts.map((l) => l.toJson()).toList(),
@@ -1097,6 +1119,10 @@ class GameState {
         legacyReduced: json['reducedVfx'] as bool?,
       ),
       autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 24),
+      autoSellMaxRarity: _jsonInt(json['autoSellMaxRarity'], 1).clamp(0, 4),
+      autoDisassembleMaxIlvl: _jsonInt(json['autoDisassembleMaxIlvl'], 24),
+      autoDisassembleMaxRarity:
+          _jsonInt(json['autoDisassembleMaxRarity'], 2).clamp(0, 4),
       rogueUnlocked: rogueUnlocked,
       seenTips: (json['seenTips'] as List<dynamic>?)
               ?.map((e) => e.toString())

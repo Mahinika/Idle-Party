@@ -475,7 +475,7 @@ class ClassKits {
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Devastate',
-      shortLabel: 'Dev',
+      shortLabel: 'Dvst',
       description: 'Strike that applies Sunder Armor stacks.',
       unlockLevel: 6,
       cooldown: 2.8,

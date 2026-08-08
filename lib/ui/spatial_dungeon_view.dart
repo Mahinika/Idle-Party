@@ -22,6 +22,7 @@ import 'game_theme.dart';
 import 'hero_paper_doll.dart';
 import 'kenney_assets.dart';
 import 'kenney_button.dart';
+import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
 import 'meta_overlays.dart';
 import 'web_click_bridge.dart';
@@ -502,10 +503,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                             )) ...[
                                       const SizedBox(height: 8),
                                       KenneyButton(
-                                        label: 'SELL JUNK',
+                                        label: 'CLEAN BAG',
                                         style: KenneyButtonStyle.grey,
                                         onPressed: () {
-                                          widget.director.autoSellJunk();
+                                          widget.director.cleanBagJunk();
                                         },
                                       ),
                                     ],
@@ -697,12 +698,10 @@ class GodHandRing extends StatelessWidget {
                       ready: ready,
                     ),
                     child: Center(
-                      child: Text(
-                        'GH',
-                        style: GameTheme.pixel(
-                          size: GameTheme.hudPixel,
-                          color: color,
-                        ),
+                      child: KenneySprite(
+                        asset: KenneyAssets.fist,
+                        size: 14,
+                        color: color,
                       ),
                     ),
                   ),

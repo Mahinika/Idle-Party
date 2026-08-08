@@ -19,10 +19,61 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.9.3';
+  static const String currentVersion = '1.9.9';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.9.9',
+      bullets: <String>[
+        'Auto-equip: empty slots skip low-iLvl affinity junk; mid-fight equip is debounced (floor clear still full).',
+        'Equip compare shows Score + UPGRADE; mail under plate is a soft penalty, not a hard dump.',
+        'Bag UI: CLEAN BAG first, FILTERS shortcut; BAG n/cap on dungeon nav; fewer mid-fight tips.',
+        'Custom icons: opaque black backgrounds cleared to transparency.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.8',
+      bullets: <String>[
+        'Bag cleanup: auto-sell pays gold; new auto-disassemble pays essence (Settings: iLvl + rarity for each).',
+        'Near-full bag: AUTO MERGE → sell → scrap. CLEAN BAG / SELL JUNK / SCRAP buttons in the bag.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.7',
+      bullets: <String>[
+        'Hub clarity: Ascend boss progress under Enter (not Daily), WHAT\'S NEW in MORE, Challenges clickable for playtest.',
+        'Shorter Contracts/Market/Beast sheets; clearer 0% progress bars; Market BUY shows need gold when broke.',
+        'Bag slot tags (Neck/Ring/Shldr…), Forge axe icon in MORE; disabled buttons look greyer.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.6',
+      bullets: <String>[
+        'Menu polish: MORE icons, Apex role/slot labels, Forge MOVE (not SPD), shorter tips.',
+        'Contracts progress bars, clearer Beast empty state, Loadouts empty tip, Essence Shop BUY shows cost.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.5',
+      bullets: <String>[
+        'Hub/UX polish: bag slots show slot + icon, CLAIM rewards without opening Contracts, Ascend label, God Hand fist icon.',
+        'Party meter shows tank damage taken / healer HPS / DPS; AUTO EQUIP vs AUTO MERGE; clearer MORE → Return to hub.',
+        'Confirm dialogs (leave/daily/gauntlet/new game) work with web playtest clicks.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.4',
+      bullets: <String>[
+        'Hub TODAY card: always shows your next chase (weekly, daily, Will, Gauntlet, zone unlock).',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.9.3',
       bullets: <String>[

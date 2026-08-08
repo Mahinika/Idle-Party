@@ -31,7 +31,7 @@ Each tagged `1.x.y` release should include:
 | Changelog sync | `test/changelog_sync_test.dart` |
 | Hub UX smoke | `.cursor/skills/hub-smoke` |
 | Zone identity | `.cursor/skills/zone-art-identity` |
-| Cursor MCP | `.cursor/mcp.json` → `idle-party` (`tool/mcp_idle_party/`) |
+| Cursor MCP | `.cursor/mcp.json` → `idle-party` (`tool/mcp_idle_party/`; UI may show `user-idle-party`) |
 | Grind / PR babysit | `.cursor/skills/grinding-until-pass`, `babysitting-pr`, `parallel-ci-triage` |
 | Browser verify / a11y | `.cursor/skills/verifying-in-browser`, `accessibility-auditing` |
 | Suggest / author skills | `.cursor/skills/suggesting-skills`, `building-skills-from-patterns` |

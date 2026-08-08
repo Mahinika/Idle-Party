@@ -3,7 +3,7 @@
 Research-förankrad plan sparad **2026-08-06** (före Q1-implementation).  
 Baseline: app **v1.9.3**, full-game audit ~**92%** ([audits/2026-08-03-full-game.md](audits/2026-08-03-full-game.md)) — audit predates Tide/Ember/meta polish; treat as historical closeout, not current completeness.
 
-**Status:** dokumenterad; Q1–Q2-kärna + Q4 polish/cadence i kod; Q3 delvis; Play production kvar.
+**Status:** dokumenterad; Q1–Q2-kärna + Q4 polish/cadence i kod; Q3 delvis; Play closed Alpha igång (produktion väntar 12×14).
 
 ---
 
@@ -11,11 +11,11 @@ Baseline: app **v1.9.3**, full-game audit ~**92%** ([audits/2026-08-03-full-game
 
 | Yta | Status | Gap |
 |-----|--------|-----|
-| Combat / AFK | Stark (`SpatialCombat` enda auktoritet; live+offline parity) | Mid-gear caster HIGH; 8 WIP-kits |
-| Gear / Apex / BiS | Stark | Set-bonuses platta; ingen gear-shop (by design) |
-| Meta / hub | ~92% komplett | Grunda payoff-loops (Gauntlet, Weekly, Will, streak) |
-| Content | **31 specs / 7 zoner** → **9 zoner** (`tide`, `ember`) | Klass-tungt, zon-lätt historiskt |
-| Distribution | GitHub APK sideload + AAB/signing docs | Play Console upload / production listing kvar |
+| Combat / AFK | Stark (`SpatialCombat` enda auktoritet; live+offline parity) | Mid-band caster risk; live-light gate |
+| Gear / Apex / BiS | Stark | 2pc/4pc procs shippade; ingen gear-shop (by design) |
+| Meta / hub | Payoffs live (Weekly n/3, Will, Gauntlet F25/50/100, season bonus, GH styles) | Prestige shop refresh / deeper sinks stretch |
+| Content | **31 specs / 9 zoner** (`tide`, `ember` shippade) | Klass-tungt historiskt; nya zoner mer sällan |
+| Distribution | GitHub Releases primary; Play Console app + closed Alpha live | Production access needs 12 closed testers × 14 days |
 | Onboarding | `FirstSessionTips` + Guides + What’s New | — |
 | A11y / save | Text scale 85–130%, colorblind floaters, VFX modes + reduce-motion label; toast dedupe; clipboard export/import + backup-hint | Lätt owned SFX stretch |
 

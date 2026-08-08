@@ -24,7 +24,8 @@ void main() {
     expect(find.textContaining('Boss F'), findsWidgets);
     expect(find.textContaining('Boss:'), findsOneWidget);
     expect(find.textContaining('MORE'), findsOneWidget);
-    expect(find.textContaining('Bosses'), findsWidgets);
+    expect(find.textContaining('Ascend'), findsWidgets);
+    expect(find.textContaining('bosses'), findsWidgets);
   });
 
   testWidgets('short hub height hides secondary chrome', (WidgetTester tester) async {
