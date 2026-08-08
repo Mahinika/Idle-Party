@@ -67,6 +67,7 @@ class _HubScreenState extends State<HubScreen>
   late String _selectedId;
   late final AnimationController _torch;
   bool _offlineDialogShown = false;
+  bool _offeredWhatsNew = false;
   bool _userPickedZone = false;
   int? _trackedAscension;
   int? _trackedHighestCleared;
@@ -127,7 +128,10 @@ class _HubScreenState extends State<HubScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     )..repeat(reverse: true);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOffline());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _maybeShowOffline();
+      await _maybeShowWhatsNew();
+    });
   }
 
   Future<void> _maybeShowOffline() async {
@@ -136,6 +140,14 @@ class _HubScreenState extends State<HubScreen>
     }
     _offlineDialogShown = true;
     await showOfflineProgressDialog(context, director);
+  }
+
+  Future<void> _maybeShowWhatsNew() async {
+    if (_offeredWhatsNew || !mounted) return;
+    if (director.state.inDungeon) return;
+    if (!MetaSystems.hasUnseenChangelog(director.state)) return;
+    _offeredWhatsNew = true;
+    await WhatsNewOverlay.show(context, director);
   }
 
   @override
@@ -406,6 +418,13 @@ class _HubScreenState extends State<HubScreen>
                           gauntletBest: state.metaDepth.gauntletBestFloor,
                           onGauntlet: () =>
                               confirmGauntletRun(context, director),
+                          weeklyReady: state.metaDepth.weeklyProgress >=
+                                  GameLogic.weeklyClearTarget &&
+                              !state.metaDepth.weeklyClaimed,
+                          weeklyProgress: state.metaDepth.weeklyProgress,
+                          weeklyClaimed: state.metaDepth.weeklyClaimed,
+                          weeklyModifier: state.metaDepth.weeklyModifier,
+                          onClaimWeekly: director.claimWeekly,
                         ),
                         if (!short && !canAscend) ...[
                           const SizedBox(height: 4),
@@ -427,7 +446,21 @@ class _HubScreenState extends State<HubScreen>
                         ],
                         const SizedBox(height: 4),
                         KenneyButton(
-                          label: 'MORE',
+                          label: () {
+                            final unseen =
+                                MetaSystems.hasUnseenChangelog(state);
+                            final readyJobs = state.missions
+                                .where((m) => m.isComplete)
+                                .length;
+                            final weeklyAlmost =
+                                state.metaDepth.weeklyProgress > 0 &&
+                                    !state.metaDepth.weeklyClaimed;
+                            if (unseen) return 'MORE · NEW';
+                            if (readyJobs > 0 || weeklyAlmost) {
+                              return 'MORE · !';
+                            }
+                            return 'MORE';
+                          }(),
                           style: KenneyButtonStyle.grey,
                           onPressed: () => _showHubMore(context),
                         ),
@@ -464,7 +497,7 @@ class _HubScreenState extends State<HubScreen>
             (label: 'BAG', onTap: widget.onOpenInventory),
             (label: 'FORGE', onTap: widget.onOpenForge),
             if (widget.onOpenLoadouts != null)
-              (label: 'GEAR SETS', onTap: widget.onOpenLoadouts!),
+              (label: 'LOADOUTS', onTap: widget.onOpenLoadouts!),
             if (widget.onOpenTeam != null)
               (label: 'PARTY', onTap: widget.onOpenTeam!),
           ],
@@ -544,6 +577,11 @@ class _HubUrgentRow extends StatelessWidget {
     required this.showGauntlet,
     required this.gauntletBest,
     required this.onGauntlet,
+    required this.weeklyReady,
+    required this.weeklyProgress,
+    required this.weeklyClaimed,
+    required this.weeklyModifier,
+    required this.onClaimWeekly,
   });
 
   final int claimable;
@@ -556,9 +594,18 @@ class _HubUrgentRow extends StatelessWidget {
   final bool showGauntlet;
   final int gauntletBest;
   final VoidCallback onGauntlet;
+  final bool weeklyReady;
+  final int weeklyProgress;
+  final bool weeklyClaimed;
+  final String weeklyModifier;
+  final VoidCallback onClaimWeekly;
 
   @override
   Widget build(BuildContext context) {
+    final mod = weeklyModifier.isEmpty ? 'weekly' : weeklyModifier;
+    final showWeeklyProgress = !weeklyClaimed &&
+        weeklyProgress > 0 &&
+        weeklyProgress < GameLogic.weeklyClearTarget;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -568,6 +615,22 @@ class _HubUrgentRow extends StatelessWidget {
             style: KenneyButtonStyle.red,
             primary: true,
             onPressed: onAscend,
+          ),
+          const SizedBox(height: 4),
+        ],
+        if (weeklyReady) ...[
+          KenneyButton(
+            label: 'CLAIM WEEKLY  +${GameLogic.weeklyClaimEssence}e',
+            style: KenneyButtonStyle.brown,
+            primary: true,
+            onPressed: onClaimWeekly,
+          ),
+          const SizedBox(height: 4),
+        ] else if (showWeeklyProgress) ...[
+          Text(
+            'Weekly $mod · $weeklyProgress/${GameLogic.weeklyClearTarget}',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 4),
         ],

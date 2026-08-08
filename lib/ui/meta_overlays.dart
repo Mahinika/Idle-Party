@@ -847,13 +847,40 @@ class WhatsNewOverlay extends StatelessWidget {
   const WhatsNewOverlay({super.key, required this.director});
   final GameDirector director;
 
+  /// Dialog host used by hub auto-show and Settings → What's New.
+  static Future<void> show(BuildContext context, GameDirector director) {
+    return showDialog<void>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: DecoratedBox(
+          decoration: MenuChrome.panel(),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: 420,
+              height: 420,
+              child: WhatsNewOverlay(director: director),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final state = director.state;
+    final sections = MetaSystems.hasUnseenChangelog(state)
+        ? MetaSystems.unseenReleases(state)
+        : MetaSystems.releases;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'VERSION ${MetaSystems.currentVersion}',
+          "WHAT'S NEW",
           textAlign: TextAlign.center,
           style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
         ),
@@ -861,26 +888,46 @@ class WhatsNewOverlay extends StatelessWidget {
         Expanded(
           child: ListView(
             children: [
-              for (final entry in MetaSystems.changelog)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('•  ', style: GameTheme.body(size: 16, color: GameTheme.torch)),
-                      Expanded(
-                        child: Text(entry, style: GameTheme.body(size: 15)),
-                      ),
-                    ],
+              for (final release in sections) ...[
+                Text(
+                  'VERSION ${release.version}',
+                  style: GameTheme.pixel(
+                    size: 8,
+                    color: GameTheme.torch,
                   ),
                 ),
+                const SizedBox(height: 6),
+                for (final entry in release.bullets)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '•  ',
+                          style: GameTheme.body(
+                            size: 16,
+                            color: GameTheme.torch,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(entry, style: GameTheme.body(size: 15)),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 8),
+              ],
             ],
           ),
         ),
         const SizedBox(height: 8),
         KenneyButton(
           label: 'GOT IT',
-          onPressed: director.markChangelogSeen,
+          onPressed: () {
+            director.markChangelogSeen();
+            Navigator.of(context).maybePop();
+          },
         ),
       ],
     );
@@ -914,6 +961,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
         'glass' => 'Glass (fragile foes)',
         'swarm' => 'Swarm (more enemies)',
         'elite' => 'Elite (tougher packs)',
+        'fortune' => 'Fortune (more gold)',
+        'iron' => 'Iron (harder, richer)',
         _ => mod.isEmpty ? 'Rotating…' : mod,
       };
 
@@ -923,7 +972,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
     final state = director.state;
     final md = state.metaDepth;
     final maxHm = state.effectiveMaxHardmode;
-    final weeklyReady = md.weeklyProgress >= 3 && !md.weeklyClaimed;
+    final weeklyReady =
+        md.weeklyProgress >= GameLogic.weeklyClearTarget && !md.weeklyClaimed;
     final activeBits = <String>[
       if (state.challengeBossRush) 'Boss Rush',
       if (state.challengeNoFlask) 'No Flask',
@@ -1019,9 +1069,17 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 ),
                 const SizedBox(height: 2),
                 Text(
+                  md.seasonKey.isEmpty
+                      ? 'Season rotating…'
+                      : 'Season ${md.seasonKey} · +${GameLogic.seasonWeeklyBonusEssence}e first weekly',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                ),
+                const SizedBox(height: 2),
+                Text(
                   md.weeklyClaimed
                       ? 'Claimed this week'
-                      : 'Clears ${md.weeklyProgress}/3'
+                      : 'Clears ${md.weeklyProgress}/${GameLogic.weeklyClearTarget}'
                           '${weeklyReady ? ' · ready' : ''}',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -1232,6 +1290,11 @@ class SaveTransferSection extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 6),
+        Text(
+          'Export copies JSON to clipboard — paste somewhere safe as a backup.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
       ],
     );
   }
@@ -1323,6 +1386,8 @@ class PrestigeShopOverlay extends StatelessWidget {
                 'gh_cdr' => state.metaDepth.godHandCdLevel,
                 'roster_cap' => state.metaDepth.petRosterCapBonus ~/ 2,
                 'legacy_spark' => state.metaDepth.legacyPoints,
+                'daily_essence' => state.metaDepth.dailyEssenceBonusLevel,
+                'gauntlet_gold' => state.metaDepth.gauntletGoldBonusLevel,
                 _ => 0,
               };
               final atCap = switch (item.id) {
@@ -1332,6 +1397,8 @@ class PrestigeShopOverlay extends StatelessWidget {
                 'gh_cdr' => state.metaDepth.godHandCdLevel >= 8,
                 'roster_cap' => state.metaDepth.petRosterCapBonus >= 10,
                 'legacy_spark' => state.metaDepth.legacyPoints >= 20,
+                'daily_essence' => state.metaDepth.dailyEssenceBonusLevel >= 5,
+                'gauntlet_gold' => state.metaDepth.gauntletGoldBonusLevel >= 5,
                 _ => false,
               };
               final canBuy =

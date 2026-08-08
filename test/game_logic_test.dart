@@ -331,8 +331,11 @@ void main() {
     final mid = initial.copyWith(highestDungeonCleared: 0);
     expect(GameLogic.recommendedDungeonId(mid), 'goblin');
 
-    final allClear = initial.copyWith(highestDungeonCleared: 6);
-    expect(GameLogic.recommendedDungeonId(allClear), 'crystal');
+    final crystalClear = initial.copyWith(highestDungeonCleared: 6);
+    expect(GameLogic.recommendedDungeonId(crystalClear), 'tide');
+
+    final allClear = initial.copyWith(highestDungeonCleared: 8);
+    expect(GameLogic.recommendedDungeonId(allClear), 'ember');
 
     final ready = mid.copyWith(bossVictories: 1);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 4));
@@ -2171,7 +2174,7 @@ void main() {
     // Single gold mul on clear (F1 → mul 1.0).
     expect(state.gold - goldBefore, expectedGold);
 
-    // Challenge/weekly mint suppressed in gauntlet (HM clear still unlocks hm_1).
+    // Challenge mint suppressed in gauntlet; weekly counts at AL10+.
     final weeklyBefore = state.metaDepth.weeklyProgress;
     final withChallenges = state.copyWith(
       challengeBossRush: true,
@@ -2191,7 +2194,10 @@ void main() {
     expect(afterClear.achievements, contains('hm_1'));
     // Gauntlet floor essence only + new achievement — no rush/HM clear mint.
     expect(afterClear.essence, 1 + (2 ~/ 2) + hmReward);
-    expect(afterClear.metaDepth.weeklyProgress, weeklyBefore);
+    expect(
+      afterClear.metaDepth.weeklyProgress,
+      min(GameLogic.weeklyClearTarget, weeklyBefore + 1),
+    );
 
     final left = GameLogic.leaveDungeon(state);
     expect(left.inGauntlet, isFalse);

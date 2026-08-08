@@ -151,6 +151,8 @@ class GameDirector extends ChangeNotifier {
   bool _uiPaused = false;
   String? _toast;
   double _toastLife = 0;
+  String? _lastToastMessage;
+  DateTime? _lastToastAt;
   String? _clearSummary;
   double _clearSummaryLife = 0;
   OfflineProgressResult? _offlineSummary;
@@ -236,6 +238,15 @@ class GameDirector extends ChangeNotifier {
       _offlineSummaryLife > 0 ? _offlineSummary : null;
 
   void showToast(String message, {double life = 2.4}) {
+    final now = DateTime.now();
+    // Skip identical toast spam within ~0.8s (clear/loot/upgrade chatter).
+    if (_lastToastMessage == message &&
+        _lastToastAt != null &&
+        now.difference(_lastToastAt!).inMilliseconds < 800) {
+      return;
+    }
+    _lastToastMessage = message;
+    _lastToastAt = now;
     if (_toast != null &&
         _toastLife > 0.35 &&
         _toast != message &&
@@ -609,6 +620,10 @@ class GameDirector extends ChangeNotifier {
           ];
           showToast('+${labels.join(', ')}', life: 2.4);
         }
+        final payoffNotices = GameLogic.takeMetaPayoffNotices();
+        if (payoffNotices.isNotEmpty) {
+          showToast(payoffNotices.join(' · '), life: 3.0);
+        }
         // Short enough to fade before the next floor's first fight reads clearly.
         _clearSummaryLife = 1.35;
         if (_state.highestDungeonCleared > beforeDungeon) {
@@ -665,6 +680,10 @@ class GameDirector extends ChangeNotifier {
         'Gauntlet ended on F$floor · best F${_state.metaDepth.gauntletBestFloor}',
         life: 3.2,
       );
+      final payoffs = GameLogic.takeMetaPayoffNotices();
+      if (payoffs.isNotEmpty) {
+        showToast(payoffs.join(' · '), life: 3.0);
+      }
       GameAudio.ui();
       notifyListeners();
       unawaited(_persistFlush());
@@ -711,7 +730,11 @@ class GameDirector extends ChangeNotifier {
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _spatial = null;
-    showToast('Returned to hub', life: 2);
+    final payoffs = GameLogic.takeMetaPayoffNotices();
+    showToast(
+      payoffs.isNotEmpty ? payoffs.join(' · ') : 'Returned to hub',
+      life: payoffs.isNotEmpty ? 3.0 : 2,
+    );
     GameAudio.ui();
     notifyListeners();
     unawaited(_persistFlush());
@@ -819,6 +842,12 @@ class GameDirector extends ChangeNotifier {
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _spatial = null;
+    final payoffs = GameLogic.takeMetaPayoffNotices();
+    if (payoffs.isNotEmpty) {
+      showToast(payoffs.join(' · '), life: 3.0);
+    } else {
+      showToast('Returned to hub', life: 2);
+    }
     notifyListeners();
     unawaited(_persistFlush());
   }
@@ -1155,7 +1184,7 @@ class GameDirector extends ChangeNotifier {
 
   void saveLoadout({required String id, required String name}) {
     _applyUpgrade(GameLogic.saveLoadout(_state, id: id, name: name));
-    showToast('Gear set "$name" saved', life: 1.8);
+    showToast('Loadout "$name" saved', life: 1.8);
   }
 
   void applyLoadout(String id) {
@@ -1164,12 +1193,12 @@ class GameDirector extends ChangeNotifier {
     GameAudio.ui();
     if (result.skipped > 0) {
       showToast(
-        'Gear set applied · ${result.skipped} slot'
+        'Loadout applied · ${result.skipped} slot'
         '${result.skipped == 1 ? '' : 's'} skipped',
         life: 2.0,
       );
     } else {
-      showToast('Gear set applied', life: 1.6);
+      showToast('Loadout applied', life: 1.6);
     }
   }
 
@@ -1619,6 +1648,19 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
+  void setGodHandStyle(int style) {
+    final before = _state.metaDepth.godHandStyle;
+    _applyUpgrade(GameLogic.setGodHandStyle(_state, style));
+    if (_state.metaDepth.godHandStyle != before) {
+      final label = switch (_state.metaDepth.godHandStyle) {
+        1 => 'Focus',
+        2 => 'Wide',
+        _ => 'Balanced',
+      };
+      showToast('God Hand · $label', life: 1.8);
+    }
+  }
+
   void buyPrestigeShopItem(String id) {
     final before = _state.essence;
     final md = _state.metaDepth;
@@ -1629,6 +1671,8 @@ class GameDirector extends ChangeNotifier {
       'gh_cdr' => md.godHandCdLevel >= 8,
       'roster_cap' => md.petRosterCapBonus >= 10,
       'legacy_spark' => md.legacyPoints >= 20,
+      'daily_essence' => md.dailyEssenceBonusLevel >= 5,
+      'gauntlet_gold' => md.gauntletGoldBonusLevel >= 5,
       _ => false,
     };
     if (atCap) {
@@ -1654,9 +1698,12 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.claimWeekly(_state));
     if (_state.essence > before) {
       GameAudio.unlock();
+      final notices = GameLogic.takeMetaPayoffNotices();
+      final gained = _state.essence - before;
+      final extra = notices.isEmpty ? '' : ' · ${notices.join(' · ')}';
       showToast(
-        'Weekly claimed · +${_state.essence - before}e',
-        life: 2.4,
+        'Weekly claimed · +${gained}e$extra',
+        life: 2.8,
       );
     }
   }
@@ -1705,6 +1752,10 @@ class GameDirector extends ChangeNotifier {
       parts.add(StoryLore.shadeJoins);
     }
     showToast(parts.join(' · '), life: 4.2);
+    final payoffs = GameLogic.takeMetaPayoffNotices();
+    if (payoffs.isNotEmpty) {
+      showToast(payoffs.join(' · '), life: 3.0);
+    }
     if (_state.inDungeon) {
       _rebuildSpatial();
     } else {

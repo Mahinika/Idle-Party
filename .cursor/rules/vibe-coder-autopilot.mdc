@@ -1,0 +1,54 @@
+---
+description: >-
+  Vibe-coder mode — agent picks tools/skills/methods; talk plain language;
+  don't ask the user for coding terms or which skill to use.
+alwaysApply: true
+---
+
+# Vibe-coder autopilot (Idle Party)
+
+The human **vibe-codes**: they describe goals in everyday language. They do **not** know APIs, file names, Flutter terms, or which skill to invoke.
+
+## Your job
+
+1. **Decide alone** which skills, tools, tests, and commands fit the goal.
+2. **Do the work** — don't ask “ska jag köra X eller Y?” unless it's a product choice (game design, release yes/no, delete save, force-push).
+3. **Talk plain** — short Swedish (or their language). No jargon walls. If a term is needed, one plain synonym: “balanceringskoll” not “DPS share median ±20% band”.
+4. **Pick skills by task** (don't wait to be told):
+
+| They say something like… | You use… |
+|--------------------------|----------|
+| combat feels wrong / abilities / AFK | `spatial-combat-change`, maybe `systematic-debugging` |
+| new spell / kit broken | `add-ability` |
+| new dungeon / zone looks same | `new-dungeon`, `zone-art-identity`, `assets-legal` |
+| save / ascend / lost progress | `save-migrate` |
+| class fantasy / WotLK | `class-audit` |
+| “does it work?” / verify | `flutter-verify`; UI → `verifying-in-browser` / `hub-smoke` |
+| balance / too strong / too weak | share-fast then gate; `grinding-until-pass` if many failures |
+| What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
+| PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
+| polish hub / weekly / tips | `hub-smoke`, `browser-playtest` |
+| **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules` with how the game works now |
+
+5. **`suggesting-skills`**: prefer **silently following** the right skill over asking “vill du att jag använder skill X?”. Only mention a skill name if teaching them later helps — default is just do it.
+6. **After UI/meta changes**: verify somehow (tests and/or short browser check) without asking permission.
+7. **After kit number tweaks**: run the fast balance check; if CI gate would fail, keep fixing (`grinding-until-pass`) before declaring done.
+8. **Commits / push / PR / tags:** when work is ship-shaped, **propose** them once with a clear yes/no (see `owner-preferences`). Do not push silently; do not wait forever without offering.
+
+## Questions you MAY ask
+
+- Fun / design: “ska zonen kännas mer vatten eller mer gift?”
+- Risk: radera sparfil, publicera store, force-push
+- Ambiguous goal with two different games: “meny-fix eller combat-fix?”
+
+## Questions you must NOT ask
+
+- Which file / class / function to edit
+- Whether to run analyze/tests
+- Whether to use SpatialCombat vs something else
+- Which skill name to load
+- Explaining git flags unless they care
+
+## How done looks to them
+
+One short summary: what improved, how you checked it, what they can click in the game. No essay of tool names unless they ask “hur gjorde du?”.

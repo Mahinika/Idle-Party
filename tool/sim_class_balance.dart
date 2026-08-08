@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -14,11 +15,22 @@ import 'sim_harness.dart';
 /// ```
 /// Quick: pass `--dart-define=QUICK=1` or edit args in the test.
 ///
+/// Fast share iterate (agents / kit nerfs):
+/// ```
+/// flutter test test/class_balance_share_fast_test.dart --reporter expanded
+/// ```
+/// Or: `runClassBalanceSim(['--share-only', '--trials=3', '--focus=demonology,balance'])`
+///
 /// Modes (`--mode=`):
 /// - `live` (default): 60 Hz, flask @35%, God Hand on CD, auto-equip — mirrors
 ///   an attentive live run without manual pathing.
 /// - `afk`: offline catch-up parity (`afkAssist` + soft GH cadence).
 /// - `bare`: SpatialCombat only (legacy harness).
+///
+/// Flags:
+/// - `--quick` — light band, F5, Prot+Disc only (CI gate).
+/// - `--share-only` — like quick but compact share table + JSON; skip clear% noise.
+/// - `--focus=a,b` — only these DPS [HeroSpecId.name] values.
 ///
 /// Direct (may fail outside Flutter embedder on some SDKs):
 /// ```
@@ -29,12 +41,14 @@ void main(List<String> args) {
 }
 
 String runClassBalanceSim(List<String> args) {
-  final trials = _argInt(args, 'trials', 20);
+  final shareOnly = args.contains('--share-only');
+  final quick = args.contains('--quick') || shareOnly;
+  final trials = _argInt(args, 'trials', shareOnly ? 3 : 20);
   final bandFilter = _argString(args, 'band');
-  final quick = args.contains('--quick');
   final partyLevel = _argInt(args, 'level', 12);
   final dungeonId = _argString(args, 'dungeon') ?? 'sandy';
   final mode = _parseMode(_argString(args, 'mode') ?? 'live');
+  final focus = _parseFocus(_argString(args, 'focus'));
 
   seedEquipmentRng(42);
 
@@ -65,9 +79,11 @@ String runClassBalanceSim(List<String> args) {
   log('- dungeon: $dungeonId');
   log('- mode: ${mode.name} (flask+GH+auto-equip unless bare)');
   log('- quick: $quick');
+  if (shareOnly) log('- share-only: true');
+  if (focus.isNotEmpty) log('- focus: ${focus.join(', ')}');
   log('');
 
-  final dpsSpecs = HeroSpecId.values
+  var dpsSpecs = HeroSpecId.values
       .where((id) {
         final t = HeroSpecs.def(id).roleTag;
         return t == SpecRoleTag.meleeDps ||
@@ -75,6 +91,13 @@ String runClassBalanceSim(List<String> args) {
             t == SpecRoleTag.caster;
       })
       .toList();
+  if (focus.isNotEmpty) {
+    dpsSpecs = dpsSpecs.where((id) => focus.contains(id.name)).toList();
+    if (dpsSpecs.isEmpty) {
+      log('ERROR: --focus matched no DPS specs (${focus.join(', ')})');
+      return buf.toString();
+    }
+  }
   final tankSpecs =
       HeroSpecId.values.where((id) => HeroSpecs.def(id).isTank).toList();
   final healerSpecs =
@@ -85,6 +108,8 @@ String runClassBalanceSim(List<String> args) {
     if (!quick)
       ('ProtPala+Holy', HeroSpecId.protPaladin, HeroSpecId.holyPaladin),
   ];
+
+  List<_AggRow>? lastShareRows;
 
   for (final band in bands) {
     for (final anchor in dpsAnchors) {
@@ -116,14 +141,25 @@ String runClassBalanceSim(List<String> args) {
             ),
           );
         }
-        _printDpsTable(log, rows);
+        if (shareOnly) {
+          _printShareTable(log, rows);
+          lastShareRows = rows;
+        } else {
+          _printDpsTable(log, rows);
+        }
         if (floor == 5 &&
             anchor.$1 == 'Prot+Disc' &&
             (band == 'light' || band == 'mid')) {
           _flagDpsOutliers(log, rows);
-          _flagClearPctOutliers(log, rows);
+          if (!shareOnly) {
+            _flagClearPctOutliers(log, rows);
+          }
+          lastShareRows ??= rows;
         }
-        if (band == 'light' && floor == 1 && anchor.$1 == 'Prot+Disc') {
+        if (!shareOnly &&
+            band == 'light' &&
+            floor == 1 &&
+            anchor.$1 == 'Prot+Disc') {
           _flagClearTimeOutliers(log, rows);
         }
         log('');
@@ -194,6 +230,16 @@ String runClassBalanceSim(List<String> args) {
   final outFile = File('tool/out/class_balance_latest.md');
   outFile.writeAsStringSync(buf.toString());
   log('Wrote ${outFile.path}');
+  if (lastShareRows != null) {
+    final jsonPath = _writeShareJson(
+      rows: lastShareRows,
+      mode: mode.name,
+      trials: trials,
+      focus: focus,
+      shareOnly: shareOnly,
+    );
+    log('Wrote $jsonPath');
+  }
   return buf.toString();
 }
 
@@ -246,14 +292,16 @@ _AggRow _runAgg({
   final focusHp = <double>[];
 
   for (var t = 0; t < trials; t++) {
+    final trialSeed = 1000 + t * 97 + floor * 13 + focusSpec.index * 3;
     seedEquipmentRng(42 + t);
+    GameLogic.random = Random(trialSeed ^ 0x5EED);
     var state = createPartyState(partySpecs: partySpecs);
     state = prepareSimParty(state, band: band, partyLevel: partyLevel);
     state = enterFloor(
       state,
       dungeonId: dungeonId,
       floor: floor,
-      seed: 1000 + t * 97 + floor * 13 + focusSpec.index * 3,
+      seed: trialSeed,
     );
     final r = simulateFloor(state, mode: mode);
     if (r.cleared) {
@@ -308,6 +356,86 @@ void _printDpsTable(void Function(String) log, List<_AggRow> rows) {
       '${r.dpsMedian.toStringAsFixed(1)} |',
     );
   }
+}
+
+/// Compact share board for `--share-only` iterate loops.
+void _printShareTable(void Function(String) log, List<_AggRow> rows) {
+  final shares = rows.map((r) => r.shareMedian).where((v) => v > 0).toList();
+  final med = shares.isEmpty ? 0.0 : medianOf(shares);
+  final lo = med * 0.80;
+  final hi = med * 1.20;
+  log('| spec | share% | vs med | flag |');
+  log('|---|---:|---:|---|');
+  final sorted = [...rows]
+    ..sort((a, b) => b.shareMedian.compareTo(a.shareMedian));
+  for (final r in sorted) {
+    final delta = r.shareMedian - med;
+    final flag = r.shareMedian > hi
+        ? 'HIGH'
+        : (r.shareMedian < lo && r.shareMedian > 0 ? 'LOW' : '');
+    log(
+      '| ${r.label} | ${r.shareMedian.toStringAsFixed(1)} | '
+      '${delta >= 0 ? '+' : ''}${delta.toStringAsFixed(1)} | $flag |',
+    );
+  }
+}
+
+String _writeShareJson({
+  required List<_AggRow> rows,
+  required String mode,
+  required int trials,
+  required List<String> focus,
+  required bool shareOnly,
+}) {
+  final shares = rows.map((r) => r.shareMedian).where((v) => v > 0).toList();
+  final med = shares.isEmpty ? 0.0 : medianOf(shares);
+  final lo = med * 0.80;
+  final hi = med * 1.20;
+  final sorted = [...rows]
+    ..sort((a, b) => b.shareMedian.compareTo(a.shareMedian));
+  final high = <String>[];
+  final low = <String>[];
+  final specs = <Map<String, Object>>[];
+  for (final r in sorted) {
+    final flag = r.shareMedian > hi
+        ? 'HIGH'
+        : (r.shareMedian < lo && r.shareMedian > 0 ? 'LOW' : 'OK');
+    if (flag == 'HIGH') high.add(r.label);
+    if (flag == 'LOW') low.add(r.label);
+    specs.add({
+      'spec': r.label,
+      'share': double.parse(r.shareMedian.toStringAsFixed(2)),
+      'dps': double.parse(r.dpsMedian.toStringAsFixed(2)),
+      'clearPct': double.parse((r.clearPct * 100).toStringAsFixed(1)),
+      'flag': flag,
+    });
+  }
+  final payload = {
+    'generatedAt': DateTime.now().toUtc().toIso8601String(),
+    'mode': mode,
+    'trials': trials,
+    'shareOnly': shareOnly,
+    'focus': focus,
+    'medianShare': double.parse(med.toStringAsFixed(2)),
+    'bandLow': double.parse(lo.toStringAsFixed(2)),
+    'bandHigh': double.parse(hi.toStringAsFixed(2)),
+    'high': high,
+    'low': low,
+    'specs': specs,
+  };
+  final file = File('tool/out/class_balance_share.json');
+  file.writeAsStringSync(
+    const JsonEncoder.withIndent('  ').convert(payload),
+  );
+  return file.path;
+}
+
+List<String> _parseFocus(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return const [];
+  return [
+    for (final part in raw.split(','))
+      if (part.trim().isNotEmpty) part.trim(),
+  ];
 }
 
 void _printTankTable(void Function(String) log, List<_AggRow> rows) {

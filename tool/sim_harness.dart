@@ -140,11 +140,6 @@ GameState outfitPartyGear(
     final eq = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped);
     EquipmentItem? weapon;
     for (final slot in slots) {
-      if (slot == EquipmentSlot.offHand &&
-          weapon != null &&
-          ClassProficiency.weaponBlocksOffHand(weapon)) {
-        continue;
-      }
       final piece = GameLogic.createEquipment(
         slot: slot,
         rarity: rarity,
@@ -153,7 +148,11 @@ GameState outfitPartyGear(
         preferredArmor: preferred,
         roleTag: hero.spec.roleTag,
       );
-      if (!GameLogic.canHeroReceive(hero, piece, slot: slot)) continue;
+      if (slot == EquipmentSlot.offHand &&
+          weapon != null &&
+          ClassProficiency.weaponBlocksOffHand(weapon)) {
+        continue;
+      }
       eq[slot] = piece;
       if (slot == EquipmentSlot.weapon) weapon = piece;
     }
@@ -271,10 +270,9 @@ FloorSimResult simulateFloor(
           : mode == SimPlayMode.live
               ? 1 / 60
               : 0.05);
-  // AFK soft GH cadence ≈ offline (every ~4.3s). Live: every CD ready.
-  final ghIntervalSteps = mode == SimPlayMode.afk
-      ? max(1, (4.3 / stepDt).round())
-      : 1;
+  // Attentive GH whenever ready (mirrors live director). Offline soft cadence
+  // lives in GameLogic.simulateSpatialOffline, not this floor harness.
+  final ghIntervalSteps = 1;
   final flaskIntervalSteps = mode == SimPlayMode.afk
       ? max(1, (1.44 / stepDt).round())
       : max(1, (1.0 / stepDt).round());

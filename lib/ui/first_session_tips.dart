@@ -15,6 +15,12 @@ class FirstSessionTips extends StatelessWidget {
 
   static const _tips = <({String id, String title, String body})>[
     (
+      id: 'first_run',
+      title: 'WORLD PATH',
+      body:
+          'Pick a zone on the World Path, then enter. Clear floors to push deeper — FARM loops a floor for loot.',
+    ),
+    (
       id: 'lore_descent',
       title: StoryLore.loreTipTitle,
       body: StoryLore.loreTipBody,
@@ -23,7 +29,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'godhand',
       title: 'GOD HAND',
       body:
-          'Your distant will. Tap the dungeon to smash foes. Cooldown is the ring top-right.',
+          'Your distant will. Tap the dungeon to smash foes. Cooldown is the ring top-right. '
+          'Forge → META: BAL / FOCUS / WIDE styles trade damage vs radius.',
     ),
     (
       id: 'farm_push',
@@ -57,6 +64,12 @@ class FirstSessionTips extends StatelessWidget {
       body: 'Hatch pets with essence. Loot Sprite boosts gold find; others add ATK.',
     ),
     (
+      id: 'contracts',
+      title: 'CONTRACTS',
+      body:
+          'Hub CONTRACTS pay gold and essence. Claim completes; every 3 claims grants a +5e chain bonus.',
+    ),
+    (
       id: 'ascend',
       title: 'ASCEND',
       body:
@@ -69,18 +82,53 @@ class FirstSessionTips extends StatelessWidget {
           'Gold & forge tracks wiped. Farm Sandy for gold → Forge GOLD upgrades → Market flasks. '
           'Spend essence under Forge → META (relics / God Hand). Apex mats survive.',
     ),
+    (
+      id: 'hardmode',
+      title: 'HARDMODE',
+      body:
+          'Under CHALLENGES, raise Hardmode for tougher packs and better gold/legendaries. Cap rises with Ascension.',
+    ),
+    (
+      id: 'weekly',
+      title: 'WEEKLY',
+      body:
+          'Clear 3 floors under the weekly modifier (glass / swarm / elite / fortune / iron), '
+          'then CLAIM WEEKLY for essence. First claim of each month also pays a season bonus. '
+          'Hub shows weekly progress while you climb.',
+    ),
+    (
+      id: 'apex',
+      title: 'APEX FORGE',
+      body:
+          'Apex slag from Gauntlet/Crystal crafts soulbound apex gear in Forge. Ranks persist through Ascend.',
+    ),
+    (
+      id: 'gauntlet',
+      title: 'CRYSTAL SPIRE',
+      body:
+          'At AL10+, Infinity Gauntlet is an endless climb from the hub. Best floor survives Ascend.',
+    ),
+    (
+      id: 'prestige',
+      title: 'ESSENCE SHOP',
+      body:
+          'Spend essence in the Essence Shop and Forge → META for relics, God Hand, and prestige power that lasts.',
+    ),
   ];
 
   String? _nextTipId() {
     final seen = director.state.seenTips;
     final inDungeon = director.state.inDungeon;
+    final s = director.state;
     for (final tip in _tips) {
       if (seen.contains(tip.id)) continue;
-      if (tip.id == 'ascend' && !GameLogic.canAscend(director.state)) {
+      if (tip.id == 'first_run' && inDungeon) {
         continue;
       }
-      if (tip.id == 'post_ascend' &&
-          (director.state.ascensionLevel < 1 || inDungeon)) {
+      if (tip.id == 'ascend' && !GameLogic.canAscend(s)) {
+        continue;
+      }
+      if (tip.id == 'post_ascend' && (s.ascensionLevel < 1 || inDungeon)) {
         continue;
       }
       if ((tip.id == 'godhand' || tip.id == 'farm_push') && !inDungeon) {
@@ -88,20 +136,58 @@ class FirstSessionTips extends StatelessWidget {
       }
       if (tip.id == 'bag' &&
           !inDungeon &&
-          director.state.gearStash.isEmpty &&
-          director.state.gold < 10) {
+          s.gearStash.isEmpty &&
+          s.gold < 10) {
         continue;
       }
       if ((tip.id == 'sanctuary' ||
               tip.id == 'market' ||
               tip.id == 'forge' ||
-              tip.id == 'pets') &&
+              tip.id == 'pets' ||
+              tip.id == 'contracts' ||
+              tip.id == 'hardmode' ||
+              tip.id == 'weekly' ||
+              tip.id == 'apex' ||
+              tip.id == 'gauntlet' ||
+              tip.id == 'prestige') &&
           inDungeon) {
         continue;
       }
-      if (tip.id == 'pets' &&
-          director.state.ownedPets.isEmpty &&
-          director.state.essence < 3) {
+      if (tip.id == 'pets' && s.ownedPets.isEmpty && s.essence < 3) {
+        continue;
+      }
+      if (tip.id == 'contracts' &&
+          s.missions.isEmpty &&
+          s.highestFloorCleared < 1 &&
+          s.metaDepth.lifetimeFloorClears < 1) {
+        continue;
+      }
+      if (tip.id == 'hardmode' &&
+          (s.effectiveMaxHardmode <= 0 ||
+              (s.highestDungeonCleared < 0 && s.ascensionLevel < 1))) {
+        continue;
+      }
+      if (tip.id == 'weekly' &&
+          s.highestFloorCleared < 1 &&
+          s.metaDepth.lifetimeFloorClears < 1 &&
+          s.ascensionLevel < 1) {
+        continue;
+      }
+      if (tip.id == 'apex' &&
+          s.ascensionLevel < 1 &&
+          s.craftMaterials.isEmpty &&
+          s.apexVault.isEmpty) {
+        continue;
+      }
+      if (tip.id == 'gauntlet' &&
+          s.ascensionLevel < GameLogic.gauntletMinAscension &&
+          !GameLogic.canEnterGauntlet(s)) {
+        continue;
+      }
+      if (tip.id == 'prestige' &&
+          s.ascensionLevel < 1 &&
+          s.essence < 1 &&
+          s.unlockedRelics.isEmpty) {
         continue;
       }
       return tip.id;
