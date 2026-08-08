@@ -32,15 +32,16 @@ Source: owner answers (vibe-coder). Agents follow these without re-asking.
 - **In-game copy stays English** (UI, tips, What’s New, guides).
 - Agent ↔ owner chat: plain Swedish (or their language). No jargon quizzes.
 
-## Balance vs fantasy (default until owner picks)
+## Balance vs fantasy
 
-When a kit is fun but CI/share says HIGH:
+**Owner choice: fairness first (rättvisa först).**
 
-1. Prefer a **small trim** that keeps fantasy readable (don’t gut the fantasy).
-2. Explain in one short plain sentence: “för stark i simulatorn → sänkte lite skada, klassen känns likadan.”
-3. If fantasy would die to hit the band, **stop and ask** with two plain options.
+When a kit is fun but share/CI says HIGH (or clearly stomps peers):
 
-(Owner may still answer “rättvisa först” or “känsla först” later — then follow that.)
+1. Trim until live-light gate / ±20% share band is honest — fantasy second.
+2. Keep *identity* if possible (names, VFX, rotation shape) but numbers must come in line.
+3. Plain Swedish one-liner when done: “för stark → sänkt så den matchar andra.”
+4. Do **not** leave documented HIGH outliers “for flavor” without an explicit later override.
 
 ## Autopilot reminder
 
