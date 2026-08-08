@@ -1,0 +1,55 @@
+---
+name: save-migrate
+description: >-
+  Adds or migrates Idle Party GameState fields safely (toJson/fromJson
+  defaults, Ascend keep/reset, SharedPreferences). Use when adding
+  persistent state, meta, Ascend behavior, save load, or export/import.
+---
+
+# Save / migrate (Idle Party)
+
+## Paths
+
+| Role | Path |
+|------|------|
+| State + serialize | `lib/core/game_state.dart` |
+| Load / Ascend / v1 migrate | `lib/core/game_logic.dart` (`stateFromJson`, `ascend`) |
+| Prefs I/O | `lib/core/game_director.dart` (`SharedPreferencesGameStorage`) |
+| Meta bundle | `lib/models/meta_depth.dart` |
+
+**Prefs:** write `idle_party_save_v2`; read v2 else legacy `idle_party_save_v1`.  
+**Load:** always `GameLogic.stateFromJson` (not raw `GameState.fromJson`).  
+**Save version:** written as `4`; migration is **field presence / defaults**, not a version switch.
+
+## Checklist: new persistent field
+
+```
+New field:
+- [ ] 1. Field + default on GameState
+- [ ] 2. copyWith (clear-flag if nullable wipe)
+- [ ] 3. toJson key
+- [ ] 4. fromJson safe default if missing
+- [ ] 5. Nested? MetaDepthState / model fromJson defaults
+- [ ] 6. Ascend: re-copy in GameLogic.ascend OR intentionally reset
+- [ ] 7. New Game: seed in createInitialState only if needed
+- [ ] 8. Round-trip + legacy-missing tests
+- [ ] 9. Mutate only via GameLogic + director (so persist runs)
+```
+
+Use `_jsonInt` / `as num?` for ints (web JSON). Bump `'version'` only for docs unless the shape breaks.
+
+## Ascend (trust `GameLogic.ascend`)
+
+**Keeps:** essence, relics, AL, lifetime gold, highestDungeonCleared, hero levels/XP/roster (gear stripped), pets, sanctuary tracks, metaDepth, soulbound, God Hand, settings, achievements/codex, challenge toggles.
+
+**Resets:** wallet gold, bossVictories, floor progress, ATK/DEF/VIT gold upgrades, equipped gear, gearStash, **loadouts**, enemies/rooms, `inDungeon`, missions.
+
+Ignore outdated comments that say loadouts survive Ascend — code clears them.
+
+## Tests
+
+- `test/save_load_test.dart`
+- `test/meta_systems_test.dart` (legacy saves without meta fields)
+- `test/meta_depth_test.dart`
+
+Use `GameDirector.preview()` for in-memory tests.

@@ -80,6 +80,7 @@ IdleSword*
 /Readme.html
 /Visit Kenney*
 /assets.json
-.cursor/
+# Keep kenney-preview / local Cursor junk out of git; ship project skills.
+.cursor/*
 !.cursor/skills/
 !.cursor/skills/**/
