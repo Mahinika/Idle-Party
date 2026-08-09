@@ -123,7 +123,7 @@ abstract final class MenuChrome {
       child: Container(
         width: 44,
         height: 4,
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 6),
         decoration: BoxDecoration(
           color: GameTheme.borderLit.withValues(alpha: 0.55),
           borderRadius: BorderRadius.circular(99),

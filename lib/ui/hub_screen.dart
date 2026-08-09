@@ -390,11 +390,11 @@ class _HubScreenState extends State<HubScreen>
                               final (actionLabel, onAction) =
                                   switch (chase.kind) {
                                 HubChaseKind.claimWeekly => (
-                                    'CLAIM',
+                                    'CLAIM VAULT',
                                     director.claimWeekly,
                                   ),
                                 HubChaseKind.claimMissions => (
-                                    'CLAIM',
+                                    'CLAIM JOBS',
                                     () {
                                       for (final m
                                           in director.state.missions) {
@@ -419,26 +419,137 @@ class _HubScreenState extends State<HubScreen>
                                   ),
                                 _ => (null, null),
                               };
-                              return _HubTodayCard(
-                                chase: chase,
-                                actionLabel: actionLabel,
-                                onAction: onAction,
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _HubTodayCard(
+                                    chase: chase,
+                                    actionLabel: actionLabel,
+                                    onAction: onAction,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Transform.scale(
+                                    scale: 1.0 + (_torch.value * 0.012),
+                                    child: KenneyButton(
+                                      label: 'ENTER DUNGEON',
+                                      style: KenneyButtonStyle.brown,
+                                      primary: true,
+                                      onPressed: unlockedSelected
+                                          ? () => widget
+                                              .onEnterDungeon(_selectedId)
+                                          : null,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _HubUrgentRow(
+                                    claimable: state.missions
+                                        .where((m) => m.isComplete)
+                                        .length,
+                                    canAscend: canAscend,
+                                    ascendLabel: canAscend
+                                        ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
+                                        : null,
+                                    // TODAY already has the primary one-tap —
+                                    // hide duplicates in the urgent stack.
+                                    hideAscend: chase.kind ==
+                                        HubChaseKind.ascend,
+                                    hideVaultClaim: chase.kind ==
+                                        HubChaseKind.claimWeekly,
+                                    hideMissionClaim: chase.kind ==
+                                        HubChaseKind.claimMissions,
+                                    onContracts: () {
+                                      for (final m
+                                          in director.state.missions) {
+                                        if (m.isComplete) {
+                                          director.claimMission(m.id);
+                                        }
+                                      }
+                                    },
+                                    onAscend: () =>
+                                        confirmAscend(context, director),
+                                    dailyClaimed:
+                                        director.isDailyClaimedToday,
+                                    onDaily: () =>
+                                        confirmDailyRun(context, director),
+                                    showGauntlet:
+                                        GameLogic.canEnterGauntlet(state) ||
+                                            state.ascensionLevel >=
+                                                GameLogic
+                                                    .gauntletMinAscension,
+                                    gauntletBest:
+                                        state.metaDepth.gauntletBestFloor,
+                                    onGauntlet: () => confirmGauntletRun(
+                                      context,
+                                      director,
+                                    ),
+                                    weeklyReady:
+                                        GameLogic.canClaimDailyVault(state),
+                                    weeklyProgress:
+                                        state.metaDepth.dailyVaultClears,
+                                    weeklyClaimed:
+                                        state.metaDepth.dailyVaultClaimed,
+                                    weeklyModifier:
+                                        state.metaDepth.weeklyModifier,
+                                    weeklyBestTimedKey:
+                                        state.metaDepth.dailyBestTimedKey,
+                                    onClaimWeekly: director.claimWeekly,
+                                  ),
+                                ],
                               );
                             },
                           ),
-                          const SizedBox(height: 8),
-                        ],
-                        Transform.scale(
-                          scale: 1.0 + (_torch.value * 0.012),
-                          child: KenneyButton(
-                            label: 'ENTER DUNGEON',
-                            style: KenneyButtonStyle.brown,
-                            primary: true,
-                            onPressed: unlockedSelected
-                                ? () => widget.onEnterDungeon(_selectedId)
-                                : null,
+                        ] else ...[
+                          const SizedBox(height: 6),
+                          Transform.scale(
+                            scale: 1.0 + (_torch.value * 0.012),
+                            child: KenneyButton(
+                              label: 'ENTER DUNGEON',
+                              style: KenneyButtonStyle.brown,
+                              primary: true,
+                              onPressed: unlockedSelected
+                                  ? () => widget.onEnterDungeon(_selectedId)
+                                  : null,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 6),
+                          _HubUrgentRow(
+                            claimable: state.missions
+                                .where((m) => m.isComplete)
+                                .length,
+                            canAscend: canAscend,
+                            ascendLabel: canAscend
+                                ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
+                                : null,
+                            onContracts: () {
+                              for (final m in director.state.missions) {
+                                if (m.isComplete) {
+                                  director.claimMission(m.id);
+                                }
+                              }
+                            },
+                            onAscend: () => confirmAscend(context, director),
+                            dailyClaimed: director.isDailyClaimedToday,
+                            onDaily: () =>
+                                confirmDailyRun(context, director),
+                            showGauntlet: GameLogic.canEnterGauntlet(state) ||
+                                state.ascensionLevel >=
+                                    GameLogic.gauntletMinAscension,
+                            gauntletBest: state.metaDepth.gauntletBestFloor,
+                            onGauntlet: () =>
+                                confirmGauntletRun(context, director),
+                            weeklyReady:
+                                GameLogic.canClaimDailyVault(state),
+                            weeklyProgress:
+                                state.metaDepth.dailyVaultClears,
+                            weeklyClaimed:
+                                state.metaDepth.dailyVaultClaimed,
+                            weeklyModifier:
+                                state.metaDepth.weeklyModifier,
+                            weeklyBestTimedKey:
+                                state.metaDepth.dailyBestTimedKey,
+                            onClaimWeekly: director.claimWeekly,
+                          ),
+                        ],
                         if (!short && !canAscend) ...[
                           const SizedBox(height: 4),
                           Text(
@@ -450,40 +561,6 @@ class _HubScreenState extends State<HubScreen>
                             ),
                           ),
                         ],
-                        const SizedBox(height: 6),
-                        _HubUrgentRow(
-                          claimable: state.missions
-                              .where((m) => m.isComplete)
-                              .length,
-                          canAscend: canAscend,
-                          ascendLabel: canAscend
-                              ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
-                              : null,
-                          onContracts: () {
-                            // Claim rewards + toast only — don't force Contracts overlay.
-                            for (final m in director.state.missions) {
-                              if (m.isComplete) {
-                                director.claimMission(m.id);
-                              }
-                            }
-                          },
-                          onAscend: () => confirmAscend(context, director),
-                          dailyClaimed: director.isDailyClaimedToday,
-                          onDaily: () => confirmDailyRun(context, director),
-                          showGauntlet: GameLogic.canEnterGauntlet(state) ||
-                              state.ascensionLevel >=
-                                  GameLogic.gauntletMinAscension,
-                          gauntletBest: state.metaDepth.gauntletBestFloor,
-                          onGauntlet: () =>
-                              confirmGauntletRun(context, director),
-                          weeklyReady: GameLogic.canClaimDailyVault(state),
-                          weeklyProgress: state.metaDepth.dailyVaultClears,
-                          weeklyClaimed: state.metaDepth.dailyVaultClaimed,
-                          weeklyModifier: state.metaDepth.weeklyModifier,
-                          weeklyBestTimedKey:
-                              state.metaDepth.dailyBestTimedKey,
-                          onClaimWeekly: director.claimWeekly,
-                        ),
                         if (!short) ...[
                           const SizedBox(height: 4),
                           ChallengeToggles(
@@ -686,11 +763,51 @@ class _HubTodayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ready = chase.urgency == HubChaseUrgency.ready;
+    final almost = chase.urgency == HubChaseUrgency.almost;
+    final accent = ready
+        ? GameTheme.torchHot
+        : almost
+            ? GameTheme.accentWarn
+            : GameTheme.torchHot;
+    final chip = ready
+        ? 'READY'
+        : almost
+            ? 'ALMOST'
+            : null;
+    final base = MenuChrome.cardBox(
+      inset: true,
+      selected: ready || almost,
+    );
     return Semantics(
       label: 'TODAY chase: ${chase.title}. ${chase.detail}',
       child: Container(
         padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-        decoration: MenuChrome.cardBox(inset: true),
+        decoration: base.copyWith(
+          border: Border.all(
+            color: ready
+                ? GameTheme.torchHot.withValues(alpha: 0.95)
+                : almost
+                    ? GameTheme.accentWarn.withValues(alpha: 0.9)
+                    : GameTheme.border.withValues(alpha: 0.85),
+            width: ready || almost ? 1.6 : 1,
+          ),
+          boxShadow: ready || almost
+              ? [
+                  BoxShadow(
+                    color: (ready ? GameTheme.torch : GameTheme.accentWarn)
+                        .withValues(alpha: ready ? 0.22 : 0.16),
+                    blurRadius: ready ? 14 : 10,
+                  ),
+                ]
+              : const [
+                  BoxShadow(
+                    color: Color(0x44000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -712,16 +829,28 @@ class _HubTodayCard extends StatelessWidget {
                             'TODAY',
                             style: GameTheme.body(
                               size: 13,
-                              color: GameTheme.torchHot,
+                              color: accent,
                             ),
                           ),
+                          if (chip != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              chip,
+                              style: GameTheme.body(
+                                size: 12,
+                                color: accent,
+                              ),
+                            ),
+                          ],
                           if (chase.progressLabel != null) ...[
                             const Spacer(),
                             Text(
                               chase.progressLabel!,
                               style: GameTheme.body(
                                 size: 13,
-                                color: GameTheme.mossLit,
+                                color: ready || almost
+                                    ? accent
+                                    : GameTheme.mossLit,
                               ),
                             ),
                           ],
@@ -738,7 +867,7 @@ class _HubTodayCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         chase.detail,
-                        maxLines: 2,
+                        maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: GameTheme.body(
                           size: 13,
@@ -783,6 +912,9 @@ class _HubUrgentRow extends StatelessWidget {
     required this.weeklyModifier,
     required this.weeklyBestTimedKey,
     required this.onClaimWeekly,
+    this.hideAscend = false,
+    this.hideVaultClaim = false,
+    this.hideMissionClaim = false,
   });
 
   final int claimable;
@@ -801,6 +933,9 @@ class _HubUrgentRow extends StatelessWidget {
   final String weeklyModifier;
   final int weeklyBestTimedKey;
   final VoidCallback onClaimWeekly;
+  final bool hideAscend;
+  final bool hideVaultClaim;
+  final bool hideMissionClaim;
 
   @override
   Widget build(BuildContext context) {
@@ -808,10 +943,13 @@ class _HubUrgentRow extends StatelessWidget {
         weeklyProgress > 0 &&
         weeklyProgress < GameLogic.dailyVaultClearTarget &&
         weeklyBestTimedKey < 2;
+    final showAscend = canAscend && ascendLabel != null && !hideAscend;
+    final showVault = weeklyReady && !hideVaultClaim;
+    final showMissions = claimable > 0 && !hideMissionClaim;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (canAscend && ascendLabel != null) ...[
+        if (showAscend) ...[
           KenneyButton(
             label: ascendLabel!,
             style: KenneyButtonStyle.red,
@@ -820,7 +958,7 @@ class _HubUrgentRow extends StatelessWidget {
           ),
           const SizedBox(height: 4),
         ],
-        if (weeklyReady) ...[
+        if (showVault) ...[
           KenneyButton(
             label:
                 'CLAIM VAULT  +${Keystone.dailyVaultEssence(weeklyBestTimedKey)}e',
@@ -839,7 +977,7 @@ class _HubUrgentRow extends StatelessWidget {
         ],
         Row(
           children: [
-            if (claimable > 0) ...[
+            if (showMissions) ...[
               Expanded(
                 child: KenneyButton(
                   label: 'CLAIM ($claimable)',

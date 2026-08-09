@@ -1791,7 +1791,19 @@ class GameLogic {
   /// Essence granted when ascending into [newLevel].
   static int ascendEssenceReward(int newLevel) => 4 + (newLevel * 3);
 
-  /// Applies Ascension + Sanctuary + gear + pet gold bonuses.
+  /// Flat ATK granted per Ascend Blessing stack.
+  static const int ascendBlessingAtk = 2;
+
+  /// Flat DEF granted per Ascend Blessing stack.
+  static const int ascendBlessingDef = 1;
+
+  /// Flat VIT granted per Ascend Blessing stack.
+  static const int ascendBlessingVit = 4;
+
+  /// Gold-find percent granted per Ascend Blessing stack.
+  static const int ascendBlessingGoldPct = 3;
+
+  /// Applies Ascension + Sanctuary + Blessing + gear + pet gold bonuses.
   static int applyGoldGain(GameState state, int baseGold) {
     if (baseGold <= 0) {
       return baseGold;
@@ -1799,6 +1811,7 @@ class GameLogic {
     final percent =
         state.ascensionGoldBonusPercent +
         state.sanctuaryGoldBonusPercent +
+        state.ascendBlessingGoldPercent +
         state.gearGoldFindPercent +
         state.petGoldFindPercent;
     if (percent <= 0) {
@@ -1892,6 +1905,7 @@ class GameLogic {
       zoneTrophies: trophies,
       noWipeAscendReady: true,
       unlockedSpecs: unlockedSpecs,
+      ascendBlessings: state.metaDepth.ascendBlessings + 1,
     );
 
     final fresh = createInitialState(now: now);
@@ -6800,6 +6814,9 @@ class OfflineProgressResult {
   final int highestFloorDelta;
   final int bossDelta;
 
+  bool get foughtWhileAway =>
+      roomsCleared > 0 || highestFloorDelta > 0 || bossDelta > 0;
+
   bool get hasSummary =>
       secondsApplied >= 45 &&
       (goldGained > 0 ||
@@ -6808,15 +6825,58 @@ class OfflineProgressResult {
           highestFloorDelta > 0 ||
           bossDelta > 0);
 
+  /// Compact chip / banner line — lead with the wow, then the numbers.
   String get headline {
     final away = formatOfflineDuration(secondsApplied);
-    final parts = <String>['Away $away'];
+    if (!hasSummary) return 'Away $away';
+    final lead = foughtWhileAway
+        ? 'Party kept fighting'
+        : 'Sanctuary kept earning';
+    final parts = <String>['$lead · Away $away'];
     if (goldGained > 0) parts.add('+${goldGained}g');
     if (essenceGained > 0) parts.add('+$essenceGained ess');
     if (roomsCleared > 0) parts.add('$roomsCleared clears');
     if (highestFloorDelta > 0) parts.add('floor +$highestFloorDelta');
     if (bossDelta > 0) parts.add('boss x$bossDelta');
     return parts.join(' · ');
+  }
+
+  /// Dialog lead sentence under the duration.
+  String get welcomeLead {
+    if (foughtWhileAway) {
+      if (bossDelta > 0 && highestFloorDelta > 0) {
+        return 'Your party pushed floors and dropped bosses while you were gone.';
+      }
+      if (bossDelta > 0) {
+        return 'Bosses fell while you were away — Ascend progress moved.';
+      }
+      if (highestFloorDelta > 0 || roomsCleared > 0) {
+        return 'Your party cleared rooms while you were away.';
+      }
+    }
+    if (goldGained > 0 || essenceGained > 0) {
+      return 'Sanctuary idle gold stacked up while you were away.';
+    }
+    return 'Welcome back.';
+  }
+
+  /// Non-zero reward rows for the welcome dialog (label, value).
+  List<(String, String)> get highlightRows {
+    final rows = <(String, String)>[];
+    if (goldGained > 0) rows.add(('Gold earned', '+${goldGained}g'));
+    if (essenceGained > 0) {
+      rows.add(('Essence earned', '+$essenceGained'));
+    }
+    if (roomsCleared > 0) {
+      rows.add(('Rooms cleared', '$roomsCleared'));
+    }
+    if (highestFloorDelta > 0) {
+      rows.add(('Floor progress', '+$highestFloorDelta'));
+    }
+    if (bossDelta > 0) {
+      rows.add(('Bosses defeated', '$bossDelta'));
+    }
+    return rows;
   }
 
   static String formatOfflineDuration(int seconds) {

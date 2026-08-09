@@ -1,5 +1,10 @@
 # Idle Party UI theme (GEAR look)
 
+**Device target:** **portrait phone only** (~360–430 CSS px). Shipping UI is
+Android phone; Flutter web is a playtest harness (emulate a phone viewport).
+Do not design for desktop/tablet as the product. Prefer tap / long-press over
+hover-only interactions.
+
 **Reference surface:** the GEAR inventory sheet (hero doll + ITEMS BAG).
 When adding or restyling menus, match this — don’t invent a new palette.
 
@@ -106,7 +111,9 @@ Item rarity (tooltips only): `itemRarityColor` / `itemRarityBorder` in `item_too
 - Combat / dungeon HUD (FARM/PUSH, God Hand, party bars) — pixel HUD chrome.
 - Bottom nav bar.
 - Start menu / intro / new-game picker — brand surfaces.
-- Item tooltips — warm rarity panels (`item_tooltip.dart`).
+- Item tooltips — warm rarity panels (`item_tooltip.dart`): **long-press** on
+  phone (centered card + scrim); hover OK for web playtest only. Bag selection
+  compare stays **compact** so the grid remains usable.
 - Hub world-path `KenneyPanel` scene cards — adjacent forge palette, not the inventory sheet.
 
 ---

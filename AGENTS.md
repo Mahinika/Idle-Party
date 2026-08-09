@@ -15,10 +15,13 @@ Agents **must** choose methods, skills, and verify steps themselves — see
 Preferences (do not re-ask): **content/feel over Play busywork**, first-hour
 **progression/power**, early calm / **endgame grindy OK**, **polish kits** before
 many new specs, **more zones**, clearer “what am I chasing today” meta, **no IAP
-for now**, **Android-first** (no iOS/web product), **large batches**, English
-in-game copy, fairness-first balance, **propose** commit / push / PR / tag.
-Chat in plain Swedish; ask only product/risk questions. Full detail:
-`.cursor/rules/owner-preferences.mdc`.
+for now**, **Android phone-only** (portrait; no iOS/web product), **large
+batches**, English in-game copy, fairness-first balance, **propose** commit /
+push / PR / tag. Chat in plain Swedish; ask only product/risk questions. Full
+detail: `.cursor/rules/owner-preferences.mdc`.
+
+**UI target:** ship for **portrait phones** (~360–430 px). Web is playtest only
+(use device emulation). No hover-only flows for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
@@ -173,7 +176,8 @@ soulbound item (may rescale) + fragments, God Hand level + style/CD in `metaDept
 `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
 (mute/VFX/colorblind/text scale/auto-sell), full `metaDepth` (Gauntlet best, Will /
 Gauntlet claims, weekly/season, prestige shop, unlocked specs, party slot 5,
-ascend streak/titles/trophies, …), **hero levels/XP**, **Apex** vault + equipped
+ascend streak/titles/trophies, **`ascendBlessings`** pack +2 ATK/+1 DEF/+4 VIT/+3% gold
+per Ascend, …), **hero levels/XP**, **Apex** vault + equipped
 apex, craft mats/pity, keystone prefs (clamped) + challenge toggles, FARM/PUSH preference.
 
 **Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades

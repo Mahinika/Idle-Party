@@ -460,8 +460,9 @@ class _StatCompareRow extends StatelessWidget {
     );
   }
 }
-/// Hover (desktop/web) overlay tooltip. Long-press on the child is left alone.
-/// Positions with real measured size and clamps so top bag rows stay on-screen.
+/// Phone-first item tooltip: **long-press** opens a centered card + scrim.
+/// Hover still works for wide web playtest. Short tap is left to the child
+/// (select / equip) so bag selection stays usable.
 class ItemTooltipAnchor extends StatefulWidget {
   const ItemTooltipAnchor({
     super.key,
@@ -470,6 +471,9 @@ class ItemTooltipAnchor extends StatefulWidget {
     this.hero,
     this.enabled = true,
   });
+
+  /// Portrait / phone sheet threshold (matches GEAR wide layout break).
+  static const double phoneMaxWidth = 520;
 
   final EquipmentItem item;
   final Widget child;
@@ -485,6 +489,7 @@ class _ItemTooltipAnchorState extends State<ItemTooltipAnchor> {
   final GlobalKey _anchorKey = GlobalKey();
   Timer? _showTimer;
   Timer? _hideTimer;
+  var _phoneSheet = false;
 
   @override
   void dispose() {
@@ -494,17 +499,33 @@ class _ItemTooltipAnchorState extends State<ItemTooltipAnchor> {
     super.dispose();
   }
 
+  void _showNow({required bool phoneSheet}) {
+    if (!widget.enabled) return;
+    _hideTimer?.cancel();
+    _showTimer?.cancel();
+    _phoneSheet = phoneSheet;
+    if (!_portal.isShowing) _portal.show();
+  }
+
+  void _hideNow() {
+    _showTimer?.cancel();
+    _hideTimer?.cancel();
+    if (_portal.isShowing) _portal.hide();
+  }
+
   void _scheduleShow() {
     if (!widget.enabled) return;
     _hideTimer?.cancel();
     _showTimer?.cancel();
     _showTimer = Timer(const Duration(milliseconds: 220), () {
       if (!mounted || !widget.enabled) return;
+      _phoneSheet = false;
       if (!_portal.isShowing) _portal.show();
     });
   }
 
   void _scheduleHide() {
+    if (_phoneSheet) return;
     _showTimer?.cancel();
     _hideTimer?.cancel();
     _hideTimer = Timer(const Duration(milliseconds: 120), () {
@@ -534,11 +555,48 @@ class _ItemTooltipAnchorState extends State<ItemTooltipAnchor> {
 
   @override
   Widget build(BuildContext context) {
+    final phone =
+        MediaQuery.sizeOf(context).width < ItemTooltipAnchor.phoneMaxWidth;
+
     return OverlayPortal(
       controller: _portal,
       overlayChildBuilder: (overlayContext) {
-        final target = _anchorRectInOverlay(overlayContext);
         final screen = MediaQuery.sizeOf(overlayContext);
+        final card = ItemTooltipCard(
+          item: widget.item,
+          hero: widget.hero,
+          compact: phone || _phoneSheet,
+        );
+
+        if (_phoneSheet || phone) {
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _hideNow,
+                  child: ColoredBox(
+                    color: Colors.black.withValues(alpha: 0.45),
+                  ),
+                ),
+              ),
+              Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: (screen.width - 24).clamp(160.0, 280.0),
+                    maxHeight: screen.height * 0.72,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: SingleChildScrollView(child: card),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        final target = _anchorRectInOverlay(overlayContext);
         if (target == null) return const SizedBox.shrink();
 
         return CustomSingleChildLayout(
@@ -549,18 +607,21 @@ class _ItemTooltipAnchorState extends State<ItemTooltipAnchor> {
           child: MouseRegion(
             onEnter: (_) => _cancelHide(),
             onExit: (_) => _scheduleHide(),
-            child: ItemTooltipCard(
-              item: widget.item,
-              hero: widget.hero,
-            ),
+            child: card,
           ),
         );
       },
-      child: MouseRegion(
+      child: GestureDetector(
         key: _anchorKey,
-        onEnter: (_) => _scheduleShow(),
-        onExit: (_) => _scheduleHide(),
-        child: widget.child,
+        behavior: HitTestBehavior.deferToChild,
+        onLongPress: () => _showNow(phoneSheet: true),
+        child: phone
+            ? widget.child
+            : MouseRegion(
+                onEnter: (_) => _scheduleShow(),
+                onExit: (_) => _scheduleHide(),
+                child: widget.child,
+              ),
       ),
     );
   }

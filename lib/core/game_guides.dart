@@ -90,7 +90,8 @@ abstract final class GameGuides {
       title: 'COMBINATOR',
       body:
           'Merge two same-slot gear pieces into one stronger item.\n\n'
-          '• In BAG: select an item → ADD TO MERGE (or long-press).\n'
+          '• In BAG: select an item → ADD TO MERGE.\n'
+          '• Long-press any item for the full tip card.\n'
           '• Add a second item of the same slot; TOOLS opens when ready.\n'
           '• Check RESULT preview and gold cost, then MERGE.\n'
           '• AUTO MERGE: repeatedly merges junk pairs of the same slot '
@@ -190,7 +191,8 @@ abstract final class GameGuides {
           'Keystone affixes still rotate each ISO week, but the vault is daily.\n\n'
           '• Fill today’s vault with 1 push clear — or time a KEY +2 (or higher).\n'
           '• Claim scales with your best timed key today.\n'
-          '• Hub TODAY card points at your next chase (vault, daily, Will, Gauntlet, zone).\n'
+          '• Hub TODAY card points at your next chase and flashes READY / ALMOST '
+          'when a claim or Ascend is close.\n'
           '• First vault claim of each calendar month also pays a season bonus.\n'
           '• Progress resets at UTC midnight.\n'
           '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
@@ -234,11 +236,14 @@ abstract final class GameGuides {
       title: 'ASCEND',
       body:
           'Prestige when Ascend unlocks in the hub.\n\n'
-          '• Resets run gear, stash, and floor progress.\n'
+          '• Each Ascend grants a lasting Blessing: +2 ATK · +1 DEF · +4 VIT · '
+          '+3% gold (stacks forever). See Forge → META.\n'
+          '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
+          '• Also raises Ascension Level (AL: +ATK/VIT/+10% gold per level) and pays essence.\n'
           '• Keeps: essence, relics, sanctuary, pets, soulbound, God Hand, '
           'highest dungeon cleared, lifetime gold, unlocked specs, '
-          'roster levels/XP, and 5th party slot.\n'
-          '• Grants essence and raises Ascension Level (AL).\n'
+          'roster levels/XP, Apex, and 5th party slot.\n'
+          '• Resets: wallet gold, floors, run gear, loadouts, forge gold upgrades.\n'
           '• AL makes later runs tougher but richer in meta power.',
     ),
     GuideTopic(

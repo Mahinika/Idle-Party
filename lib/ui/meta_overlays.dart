@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/hub_chase.dart';
 import '../core/keystone.dart';
 import '../core/meta_systems.dart';
 import '../models/achievement_def.dart';
@@ -348,45 +349,41 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
         const SizedBox(height: 10),
         MenuChrome.sectionLabel('ACTIVE'),
         const SizedBox(height: 6),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (var i = 0; i < maxSlots; i++)
-              _ActiveSlotChip(
-                index: i,
-                hero: i < active.length ? active[i] : null,
-                selected: _pendingSlotReplace ==
-                    (i < active.length ? active[i].id : 'empty_$i'),
-                locked: state.inDungeon,
-                onTap: state.inDungeon
-                    ? null
-                    : () {
-                        if (i < active.length) {
-                          setState(() {
-                            _pendingSlotReplace = active[i].id;
-                          });
-                        } else {
-                          setState(() => _pendingSlotReplace = 'empty_$i');
-                        }
-                      },
-                onClear: state.inDungeon || i >= active.length
-                    ? null
-                    : () {
-                        final ids = [
-                          for (final h in active)
-                            if (h.id != active[i].id) h.id,
-                        ];
-                        if (ids.isEmpty) {
-                          _toast('Need at least one hero');
-                          return;
-                        }
-                        director.setActiveParty(ids);
-                        setState(() => _pendingSlotReplace = null);
-                      },
-              ),
-          ],
-        ),
+        for (var i = 0; i < maxSlots; i++) ...[
+          _ActiveSlotChip(
+            index: i,
+            hero: i < active.length ? active[i] : null,
+            selected: _pendingSlotReplace ==
+                (i < active.length ? active[i].id : 'empty_$i'),
+            locked: state.inDungeon,
+            onTap: state.inDungeon
+                ? null
+                : () {
+                    if (i < active.length) {
+                      setState(() {
+                        _pendingSlotReplace = active[i].id;
+                      });
+                    } else {
+                      setState(() => _pendingSlotReplace = 'empty_$i');
+                    }
+                  },
+            onClear: state.inDungeon || i >= active.length
+                ? null
+                : () {
+                    final ids = [
+                      for (final h in active)
+                        if (h.id != active[i].id) h.id,
+                    ];
+                    if (ids.isEmpty) {
+                      _toast('Need at least one hero');
+                      return;
+                    }
+                    director.setActiveParty(ids);
+                    setState(() => _pendingSlotReplace = null);
+                  },
+          ),
+          const SizedBox(height: 6),
+        ],
         if (!state.metaDepth.partySlot5Unlocked) ...[
           const SizedBox(height: 8),
           KenneyButton(
@@ -479,25 +476,28 @@ class _ActiveSlotChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = hero == null
         ? 'SLOT ${index + 1}'
-        : '${hero!.name}\n${hero!.roleLabel}';
-    return Column(
+        : '${hero!.name} · ${hero!.roleLabel}';
+    return Row(
       children: [
-        KenneyButton(
-          label: label,
-          expanded: false,
-          style: selected ? KenneyButtonStyle.brown : KenneyButtonStyle.grey,
-          onPressed: onTap,
+        Expanded(
+          child: KenneyButton(
+            label: label,
+            style: selected ? KenneyButtonStyle.brown : KenneyButtonStyle.grey,
+            onPressed: onTap,
+          ),
         ),
-        if (onClear != null && !locked)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
+        if (onClear != null && !locked) ...[
+          const SizedBox(width: 6),
+          SizedBox(
+            width: 52,
             child: KenneyButton(
-              label: 'CLEAR',
+              label: 'X',
               style: KenneyButtonStyle.grey,
               expanded: false,
               onPressed: onClear,
             ),
           ),
+        ],
       ],
     );
   }
@@ -760,6 +760,8 @@ Future<void> showOfflineProgressDialog(
 ) async {
   final summary = director.offlineSummary;
   if (summary == null) return;
+  final chase = HubChase.forState(summary.state);
+  final rows = summary.highlightRows;
   await showDialog<void>(
     context: context,
     barrierColor: MenuChrome.scrim,
@@ -775,28 +777,40 @@ Future<void> showOfflineProgressDialog(
           ),
           const SizedBox(height: 6),
           Text(
+            summary.welcomeLead,
+            style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+          ),
+          const SizedBox(height: 6),
+          Text(
             summary.state.inDungeon
                 ? 'AFK runs spatial combat with assist (faster, softer packs).'
                 : 'Hub AFK earns sanctuary idle gold only.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
+          if (rows.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            for (final row in rows)
+              _OfflineStatRow(label: row.$1, value: row.$2),
+          ],
           const SizedBox(height: 10),
-          _OfflineStatRow(label: 'Gold earned', value: '+${summary.goldGained}g'),
-          _OfflineStatRow(
-            label: 'Essence earned',
-            value: '+${summary.essenceGained}',
+          Text(
+            chase.urgency == HubChaseUrgency.ready
+                ? 'Up next — ready: ${chase.title}'
+                : chase.urgency == HubChaseUrgency.almost
+                    ? 'Up next — almost: ${chase.title}'
+                    : 'Up next: ${chase.title}',
+            style: GameTheme.body(
+              size: 14,
+              color: chase.urgency == HubChaseUrgency.normal
+                  ? GameTheme.mossLit
+                  : GameTheme.accentWarn,
+            ),
           ),
-          _OfflineStatRow(
-            label: 'Rooms cleared',
-            value: '${summary.roomsCleared}',
-          ),
-          _OfflineStatRow(
-            label: 'Floor progress',
-            value: '+${summary.highestFloorDelta}',
-          ),
-          _OfflineStatRow(
-            label: 'Bosses defeated',
-            value: '${summary.bossDelta}',
+          Text(
+            chase.detail,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
         ],
       ),

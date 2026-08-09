@@ -428,7 +428,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   ),
                 ] else if (selectedWornHere)
                   Text(
-                    'Equipped · UNEQUIP below or long-press slot',
+                    'Equipped · UNEQUIP below · long-press for tip',
                     style: GameTheme.body(
                       size: 11,
                       color: GameTheme.parchmentDim,
@@ -675,14 +675,12 @@ class PaperDollSlot extends StatelessWidget {
       button: onTap != null || onUnequip != null,
       label: a11y,
       onTap: onTap,
-      onLongPress: onUnequip,
       excludeSemantics: true,
       child: SizedBox(
         width: hit,
         height: hit,
         child: InkWell(
           onTap: onTap,
-          onLongPress: onUnequip,
           child: Center(
             child: Container(
               width: size,

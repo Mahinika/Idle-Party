@@ -289,7 +289,7 @@ class _Is2ShellState extends State<Is2Shell> {
     }
   }
 
-  Widget _inventoryDock() {
+  Widget _inventoryDock({bool flatChrome = false}) {
     final d = widget.director;
     return _InventoryDock(
       state: state,
@@ -298,6 +298,7 @@ class _Is2ShellState extends State<Is2Shell> {
       combineB: _combineB,
       initialTab: _inventoryTab,
       onTabChanged: (i) => setState(() => _inventoryTab = i),
+      flatChrome: flatChrome,
       onSelect: _select,
       onPutCombine: _putInCombinator,
       onEquip: () {
@@ -777,6 +778,12 @@ class _Is2ShellState extends State<Is2Shell> {
         true,
       _ => false,
     };
+    // Phone-first: short menus still need most of the screen (list + claims).
+    final heightFactor = switch (_overlay) {
+      Is2Overlay.inventory => 1.0,
+      _ when shortSheet => 0.84,
+      _ => 0.96,
+    };
     return _OverlayScrim(
       title: switch (_overlay) {
         Is2Overlay.forge => 'FORGE',
@@ -798,7 +805,7 @@ class _Is2ShellState extends State<Is2Shell> {
         Is2Overlay.prestigeShop => 'ESSENCE SHOP',
         Is2Overlay.none => '',
       },
-      heightFactor: shortSheet ? 0.58 : 0.85,
+      heightFactor: heightFactor,
       onClose: _closeOverlayOrLeaveHub,
       child: switch (_overlay) {
         Is2Overlay.forge => SingleChildScrollView(
@@ -810,7 +817,7 @@ class _Is2ShellState extends State<Is2Shell> {
         Is2Overlay.sanctuary => SingleChildScrollView(
           child: _SanctuaryOverlay(director: d),
         ),
-        Is2Overlay.inventory => _inventoryDock(),
+        Is2Overlay.inventory => _inventoryDock(flatChrome: true),
         Is2Overlay.settings => _SettingsOverlay(
               director: d,
               onClose: () => _setOverlay(Is2Overlay.none),
@@ -2358,6 +2365,7 @@ class _InventoryDock extends StatefulWidget {
     required this.onCleanBag,
     required this.onOpenFilters,
     required this.onAutoMerge,
+    this.flatChrome = false,
   });
 
   final GameState state;
@@ -2366,6 +2374,7 @@ class _InventoryDock extends StatefulWidget {
   final String? combineB;
   final int initialTab;
   final ValueChanged<int> onTabChanged;
+  final bool flatChrome;
   final void Function(String id) onSelect;
   final void Function(String id) onPutCombine;
   final VoidCallback onEquip;
@@ -2675,9 +2684,7 @@ class _InventoryDockState extends State<_InventoryDock>
                         onTap: item == null
                             ? null
                             : () => onSelect(item.id),
-                        onLongPress: item == null
-                            ? null
-                            : () => onPutCombine(item.id),
+                        onLongPress: null,
                       );
                     },
                   ),
@@ -2706,41 +2713,41 @@ class _InventoryDockState extends State<_InventoryDock>
                 final cmp = hero == null
                     ? null
                     : GameLogic.compareForHero(hero, selected);
+                final scoreLine = cmp == null || cmp.powerDelta == 0
+                    ? null
+                    : (cmp.powerDelta > 0
+                        ? 'UP ${GameLogic.formatDelta(cmp.powerDelta)}'
+                        : 'DN ${GameLogic.formatDelta(cmp.powerDelta)}');
+                // Phone GEAR: keep compare to one line so the bag grid stays usable.
+                // Long-press an item for the full WoW-style tooltip sheet.
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      selected.name,
+                      [
+                        selected.name,
+                        'i${selected.effectiveItemLevel}',
+                        if (scoreLine != null) scoreLine,
+                      ].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GameTheme.body(
-                        size: 13,
-                        color: itemRarityColor(selected.rarity),
+                        size: 12,
+                        color: scoreLine != null &&
+                                cmp != null &&
+                                cmp.powerDelta < 0
+                            ? GameTheme.bloodLit
+                            : itemRarityColor(selected.rarity),
                       ),
                     ),
-                    Text(
-                      'i${selected.effectiveItemLevel} · ${selected.statsLine}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.parchmentDim,
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      height: 34,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: _equipHeroChipsFor(selected),
                       ),
                     ),
-                    if (cmp != null && cmp.powerDelta != 0)
-                      Text(
-                        cmp.powerDelta > 0
-                            ? 'Upgrade  Score ${GameLogic.formatDelta(cmp.powerDelta)}'
-                            : 'Weaker  Score ${GameLogic.formatDelta(cmp.powerDelta)}',
-                        style: GameTheme.body(
-                          size: 11,
-                          color: cmp.powerDelta > 0
-                              ? GameTheme.clear
-                              : GameTheme.bloodLit,
-                        ),
-                      ),
-                    const SizedBox(height: 6),
-                    _equipHeroChipsFor(selected),
                   ],
                 );
               },
@@ -2907,9 +2914,7 @@ class _InventoryDockState extends State<_InventoryDock>
                       onTap: item == null || combineFiltered
                           ? null
                           : () => onSelect(item.id),
-                      onLongPress: item == null || combineFiltered
-                          ? null
-                          : () => onPutCombine(item.id),
+                      onLongPress: null,
                     );
                   },
                 ),
@@ -3015,7 +3020,7 @@ class _InventoryDockState extends State<_InventoryDock>
           ),
         ] else
           Text(
-            'Tap item to equip · long-press / ADD TO MERGE for TOOLS.',
+            'Tap item to select · long-press for tip · ADD TO MERGE for TOOLS.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         if (state.gearStash.isEmpty)
@@ -3042,7 +3047,7 @@ class _InventoryDockState extends State<_InventoryDock>
     final goldOk = canCombine && state.gold >= cost;
     final status = () {
       if (primary == null && secondary == null) {
-        return 'Load two same-slot items from BAG (ADD TO MERGE or long-press).';
+        return 'Load two same-slot items from BAG (ADD TO MERGE).';
       }
       if (primary == null || secondary == null) {
         return 'Add one more item of the same slot from BAG.';
@@ -3232,6 +3237,46 @@ class _InventoryDockState extends State<_InventoryDock>
         ? 0
         : 3 - state.soulboundFragments;
 
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MenuChrome.tabRail(
+          controller: _tabs,
+          tabs: const [
+            Tab(text: 'GEAR'),
+            Tab(text: 'BAG'),
+            Tab(text: 'TOOLS'),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabs,
+            children: [
+              _equipTab(),
+              _bagTab(slots, primary),
+              _toolsTab(
+                primary: primary,
+                secondary: secondary,
+                canCombine: canCombine,
+                cost: cost,
+                preview: preview,
+                fragmentsNeeded: fragmentsNeeded,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    // Overlay GEAR already has panel chrome — skip nested “second sheet”
+    // so the menu sits flush to the top with no dead strip.
+    if (widget.flatChrome) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(2, 0, 2, 0),
+        child: body,
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -3264,36 +3309,7 @@ class _InventoryDockState extends State<_InventoryDock>
         ),
       ),
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          MenuChrome.tabRail(
-            controller: _tabs,
-            tabs: const [
-              Tab(text: 'GEAR'),
-              Tab(text: 'BAG'),
-              Tab(text: 'TOOLS'),
-            ],
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabs,
-              children: [
-                _equipTab(),
-                _bagTab(slots, primary),
-                _toolsTab(
-                  primary: primary,
-                  secondary: secondary,
-                  canCombine: canCombine,
-                  cost: cost,
-                  preview: preview,
-                  fragmentsNeeded: fragmentsNeeded,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      child: body,
     );
   }
 }
@@ -3698,7 +3714,6 @@ class _OverlayScrim extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compact = GameTheme.isCompactWidth(context);
     return Positioned.fill(
       child: Material(
         color: MenuChrome.scrim,
@@ -3717,30 +3732,13 @@ class _OverlayScrim extends StatelessWidget {
                 ),
               ),
             ),
-            compact
-                ? _MobileSheet(
-                    title: title,
-                    onClose: onClose,
-                    heightFactor: heightFactor,
-                    child: child,
-                  )
-                : Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: 520,
-                        maxHeight: heightFactor < 0.7 ? 420 : 560,
-                      ),
-                      child: SizedBox(
-                        width: 520,
-                        height: heightFactor < 0.7 ? 420 : 560,
-                        child: _OverlayPanel(
-                          title: title,
-                          onClose: onClose,
-                          child: child,
-                        ),
-                      ),
-                    ),
-                  ),
+            // Phone product: full-width sheet (never the centered desktop card).
+            _MobileSheet(
+              title: title,
+              onClose: onClose,
+              heightFactor: heightFactor,
+              child: child,
+            ),
           ],
         ),
       ),
@@ -3763,22 +3761,42 @@ class _MobileSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: FractionallySizedBox(
-        heightFactor: heightFactor,
-        widthFactor: 1,
-        // Absorb taps so scrim-dismiss behind the sheet does not fire.
-        child: GestureDetector(
-          onTap: () {},
-          behavior: HitTestBehavior.opaque,
-          child: _OverlayPanel(
-            title: title,
-            onClose: onClose,
-            margin: EdgeInsets.zero,
-            borderRadius: MenuChrome.sheetRadius,
-            child: child,
-          ),
+    // Absorb taps so scrim-dismiss behind the sheet does not fire.
+    final sheet = GestureDetector(
+      onTap: () {},
+      behavior: HitTestBehavior.opaque,
+      child: _OverlayPanel(
+        title: title,
+        onClose: onClose,
+        margin: EdgeInsets.zero,
+        borderRadius: MenuChrome.sheetRadius,
+        // Full-height GEAR: skip drag handle — reclaim vertical space.
+        showHandle: heightFactor < 0.99,
+        child: child,
+      ),
+    );
+
+    if (heightFactor >= 0.99) {
+      // Phone GEAR: flush to the top of the view — no dead strip from
+      // SafeArea / browser safe-area-inset. Keep a bottom home-bar pad only.
+      final bottom = MediaQuery.viewPaddingOf(context).bottom;
+      return MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottom),
+          child: SizedBox.expand(child: sheet),
+        ),
+      );
+    }
+
+    return SafeArea(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: FractionallySizedBox(
+          heightFactor: heightFactor,
+          widthFactor: 1,
+          child: sheet,
         ),
       ),
     );
@@ -3792,6 +3810,7 @@ class _OverlayPanel extends StatelessWidget {
     required this.child,
     this.margin = const EdgeInsets.all(16),
     this.borderRadius,
+    this.showHandle,
   });
 
   final String title;
@@ -3799,51 +3818,52 @@ class _OverlayPanel extends StatelessWidget {
   final Widget child;
   final EdgeInsets margin;
   final BorderRadius? borderRadius;
+  final bool? showHandle;
 
   @override
   Widget build(BuildContext context) {
-    final showHandle = borderRadius != null;
-    return SafeArea(
-      top: false,
-      child: Container(
-        margin: margin,
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-        decoration: MenuChrome.panel(borderRadius: borderRadius),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (showHandle) MenuChrome.sheetHandle(),
-            Row(
-              children: [
-                if (title.isNotEmpty)
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: GameTheme.menuTitle(size: 18),
-                    ),
-                  )
-                else
-                  const Spacer(),
-                KenneyButton(
-                  label: 'CLOSE',
-                  onPressed: onClose,
-                  style: KenneyButtonStyle.grey,
-                  expanded: false,
-                  primary: true,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Container(
-              height: 1,
-              color: GameTheme.borderLit.withValues(alpha: 0.22),
-            ),
-            const SizedBox(height: 10),
-            Expanded(child: child),
-          ],
-        ),
+    final handle = showHandle ?? borderRadius != null;
+    final panel = Container(
+      margin: margin,
+      padding: EdgeInsets.fromLTRB(12, handle ? 6 : 6, 12, 8),
+      decoration: MenuChrome.panel(borderRadius: borderRadius),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (handle) MenuChrome.sheetHandle(),
+          Row(
+            children: [
+              if (title.isNotEmpty)
+                Expanded(
+                  child: Text(
+                    title,
+                    style: GameTheme.menuTitle(size: 18),
+                  ),
+                )
+              else
+                const Spacer(),
+              KenneyButton(
+                label: 'CLOSE',
+                onPressed: onClose,
+                style: KenneyButtonStyle.grey,
+                expanded: false,
+                primary: true,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Container(
+            height: 1,
+            color: GameTheme.borderLit.withValues(alpha: 0.22),
+          ),
+          const SizedBox(height: 6),
+          Expanded(child: child),
+        ],
       ),
     );
+    // Mobile sheet already wraps SafeArea; avoid double bottom inset.
+    if (margin == EdgeInsets.zero) return panel;
+    return SafeArea(top: false, child: panel);
   }
 }
 
@@ -4041,6 +4061,16 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         Text(
           '${state.essence} essence · permanent (survives Ascend)',
           style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+        ),
+        Text(
+          state.metaDepth.ascendBlessings <= 0
+              ? 'Ascend Blessing · none yet — Ascend to gain permanent ATK/DEF/VIT/gold'
+              : 'Ascend Blessing ×${state.metaDepth.ascendBlessings} · '
+                  '+${state.ascendBlessingAttackBonus} ATK · '
+                  '+${state.ascendBlessingDefenseBonus} DEF · '
+                  '+${state.ascendBlessingVitalityBonus} VIT · '
+                  '+${state.ascendBlessingGoldPercent}% gold',
+          style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
         Text(
           'Relics · Soulbound · God Hand. Run gold stays on FORGE tab.',
@@ -4380,6 +4410,17 @@ class _SanctuaryOverlay extends StatelessWidget {
           'From Lv12 you can prestige a track for bonus.',
           style: GameTheme.body(size: 14, color: GameTheme.parchment),
         ),
+        if (state.metaDepth.ascendBlessings > 0) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Ascend Blessing ×${state.metaDepth.ascendBlessings} · '
+            '+${state.ascendBlessingAttackBonus} ATK · '
+            '+${state.ascendBlessingDefenseBonus} DEF · '
+            '+${state.ascendBlessingVitalityBonus} VIT · '
+            '+${state.ascendBlessingGoldPercent}% gold',
+            style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+          ),
+        ],
         const SizedBox(height: 10),
         for (final track in <String>['gold', 'power', 'vitality', 'xp']) ...[
           Builder(

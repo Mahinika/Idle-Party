@@ -263,6 +263,7 @@ void main() {
     expect(md.claimedGauntletMilestones, isEmpty);
     expect(md.dailyEssenceBonusLevel, 0);
     expect(md.gauntletGoldBonusLevel, 0);
+    expect(md.ascendBlessings, 0);
   });
 
   test('weekly claim pays raised essence and seasons rotate', () {

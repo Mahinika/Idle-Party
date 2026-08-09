@@ -455,6 +455,18 @@ class GameState {
 
   int get legacyAttackBonus => metaDepth.legacyPoints;
 
+  /// Ascend Blessing pack: +2 ATK per stack.
+  int get ascendBlessingAttackBonus => metaDepth.ascendBlessings * 2;
+
+  /// Ascend Blessing pack: +1 DEF per stack.
+  int get ascendBlessingDefenseBonus => metaDepth.ascendBlessings;
+
+  /// Ascend Blessing pack: +4 VIT per stack.
+  int get ascendBlessingVitalityBonus => metaDepth.ascendBlessings * 4;
+
+  /// Ascend Blessing pack: +3% gold find per stack.
+  int get ascendBlessingGoldPercent => metaDepth.ascendBlessings * 3;
+
   int get torchOfflineGoldPercent => metaDepth.torchKeepLevel * 8;
 
   /// Heirloom AL bonus applied to ATK when soulbound weapon is set.
@@ -541,14 +553,16 @@ class GameState {
       soulboundAttackBonus +
       soulboundRefineBonus +
       legacyAttackBonus +
-      heirloomAttackBonus;
+      heirloomAttackBonus +
+      ascendBlessingAttackBonus;
 
   int get metaDefenseBonus =>
       defenseBonus +
       relicDefenseBonus +
       ascensionDefenseBonus +
       soulboundDefenseBonus +
-      soulboundRefineBonus;
+      soulboundRefineBonus +
+      ascendBlessingDefenseBonus;
 
   int get metaVitalityBonus =>
       vitalityBonus +
@@ -556,7 +570,8 @@ class GameState {
       ascensionVitalityBonus +
       sanctuaryVitalityBonus +
       soulboundVitalityBonus +
-      heirloomVitalityBonus;
+      heirloomVitalityBonus +
+      ascendBlessingVitalityBonus;
 
   int get totalAttackBonus => metaAttackBonus +
       heroes.fold<int>(0, (s, h) => s + h.gearAttackBonus);

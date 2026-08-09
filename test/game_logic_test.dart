@@ -13,6 +13,7 @@ import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/models/mission.dart';
 import 'package:idle_party/models/pet.dart';
 import 'package:idle_party/models/stats.dart';
@@ -471,10 +472,53 @@ void main() {
           (AchievementCatalog.byId('full_party')?.essenceReward ?? 0),
     );
     expect(ascended.achievements, contains('first_ascend'));
-    expect(ascended.totalAttackBonus, 1 + 4); // AL + war banner
+    expect(ascended.metaDepth.ascendBlessings, 1);
+    expect(
+      ascended.totalAttackBonus,
+      1 + 4 + GameLogic.ascendBlessingAtk,
+    ); // AL + war banner + Blessing
     expect(ascended.ascensionGoldBonusPercent, 10);
+    expect(
+      ascended.ascendBlessingGoldPercent,
+      GameLogic.ascendBlessingGoldPct,
+    );
     expect(ascended.soulboundFragments, greaterThan(0));
     expect(ascended.inDungeon, isFalse);
+  });
+
+  test('ascend Blessing stacks ATK DEF VIT and gold', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
+        .copyWith(bossVictories: 1);
+    state = GameLogic.ascend(state, now: DateTime(2026, 7, 5));
+    expect(state.metaDepth.ascendBlessings, 1);
+    expect(state.ascendBlessingAttackBonus, GameLogic.ascendBlessingAtk);
+    expect(state.ascendBlessingDefenseBonus, GameLogic.ascendBlessingDef);
+    expect(state.ascendBlessingVitalityBonus, GameLogic.ascendBlessingVit);
+    expect(state.ascendBlessingGoldPercent, GameLogic.ascendBlessingGoldPct);
+
+    state = state.copyWith(
+      bossVictories: GameLogic.bossesRequiredForAscension(state.ascensionLevel),
+    );
+    state = GameLogic.ascend(state, now: DateTime(2026, 7, 6));
+    expect(state.metaDepth.ascendBlessings, 2);
+    expect(state.ascendBlessingAttackBonus, GameLogic.ascendBlessingAtk * 2);
+    expect(state.ascendBlessingDefenseBonus, GameLogic.ascendBlessingDef * 2);
+    expect(state.ascendBlessingVitalityBonus, GameLogic.ascendBlessingVit * 2);
+    expect(state.ascendBlessingGoldPercent, GameLogic.ascendBlessingGoldPct * 2);
+
+    final withBlessing = GameLogic.applyGoldGain(state, 100);
+    final withoutBlessing = GameLogic.applyGoldGain(
+      state.copyWith(
+        metaDepth: state.metaDepth.copyWith(ascendBlessings: 0),
+      ),
+      100,
+    );
+    expect(withBlessing, greaterThan(withoutBlessing));
+  });
+
+  test('ascendBlessings defaults to 0 on old saves', () {
+    final depth = MetaDepthState.fromJson(<String, dynamic>{});
+    expect(depth.ascendBlessings, 0);
   });
 
   test('ascend keeps hero levels and meta, clears run loadouts', () {

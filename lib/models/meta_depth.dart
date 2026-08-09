@@ -146,6 +146,7 @@ class MetaDepthState {
     this.godHandCdLevel = 0,
     this.torchKeepLevel = 0,
     this.legacyPoints = 0,
+    this.ascendBlessings = 0,
     this.ascendStreak = 0,
     this.bestAscendStreak = 0,
     this.titles = const <String>[],
@@ -201,6 +202,8 @@ class MetaDepthState {
   final int godHandCdLevel;
   final int torchKeepLevel;
   final int legacyPoints;
+  /// Stacking Ascend Blessing packs (ATK/DEF/VIT/gold). Survives Ascend.
+  final int ascendBlessings;
   final int ascendStreak;
   final int bestAscendStreak;
   final List<String> titles;
@@ -300,6 +303,7 @@ class MetaDepthState {
     int? godHandCdLevel,
     int? torchKeepLevel,
     int? legacyPoints,
+    int? ascendBlessings,
     int? ascendStreak,
     int? bestAscendStreak,
     List<String>? titles,
@@ -357,6 +361,7 @@ class MetaDepthState {
       godHandCdLevel: godHandCdLevel ?? this.godHandCdLevel,
       torchKeepLevel: torchKeepLevel ?? this.torchKeepLevel,
       legacyPoints: legacyPoints ?? this.legacyPoints,
+      ascendBlessings: ascendBlessings ?? this.ascendBlessings,
       ascendStreak: ascendStreak ?? this.ascendStreak,
       bestAscendStreak: bestAscendStreak ?? this.bestAscendStreak,
       titles: titles ?? this.titles,
@@ -419,6 +424,7 @@ class MetaDepthState {
         'godHandCdLevel': godHandCdLevel,
         'torchKeepLevel': torchKeepLevel,
         'legacyPoints': legacyPoints,
+        'ascendBlessings': ascendBlessings,
         'ascendStreak': ascendStreak,
         'bestAscendStreak': bestAscendStreak,
         'titles': titles,
@@ -487,6 +493,7 @@ class MetaDepthState {
       godHandCdLevel: (json['godHandCdLevel'] as num?)?.toInt() ?? 0,
       torchKeepLevel: (json['torchKeepLevel'] as num?)?.toInt() ?? 0,
       legacyPoints: (json['legacyPoints'] as num?)?.toInt() ?? 0,
+      ascendBlessings: (json['ascendBlessings'] as num?)?.toInt() ?? 0,
       ascendStreak: (json['ascendStreak'] as num?)?.toInt() ?? 0,
       bestAscendStreak: (json['bestAscendStreak'] as num?)?.toInt() ?? 0,
       titles: (json['titles'] as List<dynamic>?)?.cast<String>() ?? const [],

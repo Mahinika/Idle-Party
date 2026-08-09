@@ -26,9 +26,9 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.10.2',
       bullets: <String>[
+        'Ascend Blessing: each Ascend permanently stacks +2 ATK · +1 DEF · +4 VIT · +3% gold (Forge → META).',
+        'Keep playing: Ascend shows next unlocks (Rogue / 5th slot / Gauntlet), TODAY flashes READY/ALMOST, stronger AFK welcome-back.',
         'GEAR: WoW-style item tooltips with green/red compare vs equipped, hero arrows, fuller hero stats.',
-        'Menus share GEAR forge chrome (tabs, cards, titles); see docs/UI_THEME.md.',
-        'Hub TODAY: clearer chase card with one-tap CLAIM / ASCEND / DAILY / GAUNTLET when ready.',
         'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
       ],
     ),

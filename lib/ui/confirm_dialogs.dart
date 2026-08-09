@@ -54,6 +54,8 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
                 milestoneBonus: milestone,
                 godHandLevel: state.godHandLevel,
                 soulboundFragments: state.soulboundFragments,
+                blessingsAfter: state.metaDepth.ascendBlessings + 1,
+                unlockCombatRogue: state.ascensionLevel == 0,
               ),
               style: GameTheme.body(size: 15, color: GameTheme.parchment),
             ),

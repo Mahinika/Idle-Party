@@ -342,7 +342,7 @@ class GameDirector extends ChangeNotifier {
         loaded = offline.state;
         if (offline.hasSummary) {
           _offlineSummary = offline;
-          _offlineSummaryLife = 10;
+          _offlineSummaryLife = 14;
           // Hub shows a tappable banner; toast only when loading mid-dungeon.
           if (saved.inDungeon) {
             showToast(offline.headline, life: 5);
@@ -1854,6 +1854,7 @@ class GameDirector extends ChangeNotifier {
       StoryLore.ascendToast(
         al: _state.ascensionLevel,
         milestoneBonus: milestone,
+        blessings: _state.metaDepth.ascendBlessings,
       ),
       'Gear wiped · Apex kept',
     ];

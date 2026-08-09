@@ -1,4 +1,6 @@
 import '../models/dungeon_def.dart';
+import 'ascend_roadmap.dart';
+import 'game_logic.dart';
 
 /// Short fiction lines for Idle Party — no dialogue trees, just flavor
 /// on existing UI rails (intro, hub, toasts, ascend).
@@ -64,23 +66,51 @@ abstract final class StoryLore {
     int milestoneBonus = 0,
     int godHandLevel = 0,
     int soulboundFragments = 0,
+    int blessingsAfter = 1,
+    bool unlockCombatRogue = false,
   }) {
     final rewardLine = milestoneBonus > 0
-        ? 'Reward: +${rewardEssence}e (+${milestoneBonus}e milestone) · AL → $nextAl'
-        : 'Reward: +${rewardEssence}e · AL → $nextAl';
-    return 'The will withdraws and returns stronger.\n'
-        'Reset this run (gear, stash, floor progress).\n'
-        'Keep hero levels/XP, essence, relics, pets, sanctuary, soulbound, '
-        'God Hand, prestige shop, and meta-depth progress.\n\n'
+        ? '+${rewardEssence}e (+${milestoneBonus}e milestone) · AL → $nextAl'
+        : '+${rewardEssence}e · AL → $nextAl';
+    final alPower =
+        'AL power: +1 ATK · +${nextAl ~/ 2 - (nextAl - 1) ~/ 2} DEF · +2 VIT · +10% gold';
+    final blessAtk = blessingsAfter * GameLogic.ascendBlessingAtk;
+    final blessDef = blessingsAfter * GameLogic.ascendBlessingDef;
+    final blessVit = blessingsAfter * GameLogic.ascendBlessingVit;
+    final blessGold = blessingsAfter * GameLogic.ascendBlessingGoldPct;
+    final blessLine =
+        'Blessing: +${GameLogic.ascendBlessingAtk} ATK · +${GameLogic.ascendBlessingDef} DEF · '
+        '+${GameLogic.ascendBlessingVit} VIT · +${GameLogic.ascendBlessingGoldPct}% gold '
+        '(total ×$blessingsAfter: +$blessAtk ATK · +$blessDef DEF · +$blessVit VIT · +$blessGold% gold)';
+    final thisUnlock = AscendRoadmap.unlockLineForAscendTo(nextAl);
+    final unlockLine = unlockCombatRogue
+        ? '\nUnlock: Combat Rogue (Shade) joins the roster.'
+        : (thisUnlock != null ? '\n$thisUnlock' : '');
+    final ahead = AscendRoadmap.nextGoalLine(nextAl);
+    return 'You grow stronger — then start a fresh run.\n\n'
         '$rewardLine\n'
+        '$alPower\n'
+        '$blessLine$unlockLine\n'
+        '$ahead\n\n'
+        'Keep: hero levels, essence, relics, pets, sanctuary, soulbound, '
+        'God Hand, Apex, meta unlocks.\n'
+        'Reset: wallet gold, floors, run gear, loadouts, forge gold upgrades.\n'
         'God Hand Lv$godHandLevel kept · $soulboundFragments soulbound frag';
   }
 
   static String ascendToast({
     required int al,
     required int milestoneBonus,
+    int blessings = 0,
   }) {
-    final base = 'Reborn · AL$al · Farm early floors before pushing deep';
+    final bless = blessings > 0
+        ? ' · Blessing ×$blessings (+${blessings * GameLogic.ascendBlessingAtk} ATK)'
+        : '';
+    final unlock = AscendRoadmap.unlockAtAl(al);
+    final unlockBit = unlock != null ? ' · $unlock' : '';
+    final ahead = AscendRoadmap.chaseTeaser(al);
+    final base =
+        'Reborn · AL$al$bless$unlockBit · $ahead';
     if (milestoneBonus > 0) {
       return '$base · +${milestoneBonus}e milestone';
     }

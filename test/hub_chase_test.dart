@@ -107,4 +107,55 @@ void main() {
     expect(chase.kind, HubChaseKind.unlockZone);
     expect(chase.title, contains('Goblin'));
   });
+
+  test('claimables and Ascend mark READY urgency', () {
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      bossVictories: 1,
+      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+            dailyVaultClaimed: true,
+          ),
+      lastDailyDate: MetaSystems.dailyDateKey(now),
+      dailyClaimed: true,
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.ascend);
+    expect(chase.urgency, HubChaseUrgency.ready);
+    expect(chase.detail, contains('AL1'));
+  });
+
+  test('one boss from Ascend marks ALMOST and beats daily', () {
+    // AL1 needs 2 bosses — bank 1 so one remains.
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 1,
+      bossVictories: 1,
+      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+            dailyVaultClaimed: true,
+          ),
+    );
+    expect(GameLogic.bossesRequiredForAscension(1), 2);
+    // Daily still available — almost-Ascend should still win.
+    expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.urgency, HubChaseUrgency.almost);
+    expect(chase.title, contains('Almost Ascend'));
+    expect(chase.detail, contains('AL2'));
+  });
+
+  test('KEY +1 vault progress marks ALMOST', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        dailyVaultClears: 0,
+        dailyVaultClaimed: false,
+        dailyBestTimedKey: 1,
+      ),
+      lastDailyDate: MetaSystems.dailyDateKey(now),
+      dailyClaimed: true,
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.weeklyProgress);
+    expect(chase.urgency, HubChaseUrgency.almost);
+    expect(chase.title, contains('Almost'));
+  });
 }
