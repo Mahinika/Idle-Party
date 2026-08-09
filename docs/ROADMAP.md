@@ -1,9 +1,15 @@
 # Idle Party — 1-årsroadmap (2026–2027)
 
 Research-förankrad plan sparad **2026-08-06** (före Q1-implementation).  
-Baseline: app **v1.9.3**, full-game audit ~**92%** ([audits/2026-08-03-full-game.md](audits/2026-08-03-full-game.md)) — audit predates Tide/Ember/meta polish; treat as historical closeout, not current completeness.
+Baseline (historical): app **v1.9.3**, full-game audit ~**92%**
+([audits/2026-08-03-full-game.md](audits/2026-08-03-full-game.md)) — audit predates
+Tide/Ember/meta polish; treat as historical closeout, not current completeness.
 
-**Status:** dokumenterad; Q1–Q2-kärna + Q4 polish/cadence i kod; Q3 delvis; Play closed Alpha igång (produktion väntar 12×14).
+**Current ship line:** **1.10.2** (`pubspec` ↔ `MetaSystems.currentVersion`) — Ascend
+Blessing, hub TODAY READY/ALMOST, daily keystone vault, 9 zones.
+
+**Status:** dokumenterad; Q1–Q2-kärna + Q4 polish/cadence i kod; Q3 delvis; Play closed
+Alpha igång (produktion väntar 12×14). GitHub Releases är primär install.
 
 ---
 
@@ -15,7 +21,7 @@ Baseline: app **v1.9.3**, full-game audit ~**92%** ([audits/2026-08-03-full-game
 | Gear / Apex / BiS | Stark | 2pc/4pc procs shippade; ingen gear-shop (by design) |
 | Meta / hub | Payoffs live (Weekly n/3, Will, Gauntlet F25/50/100, season bonus, GH styles) | Prestige shop refresh / deeper sinks stretch |
 | Content | **31 specs / 9 zoner** (`tide`, `ember` shippade) | Klass-tungt historiskt; nya zoner mer sällan |
-| Distribution | GitHub Releases primary; Play Console app + closed Alpha live | Production access needs 12 closed testers × 14 days |
+| Distribution | GitHub Releases primary; Play Console listing + closed Alpha | Production needs 12×14; not live |
 | Onboarding | `FirstSessionTips` + Guides + What’s New | — |
 | A11y / save | Text scale 85–130%, colorblind floaters, VFX modes + reduce-motion label; toast dedupe; clipboard export/import + backup-hint | Lätt owned SFX stretch |
 

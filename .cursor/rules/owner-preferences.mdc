@@ -8,7 +8,7 @@ alwaysApply: true
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
-Last preference sync: **2026-08-09** (phone-only UI target + prior Q&A).
+Last preference sync: **2026-08-09** (phone-only UI + Ascend feel / TODAY hooks).
 
 ## Near-term focus
 
@@ -45,7 +45,7 @@ Last preference sync: **2026-08-09** (phone-only UI target + prior Q&A).
 
 - **Kits:** polish what exists (fairness + clarity + fantasy) before adding many new specs.
 - **Zones:** prefer **more zones** when adding content (still use `zone-art-identity` so they don’t feel like reskins).
-- **Meta loops** (Weekly / Will / Gauntlet / season): push toward **“I always know what I’m chasing today”** — clearer hub goals, claims, next targets.
+- **Meta loops** (daily vault / Will / Gauntlet / season): push toward **“I always know what I’m chasing today”** — hub TODAY with READY/ALMOST, Ascend Blessing + unlock teasers, clear claims.
 - **God Hand:** owner undecided (fun steer vs deeper strategy) — don’t redesign GH direction without asking.
 - **Monetization:** **no IAP / no paid store** for a while longer (stay free, no ads unless owner revisits).
 

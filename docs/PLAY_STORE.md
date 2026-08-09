@@ -7,24 +7,26 @@ Package id: **`com.idleparty.app`**
 | Item | Status | Notes |
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
-| Play Console app | ⏳ | Create when ready; id `com.idleparty.app` |
+| Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
+| Closed testing | ⏳ Alpha | Historical AAB noted **14 / 1.9.3**; ship line **1.10.2** on GitHub |
+| Production | ❌ | Needs **12 closed testers × 14 days**; not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ⏳ | Prep URL: repo `docs/PRIVACY.md` on main |
 | Data safety form | ⏳ | Match PRIVACY: local save, no ads/accounts/analytics servers |
 | IARC / content rating | ❌ | Mild fantasy combat; no chat / gambling / ads |
 | Store listing copy (EN) | ⏳ | Idle Party short + full; no Flutter placeholders |
 | Screenshots + feature graphic | ❌ | Hub + dungeon; icon `assets/custom/ui/app_icon.png` |
-| Internal testing track | ❌ | Upload AAB; smoke hub → dungeon → leave → relaunch |
-| Production listing | ❌ | Optional; GitHub Releases remains valid forever |
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
+
+Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
 ## Current decision (2026-08)
 
 **Primary distribution: GitHub Releases (sideload).**  
-Tag pushes `v*` publish signed APK + AAB via `.github/workflows/build-apk.yml`. Play Console production listing is **optional / deferred** until privacy URL hosting, IARC, screenshots, and store listing copy are ready.
-
-When you choose to publish on Play, complete the checklists below. Until then, treat this file as operator prep — not a blocker for GitHub releases.
+Tag pushes `v*` publish signed APK + AAB via `.github/workflows/build-apk.yml`. Play
+Console closed Alpha exists; **production is not live**. Day-to-day: prefer content/feel
+over Play ops unless the owner asks about Play.
 
 ## Signing
 
@@ -33,12 +35,12 @@ When you choose to publish on Play, complete the checklists below. Until then, t
 - [ ] For CI: set secrets `KEYSTORE_BASE64` (base64 of the `.jks`) and `KEY_PROPERTIES` (full `key.properties` contents), same pattern as `.github/workflows/build-apk.yml`.
 - [ ] Locally: `flutter build appbundle --release` → `build/app/outputs/bundle/release/app-release.aab`.
 
-## Play Console — internal track (optional)
+## Play Console — closed / internal (ops)
 
-- [ ] Create the app in Play Console with application id `com.idleparty.app`.
-- [ ] Enable Play App Signing if prompted.
-- [ ] Create an **Internal testing** release and upload the AAB (from CI tag `v*` artifacts/release assets, or a local build).
-- [ ] Add testers (email list or Google Group) and share the opt-in link.
+- [x] App exists in Play Console (`com.idleparty.app`) with listing + closed Alpha.
+- [ ] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers.
+- [ ] Enable Play App Signing if prompted on new uploads.
+- [ ] Add / retain closed testers toward **12 × 14 days** for production access.
 - [ ] Smoke-test install → hub → short dungeon → leave → relaunch (save persists).
 
 ## Privacy / Data safety

@@ -14,19 +14,20 @@ Agents **must** choose methods, skills, and verify steps themselves — see
 
 Preferences (do not re-ask): **content/feel over Play busywork**, first-hour
 **progression/power**, early calm / **endgame grindy OK**, **polish kits** before
-many new specs, **more zones**, clearer “what am I chasing today” meta, **no IAP
-for now**, **Android phone-only** (portrait; no iOS/web product), **large
-batches**, English in-game copy, fairness-first balance, **propose** commit /
-push / PR / tag. Chat in plain Swedish; ask only product/risk questions. Full
-detail: `.cursor/rules/owner-preferences.mdc`.
+many new specs, **more zones**, hub TODAY / Ascend Blessing / unlock teasers for
+“what am I chasing”, **no IAP for now**, **Android phone-only** (portrait; no
+iOS/web product), **large batches**, English in-game copy, fairness-first balance,
+**propose** commit / push / PR / tag. Chat in plain Swedish; ask only product/risk
+questions. Full detail: `.cursor/rules/owner-preferences.mdc`.
 
 **UI target:** ship for **portrait phones** (~360–430 px). Web is playtest only
 (use device emulation). No hover-only flows for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (AAB **14 / 1.9.3**); production still needs **12 closed testers × 14
-days**. Do not treat Play as the primary install channel yet.
+closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.10.2**.
+Production still needs **12 closed testers × 14 days**. Do not treat Play as the
+primary install channel yet.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
@@ -111,7 +112,14 @@ catch-up (full enemy stats; same kits/abilities/chambers).
 **Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = AL10+): endless Crystal
 Spire climb from Hub; wipe/leave → hub; `metaDepth.gauntletBestFloor` survives Ascend.
 
-Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat.
+**Hub TODAY** (`lib/core/hub_chase.dart`): one chase card — claimables first, then
+progress. Urgency **READY** / **ALMOST** (Ascend one boss away, KEY +1 vault, Will
+gap, etc.). Ascend confirm/toast + chase detail use **`AscendRoadmap`**
+(`lib/core/ascend_roadmap.dart`) for next AL unlocks (e.g. AL1 Combat Rogue,
+AL2 5th party slot buyable, AL10 Gauntlet).
+
+Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat. Offline return
+uses `OfflineProgressResult` (wow headline + highlight rows + “Up next” chase).
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
@@ -154,6 +162,9 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 | Ability runtime | `lib/spatial/ability_effects.dart` |
 | Tile maps | `lib/spatial/tile_map.dart` |
 | Hub | `lib/ui/hub_screen.dart` |
+| Hub TODAY chase | `lib/core/hub_chase.dart` |
+| Ascend unlock teasers | `lib/core/ascend_roadmap.dart` |
+| Ascend / lore copy | `lib/core/story_lore.dart` |
 | Dungeon / hub shell | `lib/ui/is2_shell.dart` |
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
 | Kenney helpers | `lib/ui/kenney_assets.dart` |
@@ -175,10 +186,15 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 soulbound item (may rescale) + fragments, God Hand level + style/CD in `metaDepth`,
 `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
 (mute/VFX/colorblind/text scale/auto-sell), full `metaDepth` (Gauntlet best, Will /
-Gauntlet claims, weekly/season, prestige shop, unlocked specs, party slot 5,
-ascend streak/titles/trophies, **`ascendBlessings`** pack +2 ATK/+1 DEF/+4 VIT/+3% gold
-per Ascend, …), **hero levels/XP**, **Apex** vault + equipped
-apex, craft mats/pity, keystone prefs (clamped) + challenge toggles, FARM/PUSH preference.
+Gauntlet claims, daily vault / weekly affix season, prestige shop, unlocked specs,
+party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**, …),
+**hero levels/XP**, **Apex** vault + equipped apex, craft mats/pity, keystone prefs
+(clamped) + challenge toggles, FARM/PUSH preference.
+
+**Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
+each Ascend adds **+2 ATK · +1 DEF · +4 VIT · +3% gold** on top of AL flats
+(`+1 ATK` / `DEF = AL~/2` / `+2 VIT` / `+10% gold` per AL). Shown in Forge → META
+and Sanctuary. Constants: `GameLogic.ascendBlessing*`.
 
 **Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades
 (ATK/DEF/VIT/move/haste/crit), non-Apex gear/stash, **loadouts**, leave dungeon
@@ -190,9 +206,9 @@ Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
 
 Hub **KEYSTONE** sets preferred key (`hardmodeLevel` 0–20, AL-gated). On enter,
 affixes lock + idle-friendly par timer starts (AFK counts). Boss clear under par
-→ TIMED (upgrade key, vault score); overtime → depleted. Daily vault: 1 clear
-**or** timed KEY+2; claim once per UTC day (scales with best timed key). Affixes
-still rotate weekly. See `lib/core/keystone.dart`.
+→ TIMED (upgrade key, vault score); overtime → depleted. **Daily vault** (UTC):
+1 clear **or** timed KEY+2; claim once per day (scales with best timed key).
+Affixes still rotate weekly. See `lib/core/keystone.dart`.
 
 ## God Hand
 
