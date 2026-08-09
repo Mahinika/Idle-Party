@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/keystone.dart';
 import '../core/meta_systems.dart';
 import '../models/achievement_def.dart';
 import '../models/gear_loadout.dart';
@@ -47,14 +48,14 @@ class AchievementsOverlay extends StatelessWidget {
         Text(
           '${state.willRankTitle}  ·  score ${state.collectionScore}',
           textAlign: TextAlign.center,
-          style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
+          style: GameTheme.menuTitle(size: 14, color: GameTheme.torchHot),
         ),
         if (state.metaDepth.titles.isNotEmpty) ...[
           const SizedBox(height: 6),
           Text(
             'Titles',
             textAlign: TextAlign.center,
-            style: GameTheme.pixel(size: 7, color: GameTheme.parchmentDim),
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 4),
           Wrap(
@@ -87,13 +88,7 @@ class AchievementsOverlay extends StatelessWidget {
           child: ListView(
             children: [
               for (final cat in categories) ...[
-                Text(
-                  _categoryLabel(cat),
-                  style: GameTheme.pixel(
-                    size: 7,
-                    color: GameTheme.parchmentDim,
-                  ),
-                ),
+                MenuChrome.sectionLabel(_categoryLabel(cat)),
                 const SizedBox(height: 6),
                 for (final def in byCategory[cat]!) ...[
                   Builder(
@@ -106,12 +101,9 @@ class AchievementsOverlay extends StatelessWidget {
                           horizontal: 12,
                           vertical: 10,
                         ),
-                        decoration: BoxDecoration(
-                          color: GameTheme.menuCard,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: done ? GameTheme.clear : GameTheme.border,
-                          ),
+                        decoration: MenuChrome.listCard(
+                          borderColor:
+                              done ? GameTheme.clear : GameTheme.border,
                         ),
                         child: Row(
                           children: [
@@ -128,11 +120,11 @@ class AchievementsOverlay extends StatelessWidget {
                                 children: [
                                   Text(
                                     hide ? 'Hidden' : def.title,
-                                    style: GameTheme.pixel(
-                                      size: 7,
+                                    style: GameTheme.body(
+                                      size: 15,
                                       color: done
                                           ? GameTheme.torchHot
-                                          : GameTheme.parchmentDim,
+                                          : GameTheme.parchment,
                                     ),
                                   ),
                                   const SizedBox(height: 3),
@@ -280,11 +272,7 @@ class _CodexOverlayState extends State<CodexOverlay> {
                           horizontal: 10,
                           vertical: 8,
                         ),
-                        decoration: BoxDecoration(
-                          color: GameTheme.menuCard,
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: GameTheme.border),
-                        ),
+                        decoration: MenuChrome.listCard(inset: true),
                         child: Row(
                           children: [
                             KenneySprite(
@@ -358,7 +346,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           ),
         ],
         const SizedBox(height: 10),
-        Text('ACTIVE', style: GameTheme.pixel(size: 8)),
+        MenuChrome.sectionLabel('ACTIVE'),
         const SizedBox(height: 6),
         Wrap(
           spacing: 6,
@@ -414,7 +402,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           ),
         ],
         const SizedBox(height: 12),
-        Text('ROSTER', style: GameTheme.pixel(size: 8)),
+        MenuChrome.sectionLabel('ROSTER'),
         const SizedBox(height: 6),
         for (final classId in HeroClassId.values) ...[
           Text(
@@ -708,18 +696,14 @@ class _LoadoutSlotRow extends StatelessWidget {
     final saved = loadout != null;
     return Container(
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: GameTheme.menuCard,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: GameTheme.border),
-      ),
+      decoration: MenuChrome.listCard(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             saved ? loadout!.name : 'Slot $slotId — empty',
-            style: GameTheme.pixel(
-              size: 7,
+            style: GameTheme.body(
+              size: 15,
               color: saved ? GameTheme.torchHot : GameTheme.parchmentDim,
             ),
           ),
@@ -897,7 +881,7 @@ class WhatsNewOverlay extends StatelessWidget {
         Text(
           "WHAT'S NEW",
           textAlign: TextAlign.center,
-          style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
+          style: GameTheme.menuTitle(size: 20),
         ),
         const SizedBox(height: 10),
         Expanded(
@@ -906,10 +890,7 @@ class WhatsNewOverlay extends StatelessWidget {
               for (final release in sections) ...[
                 Text(
                   'VERSION ${release.version}',
-                  style: GameTheme.pixel(
-                    size: 8,
-                    color: GameTheme.torch,
-                  ),
+                  style: GameTheme.menuTitle(size: 14, color: GameTheme.torch),
                 ),
                 const SizedBox(height: 6),
                 for (final entry in release.bullets)
@@ -949,7 +930,7 @@ class WhatsNewOverlay extends StatelessWidget {
   }
 }
 
-/// Boss Rush + No-Flask challenge toggles — set before entering a dungeon.
+/// Keystone run prefs — set before entering a dungeon (Mythic+-style).
 class ChallengeToggles extends StatefulWidget {
   const ChallengeToggles({
     super.key,
@@ -972,37 +953,29 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
     _expanded = !widget.collapsed;
   }
 
-  static String _weeklyLabel(String mod) => switch (mod) {
-        'glass' => 'Glass (fragile foes)',
-        'swarm' => 'Swarm (more enemies)',
-        'elite' => 'Elite (tougher packs)',
-        'fortune' => 'Fortune (more gold)',
-        'iron' => 'Iron (harder, richer)',
-        _ => mod.isEmpty ? 'Rotating…' : mod,
-      };
-
   @override
   Widget build(BuildContext context) {
     final director = widget.director;
     final state = director.state;
     final md = state.metaDepth;
-    final maxHm = state.effectiveMaxHardmode;
-    final weeklyReady =
-        md.weeklyProgress >= GameLogic.weeklyClearTarget && !md.weeklyClaimed;
+    final maxKey = state.effectiveMaxHardmode;
+    final vaultReady = GameLogic.canClaimDailyVault(state);
+    final affixes = Keystone.previewAffixes(state);
+    final vaultE = Keystone.dailyVaultEssence(md.dailyBestTimedKey);
     final activeBits = <String>[
+      if (state.hardmodeLevel > 0) 'KEY+${state.hardmodeLevel}',
       if (state.challengeBossRush) 'Boss Rush',
       if (state.challengeNoFlask) 'No Flask',
-      if (state.hardmodeLevel > 0) 'HM+${state.hardmodeLevel}',
-      if (weeklyReady) 'Weekly ready',
+      if (vaultReady) 'Vault ready',
     ];
 
     final headerLabel = _expanded
         ? (activeBits.isEmpty
-            ? '▾ CHALLENGES off'
-            : '▾ CHALLENGES ${activeBits.join(' · ')}')
+            ? '▾ KEYSTONE off'
+            : '▾ KEYSTONE ${activeBits.join(' · ')}')
         : (activeBits.isEmpty
-            ? '▸ CHALLENGES off'
-            : '▸ CHALLENGES ${activeBits.join(' · ')}');
+            ? '▸ KEYSTONE off'
+            : '▸ KEYSTONE ${activeBits.join(' · ')}');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1021,7 +994,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 child: Row(
                   children: [
                     Text(
-                      _expanded ? '▾ CHALLENGES' : '▸ CHALLENGES',
+                      _expanded ? '▾ KEYSTONE' : '▸ KEYSTONE',
                       style: GameTheme.pixel(
                         size: 8,
                         color: GameTheme.torchHot,
@@ -1049,6 +1022,35 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
         ),
         if (_expanded) ...[
           const SizedBox(height: 4),
+          _HardmodeStepper(
+            level: state.hardmodeLevel,
+            maxLevel: maxKey,
+            onChanged: director.setHardmodeLevel,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            state.hardmodeLevel <= 0
+                ? 'Normal dungeon. Cap KEY +$maxKey (AL gates higher).'
+                : 'KEY +${state.hardmodeLevel}: affixes lock on enter · beat boss under par to upgrade.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          if (affixes.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              affixes.map(Keystone.label).join(' · '),
+              textAlign: TextAlign.center,
+              style: GameTheme.pixel(size: 7, color: GameTheme.torchHot),
+            ),
+            Text(
+              affixes.map(Keystone.blurb).join(' · '),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            ),
+          ],
+          const SizedBox(height: 6),
           Row(
             children: [
               Expanded(
@@ -1070,56 +1072,43 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          _HardmodeStepper(
-            level: state.hardmodeLevel,
-            maxLevel: maxHm,
-            onChanged: director.setHardmodeLevel,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            state.hardmodeLevel <= 0
-                ? 'Hardmode off. Cap +$maxHm (AL gates higher).'
-                : 'HM +${state.hardmodeLevel}: tougher packs, more gold & legendaries.',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: MenuChrome.cardBox(selected: weeklyReady),
+            decoration: MenuChrome.cardBox(selected: vaultReady),
             child: Column(
               children: [
                 Text(
-                  'WEEKLY · ${_weeklyLabel(md.weeklyModifier)}',
+                  'DAILY VAULT',
                   textAlign: TextAlign.center,
                   style: GameTheme.pixel(
                     size: 8,
                     color:
-                        weeklyReady ? GameTheme.torchHot : GameTheme.parchmentDim,
+                        vaultReady ? GameTheme.torchHot : GameTheme.parchmentDim,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   md.seasonKey.isEmpty
                       ? 'Season rotating…'
-                      : 'Season ${md.seasonKey} · +${GameLogic.seasonWeeklyBonusEssence}e first weekly',
+                      : 'Season ${md.seasonKey} · +${GameLogic.seasonWeeklyBonusEssence}e first claim/month',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  md.weeklyClaimed
-                      ? 'Claimed this week'
-                      : 'Clears ${md.weeklyProgress}/${GameLogic.weeklyClearTarget}'
-                          '${weeklyReady ? ' · ready' : ''}',
+                  md.dailyVaultClaimed
+                      ? 'Claimed today'
+                      : 'Clears ${md.dailyVaultClears}/${GameLogic.dailyVaultClearTarget}'
+                          ' · best timed KEY +${md.dailyBestTimedKey}'
+                          '${vaultReady ? ' · ready' : ''}',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
                 ),
-                if (weeklyReady) ...[
+                if (vaultReady) ...[
                   const SizedBox(height: 6),
                   KenneyButton(
-                    label: 'CLAIM WEEKLY  +${GameLogic.weeklyClaimEssence}e',
+                    label: 'CLAIM VAULT  +${vaultE}e',
                     onPressed: director.claimWeekly,
                   ),
                 ],
@@ -1128,7 +1117,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           ),
           const SizedBox(height: 2),
           Text(
-            'Boss Rush / No Flask: +2e each clear. Hardmode: +1e per level.',
+            'Time the boss under par (AFK counts). Timed upgrades your key. '
+            'Daily vault: 1 clear or timed KEY+2.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
@@ -1163,7 +1153,7 @@ class _HardmodeStepper extends StatelessWidget {
             ),
             onPressed: level > 0 ? () => onChanged(level - 1) : null,
             child: WebClickScope(
-              label: 'HARDMODE -',
+              label: 'KEYSTONE -',
               onPressed: level > 0 ? () => onChanged(level - 1) : null,
               child: Text('-', style: GameTheme.pixel(size: 10)),
             ),
@@ -1172,7 +1162,7 @@ class _HardmodeStepper extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  level <= 0 ? 'HARDMODE  OFF' : 'HARDMODE  +$level',
+                  level <= 0 ? 'KEYSTONE  OFF' : 'KEYSTONE  +$level',
                   textAlign: TextAlign.center,
                   style: GameTheme.pixel(
                     size: 7,
@@ -1181,7 +1171,7 @@ class _HardmodeStepper extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '0 = easy  ·  max +$maxLevel (AL)',
+                  '0 = normal  ·  max +$maxLevel (AL)',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
                 ),
@@ -1196,7 +1186,7 @@ class _HardmodeStepper extends StatelessWidget {
             ),
             onPressed: level < maxLevel ? () => onChanged(level + 1) : null,
             child: WebClickScope(
-              label: 'HARDMODE +',
+              label: 'KEYSTONE +',
               onPressed:
                   level < maxLevel ? () => onChanged(level + 1) : null,
               child: Text('+', style: GameTheme.pixel(size: 10)),
@@ -1236,20 +1226,11 @@ class _ChallengeChip extends StatelessWidget {
             child: Container(
               constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
               alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: active
-                    ? GameTheme.stoneRaised.withValues(alpha: 0.9)
-                    : GameTheme.menuCard,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: active ? GameTheme.torchHot : GameTheme.border,
-                  width: active ? 2 : 1,
-                ),
-              ),
+              decoration: MenuChrome.listCard(selected: active),
               child: Text(
                 label,
-                style: GameTheme.pixel(
-                  size: 6,
+                style: GameTheme.body(
+                  size: 14,
                   color: active ? GameTheme.torchHot : GameTheme.parchmentDim,
                 ),
               ),
@@ -1319,7 +1300,7 @@ class SaveTransferSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Save transfer (clipboard)', style: GameTheme.pixel(size: 7)),
+        Text('Save transfer (clipboard)', style: GameTheme.body(size: 13, color: GameTheme.parchmentDim)),
         const SizedBox(height: 6),
         Row(
           children: [
@@ -1373,19 +1354,11 @@ class AscendMilestonesStrip extends StatelessWidget {
             child: Container(
               width: 52,
               alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: reached
-                    ? GameTheme.stoneRaised.withValues(alpha: 0.9)
-                    : GameTheme.menuCard,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: reached ? GameTheme.torchHot : GameTheme.border,
-                ),
-              ),
+              decoration: MenuChrome.listCard(selected: reached),
               child: Text(
                 'AL$target',
-                style: GameTheme.pixel(
-                  size: 6,
+                style: GameTheme.body(
+                  size: 13,
                   color: reached ? GameTheme.torchHot : GameTheme.parchmentDim,
                 ),
               ),
@@ -1455,18 +1428,14 @@ class PrestigeShopOverlay extends StatelessWidget {
                   !locked && !atCap && state.essence >= item.cost;
               return Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: GameTheme.menuCard,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: GameTheme.border),
-                ),
+                decoration: MenuChrome.listCard(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
                       item.name,
-                      style: GameTheme.pixel(
-                        size: 7,
+                      style: GameTheme.body(
+                        size: 15,
                         color: locked
                             ? GameTheme.parchmentDim
                             : GameTheme.torchHot,

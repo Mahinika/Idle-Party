@@ -170,7 +170,7 @@ class EquipmentFactory {
       base +
           zone * 4 +
           ascensionLevel.clamp(0, 40) * 2 +
-          hardmodeLevel.clamp(0, 10) ~/ 2,
+          hardmodeLevel.clamp(0, 20) ~/ 4,
     );
     // Soft-cap endless Crystal/Gauntlet display so auto-sell stays usable.
     if (ilvl > 100) {
@@ -237,7 +237,7 @@ class EquipmentFactory {
         } +
         floorProgress * perFloor;
     final slotM = slot == null ? 1.0 : slotMult(slot, handed: handed);
-    final hmMult = 1.0 + hardmodeLevel.clamp(0, 10) * 0.025;
+    final hmMult = 1.0 + hardmodeLevel.clamp(0, 20) * 0.0125;
     final scaled = base *
         slotM *
         zoneMultFor(dungeonId) *

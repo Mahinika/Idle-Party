@@ -59,7 +59,8 @@ abstract final class KenneyAssets {
 
   // —— Hazards / markers ——
   static String get hazardWater => tile(32);
-  static String get hazardLava => tile(41);
+  /// Warm red floor stain (distinct from spike trap tile 41).
+  static String get hazardLava => tile(12);
   static String get corridorActive => tile(60);
   static String get corridorInactive => tile(61);
   static String get target => tile(60);
@@ -78,12 +79,17 @@ abstract final class KenneyAssets {
   static String get propPot => tile(73);
   static String get propBones => tile(56);
   static String get fountainSlime => tile(20);
+  static String get propShelf => tile(75);
+  static String get propFence => tile(76);
+  static String get propPillar => tile(77);
+  static String get propRubble => tile(79);
   static String get chestClosed => tile(89);
   static String get chestOpen => tile(90);
   static String get chestMimic => tile(92);
   /// Wall fountain / glow — Tiny Dungeon has no free-standing torch sprite.
   static String get torch => tile(8);
-  static String get torchAlt => tile(20);
+  /// Warm wall accent (not the slime fountain twin).
+  static String get torchAlt => tile(25);
 
   // —— Heroes (custom intro-matched pixel art) ——
   static String get heroWizard => CustomAssets.heroWizard;
@@ -299,65 +305,144 @@ abstract final class KenneyAssets {
         MapPropKind.water => hazardWater,
         MapPropKind.lava => hazardLava,
         MapPropKind.anvil => anvil,
+        MapPropKind.shelf => propShelf,
+        MapPropKind.fence => propFence,
+        MapPropKind.pillar => propPillar,
+        MapPropKind.rubble => propRubble,
       };
 
+  /// Weighted pools (duplicates = more common). Keep each zone's clutter distinct.
   static List<MapPropKind> propPoolForDungeon(String dungeonId) =>
       switch (dungeonId) {
         'sandy' => const [
             MapPropKind.barrel,
+            MapPropKind.barrel,
+            MapPropKind.crate,
+            MapPropKind.crate,
             MapPropKind.crate,
             MapPropKind.table,
-            MapPropKind.stool,
+            MapPropKind.hatch,
+            MapPropKind.hatch,
+            MapPropKind.shelf,
+            MapPropKind.shelf,
+            MapPropKind.rubble,
+            MapPropKind.torch,
+            MapPropKind.torchAlt,
           ],
         'goblin' => const [
             MapPropKind.barrel,
+            MapPropKind.barrel,
+            MapPropKind.crate,
             MapPropKind.crate,
             MapPropKind.table,
+            MapPropKind.stool,
             MapPropKind.bones,
+            MapPropKind.pot,
+            MapPropKind.skull,
+            MapPropKind.shelf,
+            MapPropKind.rubble,
           ],
         'king' => const [
+            MapPropKind.torch,
             MapPropKind.torch,
             MapPropKind.crate,
             MapPropKind.anvil,
             MapPropKind.table,
+            MapPropKind.table,
             MapPropKind.barrel,
+            MapPropKind.stool,
+            MapPropKind.fence,
+            MapPropKind.pillar,
+            MapPropKind.shelf,
+            MapPropKind.hatch,
           ],
         'underworld' => const [
+            MapPropKind.torch,
             MapPropKind.torch,
             MapPropKind.barrel,
             MapPropKind.fountain,
             MapPropKind.crate,
+            MapPropKind.bones,
+            MapPropKind.skull,
+            MapPropKind.pillar,
+            MapPropKind.fence,
+            MapPropKind.rubble,
+            MapPropKind.pot,
           ],
         'dead' => const [
             MapPropKind.gravestone,
+            MapPropKind.gravestone,
             MapPropKind.bones,
+            MapPropKind.bones,
+            MapPropKind.skull,
             MapPropKind.crate,
             MapPropKind.torch,
+            MapPropKind.hatch,
+            MapPropKind.fence,
+            MapPropKind.rubble,
+            MapPropKind.pillar,
           ],
         'hell' => const [
             MapPropKind.torch,
             MapPropKind.torchAlt,
+            MapPropKind.torchAlt,
             MapPropKind.barrel,
             MapPropKind.trap,
+            MapPropKind.lava,
+            MapPropKind.bones,
+            MapPropKind.skull,
+            MapPropKind.rubble,
+            MapPropKind.pillar,
+            MapPropKind.crate,
           ],
         'crystal' => const [
             MapPropKind.torch,
             MapPropKind.fountain,
+            MapPropKind.fountain,
             MapPropKind.crate,
+            MapPropKind.pillar,
+            MapPropKind.pillar,
+            MapPropKind.fence,
+            MapPropKind.hatch,
+            MapPropKind.anvil,
+            MapPropKind.stool,
           ],
         'tide' => const [
             MapPropKind.water,
+            MapPropKind.water,
+            MapPropKind.water,
+            MapPropKind.barrel,
             MapPropKind.barrel,
             MapPropKind.fountain,
             MapPropKind.crate,
+            MapPropKind.hatch,
+            MapPropKind.pot,
+            MapPropKind.shelf,
+            MapPropKind.rubble,
+            MapPropKind.stool,
           ],
         'ember' => const [
             MapPropKind.torch,
             MapPropKind.torchAlt,
+            MapPropKind.torchAlt,
+            MapPropKind.lava,
             MapPropKind.lava,
             MapPropKind.anvil,
+            MapPropKind.barrel,
+            MapPropKind.crate,
+            MapPropKind.rubble,
+            MapPropKind.shelf,
+            MapPropKind.pillar,
+            MapPropKind.bones,
           ],
-        _ => const [MapPropKind.barrel, MapPropKind.crate, MapPropKind.table],
+        _ => const [
+            MapPropKind.barrel,
+            MapPropKind.crate,
+            MapPropKind.table,
+            MapPropKind.stool,
+            MapPropKind.shelf,
+            MapPropKind.rubble,
+          ],
       };
 
   static String dungeonIconFor(String dungeonId) => switch (dungeonId) {

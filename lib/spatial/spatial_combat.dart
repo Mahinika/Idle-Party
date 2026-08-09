@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/keystone.dart';
 import '../models/class_ability.dart';
 import '../models/combat_ratings.dart';
 import '../models/dungeon_room.dart';
@@ -5202,7 +5203,7 @@ abstract final class SpatialCombat {
       state.battleNumber,
       ascensionLevel: state.ascensionLevel,
       lootFindPercent: state.petLootFindPercent,
-      hardmodeLevel: state.hardmodeLevel,
+      hardmodeLevel: Keystone.combatLevel(state),
       party: state.heroes,
       dungeonId: state.dungeonId,
       enemyRole: enemy.role,

@@ -19,10 +19,36 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.9.9';
+  static const String currentVersion = '1.10.2';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.10.2',
+      bullets: <String>[
+        'GEAR: WoW-style item tooltips with green/red compare vs equipped, hero arrows, fuller hero stats.',
+        'Menus share GEAR forge chrome (tabs, cards, titles); see docs/UI_THEME.md.',
+        'Hub TODAY: clearer chase card with one-tap CLAIM / ASCEND / DAILY / GAUNTLET when ready.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.10.1',
+      bullets: <String>[
+        'Daily vault: claim once per day after 1 clear or a timed KEY +2 (scales with best timed key).',
+        'Keystone affixes still rotate weekly; season bonus remains on first vault claim of the month.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.10.0',
+      bullets: <String>[
+        'Keystone runs (Mythic+-style): pick KEY level, lock affixes on enter, idle-friendly timer.',
+        'Beat the boss under par to TIMED upgrade; overtime = depleted. Fortified/Tyrannical from KEY +4.',
+        'Daily vault: claim after 1 clear or a timed KEY +2 — reward scales with best timed key.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.9.9',
       bullets: <String>[
@@ -364,7 +390,7 @@ abstract final class MetaSystems {
     return total;
   }
 
-  /// Extra essence on floor clear while challenge toggles / hardmode are on.
+  /// Extra essence on floor clear during a keystone run / personal extras.
   /// Farm loops must not mint this (would be unbounded AFK essence).
   static int challengeClearEssenceBonus(
     GameState state, {
@@ -374,7 +400,10 @@ abstract final class MetaSystems {
     var bonus = 0;
     if (state.challengeBossRush) bonus += 2;
     if (state.challengeNoFlask) bonus += 2;
-    bonus += state.hardmodeLevel.clamp(0, state.effectiveMaxHardmode);
+    final key = state.keystoneRunActive
+        ? state.keystoneRunLevel
+        : 0;
+    bonus += key.clamp(0, state.effectiveMaxHardmode);
     return bonus;
   }
 

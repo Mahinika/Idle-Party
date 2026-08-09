@@ -20,15 +20,15 @@ abstract final class DungeonEnvironment {
 
   /// Soft full-frame wash so each dungeon reads differently.
   static Color atmosphereWash(String dungeonId) => switch (dungeonId) {
-        'sandy' => const Color(0x38C88840),
-        'goblin' => const Color(0x3028A050),
-        'king' => const Color(0x303060A0),
-        'underworld' => const Color(0x387040B0),
-        'dead' => const Color(0x30305040),
-        'hell' => const Color(0x40A02018),
-        'crystal' => const Color(0x3850A0F0),
-        'tide' => const Color(0x4820C0B8),
-        'ember' => const Color(0x48E07020),
+        'sandy' => const Color(0x44C88840),
+        'goblin' => const Color(0x3A28A050),
+        'king' => const Color(0x3A3060A0),
+        'underworld' => const Color(0x447040B0),
+        'dead' => const Color(0x3A305040),
+        'hell' => const Color(0x4CA02018),
+        'crystal' => const Color(0x4450A0F0),
+        'tide' => const Color(0x5420C0B8),
+        'ember' => const Color(0x54E07020),
         _ => const Color(0x22000000),
       };
 

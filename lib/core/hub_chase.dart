@@ -33,17 +33,23 @@ class HubChase {
 
   /// Picks the single best "what should I chase now?" target.
   ///
-  /// Priority: claimables → weekly progress → Will → Gauntlet milestone →
+  /// Priority: claimables → vault progress → Will → Gauntlet milestone →
   /// next zone unlock → daily → keep clearing recommended dungeon.
-  static HubChase forState(GameState state) {
+  static HubChase forState(GameState state, {DateTime? now}) {
     final md = state.metaDepth;
+    final clock = now ?? DateTime.now().toUtc();
 
-    if (md.weeklyProgress >= GameLogic.weeklyClearTarget && !md.weeklyClaimed) {
-      return const HubChase(
+    if (GameLogic.canClaimDailyVault(state)) {
+      final best = md.dailyBestTimedKey;
+      return HubChase(
         kind: HubChaseKind.claimWeekly,
-        title: 'Claim weekly reward',
-        detail: 'You filled this week’s clears — grab your essence.',
-        progressLabel: '3/3 ready',
+        title: 'Claim daily vault',
+        detail: best >= 2
+            ? 'Best timed KEY +$best — grab your essence.'
+            : 'You filled today’s vault — grab your essence.',
+        progressLabel: best >= 2
+            ? 'KEY +$best ready'
+            : '${GameLogic.dailyVaultClearTarget}/${GameLogic.dailyVaultClearTarget} ready',
       );
     }
 
@@ -74,23 +80,20 @@ class HubChase {
       );
     }
 
-    if (!md.weeklyClaimed &&
-        md.weeklyProgress > 0 &&
-        md.weeklyProgress < GameLogic.weeklyClearTarget) {
-      final mod = md.weeklyModifier.isEmpty ? 'weekly' : md.weeklyModifier;
-      final left = GameLogic.weeklyClearTarget - md.weeklyProgress;
+    if (!md.dailyVaultClaimed &&
+        md.dailyVaultClears > 0 &&
+        md.dailyVaultClears < GameLogic.dailyVaultClearTarget &&
+        md.dailyBestTimedKey < 2) {
       return HubChase(
         kind: HubChaseKind.weeklyProgress,
-        title: 'Finish weekly ($mod)',
-        detail: left == 1
-            ? 'One more clear under this week’s mod.'
-            : '$left clears left under this week’s mod.',
+        title: 'Finish daily vault',
+        detail: 'One more clear — or time a KEY +2.',
         progressLabel:
-            '${md.weeklyProgress}/${GameLogic.weeklyClearTarget}',
+            '${md.dailyVaultClears}/${GameLogic.dailyVaultClearTarget}',
       );
     }
 
-    if (!MetaSystems.isDailyClaimedToday(state)) {
+    if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
       return const HubChase(
         kind: HubChaseKind.dailyRun,
         title: 'Run today’s Daily',
@@ -99,13 +102,15 @@ class HubChase {
       );
     }
 
-    if (!md.weeklyClaimed && md.weeklyProgress == 0) {
-      final mod = md.weeklyModifier.isEmpty ? 'weekly' : md.weeklyModifier;
+    if (!md.dailyVaultClaimed &&
+        md.dailyVaultClears == 0 &&
+        md.dailyBestTimedKey < 2) {
       return HubChase(
         kind: HubChaseKind.weeklyProgress,
-        title: 'Start weekly ($mod)',
-        detail: 'Clear ${GameLogic.weeklyClearTarget} floors this week for essence.',
-        progressLabel: '0/${GameLogic.weeklyClearTarget}',
+        title: 'Start daily vault',
+        detail:
+            'Clear ${GameLogic.dailyVaultClearTarget} floor or time a KEY +2.',
+        progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
       );
     }
 

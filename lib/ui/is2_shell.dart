@@ -7,12 +7,12 @@ import 'package:flutter/services.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/keystone.dart';
 import '../core/meta_systems.dart';
 import '../models/class_ability.dart';
 import '../models/dungeon_def.dart';
 import '../models/dungeon_mode.dart';
 import '../models/enemy.dart';
-import '../models/gear_set.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
@@ -35,6 +35,7 @@ import 'meta_overlays.dart';
 import 'spatial_dungeon_view.dart';
 import 'first_session_tips.dart';
 import 'guides_overlay.dart';
+import 'item_tooltip.dart';
 import 'web_click_bridge.dart';
 
 Color _rarityBorderColor(LootRarity rarity) => switch (rarity) {
@@ -148,6 +149,8 @@ class _Is2ShellState extends State<Is2Shell> {
   int _abilityHeroIndex = 0;
   /// 0 = GEAR, 1 = BAG, 2 = TOOLS inside the inventory dock.
   int _inventoryTab = 1;
+  /// When set, BAG only lists gear that can fill this paper-doll slot.
+  EquipmentSlot? _bagSlotFilter;
   bool _heldBridgeLayer = false;
 
   GameState get state => widget.director.state;
@@ -168,6 +171,13 @@ class _Is2ShellState extends State<Is2Shell> {
   void _equipSelectedTo(int heroIndex) {
     final id = _selectedId;
     if (id == null) return;
+    if (!state.gearStash.any((g) => g.id == id)) {
+      widget.director.showToast(
+        'Already worn — use UNEQUIP, or pick a BAG item',
+        life: 2.4,
+      );
+      return;
+    }
     final item = GameLogic.findGear(state, id);
     EquipmentSlot? into;
     if (item != null &&
@@ -175,15 +185,38 @@ class _Is2ShellState extends State<Is2Shell> {
         heroIndex < state.heroes.length) {
       into = GameLogic.compareForHero(state.heroes[heroIndex], item).intoSlot;
     }
+    final beforeIds = state.gearStash.map((g) => g.id).toSet();
     widget.director.equipFromStash(
       id,
       heroIndex: heroIndex,
       intoSlot: into,
     );
+    final equipped = !widget.director.state.gearStash.any((g) => g.id == id) &&
+        beforeIds.contains(id);
+    if (!equipped) {
+      widget.director.showToast(
+        'Cannot equip on that hero (class / level / slot)',
+        life: 2.6,
+      );
+      return;
+    }
     setState(() {
       _equipHeroIndex = heroIndex;
       _selectedId = null;
+      _bagSlotFilter = null;
     });
+  }
+
+  void _browseBagSlot(EquipmentSlot slot) {
+    setState(() {
+      _bagSlotFilter = slot;
+      _selectedId = null;
+      // Stay on GEAR when the sheet shows an inline bag; jump to BAG otherwise.
+      if (_inventoryTab != 0) {
+        _inventoryTab = 1;
+      }
+    });
+    _setOverlay(Is2Overlay.inventory);
   }
 
   @override
@@ -274,6 +307,10 @@ class _Is2ShellState extends State<Is2Shell> {
       onSell: () {
         final id = _selectedId ?? _combineA;
         if (id == null) return;
+        if (!state.gearStash.any((g) => g.id == id)) {
+          d.showToast('Unequip first — SELL only works from BAG', life: 2.4);
+          return;
+        }
         d.sellGear(id);
         setState(() {
           if (_selectedId == id) _selectedId = null;
@@ -281,7 +318,13 @@ class _Is2ShellState extends State<Is2Shell> {
           if (_combineB == id) _combineB = null;
         });
       },
-      onUnequip: (slot) => d.unequipSlot(slot, heroIndex: _equipHeroIndex),
+      onUnequip: (slot) {
+        d.unequipSlot(slot, heroIndex: _equipHeroIndex);
+        setState(() => _selectedId = null);
+      },
+      bagSlotFilter: _bagSlotFilter,
+      onBrowseBagSlot: _browseBagSlot,
+      onClearBagSlotFilter: () => setState(() => _bagSlotFilter = null),
       equipHeroIndex: _equipHeroIndex,
       onEquipHeroChanged: (i) => setState(() => _equipHeroIndex = i),
       onEquipToHero: _equipSelectedTo,
@@ -330,7 +373,13 @@ class _Is2ShellState extends State<Is2Shell> {
       _setOverlay(Is2Overlay.none);
       return;
     }
-    setState(() => _inventoryTab = 1);
+    setState(() {
+      _inventoryTab = 1;
+      // Fresh open from nav shows the full bag (slot browse sets filter itself).
+      if (_overlay != Is2Overlay.inventory) {
+        _bagSlotFilter = null;
+      }
+    });
     _setOverlay(Is2Overlay.inventory);
   }
 
@@ -352,7 +401,12 @@ class _Is2ShellState extends State<Is2Shell> {
         overlay != Is2Overlay.inventory) {
       widget.director.clearToast();
     }
-    setState(() => _overlay = overlay);
+    setState(() {
+      _overlay = overlay;
+      if (overlay == Is2Overlay.none) {
+        _bagSlotFilter = null;
+      }
+    });
     if (!widget.hubMode) {
       _ensureBridgeLayer(_overlayHoldsBridge(overlay));
     }
@@ -981,7 +1035,7 @@ class _TopHud extends StatelessWidget {
                         enabled: false,
                         child: Text(
                           'F$floor'
-                          '${state.hardmodeLevel > 0 ? ' HM+${state.hardmodeLevel}' : ''}'
+                          '${state.keystoneRunActive ? ' KEY+${state.keystoneRunLevel}' : ''}'
                           ' · ${_formatCount(state.gold)}g',
                           style: GameTheme.pixel(
                             size: GameTheme.hudPixel,
@@ -1041,7 +1095,9 @@ class _TopHud extends StatelessWidget {
                     Flexible(
                       child: Text(
                         '$dungeonName  F$floor'
-                        '${state.hardmodeLevel > 0 ? '  HM+${state.hardmodeLevel}' : ''}',
+                        '${state.keystoneRunActive ? '  KEY+${state.keystoneRunLevel}' : ''}'
+                        '${state.keystoneRunActive ? '  ${Keystone.formatTimer(state.keystoneTimerMs)}/${Keystone.formatTimer(state.keystoneParMs)}' : ''}'
+                        '${state.keystoneOutcome == 'timed' ? '  TIMED' : state.keystoneOutcome == 'depleted' ? '  DEPLETED' : ''}',
                         overflow: TextOverflow.ellipsis,
                         style: GameTheme.pixel(size: GameTheme.hudPixel),
                       ),
@@ -1219,41 +1275,60 @@ class _BottomNav extends StatelessWidget {
                 ? 'BAG $stashCount/$stashCap!'
                 : 'BAG $stashCount/$stashCap';
     return Material(
-      color: GameTheme.ink.withValues(alpha: 0.78),
+      color: Colors.transparent,
       child: Container(
-          height: GameTheme.bottomNavHeight,
-          decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: Color(0x665A5040))),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: _BottomNavItem(
-                  label: 'GEAR',
-                  icon: KenneyAssets.iconSword,
-                  selected: active == _BottomNavTab.gear,
-                  onTap: onGear,
-                ),
-              ),
-              Expanded(
-                child: _BottomNavItem(
-                  label: bagLabel,
-                  icon: KenneyAssets.chestClosed,
-                  selected: active == _BottomNavTab.bag,
-                  urgent: full || nearlyFull,
-                  onTap: onBag,
-                ),
-              ),
-              Expanded(
-                child: _BottomNavItem(
-                  label: hubClose ? 'HUB' : 'MORE',
-                  icon: KenneyAssets.iconDoor,
-                  selected: active == _BottomNavTab.more,
-                  onTap: onMore,
-                ),
-              ),
+        height: GameTheme.bottomNavHeight,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              GameTheme.stone.withValues(alpha: 0.96),
+              GameTheme.ink.withValues(alpha: 0.98),
             ],
           ),
+          border: Border(
+            top: BorderSide(
+              color: GameTheme.borderLit.withValues(alpha: 0.35),
+            ),
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x88000000),
+              blurRadius: 16,
+              offset: Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _BottomNavItem(
+                label: 'GEAR',
+                icon: KenneyAssets.iconSword,
+                selected: active == _BottomNavTab.gear,
+                onTap: onGear,
+              ),
+            ),
+            Expanded(
+              child: _BottomNavItem(
+                label: bagLabel,
+                icon: KenneyAssets.chestClosed,
+                selected: active == _BottomNavTab.bag,
+                urgent: full || nearlyFull,
+                onTap: onBag,
+              ),
+            ),
+            Expanded(
+              child: _BottomNavItem(
+                label: hubClose ? 'HUB' : 'MORE',
+                icon: KenneyAssets.iconDoor,
+                selected: active == _BottomNavTab.more,
+                onTap: onMore,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1277,7 +1352,7 @@ class _BottomNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = urgent
-        ? GameTheme.torchHot
+        ? GameTheme.accentWarn
         : (selected ? GameTheme.torchHot : GameTheme.parchmentDim);
     return WebClickScope(
       label: label,
@@ -1291,25 +1366,28 @@ class _BottomNavItem extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: SizedBox(
-            height: GameTheme.minTouch,
+            height: GameTheme.minTouch + 4,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                KenneySprite(asset: icon, size: 18),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? GameTheme.torch.withValues(alpha: 0.14)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                  ),
+                  child: KenneySprite(asset: icon, size: 18),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   label,
-                  style: GameTheme.pixel(size: GameTheme.hudPixel, color: color),
-                ),
-                const SizedBox(height: 2),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  height: 2,
-                  width: selected ? 28 : 0,
-                  decoration: BoxDecoration(
-                    color: GameTheme.torchHot,
-                    borderRadius: BorderRadius.circular(1),
-                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(size: 13, color: color),
                 ),
               ],
             ),
@@ -2264,6 +2342,9 @@ class _InventoryDock extends StatefulWidget {
     required this.onEquip,
     required this.onSell,
     required this.onUnequip,
+    required this.bagSlotFilter,
+    required this.onBrowseBagSlot,
+    required this.onClearBagSlotFilter,
     required this.equipHeroIndex,
     required this.onEquipHeroChanged,
     required this.onEquipToHero,
@@ -2290,6 +2371,9 @@ class _InventoryDock extends StatefulWidget {
   final VoidCallback onEquip;
   final VoidCallback onSell;
   final void Function(EquipmentSlot slot) onUnequip;
+  final EquipmentSlot? bagSlotFilter;
+  final void Function(EquipmentSlot slot) onBrowseBagSlot;
+  final VoidCallback onClearBagSlotFilter;
   final int equipHeroIndex;
   final void Function(int index) onEquipHeroChanged;
   final void Function(int heroIndex) onEquipToHero;
@@ -2321,6 +2405,10 @@ class _InventoryDockState extends State<_InventoryDock>
   VoidCallback get onEquip => widget.onEquip;
   VoidCallback get onSell => widget.onSell;
   void Function(EquipmentSlot slot) get onUnequip => widget.onUnequip;
+  EquipmentSlot? get bagSlotFilter => widget.bagSlotFilter;
+  void Function(EquipmentSlot slot) get onBrowseBagSlot =>
+      widget.onBrowseBagSlot;
+  VoidCallback get onClearBagSlotFilter => widget.onClearBagSlotFilter;
   int get equipHeroIndex => widget.equipHeroIndex;
   void Function(int index) get onEquipHeroChanged => widget.onEquipHeroChanged;
   void Function(int heroIndex) get onEquipToHero => widget.onEquipToHero;
@@ -2334,6 +2422,10 @@ class _InventoryDockState extends State<_InventoryDock>
   VoidCallback get onCleanBag => widget.onCleanBag;
   VoidCallback get onOpenFilters => widget.onOpenFilters;
   VoidCallback get onAutoMerge => widget.onAutoMerge;
+
+  bool _itemMatchesBagFilter(EquipmentItem item, EquipmentSlot filter) {
+    return GameLogic.equipTargetsFor(item).contains(filter);
+  }
 
   @override
   void initState() {
@@ -2371,47 +2463,318 @@ class _InventoryDockState extends State<_InventoryDock>
   }
 
   Widget _equipTab() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: CharacterEquipPanel(
-              state: state,
-              heroIndex: equipHeroIndex,
-              onSelectHero: onEquipHeroChanged,
-              selectedItemId: selectedId,
-              onSelectItem: onSelect,
-              onUnequip: onUnequip,
-              compact: true,
-            ),
+    final worn = selectedId == null
+        ? null
+        : GameLogic.findEquippedLocation(state, selectedId!);
+    final inStash = selectedId != null &&
+        state.gearStash.any((g) => g.id == selectedId);
+    final cap = GameLogic.maxGearStashFor(state);
+    final bagSlots = List<EquipmentItem?>.generate(
+      cap,
+      (i) => i < state.gearStash.length ? state.gearStash[i] : null,
+    );
+
+    Widget actions() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: worn != null
+                    ? KenneyButton(
+                        label: 'UNEQUIP',
+                        onPressed: () => onUnequip(worn.slot),
+                        style: KenneyButtonStyle.grey,
+                      )
+                    : KenneyButton(
+                        label: 'EQUIP',
+                        onPressed: inStash ? onEquip : null,
+                      ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: KenneyButton(
+                  label: 'AUTO EQUIP',
+                  onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
+                  style: KenneyButtonStyle.grey,
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 6),
-        Row(
+          const SizedBox(height: 4),
+          KenneyButton(
+            label: 'SELL',
+            onPressed: inStash ? onSell : null,
+            style: KenneyButtonStyle.grey,
+          ),
+        ],
+      );
+    }
+
+    Widget sheet() {
+      return CharacterEquipPanel(
+        state: state,
+        heroIndex: equipHeroIndex,
+        onSelectHero: onEquipHeroChanged,
+        selectedItemId: selectedId,
+        onSelectItem: onSelect,
+        onUnequip: onUnequip,
+        onEmptySlotTap: onBrowseBagSlot,
+        compact: true,
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 520;
+        final bag = _gearInlineBag(bagSlots);
+        if (wide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 5,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(child: sheet()),
+                    ),
+                    const SizedBox(height: 6),
+                    actions(),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 4,
+                child: bag,
+              ),
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: KenneyButton(
-                label: 'EQUIP',
-                onPressed: selectedId == null ? null : onEquip,
-              ),
+              flex: 58,
+              child: SingleChildScrollView(child: sheet()),
             ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: KenneyButton(
-                label: 'AUTO EQUIP',
-                onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
-                style: KenneyButtonStyle.grey,
+            const SizedBox(height: 6),
+            actions(),
+            const SizedBox(height: 8),
+            Expanded(flex: 42, child: bag),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Compact bag pane embedded in the GEAR sheet (reference: Items Bag).
+  Widget _gearInlineBag(List<EquipmentItem?> slots) {
+    final cap = GameLogic.maxGearStashFor(state);
+    final filled = state.gearStash.length;
+    final filter = bagSlotFilter;
+    final filterLabel = filter == null
+        ? null
+        : (CharacterEquipPanel.slotLabels[filter] ?? filter.name);
+    final filtered = filter == null
+        ? slots
+        : [
+            for (final item in state.gearStash)
+              if (_itemMatchesBagFilter(item, filter)) item,
+          ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: GameTheme.panelInset.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(GameTheme.radiusMd),
+        border: Border.all(color: GameTheme.border.withValues(alpha: 0.75)),
+      ),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'ITEMS BAG',
+                  style: GameTheme.menuTitle(size: 16),
+                ),
               ),
+              Text(
+                '$filled / $cap',
+                style: GameTheme.body(
+                  size: 13,
+                  color: filled >= cap
+                      ? GameTheme.accentWarn
+                      : GameTheme.parchmentDim,
+                ),
+              ),
+            ],
+          ),
+          if (filter != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Slot: $filterLabel',
+                    style: GameTheme.body(
+                      size: 12,
+                      color: GameTheme.torchHot,
+                    ),
+                  ),
+                ),
+                KenneyButton(
+                  label: 'CLEAR',
+                  onPressed: onClearBagSlotFilter,
+                  style: KenneyButtonStyle.grey,
+                ),
+              ],
             ),
           ],
-        ),
-        const SizedBox(height: 4),
-        KenneyButton(
-          label: 'SELL',
-          onPressed: selectedId == null && combineA == null ? null : onSell,
-          style: KenneyButtonStyle.grey,
-        ),
+          const SizedBox(height: 6),
+          Expanded(
+            child: filtered.isEmpty && filter != null
+                ? Center(
+                    child: Text(
+                      'No $filterLabel in bag',
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(
+                        size: 13,
+                        color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                  )
+                : GridView.builder(
+                    itemCount: filtered.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 5,
+                      crossAxisSpacing: 5,
+                      mainAxisExtent: 56,
+                    ),
+                    itemBuilder: (context, index) {
+                      final item = filtered[index];
+                      final selected =
+                          item != null && item.id == selectedId;
+                      final hero = state.heroes.isEmpty
+                          ? null
+                          : state.heroes[equipHeroIndex.clamp(
+                              0,
+                              state.heroes.length - 1,
+                            )];
+                      return _BagSlot(
+                        item: item,
+                        state: state,
+                        hero: hero,
+                        highlight: selected,
+                        onTap: item == null
+                            ? null
+                            : () => onSelect(item.id),
+                        onLongPress: item == null
+                            ? null
+                            : () => onPutCombine(item.id),
+                      );
+                    },
+                  ),
+          ),
+          if (selectedId != null) ...[
+            const SizedBox(height: 6),
+            Builder(
+              builder: (context) {
+                final selected = GameLogic.findGear(state, selectedId!);
+                if (selected == null) return const SizedBox.shrink();
+                if (!state.gearStash.any((g) => g.id == selected.id)) {
+                  return Text(
+                    'Selected on hero — UNEQUIP to move to bag',
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  );
+                }
+                final hero = state.heroes.isEmpty
+                    ? null
+                    : state.heroes[equipHeroIndex.clamp(
+                        0,
+                        state.heroes.length - 1,
+                      )];
+                final cmp = hero == null
+                    ? null
+                    : GameLogic.compareForHero(hero, selected);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      selected.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(
+                        size: 13,
+                        color: itemRarityColor(selected.rarity),
+                      ),
+                    ),
+                    Text(
+                      'i${selected.effectiveItemLevel} · ${selected.statsLine}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(
+                        size: 11,
+                        color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                    if (cmp != null && cmp.powerDelta != 0)
+                      Text(
+                        cmp.powerDelta > 0
+                            ? 'Upgrade  Score ${GameLogic.formatDelta(cmp.powerDelta)}'
+                            : 'Weaker  Score ${GameLogic.formatDelta(cmp.powerDelta)}',
+                        style: GameTheme.body(
+                          size: 11,
+                          color: cmp.powerDelta > 0
+                              ? GameTheme.clear
+                              : GameTheme.bloodLit,
+                        ),
+                      ),
+                    const SizedBox(height: 6),
+                    _equipHeroChipsFor(selected),
+                  ],
+                );
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _equipHeroChipsFor(EquipmentItem selected) {
+    var bestIndex = -1;
+    var bestDelta = 0;
+    for (var i = 0; i < state.heroes.length; i++) {
+      final delta = GameLogic.compareForHero(
+        state.heroes[i],
+        selected,
+      ).powerDelta;
+      if (delta > 0 && delta > bestDelta) {
+        bestDelta = delta;
+        bestIndex = i;
+      }
+    }
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        for (var i = 0; i < state.heroes.length; i++)
+          _EquipHeroChip(
+            hero: state.heroes[i],
+            candidate: selected,
+            isBest: i == bestIndex,
+            onTap: () => onEquipToHero(i),
+          ),
       ],
     );
   }
@@ -2420,51 +2783,136 @@ class _InventoryDockState extends State<_InventoryDock>
     final cap = GameLogic.maxGearStashFor(state);
     final filled = state.gearStash.length;
     final nearFull = filled >= (cap * 0.9).ceil();
+    final filter = bagSlotFilter;
+    final filterLabel = filter == null
+        ? null
+        : (CharacterEquipPanel.slotLabels[filter] ?? filter.name);
+    final filteredSlots = filter == null
+        ? slots
+        : [
+            for (final item in state.gearStash)
+              if (_itemMatchesBagFilter(item, filter)) item,
+          ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          nearFull && filled >= cap
-              ? 'FULL $filled/$cap · CLEAN merges → sells gold → scraps'
-              : nearFull
-                  ? '$filled/$cap nearly full · CLEAN uses Settings filters'
-                  : '$filled/$cap · junk→gold · scrap→essence · FILTERS for caps',
-          style: GameTheme.pixel(
-            size: GameTheme.hudPixel,
-            color: nearFull ? GameTheme.torchHot : GameTheme.parchment,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                nearFull && filled >= cap
+                    ? 'BAG FULL'
+                    : nearFull
+                        ? 'NEARLY FULL'
+                        : 'CAPACITY',
+                style: GameTheme.body(
+                  size: 14,
+                  color: nearFull ? GameTheme.accentWarn : GameTheme.parchmentDim,
+                ),
+              ),
+            ),
+            Text(
+              '$filled / $cap',
+              style: GameTheme.body(
+                size: 15,
+                color: nearFull ? GameTheme.accentWarn : GameTheme.parchment,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(99),
+          child: LinearProgressIndicator(
+            value: cap <= 0 ? 0 : (filled / cap).clamp(0.0, 1.0),
+            minHeight: 5,
+            backgroundColor: GameTheme.panelInset,
+            color: filled >= cap
+                ? GameTheme.bloodLit
+                : nearFull
+                    ? GameTheme.accentWarn
+                    : GameTheme.mossLit,
           ),
         ),
         const SizedBox(height: 4),
-        Expanded(
-          child: GridView.builder(
-            itemCount: slots.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              mainAxisSpacing: 4,
-              crossAxisSpacing: 4,
-              mainAxisExtent: 56,
-            ),
-            itemBuilder: (context, index) {
-              final item = slots[index];
-              final selected = item != null && item.id == selectedId;
-              final inCombine =
-                  item != null && (item.id == combineA || item.id == combineB);
-              final combineFiltered =
-                  primary != null && item != null && item.slot != primary.slot;
-              return _BagSlot(
-                item: item,
-                state: state,
-                highlight: selected || inCombine,
-                dimmed: combineFiltered,
-                onTap: item == null || combineFiltered
-                    ? null
-                    : () => onSelect(item.id),
-                onLongPress: item == null || combineFiltered
-                    ? null
-                    : () => onPutCombine(item.id),
-              );
-            },
+        if (filter != null) ...[
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Slot: $filterLabel'
+                  '${filteredSlots.isEmpty ? ' · none in bag' : ' · ${filteredSlots.length}'}',
+                  style: GameTheme.body(
+                    size: 13,
+                    color: GameTheme.torchHot,
+                  ),
+                ),
+              ),
+              KenneyButton(
+                label: 'CLEAR',
+                onPressed: onClearBagSlotFilter,
+                style: KenneyButtonStyle.grey,
+              ),
+            ],
           ),
+          const SizedBox(height: 4),
+        ] else
+          Text(
+            nearFull && filled >= cap
+                ? 'CLEAN merges → sells gold → scraps essence'
+                : 'junk→gold · scrap→essence · FILTERS set caps',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        const SizedBox(height: 6),
+        Expanded(
+          child: filteredSlots.isEmpty && filter != null
+              ? Center(
+                  child: Text(
+                    'No $filterLabel gear in BAG.\nLoot more, or CLEAR filter.',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                )
+              : GridView.builder(
+                  itemCount: filteredSlots.length,
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    mainAxisSpacing: 6,
+                    crossAxisSpacing: 6,
+                    mainAxisExtent: 60,
+                  ),
+                  itemBuilder: (context, index) {
+                    final item = filteredSlots[index];
+                    final selected = item != null && item.id == selectedId;
+                    final inCombine = item != null &&
+                        (item.id == combineA || item.id == combineB);
+                    final combineFiltered = primary != null &&
+                        item != null &&
+                        item.slot != primary.slot;
+                    return _BagSlot(
+                      item: item,
+                      state: state,
+                      hero: state.heroes.isEmpty
+                          ? null
+                          : state.heroes[equipHeroIndex.clamp(
+                              0,
+                              state.heroes.length - 1,
+                            )],
+                      highlight: selected || inCombine,
+                      dimmed: combineFiltered,
+                      onTap: item == null || combineFiltered
+                          ? null
+                          : () => onSelect(item.id),
+                      onLongPress: item == null || combineFiltered
+                          ? null
+                          : () => onPutCombine(item.id),
+                    );
+                  },
+                ),
         ),
         const SizedBox(height: 4),
         KenneyButton(
@@ -2534,6 +2982,15 @@ class _InventoryDockState extends State<_InventoryDock>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
+                    selected.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.body(
+                      size: 14,
+                      color: itemRarityColor(selected.rarity),
+                    ),
+                  ),
+                  Text(
                     selected.statsLine,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -2542,44 +2999,6 @@ class _InventoryDockState extends State<_InventoryDock>
                       color: GameTheme.torchHot,
                     ),
                   ),
-                  if (selected.setId != null && selected.setId!.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      () {
-                        final best = state.heroes
-                            .map(
-                              (h) => (
-                                h,
-                                GearSets.wornCount(h.equipped, selected.setId!),
-                              ),
-                            )
-                            .reduce((a, b) => a.$2 >= b.$2 ? a : b);
-                        final n = best.$2;
-                        final label = selected.setLabel;
-                        if (n <= 0) return '$label · 0/4';
-                        final bonus = n >= 4
-                            ? '4pc active'
-                            : (n >= 2 ? '2pc active' : 'set');
-                        return '$label · $n/4 · $bonus';
-                      }(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.parchmentDim,
-                      ),
-                    ),
-                  ],
-                  if (_isSoulboundItem(selected)) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      'BOUND FOREVER',
-                      style: GameTheme.pixel(
-                        size: GameTheme.hudPixel,
-                        color: GameTheme.torchHot,
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 4),
                   Text(
                     'Equip on:',
@@ -2589,35 +3008,7 @@ class _InventoryDockState extends State<_InventoryDock>
                     ),
                   ),
                   const SizedBox(height: 3),
-                  Builder(
-                    builder: (context) {
-                      var bestIndex = -1;
-                      var bestDelta = 0;
-                      for (var i = 0; i < state.heroes.length; i++) {
-                        final delta = GameLogic.compareForHero(
-                          state.heroes[i],
-                          selected,
-                        ).powerDelta;
-                        if (delta > 0 && delta > bestDelta) {
-                          bestDelta = delta;
-                          bestIndex = i;
-                        }
-                      }
-                      return Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: [
-                          for (var i = 0; i < state.heroes.length; i++)
-                            _EquipHeroChip(
-                              hero: state.heroes[i],
-                              candidate: selected,
-                              isBest: i == bestIndex,
-                              onTap: () => onEquipToHero(i),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
+                  _equipHeroChipsFor(selected),
                 ],
               );
             },
@@ -2669,7 +3060,7 @@ class _InventoryDockState extends State<_InventoryDock>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('COMBINATOR', style: GameTheme.pixel(size: GameTheme.hudPixel)),
+          MenuChrome.sectionLabel('COMBINATOR'),
           const SizedBox(height: 4),
           Text(
             'Sacrifice two items of the same slot for one upgraded result.',
@@ -2781,7 +3172,7 @@ class _InventoryDockState extends State<_InventoryDock>
             ),
           ],
           const SizedBox(height: 14),
-          Text('SOULBIND', style: GameTheme.pixel(size: GameTheme.hudPixel)),
+          MenuChrome.sectionLabel('SOULBIND'),
           const SizedBox(height: 4),
           Text(
             'Lock a weapon or chest/cloak forever (3 fragments).',
@@ -2847,47 +3238,42 @@ class _InventoryDockState extends State<_InventoryDock>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            GameTheme.panel.withValues(alpha: 0.82),
-            GameTheme.stoneDeep.withValues(alpha: 0.88),
+            GameTheme.panel.withValues(alpha: 0.94),
+            GameTheme.stoneDeep.withValues(alpha: 0.97),
           ],
         ),
         border: Border(
-          top: BorderSide(color: GameTheme.borderLit.withValues(alpha: 0.85), width: 2),
+          top: BorderSide(
+            color: GameTheme.borderLit.withValues(alpha: 0.4),
+          ),
         ),
         boxShadow: [
           BoxShadow(
-            color: GameTheme.torch.withValues(alpha: 0.08),
-            blurRadius: 0,
-            spreadRadius: 1,
+            color: GameTheme.torch.withValues(alpha: 0.1),
+            blurRadius: 18,
+            offset: const Offset(0, -4),
           ),
           const BoxShadow(
-            color: Color(0x66000000),
-            blurRadius: 8,
-            offset: Offset(0, -2),
+            color: Color(0x88000000),
+            blurRadius: 16,
+            offset: Offset(0, -6),
           ),
         ],
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(GameTheme.radiusLg),
+        ),
       ),
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Material(
-            color: GameTheme.stone.withValues(alpha: 0.55),
-            child: TabBar(
-              controller: _tabs,
-              labelStyle: GameTheme.pixel(size: GameTheme.hudPixel),
-              unselectedLabelStyle:
-                  GameTheme.pixel(size: GameTheme.hudPixel),
-              indicatorColor: GameTheme.torchHot,
-              labelColor: GameTheme.torchHot,
-              unselectedLabelColor: GameTheme.parchmentDim,
-              dividerColor: GameTheme.border.withValues(alpha: 0.5),
-              tabs: const [
-                Tab(text: 'GEAR'),
-                Tab(text: 'BAG'),
-                Tab(text: 'TOOLS'),
-              ],
-            ),
+          MenuChrome.tabRail(
+            controller: _tabs,
+            tabs: const [
+              Tab(text: 'GEAR'),
+              Tab(text: 'BAG'),
+              Tab(text: 'TOOLS'),
+            ],
           ),
           Expanded(
             child: TabBarView(
@@ -3002,6 +3388,7 @@ class _BagSlot extends StatelessWidget {
     required this.item,
     required this.state,
     required this.highlight,
+    this.hero,
     this.dimmed = false,
     this.onTap,
     this.onLongPress,
@@ -3009,6 +3396,7 @@ class _BagSlot extends StatelessWidget {
 
   final EquipmentItem? item;
   final GameState state;
+  final PartyHero? hero;
   final bool highlight;
   final bool dimmed;
   final VoidCallback? onTap;
@@ -3044,7 +3432,7 @@ class _BagSlot extends StatelessWidget {
     final a11yLabel = item == null
         ? 'Empty bag slot'
         : '${item!.name}, item level ${item!.effectiveItemLevel}';
-    return Opacity(
+    final slot = Opacity(
       opacity: dimmed ? 0.25 : 1,
       child: Semantics(
         button: item != null,
@@ -3054,25 +3442,60 @@ class _BagSlot extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
-          decoration: MenuChrome.cardBox(selected: highlight).copyWith(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: item == null
+                  ? [
+                      GameTheme.panelInset.withValues(alpha: 0.7),
+                      GameTheme.stoneDeep.withValues(alpha: 0.75),
+                    ]
+                  : [
+                      Color.lerp(
+                        GameTheme.stoneRaised,
+                        rarityColor,
+                        0.18,
+                      )!,
+                      Color.lerp(
+                        GameTheme.stoneDeep,
+                        rarityColor,
+                        0.1,
+                      )!,
+                    ],
+            ),
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
             border: Border.all(
               color: highlight ? GameTheme.torchHot : rarityColor,
-              width: item != null ? 1.5 : 1,
+              width: highlight ? 1.6 : 1.1,
             ),
-            color: item == null
-                ? null
-                : Color.lerp(
-                    const Color(0xFF1A1612),
-                    rarityColor,
-                    0.12,
-                  ),
+            boxShadow: highlight
+                ? [
+                    BoxShadow(
+                      color: GameTheme.torch.withValues(alpha: 0.25),
+                      blurRadius: 10,
+                    ),
+                  ]
+                : null,
           ),
           clipBehavior: Clip.hardEdge,
           child: item == null
-              ? const SizedBox.expand()
+              ? Center(
+                  child: Icon(
+                    Icons.add,
+                    size: 14,
+                    color: GameTheme.border.withValues(alpha: 0.55),
+                  ),
+                )
               : Stack(
                   fit: StackFit.expand,
                   children: [
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Container(width: 3, color: rarityColor),
+                    ),
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 10),
@@ -3083,8 +3506,8 @@ class _BagSlot extends StatelessWidget {
                       ),
                     ),
                     Positioned(
-                      top: 1,
-                      left: 2,
+                      top: 2,
+                      left: 6,
                       child: ExcludeSemantics(
                         child: Text(
                           _slotHint(item!.slot),
@@ -3096,13 +3519,13 @@ class _BagSlot extends StatelessWidget {
                       ),
                     ),
                     Positioned(
-                      bottom: 1,
-                      left: 2,
+                      bottom: 2,
+                      left: 6,
                       child: ExcludeSemantics(
                         child: Text(
                           'i${item!.effectiveItemLevel}',
                           style: GameTheme.body(
-                            size: 11,
+                            size: 12,
                             color: GameTheme.parchment,
                           ),
                         ),
@@ -3110,14 +3533,17 @@ class _BagSlot extends StatelessWidget {
                     ),
                     if (isBest)
                       Positioned(
-                        top: 1,
-                        right: 1,
+                        top: 2,
+                        right: 2,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 3,
-                            vertical: 0,
+                            horizontal: 4,
+                            vertical: 1,
                           ),
-                          color: const Color(0xDD2A5018),
+                          decoration: BoxDecoration(
+                            color: const Color(0xEE1E4030),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                           child: Text(
                             'BEST',
                             style: GameTheme.body(
@@ -3129,8 +3555,8 @@ class _BagSlot extends StatelessWidget {
                       ),
                     if (_isSoulboundItem(item!))
                       Positioned(
-                        bottom: 1,
-                        right: 2,
+                        bottom: 2,
+                        right: 3,
                         child: Text(
                           'SB',
                           style: GameTheme.body(
@@ -3142,12 +3568,12 @@ class _BagSlot extends StatelessWidget {
                     if (item!.slot == EquipmentSlot.weapon &&
                         !_isSoulboundItem(item!))
                       Positioned(
-                        bottom: 1,
-                        right: 2,
+                        bottom: 2,
+                        right: 3,
                         child: Text(
                           _patternGlyph(item!.pattern),
-                          style: GameTheme.pixel(
-                            size: 4,
+                          style: GameTheme.body(
+                            size: 11,
                             color: GameTheme.parchmentDim,
                           ),
                         ),
@@ -3157,6 +3583,12 @@ class _BagSlot extends StatelessWidget {
         ),
       ),
       ),
+    );
+    if (item == null) return slot;
+    return ItemTooltipAnchor(
+      item: item!,
+      hero: hero,
+      child: slot,
     );
   }
 }
@@ -3375,7 +3807,7 @@ class _OverlayPanel extends StatelessWidget {
       top: false,
       child: Container(
         margin: margin,
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
         decoration: MenuChrome.panel(borderRadius: borderRadius),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3387,7 +3819,7 @@ class _OverlayPanel extends StatelessWidget {
                   Expanded(
                     child: Text(
                       title,
-                      style: GameTheme.pixel(size: GameTheme.hudPixelComfort),
+                      style: GameTheme.menuTitle(size: 18),
                     ),
                   )
                 else
@@ -3400,6 +3832,11 @@ class _OverlayPanel extends StatelessWidget {
                   primary: true,
                 ),
               ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              height: 1,
+              color: GameTheme.borderLit.withValues(alpha: 0.22),
             ),
             const SizedBox(height: 10),
             Expanded(child: child),
@@ -3474,24 +3911,15 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Material(
-          color: GameTheme.stone.withValues(alpha: 0.55),
-          child: TabBar(
-            controller: _tabs,
-            onTap: (_) => setState(() {}),
-            labelStyle: GameTheme.pixel(size: GameTheme.hudPixel),
-            unselectedLabelStyle: GameTheme.pixel(size: GameTheme.hudPixel),
-            indicatorColor: GameTheme.torchHot,
-            labelColor: GameTheme.torchHot,
-            unselectedLabelColor: GameTheme.parchmentDim,
-            dividerColor: GameTheme.border.withValues(alpha: 0.5),
-            tabs: const [
-              Tab(text: 'FORGE'),
-              Tab(text: 'META'),
-              Tab(text: 'MATS'),
-              Tab(text: 'APEX'),
-            ],
-          ),
+        MenuChrome.tabRail(
+          controller: _tabs,
+          onTap: (_) => setState(() {}),
+          tabs: const [
+            Tab(text: 'FORGE'),
+            Tab(text: 'META'),
+            Tab(text: 'MATS'),
+            Tab(text: 'APEX'),
+          ],
         ),
         const SizedBox(height: 8),
         SizedBox(
@@ -3520,8 +3948,7 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: GameTheme.pixel(size: 8)),
-          const SizedBox(height: 2),
+          MenuChrome.sectionLabel(title),
           Text(
             blurb,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -3857,16 +4284,12 @@ class _JobsOverlay extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: GameTheme.menuCard,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: switch (mission.tier) {
-                  2 => GameTheme.bloodLit,
-                  1 => GameTheme.torchHot,
-                  _ => const Color(0xFF595033),
-                },
-              ),
+            decoration: MenuChrome.listCard(
+              borderColor: switch (mission.tier) {
+                2 => GameTheme.bloodLit,
+                1 => GameTheme.torchHot,
+                _ => GameTheme.border.withValues(alpha: 0.9),
+              },
             ),
             child: Row(
               children: [
@@ -3876,12 +4299,12 @@ class _JobsOverlay extends StatelessWidget {
                     children: [
                       Text(
                         mission.title,
-                        style: GameTheme.pixel(
-                          size: 8,
+                        style: GameTheme.body(
+                          size: 16,
                           color: switch (mission.tier) {
                             2 => GameTheme.bloodLit,
                             1 => GameTheme.torchHot,
-                            _ => GameTheme.torchHot,
+                            _ => GameTheme.parchment,
                           },
                         ),
                       ),
@@ -3893,14 +4316,14 @@ class _JobsOverlay extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
                         child: LinearProgressIndicator(
                           value: mission.target <= 0
                               ? 0
                               : (mission.progress / mission.target)
                                   .clamp(0.0, 1.0),
                           minHeight: 8,
-                          backgroundColor: const Color(0xFF5A5040),
+                          backgroundColor: GameTheme.panelInset,
                           color: mission.isComplete
                               ? GameTheme.mossLit
                               : GameTheme.torchHot,
@@ -4112,7 +4535,7 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
           onChanged: director.setColorblindMode,
         ),
         const SizedBox(height: 12),
-        Text('UI text scale', style: GameTheme.pixel(size: 7)),
+        Text('UI text scale', style: GameTheme.body(size: 13, color: GameTheme.parchmentDim)),
         const SizedBox(height: 6),
         Semantics(
           slider: true,
@@ -4141,7 +4564,7 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
           ),
         ),
         const SizedBox(height: 12),
-        Text('BAG CLEANUP', style: GameTheme.pixel(size: 8)),
+        MenuChrome.sectionLabel('BAG CLEANUP'),
         const SizedBox(height: 4),
         Text(
           'Near-full bag: merge → sell gold → scrap essence. '
@@ -4149,7 +4572,7 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 10),
-        Text('Auto-sell (gold)', style: GameTheme.pixel(size: 7)),
+        Text('Auto-sell (gold)', style: GameTheme.body(size: 13, color: GameTheme.parchmentDim)),
         const SizedBox(height: 6),
         _IlvlFilterRow(
           value: state.autoSellMaxPower,
@@ -4164,7 +4587,7 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
           enabled: state.autoSellMaxPower > 0,
         ),
         const SizedBox(height: 12),
-        Text('Auto-disassemble (essence)', style: GameTheme.pixel(size: 7)),
+        Text('Auto-disassemble (essence)', style: GameTheme.body(size: 13, color: GameTheme.parchmentDim)),
         const SizedBox(height: 6),
         _IlvlFilterRow(
           value: state.autoDisassembleMaxIlvl,
@@ -4616,10 +5039,7 @@ class _MarketOverlay extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Text(
-          'SELL STASH (tap for gold)',
-          style: GameTheme.pixel(size: GameTheme.hudPixel, color: GameTheme.parchmentDim),
-        ),
+        MenuChrome.sectionLabel('SELL STASH (tap for gold)'),
         const SizedBox(height: 6),
         if (stash.isEmpty)
           Text(
@@ -4638,16 +5058,16 @@ class _MarketOverlay extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Material(
-                    color: GameTheme.menuCard,
-                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.transparent,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(GameTheme.radiusSm),
                       onTap: () => director.sellGearForGold(item.id),
-                      child: Padding(
+                      child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
                           vertical: 8,
                         ),
+                        decoration: MenuChrome.listCard(inset: true),
                         child: Row(
                           children: [
                             KenneySprite(
@@ -4663,8 +5083,8 @@ class _MarketOverlay extends StatelessWidget {
                             ),
                             Text(
                               '+${gold}g',
-                              style: GameTheme.pixel(
-                                size: 6,
+                              style: GameTheme.body(
+                                size: 14,
                                 color: GameTheme.torchHot,
                               ),
                             ),
@@ -4766,7 +5186,7 @@ class _BeastOverlayState extends State<_BeastOverlay> {
         Text(
           'Roster ${state.ownedPets.length}/$cap',
           textAlign: TextAlign.center,
-          style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
+          style: GameTheme.menuTitle(size: 16, color: GameTheme.torchHot),
         ),
         if (state.metaDepth.favoritePetSpecies.isNotEmpty) ...[
           const SizedBox(height: 4),
@@ -4786,7 +5206,7 @@ class _BeastOverlayState extends State<_BeastOverlay> {
           Text(
             'No beasts yet',
             textAlign: TextAlign.center,
-            style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
+            style: GameTheme.menuTitle(size: 16, color: GameTheme.torchHot),
           ),
           const SizedBox(height: 6),
           Text(
@@ -4819,31 +5239,28 @@ class _BeastOverlayState extends State<_BeastOverlay> {
           for (final pet in state.ownedPets)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Material(
-                color: GameTheme.menuCard,
-                borderRadius: BorderRadius.circular(6),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: pet.id == _mergeA || pet.id == _mergeB
-                          ? GameTheme.clear
-                          : state.activePet?.id == pet.id
-                              ? GameTheme.torch
-                              : const Color(0xFF595033),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          KenneySprite(
-                            asset: CustomAssets.petForInstanceId(pet.id),
-                            size: 24,
-                          ),
-                          const SizedBox(width: 10),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: MenuChrome.listCard(
+                  selected: pet.id == _mergeA ||
+                      pet.id == _mergeB ||
+                      state.activePet?.id == pet.id,
+                  borderColor: pet.id == _mergeA || pet.id == _mergeB
+                      ? GameTheme.clear
+                      : state.activePet?.id == pet.id
+                          ? GameTheme.torch
+                          : null,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        KenneySprite(
+                          asset: CustomAssets.petForInstanceId(pet.id),
+                          size: 24,
+                        ),
+                        const SizedBox(width: 10),
                           Expanded(
                             child: Builder(
                               builder: (context) {
@@ -4854,7 +5271,10 @@ class _BeastOverlayState extends State<_BeastOverlay> {
                                     Text(
                                       '${pet.name}  |  ${pet.rarity.name}'
                                       '${pet.frame != PetFrame.none ? '  [${pet.frame.name}]' : ''}',
-                                      style: GameTheme.pixel(size: 8),
+                                      style: GameTheme.body(
+                                        size: 15,
+                                        color: GameTheme.parchment,
+                                      ),
                                     ),
                                     Text(
                                       'Lv${pet.level}  ATK +${pet.totalAttackBonus}'
@@ -4874,8 +5294,8 @@ class _BeastOverlayState extends State<_BeastOverlay> {
                           if (state.activePet?.id == pet.id)
                             Text(
                               'ACTIVE',
-                              style: GameTheme.pixel(
-                                size: 5,
+                              style: GameTheme.body(
+                                size: 12,
                                 color: GameTheme.torchHot,
                               ),
                             ),
@@ -4974,7 +5394,6 @@ class _BeastOverlayState extends State<_BeastOverlay> {
                   ),
                 ),
               ),
-            ),
         ],
         const SizedBox(height: 8),
         Row(

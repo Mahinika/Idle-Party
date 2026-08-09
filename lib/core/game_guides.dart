@@ -75,7 +75,9 @@ abstract final class GameGuides {
       body:
           'Loot drops on the floor, then goes to your stash (BAG).\n\n'
           '• BAG: view, sell, scrap, or equip stash gear.\n'
-          '• GEAR: manage each hero’s slots (bottom nav or dock tab).\n'
+          '• GEAR: paper-doll per hero — UNEQUIP worn pieces, AUTO EQUIP from bag.\n'
+          '• Tap an empty GEAR slot to open BAG filtered to that slot.\n'
+          '• SELL only scraps items in BAG (unequip first).\n'
           '• Auto-Equip picks clear class upgrades (skips low-iLvl affinity crumbs '
           'on empty slots; worn slots need a meaningful score delta).\n'
           '• Settings / Bag FILTERS: auto-sell weak drops for gold, '
@@ -183,14 +185,14 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'weekly',
-      title: 'WEEKLY',
+      title: 'DAILY VAULT',
       body:
-          'Each ISO week rolls a dungeon modifier (glass / swarm / elite / fortune / iron).\n\n'
-          '• Clear 3 floors under that week’s modifier to fill progress (hub shows n/3).\n'
-          '• Claim the weekly essence reward once progress hits 3/3.\n'
-          '• Hub TODAY card points at your next chase (weekly, daily, Will, Gauntlet, zone).\n'
-          '• First claim of each calendar month also pays a season bonus.\n'
-          '• Progress resets when the week key rolls over.\n'
+          'Keystone affixes still rotate each ISO week, but the vault is daily.\n\n'
+          '• Fill today’s vault with 1 push clear — or time a KEY +2 (or higher).\n'
+          '• Claim scales with your best timed key today.\n'
+          '• Hub TODAY card points at your next chase (vault, daily, Will, Gauntlet, zone).\n'
+          '• First vault claim of each calendar month also pays a season bonus.\n'
+          '• Progress resets at UTC midnight.\n'
           '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
     ),
     GuideTopic(
@@ -200,7 +202,7 @@ abstract final class GameGuides {
           'MORE → LOADOUTS (named gear presets).\n\n'
           '• Save up to 3 named presets (by hero id).\n'
           '• Apply a loadout to swap equipped gear quickly.\n'
-          '• Handy when switching Farm vs Push or Hardmode setups.\n'
+          '• Handy when switching Farm vs Push or Keystone setups.\n'
           '• Party lineup is separate — use MORE → PARTY.\n'
           '• Not the same as dungeon armor sets (2pc/4pc bonuses + combat procs).',
     ),
@@ -216,14 +218,16 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'hardmode',
-      title: 'HARDMODE & CHALLENGES',
+      title: 'KEYSTONE RUNS',
       body:
-          'Set before entering a dungeon (hub challenge panel).\n\n'
-          '• Hardmode is AL-gated: max HM = min(10, 3 + AL÷2).\n'
-          '• Hardmode +1…+10: huge enemy HP, damage, and pack size.\n'
-          '• At HM+10: about 1000% (10×) HP, ATK, and enemy count.\n'
-          '• Boss Rush / No Flask: harder clears, extra essence.\n'
-          '• Hardmode also pays more gold — high risk, high reward.',
+          'Mythic+-style keys from the hub KEYSTONE panel — set before you enter.\n\n'
+          '• Key level is AL-gated (cap rises with Ascension, up to +20).\n'
+          '• Affixes lock on enter (weekly + Fortified/Tyrannical at +4, more at higher keys).\n'
+          '• Idle-friendly timer: AFK time counts; beat the boss under par to TIMED upgrade.\n'
+          '• Overtime = depleted (clear still counts, no key upgrade).\n'
+          '• Daily vault: 1 clear or timed KEY+2 — claim once per day.\n'
+          '• Optional Boss Rush / No Flask add extra affixes + essence.\n'
+          '• Higher keys: denser packs, more gold, better legendary odds.',
     ),
     GuideTopic(
       id: 'ascend',

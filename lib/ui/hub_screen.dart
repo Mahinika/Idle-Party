@@ -6,6 +6,7 @@ import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/hub_chase.dart';
+import '../core/keystone.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
@@ -383,7 +384,48 @@ class _HubScreenState extends State<HubScreen>
                         ),
                         const SizedBox(height: 8),
                         if (!short) ...[
-                          _HubTodayCard(chase: HubChase.forState(state)),
+                          Builder(
+                            builder: (context) {
+                              final chase = HubChase.forState(state);
+                              final (actionLabel, onAction) =
+                                  switch (chase.kind) {
+                                HubChaseKind.claimWeekly => (
+                                    'CLAIM',
+                                    director.claimWeekly,
+                                  ),
+                                HubChaseKind.claimMissions => (
+                                    'CLAIM',
+                                    () {
+                                      for (final m
+                                          in director.state.missions) {
+                                        if (m.isComplete) {
+                                          director.claimMission(m.id);
+                                        }
+                                      }
+                                    },
+                                  ),
+                                HubChaseKind.ascend => (
+                                    'ASCEND',
+                                    () => confirmAscend(context, director),
+                                  ),
+                                HubChaseKind.dailyRun => (
+                                    'DAILY',
+                                    () => confirmDailyRun(context, director),
+                                  ),
+                                HubChaseKind.gauntletMilestone => (
+                                    'GAUNTLET',
+                                    () =>
+                                        confirmGauntletRun(context, director),
+                                  ),
+                                _ => (null, null),
+                              };
+                              return _HubTodayCard(
+                                chase: chase,
+                                actionLabel: actionLabel,
+                                onAction: onAction,
+                              );
+                            },
+                          ),
                           const SizedBox(height: 8),
                         ],
                         Transform.scale(
@@ -434,12 +476,12 @@ class _HubScreenState extends State<HubScreen>
                           gauntletBest: state.metaDepth.gauntletBestFloor,
                           onGauntlet: () =>
                               confirmGauntletRun(context, director),
-                          weeklyReady: state.metaDepth.weeklyProgress >=
-                                  GameLogic.weeklyClearTarget &&
-                              !state.metaDepth.weeklyClaimed,
-                          weeklyProgress: state.metaDepth.weeklyProgress,
-                          weeklyClaimed: state.metaDepth.weeklyClaimed,
+                          weeklyReady: GameLogic.canClaimDailyVault(state),
+                          weeklyProgress: state.metaDepth.dailyVaultClears,
+                          weeklyClaimed: state.metaDepth.dailyVaultClaimed,
                           weeklyModifier: state.metaDepth.weeklyModifier,
+                          weeklyBestTimedKey:
+                              state.metaDepth.dailyBestTimedKey,
                           onClaimWeekly: director.claimWeekly,
                         ),
                         if (!short) ...[
@@ -458,8 +500,10 @@ class _HubScreenState extends State<HubScreen>
                                 .where((m) => m.isComplete)
                                 .length;
                             final weeklyAlmost =
-                                state.metaDepth.weeklyProgress > 0 &&
-                                    !state.metaDepth.weeklyClaimed;
+                                (state.metaDepth.dailyVaultClears > 0 ||
+                                        state.metaDepth.dailyBestTimedKey >=
+                                            2) &&
+                                    !state.metaDepth.dailyVaultClaimed;
                             if (unseen) return 'MORE · NEW';
                             if (readyJobs > 0 || weeklyAlmost) {
                               return 'MORE · !';
@@ -630,71 +674,90 @@ class _HubScreenState extends State<HubScreen>
 }
 
 class _HubTodayCard extends StatelessWidget {
-  const _HubTodayCard({required this.chase});
+  const _HubTodayCard({
+    required this.chase,
+    this.actionLabel,
+    this.onAction,
+  });
 
   final HubChase chase;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       label: 'TODAY chase: ${chase.title}. ${chase.detail}',
-      child: KenneyPanel(
-        style: KenneyPanelStyle.inset,
+      child: Container(
         padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        decoration: MenuChrome.cardBox(inset: true),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            KenneySprite(
-              asset: KenneyAssets.iconStar,
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                KenneySprite(
+                  asset: KenneyAssets.iconStar,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        children: [
+                          Text(
+                            'TODAY',
+                            style: GameTheme.body(
+                              size: 13,
+                              color: GameTheme.torchHot,
+                            ),
+                          ),
+                          if (chase.progressLabel != null) ...[
+                            const Spacer(),
+                            Text(
+                              chase.progressLabel!,
+                              style: GameTheme.body(
+                                size: 13,
+                                color: GameTheme.mossLit,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
                       Text(
-                        'TODAY',
-                        style: GameTheme.pixel(
-                          size: 8,
-                          color: GameTheme.torchHot,
+                        chase.title,
+                        style: GameTheme.body(
+                          size: 16,
+                          color: GameTheme.parchment,
                         ),
                       ),
-                      if (chase.progressLabel != null) ...[
-                        const Spacer(),
-                        Text(
-                          chase.progressLabel!,
-                          style: GameTheme.pixel(
-                            size: 8,
-                            color: GameTheme.mossLit,
-                          ),
+                      const SizedBox(height: 2),
+                      Text(
+                        chase.detail,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.body(
+                          size: 13,
+                          color: GameTheme.parchmentDim,
                         ),
-                      ],
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    chase.title,
-                    style: GameTheme.body(
-                      size: 15,
-                      color: GameTheme.parchment,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    chase.detail,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchmentDim,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 8),
+              KenneyButton(
+                label: actionLabel!,
+                style: KenneyButtonStyle.brown,
+                onPressed: onAction,
+              ),
+            ],
           ],
         ),
       ),
@@ -718,6 +781,7 @@ class _HubUrgentRow extends StatelessWidget {
     required this.weeklyProgress,
     required this.weeklyClaimed,
     required this.weeklyModifier,
+    required this.weeklyBestTimedKey,
     required this.onClaimWeekly,
   });
 
@@ -735,14 +799,15 @@ class _HubUrgentRow extends StatelessWidget {
   final int weeklyProgress;
   final bool weeklyClaimed;
   final String weeklyModifier;
+  final int weeklyBestTimedKey;
   final VoidCallback onClaimWeekly;
 
   @override
   Widget build(BuildContext context) {
-    final mod = weeklyModifier.isEmpty ? 'weekly' : weeklyModifier;
-    final showWeeklyProgress = !weeklyClaimed &&
+    final showVaultProgress = !weeklyClaimed &&
         weeklyProgress > 0 &&
-        weeklyProgress < GameLogic.weeklyClearTarget;
+        weeklyProgress < GameLogic.dailyVaultClearTarget &&
+        weeklyBestTimedKey < 2;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -757,15 +822,16 @@ class _HubUrgentRow extends StatelessWidget {
         ],
         if (weeklyReady) ...[
           KenneyButton(
-            label: 'CLAIM WEEKLY  +${GameLogic.weeklyClaimEssence}e',
+            label:
+                'CLAIM VAULT  +${Keystone.dailyVaultEssence(weeklyBestTimedKey)}e',
             style: KenneyButtonStyle.brown,
             primary: true,
             onPressed: onClaimWeekly,
           ),
           const SizedBox(height: 4),
-        ] else if (showWeeklyProgress) ...[
+        ] else if (showVaultProgress) ...[
           Text(
-            'Weekly $mod · $weeklyProgress/${GameLogic.weeklyClearTarget}',
+            'Daily vault · $weeklyProgress/${GameLogic.dailyVaultClearTarget}',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),

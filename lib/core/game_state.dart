@@ -88,6 +88,12 @@ class GameState {
     this.challengeBossRush = false,
     this.challengeNoFlask = false,
     this.hardmodeLevel = 0,
+    this.keystoneRunActive = false,
+    this.keystoneRunLevel = 0,
+    this.keystoneTimerMs = 0,
+    this.keystoneParMs = 0,
+    this.keystoneRunAffixes = const <String>[],
+    this.keystoneOutcome = '',
     this.colorblindMode = false,
     this.uiTextScale = 1.0,
     this.lastDailyDate,
@@ -256,8 +262,26 @@ class GameState {
   /// Challenge toggle: flasks are disabled entirely.
   final bool challengeNoFlask;
 
-  /// Hardmode key 0–10. Scales enemy power and loot (legendary chance best at 10).
+  /// Preferred keystone level 0–20 (0 = normal dungeon). Locked into a run on enter.
   final int hardmodeLevel;
+
+  /// True while inside a keystone dungeon run (not Gauntlet / Daily).
+  final bool keystoneRunActive;
+
+  /// Locked key level for the active run.
+  final int keystoneRunLevel;
+
+  /// Elapsed run timer (ms); live ticks + offline catch-up.
+  final int keystoneTimerMs;
+
+  /// Par time (ms) for a timed clear; idle-friendly.
+  final int keystoneParMs;
+
+  /// Affixes locked at run start.
+  final List<String> keystoneRunAffixes;
+
+  /// '' | `timed` | `depleted` after boss resolution this run.
+  final String keystoneOutcome;
 
   /// Accessibility: colorblind-friendly combat floater palette.
   final bool colorblindMode;
@@ -463,8 +487,8 @@ class GameState {
     return '';
   }
 
-  /// AL-gated hardmode cap (0–10).
-  int get effectiveMaxHardmode => min(10, 3 + ascensionLevel ~/ 2);
+  /// AL-gated keystone cap (0–20). AL0 → 3, grows with Ascension.
+  int get effectiveMaxHardmode => min(20, max(2, 3 + ascensionLevel));
 
   /// Sum of all heroes' gear attack (UI / power checks).
   int get equipmentAttackBonus => heroes.fold<int>(
@@ -751,6 +775,12 @@ class GameState {
     bool? challengeBossRush,
     bool? challengeNoFlask,
     int? hardmodeLevel,
+    bool? keystoneRunActive,
+    int? keystoneRunLevel,
+    int? keystoneTimerMs,
+    int? keystoneParMs,
+    List<String>? keystoneRunAffixes,
+    String? keystoneOutcome,
     bool? colorblindMode,
     double? uiTextScale,
     String? lastDailyDate,
@@ -836,6 +866,12 @@ class GameState {
       challengeBossRush: challengeBossRush ?? this.challengeBossRush,
       challengeNoFlask: challengeNoFlask ?? this.challengeNoFlask,
       hardmodeLevel: hardmodeLevel ?? this.hardmodeLevel,
+      keystoneRunActive: keystoneRunActive ?? this.keystoneRunActive,
+      keystoneRunLevel: keystoneRunLevel ?? this.keystoneRunLevel,
+      keystoneTimerMs: keystoneTimerMs ?? this.keystoneTimerMs,
+      keystoneParMs: keystoneParMs ?? this.keystoneParMs,
+      keystoneRunAffixes: keystoneRunAffixes ?? this.keystoneRunAffixes,
+      keystoneOutcome: keystoneOutcome ?? this.keystoneOutcome,
       colorblindMode: colorblindMode ?? this.colorblindMode,
       uiTextScale: uiTextScale ?? this.uiTextScale,
       lastDailyDate: lastDailyDate ?? this.lastDailyDate,
@@ -931,6 +967,12 @@ class GameState {
     'challengeBossRush': challengeBossRush,
     'challengeNoFlask': challengeNoFlask,
     'hardmodeLevel': hardmodeLevel,
+    'keystoneRunActive': keystoneRunActive,
+    'keystoneRunLevel': keystoneRunLevel,
+    'keystoneTimerMs': keystoneTimerMs,
+    'keystoneParMs': keystoneParMs,
+    'keystoneRunAffixes': keystoneRunAffixes,
+    'keystoneOutcome': keystoneOutcome,
     'colorblindMode': colorblindMode,
     'uiTextScale': uiTextScale,
     if (lastDailyDate != null) 'lastDailyDate': lastDailyDate,
@@ -1146,7 +1188,19 @@ class GameState {
           const <String>[],
       challengeBossRush: (json['challengeBossRush'] as bool?) ?? false,
       challengeNoFlask: (json['challengeNoFlask'] as bool?) ?? false,
-      hardmodeLevel: ((json['hardmodeLevel'] as num?)?.toInt() ?? 0).clamp(0, 10),
+      hardmodeLevel:
+          ((json['hardmodeLevel'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      keystoneRunActive: (json['keystoneRunActive'] as bool?) ?? false,
+      keystoneRunLevel:
+          ((json['keystoneRunLevel'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      keystoneTimerMs:
+          max(0, (json['keystoneTimerMs'] as num?)?.toInt() ?? 0),
+      keystoneParMs: max(0, (json['keystoneParMs'] as num?)?.toInt() ?? 0),
+      keystoneRunAffixes: (json['keystoneRunAffixes'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const <String>[],
+      keystoneOutcome: (json['keystoneOutcome'] as String?) ?? '',
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
       uiTextScale: (json['uiTextScale'] as num?)?.toDouble() ?? 1.0,
       lastDailyDate: json['lastDailyDate'] as String?,

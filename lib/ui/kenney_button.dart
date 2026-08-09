@@ -22,42 +22,47 @@ class KenneyButton extends StatelessWidget {
   /// Material-sized primary CTA (ENTER / Ascend / MERGE).
   final bool primary;
 
-  ({Color top, Color bottom, Color border, Color text}) get _palette =>
-      switch (style) {
-        KenneyButtonStyle.brown => (
-          top: const Color(0xFF5A4028),
-          bottom: const Color(0xFF3A2818),
-          border: GameTheme.borderLit,
-          text: GameTheme.parchment,
-        ),
-        KenneyButtonStyle.grey => (
-          top: const Color(0xFF3A3834),
-          bottom: const Color(0xFF242220),
-          border: const Color(0xFF8A8478),
-          text: GameTheme.parchment,
-        ),
-        KenneyButtonStyle.red => (
-          top: const Color(0xFF8A3A2A),
-          bottom: const Color(0xFF5A2018),
-          border: const Color(0xFFE08060),
-          text: GameTheme.torchHot,
-        ),
-      };
+  ({Color top, Color bottom, Color border, Color text, Color glow})
+      get _palette =>
+          switch (style) {
+            KenneyButtonStyle.brown => (
+              top: const Color(0xFF6B4E2E),
+              bottom: const Color(0xFF3E2A18),
+              border: GameTheme.borderLit.withValues(alpha: 0.75),
+              text: GameTheme.parchment,
+              glow: GameTheme.torch.withValues(alpha: 0.22),
+            ),
+            KenneyButtonStyle.grey => (
+              top: const Color(0xFF2A3340),
+              bottom: const Color(0xFF171E28),
+              border: GameTheme.border.withValues(alpha: 0.95),
+              text: GameTheme.parchment,
+              glow: Colors.transparent,
+            ),
+            KenneyButtonStyle.red => (
+              top: const Color(0xFF9A4030),
+              bottom: const Color(0xFF5A2018),
+              border: GameTheme.bloodLit.withValues(alpha: 0.85),
+              text: GameTheme.torchHot,
+              glow: GameTheme.bloodLit.withValues(alpha: 0.2),
+            ),
+          };
 
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     final palette = _palette;
+    final radius = BorderRadius.circular(GameTheme.radiusSm);
     final child = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       child: Text(
         label,
         textAlign: TextAlign.center,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: GameTheme.button(
-          size: label.length > 14 ? 17 : 20,
-          color: enabled ? palette.text : const Color(0xFF6A6458),
+          size: label.length > 14 ? 17 : 19,
+          color: enabled ? palette.text : const Color(0xFF5A6270),
         ),
       ),
     );
@@ -66,32 +71,35 @@ class KenneyButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: radius,
         child: Ink(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: radius,
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: enabled
                   ? [palette.top, palette.bottom]
                   : [
-                      const Color(0xFF1A1816),
-                      const Color(0xFF121110),
+                      const Color(0xFF151A22),
+                      const Color(0xFF0E1218),
                     ],
             ),
             border: Border.all(
-              color: enabled
-                  ? palette.border
-                  : const Color(0xFF4A443C),
-              width: 2,
+              color: enabled ? palette.border : const Color(0xFF2A3340),
+              width: 1.2,
             ),
             boxShadow: enabled
-                ? const [
+                ? [
                     BoxShadow(
+                      color: palette.glow,
+                      blurRadius: 12,
+                      offset: const Offset(0, 2),
+                    ),
+                    const BoxShadow(
                       color: Color(0x66000000),
-                      offset: Offset(0, 2),
-                      blurRadius: 0,
+                      offset: Offset(0, 4),
+                      blurRadius: 8,
                     ),
                   ]
                 : null,

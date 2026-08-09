@@ -15,13 +15,63 @@ void main() {
       washes.add(DungeonEnvironment.atmosphereWash(def.id).toARGB32());
       expect(KenneyAssets.floorVariantsForDungeon(def.id), isNotEmpty);
       expect(KenneyAssets.wallVariantsForDungeon(def.id), isNotEmpty);
-      expect(KenneyAssets.propPoolForDungeon(def.id).length, greaterThanOrEqualTo(3));
+      expect(KenneyAssets.propPoolForDungeon(def.id).length, greaterThanOrEqualTo(6));
+      expect(
+        KenneyAssets.propPoolForDungeon(def.id).toSet().length,
+        greaterThanOrEqualTo(5),
+      );
     }
     expect(ambients.length, DungeonCatalog.all.length);
     expect(washes.length, DungeonCatalog.all.length);
     // Sand floors must not use the edged lip tile (30).
     expect(KenneyAssets.floorSand, isNot(KenneyAssets.tile(30)));
     expect(KenneyAssets.floorSand, KenneyAssets.tile(48));
+    // Lava / torch accents must not alias trap / fountain art.
+    expect(KenneyAssets.hazardLava, isNot(KenneyAssets.trapSpikes));
+    expect(KenneyAssets.torchAlt, isNot(KenneyAssets.fountainSlime));
+  });
+
+  test('floors scatter denser wall-biased props for atmosphere', () {
+    for (final def in DungeonCatalog.all) {
+      final map = RoomLayouts.forFloor(
+        floorNumber: 3,
+        room: DungeonRoom(
+          floorNumber: 3,
+          roomIndex: 0,
+          type: RoomType.normal,
+          enemyLevel: 8,
+          enemyCount: 8,
+        ),
+        dungeonId: def.id,
+      );
+      expect(map.props.length, greaterThanOrEqualTo(16));
+      expect(map.props.length, lessThanOrEqualTo(100));
+      // Most clutter hugs walls so mid-room fight space stays clear.
+      var edge = 0;
+      for (final p in map.props) {
+        final nearWall = [
+          (0, 1),
+          (0, -1),
+          (1, 0),
+          (-1, 0),
+        ].any((d) {
+          final t = map.at(p.x + d.$1, p.y + d.$2);
+          return t == TileKind.wall;
+        });
+        if (nearWall) edge++;
+      }
+      expect(edge, greaterThan(map.props.length ~/ 2));
+      // Every carved chamber should feel furnished.
+      for (final chamber in map.chambers) {
+        final inRoom = map.props.where((p) {
+          return p.x >= chamber.x &&
+              p.x < chamber.x + chamber.w &&
+              p.y >= chamber.y &&
+              p.y < chamber.y + chamber.h;
+        }).length;
+        expect(inRoom, greaterThanOrEqualTo(6), reason: def.id);
+      }
+    }
   });
 
   test('wall rim detection and gate orientation', () {

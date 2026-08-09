@@ -20,26 +20,27 @@ class KenneyPanel extends StatelessWidget {
   /// Kept for call-site compatibility; painted panels no longer use 9-slices.
   final Rect centerSlice;
 
-  ({Color fill, Color border, Color highlight}) get _palette => switch (style) {
+  ({Color fillTop, Color fillBottom, Color border}) get _palette =>
+      switch (style) {
         KenneyPanelStyle.brown => (
-          fill: GameTheme.panel.withValues(alpha: 0.55),
-          border: GameTheme.borderLit.withValues(alpha: 0.8),
-          highlight: GameTheme.torch.withValues(alpha: 0.14),
+          fillTop: GameTheme.panel.withValues(alpha: 0.72),
+          fillBottom: GameTheme.stoneDeep.withValues(alpha: 0.78),
+          border: GameTheme.borderLit.withValues(alpha: 0.4),
         ),
         KenneyPanelStyle.beige => (
-          fill: const Color(0x992E2618),
-          border: GameTheme.borderLit.withValues(alpha: 0.85),
-          highlight: GameTheme.torch.withValues(alpha: 0.18),
+          fillTop: const Color(0x992A2218),
+          fillBottom: const Color(0x9918100C),
+          border: GameTheme.borderLit.withValues(alpha: 0.5),
         ),
         KenneyPanelStyle.inset => (
-          fill: GameTheme.panelInset.withValues(alpha: 0.62),
-          border: GameTheme.border.withValues(alpha: 0.7),
-          highlight: const Color(0x22000000),
+          fillTop: GameTheme.panelInset.withValues(alpha: 0.75),
+          fillBottom: GameTheme.ink.withValues(alpha: 0.7),
+          border: GameTheme.border.withValues(alpha: 0.75),
         ),
         KenneyPanelStyle.border => (
-          fill: GameTheme.stone.withValues(alpha: 0.58),
-          border: GameTheme.borderLit.withValues(alpha: 0.85),
-          highlight: GameTheme.torch.withValues(alpha: 0.12),
+          fillTop: GameTheme.stone.withValues(alpha: 0.7),
+          fillBottom: GameTheme.stoneDeep.withValues(alpha: 0.75),
+          border: GameTheme.borderLit.withValues(alpha: 0.45),
         ),
       };
 
@@ -48,20 +49,18 @@ class KenneyPanel extends StatelessWidget {
     final palette = _palette;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: palette.fill,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: palette.border, width: 2),
-        boxShadow: [
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [palette.fillTop, palette.fillBottom],
+        ),
+        borderRadius: BorderRadius.circular(GameTheme.radiusMd),
+        border: Border.all(color: palette.border, width: 1.2),
+        boxShadow: const [
           BoxShadow(
-            color: palette.highlight,
-            blurRadius: 0,
-            spreadRadius: 1,
-            offset: Offset.zero,
-          ),
-          const BoxShadow(
-            color: Color(0x55000000),
-            offset: Offset(0, 3),
-            blurRadius: 0,
+            color: Color(0x66000000),
+            offset: Offset(0, 6),
+            blurRadius: 16,
           ),
         ],
       ),

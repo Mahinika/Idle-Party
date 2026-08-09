@@ -481,6 +481,13 @@ class GameDirector extends ChangeNotifier {
       final before = _state;
       _spatial = result.world;
       _state = result.state;
+      // Keystone timer (idle-friendly; also advanced in offline catch-up).
+      if (_state.keystoneRunActive) {
+        _state = GameLogic.advanceKeystoneTimer(
+          _state,
+          (_spatialDt * 1000).round(),
+        );
+      }
       // Only bank this-tick kill gold — clear-frame must not re-fold the room.
       // Kill gold is credited immediately below (survives wipe).
       // Credit kill gold immediately so wipe cannot erase floater "+Ng".

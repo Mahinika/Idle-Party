@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.9.9**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.10.2**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -155,6 +155,7 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
 | Kenney helpers | `lib/ui/kenney_assets.dart` |
 | Custom art helpers | `lib/ui/custom_assets.dart` |
+| UI theme guide | `docs/UI_THEME.md` (+ `MenuChrome` / `GameTheme`) |
 
 ## Conventions
 
@@ -173,13 +174,21 @@ soulbound item (may rescale) + fragments, God Hand level + style/CD in `metaDept
 (mute/VFX/colorblind/text scale/auto-sell), full `metaDepth` (Gauntlet best, Will /
 Gauntlet claims, weekly/season, prestige shop, unlocked specs, party slot 5,
 ascend streak/titles/trophies, …), **hero levels/XP**, **Apex** vault + equipped
-apex, craft mats/pity, hardmode (clamped) + challenge toggles, FARM/PUSH preference.
+apex, craft mats/pity, keystone prefs (clamped) + challenge toggles, FARM/PUSH preference.
 
 **Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades
 (ATK/DEF/VIT/move/haste/crit), non-Apex gear/stash, **loadouts**, leave dungeon
 (`inDungeon=false`); mission board rebuilt for new AL.
 
 Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
+
+### Keystone (Mythic+-style)
+
+Hub **KEYSTONE** sets preferred key (`hardmodeLevel` 0–20, AL-gated). On enter,
+affixes lock + idle-friendly par timer starts (AFK counts). Boss clear under par
+→ TIMED (upgrade key, vault score); overtime → depleted. Daily vault: 1 clear
+**or** timed KEY+2; claim once per UTC day (scales with best timed key). Affixes
+still rotate weekly. See `lib/core/keystone.dart`.
 
 ## God Hand
 

@@ -882,6 +882,30 @@ void main() {
     expect(sold.gold, greaterThan(state.gold));
   });
 
+  test('sellGear scraps stash only and refuses equipped pieces', () {
+    final piece = GameLogic.createEquipment(
+      slot: EquipmentSlot.cloak,
+      rarity: LootRarity.rare,
+      battleNumber: 6,
+    ).copyWith(id: 'sell_cloak');
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 9)).copyWith(
+      gearStash: <EquipmentItem>[piece],
+      essence: 0,
+    );
+    state = GameLogic.equipFromStash(state, piece.id, heroIndex: 0);
+    expect(state.heroes[0].itemIn(EquipmentSlot.cloak)?.id, piece.id);
+
+    final blocked = GameLogic.sellGear(state, piece.id);
+    expect(blocked.heroes[0].itemIn(EquipmentSlot.cloak)?.id, piece.id);
+    expect(blocked.essence, 0);
+
+    state = GameLogic.unequipSlot(state, EquipmentSlot.cloak, heroIndex: 0);
+    expect(state.gearStash.any((g) => g.id == piece.id), isTrue);
+    final scrapped = GameLogic.sellGear(state, piece.id);
+    expect(scrapped.gearStash.any((g) => g.id == piece.id), isFalse);
+    expect(scrapped.essence, greaterThan(0));
+  });
+
   test('auto merge junk combines same-slot trash pairs', () {
     GameLogic.random = Random(7);
     EquipmentFactory.random = GameLogic.random;
@@ -2289,11 +2313,13 @@ void main() {
     // Single gold mul on clear (F1 → mul 1.0).
     expect(state.gold - goldBefore, expectedGold);
 
-    // Challenge mint suppressed in gauntlet; weekly counts at AL10+.
-    final weeklyBefore = state.metaDepth.weeklyProgress;
+    // Challenge mint suppressed in gauntlet; daily vault counts at AL10+.
+    final vaultBefore = state.metaDepth.dailyVaultClears;
     final withChallenges = state.copyWith(
       challengeBossRush: true,
       hardmodeLevel: 3,
+      keystoneRunActive: true,
+      keystoneRunLevel: 3,
       essence: 0,
     );
     expect(
@@ -2310,8 +2336,8 @@ void main() {
     // Gauntlet floor essence only + new achievement — no rush/HM clear mint.
     expect(afterClear.essence, 1 + (2 ~/ 2) + hmReward);
     expect(
-      afterClear.metaDepth.weeklyProgress,
-      min(GameLogic.weeklyClearTarget, weeklyBefore + 1),
+      afterClear.metaDepth.dailyVaultClears,
+      min(GameLogic.dailyVaultClearTarget, vaultBefore + 1),
     );
 
     final left = GameLogic.leaveDungeon(state);

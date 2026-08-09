@@ -40,7 +40,8 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'bag',
       title: 'BAG & GEAR',
-      body: 'Open BAG or GEAR to equip upgrades. Long-press a hero for gear.',
+      body:
+          'Open GEAR for the paper-doll, BAG for stash. Tap an empty slot to filter the bag.',
     ),
     (
       id: 'sanctuary',
@@ -84,17 +85,17 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'hardmode',
-      title: 'HARDMODE',
+      title: 'KEYSTONE',
       body:
-          'Under CHALLENGES, raise Hardmode for tougher packs and better gold/legendaries. Cap rises with Ascension.',
+          'Under KEYSTONE, pick a key level before you enter. Affixes lock in, a generous timer runs '
+          '(AFK counts), and beating the boss under par upgrades your key.',
     ),
     (
       id: 'weekly',
-      title: 'WEEKLY',
+      title: 'DAILY VAULT',
       body:
-          'Clear 3 floors under the weekly modifier (glass / swarm / elite / fortune / iron), '
-          'then CLAIM WEEKLY for essence. First claim of each month also pays a season bonus. '
-          'Hub shows weekly progress while you climb.',
+          'Clear 1 floor or time a KEY +2 today, then claim the vault for essence '
+          '(scales with your best timed key). First claim of each month also pays a season bonus.',
     ),
     (
       id: 'apex',
@@ -226,10 +227,7 @@ class FirstSessionTips extends StatelessWidget {
                         Text(
                           tip.title,
                           textAlign: TextAlign.center,
-                          style: GameTheme.pixel(
-                            size: GameTheme.hudPixelComfort,
-                            color: GameTheme.torchHot,
-                          ),
+                          style: GameTheme.menuTitle(size: 16),
                         ),
                         const SizedBox(height: 6),
                         Text(

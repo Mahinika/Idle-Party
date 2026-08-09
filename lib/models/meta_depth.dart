@@ -156,6 +156,11 @@ class MetaDepthState {
     this.weeklyProgress = 0,
     this.weeklyClaimed = false,
     this.weeklyModifier = '',
+    this.weeklyBestTimedKey = 0,
+    this.dailyVaultDate = '',
+    this.dailyVaultClears = 0,
+    this.dailyBestTimedKey = 0,
+    this.dailyVaultClaimed = false,
     this.favoritePetSpecies = '',
     this.petRosterCapBonus = 0,
     this.zoneTrophies = const <String>[],
@@ -206,6 +211,22 @@ class MetaDepthState {
   final int weeklyProgress;
   final bool weeklyClaimed;
   final String weeklyModifier;
+
+  /// Legacy weekly vault score (kept for save compat; unused by daily vault).
+  final int weeklyBestTimedKey;
+
+  /// UTC date key (`yyyy-mm-dd`) for the daily keystone vault.
+  final String dailyVaultDate;
+
+  /// Push clears counted toward today's vault.
+  final int dailyVaultClears;
+
+  /// Best timed keystone level today (vault score).
+  final int dailyBestTimedKey;
+
+  /// Whether today's vault was claimed.
+  final bool dailyVaultClaimed;
+
   final String favoritePetSpecies;
   final int petRosterCapBonus;
   final List<String> zoneTrophies;
@@ -217,7 +238,7 @@ class MetaDepthState {
   final int lifetimePetMerges;
   final int lifetimeAscends;
 
-  /// Highest Hardmode level at which a floor was cleared (not dial-only).
+  /// Highest keystone level at which a floor was cleared (not dial-only).
   final int highestHardmodeCleared;
 
   /// Best Infinity Gauntlet floor cleared (meta — survives Ascend).
@@ -289,6 +310,11 @@ class MetaDepthState {
     int? weeklyProgress,
     bool? weeklyClaimed,
     String? weeklyModifier,
+    int? weeklyBestTimedKey,
+    String? dailyVaultDate,
+    int? dailyVaultClears,
+    int? dailyBestTimedKey,
+    bool? dailyVaultClaimed,
     String? favoritePetSpecies,
     int? petRosterCapBonus,
     List<String>? zoneTrophies,
@@ -341,6 +367,11 @@ class MetaDepthState {
       weeklyProgress: weeklyProgress ?? this.weeklyProgress,
       weeklyClaimed: weeklyClaimed ?? this.weeklyClaimed,
       weeklyModifier: weeklyModifier ?? this.weeklyModifier,
+      weeklyBestTimedKey: weeklyBestTimedKey ?? this.weeklyBestTimedKey,
+      dailyVaultDate: dailyVaultDate ?? this.dailyVaultDate,
+      dailyVaultClears: dailyVaultClears ?? this.dailyVaultClears,
+      dailyBestTimedKey: dailyBestTimedKey ?? this.dailyBestTimedKey,
+      dailyVaultClaimed: dailyVaultClaimed ?? this.dailyVaultClaimed,
       favoritePetSpecies: favoritePetSpecies ?? this.favoritePetSpecies,
       petRosterCapBonus: petRosterCapBonus ?? this.petRosterCapBonus,
       zoneTrophies: zoneTrophies ?? this.zoneTrophies,
@@ -398,6 +429,11 @@ class MetaDepthState {
         'weeklyProgress': weeklyProgress,
         'weeklyClaimed': weeklyClaimed,
         'weeklyModifier': weeklyModifier,
+        'weeklyBestTimedKey': weeklyBestTimedKey,
+        'dailyVaultDate': dailyVaultDate,
+        'dailyVaultClears': dailyVaultClears,
+        'dailyBestTimedKey': dailyBestTimedKey,
+        'dailyVaultClaimed': dailyVaultClaimed,
         'favoritePetSpecies': favoritePetSpecies,
         'petRosterCapBonus': petRosterCapBonus,
         'zoneTrophies': zoneTrophies,
@@ -463,6 +499,14 @@ class MetaDepthState {
       weeklyProgress: (json['weeklyProgress'] as num?)?.toInt() ?? 0,
       weeklyClaimed: (json['weeklyClaimed'] as bool?) ?? false,
       weeklyModifier: (json['weeklyModifier'] as String?) ?? '',
+      weeklyBestTimedKey:
+          ((json['weeklyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      dailyVaultDate: (json['dailyVaultDate'] as String?) ?? '',
+      dailyVaultClears:
+          ((json['dailyVaultClears'] as num?)?.toInt() ?? 0).clamp(0, 999),
+      dailyBestTimedKey:
+          ((json['dailyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      dailyVaultClaimed: (json['dailyVaultClaimed'] as bool?) ?? false,
       favoritePetSpecies: (json['favoritePetSpecies'] as String?) ?? '',
       petRosterCapBonus: (json['petRosterCapBonus'] as num?)?.toInt() ?? 0,
       zoneTrophies:
@@ -477,7 +521,7 @@ class MetaDepthState {
       lifetimePetMerges: (json['lifetimePetMerges'] as num?)?.toInt() ?? 0,
       lifetimeAscends: (json['lifetimeAscends'] as num?)?.toInt() ?? 0,
       highestHardmodeCleared:
-          ((json['highestHardmodeCleared'] as num?)?.toInt() ?? 0).clamp(0, 10),
+          ((json['highestHardmodeCleared'] as num?)?.toInt() ?? 0).clamp(0, 20),
       gauntletBestFloor: (json['gauntletBestFloor'] as num?)?.toInt() ?? 0,
       lifetimeGauntletFloors:
           (json['lifetimeGauntletFloors'] as num?)?.toInt() ?? 0,

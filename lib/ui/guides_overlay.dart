@@ -39,16 +39,11 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
                   onTap: () => setState(
                     () => _openId = open ? null : topic.id,
                   ),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(GameTheme.radiusSm),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
                     padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                    decoration: MenuChrome.cardBox().copyWith(
-                      border: Border.all(
-                        color: open ? GameTheme.torch : GameTheme.border,
-                        width: open ? 1.4 : 1,
-                      ),
-                    ),
+                    decoration: MenuChrome.cardBox(selected: open),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -57,8 +52,8 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
                             Expanded(
                               child: Text(
                                 topic.title,
-                                style: GameTheme.pixel(
-                                  size: GameTheme.hudPixelComfort,
+                                style: GameTheme.body(
+                                  size: 17,
                                   color: open
                                       ? GameTheme.torchHot
                                       : GameTheme.parchment,
@@ -67,8 +62,8 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
                             ),
                             Text(
                               open ? '▾' : '▸',
-                              style: GameTheme.pixel(
-                                size: 10,
+                              style: GameTheme.body(
+                                size: 16,
                                 color: GameTheme.parchmentDim,
                               ),
                             ),

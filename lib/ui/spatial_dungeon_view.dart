@@ -174,7 +174,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         load(CustomAssets.heroShaman, targetWidth: 128),
         load(CustomAssets.heroWarlock, targetWidth: 128),
         load(CustomAssets.heroDruid, targetWidth: 128),
-        load(RoguelikeCharAtlas.assetPath, targetWidth: 512),
+        // Keep native size — paper-doll src rects assume full atlas pixels.
+        load(RoguelikeCharAtlas.assetPath),
         ...enemyAssets.map((a) => load(a, targetWidth: 128)),
         load(KenneyAssets.chestClosed, targetWidth: 64),
         load(KenneyAssets.coinGold, targetWidth: 48),
@@ -1033,7 +1034,17 @@ class _TileRoomPainter extends CustomPainter {
       if (!_inView(prop.x + 0.5, prop.y + 0.5, pad: 0.75)) continue;
       final img = propImages[prop.kind];
       if (img == null) continue;
-      drawSprite(img, center(prop.x + 0.5, prop.y + 0.5), 0.55);
+      final c = center(prop.x + 0.5, prop.y + 0.5);
+      // Soft ground shadow so clutter reads against flat floor tiles.
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: c.translate(0, tile * 0.18),
+          width: tile * 0.55,
+          height: tile * 0.22,
+        ),
+        Paint()..color = const Color(0x66000000),
+      );
+      drawSprite(img, c, 0.80);
     }
 
     void drawBar(Offset c, int hp, int maxHp, double width) {

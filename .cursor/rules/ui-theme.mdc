@@ -1,0 +1,19 @@
+---
+description: Idle Party menu UI must match the GEAR sheet theme (MenuChrome / GameTheme).
+globs: lib/ui/**/*.dart
+alwaysApply: false
+---
+
+# UI theme (GEAR look)
+
+When editing menus, overlays, sheets, or dialogs under `lib/ui/`:
+
+1. Follow **`docs/UI_THEME.md`** (reference = GEAR inventory sheet).
+2. Prefer **`MenuChrome`** + **`GameTheme`** primitives — do not invent new colors/radii.
+3. Titles → `GameTheme.menuTitle`; sections → `MenuChrome.sectionLabel`; lists → `cardBox` / `listCard`.
+4. Multi-tab overlays → `MenuChrome.tabRail` (same as GEAR/BAG/TOOLS).
+5. Actions → `KenneyButton` (brown / grey / red). No Material `TextButton` in forge dialogs.
+6. Press Start (`GameTheme.pixel`) only for combat HUD and tiny tags — not menu titles.
+7. Skip restyling: combat HUD, bottom nav, start menu, item tooltips, hub world-path scene.
+
+English in-game copy. If you add a new shared chrome helper, put it on `MenuChrome` and mention it in `docs/UI_THEME.md`.

@@ -22,6 +22,7 @@ import '../spatial/spatial_combat.dart';
 import 'dungeon_generator.dart';
 import 'equipment_factory.dart';
 import 'game_state.dart';
+import 'keystone.dart';
 import 'meta_systems.dart';
 
 class GameLogic {
@@ -216,27 +217,81 @@ class GameLogic {
       layoutSeed: layoutSeed,
     );
     final room = floor.first;
-    return state.copyWith(
+    final primed = _beginKeystoneRun(ensureWeeklyContract(state));
+    return primed.copyWith(
       inDungeon: true,
       inGauntlet: false,
       dungeonId: dungeonId,
-      dungeonMode: state.dungeonMode,
+      dungeonMode: primed.dungeonMode,
       highestFloorCleared: 0,
       currentRoom: room,
       dungeonFloor: floor,
       enemies: createEnemyGroup(
         room,
         dungeonId: dungeonId,
-        fromState: state,
+        fromState: primed,
       ),
       layoutSeed: layoutSeed,
-      heroes: state.heroes
+      heroes: primed.heroes
           .map(
-            (hero) => hero.copyWith(currentHp: state.effectiveHeroMaxHp(hero)),
+            (hero) => hero.copyWith(currentHp: primed.effectiveHeroMaxHp(hero)),
           )
           .toList(),
       lastUpdated: DateTime.now(),
     );
+  }
+
+  /// Locks preferred key + affixes + idle-friendly par timer for a dungeon run.
+  static GameState _beginKeystoneRun(GameState state) {
+    final key = state.hardmodeLevel.clamp(0, state.effectiveMaxHardmode);
+    if (key <= 0) {
+      return _clearKeystoneRun(state);
+    }
+    final affixes = Keystone.affixesFor(
+      key: key,
+      weeklyModifier: state.metaDepth.weeklyModifier,
+      weeklyKey: state.metaDepth.weeklyKey,
+      personalBossRush: state.challengeBossRush,
+      personalNoFlask: state.challengeNoFlask,
+    );
+    final par = Keystone.parTimeMs(
+      bossFloor: Keystone.bossFloorForAl(state.ascensionLevel),
+      key: key,
+    );
+    return state.copyWith(
+      keystoneRunActive: true,
+      keystoneRunLevel: key,
+      keystoneTimerMs: 0,
+      keystoneParMs: par,
+      keystoneRunAffixes: affixes,
+      keystoneOutcome: '',
+    );
+  }
+
+  static GameState _clearKeystoneRun(GameState state) {
+    if (!state.keystoneRunActive &&
+        state.keystoneRunLevel == 0 &&
+        state.keystoneTimerMs == 0 &&
+        state.keystoneParMs == 0 &&
+        state.keystoneRunAffixes.isEmpty &&
+        state.keystoneOutcome.isEmpty) {
+      return state;
+    }
+    return state.copyWith(
+      keystoneRunActive: false,
+      keystoneRunLevel: 0,
+      keystoneTimerMs: 0,
+      keystoneParMs: 0,
+      keystoneRunAffixes: const <String>[],
+      keystoneOutcome: '',
+    );
+  }
+
+  /// Advances keystone timer (live ticks or offline). Stops after resolve.
+  static GameState advanceKeystoneTimer(GameState state, int deltaMs) {
+    if (!state.keystoneRunActive || deltaMs <= 0) return state;
+    if (state.keystoneOutcome.isNotEmpty) return state;
+    return state.copyWith(keystoneTimerMs: state.keystoneTimerMs + deltaMs);
   }
 
   static GameState leaveDungeon(GameState state) {
@@ -246,11 +301,13 @@ class GameLogic {
           currentHp: h.currentHp.clamp(0, state.effectiveHeroMaxHp(h)),
         ),
     ];
-    var next = state.copyWith(
-      inDungeon: false,
-      inGauntlet: false,
-      heroes: heroes,
-      lastUpdated: DateTime.now(),
+    var next = _clearKeystoneRun(
+      state.copyWith(
+        inDungeon: false,
+        inGauntlet: false,
+        heroes: heroes,
+        lastUpdated: DateTime.now(),
+      ),
     );
     if (state.inGauntlet) {
       next = recordGauntletRun(next, reachedFloor: state.currentRoom.floorNumber);
@@ -319,8 +376,9 @@ class GameLogic {
       bossEvery: gauntletBossEvery,
     );
     final room = floor.first;
+    final cleared = _clearKeystoneRun(state);
     return MetaSystems.evaluateAchievements(
-      state.copyWith(
+      cleared.copyWith(
         inDungeon: true,
         inGauntlet: true,
         dungeonId: dungeonId,
@@ -332,13 +390,13 @@ class GameLogic {
         enemies: createEnemyGroup(
           room,
           dungeonId: dungeonId,
-          fromState: state.copyWith(inGauntlet: true),
+          fromState: cleared.copyWith(inGauntlet: true),
         ),
         layoutSeed: layoutSeed,
-        heroes: state.heroes
+        heroes: cleared.heroes
             .map(
               (hero) =>
-                  hero.copyWith(currentHp: state.effectiveHeroMaxHp(hero)),
+                  hero.copyWith(currentHp: cleared.effectiveHeroMaxHp(hero)),
             )
             .toList(),
         lastUpdated: DateTime.now(),
@@ -511,8 +569,9 @@ class GameLogic {
       );
     }
 
-    // HM / challenge slight pity acceleration (still boss-gated).
-    if (state.hardmodeLevel > 0 ||
+    // Keystone / challenge slight pity acceleration (still boss-gated).
+    final keyCombat = Keystone.combatLevel(state);
+    if (keyCombat > 0 ||
         state.challengeBossRush ||
         state.challengeNoFlask) {
       for (final key in pity.keys.toList()) {
@@ -1238,12 +1297,12 @@ class GameLogic {
   }
 
   static bool canUseConsumable(GameState state) =>
-      !state.challengeNoFlask &&
+      !Keystone.flasksDisabled(state) &&
       (state.heroes.any((h) => h.itemIn(EquipmentSlot.consumable) != null) ||
           state.gearStash.any((g) => g.slot == EquipmentSlot.consumable));
 
   static GameState useConsumable(GameState state, {int? heroIndex}) {
-    if (state.challengeNoFlask) {
+    if (Keystone.flasksDisabled(state)) {
       return state;
     }
     var sourceIndex = heroIndex;
@@ -1773,7 +1832,7 @@ class GameLogic {
     return roomCombatBudget(
       state.currentRoom,
       dungeonId: state.dungeonId,
-      hardmodeLevel: state.hardmodeLevel,
+      hardmodeLevel: Keystone.combatLevel(state),
       ascensionLevel: state.ascensionLevel,
       gearPressure: partyGearPressure(state),
     ).gold;
@@ -1935,6 +1994,12 @@ class GameLogic {
       challengeBossRush: state.challengeBossRush,
       challengeNoFlask: state.challengeNoFlask,
       hardmodeLevel: state.hardmodeLevel.clamp(0, hmCap),
+      keystoneRunActive: false,
+      keystoneRunLevel: 0,
+      keystoneTimerMs: 0,
+      keystoneParMs: 0,
+      keystoneRunAffixes: const <String>[],
+      keystoneOutcome: '',
       colorblindMode: state.colorblindMode,
       uiTextScale: state.uiTextScale,
       lastDailyDate: state.lastDailyDate,
@@ -2651,10 +2716,10 @@ class GameLogic {
     final zone = DungeonCatalog.byId(dungeonId ?? 'sandy').number;
     // Bosses use a gentler zone ramp — late zones were spike-wiping.
     final zoneMult = 1.0 + zone * (isBoss ? 0.22 : 0.28);
-    final hm = hardmodeLevel.clamp(0, 10);
-    // Linear to HM+10 = 10× (1000%) enemy HP/ATK.
-    final hmThreat = 1.0 + hm * 0.9;
-    final hmGold = 1.0 + hm * 0.15;
+    final hm = hardmodeLevel.clamp(0, Keystone.maxLevel);
+    // Key 20 ≈ old HM+10 (10× threat). See [Keystone.threatMul].
+    final hmThreat = Keystone.threatMul(hm);
+    final hmGold = Keystone.goldMul(hm);
     final alThreatRaw = 1.0 + ascensionLevel.clamp(0, 40) * 0.08;
     // Fresh post-ascend (gear wiped) — soften AL threat until kit rebuilds.
     final freshAscendEase =
@@ -2845,10 +2910,22 @@ class GameLogic {
     }
 
     final id = dungeonId ?? fromState?.dungeonId ?? 'sandy';
-    final hm = fromState?.hardmodeLevel ?? hardmodeLevel;
+    final hm = fromState != null
+        ? Keystone.combatLevel(fromState, fallback: hardmodeLevel)
+        : hardmodeLevel.clamp(0, Keystone.maxLevel);
     final al = fromState?.ascensionLevel ?? ascensionLevel;
-    final rush = fromState?.challengeBossRush ?? bossRush;
-    final weeklyMod = fromState?.metaDepth.weeklyModifier ?? '';
+    final affixes = fromState != null && fromState.keystoneRunActive
+        ? fromState.keystoneRunAffixes
+        : const <String>[];
+    final rush = (fromState?.challengeBossRush ?? bossRush) ||
+        affixes.contains('boss_rush');
+    final glassWeek = affixes.contains('glass');
+    final swarmWeek = affixes.contains('swarm');
+    final eliteWeek = affixes.contains('elite');
+    final fortuneWeek = affixes.contains('fortune');
+    final ironWeek = affixes.contains('iron');
+    final fortified = affixes.contains('fortified');
+    final tyrannical = affixes.contains('tyrannical');
     final level = room.globalBattleNumber;
     final gpRaw =
         (fromState != null ? partyGearPressure(fromState) : gearPressure)
@@ -2865,12 +2942,7 @@ class GameLogic {
       ascensionLevel: al,
       gearPressure: fromState != null ? partyGearPressure(fromState) : gearPressure,
     );
-    // Weekly modifiers apply after reading fromState.
-    final glassWeek = weeklyMod == 'glass';
-    final swarmWeek = weeklyMod == 'swarm';
-    final eliteWeek = weeklyMod == 'elite';
-    final fortuneWeek = weeklyMod == 'fortune';
-    final ironWeek = weeklyMod == 'iron';
+    // Keystone affixes (Mythic+-style) — only during an active key run.
     if (eliteWeek) {
       budget = (
         attack: (budget.attack * 1.15).round(),
@@ -2892,15 +2964,29 @@ class GameLogic {
         gold: (budget.gold * 1.15).round(),
       );
     }
-    // Hardmode densifies packs: HM+10 = 10× (1000%) enemy count.
-    // Swarm weekly multiplies count before HM density.
+    final isBossRoomEarly = room.type == RoomType.boss;
+    if (fortified && !isBossRoomEarly) {
+      budget = (
+        attack: (budget.attack * 1.22).round(),
+        hp: (budget.hp * 1.28).round(),
+        gold: budget.gold,
+      );
+    }
+    if (tyrannical && isBossRoomEarly) {
+      budget = (
+        attack: (budget.attack * 1.32).round(),
+        hp: (budget.hp * 1.4).round(),
+        gold: (budget.gold * 1.1).round(),
+      );
+    }
+    // Key densifies packs; Swarm multiplies count before key density.
     final baseCount = max(
       1,
       (room.enemyCount * (swarmWeek ? 1.35 : 1.0)).round(),
     );
     final count = min(
       80,
-      max(1, (baseCount * (1.0 + hm * 0.9)).round()),
+      max(1, (baseCount * Keystone.densityMul(hm)).round()),
     );
     // Full density keep: each body still carries HM-scaled HP/ATK (not diluted).
     final density = count / baseCount;
@@ -2923,7 +3009,7 @@ class GameLogic {
     final bossName = dungeon.bossName;
     final zone = dungeon.number;
     final rng = Random(level * 9173 + id.hashCode + room.type.index * 41);
-    final isBossRoom = room.type == RoomType.boss;
+    final isBossRoom = isBossRoomEarly;
     final pickType = eliteWeek && !isBossRoom ? RoomType.elite : room.type;
 
     final archetypes = <EnemyArchetype>[
@@ -3294,7 +3380,9 @@ class GameLogic {
 
     late GameState progressed;
     if (state.inDungeon) {
-      final sim = simulateSpatialOffline(state, seconds);
+      // Idle-friendly keystone: AFK time counts on the timer.
+      final timed = advanceKeystoneTimer(state, seconds * 1000);
+      final sim = simulateSpatialOffline(timed, seconds);
       progressed = sim.state;
       roomsCleared = sim.roomsCleared;
     } else {
@@ -3859,37 +3947,72 @@ class GameLogic {
     final t = (now ?? DateTime.now()).toUtc();
     final key = isoWeekKey(t);
     final season = seasonLabel(t);
-    if (state.metaDepth.weeklyKey == key &&
-        state.metaDepth.seasonKey == season) {
-      return state;
+    var next = state;
+    if (state.metaDepth.weeklyKey != key ||
+        state.metaDepth.seasonKey != season) {
+      final mod =
+          weeklyModifiers[(key.hashCode & 0x7fffffff) % weeklyModifiers.length];
+      final sameWeek = state.metaDepth.weeklyKey == key;
+      next = next.copyWith(
+        metaDepth: state.metaDepth.copyWith(
+          weeklyKey: key,
+          // Legacy weekly vault fields — kept for saves; vault is daily now.
+          weeklyProgress: sameWeek ? state.metaDepth.weeklyProgress : 0,
+          weeklyClaimed: sameWeek ? state.metaDepth.weeklyClaimed : false,
+          weeklyModifier: sameWeek ? state.metaDepth.weeklyModifier : mod,
+          weeklyBestTimedKey:
+              sameWeek ? state.metaDepth.weeklyBestTimedKey : 0,
+          seasonKey: season,
+        ),
+      );
     }
-    final mod =
-        weeklyModifiers[(key.hashCode & 0x7fffffff) % weeklyModifiers.length];
-    final sameWeek = state.metaDepth.weeklyKey == key;
+    return ensureDailyVault(next, now: t);
+  }
+
+  /// Resets daily vault progress when the UTC calendar day rolls.
+  static GameState ensureDailyVault(GameState state, {DateTime? now}) {
+    final t = (now ?? DateTime.now()).toUtc();
+    final day = MetaSystems.dailyDateKey(t);
+    if (state.metaDepth.dailyVaultDate == day) return state;
     return state.copyWith(
       metaDepth: state.metaDepth.copyWith(
-        weeklyKey: key,
-        weeklyProgress: sameWeek ? state.metaDepth.weeklyProgress : 0,
-        weeklyClaimed: sameWeek ? state.metaDepth.weeklyClaimed : false,
-        weeklyModifier: sameWeek ? state.metaDepth.weeklyModifier : mod,
-        seasonKey: season,
+        dailyVaultDate: day,
+        dailyVaultClears: 0,
+        dailyBestTimedKey: 0,
+        dailyVaultClaimed: false,
       ),
     );
   }
 
-  static int weeklyClaimEssence = 32;
-  static const int weeklyClearTarget = 3;
+  static int weeklyClaimEssence = 14;
+  static const int weeklyClearTarget = 1;
+  static const int dailyVaultClearTarget = 1;
 
-  /// One-time essence when claiming the first weekly of a calendar month.
+  /// One-time essence when claiming the first vault of a calendar month.
   static const int seasonWeeklyBonusEssence = 12;
 
-  static GameState claimWeekly(GameState state) {
-    var next = ensureWeeklyContract(state);
+  /// Claim when 1 push clear **or** a timed KEY ≥2 today.
+  static bool canClaimDailyVault(GameState state) {
+    final md = state.metaDepth;
+    if (md.dailyVaultClaimed) return false;
+    return md.dailyVaultClears >= dailyVaultClearTarget ||
+        md.dailyBestTimedKey >= 2;
+  }
+
+  /// Legacy name — daily vault.
+  static bool canClaimWeekly(GameState state) => canClaimDailyVault(state);
+
+  static GameState claimDailyVault(GameState state, {DateTime? now}) {
+    var next = ensureWeeklyContract(state, now: now);
     final md = next.metaDepth;
-    if (md.weeklyProgress < weeklyClearTarget || md.weeklyClaimed) return next;
-    var essenceGain = weeklyClaimEssence;
+    if (md.dailyVaultClaimed) return next;
+    if (md.dailyVaultClears < dailyVaultClearTarget &&
+        md.dailyBestTimedKey < 2) {
+      return next;
+    }
+    var essenceGain = Keystone.dailyVaultEssence(md.dailyBestTimedKey);
     final seasonClaims = List<String>.from(md.claimedSeasonRewards);
-    final month = isoMonthKey(DateTime.now().toUtc());
+    final month = isoMonthKey((now ?? DateTime.now()).toUtc());
     final notices = <String>[];
     if (month.isNotEmpty && !seasonClaims.contains(month)) {
       seasonClaims.add(month);
@@ -3900,13 +4023,16 @@ class GameLogic {
     next = next.copyWith(
       essence: next.essence + essenceGain,
       metaDepth: md.copyWith(
-        weeklyClaimed: true,
+        dailyVaultClaimed: true,
         claimedSeasonRewards: seasonClaims,
       ),
       lastUpdated: DateTime.now(),
     );
     return MetaSystems.evaluateAchievements(next);
   }
+
+  /// Legacy name — daily vault.
+  static GameState claimWeekly(GameState state) => claimDailyVault(state);
 
   /// God Hand style: 0 balanced, 1 focus, 2 wide.
   static GameState setGodHandStyle(GameState state, int style) {
@@ -4015,8 +4141,9 @@ class GameLogic {
     );
   }
 
-  /// Clamp hardmode to the AL-gated effective max.
+  /// Clamp preferred keystone level (hub only — ignored while a run is locked).
   static GameState setHardmodeLevel(GameState state, int level) {
+    if (state.inDungeon && state.keystoneRunActive) return state;
     final capped = level.clamp(0, state.effectiveMaxHardmode);
     return MetaSystems.evaluateAchievements(
       state.copyWith(hardmodeLevel: capped, lastUpdated: DateTime.now()),
@@ -4044,7 +4171,7 @@ class GameLogic {
     String dungeonId = 'sandy',
     EnemyRole enemyRole = EnemyRole.normal,
   }) {
-    final hm = hardmodeLevel.clamp(0, 10);
+    final hm = hardmodeLevel.clamp(0, Keystone.maxLevel);
     final roleSkipRelief = switch (enemyRole) {
       EnemyRole.boss => 0.25,
       EnemyRole.elite => 0.12,
@@ -4785,7 +4912,12 @@ class GameLogic {
     );
   }
 
+  /// Scrap one stash piece for essence. Refuses equipped gear (unequip first).
   static GameState sellGear(GameState state, String itemId) {
+    final inStash = state.gearStash.any((g) => g.id == itemId);
+    if (!inStash) {
+      return state;
+    }
     final item = findGear(state, itemId);
     if (item == null) {
       return state;
@@ -5970,9 +6102,9 @@ class GameLogic {
     int battleNumber, {
     int hardmodeLevel = 0,
   }) {
-    final hm = hardmodeLevel.clamp(0, 10);
-    // Direct legendary roll — worst at +0, best at +10.
-    final legendaryChance = 0.004 + hm * 0.011;
+    final hm = hardmodeLevel.clamp(0, Keystone.maxLevel);
+    // Direct legendary roll — key 20 ≈ old HM+10.
+    final legendaryChance = Keystone.legendaryChance(hm);
     if (random.nextDouble() < legendaryChance) {
       return LootRarity.legendary;
     }
@@ -5986,14 +6118,14 @@ class GameLogic {
       rarity = LootRarity.uncommon;
     }
 
-    // Hardmode can bump the base tier (never past legendary).
-    final bumpChance = hm * 0.04;
+    // Keystone can bump the base tier (never past legendary).
+    final bumpChance = Keystone.rarityBump(hm);
     if (rarity.index < LootRarity.legendary.index &&
         random.nextDouble() < bumpChance) {
       rarity = LootRarity.values[rarity.index + 1];
     }
     if (rarity.index < LootRarity.legendary.index &&
-        hm >= 7 &&
+        hm >= 14 &&
         random.nextDouble() < bumpChance * 0.5) {
       rarity = LootRarity.values[rarity.index + 1];
     }
@@ -6048,7 +6180,7 @@ class GameLogic {
           room.globalBattleNumber,
           ascensionLevel: state.ascensionLevel,
           lootFindPercent: state.petLootFindPercent,
-          hardmodeLevel: state.hardmodeLevel,
+          hardmodeLevel: Keystone.combatLevel(state),
           party: state.heroes,
           dungeonId: state.dungeonId,
         ),
@@ -6203,17 +6335,57 @@ class GameLogic {
         trophies.add(before.dungeonId);
       }
     }
-    // Weekly: push clears (or any boss). Gauntlet clears count at AL10+.
-    // Farm loops never mint weekly progress.
-    final gauntletWeekly =
+    // Daily vault: push clears (or any boss). Gauntlet clears count at AL10+.
+    // Farm loops never mint vault progress.
+    final gauntletVault =
         before.inGauntlet && before.ascensionLevel >= gauntletMinAscension;
-    final weeklyBump = (!farmLoop && (!before.inGauntlet || gauntletWeekly)) ||
+    final vaultBump = (!farmLoop && (!before.inGauntlet || gauntletVault)) ||
             (bossKill > 0 && !before.inGauntlet)
         ? 1
         : 0;
-    final hmCleared = before.hardmodeLevel.clamp(0, 10);
+    final keyCleared = before.keystoneRunActive
+        ? before.keystoneRunLevel
+        : before.hardmodeLevel;
+    final hmCleared = keyCleared.clamp(0, Keystone.maxLevel);
     next = ensureWeeklyContract(next);
+    var bestTimed = next.metaDepth.dailyBestTimedKey;
+    var preferredKey = next.hardmodeLevel;
+    var outcome = next.keystoneOutcome;
+    var essence = next.essence;
+    final keystoneNotices = <String>[];
+
+    // Keystone boss clear: timed → upgrade + vault score; overtime → depleted.
+    if (bossKill > 0 &&
+        before.keystoneRunActive &&
+        !before.inGauntlet &&
+        !farmLoop &&
+        before.keystoneOutcome.isEmpty) {
+      final timed = before.keystoneTimerMs <= before.keystoneParMs;
+      final key = before.keystoneRunLevel;
+      if (timed) {
+        final bonus = Keystone.timedClearBonus(key);
+        essence += bonus;
+        preferredKey = min(
+          next.effectiveMaxHardmode,
+          max(preferredKey, key + 1),
+        );
+        bestTimed = max(bestTimed, key);
+        outcome = 'timed';
+        keystoneNotices.add(
+          'KEY +$key TIMED · next KEY +$preferredKey · +${bonus}e',
+        );
+      } else {
+        outcome = 'depleted';
+        keystoneNotices.add(
+          'KEY +$key depleted (${Keystone.formatTimer(before.keystoneTimerMs)} / ${Keystone.formatTimer(before.keystoneParMs)})',
+        );
+      }
+    }
+
     next = next.copyWith(
+      essence: essence,
+      hardmodeLevel: preferredKey,
+      keystoneOutcome: outcome,
       metaDepth: next.metaDepth.copyWith(
         lifetimeFloorClears: next.metaDepth.lifetimeFloorClears + 1,
         lifetimeBossKills: next.metaDepth.lifetimeBossKills + bossKill,
@@ -6222,14 +6394,21 @@ class GameLogic {
           hmCleared,
         ),
         zoneTrophies: trophies,
-        weeklyProgress: min(
-          weeklyClearTarget,
-          next.metaDepth.weeklyProgress + weeklyBump,
+        dailyVaultClears: min(
+          dailyVaultClearTarget,
+          next.metaDepth.dailyVaultClears + vaultBump,
         ),
+        dailyBestTimedKey: bestTimed,
       ),
     );
     next = MetaSystems.evaluateAchievements(next);
     next = syncMetaPayoffs(next);
+    if (keystoneNotices.isNotEmpty) {
+      lastMetaPayoffNotices = [
+        ...lastMetaPayoffNotices,
+        ...keystoneNotices,
+      ];
+    }
     return next;
   }
 
@@ -6269,7 +6448,8 @@ class GameLogic {
       layoutSeed: seed,
     );
     final room = floor.first;
-    return state.copyWith(
+    final cleared = _clearKeystoneRun(state);
+    return cleared.copyWith(
       inDungeon: true,
       inGauntlet: false,
       dungeonId: dungeonId,
@@ -6280,14 +6460,15 @@ class GameLogic {
       enemies: createEnemyGroup(
         room,
         dungeonId: dungeonId,
-        fromState: state,
+        fromState: cleared,
       ),
       layoutSeed: seed,
       lastDailyDate: dateKey,
       dailyClaimed: isNewDay ? false : state.dailyClaimed,
-      heroes: state.heroes
+      heroes: cleared.heroes
           .map(
-            (hero) => hero.copyWith(currentHp: state.effectiveHeroMaxHp(hero)),
+            (hero) =>
+                hero.copyWith(currentHp: cleared.effectiveHeroMaxHp(hero)),
           )
           .toList(),
       lastUpdated: DateTime.now(),
