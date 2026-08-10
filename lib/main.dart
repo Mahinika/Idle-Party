@@ -297,44 +297,17 @@ class _GameHomePageState extends State<GameHomePage> {
                     setState(() => _hubOverlay = null);
                     _director.enterDungeon(dungeonId: id);
                   },
-                  onOpenInventory: () => setState(
+                  onOpenParty: () => setState(
                     () => _hubOverlay = Is2Overlay.inventory,
                   ),
-                  onOpenForge: () => setState(
-                    () => _hubOverlay = Is2Overlay.forge,
+                  onOpenPower: () => setState(
+                    () => _hubOverlay = Is2Overlay.power,
                   ),
-                  onOpenJobs: () => setState(
-                    () => _hubOverlay = Is2Overlay.jobs,
-                  ),
-                  onOpenSanctuary: () => setState(
-                    () => _hubOverlay = Is2Overlay.sanctuary,
-                  ),
-                  onOpenMarket: () => setState(
-                    () => _hubOverlay = Is2Overlay.market,
-                  ),
-                  onOpenBeast: () => setState(
-                    () => _hubOverlay = Is2Overlay.beast,
+                  onOpenMeta: () => setState(
+                    () => _hubOverlay = Is2Overlay.meta,
                   ),
                   onOpenSettings: () => setState(
                     () => _hubOverlay = Is2Overlay.settings,
-                  ),
-                  onOpenAchievements: () => setState(
-                    () => _hubOverlay = Is2Overlay.achievements,
-                  ),
-                  onOpenCodex: () => setState(
-                    () => _hubOverlay = Is2Overlay.codex,
-                  ),
-                  onOpenLoadouts: () => setState(
-                    () => _hubOverlay = Is2Overlay.loadouts,
-                  ),
-                  onOpenTeam: () => setState(
-                    () => _hubOverlay = Is2Overlay.teamComposition,
-                  ),
-                  onOpenGuides: () => setState(
-                    () => _hubOverlay = Is2Overlay.guides,
-                  ),
-                  onOpenPrestigeShop: () => setState(
-                    () => _hubOverlay = Is2Overlay.prestigeShop,
                   ),
                 ),
               ),

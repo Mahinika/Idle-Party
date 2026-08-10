@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -68,15 +69,6 @@ String _formatCount(int n) {
   return '$n';
 }
 
-String _archetypeLabel(EnemyArchetype archetype) => switch (archetype) {
-  EnemyArchetype.swarm => 'SWARM',
-  EnemyArchetype.brute => 'BRUTE',
-  EnemyArchetype.tank => 'TANK',
-  EnemyArchetype.ranged => 'RANGED',
-  EnemyArchetype.glass => 'GLASS',
-  EnemyArchetype.support => 'SUPPORT',
-};
-
 bool _isSoulboundItem(EquipmentItem item) => item.id.startsWith('soulbound_');
 
 bool _isUpgradeForAny(GameState state, EquipmentItem item) {
@@ -138,6 +130,10 @@ enum Is2Overlay {
   teamComposition,
   guides,
   prestigeShop,
+  /// Hub/dungeon POWER pillar: forge · sanctuary · market · essence.
+  power,
+  /// Hub/dungeon META pillar: keystone · contracts · beast · collection · help.
+  meta,
 }
 
 class _Is2ShellState extends State<Is2Shell> {
@@ -224,7 +220,8 @@ class _Is2ShellState extends State<Is2Shell> {
     super.initState();
     _overlay = widget.initialOverlay;
     if (_overlay == Is2Overlay.inventory) {
-      _inventoryTab = 1;
+      // PARTY pillar opens on GEAR (paper doll), not bag.
+      _inventoryTab = 0;
     }
     // Hub meta shell sits over the live hub — isolate click bridge.
     // Dungeon meta overlays (forge etc.) do the same while open.
@@ -255,6 +252,14 @@ class _Is2ShellState extends State<Is2Shell> {
   }
 
   void _putInCombinator(String id) {
+    // Merge is bag-only — equipped pieces must be unequipped first.
+    if (GameLogic.findStashGear(widget.director.state, id) == null) {
+      widget.director.showToast(
+        'Unequip to bag before merging',
+        life: 2.2,
+      );
+      return;
+    }
     setState(() {
       if (_combineA == id) {
         _combineA = null;
@@ -280,7 +285,7 @@ class _Is2ShellState extends State<Is2Shell> {
       }
     });
     if (_combineA != null && _combineB != null) {
-      widget.director.showToast('Merge ready — check TOOLS', life: 2.2);
+      widget.director.showToast('Merge ready — check MERGE', life: 2.2);
     } else if (_combineA != null && _combineB == null) {
       widget.director.showToast(
         'Added to merge · pick another same-slot item',
@@ -293,6 +298,7 @@ class _Is2ShellState extends State<Is2Shell> {
     final d = widget.director;
     return _InventoryDock(
       state: state,
+      director: d,
       selectedId: _selectedId,
       combineA: _combineA,
       combineB: _combineB,
@@ -434,130 +440,6 @@ class _Is2ShellState extends State<Is2Shell> {
     }
   }
 
-  List<
-          ({
-            String header,
-            List<({String label, VoidCallback onTap, String? icon})> items,
-          })>
-      _moreSections() {
-    final claimable = state.missions.where((m) => m.isComplete).length;
-    return [
-      (
-        header: 'GEAR',
-        items: [
-          (
-            label: 'FORGE',
-            icon: CustomAssets.iconAxe,
-            onTap: () => _openOverlay(Is2Overlay.forge),
-          ),
-          (
-            label: 'LOADOUTS',
-            icon: KenneyAssets.shield,
-            onTap: () => _openOverlay(Is2Overlay.loadouts),
-          ),
-          (
-            label: 'PARTY',
-            icon: KenneyAssets.helmet,
-            onTap: () => _openOverlay(Is2Overlay.teamComposition),
-          ),
-        ],
-      ),
-      (
-        header: 'PROGRESS',
-        items: [
-          (
-            label: claimable > 0 ? 'CONTRACTS ($claimable)' : 'CONTRACTS',
-            icon: KenneyAssets.book,
-            onTap: () => _openOverlay(Is2Overlay.jobs),
-          ),
-          (
-            label: 'SANCTUARY',
-            icon: CustomAssets.iconCampfire,
-            onTap: () => _openOverlay(Is2Overlay.sanctuary),
-          ),
-          (
-            label: 'MARKET',
-            icon: KenneyAssets.coinGold,
-            onTap: () => _openOverlay(Is2Overlay.market),
-          ),
-          (
-            label: 'BEAST PEN',
-            icon: CustomAssets.petEgg,
-            onTap: () => _openOverlay(Is2Overlay.beast),
-          ),
-          (
-            label: 'ESSENCE SHOP',
-            icon: KenneyAssets.vialBlue,
-            onTap: () => _openOverlay(Is2Overlay.prestigeShop),
-          ),
-        ],
-      ),
-      (
-        header: 'INFO',
-        items: [
-          (
-            label: MetaSystems.hasUnseenChangelog(state)
-                ? "WHAT'S NEW ★"
-                : "WHAT'S NEW",
-            icon: CustomAssets.iconTome,
-            onTap: () => WhatsNewOverlay.show(context, widget.director),
-          ),
-          (
-            label: 'SETTINGS',
-            icon: KenneyAssets.iconDoor,
-            onTap: () => _openOverlay(Is2Overlay.settings),
-          ),
-          (
-            label: 'ACHIEVEMENTS',
-            icon: KenneyAssets.iconTrophy,
-            onTap: () => _openOverlay(Is2Overlay.achievements),
-          ),
-          (
-            label: 'CODEX',
-            icon: KenneyAssets.book,
-            onTap: () => _openOverlay(Is2Overlay.codex),
-          ),
-          (
-            label: 'GUIDES',
-            icon: KenneyAssets.iconStar,
-            onTap: () => _openOverlay(Is2Overlay.guides),
-          ),
-        ],
-      ),
-    ];
-  }
-
-  void _showMoreMenu(BuildContext context) {
-    // Hub meta shell already came from Hub → MORE; don't re-list the same menu.
-    if (widget.hubMode) {
-      widget.onLeaveDungeon?.call();
-      return;
-    }
-    widget.director.clearToast();
-    // EXIT first so RETURN TO HUB is not buried under INFO rows.
-    final sections = [
-      if (widget.onLeaveDungeon != null)
-        (
-          header: 'EXIT',
-          items: [
-            (
-              label: 'RETURN TO HUB',
-              icon: KenneyAssets.iconDoor,
-              onTap: () =>
-                  confirmLeaveDungeon(context, widget.onLeaveDungeon!),
-            ),
-          ],
-        ),
-      ..._moreSections(),
-    ];
-    MenuChrome.showMenuSheet(
-      context: context,
-      title: 'MORE',
-      sections: sections,
-    ).whenComplete(_syncCombatPause);
-    widget.director.setUiPaused(true);
-  }
-
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
@@ -599,19 +481,27 @@ class _Is2ShellState extends State<Is2Shell> {
   }
 
   _BottomNavTab _navActive() {
-    final dockVisible = _overlay == Is2Overlay.inventory ||
-        (widget.hubMode &&
-            (_overlay == Is2Overlay.none ||
-                _overlay == Is2Overlay.inventory));
-    if (widget.hubMode &&
-        _overlay != Is2Overlay.none &&
-        _overlay != Is2Overlay.inventory) {
-      return _BottomNavTab.none;
-    }
-    if (!dockVisible) return _BottomNavTab.none;
-    return switch (_inventoryTab) {
-      0 => _BottomNavTab.gear,
-      1 => _BottomNavTab.bag,
+    // Hub + dungeon share PARTY / POWER / META pillars.
+    return switch (_overlay) {
+      Is2Overlay.inventory => _inventoryTab == 0
+          ? _BottomNavTab.gear
+          : _inventoryTab == 1
+              ? _BottomNavTab.bag
+              : _BottomNavTab.party,
+      Is2Overlay.power ||
+      Is2Overlay.forge ||
+      Is2Overlay.sanctuary ||
+      Is2Overlay.market ||
+      Is2Overlay.prestigeShop =>
+        _BottomNavTab.power,
+      Is2Overlay.meta ||
+      Is2Overlay.jobs ||
+      Is2Overlay.beast ||
+      Is2Overlay.achievements ||
+      Is2Overlay.codex ||
+      Is2Overlay.guides ||
+      Is2Overlay.settings =>
+        _BottomNavTab.meta,
       _ => _BottomNavTab.none,
     };
   }
@@ -658,11 +548,24 @@ class _Is2ShellState extends State<Is2Shell> {
                 _BottomNav(
                   stashCount: state.gearStash.length,
                   stashCap: GameLogic.maxGearStashFor(state),
-                  hubClose: true,
+                  hubPillars: true,
                   active: _navActive(),
-                  onGear: _openGear,
-                  onBag: _openBag,
-                  onMore: () => _showMoreMenu(context),
+                  onGear: () {
+                    setState(() => _inventoryTab = 0);
+                    _openOverlay(Is2Overlay.inventory);
+                  },
+                  onBag: () {
+                    setState(() => _inventoryTab = 1);
+                    _openOverlay(Is2Overlay.inventory);
+                  },
+                  onMore: () => _openOverlay(Is2Overlay.power),
+                  onParty: () {
+                    setState(() => _inventoryTab = 0);
+                    _openOverlay(Is2Overlay.inventory);
+                  },
+                  onPower: () => _openOverlay(Is2Overlay.power),
+                  onMeta: () => _openOverlay(Is2Overlay.meta),
+                  onHubClose: () => widget.onLeaveDungeon?.call(),
                 ),
               ],
             ),
@@ -713,10 +616,16 @@ class _Is2ShellState extends State<Is2Shell> {
                       children: [
                         SpatialDungeonView(director: d),
                         if (!d.awaitingWipeChoice) ...[
+                          // Calm map-first HUD: meter (tap), target chip, party strip.
                           Positioned(
                             left: hudSide,
                             top: GameTheme.clusterGap / 2,
                             child: _DpsMeter(director: d),
+                          ),
+                          Positioned(
+                            right: hudSide,
+                            top: GameTheme.clusterGap / 2,
+                            child: _TargetCornerHud(director: d),
                           ),
                           Positioned(
                             left: hudSide,
@@ -730,13 +639,6 @@ class _Is2ShellState extends State<Is2Shell> {
                               onUseConsumable: d.useConsumable,
                             ),
                           ),
-                          Positioned(
-                            right: hudSide,
-                            bottom: GameTheme.isCompactWidth(context)
-                                ? hudBottom + 118
-                                : hudBottom,
-                            child: _TargetCornerHud(director: d),
-                          ),
                         ],
                       ],
                     );
@@ -746,10 +648,20 @@ class _Is2ShellState extends State<Is2Shell> {
               _BottomNav(
                 stashCount: state.gearStash.length,
                 stashCap: GameLogic.maxGearStashFor(state),
+                hubPillars: true,
                 active: _navActive(),
                 onGear: _openGear,
                 onBag: _openBag,
-                onMore: () => _showMoreMenu(context),
+                onMore: () => _openOverlay(Is2Overlay.power),
+                onParty: () {
+                  setState(() => _inventoryTab = 0);
+                  _openOverlay(Is2Overlay.inventory);
+                },
+                onPower: () => _openOverlay(Is2Overlay.power),
+                onMeta: () => _openOverlay(Is2Overlay.meta),
+                onHubClose: widget.onLeaveDungeon == null
+                    ? null
+                    : () => confirmLeaveDungeon(context, widget.onLeaveDungeon!),
               ),
             ],
           ),
@@ -781,18 +693,24 @@ class _Is2ShellState extends State<Is2Shell> {
     // Phone-first: short menus still need most of the screen (list + claims).
     final heightFactor = switch (_overlay) {
       Is2Overlay.inventory => 1.0,
+      Is2Overlay.power || Is2Overlay.meta => 0.96,
       _ when shortSheet => 0.84,
       _ => 0.96,
     };
     return _OverlayScrim(
       title: switch (_overlay) {
         Is2Overlay.forge => 'FORGE',
+        Is2Overlay.power => 'POWER',
+        Is2Overlay.meta => 'META',
         Is2Overlay.jobs => 'CONTRACTS',
         Is2Overlay.sanctuary => 'SANCTUARY',
         Is2Overlay.inventory => switch (_inventoryTab) {
           0 => 'GEAR',
           1 => 'BAG',
-          _ => 'TOOLS',
+          2 => 'MERGE',
+          3 => 'LOADOUTS',
+          4 => 'ROSTER',
+          _ => 'PARTY',
         },
         Is2Overlay.settings => 'SETTINGS',
         Is2Overlay.market => 'MARKET',
@@ -811,6 +729,11 @@ class _Is2ShellState extends State<Is2Shell> {
         Is2Overlay.forge => SingleChildScrollView(
           child: _ForgeOverlay(director: d),
         ),
+        Is2Overlay.power => _PowerPillar(director: d),
+        Is2Overlay.meta => _MetaPillar(
+            director: d,
+            onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
+          ),
         Is2Overlay.jobs => SingleChildScrollView(
           child: _JobsOverlay(director: d),
         ),
@@ -898,8 +821,9 @@ class _TopHud extends StatelessWidget {
     final softcap = hubMode ? 0 : GameLogic.levelsUntilSoftcap(state);
 
     if (hubMode) {
+      final phone = GameTheme.isPhoneWidth(context);
       return Container(
-        padding: const EdgeInsets.fromLTRB(10, 8, 6, 8),
+        padding: EdgeInsets.fromLTRB(10, phone ? 4 : 8, 6, phone ? 4 : 8),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -917,7 +841,7 @@ class _TopHud extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                "HERO'S KEEP",
+                phone ? 'KEEP' : "HERO'S KEEP",
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.pixel(size: GameTheme.hudPixel),
               ),
@@ -1246,7 +1170,7 @@ class _TopHud extends StatelessWidget {
   }
 }
 
-enum _BottomNavTab { none, gear, bag, more }
+enum _BottomNavTab { none, gear, bag, more, party, power, meta }
 
 class _BottomNav extends StatelessWidget {
   const _BottomNav({
@@ -1256,7 +1180,11 @@ class _BottomNav extends StatelessWidget {
     required this.onBag,
     required this.onMore,
     this.stashCap,
-    this.hubClose = false,
+    this.hubPillars = false,
+    this.onParty,
+    this.onPower,
+    this.onMeta,
+    this.onHubClose,
   });
 
   final int stashCount;
@@ -1265,8 +1193,12 @@ class _BottomNav extends StatelessWidget {
   final VoidCallback onGear;
   final VoidCallback onBag;
   final VoidCallback onMore;
-  /// Hub meta shell: third tab closes back to hub instead of another MORE sheet.
-  final bool hubClose;
+  /// Unified pillars: PARTY / POWER / META / HUB (hub shell + dungeon).
+  final bool hubPillars;
+  final VoidCallback? onParty;
+  final VoidCallback? onPower;
+  final VoidCallback? onMeta;
+  final VoidCallback? onHubClose;
 
   @override
   Widget build(BuildContext context) {
@@ -1307,35 +1239,74 @@ class _BottomNav extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _BottomNavItem(
-                label: 'GEAR',
-                icon: KenneyAssets.iconSword,
-                selected: active == _BottomNavTab.gear,
-                onTap: onGear,
+        child: hubPillars
+            ? Row(
+                children: [
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'PARTY',
+                      icon: KenneyAssets.helmet,
+                      selected: active == _BottomNavTab.party ||
+                          active == _BottomNavTab.gear ||
+                          active == _BottomNavTab.bag,
+                      onTap: onParty ?? onGear,
+                    ),
+                  ),
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'POWER',
+                      icon: CustomAssets.iconAxe,
+                      selected: active == _BottomNavTab.power,
+                      onTap: onPower ?? onMore,
+                    ),
+                  ),
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'META',
+                      icon: KenneyAssets.book,
+                      selected: active == _BottomNavTab.meta,
+                      onTap: onMeta ?? onMore,
+                    ),
+                  ),
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'HUB',
+                      icon: KenneyAssets.iconDoor,
+                      selected: false,
+                      onTap: onHubClose ?? onMore,
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'GEAR',
+                      icon: KenneyAssets.iconSword,
+                      selected: active == _BottomNavTab.gear,
+                      onTap: onGear,
+                    ),
+                  ),
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: bagLabel,
+                      icon: KenneyAssets.chestClosed,
+                      selected: active == _BottomNavTab.bag,
+                      urgent: full || nearlyFull,
+                      onTap: onBag,
+                    ),
+                  ),
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'MORE',
+                      icon: KenneyAssets.iconDoor,
+                      selected: active == _BottomNavTab.more,
+                      onTap: onMore,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Expanded(
-              child: _BottomNavItem(
-                label: bagLabel,
-                icon: KenneyAssets.chestClosed,
-                selected: active == _BottomNavTab.bag,
-                urgent: full || nearlyFull,
-                onTap: onBag,
-              ),
-            ),
-            Expanded(
-              child: _BottomNavItem(
-                label: hubClose ? 'HUB' : 'MORE',
-                icon: KenneyAssets.iconDoor,
-                selected: active == _BottomNavTab.more,
-                onTap: onMore,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -1477,12 +1448,16 @@ class _PartyCornerHud extends StatefulWidget {
 
 class _PartyCornerHudState extends State<_PartyCornerHud> {
   static const _idleFade = Duration(seconds: 8);
+  static const _idleFadePhone = Duration(seconds: 5);
   static const _fullOpacity = 1.0;
   static const _dimOpacity = 0.55;
+  static const _dimOpacityPhone = 0.4;
   static const _hudScale = 1.0;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;
+  /// Kit chips only when the player taps a strip (map stays clear by default).
+  bool _kitOpen = false;
 
   @override
   void initState() {
@@ -1501,13 +1476,14 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
     if (_opacity < _fullOpacity) {
       setState(() => _opacity = _fullOpacity);
     }
-    _scheduleFade();
+    final phone = mounted && GameTheme.isPhoneWidth(context);
+    _scheduleFade(phone: phone);
   }
 
-  void _scheduleFade() {
-    _fadeTimer = Timer(_idleFade, () {
+  void _scheduleFade({bool phone = false}) {
+    _fadeTimer = Timer(phone ? _idleFadePhone : _idleFade, () {
       if (!mounted) return;
-      setState(() => _opacity = _dimOpacity);
+      setState(() => _opacity = phone ? _dimOpacityPhone : _dimOpacity);
     });
   }
 
@@ -1519,13 +1495,25 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
     return null;
   }
 
+  void _onHeroTap(int i) {
+    _bump();
+    if (widget.selectedHeroIndex == i && _kitOpen) {
+      setState(() => _kitOpen = false);
+      return;
+    }
+    widget.onSelectHero(i);
+    setState(() => _kitOpen = true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = widget.director.state;
     final world = widget.director.spatial;
     final canUseFlask = GameLogic.canUseConsumable(state);
     final compact = GameTheme.isCompactWidth(context);
-    final fullWidth = compact ? 196.0 : 240.0;
+    final phone = GameTheme.isPhoneWidth(context);
+    // Thin strip: reclaim map; kit expands in place when tapped.
+    final fullWidth = phone ? 148.0 : (compact ? 188.0 : 228.0);
     var partyCritical = false;
     final bossFight = world != null &&
         world.enemies.any(
@@ -1537,7 +1525,6 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
       final maxHp = s?.effectiveMaxHp ?? state.effectiveHeroMaxHp(state.heroes[i]);
       if (maxHp <= 0) continue;
       if (hp <= 0) {
-        // Downed ally mid-fight — flask urgency.
         if (bossFight ||
             (world?.enemies.any((e) => e.hp > 0 && !e.dormant) ?? false)) {
           partyCritical = true;
@@ -1557,45 +1544,64 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (var i = 0; i < state.heroes.length; i++) ...[
-            if (i > 0) SizedBox(height: state.heroes.length >= 4 ? 2.0 : 3.0),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  _bump();
-                  widget.onSelectHero(i);
-                },
-                onLongPress: () {
-                  _bump();
-                  widget.onOpenEquip();
-                },
-                borderRadius: BorderRadius.circular(4),
-                child: _PartyRow(
-                  index: i,
-                  hero: state.heroes[i],
-                  selected: widget.selectedHeroIndex == i,
-                  compact: compact || state.heroes.length >= 4,
-                  liveHp: () {
-                    final s = _spatialFor(world, i);
-                    return s?.hp ?? state.heroes[i].currentHp;
-                  }(),
-                  maxHp: () {
-                    final s = _spatialFor(world, i);
-                    return s?.effectiveMaxHp ??
-                        state.effectiveHeroMaxHp(state.heroes[i]);
-                  }(),
-                  spatial: widget.selectedHeroIndex == i
-                      ? _spatialFor(world, i)
-                      : null,
-                ),
-              ),
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xCC14110C),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: const Color(0x665A5040)),
             ),
-          ],
+            padding: EdgeInsets.fromLTRB(
+              phone ? 3 : 4,
+              phone ? 3 : 4,
+              phone ? 3 : 4,
+              phone ? 3 : 4,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < state.heroes.length; i++) ...[
+                  if (i > 0) SizedBox(height: phone ? 1.0 : 2.0),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _onHeroTap(i),
+                      onLongPress: () {
+                        _bump();
+                        widget.onOpenEquip();
+                      },
+                      borderRadius: BorderRadius.circular(3),
+                      child: _PartyRow(
+                        index: i,
+                        hero: state.heroes[i],
+                        selected: widget.selectedHeroIndex == i,
+                        kitOpen: widget.selectedHeroIndex == i && _kitOpen,
+                        compact: phone || compact || state.heroes.length >= 4,
+                        phone: phone,
+                        liveHp: () {
+                          final s = _spatialFor(world, i);
+                          return s?.hp ?? state.heroes[i].currentHp;
+                        }(),
+                        maxHp: () {
+                          final s = _spatialFor(world, i);
+                          return s?.effectiveMaxHp ??
+                              state.effectiveHeroMaxHp(state.heroes[i]);
+                        }(),
+                        spatial: (widget.selectedHeroIndex == i && _kitOpen)
+                            ? _spatialFor(world, i)
+                            : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
           if (canUseFlask) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: phone ? 5 : 4),
             _FlaskQuickSlot(
               urgent: partyCritical,
+              phone: phone,
               onTap: () {
                 _bump();
                 widget.onUseConsumable();
@@ -1611,7 +1617,13 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
       duration: const Duration(milliseconds: 400),
       child: Listener(
         behavior: HitTestBehavior.deferToChild,
-        onPointerDown: (_) => _bump(),
+        onPointerDown: (_) {
+          _fadeTimer?.cancel();
+          if (_opacity < _fullOpacity) {
+            setState(() => _opacity = _fullOpacity);
+          }
+          _scheduleFade(phone: phone);
+        },
         child: SizedBox(
           width: fullWidth * _hudScale,
           child: FittedBox(
@@ -1626,9 +1638,14 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
 }
 
 class _FlaskQuickSlot extends StatelessWidget {
-  const _FlaskQuickSlot({required this.onTap, this.urgent = false});
+  const _FlaskQuickSlot({
+    required this.onTap,
+    this.urgent = false,
+    this.phone = false,
+  });
   final VoidCallback onTap;
   final bool urgent;
+  final bool phone;
 
   @override
   Widget build(BuildContext context) {
@@ -1652,7 +1669,13 @@ class _FlaskQuickSlot extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 280),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              constraints: BoxConstraints(
+                minHeight: phone ? GameTheme.minTouch : 0,
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: phone ? 10 : 8,
+                vertical: phone ? 8 : 5,
+              ),
               decoration: BoxDecoration(
                 color: urgent
                     ? const Color(0xEE4A2010)
@@ -1666,7 +1689,10 @@ class _FlaskQuickSlot extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  KenneySprite(asset: KenneyAssets.potionRed, size: 16),
+                  KenneySprite(
+                    asset: KenneyAssets.potionRed,
+                    size: phone ? 18 : 16,
+                  ),
                   const SizedBox(width: 5),
                   Text(
                     urgent ? 'FLASK!' : 'FLASK',
@@ -1692,7 +1718,9 @@ class _PartyRow extends StatelessWidget {
     required this.liveHp,
     required this.maxHp,
     this.selected = false,
+    this.kitOpen = false,
     this.compact = false,
+    this.phone = false,
     this.spatial,
   });
 
@@ -1701,7 +1729,9 @@ class _PartyRow extends StatelessWidget {
   final int liveHp;
   final int maxHp;
   final bool selected;
+  final bool kitOpen;
   final bool compact;
+  final bool phone;
   final SpatialActor? spatial;
 
   bool _abilityBuffActive(ClassAbilityDef ability, SpatialActor s) {
@@ -1739,7 +1769,7 @@ class _PartyRow extends StatelessWidget {
     final roleShort = hero.roleLabel.length <= 4
         ? hero.roleLabel
         : hero.roleLabel.substring(0, 3);
-    final showKit = selected && spatial != null && spatial!.isAlive;
+    final showKit = kitOpen && spatial != null && spatial!.isAlive;
     final resource =
         showKit ? spatial!.rage.clamp(0.0, 100.0).toDouble() : 0.0;
     final off = hero.itemIn(EquipmentSlot.offHand);
@@ -1753,19 +1783,35 @@ class _PartyRow extends StatelessWidget {
             spatial: spatial!,
             resource: resource,
             hasShield: hasShield,
-            maxChips: compact ? 3 : 4,
+            maxChips: phone ? 2 : (compact ? 3 : 4),
           )
         : const <ClassAbilityDef>[];
 
+    final hpColor = () {
+      final cb = SpatialCombat.colorblindMode;
+      if (liveHp <= 0) {
+        return cb ? const Color(0xFFD55E00) : GameTheme.blood;
+      }
+      if (frac <= 0.35) {
+        return cb ? const Color(0xFFE69F00) : GameTheme.bloodLit;
+      }
+      return cb ? const Color(0xFF009E73) : GameTheme.clear;
+    }();
+
+    // Default: thin strip. Kit only when tapped open.
     return Container(
-      constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-      padding: EdgeInsets.fromLTRB(4, compact ? 3 : 5, 6, compact ? 3 : 5),
+      padding: EdgeInsets.symmetric(
+        horizontal: phone ? 3 : 4,
+        vertical: showKit ? (phone ? 4 : 5) : (phone ? 2 : 3),
+      ),
       decoration: BoxDecoration(
-        color: const Color(0xDD14110C),
+        color: selected
+            ? const Color(0x331C1812)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(3),
         border: Border.all(
-          color: selected ? GameTheme.torch : const Color(0x665A5040),
-          width: selected ? 1.5 : 1,
+          color: selected ? GameTheme.torch.withValues(alpha: 0.85) : Colors.transparent,
+          width: selected ? 1 : 0,
         ),
       ),
       child: Column(
@@ -1777,45 +1823,34 @@ class _PartyRow extends StatelessWidget {
               HeroDollSprite(
                 hero: hero,
                 partyIndex: index,
-                size: compact ? 16 : 18,
+                size: phone ? 12 : (compact ? 14 : 16),
               ),
-              const SizedBox(width: 5),
+              SizedBox(width: phone ? 4 : 5),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      compact
-                          ? '$roleShort L${hero.level}'
-                          : '${hero.roleLabel}  L${hero.level}',
+                      phone
+                          ? roleShort
+                          : (compact
+                              ? '$roleShort L${hero.level}'
+                              : '${hero.roleLabel}  L${hero.level}'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: GameTheme.pixel(
                         size: GameTheme.hudPixel,
                         color: GameTheme.parchment,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: phone ? 1 : 2),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(1),
                       child: LinearProgressIndicator(
                         value: frac,
-                        minHeight: compact ? 4 : 5,
+                        minHeight: phone ? 2.5 : (compact ? 3.5 : 4.5),
                         backgroundColor: const Color(0xFF2A2218),
-                        color: () {
-                          final cb = SpatialCombat.colorblindMode;
-                          if (liveHp <= 0) {
-                            return cb
-                                ? const Color(0xFFD55E00)
-                                : GameTheme.blood;
-                          }
-                          if (frac <= 0.35) {
-                            return cb
-                                ? const Color(0xFFE69F00)
-                                : GameTheme.bloodLit;
-                          }
-                          return cb
-                              ? const Color(0xFF009E73)
-                              : GameTheme.clear;
-                        }(),
+                        color: hpColor,
                       ),
                     ),
                     if (showKit) ...[
@@ -1835,7 +1870,7 @@ class _PartyRow extends StatelessWidget {
                               borderRadius: BorderRadius.circular(1),
                               child: LinearProgressIndicator(
                                 value: resource / 100,
-                                minHeight: 4,
+                                minHeight: 3,
                                 backgroundColor: const Color(0xFF2A1810),
                                 color: Color(
                                   ClassKits.resourceColorForSpec(hero.specId),
@@ -1874,34 +1909,22 @@ class _PartyRow extends StatelessWidget {
                           ],
                         ],
                       ),
-                    ] else if (!compact) ...[
-                      const SizedBox(height: 2),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(1),
-                        child: LinearProgressIndicator(
-                          value: GameLogic.xpPoolForLevel(hero.level) <= 0
-                              ? 0
-                              : (hero.xp /
-                                      GameLogic.xpPoolForLevel(hero.level))
-                                  .clamp(0.0, 1.0),
-                          minHeight: 3,
-                          backgroundColor: const Color(0xFF2A2218),
-                          color: GameTheme.torch,
-                        ),
-                      ),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(width: 5),
+              SizedBox(width: phone ? 4 : 5),
               Text(
-                '$liveHp',
-                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                phone ? '${(frac * 100).round()}' : '$liveHp',
+                style: GameTheme.body(
+                  size: phone ? 11 : 12,
+                  color: GameTheme.parchmentDim,
+                ),
               ),
             ],
           ),
           if (showKit && visibleAbilities.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Wrap(
               spacing: 3,
               runSpacing: 3,
@@ -2016,9 +2039,16 @@ class _InlineAbilityChip extends StatelessWidget {
   }
 }
 
-class _DpsMeter extends StatelessWidget {
+class _DpsMeter extends StatefulWidget {
   const _DpsMeter({required this.director});
   final GameDirector director;
+
+  @override
+  State<_DpsMeter> createState() => _DpsMeterState();
+}
+
+class _DpsMeterState extends State<_DpsMeter> {
+  bool _open = false;
 
   static String _heroTag(SpatialActor h) {
     final specId = h.heroSpecId;
@@ -2031,7 +2061,6 @@ class _DpsMeter extends StatelessWidget {
             HeroRole.rogue => 'ROG',
             null => '---',
           };
-    // Keep meter tags one line on phone HUD.
     return switch (raw) {
       'COMBAT' => 'COM',
       _ => raw.length <= 4 ? raw : raw.substring(0, 4),
@@ -2050,7 +2079,6 @@ class _DpsMeter extends StatelessWidget {
     return '$n';
   }
 
-  /// Rate from cumulative total over fight time (min 0.5s avoids startup spikes).
   static int _perSecond(int total, double elapsed) {
     final t = elapsed < 0.5 ? 0.5 : elapsed;
     return (total / t).round();
@@ -2069,22 +2097,25 @@ class _DpsMeter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Meter is HUD chrome — keep visible under Lite/Minimal VFX.
-    final world = director.spatial;
+    final world = widget.director.spatial;
     if (world == null) return const SizedBox.shrink();
 
     final elapsed = world.combatElapsed;
     final rows = <({String tag, String value, double bar, bool highlight})>[];
     var peak = 0;
+    var peakUnit = 'dps';
     for (final h in world.heroes) {
       if (h.isPet) continue;
       final m = _metric(h, elapsed);
-      if (m.rate > peak) peak = m.rate;
+      if (m.rate > peak) {
+        peak = m.rate;
+        peakUnit = m.unit;
+      }
     }
     if (peak == 0) {
       return const SizedBox.shrink();
     }
-    peak = peak.clamp(1, 1 << 30);
+    final peakForBar = peak.clamp(1, 1 << 30);
 
     for (final h in world.heroes) {
       if (h.isPet) continue;
@@ -2093,82 +2124,112 @@ class _DpsMeter extends StatelessWidget {
       rows.add((
         tag: _heroTag(h),
         value: '${_compact(m.rate)} ${m.unit}',
-        bar: m.rate / peak,
+        bar: m.rate / peakForBar,
         highlight: m.rate == peak,
       ));
     }
     if (rows.isEmpty) return const SizedBox.shrink();
 
-    return IgnorePointer(
-      child: Semantics(
-        label: 'Party combat meter',
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 160),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
-            decoration: BoxDecoration(
-              color: const Color(0xCC14110C),
-              borderRadius: BorderRadius.circular(3),
-              border: Border.all(color: const Color(0x665A5040)),
+    final chip = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xCC14110C),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: const Color(0x665A5040)),
+      ),
+      child: Text(
+        _open
+            ? 'METER ▴'
+            : '${_compact(peak)} $peakUnit ▾',
+        style: GameTheme.pixel(
+          size: GameTheme.hudPixel,
+          color: GameTheme.parchment,
+        ),
+      ),
+    );
+
+    final panel = ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 148),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
+        decoration: BoxDecoration(
+          color: const Color(0xCC14110C),
+          borderRadius: BorderRadius.circular(3),
+          border: Border.all(color: const Color(0x665A5040)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'METER ▴',
+              style: GameTheme.pixel(
+                size: GameTheme.hudPixel,
+                color: GameTheme.parchmentDim,
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'PARTY',
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
-                    color: GameTheme.parchmentDim,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                for (final row in rows) ...[
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 44,
-                        child: Text(
-                          row.tag,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                          style: GameTheme.pixel(
-                            size: GameTheme.hudPixel,
-                            color: row.highlight
-                                ? GameTheme.torchHot
-                                : GameTheme.parchment,
-                          ),
-                        ),
+            const SizedBox(height: 3),
+            for (final row in rows) ...[
+              Row(
+                children: [
+                  SizedBox(
+                    width: 40,
+                    child: Text(
+                      row.tag,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.pixel(
+                        size: GameTheme.hudPixel,
+                        color: row.highlight
+                            ? GameTheme.torchHot
+                            : GameTheme.parchment,
                       ),
-                      Expanded(
-                        child: Text(
-                          row.value,
-                          textAlign: TextAlign.right,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                          style: GameTheme.pixel(size: GameTheme.hudPixel),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(1),
-                    child: LinearProgressIndicator(
-                      value: row.bar.clamp(0.0, 1.0),
-                      minHeight: 3,
-                      backgroundColor: const Color(0xFF2A241C),
-                      color: row.highlight
-                          ? GameTheme.torchHot
-                          : GameTheme.mossLit,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  Expanded(
+                    child: Text(
+                      row.value,
+                      textAlign: TextAlign.right,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.pixel(size: GameTheme.hudPixel),
+                    ),
+                  ),
                 ],
-              ],
-            ),
+              ),
+              const SizedBox(height: 2),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(1),
+                child: LinearProgressIndicator(
+                  value: row.bar.clamp(0.0, 1.0),
+                  minHeight: 3,
+                  backgroundColor: const Color(0xFF2A241C),
+                  color: row.highlight
+                      ? GameTheme.torchHot
+                      : GameTheme.mossLit,
+                ),
+              ),
+              const SizedBox(height: 3),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    return WebClickScope(
+      label: _open ? 'Collapse party meter' : 'Expand party meter',
+      onPressed: () => setState(() => _open = !_open),
+      child: Semantics(
+        button: true,
+        label: _open ? 'Collapse party meter' : 'Expand party meter',
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => setState(() => _open = !_open),
+            borderRadius: BorderRadius.circular(3),
+            child: _open ? panel : chip,
           ),
         ),
       ),
@@ -2186,7 +2247,6 @@ class _TargetCornerHud extends StatelessWidget {
     final state = director.state;
     SpatialActor? focus;
     if (world != null) {
-      // Prefer Living Bomb target (matches the orange map ring), then nearest.
       for (final e in world.enemies) {
         if (e.hp <= 0 || e.dormant) continue;
         if (e.livingBombTimer > 0) {
@@ -2214,89 +2274,110 @@ class _TargetCornerHud extends StatelessWidget {
 
     final enemy = focus;
     final awaitingExit = world?.awaitingExit == true;
+    // Hide empty chrome — reclaim map until a foe / wipe / clear matters.
+    if (enemy == null && !state.isPartyDefeated && !awaitingExit) {
+      return const SizedBox.shrink();
+    }
+
     final label = enemy == null
         ? (state.isPartyDefeated
             ? 'WIPED'
             : awaitingExit
-                ? 'FLOOR CLEAR'
-                : 'NO TARGET')
+                ? 'CLEAR'
+                : '—')
         : enemy.name.toUpperCase();
     final role = enemy == null
         ? ''
         : switch (enemy.role) {
             EnemyRole.boss => 'BOSS',
             EnemyRole.elite => 'ELITE',
-            EnemyRole.normal => 'NORMAL',
+            EnemyRole.normal => '',
           };
     final hpFrac = enemy == null || enemy.maxHp <= 0
         ? 0.0
         : (enemy.hp / enemy.maxHp).clamp(0.0, 1.0);
-    final archetype = enemy == null ? '' : _archetypeLabel(enemy.archetype);
+    final phone = GameTheme.isPhoneWidth(context);
+    // Name only — role is color/border so the chip stays one readable line.
+    final titleColor = role == 'BOSS'
+        ? GameTheme.bloodLit
+        : (role == 'ELITE' ? GameTheme.torch : GameTheme.parchment);
 
     return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: GameTheme.isCompactWidth(context) ? 168 : 188,
-      ),
+      constraints: BoxConstraints(maxWidth: phone ? 128.0 : 148.0),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(7, 5, 7, 6),
+        padding: EdgeInsets.fromLTRB(6, phone ? 3 : 4, 6, phone ? 4 : 5),
         decoration: BoxDecoration(
-          color: const Color(0xDD14110C),
+          color: const Color(0xCC14110C),
           borderRadius: BorderRadius.circular(3),
-          border: Border.all(color: const Color(0x665A5040)),
+          border: Border.all(
+            color: role == 'BOSS'
+                ? GameTheme.bloodLit.withValues(alpha: 0.7)
+                : (role == 'ELITE'
+                    ? GameTheme.torch.withValues(alpha: 0.55)
+                    : const Color(0x665A5040)),
+          ),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              label,
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.pixel(size: GameTheme.hudPixel),
+            Row(
+              children: [
+                if (role.isNotEmpty) ...[
+                  Text(
+                    role == 'BOSS' ? 'B' : 'E',
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: titleColor,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: titleColor,
+                    ),
+                  ),
+                ),
+                if (enemy != null)
+                  Text(
+                    '${(hpFrac * 100).round()}%',
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+              ],
             ),
-            if (role.isNotEmpty || archetype.isNotEmpty)
-              Text(
-                [
-                  if (role.isNotEmpty) role,
-                  if (archetype.isNotEmpty) archetype,
-                ].join(' · '),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: role == 'BOSS'
+            if (enemy != null) ...[
+              const SizedBox(height: 2),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(1),
+                child: LinearProgressIndicator(
+                  value: hpFrac,
+                  minHeight: phone ? 3 : 4,
+                  backgroundColor: const Color(0xFF2A241C),
+                  color: hpFrac > 0.35
                       ? GameTheme.bloodLit
-                      : (role == 'ELITE'
-                            ? GameTheme.torch
-                            : GameTheme.parchmentDim),
+                      : GameTheme.blood,
                 ),
               ),
-            const SizedBox(height: 3),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(1),
-              child: LinearProgressIndicator(
-                value: hpFrac,
-                minHeight: 5,
-                backgroundColor: const Color(0xFF2A241C),
-                color: hpFrac > 0.35
-                    ? GameTheme.bloodLit
-                    : GameTheme.blood,
+            ] else
+              Text(
+                state.isPartyDefeated
+                    ? (state.inGauntlet ? 'End → hub' : 'Retry / Hub')
+                    : 'Walk to stairs',
+                style: GameTheme.body(
+                  size: 11,
+                  color: GameTheme.parchmentDim,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              enemy == null
-                  ? (state.isPartyDefeated
-                        ? (state.inGauntlet
-                            ? 'End run → hub'
-                            : 'Open Retry / Hub')
-                        : awaitingExit
-                            ? 'Walk to the stairs'
-                            : 'Seek a foe')
-                  : '${(hpFrac * 100).round()}% HP  ATK ${enemy.attack}',
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-            ),
           ],
         ),
       ),
@@ -2339,6 +2420,7 @@ class _Chip extends StatelessWidget {
 class _InventoryDock extends StatefulWidget {
   const _InventoryDock({
     required this.state,
+    required this.director,
     required this.selectedId,
     required this.combineA,
     required this.combineB,
@@ -2369,6 +2451,7 @@ class _InventoryDock extends StatefulWidget {
   });
 
   final GameState state;
+  final GameDirector director;
   final String? selectedId;
   final String? combineA;
   final String? combineB;
@@ -2440,9 +2523,9 @@ class _InventoryDockState extends State<_InventoryDock>
   void initState() {
     super.initState();
     _tabs = TabController(
-      length: 3,
+      length: 5,
       vsync: this,
-      initialIndex: widget.initialTab.clamp(0, 2),
+      initialIndex: widget.initialTab.clamp(0, 4),
     );
     _tabs.addListener(() {
       if (!_tabs.indexIsChanging) {
@@ -2454,7 +2537,7 @@ class _InventoryDockState extends State<_InventoryDock>
   @override
   void didUpdateWidget(covariant _InventoryDock oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final next = widget.initialTab.clamp(0, 2);
+    final next = widget.initialTab.clamp(0, 4);
     if (oldWidget.initialTab != widget.initialTab && _tabs.index != next) {
       _tabs.animateTo(next);
     }
@@ -2466,9 +2549,10 @@ class _InventoryDockState extends State<_InventoryDock>
     super.dispose();
   }
 
-  EquipmentItem? _find(String? id) {
+  /// Combinator slots only resolve bag items (never equipped).
+  EquipmentItem? _findStash(String? id) {
     if (id == null) return null;
-    return GameLogic.findGear(state, id);
+    return GameLogic.findStashGear(state, id);
   }
 
   Widget _equipTab() {
@@ -2537,6 +2621,8 @@ class _InventoryDockState extends State<_InventoryDock>
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 520;
+        final phone = GameTheme.isPhoneWidth(context) ||
+            constraints.maxWidth <= 430;
         final bag = _gearInlineBag(bagSlots);
         if (wide) {
           return Row(
@@ -2558,6 +2644,25 @@ class _InventoryDockState extends State<_InventoryDock>
               Expanded(
                 flex: 4,
                 child: bag,
+              ),
+            ],
+          );
+        }
+        // Phone: doll + actions only — bag has its own PARTY tab (readable taps).
+        if (phone) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(child: sheet()),
+              ),
+              const SizedBox(height: 6),
+              actions(),
+              const SizedBox(height: 6),
+              KenneyButton(
+                label: 'OPEN BAG',
+                onPressed: () => _tabs.animateTo(1),
+                style: KenneyButtonStyle.grey,
               ),
             ],
           );
@@ -2727,7 +2832,7 @@ class _InventoryDockState extends State<_InventoryDock>
                       [
                         selected.name,
                         'i${selected.effectiveItemLevel}',
-                        if (scoreLine != null) scoreLine,
+                        ?scoreLine,
                       ].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -2883,38 +2988,43 @@ class _InventoryDockState extends State<_InventoryDock>
                     ),
                   ),
                 )
-              : GridView.builder(
-                  itemCount: filteredSlots.length,
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    mainAxisSpacing: 6,
-                    crossAxisSpacing: 6,
-                    mainAxisExtent: 60,
-                  ),
-                  itemBuilder: (context, index) {
-                    final item = filteredSlots[index];
-                    final selected = item != null && item.id == selectedId;
-                    final inCombine = item != null &&
-                        (item.id == combineA || item.id == combineB);
-                    final combineFiltered = primary != null &&
-                        item != null &&
-                        item.slot != primary.slot;
-                    return _BagSlot(
-                      item: item,
-                      state: state,
-                      hero: state.heroes.isEmpty
-                          ? null
-                          : state.heroes[equipHeroIndex.clamp(
-                              0,
-                              state.heroes.length - 1,
-                            )],
-                      highlight: selected || inCombine,
-                      dimmed: combineFiltered,
-                      onTap: item == null || combineFiltered
-                          ? null
-                          : () => onSelect(item.id),
-                      onLongPress: null,
+              : LayoutBuilder(
+                  builder: (context, gridConstraints) {
+                    final phone = GameTheme.isPhoneWidth(context) ||
+                        gridConstraints.maxWidth <= 430;
+                    return GridView.builder(
+                      itemCount: filteredSlots.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: phone ? 3 : 4,
+                        mainAxisSpacing: phone ? 8 : 6,
+                        crossAxisSpacing: phone ? 8 : 6,
+                        mainAxisExtent: phone ? 72 : 60,
+                      ),
+                      itemBuilder: (context, index) {
+                        final item = filteredSlots[index];
+                        final selected = item != null && item.id == selectedId;
+                        final inCombine = item != null &&
+                            (item.id == combineA || item.id == combineB);
+                        final combineFiltered = primary != null &&
+                            item != null &&
+                            item.slot != primary.slot;
+                        return _BagSlot(
+                          item: item,
+                          state: state,
+                          hero: state.heroes.isEmpty
+                              ? null
+                              : state.heroes[equipHeroIndex.clamp(
+                                  0,
+                                  state.heroes.length - 1,
+                                )],
+                          highlight: selected || inCombine,
+                          dimmed: combineFiltered,
+                          onTap: item == null || combineFiltered
+                              ? null
+                              : () => onSelect(item.id),
+                          onLongPress: null,
+                        );
+                      },
                     );
                   },
                 ),
@@ -2968,7 +3078,9 @@ class _InventoryDockState extends State<_InventoryDock>
               child: KenneyButton(
                 label: selectedId == null ? 'AUTO MERGE' : 'ADD TO MERGE',
                 onPressed: selectedId != null
-                    ? () => onPutCombine(selectedId!)
+                    ? (GameLogic.findStashGear(state, selectedId!) == null
+                        ? null
+                        : () => onPutCombine(selectedId!))
                     : (state.gearStash.length < 2 ? null : onAutoMerge),
                 style: KenneyButtonStyle.grey,
               ),
@@ -3068,7 +3180,7 @@ class _InventoryDockState extends State<_InventoryDock>
           MenuChrome.sectionLabel('COMBINATOR'),
           const SizedBox(height: 4),
           Text(
-            'Sacrifice two items of the same slot for one upgraded result.',
+            'Sacrifice two bag items of the same slot for one upgraded result. Equipped gear is never used.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
           if (slotLabel != null) ...[
@@ -3208,7 +3320,7 @@ class _InventoryDockState extends State<_InventoryDock>
           ),
           const SizedBox(height: 10),
           Text(
-            'Flask: party HUD · Pets: MORE → Beast Pen · God Hand: Forge',
+            'Flask: party HUD · Pets: META → Beast · God Hand: POWER → Forge',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
@@ -3219,8 +3331,8 @@ class _InventoryDockState extends State<_InventoryDock>
 
   @override
   Widget build(BuildContext context) {
-    final primary = _find(combineA);
-    final secondary = _find(combineB);
+    final primary = _findStash(combineA);
+    final secondary = _findStash(combineB);
     final canCombine =
         primary != null &&
         secondary != null &&
@@ -3237,20 +3349,26 @@ class _InventoryDockState extends State<_InventoryDock>
         ? 0
         : 3 - state.soulboundFragments;
 
+    final phone = GameTheme.isPhoneWidth(context);
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         MenuChrome.tabRail(
           controller: _tabs,
-          tabs: const [
-            Tab(text: 'GEAR'),
-            Tab(text: 'BAG'),
-            Tab(text: 'TOOLS'),
+          tabs: [
+            const Tab(text: 'GEAR'),
+            const Tab(text: 'BAG'),
+            const Tab(text: 'MERGE'),
+            Tab(text: phone ? 'LOAD' : 'LOADOUTS'),
+            const Tab(text: 'ROSTER'),
           ],
         ),
         Expanded(
           child: TabBarView(
             controller: _tabs,
+            // Phone: no horizontal swipe between tabs (avoids mid-swipe overlap
+            // and fights vertical bag scroll). Tap the tab rail instead.
+            physics: const NeverScrollableScrollPhysics(),
             children: [
               _equipTab(),
               _bagTab(slots, primary),
@@ -3261,6 +3379,10 @@ class _InventoryDockState extends State<_InventoryDock>
                 cost: cost,
                 preview: preview,
                 fragmentsNeeded: fragmentsNeeded,
+              ),
+              LoadoutsOverlay(director: widget.director),
+              SingleChildScrollView(
+                child: TeamCompositionOverlay(director: widget.director),
               ),
             ],
           ),
@@ -3867,6 +3989,157 @@ class _OverlayPanel extends StatelessWidget {
   }
 }
 
+/// POWER pillar — forge · sanctuary · market · essence shop.
+class _PowerPillar extends StatefulWidget {
+  const _PowerPillar({required this.director});
+  final GameDirector director;
+
+  @override
+  State<_PowerPillar> createState() => _PowerPillarState();
+}
+
+class _PowerPillarState extends State<_PowerPillar>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs = TabController(length: 4, vsync: this);
+    _tabs.addListener(() {
+      if (!_tabs.indexIsChanging) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = widget.director;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MenuChrome.tabRail(
+          controller: _tabs,
+          onTap: (_) => setState(() {}),
+          tabs: const [
+            Tab(text: 'FORGE'),
+            Tab(text: 'CAMP'),
+            Tab(text: 'MARKET'),
+            Tab(text: 'SHOP'),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: switch (_tabs.index) {
+            0 => SingleChildScrollView(child: _ForgeOverlay(director: d)),
+            1 => SingleChildScrollView(child: _SanctuaryOverlay(director: d)),
+            2 => SingleChildScrollView(child: _MarketOverlay(director: d)),
+            _ => PrestigeShopOverlay(director: d),
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// META pillar — keystone · contracts · beast · collection · help · settings.
+class _MetaPillar extends StatefulWidget {
+  const _MetaPillar({
+    required this.director,
+    required this.onOpenWhatsNew,
+  });
+  final GameDirector director;
+  final VoidCallback onOpenWhatsNew;
+
+  @override
+  State<_MetaPillar> createState() => _MetaPillarState();
+}
+
+class _MetaPillarState extends State<_MetaPillar>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs = TabController(length: 6, vsync: this);
+    _tabs.addListener(() {
+      if (!_tabs.indexIsChanging) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = widget.director;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MenuChrome.tabRail(
+          controller: _tabs,
+          onTap: (_) => setState(() {}),
+          tabs: const [
+            Tab(text: 'KEY'),
+            Tab(text: 'JOBS'),
+            Tab(text: 'BEAST'),
+            Tab(text: 'CODEX'),
+            Tab(text: 'GUIDE'),
+            Tab(text: 'SET'),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: switch (_tabs.index) {
+            0 => SingleChildScrollView(
+                child: ChallengeToggles(director: d),
+              ),
+            1 => SingleChildScrollView(child: _JobsOverlay(director: d)),
+            2 => SingleChildScrollView(child: _BeastOverlay(director: d)),
+            3 => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: CodexOverlay(director: d)),
+                  const Divider(height: 12, color: GameTheme.border),
+                  Expanded(child: AchievementsOverlay(director: d)),
+                ],
+              ),
+            4 => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  KenneyButton(
+                    label: MetaSystems.hasUnseenChangelog(d.state)
+                        ? "WHAT'S NEW ★"
+                        : "WHAT'S NEW",
+                    style: KenneyButtonStyle.grey,
+                    onPressed: widget.onOpenWhatsNew,
+                  ),
+                  const SizedBox(height: 8),
+                  const Expanded(child: GuidesOverlay()),
+                ],
+              ),
+            _ => SingleChildScrollView(
+                child: _SettingsOverlay(
+                  director: d,
+                  onClose: () {},
+                ),
+              ),
+          },
+        ),
+      ],
+    );
+  }
+}
+
 class _ForgeOverlay extends StatefulWidget {
   const _ForgeOverlay({required this.director});
   final GameDirector director;
@@ -3943,7 +4216,7 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: 560,
+          height: math.min(560, MediaQuery.sizeOf(context).height * 0.62),
           child: IndexedStack(
             index: _tabs.index,
             children: [

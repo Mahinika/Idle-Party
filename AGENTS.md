@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.11.0**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.11.1**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -20,12 +20,14 @@ iOS/web product), **large batches**, English in-game copy, fairness-first balanc
 **propose** commit / push / PR / tag. Chat in plain Swedish; ask only product/risk
 questions. Full detail: `.cursor/rules/owner-preferences.mdc`.
 
-**UI target:** ship for **portrait phones** (~360–430 px). Web is playtest only
-(use device emulation). No hover-only flows for real players — tap / long-press.
+**UI target:** ship for **portrait phones** (~360–430 px). Owner reference:
+**Samsung Galaxy A56** → playtest at **360×780** CSS (DPR 3). Web is playtest
+only — agents must force phone emulation in Cursor browser. No hover-only flows
+for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.11.0**.
+closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.11.1**.
 Production still needs **12 closed testers × 14 days**. Do not treat Play as the
 primary install channel yet.
 
@@ -96,7 +98,8 @@ main.dart
  └─ Dungeon (inDungeon=true) → Is2Shell
       ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
       └─ Dungeon chrome (FARM/PUSH, God Hand ring, party HUD + flask,
-         target panel, bottom nav: GEAR / BAG / MORE)
+         target panel, bottom nav: PARTY / POWER / META / HUB —
+         same pillars as hub; PARTY opens gear/bag sheet)
 
 GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
              → GameLogic.simulateSpatialOffline → SpatialCombat.step

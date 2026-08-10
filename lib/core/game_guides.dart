@@ -9,19 +9,20 @@ abstract final class GameGuides {
           '• Hub: pick a zone on the World Path, manage gear and meta upgrades.\n'
           '• Dungeon: combat runs automatically. Tap the map to use God Hand.\n'
           '• Gold buys unlocks and market goods. Essence powers permanent meta.\n'
-          '• Open MORE for Forge, Sanctuary, Pets, Guides, and more.',
+          '• Open POWER (Forge, Camp, Market, Shop) or META (Key, Jobs, Guides…) '
+          'from the bottom nav — same labels in hub and dungeon.',
     ),
     GuideTopic(
       id: 'world_path',
       title: 'WORLD PATH',
       body:
-          'The hub map lists every dungeon from Sand Caverns through Crystal Spire, '
-          'Sunken Tidehold, Ashen Vault, and Hollow Grove.\n\n'
-          '• Tap an unlocked zone to enter.\n'
+          'The hub World Path is a painted map from Sandy Caverns through Hollow Grove '
+          '(Tidehold, Ashen Vault, and the rest along the road).\n\n'
+          '• Scroll the map and tap a zone portrait on a glowing ring to select it.\n'
           '• Unlock the next zone by clearing the previous boss, or by earning enough lifetime gold.\n'
-          '• Locked zones show lifetime gold progress (have / need) on the hub.\n'
+          '• Locked zones dim on the map; the caption under the map shows lifetime gold progress (have / need).\n'
           '• Lifetime gold (not wallet gold) counts for gold unlocks.\n'
-          '• Boss floor is shown on each node (Boss F n).',
+          '• Boss floor is shown under Hero\'s Keep (Boss F n).',
     ),
     GuideTopic(
       id: 'combat',
@@ -31,8 +32,9 @@ abstract final class GameGuides {
           '• Clear a chamber to open gates into the next.\n'
           '• Pick up ground loot (or wait for auto-timeout), then walk to the stairs.\n'
           '• Boss floors use a special arena.\n'
-          '• Party HP bars are bottom-left. Target info is bottom-right.\n'
-          '• Party meter (top-left) shows DPS, heals/sec (H), and tank taken/sec (T).',
+          '• Party HP strip is bottom-left — tap a hero to open their kit, tap again to fold.\n'
+          '• Target chip is top-right (name + HP).\n'
+          '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.'
     ),
     GuideTopic(
       id: 'god_hand',
@@ -59,7 +61,7 @@ abstract final class GameGuides {
       title: 'PARTY',
       body:
           'Unlock WotLK-style specs and build your own party.\n\n'
-          '• MORE → PARTY to set active heroes from your roster (4 slots, '
+          '• PARTY → ROSTER to set active heroes from your roster (4 slots, '
           '5th unlockable with essence at AL 2+).\n'
           '• New Game: pick 3 from the starter specs (Protection, Disc, Fire).\n'
           '• Combat Rogue unlocks after first Ascend; more kits via clears.\n'
@@ -92,7 +94,7 @@ abstract final class GameGuides {
           'Merge two same-slot gear pieces into one stronger item.\n\n'
           '• In BAG: select an item → ADD TO MERGE.\n'
           '• Long-press any item for the full tip card.\n'
-          '• Add a second item of the same slot; TOOLS opens when ready.\n'
+          '• Add a second item of the same slot; MERGE opens when ready.\n'
           '• Check RESULT preview and gold cost, then MERGE.\n'
           '• AUTO MERGE: repeatedly merges junk pairs of the same slot '
           '(skips BiS / clear upgrades) while you can afford the cost.\n'
@@ -102,7 +104,7 @@ abstract final class GameGuides {
       id: 'forge',
       title: 'FORGE',
       body:
-          'MORE → FORGE.\n\n'
+          'POWER → FORGE.\n\n'
           '• Train party power with gold / run resources.\n'
           '• Buy relics that permanently boost combat or economy.\n'
           '• Upgrade relic tiers and respec if you change builds.\n'
@@ -113,7 +115,7 @@ abstract final class GameGuides {
       id: 'sanctuary',
       title: 'SANCTUARY',
       body:
-          'MORE → SANCTUARY. Spend essence on permanent tracks.\n\n'
+          'POWER → CAMP. Spend essence on permanent tracks.\n\n'
           '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
           '• Tracks level infinitely — cost scales with level.\n'
           '• Optional prestige from level 12+: reset for essence + lasting bonus.\n'
@@ -145,7 +147,7 @@ abstract final class GameGuides {
       id: 'market',
       title: 'MARKET',
       body:
-          'MORE → MARKET.\n\n'
+          'POWER → MARKET.\n\n'
           '• Buy flasks and consumables with gold.\n'
           '• Sell stash junk when the bag is full.\n'
           '• Keep at least one flask for tough floors and bosses.',
@@ -154,7 +156,7 @@ abstract final class GameGuides {
       id: 'pets',
       title: 'BEAST PEN',
       body:
-          'MORE → BEAST PEN.\n\n'
+          'META → BEAST.\n\n'
           '• Hatch and level pets with essence.\n'
           '• Merge two same-species pets into a higher rarity.\n'
           '• Favorite a species, bond for power, buy portrait frames.\n'
@@ -165,7 +167,7 @@ abstract final class GameGuides {
       id: 'prestige_shop',
       title: 'ESSENCE SHOP',
       body:
-          'MORE → ESSENCE SHOP (AL-gated).\n\n'
+          'POWER → SHOP (AL-gated).\n\n'
           '• Spend essence on permanent stash slots, pet roster, GH CD, and more.\n'
           '• Purchases survive Ascend.\n'
           '• Unlock higher offerings as Ascension Level rises.',
@@ -174,13 +176,13 @@ abstract final class GameGuides {
       id: 'jobs',
       title: 'CONTRACTS',
       body:
-          'MORE → CONTRACTS.\n\n'
+          'META → JOBS.\n\n'
           '• Goals rotate: kills, elites, floors, bosses, gold.\n'
           '• Hard / Brutal variants pay more and take longer.\n'
           '• Targets scale with Ascension, zones cleared, and hardmode.\n'
           '• Claiming rolls a new contract (usually a different type).\n'
           '• Claim 3 in a row for a +5e chain bonus.\n'
-          '• The MORE menu may show CONTRACTS (n) when claims are ready.\n'
+          '• Hub META badge may show ! when claims are ready.\n'
           '• The top CLAIM chip claims all ready contracts at once '
           '(visible in combat too; long-press opens the list).',
     ),
@@ -201,11 +203,11 @@ abstract final class GameGuides {
       id: 'loadouts',
       title: 'LOADOUTS',
       body:
-          'MORE → LOADOUTS (named gear presets).\n\n'
+          'PARTY → LOADOUTS (named gear presets).\n\n'
           '• Save up to 3 named presets (by hero id).\n'
           '• Apply a loadout to swap equipped gear quickly.\n'
           '• Handy when switching Farm vs Push or Keystone setups.\n'
-          '• Party lineup is separate — use MORE → PARTY.\n'
+          '• Party lineup is separate — use PARTY → ROSTER.\n'
           '• Not the same as dungeon armor sets (2pc/4pc bonuses + combat procs).',
     ),
     GuideTopic(
@@ -259,7 +261,7 @@ abstract final class GameGuides {
       id: 'codex',
       title: 'CODEX & ACHIEVEMENTS',
       body:
-          'MORE → CODEX / ACHIEVEMENTS.\n\n'
+          'META → CODEX (codex + trophies).\n\n'
           '• Codex records monsters and items you have seen.\n'
           '• Achievements track milestones and grant rewards.\n'
           '• Discovery happens automatically as you play.',
@@ -268,11 +270,12 @@ abstract final class GameGuides {
       id: 'ui',
       title: 'UI TIPS',
       body:
-          '• Party frame (bottom-left) shrinks on phones and fades after idle — tap to wake.\n'
-          '• Party meter appears once heroes fight, heal, or take hits.\n'
+          '• Party strip (bottom-left) fades after idle — tap a hero for kit, tap again to fold.\n'
+          '• Target chip sits top-right (name + HP).\n'
+          '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.\n'
           '• Settings: text scale, reduced VFX, colorblind floaters, '
           'bag auto-sell / auto-disassemble.\n'
-          '• MORE → GUIDES brings you back here anytime.\n'
+          '• META → GUIDE brings you back here anytime.\n'
           '• Escape / back closes overlays.',
     ),
   ];

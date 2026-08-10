@@ -188,6 +188,8 @@ abstract final class CustomAssets {
   static const String introScene = '$_root/ui/intro_scene.png';
   /// Hub keep / gate plaza behind translucent chrome.
   static const String hubScene = '$_root/ui/hub_scene.png';
+  /// Scrollable World Path campaign map (portrait).
+  static const String worldPathMap = '$_root/ui/world_path_map.png';
   /// Generic combat stage backdrop (fallback).
   static const String dungeonBackdrop = '$_root/ui/dungeon_backdrop.png';
 

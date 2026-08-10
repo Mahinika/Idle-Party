@@ -17,7 +17,8 @@ Uses the same Flutter web + `WebClickBridge` path as [browser-playtest](../brows
 flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
 
-Open `http://localhost:8080/` → `CONTINUE` or `NEW GAME` → dismiss tips (`SKIP ALL TIPS` / `GOT IT`).
+Open `http://localhost:8080/` → set **phone viewport 360×780** (Samsung A56; see
+browser-playtest) → `CONTINUE` or `NEW GAME` → dismiss tips (`SKIP ALL TIPS` / `GOT IT`).
 
 ## Checklist (look → click → think)
 
@@ -28,20 +29,21 @@ Open `http://localhost:8080/` → `CONTINUE` or `NEW GAME` → dismiss tips (`SK
 | 2b | Week affix | Line above TODAY: `Week · …` when `weeklyModifier` is set |
 | 2c | Daily CTA | When TODAY is Daily, only TODAY’s **DAILY** button (no duplicate **DAILY RUN**) |
 | 3 | Daily vault claim | Vault filled (1 clear or timed KEY +2): `CLAIM VAULT`; toast says **Daily vault claimed** |
-| 4 | MORE badge | Unseen changelog → `MORE · NEW`; claimable jobs / vault mid → `MORE · !` |
-| 5 | What’s New | Open MORE → sheet title **MORE** → Settings / changelog path; bullets match `MetaSystems.currentVersion` |
-| 6 | Guides | MORE → GUIDES → topics labeled `Guide · …` in a11y; WORLD PATH mentions Tidehold/Ashen/Grove; DAILY VAULT guide; LOADOUTS ≠ ARMOR SETS |
-| 7 | God Hand tip | Enter dungeon once; tip mentions BAL/FOCUS/WIDE or Forge → META |
-| 8 | Loadouts label | MORE → `LOADOUTS` (not “GEAR SETS”) |
-| 9 | Overlay hygiene | Open Codex/Guides then ENTER: return to hub must not leave Codex stuck open |
+| 4 | MORE badge | Unseen changelog → `META · NEW` (phone: `META ★`); claimable jobs → `META · !` (phone: `META !`) |
+| 5 | What’s New | Open META → GUIDE → WHAT'S NEW; bullets match `MetaSystems.currentVersion` |
+| 6 | Guides | META → GUIDE → topics labeled `Guide · …`; WORLD PATH mentions Tidehold/Ashen/Grove |
+| 7 | God Hand tip | Enter dungeon once; tip mentions BAL/FOCUS/WIDE or POWER → Forge |
+| 8 | Loadouts label | PARTY → `LOADOUTS` (phone tab may say `LOAD`; not “GEAR SETS”) |
+| 9 | Overlay hygiene | Open META/CODEX then ENTER: return to hub must not leave sheet stuck open |
 
 ## Bridge helpers
 
 ```js
 window.__idlePartyButtons()
-window.__idlePartyClick('MORE')
-window.__idlePartyClick('MORE · NEW')
-window.__idlePartyClick('GUIDES')
+window.__idlePartyClick('PARTY')
+window.__idlePartyClick('POWER')
+window.__idlePartyClick('META')
+window.__idlePartyClick('META · NEW')
 window.__idlePartyClick('ENTER DUNGEON')
 ```
 

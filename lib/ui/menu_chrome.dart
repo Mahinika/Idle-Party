@@ -147,37 +147,53 @@ abstract final class MenuChrome {
   }
 
   /// GEAR-style inset tab rail (torch wash on selected tab).
+  ///
+  /// On phone width (or 5+ tabs), scrolls instead of crushing labels.
   static Widget tabRail({
     required TabController controller,
     required List<Widget> tabs,
     ValueChanged<int>? onTap,
+    bool? scrollable,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        decoration: BoxDecoration(
-          color: GameTheme.panelInset.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-          border: Border.all(
-            color: GameTheme.border.withValues(alpha: 0.7),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final phone = GameTheme.isPhoneWidth(context);
+        final many = tabs.length >= 5;
+        final scroll = scrollable ?? (phone || many || constraints.maxWidth < 400);
+        final labelSize = phone ? 13.0 : 16.0;
+        return Material(
+          color: Colors.transparent,
+          child: Container(
+            decoration: BoxDecoration(
+              color: GameTheme.panelInset.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              border: Border.all(
+                color: GameTheme.border.withValues(alpha: 0.7),
+              ),
+            ),
+            child: TabBar(
+              controller: controller,
+              onTap: onTap,
+              isScrollable: scroll,
+              tabAlignment: scroll ? TabAlignment.start : TabAlignment.fill,
+              labelPadding: EdgeInsets.symmetric(
+                horizontal: scroll ? (phone ? 10 : 14) : (phone ? 2 : 4),
+              ),
+              labelStyle: GameTheme.body(size: labelSize),
+              unselectedLabelStyle: GameTheme.body(size: labelSize),
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                color: GameTheme.torch.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm - 2),
+              ),
+              labelColor: GameTheme.torchHot,
+              unselectedLabelColor: GameTheme.parchmentDim,
+              dividerColor: Colors.transparent,
+              tabs: tabs,
+            ),
           ),
-        ),
-        child: TabBar(
-          controller: controller,
-          onTap: onTap,
-          labelStyle: GameTheme.body(size: 16),
-          unselectedLabelStyle: GameTheme.body(size: 16),
-          indicatorSize: TabBarIndicatorSize.tab,
-          indicator: BoxDecoration(
-            color: GameTheme.torch.withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(GameTheme.radiusSm - 2),
-          ),
-          labelColor: GameTheme.torchHot,
-          unselectedLabelColor: GameTheme.parchmentDim,
-          dividerColor: Colors.transparent,
-          tabs: tabs,
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -264,7 +280,12 @@ abstract final class MenuChrome {
                                   icon: item.icon,
                                   onTap: () {
                                     Navigator.pop(ctx);
-                                    item.onTap();
+                                    // After sheet layer pops — avoid overlay
+                                    // buttons registering on a dying layer.
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                      item.onTap();
+                                    });
                                   },
                                 ),
                             ],

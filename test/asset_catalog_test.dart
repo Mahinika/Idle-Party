@@ -78,6 +78,7 @@ void main() {
       CustomAssets.introLogo,
       CustomAssets.introScene,
       CustomAssets.hubScene,
+      CustomAssets.worldPathMap,
       CustomAssets.dungeonBackdrop,
       CustomAssets.backdropSandy,
       CustomAssets.backdropGoblin,

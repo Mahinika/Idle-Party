@@ -8,7 +8,7 @@ alwaysApply: true
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
-Last preference sync: **2026-08-09** (phone-only UI + Ascend feel / TODAY hooks).
+Last preference sync: **2026-08-10** (Samsung A56 phone playtest + Ascend feel / TODAY).
 
 ## Near-term focus
 
@@ -25,8 +25,9 @@ Last preference sync: **2026-08-09** (phone-only UI + Ascend feel / TODAY hooks)
 ## UI target device (mandatory)
 
 - **Phone-only product.** Design and ship for portrait phones (~360–430 CSS px wide). Do not optimize for desktop/tablet layouts as the real product.
+- **Owner reference phone: Samsung Galaxy A56** (1080×2340 @ DPR 3 → **360×780** CSS). Cursor browser playtest must always emulate this (or equivalent 360-wide portrait) via CDP device metrics — never judge UI at desktop/tablet width.
 - Hub, GEAR/BAG, menus, tooltips, touch targets: assume **finger + portrait**. Hover-only UX is playtest-only; phone must work with tap / long-press.
-- Flutter **web** remains a Cursor playtest harness (often with device emulation) — never treat wide desktop chrome as the shipping UI.
+- Flutter **web** remains a Cursor playtest harness with **forced phone emulation** — never treat wide desktop chrome as the shipping UI.
 
 ## Work style
 

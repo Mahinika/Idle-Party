@@ -19,10 +19,19 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.11.0';
+  static const String currentVersion = '1.11.1';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.11.1',
+      bullets: <String>[
+        'World Path: painted campaign map with small zone portraits on the rings — tap to select; locked shows have/need lifetime gold under the map.',
+        'Dungeon HUD: thinner party HP strip (tap to expand kit), compact target chip, collapsible DPS meter — more map, less chrome.',
+        'Phone playtest target locked to Samsung A56 (360×780); guides updated for the new hub map and dungeon chrome.',
+        'World Path still runs Sandy Caverns through Hollow Grove (Tidehold + Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.11.0',
       bullets: <String>[

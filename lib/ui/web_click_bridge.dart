@@ -65,18 +65,21 @@ abstract final class WebClickBridge {
   static String _key(String label) =>
       label.replaceAll(RegExp(r'\s+'), ' ').trim().toLowerCase();
 
-  static void register(String label, VoidCallback? onPressed) {
+  static int get currentLayer => _layer;
+
+  static void register(String label, VoidCallback? onPressed, {int? layer}) {
     if (!kIsWeb) return;
     final key = _key(label);
     if (key.isEmpty) return;
+    final at = layer ?? _layer;
     if (onPressed == null) {
       final existing = _byKey[key];
-      if (existing != null && existing.layer == _layer) {
+      if (existing != null && existing.layer == at) {
         _byKey.remove(key);
       }
       return;
     }
-    _byKey[key] = _Entry(label: label, onPressed: onPressed, layer: _layer);
+    _byKey[key] = _Entry(label: label, onPressed: onPressed, layer: at);
   }
 
   static void unregister(String label) {
@@ -181,6 +184,9 @@ class WebClickScope extends StatefulWidget {
 
 class _WebClickScopeState extends State<WebClickScope> {
   String? _registeredLabel;
+  /// Layer at first mount — keep underlay buttons on layer 0 when a modal
+  /// pushes a higher layer and the parent rebuilds.
+  late final int _mountLayer;
 
   void _sync() {
     if (_registeredLabel != null && _registeredLabel != widget.label) {
@@ -188,7 +194,11 @@ class _WebClickScopeState extends State<WebClickScope> {
       _registeredLabel = null;
     }
     if (widget.onPressed != null) {
-      WebClickBridge.register(widget.label, widget.onPressed);
+      WebClickBridge.register(
+        widget.label,
+        widget.onPressed,
+        layer: _mountLayer,
+      );
       _registeredLabel = widget.label;
     } else if (_registeredLabel != null) {
       WebClickBridge.unregister(_registeredLabel!);
@@ -199,6 +209,7 @@ class _WebClickScopeState extends State<WebClickScope> {
   @override
   void initState() {
     super.initState();
+    _mountLayer = WebClickBridge.currentLayer;
     _sync();
   }
 

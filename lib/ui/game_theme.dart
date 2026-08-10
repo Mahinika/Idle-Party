@@ -62,6 +62,11 @@ abstract final class GameTheme {
     return size.shortestSide < 600 || size.width < 700;
   }
 
+  /// Shipping portrait phone width (Samsung A56 ≈ 360; band ~360–430).
+  static bool isPhoneWidth(BuildContext context) {
+    return MediaQuery.sizeOf(context).width <= 430;
+  }
+
   /// Short phone / landscape-short: hub CTAs must collapse.
   static bool isShortHeight(BuildContext context) {
     return MediaQuery.sizeOf(context).height < 720;

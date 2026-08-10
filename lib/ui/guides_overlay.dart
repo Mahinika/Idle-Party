@@ -4,7 +4,7 @@ import '../core/game_guides.dart';
 import 'game_theme.dart';
 import 'menu_chrome.dart';
 
-/// Expandable how-to guide opened from MORE → GUIDES.
+/// Expandable how-to guide opened from META → GUIDE.
 class GuidesOverlay extends StatefulWidget {
   const GuidesOverlay({super.key});
 

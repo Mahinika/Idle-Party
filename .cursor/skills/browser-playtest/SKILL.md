@@ -12,6 +12,24 @@ Flutter CanvasKit has no real DOM widgets. Cursor often cannot send trusted CDP
 `Input.*` mouse events. Idle Party exposes semantics + `WebClickBridge` so the
 agent can see screenshots and drive buttons.
 
+## Phone viewport (mandatory)
+
+Idle Party ships **phone-only**. Owner reference device: **Samsung Galaxy A56**
+(1080×2340 @ DPR 3 → **360×780** CSS px). Never playtest at desktop/tablet width.
+
+After every navigate / restart / new tab, before judging UI:
+
+```
+Emulation.setDeviceMetricsOverride
+  width: 360, height: 780, deviceScaleFactor: 3, mobile: true
+  screenWidth: 360, screenHeight: 780
+Emulation.setTouchEmulationEnabled { enabled: true, maxTouchPoints: 5 }
+```
+
+Optional UA: `Mozilla/5.0 (Linux; Android 15; SM-A566B) … Mobile Safari/537.36`
+
+Confirm: `window.innerWidth === 360` (and height ≈ 780). If wider → re-apply metrics.
+
 ## Loop
 
 1. Serve web (repo root):
@@ -21,9 +39,10 @@ flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
 
 2. Open Cursor browser → `http://localhost:8080/`
-3. Wait ~3–4s for load + start-menu input unlock (900ms)
-4. `browser_lock` → screenshot / `browser_snapshot` → click → repeat
-5. `browser_unlock` when done
+3. **Apply A56 phone metrics** (section above) — do this every session
+4. Wait ~3–4s for load + start-menu input unlock (900ms)
+5. `browser_lock` → screenshot / `browser_snapshot` → click → repeat
+6. `browser_unlock` when done
 
 ## Click order (prefer this)
 
@@ -48,7 +67,7 @@ Do **not** rely on raw canvas coordinate clicks alone; full-bleed art used to st
 | Title | `CONTINUE` or `NEW GAME` → `START` (confirm `OVERWRITE` if prompted) |
 | Tips | `SKIP ALL TIPS` or `GOT IT` |
 | Hub | `ENTER DUNGEON` |
-| Dungeon | `FARM dungeon mode` / `PUSH dungeon mode`, `God Hand ready`, `Use healing flask`, `GEAR` / `BAG` / `MORE` |
+| Dungeon | `FARM dungeon mode` / `PUSH dungeon mode`, `God Hand ready`, `Use healing flask`, `PARTY` / `POWER` / `META` / `HUB` |
 
 After each click: wait briefly, new snapshot/screenshot, then decide. Stop after ~4 failed attempts on the same control; report what you saw.
 
@@ -98,7 +117,8 @@ After hub / What’s New / weekly / guides changes, follow **hub-smoke** (`.curs
 ```
 Browser playtest:
 - [ ] web-server on :8080
-- [ ] browser open + bridge live
+- [ ] browser open + **A56 phone metrics (360×780)**
+- [ ] bridge live
 - [ ] lock → snapshot
 - [ ] drive target flow (click or __idlePartyClick)
 - [ ] screenshot evidence of result

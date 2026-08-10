@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
@@ -214,6 +216,37 @@ void main() {
       warrior.rage = 100;
     }
     expect(charged, isTrue);
+  });
+
+  test('Charge refuses targets beyond max range', () {
+    final state = _partyAtLevel(15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final warrior =
+        world.heroes.firstWhere((h) => h.heroRole == HeroRole.warrior);
+    // Farther than chargeMaxRange (8) — must not teleport across the map.
+    warrior
+      ..rage = 100
+      ..x = target.x - 14.0
+      ..y = target.y;
+    _padAbilityCds(warrior, except: AbilityId.charge);
+
+    final startX = warrior.x;
+    final startY = warrior.y;
+    for (var i = 0; i < 20; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      warrior.rage = 100;
+      _padAbilityCds(warrior, except: AbilityId.charge);
+    }
+    expect(target.rootTimer, 0);
+    // May walk closer, but must not instant-snap into melee via Charge.
+    final moved = math.sqrt(
+      math.pow(warrior.x - startX, 2) + math.pow(warrior.y - startY, 2),
+    );
+    final stillFar =
+        math.sqrt(math.pow(warrior.x - target.x, 2) + math.pow(warrior.y - target.y, 2));
+    expect(stillFar, greaterThan(8.0));
+    expect(moved, lessThan(6.0));
   });
 
   test('Commanding Shout buffs living party heroes', () {

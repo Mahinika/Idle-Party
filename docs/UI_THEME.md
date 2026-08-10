@@ -1,12 +1,15 @@
 # Idle Party UI theme (GEAR look)
 
 **Device target:** **portrait phone only** (~360–430 CSS px). Shipping UI is
-Android phone; Flutter web is a playtest harness (emulate a phone viewport).
+Android phone (owner reference: **Samsung Galaxy A56** → 360×780 CSS);
+Flutter web is a playtest harness (always emulate that phone viewport).
 Do not design for desktop/tablet as the product. Prefer tap / long-press over
 hover-only interactions.
 
-**Reference surface:** the GEAR inventory sheet (hero doll + ITEMS BAG).
-When adding or restyling menus, match this — don’t invent a new palette.
+**Reference surface:** the GEAR inventory sheet. On phone width, GEAR is the
+hero doll + actions (bag lives on the **BAG** tab). Wider playtest layouts may
+still show doll + ITEMS BAG side-by-side. When adding or restyling menus, match
+this chrome — don’t invent a new palette.
 
 Code sources of truth:
 

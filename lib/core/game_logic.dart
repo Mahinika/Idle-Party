@@ -4799,6 +4799,11 @@ class GameLogic {
         if (item.id == id) return item;
       }
     }
+    return findStashGear(state, id);
+  }
+
+  /// Bag-only lookup — combinator / merge never touches equipped gear.
+  static EquipmentItem? findStashGear(GameState state, String id) {
     for (final item in state.gearStash) {
       if (item.id == id) return item;
     }
@@ -5706,15 +5711,16 @@ class GameLogic {
     );
   }
 
-  /// Combines two same-slot pieces (stash and/or equipped). Primary keeps
-  /// slot/pattern identity; secondary contributes half its stats.
+  /// Combines two same-slot **bag** pieces. Equipped gear is ignored —
+  /// unequip to stash first. Primary keeps slot/pattern identity;
+  /// secondary contributes half its stats. Result always returns to bag.
   static GameState combineGear(
     GameState state, {
     required String primaryId,
     required String secondaryId,
   }) {
-    final primary = findGear(state, primaryId);
-    final secondary = findGear(state, secondaryId);
+    final primary = findStashGear(state, primaryId);
+    final secondary = findStashGear(state, secondaryId);
     if (primary == null || secondary == null) {
       return state;
     }

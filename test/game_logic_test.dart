@@ -606,7 +606,7 @@ void main() {
     );
   });
 
-  test('combinator merges same-slot gear into stash', () {
+  test('combinator ignores equipped gear and only merges bag pieces', () {
     final primary = EquipmentItem(
       id: 'w1',
       name: 'Iron Blade',
@@ -640,6 +640,23 @@ void main() {
       heroes: [hero0, ...state.heroes.skip(1)],
     );
 
+    final blocked = GameLogic.combineGear(
+      state,
+      primaryId: primary.id,
+      secondaryId: secondary.id,
+    );
+    expect(blocked.gold, cost);
+    expect(blocked.heroes.first.itemIn(EquipmentSlot.weapon)?.id, primary.id);
+    expect(blocked.gearStash.map((g) => g.id), contains(secondary.id));
+
+    // Both in bag → merge succeeds; result lands in stash.
+    state = state.copyWith(
+      heroes: [
+        hero0.copyWith(equipped: const <EquipmentSlot, EquipmentItem>{}),
+        ...state.heroes.skip(1),
+      ],
+      gearStash: <EquipmentItem>[primary, secondary],
+    );
     final combined = GameLogic.combineGear(
       state,
       primaryId: primary.id,

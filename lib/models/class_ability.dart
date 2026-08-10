@@ -434,7 +434,7 @@ class ClassKits {
       specId: HeroSpecId.protection,
       name: 'Charge',
       shortLabel: 'Charge',
-      description: 'Rush a distant foe and briefly root them.',
+      description: 'Rush a foe in line of sight (not too far) and briefly root them.',
       unlockLevel: 4,
       cooldown: 12,
       resourceCost: 10,

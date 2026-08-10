@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -809,15 +811,21 @@ Future<void> showOfflineProgressDialog(
       break;
   }
 
+  WebClickBridge.pushLayer();
   await showDialog<void>(
     context: context,
     barrierColor: MenuChrome.scrim,
     builder: (ctx) => MenuChrome.dialog(
       title: 'Welcome back!',
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(ctx).height * 0.55,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
           Text(
             'Away for ${OfflineProgressResult.formatOfflineDuration(summary.secondsApplied)}',
             style: GameTheme.body(size: 16, color: GameTheme.parchment),
@@ -866,7 +874,9 @@ Future<void> showOfflineProgressDialog(
             overflow: TextOverflow.ellipsis,
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
-        ],
+            ],
+          ),
+        ),
       ),
       actions: [
         if (chase.urgency == HubChaseUrgency.ready &&
@@ -888,7 +898,7 @@ Future<void> showOfflineProgressDialog(
         ),
       ],
     ),
-  );
+  ).whenComplete(WebClickBridge.popLayer);
 }
 
 class _OfflineStatRow extends StatelessWidget {
@@ -928,20 +938,26 @@ class WhatsNewOverlay extends StatelessWidget {
     return showDialog<void>(
       context: context,
       barrierColor: MenuChrome.scrim,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: DecoratedBox(
-          decoration: MenuChrome.panel(),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: 420,
-              height: 420,
-              child: WhatsNewOverlay(director: director),
+      builder: (ctx) {
+        final size = MediaQuery.sizeOf(ctx);
+        final maxW = math.min(420.0, size.width - 32);
+        final maxH = math.min(420.0, size.height * 0.78);
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: DecoratedBox(
+            decoration: MenuChrome.panel(),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: maxW,
+                height: maxH,
+                child: WhatsNewOverlay(director: director),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
