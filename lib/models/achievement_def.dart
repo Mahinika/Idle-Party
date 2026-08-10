@@ -341,7 +341,7 @@ abstract final class AchievementCatalog {
     AchievementDef(
       id: 'weekly_clear',
       title: 'Weekender',
-      description: 'Claim a weekly contract.',
+      description: 'Claim a daily vault reward.',
       essenceReward: 10,
       category: AchievementCategory.meta,
     ),

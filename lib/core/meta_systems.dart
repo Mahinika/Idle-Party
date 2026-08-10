@@ -310,7 +310,7 @@ abstract final class MetaSystems {
         s.sanctuaryVitalityLevel >= 12 ||
         s.metaDepth.sanctuaryXpLevel >= 12,
     'god_hand_5': (s) => s.godHandLevel >= 5,
-    'weekly_clear': (s) => s.metaDepth.weeklyClaimed,
+    'weekly_clear': (s) => s.metaDepth.dailyVaultClaimed,
     'gauntlet_25': (s) => s.metaDepth.gauntletBestFloor >= 25,
     'gauntlet_50': (s) => s.metaDepth.gauntletBestFloor >= 50,
     'gauntlet_100': (s) => s.metaDepth.gauntletBestFloor >= 100,
