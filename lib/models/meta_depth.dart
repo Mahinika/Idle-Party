@@ -190,6 +190,7 @@ class MetaDepthState {
     this.gauntletGoldBonusLevel = 0,
     this.seasonKey = '',
     this.claimedSeasonRewards = const <String>[],
+    this.claimedWeekGoals = const <String>[],
   });
 
   final int sanctuaryXpLevel;
@@ -284,6 +285,9 @@ class MetaDepthState {
   /// Calendar months (`yyyy-MM`) that already paid the season weekly bonus.
   final List<String> claimedSeasonRewards;
 
+  /// Local week goals already claimed (`yyyy-Www:goalId`).
+  final List<String> claimedWeekGoals;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -347,6 +351,7 @@ class MetaDepthState {
     int? gauntletGoldBonusLevel,
     String? seasonKey,
     List<String>? claimedSeasonRewards,
+    List<String>? claimedWeekGoals,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -410,6 +415,7 @@ class MetaDepthState {
           gauntletGoldBonusLevel ?? this.gauntletGoldBonusLevel,
       seasonKey: seasonKey ?? this.seasonKey,
       claimedSeasonRewards: claimedSeasonRewards ?? this.claimedSeasonRewards,
+      claimedWeekGoals: claimedWeekGoals ?? this.claimedWeekGoals,
     );
   }
 
@@ -468,6 +474,7 @@ class MetaDepthState {
         'gauntletGoldBonusLevel': gauntletGoldBonusLevel,
         'seasonKey': seasonKey,
         'claimedSeasonRewards': claimedSeasonRewards,
+        'claimedWeekGoals': claimedWeekGoals,
       };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -558,6 +565,9 @@ class MetaDepthState {
       seasonKey: (json['seasonKey'] as String?) ?? '',
       claimedSeasonRewards:
           (json['claimedSeasonRewards'] as List<dynamic>?)?.cast<String>() ??
+              const [],
+      claimedWeekGoals:
+          (json['claimedWeekGoals'] as List<dynamic>?)?.cast<String>() ??
               const [],
     );
   }

@@ -613,6 +613,11 @@ class GameDirector extends ChangeNotifier {
             'WIPED — Gauntlet ends on F$floor (best floor saved)',
             life: 4,
           );
+        } else if (MetaSystems.isActiveDailyRun(_state)) {
+          showToast(
+            'WIPED — Daily echo · Retry restarts this floor, or Hub',
+            life: 4,
+          );
         } else {
           final pushFail = _state.dungeonMode == DungeonMode.push &&
               floor > _state.highestFloorCleared;
@@ -738,7 +743,12 @@ class GameDirector extends ChangeNotifier {
       unawaited(_persistFlush());
       return;
     }
-    if (_state.dungeonMode == DungeonMode.push &&
+    if (MetaSystems.isActiveDailyRun(_state)) {
+      _state = GameLogic.restartFloor(
+        _state,
+      ).copyWith(lastUpdated: DateTime.now());
+      showToast('Daily echo restarted — fight on', life: 2.5);
+    } else if (_state.dungeonMode == DungeonMode.push &&
         _state.currentRoom.floorNumber > _state.highestFloorCleared) {
       _state = GameLogic.retreatFromFailedPush(
         _state,
@@ -1814,7 +1824,7 @@ class GameDirector extends ChangeNotifier {
       final gained = _state.essence - before;
       final extra = notices.isEmpty ? '' : ' · ${notices.join(' · ')}';
       showToast(
-        'Weekly claimed · +${gained}e$extra',
+        'Daily vault claimed · +${gained}e$extra',
         life: 2.8,
       );
     }
@@ -1856,15 +1866,11 @@ class GameDirector extends ChangeNotifier {
         milestoneBonus: milestone,
         blessings: _state.metaDepth.ascendBlessings,
       ),
-      'Gear wiped · Apex kept',
     ];
-    if (_state.essence >= 20) {
-      parts.add('Forge → META for essence');
-    }
     if (!hadRogue && _state.rogueUnlocked) {
-      parts.add(StoryLore.shadeJoins);
+      parts.add('Shade joins');
     }
-    showToast(parts.join(' · '), life: 4.2);
+    showToast(parts.join(' · '), life: 3.6);
     final payoffs = GameLogic.takeMetaPayoffNotices();
     if (payoffs.isNotEmpty) {
       showToast(payoffs.join(' · '), life: 3.0);
@@ -1941,6 +1947,7 @@ class GameDirector extends ChangeNotifier {
   }
 
   void _announceAbilityUnlocks(GameState before, GameState after) {
+    final bits = <String>[];
     for (var i = 0; i < after.heroes.length; i++) {
       final hero = after.heroes[i];
       final oldLevel = i < before.heroes.length ? before.heroes[i].level : 0;
@@ -1949,10 +1956,16 @@ class GameDirector extends ChangeNotifier {
             (d) => d.unlockLevel > oldLevel && d.unlockLevel <= hero.level,
           );
       for (final ability in unlocked) {
-        GameAudio.unlock();
-        showToast('${hero.name}: ${ability.shortLabel}!', life: 2.6);
+        bits.add('${hero.name}: ${ability.shortLabel}');
       }
     }
+    if (bits.isEmpty) return;
+    GameAudio.unlock();
+    // One toast — avoids spam when several heroes level in the same clear.
+    showToast(
+      bits.length == 1 ? '${bits.first}!' : '${bits.take(3).join(' · ')}!',
+      life: 2.4,
+    );
   }
 
   void _announceAchievementUnlocks(GameState before, GameState after) {

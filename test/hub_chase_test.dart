@@ -28,8 +28,23 @@ void main() {
       ),
     );
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.claimWeekly);
+    expect(chase.kind, HubChaseKind.claimDailyVault);
     expect(chase.progressLabel, contains('ready'));
+  });
+
+  test('season bonus surfaces on claimable vault', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = GameLogic.ensureWeeklyContract(state, now: now);
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        dailyVaultClears: GameLogic.dailyVaultClearTarget,
+        dailyVaultClaimed: false,
+        claimedSeasonRewards: const <String>[],
+      ),
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.claimDailyVault);
+    expect(chase.title.toLowerCase(), contains('season'));
   });
 
   test('complete missions surface as claim chase', () {
@@ -154,7 +169,7 @@ void main() {
       dailyClaimed: true,
     );
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.weeklyProgress);
+    expect(chase.kind, HubChaseKind.dailyVaultProgress);
     expect(chase.urgency, HubChaseUrgency.almost);
     expect(chase.title, contains('Almost'));
   });

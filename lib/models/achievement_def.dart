@@ -151,6 +151,13 @@ abstract final class AchievementCatalog {
       essenceReward: 26,
       category: AchievementCategory.explorer,
     ),
+    AchievementDef(
+      id: 'clear_grove',
+      title: 'Root Severed',
+      description: 'Clear Hollow Grove.',
+      essenceReward: 30,
+      category: AchievementCategory.explorer,
+    ),
     // —— Hardmode ——
     AchievementDef(
       id: 'hm_1',

@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.10.2**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.11.0**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -25,7 +25,7 @@ questions. Full detail: `.cursor/rules/owner-preferences.mdc`.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.10.2**.
+closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.11.0**.
 Production still needs **12 closed testers × 14 days**. Do not treat Play as the
 primary install channel yet.
 
@@ -102,7 +102,7 @@ GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
              → GameLogic.simulateSpatialOffline → SpatialCombat.step
                (AFK: afkAssist + reducedVfx, auto-flask, God Hand)
 GameLogic + GameState   (rules / persistence)
-DungeonCatalog          (9 named zones, bossFloor = 5 + AL)
+DungeonCatalog          (10 named zones, bossFloor = 5 + AL)
 RoomLayouts (tile_map)  (multi-chamber maps + gates)
 ```
 
@@ -123,7 +123,7 @@ uses `OfflineProgressResult` (wow headline + highlight rows + “Up next” chas
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
-## World path (9 zones)
+## World path (10 zones)
 
 | # | id | Name |
 |---|-----|------|
@@ -136,6 +136,7 @@ Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 | 6 | crystal | Crystal Spire |
 | 7 | tide | Sunken Tidehold |
 | 8 | ember | Ashen Vault |
+| 9 | grove | Hollow Grove |
 
 Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 

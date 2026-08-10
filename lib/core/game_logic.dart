@@ -23,6 +23,7 @@ import 'dungeon_generator.dart';
 import 'equipment_factory.dart';
 import 'game_state.dart';
 import 'keystone.dart';
+import 'local_season.dart';
 import 'meta_systems.dart';
 
 class GameLogic {
@@ -3325,6 +3326,14 @@ class GameLogic {
         EnemyArchetype.glass: ['Char Blade', 'Soot Fang'],
         EnemyArchetype.support: ['Ash Chanter', 'Ember Adept'],
       },
+      'grove' => const {
+        EnemyArchetype.swarm: ['Moss Slime', 'Root Tick', 'Leaf Mite'],
+        EnemyArchetype.brute: ['Grove Brute', 'Timber Crusher'],
+        EnemyArchetype.tank: ['Hollow Guard', 'Bark Bulwark'],
+        EnemyArchetype.ranged: ['Spore Bat', 'Canopy Spitter'],
+        EnemyArchetype.glass: ['Thorn Skitter', 'Bramble Fang'],
+        EnemyArchetype.support: ['Wyrd Chanter', 'Grove Adept'],
+      },
       _ => const {
         EnemyArchetype.swarm: ['Cave Slime', 'Sand Mite'],
         EnemyArchetype.brute: ['Cave Brute', 'Rock Crab'],
@@ -3529,6 +3538,16 @@ class GameLogic {
         if (current.inGauntlet) {
           current = exitToHubHealed(current);
           break;
+        }
+        if (MetaSystems.isActiveDailyRun(current)) {
+          current = restartFloor(current);
+          if (!current.inDungeon) break;
+          world = SpatialCombat.build(
+            current,
+            threatScale: threatScale,
+            afkAssist: afkAssist,
+          );
+          continue;
         }
         if (current.dungeonMode == DungeonMode.push &&
             current.currentRoom.floorNumber > current.highestFloorCleared) {
@@ -3964,9 +3983,11 @@ class GameLogic {
     var next = state;
     if (state.metaDepth.weeklyKey != key ||
         state.metaDepth.seasonKey != season) {
-      final mod =
-          weeklyModifiers[(key.hashCode & 0x7fffffff) % weeklyModifiers.length];
       final sameWeek = state.metaDepth.weeklyKey == key;
+      final mod = LocalSeasonCatalog.resolveAffix(
+        weekKey: key,
+        currentModifier: sameWeek ? state.metaDepth.weeklyModifier : '',
+      );
       next = next.copyWith(
         metaDepth: state.metaDepth.copyWith(
           weeklyKey: key,
@@ -4028,10 +4049,17 @@ class GameLogic {
     final seasonClaims = List<String>.from(md.claimedSeasonRewards);
     final month = isoMonthKey((now ?? DateTime.now()).toUtc());
     final notices = <String>[];
+    final titles = List<String>.from(md.titles);
     if (month.isNotEmpty && !seasonClaims.contains(month)) {
       seasonClaims.add(month);
       essenceGain += seasonWeeklyBonusEssence;
       notices.add('Season $month · +${seasonWeeklyBonusEssence}e');
+      final season = LocalSeasonCatalog.forMonthKey(month);
+      final title = season.titleReward;
+      if (title != null && title.isNotEmpty && !titles.contains(title)) {
+        titles.add(title);
+        notices.add('Title unlocked · $title');
+      }
     }
     lastMetaPayoffNotices = notices;
     next = next.copyWith(
@@ -4039,6 +4067,7 @@ class GameLogic {
       metaDepth: md.copyWith(
         dailyVaultClaimed: true,
         claimedSeasonRewards: seasonClaims,
+        titles: titles,
       ),
       lastUpdated: DateTime.now(),
     );
@@ -4046,7 +4075,8 @@ class GameLogic {
   }
 
   /// Legacy name — daily vault.
-  static GameState claimWeekly(GameState state) => claimDailyVault(state);
+  static GameState claimWeekly(GameState state, {DateTime? now}) =>
+      claimDailyVault(state, now: now);
 
   /// God Hand style: 0 balanced, 1 focus, 2 wide.
   static GameState setGodHandStyle(GameState state, int style) {
@@ -4078,6 +4108,7 @@ class GameLogic {
     }
     final gauntletClaims =
         List<String>.from(next.metaDepth.claimedGauntletMilestones);
+    final titles = List<String>.from(next.metaDepth.titles);
     final best = next.metaDepth.gauntletBestFloor;
     for (final floor in GauntletMilestones.floors) {
       final id = GauntletMilestones.claimId(floor);
@@ -4086,12 +4117,39 @@ class GameLogic {
         final gain = GauntletMilestones.essenceForFloor(floor);
         essenceGain += gain;
         notices.add('Gauntlet F$floor · +${gain}e');
+        final title = LocalSeasonCatalog.gauntletTitles[floor];
+        if (title != null && !titles.contains(title)) {
+          titles.add(title);
+          notices.add('Title unlocked · $title');
+        }
       }
     }
+
+    // Local week goals (timed KEY / Gauntlet floor).
+    final weekClaims = List<String>.from(next.metaDepth.claimedWeekGoals);
+    final weekKey = next.metaDepth.weeklyKey;
+    if (weekKey.isNotEmpty) {
+      final week = LocalSeasonCatalog.forWeekKey(weekKey);
+      final claimId = week.claimIdForWeek(weekKey);
+      if (LocalSeasonCatalog.weekGoalReady(next, week) &&
+          !weekClaims.contains(claimId)) {
+        weekClaims.add(claimId);
+        essenceGain += week.essenceReward;
+        notices.add('${week.name} · +${week.essenceReward}e');
+        final title = week.titleReward;
+        if (title != null && title.isNotEmpty && !titles.contains(title)) {
+          titles.add(title);
+          notices.add('Title unlocked · $title');
+        }
+      }
+    }
+
     if (essenceGain == 0 &&
         willClaims.length == next.metaDepth.claimedWillRanks.length &&
         gauntletClaims.length ==
-            next.metaDepth.claimedGauntletMilestones.length) {
+            next.metaDepth.claimedGauntletMilestones.length &&
+        weekClaims.length == next.metaDepth.claimedWeekGoals.length &&
+        titles.length == next.metaDepth.titles.length) {
       lastMetaPayoffNotices = const [];
       return MetaSystems.evaluateAchievements(next);
     }
@@ -4101,6 +4159,8 @@ class GameLogic {
       metaDepth: next.metaDepth.copyWith(
         claimedWillRanks: willClaims,
         claimedGauntletMilestones: gauntletClaims,
+        claimedWeekGoals: weekClaims,
+        titles: titles,
       ),
     );
     return MetaSystems.evaluateAchievements(next);
@@ -6232,6 +6292,8 @@ class GameLogic {
 
     // Push + boss floor clear → dungeon cleared, back to hub.
     // Gauntlet never exits on boss — endless climb.
+    // Daily echo: claim on first clear, then return to hub (one floor).
+    final wasDaily = MetaSystems.isActiveDailyRun(state);
     if (!farmLoop && clearedBoss && !gauntlet) {
       final def = DungeonCatalog.byId(awarded.dungeonId);
       var progressed = awarded.copyWith(
@@ -6310,6 +6372,20 @@ class GameLogic {
     );
     progressed = _applyMetaProgress(state, progressed, drops);
 
+    // Daily echo ends after the first clear (reward claimed) — no PUSH climb.
+    if (wasDaily && progressed.dailyClaimed) {
+      progressed = progressed.copyWith(
+        inDungeon: false,
+        heroes: progressed.heroes
+            .map(
+              (hero) => hero.copyWith(
+                currentHp: progressed.effectiveHeroMaxHp(hero),
+              ),
+            )
+            .toList(),
+      );
+    }
+
     return applyMissionProgress(
       progressed,
       enemiesDefeated: enemiesDefeated,
@@ -6330,7 +6406,8 @@ class GameLogic {
   ) {
     var next = MetaSystems.registerEnemyEncounters(after, before.enemies);
     next = MetaSystems.registerItemDrops(next, drops);
-    next = _claimDailyIfEligible(next);
+    // Probe [before] — after already rolled a new layoutSeed on advance.
+    next = _claimDailyIfEligible(next, dailyProbe: before);
     final farmLoop = before.dungeonMode == DungeonMode.farm;
     // Gauntlet is endless — same mint rules as farm (no challenge/weekly cheese).
     final suppressMetaMint = farmLoop || before.inGauntlet;
@@ -6363,6 +6440,7 @@ class GameLogic {
     final hmCleared = keyCleared.clamp(0, Keystone.maxLevel);
     next = ensureWeeklyContract(next);
     var bestTimed = next.metaDepth.dailyBestTimedKey;
+    var weekBestTimed = next.metaDepth.weeklyBestTimedKey;
     var preferredKey = next.hardmodeLevel;
     var outcome = next.keystoneOutcome;
     var essence = next.essence;
@@ -6384,6 +6462,7 @@ class GameLogic {
           max(preferredKey, key + 1),
         );
         bestTimed = max(bestTimed, key);
+        weekBestTimed = max(weekBestTimed, key);
         outcome = 'timed';
         keystoneNotices.add(
           'KEY +$key TIMED · next KEY +$preferredKey · +${bonus}e',
@@ -6413,6 +6492,7 @@ class GameLogic {
           next.metaDepth.dailyVaultClears + vaultBump,
         ),
         dailyBestTimedKey: bestTimed,
+        weeklyBestTimedKey: weekBestTimed,
       ),
     );
     next = MetaSystems.evaluateAchievements(next);
@@ -6426,14 +6506,18 @@ class GameLogic {
     return next;
   }
 
-  static GameState _claimDailyIfEligible(GameState state) {
+  static GameState _claimDailyIfEligible(
+    GameState state, {
+    GameState? dailyProbe,
+  }) {
     if (state.dailyClaimed) return state;
-    final now = DateTime.now().toUtc();
-    final todayKey = MetaSystems.dailyDateKey(now);
-    if (state.lastDailyDate != todayKey) return state;
-    if (state.dungeonId != MetaSystems.dailyDungeonId(now)) return state;
-    // Must still be on today's Daily layout seed (not a normal re-enter).
-    if (state.layoutSeed != MetaSystems.dailySeed(now)) return state;
+    final probe = dailyProbe ?? state;
+    // Match the day the Daily was started (probe.lastDailyDate), not wall
+    // clock — tests inject frozen dates and midnight crossover mid-run.
+    final day = MetaSystems.parseDailyDateKey(probe.lastDailyDate);
+    if (day == null) return state;
+    if (probe.dungeonId != MetaSystems.dailyDungeonId(day)) return state;
+    if (probe.layoutSeed != MetaSystems.dailySeed(day)) return state;
     final dailyEssenceReward =
         25 + state.metaDepth.dailyEssenceBonusLevel * 5;
     return state.copyWith(
@@ -6442,10 +6526,9 @@ class GameLogic {
     );
   }
 
-  /// Enters the free, seeded Daily Run — a single floor in whichever
-  /// dungeon today's UTC date rotates to. Ignores normal unlock gating
-  /// (it's a bounded daily trial, not a permanent unlock). Clearing any
-  /// floor/boss while inside claims today's reward exactly once.
+  /// Enters the free, seeded Daily Run — a single floor echo in whichever
+  /// dungeon today's UTC date rotates to. Ignores normal unlock gating.
+  /// Clearing the floor claims today's reward once and returns to hub.
   static GameState enterDaily(GameState state, {DateTime? now}) {
     final t = now ?? DateTime.now().toUtc();
     if (MetaSystems.isDailyClaimedToday(state, now: t)) {

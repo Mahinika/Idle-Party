@@ -6,10 +6,12 @@ void main() {
   test('Ascend roadmap unlocks key AL milestones', () {
     expect(AscendRoadmap.unlockAtAl(1), contains('Combat Rogue'));
     expect(AscendRoadmap.unlockAtAl(2), contains('5th party'));
+    expect(AscendRoadmap.unlockAtAl(2), contains('80e'));
     expect(
       AscendRoadmap.unlockAtAl(GameLogic.gauntletMinAscension),
       contains('Gauntlet'),
     );
+    expect(AscendRoadmap.unlockAtAl(5), contains('Warden'));
     expect(AscendRoadmap.unlockAtAl(4), isNull);
   });
 

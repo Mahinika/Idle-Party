@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/meta_systems.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
@@ -261,6 +262,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     final world = widget.director.spatial;
     final room = state.currentRoom;
     final farm = state.dungeonMode == DungeonMode.farm;
+    final dailyEcho = MetaSystems.isActiveDailyRun(state);
 
     final frameColor = room.type == RoomType.boss
         ? GameTheme.borderLit
@@ -460,6 +462,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                     Text(
                                       state.inGauntlet
                                           ? 'Gauntlet run ends here. Best floor is saved. Return to hub to climb again.'
+                                          : dailyEcho
+                                          ? 'Daily echo — RETRY restarts this floor. HUB ends the run (claim needs a clear).'
                                           : farm
                                           ? 'RETRY restarts this floor (F${state.currentRoom.floorNumber}). HUB ends the run.'
                                           : () {
@@ -482,7 +486,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                     const SizedBox(height: 14),
                                     if (!state.inGauntlet)
                                       KenneyButton(
-                                        label: farm
+                                        label: (farm || dailyEcho)
                                             ? 'RETRY FLOOR'
                                             : () {
                                                 final safe = state

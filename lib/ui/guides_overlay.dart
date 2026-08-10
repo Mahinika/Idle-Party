@@ -33,53 +33,58 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
             itemBuilder: (context, i) {
               final topic = topics[i];
               final open = _openId == topic.id;
-              return Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => setState(
-                    () => _openId = open ? null : topic.id,
-                  ),
-                  borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                    decoration: MenuChrome.cardBox(selected: open),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                topic.title,
-                                style: GameTheme.body(
-                                  size: 17,
-                                  color: open
-                                      ? GameTheme.torchHot
-                                      : GameTheme.parchment,
+              return Semantics(
+                button: true,
+                label: 'Guide · ${topic.title}',
+                excludeSemantics: true,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => setState(
+                      () => _openId = open ? null : topic.id,
+                    ),
+                    borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                      decoration: MenuChrome.cardBox(selected: open),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  topic.title,
+                                  style: GameTheme.body(
+                                    size: 17,
+                                    color: open
+                                        ? GameTheme.torchHot
+                                        : GameTheme.parchment,
+                                  ),
                                 ),
                               ),
-                            ),
+                              Text(
+                                open ? '▾' : '▸',
+                                style: GameTheme.body(
+                                  size: 16,
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (open) ...[
+                            const SizedBox(height: 8),
                             Text(
-                              open ? '▾' : '▸',
+                              topic.body,
                               style: GameTheme.body(
-                                size: 16,
-                                color: GameTheme.parchmentDim,
+                                size: 14,
+                                color: GameTheme.parchment,
                               ),
                             ),
                           ],
-                        ),
-                        if (open) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            topic.body,
-                            style: GameTheme.body(
-                              size: 14,
-                              color: GameTheme.parchment,
-                            ),
-                          ),
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),

@@ -268,6 +268,7 @@ class EquipmentItem {
       'crystal' => 'Spire',
       'tide' => 'Tidehold',
       'ember' => 'Ashen',
+      'grove' => 'Hollow',
       _ => parts.first,
     };
     final armor = parts.sublist(1).join(' ');

@@ -8,8 +8,8 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ⏳ Alpha | Historical AAB noted **14 / 1.9.3**; ship line **1.10.2** on GitHub |
-| Production | ❌ | Needs **12 closed testers × 14 days**; not live |
+| Closed testing | ⏳ Alpha | Historical AAB noted **14 / 1.9.3**; ship line **1.11.0** on GitHub |
+| Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ⏳ | Prep URL: repo `docs/PRIVACY.md` on main |
 | Data safety form | ⏳ | Match PRIVACY: local save, no ads/accounts/analytics servers |

@@ -90,6 +90,12 @@ abstract final class ApexCraft {
       bossSources: 'Ashen Vault boss',
     ),
     CraftMatDef(
+      id: 'shard_grove',
+      name: 'Hollow Shard',
+      family: CraftMatFamily.shard,
+      bossSources: 'Hollow Grove boss',
+    ),
+    CraftMatDef(
       id: 'core_tank',
       name: 'Aegis Core',
       family: CraftMatFamily.core,

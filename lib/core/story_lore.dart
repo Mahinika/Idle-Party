@@ -30,6 +30,7 @@ abstract final class StoryLore {
       'crystal' => 'The Spire sings. Climb anyway.',
       'tide' => 'Salt water fills the hold. Hold your breath.',
       'ember' => 'Ash drifts in the vault. The crown still smolders.',
+      'grove' => 'Roots tighten. Something old watches between the trunks.',
       _ => 'Entering ${def.name}…',
     };
   }
@@ -46,6 +47,7 @@ abstract final class StoryLore {
       'crystal' => 'The Warden yields. Ascension waits in the hub.',
       'tide' => 'The Leviathan sinks. Pressure eases — briefly.',
       'ember' => 'The Sovereign cools. Embers still whisper.',
+      'grove' => 'Wyrd Root stills. The grove exhales moss and quiet.',
       _ => '${def.name} cleared.',
     };
   }
@@ -92,7 +94,7 @@ abstract final class StoryLore {
         '$alPower\n'
         '$blessLine$unlockLine\n'
         '$ahead\n\n'
-        'Keep: hero levels, essence, relics, pets, sanctuary, soulbound, '
+        'Keep: hero levels/XP, essence, relics, pets, sanctuary, soulbound, '
         'God Hand, Apex, meta unlocks.\n'
         'Reset: wallet gold, floors, run gear, loadouts, forge gold upgrades.\n'
         'God Hand Lv$godHandLevel kept · $soulboundFragments soulbound frag';
@@ -103,18 +105,12 @@ abstract final class StoryLore {
     required int milestoneBonus,
     int blessings = 0,
   }) {
-    final bless = blessings > 0
-        ? ' · Blessing ×$blessings (+${blessings * GameLogic.ascendBlessingAtk} ATK)'
-        : '';
+    // Keep short — hub toast is 2–3 lines; detail lives in Ascend confirm.
+    final bless = blessings > 0 ? ' · Blessing ×$blessings' : '';
     final unlock = AscendRoadmap.unlockAtAl(al);
     final unlockBit = unlock != null ? ' · $unlock' : '';
-    final ahead = AscendRoadmap.chaseTeaser(al);
-    final base =
-        'Reborn · AL$al$bless$unlockBit · $ahead';
-    if (milestoneBonus > 0) {
-      return '$base · +${milestoneBonus}e milestone';
-    }
-    return base;
+    final mile = milestoneBonus > 0 ? ' · +${milestoneBonus}e' : '';
+    return 'Reborn · AL$al$bless$unlockBit$mile';
   }
 
   static const String shadeJoins =

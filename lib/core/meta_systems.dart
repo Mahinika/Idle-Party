@@ -19,10 +19,21 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.10.2';
+  static const String currentVersion = '1.11.0';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.11.0',
+      bullets: <String>[
+        'Local seasons: weekly hub goals (timed KEY / Gauntlet) with essence + titles — same combat loop, new chase.',
+        'TODAY stays on phone layouts; progress chases get ENTER / PATH / FORGE buttons; week affix sits above TODAY.',
+        'Hub polish: MORE sheet titled MORE (not HUB); Daily only on TODAY when that is the chase; hub overlays clear on dungeon enter.',
+        'Daily echo is one floor (claim → hub); wipe retries the floor. Forge shows this-run vs party totals. Shorter Ascend toast · Bound frags · quieter level-ups.',
+        'Affliction kit fantasy: clearer DoT copy + purple shadow VFX on Corruption / UA / Haunt / Drain / Agony.',
+        'World Path: Hollow Grove joins Sunken Tidehold and Ashen Vault as the deep endgame gates.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.10.2',
       bullets: <String>[
@@ -233,6 +244,36 @@ abstract final class MetaSystems {
     return state.lastDailyDate == dailyDateKey(t) && state.dailyClaimed;
   }
 
+  /// Parses [dailyDateKey] (`YYYY-MM-DD`) to a UTC calendar day, or null.
+  static DateTime? parseDailyDateKey(String? key) {
+    if (key == null || key.isEmpty) return null;
+    final parts = key.split('-');
+    if (parts.length != 3) return null;
+    final y = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    final d = int.tryParse(parts[2]);
+    if (y == null || m == null || d == null) return null;
+    if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+    return DateTime.utc(y, m, d);
+  }
+
+  /// True while inside a seeded Daily echo (one-floor trial).
+  /// Identity is [lastDailyDate] + dungeon + layout seed — not wall-clock
+  /// “today”, so midnight crossover mid-run still counts as Daily.
+  /// When [now] is passed (tests), also require that calendar day.
+  static bool isActiveDailyRun(GameState state, {DateTime? now}) {
+    if (!state.inDungeon || state.inGauntlet) return false;
+    final dayKey = state.lastDailyDate;
+    if (dayKey == null || dayKey.isEmpty) return false;
+    final day = parseDailyDateKey(dayKey);
+    if (day == null) return false;
+    if (now != null && dayKey != dailyDateKey(now.toUtc())) {
+      return false;
+    }
+    if (state.dungeonId != dailyDungeonId(day)) return false;
+    return state.layoutSeed == dailySeed(day);
+  }
+
   // —— Collection score ——————————————————————————————————————
 
   /// Will-rank collection score (achievements, pets, relics, codex, trophies).
@@ -272,6 +313,7 @@ abstract final class MetaSystems {
     'clear_crystal': (s) => s.highestDungeonCleared >= 6,
     'clear_tide': (s) => s.highestDungeonCleared >= 7,
     'clear_ember': (s) => s.highestDungeonCleared >= 8,
+    'clear_grove': (s) => s.highestDungeonCleared >= 9,
     'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
     'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
     'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,

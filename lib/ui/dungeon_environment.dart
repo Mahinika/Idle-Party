@@ -15,6 +15,7 @@ abstract final class DungeonEnvironment {
         'crystal' => const Color(0xFF081018),
         'tide' => const Color(0xFF041820),
         'ember' => const Color(0xFF1A1004),
+        'grove' => const Color(0xFF081208),
         _ => const Color(0xFF080706),
       };
 
@@ -29,6 +30,7 @@ abstract final class DungeonEnvironment {
         'crystal' => const Color(0x4450A0F0),
         'tide' => const Color(0x5420C0B8),
         'ember' => const Color(0x54E07020),
+        'grove' => const Color(0x5448A038),
         _ => const Color(0x22000000),
       };
 
@@ -43,6 +45,7 @@ abstract final class DungeonEnvironment {
         'crystal' => const Color(0x5A183050),
         'tide' => const Color(0x5A184848),
         'ember' => const Color(0x6A402818),
+        'grove' => const Color(0x5A304820),
         _ => const Color(0x55050403),
       };
 
@@ -57,6 +60,7 @@ abstract final class DungeonEnvironment {
         'crystal' => const Color(0xFF80D0FF),
         'tide' => const Color(0xFF40C0B0),
         'ember' => const Color(0xFFE09040),
+        'grove' => const Color(0xFF68B048),
         _ => const Color(0xFFE0C080),
       };
 
@@ -68,6 +72,7 @@ abstract final class DungeonEnvironment {
         'crystal' => const Color(0x38001020),
         'tide' => const Color(0x38001820),
         'ember' => const Color(0x3C100800),
+        'grove' => const Color(0x38081008),
         _ => const Color(0x2C000000),
       };
 

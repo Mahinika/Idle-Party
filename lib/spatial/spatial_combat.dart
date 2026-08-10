@@ -5254,16 +5254,20 @@ abstract final class SpatialCombat {
         argb: _floaterXp,
         life: 0.9,
       );
+      var leveledFloater = false;
       for (var i = 0; i < next.heroes.length; i++) {
         if (next.heroes[i].level > beforeLevels[i]) {
-          _spawnFloater(
-            world,
-            x: world.heroes.length > i ? world.heroes[i].x : enemy.x,
-            y: (world.heroes.length > i ? world.heroes[i].y : enemy.y) - 0.9,
-            text: 'LEVEL UP!',
-            argb: _floaterXp,
-            life: 1.2,
-          );
+          if (!leveledFloater) {
+            leveledFloater = true;
+            _spawnFloater(
+              world,
+              x: world.heroes.length > i ? world.heroes[i].x : enemy.x,
+              y: (world.heroes.length > i ? world.heroes[i].y : enemy.y) - 0.9,
+              text: 'LEVEL UP!',
+              argb: _floaterXp,
+              life: 1.0,
+            );
+          }
           if (i < world.heroes.length) {
             final h = next.heroes[i];
             final a = world.heroes[i];

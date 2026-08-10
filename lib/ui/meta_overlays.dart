@@ -12,6 +12,7 @@ import '../models/gear_loadout.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/meta_depth.dart';
+import 'confirm_dialogs.dart';
 import 'game_theme.dart';
 import 'kenney_assets.dart';
 import 'kenney_button.dart';
@@ -762,6 +763,52 @@ Future<void> showOfflineProgressDialog(
   if (summary == null) return;
   final chase = HubChase.forState(summary.state);
   final rows = summary.highlightRows;
+  final notices = List<String>.from(GameLogic.lastMetaPayoffNotices);
+
+  VoidCallback? readyAction;
+  var readyLabel = '';
+  switch (chase.kind) {
+    case HubChaseKind.claimDailyVault:
+      readyLabel = 'CLAIM VAULT';
+      readyAction = () {
+        director.claimWeekly();
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+      };
+    case HubChaseKind.claimMissions:
+      readyLabel = 'CLAIM JOBS';
+      readyAction = () {
+        for (final m in director.state.missions) {
+          if (m.isComplete) director.claimMission(m.id);
+        }
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+      };
+    case HubChaseKind.ascend:
+      readyLabel = 'ASCEND';
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+        confirmAscend(context, director);
+      };
+    case HubChaseKind.dailyRun:
+      readyLabel = 'DAILY';
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+        confirmDailyRun(context, director);
+      };
+    case HubChaseKind.gauntletMilestone:
+      readyLabel = 'GAUNTLET';
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+        confirmGauntletRun(context, director);
+      };
+    default:
+      break;
+  }
+
   await showDialog<void>(
     context: context,
     barrierColor: MenuChrome.scrim,
@@ -792,6 +839,13 @@ Future<void> showOfflineProgressDialog(
             for (final row in rows)
               _OfflineStatRow(label: row.$1, value: row.$2),
           ],
+          if (notices.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              notices.join(' · '),
+              style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+            ),
+          ],
           const SizedBox(height: 10),
           Text(
             chase.urgency == HubChaseUrgency.ready
@@ -815,6 +869,15 @@ Future<void> showOfflineProgressDialog(
         ],
       ),
       actions: [
+        if (chase.urgency == HubChaseUrgency.ready &&
+            readyAction != null) ...[
+          KenneyButton(
+            label: readyLabel,
+            expanded: false,
+            style: KenneyButtonStyle.brown,
+            onPressed: readyAction,
+          ),
+        ],
         KenneyButton(
           label: 'NICE',
           expanded: false,
@@ -1044,8 +1107,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           const SizedBox(height: 4),
           Text(
             state.hardmodeLevel <= 0
-                ? 'Normal dungeon. Cap KEY +$maxKey (AL gates higher).'
-                : 'KEY +${state.hardmodeLevel}: affixes lock on enter · beat boss under par to upgrade.',
+                ? 'Normal · max KEY +$maxKey'
+                : 'KEY +${state.hardmodeLevel} locks affixes on enter',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
@@ -1055,13 +1118,6 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
               affixes.map(Keystone.label).join(' · '),
               textAlign: TextAlign.center,
               style: GameTheme.pixel(size: 7, color: GameTheme.torchHot),
-            ),
-            Text(
-              affixes.map(Keystone.blurb).join(' · '),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
             ),
           ],
           const SizedBox(height: 6),
@@ -1105,7 +1161,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 Text(
                   md.seasonKey.isEmpty
                       ? 'Season rotating…'
-                      : 'Season ${md.seasonKey} · +${GameLogic.seasonWeeklyBonusEssence}e first claim/month',
+                      : 'This month · +${GameLogic.seasonWeeklyBonusEssence}e first vault claim',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
                 ),
@@ -1131,8 +1187,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           ),
           const SizedBox(height: 2),
           Text(
-            'Time the boss under par (AFK counts). Timed upgrades your key. '
-            'Daily vault: 1 clear or timed KEY+2.',
+            'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),

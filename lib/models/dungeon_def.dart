@@ -117,6 +117,16 @@ abstract final class DungeonCatalog {
       unlockPrice: 1200000,
       blurb: 'A vault of cooled fire that still answers to a crown.',
     ),
+    DungeonDef(
+      number: 9,
+      id: 'grove',
+      name: 'Hollow Grove',
+      layout: DungeonLayoutKind.cave,
+      bossId: 'grove_wyrd',
+      bossName: 'Wyrd Root',
+      unlockPrice: 1800000,
+      blurb: 'Roots drink the dark between Tidehold and the Ashen Vault.',
+    ),
   ];
 
   static DungeonDef byId(String id) {

@@ -5,11 +5,24 @@ Baseline (historical): app **v1.9.3**, full-game audit ~**92%**
 ([audits/2026-08-03-full-game.md](audits/2026-08-03-full-game.md)) — audit predates
 Tide/Ember/meta polish; treat as historical closeout, not current completeness.
 
-**Current ship line:** **1.10.2** (`pubspec` ↔ `MetaSystems.currentVersion`) — Ascend
-Blessing, hub TODAY READY/ALMOST, daily keystone vault, 9 zones.
+**Current ship line:** **1.11.0** (`pubspec` ↔ `MetaSystems.currentVersion`) — Local
+seasons, hub TODAY phone polish, Hollow Grove (10th zone), Affliction VFX pass.
 
-**Status:** dokumenterad; Q1–Q2-kärna + Q4 polish/cadence i kod; Q3 delvis; Play closed
+**Status:** dokumenterad; Q1–Q4 kärna + success-spår Habit→Season→Zone i kod; Play closed
 Alpha igång (produktion väntar 12×14). GitHub Releases är primär install.
+
+---
+
+## Success-spår (research → kod, 2026-08)
+
+| Fas | Mål | Status |
+|-----|-----|--------|
+| A Habit | Phone TODAY + chase CTAs + vault honesty | Done in 1.11.0 |
+| B Second layer | `LocalSeasonCatalog` week goals + titles | Done in 1.11.0 |
+| C Cadence | Zone 10 Hollow Grove + Affliction fantasy + season rows | Done in 1.11.0 |
+| Play bg | 12×14 closed testers | Operator — see [PLAY_STORE.md](PLAY_STORE.md) |
+
+Win-condition: spelaren ser en READY/ALMOST-jakt, känner mer power, litar på nästa tag.
 
 ---
 
@@ -20,12 +33,12 @@ Alpha igång (produktion väntar 12×14). GitHub Releases är primär install.
 | Combat / AFK | Stark (`SpatialCombat` enda auktoritet; live+offline parity) | Mid-band caster risk; live-light gate |
 | Gear / Apex / BiS | Stark | 2pc/4pc procs shippade; ingen gear-shop (by design) |
 | Meta / hub | Payoffs live (Weekly n/3, Will, Gauntlet F25/50/100, season bonus, GH styles) | Prestige shop refresh / deeper sinks stretch |
-| Content | **31 specs / 9 zoner** (`tide`, `ember` shippade) | Klass-tungt historiskt; nya zoner mer sällan |
+| Content | **31 specs / 10 zoner** (`tide`, `ember`, `grove` shippade) | Klass-tungt historiskt; nya zoner mer sällan |
 | Distribution | GitHub Releases primary; Play Console listing + closed Alpha | Production needs 12×14; not live |
 | Onboarding | `FirstSessionTips` + Guides + What’s New | — |
 | A11y / save | Text scale 85–130%, colorblind floaters, VFX modes + reduce-motion label; toast dedupe; clipboard export/import + backup-hint | Lätt owned SFX stretch |
 
-**Inventarie:** 9 zoner ([lib/models/dungeon_def.dart](../lib/models/dungeon_def.dart)), 10 klasser / 31 specs, ~259 abilities, 4 legacy tickers + 27 runner-kits, Infinity Gauntlet AL10+, balance harness ([tool/sim_harness.dart](../tool/sim_harness.dart) live/afk/bare).
+**Inventarie:** 10 zoner ([lib/models/dungeon_def.dart](../lib/models/dungeon_def.dart)), 10 klasser / 31 specs, ~259 abilities, 4 legacy tickers + 27 runner-kits, Infinity Gauntlet AL10+, `LocalSeasonCatalog`, balance harness ([tool/sim_harness.dart](../tool/sim_harness.dart) live/afk/bare).
 
 **WIP kits (Aug 2026 audits):** Affliction, Beast Mastery, Blood, Demonology, Fury, Unholy, Restoration Druid, Subtlety — se [docs/audits/](audits/). Identity/coeff-pass shippad för alla åtta.
 
@@ -152,7 +165,7 @@ flowchart LR
 5. **Save UX** — export/import finns; synliggör + backup-hint.
 6. **Stretch:** Windows CI-zip; lokal high-score share image.
 
-**Exit Q4:** 9 zoner; Play (eller dokumenterat sideload-only); dokumenterad cadence; a11y minimum.
+**Exit Q4:** 10 zoner; Play (eller dokumenterat sideload-only); dokumenterad cadence; a11y minimum.
 
 ---
 

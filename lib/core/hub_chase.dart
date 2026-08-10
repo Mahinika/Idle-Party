@@ -3,19 +3,22 @@ import '../models/meta_depth.dart';
 import 'ascend_roadmap.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'local_season.dart';
 import 'meta_systems.dart';
 
 /// Kind of hub "today" chase — claimables first, then progress goals.
 enum HubChaseKind {
-  claimWeekly,
+  /// Daily vault ready to claim (API still uses [GameLogic.claimWeekly]).
+  claimDailyVault,
   claimMissions,
   ascend,
-  weeklyProgress,
+  dailyVaultProgress,
   willRank,
   gauntletMilestone,
   unlockZone,
   dailyRun,
   clearFloors,
+  weekGoal,
 }
 
 /// How close the chase is to a payoff — drives TODAY chrome.
@@ -38,6 +41,7 @@ class HubChase {
     required this.detail,
     this.progressLabel,
     this.urgency = HubChaseUrgency.normal,
+    this.zoneId,
   });
 
   final HubChaseKind kind;
@@ -46,22 +50,32 @@ class HubChase {
   final String? progressLabel;
   final HubChaseUrgency urgency;
 
+  /// Target zone id for [HubChaseKind.unlockZone] / clear pushes.
+  final String? zoneId;
+
   /// Picks the single best "what should I chase now?" target.
   ///
-  /// Priority: claimables → Ascend → almost-Ascend → vault progress →
-  /// daily → zone → Will → Gauntlet → keep clearing.
+  /// Priority: claimables → Ascend → almost-Ascend → vault / KEY cliffs →
+  /// week goal → daily → zone → Will → Gauntlet → keep clearing.
   static HubChase forState(GameState state, {DateTime? now}) {
     final md = state.metaDepth;
     final clock = now ?? DateTime.now().toUtc();
 
     if (GameLogic.canClaimDailyVault(state)) {
       final best = md.dailyBestTimedKey;
+      final month = GameLogic.isoMonthKey(clock);
+      final seasonPending = !md.claimedSeasonRewards.contains(month);
+      final seasonBit = seasonPending
+          ? ' · season +${GameLogic.seasonWeeklyBonusEssence}e'
+          : '';
       return HubChase(
-        kind: HubChaseKind.claimWeekly,
-        title: 'Claim daily vault',
+        kind: HubChaseKind.claimDailyVault,
+        title: seasonPending
+            ? 'Claim daily vault · season bonus'
+            : 'Claim daily vault',
         detail: best >= 2
-            ? 'Best timed KEY +$best — grab your essence.'
-            : 'You filled today’s vault — grab your essence.',
+            ? 'Best timed KEY +$best — grab your essence$seasonBit.'
+            : 'You filled today’s vault — grab your essence$seasonBit.',
         progressLabel: best >= 2
             ? 'KEY +$best ready'
             : '${GameLogic.dailyVaultClearTarget}/${GameLogic.dailyVaultClearTarget} ready',
@@ -123,30 +137,12 @@ class HubChase {
       );
     }
 
-    if (!md.dailyVaultClaimed &&
-        md.dailyVaultClears > 0 &&
-        md.dailyVaultClears < GameLogic.dailyVaultClearTarget &&
-        md.dailyBestTimedKey < 2) {
-      final left =
-          GameLogic.dailyVaultClearTarget - md.dailyVaultClears;
-      return HubChase(
-        kind: HubChaseKind.weeklyProgress,
-        title: left == 1 ? 'Almost — finish daily vault' : 'Finish daily vault',
-        detail: left == 1
-            ? 'One more clear — or time a KEY +2 — then claim.'
-            : 'One more clear — or time a KEY +2.',
-        progressLabel:
-            '${md.dailyVaultClears}/${GameLogic.dailyVaultClearTarget}',
-        urgency: left == 1 ? HubChaseUrgency.almost : HubChaseUrgency.normal,
-      );
-    }
-
     // KEY +1 timed but not yet claimable (need KEY +2) — cliffhanger.
     if (!md.dailyVaultClaimed &&
         md.dailyVaultClears < GameLogic.dailyVaultClearTarget &&
         md.dailyBestTimedKey == 1) {
       return const HubChase(
-        kind: HubChaseKind.weeklyProgress,
+        kind: HubChaseKind.dailyVaultProgress,
         title: 'Almost — time KEY +2',
         detail: 'Best timed KEY +1 today — one higher key fills the vault.',
         progressLabel: 'KEY +1',
@@ -167,7 +163,7 @@ class HubChase {
         md.dailyVaultClears == 0 &&
         md.dailyBestTimedKey < 2) {
       return HubChase(
-        kind: HubChaseKind.weeklyProgress,
+        kind: HubChaseKind.dailyVaultProgress,
         title: 'Start daily vault',
         detail:
             'Clear ${GameLogic.dailyVaultClearTarget} floor or time a KEY +2.',
@@ -175,6 +171,7 @@ class HubChase {
       );
     }
 
+    // Zone / Will / Gauntlet before routine week goals.
     final zone = _nextZoneChase(state);
     if (zone != null) return zone;
 
@@ -184,6 +181,12 @@ class HubChase {
     final gauntlet = _nextGauntletChase(state);
     if (gauntlet != null) return gauntlet;
 
+    final weekAlmost = _weekGoalChase(state, clock, almostOnly: true);
+    if (weekAlmost != null) return weekAlmost;
+
+    final weekGoal = _weekGoalChase(state, clock, almostOnly: false);
+    if (weekGoal != null) return weekGoal;
+
     return _ascendPushChase(
       state,
       bossesNeed: bossesNeed,
@@ -191,6 +194,39 @@ class HubChase {
       urgency: bossesLeft == 1 && state.bossVictories > 0
           ? HubChaseUrgency.almost
           : HubChaseUrgency.normal,
+    );
+  }
+
+  static HubChase? _weekGoalChase(
+    GameState state,
+    DateTime clock, {
+    required bool almostOnly,
+  }) {
+    final weekKey = state.metaDepth.weeklyKey.isNotEmpty
+        ? state.metaDepth.weeklyKey
+        : GameLogic.isoWeekKey(clock);
+    final week = LocalSeasonCatalog.forWeekKey(weekKey);
+    if (!week.hasGoal) return null;
+    if (LocalSeasonCatalog.weekGoalClaimed(state, week)) return null;
+    if (LocalSeasonCatalog.weekGoalReady(state, week)) return null;
+
+    if (LocalSeasonCatalog.weekGoalAlmost(state, week)) {
+      return HubChase(
+        kind: HubChaseKind.weekGoal,
+        title: 'Almost · ${week.name}',
+        detail: week.blurb,
+        progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
+        urgency: HubChaseUrgency.almost,
+      );
+    }
+
+    if (almostOnly) return null;
+
+    return HubChase(
+      kind: HubChaseKind.weekGoal,
+      title: week.name,
+      detail: week.blurb,
+      progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
     );
   }
 
@@ -216,6 +252,7 @@ class HubChase {
           : 'Farm gear or push deeper for power. $teaser',
       progressLabel: 'Ascend ${state.bossVictories}/$bossesNeed',
       urgency: urgency,
+      zoneId: dungeonId,
     );
   }
 
@@ -241,7 +278,6 @@ class HubChase {
 
   static HubChase? _nextGauntletChase(GameState state) {
     if (state.ascensionLevel < GameLogic.gauntletMinAscension) {
-      // Soft teaser before unlock — still not the primary chase usually.
       return null;
     }
     final best = state.metaDepth.gauntletBestFloor;
@@ -250,7 +286,6 @@ class HubChase {
       final id = GauntletMilestones.claimId(floor);
       if (claimed.contains(id)) continue;
       if (best >= floor) {
-        // Payoff sync should claim; still nudge climb if somehow pending.
         continue;
       }
       final need = floor - best;
@@ -285,6 +320,7 @@ class HubChase {
           title: 'Unlock ${d.name}',
           detail: 'Clear $prevName (or earn lifetime gold) to open the path.',
           urgency: HubChaseUrgency.almost,
+          zoneId: d.id,
         );
       }
       final almost = d.unlockPrice > 0 &&
@@ -295,6 +331,7 @@ class HubChase {
         detail: 'Need $goldNeed more lifetime gold — or clear $prevName.',
         progressLabel: '$lifetime / ${d.unlockPrice}g',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
+        zoneId: d.id,
       );
     }
     return null;

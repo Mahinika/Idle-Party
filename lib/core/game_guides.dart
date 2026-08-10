@@ -16,7 +16,7 @@ abstract final class GameGuides {
       title: 'WORLD PATH',
       body:
           'The hub map lists every dungeon from Sand Caverns through Crystal Spire, '
-          'Sunken Tidehold, and Ashen Vault.\n\n'
+          'Sunken Tidehold, Ashen Vault, and Hollow Grove.\n\n'
           '• Tap an unlocked zone to enter.\n'
           '• Unlock the next zone by clearing the previous boss, or by earning enough lifetime gold.\n'
           '• Locked zones show lifetime gold progress (have / need) on the hub.\n'

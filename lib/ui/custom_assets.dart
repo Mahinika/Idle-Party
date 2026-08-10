@@ -165,6 +165,8 @@ abstract final class CustomAssets {
   static const String portraitTide = portraitUnderworld;
   /// Ashen Vault uses dead-city portrait (distinct from Hell's Gate).
   static const String portraitEmber = portraitDead;
+  /// Hollow Grove alias — sandy portrait + moss wash (≠ tide/ember neighbors).
+  static const String portraitGrove = portraitSandy;
 
   static String dungeonPortrait(String dungeonId) => switch (dungeonId) {
         'sandy' => portraitSandy,
@@ -176,6 +178,7 @@ abstract final class CustomAssets {
         'crystal' => portraitCrystal,
         'tide' => portraitTide,
         'ember' => portraitEmber,
+        'grove' => portraitGrove,
         _ => portraitSandy,
       };
 
@@ -199,6 +202,8 @@ abstract final class CustomAssets {
   static const String backdropTide = backdropUnderworld;
   /// Ashen Vault: dead backdrop (ember wash separates from Hell).
   static const String backdropEmber = backdropDead;
+  /// Hollow Grove alias — sandy backdrop + moss wash (≠ tide/ember).
+  static const String backdropGrove = backdropSandy;
 
   static String dungeonBackdropFor(String dungeonId) => switch (dungeonId) {
         'sandy' => backdropSandy,
@@ -210,6 +215,7 @@ abstract final class CustomAssets {
         'crystal' => backdropCrystal,
         'tide' => backdropTide,
         'ember' => backdropEmber,
+        'grove' => backdropGrove,
         _ => dungeonBackdrop,
       };
 

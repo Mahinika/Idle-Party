@@ -243,6 +243,7 @@ abstract final class KenneyAssets {
       'crystal' => floorStone,
       'tide' => floorStone,
       'ember' => floorSand,
+      'grove' => floorDirtDetail,
       _ => switch (DungeonCatalog.byId(dungeonId).layout) {
           DungeonLayoutKind.cave => floorSand,
           DungeonLayoutKind.hideout => floorDirtDetail,
@@ -278,6 +279,7 @@ abstract final class KenneyAssets {
       'hell' || 'ember' => [wallStone, wallStone, wallBanner],
       'dead' => [wallStone, wallStone, wallBannerAlt],
       'crystal' || 'tide' => [wallStone, wallStoneAlt1],
+      'grove' => [wallStone, wallStone, wallStoneAlt1],
       _ => [wallStone],
     };
   }
@@ -435,6 +437,20 @@ abstract final class KenneyAssets {
             MapPropKind.pillar,
             MapPropKind.bones,
           ],
+        'grove' => const [
+            MapPropKind.fountain,
+            MapPropKind.fountain,
+            MapPropKind.crate,
+            MapPropKind.crate,
+            MapPropKind.barrel,
+            MapPropKind.bones,
+            MapPropKind.pot,
+            MapPropKind.rubble,
+            MapPropKind.rubble,
+            MapPropKind.shelf,
+            MapPropKind.torch,
+            MapPropKind.fence,
+          ],
         _ => const [
             MapPropKind.barrel,
             MapPropKind.crate,
@@ -456,6 +472,7 @@ abstract final class KenneyAssets {
         'crystal' => doorVariant,
         'tide' => doorClosed,
         'ember' => hatch,
+        'grove' => chestClosed,
         _ => iconDoor,
       };
 
@@ -475,6 +492,7 @@ abstract final class KenneyAssets {
         'crystal' => enemyCrystalBoss,
         'tide' => enemyCrab,
         'ember' => enemyCyclops,
+        'grove' => enemySpider,
         _ => enemyBoss,
       };
     }
@@ -486,6 +504,7 @@ abstract final class KenneyAssets {
         'ember' => enemyGolem,
         'crystal' => enemyCrystalWraith,
         'tide' => enemyCrab,
+        'grove' => enemySpider,
         _ => enemyCyclops,
       };
     }
@@ -499,6 +518,7 @@ abstract final class KenneyAssets {
       'ember' => enemyRat,
       'crystal' => enemyCrystalMite,
       'tide' => enemySlime,
+      'grove' => enemySlime,
       _ => enemySlime,
     };
   }
@@ -520,6 +540,7 @@ abstract final class KenneyAssets {
           'crystal' => enemyCrystalMite,
           'tide' => enemySlime,
           'ember' => enemyRat,
+          'grove' => enemySlime,
           _ => enemyRat,
         },
       EnemyArchetype.brute => switch (dungeonId) {
@@ -530,6 +551,7 @@ abstract final class KenneyAssets {
           'ember' => enemyCyclops,
           'crystal' => enemyCrystalBoss,
           'tide' => enemyCrab,
+          'grove' => enemySpider,
           _ => enemyCyclops,
         },
       EnemyArchetype.tank => switch (dungeonId) {
@@ -539,6 +561,7 @@ abstract final class KenneyAssets {
           'ember' => enemyGolem,
           'crystal' => enemyCrystalBoss,
           'tide' => enemyCrab,
+          'grove' => enemySpider,
           _ => enemyGolem,
         },
       EnemyArchetype.ranged => switch (dungeonId) {
@@ -548,6 +571,7 @@ abstract final class KenneyAssets {
           'ember' => enemyBat,
           'crystal' => enemyCrystalWraith,
           'tide' => enemyBat,
+          'grove' => enemyBat,
           _ => enemyBat,
         },
       EnemyArchetype.glass => switch (dungeonId) {
@@ -557,12 +581,14 @@ abstract final class KenneyAssets {
           'ember' => enemyRat,
           'crystal' => enemyCrystalWraith,
           'tide' => enemySlime,
+          'grove' => enemySlime,
           _ => enemyBat,
         },
       EnemyArchetype.support => switch (dungeonId) {
           'crystal' => enemyCrystalWraith,
           'tide' => enemyCrab,
           'ember' => enemyCultist,
+          'grove' => enemyBat,
           _ => enemyCultist,
         },
     };
@@ -603,6 +629,7 @@ abstract final class KenneyAssets {
       'cthulhu' || 'chtulu' => enemyHellBoss,
       'tide leviathan' => enemyCrab,
       'cinder sovereign' => enemyCyclops,
+      'wyrd root' => enemySpider,
       'crystal warden' ||
       'crystal golem' ||
       'frozen bulwark' ||
@@ -648,6 +675,16 @@ abstract final class KenneyAssets {
       'cinder tick' =>
         enemyCultist,
       'char blade' || 'soot fang' => enemyRat,
+      'moss slime' || 'leaf mite' => enemySlime,
+      'root tick' => enemySpider,
+      'grove brute' || 'timber crusher' || 'hollow guard' || 'bark bulwark' =>
+        enemySpider,
+      'spore bat' ||
+      'canopy spitter' ||
+      'wyrd chanter' ||
+      'grove adept' =>
+        enemyBat,
+      'thorn skitter' || 'bramble fang' => enemySlime,
       'cave slime' || 'drip ooze' || 'sand mite' => enemySlime,
       'spit bat' || 'cavern spitter' || 'drill bat' => enemyBat,
       'needle rat' || 'glass skitter' || 'fort rat' || 'sneak rat' || 'pest' ||

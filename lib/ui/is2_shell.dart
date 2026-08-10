@@ -3992,11 +3992,17 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         ),
         const SizedBox(height: 6),
         Text(
-          'ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
-          'VIT +${state.totalVitalityBonus}\n'
+          'This run forge: ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
+          'VIT +${state.vitalityBonus}\n'
           'MOVE +${state.moveSpeedBonus}%  HASTE +${state.attackSpeedBonus}%  '
           'CRIT +${state.critBonus}%',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Party total: ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
+          'VIT +${state.totalVitalityBonus}',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         Text(

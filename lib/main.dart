@@ -268,6 +268,17 @@ class _GameHomePageState extends State<GameHomePage> {
           });
         }
 
+        // Drop stale hub MORE overlays when combat starts (ENTER / Daily /
+        // Gauntlet). Otherwise Codex/Guides can reopen on return to hub.
+        if (_director.state.inDungeon && _hubOverlay != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            if (_director.state.inDungeon && _hubOverlay != null) {
+              setState(() => _hubOverlay = null);
+            }
+          });
+        }
+
         final Widget body;
         if (_director.state.inDungeon) {
           body = Is2Shell(
@@ -282,8 +293,10 @@ class _GameHomePageState extends State<GameHomePage> {
                 ignoring: _hubOverlay != null,
                 child: HubScreen(
                   director: _director,
-                  onEnterDungeon: (id) =>
-                      _director.enterDungeon(dungeonId: id),
+                  onEnterDungeon: (id) {
+                    setState(() => _hubOverlay = null);
+                    _director.enterDungeon(dungeonId: id);
+                  },
                   onOpenInventory: () => setState(
                     () => _hubOverlay = Is2Overlay.inventory,
                   ),
