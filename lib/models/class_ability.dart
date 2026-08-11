@@ -620,6 +620,15 @@ class ClassKits {
       effect: AbilityEffectKind.absorb,
       tier: AbilityCastTier.filler,
       coeff: 2.0,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFE8D090,
+        groundDisc: true,
+        groundLife: 2.2,
+        groundArgb: 0x66FFE8A0,
+        groundRadius: 1.6,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.prayerOfMending,
@@ -634,6 +643,11 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 1.0,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFF0C0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.penance,
@@ -648,6 +662,11 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.signature,
       coeff: 0.62,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFE8A0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.powerWordFortitude,
@@ -804,7 +823,7 @@ class ClassKits {
       specId: HeroSpecId.fire,
       name: 'Pyroblast',
       shortLabel: 'Pyro',
-      description: 'Huge fire nuke (Hot Streak style).',
+      description: 'Free Pyroblast after two Fireball crits (Hot Streak).',
       unlockLevel: 13,
       cooldown: 15,
       resourceCost: 28,
@@ -1916,7 +1935,7 @@ class ClassKits {
       specId: HeroSpecId.assassination,
       name: 'Cold Blood',
       shortLabel: 'Cold',
-      description: 'Self crit buff.',
+      description: 'Self crit amp window for poisons and finishers.',
       unlockLevel: 11,
       cooldown: 35,
       effect: AbilityEffectKind.selfBuff,
@@ -1928,7 +1947,7 @@ class ClassKits {
       specId: HeroSpecId.assassination,
       name: 'Vendetta',
       shortLabel: 'Vend',
-      description: 'Signature mark amplify.',
+      description: 'Signature damage amp on your attacks.',
       unlockLevel: 13,
       cooldown: 45,
       resourceCost: 15,
@@ -1975,6 +1994,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.28,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFB090E0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.backstab,
@@ -1989,6 +2013,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.60,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFF9070C8,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.shadowstep,
@@ -2002,6 +2031,15 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFF8060C0,
+        groundDisc: true,
+        groundLife: 1.4,
+        groundArgb: 0x668060C0,
+        groundRadius: 1.4,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.premeditation,
@@ -2028,6 +2066,15 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFC090E8,
+        groundDisc: true,
+        groundLife: 3.0,
+        groundArgb: 0x77A070E0,
+        groundRadius: 2.2,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.eviscerateSub,
@@ -2043,6 +2090,11 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.65,
       showInHud: false,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFD0A0FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.cheapShot,
@@ -3024,7 +3076,7 @@ class ClassKits {
       specId: HeroSpecId.arcane,
       name: 'Slow',
       shortLabel: 'Slow',
-      description: 'Root nearest foe.',
+      description: 'Slow nearest foe attack speed.',
       unlockLevel: 9,
       cooldown: 14,
       resourceCost: 12,
@@ -3050,7 +3102,7 @@ class ClassKits {
       specId: HeroSpecId.arcane,
       name: 'Arcane Power',
       shortLabel: 'AP',
-      description: 'Signature damage window.',
+      description: 'Signature damage amp for Arcane spells.',
       unlockLevel: 13,
       cooldown: 40,
       resourceCost: 25,
@@ -3564,6 +3616,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.15,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF90E060,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.starfire,
@@ -3578,6 +3635,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.45,
+      boltStyle: SpellBoltStyle.arcane,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arcane,
+        castArgb: 0xFFD0A0FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.moonfire,
@@ -3592,6 +3654,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.9,
+      boltStyle: SpellBoltStyle.arcane,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arcane,
+        castArgb: 0xFFA0C0FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.hurricane,
@@ -3606,6 +3673,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.75,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF70D050,
+        groundDisc: true,
+        groundLife: 3.5,
+        groundArgb: 0x6670C048,
+        groundRadius: 2.8,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.typhoon,
@@ -3633,6 +3709,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
       coeff: 1.0,
+      boltStyle: SpellBoltStyle.arcane,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arcane,
+        castArgb: 0xFFE0C060,
+        groundDisc: true,
+        groundLife: 4.0,
+        groundArgb: 0x77D0A040,
+        groundRadius: 3.0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.barkskinBal,

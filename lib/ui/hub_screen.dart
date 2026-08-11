@@ -155,6 +155,14 @@ class _HubScreenState extends State<HubScreen>
             }
           },
         );
+      case HubChaseKind.meetHero:
+        return (
+          'PARTY',
+          () {
+            director.ackPendingHeroReveals();
+            widget.onOpenParty();
+          },
+        );
       case HubChaseKind.ascend:
         return ('ASCEND', () => confirmAscend(context, director));
       case HubChaseKind.dailyRun:
@@ -379,7 +387,8 @@ class _HubScreenState extends State<HubScreen>
                                   hideMissionClaim: chase.kind ==
                                       HubChaseKind.claimMissions,
                                   hideDaily:
-                                      chase.kind == HubChaseKind.dailyRun,
+                                      chase.kind == HubChaseKind.dailyRun ||
+                                          chase.kind == HubChaseKind.meetHero,
                                   onContracts: () {
                                     for (final m
                                         in director.state.missions) {
@@ -935,19 +944,20 @@ class _ZonePathMap extends StatefulWidget {
   final double pulse;
   final ValueChanged<String> onSelect;
 
-  /// Marker centers on painted gold rings (zone 0…9 top→bottom).
+  /// Marker centers on painted gold rings (zone 0…10 top→bottom).
   /// Extra art glow between ember/grove was painted out of the asset.
   static const List<Offset> markerNorm = [
-    Offset(0.491, 0.082), // sandy
-    Offset(0.483, 0.155), // goblin
-    Offset(0.474, 0.286), // king
-    Offset(0.514, 0.359), // underworld
-    Offset(0.454, 0.440), // dead
-    Offset(0.479, 0.567), // hell
-    Offset(0.465, 0.643), // crystal
-    Offset(0.503, 0.713), // tide
-    Offset(0.466, 0.781), // ember
-    Offset(0.478, 0.947), // grove
+    Offset(0.491, 0.070), // sandy
+    Offset(0.483, 0.145), // goblin
+    Offset(0.474, 0.240), // king
+    Offset(0.514, 0.325), // underworld
+    Offset(0.454, 0.410), // dead
+    Offset(0.479, 0.500), // hell
+    Offset(0.465, 0.585), // crystal
+    Offset(0.503, 0.665), // tide
+    Offset(0.466, 0.740), // ember
+    Offset(0.478, 0.845), // grove
+    Offset(0.485, 0.940), // storm
   ];
 
   static const double mapAspect = 1536 / 1024;
@@ -960,6 +970,8 @@ class _ZonePathMapState extends State<_ZonePathMap> {
   final ScrollController _scroll = ScrollController();
   String? _scrolledTo;
   bool _didInitialJump = false;
+  double? _lastMapH;
+  double? _lastViewH;
 
   @override
   void didUpdateWidget(covariant _ZonePathMap oldWidget) {
@@ -977,7 +989,11 @@ class _ZonePathMapState extends State<_ZonePathMap> {
 
   void _ensureSelectedVisible(double mapH, double viewH) {
     if (!_scroll.hasClients) return;
-    if (_scrolledTo == widget.selectedId) return;
+    if (_scrolledTo == widget.selectedId &&
+        _lastMapH == mapH &&
+        _lastViewH == viewH) {
+      return;
+    }
     final idx = widget.dungeons.indexWhere((d) => d.id == widget.selectedId);
     if (idx < 0 || idx >= _ZonePathMap.markerNorm.length) return;
     final y = _ZonePathMap.markerNorm[idx].dy * mapH;
@@ -985,6 +1001,8 @@ class _ZonePathMapState extends State<_ZonePathMap> {
     final target =
         (y - viewH * 0.45).clamp(0.0, math.max(0.0, mapH - viewH)).toDouble();
     _scrolledTo = widget.selectedId;
+    _lastMapH = mapH;
+    _lastViewH = viewH;
     if (!_didInitialJump) {
       _didInitialJump = true;
       _scroll.jumpTo(target);
@@ -1022,9 +1040,14 @@ class _ZonePathMapState extends State<_ZonePathMap> {
         // Small portrait discs on painted rings — map art stays primary.
         final markerSize = (mapW * 0.10).clamp(32.0, 44.0);
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _ensureSelectedVisible(mapH, viewH);
-        });
+        final needsScroll = _scrolledTo != widget.selectedId ||
+            _lastMapH != mapH ||
+            _lastViewH != viewH;
+        if (needsScroll) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _ensureSelectedVisible(mapH, viewH);
+          });
+        }
 
         final dungeons = widget.dungeons;
         final n = math.min(dungeons.length, _ZonePathMap.markerNorm.length);

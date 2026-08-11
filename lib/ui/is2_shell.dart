@@ -408,6 +408,10 @@ class _Is2ShellState extends State<Is2Shell> {
         overlay != Is2Overlay.inventory) {
       widget.director.clearToast();
     }
+    if (overlay == Is2Overlay.inventory ||
+        overlay == Is2Overlay.teamComposition) {
+      widget.director.ackPendingHeroReveals();
+    }
     setState(() {
       _overlay = overlay;
       if (overlay == Is2Overlay.none) {
@@ -1747,7 +1751,15 @@ class _PartyRow extends StatelessWidget {
       AbilityId.powerInfusion => s.powerInfusionTimer > 0,
       AbilityId.innerFire => s.innerFireActive,
       AbilityId.combustion => s.combustionTimer > 0,
-      AbilityId.iceBlock => s.iceBlockTimer > 0,
+      AbilityId.vendetta ||
+      AbilityId.coldBlood ||
+      AbilityId.arcanePower =>
+        s.combustionTimer > 0,
+      AbilityId.pyroblast => s.hotStreakReady,
+      AbilityId.iceBlock ||
+      AbilityId.arcaneIceBlock ||
+      AbilityId.frostMageIceBlock =>
+        s.iceBlockTimer > 0,
       AbilityId.livingBomb => s.livingBombArmed > 0,
       AbilityId.sliceAndDice => s.sliceAndDiceTimer > 0,
       AbilityId.bladeFlurry => s.bladeFlurryTimer > 0,
@@ -3320,7 +3332,7 @@ class _InventoryDockState extends State<_InventoryDock>
           ),
           const SizedBox(height: 10),
           Text(
-            'Flask: party HUD · Pets: META → Beast · God Hand: POWER → Forge',
+            'Flask: party HUD · Pets: META → Beast · God Hand: POWER → Forge → KEEP',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
@@ -4020,9 +4032,40 @@ class _PowerPillarState extends State<_PowerPillar>
   @override
   Widget build(BuildContext context) {
     final d = widget.director;
+    final s = d.state;
+    final keepLine =
+        'Keep · AL${s.ascensionLevel} · Bless ×${s.metaDepth.ascendBlessings} · '
+        '${s.essence}e';
+    final runLine =
+        'This run · forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
+        'VIT +${s.vitalityBonus}';
+    final blurb = switch (_tabs.index) {
+      0 => 'Forge: gold this run (wipes) · KEEP forever · Apex mats',
+      1 => 'Camp: permanent essence tracks — survive Ascend',
+      2 => 'Market: flasks for the run · sell stash for gold',
+      _ => 'Shop: essence power that survives Ascend',
+    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 2, 8, 0),
+          child: Column(
+            children: [
+              Text(
+                keepLine,
+                textAlign: TextAlign.center,
+                style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+              ),
+              Text(
+                runLine,
+                textAlign: TextAlign.center,
+                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
         MenuChrome.tabRail(
           controller: _tabs,
           onTap: (_) => setState(() {}),
@@ -4033,7 +4076,13 @@ class _PowerPillarState extends State<_PowerPillar>
             Tab(text: 'SHOP'),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
+        Text(
+          blurb,
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
         Expanded(
           child: switch (_tabs.index) {
             0 => SingleChildScrollView(child: _ForgeOverlay(director: d)),
@@ -4182,12 +4231,12 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
       PartyUpgradeType.crit => '+${state.critBonus}%',
     };
     final name = switch (type) {
-      PartyUpgradeType.attack => 'Attack',
-      PartyUpgradeType.defense => 'Defense',
-      PartyUpgradeType.vitality => 'Vitality',
-      PartyUpgradeType.moveSpeed => 'Move',
-      PartyUpgradeType.attackSpeed => 'Haste',
-      PartyUpgradeType.crit => 'Crit',
+      PartyUpgradeType.attack => 'ATK',
+      PartyUpgradeType.defense => 'DEF',
+      PartyUpgradeType.vitality => 'VIT',
+      PartyUpgradeType.moveSpeed => 'MOVE',
+      PartyUpgradeType.attackSpeed => 'HASTE',
+      PartyUpgradeType.crit => 'CRIT',
     };
     final costPart = onPressed != null ? '${cost}g' : 'Need ${cost}g';
     final label = recommended
@@ -4208,8 +4257,8 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
           controller: _tabs,
           onTap: (_) => setState(() {}),
           tabs: const [
-            Tab(text: 'FORGE'),
-            Tab(text: 'META'),
+            Tab(text: 'GOLD'),
+            Tab(text: 'KEEP'),
             Tab(text: 'MATS'),
             Tab(text: 'APEX'),
           ],
@@ -4256,24 +4305,31 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
     final training = GameLogic.partyTrainingCostFor(state);
     final canAscend = GameLogic.canAscend(state);
     final softcap = GameLogic.levelsUntilSoftcap(state);
+    final meanLv = state.heroes.isEmpty
+        ? 1
+        : (state.heroes.fold<int>(0, (s, h) => s + h.level) /
+                state.heroes.length)
+            .round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Gold upgrades this run (wipe on Ascend). Essence spends → META.',
+          'Gold this run — forge upgrades wipe on Ascend. '
+          'Train levels stay forever.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         Text(
-          'This run forge: ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
+          'Bought this run:  ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
           'VIT +${state.vitalityBonus}\n'
           'MOVE +${state.moveSpeedBonus}%  HASTE +${state.attackSpeedBonus}%  '
           'CRIT +${state.critBonus}%',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          style: GameTheme.body(size: 14, color: GameTheme.parchment),
         ),
         const SizedBox(height: 4),
         Text(
-          'Party total: ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
+          'Party power now (gear + keep + forge):  '
+          'ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
           'VIT +${state.totalVitalityBonus}',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -4281,35 +4337,39 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         Text(
           canAscend
               ? (director.state.inDungeon
-                  ? 'Ascend ready on Hub · AL${state.ascensionLevel + 1}'
-                  : 'Ascend ready · AL${state.ascensionLevel + 1}')
-              : (director.state.inDungeon
-                  ? 'Ascend on Hub · '
-                      '${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} bosses'
-                  : 'Ascend ${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} bosses · keep clearing'),
+                  ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
+                  : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
+              : 'Ascend ${state.bossVictories}/'
+                  '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} '
+                  'bosses · claim on Hub (not here)',
           textAlign: TextAlign.center,
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _sectionTitle(
-          'GOLD UPGRADES',
-          'Infinite · wipe on Ascend. BEST = cheapest relative gain.',
+          'TRAIN (LEVELS)',
+          'Pays gold · +1 level to every hero · levels survive Ascend.',
         ),
         KenneyButton(
           label: state.gold >= training
-              ? 'Train $training g'
-              : 'Need $training g',
+              ? 'Train party +1 Lv · ${training}g'
+              : 'Train · Need ${training}g',
           onPressed: state.gold >= training ? director.applyTraining : null,
         ),
-        if (softcap > 0)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              'Train: need ~$softcap level${softcap == 1 ? '' : 's'} to match floor',
-              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-            ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            softcap > 0
+                ? 'Avg Lv$meanLv · ~$softcap more level${softcap == 1 ? '' : 's'} to match floor'
+                : 'Avg Lv$meanLv · party level matches this floor',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
-        const SizedBox(height: 6),
+        ),
+        const SizedBox(height: 10),
+        _sectionTitle(
+          'RUN BONUSES (GOLD)',
+          'Cheapest relative gain shows BEST. All wipe when you Ascend.',
+        ),
         for (final type in PartyUpgradeType.values) ...[
           _upgradeButton(
             state: state,
@@ -4338,27 +4398,29 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${state.essence} essence · permanent (survives Ascend)',
-          style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+          'Keep forever — essence spends survive Ascend. '
+          'Run gold lives on the GOLD tab.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${state.essence} essence',
+          style: GameTheme.body(size: 15, color: GameTheme.torchHot),
         ),
         Text(
           state.metaDepth.ascendBlessings <= 0
-              ? 'Ascend Blessing · none yet — Ascend to gain permanent ATK/DEF/VIT/gold'
-              : 'Ascend Blessing ×${state.metaDepth.ascendBlessings} · '
+              ? 'Ascend Blessing: none yet — Ascend on Hub for permanent ATK/DEF/VIT/gold'
+              : 'Ascend Blessing ×${state.metaDepth.ascendBlessings}: '
                   '+${state.ascendBlessingAttackBonus} ATK · '
                   '+${state.ascendBlessingDefenseBonus} DEF · '
                   '+${state.ascendBlessingVitalityBonus} VIT · '
                   '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
-        Text(
-          'Relics · Soulbound · God Hand. Run gold stays on FORGE tab.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
         const SizedBox(height: 8),
         _sectionTitle(
           'RELICS',
-          'Permanent party auras.',
+          'Buy once · upgrade tiers · permanent party auras.',
         ),
         for (final relicId in GameLogic.relicOrder) ...[
           Builder(
@@ -4373,13 +4435,13 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
                   : 0;
               final desc = switch (relicId) {
                 GameLogic.warBannerRelic => owned
-                    ? 'Permanent +${state.relicAttackBonus} team attack aura (T$tier).'
-                    : 'Permanent +4 team attack aura per tier.',
+                    ? 'Permanent +${state.relicAttackBonus} team attack (T$tier).'
+                    : 'Permanent +4 team attack per tier.',
                 GameLogic.ironWardRelic => owned
-                    ? 'Permanent +${state.relicDefenseBonus} team defense aura (T$tier).'
-                    : 'Permanent +2 team defense aura per tier.',
+                    ? 'Permanent +${state.relicDefenseBonus} team defense (T$tier).'
+                    : 'Permanent +2 team defense per tier.',
                 GameLogic.phoenixEmberRelic => owned
-                    ? 'Permanent +${state.relicVitalityBonus} max HP for every hero (T$tier).'
+                    ? 'Permanent +${state.relicVitalityBonus} max HP per hero (T$tier).'
                     : 'Permanent +10 max HP per hero per tier.',
                 GameLogic.godHandFocusRelic => owned
                     ? '+${state.relicGodHandDamageBonus} God Hand damage (T$tier).'
@@ -4460,9 +4522,13 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const Divider(height: 16, color: Color(0x665A5040)),
         _sectionTitle(
           'SOULBOUND',
-          'Bind one weapon or armor from bag TOOLS · survives Ascend. '
-              'Prefer picks the slot when you tap BIND on a hero.',
+          'One forever item for the whole party. Bind from a hero → TOOLS (3 fragments).',
         ),
+        Text(
+          'Prefer which slot BIND picks first:',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
         Row(
           children: [
             Expanded(
@@ -4493,20 +4559,19 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const SizedBox(height: 6),
         if (state.soulboundItem == null)
           Text(
-            'No soulbound yet. Open a hero → TOOLS → BIND (3 fragments). '
-            'Preference: ${state.metaDepth.soulboundIsArmor ? 'armor' : 'weapon'}.',
+            'None yet. Equip a weapon or chest/cloak, open that hero → TOOLS → SOULBIND.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           )
         else ...[
           Text(
-            '${state.soulboundItem!.name}  ·  refine '
-            '${state.metaDepth.soulboundRefine}',
+            '${state.soulboundItem!.name}\n'
+            'Refine ${state.metaDepth.soulboundRefine} · each refine +1 ATK & +1 DEF',
             style: GameTheme.body(size: 14, color: GameTheme.mossLit),
           ),
           const SizedBox(height: 6),
           KenneyButton(
             label:
-                'REFINE  ${GameLogic.refineSoulboundCost(state.metaDepth.soulboundRefine)} frag',
+                'Refine +1 ATK/DEF · ${GameLogic.refineSoulboundCost(state.metaDepth.soulboundRefine)} frag',
             onPressed: state.soulboundFragments >=
                     GameLogic.refineSoulboundCost(
                       state.metaDepth.soulboundRefine,
@@ -4518,17 +4583,17 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const Divider(height: 16, color: Color(0x665A5040)),
         _sectionTitle(
           'GOD HAND',
-          'Essence · tap AOE in dungeon. Survives Ascend.',
+          'Tap in the dungeon for AOE. Essence upgrades survive Ascend.',
         ),
         Text(
-          'Lv${state.godHandLevel}  AOE ${state.godHandBaseDamage}  '
-          'r${state.godHandRadius.toStringAsFixed(1)}',
+          'Lv${state.godHandLevel} · damage ${state.godHandBaseDamage} · '
+          'radius ${state.godHandRadius.toStringAsFixed(1)}',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         KenneyButton(
           label:
-              'POWER Lv${state.godHandLevel}  ${GameLogic.godHandUpgradeCost(state.godHandLevel)}e',
+              'Damage Lv${state.godHandLevel} · ${GameLogic.godHandUpgradeCost(state.godHandLevel)}e',
           onPressed: state.essence >=
                   GameLogic.godHandUpgradeCost(state.godHandLevel)
               ? director.upgradeGodHand
@@ -4537,8 +4602,8 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const SizedBox(height: 6),
         KenneyButton(
           label: state.metaDepth.godHandCdLevel >= 8
-              ? 'CD Lv${state.metaDepth.godHandCdLevel}  MAX'
-              : 'CD Lv${state.metaDepth.godHandCdLevel}  '
+              ? 'Cooldown Lv${state.metaDepth.godHandCdLevel} · MAX'
+              : 'Cooldown Lv${state.metaDepth.godHandCdLevel} · '
                   '${GameLogic.godHandCdUpgradeCost(state.metaDepth.godHandCdLevel)}e',
           onPressed: state.metaDepth.godHandCdLevel >= 8
               ? null
@@ -4551,7 +4616,7 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         ),
         const SizedBox(height: 8),
         Text(
-          'Style · BAL / FOCUS / WIDE (tip: God Hand styles)',
+          'Style: BAL = default · FOCUS = harder hits, smaller blast · WIDE = bigger blast, softer hits',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),
@@ -4587,8 +4652,23 @@ class _JobsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    final ready = state.missions.where((m) => m.isComplete).length;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text(
+          'Contracts — clear goals while you dungeon. Claim for gold + essence.',
+          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        ),
+        if (ready > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              '$ready ready to claim',
+              style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+            ),
+          ),
+        const SizedBox(height: 8),
         for (final mission in state.missions)
           Container(
             margin: const EdgeInsets.only(bottom: 8),
@@ -4685,9 +4765,9 @@ class _SanctuaryOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Permanent essence tracks (infinite · survive Ascend). '
-          'From Lv12 you can prestige a track for bonus.',
-          style: GameTheme.body(size: 14, color: GameTheme.parchment),
+          'Permanent essence tracks — survive Ascend. '
+          'Upgrade forever; from Lv12 you can Prestige (reset level, keep a bonus).',
+          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (state.metaDepth.ascendBlessings > 0) ...[
           const SizedBox(height: 6),
@@ -4722,12 +4802,8 @@ class _SanctuaryOverlay extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
+                  MenuChrome.sectionLabel(
                     GameLogic.sanctuaryNames[track] ?? track,
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
-                      color: GameTheme.torchHot,
-                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -4739,7 +4815,7 @@ class _SanctuaryOverlay extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Next $nextBonus',
+                    'Next: $nextBonus',
                     style: GameTheme.body(
                       size: 12,
                       color: GameTheme.mossLit,
@@ -4757,7 +4833,7 @@ class _SanctuaryOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   KenneyButton(
-                    label: 'UPGRADE  ${cost}e',
+                    label: 'Upgrade · ${cost}e',
                     onPressed: state.essence >= cost
                         ? () => director.upgradeSanctuary(track)
                         : null,
@@ -4765,7 +4841,7 @@ class _SanctuaryOverlay extends StatelessWidget {
                   if (level >= 12) ...[
                     const SizedBox(height: 4),
                     KenneyButton(
-                      label: 'PRESTIGE RESET  +${25 + level}e',
+                      label: 'Prestige reset · +${25 + level}e',
                       style: KenneyButtonStyle.brown,
                       onPressed: () =>
                           director.prestigeSanctuaryTrack(track),
@@ -5309,29 +5385,31 @@ class _MarketOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Gold ${_formatCount(state.gold)} / Essence ${_formatCount(state.essence)}',
+          'Gold ${_formatCount(state.gold)} · Essence ${_formatCount(state.essence)}',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         Text(
-          'Flasks for gold · tap stash to sell for gold. '
-          'Bag SELL JUNK = gold · SCRAP = essence (Settings filters).',
+          'Buy heals with gold. Tap a stash item here to sell it for gold.\n'
+          'In the bag: SELL JUNK = gold · SCRAP = essence (Settings filters).',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 12),
+        MenuChrome.sectionLabel('CONSUMABLES'),
+        const SizedBox(height: 6),
         KenneyButton(
           label: state.gold >= flaskCost
-              ? 'BUY FLASK  ${flaskCost}g'
-              : 'BUY FLASK  ${flaskCost}g · need gold',
+              ? 'Buy flask · ${flaskCost}g'
+              : 'Buy flask · Need ${flaskCost}g',
           onPressed: state.gold >= flaskCost ? director.buyMarketFlask : null,
         ),
         const SizedBox(height: 6),
         KenneyButton(
           label: state.gold >= flaskCost * 3
-              ? 'BUY 3 FLASKS  ${flaskCost * 3}g'
-              : 'BUY 3 FLASKS  ${flaskCost * 3}g · need gold',
+              ? 'Buy 3 flasks · ${flaskCost * 3}g'
+              : 'Buy 3 flasks · Need ${flaskCost * 3}g',
           onPressed: state.gold >= flaskCost * 3
               ? () => director.buyMarketFlasks()
               : null,
@@ -5339,8 +5417,8 @@ class _MarketOverlay extends StatelessWidget {
         const SizedBox(height: 6),
         KenneyButton(
           label: state.gold >= GameLogic.marketBandageCost(state)
-              ? 'BUY BANDAGE  ${GameLogic.marketBandageCost(state)}g'
-              : 'BUY BANDAGE  ${GameLogic.marketBandageCost(state)}g · need gold',
+              ? 'Buy bandage · ${GameLogic.marketBandageCost(state)}g'
+              : 'Buy bandage · Need ${GameLogic.marketBandageCost(state)}g',
           onPressed: state.gold >= GameLogic.marketBandageCost(state)
               ? director.buyMarketBandage
               : null,
@@ -5359,11 +5437,11 @@ class _MarketOverlay extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        MenuChrome.sectionLabel('SELL STASH (tap for gold)'),
+        MenuChrome.sectionLabel('SELL STASH (TAP = GOLD)'),
         const SizedBox(height: 6),
         if (stash.isEmpty)
           Text(
-            'Bag is empty. Clear rooms for gear. Sell here for gold, or SELL JUNK in the bag for essence.',
+            'Bag empty. Clear rooms for gear, then sell extras here for gold.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
           )

@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.11.1**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.11.3**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -27,7 +27,7 @@ for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.11.1**.
+closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.11.3**.
 Production still needs **12 closed testers × 14 days**. Do not treat Play as the
 primary install channel yet.
 
@@ -105,7 +105,7 @@ GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
              → GameLogic.simulateSpatialOffline → SpatialCombat.step
                (AFK: afkAssist + reducedVfx, auto-flask, God Hand)
 GameLogic + GameState   (rules / persistence)
-DungeonCatalog          (10 named zones, bossFloor = 5 + AL)
+DungeonCatalog          (11 named zones, bossFloor = 5 + AL)
 RoomLayouts (tile_map)  (multi-chamber maps + gates)
 ```
 
@@ -115,18 +115,21 @@ catch-up (full enemy stats; same kits/abilities/chambers).
 **Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = AL10+): endless Crystal
 Spire climb from Hub; wipe/leave → hub; `metaDepth.gauntletBestFloor` survives Ascend.
 
-**Hub TODAY** (`lib/core/hub_chase.dart`): one chase card — claimables first, then
-progress. Urgency **READY** / **ALMOST** (Ascend one boss away, KEY +1 vault, Will
-gap, etc.). Ascend confirm/toast + chase detail use **`AscendRoadmap`**
-(`lib/core/ascend_roadmap.dart`) for next AL unlocks (e.g. AL1 Combat Rogue,
-AL2 5th party slot buyable, AL10 Gauntlet).
+**Hub TODAY** (`lib/core/hub_chase.dart`): one chase card — claimables first
+(vault / jobs / **Meet new kit**), then Ascend / progress. Urgency **READY** /
+**ALMOST** (Ascend one boss away, KEY +1 vault, Will gap, etc.). New unlocks
+queue `metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast +
+chase detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next
+AL unlocks — kit ladder AL1–6 (e.g. Combat Rogue, BM/Holy/Arcane + 5th slot,
+DKs, Aff/Demo) plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint +
+Shadow→warlock sprite).
 
 Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat. Offline return
 uses `OfflineProgressResult` (wow headline + highlight rows + “Up next” chase).
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
-## World path (10 zones)
+## World path (11 zones)
 
 | # | id | Name |
 |---|-----|------|
@@ -140,6 +143,7 @@ Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 | 7 | tide | Sunken Tidehold |
 | 8 | ember | Ashen Vault |
 | 9 | grove | Hollow Grove |
+| 10 | storm | Stormwake Hollow |
 
 Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 
@@ -191,13 +195,13 @@ soulbound item (may rescale) + fragments, God Hand level + style/CD in `metaDept
 `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
 (mute/VFX/colorblind/text scale/auto-sell), full `metaDepth` (Gauntlet best, Will /
 Gauntlet claims, daily vault / weekly affix season, prestige shop, unlocked specs,
-party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**, …),
+**`pendingHeroReveals`** (Meet … TODAY until PARTY), party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**, …),
 **hero levels/XP**, **Apex** vault + equipped apex, craft mats/pity, keystone prefs
 (clamped) + challenge toggles, FARM/PUSH preference.
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
 each Ascend adds **+2 ATK · +1 DEF · +4 VIT · +3% gold** on top of AL flats
-(`+1 ATK` / `DEF = AL~/2` / `+2 VIT` / `+10% gold` per AL). Shown in Forge → META
+(`+1 ATK` / `DEF = AL~/2` / `+2 VIT` / `+10% gold` per AL). Shown in Forge → KEEP
 and Sanctuary. Constants: `GameLogic.ascendBlessing*`.
 
 **Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades
@@ -217,7 +221,7 @@ Affixes still rotate weekly. See `lib/core/keystone.dart`.
 ## God Hand
 
 Tap steers the party briefly and deals AOE; has cooldown. Damage upgrades with essence.
-Styles under Forge → META: **BAL** / **FOCUS** (+dmg −radius) / **WIDE** (+radius −dmg).
+Styles under Forge → KEEP: **BAL** / **FOCUS** (+dmg −radius) / **WIDE** (+radius −dmg).
 Optional CD upgrades: `metaDepth.godHandCdLevel`.
 
 ## Balance policy

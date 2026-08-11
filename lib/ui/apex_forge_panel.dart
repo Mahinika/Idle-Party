@@ -31,18 +31,18 @@ class ApexMaterialsPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Boss mats for Apex craft. Survive Ascend. Not in the gear bag.',
+          'Boss materials for Apex craft. Survive Ascend. Separate from the gear bag.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),
         Text(
-          'Zone shards from that boss · cores any boss · Slag from Gauntlet/Spire.',
+          'Zone shards from that zone’s boss · cores from any boss · Slag from Gauntlet/Spire.',
           style: GameTheme.body(size: 12, color: GameTheme.torchHot),
         ),
         const SizedBox(height: 10),
         if (owned.isEmpty)
           Text(
-            'No materials yet — clear dungeon bosses in PUSH.',
+            'No materials yet — clear dungeon bosses (PUSH helps).',
             style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
           )
         else ...[
@@ -204,7 +204,7 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Craft Apex BiS from MATS (not gold). Weapon R1 unlocks armor · survives Ascend.',
+          'Craft Apex BiS with materials (not gold). Craft weapon R1 first, then armor. Survives Ascend.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (nextFarm != null) ...[

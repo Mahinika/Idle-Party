@@ -1,8 +1,10 @@
 import '../models/dungeon_def.dart';
+import '../models/hero_spec.dart';
 import '../models/meta_depth.dart';
 import 'ascend_roadmap.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'hero_identity.dart';
 import 'local_season.dart';
 import 'meta_systems.dart';
 
@@ -11,6 +13,8 @@ enum HubChaseKind {
   /// Daily vault ready to claim (API still uses [GameLogic.claimWeekly]).
   claimDailyVault,
   claimMissions,
+  /// Newly unlocked kit waiting for PARTY meet / acknowledge.
+  meetHero,
   ascend,
   dailyVaultProgress,
   willRank,
@@ -96,6 +100,9 @@ class HubChase {
         urgency: HubChaseUrgency.ready,
       );
     }
+
+    final meet = _pendingMeetChase(state);
+    if (meet != null) return meet;
 
     if (GameLogic.canAscend(state)) {
       final reward = GameLogic.ascendEssenceReward(state.ascensionLevel + 1) +
@@ -197,6 +204,25 @@ class HubChase {
     );
   }
 
+  static HubChase? _pendingMeetChase(GameState state) {
+    final pending = state.metaDepth.pendingHeroReveals;
+    if (pending.isEmpty) return null;
+    final specs = <HeroSpecId>[
+      for (final name in pending) ?HeroIdentity.tryParseSpec(name),
+    ];
+    if (specs.isEmpty) return null;
+    final first = specs.first;
+    final def = HeroSpecs.def(first);
+    final extra = specs.length - 1;
+    return HubChase(
+      kind: HubChaseKind.meetHero,
+      title: extra > 0 ? 'Meet ${def.name} · +$extra' : 'Meet ${def.name}',
+      detail: '${HeroIdentity.fantasyLine(first)} Open PARTY to field them.',
+      progressLabel: 'New',
+      urgency: HubChaseUrgency.ready,
+    );
+  }
+
   static HubChase? _weekGoalChase(
     GameState state,
     DateTime clock, {
@@ -238,7 +264,8 @@ class HubChase {
   }) {
     final dungeonId = GameLogic.recommendedDungeonId(state);
     final dungeon = DungeonCatalog.byId(dungeonId);
-    final teaser = AscendRoadmap.chaseTeaser(state.ascensionLevel);
+    final kitTeaser = AscendRoadmap.nextMissingKitTeaser(state);
+    final teaser = kitTeaser ?? AscendRoadmap.chaseTeaser(state.ascensionLevel);
     final almost = urgency == HubChaseUrgency.almost;
     return HubChase(
       kind: HubChaseKind.clearFloors,

@@ -62,6 +62,23 @@ void main() {
       expect(cleared.inDungeon, isFalse);
       expect(MetaSystems.isActiveDailyRun(cleared, now: now), isFalse);
     });
+
+    test('daily wipe restart keeps seed so claim still works', () {
+      final now = DateTime.utc(2026, 8, 9, 12);
+      var state = GameLogic.enterDaily(
+        GameLogic.createInitialState(now: now),
+        now: now,
+      );
+      final seed = state.layoutSeed;
+      state = GameLogic.restartFloor(state);
+      expect(state.layoutSeed, seed);
+      expect(MetaSystems.isActiveDailyRun(state, now: now), isTrue);
+
+      state = state.copyWith(enemies: const []);
+      final cleared = GameLogic.completeCurrentRoom(state, goldGain: 0);
+      expect(cleared.dailyClaimed, isTrue);
+      expect(cleared.inDungeon, isFalse);
+    });
   });
 
   group('Gear loadouts', () {
@@ -210,6 +227,7 @@ void main() {
       final tide = DungeonCatalog.byId('tide');
       final ember = DungeonCatalog.byId('ember');
       final grove = DungeonCatalog.byId('grove');
+      final storm = DungeonCatalog.byId('storm');
       expect(crystal.number, 6);
       expect(tide.number, 7);
       expect(tide.bossName, 'Tide Leviathan');
@@ -217,7 +235,9 @@ void main() {
       expect(ember.bossName, 'Cinder Sovereign');
       expect(grove.number, 9);
       expect(grove.bossName, 'Wyrd Root');
-      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(10));
+      expect(storm.number, 10);
+      expect(storm.bossName, 'Storm Tyrant');
+      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(11));
       expect(
         DungeonCatalog.isUnlocked('tide', 0, 6),
         isTrue,
@@ -236,6 +256,14 @@ void main() {
       );
       expect(
         DungeonCatalog.isUnlocked('grove', 0, 7),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('storm', 0, 9),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('storm', 0, 8),
         isFalse,
       );
     });

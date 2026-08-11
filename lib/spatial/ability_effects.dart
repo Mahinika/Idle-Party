@@ -226,6 +226,30 @@ abstract final class AbilityEffectRunner {
           focus.bleedTimer > 3.5) {
         return false;
       }
+      // DoT maintain: don't refresh the same DoT while it has time left.
+      if (_isMaintainDot(d) &&
+          focus != null &&
+          focus.bleedTimer > 3.5 &&
+          focus.bleedAbilityId == d.id.name) {
+        return false;
+      }
+      // Assassin Envenom wants combo points.
+      if (d.id == AbilityId.envenom && hero.comboPoints < 3) {
+        return false;
+      }
+      // Arcane Missiles dump when charged; hold early.
+      if (d.id == AbilityId.arcaneMissiles && hero.arcaneCharges < 2) {
+        return false;
+      }
+      // Frost Nova (SpecKit): pack peel, not single-target root spam.
+      if (d.id == AbilityId.frostNovaMage) {
+        final near = [
+          for (final e in world.enemies)
+            if (e.hp > 0 && !e.dormant && SpatialCombat._dist(hero, e) <= 2.4) e,
+        ];
+        final peel = near.any((e) => SpatialCombat._dist(hero, e) <= 1.6);
+        if (near.length < 2 && !peel) return false;
+      }
       return true;
     }
 
@@ -303,6 +327,31 @@ abstract final class AbilityEffectRunner {
               b.effect == AbilityEffectKind.absorb;
           if (aHeal != bHeal) return aHeal ? -1 : 1;
         }
+        // DoT maintain before fillers when the focus has no DoT.
+        if (focus != null && focus.bleedTimer < 2.0) {
+          final aDot = _isMaintainDot(a);
+          final bDot = _isMaintainDot(b);
+          if (aDot != bDot) return aDot ? -1 : 1;
+        }
+        // Arcane: build Blast stacks, then dump Missiles.
+        if (hero.heroSpecId == HeroSpecId.arcane) {
+          if (hero.arcaneCharges >= 3) {
+            final aDump = a.id == AbilityId.arcaneMissiles;
+            final bDump = b.id == AbilityId.arcaneMissiles;
+            if (aDump != bDump) return aDump ? -1 : 1;
+          } else {
+            final aBuild = a.id == AbilityId.arcaneBlast;
+            final bBuild = b.id == AbilityId.arcaneBlast;
+            if (aBuild != bBuild) return aBuild ? -1 : 1;
+          }
+        }
+        // Assassin: Envenom when combo is ready.
+        if (hero.heroSpecId == HeroSpecId.assassination &&
+            hero.comboPoints >= 4) {
+          final aEnv = a.id == AbilityId.envenom;
+          final bEnv = b.id == AbilityId.envenom;
+          if (aEnv != bEnv) return aEnv ? -1 : 1;
+        }
         // Prefer AoE in packs, ST otherwise.
         final aAoe = a.effect == AbilityEffectKind.aoe;
         final bAoe = b.effect == AbilityEffectKind.aoe;
@@ -331,6 +380,44 @@ abstract final class AbilityEffectRunner {
         key.contains('hammer of wrath') ||
         key.contains('kill shot');
   }
+
+  static bool _isMaintainDot(ClassAbilityDef d) => switch (d.id) {
+        AbilityId.corruption ||
+        AbilityId.unstableAffliction ||
+        AbilityId.curseOfAgony ||
+        AbilityId.shadowWordPain ||
+        AbilityId.vampiricTouch ||
+        AbilityId.devouringPlague ||
+        AbilityId.moonfire ||
+        AbilityId.immolateDemo ||
+        AbilityId.immolateDestro ||
+        AbilityId.serpentSting ||
+        AbilityId.garrote ||
+        AbilityId.rupture ||
+        AbilityId.bloodBoil ||
+        AbilityId.bloodBoilUnholy ||
+        AbilityId.howlingBlast ||
+        AbilityId.scourgeStrike ||
+        AbilityId.heartStrike =>
+          true,
+        _ => false,
+      };
+
+  static bool _isStackingDot(ClassAbilityDef d) => switch (d.id) {
+        AbilityId.corruption ||
+        AbilityId.unstableAffliction ||
+        AbilityId.curseOfAgony ||
+        AbilityId.shadowWordPain ||
+        AbilityId.vampiricTouch ||
+        AbilityId.devouringPlague ||
+        AbilityId.bloodBoil ||
+        AbilityId.bloodBoilUnholy ||
+        AbilityId.howlingBlast ||
+        AbilityId.scourgeStrike ||
+        AbilityId.heartStrike =>
+          true,
+        _ => false,
+      };
 
   /// Applies always-on kit passive bonuses from [ability.id].
   /// Magnitudes are mild so stacking with GameState auras stays sane.
@@ -520,6 +607,51 @@ abstract final class AbilityEffectRunner {
       }
       return true;
     }
+    // Shamanistic Rage: resource dump + short DR (copy promised both).
+    if (def.id == AbilityId.shamanisticRage) {
+      _spendAndCd(world, hero, def);
+      final grant = def.coeff > 0 ? def.coeff : 30.0;
+      SpatialCombat._gainRage(hero, grant);
+      hero.shieldWallTimer = math.max(hero.shieldWallTimer, 4.0);
+      hero.buffTimers['shield'] = 4.0;
+      _announce(world, hero, def.shortLabel, 0xFFE0C040, reducedVfx);
+      if (!reducedVfx) {
+        SpatialCombat._spawnRing(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: 0xFFE0A040,
+          radius: 0.9,
+          life: 0.4,
+        );
+      }
+      return true;
+    }
+    // Real Ice Block immunity (not just Shield Wall DR).
+    if (def.id == AbilityId.arcaneIceBlock ||
+        def.id == AbilityId.frostMageIceBlock) {
+      _spendAndCd(world, hero, def);
+      hero.iceBlockTimer = math.max(hero.iceBlockTimer, 4.0);
+      _announce(
+        world,
+        hero,
+        def.shortLabel,
+        0xFFA0E8FF,
+        reducedVfx,
+        important: true,
+      );
+      if (!reducedVfx) {
+        SpatialCombat._spawnRing(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: 0xAA80D0FF,
+          radius: 1.0,
+          life: 0.45,
+        );
+      }
+      return true;
+    }
 
     switch (def.effect) {
       case AbilityEffectKind.passive:
@@ -539,8 +671,8 @@ abstract final class AbilityEffectRunner {
         _castAoe(world, hero, focus, def, rng, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.heal:
-        // Blood Rune Tap is self-sustain, not party triage.
-        if (def.id == AbilityId.runeTap) {
+        // Blood Rune Tap / Guardian FR are self-sustain, not party triage.
+        if (def.id == AbilityId.runeTap || def.id == AbilityId.frenziedRegen) {
           if (!_allyNeedsHeal(hero)) return false;
           _spendAndCd(world, hero, def);
           _castHeal(world, hero, hero, def, reducedVfx: reducedVfx);
@@ -571,7 +703,10 @@ abstract final class AbilityEffectRunner {
         _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.absorb:
-        final ally = _lowestAlly(world, hero);
+        // Unholy AMS is a self shell — not a party bubble on the lowest ally.
+        final ally = def.id == AbilityId.antiMagicShell
+            ? hero
+            : _lowestAlly(world, hero);
         if (ally == null) return false;
         if (!_allyNeedsAbsorb(ally)) return false;
         _spendAndCd(world, hero, def);
@@ -595,6 +730,60 @@ abstract final class AbilityEffectRunner {
         }
         return true;
       case AbilityEffectKind.root:
+        if (def.id == AbilityId.slow) {
+          if (focus == null || focus.hp <= 0) return false;
+          _spendAndCd(world, hero, def);
+          focus.attackSlowTimer =
+              math.max(focus.attackSlowTimer, 4.0 + hero.kitRootBonus);
+          hero.attackFlash = 0.12;
+          _announce(world, hero, def.shortLabel, 0xFFB090FF, reducedVfx);
+          if (!reducedVfx) {
+            SpatialCombat._spawnRing(
+              world,
+              x: focus.x,
+              y: focus.y,
+              argb: 0xAAB090FF,
+              radius: 0.7,
+              life: 0.4,
+            );
+          }
+          return true;
+        }
+        if (def.id == AbilityId.frostNovaMage ||
+            def.id == AbilityId.psychicScream) {
+          final nearby = [
+            for (final e in world.enemies)
+              if (e.hp > 0 &&
+                  !e.dormant &&
+                  SpatialCombat._dist(hero, e) <= 2.5)
+                e,
+          ];
+          if (nearby.isEmpty) return false;
+          if (def.id == AbilityId.frostNovaMage) {
+            final peel =
+                nearby.any((e) => SpatialCombat._dist(hero, e) <= 1.6);
+            if (nearby.length < 2 && !peel) return false;
+          }
+          _spendAndCd(world, hero, def);
+          final rootDur = 2.4 + hero.kitRootBonus;
+          for (final e in nearby) {
+            e.rootTimer = math.max(e.rootTimer, rootDur);
+            e.attackSlowTimer = math.max(e.attackSlowTimer, 3.0);
+          }
+          hero.attackFlash = 0.14;
+          _announce(world, hero, def.shortLabel, 0xFF80D0FF, reducedVfx);
+          if (!reducedVfx) {
+            SpatialCombat._spawnRing(
+              world,
+              x: hero.x,
+              y: hero.y,
+              argb: 0xFF60C0FF,
+              radius: 1.6,
+              life: 0.45,
+            );
+          }
+          return true;
+        }
         if (focus == null || focus.hp <= 0) return false;
         _spendAndCd(world, hero, def);
         _castRoot(world, hero, focus, def, reducedVfx: reducedVfx);
@@ -607,6 +796,61 @@ abstract final class AbilityEffectRunner {
         return true;
       case AbilityEffectKind.emergencyDefend:
         _spendAndCd(world, hero, def);
+        // Feign Death: drop aggro + brief untargetable (Vanish pattern).
+        if (def.id == AbilityId.feignDeath) {
+          hero.vanishTimer = math.max(hero.vanishTimer, 2.2);
+          hero.shieldWallTimer = math.max(hero.shieldWallTimer, 1.5);
+          for (final e in world.enemies) {
+            if (e.forcedTargetId == hero.id) {
+              e.forcedTargetId = null;
+              e.forcedTargetTimer = 0;
+            }
+          }
+          _announce(
+            world,
+            hero,
+            def.shortLabel,
+            0xFFB8D4FF,
+            reducedVfx,
+            important: true,
+          );
+          if (!reducedVfx) {
+            SpatialCombat._spawnRing(
+              world,
+              x: hero.x,
+              y: hero.y,
+              argb: 0xFF90A0B0,
+              radius: 1.0,
+              life: 0.35,
+            );
+          }
+          return true;
+        }
+        // Disengage: kite speed + short DR (not a full tank wall).
+        if (def.id == AbilityId.disengage) {
+          hero.sprintTimer = math.max(hero.sprintTimer, 3.5);
+          hero.shieldWallTimer = math.max(hero.shieldWallTimer, 2.0);
+          hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 3.0);
+          _announce(
+            world,
+            hero,
+            def.shortLabel,
+            0xFFB8D4FF,
+            reducedVfx,
+            important: true,
+          );
+          if (!reducedVfx) {
+            SpatialCombat._spawnRing(
+              world,
+              x: hero.x,
+              y: hero.y,
+              argb: 0xFF70C090,
+              radius: 1.1,
+              life: 0.35,
+            );
+          }
+          return true;
+        }
         final lowest = _lowestAlly(world, hero);
         final lowestFrac = lowest == null || lowest.effectiveMaxHp <= 0
             ? 1.0
@@ -697,6 +941,38 @@ abstract final class AbilityEffectRunner {
       2,
       (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
     );
+    // Damage amp window (Vendetta / Cold Blood / Arcane Power).
+    if (hero.combustionTimer > 0) {
+      raw = math.max(2, (raw * 1.22).round());
+    }
+    // Arcane Blast stacks; Missiles dump.
+    if (def.id == AbilityId.arcaneBlast) {
+      hero.arcaneCharges = math.min(4, hero.arcaneCharges + 1);
+      raw = math.max(
+        2,
+        (raw * (1.0 + hero.arcaneCharges * 0.12)).round(),
+      );
+    } else if (def.id == AbilityId.arcaneMissiles) {
+      final charges = hero.arcaneCharges;
+      hero.arcaneCharges = 0;
+      raw = math.max(2, (raw * (1.0 + charges * 0.2)).round());
+    }
+    // Frost Ice Lance shatters rooted targets.
+    if (def.id == AbilityId.iceLance && enemy.rootTimer > 0) {
+      raw = math.max(2, (raw * 1.75).round());
+    }
+    // Assassination: build combo on Mut/Garrote; Envenom spends.
+    if (hero.heroSpecId == HeroSpecId.assassination) {
+      if (def.id == AbilityId.mutilate) {
+        hero.comboPoints = math.min(5, hero.comboPoints + 2);
+      } else if (def.id == AbilityId.garrote) {
+        hero.comboPoints = math.min(5, hero.comboPoints + 1);
+      } else if (def.id == AbilityId.envenom) {
+        final pts = hero.comboPoints;
+        hero.comboPoints = 0;
+        raw = math.max(2, (raw * (1.05 + pts * 0.22)).round());
+      }
+    }
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
     final pet = _petEmpoweredAbility(def)
         ? _ownedCombatPet(world, hero)
@@ -1004,6 +1280,10 @@ abstract final class AbilityEffectRunner {
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
       if (SpatialCombat._dist(hero, e) > radius) continue;
+      // Cone of Cold / chill AoE: slow attack cadence.
+      if (def.id == AbilityId.coneOfCold) {
+        e.attackSlowTimer = math.max(e.attackSlowTimer, 3.0);
+      }
 
       final fly = hero.ranged ||
           style == SpellBoltStyle.lightning ||
@@ -1024,12 +1304,15 @@ abstract final class AbilityEffectRunner {
             delay: i * 0.05,
           ),
         );
+        // Disease DoTs apply on cast (bolt damage may land later).
+        _applyBleedIfNeeded(world, hero, e, def, raw);
       } else {
         final wasAlive = e.hp > 0;
         final dealt = math.max(1, raw - e.effectiveDefense);
         e.hp = math.max(0, e.hp - dealt);
         SpatialCombat._recordHeroDamage(hero, dealt);
         SpatialCombat._applyTankSoftThreat(hero, e);
+        _applyBleedIfNeeded(world, hero, e, def, raw);
         if (!reducedVfx) {
           SpatialCombat._spawnSpark(
             world,
@@ -1208,6 +1491,7 @@ abstract final class AbilityEffectRunner {
       e.hp = math.max(0, e.hp - dealt);
       SpatialCombat._recordHeroDamage(hero, dealt);
       SpatialCombat._applyTankSoftThreat(hero, e);
+      _applyBleedIfNeeded(world, hero, e, def, raw);
       hitCount++;
       if (!reducedVfx) {
         SpatialCombat._spawnSpark(
@@ -1284,7 +1568,19 @@ abstract final class AbilityEffectRunner {
   }) {
     final style = SpatialCombat.boltStyleForAbility(caster, def: def);
     final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
-    _healLowest(world, caster, ally, def.coeff, def.shortLabel);
+    final isHot = def.id == AbilityId.riptide ||
+        def.id == AbilityId.renew ||
+        def.id == AbilityId.rejuvenation;
+    final directCoeff = isHot ? def.coeff * 0.55 : def.coeff;
+    _healLowest(world, caster, ally, directCoeff, def.shortLabel);
+    if (isHot) {
+      ally.buffTimers['hot'] = 12.0;
+      ally.hotHps = math.max(
+        ally.hotHps,
+        math.max(2.0, caster.attack * 0.14 * caster.kitHealMul),
+      );
+      ally.hotAcc = 0;
+    }
     _announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
       SpatialCombat._spawnSpark(
@@ -1398,7 +1694,8 @@ abstract final class AbilityEffectRunner {
           AbilityId.wildGrowth ||
           AbilityId.tranquility ||
           AbilityId.divineHymn ||
-          AbilityId.holyPriestNova:
+          AbilityId.holyPriestNova ||
+          AbilityId.circleOfHealing:
         return true;
       default:
         final key = _abilityKey(def);
@@ -1408,7 +1705,8 @@ abstract final class AbilityEffectRunner {
             key.contains('wild growth') ||
             key.contains('tranquility') ||
             key.contains('hymn') ||
-            key.contains('holy nova');
+            key.contains('holy nova') ||
+            key.contains('circle of healing');
     }
   }
 
@@ -1524,7 +1822,14 @@ abstract final class AbilityEffectRunner {
       AbilityId.moonfire ||
       AbilityId.immolateDemo ||
       AbilityId.immolateDestro ||
-      AbilityId.shadowWordPain =>
+      AbilityId.shadowWordPain ||
+      AbilityId.vampiricTouch ||
+      AbilityId.devouringPlague ||
+      AbilityId.bloodBoil ||
+      AbilityId.bloodBoilUnholy ||
+      AbilityId.howlingBlast ||
+      AbilityId.scourgeStrike ||
+      AbilityId.heartStrike =>
         true,
       _ => false,
     };
@@ -1538,8 +1843,16 @@ abstract final class AbilityEffectRunner {
       AbilityId.curseOfAgony ||
       AbilityId.immolateDemo ||
       AbilityId.immolateDestro ||
-      AbilityId.shadowWordPain =>
+      AbilityId.shadowWordPain ||
+      AbilityId.vampiricTouch ||
+      AbilityId.devouringPlague =>
         12.0,
+      AbilityId.bloodBoil ||
+      AbilityId.bloodBoilUnholy ||
+      AbilityId.heartStrike =>
+        12.0,
+      AbilityId.howlingBlast => 12.0,
+      AbilityId.scourgeStrike => 10.0,
       _ => 9.0,
     };
     final dpsFrac = switch (def.id) {
@@ -1551,16 +1864,35 @@ abstract final class AbilityEffectRunner {
       AbilityId.unstableAffliction => 0.20,
       AbilityId.curseOfAgony => 0.17,
       AbilityId.shadowWordPain => 0.13,
+      AbilityId.vampiricTouch => 0.14,
+      AbilityId.devouringPlague => 0.16,
       AbilityId.immolateDemo || AbilityId.immolateDestro => 0.15,
       AbilityId.moonfire => 0.11,
+      AbilityId.bloodBoil || AbilityId.bloodBoilUnholy => 0.11,
+      AbilityId.howlingBlast => 0.12,
+      AbilityId.scourgeStrike || AbilityId.heartStrike => 0.10,
       _ => 0.12,
     };
     final fromHit = raw * 0.08;
-    enemy.bleedTimer = duration;
-    enemy.bleedDps =
+    final newDps =
         math.max(1.5, hero.attack * dpsFrac * hero.kitOutMul + fromHit);
-    enemy.bleedAcc = 0;
+    // Affliction / Shadow: stacking DoTs add instead of fully overwriting.
+    if (_isStackingDot(def) &&
+        enemy.bleedTimer > 0.4 &&
+        enemy.bleedCasterId == hero.id &&
+        enemy.bleedAbilityId != def.id.name) {
+      enemy.bleedDps = math.min(
+        hero.attack * 0.62 * hero.kitOutMul,
+        enemy.bleedDps + newDps * 0.55,
+      );
+      enemy.bleedTimer = math.max(enemy.bleedTimer, duration);
+    } else {
+      enemy.bleedTimer = duration;
+      enemy.bleedDps = newDps;
+      enemy.bleedAcc = 0;
+    }
     enemy.bleedCasterId = hero.id;
+    enemy.bleedAbilityId = def.id.name;
     if (def.id == AbilityId.rip) {
       SpatialCombat._spawnFloater(
         world,
@@ -1650,6 +1982,21 @@ abstract final class AbilityEffectRunner {
   }
 
   static void _selfBuff(SpatialActor hero, ClassAbilityDef def) {
+    // Explicit damage-amp windows (not Fire-only — Assa / Arcane use this too).
+    if (def.id == AbilityId.vendetta ||
+        def.id == AbilityId.coldBlood ||
+        def.id == AbilityId.arcanePower ||
+        def.id == AbilityId.combustion) {
+      final dur = switch (def.id) {
+        AbilityId.vendetta => 8.0,
+        AbilityId.coldBlood => 6.0,
+        AbilityId.arcanePower => 7.0,
+        _ => 5.0,
+      };
+      hero.combustionTimer = math.max(hero.combustionTimer, dur);
+      hero.buffTimers['buff'] = dur;
+      return;
+    }
     // Prefer existing haste / shield timers when possible.
     final name = def.id.name.toLowerCase();
     if (name.contains('haste') ||
@@ -1658,7 +2005,6 @@ abstract final class AbilityEffectRunner {
         name.contains('enrage') ||
         name.contains('berserk') ||
         name.contains('wrath') ||
-        name.contains('power') ||
         name.contains('veins') ||
         name.contains('dance') ||
         name.contains('wish') ||
@@ -1677,6 +2023,7 @@ abstract final class AbilityEffectRunner {
         name.contains('sprint') ||
         name.contains('disengage')) {
       // One haste channel only — stacking PI × buffTimers['haste'] was ~1.79×.
+      // Note: Arcane Power is damage amp above — do not match bare "power".
       hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 6.0);
       return;
     }
@@ -1690,6 +2037,5 @@ abstract final class AbilityEffectRunner {
       return;
     }
     hero.buffTimers['buff'] = 5.0;
-    hero.combustionTimer = math.max(hero.combustionTimer, 5.0);
   }
 }

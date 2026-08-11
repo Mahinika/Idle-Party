@@ -127,6 +127,16 @@ abstract final class DungeonCatalog {
       unlockPrice: 1800000,
       blurb: 'Roots drink the dark between Tidehold and the Ashen Vault.',
     ),
+    DungeonDef(
+      number: 10,
+      id: 'storm',
+      name: 'Stormwake Hollow',
+      layout: DungeonLayoutKind.arena,
+      bossId: 'storm_tyrant',
+      bossName: 'Storm Tyrant',
+      unlockPrice: 2600000,
+      blurb: 'Wind tears the last gate — lightning remembers every will.',
+    ),
   ];
 
   static DungeonDef byId(String id) {

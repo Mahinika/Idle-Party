@@ -51,5 +51,12 @@ void main() {
         reason: 'grove dungeon shipped — mention Hollow Grove in What’s New',
       );
     }
+    if (ids.contains('storm')) {
+      expect(
+        bullets.contains('storm') || bullets.contains('stormwake'),
+        isTrue,
+        reason: 'storm dungeon shipped — mention Stormwake/Storm in What’s New',
+      );
+    }
   });
 }

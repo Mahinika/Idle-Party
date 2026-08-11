@@ -144,4 +144,51 @@ void main() {
     expect(loaded.hardmodeLevel, 10);
     expect(loaded.keystoneRunActive, isFalse);
   });
+
+  test('stateFromJson re-locks KEY run when dungeon save lacks keystone flag', () {
+    final json = GameLogic.createInitialState()
+        .copyWith(
+          ascensionLevel: 5,
+          inDungeon: true,
+          hardmodeLevel: 6,
+          keystoneRunActive: false,
+          keystoneRunLevel: 0,
+        )
+        .toJson();
+    final loaded = GameLogic.stateFromJson(json);
+    expect(loaded.keystoneRunActive, isTrue);
+    expect(loaded.keystoneRunLevel, 6);
+    expect(Keystone.combatLevel(loaded), 6);
+  });
+
+  test('ascend keeps high KEY preference up to AL-gated max', () {
+    final ready = GameLogic.createInitialState(now: DateTime(2026, 8, 1))
+        .copyWith(
+          ascensionLevel: 15,
+          bossVictories: 16,
+          hardmodeLevel: 15,
+        );
+    expect(GameLogic.canAscend(ready), isTrue);
+    final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 2));
+    expect(ascended.ascensionLevel, 16);
+    expect(ascended.effectiveMaxHardmode, 19);
+    expect(ascended.hardmodeLevel, 15);
+  });
+
+  test('ensureDailyVault migrates legacy weekly progress once', () {
+    final now = DateTime.utc(2026, 8, 10, 12);
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      metaDepth: MetaDepthState(
+        weeklyProgress: 1,
+        weeklyClaimed: false,
+        weeklyBestTimedKey: 3,
+        dailyVaultDate: '',
+      ),
+    );
+    final migrated = GameLogic.ensureDailyVault(state, now: now);
+    expect(migrated.metaDepth.dailyVaultDate, MetaSystems.dailyDateKey(now));
+    expect(migrated.metaDepth.dailyVaultClears, 1);
+    expect(migrated.metaDepth.dailyBestTimedKey, 3);
+    expect(migrated.metaDepth.dailyVaultClaimed, isFalse);
+  });
 }

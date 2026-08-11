@@ -335,8 +335,14 @@ void main() {
     final crystalClear = initial.copyWith(highestDungeonCleared: 6);
     expect(GameLogic.recommendedDungeonId(crystalClear), 'tide');
 
-    final allClear = initial.copyWith(highestDungeonCleared: 8);
-    expect(GameLogic.recommendedDungeonId(allClear), 'ember');
+    final groveFrontier = initial.copyWith(highestDungeonCleared: 8);
+    expect(GameLogic.recommendedDungeonId(groveFrontier), 'grove');
+
+    final stormFrontier = initial.copyWith(highestDungeonCleared: 9);
+    expect(GameLogic.recommendedDungeonId(stormFrontier), 'storm');
+
+    final allClear = initial.copyWith(highestDungeonCleared: 10);
+    expect(GameLogic.recommendedDungeonId(allClear), 'storm');
 
     final ready = mid.copyWith(bossVictories: 1);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 4));
@@ -1614,6 +1620,21 @@ void main() {
     expect(state.heroRoster.length, greaterThan(before));
     final newest = state.heroRoster.last;
     expect(newest.level, greaterThanOrEqualTo(15));
+    expect(state.metaDepth.pendingHeroReveals, contains(newest.specId.name));
+  });
+
+  test('unlockSpec queues pending hero reveal', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    state = state.copyWith(
+      ascensionLevel: 1,
+      bossVictories: 99,
+      highestDungeonCleared: 1,
+    );
+    expect(state.metaDepth.pendingHeroReveals, isEmpty);
+    state = GameLogic.syncSpecUnlocks(state);
+    expect(state.metaDepth.pendingHeroReveals, isNotEmpty);
+    final cleared = GameLogic.ackPendingHeroReveals(state);
+    expect(cleared.metaDepth.pendingHeroReveals, isEmpty);
   });
 
   test('fresh ascend dampens AL threat until gear rebuilds', () {

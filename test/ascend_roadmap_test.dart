@@ -11,8 +11,11 @@ void main() {
       AscendRoadmap.unlockAtAl(GameLogic.gauntletMinAscension),
       contains('Gauntlet'),
     );
-    expect(AscendRoadmap.unlockAtAl(5), contains('Warden'));
-    expect(AscendRoadmap.unlockAtAl(4), isNull);
+    expect(AscendRoadmap.unlockAtAl(5), contains('Guardian'));
+    expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
+    expect(AscendRoadmap.unlockAtAl(4), contains('Survival'));
+    expect(AscendRoadmap.unlockAtAl(4), contains('+2 more'));
+    expect(AscendRoadmap.unlockAtAl(6), contains('Affliction'));
   });
 
   test('nextGoalLine points at the nearest unlock', () {

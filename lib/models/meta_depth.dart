@@ -183,6 +183,7 @@ class MetaDepthState {
     this.relicRespecs = 0,
     this.partySlot5Unlocked = false,
     this.unlockedSpecs = const <String>[],
+    this.pendingHeroReveals = const <String>[],
     this.claimedWillRanks = const <String>[],
     this.claimedGauntletMilestones = const <String>[],
     this.godHandStyle = 0,
@@ -264,6 +265,10 @@ class MetaDepthState {
   /// Unlocked [HeroSpecId.name] strings (roster eligibility).
   final List<String> unlockedSpecs;
 
+  /// Newly unlocked specs waiting for hub “Meet …” reveal ([HeroSpecId.name]).
+  /// Survives Ascend until the player opens PARTY / acknowledges.
+  final List<String> pendingHeroReveals;
+
   /// Will-rank score thresholds already claimed for essence (e.g. `"25"`).
   final List<String> claimedWillRanks;
 
@@ -344,6 +349,7 @@ class MetaDepthState {
     int? relicRespecs,
     bool? partySlot5Unlocked,
     List<String>? unlockedSpecs,
+    List<String>? pendingHeroReveals,
     List<String>? claimedWillRanks,
     List<String>? claimedGauntletMilestones,
     int? godHandStyle,
@@ -405,6 +411,7 @@ class MetaDepthState {
       relicRespecs: relicRespecs ?? this.relicRespecs,
       partySlot5Unlocked: partySlot5Unlocked ?? this.partySlot5Unlocked,
       unlockedSpecs: unlockedSpecs ?? this.unlockedSpecs,
+      pendingHeroReveals: pendingHeroReveals ?? this.pendingHeroReveals,
       claimedWillRanks: claimedWillRanks ?? this.claimedWillRanks,
       claimedGauntletMilestones:
           claimedGauntletMilestones ?? this.claimedGauntletMilestones,
@@ -467,6 +474,7 @@ class MetaDepthState {
         'relicRespecs': relicRespecs,
         'partySlot5Unlocked': partySlot5Unlocked,
         'unlockedSpecs': unlockedSpecs,
+        'pendingHeroReveals': pendingHeroReveals,
         'claimedWillRanks': claimedWillRanks,
         'claimedGauntletMilestones': claimedGauntletMilestones,
         'godHandStyle': godHandStyle,
@@ -549,6 +557,9 @@ class MetaDepthState {
       partySlot5Unlocked: (json['partySlot5Unlocked'] as bool?) ?? false,
       unlockedSpecs:
           (json['unlockedSpecs'] as List<dynamic>?)?.cast<String>() ??
+              const [],
+      pendingHeroReveals:
+          (json['pendingHeroReveals'] as List<dynamic>?)?.cast<String>() ??
               const [],
       claimedWillRanks:
           (json['claimedWillRanks'] as List<dynamic>?)?.cast<String>() ??

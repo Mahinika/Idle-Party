@@ -33,12 +33,12 @@ void main() {
     );
   }
 
-  PartyHero hero(HeroSpecId id) {
+  PartyHero hero(HeroSpecId id, {int level = 40}) {
     final spec = HeroSpecs.def(id);
     return PartyHero(
       id: id.name,
       name: spec.shortLabel,
-      level: 20,
+      level: level,
       currentHp: 100,
       stats: spec.startingStats,
       specId: id,
@@ -110,6 +110,89 @@ void main() {
     );
   });
 
+  test('Enhancement values Str closer to Agi than pure Rogue', () {
+    final enh = hero(HeroSpecId.enhancement);
+    final combat = hero(HeroSpecId.combat);
+    final strHeavy =
+        item(str: 12, agi: 4, armorType: ArmorType.mail);
+    final agiHeavy =
+        item(str: 4, agi: 12, armorType: ArmorType.mail);
+
+    final enhStr = GameLogic.specEquipScore(enh, strHeavy);
+    final enhAgi = GameLogic.specEquipScore(enh, agiHeavy);
+    final combStr = GameLogic.specEquipScore(combat, strHeavy);
+    final combAgi = GameLogic.specEquipScore(combat, agiHeavy);
+
+    // Both prefer Agi piece, but Enh's Str gap is smaller.
+    expect(enhAgi, greaterThan(enhStr));
+    expect(combAgi, greaterThan(combStr));
+    expect(enhAgi - enhStr, lessThan(combAgi - combStr));
+  });
+
+  test('Enhancement: strong leather beats weak preferred mail', () {
+    final enh = hero(HeroSpecId.enhancement);
+    final weakMail = item(agi: 4, str: 2, armorType: ArmorType.mail);
+    final strongLeather = item(agi: 14, str: 6, armorType: ArmorType.leather);
+    expect(
+      GameLogic.specEquipScore(enh, strongLeather),
+      greaterThan(GameLogic.specEquipScore(enh, weakMail)),
+    );
+  });
+
+  test('Prot: preferred plate still beats equal-stat cloth', () {
+    final prot = hero(HeroSpecId.protection);
+    final plate = item(str: 6, sta: 8, armor: 10, armorType: ArmorType.plate);
+    final cloth = item(str: 6, sta: 8, armor: 10, armorType: ArmorType.cloth);
+    expect(
+      GameLogic.specEquipScore(prot, plate),
+      greaterThan(GameLogic.specEquipScore(prot, cloth)),
+    );
+  });
+
+  test('Hunter prefers Agi more extremely than Combat Rogue', () {
+    final bm = hero(HeroSpecId.beastMastery);
+    final combat = hero(HeroSpecId.combat);
+    final agi = item(agi: 14, str: 2, armorType: ArmorType.mail);
+    final str = item(agi: 2, str: 14, armorType: ArmorType.mail);
+
+    final bmGap =
+        GameLogic.specEquipScore(bm, agi) - GameLogic.specEquipScore(bm, str);
+    final combGap = GameLogic.specEquipScore(combat, agi) -
+        GameLogic.specEquipScore(combat, str);
+    expect(bmGap, greaterThan(combGap));
+  });
+
+  test('Shadow values Spirit more than Fire', () {
+    final shadow = hero(HeroSpecId.shadow);
+    final fire = hero(HeroSpecId.fire);
+    final spi = item(intel: 6, spi: 10, armorType: ArmorType.cloth);
+    final rawInt = item(intel: 12, spi: 0, armorType: ArmorType.cloth);
+
+    final shadowSpiGap = GameLogic.specEquipScore(shadow, spi) -
+        GameLogic.specEquipScore(shadow, rawInt);
+    final fireSpiGap = GameLogic.specEquipScore(fire, spi) -
+        GameLogic.specEquipScore(fire, rawInt);
+    expect(shadowSpiGap, greaterThan(fireSpiGap));
+  });
+
+  test('priorityBlurb lists top stats for a spec', () {
+    final blurb = EquipStatWeights.priorityBlurb(
+      HeroSpecs.def(HeroSpecId.protection),
+    );
+    expect(blurb, contains('PROT'));
+    expect(blurb.toLowerCase(), contains('stamina'));
+  });
+
+  test('Preferred plate scores higher than cloth for Arms', () {
+    final arms = hero(HeroSpecId.arms);
+    final plate = item(str: 8, sta: 4, armorType: ArmorType.plate);
+    final cloth = item(str: 8, sta: 4, armorType: ArmorType.cloth);
+    expect(
+      GameLogic.specEquipScore(arms, plate),
+      greaterThan(GameLogic.specEquipScore(arms, cloth)),
+    );
+  });
+
   test('EquipStatWeights loot shares: tank Sta-heavy, caster Int>SP', () {
     final tank = EquipStatWeights.lootShares(
       bias: HeroRole.warrior,
@@ -129,5 +212,15 @@ void main() {
       roleTag: SpecRoleTag.meleeDps,
     );
     expect(arms[0], greaterThan(arms[2])); // str > sta
+  });
+
+  test('Enhancement loot shares keep meaningful Str', () {
+    final shares = EquipStatWeights.lootShares(
+      bias: HeroRole.rogue,
+      roleTag: SpecRoleTag.meleeDps,
+      specId: HeroSpecId.enhancement,
+    );
+    expect(shares[0], greaterThan(0.28)); // str
+    expect(shares[1], greaterThan(shares[0])); // agi > str
   });
 }

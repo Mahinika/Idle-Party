@@ -172,11 +172,13 @@ class EquipmentFactory {
           ascensionLevel.clamp(0, 40) * 2 +
           hardmodeLevel.clamp(0, 20) ~/ 4,
     );
-    // Soft-cap endless Crystal/Gauntlet display so auto-sell stays usable.
-    if (ilvl > 100) {
-      ilvl = 100 + ((ilvl - 100) * 0.35).round();
-    }
-    return ilvl;
+    return softCapItemLevel(ilvl);
+  }
+
+  /// Compress display/budget ilvl above 100 (Crystal/Gauntlet / soulbound).
+  static int softCapItemLevel(int itemLevel) {
+    if (itemLevel <= 100) return itemLevel;
+    return 100 + ((itemLevel - 100) * 0.35).round();
   }
 
   /// Classic-style slot budget multipliers (MH full; jewelry/wrist softer).
@@ -209,7 +211,31 @@ class EquipmentFactory {
     };
   }
 
-  static int _budget({
+  /// Primary+armor budget from **display** item level (honest vs tooltip iLvl).
+  ///
+  /// Rarity mainly enters via [itemLevelFor]; a small quality mul keeps epic/
+  /// legendary denser at the same shown ilvl.
+  static int budgetForItemLevel({
+    required int itemLevel,
+    required LootRarity rarity,
+    EquipmentSlot? slot,
+    WeaponHanded? handed,
+  }) {
+    final slotM = slot == null ? 1.0 : slotMult(slot, handed: handed);
+    final quality = switch (rarity) {
+      LootRarity.common => 0.92,
+      LootRarity.uncommon => 0.96,
+      LootRarity.rare => 1.0,
+      LootRarity.epic => 1.06,
+      LootRarity.legendary => 1.12,
+    };
+    // ~0.72 primary pts / ilvl on MH rare before armor carve / affix slice.
+    const ptsPerIlvl = 0.72;
+    return max(3, (itemLevel * ptsPerIlvl * quality * slotM).round());
+  }
+
+  /// Floor/zone/AL/HM → ilvl → budget (single source of truth).
+  static int budgetForDrop({
     required LootRarity rarity,
     required int battleNumber,
     EquipmentSlot? slot,
@@ -218,32 +244,19 @@ class EquipmentFactory {
     int ascensionLevel = 0,
     int hardmodeLevel = 0,
   }) {
-    // Continuous floor growth (aligned with ilvl +2/floor pacing).
-    // Old band was ~/8; per-floor rates keep the same milestone averages.
-    final floorProgress = max(0, battleNumber - 1);
-    final perFloor = switch (rarity) {
-      LootRarity.common => 0.25,
-      LootRarity.uncommon => 0.25,
-      LootRarity.rare => 0.375,
-      LootRarity.epic => 0.5,
-      LootRarity.legendary => 0.625,
-    };
-    final base = switch (rarity) {
-          LootRarity.common => 6.0,
-          LootRarity.uncommon => 10.0,
-          LootRarity.rare => 16.0,
-          LootRarity.epic => 24.0,
-          LootRarity.legendary => 36.0,
-        } +
-        floorProgress * perFloor;
-    final slotM = slot == null ? 1.0 : slotMult(slot, handed: handed);
-    final hmMult = 1.0 + hardmodeLevel.clamp(0, 20) * 0.0125;
-    final scaled = base *
-        slotM *
-        zoneMultFor(dungeonId) *
-        alLootMult(ascensionLevel) *
-        hmMult;
-    return max(3, scaled.round());
+    final iLvl = itemLevelFor(
+      battleNumber: battleNumber,
+      rarity: rarity,
+      dungeonId: dungeonId,
+      ascensionLevel: ascensionLevel,
+      hardmodeLevel: hardmodeLevel,
+    );
+    return budgetForItemLevel(
+      itemLevel: iLvl,
+      rarity: rarity,
+      slot: slot,
+      handed: handed,
+    );
   }
 
   static ArmorType armorTypeFor(
@@ -340,23 +353,30 @@ class EquipmentFactory {
     ArmorType type,
     HeroRole bias, {
     SpecRoleTag? roleTag,
+    HeroSpecId? lootSpecId,
   }) {
     // Plate tanks get a touch more Sta; cloth casters keep Int/SP from shares.
     if (type == ArmorType.plate && roleTag == SpecRoleTag.tank) {
       return const [0.25, 0.10, 0.55, 0.0, 0.05, 0.05];
     }
-    return EquipStatWeights.lootShares(bias: bias, roleTag: roleTag);
+    return EquipStatWeights.lootShares(
+      bias: bias,
+      roleTag: roleTag,
+      specId: lootSpecId,
+    );
   }
 
   static List<double> _weaponWeights(
     WeaponType type,
     HeroRole bias, {
     SpecRoleTag? roleTag,
+    HeroSpecId? lootSpecId,
   }) {
     if (type == WeaponType.staff || type == WeaponType.wand) {
       return EquipStatWeights.lootShares(
         bias: HeroRole.mage,
         roleTag: roleTag ?? SpecRoleTag.caster,
+        specId: lootSpecId,
       );
     }
     if (type == WeaponType.bow ||
@@ -366,21 +386,28 @@ class EquipmentFactory {
       return EquipStatWeights.lootShares(
         bias: HeroRole.rogue,
         roleTag: roleTag ?? SpecRoleTag.rangedDps,
+        specId: lootSpecId,
       );
     }
-    return EquipStatWeights.lootShares(bias: bias, roleTag: roleTag);
+    return EquipStatWeights.lootShares(
+      bias: bias,
+      roleTag: roleTag,
+      specId: lootSpecId,
+    );
   }
 
   static List<double> _offHandWeights(
     OffHandKind kind, {
     HeroRole bias = HeroRole.warrior,
     SpecRoleTag? roleTag,
+    HeroSpecId? lootSpecId,
   }) =>
       switch (kind) {
         OffHandKind.shield => const [0.25, 0.10, 0.55, 0.0, 0.05, 0.05],
         OffHandKind.weapon => EquipStatWeights.lootShares(
             bias: bias,
             roleTag: roleTag ?? SpecRoleTag.meleeDps,
+            specId: lootSpecId,
           ),
         OffHandKind.frill => EquipStatWeights.lootShares(
             bias: bias == HeroRole.rogue ? HeroRole.healer : bias,
@@ -388,14 +415,20 @@ class EquipmentFactory {
                 (bias == HeroRole.mage
                     ? SpecRoleTag.caster
                     : SpecRoleTag.healer),
+            specId: lootSpecId,
           ),
       };
 
   static List<double> _jewelryWeights(
     HeroRole bias, {
     SpecRoleTag? roleTag,
+    HeroSpecId? lootSpecId,
   }) =>
-      EquipStatWeights.lootShares(bias: bias, roleTag: roleTag);
+      EquipStatWeights.lootShares(
+        bias: bias,
+        roleTag: roleTag,
+        specId: lootSpecId,
+      );
 
   static ({int str, int agi, int sta, int intel, int spi, int sp}) _distribute(
     int budget,
@@ -416,7 +449,8 @@ class EquipmentFactory {
     );
   }
 
-  static int _armorPoints(ArmorType? type, int budget) {
+  /// Armor carved from primary budget (same carve Apex / drops share).
+  static int armorPointsFor(ArmorType? type, int budget) {
     if (type == null) return max(1, budget ~/ 4);
     return switch (type) {
       ArmorType.cloth => max(0, budget ~/ 8),
@@ -611,6 +645,7 @@ class EquipmentFactory {
     HeroRole? bias,
     ArmorType? preferredArmor,
     SpecRoleTag? roleTag,
+    HeroSpecId? lootSpecId,
     String? dungeonId,
     int ascensionLevel = 0,
     int hardmodeLevel = 0,
@@ -630,16 +665,31 @@ class EquipmentFactory {
         max(1, battleNumber),
         preferred: preferredArmor,
       );
-      weights = _armorWeights(armorType, classBias, roleTag: roleTag);
+      weights = _armorWeights(
+        armorType,
+        classBias,
+        roleTag: roleTag,
+        lootSpecId: lootSpecId,
+      );
     } else if (slot == EquipmentSlot.weapon) {
       final mh = mainHandFor(classBias);
       weaponType = mh.$1;
       handed = mh.$2;
-      weights = _weaponWeights(weaponType, classBias, roleTag: roleTag);
+      weights = _weaponWeights(
+        weaponType,
+        classBias,
+        roleTag: roleTag,
+        lootSpecId: lootSpecId,
+      );
     } else if (slot == EquipmentSlot.ranged) {
       weaponType = rangedFor(classBias);
       handed = ClassProficiency.defaultHanded(weaponType);
-      weights = _weaponWeights(weaponType, classBias, roleTag: roleTag);
+      weights = _weaponWeights(
+        weaponType,
+        classBias,
+        roleTag: roleTag,
+        lootSpecId: lootSpecId,
+      );
     } else if (slot == EquipmentSlot.offHand) {
       if (classBias == HeroRole.warrior) {
         offHandKind = OffHandKind.shield;
@@ -647,6 +697,7 @@ class EquipmentFactory {
           OffHandKind.shield,
           bias: classBias,
           roleTag: roleTag,
+          lootSpecId: lootSpecId,
         );
       } else if (classBias == HeroRole.rogue) {
         offHandKind = OffHandKind.weapon;
@@ -662,6 +713,7 @@ class EquipmentFactory {
           OffHandKind.weapon,
           bias: classBias,
           roleTag: roleTag,
+          lootSpecId: lootSpecId,
         );
       } else {
         offHandKind = OffHandKind.frill;
@@ -669,6 +721,7 @@ class EquipmentFactory {
           OffHandKind.frill,
           bias: classBias,
           roleTag: roleTag,
+          lootSpecId: lootSpecId,
         );
       }
     } else if (slot == EquipmentSlot.cloak ||
@@ -677,9 +730,17 @@ class EquipmentFactory {
         slot == EquipmentSlot.ring2 ||
         slot == EquipmentSlot.trinket ||
         slot == EquipmentSlot.trinket2) {
-      weights = _jewelryWeights(classBias, roleTag: roleTag);
+      weights = _jewelryWeights(
+        classBias,
+        roleTag: roleTag,
+        lootSpecId: lootSpecId,
+      );
     } else {
-      weights = _jewelryWeights(classBias, roleTag: roleTag);
+      weights = _jewelryWeights(
+        classBias,
+        roleTag: roleTag,
+        lootSpecId: lootSpecId,
+      );
     }
 
     if (slot == EquipmentSlot.offHand && classBias == HeroRole.warrior) {
@@ -690,6 +751,7 @@ class EquipmentFactory {
         OffHandKind.shield,
         bias: classBias,
         roleTag: roleTag,
+        lootSpecId: lootSpecId,
       );
     }
     if (slot == EquipmentSlot.offHand &&
@@ -701,6 +763,7 @@ class EquipmentFactory {
         OffHandKind.frill,
         bias: classBias,
         roleTag: roleTag,
+        lootSpecId: lootSpecId,
       );
     }
 
@@ -732,14 +795,18 @@ class EquipmentFactory {
       suffix = suffixPool[random.nextInt(suffixPool.length)];
     }
 
-    final rawBudget = _budget(
-      rarity: rarity,
+    final iLvl = itemLevelFor(
       battleNumber: battleNumber,
-      slot: slot,
-      handed: handed,
+      rarity: rarity,
       dungeonId: dungeon,
       ascensionLevel: ascensionLevel,
       hardmodeLevel: hardmodeLevel,
+    );
+    final rawBudget = budgetForItemLevel(
+      itemLevel: iLvl,
+      rarity: rarity,
+      slot: slot,
+      handed: handed,
     );
     final affixCount = (prefix != null ? 1 : 0) + (suffix != null ? 1 : 0);
     final affixFrac = affixCount == 0
@@ -749,18 +816,10 @@ class EquipmentFactory {
     final primaryBudget = max(1, rawBudget - affixPool);
     final perAffix = affixCount == 0 ? 0 : max(1, affixPool ~/ affixCount);
 
-    final iLvl = itemLevelFor(
-      battleNumber: battleNumber,
-      rarity: rarity,
-      dungeonId: dungeon,
-      ascensionLevel: ascensionLevel,
-      hardmodeLevel: hardmodeLevel,
-    );
-
     // Armor density reserved from primary budget (not stacked on top).
     final armorPts = slot.isArmorSlot ||
             (slot == EquipmentSlot.offHand && offHandKind == OffHandKind.shield)
-        ? _armorPoints(
+        ? armorPointsFor(
             armorType ??
                 (offHandKind == OffHandKind.shield ? ArmorType.plate : null),
             primaryBudget,
@@ -795,6 +854,9 @@ class EquipmentFactory {
     if (prefix != null) applyAffix(prefix);
     if (suffix != null) applyAffix(suffix);
 
+    // Secondaries grow with displayed ilvl (not rarity alone).
+    final secTier = max(0, (iLvl - 5) ~/ 18);
+
     if (armorType == ArmorType.leather ||
         weaponType == WeaponType.dagger ||
         weaponType == WeaponType.bow ||
@@ -802,21 +864,25 @@ class EquipmentFactory {
         weaponType == WeaponType.gun ||
         weaponType == WeaponType.thrown ||
         classBias == HeroRole.rogue) {
-      crit = max(crit, rarity.index + (random.nextDouble() < 0.5 ? 1 : 0));
+      crit = max(crit, rarity.index + secTier);
     }
     if (armorType == ArmorType.cloth ||
         weaponType == WeaponType.staff ||
         weaponType == WeaponType.wand ||
         offHandKind == OffHandKind.frill) {
-      mp5 = rarity.index >= 1 ? 1 + rarity.index : 0;
-      if (random.nextDouble() < 0.4) crit = max(crit, rarity.index);
+      mp5 = rarity.index >= 1
+          ? 1 + rarity.index + secTier ~/ 2
+          : max(0, secTier ~/ 2);
+      if (random.nextDouble() < 0.4) {
+        crit = max(crit, rarity.index + secTier ~/ 2);
+      }
     }
     if (slot == EquipmentSlot.boots) {
-      move = 3 + rarity.index * 2;
-      aspd = max(aspd, 1 + rarity.index);
+      move = 2 + rarity.index * 2 + secTier;
+      aspd = max(aspd, 1 + rarity.index + secTier ~/ 2);
     }
     if (slot == EquipmentSlot.weapon || slot == EquipmentSlot.hands) {
-      aspd = max(aspd, 1 + rarity.index);
+      aspd = max(aspd, 1 + rarity.index + secTier ~/ 2);
     }
 
     var effectId = GearEffectId.none;
@@ -846,11 +912,11 @@ class EquipmentFactory {
             : (random.nextBool() ? GearEffectId.haste : GearEffectId.lifesteal),
       };
       effectValue = switch (effectId) {
-        GearEffectId.lifesteal => 3 + rarity.index * 2,
+        GearEffectId.lifesteal => 3 + rarity.index * 2 + secTier,
         GearEffectId.pierce => 1,
-        GearEffectId.goldFind => 6 + rarity.index * 4,
-        GearEffectId.crit => 3 + rarity.index * 2,
-        GearEffectId.haste => 3 + rarity.index * 2,
+        GearEffectId.goldFind => 6 + rarity.index * 4 + secTier * 2,
+        GearEffectId.crit => 3 + rarity.index * 2 + secTier,
+        GearEffectId.haste => 3 + rarity.index * 2 + secTier,
         GearEffectId.none => 0,
       };
     }

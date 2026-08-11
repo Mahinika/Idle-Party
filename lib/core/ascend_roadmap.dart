@@ -1,22 +1,79 @@
+import '../models/hero_spec.dart';
 import '../models/meta_depth.dart';
 import 'game_logic.dart';
+import 'game_state.dart';
 import 'meta_systems.dart';
 
 /// Player-facing Ascend unlock teasers — “what’s next after this AL?”
 abstract final class AscendRoadmap {
+  /// Specs that unlock primarily by reaching this Ascension Level.
+  ///
+  /// Zone-clear and shop unlocks stay on their own hints; this list is the
+  /// Ascend / TODAY “party power” ladder.
+  static const Map<int, List<(HeroSpecId id, String label)>> kitUnlocksByAl = {
+    1: [
+      (HeroSpecId.combat, 'Combat Rogue'),
+      (HeroSpecId.arms, 'Arms Warrior'),
+    ],
+    2: [
+      (HeroSpecId.beastMastery, 'Beast Mastery'),
+      (HeroSpecId.holyPriest, 'Holy Priest'),
+      (HeroSpecId.arcane, 'Arcane Mage'),
+    ],
+    3: [
+      (HeroSpecId.protPaladin, 'Protection Paladin'),
+      (HeroSpecId.assassination, 'Assassination'),
+      (HeroSpecId.restorationShaman, 'Resto Shaman'),
+      (HeroSpecId.frostMage, 'Frost Mage'),
+      (HeroSpecId.restorationDruid, 'Resto Druid'),
+    ],
+    4: [
+      (HeroSpecId.survival, 'Survival'),
+      (HeroSpecId.elemental, 'Elemental'),
+      (HeroSpecId.enhancement, 'Enhancement'),
+      (HeroSpecId.balance, 'Balance'),
+      (HeroSpecId.feral, 'Feral'),
+    ],
+    5: [
+      (HeroSpecId.blood, 'Blood DK'),
+      (HeroSpecId.frostDk, 'Frost DK'),
+      (HeroSpecId.guardian, 'Guardian'),
+    ],
+    6: [
+      (HeroSpecId.affliction, 'Affliction'),
+      (HeroSpecId.demonology, 'Demonology'),
+    ],
+  };
+
+  /// Short kit list for [al], or null if none.
+  static String? kitUnlockSummary(int al, {int maxNames = 3}) {
+    final kits = kitUnlocksByAl[al];
+    if (kits == null || kits.isEmpty) return null;
+    final names = [
+      for (final k in kits.take(maxNames)) k.$2,
+    ];
+    final extra = kits.length - names.length;
+    final joined = names.join(' · ');
+    if (extra > 0) return '$joined · +$extra more';
+    return joined;
+  }
+
   /// Concrete unlock when the player **reaches** [al] (after Ascend).
   static String? unlockAtAl(int al) {
-    switch (al) {
-      case 1:
-        return 'Combat Rogue (Shade)';
-      case 2:
-        return '5th party slot '
-            '(Forge · ${GameLogic.partySlot5EssenceCost}e)';
-      case GameLogic.gauntletMinAscension:
-        return 'Infinity Gauntlet';
-      default:
-        break;
+    if (al == 2) {
+      final kits = kitUnlockSummary(2);
+      return '$kits · 5th party slot '
+          '(Forge · ${GameLogic.partySlot5EssenceCost}e)';
     }
+    if (al == GameLogic.gauntletMinAscension) {
+      final kits = kitUnlockSummary(al);
+      return kits == null
+          ? 'Infinity Gauntlet'
+          : '$kits · Infinity Gauntlet';
+    }
+
+    final kits = kitUnlockSummary(al);
+    if (kits != null) return kits;
 
     final title = AscendTitles.byAl[al];
     if (title != null) {
@@ -57,5 +114,27 @@ abstract final class AscendRoadmap {
       return 'AL$al → $unlock';
     }
     return 'Stack Blessings + AL power';
+  }
+
+  /// Next AL that still has kit unlocks the player has not rostered yet.
+  static String? nextMissingKitTeaser(GameState state) {
+    final al = state.ascensionLevel;
+    for (var target = al + 1; target <= 6; target++) {
+      final kits = kitUnlocksByAl[target];
+      if (kits == null) continue;
+      final missing = [
+        for (final k in kits)
+          if (!state.isSpecUnlocked(k.$1) &&
+              !state.heroRoster.any((h) => h.specId == k.$1))
+            k.$2,
+      ];
+      if (missing.isEmpty) continue;
+      final shownList = missing.take(2).toList();
+      final shown = shownList.join(' · ');
+      final rest = missing.length - shownList.length;
+      final bit = rest > 0 ? '$shown · +$rest more' : shown;
+      return 'AL$target unlocks $bit';
+    }
+    return null;
   }
 }

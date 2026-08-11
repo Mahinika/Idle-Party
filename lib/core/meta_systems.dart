@@ -19,10 +19,36 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.11.1';
+  static const String currentVersion = '1.11.3';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.11.3',
+      bullets: <String>[
+        'World Path: Stormwake Hollow — new end zone after Hollow Grove (Storm Tyrant).',
+        'Unique Tide / Ember / Grove combat backdrops; lighter washes so the art reads.',
+        'POWER clearer: Keep (AL / Bless / essence) vs this-run forge on the POWER header.',
+        'Kit VFX polish: Subtlety shadow, Discipline holy shields, Balance Hurricane/Starfall discs.',
+        'World Path still runs Sandy Caverns through Stormwake Hollow (Tidehold, Ashen Vault, Grove on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.11.2',
+      bullets: <String>[
+        'Meet new kits: Ascend/unlock queues a TODAY READY card + toast; open PARTY to field them. Specs tint distinctly (Shadow reads void).',
+        'TODAY / Ascend name the next kit unlocks (AL1–6 ladder + Gauntlet) — party power chase is honest.',
+        'Kit honesty: Feign drops aggro, Disengage kites, Circle of Healing splashes, Riptide/Renew HoT ticks, DK diseases on Boil/Howling.',
+        'Tide / Ember / Grove read more distinct in combat (stronger washes + floor remaps); Jobs/Market copy clearer.',
+        'POWER menu clearer: Forge tabs GOLD / KEEP / MATS / APEX; Train says +1 level; Keep vs run gold spelled out; Camp/Market/Shop blurbs.',
+        'Gear: item stats now follow displayed item level (soft-cap honest); secondaries scale with iLvl; Apex uses the same curve.',
+        'Gear: smarter Auto Equip per spec (Enh/Hunter/Shadow/Aff/Blood/Disc); tooltips show For SPEC: best stats; drops bias to your party kits.',
+        'Kit honesty: Vendetta/Cold Blood amp melee, Unholy AMS on self, Enhancement Rage+DR, Frost Nova pack freeze, Arcane charge dump, Shadow/Affliction DoT maintain, Fire Hot Streak Pyro.',
+        'Fixes: Ascend keeps high KEY prefs (up to AL cap 20); Daily wipe retry still claims; dungeon saves re-lock KEY combat.',
+        'World Path: unique Tide / Ember / Grove portraits; lighter map asset; smoother path scroll.',
+        'World Path still runs Sandy Caverns through Hollow Grove (Tidehold + Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.11.1',
       bullets: <String>[
@@ -46,7 +72,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.10.2',
       bullets: <String>[
-        'Ascend Blessing: each Ascend permanently stacks +2 ATK · +1 DEF · +4 VIT · +3% gold (Forge → META).',
+        'Ascend Blessing: each Ascend permanently stacks +2 ATK · +1 DEF · +4 VIT · +3% gold (Forge → KEEP).',
         'Keep playing: Ascend shows next unlocks (Rogue / 5th slot / Gauntlet), TODAY flashes READY/ALMOST, stronger AFK welcome-back.',
         'GEAR: WoW-style item tooltips with green/red compare vs equipped, hero arrows, fuller hero stats.',
         'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
@@ -323,6 +349,7 @@ abstract final class MetaSystems {
     'clear_tide': (s) => s.highestDungeonCleared >= 7,
     'clear_ember': (s) => s.highestDungeonCleared >= 8,
     'clear_grove': (s) => s.highestDungeonCleared >= 9,
+    'clear_storm': (s) => s.highestDungeonCleared >= 10,
     'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
     'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
     'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,

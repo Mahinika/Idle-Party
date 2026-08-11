@@ -31,6 +31,7 @@ abstract final class StoryLore {
       'tide' => 'Salt water fills the hold. Hold your breath.',
       'ember' => 'Ash drifts in the vault. The crown still smolders.',
       'grove' => 'Roots tighten. Something old watches between the trunks.',
+      'storm' => 'Wind screams through the hollow. Lightning answers every step.',
       _ => 'Entering ${def.name}…',
     };
   }
@@ -48,6 +49,7 @@ abstract final class StoryLore {
       'tide' => 'The Leviathan sinks. Pressure eases — briefly.',
       'ember' => 'The Sovereign cools. Embers still whisper.',
       'grove' => 'Wyrd Root stills. The grove exhales moss and quiet.',
+      'storm' => 'The Tyrant breaks. Thunder rolls away into quiet.',
       _ => '${def.name} cleared.',
     };
   }

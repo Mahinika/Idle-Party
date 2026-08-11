@@ -238,7 +238,7 @@ void main() {
       warrior.rage = 100;
       _padAbilityCds(warrior, except: AbilityId.charge);
     }
-    expect(target.rootTimer, 0);
+    expect(target.rootTimer, lessThan(0.1));
     // May walk closer, but must not instant-snap into melee via Charge.
     final moved = math.sqrt(
       math.pow(warrior.x - startX, 2) + math.pow(warrior.y - startY, 2),

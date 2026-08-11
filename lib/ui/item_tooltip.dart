@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
+import '../models/equip_stat_weights.dart';
 import '../models/gear_set.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
@@ -227,9 +228,19 @@ class ItemTooltipCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   _effectCompareLine(item, worn),
                 ],
+                if (hero != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    EquipStatWeights.priorityBlurb(hero!.spec),
+                    style: GameTheme.body(
+                      size: 11,
+                      color: _gold,
+                    ),
+                  ),
+                ],
                 if (item.affinity != null && item.affinity!.isNotEmpty)
                   Text(
-                    'Affinity: ${_titleCase(item.affinity!)}',
+                    _affinityLine(item.affinity!, hero),
                     style: GameTheme.body(
                       size: 11,
                       color: GameTheme.parchmentDim,
@@ -415,6 +426,16 @@ class ItemTooltipCard extends StatelessWidget {
     if (raw.isEmpty) return raw;
     final lower = raw.toLowerCase();
     return '${lower[0].toUpperCase()}${lower.substring(1)}';
+  }
+
+  static String _affinityLine(String affinity, PartyHero? hero) {
+    final pretty = _titleCase(affinity);
+    if (hero == null) return 'Affinity: $pretty';
+    final match = hero.spec.gearAffinity.name == affinity.toLowerCase();
+    if (match) {
+      return 'Affinity: $pretty · matches ${hero.spec.shortLabel}';
+    }
+    return 'Affinity: $pretty · weak for ${hero.spec.shortLabel}';
   }
 }
 

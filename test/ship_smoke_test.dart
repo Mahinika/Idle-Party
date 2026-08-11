@@ -7,8 +7,8 @@ import 'package:idle_party/models/dungeon_def.dart';
 
 /// Fast honesty checks: world path, unlock rules, guides, release version.
 void main() {
-  test('world path ships ten named zones including tide, ember, and grove', () {
-    expect(DungeonCatalog.all.length, 10);
+  test('world path ships eleven named zones including storm', () {
+    expect(DungeonCatalog.all.length, 11);
     final ids = DungeonCatalog.all.map((d) => d.id).toList();
     expect(
       ids,
@@ -23,11 +23,13 @@ void main() {
         'tide',
         'ember',
         'grove',
+        'storm',
       ],
     );
     expect(DungeonCatalog.byId('tide').name, 'Sunken Tidehold');
     expect(DungeonCatalog.byId('ember').name, 'Ashen Vault');
     expect(DungeonCatalog.byId('grove').name, 'Hollow Grove');
+    expect(DungeonCatalog.byId('storm').name, 'Stormwake Hollow');
   });
 
   test('zone unlock uses lifetime gold or prior clear, not wallet gold', () {
@@ -47,6 +49,10 @@ void main() {
     expect(DungeonCatalog.isUnlocked('grove', 1799999, 7), isFalse);
     expect(DungeonCatalog.isUnlocked('grove', 1800000, 7), isTrue);
     expect(DungeonCatalog.isUnlocked('grove', 0, 8), isTrue);
+
+    expect(DungeonCatalog.isUnlocked('storm', 2599999, 8), isFalse);
+    expect(DungeonCatalog.isUnlocked('storm', 2600000, 8), isTrue);
+    expect(DungeonCatalog.isUnlocked('storm', 0, 9), isTrue);
   });
 
   test('guides cover World Path endgame zones and LOADOUTS vs armor sets', () {
@@ -54,6 +60,7 @@ void main() {
     expect(world.body.toLowerCase(), contains('tidehold'));
     expect(world.body.toLowerCase(), contains('ashen'));
     expect(world.body.toLowerCase(), contains('hollow grove'));
+    expect(world.body.toLowerCase(), contains('stormwake'));
     expect(world.body.toLowerCase(), contains('lifetime gold'));
 
     final loadouts = GameGuides.topics.firstWhere((t) => t.id == 'loadouts');
@@ -79,8 +86,16 @@ void main() {
     expect(vault.body.toUpperCase(), contains('TODAY'));
     expect(vault.body.toUpperCase(), contains('READY'));
 
-    expect(AscendRoadmap.unlockAtAl(1), isNotNull);
-    expect(AscendRoadmap.unlockAtAl(2), isNotNull);
+    expect(AscendRoadmap.unlockAtAl(1), contains('Combat Rogue'));
+    expect(AscendRoadmap.unlockAtAl(2), contains('Beast Mastery'));
+    expect(AscendRoadmap.unlockAtAl(2), contains('5th party slot'));
+    expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
     expect(AscendRoadmap.unlockAtAl(10), contains('Gauntlet'));
+    expect(AscendRoadmap.chaseTeaser(0), contains('AL1'));
+    expect(AscendRoadmap.kitUnlockSummary(4), isNotNull);
+
+    final classes = GameGuides.topics.firstWhere((t) => t.id == 'classes');
+    expect(classes.body, contains('AL2'));
+    expect(classes.body, contains('Beast Mastery'));
   });
 }

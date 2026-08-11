@@ -16,8 +16,8 @@ abstract final class GameGuides {
       id: 'world_path',
       title: 'WORLD PATH',
       body:
-          'The hub World Path is a painted map from Sandy Caverns through Hollow Grove '
-          '(Tidehold, Ashen Vault, and the rest along the road).\n\n'
+          'The hub World Path is a painted map from Sandy Caverns through Stormwake Hollow '
+          '(Tidehold, Ashen Vault, Hollow Grove, and the rest along the road).\n\n'
           '• Scroll the map and tap a zone portrait on a glowing ring to select it.\n'
           '• Unlock the next zone by clearing the previous boss, or by earning enough lifetime gold.\n'
           '• Locked zones dim on the map; the caption under the map shows lifetime gold progress (have / need).\n'
@@ -45,7 +45,7 @@ abstract final class GameGuides {
           '• Cooldown ring is top-right of the dungeon view.\n'
           '• Upgrade God Hand damage with essence (meta).\n'
           '• Upgrade God Hand CD (Forge / Prestige) to shorten the cooldown.\n'
-          '• Styles under Forge → META: BALANCED, FOCUS (+damage −radius), WIDE (+radius −damage).',
+          '• Styles under Forge → KEEP: BALANCED, FOCUS (+damage −radius), WIDE (+radius −damage).',
     ),
     GuideTopic(
       id: 'farm_push',
@@ -105,11 +105,29 @@ abstract final class GameGuides {
       title: 'FORGE',
       body:
           'POWER → FORGE.\n\n'
-          '• Train party power with gold / run resources.\n'
-          '• Buy relics that permanently boost combat or economy.\n'
-          '• Upgrade relic tiers and respec if you change builds.\n'
-          '• Refine soulbound gear; upgrade God Hand power and cooldown.\n'
+          'Tabs:\n'
+          '• GOLD — spend gold this run. Train = +1 level to every hero '
+          '(levels keep on Ascend). ATK/DEF/VIT/MOVE/HASTE/CRIT wipe on Ascend. '
+          'BEST marks the cheapest relative upgrade.\n'
+          '• KEEP — essence that survives Ascend: relics, soulbound refine, '
+          'God Hand damage/cooldown/style.\n'
+          '• MATS / APEX — boss materials and Apex craft.\n\n'
           '• Ascend from the Hub when ready (not from Forge).',
+    ),
+    GuideTopic(
+      id: 'classes',
+      title: 'CLASS UNLOCKS',
+      body:
+          'Ascend grows your roster — TODAY and Ascend teasers name the next kits.\n\n'
+          '• AL1: Combat Rogue, Arms\n'
+          '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot (essence)\n'
+          '• AL3: Prot Paladin, Assassination, Resto Shaman, Frost Mage, Resto Druid\n'
+          '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'
+          '• AL5: Blood DK, Frost DK, Guardian\n'
+          '• AL6: Affliction, Demonology\n'
+          '• AL10: Infinity Gauntlet\n\n'
+          'Some kits also unlock from zone clears or the Prestige Shop — see each '
+          'spec’s unlock hint in PARTY.',
     ),
     GuideTopic(
       id: 'sanctuary',
@@ -136,7 +154,7 @@ abstract final class GameGuides {
       id: 'apex',
       title: 'APEX FORGE',
       body:
-          'FORGE → MATERIALS / APEX.\n\n'
+          'FORGE → MATS / APEX.\n\n'
           '• Craft the strongest class/role gear from boss-only materials.\n'
           '• Materials live in a separate bag (not gear stash) and survive Ascend.\n'
           '• Farm bosses on each dungeon — trash packs never drop mats.\n'
@@ -239,7 +257,7 @@ abstract final class GameGuides {
       body:
           'Prestige when Ascend unlocks in the hub.\n\n'
           '• Each Ascend grants a lasting Blessing: +2 ATK · +1 DEF · +4 VIT · '
-          '+3% gold (stacks forever). See Forge → META.\n'
+          '+3% gold (stacks forever). See Forge → KEEP.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
           '• Also raises Ascension Level (AL: +ATK/VIT/+10% gold per level) and pays essence.\n'
           '• Keeps: essence, relics, sanctuary, pets, soulbound, God Hand, '

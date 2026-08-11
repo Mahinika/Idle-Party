@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/hero_identity.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
@@ -1028,10 +1029,11 @@ class _TileRoomPainter extends CustomPainter {
       Offset c,
       double scale, {
       double alpha = 1,
+      Color? tint,
     }) {
       final s = tile * scale;
       final dst = Rect.fromCenter(center: c, width: s, height: s);
-      _drawImage(canvas, image, dst, alpha: alpha);
+      _drawImage(canvas, image, dst, alpha: alpha, tint: tint);
     }
 
     for (final prop in world.map.props) {
@@ -1464,8 +1466,11 @@ class _TileRoomPainter extends CustomPainter {
       final alpha = hero.isAlive ? 1.0 : 0.25;
       // Prefer class sprite from active party hero when available.
       ui.Image? img;
+      Color? tint;
       if (partyHero != null) {
-        img = heroesByClass[partyHero.spec.classId];
+        img = heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
+        final argb = HeroIdentity.tintArgb(partyHero.specId);
+        if (argb != null) tint = Color(argb);
       }
       img ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
       if (img != null) {
@@ -1474,6 +1479,7 @@ class _TileRoomPainter extends CustomPainter {
           c,
           scale,
           alpha: hero.vanishTimer > 0 ? 0.35 : alpha,
+          tint: tint,
         );
       } else if (partyHero != null) {
         final walk = flash > 0.05
@@ -1995,14 +2001,19 @@ class _TileRoomPainter extends CustomPainter {
     Rect src,
     Rect dst, {
     double alpha = 1,
+    Color? tint,
   }) {
+    final paint = Paint()
+      ..filterQuality = FilterQuality.none
+      ..color = Color.fromRGBO(255, 255, 255, alpha);
+    if (tint != null) {
+      paint.colorFilter = ColorFilter.mode(tint, BlendMode.modulate);
+    }
     canvas.drawImageRect(
       image,
       src,
       dst,
-      Paint()
-        ..filterQuality = FilterQuality.none
-        ..color = Color.fromRGBO(255, 255, 255, alpha),
+      paint,
     );
   }
 
@@ -2011,6 +2022,7 @@ class _TileRoomPainter extends CustomPainter {
     ui.Image image,
     Rect dst, {
     double alpha = 1,
+    Color? tint,
   }) {
     _drawImageSrc(
       canvas,
@@ -2018,6 +2030,7 @@ class _TileRoomPainter extends CustomPainter {
       Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
       dst,
       alpha: alpha,
+      tint: tint,
     );
   }
 

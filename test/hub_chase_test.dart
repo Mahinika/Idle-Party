@@ -173,4 +173,32 @@ void main() {
     expect(chase.urgency, HubChaseUrgency.almost);
     expect(chase.title, contains('Almost'));
   });
+
+  test('pending hero reveal is READY meet chase', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        dailyVaultClaimed: true,
+        pendingHeroReveals: const ['combat', 'arms'],
+      ),
+      lastDailyDate: MetaSystems.dailyDateKey(now),
+      dailyClaimed: true,
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.meetHero);
+    expect(chase.urgency, HubChaseUrgency.ready);
+    expect(chase.title, contains('Combat'));
+    expect(chase.detail.toLowerCase(), contains('party'));
+  });
+
+  test('ack clears pending hero reveals', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        pendingHeroReveals: const ['combat'],
+      ),
+    );
+    state = GameLogic.ackPendingHeroReveals(state);
+    expect(state.metaDepth.pendingHeroReveals, isEmpty);
+  });
 }

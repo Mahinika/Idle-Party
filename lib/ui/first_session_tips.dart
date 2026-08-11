@@ -30,7 +30,7 @@ class FirstSessionTips extends StatelessWidget {
       title: 'GOD HAND',
       body:
           'Your distant will. Tap the dungeon to smash foes. Cooldown is the ring top-right. '
-          'Forge → META: BAL / FOCUS / WIDE styles trade damage vs radius.',
+          'Forge → KEEP: BAL / FOCUS / WIDE styles trade damage vs radius.',
     ),
     (
       id: 'farm_push',
@@ -80,8 +80,9 @@ class FirstSessionTips extends StatelessWidget {
       id: 'post_ascend',
       title: 'AFTER ASCEND',
       body:
-          'Gold & forge tracks wiped. Farm Sandy for gold → Forge GOLD upgrades → Market flasks. '
-          'Spend essence under Forge → META (relics / God Hand). Apex mats survive.',
+          'New kits land in PARTY — TODAY shows Meet … when something unlocked. '
+          'Gold & forge tracks wiped: farm Sandy → Forge GOLD → Market flasks. '
+          'Spend essence under Forge → KEEP (relics / God Hand). Apex mats survive.',
     ),
     (
       id: 'hardmode',
@@ -113,7 +114,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'prestige',
       title: 'ESSENCE SHOP',
       body:
-          'Spend essence in the Essence Shop and Forge → META for relics, God Hand, and prestige power that lasts.',
+          'Spend essence in the Essence Shop and Forge → KEEP for relics, God Hand, and prestige power that lasts.',
     ),
   ];
 

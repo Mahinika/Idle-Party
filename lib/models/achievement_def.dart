@@ -158,6 +158,13 @@ abstract final class AchievementCatalog {
       essenceReward: 30,
       category: AchievementCategory.explorer,
     ),
+    AchievementDef(
+      id: 'clear_storm',
+      title: 'Stormbreaker',
+      description: 'Clear Stormwake Hollow.',
+      essenceReward: 34,
+      category: AchievementCategory.explorer,
+    ),
     // —— Hardmode ——
     AchievementDef(
       id: 'hm_1',

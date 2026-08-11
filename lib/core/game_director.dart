@@ -17,6 +17,7 @@ import '../spatial/spatial_combat.dart';
 import '../ui/game_audio.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'hero_identity.dart';
 import 'meta_systems.dart';
 import 'story_lore.dart';
 import '../models/dungeon_def.dart';
@@ -1362,8 +1363,18 @@ class GameDirector extends ChangeNotifier {
     final before = _state.isSpecUnlocked(specId);
     _applyUpgrade(GameLogic.unlockSpec(_state, specId));
     if (_state.isSpecUnlocked(specId) && !before) {
-      showToast('${HeroSpecs.def(specId).name} joined roster', life: 2.2);
+      final def = HeroSpecs.def(specId);
+      showToast(
+        '${def.name} · ${HeroIdentity.fantasyLine(specId)}',
+        life: 2.8,
+      );
     }
+  }
+
+  /// Clears TODAY “Meet …” after the player opens PARTY.
+  void ackPendingHeroReveals() {
+    if (_state.metaDepth.pendingHeroReveals.isEmpty) return;
+    _applyUpgrade(GameLogic.ackPendingHeroReveals(_state));
   }
 
   // —— Daily run ——————————————————————————————————————————————
@@ -1869,6 +1880,23 @@ class GameDirector extends ChangeNotifier {
     ];
     if (!hadRogue && _state.rogueUnlocked) {
       parts.add('Shade joins');
+    }
+    final reveals = _state.metaDepth.pendingHeroReveals;
+    if (reveals.isNotEmpty) {
+      final names = <String>[];
+      for (final name in reveals.take(2)) {
+        final id = HeroIdentity.tryParseSpec(name);
+        if (id == null) continue;
+        names.add(HeroSpecs.def(id).name);
+      }
+      if (names.isNotEmpty) {
+        final extra = reveals.length - names.length;
+        parts.add(
+          extra > 0
+              ? 'New: ${names.join(' · ')} · +$extra'
+              : 'New: ${names.join(' · ')}',
+        );
+      }
     }
     showToast(parts.join(' · '), life: 3.6);
     final payoffs = GameLogic.takeMetaPayoffNotices();

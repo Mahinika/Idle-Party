@@ -297,9 +297,10 @@ class _GameHomePageState extends State<GameHomePage> {
                     setState(() => _hubOverlay = null);
                     _director.enterDungeon(dungeonId: id);
                   },
-                  onOpenParty: () => setState(
-                    () => _hubOverlay = Is2Overlay.inventory,
-                  ),
+                  onOpenParty: () {
+                    _director.ackPendingHeroReveals();
+                    setState(() => _hubOverlay = Is2Overlay.inventory);
+                  },
                   onOpenPower: () => setState(
                     () => _hubOverlay = Is2Overlay.power,
                   ),

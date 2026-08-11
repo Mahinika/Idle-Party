@@ -1468,14 +1468,20 @@ class PrestigeShopOverlay extends StatelessWidget {
       children: [
         if (state.ascensionLevel < 3) ...[
           Text(
-            'Browse freely — purchases unlock at AL3+.',
+            'Browse freely — buying unlocks at Ascension Level 3+.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 14, color: GameTheme.torchHot),
           ),
           const SizedBox(height: 8),
         ],
         Text(
-          'Essence ${state.essence}  |  AL${state.ascensionLevel}',
+          'Essence shop — permanent upgrades that survive Ascend.',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${state.essence} essence · AL${state.ascensionLevel}',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),

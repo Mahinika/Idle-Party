@@ -5,9 +5,9 @@ Baseline (historical): app **v1.9.3**, full-game audit ~**92%**
 ([audits/2026-08-03-full-game.md](audits/2026-08-03-full-game.md)) — audit predates
 Tide/Ember/meta polish; treat as historical closeout, not current completeness.
 
-**Current ship line:** **1.11.1** (`pubspec` ↔ `MetaSystems.currentVersion`) — Local
+**Current ship line:** **1.11.2** (`pubspec` ↔ `MetaSystems.currentVersion`) — Local
 seasons, hub TODAY phone polish, Hollow Grove (10th zone), Affliction VFX pass,
-painted World Path map + leaner dungeon HUD.
+painted World Path map + leaner dungeon HUD + KEY/Daily save fixes.
 
 **Status:** dokumenterad; Q1–Q4 kärna + success-spår Habit→Season→Zone i kod; Play closed
 Alpha igång (produktion väntar 12×14). GitHub Releases är primär install.
