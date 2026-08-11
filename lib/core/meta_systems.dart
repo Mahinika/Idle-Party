@@ -19,10 +19,19 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.11.3';
+  static const String currentVersion = '1.11.4';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.11.4',
+      bullets: <String>[
+        'Stormwake: unique Storm Tyrant boss + gale mite sprites (not ghost/bat twins).',
+        'World Path markers retuned for the 11-zone map (Stormwake at the bottom chasm).',
+        'Kit VFX: Survival traps/shots, Holy Priest CoH/Nova/Hymn, Disc Flash/PS/PI read clearer.',
+        'World Path still runs Sandy Caverns through Stormwake Hollow (Tidehold, Ashen Vault, Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.11.3',
       bullets: <String>[

@@ -945,19 +945,19 @@ class _ZonePathMap extends StatefulWidget {
   final ValueChanged<String> onSelect;
 
   /// Marker centers on painted gold rings (zone 0…10 top→bottom).
-  /// Extra art glow between ember/grove was painted out of the asset.
+  /// Tuned for world_path_map with Stormwake at the bottom chasm.
   static const List<Offset> markerNorm = [
-    Offset(0.491, 0.070), // sandy
-    Offset(0.483, 0.145), // goblin
-    Offset(0.474, 0.240), // king
-    Offset(0.514, 0.325), // underworld
-    Offset(0.454, 0.410), // dead
-    Offset(0.479, 0.500), // hell
-    Offset(0.465, 0.585), // crystal
-    Offset(0.503, 0.665), // tide
-    Offset(0.466, 0.740), // ember
-    Offset(0.478, 0.845), // grove
-    Offset(0.485, 0.940), // storm
+    Offset(0.492, 0.058), // sandy — cave mouth
+    Offset(0.478, 0.138), // goblin — camp
+    Offset(0.470, 0.228), // king — fort wall
+    Offset(0.508, 0.318), // underworld — purple crystals
+    Offset(0.448, 0.400), // dead — tombs
+    Offset(0.475, 0.490), // hell — spiked gate
+    Offset(0.460, 0.575), // crystal — ice peaks
+    Offset(0.500, 0.655), // tide — sunken ruins
+    Offset(0.458, 0.735), // ember — lava door
+    Offset(0.472, 0.835), // grove — dark forest
+    Offset(0.488, 0.945), // storm — bottom purple chasm
   ];
 
   static const double mapAspect = 1536 / 1024;

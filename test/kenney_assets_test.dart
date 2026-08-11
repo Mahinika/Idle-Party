@@ -72,6 +72,14 @@ void main() {
       KenneyAssets.enemySpriteForCodexName('Ice Caster'),
       KenneyAssets.enemyCrystalWraith,
     );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Storm Tyrant'),
+      KenneyAssets.enemyStormBoss,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Gale Mite'),
+      KenneyAssets.enemyStormMite,
+    );
   });
 
   test('sandy swarm codex names map to slime not hash lottery', () {

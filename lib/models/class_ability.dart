@@ -694,6 +694,11 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 1.55,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFF0B0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.painSuppression,
@@ -707,6 +712,15 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFE0C070,
+        groundDisc: true,
+        groundLife: 2.5,
+        groundArgb: 0x66E0C070,
+        groundRadius: 1.5,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.powerInfusion,
@@ -720,6 +734,11 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFD070,
+      ),
     ),
 
     // —— Mage (Fire) ——
@@ -1776,6 +1795,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.25,
+      boltStyle: SpellBoltStyle.fire,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.fire,
+        castArgb: 0xFFFF9040,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.serpentSting,
@@ -1790,6 +1814,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.85,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF70D050,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.explosiveTrap,
@@ -1804,6 +1833,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.90,
+      boltStyle: SpellBoltStyle.fire,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.fire,
+        castArgb: 0xFFFF8050,
+        groundDisc: true,
+        groundLife: 3.0,
+        groundArgb: 0x88FF7040,
+        groundRadius: 2.6,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.freezingTrap,
@@ -1817,6 +1855,15 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.root,
       tier: AbilityCastTier.filler,
+      boltStyle: SpellBoltStyle.frost,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.frost,
+        castArgb: 0xFF90D8FF,
+        groundDisc: true,
+        groundLife: 2.0,
+        groundArgb: 0x6690D0FF,
+        groundRadius: 1.8,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.mongooseBite,
@@ -1831,6 +1878,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.3,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFE8C090,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.blackArrow,
@@ -2163,6 +2215,11 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 1.55,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFE8A0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.circleOfHealing,
@@ -2177,6 +2234,15 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 1.4,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFF0C0,
+        groundDisc: true,
+        groundLife: 2.2,
+        groundArgb: 0x66FFE8A0,
+        groundRadius: 2.4,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.guardianSpirit,
@@ -2191,6 +2257,15 @@ class ClassKits {
       effect: AbilityEffectKind.absorb,
       tier: AbilityCastTier.signature,
       coeff: 1.9,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFD090,
+        groundDisc: true,
+        groundLife: 2.8,
+        groundArgb: 0x77FFE090,
+        groundRadius: 1.7,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.holyPriestNova,
@@ -2205,6 +2280,15 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 0.85,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFF8D0,
+        groundDisc: true,
+        groundLife: 2.0,
+        groundArgb: 0x66FFF0B0,
+        groundRadius: 2.8,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.divineHymn,
@@ -2219,6 +2303,15 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.signature,
       coeff: 1.6,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFE080,
+        groundDisc: true,
+        groundLife: 3.5,
+        groundArgb: 0x88FFE8A0,
+        groundRadius: 3.0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.desperatePrayer,

@@ -263,4 +263,6 @@ abstract final class CustomAssets {
   static const String enemyCrystalBoss = '$_root/enemies/crystal_boss.png';
   static const String enemyCrystalWraith = '$_root/enemies/crystal_wraith.png';
   static const String enemyCrystalMite = '$_root/enemies/crystal_mite.png';
+  static const String enemyBossStorm = '$_root/enemies/boss_storm.png';
+  static const String enemyStormMite = '$_root/enemies/storm_mite.png';
 }

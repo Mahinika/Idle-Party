@@ -122,6 +122,8 @@ abstract final class KenneyAssets {
   static String get enemyCrystalBoss => CustomAssets.enemyCrystalBoss;
   static String get enemyCrystalWraith => CustomAssets.enemyCrystalWraith;
   static String get enemyCrystalMite => CustomAssets.enemyCrystalMite;
+  static String get enemyStormBoss => CustomAssets.enemyBossStorm;
+  static String get enemyStormMite => CustomAssets.enemyStormMite;
 
   // —— Gear / consumables (custom identity icons; Tiny Dungeon tiles kept as fallback) ——
   static String get shieldRound => CustomAssets.iconShieldRound;
@@ -522,7 +524,7 @@ abstract final class KenneyAssets {
         'tide' => enemyCrab,
         'ember' => enemyCyclops,
         'grove' => enemySpider,
-        'storm' => enemyGhost,
+        'storm' => enemyStormBoss,
         _ => enemyBoss,
       };
     }
@@ -550,7 +552,7 @@ abstract final class KenneyAssets {
       'crystal' => enemyCrystalMite,
       'tide' => enemySlime,
       'grove' => enemySlime,
-      'storm' => enemyBat,
+      'storm' => enemyStormMite,
       _ => enemySlime,
     };
   }
@@ -573,7 +575,7 @@ abstract final class KenneyAssets {
           'tide' => enemySlime,
           'ember' => enemyRat,
           'grove' => enemySlime,
-          'storm' => enemyBat,
+          'storm' => enemyStormMite,
           _ => enemyRat,
         },
       EnemyArchetype.brute => switch (dungeonId) {
@@ -647,6 +649,8 @@ abstract final class KenneyAssets {
         enemyCrystalBoss,
         enemyCrystalWraith,
         enemyCrystalMite,
+        enemyStormBoss,
+        enemyStormMite,
       ];
 
   static int enemySpriteCatalogIndex(String asset) {
@@ -668,7 +672,7 @@ abstract final class KenneyAssets {
       'tide leviathan' => enemyCrab,
       'cinder sovereign' => enemyCyclops,
       'wyrd root' => enemySpider,
-      'storm tyrant' => enemyGhost,
+      'storm tyrant' => enemyStormBoss,
       'crystal warden' ||
       'crystal golem' ||
       'frozen bulwark' ||
@@ -724,7 +728,7 @@ abstract final class KenneyAssets {
       'grove adept' =>
         enemyBat,
       'thorn skitter' || 'bramble fang' => enemySlime,
-      'gale mite' || 'storm tick' || 'spark bat' => enemyBat,
+      'gale mite' || 'storm tick' || 'spark bat' => enemyStormMite,
       'storm brute' || 'thunder crusher' || 'gale bulwark' || 'storm guard' =>
         enemyGolem,
       'volt spitter' || 'gale slinger' => enemyBat,
