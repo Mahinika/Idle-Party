@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../models/gear_set.dart';
 import '../models/hero.dart';
@@ -7,12 +8,13 @@ import '../models/loot.dart';
 import 'custom_assets.dart';
 import 'game_theme.dart';
 import 'hero_doll_sprite.dart';
-import 'hero_paper_doll.dart';
+import 'item_tooltip.dart';
 import 'kenney_assets.dart';
 import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
 
-/// WoW-style character sheet: equipment slots around a paper-doll, stats below.
+/// Character sheet inspired by classic mobile RPG equip screens:
+/// hero preview, labeled slots around it, big DAMAGE / ARMOR under the doll.
 class CharacterEquipPanel extends StatelessWidget {
   const CharacterEquipPanel({
     super.key,
@@ -22,7 +24,9 @@ class CharacterEquipPanel extends StatelessWidget {
     required this.selectedItemId,
     required this.onSelectItem,
     required this.onUnequip,
+    this.onEmptySlotTap,
     this.compact = false,
+    this.showHeroStrip = true,
   });
 
   final GameState state;
@@ -31,54 +35,65 @@ class CharacterEquipPanel extends StatelessWidget {
   final String? selectedItemId;
   final void Function(String id) onSelectItem;
   final void Function(EquipmentSlot slot) onUnequip;
+  final void Function(EquipmentSlot slot)? onEmptySlotTap;
   final bool compact;
+  final bool showHeroStrip;
 
+  /// Left armor column (reference: helm → feet).
   static const leftColumn = <EquipmentSlot>[
     EquipmentSlot.head,
-    EquipmentSlot.neck,
     EquipmentSlot.shoulder,
-    EquipmentSlot.cloak,
     EquipmentSlot.chest,
-    EquipmentSlot.wrist,
-  ];
-
-  static const rightColumn = <EquipmentSlot>[
     EquipmentSlot.hands,
-    EquipmentSlot.waist,
     EquipmentSlot.legs,
     EquipmentSlot.boots,
+  ];
+
+  /// Right accessory column (reference: neck → charm).
+  static const rightColumn = <EquipmentSlot>[
+    EquipmentSlot.neck,
+    EquipmentSlot.cloak,
+    EquipmentSlot.wrist,
+    EquipmentSlot.waist,
     EquipmentSlot.ring,
     EquipmentSlot.ring2,
   ];
 
+  /// Bottom weapon row under the doll (weapon / shield emphasized).
   static const weaponRow = <EquipmentSlot>[
-    EquipmentSlot.trinket,
-    EquipmentSlot.trinket2,
     EquipmentSlot.weapon,
     EquipmentSlot.offHand,
     EquipmentSlot.ranged,
+    EquipmentSlot.trinket,
+    EquipmentSlot.trinket2,
     EquipmentSlot.consumable,
   ];
 
+  static List<EquipmentSlot> get allSlots => [
+        ...leftColumn,
+        ...rightColumn,
+        ...weaponRow,
+      ];
+
   static const slotLabels = <EquipmentSlot, String>{
-    EquipmentSlot.weapon: 'MH',
-    EquipmentSlot.offHand: 'OH',
-    EquipmentSlot.ranged: 'RNG',
-    EquipmentSlot.head: 'Head',
-    EquipmentSlot.shoulder: 'Shoulder',
-    EquipmentSlot.chest: 'Chest',
-    EquipmentSlot.hands: 'Hands',
-    EquipmentSlot.waist: 'Waist',
-    EquipmentSlot.legs: 'Legs',
-    EquipmentSlot.boots: 'Feet',
-    EquipmentSlot.wrist: 'Wrist',
-    EquipmentSlot.cloak: 'Back',
-    EquipmentSlot.neck: 'Neck',
-    EquipmentSlot.ring: 'Finger',
-    EquipmentSlot.ring2: 'Finger',
-    EquipmentSlot.trinket: 'Trinket',
-    EquipmentSlot.trinket2: 'Trinket',
-    EquipmentSlot.consumable: 'Flask',
+    EquipmentSlot.weapon: 'WEAPON',
+    EquipmentSlot.offHand: 'SHIELD',
+    EquipmentSlot.ranged: 'RANGED',
+    EquipmentSlot.head: 'HELM',
+    EquipmentSlot.shoulder: 'SHOULDER',
+    EquipmentSlot.chest: 'CHEST',
+    EquipmentSlot.hands: 'GLOVES',
+    EquipmentSlot.waist: 'BELT',
+    EquipmentSlot.legs: 'LEGS',
+    EquipmentSlot.boots: 'FEET',
+    EquipmentSlot.wrist: 'WRIST',
+    EquipmentSlot.cloak: 'CAPE',
+    EquipmentSlot.neck: 'NECK',
+    EquipmentSlot.ring: 'RING',
+    EquipmentSlot.ring2: 'RING',
+    EquipmentSlot.trinket: 'CHARM',
+    EquipmentSlot.trinket2: 'CHARM',
+    EquipmentSlot.consumable: 'FLASK',
   };
 
   static String? emptyIconFor(EquipmentSlot slot) => switch (slot) {
@@ -108,10 +123,10 @@ class CharacterEquipPanel extends StatelessWidget {
     if (heroes.isEmpty) return const SizedBox.shrink();
     final index = heroIndex.clamp(0, heroes.length - 1);
     final hero = heroes[index];
-    // Dense enough that balanced 6+6 columns fit with weapons under the doll.
-    final slotSize = compact ? 36.0 : 42.0;
-    final slotGap = compact ? 3.0 : 4.0;
-    final dollSize = compact ? 76.0 : 100.0;
+    final slotSize = compact ? 40.0 : 46.0;
+    final slotGap = compact ? 4.0 : 5.0;
+    final dollSize = compact ? 96.0 : 120.0;
+    final weaponSize = compact ? 44.0 : 50.0;
 
     final atk = state.effectiveHeroAttack(hero);
     final def = state.effectiveHeroDefense(hero);
@@ -125,63 +140,113 @@ class CharacterEquipPanel extends StatelessWidget {
       }
       selected ??= _findAnywhere(selectedItemId!);
     }
+    final selectedItem = selected;
+    final selectedWornHere = selectedItem != null &&
+        _slotOfSelected(hero, selectedItem.id) != null;
+    final stashPiece = selectedItem != null &&
+            state.gearStash.any((g) => g.id == selectedItem.id)
+        ? selectedItem
+        : null;
+    final compare = stashPiece == null
+        ? null
+        : GameLogic.compareForHero(hero, stashPiece);
 
-    Widget slotFor(EquipmentSlot slot) => PaperDollSlot(
-          slot: slot,
-          item: hero.itemIn(slot),
-          selected: hero.itemIn(slot)?.id == selectedItemId,
-          size: slotSize,
-          onTap: hero.itemIn(slot) == null
-              ? null
-              : () => onSelectItem(hero.itemIn(slot)!.id),
-          onUnequip:
-              hero.itemIn(slot) == null ? null : () => onUnequip(slot),
-        );
+    Widget slotFor(EquipmentSlot slot, {double? size}) {
+      final item = hero.itemIn(slot);
+      return PaperDollSlot(
+        slot: slot,
+        item: item,
+        hero: hero,
+        selected: item?.id == selectedItemId,
+        size: size ?? slotSize,
+        labeled: true,
+        onTap: item != null
+            ? () => onSelectItem(item.id)
+            : (onEmptySlotTap != null ? () => onEmptySlotTap!(slot) : null),
+        onUnequip: item == null ? null : () => onUnequip(slot),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          height: 40,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: heroes.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 4),
-            itemBuilder: (context, i) {
-              final h = heroes[i];
-              final active = i == index;
-              return InkWell(
-                onTap: () => onSelectHero(i),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: MenuChrome.cardBox(selected: active),
-                  child: Row(
-                    children: [
-                      HeroDollSprite(hero: h, partyIndex: i, size: 24),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${h.roleLabel} · L${h.level}',
-                        style: GameTheme.pixel(size: 8),
-                      ),
-                    ],
+        if (showHeroStrip) ...[
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: heroes.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 4),
+              itemBuilder: (context, i) {
+                final h = heroes[i];
+                final active = i == index;
+                return InkWell(
+                  onTap: () => onSelectHero(i),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: MenuChrome.cardBox(selected: active),
+                    child: Row(
+                      children: [
+                        HeroDollSprite(hero: h, partyIndex: i, size: 24),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${h.roleLabel} · L${h.level}',
+                          style: GameTheme.pixel(size: 8),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
+          const SizedBox(height: 8),
+        ],
+        Row(
+          children: [
+            _HeroArrow(
+              icon: Icons.chevron_left_rounded,
+              label: 'Previous hero',
+              enabled: heroes.length > 1,
+              onTap: () => onSelectHero(
+                (index - 1 + heroes.length) % heroes.length,
+              ),
+            ),
+            Expanded(
+              child: Column(
+                children: [
+                  Text(
+                    '${hero.roleLabel} — Level ${hero.level}',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.menuTitle(size: compact ? 18 : 20),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    state.isPartyDefeated
+                        ? 'iLvl ${_avgItemLevel(hero)}  ·  WIPED'
+                        : 'iLvl ${_avgItemLevel(hero)}  ·  HP '
+                            '${hero.currentHp.clamp(0, maxHp)}/$maxHp',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _HeroArrow(
+              icon: Icons.chevron_right_rounded,
+              label: 'Next hero',
+              enabled: heroes.length > 1,
+              onTap: () => onSelectHero((index + 1) % heroes.length),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          state.isPartyDefeated
-              ? '${hero.roleLabel}  |  Lv${hero.level}  |  iLvl ${_avgItemLevel(hero)}'
-                  '  |  WIPED  (max $maxHp)'
-              : '${hero.roleLabel}  |  Lv${hero.level}  |  iLvl ${_avgItemLevel(hero)}'
-                  '  |  HP ${hero.currentHp.clamp(0, maxHp)}/$maxHp',
-          textAlign: TextAlign.center,
-          style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
-        ),
-        const SizedBox(height: 6),
-        // WoW paper doll: armor columns + model with weapons under feet.
+        const SizedBox(height: 10),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -194,22 +259,32 @@ class CharacterEquipPanel extends StatelessWidget {
               child: Column(
                 children: [
                   Container(
-                    width: dollSize + 16,
-                    height: dollSize + 16,
+                    width: dollSize + 28,
+                    height: dollSize + 28,
                     decoration: BoxDecoration(
                       gradient: const RadialGradient(
+                        center: Alignment(0, 0.55),
+                        radius: 0.85,
                         colors: [
-                          Color(0xFF3A2A18),
-                          Color(0xFF14100C),
+                          Color(0x5540A090),
+                          Color(0xFF101820),
+                          Color(0xFF080C12),
                         ],
+                        stops: [0.0, 0.45, 1.0],
                       ),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(GameTheme.radiusMd),
                       border: Border.all(
-                        color: GameTheme.borderLit.withValues(alpha: 0.7),
+                        color: GameTheme.borderLit.withValues(alpha: 0.55),
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: GameTheme.torch.withValues(alpha: 0.12),
+                          blurRadius: 16,
+                        ),
+                      ],
                     ),
                     alignment: Alignment.center,
-                    child: HeroPaperDollView(
+                    child: HeroDollSprite(
                       hero: hero,
                       partyIndex: index,
                       size: dollSize,
@@ -229,13 +304,30 @@ class CharacterEquipPanel extends StatelessWidget {
                       ),
                     ),
                   ],
+                  SizedBox(height: slotGap + 2),
+                  // Weapon + shield as corner anchors (reference feel).
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      slotFor(EquipmentSlot.weapon, size: weaponSize),
+                      SizedBox(width: slotGap + 6),
+                      slotFor(EquipmentSlot.offHand, size: weaponSize),
+                    ],
+                  ),
                   SizedBox(height: slotGap),
-                  // Weapon / off-hand / ranged / flask under the model (WoW).
                   Wrap(
                     alignment: WrapAlignment.center,
                     spacing: slotGap,
                     runSpacing: slotGap,
-                    children: [for (final s in weaponRow) slotFor(s)],
+                    children: [
+                      for (final s in const [
+                        EquipmentSlot.ranged,
+                        EquipmentSlot.trinket,
+                        EquipmentSlot.trinket2,
+                        EquipmentSlot.consumable,
+                      ])
+                        slotFor(s),
+                    ],
                   ),
                 ],
               ),
@@ -247,14 +339,32 @@ class CharacterEquipPanel extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _BigStat(
+                label: 'DAMAGE',
+                value: '$atk',
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _BigStat(
+                label: 'ARMOR',
+                value: '$def',
+              ),
+            ),
+          ],
+        ),
         if (selected != null) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1610),
-              borderRadius: BorderRadius.circular(4),
+              color: GameTheme.panelInset,
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
               border: Border.all(color: _rarityColor(selected.rarity)),
             ),
             child: Column(
@@ -262,17 +372,18 @@ class CharacterEquipPanel extends StatelessWidget {
               children: [
                 Text(
                   selected.name,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.pixel(
-                    size: 6,
+                  style: GameTheme.body(
+                    size: 14,
                     color: _rarityColor(selected.rarity),
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   '${slotLabels[selected.slot] ?? selected.slot.name}'
-                  ' | i${selected.effectiveItemLevel} | ${selected.statsLine}',
-                  maxLines: 2,
+                  ' · i${selected.effectiveItemLevel} · ${selected.statsLine}',
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(
                     size: 12,
@@ -297,36 +408,77 @@ class CharacterEquipPanel extends StatelessWidget {
                       color: GameTheme.parchmentDim,
                     ),
                   ),
+                if (compare != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    compare.isUpgrade
+                        ? 'vs worn  Score ${GameLogic.formatDelta(compare.powerDelta)}  UPGRADE'
+                        : 'vs worn  Score ${GameLogic.formatDelta(compare.powerDelta)}'
+                            '  A${GameLogic.formatDelta(compare.atkDelta)}'
+                            ' D${GameLogic.formatDelta(compare.defDelta)}'
+                            ' V${GameLogic.formatDelta(compare.vitDelta)}',
+                    style: GameTheme.body(
+                      size: 12,
+                      color: compare.powerDelta > 0
+                          ? GameTheme.clear
+                          : (compare.powerDelta < 0
+                              ? GameTheme.bloodLit
+                              : GameTheme.parchmentDim),
+                    ),
+                  ),
+                ] else if (selectedWornHere)
+                  Text(
+                    'Equipped · UNEQUIP below · long-press for tip',
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
               ],
             ),
           ),
         ],
-        const SizedBox(height: 6),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (final entry in [
-                ('STR', '${ratings.strength}'),
-                ('AGI', '${ratings.agility}'),
-                ('STA', '${ratings.stamina}'),
-                ('INT', '${ratings.intellect}'),
-                ('SPI', '${ratings.spirit}'),
-                ('DMG', '$atk'),
-                ('DEF', '$def'),
-                ('CRIT', '${state.effectiveHeroCrit(hero)}%'),
-                (
-                  'HASTE',
-                  state.effectiveHeroAttackSpeed(hero).toStringAsFixed(2),
-                ),
-                ('LS', '${hero.gearLifestealPercent}%'),
-              ]) ...[
-                _MiniStat(label: entry.$1, value: entry.$2),
-                const SizedBox(width: 4),
-              ],
-            ],
+        if (onEmptySlotTap != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Tap empty slot to filter the bag.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
+        ],
+        const SizedBox(height: 10),
+        Text(
+          'HERO STATS',
+          textAlign: TextAlign.center,
+          style: GameTheme.pixel(size: 7, color: GameTheme.parchmentDim),
         ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          alignment: WrapAlignment.center,
+          children: [
+            for (final entry in [
+              ('STR', '${ratings.strength}'),
+              ('AGI', '${ratings.agility}'),
+              ('STA', '${ratings.stamina}'),
+              ('INT', '${ratings.intellect}'),
+              ('SPI', '${ratings.spirit}'),
+              ('DMG', '$atk'),
+              ('DEF', '$def'),
+              ('HP', '$maxHp'),
+              ('CRIT', '${state.effectiveHeroCrit(hero)}%'),
+              (
+                'HASTE',
+                state.effectiveHeroAttackSpeed(hero).toStringAsFixed(2),
+              ),
+              ('LS', '${hero.gearLifestealPercent}%'),
+              ('iLvl', '${_avgItemLevel(hero)}'),
+            ])
+              _StatChip(label: entry.$1, value: entry.$2),
+          ],
+        ),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -351,12 +503,13 @@ class CharacterEquipPanel extends StatelessWidget {
   }
 
   int _avgItemLevel(PartyHero hero) {
-    if (hero.equipped.isEmpty) return 0;
+    final slots = allSlots;
+    if (slots.isEmpty) return 0;
     var sum = 0;
-    for (final item in hero.equipped.values) {
-      sum += item.effectiveItemLevel;
+    for (final slot in slots) {
+      sum += hero.itemIn(slot)?.effectiveItemLevel ?? 0;
     }
-    return (sum / hero.equipped.length).round();
+    return (sum / slots.length).round();
   }
 }
 
@@ -369,7 +522,7 @@ class _SlotColumn extends StatelessWidget {
 
   final List<EquipmentSlot> slots;
   final double slotGap;
-  final Widget Function(EquipmentSlot slot) slotBuilder;
+  final Widget Function(EquipmentSlot slot, {double? size}) slotBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -384,6 +537,106 @@ class _SlotColumn extends StatelessWidget {
   }
 }
 
+class _HeroArrow extends StatelessWidget {
+  const _HeroArrow({
+    required this.icon,
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: label,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+        child: SizedBox(
+          width: 40,
+          height: 48,
+          child: Icon(
+            icon,
+            size: 28,
+            color: enabled
+                ? GameTheme.torchHot
+                : GameTheme.parchmentDim.withValues(alpha: 0.35),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BigStat extends StatelessWidget {
+  const _BigStat({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: GameTheme.panelInset,
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+        border: Border.all(color: GameTheme.border.withValues(alpha: 0.8)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: GameTheme.pixel(size: 7, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: GameTheme.menuTitle(size: 22),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 72),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: MenuChrome.cardBox(inset: true),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: GameTheme.pixel(size: 5, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            style: GameTheme.pixel(size: 7, color: GameTheme.torchHot),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class PaperDollSlot extends StatelessWidget {
   const PaperDollSlot({
     super.key,
@@ -391,14 +644,18 @@ class PaperDollSlot extends StatelessWidget {
     required this.item,
     required this.selected,
     required this.size,
+    this.hero,
+    this.labeled = false,
     this.onTap,
     this.onUnequip,
   });
 
   final EquipmentSlot slot;
   final EquipmentItem? item;
+  final PartyHero? hero;
   final bool selected;
   final double size;
+  final bool labeled;
   final VoidCallback? onTap;
   final VoidCallback? onUnequip;
 
@@ -406,28 +663,43 @@ class PaperDollSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     final border = item == null
         ? GameTheme.border
-        : _rarityColor(item!.rarity);
+        : itemRarityBorder(item!.rarity);
     final emptyIcon = CharacterEquipPanel.emptyIconFor(slot);
     final short = CharacterEquipPanel.slotLabels[slot] ?? slot.name;
+    final a11y = item == null
+        ? 'Empty $short — browse bag'
+        : '${item!.name} ${item!.effectiveItemLevel}';
 
     final hit = size < GameTheme.minTouch ? GameTheme.minTouch : size;
-    return Tooltip(
-      message: item?.name ?? short,
+    final body = Semantics(
+      button: onTap != null || onUnequip != null,
+      label: a11y,
+      onTap: onTap,
+      excludeSemantics: true,
       child: SizedBox(
         width: hit,
         height: hit,
         child: InkWell(
           onTap: onTap,
-          onLongPress: onUnequip,
           child: Center(
             child: Container(
               width: size,
               height: size,
-              decoration: MenuChrome.cardBox(selected: selected).copyWith(
+              decoration: BoxDecoration(
+                color: GameTheme.panelInset,
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: selected ? GameTheme.torch : border,
-                  width: selected ? 2 : 1.5,
+                  color: selected ? GameTheme.torchHot : border,
+                  width: selected ? 2 : 1.4,
                 ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: GameTheme.torch.withValues(alpha: 0.28),
+                          blurRadius: 8,
+                        ),
+                      ]
+                    : null,
               ),
               clipBehavior: Clip.hardEdge,
               child: item != null
@@ -455,56 +727,73 @@ class PaperDollSlot extends StatelessWidget {
                           ),
                       ],
                     )
-                  : emptyIcon != null
-                      ? Opacity(
-                          opacity: 0.28,
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: KenneySprite(
-                              asset: emptyIcon,
-                              size: size - 12,
+                  : labeled
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (emptyIcon != null)
+                              Opacity(
+                                opacity: 0.22,
+                                child: KenneySprite(
+                                  asset: emptyIcon,
+                                  size: size * 0.38,
+                                ),
+                              ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 2),
+                              child: Text(
+                                short,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.pixel(
+                                  size: size >= 44 ? 5 : 4,
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         )
-                      : Center(
-                          child: Text(
-                            short.length <= 4 ? short : short.substring(0, 3),
-                            textAlign: TextAlign.center,
-                            style: GameTheme.pixel(
-                              size: 5,
-                              color: GameTheme.parchmentDim,
+                      : emptyIcon != null
+                          ? Opacity(
+                              opacity: 0.28,
+                              child: Padding(
+                                padding: const EdgeInsets.all(6),
+                                child: KenneySprite(
+                                  asset: emptyIcon,
+                                  size: size - 12,
+                                ),
+                              ),
+                            )
+                          : Center(
+                              child: Text(
+                                short.length <= 4
+                                    ? short
+                                    : short.substring(0, 3),
+                                textAlign: TextAlign.center,
+                                style: GameTheme.pixel(
+                                  size: 5,
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
             ),
           ),
         ),
       ),
     );
-  }
-}
 
-class _MiniStat extends StatelessWidget {
-  const _MiniStat({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: MenuChrome.cardBox(inset: true),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: GameTheme.pixel(size: 5, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(width: 6),
-          Text(value, style: GameTheme.pixel(size: 6, color: GameTheme.torchHot)),
-        ],
-      ),
+    if (item == null) {
+      return Tooltip(
+        message: 'Empty $short — tap to browse bag',
+        child: body,
+      );
+    }
+    return ItemTooltipAnchor(
+      item: item!,
+      hero: hero,
+      child: body,
     );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/keystone.dart';
 import '../models/class_ability.dart';
 import '../models/combat_ratings.dart';
 import '../models/dungeon_room.dart';
@@ -203,10 +204,16 @@ class SpatialActor {
   int setProcArgb = 0xFFFFD070;
 
   // ?? Mage (Fire) ??
+  /// Damage amp window (Fire Combustion, Assa Vendetta/Cold Blood, Arcane Power).
   double combustionTimer = 0;
   double iceBlockTimer = 0;
   /// While a Living Bomb you cast is still ticking on any foe.
   double livingBombArmed = 0;
+  /// Fire Hot Streak: consecutive Fireball crits → free Pyroblast.
+  int hotStreakStack = 0;
+  bool hotStreakReady = false;
+  /// Arcane Blast charges (0–4); Missiles dump spends them.
+  int arcaneCharges = 0;
 
   // ?? Rogue (Combat) ??
   int comboPoints = 0;
@@ -242,11 +249,17 @@ class SpatialActor {
   double livingBombAcc = 0;
   String? livingBombCasterId;
 
-  /// Generic bleed DoT (Rip / Rake / Rend).
+  /// Generic bleed DoT (Rip / Rake / Rend / Affliction / Shadow).
   double bleedTimer = 0;
   double bleedDps = 0;
   double bleedAcc = 0;
   String? bleedCasterId;
+  /// Last ability id that applied [bleedTimer] (maintain / stack checks).
+  String? bleedAbilityId;
+
+  /// Ally heal-over-time (Riptide / Renew / Rejuvenation).
+  double hotHps = 0;
+  double hotAcc = 0;
 
   /// Cumulative combat stats this floor (heroes only; for party meter).
   int damageDealt = 0;
@@ -942,7 +955,9 @@ abstract final class SpatialCombat {
         a.bleedTimer = math.max(0, a.bleedTimer - dt);
         if (a.bleedTimer <= 0) {
           a.bleedDps = 0;
+          a.bleedAcc = 0;
           a.bleedCasterId = null;
+          a.bleedAbilityId = null;
         }
       }
       if (a.rootTimer > 0) {
@@ -1014,9 +1029,28 @@ abstract final class SpatialCombat {
           final left = (a.buffTimers[key] ?? 0) - dt;
           if (left <= 0) {
             a.buffTimers.remove(key);
+            if (key == 'hot') {
+              a.hotHps = 0;
+              a.hotAcc = 0;
+            }
           } else {
             a.buffTimers[key] = left;
           }
+        }
+      }
+      // Ally HoT ticks (Riptide / Renew / Rejuv).
+      if (a.team == SpatialTeam.hero &&
+          a.hp > 0 &&
+          (a.buffTimers['hot'] ?? 0) > 0 &&
+          a.hotHps > 0) {
+        a.hotAcc += a.hotHps * dt;
+        if (a.hotAcc >= 1) {
+          final tick = a.hotAcc.floor();
+          a.hotAcc -= tick;
+          final before = a.hp;
+          a.hp = math.min(a.effectiveMaxHp, a.hp + tick);
+          final gained = a.hp - before;
+          if (gained > 0) a.healingDone += gained;
         }
       }
     }
@@ -1257,52 +1291,66 @@ abstract final class SpatialCombat {
 
     bool can(AbilityId id) => _canCast(warrior, id, hasShield: hasShield);
 
-    // Charge — gap-close when focus is far (WotLK Prot mobility beat).
+    // Charge — short LOS gap-close (not a map-wide teleport).
+    const chargeMinRange = 3.5;
+    const chargeMaxRange = 8.0;
     if (focusEnemy != null &&
         focusEnemy.hp > 0 &&
         !focusEnemy.dormant &&
-        can(AbilityId.charge) &&
-        _dist(warrior, focusEnemy) > 3.5) {
-      final def = WarriorAbilities.defFor(AbilityId.charge)!;
-      _spendRage(warrior, def.resourceCost);
-      _startAbilityCd(world, warrior, AbilityId.charge, def.cooldown);
-      final dx = focusEnemy.x - warrior.x;
-      final dy = focusEnemy.y - warrior.y;
-      final len = math.sqrt(dx * dx + dy * dy);
-      if (!reducedVfx) {
-        _spawnBurst(
+        can(AbilityId.charge)) {
+      final chargeDist = _dist(warrior, focusEnemy);
+      final chargeLos = chargeDist > chargeMinRange &&
+          chargeDist <= chargeMaxRange &&
+          _hasClearCorridor(
+            world.map,
+            world.openGateIds,
+            warrior.x.floor(),
+            warrior.y.floor(),
+            focusEnemy.x.floor(),
+            focusEnemy.y.floor(),
+          );
+      if (chargeLos) {
+        final def = WarriorAbilities.defFor(AbilityId.charge)!;
+        _spendRage(warrior, def.resourceCost);
+        _startAbilityCd(world, warrior, AbilityId.charge, def.cooldown);
+        final dx = focusEnemy.x - warrior.x;
+        final dy = focusEnemy.y - warrior.y;
+        final len = math.sqrt(dx * dx + dy * dy);
+        if (!reducedVfx) {
+          _spawnBurst(
+            world,
+            x: warrior.x,
+            y: warrior.y,
+            argb: 0xAAC0A070,
+            radius: 0.55,
+            life: 0.22,
+          );
+        }
+        if (len > 0.1) {
+          final targetDist = math.max(0.55, warrior.attackRange * 0.85);
+          final nx = focusEnemy.x - (dx / len) * targetDist;
+          final ny = focusEnemy.y - (dy / len) * targetDist;
+          final snapped = _snapToWalkable(
+            world.map,
+            world.openGateIds,
+            nx,
+            ny,
+          );
+          warrior.x = snapped.$1;
+          warrior.y = snapped.$2;
+        }
+        focusEnemy.rootTimer = math.max(focusEnemy.rootTimer, 0.85);
+        _gainRage(warrior, 8);
+        _announceCast(
           world,
-          x: warrior.x,
-          y: warrior.y,
-          argb: 0xAAC0A070,
-          radius: 0.55,
-          life: 0.22,
+          warrior,
+          text: 'CHARGE',
+          argb: 0xFFE0C070,
+          reducedVfx: reducedVfx,
+          burstArgb: 0x88D0A050,
+          burstRadius: 0.7,
         );
       }
-      if (len > 0.1) {
-        final targetDist = math.max(0.55, warrior.attackRange * 0.85);
-        final nx = focusEnemy.x - (dx / len) * targetDist;
-        final ny = focusEnemy.y - (dy / len) * targetDist;
-        final snapped = _snapToWalkable(
-          world.map,
-          world.openGateIds,
-          nx,
-          ny,
-        );
-        warrior.x = snapped.$1;
-        warrior.y = snapped.$2;
-      }
-      focusEnemy.rootTimer = math.max(focusEnemy.rootTimer, 0.85);
-      _gainRage(warrior, 8);
-      _announceCast(
-        world,
-        warrior,
-        text: 'CHARGE',
-        argb: 0xFFE0C070,
-        reducedVfx: reducedVfx,
-        burstArgb: 0x88D0A050,
-        burstRadius: 0.7,
-      );
     }
 
     // Shield Wall ? emergency DR.
@@ -2358,14 +2406,17 @@ abstract final class SpatialCombat {
     if (focusEnemy != null &&
         focusEnemy.hp > 0 &&
         _dist(mage, focusEnemy) <= mage.attackRange + 0.5 &&
+        mage.hotStreakReady &&
         can(AbilityId.pyroblast)) {
       final def = ClassKits.defFor(AbilityId.pyroblast)!;
-      _spendRage(mage, def.resourceCost);
+      // Hot Streak: free Pyro (no mana); CD still starts so it can't chain.
       _startAbilityCd(world, mage, AbilityId.pyroblast, def.cooldown);
+      mage.hotStreakReady = false;
+      mage.hotStreakStack = 0;
       mage.attackFlash = 0.22;
       var dmg =
-          math.max(3, (mage.attack * 1.35 * mage.kitOutMul * casterAbilityTax).round());
-      if (mage.combustionTimer > 0) dmg = (dmg * 1.05).round();
+          math.max(3, (mage.attack * 1.45 * mage.kitOutMul * casterAbilityTax).round());
+      if (mage.combustionTimer > 0) dmg = (dmg * 1.08).round();
       SpatialCombat._addProjectile(world, 
         _spellBolt(
           from: mage,
@@ -2379,7 +2430,7 @@ abstract final class SpatialCombat {
       _announceCast(
         world,
         mage,
-        text: 'PYROBLAST',
+        text: 'HOT STREAK',
         argb: 0xFFFF5020,
         reducedVfx: reducedVfx,
         burstArgb: 0xFFFF6030,
@@ -2396,20 +2447,32 @@ abstract final class SpatialCombat {
       var dmg =
           math.max(2, (mage.attack * 0.95 * mage.kitOutMul * casterAbilityTax).round());
       if (mage.combustionTimer > 0) dmg = (dmg * 1.05).round();
+      // Hot Streak: two Fireball crits unlock free Pyroblast.
+      final isCrit = GameLogic.random.nextInt(100) < 28;
+      if (isCrit) {
+        dmg = (dmg * 1.75).round();
+        mage.hotStreakStack = math.min(2, mage.hotStreakStack + 1);
+        if (mage.hotStreakStack >= 2) {
+          mage.hotStreakReady = true;
+          mage.hotStreakStack = 0;
+        }
+      } else {
+        mage.hotStreakStack = 0;
+      }
       SpatialCombat._addProjectile(world, 
         _spellBolt(
           from: mage,
           to: focusEnemy,
           damage: dmg,
           style: SpellBoltStyle.fire,
-          label: 'FIREBALL',
+          label: isCrit ? 'CRIT' : 'FIREBALL',
           labelArgb: 0xFFFF8040,
         ),
       );
       _announceCast(
         world,
         mage,
-        text: 'FIREBALL',
+        text: mage.hotStreakReady ? 'HOT STREAK!' : 'FIREBALL',
         argb: 0xFFFF8040,
         reducedVfx: reducedVfx,
         burstArgb: 0xFFFF9040,
@@ -2693,8 +2756,11 @@ abstract final class SpatialCombat {
     if ((hero.buffTimers['atkShout'] ?? 0) > 0) {
       damage = math.max(1, (damage * 1.08).round());
     }
-    if (hero.heroSpecId == HeroSpecId.fire) {
-      // Whites stay baseline; kit spells apply Combustion in the Fire ticker.
+    // Vendetta / Cold Blood / Arcane Power / Combustion amp whites + kit AA.
+    if (hero.combustionTimer > 0 && hero.heroSpecId != HeroSpecId.fire) {
+      damage = math.max(1, (damage * 1.25).round());
+      tag ??= 'AMP';
+      tagArgb = 0xFFFF6060;
     }
 
     if (hero.heroSpecId == HeroSpecId.combat ||
@@ -3316,6 +3382,9 @@ abstract final class SpatialCombat {
     to.combustionTimer = from.combustionTimer;
     to.iceBlockTimer = from.iceBlockTimer;
     to.livingBombArmed = from.livingBombArmed;
+    to.hotStreakStack = from.hotStreakStack;
+    to.hotStreakReady = from.hotStreakReady;
+    to.arcaneCharges = from.arcaneCharges;
     to.comboPoints = from.comboPoints;
     to.sliceAndDiceTimer = from.sliceAndDiceTimer;
     to.bladeFlurryTimer = from.bladeFlurryTimer;
@@ -3336,6 +3405,9 @@ abstract final class SpatialCombat {
     to.bleedDps = from.bleedDps;
     to.bleedAcc = from.bleedAcc;
     to.bleedCasterId = from.bleedCasterId;
+    to.bleedAbilityId = from.bleedAbilityId;
+    to.hotHps = from.hotHps;
+    to.hotAcc = from.hotAcc;
     to.rootTimer = from.rootTimer;
     to.damageDealt = from.damageDealt;
     to.healingDone = from.healingDone;
@@ -5202,7 +5274,7 @@ abstract final class SpatialCombat {
       state.battleNumber,
       ascensionLevel: state.ascensionLevel,
       lootFindPercent: state.petLootFindPercent,
-      hardmodeLevel: state.hardmodeLevel,
+      hardmodeLevel: Keystone.combatLevel(state),
       party: state.heroes,
       dungeonId: state.dungeonId,
       enemyRole: enemy.role,
@@ -5253,16 +5325,20 @@ abstract final class SpatialCombat {
         argb: _floaterXp,
         life: 0.9,
       );
+      var leveledFloater = false;
       for (var i = 0; i < next.heroes.length; i++) {
         if (next.heroes[i].level > beforeLevels[i]) {
-          _spawnFloater(
-            world,
-            x: world.heroes.length > i ? world.heroes[i].x : enemy.x,
-            y: (world.heroes.length > i ? world.heroes[i].y : enemy.y) - 0.9,
-            text: 'LEVEL UP!',
-            argb: _floaterXp,
-            life: 1.2,
-          );
+          if (!leveledFloater) {
+            leveledFloater = true;
+            _spawnFloater(
+              world,
+              x: world.heroes.length > i ? world.heroes[i].x : enemy.x,
+              y: (world.heroes.length > i ? world.heroes[i].y : enemy.y) - 0.9,
+              text: 'LEVEL UP!',
+              argb: _floaterXp,
+              life: 1.0,
+            );
+          }
           if (i < world.heroes.length) {
             final h = next.heroes[i];
             final a = world.heroes[i];

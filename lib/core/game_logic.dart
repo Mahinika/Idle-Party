@@ -22,6 +22,8 @@ import '../spatial/spatial_combat.dart';
 import 'dungeon_generator.dart';
 import 'equipment_factory.dart';
 import 'game_state.dart';
+import 'keystone.dart';
+import 'local_season.dart';
 import 'meta_systems.dart';
 
 class GameLogic {
@@ -216,27 +218,81 @@ class GameLogic {
       layoutSeed: layoutSeed,
     );
     final room = floor.first;
-    return state.copyWith(
+    final primed = _beginKeystoneRun(ensureWeeklyContract(state));
+    return primed.copyWith(
       inDungeon: true,
       inGauntlet: false,
       dungeonId: dungeonId,
-      dungeonMode: state.dungeonMode,
+      dungeonMode: primed.dungeonMode,
       highestFloorCleared: 0,
       currentRoom: room,
       dungeonFloor: floor,
       enemies: createEnemyGroup(
         room,
         dungeonId: dungeonId,
-        fromState: state,
+        fromState: primed,
       ),
       layoutSeed: layoutSeed,
-      heroes: state.heroes
+      heroes: primed.heroes
           .map(
-            (hero) => hero.copyWith(currentHp: state.effectiveHeroMaxHp(hero)),
+            (hero) => hero.copyWith(currentHp: primed.effectiveHeroMaxHp(hero)),
           )
           .toList(),
       lastUpdated: DateTime.now(),
     );
+  }
+
+  /// Locks preferred key + affixes + idle-friendly par timer for a dungeon run.
+  static GameState _beginKeystoneRun(GameState state) {
+    final key = state.hardmodeLevel.clamp(0, state.effectiveMaxHardmode);
+    if (key <= 0) {
+      return _clearKeystoneRun(state);
+    }
+    final affixes = Keystone.affixesFor(
+      key: key,
+      weeklyModifier: state.metaDepth.weeklyModifier,
+      weeklyKey: state.metaDepth.weeklyKey,
+      personalBossRush: state.challengeBossRush,
+      personalNoFlask: state.challengeNoFlask,
+    );
+    final par = Keystone.parTimeMs(
+      bossFloor: Keystone.bossFloorForAl(state.ascensionLevel),
+      key: key,
+    );
+    return state.copyWith(
+      keystoneRunActive: true,
+      keystoneRunLevel: key,
+      keystoneTimerMs: 0,
+      keystoneParMs: par,
+      keystoneRunAffixes: affixes,
+      keystoneOutcome: '',
+    );
+  }
+
+  static GameState _clearKeystoneRun(GameState state) {
+    if (!state.keystoneRunActive &&
+        state.keystoneRunLevel == 0 &&
+        state.keystoneTimerMs == 0 &&
+        state.keystoneParMs == 0 &&
+        state.keystoneRunAffixes.isEmpty &&
+        state.keystoneOutcome.isEmpty) {
+      return state;
+    }
+    return state.copyWith(
+      keystoneRunActive: false,
+      keystoneRunLevel: 0,
+      keystoneTimerMs: 0,
+      keystoneParMs: 0,
+      keystoneRunAffixes: const <String>[],
+      keystoneOutcome: '',
+    );
+  }
+
+  /// Advances keystone timer (live ticks or offline). Stops after resolve.
+  static GameState advanceKeystoneTimer(GameState state, int deltaMs) {
+    if (!state.keystoneRunActive || deltaMs <= 0) return state;
+    if (state.keystoneOutcome.isNotEmpty) return state;
+    return state.copyWith(keystoneTimerMs: state.keystoneTimerMs + deltaMs);
   }
 
   static GameState leaveDungeon(GameState state) {
@@ -246,11 +302,13 @@ class GameLogic {
           currentHp: h.currentHp.clamp(0, state.effectiveHeroMaxHp(h)),
         ),
     ];
-    var next = state.copyWith(
-      inDungeon: false,
-      inGauntlet: false,
-      heroes: heroes,
-      lastUpdated: DateTime.now(),
+    var next = _clearKeystoneRun(
+      state.copyWith(
+        inDungeon: false,
+        inGauntlet: false,
+        heroes: heroes,
+        lastUpdated: DateTime.now(),
+      ),
     );
     if (state.inGauntlet) {
       next = recordGauntletRun(next, reachedFloor: state.currentRoom.floorNumber);
@@ -319,8 +377,9 @@ class GameLogic {
       bossEvery: gauntletBossEvery,
     );
     final room = floor.first;
+    final cleared = _clearKeystoneRun(state);
     return MetaSystems.evaluateAchievements(
-      state.copyWith(
+      cleared.copyWith(
         inDungeon: true,
         inGauntlet: true,
         dungeonId: dungeonId,
@@ -332,13 +391,13 @@ class GameLogic {
         enemies: createEnemyGroup(
           room,
           dungeonId: dungeonId,
-          fromState: state.copyWith(inGauntlet: true),
+          fromState: cleared.copyWith(inGauntlet: true),
         ),
         layoutSeed: layoutSeed,
-        heroes: state.heroes
+        heroes: cleared.heroes
             .map(
               (hero) =>
-                  hero.copyWith(currentHp: state.effectiveHeroMaxHp(hero)),
+                  hero.copyWith(currentHp: cleared.effectiveHeroMaxHp(hero)),
             )
             .toList(),
         lastUpdated: DateTime.now(),
@@ -511,8 +570,9 @@ class GameLogic {
       );
     }
 
-    // HM / challenge slight pity acceleration (still boss-gated).
-    if (state.hardmodeLevel > 0 ||
+    // Keystone / challenge slight pity acceleration (still boss-gated).
+    final keyCombat = Keystone.combatLevel(state);
+    if (keyCombat > 0 ||
         state.challengeBossRush ||
         state.challengeNoFlask) {
       for (final key in pity.keys.toList()) {
@@ -1238,12 +1298,12 @@ class GameLogic {
   }
 
   static bool canUseConsumable(GameState state) =>
-      !state.challengeNoFlask &&
+      !Keystone.flasksDisabled(state) &&
       (state.heroes.any((h) => h.itemIn(EquipmentSlot.consumable) != null) ||
           state.gearStash.any((g) => g.slot == EquipmentSlot.consumable));
 
   static GameState useConsumable(GameState state, {int? heroIndex}) {
-    if (state.challengeNoFlask) {
+    if (Keystone.flasksDisabled(state)) {
       return state;
     }
     var sourceIndex = heroIndex;
@@ -1732,7 +1792,19 @@ class GameLogic {
   /// Essence granted when ascending into [newLevel].
   static int ascendEssenceReward(int newLevel) => 4 + (newLevel * 3);
 
-  /// Applies Ascension + Sanctuary + gear + pet gold bonuses.
+  /// Flat ATK granted per Ascend Blessing stack.
+  static const int ascendBlessingAtk = 2;
+
+  /// Flat DEF granted per Ascend Blessing stack.
+  static const int ascendBlessingDef = 1;
+
+  /// Flat VIT granted per Ascend Blessing stack.
+  static const int ascendBlessingVit = 4;
+
+  /// Gold-find percent granted per Ascend Blessing stack.
+  static const int ascendBlessingGoldPct = 3;
+
+  /// Applies Ascension + Sanctuary + Blessing + gear + pet gold bonuses.
   static int applyGoldGain(GameState state, int baseGold) {
     if (baseGold <= 0) {
       return baseGold;
@@ -1740,6 +1812,7 @@ class GameLogic {
     final percent =
         state.ascensionGoldBonusPercent +
         state.sanctuaryGoldBonusPercent +
+        state.ascendBlessingGoldPercent +
         state.gearGoldFindPercent +
         state.petGoldFindPercent;
     if (percent <= 0) {
@@ -1773,7 +1846,7 @@ class GameLogic {
     return roomCombatBudget(
       state.currentRoom,
       dungeonId: state.dungeonId,
-      hardmodeLevel: state.hardmodeLevel,
+      hardmodeLevel: Keystone.combatLevel(state),
       ascensionLevel: state.ascensionLevel,
       gearPressure: partyGearPressure(state),
     ).gold;
@@ -1833,10 +1906,12 @@ class GameLogic {
       zoneTrophies: trophies,
       noWipeAscendReady: true,
       unlockedSpecs: unlockedSpecs,
+      ascendBlessings: state.metaDepth.ascendBlessings + 1,
     );
 
     final fresh = createInitialState(now: now);
-    final hmCap = min(10, 3 + nextLevel ~/ 2);
+    // Match [GameState.effectiveMaxHardmode] for the post-Ascend AL.
+    final hmCap = min(20, max(2, 3 + nextLevel));
 
     // Preserve roster levels/XP; strip run gear but keep Apex. Combat unlocks.
     final stashApex = [
@@ -1919,6 +1994,9 @@ class GameLogic {
       soundMuted: state.soundMuted,
       vfxQuality: state.vfxQuality,
       autoSellMaxPower: state.autoSellMaxPower,
+      autoSellMaxRarity: state.autoSellMaxRarity,
+      autoDisassembleMaxIlvl: state.autoDisassembleMaxIlvl,
+      autoDisassembleMaxRarity: state.autoDisassembleMaxRarity,
       rogueUnlocked: true,
       seenTips: [
         for (final t in state.seenTips)
@@ -1932,6 +2010,12 @@ class GameLogic {
       challengeBossRush: state.challengeBossRush,
       challengeNoFlask: state.challengeNoFlask,
       hardmodeLevel: state.hardmodeLevel.clamp(0, hmCap),
+      keystoneRunActive: false,
+      keystoneRunLevel: 0,
+      keystoneTimerMs: 0,
+      keystoneParMs: 0,
+      keystoneRunAffixes: const <String>[],
+      keystoneOutcome: '',
       colorblindMode: state.colorblindMode,
       uiTextScale: state.uiTextScale,
       lastDailyDate: state.lastDailyDate,
@@ -1977,6 +2061,9 @@ class GameLogic {
     var next = state;
     final combatName = HeroSpecs.ascendUnlockSpec.name;
     final unlocked = List<String>.from(next.metaDepth.unlockedSpecs);
+    var pending = List<String>.from(next.metaDepth.pendingHeroReveals);
+    final wasMissing = !unlocked.contains(combatName) ||
+        !next.heroRoster.any((h) => h.specId == HeroSpecs.ascendUnlockSpec);
     if (!unlocked.contains(combatName)) {
       unlocked.add(combatName);
       next = next.copyWith(
@@ -2008,6 +2095,15 @@ class GameLogic {
           activeHeroIds: [...next.activeHeroIds, combat.id],
         );
       }
+    }
+    if (wasMissing && !pending.contains(combatName)) {
+      pending = [...pending, combatName];
+      next = next.copyWith(
+        metaDepth: next.metaDepth.copyWith(
+          unlockedSpecs: unlocked,
+          pendingHeroReveals: pending,
+        ),
+      );
     }
     return fillMissingStarterGear(next);
   }
@@ -2106,12 +2202,21 @@ class GameLogic {
         state.heroRoster.any((h) => h.specId == specId)) {
       return state;
     }
+    final wasNew = !state.isSpecUnlocked(specId) ||
+        !state.heroRoster.any((h) => h.specId == specId);
     final unlocked = <String>{
       ...state.metaDepth.unlockedSpecs,
       specId.name,
     }.toList();
+    var pending = List<String>.from(state.metaDepth.pendingHeroReveals);
+    if (wasNew && !pending.contains(specId.name)) {
+      pending = [...pending, specId.name];
+    }
     var next = state.copyWith(
-      metaDepth: state.metaDepth.copyWith(unlockedSpecs: unlocked),
+      metaDepth: state.metaDepth.copyWith(
+        unlockedSpecs: unlocked,
+        pendingHeroReveals: pending,
+      ),
       lastUpdated: DateTime.now(),
     );
     if (next.heroRoster.any((h) => h.specId == specId)) {
@@ -2127,6 +2232,17 @@ class GameLogic {
     );
     return next.copyWith(
       heroRoster: [...next.heroRoster, hero],
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// Clears hub “Meet new hero” queue (player opened PARTY / acknowledged).
+  static GameState ackPendingHeroReveals(GameState state) {
+    if (state.metaDepth.pendingHeroReveals.isEmpty) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        pendingHeroReveals: const <String>[],
+      ),
       lastUpdated: DateTime.now(),
     );
   }
@@ -2648,10 +2764,10 @@ class GameLogic {
     final zone = DungeonCatalog.byId(dungeonId ?? 'sandy').number;
     // Bosses use a gentler zone ramp — late zones were spike-wiping.
     final zoneMult = 1.0 + zone * (isBoss ? 0.22 : 0.28);
-    final hm = hardmodeLevel.clamp(0, 10);
-    // Linear to HM+10 = 10× (1000%) enemy HP/ATK.
-    final hmThreat = 1.0 + hm * 0.9;
-    final hmGold = 1.0 + hm * 0.15;
+    final hm = hardmodeLevel.clamp(0, Keystone.maxLevel);
+    // Key 20 ≈ old HM+10 (10× threat). See [Keystone.threatMul].
+    final hmThreat = Keystone.threatMul(hm);
+    final hmGold = Keystone.goldMul(hm);
     final alThreatRaw = 1.0 + ascensionLevel.clamp(0, 40) * 0.08;
     // Fresh post-ascend (gear wiped) — soften AL threat until kit rebuilds.
     final freshAscendEase =
@@ -2842,10 +2958,22 @@ class GameLogic {
     }
 
     final id = dungeonId ?? fromState?.dungeonId ?? 'sandy';
-    final hm = fromState?.hardmodeLevel ?? hardmodeLevel;
+    final hm = fromState != null
+        ? Keystone.combatLevel(fromState, fallback: hardmodeLevel)
+        : hardmodeLevel.clamp(0, Keystone.maxLevel);
     final al = fromState?.ascensionLevel ?? ascensionLevel;
-    final rush = fromState?.challengeBossRush ?? bossRush;
-    final weeklyMod = fromState?.metaDepth.weeklyModifier ?? '';
+    final affixes = fromState != null && fromState.keystoneRunActive
+        ? fromState.keystoneRunAffixes
+        : const <String>[];
+    final rush = (fromState?.challengeBossRush ?? bossRush) ||
+        affixes.contains('boss_rush');
+    final glassWeek = affixes.contains('glass');
+    final swarmWeek = affixes.contains('swarm');
+    final eliteWeek = affixes.contains('elite');
+    final fortuneWeek = affixes.contains('fortune');
+    final ironWeek = affixes.contains('iron');
+    final fortified = affixes.contains('fortified');
+    final tyrannical = affixes.contains('tyrannical');
     final level = room.globalBattleNumber;
     final gpRaw =
         (fromState != null ? partyGearPressure(fromState) : gearPressure)
@@ -2862,12 +2990,7 @@ class GameLogic {
       ascensionLevel: al,
       gearPressure: fromState != null ? partyGearPressure(fromState) : gearPressure,
     );
-    // Weekly modifiers apply after reading fromState.
-    final glassWeek = weeklyMod == 'glass';
-    final swarmWeek = weeklyMod == 'swarm';
-    final eliteWeek = weeklyMod == 'elite';
-    final fortuneWeek = weeklyMod == 'fortune';
-    final ironWeek = weeklyMod == 'iron';
+    // Keystone affixes (Mythic+-style) — only during an active key run.
     if (eliteWeek) {
       budget = (
         attack: (budget.attack * 1.15).round(),
@@ -2889,15 +3012,29 @@ class GameLogic {
         gold: (budget.gold * 1.15).round(),
       );
     }
-    // Hardmode densifies packs: HM+10 = 10× (1000%) enemy count.
-    // Swarm weekly multiplies count before HM density.
+    final isBossRoomEarly = room.type == RoomType.boss;
+    if (fortified && !isBossRoomEarly) {
+      budget = (
+        attack: (budget.attack * 1.22).round(),
+        hp: (budget.hp * 1.28).round(),
+        gold: budget.gold,
+      );
+    }
+    if (tyrannical && isBossRoomEarly) {
+      budget = (
+        attack: (budget.attack * 1.32).round(),
+        hp: (budget.hp * 1.4).round(),
+        gold: (budget.gold * 1.1).round(),
+      );
+    }
+    // Key densifies packs; Swarm multiplies count before key density.
     final baseCount = max(
       1,
       (room.enemyCount * (swarmWeek ? 1.35 : 1.0)).round(),
     );
     final count = min(
       80,
-      max(1, (baseCount * (1.0 + hm * 0.9)).round()),
+      max(1, (baseCount * Keystone.densityMul(hm)).round()),
     );
     // Full density keep: each body still carries HM-scaled HP/ATK (not diluted).
     final density = count / baseCount;
@@ -2920,7 +3057,7 @@ class GameLogic {
     final bossName = dungeon.bossName;
     final zone = dungeon.number;
     final rng = Random(level * 9173 + id.hashCode + room.type.index * 41);
-    final isBossRoom = room.type == RoomType.boss;
+    final isBossRoom = isBossRoomEarly;
     final pickType = eliteWeek && !isBossRoom ? RoomType.elite : room.type;
 
     final archetypes = <EnemyArchetype>[
@@ -3222,6 +3359,22 @@ class GameLogic {
         EnemyArchetype.glass: ['Char Blade', 'Soot Fang'],
         EnemyArchetype.support: ['Ash Chanter', 'Ember Adept'],
       },
+      'grove' => const {
+        EnemyArchetype.swarm: ['Moss Slime', 'Root Tick', 'Leaf Mite'],
+        EnemyArchetype.brute: ['Grove Brute', 'Timber Crusher'],
+        EnemyArchetype.tank: ['Hollow Guard', 'Bark Bulwark'],
+        EnemyArchetype.ranged: ['Spore Bat', 'Canopy Spitter'],
+        EnemyArchetype.glass: ['Thorn Skitter', 'Bramble Fang'],
+        EnemyArchetype.support: ['Wyrd Chanter', 'Grove Adept'],
+      },
+      'storm' => const {
+        EnemyArchetype.swarm: ['Gale Mite', 'Storm Tick', 'Spark Bat'],
+        EnemyArchetype.brute: ['Storm Brute', 'Thunder Crusher'],
+        EnemyArchetype.tank: ['Gale Bulwark', 'Storm Guard'],
+        EnemyArchetype.ranged: ['Volt Spitter', 'Gale Slinger'],
+        EnemyArchetype.glass: ['Lightning Fang', 'Zephyr Blade'],
+        EnemyArchetype.support: ['Storm Chanter', 'Tempest Adept'],
+      },
       _ => const {
         EnemyArchetype.swarm: ['Cave Slime', 'Sand Mite'],
         EnemyArchetype.brute: ['Cave Brute', 'Rock Crab'],
@@ -3236,8 +3389,11 @@ class GameLogic {
   }
 
   /// Restarts the current floor wave with a healed party.
+  /// Daily echo keeps today's layout seed so claim + wipe-retry stay valid.
   static GameState restartFloor(GameState state) {
-    final layoutSeed = newLayoutSeed();
+    final keepDailySeed = MetaSystems.isActiveDailyRun(state);
+    final layoutSeed =
+        keepDailySeed ? state.layoutSeed : newLayoutSeed();
     final floor = DungeonGenerator.generateFloor(
       state.currentRoom.floorNumber,
       ascensionLevel: state.ascensionLevel,
@@ -3291,7 +3447,9 @@ class GameLogic {
 
     late GameState progressed;
     if (state.inDungeon) {
-      final sim = simulateSpatialOffline(state, seconds);
+      // Idle-friendly keystone: AFK time counts on the timer.
+      final timed = advanceKeystoneTimer(state, seconds * 1000);
+      final sim = simulateSpatialOffline(timed, seconds);
       progressed = sim.state;
       roomsCleared = sim.roomsCleared;
     } else {
@@ -3424,6 +3582,16 @@ class GameLogic {
         if (current.inGauntlet) {
           current = exitToHubHealed(current);
           break;
+        }
+        if (MetaSystems.isActiveDailyRun(current)) {
+          current = restartFloor(current);
+          if (!current.inDungeon) break;
+          world = SpatialCombat.build(
+            current,
+            threatScale: threatScale,
+            afkAssist: afkAssist,
+          );
+          continue;
         }
         if (current.dungeonMode == DungeonMode.push &&
             current.currentRoom.floorNumber > current.highestFloorCleared) {
@@ -3856,54 +4024,121 @@ class GameLogic {
     final t = (now ?? DateTime.now()).toUtc();
     final key = isoWeekKey(t);
     final season = seasonLabel(t);
-    if (state.metaDepth.weeklyKey == key &&
-        state.metaDepth.seasonKey == season) {
-      return state;
+    var next = state;
+    if (state.metaDepth.weeklyKey != key ||
+        state.metaDepth.seasonKey != season) {
+      final sameWeek = state.metaDepth.weeklyKey == key;
+      final mod = LocalSeasonCatalog.resolveAffix(
+        weekKey: key,
+        currentModifier: sameWeek ? state.metaDepth.weeklyModifier : '',
+      );
+      next = next.copyWith(
+        metaDepth: state.metaDepth.copyWith(
+          weeklyKey: key,
+          // Legacy weekly vault fields — kept for saves; vault is daily now.
+          weeklyProgress: sameWeek ? state.metaDepth.weeklyProgress : 0,
+          weeklyClaimed: sameWeek ? state.metaDepth.weeklyClaimed : false,
+          weeklyModifier: sameWeek ? state.metaDepth.weeklyModifier : mod,
+          weeklyBestTimedKey:
+              sameWeek ? state.metaDepth.weeklyBestTimedKey : 0,
+          seasonKey: season,
+        ),
+      );
     }
-    final mod =
-        weeklyModifiers[(key.hashCode & 0x7fffffff) % weeklyModifiers.length];
-    final sameWeek = state.metaDepth.weeklyKey == key;
+    return ensureDailyVault(next, now: t);
+  }
+
+  /// Resets daily vault progress when the UTC calendar day rolls.
+  /// First touch on legacy saves (empty [dailyVaultDate]) migrates weekly
+  /// vault progress into today's daily fields instead of wiping it.
+  static GameState ensureDailyVault(GameState state, {DateTime? now}) {
+    final t = (now ?? DateTime.now()).toUtc();
+    final day = MetaSystems.dailyDateKey(t);
+    final md = state.metaDepth;
+    if (md.dailyVaultDate == day) return state;
+    if (md.dailyVaultDate.isEmpty &&
+        (md.weeklyProgress > 0 ||
+            md.weeklyClaimed ||
+            md.weeklyBestTimedKey > 0)) {
+      return state.copyWith(
+        metaDepth: md.copyWith(
+          dailyVaultDate: day,
+          dailyVaultClears: md.weeklyClaimed
+              ? dailyVaultClearTarget
+              : min(dailyVaultClearTarget, md.weeklyProgress),
+          dailyBestTimedKey: md.weeklyBestTimedKey,
+          dailyVaultClaimed: md.weeklyClaimed,
+        ),
+      );
+    }
     return state.copyWith(
-      metaDepth: state.metaDepth.copyWith(
-        weeklyKey: key,
-        weeklyProgress: sameWeek ? state.metaDepth.weeklyProgress : 0,
-        weeklyClaimed: sameWeek ? state.metaDepth.weeklyClaimed : false,
-        weeklyModifier: sameWeek ? state.metaDepth.weeklyModifier : mod,
-        seasonKey: season,
+      metaDepth: md.copyWith(
+        dailyVaultDate: day,
+        dailyVaultClears: 0,
+        dailyBestTimedKey: 0,
+        dailyVaultClaimed: false,
       ),
     );
   }
 
-  static int weeklyClaimEssence = 32;
-  static const int weeklyClearTarget = 3;
+  static int weeklyClaimEssence = 14;
+  static const int weeklyClearTarget = 1;
+  static const int dailyVaultClearTarget = 1;
 
-  /// One-time essence when claiming the first weekly of a calendar month.
+  /// One-time essence when claiming the first vault of a calendar month.
   static const int seasonWeeklyBonusEssence = 12;
 
-  static GameState claimWeekly(GameState state) {
-    var next = ensureWeeklyContract(state);
+  /// Claim when 1 push clear **or** a timed KEY ≥2 today.
+  static bool canClaimDailyVault(GameState state) {
+    final md = state.metaDepth;
+    if (md.dailyVaultClaimed) return false;
+    return md.dailyVaultClears >= dailyVaultClearTarget ||
+        md.dailyBestTimedKey >= 2;
+  }
+
+  /// Legacy name — daily vault.
+  static bool canClaimWeekly(GameState state) => canClaimDailyVault(state);
+
+  static GameState claimDailyVault(GameState state, {DateTime? now}) {
+    var next = ensureWeeklyContract(state, now: now);
     final md = next.metaDepth;
-    if (md.weeklyProgress < weeklyClearTarget || md.weeklyClaimed) return next;
-    var essenceGain = weeklyClaimEssence;
+    if (md.dailyVaultClaimed) return next;
+    if (md.dailyVaultClears < dailyVaultClearTarget &&
+        md.dailyBestTimedKey < 2) {
+      return next;
+    }
+    var essenceGain = Keystone.dailyVaultEssence(md.dailyBestTimedKey);
     final seasonClaims = List<String>.from(md.claimedSeasonRewards);
-    final month = isoMonthKey(DateTime.now().toUtc());
+    final month = isoMonthKey((now ?? DateTime.now()).toUtc());
     final notices = <String>[];
+    final titles = List<String>.from(md.titles);
     if (month.isNotEmpty && !seasonClaims.contains(month)) {
       seasonClaims.add(month);
       essenceGain += seasonWeeklyBonusEssence;
       notices.add('Season $month · +${seasonWeeklyBonusEssence}e');
+      final season = LocalSeasonCatalog.forMonthKey(month);
+      final title = season.titleReward;
+      if (title != null && title.isNotEmpty && !titles.contains(title)) {
+        titles.add(title);
+        notices.add('Title unlocked · $title');
+      }
     }
     lastMetaPayoffNotices = notices;
     next = next.copyWith(
       essence: next.essence + essenceGain,
       metaDepth: md.copyWith(
-        weeklyClaimed: true,
+        dailyVaultClaimed: true,
         claimedSeasonRewards: seasonClaims,
+        titles: titles,
       ),
       lastUpdated: DateTime.now(),
     );
     return MetaSystems.evaluateAchievements(next);
   }
+
+  /// Legacy name — daily vault.
+  static GameState claimWeekly(GameState state, {DateTime? now}) =>
+      claimDailyVault(state, now: now);
 
   /// God Hand style: 0 balanced, 1 focus, 2 wide.
   static GameState setGodHandStyle(GameState state, int style) {
@@ -3935,6 +4170,7 @@ class GameLogic {
     }
     final gauntletClaims =
         List<String>.from(next.metaDepth.claimedGauntletMilestones);
+    final titles = List<String>.from(next.metaDepth.titles);
     final best = next.metaDepth.gauntletBestFloor;
     for (final floor in GauntletMilestones.floors) {
       final id = GauntletMilestones.claimId(floor);
@@ -3943,12 +4179,39 @@ class GameLogic {
         final gain = GauntletMilestones.essenceForFloor(floor);
         essenceGain += gain;
         notices.add('Gauntlet F$floor · +${gain}e');
+        final title = LocalSeasonCatalog.gauntletTitles[floor];
+        if (title != null && !titles.contains(title)) {
+          titles.add(title);
+          notices.add('Title unlocked · $title');
+        }
       }
     }
+
+    // Local week goals (timed KEY / Gauntlet floor).
+    final weekClaims = List<String>.from(next.metaDepth.claimedWeekGoals);
+    final weekKey = next.metaDepth.weeklyKey;
+    if (weekKey.isNotEmpty) {
+      final week = LocalSeasonCatalog.forWeekKey(weekKey);
+      final claimId = week.claimIdForWeek(weekKey);
+      if (LocalSeasonCatalog.weekGoalReady(next, week) &&
+          !weekClaims.contains(claimId)) {
+        weekClaims.add(claimId);
+        essenceGain += week.essenceReward;
+        notices.add('${week.name} · +${week.essenceReward}e');
+        final title = week.titleReward;
+        if (title != null && title.isNotEmpty && !titles.contains(title)) {
+          titles.add(title);
+          notices.add('Title unlocked · $title');
+        }
+      }
+    }
+
     if (essenceGain == 0 &&
         willClaims.length == next.metaDepth.claimedWillRanks.length &&
         gauntletClaims.length ==
-            next.metaDepth.claimedGauntletMilestones.length) {
+            next.metaDepth.claimedGauntletMilestones.length &&
+        weekClaims.length == next.metaDepth.claimedWeekGoals.length &&
+        titles.length == next.metaDepth.titles.length) {
       lastMetaPayoffNotices = const [];
       return MetaSystems.evaluateAchievements(next);
     }
@@ -3958,6 +4221,8 @@ class GameLogic {
       metaDepth: next.metaDepth.copyWith(
         claimedWillRanks: willClaims,
         claimedGauntletMilestones: gauntletClaims,
+        claimedWeekGoals: weekClaims,
+        titles: titles,
       ),
     );
     return MetaSystems.evaluateAchievements(next);
@@ -4012,8 +4277,9 @@ class GameLogic {
     );
   }
 
-  /// Clamp hardmode to the AL-gated effective max.
+  /// Clamp preferred keystone level (hub only — ignored while a run is locked).
   static GameState setHardmodeLevel(GameState state, int level) {
+    if (state.inDungeon && state.keystoneRunActive) return state;
     final capped = level.clamp(0, state.effectiveMaxHardmode);
     return MetaSystems.evaluateAchievements(
       state.copyWith(hardmodeLevel: capped, lastUpdated: DateTime.now()),
@@ -4041,7 +4307,7 @@ class GameLogic {
     String dungeonId = 'sandy',
     EnemyRole enemyRole = EnemyRole.normal,
   }) {
-    final hm = hardmodeLevel.clamp(0, 10);
+    final hm = hardmodeLevel.clamp(0, Keystone.maxLevel);
     final roleSkipRelief = switch (enemyRole) {
       EnemyRole.boss => 0.25,
       EnemyRole.elite => 0.12,
@@ -4080,24 +4346,28 @@ class GameLogic {
         .where((s) => s != EquipmentSlot.consumable)
         .toList();
 
-    (HeroRole bias, ArmorType? preferred, SpecRoleTag? roleTag) pickBias() {
+    (HeroRole bias, ArmorType? preferred, SpecRoleTag? roleTag, HeroSpecId? specId)
+        pickBias() {
       final target = _lootTargetHero(party);
       if (target != null) {
         return (
-          _equipScoreRole(target.spec),
+          // Naming + affix pool follow gearAffinity (Enh→rogue, Holy→healer).
+          target.spec.gearAffinity,
           preferredArmorForSpec(target.spec, max(1, battleNumber)),
           target.spec.roleTag,
+          target.specId,
         );
       }
       return (
         HeroRole.values[random.nextInt(HeroRole.values.length)],
         null,
         null,
+        null,
       );
     }
 
     final slot = slots[random.nextInt(slots.length)];
-    final (bias, preferredArmor, roleTag) = pickBias();
+    final (bias, preferredArmor, roleTag, lootSpecId) = pickBias();
     final piece = createEquipment(
       slot: slot,
       rarity: primaryRarity,
@@ -4105,6 +4375,7 @@ class GameLogic {
       bias: bias,
       preferredArmor: preferredArmor,
       roleTag: roleTag,
+      lootSpecId: lootSpecId,
       dungeonId: dungeonId,
       ascensionLevel: ascensionLevel,
       hardmodeLevel: hardmodeLevel,
@@ -4131,7 +4402,7 @@ class GameLogic {
     if (battleNumber >= 4 &&
         random.nextDouble() < secondChance.clamp(0.0, secondCap)) {
       final slot2 = slots[random.nextInt(slots.length)];
-      final (bias2, preferred2, roleTag2) = pickBias();
+      final (bias2, preferred2, roleTag2, lootSpecId2) = pickBias();
       final rarity2 = primaryRarity.index > 0
           ? LootRarity.values[primaryRarity.index - 1]
           : LootRarity.common;
@@ -4142,6 +4413,7 @@ class GameLogic {
         bias: bias2,
         preferredArmor: preferred2,
         roleTag: roleTag2,
+        lootSpecId: lootSpecId2,
         dungeonId: dungeonId,
         ascensionLevel: ascensionLevel,
         hardmodeLevel: hardmodeLevel,
@@ -4278,6 +4550,7 @@ class GameLogic {
     HeroRole? bias,
     ArmorType? preferredArmor,
     SpecRoleTag? roleTag,
+    HeroSpecId? lootSpecId,
     String? dungeonId,
     int ascensionLevel = 0,
     int hardmodeLevel = 0,
@@ -4290,6 +4563,7 @@ class GameLogic {
       bias: bias,
       preferredArmor: preferredArmor,
       roleTag: roleTag,
+      lootSpecId: lootSpecId,
       dungeonId: dungeonId,
       ascensionLevel: ascensionLevel,
       hardmodeLevel: hardmodeLevel,
@@ -4320,39 +4594,91 @@ class GameLogic {
   }
 
   /// Scale a soulbound piece so Ascend AL keeps it relevant vs new drops.
+  ///
+  /// Primaries track the target ilvl ratio; total power stays near the same
+  /// budget curve as fresh drops at that ilvl.
   static EquipmentItem scaleSoulboundForAl(
     EquipmentItem item,
     int ascensionLevel,
   ) {
-    final al = ascensionLevel.clamp(0, 40);
-    final targetIlvl = max(item.effectiveItemLevel, 20 + al * 3);
-    if (targetIlvl <= item.effectiveItemLevel) {
-      return item.copyWith(itemLevel: item.effectiveItemLevel);
+    // Fold legacy Vit/Def into Sta/Armor before scaling so clamps can't wipe them.
+    var base = item;
+    if (base.vitalityBonus != 0 || base.defenseBonus != 0) {
+      base = base.copyWith(
+        staminaBonus: base.resolvedStamina,
+        armorBonus: base.resolvedArmor,
+        vitalityBonus: 0,
+        defenseBonus: 0,
+      );
     }
-    final ratio = targetIlvl / max(1, item.effectiveItemLevel);
+
+    final al = ascensionLevel.clamp(0, 40);
+    final rawTarget = max(base.effectiveItemLevel, 20 + al * 3);
+    final targetIlvl = EquipmentFactory.softCapItemLevel(rawTarget);
+    if (targetIlvl <= base.effectiveItemLevel) {
+      return base.copyWith(itemLevel: base.effectiveItemLevel);
+    }
+    final ratio = targetIlvl / max(1, base.effectiveItemLevel);
     int bump(int v) {
       if (v <= 0) return 0;
       return max(v, (v * ratio).round());
     }
 
-    return item.copyWith(
+    var scaled = base.copyWith(
       itemLevel: targetIlvl,
-      strengthBonus: bump(item.strengthBonus),
-      agilityBonus: bump(item.agilityBonus),
-      staminaBonus: bump(item.staminaBonus),
-      intellectBonus: bump(item.intellectBonus),
-      spiritBonus: bump(item.spiritBonus),
-      spellPowerBonus: bump(item.spellPowerBonus),
-      armorBonus: bump(item.armorBonus),
-      attackBonus: bump(item.attackBonus),
-      defenseBonus: bump(item.defenseBonus),
-      vitalityBonus: bump(item.vitalityBonus),
-      mp5Bonus: bump(item.mp5Bonus),
-      critChanceBonus: bump(item.critChanceBonus),
-      attackSpeedBonus: bump(item.attackSpeedBonus),
-      moveSpeedBonus: bump(item.moveSpeedBonus),
-      effectValue: bump(item.effectValue),
+      strengthBonus: bump(base.strengthBonus),
+      agilityBonus: bump(base.agilityBonus),
+      staminaBonus: bump(base.staminaBonus),
+      intellectBonus: bump(base.intellectBonus),
+      spiritBonus: bump(base.spiritBonus),
+      spellPowerBonus: bump(base.spellPowerBonus),
+      armorBonus: bump(base.armorBonus),
+      attackBonus: bump(base.attackBonus),
+      defenseBonus: 0,
+      vitalityBonus: 0,
+      mp5Bonus: bump(base.mp5Bonus),
+      critChanceBonus: bump(base.critChanceBonus),
+      attackSpeedBonus: bump(base.attackSpeedBonus),
+      moveSpeedBonus: bump(base.moveSpeedBonus),
+      effectValue: bump(base.effectValue),
     );
+
+    // Soft-clamp runaway primaries to ~1.35× drop budget at the new ilvl.
+    final cap = (EquipmentFactory.budgetForItemLevel(
+              itemLevel: targetIlvl,
+              rarity: base.rarity.index >= LootRarity.rare.index
+                  ? base.rarity
+                  : LootRarity.rare,
+              slot: base.slot,
+              handed: base.handed,
+            ) *
+            1.35)
+        .round();
+    final primarySum = scaled.strengthBonus +
+        scaled.agilityBonus +
+        scaled.staminaBonus +
+        scaled.intellectBonus +
+        scaled.spiritBonus +
+        scaled.spellPowerBonus +
+        scaled.armorBonus +
+        scaled.attackBonus;
+    if (primarySum > cap && primarySum > 0) {
+      final shrink = cap / primarySum;
+      int sh(int v) => v <= 0 ? 0 : max(1, (v * shrink).round());
+      scaled = scaled.copyWith(
+        strengthBonus: sh(scaled.strengthBonus),
+        agilityBonus: sh(scaled.agilityBonus),
+        staminaBonus: sh(scaled.staminaBonus),
+        intellectBonus: sh(scaled.intellectBonus),
+        spiritBonus: sh(scaled.spiritBonus),
+        spellPowerBonus: sh(scaled.spellPowerBonus),
+        armorBonus: sh(scaled.armorBonus),
+        attackBonus: sh(scaled.attackBonus),
+        defenseBonus: 0,
+        vitalityBonus: 0,
+      );
+    }
+    return scaled;
   }
 
   static String _equipmentNameFor(
@@ -4595,6 +4921,11 @@ class GameLogic {
         if (item.id == id) return item;
       }
     }
+    return findStashGear(state, id);
+  }
+
+  /// Bag-only lookup — combinator / merge never touches equipped gear.
+  static EquipmentItem? findStashGear(GameState state, String id) {
     for (final item in state.gearStash) {
       if (item.id == id) return item;
     }
@@ -4782,7 +5113,12 @@ class GameLogic {
     );
   }
 
+  /// Scrap one stash piece for essence. Refuses equipped gear (unequip first).
   static GameState sellGear(GameState state, String itemId) {
+    final inStash = state.gearStash.any((g) => g.id == itemId);
+    if (!inStash) {
+      return state;
+    }
     final item = findGear(state, itemId);
     if (item == null) {
       return state;
@@ -4973,18 +5309,34 @@ class GameLogic {
         (item.effectiveItemLevel ~/ 4) +
         (item.affinity == affinityRole.name ? 24 : 0);
     // Prefer the heaviest armor the spec can wear (stops cloth beating mail).
+    // One step below preferred (mail under plate) is a soft penalty, not a dump.
     if (spec != null && item.armorType != null) {
       final preferred = preferredArmorForSpec(spec, level);
       if (preferred != null) {
-        if (item.armorType == preferred) {
-          score += 32;
+        final delta =
+            _armorWeightRank(preferred) - _armorWeightRank(item.armorType!);
+        if (delta == 0) {
+          // Soft identity nudge — meaningful better stats on lighter armor win.
+          score += 24;
+        } else if (delta == 1) {
+          score -= 8;
+        } else if (delta > 1) {
+          score -= 24;
         } else {
-          score -= 12;
+          // Heavier than preferred (shouldn't equip) — dump hard.
+          score -= 40;
         }
       }
     }
     return score;
   }
+
+  static int _armorWeightRank(ArmorType t) => switch (t) {
+        ArmorType.cloth => 0,
+        ArmorType.leather => 1,
+        ArmorType.mail => 2,
+        ArmorType.plate => 3,
+      };
 
   static SpecRoleTag _tagForRole(HeroRole role) => switch (role) {
         HeroRole.warrior => SpecRoleTag.meleeDps,
@@ -5114,19 +5466,35 @@ class GameLogic {
   }
 
   /// Empty slots only fill role-plausible gear (not every wearable crumb).
-  static bool emptySlotWorthFilling(PartyHero hero, EquipmentItem item, int score) {
-    final spec = hero.spec;
-    if (item.affinity != null && item.affinity == spec.gearAffinity.name) {
-      return true;
-    }
-    final preferred = preferredArmorForSpec(spec, hero.level);
-    if (preferred != null && item.armorType == preferred) {
-      return true;
-    }
+  ///
+  /// Affinity / preferred armor alone is not enough — low-iLvl tagged junk was
+  /// filling empty slots, then BiS-keep blocked auto-sell and clogged the bag.
+  static bool emptySlotWorthFilling(
+    PartyHero hero,
+    EquipmentItem item,
+    int score,
+  ) {
     final mass = roleRelevantStatMass(hero, item);
-    // Real primary stack for this role, or an obviously strong piece.
-    if (mass >= 28) return true;
-    if (score >= 90 && mass >= 12) return true;
+    final minIlvl = max(6, (hero.level * 0.55).floor());
+    final ilvl = item.effectiveItemLevel;
+    // Soft ilvl floor vs hero level — early crumbs (i5 on L20) stay in bag.
+    // Strong mass still needs to be near the floor (not outleveled tank armor).
+    final nearLevel = ilvl >= minIlvl - 2;
+
+    if (mass >= 28 && nearLevel) return true;
+    if (score >= 90 && mass >= 12 && nearLevel) return true;
+
+    final spec = hero.spec;
+    final affinityOk =
+        item.affinity != null && item.affinity == spec.gearAffinity.name;
+    final preferred = preferredArmorForSpec(spec, hero.level);
+    final armorOk = preferred != null && item.armorType == preferred;
+    if (!affinityOk && !armorOk) return false;
+
+    if (ilvl >= minIlvl && mass >= 10) return true;
+    if (ilvl >= minIlvl + 4 && mass >= 6) return true;
+    // Preferred armor with decent mass even if slightly under ilvl floor.
+    if (armorOk && nearLevel && mass >= 16) return true;
     return false;
   }
 
@@ -5467,15 +5835,16 @@ class GameLogic {
     );
   }
 
-  /// Combines two same-slot pieces (stash and/or equipped). Primary keeps
-  /// slot/pattern identity; secondary contributes half its stats.
+  /// Combines two same-slot **bag** pieces. Equipped gear is ignored —
+  /// unequip to stash first. Primary keeps slot/pattern identity;
+  /// secondary contributes half its stats. Result always returns to bag.
   static GameState combineGear(
     GameState state, {
     required String primaryId,
     required String secondaryId,
   }) {
-    final primary = findGear(state, primaryId);
-    final secondary = findGear(state, secondaryId);
+    final primary = findStashGear(state, primaryId);
+    final secondary = findStashGear(state, secondaryId);
     if (primary == null || secondary == null) {
       return state;
     }
@@ -5503,8 +5872,8 @@ class GameLogic {
   }
 
   /// Gear always goes to stash (manual equip). Non-gear → essence.
-  /// Weak junk is auto-sold on pickup when [autoSellMaxPower] > 0
-  /// (ilvl cap — field name kept for save compatibility; treat as autoSellMaxItemLevel).
+  /// Weak junk is auto-sold for **gold** or auto-disassembled for **essence**
+  /// on pickup when filters match (sell checked first).
   static ({GameState state, List<LootDrop> resolved}) applyLootDrops(
     GameState state,
     List<LootDrop> drops,
@@ -5537,6 +5906,18 @@ class GameLogic {
       }
 
       if (_shouldAutoSellOnPickup(next, item)) {
+        final value = equipmentGoldValue(item);
+        next = next.copyWith(
+          gold: next.gold + value,
+          lifetimeGoldEarned: next.lifetimeGoldEarned + value,
+        );
+        resolved.add(
+          drop.copyWith(outcome: LootOutcome.gold, essenceGained: 0),
+        );
+        continue;
+      }
+
+      if (_shouldAutoDisassembleOnPickup(next, item)) {
         final value = equipmentEssenceValue(item);
         next = next.copyWith(essence: next.essence + value);
         resolved.add(
@@ -5557,17 +5938,69 @@ class GameLogic {
 
     // Live spatial loot never goes through completeCurrentRoom meta progress.
     next = MetaSystems.registerItemDrops(next, drops);
-    // Near-full bag: dump junk automatically so fights aren't loot-blocked.
-    final cap = maxGearStashFor(next);
-    if (next.gearStash.length >= (cap * 0.9).ceil()) {
-      next = autoSellJunk(next);
-    }
+    // Near-full bag: merge → sell gold → disassemble essence.
+    next = unstickBagIfNeeded(next);
     return (state: next, resolved: resolved);
   }
 
+  /// Run merge + auto-sell + auto-disassemble when stash is ≥90% full.
+  static GameState unstickBagIfNeeded(GameState state) {
+    final cap = maxGearStashFor(state);
+    if (state.gearStash.length < (cap * 0.9).ceil()) {
+      return state;
+    }
+    return cleanBagJunk(state, unstickBag: true);
+  }
+
+  /// Merge junk (optional), then auto-sell for gold, then auto-disassemble
+  /// for essence. [unstickBag] keeps only BiS/soulbound/best-per-slot.
+  static GameState cleanBagJunk(
+    GameState state, {
+    bool unstickBag = false,
+    bool mergeFirst = true,
+  }) {
+    var next = state;
+    if (mergeFirst) {
+      next = autoMergeJunk(next).state;
+    }
+    next = autoSellJunk(next, unstickBag: unstickBag);
+    next = autoDisassembleJunk(next, unstickBag: unstickBag);
+    return next;
+  }
+
+  static bool _matchesIlvlRarityFilter(
+    EquipmentItem item, {
+    required int maxIlvl,
+    required int maxRarity,
+  }) {
+    if (maxIlvl <= 0) return false;
+    if (item.effectiveItemLevel > maxIlvl) return false;
+    if (item.rarity.index > maxRarity.clamp(0, 4)) return false;
+    return true;
+  }
+
   static bool _shouldAutoSellOnPickup(GameState state, EquipmentItem item) {
-    if (state.autoSellMaxPower <= 0) return false;
-    if (item.effectiveItemLevel > state.autoSellMaxPower) return false;
+    if (!_matchesIlvlRarityFilter(
+      item,
+      maxIlvl: state.autoSellMaxPower,
+      maxRarity: state.autoSellMaxRarity,
+    )) {
+      return false;
+    }
+    return !_shouldKeepInBag(state, item);
+  }
+
+  static bool _shouldAutoDisassembleOnPickup(
+    GameState state,
+    EquipmentItem item,
+  ) {
+    if (!_matchesIlvlRarityFilter(
+      item,
+      maxIlvl: state.autoDisassembleMaxIlvl,
+      maxRarity: state.autoDisassembleMaxRarity,
+    )) {
+      return false;
+    }
     return !_shouldKeepInBag(state, item);
   }
 
@@ -5600,12 +6033,14 @@ class GameLogic {
     return false;
   }
 
-  /// Keep BiS/upgrades normally. Rare+ kept when bag has room.
-  /// [unstickBag] (near-full sell pass): keep BiS-planned + soulbound, else
-  /// the strongest role/spec-scored piece per slot.
-  static bool _shouldKeepWhenSellingJunk(
+  /// Whether [item] should stay when cleaning the bag.
+  ///
+  /// [mode] `sell` uses gold filters; `disassemble` uses essence filters.
+  /// [unstickBag]: keep BiS/soulbound/apex and the strongest piece per slot.
+  static bool _shouldKeepWhenCleaning(
     GameState state,
     EquipmentItem item, {
+    required bool forSell,
     bool unstickBag = false,
   }) {
     if (unstickBag) {
@@ -5637,16 +6072,27 @@ class GameLogic {
     if (_shouldKeepInBag(state, item)) {
       return true;
     }
-    // Unify with pickup auto-sell: at/below iLvl cap → junk unless BiS/upgrade.
-    if (state.autoSellMaxPower > 0 &&
-        item.effectiveItemLevel <= state.autoSellMaxPower) {
-      return false;
-    }
-    // Above the cap: keep rare+ while the bag still has room.
+    final matches = forSell
+        ? _matchesIlvlRarityFilter(
+            item,
+            maxIlvl: state.autoSellMaxPower,
+            maxRarity: state.autoSellMaxRarity,
+          )
+        : _matchesIlvlRarityFilter(
+            item,
+            maxIlvl: state.autoDisassembleMaxIlvl,
+            maxRarity: state.autoDisassembleMaxRarity,
+          );
+    // Matching filter → eligible to clean (do not keep).
+    if (matches) return false;
+    // Outside filter: keep rare+ while bag has room; commons may still go in
+    // unstick-only passes.
     if (item.rarity.index >= LootRarity.rare.index) {
       return true;
     }
-    return false;
+    // Non-matching common/uncommon: keep unless filters are off entirely
+    // (manual clean with filters off should not dump everything).
+    return true;
   }
 
   /// Best slotEquipScore for [item] across heroes who can wear it.
@@ -5724,47 +6170,106 @@ class GameLogic {
     return (state: next, merges: merges);
   }
 
-  /// Last [autoSellJunk] sell count (consumed by UI toasts).
+  /// Last [autoSellJunk] counts (consumed by UI toasts).
   static int lastAutoSellCount = 0;
+  static int lastAutoSellGold = 0;
 
-  /// Sell stash pieces that are not BiS/upgrades.
-  ///
-  /// Matches pickup auto-sell: at/below [GameState.autoSellMaxPower] iLvl is
-  /// junk (unless BiS/upgrade). Rare+ above the cap are kept while the bag has
-  /// room. At ≥90% capacity an unstick pass keeps only BiS/soulbound/apex and
-  /// the strongest piece per slot.
-  static GameState autoSellJunk(GameState state) {
-    var essence = state.essence;
-    // Multi-pass: after selling, another piece may become "best for empty".
+  /// Last [autoDisassembleJunk] counts (consumed by UI toasts).
+  static int lastAutoDisassembleCount = 0;
+  static int lastAutoDisassembleEssence = 0;
+
+  /// Sell stash junk for **gold** (iLvl + rarity filters; BiS kept).
+  static GameState autoSellJunk(
+    GameState state, {
+    bool unstickBag = false,
+  }) {
+    var gold = state.gold;
+    var lifetime = state.lifetimeGoldEarned;
     var stash = List<EquipmentItem>.from(state.gearStash);
     final beforeLen = stash.length;
-    final cap = maxGearStashFor(state);
-    final unstickBag = stash.length >= (cap * 0.9).ceil();
+    var gained = 0;
     var guard = 0;
     while (guard < 64) {
       guard++;
-      final probe = state.copyWith(gearStash: stash);
-      EquipmentItem? sellId;
+      final probe = state.copyWith(gearStash: stash, gold: gold);
+      EquipmentItem? sellItem;
       for (final item in stash) {
-        if (!_shouldKeepWhenSellingJunk(
+        if (!_shouldKeepWhenCleaning(
           probe,
           item,
+          forSell: true,
           unstickBag: unstickBag,
         )) {
-          sellId = item;
+          sellItem = item;
           break;
         }
       }
-      if (sellId == null) break;
-      essence += equipmentEssenceValue(sellId);
-      stash = stash.where((g) => g.id != sellId!.id).toList();
+      if (sellItem == null) break;
+      final value = equipmentGoldValue(sellItem);
+      gold += value;
+      lifetime += value;
+      gained += value;
+      stash = stash.where((g) => g.id != sellItem!.id).toList();
     }
     lastAutoSellCount = beforeLen - stash.length;
+    lastAutoSellGold = gained;
+    return state.copyWith(
+      gearStash: stash,
+      gold: gold,
+      lifetimeGoldEarned: lifetime,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// Disassemble stash junk for **essence** (iLvl + rarity filters; BiS kept).
+  static GameState autoDisassembleJunk(
+    GameState state, {
+    bool unstickBag = false,
+  }) {
+    var essence = state.essence;
+    var stash = List<EquipmentItem>.from(state.gearStash);
+    final beforeLen = stash.length;
+    var gained = 0;
+    var guard = 0;
+    while (guard < 64) {
+      guard++;
+      final probe = state.copyWith(gearStash: stash, essence: essence);
+      EquipmentItem? scrap;
+      for (final item in stash) {
+        if (!_shouldKeepWhenCleaning(
+          probe,
+          item,
+          forSell: false,
+          unstickBag: unstickBag,
+        )) {
+          scrap = item;
+          break;
+        }
+      }
+      if (scrap == null) break;
+      final value = equipmentEssenceValue(scrap);
+      essence += value;
+      gained += value;
+      stash = stash.where((g) => g.id != scrap!.id).toList();
+    }
+    lastAutoDisassembleCount = beforeLen - stash.length;
+    lastAutoDisassembleEssence = gained;
     return state.copyWith(
       gearStash: stash,
       essence: essence,
       lastUpdated: DateTime.now(),
     );
+  }
+
+  static String rarityFilterLabel(int rarityIndex) {
+    final i = rarityIndex.clamp(0, LootRarity.values.length - 1);
+    return switch (LootRarity.values[i]) {
+      LootRarity.common => 'Common',
+      LootRarity.uncommon => 'Uncommon',
+      LootRarity.rare => 'Rare',
+      LootRarity.epic => 'Epic',
+      LootRarity.legendary => 'Legendary',
+    };
   }
 
   static int recommendedForgeUpgrade(GameState state) {
@@ -5801,9 +6306,9 @@ class GameLogic {
     int battleNumber, {
     int hardmodeLevel = 0,
   }) {
-    final hm = hardmodeLevel.clamp(0, 10);
-    // Direct legendary roll — worst at +0, best at +10.
-    final legendaryChance = 0.004 + hm * 0.011;
+    final hm = hardmodeLevel.clamp(0, Keystone.maxLevel);
+    // Direct legendary roll — key 20 ≈ old HM+10.
+    final legendaryChance = Keystone.legendaryChance(hm);
     if (random.nextDouble() < legendaryChance) {
       return LootRarity.legendary;
     }
@@ -5817,14 +6322,14 @@ class GameLogic {
       rarity = LootRarity.uncommon;
     }
 
-    // Hardmode can bump the base tier (never past legendary).
-    final bumpChance = hm * 0.04;
+    // Keystone can bump the base tier (never past legendary).
+    final bumpChance = Keystone.rarityBump(hm);
     if (rarity.index < LootRarity.legendary.index &&
         random.nextDouble() < bumpChance) {
       rarity = LootRarity.values[rarity.index + 1];
     }
     if (rarity.index < LootRarity.legendary.index &&
-        hm >= 7 &&
+        hm >= 14 &&
         random.nextDouble() < bumpChance * 0.5) {
       rarity = LootRarity.values[rarity.index + 1];
     }
@@ -5879,7 +6384,7 @@ class GameLogic {
           room.globalBattleNumber,
           ascensionLevel: state.ascensionLevel,
           lootFindPercent: state.petLootFindPercent,
-          hardmodeLevel: state.hardmodeLevel,
+          hardmodeLevel: Keystone.combatLevel(state),
           party: state.heroes,
           dungeonId: state.dungeonId,
         ),
@@ -5917,6 +6422,8 @@ class GameLogic {
 
     // Push + boss floor clear → dungeon cleared, back to hub.
     // Gauntlet never exits on boss — endless climb.
+    // Daily echo: claim on first clear, then return to hub (one floor).
+    final wasDaily = MetaSystems.isActiveDailyRun(state);
     if (!farmLoop && clearedBoss && !gauntlet) {
       final def = DungeonCatalog.byId(awarded.dungeonId);
       var progressed = awarded.copyWith(
@@ -5934,6 +6441,7 @@ class GameLogic {
             )
             .toList(),
       );
+      progressed = _clearKeystoneRun(progressed);
       progressed = _applyMetaProgress(state, progressed, drops);
       return applyMissionProgress(
         progressed,
@@ -5995,6 +6503,22 @@ class GameLogic {
     );
     progressed = _applyMetaProgress(state, progressed, drops);
 
+    // Daily echo ends after the first clear (reward claimed) — no PUSH climb.
+    if (wasDaily && progressed.dailyClaimed) {
+      progressed = _clearKeystoneRun(
+        progressed.copyWith(
+          inDungeon: false,
+          heroes: progressed.heroes
+              .map(
+                (hero) => hero.copyWith(
+                  currentHp: progressed.effectiveHeroMaxHp(hero),
+                ),
+              )
+              .toList(),
+        ),
+      );
+    }
+
     return applyMissionProgress(
       progressed,
       enemiesDefeated: enemiesDefeated,
@@ -6015,7 +6539,8 @@ class GameLogic {
   ) {
     var next = MetaSystems.registerEnemyEncounters(after, before.enemies);
     next = MetaSystems.registerItemDrops(next, drops);
-    next = _claimDailyIfEligible(next);
+    // Probe [before] — after already rolled a new layoutSeed on advance.
+    next = _claimDailyIfEligible(next, dailyProbe: before);
     final farmLoop = before.dungeonMode == DungeonMode.farm;
     // Gauntlet is endless — same mint rules as farm (no challenge/weekly cheese).
     final suppressMetaMint = farmLoop || before.inGauntlet;
@@ -6034,17 +6559,59 @@ class GameLogic {
         trophies.add(before.dungeonId);
       }
     }
-    // Weekly: push clears (or any boss). Gauntlet clears count at AL10+.
-    // Farm loops never mint weekly progress.
-    final gauntletWeekly =
+    // Daily vault: push clears (or any boss). Gauntlet clears count at AL10+.
+    // Farm loops never mint vault progress.
+    final gauntletVault =
         before.inGauntlet && before.ascensionLevel >= gauntletMinAscension;
-    final weeklyBump = (!farmLoop && (!before.inGauntlet || gauntletWeekly)) ||
+    final vaultBump = (!farmLoop && (!before.inGauntlet || gauntletVault)) ||
             (bossKill > 0 && !before.inGauntlet)
         ? 1
         : 0;
-    final hmCleared = before.hardmodeLevel.clamp(0, 10);
+    final keyCleared = before.keystoneRunActive
+        ? before.keystoneRunLevel
+        : before.hardmodeLevel;
+    final hmCleared = keyCleared.clamp(0, Keystone.maxLevel);
     next = ensureWeeklyContract(next);
+    var bestTimed = next.metaDepth.dailyBestTimedKey;
+    var weekBestTimed = next.metaDepth.weeklyBestTimedKey;
+    var preferredKey = next.hardmodeLevel;
+    var outcome = next.keystoneOutcome;
+    var essence = next.essence;
+    final keystoneNotices = <String>[];
+
+    // Keystone boss clear: timed → upgrade + vault score; overtime → depleted.
+    if (bossKill > 0 &&
+        before.keystoneRunActive &&
+        !before.inGauntlet &&
+        !farmLoop &&
+        before.keystoneOutcome.isEmpty) {
+      final timed = before.keystoneTimerMs <= before.keystoneParMs;
+      final key = before.keystoneRunLevel;
+      if (timed) {
+        final bonus = Keystone.timedClearBonus(key);
+        essence += bonus;
+        preferredKey = min(
+          next.effectiveMaxHardmode,
+          max(preferredKey, key + 1),
+        );
+        bestTimed = max(bestTimed, key);
+        weekBestTimed = max(weekBestTimed, key);
+        outcome = 'timed';
+        keystoneNotices.add(
+          'KEY +$key TIMED · next KEY +$preferredKey · +${bonus}e',
+        );
+      } else {
+        outcome = 'depleted';
+        keystoneNotices.add(
+          'KEY +$key depleted (${Keystone.formatTimer(before.keystoneTimerMs)} / ${Keystone.formatTimer(before.keystoneParMs)})',
+        );
+      }
+    }
+
     next = next.copyWith(
+      essence: essence,
+      hardmodeLevel: preferredKey,
+      keystoneOutcome: outcome,
       metaDepth: next.metaDepth.copyWith(
         lifetimeFloorClears: next.metaDepth.lifetimeFloorClears + 1,
         lifetimeBossKills: next.metaDepth.lifetimeBossKills + bossKill,
@@ -6053,25 +6620,37 @@ class GameLogic {
           hmCleared,
         ),
         zoneTrophies: trophies,
-        weeklyProgress: min(
-          weeklyClearTarget,
-          next.metaDepth.weeklyProgress + weeklyBump,
+        dailyVaultClears: min(
+          dailyVaultClearTarget,
+          next.metaDepth.dailyVaultClears + vaultBump,
         ),
+        dailyBestTimedKey: bestTimed,
+        weeklyBestTimedKey: weekBestTimed,
       ),
     );
     next = MetaSystems.evaluateAchievements(next);
     next = syncMetaPayoffs(next);
+    if (keystoneNotices.isNotEmpty) {
+      lastMetaPayoffNotices = [
+        ...lastMetaPayoffNotices,
+        ...keystoneNotices,
+      ];
+    }
     return next;
   }
 
-  static GameState _claimDailyIfEligible(GameState state) {
+  static GameState _claimDailyIfEligible(
+    GameState state, {
+    GameState? dailyProbe,
+  }) {
     if (state.dailyClaimed) return state;
-    final now = DateTime.now().toUtc();
-    final todayKey = MetaSystems.dailyDateKey(now);
-    if (state.lastDailyDate != todayKey) return state;
-    if (state.dungeonId != MetaSystems.dailyDungeonId(now)) return state;
-    // Must still be on today's Daily layout seed (not a normal re-enter).
-    if (state.layoutSeed != MetaSystems.dailySeed(now)) return state;
+    final probe = dailyProbe ?? state;
+    // Match the day the Daily was started (probe.lastDailyDate), not wall
+    // clock — tests inject frozen dates and midnight crossover mid-run.
+    final day = MetaSystems.parseDailyDateKey(probe.lastDailyDate);
+    if (day == null) return state;
+    if (probe.dungeonId != MetaSystems.dailyDungeonId(day)) return state;
+    if (probe.layoutSeed != MetaSystems.dailySeed(day)) return state;
     final dailyEssenceReward =
         25 + state.metaDepth.dailyEssenceBonusLevel * 5;
     return state.copyWith(
@@ -6080,10 +6659,9 @@ class GameLogic {
     );
   }
 
-  /// Enters the free, seeded Daily Run — a single floor in whichever
-  /// dungeon today's UTC date rotates to. Ignores normal unlock gating
-  /// (it's a bounded daily trial, not a permanent unlock). Clearing any
-  /// floor/boss while inside claims today's reward exactly once.
+  /// Enters the free, seeded Daily Run — a single floor echo in whichever
+  /// dungeon today's UTC date rotates to. Ignores normal unlock gating.
+  /// Clearing the floor claims today's reward once and returns to hub.
   static GameState enterDaily(GameState state, {DateTime? now}) {
     final t = now ?? DateTime.now().toUtc();
     if (MetaSystems.isDailyClaimedToday(state, now: t)) {
@@ -6100,7 +6678,8 @@ class GameLogic {
       layoutSeed: seed,
     );
     final room = floor.first;
-    return state.copyWith(
+    final cleared = _clearKeystoneRun(state);
+    return cleared.copyWith(
       inDungeon: true,
       inGauntlet: false,
       dungeonId: dungeonId,
@@ -6111,14 +6690,15 @@ class GameLogic {
       enemies: createEnemyGroup(
         room,
         dungeonId: dungeonId,
-        fromState: state,
+        fromState: cleared,
       ),
       layoutSeed: seed,
       lastDailyDate: dateKey,
       dailyClaimed: isNewDay ? false : state.dailyClaimed,
-      heroes: state.heroes
+      heroes: cleared.heroes
           .map(
-            (hero) => hero.copyWith(currentHp: state.effectiveHeroMaxHp(hero)),
+            (hero) =>
+                hero.copyWith(currentHp: cleared.effectiveHeroMaxHp(hero)),
           )
           .toList(),
       lastUpdated: DateTime.now(),
@@ -6149,6 +6729,14 @@ class GameLogic {
           );
     if (next.ascensionLevel > 0) {
       next = next.copyWith(rogueUnlocked: true);
+    }
+    // Legacy / incomplete dungeon saves: preferred KEY was set but the run
+    // never locked — re-begin so combat scaling matches hub KEY preference.
+    if (next.inDungeon &&
+        !next.inGauntlet &&
+        !next.keystoneRunActive &&
+        next.hardmodeLevel > 0) {
+      next = _beginKeystoneRun(next);
     }
     return MetaSystems.evaluateAchievements(
       syncSpecUnlocks(ensureRogueHero(next)),
@@ -6450,6 +7038,9 @@ class OfflineProgressResult {
   final int highestFloorDelta;
   final int bossDelta;
 
+  bool get foughtWhileAway =>
+      roomsCleared > 0 || highestFloorDelta > 0 || bossDelta > 0;
+
   bool get hasSummary =>
       secondsApplied >= 45 &&
       (goldGained > 0 ||
@@ -6458,15 +7049,58 @@ class OfflineProgressResult {
           highestFloorDelta > 0 ||
           bossDelta > 0);
 
+  /// Compact chip / banner line — lead with the wow, then the numbers.
   String get headline {
     final away = formatOfflineDuration(secondsApplied);
-    final parts = <String>['Away $away'];
+    if (!hasSummary) return 'Away $away';
+    final lead = foughtWhileAway
+        ? 'Party kept fighting'
+        : 'Sanctuary kept earning';
+    final parts = <String>['$lead · Away $away'];
     if (goldGained > 0) parts.add('+${goldGained}g');
     if (essenceGained > 0) parts.add('+$essenceGained ess');
     if (roomsCleared > 0) parts.add('$roomsCleared clears');
     if (highestFloorDelta > 0) parts.add('floor +$highestFloorDelta');
     if (bossDelta > 0) parts.add('boss x$bossDelta');
     return parts.join(' · ');
+  }
+
+  /// Dialog lead sentence under the duration.
+  String get welcomeLead {
+    if (foughtWhileAway) {
+      if (bossDelta > 0 && highestFloorDelta > 0) {
+        return 'Your party pushed floors and dropped bosses while you were gone.';
+      }
+      if (bossDelta > 0) {
+        return 'Bosses fell while you were away — Ascend progress moved.';
+      }
+      if (highestFloorDelta > 0 || roomsCleared > 0) {
+        return 'Your party cleared rooms while you were away.';
+      }
+    }
+    if (goldGained > 0 || essenceGained > 0) {
+      return 'Sanctuary idle gold stacked up while you were away.';
+    }
+    return 'Welcome back.';
+  }
+
+  /// Non-zero reward rows for the welcome dialog (label, value).
+  List<(String, String)> get highlightRows {
+    final rows = <(String, String)>[];
+    if (goldGained > 0) rows.add(('Gold earned', '+${goldGained}g'));
+    if (essenceGained > 0) {
+      rows.add(('Essence earned', '+$essenceGained'));
+    }
+    if (roomsCleared > 0) {
+      rows.add(('Rooms cleared', '$roomsCleared'));
+    }
+    if (highestFloorDelta > 0) {
+      rows.add(('Floor progress', '+$highestFloorDelta'));
+    }
+    if (bossDelta > 0) {
+      rows.add(('Bosses defeated', '$bossDelta'));
+    }
+    return rows;
   }
 
   static String formatOfflineDuration(int seconds) {

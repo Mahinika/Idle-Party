@@ -44,5 +44,19 @@ void main() {
         reason: 'ember dungeon shipped — mention Ashen/Ember/Vault in What’s New',
       );
     }
+    if (ids.contains('grove')) {
+      expect(
+        bullets.contains('grove') || bullets.contains('hollow'),
+        isTrue,
+        reason: 'grove dungeon shipped — mention Hollow Grove in What’s New',
+      );
+    }
+    if (ids.contains('storm')) {
+      expect(
+        bullets.contains('storm') || bullets.contains('stormwake'),
+        isTrue,
+        reason: 'storm dungeon shipped — mention Stormwake/Storm in What’s New',
+      );
+    }
   });
 }

@@ -45,6 +45,39 @@ void main() {
       expect(result.dungeonId, MetaSystems.dailyDungeonId(now));
       expect(result.dailyClaimed, isFalse);
       expect(result.lastDailyDate, MetaSystems.dailyDateKey(now));
+      expect(MetaSystems.isActiveDailyRun(result, now: now), isTrue);
+    });
+
+    test('daily floor clear claims reward and returns to hub', () {
+      final now = DateTime.utc(2026, 8, 9, 12);
+      var state = GameLogic.createInitialState(now: now);
+      state = GameLogic.enterDaily(state, now: now);
+      expect(state.inDungeon, isTrue);
+      expect(MetaSystems.isActiveDailyRun(state, now: now), isTrue);
+
+      // Simulate a cleared wave: no living foes, then complete room.
+      state = state.copyWith(enemies: const []);
+      final cleared = GameLogic.completeCurrentRoom(state, goldGain: 0);
+      expect(cleared.dailyClaimed, isTrue);
+      expect(cleared.inDungeon, isFalse);
+      expect(MetaSystems.isActiveDailyRun(cleared, now: now), isFalse);
+    });
+
+    test('daily wipe restart keeps seed so claim still works', () {
+      final now = DateTime.utc(2026, 8, 9, 12);
+      var state = GameLogic.enterDaily(
+        GameLogic.createInitialState(now: now),
+        now: now,
+      );
+      final seed = state.layoutSeed;
+      state = GameLogic.restartFloor(state);
+      expect(state.layoutSeed, seed);
+      expect(MetaSystems.isActiveDailyRun(state, now: now), isTrue);
+
+      state = state.copyWith(enemies: const []);
+      final cleared = GameLogic.completeCurrentRoom(state, goldGain: 0);
+      expect(cleared.dailyClaimed, isTrue);
+      expect(cleared.inDungeon, isFalse);
     });
   });
 
@@ -193,12 +226,18 @@ void main() {
       final crystal = DungeonCatalog.byId('crystal');
       final tide = DungeonCatalog.byId('tide');
       final ember = DungeonCatalog.byId('ember');
+      final grove = DungeonCatalog.byId('grove');
+      final storm = DungeonCatalog.byId('storm');
       expect(crystal.number, 6);
       expect(tide.number, 7);
       expect(tide.bossName, 'Tide Leviathan');
       expect(ember.number, 8);
       expect(ember.bossName, 'Cinder Sovereign');
-      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(9));
+      expect(grove.number, 9);
+      expect(grove.bossName, 'Wyrd Root');
+      expect(storm.number, 10);
+      expect(storm.bossName, 'Storm Tyrant');
+      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(11));
       expect(
         DungeonCatalog.isUnlocked('tide', 0, 6),
         isTrue,
@@ -209,6 +248,22 @@ void main() {
       );
       expect(
         DungeonCatalog.isUnlocked('ember', 0, 6),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('grove', 0, 8),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('grove', 0, 7),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('storm', 0, 9),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('storm', 0, 8),
         isFalse,
       );
     });

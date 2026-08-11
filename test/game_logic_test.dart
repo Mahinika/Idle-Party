@@ -13,6 +13,7 @@ import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/models/mission.dart';
 import 'package:idle_party/models/pet.dart';
 import 'package:idle_party/models/stats.dart';
@@ -334,8 +335,14 @@ void main() {
     final crystalClear = initial.copyWith(highestDungeonCleared: 6);
     expect(GameLogic.recommendedDungeonId(crystalClear), 'tide');
 
-    final allClear = initial.copyWith(highestDungeonCleared: 8);
-    expect(GameLogic.recommendedDungeonId(allClear), 'ember');
+    final groveFrontier = initial.copyWith(highestDungeonCleared: 8);
+    expect(GameLogic.recommendedDungeonId(groveFrontier), 'grove');
+
+    final stormFrontier = initial.copyWith(highestDungeonCleared: 9);
+    expect(GameLogic.recommendedDungeonId(stormFrontier), 'storm');
+
+    final allClear = initial.copyWith(highestDungeonCleared: 10);
+    expect(GameLogic.recommendedDungeonId(allClear), 'storm');
 
     final ready = mid.copyWith(bossVictories: 1);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 4));
@@ -471,10 +478,53 @@ void main() {
           (AchievementCatalog.byId('full_party')?.essenceReward ?? 0),
     );
     expect(ascended.achievements, contains('first_ascend'));
-    expect(ascended.totalAttackBonus, 1 + 4); // AL + war banner
+    expect(ascended.metaDepth.ascendBlessings, 1);
+    expect(
+      ascended.totalAttackBonus,
+      1 + 4 + GameLogic.ascendBlessingAtk,
+    ); // AL + war banner + Blessing
     expect(ascended.ascensionGoldBonusPercent, 10);
+    expect(
+      ascended.ascendBlessingGoldPercent,
+      GameLogic.ascendBlessingGoldPct,
+    );
     expect(ascended.soulboundFragments, greaterThan(0));
     expect(ascended.inDungeon, isFalse);
+  });
+
+  test('ascend Blessing stacks ATK DEF VIT and gold', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
+        .copyWith(bossVictories: 1);
+    state = GameLogic.ascend(state, now: DateTime(2026, 7, 5));
+    expect(state.metaDepth.ascendBlessings, 1);
+    expect(state.ascendBlessingAttackBonus, GameLogic.ascendBlessingAtk);
+    expect(state.ascendBlessingDefenseBonus, GameLogic.ascendBlessingDef);
+    expect(state.ascendBlessingVitalityBonus, GameLogic.ascendBlessingVit);
+    expect(state.ascendBlessingGoldPercent, GameLogic.ascendBlessingGoldPct);
+
+    state = state.copyWith(
+      bossVictories: GameLogic.bossesRequiredForAscension(state.ascensionLevel),
+    );
+    state = GameLogic.ascend(state, now: DateTime(2026, 7, 6));
+    expect(state.metaDepth.ascendBlessings, 2);
+    expect(state.ascendBlessingAttackBonus, GameLogic.ascendBlessingAtk * 2);
+    expect(state.ascendBlessingDefenseBonus, GameLogic.ascendBlessingDef * 2);
+    expect(state.ascendBlessingVitalityBonus, GameLogic.ascendBlessingVit * 2);
+    expect(state.ascendBlessingGoldPercent, GameLogic.ascendBlessingGoldPct * 2);
+
+    final withBlessing = GameLogic.applyGoldGain(state, 100);
+    final withoutBlessing = GameLogic.applyGoldGain(
+      state.copyWith(
+        metaDepth: state.metaDepth.copyWith(ascendBlessings: 0),
+      ),
+      100,
+    );
+    expect(withBlessing, greaterThan(withoutBlessing));
+  });
+
+  test('ascendBlessings defaults to 0 on old saves', () {
+    final depth = MetaDepthState.fromJson(<String, dynamic>{});
+    expect(depth.ascendBlessings, 0);
   });
 
   test('ascend keeps hero levels and meta, clears run loadouts', () {
@@ -534,7 +584,7 @@ void main() {
     );
 
     final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
-        .copyWith(autoSellMaxPower: 0);
+        .copyWith(autoSellMaxPower: 0, autoDisassembleMaxIlvl: 0);
     final afterWeak = GameLogic.applyLootDrops(initial, [
       LootDrop(
         name: weak.name,
@@ -562,7 +612,7 @@ void main() {
     );
   });
 
-  test('combinator merges same-slot gear into stash', () {
+  test('combinator ignores equipped gear and only merges bag pieces', () {
     final primary = EquipmentItem(
       id: 'w1',
       name: 'Iron Blade',
@@ -596,6 +646,23 @@ void main() {
       heroes: [hero0, ...state.heroes.skip(1)],
     );
 
+    final blocked = GameLogic.combineGear(
+      state,
+      primaryId: primary.id,
+      secondaryId: secondary.id,
+    );
+    expect(blocked.gold, cost);
+    expect(blocked.heroes.first.itemIn(EquipmentSlot.weapon)?.id, primary.id);
+    expect(blocked.gearStash.map((g) => g.id), contains(secondary.id));
+
+    // Both in bag → merge succeeds; result lands in stash.
+    state = state.copyWith(
+      heroes: [
+        hero0.copyWith(equipped: const <EquipmentSlot, EquipmentItem>{}),
+        ...state.heroes.skip(1),
+      ],
+      gearStash: <EquipmentItem>[primary, secondary],
+    );
     final combined = GameLogic.combineGear(
       state,
       primaryId: primary.id,
@@ -719,6 +786,67 @@ void main() {
     expect(state.gearStash.map((e) => e.id), contains(junkStaff.id));
   });
 
+  test('auto equip skips low-ilvl affinity crumbs on empty slots', () {
+    final crumb = GameLogic.createEquipment(
+      slot: EquipmentSlot.cloak,
+      rarity: LootRarity.common,
+      battleNumber: 1,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'crumb_cloak',
+      attackBonus: 0,
+      defenseBonus: 0,
+      vitalityBonus: 0,
+      strengthBonus: 1,
+      agilityBonus: 0,
+      staminaBonus: 1,
+      intellectBonus: 0,
+      spiritBonus: 0,
+      spellPowerBonus: 0,
+      armorBonus: 0,
+      mp5Bonus: 0,
+      critChanceBonus: 0,
+      attackSpeedBonus: 0,
+      moveSpeedBonus: 0,
+      affinity: HeroRole.warrior.name,
+      itemLevel: 5,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      clearAffinity: false,
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    // L20+ party with empty cloaks — affinity alone must not fill with i5 junk.
+    final heroes = [
+      for (final h in state.heroes)
+        h.copyWith(
+          level: 22,
+          equipped: {
+            for (final e in h.equipped.entries)
+              if (e.key != EquipmentSlot.cloak) e.key: e.value,
+          },
+        ),
+    ];
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[crumb],
+    );
+    expect(
+      GameLogic.emptySlotWorthFilling(
+        state.heroes.first,
+        crumb,
+        GameLogic.specEquipScore(state.heroes.first, crumb),
+      ),
+      isFalse,
+    );
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(
+      state.heroes.any((h) => h.itemIn(EquipmentSlot.cloak)?.id == crumb.id),
+      isFalse,
+    );
+    expect(state.gearStash.map((e) => e.id), contains(crumb.id));
+  });
+
   test('auto equip ignores tiny worn-slot sidegrades', () {
     final worn = GameLogic.createEquipment(
       slot: EquipmentSlot.cloak,
@@ -770,7 +898,7 @@ void main() {
     expect(state.gearStash.map((e) => e.id), contains(side.id));
   });
 
-  test('auto sell junk clears non-upgrades regardless of ilvl cap', () {
+  test('auto sell junk sells non-upgrades within iLvl and rarity filters', () {
     final weak = GameLogic.createEquipment(
       slot: EquipmentSlot.cloak,
       rarity: LootRarity.common,
@@ -804,7 +932,8 @@ void main() {
 
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
       gearStash: <EquipmentItem>[...strongCloaks, weak],
-      autoSellMaxPower: 5,
+      autoSellMaxPower: 40,
+      autoSellMaxRarity: LootRarity.uncommon.index,
     );
     for (var i = 0; i < 3; i++) {
       state = GameLogic.equipFromStash(
@@ -817,7 +946,31 @@ void main() {
 
     final sold = GameLogic.autoSellJunk(state);
     expect(sold.gearStash, isEmpty);
-    expect(sold.essence, greaterThan(state.essence));
+    expect(sold.gold, greaterThan(state.gold));
+  });
+
+  test('sellGear scraps stash only and refuses equipped pieces', () {
+    final piece = GameLogic.createEquipment(
+      slot: EquipmentSlot.cloak,
+      rarity: LootRarity.rare,
+      battleNumber: 6,
+    ).copyWith(id: 'sell_cloak');
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 9)).copyWith(
+      gearStash: <EquipmentItem>[piece],
+      essence: 0,
+    );
+    state = GameLogic.equipFromStash(state, piece.id, heroIndex: 0);
+    expect(state.heroes[0].itemIn(EquipmentSlot.cloak)?.id, piece.id);
+
+    final blocked = GameLogic.sellGear(state, piece.id);
+    expect(blocked.heroes[0].itemIn(EquipmentSlot.cloak)?.id, piece.id);
+    expect(blocked.essence, 0);
+
+    state = GameLogic.unequipSlot(state, EquipmentSlot.cloak, heroIndex: 0);
+    expect(state.gearStash.any((g) => g.id == piece.id), isTrue);
+    final scrapped = GameLogic.sellGear(state, piece.id);
+    expect(scrapped.gearStash.any((g) => g.id == piece.id), isFalse);
+    expect(scrapped.essence, greaterThan(0));
   });
 
   test('auto merge junk combines same-slot trash pairs', () {
@@ -1063,7 +1216,11 @@ void main() {
       );
       frillHero++;
     }
-    state = state.copyWith(gearStash: <EquipmentItem>[weakFrill]);
+    state = state.copyWith(
+      gearStash: <EquipmentItem>[weakFrill],
+      autoSellMaxPower: 40,
+      autoSellMaxRarity: LootRarity.uncommon.index,
+    );
 
     final cmp = GameLogic.compareForHero(
       state.heroes[mageIndex],
@@ -1073,7 +1230,7 @@ void main() {
 
     final sold = GameLogic.autoSellJunk(state);
     expect(sold.gearStash, isEmpty);
-    expect(sold.essence, greaterThan(state.essence));
+    expect(sold.gold, greaterThan(state.gold));
   });
 
   test('auto equip skips plate for low-level warrior; SELL JUNK keeps rare+', () {
@@ -1138,6 +1295,7 @@ void main() {
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
       gearStash: <EquipmentItem>[...wornCloaks, rareUnderCap],
       autoSellMaxPower: 20,
+      autoSellMaxRarity: LootRarity.rare.index,
     );
     for (var i = 0; i < 3; i++) {
       state = GameLogic.equipFromStash(
@@ -1323,9 +1481,57 @@ void main() {
     state = state.copyWith(gearStash: weakRares);
     expect(state.gearStash.length, cap);
 
-    final sold = GameLogic.autoSellJunk(state);
+    final sold = GameLogic.autoSellJunk(state, unstickBag: true);
     expect(sold.gearStash.length, lessThan(cap ~/ 2));
-    expect(sold.essence, greaterThan(state.essence));
+    expect(sold.gold, greaterThan(state.gold));
+  });
+
+  test('auto-disassemble scraps matching junk for essence', () {
+    final junk = GameLogic.createEquipment(
+      slot: EquipmentSlot.cloak,
+      rarity: LootRarity.common,
+      battleNumber: 1,
+    ).copyWith(
+      id: 'scrap_cloak',
+      attackBonus: 0,
+      defenseBonus: 1,
+      vitalityBonus: 0,
+      itemLevel: 4,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      clearAffinity: true,
+    );
+    final worn = [
+      for (var i = 0; i < 3; i++)
+        GameLogic.createEquipment(
+          slot: EquipmentSlot.cloak,
+          rarity: LootRarity.rare,
+          battleNumber: 10,
+        ).copyWith(
+          id: 'worn_scrap_$i',
+          attackBonus: 4,
+          defenseBonus: 12,
+          vitalityBonus: 14,
+          itemLevel: 40,
+          effectId: GearEffectId.none,
+          effectValue: 0,
+          clearAffinity: true,
+        ),
+    ];
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
+      gearStash: <EquipmentItem>[...worn, junk],
+      autoSellMaxPower: 0,
+      autoDisassembleMaxIlvl: 10,
+      autoDisassembleMaxRarity: LootRarity.uncommon.index,
+    );
+    for (var i = 0; i < 3; i++) {
+      state = GameLogic.equipFromStash(state, worn[i].id, heroIndex: i);
+    }
+    state = state.copyWith(gearStash: <EquipmentItem>[junk]);
+    final scraped = GameLogic.autoDisassembleJunk(state);
+    expect(scraped.gearStash, isEmpty);
+    expect(scraped.essence, greaterThan(state.essence));
+    expect(scraped.gold, state.gold);
   });
 
   test('applyLootDrops registers item names in the codex', () {
@@ -1414,6 +1620,21 @@ void main() {
     expect(state.heroRoster.length, greaterThan(before));
     final newest = state.heroRoster.last;
     expect(newest.level, greaterThanOrEqualTo(15));
+    expect(state.metaDepth.pendingHeroReveals, contains(newest.specId.name));
+  });
+
+  test('unlockSpec queues pending hero reveal', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    state = state.copyWith(
+      ascensionLevel: 1,
+      bossVictories: 99,
+      highestDungeonCleared: 1,
+    );
+    expect(state.metaDepth.pendingHeroReveals, isEmpty);
+    state = GameLogic.syncSpecUnlocks(state);
+    expect(state.metaDepth.pendingHeroReveals, isNotEmpty);
+    final cleared = GameLogic.ackPendingHeroReveals(state);
+    expect(cleared.metaDepth.pendingHeroReveals, isEmpty);
   });
 
   test('fresh ascend dampens AL threat until gear rebuilds', () {
@@ -2174,11 +2395,13 @@ void main() {
     // Single gold mul on clear (F1 → mul 1.0).
     expect(state.gold - goldBefore, expectedGold);
 
-    // Challenge mint suppressed in gauntlet; weekly counts at AL10+.
-    final weeklyBefore = state.metaDepth.weeklyProgress;
+    // Challenge mint suppressed in gauntlet; daily vault counts at AL10+.
+    final vaultBefore = state.metaDepth.dailyVaultClears;
     final withChallenges = state.copyWith(
       challengeBossRush: true,
       hardmodeLevel: 3,
+      keystoneRunActive: true,
+      keystoneRunLevel: 3,
       essence: 0,
     );
     expect(
@@ -2195,8 +2418,8 @@ void main() {
     // Gauntlet floor essence only + new achievement — no rush/HM clear mint.
     expect(afterClear.essence, 1 + (2 ~/ 2) + hmReward);
     expect(
-      afterClear.metaDepth.weeklyProgress,
-      min(GameLogic.weeklyClearTarget, weeklyBefore + 1),
+      afterClear.metaDepth.dailyVaultClears,
+      min(GameLogic.dailyVaultClearTarget, vaultBefore + 1),
     );
 
     final left = GameLogic.leaveDungeon(state);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/hero.dart';
-import 'custom_assets.dart';
+import 'kenney_assets.dart';
 import 'kenney_sprite.dart';
 
 /// Painted custom hero sprite (intro-matched). Replaces Kenney paper-doll in HUD/equip.
@@ -21,11 +21,19 @@ class HeroDollSprite extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final asset = CustomAssets.heroForClass(hero.spec.classId);
+    final asset = KenneyAssets.heroSpriteForSpec(hero.specId);
+    final tint = KenneyAssets.heroTintForSpec(hero.specId);
     final alive = hero.currentHp > 0;
+    Widget sprite = KenneySprite(asset: asset, size: size);
+    if (tint != null) {
+      sprite = ColorFiltered(
+        colorFilter: ColorFilter.mode(tint, BlendMode.modulate),
+        child: sprite,
+      );
+    }
     return Opacity(
       opacity: alive ? 1 : 0.35,
-      child: KenneySprite(asset: asset, size: size),
+      child: sprite,
     );
   }
 }

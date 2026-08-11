@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_room.dart';
@@ -98,25 +99,25 @@ void main() {
     expect(state.metaDepth.lifetimePetMerges, 1);
   });
 
-  test('weekly progress increments on floor clear path', () {
+  test('daily vault progress increments on floor clear path', () {
     final now = DateTime.now();
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.ensureWeeklyContract(state, now: now);
-    expect(state.metaDepth.weeklyProgress, 0);
+    expect(state.metaDepth.dailyVaultClears, 0);
     state = GameLogic.completeCurrentRoom(state, goldGain: 10, skipLootRoll: true);
-    expect(state.metaDepth.weeklyProgress, 1);
+    expect(state.metaDepth.dailyVaultClears, 1);
     expect(state.metaDepth.lifetimeFloorClears, greaterThanOrEqualTo(1));
-    // Ascend must not double-count weekly progress.
+    // Ascend must not wipe daily vault progress.
     state = state.copyWith(
       bossVictories: GameLogic.bossesRequiredForAscension(state.ascensionLevel),
-      metaDepth: state.metaDepth.copyWith(weeklyProgress: 2),
+      metaDepth: state.metaDepth.copyWith(dailyVaultClears: 1),
     );
-    final beforeWeekly = state.metaDepth.weeklyProgress;
+    final beforeVault = state.metaDepth.dailyVaultClears;
     state = GameLogic.ascend(state, now: now);
-    expect(state.metaDepth.weeklyProgress, beforeWeekly);
+    expect(state.metaDepth.dailyVaultClears, beforeVault);
   });
 
-  test('weekly rollover keeps first clear progress of the new week', () {
+  test('weekly rollover resets legacy weeklyProgress on new week', () {
     var state = GameLogic.createInitialState(now: DateTime.now());
     // Stale prior-week key with leftover progress that would be wiped on rotate.
     state = state.copyWith(
@@ -130,7 +131,8 @@ void main() {
     state = GameLogic.completeCurrentRoom(state, goldGain: 10, skipLootRoll: true);
     final key = GameLogic.isoWeekKey(DateTime.now().toUtc());
     expect(state.metaDepth.weeklyKey, key);
-    expect(state.metaDepth.weeklyProgress, 1);
+    expect(state.metaDepth.weeklyProgress, 0);
+    expect(state.metaDepth.dailyVaultClears, 1);
   });
 
   test('createEnemyGroup glass modifier shrinks HP and boosts ATK', () {
@@ -141,9 +143,15 @@ void main() {
       enemyLevel: 3,
       enemyCount: 4,
     );
-    final baseState = GameLogic.createInitialState(now: DateTime(2026, 7, 31));
+    final baseState = GameLogic.createInitialState(now: DateTime(2026, 7, 31))
+        .copyWith(
+      keystoneRunActive: true,
+      keystoneRunLevel: 2,
+      keystoneRunAffixes: const <String>['elite'],
+    );
     final plain = GameLogic.createEnemyGroup(room, fromState: baseState);
     final glassState = baseState.copyWith(
+      keystoneRunAffixes: const <String>['glass'],
       metaDepth: baseState.metaDepth.copyWith(weeklyModifier: 'glass'),
     );
     final glass = GameLogic.createEnemyGroup(room, fromState: glassState);
@@ -263,28 +271,34 @@ void main() {
     expect(md.claimedGauntletMilestones, isEmpty);
     expect(md.dailyEssenceBonusLevel, 0);
     expect(md.gauntletGoldBonusLevel, 0);
+    expect(md.ascendBlessings, 0);
   });
 
-  test('weekly claim pays raised essence and seasons rotate', () {
+  test('daily vault claim pays essence and seasons rotate', () {
     final now = DateTime.utc(2026, 8, 7);
     final key = GameLogic.isoWeekKey(now);
     var state = GameLogic.createInitialState(now: now).copyWith(
       metaDepth: MetaDepthState(
         weeklyKey: key,
-        weeklyProgress: 3,
         weeklyModifier: 'glass',
         seasonKey: GameLogic.seasonLabel(now),
+        dailyVaultDate: MetaSystems.dailyDateKey(now),
+        dailyVaultClears: 1,
+        dailyVaultClaimed: false,
+        claimedSeasonRewards: const <String>[],
       ),
     );
     expect(state.metaDepth.seasonKey, contains('2026-W'));
     expect(state.metaDepth.seasonKey, contains('2026-08'));
-    expect(GameLogic.weeklyClaimEssence, greaterThanOrEqualTo(30));
+    expect(GameLogic.canClaimDailyVault(state), isTrue);
     final before = state.essence;
-    state = GameLogic.claimWeekly(state);
-    expect(state.metaDepth.weeklyClaimed, isTrue);
-    expect(state.essence, greaterThanOrEqualTo(before + GameLogic.weeklyClaimEssence));
-    expect(state.metaDepth.claimedSeasonRewards, contains('2026-08'));
+    final expectedMin = Keystone.dailyVaultEssence(0) +
+        GameLogic.seasonWeeklyBonusEssence;
+    state = GameLogic.claimWeekly(state, now: now);
+    expect(state.metaDepth.dailyVaultClaimed, isTrue);
+    expect(state.essence, greaterThanOrEqualTo(before + expectedMin));
     expect(state.achievements, contains('weekly_clear'));
+    expect(state.metaDepth.claimedSeasonRewards, contains('2026-08'));
   });
 
   test('will ranks and gauntlet milestones claim once', () {

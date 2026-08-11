@@ -39,6 +39,8 @@ abstract final class GearSets {
       'crystal' => 'Spire',
       'tide' => 'Tidehold',
       'ember' => 'Ashen',
+      'grove' => 'Hollow',
+      'storm' => 'Stormwake',
       _ => dungeonId,
     };
     final armor = switch (armorRaw) {
@@ -175,6 +177,8 @@ abstract final class GearSets {
       'crystal' => ('SPIRE', 0xFF80D0FF),
       'tide' => ('TIDE', 0xFF40C0B0),
       'ember' => ('ASHEN', 0xFFE09040),
+      'grove' => ('GROVE', 0xFF68B048),
+      'storm' => ('GALE', 0xFFE8E040),
       _ => ('SET', 0xFFFFD070),
     };
     return (chance: 0.10, damageMul: 1.35, tag: tag, argb: argb);

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/hero_identity.dart';
+import '../core/meta_systems.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
@@ -22,6 +24,7 @@ import 'game_theme.dart';
 import 'hero_paper_doll.dart';
 import 'kenney_assets.dart';
 import 'kenney_button.dart';
+import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
 import 'meta_overlays.dart';
 import 'web_click_bridge.dart';
@@ -173,7 +176,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         load(CustomAssets.heroShaman, targetWidth: 128),
         load(CustomAssets.heroWarlock, targetWidth: 128),
         load(CustomAssets.heroDruid, targetWidth: 128),
-        load(RoguelikeCharAtlas.assetPath, targetWidth: 512),
+        // Keep native size — paper-doll src rects assume full atlas pixels.
+        load(RoguelikeCharAtlas.assetPath),
         ...enemyAssets.map((a) => load(a, targetWidth: 128)),
         load(KenneyAssets.chestClosed, targetWidth: 64),
         load(KenneyAssets.coinGold, targetWidth: 48),
@@ -259,6 +263,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     final world = widget.director.spatial;
     final room = state.currentRoom;
     final farm = state.dungeonMode == DungeonMode.farm;
+    final dailyEcho = MetaSystems.isActiveDailyRun(state);
 
     final frameColor = room.type == RoomType.boss
         ? GameTheme.borderLit
@@ -458,6 +463,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                     Text(
                                       state.inGauntlet
                                           ? 'Gauntlet run ends here. Best floor is saved. Return to hub to climb again.'
+                                          : dailyEcho
+                                          ? 'Daily echo — RETRY restarts this floor. HUB ends the run (claim needs a clear).'
                                           : farm
                                           ? 'RETRY restarts this floor (F${state.currentRoom.floorNumber}). HUB ends the run.'
                                           : () {
@@ -480,7 +487,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                     const SizedBox(height: 14),
                                     if (!state.inGauntlet)
                                       KenneyButton(
-                                        label: farm
+                                        label: (farm || dailyEcho)
                                             ? 'RETRY FLOOR'
                                             : () {
                                                 final safe = state
@@ -502,10 +509,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                             )) ...[
                                       const SizedBox(height: 8),
                                       KenneyButton(
-                                        label: 'SELL JUNK',
+                                        label: 'CLEAN BAG',
                                         style: KenneyButtonStyle.grey,
                                         onPressed: () {
-                                          widget.director.autoSellJunk();
+                                          widget.director.cleanBagJunk();
                                         },
                                       ),
                                     ],
@@ -697,12 +704,10 @@ class GodHandRing extends StatelessWidget {
                       ready: ready,
                     ),
                     child: Center(
-                      child: Text(
-                        'GH',
-                        style: GameTheme.pixel(
-                          size: GameTheme.hudPixel,
-                          color: color,
-                        ),
+                      child: KenneySprite(
+                        asset: KenneyAssets.fist,
+                        size: 14,
+                        color: color,
                       ),
                     ),
                   ),
@@ -1024,17 +1029,28 @@ class _TileRoomPainter extends CustomPainter {
       Offset c,
       double scale, {
       double alpha = 1,
+      Color? tint,
     }) {
       final s = tile * scale;
       final dst = Rect.fromCenter(center: c, width: s, height: s);
-      _drawImage(canvas, image, dst, alpha: alpha);
+      _drawImage(canvas, image, dst, alpha: alpha, tint: tint);
     }
 
     for (final prop in world.map.props) {
       if (!_inView(prop.x + 0.5, prop.y + 0.5, pad: 0.75)) continue;
       final img = propImages[prop.kind];
       if (img == null) continue;
-      drawSprite(img, center(prop.x + 0.5, prop.y + 0.5), 0.55);
+      final c = center(prop.x + 0.5, prop.y + 0.5);
+      // Soft ground shadow so clutter reads against flat floor tiles.
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: c.translate(0, tile * 0.18),
+          width: tile * 0.55,
+          height: tile * 0.22,
+        ),
+        Paint()..color = const Color(0x66000000),
+      );
+      drawSprite(img, c, 0.80);
     }
 
     void drawBar(Offset c, int hp, int maxHp, double width) {
@@ -1450,8 +1466,11 @@ class _TileRoomPainter extends CustomPainter {
       final alpha = hero.isAlive ? 1.0 : 0.25;
       // Prefer class sprite from active party hero when available.
       ui.Image? img;
+      Color? tint;
       if (partyHero != null) {
-        img = heroesByClass[partyHero.spec.classId];
+        img = heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
+        final argb = HeroIdentity.tintArgb(partyHero.specId);
+        if (argb != null) tint = Color(argb);
       }
       img ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
       if (img != null) {
@@ -1460,6 +1479,7 @@ class _TileRoomPainter extends CustomPainter {
           c,
           scale,
           alpha: hero.vanishTimer > 0 ? 0.35 : alpha,
+          tint: tint,
         );
       } else if (partyHero != null) {
         final walk = flash > 0.05
@@ -1981,14 +2001,19 @@ class _TileRoomPainter extends CustomPainter {
     Rect src,
     Rect dst, {
     double alpha = 1,
+    Color? tint,
   }) {
+    final paint = Paint()
+      ..filterQuality = FilterQuality.none
+      ..color = Color.fromRGBO(255, 255, 255, alpha);
+    if (tint != null) {
+      paint.colorFilter = ColorFilter.mode(tint, BlendMode.modulate);
+    }
     canvas.drawImageRect(
       image,
       src,
       dst,
-      Paint()
-        ..filterQuality = FilterQuality.none
-        ..color = Color.fromRGBO(255, 255, 255, alpha),
+      paint,
     );
   }
 
@@ -1997,6 +2022,7 @@ class _TileRoomPainter extends CustomPainter {
     ui.Image image,
     Rect dst, {
     double alpha = 1,
+    Color? tint,
   }) {
     _drawImageSrc(
       canvas,
@@ -2004,6 +2030,7 @@ class _TileRoomPainter extends CustomPainter {
       Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
       dst,
       alpha: alpha,
+      tint: tint,
     );
   }
 

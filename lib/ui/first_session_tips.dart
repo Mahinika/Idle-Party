@@ -30,7 +30,7 @@ class FirstSessionTips extends StatelessWidget {
       title: 'GOD HAND',
       body:
           'Your distant will. Tap the dungeon to smash foes. Cooldown is the ring top-right. '
-          'Forge → META: BAL / FOCUS / WIDE styles trade damage vs radius.',
+          'Forge → KEEP: BAL / FOCUS / WIDE styles trade damage vs radius.',
     ),
     (
       id: 'farm_push',
@@ -40,7 +40,8 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'bag',
       title: 'BAG & GEAR',
-      body: 'Open BAG or GEAR to equip upgrades. Long-press a hero for gear.',
+      body:
+          'Open GEAR for the paper-doll, BAG for stash. Tap an empty slot to filter the bag.',
     ),
     (
       id: 'sanctuary',
@@ -79,22 +80,23 @@ class FirstSessionTips extends StatelessWidget {
       id: 'post_ascend',
       title: 'AFTER ASCEND',
       body:
-          'Gold & forge tracks wiped. Farm Sandy for gold → Forge GOLD upgrades → Market flasks. '
-          'Spend essence under Forge → META (relics / God Hand). Apex mats survive.',
+          'New kits land in PARTY — TODAY shows Meet … when something unlocked. '
+          'Gold & forge tracks wiped: farm Sandy → Forge GOLD → Market flasks. '
+          'Spend essence under Forge → KEEP (relics / God Hand). Apex mats survive.',
     ),
     (
       id: 'hardmode',
-      title: 'HARDMODE',
+      title: 'KEYSTONE',
       body:
-          'Under CHALLENGES, raise Hardmode for tougher packs and better gold/legendaries. Cap rises with Ascension.',
+          'Under KEYSTONE, pick a key level before you enter. Affixes lock in, a generous timer runs '
+          '(AFK counts), and beating the boss under par upgrades your key.',
     ),
     (
       id: 'weekly',
-      title: 'WEEKLY',
+      title: 'DAILY VAULT',
       body:
-          'Clear 3 floors under the weekly modifier (glass / swarm / elite / fortune / iron), '
-          'then CLAIM WEEKLY for essence. First claim of each month also pays a season bonus. '
-          'Hub shows weekly progress while you climb.',
+          'Clear 1 floor or time a KEY +2 today, then claim the vault for essence '
+          '(scales with your best timed key). First claim of each month also pays a season bonus.',
     ),
     (
       id: 'apex',
@@ -112,7 +114,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'prestige',
       title: 'ESSENCE SHOP',
       body:
-          'Spend essence in the Essence Shop and Forge → META for relics, God Hand, and prestige power that lasts.',
+          'Spend essence in the Essence Shop and Forge → KEEP for relics, God Hand, and prestige power that lasts.',
     ),
   ];
 
@@ -122,6 +124,10 @@ class FirstSessionTips extends StatelessWidget {
     final s = director.state;
     for (final tip in _tips) {
       if (seen.contains(tip.id)) continue;
+      // Live combat: only God Hand + FARM/PUSH tips — avoid tip spam mid-fight.
+      if (inDungeon && tip.id != 'godhand' && tip.id != 'farm_push') {
+        continue;
+      }
       if (tip.id == 'first_run' && inDungeon) {
         continue;
       }
@@ -222,10 +228,7 @@ class FirstSessionTips extends StatelessWidget {
                         Text(
                           tip.title,
                           textAlign: TextAlign.center,
-                          style: GameTheme.pixel(
-                            size: GameTheme.hudPixelComfort,
-                            color: GameTheme.torchHot,
-                          ),
+                          style: GameTheme.menuTitle(size: 16),
                         ),
                         const SizedBox(height: 6),
                         Text(

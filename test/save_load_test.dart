@@ -26,6 +26,9 @@ void main() {
       ascensionLevel: 1,
       godHandLevel: 2,
       autoSellMaxPower: 30,
+      autoSellMaxRarity: 2,
+      autoDisassembleMaxIlvl: 18,
+      autoDisassembleMaxRarity: 1,
       soundMuted: true,
       reducedVfx: true,
       rogueUnlocked: true,
@@ -54,6 +57,9 @@ void main() {
     expect(decoded.ascensionLevel, 1);
     expect(decoded.godHandLevel, 2);
     expect(decoded.autoSellMaxPower, 30);
+    expect(decoded.autoSellMaxRarity, 2);
+    expect(decoded.autoDisassembleMaxIlvl, 18);
+    expect(decoded.autoDisassembleMaxRarity, 1);
     expect(decoded.soundMuted, isTrue);
     expect(decoded.reducedVfx, isTrue);
     expect(decoded.vfxQuality.name, 'lite');

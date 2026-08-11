@@ -155,32 +155,37 @@ class _GameHomePageState extends State<GameHomePage> {
 
   Future<void> _confirmNewGame(List<HeroSpecId> specs) async {
     if (_director.hasExistingSave) {
-      final ok = await showDialog<bool>(
-        context: context,
-        barrierColor: MenuChrome.scrim,
-        builder: (ctx) => MenuChrome.dialog(
-          title: 'Overwrite save?',
-          content: Text(
-            'Starting a new game erases your current progress.',
-            style: GameTheme.body(size: 15, color: GameTheme.parchment),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(
-                'CANCEL',
-                style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+      WebClickBridge.pushLayer();
+      bool? ok;
+      try {
+        ok = await showDialog<bool>(
+          context: context,
+          barrierColor: MenuChrome.scrim,
+          builder: (ctx) => MenuChrome.dialog(
+            title: 'Overwrite save?',
+            content: Text(
+              'Starting a new game erases your current progress.',
+              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            ),
+            actions: [
+              KenneyButton(
+                label: 'CANCEL',
+                style: KenneyButtonStyle.grey,
+                expanded: false,
+                onPressed: () => Navigator.pop(ctx, false),
               ),
-            ),
-            KenneyButton(
-              label: 'OVERWRITE',
-              expanded: false,
-              style: KenneyButtonStyle.red,
-              onPressed: () => Navigator.pop(ctx, true),
-            ),
-          ],
-        ),
-      );
+              KenneyButton(
+                label: 'OVERWRITE',
+                expanded: false,
+                style: KenneyButtonStyle.red,
+                onPressed: () => Navigator.pop(ctx, true),
+              ),
+            ],
+          ),
+        );
+      } finally {
+        WebClickBridge.popLayer();
+      }
       if (ok != true || !mounted) {
         setState(() => _phase = _AppPhase.startMenu);
         return;
@@ -263,6 +268,17 @@ class _GameHomePageState extends State<GameHomePage> {
           });
         }
 
+        // Drop stale hub MORE overlays when combat starts (ENTER / Daily /
+        // Gauntlet). Otherwise Codex/Guides can reopen on return to hub.
+        if (_director.state.inDungeon && _hubOverlay != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            if (_director.state.inDungeon && _hubOverlay != null) {
+              setState(() => _hubOverlay = null);
+            }
+          });
+        }
+
         final Widget body;
         if (_director.state.inDungeon) {
           body = Is2Shell(
@@ -277,46 +293,22 @@ class _GameHomePageState extends State<GameHomePage> {
                 ignoring: _hubOverlay != null,
                 child: HubScreen(
                   director: _director,
-                  onEnterDungeon: (id) =>
-                      _director.enterDungeon(dungeonId: id),
-                  onOpenInventory: () => setState(
-                    () => _hubOverlay = Is2Overlay.inventory,
+                  onEnterDungeon: (id) {
+                    setState(() => _hubOverlay = null);
+                    _director.enterDungeon(dungeonId: id);
+                  },
+                  onOpenParty: () {
+                    _director.ackPendingHeroReveals();
+                    setState(() => _hubOverlay = Is2Overlay.inventory);
+                  },
+                  onOpenPower: () => setState(
+                    () => _hubOverlay = Is2Overlay.power,
                   ),
-                  onOpenForge: () => setState(
-                    () => _hubOverlay = Is2Overlay.forge,
-                  ),
-                  onOpenJobs: () => setState(
-                    () => _hubOverlay = Is2Overlay.jobs,
-                  ),
-                  onOpenSanctuary: () => setState(
-                    () => _hubOverlay = Is2Overlay.sanctuary,
-                  ),
-                  onOpenMarket: () => setState(
-                    () => _hubOverlay = Is2Overlay.market,
-                  ),
-                  onOpenBeast: () => setState(
-                    () => _hubOverlay = Is2Overlay.beast,
+                  onOpenMeta: () => setState(
+                    () => _hubOverlay = Is2Overlay.meta,
                   ),
                   onOpenSettings: () => setState(
                     () => _hubOverlay = Is2Overlay.settings,
-                  ),
-                  onOpenAchievements: () => setState(
-                    () => _hubOverlay = Is2Overlay.achievements,
-                  ),
-                  onOpenCodex: () => setState(
-                    () => _hubOverlay = Is2Overlay.codex,
-                  ),
-                  onOpenLoadouts: () => setState(
-                    () => _hubOverlay = Is2Overlay.loadouts,
-                  ),
-                  onOpenTeam: () => setState(
-                    () => _hubOverlay = Is2Overlay.teamComposition,
-                  ),
-                  onOpenGuides: () => setState(
-                    () => _hubOverlay = Is2Overlay.guides,
-                  ),
-                  onOpenPrestigeShop: () => setState(
-                    () => _hubOverlay = Is2Overlay.prestigeShop,
                   ),
                 ),
               ),

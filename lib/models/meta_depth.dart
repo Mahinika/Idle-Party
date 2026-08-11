@@ -146,6 +146,7 @@ class MetaDepthState {
     this.godHandCdLevel = 0,
     this.torchKeepLevel = 0,
     this.legacyPoints = 0,
+    this.ascendBlessings = 0,
     this.ascendStreak = 0,
     this.bestAscendStreak = 0,
     this.titles = const <String>[],
@@ -156,6 +157,11 @@ class MetaDepthState {
     this.weeklyProgress = 0,
     this.weeklyClaimed = false,
     this.weeklyModifier = '',
+    this.weeklyBestTimedKey = 0,
+    this.dailyVaultDate = '',
+    this.dailyVaultClears = 0,
+    this.dailyBestTimedKey = 0,
+    this.dailyVaultClaimed = false,
     this.favoritePetSpecies = '',
     this.petRosterCapBonus = 0,
     this.zoneTrophies = const <String>[],
@@ -177,6 +183,7 @@ class MetaDepthState {
     this.relicRespecs = 0,
     this.partySlot5Unlocked = false,
     this.unlockedSpecs = const <String>[],
+    this.pendingHeroReveals = const <String>[],
     this.claimedWillRanks = const <String>[],
     this.claimedGauntletMilestones = const <String>[],
     this.godHandStyle = 0,
@@ -184,6 +191,7 @@ class MetaDepthState {
     this.gauntletGoldBonusLevel = 0,
     this.seasonKey = '',
     this.claimedSeasonRewards = const <String>[],
+    this.claimedWeekGoals = const <String>[],
   });
 
   final int sanctuaryXpLevel;
@@ -196,6 +204,8 @@ class MetaDepthState {
   final int godHandCdLevel;
   final int torchKeepLevel;
   final int legacyPoints;
+  /// Stacking Ascend Blessing packs (ATK/DEF/VIT/gold). Survives Ascend.
+  final int ascendBlessings;
   final int ascendStreak;
   final int bestAscendStreak;
   final List<String> titles;
@@ -206,6 +216,22 @@ class MetaDepthState {
   final int weeklyProgress;
   final bool weeklyClaimed;
   final String weeklyModifier;
+
+  /// Legacy weekly vault score (kept for save compat; unused by daily vault).
+  final int weeklyBestTimedKey;
+
+  /// UTC date key (`yyyy-mm-dd`) for the daily keystone vault.
+  final String dailyVaultDate;
+
+  /// Push clears counted toward today's vault.
+  final int dailyVaultClears;
+
+  /// Best timed keystone level today (vault score).
+  final int dailyBestTimedKey;
+
+  /// Whether today's vault was claimed.
+  final bool dailyVaultClaimed;
+
   final String favoritePetSpecies;
   final int petRosterCapBonus;
   final List<String> zoneTrophies;
@@ -217,7 +243,7 @@ class MetaDepthState {
   final int lifetimePetMerges;
   final int lifetimeAscends;
 
-  /// Highest Hardmode level at which a floor was cleared (not dial-only).
+  /// Highest keystone level at which a floor was cleared (not dial-only).
   final int highestHardmodeCleared;
 
   /// Best Infinity Gauntlet floor cleared (meta — survives Ascend).
@@ -238,6 +264,10 @@ class MetaDepthState {
 
   /// Unlocked [HeroSpecId.name] strings (roster eligibility).
   final List<String> unlockedSpecs;
+
+  /// Newly unlocked specs waiting for hub “Meet …” reveal ([HeroSpecId.name]).
+  /// Survives Ascend until the player opens PARTY / acknowledges.
+  final List<String> pendingHeroReveals;
 
   /// Will-rank score thresholds already claimed for essence (e.g. `"25"`).
   final List<String> claimedWillRanks;
@@ -260,6 +290,9 @@ class MetaDepthState {
   /// Calendar months (`yyyy-MM`) that already paid the season weekly bonus.
   final List<String> claimedSeasonRewards;
 
+  /// Local week goals already claimed (`yyyy-Www:goalId`).
+  final List<String> claimedWeekGoals;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -279,6 +312,7 @@ class MetaDepthState {
     int? godHandCdLevel,
     int? torchKeepLevel,
     int? legacyPoints,
+    int? ascendBlessings,
     int? ascendStreak,
     int? bestAscendStreak,
     List<String>? titles,
@@ -289,6 +323,11 @@ class MetaDepthState {
     int? weeklyProgress,
     bool? weeklyClaimed,
     String? weeklyModifier,
+    int? weeklyBestTimedKey,
+    String? dailyVaultDate,
+    int? dailyVaultClears,
+    int? dailyBestTimedKey,
+    bool? dailyVaultClaimed,
     String? favoritePetSpecies,
     int? petRosterCapBonus,
     List<String>? zoneTrophies,
@@ -310,6 +349,7 @@ class MetaDepthState {
     int? relicRespecs,
     bool? partySlot5Unlocked,
     List<String>? unlockedSpecs,
+    List<String>? pendingHeroReveals,
     List<String>? claimedWillRanks,
     List<String>? claimedGauntletMilestones,
     int? godHandStyle,
@@ -317,6 +357,7 @@ class MetaDepthState {
     int? gauntletGoldBonusLevel,
     String? seasonKey,
     List<String>? claimedSeasonRewards,
+    List<String>? claimedWeekGoals,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -331,6 +372,7 @@ class MetaDepthState {
       godHandCdLevel: godHandCdLevel ?? this.godHandCdLevel,
       torchKeepLevel: torchKeepLevel ?? this.torchKeepLevel,
       legacyPoints: legacyPoints ?? this.legacyPoints,
+      ascendBlessings: ascendBlessings ?? this.ascendBlessings,
       ascendStreak: ascendStreak ?? this.ascendStreak,
       bestAscendStreak: bestAscendStreak ?? this.bestAscendStreak,
       titles: titles ?? this.titles,
@@ -341,6 +383,11 @@ class MetaDepthState {
       weeklyProgress: weeklyProgress ?? this.weeklyProgress,
       weeklyClaimed: weeklyClaimed ?? this.weeklyClaimed,
       weeklyModifier: weeklyModifier ?? this.weeklyModifier,
+      weeklyBestTimedKey: weeklyBestTimedKey ?? this.weeklyBestTimedKey,
+      dailyVaultDate: dailyVaultDate ?? this.dailyVaultDate,
+      dailyVaultClears: dailyVaultClears ?? this.dailyVaultClears,
+      dailyBestTimedKey: dailyBestTimedKey ?? this.dailyBestTimedKey,
+      dailyVaultClaimed: dailyVaultClaimed ?? this.dailyVaultClaimed,
       favoritePetSpecies: favoritePetSpecies ?? this.favoritePetSpecies,
       petRosterCapBonus: petRosterCapBonus ?? this.petRosterCapBonus,
       zoneTrophies: zoneTrophies ?? this.zoneTrophies,
@@ -364,6 +411,7 @@ class MetaDepthState {
       relicRespecs: relicRespecs ?? this.relicRespecs,
       partySlot5Unlocked: partySlot5Unlocked ?? this.partySlot5Unlocked,
       unlockedSpecs: unlockedSpecs ?? this.unlockedSpecs,
+      pendingHeroReveals: pendingHeroReveals ?? this.pendingHeroReveals,
       claimedWillRanks: claimedWillRanks ?? this.claimedWillRanks,
       claimedGauntletMilestones:
           claimedGauntletMilestones ?? this.claimedGauntletMilestones,
@@ -374,6 +422,7 @@ class MetaDepthState {
           gauntletGoldBonusLevel ?? this.gauntletGoldBonusLevel,
       seasonKey: seasonKey ?? this.seasonKey,
       claimedSeasonRewards: claimedSeasonRewards ?? this.claimedSeasonRewards,
+      claimedWeekGoals: claimedWeekGoals ?? this.claimedWeekGoals,
     );
   }
 
@@ -388,6 +437,7 @@ class MetaDepthState {
         'godHandCdLevel': godHandCdLevel,
         'torchKeepLevel': torchKeepLevel,
         'legacyPoints': legacyPoints,
+        'ascendBlessings': ascendBlessings,
         'ascendStreak': ascendStreak,
         'bestAscendStreak': bestAscendStreak,
         'titles': titles,
@@ -398,6 +448,11 @@ class MetaDepthState {
         'weeklyProgress': weeklyProgress,
         'weeklyClaimed': weeklyClaimed,
         'weeklyModifier': weeklyModifier,
+        'weeklyBestTimedKey': weeklyBestTimedKey,
+        'dailyVaultDate': dailyVaultDate,
+        'dailyVaultClears': dailyVaultClears,
+        'dailyBestTimedKey': dailyBestTimedKey,
+        'dailyVaultClaimed': dailyVaultClaimed,
         'favoritePetSpecies': favoritePetSpecies,
         'petRosterCapBonus': petRosterCapBonus,
         'zoneTrophies': zoneTrophies,
@@ -419,6 +474,7 @@ class MetaDepthState {
         'relicRespecs': relicRespecs,
         'partySlot5Unlocked': partySlot5Unlocked,
         'unlockedSpecs': unlockedSpecs,
+        'pendingHeroReveals': pendingHeroReveals,
         'claimedWillRanks': claimedWillRanks,
         'claimedGauntletMilestones': claimedGauntletMilestones,
         'godHandStyle': godHandStyle,
@@ -426,6 +482,7 @@ class MetaDepthState {
         'gauntletGoldBonusLevel': gauntletGoldBonusLevel,
         'seasonKey': seasonKey,
         'claimedSeasonRewards': claimedSeasonRewards,
+        'claimedWeekGoals': claimedWeekGoals,
       };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -451,6 +508,7 @@ class MetaDepthState {
       godHandCdLevel: (json['godHandCdLevel'] as num?)?.toInt() ?? 0,
       torchKeepLevel: (json['torchKeepLevel'] as num?)?.toInt() ?? 0,
       legacyPoints: (json['legacyPoints'] as num?)?.toInt() ?? 0,
+      ascendBlessings: (json['ascendBlessings'] as num?)?.toInt() ?? 0,
       ascendStreak: (json['ascendStreak'] as num?)?.toInt() ?? 0,
       bestAscendStreak: (json['bestAscendStreak'] as num?)?.toInt() ?? 0,
       titles: (json['titles'] as List<dynamic>?)?.cast<String>() ?? const [],
@@ -463,6 +521,14 @@ class MetaDepthState {
       weeklyProgress: (json['weeklyProgress'] as num?)?.toInt() ?? 0,
       weeklyClaimed: (json['weeklyClaimed'] as bool?) ?? false,
       weeklyModifier: (json['weeklyModifier'] as String?) ?? '',
+      weeklyBestTimedKey:
+          ((json['weeklyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      dailyVaultDate: (json['dailyVaultDate'] as String?) ?? '',
+      dailyVaultClears:
+          ((json['dailyVaultClears'] as num?)?.toInt() ?? 0).clamp(0, 999),
+      dailyBestTimedKey:
+          ((json['dailyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      dailyVaultClaimed: (json['dailyVaultClaimed'] as bool?) ?? false,
       favoritePetSpecies: (json['favoritePetSpecies'] as String?) ?? '',
       petRosterCapBonus: (json['petRosterCapBonus'] as num?)?.toInt() ?? 0,
       zoneTrophies:
@@ -477,7 +543,7 @@ class MetaDepthState {
       lifetimePetMerges: (json['lifetimePetMerges'] as num?)?.toInt() ?? 0,
       lifetimeAscends: (json['lifetimeAscends'] as num?)?.toInt() ?? 0,
       highestHardmodeCleared:
-          ((json['highestHardmodeCleared'] as num?)?.toInt() ?? 0).clamp(0, 10),
+          ((json['highestHardmodeCleared'] as num?)?.toInt() ?? 0).clamp(0, 20),
       gauntletBestFloor: (json['gauntletBestFloor'] as num?)?.toInt() ?? 0,
       lifetimeGauntletFloors:
           (json['lifetimeGauntletFloors'] as num?)?.toInt() ?? 0,
@@ -491,6 +557,9 @@ class MetaDepthState {
       partySlot5Unlocked: (json['partySlot5Unlocked'] as bool?) ?? false,
       unlockedSpecs:
           (json['unlockedSpecs'] as List<dynamic>?)?.cast<String>() ??
+              const [],
+      pendingHeroReveals:
+          (json['pendingHeroReveals'] as List<dynamic>?)?.cast<String>() ??
               const [],
       claimedWillRanks:
           (json['claimedWillRanks'] as List<dynamic>?)?.cast<String>() ??
@@ -507,6 +576,9 @@ class MetaDepthState {
       seasonKey: (json['seasonKey'] as String?) ?? '',
       claimedSeasonRewards:
           (json['claimedSeasonRewards'] as List<dynamic>?)?.cast<String>() ??
+              const [],
+      claimedWeekGoals:
+          (json['claimedWeekGoals'] as List<dynamic>?)?.cast<String>() ??
               const [],
     );
   }

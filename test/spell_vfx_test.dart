@@ -147,7 +147,7 @@ void main() {
       (AbilityId.arcaneBlast, HeroSpecId.arcane, SpellBoltStyle.arcane),
       (AbilityId.frostbolt, HeroSpecId.frostMage, SpellBoltStyle.frost),
       (AbilityId.corruption, HeroSpecId.affliction, SpellBoltStyle.shadow),
-      (AbilityId.starfire, HeroSpecId.balance, SpellBoltStyle.nature),
+      (AbilityId.starfire, HeroSpecId.balance, SpellBoltStyle.arcane),
       (AbilityId.rejuvenation, HeroSpecId.restorationDruid, SpellBoltStyle.nature),
       (AbilityId.holyShock, HeroSpecId.holyPaladin, SpellBoltStyle.holy),
       (AbilityId.garrote, HeroSpecId.assassination, SpellBoltStyle.nature),

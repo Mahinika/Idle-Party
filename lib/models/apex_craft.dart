@@ -1,3 +1,4 @@
+import '../core/equipment_factory.dart';
 import 'dungeon_def.dart';
 import 'hero.dart';
 import 'hero_spec.dart';
@@ -88,6 +89,18 @@ abstract final class ApexCraft {
       name: 'Ashen Shard',
       family: CraftMatFamily.shard,
       bossSources: 'Ashen Vault boss',
+    ),
+    CraftMatDef(
+      id: 'shard_grove',
+      name: 'Hollow Shard',
+      family: CraftMatFamily.shard,
+      bossSources: 'Hollow Grove boss',
+    ),
+    CraftMatDef(
+      id: 'shard_storm',
+      name: 'Stormwake Shard',
+      family: CraftMatFamily.shard,
+      bossSources: 'Stormwake Hollow boss',
     ),
     CraftMatDef(
       id: 'core_tank',
@@ -388,41 +401,8 @@ abstract final class ApexCraft {
       _ => 1.22,
     };
     final alBonus = ascensionLevel * 2;
-    final baseIlvl = 40 + alBonus + rank * 8 + (slot == EquipmentSlot.weapon ? 6 : 0);
-    final budget = (28 * powerMul + alBonus * 0.6).round();
-
-    var str = 0, agi = 0, sta = 0, intel = 0, spi = 0, sp = 0, armor = 0;
-    var ap = 0, crit = 0, aspd = 0;
-    switch (role) {
-      case SpecRoleTag.tank:
-        str = (budget * 0.35).round();
-        sta = (budget * 0.4).round();
-        armor = (budget * 0.45).round();
-        crit = 2 + rank;
-      case SpecRoleTag.healer:
-        intel = (budget * 0.35).round();
-        spi = (budget * 0.3).round();
-        sp = (budget * 0.35).round();
-        sta = (budget * 0.2).round();
-      case SpecRoleTag.meleeDps:
-        str = (budget * 0.35).round();
-        agi = (budget * 0.25).round();
-        ap = (budget * 0.2).round();
-        crit = 3 + rank * 2;
-        aspd = 2 + rank;
-        sta = (budget * 0.15).round();
-      case SpecRoleTag.rangedDps:
-        agi = (budget * 0.45).round();
-        ap = (budget * 0.25).round();
-        crit = 4 + rank * 2;
-        aspd = 3 + rank;
-        sta = (budget * 0.15).round();
-      case SpecRoleTag.caster:
-        intel = (budget * 0.4).round();
-        sp = (budget * 0.4).round();
-        crit = 3 + rank * 2;
-        sta = (budget * 0.15).round();
-    }
+    final baseIlvl =
+        40 + alBonus + rank * 8 + (slot == EquipmentSlot.weapon ? 6 : 0);
 
     ArmorType? armorType;
     WeaponType? weaponType;
@@ -444,7 +424,6 @@ abstract final class ApexCraft {
     } else if (slot == EquipmentSlot.offHand) {
       if (role == SpecRoleTag.tank) {
         offHandKind = OffHandKind.shield;
-        armor = (armor + budget * 0.2).round();
       } else if (role == SpecRoleTag.healer || role == SpecRoleTag.caster) {
         offHandKind = OffHandKind.frill;
       } else {
@@ -452,6 +431,62 @@ abstract final class ApexCraft {
         weaponType = WeaponType.sword;
         handed = WeaponHanded.oneHand;
       }
+    }
+
+    // Same ilvl→budget curve as dungeon drops (legendary quality + rank mul).
+    // Armor is carved from the pool (not stacked on top) — matches EquipmentFactory.create.
+    final baseBudget = EquipmentFactory.budgetForItemLevel(
+      itemLevel: baseIlvl,
+      rarity: LootRarity.legendary,
+      slot: slot,
+      handed: handed,
+    );
+    final budget = max(8, (baseBudget * powerMul).round());
+
+    final needsArmor = slot.isArmorSlot ||
+        slot == EquipmentSlot.cloak ||
+        (slot == EquipmentSlot.offHand && offHandKind == OffHandKind.shield);
+    final armor = needsArmor
+        ? EquipmentFactory.armorPointsFor(
+            armorType ??
+                (offHandKind == OffHandKind.shield ? ArmorType.plate : null),
+            budget,
+          )
+        : 0;
+    final pool = max(1, budget - armor);
+
+    var str = 0, agi = 0, sta = 0, intel = 0, spi = 0, sp = 0;
+    var ap = 0, crit = 0, aspd = 0;
+    final secTier = max(0, (baseIlvl - 5) ~/ 18);
+    // Role weights sum to ~1.0 of [pool] (armor already carved).
+    switch (role) {
+      case SpecRoleTag.tank:
+        str = (pool * 0.40).round();
+        sta = (pool * 0.55).round();
+        crit = 2 + rank + secTier ~/ 2;
+      case SpecRoleTag.healer:
+        intel = (pool * 0.30).round();
+        spi = (pool * 0.25).round();
+        sp = (pool * 0.30).round();
+        sta = (pool * 0.15).round();
+      case SpecRoleTag.meleeDps:
+        str = (pool * 0.35).round();
+        agi = (pool * 0.25).round();
+        ap = (pool * 0.20).round();
+        sta = (pool * 0.15).round();
+        crit = 3 + rank * 2 + secTier ~/ 2;
+        aspd = 2 + rank + secTier ~/ 2;
+      case SpecRoleTag.rangedDps:
+        agi = (pool * 0.50).round();
+        ap = (pool * 0.30).round();
+        sta = (pool * 0.15).round();
+        crit = 4 + rank * 2 + secTier ~/ 2;
+        aspd = 3 + rank + secTier ~/ 2;
+      case SpecRoleTag.caster:
+        intel = (pool * 0.42).round();
+        sp = (pool * 0.42).round();
+        sta = (pool * 0.15).round();
+        crit = 3 + rank * 2 + secTier ~/ 2;
     }
 
     return EquipmentItem(

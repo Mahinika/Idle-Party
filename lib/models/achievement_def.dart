@@ -151,6 +151,20 @@ abstract final class AchievementCatalog {
       essenceReward: 26,
       category: AchievementCategory.explorer,
     ),
+    AchievementDef(
+      id: 'clear_grove',
+      title: 'Root Severed',
+      description: 'Clear Hollow Grove.',
+      essenceReward: 30,
+      category: AchievementCategory.explorer,
+    ),
+    AchievementDef(
+      id: 'clear_storm',
+      title: 'Stormbreaker',
+      description: 'Clear Stormwake Hollow.',
+      essenceReward: 34,
+      category: AchievementCategory.explorer,
+    ),
     // —— Hardmode ——
     AchievementDef(
       id: 'hm_1',
@@ -341,7 +355,7 @@ abstract final class AchievementCatalog {
     AchievementDef(
       id: 'weekly_clear',
       title: 'Weekender',
-      description: 'Claim a weekly contract.',
+      description: 'Claim a daily vault reward.',
       essenceReward: 10,
       category: AchievementCategory.meta,
     ),

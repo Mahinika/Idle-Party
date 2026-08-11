@@ -23,6 +23,14 @@ enum MapPropKind {
   water,
   lava,
   anvil,
+  /// Stacked crates / shelf clutter.
+  shelf,
+  /// Iron bars / railing accent.
+  fence,
+  /// Tall stone/metal pillar accent.
+  pillar,
+  /// Floor debris / rubble pile.
+  rubble,
 }
 
 class MapProp {
@@ -430,6 +438,7 @@ abstract final class RoomLayouts {
         spawnPoints: spawnPoints,
         exitPoint: exitPoint,
         enemySpawns: enemySpawns,
+        chambers: <Chamber>[chamber],
         dungeonId: dungeonId,
         layoutSeed: layoutSeed,
         rng: rng,
@@ -572,6 +581,7 @@ abstract final class RoomLayouts {
         spawnPoints: spawnPoints,
         exitPoint: exitPoint,
         enemySpawns: enemySpawns,
+        chambers: <Chamber>[chamber],
         dungeonId: dungeonId,
         layoutSeed: layoutSeed,
         rng: rng,
@@ -632,6 +642,7 @@ abstract final class RoomLayouts {
         spawnPoints: spawnPoints,
         exitPoint: exitPoint,
         enemySpawns: spawns,
+        chambers: <Chamber>[chamber],
         dungeonId: dungeonId,
         layoutSeed: layoutSeed,
         rng: rng,
@@ -879,6 +890,7 @@ abstract final class RoomLayouts {
         spawnPoints: spawnPoints,
         exitPoint: exitPoint,
         enemySpawns: finalEnemySpawns,
+        chambers: chambers,
         dungeonId: dungeonId,
         layoutSeed: layoutSeed,
         rng: rng,
@@ -894,6 +906,7 @@ abstract final class RoomLayouts {
     required List<(int x, int y)> spawnPoints,
     required (int x, int y) exitPoint,
     required List<(int x, int y)> enemySpawns,
+    required List<Chamber> chambers,
     required String dungeonId,
     required int layoutSeed,
     required Random rng,
@@ -912,24 +925,50 @@ abstract final class RoomLayouts {
       block(p.$1, p.$2);
     }
 
-    final floorCells = <(int, int)>[];
+    bool touchesWall(int x, int y) {
+      const dirs = <(int, int)>[(0, 1), (0, -1), (1, 0), (-1, 0)];
+      for (final d in dirs) {
+        final nx = x + d.$1;
+        final ny = y + d.$2;
+        if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) return true;
+        if (tiles[ny * cols + nx] == TileKind.wall) return true;
+      }
+      return false;
+    }
+
+    bool inChamber(Chamber c, int x, int y) =>
+        x >= c.x && x < c.x + c.w && y >= c.y && y < c.y + c.h;
+
+    final edgeCells = <(int, int)>[];
+    final openCells = <(int, int)>[];
     for (var y = 0; y < rows; y++) {
       for (var x = 0; x < cols; x++) {
         if (tiles[y * cols + x] != TileKind.floor) continue;
         if (blocked.contains('$x,$y')) continue;
-        floorCells.add((x, y));
+        final cell = (x, y);
+        if (touchesWall(x, y)) {
+          edgeCells.add(cell);
+        } else {
+          openCells.add(cell);
+        }
       }
     }
 
-    final target = (floorCells.length * 0.028).floor().clamp(3, 18);
+    final floorCount = edgeCells.length + openCells.length;
+    // Dense enough to read in a zoomed-out camera (~12% of floor).
+    final target = (floorCount * 0.12).floor().clamp(16, 80);
     final props = <MapProp>[];
     final used = <String>{};
 
-    for (var i = 0; i < target && floorCells.isNotEmpty; i++) {
-      final idx = rng.nextInt(floorCells.length);
-      final cell = floorCells.removeAt(idx);
+    (int, int)? takeFrom(List<(int, int)> cells) {
+      if (cells.isEmpty) return null;
+      final idx = rng.nextInt(cells.length);
+      return cells.removeAt(idx);
+    }
+
+    void placeAt((int, int) cell) {
       final key = '${cell.$1},${cell.$2}';
-      if (used.contains(key)) continue;
+      if (used.contains(key)) return;
       used.add(key);
       props.add(
         MapProp(
@@ -938,6 +977,49 @@ abstract final class RoomLayouts {
           kind: pool[rng.nextInt(pool.length)],
         ),
       );
+    }
+
+    for (var i = 0; i < target; i++) {
+      // Prefer wall-adjacent clutter so open fight space stays readable.
+      final preferEdge = rng.nextDouble() < 0.75;
+      var cell = preferEdge ? takeFrom(edgeCells) : takeFrom(openCells);
+      cell ??= takeFrom(edgeCells) ?? takeFrom(openCells);
+      if (cell == null) break;
+      placeAt(cell);
+    }
+
+    // Guarantee each chamber has local clutter (corridors alone look empty).
+    const perChamberMin = 6;
+    for (final chamber in chambers) {
+      var count = 0;
+      for (final p in props) {
+        if (inChamber(chamber, p.x, p.y)) count++;
+      }
+      if (count >= perChamberMin) continue;
+
+      final localEdge = <(int, int)>[];
+      final localOpen = <(int, int)>[];
+      for (var y = chamber.y; y < chamber.y + chamber.h; y++) {
+        for (var x = chamber.x; x < chamber.x + chamber.w; x++) {
+          if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
+          if (tiles[y * cols + x] != TileKind.floor) continue;
+          if (blocked.contains('$x,$y') || used.contains('$x,$y')) continue;
+          final cell = (x, y);
+          if (touchesWall(x, y)) {
+            localEdge.add(cell);
+          } else {
+            localOpen.add(cell);
+          }
+        }
+      }
+      while (count < perChamberMin) {
+        final preferEdge = rng.nextDouble() < 0.8;
+        var cell = preferEdge ? takeFrom(localEdge) : takeFrom(localOpen);
+        cell ??= takeFrom(localEdge) ?? takeFrom(localOpen);
+        if (cell == null) break;
+        placeAt(cell);
+        count++;
+      }
     }
 
     return props;

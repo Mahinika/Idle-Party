@@ -17,15 +17,20 @@ Flutter CanvasKit has no real DOM widgets. Prefer **browser-playtest** mechanics
 flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
 
-2. Open `http://localhost:8080/` in Cursor browser; wait ~3–4s for load + start-menu unlock.
-3. `browser_lock` → snapshot / screenshot.
-4. Drive with `__idlePartyClick('…')` / button refs (see `browser-playtest`).
-5. Health:
+2. Open `http://localhost:8080/` in Cursor browser.
+3. **Phone mode (mandatory):** CDP `Emulation.setDeviceMetricsOverride` →
+   **360×780**, `deviceScaleFactor: 3`, `mobile: true` (Samsung A56). Confirm
+   `innerWidth === 360`. See **browser-playtest**.
+4. Wait ~3–4s for load + start-menu unlock.
+5. `browser_lock` → snapshot / screenshot.
+6. Drive with `__idlePartyClick('…')` / button refs (see `browser-playtest`).
+7. Health:
    - Page renders (not blank forever)
+   - Viewport is phone (360 wide), not desktop
    - Bridge live: `typeof window.__idlePartyClick === 'function'`
    - Changed UI reachable (hub / dungeon chrome)
-6. For hub polish checklist → follow **hub-smoke**.
-7. Unlock when done; report verdict + evidence.
+8. For hub polish checklist → follow **hub-smoke**.
+9. Unlock when done; report verdict + evidence.
 
 ## When
 

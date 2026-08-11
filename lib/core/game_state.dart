@@ -76,6 +76,9 @@ class GameState {
     this.soundMuted = false,
     this.vfxQuality = VfxQuality.full,
     this.autoSellMaxPower = 24,
+    this.autoSellMaxRarity = 1,
+    this.autoDisassembleMaxIlvl = 24,
+    this.autoDisassembleMaxRarity = 2,
     this.rogueUnlocked = false,
     this.seenTips = const <String>[],
     this.loadouts = const <GearLoadout>[],
@@ -85,6 +88,12 @@ class GameState {
     this.challengeBossRush = false,
     this.challengeNoFlask = false,
     this.hardmodeLevel = 0,
+    this.keystoneRunActive = false,
+    this.keystoneRunLevel = 0,
+    this.keystoneTimerMs = 0,
+    this.keystoneParMs = 0,
+    this.keystoneRunAffixes = const <String>[],
+    this.keystoneOutcome = '',
     this.colorblindMode = false,
     this.uiTextScale = 1.0,
     this.lastDailyDate,
@@ -214,10 +223,18 @@ class GameState {
   /// True when VFX is lite or minimal (spawn gates skip bursts/floaters).
   bool get reducedVfx => vfxQuality.reduced;
 
-  /// Auto-sell *drops on pickup* when itemLevel ≤ this (0 = off).
-  /// Bag AUTO SELL button ignores this and sells all non-upgrades.
-  /// Auto-sell pickup threshold as **item level** (legacy field name).
+  /// Auto-sell *drops on pickup* / bag cleanup when itemLevel ≤ this (0 = off).
+  /// Legacy field name — treat as auto-sell max item level. Pays **gold**.
   final int autoSellMaxPower;
+
+  /// Max [LootRarity.index] inclusive for auto-sell gold (0=common … 4=legendary).
+  final int autoSellMaxRarity;
+
+  /// Auto-disassemble junk to **essence** when itemLevel ≤ this (0 = off).
+  final int autoDisassembleMaxIlvl;
+
+  /// Max [LootRarity.index] inclusive for auto-disassemble.
+  final int autoDisassembleMaxRarity;
 
   /// Fourth hero (Rogue) unlocked after first Ascend.
   final bool rogueUnlocked;
@@ -245,8 +262,26 @@ class GameState {
   /// Challenge toggle: flasks are disabled entirely.
   final bool challengeNoFlask;
 
-  /// Hardmode key 0–10. Scales enemy power and loot (legendary chance best at 10).
+  /// Preferred keystone level 0–20 (0 = normal dungeon). Locked into a run on enter.
   final int hardmodeLevel;
+
+  /// True while inside a keystone dungeon run (not Gauntlet / Daily).
+  final bool keystoneRunActive;
+
+  /// Locked key level for the active run.
+  final int keystoneRunLevel;
+
+  /// Elapsed run timer (ms); live ticks + offline catch-up.
+  final int keystoneTimerMs;
+
+  /// Par time (ms) for a timed clear; idle-friendly.
+  final int keystoneParMs;
+
+  /// Affixes locked at run start.
+  final List<String> keystoneRunAffixes;
+
+  /// '' | `timed` | `depleted` after boss resolution this run.
+  final String keystoneOutcome;
 
   /// Accessibility: colorblind-friendly combat floater palette.
   final bool colorblindMode;
@@ -420,6 +455,18 @@ class GameState {
 
   int get legacyAttackBonus => metaDepth.legacyPoints;
 
+  /// Ascend Blessing pack: +2 ATK per stack.
+  int get ascendBlessingAttackBonus => metaDepth.ascendBlessings * 2;
+
+  /// Ascend Blessing pack: +1 DEF per stack.
+  int get ascendBlessingDefenseBonus => metaDepth.ascendBlessings;
+
+  /// Ascend Blessing pack: +4 VIT per stack.
+  int get ascendBlessingVitalityBonus => metaDepth.ascendBlessings * 4;
+
+  /// Ascend Blessing pack: +3% gold find per stack.
+  int get ascendBlessingGoldPercent => metaDepth.ascendBlessings * 3;
+
   int get torchOfflineGoldPercent => metaDepth.torchKeepLevel * 8;
 
   /// Heirloom AL bonus applied to ATK when soulbound weapon is set.
@@ -452,8 +499,8 @@ class GameState {
     return '';
   }
 
-  /// AL-gated hardmode cap (0–10).
-  int get effectiveMaxHardmode => min(10, 3 + ascensionLevel ~/ 2);
+  /// AL-gated keystone cap (0–20). AL0 → 3, grows with Ascension.
+  int get effectiveMaxHardmode => min(20, max(2, 3 + ascensionLevel));
 
   /// Sum of all heroes' gear attack (UI / power checks).
   int get equipmentAttackBonus => heroes.fold<int>(
@@ -506,14 +553,16 @@ class GameState {
       soulboundAttackBonus +
       soulboundRefineBonus +
       legacyAttackBonus +
-      heirloomAttackBonus;
+      heirloomAttackBonus +
+      ascendBlessingAttackBonus;
 
   int get metaDefenseBonus =>
       defenseBonus +
       relicDefenseBonus +
       ascensionDefenseBonus +
       soulboundDefenseBonus +
-      soulboundRefineBonus;
+      soulboundRefineBonus +
+      ascendBlessingDefenseBonus;
 
   int get metaVitalityBonus =>
       vitalityBonus +
@@ -521,7 +570,8 @@ class GameState {
       ascensionVitalityBonus +
       sanctuaryVitalityBonus +
       soulboundVitalityBonus +
-      heirloomVitalityBonus;
+      heirloomVitalityBonus +
+      ascendBlessingVitalityBonus;
 
   int get totalAttackBonus => metaAttackBonus +
       heroes.fold<int>(0, (s, h) => s + h.gearAttackBonus);
@@ -728,6 +778,9 @@ class GameState {
     VfxQuality? vfxQuality,
     bool? reducedVfx,
     int? autoSellMaxPower,
+    int? autoSellMaxRarity,
+    int? autoDisassembleMaxIlvl,
+    int? autoDisassembleMaxRarity,
     bool? rogueUnlocked,
     List<String>? seenTips,
     List<GearLoadout>? loadouts,
@@ -737,6 +790,12 @@ class GameState {
     bool? challengeBossRush,
     bool? challengeNoFlask,
     int? hardmodeLevel,
+    bool? keystoneRunActive,
+    int? keystoneRunLevel,
+    int? keystoneTimerMs,
+    int? keystoneParMs,
+    List<String>? keystoneRunAffixes,
+    String? keystoneOutcome,
     bool? colorblindMode,
     double? uiTextScale,
     String? lastDailyDate,
@@ -808,6 +867,11 @@ class GameState {
               ? this.vfxQuality
               : (reducedVfx ? VfxQuality.lite : VfxQuality.full)),
       autoSellMaxPower: autoSellMaxPower ?? this.autoSellMaxPower,
+      autoSellMaxRarity: autoSellMaxRarity ?? this.autoSellMaxRarity,
+      autoDisassembleMaxIlvl:
+          autoDisassembleMaxIlvl ?? this.autoDisassembleMaxIlvl,
+      autoDisassembleMaxRarity:
+          autoDisassembleMaxRarity ?? this.autoDisassembleMaxRarity,
       rogueUnlocked: rogueUnlocked ?? this.rogueUnlocked,
       seenTips: seenTips ?? this.seenTips,
       loadouts: loadouts ?? this.loadouts,
@@ -817,6 +881,12 @@ class GameState {
       challengeBossRush: challengeBossRush ?? this.challengeBossRush,
       challengeNoFlask: challengeNoFlask ?? this.challengeNoFlask,
       hardmodeLevel: hardmodeLevel ?? this.hardmodeLevel,
+      keystoneRunActive: keystoneRunActive ?? this.keystoneRunActive,
+      keystoneRunLevel: keystoneRunLevel ?? this.keystoneRunLevel,
+      keystoneTimerMs: keystoneTimerMs ?? this.keystoneTimerMs,
+      keystoneParMs: keystoneParMs ?? this.keystoneParMs,
+      keystoneRunAffixes: keystoneRunAffixes ?? this.keystoneRunAffixes,
+      keystoneOutcome: keystoneOutcome ?? this.keystoneOutcome,
       colorblindMode: colorblindMode ?? this.colorblindMode,
       uiTextScale: uiTextScale ?? this.uiTextScale,
       lastDailyDate: lastDailyDate ?? this.lastDailyDate,
@@ -900,6 +970,9 @@ class GameState {
     'vfxQuality': vfxQuality.name,
     'reducedVfx': reducedVfx,
     'autoSellMaxPower': autoSellMaxPower,
+    'autoSellMaxRarity': autoSellMaxRarity,
+    'autoDisassembleMaxIlvl': autoDisassembleMaxIlvl,
+    'autoDisassembleMaxRarity': autoDisassembleMaxRarity,
     'rogueUnlocked': rogueUnlocked,
     'seenTips': seenTips,
     'loadouts': loadouts.map((l) => l.toJson()).toList(),
@@ -909,6 +982,12 @@ class GameState {
     'challengeBossRush': challengeBossRush,
     'challengeNoFlask': challengeNoFlask,
     'hardmodeLevel': hardmodeLevel,
+    'keystoneRunActive': keystoneRunActive,
+    'keystoneRunLevel': keystoneRunLevel,
+    'keystoneTimerMs': keystoneTimerMs,
+    'keystoneParMs': keystoneParMs,
+    'keystoneRunAffixes': keystoneRunAffixes,
+    'keystoneOutcome': keystoneOutcome,
     'colorblindMode': colorblindMode,
     'uiTextScale': uiTextScale,
     if (lastDailyDate != null) 'lastDailyDate': lastDailyDate,
@@ -1097,6 +1176,10 @@ class GameState {
         legacyReduced: json['reducedVfx'] as bool?,
       ),
       autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 24),
+      autoSellMaxRarity: _jsonInt(json['autoSellMaxRarity'], 1).clamp(0, 4),
+      autoDisassembleMaxIlvl: _jsonInt(json['autoDisassembleMaxIlvl'], 24),
+      autoDisassembleMaxRarity:
+          _jsonInt(json['autoDisassembleMaxRarity'], 2).clamp(0, 4),
       rogueUnlocked: rogueUnlocked,
       seenTips: (json['seenTips'] as List<dynamic>?)
               ?.map((e) => e.toString())
@@ -1120,7 +1203,19 @@ class GameState {
           const <String>[],
       challengeBossRush: (json['challengeBossRush'] as bool?) ?? false,
       challengeNoFlask: (json['challengeNoFlask'] as bool?) ?? false,
-      hardmodeLevel: ((json['hardmodeLevel'] as num?)?.toInt() ?? 0).clamp(0, 10),
+      hardmodeLevel:
+          ((json['hardmodeLevel'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      keystoneRunActive: (json['keystoneRunActive'] as bool?) ?? false,
+      keystoneRunLevel:
+          ((json['keystoneRunLevel'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      keystoneTimerMs:
+          max(0, (json['keystoneTimerMs'] as num?)?.toInt() ?? 0),
+      keystoneParMs: max(0, (json['keystoneParMs'] as num?)?.toInt() ?? 0),
+      keystoneRunAffixes: (json['keystoneRunAffixes'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const <String>[],
+      keystoneOutcome: (json['keystoneOutcome'] as String?) ?? '',
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
       uiTextScale: (json['uiTextScale'] as num?)?.toDouble() ?? 1.0,
       lastDailyDate: json['lastDailyDate'] as String?,

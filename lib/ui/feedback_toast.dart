@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'game_theme.dart';
 
-/// Shared feedback toast — keep above meta overlays / hub scrims so players
-/// always see director messages (equip, ascend, save, unlock, etc.).
+/// Shared feedback toast for director messages (equip, claim, unlock, etc.).
+/// Callers should hide this while full-screen meta overlays are open so it
+/// does not cover Contracts / Forge chrome.
 class FeedbackToast extends StatelessWidget {
   const FeedbackToast({
     super.key,
@@ -25,19 +26,39 @@ class FeedbackToast extends StatelessWidget {
           liveRegion: true,
           label: message,
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xF214110C),
-              borderRadius: BorderRadius.circular(3),
-              border: Border.all(color: GameTheme.borderLit),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  GameTheme.stoneRaised.withValues(alpha: 0.96),
+                  GameTheme.stoneDeep.withValues(alpha: 0.96),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(GameTheme.radiusMd),
+              border: Border.all(
+                color: GameTheme.borderLit.withValues(alpha: 0.55),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: GameTheme.torch.withValues(alpha: 0.12),
+                  blurRadius: 16,
+                ),
+                const BoxShadow(
+                  color: Color(0x88000000),
+                  blurRadius: 18,
+                  offset: Offset(0, 8),
+                ),
+              ],
             ),
             child: Text(
               message,
               textAlign: TextAlign.center,
               maxLines: maxLines,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 15),
+              style: GameTheme.body(size: 16),
             ),
           ),
         ),

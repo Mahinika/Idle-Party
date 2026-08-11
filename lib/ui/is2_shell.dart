@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,12 +8,12 @@ import 'package:flutter/services.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/keystone.dart';
 import '../core/meta_systems.dart';
 import '../models/class_ability.dart';
 import '../models/dungeon_def.dart';
 import '../models/dungeon_mode.dart';
 import '../models/enemy.dart';
-import '../models/gear_set.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
@@ -35,6 +36,7 @@ import 'meta_overlays.dart';
 import 'spatial_dungeon_view.dart';
 import 'first_session_tips.dart';
 import 'guides_overlay.dart';
+import 'item_tooltip.dart';
 import 'web_click_bridge.dart';
 
 Color _rarityBorderColor(LootRarity rarity) => switch (rarity) {
@@ -66,15 +68,6 @@ String _formatCount(int n) {
   }
   return '$n';
 }
-
-String _archetypeLabel(EnemyArchetype archetype) => switch (archetype) {
-  EnemyArchetype.swarm => 'SWARM',
-  EnemyArchetype.brute => 'BRUTE',
-  EnemyArchetype.tank => 'TANK',
-  EnemyArchetype.ranged => 'RANGED',
-  EnemyArchetype.glass => 'GLASS',
-  EnemyArchetype.support => 'SUPPORT',
-};
 
 bool _isSoulboundItem(EquipmentItem item) => item.id.startsWith('soulbound_');
 
@@ -137,6 +130,10 @@ enum Is2Overlay {
   teamComposition,
   guides,
   prestigeShop,
+  /// Hub/dungeon POWER pillar: forge · sanctuary · market · essence.
+  power,
+  /// Hub/dungeon META pillar: keystone · contracts · beast · collection · help.
+  meta,
 }
 
 class _Is2ShellState extends State<Is2Shell> {
@@ -148,6 +145,8 @@ class _Is2ShellState extends State<Is2Shell> {
   int _abilityHeroIndex = 0;
   /// 0 = GEAR, 1 = BAG, 2 = TOOLS inside the inventory dock.
   int _inventoryTab = 1;
+  /// When set, BAG only lists gear that can fill this paper-doll slot.
+  EquipmentSlot? _bagSlotFilter;
   bool _heldBridgeLayer = false;
 
   GameState get state => widget.director.state;
@@ -163,11 +162,18 @@ class _Is2ShellState extends State<Is2Shell> {
   }
 
   bool _overlayHoldsBridge(Is2Overlay overlay) =>
-      overlay != Is2Overlay.none && overlay != Is2Overlay.inventory;
+      overlay != Is2Overlay.none;
 
   void _equipSelectedTo(int heroIndex) {
     final id = _selectedId;
     if (id == null) return;
+    if (!state.gearStash.any((g) => g.id == id)) {
+      widget.director.showToast(
+        'Already worn — use UNEQUIP, or pick a BAG item',
+        life: 2.4,
+      );
+      return;
+    }
     final item = GameLogic.findGear(state, id);
     EquipmentSlot? into;
     if (item != null &&
@@ -175,15 +181,38 @@ class _Is2ShellState extends State<Is2Shell> {
         heroIndex < state.heroes.length) {
       into = GameLogic.compareForHero(state.heroes[heroIndex], item).intoSlot;
     }
+    final beforeIds = state.gearStash.map((g) => g.id).toSet();
     widget.director.equipFromStash(
       id,
       heroIndex: heroIndex,
       intoSlot: into,
     );
+    final equipped = !widget.director.state.gearStash.any((g) => g.id == id) &&
+        beforeIds.contains(id);
+    if (!equipped) {
+      widget.director.showToast(
+        'Cannot equip on that hero (class / level / slot)',
+        life: 2.6,
+      );
+      return;
+    }
     setState(() {
       _equipHeroIndex = heroIndex;
       _selectedId = null;
+      _bagSlotFilter = null;
     });
+  }
+
+  void _browseBagSlot(EquipmentSlot slot) {
+    setState(() {
+      _bagSlotFilter = slot;
+      _selectedId = null;
+      // Stay on GEAR when the sheet shows an inline bag; jump to BAG otherwise.
+      if (_inventoryTab != 0) {
+        _inventoryTab = 1;
+      }
+    });
+    _setOverlay(Is2Overlay.inventory);
   }
 
   @override
@@ -191,7 +220,8 @@ class _Is2ShellState extends State<Is2Shell> {
     super.initState();
     _overlay = widget.initialOverlay;
     if (_overlay == Is2Overlay.inventory) {
-      _inventoryTab = 1;
+      // PARTY pillar opens on GEAR (paper doll), not bag.
+      _inventoryTab = 0;
     }
     // Hub meta shell sits over the live hub — isolate click bridge.
     // Dungeon meta overlays (forge etc.) do the same while open.
@@ -222,6 +252,14 @@ class _Is2ShellState extends State<Is2Shell> {
   }
 
   void _putInCombinator(String id) {
+    // Merge is bag-only — equipped pieces must be unequipped first.
+    if (GameLogic.findStashGear(widget.director.state, id) == null) {
+      widget.director.showToast(
+        'Unequip to bag before merging',
+        life: 2.2,
+      );
+      return;
+    }
     setState(() {
       if (_combineA == id) {
         _combineA = null;
@@ -247,7 +285,7 @@ class _Is2ShellState extends State<Is2Shell> {
       }
     });
     if (_combineA != null && _combineB != null) {
-      widget.director.showToast('Merge ready — check TOOLS', life: 2.2);
+      widget.director.showToast('Merge ready — check MERGE', life: 2.2);
     } else if (_combineA != null && _combineB == null) {
       widget.director.showToast(
         'Added to merge · pick another same-slot item',
@@ -256,15 +294,17 @@ class _Is2ShellState extends State<Is2Shell> {
     }
   }
 
-  Widget _inventoryDock() {
+  Widget _inventoryDock({bool flatChrome = false}) {
     final d = widget.director;
     return _InventoryDock(
       state: state,
+      director: d,
       selectedId: _selectedId,
       combineA: _combineA,
       combineB: _combineB,
       initialTab: _inventoryTab,
       onTabChanged: (i) => setState(() => _inventoryTab = i),
+      flatChrome: flatChrome,
       onSelect: _select,
       onPutCombine: _putInCombinator,
       onEquip: () {
@@ -274,6 +314,10 @@ class _Is2ShellState extends State<Is2Shell> {
       onSell: () {
         final id = _selectedId ?? _combineA;
         if (id == null) return;
+        if (!state.gearStash.any((g) => g.id == id)) {
+          d.showToast('Unequip first — SELL only works from BAG', life: 2.4);
+          return;
+        }
         d.sellGear(id);
         setState(() {
           if (_selectedId == id) _selectedId = null;
@@ -281,7 +325,13 @@ class _Is2ShellState extends State<Is2Shell> {
           if (_combineB == id) _combineB = null;
         });
       },
-      onUnequip: (slot) => d.unequipSlot(slot, heroIndex: _equipHeroIndex),
+      onUnequip: (slot) {
+        d.unequipSlot(slot, heroIndex: _equipHeroIndex);
+        setState(() => _selectedId = null);
+      },
+      bagSlotFilter: _bagSlotFilter,
+      onBrowseBagSlot: _browseBagSlot,
+      onClearBagSlotFilter: () => setState(() => _bagSlotFilter = null),
       equipHeroIndex: _equipHeroIndex,
       onEquipHeroChanged: (i) => setState(() => _equipHeroIndex = i),
       onEquipToHero: _equipSelectedTo,
@@ -302,6 +352,9 @@ class _Is2ShellState extends State<Is2Shell> {
       },
       onBindSoulbound: () => d.bindSoulbound(heroIndex: _equipHeroIndex),
       onAutoSell: d.autoSellJunk,
+      onAutoDisassemble: d.autoDisassembleJunk,
+      onCleanBag: d.cleanBagJunk,
+      onOpenFilters: () => _openOverlay(Is2Overlay.settings),
       onAutoMerge: () {
         d.autoMergeJunk();
         setState(() {
@@ -327,7 +380,13 @@ class _Is2ShellState extends State<Is2Shell> {
       _setOverlay(Is2Overlay.none);
       return;
     }
-    setState(() => _inventoryTab = 1);
+    setState(() {
+      _inventoryTab = 1;
+      // Fresh open from nav shows the full bag (slot browse sets filter itself).
+      if (_overlay != Is2Overlay.inventory) {
+        _bagSlotFilter = null;
+      }
+    });
     _setOverlay(Is2Overlay.inventory);
   }
 
@@ -345,7 +404,20 @@ class _Is2ShellState extends State<Is2Shell> {
   void _openOverlay(Is2Overlay overlay) => _setOverlay(overlay);
 
   void _setOverlay(Is2Overlay overlay) {
-    setState(() => _overlay = overlay);
+    if (overlay != Is2Overlay.none &&
+        overlay != Is2Overlay.inventory) {
+      widget.director.clearToast();
+    }
+    if (overlay == Is2Overlay.inventory ||
+        overlay == Is2Overlay.teamComposition) {
+      widget.director.ackPendingHeroReveals();
+    }
+    setState(() {
+      _overlay = overlay;
+      if (overlay == Is2Overlay.none) {
+        _bagSlotFilter = null;
+      }
+    });
     if (!widget.hubMode) {
       _ensureBridgeLayer(_overlayHoldsBridge(overlay));
     }
@@ -370,105 +442,6 @@ class _Is2ShellState extends State<Is2Shell> {
     if (_overlay != Is2Overlay.none) {
       _setOverlay(Is2Overlay.none);
     }
-  }
-
-  List<({String header, List<({String label, VoidCallback onTap})> items})>
-      _moreSections({required bool includeSettings}) {
-    final claimable = state.missions.where((m) => m.isComplete).length;
-    return [
-      (
-        header: 'GEAR',
-        items: [
-          (
-            label: 'FORGE',
-            onTap: () => _openOverlay(Is2Overlay.forge),
-          ),
-          (
-            label: 'LOADOUTS',
-            onTap: () => _openOverlay(Is2Overlay.loadouts),
-          ),
-          (
-            label: 'PARTY',
-            onTap: () => _openOverlay(Is2Overlay.teamComposition),
-          ),
-        ],
-      ),
-      (
-        header: 'PROGRESS',
-        items: [
-          (
-            label: claimable > 0 ? 'CONTRACTS ($claimable)' : 'CONTRACTS',
-            onTap: () => _openOverlay(Is2Overlay.jobs),
-          ),
-          (
-            label: 'SANCTUARY',
-            onTap: () => _openOverlay(Is2Overlay.sanctuary),
-          ),
-          (
-            label: 'MARKET',
-            onTap: () => _openOverlay(Is2Overlay.market),
-          ),
-          (
-            label: 'BEAST PEN',
-            onTap: () => _openOverlay(Is2Overlay.beast),
-          ),
-          (
-            label: 'ESSENCE SHOP',
-            onTap: () => _openOverlay(Is2Overlay.prestigeShop),
-          ),
-        ],
-      ),
-      (
-        header: 'INFO',
-        items: [
-          (
-            label: 'ACHIEVEMENTS',
-            onTap: () => _openOverlay(Is2Overlay.achievements),
-          ),
-          (
-            label: 'CODEX',
-            onTap: () => _openOverlay(Is2Overlay.codex),
-          ),
-          (
-            label: 'GUIDES',
-            onTap: () => _openOverlay(Is2Overlay.guides),
-          ),
-          if (includeSettings)
-            (
-              label: 'SETTINGS',
-              onTap: () => _openOverlay(Is2Overlay.settings),
-            ),
-        ],
-      ),
-    ];
-  }
-
-  void _showMoreMenu(BuildContext context) {
-    // Hub meta shell already came from Hub → MORE; don't re-list the same menu.
-    if (widget.hubMode) {
-      widget.onLeaveDungeon?.call();
-      return;
-    }
-    final sections = [
-      ..._moreSections(includeSettings: false),
-      if (widget.onLeaveDungeon != null)
-        (
-          header: '',
-          items: [
-            (
-              label: 'RETURN TO HUB',
-              onTap: () =>
-                  confirmLeaveDungeon(context, widget.onLeaveDungeon!),
-            ),
-          ],
-        ),
-    ];
-    MenuChrome.showMenuSheet(
-      context: context,
-      title: 'MORE',
-      sections: sections,
-    ).whenComplete(_syncCombatPause);
-    widget.director.setUiPaused(true);
   }
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
@@ -512,19 +485,27 @@ class _Is2ShellState extends State<Is2Shell> {
   }
 
   _BottomNavTab _navActive() {
-    final dockVisible = _overlay == Is2Overlay.inventory ||
-        (widget.hubMode &&
-            (_overlay == Is2Overlay.none ||
-                _overlay == Is2Overlay.inventory));
-    if (widget.hubMode &&
-        _overlay != Is2Overlay.none &&
-        _overlay != Is2Overlay.inventory) {
-      return _BottomNavTab.none;
-    }
-    if (!dockVisible) return _BottomNavTab.none;
-    return switch (_inventoryTab) {
-      0 => _BottomNavTab.gear,
-      1 => _BottomNavTab.bag,
+    // Hub + dungeon share PARTY / POWER / META pillars.
+    return switch (_overlay) {
+      Is2Overlay.inventory => _inventoryTab == 0
+          ? _BottomNavTab.gear
+          : _inventoryTab == 1
+              ? _BottomNavTab.bag
+              : _BottomNavTab.party,
+      Is2Overlay.power ||
+      Is2Overlay.forge ||
+      Is2Overlay.sanctuary ||
+      Is2Overlay.market ||
+      Is2Overlay.prestigeShop =>
+        _BottomNavTab.power,
+      Is2Overlay.meta ||
+      Is2Overlay.jobs ||
+      Is2Overlay.beast ||
+      Is2Overlay.achievements ||
+      Is2Overlay.codex ||
+      Is2Overlay.guides ||
+      Is2Overlay.settings =>
+        _BottomNavTab.meta,
       _ => _BottomNavTab.none,
     };
   }
@@ -571,11 +552,24 @@ class _Is2ShellState extends State<Is2Shell> {
                 _BottomNav(
                   stashCount: state.gearStash.length,
                   stashCap: GameLogic.maxGearStashFor(state),
-                  hubClose: true,
+                  hubPillars: true,
                   active: _navActive(),
-                  onGear: _openGear,
-                  onBag: _openBag,
-                  onMore: () => _showMoreMenu(context),
+                  onGear: () {
+                    setState(() => _inventoryTab = 0);
+                    _openOverlay(Is2Overlay.inventory);
+                  },
+                  onBag: () {
+                    setState(() => _inventoryTab = 1);
+                    _openOverlay(Is2Overlay.inventory);
+                  },
+                  onMore: () => _openOverlay(Is2Overlay.power),
+                  onParty: () {
+                    setState(() => _inventoryTab = 0);
+                    _openOverlay(Is2Overlay.inventory);
+                  },
+                  onPower: () => _openOverlay(Is2Overlay.power),
+                  onMeta: () => _openOverlay(Is2Overlay.meta),
+                  onHubClose: () => widget.onLeaveDungeon?.call(),
                 ),
               ],
             ),
@@ -586,7 +580,12 @@ class _Is2ShellState extends State<Is2Shell> {
           FirstSessionTips(director: d),
           if (d.toast != null)
             Positioned.fill(
-              child: FeedbackToast(message: d.toast!),
+              child: FeedbackToast(
+                message: d.toast!,
+                alignment: _overlay != Is2Overlay.none
+                    ? const Alignment(0, -0.82)
+                    : const Alignment(0, -0.42),
+              ),
             ),
         ],
       );
@@ -621,10 +620,16 @@ class _Is2ShellState extends State<Is2Shell> {
                       children: [
                         SpatialDungeonView(director: d),
                         if (!d.awaitingWipeChoice) ...[
+                          // Calm map-first HUD: meter (tap), target chip, party strip.
                           Positioned(
                             left: hudSide,
                             top: GameTheme.clusterGap / 2,
                             child: _DpsMeter(director: d),
+                          ),
+                          Positioned(
+                            right: hudSide,
+                            top: GameTheme.clusterGap / 2,
+                            child: _TargetCornerHud(director: d),
                           ),
                           Positioned(
                             left: hudSide,
@@ -638,13 +643,6 @@ class _Is2ShellState extends State<Is2Shell> {
                               onUseConsumable: d.useConsumable,
                             ),
                           ),
-                          Positioned(
-                            right: hudSide,
-                            bottom: GameTheme.isCompactWidth(context)
-                                ? hudBottom + 118
-                                : hudBottom,
-                            child: _TargetCornerHud(director: d),
-                          ),
                         ],
                       ],
                     );
@@ -654,10 +652,20 @@ class _Is2ShellState extends State<Is2Shell> {
               _BottomNav(
                 stashCount: state.gearStash.length,
                 stashCap: GameLogic.maxGearStashFor(state),
+                hubPillars: true,
                 active: _navActive(),
                 onGear: _openGear,
                 onBag: _openBag,
-                onMore: () => _showMoreMenu(context),
+                onMore: () => _openOverlay(Is2Overlay.power),
+                onParty: () {
+                  setState(() => _inventoryTab = 0);
+                  _openOverlay(Is2Overlay.inventory);
+                },
+                onPower: () => _openOverlay(Is2Overlay.power),
+                onMeta: () => _openOverlay(Is2Overlay.meta),
+                onHubClose: widget.onLeaveDungeon == null
+                    ? null
+                    : () => confirmLeaveDungeon(context, widget.onLeaveDungeon!),
               ),
             ],
           ),
@@ -666,22 +674,47 @@ class _Is2ShellState extends State<Is2Shell> {
         FirstSessionTips(director: d),
         if (d.toast != null)
           Positioned.fill(
-            child: FeedbackToast(message: d.toast!),
+            child: FeedbackToast(
+              message: d.toast!,
+              alignment: _overlay != Is2Overlay.none
+                  ? const Alignment(0, -0.82)
+                  : const Alignment(0, -0.42),
+            ),
           ),
       ],
     );
   }
 
   Widget _metaOverlay(GameDirector d) {
+    final shortSheet = switch (_overlay) {
+      Is2Overlay.jobs ||
+      Is2Overlay.market ||
+      Is2Overlay.beast ||
+      Is2Overlay.prestigeShop =>
+        true,
+      _ => false,
+    };
+    // Phone-first: short menus still need most of the screen (list + claims).
+    final heightFactor = switch (_overlay) {
+      Is2Overlay.inventory => 1.0,
+      Is2Overlay.power || Is2Overlay.meta => 0.96,
+      _ when shortSheet => 0.84,
+      _ => 0.96,
+    };
     return _OverlayScrim(
       title: switch (_overlay) {
         Is2Overlay.forge => 'FORGE',
+        Is2Overlay.power => 'POWER',
+        Is2Overlay.meta => 'META',
         Is2Overlay.jobs => 'CONTRACTS',
         Is2Overlay.sanctuary => 'SANCTUARY',
         Is2Overlay.inventory => switch (_inventoryTab) {
           0 => 'GEAR',
           1 => 'BAG',
-          _ => 'TOOLS',
+          2 => 'MERGE',
+          3 => 'LOADOUTS',
+          4 => 'ROSTER',
+          _ => 'PARTY',
         },
         Is2Overlay.settings => 'SETTINGS',
         Is2Overlay.market => 'MARKET',
@@ -694,23 +727,31 @@ class _Is2ShellState extends State<Is2Shell> {
         Is2Overlay.prestigeShop => 'ESSENCE SHOP',
         Is2Overlay.none => '',
       },
+      heightFactor: heightFactor,
       onClose: _closeOverlayOrLeaveHub,
       child: switch (_overlay) {
         Is2Overlay.forge => SingleChildScrollView(
           child: _ForgeOverlay(director: d),
         ),
+        Is2Overlay.power => _PowerPillar(director: d),
+        Is2Overlay.meta => _MetaPillar(
+            director: d,
+            onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
+          ),
         Is2Overlay.jobs => SingleChildScrollView(
           child: _JobsOverlay(director: d),
         ),
         Is2Overlay.sanctuary => SingleChildScrollView(
           child: _SanctuaryOverlay(director: d),
         ),
-        Is2Overlay.inventory => _inventoryDock(),
+        Is2Overlay.inventory => _inventoryDock(flatChrome: true),
         Is2Overlay.settings => _SettingsOverlay(
               director: d,
               onClose: () => _setOverlay(Is2Overlay.none),
             ),
-        Is2Overlay.market => _MarketOverlay(director: d),
+        Is2Overlay.market => SingleChildScrollView(
+          child: _MarketOverlay(director: d),
+        ),
         Is2Overlay.beast => SingleChildScrollView(
           child: _BeastOverlay(director: d),
         ),
@@ -784,8 +825,9 @@ class _TopHud extends StatelessWidget {
     final softcap = hubMode ? 0 : GameLogic.levelsUntilSoftcap(state);
 
     if (hubMode) {
+      final phone = GameTheme.isPhoneWidth(context);
       return Container(
-        padding: const EdgeInsets.fromLTRB(10, 8, 6, 8),
+        padding: EdgeInsets.fromLTRB(10, phone ? 4 : 8, 6, phone ? 4 : 8),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -803,7 +845,7 @@ class _TopHud extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                "HERO'S KEEP",
+                phone ? 'KEEP' : "HERO'S KEEP",
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.pixel(size: GameTheme.hudPixel),
               ),
@@ -928,7 +970,7 @@ class _TopHud extends StatelessWidget {
                         enabled: false,
                         child: Text(
                           'F$floor'
-                          '${state.hardmodeLevel > 0 ? ' HM+${state.hardmodeLevel}' : ''}'
+                          '${state.keystoneRunActive ? ' KEY+${state.keystoneRunLevel}' : ''}'
                           ' · ${_formatCount(state.gold)}g',
                           style: GameTheme.pixel(
                             size: GameTheme.hudPixel,
@@ -988,7 +1030,9 @@ class _TopHud extends StatelessWidget {
                     Flexible(
                       child: Text(
                         '$dungeonName  F$floor'
-                        '${state.hardmodeLevel > 0 ? '  HM+${state.hardmodeLevel}' : ''}',
+                        '${state.keystoneRunActive ? '  KEY+${state.keystoneRunLevel}' : ''}'
+                        '${state.keystoneRunActive ? '  ${Keystone.formatTimer(state.keystoneTimerMs)}/${Keystone.formatTimer(state.keystoneParMs)}' : ''}'
+                        '${state.keystoneOutcome == 'timed' ? '  TIMED' : state.keystoneOutcome == 'depleted' ? '  DEPLETED' : ''}',
                         overflow: TextOverflow.ellipsis,
                         style: GameTheme.pixel(size: GameTheme.hudPixel),
                       ),
@@ -1130,7 +1174,7 @@ class _TopHud extends StatelessWidget {
   }
 }
 
-enum _BottomNavTab { none, gear, bag, more }
+enum _BottomNavTab { none, gear, bag, more, party, power, meta }
 
 class _BottomNav extends StatelessWidget {
   const _BottomNav({
@@ -1140,7 +1184,11 @@ class _BottomNav extends StatelessWidget {
     required this.onBag,
     required this.onMore,
     this.stashCap,
-    this.hubClose = false,
+    this.hubPillars = false,
+    this.onParty,
+    this.onPower,
+    this.onMeta,
+    this.onHubClose,
   });
 
   final int stashCount;
@@ -1149,8 +1197,12 @@ class _BottomNav extends StatelessWidget {
   final VoidCallback onGear;
   final VoidCallback onBag;
   final VoidCallback onMore;
-  /// Hub meta shell: third tab closes back to hub instead of another MORE sheet.
-  final bool hubClose;
+  /// Unified pillars: PARTY / POWER / META / HUB (hub shell + dungeon).
+  final bool hubPillars;
+  final VoidCallback? onParty;
+  final VoidCallback? onPower;
+  final VoidCallback? onMeta;
+  final VoidCallback? onHubClose;
 
   @override
   Widget build(BuildContext context) {
@@ -1158,47 +1210,107 @@ class _BottomNav extends StatelessWidget {
     final nearlyFull = !full &&
         stashCap != null &&
         stashCount >= (stashCap! * 0.9).ceil();
-    final bagLabel = full
-        ? 'BAG FULL'
-        : nearlyFull
-            ? 'BAG $stashCount!'
-            : 'BAG $stashCount';
+    final bagLabel = stashCap == null
+        ? 'BAG $stashCount'
+        : full
+            ? 'BAG FULL $stashCount/$stashCap'
+            : nearlyFull
+                ? 'BAG $stashCount/$stashCap!'
+                : 'BAG $stashCount/$stashCap';
     return Material(
-      color: GameTheme.ink.withValues(alpha: 0.78),
+      color: Colors.transparent,
       child: Container(
-          height: GameTheme.bottomNavHeight,
-          decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: Color(0x665A5040))),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: _BottomNavItem(
-                  label: 'GEAR',
-                  icon: KenneyAssets.iconSword,
-                  selected: active == _BottomNavTab.gear,
-                  onTap: onGear,
-                ),
-              ),
-              Expanded(
-                child: _BottomNavItem(
-                  label: bagLabel,
-                  icon: KenneyAssets.chestClosed,
-                  selected: active == _BottomNavTab.bag,
-                  urgent: full || nearlyFull,
-                  onTap: onBag,
-                ),
-              ),
-              Expanded(
-                child: _BottomNavItem(
-                  label: hubClose ? 'HUB' : 'MORE',
-                  icon: KenneyAssets.iconDoor,
-                  selected: active == _BottomNavTab.more,
-                  onTap: onMore,
-                ),
-              ),
+        height: GameTheme.bottomNavHeight,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              GameTheme.stone.withValues(alpha: 0.96),
+              GameTheme.ink.withValues(alpha: 0.98),
             ],
           ),
+          border: Border(
+            top: BorderSide(
+              color: GameTheme.borderLit.withValues(alpha: 0.35),
+            ),
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x88000000),
+              blurRadius: 16,
+              offset: Offset(0, -4),
+            ),
+          ],
+        ),
+        child: hubPillars
+            ? Row(
+                children: [
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'PARTY',
+                      icon: KenneyAssets.helmet,
+                      selected: active == _BottomNavTab.party ||
+                          active == _BottomNavTab.gear ||
+                          active == _BottomNavTab.bag,
+                      onTap: onParty ?? onGear,
+                    ),
+                  ),
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'POWER',
+                      icon: CustomAssets.iconAxe,
+                      selected: active == _BottomNavTab.power,
+                      onTap: onPower ?? onMore,
+                    ),
+                  ),
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'META',
+                      icon: KenneyAssets.book,
+                      selected: active == _BottomNavTab.meta,
+                      onTap: onMeta ?? onMore,
+                    ),
+                  ),
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'HUB',
+                      icon: KenneyAssets.iconDoor,
+                      selected: false,
+                      onTap: onHubClose ?? onMore,
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'GEAR',
+                      icon: KenneyAssets.iconSword,
+                      selected: active == _BottomNavTab.gear,
+                      onTap: onGear,
+                    ),
+                  ),
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: bagLabel,
+                      icon: KenneyAssets.chestClosed,
+                      selected: active == _BottomNavTab.bag,
+                      urgent: full || nearlyFull,
+                      onTap: onBag,
+                    ),
+                  ),
+                  Expanded(
+                    child: _BottomNavItem(
+                      label: 'MORE',
+                      icon: KenneyAssets.iconDoor,
+                      selected: active == _BottomNavTab.more,
+                      onTap: onMore,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -1222,7 +1334,7 @@ class _BottomNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = urgent
-        ? GameTheme.torchHot
+        ? GameTheme.accentWarn
         : (selected ? GameTheme.torchHot : GameTheme.parchmentDim);
     return WebClickScope(
       label: label,
@@ -1236,25 +1348,28 @@ class _BottomNavItem extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: SizedBox(
-            height: GameTheme.minTouch,
+            height: GameTheme.minTouch + 4,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                KenneySprite(asset: icon, size: 18),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? GameTheme.torch.withValues(alpha: 0.14)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                  ),
+                  child: KenneySprite(asset: icon, size: 18),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   label,
-                  style: GameTheme.pixel(size: GameTheme.hudPixel, color: color),
-                ),
-                const SizedBox(height: 2),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  height: 2,
-                  width: selected ? 28 : 0,
-                  decoration: BoxDecoration(
-                    color: GameTheme.torchHot,
-                    borderRadius: BorderRadius.circular(1),
-                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(size: 13, color: color),
                 ),
               ],
             ),
@@ -1337,12 +1452,16 @@ class _PartyCornerHud extends StatefulWidget {
 
 class _PartyCornerHudState extends State<_PartyCornerHud> {
   static const _idleFade = Duration(seconds: 8);
+  static const _idleFadePhone = Duration(seconds: 5);
   static const _fullOpacity = 1.0;
   static const _dimOpacity = 0.55;
+  static const _dimOpacityPhone = 0.4;
   static const _hudScale = 1.0;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;
+  /// Kit chips only when the player taps a strip (map stays clear by default).
+  bool _kitOpen = false;
 
   @override
   void initState() {
@@ -1361,13 +1480,14 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
     if (_opacity < _fullOpacity) {
       setState(() => _opacity = _fullOpacity);
     }
-    _scheduleFade();
+    final phone = mounted && GameTheme.isPhoneWidth(context);
+    _scheduleFade(phone: phone);
   }
 
-  void _scheduleFade() {
-    _fadeTimer = Timer(_idleFade, () {
+  void _scheduleFade({bool phone = false}) {
+    _fadeTimer = Timer(phone ? _idleFadePhone : _idleFade, () {
       if (!mounted) return;
-      setState(() => _opacity = _dimOpacity);
+      setState(() => _opacity = phone ? _dimOpacityPhone : _dimOpacity);
     });
   }
 
@@ -1379,13 +1499,25 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
     return null;
   }
 
+  void _onHeroTap(int i) {
+    _bump();
+    if (widget.selectedHeroIndex == i && _kitOpen) {
+      setState(() => _kitOpen = false);
+      return;
+    }
+    widget.onSelectHero(i);
+    setState(() => _kitOpen = true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = widget.director.state;
     final world = widget.director.spatial;
     final canUseFlask = GameLogic.canUseConsumable(state);
     final compact = GameTheme.isCompactWidth(context);
-    final fullWidth = compact ? 196.0 : 240.0;
+    final phone = GameTheme.isPhoneWidth(context);
+    // Thin strip: reclaim map; kit expands in place when tapped.
+    final fullWidth = phone ? 148.0 : (compact ? 188.0 : 228.0);
     var partyCritical = false;
     final bossFight = world != null &&
         world.enemies.any(
@@ -1397,7 +1529,6 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
       final maxHp = s?.effectiveMaxHp ?? state.effectiveHeroMaxHp(state.heroes[i]);
       if (maxHp <= 0) continue;
       if (hp <= 0) {
-        // Downed ally mid-fight — flask urgency.
         if (bossFight ||
             (world?.enemies.any((e) => e.hp > 0 && !e.dormant) ?? false)) {
           partyCritical = true;
@@ -1417,45 +1548,64 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (var i = 0; i < state.heroes.length; i++) ...[
-            if (i > 0) SizedBox(height: state.heroes.length >= 4 ? 2.0 : 3.0),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  _bump();
-                  widget.onSelectHero(i);
-                },
-                onLongPress: () {
-                  _bump();
-                  widget.onOpenEquip();
-                },
-                borderRadius: BorderRadius.circular(4),
-                child: _PartyRow(
-                  index: i,
-                  hero: state.heroes[i],
-                  selected: widget.selectedHeroIndex == i,
-                  compact: compact || state.heroes.length >= 4,
-                  liveHp: () {
-                    final s = _spatialFor(world, i);
-                    return s?.hp ?? state.heroes[i].currentHp;
-                  }(),
-                  maxHp: () {
-                    final s = _spatialFor(world, i);
-                    return s?.effectiveMaxHp ??
-                        state.effectiveHeroMaxHp(state.heroes[i]);
-                  }(),
-                  spatial: widget.selectedHeroIndex == i
-                      ? _spatialFor(world, i)
-                      : null,
-                ),
-              ),
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xCC14110C),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: const Color(0x665A5040)),
             ),
-          ],
+            padding: EdgeInsets.fromLTRB(
+              phone ? 3 : 4,
+              phone ? 3 : 4,
+              phone ? 3 : 4,
+              phone ? 3 : 4,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < state.heroes.length; i++) ...[
+                  if (i > 0) SizedBox(height: phone ? 1.0 : 2.0),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _onHeroTap(i),
+                      onLongPress: () {
+                        _bump();
+                        widget.onOpenEquip();
+                      },
+                      borderRadius: BorderRadius.circular(3),
+                      child: _PartyRow(
+                        index: i,
+                        hero: state.heroes[i],
+                        selected: widget.selectedHeroIndex == i,
+                        kitOpen: widget.selectedHeroIndex == i && _kitOpen,
+                        compact: phone || compact || state.heroes.length >= 4,
+                        phone: phone,
+                        liveHp: () {
+                          final s = _spatialFor(world, i);
+                          return s?.hp ?? state.heroes[i].currentHp;
+                        }(),
+                        maxHp: () {
+                          final s = _spatialFor(world, i);
+                          return s?.effectiveMaxHp ??
+                              state.effectiveHeroMaxHp(state.heroes[i]);
+                        }(),
+                        spatial: (widget.selectedHeroIndex == i && _kitOpen)
+                            ? _spatialFor(world, i)
+                            : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
           if (canUseFlask) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: phone ? 5 : 4),
             _FlaskQuickSlot(
               urgent: partyCritical,
+              phone: phone,
               onTap: () {
                 _bump();
                 widget.onUseConsumable();
@@ -1471,7 +1621,13 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
       duration: const Duration(milliseconds: 400),
       child: Listener(
         behavior: HitTestBehavior.deferToChild,
-        onPointerDown: (_) => _bump(),
+        onPointerDown: (_) {
+          _fadeTimer?.cancel();
+          if (_opacity < _fullOpacity) {
+            setState(() => _opacity = _fullOpacity);
+          }
+          _scheduleFade(phone: phone);
+        },
         child: SizedBox(
           width: fullWidth * _hudScale,
           child: FittedBox(
@@ -1486,9 +1642,14 @@ class _PartyCornerHudState extends State<_PartyCornerHud> {
 }
 
 class _FlaskQuickSlot extends StatelessWidget {
-  const _FlaskQuickSlot({required this.onTap, this.urgent = false});
+  const _FlaskQuickSlot({
+    required this.onTap,
+    this.urgent = false,
+    this.phone = false,
+  });
   final VoidCallback onTap;
   final bool urgent;
+  final bool phone;
 
   @override
   Widget build(BuildContext context) {
@@ -1512,7 +1673,13 @@ class _FlaskQuickSlot extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 280),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              constraints: BoxConstraints(
+                minHeight: phone ? GameTheme.minTouch : 0,
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: phone ? 10 : 8,
+                vertical: phone ? 8 : 5,
+              ),
               decoration: BoxDecoration(
                 color: urgent
                     ? const Color(0xEE4A2010)
@@ -1526,7 +1693,10 @@ class _FlaskQuickSlot extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  KenneySprite(asset: KenneyAssets.potionRed, size: 16),
+                  KenneySprite(
+                    asset: KenneyAssets.potionRed,
+                    size: phone ? 18 : 16,
+                  ),
                   const SizedBox(width: 5),
                   Text(
                     urgent ? 'FLASK!' : 'FLASK',
@@ -1552,7 +1722,9 @@ class _PartyRow extends StatelessWidget {
     required this.liveHp,
     required this.maxHp,
     this.selected = false,
+    this.kitOpen = false,
     this.compact = false,
+    this.phone = false,
     this.spatial,
   });
 
@@ -1561,7 +1733,9 @@ class _PartyRow extends StatelessWidget {
   final int liveHp;
   final int maxHp;
   final bool selected;
+  final bool kitOpen;
   final bool compact;
+  final bool phone;
   final SpatialActor? spatial;
 
   bool _abilityBuffActive(ClassAbilityDef ability, SpatialActor s) {
@@ -1577,7 +1751,15 @@ class _PartyRow extends StatelessWidget {
       AbilityId.powerInfusion => s.powerInfusionTimer > 0,
       AbilityId.innerFire => s.innerFireActive,
       AbilityId.combustion => s.combustionTimer > 0,
-      AbilityId.iceBlock => s.iceBlockTimer > 0,
+      AbilityId.vendetta ||
+      AbilityId.coldBlood ||
+      AbilityId.arcanePower =>
+        s.combustionTimer > 0,
+      AbilityId.pyroblast => s.hotStreakReady,
+      AbilityId.iceBlock ||
+      AbilityId.arcaneIceBlock ||
+      AbilityId.frostMageIceBlock =>
+        s.iceBlockTimer > 0,
       AbilityId.livingBomb => s.livingBombArmed > 0,
       AbilityId.sliceAndDice => s.sliceAndDiceTimer > 0,
       AbilityId.bladeFlurry => s.bladeFlurryTimer > 0,
@@ -1599,7 +1781,7 @@ class _PartyRow extends StatelessWidget {
     final roleShort = hero.roleLabel.length <= 4
         ? hero.roleLabel
         : hero.roleLabel.substring(0, 3);
-    final showKit = selected && spatial != null && spatial!.isAlive;
+    final showKit = kitOpen && spatial != null && spatial!.isAlive;
     final resource =
         showKit ? spatial!.rage.clamp(0.0, 100.0).toDouble() : 0.0;
     final off = hero.itemIn(EquipmentSlot.offHand);
@@ -1613,19 +1795,35 @@ class _PartyRow extends StatelessWidget {
             spatial: spatial!,
             resource: resource,
             hasShield: hasShield,
-            maxChips: compact ? 4 : 6,
+            maxChips: phone ? 2 : (compact ? 3 : 4),
           )
         : const <ClassAbilityDef>[];
 
+    final hpColor = () {
+      final cb = SpatialCombat.colorblindMode;
+      if (liveHp <= 0) {
+        return cb ? const Color(0xFFD55E00) : GameTheme.blood;
+      }
+      if (frac <= 0.35) {
+        return cb ? const Color(0xFFE69F00) : GameTheme.bloodLit;
+      }
+      return cb ? const Color(0xFF009E73) : GameTheme.clear;
+    }();
+
+    // Default: thin strip. Kit only when tapped open.
     return Container(
-      constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-      padding: EdgeInsets.fromLTRB(4, compact ? 3 : 5, 6, compact ? 3 : 5),
+      padding: EdgeInsets.symmetric(
+        horizontal: phone ? 3 : 4,
+        vertical: showKit ? (phone ? 4 : 5) : (phone ? 2 : 3),
+      ),
       decoration: BoxDecoration(
-        color: const Color(0xDD14110C),
+        color: selected
+            ? const Color(0x331C1812)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(3),
         border: Border.all(
-          color: selected ? GameTheme.torch : const Color(0x665A5040),
-          width: selected ? 1.5 : 1,
+          color: selected ? GameTheme.torch.withValues(alpha: 0.85) : Colors.transparent,
+          width: selected ? 1 : 0,
         ),
       ),
       child: Column(
@@ -1637,45 +1835,34 @@ class _PartyRow extends StatelessWidget {
               HeroDollSprite(
                 hero: hero,
                 partyIndex: index,
-                size: compact ? 16 : 18,
+                size: phone ? 12 : (compact ? 14 : 16),
               ),
-              const SizedBox(width: 5),
+              SizedBox(width: phone ? 4 : 5),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      compact
-                          ? '$roleShort L${hero.level}'
-                          : '${hero.roleLabel}  L${hero.level}',
+                      phone
+                          ? roleShort
+                          : (compact
+                              ? '$roleShort L${hero.level}'
+                              : '${hero.roleLabel}  L${hero.level}'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: GameTheme.pixel(
                         size: GameTheme.hudPixel,
                         color: GameTheme.parchment,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: phone ? 1 : 2),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(1),
                       child: LinearProgressIndicator(
                         value: frac,
-                        minHeight: compact ? 4 : 5,
+                        minHeight: phone ? 2.5 : (compact ? 3.5 : 4.5),
                         backgroundColor: const Color(0xFF2A2218),
-                        color: () {
-                          final cb = SpatialCombat.colorblindMode;
-                          if (liveHp <= 0) {
-                            return cb
-                                ? const Color(0xFFD55E00)
-                                : GameTheme.blood;
-                          }
-                          if (frac <= 0.35) {
-                            return cb
-                                ? const Color(0xFFE69F00)
-                                : GameTheme.bloodLit;
-                          }
-                          return cb
-                              ? const Color(0xFF009E73)
-                              : GameTheme.clear;
-                        }(),
+                        color: hpColor,
                       ),
                     ),
                     if (showKit) ...[
@@ -1695,7 +1882,7 @@ class _PartyRow extends StatelessWidget {
                               borderRadius: BorderRadius.circular(1),
                               child: LinearProgressIndicator(
                                 value: resource / 100,
-                                minHeight: 4,
+                                minHeight: 3,
                                 backgroundColor: const Color(0xFF2A1810),
                                 color: Color(
                                   ClassKits.resourceColorForSpec(hero.specId),
@@ -1734,34 +1921,22 @@ class _PartyRow extends StatelessWidget {
                           ],
                         ],
                       ),
-                    ] else if (!compact) ...[
-                      const SizedBox(height: 2),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(1),
-                        child: LinearProgressIndicator(
-                          value: GameLogic.xpPoolForLevel(hero.level) <= 0
-                              ? 0
-                              : (hero.xp /
-                                      GameLogic.xpPoolForLevel(hero.level))
-                                  .clamp(0.0, 1.0),
-                          minHeight: 3,
-                          backgroundColor: const Color(0xFF2A2218),
-                          color: GameTheme.torch,
-                        ),
-                      ),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(width: 5),
+              SizedBox(width: phone ? 4 : 5),
               Text(
-                '$liveHp',
-                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                phone ? '${(frac * 100).round()}' : '$liveHp',
+                style: GameTheme.body(
+                  size: phone ? 11 : 12,
+                  color: GameTheme.parchmentDim,
+                ),
               ),
             ],
           ),
           if (showKit && visibleAbilities.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Wrap(
               spacing: 3,
               runSpacing: 3,
@@ -1876,9 +2051,16 @@ class _InlineAbilityChip extends StatelessWidget {
   }
 }
 
-class _DpsMeter extends StatelessWidget {
+class _DpsMeter extends StatefulWidget {
   const _DpsMeter({required this.director});
   final GameDirector director;
+
+  @override
+  State<_DpsMeter> createState() => _DpsMeterState();
+}
+
+class _DpsMeterState extends State<_DpsMeter> {
+  bool _open = false;
 
   static String _heroTag(SpatialActor h) {
     final specId = h.heroSpecId;
@@ -1891,11 +2073,16 @@ class _DpsMeter extends StatelessWidget {
             HeroRole.rogue => 'ROG',
             null => '---',
           };
-    // Keep meter tags one line on phone HUD.
     return switch (raw) {
       'COMBAT' => 'COM',
       _ => raw.length <= 4 ? raw : raw.substring(0, 4),
     };
+  }
+
+  static SpecRoleTag? _roleTag(SpatialActor h) {
+    final specId = h.heroSpecId;
+    if (specId == null) return null;
+    return HeroSpecs.def(specId).roleTag;
   }
 
   static String _compact(int n) {
@@ -1904,115 +2091,157 @@ class _DpsMeter extends StatelessWidget {
     return '$n';
   }
 
-  /// Rate from cumulative total over fight time (min 0.5s avoids startup spikes).
   static int _perSecond(int total, double elapsed) {
     final t = elapsed < 0.5 ? 0.5 : elapsed;
     return (total / t).round();
   }
 
+  static ({int rate, String unit}) _metric(SpatialActor h, double elapsed) {
+    final tag = _roleTag(h);
+    if (tag == SpecRoleTag.tank) {
+      return (rate: _perSecond(h.damageTaken, elapsed), unit: 'dtps');
+    }
+    if (tag == SpecRoleTag.healer) {
+      return (rate: _perSecond(h.healingDone, elapsed), unit: 'hps');
+    }
+    return (rate: _perSecond(h.damageDealt, elapsed), unit: 'dps');
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Meter is HUD chrome — keep visible under Lite/Minimal VFX.
-    final world = director.spatial;
+    final world = widget.director.spatial;
     if (world == null) return const SizedBox.shrink();
 
     final elapsed = world.combatElapsed;
     final rows = <({String tag, String value, double bar, bool highlight})>[];
-    var peakDps = 0;
+    var peak = 0;
+    var peakUnit = 'dps';
     for (final h in world.heroes) {
       if (h.isPet) continue;
-      final dps = _perSecond(h.damageDealt, elapsed);
-      if (dps > peakDps) peakDps = dps;
+      final m = _metric(h, elapsed);
+      if (m.rate > peak) {
+        peak = m.rate;
+        peakUnit = m.unit;
+      }
     }
-    if (peakDps == 0) {
+    if (peak == 0) {
       return const SizedBox.shrink();
     }
-    peakDps = peakDps.clamp(1, 1 << 30);
+    final peakForBar = peak.clamp(1, 1 << 30);
 
     for (final h in world.heroes) {
       if (h.isPet) continue;
-      if (h.damageDealt <= 0) continue;
-      final dps = _perSecond(h.damageDealt, elapsed);
-      if (dps < 1) continue;
+      final m = _metric(h, elapsed);
+      if (m.rate < 1) continue;
       rows.add((
         tag: _heroTag(h),
-        value: '${_compact(dps)} dps',
-        bar: dps / peakDps,
-        highlight: dps == peakDps,
+        value: '${_compact(m.rate)} ${m.unit}',
+        bar: m.rate / peakForBar,
+        highlight: m.rate == peak,
       ));
     }
     if (rows.isEmpty) return const SizedBox.shrink();
 
-    return IgnorePointer(
-      child: Semantics(
-        label: 'Party DPS meter',
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 152),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
-            decoration: BoxDecoration(
-              color: const Color(0xCC14110C),
-              borderRadius: BorderRadius.circular(3),
-              border: Border.all(color: const Color(0x665A5040)),
+    final chip = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xCC14110C),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: const Color(0x665A5040)),
+      ),
+      child: Text(
+        _open
+            ? 'METER ▴'
+            : '${_compact(peak)} $peakUnit ▾',
+        style: GameTheme.pixel(
+          size: GameTheme.hudPixel,
+          color: GameTheme.parchment,
+        ),
+      ),
+    );
+
+    final panel = ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 148),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
+        decoration: BoxDecoration(
+          color: const Color(0xCC14110C),
+          borderRadius: BorderRadius.circular(3),
+          border: Border.all(color: const Color(0x665A5040)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'METER ▴',
+              style: GameTheme.pixel(
+                size: GameTheme.hudPixel,
+                color: GameTheme.parchmentDim,
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'DPS',
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
-                    color: GameTheme.parchmentDim,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                for (final row in rows) ...[
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 44,
-                        child: Text(
-                          row.tag,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                          style: GameTheme.pixel(
-                            size: GameTheme.hudPixel,
-                            color: row.highlight
-                                ? GameTheme.torchHot
-                                : GameTheme.parchment,
-                          ),
-                        ),
+            const SizedBox(height: 3),
+            for (final row in rows) ...[
+              Row(
+                children: [
+                  SizedBox(
+                    width: 40,
+                    child: Text(
+                      row.tag,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.pixel(
+                        size: GameTheme.hudPixel,
+                        color: row.highlight
+                            ? GameTheme.torchHot
+                            : GameTheme.parchment,
                       ),
-                      Expanded(
-                        child: Text(
-                          row.value,
-                          textAlign: TextAlign.right,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                          style: GameTheme.pixel(size: GameTheme.hudPixel),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(1),
-                    child: LinearProgressIndicator(
-                      value: row.bar.clamp(0.0, 1.0),
-                      minHeight: 3,
-                      backgroundColor: const Color(0xFF2A241C),
-                      color: row.highlight
-                          ? GameTheme.torchHot
-                          : GameTheme.mossLit,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  Expanded(
+                    child: Text(
+                      row.value,
+                      textAlign: TextAlign.right,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.pixel(size: GameTheme.hudPixel),
+                    ),
+                  ),
                 ],
-              ],
-            ),
+              ),
+              const SizedBox(height: 2),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(1),
+                child: LinearProgressIndicator(
+                  value: row.bar.clamp(0.0, 1.0),
+                  minHeight: 3,
+                  backgroundColor: const Color(0xFF2A241C),
+                  color: row.highlight
+                      ? GameTheme.torchHot
+                      : GameTheme.mossLit,
+                ),
+              ),
+              const SizedBox(height: 3),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    return WebClickScope(
+      label: _open ? 'Collapse party meter' : 'Expand party meter',
+      onPressed: () => setState(() => _open = !_open),
+      child: Semantics(
+        button: true,
+        label: _open ? 'Collapse party meter' : 'Expand party meter',
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => setState(() => _open = !_open),
+            borderRadius: BorderRadius.circular(3),
+            child: _open ? panel : chip,
           ),
         ),
       ),
@@ -2030,7 +2259,6 @@ class _TargetCornerHud extends StatelessWidget {
     final state = director.state;
     SpatialActor? focus;
     if (world != null) {
-      // Prefer Living Bomb target (matches the orange map ring), then nearest.
       for (final e in world.enemies) {
         if (e.hp <= 0 || e.dormant) continue;
         if (e.livingBombTimer > 0) {
@@ -2058,89 +2286,110 @@ class _TargetCornerHud extends StatelessWidget {
 
     final enemy = focus;
     final awaitingExit = world?.awaitingExit == true;
+    // Hide empty chrome — reclaim map until a foe / wipe / clear matters.
+    if (enemy == null && !state.isPartyDefeated && !awaitingExit) {
+      return const SizedBox.shrink();
+    }
+
     final label = enemy == null
         ? (state.isPartyDefeated
             ? 'WIPED'
             : awaitingExit
-                ? 'FLOOR CLEAR'
-                : 'NO TARGET')
+                ? 'CLEAR'
+                : '—')
         : enemy.name.toUpperCase();
     final role = enemy == null
         ? ''
         : switch (enemy.role) {
             EnemyRole.boss => 'BOSS',
             EnemyRole.elite => 'ELITE',
-            EnemyRole.normal => 'NORMAL',
+            EnemyRole.normal => '',
           };
     final hpFrac = enemy == null || enemy.maxHp <= 0
         ? 0.0
         : (enemy.hp / enemy.maxHp).clamp(0.0, 1.0);
-    final archetype = enemy == null ? '' : _archetypeLabel(enemy.archetype);
+    final phone = GameTheme.isPhoneWidth(context);
+    // Name only — role is color/border so the chip stays one readable line.
+    final titleColor = role == 'BOSS'
+        ? GameTheme.bloodLit
+        : (role == 'ELITE' ? GameTheme.torch : GameTheme.parchment);
 
     return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: GameTheme.isCompactWidth(context) ? 168 : 188,
-      ),
+      constraints: BoxConstraints(maxWidth: phone ? 128.0 : 148.0),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(7, 5, 7, 6),
+        padding: EdgeInsets.fromLTRB(6, phone ? 3 : 4, 6, phone ? 4 : 5),
         decoration: BoxDecoration(
-          color: const Color(0xDD14110C),
+          color: const Color(0xCC14110C),
           borderRadius: BorderRadius.circular(3),
-          border: Border.all(color: const Color(0x665A5040)),
+          border: Border.all(
+            color: role == 'BOSS'
+                ? GameTheme.bloodLit.withValues(alpha: 0.7)
+                : (role == 'ELITE'
+                    ? GameTheme.torch.withValues(alpha: 0.55)
+                    : const Color(0x665A5040)),
+          ),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              label,
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.pixel(size: GameTheme.hudPixel),
+            Row(
+              children: [
+                if (role.isNotEmpty) ...[
+                  Text(
+                    role == 'BOSS' ? 'B' : 'E',
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: titleColor,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: titleColor,
+                    ),
+                  ),
+                ),
+                if (enemy != null)
+                  Text(
+                    '${(hpFrac * 100).round()}%',
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+              ],
             ),
-            if (role.isNotEmpty || archetype.isNotEmpty)
-              Text(
-                [
-                  if (role.isNotEmpty) role,
-                  if (archetype.isNotEmpty) archetype,
-                ].join(' · '),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: role == 'BOSS'
+            if (enemy != null) ...[
+              const SizedBox(height: 2),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(1),
+                child: LinearProgressIndicator(
+                  value: hpFrac,
+                  minHeight: phone ? 3 : 4,
+                  backgroundColor: const Color(0xFF2A241C),
+                  color: hpFrac > 0.35
                       ? GameTheme.bloodLit
-                      : (role == 'ELITE'
-                            ? GameTheme.torch
-                            : GameTheme.parchmentDim),
+                      : GameTheme.blood,
                 ),
               ),
-            const SizedBox(height: 3),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(1),
-              child: LinearProgressIndicator(
-                value: hpFrac,
-                minHeight: 5,
-                backgroundColor: const Color(0xFF2A241C),
-                color: hpFrac > 0.35
-                    ? GameTheme.bloodLit
-                    : GameTheme.blood,
+            ] else
+              Text(
+                state.isPartyDefeated
+                    ? (state.inGauntlet ? 'End → hub' : 'Retry / Hub')
+                    : 'Walk to stairs',
+                style: GameTheme.body(
+                  size: 11,
+                  color: GameTheme.parchmentDim,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              enemy == null
-                  ? (state.isPartyDefeated
-                        ? (state.inGauntlet
-                            ? 'End run → hub'
-                            : 'Open Retry / Hub')
-                        : awaitingExit
-                            ? 'Walk to the stairs'
-                            : 'Seek a foe')
-                  : '${(hpFrac * 100).round()}% HP  ATK ${enemy.attack}',
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-            ),
           ],
         ),
       ),
@@ -2183,6 +2432,7 @@ class _Chip extends StatelessWidget {
 class _InventoryDock extends StatefulWidget {
   const _InventoryDock({
     required this.state,
+    required this.director,
     required this.selectedId,
     required this.combineA,
     required this.combineB,
@@ -2193,6 +2443,9 @@ class _InventoryDock extends StatefulWidget {
     required this.onEquip,
     required this.onSell,
     required this.onUnequip,
+    required this.bagSlotFilter,
+    required this.onBrowseBagSlot,
+    required this.onClearBagSlotFilter,
     required this.equipHeroIndex,
     required this.onEquipHeroChanged,
     required this.onEquipToHero,
@@ -2202,20 +2455,29 @@ class _InventoryDock extends StatefulWidget {
     required this.onCombine,
     required this.onBindSoulbound,
     required this.onAutoSell,
+    required this.onAutoDisassemble,
+    required this.onCleanBag,
+    required this.onOpenFilters,
     required this.onAutoMerge,
+    this.flatChrome = false,
   });
 
   final GameState state;
+  final GameDirector director;
   final String? selectedId;
   final String? combineA;
   final String? combineB;
   final int initialTab;
   final ValueChanged<int> onTabChanged;
+  final bool flatChrome;
   final void Function(String id) onSelect;
   final void Function(String id) onPutCombine;
   final VoidCallback onEquip;
   final VoidCallback onSell;
   final void Function(EquipmentSlot slot) onUnequip;
+  final EquipmentSlot? bagSlotFilter;
+  final void Function(EquipmentSlot slot) onBrowseBagSlot;
+  final VoidCallback onClearBagSlotFilter;
   final int equipHeroIndex;
   final void Function(int index) onEquipHeroChanged;
   final void Function(int heroIndex) onEquipToHero;
@@ -2225,6 +2487,9 @@ class _InventoryDock extends StatefulWidget {
   final VoidCallback onCombine;
   final VoidCallback onBindSoulbound;
   final VoidCallback onAutoSell;
+  final VoidCallback onAutoDisassemble;
+  final VoidCallback onCleanBag;
+  final VoidCallback onOpenFilters;
   final VoidCallback onAutoMerge;
 
   @override
@@ -2244,6 +2509,10 @@ class _InventoryDockState extends State<_InventoryDock>
   VoidCallback get onEquip => widget.onEquip;
   VoidCallback get onSell => widget.onSell;
   void Function(EquipmentSlot slot) get onUnequip => widget.onUnequip;
+  EquipmentSlot? get bagSlotFilter => widget.bagSlotFilter;
+  void Function(EquipmentSlot slot) get onBrowseBagSlot =>
+      widget.onBrowseBagSlot;
+  VoidCallback get onClearBagSlotFilter => widget.onClearBagSlotFilter;
   int get equipHeroIndex => widget.equipHeroIndex;
   void Function(int index) get onEquipHeroChanged => widget.onEquipHeroChanged;
   void Function(int heroIndex) get onEquipToHero => widget.onEquipToHero;
@@ -2253,15 +2522,22 @@ class _InventoryDockState extends State<_InventoryDock>
   VoidCallback get onCombine => widget.onCombine;
   VoidCallback get onBindSoulbound => widget.onBindSoulbound;
   VoidCallback get onAutoSell => widget.onAutoSell;
+  VoidCallback get onAutoDisassemble => widget.onAutoDisassemble;
+  VoidCallback get onCleanBag => widget.onCleanBag;
+  VoidCallback get onOpenFilters => widget.onOpenFilters;
   VoidCallback get onAutoMerge => widget.onAutoMerge;
+
+  bool _itemMatchesBagFilter(EquipmentItem item, EquipmentSlot filter) {
+    return GameLogic.equipTargetsFor(item).contains(filter);
+  }
 
   @override
   void initState() {
     super.initState();
     _tabs = TabController(
-      length: 3,
+      length: 5,
       vsync: this,
-      initialIndex: widget.initialTab.clamp(0, 2),
+      initialIndex: widget.initialTab.clamp(0, 4),
     );
     _tabs.addListener(() {
       if (!_tabs.indexIsChanging) {
@@ -2273,7 +2549,7 @@ class _InventoryDockState extends State<_InventoryDock>
   @override
   void didUpdateWidget(covariant _InventoryDock oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final next = widget.initialTab.clamp(0, 2);
+    final next = widget.initialTab.clamp(0, 4);
     if (oldWidget.initialTab != widget.initialTab && _tabs.index != next) {
       _tabs.animateTo(next);
     }
@@ -2285,68 +2561,344 @@ class _InventoryDockState extends State<_InventoryDock>
     super.dispose();
   }
 
-  EquipmentItem? _find(String? id) {
+  /// Combinator slots only resolve bag items (never equipped).
+  EquipmentItem? _findStash(String? id) {
     if (id == null) return null;
-    return GameLogic.findGear(state, id);
+    return GameLogic.findStashGear(state, id);
   }
 
   Widget _equipTab() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: CharacterEquipPanel(
-              state: state,
-              heroIndex: equipHeroIndex,
-              onSelectHero: onEquipHeroChanged,
-              selectedItemId: selectedId,
-              onSelectItem: onSelect,
-              onUnequip: onUnequip,
-              compact: true,
-            ),
+    final worn = selectedId == null
+        ? null
+        : GameLogic.findEquippedLocation(state, selectedId!);
+    final inStash = selectedId != null &&
+        state.gearStash.any((g) => g.id == selectedId);
+    final cap = GameLogic.maxGearStashFor(state);
+    final bagSlots = List<EquipmentItem?>.generate(
+      cap,
+      (i) => i < state.gearStash.length ? state.gearStash[i] : null,
+    );
+
+    Widget actions() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: worn != null
+                    ? KenneyButton(
+                        label: 'UNEQUIP',
+                        onPressed: () => onUnequip(worn.slot),
+                        style: KenneyButtonStyle.grey,
+                      )
+                    : KenneyButton(
+                        label: 'EQUIP',
+                        onPressed: inStash ? onEquip : null,
+                      ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: KenneyButton(
+                  label: 'AUTO EQUIP',
+                  onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
+                  style: KenneyButtonStyle.grey,
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 6),
-        Row(
+          const SizedBox(height: 4),
+          KenneyButton(
+            label: 'SELL',
+            onPressed: inStash ? onSell : null,
+            style: KenneyButtonStyle.grey,
+          ),
+        ],
+      );
+    }
+
+    Widget sheet() {
+      return CharacterEquipPanel(
+        state: state,
+        heroIndex: equipHeroIndex,
+        onSelectHero: onEquipHeroChanged,
+        selectedItemId: selectedId,
+        onSelectItem: onSelect,
+        onUnequip: onUnequip,
+        onEmptySlotTap: onBrowseBagSlot,
+        compact: true,
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 520;
+        final phone = GameTheme.isPhoneWidth(context) ||
+            constraints.maxWidth <= 430;
+        final bag = _gearInlineBag(bagSlots);
+        if (wide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 5,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(child: sheet()),
+                    ),
+                    const SizedBox(height: 6),
+                    actions(),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 4,
+                child: bag,
+              ),
+            ],
+          );
+        }
+        // Phone: doll + actions only — bag has its own PARTY tab (readable taps).
+        if (phone) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(child: sheet()),
+              ),
+              const SizedBox(height: 6),
+              actions(),
+              const SizedBox(height: 6),
+              KenneyButton(
+                label: 'OPEN BAG',
+                onPressed: () => _tabs.animateTo(1),
+                style: KenneyButtonStyle.grey,
+              ),
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: KenneyButton(
-                label: 'EQUIP',
-                onPressed: selectedId == null ? null : onEquip,
-              ),
+              flex: 58,
+              child: SingleChildScrollView(child: sheet()),
             ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: KenneyButton(
-                label: 'AUTO',
-                onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
-                style: KenneyButtonStyle.grey,
+            const SizedBox(height: 6),
+            actions(),
+            const SizedBox(height: 8),
+            Expanded(flex: 42, child: bag),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Compact bag pane embedded in the GEAR sheet (reference: Items Bag).
+  Widget _gearInlineBag(List<EquipmentItem?> slots) {
+    final cap = GameLogic.maxGearStashFor(state);
+    final filled = state.gearStash.length;
+    final filter = bagSlotFilter;
+    final filterLabel = filter == null
+        ? null
+        : (CharacterEquipPanel.slotLabels[filter] ?? filter.name);
+    final filtered = filter == null
+        ? slots
+        : [
+            for (final item in state.gearStash)
+              if (_itemMatchesBagFilter(item, filter)) item,
+          ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: GameTheme.panelInset.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(GameTheme.radiusMd),
+        border: Border.all(color: GameTheme.border.withValues(alpha: 0.75)),
+      ),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'ITEMS BAG',
+                  style: GameTheme.menuTitle(size: 16),
+                ),
               ),
+              Text(
+                '$filled / $cap',
+                style: GameTheme.body(
+                  size: 13,
+                  color: filled >= cap
+                      ? GameTheme.accentWarn
+                      : GameTheme.parchmentDim,
+                ),
+              ),
+            ],
+          ),
+          if (filter != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Slot: $filterLabel',
+                    style: GameTheme.body(
+                      size: 12,
+                      color: GameTheme.torchHot,
+                    ),
+                  ),
+                ),
+                KenneyButton(
+                  label: 'CLEAR',
+                  onPressed: onClearBagSlotFilter,
+                  style: KenneyButtonStyle.grey,
+                ),
+              ],
             ),
           ],
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Expanded(
-              child: KenneyButton(
-                label: 'SELL',
-                onPressed:
-                    selectedId == null && combineA == null ? null : onSell,
-                style: KenneyButtonStyle.grey,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: KenneyButton(
-                label: 'SELL JUNK',
-                onPressed: state.gearStash.isEmpty ? null : onAutoSell,
-                style: KenneyButtonStyle.grey,
-              ),
+          const SizedBox(height: 6),
+          Expanded(
+            child: filtered.isEmpty && filter != null
+                ? Center(
+                    child: Text(
+                      'No $filterLabel in bag',
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(
+                        size: 13,
+                        color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                  )
+                : GridView.builder(
+                    itemCount: filtered.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 5,
+                      crossAxisSpacing: 5,
+                      mainAxisExtent: 56,
+                    ),
+                    itemBuilder: (context, index) {
+                      final item = filtered[index];
+                      final selected =
+                          item != null && item.id == selectedId;
+                      final hero = state.heroes.isEmpty
+                          ? null
+                          : state.heroes[equipHeroIndex.clamp(
+                              0,
+                              state.heroes.length - 1,
+                            )];
+                      return _BagSlot(
+                        item: item,
+                        state: state,
+                        hero: hero,
+                        highlight: selected,
+                        onTap: item == null
+                            ? null
+                            : () => onSelect(item.id),
+                        onLongPress: null,
+                      );
+                    },
+                  ),
+          ),
+          if (selectedId != null) ...[
+            const SizedBox(height: 6),
+            Builder(
+              builder: (context) {
+                final selected = GameLogic.findGear(state, selectedId!);
+                if (selected == null) return const SizedBox.shrink();
+                if (!state.gearStash.any((g) => g.id == selected.id)) {
+                  return Text(
+                    'Selected on hero — UNEQUIP to move to bag',
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  );
+                }
+                final hero = state.heroes.isEmpty
+                    ? null
+                    : state.heroes[equipHeroIndex.clamp(
+                        0,
+                        state.heroes.length - 1,
+                      )];
+                final cmp = hero == null
+                    ? null
+                    : GameLogic.compareForHero(hero, selected);
+                final scoreLine = cmp == null || cmp.powerDelta == 0
+                    ? null
+                    : (cmp.powerDelta > 0
+                        ? 'UP ${GameLogic.formatDelta(cmp.powerDelta)}'
+                        : 'DN ${GameLogic.formatDelta(cmp.powerDelta)}');
+                // Phone GEAR: keep compare to one line so the bag grid stays usable.
+                // Long-press an item for the full WoW-style tooltip sheet.
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      [
+                        selected.name,
+                        'i${selected.effectiveItemLevel}',
+                        ?scoreLine,
+                      ].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(
+                        size: 12,
+                        color: scoreLine != null &&
+                                cmp != null &&
+                                cmp.powerDelta < 0
+                            ? GameTheme.bloodLit
+                            : itemRarityColor(selected.rarity),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      height: 34,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: _equipHeroChipsFor(selected),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
-        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _equipHeroChipsFor(EquipmentItem selected) {
+    var bestIndex = -1;
+    var bestDelta = 0;
+    for (var i = 0; i < state.heroes.length; i++) {
+      final delta = GameLogic.compareForHero(
+        state.heroes[i],
+        selected,
+      ).powerDelta;
+      if (delta > 0 && delta > bestDelta) {
+        bestDelta = delta;
+        bestIndex = i;
+      }
+    }
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        for (var i = 0; i < state.heroes.length; i++)
+          _EquipHeroChip(
+            hero: state.heroes[i],
+            candidate: selected,
+            isBest: i == bestIndex,
+            onTap: () => onEquipToHero(i),
+          ),
       ],
     );
   }
@@ -2355,66 +2907,180 @@ class _InventoryDockState extends State<_InventoryDock>
     final cap = GameLogic.maxGearStashFor(state);
     final filled = state.gearStash.length;
     final nearFull = filled >= (cap * 0.9).ceil();
+    final filter = bagSlotFilter;
+    final filterLabel = filter == null
+        ? null
+        : (CharacterEquipPanel.slotLabels[filter] ?? filter.name);
+    final filteredSlots = filter == null
+        ? slots
+        : [
+            for (final item in state.gearStash)
+              if (_itemMatchesBagFilter(item, filter)) item,
+          ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          nearFull && filled >= cap
-              ? 'BAG FULL  $filled/$cap — oldest salvages to essence'
-              : nearFull
-                  ? 'BAG  $filled/$cap — nearly full (SELL JUNK dumps non-BiS + under iLvl cap)'
-                  : 'BAG  $filled/$cap · SELL = essence · Market = gold',
-          style: GameTheme.pixel(
-            size: GameTheme.hudPixel,
-            color: nearFull ? GameTheme.torchHot : GameTheme.parchment,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                nearFull && filled >= cap
+                    ? 'BAG FULL'
+                    : nearFull
+                        ? 'NEARLY FULL'
+                        : 'CAPACITY',
+                style: GameTheme.body(
+                  size: 14,
+                  color: nearFull ? GameTheme.accentWarn : GameTheme.parchmentDim,
+                ),
+              ),
+            ),
+            Text(
+              '$filled / $cap',
+              style: GameTheme.body(
+                size: 15,
+                color: nearFull ? GameTheme.accentWarn : GameTheme.parchment,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(99),
+          child: LinearProgressIndicator(
+            value: cap <= 0 ? 0 : (filled / cap).clamp(0.0, 1.0),
+            minHeight: 5,
+            backgroundColor: GameTheme.panelInset,
+            color: filled >= cap
+                ? GameTheme.bloodLit
+                : nearFull
+                    ? GameTheme.accentWarn
+                    : GameTheme.mossLit,
           ),
         ),
         const SizedBox(height: 4),
-        Expanded(
-          child: GridView.builder(
-            itemCount: slots.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              mainAxisSpacing: 4,
-              crossAxisSpacing: 4,
-              mainAxisExtent: GameTheme.minTouch,
-            ),
-            itemBuilder: (context, index) {
-              final item = slots[index];
-              final selected = item != null && item.id == selectedId;
-              final inCombine =
-                  item != null && (item.id == combineA || item.id == combineB);
-              final combineFiltered =
-                  primary != null && item != null && item.slot != primary.slot;
-              return _BagSlot(
-                item: item,
-                state: state,
-                highlight: selected || inCombine,
-                dimmed: combineFiltered,
-                onTap: item == null || combineFiltered
-                    ? null
-                    : () => onSelect(item.id),
-                onLongPress: item == null || combineFiltered
-                    ? null
-                    : () => onPutCombine(item.id),
-              );
-            },
+        if (filter != null) ...[
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Slot: $filterLabel'
+                  '${filteredSlots.isEmpty ? ' · none in bag' : ' · ${filteredSlots.length}'}',
+                  style: GameTheme.body(
+                    size: 13,
+                    color: GameTheme.torchHot,
+                  ),
+                ),
+              ),
+              KenneyButton(
+                label: 'CLEAR',
+                onPressed: onClearBagSlotFilter,
+                style: KenneyButtonStyle.grey,
+              ),
+            ],
           ),
+          const SizedBox(height: 4),
+        ] else
+          Text(
+            nearFull && filled >= cap
+                ? 'CLEAN merges → sells gold → scraps essence'
+                : 'junk→gold · scrap→essence · FILTERS set caps',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        const SizedBox(height: 6),
+        Expanded(
+          child: filteredSlots.isEmpty && filter != null
+              ? Center(
+                  child: Text(
+                    'No $filterLabel gear in BAG.\nLoot more, or CLEAR filter.',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                )
+              : LayoutBuilder(
+                  builder: (context, gridConstraints) {
+                    final phone = GameTheme.isPhoneWidth(context) ||
+                        gridConstraints.maxWidth <= 430;
+                    return GridView.builder(
+                      itemCount: filteredSlots.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: phone ? 3 : 4,
+                        mainAxisSpacing: phone ? 8 : 6,
+                        crossAxisSpacing: phone ? 8 : 6,
+                        mainAxisExtent: phone ? 72 : 60,
+                      ),
+                      itemBuilder: (context, index) {
+                        final item = filteredSlots[index];
+                        final selected = item != null && item.id == selectedId;
+                        final inCombine = item != null &&
+                            (item.id == combineA || item.id == combineB);
+                        final combineFiltered = primary != null &&
+                            item != null &&
+                            item.slot != primary.slot;
+                        return _BagSlot(
+                          item: item,
+                          state: state,
+                          hero: state.heroes.isEmpty
+                              ? null
+                              : state.heroes[equipHeroIndex.clamp(
+                                  0,
+                                  state.heroes.length - 1,
+                                )],
+                          highlight: selected || inCombine,
+                          dimmed: combineFiltered,
+                          onTap: item == null || combineFiltered
+                              ? null
+                              : () => onSelect(item.id),
+                          onLongPress: null,
+                        );
+                      },
+                    );
+                  },
+                ),
         ),
         const SizedBox(height: 4),
         KenneyButton(
-          label: 'ADD TO MERGE',
-          onPressed: selectedId == null
-              ? null
-              : () => onPutCombine(selectedId!),
-          style: KenneyButtonStyle.grey,
+          label: 'CLEAN BAG',
+          onPressed: state.gearStash.isEmpty ? null : onCleanBag,
+          style: KenneyButtonStyle.brown,
         ),
         const SizedBox(height: 4),
         Row(
           children: [
             Expanded(
               child: KenneyButton(
-                label: 'AUTO',
+                label: 'SELL JUNK',
+                onPressed: state.gearStash.isEmpty ? null : onAutoSell,
+                style: KenneyButtonStyle.grey,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: KenneyButton(
+                label: 'SCRAP',
+                onPressed: state.gearStash.isEmpty ? null : onAutoDisassemble,
+                style: KenneyButtonStyle.grey,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: KenneyButton(
+                label: 'FILTERS',
+                onPressed: onOpenFilters,
+                style: KenneyButtonStyle.grey,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Expanded(
+              child: KenneyButton(
+                label: 'AUTO EQUIP',
                 onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
                 style: KenneyButtonStyle.grey,
               ),
@@ -2422,18 +3088,16 @@ class _InventoryDockState extends State<_InventoryDock>
             const SizedBox(width: 4),
             Expanded(
               child: KenneyButton(
-                label: 'AUTO MERGE',
-                onPressed: state.gearStash.length < 2 ? null : onAutoMerge,
+                label: selectedId == null ? 'AUTO MERGE' : 'ADD TO MERGE',
+                onPressed: selectedId != null
+                    ? (GameLogic.findStashGear(state, selectedId!) == null
+                        ? null
+                        : () => onPutCombine(selectedId!))
+                    : (state.gearStash.length < 2 ? null : onAutoMerge),
                 style: KenneyButtonStyle.grey,
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 4),
-        KenneyButton(
-          label: 'SELL JUNK',
-          onPressed: state.gearStash.isEmpty ? null : onAutoSell,
-          style: KenneyButtonStyle.grey,
         ),
         if (selectedId != null) ...[
           const SizedBox(height: 4),
@@ -2447,6 +3111,15 @@ class _InventoryDockState extends State<_InventoryDock>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
+                    selected.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.body(
+                      size: 14,
+                      color: itemRarityColor(selected.rarity),
+                    ),
+                  ),
+                  Text(
                     selected.statsLine,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -2455,44 +3128,6 @@ class _InventoryDockState extends State<_InventoryDock>
                       color: GameTheme.torchHot,
                     ),
                   ),
-                  if (selected.setId != null && selected.setId!.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      () {
-                        final best = state.heroes
-                            .map(
-                              (h) => (
-                                h,
-                                GearSets.wornCount(h.equipped, selected.setId!),
-                              ),
-                            )
-                            .reduce((a, b) => a.$2 >= b.$2 ? a : b);
-                        final n = best.$2;
-                        final label = selected.setLabel;
-                        if (n <= 0) return '$label · 0/4';
-                        final bonus = n >= 4
-                            ? '4pc active'
-                            : (n >= 2 ? '2pc active' : 'set');
-                        return '$label · $n/4 · $bonus';
-                      }(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.parchmentDim,
-                      ),
-                    ),
-                  ],
-                  if (_isSoulboundItem(selected)) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      'BOUND FOREVER',
-                      style: GameTheme.pixel(
-                        size: GameTheme.hudPixel,
-                        color: GameTheme.torchHot,
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 4),
                   Text(
                     'Equip on:',
@@ -2502,43 +3137,14 @@ class _InventoryDockState extends State<_InventoryDock>
                     ),
                   ),
                   const SizedBox(height: 3),
-                  Builder(
-                    builder: (context) {
-                      var bestIndex = -1;
-                      var bestDelta = 0;
-                      for (var i = 0; i < state.heroes.length; i++) {
-                        final delta = GameLogic.compareForHero(
-                          state.heroes[i],
-                          selected,
-                        ).powerDelta;
-                        if (delta > 0 && delta > bestDelta) {
-                          bestDelta = delta;
-                          bestIndex = i;
-                        }
-                      }
-                      return Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: [
-                          for (var i = 0; i < state.heroes.length; i++)
-                            _EquipHeroChip(
-                              hero: state.heroes[i],
-                              candidate: selected,
-                              isBest: i == bestIndex,
-                              onTap: () => onEquipToHero(i),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
+                  _equipHeroChipsFor(selected),
                 ],
               );
             },
           ),
         ] else
           Text(
-            'Tap an item to equip it, or ADD TO MERGE / long-press '
-            'to feed the TOOLS combinator (same slot only).',
+            'Tap item to select · long-press for tip · ADD TO MERGE for TOOLS.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         if (state.gearStash.isEmpty)
@@ -2565,7 +3171,7 @@ class _InventoryDockState extends State<_InventoryDock>
     final goldOk = canCombine && state.gold >= cost;
     final status = () {
       if (primary == null && secondary == null) {
-        return 'Load two same-slot items from BAG (ADD TO MERGE or long-press).';
+        return 'Load two same-slot items from BAG (ADD TO MERGE).';
       }
       if (primary == null || secondary == null) {
         return 'Add one more item of the same slot from BAG.';
@@ -2583,10 +3189,10 @@ class _InventoryDockState extends State<_InventoryDock>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('COMBINATOR', style: GameTheme.pixel(size: GameTheme.hudPixel)),
+          MenuChrome.sectionLabel('COMBINATOR'),
           const SizedBox(height: 4),
           Text(
-            'Sacrifice two items of the same slot for one upgraded result.',
+            'Sacrifice two bag items of the same slot for one upgraded result. Equipped gear is never used.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
           if (slotLabel != null) ...[
@@ -2695,7 +3301,7 @@ class _InventoryDockState extends State<_InventoryDock>
             ),
           ],
           const SizedBox(height: 14),
-          Text('SOULBIND', style: GameTheme.pixel(size: GameTheme.hudPixel)),
+          MenuChrome.sectionLabel('SOULBIND'),
           const SizedBox(height: 4),
           Text(
             'Lock a weapon or chest/cloak forever (3 fragments).',
@@ -2726,7 +3332,7 @@ class _InventoryDockState extends State<_InventoryDock>
           ),
           const SizedBox(height: 10),
           Text(
-            'Flask: party HUD · Pets: MORE → Beast Pen · God Hand: Forge',
+            'Flask: party HUD · Pets: META → Beast · God Hand: POWER → Forge → KEEP',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
@@ -2737,8 +3343,8 @@ class _InventoryDockState extends State<_InventoryDock>
 
   @override
   Widget build(BuildContext context) {
-    final primary = _find(combineA);
-    final secondary = _find(combineB);
+    final primary = _findStash(combineA);
+    final secondary = _findStash(combineB);
     final canCombine =
         primary != null &&
         secondary != null &&
@@ -2755,73 +3361,89 @@ class _InventoryDockState extends State<_InventoryDock>
         ? 0
         : 3 - state.soulboundFragments;
 
+    final phone = GameTheme.isPhoneWidth(context);
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MenuChrome.tabRail(
+          controller: _tabs,
+          tabs: [
+            const Tab(text: 'GEAR'),
+            const Tab(text: 'BAG'),
+            const Tab(text: 'MERGE'),
+            Tab(text: phone ? 'LOAD' : 'LOADOUTS'),
+            const Tab(text: 'ROSTER'),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabs,
+            // Phone: no horizontal swipe between tabs (avoids mid-swipe overlap
+            // and fights vertical bag scroll). Tap the tab rail instead.
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _equipTab(),
+              _bagTab(slots, primary),
+              _toolsTab(
+                primary: primary,
+                secondary: secondary,
+                canCombine: canCombine,
+                cost: cost,
+                preview: preview,
+                fragmentsNeeded: fragmentsNeeded,
+              ),
+              LoadoutsOverlay(director: widget.director),
+              SingleChildScrollView(
+                child: TeamCompositionOverlay(director: widget.director),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    // Overlay GEAR already has panel chrome — skip nested “second sheet”
+    // so the menu sits flush to the top with no dead strip.
+    if (widget.flatChrome) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(2, 0, 2, 0),
+        child: body,
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            GameTheme.panel.withValues(alpha: 0.82),
-            GameTheme.stoneDeep.withValues(alpha: 0.88),
+            GameTheme.panel.withValues(alpha: 0.94),
+            GameTheme.stoneDeep.withValues(alpha: 0.97),
           ],
         ),
         border: Border(
-          top: BorderSide(color: GameTheme.borderLit.withValues(alpha: 0.85), width: 2),
+          top: BorderSide(
+            color: GameTheme.borderLit.withValues(alpha: 0.4),
+          ),
         ),
         boxShadow: [
           BoxShadow(
-            color: GameTheme.torch.withValues(alpha: 0.08),
-            blurRadius: 0,
-            spreadRadius: 1,
+            color: GameTheme.torch.withValues(alpha: 0.1),
+            blurRadius: 18,
+            offset: const Offset(0, -4),
           ),
           const BoxShadow(
-            color: Color(0x66000000),
-            blurRadius: 8,
-            offset: Offset(0, -2),
+            color: Color(0x88000000),
+            blurRadius: 16,
+            offset: Offset(0, -6),
           ),
         ],
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(GameTheme.radiusLg),
+        ),
       ),
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Material(
-            color: GameTheme.stone.withValues(alpha: 0.55),
-            child: TabBar(
-              controller: _tabs,
-              labelStyle: GameTheme.pixel(size: GameTheme.hudPixel),
-              unselectedLabelStyle:
-                  GameTheme.pixel(size: GameTheme.hudPixel),
-              indicatorColor: GameTheme.torchHot,
-              labelColor: GameTheme.torchHot,
-              unselectedLabelColor: GameTheme.parchmentDim,
-              dividerColor: GameTheme.border.withValues(alpha: 0.5),
-              tabs: const [
-                Tab(text: 'GEAR'),
-                Tab(text: 'BAG'),
-                Tab(text: 'TOOLS'),
-              ],
-            ),
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabs,
-              children: [
-                _equipTab(),
-                _bagTab(slots, primary),
-                _toolsTab(
-                  primary: primary,
-                  secondary: secondary,
-                  canCombine: canCombine,
-                  cost: cost,
-                  preview: preview,
-                  fragmentsNeeded: fragmentsNeeded,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+      child: body,
     );
   }
 }
@@ -2888,15 +3510,21 @@ class _EquipHeroChip extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'P ${GameLogic.formatDelta(cmp.powerDelta)}',
+                'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
                 style: GameTheme.pixel(size: GameTheme.hudPixel, color: deltaColor),
               ),
-              Text(
-                'A${GameLogic.formatDelta(cmp.atkDelta)} '
-                'D${GameLogic.formatDelta(cmp.defDelta)} '
-                'V${GameLogic.formatDelta(cmp.vitDelta)}',
-                style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
-              ),
+              if (cmp.isUpgrade)
+                Text(
+                  'UPGRADE',
+                  style: GameTheme.body(size: 10, color: GameTheme.clear),
+                )
+              else
+                Text(
+                  'raw A${GameLogic.formatDelta(cmp.atkDelta)} '
+                  'D${GameLogic.formatDelta(cmp.defDelta)} '
+                  'V${GameLogic.formatDelta(cmp.vitDelta)}',
+                  style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+                ),
             ],
           ),
         ),
@@ -2910,6 +3538,7 @@ class _BagSlot extends StatelessWidget {
     required this.item,
     required this.state,
     required this.highlight,
+    this.hero,
     this.dimmed = false,
     this.onTap,
     this.onLongPress,
@@ -2917,10 +3546,32 @@ class _BagSlot extends StatelessWidget {
 
   final EquipmentItem? item;
   final GameState state;
+  final PartyHero? hero;
   final bool highlight;
   final bool dimmed;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+
+  static String _slotHint(EquipmentSlot slot) {
+    return switch (slot) {
+      EquipmentSlot.weapon => 'MH',
+      EquipmentSlot.offHand => 'OH',
+      EquipmentSlot.ranged => 'Rng',
+      EquipmentSlot.head => 'Head',
+      EquipmentSlot.shoulder => 'Shldr',
+      EquipmentSlot.chest => 'Chest',
+      EquipmentSlot.hands => 'Hand',
+      EquipmentSlot.waist => 'Belt',
+      EquipmentSlot.legs => 'Legs',
+      EquipmentSlot.boots => 'Feet',
+      EquipmentSlot.wrist => 'Wrist',
+      EquipmentSlot.cloak => 'Back',
+      EquipmentSlot.neck => 'Neck',
+      EquipmentSlot.ring || EquipmentSlot.ring2 => 'Ring',
+      EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'Trink',
+      EquipmentSlot.consumable => 'Flask',
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2931,7 +3582,7 @@ class _BagSlot extends StatelessWidget {
     final a11yLabel = item == null
         ? 'Empty bag slot'
         : '${item!.name}, item level ${item!.effectiveItemLevel}';
-    return Opacity(
+    final slot = Opacity(
       opacity: dimmed ? 0.25 : 1,
       child: Semantics(
         button: item != null,
@@ -2941,51 +3592,112 @@ class _BagSlot extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
-          decoration: MenuChrome.cardBox(selected: highlight).copyWith(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: item == null
+                  ? [
+                      GameTheme.panelInset.withValues(alpha: 0.7),
+                      GameTheme.stoneDeep.withValues(alpha: 0.75),
+                    ]
+                  : [
+                      Color.lerp(
+                        GameTheme.stoneRaised,
+                        rarityColor,
+                        0.18,
+                      )!,
+                      Color.lerp(
+                        GameTheme.stoneDeep,
+                        rarityColor,
+                        0.1,
+                      )!,
+                    ],
+            ),
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
             border: Border.all(
               color: highlight ? GameTheme.torchHot : rarityColor,
-              width: item != null ? 1.5 : 1,
+              width: highlight ? 1.6 : 1.1,
             ),
+            boxShadow: highlight
+                ? [
+                    BoxShadow(
+                      color: GameTheme.torch.withValues(alpha: 0.25),
+                      blurRadius: 10,
+                    ),
+                  ]
+                : null,
           ),
           clipBehavior: Clip.hardEdge,
           child: item == null
-              ? const SizedBox.expand()
+              ? Center(
+                  child: Icon(
+                    Icons.add,
+                    size: 14,
+                    color: GameTheme.border.withValues(alpha: 0.55),
+                  ),
+                )
               : Stack(
                   fit: StackFit.expand,
                   children: [
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Container(width: 3, color: rarityColor),
+                    ),
                     Center(
-                      child: KenneySprite(
-                        asset: KenneyAssets.equipmentIconFor(item!),
-                        size: 22,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: KenneySprite(
+                          asset: KenneyAssets.equipmentIconFor(item!),
+                          size: 26,
+                        ),
                       ),
                     ),
                     Positioned(
-                      bottom: 1,
-                      left: 2,
+                      top: 2,
+                      left: 6,
+                      child: ExcludeSemantics(
+                        child: Text(
+                          _slotHint(item!.slot),
+                          style: GameTheme.body(
+                            size: 10,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 2,
+                      left: 6,
                       child: ExcludeSemantics(
                         child: Text(
                           'i${item!.effectiveItemLevel}',
                           style: GameTheme.body(
                             size: 12,
-                            color: GameTheme.parchmentDim,
+                            color: GameTheme.parchment,
                           ),
                         ),
                       ),
                     ),
                     if (isBest)
                       Positioned(
-                        top: 1,
-                        left: 1,
+                        top: 2,
+                        right: 2,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 3,
-                            vertical: 0,
+                            horizontal: 4,
+                            vertical: 1,
                           ),
-                          color: const Color(0xDD2A5018),
+                          decoration: BoxDecoration(
+                            color: const Color(0xEE1E4030),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                           child: Text(
                             'BEST',
                             style: GameTheme.body(
-                              size: 11,
+                              size: 10,
                               color: GameTheme.clear,
                             ),
                           ),
@@ -2993,24 +3705,25 @@ class _BagSlot extends StatelessWidget {
                       ),
                     if (_isSoulboundItem(item!))
                       Positioned(
-                        top: 0,
-                        right: 2,
+                        bottom: 2,
+                        right: 3,
                         child: Text(
                           'SB',
                           style: GameTheme.body(
-                            size: 11,
+                            size: 10,
                             color: GameTheme.torchHot,
                           ),
                         ),
                       ),
-                    if (item!.slot == EquipmentSlot.weapon)
+                    if (item!.slot == EquipmentSlot.weapon &&
+                        !_isSoulboundItem(item!))
                       Positioned(
-                        bottom: 1,
-                        right: 2,
+                        bottom: 2,
+                        right: 3,
                         child: Text(
                           _patternGlyph(item!.pattern),
-                          style: GameTheme.pixel(
-                            size: 4,
+                          style: GameTheme.body(
+                            size: 11,
                             color: GameTheme.parchmentDim,
                           ),
                         ),
@@ -3020,6 +3733,12 @@ class _BagSlot extends StatelessWidget {
         ),
       ),
       ),
+    );
+    if (item == null) return slot;
+    return ItemTooltipAnchor(
+      item: item!,
+      hero: hero,
+      child: slot,
     );
   }
 }
@@ -3119,15 +3838,16 @@ class _OverlayScrim extends StatelessWidget {
     required this.title,
     required this.onClose,
     required this.child,
+    this.heightFactor = 0.85,
   });
 
   final String title;
   final VoidCallback onClose;
   final Widget child;
+  final double heightFactor;
 
   @override
   Widget build(BuildContext context) {
-    final compact = GameTheme.isCompactWidth(context);
     return Positioned.fill(
       child: Material(
         color: MenuChrome.scrim,
@@ -3146,25 +3866,13 @@ class _OverlayScrim extends StatelessWidget {
                 ),
               ),
             ),
-            compact
-                ? _MobileSheet(title: title, onClose: onClose, child: child)
-                : Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: 520,
-                        maxHeight: 560,
-                      ),
-                      child: SizedBox(
-                        width: 520,
-                        height: 560,
-                        child: _OverlayPanel(
-                          title: title,
-                          onClose: onClose,
-                          child: child,
-                        ),
-                      ),
-                    ),
-                  ),
+            // Phone product: full-width sheet (never the centered desktop card).
+            _MobileSheet(
+              title: title,
+              onClose: onClose,
+              heightFactor: heightFactor,
+              child: child,
+            ),
           ],
         ),
       ),
@@ -3177,30 +3885,52 @@ class _MobileSheet extends StatelessWidget {
     required this.title,
     required this.onClose,
     required this.child,
+    this.heightFactor = 0.85,
   });
 
   final String title;
   final VoidCallback onClose;
   final Widget child;
+  final double heightFactor;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: FractionallySizedBox(
-        heightFactor: GameTheme.isCompactWidth(context) ? 0.85 : 0.94,
-        widthFactor: 1,
-        // Absorb taps so scrim-dismiss behind the sheet does not fire.
-        child: GestureDetector(
-          onTap: () {},
-          behavior: HitTestBehavior.opaque,
-          child: _OverlayPanel(
-            title: title,
-            onClose: onClose,
-            margin: EdgeInsets.zero,
-            borderRadius: MenuChrome.sheetRadius,
-            child: child,
-          ),
+    // Absorb taps so scrim-dismiss behind the sheet does not fire.
+    final sheet = GestureDetector(
+      onTap: () {},
+      behavior: HitTestBehavior.opaque,
+      child: _OverlayPanel(
+        title: title,
+        onClose: onClose,
+        margin: EdgeInsets.zero,
+        borderRadius: MenuChrome.sheetRadius,
+        // Full-height GEAR: skip drag handle — reclaim vertical space.
+        showHandle: heightFactor < 0.99,
+        child: child,
+      ),
+    );
+
+    if (heightFactor >= 0.99) {
+      // Phone GEAR: flush to the top of the view — no dead strip from
+      // SafeArea / browser safe-area-inset. Keep a bottom home-bar pad only.
+      final bottom = MediaQuery.viewPaddingOf(context).bottom;
+      return MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottom),
+          child: SizedBox.expand(child: sheet),
+        ),
+      );
+    }
+
+    return SafeArea(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: FractionallySizedBox(
+          heightFactor: heightFactor,
+          widthFactor: 1,
+          child: sheet,
         ),
       ),
     );
@@ -3214,6 +3944,7 @@ class _OverlayPanel extends StatelessWidget {
     required this.child,
     this.margin = const EdgeInsets.all(16),
     this.borderRadius,
+    this.showHandle,
   });
 
   final String title;
@@ -3221,45 +3952,239 @@ class _OverlayPanel extends StatelessWidget {
   final Widget child;
   final EdgeInsets margin;
   final BorderRadius? borderRadius;
+  final bool? showHandle;
 
   @override
   Widget build(BuildContext context) {
-    final showHandle = borderRadius != null;
-    return SafeArea(
-      top: false,
-      child: Container(
-        margin: margin,
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-        decoration: MenuChrome.panel(borderRadius: borderRadius),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (showHandle) MenuChrome.sheetHandle(),
-            Row(
-              children: [
-                if (title.isNotEmpty)
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: GameTheme.pixel(size: GameTheme.hudPixelComfort),
-                    ),
-                  )
-                else
-                  const Spacer(),
-                KenneyButton(
-                  label: 'CLOSE',
-                  onPressed: onClose,
-                  style: KenneyButtonStyle.grey,
-                  expanded: false,
-                  primary: true,
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Expanded(child: child),
+    final handle = showHandle ?? borderRadius != null;
+    final panel = Container(
+      margin: margin,
+      padding: EdgeInsets.fromLTRB(12, handle ? 6 : 6, 12, 8),
+      decoration: MenuChrome.panel(borderRadius: borderRadius),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (handle) MenuChrome.sheetHandle(),
+          Row(
+            children: [
+              if (title.isNotEmpty)
+                Expanded(
+                  child: Text(
+                    title,
+                    style: GameTheme.menuTitle(size: 18),
+                  ),
+                )
+              else
+                const Spacer(),
+              KenneyButton(
+                label: 'CLOSE',
+                onPressed: onClose,
+                style: KenneyButtonStyle.grey,
+                expanded: false,
+                primary: true,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Container(
+            height: 1,
+            color: GameTheme.borderLit.withValues(alpha: 0.22),
+          ),
+          const SizedBox(height: 6),
+          Expanded(child: child),
+        ],
+      ),
+    );
+    // Mobile sheet already wraps SafeArea; avoid double bottom inset.
+    if (margin == EdgeInsets.zero) return panel;
+    return SafeArea(top: false, child: panel);
+  }
+}
+
+/// POWER pillar — forge · sanctuary · market · essence shop.
+class _PowerPillar extends StatefulWidget {
+  const _PowerPillar({required this.director});
+  final GameDirector director;
+
+  @override
+  State<_PowerPillar> createState() => _PowerPillarState();
+}
+
+class _PowerPillarState extends State<_PowerPillar>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs = TabController(length: 4, vsync: this);
+    _tabs.addListener(() {
+      if (!_tabs.indexIsChanging) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = widget.director;
+    final s = d.state;
+    final keepLine =
+        'Keep · AL${s.ascensionLevel} · Bless ×${s.metaDepth.ascendBlessings} · '
+        '${s.essence}e';
+    final runLine =
+        'This run · forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
+        'VIT +${s.vitalityBonus}';
+    final blurb = switch (_tabs.index) {
+      0 => 'Forge: gold this run (wipes) · KEEP forever · Apex mats',
+      1 => 'Camp: permanent essence tracks — survive Ascend',
+      2 => 'Market: flasks for the run · sell stash for gold',
+      _ => 'Shop: essence power that survives Ascend',
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 2, 8, 0),
+          child: Column(
+            children: [
+              Text(
+                keepLine,
+                textAlign: TextAlign.center,
+                style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+              ),
+              Text(
+                runLine,
+                textAlign: TextAlign.center,
+                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        MenuChrome.tabRail(
+          controller: _tabs,
+          onTap: (_) => setState(() {}),
+          tabs: const [
+            Tab(text: 'FORGE'),
+            Tab(text: 'CAMP'),
+            Tab(text: 'MARKET'),
+            Tab(text: 'SHOP'),
           ],
         ),
-      ),
+        const SizedBox(height: 4),
+        Text(
+          blurb,
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        Expanded(
+          child: switch (_tabs.index) {
+            0 => SingleChildScrollView(child: _ForgeOverlay(director: d)),
+            1 => SingleChildScrollView(child: _SanctuaryOverlay(director: d)),
+            2 => SingleChildScrollView(child: _MarketOverlay(director: d)),
+            _ => PrestigeShopOverlay(director: d),
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// META pillar — keystone · contracts · beast · collection · help · settings.
+class _MetaPillar extends StatefulWidget {
+  const _MetaPillar({
+    required this.director,
+    required this.onOpenWhatsNew,
+  });
+  final GameDirector director;
+  final VoidCallback onOpenWhatsNew;
+
+  @override
+  State<_MetaPillar> createState() => _MetaPillarState();
+}
+
+class _MetaPillarState extends State<_MetaPillar>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs = TabController(length: 6, vsync: this);
+    _tabs.addListener(() {
+      if (!_tabs.indexIsChanging) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = widget.director;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MenuChrome.tabRail(
+          controller: _tabs,
+          onTap: (_) => setState(() {}),
+          tabs: const [
+            Tab(text: 'KEY'),
+            Tab(text: 'JOBS'),
+            Tab(text: 'BEAST'),
+            Tab(text: 'CODEX'),
+            Tab(text: 'GUIDE'),
+            Tab(text: 'SET'),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: switch (_tabs.index) {
+            0 => SingleChildScrollView(
+                child: ChallengeToggles(director: d),
+              ),
+            1 => SingleChildScrollView(child: _JobsOverlay(director: d)),
+            2 => SingleChildScrollView(child: _BeastOverlay(director: d)),
+            3 => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: CodexOverlay(director: d)),
+                  const Divider(height: 12, color: GameTheme.border),
+                  Expanded(child: AchievementsOverlay(director: d)),
+                ],
+              ),
+            4 => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  KenneyButton(
+                    label: MetaSystems.hasUnseenChangelog(d.state)
+                        ? "WHAT'S NEW ★"
+                        : "WHAT'S NEW",
+                    style: KenneyButtonStyle.grey,
+                    onPressed: widget.onOpenWhatsNew,
+                  ),
+                  const SizedBox(height: 8),
+                  const Expanded(child: GuidesOverlay()),
+                ],
+              ),
+            _ => SingleChildScrollView(
+                child: _SettingsOverlay(
+                  director: d,
+                  onClose: () {},
+                ),
+              ),
+          },
+        ),
+      ],
     );
   }
 }
@@ -3306,12 +4231,12 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
       PartyUpgradeType.crit => '+${state.critBonus}%',
     };
     final name = switch (type) {
-      PartyUpgradeType.attack => 'Attack',
-      PartyUpgradeType.defense => 'Defense',
-      PartyUpgradeType.vitality => 'Vitality',
-      PartyUpgradeType.moveSpeed => 'Move',
-      PartyUpgradeType.attackSpeed => 'Haste',
-      PartyUpgradeType.crit => 'Crit',
+      PartyUpgradeType.attack => 'ATK',
+      PartyUpgradeType.defense => 'DEF',
+      PartyUpgradeType.vitality => 'VIT',
+      PartyUpgradeType.moveSpeed => 'MOVE',
+      PartyUpgradeType.attackSpeed => 'HASTE',
+      PartyUpgradeType.crit => 'CRIT',
     };
     final costPart = onPressed != null ? '${cost}g' : 'Need ${cost}g';
     final label = recommended
@@ -3328,28 +4253,19 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Material(
-          color: GameTheme.stone.withValues(alpha: 0.55),
-          child: TabBar(
-            controller: _tabs,
-            onTap: (_) => setState(() {}),
-            labelStyle: GameTheme.pixel(size: GameTheme.hudPixel),
-            unselectedLabelStyle: GameTheme.pixel(size: GameTheme.hudPixel),
-            indicatorColor: GameTheme.torchHot,
-            labelColor: GameTheme.torchHot,
-            unselectedLabelColor: GameTheme.parchmentDim,
-            dividerColor: GameTheme.border.withValues(alpha: 0.5),
-            tabs: const [
-              Tab(text: 'FORGE'),
-              Tab(text: 'META'),
-              Tab(text: 'MATS'),
-              Tab(text: 'APEX'),
-            ],
-          ),
+        MenuChrome.tabRail(
+          controller: _tabs,
+          onTap: (_) => setState(() {}),
+          tabs: const [
+            Tab(text: 'GOLD'),
+            Tab(text: 'KEEP'),
+            Tab(text: 'MATS'),
+            Tab(text: 'APEX'),
+          ],
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: 560,
+          height: math.min(560, MediaQuery.sizeOf(context).height * 0.62),
           child: IndexedStack(
             index: _tabs.index,
             children: [
@@ -3374,8 +4290,7 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: GameTheme.pixel(size: 8)),
-          const SizedBox(height: 2),
+          MenuChrome.sectionLabel(title),
           Text(
             blurb,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -3390,55 +4305,71 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
     final training = GameLogic.partyTrainingCostFor(state);
     final canAscend = GameLogic.canAscend(state);
     final softcap = GameLogic.levelsUntilSoftcap(state);
+    final meanLv = state.heroes.isEmpty
+        ? 1
+        : (state.heroes.fold<int>(0, (s, h) => s + h.level) /
+                state.heroes.length)
+            .round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Gold for party ATK/DEF/VIT/etc this run (wipes on Ascend).\n'
-          'Essence spends are under META — not here.',
+          'Gold this run — forge upgrades wipe on Ascend. '
+          'Train levels stay forever.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         Text(
-          'ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
-          'VIT +${state.totalVitalityBonus}\n'
-          'SPD +${state.moveSpeedBonus}%  HASTE +${state.attackSpeedBonus}%  '
+          'Bought this run:  ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
+          'VIT +${state.vitalityBonus}\n'
+          'MOVE +${state.moveSpeedBonus}%  HASTE +${state.attackSpeedBonus}%  '
           'CRIT +${state.critBonus}%',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          style: GameTheme.body(size: 14, color: GameTheme.parchment),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Party power now (gear + keep + forge):  '
+          'ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
+          'VIT +${state.totalVitalityBonus}',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         Text(
           canAscend
               ? (director.state.inDungeon
-                  ? 'Ascend ready on Hub · AL${state.ascensionLevel + 1}'
-                  : 'Ascend ready · AL${state.ascensionLevel + 1}')
-              : (director.state.inDungeon
-                  ? 'Ascend on Hub · '
-                      '${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} bosses'
-                  : '${state.bossVictories}/${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} bosses · keep clearing'),
+                  ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
+                  : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
+              : 'Ascend ${state.bossVictories}/'
+                  '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} '
+                  'bosses · claim on Hub (not here)',
           textAlign: TextAlign.center,
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _sectionTitle(
-          'GOLD UPGRADES',
-          'Infinite tracks · wipe on Ascend. BEST marks the cheapest relative gain.',
+          'TRAIN (LEVELS)',
+          'Pays gold · +1 level to every hero · levels survive Ascend.',
         ),
         KenneyButton(
           label: state.gold >= training
-              ? 'Train $training g'
-              : 'Need $training g',
+              ? 'Train party +1 Lv · ${training}g'
+              : 'Train · Need ${training}g',
           onPressed: state.gold >= training ? director.applyTraining : null,
         ),
-        if (softcap > 0)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              'Train: need ~$softcap level${softcap == 1 ? '' : 's'} to match floor',
-              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-            ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            softcap > 0
+                ? 'Avg Lv$meanLv · ~$softcap more level${softcap == 1 ? '' : 's'} to match floor'
+                : 'Avg Lv$meanLv · party level matches this floor',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
-        const SizedBox(height: 6),
+        ),
+        const SizedBox(height: 10),
+        _sectionTitle(
+          'RUN BONUSES (GOLD)',
+          'Cheapest relative gain shows BEST. All wipe when you Ascend.',
+        ),
         for (final type in PartyUpgradeType.values) ...[
           _upgradeButton(
             state: state,
@@ -3457,11 +4388,6 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
           ),
           const SizedBox(height: 6),
         ],
-        Text(
-          'Gold forge tracks are infinite (cost scales) and wipe on Ascend.\n'
-          'Relics / Soulbound / God Hand live under META.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
       ],
     );
   }
@@ -3472,18 +4398,29 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${state.essence} essence · spends here survive Ascend',
-          style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+          'Keep forever — essence spends survive Ascend. '
+          'Run gold lives on the GOLD tab.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${state.essence} essence',
+          style: GameTheme.body(size: 15, color: GameTheme.torchHot),
         ),
         Text(
-          'Relics, sanctuary tracks, soulbound & God Hand use essence. '
-          'Run gold upgrades stay on the GOLD tab.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          state.metaDepth.ascendBlessings <= 0
+              ? 'Ascend Blessing: none yet — Ascend on Hub for permanent ATK/DEF/VIT/gold'
+              : 'Ascend Blessing ×${state.metaDepth.ascendBlessings}: '
+                  '+${state.ascendBlessingAttackBonus} ATK · '
+                  '+${state.ascendBlessingDefenseBonus} DEF · '
+                  '+${state.ascendBlessingVitalityBonus} VIT · '
+                  '+${state.ascendBlessingGoldPercent}% gold',
+          style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
         const SizedBox(height: 8),
         _sectionTitle(
           'RELICS',
-          'Essence · permanent party auras.',
+          'Buy once · upgrade tiers · permanent party auras.',
         ),
         for (final relicId in GameLogic.relicOrder) ...[
           Builder(
@@ -3498,13 +4435,13 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
                   : 0;
               final desc = switch (relicId) {
                 GameLogic.warBannerRelic => owned
-                    ? 'Permanent +${state.relicAttackBonus} team attack aura (T$tier).'
-                    : 'Permanent +4 team attack aura per tier.',
+                    ? 'Permanent +${state.relicAttackBonus} team attack (T$tier).'
+                    : 'Permanent +4 team attack per tier.',
                 GameLogic.ironWardRelic => owned
-                    ? 'Permanent +${state.relicDefenseBonus} team defense aura (T$tier).'
-                    : 'Permanent +2 team defense aura per tier.',
+                    ? 'Permanent +${state.relicDefenseBonus} team defense (T$tier).'
+                    : 'Permanent +2 team defense per tier.',
                 GameLogic.phoenixEmberRelic => owned
-                    ? 'Permanent +${state.relicVitalityBonus} max HP for every hero (T$tier).'
+                    ? 'Permanent +${state.relicVitalityBonus} max HP per hero (T$tier).'
                     : 'Permanent +10 max HP per hero per tier.',
                 GameLogic.godHandFocusRelic => owned
                     ? '+${state.relicGodHandDamageBonus} God Hand damage (T$tier).'
@@ -3585,9 +4522,13 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const Divider(height: 16, color: Color(0x665A5040)),
         _sectionTitle(
           'SOULBOUND',
-          'Bind one weapon or armor from bag TOOLS · survives Ascend. '
-              'Prefer picks the slot when you tap BIND on a hero.',
+          'One forever item for the whole party. Bind from a hero → TOOLS (3 fragments).',
         ),
+        Text(
+          'Prefer which slot BIND picks first:',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
         Row(
           children: [
             Expanded(
@@ -3618,20 +4559,19 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const SizedBox(height: 6),
         if (state.soulboundItem == null)
           Text(
-            'No soulbound yet. Open a hero → TOOLS → BIND (3 fragments). '
-            'Preference: ${state.metaDepth.soulboundIsArmor ? 'armor' : 'weapon'}.',
+            'None yet. Equip a weapon or chest/cloak, open that hero → TOOLS → SOULBIND.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           )
         else ...[
           Text(
-            '${state.soulboundItem!.name}  ·  refine '
-            '${state.metaDepth.soulboundRefine}',
+            '${state.soulboundItem!.name}\n'
+            'Refine ${state.metaDepth.soulboundRefine} · each refine +1 ATK & +1 DEF',
             style: GameTheme.body(size: 14, color: GameTheme.mossLit),
           ),
           const SizedBox(height: 6),
           KenneyButton(
             label:
-                'REFINE  ${GameLogic.refineSoulboundCost(state.metaDepth.soulboundRefine)} frag',
+                'Refine +1 ATK/DEF · ${GameLogic.refineSoulboundCost(state.metaDepth.soulboundRefine)} frag',
             onPressed: state.soulboundFragments >=
                     GameLogic.refineSoulboundCost(
                       state.metaDepth.soulboundRefine,
@@ -3643,17 +4583,17 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const Divider(height: 16, color: Color(0x665A5040)),
         _sectionTitle(
           'GOD HAND',
-          'Essence · tap AOE in dungeon. Survives Ascend.',
+          'Tap in the dungeon for AOE. Essence upgrades survive Ascend.',
         ),
         Text(
-          'Lv${state.godHandLevel}  AOE ${state.godHandBaseDamage}  '
-          'r${state.godHandRadius.toStringAsFixed(1)}',
+          'Lv${state.godHandLevel} · damage ${state.godHandBaseDamage} · '
+          'radius ${state.godHandRadius.toStringAsFixed(1)}',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         KenneyButton(
           label:
-              'POWER Lv${state.godHandLevel}  ${GameLogic.godHandUpgradeCost(state.godHandLevel)}e',
+              'Damage Lv${state.godHandLevel} · ${GameLogic.godHandUpgradeCost(state.godHandLevel)}e',
           onPressed: state.essence >=
                   GameLogic.godHandUpgradeCost(state.godHandLevel)
               ? director.upgradeGodHand
@@ -3662,8 +4602,8 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const SizedBox(height: 6),
         KenneyButton(
           label: state.metaDepth.godHandCdLevel >= 8
-              ? 'CD Lv${state.metaDepth.godHandCdLevel}  MAX'
-              : 'CD Lv${state.metaDepth.godHandCdLevel}  '
+              ? 'Cooldown Lv${state.metaDepth.godHandCdLevel} · MAX'
+              : 'Cooldown Lv${state.metaDepth.godHandCdLevel} · '
                   '${GameLogic.godHandCdUpgradeCost(state.metaDepth.godHandCdLevel)}e',
           onPressed: state.metaDepth.godHandCdLevel >= 8
               ? null
@@ -3676,7 +4616,7 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         ),
         const SizedBox(height: 8),
         Text(
-          'Style · BAL / FOCUS / WIDE (tip: God Hand styles)',
+          'Style: BAL = default · FOCUS = harder hits, smaller blast · WIDE = bigger blast, softer hits',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),
@@ -3712,22 +4652,33 @@ class _JobsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    final ready = state.missions.where((m) => m.isComplete).length;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text(
+          'Contracts — clear goals while you dungeon. Claim for gold + essence.',
+          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        ),
+        if (ready > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              '$ready ready to claim',
+              style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+            ),
+          ),
+        const SizedBox(height: 8),
         for (final mission in state.missions)
           Container(
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: GameTheme.menuCard,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: switch (mission.tier) {
-                  2 => GameTheme.bloodLit,
-                  1 => GameTheme.torchHot,
-                  _ => const Color(0xFF595033),
-                },
-              ),
+            decoration: MenuChrome.listCard(
+              borderColor: switch (mission.tier) {
+                2 => GameTheme.bloodLit,
+                1 => GameTheme.torchHot,
+                _ => GameTheme.border.withValues(alpha: 0.9),
+              },
             ),
             child: Row(
               children: [
@@ -3737,12 +4688,12 @@ class _JobsOverlay extends StatelessWidget {
                     children: [
                       Text(
                         mission.title,
-                        style: GameTheme.pixel(
-                          size: 8,
+                        style: GameTheme.body(
+                          size: 16,
                           color: switch (mission.tier) {
                             2 => GameTheme.bloodLit,
                             1 => GameTheme.torchHot,
-                            _ => GameTheme.torchHot,
+                            _ => GameTheme.parchment,
                           },
                         ),
                       ),
@@ -3752,9 +4703,25 @@ class _JobsOverlay extends StatelessWidget {
                         '+${mission.goldReward}g +${mission.essenceReward}e',
                         style: GameTheme.body(size: 14),
                       ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                        child: LinearProgressIndicator(
+                          value: mission.target <= 0
+                              ? 0
+                              : (mission.progress / mission.target)
+                                  .clamp(0.0, 1.0),
+                          minHeight: 8,
+                          backgroundColor: GameTheme.panelInset,
+                          color: mission.isComplete
+                              ? GameTheme.mossLit
+                              : GameTheme.torchHot,
+                        ),
+                      ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 KenneyButton(
                   label: mission.isComplete ? 'CLAIM' : 'IN PROGRESS',
                   onPressed: mission.isComplete
@@ -3798,10 +4765,21 @@ class _SanctuaryOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Permanent essence tracks — infinite levels (cost scales). '
-          'Survive Ascend. Optional reset from Lv12 converts into prestige.',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          'Permanent essence tracks — survive Ascend. '
+          'Upgrade forever; from Lv12 you can Prestige (reset level, keep a bonus).',
+          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
+        if (state.metaDepth.ascendBlessings > 0) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Ascend Blessing ×${state.metaDepth.ascendBlessings} · '
+            '+${state.ascendBlessingAttackBonus} ATK · '
+            '+${state.ascendBlessingDefenseBonus} DEF · '
+            '+${state.ascendBlessingVitalityBonus} VIT · '
+            '+${state.ascendBlessingGoldPercent}% gold',
+            style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+          ),
+        ],
         const SizedBox(height: 10),
         for (final track in <String>['gold', 'power', 'vitality', 'xp']) ...[
           Builder(
@@ -3824,12 +4802,8 @@ class _SanctuaryOverlay extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
+                  MenuChrome.sectionLabel(
                     GameLogic.sanctuaryNames[track] ?? track,
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
-                      color: GameTheme.torchHot,
-                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -3841,7 +4815,7 @@ class _SanctuaryOverlay extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Next $nextBonus',
+                    'Next: $nextBonus',
                     style: GameTheme.body(
                       size: 12,
                       color: GameTheme.mossLit,
@@ -3859,7 +4833,7 @@ class _SanctuaryOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   KenneyButton(
-                    label: 'UPGRADE  ${cost}e',
+                    label: 'Upgrade · ${cost}e',
                     onPressed: state.essence >= cost
                         ? () => director.upgradeSanctuary(track)
                         : null,
@@ -3867,7 +4841,7 @@ class _SanctuaryOverlay extends StatelessWidget {
                   if (level >= 12) ...[
                     const SizedBox(height: 4),
                     KenneyButton(
-                      label: 'PRESTIGE RESET  +${25 + level}e',
+                      label: 'Prestige reset · +${25 + level}e',
                       style: KenneyButtonStyle.brown,
                       onPressed: () =>
                           director.prestigeSanctuaryTrack(track),
@@ -3957,7 +4931,7 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
           onChanged: director.setColorblindMode,
         ),
         const SizedBox(height: 12),
-        Text('UI text scale', style: GameTheme.pixel(size: 7)),
+        Text('UI text scale', style: GameTheme.body(size: 13, color: GameTheme.parchmentDim)),
         const SizedBox(height: 6),
         Semantics(
           slider: true,
@@ -3986,60 +4960,49 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
           ),
         ),
         const SizedBox(height: 12),
-        Text('Auto-sell max iLvl', style: GameTheme.pixel(size: 8)),
-        const SizedBox(height: 6),
-        Builder(
-          builder: (context) {
-            final sellCap = GameLogic.maxAutoSellIlvlCap(state);
-            return Row(
-              children: [
-                TextButton(
-                  style: TextButton.styleFrom(
-                    minimumSize:
-                        const Size(GameTheme.minTouch, GameTheme.minTouch),
-                    padding: EdgeInsets.zero,
-                    foregroundColor: GameTheme.parchment,
-                  ),
-                  onPressed: state.autoSellMaxPower > 0
-                      ? () => director
-                          .setAutoSellMaxPower(state.autoSellMaxPower - 1)
-                      : null,
-                  child: Text('-', style: GameTheme.pixel(size: 10)),
-                ),
-                Expanded(
-                  child: _CaveSlider(
-                    value: state.autoSellMaxPower
-                        .toDouble()
-                        .clamp(0, sellCap.toDouble()),
-                    min: 0,
-                    max: sellCap.toDouble(),
-                    divisions: sellCap.clamp(1, 200),
-                    onChanged: (v) => director.setAutoSellMaxPower(v.round()),
-                  ),
-                ),
-                TextButton(
-                  style: TextButton.styleFrom(
-                    minimumSize:
-                        const Size(GameTheme.minTouch, GameTheme.minTouch),
-                    padding: EdgeInsets.zero,
-                    foregroundColor: GameTheme.parchment,
-                  ),
-                  onPressed: state.autoSellMaxPower < sellCap
-                      ? () => director
-                          .setAutoSellMaxPower(state.autoSellMaxPower + 1)
-                      : null,
-                  child: Text('+', style: GameTheme.pixel(size: 10)),
-                ),
-              ],
-            );
-          },
-        ),
+        MenuChrome.sectionLabel('BAG CLEANUP'),
+        const SizedBox(height: 4),
         Text(
-          'Pickup & bag SELL JUNK: sell at or below i${state.autoSellMaxPower} '
-          'if not BiS/upgrade (0 = off). Cap scales with dungeon clears / AL '
-          '(max i${GameLogic.maxAutoSellIlvlCap(state)}). Rare+ above the cap '
-          'kept until bag ≥90% full. Bag SELL = essence; Market = gold.',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          'Near-full bag: merge → sell gold → scrap essence. '
+          'BiS / upgrades are never cleaned. Bag → FILTERS opens these controls.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 10),
+        Text('Auto-sell (gold)', style: GameTheme.body(size: 13, color: GameTheme.parchmentDim)),
+        const SizedBox(height: 6),
+        _IlvlFilterRow(
+          value: state.autoSellMaxPower,
+          max: GameLogic.maxAutoSellIlvlCap(state),
+          onChanged: director.setAutoSellMaxPower,
+          offLabel: 'Off',
+        ),
+        const SizedBox(height: 6),
+        _RarityFilterRow(
+          value: state.autoSellMaxRarity,
+          onChanged: director.setAutoSellMaxRarity,
+          enabled: state.autoSellMaxPower > 0,
+        ),
+        const SizedBox(height: 12),
+        Text('Auto-disassemble (essence)', style: GameTheme.body(size: 13, color: GameTheme.parchmentDim)),
+        const SizedBox(height: 6),
+        _IlvlFilterRow(
+          value: state.autoDisassembleMaxIlvl,
+          max: GameLogic.maxAutoSellIlvlCap(state),
+          onChanged: director.setAutoDisassembleMaxIlvl,
+          offLabel: 'Off',
+        ),
+        const SizedBox(height: 6),
+        _RarityFilterRow(
+          value: state.autoDisassembleMaxRarity,
+          onChanged: director.setAutoDisassembleMaxRarity,
+          enabled: state.autoDisassembleMaxIlvl > 0,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity), then scrap '
+          'leftovers that match disassemble filters. Single-item SELL = essence. '
+          'Market tap = gold.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 16),
         SaveTransferSection(director: director),
@@ -4083,6 +5046,119 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
     );
   }
 
+}
+
+class _IlvlFilterRow extends StatelessWidget {
+  const _IlvlFilterRow({
+    required this.value,
+    required this.max,
+    required this.onChanged,
+    required this.offLabel,
+  });
+
+  final int value;
+  final int max;
+  final ValueChanged<int> onChanged;
+  final String offLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        TextButton(
+          style: TextButton.styleFrom(
+            minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
+            padding: EdgeInsets.zero,
+            foregroundColor: GameTheme.parchment,
+          ),
+          onPressed: value > 0 ? () => onChanged(value - 1) : null,
+          child: Text('-', style: GameTheme.pixel(size: 10)),
+        ),
+        Expanded(
+          child: _CaveSlider(
+            value: value.toDouble().clamp(0, max.toDouble()),
+            min: 0,
+            max: max.toDouble(),
+            divisions: max.clamp(1, 200),
+            onChanged: (v) => onChanged(v.round()),
+          ),
+        ),
+        TextButton(
+          style: TextButton.styleFrom(
+            minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
+            padding: EdgeInsets.zero,
+            foregroundColor: GameTheme.parchment,
+          ),
+          onPressed: value < max ? () => onChanged(value + 1) : null,
+          child: Text('+', style: GameTheme.pixel(size: 10)),
+        ),
+        SizedBox(
+          width: 52,
+          child: Text(
+            value <= 0 ? offLabel : 'i$value',
+            textAlign: TextAlign.right,
+            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RarityFilterRow extends StatelessWidget {
+  const _RarityFilterRow({
+    required this.value,
+    required this.onChanged,
+    required this.enabled,
+  });
+
+  final int value;
+  final ValueChanged<int> onChanged;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = GameLogic.rarityFilterLabel(value);
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: Row(
+        children: [
+          Text(
+            'Max rarity',
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+          const Spacer(),
+          TextButton(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
+              padding: EdgeInsets.zero,
+              foregroundColor: GameTheme.parchment,
+            ),
+            onPressed: enabled && value > 0 ? () => onChanged(value - 1) : null,
+            child: Text('-', style: GameTheme.pixel(size: 10)),
+          ),
+          SizedBox(
+            width: 88,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: GameTheme.pixel(size: 7, color: GameTheme.torchHot),
+            ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
+              padding: EdgeInsets.zero,
+              foregroundColor: GameTheme.parchment,
+            ),
+            onPressed:
+                enabled && value < 4 ? () => onChanged(value + 1) : null,
+            child: Text('+', style: GameTheme.pixel(size: 10)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SettingsToggle extends StatelessWidget {
@@ -4309,31 +5385,40 @@ class _MarketOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Gold ${_formatCount(state.gold)} / Essence ${_formatCount(state.essence)}',
+          'Gold ${_formatCount(state.gold)} · Essence ${_formatCount(state.essence)}',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         Text(
-          'Buy flasks for mid-run recovery (gold). Tap stash pieces here to sell for gold. '
-          'Bag SELL / SELL JUNK pay essence — rare+ kept until bag ≥90% full.',
+          'Buy heals with gold. Tap a stash item here to sell it for gold.\n'
+          'In the bag: SELL JUNK = gold · SCRAP = essence (Settings filters).',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 12),
+        MenuChrome.sectionLabel('CONSUMABLES'),
+        const SizedBox(height: 6),
         KenneyButton(
-          label: 'BUY FLASK  ${flaskCost}g',
+          label: state.gold >= flaskCost
+              ? 'Buy flask · ${flaskCost}g'
+              : 'Buy flask · Need ${flaskCost}g',
           onPressed: state.gold >= flaskCost ? director.buyMarketFlask : null,
         ),
         const SizedBox(height: 6),
         KenneyButton(
-          label: 'BUY 3 FLASKS  ${flaskCost * 3}g',
-          onPressed:
-              state.gold >= flaskCost ? () => director.buyMarketFlasks() : null,
+          label: state.gold >= flaskCost * 3
+              ? 'Buy 3 flasks · ${flaskCost * 3}g'
+              : 'Buy 3 flasks · Need ${flaskCost * 3}g',
+          onPressed: state.gold >= flaskCost * 3
+              ? () => director.buyMarketFlasks()
+              : null,
         ),
         const SizedBox(height: 6),
         KenneyButton(
-          label: 'BUY BANDAGE  ${GameLogic.marketBandageCost(state)}g',
+          label: state.gold >= GameLogic.marketBandageCost(state)
+              ? 'Buy bandage · ${GameLogic.marketBandageCost(state)}g'
+              : 'Buy bandage · Need ${GameLogic.marketBandageCost(state)}g',
           onPressed: state.gold >= GameLogic.marketBandageCost(state)
               ? director.buyMarketBandage
               : null,
@@ -4352,14 +5437,11 @@ class _MarketOverlay extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Text(
-          'SELL STASH (tap for gold)',
-          style: GameTheme.pixel(size: GameTheme.hudPixel, color: GameTheme.parchmentDim),
-        ),
+        MenuChrome.sectionLabel('SELL STASH (TAP = GOLD)'),
         const SizedBox(height: 6),
         if (stash.isEmpty)
           Text(
-            'Bag is empty. Clear rooms for gear. Sell here for gold, or SELL JUNK in the bag for essence.',
+            'Bag empty. Clear rooms for gear, then sell extras here for gold.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
           )
@@ -4374,16 +5456,16 @@ class _MarketOverlay extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Material(
-                    color: GameTheme.menuCard,
-                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.transparent,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(GameTheme.radiusSm),
                       onTap: () => director.sellGearForGold(item.id),
-                      child: Padding(
+                      child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
                           vertical: 8,
                         ),
+                        decoration: MenuChrome.listCard(inset: true),
                         child: Row(
                           children: [
                             KenneySprite(
@@ -4399,8 +5481,8 @@ class _MarketOverlay extends StatelessWidget {
                             ),
                             Text(
                               '+${gold}g',
-                              style: GameTheme.pixel(
-                                size: 6,
+                              style: GameTheme.body(
+                                size: 14,
                                 color: GameTheme.torchHot,
                               ),
                             ),
@@ -4502,7 +5584,7 @@ class _BeastOverlayState extends State<_BeastOverlay> {
         Text(
           'Roster ${state.ownedPets.length}/$cap',
           textAlign: TextAlign.center,
-          style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
+          style: GameTheme.menuTitle(size: 16, color: GameTheme.torchHot),
         ),
         if (state.metaDepth.favoritePetSpecies.isNotEmpty) ...[
           const SizedBox(height: 4),
@@ -4513,14 +5595,26 @@ class _BeastOverlayState extends State<_BeastOverlay> {
           ),
         ],
         const SizedBox(height: 8),
-        if (state.ownedPets.isEmpty)
+        if (state.ownedPets.isEmpty) ...[
+          const SizedBox(height: 8),
+          Center(
+            child: KenneySprite(asset: CustomAssets.petEgg, size: 56),
+          ),
+          const SizedBox(height: 10),
           Text(
-            'No beasts yet. Hatch an egg with essence — '
-            'companions fight beside the party.',
+            'No beasts yet',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
-          )
-        else ...[
+            style: GameTheme.menuTitle(size: 16, color: GameTheme.torchHot),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Hatch an egg with essence — companions fight beside the party '
+            'and grant passives (gold, loot, mitigate…).',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 12),
+        ] else ...[
           Text(
             canMerge
                 ? 'Tap MERGE to combine same-species pets'
@@ -4543,31 +5637,28 @@ class _BeastOverlayState extends State<_BeastOverlay> {
           for (final pet in state.ownedPets)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Material(
-                color: GameTheme.menuCard,
-                borderRadius: BorderRadius.circular(6),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: pet.id == _mergeA || pet.id == _mergeB
-                          ? GameTheme.clear
-                          : state.activePet?.id == pet.id
-                              ? GameTheme.torch
-                              : const Color(0xFF595033),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          KenneySprite(
-                            asset: CustomAssets.petForInstanceId(pet.id),
-                            size: 24,
-                          ),
-                          const SizedBox(width: 10),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: MenuChrome.listCard(
+                  selected: pet.id == _mergeA ||
+                      pet.id == _mergeB ||
+                      state.activePet?.id == pet.id,
+                  borderColor: pet.id == _mergeA || pet.id == _mergeB
+                      ? GameTheme.clear
+                      : state.activePet?.id == pet.id
+                          ? GameTheme.torch
+                          : null,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        KenneySprite(
+                          asset: CustomAssets.petForInstanceId(pet.id),
+                          size: 24,
+                        ),
+                        const SizedBox(width: 10),
                           Expanded(
                             child: Builder(
                               builder: (context) {
@@ -4578,7 +5669,10 @@ class _BeastOverlayState extends State<_BeastOverlay> {
                                     Text(
                                       '${pet.name}  |  ${pet.rarity.name}'
                                       '${pet.frame != PetFrame.none ? '  [${pet.frame.name}]' : ''}',
-                                      style: GameTheme.pixel(size: 8),
+                                      style: GameTheme.body(
+                                        size: 15,
+                                        color: GameTheme.parchment,
+                                      ),
                                     ),
                                     Text(
                                       'Lv${pet.level}  ATK +${pet.totalAttackBonus}'
@@ -4598,8 +5692,8 @@ class _BeastOverlayState extends State<_BeastOverlay> {
                           if (state.activePet?.id == pet.id)
                             Text(
                               'ACTIVE',
-                              style: GameTheme.pixel(
-                                size: 5,
+                              style: GameTheme.body(
+                                size: 12,
                                 color: GameTheme.torchHot,
                               ),
                             ),
@@ -4698,7 +5792,6 @@ class _BeastOverlayState extends State<_BeastOverlay> {
                   ),
                 ),
               ),
-            ),
         ],
         const SizedBox(height: 8),
         Row(

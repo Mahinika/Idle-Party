@@ -19,10 +19,133 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.9.3';
+  static const String currentVersion = '1.11.3';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.11.3',
+      bullets: <String>[
+        'World Path: Stormwake Hollow — new end zone after Hollow Grove (Storm Tyrant).',
+        'Unique Tide / Ember / Grove combat backdrops; lighter washes so the art reads.',
+        'POWER clearer: Keep (AL / Bless / essence) vs this-run forge on the POWER header.',
+        'Kit VFX polish: Subtlety shadow, Discipline holy shields, Balance Hurricane/Starfall discs.',
+        'World Path still runs Sandy Caverns through Stormwake Hollow (Tidehold, Ashen Vault, Grove on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.11.2',
+      bullets: <String>[
+        'Meet new kits: Ascend/unlock queues a TODAY READY card + toast; open PARTY to field them. Specs tint distinctly (Shadow reads void).',
+        'TODAY / Ascend name the next kit unlocks (AL1–6 ladder + Gauntlet) — party power chase is honest.',
+        'Kit honesty: Feign drops aggro, Disengage kites, Circle of Healing splashes, Riptide/Renew HoT ticks, DK diseases on Boil/Howling.',
+        'Tide / Ember / Grove read more distinct in combat (stronger washes + floor remaps); Jobs/Market copy clearer.',
+        'POWER menu clearer: Forge tabs GOLD / KEEP / MATS / APEX; Train says +1 level; Keep vs run gold spelled out; Camp/Market/Shop blurbs.',
+        'Gear: item stats now follow displayed item level (soft-cap honest); secondaries scale with iLvl; Apex uses the same curve.',
+        'Gear: smarter Auto Equip per spec (Enh/Hunter/Shadow/Aff/Blood/Disc); tooltips show For SPEC: best stats; drops bias to your party kits.',
+        'Kit honesty: Vendetta/Cold Blood amp melee, Unholy AMS on self, Enhancement Rage+DR, Frost Nova pack freeze, Arcane charge dump, Shadow/Affliction DoT maintain, Fire Hot Streak Pyro.',
+        'Fixes: Ascend keeps high KEY prefs (up to AL cap 20); Daily wipe retry still claims; dungeon saves re-lock KEY combat.',
+        'World Path: unique Tide / Ember / Grove portraits; lighter map asset; smoother path scroll.',
+        'World Path still runs Sandy Caverns through Hollow Grove (Tidehold + Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.11.1',
+      bullets: <String>[
+        'World Path: painted campaign map with small zone portraits on the rings — tap to select; locked shows have/need lifetime gold under the map.',
+        'Dungeon HUD: thinner party HP strip (tap to expand kit), compact target chip, collapsible DPS meter — more map, less chrome.',
+        'Phone playtest target locked to Samsung A56 (360×780); guides updated for the new hub map and dungeon chrome.',
+        'World Path still runs Sandy Caverns through Hollow Grove (Tidehold + Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.11.0',
+      bullets: <String>[
+        'Local seasons: weekly hub goals (timed KEY / Gauntlet) with essence + titles — same combat loop, new chase.',
+        'TODAY stays on phone layouts; progress chases get ENTER / PATH / FORGE buttons; week affix sits above TODAY.',
+        'Hub polish: MORE sheet titled MORE (not HUB); Daily only on TODAY when that is the chase; hub overlays clear on dungeon enter.',
+        'Daily echo is one floor (claim → hub); wipe retries the floor. Forge shows this-run vs party totals. Shorter Ascend toast · Bound frags · quieter level-ups.',
+        'Affliction kit fantasy: clearer DoT copy + purple shadow VFX on Corruption / UA / Haunt / Drain / Agony.',
+        'World Path: Hollow Grove joins Sunken Tidehold and Ashen Vault as the deep endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.10.2',
+      bullets: <String>[
+        'Ascend Blessing: each Ascend permanently stacks +2 ATK · +1 DEF · +4 VIT · +3% gold (Forge → KEEP).',
+        'Keep playing: Ascend shows next unlocks (Rogue / 5th slot / Gauntlet), TODAY flashes READY/ALMOST, stronger AFK welcome-back.',
+        'GEAR: WoW-style item tooltips with green/red compare vs equipped, hero arrows, fuller hero stats.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.10.1',
+      bullets: <String>[
+        'Daily vault: claim once per day after 1 clear or a timed KEY +2 (scales with best timed key).',
+        'Keystone affixes still rotate weekly; season bonus remains on first vault claim of the month.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.10.0',
+      bullets: <String>[
+        'Keystone runs (Mythic+-style): pick KEY level, lock affixes on enter, idle-friendly timer.',
+        'Beat the boss under par to TIMED upgrade; overtime = depleted. Fortified/Tyrannical from KEY +4.',
+        'Daily vault: claim after 1 clear or a timed KEY +2 — reward scales with best timed key.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.9',
+      bullets: <String>[
+        'Auto-equip: empty slots skip low-iLvl affinity junk; mid-fight equip is debounced (floor clear still full).',
+        'Equip compare shows Score + UPGRADE; mail under plate is a soft penalty, not a hard dump.',
+        'Bag UI: CLEAN BAG first, FILTERS shortcut; BAG n/cap on dungeon nav; fewer mid-fight tips.',
+        'Custom icons: opaque black backgrounds cleared to transparency.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.8',
+      bullets: <String>[
+        'Bag cleanup: auto-sell pays gold; new auto-disassemble pays essence (Settings: iLvl + rarity for each).',
+        'Near-full bag: AUTO MERGE → sell → scrap. CLEAN BAG / SELL JUNK / SCRAP buttons in the bag.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.7',
+      bullets: <String>[
+        'Hub clarity: Ascend boss progress under Enter (not Daily), WHAT\'S NEW in MORE, Challenges clickable for playtest.',
+        'Shorter Contracts/Market/Beast sheets; clearer 0% progress bars; Market BUY shows need gold when broke.',
+        'Bag slot tags (Neck/Ring/Shldr…), Forge axe icon in MORE; disabled buttons look greyer.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.6',
+      bullets: <String>[
+        'Menu polish: MORE icons, Apex role/slot labels, Forge MOVE (not SPD), shorter tips.',
+        'Contracts progress bars, clearer Beast empty state, Loadouts empty tip, Essence Shop BUY shows cost.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.5',
+      bullets: <String>[
+        'Hub/UX polish: bag slots show slot + icon, CLAIM rewards without opening Contracts, Ascend label, God Hand fist icon.',
+        'Party meter shows tank damage taken / healer HPS / DPS; AUTO EQUIP vs AUTO MERGE; clearer MORE → Return to hub.',
+        'Confirm dialogs (leave/daily/gauntlet/new game) work with web playtest clicks.',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.9.4',
+      bullets: <String>[
+        'Hub TODAY card: always shows your next chase (weekly, daily, Will, Gauntlet, zone unlock).',
+        'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.9.3',
       bullets: <String>[
@@ -156,6 +279,36 @@ abstract final class MetaSystems {
     return state.lastDailyDate == dailyDateKey(t) && state.dailyClaimed;
   }
 
+  /// Parses [dailyDateKey] (`YYYY-MM-DD`) to a UTC calendar day, or null.
+  static DateTime? parseDailyDateKey(String? key) {
+    if (key == null || key.isEmpty) return null;
+    final parts = key.split('-');
+    if (parts.length != 3) return null;
+    final y = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    final d = int.tryParse(parts[2]);
+    if (y == null || m == null || d == null) return null;
+    if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+    return DateTime.utc(y, m, d);
+  }
+
+  /// True while inside a seeded Daily echo (one-floor trial).
+  /// Identity is [lastDailyDate] + dungeon + layout seed — not wall-clock
+  /// “today”, so midnight crossover mid-run still counts as Daily.
+  /// When [now] is passed (tests), also require that calendar day.
+  static bool isActiveDailyRun(GameState state, {DateTime? now}) {
+    if (!state.inDungeon || state.inGauntlet) return false;
+    final dayKey = state.lastDailyDate;
+    if (dayKey == null || dayKey.isEmpty) return false;
+    final day = parseDailyDateKey(dayKey);
+    if (day == null) return false;
+    if (now != null && dayKey != dailyDateKey(now.toUtc())) {
+      return false;
+    }
+    if (state.dungeonId != dailyDungeonId(day)) return false;
+    return state.layoutSeed == dailySeed(day);
+  }
+
   // —— Collection score ——————————————————————————————————————
 
   /// Will-rank collection score (achievements, pets, relics, codex, trophies).
@@ -195,6 +348,8 @@ abstract final class MetaSystems {
     'clear_crystal': (s) => s.highestDungeonCleared >= 6,
     'clear_tide': (s) => s.highestDungeonCleared >= 7,
     'clear_ember': (s) => s.highestDungeonCleared >= 8,
+    'clear_grove': (s) => s.highestDungeonCleared >= 9,
+    'clear_storm': (s) => s.highestDungeonCleared >= 10,
     'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
     'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
     'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,
@@ -233,7 +388,7 @@ abstract final class MetaSystems {
         s.sanctuaryVitalityLevel >= 12 ||
         s.metaDepth.sanctuaryXpLevel >= 12,
     'god_hand_5': (s) => s.godHandLevel >= 5,
-    'weekly_clear': (s) => s.metaDepth.weeklyClaimed,
+    'weekly_clear': (s) => s.metaDepth.dailyVaultClaimed,
     'gauntlet_25': (s) => s.metaDepth.gauntletBestFloor >= 25,
     'gauntlet_50': (s) => s.metaDepth.gauntletBestFloor >= 50,
     'gauntlet_100': (s) => s.metaDepth.gauntletBestFloor >= 100,
@@ -313,7 +468,7 @@ abstract final class MetaSystems {
     return total;
   }
 
-  /// Extra essence on floor clear while challenge toggles / hardmode are on.
+  /// Extra essence on floor clear during a keystone run / personal extras.
   /// Farm loops must not mint this (would be unbounded AFK essence).
   static int challengeClearEssenceBonus(
     GameState state, {
@@ -323,7 +478,10 @@ abstract final class MetaSystems {
     var bonus = 0;
     if (state.challengeBossRush) bonus += 2;
     if (state.challengeNoFlask) bonus += 2;
-    bonus += state.hardmodeLevel.clamp(0, state.effectiveMaxHardmode);
+    final key = state.keystoneRunActive
+        ? state.keystoneRunLevel
+        : 0;
+    bonus += key.clamp(0, state.effectiveMaxHardmode);
     return bonus;
   }
 

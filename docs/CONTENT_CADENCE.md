@@ -11,8 +11,18 @@ Each tagged `1.x.y` release should include:
    - Reads `tool/out/class_balance_share.json` + markdown board
    - CI: `test/class_balance_gate_test.dart` (live light, fails on DPS `**HIGH**`)
    - Mid band still manual / long (`class_balance_mid_sim_test`) when casters feel spicy
-2. **Content slice** — one player-visible piece: dungeon beat, kit identity, meta sink, Weekly/Gauntlet beat, or a11y/save polish. Prefer one hero feature per quarter (see ROADMAP).
+2. **Content slice** — one player-visible piece: dungeon beat, kit identity, meta sink, **local season week row**, Weekly/Gauntlet beat, or a11y/save polish. Prefer one hero feature per quarter (see ROADMAP).
 3. **Release notes** — What’s New in `lib/core/meta_systems.dart`; `test/changelog_sync_test.dart` keeps pubspec ↔ version ↔ zone tokens honest.
+
+### Success-spår (research-backed)
+
+Ship habit → second layer → content cadence:
+
+1. **Habit** — hub TODAY READY/ALMOST always visible on phone; claim/progress CTAs.
+2. **Local season** — `lib/core/local_season.dart` week/month rows (reuse SpatialCombat + vault/Gauntlet).
+3. **Zones / kits** — prefer new zones + kit fantasy polish over new specs; Play 12×14 stays background.
+
+See [ROADMAP.md](ROADMAP.md) “Success-spår”.
 
 ## Checklist before tagging
 
@@ -31,7 +41,7 @@ Each tagged `1.x.y` release should include:
 | Changelog sync | `test/changelog_sync_test.dart` |
 | Hub UX smoke | `.cursor/skills/hub-smoke` |
 | Zone identity | `.cursor/skills/zone-art-identity` |
-| Cursor MCP | `.cursor/mcp.json` → `idle-party` (`tool/mcp_idle_party/`) |
+| Cursor MCP | `.cursor/mcp.json` → `idle-party` (`tool/mcp_idle_party/`; UI may show `user-idle-party`) |
 | Grind / PR babysit | `.cursor/skills/grinding-until-pass`, `babysitting-pr`, `parallel-ci-triage` |
 | Browser verify / a11y | `.cursor/skills/verifying-in-browser`, `accessibility-auditing` |
 | Suggest / author skills | `.cursor/skills/suggesting-skills`, `building-skills-from-patterns` |

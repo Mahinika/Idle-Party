@@ -28,10 +28,12 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 | What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
 | PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
 | polish hub / weekly / tips | `hub-smoke`, `browser-playtest` |
+| Play Store / listing / privacy / AAB | `play-store-prep` (+ `docs/PLAY_STORE.md`) |
 | **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules` with how the game works now |
+| Ascend / “what am I chasing” feel | check `hub_chase`, `ascend_roadmap`, Blessing in `metaDepth` — not a separate skill |
 
 5. **`suggesting-skills`**: prefer **silently following** the right skill over asking “vill du att jag använder skill X?”. Only mention a skill name if teaching them later helps — default is just do it.
-6. **After UI/meta changes**: verify somehow (tests and/or short browser check) without asking permission.
+6. **After UI/meta changes**: verify somehow (tests and/or short browser check) without asking permission. Browser checks **always** use Samsung A56 phone metrics (**360×780**) — see `browser-playtest`.
 7. **After kit number tweaks**: run the fast balance check; if CI gate would fail, keep fixing (`grinding-until-pass`) before declaring done.
 8. **Commits / push / PR / tags:** when work is ship-shaped, **propose** them once with a clear yes/no (see `owner-preferences`). Do not push silently; do not wait forever without offering.
 

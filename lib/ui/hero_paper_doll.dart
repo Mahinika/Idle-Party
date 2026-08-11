@@ -271,10 +271,9 @@ class HeroPaperDollView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<ui.Image>(
-      future: DecodedImageCache.load(
-        RoguelikeCharAtlas.assetPath,
-        targetWidth: 512,
-      ),
+      // Native atlas is only ~918×203 — never downscale, or tile src rects
+      // (16px / stride 17) sample the wrong cells and look like a 2×2 mash.
+      future: DecodedImageCache.load(RoguelikeCharAtlas.assetPath),
       builder: (context, snap) {
         if (!snap.hasData) {
           return HeroDollSprite(

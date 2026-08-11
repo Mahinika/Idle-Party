@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.9.3**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.11.3**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -12,13 +12,26 @@ The owner describes goals in plain language and does not pick tools/skills.
 Agents **must** choose methods, skills, and verify steps themselves — see
 `.cursor/rules/vibe-coder-autopilot.mdc` and `.cursor/rules/owner-preferences.mdc`.
 
-Preferences (do not re-ask): Play Store goal soon, **large batches**, **cozy idle**,
-**English in-game copy**, **fairness-first** balance, **propose** commit / push / PR / tag
-(with a clear yes/no). Chat in plain Swedish; ask only product/risk questions.
+Preferences (do not re-ask): **content/feel over Play busywork**, first-hour
+**progression/power**, early calm / **endgame grindy OK**, **polish kits** before
+many new specs, **more zones**, hub TODAY / Ascend Blessing / unlock teasers for
+“what am I chasing”, **no IAP for now**, **Android phone-only** (portrait; no
+iOS/web product), **large batches**, English in-game copy, fairness-first balance,
+**propose** commit / push / PR / tag. Chat in plain Swedish; ask only product/risk
+questions. Full detail: `.cursor/rules/owner-preferences.mdc`.
 
-**Distribution today:** GitHub Releases APK/AAB is the live path (`docs/PLAY_STORE.md`).
-Play Console is the goal — prepare listing/privacy/IARC, but do not assume Play is
-already the primary install channel.
+**UI target:** ship for **portrait phones** (~360–430 px). Owner reference:
+**Samsung Galaxy A56** → playtest at **360×780** CSS (DPR 3). Web is playtest
+only — agents must force phone emulation in Cursor browser. No hover-only flows
+for real players — tap / long-press.
+
+**Distribution today:** GitHub Releases APK/AAB is the live install path
+(`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
+closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.11.3**.
+Production still needs **12 closed testers × 14 days**. Do not treat Play as the
+primary install channel yet.
+
+Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
 ## Legal / IP policy (mandatory)
 
@@ -85,13 +98,14 @@ main.dart
  └─ Dungeon (inDungeon=true) → Is2Shell
       ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
       └─ Dungeon chrome (FARM/PUSH, God Hand ring, party HUD + flask,
-         target panel, bottom nav: GEAR / BAG / MORE)
+         target panel, bottom nav: PARTY / POWER / META / HUB —
+         same pillars as hub; PARTY opens gear/bag sheet)
 
 GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
              → GameLogic.simulateSpatialOffline → SpatialCombat.step
                (AFK: afkAssist + reducedVfx, auto-flask, God Hand)
 GameLogic + GameState   (rules / persistence)
-DungeonCatalog          (9 named zones, bossFloor = 5 + AL)
+DungeonCatalog          (11 named zones, bossFloor = 5 + AL)
 RoomLayouts (tile_map)  (multi-chamber maps + gates)
 ```
 
@@ -101,11 +115,21 @@ catch-up (full enemy stats; same kits/abilities/chambers).
 **Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = AL10+): endless Crystal
 Spire climb from Hub; wipe/leave → hub; `metaDepth.gauntletBestFloor` survives Ascend.
 
-Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat.
+**Hub TODAY** (`lib/core/hub_chase.dart`): one chase card — claimables first
+(vault / jobs / **Meet new kit**), then Ascend / progress. Urgency **READY** /
+**ALMOST** (Ascend one boss away, KEY +1 vault, Will gap, etc.). New unlocks
+queue `metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast +
+chase detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next
+AL unlocks — kit ladder AL1–6 (e.g. Combat Rogue, BM/Holy/Arcane + 5th slot,
+DKs, Aff/Demo) plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint +
+Shadow→warlock sprite).
+
+Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat. Offline return
+uses `OfflineProgressResult` (wow headline + highlight rows + “Up next” chase).
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
-## World path (9 zones)
+## World path (11 zones)
 
 | # | id | Name |
 |---|-----|------|
@@ -118,6 +142,8 @@ Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 | 6 | crystal | Crystal Spire |
 | 7 | tide | Sunken Tidehold |
 | 8 | ember | Ashen Vault |
+| 9 | grove | Hollow Grove |
+| 10 | storm | Stormwake Hollow |
 
 Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 
@@ -144,10 +170,14 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 | Ability runtime | `lib/spatial/ability_effects.dart` |
 | Tile maps | `lib/spatial/tile_map.dart` |
 | Hub | `lib/ui/hub_screen.dart` |
+| Hub TODAY chase | `lib/core/hub_chase.dart` |
+| Ascend unlock teasers | `lib/core/ascend_roadmap.dart` |
+| Ascend / lore copy | `lib/core/story_lore.dart` |
 | Dungeon / hub shell | `lib/ui/is2_shell.dart` |
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
 | Kenney helpers | `lib/ui/kenney_assets.dart` |
 | Custom art helpers | `lib/ui/custom_assets.dart` |
+| UI theme guide | `docs/UI_THEME.md` (+ `MenuChrome` / `GameTheme`) |
 
 ## Conventions
 
@@ -161,22 +191,37 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 ## Meta (survives Ascend)
 
 **Keeps:** essence (and rewards), relics, sanctuary tracks + prestige, pets,
-soulbound (item may rescale for new AL), God Hand level + style/CD in `metaDepth`,
+soulbound item (may rescale) + fragments, God Hand level + style/CD in `metaDepth`,
 `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
 (mute/VFX/colorblind/text scale/auto-sell), full `metaDepth` (Gauntlet best, Will /
-Gauntlet claims, weekly/season, prestige shop, unlocked specs, party slot 5, …),
-**hero levels/XP**, **Apex** vault + equipped apex, craft mats/pity, hardmode
-(clamped) + challenge toggles.
+Gauntlet claims, daily vault / weekly affix season, prestige shop, unlocked specs,
+**`pendingHeroReveals`** (Meet … TODAY until PARTY), party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**, …),
+**hero levels/XP**, **Apex** vault + equipped apex, craft mats/pity, keystone prefs
+(clamped) + challenge toggles, FARM/PUSH preference.
 
-**Resets:** wallet gold, floor progress, gold party upgrades (ATK/DEF/VIT/move/haste/crit),
-non-Apex gear/stash, **loadouts**, leave dungeon; mission board rebuilt for new AL.
+**Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
+each Ascend adds **+2 ATK · +1 DEF · +4 VIT · +3% gold** on top of AL flats
+(`+1 ATK` / `DEF = AL~/2` / `+2 VIT` / `+10% gold` per AL). Shown in Forge → KEEP
+and Sanctuary. Constants: `GameLogic.ascendBlessing*`.
+
+**Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades
+(ATK/DEF/VIT/move/haste/crit), non-Apex gear/stash, **loadouts**, leave dungeon
+(`inDungeon=false`); mission board rebuilt for new AL.
 
 Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
+
+### Keystone (Mythic+-style)
+
+Hub **KEYSTONE** sets preferred key (`hardmodeLevel` 0–20, AL-gated). On enter,
+affixes lock + idle-friendly par timer starts (AFK counts). Boss clear under par
+→ TIMED (upgrade key, vault score); overtime → depleted. **Daily vault** (UTC):
+1 clear **or** timed KEY+2; claim once per day (scales with best timed key).
+Affixes still rotate weekly. See `lib/core/keystone.dart`.
 
 ## God Hand
 
 Tap steers the party briefly and deals AOE; has cooldown. Damage upgrades with essence.
-Styles under Forge → META: **BAL** / **FOCUS** (+dmg −radius) / **WIDE** (+radius −dmg).
+Styles under Forge → KEEP: **BAL** / **FOCUS** (+dmg −radius) / **WIDE** (+radius −dmg).
 Optional CD upgrades: `metaDepth.godHandCdLevel`.
 
 ## Balance policy

@@ -161,10 +161,10 @@ abstract final class CustomAssets {
   static const String portraitDead = '$_root/portraits/dead.png';
   static const String portraitHell = '$_root/portraits/hell.png';
   static const String portraitCrystal = '$_root/portraits/crystal.png';
-  /// Tidehold uses underworld portrait tint-adjacent art (distinct from Spire).
-  static const String portraitTide = portraitUnderworld;
-  /// Ashen Vault uses dead-city portrait (distinct from Hell's Gate).
-  static const String portraitEmber = portraitDead;
+  static const String portraitTide = '$_root/portraits/tide.png';
+  static const String portraitEmber = '$_root/portraits/ember.png';
+  static const String portraitGrove = '$_root/portraits/grove.png';
+  static const String portraitStorm = '$_root/portraits/storm.png';
 
   static String dungeonPortrait(String dungeonId) => switch (dungeonId) {
         'sandy' => portraitSandy,
@@ -176,6 +176,8 @@ abstract final class CustomAssets {
         'crystal' => portraitCrystal,
         'tide' => portraitTide,
         'ember' => portraitEmber,
+        'grove' => portraitGrove,
+        'storm' => portraitStorm,
         _ => portraitSandy,
       };
 
@@ -185,6 +187,8 @@ abstract final class CustomAssets {
   static const String introScene = '$_root/ui/intro_scene.png';
   /// Hub keep / gate plaza behind translucent chrome.
   static const String hubScene = '$_root/ui/hub_scene.png';
+  /// Scrollable World Path campaign map (portrait).
+  static const String worldPathMap = '$_root/ui/world_path_map.png';
   /// Generic combat stage backdrop (fallback).
   static const String dungeonBackdrop = '$_root/ui/dungeon_backdrop.png';
 
@@ -195,10 +199,14 @@ abstract final class CustomAssets {
   static const String backdropDead = '$_root/ui/backdrops/dead.png';
   static const String backdropHell = '$_root/ui/backdrops/hell.png';
   static const String backdropCrystal = '$_root/ui/backdrops/crystal.png';
-  /// Tidehold: underworld backdrop (teal wash separates from Spire).
-  static const String backdropTide = backdropUnderworld;
-  /// Ashen Vault: dead backdrop (ember wash separates from Hell).
-  static const String backdropEmber = backdropDead;
+  /// Owned Tidehold chamber (teal pressure + silt — not Underworld twin).
+  static const String backdropTide = '$_root/ui/backdrops/tide.png';
+  /// Owned Ashen Vault chamber (cooled ember — not Dead/Hell twin).
+  static const String backdropEmber = '$_root/ui/backdrops/ember.png';
+  /// Owned Hollow Grove chamber (roots + moss — not Sandy twin).
+  static const String backdropGrove = '$_root/ui/backdrops/grove.png';
+  /// Owned Stormwake Hollow arena (violet storm — end of World Path).
+  static const String backdropStorm = '$_root/ui/backdrops/storm.png';
 
   static String dungeonBackdropFor(String dungeonId) => switch (dungeonId) {
         'sandy' => backdropSandy,
@@ -210,6 +218,8 @@ abstract final class CustomAssets {
         'crystal' => backdropCrystal,
         'tide' => backdropTide,
         'ember' => backdropEmber,
+        'grove' => backdropGrove,
+        'storm' => backdropStorm,
         _ => dungeonBackdrop,
       };
 
