@@ -147,9 +147,12 @@ class CombatRatings {
       level: hero.level,
     );
     final physical = max(1, (ap / kAp).round()) + gearFlatAttack;
-    // Casters: Int fully, Spell Power at half — was 1:1 and outscaled melee gear ROI.
+    // Casters: base Int full; gear Int+SP at ~1/3 — matches Str/Agi→ATK ROI.
     final spPool = intel + gearSpellPower;
-    final casterAtk = max(1, intel + (gearSpellPower ~/ 2));
+    final casterAtk = max(
+      1,
+      grown.intel + ((gearIntellect + gearSpellPower) ~/ 3),
+    );
     final sp = spPool;
 
     final isCaster =

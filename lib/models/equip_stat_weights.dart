@@ -106,7 +106,10 @@ class EquipStatWeights {
     return 'For ${spec.shortLabel}: ${labels.join(' · ')}';
   }
 
-  /// Loot primary budget shares: [str, agi, sta, intel, spi, sp].
+  /// Loot **primary** budget shares: [str, agi, sta, intel, spi, sp].
+  ///
+  /// WotLK-shaped and phone-readable: one power primary + Stamina
+  /// (casters also Spell Power; healers also Spirit). No crumb stats.
   static List<double> lootShares({
     required HeroRole bias,
     SpecRoleTag? roleTag,
@@ -115,37 +118,37 @@ class EquipStatWeights {
     if (specId != null) {
       switch (specId) {
         case HeroSpecId.enhancement:
-          // Hybrid mail: Agi lead, meaningful Str.
-          return const [0.32, 0.38, 0.22, 0.0, 0.04, 0.04];
+          // Hybrid mail: Agi lead + Str + Sta.
+          return const [0.38, 0.40, 0.22, 0.0, 0.0, 0.0];
         case HeroSpecId.beastMastery:
         case HeroSpecId.marksmanship:
         case HeroSpecId.survival:
-          return const [0.12, 0.52, 0.24, 0.0, 0.06, 0.06];
+          return const [0.14, 0.60, 0.26, 0.0, 0.0, 0.0];
         case HeroSpecId.shadow:
         case HeroSpecId.affliction:
-          return const [0.0, 0.04, 0.14, 0.40, 0.14, 0.28];
+          return const [0.0, 0.0, 0.26, 0.48, 0.08, 0.18];
         case HeroSpecId.blood:
-          return const [0.22, 0.10, 0.56, 0.0, 0.06, 0.06];
+          return const [0.30, 0.0, 0.70, 0.0, 0.0, 0.0];
         default:
           break;
       }
     }
     if (roleTag != null) {
       return switch (roleTag) {
-        SpecRoleTag.tank => const [0.28, 0.12, 0.50, 0.0, 0.05, 0.05],
-        SpecRoleTag.healer => const [0.0, 0.04, 0.16, 0.34, 0.12, 0.34],
-        SpecRoleTag.caster => const [0.0, 0.04, 0.12, 0.44, 0.08, 0.32],
+        SpecRoleTag.tank => const [0.34, 0.0, 0.66, 0.0, 0.0, 0.0],
+        SpecRoleTag.healer => const [0.0, 0.0, 0.26, 0.40, 0.18, 0.16],
+        SpecRoleTag.caster => const [0.0, 0.0, 0.28, 0.50, 0.0, 0.22],
         SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
           bias == HeroRole.warrior
-              ? const [0.48, 0.12, 0.28, 0.0, 0.06, 0.06]
-              : const [0.22, 0.44, 0.22, 0.04, 0.04, 0.04],
+              ? const [0.72, 0.0, 0.28, 0.0, 0.0, 0.0]
+              : const [0.18, 0.58, 0.24, 0.0, 0.0, 0.0],
       };
     }
     return switch (bias) {
-      HeroRole.warrior => const [0.42, 0.12, 0.36, 0.0, 0.05, 0.05],
-      HeroRole.rogue => const [0.22, 0.44, 0.22, 0.04, 0.04, 0.04],
-      HeroRole.healer => const [0.0, 0.04, 0.16, 0.34, 0.12, 0.34],
-      HeroRole.mage => const [0.0, 0.04, 0.12, 0.44, 0.08, 0.32],
+      HeroRole.warrior => const [0.68, 0.0, 0.32, 0.0, 0.0, 0.0],
+      HeroRole.rogue => const [0.18, 0.58, 0.24, 0.0, 0.0, 0.0],
+      HeroRole.healer => const [0.0, 0.0, 0.26, 0.40, 0.18, 0.16],
+      HeroRole.mage => const [0.0, 0.0, 0.28, 0.50, 0.0, 0.22],
     };
   }
 

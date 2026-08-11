@@ -29,6 +29,11 @@ abstract final class MetaSystems {
         'Stormwake: unique Storm Tyrant boss + gale mite sprites (not ghost/bat twins).',
         'World Path markers retuned for the 11-zone map (Stormwake at the bottom chasm).',
         'Kit VFX: Survival traps/shots, Holy Priest CoH/Nova/Hymn, Disc Flash/PS/PI read clearer.',
+        'POWER → FORGE: all run bonuses scroll on phone; forge HP is STA (Stamina), same as gear.',
+        'Gear readability: Primary vs Secondary on tooltips; new drops lean (no Move spam, ≤2 secondaries).',
+        'Gear power tuned: caster Int/SP ROI matches melee; full rare sets matter in combat without stomping.',
+        'Auto Equip: will not replace worn gear with clearly lower iLvl for tiny affinity bumps.',
+        'Gear systems: Apex hard-lock, set BiS nudge capped, UPGRADE badge matches Auto Equip, merge keeps primary set only, unstick honors FILTERS.',
         'World Path still runs Sandy Caverns through Stormwake Hollow (Tidehold, Ashen Vault, Grove on the road).',
       ],
     ),
@@ -81,7 +86,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.10.2',
       bullets: <String>[
-        'Ascend Blessing: each Ascend permanently stacks +2 ATK · +1 DEF · +4 VIT · +3% gold (Forge → KEEP).',
+        'Ascend Blessing: each Ascend permanently stacks +2 ATK · +1 DEF · +4 STA · +3% gold (Forge → KEEP).',
         'Keep playing: Ascend shows next unlocks (Rogue / 5th slot / Gauntlet), TODAY flashes READY/ALMOST, stronger AFK welcome-back.',
         'GEAR: WoW-style item tooltips with green/red compare vs equipped, hero arrows, fuller hero stats.',
         'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',

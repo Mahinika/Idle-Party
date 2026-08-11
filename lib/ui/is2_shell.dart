@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -730,9 +729,8 @@ class _Is2ShellState extends State<Is2Shell> {
       heightFactor: heightFactor,
       onClose: _closeOverlayOrLeaveHub,
       child: switch (_overlay) {
-        Is2Overlay.forge => SingleChildScrollView(
-          child: _ForgeOverlay(director: d),
-        ),
+        // Bounded sheet height — forge scrolls inside (no nested outer scroll).
+        Is2Overlay.forge => _ForgeOverlay(director: d),
         Is2Overlay.power => _PowerPillar(director: d),
         Is2Overlay.meta => _MetaPillar(
             director: d,
@@ -2832,9 +2830,11 @@ class _InventoryDockState extends State<_InventoryDock>
                     : GameLogic.compareForHero(hero, selected);
                 final scoreLine = cmp == null || cmp.powerDelta == 0
                     ? null
-                    : (cmp.powerDelta > 0
+                    : (cmp.isUpgrade
                         ? 'UP ${GameLogic.formatDelta(cmp.powerDelta)}'
-                        : 'DN ${GameLogic.formatDelta(cmp.powerDelta)}');
+                        : (cmp.powerDelta > 0
+                            ? 'SCORE ${GameLogic.formatDelta(cmp.powerDelta)}'
+                            : 'DN ${GameLogic.formatDelta(cmp.powerDelta)}'));
                 // Phone GEAR: keep compare to one line so the bag grid stays usable.
                 // Long-press an item for the full WoW-style tooltip sheet.
                 return Column(
@@ -4038,7 +4038,7 @@ class _PowerPillarState extends State<_PowerPillar>
         '${s.essence}e';
     final runLine =
         'This run · forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
-        'VIT +${s.vitalityBonus}';
+        'STA +${s.vitalityBonus}';
     final blurb = switch (_tabs.index) {
       0 => 'Forge: gold this run (wipes) · KEEP forever · Apex mats',
       1 => 'Camp: permanent essence tracks — survive Ascend',
@@ -4085,7 +4085,8 @@ class _PowerPillarState extends State<_PowerPillar>
         const SizedBox(height: 6),
         Expanded(
           child: switch (_tabs.index) {
-            0 => SingleChildScrollView(child: _ForgeOverlay(director: d)),
+            // Forge fills height and scrolls once (nested scroll hid MOVE/HASTE/CRIT).
+            0 => _ForgeOverlay(director: d),
             1 => SingleChildScrollView(child: _SanctuaryOverlay(director: d)),
             2 => SingleChildScrollView(child: _MarketOverlay(director: d)),
             _ => PrestigeShopOverlay(director: d),
@@ -4233,7 +4234,7 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
     final name = switch (type) {
       PartyUpgradeType.attack => 'ATK',
       PartyUpgradeType.defense => 'DEF',
-      PartyUpgradeType.vitality => 'VIT',
+      PartyUpgradeType.vitality => 'STA',
       PartyUpgradeType.moveSpeed => 'MOVE',
       PartyUpgradeType.attackSpeed => 'HASTE',
       PartyUpgradeType.crit => 'CRIT',
@@ -4264,8 +4265,7 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
           ],
         ),
         const SizedBox(height: 8),
-        SizedBox(
-          height: math.min(560, MediaQuery.sizeOf(context).height * 0.62),
+        Expanded(
           child: IndexedStack(
             index: _tabs.index,
             children: [
@@ -4318,54 +4318,20 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
           'Train levels stay forever.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 6),
-        Text(
-          'Bought this run:  ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
-          'VIT +${state.vitalityBonus}\n'
-          'MOVE +${state.moveSpeedBonus}%  HASTE +${state.attackSpeedBonus}%  '
-          'CRIT +${state.critBonus}%',
-          style: GameTheme.body(size: 14, color: GameTheme.parchment),
-        ),
         const SizedBox(height: 4),
         Text(
-          'Party power now (gear + keep + forge):  '
-          'ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
-          'VIT +${state.totalVitalityBonus}',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          'Bought: ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
+          'STA +${state.vitalityBonus}  '
+          'MOVE +${state.moveSpeedBonus}%  HASTE +${state.attackSpeedBonus}%  '
+          'CRIT +${state.critBonus}%',
+          style: GameTheme.body(size: 13, color: GameTheme.parchment),
         ),
-        const SizedBox(height: 6),
         Text(
-          canAscend
-              ? (director.state.inDungeon
-                  ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
-                  : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
-              : 'Ascend ${state.bossVictories}/'
-                  '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} '
-                  'bosses · claim on Hub (not here)',
-          textAlign: TextAlign.center,
+          'Party now: ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
+          'STA +${state.totalVitalityBonus}',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
-        _sectionTitle(
-          'TRAIN (LEVELS)',
-          'Pays gold · +1 level to every hero · levels survive Ascend.',
-        ),
-        KenneyButton(
-          label: state.gold >= training
-              ? 'Train party +1 Lv · ${training}g'
-              : 'Train · Need ${training}g',
-          onPressed: state.gold >= training ? director.applyTraining : null,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            softcap > 0
-                ? 'Avg Lv$meanLv · ~$softcap more level${softcap == 1 ? '' : 's'} to match floor'
-                : 'Avg Lv$meanLv · party level matches this floor',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-        ),
-        const SizedBox(height: 10),
         _sectionTitle(
           'RUN BONUSES (GOLD)',
           'Cheapest relative gain shows BEST. All wipe when you Ascend.',
@@ -4388,6 +4354,39 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
           ),
           const SizedBox(height: 6),
         ],
+        const SizedBox(height: 8),
+        _sectionTitle(
+          'TRAIN (LEVELS)',
+          'Pays gold · +1 level to every hero · levels survive Ascend.',
+        ),
+        KenneyButton(
+          label: state.gold >= training
+              ? 'Train party +1 Lv · ${training}g'
+              : 'Train · Need ${training}g',
+          onPressed: state.gold >= training ? director.applyTraining : null,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            softcap > 0
+                ? 'Avg Lv$meanLv · ~$softcap more level${softcap == 1 ? '' : 's'} to match floor'
+                : 'Avg Lv$meanLv · party level matches this floor',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          canAscend
+              ? (director.state.inDungeon
+                  ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
+                  : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
+              : 'Ascend ${state.bossVictories}/'
+                  '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} '
+                  'bosses · claim on Hub (not here)',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -4409,11 +4408,11 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         ),
         Text(
           state.metaDepth.ascendBlessings <= 0
-              ? 'Ascend Blessing: none yet — Ascend on Hub for permanent ATK/DEF/VIT/gold'
+              ? 'Ascend Blessing: none yet — Ascend on Hub for permanent ATK/DEF/STA/gold'
               : 'Ascend Blessing ×${state.metaDepth.ascendBlessings}: '
                   '+${state.ascendBlessingAttackBonus} ATK · '
                   '+${state.ascendBlessingDefenseBonus} DEF · '
-                  '+${state.ascendBlessingVitalityBonus} VIT · '
+                  '+${state.ascendBlessingVitalityBonus} STA · '
                   '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
@@ -4775,7 +4774,7 @@ class _SanctuaryOverlay extends StatelessWidget {
             'Ascend Blessing ×${state.metaDepth.ascendBlessings} · '
             '+${state.ascendBlessingAttackBonus} ATK · '
             '+${state.ascendBlessingDefenseBonus} DEF · '
-            '+${state.ascendBlessingVitalityBonus} VIT · '
+            '+${state.ascendBlessingVitalityBonus} STA · '
             '+${state.ascendBlessingGoldPercent}% gold',
             style: GameTheme.body(size: 13, color: GameTheme.mossLit),
           ),

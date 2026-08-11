@@ -316,6 +316,95 @@ void main() {
     expect(merged.name.toLowerCase(), contains('bear'));
   });
 
+  test('merge does not inherit setId from fuel-only secondary', () {
+    final primary = EquipmentItem(
+      id: 'p_noset',
+      name: 'Plain Chest',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      armorType: ArmorType.plate,
+      strengthBonus: 4,
+      staminaBonus: 6,
+      armorBonus: 8,
+      itemLevel: 20,
+    );
+    final secondary = EquipmentItem(
+      id: 's_set',
+      name: 'Set Fuel',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.uncommon,
+      armorType: ArmorType.plate,
+      strengthBonus: 2,
+      staminaBonus: 2,
+      itemLevel: 12,
+      setId: 'sandy_plate',
+    );
+    final merged = GameLogic.mergeEquipment(primary, secondary);
+    expect(merged.setId, isNull);
+  });
+
+  test('higher-ilvl non-set beats set completion score nudge', () {
+    final hero = PartyHero.starting(
+      name: 'Aegis',
+      specId: HeroSpecId.protection,
+      level: 20,
+    ).copyWith(
+      equipped: {
+        EquipmentSlot.head: EquipmentItem(
+          id: 'h',
+          name: 'Helm',
+          slot: EquipmentSlot.head,
+          rarity: LootRarity.rare,
+          armorType: ArmorType.mail,
+          setId: 'sandy_mail',
+          staminaBonus: 5,
+          armorBonus: 8,
+          itemLevel: 20,
+        ),
+        EquipmentSlot.shoulder: EquipmentItem(
+          id: 's',
+          name: 'Shoulders',
+          slot: EquipmentSlot.shoulder,
+          rarity: LootRarity.rare,
+          armorType: ArmorType.mail,
+          setId: 'sandy_mail',
+          staminaBonus: 5,
+          armorBonus: 8,
+          itemLevel: 20,
+        ),
+      },
+    );
+    final setChest = EquipmentItem(
+      id: 'c_set',
+      name: 'Set Chest',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      armorType: ArmorType.mail,
+      setId: 'sandy_mail',
+      staminaBonus: 6,
+      armorBonus: 10,
+      strengthBonus: 4,
+      itemLevel: 20,
+      affinity: 'warrior',
+    );
+    final betterPlain = EquipmentItem(
+      id: 'c_better',
+      name: 'Better Plain',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      armorType: ArmorType.mail,
+      staminaBonus: 14,
+      armorBonus: 22,
+      strengthBonus: 12,
+      itemLevel: 36,
+      affinity: 'warrior',
+    );
+    expect(
+      GameLogic.specEquipScore(hero, betterPlain),
+      greaterThan(GameLogic.specEquipScore(hero, setChest)),
+    );
+  });
+
   test('gold value does not triple-count ilvl', () {
     final item = EquipmentItem(
       id: 'g',
@@ -586,7 +675,7 @@ void main() {
   test('secondaries grow with item level for same rarity', () {
     EquipmentFactory.random = Random(5);
     final low = EquipmentFactory.create(
-      slot: EquipmentSlot.boots,
+      slot: EquipmentSlot.weapon,
       rarity: LootRarity.rare,
       battleNumber: 2,
       bias: HeroRole.rogue,
@@ -594,7 +683,7 @@ void main() {
     );
     EquipmentFactory.random = Random(5);
     final high = EquipmentFactory.create(
-      slot: EquipmentSlot.boots,
+      slot: EquipmentSlot.weapon,
       rarity: LootRarity.rare,
       battleNumber: 40,
       bias: HeroRole.rogue,
@@ -602,10 +691,47 @@ void main() {
       ascensionLevel: 5,
     );
     expect(high.effectiveItemLevel, greaterThan(low.effectiveItemLevel + 20));
-    expect(
-      high.moveSpeedBonus + high.attackSpeedBonus,
-      greaterThan(low.moveSpeedBonus + low.attackSpeedBonus),
-    );
+    final lowSec = low.critChanceBonus + low.attackSpeedBonus + low.mp5Bonus;
+    final highSec = high.critChanceBonus + high.attackSpeedBonus + high.mp5Bonus;
+    expect(highSec, greaterThan(lowSec));
+  });
+
+  test('new drops keep lean primary + at most two secondaries', () {
+    final slots = [
+      for (final s in EquipmentSlot.values)
+        if (s != EquipmentSlot.consumable) s,
+    ];
+    for (var seed = 0; seed < 40; seed++) {
+      EquipmentFactory.random = Random(seed);
+      final piece = EquipmentFactory.create(
+        slot: slots[seed % slots.length],
+        rarity: LootRarity.values[1 + seed % 4],
+        battleNumber: 8 + seed,
+        bias: HeroRole.values[seed % 4],
+        dungeonId: 'sandy',
+      );
+      final primaryKinds = [
+        if (piece.strengthBonus > 0) 1,
+        if (piece.agilityBonus > 0) 1,
+        if (piece.intellectBonus > 0) 1,
+        if (piece.spiritBonus > 0) 1,
+        if (piece.spellPowerBonus > 0) 1,
+      ].length;
+      // Power primaries stay focused (Sta/Armor separate).
+      expect(
+        primaryKinds,
+        lessThanOrEqualTo(3),
+        reason: 'seed $seed ${piece.name}',
+      );
+      final secLines = [
+        if (piece.critChanceBonus > 0) 1,
+        if (piece.attackSpeedBonus > 0) 1,
+        if (piece.mp5Bonus > 0) 1,
+        if (piece.moveSpeedBonus > 0) 1,
+      ].length;
+      expect(secLines, lessThanOrEqualTo(2), reason: 'seed $seed ${piece.name}');
+      expect(piece.moveSpeedBonus, 0, reason: 'no Move spam seed $seed');
+    }
   });
 
   test('Apex budget follows legendary ilvl curve', () {

@@ -5036,6 +5036,12 @@ class GameLogic {
     if (!canHeroReceive(heroCheck, item, slot: targetSlot)) {
       return state;
     }
+    // Apex is soul-kept — never overwrite with a normal drop (vault recovers,
+    // but accidental tap / Auto Equip must not kick it).
+    final wornNow = heroCheck.itemIn(targetSlot);
+    if (wornNow != null && wornNow.isApex && !item.isApex) {
+      return state;
+    }
 
     final equippedItem =
         item.slot == targetSlot ? item : item.copyWith(slot: targetSlot);
@@ -5305,8 +5311,8 @@ class GameLogic {
     var score = core +
         effect +
         item.rarity.index * 2 +
-        // Soft ilvl tie-break — stats/rarity/set dominate BiS.
-        (item.effectiveItemLevel ~/ 4) +
+        // Item level is a real power signal — not just a soft tie-break.
+        item.effectiveItemLevel +
         (item.affinity == affinityRole.name ? 24 : 0);
     // Prefer the heaviest armor the spec can wear (stops cloth beating mail).
     // One step below preferred (mail under plate) is a soft penalty, not a dump.
@@ -5443,6 +5449,7 @@ class GameLogic {
       isUpgrade: isMeaningfulEquipUpgrade(
         hero: hero,
         item: candidate,
+        worn: current,
         curScore: curScore,
         newScore: newScore,
         slotEmpty: current == null,
@@ -5501,18 +5508,31 @@ class GameLogic {
   /// Clear upgrade bar shared by Auto Equip, UI badges, and keep/sell helpers.
   ///
   /// Empty slots use [emptySlotWorthFilling]. Worn slots need a meaningful
-  /// delta so +1 rarity/ilvl noise does not thrash gear.
+  /// delta so +1 rarity/ilvl noise does not thrash gear. Lower-iLvl swaps are
+  /// allowed only when the role score jump is clearly real (not affinity crumbs).
   static bool isMeaningfulEquipUpgrade({
     required PartyHero hero,
     required EquipmentItem item,
     required int curScore,
     required int newScore,
     required bool slotEmpty,
+    EquipmentItem? worn,
   }) {
     final delta = newScore - curScore;
     if (delta <= 0) return false;
     if (slotEmpty) {
       return emptySlotWorthFilling(hero, item, newScore);
+    }
+    final wornItem = worn;
+    if (wornItem != null) {
+      final ilvlGap =
+          wornItem.effectiveItemLevel - item.effectiveItemLevel;
+      if (ilvlGap > 2) {
+        // Lower iLvl: demand a real upgrade (affinity +24 / armor +24 alone
+        // used to replace higher-iLvl pieces and felt broken).
+        final minDelta = max(20, (curScore * 0.10).ceil() + ilvlGap);
+        return delta >= minDelta;
+      }
     }
     final minDelta = max(6, (curScore * 0.03).ceil());
     return delta >= minDelta;
@@ -5603,6 +5623,7 @@ class GameLogic {
               if (isMeaningfulEquipUpgrade(
                 hero: hero,
                 item: entry.item,
+                worn: cur,
                 curScore: curScore,
                 newScore: sc,
                 slotEmpty: cur == null,
@@ -5831,7 +5852,7 @@ class GameLogic {
       iconId: primary.iconId ?? secondary.iconId,
       affixPrefixId: affixPrefixId,
       affixSuffixId: affixSuffixId,
-      setId: primary.setId ?? secondary.setId,
+      setId: primary.setId,
     );
   }
 
@@ -6067,7 +6088,21 @@ class GameLogic {
           bestIlvl = ilvl;
         }
       }
-      return best?.id == item.id;
+      if (best?.id == item.id) return true;
+      // Still honor FILTERS — near-full unstick must not dump epics above cap.
+      final matches = forSell
+          ? _matchesIlvlRarityFilter(
+              item,
+              maxIlvl: state.autoSellMaxPower,
+              maxRarity: state.autoSellMaxRarity,
+            )
+          : _matchesIlvlRarityFilter(
+              item,
+              maxIlvl: state.autoDisassembleMaxIlvl,
+              maxRarity: state.autoDisassembleMaxRarity,
+            );
+      if (!matches) return true;
+      return false;
     }
     if (_shouldKeepInBag(state, item)) {
       return true;

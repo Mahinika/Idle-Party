@@ -198,6 +198,9 @@ abstract final class GearSets {
   }
 
   /// Equip-score bonus for completing / progressing a set with [candidate].
+  ///
+  /// Kept modest so real stats/iLvl still dominate BiS (completion is a nudge,
+  /// not a +100 hammer that beats clearly better non-set gear).
   static int equipScoreBonus({
     required Map<EquipmentSlot, EquipmentItem> equipped,
     required EquipmentItem candidate,
@@ -209,10 +212,10 @@ abstract final class GearSets {
       ..remove(candidate.slot);
     final before = wornCount(without, setId);
     final after = before + 1;
-    var bonus = 18; // any set piece
-    if (after >= 2 && before < 2) bonus += 36;
-    if (after >= 4 && before < 4) bonus += 55;
-    if (after >= 2) bonus += after * 10;
+    var bonus = 8; // any set piece
+    if (after >= 2 && before < 2) bonus += 14;
+    if (after >= 4 && before < 4) bonus += 18;
+    if (after >= 2) bonus += after * 3;
     return bonus;
   }
 }

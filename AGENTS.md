@@ -200,12 +200,13 @@ Gauntlet claims, daily vault / weekly affix season, prestige shop, unlocked spec
 (clamped) + challenge toggles, FARM/PUSH preference.
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
-each Ascend adds **+2 ATK · +1 DEF · +4 VIT · +3% gold** on top of AL flats
-(`+1 ATK` / `DEF = AL~/2` / `+2 VIT` / `+10% gold` per AL). Shown in Forge → KEEP
-and Sanctuary. Constants: `GameLogic.ascendBlessing*`.
+each Ascend adds **+2 ATK · +1 DEF · +4 STA · +3% gold** on top of AL flats
+(`+1 ATK` / `DEF = AL~/2` / `+2 STA` / `+10% gold` per AL). Shown in Forge → KEEP
+and Sanctuary. Constants: `GameLogic.ascendBlessing*`. Player-facing label is
+**STA / Stamina** (same as gear); internal fields may still say vitality.
 
 **Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades
-(ATK/DEF/VIT/move/haste/crit), non-Apex gear/stash, **loadouts**, leave dungeon
+(ATK/DEF/STA/move/haste/crit), non-Apex gear/stash, **loadouts**, leave dungeon
 (`inDungeon=false`); mission board rebuilt for new AL.
 
 Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.

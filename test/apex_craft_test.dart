@@ -5,6 +5,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/apex_craft.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
+import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 
@@ -180,6 +181,55 @@ void main() {
       GameLogic.autoSellJunk(state).gearStash.any((i) => i.id == apex.id),
       isTrue,
     );
+  });
+
+  test('equipFromStash refuses to overwrite Apex with normal gear', () {
+    final apex = ApexCraft.buildItem(
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.chest,
+      rank: 1,
+      ascensionLevel: 0,
+    );
+    final normal = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.epic,
+      battleNumber: 20,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'normal_chest',
+      armorType: ArmorType.plate,
+      strengthBonus: 40,
+      staminaBonus: 40,
+      armorBonus: 40,
+      itemLevel: 80,
+      isApex: false,
+      affinity: 'warrior',
+    );
+    var state = GameLogic.createInitialState();
+    final w = state.heroes.indexWhere((h) => h.gearAffinity == HeroRole.warrior);
+    expect(w, greaterThanOrEqualTo(0));
+    final heroes = [...state.heroes];
+    heroes[w] = heroes[w].copyWith(
+      level: 40,
+      equipped: {
+        ...heroes[w].equipped,
+        EquipmentSlot.chest: apex,
+      },
+    );
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: [normal],
+    );
+    final next = GameLogic.equipFromStash(
+      state,
+      normal.id,
+      heroIndex: w,
+      intoSlot: EquipmentSlot.chest,
+    );
+    expect(next.heroes[w].itemIn(EquipmentSlot.chest)?.id, apex.id);
+    expect(next.gearStash.any((g) => g.id == normal.id), isTrue);
+    expect(GameLogic.compareForHero(next.heroes[w], normal).isUpgrade, isFalse);
   });
 
   test('save round-trip preserves craft fields and apex flags', () {

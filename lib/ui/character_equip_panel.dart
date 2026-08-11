@@ -419,7 +419,7 @@ class CharacterEquipPanel extends StatelessWidget {
                             ' V${GameLogic.formatDelta(compare.vitDelta)}',
                     style: GameTheme.body(
                       size: 12,
-                      color: compare.powerDelta > 0
+                      color: compare.isUpgrade
                           ? GameTheme.clear
                           : (compare.powerDelta < 0
                               ? GameTheme.bloodLit

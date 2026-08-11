@@ -674,7 +674,7 @@ class ClassKits {
       specId: HeroSpecId.discipline,
       name: 'Power Word: Fortitude',
       shortLabel: 'Fort',
-      description: 'Party vitality buff — more max HP for a while.',
+      description: 'Party stamina buff — more max HP for a while.',
       unlockLevel: 9,
       cooldown: 30,
       resourceCost: 25,

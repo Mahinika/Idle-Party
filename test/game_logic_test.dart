@@ -1143,6 +1143,127 @@ void main() {
     expect(state.gearStash, isEmpty);
   });
 
+  test('auto equip does not swap worn gear for lower iLvl affinity crumb', () {
+    final worn = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 12,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'worn_high_ilvl',
+      armorType: ArmorType.mail,
+      strengthBonus: 14,
+      staminaBonus: 12,
+      armorBonus: 18,
+      itemLevel: 40,
+      affinity: 'warrior',
+      effectId: GearEffectId.none,
+      effectValue: 0,
+    );
+    // Lower iLvl, affinity-tagged, slightly weaker stats — used to win on
+    // affinity (+24) while iLvl only counted ~/4.
+    final lower = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'bag_lower_ilvl',
+      armorType: ArmorType.mail,
+      strengthBonus: 13,
+      staminaBonus: 11,
+      armorBonus: 16,
+      itemLevel: 28,
+      affinity: 'warrior',
+      effectId: GearEffectId.none,
+      effectValue: 0,
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final heroes = [...state.heroes];
+    heroes[0] = heroes[0].copyWith(
+      level: 20,
+      equipped: {
+        ...heroes[0].equipped,
+        EquipmentSlot.chest: worn,
+      },
+    );
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[lower],
+    );
+
+    final cmp = GameLogic.compareForHero(state.heroes[0], lower);
+    expect(cmp.isUpgrade, isFalse);
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(state.heroes[0].itemIn(EquipmentSlot.chest)?.id, worn.id);
+    expect(state.gearStash.any((g) => g.id == lower.id), isTrue);
+  });
+
+  test('auto equip may swap lower iLvl when role stats clearly win', () {
+    final wornJunk = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.uncommon,
+      battleNumber: 10,
+      bias: HeroRole.mage,
+    ).copyWith(
+      id: 'worn_wrong_stats',
+      armorType: ArmorType.cloth,
+      strengthBonus: 12,
+      staminaBonus: 2,
+      armorBonus: 4,
+      intellectBonus: 0,
+      spellPowerBonus: 0,
+      itemLevel: 36,
+      affinity: 'warrior',
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      clearAffinity: true,
+    );
+    final betterLower = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.mage,
+    ).copyWith(
+      id: 'bag_right_stats',
+      armorType: ArmorType.cloth,
+      intellectBonus: 22,
+      spellPowerBonus: 14,
+      staminaBonus: 10,
+      armorBonus: 6,
+      itemLevel: 28,
+      affinity: 'mage',
+      effectId: GearEffectId.none,
+      effectValue: 0,
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final mageIndex =
+        state.heroes.indexWhere((h) => h.gearAffinity == HeroRole.mage);
+    expect(mageIndex, greaterThanOrEqualTo(0));
+    final heroes = [...state.heroes];
+    heroes[mageIndex] = heroes[mageIndex].copyWith(
+      level: 20,
+      equipped: {
+        ...heroes[mageIndex].equipped,
+        EquipmentSlot.chest: wornJunk,
+      },
+    );
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[betterLower],
+    );
+
+    final cmp = GameLogic.compareForHero(state.heroes[mageIndex], betterLower);
+    expect(cmp.isUpgrade, isTrue);
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(
+      state.heroes[mageIndex].itemIn(EquipmentSlot.chest)?.id,
+      betterLower.id,
+    );
+  });
+
   test('sell junk drops offhand blocked by two-hand weapon', () {
     final staff = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
@@ -1478,12 +1599,48 @@ void main() {
           clearAffinity: true,
         ),
     ];
-    state = state.copyWith(gearStash: weakRares);
+    state = state.copyWith(
+      gearStash: weakRares,
+      autoSellMaxPower: 40,
+      autoSellMaxRarity: LootRarity.rare.index,
+    );
     expect(state.gearStash.length, cap);
 
     final sold = GameLogic.autoSellJunk(state, unstickBag: true);
     expect(sold.gearStash.length, lessThan(cap ~/ 2));
     expect(sold.gold, greaterThan(state.gold));
+  });
+
+  test('near-full unstick still keeps epics above FILTERS', () {
+    final cap = GameLogic.maxGearStashFor(
+      GameLogic.createInitialState(now: DateTime(2026, 7, 4)),
+    );
+    final epics = [
+      for (var i = 0; i < cap; i++)
+        GameLogic.createEquipment(
+          slot: EquipmentSlot.cloak,
+          rarity: LootRarity.epic,
+          battleNumber: 12,
+        ).copyWith(
+          id: 'epic_above_$i',
+          armorBonus: 4 + (i % 3),
+          staminaBonus: 4,
+          itemLevel: 36,
+          effectId: GearEffectId.none,
+          effectValue: 0,
+          clearAffinity: true,
+        ),
+    ];
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
+      gearStash: epics,
+      // Uncommon i24 — epics are outside FILTERS.
+      autoSellMaxPower: 24,
+      autoSellMaxRarity: LootRarity.uncommon.index,
+    );
+    final sold = GameLogic.autoSellJunk(state, unstickBag: true);
+    // Best-per-slot + all other epics above filter remain.
+    expect(sold.gearStash.length, cap);
+    expect(sold.gold, state.gold);
   });
 
   test('auto-disassemble scraps matching junk for essence', () {

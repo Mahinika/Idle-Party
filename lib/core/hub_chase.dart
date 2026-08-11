@@ -120,7 +120,7 @@ class HubChase {
         detail:
             '+${reward}e · Blessing +${GameLogic.ascendBlessingAtk} ATK/'
             '+${GameLogic.ascendBlessingDef} DEF/'
-            '+${GameLogic.ascendBlessingVit} VIT/'
+            '+${GameLogic.ascendBlessingVit} STA/'
             '+${GameLogic.ascendBlessingGoldPct}% gold$unlockBit',
         progressLabel: 'Ready',
         urgency: HubChaseUrgency.ready,

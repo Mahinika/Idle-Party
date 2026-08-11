@@ -77,15 +77,15 @@ abstract final class StoryLore {
         ? '+${rewardEssence}e (+${milestoneBonus}e milestone) · AL → $nextAl'
         : '+${rewardEssence}e · AL → $nextAl';
     final alPower =
-        'AL power: +1 ATK · +${nextAl ~/ 2 - (nextAl - 1) ~/ 2} DEF · +2 VIT · +10% gold';
+        'AL power: +1 ATK · +${nextAl ~/ 2 - (nextAl - 1) ~/ 2} DEF · +2 STA · +10% gold';
     final blessAtk = blessingsAfter * GameLogic.ascendBlessingAtk;
     final blessDef = blessingsAfter * GameLogic.ascendBlessingDef;
     final blessVit = blessingsAfter * GameLogic.ascendBlessingVit;
     final blessGold = blessingsAfter * GameLogic.ascendBlessingGoldPct;
     final blessLine =
         'Blessing: +${GameLogic.ascendBlessingAtk} ATK · +${GameLogic.ascendBlessingDef} DEF · '
-        '+${GameLogic.ascendBlessingVit} VIT · +${GameLogic.ascendBlessingGoldPct}% gold '
-        '(total ×$blessingsAfter: +$blessAtk ATK · +$blessDef DEF · +$blessVit VIT · +$blessGold% gold)';
+        '+${GameLogic.ascendBlessingVit} STA · +${GameLogic.ascendBlessingGoldPct}% gold '
+        '(total ×$blessingsAfter: +$blessAtk ATK · +$blessDef DEF · +$blessVit STA · +$blessGold% gold)';
     final thisUnlock = AscendRoadmap.unlockLineForAscendTo(nextAl);
     final unlockLine = unlockCombatRogue
         ? '\nUnlock: Combat Rogue (Shade) joins the roster.'
