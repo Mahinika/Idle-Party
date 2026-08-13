@@ -347,8 +347,11 @@ void main() {
     final fenFrontier = initial.copyWith(highestDungeonCleared: 11);
     expect(GameLogic.recommendedDungeonId(fenFrontier), 'fen');
 
-    final allClear = initial.copyWith(highestDungeonCleared: 12);
-    expect(GameLogic.recommendedDungeonId(allClear), 'fen');
+    final brassFrontier = initial.copyWith(highestDungeonCleared: 12);
+    expect(GameLogic.recommendedDungeonId(brassFrontier), 'brass');
+
+    final allClear = initial.copyWith(highestDungeonCleared: 13);
+    expect(GameLogic.recommendedDungeonId(allClear), 'brass');
 
     final ready = mid.copyWith(bossVictories: 1);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 4));

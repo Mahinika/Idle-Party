@@ -157,6 +157,16 @@ abstract final class DungeonCatalog {
       unlockPrice: 5000000,
       blurb: 'The ice thaws into a poisoned mire. Something wet still hunts.',
     ),
+    DungeonDef(
+      number: 13,
+      id: 'brass',
+      name: 'Brassvault Deep',
+      layout: DungeonLayoutKind.cave,
+      bossId: 'brass_mainspring',
+      bossName: 'The Mainspring',
+      unlockPrice: 7000000,
+      blurb: 'The mire drains into buried clockwork. Something still ticks.',
+    ),
   ];
 
   static DungeonDef byId(String id) {

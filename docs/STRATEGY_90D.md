@@ -1,6 +1,7 @@
 # Idle Party — 90-dagars strategi (topplistor + våra lärdomar)
 
-**Sparad:** 2026-08-13 · Ship-linje vid skrivning: **1.11.5**  
+**Sparad:** 2026-08-13 · Ship-linje vid skrivning: **1.12.0**  
+**Status:** Månad 1–3 shippade. Operativt härnäst: [CONTENT_CADENCE.md](CONTENT_CADENCE.md) (balance + en synlig slice + What’s New).  
 **Bas:** [TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md) + det vi redan byggt/lärt i spelet  
 **Rythm:** [CONTENT_CADENCE.md](CONTENT_CADENCE.md) · Chase: [CHASE_CONTRACT.md](CHASE_CONTRACT.md)
 
@@ -43,7 +44,7 @@ Win-condition om 90 dagar: en ny spelare (telefon A56) förstår *vad de jagar*,
 | Hub TODAY / ChaseContract | Shipped |
 | Offline story + Up next | Shipped |
 | Gear budget honesty | Shipped |
-| Floor blueprint + room chests + 12 zoner (→ Rime) | Shipped (1.11.5) |
+| Floor blueprint + room chests + 14 zoner (→ Brassvault) | Shipped (1.12.0) |
 | Ascend Blessing | Shipped |
 | Kit unlock fantasy (Meet … / pending reveals) | Shipped (P3) — Month 2 continues fairness + fantasy polish |
 | Keystone-lager / God Hand-riktning | Shipped soft defaults (P4/P5) — **not** 90-day main track unless chase/kits/zones are satisfied |
@@ -186,3 +187,4 @@ Månadsskifte: en mening i What’s New som spelaren bryr sig om (English).
 | Datum | Ändring |
 |-------|---------|
 | 2026-08-13 | Första 90-dagarsplan: topplistor + Idle Party-lärdomar |
+| 2026-08-13 | M1–M3 shippade (chase, kits, Blightfen). Cadence tar över; Brassvault är nästa zon-slice. |

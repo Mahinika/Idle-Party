@@ -72,5 +72,12 @@ void main() {
         reason: 'fen dungeon shipped — mention Blightfen/Fen in What’s New',
       );
     }
+    if (ids.contains('brass')) {
+      expect(
+        bullets.contains('brass') || bullets.contains('brassvault'),
+        isTrue,
+        reason: 'brass dungeon shipped — mention Brassvault/Brass in What’s New',
+      );
+    }
   });
 }

@@ -61,6 +61,14 @@ void main() {
     expect(rime.treasureAlcoveChance, greaterThan(fen.treasureAlcoveChance));
   });
 
+  test('brass kit prefers treasure alcoves vs fen choke', () {
+    final brass = ZoneLayoutKit.forId('brass');
+    final fen = ZoneLayoutKit.forId('fen');
+    expect(brass.preferTreasureAlcove, isTrue);
+    expect(fen.preferChoke, isTrue);
+    expect(brass.treasureAlcoveChance, greaterThan(fen.treasureAlcoveChance));
+  });
+
   test('every zone kit resolves', () {
     for (final def in DungeonCatalog.all) {
       final kit = ZoneLayoutKit.forId(def.id);

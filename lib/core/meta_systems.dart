@@ -26,11 +26,12 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.0',
       bullets: <String>[
-        'World Path: Blightfen Mire — new end zone after Rimeglass (Fen Hydra).',
-        'Poison thaw identity: bile wash, fen mites, slime hydra boss (not a Rimeglass twin).',
-        'World Path map extended with a painted mire strip + 13th ring under the ice.',
-        'Blightfen leans choke corridors through standing water; Rimeglass keeps quiet treasure alcoves.',
-        'World Path still runs Sandy Caverns through Blightfen (Tidehold, Ashen Vault, Grove, Stormwake, Rimeglass on the road).',
+        'World Path: Brassvault Deep — new end zone after Blightfen (The Mainspring).',
+        'Clockwork identity: brass wash, cog mites, golem mainspring (not a Blightfen twin).',
+        'World Path map extended with a painted brass-vault strip + 14th ring under the mire.',
+        'Brassvault leans treasure alcoves of cogs; Blightfen keeps choke water.',
+        'Blightfen Mire still on the road after Rimeglass (Fen Hydra).',
+        'World Path still runs Sandy Caverns through Brassvault (Tidehold, Ashen Vault, Grove, Stormwake, Rimeglass, Blightfen on the road).',
       ],
     ),
     ChangelogRelease(
@@ -400,6 +401,7 @@ abstract final class MetaSystems {
     'clear_storm': (s) => s.highestDungeonCleared >= 10,
     'clear_rime': (s) => s.highestDungeonCleared >= 11,
     'clear_fen': (s) => s.highestDungeonCleared >= 12,
+    'clear_brass': (s) => s.highestDungeonCleared >= 13,
     'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
     'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
     'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,

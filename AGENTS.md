@@ -19,8 +19,8 @@ many new specs, **more zones**, hub TODAY / Ascend Blessing / unlock teasers for
 iOS/web product), **large batches**, English in-game copy, fairness-first balance,
 **commit locally when a batch is verified**, ask before push / PR / tag.
 Near-term execution order:
-`docs/STRATEGY_90D.md` (chase → kits → zone). **Default next work:** current
-month (now Month 1 chase / first hour) unless the owner names something else.
+`docs/CONTENT_CADENCE.md` after 90d M1–M3 shipped. **Default next work:**
+monthly cadence (zones + kit polish) unless the owner names something else.
 Chat in plain Swedish; ask only product/risk questions. Full detail:
 `.cursor/rules/owner-preferences.mdc`.
 
@@ -118,7 +118,7 @@ GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
              → GameLogic.simulateSpatialOffline → SpatialCombat.step
                (AFK: afkAssist + reducedVfx, auto-flask, God Hand)
 GameLogic + GameState   (rules / persistence)
-DungeonCatalog          (12 named zones, bossFloor = 5 + AL)
+DungeonCatalog          (14 named zones, bossFloor = 5 + AL)
 RoomLayouts + FloorBlueprint / PlacementPlan / ZoneLayoutKit
                         (multi-chamber maps, gates, room-chest sockets)
 ```
@@ -126,8 +126,8 @@ RoomLayouts + FloorBlueprint / PlacementPlan / ZoneLayoutKit
 **SpatialCombat is the combat authority** for live play and in-dungeon offline
 catch-up (full enemy stats; same kits/abilities/chambers).
 
-**Content inventory:** 10 classes / **31 specs** (`HeroSpecId`) · **13 zones**
-through Blightfen Mire.
+**Content inventory:** 10 classes / **31 specs** (`HeroSpecId`) · **14 zones**
+through Brassvault Deep.
 
 **Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = AL10+): endless Crystal
 Spire climb from Hub; wipe/leave → hub; `metaDepth.gauntletBestFloor` survives Ascend.
@@ -149,7 +149,7 @@ ChaseContract).
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
-## World path (13 zones)
+## World path (14 zones)
 
 | # | id | Name |
 |---|-----|------|
@@ -166,6 +166,7 @@ Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 | 10 | storm | Stormwake Hollow |
 | 11 | rime | Rimeglass Rift |
 | 12 | fen | Blightfen Mire |
+| 13 | brass | Brassvault Deep |
 
 Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 
@@ -174,7 +175,7 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 - One **combat wave per floor**; boss on floor `5 + ascensionLevel`.
 - Generation: **FloorBlueprint** (room beats) → **PlacementPlan** (props +
   chest sockets) → `RoomLayouts` / `SpatialCombat.build`, with per-zone
-  **`ZoneLayoutKit`** (e.g. Rime treasure alcoves vs Blightfen chokes).
+  **`ZoneLayoutKit`** (e.g. Brassvault treasure alcoves vs Blightfen chokes).
 - Maps are **multi-chamber** with corridor **gates** after a chamber clears.
 - Enemies in later chambers start **dormant**; wake when prior chambers clear
   (and can wake on **proximity** so soft-locks are rare).

@@ -7,7 +7,7 @@ void main() {
   final context =
       'Idle Party default work this session: $now '
       'Do that unless the owner named something else. '
-      'Do not start /init, repo cleanup, Play ops, new zones, or new specs unprompted. '
+      'Do not start /init, repo cleanup, or Play ops unprompted. '
       'If they paste play notes (TODAY felt wrong, did not know what to chase), '
       'that is the batch — fix ChaseContract / hub / tips. '
       'Prefer git branch main for daily work; release/* only when cutting a tag. '
@@ -22,7 +22,7 @@ void main() {
 
 String _nowLine() {
   final file = File('.cursor/rules/owner-preferences.mdc');
-  if (!file.existsSync()) return 'Month 1 (chase / first hour)';
+  if (!file.existsSync()) return 'monthly cadence (zones + kit polish)';
   for (final line in file.readAsLinesSync()) {
     final t = line.trim();
     final marker = '**Now:**';
@@ -31,5 +31,5 @@ String _nowLine() {
       return t.substring(i + marker.length).trim();
     }
   }
-  return 'Month 1 (chase / first hour)';
+  return 'monthly cadence (zones + kit polish)';
 }

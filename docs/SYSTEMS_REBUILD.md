@@ -67,8 +67,8 @@ BAL/FOCUS/WIDE + CD = soft knobs (not a talent tree).
 - Play Store ops (bakgrund)
 - Prestige-shop deep sinks (stretch)
 
-**Nästa stora spår (operativt):** [STRATEGY_90D.md](STRATEGY_90D.md) — Month 1
-chase/first-hour polish → Month 2 kits fairness+fantasy → Month 3 zone identity.
+**Nästa stora spår (operativt):** 90d M1–M3 shipped. Cadence:
+[CONTENT_CADENCE.md](CONTENT_CADENCE.md) (balance + one player-visible slice).
 Floor generation is **shipped** — see [FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md).
 
 ---

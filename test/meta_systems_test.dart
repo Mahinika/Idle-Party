@@ -243,7 +243,10 @@ void main() {
       final fen = DungeonCatalog.byId('fen');
       expect(fen.number, 12);
       expect(fen.bossName, 'Fen Hydra');
-      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(13));
+      final brass = DungeonCatalog.byId('brass');
+      expect(brass.number, 13);
+      expect(brass.bossName, 'The Mainspring');
+      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(14));
       expect(
         DungeonCatalog.isUnlocked('tide', 0, 6),
         isTrue,
@@ -286,6 +289,14 @@ void main() {
       );
       expect(
         DungeonCatalog.isUnlocked('fen', 0, 10),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('brass', 0, 12),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('brass', 0, 11),
         isFalse,
       );
     });

@@ -13,8 +13,8 @@ verified; still ask before push / Play / save-wipe. Product locks unchanged).
 
 ## Near-term focus
 
-- **Default roadmap:** follow `docs/STRATEGY_90D.md` — Month 1 chase/first-hour → Month 2 kits fairness+fantasy → Month 3 zone identity (blueprint). Don’t invent a competing priority list. **Now:** Month 1 (chase / first hour).
-- Vague “gör spelet bättre / vad härnäst” → **do the current month**, not `/init`, cleanup, or CI chores.
+- **Default roadmap:** 90-day M1–M3 shipped (chase → kits → Blightfen). Operate from `docs/CONTENT_CADENCE.md` — balance + one player-visible slice + What’s New. Keep STRATEGY_90D decision table (kits before new specs; new zone if chase is clear). Don’t invent a competing list. **Now:** monthly cadence (zones + kit polish).
+- Vague “gör spelet bättre / vad härnäst” → **cadence slice**, not `/init`, cleanup, or CI chores.
 - Prefer **game feel / content** over Play ops busywork (closed-test recruitment can idle in background).
 - Play production remains a goal, but day-to-day work defaults to **content + feel** unless the owner asks about Play.
 - Background why (optional read): `docs/TOP_GAMES_RESEARCH.md`.

@@ -179,6 +179,13 @@ abstract final class AchievementCatalog {
       essenceReward: 42,
       category: AchievementCategory.explorer,
     ),
+    AchievementDef(
+      id: 'clear_brass',
+      title: 'Clockbound',
+      description: 'Clear Brassvault Deep.',
+      essenceReward: 46,
+      category: AchievementCategory.explorer,
+    ),
     // —— Hardmode ——
     AchievementDef(
       id: 'hm_1',

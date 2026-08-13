@@ -8,8 +8,8 @@ import 'package:idle_party/models/dungeon_def.dart';
 
 /// Fast honesty checks: world path, unlock rules, guides, release version.
 void main() {
-  test('world path ships thirteen named zones including fen', () {
-    expect(DungeonCatalog.all.length, 13);
+  test('world path ships fourteen named zones including brass', () {
+    expect(DungeonCatalog.all.length, 14);
     final ids = DungeonCatalog.all.map((d) => d.id).toList();
     expect(
       ids,
@@ -27,6 +27,7 @@ void main() {
         'storm',
         'rime',
         'fen',
+        'brass',
       ],
     );
     expect(DungeonCatalog.byId('tide').name, 'Sunken Tidehold');
@@ -35,6 +36,7 @@ void main() {
     expect(DungeonCatalog.byId('storm').name, 'Stormwake Hollow');
     expect(DungeonCatalog.byId('rime').name, 'Rimeglass Rift');
     expect(DungeonCatalog.byId('fen').name, 'Blightfen Mire');
+    expect(DungeonCatalog.byId('brass').name, 'Brassvault Deep');
   });
 
   test('zone unlock uses lifetime gold or prior clear, not wallet gold', () {
@@ -66,6 +68,10 @@ void main() {
     expect(DungeonCatalog.isUnlocked('fen', 4999999, 10), isFalse);
     expect(DungeonCatalog.isUnlocked('fen', 5000000, 10), isTrue);
     expect(DungeonCatalog.isUnlocked('fen', 0, 11), isTrue);
+
+    expect(DungeonCatalog.isUnlocked('brass', 6999999, 11), isFalse);
+    expect(DungeonCatalog.isUnlocked('brass', 7000000, 11), isTrue);
+    expect(DungeonCatalog.isUnlocked('brass', 0, 12), isTrue);
   });
 
   test('guides cover World Path endgame zones and LOADOUTS vs armor sets', () {
@@ -76,6 +82,7 @@ void main() {
     expect(world.body.toLowerCase(), contains('stormwake'));
     expect(world.body.toLowerCase(), contains('rimeglass'));
     expect(world.body.toLowerCase(), contains('blightfen'));
+    expect(world.body.toLowerCase(), contains('brassvault'));
     expect(world.body.toLowerCase(), contains('lifetime gold'));
 
     final loadouts = GameGuides.topics.firstWhere((t) => t.id == 'loadouts');

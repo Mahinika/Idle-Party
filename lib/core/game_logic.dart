@@ -3390,6 +3390,14 @@ class GameLogic {
         EnemyArchetype.glass: ['Rot Fang', 'Mire Blade'],
         EnemyArchetype.support: ['Fen Chanter', 'Mire Adept'],
       },
+      'brass' => const {
+        EnemyArchetype.swarm: ['Cog Mite', 'Rust Tick', 'Brass Flea'],
+        EnemyArchetype.brute: ['Vault Bruiser', 'Cog Crusher'],
+        EnemyArchetype.tank: ['Brass Bulwark', 'Cog Guard'],
+        EnemyArchetype.ranged: ['Spark Spitter', 'Coil Slinger'],
+        EnemyArchetype.glass: ['Razor Cog', 'Spring Fang'],
+        EnemyArchetype.support: ['Clock Chanter', 'Brass Adept'],
+      },
       _ => const {
         EnemyArchetype.swarm: ['Cave Slime', 'Sand Mite'],
         EnemyArchetype.brute: ['Cave Brute', 'Rock Crab'],
