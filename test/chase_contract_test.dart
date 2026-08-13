@@ -66,4 +66,16 @@ void main() {
     expect(offline.upNextLine, hub.upNextLine);
     expect(offline.kind, hub.kind);
   });
+
+  test('after first Ascend, KEY habit is Up next ENTER', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 1,
+    );
+    final contract = ChaseContract.fromState(state, now: now);
+    expect(contract.kind, HubChaseKind.keystone);
+    expect(contract.title.toUpperCase(), contains('KEY'));
+    expect(contract.readyActionLabel, 'ENTER');
+    expect(contract.upNextLine, startsWith('Up next:'));
+    expect(contract.isReady, isFalse);
+  });
 }

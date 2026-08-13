@@ -4129,10 +4129,10 @@ class GameLogic {
   static bool showKeystoneJargon(GameState state) =>
       state.ascensionLevel >= 2 || state.highestDungeonCleared >= 2;
 
-  /// Daily / vault-start as TODAY after the first boss or first Ascend.
+  /// Daily / vault-start / KEY habit as TODAY after the first boss or first Ascend.
   ///
   /// New saves chase growing the party in the starter zone — not a Daily
-  /// handshake they have not earned yet.
+  /// or KEY handshake they have not earned yet.
   static bool showDailyChase(GameState state) =>
       state.ascensionLevel > 0 || state.bossVictories > 0;
 

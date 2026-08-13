@@ -172,6 +172,26 @@ class _HubScreenState extends State<HubScreen>
         return ('ASCEND', () => confirmAscend(context, director));
       case HubChaseKind.dailyRun:
         return ('DAILY', () => confirmDailyRun(context, director));
+      case HubChaseKind.keystone:
+        final id = chase.zoneId ?? _selectedId;
+        return (
+          'ENTER',
+          () {
+            director.setHardmodeLevel(chase.keyLevel ?? 1);
+            if (chase.zoneId != null) {
+              setState(() {
+                _userPickedZone = true;
+                _selectedId = chase.zoneId!;
+              });
+            }
+            final unlocked = DungeonCatalog.isUnlocked(
+              id,
+              director.state.lifetimeGoldEarned,
+              director.state.highestDungeonCleared,
+            );
+            if (unlocked) widget.onEnterDungeon(id);
+          },
+        );
       case HubChaseKind.gauntletMilestone:
         return ('GAUNTLET', () => confirmGauntletRun(context, director));
       case HubChaseKind.weekGoal:
@@ -401,6 +421,8 @@ class _HubScreenState extends State<HubScreen>
                                       HubChaseKind.claimMissions,
                                   hideDaily:
                                       chase.kind == HubChaseKind.dailyRun ||
+                                          chase.kind ==
+                                              HubChaseKind.keystone ||
                                           chase.kind ==
                                               HubChaseKind.meetHero ||
                                           !GameLogic.showDailyChase(state),

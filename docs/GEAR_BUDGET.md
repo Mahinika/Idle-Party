@@ -11,6 +11,7 @@ Source of truth: `EquipmentFactory.budgetForItemLevel` in `lib/core/equipment_fa
 - Inputs: display **item level**, **rarity** (quality mul), **slot** (and 2H mul).
 - ~`0.88` primary points per iLvl on a main-hand rare before armor carve / affix slice.
 - Rarity mainly raises shown iLvl via `itemLevelFor`; quality mul keeps epic/legendary denser at the same iLvl.
+- KEY loot bonus is `Keystone.lootItemLevelBonus` (`key * 2`) — KEY +10 is +20 iLvl, not `key ~/ 4`.
 
 New drops, merge output, and Apex craft should spend this budget — not invent a parallel power curve.
 

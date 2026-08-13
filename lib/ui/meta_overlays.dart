@@ -801,6 +801,8 @@ Future<void> showOfflineProgressDialog(
         Navigator.pop(context);
         confirmDailyRun(context, director);
       };
+    case HubChaseKind.keystone:
+      break;
     case HubChaseKind.gauntletMilestone:
       readyAction = () {
         director.dismissOfflineSummary();

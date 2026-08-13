@@ -33,6 +33,9 @@ abstract final class Keystone {
 
   static double rarityBump(int key) => key.clamp(0, maxLevel) * 0.02;
 
+  /// Honest loot jump: KEY +10 is +20 iLvl, not a +2 crumb.
+  static int lootItemLevelBonus(int key) => key.clamp(0, maxLevel) * 2;
+
   /// Idle-friendly par: ~2 min/floor + 20s/key/floor (offline counts).
   static int parTimeMs({required int bossFloor, required int key}) {
     if (key <= 0) return 0;

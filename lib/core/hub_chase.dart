@@ -5,6 +5,7 @@ import 'ascend_roadmap.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'hero_identity.dart';
+import 'keystone.dart';
 import 'local_season.dart';
 import 'meta_systems.dart';
 
@@ -21,6 +22,8 @@ enum HubChaseKind {
   gauntletMilestone,
   unlockZone,
   dailyRun,
+  /// Next KEY run after the first hour (habit until AL cap).
+  keystone,
   clearFloors,
   weekGoal,
 }
@@ -46,6 +49,7 @@ class HubChase {
     this.progressLabel,
     this.urgency = HubChaseUrgency.normal,
     this.zoneId,
+    this.keyLevel,
   });
 
   final HubChaseKind kind;
@@ -57,10 +61,14 @@ class HubChase {
   /// Target zone id for [HubChaseKind.unlockZone] / clear pushes.
   final String? zoneId;
 
+  /// Preferred KEY to set on ENTER for [HubChaseKind.keystone].
+  final int? keyLevel;
+
   /// Picks the single best "what should I chase now?" target.
   ///
   /// Priority: claimables → Ascend → almost-Ascend → vault / KEY cliffs →
-  /// week goal → daily → zone → Will → Gauntlet → keep clearing.
+  /// first hour → KEY habit → daily → vault start → zone → Will → Gauntlet →
+  /// keep clearing.
   static HubChase forState(GameState state, {DateTime? now}) {
     final md = state.metaDepth;
     final clock = now ?? DateTime.now().toUtc();
@@ -180,7 +188,7 @@ class HubChase {
     if (weekAlmostEarly != null) return weekAlmostEarly;
 
     // First hour: grow the party in the starter zone. Daily / vault / Will
-    // grind wait until a boss (or first Ascend) so TODAY is not a meta list.
+    // / KEY grind wait until a boss (or first Ascend) so TODAY is not a meta list.
     final firstHour = !GameLogic.showDailyChase(state);
     if (firstHour) {
       return _ascendPushChase(
@@ -190,6 +198,10 @@ class HubChase {
         urgency: HubChaseUrgency.normal,
       );
     }
+
+    // Habit after the first hour: chase the next KEY until the AL cap.
+    final keyPush = _keystonePushChase(state);
+    if (keyPush != null) return keyPush;
 
     if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
       return const HubChase(
@@ -289,6 +301,28 @@ class HubChase {
       title: week.name,
       detail: week.blurb,
       progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
+    );
+  }
+
+  /// Next KEY after the first hour, until preferred key hits the AL cap.
+  ///
+  /// Uses KEY words even before [GameLogic.showKeystoneJargon] — this is the
+  /// habit loop, not mid-layer vault copy.
+  static HubChase? _keystonePushChase(GameState state) {
+    final cap = Keystone.maxForAl(state.ascensionLevel);
+    final pref = state.hardmodeLevel.clamp(0, cap);
+    if (pref >= cap) return null;
+    final target = pref <= 0 ? 1 : pref;
+    final firstKey = pref <= 0;
+    return HubChase(
+      kind: HubChaseKind.keystone,
+      title: firstKey ? 'Run KEY +1' : 'Time KEY +$target',
+      detail: firstKey
+          ? 'Higher keys drop higher iLvl loot — start with KEY +1.'
+          : 'Time KEY +$target for better iLvl loot and the next key unlock.',
+      progressLabel: 'KEY +$target',
+      keyLevel: target,
+      zoneId: GameLogic.recommendedDungeonId(state),
     );
   }
 

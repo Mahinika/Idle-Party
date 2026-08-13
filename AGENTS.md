@@ -248,9 +248,12 @@ Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
 
 Hub **KEYSTONE** sets preferred key (`hardmodeLevel` 0–20, AL-gated). On enter,
 affixes lock + idle-friendly par timer starts (AFK counts). Boss clear under par
-→ TIMED (upgrade key, vault score); overtime → depleted. **Daily vault** (UTC):
-1 clear **or** timed KEY+2; claim once per day (scales with best timed key).
-Affixes still rotate weekly. See `lib/core/keystone.dart`.
+→ TIMED (upgrade key, vault score); overtime → depleted. Loot iLvl bonus is
+`key * 2` (`Keystone.lootItemLevelBonus`) so higher keys are a visible gear jump.
+After the first hour, hub TODAY chases the next KEY until the AL cap; Daily /
+Will / Gauntlet surface when the preferred key is at cap (ALMOST cliffs stay above).
+**Daily vault** (UTC): 1 clear **or** timed KEY+2; claim once per day (scales with
+best timed key). Affixes still rotate weekly. See `lib/core/keystone.dart`.
 
 ## God Hand
 

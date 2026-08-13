@@ -218,7 +218,9 @@ abstract final class GameGuides {
       body:
           'Keystone affixes still rotate each ISO week, but the vault is daily.\n\n'
           '• Early on: TODAY tells you to grow the party in the starter zone. '
-          'Daily and vault-start wait until you have beaten a boss (or Ascended).\n'
+          'Daily, KEY, and vault-start wait until you have beaten a boss (or Ascended).\n'
+          '• After that first hour, TODAY chases KEY +1 (higher iLvl loot) until '
+          'your key hits the AL cap — then Daily / vault / Will can surface.\n'
           '• Fill today’s vault with 1 dungeon clear, then claim essence.\n'
           '• Later: time a KEY +2 (or higher) for a bigger claim — META → KEYSTONE.\n'
           '• Hub TODAY and offline Up next share one chase (claim → READY → '
@@ -261,7 +263,10 @@ abstract final class GameGuides {
           '• Overtime = depleted (clear still counts, no key upgrade).\n'
           '• Daily vault: 1 clear or timed KEY+2 — claim once per day.\n'
           '• Optional Boss Rush / No Flask add extra affixes + essence.\n'
-          '• Higher keys: denser packs, more gold, better legendary odds.',
+          '• Higher keys drop higher iLvl gear (KEY +10 is a real jump) plus '
+          'denser packs, more gold, and better legendary odds.\n'
+          '• After the first boss/Ascend, hub TODAY points at the next KEY until '
+          'you are at the AL cap.',
     ),
     GuideTopic(
       id: 'ascend',
@@ -283,7 +288,9 @@ abstract final class GameGuides {
       title: 'DAILY RUN',
       body:
           'A daily echo dungeon appears on the hub when available.\n\n'
-          '• TODAY offers Daily after you have beaten a boss or Ascended once.\n'
+          '• After the first hour, TODAY chases KEY — Daily is extra essence, '
+          'not the default habit.\n'
+          '• TODAY offers Daily when your KEY is at the AL cap (or KEY is not the grind).\n'
           '• Clear the required floor(s) for a flat essence reward.\n'
           '• May let you visit a locked zone for the day.\n'
           '• Claim once per day — good free essence.',
