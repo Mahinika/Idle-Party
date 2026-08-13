@@ -1578,7 +1578,7 @@ class ClassKits {
       resourceCost: 12,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.2,
+      coeff: 1.08,
     ),
     ClassAbilityDef(
       id: AbilityId.killCommand,
@@ -1592,7 +1592,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.65,
+      coeff: 1.48,
     ),
     ClassAbilityDef(
       id: AbilityId.multiShot,
@@ -1606,7 +1606,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.82,
+      coeff: 0.74,
     ),
     ClassAbilityDef(
       id: AbilityId.bestialWrath,
@@ -2692,7 +2692,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.22,
+      coeff: 1.12,
     ),
     ClassAbilityDef(
       id: AbilityId.deathCoil,
@@ -2706,7 +2706,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.12,
+      coeff: 1.04,
     ),
     ClassAbilityDef(
       id: AbilityId.bloodBoilUnholy,

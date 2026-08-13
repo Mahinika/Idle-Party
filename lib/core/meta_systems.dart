@@ -27,6 +27,7 @@ abstract final class MetaSystems {
       version: '1.12.1',
       bullets: <String>[
         'Kits: Arms Sweeping Strikes is a cleave window on your swings (HUD shows SWEEP) — not a one-shot nova. Prot Paladin Holy Shield is a block window while you tank; Divine Protection stays the panic bubble.',
+        'Beast Mastery and Unholy sit closer to other DPS — pet, ghoul, and diseases still look the same; they just hit a bit less.',
         'World Path still runs Sandy Caverns through Brassvault Deep (Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
