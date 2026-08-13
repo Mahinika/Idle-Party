@@ -6,12 +6,13 @@ import 'package:idle_party/core/meta_systems.dart';
 void main() {
   final now = DateTime.utc(2026, 8, 8, 12);
 
-  test('fresh hub prefers daily run', () {
+  test('fresh hub prefers growing the party in the starter zone', () {
     final state = GameLogic.createInitialState(now: now);
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.dailyRun);
-    expect(chase.title, isNotEmpty);
-    expect(chase.detail, isNotEmpty);
+    expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.title, contains('Grow the party'));
+    expect(chase.title, contains('Sandy'));
+    expect(chase.urgency, HubChaseUrgency.normal);
   });
 
   test('claim daily vault beats other chases', () {
@@ -70,6 +71,7 @@ void main() {
   test('Will chase shows next threshold gap', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
+      ascensionLevel: 1,
       metaDepth: state.metaDepth.copyWith(dailyVaultClaimed: true),
       lastDailyDate: MetaSystems.dailyDateKey(now),
       dailyClaimed: true,
@@ -105,9 +107,10 @@ void main() {
     expect(chase.title, contains('25'));
   });
 
-  test('next locked zone chase uses lifetime gold progress', () {
+  test('normal zone unlock does not beat pushing the current dungeon', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
+      ascensionLevel: 1,
       lifetimeGoldEarned: 1000,
       highestDungeonCleared: -1,
       metaDepth: state.metaDepth.copyWith(dailyVaultClaimed: true),
@@ -119,8 +122,8 @@ void main() {
     );
     expect(state.collectionScore, greaterThanOrEqualTo(320));
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.unlockZone);
-    expect(chase.title, contains('Goblin'));
+    expect(chase.kind, isNot(HubChaseKind.unlockZone));
+    expect(chase.title.toLowerCase(), isNot(contains('unlock')));
   });
 
   test('claimables and Ascend mark READY urgency', () {
@@ -236,5 +239,14 @@ void main() {
     );
     state = GameLogic.ackPendingHeroReveals(state);
     expect(state.metaDepth.pendingHeroReveals, isEmpty);
+  });
+
+  test('after first Ascend, unused Daily is the hub chase', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 1,
+    );
+    expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.dailyRun);
   });
 }

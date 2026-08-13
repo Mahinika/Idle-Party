@@ -11,6 +11,8 @@ void main() {
     int gold = 0,
     int essence = 0,
     int seconds = 120,
+    int levels = 0,
+    int gear = 0,
   }) {
     final state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 8));
     return OfflineProgressResult(
@@ -21,6 +23,8 @@ void main() {
       roomsCleared: rooms,
       highestFloorDelta: floors,
       bossDelta: bosses,
+      levelsGained: levels,
+      gearFinds: gear,
     );
   }
 
@@ -36,6 +40,13 @@ void main() {
     final r = result(bosses: 1, floors: 3, rooms: 5, gold: 99);
     expect(r.welcomeLead.toLowerCase(), contains('boss'));
     expect(r.welcomeLead.toLowerCase(), isNot(contains('rooms')));
+  });
+
+  test('welcomeLead prefers party levels over rooms when no boss', () {
+    final r = result(levels: 2, floors: 3, rooms: 8, gold: 40);
+    expect(r.welcomeLead.toLowerCase(), contains('level'));
+    expect(r.headline, startsWith('Party grew'));
+    expect(r.highlightRows.first.$1, 'Party levels');
   });
 
   test('highlightRows caps at 3 and ranks bosses first', () {

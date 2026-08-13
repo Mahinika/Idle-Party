@@ -179,6 +179,18 @@ class HubChase {
     final weekAlmostEarly = _weekGoalChase(state, clock, almostOnly: true);
     if (weekAlmostEarly != null) return weekAlmostEarly;
 
+    // First hour: grow the party in the starter zone. Daily / vault / Will
+    // grind wait until a boss (or first Ascend) so TODAY is not a meta list.
+    final firstHour = !GameLogic.showDailyChase(state);
+    if (firstHour) {
+      return _ascendPushChase(
+        state,
+        bossesNeed: bossesNeed,
+        bossesLeft: bossesLeft,
+        urgency: HubChaseUrgency.normal,
+      );
+    }
+
     if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
       return const HubChase(
         kind: HubChaseKind.dailyRun,
@@ -291,12 +303,18 @@ class HubChase {
     final kitTeaser = AscendRoadmap.nextMissingKitTeaser(state);
     final teaser = kitTeaser ?? AscendRoadmap.chaseTeaser(state.ascensionLevel);
     final almost = urgency == HubChaseUrgency.almost;
+    final firstHour =
+        state.ascensionLevel == 0 && state.bossVictories == 0 && !almost;
     return HubChase(
       kind: HubChaseKind.clearFloors,
       title: almost
           ? 'Almost Ascend — push ${dungeon.name}'
-          : 'Push ${dungeon.name}',
-      detail: bossesLeft > 0
+          : firstHour
+              ? 'Grow the party — ${dungeon.name}'
+              : 'Push ${dungeon.name}',
+      detail: firstHour
+          ? 'Enter, fight, get stronger. 1 boss then you can Ascend. $teaser'
+          : bossesLeft > 0
           ? (almost
               ? '1 boss left · then Ascend. $teaser'
               : 'Clear bosses toward Ascend ($bossesLeft left). $teaser')
@@ -376,12 +394,15 @@ class HubChase {
       }
       final almost = d.unlockPrice > 0 &&
           goldNeed <= (d.unlockPrice * 0.12).ceil().clamp(1, d.unlockPrice);
+      // Playing the current zone unlocks the next. TODAY only names a zone
+      // unlock when gold is a cliffhanger — not as the default grind.
+      if (!almost) return null;
       return HubChase(
         kind: HubChaseKind.unlockZone,
-        title: almost ? 'Almost ${d.name}' : 'Unlock ${d.name}',
+        title: 'Almost ${d.name}',
         detail: 'Need $goldNeed more lifetime gold — or clear $prevName.',
         progressLabel: '$lifetime / ${d.unlockPrice}g',
-        urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
+        urgency: HubChaseUrgency.almost,
         zoneId: d.id,
       );
     }

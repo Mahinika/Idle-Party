@@ -3450,6 +3450,8 @@ class GameLogic {
     final beforeEssence = state.essence;
     final beforeHighest = state.highestFloorCleared;
     final beforeBoss = state.bossVictories;
+    final beforeLevels = _partyLevelSum(state);
+    final beforeGear = _ownedGearCount(state);
     var roomsCleared = 0;
 
     late GameState progressed;
@@ -3475,7 +3477,20 @@ class GameLogic {
       roomsCleared: roomsCleared,
       highestFloorDelta: progressed.highestFloorCleared - beforeHighest,
       bossDelta: progressed.bossVictories - beforeBoss,
+      levelsGained: _partyLevelSum(progressed) - beforeLevels,
+      gearFinds: (_ownedGearCount(progressed) - beforeGear).clamp(0, 999),
     );
+  }
+
+  static int _partyLevelSum(GameState state) =>
+      state.heroes.fold<int>(0, (n, h) => n + h.level);
+
+  static int _ownedGearCount(GameState state) {
+    var n = state.gearStash.length;
+    for (final h in state.heroRoster) {
+      n += h.equipped.length;
+    }
+    return n;
   }
 
   /// Hub-only AFK: small gold (and rare essence) from sanctuary — no combat ticks.
@@ -4097,6 +4112,13 @@ class GameLogic {
   /// AL≥2 or two zones cleared (Goblin+) — see docs/SYSTEMS_REBUILD.md P4.
   static bool showKeystoneJargon(GameState state) =>
       state.ascensionLevel >= 2 || state.highestDungeonCleared >= 2;
+
+  /// Daily / vault-start as TODAY after the first boss or first Ascend.
+  ///
+  /// New saves chase growing the party in the starter zone — not a Daily
+  /// handshake they have not earned yet.
+  static bool showDailyChase(GameState state) =>
+      state.ascensionLevel > 0 || state.bossVictories > 0;
 
 
   /// One-time essence when claiming the first vault of a calendar month.
@@ -7248,6 +7270,8 @@ class OfflineProgressResult {
     required this.roomsCleared,
     required this.highestFloorDelta,
     required this.bossDelta,
+    this.levelsGained = 0,
+    this.gearFinds = 0,
   });
 
   static const int maxHighlightRows = 3;
@@ -7259,9 +7283,14 @@ class OfflineProgressResult {
   final int roomsCleared;
   final int highestFloorDelta;
   final int bossDelta;
+  final int levelsGained;
+  final int gearFinds;
 
   bool get foughtWhileAway =>
-      roomsCleared > 0 || highestFloorDelta > 0 || bossDelta > 0;
+      roomsCleared > 0 ||
+      highestFloorDelta > 0 ||
+      bossDelta > 0 ||
+      levelsGained > 0;
 
   bool get hasSummary =>
       secondsApplied >= 45 &&
@@ -7269,7 +7298,9 @@ class OfflineProgressResult {
           essenceGained > 0 ||
           roomsCleared > 0 ||
           highestFloorDelta > 0 ||
-          bossDelta > 0);
+          bossDelta > 0 ||
+          levelsGained > 0 ||
+          gearFinds > 0);
 
   /// Compact hub banner — wow + away time (no number dump).
   String get headline {
@@ -7280,18 +7311,24 @@ class OfflineProgressResult {
           ? 'Boss fell · Away $away'
           : 'Bosses fell · Away $away';
     }
+    if (levelsGained > 0) return 'Party grew · Away $away';
     if (foughtWhileAway) return 'Party fought · Away $away';
     return 'Sanctuary earned · Away $away';
   }
 
   /// Dialog lead — single feeling sentence (not a stat list).
   String get welcomeLead {
+    if (bossDelta > 0) {
+      return bossDelta == 1
+          ? 'A boss fell while you were away — Ascend moved.'
+          : '$bossDelta bosses fell while you were away — Ascend moved.';
+    }
+    if (levelsGained > 0) {
+      return levelsGained == 1
+          ? 'Your party gained a level while you were away.'
+          : 'Your party gained $levelsGained levels while you were away.';
+    }
     if (foughtWhileAway) {
-      if (bossDelta > 0) {
-        return bossDelta == 1
-            ? 'A boss fell while you were away — Ascend moved.'
-            : '$bossDelta bosses fell while you were away — Ascend moved.';
-      }
       if (highestFloorDelta > 0) {
         return highestFloorDelta == 1
             ? 'Your party pushed a floor while you were gone.'
@@ -7303,29 +7340,40 @@ class OfflineProgressResult {
             : 'Your party cleared $roomsCleared rooms while you were away.';
       }
     }
+    if (gearFinds > 0) {
+      return gearFinds == 1
+          ? 'Your party found new gear while you were away.'
+          : 'Your party found gear while you were away.';
+    }
     if (goldGained > 0 || essenceGained > 0) {
       return 'Sanctuary kept earning while you were away.';
     }
     return 'Welcome back.';
   }
 
-  /// Top reward rows for the welcome dialog — bosses / floors first, max 3.
+  /// Top reward rows for the welcome dialog — bosses / levels first, max 3.
   List<(String, String)> get highlightRows {
     final ranked = <(int priority, String label, String value)>[];
     if (bossDelta > 0) {
       ranked.add((0, 'Bosses defeated', '$bossDelta'));
     }
+    if (levelsGained > 0) {
+      ranked.add((1, 'Party levels', '+$levelsGained'));
+    }
+    if (gearFinds > 0) {
+      ranked.add((2, 'New gear', '+$gearFinds'));
+    }
     if (highestFloorDelta > 0) {
-      ranked.add((1, 'Floor progress', '+$highestFloorDelta'));
+      ranked.add((3, 'Floor progress', '+$highestFloorDelta'));
     }
     if (roomsCleared > 0) {
-      ranked.add((2, 'Rooms cleared', '$roomsCleared'));
+      ranked.add((4, 'Rooms cleared', '$roomsCleared'));
     }
     if (essenceGained > 0) {
-      ranked.add((3, 'Essence earned', '+$essenceGained'));
+      ranked.add((5, 'Essence earned', '+$essenceGained'));
     }
     if (goldGained > 0) {
-      ranked.add((4, 'Gold earned', '+${goldGained}g'));
+      ranked.add((6, 'Gold earned', '+${goldGained}g'));
     }
     ranked.sort((a, b) => a.$1.compareTo(b.$1));
     return [

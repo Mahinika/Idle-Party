@@ -216,7 +216,9 @@ abstract final class GameGuides {
       title: 'DAILY VAULT',
       body:
           'Keystone affixes still rotate each ISO week, but the vault is daily.\n\n'
-          '• Early on: fill today’s vault with 1 dungeon clear, then claim essence.\n'
+          '• Early on: TODAY tells you to grow the party in the starter zone. '
+          'Daily and vault-start wait until you have beaten a boss (or Ascended).\n'
+          '• Fill today’s vault with 1 dungeon clear, then claim essence.\n'
           '• Later: time a KEY +2 (or higher) for a bigger claim — META → KEYSTONE.\n'
           '• Hub TODAY and offline Up next share one chase (claim → READY → '
           'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
@@ -280,6 +282,7 @@ abstract final class GameGuides {
       title: 'DAILY RUN',
       body:
           'A daily echo dungeon appears on the hub when available.\n\n'
+          '• TODAY offers Daily after you have beaten a boss or Ascended once.\n'
           '• Clear the required floor(s) for a flat essence reward.\n'
           '• May let you visit a locked zone for the day.\n'
           '• Claim once per day — good free essence.',

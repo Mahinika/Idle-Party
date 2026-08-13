@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/ascend_roadmap.dart';
 import 'package:idle_party/core/game_guides.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 
@@ -104,5 +105,14 @@ void main() {
     final classes = GameGuides.topics.firstWhere((t) => t.id == 'classes');
     expect(classes.body, contains('AL2'));
     expect(classes.body, contains('Beast Mastery'));
+  });
+
+  test('fresh TODAY chase is grow-the-party, not Daily', () {
+    final now = DateTime.utc(2026, 8, 8, 12);
+    final state = GameLogic.createInitialState(now: now);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.title.toLowerCase(), contains('grow'));
+    expect(GameLogic.showDailyChase(state), isFalse);
   });
 }

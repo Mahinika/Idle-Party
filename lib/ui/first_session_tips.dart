@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/game_state.dart';
 import '../core/story_lore.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
@@ -13,12 +14,13 @@ class FirstSessionTips extends StatelessWidget {
 
   final GameDirector director;
 
-  static const _tips = <({String id, String title, String body})>[
+  static const tips = <({String id, String title, String body})>[
     (
       id: 'first_run',
-      title: 'WORLD PATH',
+      title: 'TODAY',
       body:
-          'Pick a zone on the World Path, then enter. Clear floors to push deeper — FARM loops a floor for loot.',
+          'The TODAY line is your chase. Tap ENTER DUNGEON — grow the party in '
+          'Sandy Caverns. Clear floors, get stronger, beat the first boss.',
     ),
     (
       id: 'lore_descent',
@@ -26,17 +28,16 @@ class FirstSessionTips extends StatelessWidget {
       body: StoryLore.loreTipBody,
     ),
     (
-      id: 'godhand',
-      title: 'GOD HAND',
-      body:
-          'Tap the dungeon to steer the party and smash packs — that is the toy. '
-          'Cooldown ring is top-right. Forge → KEEP later: damage, shorter CD, and '
-          'BAL / FOCUS / WIDE styles (soft power knobs, not a talent tree).',
-    ),
-    (
       id: 'farm_push',
       title: 'FARM / PUSH',
       body: 'FARM loops this floor for loot. PUSH advances when you clear.',
+    ),
+    (
+      id: 'godhand',
+      title: 'GOD HAND',
+      body:
+          'Tap the dungeon to steer the party and smash packs. Cooldown is the '
+          'ring top-right. Later: Forge → KEEP for BAL / FOCUS / WIDE.',
     ),
     (
       id: 'bag',
@@ -119,17 +120,25 @@ class FirstSessionTips extends StatelessWidget {
     ),
   ];
 
-  String? _nextTipId() {
-    final seen = director.state.seenTips;
-    final inDungeon = director.state.inDungeon;
-    final s = director.state;
-    for (final tip in _tips) {
+  /// True after the player has actually run a floor (or already Ascended).
+  static bool leftPorch(GameState s) =>
+      s.highestFloorCleared >= 1 ||
+      s.metaDepth.lifetimeFloorClears >= 1 ||
+      s.ascensionLevel >= 1;
+
+  static String? nextTipId(GameState s, {required bool inDungeon}) {
+    final seen = s.seenTips;
+    final porch = leftPorch(s);
+    for (final tip in tips) {
       if (seen.contains(tip.id)) continue;
       // Live combat: only God Hand + FARM/PUSH tips — avoid tip spam mid-fight.
       if (inDungeon && tip.id != 'godhand' && tip.id != 'farm_push') {
         continue;
       }
       if (tip.id == 'first_run' && inDungeon) {
+        continue;
+      }
+      if (tip.id == 'lore_descent' && !porch) {
         continue;
       }
       if (tip.id == 'ascend' && !GameLogic.canAscend(s)) {
@@ -157,7 +166,7 @@ class FirstSessionTips extends StatelessWidget {
               tip.id == 'apex' ||
               tip.id == 'gauntlet' ||
               tip.id == 'prestige') &&
-          inDungeon) {
+          (inDungeon || !porch)) {
         continue;
       }
       if (tip.id == 'pets' && s.ownedPets.isEmpty && s.essence < 3) {
@@ -206,9 +215,12 @@ class FirstSessionTips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final id = _nextTipId();
+    final id = nextTipId(
+      director.state,
+      inDungeon: director.state.inDungeon,
+    );
     if (id == null) return const SizedBox.shrink();
-    final tip = _tips.firstWhere((t) => t.id == id);
+    final tip = tips.firstWhere((t) => t.id == id);
     final body = tip.id == 'weekly' && GameLogic.showKeystoneJargon(director.state)
         ? 'Clear 1 floor or time a KEY +2 today, then claim the vault for essence '
             '(scales with your best timed key). First claim of each month also pays a season bonus.'
@@ -256,7 +268,7 @@ class FirstSessionTips extends StatelessWidget {
                         KenneyButton(
                           label: 'SKIP ALL TIPS',
                           onPressed: () => director.dismissAllTips(
-                            _tips.map((t) => t.id),
+                            tips.map((t) => t.id),
                           ),
                           style: KenneyButtonStyle.grey,
                         ),

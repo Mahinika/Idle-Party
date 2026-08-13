@@ -401,7 +401,9 @@ class _HubScreenState extends State<HubScreen>
                                       HubChaseKind.claimMissions,
                                   hideDaily:
                                       chase.kind == HubChaseKind.dailyRun ||
-                                          chase.kind == HubChaseKind.meetHero,
+                                          chase.kind ==
+                                              HubChaseKind.meetHero ||
+                                          !GameLogic.showDailyChase(state),
                                   onContracts: () {
                                     for (final m
                                         in director.state.missions) {
