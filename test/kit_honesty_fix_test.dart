@@ -526,6 +526,83 @@ void main() {
     expect(fired, isTrue);
     expect(fury.rage, greaterThan(30));
   });
+
+  test('Sweeping Strikes is a cleave window, not an AoE nova', () {
+    expect(
+      ClassKits.defFor(AbilityId.sweepingStrikes)!.effect,
+      AbilityEffectKind.selfBuff,
+    );
+    final state = _soloSpecParty(HeroSpecId.arms, level: 15);
+    var world = SpatialCombat.build(state);
+    final a = _soloEnemy(world);
+    SpatialActor? b;
+    for (final e in world.enemies) {
+      if (identical(e, a)) continue;
+      e
+        ..dormant = false
+        ..hp = math.max(e.hp, 800)
+        ..x = a.x + 0.8
+        ..y = a.y;
+      b = e;
+      break;
+    }
+    expect(b, isNotNull);
+    final arms = world.heroes.firstWhere((h) => !h.isPet);
+    arms
+      ..rage = 100
+      ..fireCooldown = 99
+      ..x = a.x - 1.2
+      ..y = a.y;
+    _padAbilityCds(arms, except: AbilityId.sweepingStrikes);
+
+    var windowed = false;
+    for (var i = 0; i < 80; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (arms.bladeFlurryTimer > 0) {
+        windowed = true;
+        break;
+      }
+      arms.rage = 100;
+      arms.fireCooldown = 99;
+      if (a.hp < 40) a.hp = 800;
+      if (b!.hp < 40) b.hp = 800;
+    }
+    expect(windowed, isTrue);
+
+    final otherHp = b!.hp;
+    arms.fireCooldown = 0;
+    world = SpatialCombat.step(world, state, dt: 0.1).world;
+    expect(b.hp, lessThan(otherHp));
+  });
+
+  test('Holy Shield blocks while healthy, not only as a panic wall', () {
+    final def = ClassKits.defFor(AbilityId.holyShield)!;
+    expect(def.effect, AbilityEffectKind.selfBuff);
+    expect(def.tier, isNot(AbilityCastTier.emergency));
+    final state = _soloSpecParty(HeroSpecId.protPaladin, level: 15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final pala = world.heroes.firstWhere((h) => !h.isPet);
+    pala
+      ..rage = 100
+      ..hp = (pala.maxHp * 0.9).round()
+      ..x = target.x - 1.4
+      ..y = target.y;
+    _padAbilityCds(pala, except: AbilityId.holyShield);
+
+    var blocked = false;
+    for (var i = 0; i < 80; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (pala.shieldBlockTimer > 0) {
+        blocked = true;
+        break;
+      }
+      pala.rage = 100;
+      pala.hp = (pala.maxHp * 0.9).round();
+    }
+    expect(blocked, isTrue);
+    expect(pala.shieldWallTimer, 0);
+  });
 }
 
 GameState _soloSpecParty(HeroSpecId specId, {required int level}) {

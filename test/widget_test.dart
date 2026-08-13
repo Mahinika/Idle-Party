@@ -18,7 +18,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('IDLE PARTY'), findsOneWidget);
-    expect(find.textContaining('ENTER DUNGEON'), findsOneWidget);
+    expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(find.textContaining("Hero's Keep"), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp(r'Sandy Caverns')), findsWidgets);
     expect(find.textContaining('Boss F'), findsWidgets);
@@ -41,8 +41,8 @@ void main() {
     await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(GameTheme.isShortHeight(tester.element(find.textContaining('ENTER DUNGEON'))), isTrue);
-    expect(find.textContaining('ENTER DUNGEON'), findsOneWidget);
+    expect(GameTheme.isShortHeight(tester.element(find.text('ENTER DUNGEON'))), isTrue);
+    expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(find.textContaining('KEYSTONE'), findsWidgets);
     expect(find.text('PARTY'), findsOneWidget);
     expect(find.text('POWER'), findsOneWidget);

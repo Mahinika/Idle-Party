@@ -250,6 +250,10 @@ abstract final class AbilityEffectRunner {
         final peel = near.any((e) => SpatialCombat._dist(hero, e) <= 1.6);
         if (near.length < 2 && !peel) return false;
       }
+      // Sweeping Strikes wants a pack (or elite) to cleave into.
+      if (d.id == AbilityId.sweepingStrikes) {
+        if (nearby < 2 && !(nearby == 1 && focusElite)) return false;
+      }
       return true;
     }
 
@@ -2005,6 +2009,18 @@ abstract final class AbilityEffectRunner {
       };
       hero.combustionTimer = math.max(hero.combustionTimer, dur);
       hero.buffTimers['buff'] = dur;
+      return;
+    }
+    // Arms Sweeping Strikes — same cleave window as Combat Blade Flurry.
+    if (def.id == AbilityId.sweepingStrikes) {
+      hero.bladeFlurryTimer = math.max(hero.bladeFlurryTimer, 6.0);
+      hero.buffTimers['buff'] = 6.0;
+      return;
+    }
+    // Prot Paladin Holy Shield — block window, not a panic wall.
+    if (def.id == AbilityId.holyShield) {
+      hero.shieldBlockTimer = math.max(hero.shieldBlockTimer, 6.0);
+      hero.buffTimers['shield'] = 6.0;
       return;
     }
     // Prefer existing haste / shield timers when possible.

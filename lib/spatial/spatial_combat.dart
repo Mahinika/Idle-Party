@@ -4300,8 +4300,7 @@ abstract final class SpatialCombat {
             _gainRage(hero, 3);
           }
           _grantCombatResource(hero, dealt: dealt, skipRageTank: true);
-          if (hero.bladeFlurryTimer > 0 &&
-              _actorResource(hero) == SpecResource.energy) {
+          if (hero.bladeFlurryTimer > 0) {
             for (final e in world.enemies) {
               if (e.id == target.id || e.hp <= 0 || e.dormant) continue;
               if (_dist(hero, e) > 2.2) continue;

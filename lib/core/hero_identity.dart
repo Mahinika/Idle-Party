@@ -103,11 +103,11 @@ abstract final class HeroIdentity {
   /// Visible kit hook for Meet / Ascend teasers (what to watch in combat).
   static String meetHook(HeroSpecId specId) {
     return switch (specId) {
-      HeroSpecId.arms => 'Watch Bladestorm / cleave waves.',
+      HeroSpecId.arms => 'Watch Sweeping Strikes cleave, then Bladestorm.',
       HeroSpecId.fury => 'Watch Bloodthirst rage and Reck windows.',
       HeroSpecId.protection => 'Watch Shield Slam + block fantasy.',
       HeroSpecId.holyPaladin => 'Watch Holy Light / Beacon peels.',
-      HeroSpecId.protPaladin => 'Watch Consecration under packs.',
+      HeroSpecId.protPaladin => 'Watch Consecration and Holy Shield blocks.',
       HeroSpecId.retribution => 'Watch Crusader Strike pressure.',
       HeroSpecId.beastMastery => 'Watch the pet melt with you.',
       HeroSpecId.marksmanship => 'Watch Aimed Shot punches.',

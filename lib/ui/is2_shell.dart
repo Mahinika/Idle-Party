@@ -1782,6 +1782,8 @@ class _PartyRow extends StatelessWidget {
       AbilityId.livingBomb => s.livingBombArmed > 0,
       AbilityId.sliceAndDice => s.sliceAndDiceTimer > 0,
       AbilityId.bladeFlurry => s.bladeFlurryTimer > 0,
+      AbilityId.sweepingStrikes => s.bladeFlurryTimer > 0,
+      AbilityId.holyShield => s.shieldBlockTimer > 0,
       AbilityId.sprint => s.sprintTimer > 0,
       AbilityId.vanish => s.vanishTimer > 0,
       AbilityId.killingSpree => s.killingSpreeTimer > 0,
@@ -1932,6 +1934,18 @@ class _PartyRow extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text(
                               'STREAK',
+                              style: GameTheme.pixel(
+                                size: 6,
+                                color: GameTheme.torchHot,
+                              ),
+                            ),
+                          ],
+                          if (spatial!.bladeFlurryTimer > 0) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              hero.gearAffinity == HeroRole.rogue
+                                  ? 'FLURRY'
+                                  : 'SWEEP',
                               style: GameTheme.pixel(
                                 size: 6,
                                 color: GameTheme.torchHot,
