@@ -177,7 +177,9 @@ with sync_playwright() as p:
     page.wait_for_timeout(3500)
     page.wait_for_selector("flt-semantics[role=button]", timeout=30000)
 
-    # Fresh run
+    # Fresh run — skip cold-start story if it is showing.
+    bridge_click(page, "SKIP")
+    page.wait_for_timeout(400)
     bridge_click(page, "NEW GAME")
     page.wait_for_timeout(1000)
     bridge_click(page, "START")

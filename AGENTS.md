@@ -106,7 +106,7 @@ blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`. Play ops: `docs/PLAY_STORE.md`
 
 ```
 main.dart
- ├─ loading → startMenu → optional newGamePicker → play
+ ├─ loading → boot intro → startMenu → optional newGamePicker → play
  ├─ Hub (inDungeon=false) → HubScreen + optional Is2Shell(hubMode) overlays
  └─ Dungeon (inDungeon=true) → Is2Shell
       ├─ SpatialDungeonView (camera follow, God Hand, farm/push)

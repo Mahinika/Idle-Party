@@ -11,6 +11,22 @@ abstract final class StoryLore {
   static const String introSubline =
       'You are the distant will. Guide them into the deep.';
 
+  /// Cold-start beats before CONTINUE / NEW GAME. Short, skippable.
+  static const introBeats = <({String title, String body})>[
+    (
+      title: 'IDLE PARTY',
+      body: 'A party that fights while you watch.',
+    ),
+    (
+      title: 'THE KEEP',
+      body: 'Twelve gates. Something wrong sleeps beneath.',
+    ),
+    (
+      title: 'YOUR WILL',
+      body: 'Guide them. Grow them. Descend.',
+    ),
+  ];
+
   /// Hub / catalog one-liners keyed by dungeon id.
   static String dungeonBlurb(String dungeonId) {
     final def = DungeonCatalog.byId(dungeonId);

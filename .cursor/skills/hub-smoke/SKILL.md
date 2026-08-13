@@ -18,7 +18,7 @@ flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
 
 Open `http://localhost:8080/` → set **phone viewport 360×780** (Samsung A56; see
-browser-playtest) → `CONTINUE` or `NEW GAME` → dismiss tips (`SKIP ALL TIPS` / `GOT IT`).
+browser-playtest) → skip boot story (`SKIP`) → `CONTINUE` or `NEW GAME` → dismiss tips (`SKIP ALL TIPS` / `GOT IT`).
 
 ## Checklist (look → click → think)
 

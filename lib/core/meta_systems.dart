@@ -34,7 +34,7 @@ abstract final class MetaSystems {
         'Rimeglass leans quiet treasure alcoves; Stormwake leans choke corridors.',
         'TODAY first hour: grow the party in Sandy — Daily/vault wait until a boss. ALMOST zone/Will still beats Daily grind; offline Meet opens PARTY; KEY tips wait for mid progress.',
         'First tips: TODAY + ENTER, then FARM/PUSH and God Hand in the dungeon. Menu tips wait until you have cleared a floor.',
-        'New Game party picker shows locked kits (AL / later) so the starter list does not look empty.',
+        'Cold start: a short skippable story intro (the keep, your will) plays before CONTINUE / NEW GAME.',
         'Offline welcome can lead with party levels when the roster grew while you were away.',
         'World Path still runs Sandy Caverns through Rimeglass Rift (Tidehold, Ashen Vault, Grove, Stormwake on the road).',
       ],

@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'core/equipment_factory.dart';
 import 'core/game_director.dart';
 import 'models/hero_spec.dart';
+import 'ui/boot_intro_screen.dart';
 import 'ui/custom_assets.dart';
 import 'ui/first_session_tips.dart';
 import 'ui/game_audio.dart';
@@ -117,7 +118,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-enum _AppPhase { loading, startMenu, newGamePicker, play }
+enum _AppPhase { loading, bootIntro, startMenu, newGamePicker, play }
 
 class GameHomePage extends StatefulWidget {
   const GameHomePage({
@@ -159,7 +160,7 @@ class _GameHomePageState extends State<GameHomePage> {
     }
     if (!mounted) return;
     setState(() {
-      _phase = widget.showIntro ? _AppPhase.startMenu : _AppPhase.play;
+      _phase = widget.showIntro ? _AppPhase.bootIntro : _AppPhase.play;
     });
     if (_phase == _AppPhase.play) {
       _director.ensureCombatLoop();
@@ -258,6 +259,18 @@ class _GameHomePageState extends State<GameHomePage> {
               ),
             ),
           ],
+        ),
+      );
+    }
+
+    if (_phase == _AppPhase.bootIntro) {
+      return Scaffold(
+        body: BootIntroScreen(
+          key: const ValueKey('boot-intro'),
+          onFinished: () {
+            if (!mounted) return;
+            setState(() => _phase = _AppPhase.startMenu);
+          },
         ),
       );
     }

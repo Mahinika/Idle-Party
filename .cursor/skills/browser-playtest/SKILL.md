@@ -64,7 +64,7 @@ Do **not** rely on raw canvas coordinate clicks alone; full-bleed art used to st
 
 | Step | Action |
 |------|--------|
-| Title | `CONTINUE` or `NEW GAME` → `START` (confirm `OVERWRITE` if prompted) |
+| Title | `SKIP` (boot story) → `CONTINUE` or `NEW GAME` → `START` (confirm `OVERWRITE` if prompted) |
 | Tips | `SKIP ALL TIPS` or `GOT IT` |
 | Hub | `ENTER DUNGEON` |
 | Dungeon | `FARM dungeon mode` / `PUSH dungeon mode`, `God Hand ready`, `Use healing flask`, `PARTY` / `POWER` / `META` / `HUB` |
