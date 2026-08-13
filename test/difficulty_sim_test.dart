@@ -100,6 +100,7 @@ void main() {
 
     // Fresh can sometimes clear F1, but should not always wipe.
     expect(freshF1, greaterThanOrEqualTo(0.2));
+    final freshF3 = rates['FRESH']![3]!;
     // Fresh F3 is attrition + seed-noisy on 10 trials (CI can roll 0%).
     // LIGHT forge is the honest "reachable with a little power" check.
     expect(rates['LIGHT']![3]!, greaterThanOrEqualTo(0.5));
@@ -107,8 +108,10 @@ void main() {
     expect(freshBoss, lessThanOrEqualTo(0.3));
     // ~10 loot upgrades: early floors OK, boss not free.
     expect(gear10F1, greaterThanOrEqualTo(0.4));
-    // GEAR10 F3: 10-trial jitter + elite-floor seeds can dip to ~10%.
-    expect(rates['GEAR10']![3]!, greaterThanOrEqualTo(0.1));
+    // Loot must not make F3 harder than a naked party (gear-pressure overshoot).
+    expect(rates['GEAR10']![3]!, greaterThanOrEqualTo(freshF3));
+    // GEAR10 F3: 10-trial jitter + elite-floor seeds can dip; still not a wall.
+    expect(rates['GEAR10']![3]!, greaterThanOrEqualTo(0.2));
     // 10-trial jitter: allow up to 80% boss clears on a geared fresh party.
     expect(gear10Boss, lessThanOrEqualTo(0.8));
     // Mid-power party can clear early floors.
