@@ -3048,7 +3048,7 @@ abstract final class SpatialCombat {
       };
       final atkScale = switch (spec) {
         HeroSpecId.beastMastery => 0.72,
-        HeroSpecId.unholy => 0.68,
+        HeroSpecId.unholy => 0.50,
         // Demo personal kit was HIGH; companion contributes without dominating.
         _ => 0.36,
       };
@@ -3298,7 +3298,7 @@ abstract final class SpatialCombat {
       };
       final atkScale = switch (spec) {
         HeroSpecId.beastMastery => 0.72,
-        HeroSpecId.unholy => 0.68,
+        HeroSpecId.unholy => 0.50,
         _ => 0.36,
       };
       pets.add(

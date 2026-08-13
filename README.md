@@ -53,7 +53,8 @@ flutter run -d web-server --web-hostname=localhost --web-port=8080
 | **Bag & Forge** | Gear, combinator, training, relics, sanctuary |
 | **Meta** | Pets, prestige sinks, contracts, weekly challenge, Will rank & titles |
 
-Zones stretch from sandy caverns to hell and crystal — each with its own look, packs, and bosses.
+Zones stretch from Sandy Caverns through Tide / Ember / Grove / Stormwake to
+**Rimeglass Rift** (12 named zones) — each with its own look, packs, and bosses.
 
 ---
 

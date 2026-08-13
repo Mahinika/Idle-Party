@@ -519,6 +519,10 @@ void main() {
     var world = SpatialCombat.build(state, afkAssist: true);
     expect(world.afkAssist, isTrue);
 
+    // Room chests spawn fresh loot (age 0) — AFK exit waits until every
+    // drop is past the 1s vacuum gate. Clear + reseed so this test only
+    // checks vacuum-on-exit, not chest aging.
+    world.groundLoot.clear();
     final drop = GameLogic.createEquipment(
       slot: EquipmentSlot.ring,
       rarity: LootRarity.rare,

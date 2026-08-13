@@ -5,9 +5,9 @@ Baseline (historical): app **v1.9.3**, full-game audit ~**92%**
 ([audits/2026-08-03-full-game.md](audits/2026-08-03-full-game.md)) — audit predates
 Tide/Ember/meta polish; treat as historical closeout, not current completeness.
 
-**Current ship line:** **1.11.2** (`pubspec` ↔ `MetaSystems.currentVersion`) — Local
-seasons, hub TODAY phone polish, Hollow Grove (10th zone), Affliction VFX pass,
-painted World Path map + leaner dungeon HUD + KEY/Daily save fixes.
+**Current ship line:** **1.11.5** (`pubspec` ↔ `MetaSystems.currentVersion`) —
+Rimeglass Rift (12th zone), floor blueprint / room chests, gear-budget honesty,
+chase contract polish, Ascend Blessing / hub TODAY.
 
 **Status:** dokumenterad; Q1–Q4 kärna + success-spår Habit→Season→Zone i kod; Play closed
 Alpha igång (produktion väntar 12×14). GitHub Releases är primär install.
@@ -34,7 +34,7 @@ Win-condition: spelaren ser en READY/ALMOST-jakt, känner mer power, litar på n
 | Combat / AFK | Stark (`SpatialCombat` enda auktoritet; live+offline parity) | Mid-band caster risk; live-light gate |
 | Gear / Apex / BiS | Stark | 2pc/4pc procs shippade; ingen gear-shop (by design) |
 | Meta / hub | Payoffs live (Weekly n/3, Will, Gauntlet F25/50/100, season bonus, GH styles) | Prestige shop refresh / deeper sinks stretch |
-| Content | **31 specs / 10 zoner** (`tide`, `ember`, `grove` shippade) | Klass-tungt historiskt; nya zoner mer sällan |
+| Content | **31 specs / 12 zoner** (through `rime` Rimeglass Rift) | Klass-tungt historiskt; nya zoner mer sällan |
 | Distribution | GitHub Releases primary; Play Console listing + closed Alpha | Production needs 12×14; not live |
 | Onboarding | `FirstSessionTips` + Guides + What’s New | — |
 | A11y / save | Text scale 85–130%, colorblind floaters, VFX modes + reduce-motion label; toast dedupe; clipboard export/import + backup-hint | Lätt owned SFX stretch |

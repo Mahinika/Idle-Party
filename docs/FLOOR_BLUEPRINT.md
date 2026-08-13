@@ -219,14 +219,14 @@ Gear-power stil: [GEAR_BUDGET.md](GEAR_BUDGET.md) oförändrad. Blueprint styr *
 
 ## Definition of done (hela spåret)
 
-- [ ] Blueprint deterministisk för fasta seeds  
-- [ ] PlacementPlan: inga blockerade exit-paths i tester  
-- [ ] Props har landmark vs edge (inte bara densitet)  
-- [ ] Minst treasure/elite room-reward synlig i P2  
-- [ ] Rimeglass showcase tydligt olik Stormwake (P3)  
-- [ ] Live + offline samma layout/loot-regler  
-- [ ] What’s New + guides ärliga när player-visible  
-- [ ] `flutter analyze lib test`; relevanta layout/loot/ship tests gröna  
+- [x] Blueprint deterministisk för fasta seeds  
+- [x] PlacementPlan: inga blockerade exit-paths i tester  
+- [x] Props har landmark vs edge (inte bara densitet)  
+- [x] Minst treasure/elite room-reward synlig i P2  
+- [x] Rimeglass showcase tydligt olik Stormwake (P3)  
+- [x] Live + offline samma layout/loot-regler  
+- [x] What’s New + guides ärliga när player-visible  
+- [x] `flutter analyze lib test`; relevanta layout/loot/ship tests gröna  
 
 ---
 

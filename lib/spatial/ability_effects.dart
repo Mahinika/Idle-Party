@@ -469,7 +469,8 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 1.26;
         hero.kitInMul *= 0.97;
       case AbilityId.unholyPresence:
-        hero.kitOutMul *= 1.34;
+        // Fairness: was live-light HIGH (~62% share) — trim presence lean.
+        hero.kitOutMul *= 1.16;
         hero.kitHasteMul *= 1.14;
         // Ghoul companion spawned in SpatialCombat.build.
       case AbilityId.enhancementWeapons:
@@ -552,7 +553,7 @@ abstract final class AbilityEffectRunner {
         owner: hero,
         count: 4,
         duration: 16,
-        atkScale: 0.38,
+        atkScale: 0.30,
         namePrefix: 'Ghoul',
         idPrefix: 'army',
       );

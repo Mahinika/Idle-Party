@@ -705,7 +705,7 @@ void main() {
       affinity: HeroRole.warrior.name,
       offHandKind: OffHandKind.shield,
     );
-    final mageWand = GameLogic.createEquipment(
+    final mageStaff = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
       rarity: LootRarity.rare,
       battleNumber: 8,
@@ -727,20 +727,45 @@ void main() {
     );
 
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final prot = state.heroes.firstWhere((h) => h.role == HeroRole.warrior);
+    final fire = state.heroes.firstWhere((h) => h.role == HeroRole.mage);
+    // Budget honesty: shield is a tank piece; Int/SP staff is a caster piece.
+    expect(
+      GameLogic.specEquipScore(prot, tankShield),
+      greaterThan(GameLogic.specEquipScore(fire, tankShield)),
+    );
+    expect(
+      GameLogic.specEquipScore(fire, mageStaff),
+      greaterThan(GameLogic.specEquipScore(prot, mageStaff)),
+    );
+
+    // Auto Equip: tank-only empty party takes the shield from stash.
     state = state.copyWith(
-      heroes: state.heroes
-          .map((h) => h.copyWith(clearEquipped: true))
-          .toList(),
-      gearStash: <EquipmentItem>[tankShield, mageWand],
+      heroes: [
+        prot.copyWith(level: 20, clearEquipped: true),
+      ],
+      gearStash: <EquipmentItem>[tankShield],
     );
     state = GameLogic.autoEquipBetterGear(state);
+    expect(
+      state.heroes.single.itemIn(EquipmentSlot.offHand)?.id,
+      tankShield.id,
+    );
 
-    expect(state.heroes[0].role, HeroRole.warrior);
-    expect(state.heroes[2].role, HeroRole.mage);
-    expect(state.heroes[0].itemIn(EquipmentSlot.offHand)?.id, tankShield.id);
-    // Mage-affinity Int staff must prefer Fire over Disc (healer SP weights).
-    expect(state.heroes[2].itemIn(EquipmentSlot.weapon)?.id, mageWand.id);
-    expect(state.gearStash, isEmpty);
+    // Fire-only empty party takes the Int/SP staff.
+    state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final mage = state.heroes.firstWhere((h) => h.role == HeroRole.mage);
+    state = state.copyWith(
+      heroes: [
+        mage.copyWith(level: 20, clearEquipped: true),
+      ],
+      gearStash: <EquipmentItem>[mageStaff],
+    );
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(
+      state.heroes.single.itemIn(EquipmentSlot.weapon)?.id,
+      mageStaff.id,
+    );
   });
 
   test('auto equip skips wrong-role junk on empty slots', () {

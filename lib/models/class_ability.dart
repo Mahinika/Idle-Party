@@ -2693,7 +2693,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.45,
+      coeff: 1.22,
     ),
     ClassAbilityDef(
       id: AbilityId.deathCoil,
@@ -2707,7 +2707,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.35,
+      coeff: 1.12,
     ),
     ClassAbilityDef(
       id: AbilityId.bloodBoilUnholy,
@@ -2721,7 +2721,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.82,
+      coeff: 0.70,
     ),
     ClassAbilityDef(
       id: AbilityId.gargoyle,
@@ -2762,7 +2762,7 @@ class ClassKits {
       resourceCost: 30,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
-      coeff: 0.7,
+      coeff: 0.55,
     ),
     ClassAbilityDef(
       id: AbilityId.unholyIbf,

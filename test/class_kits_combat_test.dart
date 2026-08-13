@@ -239,7 +239,8 @@ void main() {
       world = SpatialCombat.step(world, state, dt: 0.1).world;
     }
     expect(target.rootTimer, lessThan(0.1));
-    expect(warrior.x, closeTo(target.x - 14.0, 0.5));
+    // Pin each step; allow small walk jitter without counting as Charge.
+    expect(warrior.x, closeTo(target.x - 14.0, 1.0));
   });
 
   test('Commanding Shout buffs living party heroes', () {

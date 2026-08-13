@@ -45,67 +45,69 @@ void main() {
     ).copyWith(level: level);
   }
 
-  test('hunters prefer mail over leather at equal Agi budget', () {
+  test('budget score ignores armor type at equal weighted stats', () {
+    // GEAR_BUDGET: no armor/affinity crumbs — same stats → same BiS score.
+    // (piece() defaults armorBonus by material; pin equal Armor here.)
     final hero = heroFor(HeroSpecId.beastMastery, name: 'Hunt');
     final mail = piece(
       armor: ArmorType.mail,
       affinity: HeroRole.rogue,
       agi: 10,
       sta: 8,
-    );
+    ).copyWith(armorBonus: 10);
     final leather = piece(
       armor: ArmorType.leather,
       affinity: HeroRole.rogue,
-      agi: 12,
-      sta: 6,
-    );
+      agi: 10,
+      sta: 8,
+    ).copyWith(armorBonus: 10);
     expect(
       GameLogic.specEquipScore(hero, mail),
-      greaterThan(GameLogic.specEquipScore(hero, leather)),
+      GameLogic.specEquipScore(hero, leather),
     );
   });
 
-  test('elemental prefers mail caster stats over cloth', () {
+  test('elemental ranks higher Int/SP budget over lower budget', () {
     final hero = heroFor(HeroSpecId.elemental, name: 'Storm');
-    final mail = piece(
+    final strong = piece(
       armor: ArmorType.mail,
       affinity: HeroRole.mage,
-      intel: 10,
-      sp: 8,
+      intel: 14,
+      sp: 12,
       sta: 6,
     );
-    final cloth = piece(
+    final weak = piece(
       armor: ArmorType.cloth,
       affinity: HeroRole.mage,
-      intel: 12,
-      sp: 10,
+      intel: 8,
+      sp: 6,
       sta: 4,
     );
     expect(
-      GameLogic.specEquipScore(hero, mail),
-      greaterThan(GameLogic.specEquipScore(hero, cloth)),
+      GameLogic.specEquipScore(hero, strong),
+      greaterThan(GameLogic.specEquipScore(hero, weak)),
     );
   });
 
-  test('holy paladin prefers plate healer stats over cloth', () {
+  test('holy paladin ranks higher healer budget over lower budget', () {
     final hero = heroFor(HeroSpecId.holyPaladin, name: 'Light', level: 40);
-    final plate = piece(
+    final strong = piece(
       armor: ArmorType.plate,
       affinity: HeroRole.healer,
-      intel: 10,
-      sp: 8,
-      sta: 8,
+      intel: 14,
+      sp: 12,
+      sta: 10,
     );
-    final cloth = piece(
+    final weak = piece(
       armor: ArmorType.cloth,
       affinity: HeroRole.healer,
-      intel: 12,
-      sp: 10,
+      intel: 8,
+      sp: 6,
       sta: 4,
     );
     expect(
-      GameLogic.specEquipScore(hero, plate),
-      greaterThan(GameLogic.specEquipScore(hero, cloth)),
+      GameLogic.specEquipScore(hero, strong),
+      greaterThan(GameLogic.specEquipScore(hero, weak)),
     );
   });
 
