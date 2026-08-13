@@ -4305,7 +4305,7 @@ abstract final class SpatialCombat {
             for (final e in world.enemies) {
               if (e.id == target.id || e.hp <= 0 || e.dormant) continue;
               if (_dist(hero, e) > 2.2) continue;
-              final cleave = math.max(1, (dealt * 0.55).round());
+              final cleave = math.max(1, (dealt * 0.40).round());
               e.hp = math.max(0, e.hp - cleave);
               _recordHeroDamage(hero, cleave);
               if (!state.reducedVfx) {

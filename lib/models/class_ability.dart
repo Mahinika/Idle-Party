@@ -996,7 +996,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.45,
+      coeff: 1.32,
     ),
     ClassAbilityDef(
       id: AbilityId.overpower,
@@ -1010,7 +1010,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.25,
+      coeff: 1.15,
     ),
     ClassAbilityDef(
       id: AbilityId.rend,
@@ -1051,7 +1051,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
-      coeff: 1.0,
+      coeff: 0.88,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,

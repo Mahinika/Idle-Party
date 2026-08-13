@@ -455,7 +455,7 @@ abstract final class AbilityEffectRunner {
 
       // —— melee DPS (target ~1.22–1.30; Arms was wildly overtuned at 1.55) ——
       case AbilityId.armsStance:
-        hero.kitOutMul *= 1.26;
+        hero.kitOutMul *= 1.18;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
         hero.kitOutMul *= 1.30;
