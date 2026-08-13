@@ -455,7 +455,7 @@ abstract final class AbilityEffectRunner {
 
       // —— melee DPS (target ~1.22–1.30; Arms was wildly overtuned at 1.55) ——
       case AbilityId.armsStance:
-        hero.kitOutMul *= 1.26;
+        hero.kitOutMul *= 1.18;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
         hero.kitOutMul *= 1.30;
@@ -473,9 +473,9 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 1.26;
         hero.kitInMul *= 0.97;
       case AbilityId.unholyPresence:
-        // Fairness: was live-light HIGH (~62% share) — trim presence lean.
-        hero.kitOutMul *= 1.16;
-        hero.kitHasteMul *= 1.14;
+        // Fairness: ghoul + diseases carry identity; presence is a lean, not a stomp.
+        hero.kitOutMul *= 1.10;
+        hero.kitHasteMul *= 1.10;
         // Ghoul companion spawned in SpatialCombat.build.
       case AbilityId.enhancementWeapons:
         hero.kitOutMul *= 1.26;
@@ -485,7 +485,7 @@ abstract final class AbilityEffectRunner {
 
       // —— ranged (MM/Surv/BM were low share) ——
       case AbilityId.aspectOfHawk:
-        hero.kitOutMul *= 1.46;
+        hero.kitOutMul *= 1.28;
       case AbilityId.trueshotAura:
         hero.kitOutMul *= 1.36;
         hero.kitHasteMul *= 1.10;

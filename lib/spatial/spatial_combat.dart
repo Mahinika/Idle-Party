@@ -39,6 +39,16 @@ bool _actorIsMeleeDps(SpatialActor h) {
   return HeroSpecs.def(id).roleTag == SpecRoleTag.meleeDps;
 }
 
+/// Personal ATK fraction for BM / Demo / Unholy companions.
+/// BM stays the pet-family leader; Unholy ghoul is a disease assist.
+double _classCompanionAtkScale(HeroSpecId spec) {
+  return switch (spec) {
+    HeroSpecId.beastMastery => 0.56,
+    HeroSpecId.unholy => 0.40,
+    _ => 0.36,
+  };
+}
+
 /// Resource return on a successful combat hit (melee direct or projectile).
 /// [skipRageTank] when the caller already applied tank/rage-from-dealt.
 void _grantCombatResource(
@@ -3046,12 +3056,7 @@ abstract final class SpatialCombat {
         HeroSpecId.demonology => 'Demon',
         _ => 'Ghoul',
       };
-      final atkScale = switch (spec) {
-        HeroSpecId.beastMastery => 0.72,
-        HeroSpecId.unholy => 0.50,
-        // Demo personal kit was HIGH; companion contributes without dominating.
-        _ => 0.36,
-      };
+      final atkScale = _classCompanionAtkScale(spec!);
       pets.add(
         SpatialActor(
           id: 'classpet_${h.id}',
@@ -3296,11 +3301,7 @@ abstract final class SpatialCombat {
         HeroSpecId.demonology => 'Demon',
         _ => 'Ghoul',
       };
-      final atkScale = switch (spec) {
-        HeroSpecId.beastMastery => 0.72,
-        HeroSpecId.unholy => 0.50,
-        _ => 0.36,
-      };
+      final atkScale = _classCompanionAtkScale(spec!);
       pets.add(
         SpatialActor(
           id: 'classpet_${h.id}',
@@ -4304,7 +4305,7 @@ abstract final class SpatialCombat {
             for (final e in world.enemies) {
               if (e.id == target.id || e.hp <= 0 || e.dormant) continue;
               if (_dist(hero, e) > 2.2) continue;
-              final cleave = math.max(1, (dealt * 0.55).round());
+              final cleave = math.max(1, (dealt * 0.40).round());
               e.hp = math.max(0, e.hp - cleave);
               _recordHeroDamage(hero, cleave);
               if (!state.reducedVfx) {

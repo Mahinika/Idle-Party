@@ -2772,14 +2772,13 @@ class GameLogic {
     final freshAscendEase =
         gearPressure <= 1.08 && ascensionLevel > 0 ? 0.65 : 1.0;
     final alThreat = alThreatRaw * freshAscendEase;
-    final gpRaw = gearPressure.clamp(1.0, 2.5);
     // Fresh early floors: don't let gear-pressure spike packs before F5.
     // AL0 boss: keep mild pressure so farmed loot helps heroes more than enemies.
-    final gp = switch ((level, ascensionLevel)) {
-      (final l, _) when l <= 4 => 1.0 + (gpRaw - 1.0) * (0.25 + l * 0.12),
-      (5, 0) => 1.0 + (gpRaw - 1.0) * 0.4,
-      _ => gpRaw,
-    };
+    final gp = appliedGearPressure(
+      gearPressure,
+      level: level,
+      ascensionLevel: ascensionLevel,
+    );
     final threat = hmThreat * alThreat;
     // Early attrition ramp: F1–F3 clearable for fresh parties; first AL0 boss
     // must be beatable after a short Sandy farm (LIGHT), not MID-only.
@@ -2832,6 +2831,24 @@ class GameLogic {
             .round();
 
     return (attack: attack, hp: hp, gold: gold);
+  }
+
+  /// Slice of [partyGearPressure] that actually scales this floor.
+  ///
+  /// Early Sandy floors only take a fraction of loot-threat so picking up
+  /// ~10 upgrades helps F3 instead of scaling packs into a wipe wall
+  /// (GEAR10 was 0% F3 while a naked party still cleared ~30%).
+  static double appliedGearPressure(
+    double gearPressure, {
+    required int level,
+    int ascensionLevel = 0,
+  }) {
+    final gpRaw = gearPressure.clamp(1.0, 2.5);
+    return switch ((level, ascensionLevel)) {
+      (final l, _) when l <= 4 => 1.0 + (gpRaw - 1.0) * (0.10 + l * 0.06),
+      (5, 0) => 1.0 + (gpRaw - 1.0) * 0.4,
+      _ => gpRaw,
+    };
   }
 
   /// How much equipped loot should pull dungeon threat.
@@ -2974,14 +2991,11 @@ class GameLogic {
     final fortified = affixes.contains('fortified');
     final tyrannical = affixes.contains('tyrannical');
     final level = room.globalBattleNumber;
-    final gpRaw =
-        (fromState != null ? partyGearPressure(fromState) : gearPressure)
-            .clamp(1.0, 2.5);
-    final gp = switch ((level, al)) {
-      (final l, _) when l <= 4 => 1.0 + (gpRaw - 1.0) * (0.25 + l * 0.12),
-      (5, 0) => 1.0 + (gpRaw - 1.0) * 0.4,
-      _ => gpRaw,
-    };
+    final gp = appliedGearPressure(
+      fromState != null ? partyGearPressure(fromState) : gearPressure,
+      level: level,
+      ascensionLevel: al,
+    );
     var budget = roomCombatBudget(
       room,
       dungeonId: id,

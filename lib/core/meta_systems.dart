@@ -28,6 +28,7 @@ abstract final class MetaSystems {
       bullets: <String>[
         'After the first hour, TODAY chases KEY +1 for better iLvl loot (not Daily). Higher keys raise item level honestly — KEY +10 is a real jump vs the same floor without a key.',
         'Kits: Arms Sweeping Strikes is a cleave window on your swings (HUD shows SWEEP) — not a one-shot nova. Prot Paladin Holy Shield is a block window while you tank; Divine Protection stays the panic bubble.',
+        'Arms, Beast Mastery, and Unholy sit closer to other DPS — Sweep, pet, and ghoul still look the same; they just hit a bit less.',
         'World Path still runs Sandy Caverns through Brassvault Deep (Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
