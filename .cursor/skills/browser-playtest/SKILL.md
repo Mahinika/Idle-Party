@@ -56,7 +56,7 @@ window.__idlePartyClick('ENTER DUNGEON')  // true if handled
 window.__idlePartyTap(x, y)           // map / coordinate tap (logical px)
 ```
 
-3. **Playwright** only as last resort (`tool/playtest_*.py` patterns) — real OS mouse path.
+3. **Playwright** only as last resort (`tool/playtest_al3.py`, `tool/playwright_newgame_test.py`) — real OS mouse path.
 
 Do **not** rely on raw canvas coordinate clicks alone; full-bleed art used to steal hits.
 

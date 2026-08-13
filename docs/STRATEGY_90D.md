@@ -45,8 +45,8 @@ Win-condition om 90 dagar: en ny spelare (telefon A56) förstår *vad de jagar*,
 | Gear budget honesty | Shipped |
 | Floor blueprint + room chests + 12 zoner (→ Rime) | Shipped (1.11.5) |
 | Ascend Blessing | Shipped |
-| Kit unlock fantasy (Meet … / pending reveals) | Delvis — fortsätt P3 i [SYSTEMS_REBUILD.md](SYSTEMS_REBUILD.md) |
-| Keystone-lager / God Hand-riktning | Senare (P4/P5) — **inte** 90-dagars huvudspår om inte chase/kits/zoner är nöjda |
+| Kit unlock fantasy (Meet … / pending reveals) | Shipped (P3) — Month 2 continues fairness + fantasy polish |
+| Keystone-lager / God Hand-riktning | Shipped soft defaults (P4/P5) — **not** 90-day main track unless chase/kits/zones are satisfied |
 
 ---
 

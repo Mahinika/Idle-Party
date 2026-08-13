@@ -1,6 +1,6 @@
 ---
 description: >-
-  Ship bar for Idle Party agent work — verify, honesty, propose commit/push.
+  Ship bar for Idle Party agent work — verify, honesty, commit locally, ask before push.
 alwaysApply: true
 ---
 
@@ -12,7 +12,8 @@ Before telling the owner a coding task is finished:
 2. **Tests that match the change** — combat/kit → share-fast / gate as needed; What’s New / version → `changelog_sync_test`; hub labels / unlock / guides → `ship_smoke_test` or targeted unit tests.
 3. **Player-visible honesty** — if they can see it in-game, What’s New / guides / labels match reality (English copy).
 4. **No legal junk** — no foreign APKs/dumps; art only via Kenney/custom helpers.
-5. **Propose ship steps** — when the batch is ship-shaped, ask once: commit? push? PR? tag? Clear yes/no. Do not push silently; do not forget to offer.
+5. **Ship steps** — when the batch is verified, **commit locally**. Then ask
+   once: push? PR? tag? Clear yes/no. Do not push silently; do not skip the offer.
 6. **Agent docs** — if architecture / Ascend / world path / distribution / tooling changed, update `AGENTS.md` (or run `/init`) so rules stay honest.
 
 Skip heavy mid-band balance sims unless the task is balance. Skip browser playtest for pure logic unless UI chrome changed.

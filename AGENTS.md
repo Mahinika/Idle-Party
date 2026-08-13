@@ -17,8 +17,10 @@ Preferences (do not re-ask): **content/feel over Play busywork**, first-hour
 many new specs, **more zones**, hub TODAY / Ascend Blessing / unlock teasers for
 “what am I chasing”, **no IAP for now**, **Android phone-only** (portrait; no
 iOS/web product), **large batches**, English in-game copy, fairness-first balance,
-**propose** commit / push / PR / tag. Chat in plain Swedish; ask only product/risk
-questions. Full detail: `.cursor/rules/owner-preferences.mdc`.
+**commit locally when a batch is verified**, ask before push / PR / tag.
+Near-term execution order:
+`docs/STRATEGY_90D.md` (chase → kits → zone). Chat in plain Swedish; ask only
+product/risk questions. Full detail: `.cursor/rules/owner-preferences.mdc`.
 
 **UI target:** ship for **portrait phones** (~360–430 px). Owner reference:
 **Samsung Galaxy A56** → playtest at **360×780** CSS (DPR 3). Web is playtest
@@ -71,18 +73,19 @@ flutter test test/ship_smoke_test.dart
 
 Skills under `.cursor/skills/`: domain (`spatial-combat-change`, `add-ability`,
 `new-dungeon`, `zone-art-identity`, `save-migrate`, `class-audit`, `assets-legal`,
-`flutter-verify`, `browser-playtest`, `hub-smoke`) and Cursor workflows
-(`suggesting-skills`, `building-skills-from-patterns`, `grinding-until-pass`,
-`babysitting-pr`, `parallel-ci-triage`, `verifying-in-browser`,
-`screenshotting-changelog`, `recording-browser-flow-as-test`,
+`flutter-verify`, `browser-playtest`, `hub-smoke`, `play-store-prep`, `init`) and
+Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
+`grinding-until-pass`, `babysitting-pr`, `parallel-ci-triage`,
+`verifying-in-browser`, `screenshotting-changelog`, `recording-browser-flow-as-test`,
 `systematic-debugging`, `reviewing-code`, `accessibility-auditing`).
 
-Cadence: `docs/CONTENT_CADENCE.md`. Roadmap: `docs/ROADMAP.md`.
-Systems rebuild (chase / offline / kits / KEY / God Hand): `docs/SYSTEMS_REBUILD.md`.
-Chase contract (hub TODAY ↔ offline Up next): `docs/CHASE_CONTRACT.md`.
-Gear budget contract: `docs/GEAR_BUDGET.md`.
-Floor generation rebuild (plan): `docs/FLOOR_BLUEPRINT.md`.
-Play ops status: `docs/PLAY_STORE.md` (operator table) + skill `play-store-prep`.
+Cadence: `docs/CONTENT_CADENCE.md`. Near-term (90d): `docs/STRATEGY_90D.md`
+(chase → kits → zone). Year roadmap: `docs/ROADMAP.md`. Background research:
+`docs/TOP_GAMES_RESEARCH.md`. Systems rebuild (P1–P5 chase/offline/kits/KEY/GH
+shipped): `docs/SYSTEMS_REBUILD.md`. Chase contract (hub TODAY ↔ offline Up next):
+`docs/CHASE_CONTRACT.md`. Gear budget contract: `docs/GEAR_BUDGET.md`. Floor
+blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`. Play ops: `docs/PLAY_STORE.md`
++ skill `play-store-prep`.
 
 ### Cursor automation
 
@@ -110,26 +113,33 @@ GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
                (AFK: afkAssist + reducedVfx, auto-flask, God Hand)
 GameLogic + GameState   (rules / persistence)
 DungeonCatalog          (12 named zones, bossFloor = 5 + AL)
-RoomLayouts (tile_map)  (multi-chamber maps + gates)
+RoomLayouts + FloorBlueprint / PlacementPlan / ZoneLayoutKit
+                        (multi-chamber maps, gates, room-chest sockets)
 ```
 
 **SpatialCombat is the combat authority** for live play and in-dungeon offline
 catch-up (full enemy stats; same kits/abilities/chambers).
 
+**Content inventory:** 10 classes / **31 specs** (`HeroSpecId`) · **12 zones**
+through Rimeglass Rift.
+
 **Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = AL10+): endless Crystal
 Spire climb from Hub; wipe/leave → hub; `metaDepth.gauntletBestFloor` survives Ascend.
 
-**Hub TODAY** (`lib/core/hub_chase.dart`): one chase card — claimables first
-(vault / jobs / **Meet new kit**), then Ascend / progress. Urgency **READY** /
-**ALMOST** (Ascend one boss away, KEY +1 vault, Will gap, etc.). New unlocks
-queue `metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast +
-chase detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next
-AL unlocks — kit ladder AL1–6 (e.g. Combat Rogue, BM/Holy/Arcane + 5th slot,
-DKs, Aff/Demo) plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint +
-Shadow→warlock sprite).
+**Hub TODAY** — selection in `HubChase.forState`; every surface reads the same
+words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up
+next). One chase card — claimables first (vault / jobs / **Meet new kit**), then
+Ascend / progress. Urgency **READY** / **ALMOST** (zone/Will/Gauntlet/Ascend-near
+beat Daily grind; also KEY +1 vault, etc.). New unlocks queue
+`metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast + chase
+detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next AL
+unlocks — kit ladder AL1–6 (e.g. Combat Rogue, BM/Holy/Arcane + 5th slot, DKs,
+Aff/Demo) plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock
+sprite).
 
 Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat. Offline return
-uses `OfflineProgressResult` (wow headline + highlight rows + “Up next” chase).
+uses `OfflineProgressResult` (wow headline + ≤3 highlights + “Up next” =
+ChaseContract).
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
@@ -155,9 +165,14 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 ## Floor / chamber model
 
 - One **combat wave per floor**; boss on floor `5 + ascensionLevel`.
+- Generation: **FloorBlueprint** (room beats) → **PlacementPlan** (props +
+  chest sockets) → `RoomLayouts` / `SpatialCombat.build`, with per-zone
+  **`ZoneLayoutKit`** (e.g. Rime treasure alcoves vs Stormwake chokes).
 - Maps are **multi-chamber** with corridor **gates** after a chamber clears.
 - Enemies in later chambers start **dormant**; wake when prior chambers clear
   (and can wake on **proximity** so soft-locks are rare).
+- **Room chests** on elite/treasure beats drop gold/gear pickups — same AFK
+  vacuum / timeout path as kill loot.
 - After all enemies die and loot is picked up (or times out), party walks to
   **stairs/exit** → `completeCurrentRoom`.
 

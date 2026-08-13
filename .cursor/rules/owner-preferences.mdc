@@ -1,19 +1,22 @@
 ---
 description: >-
   Owner product preferences for Idle Party — content focus, progression fantasy,
-  polish kits, more zones, big batches, English UI, propose commit/PR/tag.
+  polish kits, more zones, big batches, English UI; commit locally, ask before push.
 alwaysApply: true
 ---
 
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
-Last preference sync: **2026-08-10** (Samsung A56 phone playtest + Ascend feel / TODAY).
+Last preference sync: **2026-08-13** (workstyle: commit locally when a batch is
+verified; still ask before push / Play / save-wipe. Product locks unchanged).
 
 ## Near-term focus
 
+- **Default roadmap:** follow `docs/STRATEGY_90D.md` — Month 1 chase/first-hour → Month 2 kits fairness+fantasy → Month 3 zone identity (blueprint). Don’t invent a competing priority list. **Now:** Month 1 (chase / first hour).
 - Prefer **game feel / content** over Play ops busywork (closed-test recruitment can idle in background).
 - Play production remains a goal, but day-to-day work defaults to **content + feel** unless the owner asks about Play.
+- Background why (optional read): `docs/TOP_GAMES_RESEARCH.md`.
 
 ## Distribution
 
@@ -33,7 +36,20 @@ Last preference sync: **2026-08-10** (Samsung A56 phone playtest + Ascend feel /
 
 - Prefer **large batches** (“gör allt X”) — fewer tiny back-and-forths.
 - Still verify (analyze/tests / hub smoke as needed) before calling done.
-- **Propose** commit, push, PR, and release tags when something is ship-shaped — ask once with a clear yes/no, don’t wait silently.
+- **Commit locally** when the requested batch is verified (DoD). Don’t wait for
+  a second “ska jag commita?”. **Ask before push, PR, and release tags.** Never
+  force-push or skip hooks unless the owner says so in that turn.
+- **Code shape:** prefer splitting a giant file (`game_logic`, `is2_shell`,
+  `spatial_combat`, …) when a change needs a home. Do **not** merge more into
+  those files. Keep SpatialCombat as combat authority (extract helpers, don’t
+  add a second fight sim).
+- **Dead code:** delete unused files/APIs with zero callers. Keep JSON/save
+  fields that old saves may still contain (`save-migrate`). Unused
+  `@Deprecated` helpers that are not serialized may go.
+- **Product locks stay** (phone, English UI, fairness, no IAP, 90-day roadmap,
+  legal/Kenney). Agents may tighten *workstyle* so they can finish; they must
+  not weaken those locks. Cursor/AI safety (no exploits, no foreign dumps) is
+  not overridable from this file.
 
 ## Game feel & fantasy
 

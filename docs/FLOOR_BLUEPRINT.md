@@ -3,7 +3,8 @@
 Idle Party — bästa varianten för hur floors **genereras**, **ser ut**, och **var föremål/fiender** placeras.
 
 Status: **SHIPPED (P0–P4)** — Blueprint + PlacementPlan + zone kits wired through
-`RoomLayouts` / `SpatialCombat.build` room-chest pickups.
+`RoomLayouts` / `SpatialCombat.build` room-chest pickups. Sections below are the
+**pipeline contract** (kept for the next zone), not an open backlog.
 
 Showcase: **Rimeglass** (treasure alcoves) vs **Stormwake** (choke). All catalog
 zones have a `ZoneLayoutKit`.
@@ -25,20 +26,11 @@ Spelaren ska kunna säga: *“det här rummet hade ett jobb”* — approach, ch
 
 ---
 
-## Vad som är fel idag (kort)
+## Historical problem (pre-ship)
 
-```mermaid
-flowchart LR
-  DG[DungeonGenerator_RoomType] --> RL[RoomLayouts_chambers]
-  RL --> Props[_scatterProps_density]
-  RL --> SC[SpatialCombat]
-  SC --> Loot[GroundLoot_on_kill]
-```
-
-- `DungeonGenerator` = mötesstatistik (antal/nivå/typ), inte **berättelse**.
-- `RoomLayouts` = bra chamber/gate-modell, men props är **densitet**, inte roller.
-- Loot = nästan bara **kill-drops**; få “rummet gav dig detta”-ögonblick.
-- Zon-identitet = wash/sprites mer än **rumsgrammatik**.
+`DungeonGenerator` only picked encounter stats; `RoomLayouts` scattered props by
+density; loot was almost only kill-drops. Zones read as wash/sprites more than
+room grammar. That is why Blueprint → PlacementPlan → `ZoneLayoutKit` exists.
 
 ---
 
@@ -162,7 +154,7 @@ Gear-power stil: [GEAR_BUDGET.md](GEAR_BUDGET.md) oförändrad. Blueprint styr *
 
 ---
 
-## Fasplan (leverans)
+## Fasplan (implementation log — complete at 1.11.x)
 
 ### P0 — Kontrakt + tester (ingen spelarkänsla än)
 
@@ -239,12 +231,8 @@ Gear-power stil: [GEAR_BUDGET.md](GEAR_BUDGET.md) oförändrad. Blueprint styr *
 
 ---
 
-## Körordning (rekommenderad batch)
+## Körordning (done)
 
-1. **P0 kontrakt** (liten, låser design)  
-2. **P1 sockets i layouts** (medel — största kodytan)  
-3. **P2 room rewards** (medel — kännbart)  
-4. **P3 Rimeglass kit** (liten–medel — wow)  
-5. **P4 övriga zoner** (cadence, en i taget)
-
-Efter varje fas: analyze + tester; föreslå commit/push; What’s New när något syns i spelet.
+P0 kontrakt → P1 sockets → P2 room rewards → P3 Rimeglass kit → P4 remaining
+zone kits. Next zone: follow this contract + `new-dungeon` / `zone-art-identity`;
+do not invent a second generator.

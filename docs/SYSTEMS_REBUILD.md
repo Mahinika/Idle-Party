@@ -67,8 +67,9 @@ BAL/FOCUS/WIDE + CD = soft knobs (not a talent tree).
 - Play Store ops (bakgrund)
 - Prestige-shop deep sinks (stretch)
 
-**Nästa stora system-spår (plan):** floor generation — se [FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md)
-(Blueprint → layout-grammatik → PlacementPlan; SpatialCombat kvar).
+**Nästa stora spår (operativt):** [STRATEGY_90D.md](STRATEGY_90D.md) — Month 1
+chase/first-hour polish → Month 2 kits fairness+fantasy → Month 3 zone identity.
+Floor generation is **shipped** — see [FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md).
 
 ---
 

@@ -101,7 +101,6 @@ abstract final class KenneyAssets {
   static String get heroSoldier => tile(87);
   static String get heroRogue => CustomAssets.heroRogue;
   static String get heroKnight => CustomAssets.heroKnight;
-  static String get heroKnightAlt => CustomAssets.heroKnight;
   static String get heroWoman => tile(98);
   static String get heroHealer => CustomAssets.heroHealer;
   static String get heroElder => tile(100);
@@ -159,11 +158,7 @@ abstract final class KenneyAssets {
   static String get gloves => CustomAssets.iconGloves;
   static String get shoulders => CustomAssets.iconShoulders;
   static String get belt => CustomAssets.iconBelt;
-  static String get meat => potionGreen;
-  static String get roomCleared => doorArch; // legacy alias; unused in painter
   static String get propSkull => gravestoneAlt;
-  static String get wallStoneAlt2 => trapSpikes; // legacy — do not use as wall
-  static String get stairsAlt => stairsDown;
 
   // —— Extras (custom identity; Kenney extras kept on disk as legacy) ——
   static String get book => CustomAssets.iconBook;
