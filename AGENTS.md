@@ -19,8 +19,10 @@ many new specs, **more zones**, hub TODAY / Ascend Blessing / unlock teasers for
 iOS/web product), **large batches**, English in-game copy, fairness-first balance,
 **commit locally when a batch is verified**, ask before push / PR / tag.
 Near-term execution order:
-`docs/STRATEGY_90D.md` (chase → kits → zone). Chat in plain Swedish; ask only
-product/risk questions. Full detail: `.cursor/rules/owner-preferences.mdc`.
+`docs/STRATEGY_90D.md` (chase → kits → zone). **Default next work:** current
+month (now Month 1 chase / first hour) unless the owner names something else.
+Chat in plain Swedish; ask only product/risk questions. Full detail:
+`.cursor/rules/owner-preferences.mdc`.
 
 **UI target:** ship for **portrait phones** (~360–430 px). Owner reference:
 **Samsung Galaxy A56** → playtest at **360×780** CSS (DPR 3). Web is playtest
@@ -90,8 +92,11 @@ blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`. Play ops: `docs/PLAY_STORE.md`
 
 ### Cursor automation
 
-- Project hooks: `.cursor/hooks.json` — after game/docs edits, **stop** runs
-  `flutter analyze lib test` (and changelog sync when version/What’s New files touched).
+- Project hooks: `.cursor/hooks.json` — **sessionStart** injects current STRATEGY
+  month; after game/docs edits, **stop** runs `flutter analyze lib test`, plus
+  changelog sync when version/What’s New files touched, plus `ship_smoke_test`
+  when hub/chase/guides files touched.
+- Git: daily work on `main`; `release/*` only when cutting a tag.
 - Ship bar: `.cursor/rules/definition-of-done.mdc`.
 - Fast honesty: `flutter test test/ship_smoke_test.dart`.
 - MCP: `.cursor/mcp.json` → **`idle-party`** (`tool/mcp_idle_party/`) — balance_share,

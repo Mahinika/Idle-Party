@@ -30,7 +30,7 @@ Win-condition om 90 dagar: en ny spelare (telefon A56) förstår *vad de jagar*,
 5. **Nya system kräver testkontrakt** — room chests bröt AFK-vacuum/kill-loot/difficulty-gates. Varje ny spawn/loot-väg = uppdatera tester *i samma batch*.  
 6. **Fairness-first på HIGH** — Unholy ~62 % share: sänk tills gate är grön; behåll identity (namn/VFX), inte siffrorna.  
 7. **Zoner med ansikte** — Rimeglass vs Stormwake (kits + wash) funkar; “reskin crystal” gör det inte.  
-8. **Stora ärliga batchar** — hellre en tag med zon + blueprint + chase-fix än tio halvmesyrer. Föreslå commit/push/tag när det är ship-shaped.  
+8. **Stora ärliga batchar** — hellre en tag med zon + blueprint + chase-fix än tio halvmesyrer. Commit lokalt när batchen är kollad; fråga före push/tag.  
 9. **Phone-first** — bedöm UI på **360×780**, inte desktop-web.  
 10. **Play ops i bakgrunden** — content/feel först; 12×14 stänger inte feature-tåget.
 

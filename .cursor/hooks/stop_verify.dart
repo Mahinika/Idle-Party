@@ -27,6 +27,7 @@ Future<void> main() async {
 
   final dirtyText = dirty.readAsStringSync();
   final needChangelog = _touchesChangelog(dirtyText);
+  final needShipSmoke = _touchesChase(dirtyText);
 
   final analyze = await _run(
     'flutter',
@@ -59,6 +60,23 @@ Future<void> main() async {
     }
   }
 
+  if (needShipSmoke) {
+    final smoke = await _run(
+      'flutter',
+      <String>['test', 'test/ship_smoke_test.dart'],
+    );
+    if (smoke.exitCode != 0) {
+      _emit(<String, dynamic>{
+        'followup_message':
+            'Stop-hook: ship_smoke failed. Hub TODAY / unlock / guides '
+            'copy is lying. Fix ChaseContract honesty, then re-run '
+            '`flutter test test/ship_smoke_test.dart`.\n\n'
+            '${_trim(smoke.combined)}',
+      });
+      return;
+    }
+  }
+
   try {
     dirty.deleteSync();
   } catch (_) {}
@@ -71,6 +89,24 @@ bool _touchesChangelog(String dirtyText) {
       t.contains('pubspec.yaml') ||
       t.contains('dungeon_def.dart') ||
       t.contains('changelog_sync');
+}
+
+bool _touchesChase(String dirtyText) {
+  final t = dirtyText.toLowerCase().replaceAll('\\', '/');
+  const needles = <String>[
+    'hub_chase.dart',
+    'chase_contract.dart',
+    'hub_screen.dart',
+    'game_guides.dart',
+    'ascend_roadmap.dart',
+    'first_session_tips.dart',
+    'story_lore.dart',
+    'ship_smoke_test.dart',
+  ];
+  for (final n in needles) {
+    if (t.contains(n)) return true;
+  }
+  return false;
 }
 
 Future<({int exitCode, String combined})> _run(

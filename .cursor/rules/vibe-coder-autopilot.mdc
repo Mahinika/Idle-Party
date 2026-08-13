@@ -31,6 +31,8 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 | What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
 | PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
 | polish hub / weekly / tips | `hub-smoke`, `browser-playtest` |
+| I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — that *is* the batch |
+| “gör spelet bättre” / vad härnäst (no other target) | current month in `docs/STRATEGY_90D.md` — not `/init` or cleanup |
 | Play Store / listing / privacy / AAB | `play-store-prep` (+ `docs/PLAY_STORE.md`) |
 | **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules` with how the game works now |
 | Ascend / “what am I chasing” feel | check `hub_chase`, `ascend_roadmap`, Blessing in `metaDepth` — not a separate skill |

@@ -14,6 +14,7 @@ verified; still ask before push / Play / save-wipe. Product locks unchanged).
 ## Near-term focus
 
 - **Default roadmap:** follow `docs/STRATEGY_90D.md` — Month 1 chase/first-hour → Month 2 kits fairness+fantasy → Month 3 zone identity (blueprint). Don’t invent a competing priority list. **Now:** Month 1 (chase / first hour).
+- Vague “gör spelet bättre / vad härnäst” → **do the current month**, not `/init`, cleanup, or CI chores.
 - Prefer **game feel / content** over Play ops busywork (closed-test recruitment can idle in background).
 - Play production remains a goal, but day-to-day work defaults to **content + feel** unless the owner asks about Play.
 - Background why (optional read): `docs/TOP_GAMES_RESEARCH.md`.
@@ -31,6 +32,7 @@ verified; still ask before push / Play / save-wipe. Product locks unchanged).
 - **Owner reference phone: Samsung Galaxy A56** (1080×2340 @ DPR 3 → **360×780** CSS). Cursor browser playtest must always emulate this (or equivalent 360-wide portrait) via CDP device metrics — never judge UI at desktop/tablet width.
 - Hub, GEAR/BAG, menus, tooltips, touch targets: assume **finger + portrait**. Hover-only UX is playtest-only; phone must work with tap / long-press.
 - Flutter **web** remains a Cursor playtest harness with **forced phone emulation** — never treat wide desktop chrome as the shipping UI.
+- **Owner play notes win.** If they write what the first hour felt like (TODAY lied, tips got in the way, “what do I chase?”), that *is* the Month 1 batch — fix those surfaces. Don’t wait for a formal audit. Don’t invent a 10-minute phone pass without their notes unless they asked you to playtest in the Cursor browser.
 
 ## Work style
 
@@ -46,6 +48,8 @@ verified; still ask before push / Play / save-wipe. Product locks unchanged).
 - **Dead code:** delete unused files/APIs with zero callers. Keep JSON/save
   fields that old saves may still contain (`save-migrate`). Unused
   `@Deprecated` helpers that are not serialized may go.
+- **Git:** daily work on `main`. `release/x.y.z` only when cutting a tag. Don’t open a release branch for chores.
+- **Don’t stage** `windows/flutter/generated_*` unless `pubspec.yaml` plugins actually changed (`jni` noise from `pub get` is not a product change).
 - **Product locks stay** (phone, English UI, fairness, no IAP, 90-day roadmap,
   legal/Kenney). Agents may tighten *workstyle* so they can finish; they must
   not weaken those locks. Cursor/AI safety (no exploits, no foreign dumps) is
