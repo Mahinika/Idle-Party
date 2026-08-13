@@ -25,6 +25,8 @@ Alpha igång (produktion väntar 12×14). GitHub Releases är primär install.
 
 Win-condition: spelaren ser en READY/ALMOST-jakt, känner mer power, litar på nästa tag.
 
+**Nästa 90 dagar (operativt):** [STRATEGY_90D.md](STRATEGY_90D.md) — chase/första timmen → kits fairness+fantasy → zon-identity; byggd på toppliste-research + lärdomar från 1.11.x.
+
 ---
 
 ## Research baseline
