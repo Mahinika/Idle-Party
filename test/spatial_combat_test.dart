@@ -259,6 +259,8 @@ void main() {
   test('kills spawn ground loot and combat floaters', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     var world = SpatialCombat.build(state);
+    // Room chests seed gold pouches on build — clear so kill drops are alone.
+    world.groundLoot.clear();
     final target = world.enemies.firstWhere((e) => e.hp > 0 && !e.dormant);
     SpatialCombat.godHand(
       world,
