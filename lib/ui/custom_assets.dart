@@ -166,6 +166,7 @@ abstract final class CustomAssets {
   static const String portraitGrove = '$_root/portraits/grove.png';
   static const String portraitStorm = '$_root/portraits/storm.png';
   static const String portraitRime = '$_root/portraits/rime.png';
+  static const String portraitFen = '$_root/portraits/fen.png';
 
   static String dungeonPortrait(String dungeonId) => switch (dungeonId) {
         'sandy' => portraitSandy,
@@ -180,6 +181,7 @@ abstract final class CustomAssets {
         'grove' => portraitGrove,
         'storm' => portraitStorm,
         'rime' => portraitRime,
+        'fen' => portraitFen,
         _ => portraitSandy,
       };
 
@@ -211,6 +213,8 @@ abstract final class CustomAssets {
   static const String backdropStorm = '$_root/ui/backdrops/storm.png';
   /// Owned Rimeglass Rift chamber (cyan ice — quiet after the gale).
   static const String backdropRime = '$_root/ui/backdrops/rime.png';
+  /// Owned Blightfen Mire chamber (bile swamp — not Grove/Tide twin).
+  static const String backdropFen = '$_root/ui/backdrops/fen.png';
 
   static String dungeonBackdropFor(String dungeonId) => switch (dungeonId) {
         'sandy' => backdropSandy,
@@ -225,6 +229,7 @@ abstract final class CustomAssets {
         'grove' => backdropGrove,
         'storm' => backdropStorm,
         'rime' => backdropRime,
+        'fen' => backdropFen,
         _ => dungeonBackdrop,
       };
 
@@ -272,4 +277,6 @@ abstract final class CustomAssets {
   static const String enemyStormMite = '$_root/enemies/storm_mite.png';
   static const String enemyBossRime = '$_root/enemies/boss_rime.png';
   static const String enemyRimeMite = '$_root/enemies/rime_mite.png';
+  static const String enemyBossFen = '$_root/enemies/boss_fen.png';
+  static const String enemyFenMite = '$_root/enemies/fen_mite.png';
 }

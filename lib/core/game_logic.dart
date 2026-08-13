@@ -3382,6 +3382,14 @@ class GameLogic {
         EnemyArchetype.glass: ['Glass Fang', 'Frost Blade'],
         EnemyArchetype.support: ['Glacier Chanter', 'Stillfrost Adept'],
       },
+      'fen' => const {
+        EnemyArchetype.swarm: ['Bile Slime', 'Fen Tick', 'Spore Flea'],
+        EnemyArchetype.brute: ['Fen Brute', 'Mire Crusher'],
+        EnemyArchetype.tank: ['Bog Bulwark', 'Fen Guard'],
+        EnemyArchetype.ranged: ['Bile Spitter', 'Fen Slinger'],
+        EnemyArchetype.glass: ['Rot Fang', 'Mire Blade'],
+        EnemyArchetype.support: ['Fen Chanter', 'Mire Adept'],
+      },
       _ => const {
         EnemyArchetype.swarm: ['Cave Slime', 'Sand Mite'],
         EnemyArchetype.brute: ['Cave Brute', 'Rock Crab'],

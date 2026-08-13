@@ -65,5 +65,12 @@ void main() {
         reason: 'rime dungeon shipped — mention Rimeglass/Rime in What’s New',
       );
     }
+    if (ids.contains('fen')) {
+      expect(
+        bullets.contains('fen') || bullets.contains('blightfen'),
+        isTrue,
+        reason: 'fen dungeon shipped — mention Blightfen/Fen in What’s New',
+      );
+    }
   });
 }

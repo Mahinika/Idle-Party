@@ -8,8 +8,8 @@ import 'package:idle_party/models/dungeon_def.dart';
 
 /// Fast honesty checks: world path, unlock rules, guides, release version.
 void main() {
-  test('world path ships twelve named zones including rime', () {
-    expect(DungeonCatalog.all.length, 12);
+  test('world path ships thirteen named zones including fen', () {
+    expect(DungeonCatalog.all.length, 13);
     final ids = DungeonCatalog.all.map((d) => d.id).toList();
     expect(
       ids,
@@ -26,6 +26,7 @@ void main() {
         'grove',
         'storm',
         'rime',
+        'fen',
       ],
     );
     expect(DungeonCatalog.byId('tide').name, 'Sunken Tidehold');
@@ -33,6 +34,7 @@ void main() {
     expect(DungeonCatalog.byId('grove').name, 'Hollow Grove');
     expect(DungeonCatalog.byId('storm').name, 'Stormwake Hollow');
     expect(DungeonCatalog.byId('rime').name, 'Rimeglass Rift');
+    expect(DungeonCatalog.byId('fen').name, 'Blightfen Mire');
   });
 
   test('zone unlock uses lifetime gold or prior clear, not wallet gold', () {
@@ -60,6 +62,10 @@ void main() {
     expect(DungeonCatalog.isUnlocked('rime', 3599999, 9), isFalse);
     expect(DungeonCatalog.isUnlocked('rime', 3600000, 9), isTrue);
     expect(DungeonCatalog.isUnlocked('rime', 0, 10), isTrue);
+
+    expect(DungeonCatalog.isUnlocked('fen', 4999999, 10), isFalse);
+    expect(DungeonCatalog.isUnlocked('fen', 5000000, 10), isTrue);
+    expect(DungeonCatalog.isUnlocked('fen', 0, 11), isTrue);
   });
 
   test('guides cover World Path endgame zones and LOADOUTS vs armor sets', () {
@@ -69,6 +75,7 @@ void main() {
     expect(world.body.toLowerCase(), contains('hollow grove'));
     expect(world.body.toLowerCase(), contains('stormwake'));
     expect(world.body.toLowerCase(), contains('rimeglass'));
+    expect(world.body.toLowerCase(), contains('blightfen'));
     expect(world.body.toLowerCase(), contains('lifetime gold'));
 
     final loadouts = GameGuides.topics.firstWhere((t) => t.id == 'loadouts');

@@ -20,6 +20,7 @@ abstract final class DungeonEnvironment {
         'storm' => const Color(0xFF0A0614),
         // Deep ice void — quiet cyan after the gale (not crystal twin).
         'rime' => const Color(0xFF041018),
+        'fen' => const Color(0xFF0C1404),
         _ => const Color(0xFF080706),
       };
 
@@ -40,6 +41,7 @@ abstract final class DungeonEnvironment {
         'storm' => const Color(0x4A8040D0),
         // Pale cyan frost wash (not storm violet, not crystal blue twin).
         'rime' => const Color(0x4860D8E0),
+        'fen' => const Color(0x48B0C028),
         _ => const Color(0x22000000),
       };
 
@@ -57,6 +59,7 @@ abstract final class DungeonEnvironment {
         'grove' => const Color(0x5A283818),
         'storm' => const Color(0x5A281848),
         'rime' => const Color(0x5A184860),
+        'fen' => const Color(0x5A3A4810),
         _ => const Color(0x55050403),
       };
 
@@ -74,6 +77,7 @@ abstract final class DungeonEnvironment {
         'grove' => const Color(0xFF68B048),
         'storm' => const Color(0xFFE8E040),
         'rime' => const Color(0xFF70E8F0),
+        'fen' => const Color(0xFFC8E040),
         _ => const Color(0xFFE0C080),
       };
 
@@ -88,6 +92,7 @@ abstract final class DungeonEnvironment {
         'grove' => const Color(0x38081008),
         'storm' => const Color(0x3A100828),
         'rime' => const Color(0x38081828),
+        'fen' => const Color(0x38101808),
         _ => const Color(0x2C000000),
       };
 

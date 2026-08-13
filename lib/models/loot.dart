@@ -271,6 +271,7 @@ class EquipmentItem {
       'grove' => 'Hollow',
       'storm' => 'Stormwake',
       'rime' => 'Rimeglass',
+      'fen' => 'Blightfen',
       _ => parts.first,
     };
     final armor = parts.sublist(1).join(' ');

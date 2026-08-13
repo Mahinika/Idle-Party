@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.11.5**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.0**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -31,7 +31,7 @@ for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.11.5**.
+closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.12.0**.
 Production still needs **12 closed testers × 14 days**. Do not treat Play as the
 primary install channel yet.
 
@@ -126,8 +126,8 @@ RoomLayouts + FloorBlueprint / PlacementPlan / ZoneLayoutKit
 **SpatialCombat is the combat authority** for live play and in-dungeon offline
 catch-up (full enemy stats; same kits/abilities/chambers).
 
-**Content inventory:** 10 classes / **31 specs** (`HeroSpecId`) · **12 zones**
-through Rimeglass Rift.
+**Content inventory:** 10 classes / **31 specs** (`HeroSpecId`) · **13 zones**
+through Blightfen Mire.
 
 **Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = AL10+): endless Crystal
 Spire climb from Hub; wipe/leave → hub; `metaDepth.gauntletBestFloor` survives Ascend.
@@ -149,7 +149,7 @@ ChaseContract).
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
-## World path (12 zones)
+## World path (13 zones)
 
 | # | id | Name |
 |---|-----|------|
@@ -165,6 +165,7 @@ Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 | 9 | grove | Hollow Grove |
 | 10 | storm | Stormwake Hollow |
 | 11 | rime | Rimeglass Rift |
+| 12 | fen | Blightfen Mire |
 
 Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 
@@ -173,7 +174,7 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 - One **combat wave per floor**; boss on floor `5 + ascensionLevel`.
 - Generation: **FloorBlueprint** (room beats) → **PlacementPlan** (props +
   chest sockets) → `RoomLayouts` / `SpatialCombat.build`, with per-zone
-  **`ZoneLayoutKit`** (e.g. Rime treasure alcoves vs Stormwake chokes).
+  **`ZoneLayoutKit`** (e.g. Rime treasure alcoves vs Blightfen chokes).
 - Maps are **multi-chamber** with corridor **gates** after a chamber clears.
 - Enemies in later chambers start **dormant**; wake when prior chambers clear
   (and can wake on **proximity** so soft-locks are rare).

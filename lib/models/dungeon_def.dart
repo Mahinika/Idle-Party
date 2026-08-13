@@ -147,6 +147,16 @@ abstract final class DungeonCatalog {
       unlockPrice: 3600000,
       blurb: 'After the gale: a quiet rift of glass and killing cold.',
     ),
+    DungeonDef(
+      number: 12,
+      id: 'fen',
+      name: 'Blightfen Mire',
+      layout: DungeonLayoutKind.cave,
+      bossId: 'fen_hydra',
+      bossName: 'Fen Hydra',
+      unlockPrice: 5000000,
+      blurb: 'The ice thaws into a poisoned mire. Something wet still hunts.',
+    ),
   ];
 
   static DungeonDef byId(String id) {

@@ -109,6 +109,12 @@ abstract final class ApexCraft {
       bossSources: 'Rimeglass Rift boss',
     ),
     CraftMatDef(
+      id: 'shard_fen',
+      name: 'Blightfen Shard',
+      family: CraftMatFamily.shard,
+      bossSources: 'Blightfen Mire boss',
+    ),
+    CraftMatDef(
       id: 'core_tank',
       name: 'Aegis Core',
       family: CraftMatFamily.core,

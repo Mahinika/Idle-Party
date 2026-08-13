@@ -959,24 +959,25 @@ class _ZonePathMap extends StatefulWidget {
   final double pulse;
   final ValueChanged<String> onSelect;
 
-  /// Marker centers on painted gold rings (zone 0…11 top→bottom).
-  /// Tuned for extended world_path_map (Rimeglass ice strip under Stormwake).
+  /// Marker centers on painted gold rings (zone 0…12 top→bottom).
+  /// Tuned for extended world_path_map (Blightfen mire strip under Rimeglass).
   static const List<Offset> markerNorm = [
-    Offset(0.492, 0.049), // sandy — cave mouth
-    Offset(0.478, 0.117), // goblin — camp
-    Offset(0.470, 0.193), // king — fort wall
-    Offset(0.508, 0.270), // underworld — purple crystals
-    Offset(0.448, 0.339), // dead — tombs
-    Offset(0.475, 0.415), // hell — spiked gate
-    Offset(0.460, 0.487), // crystal — ice peaks
-    Offset(0.500, 0.555), // tide — sunken ruins
-    Offset(0.458, 0.623), // ember — lava door
-    Offset(0.472, 0.708), // grove — dark forest
-    Offset(0.488, 0.801), // storm — purple chasm
-    Offset(0.500, 0.951), // rime — painted ice-rift ring
+    Offset(0.492, 0.043), // sandy — cave mouth
+    Offset(0.478, 0.103), // goblin — camp
+    Offset(0.470, 0.170), // king — fort wall
+    Offset(0.508, 0.238), // underworld — purple crystals
+    Offset(0.448, 0.299), // dead — tombs
+    Offset(0.475, 0.367), // hell — spiked gate
+    Offset(0.460, 0.430), // crystal — ice peaks
+    Offset(0.500, 0.490), // tide — sunken ruins
+    Offset(0.458, 0.550), // ember — lava door
+    Offset(0.472, 0.625), // grove — dark forest
+    Offset(0.488, 0.707), // storm — purple chasm
+    Offset(0.500, 0.840), // rime — painted ice-rift ring
+    Offset(0.489, 0.955), // fen — painted mire ring
   ];
 
-  static const double mapAspect = 1812 / 1024;
+  static const double mapAspect = 2052 / 1024;
 
   @override
   State<_ZonePathMap> createState() => _ZonePathMapState();

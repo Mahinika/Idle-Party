@@ -38,6 +38,7 @@ migrate_working_dir/
 
 # Local world-path map rebuild source (11-zone)
 assets/custom/ui/world_path_map_11zone_bak.png
+assets/custom/ui/world_path_map_12zone_bak.png
 
 # Symbolication related
 app.*.symbols

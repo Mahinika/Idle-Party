@@ -172,6 +172,13 @@ abstract final class AchievementCatalog {
       essenceReward: 38,
       category: AchievementCategory.explorer,
     ),
+    AchievementDef(
+      id: 'clear_fen',
+      title: 'Fenwalker',
+      description: 'Clear Blightfen Mire.',
+      essenceReward: 42,
+      category: AchievementCategory.explorer,
+    ),
     // —— Hardmode ——
     AchievementDef(
       id: 'hm_1',

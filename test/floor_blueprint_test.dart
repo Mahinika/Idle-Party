@@ -53,12 +53,12 @@ void main() {
     expect(treasure.beats.map((b) => b.kind), contains(FloorBeatKind.treasure));
   });
 
-  test('rime kit prefers treasure alcoves vs storm choke', () {
+  test('rime kit prefers treasure alcoves vs fen choke', () {
     final rime = ZoneLayoutKit.forId('rime');
-    final storm = ZoneLayoutKit.forId('storm');
+    final fen = ZoneLayoutKit.forId('fen');
     expect(rime.preferTreasureAlcove, isTrue);
-    expect(storm.preferChoke, isTrue);
-    expect(rime.treasureAlcoveChance, greaterThan(storm.treasureAlcoveChance));
+    expect(fen.preferChoke, isTrue);
+    expect(rime.treasureAlcoveChance, greaterThan(fen.treasureAlcoveChance));
   });
 
   test('every zone kit resolves', () {

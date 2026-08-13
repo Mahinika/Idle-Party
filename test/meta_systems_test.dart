@@ -240,7 +240,10 @@ void main() {
       expect(storm.bossName, 'Storm Tyrant');
       expect(rime.number, 11);
       expect(rime.bossName, 'Rime Colossus');
-      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(12));
+      final fen = DungeonCatalog.byId('fen');
+      expect(fen.number, 12);
+      expect(fen.bossName, 'Fen Hydra');
+      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(13));
       expect(
         DungeonCatalog.isUnlocked('tide', 0, 6),
         isTrue,
@@ -275,6 +278,14 @@ void main() {
       );
       expect(
         DungeonCatalog.isUnlocked('rime', 0, 9),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('fen', 0, 11),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('fen', 0, 10),
         isFalse,
       );
     });

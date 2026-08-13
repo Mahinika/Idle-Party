@@ -42,6 +42,7 @@ abstract final class GearSets {
       'grove' => 'Hollow',
       'storm' => 'Stormwake',
       'rime' => 'Rimeglass',
+      'fen' => 'Blightfen',
       _ => dungeonId,
     };
     final armor = switch (armorRaw) {
@@ -181,6 +182,7 @@ abstract final class GearSets {
       'grove' => ('GROVE', 0xFF68B048),
       'storm' => ('GALE', 0xFFE8E040),
       'rime' => ('RIME', 0xFF70E8F0),
+      'fen' => ('FEN', 0xFFB8D030),
       _ => ('SET', 0xFFFFD070),
     };
     return (chance: 0.10, damageMul: 1.35, tag: tag, argb: argb);

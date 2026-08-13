@@ -41,6 +41,19 @@ class ZoneLayoutKit {
           normalRoomChestChance: 0.28,
           landmarkPerChamber: 2,
         ),
+        'fen' => const ZoneLayoutKit(
+          dungeonId: 'fen',
+          landmarks: <MapPropKind>[
+            MapPropKind.water,
+            MapPropKind.fountain,
+            MapPropKind.bones,
+            MapPropKind.trap,
+          ],
+          preferChoke: true,
+          eliteRoomChest: true,
+          normalRoomChestChance: 0.12,
+          landmarkPerChamber: 1,
+        ),
         'storm' => const ZoneLayoutKit(
           dungeonId: 'storm',
           landmarks: <MapPropKind>[
