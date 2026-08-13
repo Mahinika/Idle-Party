@@ -26,6 +26,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.1',
       bullets: <String>[
+        'GEAR: plate tanks show more ARMOR than leather DPS. Agility is a small dodge crumb — it no longer turns Combat Rogue into the party’s armor king.',
         'Kits: Arms Sweeping Strikes is a cleave window on your swings (HUD shows SWEEP) — not a one-shot nova. Prot Paladin Holy Shield is a block window while you tank; Divine Protection stays the panic bubble.',
         'World Path still runs Sandy Caverns through Brassvault Deep (Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
