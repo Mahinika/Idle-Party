@@ -82,6 +82,31 @@ class _MyAppState extends State<MyApp> {
         ),
         scaffoldBackgroundColor: GameTheme.ink,
       ),
+      builder: (context, child) {
+        final content = child ?? const SizedBox.shrink();
+        if (!kIsWeb) return content;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            const maxW = 430.0;
+            if (constraints.maxWidth <= maxW) return content;
+            return ColoredBox(
+              color: const Color(0xFF05070A),
+              child: Center(
+                child: SizedBox(
+                  width: maxW,
+                  height: constraints.maxHeight,
+                  child: MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      size: Size(maxW, constraints.maxHeight),
+                    ),
+                    child: content,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
       home: GameHomePage(
         key: const ValueKey('game-home'),
         director: _director,

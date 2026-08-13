@@ -45,6 +45,9 @@ void main() {
     expect(find.byType(StartMenuScreen), findsNothing);
     expect(find.byType(NewGamePartyPicker), findsOneWidget);
     expect(find.text('NEW PARTY'), findsOneWidget);
+    expect(find.text('ARMS  Arms Warrior'), findsOneWidget);
+    expect(find.text('LOCKED'), findsWidgets);
+    expect(find.text('SET'), findsOneWidget);
   });
 
   testWidgets('new game start reaches hub with chosen party size',
@@ -82,7 +85,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byType(NewGamePartyPicker), findsNothing);
-    expect(find.textContaining('ENTER DUNGEON'), findsOneWidget);
+    expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(director.state.heroes.length, 3);
     expect(
       director.state.heroes.map((h) => h.specId).toSet(),

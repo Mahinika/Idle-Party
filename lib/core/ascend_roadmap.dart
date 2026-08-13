@@ -107,6 +107,16 @@ abstract final class AscendRoadmap {
     return 'Next: keep stacking Blessings and AL power';
   }
 
+  /// Ascend level that unlocks [id], or null if it is not on this ladder.
+  static int? ascendLevelForKit(HeroSpecId id) {
+    for (final entry in kitUnlocksByAl.entries) {
+      for (final kit in entry.value) {
+        if (kit.$1 == id) return entry.key;
+      }
+    }
+    return null;
+  }
+
   /// Compact teaser for TODAY / hub chase detail.
   static String chaseTeaser(int currentAl) {
     for (var al = currentAl + 1; al <= 40; al++) {
