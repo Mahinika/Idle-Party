@@ -33,11 +33,14 @@ class ItemTooltipCard extends StatelessWidget {
     super.key,
     required this.item,
     this.hero,
+    this.pairingStash,
     this.compact = false,
   });
 
   final EquipmentItem item;
   final PartyHero? hero;
+  /// Bag gear used so 1H vs worn 2H can credit a shield/tome.
+  final List<EquipmentItem>? pairingStash;
   final bool compact;
 
   static const _green = Color(0xFF1EFF00);
@@ -62,7 +65,11 @@ class ItemTooltipCard extends StatelessWidget {
     var comparing = false;
     var alreadyEquipped = false;
     if (hero != null) {
-      final cmp = GameLogic.compareForHero(hero!, item);
+      final cmp = GameLogic.compareForHero(
+        hero!,
+        item,
+        pairingStash: pairingStash,
+      );
       intoSlot = cmp.intoSlot;
       powerDelta = cmp.powerDelta;
       isUpgrade = cmp.isUpgrade;
@@ -327,7 +334,9 @@ class ItemTooltipCard extends StatelessWidget {
                       isUpgrade
                           ? 'UPGRADE  Score ${GameLogic.formatDelta(powerDelta)}'
                           : (powerDelta > 0
-                              ? 'SCORE +$powerDelta · not enough to swap'
+                              ? (worn == null
+                                  ? 'SCORE +$powerDelta · too weak to fill'
+                                  : 'SCORE +$powerDelta · not enough to swap')
                               : (powerDelta < 0
                                   ? 'WEAKER  Score ${GameLogic.formatDelta(powerDelta)}'
                                   : 'SAME SCORE')),
@@ -535,6 +544,7 @@ class ItemTooltipAnchor extends StatefulWidget {
     required this.item,
     required this.child,
     this.hero,
+    this.pairingStash,
     this.enabled = true,
   });
 
@@ -544,6 +554,7 @@ class ItemTooltipAnchor extends StatefulWidget {
   final EquipmentItem item;
   final Widget child;
   final PartyHero? hero;
+  final List<EquipmentItem>? pairingStash;
   final bool enabled;
 
   @override
@@ -631,6 +642,7 @@ class _ItemTooltipAnchorState extends State<ItemTooltipAnchor> {
         final card = ItemTooltipCard(
           item: widget.item,
           hero: widget.hero,
+          pairingStash: widget.pairingStash,
           compact: phone || _phoneSheet,
         );
 

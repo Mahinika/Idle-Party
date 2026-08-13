@@ -108,8 +108,9 @@ class EquipStatWeights {
 
   /// Loot **primary** budget shares: [str, agi, sta, intel, spi, sp].
   ///
-  /// WotLK-shaped and phone-readable: one power primary + Stamina
-  /// (casters also Spell Power; healers also Spirit). No crumb stats.
+  /// WotLK-shaped and phone-readable (docs/GEAR_BUDGET.md): one power primary
+  /// + Stamina (casters also Spell Power; healers also Spirit). No crumb stats.
+  /// Affinity on rolled items is drop bias / tooltip flavour — not BiS score.
   static List<double> lootShares({
     required HeroRole bias,
     SpecRoleTag? roleTag,

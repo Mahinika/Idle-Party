@@ -72,15 +72,16 @@ class HubChase {
       final seasonBit = seasonPending
           ? ' · season +${GameLogic.seasonWeeklyBonusEssence}e'
           : '';
+      final keyTalk = GameLogic.showKeystoneJargon(state);
       return HubChase(
         kind: HubChaseKind.claimDailyVault,
         title: seasonPending
             ? 'Claim daily vault · season bonus'
             : 'Claim daily vault',
-        detail: best >= 2
+        detail: best >= 2 && keyTalk
             ? 'Best timed KEY +$best — grab your essence$seasonBit.'
             : 'You filled today’s vault — grab your essence$seasonBit.',
-        progressLabel: best >= 2
+        progressLabel: best >= 2 && keyTalk
             ? 'KEY +$best ready'
             : '${GameLogic.dailyVaultClearTarget}/${GameLogic.dailyVaultClearTarget} ready',
         urgency: HubChaseUrgency.ready,
@@ -145,17 +146,38 @@ class HubChase {
     }
 
     // KEY +1 timed but not yet claimable (need KEY +2) — cliffhanger.
+    // Early players get soft copy; KEY jargon waits for mid layer.
     if (!md.dailyVaultClaimed &&
         md.dailyVaultClears < GameLogic.dailyVaultClearTarget &&
         md.dailyBestTimedKey == 1) {
-      return const HubChase(
+      final keyTalk = GameLogic.showKeystoneJargon(state);
+      return HubChase(
         kind: HubChaseKind.dailyVaultProgress,
-        title: 'Almost — time KEY +2',
-        detail: 'Best timed KEY +1 today — one higher key fills the vault.',
-        progressLabel: 'KEY +1',
+        title: keyTalk ? 'Almost — time KEY +2' : 'Almost — fill the vault',
+        detail: keyTalk
+            ? 'Best timed KEY +1 today — one higher key fills the vault.'
+            : 'One more strong timed clear fills today’s vault.',
+        progressLabel: keyTalk ? 'KEY +1' : 'Almost',
         urgency: HubChaseUrgency.almost,
       );
     }
+
+    // Other ALMOST cliffs beat Daily / vault-start grind (see CHASE_CONTRACT.md).
+    final zoneAlmost = _nextZoneChase(state);
+    if (zoneAlmost != null && zoneAlmost.urgency == HubChaseUrgency.almost) {
+      return zoneAlmost;
+    }
+    final willAlmost = _nextWillChase(state);
+    if (willAlmost != null && willAlmost.urgency == HubChaseUrgency.almost) {
+      return willAlmost;
+    }
+    final gauntletAlmost = _nextGauntletChase(state);
+    if (gauntletAlmost != null &&
+        gauntletAlmost.urgency == HubChaseUrgency.almost) {
+      return gauntletAlmost;
+    }
+    final weekAlmostEarly = _weekGoalChase(state, clock, almostOnly: true);
+    if (weekAlmostEarly != null) return weekAlmostEarly;
 
     if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
       return const HubChase(
@@ -169,16 +191,18 @@ class HubChase {
     if (!md.dailyVaultClaimed &&
         md.dailyVaultClears == 0 &&
         md.dailyBestTimedKey < 2) {
+      final keyTalk = GameLogic.showKeystoneJargon(state);
       return HubChase(
         kind: HubChaseKind.dailyVaultProgress,
         title: 'Start daily vault',
-        detail:
-            'Clear ${GameLogic.dailyVaultClearTarget} floor or time a KEY +2.',
+        detail: keyTalk
+            ? 'Clear ${GameLogic.dailyVaultClearTarget} floor or time a KEY +2.'
+            : 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for vault essence.',
         progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
       );
     }
 
-    // Zone / Will / Gauntlet before routine week goals.
+    // Progress grind: zone / Will / Gauntlet / week (normal or leftover almost).
     final zone = _nextZoneChase(state);
     if (zone != null) return zone;
 
@@ -217,7 +241,7 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.meetHero,
       title: extra > 0 ? 'Meet ${def.name} · +$extra' : 'Meet ${def.name}',
-      detail: '${HeroIdentity.fantasyLine(first)} Open PARTY to field them.',
+      detail: '${HeroIdentity.meetDetail(first)} Open PARTY to field them.',
       progressLabel: 'New',
       urgency: HubChaseUrgency.ready,
     );

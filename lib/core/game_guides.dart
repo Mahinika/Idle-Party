@@ -16,8 +16,8 @@ abstract final class GameGuides {
       id: 'world_path',
       title: 'WORLD PATH',
       body:
-          'The hub World Path is a painted map from Sandy Caverns through Stormwake Hollow '
-          '(Tidehold, Ashen Vault, Hollow Grove, and the rest along the road).\n\n'
+          'The hub World Path is a painted map from Sandy Caverns through Rimeglass Rift '
+          '(Tidehold, Ashen Vault, Hollow Grove, Stormwake, and the rest along the road).\n\n'
           '• Scroll the map and tap a zone portrait on a glowing ring to select it.\n'
           '• Unlock the next zone by clearing the previous boss, or by earning enough lifetime gold.\n'
           '• Locked zones dim on the map; the caption under the map shows lifetime gold progress (have / need).\n'
@@ -31,6 +31,7 @@ abstract final class GameGuides {
           'Each floor is one combat wave on a multi-chamber map.\n\n'
           '• Clear a chamber to open gates into the next.\n'
           '• Pick up ground loot (or wait for auto-timeout), then walk to the stairs.\n'
+          '• Elite and treasure floors often hide a room chest — grab it like other floor loot.\n'
           '• Boss floors use a special arena.\n'
           '• Party HP strip is bottom-left — tap a hero to open their kit, tap again to fold.\n'
           '• Target chip is top-right (name + HP).\n'
@@ -40,12 +41,12 @@ abstract final class GameGuides {
       id: 'god_hand',
       title: 'GOD HAND',
       body:
-          'You are the distant will. Tap the dungeon floor to strike.\n\n'
-          '• Deals area damage and briefly steers the party toward the tap.\n'
+          'You are the distant will. Tap the dungeon floor to steer and burst.\n\n'
+          '• First job: smash a pack and pull the party toward your tap.\n'
           '• Cooldown ring is top-right of the dungeon view.\n'
-          '• Upgrade God Hand damage with essence (meta).\n'
-          '• Upgrade God Hand CD (Forge / Prestige) to shorten the cooldown.\n'
-          '• Styles under Forge → KEEP: BALANCED, FOCUS (+damage −radius), WIDE (+radius −damage).',
+          '• Forge → KEEP (soft knobs): more damage, shorter CD, BAL / FOCUS / WIDE styles.\n'
+          '• Styles trade damage vs radius — not a second talent tree.\n'
+          '• Upgrades use essence and survive Ascend.',
     ),
     GuideTopic(
       id: 'farm_push',
@@ -78,13 +79,15 @@ abstract final class GameGuides {
           'Loot drops on the floor, then goes to your stash (BAG).\n\n'
           '• BAG: view, sell, scrap, or equip stash gear.\n'
           '• Stats: Primary (Armor, Str/Agi/Int, Sta, Spirit, Spell Power) and '
-          'Secondary (Crit, Haste, Mp5) — new drops keep a short list.\n'
+          'Secondary (Crit, Haste, Mp5) — new drops keep ≤2 secondaries (no Move).\n'
+          '• Item level is the power size; green UPGRADE means Auto Equip would swap '
+          '(same score for both — no affinity/armor ghost points).\n'
           '• GEAR: paper-doll per hero — UNEQUIP worn pieces, AUTO EQUIP from bag.\n'
           '• Tap an empty GEAR slot to open BAG filtered to that slot.\n'
           '• SELL only scraps items in BAG (unequip first).\n'
-          '• Auto-Equip picks clear class upgrades (skips low-iLvl affinity crumbs '
-          'on empty slots; worn slots need a meaningful score delta and will not '
-          'swap to clearly lower iLvl for tiny affinity bumps).\n'
+          '• Auto-Equip follows budget stats (skips crumbs; will not swap to clearly '
+          'lower iLvl without a real power jump; 1H+off-hand can beat a lonely 2H).\n'
+          '• Armor sets (2pc/4pc) give combat bonuses — not fake BiS score.\n'
           '• Settings / Bag FILTERS: auto-sell weak drops for gold, '
           'auto-disassemble for essence (iLvl + rarity filters).\n'
           '• Near-full bag: merge → sell → scrap automatically.\n'
@@ -121,7 +124,8 @@ abstract final class GameGuides {
       id: 'classes',
       title: 'CLASS UNLOCKS',
       body:
-          'Ascend grows your roster — TODAY and Ascend teasers name the next kits.\n\n'
+          'Ascend grows your roster — TODAY and Ascend teasers name the next kits '
+          'with a short fantasy line plus a Watch… combat hook.\n\n'
           '• AL1: Combat Rogue, Arms\n'
           '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot (essence)\n'
           '• AL3: Prot Paladin, Assassination, Resto Shaman, Frost Mage, Resto Druid\n'
@@ -212,10 +216,12 @@ abstract final class GameGuides {
       title: 'DAILY VAULT',
       body:
           'Keystone affixes still rotate each ISO week, but the vault is daily.\n\n'
-          '• Fill today’s vault with 1 push clear — or time a KEY +2 (or higher).\n'
-          '• Claim scales with your best timed key today.\n'
-          '• Hub TODAY card points at your next chase and flashes READY / ALMOST '
-          'when a claim or Ascend is close.\n'
+          '• Early on: fill today’s vault with 1 dungeon clear, then claim essence.\n'
+          '• Later: time a KEY +2 (or higher) for a bigger claim — META → KEYSTONE.\n'
+          '• Hub TODAY and offline Up next share one chase (claim → READY → '
+          'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
+          '• Welcome-back shows one wow line, a few highlights, then Up next.\n'
+          '• TODAY flashes READY / ALMOST when a claim or Ascend is close.\n'
           '• First vault claim of each calendar month also pays a season bonus.\n'
           '• Progress resets at UTC midnight.\n'
           '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',

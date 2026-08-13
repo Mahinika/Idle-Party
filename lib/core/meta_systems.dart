@@ -19,10 +19,23 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.11.4';
+  static const String currentVersion = '1.11.5';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.11.5',
+      bullets: <String>[
+        'World Path: Rimeglass Rift — new end zone after Stormwake (Rime Colossus).',
+        'Quiet ice identity: cyan wash, rime mites, frost golem boss (not Stormwake twin).',
+        'World Path map extended with a painted Rimeglass ice strip + 12th ring under Stormwake.',
+        'Floors use a Blueprint → placement plan: room beats, landmark props, and chest sockets (not just scatter clutter).',
+        'Room chests drop gold/gear pickups on elite/treasure beats — same AFK vacuum as kill loot.',
+        'Rimeglass leans quiet treasure alcoves; Stormwake leans choke corridors.',
+        'TODAY chase honesty: ALMOST zone/Will beats Daily grind; offline Meet opens PARTY; KEY tips wait for mid progress.',
+        'World Path still runs Sandy Caverns through Rimeglass Rift (Tidehold, Ashen Vault, Grove, Stormwake on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.11.4',
       bullets: <String>[
@@ -32,8 +45,14 @@ abstract final class MetaSystems {
         'POWER → FORGE: all run bonuses scroll on phone; forge HP is STA (Stamina), same as gear.',
         'Gear readability: Primary vs Secondary on tooltips; new drops lean (no Move spam, ≤2 secondaries).',
         'Gear power tuned: caster Int/SP ROI matches melee; full rare sets matter in combat without stomping.',
+        'Gear budget: iLvl→stats power only — UPGRADE/Auto Equip ignore affinity/armor/set ghost score; BEST matches real upgrades; 1H+off-hand can beat a lonely 2H.',
+        'TODAY chase: hub and offline Up next share one ChaseContract (claim → READY → ALMOST → grind).',
+        'Offline welcome: one wow line, up to 3 highlights, then the same Up next chase as hub TODAY.',
+        'Meet kits: TODAY/Ascend teasers include fantasy + a Watch… combat hook for each AL ladder unlock.',
+        'Daily vault early: simple clear-and-claim copy; KEY jargon waits until mid progress (AL2+ / deeper zones).',
+        'God Hand: steer-toy first (tap to pull + smash); Forge KEEP styles/CD stay soft power knobs.',
         'Auto Equip: will not replace worn gear with clearly lower iLvl for tiny affinity bumps.',
-        'Gear systems: Apex hard-lock, set BiS nudge capped, UPGRADE badge matches Auto Equip, merge keeps primary set only, unstick honors FILTERS.',
+        'Gear systems: Apex hard-lock, merge keeps primary set only, unstick honors FILTERS.',
         'World Path still runs Sandy Caverns through Stormwake Hollow (Tidehold, Ashen Vault, Grove on the road).',
       ],
     ),
@@ -364,6 +383,7 @@ abstract final class MetaSystems {
     'clear_ember': (s) => s.highestDungeonCleared >= 8,
     'clear_grove': (s) => s.highestDungeonCleared >= 9,
     'clear_storm': (s) => s.highestDungeonCleared >= 10,
+    'clear_rime': (s) => s.highestDungeonCleared >= 11,
     'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
     'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
     'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,

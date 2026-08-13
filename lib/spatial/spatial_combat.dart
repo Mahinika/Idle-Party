@@ -3073,12 +3073,28 @@ abstract final class SpatialCombat {
       );
     }
 
+    final groundLoot = <GroundLoot>[];
+    final chestRng = math.Random(state.layoutSeed ^ 0xC7E57);
+    for (final cell in map.lootChestPoints) {
+      final drops = GameLogic.rollRoomChestLoot(state, random: chestRng);
+      for (var i = 0; i < drops.length; i++) {
+        final ang = (i / math.max(1, drops.length)) * math.pi * 2;
+        groundLoot.add(
+          GroundLoot(
+            x: cell.$1 + 0.5 + math.cos(ang) * 0.2,
+            y: cell.$2 + 0.5 + math.sin(ang) * 0.2,
+            drop: drops[i],
+          ),
+        );
+      }
+    }
+
     return SpatialWorld(
       map: map,
       heroes: heroes,
       enemies: enemies,
       projectiles: <SpatialProjectile>[],
-      groundLoot: <GroundLoot>[],
+      groundLoot: groundLoot,
       isTreasure: isTreasure,
       treasureTimer: isTreasure ? 1.2 : 0,
       activeChamber: firstCombat,

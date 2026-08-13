@@ -41,6 +41,7 @@ abstract final class GearSets {
       'ember' => 'Ashen',
       'grove' => 'Hollow',
       'storm' => 'Stormwake',
+      'rime' => 'Rimeglass',
       _ => dungeonId,
     };
     final armor = switch (armorRaw) {
@@ -179,6 +180,7 @@ abstract final class GearSets {
       'ember' => ('ASHEN', 0xFFE09040),
       'grove' => ('GROVE', 0xFF68B048),
       'storm' => ('GALE', 0xFFE8E040),
+      'rime' => ('RIME', 0xFF70E8F0),
       _ => ('SET', 0xFFFFD070),
     };
     return (chance: 0.10, damageMul: 1.35, tag: tag, argb: argb);
@@ -197,25 +199,14 @@ abstract final class GearSets {
     return '$name 2pc · +stats';
   }
 
-  /// Equip-score bonus for completing / progressing a set with [candidate].
-  ///
-  /// Kept modest so real stats/iLvl still dominate BiS (completion is a nudge,
-  /// not a +100 hammer that beats clearly better non-set gear).
+  /// Legacy hook — upgrade path no longer adds flat set points (GEAR_BUDGET).
+  /// Set power comes from real 2pc/4pc combat bonuses only.
+  static const int maxEquipScoreBonus = 0;
+
   static int equipScoreBonus({
     required Map<EquipmentSlot, EquipmentItem> equipped,
     required EquipmentItem candidate,
   }) {
-    final setId = candidate.setId;
-    if (setId == null || setId.isEmpty) return 0;
-    if (!setSlots.contains(candidate.slot)) return 0;
-    final without = Map<EquipmentSlot, EquipmentItem>.from(equipped)
-      ..remove(candidate.slot);
-    final before = wornCount(without, setId);
-    final after = before + 1;
-    var bonus = 8; // any set piece
-    if (after >= 2 && before < 2) bonus += 14;
-    if (after >= 4 && before < 4) bonus += 18;
-    if (after >= 2) bonus += after * 3;
-    return bonus;
+    return 0;
   }
 }

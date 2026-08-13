@@ -103,6 +103,12 @@ abstract final class ApexCraft {
       bossSources: 'Stormwake Hollow boss',
     ),
     CraftMatDef(
+      id: 'shard_rime',
+      name: 'Rimeglass Shard',
+      family: CraftMatFamily.shard,
+      bossSources: 'Rimeglass Rift boss',
+    ),
+    CraftMatDef(
       id: 'core_tank',
       name: 'Aegis Core',
       family: CraftMatFamily.core,

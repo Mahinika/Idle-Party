@@ -32,6 +32,7 @@ abstract final class StoryLore {
       'ember' => 'Ash drifts in the vault. The crown still smolders.',
       'grove' => 'Roots tighten. Something old watches between the trunks.',
       'storm' => 'Wind screams through the hollow. Lightning answers every step.',
+      'rime' => 'The wind dies. Rimeglass sings underfoot — cold enough to cut.',
       _ => 'Entering ${def.name}…',
     };
   }
@@ -50,6 +51,7 @@ abstract final class StoryLore {
       'ember' => 'The Sovereign cools. Embers still whisper.',
       'grove' => 'Wyrd Root stills. The grove exhales moss and quiet.',
       'storm' => 'The Tyrant breaks. Thunder rolls away into quiet.',
+      'rime' => 'The Colossus cracks. Frost settles — the rift holds its breath.',
       _ => '${def.name} cleared.',
     };
   }

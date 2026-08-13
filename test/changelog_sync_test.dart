@@ -58,5 +58,12 @@ void main() {
         reason: 'storm dungeon shipped — mention Stormwake/Storm in What’s New',
       );
     }
+    if (ids.contains('rime')) {
+      expect(
+        bullets.contains('rime') || bullets.contains('rimeglass'),
+        isTrue,
+        reason: 'rime dungeon shipped — mention Rimeglass/Rime in What’s New',
+      );
+    }
   });
 }

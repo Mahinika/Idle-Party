@@ -72,7 +72,13 @@ bool _isSoulboundItem(EquipmentItem item) => item.id.startsWith('soulbound_');
 
 bool _isUpgradeForAny(GameState state, EquipmentItem item) {
   for (final hero in state.heroes) {
-    if (GameLogic.compareForHero(hero, item).isUpgrade) return true;
+    if (GameLogic.compareForHero(
+      hero,
+      item,
+      pairingStash: state.gearStash,
+    ).isUpgrade) {
+      return true;
+    }
   }
   return false;
 }
@@ -82,13 +88,23 @@ bool _isBestStashItem(GameState state, EquipmentItem item) {
   var bestDelta = 0;
   for (final stashItem in state.gearStash) {
     for (final hero in state.heroes) {
-      final d = GameLogic.compareForHero(hero, stashItem).powerDelta;
-      if (d > bestDelta) bestDelta = d;
+      final cmp = GameLogic.compareForHero(
+        hero,
+        stashItem,
+        pairingStash: state.gearStash,
+      );
+      if (cmp.isUpgrade && cmp.powerDelta > bestDelta) {
+        bestDelta = cmp.powerDelta;
+      }
     }
   }
   for (final hero in state.heroes) {
-    final d = GameLogic.compareForHero(hero, item).powerDelta;
-    if (d > 0 && d >= bestDelta) return true;
+    final cmp = GameLogic.compareForHero(
+      hero,
+      item,
+      pairingStash: state.gearStash,
+    );
+    if (cmp.isUpgrade && cmp.powerDelta >= bestDelta) return true;
   }
   return false;
 }
@@ -178,7 +194,11 @@ class _Is2ShellState extends State<Is2Shell> {
     if (item != null &&
         heroIndex >= 0 &&
         heroIndex < state.heroes.length) {
-      into = GameLogic.compareForHero(state.heroes[heroIndex], item).intoSlot;
+      into = GameLogic.compareForHero(
+        state.heroes[heroIndex],
+        item,
+        pairingStash: state.gearStash,
+      ).intoSlot;
     }
     final beforeIds = state.gearStash.map((g) => g.id).toSet();
     widget.director.equipFromStash(
@@ -2827,7 +2847,11 @@ class _InventoryDockState extends State<_InventoryDock>
                       )];
                 final cmp = hero == null
                     ? null
-                    : GameLogic.compareForHero(hero, selected);
+                    : GameLogic.compareForHero(
+                        hero,
+                        selected,
+                        pairingStash: state.gearStash,
+                      );
                 final scoreLine = cmp == null || cmp.powerDelta == 0
                     ? null
                     : (cmp.isUpgrade
@@ -2879,12 +2903,13 @@ class _InventoryDockState extends State<_InventoryDock>
     var bestIndex = -1;
     var bestDelta = 0;
     for (var i = 0; i < state.heroes.length; i++) {
-      final delta = GameLogic.compareForHero(
+      final cmp = GameLogic.compareForHero(
         state.heroes[i],
         selected,
-      ).powerDelta;
-      if (delta > 0 && delta > bestDelta) {
-        bestDelta = delta;
+        pairingStash: state.gearStash,
+      );
+      if (cmp.isUpgrade && cmp.powerDelta > bestDelta) {
+        bestDelta = cmp.powerDelta;
         bestIndex = i;
       }
     }
@@ -2896,6 +2921,7 @@ class _InventoryDockState extends State<_InventoryDock>
           _EquipHeroChip(
             hero: state.heroes[i],
             candidate: selected,
+            pairingStash: state.gearStash,
             isBest: i == bestIndex,
             onTap: () => onEquipToHero(i),
           ),
@@ -3453,17 +3479,23 @@ class _EquipHeroChip extends StatelessWidget {
     required this.hero,
     required this.candidate,
     required this.onTap,
+    this.pairingStash,
     this.isBest = false,
   });
 
   final PartyHero hero;
   final EquipmentItem candidate;
   final VoidCallback onTap;
+  final List<EquipmentItem>? pairingStash;
   final bool isBest;
 
   @override
   Widget build(BuildContext context) {
-    final cmp = GameLogic.compareForHero(hero, candidate);
+    final cmp = GameLogic.compareForHero(
+      hero,
+      candidate,
+      pairingStash: pairingStash,
+    );
     final deltaColor = cmp.powerDelta > 0
         ? GameTheme.clear
         : (cmp.powerDelta < 0 ? const Color(0xFFE07060) : GameTheme.parchmentDim);
@@ -3520,9 +3552,9 @@ class _EquipHeroChip extends StatelessWidget {
                 )
               else
                 Text(
-                  'raw A${GameLogic.formatDelta(cmp.atkDelta)} '
+                  'power ${GameLogic.formatDelta(cmp.atkDelta)} '
                   'D${GameLogic.formatDelta(cmp.defDelta)} '
-                  'V${GameLogic.formatDelta(cmp.vitDelta)}',
+                  'STA${GameLogic.formatDelta(cmp.vitDelta)}',
                   style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
                 ),
             ],
@@ -3738,6 +3770,7 @@ class _BagSlot extends StatelessWidget {
     return ItemTooltipAnchor(
       item: item!,
       hero: hero,
+      pairingStash: state.gearStash,
       child: slot,
     );
   }
@@ -4582,7 +4615,7 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const Divider(height: 16, color: Color(0x665A5040)),
         _sectionTitle(
           'GOD HAND',
-          'Tap in the dungeon for AOE. Essence upgrades survive Ascend.',
+          'Tap in the dungeon to steer + burst. KEEP upgrades are soft knobs (damage, CD, style).',
         ),
         Text(
           'Lv${state.godHandLevel} · damage ${state.godHandBaseDamage} · '

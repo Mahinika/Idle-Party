@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/chase_contract.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
@@ -125,7 +126,11 @@ class _HubScreenState extends State<HubScreen>
       return;
     }
     _offlineDialogShown = true;
-    await showOfflineProgressDialog(context, director);
+    await showOfflineProgressDialog(
+      context,
+      director,
+      onOpenParty: widget.onOpenParty,
+    );
   }
 
   Future<void> _maybeShowWhatsNew() async {
@@ -301,8 +306,11 @@ class _HubScreenState extends State<HubScreen>
                           const SizedBox(height: 8),
                           _OfflineBanner(
                             text: director.offlineSummary!.headline,
-                            onDismiss: () =>
-                                showOfflineProgressDialog(context, director),
+                            onDismiss: () => showOfflineProgressDialog(
+                              context,
+                              director,
+                              onOpenParty: widget.onOpenParty,
+                            ),
                           ),
                         ],
                         const SizedBox(height: 6),
@@ -329,14 +337,19 @@ class _HubScreenState extends State<HubScreen>
                         const SizedBox(height: 6),
                         Builder(
                           builder: (context) {
-                            final chase = HubChase.forState(state);
+                            final contract = ChaseContract.fromState(state);
+                            final chase = contract.chase;
                             final (actionLabel, onAction) =
                                 _chaseAction(context, chase);
                             final weekMod = state.metaDepth.weeklyModifier;
+                            final showWeekAffix =
+                                !short &&
+                                weekMod.isNotEmpty &&
+                                GameLogic.showKeystoneJargon(state);
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                if (!short && weekMod.isNotEmpty) ...[
+                                if (showWeekAffix) ...[
                                   Text(
                                     'Week · ${Keystone.label(weekMod)} — ${Keystone.blurb(weekMod)}',
                                     textAlign: TextAlign.center,
@@ -944,23 +957,24 @@ class _ZonePathMap extends StatefulWidget {
   final double pulse;
   final ValueChanged<String> onSelect;
 
-  /// Marker centers on painted gold rings (zone 0…10 top→bottom).
-  /// Tuned for world_path_map with Stormwake at the bottom chasm.
+  /// Marker centers on painted gold rings (zone 0…11 top→bottom).
+  /// Tuned for extended world_path_map (Rimeglass ice strip under Stormwake).
   static const List<Offset> markerNorm = [
-    Offset(0.492, 0.058), // sandy — cave mouth
-    Offset(0.478, 0.138), // goblin — camp
-    Offset(0.470, 0.228), // king — fort wall
-    Offset(0.508, 0.318), // underworld — purple crystals
-    Offset(0.448, 0.400), // dead — tombs
-    Offset(0.475, 0.490), // hell — spiked gate
-    Offset(0.460, 0.575), // crystal — ice peaks
-    Offset(0.500, 0.655), // tide — sunken ruins
-    Offset(0.458, 0.735), // ember — lava door
-    Offset(0.472, 0.835), // grove — dark forest
-    Offset(0.488, 0.945), // storm — bottom purple chasm
+    Offset(0.492, 0.049), // sandy — cave mouth
+    Offset(0.478, 0.117), // goblin — camp
+    Offset(0.470, 0.193), // king — fort wall
+    Offset(0.508, 0.270), // underworld — purple crystals
+    Offset(0.448, 0.339), // dead — tombs
+    Offset(0.475, 0.415), // hell — spiked gate
+    Offset(0.460, 0.487), // crystal — ice peaks
+    Offset(0.500, 0.555), // tide — sunken ruins
+    Offset(0.458, 0.623), // ember — lava door
+    Offset(0.472, 0.708), // grove — dark forest
+    Offset(0.488, 0.801), // storm — purple chasm
+    Offset(0.500, 0.951), // rime — painted ice-rift ring
   ];
 
-  static const double mapAspect = 1536 / 1024;
+  static const double mapAspect = 1812 / 1024;
 
   @override
   State<_ZonePathMap> createState() => _ZonePathMapState();

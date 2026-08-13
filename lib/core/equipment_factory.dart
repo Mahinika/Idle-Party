@@ -847,9 +847,10 @@ class EquipmentFactory {
       str = (str * dpsBump).round();
       agi = (agi * dpsBump).round();
     }
+    // Secondaries (WotLK-lite / GEAR_BUDGET): Crit / Haste (/ Mp5 healers).
+    // Cap 2 lines. Never roll Move on loot.
     var crit = 0;
     var aspd = 0;
-    var move = 0;
     var mp5 = 0;
 
     void applyAffix(ItemAffixDef a) {
@@ -867,8 +868,6 @@ class EquipmentFactory {
     if (prefix != null) applyAffix(prefix);
     if (suffix != null) applyAffix(suffix);
 
-    // Secondaries (WotLK-lite): Crit / Haste (/ Mp5 for healers). Cap 2 lines.
-    // Magnitude scales with displayed ilvl — not a wall of stacked slot extras.
     final secTier = max(0, (iLvl - 5) ~/ 18);
     final secAmt = max(1, rarity.index + secTier);
     final tag = roleTag ?? _fallbackTag(classBias);
@@ -900,7 +899,6 @@ class EquipmentFactory {
       if (crit > 0) n++;
       if (aspd > 0) n++;
       if (mp5 > 0) n++;
-      if (move > 0) n++;
       return n;
     }
 
@@ -916,18 +914,16 @@ class EquipmentFactory {
       }
     }
 
-    // Affixes can push past two lines — keep the strongest two.
+    // Affixes can push past two lines — keep the strongest two (no Move).
     if (secondaryLines() > 2) {
       final ranked = <({String id, int v})>[
         if (crit > 0) (id: 'crit', v: crit),
         if (aspd > 0) (id: 'aspd', v: aspd),
         if (mp5 > 0) (id: 'mp5', v: mp5),
-        if (move > 0) (id: 'move', v: move),
       ]..sort((a, b) => b.v.compareTo(a.v));
       crit = 0;
       aspd = 0;
       mp5 = 0;
-      move = 0;
       for (final e in ranked.take(2)) {
         switch (e.id) {
           case 'crit':
@@ -936,8 +932,6 @@ class EquipmentFactory {
             aspd = e.v;
           case 'mp5':
             mp5 = e.v;
-          case 'move':
-            move = e.v;
         }
       }
     }
@@ -1029,10 +1023,11 @@ class EquipmentFactory {
       mp5Bonus: mp5,
       critChanceBonus: crit,
       attackSpeedBonus: aspd,
-      moveSpeedBonus: move,
+      moveSpeedBonus: 0, // GEAR_BUDGET: no Move on loot
       pattern: pattern,
       effectId: effectId,
       effectValue: effectValue,
+      // Affinity = drop bias / tooltip flavour — not equip-score.
       affinity: classBias.name,
       itemLevel: iLvl,
       armorType: armorType,

@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.11.4**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.11.5**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -27,7 +27,7 @@ for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.11.4**.
+closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.11.5**.
 Production still needs **12 closed testers × 14 days**. Do not treat Play as the
 primary install channel yet.
 
@@ -78,6 +78,10 @@ Skills under `.cursor/skills/`: domain (`spatial-combat-change`, `add-ability`,
 `systematic-debugging`, `reviewing-code`, `accessibility-auditing`).
 
 Cadence: `docs/CONTENT_CADENCE.md`. Roadmap: `docs/ROADMAP.md`.
+Systems rebuild (chase / offline / kits / KEY / God Hand): `docs/SYSTEMS_REBUILD.md`.
+Chase contract (hub TODAY ↔ offline Up next): `docs/CHASE_CONTRACT.md`.
+Gear budget contract: `docs/GEAR_BUDGET.md`.
+Floor generation rebuild (plan): `docs/FLOOR_BLUEPRINT.md`.
 Play ops status: `docs/PLAY_STORE.md` (operator table) + skill `play-store-prep`.
 
 ### Cursor automation
@@ -105,7 +109,7 @@ GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
              → GameLogic.simulateSpatialOffline → SpatialCombat.step
                (AFK: afkAssist + reducedVfx, auto-flask, God Hand)
 GameLogic + GameState   (rules / persistence)
-DungeonCatalog          (11 named zones, bossFloor = 5 + AL)
+DungeonCatalog          (12 named zones, bossFloor = 5 + AL)
 RoomLayouts (tile_map)  (multi-chamber maps + gates)
 ```
 
@@ -129,7 +133,7 @@ uses `OfflineProgressResult` (wow headline + highlight rows + “Up next” chas
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
-## World path (11 zones)
+## World path (12 zones)
 
 | # | id | Name |
 |---|-----|------|
@@ -144,6 +148,7 @@ Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 | 8 | ember | Ashen Vault |
 | 9 | grove | Hollow Grove |
 | 10 | storm | Stormwake Hollow |
+| 11 | rime | Rimeglass Rift |
 
 Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 
@@ -169,14 +174,17 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 | Spatial sim | `lib/spatial/spatial_combat.dart` |
 | Ability runtime | `lib/spatial/ability_effects.dart` |
 | Tile maps | `lib/spatial/tile_map.dart` |
+| Floor blueprint / placement | `lib/spatial/floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart` + `docs/FLOOR_BLUEPRINT.md` |
 | Hub | `lib/ui/hub_screen.dart` |
 | Hub TODAY chase | `lib/core/hub_chase.dart` |
+| Chase contract (hub ↔ AFK) | `lib/core/chase_contract.dart` + `docs/CHASE_CONTRACT.md` |
 | Ascend unlock teasers | `lib/core/ascend_roadmap.dart` |
 | Ascend / lore copy | `lib/core/story_lore.dart` |
 | Dungeon / hub shell | `lib/ui/is2_shell.dart` |
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
 | Kenney helpers | `lib/ui/kenney_assets.dart` |
 | Custom art helpers | `lib/ui/custom_assets.dart` |
+| Gear budget contract | `docs/GEAR_BUDGET.md` |
 | UI theme guide | `docs/UI_THEME.md` (+ `MenuChrome` / `GameTheme`) |
 
 ## Conventions
@@ -187,6 +195,8 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 - Asset paths only through `KenneyAssets` / `CustomAssets` (no raw `assets/...` in UI).
 - Pixel sprites: `filterQuality: FilterQuality.none`.
 - Loadouts UI label = **LOADOUTS**; dungeon armor 2pc/4pc = **armor sets** (not the same).
+- Gear BiS / UPGRADE: budget-honest score only — see `docs/GEAR_BUDGET.md`
+  (`itemBudgetScore`; no affinity/armor/rarity/set crumbs).
 
 ## Meta (survives Ascend)
 

@@ -4,6 +4,11 @@ import 'hero.dart';
 import 'stats.dart';
 
 /// Idle-tuned Classic conversion: AP → ATK uses kAp = 4 (Classic uses 14).
+///
+/// Gear primary ROI must stay aligned with equip BiS weights
+/// ([EquipStatWeights] / docs/GEAR_BUDGET.md): Str/Agi melee via AP;
+/// casters use Intellect full on the sheet base and gear Int+SP at ~1/3 into ATK
+/// so Int/SP match Str/Agi→ATK value for Auto Equip honesty.
 class CombatRatings {
   const CombatRatings({
     required this.strength,

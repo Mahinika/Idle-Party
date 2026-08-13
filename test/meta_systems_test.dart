@@ -228,6 +228,7 @@ void main() {
       final ember = DungeonCatalog.byId('ember');
       final grove = DungeonCatalog.byId('grove');
       final storm = DungeonCatalog.byId('storm');
+      final rime = DungeonCatalog.byId('rime');
       expect(crystal.number, 6);
       expect(tide.number, 7);
       expect(tide.bossName, 'Tide Leviathan');
@@ -237,7 +238,9 @@ void main() {
       expect(grove.bossName, 'Wyrd Root');
       expect(storm.number, 10);
       expect(storm.bossName, 'Storm Tyrant');
-      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(11));
+      expect(rime.number, 11);
+      expect(rime.bossName, 'Rime Colossus');
+      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(12));
       expect(
         DungeonCatalog.isUnlocked('tide', 0, 6),
         isTrue,
@@ -264,6 +267,14 @@ void main() {
       );
       expect(
         DungeonCatalog.isUnlocked('storm', 0, 8),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('rime', 0, 10),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('rime', 0, 9),
         isFalse,
       );
     });

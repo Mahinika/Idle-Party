@@ -137,6 +137,16 @@ abstract final class DungeonCatalog {
       unlockPrice: 2600000,
       blurb: 'Wind tears the last gate — lightning remembers every will.',
     ),
+    DungeonDef(
+      number: 11,
+      id: 'rime',
+      name: 'Rimeglass Rift',
+      layout: DungeonLayoutKind.cave,
+      bossId: 'rime_colossus',
+      bossName: 'Rime Colossus',
+      unlockPrice: 3600000,
+      blurb: 'After the gale: a quiet rift of glass and killing cold.',
+    ),
   ];
 
   static DungeonDef byId(String id) {

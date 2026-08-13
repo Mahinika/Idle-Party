@@ -36,6 +36,9 @@ migrate_working_dir/
 # Local simulation reports
 /tool/out/
 
+# Local world-path map rebuild source (11-zone)
+assets/custom/ui/world_path_map_11zone_bak.png
+
 # Symbolication related
 app.*.symbols
 

@@ -113,7 +113,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
 
     final floorPaths = KenneyAssets.floorVariantsForDungeon(dungeonId);
     final wallPaths = KenneyAssets.wallVariantsForDungeon(dungeonId);
-    final propKinds = KenneyAssets.propPoolForDungeon(dungeonId).toSet();
+    final propKinds = KenneyAssets.propPoolForDungeon(dungeonId).toSet()
+      ..add(MapPropKind.chest);
     final enemyAssets = KenneyAssets.enemySpriteCatalog;
 
     // Shared combat icons — decode once, keep across dungeon switches.

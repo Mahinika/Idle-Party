@@ -29,8 +29,9 @@ class FirstSessionTips extends StatelessWidget {
       id: 'godhand',
       title: 'GOD HAND',
       body:
-          'Your distant will. Tap the dungeon to smash foes. Cooldown is the ring top-right. '
-          'Forge → KEEP: BAL / FOCUS / WIDE styles trade damage vs radius.',
+          'Tap the dungeon to steer the party and smash packs — that is the toy. '
+          'Cooldown ring is top-right. Forge → KEEP later: damage, shorter CD, and '
+          'BAL / FOCUS / WIDE styles (soft power knobs, not a talent tree).',
     ),
     (
       id: 'farm_push',
@@ -95,8 +96,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'weekly',
       title: 'DAILY VAULT',
       body:
-          'Clear 1 floor or time a KEY +2 today, then claim the vault for essence '
-          '(scales with your best timed key). First claim of each month also pays a season bonus.',
+          'Clear 1 dungeon floor today, then claim the vault for essence. '
+          'First claim of each month also pays a season bonus.',
     ),
     (
       id: 'apex',
@@ -168,8 +169,10 @@ class FirstSessionTips extends StatelessWidget {
           s.metaDepth.lifetimeFloorClears < 1) {
         continue;
       }
+      // KEYSTONE tip waits for mid-layer jargon (AL≥2 or zone 3+ cleared).
       if (tip.id == 'hardmode' &&
-          (s.effectiveMaxHardmode <= 0 ||
+          (!GameLogic.showKeystoneJargon(s) ||
+              s.effectiveMaxHardmode <= 0 ||
               (s.highestDungeonCleared < 0 && s.ascensionLevel < 1))) {
         continue;
       }
@@ -206,6 +209,10 @@ class FirstSessionTips extends StatelessWidget {
     final id = _nextTipId();
     if (id == null) return const SizedBox.shrink();
     final tip = _tips.firstWhere((t) => t.id == id);
+    final body = tip.id == 'weekly' && GameLogic.showKeystoneJargon(director.state)
+        ? 'Clear 1 floor or time a KEY +2 today, then claim the vault for essence '
+            '(scales with your best timed key). First claim of each month also pays a season bonus.'
+        : tip.body;
 
     return Align(
       alignment: Alignment.bottomCenter,
@@ -232,7 +239,7 @@ class FirstSessionTips extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          tip.body,
+                          body,
                           textAlign: TextAlign.center,
                           style: GameTheme.body(
                             size: 14,

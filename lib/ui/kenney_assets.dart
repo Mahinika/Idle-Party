@@ -124,6 +124,8 @@ abstract final class KenneyAssets {
   static String get enemyCrystalMite => CustomAssets.enemyCrystalMite;
   static String get enemyStormBoss => CustomAssets.enemyBossStorm;
   static String get enemyStormMite => CustomAssets.enemyStormMite;
+  static String get enemyRimeBoss => CustomAssets.enemyBossRime;
+  static String get enemyRimeMite => CustomAssets.enemyRimeMite;
 
   // —— Gear / consumables (custom identity icons; Tiny Dungeon tiles kept as fallback) ——
   static String get shieldRound => CustomAssets.iconShieldRound;
@@ -255,6 +257,7 @@ abstract final class KenneyAssets {
       'ember' => floorStone, // ash vault stone (not hell sand twin)
       'grove' => floorDirtDetail,
       'storm' => floorStone, // storm arena stone
+      'rime' => floorDirtDetail, // frost silt — not crystal stone twin
       _ => switch (DungeonCatalog.byId(dungeonId).layout) {
           DungeonLayoutKind.cave => floorSand,
           DungeonLayoutKind.hideout => floorDirtDetail,
@@ -276,6 +279,7 @@ abstract final class KenneyAssets {
       'tide' => <String>[floorDirtDetail, floorDirtDetail],
       'grove' => <String>[floorDirtDetail, floorDirt],
       'storm' => <String>[floorStone, floorStone, floorStoneAlt1],
+      'rime' => <String>[floorDirtDetail, floorDirtDetail, floorDirt],
       _ => <String>[floorForDungeon(dungeonId)],
     };
   }
@@ -296,6 +300,7 @@ abstract final class KenneyAssets {
       'crystal' || 'tide' => [wallStone, wallStoneAlt1],
       'grove' => [wallStone, wallStone, wallStoneAlt1],
       'storm' => [wallStone, wallStone, wallBanner],
+      'rime' => [wallStone, wallStoneAlt1, wallStone],
       _ => [wallStone],
     };
   }
@@ -327,6 +332,7 @@ abstract final class KenneyAssets {
         MapPropKind.fence => propFence,
         MapPropKind.pillar => propPillar,
         MapPropKind.rubble => propRubble,
+        MapPropKind.chest => chestClosed,
       };
 
   /// Weighted pools (duplicates = more common). Keep each zone's clutter distinct.
@@ -420,6 +426,7 @@ abstract final class KenneyAssets {
             MapPropKind.crate,
             MapPropKind.pillar,
             MapPropKind.pillar,
+            MapPropKind.chest,
             MapPropKind.fence,
             MapPropKind.hatch,
             MapPropKind.anvil,
@@ -481,6 +488,21 @@ abstract final class KenneyAssets {
             MapPropKind.trap,
             MapPropKind.bones,
           ],
+        'rime' => const [
+            MapPropKind.fountain,
+            MapPropKind.fountain,
+            MapPropKind.water,
+            MapPropKind.pillar,
+            MapPropKind.pillar,
+            MapPropKind.chest,
+            MapPropKind.rubble,
+            MapPropKind.crate,
+            MapPropKind.barrel,
+            MapPropKind.pot,
+            MapPropKind.shelf,
+            MapPropKind.bones,
+            MapPropKind.fence,
+          ],
         _ => const [
             MapPropKind.barrel,
             MapPropKind.crate,
@@ -488,6 +510,7 @@ abstract final class KenneyAssets {
             MapPropKind.stool,
             MapPropKind.shelf,
             MapPropKind.rubble,
+            MapPropKind.chest,
           ],
       };
 
@@ -504,6 +527,7 @@ abstract final class KenneyAssets {
         'ember' => hatch,
         'grove' => chestClosed,
         'storm' => torch,
+        'rime' => stairs,
         _ => iconDoor,
       };
 
@@ -525,6 +549,7 @@ abstract final class KenneyAssets {
         'ember' => enemyCyclops,
         'grove' => enemySpider,
         'storm' => enemyStormBoss,
+        'rime' => enemyRimeBoss,
         _ => enemyBoss,
       };
     }
@@ -538,6 +563,7 @@ abstract final class KenneyAssets {
         'tide' => enemyCrab,
         'grove' => enemySpider,
         'storm' => enemyBat,
+        'rime' => enemyGolem,
         _ => enemyCyclops,
       };
     }
@@ -553,6 +579,7 @@ abstract final class KenneyAssets {
       'tide' => enemySlime,
       'grove' => enemySlime,
       'storm' => enemyStormMite,
+      'rime' => enemyRimeMite,
       _ => enemySlime,
     };
   }
@@ -576,6 +603,7 @@ abstract final class KenneyAssets {
           'ember' => enemyRat,
           'grove' => enemySlime,
           'storm' => enemyStormMite,
+          'rime' => enemyRimeMite,
           _ => enemyRat,
         },
       EnemyArchetype.brute => switch (dungeonId) {
@@ -588,6 +616,7 @@ abstract final class KenneyAssets {
           'tide' => enemyCrab,
           'grove' => enemySpider,
           'storm' => enemyGolem,
+          'rime' => enemyGolem,
           _ => enemyCyclops,
         },
       EnemyArchetype.tank => switch (dungeonId) {
@@ -599,6 +628,7 @@ abstract final class KenneyAssets {
           'tide' => enemyCrab,
           'grove' => enemySpider,
           'storm' => enemyGolem,
+          'rime' => enemyGolem,
           _ => enemyGolem,
         },
       EnemyArchetype.ranged => switch (dungeonId) {
@@ -610,6 +640,7 @@ abstract final class KenneyAssets {
           'tide' => enemyBat,
           'grove' => enemyBat,
           'storm' => enemyBat,
+          'rime' => enemyGhost,
           _ => enemyBat,
         },
       EnemyArchetype.glass => switch (dungeonId) {
@@ -621,6 +652,7 @@ abstract final class KenneyAssets {
           'tide' => enemySlime,
           'grove' => enemySlime,
           'storm' => enemyRat,
+          'rime' => enemyRimeMite,
           _ => enemyBat,
         },
       EnemyArchetype.support => switch (dungeonId) {
@@ -629,6 +661,7 @@ abstract final class KenneyAssets {
           'ember' => enemyCultist,
           'grove' => enemyBat,
           'storm' => enemyCultist,
+          'rime' => enemyGhost,
           _ => enemyCultist,
         },
     };
@@ -651,6 +684,8 @@ abstract final class KenneyAssets {
         enemyCrystalMite,
         enemyStormBoss,
         enemyStormMite,
+        enemyRimeBoss,
+        enemyRimeMite,
       ];
 
   static int enemySpriteCatalogIndex(String asset) {
@@ -673,6 +708,7 @@ abstract final class KenneyAssets {
       'cinder sovereign' => enemyCyclops,
       'wyrd root' => enemySpider,
       'storm tyrant' => enemyStormBoss,
+      'rime colossus' => enemyRimeBoss,
       'crystal warden' ||
       'crystal golem' ||
       'frozen bulwark' ||
@@ -734,6 +770,12 @@ abstract final class KenneyAssets {
       'volt spitter' || 'gale slinger' => enemyBat,
       'lightning fang' || 'zephyr blade' => enemyRat,
       'storm chanter' || 'tempest adept' => enemyCultist,
+      'rime mite' || 'frost tick' || 'glass flea' => enemyRimeMite,
+      'rime brute' || 'frost crusher' || 'glass bulwark' || 'rime guard' =>
+        enemyGolem,
+      'shard slinger' || 'rime spitter' => enemyGhost,
+      'glass fang' || 'frost blade' => enemyRimeMite,
+      'glacier chanter' || 'stillfrost adept' => enemyGhost,
       'cave slime' || 'drip ooze' || 'sand mite' => enemySlime,
       'spit bat' || 'cavern spitter' || 'drill bat' => enemyBat,
       'needle rat' || 'glass skitter' || 'fort rat' || 'sneak rat' || 'pest' ||
@@ -854,6 +896,24 @@ abstract final class KenneyAssets {
         key.contains('cyclops') ||
         key.contains('sentry')) {
       return enemyCyclops;
+    }
+    if (key.contains('rime') ||
+        key.contains('frost') ||
+        (key.contains('glass') && !key.contains('hour'))) {
+      if (key.contains('colossus')) return enemyRimeBoss;
+      if (key.contains('brute') ||
+          key.contains('crusher') ||
+          key.contains('bulwark') ||
+          key.contains('guard')) {
+        return enemyGolem;
+      }
+      if (key.contains('chanter') || key.contains('adept')) {
+        return enemyGhost;
+      }
+      if (key.contains('slinger') || key.contains('spitter')) {
+        return enemyGhost;
+      }
+      return enemyRimeMite;
     }
     if (key.contains('storm') ||
         key.contains('gale') ||

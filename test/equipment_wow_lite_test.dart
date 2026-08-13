@@ -156,7 +156,7 @@ void main() {
     expect(b.powerScore - a.powerScore, 30);
   });
 
-  test('specEquipScore prefers set completion', () {
+  test('specEquipScore ignores set completion flats (combat set only)', () {
     final hero = PartyHero.starting(
       name: 'Aegis',
       specId: HeroSpecId.protection,
@@ -210,8 +210,9 @@ void main() {
     );
     expect(
       GameLogic.specEquipScore(hero, setChest),
-      greaterThan(GameLogic.specEquipScore(hero, plainChest)),
+      GameLogic.specEquipScore(hero, plainChest),
     );
+    expect(GearSets.equipScoreBonus(equipped: hero.equipped, candidate: setChest), 0);
   });
 
   test('rollLoot can return multiple drops for spatial spawn', () {

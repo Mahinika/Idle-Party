@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/chase_contract.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
@@ -759,26 +760,28 @@ class _LoadoutSlotRow extends StatelessWidget {
 /// full-detail dialog the player must dismiss.
 Future<void> showOfflineProgressDialog(
   BuildContext context,
-  GameDirector director,
-) async {
+  GameDirector director, {
+  VoidCallback? onOpenParty,
+}) async {
   final summary = director.offlineSummary;
   if (summary == null) return;
-  final chase = HubChase.forState(summary.state);
+  final contract = ChaseContract.fromState(summary.state);
+  final chase = contract.chase;
   final rows = summary.highlightRows;
-  final notices = List<String>.from(GameLogic.lastMetaPayoffNotices);
+  final notices = List<String>.from(GameLogic.lastMetaPayoffNotices)
+      .take(2)
+      .toList(growable: false);
 
   VoidCallback? readyAction;
-  var readyLabel = '';
+  var readyLabel = contract.readyActionLabel ?? '';
   switch (chase.kind) {
     case HubChaseKind.claimDailyVault:
-      readyLabel = 'CLAIM VAULT';
       readyAction = () {
         director.claimWeekly();
         director.dismissOfflineSummary();
         Navigator.pop(context);
       };
     case HubChaseKind.claimMissions:
-      readyLabel = 'CLAIM JOBS';
       readyAction = () {
         for (final m in director.state.missions) {
           if (m.isComplete) director.claimMission(m.id);
@@ -787,25 +790,34 @@ Future<void> showOfflineProgressDialog(
         Navigator.pop(context);
       };
     case HubChaseKind.ascend:
-      readyLabel = 'ASCEND';
       readyAction = () {
         director.dismissOfflineSummary();
         Navigator.pop(context);
         confirmAscend(context, director);
       };
     case HubChaseKind.dailyRun:
-      readyLabel = 'DAILY';
       readyAction = () {
         director.dismissOfflineSummary();
         Navigator.pop(context);
         confirmDailyRun(context, director);
       };
     case HubChaseKind.gauntletMilestone:
-      readyLabel = 'GAUNTLET';
       readyAction = () {
         director.dismissOfflineSummary();
         Navigator.pop(context);
         confirmGauntletRun(context, director);
+      };
+    case HubChaseKind.meetHero:
+      readyLabel = 'PARTY';
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+        // Hub passes onOpenParty (acks + opens PARTY). Fallback: ack only.
+        if (onOpenParty != null) {
+          onOpenParty();
+        } else {
+          director.ackPendingHeroReveals();
+        }
       };
     default:
       break;
@@ -835,13 +847,6 @@ Future<void> showOfflineProgressDialog(
             summary.welcomeLead,
             style: GameTheme.body(size: 14, color: GameTheme.torchHot),
           ),
-          const SizedBox(height: 6),
-          Text(
-            summary.state.inDungeon
-                ? 'AFK runs spatial combat with assist (faster, softer packs).'
-                : 'Hub AFK earns sanctuary idle gold only.',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-          ),
           if (rows.isNotEmpty) ...[
             const SizedBox(height: 10),
             for (final row in rows)
@@ -851,16 +856,14 @@ Future<void> showOfflineProgressDialog(
             const SizedBox(height: 8),
             Text(
               notices.join(' · '),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: GameTheme.body(size: 13, color: GameTheme.mossLit),
             ),
           ],
           const SizedBox(height: 10),
           Text(
-            chase.urgency == HubChaseUrgency.ready
-                ? 'Up next — ready: ${chase.title}'
-                : chase.urgency == HubChaseUrgency.almost
-                    ? 'Up next — almost: ${chase.title}'
-                    : 'Up next: ${chase.title}',
+            contract.upNextLine,
             style: GameTheme.body(
               size: 14,
               color: chase.urgency == HubChaseUrgency.normal

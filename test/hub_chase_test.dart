@@ -157,6 +157,22 @@ void main() {
     expect(chase.detail, contains('AL2'));
   });
 
+  test('zone ALMOST beats daily run', () {
+    // Goblin unlock 5k — within 12% goldNeed counts as ALMOST.
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      lifetimeGoldEarned: 4500,
+      highestDungeonCleared: -1,
+      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+            dailyVaultClaimed: true,
+          ),
+    );
+    expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.unlockZone);
+    expect(chase.urgency, HubChaseUrgency.almost);
+    expect(chase.title, contains('Almost'));
+  });
+
   test('KEY +1 vault progress marks ALMOST', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
@@ -172,6 +188,26 @@ void main() {
     expect(chase.kind, HubChaseKind.dailyVaultProgress);
     expect(chase.urgency, HubChaseUrgency.almost);
     expect(chase.title, contains('Almost'));
+    // Fresh AL0 — soft vault copy, no KEY jargon yet.
+    expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
+  });
+
+  test('mid-layer vault almost uses KEY jargon', () {
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 2,
+      highestDungeonCleared: 3,
+      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+            dailyVaultClears: 0,
+            dailyVaultClaimed: false,
+            dailyBestTimedKey: 1,
+          ),
+      lastDailyDate: MetaSystems.dailyDateKey(now),
+      dailyClaimed: true,
+    );
+    expect(GameLogic.showKeystoneJargon(state), isTrue);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.dailyVaultProgress);
+    expect(chase.title.toUpperCase(), contains('KEY'));
   });
 
   test('pending hero reveal is READY meet chase', () {
