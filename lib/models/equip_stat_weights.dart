@@ -8,7 +8,8 @@ import 'hero_spec.dart';
 /// - Rogue ATK ≈ (Str+Agi)/4 → Agi also feeds crit/DEF
 /// - Caster/healer ATK = Int + SP/2 → Int full, SP half
 /// - Spirit / Mp5 → mana regen only (not throughput)
-/// - Sta → HP; Armor / Agi → DEF
+/// - Sta → HP; gear Armor is sheet DEF; Agi is a small dodge crumb
+///   ([CombatRatings.agilityToDefense]) so plate tanks stay ahead of leather DPS.
 class EquipStatWeights {
   const EquipStatWeights({
     required this.str,
@@ -164,7 +165,7 @@ class EquipStatWeights {
   /// Survives packs: Sta / Armor first, then Str for threat / chip.
   static const _tank = EquipStatWeights(
     str: 6.5,
-    agi: 5.0,
+    agi: 1.5,
     sta: 10.0,
     intel: 0.5,
     spi: 1.0,
@@ -180,7 +181,7 @@ class EquipStatWeights {
   /// Blood leans self-heal threat — a touch more Str than generic tank.
   static const _bloodTank = EquipStatWeights(
     str: 7.5,
-    agi: 4.5,
+    agi: 1.5,
     sta: 10.0,
     intel: 0.5,
     spi: 1.0,

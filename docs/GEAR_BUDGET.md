@@ -36,6 +36,7 @@ Rules:
 Combat conversion (must stay aligned with equip weights):
 
 - Melee ATK from Str/Agi via `CombatRatings` (kAp = 4).
+- Sheet DEF is gear Armor + tank guard + a small Agi crumb (`CombatRatings.agilityToDefense`). Plate tanks stay ahead of leather DPS.
 - Caster/healer throughput: **Intellect full**, **Spell Power ≈ half** into the ATK pool.
 
 ## Equip score (`itemBudgetScore`)

@@ -630,9 +630,10 @@ class GameState {
   }
 
   /// Tank guard DEF — only true tanks (not Arms/Fury/Ret DPS).
+  /// Scales with level so plate stays ahead of leather DPS on the ARMOR sheet.
   int tankGuardBonusFor(PartyHero hero) {
     if (!hero.spec.isTank || !hero.isAlive) return 0;
-    return 2 + (hero.level ~/ 5);
+    return 1 + hero.level;
   }
 
   /// Healer mend amount per tick (scales lightly with healer level).

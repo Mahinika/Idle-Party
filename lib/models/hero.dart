@@ -122,7 +122,8 @@ class PartyHero {
 
   int get defense {
     final g = grownPrimaries;
-    return CombatRatings.roleBaseArmor(gearAffinity) + 2 * g.agi;
+    return CombatRatings.roleBaseArmor(gearAffinity) +
+        CombatRatings.agilityToDefense(g.agi);
   }
 
   int get maxHp {

@@ -36,6 +36,7 @@ void main() {
         '${'dATK%'.padLeft(6)} ${'dHP%'.padLeft(6)}',
       );
       final atks = <int>[];
+      final defs = <int>[];
       final dAtks = <double>[];
       final meta = _blankMeta();
       for (final role in HeroRole.values) {
@@ -56,6 +57,7 @@ void main() {
         final dAtk = nAtk <= 0 ? 0.0 : (gAtk - nAtk) * 100.0 / nAtk;
         final dHp = nHp <= 0 ? 0.0 : (gHp - nHp) * 100.0 / nHp;
         atks.add(gAtk);
+        defs.add(gDef);
         dAtks.add(dAtk);
         log(
           '${role.name.padRight(8)} ${gAtk.toString().padLeft(5)} '
@@ -82,6 +84,11 @@ void main() {
         final dpsSpread =
             ((mage - rogue).abs() * 100.0) / max(1, (mage + rogue) ~/ 2);
         expect(dpsSpread, lessThan(40), reason: 'mage vs rogue ATK spread');
+        expect(
+          defs[HeroRole.warrior.index],
+          greaterThan(defs[HeroRole.rogue.index]),
+          reason: 'plate tank ARMOR must beat leather rogue',
+        );
         for (var i = 0; i < HeroRole.values.length; i++) {
           final role = HeroRole.values[i];
           if (role == HeroRole.warrior) {
