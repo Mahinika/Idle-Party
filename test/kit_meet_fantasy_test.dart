@@ -45,4 +45,33 @@ void main() {
     expect(teaser!, contains('AL'));
     expect(teaser, contains('Watch'));
   });
+
+  test('AL ladder kits unlock at that AL with no zone clears', () {
+    for (final entry in AscendRoadmap.kitUnlocksByAl.entries) {
+      final al = entry.key;
+      var state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 13));
+      state = state.copyWith(
+        ascensionLevel: al,
+        highestDungeonCleared: -1,
+        essence: 0,
+        rogueUnlocked: al >= 1,
+      );
+      for (final kit in entry.value) {
+        expect(
+          GameLogic.canUnlockSpec(state, kit.$1),
+          isTrue,
+          reason: '${kit.$1.name} should unlock at AL$al',
+        );
+      }
+    }
+  });
+
+  test('Holy Paladin is on the AL1 Meet ladder', () {
+    expect(AscendRoadmap.ascendLevelForKit(HeroSpecId.holyPaladin), 1);
+    expect(AscendRoadmap.unlockAtAl(1), contains('Holy Paladin'));
+    expect(
+      HeroSpecs.def(HeroSpecId.holyPaladin).unlockHint.toLowerCase(),
+      contains('al 1'),
+    );
+  });
 }

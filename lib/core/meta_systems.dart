@@ -36,6 +36,8 @@ abstract final class MetaSystems {
         'First tips: TODAY + ENTER, then FARM/PUSH and God Hand in the dungeon. Menu tips wait until you have cleared a floor.',
         'Cold start: a short skippable story intro (the keep, your will) plays before CONTINUE / NEW GAME.',
         'Offline welcome can lead with party levels when the roster grew while you were away.',
+        'Kits: Fury Recklessness is an all-in damage window (not a panic wall); Bloodthirst returns rage. Frost DK Hungering Cold freezes the pack — Frost Strike shatters rooted foes. Fire HUD shows STREAK when Pyroblast is ready.',
+        'Ascend AL1 teasers include Holy Paladin (AL1 or 25e shop) — same as the live unlock.',
         'World Path still runs Sandy Caverns through Rimeglass Rift (Tidehold, Ashen Vault, Grove, Stormwake on the road).',
       ],
     ),

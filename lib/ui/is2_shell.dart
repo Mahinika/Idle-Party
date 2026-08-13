@@ -1769,6 +1769,7 @@ class _PartyRow extends StatelessWidget {
       AbilityId.powerInfusion => s.powerInfusionTimer > 0,
       AbilityId.innerFire => s.innerFireActive,
       AbilityId.combustion => s.combustionTimer > 0,
+      AbilityId.furyRecklessness => s.combustionTimer > 0,
       AbilityId.vendetta ||
       AbilityId.coldBlood ||
       AbilityId.arcanePower =>
@@ -1921,6 +1922,16 @@ class _PartyRow extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text(
                               'CP${spatial!.comboPoints}',
+                              style: GameTheme.pixel(
+                                size: 6,
+                                color: GameTheme.torchHot,
+                              ),
+                            ),
+                          ],
+                          if (spatial!.hotStreakReady) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              'STREAK',
                               style: GameTheme.pixel(
                                 size: 6,
                                 color: GameTheme.torchHot,

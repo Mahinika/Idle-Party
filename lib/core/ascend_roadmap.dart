@@ -15,6 +15,7 @@ abstract final class AscendRoadmap {
     1: [
       (HeroSpecId.combat, 'Combat Rogue'),
       (HeroSpecId.arms, 'Arms Warrior'),
+      (HeroSpecId.holyPaladin, 'Holy Paladin'),
     ],
     2: [
       (HeroSpecId.beastMastery, 'Beast Mastery'),

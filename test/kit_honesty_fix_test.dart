@@ -442,6 +442,90 @@ void main() {
     expect(diseased, isTrue);
     expect(target.bleedAbilityId, AbilityId.bloodBoil.name);
   });
+
+  test('Hungering Cold roots a pack', () {
+    final state = _soloSpecParty(HeroSpecId.frostDk, level: 15);
+    var world = SpatialCombat.build(state);
+    expect(world.enemies.length, greaterThanOrEqualTo(2));
+    final dk = world.heroes.firstWhere((h) => !h.isPet);
+    final pack = world.enemies.where((e) => e.hp > 0 && !e.dormant).take(3);
+    final cx = pack.map((e) => e.x).reduce((a, b) => a + b) / pack.length;
+    final cy = pack.map((e) => e.y).reduce((a, b) => a + b) / pack.length;
+    dk
+      ..rage = 100
+      ..x = cx
+      ..y = cy;
+    for (final e in pack) {
+      e
+        ..x = cx + 0.4
+        ..y = cy
+        ..dormant = false
+        ..hp = math.max(e.hp, 300);
+    }
+    _padAbilityCds(dk, except: AbilityId.hungeringCold);
+
+    var rooted = 0;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      rooted = world.enemies.where((e) => e.rootTimer > 0).length;
+      if (rooted >= 2) break;
+      dk.rage = 100;
+    }
+    expect(rooted, greaterThanOrEqualTo(2));
+  });
+
+  test('Fury Recklessness is an all-in damage window at full HP', () {
+    final state = _soloSpecParty(HeroSpecId.fury, level: 15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final fury = world.heroes.firstWhere((h) => !h.isPet);
+    fury
+      ..rage = 100
+      ..hp = fury.maxHp
+      ..x = target.x - 1.2
+      ..y = target.y;
+    _padAbilityCds(fury, except: AbilityId.furyRecklessness);
+
+    var amped = false;
+    for (var i = 0; i < 60; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (fury.combustionTimer > 0) {
+        amped = true;
+        break;
+      }
+      fury
+        ..rage = 100
+        ..hp = fury.maxHp;
+      if (target.hp < 10) target.hp = (target.maxHp * 0.35).round();
+    }
+    expect(amped, isTrue);
+    expect(fury.shieldWallTimer, 0);
+  });
+
+  test('Bloodthirst returns rage on hit', () {
+    final state = _soloSpecParty(HeroSpecId.fury, level: 15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final fury = world.heroes.firstWhere((h) => !h.isPet);
+    fury
+      ..rage = 50
+      ..fireCooldown = 99
+      ..x = target.x - 1.2
+      ..y = target.y;
+    _padAbilityCds(fury, except: AbilityId.bloodthirst);
+
+    var fired = false;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((fury.abilityCd[AbilityId.bloodthirst.name] ?? 0) > 0) {
+        fired = true;
+        break;
+      }
+      fury.fireCooldown = 99;
+    }
+    expect(fired, isTrue);
+    expect(fury.rage, greaterThan(30));
+  });
 }
 
 GameState _soloSpecParty(HeroSpecId specId, {required int level}) {

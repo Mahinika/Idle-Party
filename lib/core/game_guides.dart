@@ -65,7 +65,7 @@ abstract final class GameGuides {
           '• PARTY → ROSTER to set active heroes from your roster (4 slots, '
           '5th unlockable with essence at AL 2+).\n'
           '• New Game: pick 3 from the starter specs (Protection, Disc, Fire).\n'
-          '• Combat Rogue unlocks after first Ascend; more kits via clears.\n'
+          '• Combat Rogue and Holy Paladin unlock after first Ascend; more kits via clears.\n'
           '• More specs unlock via Ascend level and dungeon clears.\n'
           '• Tap a hero in the HUD for abilities; chips show cooldowns.\n'
           '• Resources: Rage / Mana / Energy / Runic — kits spend these.\n'
@@ -126,7 +126,7 @@ abstract final class GameGuides {
       body:
           'Ascend grows your roster — TODAY and Ascend teasers name the next kits '
           'with a short fantasy line plus a Watch… combat hook.\n\n'
-          '• AL1: Combat Rogue, Arms\n'
+          '• AL1: Combat Rogue, Arms, Holy Paladin\n'
           '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot (essence)\n'
           '• AL3: Prot Paladin, Assassination, Resto Shaman, Frost Mage, Resto Druid\n'
           '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'

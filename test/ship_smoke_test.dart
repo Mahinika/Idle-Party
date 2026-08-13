@@ -95,6 +95,7 @@ void main() {
     expect(vault.body.toUpperCase(), contains('READY'));
 
     expect(AscendRoadmap.unlockAtAl(1), contains('Combat Rogue'));
+    expect(AscendRoadmap.unlockAtAl(1), contains('Holy Paladin'));
     expect(AscendRoadmap.unlockAtAl(2), contains('Beast Mastery'));
     expect(AscendRoadmap.unlockAtAl(2), contains('5th party slot'));
     expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
@@ -105,6 +106,7 @@ void main() {
     final classes = GameGuides.topics.firstWhere((t) => t.id == 'classes');
     expect(classes.body, contains('AL2'));
     expect(classes.body, contains('Beast Mastery'));
+    expect(classes.body, contains('Holy Paladin'));
   });
 
   test('fresh TODAY chase is grow-the-party, not Daily', () {

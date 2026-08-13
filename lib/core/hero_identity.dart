@@ -104,7 +104,7 @@ abstract final class HeroIdentity {
   static String meetHook(HeroSpecId specId) {
     return switch (specId) {
       HeroSpecId.arms => 'Watch Bladestorm / cleave waves.',
-      HeroSpecId.fury => 'Watch dual-wield rage dumps.',
+      HeroSpecId.fury => 'Watch Bloodthirst rage and Reck windows.',
       HeroSpecId.protection => 'Watch Shield Slam + block fantasy.',
       HeroSpecId.holyPaladin => 'Watch Holy Light / Beacon peels.',
       HeroSpecId.protPaladin => 'Watch Consecration under packs.',
@@ -119,7 +119,7 @@ abstract final class HeroIdentity {
       HeroSpecId.holyPriest => 'Watch Circle of Healing splashes.',
       HeroSpecId.shadow => 'Watch DoTs blanket the pack.',
       HeroSpecId.blood => 'Watch self-heals while tanking.',
-      HeroSpecId.frostDk => 'Watch Howling Blast / frost pressure.',
+      HeroSpecId.frostDk => 'Watch Hungering Cold freeze, then shatter.',
       HeroSpecId.unholy => 'Watch diseases and ghoul assists.',
       HeroSpecId.elemental => 'Watch Lightning / Lava Burst bursts.',
       HeroSpecId.enhancement => 'Watch Stormstrike melee swings.',

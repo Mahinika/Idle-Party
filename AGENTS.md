@@ -139,7 +139,7 @@ Ascend / progress. Urgency **READY** / **ALMOST** (zone/Will/Gauntlet/Ascend-nea
 beat Daily grind; also KEY +1 vault, etc.). New unlocks queue
 `metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast + chase
 detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next AL
-unlocks — kit ladder AL1–6 (e.g. Combat Rogue, BM/Holy/Arcane + 5th slot, DKs,
+unlocks — kit ladder AL1–6 (e.g. Combat Rogue / Arms / Holy Paladin, BM/Holy/Arcane + 5th slot, DKs,
 Aff/Demo) plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock
 sprite).
 

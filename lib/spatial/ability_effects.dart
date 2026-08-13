@@ -666,6 +666,9 @@ abstract final class AbilityEffectRunner {
         }
         _spendAndCd(world, hero, def);
         _castDamage(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+        if (def.id == AbilityId.bloodthirst) {
+          SpatialCombat._gainRage(hero, 10);
+        }
         return true;
       case AbilityEffectKind.aoe:
         _spendAndCd(world, hero, def);
@@ -751,7 +754,8 @@ abstract final class AbilityEffectRunner {
           return true;
         }
         if (def.id == AbilityId.frostNovaMage ||
-            def.id == AbilityId.psychicScream) {
+            def.id == AbilityId.psychicScream ||
+            def.id == AbilityId.hungeringCold) {
           final nearby = [
             for (final e in world.enemies)
               if (e.hp > 0 &&
@@ -962,6 +966,10 @@ abstract final class AbilityEffectRunner {
     if (def.id == AbilityId.iceLance && enemy.rootTimer > 0) {
       raw = math.max(2, (raw * 1.75).round());
     }
+    // Frost DK finisher pops rooted packs (Hungering Cold → shatter).
+    if (def.id == AbilityId.frostStrike && enemy.rootTimer > 0) {
+      raw = math.max(2, (raw * 1.4).round());
+    }
     // Assassination: build combo on Mut/Garrote; Envenom spends.
     if (hero.heroSpecId == HeroSpecId.assassination) {
       if (def.id == AbilityId.mutilate) {
@@ -1108,7 +1116,6 @@ abstract final class AbilityEffectRunner {
         def.id == AbilityId.arcaneExplosion ||
         def.id == AbilityId.frostNova ||
         def.id == AbilityId.frostNovaMage ||
-        def.id == AbilityId.hungeringCold ||
         def.id == AbilityId.bladeFlurry ||
         def.id == AbilityId.swipe ||
         def.id == AbilityId.handOfGuldan ||
@@ -1987,11 +1994,13 @@ abstract final class AbilityEffectRunner {
     if (def.id == AbilityId.vendetta ||
         def.id == AbilityId.coldBlood ||
         def.id == AbilityId.arcanePower ||
-        def.id == AbilityId.combustion) {
+        def.id == AbilityId.combustion ||
+        def.id == AbilityId.furyRecklessness) {
       final dur = switch (def.id) {
         AbilityId.vendetta => 8.0,
         AbilityId.coldBlood => 6.0,
         AbilityId.arcanePower => 7.0,
+        AbilityId.furyRecklessness => 8.0,
         _ => 5.0,
       };
       hero.combustionTimer = math.max(hero.combustionTimer, dur);
