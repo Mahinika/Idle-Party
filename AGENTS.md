@@ -54,6 +54,7 @@ flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
 
 CI uses `flutter analyze lib test --no-fatal-infos` then `flutter test` (includes balance gate).
+Runs on push to `main` / `master` / `cursor/**` / `release/**`, and on pull requests.
 
 ### Agent tooling (balance / honesty / QA)
 
