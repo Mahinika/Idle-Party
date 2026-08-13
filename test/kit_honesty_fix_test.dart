@@ -603,6 +603,196 @@ void main() {
     expect(blocked, isTrue);
     expect(pala.shieldWallTimer, 0);
   });
+
+  test('Beacon peels a Holy Light onto the marked tank', () {
+    final def = ClassKits.defFor(AbilityId.beaconOfLight)!;
+    expect(def.effect, AbilityEffectKind.selfBuff);
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 10));
+    state = GameLogic.enterDungeon(state, dungeonId: 'sandy');
+    var pala = state.heroes.first.copyWith(specId: HeroSpecId.holyPaladin);
+    var tank = state.heroes[1].copyWith(specId: HeroSpecId.protection);
+    while (pala.level < 15) {
+      pala = pala.levelUp();
+    }
+    while (tank.level < 15) {
+      tank = tank.levelUp();
+    }
+    state = state.copyWith(heroes: [pala, tank]);
+    var world = SpatialCombat.build(state);
+    final healer = world.heroes.firstWhere(
+      (h) => h.heroSpecId == HeroSpecId.holyPaladin,
+    );
+    final marked = world.heroes.firstWhere(
+      (h) => h.heroSpecId == HeroSpecId.protection,
+    );
+    final foe = _soloEnemy(world);
+    healer
+      ..rage = 100
+      ..hp = (healer.maxHp * 0.4).round()
+      ..x = foe.x - 2.2
+      ..y = foe.y;
+    marked
+      ..hp = (marked.maxHp * 0.55).round()
+      ..x = healer.x + 0.6
+      ..y = healer.y;
+    _padAbilityCds(healer, except: AbilityId.beaconOfLight);
+
+    var markedBeacon = false;
+    for (var i = 0; i < 80; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (healer.beaconTimer > 0 && healer.beaconTargetId == marked.id) {
+        markedBeacon = true;
+        break;
+      }
+      healer.rage = 100;
+      healer.hp = (healer.maxHp * 0.4).round();
+      marked.hp = (marked.maxHp * 0.55).round();
+    }
+    expect(markedBeacon, isTrue);
+
+    final tankHp = marked.hp;
+    healer.rage = 100;
+    _padAbilityCds(healer, except: AbilityId.holyLight);
+    healer.hp = (healer.maxHp * 0.35).round();
+    var peeled = false;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (marked.hp > tankHp) {
+        peeled = true;
+        break;
+      }
+      healer.rage = 100;
+      healer.hp = (healer.maxHp * 0.35).round();
+    }
+    expect(peeled, isTrue);
+  });
+
+  test('Holy Shock smites when the party is topped', () {
+    final state = _soloSpecParty(HeroSpecId.holyPaladin, level: 15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final pala = world.heroes.firstWhere((h) => !h.isPet);
+    pala
+      ..rage = 100
+      ..hp = pala.maxHp
+      ..x = target.x - 2.4
+      ..y = target.y;
+    _padAbilityCds(pala, except: AbilityId.holyShock);
+    final hpBefore = target.hp;
+    var smote = false;
+    for (var i = 0; i < 80; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (target.hp < hpBefore) {
+        smote = true;
+        break;
+      }
+      pala.rage = 100;
+      pala.hp = pala.maxHp;
+    }
+    expect(smote, isTrue);
+  });
+
+  test('Divine Favor is a heal window, not haste', () {
+    final def = ClassKits.defFor(AbilityId.divineFavor)!;
+    expect(def.effect, AbilityEffectKind.selfBuff);
+    final state = _soloSpecParty(HeroSpecId.holyPaladin, level: 15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final pala = world.heroes.firstWhere((h) => !h.isPet);
+    pala
+      ..rage = 100
+      ..hp = (pala.maxHp * 0.9).round()
+      ..x = target.x - 2.2
+      ..y = target.y;
+    target.hp = (target.maxHp * 0.3).round();
+    _padAbilityCds(pala, except: AbilityId.divineFavor);
+
+    var favored = false;
+    for (var i = 0; i < 80; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((pala.buffTimers['favor'] ?? 0) > 0) {
+        favored = true;
+        break;
+      }
+      pala.rage = 100;
+      pala.hp = (pala.maxHp * 0.9).round();
+    }
+    expect(favored, isTrue);
+    expect(pala.powerInfusionTimer, 0);
+    world = SpatialCombat.step(world, state, dt: 0.1).world;
+    expect(pala.kitHealMul, greaterThan(1.32));
+  });
+
+  test('Marksmanship Volley hits a pack, not a single-target root', () {
+    final def = ClassKits.defFor(AbilityId.volley)!;
+    expect(def.effect, AbilityEffectKind.aoe);
+    expect(ClassKits.defFor(AbilityId.scatterShot), isNull);
+    final state = _soloSpecParty(HeroSpecId.marksmanship, level: 15);
+    var world = SpatialCombat.build(state);
+    SpatialActor? a;
+    SpatialActor? b;
+    for (final e in world.enemies) {
+      if (e.hp <= 0 || e.dormant) continue;
+      a ??= e;
+      if (identical(e, a)) continue;
+      e
+        ..dormant = false
+        ..hp = math.max(e.hp, 800)
+        ..x = a.x + 0.8
+        ..y = a.y;
+      b = e;
+      break;
+    }
+    expect(b, isNotNull);
+    for (final e in world.enemies) {
+      if (!identical(e, a) && !identical(e, b)) {
+        e
+          ..hp = 0
+          ..dormant = true;
+      }
+    }
+    a!.dormant = false;
+    b!.dormant = false;
+    final hunter = world.heroes.firstWhere((h) => !h.isPet);
+    hunter
+      ..rage = 100
+      ..fireCooldown = 99
+      ..moveSpeed = 0;
+    a
+      ..moveSpeed = 0
+      ..dormant = false
+      ..hp = math.max(a.hp, 800)
+      ..x = hunter.x + 1.1
+      ..y = hunter.y;
+    b
+      ..moveSpeed = 0
+      ..dormant = false
+      ..hp = math.max(b.hp, 800)
+      ..x = hunter.x + 1.7
+      ..y = hunter.y;
+    _padAbilityCds(hunter, except: AbilityId.volley);
+    AbilityEffectRunner.tick(
+      world,
+      hunter,
+      state,
+      dt: 0.1,
+      rng: math.Random(1),
+      reducedVfx: false,
+      hasShield: false,
+    );
+    expect(
+      hunter.abilityCd[AbilityId.volley.name] ?? 0,
+      greaterThan(0),
+      reason: 'Volley should start its cooldown',
+    );
+    expect(
+      world.projectiles.length,
+      greaterThanOrEqualTo(2),
+      reason: 'Volley should rain arrows on the pack',
+    );
+    expect(a.rootTimer, 0);
+    expect(b.rootTimer, 0);
+  });
 }
 
 GameState _soloSpecParty(HeroSpecId specId, {required int level}) {

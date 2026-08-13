@@ -170,6 +170,9 @@ abstract final class AbilityEffectRunner {
       if (d.effect != AbilityEffectKind.passive) continue;
       _applyPassive(hero, d, def);
     }
+    if ((hero.buffTimers['favor'] ?? 0) > 0) {
+      hero.kitHealMul *= 1.35;
+    }
 
     final castable = unlocked
         .where((d) => d.effect != AbilityEffectKind.passive)
@@ -193,6 +196,11 @@ abstract final class AbilityEffectRunner {
     }
 
     final nearby = SpatialCombat._countNearbyEnemies(hero, world);
+    final aroundFocus = focus == null
+        ? 0
+        : SpatialCombat._countNearbyEnemies(focus, world);
+    // Ranged kits kite outside self-radius; packs around the focus still count.
+    final pack = math.max(nearby, aroundFocus);
     final focusHpFrac = focus == null || focus.maxHp <= 0
         ? 1.0
         : focus.hp / focus.maxHp;
@@ -202,7 +210,7 @@ abstract final class AbilityEffectRunner {
     bool contextOk(ClassAbilityDef d) {
       // AoE only when a pack is present (still allow on lone boss).
       if (d.effect == AbilityEffectKind.aoe) {
-        if (nearby < 2 && !(nearby == 1 && focusElite)) return false;
+        if (pack < 2 && !(pack == 1 && focusElite)) return false;
       }
       // Execute-style finishers.
       if (_isExecuteAbility(d) && focusHpFrac > 0.25) return false;
@@ -253,6 +261,10 @@ abstract final class AbilityEffectRunner {
       // Sweeping Strikes wants a pack (or elite) to cleave into.
       if (d.id == AbilityId.sweepingStrikes) {
         if (nearby < 2 && !(nearby == 1 && focusElite)) return false;
+      }
+      // Beacon is a maintain mark — don't recast while it still has time.
+      if (d.id == AbilityId.beaconOfLight && hero.beaconTimer > 10) {
+        return false;
       }
       return true;
     }
@@ -359,8 +371,8 @@ abstract final class AbilityEffectRunner {
         // Prefer AoE in packs, ST otherwise.
         final aAoe = a.effect == AbilityEffectKind.aoe;
         final bAoe = b.effect == AbilityEffectKind.aoe;
-        if (nearby >= 2 && aAoe != bAoe) return aAoe ? -1 : 1;
-        if (nearby < 2 && aAoe != bAoe) return aAoe ? 1 : -1;
+        if (pack >= 2 && aAoe != bAoe) return aAoe ? -1 : 1;
+        if (pack < 2 && aAoe != bAoe) return aAoe ? 1 : -1;
         final byCost = b.resourceCost.compareTo(a.resourceCost);
         if (byCost != 0) return byCost;
         final byCoeff = b.coeff.compareTo(a.coeff);
@@ -686,6 +698,20 @@ abstract final class AbilityEffectRunner {
           _castHeal(world, hero, hero, def, reducedVfx: reducedVfx);
           return true;
         }
+        // Holy Shock: heal if someone is hurt, otherwise smite the focus.
+        if (def.id == AbilityId.holyShock) {
+          if (_partyNeedsHeal(world)) {
+            final ally = _lowestAlly(world, hero);
+            if (ally == null) return false;
+            _spendAndCd(world, hero, def);
+            _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
+            return true;
+          }
+          if (focus == null || focus.hp <= 0) return false;
+          _spendAndCd(world, hero, def);
+          _castDamage(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+          return true;
+        }
         if (_isPartyHeal(def)) {
           if (!_partyNeedsHeal(world)) return false;
           _spendAndCd(world, hero, def);
@@ -721,6 +747,24 @@ abstract final class AbilityEffectRunner {
         _castAbsorb(world, hero, ally, def, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.selfBuff:
+        if (def.id == AbilityId.beaconOfLight) {
+          final mark = _beaconMarkTarget(world, hero);
+          hero.beaconTargetId = mark.id;
+          hero.beaconTimer = 18;
+          _spendAndCd(world, hero, def);
+          _announce(world, hero, def.shortLabel, 0xFFFFF0A8, reducedVfx);
+          if (!reducedVfx) {
+            SpatialCombat._spawnRing(
+              world,
+              x: mark.x,
+              y: mark.y,
+              argb: 0xFFFFF0A8,
+              radius: 0.9,
+              life: 0.4,
+            );
+          }
+          return true;
+        }
         _spendAndCd(world, hero, def);
         _selfBuff(hero, def);
         _announce(world, hero, def.shortLabel, 0xFF90E0FF, reducedVfx);
@@ -1677,6 +1721,25 @@ abstract final class AbilityEffectRunner {
     );
   }
 
+  static SpatialActor _beaconMarkTarget(SpatialWorld world, SpatialActor pala) {
+    SpatialActor? tank;
+    SpatialActor? stoutest;
+    var bestMax = -1;
+    for (final h in world.heroes) {
+      if (!h.isAlive || h.isPet) continue;
+      if (_actorIsTank(h)) {
+        if (tank == null || h.effectiveMaxHp > tank.effectiveMaxHp) {
+          tank = h;
+        }
+      }
+      if (h.effectiveMaxHp > bestMax) {
+        bestMax = h.effectiveMaxHp;
+        stoutest = h;
+      }
+    }
+    return tank ?? stoutest ?? pala;
+  }
+
   static SpatialActor? _lowestAlly(SpatialWorld world, SpatialActor self) {
     SpatialActor? best;
     var bestFrac = 2.0;
@@ -1751,7 +1814,7 @@ abstract final class AbilityEffectRunner {
     final maxTargets = living.length.clamp(1, 4);
     for (var i = 0; i < maxTargets; i++) {
       final ally = living[i];
-      _healLowest(world, caster, ally, bounce, def.shortLabel);
+      _healLowest(world, caster, ally, bounce, def.shortLabel, beaconPeel: false);
       bounce *= 0.72;
     }
     _announce(
@@ -1953,8 +2016,9 @@ abstract final class AbilityEffectRunner {
     SpatialActor caster,
     SpatialActor ally,
     double coeff,
-    String label,
-  ) {
+    String label, {
+    bool beaconPeel = true,
+  }) {
     final amount =
         math.max(4, (caster.attack * coeff * caster.kitHealMul).round());
     final before = ally.hp;
@@ -1969,6 +2033,35 @@ abstract final class AbilityEffectRunner {
         text: '+$gained',
         argb: SpatialCombat._floaterHeal,
         life: 0.55,
+      );
+    }
+    if (!beaconPeel ||
+        caster.beaconTimer <= 0 ||
+        caster.beaconTargetId == null ||
+        caster.beaconTargetId == ally.id) {
+      return;
+    }
+    SpatialActor? marked;
+    for (final h in world.heroes) {
+      if (h.id == caster.beaconTargetId && h.isAlive && !h.isPet) {
+        marked = h;
+        break;
+      }
+    }
+    if (marked == null) return;
+    final peel = math.max(2, (amount * 0.4).round());
+    final markedBefore = marked.hp;
+    marked.hp = math.min(marked.effectiveMaxHp, marked.hp + peel);
+    final peeled = marked.hp - markedBefore;
+    if (peeled > 0) {
+      caster.healingDone += peeled;
+      SpatialCombat._spawnFloater(
+        world,
+        x: marked.x,
+        y: marked.y - 0.55,
+        text: '+$peeled',
+        argb: 0xFFFFF0A8,
+        life: 0.5,
       );
     }
   }
@@ -2023,6 +2116,11 @@ abstract final class AbilityEffectRunner {
       hero.buffTimers['shield'] = 6.0;
       return;
     }
+    // Holy Paladin Divine Favor — heal amp, not a haste window.
+    if (def.id == AbilityId.divineFavor) {
+      hero.buffTimers['favor'] = 8.0;
+      return;
+    }
     // Prefer existing haste / shield timers when possible.
     final name = def.id.name.toLowerCase();
     if (name.contains('haste') ||
@@ -2041,7 +2139,6 @@ abstract final class AbilityEffectRunner {
         name.contains('backdraft') ||
         name.contains('presence') ||
         name.contains('mastery') ||
-        name.contains('favor') ||
         name.contains('spirit') ||
         name.contains('gargoyle') ||
         name.contains('charge') ||

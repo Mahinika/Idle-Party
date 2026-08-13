@@ -139,6 +139,7 @@ void main() {
       (AbilityId.bloodthirst, HeroSpecId.fury, SpellBoltStyle.weapon),
       (AbilityId.crusaderStrike, HeroSpecId.retribution, SpellBoltStyle.holy),
       (AbilityId.aimedShot, HeroSpecId.marksmanship, SpellBoltStyle.arrow),
+      (AbilityId.volley, HeroSpecId.marksmanship, SpellBoltStyle.arrow),
       (AbilityId.envenom, HeroSpecId.assassination, SpellBoltStyle.nature),
       (AbilityId.mindBlast, HeroSpecId.shadow, SpellBoltStyle.shadow),
       (AbilityId.heartStrike, HeroSpecId.blood, SpellBoltStyle.weapon),

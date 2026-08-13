@@ -225,6 +225,10 @@ class SpatialActor {
   /// Arcane Blast charges (0–4); Missiles dump spends them.
   int arcaneCharges = 0;
 
+  /// Holy Paladin Beacon: heals peel onto this ally while [beaconTimer] > 0.
+  String? beaconTargetId;
+  double beaconTimer = 0;
+
   // ?? Rogue (Combat) ??
   int comboPoints = 0;
   double sliceAndDiceTimer = 0;
@@ -987,6 +991,10 @@ abstract final class SpatialCombat {
       }
       if (a.combustionTimer > 0) {
         a.combustionTimer = math.max(0, a.combustionTimer - dt);
+      }
+      if (a.beaconTimer > 0) {
+        a.beaconTimer = math.max(0, a.beaconTimer - dt);
+        if (a.beaconTimer <= 0) a.beaconTargetId = null;
       }
       if (a.iceBlockTimer > 0) {
         a.iceBlockTimer = math.max(0, a.iceBlockTimer - dt);
@@ -3402,6 +3410,8 @@ abstract final class SpatialCombat {
     to.hotStreakStack = from.hotStreakStack;
     to.hotStreakReady = from.hotStreakReady;
     to.arcaneCharges = from.arcaneCharges;
+    to.beaconTargetId = from.beaconTargetId;
+    to.beaconTimer = from.beaconTimer;
     to.comboPoints = from.comboPoints;
     to.sliceAndDiceTimer = from.sliceAndDiceTimer;
     to.bladeFlurryTimer = from.bladeFlurryTimer;
@@ -3754,6 +3764,7 @@ abstract final class SpatialCombat {
       AbilityId.steadyShot ||
       AbilityId.chimeraShot ||
       AbilityId.scatterShot ||
+      AbilityId.volley ||
       AbilityId.killCommand ||
       AbilityId.serpentSting ||
       AbilityId.blackArrow ||

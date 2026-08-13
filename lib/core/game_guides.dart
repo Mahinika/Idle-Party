@@ -68,7 +68,7 @@ abstract final class GameGuides {
           '• Combat Rogue and Holy Paladin unlock after first Ascend; more kits via clears.\n'
           '• More specs unlock via Ascend level and dungeon clears.\n'
           '• Tap a hero in the HUD for abilities; chips show cooldowns '
-          '(STREAK, SWEEP / FLURRY when those windows are up).\n'
+          '(STREAK, SWEEP / FLURRY, BEACON when those windows are up).\n'
           '• Resources: Rage / Mana / Energy / Runic — kits spend these.\n'
           '• Roster levels persist on Ascend; run gear still resets.\n'
           '• Flask heals the party when you have a potion.',

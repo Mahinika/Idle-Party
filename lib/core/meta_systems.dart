@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.1';
+  static const String currentVersion = '1.12.2';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.2',
+      bullets: <String>[
+        'Holy Paladin: Beacon marks an ally so your heals peel onto them. Holy Shock heals when someone is hurt, or smites when the party is topped. Divine Favor is a heal window — not haste.',
+        'Marksmanship: Volley rains arrows on the pack (not a Scatter root). Aimed Shot still punches the focus.',
+        'World Path still runs Sandy Caverns through Brassvault Deep (Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.1',
         bullets: <String>[
