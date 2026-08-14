@@ -18,7 +18,7 @@ void main() {
     expect(StoryLore.introSubline, contains('will'));
     expect(StoryLore.introBeats, hasLength(3));
     expect(StoryLore.introBeats.first.title, 'IDLE PARTY');
-    expect(StoryLore.introBeats[1].body.toLowerCase(), contains('fourteen'));
+    expect(StoryLore.introBeats[1].body.toLowerCase(), contains('fifteen'));
     final body = StoryLore.ascendConfirmBody(
       rewardEssence: 7,
       nextAl: 1,

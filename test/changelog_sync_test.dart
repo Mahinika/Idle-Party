@@ -79,5 +79,12 @@ void main() {
         reason: 'brass dungeon shipped — mention Brassvault/Brass in What’s New',
       );
     }
+    if (ids.contains('veil')) {
+      expect(
+        bullets.contains('veil') || bullets.contains('mothveil'),
+        isTrue,
+        reason: 'veil dungeon shipped — mention Mothveil/Veil in What’s New',
+      );
+    }
   });
 }

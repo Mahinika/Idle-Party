@@ -19,10 +19,20 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.2';
+  static const String currentVersion = '1.12.3';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.3',
+      bullets: <String>[
+        'World Path: Mothveil Hollow — new end zone after Brassvault (The Pale Monarch).',
+        'Moth-silk identity: lilac dust wash, veil mites, Pale Monarch (not a Brassvault twin).',
+        'World Path map extended with a painted moth-dust strip + 15th ring under the vault.',
+        'Mothveil leans silk chokes; Brassvault keeps cog treasure alcoves.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.2',
       bullets: <String>[
@@ -420,6 +430,7 @@ abstract final class MetaSystems {
     'clear_rime': (s) => s.highestDungeonCleared >= 11,
     'clear_fen': (s) => s.highestDungeonCleared >= 12,
     'clear_brass': (s) => s.highestDungeonCleared >= 13,
+    'clear_veil': (s) => s.highestDungeonCleared >= 14,
     'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
     'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
     'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,

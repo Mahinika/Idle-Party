@@ -129,6 +129,8 @@ abstract final class KenneyAssets {
   static String get enemyFenMite => CustomAssets.enemyFenMite;
   static String get enemyBrassBoss => CustomAssets.enemyBossBrass;
   static String get enemyBrassMite => CustomAssets.enemyBrassMite;
+  static String get enemyVeilBoss => CustomAssets.enemyBossVeil;
+  static String get enemyVeilMite => CustomAssets.enemyVeilMite;
 
   // —— Gear / consumables (custom identity icons; Tiny Dungeon tiles kept as fallback) ——
   static String get shieldRound => CustomAssets.iconShieldRound;
@@ -259,6 +261,7 @@ abstract final class KenneyAssets {
       'rime' => floorDirtDetail, // frost silt — not crystal stone twin
       'fen' => floorDirt, // mire mud — not rime silt twin
       'brass' => floorStone, // brass halls — not fen mud twin
+      'veil' => floorDirtDetail, // silk dust — not brass stone twin
       _ => switch (DungeonCatalog.byId(dungeonId).layout) {
           DungeonLayoutKind.cave => floorSand,
           DungeonLayoutKind.hideout => floorDirtDetail,
@@ -283,6 +286,7 @@ abstract final class KenneyAssets {
       'rime' => <String>[floorDirtDetail, floorDirtDetail, floorDirt],
       'fen' => <String>[floorDirt, floorDirt, floorDirtDetail],
       'brass' => <String>[floorStone, floorStone, floorStoneAlt1],
+      'veil' => <String>[floorDirtDetail, floorDirt, floorDirtDetail],
       _ => <String>[floorForDungeon(dungeonId)],
     };
   }
@@ -306,6 +310,7 @@ abstract final class KenneyAssets {
       'rime' => [wallStone, wallStoneAlt1, wallStone],
       'fen' => [wallStone, wallStone, wallStoneAlt1],
       'brass' => [wallStone, wallBanner, wallStone],
+      'veil' => [wallStone, wallStoneAlt1, wallStone],
       _ => [wallStone],
     };
   }
@@ -536,6 +541,19 @@ abstract final class KenneyAssets {
             MapPropKind.stool,
             MapPropKind.shelf,
           ],
+        'veil' => const [
+            MapPropKind.torch,
+            MapPropKind.torchAlt,
+            MapPropKind.bones,
+            MapPropKind.trap,
+            MapPropKind.crate,
+            MapPropKind.barrel,
+            MapPropKind.rubble,
+            MapPropKind.skull,
+            MapPropKind.pot,
+            MapPropKind.fence,
+            MapPropKind.stool,
+          ],
         _ => const [
             MapPropKind.barrel,
             MapPropKind.crate,
@@ -563,6 +581,7 @@ abstract final class KenneyAssets {
         'rime' => stairs,
         'fen' => fountainSlime,
         'brass' => anvil,
+        'veil' => torchAlt,
         _ => iconDoor,
       };
 
@@ -587,6 +606,7 @@ abstract final class KenneyAssets {
         'rime' => enemyRimeBoss,
         'fen' => enemyFenBoss,
         'brass' => enemyBrassBoss,
+        'veil' => enemyVeilBoss,
         _ => enemyBoss,
       };
     }
@@ -603,6 +623,7 @@ abstract final class KenneyAssets {
         'rime' => enemyGolem,
         'fen' => enemySpider,
         'brass' => enemyCyclops,
+        'veil' => enemySpider,
         _ => enemyCyclops,
       };
     }
@@ -621,6 +642,7 @@ abstract final class KenneyAssets {
       'rime' => enemyRimeMite,
       'fen' => enemyFenMite,
       'brass' => enemyBrassMite,
+      'veil' => enemyVeilMite,
       _ => enemySlime,
     };
   }
@@ -647,6 +669,7 @@ abstract final class KenneyAssets {
           'rime' => enemyRimeMite,
           'fen' => enemyFenMite,
           'brass' => enemyBrassMite,
+          'veil' => enemyVeilMite,
           _ => enemyRat,
         },
       EnemyArchetype.brute => switch (dungeonId) {
@@ -662,6 +685,7 @@ abstract final class KenneyAssets {
           'rime' => enemyGolem,
           'fen' => enemySlime,
           'brass' => enemyCyclops,
+          'veil' => enemySpider,
           _ => enemyCyclops,
         },
       EnemyArchetype.tank => switch (dungeonId) {
@@ -676,6 +700,7 @@ abstract final class KenneyAssets {
           'rime' => enemyGolem,
           'fen' => enemySpider,
           'brass' => enemyGolem,
+          'veil' => enemyGhost,
           _ => enemyGolem,
         },
       EnemyArchetype.ranged => switch (dungeonId) {
@@ -690,6 +715,7 @@ abstract final class KenneyAssets {
           'rime' => enemyGhost,
           'fen' => enemyBat,
           'brass' => enemyBat,
+          'veil' => enemyBat,
           _ => enemyBat,
         },
       EnemyArchetype.glass => switch (dungeonId) {
@@ -704,6 +730,7 @@ abstract final class KenneyAssets {
           'rime' => enemyRimeMite,
           'fen' => enemyFenMite,
           'brass' => enemyBrassMite,
+          'veil' => enemySpider,
           _ => enemyBat,
         },
       EnemyArchetype.support => switch (dungeonId) {
@@ -715,6 +742,7 @@ abstract final class KenneyAssets {
           'rime' => enemyGhost,
           'fen' => enemyCultist,
           'brass' => enemyCultist,
+          'veil' => enemyCultist,
           _ => enemyCultist,
         },
     };
@@ -743,6 +771,8 @@ abstract final class KenneyAssets {
         enemyFenMite,
         enemyBrassBoss,
         enemyBrassMite,
+        enemyVeilBoss,
+        enemyVeilMite,
       ];
 
   static int enemySpriteCatalogIndex(String asset) {
@@ -768,6 +798,7 @@ abstract final class KenneyAssets {
       'rime colossus' => enemyRimeBoss,
       'fen hydra' => enemyFenBoss,
       'the mainspring' => enemyBrassBoss,
+      'the pale monarch' => enemyVeilBoss,
       'crystal warden' ||
       'crystal golem' ||
       'frozen bulwark' ||
@@ -847,6 +878,12 @@ abstract final class KenneyAssets {
       'spark spitter' || 'coil slinger' => enemyBat,
       'razor cog' || 'spring fang' => enemyBrassMite,
       'clock chanter' || 'brass adept' => enemyCultist,
+      'dust moth' || 'veil mite' || 'silk flea' => enemyVeilMite,
+      'silk bruiser' || 'veil crusher' => enemySpider,
+      'cocoon guard' || 'veil bulwark' => enemyGhost,
+      'dust spitter' || 'silk slinger' => enemyBat,
+      'wing fang' || 'veil blade' => enemySpider,
+      'moth chanter' || 'veil adept' => enemyCultist,
       'cave slime' || 'drip ooze' || 'sand mite' => enemySlime,
       'spit bat' || 'cavern spitter' || 'drill bat' => enemyBat,
       'needle rat' || 'glass skitter' || 'fort rat' || 'sneak rat' || 'pest' ||
@@ -883,6 +920,30 @@ abstract final class KenneyAssets {
       _ => null,
     };
     if (mapped != null) return mapped;
+
+    if (key.contains('mothveil') ||
+        key.contains('monarch') ||
+        key.contains('moth ') ||
+        key.contains('silk') ||
+        (key.contains('veil') && !key.contains('brass'))) {
+      if (key.contains('monarch')) return enemyVeilBoss;
+      if (key.contains('chanter') || key.contains('adept')) {
+        return enemyCultist;
+      }
+      if (key.contains('spitter') || key.contains('slinger')) {
+        return enemyBat;
+      }
+      if (key.contains('bruiser') || key.contains('crusher')) {
+        return enemySpider;
+      }
+      if (key.contains('bulwark') || key.contains('guard')) {
+        return enemyGhost;
+      }
+      if (key.contains('fang') || key.contains('blade')) {
+        return enemySpider;
+      }
+      return enemyVeilMite;
+    }
 
     if (key.contains('crystal') ||
         key.contains('frost') ||

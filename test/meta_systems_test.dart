@@ -246,7 +246,10 @@ void main() {
       final brass = DungeonCatalog.byId('brass');
       expect(brass.number, 13);
       expect(brass.bossName, 'The Mainspring');
-      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(14));
+      final veil = DungeonCatalog.byId('veil');
+      expect(veil.number, 14);
+      expect(veil.bossName, 'The Pale Monarch');
+      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(15));
       expect(
         DungeonCatalog.isUnlocked('tide', 0, 6),
         isTrue,
@@ -297,6 +300,14 @@ void main() {
       );
       expect(
         DungeonCatalog.isUnlocked('brass', 0, 11),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('veil', 0, 13),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('veil', 0, 12),
         isFalse,
       );
     });

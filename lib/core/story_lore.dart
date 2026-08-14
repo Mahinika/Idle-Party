@@ -19,7 +19,7 @@ abstract final class StoryLore {
     ),
     (
       title: 'THE KEEP',
-      body: 'Fourteen gates. Something wrong sleeps beneath.',
+      body: 'Fifteen gates. Something wrong sleeps beneath.',
     ),
     (
       title: 'YOUR WILL',
@@ -51,6 +51,7 @@ abstract final class StoryLore {
       'rime' => 'The wind dies. Rimeglass sings underfoot — cold enough to cut.',
       'fen' => 'The ice sweats. Bile water pools where the cold used to sing.',
       'brass' => 'The mire drains through brass grates. Something still ticks.',
+      'veil' => 'Brass ticks fade. Moth-dust fills the hollow.',
       _ => 'Entering ${def.name}…',
     };
   }
@@ -72,6 +73,7 @@ abstract final class StoryLore {
       'rime' => 'The Colossus cracks. Frost settles — the rift holds its breath.',
       'fen' => 'The Hydra sinks. The mire keeps bubbling.',
       'brass' => 'The Mainspring stills. Cogs keep ticking in the dark.',
+      'veil' => 'The Pale Monarch folds. Silk still drifts.',
       _ => '${def.name} cleared.',
     };
   }
@@ -142,5 +144,5 @@ abstract final class StoryLore {
 
   static const String loreTipTitle = 'THE DESCENT';
   static const String loreTipBody =
-      'Fourteen gates. One wrongness below. Clear deeper zones, then Ascend.';
+      'Fifteen gates. One wrongness below. Clear deeper zones, then Ascend.';
 }

@@ -16,8 +16,8 @@ abstract final class GameGuides {
       id: 'world_path',
       title: 'WORLD PATH',
       body:
-          'The hub World Path is a painted map from Sandy Caverns through Brassvault Deep '
-          '(Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, and the rest along the road).\n\n'
+          'The hub World Path is a painted map from Sandy Caverns through Mothveil Hollow '
+          '(Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault, and the rest along the road).\n\n'
           '• Scroll the map and tap a zone portrait on a glowing ring to select it.\n'
           '• Unlock the next zone by clearing the previous boss, or by earning enough lifetime gold.\n'
           '• Locked zones dim on the map; the caption under the map shows lifetime gold progress (have / need).\n'

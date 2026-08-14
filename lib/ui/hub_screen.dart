@@ -981,26 +981,27 @@ class _ZonePathMap extends StatefulWidget {
   final double pulse;
   final ValueChanged<String> onSelect;
 
-  /// Marker centers on painted gold rings (zone 0…13 top→bottom).
-  /// Tuned for extended world_path_map (Brassvault strip under Blightfen).
+  /// Marker centers on painted gold rings (zone 0…14 top→bottom).
+  /// Tuned for extended world_path_map (Mothveil strip under Brassvault).
   static const List<Offset> markerNorm = [
-    Offset(0.492, 0.038), // sandy — cave mouth
-    Offset(0.478, 0.092), // goblin — camp
-    Offset(0.470, 0.152), // king — fort wall
-    Offset(0.508, 0.213), // underworld — purple crystals
-    Offset(0.448, 0.268), // dead — tombs
-    Offset(0.475, 0.329), // hell — spiked gate
-    Offset(0.460, 0.385), // crystal — ice peaks
-    Offset(0.500, 0.439), // tide — sunken ruins
-    Offset(0.458, 0.492), // ember — lava door
-    Offset(0.472, 0.560), // grove — dark forest
-    Offset(0.488, 0.633), // storm — purple chasm
-    Offset(0.500, 0.752), // rime — painted ice-rift ring
-    Offset(0.489, 0.855), // fen — painted mire ring
-    Offset(0.505, 0.960), // brass — painted vault ring
+    Offset(0.492, 0.034), // sandy — cave mouth
+    Offset(0.478, 0.083), // goblin — camp
+    Offset(0.470, 0.138), // king — fort wall
+    Offset(0.508, 0.193), // underworld — purple crystals
+    Offset(0.448, 0.243), // dead — tombs
+    Offset(0.475, 0.298), // hell — spiked gate
+    Offset(0.460, 0.349), // crystal — ice peaks
+    Offset(0.500, 0.397), // tide — sunken ruins
+    Offset(0.458, 0.445), // ember — lava door
+    Offset(0.472, 0.507), // grove — dark forest
+    Offset(0.488, 0.573), // storm — purple chasm
+    Offset(0.500, 0.681), // rime — painted ice-rift ring
+    Offset(0.489, 0.774), // fen — painted mire ring
+    Offset(0.505, 0.869), // brass — painted vault ring
+    Offset(0.497, 0.964), // veil — painted moth-dust ring
   ];
 
-  static const double mapAspect = 2292 / 1024;
+  static const double mapAspect = 2532 / 1024;
 
   @override
   State<_ZonePathMap> createState() => _ZonePathMapState();

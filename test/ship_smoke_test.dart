@@ -8,8 +8,8 @@ import 'package:idle_party/models/dungeon_def.dart';
 
 /// Fast honesty checks: world path, unlock rules, guides, release version.
 void main() {
-  test('world path ships fourteen named zones including brass', () {
-    expect(DungeonCatalog.all.length, 14);
+  test('world path ships fifteen named zones including mothveil', () {
+    expect(DungeonCatalog.all.length, 15);
     final ids = DungeonCatalog.all.map((d) => d.id).toList();
     expect(
       ids,
@@ -28,6 +28,7 @@ void main() {
         'rime',
         'fen',
         'brass',
+        'veil',
       ],
     );
     expect(DungeonCatalog.byId('tide').name, 'Sunken Tidehold');
@@ -37,6 +38,7 @@ void main() {
     expect(DungeonCatalog.byId('rime').name, 'Rimeglass Rift');
     expect(DungeonCatalog.byId('fen').name, 'Blightfen Mire');
     expect(DungeonCatalog.byId('brass').name, 'Brassvault Deep');
+    expect(DungeonCatalog.byId('veil').name, 'Mothveil Hollow');
   });
 
   test('zone unlock uses lifetime gold or prior clear, not wallet gold', () {
@@ -72,6 +74,10 @@ void main() {
     expect(DungeonCatalog.isUnlocked('brass', 6999999, 11), isFalse);
     expect(DungeonCatalog.isUnlocked('brass', 7000000, 11), isTrue);
     expect(DungeonCatalog.isUnlocked('brass', 0, 12), isTrue);
+
+    expect(DungeonCatalog.isUnlocked('veil', 9999999, 12), isFalse);
+    expect(DungeonCatalog.isUnlocked('veil', 10000000, 12), isTrue);
+    expect(DungeonCatalog.isUnlocked('veil', 0, 13), isTrue);
   });
 
   test('guides cover World Path endgame zones and LOADOUTS vs armor sets', () {
@@ -83,6 +89,7 @@ void main() {
     expect(world.body.toLowerCase(), contains('rimeglass'));
     expect(world.body.toLowerCase(), contains('blightfen'));
     expect(world.body.toLowerCase(), contains('brassvault'));
+    expect(world.body.toLowerCase(), contains('mothveil'));
     expect(world.body.toLowerCase(), contains('lifetime gold'));
 
     final loadouts = GameGuides.topics.firstWhere((t) => t.id == 'loadouts');

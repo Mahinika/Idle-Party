@@ -3412,6 +3412,14 @@ class GameLogic {
         EnemyArchetype.glass: ['Razor Cog', 'Spring Fang'],
         EnemyArchetype.support: ['Clock Chanter', 'Brass Adept'],
       },
+      'veil' => const {
+        EnemyArchetype.swarm: ['Dust Moth', 'Veil Mite', 'Silk Flea'],
+        EnemyArchetype.brute: ['Silk Bruiser', 'Veil Crusher'],
+        EnemyArchetype.tank: ['Cocoon Guard', 'Veil Bulwark'],
+        EnemyArchetype.ranged: ['Dust Spitter', 'Silk Slinger'],
+        EnemyArchetype.glass: ['Wing Fang', 'Veil Blade'],
+        EnemyArchetype.support: ['Moth Chanter', 'Veil Adept'],
+      },
       _ => const {
         EnemyArchetype.swarm: ['Cave Slime', 'Sand Mite'],
         EnemyArchetype.brute: ['Cave Brute', 'Rock Crab'],

@@ -5,8 +5,8 @@ Baseline (historical): app **v1.9.3**, full-game audit ~**92%**
 ([audits/2026-08-03-full-game.md](audits/2026-08-03-full-game.md)) — audit predates
 Tide/Ember/meta polish; treat as historical closeout, not current completeness.
 
-**Current ship line:** **1.12.0** (`pubspec` ↔ `MetaSystems.currentVersion`) —
-Brassvault Deep (14th zone) after Blightfen Mire, plus 1.11.5 chase/kits/Rimeglass.
+**Current ship line:** **1.12.3** (`pubspec` ↔ `MetaSystems.currentVersion`) —
+Mothveil Hollow (15th zone) after Brassvault Deep.
 
 **Status:** dokumenterad; Q1–Q4 kärna + success-spår Habit→Season→Zone i kod; Play closed
 Alpha igång (produktion väntar 12×14). GitHub Releases är primär install.
@@ -35,12 +35,12 @@ Win-condition: spelaren ser en READY/ALMOST-jakt, känner mer power, litar på n
 | Combat / AFK | Stark (`SpatialCombat` enda auktoritet; live+offline parity) | Mid-band caster risk; live-light gate |
 | Gear / Apex / BiS | Stark | 2pc/4pc procs shippade; ingen gear-shop (by design) |
 | Meta / hub | Payoffs live (Weekly n/3, Will, Gauntlet F25/50/100, season bonus, GH styles) | Prestige shop refresh / deeper sinks stretch |
-| Content | **31 specs / 14 zoner** (through `brass` Brassvault Deep) | Klass-tungt historiskt; nya zoner mer sällan |
+| Content | **31 specs / 15 zoner** (through `veil` Mothveil Hollow) | Klass-tungt historiskt; nya zoner mer sällan |
 | Distribution | GitHub Releases primary; Play Console listing + closed Alpha | Production needs 12×14; not live |
 | Onboarding | `FirstSessionTips` + Guides + What’s New | — |
 | A11y / save | Text scale 85–130%, colorblind floaters, VFX modes + reduce-motion label; toast dedupe; clipboard export/import + backup-hint | Lätt owned SFX stretch |
 
-**Inventarie:** **14 zoner** through Brassvault ([lib/models/dungeon_def.dart](../lib/models/dungeon_def.dart)), 10 klasser / 31 specs, ~259 abilities, 4 legacy tickers + 27 runner-kits, Infinity Gauntlet AL10+, `LocalSeasonCatalog`, floor blueprint / room chests, balance harness ([tool/sim_harness.dart](../tool/sim_harness.dart) live/afk/bare).
+**Inventarie:** **15 zoner** through Mothveil ([lib/models/dungeon_def.dart](../lib/models/dungeon_def.dart)), 10 klasser / 31 specs, ~259 abilities, 4 legacy tickers + 27 runner-kits, Infinity Gauntlet AL10+, `LocalSeasonCatalog`, floor blueprint / room chests, balance harness ([tool/sim_harness.dart](../tool/sim_harness.dart) live/afk/bare).
 
 **Kit audits (Aug 2026):** historical snapshots under [docs/audits/](audits/) — identity/coeff-pass shippad för de åtta som då var WIP. Re-run `class-audit` before treating Verdict as current. See [audits/README.md](audits/README.md).
 

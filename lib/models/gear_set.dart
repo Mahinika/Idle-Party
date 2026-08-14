@@ -44,6 +44,7 @@ abstract final class GearSets {
       'rime' => 'Rimeglass',
       'fen' => 'Blightfen',
       'brass' => 'Brassvault',
+      'veil' => 'Mothveil',
       _ => dungeonId,
     };
     final armor = switch (armorRaw) {
@@ -185,6 +186,7 @@ abstract final class GearSets {
       'rime' => ('RIME', 0xFF70E8F0),
       'fen' => ('FEN', 0xFFB8D030),
       'brass' => ('BRASS', 0xFFC8A030),
+      'veil' => ('VEIL', 0xFFE0B8D0),
       _ => ('SET', 0xFFFFD070),
     };
     return (chance: 0.10, damageMul: 1.35, tag: tag, argb: argb);

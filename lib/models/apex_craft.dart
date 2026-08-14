@@ -121,6 +121,12 @@ abstract final class ApexCraft {
       bossSources: 'Brassvault Deep boss',
     ),
     CraftMatDef(
+      id: 'shard_veil',
+      name: 'Mothveil Shard',
+      family: CraftMatFamily.shard,
+      bossSources: 'Mothveil Hollow boss',
+    ),
+    CraftMatDef(
       id: 'core_tank',
       name: 'Aegis Core',
       family: CraftMatFamily.core,
