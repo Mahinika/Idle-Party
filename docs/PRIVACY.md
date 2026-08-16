@@ -32,6 +32,18 @@ The app may let you **copy a save to the clipboard** or **paste a save from the 
 
 Aside from normal OS / store behavior (install, updates) and optional Play Games calls when you opt in, Idle Party does not require an Idle Party account or Idle Party cloud service.
 
+## Delete your data / sign-out
+
+Idle Party does not create its own username or password. Optional Play Games sign-in uses your Google account.
+
+To stop sharing progress or scores with Play Games:
+
+1. In the app, open **MORE** and sign out of Play Games if you are signed in.
+2. On the web, open your [Google Account third-party apps](https://myaccount.google.com/permissions) and remove Idle Party / Play Games access.
+3. You can also delete Play Games activity from your Google Account.
+
+Local save on the device is removed when you clear the app’s storage or uninstall. Clipboard backups you made yourself stay on your device until you delete them.
+
 ## Children
 
 The game is intended as a general-audience idle RPG. It does not collect personal information for profiles or ads beyond what Google Play Games may process when you opt in.
