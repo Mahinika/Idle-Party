@@ -19,10 +19,20 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.7';
+  static const String currentVersion = '1.12.8';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.8',
+      bullets: <String>[
+        'Combat Rogue hits harder so the kit sits with other melee.',
+        'Holy Priest Guardian Spirit is a real emergency save; Resto Lifebloom is a HoT again.',
+        'Local season weeks named for late summer (Moth Dust / Brass Tempo) + KEYSTONE week-goal card.',
+        'Tide / Ember / Grove layout kits lean harder into water alcoves, lava chokes, and root choke rooms.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.7',
       bullets: <String>[

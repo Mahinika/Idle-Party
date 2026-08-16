@@ -231,6 +231,8 @@ abstract final class GameGuides {
           '• Welcome-back shows one wow line, a few highlights, then Up next.\n'
           '• TODAY flashes READY / ALMOST when a claim or Ascend is close.\n'
           '• First vault claim of each calendar month also pays a season bonus.\n'
+          '• Each ISO week has a named local season beat (KEY +2 or Gauntlet floor) '
+          '— TODAY / META may chase it; claim pays essence + title.\n'
           '• Progress resets at UTC midnight.\n'
           '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
     ),

@@ -206,6 +206,89 @@ void main() {
     expect(dotted, isTrue);
   });
 
+  test('Lifebloom applies HoT, not absorb', () {
+    final state = _soloSpecParty(HeroSpecId.restorationDruid, level: 12);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final druid = world.heroes.firstWhere((h) => !h.isPet);
+    final ally = SpatialActor(
+      id: 'hurt',
+      name: 'Hurt',
+      team: SpatialTeam.hero,
+      x: druid.x,
+      y: druid.y,
+      hp: 60,
+      maxHp: 200,
+      attack: 1,
+      defense: 0,
+      moveSpeed: 0,
+      attackRange: 1,
+      attackCooldown: 1,
+      fireCooldown: 1,
+    );
+    world.heroes.add(ally);
+    druid
+      ..rage = 100
+      ..x = target.x - 2.5
+      ..y = target.y;
+    _padAbilityCds(druid, except: AbilityId.lifebloom);
+
+    var bloomed = false;
+    for (var i = 0; i < 100; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((ally.buffTimers['hot'] ?? 0) > 0 && ally.hotHps > 0) {
+        bloomed = true;
+        break;
+      }
+      druid.rage = 100;
+      ally.hp = 60;
+    }
+    expect(bloomed, isTrue);
+    expect(ally.absorbShield, 0);
+  });
+
+  test('Guardian Spirit emergency-saves lowest ally', () {
+    final state = _soloSpecParty(HeroSpecId.holyPriest, level: 12);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final priest = world.heroes.firstWhere((h) => !h.isPet);
+    final ally = SpatialActor(
+      id: 'hurt',
+      name: 'Hurt',
+      team: SpatialTeam.hero,
+      x: priest.x,
+      y: priest.y,
+      hp: 20,
+      maxHp: 200,
+      attack: 1,
+      defense: 0,
+      moveSpeed: 0,
+      attackRange: 1,
+      attackCooldown: 1,
+      fireCooldown: 1,
+    );
+    world.heroes.add(ally);
+    priest
+      ..rage = 100
+      ..hp = (priest.maxHp * 0.9).round()
+      ..x = target.x - 2.5
+      ..y = target.y;
+    _padAbilityCds(priest, except: AbilityId.guardianSpirit);
+
+    var saved = false;
+    for (var i = 0; i < 80; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (ally.absorbShield > 0 && ally.shieldWallTimer > 0) {
+        saved = true;
+        break;
+      }
+      priest.rage = 100;
+      ally.hp = 20;
+      priest.hp = (priest.maxHp * 0.9).round();
+    }
+    expect(saved, isTrue);
+  });
+
   test('Shamanistic Rage grants resource and DR', () {
     final state = _soloSpecParty(HeroSpecId.enhancement, level: 15);
     var world = SpatialCombat.build(state);

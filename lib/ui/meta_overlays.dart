@@ -9,6 +9,7 @@ import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/hub_chase.dart';
 import '../core/keystone.dart';
+import '../core/local_season.dart';
 import '../core/meta_systems.dart';
 import '../models/achievement_def.dart';
 import '../models/gear_loadout.dart';
@@ -1060,11 +1061,24 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
     final vaultReady = GameLogic.canClaimDailyVault(state);
     final affixes = Keystone.previewAffixes(state);
     final vaultE = Keystone.dailyVaultEssence(md.dailyBestTimedKey);
+    final weekKey = md.weeklyKey.isNotEmpty
+        ? md.weeklyKey
+        : GameLogic.isoWeekKey(DateTime.now().toUtc());
+    final week = LocalSeasonCatalog.forWeekKey(weekKey);
+    final weekClaimed = LocalSeasonCatalog.weekGoalClaimed(state, week);
+    final weekReady = LocalSeasonCatalog.weekGoalReady(state, week);
+    final weekAlmost = LocalSeasonCatalog.weekGoalAlmost(state, week);
+    final month = LocalSeasonCatalog.forMonthKey(
+      md.seasonKey.contains('·')
+          ? md.seasonKey.split('·').last.trim()
+          : GameLogic.isoMonthKey(DateTime.now().toUtc()),
+    );
     final activeBits = <String>[
       if (state.hardmodeLevel > 0) 'KEY+${state.hardmodeLevel}',
       if (state.challengeBossRush) 'Boss Rush',
       if (state.challengeNoFlask) 'No Flask',
       if (vaultReady) 'Vault ready',
+      if (weekReady) 'Week ready',
     ];
 
     final headerLabel = _expanded
@@ -1182,7 +1196,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 Text(
                   md.seasonKey.isEmpty
                       ? 'Season rotating…'
-                      : 'This month · +${GameLogic.seasonWeeklyBonusEssence}e first vault claim',
+                      : '${month.name} · +${GameLogic.seasonWeeklyBonusEssence}e first vault claim',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
                 ),
@@ -1206,6 +1220,49 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
               ],
             ),
           ),
+          if (week.hasGoal) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: MenuChrome.cardBox(
+                selected: weekReady || weekAlmost,
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    weekReady
+                        ? 'WEEK GOAL READY'
+                        : weekAlmost
+                            ? 'WEEK GOAL ALMOST'
+                            : 'WEEK GOAL',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.pixel(
+                      size: 8,
+                      color: weekReady || weekAlmost
+                          ? GameTheme.torchHot
+                          : GameTheme.parchmentDim,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    week.name,
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(size: 13, color: GameTheme.parchment),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    weekClaimed
+                        ? 'Claimed · ${week.titleReward ?? week.name}'
+                        : '${week.blurb}\n'
+                            '${LocalSeasonCatalog.weekProgressLabel(state, week)}'
+                            '${weekReady ? ' · auto-claims on hub sync' : ''}',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 2),
           Text(
             'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2.',

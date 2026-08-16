@@ -913,6 +913,36 @@ abstract final class AbilityEffectRunner {
           }
           return true;
         }
+        // Guardian Spirit: panic bubble + DR on the lowest ally.
+        if (def.id == AbilityId.guardianSpirit) {
+          final ally = _lowestAlly(world, hero) ?? hero;
+          final amount = math.max(
+            12,
+            (hero.attack * def.coeff * hero.kitHealMul).round(),
+          );
+          ally.absorbShield += amount;
+          ally.shieldWallTimer = math.max(ally.shieldWallTimer, 4.0);
+          ally.buffTimers['shield'] = 4.0;
+          _announce(
+            world,
+            hero,
+            def.shortLabel,
+            0xFFFFD090,
+            reducedVfx,
+            important: true,
+          );
+          if (!reducedVfx) {
+            SpatialCombat._spawnRing(
+              world,
+              x: ally.x,
+              y: ally.y,
+              argb: 0xAAFFE090,
+              radius: 1.0,
+              life: 0.5,
+            );
+          }
+          return true;
+        }
         // Feign Death: drop aggro + brief untargetable (Vanish pattern).
         if (def.id == AbilityId.feignDeath) {
           hero.vanishTimer = math.max(hero.vanishTimer, 2.2);
@@ -1722,7 +1752,8 @@ abstract final class AbilityEffectRunner {
     final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
     final isHot = def.id == AbilityId.riptide ||
         def.id == AbilityId.renew ||
-        def.id == AbilityId.rejuvenation;
+        def.id == AbilityId.rejuvenation ||
+        def.id == AbilityId.lifebloom;
     final directCoeff = isHot ? def.coeff * 0.55 : def.coeff;
     _healLowest(world, caster, ally, directCoeff, def.shortLabel);
     if (isHot) {

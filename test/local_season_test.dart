@@ -15,6 +15,13 @@ void main() {
     expect(week.hasGoal, isTrue);
   });
 
+  test('pinned August 2026 weeks resolve by exact weekKey', () {
+    expect(LocalSeasonCatalog.forWeekKey('2026-W32').id, 'fen_tide');
+    expect(LocalSeasonCatalog.forWeekKey('2026-W33').id, 'moth_dust');
+    expect(LocalSeasonCatalog.forWeekKey('2026-W34').id, 'brass_tempo');
+    expect(LocalSeasonCatalog.forMonthKey('2026-08').id, 'veil_month');
+  });
+
   test('week affix override applied on ensureWeeklyContract', () {
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.ensureWeeklyContract(state, now: now);
