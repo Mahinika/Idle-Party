@@ -1235,6 +1235,12 @@ class _ZonePathMapState extends State<_ZonePathMap> {
                 fit: BoxFit.fill,
                 filterQuality: FilterQuality.medium,
                 gaplessPlayback: true,
+                // Decode at the size we actually paint. The source is
+                // 1024x2532; without a cap that is ~10 MB of decoded memory
+                // for a map drawn ~336 logical px wide.
+                cacheWidth: (mapW * MediaQuery.devicePixelRatioOf(context))
+                    .round()
+                    .clamp(256, 1024),
               ),
             ),
           ),

@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 SRC = os.path.join(ROOT, 'assets', 'custom', 'ui', 'world_path_map.png')
-BAK = os.path.join(ROOT, 'assets', 'custom', 'ui', 'world_path_map_11zone_bak.png')
+BAK = os.path.join(ROOT, 'tool', 'art_backups', 'world_path_map_11zone_bak.png')
 
 
 def ice_recolor(im: Image.Image) -> Image.Image:

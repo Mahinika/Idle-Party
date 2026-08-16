@@ -661,7 +661,14 @@ abstract final class KenneyAssets {
     if (enemy.role == EnemyRole.boss) {
       return enemySpriteForRole(EnemyRole.boss, dungeonId: dungeonId);
     }
-    return switch (enemy.archetype) {
+    return enemySpriteForArchetype(enemy.archetype, dungeonId: dungeonId);
+  }
+
+  static String enemySpriteForArchetype(
+    EnemyArchetype archetype, {
+    String? dungeonId,
+  }) {
+    return switch (archetype) {
       EnemyArchetype.swarm => switch (dungeonId) {
           'sandy' => enemySlime,
           'goblin' => enemyRat,
@@ -786,6 +793,18 @@ abstract final class KenneyAssets {
     final i = enemySpriteCatalog.indexOf(asset);
     return i < 0 ? 0 : i;
   }
+
+  /// Every enemy sprite one zone can spawn — boss, elite, trash and each
+  /// archetype — plus the two shared fallbacks. The stage decodes this set
+  /// instead of all 24 sprites, and reloads it when the zone changes.
+  static Set<String> enemySpritesForDungeon(String dungeonId) => <String>{
+        enemySlime,
+        enemyBoss,
+        for (final role in EnemyRole.values)
+          enemySpriteForRole(role, dungeonId: dungeonId),
+        for (final archetype in EnemyArchetype.values)
+          enemySpriteForArchetype(archetype, dungeonId: dungeonId),
+      };
 
   /// Stable cosmetic sprite for a codex enemy name (aligned with combat families).
   static String enemySpriteForCodexName(String name) {

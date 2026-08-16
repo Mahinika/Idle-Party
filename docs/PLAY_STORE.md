@@ -16,7 +16,7 @@ Package id: **`com.idleparty.app`**
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed 1.12.9 build. |
 | IARC / content rating | ✅ | Completed 2026-08-08 (mild fantasy combat). Console shows PEGI 12 / ESRB Everyone 10+ / IARC 7+ (and regional equivalents). No chat / gambling / ads. |
 | Store listing copy (EN) | ✅ | Saved 2026-08-16. Short: KEYSTONE + Ascend. Full: 15 zones, 31 specs, optional Play Games, no ads / no paid store. |
-| Screenshots + feature graphic | ✅ | Phone shots + feature graphic already on listing (2026-08-08). Icon refreshed 2026-08-16 from `assets/custom/ui/app_icon.png`. |
+| Screenshots + feature graphic | ✅ | Phone shots + feature graphic already on listing (2026-08-08). Icon refreshed 2026-08-16 from `tool/art_backups/app_icon.png`. |
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
 
@@ -70,7 +70,7 @@ Suggested Description (en-US):
 
 - [x] Content rating questionnaire (IARC) completed 2026-08-08 — mild fantasy combat; PEGI 12 / ESRB Everyone 10+ / IARC 7+ (no chat, gambling, or ads).
 - [x] Short + full description (en-US) saved 2026-08-16: product name **Idle Party**; 15 zones; KEYSTONE / Ascend / optional Play Games; no Flutter placeholders.
-- [x] Phone screenshots + feature graphic on listing (2026-08-08); high-res icon refreshed 2026-08-16 from `assets/custom/ui/app_icon.png`.
+- [x] Phone screenshots + feature graphic on listing (2026-08-08); high-res icon refreshed 2026-08-16 from `tool/art_backups/app_icon.png`.
 - [ ] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*`.
 
 ## Production listing

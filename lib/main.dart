@@ -165,6 +165,29 @@ class _GameHomePageState extends State<GameHomePage> {
     if (_phase == _AppPhase.play) {
       _director.ensureCombatLoop();
     }
+    unawaited(_precacheScenes());
+  }
+
+  /// Warms the two painted scenes the player hits first, while the intro or
+  /// start menu is still on screen. Decode sizes must match
+  /// [CaveAtmosphere.fullBleedScene] or the warm-up lands in a different
+  /// cache entry and buys nothing.
+  Future<void> _precacheScenes() async {
+    for (final asset in <String>[
+      CustomAssets.hubScene,
+      CustomAssets.dungeonBackdropFor(_director.state.dungeonId),
+    ]) {
+      if (!mounted) return;
+      await precacheImage(
+        ResizeImage(
+          AssetImage(asset),
+          width: 960,
+          height: 960,
+          allowUpscaling: false,
+        ),
+        context,
+      );
+    }
   }
 
   void _continueGame() {

@@ -45,7 +45,7 @@ Owned Idle Party pixel art. Preferred over Tiny Dungeon for heroes, enemies, pet
 | `custom/pets/` | Egg + ember_pup / cave_bat / loot_sprite / warden_cub (other species remap to nearest) |
 | `custom/icons/` | Armor/jewelry slot icons + tome |
 | `custom/portraits/` + `custom/ui/backdrops/` | Per-dungeon hub identity (7 zones) |
-| `custom/ui/` | intro/hub/dungeon scenes; `app_icon.png` for store/launcher branding |
+| `custom/ui/` | intro/hub/dungeon scenes and the World Path map (launcher/store icon source lives in `tool/art_backups/app_icon.png`, outside the bundle) |
 
 Codex names resolve via `KenneyAssets.enemySpriteForCodexName` (keyword + exact maps; no hash lottery).
 

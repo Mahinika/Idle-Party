@@ -5,7 +5,7 @@
 Idle Party is a cozy-but-crunchy **idle RPG**: a hero party crawls spatial dungeon floors, clears chambers, farms loot, and grows stronger between runs. Tap in for God Hand moments, or let the corridor combat cook offline.
 
 <p align="center">
-  <img src="assets/custom/ui/app_icon.png" alt="Idle Party app icon" width="160" />
+  <img src="tool/art_backups/app_icon.png" alt="Idle Party app icon" width="160" />
 </p>
 
 **[Download Android APK (latest)](https://github.com/Mahinika/Idle-Party/releases/latest)** · **[All releases](https://github.com/Mahinika/Idle-Party/releases)**

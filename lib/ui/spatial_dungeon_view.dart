@@ -115,7 +115,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     final wallPaths = KenneyAssets.wallVariantsForDungeon(dungeonId);
     final propKinds = KenneyAssets.propPoolForDungeon(dungeonId).toSet()
       ..add(MapPropKind.chest);
-    final enemyAssets = KenneyAssets.enemySpriteCatalog;
 
     // Shared combat icons — decode once, keep across dungeon switches.
     if (!_sharedLoaded) {
@@ -179,7 +178,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         load(CustomAssets.heroDruid, targetWidth: 128),
         // Keep native size — paper-doll src rects assume full atlas pixels.
         load(RoguelikeCharAtlas.assetPath),
-        ...enemyAssets.map((a) => load(a, targetWidth: 128)),
         load(KenneyAssets.chestClosed, targetWidth: 64),
         load(KenneyAssets.coinGold, targetWidth: 48),
         load(KenneyAssets.sword, targetWidth: 48),
@@ -211,8 +209,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         ..[HeroClassId.warlock] = shared[i++]
         ..[HeroClassId.druid] = shared[i++];
       _charAtlas = shared[i++];
-      _enemySprites = shared.sublist(i, i + enemyAssets.length);
-      i += enemyAssets.length;
       _chest = shared[i++];
       _coin = shared[i++];
       _sword = shared[i++];
@@ -230,12 +226,19 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       _sharedLoaded = true;
     }
 
+    // Only this zone's enemies — the catalog holds 24 sprites but a zone can
+    // spawn at most a handful. Indices stay catalog-aligned because the
+    // painter looks sprites up by `EnemyUnit.assetIndex`.
+    final catalog = KenneyAssets.enemySpriteCatalog;
+    final zoneEnemyAssets = KenneyAssets.enemySpritesForDungeon(dungeonId);
+
     final zone = await Future.wait([
       ...floorPaths.map((a) => load(a, targetWidth: 64)),
       ...wallPaths.map((a) => load(a, targetWidth: 64)),
       ...propKinds.map(
         (k) => load(KenneyAssets.propAsset(k), targetWidth: 64),
       ),
+      ...zoneEnemyAssets.map((a) => load(a, targetWidth: 128)),
     ]);
     if (!mounted) return;
 
@@ -249,12 +252,17 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     for (final kind in propKindList) {
       propImages[kind] = zone[zi++];
     }
+    final enemySprites = List<ui.Image?>.filled(catalog.length, null);
+    for (final asset in zoneEnemyAssets) {
+      enemySprites[KenneyAssets.enemySpriteCatalogIndex(asset)] = zone[zi++];
+    }
 
     setState(() {
       _loadedDungeonId = dungeonId;
       _floorReady = floorVariants;
       _wallReady = wallVariants;
       _propImages = propImages;
+      _enemySprites = enemySprites;
     });
   }
 

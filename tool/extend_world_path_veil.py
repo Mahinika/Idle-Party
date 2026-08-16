@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 CUSTOM = os.path.join(ROOT, 'assets', 'custom')
 MAP_SRC = os.path.join(CUSTOM, 'ui', 'world_path_map.png')
-MAP_BAK = os.path.join(CUSTOM, 'ui', 'world_path_map_14zone_bak.png')
+MAP_BAK = os.path.join(ROOT, 'tool', 'art_backups', 'world_path_map_14zone_bak.png')
 
 # Hub markers on the 14-zone (2292px) map — rescale after extend.
 OLD_MARKERS = [
