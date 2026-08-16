@@ -1,0 +1,7 @@
+# Long Monte-Carlo balance/difficulty probes are tagged `sim`.
+# Default CI runs `flutter test --exclude-tags sim`; the nightly job runs
+# `flutter test --tags sim`. The live-light balance gate stays untagged so it
+# keeps blocking merges.
+tags:
+  sim:
+    timeout: 60m

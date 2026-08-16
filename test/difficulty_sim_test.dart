@@ -1,3 +1,6 @@
+@Tags(['sim'])
+library;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
@@ -7,7 +10,7 @@ import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 
 /// Difficulty probe + CI gates — run with:
-///   flutter test test/difficulty_sim_test.dart --reporter expanded
+///   flutter test test/difficulty_sim_test.dart --reporter expanded --tags sim
 void main() {
   test('difficulty probe: fresh / light / mid push win rates', () {
     final report = StringBuffer('\n=== DIFFICULTY PROBE ===\n');

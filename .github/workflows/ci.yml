@@ -25,4 +25,6 @@ jobs:
         run: flutter analyze lib test --no-fatal-infos
 
       - name: Test
-        run: flutter test
+        # Long Monte-Carlo sims are tagged `sim` and run in sim-nightly.yml.
+        # The live-light balance gate is untagged and still blocks merges.
+        run: flutter test --exclude-tags sim
