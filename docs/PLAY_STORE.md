@@ -81,3 +81,10 @@ Suggested Description (en-US):
 ## CI reminder
 
 Tag push `v*` runs the Android workflow: release APK + AAB (when the AAB path exists), attached to the GitHub Release when secrets allow signed builds.
+
+## Agent: upload AAB from Cursor
+
+Closed Alpha upload recipe (CORS + `py -3` + fetch into file input — **not**
+`DOM.setFileInputFiles`) lives in `.cursor/skills/play-store-prep/SKILL.md`
+under **Upload signed AAB to closed Alpha**. Update the Operator status table
+after each submit.
