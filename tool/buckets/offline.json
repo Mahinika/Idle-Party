@@ -1,0 +1,21 @@
+{
+  "source": "lib/core/game_logic.dart",
+  "class": "GameLogic",
+  "bucket": "Offline progress",
+  "target_class": "OfflineProgress",
+  "out": "lib/core/offline_progress.dart",
+  "members": [
+    "applyOfflineProgressAsync",
+    "applyOfflineProgress",
+    "_offlineResultFrom",
+    "_partyLevelSum",
+    "_ownedGearCount",
+    "applyHubIdleProgress",
+    "offlineFloorBudget",
+    "simulateSpatialOffline",
+    "godHandAim",
+    "_offlineGodHandAim"
+  ],
+  "no_delegate": [],
+  "header": "import 'dart:math';\n\nimport '../models/dungeon_mode.dart';\nimport '../spatial/spatial_combat.dart';\nimport 'game_logic.dart';\nimport 'game_state.dart';\nimport 'offline_sim.dart';\n\n/// What the party did while the phone was in a pocket.\n///\n/// AFK time is credited from a budget, never from how fast the device ran the\n/// walk — see `OfflineSim` for the sliced runner and\n/// `test/offline_sim_slice_test.dart` for the guarantee that slicing changes\n/// no numbers.\nabstract final class OfflineProgress {"
+}

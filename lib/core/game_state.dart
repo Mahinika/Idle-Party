@@ -803,6 +803,13 @@ class GameState {
     var nextRoster = heroRoster ?? this.heroRoster;
     var nextActive = activeHeroIds ?? this.activeHeroIds;
     if (heroes != null) {
+      assert(
+        heroRoster != null ||
+            activeHeroIds != null ||
+            _sameParty(this.activeHeroIds, heroes),
+        'copyWith(heroes:) updates hero data for the party that is already '
+        'active. Use withActiveParty() to change who is in the party.',
+      );
       nextRoster = _mergeHeroesIntoRoster(nextRoster, heroes);
       nextActive = [for (final h in heroes) h.id];
     }
@@ -891,6 +898,24 @@ class GameState {
     );
   }
 
+  /// Swaps *who* fights: roster keeps everyone, [party] becomes the active five.
+  ///
+  /// Separate from `copyWith(heroes:)` on purpose — that one means "same party,
+  /// new numbers" and used to reorder the party by accident when a caller
+  /// passed a different list.
+  GameState withActiveParty(List<PartyHero> party) => copyWith(
+    heroRoster: _mergeHeroesIntoRoster(heroRoster, party),
+    activeHeroIds: [for (final h in party) h.id],
+  );
+
+  static bool _sameParty(List<String> activeIds, List<PartyHero> heroes) {
+    if (activeIds.length != heroes.length) return false;
+    for (var i = 0; i < heroes.length; i++) {
+      if (activeIds[i] != heroes[i].id) return false;
+    }
+    return true;
+  }
+
   /// Merges [updates] into [roster] by hero id (order preserved; new ids append).
   static List<PartyHero> _mergeHeroesIntoRoster(
     List<PartyHero> roster,
@@ -912,8 +937,12 @@ class GameState {
     return merged;
   }
 
+  /// Save format written by [toJson]. Readers branch on it in
+  /// `GameLogic.saveVersionOf`; bump it when a field changes meaning.
+  static const int saveVersion = 4;
+
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'version': 4,
+    'version': saveVersion,
     'heroRoster': heroRoster.map((hero) => hero.toJson()).toList(),
     'activeHeroIds': activeHeroIds,
     'heroes': heroes.map((hero) => hero.toJson()).toList(),

@@ -16,21 +16,20 @@ void main() {
   });
 
   test('caster aura requires SpecRoleTag.caster not hunter', () {
-    final state = GameLogic.createInitialState(now: DateTime(2026, 8, 1))
-        .copyWith(
-      heroes: [
-        PartyHero.starting(
-          name: 'Hunt',
-          specId: HeroSpecId.beastMastery,
-          stats: PartyHero.startingStatsForSpec(HeroSpecId.beastMastery),
-        ),
-        PartyHero.starting(
-          name: 'Tank',
-          specId: HeroSpecId.protection,
-          stats: PartyHero.startingStatsForSpec(HeroSpecId.protection),
-        ),
-      ],
-    );
+    final state = GameLogic.createInitialState(
+      now: DateTime(2026, 8, 1),
+    ).withActiveParty([
+      PartyHero.starting(
+        name: 'Hunt',
+        specId: HeroSpecId.beastMastery,
+        stats: PartyHero.startingStatsForSpec(HeroSpecId.beastMastery),
+      ),
+      PartyHero.starting(
+        name: 'Tank',
+        specId: HeroSpecId.protection,
+        stats: PartyHero.startingStatsForSpec(HeroSpecId.protection),
+      ),
+    ]);
     expect(state.hasLivingCaster, isFalse);
     expect(state.casterAuraBonusFor(state.heroes.first), 0);
   });
@@ -47,7 +46,7 @@ void main() {
       stats: PartyHero.startingStatsForSpec(HeroSpecId.protection),
     );
     final state = GameLogic.createInitialState(now: DateTime(2026, 8, 1))
-        .copyWith(heroes: [arms, prot]);
+        .withActiveParty([arms, prot]);
     expect(state.tankGuardBonusFor(arms), 0);
     expect(state.tankGuardBonusFor(prot), greaterThan(0));
   });
@@ -69,7 +68,7 @@ void main() {
       stats: PartyHero.startingStatsForSpec(HeroSpecId.fire),
     );
     final state = GameLogic.createInitialState(now: DateTime(2026, 8, 1))
-        .copyWith(heroes: [pala, disc, fire]);
+        .withActiveParty([pala, disc, fire]);
     final world = SpatialCombat.build(state);
     final tank = world.heroes.firstWhere(
       (h) => h.heroSpecId == HeroSpecId.protPaladin,

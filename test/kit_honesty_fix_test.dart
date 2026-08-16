@@ -826,7 +826,7 @@ void main() {
     while (tank.level < 15) {
       tank = tank.levelUp();
     }
-    state = state.copyWith(heroes: [pala, tank]);
+    state = state.withActiveParty([pala, tank]);
     var world = SpatialCombat.build(state);
     final healer = world.heroes.firstWhere(
       (h) => h.heroSpecId == HeroSpecId.holyPaladin,
@@ -1012,7 +1012,7 @@ GameState _soloSpecParty(HeroSpecId specId, {required int level}) {
   while (hero.level < level) {
     hero = hero.levelUp();
   }
-  return state.copyWith(heroes: [hero]);
+  return state.withActiveParty([hero]);
 }
 
 SpatialActor _soloEnemy(SpatialWorld world) {

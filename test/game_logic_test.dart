@@ -749,12 +749,9 @@ void main() {
     );
 
     // Auto Equip: tank-only empty party takes the shield from stash.
-    state = state.copyWith(
-      heroes: [
-        prot.copyWith(level: 20, clearEquipped: true),
-      ],
-      gearStash: <EquipmentItem>[tankShield],
-    );
+    state = state
+        .withActiveParty([prot.copyWith(level: 20, clearEquipped: true)])
+        .copyWith(gearStash: <EquipmentItem>[tankShield]);
     state = GameLogic.autoEquipBetterGear(state);
     expect(
       state.heroes.single.itemIn(EquipmentSlot.offHand)?.id,
@@ -764,12 +761,9 @@ void main() {
     // Fire-only empty party takes the Int/SP staff.
     state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final mage = state.heroes.firstWhere((h) => h.role == HeroRole.mage);
-    state = state.copyWith(
-      heroes: [
-        mage.copyWith(level: 20, clearEquipped: true),
-      ],
-      gearStash: <EquipmentItem>[mageStaff],
-    );
+    state = state
+        .withActiveParty([mage.copyWith(level: 20, clearEquipped: true)])
+        .copyWith(gearStash: <EquipmentItem>[mageStaff]);
     state = GameLogic.autoEquipBetterGear(state);
     expect(
       state.heroes.single.itemIn(EquipmentSlot.weapon)?.id,

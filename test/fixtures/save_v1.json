@@ -1,0 +1,61 @@
+{
+  "heroes": [
+    {
+      "name": "Bram",
+      "role": "warrior",
+      "level": 7,
+      "currentHp": 61,
+      "stats": {"attack": 9, "defense": 6, "maxHp": 74}
+    },
+    {
+      "name": "Sela",
+      "role": "rogue",
+      "level": 6,
+      "currentHp": 40,
+      "stats": {"attack": 11, "defense": 3, "maxHp": 48}
+    },
+    {
+      "name": "Ivy",
+      "role": "healer",
+      "level": 6,
+      "currentHp": 44,
+      "stats": {"attack": 5, "defense": 4, "maxHp": 52}
+    },
+    {
+      "name": "Nyx",
+      "role": "mage",
+      "level": 6,
+      "currentHp": 38,
+      "stats": {"attack": 12, "defense": 2, "maxHp": 44}
+    }
+  ],
+  "enemy": {
+    "name": "Cave Slime",
+    "level": 7,
+    "currentHp": 40,
+    "stats": {"attack": 8, "defense": 3, "maxHp": 40}
+  },
+  "battleNumber": 9,
+  "gold": 1450,
+  "essence": 12,
+  "bossVictories": 1,
+  "lastUpdated": "2025-04-02T18:22:11.000Z",
+  "offlineSecondsRecovered": 3600,
+  "attackBonus": 4,
+  "defenseBonus": 2,
+  "vitalityBonus": 3,
+  "ascensionLevel": 0,
+  "unlockedRelics": ["war_banner"],
+  "recentLoot": [
+    {"name": "Gold Pouch", "amount": 40, "rarity": "common"}
+  ],
+  "equippedWeapon": {
+    "id": "legacy_weapon_1",
+    "name": "Chipped Sword",
+    "slot": "weapon",
+    "rarity": "common",
+    "attackBonus": 3,
+    "defenseBonus": 0,
+    "vitalityBonus": 0
+  }
+}

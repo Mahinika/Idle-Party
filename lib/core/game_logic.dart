@@ -2167,9 +2167,9 @@ class GameLogic {
   /// Parses a save of any version, migrating legacy v1 saves
   /// (single `enemy` + stored `battleNumber`) to the room-based v2 model.
   static GameState stateFromJson(Map<String, dynamic> json) {
-    final loaded = json.containsKey('enemies')
-        ? GameState.fromJson(json)
-        : _migrateV1(json);
+    final loaded = saveVersionOf(json) <= 1
+        ? _migrateV1(json)
+        : _backfillLifetimeGold(GameState.fromJson(json));
     final legacyBoard = loaded.missions.any(
       (m) =>
           m.id == 'defeat_enemies' ||
@@ -2200,6 +2200,31 @@ class GameLogic {
     return MetaSystems.evaluateAchievements(
       syncSpecUnlocks(ensureRogueHero(next)),
     );
+  }
+
+  /// Which save format this JSON is.
+  ///
+  /// Saves have written `version` since v2; before that the shape is the tell
+  /// (v1 stored a single `enemy`, not an `enemies` list). Reading the field
+  /// means a future format change has one place to branch on.
+  static int saveVersionOf(Map<String, dynamic> json) {
+    final stored = (json['version'] as num?)?.toInt();
+    if (stored != null && stored > 0) return stored;
+    return json.containsKey('enemies') ? 2 : 1;
+  }
+
+  /// Zones unlock on **lifetime** gold, so a save that never stored it (or
+  /// stored less than the run itself proves) would re-lock zones the player
+  /// already walked into. Raise it to the smallest honest value instead.
+  static GameState _backfillLifetimeGold(GameState state) {
+    var floor = state.gold;
+    for (final d in DungeonCatalog.all) {
+      if (d.number <= state.highestDungeonCleared) {
+        floor = max(floor, d.unlockPrice);
+      }
+    }
+    if (state.lifetimeGoldEarned >= floor) return state;
+    return state.copyWith(lifetimeGoldEarned: floor);
   }
 
   // —— Save export / import (clipboard JSON, no server) ——————————

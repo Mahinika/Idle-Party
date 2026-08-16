@@ -73,5 +73,5 @@ GameState _soloSpecParty(HeroSpecId specId, {required int level}) {
   while (hero.level < level) {
     hero = hero.levelUp();
   }
-  return state.copyWith(heroes: [hero]);
+  return state.withActiveParty([hero]);
 }
