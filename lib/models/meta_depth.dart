@@ -192,6 +192,12 @@ class MetaDepthState {
     this.seasonKey = '',
     this.claimedSeasonRewards = const <String>[],
     this.claimedWeekGoals = const <String>[],
+    this.leaderboardSeasonKey = '',
+    this.seasonBestTimedKey = 0,
+    this.seasonBestTimedClearMs = 0,
+    this.seasonBestGauntletFloor = 0,
+    this.cloudSaveUpdatedMs = 0,
+    this.playGamesOptIn = false,
   });
 
   final int sanctuaryXpLevel;
@@ -293,6 +299,24 @@ class MetaDepthState {
   /// Local week goals already claimed (`yyyy-Www:goalId`).
   final List<String> claimedWeekGoals;
 
+  /// Calendar month (`yyyy-MM`) for Play Games seasonal PBs.
+  final String leaderboardSeasonKey;
+
+  /// Best TIMED keystone level this [leaderboardSeasonKey].
+  final int seasonBestTimedKey;
+
+  /// Clear time (ms) for [seasonBestTimedKey] (lower is better).
+  final int seasonBestTimedClearMs;
+
+  /// Best Infinity Gauntlet floor this [leaderboardSeasonKey].
+  final int seasonBestGauntletFloor;
+
+  /// UTC millis when this save was last written for cloud conflict checks.
+  final int cloudSaveUpdatedMs;
+
+  /// Player opted into Play Games (sign-in succeeded at least once).
+  final bool playGamesOptIn;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -358,6 +382,12 @@ class MetaDepthState {
     String? seasonKey,
     List<String>? claimedSeasonRewards,
     List<String>? claimedWeekGoals,
+    String? leaderboardSeasonKey,
+    int? seasonBestTimedKey,
+    int? seasonBestTimedClearMs,
+    int? seasonBestGauntletFloor,
+    int? cloudSaveUpdatedMs,
+    bool? playGamesOptIn,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -423,6 +453,15 @@ class MetaDepthState {
       seasonKey: seasonKey ?? this.seasonKey,
       claimedSeasonRewards: claimedSeasonRewards ?? this.claimedSeasonRewards,
       claimedWeekGoals: claimedWeekGoals ?? this.claimedWeekGoals,
+      leaderboardSeasonKey:
+          leaderboardSeasonKey ?? this.leaderboardSeasonKey,
+      seasonBestTimedKey: seasonBestTimedKey ?? this.seasonBestTimedKey,
+      seasonBestTimedClearMs:
+          seasonBestTimedClearMs ?? this.seasonBestTimedClearMs,
+      seasonBestGauntletFloor:
+          seasonBestGauntletFloor ?? this.seasonBestGauntletFloor,
+      cloudSaveUpdatedMs: cloudSaveUpdatedMs ?? this.cloudSaveUpdatedMs,
+      playGamesOptIn: playGamesOptIn ?? this.playGamesOptIn,
     );
   }
 
@@ -483,6 +522,12 @@ class MetaDepthState {
         'seasonKey': seasonKey,
         'claimedSeasonRewards': claimedSeasonRewards,
         'claimedWeekGoals': claimedWeekGoals,
+        'leaderboardSeasonKey': leaderboardSeasonKey,
+        'seasonBestTimedKey': seasonBestTimedKey,
+        'seasonBestTimedClearMs': seasonBestTimedClearMs,
+        'seasonBestGauntletFloor': seasonBestGauntletFloor,
+        'cloudSaveUpdatedMs': cloudSaveUpdatedMs,
+        'playGamesOptIn': playGamesOptIn,
       };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -580,6 +625,17 @@ class MetaDepthState {
       claimedWeekGoals:
           (json['claimedWeekGoals'] as List<dynamic>?)?.cast<String>() ??
               const [],
+      leaderboardSeasonKey:
+          (json['leaderboardSeasonKey'] as String?) ?? '',
+      seasonBestTimedKey:
+          ((json['seasonBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      seasonBestTimedClearMs:
+          (json['seasonBestTimedClearMs'] as num?)?.toInt() ?? 0,
+      seasonBestGauntletFloor:
+          (json['seasonBestGauntletFloor'] as num?)?.toInt() ?? 0,
+      cloudSaveUpdatedMs:
+          (json['cloudSaveUpdatedMs'] as num?)?.toInt() ?? 0,
+      playGamesOptIn: (json['playGamesOptIn'] as bool?) ?? false,
     );
   }
 }

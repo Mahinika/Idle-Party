@@ -5074,6 +5074,8 @@ class _SettingsOverlayState extends State<_SettingsOverlay> {
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 16),
+        PlayGamesSection(director: director),
+        const SizedBox(height: 16),
         SaveTransferSection(director: director),
         const SizedBox(height: 16),
         KenneyButton(

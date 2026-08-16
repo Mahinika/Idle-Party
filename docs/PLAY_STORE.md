@@ -12,7 +12,8 @@ Package id: **`com.idleparty.app`**
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ⏳ | Prep URL: repo `docs/PRIVACY.md` on main |
-| Data safety form | ⏳ | Match PRIVACY: local save, no ads/accounts/analytics servers |
+| Data safety form | ⏳ | Match PRIVACY: local save; **optional** Play Games (scores + Saved Games); no ads; no Idle Party analytics servers |
+| Play Games Services | ⏳ | Enable login + Saved Games; create monthly Timed KEY + Gauntlet leaderboards; paste IDs into `lib/core/play_leaderboard_ids.dart`; set `game_services_project_id` in `android/app/src/main/res/values/games-ids.xml` |
 | IARC / content rating | ❌ | Mild fantasy combat; no chat / gambling / ads |
 | Store listing copy (EN) | ⏳ | Idle Party short + full; no Flutter placeholders |
 | Screenshots + feature graphic | ❌ | Hub + dungeon; icon `assets/custom/ui/app_icon.png` |
@@ -48,7 +49,15 @@ over Play ops unless the owner asks about Play.
 - [ ] Privacy policy URL pointing at this repo’s  
   `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md`  
   (or the equivalent branch/raw URL you publish).
-- [ ] Data safety form: **no accounts**, **no ads**, **no analytics collection to Idle Party servers**, **local-only save**; clipboard export/import is optional and user-initiated (see [PRIVACY.md](PRIVACY.md)).
+- [ ] Data safety form: **local save**; **optional Play Games** (Game progress / leaderboards / Saved Games when signed in); **no ads**; **no Idle Party analytics servers**; clipboard export/import is optional and user-initiated (see [PRIVACY.md](PRIVACY.md)).
+
+### Play Games setup (leaderboards + cloud)
+
+1. Play Console → Play Games Services → link `com.idleparty.app`.
+2. Enable player login + **Saved Games**.
+3. Each calendar month create two leaderboards (e.g. `Timed KEY · 2026-08`, `Gauntlet · 2026-08`) and paste Android IDs into [`lib/core/play_leaderboard_ids.dart`](../lib/core/play_leaderboard_ids.dart).
+4. Put the numeric Games **App ID** in [`android/app/src/main/res/values/games-ids.xml`](../android/app/src/main/res/values/games-ids.xml).
+5. Test on a **Play-installed** build (internal/closed). GitHub sideload may soft-fail sign-in.
 
 ## Content rating / store listing notes
 

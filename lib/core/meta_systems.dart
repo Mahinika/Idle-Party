@@ -19,10 +19,20 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.8';
+  static const String currentVersion = '1.12.9';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.9',
+      bullets: <String>[
+        'Optional Play Games in MORE: seasonal Timed KEY + Gauntlet boards and cloud save (sign-in; clipboard backup still works).',
+        'Protection / Discipline / Fire / Combat kits now share the same cast engine as every other spec (same feel, cleaner wiring).',
+        'Tidehold / Ashen Vault / Hollow Grove read clearer apart from Crystal / Hell / Fen (wash, floors, props, trash sprites).',
+        'Hub TODAY shows KEY · Vault · Week crumbs under the chase so you always see today’s meta on a phone.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.8',
       bullets: <String>[

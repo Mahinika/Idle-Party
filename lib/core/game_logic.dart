@@ -24,6 +24,8 @@ import 'game_state.dart';
 import 'keystone.dart';
 import 'local_season.dart';
 import 'meta_systems.dart';
+import 'play_games_bridge.dart';
+import 'play_games_scores.dart';
 
 class GameLogic {
   /// Injectable randomness for enemy targeting (seed in tests).
@@ -350,13 +352,25 @@ class GameLogic {
     required int reachedFloor,
   }) {
     final cleared = max(0, reachedFloor - 1);
-    final best = max(state.metaDepth.gauntletBestFloor, cleared);
-    if (best == state.metaDepth.gauntletBestFloor) {
-      return syncMetaPayoffs(state);
+    var next = ensureLeaderboardSeason(state);
+    final best = max(next.metaDepth.gauntletBestFloor, cleared);
+    final seasonBest = max(next.metaDepth.seasonBestGauntletFloor, cleared);
+    if (best == next.metaDepth.gauntletBestFloor &&
+        seasonBest == next.metaDepth.seasonBestGauntletFloor) {
+      return syncMetaPayoffs(next);
+    }
+    if (seasonBest > next.metaDepth.seasonBestGauntletFloor) {
+      PlayGamesBridge.noteGauntletPb(
+        monthKey: next.metaDepth.leaderboardSeasonKey,
+        floor: seasonBest,
+      );
     }
     return syncMetaPayoffs(
-      state.copyWith(
-        metaDepth: state.metaDepth.copyWith(gauntletBestFloor: best),
+      next.copyWith(
+        metaDepth: next.metaDepth.copyWith(
+          gauntletBestFloor: best,
+          seasonBestGauntletFloor: seasonBest,
+        ),
       ),
     );
   }
@@ -4068,6 +4082,21 @@ class GameLogic {
     return '$y-$m';
   }
 
+  /// Reset Play Games seasonal PBs when the calendar month rolls.
+  static GameState ensureLeaderboardSeason(GameState state, {DateTime? now}) {
+    final month = isoMonthKey((now ?? DateTime.now()).toUtc());
+    final md = state.metaDepth;
+    if (md.leaderboardSeasonKey == month) return state;
+    return state.copyWith(
+      metaDepth: md.copyWith(
+        leaderboardSeasonKey: month,
+        seasonBestTimedKey: 0,
+        seasonBestTimedClearMs: 0,
+        seasonBestGauntletFloor: 0,
+      ),
+    );
+  }
+
   /// Display season label (ISO week + month), e.g. `2026-W32 · 2026-08`.
   static String seasonLabel(DateTime utc) =>
       '${isoWeekKey(utc)} · ${isoMonthKey(utc)}';
@@ -4084,23 +4113,23 @@ class GameLogic {
     final t = (now ?? DateTime.now()).toUtc();
     final key = isoWeekKey(t);
     final season = seasonLabel(t);
-    var next = state;
-    if (state.metaDepth.weeklyKey != key ||
-        state.metaDepth.seasonKey != season) {
-      final sameWeek = state.metaDepth.weeklyKey == key;
+    var next = ensureLeaderboardSeason(state, now: t);
+    if (next.metaDepth.weeklyKey != key ||
+        next.metaDepth.seasonKey != season) {
+      final sameWeek = next.metaDepth.weeklyKey == key;
       final mod = LocalSeasonCatalog.resolveAffix(
         weekKey: key,
-        currentModifier: sameWeek ? state.metaDepth.weeklyModifier : '',
+        currentModifier: sameWeek ? next.metaDepth.weeklyModifier : '',
       );
       next = next.copyWith(
-        metaDepth: state.metaDepth.copyWith(
+        metaDepth: next.metaDepth.copyWith(
           weeklyKey: key,
           // Legacy weekly vault fields — kept for saves; vault is daily now.
-          weeklyProgress: sameWeek ? state.metaDepth.weeklyProgress : 0,
-          weeklyClaimed: sameWeek ? state.metaDepth.weeklyClaimed : false,
-          weeklyModifier: sameWeek ? state.metaDepth.weeklyModifier : mod,
+          weeklyProgress: sameWeek ? next.metaDepth.weeklyProgress : 0,
+          weeklyClaimed: sameWeek ? next.metaDepth.weeklyClaimed : false,
+          weeklyModifier: sameWeek ? next.metaDepth.weeklyModifier : mod,
           weeklyBestTimedKey:
-              sameWeek ? state.metaDepth.weeklyBestTimedKey : 0,
+              sameWeek ? next.metaDepth.weeklyBestTimedKey : 0,
           seasonKey: season,
         ),
       );
@@ -6773,11 +6802,22 @@ class GameLogic {
                 awarded.metaDepth.gauntletBestFloor,
                 room.floorNumber,
               ),
+              seasonBestGauntletFloor: max(
+                awarded.metaDepth.seasonBestGauntletFloor,
+                room.floorNumber,
+              ),
               lifetimeGauntletFloors:
                   awarded.metaDepth.lifetimeGauntletFloors + 1,
             )
           : awarded.metaDepth,
     );
+    if (gauntlet &&
+        room.floorNumber > awarded.metaDepth.seasonBestGauntletFloor) {
+      final month = awarded.metaDepth.leaderboardSeasonKey.isNotEmpty
+          ? awarded.metaDepth.leaderboardSeasonKey
+          : isoMonthKey(DateTime.now().toUtc());
+      PlayGamesBridge.noteGauntletPb(monthKey: month, floor: room.floorNumber);
+    }
     progressed = _applyMetaProgress(state, progressed, drops);
 
     // Daily echo ends after the first clear (reward claimed) — no PUSH climb.
@@ -6877,6 +6917,28 @@ class GameLogic {
         keystoneNotices.add(
           'KEY +$key TIMED · next KEY +$preferredKey · +${bonus}e',
         );
+        final md = next.metaDepth;
+        final clearMs = before.keystoneTimerMs;
+        if (PlayGamesScores.isBetterTimed(
+          newKey: key,
+          newClearMs: clearMs,
+          bestKey: md.seasonBestTimedKey,
+          bestClearMs: md.seasonBestTimedClearMs,
+        )) {
+          next = next.copyWith(
+            metaDepth: md.copyWith(
+              seasonBestTimedKey: key,
+              seasonBestTimedClearMs: clearMs,
+            ),
+          );
+          PlayGamesBridge.noteTimedPb(
+            monthKey: next.metaDepth.leaderboardSeasonKey.isNotEmpty
+                ? next.metaDepth.leaderboardSeasonKey
+                : isoMonthKey(DateTime.now().toUtc()),
+            keyLevel: key,
+            clearMs: clearMs,
+          );
+        }
       } else {
         outcome = 'depleted';
         keystoneNotices.add(

@@ -19,6 +19,9 @@ import 'game_logic.dart';
 import 'game_state.dart';
 import 'hero_identity.dart';
 import 'meta_systems.dart';
+import 'play_games_bridge.dart';
+import 'play_games_scores.dart';
+import 'play_leaderboard_ids.dart';
 import 'story_lore.dart';
 import '../models/dungeon_def.dart';
 
@@ -170,9 +173,18 @@ class GameDirector extends ChangeNotifier {
   Future<void> _saveChain = Future.value();
 
   void _persist() {
+    final stamped = _state.copyWith(
+      metaDepth: _state.metaDepth.copyWith(
+        cloudSaveUpdatedMs: DateTime.now().toUtc().millisecondsSinceEpoch,
+      ),
+    );
+    _state = stamped;
     _saveChain = _saveChain
         .then((_) => _storage.save(_state))
-        .catchError((Object e, StackTrace st) {
+        .then((_) {
+      PlayGamesBridge.scheduleCloudUpload(_state);
+      unawaited(PlayGamesBridge.flushPendingScores());
+    }).catchError((Object e, StackTrace st) {
       debugPrint('save failed: $e\n$st');
     });
   }
@@ -1468,6 +1480,124 @@ class GameDirector extends ChangeNotifier {
     unawaited(_persistFlush());
     return true;
   }
+
+  /// Opt-in Play Games sign-in (leaderboards + cloud). Returns true when signed in.
+  Future<bool> signInPlayGames() async {
+    final ok = await PlayGamesBridge.signIn();
+    if (!ok) {
+      showToast(
+        PlayGamesBridge.isSupported
+            ? 'Play Games sign-in failed'
+            : 'Play Games unavailable on this build',
+        life: 2.4,
+      );
+      return false;
+    }
+    _state = _state.copyWith(
+      metaDepth: _state.metaDepth.copyWith(playGamesOptIn: true),
+    );
+    notifyListeners();
+    final cloud = await PlayGamesBridge.loadCloud();
+    if (cloud != null && !_hasExistingSave) {
+      _applyCloudRestore(cloud, toast: 'Restored from Play Games');
+    } else if (cloud == null && !_hasExistingSave) {
+      showToast('Signed in · no cloud save yet', life: 2.2);
+    } else {
+      showToast('Signed in to Play Games', life: 2.0);
+    }
+    unawaited(PlayGamesBridge.saveCloud(_state));
+    unawaited(PlayGamesBridge.flushPendingScores());
+    unawaited(_persistFlush());
+    return true;
+  }
+
+  void _applyCloudRestore(GameState cloud, {required String toast}) {
+    _awaitingWipeChoice = false;
+    _hasExistingSave = true;
+    _state = GameLogic.ensureRogueHero(
+      GameLogic.ensureWeeklyContract(cloud),
+    );
+    GameAudio.muted = _state.soundMuted;
+    SpatialCombat.colorblindMode = _state.colorblindMode;
+    if (_state.inDungeon) {
+      _rebuildSpatial();
+      if (enableSpatialLoop) _startSpatialLoop();
+    } else {
+      _spatialTimer?.cancel();
+      _spatialTimer = null;
+      _spatial = null;
+    }
+    notifyListeners();
+    showToast(toast, life: 2.6);
+  }
+
+  Future<bool> backupToPlayGames() async {
+    final ok = await PlayGamesBridge.saveCloud(_state);
+    showToast(
+      ok ? 'Backed up to Play Games' : 'Cloud backup failed',
+      life: 2.2,
+    );
+    return ok;
+  }
+
+  Future<bool> restoreFromPlayGames({bool force = false}) async {
+    final cloud = await PlayGamesBridge.loadCloud();
+    if (cloud == null) {
+      showToast('No Play Games save found', life: 2.2);
+      return false;
+    }
+    if (!force) {
+      final decision = PlayGamesScores.resolveConflict(
+        localMs: _state.metaDepth.cloudSaveUpdatedMs,
+        cloudMs: cloud.metaDepth.cloudSaveUpdatedMs,
+      );
+      if (decision == CloudConflict.preferLocal) {
+        showToast('This device is newer — kept local save', life: 2.4);
+        return false;
+      }
+      if (decision == CloudConflict.askUser) {
+        // Caller should show confirm; force=true after confirm.
+        return false;
+      }
+    }
+    _applyCloudRestore(cloud, toast: 'Restored from Play Games');
+    unawaited(_persistFlush());
+    return true;
+  }
+
+  /// Hint lines for cloud conflict dialogs.
+  String playGamesConflictHint(GameState s) =>
+      PlayGamesBridge.conflictHint(s);
+
+  Future<void> showPlayTimedLeaderboard() async {
+    final month = _state.metaDepth.leaderboardSeasonKey.isNotEmpty
+        ? _state.metaDepth.leaderboardSeasonKey
+        : GameLogic.isoMonthKey(DateTime.now().toUtc());
+    if (!PlayLeaderboardIds.hasBoards(month)) {
+      showToast('Season boards not configured yet', life: 2.4);
+      return;
+    }
+    await PlayGamesBridge.showTimedLeaderboard(month);
+  }
+
+  Future<void> showPlayGauntletLeaderboard() async {
+    final month = _state.metaDepth.leaderboardSeasonKey.isNotEmpty
+        ? _state.metaDepth.leaderboardSeasonKey
+        : GameLogic.isoMonthKey(DateTime.now().toUtc());
+    if (!PlayLeaderboardIds.hasBoards(month)) {
+      showToast('Season boards not configured yet', life: 2.4);
+      return;
+    }
+    await PlayGamesBridge.showGauntletLeaderboard(month);
+  }
+
+  CloudConflict peekCloudConflict(GameState cloud) =>
+      PlayGamesScores.resolveConflict(
+        localMs: _state.metaDepth.cloudSaveUpdatedMs,
+        cloudMs: cloud.metaDepth.cloudSaveUpdatedMs,
+      );
+
+  Future<GameState?> loadPlayGamesCloud() => PlayGamesBridge.loadCloud();
 
   void unequipSlot(EquipmentSlot slot, {int heroIndex = 0}) {
     _applyUpgrade(

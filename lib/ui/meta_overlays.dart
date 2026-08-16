@@ -11,6 +11,9 @@ import '../core/hub_chase.dart';
 import '../core/keystone.dart';
 import '../core/local_season.dart';
 import '../core/meta_systems.dart';
+import '../core/play_games_bridge.dart';
+import '../core/play_games_scores.dart';
+import '../core/play_leaderboard_ids.dart';
 import '../models/achievement_def.dart';
 import '../models/gear_loadout.dart';
 import '../models/hero.dart';
@@ -1471,6 +1474,228 @@ class SaveTransferSection extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           'Export copies JSON to clipboard — paste somewhere safe as a backup.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+      ],
+    );
+  }
+}
+
+/// Opt-in Play Games: seasonal boards + cloud save (Google hosts; no Idle Party server).
+class PlayGamesSection extends StatefulWidget {
+  const PlayGamesSection({super.key, required this.director});
+  final GameDirector director;
+
+  @override
+  State<PlayGamesSection> createState() => _PlayGamesSectionState();
+}
+
+class _PlayGamesSectionState extends State<PlayGamesSection> {
+  bool _busy = false;
+
+  GameDirector get director => widget.director;
+
+  Future<void> _run(Future<void> Function() action) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _signIn() => _run(() async {
+        final ok = await director.signInPlayGames();
+        if (!ok || !mounted) return;
+        final cloud = await director.loadPlayGamesCloud();
+        if (cloud == null || !mounted) return;
+        final conflict = director.peekCloudConflict(cloud);
+        if (conflict != CloudConflict.askUser) return;
+        final useCloud = await showDialog<bool>(
+          context: context,
+          barrierColor: MenuChrome.scrim,
+          builder: (ctx) => MenuChrome.dialog(
+            title: 'Cloud save differs',
+            content: Text(
+              'This device:\n${director.playGamesConflictHint(director.state)}\n\n'
+              'Play Games:\n${director.playGamesConflictHint(cloud)}\n\n'
+              'Which save should we keep?',
+              style: GameTheme.body(size: 14, color: GameTheme.parchment),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(
+                  'KEEP DEVICE',
+                  style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+                ),
+              ),
+              KenneyButton(
+                label: 'USE CLOUD',
+                style: KenneyButtonStyle.brown,
+                expanded: false,
+                onPressed: () => Navigator.pop(ctx, true),
+              ),
+            ],
+          ),
+        );
+        if (useCloud == true) {
+          await director.restoreFromPlayGames(force: true);
+        }
+      });
+
+  Future<void> _restore() => _run(() async {
+        final cloud = await director.loadPlayGamesCloud();
+        if (cloud == null) {
+          director.showToast('No Play Games save found', life: 2.2);
+          return;
+        }
+        final conflict = director.peekCloudConflict(cloud);
+        if (conflict == CloudConflict.askUser && mounted) {
+          final useCloud = await showDialog<bool>(
+            context: context,
+            barrierColor: MenuChrome.scrim,
+            builder: (ctx) => MenuChrome.dialog(
+              title: 'Restore from Play Games?',
+              content: Text(
+                'This device:\n${director.playGamesConflictHint(director.state)}\n\n'
+                'Play Games:\n${director.playGamesConflictHint(cloud)}',
+                style: GameTheme.body(size: 14, color: GameTheme.parchment),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(
+                    'CANCEL',
+                    style:
+                        GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+                  ),
+                ),
+                KenneyButton(
+                  label: 'RESTORE',
+                  style: KenneyButtonStyle.red,
+                  expanded: false,
+                  onPressed: () => Navigator.pop(ctx, true),
+                ),
+              ],
+            ),
+          );
+          if (useCloud != true) return;
+          await director.restoreFromPlayGames(force: true);
+          return;
+        }
+        await director.restoreFromPlayGames(force: conflict == CloudConflict.preferCloud);
+      });
+
+  @override
+  Widget build(BuildContext context) {
+    final state = director.state;
+    final md = state.metaDepth;
+    final month = md.leaderboardSeasonKey.isNotEmpty
+        ? md.leaderboardSeasonKey
+        : GameLogic.isoMonthKey(DateTime.now().toUtc());
+    final timedLabel = md.seasonBestTimedKey > 0
+        ? PlayGamesScores.formatTimedLabel(
+            md.seasonBestTimedKey,
+            md.seasonBestTimedClearMs,
+          )
+        : 'No timed KEY yet';
+    final gauntletLabel = md.seasonBestGauntletFloor > 0
+        ? 'Gauntlet F${md.seasonBestGauntletFloor}'
+        : 'No Gauntlet floor yet';
+    final boardsReady = PlayLeaderboardIds.hasBoards(month);
+    final signedIn = PlayGamesBridge.isSignedInCached || md.playGamesOptIn;
+    final lastBackup = PlayGamesBridge.lastCloudUploadAt;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'PLAY GAMES',
+          style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Season $month · opt-in boards + cloud backup',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          timedLabel,
+          style: GameTheme.body(size: 13, color: GameTheme.parchment),
+        ),
+        Text(
+          gauntletLabel,
+          style: GameTheme.body(size: 13, color: GameTheme.parchment),
+        ),
+        if (lastBackup != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Last cloud backup · ${lastBackup.toLocal()}',
+            style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+          ),
+        ],
+        const SizedBox(height: 8),
+        KenneyButton(
+          label: signedIn ? 'SIGNED IN' : 'SIGN IN WITH PLAY GAMES',
+          style: KenneyButtonStyle.brown,
+          onPressed: _busy || signedIn ? null : _signIn,
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: KenneyButton(
+                label: 'VIEW KEY',
+                style: KenneyButtonStyle.grey,
+                onPressed: _busy || !boardsReady
+                    ? null
+                    : () => _run(director.showPlayTimedLeaderboard),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: KenneyButton(
+                label: 'VIEW GAUNTLET',
+                style: KenneyButtonStyle.grey,
+                onPressed: _busy || !boardsReady
+                    ? null
+                    : () => _run(director.showPlayGauntletLeaderboard),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: KenneyButton(
+                label: 'BACKUP NOW',
+                style: KenneyButtonStyle.grey,
+                onPressed: _busy
+                    ? null
+                    : () => _run(() async {
+                          await director.backupToPlayGames();
+                        }),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: KenneyButton(
+                label: 'RESTORE',
+                style: KenneyButtonStyle.grey,
+                onPressed: _busy ? null : _restore,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          boardsReady
+              ? 'Boards submit on new season PBs while signed in.'
+              : 'Leaderboard IDs not set yet — add them in Play Console, then '
+                  'paste into play_leaderboard_ids.dart.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
       ],
