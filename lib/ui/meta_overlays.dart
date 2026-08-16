@@ -3,11 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/chase_contract.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/hub_chase.dart';
 import '../core/keystone.dart';
+import '../core/local_season.dart';
 import '../core/meta_systems.dart';
 import '../models/achievement_def.dart';
 import '../models/gear_loadout.dart';
@@ -759,26 +761,28 @@ class _LoadoutSlotRow extends StatelessWidget {
 /// full-detail dialog the player must dismiss.
 Future<void> showOfflineProgressDialog(
   BuildContext context,
-  GameDirector director,
-) async {
+  GameDirector director, {
+  VoidCallback? onOpenParty,
+}) async {
   final summary = director.offlineSummary;
   if (summary == null) return;
-  final chase = HubChase.forState(summary.state);
+  final contract = ChaseContract.fromState(summary.state);
+  final chase = contract.chase;
   final rows = summary.highlightRows;
-  final notices = List<String>.from(GameLogic.lastMetaPayoffNotices);
+  final notices = List<String>.from(GameLogic.lastMetaPayoffNotices)
+      .take(2)
+      .toList(growable: false);
 
   VoidCallback? readyAction;
-  var readyLabel = '';
+  var readyLabel = contract.readyActionLabel ?? '';
   switch (chase.kind) {
     case HubChaseKind.claimDailyVault:
-      readyLabel = 'CLAIM VAULT';
       readyAction = () {
         director.claimWeekly();
         director.dismissOfflineSummary();
         Navigator.pop(context);
       };
     case HubChaseKind.claimMissions:
-      readyLabel = 'CLAIM JOBS';
       readyAction = () {
         for (final m in director.state.missions) {
           if (m.isComplete) director.claimMission(m.id);
@@ -787,25 +791,36 @@ Future<void> showOfflineProgressDialog(
         Navigator.pop(context);
       };
     case HubChaseKind.ascend:
-      readyLabel = 'ASCEND';
       readyAction = () {
         director.dismissOfflineSummary();
         Navigator.pop(context);
         confirmAscend(context, director);
       };
     case HubChaseKind.dailyRun:
-      readyLabel = 'DAILY';
       readyAction = () {
         director.dismissOfflineSummary();
         Navigator.pop(context);
         confirmDailyRun(context, director);
       };
+    case HubChaseKind.keystone:
+      break;
     case HubChaseKind.gauntletMilestone:
-      readyLabel = 'GAUNTLET';
       readyAction = () {
         director.dismissOfflineSummary();
         Navigator.pop(context);
         confirmGauntletRun(context, director);
+      };
+    case HubChaseKind.meetHero:
+      readyLabel = 'PARTY';
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+        // Hub passes onOpenParty (acks + opens PARTY). Fallback: ack only.
+        if (onOpenParty != null) {
+          onOpenParty();
+        } else {
+          director.ackPendingHeroReveals();
+        }
       };
     default:
       break;
@@ -835,13 +850,6 @@ Future<void> showOfflineProgressDialog(
             summary.welcomeLead,
             style: GameTheme.body(size: 14, color: GameTheme.torchHot),
           ),
-          const SizedBox(height: 6),
-          Text(
-            summary.state.inDungeon
-                ? 'AFK runs spatial combat with assist (faster, softer packs).'
-                : 'Hub AFK earns sanctuary idle gold only.',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-          ),
           if (rows.isNotEmpty) ...[
             const SizedBox(height: 10),
             for (final row in rows)
@@ -851,16 +859,14 @@ Future<void> showOfflineProgressDialog(
             const SizedBox(height: 8),
             Text(
               notices.join(' · '),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: GameTheme.body(size: 13, color: GameTheme.mossLit),
             ),
           ],
           const SizedBox(height: 10),
           Text(
-            chase.urgency == HubChaseUrgency.ready
-                ? 'Up next — ready: ${chase.title}'
-                : chase.urgency == HubChaseUrgency.almost
-                    ? 'Up next — almost: ${chase.title}'
-                    : 'Up next: ${chase.title}',
+            contract.upNextLine,
             style: GameTheme.body(
               size: 14,
               color: chase.urgency == HubChaseUrgency.normal
@@ -1055,11 +1061,24 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
     final vaultReady = GameLogic.canClaimDailyVault(state);
     final affixes = Keystone.previewAffixes(state);
     final vaultE = Keystone.dailyVaultEssence(md.dailyBestTimedKey);
+    final weekKey = md.weeklyKey.isNotEmpty
+        ? md.weeklyKey
+        : GameLogic.isoWeekKey(DateTime.now().toUtc());
+    final week = LocalSeasonCatalog.forWeekKey(weekKey);
+    final weekClaimed = LocalSeasonCatalog.weekGoalClaimed(state, week);
+    final weekReady = LocalSeasonCatalog.weekGoalReady(state, week);
+    final weekAlmost = LocalSeasonCatalog.weekGoalAlmost(state, week);
+    final month = LocalSeasonCatalog.forMonthKey(
+      md.seasonKey.contains('·')
+          ? md.seasonKey.split('·').last.trim()
+          : GameLogic.isoMonthKey(DateTime.now().toUtc()),
+    );
     final activeBits = <String>[
       if (state.hardmodeLevel > 0) 'KEY+${state.hardmodeLevel}',
       if (state.challengeBossRush) 'Boss Rush',
       if (state.challengeNoFlask) 'No Flask',
       if (vaultReady) 'Vault ready',
+      if (weekReady) 'Week ready',
     ];
 
     final headerLabel = _expanded
@@ -1177,7 +1196,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 Text(
                   md.seasonKey.isEmpty
                       ? 'Season rotating…'
-                      : 'This month · +${GameLogic.seasonWeeklyBonusEssence}e first vault claim',
+                      : '${month.name} · +${GameLogic.seasonWeeklyBonusEssence}e first vault claim',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
                 ),
@@ -1201,6 +1220,49 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
               ],
             ),
           ),
+          if (week.hasGoal) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: MenuChrome.cardBox(
+                selected: weekReady || weekAlmost,
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    weekReady
+                        ? 'WEEK GOAL READY'
+                        : weekAlmost
+                            ? 'WEEK GOAL ALMOST'
+                            : 'WEEK GOAL',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.pixel(
+                      size: 8,
+                      color: weekReady || weekAlmost
+                          ? GameTheme.torchHot
+                          : GameTheme.parchmentDim,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    week.name,
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(size: 13, color: GameTheme.parchment),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    weekClaimed
+                        ? 'Claimed · ${week.titleReward ?? week.name}'
+                        : '${week.blurb}\n'
+                            '${LocalSeasonCatalog.weekProgressLabel(state, week)}'
+                            '${weekReady ? ' · auto-claims on hub sync' : ''}',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 2),
           Text(
             'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2.',

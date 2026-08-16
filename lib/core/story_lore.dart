@@ -11,6 +11,22 @@ abstract final class StoryLore {
   static const String introSubline =
       'You are the distant will. Guide them into the deep.';
 
+  /// Cold-start beats before CONTINUE / NEW GAME. Short, skippable.
+  static const introBeats = <({String title, String body})>[
+    (
+      title: 'IDLE PARTY',
+      body: 'A party that fights while you watch.',
+    ),
+    (
+      title: 'THE KEEP',
+      body: 'Fifteen gates. Something wrong sleeps beneath.',
+    ),
+    (
+      title: 'YOUR WILL',
+      body: 'Guide them. Grow them. Descend.',
+    ),
+  ];
+
   /// Hub / catalog one-liners keyed by dungeon id.
   static String dungeonBlurb(String dungeonId) {
     final def = DungeonCatalog.byId(dungeonId);
@@ -32,6 +48,10 @@ abstract final class StoryLore {
       'ember' => 'Ash drifts in the vault. The crown still smolders.',
       'grove' => 'Roots tighten. Something old watches between the trunks.',
       'storm' => 'Wind screams through the hollow. Lightning answers every step.',
+      'rime' => 'The wind dies. Rimeglass sings underfoot — cold enough to cut.',
+      'fen' => 'The ice sweats. Bile water pools where the cold used to sing.',
+      'brass' => 'The mire drains through brass grates. Something still ticks.',
+      'veil' => 'Brass ticks fade. Moth-dust fills the hollow.',
       _ => 'Entering ${def.name}…',
     };
   }
@@ -50,6 +70,10 @@ abstract final class StoryLore {
       'ember' => 'The Sovereign cools. Embers still whisper.',
       'grove' => 'Wyrd Root stills. The grove exhales moss and quiet.',
       'storm' => 'The Tyrant breaks. Thunder rolls away into quiet.',
+      'rime' => 'The Colossus cracks. Frost settles — the rift holds its breath.',
+      'fen' => 'The Hydra sinks. The mire keeps bubbling.',
+      'brass' => 'The Mainspring stills. Cogs keep ticking in the dark.',
+      'veil' => 'The Pale Monarch folds. Silk still drifts.',
       _ => '${def.name} cleared.',
     };
   }
@@ -77,15 +101,15 @@ abstract final class StoryLore {
         ? '+${rewardEssence}e (+${milestoneBonus}e milestone) · AL → $nextAl'
         : '+${rewardEssence}e · AL → $nextAl';
     final alPower =
-        'AL power: +1 ATK · +${nextAl ~/ 2 - (nextAl - 1) ~/ 2} DEF · +2 VIT · +10% gold';
+        'AL power: +1 ATK · +${nextAl ~/ 2 - (nextAl - 1) ~/ 2} DEF · +2 STA · +10% gold';
     final blessAtk = blessingsAfter * GameLogic.ascendBlessingAtk;
     final blessDef = blessingsAfter * GameLogic.ascendBlessingDef;
     final blessVit = blessingsAfter * GameLogic.ascendBlessingVit;
     final blessGold = blessingsAfter * GameLogic.ascendBlessingGoldPct;
     final blessLine =
         'Blessing: +${GameLogic.ascendBlessingAtk} ATK · +${GameLogic.ascendBlessingDef} DEF · '
-        '+${GameLogic.ascendBlessingVit} VIT · +${GameLogic.ascendBlessingGoldPct}% gold '
-        '(total ×$blessingsAfter: +$blessAtk ATK · +$blessDef DEF · +$blessVit VIT · +$blessGold% gold)';
+        '+${GameLogic.ascendBlessingVit} STA · +${GameLogic.ascendBlessingGoldPct}% gold '
+        '(total ×$blessingsAfter: +$blessAtk ATK · +$blessDef DEF · +$blessVit STA · +$blessGold% gold)';
     final thisUnlock = AscendRoadmap.unlockLineForAscendTo(nextAl);
     final unlockLine = unlockCombatRogue
         ? '\nUnlock: Combat Rogue (Shade) joins the roster.'
@@ -120,5 +144,5 @@ abstract final class StoryLore {
 
   static const String loreTipTitle = 'THE DESCENT';
   static const String loreTipBody =
-      'Nine gates. One wrongness below. Clear deeper zones, then Ascend.';
+      'Fifteen gates. One wrongness below. Clear deeper zones, then Ascend.';
 }

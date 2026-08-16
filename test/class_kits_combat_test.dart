@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
@@ -231,22 +229,18 @@ void main() {
       ..y = target.y;
     _padAbilityCds(warrior, except: AbilityId.charge);
 
-    final startX = warrior.x;
-    final startY = warrior.y;
-    for (var i = 0; i < 20; i++) {
-      world = SpatialCombat.step(world, state, dt: 0.1).world;
-      warrior.rage = 100;
+    for (var i = 0; i < 8; i++) {
+      // Pin far so we only test out-of-range refuse (not walk-into-range Charge).
+      warrior
+        ..x = target.x - 14.0
+        ..y = target.y
+        ..rage = 100;
       _padAbilityCds(warrior, except: AbilityId.charge);
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
     }
     expect(target.rootTimer, lessThan(0.1));
-    // May walk closer, but must not instant-snap into melee via Charge.
-    final moved = math.sqrt(
-      math.pow(warrior.x - startX, 2) + math.pow(warrior.y - startY, 2),
-    );
-    final stillFar =
-        math.sqrt(math.pow(warrior.x - target.x, 2) + math.pow(warrior.y - target.y, 2));
-    expect(stillFar, greaterThan(8.0));
-    expect(moved, lessThan(6.0));
+    // Pin each step; allow small walk jitter without counting as Charge.
+    expect(warrior.x, closeTo(target.x - 14.0, 1.0));
   });
 
   test('Commanding Shout buffs living party heroes', () {

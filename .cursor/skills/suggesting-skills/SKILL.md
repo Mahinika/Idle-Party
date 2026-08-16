@@ -32,6 +32,9 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | A11y / reduce motion / labels | `accessibility-auditing` |
 | UI change “does it look ok?” | `verifying-in-browser` |
 | Play Store / listing / privacy / IARC | `play-store-prep` |
+| `/init` / resync AGENTS + rules | `init` |
+| Strategi / 90 dagar / prioritering | 90d shipped → read `docs/CONTENT_CADENCE.md` (silently) |
+| Topplistor / varför bra spel | `docs/TOP_GAMES_RESEARCH.md` background only — don’t derail |
 
 ## Rules
 

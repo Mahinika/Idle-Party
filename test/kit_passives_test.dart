@@ -55,6 +55,14 @@ void main() {
     expect(priest.innerFireActive, isTrue);
     expect(priest.kitHealMul, greaterThan(1.0));
   });
+
+  test('Combat rogue kitOutMul sits near melee band', () {
+    final state = _soloSpecParty(HeroSpecId.combat, level: 5);
+    var world = SpatialCombat.build(state);
+    world = SpatialCombat.step(world, state, dt: 0.1).world;
+    final rogue = world.heroes.firstWhere((h) => !h.isPet);
+    expect(rogue.kitOutMul, closeTo(0.94, 0.001));
+  });
 }
 
 GameState _soloSpecParty(HeroSpecId specId, {required int level}) {

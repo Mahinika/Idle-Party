@@ -3,6 +3,9 @@ import 'dart:math';
 import '../models/dungeon_def.dart';
 import '../models/dungeon_room.dart';
 import '../ui/kenney_assets.dart';
+import 'floor_blueprint.dart';
+import 'placement_plan.dart';
+import 'zone_layout_kit.dart';
 
 enum TileKind { wall, floor, spawn, exit, gate }
 
@@ -31,6 +34,8 @@ enum MapPropKind {
   pillar,
   /// Floor debris / rubble pile.
   rubble,
+  /// Interactive-looking room chest (also a GroundLoot socket).
+  chest,
 }
 
 class MapProp {
@@ -100,6 +105,7 @@ class TileMap {
     this.gates = const <GateInfo>[],
     this.enemyChamberIndices = const <int>[],
     this.props = const <MapProp>[],
+    this.lootChestPoints = const <(int, int)>[],
     this.layoutSeed = 0,
   });
 
@@ -118,6 +124,9 @@ class TileMap {
 
   /// Decorative props (non-blocking).
   final List<MapProp> props;
+
+  /// Room-reward chest sockets (world pickups spawned in SpatialCombat.build).
+  final List<(int x, int y)> lootChestPoints;
 
   /// Seed used for floor/wall hash + prop scatter.
   final int layoutSeed;
@@ -274,6 +283,7 @@ abstract final class RoomLayouts {
         rng: rng,
         dungeonId: dungeonId,
         layoutSeed: seed,
+        room: room,
       );
     }
     if (room.type == RoomType.boss) {
@@ -282,6 +292,7 @@ abstract final class RoomLayouts {
         dungeonId: dungeonId,
         layoutSeed: seed,
         enemyCount: enemyCount,
+        room: room,
       );
     }
 
@@ -291,6 +302,7 @@ abstract final class RoomLayouts {
         dungeonId: dungeonId,
         layoutSeed: seed,
         enemyCount: enemyCount,
+        room: room,
       );
     }
 
@@ -311,6 +323,73 @@ abstract final class RoomLayouts {
       enemyCount: enemyCount,
       dungeonId: dungeonId,
       layoutSeed: seed,
+      room: room,
+    );
+  }
+
+  /// Apply FloorBlueprint + PlacementPlan (fallback to legacy scatter).
+  static TileMap _composeMap({
+    required int cols,
+    required int rows,
+    required List<TileKind> tiles,
+    required List<(int x, int y)> spawnPoints,
+    required (int x, int y) exitPoint,
+    required List<(int x, int y)> enemySpawns,
+    required List<int> enemyChamberIndices,
+    required List<Chamber> chambers,
+    required List<GateInfo> gates,
+    required List<(int x, int y)> roomCenters,
+    required String dungeonId,
+    required int layoutSeed,
+    required Random rng,
+    required DungeonRoom room,
+  }) {
+    final blueprint = FloorBlueprint.forRoom(
+      room,
+      dungeonId: dungeonId,
+      layoutSeed: layoutSeed,
+    );
+    final kit = ZoneLayoutKit.forId(dungeonId);
+    final plan = PlacementPlan.build(
+      cols: cols,
+      rows: rows,
+      tiles: tiles,
+      spawnPoints: spawnPoints,
+      exitPoint: exitPoint,
+      enemySpawns: enemySpawns,
+      chambers: chambers,
+      blueprint: blueprint,
+      kit: kit,
+      rng: rng,
+    );
+    final props = plan.props.isNotEmpty
+        ? plan.props
+        : _scatterProps(
+            cols: cols,
+            rows: rows,
+            tiles: tiles,
+            spawnPoints: spawnPoints,
+            exitPoint: exitPoint,
+            enemySpawns: enemySpawns,
+            chambers: chambers,
+            dungeonId: dungeonId,
+            layoutSeed: layoutSeed,
+            rng: rng,
+          );
+    return TileMap(
+      cols: cols,
+      rows: rows,
+      tiles: tiles,
+      spawnPoints: spawnPoints,
+      exitPoint: exitPoint,
+      enemySpawns: enemySpawns,
+      roomCenters: roomCenters,
+      chambers: chambers,
+      gates: gates,
+      enemyChamberIndices: enemyChamberIndices,
+      props: props,
+      lootChestPoints: plan.lootChestPoints,
+      layoutSeed: layoutSeed,
     );
   }
 
@@ -318,6 +397,7 @@ abstract final class RoomLayouts {
     Random rng, {
     required String dungeonId,
     required int layoutSeed,
+    required DungeonRoom room,
     int enemyCount = 6,
   }) {
     const cols = 25;
@@ -421,29 +501,21 @@ abstract final class RoomLayouts {
 
     final chambersIdx = List<int>.filled(enemySpawns.length, 0);
 
-    return TileMap(
+    return _composeMap(
       cols: cols,
       rows: rows,
       tiles: tiles,
       spawnPoints: spawnPoints,
       exitPoint: exitPoint,
       enemySpawns: enemySpawns,
-      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
-      chambers: <Chamber>[chamber],
       enemyChamberIndices: chambersIdx,
-      props: _scatterProps(
-        cols: cols,
-        rows: rows,
-        tiles: tiles,
-        spawnPoints: spawnPoints,
-        exitPoint: exitPoint,
-        enemySpawns: enemySpawns,
-        chambers: <Chamber>[chamber],
-        dungeonId: dungeonId,
-        layoutSeed: layoutSeed,
-        rng: rng,
-      ),
+      chambers: <Chamber>[chamber],
+      gates: const <GateInfo>[],
+      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
+      dungeonId: dungeonId,
       layoutSeed: layoutSeed,
+      rng: rng,
+      room: room,
     );
   }
 
@@ -453,6 +525,7 @@ abstract final class RoomLayouts {
     Random rng, {
     required String dungeonId,
     required int layoutSeed,
+    required DungeonRoom room,
     int enemyCount = 8,
   }) {
     const cols = 23;
@@ -564,29 +637,21 @@ abstract final class RoomLayouts {
     }
 
     final chambersIdx = List<int>.filled(enemySpawns.length, 0);
-    return TileMap(
+    return _composeMap(
       cols: cols,
       rows: rows,
       tiles: tiles,
       spawnPoints: spawnPoints,
       exitPoint: exitPoint,
       enemySpawns: enemySpawns,
-      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
-      chambers: <Chamber>[chamber],
       enemyChamberIndices: chambersIdx,
-      props: _scatterProps(
-        cols: cols,
-        rows: rows,
-        tiles: tiles,
-        spawnPoints: spawnPoints,
-        exitPoint: exitPoint,
-        enemySpawns: enemySpawns,
-        chambers: <Chamber>[chamber],
-        dungeonId: dungeonId,
-        layoutSeed: layoutSeed,
-        rng: rng,
-      ),
+      chambers: <Chamber>[chamber],
+      gates: const <GateInfo>[],
+      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
+      dungeonId: dungeonId,
       layoutSeed: layoutSeed,
+      rng: rng,
+      room: room,
     );
   }
 
@@ -597,6 +662,7 @@ abstract final class RoomLayouts {
     required Random rng,
     required String dungeonId,
     required int layoutSeed,
+    required DungeonRoom room,
   }) {
     final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
     void set(int x, int y, TileKind k) {
@@ -625,29 +691,21 @@ abstract final class RoomLayouts {
     );
     final exitPoint = (cols - 3, rows ~/ 2);
 
-    return TileMap(
+    return _composeMap(
       cols: cols,
       rows: rows,
       tiles: tiles,
       spawnPoints: spawnPoints,
       exitPoint: exitPoint,
       enemySpawns: spawns,
-      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
-      chambers: <Chamber>[chamber],
       enemyChamberIndices: List<int>.filled(spawns.length, 0),
-      props: _scatterProps(
-        cols: cols,
-        rows: rows,
-        tiles: tiles,
-        spawnPoints: spawnPoints,
-        exitPoint: exitPoint,
-        enemySpawns: spawns,
-        chambers: <Chamber>[chamber],
-        dungeonId: dungeonId,
-        layoutSeed: layoutSeed,
-        rng: rng,
-      ),
+      chambers: <Chamber>[chamber],
+      gates: const <GateInfo>[],
+      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
+      dungeonId: dungeonId,
       layoutSeed: layoutSeed,
+      rng: rng,
+      room: room,
     );
   }
 
@@ -660,6 +718,7 @@ abstract final class RoomLayouts {
     required int enemyCount,
     required String dungeonId,
     required int layoutSeed,
+    required DungeonRoom room,
   }) {
     final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
     void set(int x, int y, TileKind k) {
@@ -872,30 +931,21 @@ abstract final class RoomLayouts {
     final finalEnemySpawns = enemySpawns.take(enemyCount).toList();
     final finalChambers = enemyChambers.take(finalEnemySpawns.length).toList();
 
-    return TileMap(
+    return _composeMap(
       cols: cols,
       rows: rows,
       tiles: tiles,
       spawnPoints: spawnPoints,
       exitPoint: exitPoint,
       enemySpawns: finalEnemySpawns,
-      roomCenters: rooms.map((r) => (r.cx, r.cy)).toList(),
+      enemyChamberIndices: finalChambers,
       chambers: chambers,
       gates: gateList,
-      enemyChamberIndices: finalChambers,
-      props: _scatterProps(
-        cols: cols,
-        rows: rows,
-        tiles: tiles,
-        spawnPoints: spawnPoints,
-        exitPoint: exitPoint,
-        enemySpawns: finalEnemySpawns,
-        chambers: chambers,
-        dungeonId: dungeonId,
-        layoutSeed: layoutSeed,
-        rng: rng,
-      ),
+      roomCenters: rooms.map((r) => (r.cx, r.cy)).toList(),
+      dungeonId: dungeonId,
       layoutSeed: layoutSeed,
+      rng: rng,
+      room: room,
     );
   }
 

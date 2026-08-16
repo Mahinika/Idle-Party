@@ -8,6 +8,13 @@ with sync_playwright() as p:
     page.wait_for_timeout(3500)
     page.wait_for_selector("flt-semantics[role=button]", timeout=15000)
 
+    skip = page.get_by_role("button", name="SKIP")
+    if skip.count() > 0:
+        box = skip.first.bounding_box()
+        if box:
+            page.mouse.click(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2, delay=40)
+            page.wait_for_timeout(800)
+
     # Check if CONTINUE is disabled via aria
     for name in ["CONTINUE", "NEW GAME"]:
         loc = page.get_by_role("button", name=name)

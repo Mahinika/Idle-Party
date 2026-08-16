@@ -33,11 +33,14 @@ class ItemTooltipCard extends StatelessWidget {
     super.key,
     required this.item,
     this.hero,
+    this.pairingStash,
     this.compact = false,
   });
 
   final EquipmentItem item;
   final PartyHero? hero;
+  /// Bag gear used so 1H vs worn 2H can credit a shield/tome.
+  final List<EquipmentItem>? pairingStash;
   final bool compact;
 
   static const _green = Color(0xFF1EFF00);
@@ -58,12 +61,18 @@ class ItemTooltipCard extends StatelessWidget {
     EquipmentItem? worn;
     var intoSlot = item.slot;
     var powerDelta = 0;
+    var isUpgrade = false;
     var comparing = false;
     var alreadyEquipped = false;
     if (hero != null) {
-      final cmp = GameLogic.compareForHero(hero!, item);
+      final cmp = GameLogic.compareForHero(
+        hero!,
+        item,
+        pairingStash: pairingStash,
+      );
       intoSlot = cmp.intoSlot;
       powerDelta = cmp.powerDelta;
+      isUpgrade = cmp.isUpgrade;
       worn = hero!.itemIn(intoSlot);
       if (worn?.id == item.id) {
         alreadyEquipped = true;
@@ -212,17 +221,47 @@ class ItemTooltipCard extends StatelessWidget {
                 ],
                 if (statRows.isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  for (final row in statRows)
-                    _StatCompareRow(
-                      label: row.value == 0
-                          ? row.name
-                          : '${row.value > 0 ? '+' : ''}${row.value} ${row.name}',
-                      labelColor: row.value == 0
-                          ? GameTheme.parchmentDim
-                          : _green,
-                      delta: comparing ? row.delta : null,
-                      emphasizeDelta: true,
+                  if (statRows.any((r) => r.primary)) ...[
+                    Text(
+                      'Primary',
+                      style: GameTheme.body(
+                        size: 11,
+                        color: GameTheme.parchmentDim,
+                      ),
                     ),
+                    for (final row in statRows.where((r) => r.primary))
+                      _StatCompareRow(
+                        label: row.value == 0
+                            ? row.name
+                            : '${row.value > 0 ? '+' : ''}${row.value} ${row.name}',
+                        labelColor: row.value == 0
+                            ? GameTheme.parchmentDim
+                            : _green,
+                        delta: comparing ? row.delta : null,
+                        emphasizeDelta: true,
+                      ),
+                  ],
+                  if (statRows.any((r) => !r.primary)) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      'Secondary',
+                      style: GameTheme.body(
+                        size: 11,
+                        color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                    for (final row in statRows.where((r) => !r.primary))
+                      _StatCompareRow(
+                        label: row.value == 0
+                            ? row.name
+                            : '${row.value > 0 ? '+' : ''}${row.value} ${row.name}',
+                        labelColor: row.value == 0
+                            ? GameTheme.parchmentDim
+                            : _green,
+                        delta: comparing ? row.delta : null,
+                        emphasizeDelta: true,
+                      ),
+                  ],
                 ],
                 if (item.effectLabel.isNotEmpty) ...[
                   const SizedBox(height: 4),
@@ -275,13 +314,15 @@ class ItemTooltipCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: (powerDelta > 0
+                      color: (isUpgrade
                               ? _green
-                              : (powerDelta < 0 ? _red : GameTheme.parchmentDim))
+                              : (powerDelta < 0
+                                  ? _red
+                                  : GameTheme.parchmentDim))
                           .withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: powerDelta > 0
+                        color: isUpgrade
                             ? _green
                             : (powerDelta < 0
                                 ? _red
@@ -290,15 +331,19 @@ class ItemTooltipCard extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      powerDelta > 0
+                      isUpgrade
                           ? 'UPGRADE  Score ${GameLogic.formatDelta(powerDelta)}'
-                          : (powerDelta < 0
-                              ? 'WEAKER  Score ${GameLogic.formatDelta(powerDelta)}'
-                              : 'SAME SCORE'),
+                          : (powerDelta > 0
+                              ? (worn == null
+                                  ? 'SCORE +$powerDelta · too weak to fill'
+                                  : 'SCORE +$powerDelta · not enough to swap')
+                              : (powerDelta < 0
+                                  ? 'WEAKER  Score ${GameLogic.formatDelta(powerDelta)}'
+                                  : 'SAME SCORE')),
                       textAlign: TextAlign.center,
                       style: GameTheme.body(
                         size: 12,
-                        color: powerDelta > 0
+                        color: isUpgrade
                             ? _green
                             : (powerDelta < 0
                                 ? _red
@@ -397,28 +442,37 @@ class ItemTooltipCard extends StatelessWidget {
   }
 
   /// Union of candidate + worn stats so lost stats show as red deltas.
-  static List<({String name, int value, int delta})> _compareStatRows(
+  /// Primary = Armor + Str/Agi/Sta/Int/Spi/SP (+ legacy AP).
+  /// Secondary = Crit / Haste / Mp5 / Move (WotLK-lite ratings).
+  static List<({String name, int value, int delta, bool primary})>
+      _compareStatRows(
     EquipmentItem item,
     EquipmentItem? worn,
   ) {
-    final rows = <({String name, int value, int delta})>[];
-    void add(String name, int neu, int old) {
+    final rows = <({String name, int value, int delta, bool primary})>[];
+    void add(String name, int neu, int old, {required bool primary}) {
       if (neu == 0 && old == 0) return;
-      rows.add((name: name, value: neu, delta: neu - old));
+      rows.add((name: name, value: neu, delta: neu - old, primary: primary));
     }
 
-    add('Armor', item.resolvedArmor, worn?.resolvedArmor ?? 0);
-    add('Strength', item.strengthBonus, worn?.strengthBonus ?? 0);
-    add('Agility', item.agilityBonus, worn?.agilityBonus ?? 0);
-    add('Stamina', item.resolvedStamina, worn?.resolvedStamina ?? 0);
-    add('Intellect', item.intellectBonus, worn?.intellectBonus ?? 0);
-    add('Spirit', item.spiritBonus, worn?.spiritBonus ?? 0);
-    add('Spell Power', item.spellPowerBonus, worn?.spellPowerBonus ?? 0);
-    add('Attack Power', item.attackBonus, worn?.attackBonus ?? 0);
-    add('Mp5', item.mp5Bonus, worn?.mp5Bonus ?? 0);
-    add('Crit %', item.critChanceBonus, worn?.critChanceBonus ?? 0);
-    add('Haste %', item.attackSpeedBonus, worn?.attackSpeedBonus ?? 0);
-    add('Move %', item.moveSpeedBonus, worn?.moveSpeedBonus ?? 0);
+    add('Armor', item.resolvedArmor, worn?.resolvedArmor ?? 0, primary: true);
+    add('Strength', item.strengthBonus, worn?.strengthBonus ?? 0, primary: true);
+    add('Agility', item.agilityBonus, worn?.agilityBonus ?? 0, primary: true);
+    add('Stamina', item.resolvedStamina, worn?.resolvedStamina ?? 0,
+        primary: true);
+    add('Intellect', item.intellectBonus, worn?.intellectBonus ?? 0,
+        primary: true);
+    add('Spirit', item.spiritBonus, worn?.spiritBonus ?? 0, primary: true);
+    add('Spell Power', item.spellPowerBonus, worn?.spellPowerBonus ?? 0,
+        primary: true);
+    add('Attack Power', item.attackBonus, worn?.attackBonus ?? 0, primary: true);
+    add('Crit %', item.critChanceBonus, worn?.critChanceBonus ?? 0,
+        primary: false);
+    add('Haste %', item.attackSpeedBonus, worn?.attackSpeedBonus ?? 0,
+        primary: false);
+    add('Mp5', item.mp5Bonus, worn?.mp5Bonus ?? 0, primary: false);
+    add('Move %', item.moveSpeedBonus, worn?.moveSpeedBonus ?? 0,
+        primary: false);
     return rows;
   }
 
@@ -490,6 +544,7 @@ class ItemTooltipAnchor extends StatefulWidget {
     required this.item,
     required this.child,
     this.hero,
+    this.pairingStash,
     this.enabled = true,
   });
 
@@ -499,6 +554,7 @@ class ItemTooltipAnchor extends StatefulWidget {
   final EquipmentItem item;
   final Widget child;
   final PartyHero? hero;
+  final List<EquipmentItem>? pairingStash;
   final bool enabled;
 
   @override
@@ -586,6 +642,7 @@ class _ItemTooltipAnchorState extends State<ItemTooltipAnchor> {
         final card = ItemTooltipCard(
           item: widget.item,
           hero: widget.hero,
+          pairingStash: widget.pairingStash,
           compact: phone || _phoneSheet,
         );
 

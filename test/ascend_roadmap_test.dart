@@ -5,6 +5,7 @@ import 'package:idle_party/core/game_logic.dart';
 void main() {
   test('Ascend roadmap unlocks key AL milestones', () {
     expect(AscendRoadmap.unlockAtAl(1), contains('Combat Rogue'));
+    expect(AscendRoadmap.unlockAtAl(1), contains('Holy Paladin'));
     expect(AscendRoadmap.unlockAtAl(2), contains('5th party'));
     expect(AscendRoadmap.unlockAtAl(2), contains('80e'));
     expect(

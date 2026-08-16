@@ -1,17 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
+import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 8, 12);
 
-  test('fresh hub prefers daily run', () {
+  test('fresh hub prefers growing the party in the starter zone', () {
     final state = GameLogic.createInitialState(now: now);
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.dailyRun);
-    expect(chase.title, isNotEmpty);
-    expect(chase.detail, isNotEmpty);
+    expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.title, contains('Grow the party'));
+    expect(chase.title, contains('Sandy'));
+    expect(chase.urgency, HubChaseUrgency.normal);
   });
 
   test('claim daily vault beats other chases', () {
@@ -70,6 +72,8 @@ void main() {
   test('Will chase shows next threshold gap', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
+      ascensionLevel: 1,
+      hardmodeLevel: Keystone.maxForAl(1),
       metaDepth: state.metaDepth.copyWith(dailyVaultClaimed: true),
       lastDailyDate: MetaSystems.dailyDateKey(now),
       dailyClaimed: true,
@@ -87,6 +91,7 @@ void main() {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
       ascensionLevel: 10,
+      hardmodeLevel: Keystone.maxForAl(10),
       metaDepth: state.metaDepth.copyWith(
         dailyVaultClaimed: true,
         gauntletBestFloor: 10,
@@ -105,9 +110,10 @@ void main() {
     expect(chase.title, contains('25'));
   });
 
-  test('next locked zone chase uses lifetime gold progress', () {
+  test('normal zone unlock does not beat pushing the current dungeon', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
+      ascensionLevel: 1,
       lifetimeGoldEarned: 1000,
       highestDungeonCleared: -1,
       metaDepth: state.metaDepth.copyWith(dailyVaultClaimed: true),
@@ -119,8 +125,8 @@ void main() {
     );
     expect(state.collectionScore, greaterThanOrEqualTo(320));
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.unlockZone);
-    expect(chase.title, contains('Goblin'));
+    expect(chase.kind, isNot(HubChaseKind.unlockZone));
+    expect(chase.title.toLowerCase(), isNot(contains('unlock')));
   });
 
   test('claimables and Ascend mark READY urgency', () {
@@ -157,6 +163,22 @@ void main() {
     expect(chase.detail, contains('AL2'));
   });
 
+  test('zone ALMOST beats daily run', () {
+    // Goblin unlock 5k — within 12% goldNeed counts as ALMOST.
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      lifetimeGoldEarned: 4500,
+      highestDungeonCleared: -1,
+      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+            dailyVaultClaimed: true,
+          ),
+    );
+    expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.unlockZone);
+    expect(chase.urgency, HubChaseUrgency.almost);
+    expect(chase.title, contains('Almost'));
+  });
+
   test('KEY +1 vault progress marks ALMOST', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
@@ -172,6 +194,26 @@ void main() {
     expect(chase.kind, HubChaseKind.dailyVaultProgress);
     expect(chase.urgency, HubChaseUrgency.almost);
     expect(chase.title, contains('Almost'));
+    // Fresh AL0 — soft vault copy, no KEY jargon yet.
+    expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
+  });
+
+  test('mid-layer vault almost uses KEY jargon', () {
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 2,
+      highestDungeonCleared: 3,
+      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+            dailyVaultClears: 0,
+            dailyVaultClaimed: false,
+            dailyBestTimedKey: 1,
+          ),
+      lastDailyDate: MetaSystems.dailyDateKey(now),
+      dailyClaimed: true,
+    );
+    expect(GameLogic.showKeystoneJargon(state), isTrue);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.dailyVaultProgress);
+    expect(chase.title.toUpperCase(), contains('KEY'));
   });
 
   test('pending hero reveal is READY meet chase', () {
@@ -200,5 +242,45 @@ void main() {
     );
     state = GameLogic.ackPendingHeroReveals(state);
     expect(state.metaDepth.pendingHeroReveals, isEmpty);
+  });
+
+  test('after first Ascend, unused KEY is the hub chase', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 1,
+    );
+    expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+    expect(GameLogic.showKeystoneJargon(state), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.keystone);
+    expect(chase.title.toUpperCase(), contains('KEY'));
+    expect(chase.detail.toUpperCase(), contains('ILVL'));
+    expect(chase.keyLevel, 1);
+    expect(chase.progressLabel, 'KEY +1');
+  });
+
+  test('KEY at AL cap falls through to Daily', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 1,
+      hardmodeLevel: Keystone.maxForAl(1),
+    );
+    expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.dailyRun);
+  });
+
+  test('preferred KEY below cap is the TODAY target', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 1,
+      hardmodeLevel: 2,
+      lastDailyDate: MetaSystems.dailyDateKey(now),
+      dailyClaimed: true,
+      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+            dailyVaultClaimed: true,
+          ),
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.keystone);
+    expect(chase.keyLevel, 2);
+    expect(chase.title, contains('KEY +2'));
   });
 }

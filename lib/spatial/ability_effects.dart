@@ -170,6 +170,9 @@ abstract final class AbilityEffectRunner {
       if (d.effect != AbilityEffectKind.passive) continue;
       _applyPassive(hero, d, def);
     }
+    if ((hero.buffTimers['favor'] ?? 0) > 0) {
+      hero.kitHealMul *= 1.35;
+    }
 
     final castable = unlocked
         .where((d) => d.effect != AbilityEffectKind.passive)
@@ -193,6 +196,11 @@ abstract final class AbilityEffectRunner {
     }
 
     final nearby = SpatialCombat._countNearbyEnemies(hero, world);
+    final aroundFocus = focus == null
+        ? 0
+        : SpatialCombat._countNearbyEnemies(focus, world);
+    // Ranged kits kite outside self-radius; packs around the focus still count.
+    final pack = math.max(nearby, aroundFocus);
     final focusHpFrac = focus == null || focus.maxHp <= 0
         ? 1.0
         : focus.hp / focus.maxHp;
@@ -202,7 +210,7 @@ abstract final class AbilityEffectRunner {
     bool contextOk(ClassAbilityDef d) {
       // AoE only when a pack is present (still allow on lone boss).
       if (d.effect == AbilityEffectKind.aoe) {
-        if (nearby < 2 && !(nearby == 1 && focusElite)) return false;
+        if (pack < 2 && !(pack == 1 && focusElite)) return false;
       }
       // Execute-style finishers.
       if (_isExecuteAbility(d) && focusHpFrac > 0.25) return false;
@@ -249,6 +257,14 @@ abstract final class AbilityEffectRunner {
         ];
         final peel = near.any((e) => SpatialCombat._dist(hero, e) <= 1.6);
         if (near.length < 2 && !peel) return false;
+      }
+      // Sweeping Strikes wants a pack (or elite) to cleave into.
+      if (d.id == AbilityId.sweepingStrikes) {
+        if (nearby < 2 && !(nearby == 1 && focusElite)) return false;
+      }
+      // Beacon is a maintain mark — don't recast while it still has time.
+      if (d.id == AbilityId.beaconOfLight && hero.beaconTimer > 10) {
+        return false;
       }
       return true;
     }
@@ -355,8 +371,8 @@ abstract final class AbilityEffectRunner {
         // Prefer AoE in packs, ST otherwise.
         final aAoe = a.effect == AbilityEffectKind.aoe;
         final bAoe = b.effect == AbilityEffectKind.aoe;
-        if (nearby >= 2 && aAoe != bAoe) return aAoe ? -1 : 1;
-        if (nearby < 2 && aAoe != bAoe) return aAoe ? 1 : -1;
+        if (pack >= 2 && aAoe != bAoe) return aAoe ? -1 : 1;
+        if (pack < 2 && aAoe != bAoe) return aAoe ? 1 : -1;
         final byCost = b.resourceCost.compareTo(a.resourceCost);
         if (byCost != 0) return byCost;
         final byCoeff = b.coeff.compareTo(a.coeff);
@@ -392,6 +408,8 @@ abstract final class AbilityEffectRunner {
         AbilityId.immolateDemo ||
         AbilityId.immolateDestro ||
         AbilityId.serpentSting ||
+        AbilityId.flameShock ||
+        AbilityId.lacerate ||
         AbilityId.garrote ||
         AbilityId.rupture ||
         AbilityId.bloodBoil ||
@@ -451,7 +469,7 @@ abstract final class AbilityEffectRunner {
 
       // —— melee DPS (target ~1.22–1.30; Arms was wildly overtuned at 1.55) ——
       case AbilityId.armsStance:
-        hero.kitOutMul *= 1.26;
+        hero.kitOutMul *= 1.18;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
         hero.kitOutMul *= 1.30;
@@ -469,8 +487,9 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 1.26;
         hero.kitInMul *= 0.97;
       case AbilityId.unholyPresence:
-        hero.kitOutMul *= 1.34;
-        hero.kitHasteMul *= 1.14;
+        // Fairness: ghoul + diseases carry identity; presence is a lean, not a stomp.
+        hero.kitOutMul *= 1.10;
+        hero.kitHasteMul *= 1.10;
         // Ghoul companion spawned in SpatialCombat.build.
       case AbilityId.enhancementWeapons:
         hero.kitOutMul *= 1.26;
@@ -480,7 +499,7 @@ abstract final class AbilityEffectRunner {
 
       // —— ranged (MM/Surv/BM were low share) ——
       case AbilityId.aspectOfHawk:
-        hero.kitOutMul *= 1.46;
+        hero.kitOutMul *= 1.28;
       case AbilityId.trueshotAura:
         hero.kitOutMul *= 1.36;
         hero.kitHasteMul *= 1.10;
@@ -552,7 +571,7 @@ abstract final class AbilityEffectRunner {
         owner: hero,
         count: 4,
         duration: 16,
-        atkScale: 0.38,
+        atkScale: 0.30,
         namePrefix: 'Ghoul',
         idPrefix: 'army',
       );
@@ -602,6 +621,31 @@ abstract final class AbilityEffectRunner {
           y: hero.y,
           argb: 0xFF80D0FF,
           radius: 1.0,
+          life: 0.45,
+        );
+      }
+      return true;
+    }
+    if (def.id == AbilityId.gargoyle) {
+      _spendAndCd(world, hero, def);
+      SpatialCombat.spawnTempPets(
+        world,
+        owner: hero,
+        count: 1,
+        duration: 22,
+        atkScale: 0.48,
+        namePrefix: 'Gargoyle',
+        idPrefix: 'garg',
+      );
+      hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 8.0);
+      _announce(world, hero, def.shortLabel, 0xFFA080C0, reducedVfx);
+      if (!reducedVfx) {
+        SpatialCombat._spawnRing(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: 0xFFA080C0,
+          radius: 1.05,
           life: 0.45,
         );
       }
@@ -665,6 +709,9 @@ abstract final class AbilityEffectRunner {
         }
         _spendAndCd(world, hero, def);
         _castDamage(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+        if (def.id == AbilityId.bloodthirst) {
+          SpatialCombat._gainRage(hero, 10);
+        }
         return true;
       case AbilityEffectKind.aoe:
         _spendAndCd(world, hero, def);
@@ -676,6 +723,20 @@ abstract final class AbilityEffectRunner {
           if (!_allyNeedsHeal(hero)) return false;
           _spendAndCd(world, hero, def);
           _castHeal(world, hero, hero, def, reducedVfx: reducedVfx);
+          return true;
+        }
+        // Holy Shock: heal if someone is hurt, otherwise smite the focus.
+        if (def.id == AbilityId.holyShock) {
+          if (_partyNeedsHeal(world)) {
+            final ally = _lowestAlly(world, hero);
+            if (ally == null) return false;
+            _spendAndCd(world, hero, def);
+            _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
+            return true;
+          }
+          if (focus == null || focus.hp <= 0) return false;
+          _spendAndCd(world, hero, def);
+          _castDamage(world, hero, focus, def, rng, reducedVfx: reducedVfx);
           return true;
         }
         if (_isPartyHeal(def)) {
@@ -703,8 +764,9 @@ abstract final class AbilityEffectRunner {
         _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.absorb:
-        // Unholy AMS is a self shell — not a party bubble on the lowest ally.
-        final ally = def.id == AbilityId.antiMagicShell
+        // Unholy AMS / Blood Bone Shield are self shells — not party bubbles.
+        final ally = def.id == AbilityId.antiMagicShell ||
+                def.id == AbilityId.boneShield
             ? hero
             : _lowestAlly(world, hero);
         if (ally == null) return false;
@@ -713,6 +775,24 @@ abstract final class AbilityEffectRunner {
         _castAbsorb(world, hero, ally, def, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.selfBuff:
+        if (def.id == AbilityId.beaconOfLight) {
+          final mark = _beaconMarkTarget(world, hero);
+          hero.beaconTargetId = mark.id;
+          hero.beaconTimer = 18;
+          _spendAndCd(world, hero, def);
+          _announce(world, hero, def.shortLabel, 0xFFFFF0A8, reducedVfx);
+          if (!reducedVfx) {
+            SpatialCombat._spawnRing(
+              world,
+              x: mark.x,
+              y: mark.y,
+              argb: 0xFFFFF0A8,
+              radius: 0.9,
+              life: 0.4,
+            );
+          }
+          return true;
+        }
         _spendAndCd(world, hero, def);
         _selfBuff(hero, def);
         _announce(world, hero, def.shortLabel, 0xFF90E0FF, reducedVfx);
@@ -750,7 +830,8 @@ abstract final class AbilityEffectRunner {
           return true;
         }
         if (def.id == AbilityId.frostNovaMage ||
-            def.id == AbilityId.psychicScream) {
+            def.id == AbilityId.psychicScream ||
+            def.id == AbilityId.hungeringCold) {
           final nearby = [
             for (final e in world.enemies)
               if (e.hp > 0 &&
@@ -796,6 +877,72 @@ abstract final class AbilityEffectRunner {
         return true;
       case AbilityEffectKind.emergencyDefend:
         _spendAndCd(world, hero, def);
+        // Preparation: reset other kit CDs (Prep stays on CD).
+        if (def.id == AbilityId.preparation) {
+          final spec = hero.heroSpecId;
+          if (spec != null) {
+            final kitKeys = {
+              for (final d in ClassKits.forSpec(spec)) d.id.name,
+            };
+            hero.abilityCd.removeWhere(
+              (k, _) => k != AbilityId.preparation.name && kitKeys.contains(k),
+            );
+          } else {
+            hero.abilityCd.removeWhere(
+              (k, _) => k != AbilityId.preparation.name,
+            );
+          }
+          hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 4.0);
+          _announce(
+            world,
+            hero,
+            def.shortLabel,
+            0xFFB8D4FF,
+            reducedVfx,
+            important: true,
+          );
+          if (!reducedVfx) {
+            SpatialCombat._spawnRing(
+              world,
+              x: hero.x,
+              y: hero.y,
+              argb: 0xFF90A0C0,
+              radius: 1.05,
+              life: 0.4,
+            );
+          }
+          return true;
+        }
+        // Guardian Spirit: panic bubble + DR on the lowest ally.
+        if (def.id == AbilityId.guardianSpirit) {
+          final ally = _lowestAlly(world, hero) ?? hero;
+          final amount = math.max(
+            12,
+            (hero.attack * def.coeff * hero.kitHealMul).round(),
+          );
+          ally.absorbShield += amount;
+          ally.shieldWallTimer = math.max(ally.shieldWallTimer, 4.0);
+          ally.buffTimers['shield'] = 4.0;
+          _announce(
+            world,
+            hero,
+            def.shortLabel,
+            0xFFFFD090,
+            reducedVfx,
+            important: true,
+          );
+          if (!reducedVfx) {
+            SpatialCombat._spawnRing(
+              world,
+              x: ally.x,
+              y: ally.y,
+              argb: 0xAAFFE090,
+              radius: 1.0,
+              life: 0.5,
+            );
+          }
+          return true;
+        }
         // Feign Death: drop aggro + brief untargetable (Vanish pattern).
         if (def.id == AbilityId.feignDeath) {
           hero.vanishTimer = math.max(hero.vanishTimer, 2.2);
@@ -961,6 +1108,10 @@ abstract final class AbilityEffectRunner {
     if (def.id == AbilityId.iceLance && enemy.rootTimer > 0) {
       raw = math.max(2, (raw * 1.75).round());
     }
+    // Frost DK finisher pops rooted packs (Hungering Cold → shatter).
+    if (def.id == AbilityId.frostStrike && enemy.rootTimer > 0) {
+      raw = math.max(2, (raw * 1.4).round());
+    }
     // Assassination: build combo on Mut/Garrote; Envenom spends.
     if (hero.heroSpecId == HeroSpecId.assassination) {
       if (def.id == AbilityId.mutilate) {
@@ -1068,11 +1219,13 @@ abstract final class AbilityEffectRunner {
         key.contains('volley') ||
         key.contains('barrage') ||
         def.id == AbilityId.multiShot ||
+        def.id == AbilityId.multiShotSurv ||
         (style == SpellBoltStyle.arrow &&
             (key.contains('shot') || key.contains('arrow')))) {
       _fanBolts(
         world,
         hero,
+        focus,
         def,
         style,
         rng,
@@ -1086,14 +1239,29 @@ abstract final class AbilityEffectRunner {
         def.id == AbilityId.starfall ||
         def.id == AbilityId.thunderstorm ||
         def.id == AbilityId.howlingBlast ||
+        def.id == AbilityId.mindSear ||
+        def.id == AbilityId.blizzard ||
+        def.id == AbilityId.rainOfFire ||
         key.contains('hurricane') ||
         key.contains('starfall') ||
-        key.contains('thunderstorm')) {
-      _rainBolts(world, hero, def, style, rng, reducedVfx: reducedVfx);
+        key.contains('thunderstorm') ||
+        key.contains('blizzard') ||
+        key.contains('rain of fire') ||
+        key.contains('mind sear')) {
+      _rainBolts(
+        world,
+        hero,
+        focus,
+        def,
+        style,
+        rng,
+        reducedVfx: reducedVfx,
+      );
       return;
     }
     // Ground zones — heavier rings + on-target sparks (no projectile spam).
     if (def.id == AbilityId.consecration ||
+        def.id == AbilityId.consecrationHoly ||
         def.id == AbilityId.bloodBoil ||
         def.id == AbilityId.bloodBoilUnholy ||
         def.id == AbilityId.bladestorm ||
@@ -1107,9 +1275,12 @@ abstract final class AbilityEffectRunner {
         def.id == AbilityId.arcaneExplosion ||
         def.id == AbilityId.frostNova ||
         def.id == AbilityId.frostNovaMage ||
-        def.id == AbilityId.hungeringCold ||
         def.id == AbilityId.bladeFlurry ||
         def.id == AbilityId.swipe ||
+        def.id == AbilityId.feralSwipe ||
+        def.id == AbilityId.fanOfKnives ||
+        def.id == AbilityId.fanOfKnivesSub ||
+        def.id == AbilityId.seedOfCorruption ||
         def.id == AbilityId.handOfGuldan ||
         def.id == AbilityId.explosiveTrap ||
         def.vfx?.groundDisc == true ||
@@ -1118,7 +1289,9 @@ abstract final class AbilityEffectRunner {
         key.contains('bloodboil') ||
         key.contains('bladestorm') ||
         key.contains('whirlwind') ||
-        key.contains('shadowfury')) {
+        key.contains('shadowfury') ||
+        key.contains('fan of knives') ||
+        key.contains('seed of corruption')) {
       _groundNova(world, hero, def, style, rng, reducedVfx: reducedVfx);
       return;
     }
@@ -1210,6 +1383,7 @@ abstract final class AbilityEffectRunner {
   static void _fanBolts(
     SpatialWorld world,
     SpatialActor hero,
+    SpatialActor? focus,
     ClassAbilityDef def,
     SpellBoltStyle style,
     math.Random rng, {
@@ -1218,18 +1392,21 @@ abstract final class AbilityEffectRunner {
   }) {
     final raw =
         math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
+    final anchor = focus != null && focus.hp > 0 && !focus.dormant
+        ? focus
+        : hero;
     final enemies = world.enemies
         .where((e) => e.hp > 0 && !e.dormant)
         .toList()
       ..sort(
-        (a, b) => SpatialCombat._dist(hero, a)
-            .compareTo(SpatialCombat._dist(hero, b)),
+        (a, b) => SpatialCombat._dist(anchor, a)
+            .compareTo(SpatialCombat._dist(anchor, b)),
       );
     final picks = enemies.take(hops).toList();
     if (picks.isEmpty) return;
     hero.attackFlash = 0.18;
     for (var i = 0; i < picks.length; i++) {
-      SpatialCombat._addProjectile(world, 
+      SpatialCombat._addProjectile(world,
         SpatialCombat._spellBolt(
           from: hero,
           to: picks[i],
@@ -1345,6 +1522,7 @@ abstract final class AbilityEffectRunner {
   static void _rainBolts(
     SpatialWorld world,
     SpatialActor hero,
+    SpatialActor? focus,
     ClassAbilityDef def,
     SpellBoltStyle style,
     math.Random rng, {
@@ -1355,12 +1533,16 @@ abstract final class AbilityEffectRunner {
         math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
+    // Ranged kits kite outside self-radius — rain on the focus pack.
+    final anchor = focus != null && focus.hp > 0 && !focus.dormant
+        ? focus
+        : hero;
 
     if (!reducedVfx) {
       SpatialCombat._spawnRing(
         world,
-        x: hero.x,
-        y: hero.y,
+        x: anchor.x,
+        y: anchor.y,
         argb: argb,
         radius: radius * 0.45,
         life: 0.5,
@@ -1370,7 +1552,7 @@ abstract final class AbilityEffectRunner {
     var i = 0;
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
-      if (SpatialCombat._dist(hero, e) > radius) continue;
+      if (SpatialCombat._dist(anchor, e) > radius) continue;
       if (i >= 4) break;
       SpatialCombat._addProjectile(world, 
         SpatialCombat.spellBoltBetween(
@@ -1570,7 +1752,8 @@ abstract final class AbilityEffectRunner {
     final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
     final isHot = def.id == AbilityId.riptide ||
         def.id == AbilityId.renew ||
-        def.id == AbilityId.rejuvenation;
+        def.id == AbilityId.rejuvenation ||
+        def.id == AbilityId.lifebloom;
     final directCoeff = isHot ? def.coeff * 0.55 : def.coeff;
     _healLowest(world, caster, ally, directCoeff, def.shortLabel);
     if (isHot) {
@@ -1665,6 +1848,25 @@ abstract final class AbilityEffectRunner {
     );
   }
 
+  static SpatialActor _beaconMarkTarget(SpatialWorld world, SpatialActor pala) {
+    SpatialActor? tank;
+    SpatialActor? stoutest;
+    var bestMax = -1;
+    for (final h in world.heroes) {
+      if (!h.isAlive || h.isPet) continue;
+      if (_actorIsTank(h)) {
+        if (tank == null || h.effectiveMaxHp > tank.effectiveMaxHp) {
+          tank = h;
+        }
+      }
+      if (h.effectiveMaxHp > bestMax) {
+        bestMax = h.effectiveMaxHp;
+        stoutest = h;
+      }
+    }
+    return tank ?? stoutest ?? pala;
+  }
+
   static SpatialActor? _lowestAlly(SpatialWorld world, SpatialActor self) {
     SpatialActor? best;
     var bestFrac = 2.0;
@@ -1739,7 +1941,7 @@ abstract final class AbilityEffectRunner {
     final maxTargets = living.length.clamp(1, 4);
     for (var i = 0; i < maxTargets; i++) {
       final ally = living[i];
-      _healLowest(world, caster, ally, bounce, def.shortLabel);
+      _healLowest(world, caster, ally, bounce, def.shortLabel, beaconPeel: false);
       bounce *= 0.72;
     }
     _announce(
@@ -1816,12 +2018,14 @@ abstract final class AbilityEffectRunner {
       AbilityId.garrote ||
       AbilityId.rupture ||
       AbilityId.serpentSting ||
+      AbilityId.lacerate ||
       AbilityId.corruption ||
       AbilityId.unstableAffliction ||
       AbilityId.curseOfAgony ||
       AbilityId.moonfire ||
       AbilityId.immolateDemo ||
       AbilityId.immolateDestro ||
+      AbilityId.flameShock ||
       AbilityId.shadowWordPain ||
       AbilityId.vampiricTouch ||
       AbilityId.devouringPlague ||
@@ -1837,12 +2041,13 @@ abstract final class AbilityEffectRunner {
     final duration = switch (def.id) {
       AbilityId.rip => 12.0,
       AbilityId.rake || AbilityId.garrote => 8.0,
-      AbilityId.serpentSting || AbilityId.moonfire => 10.0,
+      AbilityId.serpentSting || AbilityId.moonfire || AbilityId.lacerate => 10.0,
       AbilityId.corruption ||
       AbilityId.unstableAffliction ||
       AbilityId.curseOfAgony ||
       AbilityId.immolateDemo ||
       AbilityId.immolateDestro ||
+      AbilityId.flameShock ||
       AbilityId.shadowWordPain ||
       AbilityId.vampiricTouch ||
       AbilityId.devouringPlague =>
@@ -1860,13 +2065,15 @@ abstract final class AbilityEffectRunner {
       AbilityId.rake || AbilityId.garrote => 0.14,
       AbilityId.rupture => 0.18,
       AbilityId.serpentSting => 0.12,
+      AbilityId.lacerate => 0.13,
       AbilityId.corruption => 0.18,
       AbilityId.unstableAffliction => 0.20,
       AbilityId.curseOfAgony => 0.17,
       AbilityId.shadowWordPain => 0.13,
       AbilityId.vampiricTouch => 0.14,
       AbilityId.devouringPlague => 0.16,
-      AbilityId.immolateDemo || AbilityId.immolateDestro => 0.15,
+      AbilityId.immolateDemo || AbilityId.immolateDestro || AbilityId.flameShock =>
+        0.15,
       AbilityId.moonfire => 0.11,
       AbilityId.bloodBoil || AbilityId.bloodBoilUnholy => 0.11,
       AbilityId.howlingBlast => 0.12,
@@ -1941,8 +2148,9 @@ abstract final class AbilityEffectRunner {
     SpatialActor caster,
     SpatialActor ally,
     double coeff,
-    String label,
-  ) {
+    String label, {
+    bool beaconPeel = true,
+  }) {
     final amount =
         math.max(4, (caster.attack * coeff * caster.kitHealMul).round());
     final before = ally.hp;
@@ -1957,6 +2165,35 @@ abstract final class AbilityEffectRunner {
         text: '+$gained',
         argb: SpatialCombat._floaterHeal,
         life: 0.55,
+      );
+    }
+    if (!beaconPeel ||
+        caster.beaconTimer <= 0 ||
+        caster.beaconTargetId == null ||
+        caster.beaconTargetId == ally.id) {
+      return;
+    }
+    SpatialActor? marked;
+    for (final h in world.heroes) {
+      if (h.id == caster.beaconTargetId && h.isAlive && !h.isPet) {
+        marked = h;
+        break;
+      }
+    }
+    if (marked == null) return;
+    final peel = math.max(2, (amount * 0.4).round());
+    final markedBefore = marked.hp;
+    marked.hp = math.min(marked.effectiveMaxHp, marked.hp + peel);
+    final peeled = marked.hp - markedBefore;
+    if (peeled > 0) {
+      caster.healingDone += peeled;
+      SpatialCombat._spawnFloater(
+        world,
+        x: marked.x,
+        y: marked.y - 0.55,
+        text: '+$peeled',
+        argb: 0xFFFFF0A8,
+        life: 0.5,
       );
     }
   }
@@ -1986,15 +2223,34 @@ abstract final class AbilityEffectRunner {
     if (def.id == AbilityId.vendetta ||
         def.id == AbilityId.coldBlood ||
         def.id == AbilityId.arcanePower ||
-        def.id == AbilityId.combustion) {
+        def.id == AbilityId.combustion ||
+        def.id == AbilityId.furyRecklessness) {
       final dur = switch (def.id) {
         AbilityId.vendetta => 8.0,
         AbilityId.coldBlood => 6.0,
         AbilityId.arcanePower => 7.0,
+        AbilityId.furyRecklessness => 8.0,
         _ => 5.0,
       };
       hero.combustionTimer = math.max(hero.combustionTimer, dur);
       hero.buffTimers['buff'] = dur;
+      return;
+    }
+    // Arms Sweeping Strikes — same cleave window as Combat Blade Flurry.
+    if (def.id == AbilityId.sweepingStrikes) {
+      hero.bladeFlurryTimer = math.max(hero.bladeFlurryTimer, 6.0);
+      hero.buffTimers['buff'] = 6.0;
+      return;
+    }
+    // Prot Paladin Holy Shield — block window, not a panic wall.
+    if (def.id == AbilityId.holyShield) {
+      hero.shieldBlockTimer = math.max(hero.shieldBlockTimer, 6.0);
+      hero.buffTimers['shield'] = 6.0;
+      return;
+    }
+    // Holy Paladin Divine Favor — heal amp, not a haste window.
+    if (def.id == AbilityId.divineFavor) {
+      hero.buffTimers['favor'] = 8.0;
       return;
     }
     // Prefer existing haste / shield timers when possible.
@@ -2015,7 +2271,6 @@ abstract final class AbilityEffectRunner {
         name.contains('backdraft') ||
         name.contains('presence') ||
         name.contains('mastery') ||
-        name.contains('favor') ||
         name.contains('spirit') ||
         name.contains('gargoyle') ||
         name.contains('charge') ||

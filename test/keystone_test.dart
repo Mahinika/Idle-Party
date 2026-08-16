@@ -38,6 +38,13 @@ void main() {
     expect(high, contains('boss_rush'));
   });
 
+  test('KEY loot iLvl bonus is a visible jump, not a crumb', () {
+    expect(Keystone.lootItemLevelBonus(0), 0);
+    expect(Keystone.lootItemLevelBonus(1), 2);
+    expect(Keystone.lootItemLevelBonus(10), 20);
+    expect(Keystone.lootItemLevelBonus(20), 40);
+  });
+
   test('enter dungeon locks keystone run; leave clears it', () {
     final base = GameLogic.createInitialState().copyWith(hardmodeLevel: 3);
     final entered = GameLogic.enterDungeon(base, dungeonId: 'sandy');

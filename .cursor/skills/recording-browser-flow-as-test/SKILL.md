@@ -2,7 +2,8 @@
 name: recording-browser-flow-as-test
 description: >-
   Record an Idle Party hub/dungeon flow in Cursor's browser, then emit or update
-  a Playwright script using stable labels / WebClickBridge (tool/playtest_*.py).
+  a Playwright script using stable labels / WebClickBridge
+  (`tool/playtest_al3.py`, `tool/playwright_newgame_test.py`).
 ---
 
 # Record browser flow as test (Idle Party)
@@ -10,7 +11,7 @@ description: >-
 ## Prerequisites
 
 - Web server on `:8080` (see `browser-playtest`)
-- Existing patterns: `tool/playwright_*.py`, `tool/playtest_*.py`
+- Existing patterns: `tool/playtest_al3.py` (WebClickBridge), `tool/playwright_newgame_test.py`
 
 ## Recording
 

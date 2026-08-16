@@ -139,13 +139,14 @@ void main() {
     );
   });
 
-  test('Prot: preferred plate still beats equal-stat cloth', () {
+  test('Prot: equal-stat plate and cloth score the same (budget honesty)', () {
+    // Armor type is a canEquip / loot-bias concern, not a BiS crumb.
     final prot = hero(HeroSpecId.protection);
     final plate = item(str: 6, sta: 8, armor: 10, armorType: ArmorType.plate);
     final cloth = item(str: 6, sta: 8, armor: 10, armorType: ArmorType.cloth);
     expect(
       GameLogic.specEquipScore(prot, plate),
-      greaterThan(GameLogic.specEquipScore(prot, cloth)),
+      GameLogic.specEquipScore(prot, cloth),
     );
   });
 
@@ -183,13 +184,13 @@ void main() {
     expect(blurb.toLowerCase(), contains('stamina'));
   });
 
-  test('Preferred plate scores higher than cloth for Arms', () {
+  test('Arms: equal-stat plate and cloth score the same (budget honesty)', () {
     final arms = hero(HeroSpecId.arms);
     final plate = item(str: 8, sta: 4, armorType: ArmorType.plate);
     final cloth = item(str: 8, sta: 4, armorType: ArmorType.cloth);
     expect(
       GameLogic.specEquipScore(arms, plate),
-      greaterThan(GameLogic.specEquipScore(arms, cloth)),
+      GameLogic.specEquipScore(arms, cloth),
     );
   });
 

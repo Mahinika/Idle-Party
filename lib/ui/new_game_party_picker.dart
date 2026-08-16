@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../core/ascend_roadmap.dart';
 import '../core/game_logic.dart';
 import '../models/hero_spec.dart';
 import 'custom_assets.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
+import 'menu_chrome.dart';
 
 /// Pick exactly [GameLogic.starterPartySize] unique specs for a new run.
 class NewGamePartyPicker extends StatefulWidget {
@@ -55,6 +57,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   }
 
   void _pick(HeroSpecId id) {
+    if (!HeroSpecs.starterUnlocked.contains(id)) return;
     setState(() {
       for (var i = 0; i < _slots.length; i++) {
         if (i != _activeSlot && _slots[i] == id) {
@@ -71,6 +74,12 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   @override
   Widget build(BuildContext context) {
     final warn = _softWarn;
+    final classSpecs = [
+      for (final id in HeroSpecs.forClass(_filter))
+        if (HeroSpecs.starterUnlocked.contains(id)) id,
+      for (final id in HeroSpecs.forClass(_filter))
+        if (!HeroSpecs.starterUnlocked.contains(id)) id,
+    ];
     return Scaffold(
       backgroundColor: GameTheme.ink,
       body: SafeArea(
@@ -82,11 +91,11 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               Text(
                 'NEW PARTY',
                 textAlign: TextAlign.center,
-                style: GameTheme.pixel(size: 16, color: GameTheme.torchHot),
+                style: GameTheme.menuTitle(size: 18),
               ),
               const SizedBox(height: 6),
               Text(
-                'Choose ${GameLogic.starterPartySize} starting specs',
+                'Pick ${GameLogic.starterPartySize} starters. More kits after Ascend.',
                 textAlign: TextAlign.center,
                 style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
               ),
@@ -140,22 +149,27 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               ),
               const SizedBox(height: 10),
               Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: GameTheme.stone,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF595033)),
-                  ),
+                child: DecoratedBox(
+                  decoration: MenuChrome.panel(opaque: true),
                   child: ListView(
                     padding: const EdgeInsets.all(8),
                     children: [
-                      for (final specId in HeroSpecs.starterUnlocked)
-                        if (HeroSpecs.def(specId).classId == _filter)
-                          _SpecPickRow(
-                            def: HeroSpecs.def(specId),
-                            taken: _slots.contains(specId),
-                            onTap: () => _pick(specId),
-                          ),
+                      for (final specId in classSpecs)
+                        _SpecPickRow(
+                          def: HeroSpecs.def(specId),
+                          starter: HeroSpecs.starterUnlocked.contains(specId),
+                          taken: _slots.contains(specId),
+                          onTap: () => _pick(specId),
+                        ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Rogues, hunters, DKs and more unlock as you Ascend.',
+                        textAlign: TextAlign.center,
+                        style: GameTheme.body(
+                          size: 12,
+                          color: GameTheme.parchmentDim,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -209,47 +223,43 @@ class _SlotCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final def = specId == null ? null : HeroSpecs.def(specId!);
     return Material(
-      color: selected ? const Color(0xFF3A3220) : GameTheme.menuCard,
-      borderRadius: BorderRadius.circular(8),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: selected ? GameTheme.torch : const Color(0xFF595033),
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+        child: DecoratedBox(
+          decoration: MenuChrome.cardBox(selected: selected),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              children: [
+                KenneySprite(
+                  asset: def == null
+                      ? CustomAssets.heroKnight
+                      : CustomAssets.heroForClass(def.classId),
+                  size: 40,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  def?.shortLabel ?? 'SLOT ${index + 1}',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(
+                    size: 13,
+                    color: GameTheme.parchment,
+                  ),
+                ),
+                Text(
+                  def?.name ?? 'Tap to pick',
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(
+                    size: 11,
+                    color: GameTheme.parchmentDim,
+                  ),
+                ),
+              ],
             ),
-          ),
-          child: Column(
-            children: [
-              KenneySprite(
-                asset: def == null
-                    ? CustomAssets.heroKnight
-                    : CustomAssets.heroForClass(def.classId),
-                size: 40,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                def?.shortLabel ?? 'SLOT ${index + 1}',
-                textAlign: TextAlign.center,
-                style: GameTheme.pixel(
-                  size: 7,
-                  color: GameTheme.parchment,
-                ),
-              ),
-              Text(
-                def?.name ?? 'Tap to pick',
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(
-                  size: 11,
-                  color: GameTheme.parchmentDim,
-                ),
-              ),
-            ],
           ),
         ),
       ),
@@ -260,62 +270,87 @@ class _SlotCard extends StatelessWidget {
 class _SpecPickRow extends StatelessWidget {
   const _SpecPickRow({
     required this.def,
+    required this.starter,
     required this.taken,
     required this.onTap,
   });
 
   final HeroSpecDef def;
+  final bool starter;
   final bool taken;
   final VoidCallback onTap;
 
+  String get _lockLabel {
+    final al = AscendRoadmap.ascendLevelForKit(def.id);
+    if (al != null) return 'AL$al';
+    if (def.unlockHint.isNotEmpty) return def.unlockHint;
+    return 'Later';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final locked = !starter;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Material(
-        color: GameTheme.menuCard,
-        borderRadius: BorderRadius.circular(6),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(6),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            child: Row(
-              children: [
-                KenneySprite(
-                  asset: CustomAssets.heroForClass(def.classId),
-                  size: 36,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${def.shortLabel}  ${def.name}',
-                        style: GameTheme.body(
-                          size: 14,
-                          color: GameTheme.parchment,
-                        ),
+      child: Opacity(
+        opacity: locked ? 0.55 : 1,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: locked ? null : onTap,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: DecoratedBox(
+              decoration: MenuChrome.listCard(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: Row(
+                  children: [
+                    KenneySprite(
+                      asset: CustomAssets.heroForClass(def.classId),
+                      size: 36,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${def.shortLabel}  ${def.name}',
+                            style: GameTheme.body(
+                              size: 14,
+                              color: GameTheme.parchment,
+                            ),
+                          ),
+                          Text(
+                            locked
+                                ? _lockLabel
+                                : '${def.roleTag.name} · ${def.resource.name}',
+                            style: GameTheme.body(
+                              size: 11,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '${def.roleTag.name} · ${def.resource.name}',
-                        style: GameTheme.body(
-                          size: 11,
-                          color: GameTheme.parchmentDim,
-                        ),
+                    ),
+                    Text(
+                      locked
+                          ? 'LOCKED'
+                          : taken
+                              ? 'SET'
+                              : 'PICK',
+                      style: GameTheme.body(
+                        size: 13,
+                        color: locked
+                            ? GameTheme.parchmentDim
+                            : taken
+                                ? GameTheme.mossLit
+                                : GameTheme.torchHot,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                Text(
-                  taken ? 'SET' : 'PICK',
-                  style: GameTheme.pixel(
-                    size: 7,
-                    color: taken ? GameTheme.mossLit : GameTheme.torchHot,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

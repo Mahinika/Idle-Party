@@ -22,7 +22,8 @@ Ship habit → second layer → content cadence:
 2. **Local season** — `lib/core/local_season.dart` week/month rows (reuse SpatialCombat + vault/Gauntlet).
 3. **Zones / kits** — prefer new zones + kit fantasy polish over new specs; Play 12×14 stays background.
 
-See [ROADMAP.md](ROADMAP.md) “Success-spår”.
+See [ROADMAP.md](ROADMAP.md) “Success-spår”.  
+Near-term (90 days): [STRATEGY_90D.md](STRATEGY_90D.md).
 
 ## Checklist before tagging
 

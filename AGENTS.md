@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.11.3**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.8**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -17,8 +17,12 @@ Preferences (do not re-ask): **content/feel over Play busywork**, first-hour
 many new specs, **more zones**, hub TODAY / Ascend Blessing / unlock teasers for
 “what am I chasing”, **no IAP for now**, **Android phone-only** (portrait; no
 iOS/web product), **large batches**, English in-game copy, fairness-first balance,
-**propose** commit / push / PR / tag. Chat in plain Swedish; ask only product/risk
-questions. Full detail: `.cursor/rules/owner-preferences.mdc`.
+**commit locally when a batch is verified**, ask before push / PR / tag.
+Near-term execution order:
+`docs/CONTENT_CADENCE.md` after 90d M1–M3 shipped. **Default next work:**
+monthly cadence (zones + kit polish) unless the owner names something else.
+Chat in plain Swedish; ask only product/risk questions. Full detail:
+`.cursor/rules/owner-preferences.mdc`.
 
 **UI target:** ship for **portrait phones** (~360–430 px). Owner reference:
 **Samsung Galaxy A56** → playtest at **360×780** CSS (DPR 3). Web is playtest
@@ -27,7 +31,7 @@ for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (historical upload noted as AAB **14 / 1.9.3**); ship line is **1.11.3**.
+closed Alpha (historical upload noted as AAB **14 / 1.9.3**); tagged GitHub line is **1.12.0**, working ship **1.12.8**.
 Production still needs **12 closed testers × 14 days**. Do not treat Play as the
 primary install channel yet.
 
@@ -52,6 +56,7 @@ flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
 
 CI uses `flutter analyze lib test --no-fatal-infos` then `flutter test` (includes balance gate).
+Runs on push to `main` / `master` / `cursor/**` / `release/**`, and on pull requests.
 
 ### Agent tooling (balance / honesty / QA)
 
@@ -71,19 +76,27 @@ flutter test test/ship_smoke_test.dart
 
 Skills under `.cursor/skills/`: domain (`spatial-combat-change`, `add-ability`,
 `new-dungeon`, `zone-art-identity`, `save-migrate`, `class-audit`, `assets-legal`,
-`flutter-verify`, `browser-playtest`, `hub-smoke`) and Cursor workflows
-(`suggesting-skills`, `building-skills-from-patterns`, `grinding-until-pass`,
-`babysitting-pr`, `parallel-ci-triage`, `verifying-in-browser`,
-`screenshotting-changelog`, `recording-browser-flow-as-test`,
+`flutter-verify`, `browser-playtest`, `hub-smoke`, `play-store-prep`, `init`) and
+Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
+`grinding-until-pass`, `babysitting-pr`, `parallel-ci-triage`,
+`verifying-in-browser`, `screenshotting-changelog`, `recording-browser-flow-as-test`,
 `systematic-debugging`, `reviewing-code`, `accessibility-auditing`).
 
-Cadence: `docs/CONTENT_CADENCE.md`. Roadmap: `docs/ROADMAP.md`.
-Play ops status: `docs/PLAY_STORE.md` (operator table) + skill `play-store-prep`.
+Cadence: `docs/CONTENT_CADENCE.md`. Near-term (90d): `docs/STRATEGY_90D.md`
+(chase → kits → zone). Year roadmap: `docs/ROADMAP.md`. Background research:
+`docs/TOP_GAMES_RESEARCH.md`. Systems rebuild (P1–P5 chase/offline/kits/KEY/GH
+shipped): `docs/SYSTEMS_REBUILD.md`. Chase contract (hub TODAY ↔ offline Up next):
+`docs/CHASE_CONTRACT.md`. Gear budget contract: `docs/GEAR_BUDGET.md`. Floor
+blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`. Play ops: `docs/PLAY_STORE.md`
++ skill `play-store-prep`.
 
 ### Cursor automation
 
-- Project hooks: `.cursor/hooks.json` — after game/docs edits, **stop** runs
-  `flutter analyze lib test` (and changelog sync when version/What’s New files touched).
+- Project hooks: `.cursor/hooks.json` — **sessionStart** injects current STRATEGY
+  month; after game/docs edits, **stop** runs `flutter analyze lib test`, plus
+  changelog sync when version/What’s New files touched, plus `ship_smoke_test`
+  when hub/chase/guides files touched.
+- Git: daily work on `main`; `release/*` only when cutting a tag.
 - Ship bar: `.cursor/rules/definition-of-done.mdc`.
 - Fast honesty: `flutter test test/ship_smoke_test.dart`.
 - MCP: `.cursor/mcp.json` → **`idle-party`** (`tool/mcp_idle_party/`) — balance_share,
@@ -93,7 +106,7 @@ Play ops status: `docs/PLAY_STORE.md` (operator table) + skill `play-store-prep`
 
 ```
 main.dart
- ├─ loading → startMenu → optional newGamePicker → play
+ ├─ loading → boot intro → startMenu → optional newGamePicker → play
  ├─ Hub (inDungeon=false) → HubScreen + optional Is2Shell(hubMode) overlays
  └─ Dungeon (inDungeon=true) → Is2Shell
       ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
@@ -105,31 +118,38 @@ GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
              → GameLogic.simulateSpatialOffline → SpatialCombat.step
                (AFK: afkAssist + reducedVfx, auto-flask, God Hand)
 GameLogic + GameState   (rules / persistence)
-DungeonCatalog          (11 named zones, bossFloor = 5 + AL)
-RoomLayouts (tile_map)  (multi-chamber maps + gates)
+DungeonCatalog          (15 named zones, bossFloor = 5 + AL)
+RoomLayouts + FloorBlueprint / PlacementPlan / ZoneLayoutKit
+                        (multi-chamber maps, gates, room-chest sockets)
 ```
 
 **SpatialCombat is the combat authority** for live play and in-dungeon offline
 catch-up (full enemy stats; same kits/abilities/chambers).
 
+**Content inventory:** 10 classes / **31 specs** (`HeroSpecId`) · **15 zones**
+through Mothveil Hollow.
+
 **Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = AL10+): endless Crystal
 Spire climb from Hub; wipe/leave → hub; `metaDepth.gauntletBestFloor` survives Ascend.
 
-**Hub TODAY** (`lib/core/hub_chase.dart`): one chase card — claimables first
-(vault / jobs / **Meet new kit**), then Ascend / progress. Urgency **READY** /
-**ALMOST** (Ascend one boss away, KEY +1 vault, Will gap, etc.). New unlocks
-queue `metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast +
-chase detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next
-AL unlocks — kit ladder AL1–6 (e.g. Combat Rogue, BM/Holy/Arcane + 5th slot,
-DKs, Aff/Demo) plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint +
-Shadow→warlock sprite).
+**Hub TODAY** — selection in `HubChase.forState`; every surface reads the same
+words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up
+next). One chase card — claimables first (vault / jobs / **Meet new kit**), then
+Ascend / progress. Urgency **READY** / **ALMOST** (zone/Will/Gauntlet/Ascend-near
+beat Daily grind; also KEY +1 vault, etc.). New unlocks queue
+`metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast + chase
+detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next AL
+unlocks — kit ladder AL1–6 (e.g. Combat Rogue / Arms / Holy Paladin, BM/Holy/Arcane + 5th slot, DKs,
+Aff/Demo) plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock
+sprite).
 
 Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat. Offline return
-uses `OfflineProgressResult` (wow headline + highlight rows + “Up next” chase).
+uses `OfflineProgressResult` (wow headline + ≤3 highlights + “Up next” =
+ChaseContract).
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
-## World path (11 zones)
+## World path (15 zones)
 
 | # | id | Name |
 |---|-----|------|
@@ -144,15 +164,24 @@ Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 | 8 | ember | Ashen Vault |
 | 9 | grove | Hollow Grove |
 | 10 | storm | Stormwake Hollow |
+| 11 | rime | Rimeglass Rift |
+| 12 | fen | Blightfen Mire |
+| 13 | brass | Brassvault Deep |
+| 14 | veil | Mothveil Hollow |
 
 Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 
 ## Floor / chamber model
 
 - One **combat wave per floor**; boss on floor `5 + ascensionLevel`.
+- Generation: **FloorBlueprint** (room beats) → **PlacementPlan** (props +
+  chest sockets) → `RoomLayouts` / `SpatialCombat.build`, with per-zone
+  **`ZoneLayoutKit`** (e.g. Brassvault treasure alcoves vs Mothveil silk chokes).
 - Maps are **multi-chamber** with corridor **gates** after a chamber clears.
 - Enemies in later chambers start **dormant**; wake when prior chambers clear
   (and can wake on **proximity** so soft-locks are rare).
+- **Room chests** on elite/treasure beats drop gold/gear pickups — same AFK
+  vacuum / timeout path as kill loot.
 - After all enemies die and loot is picked up (or times out), party walks to
   **stairs/exit** → `completeCurrentRoom`.
 
@@ -169,14 +198,17 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 | Spatial sim | `lib/spatial/spatial_combat.dart` |
 | Ability runtime | `lib/spatial/ability_effects.dart` |
 | Tile maps | `lib/spatial/tile_map.dart` |
+| Floor blueprint / placement | `lib/spatial/floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart` + `docs/FLOOR_BLUEPRINT.md` |
 | Hub | `lib/ui/hub_screen.dart` |
 | Hub TODAY chase | `lib/core/hub_chase.dart` |
+| Chase contract (hub ↔ AFK) | `lib/core/chase_contract.dart` + `docs/CHASE_CONTRACT.md` |
 | Ascend unlock teasers | `lib/core/ascend_roadmap.dart` |
 | Ascend / lore copy | `lib/core/story_lore.dart` |
 | Dungeon / hub shell | `lib/ui/is2_shell.dart` |
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
 | Kenney helpers | `lib/ui/kenney_assets.dart` |
 | Custom art helpers | `lib/ui/custom_assets.dart` |
+| Gear budget contract | `docs/GEAR_BUDGET.md` |
 | UI theme guide | `docs/UI_THEME.md` (+ `MenuChrome` / `GameTheme`) |
 
 ## Conventions
@@ -187,6 +219,8 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 - Asset paths only through `KenneyAssets` / `CustomAssets` (no raw `assets/...` in UI).
 - Pixel sprites: `filterQuality: FilterQuality.none`.
 - Loadouts UI label = **LOADOUTS**; dungeon armor 2pc/4pc = **armor sets** (not the same).
+- Gear BiS / UPGRADE: budget-honest score only — see `docs/GEAR_BUDGET.md`
+  (`itemBudgetScore`; no affinity/armor/rarity/set crumbs).
 
 ## Meta (survives Ascend)
 
@@ -200,12 +234,13 @@ Gauntlet claims, daily vault / weekly affix season, prestige shop, unlocked spec
 (clamped) + challenge toggles, FARM/PUSH preference.
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
-each Ascend adds **+2 ATK · +1 DEF · +4 VIT · +3% gold** on top of AL flats
-(`+1 ATK` / `DEF = AL~/2` / `+2 VIT` / `+10% gold` per AL). Shown in Forge → KEEP
-and Sanctuary. Constants: `GameLogic.ascendBlessing*`.
+each Ascend adds **+2 ATK · +1 DEF · +4 STA · +3% gold** on top of AL flats
+(`+1 ATK` / `DEF = AL~/2` / `+2 STA` / `+10% gold` per AL). Shown in Forge → KEEP
+and Sanctuary. Constants: `GameLogic.ascendBlessing*`. Player-facing label is
+**STA / Stamina** (same as gear); internal fields may still say vitality.
 
 **Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades
-(ATK/DEF/VIT/move/haste/crit), non-Apex gear/stash, **loadouts**, leave dungeon
+(ATK/DEF/STA/move/haste/crit), non-Apex gear/stash, **loadouts**, leave dungeon
 (`inDungeon=false`); mission board rebuilt for new AL.
 
 Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
@@ -214,9 +249,12 @@ Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
 
 Hub **KEYSTONE** sets preferred key (`hardmodeLevel` 0–20, AL-gated). On enter,
 affixes lock + idle-friendly par timer starts (AFK counts). Boss clear under par
-→ TIMED (upgrade key, vault score); overtime → depleted. **Daily vault** (UTC):
-1 clear **or** timed KEY+2; claim once per day (scales with best timed key).
-Affixes still rotate weekly. See `lib/core/keystone.dart`.
+→ TIMED (upgrade key, vault score); overtime → depleted. Loot iLvl bonus is
+`key * 2` (`Keystone.lootItemLevelBonus`) so higher keys are a visible gear jump.
+After the first hour, hub TODAY chases the next KEY until the AL cap; Daily /
+Will / Gauntlet surface when the preferred key is at cap (ALMOST cliffs stay above).
+**Daily vault** (UTC): 1 clear **or** timed KEY+2; claim once per day (scales with
+best timed key). Affixes still rotate weekly. See `lib/core/keystone.dart`.
 
 ## God Hand
 

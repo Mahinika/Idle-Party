@@ -10,6 +10,7 @@ import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
+import 'keystone.dart';
 
 /// Affix definition loaded from `item_affixes.json`.
 class ItemAffixDef {
@@ -170,7 +171,7 @@ class EquipmentFactory {
       base +
           zone * 4 +
           ascensionLevel.clamp(0, 40) * 2 +
-          hardmodeLevel.clamp(0, 20) ~/ 4,
+          Keystone.lootItemLevelBonus(hardmodeLevel),
     );
     return softCapItemLevel(ilvl);
   }
@@ -229,8 +230,9 @@ class EquipmentFactory {
       LootRarity.epic => 1.06,
       LootRarity.legendary => 1.12,
     };
-    // ~0.72 primary pts / ilvl on MH rare before armor carve / affix slice.
-    const ptsPerIlvl = 0.72;
+    // ~0.88 primary pts / ilvl on MH rare before armor carve / affix slice.
+    // Tuned so full mid rare sets lift melee ATK without caster Int stomping.
+    const ptsPerIlvl = 0.88;
     return max(3, (itemLevel * ptsPerIlvl * quality * slotM).round());
   }
 
@@ -355,9 +357,9 @@ class EquipmentFactory {
     SpecRoleTag? roleTag,
     HeroSpecId? lootSpecId,
   }) {
-    // Plate tanks get a touch more Sta; cloth casters keep Int/SP from shares.
+    // Plate tanks: Str + Sta only (matches lean primary shares).
     if (type == ArmorType.plate && roleTag == SpecRoleTag.tank) {
-      return const [0.25, 0.10, 0.55, 0.0, 0.05, 0.05];
+      return const [0.34, 0.0, 0.66, 0.0, 0.0, 0.0];
     }
     return EquipStatWeights.lootShares(
       bias: bias,
@@ -403,7 +405,7 @@ class EquipmentFactory {
     HeroSpecId? lootSpecId,
   }) =>
       switch (kind) {
-        OffHandKind.shield => const [0.25, 0.10, 0.55, 0.0, 0.05, 0.05],
+        OffHandKind.shield => const [0.34, 0.0, 0.66, 0.0, 0.0, 0.0],
         OffHandKind.weapon => EquipStatWeights.lootShares(
             bias: bias,
             roleTag: roleTag ?? SpecRoleTag.meleeDps,
@@ -834,9 +836,22 @@ class EquipmentFactory {
     var intel = dist.intel;
     var spi = dist.spi;
     var sp = dist.sp;
+
+    // Melee/ranged DPS: slight primary bump so sheet ATK tracks cloth casters
+    // after armor carve (leather/mail keep less offensive budget than cloth).
+    final dpsBump = switch (roleTag ?? _fallbackTag(classBias)) {
+      SpecRoleTag.meleeDps || SpecRoleTag.rangedDps => 1.22,
+      SpecRoleTag.tank => 1.0,
+      SpecRoleTag.healer || SpecRoleTag.caster => 1.0,
+    };
+    if (dpsBump > 1.0) {
+      str = (str * dpsBump).round();
+      agi = (agi * dpsBump).round();
+    }
+    // Secondaries (WotLK-lite / GEAR_BUDGET): Crit / Haste (/ Mp5 healers).
+    // Cap 2 lines. Never roll Move on loot.
     var crit = 0;
     var aspd = 0;
-    var move = 0;
     var mp5 = 0;
 
     void applyAffix(ItemAffixDef a) {
@@ -854,35 +869,72 @@ class EquipmentFactory {
     if (prefix != null) applyAffix(prefix);
     if (suffix != null) applyAffix(suffix);
 
-    // Secondaries grow with displayed ilvl (not rarity alone).
     final secTier = max(0, (iLvl - 5) ~/ 18);
+    final secAmt = max(1, rarity.index + secTier);
+    final tag = roleTag ?? _fallbackTag(classBias);
+    final targetSecs = switch (rarity) {
+      LootRarity.common => random.nextDouble() < 0.40 ? 1 : 0,
+      LootRarity.uncommon => 1,
+      LootRarity.rare => random.nextDouble() < 0.55 ? 2 : 1,
+      LootRarity.epic || LootRarity.legendary => 2,
+    };
 
-    if (armorType == ArmorType.leather ||
-        weaponType == WeaponType.dagger ||
-        weaponType == WeaponType.bow ||
-        weaponType == WeaponType.crossbow ||
-        weaponType == WeaponType.gun ||
-        weaponType == WeaponType.thrown ||
-        classBias == HeroRole.rogue) {
-      crit = max(crit, rarity.index + secTier);
+    final pool = <String>[
+      for (final id in switch (tag) {
+        SpecRoleTag.healer => const ['haste', 'mp5', 'crit'],
+        SpecRoleTag.caster => const ['crit', 'haste'],
+        SpecRoleTag.tank => const ['haste', 'crit'],
+        SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
+          const ['crit', 'haste'],
+      })
+        id,
+    ];
+    // Weapons / gloves lean Haste first (classic feel).
+    if (slot == EquipmentSlot.weapon || slot == EquipmentSlot.hands) {
+      pool.remove('haste');
+      pool.insert(0, 'haste');
     }
-    if (armorType == ArmorType.cloth ||
-        weaponType == WeaponType.staff ||
-        weaponType == WeaponType.wand ||
-        offHandKind == OffHandKind.frill) {
-      mp5 = rarity.index >= 1
-          ? 1 + rarity.index + secTier ~/ 2
-          : max(0, secTier ~/ 2);
-      if (random.nextDouble() < 0.4) {
-        crit = max(crit, rarity.index + secTier ~/ 2);
+
+    int secondaryLines() {
+      var n = 0;
+      if (crit > 0) n++;
+      if (aspd > 0) n++;
+      if (mp5 > 0) n++;
+      return n;
+    }
+
+    while (secondaryLines() < targetSecs && pool.isNotEmpty) {
+      final pick = pool.removeAt(0);
+      switch (pick) {
+        case 'crit':
+          if (crit <= 0) crit = secAmt;
+        case 'haste':
+          if (aspd <= 0) aspd = secAmt;
+        case 'mp5':
+          if (mp5 <= 0) mp5 = max(1, (secAmt + 1) ~/ 2);
       }
     }
-    if (slot == EquipmentSlot.boots) {
-      move = 2 + rarity.index * 2 + secTier;
-      aspd = max(aspd, 1 + rarity.index + secTier ~/ 2);
-    }
-    if (slot == EquipmentSlot.weapon || slot == EquipmentSlot.hands) {
-      aspd = max(aspd, 1 + rarity.index + secTier ~/ 2);
+
+    // Affixes can push past two lines — keep the strongest two (no Move).
+    if (secondaryLines() > 2) {
+      final ranked = <({String id, int v})>[
+        if (crit > 0) (id: 'crit', v: crit),
+        if (aspd > 0) (id: 'aspd', v: aspd),
+        if (mp5 > 0) (id: 'mp5', v: mp5),
+      ]..sort((a, b) => b.v.compareTo(a.v));
+      crit = 0;
+      aspd = 0;
+      mp5 = 0;
+      for (final e in ranked.take(2)) {
+        switch (e.id) {
+          case 'crit':
+            crit = e.v;
+          case 'aspd':
+            aspd = e.v;
+          case 'mp5':
+            mp5 = e.v;
+        }
+      }
     }
 
     var effectId = GearEffectId.none;
@@ -972,10 +1024,11 @@ class EquipmentFactory {
       mp5Bonus: mp5,
       critChanceBonus: crit,
       attackSpeedBonus: aspd,
-      moveSpeedBonus: move,
+      moveSpeedBonus: 0, // GEAR_BUDGET: no Move on loot
       pattern: pattern,
       effectId: effectId,
       effectValue: effectValue,
+      // Affinity = drop bias / tooltip flavour — not equip-score.
       affinity: classBias.name,
       itemLevel: iLvl,
       armorType: armorType,

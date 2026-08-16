@@ -58,5 +58,33 @@ void main() {
         reason: 'storm dungeon shipped — mention Stormwake/Storm in What’s New',
       );
     }
+    if (ids.contains('rime')) {
+      expect(
+        bullets.contains('rime') || bullets.contains('rimeglass'),
+        isTrue,
+        reason: 'rime dungeon shipped — mention Rimeglass/Rime in What’s New',
+      );
+    }
+    if (ids.contains('fen')) {
+      expect(
+        bullets.contains('fen') || bullets.contains('blightfen'),
+        isTrue,
+        reason: 'fen dungeon shipped — mention Blightfen/Fen in What’s New',
+      );
+    }
+    if (ids.contains('brass')) {
+      expect(
+        bullets.contains('brass') || bullets.contains('brassvault'),
+        isTrue,
+        reason: 'brass dungeon shipped — mention Brassvault/Brass in What’s New',
+      );
+    }
+    if (ids.contains('veil')) {
+      expect(
+        bullets.contains('veil') || bullets.contains('mothveil'),
+        isTrue,
+        reason: 'veil dungeon shipped — mention Mothveil/Veil in What’s New',
+      );
+    }
   });
 }

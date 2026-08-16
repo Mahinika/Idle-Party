@@ -19,10 +19,133 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.11.3';
+  static const String currentVersion = '1.12.8';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.8',
+      bullets: <String>[
+        'Combat Rogue hits harder so the kit sits with other melee.',
+        'Holy Priest Guardian Spirit is a real emergency save; Resto Lifebloom is a HoT again.',
+        'Local season weeks named for late summer (Moth Dust / Brass Tempo) + KEYSTONE week-goal card.',
+        'Tide / Ember / Grove layout kits lean harder into water alcoves, lava chokes, and root choke rooms.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.7',
+      bullets: <String>[
+        'Kit fantasy pass: Blood Bone Shield, Guardian Lacerate, Fury Enraged Regeneration, Unholy Gargoyle actually summons, Subtlety Preparation resets CDs.',
+        'Pack tools: Elemental Flame Shock, Frost Mage Blizzard, Destruction Rain of Fire, Survival Multi-Shot — rain/fan AoEs aim at your focus pack.',
+        'Healers unchanged — party heals already cover their fantasy.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.6',
+      bullets: <String>[
+        'Kit AoE gaps filled: Affliction Seed of Corruption, Assassination/Subtlety Fan of Knives, Shadow Mind Sear, Feral Swipe, Holy Paladin Consecration.',
+        'Healers still clear packs via party heals (CoH / Holy Nova / Healing Rain / Wild Growth) — damage AoE was the missing feel on ST-heavy DPS.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.5',
+      bullets: <String>[
+        'VFX: Lite keeps ground discs (Consecration / Bladestorm) and auras — only Full shows floaters/bursts; Minimal still reduces motion.',
+        'Signature kits (Execute, TV, Pyroblast, Chaos Bolt, Tranquility, …) get explicit cast tints / discs so fantasy reads clearer.',
+        'Melee trails read thicker on Full; Lite/Minimal use a short bright slash nub.',
+        'Settings + Guides name Full / Lite / Minimal honestly.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.4',
+      bullets: <String>[
+        'World Path map: endgame road (Rimeglass → Blightfen → Brassvault → Mothveil) painted as continuous terrain — not glued color bands.',
+        'Hub path markers: clearer HERE / OPEN / CLEAR / LOCKED labels, bigger tap targets, lifetime gold as 1.2M / 750k.',
+        'Zone caption shows boss + flavor when unlocked; locked still shows have/need lifetime gold.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.3',
+      bullets: <String>[
+        'World Path: Mothveil Hollow — new end zone after Brassvault (The Pale Monarch).',
+        'Moth-silk identity: lilac dust wash, veil mites, Pale Monarch (not a Brassvault twin).',
+        'World Path map extended with a painted moth-dust strip + 15th ring under the vault.',
+        'Mothveil leans silk chokes; Brassvault keeps cog treasure alcoves.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.2',
+      bullets: <String>[
+        'Holy Paladin: Beacon marks an ally so your heals peel onto them. Holy Shock heals when someone is hurt, or smites when the party is topped. Divine Favor is a heal window — not haste.',
+        'Marksmanship: Volley rains arrows on the pack (not a Scatter root). Aimed Shot still punches the focus.',
+        'World Path still runs Sandy Caverns through Brassvault Deep (Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.1',
+        bullets: <String>[
+        'After the first hour, TODAY chases KEY +1 for better iLvl loot (not Daily). Higher keys raise item level honestly — KEY +10 is a real jump vs the same floor without a key.',
+        'GEAR: plate tanks show more ARMOR than leather DPS. Agility is a small dodge crumb — it no longer turns Combat Rogue into the party’s armor king.',
+        'Kits: Arms Sweeping Strikes is a cleave window on your swings (HUD shows SWEEP) — not a one-shot nova. Prot Paladin Holy Shield is a block window while you tank; Divine Protection stays the panic bubble.',
+        'Arms, Beast Mastery, and Unholy sit closer to other DPS — Sweep, pet, and ghoul still look the same; they just hit a bit less.',
+        'World Path still runs Sandy Caverns through Brassvault Deep (Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.0',
+      bullets: <String>[
+        'World Path: Brassvault Deep — new end zone after Blightfen (The Mainspring).',
+        'Clockwork identity: brass wash, cog mites, golem mainspring (not a Blightfen twin).',
+        'World Path map extended with a painted brass-vault strip + 14th ring under the mire.',
+        'Brassvault leans treasure alcoves of cogs; Blightfen keeps choke water.',
+        'Blightfen Mire still on the road after Rimeglass (Fen Hydra).',
+        'World Path still runs Sandy Caverns through Brassvault (Tidehold, Ashen Vault, Grove, Stormwake, Rimeglass, Blightfen on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.11.5',
+      bullets: <String>[
+        'World Path: Rimeglass Rift — new end zone after Stormwake (Rime Colossus).',
+        'Quiet ice identity: cyan wash, rime mites, frost golem boss (not Stormwake twin).',
+        'World Path map extended with a painted Rimeglass ice strip + 12th ring under Stormwake.',
+        'Floors use a Blueprint → placement plan: room beats, landmark props, and chest sockets (not just scatter clutter).',
+        'Room chests drop gold/gear pickups on elite/treasure beats — same AFK vacuum as kill loot.',
+        'Rimeglass leans quiet treasure alcoves; Stormwake leans choke corridors.',
+        'TODAY first hour: grow the party in Sandy — Daily/vault wait until a boss. ALMOST zone/Will still beats Daily grind; offline Meet opens PARTY; KEY tips wait for mid progress.',
+        'First tips: TODAY + ENTER, then FARM/PUSH and God Hand in the dungeon. Menu tips wait until you have cleared a floor.',
+        'Cold start: a short skippable story intro (the keep, your will) plays before CONTINUE / NEW GAME.',
+        'Offline welcome can lead with party levels when the roster grew while you were away.',
+        'Kits: Fury Recklessness is an all-in damage window (not a panic wall); Bloodthirst returns rage. Frost DK Hungering Cold freezes the pack — Frost Strike shatters rooted foes. Fire HUD shows STREAK when Pyroblast is ready.',
+        'Ascend AL1 teasers include Holy Paladin (AL1 or 25e shop) — same as the live unlock.',
+        'World Path still runs Sandy Caverns through Rimeglass Rift (Tidehold, Ashen Vault, Grove, Stormwake on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.11.4',
+      bullets: <String>[
+        'Stormwake: unique Storm Tyrant boss + gale mite sprites (not ghost/bat twins).',
+        'World Path markers retuned for the 11-zone map (Stormwake at the bottom chasm).',
+        'Kit VFX: Survival traps/shots, Holy Priest CoH/Nova/Hymn, Disc Flash/PS/PI read clearer.',
+        'POWER → FORGE: all run bonuses scroll on phone; forge HP is STA (Stamina), same as gear.',
+        'Gear readability: Primary vs Secondary on tooltips; new drops lean (no Move spam, ≤2 secondaries).',
+        'Gear power tuned: caster Int/SP ROI matches melee; full rare sets matter in combat without stomping.',
+        'Gear budget: iLvl→stats power only — UPGRADE/Auto Equip ignore affinity/armor/set ghost score; BEST matches real upgrades; 1H+off-hand can beat a lonely 2H.',
+        'TODAY chase: hub and offline Up next share one ChaseContract (claim → READY → ALMOST → grind).',
+        'Offline welcome: one wow line, up to 3 highlights, then the same Up next chase as hub TODAY.',
+        'Meet kits: TODAY/Ascend teasers include fantasy + a Watch… combat hook for each AL ladder unlock.',
+        'Daily vault early: simple clear-and-claim copy; KEY jargon waits until mid progress (AL2+ / deeper zones).',
+        'God Hand: steer-toy first (tap to pull + smash); Forge KEEP styles/CD stay soft power knobs.',
+        'Auto Equip: will not replace worn gear with clearly lower iLvl for tiny affinity bumps.',
+        'Gear systems: Apex hard-lock, merge keeps primary set only, unstick honors FILTERS.',
+        'World Path still runs Sandy Caverns through Stormwake Hollow (Tidehold, Ashen Vault, Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.11.3',
       bullets: <String>[
@@ -72,7 +195,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.10.2',
       bullets: <String>[
-        'Ascend Blessing: each Ascend permanently stacks +2 ATK · +1 DEF · +4 VIT · +3% gold (Forge → KEEP).',
+        'Ascend Blessing: each Ascend permanently stacks +2 ATK · +1 DEF · +4 STA · +3% gold (Forge → KEEP).',
         'Keep playing: Ascend shows next unlocks (Rogue / 5th slot / Gauntlet), TODAY flashes READY/ALMOST, stronger AFK welcome-back.',
         'GEAR: WoW-style item tooltips with green/red compare vs equipped, hero arrows, fuller hero stats.',
         'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
@@ -350,6 +473,10 @@ abstract final class MetaSystems {
     'clear_ember': (s) => s.highestDungeonCleared >= 8,
     'clear_grove': (s) => s.highestDungeonCleared >= 9,
     'clear_storm': (s) => s.highestDungeonCleared >= 10,
+    'clear_rime': (s) => s.highestDungeonCleared >= 11,
+    'clear_fen': (s) => s.highestDungeonCleared >= 12,
+    'clear_brass': (s) => s.highestDungeonCleared >= 13,
+    'clear_veil': (s) => s.highestDungeonCleared >= 14,
     'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
     'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
     'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,

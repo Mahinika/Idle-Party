@@ -1,19 +1,23 @@
 ---
 description: >-
   Owner product preferences for Idle Party — content focus, progression fantasy,
-  polish kits, more zones, big batches, English UI, propose commit/PR/tag.
+  polish kits, more zones, big batches, English UI; commit locally, ask before push.
 alwaysApply: true
 ---
 
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
-Last preference sync: **2026-08-10** (Samsung A56 phone playtest + Ascend feel / TODAY).
+Last preference sync: **2026-08-13** (workstyle: commit locally when a batch is
+verified; still ask before push / Play / save-wipe. Product locks unchanged).
 
 ## Near-term focus
 
+- **Default roadmap:** 90-day M1–M3 shipped (chase → kits → Blightfen). Operate from `docs/CONTENT_CADENCE.md` — balance + one player-visible slice + What’s New. Keep STRATEGY_90D decision table (kits before new specs; new zone if chase is clear). Don’t invent a competing list. **Now:** monthly cadence (zones + kit polish).
+- Vague “gör spelet bättre / vad härnäst” → **cadence slice**, not `/init`, cleanup, or CI chores.
 - Prefer **game feel / content** over Play ops busywork (closed-test recruitment can idle in background).
 - Play production remains a goal, but day-to-day work defaults to **content + feel** unless the owner asks about Play.
+- Background why (optional read): `docs/TOP_GAMES_RESEARCH.md`.
 
 ## Distribution
 
@@ -28,12 +32,28 @@ Last preference sync: **2026-08-10** (Samsung A56 phone playtest + Ascend feel /
 - **Owner reference phone: Samsung Galaxy A56** (1080×2340 @ DPR 3 → **360×780** CSS). Cursor browser playtest must always emulate this (or equivalent 360-wide portrait) via CDP device metrics — never judge UI at desktop/tablet width.
 - Hub, GEAR/BAG, menus, tooltips, touch targets: assume **finger + portrait**. Hover-only UX is playtest-only; phone must work with tap / long-press.
 - Flutter **web** remains a Cursor playtest harness with **forced phone emulation** — never treat wide desktop chrome as the shipping UI.
+- **Owner play notes win.** If they write what the first hour felt like (TODAY lied, tips got in the way, “what do I chase?”), that *is* the Month 1 batch — fix those surfaces. Don’t wait for a formal audit. Don’t invent a 10-minute phone pass without their notes unless they asked you to playtest in the Cursor browser.
 
 ## Work style
 
 - Prefer **large batches** (“gör allt X”) — fewer tiny back-and-forths.
 - Still verify (analyze/tests / hub smoke as needed) before calling done.
-- **Propose** commit, push, PR, and release tags when something is ship-shaped — ask once with a clear yes/no, don’t wait silently.
+- **Commit locally** when the requested batch is verified (DoD). Don’t wait for
+  a second “ska jag commita?”. **Ask before push, PR, and release tags.** Never
+  force-push or skip hooks unless the owner says so in that turn.
+- **Code shape:** prefer splitting a giant file (`game_logic`, `is2_shell`,
+  `spatial_combat`, …) when a change needs a home. Do **not** merge more into
+  those files. Keep SpatialCombat as combat authority (extract helpers, don’t
+  add a second fight sim).
+- **Dead code:** delete unused files/APIs with zero callers. Keep JSON/save
+  fields that old saves may still contain (`save-migrate`). Unused
+  `@Deprecated` helpers that are not serialized may go.
+- **Git:** daily work on `main`. `release/x.y.z` only when cutting a tag. Don’t open a release branch for chores.
+- **Don’t stage** `windows/flutter/generated_*` unless `pubspec.yaml` plugins actually changed (`jni` noise from `pub get` is not a product change).
+- **Product locks stay** (phone, English UI, fairness, no IAP, 90-day roadmap,
+  legal/Kenney). Agents may tighten *workstyle* so they can finish; they must
+  not weaken those locks. Cursor/AI safety (no exploits, no foreign dumps) is
+  not overridable from this file.
 
 ## Game feel & fantasy
 

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/models/hero_spec.dart';
+import 'package:idle_party/models/vfx_quality.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 
 SpatialActor _hero(HeroSpecId spec, {bool ranged = true}) {
@@ -139,6 +140,7 @@ void main() {
       (AbilityId.bloodthirst, HeroSpecId.fury, SpellBoltStyle.weapon),
       (AbilityId.crusaderStrike, HeroSpecId.retribution, SpellBoltStyle.holy),
       (AbilityId.aimedShot, HeroSpecId.marksmanship, SpellBoltStyle.arrow),
+      (AbilityId.volley, HeroSpecId.marksmanship, SpellBoltStyle.arrow),
       (AbilityId.envenom, HeroSpecId.assassination, SpellBoltStyle.nature),
       (AbilityId.mindBlast, HeroSpecId.shadow, SpellBoltStyle.shadow),
       (AbilityId.heartStrike, HeroSpecId.blood, SpellBoltStyle.weapon),
@@ -176,12 +178,57 @@ void main() {
       AbilityId.swipe,
       AbilityId.arcaneExplosion,
       AbilityId.bladeFlurry,
+      AbilityId.tranquility,
+      AbilityId.holyWrath,
+      AbilityId.hungeringCold,
+      AbilityId.spiritLink,
+      AbilityId.shockwave,
+      AbilityId.killingSpree,
+      AbilityId.armyOfDead,
     ]) {
       expect(
         SpatialCombat.groundDiscLifeFor(id),
         isNotNull,
         reason: '$id should have a ground disc',
       );
+    }
+  });
+
+  test('VfxQuality Lite keeps discs/auras; Minimal strips motion layers', () {
+    expect(VfxQuality.full.showBurstsAndFloaters, isTrue);
+    expect(VfxQuality.full.showGroundFx, isTrue);
+    expect(VfxQuality.full.showActorAuras, isTrue);
+    expect(VfxQuality.full.showProjectileTrails, isTrue);
+
+    expect(VfxQuality.lite.showBurstsAndFloaters, isFalse);
+    expect(VfxQuality.lite.showGroundFx, isTrue);
+    expect(VfxQuality.lite.showActorAuras, isTrue);
+    expect(VfxQuality.lite.showProjectileTrails, isFalse);
+    expect(VfxQuality.lite.reduced, isTrue);
+
+    expect(VfxQuality.minimal.showBurstsAndFloaters, isFalse);
+    expect(VfxQuality.minimal.showGroundFx, isFalse);
+    expect(VfxQuality.minimal.showActorAuras, isFalse);
+    expect(VfxQuality.minimal.showGuideAndPulse, isFalse);
+  });
+
+  test('signature damage/buff kits carry AbilityVfxSpec', () {
+    for (final id in [
+      AbilityId.pyroblast,
+      AbilityId.armsExecute,
+      AbilityId.templarsVerdict,
+      AbilityId.chaosBolt,
+      AbilityId.mindBlast,
+      AbilityId.trueshot,
+      AbilityId.earthShock,
+      AbilityId.tranquility,
+      AbilityId.divineFavor,
+      AbilityId.blackArrow,
+    ]) {
+      final def = ClassKits.defFor(id);
+      expect(def, isNotNull, reason: '$id missing');
+      expect(def!.vfx, isNotNull, reason: '$id needs AbilityVfxSpec');
+      expect(def.vfx!.boltStyle ?? def.boltStyle, isNotNull);
     }
   });
 }

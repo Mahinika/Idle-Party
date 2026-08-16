@@ -165,6 +165,34 @@ abstract final class AchievementCatalog {
       essenceReward: 34,
       category: AchievementCategory.explorer,
     ),
+    AchievementDef(
+      id: 'clear_rime',
+      title: 'Rimebreaker',
+      description: 'Clear Rimeglass Rift.',
+      essenceReward: 38,
+      category: AchievementCategory.explorer,
+    ),
+    AchievementDef(
+      id: 'clear_fen',
+      title: 'Fenwalker',
+      description: 'Clear Blightfen Mire.',
+      essenceReward: 42,
+      category: AchievementCategory.explorer,
+    ),
+    AchievementDef(
+      id: 'clear_brass',
+      title: 'Clockbound',
+      description: 'Clear Brassvault Deep.',
+      essenceReward: 46,
+      category: AchievementCategory.explorer,
+    ),
+    AchievementDef(
+      id: 'clear_veil',
+      title: 'Veilwalker',
+      description: 'Clear Mothveil Hollow.',
+      essenceReward: 50,
+      category: AchievementCategory.explorer,
+    ),
     // —— Hardmode ——
     AchievementDef(
       id: 'hm_1',

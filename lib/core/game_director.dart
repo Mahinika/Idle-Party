@@ -876,6 +876,8 @@ class GameDirector extends ChangeNotifier {
                 : 'God Hand · ${result.kills} kills'),
         life: 1.5,
       );
+    } else {
+      showToast('God Hand · steered', life: 1.1);
     }
     notifyListeners();
   }
@@ -1365,7 +1367,7 @@ class GameDirector extends ChangeNotifier {
     if (_state.isSpecUnlocked(specId) && !before) {
       final def = HeroSpecs.def(specId);
       showToast(
-        '${def.name} · ${HeroIdentity.fantasyLine(specId)}',
+        '${def.name} · ${HeroIdentity.meetDetail(specId)}',
         life: 2.8,
       );
     }

@@ -117,7 +117,7 @@ Item rarity (tooltips only): `itemRarityColor` / `itemRarityBorder` in `item_too
 - Item tooltips — warm rarity panels (`item_tooltip.dart`): **long-press** on
   phone (centered card + scrim); hover OK for web playtest only. Bag selection
   compare stays **compact** so the grid remains usable.
-- Hub world-path `KenneyPanel` scene cards — adjacent forge palette, not the inventory sheet.
+- Hub world-path scene cards — adjacent forge palette, not the inventory sheet.
 
 ---
 

@@ -149,7 +149,11 @@ class CharacterEquipPanel extends StatelessWidget {
         : null;
     final compare = stashPiece == null
         ? null
-        : GameLogic.compareForHero(hero, stashPiece);
+        : GameLogic.compareForHero(
+            hero,
+            stashPiece,
+            pairingStash: state.gearStash,
+          );
 
     Widget slotFor(EquipmentSlot slot, {double? size}) {
       final item = hero.itemIn(slot);
@@ -157,6 +161,7 @@ class CharacterEquipPanel extends StatelessWidget {
         slot: slot,
         item: item,
         hero: hero,
+        pairingStash: state.gearStash,
         selected: item?.id == selectedItemId,
         size: size ?? slotSize,
         labeled: true,
@@ -419,7 +424,7 @@ class CharacterEquipPanel extends StatelessWidget {
                             ' V${GameLogic.formatDelta(compare.vitDelta)}',
                     style: GameTheme.body(
                       size: 12,
-                      color: compare.powerDelta > 0
+                      color: compare.isUpgrade
                           ? GameTheme.clear
                           : (compare.powerDelta < 0
                               ? GameTheme.bloodLit
@@ -645,6 +650,7 @@ class PaperDollSlot extends StatelessWidget {
     required this.selected,
     required this.size,
     this.hero,
+    this.pairingStash,
     this.labeled = false,
     this.onTap,
     this.onUnequip,
@@ -653,6 +659,7 @@ class PaperDollSlot extends StatelessWidget {
   final EquipmentSlot slot;
   final EquipmentItem? item;
   final PartyHero? hero;
+  final List<EquipmentItem>? pairingStash;
   final bool selected;
   final double size;
   final bool labeled;
@@ -793,6 +800,7 @@ class PaperDollSlot extends StatelessWidget {
     return ItemTooltipAnchor(
       item: item!,
       hero: hero,
+      pairingStash: pairingStash,
       child: body,
     );
   }

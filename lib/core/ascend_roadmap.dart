@@ -2,6 +2,7 @@ import '../models/hero_spec.dart';
 import '../models/meta_depth.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'hero_identity.dart';
 import 'meta_systems.dart';
 
 /// Player-facing Ascend unlock teasers — “what’s next after this AL?”
@@ -14,6 +15,7 @@ abstract final class AscendRoadmap {
     1: [
       (HeroSpecId.combat, 'Combat Rogue'),
       (HeroSpecId.arms, 'Arms Warrior'),
+      (HeroSpecId.holyPaladin, 'Holy Paladin'),
     ],
     2: [
       (HeroSpecId.beastMastery, 'Beast Mastery'),
@@ -106,6 +108,16 @@ abstract final class AscendRoadmap {
     return 'Next: keep stacking Blessings and AL power';
   }
 
+  /// Ascend level that unlocks [id], or null if it is not on this ladder.
+  static int? ascendLevelForKit(HeroSpecId id) {
+    for (final entry in kitUnlocksByAl.entries) {
+      for (final kit in entry.value) {
+        if (kit.$1 == id) return entry.key;
+      }
+    }
+    return null;
+  }
+
   /// Compact teaser for TODAY / hub chase detail.
   static String chaseTeaser(int currentAl) {
     for (var al = currentAl + 1; al <= 40; al++) {
@@ -122,18 +134,22 @@ abstract final class AscendRoadmap {
     for (var target = al + 1; target <= 6; target++) {
       final kits = kitUnlocksByAl[target];
       if (kits == null) continue;
-      final missing = [
+      final missing = <(HeroSpecId id, String label)>[
         for (final k in kits)
           if (!state.isSpecUnlocked(k.$1) &&
               !state.heroRoster.any((h) => h.specId == k.$1))
-            k.$2,
+            k,
       ];
       if (missing.isEmpty) continue;
-      final shownList = missing.take(2).toList();
+      final first = missing.first;
+      final shownList = [
+        for (final k in missing.take(2)) k.$2,
+      ];
       final shown = shownList.join(' · ');
       final rest = missing.length - shownList.length;
       final bit = rest > 0 ? '$shown · +$rest more' : shown;
-      return 'AL$target unlocks $bit';
+      final hook = HeroIdentity.meetHook(first.$1);
+      return 'AL$target unlocks $bit — $hook';
     }
     return null;
   }

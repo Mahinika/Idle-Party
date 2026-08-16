@@ -60,6 +60,9 @@ abstract final class HeroIdentity {
     };
   }
 
+  /// One-line fantasy for unlock toast / Meet card (GEAR/SYSTEMS meetBlurb).
+  static String meetBlurb(HeroSpecId specId) => fantasyLine(specId);
+
   /// One-line fantasy for unlock toast / reveal card.
   static String fantasyLine(HeroSpecId specId) {
     return switch (specId) {
@@ -96,6 +99,47 @@ abstract final class HeroIdentity {
       HeroSpecId.restorationDruid => 'HoTs that keep ticking.',
     };
   }
+
+  /// Visible kit hook for Meet / Ascend teasers (what to watch in combat).
+  static String meetHook(HeroSpecId specId) {
+    return switch (specId) {
+      HeroSpecId.arms => 'Watch Sweeping Strikes cleave, then Bladestorm.',
+      HeroSpecId.fury => 'Watch Bloodthirst rage and Reck windows.',
+      HeroSpecId.protection => 'Watch Shield Slam + block fantasy.',
+      HeroSpecId.holyPaladin => 'Watch Beacon peels and Holy Shock smite.',
+      HeroSpecId.protPaladin => 'Watch Consecration and Holy Shield blocks.',
+      HeroSpecId.retribution => 'Watch Crusader Strike pressure.',
+      HeroSpecId.beastMastery => 'Watch the pet melt with you.',
+      HeroSpecId.marksmanship => 'Watch Aimed Shot, then Volley the pack.',
+      HeroSpecId.survival => 'Watch traps and Explosive Shot.',
+      HeroSpecId.assassination => 'Watch poisons tick into finishers.',
+      HeroSpecId.combat => 'Watch Sinister → Eviscerate chains.',
+      HeroSpecId.subtlety => 'Watch openers from stealth.',
+      HeroSpecId.discipline => 'Watch shields land before damage.',
+      HeroSpecId.holyPriest => 'Watch Circle of Healing splashes.',
+      HeroSpecId.shadow => 'Watch DoTs blanket the pack.',
+      HeroSpecId.blood => 'Watch self-heals while tanking.',
+      HeroSpecId.frostDk => 'Watch Hungering Cold freeze, then shatter.',
+      HeroSpecId.unholy => 'Watch diseases and ghoul assists.',
+      HeroSpecId.elemental => 'Watch Lightning / Lava Burst bursts.',
+      HeroSpecId.enhancement => 'Watch Stormstrike melee swings.',
+      HeroSpecId.restorationShaman => 'Watch Riptide / Chain Heal.',
+      HeroSpecId.arcane => 'Watch charge stacks then missiles.',
+      HeroSpecId.fire => 'Watch Hot Streak Pyroblasts.',
+      HeroSpecId.frostMage => 'Watch freeze into shatter.',
+      HeroSpecId.affliction => 'Watch curses stack and drain.',
+      HeroSpecId.demonology => 'Watch demons join the fight.',
+      HeroSpecId.destruction => 'Watch Chaos Bolt nukes.',
+      HeroSpecId.balance => 'Watch Moonfire / Starfall.',
+      HeroSpecId.feral => 'Watch bleeds build into bites.',
+      HeroSpecId.guardian => 'Watch Thrash / bear threat.',
+      HeroSpecId.restorationDruid => 'Watch Rejuvenation HoTs tick.',
+    };
+  }
+
+  /// Meet card body: fantasy + combat hook.
+  static String meetDetail(HeroSpecId specId) =>
+      '${meetBlurb(specId)} ${meetHook(specId)}';
 
   static HeroSpecId? tryParseSpec(String name) {
     for (final id in HeroSpecId.values) {

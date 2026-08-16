@@ -111,6 +111,10 @@ void main() {
       CustomAssets.enemyCrystalBoss,
       CustomAssets.enemyCrystalWraith,
       CustomAssets.enemyCrystalMite,
+      CustomAssets.enemyBossStorm,
+      CustomAssets.enemyStormMite,
+      CustomAssets.enemyBossVeil,
+      CustomAssets.enemyVeilMite,
     };
     for (final path in paths) {
       expect(exists(path), isTrue, reason: path);

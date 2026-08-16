@@ -341,8 +341,20 @@ void main() {
     final stormFrontier = initial.copyWith(highestDungeonCleared: 9);
     expect(GameLogic.recommendedDungeonId(stormFrontier), 'storm');
 
-    final allClear = initial.copyWith(highestDungeonCleared: 10);
-    expect(GameLogic.recommendedDungeonId(allClear), 'storm');
+    final rimeFrontier = initial.copyWith(highestDungeonCleared: 10);
+    expect(GameLogic.recommendedDungeonId(rimeFrontier), 'rime');
+
+    final fenFrontier = initial.copyWith(highestDungeonCleared: 11);
+    expect(GameLogic.recommendedDungeonId(fenFrontier), 'fen');
+
+    final brassFrontier = initial.copyWith(highestDungeonCleared: 12);
+    expect(GameLogic.recommendedDungeonId(brassFrontier), 'brass');
+
+    final veilFrontier = initial.copyWith(highestDungeonCleared: 13);
+    expect(GameLogic.recommendedDungeonId(veilFrontier), 'veil');
+
+    final allClear = initial.copyWith(highestDungeonCleared: 14);
+    expect(GameLogic.recommendedDungeonId(allClear), 'veil');
 
     final ready = mid.copyWith(bossVictories: 1);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 4));
@@ -702,7 +714,7 @@ void main() {
       affinity: HeroRole.warrior.name,
       offHandKind: OffHandKind.shield,
     );
-    final mageWand = GameLogic.createEquipment(
+    final mageStaff = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
       rarity: LootRarity.rare,
       battleNumber: 8,
@@ -724,20 +736,45 @@ void main() {
     );
 
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final prot = state.heroes.firstWhere((h) => h.role == HeroRole.warrior);
+    final fire = state.heroes.firstWhere((h) => h.role == HeroRole.mage);
+    // Budget honesty: shield is a tank piece; Int/SP staff is a caster piece.
+    expect(
+      GameLogic.specEquipScore(prot, tankShield),
+      greaterThan(GameLogic.specEquipScore(fire, tankShield)),
+    );
+    expect(
+      GameLogic.specEquipScore(fire, mageStaff),
+      greaterThan(GameLogic.specEquipScore(prot, mageStaff)),
+    );
+
+    // Auto Equip: tank-only empty party takes the shield from stash.
     state = state.copyWith(
-      heroes: state.heroes
-          .map((h) => h.copyWith(clearEquipped: true))
-          .toList(),
-      gearStash: <EquipmentItem>[tankShield, mageWand],
+      heroes: [
+        prot.copyWith(level: 20, clearEquipped: true),
+      ],
+      gearStash: <EquipmentItem>[tankShield],
     );
     state = GameLogic.autoEquipBetterGear(state);
+    expect(
+      state.heroes.single.itemIn(EquipmentSlot.offHand)?.id,
+      tankShield.id,
+    );
 
-    expect(state.heroes[0].role, HeroRole.warrior);
-    expect(state.heroes[2].role, HeroRole.mage);
-    expect(state.heroes[0].itemIn(EquipmentSlot.offHand)?.id, tankShield.id);
-    // Mage-affinity Int staff must prefer Fire over Disc (healer SP weights).
-    expect(state.heroes[2].itemIn(EquipmentSlot.weapon)?.id, mageWand.id);
-    expect(state.gearStash, isEmpty);
+    // Fire-only empty party takes the Int/SP staff.
+    state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final mage = state.heroes.firstWhere((h) => h.role == HeroRole.mage);
+    state = state.copyWith(
+      heroes: [
+        mage.copyWith(level: 20, clearEquipped: true),
+      ],
+      gearStash: <EquipmentItem>[mageStaff],
+    );
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(
+      state.heroes.single.itemIn(EquipmentSlot.weapon)?.id,
+      mageStaff.id,
+    );
   });
 
   test('auto equip skips wrong-role junk on empty slots', () {
@@ -1143,6 +1180,317 @@ void main() {
     expect(state.gearStash, isEmpty);
   });
 
+  test('auto equip does not swap worn gear for lower iLvl affinity crumb', () {
+    final worn = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 12,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'worn_high_ilvl',
+      armorType: ArmorType.mail,
+      strengthBonus: 14,
+      staminaBonus: 12,
+      armorBonus: 18,
+      itemLevel: 40,
+      affinity: 'warrior',
+      effectId: GearEffectId.none,
+      effectValue: 0,
+    );
+    // Lower iLvl, affinity-tagged, slightly weaker stats — used to win on
+    // affinity (+24) while iLvl only counted ~/4.
+    final lower = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'bag_lower_ilvl',
+      armorType: ArmorType.mail,
+      strengthBonus: 13,
+      staminaBonus: 11,
+      armorBonus: 16,
+      itemLevel: 28,
+      affinity: 'warrior',
+      effectId: GearEffectId.none,
+      effectValue: 0,
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final heroes = [...state.heroes];
+    heroes[0] = heroes[0].copyWith(
+      level: 20,
+      equipped: {
+        ...heroes[0].equipped,
+        EquipmentSlot.chest: worn,
+      },
+    );
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[lower],
+    );
+
+    final cmp = GameLogic.compareForHero(state.heroes[0], lower);
+    expect(cmp.isUpgrade, isFalse);
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(state.heroes[0].itemIn(EquipmentSlot.chest)?.id, worn.id);
+    expect(state.gearStash.any((g) => g.id == lower.id), isTrue);
+  });
+
+  test('same-ilvl affinity alone is not a meaningful upgrade', () {
+    final worn = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 12,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'worn_plain',
+      armorType: ArmorType.mail,
+      strengthBonus: 14,
+      staminaBonus: 12,
+      armorBonus: 18,
+      itemLevel: 32,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      clearAffinity: true,
+    );
+    final tagged = worn.copyWith(
+      id: 'bag_tagged',
+      affinity: 'warrior',
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final heroes = [...state.heroes];
+    heroes[0] = heroes[0].copyWith(
+      level: 20,
+      equipped: {
+        ...heroes[0].equipped,
+        EquipmentSlot.chest: worn,
+      },
+    );
+    state = state.copyWith(heroes: heroes, gearStash: <EquipmentItem>[tagged]);
+
+    final cmp = GameLogic.compareForHero(state.heroes[0], tagged);
+    expect(cmp.powerDelta, 0);
+    expect(cmp.isUpgrade, isFalse);
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(state.heroes[0].itemIn(EquipmentSlot.chest)?.id, worn.id);
+  });
+
+  test('atkDelta includes intellect for casters', () {
+    final worn = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.mage,
+    ).copyWith(
+      id: 'worn_low_int',
+      armorType: ArmorType.cloth,
+      intellectBonus: 4,
+      spellPowerBonus: 2,
+      staminaBonus: 6,
+      itemLevel: 24,
+      clearAffinity: true,
+    );
+    final better = worn.copyWith(
+      id: 'bag_high_int',
+      intellectBonus: 18,
+      spellPowerBonus: 10,
+      staminaBonus: 8,
+      itemLevel: 28,
+      affinity: 'mage',
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final mageIndex =
+        state.heroes.indexWhere((h) => h.gearAffinity == HeroRole.mage);
+    expect(mageIndex, greaterThanOrEqualTo(0));
+    final heroes = [...state.heroes];
+    heroes[mageIndex] = heroes[mageIndex].copyWith(
+      level: 20,
+      equipped: {
+        ...heroes[mageIndex].equipped,
+        EquipmentSlot.chest: worn,
+      },
+    );
+    state = state.copyWith(heroes: heroes);
+
+    final cmp = GameLogic.compareForHero(state.heroes[mageIndex], better);
+    expect(cmp.atkDelta, 18 - 4 + 10 - 2);
+  });
+
+  test('1H plus stash OH can beat worn two-hand on upgrade score', () {
+    final twoHand = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      battleNumber: 10,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'worn_2h',
+      weaponType: WeaponType.sword,
+      handed: WeaponHanded.twoHand,
+      strengthBonus: 16,
+      staminaBonus: 8,
+      itemLevel: 30,
+      affinity: 'warrior',
+      effectId: GearEffectId.none,
+      effectValue: 0,
+    );
+    final oneHand = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      battleNumber: 9,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'bag_1h',
+      weaponType: WeaponType.sword,
+      handed: WeaponHanded.oneHand,
+      strengthBonus: 12,
+      staminaBonus: 6,
+      itemLevel: 28,
+      affinity: 'warrior',
+      effectId: GearEffectId.none,
+      effectValue: 0,
+    );
+    final shield = GameLogic.createEquipment(
+      slot: EquipmentSlot.offHand,
+      rarity: LootRarity.rare,
+      battleNumber: 9,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'bag_shield',
+      offHandKind: OffHandKind.shield,
+      strengthBonus: 6,
+      staminaBonus: 14,
+      armorBonus: 40,
+      itemLevel: 28,
+      affinity: 'warrior',
+      effectId: GearEffectId.none,
+      effectValue: 0,
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final w = state.heroes.indexWhere(
+      (h) => h.spec.roleTag == SpecRoleTag.tank || h.gearAffinity == HeroRole.warrior,
+    );
+    expect(w, greaterThanOrEqualTo(0));
+    final heroes = [...state.heroes];
+    heroes[w] = heroes[w].copyWith(
+      level: 24,
+      equipped: {
+        ...heroes[w].equipped,
+        EquipmentSlot.weapon: twoHand,
+      },
+      clearEquipped: false,
+    );
+    // Ensure no leftover OH under a 2H.
+    final eq = Map<EquipmentSlot, EquipmentItem>.from(heroes[w].equipped)
+      ..remove(EquipmentSlot.offHand)
+      ..[EquipmentSlot.weapon] = twoHand;
+    heroes[w] = heroes[w].copyWith(equipped: eq);
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[oneHand, shield],
+    );
+
+    final withoutPair = GameLogic.compareForHero(state.heroes[w], oneHand);
+    final withPair = GameLogic.compareForHero(
+      state.heroes[w],
+      oneHand,
+      pairingStash: state.gearStash,
+    );
+    expect(withPair.powerDelta, greaterThan(withoutPair.powerDelta));
+    expect(withPair.isUpgrade, isTrue);
+
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(state.heroes[w].itemIn(EquipmentSlot.weapon)?.id, oneHand.id);
+    expect(state.heroes[w].itemIn(EquipmentSlot.offHand)?.id, shield.id);
+  });
+
+  test('auto equip may swap lower iLvl when role stats clearly win', () {
+    final wornJunk = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.uncommon,
+      battleNumber: 10,
+      bias: HeroRole.mage,
+    ).copyWith(
+      id: 'worn_wrong_stats',
+      armorType: ArmorType.cloth,
+      strengthBonus: 12,
+      staminaBonus: 2,
+      armorBonus: 4,
+      intellectBonus: 0,
+      spellPowerBonus: 0,
+      itemLevel: 36,
+      affinity: 'warrior',
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      clearAffinity: true,
+    );
+    final betterLower = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.mage,
+    ).copyWith(
+      id: 'bag_right_stats',
+      armorType: ArmorType.cloth,
+      intellectBonus: 22,
+      spellPowerBonus: 14,
+      staminaBonus: 10,
+      armorBonus: 6,
+      itemLevel: 28,
+      affinity: 'mage',
+      effectId: GearEffectId.none,
+      effectValue: 0,
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final mageIndex =
+        state.heroes.indexWhere((h) => h.gearAffinity == HeroRole.mage);
+    expect(mageIndex, greaterThanOrEqualTo(0));
+    final heroes = [...state.heroes];
+    // Fill other chests so BiS does not steal the bag piece for empty slots.
+    final filler = betterLower.copyWith(
+      id: 'filler_chest',
+      intellectBonus: 30,
+      spellPowerBonus: 20,
+      staminaBonus: 16,
+      itemLevel: 40,
+    );
+    for (var i = 0; i < heroes.length; i++) {
+      if (i == mageIndex) {
+        heroes[i] = heroes[i].copyWith(
+          level: 20,
+          equipped: {
+            ...heroes[i].equipped,
+            EquipmentSlot.chest: wornJunk,
+          },
+        );
+      } else {
+        heroes[i] = heroes[i].copyWith(
+          level: 20,
+          equipped: {
+            ...heroes[i].equipped,
+            EquipmentSlot.chest: filler.copyWith(id: 'filler_chest_$i'),
+          },
+        );
+      }
+    }
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[betterLower],
+    );
+
+    final cmp = GameLogic.compareForHero(state.heroes[mageIndex], betterLower);
+    expect(cmp.isUpgrade, isTrue);
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(
+      state.heroes[mageIndex].itemIn(EquipmentSlot.chest)?.id,
+      betterLower.id,
+    );
+  });
+
   test('sell junk drops offhand blocked by two-hand weapon', () {
     final staff = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
@@ -1478,12 +1826,48 @@ void main() {
           clearAffinity: true,
         ),
     ];
-    state = state.copyWith(gearStash: weakRares);
+    state = state.copyWith(
+      gearStash: weakRares,
+      autoSellMaxPower: 40,
+      autoSellMaxRarity: LootRarity.rare.index,
+    );
     expect(state.gearStash.length, cap);
 
     final sold = GameLogic.autoSellJunk(state, unstickBag: true);
     expect(sold.gearStash.length, lessThan(cap ~/ 2));
     expect(sold.gold, greaterThan(state.gold));
+  });
+
+  test('near-full unstick still keeps epics above FILTERS', () {
+    final cap = GameLogic.maxGearStashFor(
+      GameLogic.createInitialState(now: DateTime(2026, 7, 4)),
+    );
+    final epics = [
+      for (var i = 0; i < cap; i++)
+        GameLogic.createEquipment(
+          slot: EquipmentSlot.cloak,
+          rarity: LootRarity.epic,
+          battleNumber: 12,
+        ).copyWith(
+          id: 'epic_above_$i',
+          armorBonus: 4 + (i % 3),
+          staminaBonus: 4,
+          itemLevel: 36,
+          effectId: GearEffectId.none,
+          effectValue: 0,
+          clearAffinity: true,
+        ),
+    ];
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
+      gearStash: epics,
+      // Uncommon i24 — epics are outside FILTERS.
+      autoSellMaxPower: 24,
+      autoSellMaxRarity: LootRarity.uncommon.index,
+    );
+    final sold = GameLogic.autoSellJunk(state, unstickBag: true);
+    // Best-per-slot + all other epics above filter remain.
+    expect(sold.gearStash.length, cap);
+    expect(sold.gold, state.gold);
   });
 
   test('auto-disassemble scraps matching junk for essence', () {
@@ -1635,6 +2019,30 @@ void main() {
     expect(state.metaDepth.pendingHeroReveals, isNotEmpty);
     final cleared = GameLogic.ackPendingHeroReveals(state);
     expect(cleared.metaDepth.pendingHeroReveals, isEmpty);
+  });
+
+  test('early-floor gear pressure does not overshoot F3 packs', () {
+    final room = DungeonGenerator.generateFloor(
+      3,
+      dungeonId: 'sandy',
+      layoutSeed: 1,
+    ).first;
+    final fresh = GameLogic.roomCombatBudget(
+      room,
+      dungeonId: 'sandy',
+      gearPressure: 1.0,
+    );
+    final gear10 = GameLogic.roomCombatBudget(
+      room,
+      dungeonId: 'sandy',
+      gearPressure: 1.93,
+    );
+    expect(gear10.hp / fresh.hp, lessThan(1.4));
+    expect(gear10.attack / fresh.attack, lessThan(1.3));
+    expect(
+      GameLogic.appliedGearPressure(1.93, level: 3),
+      closeTo(1.26, 0.02),
+    );
   });
 
   test('fresh ascend dampens AL threat until gear rebuilds', () {

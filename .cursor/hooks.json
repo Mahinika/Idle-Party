@@ -7,10 +7,16 @@
         "timeout": 15
       }
     ],
+    "sessionStart": [
+      {
+        "command": "dart .cursor/hooks/session_start.dart",
+        "timeout": 10
+      }
+    ],
     "stop": [
       {
         "command": "dart .cursor/hooks/stop_verify.dart",
-        "timeout": 180,
+        "timeout": 240,
         "loop_limit": 2
       }
     ]

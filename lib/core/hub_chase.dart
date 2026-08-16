@@ -5,6 +5,7 @@ import 'ascend_roadmap.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'hero_identity.dart';
+import 'keystone.dart';
 import 'local_season.dart';
 import 'meta_systems.dart';
 
@@ -21,6 +22,8 @@ enum HubChaseKind {
   gauntletMilestone,
   unlockZone,
   dailyRun,
+  /// Next KEY run after the first hour (habit until AL cap).
+  keystone,
   clearFloors,
   weekGoal,
 }
@@ -46,6 +49,7 @@ class HubChase {
     this.progressLabel,
     this.urgency = HubChaseUrgency.normal,
     this.zoneId,
+    this.keyLevel,
   });
 
   final HubChaseKind kind;
@@ -57,10 +61,14 @@ class HubChase {
   /// Target zone id for [HubChaseKind.unlockZone] / clear pushes.
   final String? zoneId;
 
+  /// Preferred KEY to set on ENTER for [HubChaseKind.keystone].
+  final int? keyLevel;
+
   /// Picks the single best "what should I chase now?" target.
   ///
   /// Priority: claimables → Ascend → almost-Ascend → vault / KEY cliffs →
-  /// week goal → daily → zone → Will → Gauntlet → keep clearing.
+  /// first hour → KEY habit → daily → vault start → zone → Will → Gauntlet →
+  /// keep clearing.
   static HubChase forState(GameState state, {DateTime? now}) {
     final md = state.metaDepth;
     final clock = now ?? DateTime.now().toUtc();
@@ -72,15 +80,16 @@ class HubChase {
       final seasonBit = seasonPending
           ? ' · season +${GameLogic.seasonWeeklyBonusEssence}e'
           : '';
+      final keyTalk = GameLogic.showKeystoneJargon(state);
       return HubChase(
         kind: HubChaseKind.claimDailyVault,
         title: seasonPending
             ? 'Claim daily vault · season bonus'
             : 'Claim daily vault',
-        detail: best >= 2
+        detail: best >= 2 && keyTalk
             ? 'Best timed KEY +$best — grab your essence$seasonBit.'
             : 'You filled today’s vault — grab your essence$seasonBit.',
-        progressLabel: best >= 2
+        progressLabel: best >= 2 && keyTalk
             ? 'KEY +$best ready'
             : '${GameLogic.dailyVaultClearTarget}/${GameLogic.dailyVaultClearTarget} ready',
         urgency: HubChaseUrgency.ready,
@@ -120,7 +129,7 @@ class HubChase {
         detail:
             '+${reward}e · Blessing +${GameLogic.ascendBlessingAtk} ATK/'
             '+${GameLogic.ascendBlessingDef} DEF/'
-            '+${GameLogic.ascendBlessingVit} VIT/'
+            '+${GameLogic.ascendBlessingVit} STA/'
             '+${GameLogic.ascendBlessingGoldPct}% gold$unlockBit',
         progressLabel: 'Ready',
         urgency: HubChaseUrgency.ready,
@@ -145,17 +154,54 @@ class HubChase {
     }
 
     // KEY +1 timed but not yet claimable (need KEY +2) — cliffhanger.
+    // Early players get soft copy; KEY jargon waits for mid layer.
     if (!md.dailyVaultClaimed &&
         md.dailyVaultClears < GameLogic.dailyVaultClearTarget &&
         md.dailyBestTimedKey == 1) {
-      return const HubChase(
+      final keyTalk = GameLogic.showKeystoneJargon(state);
+      return HubChase(
         kind: HubChaseKind.dailyVaultProgress,
-        title: 'Almost — time KEY +2',
-        detail: 'Best timed KEY +1 today — one higher key fills the vault.',
-        progressLabel: 'KEY +1',
+        title: keyTalk ? 'Almost — time KEY +2' : 'Almost — fill the vault',
+        detail: keyTalk
+            ? 'Best timed KEY +1 today — one higher key fills the vault.'
+            : 'One more strong timed clear fills today’s vault.',
+        progressLabel: keyTalk ? 'KEY +1' : 'Almost',
         urgency: HubChaseUrgency.almost,
       );
     }
+
+    // Other ALMOST cliffs beat Daily / vault-start grind (see CHASE_CONTRACT.md).
+    final zoneAlmost = _nextZoneChase(state);
+    if (zoneAlmost != null && zoneAlmost.urgency == HubChaseUrgency.almost) {
+      return zoneAlmost;
+    }
+    final willAlmost = _nextWillChase(state);
+    if (willAlmost != null && willAlmost.urgency == HubChaseUrgency.almost) {
+      return willAlmost;
+    }
+    final gauntletAlmost = _nextGauntletChase(state);
+    if (gauntletAlmost != null &&
+        gauntletAlmost.urgency == HubChaseUrgency.almost) {
+      return gauntletAlmost;
+    }
+    final weekAlmostEarly = _weekGoalChase(state, clock, almostOnly: true);
+    if (weekAlmostEarly != null) return weekAlmostEarly;
+
+    // First hour: grow the party in the starter zone. Daily / vault / Will
+    // / KEY grind wait until a boss (or first Ascend) so TODAY is not a meta list.
+    final firstHour = !GameLogic.showDailyChase(state);
+    if (firstHour) {
+      return _ascendPushChase(
+        state,
+        bossesNeed: bossesNeed,
+        bossesLeft: bossesLeft,
+        urgency: HubChaseUrgency.normal,
+      );
+    }
+
+    // Habit after the first hour: chase the next KEY until the AL cap.
+    final keyPush = _keystonePushChase(state);
+    if (keyPush != null) return keyPush;
 
     if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
       return const HubChase(
@@ -169,16 +215,18 @@ class HubChase {
     if (!md.dailyVaultClaimed &&
         md.dailyVaultClears == 0 &&
         md.dailyBestTimedKey < 2) {
+      final keyTalk = GameLogic.showKeystoneJargon(state);
       return HubChase(
         kind: HubChaseKind.dailyVaultProgress,
         title: 'Start daily vault',
-        detail:
-            'Clear ${GameLogic.dailyVaultClearTarget} floor or time a KEY +2.',
+        detail: keyTalk
+            ? 'Clear ${GameLogic.dailyVaultClearTarget} floor or time a KEY +2.'
+            : 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for vault essence.',
         progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
       );
     }
 
-    // Zone / Will / Gauntlet before routine week goals.
+    // Progress grind: zone / Will / Gauntlet / week (normal or leftover almost).
     final zone = _nextZoneChase(state);
     if (zone != null) return zone;
 
@@ -217,7 +265,7 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.meetHero,
       title: extra > 0 ? 'Meet ${def.name} · +$extra' : 'Meet ${def.name}',
-      detail: '${HeroIdentity.fantasyLine(first)} Open PARTY to field them.',
+      detail: '${HeroIdentity.meetDetail(first)} Open PARTY to field them.',
       progressLabel: 'New',
       urgency: HubChaseUrgency.ready,
     );
@@ -256,6 +304,28 @@ class HubChase {
     );
   }
 
+  /// Next KEY after the first hour, until preferred key hits the AL cap.
+  ///
+  /// Uses KEY words even before [GameLogic.showKeystoneJargon] — this is the
+  /// habit loop, not mid-layer vault copy.
+  static HubChase? _keystonePushChase(GameState state) {
+    final cap = Keystone.maxForAl(state.ascensionLevel);
+    final pref = state.hardmodeLevel.clamp(0, cap);
+    if (pref >= cap) return null;
+    final target = pref <= 0 ? 1 : pref;
+    final firstKey = pref <= 0;
+    return HubChase(
+      kind: HubChaseKind.keystone,
+      title: firstKey ? 'Run KEY +1' : 'Time KEY +$target',
+      detail: firstKey
+          ? 'Higher keys drop higher iLvl loot — start with KEY +1.'
+          : 'Time KEY +$target for better iLvl loot and the next key unlock.',
+      progressLabel: 'KEY +$target',
+      keyLevel: target,
+      zoneId: GameLogic.recommendedDungeonId(state),
+    );
+  }
+
   static HubChase _ascendPushChase(
     GameState state, {
     required int bossesNeed,
@@ -267,12 +337,18 @@ class HubChase {
     final kitTeaser = AscendRoadmap.nextMissingKitTeaser(state);
     final teaser = kitTeaser ?? AscendRoadmap.chaseTeaser(state.ascensionLevel);
     final almost = urgency == HubChaseUrgency.almost;
+    final firstHour =
+        state.ascensionLevel == 0 && state.bossVictories == 0 && !almost;
     return HubChase(
       kind: HubChaseKind.clearFloors,
       title: almost
           ? 'Almost Ascend — push ${dungeon.name}'
-          : 'Push ${dungeon.name}',
-      detail: bossesLeft > 0
+          : firstHour
+              ? 'Grow the party — ${dungeon.name}'
+              : 'Push ${dungeon.name}',
+      detail: firstHour
+          ? 'Enter, fight, get stronger. 1 boss then you can Ascend. $teaser'
+          : bossesLeft > 0
           ? (almost
               ? '1 boss left · then Ascend. $teaser'
               : 'Clear bosses toward Ascend ($bossesLeft left). $teaser')
@@ -352,12 +428,15 @@ class HubChase {
       }
       final almost = d.unlockPrice > 0 &&
           goldNeed <= (d.unlockPrice * 0.12).ceil().clamp(1, d.unlockPrice);
+      // Playing the current zone unlocks the next. TODAY only names a zone
+      // unlock when gold is a cliffhanger — not as the default grind.
+      if (!almost) return null;
       return HubChase(
         kind: HubChaseKind.unlockZone,
-        title: almost ? 'Almost ${d.name}' : 'Unlock ${d.name}',
+        title: 'Almost ${d.name}',
         detail: 'Need $goldNeed more lifetime gold — or clear $prevName.',
         progressLabel: '$lifetime / ${d.unlockPrice}g',
-        urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
+        urgency: HubChaseUrgency.almost,
         zoneId: d.id,
       );
     }

@@ -59,6 +59,47 @@ class LocalSeasonMonth {
 abstract final class LocalSeasonCatalog {
   /// Explicit week rows (optional exact [LocalSeasonWeek.weekKey]).
   static const List<LocalSeasonWeek> weeks = <LocalSeasonWeek>[
+    // Pinned late-summer 2026 weeks (ISO) so hub TODAY names a real season beat.
+    LocalSeasonWeek(
+      id: 'fen_tide',
+      name: 'Fen Tide Week',
+      blurb: 'Mire pressure — time a KEY +2 under Swarm.',
+      weekKey: '2026-W32',
+      affixOverride: 'swarm',
+      timedKeyTarget: 2,
+      essenceReward: 12,
+      titleReward: 'Fen Timer',
+    ),
+    LocalSeasonWeek(
+      id: 'moth_dust',
+      name: 'Moth Dust Week',
+      blurb: 'Silk week — time a KEY +2 while the veil drifts.',
+      weekKey: '2026-W33',
+      affixOverride: 'glass',
+      timedKeyTarget: 2,
+      essenceReward: 12,
+      titleReward: 'Moth Timer',
+    ),
+    LocalSeasonWeek(
+      id: 'brass_tempo',
+      name: 'Brass Tempo',
+      blurb: 'Cog packs — bank a timed KEY +2 under Elite.',
+      weekKey: '2026-W34',
+      affixOverride: 'elite',
+      timedKeyTarget: 2,
+      essenceReward: 12,
+      titleReward: 'Brass Timer',
+    ),
+    LocalSeasonWeek(
+      id: 'spire_late',
+      name: 'Late Spire Push',
+      blurb: 'Climb Infinity Gauntlet to floor 20 this week.',
+      weekKey: '2026-W35',
+      affixOverride: 'iron',
+      gauntletFloorTarget: 20,
+      essenceReward: 14,
+      titleReward: 'Late Spire',
+    ),
     LocalSeasonWeek(
       id: 'glass_tempo',
       name: 'Glass Tempo',
@@ -116,6 +157,12 @@ abstract final class LocalSeasonCatalog {
   ];
 
   static const List<LocalSeasonMonth> months = <LocalSeasonMonth>[
+    LocalSeasonMonth(
+      id: 'veil_month',
+      name: 'Veil Month',
+      monthKey: '2026-08',
+      titleReward: 'Veil Season',
+    ),
     LocalSeasonMonth(
       id: 'ember_month',
       name: 'Ember Month',

@@ -2,13 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/ascend_roadmap.dart';
 import 'package:idle_party/core/game_guides.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/dungeon_def.dart';
+import 'package:idle_party/ui/hub_screen.dart';
 
 /// Fast honesty checks: world path, unlock rules, guides, release version.
 void main() {
-  test('world path ships eleven named zones including storm', () {
-    expect(DungeonCatalog.all.length, 11);
+  test('world path ships fifteen named zones including mothveil', () {
+    expect(DungeonCatalog.all.length, 15);
     final ids = DungeonCatalog.all.map((d) => d.id).toList();
     expect(
       ids,
@@ -24,12 +26,39 @@ void main() {
         'ember',
         'grove',
         'storm',
+        'rime',
+        'fen',
+        'brass',
+        'veil',
       ],
     );
     expect(DungeonCatalog.byId('tide').name, 'Sunken Tidehold');
     expect(DungeonCatalog.byId('ember').name, 'Ashen Vault');
     expect(DungeonCatalog.byId('grove').name, 'Hollow Grove');
     expect(DungeonCatalog.byId('storm').name, 'Stormwake Hollow');
+    expect(DungeonCatalog.byId('rime').name, 'Rimeglass Rift');
+    expect(DungeonCatalog.byId('fen').name, 'Blightfen Mire');
+    expect(DungeonCatalog.byId('brass').name, 'Brassvault Deep');
+    expect(DungeonCatalog.byId('veil').name, 'Mothveil Hollow');
+  });
+
+  test('World Path map markers match dungeon catalog length and order', () {
+    expect(HubScreen.worldPathMarkerCount, DungeonCatalog.all.length);
+    expect(HubScreen.worldPathMarkerCount, 15);
+    // First / last anchors stay in the painted path corridor.
+    final first = HubScreen.worldPathMarkerNorm.first;
+    final last = HubScreen.worldPathMarkerNorm.last;
+    expect(first.dx, inInclusiveRange(0.35, 0.65));
+    expect(first.dy, lessThan(0.12));
+    expect(last.dx, inInclusiveRange(0.35, 0.65));
+    expect(last.dy, greaterThan(0.90));
+    for (var i = 1; i < HubScreen.worldPathMarkerNorm.length; i++) {
+      expect(
+        HubScreen.worldPathMarkerNorm[i].dy,
+        greaterThan(HubScreen.worldPathMarkerNorm[i - 1].dy),
+        reason: 'markers must descend sandy→veil',
+      );
+    }
   });
 
   test('zone unlock uses lifetime gold or prior clear, not wallet gold', () {
@@ -53,6 +82,22 @@ void main() {
     expect(DungeonCatalog.isUnlocked('storm', 2599999, 8), isFalse);
     expect(DungeonCatalog.isUnlocked('storm', 2600000, 8), isTrue);
     expect(DungeonCatalog.isUnlocked('storm', 0, 9), isTrue);
+
+    expect(DungeonCatalog.isUnlocked('rime', 3599999, 9), isFalse);
+    expect(DungeonCatalog.isUnlocked('rime', 3600000, 9), isTrue);
+    expect(DungeonCatalog.isUnlocked('rime', 0, 10), isTrue);
+
+    expect(DungeonCatalog.isUnlocked('fen', 4999999, 10), isFalse);
+    expect(DungeonCatalog.isUnlocked('fen', 5000000, 10), isTrue);
+    expect(DungeonCatalog.isUnlocked('fen', 0, 11), isTrue);
+
+    expect(DungeonCatalog.isUnlocked('brass', 6999999, 11), isFalse);
+    expect(DungeonCatalog.isUnlocked('brass', 7000000, 11), isTrue);
+    expect(DungeonCatalog.isUnlocked('brass', 0, 12), isTrue);
+
+    expect(DungeonCatalog.isUnlocked('veil', 9999999, 12), isFalse);
+    expect(DungeonCatalog.isUnlocked('veil', 10000000, 12), isTrue);
+    expect(DungeonCatalog.isUnlocked('veil', 0, 13), isTrue);
   });
 
   test('guides cover World Path endgame zones and LOADOUTS vs armor sets', () {
@@ -61,6 +106,10 @@ void main() {
     expect(world.body.toLowerCase(), contains('ashen'));
     expect(world.body.toLowerCase(), contains('hollow grove'));
     expect(world.body.toLowerCase(), contains('stormwake'));
+    expect(world.body.toLowerCase(), contains('rimeglass'));
+    expect(world.body.toLowerCase(), contains('blightfen'));
+    expect(world.body.toLowerCase(), contains('brassvault'));
+    expect(world.body.toLowerCase(), contains('mothveil'));
     expect(world.body.toLowerCase(), contains('lifetime gold'));
 
     final loadouts = GameGuides.topics.firstWhere((t) => t.id == 'loadouts');
@@ -87,6 +136,7 @@ void main() {
     expect(vault.body.toUpperCase(), contains('READY'));
 
     expect(AscendRoadmap.unlockAtAl(1), contains('Combat Rogue'));
+    expect(AscendRoadmap.unlockAtAl(1), contains('Holy Paladin'));
     expect(AscendRoadmap.unlockAtAl(2), contains('Beast Mastery'));
     expect(AscendRoadmap.unlockAtAl(2), contains('5th party slot'));
     expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
@@ -97,5 +147,15 @@ void main() {
     final classes = GameGuides.topics.firstWhere((t) => t.id == 'classes');
     expect(classes.body, contains('AL2'));
     expect(classes.body, contains('Beast Mastery'));
+    expect(classes.body, contains('Holy Paladin'));
+  });
+
+  test('fresh TODAY chase is grow-the-party, not Daily', () {
+    final now = DateTime.utc(2026, 8, 8, 12);
+    final state = GameLogic.createInitialState(now: now);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.title.toLowerCase(), contains('grow'));
+    expect(GameLogic.showDailyChase(state), isFalse);
   });
 }

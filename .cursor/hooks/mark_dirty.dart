@@ -2,6 +2,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+const _dirtyPath = '.cursor/hooks/.verify-dirty';
+
 void main() async {
   final raw = await stdin.transform(utf8.decoder).join();
   Map<String, dynamic> payload = <String, dynamic>{};
@@ -15,9 +17,18 @@ void main() async {
     return;
   }
 
-  final dirty = File('.cursor/hooks/.verify-dirty');
+  final dirty = File(_dirtyPath);
   dirty.parent.createSync(recursive: true);
-  dirty.writeAsStringSync('${DateTime.now().toIso8601String()}\n$path\n');
+  final normalized = path.replaceAll('\\', '/');
+  final existing = dirty.existsSync() ? dirty.readAsStringSync() : '';
+  if (existing.contains(normalized)) {
+    stdout.write('{}');
+    return;
+  }
+  dirty.writeAsStringSync(
+    '${existing.isEmpty ? '${DateTime.now().toIso8601String()}\n' : existing}'
+    '$normalized\n',
+  );
   stdout.write('{}');
 }
 
@@ -34,7 +45,8 @@ String? _pathFrom(Map<String, dynamic> payload) {
 }
 
 bool _shouldMark(String path) {
-  final p = path.toLowerCase();
+  final p = path.toLowerCase().replaceAll('\\', '/');
+  if (p.contains('/windows/flutter/generated_')) return false;
   const needles = <String>[
     '/lib/',
     '/test/',
@@ -42,13 +54,14 @@ bool _shouldMark(String path) {
     'agents.md',
     '/docs/play_store.md',
     '/docs/privacy.md',
+    '/docs/strategy_90d.md',
     '/.cursor/rules/',
     '/.cursor/skills/',
+    '/.cursor/hooks/',
   ];
   for (final n in needles) {
     if (p.contains(n)) return true;
   }
-  // Windows-ish relative paths without leading slash
   return p.startsWith('lib/') ||
       p.startsWith('test/') ||
       p.endsWith('pubspec.yaml') ||

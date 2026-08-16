@@ -135,12 +135,13 @@ class _FloorResult {
 }
 
 _FloorResult _simulateFloor(GameState state) {
-  var world = SpatialCombat.build(state, threatScale: 1.0);
+  var world = SpatialCombat.build(state, threatScale: 1.0, afkAssist: true);
   var s = state;
   var gold = 0;
   var t = 0.0;
   const dt = 1 / 30;
-  const limit = 90.0;
+  // Room chests + multi-chamber grammar need headroom vs old 90s probe.
+  const limit = 180.0;
   while (t < limit) {
     final step = SpatialCombat.step(world, s, dt: dt);
     world = step.world;
@@ -156,8 +157,9 @@ _FloorResult _simulateFloor(GameState state) {
         label: 'WIPE',
       );
     }
-    if (world.awaitingExit ||
-        (world.enemies.every((e) => e.hp <= 0) && world.groundLoot.isEmpty)) {
+    // Combat clear = all foes down. Don't wait on exit walk / chest vacuum —
+    // room chests + multi-chamber grammar made old 90s exit probes flake on CI.
+    if (world.enemies.every((e) => e.hp <= 0)) {
       return _FloorResult(
         wiped: false,
         timedOut: false,

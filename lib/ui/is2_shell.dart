@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -73,7 +72,13 @@ bool _isSoulboundItem(EquipmentItem item) => item.id.startsWith('soulbound_');
 
 bool _isUpgradeForAny(GameState state, EquipmentItem item) {
   for (final hero in state.heroes) {
-    if (GameLogic.compareForHero(hero, item).isUpgrade) return true;
+    if (GameLogic.compareForHero(
+      hero,
+      item,
+      pairingStash: state.gearStash,
+    ).isUpgrade) {
+      return true;
+    }
   }
   return false;
 }
@@ -83,13 +88,23 @@ bool _isBestStashItem(GameState state, EquipmentItem item) {
   var bestDelta = 0;
   for (final stashItem in state.gearStash) {
     for (final hero in state.heroes) {
-      final d = GameLogic.compareForHero(hero, stashItem).powerDelta;
-      if (d > bestDelta) bestDelta = d;
+      final cmp = GameLogic.compareForHero(
+        hero,
+        stashItem,
+        pairingStash: state.gearStash,
+      );
+      if (cmp.isUpgrade && cmp.powerDelta > bestDelta) {
+        bestDelta = cmp.powerDelta;
+      }
     }
   }
   for (final hero in state.heroes) {
-    final d = GameLogic.compareForHero(hero, item).powerDelta;
-    if (d > 0 && d >= bestDelta) return true;
+    final cmp = GameLogic.compareForHero(
+      hero,
+      item,
+      pairingStash: state.gearStash,
+    );
+    if (cmp.isUpgrade && cmp.powerDelta >= bestDelta) return true;
   }
   return false;
 }
@@ -179,7 +194,11 @@ class _Is2ShellState extends State<Is2Shell> {
     if (item != null &&
         heroIndex >= 0 &&
         heroIndex < state.heroes.length) {
-      into = GameLogic.compareForHero(state.heroes[heroIndex], item).intoSlot;
+      into = GameLogic.compareForHero(
+        state.heroes[heroIndex],
+        item,
+        pairingStash: state.gearStash,
+      ).intoSlot;
     }
     final beforeIds = state.gearStash.map((g) => g.id).toSet();
     widget.director.equipFromStash(
@@ -730,9 +749,8 @@ class _Is2ShellState extends State<Is2Shell> {
       heightFactor: heightFactor,
       onClose: _closeOverlayOrLeaveHub,
       child: switch (_overlay) {
-        Is2Overlay.forge => SingleChildScrollView(
-          child: _ForgeOverlay(director: d),
-        ),
+        // Bounded sheet height — forge scrolls inside (no nested outer scroll).
+        Is2Overlay.forge => _ForgeOverlay(director: d),
         Is2Overlay.power => _PowerPillar(director: d),
         Is2Overlay.meta => _MetaPillar(
             director: d,
@@ -1751,6 +1769,7 @@ class _PartyRow extends StatelessWidget {
       AbilityId.powerInfusion => s.powerInfusionTimer > 0,
       AbilityId.innerFire => s.innerFireActive,
       AbilityId.combustion => s.combustionTimer > 0,
+      AbilityId.furyRecklessness => s.combustionTimer > 0,
       AbilityId.vendetta ||
       AbilityId.coldBlood ||
       AbilityId.arcanePower =>
@@ -1763,6 +1782,10 @@ class _PartyRow extends StatelessWidget {
       AbilityId.livingBomb => s.livingBombArmed > 0,
       AbilityId.sliceAndDice => s.sliceAndDiceTimer > 0,
       AbilityId.bladeFlurry => s.bladeFlurryTimer > 0,
+      AbilityId.sweepingStrikes => s.bladeFlurryTimer > 0,
+      AbilityId.holyShield => s.shieldBlockTimer > 0,
+      AbilityId.beaconOfLight => s.beaconTimer > 0,
+      AbilityId.divineFavor => (s.buffTimers['favor'] ?? 0) > 0,
       AbilityId.sprint => s.sprintTimer > 0,
       AbilityId.vanish => s.vanishTimer > 0,
       AbilityId.killingSpree => s.killingSpreeTimer > 0,
@@ -1906,6 +1929,38 @@ class _PartyRow extends StatelessWidget {
                               style: GameTheme.pixel(
                                 size: 6,
                                 color: GameTheme.torchHot,
+                              ),
+                            ),
+                          ],
+                          if (spatial!.hotStreakReady) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              'STREAK',
+                              style: GameTheme.pixel(
+                                size: 6,
+                                color: GameTheme.torchHot,
+                              ),
+                            ),
+                          ],
+                          if (spatial!.bladeFlurryTimer > 0) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              hero.gearAffinity == HeroRole.rogue
+                                  ? 'FLURRY'
+                                  : 'SWEEP',
+                              style: GameTheme.pixel(
+                                size: 6,
+                                color: GameTheme.torchHot,
+                              ),
+                            ),
+                          ],
+                          if (spatial!.beaconTimer > 0) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              'BEACON',
+                              style: GameTheme.pixel(
+                                size: 6,
+                                color: const Color(0xFFFFF0A8),
                               ),
                             ),
                           ],
@@ -2829,12 +2884,18 @@ class _InventoryDockState extends State<_InventoryDock>
                       )];
                 final cmp = hero == null
                     ? null
-                    : GameLogic.compareForHero(hero, selected);
+                    : GameLogic.compareForHero(
+                        hero,
+                        selected,
+                        pairingStash: state.gearStash,
+                      );
                 final scoreLine = cmp == null || cmp.powerDelta == 0
                     ? null
-                    : (cmp.powerDelta > 0
+                    : (cmp.isUpgrade
                         ? 'UP ${GameLogic.formatDelta(cmp.powerDelta)}'
-                        : 'DN ${GameLogic.formatDelta(cmp.powerDelta)}');
+                        : (cmp.powerDelta > 0
+                            ? 'SCORE ${GameLogic.formatDelta(cmp.powerDelta)}'
+                            : 'DN ${GameLogic.formatDelta(cmp.powerDelta)}'));
                 // Phone GEAR: keep compare to one line so the bag grid stays usable.
                 // Long-press an item for the full WoW-style tooltip sheet.
                 return Column(
@@ -2879,12 +2940,13 @@ class _InventoryDockState extends State<_InventoryDock>
     var bestIndex = -1;
     var bestDelta = 0;
     for (var i = 0; i < state.heroes.length; i++) {
-      final delta = GameLogic.compareForHero(
+      final cmp = GameLogic.compareForHero(
         state.heroes[i],
         selected,
-      ).powerDelta;
-      if (delta > 0 && delta > bestDelta) {
-        bestDelta = delta;
+        pairingStash: state.gearStash,
+      );
+      if (cmp.isUpgrade && cmp.powerDelta > bestDelta) {
+        bestDelta = cmp.powerDelta;
         bestIndex = i;
       }
     }
@@ -2896,6 +2958,7 @@ class _InventoryDockState extends State<_InventoryDock>
           _EquipHeroChip(
             hero: state.heroes[i],
             candidate: selected,
+            pairingStash: state.gearStash,
             isBest: i == bestIndex,
             onTap: () => onEquipToHero(i),
           ),
@@ -3453,17 +3516,23 @@ class _EquipHeroChip extends StatelessWidget {
     required this.hero,
     required this.candidate,
     required this.onTap,
+    this.pairingStash,
     this.isBest = false,
   });
 
   final PartyHero hero;
   final EquipmentItem candidate;
   final VoidCallback onTap;
+  final List<EquipmentItem>? pairingStash;
   final bool isBest;
 
   @override
   Widget build(BuildContext context) {
-    final cmp = GameLogic.compareForHero(hero, candidate);
+    final cmp = GameLogic.compareForHero(
+      hero,
+      candidate,
+      pairingStash: pairingStash,
+    );
     final deltaColor = cmp.powerDelta > 0
         ? GameTheme.clear
         : (cmp.powerDelta < 0 ? const Color(0xFFE07060) : GameTheme.parchmentDim);
@@ -3520,9 +3589,9 @@ class _EquipHeroChip extends StatelessWidget {
                 )
               else
                 Text(
-                  'raw A${GameLogic.formatDelta(cmp.atkDelta)} '
+                  'power ${GameLogic.formatDelta(cmp.atkDelta)} '
                   'D${GameLogic.formatDelta(cmp.defDelta)} '
-                  'V${GameLogic.formatDelta(cmp.vitDelta)}',
+                  'STA${GameLogic.formatDelta(cmp.vitDelta)}',
                   style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
                 ),
             ],
@@ -3738,6 +3807,7 @@ class _BagSlot extends StatelessWidget {
     return ItemTooltipAnchor(
       item: item!,
       hero: hero,
+      pairingStash: state.gearStash,
       child: slot,
     );
   }
@@ -4038,7 +4108,7 @@ class _PowerPillarState extends State<_PowerPillar>
         '${s.essence}e';
     final runLine =
         'This run · forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
-        'VIT +${s.vitalityBonus}';
+        'STA +${s.vitalityBonus}';
     final blurb = switch (_tabs.index) {
       0 => 'Forge: gold this run (wipes) · KEEP forever · Apex mats',
       1 => 'Camp: permanent essence tracks — survive Ascend',
@@ -4085,7 +4155,8 @@ class _PowerPillarState extends State<_PowerPillar>
         const SizedBox(height: 6),
         Expanded(
           child: switch (_tabs.index) {
-            0 => SingleChildScrollView(child: _ForgeOverlay(director: d)),
+            // Forge fills height and scrolls once (nested scroll hid MOVE/HASTE/CRIT).
+            0 => _ForgeOverlay(director: d),
             1 => SingleChildScrollView(child: _SanctuaryOverlay(director: d)),
             2 => SingleChildScrollView(child: _MarketOverlay(director: d)),
             _ => PrestigeShopOverlay(director: d),
@@ -4233,7 +4304,7 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
     final name = switch (type) {
       PartyUpgradeType.attack => 'ATK',
       PartyUpgradeType.defense => 'DEF',
-      PartyUpgradeType.vitality => 'VIT',
+      PartyUpgradeType.vitality => 'STA',
       PartyUpgradeType.moveSpeed => 'MOVE',
       PartyUpgradeType.attackSpeed => 'HASTE',
       PartyUpgradeType.crit => 'CRIT',
@@ -4264,8 +4335,7 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
           ],
         ),
         const SizedBox(height: 8),
-        SizedBox(
-          height: math.min(560, MediaQuery.sizeOf(context).height * 0.62),
+        Expanded(
           child: IndexedStack(
             index: _tabs.index,
             children: [
@@ -4318,54 +4388,20 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
           'Train levels stay forever.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 6),
-        Text(
-          'Bought this run:  ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
-          'VIT +${state.vitalityBonus}\n'
-          'MOVE +${state.moveSpeedBonus}%  HASTE +${state.attackSpeedBonus}%  '
-          'CRIT +${state.critBonus}%',
-          style: GameTheme.body(size: 14, color: GameTheme.parchment),
-        ),
         const SizedBox(height: 4),
         Text(
-          'Party power now (gear + keep + forge):  '
-          'ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
-          'VIT +${state.totalVitalityBonus}',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          'Bought: ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
+          'STA +${state.vitalityBonus}  '
+          'MOVE +${state.moveSpeedBonus}%  HASTE +${state.attackSpeedBonus}%  '
+          'CRIT +${state.critBonus}%',
+          style: GameTheme.body(size: 13, color: GameTheme.parchment),
         ),
-        const SizedBox(height: 6),
         Text(
-          canAscend
-              ? (director.state.inDungeon
-                  ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
-                  : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
-              : 'Ascend ${state.bossVictories}/'
-                  '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} '
-                  'bosses · claim on Hub (not here)',
-          textAlign: TextAlign.center,
+          'Party now: ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
+          'STA +${state.totalVitalityBonus}',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
-        _sectionTitle(
-          'TRAIN (LEVELS)',
-          'Pays gold · +1 level to every hero · levels survive Ascend.',
-        ),
-        KenneyButton(
-          label: state.gold >= training
-              ? 'Train party +1 Lv · ${training}g'
-              : 'Train · Need ${training}g',
-          onPressed: state.gold >= training ? director.applyTraining : null,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            softcap > 0
-                ? 'Avg Lv$meanLv · ~$softcap more level${softcap == 1 ? '' : 's'} to match floor'
-                : 'Avg Lv$meanLv · party level matches this floor',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-        ),
-        const SizedBox(height: 10),
         _sectionTitle(
           'RUN BONUSES (GOLD)',
           'Cheapest relative gain shows BEST. All wipe when you Ascend.',
@@ -4388,6 +4424,39 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
           ),
           const SizedBox(height: 6),
         ],
+        const SizedBox(height: 8),
+        _sectionTitle(
+          'TRAIN (LEVELS)',
+          'Pays gold · +1 level to every hero · levels survive Ascend.',
+        ),
+        KenneyButton(
+          label: state.gold >= training
+              ? 'Train party +1 Lv · ${training}g'
+              : 'Train · Need ${training}g',
+          onPressed: state.gold >= training ? director.applyTraining : null,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            softcap > 0
+                ? 'Avg Lv$meanLv · ~$softcap more level${softcap == 1 ? '' : 's'} to match floor'
+                : 'Avg Lv$meanLv · party level matches this floor',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          canAscend
+              ? (director.state.inDungeon
+                  ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
+                  : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
+              : 'Ascend ${state.bossVictories}/'
+                  '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} '
+                  'bosses · claim on Hub (not here)',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -4409,11 +4478,11 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         ),
         Text(
           state.metaDepth.ascendBlessings <= 0
-              ? 'Ascend Blessing: none yet — Ascend on Hub for permanent ATK/DEF/VIT/gold'
+              ? 'Ascend Blessing: none yet — Ascend on Hub for permanent ATK/DEF/STA/gold'
               : 'Ascend Blessing ×${state.metaDepth.ascendBlessings}: '
                   '+${state.ascendBlessingAttackBonus} ATK · '
                   '+${state.ascendBlessingDefenseBonus} DEF · '
-                  '+${state.ascendBlessingVitalityBonus} VIT · '
+                  '+${state.ascendBlessingVitalityBonus} STA · '
                   '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
@@ -4583,7 +4652,7 @@ class _ForgeOverlayState extends State<_ForgeOverlay>
         const Divider(height: 16, color: Color(0x665A5040)),
         _sectionTitle(
           'GOD HAND',
-          'Tap in the dungeon for AOE. Essence upgrades survive Ascend.',
+          'Tap in the dungeon to steer + burst. KEEP upgrades are soft knobs (damage, CD, style).',
         ),
         Text(
           'Lv${state.godHandLevel} · damage ${state.godHandBaseDamage} · '
@@ -4775,7 +4844,7 @@ class _SanctuaryOverlay extends StatelessWidget {
             'Ascend Blessing ×${state.metaDepth.ascendBlessings} · '
             '+${state.ascendBlessingAttackBonus} ATK · '
             '+${state.ascendBlessingDefenseBonus} DEF · '
-            '+${state.ascendBlessingVitalityBonus} VIT · '
+            '+${state.ascendBlessingVitalityBonus} STA · '
             '+${state.ascendBlessingGoldPercent}% gold',
             style: GameTheme.body(size: 13, color: GameTheme.mossLit),
           ),

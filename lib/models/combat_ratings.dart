@@ -4,6 +4,11 @@ import 'hero.dart';
 import 'stats.dart';
 
 /// Idle-tuned Classic conversion: AP → ATK uses kAp = 4 (Classic uses 14).
+///
+/// Gear primary ROI must stay aligned with equip BiS weights
+/// ([EquipStatWeights] / docs/GEAR_BUDGET.md): Str/Agi melee via AP;
+/// casters use Intellect full on the sheet base and gear Int+SP at ~1/3 into ATK
+/// so Int/SP match Str/Agi→ATK value for Auto Equip honesty.
 class CombatRatings {
   const CombatRatings({
     required this.strength,
@@ -49,6 +54,13 @@ class CombatRatings {
 
   static int roleBaseCrit(HeroRole role) =>
       role == HeroRole.rogue ? 12 : 5;
+
+  /// Dodge-like crumb into sheet DEF.
+  ///
+  /// Classic's 2 armor per Agi made leather DPS out-armor plate: idle gear
+  /// Armor is budget-carved (tens–hundreds) while Agi stacks from every
+  /// leather piece plus 2 Agi/level on rogues.
+  static int agilityToDefense(int agility) => max(0, agility) ~/ 8;
 
   /// Per-level primary gains (on top of base [Stats]).
   static ({int str, int agi, int sta, int intel, int spi}) levelGains(
@@ -147,16 +159,19 @@ class CombatRatings {
       level: hero.level,
     );
     final physical = max(1, (ap / kAp).round()) + gearFlatAttack;
-    // Casters: Int fully, Spell Power at half — was 1:1 and outscaled melee gear ROI.
+    // Casters: base Int full; gear Int+SP at ~1/3 — matches Str/Agi→ATK ROI.
     final spPool = intel + gearSpellPower;
-    final casterAtk = max(1, intel + (gearSpellPower ~/ 2));
+    final casterAtk = max(
+      1,
+      grown.intel + ((gearIntellect + gearSpellPower) ~/ 3),
+    );
     final sp = spPool;
 
     final isCaster =
         hero.gearAffinity == HeroRole.mage || hero.gearAffinity == HeroRole.healer;
 
     final defense = roleBaseArmor(hero.gearAffinity) +
-        2 * agi +
+        agilityToDefense(agi) +
         gearArmor +
         metaDefense +
         guardBonus;
