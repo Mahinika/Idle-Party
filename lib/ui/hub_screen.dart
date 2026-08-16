@@ -276,17 +276,20 @@ class _HubScreenState extends State<HubScreen>
       children: [
         RepaintBoundary(child: const HubSceneBackdrop()),
         SafeArea(
-          child: AnimatedBuilder(
-            animation: _torch,
-            builder: (context, _) {
-              final flicker = 0.55 + (_torch.value * 0.45);
+          child: Builder(
+            builder: (context) {
               return Stack(
                 fit: StackFit.expand,
                 children: [
-                  CaveAtmosphere.torchBloom(
-                    intensity: flicker,
-                    alignment: const Alignment(0, 0.15),
-                    sizeFactor: 0.7,
+                  // Only the flame redraws each frame — the map, TODAY card and
+                  // buttons used to rebuild 60 times a second with it.
+                  AnimatedBuilder(
+                    animation: _torch,
+                    builder: (context, _) => CaveAtmosphere.torchBloom(
+                      intensity: 0.55 + (_torch.value * 0.45),
+                      alignment: const Alignment(0, 0.15),
+                      sizeFactor: 0.7,
+                    ),
                   ),
                   Positioned.fill(
                     child: IgnorePointer(
@@ -308,7 +311,9 @@ class _HubScreenState extends State<HubScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              HubHeader(
+                              AnimatedBuilder(
+                                animation: _torch,
+                                builder: (context, _) => HubHeader(
                                 ascensionLevel: state.ascensionLevel,
                                 bossFloor: bossFloor,
                                 gold: state.gold,
@@ -319,9 +324,10 @@ class _HubScreenState extends State<HubScreen>
                                 displayTitle: state.displayTitle,
                                 zoneTrophies:
                                     state.metaDepth.zoneTrophies.length,
-                                torch: flicker,
-                                onOpenSettings: () =>
-                                    router.open(MenuRoute.settings),
+                                  torch: 0.55 + (_torch.value * 0.45),
+                                  onOpenSettings: () =>
+                                      router.open(MenuRoute.settings),
+                                ),
                               ),
                               if (director.offlineSummary != null) ...[
                                 const SizedBox(height: 8),
@@ -338,16 +344,19 @@ class _HubScreenState extends State<HubScreen>
                               const SizedBox(height: 6),
                               // World Path: painted campaign map + tappable rings.
                               Expanded(
-                                child: ZonePathMap(
-                                  dungeons: DungeonCatalog.all,
-                                  selectedId: _selectedId,
-                                  lifetimeGold: state.lifetimeGoldEarned,
-                                  highestCleared: state.highestDungeonCleared,
-                                  pulse: _torch.value,
-                                  onSelect: (id) => setState(() {
-                                    _userPickedZone = true;
-                                    _selectedId = id;
-                                  }),
+                                child: AnimatedBuilder(
+                                  animation: _torch,
+                                  builder: (context, _) => ZonePathMap(
+                                    dungeons: DungeonCatalog.all,
+                                    selectedId: _selectedId,
+                                    lifetimeGold: state.lifetimeGoldEarned,
+                                    highestCleared: state.highestDungeonCleared,
+                                    pulse: _torch.value,
+                                    onSelect: (id) => setState(() {
+                                      _userPickedZone = true;
+                                      _selectedId = id;
+                                    }),
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -401,8 +410,13 @@ class _HubScreenState extends State<HubScreen>
                                         chaseKind: chase.kind,
                                       ),
                                       const SizedBox(height: 6),
-                                      Transform.scale(
-                                        scale: 1.0 + (_torch.value * 0.012),
+                                      AnimatedBuilder(
+                                        animation: _torch,
+                                        builder: (context, child) =>
+                                            Transform.scale(
+                                          scale: 1.0 + (_torch.value * 0.012),
+                                          child: child,
+                                        ),
                                         child: KenneyButton(
                                           label: 'ENTER DUNGEON',
                                           style: KenneyButtonStyle.brown,

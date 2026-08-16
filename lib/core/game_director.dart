@@ -354,7 +354,10 @@ class GameDirector extends ChangeNotifier {
         }
 
         final elapsed = DateTime.now().difference(saved.lastUpdated);
-        final offline = GameLogic.applyOfflineProgress(saved, elapsed);
+        final offline = await GameLogic.applyOfflineProgressAsync(
+          saved,
+          elapsed,
+        );
         loaded = offline.state;
         if (offline.hasSummary) {
           _offlineSummary = offline;

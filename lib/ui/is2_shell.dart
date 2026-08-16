@@ -103,41 +103,42 @@ class _Is2ShellState extends State<Is2Shell> {
                 onOpenContracts: () => router.open(MenuRoute.jobs),
               ),
               Expanded(
-                child: ListenableBuilder(
-                  listenable: d.combatFrame,
-                  builder: (context, _) {
-                    return Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        SpatialDungeonView(director: d),
-                        if (!d.awaitingWipeChoice) ...[
-                          // Calm map-first HUD: meter (tap), target chip, party strip.
-                          Positioned(
-                            left: hudSide,
-                            top: GameTheme.clusterGap / 2,
-                            child: DpsMeter(director: d),
-                          ),
-                          Positioned(
-                            right: hudSide,
-                            top: GameTheme.clusterGap / 2,
-                            child: TargetCornerHud(director: d),
-                          ),
-                          Positioned(
-                            left: hudSide,
-                            bottom: hudBottom,
-                            child: PartyCornerHud(
-                              director: d,
-                              selectedHeroIndex: router.abilityHeroIndex,
-                              onSelectHero: (i) => router.abilityHeroIndex = i,
-                              onOpenEquip: () =>
-                                  router.toggleParty(PartyTab.gear),
-                              onUseConsumable: d.useConsumable,
-                            ),
-                          ),
-                        ],
-                      ],
-                    );
-                  },
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // The map redraws every combat frame (~60 Hz)…
+                    ListenableBuilder(
+                      listenable: d.combatFrame,
+                      builder: (context, _) => SpatialDungeonView(director: d),
+                    ),
+                    // …the HUD numbers follow the director's ~10 Hz beat.
+                    // Reading every hero and every enemy 60 times a second only
+                    // bought digits nobody can read that fast.
+                    if (!d.awaitingWipeChoice) ...[
+                      // Calm map-first HUD: meter (tap), target chip, party strip.
+                      Positioned(
+                        left: hudSide,
+                        top: GameTheme.clusterGap / 2,
+                        child: DpsMeter(director: d),
+                      ),
+                      Positioned(
+                        right: hudSide,
+                        top: GameTheme.clusterGap / 2,
+                        child: TargetCornerHud(director: d),
+                      ),
+                      Positioned(
+                        left: hudSide,
+                        bottom: hudBottom,
+                        child: PartyCornerHud(
+                          director: d,
+                          selectedHeroIndex: router.abilityHeroIndex,
+                          onSelectHero: (i) => router.abilityHeroIndex = i,
+                          onOpenEquip: () => router.toggleParty(PartyTab.gear),
+                          onUseConsumable: d.useConsumable,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               AppBottomBar(

@@ -16,7 +16,6 @@ import '../models/mission.dart';
 import '../models/pet.dart';
 import '../models/proficiency.dart';
 import '../models/stats.dart';
-import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
 import 'dungeon_generator.dart';
 import 'equipment_factory.dart';
@@ -24,6 +23,7 @@ import 'game_state.dart';
 import 'keystone.dart';
 import 'local_season.dart';
 import 'meta_systems.dart';
+import 'offline_sim.dart';
 import 'play_games_bridge.dart';
 import 'play_games_scores.dart';
 
@@ -3439,6 +3439,31 @@ class GameLogic {
   }
 
   /// Result of crediting AFK time on boot / resume.
+  /// Same credit as [applyOfflineProgress], but the dungeon replay runs in
+  /// slices with the frame handed back between them — boot stays paintable
+  /// even after a full 8h absence.
+  static Future<OfflineProgressResult> applyOfflineProgressAsync(
+    GameState state,
+    Duration elapsed,
+  ) async {
+    final seconds = elapsed.inSeconds.clamp(0, 8 * 3600);
+    if (seconds == 0 || !state.inDungeon) {
+      return applyOfflineProgress(state, elapsed);
+    }
+    final timed = advanceKeystoneTimer(state, seconds * 1000);
+    final sim = OfflineSim(timed, seconds);
+    while (!sim.done) {
+      sim.runSlice(OfflineSim.sliceSteps);
+      if (!sim.done) await Future<void>.delayed(Duration.zero);
+    }
+    return _offlineResultFrom(
+      before: state,
+      progressed: sim.state,
+      seconds: seconds,
+      roomsCleared: sim.roomsCleared,
+    );
+  }
+
   static OfflineProgressResult applyOfflineProgress(
     GameState state,
     Duration elapsed,
@@ -3458,14 +3483,7 @@ class GameLogic {
       );
     }
 
-    final beforeGold = state.gold;
-    final beforeEssence = state.essence;
-    final beforeHighest = state.highestFloorCleared;
-    final beforeBoss = state.bossVictories;
-    final beforeLevels = _partyLevelSum(state);
-    final beforeGear = _ownedGearCount(state);
     var roomsCleared = 0;
-
     late GameState progressed;
     if (state.inDungeon) {
       // Idle-friendly keystone: AFK time counts on the timer.
@@ -3477,20 +3495,37 @@ class GameLogic {
       // Hub AFK: sanctuary idle gold only — no ghost combat / boss farms.
       progressed = applyHubIdleProgress(state, seconds);
     }
-    progressed = progressed.copyWith(
+    return _offlineResultFrom(
+      before: state,
+      progressed: progressed,
+      seconds: seconds,
+      roomsCleared: roomsCleared,
+    );
+  }
+
+  static OfflineProgressResult _offlineResultFrom({
+    required GameState before,
+    required GameState progressed,
+    required int seconds,
+    required int roomsCleared,
+  }) {
+    final next = progressed.copyWith(
       offlineSecondsRecovered: progressed.offlineSecondsRecovered + seconds,
       lastUpdated: DateTime.now(),
     );
     return OfflineProgressResult(
-      state: progressed,
+      state: next,
       secondsApplied: seconds,
-      goldGained: progressed.gold - beforeGold,
-      essenceGained: progressed.essence - beforeEssence,
+      goldGained: next.gold - before.gold,
+      essenceGained: next.essence - before.essence,
       roomsCleared: roomsCleared,
-      highestFloorDelta: progressed.highestFloorCleared - beforeHighest,
-      bossDelta: progressed.bossVictories - beforeBoss,
-      levelsGained: _partyLevelSum(progressed) - beforeLevels,
-      gearFinds: (_ownedGearCount(progressed) - beforeGear).clamp(0, 999),
+      highestFloorDelta: next.highestFloorCleared - before.highestFloorCleared,
+      bossDelta: next.bossVictories - before.bossVictories,
+      levelsGained: _partyLevelSum(next) - _partyLevelSum(before),
+      gearFinds: (_ownedGearCount(next) - _ownedGearCount(before)).clamp(
+        0,
+        999,
+      ),
     );
   }
 
@@ -3543,9 +3578,9 @@ class GameLogic {
     return min(120, firstBand + extra);
   }
 
-  /// Replays in-dungeon combat while offline using [SpatialCombat] (same authority
-  /// as live play). Uses AFK assist + reduced VFX so boot stays responsive.
-  /// Auto-uses flasks at low HP and God Hand when off cooldown.
+  /// Replays in-dungeon combat while offline using [SpatialCombat] (same
+  /// authority as live play). See [OfflineSim] — boot runs the same walk in
+  /// slices so a long absence cannot freeze the app on return.
   static ({GameState state, int roomsCleared}) simulateSpatialOffline(
     GameState state,
     int seconds,
@@ -3553,167 +3588,8 @@ class GameLogic {
     if (!state.inDungeon || seconds <= 0) {
       return (state: state, roomsCleared: 0);
     }
-
-    var maxFloors = offlineFloorBudget(seconds);
-    // Gauntlet AFK: hard soft-cap so offline can't mint endless climb rewards.
-    if (state.inGauntlet) {
-      maxFloors = min(maxFloors, 6);
-    }
-    if (maxFloors <= 0) {
-      return (state: state, roomsCleared: 0);
-    }
-
-    final preferVfx = state.vfxQuality;
-    // Full enemy stats; AFK assist keeps boot catch-up responsive.
-    const threatScale = 1.0;
-    const afkAssist = true;
-    const dt = 0.12;
-    // Cap steps to floor budget (+ headroom) so long AFK can't burn CPU past
-    // what [offlineFloorBudget] will award.
-    final maxSteps = min(12000, max(240, maxFloors * 420));
-
-    var current = state.copyWith(vfxQuality: VfxQuality.minimal);
-    var world = SpatialCombat.build(
-      current,
-      threatScale: threatScale,
-      afkAssist: afkAssist,
-    );
-    var floorsCleared = 0;
-    var abilityCasts = 0;
-
-    for (var step = 0; step < maxSteps; step++) {
-      if (!current.inDungeon || floorsCleared >= maxFloors) break;
-
-      final stashLenBefore = current.gearStash.length;
-      final result = SpatialCombat.step(world, current, dt: dt);
-      world = result.world;
-      current = result.state;
-      if (result.goldFromKills > 0) {
-        current = creditCombatGold(current, result.goldFromKills);
-      }
-      abilityCasts += result.abilityCasts;
-      // Live parity: wear clear upgrades mid-floor and sync actor sheets.
-      if (current.gearStash.length > stashLenBefore) {
-        current = autoEquipBetterGear(current);
-        world = SpatialCombat.syncPartyFromState(world, current);
-      }
-
-      // Keep AFK sim lean — strip accumulated VFX lists periodically.
-      if (step % 40 == 0) {
-        world.floaters.clear();
-        world.bursts.clear();
-        world.groundFx.clear();
-        if (world.projectiles.length > 24) {
-          world.projectiles.removeRange(0, world.projectiles.length - 24);
-        }
-      }
-
-      // Wipe before flask/God Hand — avoid post-wipe loot/XP from assist.
-      if (result.partyWiped) {
-        // Gauntlet wipe always ends the run (same as live hub exit).
-        if (current.inGauntlet) {
-          current = exitToHubHealed(current);
-          break;
-        }
-        if (MetaSystems.isActiveDailyRun(current)) {
-          current = restartFloor(current);
-          if (!current.inDungeon) break;
-          world = SpatialCombat.build(
-            current,
-            threatScale: threatScale,
-            afkAssist: afkAssist,
-          );
-          continue;
-        }
-        if (current.dungeonMode == DungeonMode.push &&
-            current.currentRoom.floorNumber > current.highestFloorCleared) {
-          current = retreatFromFailedPush(current);
-          break;
-        }
-        current = restartFloor(current);
-        if (!current.inDungeon) break;
-        world = SpatialCombat.build(
-          current,
-          threatScale: threatScale,
-          afkAssist: afkAssist,
-        );
-        continue;
-      }
-
-      // Mid-fight flask when living party avg HP drops below 35%.
-      if (step % 12 == 0 && canUseConsumable(current)) {
-        final living = <PartyHero>[
-          for (final h in current.heroes)
-            if (h.currentHp > 0) h,
-        ];
-        if (living.isNotEmpty) {
-          var ratioSum = 0.0;
-          for (final h in living) {
-            final maxHp = current.effectiveHeroMaxHp(h);
-            ratioSum += maxHp > 0 ? h.currentHp / maxHp : 0;
-          }
-          if (ratioSum / living.length < 0.35) {
-            current = useConsumable(current);
-            world = SpatialCombat.syncPartyFromState(world, current);
-            SpatialCombat.spawnFlaskHealFx(
-              world,
-              reducedVfx: current.reducedVfx,
-            );
-          }
-        }
-      }
-
-      // God Hand toward nearest live enemy when ready.
-      // Soft cadence: every ~4.3s of sim time so AFK doesn't hard-carry mid PUSH.
-      if (step % 36 == 0 && world.godHandCooldown <= 0) {
-        final aim = _offlineGodHandAim(world);
-        if (aim != null) {
-          final gh = SpatialCombat.godHand(
-            world,
-            current,
-            tileX: aim.$1,
-            tileY: aim.$2,
-          );
-          world = gh.world;
-          current = gh.state;
-          if (gh.goldFromKills > 0) {
-            current = creditCombatGold(current, gh.goldFromKills);
-          }
-        }
-      }
-
-      if (!result.roomCleared) continue;
-
-      final wasTreasure = world.isTreasure;
-      // Combat gold already credited per kill; treasure pays scaled chest budget.
-      final gold = wasTreasure ? treasureGoldBudget(current) : 0;
-      current = completeCurrentRoom(
-        current,
-        goldGain: gold,
-        skipLootRoll: !wasTreasure,
-      );
-      floorsCleared++;
-      if (!current.inDungeon || floorsCleared >= maxFloors) break;
-      world = SpatialCombat.build(
-        current,
-        threatScale: threatScale,
-        afkAssist: afkAssist,
-      );
-    }
-
-    if (abilityCasts > 0) {
-      current = current.copyWith(
-        metaDepth: current.metaDepth.copyWith(
-          lifetimeAbilityCasts:
-              current.metaDepth.lifetimeAbilityCasts + abilityCasts,
-        ),
-      );
-    }
-
-    return (
-      state: current.copyWith(vfxQuality: preferVfx),
-      roomsCleared: floorsCleared,
-    );
+    final sim = OfflineSim(state, seconds)..runAll();
+    return (state: sim.state, roomsCleared: sim.roomsCleared);
   }
 
   /// Nearest awake enemy to living party centroid, or null if none.
@@ -5674,8 +5550,46 @@ class GameLogic {
   }
 
   /// Planned stash→slot upgrades from BiS assignment (shared by Auto Equip / Sell Junk).
+  ///
+  /// Memoized on [gearPlanSignature]: the walk is heavy (six rounds over every
+  /// hero, slot and bag item) and it used to run up to eight times per Auto
+  /// Equip, once per loot drop in the offline catch-up, and again for every
+  /// menu badge repaint.
   static List<({int heroIndex, EquipmentSlot slot, String itemId, int delta})>
   planBiSAssignments(GameState state) {
+    final signature = gearPlanSignature(state);
+    final cached = _bisPlan;
+    if (cached != null && signature == _bisPlanSignature) return cached;
+    final plan = List<
+      ({int heroIndex, EquipmentSlot slot, String itemId, int delta})
+    >.unmodifiable(_computeBiSAssignments(state));
+    _bisPlanSignature = signature;
+    _bisPlan = plan;
+    return plan;
+  }
+
+  static int _bisPlanSignature = 0;
+  static List<({int heroIndex, EquipmentSlot slot, String itemId, int delta})>?
+  _bisPlan;
+
+  /// Cheap hash of everything the BiS plan depends on: bag contents, worn
+  /// gear, and hero spec/level. Anything else can change without redoing it.
+  static int gearPlanSignature(GameState state) {
+    var h = state.gearStash.length * 31 + state.heroes.length;
+    for (final item in state.gearStash) {
+      h = (h * 33) ^ item.id.hashCode ^ item.effectiveItemLevel;
+    }
+    for (final hero in state.heroes) {
+      h = (h * 33) ^ hero.specId.index ^ (hero.level * 7);
+      for (final entry in hero.equipped.entries) {
+        h = (h * 33) ^ entry.key.index ^ entry.value.id.hashCode;
+      }
+    }
+    return h & 0x3FFFFFFF;
+  }
+
+  static List<({int heroIndex, EquipmentSlot slot, String itemId, int delta})>
+  _computeBiSAssignments(GameState state) {
     final stashById = <String, EquipmentItem>{
       for (final item in state.gearStash) item.id: item,
     };

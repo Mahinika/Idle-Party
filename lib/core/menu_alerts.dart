@@ -167,34 +167,11 @@ class MenuAlerts {
 
   /// How many bag items Auto Equip would actually put on someone.
   ///
-  /// Memoized on a cheap gear signature: the plan walk is too heavy to redo on
-  /// every chrome repaint (~10 Hz in a live dungeon).
+  /// The plan itself is memoized in [GameLogic.planBiSAssignments], so the
+  /// badge can ask on every chrome repaint (~10 Hz in a live dungeon).
   static int bagUpgradeCount(GameState state) {
     if (state.gearStash.isEmpty) return 0;
-    final sig = _gearSignature(state);
-    if (sig == _cachedSignature) return _cachedUpgrades;
-    final count = GameLogic.planBiSAssignments(state).length;
-    _cachedSignature = sig;
-    _cachedUpgrades = count;
-    return count;
-  }
-
-  static int _cachedSignature = 0;
-  static int _cachedUpgrades = 0;
-
-  /// Only bag contents + worn gear + hero levels change the upgrade plan.
-  static int _gearSignature(GameState state) {
-    var h = state.gearStash.length * 31 + state.heroes.length;
-    for (final item in state.gearStash) {
-      h = (h * 33) ^ item.id.hashCode;
-    }
-    for (final hero in state.heroes) {
-      h = (h * 33) ^ hero.specId.index ^ (hero.level * 7);
-      for (final entry in hero.equipped.entries) {
-        h = (h * 33) ^ entry.key.index ^ entry.value.id.hashCode;
-      }
-    }
-    return h & 0x3FFFFFFF;
+    return GameLogic.planBiSAssignments(state).length;
   }
 }
 
