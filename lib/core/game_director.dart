@@ -18,6 +18,7 @@ import '../ui/game_audio.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'hero_identity.dart';
+import 'logic_notices.dart';
 import 'meta_systems.dart';
 import 'play_games_bridge.dart';
 import 'play_games_scores.dart';
@@ -594,19 +595,13 @@ class GameDirector extends ChangeNotifier {
           _state.gearStash.length >= stashCap) {
         showToast('Bag full — oldest loot salvages to essence', life: 2.4);
       }
-      if (GameLogic.lastAutoSellCount > 0 ||
-          GameLogic.lastAutoDisassembleCount > 0) {
-        final sold = GameLogic.lastAutoSellCount;
-        final gold = GameLogic.lastAutoSellGold;
-        final scraped = GameLogic.lastAutoDisassembleCount;
-        final ess = GameLogic.lastAutoDisassembleEssence;
-        GameLogic.lastAutoSellCount = 0;
-        GameLogic.lastAutoSellGold = 0;
-        GameLogic.lastAutoDisassembleCount = 0;
-        GameLogic.lastAutoDisassembleEssence = 0;
+      final cleanup = LogicNotices.takeBagCleanup();
+      if (!cleanup.isEmpty) {
         final bits = <String>[
-          if (sold > 0) 'sold $sold (+${gold}g)',
-          if (scraped > 0) 'scrap $scraped (+${ess}e)',
+          if (cleanup.sold > 0)
+            'sold ${cleanup.sold} (+${cleanup.goldGained}g)',
+          if (cleanup.scrapped > 0)
+            'scrap ${cleanup.scrapped} (+${cleanup.essenceGained}e)',
         ];
         showToast('Bag unstuck · ${bits.join(' · ')}', life: 1.8);
       }
@@ -683,14 +678,14 @@ class GameDirector extends ChangeNotifier {
               ? 'GAUNTLET F$floorNo  +${goldDelta}g  +${essDelta}e'
               : 'GAUNTLET F$floorNo  +${goldDelta}g';
         }
-        final matGrants = GameLogic.takeCraftMatGrants();
+        final matGrants = LogicNotices.takeCraftMats();
         if (matGrants.isNotEmpty) {
           final labels = [
             for (final id in matGrants) ApexCraft.materialsById[id]?.name ?? id,
           ];
           showToast('+${labels.join(', ')}', life: 2.4);
         }
-        final payoffNotices = GameLogic.takeMetaPayoffNotices();
+        final payoffNotices = LogicNotices.takeMetaPayoffs();
         if (payoffNotices.isNotEmpty) {
           showToast(payoffNotices.join(' · '), life: 3.0);
         }
@@ -750,7 +745,7 @@ class GameDirector extends ChangeNotifier {
         'Gauntlet ended on F$floor · best F${_state.metaDepth.gauntletBestFloor}',
         life: 3.2,
       );
-      final payoffs = GameLogic.takeMetaPayoffNotices();
+      final payoffs = LogicNotices.takeMetaPayoffs();
       if (payoffs.isNotEmpty) {
         showToast(payoffs.join(' · '), life: 3.0);
       }
@@ -805,7 +800,7 @@ class GameDirector extends ChangeNotifier {
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _spatial = null;
-    final payoffs = GameLogic.takeMetaPayoffNotices();
+    final payoffs = LogicNotices.takeMetaPayoffs();
     showToast(
       payoffs.isNotEmpty ? payoffs.join(' · ') : 'Returned to hub',
       life: payoffs.isNotEmpty ? 3.0 : 2,
@@ -919,7 +914,7 @@ class GameDirector extends ChangeNotifier {
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _spatial = null;
-    final payoffs = GameLogic.takeMetaPayoffNotices();
+    final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {
       showToast(payoffs.join(' · '), life: 3.0);
     } else {
@@ -1161,8 +1156,7 @@ class GameDirector extends ChangeNotifier {
     final cap = GameLogic.maxGearStashFor(_state);
     final unstick = beforeLen >= (cap * 0.9).ceil();
     _applyUpgrade(GameLogic.autoSellJunk(_state, unstickBag: unstick));
-    GameLogic.lastAutoSellCount = 0;
-    GameLogic.lastAutoSellGold = 0;
+    LogicNotices.takeBagCleanup(); // reported below, not as a second toast
     final sold = beforeLen - _state.gearStash.length;
     final gold = _state.gold - beforeGold;
     if (sold > 0) {
@@ -1178,8 +1172,7 @@ class GameDirector extends ChangeNotifier {
     final cap = GameLogic.maxGearStashFor(_state);
     final unstick = beforeLen >= (cap * 0.9).ceil();
     _applyUpgrade(GameLogic.autoDisassembleJunk(_state, unstickBag: unstick));
-    GameLogic.lastAutoDisassembleCount = 0;
-    GameLogic.lastAutoDisassembleEssence = 0;
+    LogicNotices.takeBagCleanup(); // reported below, not as a second toast
     final scraped = beforeLen - _state.gearStash.length;
     final gained = _state.essence - beforeEss;
     if (scraped > 0) {
@@ -1199,10 +1192,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(
       GameLogic.cleanBagJunk(_state, unstickBag: unstick, mergeFirst: true),
     );
-    GameLogic.lastAutoSellCount = 0;
-    GameLogic.lastAutoSellGold = 0;
-    GameLogic.lastAutoDisassembleCount = 0;
-    GameLogic.lastAutoDisassembleEssence = 0;
+    LogicNotices.takeBagCleanup(); // reported below, not as a second toast
     final cleared = beforeLen - _state.gearStash.length;
     final gold = _state.gold - beforeGold;
     final ess = _state.essence - beforeEss;
@@ -1933,7 +1923,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.claimWeekly(_state));
     if (_state.essence > before) {
       GameAudio.unlock();
-      final notices = GameLogic.takeMetaPayoffNotices();
+      final notices = LogicNotices.takeMetaPayoffs();
       final gained = _state.essence - before;
       final extra = notices.isEmpty ? '' : ' · ${notices.join(' · ')}';
       showToast('Daily vault claimed · +${gained}e$extra', life: 2.8);
@@ -1995,7 +1985,7 @@ class GameDirector extends ChangeNotifier {
       }
     }
     showToast(parts.join(' · '), life: 3.6);
-    final payoffs = GameLogic.takeMetaPayoffNotices();
+    final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {
       showToast(payoffs.join(' · '), life: 3.0);
     }

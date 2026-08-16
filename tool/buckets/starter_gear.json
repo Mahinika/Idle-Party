@@ -1,0 +1,16 @@
+{
+  "source": "lib/core/game_logic.dart",
+  "class": "GameLogic",
+  "bucket": "Starter gear",
+  "target_class": "StarterGear",
+  "out": "lib/core/starter_gear.dart",
+  "members": [
+    "fillMissingStarterGear",
+    "forSpec",
+    "_starterKitRole",
+    "preferredArmorForSpec",
+    "forRole"
+  ],
+  "no_delegate": ["forSpec", "forRole"],
+  "header": "import '../models/hero.dart';\nimport '../models/hero_spec.dart';\nimport '../models/loot.dart';\nimport '../models/proficiency.dart';\nimport '../models/stats.dart';\nimport 'game_state.dart';\n\n/// The gear a hero starts with, and the rules for topping empty slots back up.\n///\n/// This is a lookup table with a couple of renaming rules on top: ~460 lines of\n/// data that used to sit in the middle of the rules engine, pushing everything\n/// else apart.\nabstract final class StarterGear {"
+}

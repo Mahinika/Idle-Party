@@ -7,7 +7,6 @@ import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
 import '../models/gear_loadout.dart';
-import '../models/equip_stat_weights.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
@@ -18,9 +17,12 @@ import '../models/proficiency.dart';
 import '../models/stats.dart';
 import '../spatial/spatial_combat.dart';
 import 'dungeon_generator.dart';
-import 'equipment_factory.dart';
 import 'game_state.dart';
 import 'keystone.dart';
+import 'logic_notices.dart';
+import 'gear_service.dart';
+import 'loot_pipeline.dart';
+import 'starter_gear.dart';
 import 'local_season.dart';
 import 'meta_systems.dart';
 import 'offline_sim.dart';
@@ -99,7 +101,7 @@ class GameLogic {
           name: HeroSpecs.def(specId).defaultName,
           specId: specId,
           stats: PartyHero.startingStatsForSpec(specId),
-          equipped: _starterGearForSpec(specId),
+          equipped: StarterGear.forSpec(specId),
         ),
     ];
     var state = GameState(
@@ -413,24 +415,6 @@ class GameLogic {
     );
   }
 
-  /// Last mats granted by [grantBossCraftMats] (for UI toasts). Cleared on read.
-  static List<String> lastCraftMatGrants = <String>[];
-
-  static List<String> takeCraftMatGrants() {
-    final out = List<String>.from(lastCraftMatGrants);
-    lastCraftMatGrants = <String>[];
-    return out;
-  }
-
-  /// Notices from the last [syncMetaPayoffs] (Will / Gauntlet / season). Cleared on read.
-  static List<String> lastMetaPayoffNotices = <String>[];
-
-  static List<String> takeMetaPayoffNotices() {
-    final out = List<String>.from(lastMetaPayoffNotices);
-    lastMetaPayoffNotices = <String>[];
-    return out;
-  }
-
   static int craftMatCount(GameState state, String matId) =>
       state.craftMaterials[matId] ?? 0;
 
@@ -465,7 +449,7 @@ class GameLogic {
     GameState state, {
     required bool clearedBoss,
   }) {
-    lastCraftMatGrants = <String>[];
+    LogicNotices.startCraftMats();
     if (!clearedBoss) return state;
 
     final farm = state.dungeonMode == DungeonMode.farm;
@@ -493,7 +477,7 @@ class GameLogic {
       final hit = chance >= 1.0 || random.nextDouble() < chance;
       if (hit) {
         next = _addCraftMat(next, matId);
-        lastCraftMatGrants.add(matId);
+        LogicNotices.addCraftMat(matId);
         pity[pityKey] = 0;
         return true;
       }
@@ -1848,17 +1832,6 @@ class GameLogic {
     return applyMissionProgress(paid, goldEarned: gained);
   }
 
-  /// Treasure / chest gold budget using full zone · HM · AL · gear pressure.
-  static int treasureGoldBudget(GameState state) {
-    return roomCombatBudget(
-      state.currentRoom,
-      dungeonId: state.dungeonId,
-      hardmodeLevel: Keystone.combatLevel(state),
-      ascensionLevel: state.ascensionLevel,
-      gearPressure: partyGearPressure(state),
-    ).gold;
-  }
-
   /// Prestige: reset the run, keep essence/relics/sanctuary/pets/soulbound, bump AL.
   /// Returns [state] unchanged if Ascend is locked.
   static GameState ascend(GameState state, {DateTime? now}) {
@@ -1944,7 +1917,7 @@ class GameLogic {
           name: HeroSpecs.def(HeroSpecs.ascendUnlockSpec).defaultName,
           specId: HeroSpecs.ascendUnlockSpec,
           stats: PartyHero.startingStatsForSpec(HeroSpecs.ascendUnlockSpec),
-          equipped: _starterGear(HeroRole.rogue),
+          equipped: StarterGear.forRole(HeroRole.rogue),
           level: seedLevel,
         ),
       ];
@@ -2072,7 +2045,7 @@ class GameLogic {
         name: HeroSpecs.def(HeroSpecs.ascendUnlockSpec).defaultName,
         specId: HeroSpecs.ascendUnlockSpec,
         stats: PartyHero.startingStatsForSpec(HeroSpecs.ascendUnlockSpec),
-        equipped: _starterGear(HeroRole.rogue),
+        equipped: StarterGear.forRole(HeroRole.rogue),
         level: rosterSeedLevel(next),
       );
       final roster = [...next.heroRoster, rogue];
@@ -2220,7 +2193,7 @@ class GameLogic {
       name: def.defaultName,
       specId: specId,
       stats: PartyHero.startingStatsForSpec(specId),
-      equipped: _starterGearForSpec(def.id),
+      equipped: StarterGear.forSpec(def.id),
       level: rosterSeedLevel(next),
     );
     return next.copyWith(
@@ -2236,486 +2209,6 @@ class GameLogic {
       metaDepth: state.metaDepth.copyWith(pendingHeroReveals: const <String>[]),
       lastUpdated: DateTime.now(),
     );
-  }
-
-  /// Fills empty equipment slots with class starter pieces (keeps worn gear).
-  static GameState fillMissingStarterGear(GameState state) {
-    var changed = false;
-    final rebuilt = <PartyHero>[];
-    for (final hero in state.heroRoster) {
-      final starter = _starterGearForSpec(hero.specId);
-      final next = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped);
-      var heroChanged = false;
-      final blocksOh = ClassProficiency.weaponBlocksOffHand(
-        next[EquipmentSlot.weapon],
-      );
-      for (final entry in starter.entries) {
-        if (next.containsKey(entry.key)) continue;
-        // Never put a starter OH under a kept Apex (or any) 2H weapon.
-        if (blocksOh && entry.key == EquipmentSlot.offHand) continue;
-        next[entry.key] = entry.value.copyWith(id: '${entry.value.id}_fill');
-        heroChanged = true;
-        changed = true;
-      }
-      rebuilt.add(heroChanged ? hero.copyWith(equipped: next) : hero);
-    }
-    if (!changed) return state;
-    return state.copyWith(heroRoster: rebuilt, lastUpdated: DateTime.now());
-  }
-
-  /// Starter kit keyed by talent tree — armor follows [HeroSpecDef.armorTypes].
-  static Map<EquipmentSlot, EquipmentItem> _starterGearForSpec(
-    HeroSpecId specId,
-  ) {
-    final spec = HeroSpecs.def(specId);
-    final kitRole = _starterKitRole(spec);
-    final base = _starterGear(kitRole);
-    final armorMat = preferredArmorForSpec(spec, 1);
-    final matName = armorMat == null
-        ? null
-        : armorMat.name[0].toUpperCase() + armorMat.name.substring(1);
-    final out = <EquipmentSlot, EquipmentItem>{};
-    for (final e in base.entries) {
-      final item = e.value;
-      final id = item.id.replaceFirst(
-        kitRole.name,
-        spec.shortLabel.toLowerCase(),
-      );
-      if (armorMat != null &&
-          matName != null &&
-          item.slot.isArmorSlot &&
-          item.armorType != null) {
-        final oldMat = item.armorType!.name;
-        final oldTitle = oldMat[0].toUpperCase() + oldMat.substring(1);
-        final renamed = item.name.contains(oldTitle)
-            ? item.name.replaceFirst(oldTitle, matName)
-            : item.name;
-        out[e.key] = item.copyWith(id: id, name: renamed, armorType: armorMat);
-      } else {
-        out[e.key] = item.copyWith(id: id);
-      }
-    }
-
-    // Swap illegal off-hands (e.g. Guardian Druid inheriting a warrior shield).
-    final oh = out[EquipmentSlot.offHand];
-    if (oh != null &&
-        !ClassProficiency.canEquip(
-          role: spec.gearAffinity,
-          level: 1,
-          item: oh,
-          specId: specId,
-        )) {
-      if (ClassProficiency.canEquipOffHandForSpec(spec, OffHandKind.frill)) {
-        out[EquipmentSlot.offHand] = EquipmentItem(
-          id: 'start_${spec.shortLabel.toLowerCase()}_oh',
-          name: '${spec.shortLabel} Charm',
-          slot: EquipmentSlot.offHand,
-          rarity: LootRarity.common,
-          offHandKind: OffHandKind.frill,
-          intellectBonus: spec.isHealer || spec.roleTag == SpecRoleTag.caster
-              ? 1
-              : 0,
-          staminaBonus: 1,
-          spiritBonus: spec.isHealer ? 1 : 0,
-          spellPowerBonus: spec.isHealer || spec.roleTag == SpecRoleTag.caster
-              ? 1
-              : 0,
-          itemLevel: 5,
-        );
-      } else if (ClassProficiency.canEquipOffHandForSpec(
-        spec,
-        OffHandKind.weapon,
-      )) {
-        out[EquipmentSlot.offHand] = EquipmentItem(
-          id: 'start_${spec.shortLabel.toLowerCase()}_oh',
-          name: '${spec.shortLabel} Sidearm',
-          slot: EquipmentSlot.offHand,
-          rarity: LootRarity.common,
-          offHandKind: OffHandKind.weapon,
-          weaponType: WeaponType.dagger,
-          handed: WeaponHanded.oneHand,
-          agilityBonus: 1,
-          staminaBonus: 1,
-          itemLevel: 5,
-        );
-      } else {
-        out.remove(EquipmentSlot.offHand);
-      }
-    }
-
-    // Swap illegal ranged (Holy Paladin inheriting a priest wand, etc.).
-    final ranged = out[EquipmentSlot.ranged];
-    if (ranged != null &&
-        !ClassProficiency.canEquip(
-          role: spec.gearAffinity,
-          level: 1,
-          item: ranged,
-          specId: specId,
-        )) {
-      final preferWand = ClassProficiency.canEquipWeaponForSpec(
-        spec,
-        WeaponType.wand,
-        WeaponHanded.oneHand,
-        rangedSlot: true,
-      );
-      out[EquipmentSlot.ranged] = EquipmentItem(
-        id: 'start_${spec.shortLabel.toLowerCase()}_rng',
-        name: preferWand
-            ? '${spec.shortLabel} Wand'
-            : '${spec.shortLabel} Thrown',
-        slot: EquipmentSlot.ranged,
-        rarity: LootRarity.common,
-        weaponType: preferWand ? WeaponType.wand : WeaponType.thrown,
-        handed: WeaponHanded.oneHand,
-        intellectBonus: preferWand ? 1 : 0,
-        spellPowerBonus: preferWand ? 2 : 0,
-        strengthBonus: preferWand ? 0 : 1,
-        agilityBonus: preferWand ? 0 : 1,
-        itemLevel: 5,
-      );
-    }
-
-    // Swap illegal main-hand weapons.
-    final weapon = out[EquipmentSlot.weapon];
-    if (weapon != null &&
-        !ClassProficiency.canEquip(
-          role: spec.gearAffinity,
-          level: 1,
-          item: weapon,
-          specId: specId,
-        )) {
-      final useStaff = ClassProficiency.canEquipWeaponForSpec(
-        spec,
-        WeaponType.staff,
-        WeaponHanded.twoHand,
-        rangedSlot: false,
-      );
-      final useMace = ClassProficiency.canEquipWeaponForSpec(
-        spec,
-        WeaponType.mace,
-        WeaponHanded.oneHand,
-        rangedSlot: false,
-      );
-      out[EquipmentSlot.weapon] = EquipmentItem(
-        id: 'start_${spec.shortLabel.toLowerCase()}_wpn',
-        name: useStaff ? '${spec.shortLabel} Staff' : '${spec.shortLabel} Mace',
-        slot: EquipmentSlot.weapon,
-        rarity: LootRarity.common,
-        weaponType: useStaff ? WeaponType.staff : WeaponType.mace,
-        handed: useStaff ? WeaponHanded.twoHand : WeaponHanded.oneHand,
-        intellectBonus: spec.isHealer || spec.roleTag == SpecRoleTag.caster
-            ? 2
-            : 0,
-        spiritBonus: spec.isHealer ? 1 : 0,
-        spellPowerBonus: spec.isHealer || spec.roleTag == SpecRoleTag.caster
-            ? 1
-            : 0,
-        strengthBonus: useMace && !spec.isHealer ? 2 : 0,
-        staminaBonus: 1,
-        itemLevel: 5,
-      );
-      if (useStaff) {
-        out.remove(EquipmentSlot.offHand);
-      }
-    }
-
-    return out;
-  }
-
-  static HeroRole _starterKitRole(HeroSpecDef spec) => switch (spec.classId) {
-    HeroClassId.hunter => HeroRole.rogue,
-    HeroClassId.shaman => switch (spec.roleTag) {
-      SpecRoleTag.meleeDps => HeroRole.rogue,
-      SpecRoleTag.healer => HeroRole.healer,
-      _ => HeroRole.mage, // elemental caster
-    },
-    HeroClassId.deathKnight => HeroRole.warrior,
-    HeroClassId.paladin => spec.isHealer ? HeroRole.healer : HeroRole.warrior,
-    HeroClassId.warlock => HeroRole.mage,
-    HeroClassId.druid => switch (spec.roleTag) {
-      SpecRoleTag.tank => HeroRole.warrior,
-      SpecRoleTag.healer => HeroRole.healer,
-      SpecRoleTag.caster => HeroRole.mage,
-      _ => HeroRole.rogue,
-    },
-    _ => spec.gearAffinity,
-  };
-
-  /// Heaviest armor the hero may wear at [level] (plate@40 except DK).
-  static ArmorType? preferredArmorForSpec(HeroSpecDef spec, int level) {
-    if (ClassProficiency.canEquipArmorForSpec(spec, level, ArmorType.plate)) {
-      return ArmorType.plate;
-    }
-    if (spec.armorTypes.contains(ArmorType.mail)) return ArmorType.mail;
-    if (spec.armorTypes.contains(ArmorType.leather)) return ArmorType.leather;
-    if (spec.armorTypes.contains(ArmorType.cloth)) return ArmorType.cloth;
-    return null;
-  }
-
-  static Map<EquipmentSlot, EquipmentItem> _starterGear(HeroRole role) {
-    EquipmentItem piece({
-      required String id,
-      required String name,
-      required EquipmentSlot slot,
-      ArmorType? armorType,
-      WeaponType? weaponType,
-      WeaponHanded? handed,
-      OffHandKind? offHandKind,
-      int str = 0,
-      int agi = 0,
-      int sta = 0,
-      int intel = 0,
-      int spi = 0,
-      int sp = 0,
-      int armor = 0,
-      int crit = 0,
-      int aspd = 0,
-      int move = 0,
-      int mp5 = 0,
-    }) {
-      return EquipmentItem(
-        id: id,
-        name: name,
-        slot: slot,
-        rarity: LootRarity.common,
-        strengthBonus: str,
-        agilityBonus: agi,
-        staminaBonus: sta,
-        intellectBonus: intel,
-        spiritBonus: spi,
-        spellPowerBonus: sp,
-        armorBonus: armor,
-        critChanceBonus: crit,
-        attackSpeedBonus: aspd,
-        moveSpeedBonus: move,
-        mp5Bonus: mp5,
-        affinity: role.name,
-        itemLevel: 5,
-        armorType: armorType,
-        weaponType: weaponType,
-        handed: handed,
-        offHandKind: offHandKind,
-        iconId: slot == EquipmentSlot.consumable ? 'flask' : null,
-      );
-    }
-
-    final prefix = switch (role) {
-      HeroRole.warrior => 'Guard',
-      HeroRole.healer => 'Soft',
-      HeroRole.mage => 'Spark',
-      HeroRole.rogue => 'Swift',
-    };
-    final armorMat = switch (role) {
-      HeroRole.warrior => ArmorType.mail,
-      HeroRole.rogue => ArmorType.leather,
-      HeroRole.healer || HeroRole.mage => ArmorType.cloth,
-    };
-    final matName = armorMat.name[0].toUpperCase() + armorMat.name.substring(1);
-
-    // Starter budget: modest — primaries mainly on weapon/chest.
-    final p = switch (role) {
-      HeroRole.warrior => (str: 1, agi: 0, sta: 1, intel: 0, spi: 0, sp: 0),
-      HeroRole.rogue => (str: 0, agi: 1, sta: 1, intel: 0, spi: 0, sp: 0),
-      HeroRole.healer => (str: 0, agi: 0, sta: 1, intel: 1, spi: 1, sp: 1),
-      HeroRole.mage => (str: 0, agi: 0, sta: 1, intel: 1, spi: 1, sp: 1),
-    };
-
-    EquipmentItem armorPiece(
-      EquipmentSlot slot,
-      String noun, {
-      int armorPts = 1,
-    }) {
-      final isCore =
-          slot == EquipmentSlot.chest ||
-          slot == EquipmentSlot.legs ||
-          slot == EquipmentSlot.head;
-      return piece(
-        id: 'start_${role.name}_${slot.name}',
-        name: '$prefix $matName $noun',
-        slot: slot,
-        armorType: armorMat,
-        str: isCore ? p.str : 0,
-        agi: isCore ? p.agi : 0,
-        sta: isCore ? p.sta : (slot == EquipmentSlot.boots ? 1 : 0),
-        intel: isCore ? p.intel : 0,
-        spi: isCore ? p.spi : 0,
-        sp: slot == EquipmentSlot.chest ? p.sp : 0,
-        armor: role == HeroRole.warrior && isCore ? armorPts + 1 : armorPts,
-        move: slot == EquipmentSlot.boots ? 2 : 0,
-        aspd: slot == EquipmentSlot.hands || slot == EquipmentSlot.boots
-            ? 1
-            : 0,
-        mp5: armorMat == ArmorType.cloth ? 1 : 0,
-      );
-    }
-
-    EquipmentItem jewelry(EquipmentSlot slot, String noun) => piece(
-      id: 'start_${role.name}_${slot.name}',
-      name: '$prefix $noun',
-      slot: slot,
-      str: slot == EquipmentSlot.neck ? p.str : 0,
-      agi: slot == EquipmentSlot.neck ? p.agi : 0,
-      sta: 0,
-      intel: slot == EquipmentSlot.neck ? p.intel : 0,
-      spi: slot == EquipmentSlot.neck ? p.spi : 0,
-      sp: p.sp > 0 && slot == EquipmentSlot.neck ? 1 : 0,
-      crit: role == HeroRole.rogue && slot == EquipmentSlot.ring ? 1 : 0,
-    );
-
-    final weapon = switch (role) {
-      HeroRole.warrior => piece(
-        id: 'start_war_wpn',
-        name: '$prefix 1H Mace',
-        slot: EquipmentSlot.weapon,
-        weaponType: WeaponType.mace,
-        handed: WeaponHanded.oneHand,
-        str: 3,
-        sta: 2,
-        aspd: 1,
-      ),
-      HeroRole.healer => piece(
-        id: 'start_pri_wpn',
-        name: '$prefix 1H Mace',
-        slot: EquipmentSlot.weapon,
-        weaponType: WeaponType.mace,
-        handed: WeaponHanded.oneHand,
-        intel: 2,
-        spi: 1,
-        sp: 1,
-        mp5: 1,
-      ),
-      HeroRole.mage => piece(
-        id: 'start_mag_wpn',
-        name: '$prefix 1H Sword',
-        slot: EquipmentSlot.weapon,
-        weaponType: WeaponType.sword,
-        handed: WeaponHanded.oneHand,
-        intel: 2,
-        spi: 1,
-        sp: 1,
-      ),
-      HeroRole.rogue => piece(
-        id: 'start_rog_wpn',
-        name: '$prefix Dagger',
-        slot: EquipmentSlot.weapon,
-        weaponType: WeaponType.dagger,
-        handed: WeaponHanded.oneHand,
-        agi: 3,
-        str: 1,
-        crit: 1,
-        aspd: 1,
-      ),
-    };
-
-    final offHand = switch (role) {
-      HeroRole.warrior => piece(
-        id: 'start_war_oh',
-        name: '$prefix Tower Shield',
-        slot: EquipmentSlot.offHand,
-        offHandKind: OffHandKind.shield,
-        str: 1,
-        sta: 2,
-        armor: 3,
-      ),
-      HeroRole.healer || HeroRole.mage => piece(
-        id: 'start_${role.name}_oh',
-        name: '$prefix Tome',
-        slot: EquipmentSlot.offHand,
-        offHandKind: OffHandKind.frill,
-        intel: 1,
-        spi: 1,
-        sp: 2,
-        mp5: 1,
-      ),
-      HeroRole.rogue => piece(
-        id: 'start_rog_oh',
-        name: '$prefix Off-hand Dagger',
-        slot: EquipmentSlot.offHand,
-        offHandKind: OffHandKind.weapon,
-        weaponType: WeaponType.dagger,
-        handed: WeaponHanded.oneHand,
-        agi: 2,
-        crit: 1,
-        aspd: 1,
-      ),
-    };
-
-    final ranged = switch (role) {
-      HeroRole.healer || HeroRole.mage => piece(
-        id: 'start_${role.name}_rng',
-        name: '$prefix Wand',
-        slot: EquipmentSlot.ranged,
-        weaponType: WeaponType.wand,
-        handed: WeaponHanded.oneHand,
-        intel: 1,
-        sp: 2,
-      ),
-      HeroRole.warrior => piece(
-        id: 'start_war_rng',
-        name: '$prefix Thrown',
-        slot: EquipmentSlot.ranged,
-        weaponType: WeaponType.thrown,
-        handed: WeaponHanded.oneHand,
-        str: 1,
-        agi: 1,
-      ),
-      HeroRole.rogue => piece(
-        id: 'start_rog_rng',
-        name: '$prefix Bow',
-        slot: EquipmentSlot.ranged,
-        weaponType: WeaponType.bow,
-        handed: WeaponHanded.twoHand,
-        agi: 2,
-      ),
-    };
-
-    final flask = piece(
-      id: 'start_${role.name}_flask',
-      name: 'Healing Flask',
-      slot: EquipmentSlot.consumable,
-      sta: 1,
-    );
-
-    return {
-      EquipmentSlot.weapon: weapon,
-      EquipmentSlot.offHand: offHand,
-      EquipmentSlot.ranged: ranged,
-      EquipmentSlot.head: armorPiece(EquipmentSlot.head, 'Helm', armorPts: 2),
-      EquipmentSlot.shoulder: armorPiece(
-        EquipmentSlot.shoulder,
-        'Pauldrons',
-        armorPts: 1,
-      ),
-      EquipmentSlot.chest: armorPiece(
-        EquipmentSlot.chest,
-        'Chestguard',
-        armorPts: 3,
-      ),
-      EquipmentSlot.waist: armorPiece(EquipmentSlot.waist, 'Belt'),
-      EquipmentSlot.legs: armorPiece(
-        EquipmentSlot.legs,
-        'Legguards',
-        armorPts: 2,
-      ),
-      EquipmentSlot.boots: armorPiece(EquipmentSlot.boots, 'Boots'),
-      EquipmentSlot.wrist: armorPiece(EquipmentSlot.wrist, 'Bracers'),
-      EquipmentSlot.hands: armorPiece(EquipmentSlot.hands, 'Gloves'),
-      EquipmentSlot.cloak: jewelry(EquipmentSlot.cloak, 'Cloak'),
-      EquipmentSlot.neck: jewelry(EquipmentSlot.neck, 'Amulet'),
-      EquipmentSlot.ring: jewelry(EquipmentSlot.ring, 'Ring'),
-      EquipmentSlot.ring2: jewelry(EquipmentSlot.ring2, 'Band'),
-      EquipmentSlot.trinket: jewelry(EquipmentSlot.trinket, 'Trinket'),
-      EquipmentSlot.trinket2: jewelry(EquipmentSlot.trinket2, 'Charm'),
-      EquipmentSlot.consumable: flask,
-    };
-  }
-
-  static bool isBossBattle(int battleNumber, {int ascensionLevel = 0}) =>
-      battleNumber == DungeonGenerator.bossFloorFor(ascensionLevel);
-
-  static bool isEliteBattle(int battleNumber) {
-    final room = DungeonGenerator.generateFloor(max(1, battleNumber)).first;
-    return room.type == RoomType.elite || battleNumber % 5 == 3;
   }
 
   /// Combat budget for a room: total effective attack/HP/gold the enemy
@@ -3934,14 +3427,6 @@ class GameLogic {
   static String seasonLabel(DateTime utc) =>
       '${isoWeekKey(utc)} · ${isoMonthKey(utc)}';
 
-  static const List<String> weeklyModifiers = <String>[
-    'glass',
-    'swarm',
-    'elite',
-    'fortune',
-    'iron',
-  ];
-
   static GameState ensureWeeklyContract(GameState state, {DateTime? now}) {
     final t = (now ?? DateTime.now()).toUtc();
     final key = isoWeekKey(t);
@@ -4001,8 +3486,6 @@ class GameLogic {
     );
   }
 
-  static int weeklyClaimEssence = 14;
-  static const int weeklyClearTarget = 1;
   static const int dailyVaultClearTarget = 1;
 
   /// Mid+ players see KEY / weekly affix jargon; early stays vault-simple.
@@ -4056,7 +3539,7 @@ class GameLogic {
         notices.add('Title unlocked · $title');
       }
     }
-    lastMetaPayoffNotices = notices;
+    LogicNotices.setMetaPayoffs(notices);
     next = next.copyWith(
       essence: next.essence + essenceGain,
       metaDepth: md.copyWith(
@@ -4144,10 +3627,10 @@ class GameLogic {
             next.metaDepth.claimedGauntletMilestones.length &&
         weekClaims.length == next.metaDepth.claimedWeekGoals.length &&
         titles.length == next.metaDepth.titles.length) {
-      lastMetaPayoffNotices = const [];
+      LogicNotices.setMetaPayoffs(const []);
       return MetaSystems.evaluateAchievements(next);
     }
-    lastMetaPayoffNotices = notices;
+    LogicNotices.setMetaPayoffs(notices);
     next = next.copyWith(
       essence: next.essence + essenceGain,
       metaDepth: next.metaDepth.copyWith(
@@ -4216,510 +3699,6 @@ class GameLogic {
     return MetaSystems.evaluateAchievements(
       state.copyWith(hardmodeLevel: capped, lastUpdated: DateTime.now()),
     );
-  }
-
-  /// Gold granted by a Gold Pouch drop ([LootDrop.amount] is the base gold).
-  static int goldPouchBaseGold(int battleNumber) =>
-      20 + max(1, battleNumber) * 5;
-
-  static bool isWalletGoldDrop(LootDrop drop) {
-    if (drop.equipment != null) return false;
-    final n = drop.name.toLowerCase();
-    return n.contains('gold pouch') || n.contains('coin pouch');
-  }
-
-  /// Per-kill loot: gear (or Faded Dust). No room fillers — those are
-  /// [rollFloorClearLoot] once per clear.
-  static List<LootDrop> rollKillLoot(
-    int battleNumber, {
-    int ascensionLevel = 0,
-    int lootFindPercent = 0,
-    int hardmodeLevel = 0,
-    List<PartyHero>? party,
-    String dungeonId = 'sandy',
-    EnemyRole enemyRole = EnemyRole.normal,
-  }) {
-    final hm = hardmodeLevel.clamp(0, Keystone.maxLevel);
-    final roleSkipRelief = switch (enemyRole) {
-      EnemyRole.boss => 0.25,
-      EnemyRole.elite => 0.12,
-      EnemyRole.normal => 0.0,
-    };
-
-    // AL drop penalty: chance to skip gear entirely (pets / HM / elites blunt).
-    final skipChance =
-        (ascensionLevel * ascensionDropPenalty -
-                lootFindPercent / 100.0 -
-                hm * 0.012 -
-                roleSkipRelief)
-            .clamp(0.0, 0.55);
-    if (random.nextDouble() < skipChance) {
-      return <LootDrop>[
-        const LootDrop(
-          name: 'Faded Dust',
-          amount: 1,
-          rarity: LootRarity.common,
-        ),
-      ];
-    }
-
-    var primaryRarity = _rarityForBattle(battleNumber, hardmodeLevel: hm);
-    final rarityBumps = switch (enemyRole) {
-      EnemyRole.boss => 2,
-      EnemyRole.elite => 1,
-      EnemyRole.normal => 0,
-    };
-    for (var i = 0; i < rarityBumps; i++) {
-      if (primaryRarity.index < LootRarity.values.length - 1) {
-        primaryRarity = LootRarity.values[primaryRarity.index + 1];
-      }
-    }
-
-    final slots = EquipmentSlot.values
-        .where((s) => s != EquipmentSlot.consumable)
-        .toList();
-
-    (
-      HeroRole bias,
-      ArmorType? preferred,
-      SpecRoleTag? roleTag,
-      HeroSpecId? specId,
-    )
-    pickBias() {
-      final target = _lootTargetHero(party);
-      if (target != null) {
-        return (
-          // Naming + affix pool follow gearAffinity (Enh→rogue, Holy→healer).
-          target.spec.gearAffinity,
-          preferredArmorForSpec(target.spec, max(1, battleNumber)),
-          target.spec.roleTag,
-          target.specId,
-        );
-      }
-      return (
-        HeroRole.values[random.nextInt(HeroRole.values.length)],
-        null,
-        null,
-        null,
-      );
-    }
-
-    final slot = slots[random.nextInt(slots.length)];
-    final (bias, preferredArmor, roleTag, lootSpecId) = pickBias();
-    final piece = createEquipment(
-      slot: slot,
-      rarity: primaryRarity,
-      battleNumber: battleNumber,
-      bias: bias,
-      preferredArmor: preferredArmor,
-      roleTag: roleTag,
-      lootSpecId: lootSpecId,
-      dungeonId: dungeonId,
-      ascensionLevel: ascensionLevel,
-      hardmodeLevel: hardmodeLevel,
-    );
-    final drops = <LootDrop>[
-      LootDrop(
-        name: piece.name,
-        amount: 1,
-        rarity: primaryRarity,
-        equipment: piece,
-      ),
-    ];
-
-    final roleSecondMul = switch (enemyRole) {
-      EnemyRole.boss => 1.75,
-      EnemyRole.elite => 1.35,
-      EnemyRole.normal => 1.0,
-    };
-    final secondChance =
-        (battleNumber >= 6
-            ? (0.22 + lootFindPercent / 200.0)
-            : (0.08 + lootFindPercent / 250.0)) *
-        roleSecondMul;
-    final secondCap = battleNumber >= 6 ? 0.55 : 0.28;
-    if (battleNumber >= 4 &&
-        random.nextDouble() < secondChance.clamp(0.0, secondCap)) {
-      final slot2 = slots[random.nextInt(slots.length)];
-      final (bias2, preferred2, roleTag2, lootSpecId2) = pickBias();
-      final rarity2 = primaryRarity.index > 0
-          ? LootRarity.values[primaryRarity.index - 1]
-          : LootRarity.common;
-      final piece2 = createEquipment(
-        slot: slot2,
-        rarity: rarity2,
-        battleNumber: battleNumber,
-        bias: bias2,
-        preferredArmor: preferred2,
-        roleTag: roleTag2,
-        lootSpecId: lootSpecId2,
-        dungeonId: dungeonId,
-        ascensionLevel: ascensionLevel,
-        hardmodeLevel: hardmodeLevel,
-      );
-      drops.add(
-        LootDrop(
-          name: piece2.name,
-          amount: 1,
-          rarity: rarity2,
-          equipment: piece2,
-        ),
-      );
-    }
-
-    return drops;
-  }
-
-  /// Room chest reward (socket pickup). Small gold pouch + occasional gear.
-  static List<LootDrop> rollRoomChestLoot(GameState state, {Random? random}) {
-    final rng =
-        random ?? Random(state.layoutSeed ^ state.battleNumber ^ 0xC7E57);
-    final gold = max(4, treasureGoldBudget(state) ~/ 5);
-    final drops = <LootDrop>[
-      LootDrop(name: 'Gold Pouch', amount: gold, rarity: LootRarity.common),
-    ];
-    if (rng.nextDouble() < 0.42) {
-      final gear = rollKillLoot(
-        state.battleNumber,
-        ascensionLevel: state.ascensionLevel,
-        lootFindPercent: state.petLootFindPercent,
-        hardmodeLevel: Keystone.combatLevel(state),
-        party: state.heroes,
-        dungeonId: state.dungeonId,
-      );
-      for (final d in gear) {
-        if (d.isEquipment) {
-          drops.add(d);
-          break;
-        }
-      }
-    }
-    if (state.currentRoom.type == RoomType.treasure) {
-      drops.add(
-        const LootDrop(
-          name: 'Essence Vial',
-          amount: 1,
-          rarity: LootRarity.rare,
-        ),
-      );
-    }
-    return drops;
-  }
-
-  /// Once-per-clear fillers (sigil / pouch / relic / vial). Uses live [roomType]
-  /// so gauntlet bosses (`floor % 5 == 0`) get Boss Sigil correctly.
-  static List<LootDrop> rollFloorClearLoot(
-    int battleNumber, {
-    required RoomType roomType,
-  }) {
-    final drops = <LootDrop>[];
-    if (battleNumber % 4 == 0) {
-      drops.add(
-        LootDrop(
-          name: 'Gold Pouch',
-          amount: goldPouchBaseGold(battleNumber),
-          rarity: LootRarity.common,
-        ),
-      );
-    }
-    if (battleNumber % 9 == 0) {
-      drops.add(
-        const LootDrop(name: 'Relic Shard', amount: 1, rarity: LootRarity.rare),
-      );
-    }
-    if (roomType == RoomType.boss) {
-      drops.add(
-        const LootDrop(name: 'Boss Sigil', amount: 1, rarity: LootRarity.epic),
-      );
-    }
-    if (roomType == RoomType.treasure) {
-      drops.add(
-        const LootDrop(
-          name: 'Essence Vial',
-          amount: 1,
-          rarity: LootRarity.rare,
-        ),
-      );
-    }
-    return drops;
-  }
-
-  /// Combined roll (kill gear + floor fillers). Prefer [rollKillLoot] /
-  /// [rollFloorClearLoot] at call sites. Kept for tests / tooling.
-  static List<LootDrop> rollLoot(
-    int battleNumber, {
-    int ascensionLevel = 0,
-    int lootFindPercent = 0,
-    int hardmodeLevel = 0,
-    List<PartyHero>? party,
-    String dungeonId = 'sandy',
-    EnemyRole enemyRole = EnemyRole.normal,
-    RoomType? roomType,
-  }) {
-    final resolvedType =
-        roomType ??
-        DungeonGenerator.generateFloor(
-          max(1, battleNumber),
-          ascensionLevel: ascensionLevel,
-          dungeonId: dungeonId,
-          bossEvery: null,
-        ).first.type;
-    return _finalizeLootDrops([
-      ...rollKillLoot(
-        battleNumber,
-        ascensionLevel: ascensionLevel,
-        lootFindPercent: lootFindPercent,
-        hardmodeLevel: hardmodeLevel,
-        party: party,
-        dungeonId: dungeonId,
-        enemyRole: enemyRole,
-      ),
-      ...rollFloorClearLoot(battleNumber, roomType: resolvedType),
-    ]);
-  }
-
-  /// Keep all gear / sigil / relic / vial; fill remaining slots with filler
-  /// (gold pouch). Soft cap 5 — never discards important drops.
-  static List<LootDrop> _finalizeLootDrops(List<LootDrop> drops) {
-    const softCap = 5;
-    if (drops.length <= softCap) return List<LootDrop>.from(drops);
-
-    bool important(LootDrop d) {
-      if (d.isEquipment) return true;
-      final n = d.name.toLowerCase();
-      return n.contains('boss sigil') ||
-          n.contains('relic') ||
-          n.contains('essence vial');
-    }
-
-    final keep = <LootDrop>[];
-    final filler = <LootDrop>[];
-    for (final d in drops) {
-      if (important(d)) {
-        keep.add(d);
-      } else {
-        filler.add(d);
-      }
-    }
-    final out = List<LootDrop>.from(keep);
-    for (final d in filler) {
-      if (out.length >= softCap) break;
-      out.add(d);
-    }
-    return out;
-  }
-
-  static PartyHero? _lootTargetHero(List<PartyHero>? party) {
-    if (party == null || party.isEmpty) return null;
-    final living = [
-      for (final h in party)
-        if (h.isAlive) h,
-    ];
-    final pool = living.isNotEmpty ? living : party;
-    return pool[random.nextInt(pool.length)];
-  }
-
-  static EquipmentItem createEquipment({
-    required EquipmentSlot slot,
-    required LootRarity rarity,
-    required int battleNumber,
-    HeroRole? bias,
-    ArmorType? preferredArmor,
-    SpecRoleTag? roleTag,
-    HeroSpecId? lootSpecId,
-    String? dungeonId,
-    int ascensionLevel = 0,
-    int hardmodeLevel = 0,
-  }) {
-    EquipmentFactory.random = random;
-    return EquipmentFactory.create(
-      slot: slot,
-      rarity: rarity,
-      battleNumber: battleNumber,
-      bias: bias,
-      preferredArmor: preferredArmor,
-      roleTag: roleTag,
-      lootSpecId: lootSpecId,
-      dungeonId: dungeonId,
-      ascensionLevel: ascensionLevel,
-      hardmodeLevel: hardmodeLevel,
-    );
-  }
-
-  /// Item level from floor + rarity + dungeon/AL/HM band (soft-capped late).
-  static int itemLevelFor({
-    required int battleNumber,
-    required LootRarity rarity,
-    String? dungeonId,
-    int ascensionLevel = 0,
-    int hardmodeLevel = 0,
-  }) => EquipmentFactory.itemLevelFor(
-    battleNumber: battleNumber,
-    rarity: rarity,
-    dungeonId: dungeonId,
-    ascensionLevel: ascensionLevel,
-    hardmodeLevel: hardmodeLevel,
-  );
-
-  /// Recommended auto-sell iLvl ceiling for the player's progression.
-  static int maxAutoSellIlvlCap(GameState state) {
-    final fromDungeon = state.highestDungeonCleared * 22;
-    final fromAl = state.ascensionLevel * 4;
-    return (60 + fromDungeon + fromAl).clamp(60, 200);
-  }
-
-  /// Scale a soulbound piece so Ascend AL keeps it relevant vs new drops.
-  ///
-  /// Primaries track the target ilvl ratio; total power stays near the same
-  /// budget curve as fresh drops at that ilvl.
-  static EquipmentItem scaleSoulboundForAl(
-    EquipmentItem item,
-    int ascensionLevel,
-  ) {
-    // Fold legacy Vit/Def into Sta/Armor before scaling so clamps can't wipe them.
-    var base = item;
-    if (base.vitalityBonus != 0 || base.defenseBonus != 0) {
-      base = base.copyWith(
-        staminaBonus: base.resolvedStamina,
-        armorBonus: base.resolvedArmor,
-        vitalityBonus: 0,
-        defenseBonus: 0,
-      );
-    }
-
-    final al = ascensionLevel.clamp(0, 40);
-    final rawTarget = max(base.effectiveItemLevel, 20 + al * 3);
-    final targetIlvl = EquipmentFactory.softCapItemLevel(rawTarget);
-    if (targetIlvl <= base.effectiveItemLevel) {
-      return base.copyWith(itemLevel: base.effectiveItemLevel);
-    }
-    final ratio = targetIlvl / max(1, base.effectiveItemLevel);
-    int bump(int v) {
-      if (v <= 0) return 0;
-      return max(v, (v * ratio).round());
-    }
-
-    var scaled = base.copyWith(
-      itemLevel: targetIlvl,
-      strengthBonus: bump(base.strengthBonus),
-      agilityBonus: bump(base.agilityBonus),
-      staminaBonus: bump(base.staminaBonus),
-      intellectBonus: bump(base.intellectBonus),
-      spiritBonus: bump(base.spiritBonus),
-      spellPowerBonus: bump(base.spellPowerBonus),
-      armorBonus: bump(base.armorBonus),
-      attackBonus: bump(base.attackBonus),
-      defenseBonus: 0,
-      vitalityBonus: 0,
-      mp5Bonus: bump(base.mp5Bonus),
-      critChanceBonus: bump(base.critChanceBonus),
-      attackSpeedBonus: bump(base.attackSpeedBonus),
-      moveSpeedBonus: bump(base.moveSpeedBonus),
-      effectValue: bump(base.effectValue),
-    );
-
-    // Soft-clamp runaway primaries to ~1.35× drop budget at the new ilvl.
-    final cap =
-        (EquipmentFactory.budgetForItemLevel(
-                  itemLevel: targetIlvl,
-                  rarity: base.rarity.index >= LootRarity.rare.index
-                      ? base.rarity
-                      : LootRarity.rare,
-                  slot: base.slot,
-                  handed: base.handed,
-                ) *
-                1.35)
-            .round();
-    final primarySum =
-        scaled.strengthBonus +
-        scaled.agilityBonus +
-        scaled.staminaBonus +
-        scaled.intellectBonus +
-        scaled.spiritBonus +
-        scaled.spellPowerBonus +
-        scaled.armorBonus +
-        scaled.attackBonus;
-    if (primarySum > cap && primarySum > 0) {
-      final shrink = cap / primarySum;
-      int sh(int v) => v <= 0 ? 0 : max(1, (v * shrink).round());
-      scaled = scaled.copyWith(
-        strengthBonus: sh(scaled.strengthBonus),
-        agilityBonus: sh(scaled.agilityBonus),
-        staminaBonus: sh(scaled.staminaBonus),
-        intellectBonus: sh(scaled.intellectBonus),
-        spiritBonus: sh(scaled.spiritBonus),
-        spellPowerBonus: sh(scaled.spellPowerBonus),
-        armorBonus: sh(scaled.armorBonus),
-        attackBonus: sh(scaled.attackBonus),
-        defenseBonus: 0,
-        vitalityBonus: 0,
-      );
-    }
-    return scaled;
-  }
-
-  static String _equipmentNameFor(
-    EquipmentSlot slot,
-    LootRarity rarity, {
-    HeroRole? bias,
-    ArmorType? armorType,
-    WeaponType? weaponType,
-    OffHandKind? offHandKind,
-    WeaponHanded? handed,
-    String? affixPrefixId,
-    String? affixSuffixId,
-  }) => EquipmentFactory.equipmentNameFor(
-    slot: slot,
-    rarity: rarity,
-    bias: bias,
-    armorType: armorType,
-    weaponType: weaponType,
-    offHandKind: offHandKind,
-    handed: handed,
-    affixPrefix: EquipmentFactory.affixNameById(affixPrefixId),
-    affixSuffix: EquipmentFactory.affixNameById(affixSuffixId),
-  );
-
-  static int lootEssenceValue(LootDrop drop) {
-    if (drop.essenceGained > 0) {
-      return drop.essenceGained;
-    }
-    if (drop.equipment != null) {
-      return equipmentEssenceValue(drop.equipment!);
-    }
-    final perItem = switch (drop.rarity) {
-      LootRarity.common => 2,
-      LootRarity.uncommon => 5,
-      LootRarity.rare => 9,
-      LootRarity.epic => 16,
-      LootRarity.legendary => 28,
-    };
-
-    return perItem * drop.amount;
-  }
-
-  static int equipmentEssenceValue(EquipmentItem item) {
-    final base = switch (item.rarity) {
-      LootRarity.common => 2,
-      LootRarity.uncommon => 5,
-      LootRarity.rare => 9,
-      LootRarity.epic => 16,
-      LootRarity.legendary => 28,
-    };
-    return base + (item.powerScore ~/ 4);
-  }
-
-  /// Merchant gold payout (stash-only sales).
-  /// Uses stat power + 2×ilvl (ilvl is not double-counted via [powerScore]).
-  static int equipmentGoldValue(EquipmentItem item) {
-    final base = switch (item.rarity) {
-      LootRarity.common => 8,
-      LootRarity.uncommon => 18,
-      LootRarity.rare => 40,
-      LootRarity.epic => 90,
-      LootRarity.legendary => 160,
-    };
-    return base + item.statPowerScore + (item.effectiveItemLevel * 2);
   }
 
   static int marketFlaskCost(GameState state) =>
@@ -4805,16 +3784,6 @@ class GameLogic {
     return next.copyWith(lastUpdated: DateTime.now());
   }
 
-  static GameState sellGearForGold(GameState state, String itemId) {
-    final inStash = state.gearStash.any((g) => g.id == itemId);
-    if (!inStash) return state;
-    final item = findGear(state, itemId);
-    if (item == null) return state;
-    final value = equipmentGoldValue(item);
-    final next = removeGear(state, itemId);
-    return next.copyWith(gold: next.gold + value, lastUpdated: DateTime.now());
-  }
-
   static GameState dismissTip(GameState state, String tipId) {
     if (state.seenTips.contains(tipId)) return state;
     return state.copyWith(
@@ -4831,1604 +3800,6 @@ class GameLogic {
     }
     if (!changed) return state;
     return state.copyWith(seenTips: seen.toList(), lastUpdated: DateTime.now());
-  }
-
-  static const int maxGearStash = 50;
-
-  static int maxGearStashFor(GameState state) =>
-      maxGearStash + state.metaDepth.stashBonusSlots;
-
-  /// Puts gear into the inventory stash. Overflow salvages the oldest piece.
-  static GameState stashEquipment(GameState state, EquipmentItem item) {
-    return stashEquipmentDetailed(state, item).state;
-  }
-
-  /// Like [stashEquipment], also reporting overflow salvage for UI feedback.
-  static ({GameState state, int overflowEssence, String? overflowName})
-  stashEquipmentDetailed(GameState state, EquipmentItem item) {
-    if (item.isApex) {
-      return (
-        state: state.copyWith(apexVault: [...state.apexVault, item]),
-        overflowEssence: 0,
-        overflowName: null,
-      );
-    }
-    final stash = List<EquipmentItem>.from(state.gearStash);
-    var essence = state.essence;
-    var overflowEssence = 0;
-    String? overflowName;
-    final cap = maxGearStashFor(state);
-    if (stash.length >= cap) {
-      final overflow = stash.removeAt(0);
-      if (overflow.isApex) {
-        return (
-          state: state.copyWith(
-            gearStash: stash,
-            apexVault: [...state.apexVault, overflow, item],
-            essence: essence,
-          ),
-          overflowEssence: 0,
-          overflowName: null,
-        );
-      }
-      overflowEssence = equipmentEssenceValue(overflow);
-      overflowName = overflow.name;
-      essence += overflowEssence;
-    }
-    stash.add(item);
-    return (
-      state: state.copyWith(gearStash: stash, essence: essence),
-      overflowEssence: overflowEssence,
-      overflowName: overflowName,
-    );
-  }
-
-  static EquipmentItem? findGear(GameState state, String id) {
-    for (final hero in state.heroes) {
-      for (final item in hero.equipped.values) {
-        if (item.id == id) return item;
-      }
-    }
-    return findStashGear(state, id);
-  }
-
-  /// Bag-only lookup — combinator / merge never touches equipped gear.
-  static EquipmentItem? findStashGear(GameState state, String id) {
-    for (final item in state.gearStash) {
-      if (item.id == id) return item;
-    }
-    return null;
-  }
-
-  static ({int heroIndex, EquipmentSlot slot})? findEquippedLocation(
-    GameState state,
-    String id,
-  ) {
-    for (var i = 0; i < state.heroes.length; i++) {
-      for (final entry in state.heroes[i].equipped.entries) {
-        if (entry.value.id == id) {
-          return (heroIndex: i, slot: entry.key);
-        }
-      }
-    }
-    return null;
-  }
-
-  static GameState removeGear(GameState state, String id) {
-    final location = findEquippedLocation(state, id);
-    if (location != null) {
-      final hero = state.heroes[location.heroIndex];
-      final nextGear = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped)
-        ..remove(location.slot);
-      final heroes = [...state.heroes];
-      heroes[location.heroIndex] = hero.copyWith(equipped: nextGear);
-      return state.copyWith(heroes: heroes);
-    }
-    return state.copyWith(
-      gearStash: state.gearStash.where((item) => item.id != id).toList(),
-    );
-  }
-
-  /// Slots a stash piece may fill (rings/trinkets share dual slots).
-  static List<EquipmentSlot> equipTargetsFor(EquipmentItem item) {
-    return switch (item.slot) {
-      EquipmentSlot.ring || EquipmentSlot.ring2 => <EquipmentSlot>[
-        EquipmentSlot.ring,
-        EquipmentSlot.ring2,
-      ],
-      EquipmentSlot.trinket || EquipmentSlot.trinket2 => <EquipmentSlot>[
-        EquipmentSlot.trinket,
-        EquipmentSlot.trinket2,
-      ],
-      _ => <EquipmentSlot>[item.slot],
-    };
-  }
-
-  /// Whether [hero] can actually receive [item] into [slot] right now.
-  static bool canHeroReceive(
-    PartyHero hero,
-    EquipmentItem item, {
-    required EquipmentSlot slot,
-  }) {
-    if (item.isApex) {
-      final className = item.apexClassId;
-      if (className != null && className != hero.spec.classId.name) {
-        return false;
-      }
-    }
-    final remapped = item.slot == slot ? item : item.copyWith(slot: slot);
-    if (!ClassProficiency.canEquip(
-      role: hero.gearAffinity,
-      level: hero.level,
-      item: remapped,
-      specId: hero.specId,
-    )) {
-      return false;
-    }
-    if (slot == EquipmentSlot.offHand &&
-        ClassProficiency.weaponBlocksOffHand(
-          hero.itemIn(EquipmentSlot.weapon),
-        )) {
-      return false;
-    }
-    return true;
-  }
-
-  /// Equip a stash item onto a hero slot (current piece moves to stash).
-  static GameState equipFromStash(
-    GameState state,
-    String itemId, {
-    int heroIndex = 0,
-    EquipmentSlot? intoSlot,
-  }) {
-    if (heroIndex < 0 || heroIndex >= state.heroes.length) {
-      return state;
-    }
-    EquipmentItem? item;
-    for (final candidate in state.gearStash) {
-      if (candidate.id == itemId) {
-        item = candidate;
-        break;
-      }
-    }
-    if (item == null) {
-      return state;
-    }
-
-    final targetSlot = intoSlot ?? item.slot;
-    if (!equipTargetsFor(item).contains(targetSlot)) {
-      return state;
-    }
-
-    final heroCheck = state.heroes[heroIndex];
-    if (!canHeroReceive(heroCheck, item, slot: targetSlot)) {
-      return state;
-    }
-    // Apex is soul-kept — never overwrite with a normal drop (vault recovers,
-    // but accidental tap / Auto Equip must not kick it).
-    final wornNow = heroCheck.itemIn(targetSlot);
-    if (wornNow != null && wornNow.isApex && !item.isApex) {
-      return state;
-    }
-
-    final equippedItem = item.slot == targetSlot
-        ? item
-        : item.copyWith(slot: targetSlot);
-
-    var next = state.copyWith(
-      gearStash: state.gearStash.where((g) => g.id != itemId).toList(),
-      equipped: const <EquipmentSlot, EquipmentItem>{},
-    );
-    final hero = next.heroes[heroIndex];
-    final current = hero.itemIn(targetSlot);
-    if (current != null) {
-      next = stashEquipment(next, current);
-    }
-
-    final vitalityBefore = next.effectiveHeroMaxHp(hero);
-    final nextGear = Map<EquipmentSlot, EquipmentItem>.from(
-      next.heroes[heroIndex].equipped,
-    )..[targetSlot] = equippedItem;
-
-    // 2H main-hand unequips off-hand.
-    if (targetSlot == EquipmentSlot.weapon &&
-        ClassProficiency.weaponBlocksOffHand(equippedItem)) {
-      final off = nextGear.remove(EquipmentSlot.offHand);
-      if (off != null) {
-        next = stashEquipment(next, off);
-      }
-    }
-
-    final heroes = [...next.heroes];
-    heroes[heroIndex] = next.heroes[heroIndex].copyWith(equipped: nextGear);
-    next = next.copyWith(heroes: heroes);
-    final updated = next.heroes[heroIndex];
-    final vitalityAfter = next.effectiveHeroMaxHp(updated);
-    final vitalityDelta = vitalityAfter - vitalityBefore;
-    if (vitalityDelta != 0) {
-      heroes[heroIndex] = updated.copyWith(
-        currentHp: vitalityDelta > 0
-            ? min(vitalityAfter, updated.currentHp + vitalityDelta)
-            : min(vitalityAfter, updated.currentHp),
-      );
-      next = next.copyWith(heroes: heroes);
-    }
-    return next.copyWith(lastUpdated: DateTime.now());
-  }
-
-  static GameState unequipSlot(
-    GameState state,
-    EquipmentSlot slot, {
-    int heroIndex = 0,
-  }) {
-    if (heroIndex < 0 || heroIndex >= state.heroes.length) {
-      return state;
-    }
-    final hero = state.heroes[heroIndex];
-    final current = hero.itemIn(slot);
-    if (current == null) {
-      return state;
-    }
-    final nextGear = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped)
-      ..remove(slot);
-    final heroes = [...state.heroes];
-    heroes[heroIndex] = hero.copyWith(equipped: nextGear);
-    var next = state.copyWith(
-      heroes: heroes,
-      equipped: const <EquipmentSlot, EquipmentItem>{},
-    );
-    next = stashEquipment(next, current);
-    final updated = next.heroes[heroIndex];
-    heroes[heroIndex] = updated.copyWith(
-      currentHp: min(next.effectiveHeroMaxHp(updated), updated.currentHp),
-    );
-    return next.copyWith(heroes: heroes, lastUpdated: DateTime.now());
-  }
-
-  /// Scrap one stash piece for essence. Refuses equipped gear (unequip first).
-  static GameState sellGear(GameState state, String itemId) {
-    final inStash = state.gearStash.any((g) => g.id == itemId);
-    if (!inStash) {
-      return state;
-    }
-    final item = findGear(state, itemId);
-    if (item == null) {
-      return state;
-    }
-    final value = equipmentEssenceValue(item);
-    final next = removeGear(state, itemId);
-    return next.copyWith(
-      essence: next.essence + value,
-      heroes: next.heroes
-          .map(
-            (hero) => hero.copyWith(
-              currentHp: min(next.effectiveHeroMaxHp(hero), hero.currentHp),
-            ),
-          )
-          .toList(),
-      lastUpdated: DateTime.now(),
-    );
-  }
-
-  static int combineCost(
-    EquipmentItem primary,
-    EquipmentItem secondary, {
-    int combinatorLuck = 0,
-  }) => max(
-    1,
-    20 +
-        primary.powerScore +
-        secondary.powerScore +
-        ((primary.rarity.index + secondary.rarity.index) * 5) -
-        combinatorLuck * 3,
-  );
-
-  /// Slot groups for BiS planning: dual ring/trinket, then singletons.
-  static List<List<EquipmentSlot>> equipSlotGroups() {
-    return <List<EquipmentSlot>>[
-      <EquipmentSlot>[EquipmentSlot.ring, EquipmentSlot.ring2],
-      <EquipmentSlot>[EquipmentSlot.trinket, EquipmentSlot.trinket2],
-      for (final slot in EquipmentSlot.values)
-        if (slot != EquipmentSlot.ring &&
-            slot != EquipmentSlot.ring2 &&
-            slot != EquipmentSlot.trinket &&
-            slot != EquipmentSlot.trinket2 &&
-            slot != EquipmentSlot.consumable)
-          <EquipmentSlot>[slot],
-    ];
-  }
-
-  /// Net score for putting [item] into [slot] on [hero].
-  ///
-  /// Two-hand weapons subtract the currently worn off-hand so Auto Equip
-  /// does not drop a strong shield/tome for a marginally better 2H.
-  ///
-  /// One-hand weapons swapping off a two-hand add the best wearable off-hand
-  /// from [pairingStash] (bag), so 1H+shield can beat a lonely staff.
-  static int slotEquipScore(
-    PartyHero hero,
-    EquipmentItem? item, {
-    required EquipmentSlot slot,
-    List<EquipmentItem>? pairingStash,
-  }) {
-    if (item == null) return 0;
-    if (!canHeroReceive(hero, item, slot: slot)) {
-      return -999999;
-    }
-    var score = specEquipScore(hero, item);
-    if (slot == EquipmentSlot.weapon &&
-        ClassProficiency.weaponBlocksOffHand(item)) {
-      final off = hero.itemIn(EquipmentSlot.offHand);
-      if (off != null) {
-        score -= specEquipScore(hero, off);
-      }
-    } else if (slot == EquipmentSlot.weapon &&
-        !ClassProficiency.weaponBlocksOffHand(item) &&
-        pairingStash != null &&
-        ClassProficiency.weaponBlocksOffHand(
-          hero.itemIn(EquipmentSlot.weapon),
-        )) {
-      score += bestPairingOffHandScore(
-        hero,
-        pairingStash,
-        excludeItemId: item.id,
-      );
-    }
-    return score;
-  }
-
-  /// Best off-hand score from [stash] as if the hero could wear OH (ignores
-  /// current 2H block). Used when scoring a 1H swap off a two-hander.
-  static int bestPairingOffHandScore(
-    PartyHero hero,
-    List<EquipmentItem> stash, {
-    String? excludeItemId,
-  }) {
-    return bestPairingOffHand(
-          hero,
-          stash,
-          excludeItemId: excludeItemId,
-        )?.score ??
-        0;
-  }
-
-  /// Best wearable off-hand from [stash] ignoring the current 2H block.
-  static ({EquipmentItem item, int score})? bestPairingOffHand(
-    PartyHero hero,
-    List<EquipmentItem> stash, {
-    String? excludeItemId,
-  }) {
-    EquipmentItem? bestItem;
-    var best = 0;
-    for (final raw in stash) {
-      if (excludeItemId != null && raw.id == excludeItemId) continue;
-      if (!equipTargetsFor(raw).contains(EquipmentSlot.offHand)) continue;
-      if (raw.isApex) {
-        final className = raw.apexClassId;
-        if (className != null && className != hero.spec.classId.name) {
-          continue;
-        }
-      }
-      final item = raw.slot == EquipmentSlot.offHand
-          ? raw
-          : raw.copyWith(slot: EquipmentSlot.offHand);
-      if (!ClassProficiency.canEquip(
-        role: hero.gearAffinity,
-        level: hero.level,
-        item: item,
-        specId: hero.specId,
-      )) {
-        continue;
-      }
-      final sc = specEquipScore(hero, item);
-      if (sc > best) {
-        best = sc;
-        bestItem = raw;
-      }
-    }
-    if (bestItem == null || best <= 0) return null;
-    return (item: bestItem, score: best);
-  }
-
-  /// Spec-aware score for deciding whether gear is an upgrade for a hero.
-  ///
-  /// Budget-honest path: role-weighted stats + real effects + Apex tier.
-  /// No affinity / armor / rarity / set / raw-iLvl crumbs — see docs/GEAR_BUDGET.md.
-  static int specEquipScore(PartyHero hero, EquipmentItem item) {
-    return itemBudgetScore(hero, item);
-  }
-
-  /// Role-weighted item power for BiS / Auto Equip / UPGRADE (GEAR_BUDGET).
-  static int itemBudgetScore(PartyHero hero, EquipmentItem item) {
-    final role = _equipScoreRole(hero.spec);
-    var score = roleEquipScore(
-      role,
-      item,
-      specId: hero.specId,
-      level: hero.level,
-    );
-    if (item.isApex) {
-      score += 80 + item.apexRank * 40;
-      if (item.apexClassId == hero.spec.classId.name) {
-        score += 40;
-      }
-      if (item.apexRoleTag == hero.spec.roleTag.name) {
-        score += 60;
-      }
-    }
-    return score;
-  }
-
-  /// Map talent trees onto the 4 scoring archetypes (not identity labels).
-  static HeroRole _equipScoreRole(HeroSpecDef spec) {
-    if (spec.classId == HeroClassId.hunter) return HeroRole.rogue;
-    return switch (spec.roleTag) {
-      SpecRoleTag.tank => HeroRole.warrior,
-      SpecRoleTag.healer => HeroRole.healer,
-      SpecRoleTag.caster => HeroRole.mage,
-      SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
-        spec.gearAffinity == HeroRole.mage
-            ? HeroRole.mage
-            : (spec.gearAffinity == HeroRole.warrior
-                  ? HeroRole.warrior
-                  : HeroRole.rogue),
-    };
-  }
-
-  /// Class-aware score for deciding whether gear is an upgrade for a hero.
-  ///
-  /// When [specId] is set, weights follow [EquipStatWeights.forSpec] so BiS
-  /// matches CombatRatings (tank Sta/Armor, Str-DPS, Agi-DPS, Int>SP casters).
-  ///
-  /// Budget-honest: weighted stats + effects only. No affinity/armor/rarity/iLvl
-  /// crumbs — iLvl power is already inside the item's rolled stats.
-  static int roleEquipScore(
-    HeroRole role,
-    EquipmentItem item, {
-    HeroSpecId? specId,
-    int level = 60,
-  }) {
-    // [level] reserved for future armor-gate soft hints; hard gate is canEquip.
-    final spec = specId != null ? HeroSpecs.def(specId) : null;
-    final w = spec != null
-        ? EquipStatWeights.forSpec(spec)
-        : EquipStatWeights.forRole(role);
-    final roleTag = spec?.roleTag;
-    assert(level >= 1);
-    final effect = switch (item.effectId) {
-      GearEffectId.lifesteal => switch (roleTag ?? _tagForRole(role)) {
-        SpecRoleTag.tank => item.effectValue * 5,
-        SpecRoleTag.meleeDps || SpecRoleTag.rangedDps => item.effectValue * 3,
-        _ => item.effectValue,
-      },
-      GearEffectId.pierce => switch (roleTag ?? _tagForRole(role)) {
-        SpecRoleTag.caster => 24,
-        SpecRoleTag.meleeDps || SpecRoleTag.rangedDps => 12,
-        _ => 6,
-      },
-      GearEffectId.crit => switch (roleTag ?? _tagForRole(role)) {
-        SpecRoleTag.meleeDps || SpecRoleTag.rangedDps => item.effectValue * 4,
-        SpecRoleTag.caster => item.effectValue * 3,
-        SpecRoleTag.healer => item.effectValue * 2,
-        _ => item.effectValue,
-      },
-      GearEffectId.haste => switch (roleTag ?? _tagForRole(role)) {
-        SpecRoleTag.caster || SpecRoleTag.healer => item.effectValue * 3,
-        SpecRoleTag.meleeDps || SpecRoleTag.rangedDps => item.effectValue * 2,
-        _ => item.effectValue,
-      },
-      GearEffectId.goldFind => item.effectValue,
-      GearEffectId.none => 0,
-    };
-    // Move is not part of loot budget; still count tiny existing Move for
-    // honesty on old saves, but weight is already low in EquipStatWeights.
-    final core =
-        (item.strengthBonus * w.str +
-                item.agilityBonus * w.agi +
-                item.resolvedStamina * w.sta +
-                item.intellectBonus * w.intel +
-                item.spiritBonus * w.spi +
-                item.spellPowerBonus * w.sp +
-                item.resolvedArmor * w.armor +
-                item.critChanceBonus * w.crit +
-                item.attackSpeedBonus * w.aspd +
-                item.moveSpeedBonus * w.move +
-                item.mp5Bonus * w.mp5)
-            .round() +
-        (item.attackBonus * w.flatAtk).round();
-    return core + effect;
-  }
-
-  static SpecRoleTag _tagForRole(HeroRole role) => switch (role) {
-    HeroRole.warrior => SpecRoleTag.meleeDps,
-    HeroRole.rogue => SpecRoleTag.meleeDps,
-    HeroRole.healer => SpecRoleTag.healer,
-    HeroRole.mage => SpecRoleTag.caster,
-  };
-
-  /// Compare a bag candidate against what a hero wears in that slot family.
-  ///
-  /// Rings/trinkets pick the best of the dual slots. Off-hand is not an upgrade
-  /// while a two-hand weapon is equipped.
-  ///
-  /// Pass [pairingStash] (usually bag) so 1H vs worn 2H can credit a shield/tome.
-  static ({
-    int powerDelta,
-    int atkDelta,
-    int defDelta,
-    int vitDelta,
-    bool isUpgrade,
-    EquipmentSlot intoSlot,
-  })
-  compareForHero(
-    PartyHero hero,
-    EquipmentItem candidate, {
-    EquipmentSlot? intoSlot,
-    List<EquipmentItem>? pairingStash,
-  }) {
-    final targets = intoSlot != null
-        ? <EquipmentSlot>[intoSlot]
-        : equipTargetsFor(candidate);
-
-    var bestDelta = -99999;
-    var best = (
-      powerDelta: -9999,
-      atkDelta: 0,
-      defDelta: 0,
-      vitDelta: 0,
-      isUpgrade: false,
-      intoSlot: targets.first,
-    );
-
-    for (final slot in targets) {
-      final cmp = _compareForHeroSlot(
-        hero,
-        candidate,
-        slot,
-        pairingStash: pairingStash,
-      );
-      if (cmp.powerDelta > bestDelta) {
-        bestDelta = cmp.powerDelta;
-        best = (
-          powerDelta: cmp.powerDelta,
-          atkDelta: cmp.atkDelta,
-          defDelta: cmp.defDelta,
-          vitDelta: cmp.vitDelta,
-          isUpgrade: cmp.isUpgrade,
-          intoSlot: slot,
-        );
-      }
-    }
-    return best;
-  }
-
-  static ({
-    int powerDelta,
-    int atkDelta,
-    int defDelta,
-    int vitDelta,
-    bool isUpgrade,
-  })
-  _compareForHeroSlot(
-    PartyHero hero,
-    EquipmentItem candidate,
-    EquipmentSlot slot, {
-    List<EquipmentItem>? pairingStash,
-  }) {
-    if (!canHeroReceive(hero, candidate, slot: slot)) {
-      return (
-        powerDelta: -9999,
-        atkDelta: 0,
-        defDelta: 0,
-        vitDelta: 0,
-        isUpgrade: false,
-      );
-    }
-    final current = hero.itemIn(slot);
-    if (current != null && current.isApex && !candidate.isApex) {
-      return (
-        powerDelta: -9999,
-        atkDelta: 0,
-        defDelta: 0,
-        vitDelta: 0,
-        isUpgrade: false,
-      );
-    }
-    final curScore = slotEquipScore(
-      hero,
-      current,
-      slot: slot,
-      pairingStash: pairingStash,
-    );
-    final newScore = slotEquipScore(
-      hero,
-      candidate,
-      slot: slot,
-      pairingStash: pairingStash,
-    );
-    final curAtk =
-        (current?.strengthBonus ?? 0) +
-        (current?.agilityBonus ?? 0) +
-        (current?.intellectBonus ?? 0) +
-        (current?.spellPowerBonus ?? 0) +
-        (current?.attackBonus ?? 0);
-    final curDef = current?.resolvedArmor ?? 0;
-    final curVit = current?.resolvedStamina ?? 0;
-    final newAtk =
-        candidate.strengthBonus +
-        candidate.agilityBonus +
-        candidate.intellectBonus +
-        candidate.spellPowerBonus +
-        candidate.attackBonus;
-    final powerDelta = newScore - curScore;
-    return (
-      powerDelta: powerDelta,
-      atkDelta: newAtk - curAtk,
-      defDelta: candidate.resolvedArmor - curDef,
-      vitDelta: candidate.resolvedStamina - curVit,
-      isUpgrade: isMeaningfulEquipUpgrade(
-        hero: hero,
-        item: candidate,
-        worn: current,
-        curScore: curScore,
-        newScore: newScore,
-        slotEmpty: current == null,
-      ),
-    );
-  }
-
-  /// Role-weighted primary mass (excludes rarity / ilvl / affinity crumbs).
-  static double roleRelevantStatMass(PartyHero hero, EquipmentItem item) {
-    final w = EquipStatWeights.forSpec(hero.spec);
-    return item.strengthBonus * w.str +
-        item.agilityBonus * w.agi +
-        item.resolvedStamina * w.sta +
-        item.intellectBonus * w.intel +
-        item.spiritBonus * w.spi +
-        item.spellPowerBonus * w.sp +
-        item.resolvedArmor * w.armor +
-        item.critChanceBonus * w.crit +
-        item.attackSpeedBonus * w.aspd +
-        item.attackBonus * w.flatAtk;
-  }
-
-  /// Empty slots only fill role-plausible gear (not every wearable crumb).
-  ///
-  /// GEAR_BUDGET: score/mass must clear a level-scaled floor. Affinity /
-  /// preferred armor alone is not enough.
-  static bool emptySlotWorthFilling(
-    PartyHero hero,
-    EquipmentItem item,
-    int score,
-  ) {
-    final mass = roleRelevantStatMass(hero, item);
-    final minIlvl = max(6, (hero.level * 0.55).floor());
-    final ilvl = item.effectiveItemLevel;
-    final nearLevel = ilvl >= minIlvl - 2;
-
-    // Primary gates: meaningful budget score or mass near hero level.
-    if (score >= 90 && mass >= 12 && nearLevel) return true;
-    if (mass >= 28 && nearLevel) return true;
-    if (ilvl >= minIlvl && mass >= 10) return true;
-    if (ilvl >= minIlvl + 4 && mass >= 6) return true;
-
-    final spec = hero.spec;
-    final preferred = preferredArmorForSpec(spec, hero.level);
-    final armorOk = preferred != null && item.armorType == preferred;
-    if (armorOk && nearLevel && mass >= 16) return true;
-    return false;
-  }
-
-  /// Clear upgrade bar shared by Auto Equip, UI badges, and keep/sell helpers.
-  ///
-  /// Empty slots use [emptySlotWorthFilling]. Worn slots need a meaningful
-  /// budget-score delta (see docs/GEAR_BUDGET.md). Lower-iLvl swaps need a
-  /// clearly real jump so tiny noise does not thrash gear.
-  static bool isMeaningfulEquipUpgrade({
-    required PartyHero hero,
-    required EquipmentItem item,
-    required int curScore,
-    required int newScore,
-    required bool slotEmpty,
-    EquipmentItem? worn,
-  }) {
-    final delta = newScore - curScore;
-    if (delta <= 0) return false;
-    if (slotEmpty) {
-      return emptySlotWorthFilling(hero, item, newScore);
-    }
-    final wornItem = worn;
-    if (wornItem != null) {
-      final ilvlGap = wornItem.effectiveItemLevel - item.effectiveItemLevel;
-      if (ilvlGap > 2) {
-        final minDelta = max(20, (curScore * 0.10).ceil() + ilvlGap);
-        return delta >= minDelta;
-      }
-    }
-    final minDelta = max(6, (curScore * 0.03).ceil());
-    return delta >= minDelta;
-  }
-
-  /// Planned stash→slot upgrades from BiS assignment (shared by Auto Equip / Sell Junk).
-  ///
-  /// Memoized on [gearPlanSignature]: the walk is heavy (six rounds over every
-  /// hero, slot and bag item) and it used to run up to eight times per Auto
-  /// Equip, once per loot drop in the offline catch-up, and again for every
-  /// menu badge repaint.
-  static List<({int heroIndex, EquipmentSlot slot, String itemId, int delta})>
-  planBiSAssignments(GameState state) {
-    final signature = gearPlanSignature(state);
-    final cached = _bisPlan;
-    if (cached != null && signature == _bisPlanSignature) return cached;
-    final plan = List<
-      ({int heroIndex, EquipmentSlot slot, String itemId, int delta})
-    >.unmodifiable(_computeBiSAssignments(state));
-    _bisPlanSignature = signature;
-    _bisPlan = plan;
-    return plan;
-  }
-
-  static int _bisPlanSignature = 0;
-  static List<({int heroIndex, EquipmentSlot slot, String itemId, int delta})>?
-  _bisPlan;
-
-  /// Cheap hash of everything the BiS plan depends on: bag contents, worn
-  /// gear, and hero spec/level. Anything else can change without redoing it.
-  static int gearPlanSignature(GameState state) {
-    var h = state.gearStash.length * 31 + state.heroes.length;
-    for (final item in state.gearStash) {
-      h = (h * 33) ^ item.id.hashCode ^ item.effectiveItemLevel;
-    }
-    for (final hero in state.heroes) {
-      h = (h * 33) ^ hero.specId.index ^ (hero.level * 7);
-      for (final entry in hero.equipped.entries) {
-        h = (h * 33) ^ entry.key.index ^ entry.value.id.hashCode;
-      }
-    }
-    return h & 0x3FFFFFFF;
-  }
-
-  static List<({int heroIndex, EquipmentSlot slot, String itemId, int delta})>
-  _computeBiSAssignments(GameState state) {
-    final stashById = <String, EquipmentItem>{
-      for (final item in state.gearStash) item.id: item,
-    };
-    if (stashById.isEmpty) return const [];
-
-    final reserved = <String>{};
-    final plan =
-        <({int heroIndex, EquipmentSlot slot, String itemId, int delta})>[];
-    final filledSlots = <String>{};
-
-    String slotKey(int heroIndex, EquipmentSlot slot) =>
-        '$heroIndex:${slot.name}';
-
-    for (var round = 0; round < 6; round++) {
-      final proposals =
-          <({int heroIndex, EquipmentSlot slot, String itemId, int delta})>[];
-
-      for (var hi = 0; hi < state.heroes.length; hi++) {
-        final hero = state.heroes[hi];
-        String? plannedWeaponId;
-        for (final p in plan) {
-          if (p.heroIndex == hi && p.slot == EquipmentSlot.weapon) {
-            plannedWeaponId = p.itemId;
-            break;
-          }
-        }
-        final plannedWeapon = plannedWeaponId == null
-            ? hero.itemIn(EquipmentSlot.weapon)
-            : stashById[plannedWeaponId] ?? hero.itemIn(EquipmentSlot.weapon);
-        final blocksOffHand = ClassProficiency.weaponBlocksOffHand(
-          plannedWeapon,
-        );
-
-        for (final group in equipSlotGroups()) {
-          if (blocksOffHand &&
-              group.length == 1 &&
-              group.first == EquipmentSlot.offHand) {
-            continue;
-          }
-
-          final available = <EquipmentItem>[
-            for (final item in state.gearStash)
-              if (!reserved.contains(item.id)) item,
-          ];
-          final pairing = state.gearStash;
-
-          final scored = <({EquipmentItem item, int score})>[];
-          for (final item in available) {
-            if (!equipTargetsFor(item).any(group.contains)) continue;
-            var best = -999999;
-            for (final slot in group) {
-              if (filledSlots.contains(slotKey(hi, slot))) continue;
-              if (!canHeroReceive(hero, item, slot: slot)) continue;
-              best = max(
-                best,
-                slotEquipScore(hero, item, slot: slot, pairingStash: pairing),
-              );
-            }
-            if (best > -999999) {
-              scored.add((item: item, score: best));
-            }
-          }
-          scored.sort((a, b) => b.score.compareTo(a.score));
-
-          final slots = [...group]
-            ..sort((a, b) {
-              final sa = filledSlots.contains(slotKey(hi, a))
-                  ? 999999
-                  : slotEquipScore(
-                      hero,
-                      hero.itemIn(a),
-                      slot: a,
-                      pairingStash: pairing,
-                    );
-              final sb = filledSlots.contains(slotKey(hi, b))
-                  ? 999999
-                  : slotEquipScore(
-                      hero,
-                      hero.itemIn(b),
-                      slot: b,
-                      pairingStash: pairing,
-                    );
-              return sa.compareTo(sb);
-            });
-
-          final usedLocal = <String>{};
-          for (final slot in slots) {
-            if (filledSlots.contains(slotKey(hi, slot))) continue;
-            final cur = hero.itemIn(slot);
-            final curScore = slotEquipScore(
-              hero,
-              cur,
-              slot: slot,
-              pairingStash: pairing,
-            );
-            for (final entry in scored) {
-              if (usedLocal.contains(entry.item.id)) continue;
-              if (reserved.contains(entry.item.id)) continue;
-              if (!canHeroReceive(hero, entry.item, slot: slot)) continue;
-              final sc = slotEquipScore(
-                hero,
-                entry.item,
-                slot: slot,
-                pairingStash: pairing,
-              );
-              if (isMeaningfulEquipUpgrade(
-                hero: hero,
-                item: entry.item,
-                worn: cur,
-                curScore: curScore,
-                newScore: sc,
-                slotEmpty: cur == null,
-              )) {
-                usedLocal.add(entry.item.id);
-                proposals.add((
-                  heroIndex: hi,
-                  slot: slot,
-                  itemId: entry.item.id,
-                  delta: sc - curScore,
-                ));
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      if (proposals.isEmpty) break;
-
-      final bestByItem =
-          <
-            String,
-            ({int heroIndex, EquipmentSlot slot, String itemId, int delta})
-          >{};
-      for (final p in proposals) {
-        final prev = bestByItem[p.itemId];
-        if (prev == null || p.delta > prev.delta) {
-          bestByItem[p.itemId] = p;
-        }
-      }
-
-      final bestBySlot =
-          <
-            String,
-            ({int heroIndex, EquipmentSlot slot, String itemId, int delta})
-          >{};
-      for (final p in bestByItem.values) {
-        final key = slotKey(p.heroIndex, p.slot);
-        final prev = bestBySlot[key];
-        if (prev == null || p.delta > prev.delta) {
-          bestBySlot[key] = p;
-        }
-      }
-
-      var added = 0;
-      final winners = bestBySlot.values.toList()
-        ..sort((a, b) => b.delta.compareTo(a.delta));
-      final claimedThisRound = <String>{};
-      for (final w in winners) {
-        if (reserved.contains(w.itemId)) continue;
-        if (claimedThisRound.contains(w.itemId)) continue;
-        final key = slotKey(w.heroIndex, w.slot);
-        if (filledSlots.contains(key)) continue;
-        reserved.add(w.itemId);
-        claimedThisRound.add(w.itemId);
-        filledSlots.add(key);
-        plan.add(w);
-        added++;
-
-        // 1H swap off a 2H: also pull the bag OH that pairing credited, so one
-        // Auto Equip pass equips sword+shield instead of leaving the shield.
-        if (w.slot == EquipmentSlot.weapon) {
-          final heroNow = state.heroes[w.heroIndex];
-          final wornW = heroNow.itemIn(EquipmentSlot.weapon);
-          EquipmentItem? incoming;
-          for (final g in state.gearStash) {
-            if (g.id == w.itemId) {
-              incoming = g;
-              break;
-            }
-          }
-          if (incoming != null &&
-              ClassProficiency.weaponBlocksOffHand(wornW) &&
-              !ClassProficiency.weaponBlocksOffHand(incoming)) {
-            final ohKey = slotKey(w.heroIndex, EquipmentSlot.offHand);
-            if (!filledSlots.contains(ohKey) &&
-                heroNow.itemIn(EquipmentSlot.offHand) == null) {
-              final paired = bestPairingOffHand(heroNow, [
-                for (final g in state.gearStash)
-                  if (!reserved.contains(g.id) &&
-                      !claimedThisRound.contains(g.id))
-                    g,
-              ], excludeItemId: w.itemId);
-              if (paired != null) {
-                reserved.add(paired.item.id);
-                claimedThisRound.add(paired.item.id);
-                filledSlots.add(ohKey);
-                plan.add((
-                  heroIndex: w.heroIndex,
-                  slot: EquipmentSlot.offHand,
-                  itemId: paired.item.id,
-                  delta: paired.score,
-                ));
-                added++;
-              }
-            }
-          }
-        }
-      }
-      if (added == 0) break;
-    }
-
-    return plan;
-  }
-
-  /// Equip every stash piece that is a class-aware upgrade for some hero.
-  ///
-  /// Uses per-hero BiS slot fill with party-wide conflict resolution (largest
-  /// power delta wins contested items; losers re-pick next round).
-  /// Multi-pass so leftovers can fill after contested items resolve.
-  static GameState autoEquipBetterGear(GameState state) {
-    var next = state;
-    for (var pass = 0; pass < 8; pass++) {
-      final beforeLen = next.gearStash.length;
-      next = _autoEquipPass(next);
-      if (next.gearStash.length >= beforeLen) {
-        break;
-      }
-    }
-    return next.copyWith(lastUpdated: DateTime.now());
-  }
-
-  static GameState _autoEquipPass(GameState state) {
-    var next = state;
-    final plan = planBiSAssignments(next);
-    final ordered = [...plan]
-      ..sort((a, b) {
-        final aw = a.slot == EquipmentSlot.weapon ? 0 : 1;
-        final bw = b.slot == EquipmentSlot.weapon ? 0 : 1;
-        return aw.compareTo(bw);
-      });
-    for (final step in ordered) {
-      EquipmentItem? item;
-      for (final g in next.gearStash) {
-        if (g.id == step.itemId) {
-          item = g;
-          break;
-        }
-      }
-      if (item == null) continue;
-      final hero = next.heroes[step.heroIndex];
-      if (!canHeroReceive(hero, item, slot: step.slot)) continue;
-      final beforeLen = next.gearStash.length;
-      next = equipFromStash(
-        next,
-        step.itemId,
-        heroIndex: step.heroIndex,
-        intoSlot: step.slot,
-      );
-      if (next.gearStash.length >= beforeLen) {
-        continue;
-      }
-    }
-    return next;
-  }
-
-  static String formatDelta(int value) {
-    if (value > 0) return '+$value';
-    if (value < 0) return '$value';
-    return '0';
-  }
-
-  static bool canCombine(EquipmentItem primary, EquipmentItem secondary) =>
-      primary.slot == secondary.slot &&
-      primary.id != secondary.id &&
-      !primary.isApex &&
-      !secondary.isApex;
-
-  static LootRarity mergedRarity(LootRarity primary, LootRarity secondary) {
-    if (secondary.index > primary.index) {
-      return secondary;
-    }
-    if (secondary.index == primary.index &&
-        primary.index < LootRarity.legendary.index) {
-      return LootRarity.values[primary.index + 1];
-    }
-    return primary;
-  }
-
-  static EquipmentItem mergeEquipment(
-    EquipmentItem primary,
-    EquipmentItem secondary,
-  ) {
-    return _mergedEquipment(
-      primary,
-      secondary,
-      id: 'combined_${primary.slot.name}_${random.nextInt(1000000)}',
-    );
-  }
-
-  /// Shows a combination result without changing state or consuming randomness.
-  static EquipmentItem previewCombine(
-    EquipmentItem primary,
-    EquipmentItem secondary,
-  ) {
-    return _mergedEquipment(
-      primary,
-      secondary,
-      id: 'preview_${primary.id}_${secondary.id}',
-    );
-  }
-
-  static EquipmentItem _mergedEquipment(
-    EquipmentItem primary,
-    EquipmentItem secondary, {
-    required String id,
-  }) {
-    final rarity = mergedRarity(primary.rarity, secondary.rarity);
-    // Primary drives slot + pattern; secondary can upgrade pattern if rarer.
-    final pattern = secondary.rarity.index > primary.rarity.index
-        ? secondary.pattern
-        : primary.pattern;
-    final effectId = primary.effectId != GearEffectId.none
-        ? primary.effectId
-        : secondary.effectId;
-    final effectValue = effectId == GearEffectId.none
-        ? 0
-        : max(primary.effectValue, secondary.effectValue);
-    final affixPrefixId = primary.affixPrefixId ?? secondary.affixPrefixId;
-    final affixSuffixId = primary.affixSuffixId ?? secondary.affixSuffixId;
-    return EquipmentItem(
-      id: id,
-      name: _equipmentNameFor(
-        primary.slot,
-        rarity,
-        bias: primary.affinity == null
-            ? null
-            : HeroRole.values.byName(primary.affinity!),
-        armorType: primary.armorType ?? secondary.armorType,
-        weaponType: primary.weaponType ?? secondary.weaponType,
-        offHandKind: primary.offHandKind ?? secondary.offHandKind,
-        handed: primary.handed ?? secondary.handed,
-        affixPrefixId: affixPrefixId,
-        affixSuffixId: affixSuffixId,
-      ),
-      slot: primary.slot,
-      rarity: rarity,
-      strengthBonus:
-          primary.strengthBonus + ((secondary.strengthBonus * 50) ~/ 100),
-      agilityBonus:
-          primary.agilityBonus + ((secondary.agilityBonus * 50) ~/ 100),
-      staminaBonus:
-          primary.staminaBonus + ((secondary.staminaBonus * 50) ~/ 100),
-      intellectBonus:
-          primary.intellectBonus + ((secondary.intellectBonus * 50) ~/ 100),
-      spiritBonus: primary.spiritBonus + ((secondary.spiritBonus * 50) ~/ 100),
-      spellPowerBonus:
-          primary.spellPowerBonus + ((secondary.spellPowerBonus * 50) ~/ 100),
-      armorBonus: primary.armorBonus + ((secondary.armorBonus * 50) ~/ 100),
-      mp5Bonus: primary.mp5Bonus + ((secondary.mp5Bonus * 50) ~/ 100),
-      attackBonus: primary.attackBonus + ((secondary.attackBonus * 50) ~/ 100),
-      defenseBonus:
-          primary.defenseBonus + ((secondary.defenseBonus * 50) ~/ 100),
-      vitalityBonus:
-          primary.vitalityBonus + ((secondary.vitalityBonus * 50) ~/ 100),
-      critChanceBonus:
-          primary.critChanceBonus + ((secondary.critChanceBonus * 50) ~/ 100),
-      attackSpeedBonus:
-          primary.attackSpeedBonus + ((secondary.attackSpeedBonus * 50) ~/ 100),
-      // GEAR_BUDGET: do not inherit Move from fuel into new merges.
-      moveSpeedBonus: 0,
-      pattern: pattern,
-      effectId: effectId,
-      effectValue: effectValue,
-      // Affinity / setId from primary only (identity), not score crumbs.
-      affinity: primary.affinity,
-      itemLevel:
-          max(primary.effectiveItemLevel, secondary.effectiveItemLevel) +
-          (rarity.index > primary.rarity.index ? 2 : 1),
-      armorType: primary.armorType ?? secondary.armorType,
-      weaponType: primary.weaponType ?? secondary.weaponType,
-      handed: primary.handed ?? secondary.handed,
-      offHandKind: primary.offHandKind ?? secondary.offHandKind,
-      iconId: primary.iconId ?? secondary.iconId,
-      affixPrefixId: affixPrefixId,
-      affixSuffixId: affixSuffixId,
-      setId: primary.setId,
-    );
-  }
-
-  /// Combines two same-slot **bag** pieces. Equipped gear is ignored —
-  /// unequip to stash first. Primary keeps slot/pattern identity;
-  /// secondary contributes half its stats. Result always returns to bag.
-  static GameState combineGear(
-    GameState state, {
-    required String primaryId,
-    required String secondaryId,
-  }) {
-    final primary = findStashGear(state, primaryId);
-    final secondary = findStashGear(state, secondaryId);
-    if (primary == null || secondary == null) {
-      return state;
-    }
-    if (!canCombine(primary, secondary)) {
-      return state;
-    }
-    final cost = combineCost(
-      primary,
-      secondary,
-      combinatorLuck: state.metaDepth.combinatorLuck,
-    );
-    if (state.gold < cost) {
-      return state;
-    }
-
-    var next = state.copyWith(gold: state.gold - cost);
-    next = removeGear(next, primaryId);
-    next = removeGear(next, secondaryId);
-
-    final result = mergeEquipment(primary, secondary);
-    // Always stash result — player equips manually.
-    next = stashEquipment(next, result);
-
-    return next.copyWith(lastUpdated: DateTime.now());
-  }
-
-  /// Gear always goes to stash (manual equip). Non-gear → essence.
-  /// Weak junk is auto-sold for **gold** or auto-disassembled for **essence**
-  /// on pickup when filters match (sell checked first).
-  static ({GameState state, List<LootDrop> resolved}) applyLootDrops(
-    GameState state,
-    List<LootDrop> drops,
-  ) {
-    var next = state;
-    final resolved = <LootDrop>[];
-
-    for (final drop in drops) {
-      final item = drop.equipment;
-      if (item == null) {
-        if (isWalletGoldDrop(drop)) {
-          final gained = applyGoldGain(next, drop.amount);
-          if (gained > 0) {
-            next = next.copyWith(
-              gold: next.gold + gained,
-              lifetimeGoldEarned: next.lifetimeGoldEarned + gained,
-            );
-          }
-          resolved.add(
-            drop.copyWith(outcome: LootOutcome.gold, essenceGained: 0),
-          );
-          continue;
-        }
-        final essence = lootEssenceValue(drop);
-        next = next.copyWith(essence: next.essence + essence);
-        resolved.add(
-          drop.copyWith(outcome: LootOutcome.essence, essenceGained: essence),
-        );
-        continue;
-      }
-
-      if (_shouldAutoSellOnPickup(next, item)) {
-        final value = equipmentGoldValue(item);
-        next = next.copyWith(
-          gold: next.gold + value,
-          lifetimeGoldEarned: next.lifetimeGoldEarned + value,
-        );
-        resolved.add(
-          drop.copyWith(outcome: LootOutcome.gold, essenceGained: 0),
-        );
-        continue;
-      }
-
-      if (_shouldAutoDisassembleOnPickup(next, item)) {
-        final value = equipmentEssenceValue(item);
-        next = next.copyWith(essence: next.essence + value);
-        resolved.add(
-          drop.copyWith(outcome: LootOutcome.essence, essenceGained: value),
-        );
-        continue;
-      }
-
-      final stashed = stashEquipmentDetailed(next, item);
-      next = stashed.state;
-      resolved.add(
-        drop.copyWith(
-          outcome: LootOutcome.stashed,
-          essenceGained: stashed.overflowEssence,
-        ),
-      );
-    }
-
-    // Live spatial loot never goes through completeCurrentRoom meta progress.
-    next = MetaSystems.registerItemDrops(next, drops);
-    // Near-full bag: merge → sell gold → disassemble essence.
-    next = unstickBagIfNeeded(next);
-    return (state: next, resolved: resolved);
-  }
-
-  /// Run merge + auto-sell + auto-disassemble when stash is ≥90% full.
-  static GameState unstickBagIfNeeded(GameState state) {
-    final cap = maxGearStashFor(state);
-    if (state.gearStash.length < (cap * 0.9).ceil()) {
-      return state;
-    }
-    return cleanBagJunk(state, unstickBag: true);
-  }
-
-  /// Merge junk (optional), then auto-sell for gold, then auto-disassemble
-  /// for essence. [unstickBag] keeps only BiS/soulbound/best-per-slot.
-  static GameState cleanBagJunk(
-    GameState state, {
-    bool unstickBag = false,
-    bool mergeFirst = true,
-  }) {
-    var next = state;
-    if (mergeFirst) {
-      next = autoMergeJunk(next).state;
-    }
-    next = autoSellJunk(next, unstickBag: unstickBag);
-    next = autoDisassembleJunk(next, unstickBag: unstickBag);
-    return next;
-  }
-
-  static bool _matchesIlvlRarityFilter(
-    EquipmentItem item, {
-    required int maxIlvl,
-    required int maxRarity,
-  }) {
-    if (maxIlvl <= 0) return false;
-    if (item.effectiveItemLevel > maxIlvl) return false;
-    if (item.rarity.index > maxRarity.clamp(0, 4)) return false;
-    return true;
-  }
-
-  static bool _shouldAutoSellOnPickup(GameState state, EquipmentItem item) {
-    if (!_matchesIlvlRarityFilter(
-      item,
-      maxIlvl: state.autoSellMaxPower,
-      maxRarity: state.autoSellMaxRarity,
-    )) {
-      return false;
-    }
-    return !_shouldKeepInBag(state, item);
-  }
-
-  static bool _shouldAutoDisassembleOnPickup(
-    GameState state,
-    EquipmentItem item,
-  ) {
-    if (!_matchesIlvlRarityFilter(
-      item,
-      maxIlvl: state.autoDisassembleMaxIlvl,
-      maxRarity: state.autoDisassembleMaxRarity,
-    )) {
-      return false;
-    }
-    return !_shouldKeepInBag(state, item);
-  }
-
-  /// Keep bag piece if BiS planning would equip it, or it upgrades a worn slot.
-  /// Empty slots alone do not keep forever — BiS plan covers meaningful fills.
-  static bool _shouldKeepInBag(GameState state, EquipmentItem item) {
-    if (item.isApex) return true;
-    // Pickup path: candidate is not in stash yet — probe as if stashed so BiS
-    // planning can claim it before auto-sell.
-    final probe = state.gearStash.any((g) => g.id == item.id)
-        ? state
-        : state.copyWith(gearStash: [...state.gearStash, item]);
-    final plan = planBiSAssignments(probe);
-    if (plan.any((p) => p.itemId == item.id)) {
-      return true;
-    }
-    for (final hero in state.heroes) {
-      for (final slot in equipTargetsFor(item)) {
-        if (!canHeroReceive(hero, item, slot: slot)) {
-          continue;
-        }
-        if (hero.itemIn(slot) == null) {
-          continue;
-        }
-        if (_compareForHeroSlot(
-          hero,
-          item,
-          slot,
-          pairingStash: state.gearStash,
-        ).isUpgrade) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  /// Whether [item] should stay when cleaning the bag.
-  ///
-  /// [mode] `sell` uses gold filters; `disassemble` uses essence filters.
-  /// [unstickBag]: keep BiS/soulbound/apex and the strongest piece per slot.
-  static bool _shouldKeepWhenCleaning(
-    GameState state,
-    EquipmentItem item, {
-    required bool forSell,
-    bool unstickBag = false,
-  }) {
-    if (unstickBag) {
-      if (item.isApex ||
-          item.id.contains('soulbound') ||
-          item.name.toLowerCase().startsWith('soulbound')) {
-        return true;
-      }
-      final plan = planBiSAssignments(state);
-      if (plan.any((p) => p.itemId == item.id)) {
-        return true;
-      }
-      EquipmentItem? best;
-      var bestScore = -999999;
-      var bestIlvl = -1;
-      for (final other in state.gearStash) {
-        if (other.slot != item.slot) continue;
-        final score = _partySlotScore(state, other);
-        final ilvl = other.effectiveItemLevel;
-        if (score > bestScore || (score == bestScore && ilvl > bestIlvl)) {
-          best = other;
-          bestScore = score;
-          bestIlvl = ilvl;
-        }
-      }
-      if (best?.id == item.id) return true;
-      // Still honor FILTERS — near-full unstick must not dump epics above cap.
-      final matches = forSell
-          ? _matchesIlvlRarityFilter(
-              item,
-              maxIlvl: state.autoSellMaxPower,
-              maxRarity: state.autoSellMaxRarity,
-            )
-          : _matchesIlvlRarityFilter(
-              item,
-              maxIlvl: state.autoDisassembleMaxIlvl,
-              maxRarity: state.autoDisassembleMaxRarity,
-            );
-      if (!matches) return true;
-      return false;
-    }
-    if (_shouldKeepInBag(state, item)) {
-      return true;
-    }
-    final matches = forSell
-        ? _matchesIlvlRarityFilter(
-            item,
-            maxIlvl: state.autoSellMaxPower,
-            maxRarity: state.autoSellMaxRarity,
-          )
-        : _matchesIlvlRarityFilter(
-            item,
-            maxIlvl: state.autoDisassembleMaxIlvl,
-            maxRarity: state.autoDisassembleMaxRarity,
-          );
-    // Matching filter → eligible to clean (do not keep).
-    if (matches) return false;
-    // Outside filter: keep rare+ while bag has room; commons may still go in
-    // unstick-only passes.
-    if (item.rarity.index >= LootRarity.rare.index) {
-      return true;
-    }
-    // Non-matching common/uncommon: keep unless filters are off entirely
-    // (manual clean with filters off should not dump everything).
-    return true;
-  }
-
-  /// Best slotEquipScore for [item] across heroes who can wear it.
-  static int _partySlotScore(GameState state, EquipmentItem item) {
-    var best = 0;
-    for (final hero in state.heroes) {
-      for (final slot in equipTargetsFor(item)) {
-        if (!canHeroReceive(hero, item, slot: slot)) continue;
-        best = max(
-          best,
-          slotEquipScore(hero, item, slot: slot, pairingStash: state.gearStash),
-        );
-      }
-    }
-    return best;
-  }
-
-  /// Auto-merge junk pairs in the bag: same slot, neither is a BiS/upgrade keep,
-  /// while gold covers [combineCost]. Stronger piece is base; weaker is fuel.
-  ///
-  /// Returns the updated state and how many merges ran (0 if none possible).
-  static ({GameState state, int merges}) autoMergeJunk(
-    GameState state, {
-    int maxMerges = 40,
-  }) {
-    var next = state;
-    var merges = 0;
-    while (merges < maxMerges) {
-      EquipmentItem? base;
-      EquipmentItem? fuel;
-      var bestScore = 1 << 30;
-      for (var i = 0; i < next.gearStash.length; i++) {
-        final a = next.gearStash[i];
-        if (_shouldKeepInBag(next, a)) {
-          continue;
-        }
-        for (var j = i + 1; j < next.gearStash.length; j++) {
-          final b = next.gearStash[j];
-          if (a.slot != b.slot || _shouldKeepInBag(next, b)) {
-            continue;
-          }
-          final cost = combineCost(
-            a,
-            b,
-            combinatorLuck: next.metaDepth.combinatorLuck,
-          );
-          if (next.gold < cost) {
-            continue;
-          }
-          final score = a.powerScore + b.powerScore;
-          if (score >= bestScore) {
-            continue;
-          }
-          bestScore = score;
-          if (a.powerScore >= b.powerScore) {
-            base = a;
-            fuel = b;
-          } else {
-            base = b;
-            fuel = a;
-          }
-        }
-      }
-      if (base == null || fuel == null) {
-        break;
-      }
-      final goldBefore = next.gold;
-      next = combineGear(next, primaryId: base.id, secondaryId: fuel.id);
-      if (next.gold >= goldBefore) {
-        break;
-      }
-      merges++;
-    }
-    return (state: next, merges: merges);
-  }
-
-  /// Last [autoSellJunk] counts (consumed by UI toasts).
-  static int lastAutoSellCount = 0;
-  static int lastAutoSellGold = 0;
-
-  /// Last [autoDisassembleJunk] counts (consumed by UI toasts).
-  static int lastAutoDisassembleCount = 0;
-  static int lastAutoDisassembleEssence = 0;
-
-  /// Sell stash junk for **gold** (iLvl + rarity filters; BiS kept).
-  static GameState autoSellJunk(GameState state, {bool unstickBag = false}) {
-    var gold = state.gold;
-    var lifetime = state.lifetimeGoldEarned;
-    var stash = List<EquipmentItem>.from(state.gearStash);
-    final beforeLen = stash.length;
-    var gained = 0;
-    var guard = 0;
-    while (guard < 64) {
-      guard++;
-      final probe = state.copyWith(gearStash: stash, gold: gold);
-      EquipmentItem? sellItem;
-      for (final item in stash) {
-        if (!_shouldKeepWhenCleaning(
-          probe,
-          item,
-          forSell: true,
-          unstickBag: unstickBag,
-        )) {
-          sellItem = item;
-          break;
-        }
-      }
-      if (sellItem == null) break;
-      final value = equipmentGoldValue(sellItem);
-      gold += value;
-      lifetime += value;
-      gained += value;
-      stash = stash.where((g) => g.id != sellItem!.id).toList();
-    }
-    lastAutoSellCount = beforeLen - stash.length;
-    lastAutoSellGold = gained;
-    return state.copyWith(
-      gearStash: stash,
-      gold: gold,
-      lifetimeGoldEarned: lifetime,
-      lastUpdated: DateTime.now(),
-    );
-  }
-
-  /// Disassemble stash junk for **essence** (iLvl + rarity filters; BiS kept).
-  static GameState autoDisassembleJunk(
-    GameState state, {
-    bool unstickBag = false,
-  }) {
-    var essence = state.essence;
-    var stash = List<EquipmentItem>.from(state.gearStash);
-    final beforeLen = stash.length;
-    var gained = 0;
-    var guard = 0;
-    while (guard < 64) {
-      guard++;
-      final probe = state.copyWith(gearStash: stash, essence: essence);
-      EquipmentItem? scrap;
-      for (final item in stash) {
-        if (!_shouldKeepWhenCleaning(
-          probe,
-          item,
-          forSell: false,
-          unstickBag: unstickBag,
-        )) {
-          scrap = item;
-          break;
-        }
-      }
-      if (scrap == null) break;
-      final value = equipmentEssenceValue(scrap);
-      essence += value;
-      gained += value;
-      stash = stash.where((g) => g.id != scrap!.id).toList();
-    }
-    lastAutoDisassembleCount = beforeLen - stash.length;
-    lastAutoDisassembleEssence = gained;
-    return state.copyWith(
-      gearStash: stash,
-      essence: essence,
-      lastUpdated: DateTime.now(),
-    );
-  }
-
-  static String rarityFilterLabel(int rarityIndex) {
-    final i = rarityIndex.clamp(0, LootRarity.values.length - 1);
-    return switch (LootRarity.values[i]) {
-      LootRarity.common => 'Common',
-      LootRarity.uncommon => 'Uncommon',
-      LootRarity.rare => 'Rare',
-      LootRarity.epic => 'Epic',
-      LootRarity.legendary => 'Legendary',
-    };
   }
 
   static int recommendedForgeUpgrade(GameState state) {
@@ -6459,40 +3830,6 @@ class GameLogic {
     final floor = state.currentRoom.floorNumber.toDouble();
     final gap = floor + 2 - mean;
     return max(0, gap.ceil());
-  }
-
-  static LootRarity _rarityForBattle(
-    int battleNumber, {
-    int hardmodeLevel = 0,
-  }) {
-    final hm = hardmodeLevel.clamp(0, Keystone.maxLevel);
-    // Direct legendary roll — key 20 ≈ old HM+10.
-    final legendaryChance = Keystone.legendaryChance(hm);
-    if (random.nextDouble() < legendaryChance) {
-      return LootRarity.legendary;
-    }
-
-    var rarity = LootRarity.common;
-    if (battleNumber % 12 == 0) {
-      rarity = LootRarity.epic;
-    } else if (battleNumber % 6 == 0) {
-      rarity = LootRarity.rare;
-    } else if (battleNumber % 3 == 0) {
-      rarity = LootRarity.uncommon;
-    }
-
-    // Keystone can bump the base tier (never past legendary).
-    final bumpChance = Keystone.rarityBump(hm);
-    if (rarity.index < LootRarity.legendary.index &&
-        random.nextDouble() < bumpChance) {
-      rarity = LootRarity.values[rarity.index + 1];
-    }
-    if (rarity.index < LootRarity.legendary.index &&
-        hm >= 14 &&
-        random.nextDouble() < bumpChance * 0.5) {
-      rarity = LootRarity.values[rarity.index + 1];
-    }
-    return rarity;
   }
 
   /// Public room-clear: awards loot/gold and advances (farm loop or push).
@@ -6538,7 +3875,7 @@ class GameLogic {
       drops = lootResult.resolved;
     } else {
       // Treasure (and any explicit full roll): chest gear + floor fillers.
-      final rawDrops = _finalizeLootDrops([
+      final rawDrops = LootPipeline.finalizeLootDrops([
         ...rollKillLoot(
           room.globalBattleNumber,
           ascensionLevel: state.ascensionLevel,
@@ -6822,9 +4159,7 @@ class GameLogic {
     );
     next = MetaSystems.evaluateAchievements(next);
     next = syncMetaPayoffs(next);
-    if (keystoneNotices.isNotEmpty) {
-      lastMetaPayoffNotices = [...lastMetaPayoffNotices, ...keystoneNotices];
-    }
+    LogicNotices.addMetaPayoffs(keystoneNotices);
     return next;
   }
 
@@ -6946,197 +4281,6 @@ class GameLogic {
 
   // —— Gear loadouts (save/apply up to 3 named presets) ——————————
 
-  static const int maxLoadouts = 3;
-
-  /// Captures each hero's currently-equipped gear as a named preset.
-  /// Replaces an existing loadout with the same [id], otherwise appends
-  /// (capped at [maxLoadouts] — oldest is dropped to make room).
-  static GameState saveLoadout(
-    GameState state, {
-    required String id,
-    required String name,
-  }) {
-    final heroIds = <String>[for (final hero in state.heroes) hero.id];
-    final heroSlots = <Map<String, String>>[
-      for (final hero in state.heroes)
-        <String, String>{
-          for (final entry in hero.equipped.entries)
-            entry.key.name: entry.value.id,
-        },
-    ];
-    final loadout = GearLoadout(
-      id: id,
-      name: name,
-      heroSlotItemIds: heroSlots,
-      heroIds: heroIds,
-    );
-    final next = List<GearLoadout>.from(state.loadouts);
-    final existingIndex = next.indexWhere((l) => l.id == id);
-    if (existingIndex >= 0) {
-      next[existingIndex] = loadout;
-    } else {
-      if (next.length >= maxLoadouts) {
-        next.removeAt(0);
-      }
-      next.add(loadout);
-    }
-    return state.copyWith(loadouts: next, lastUpdated: DateTime.now());
-  }
-
-  static GameState deleteLoadout(GameState state, String id) {
-    if (!state.loadouts.any((l) => l.id == id)) return state;
-    return state.copyWith(
-      loadouts: state.loadouts.where((l) => l.id != id).toList(),
-      lastUpdated: DateTime.now(),
-    );
-  }
-
-  /// Locates [itemId] anywhere it might currently live (any roster hero's
-  /// equipped gear, or the stash) and removes it from there.
-  static (EquipmentItem?, GameState) _extractItemById(
-    GameState state,
-    String itemId,
-  ) {
-    for (var i = 0; i < state.heroRoster.length; i++) {
-      final hero = state.heroRoster[i];
-      for (final entry in hero.equipped.entries) {
-        if (entry.value.id == itemId) {
-          final nextGear = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped)
-            ..remove(entry.key);
-          final roster = [...state.heroRoster];
-          roster[i] = hero.copyWith(equipped: nextGear);
-          return (entry.value, state.copyWith(heroRoster: roster));
-        }
-      }
-    }
-    for (final item in state.gearStash) {
-      if (item.id == itemId) {
-        return (
-          item,
-          state.copyWith(
-            gearStash: state.gearStash.where((g) => g.id != itemId).toList(),
-          ),
-        );
-      }
-    }
-    for (final item in state.apexVault) {
-      if (item.id == itemId) {
-        return (
-          item,
-          state.copyWith(
-            apexVault: state.apexVault.where((g) => g.id != itemId).toList(),
-          ),
-        );
-      }
-    }
-    return (null, state);
-  }
-
-  /// Re-equips a saved [GearLoadout] by id. Items sold/lost since the
-  /// loadout was saved are skipped (counted in [skipped]); items that fail a
-  /// class proficiency check are returned to the stash.
-  static ({GameState state, int skipped}) applyLoadout(
-    GameState state,
-    String id,
-  ) {
-    GearLoadout? loadout;
-    for (final l in state.loadouts) {
-      if (l.id == id) {
-        loadout = l;
-        break;
-      }
-    }
-    if (loadout == null) return (state: state, skipped: 0);
-
-    var next = state;
-    var skipped = 0;
-    final useIds =
-        loadout.heroIds.isNotEmpty &&
-        loadout.heroIds.length == loadout.heroSlotItemIds.length;
-
-    for (
-      var slotIndex = 0;
-      slotIndex < loadout.heroSlotItemIds.length;
-      slotIndex++
-    ) {
-      late int rosterIndex;
-      if (useIds) {
-        final heroId = loadout.heroIds[slotIndex];
-        final idx = next.heroRoster.indexWhere((h) => h.id == heroId);
-        if (idx < 0) continue;
-        rosterIndex = idx;
-      } else {
-        if (slotIndex >= next.heroes.length) break;
-        final activeId = next.heroes[slotIndex].id;
-        final idx = next.heroRoster.indexWhere((h) => h.id == activeId);
-        if (idx < 0) continue;
-        rosterIndex = idx;
-      }
-
-      for (final entry in loadout.heroSlotItemIds[slotIndex].entries) {
-        final slot = EquipmentSlotX.parse(entry.key);
-        final itemId = entry.value;
-        final target = next.heroRoster[rosterIndex];
-        if (target.itemIn(slot)?.id == itemId) {
-          continue;
-        }
-        final extracted = _extractItemById(next, itemId);
-        final item = extracted.$1;
-        next = extracted.$2;
-        // Re-resolve index after roster mutation.
-        final resolved = useIds
-            ? next.heroRoster.indexWhere(
-                (h) => h.id == loadout!.heroIds[slotIndex],
-              )
-            : next.heroRoster.indexWhere(
-                (h) => h.id == next.heroes[slotIndex].id,
-              );
-        if (resolved < 0) continue;
-        rosterIndex = resolved;
-        if (item == null) {
-          skipped++;
-          continue;
-        }
-
-        final hero = next.heroRoster[rosterIndex];
-        if (!ClassProficiency.canEquip(
-          role: hero.gearAffinity,
-          level: hero.level,
-          item: item,
-          specId: hero.specId,
-        )) {
-          next = stashEquipment(next, item);
-          skipped++;
-          continue;
-        }
-        final current = hero.itemIn(slot);
-        if (current != null) {
-          next = stashEquipment(next, current);
-        }
-        final nextGear = Map<EquipmentSlot, EquipmentItem>.from(
-          next.heroRoster[rosterIndex].equipped,
-        )..[slot] = item;
-        final roster = [...next.heroRoster];
-        roster[rosterIndex] = next.heroRoster[rosterIndex].copyWith(
-          equipped: nextGear,
-        );
-        next = next.copyWith(heroRoster: roster);
-      }
-    }
-
-    next = next.copyWith(
-      heroes: next.heroes
-          .map(
-            (hero) => hero.copyWith(
-              currentHp: min(next.effectiveHeroMaxHp(hero), hero.currentHp),
-            ),
-          )
-          .toList(),
-      lastUpdated: DateTime.now(),
-    );
-    return (state: next, skipped: skipped);
-  }
-
   static GameState setSoulboundPreferArmor(GameState state, bool preferArmor) {
     if (state.metaDepth.soulboundIsArmor == preferArmor) return state;
     return state.copyWith(
@@ -7205,6 +4349,310 @@ class GameLogic {
       ),
     );
   }
+
+  // —— Starter gear: moved to starter_gear.dart ——
+  static GameState fillMissingStarterGear(GameState state) =>
+      StarterGear.fillMissingStarterGear(state);
+  static ArmorType? preferredArmorForSpec(HeroSpecDef spec, int level) =>
+      StarterGear.preferredArmorForSpec(spec, level);
+  // —— Loot pipeline: moved to loot_pipeline.dart ——
+  static int goldPouchBaseGold(int battleNumber) =>
+      LootPipeline.goldPouchBaseGold(battleNumber);
+  static bool isWalletGoldDrop(LootDrop drop) =>
+      LootPipeline.isWalletGoldDrop(drop);
+  static List<LootDrop> rollKillLoot(
+    int battleNumber, {
+    int ascensionLevel = 0,
+    int lootFindPercent = 0,
+    int hardmodeLevel = 0,
+    List<PartyHero>? party,
+    String dungeonId = 'sandy',
+    EnemyRole enemyRole = EnemyRole.normal,
+  }) => LootPipeline.rollKillLoot(
+    battleNumber,
+    ascensionLevel: ascensionLevel,
+    lootFindPercent: lootFindPercent,
+    hardmodeLevel: hardmodeLevel,
+    party: party,
+    dungeonId: dungeonId,
+    enemyRole: enemyRole,
+  );
+  static List<LootDrop> rollRoomChestLoot(GameState state, {Random? random}) =>
+      LootPipeline.rollRoomChestLoot(state, random: random);
+  static List<LootDrop> rollFloorClearLoot(
+    int battleNumber, {
+    required RoomType roomType,
+  }) => LootPipeline.rollFloorClearLoot(battleNumber, roomType: roomType);
+  static List<LootDrop> rollLoot(
+    int battleNumber, {
+    int ascensionLevel = 0,
+    int lootFindPercent = 0,
+    int hardmodeLevel = 0,
+    List<PartyHero>? party,
+    String dungeonId = 'sandy',
+    EnemyRole enemyRole = EnemyRole.normal,
+    RoomType? roomType,
+  }) => LootPipeline.rollLoot(
+    battleNumber,
+    ascensionLevel: ascensionLevel,
+    lootFindPercent: lootFindPercent,
+    hardmodeLevel: hardmodeLevel,
+    party: party,
+    dungeonId: dungeonId,
+    enemyRole: enemyRole,
+    roomType: roomType,
+  );
+  static EquipmentItem createEquipment({
+    required EquipmentSlot slot,
+    required LootRarity rarity,
+    required int battleNumber,
+    HeroRole? bias,
+    ArmorType? preferredArmor,
+    SpecRoleTag? roleTag,
+    HeroSpecId? lootSpecId,
+    String? dungeonId,
+    int ascensionLevel = 0,
+    int hardmodeLevel = 0,
+  }) => LootPipeline.createEquipment(
+    slot: slot,
+    rarity: rarity,
+    battleNumber: battleNumber,
+    bias: bias,
+    preferredArmor: preferredArmor,
+    roleTag: roleTag,
+    lootSpecId: lootSpecId,
+    dungeonId: dungeonId,
+    ascensionLevel: ascensionLevel,
+    hardmodeLevel: hardmodeLevel,
+  );
+  static int itemLevelFor({
+    required int battleNumber,
+    required LootRarity rarity,
+    String? dungeonId,
+    int ascensionLevel = 0,
+    int hardmodeLevel = 0,
+  }) => LootPipeline.itemLevelFor(
+    battleNumber: battleNumber,
+    rarity: rarity,
+    dungeonId: dungeonId,
+    ascensionLevel: ascensionLevel,
+    hardmodeLevel: hardmodeLevel,
+  );
+  static int maxAutoSellIlvlCap(GameState state) =>
+      LootPipeline.maxAutoSellIlvlCap(state);
+  static EquipmentItem scaleSoulboundForAl(
+    EquipmentItem item,
+    int ascensionLevel,
+  ) => LootPipeline.scaleSoulboundForAl(item, ascensionLevel);
+  static int lootEssenceValue(LootDrop drop) =>
+      LootPipeline.lootEssenceValue(drop);
+  static int equipmentEssenceValue(EquipmentItem item) =>
+      LootPipeline.equipmentEssenceValue(item);
+  static int equipmentGoldValue(EquipmentItem item) =>
+      LootPipeline.equipmentGoldValue(item);
+  static int treasureGoldBudget(GameState state) =>
+      LootPipeline.treasureGoldBudget(state);
+  // —— Gear service: moved to gear_service.dart ——
+  static const int maxGearStash = GearService.maxGearStash;
+  static int maxGearStashFor(GameState state) =>
+      GearService.maxGearStashFor(state);
+  static GameState stashEquipment(GameState state, EquipmentItem item) =>
+      GearService.stashEquipment(state, item);
+  static ({GameState state, int overflowEssence, String? overflowName})
+  stashEquipmentDetailed(GameState state, EquipmentItem item) =>
+      GearService.stashEquipmentDetailed(state, item);
+  static EquipmentItem? findGear(GameState state, String id) =>
+      GearService.findGear(state, id);
+  static EquipmentItem? findStashGear(GameState state, String id) =>
+      GearService.findStashGear(state, id);
+  static ({int heroIndex, EquipmentSlot slot})? findEquippedLocation(
+    GameState state,
+    String id,
+  ) => GearService.findEquippedLocation(state, id);
+  static GameState removeGear(GameState state, String id) =>
+      GearService.removeGear(state, id);
+  static List<EquipmentSlot> equipTargetsFor(EquipmentItem item) =>
+      GearService.equipTargetsFor(item);
+  static bool canHeroReceive(
+    PartyHero hero,
+    EquipmentItem item, {
+    required EquipmentSlot slot,
+  }) => GearService.canHeroReceive(hero, item, slot: slot);
+  static GameState equipFromStash(
+    GameState state,
+    String itemId, {
+    int heroIndex = 0,
+    EquipmentSlot? intoSlot,
+  }) => GearService.equipFromStash(
+    state,
+    itemId,
+    heroIndex: heroIndex,
+    intoSlot: intoSlot,
+  );
+  static GameState unequipSlot(
+    GameState state,
+    EquipmentSlot slot, {
+    int heroIndex = 0,
+  }) => GearService.unequipSlot(state, slot, heroIndex: heroIndex);
+  static GameState sellGear(GameState state, String itemId) =>
+      GearService.sellGear(state, itemId);
+  static int combineCost(
+    EquipmentItem primary,
+    EquipmentItem secondary, {
+    int combinatorLuck = 0,
+  }) => GearService.combineCost(
+    primary,
+    secondary,
+    combinatorLuck: combinatorLuck,
+  );
+  static List<List<EquipmentSlot>> equipSlotGroups() =>
+      GearService.equipSlotGroups();
+  static int slotEquipScore(
+    PartyHero hero,
+    EquipmentItem? item, {
+    required EquipmentSlot slot,
+    List<EquipmentItem>? pairingStash,
+  }) => GearService.slotEquipScore(
+    hero,
+    item,
+    slot: slot,
+    pairingStash: pairingStash,
+  );
+  static int bestPairingOffHandScore(
+    PartyHero hero,
+    List<EquipmentItem> stash, {
+    String? excludeItemId,
+  }) => GearService.bestPairingOffHandScore(
+    hero,
+    stash,
+    excludeItemId: excludeItemId,
+  );
+  static ({EquipmentItem item, int score})? bestPairingOffHand(
+    PartyHero hero,
+    List<EquipmentItem> stash, {
+    String? excludeItemId,
+  }) =>
+      GearService.bestPairingOffHand(hero, stash, excludeItemId: excludeItemId);
+  static int specEquipScore(PartyHero hero, EquipmentItem item) =>
+      GearService.specEquipScore(hero, item);
+  static int itemBudgetScore(PartyHero hero, EquipmentItem item) =>
+      GearService.itemBudgetScore(hero, item);
+  static int roleEquipScore(
+    HeroRole role,
+    EquipmentItem item, {
+    HeroSpecId? specId,
+    int level = 60,
+  }) => GearService.roleEquipScore(role, item, specId: specId, level: level);
+  static ({
+    int powerDelta,
+    int atkDelta,
+    int defDelta,
+    int vitDelta,
+    bool isUpgrade,
+    EquipmentSlot intoSlot,
+  })
+  compareForHero(
+    PartyHero hero,
+    EquipmentItem candidate, {
+    EquipmentSlot? intoSlot,
+    List<EquipmentItem>? pairingStash,
+  }) => GearService.compareForHero(
+    hero,
+    candidate,
+    intoSlot: intoSlot,
+    pairingStash: pairingStash,
+  );
+  static double roleRelevantStatMass(PartyHero hero, EquipmentItem item) =>
+      GearService.roleRelevantStatMass(hero, item);
+  static bool emptySlotWorthFilling(
+    PartyHero hero,
+    EquipmentItem item,
+    int score,
+  ) => GearService.emptySlotWorthFilling(hero, item, score);
+  static bool isMeaningfulEquipUpgrade({
+    required PartyHero hero,
+    required EquipmentItem item,
+    required int curScore,
+    required int newScore,
+    required bool slotEmpty,
+    EquipmentItem? worn,
+  }) => GearService.isMeaningfulEquipUpgrade(
+    hero: hero,
+    item: item,
+    curScore: curScore,
+    newScore: newScore,
+    slotEmpty: slotEmpty,
+    worn: worn,
+  );
+  static List<({int heroIndex, EquipmentSlot slot, String itemId, int delta})>
+  planBiSAssignments(GameState state) => GearService.planBiSAssignments(state);
+  static int gearPlanSignature(GameState state) =>
+      GearService.gearPlanSignature(state);
+  static GameState autoEquipBetterGear(GameState state) =>
+      GearService.autoEquipBetterGear(state);
+  static String formatDelta(int value) => GearService.formatDelta(value);
+  static bool canCombine(EquipmentItem primary, EquipmentItem secondary) =>
+      GearService.canCombine(primary, secondary);
+  static LootRarity mergedRarity(LootRarity primary, LootRarity secondary) =>
+      GearService.mergedRarity(primary, secondary);
+  static EquipmentItem mergeEquipment(
+    EquipmentItem primary,
+    EquipmentItem secondary,
+  ) => GearService.mergeEquipment(primary, secondary);
+  static EquipmentItem previewCombine(
+    EquipmentItem primary,
+    EquipmentItem secondary,
+  ) => GearService.previewCombine(primary, secondary);
+  static GameState combineGear(
+    GameState state, {
+    required String primaryId,
+    required String secondaryId,
+  }) => GearService.combineGear(
+    state,
+    primaryId: primaryId,
+    secondaryId: secondaryId,
+  );
+  static ({GameState state, List<LootDrop> resolved}) applyLootDrops(
+    GameState state,
+    List<LootDrop> drops,
+  ) => GearService.applyLootDrops(state, drops);
+  static GameState unstickBagIfNeeded(GameState state) =>
+      GearService.unstickBagIfNeeded(state);
+  static GameState cleanBagJunk(
+    GameState state, {
+    bool unstickBag = false,
+    bool mergeFirst = true,
+  }) => GearService.cleanBagJunk(
+    state,
+    unstickBag: unstickBag,
+    mergeFirst: mergeFirst,
+  );
+  static ({GameState state, int merges}) autoMergeJunk(
+    GameState state, {
+    int maxMerges = 40,
+  }) => GearService.autoMergeJunk(state, maxMerges: maxMerges);
+  static GameState autoSellJunk(GameState state, {bool unstickBag = false}) =>
+      GearService.autoSellJunk(state, unstickBag: unstickBag);
+  static GameState autoDisassembleJunk(
+    GameState state, {
+    bool unstickBag = false,
+  }) => GearService.autoDisassembleJunk(state, unstickBag: unstickBag);
+  static String rarityFilterLabel(int rarityIndex) =>
+      GearService.rarityFilterLabel(rarityIndex);
+  static GameState sellGearForGold(GameState state, String itemId) =>
+      GearService.sellGearForGold(state, itemId);
+  static const int maxLoadouts = GearService.maxLoadouts;
+  static GameState saveLoadout(
+    GameState state, {
+    required String id,
+    required String name,
+  }) => GearService.saveLoadout(state, id: id, name: name);
+  static GameState deleteLoadout(GameState state, String id) =>
+      GearService.deleteLoadout(state, id);
+  static ({GameState state, int skipped}) applyLoadout(
+    GameState state,
+    String id,
+  ) => GearService.applyLoadout(state, id);
 }
 
 /// Snapshot of what AFK time awarded on a single apply.

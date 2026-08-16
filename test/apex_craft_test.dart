@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/logic_notices.dart';
 import 'package:idle_party/models/apex_craft.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
@@ -12,7 +13,7 @@ import 'package:idle_party/models/loot.dart';
 void main() {
   setUp(() {
     GameLogic.random = Random(42);
-    GameLogic.lastCraftMatGrants = <String>[];
+    LogicNotices.reset();
   });
 
   test('apex recipes only for valid class×role pairs', () {

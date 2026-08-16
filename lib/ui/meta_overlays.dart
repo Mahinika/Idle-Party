@@ -10,6 +10,7 @@ import '../core/game_state.dart';
 import '../core/hub_chase.dart';
 import '../core/keystone.dart';
 import '../core/local_season.dart';
+import '../core/logic_notices.dart';
 import '../core/meta_systems.dart';
 import '../core/play_games_bridge.dart';
 import '../core/play_games_scores.dart';
@@ -779,7 +780,7 @@ Future<void> showOfflineProgressDialog(
   final chase = contract.chase;
   final rows = summary.highlightRows;
   final notices = List<String>.from(
-    GameLogic.lastMetaPayoffNotices,
+    LogicNotices.metaPayoffs,
   ).take(2).toList(growable: false);
 
   VoidCallback? readyAction;
