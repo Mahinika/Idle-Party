@@ -347,7 +347,7 @@ class HubChase {
               ? 'Grow the party — ${dungeon.name}'
               : 'Push ${dungeon.name}',
       detail: firstHour
-          ? 'Enter, fight, get stronger. 1 boss then you can Ascend. $teaser'
+          ? 'Enter the cave. Your party fights on its own. Get stronger and beat the boss.'
           : bossesLeft > 0
           ? (almost
               ? '1 boss left · then Ascend. $teaser'

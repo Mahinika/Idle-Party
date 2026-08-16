@@ -19,6 +19,25 @@ enum HeroClassId {
 /// Party role tags — use these for tank/healer/DPS identity (not [HeroRole]).
 enum SpecRoleTag { tank, healer, meleeDps, rangedDps, caster }
 
+/// Plain English job words for players who never played an RPG.
+extension SpecRoleTagPlain on SpecRoleTag {
+  String get plainLabel => switch (this) {
+        SpecRoleTag.tank => 'Shield',
+        SpecRoleTag.healer => 'Healer',
+        SpecRoleTag.meleeDps => 'Damage',
+        SpecRoleTag.rangedDps => 'Damage',
+        SpecRoleTag.caster => 'Damage',
+      };
+
+  String get plainJob => switch (this) {
+        SpecRoleTag.tank => 'soaks hits so others can fight',
+        SpecRoleTag.healer => 'keeps the party alive',
+        SpecRoleTag.meleeDps => 'fights up close',
+        SpecRoleTag.rangedDps => 'fights from range',
+        SpecRoleTag.caster => 'casts spells',
+      };
+}
+
 /// Resource type for HUD / regen.
 enum SpecResource { rage, mana, energy, runic }
 
@@ -103,6 +122,9 @@ class HeroSpecDef {
 
   bool get isTank => roleTag == SpecRoleTag.tank;
   bool get isHealer => roleTag == SpecRoleTag.healer;
+
+  /// New-game / roster line: "Shield — soaks hits so others can fight".
+  String get plainRoleLine => '${roleTag.plainLabel} — ${roleTag.plainJob}';
 }
 
 /// Catalog + helpers for [HeroSpecId].

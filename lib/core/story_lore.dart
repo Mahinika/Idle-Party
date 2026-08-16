@@ -6,24 +6,24 @@ import 'game_logic.dart';
 /// on existing UI rails (intro, hub, toasts, ascend).
 abstract final class StoryLore {
   static const String introTagline =
-      'A party that fights while you watch.';
+      'Your party fights while you watch.';
 
   static const String introSubline =
-      'You are the distant will. Guide them into the deep.';
+      'Tap to help. Grow stronger. No other game required.';
 
   /// Cold-start beats before CONTINUE / NEW GAME. Short, skippable.
   static const introBeats = <({String title, String body})>[
     (
       title: 'IDLE PARTY',
-      body: 'A party that fights while you watch.',
+      body: 'Your heroes fight on their own while you watch.',
     ),
     (
-      title: 'THE KEEP',
-      body: 'Fifteen gates. Something wrong sleeps beneath.',
+      title: 'THE CAVE',
+      body: 'Send them into a dungeon. They clear rooms and pick up loot.',
     ),
     (
-      title: 'YOUR WILL',
-      body: 'Guide them. Grow them. Descend.',
+      title: 'YOUR JOB',
+      body: 'Tap the map to help. Grow the party. Beat the first boss.',
     ),
   ];
 
@@ -142,7 +142,8 @@ abstract final class StoryLore {
   static const String shadeJoins =
       'Shade the Rogue answers the call.';
 
-  static const String loreTipTitle = 'THE DESCENT';
+  static const String loreTipTitle = 'THE ROAD';
   static const String loreTipBody =
-      'Fifteen gates. One wrongness below. Clear deeper zones, then Ascend.';
+      'More caves wait after this one. Beat bosses to open the road. '
+      'Later you can Ascend — a fresh run that keeps hero levels.';
 }

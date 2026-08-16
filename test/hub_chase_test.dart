@@ -14,6 +14,9 @@ void main() {
     expect(chase.title, contains('Grow the party'));
     expect(chase.title, contains('Sandy'));
     expect(chase.urgency, HubChaseUrgency.normal);
+    expect(chase.detail.toLowerCase(), contains('cave'));
+    expect(chase.detail, isNot(contains('Combat Rogue')));
+    expect(chase.detail, isNot(contains('AL1')));
   });
 
   test('claim daily vault beats other chases', () {

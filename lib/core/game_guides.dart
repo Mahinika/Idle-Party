@@ -5,12 +5,15 @@ abstract final class GameGuides {
       id: 'basics',
       title: 'BASICS',
       body:
-          'Idle Party is an idle RPG: your party fights in dungeons while you watch and steer.\n\n'
-          '• Hub: pick a zone on the World Path, manage gear and meta upgrades.\n'
-          '• Dungeon: combat runs automatically. Tap the map to use God Hand.\n'
-          '• Gold buys unlocks and market goods. Essence powers permanent meta.\n'
-          '• Open POWER (Forge, Camp, Market, Shop) or META (Key, Jobs, Guides…) '
-          'from the bottom nav — same labels in hub and dungeon.',
+          'You have a small party of heroes. They fight on their own.\n\n'
+          '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
+          '• Watch them clear rooms. Tap the map (God Hand) when you want to help.\n'
+          '• TODAY on the hub always names the next job — start there.\n'
+          '• Gold buys supplies and run power. Essence buys lasting power.\n'
+          '• Bottom buttons (same in hub and dungeon): PARTY (heroes and gear), '
+          'POWER (upgrades), META (extras and Guides), HUB (home).\n'
+          '• You do not need to have played another RPG. Names like PROT / DISC / FIRE '
+          'are just the three starter jobs: Shield, Healer, Damage.',
     ),
     GuideTopic(
       id: 'world_path',
@@ -44,7 +47,7 @@ abstract final class GameGuides {
       id: 'god_hand',
       title: 'GOD HAND',
       body:
-          'You are the distant will. Tap the dungeon floor to steer and burst.\n\n'
+          'Tap the dungeon floor to help: smash enemies and steer the party.\n\n'
           '• First job: smash a pack and pull the party toward your tap.\n'
           '• Cooldown ring is top-right of the dungeon view.\n'
           '• Forge → KEEP (soft knobs): more damage, shorter CD, BAL / FOCUS / WIDE styles.\n'
@@ -64,12 +67,13 @@ abstract final class GameGuides {
       id: 'party',
       title: 'PARTY',
       body:
-          'Unlock WotLK-style specs and build your own party.\n\n'
-          '• PARTY → ROSTER to set active heroes from your roster (4 slots, '
-          '5th unlockable with essence at AL 2+).\n'
-          '• New Game: pick 3 from the starter specs (Protection, Disc, Fire).\n'
-          '• Combat Rogue and Holy Paladin unlock after first Ascend; more kits via clears.\n'
-          '• More specs unlock via Ascend level and dungeon clears.\n'
+          'Your party is three jobs: Shield (soaks hits), Healer (keeps people up), '
+          'and Damage (kills enemies).\n\n'
+          '• PARTY → ROSTER to swap who is fighting (4 slots, '
+          '5th unlockable later).\n'
+          '• New Game: pick 3 starters — Protection (Shield), Discipline (Healer), '
+          'Fire (Damage) is the easy mix.\n'
+          '• More hero types unlock as you grow — you do not need another game.\n'
           '• Tap a hero in the HUD for abilities; chips show cooldowns '
           '(STREAK, SWEEP / FLURRY, BEACON when those windows are up).\n'
           '• Resources: Rage / Mana / Energy / Runic — kits spend these.\n'

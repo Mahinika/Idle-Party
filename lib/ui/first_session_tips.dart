@@ -19,8 +19,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'first_run',
       title: 'TODAY',
       body:
-          'The TODAY line is your chase. Tap ENTER DUNGEON — grow the party in '
-          'Sandy Caverns. Clear floors, get stronger, beat the first boss.',
+          'This line is your next job. Tap ENTER DUNGEON. Your party fights on '
+          'its own — watch them, pick up loot, get stronger, beat the first boss.',
     ),
     (
       id: 'lore_descent',
@@ -30,20 +30,21 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'farm_push',
       title: 'FARM / PUSH',
-      body: 'FARM loops this floor for loot. PUSH advances when you clear.',
+      body: 'FARM stays on this floor for extra loot. PUSH goes deeper toward the boss.',
     ),
     (
       id: 'godhand',
       title: 'GOD HAND',
       body:
-          'Tap the dungeon to steer the party and smash packs. Cooldown is the '
-          'ring top-right. Later: Forge → KEEP for BAL / FOCUS / WIDE.',
+          'Tap the map once to help: smash enemies and steer the party. Wait '
+          'for the ring (top-right) to refill, then tap again.',
     ),
     (
       id: 'bag',
       title: 'BAG & GEAR',
       body:
-          'Open GEAR for the paper-doll, BAG for stash. Tap an empty slot to filter the bag.',
+          'Open GEAR to dress a hero. BAG is extra items. Tap an empty slot to '
+          'see only that kind of item.',
     ),
     (
       id: 'sanctuary',

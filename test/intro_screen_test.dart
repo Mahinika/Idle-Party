@@ -87,6 +87,10 @@ void main() {
     expect(find.text('ARMS  Arms Warrior'), findsOneWidget);
     expect(find.text('LOCKED'), findsWidgets);
     expect(find.text('SET'), findsOneWidget);
+    expect(find.text('Shield'), findsWidgets);
+    expect(find.text('Healer'), findsWidgets);
+    expect(find.text('Damage'), findsWidgets);
+    expect(find.text('Unlocks later'), findsWidgets);
   });
 
   testWidgets('new game start reaches hub with chosen party size',

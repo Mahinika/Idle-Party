@@ -1,4 +1,5 @@
 import 'ascend_roadmap.dart';
+import 'game_logic.dart';
 import 'game_state.dart';
 import 'hub_chase.dart';
 
@@ -58,8 +59,9 @@ class ChaseContract {
   static ChaseContract fromState(GameState state, {DateTime? now}) {
     final chase = HubChase.forState(state, now: now);
     String? teaser;
+    final firstHour = !GameLogic.showDailyChase(state);
     if (chase.kind == HubChaseKind.ascend ||
-        chase.kind == HubChaseKind.clearFloors) {
+        (chase.kind == HubChaseKind.clearFloors && !firstHour)) {
       teaser = AscendRoadmap.nextMissingKitTeaser(state) ??
           AscendRoadmap.chaseTeaser(state.ascensionLevel);
     } else if (chase.kind == HubChaseKind.meetHero) {

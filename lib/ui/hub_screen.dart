@@ -551,6 +551,9 @@ class _HubMetaPulse extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!GameLogic.showDailyChase(state)) {
+      return const SizedBox(height: 4);
+    }
     final bits = <String>[];
     final showKey = GameLogic.showKeystoneJargon(state);
     if (showKey &&
