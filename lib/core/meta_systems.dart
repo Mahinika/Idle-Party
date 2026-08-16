@@ -19,10 +19,20 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.10';
+  static const String currentVersion = '1.12.11';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.11',
+      bullets: <String>[
+        'Lighter install and snappier hub: less art baggage, and the map only redraws what moved.',
+        'One bottom bar in hub and dungeon — PARTY / POWER / META keep the same tab when you enter or leave a floor.',
+        'Every zone has its own boss and trash look (plus pets stop borrowing enemy sprites).',
+        'Long AFK returns without freezing the phone; bag cleanup and craft mat toasts stay honest.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.10',
       bullets: <String>[
