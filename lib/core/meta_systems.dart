@@ -19,10 +19,19 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.3';
+  static const String currentVersion = '1.12.4';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.4',
+      bullets: <String>[
+        'World Path map: endgame road (Rimeglass → Blightfen → Brassvault → Mothveil) painted as continuous terrain — not glued color bands.',
+        'Hub path markers: clearer HERE / OPEN / CLEAR / LOCKED labels, bigger tap targets, lifetime gold as 1.2M / 750k.',
+        'Zone caption shows boss + flavor when unlocked; locked still shows have/need lifetime gold.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.3',
       bullets: <String>[

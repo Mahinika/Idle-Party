@@ -5,6 +5,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/dungeon_def.dart';
+import 'package:idle_party/ui/hub_screen.dart';
 
 /// Fast honesty checks: world path, unlock rules, guides, release version.
 void main() {
@@ -39,6 +40,25 @@ void main() {
     expect(DungeonCatalog.byId('fen').name, 'Blightfen Mire');
     expect(DungeonCatalog.byId('brass').name, 'Brassvault Deep');
     expect(DungeonCatalog.byId('veil').name, 'Mothveil Hollow');
+  });
+
+  test('World Path map markers match dungeon catalog length and order', () {
+    expect(HubScreen.worldPathMarkerCount, DungeonCatalog.all.length);
+    expect(HubScreen.worldPathMarkerCount, 15);
+    // First / last anchors stay in the painted path corridor.
+    final first = HubScreen.worldPathMarkerNorm.first;
+    final last = HubScreen.worldPathMarkerNorm.last;
+    expect(first.dx, inInclusiveRange(0.35, 0.65));
+    expect(first.dy, lessThan(0.12));
+    expect(last.dx, inInclusiveRange(0.35, 0.65));
+    expect(last.dy, greaterThan(0.90));
+    for (var i = 1; i < HubScreen.worldPathMarkerNorm.length; i++) {
+      expect(
+        HubScreen.worldPathMarkerNorm[i].dy,
+        greaterThan(HubScreen.worldPathMarkerNorm[i - 1].dy),
+        reason: 'markers must descend sandy→veil',
+      );
+    }
   });
 
   test('zone unlock uses lifetime gold or prior clear, not wallet gold', () {
