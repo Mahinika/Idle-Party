@@ -90,21 +90,18 @@ class _MyAppState extends State<MyApp> {
         if (!kIsWeb) return content;
         return LayoutBuilder(
           builder: (context, constraints) {
-            const maxW = 430.0;
-            if (constraints.maxWidth <= maxW) return content;
+            // Match Samsung A56 CSS width so web playtest matches the APK.
+            const maxW = 360.0;
+            final h = constraints.maxHeight;
+            final framed = MediaQuery(
+              data: MediaQuery.of(context).copyWith(size: Size(maxW, h)),
+              child: content,
+            );
+            if (constraints.maxWidth <= maxW) return framed;
             return ColoredBox(
               color: const Color(0xFF05070A),
               child: Center(
-                child: SizedBox(
-                  width: maxW,
-                  height: constraints.maxHeight,
-                  child: MediaQuery(
-                    data: MediaQuery.of(
-                      context,
-                    ).copyWith(size: Size(maxW, constraints.maxHeight)),
-                    child: content,
-                  ),
-                ),
+                child: SizedBox(width: maxW, height: h, child: framed),
               ),
             );
           },

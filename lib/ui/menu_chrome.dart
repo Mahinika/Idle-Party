@@ -147,9 +147,9 @@ abstract final class MenuChrome {
     return LayoutBuilder(
       builder: (context, constraints) {
         final phone = GameTheme.isPhoneWidth(context);
-        final many = tabs.length >= 5;
-        final scroll =
-            scrollable ?? (phone || many || constraints.maxWidth < 400);
+        // Always scroll on the shipping phone chrome so labels stay readable
+        // (wide browsers used to crush five tabs into one row).
+        final scroll = scrollable ?? true;
         final labelSize = phone ? 13.0 : 16.0;
         return Material(
           color: Colors.transparent,

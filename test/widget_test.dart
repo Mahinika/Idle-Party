@@ -182,12 +182,15 @@ void main() {
     await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(GameTheme.isCompactWidth(tester.element(find.text('PARTY').last)), isFalse);
+    // Phone-only product: menus stay on the phone chrome even in a wide window.
+    expect(GameTheme.isPhoneWidth(tester.element(find.text('PARTY').last)), isTrue);
 
     await tester.tap(find.text('PARTY').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('BAG'));
     await tester.pumpAndSettle();
     expect(find.textContaining('BAG'), findsWidgets);
+    // GEAR is doll + OPEN BAG — not a side-by-side bag pane.
+    expect(find.text('OPEN BAG'), findsNothing); // BAG tab is open, not GEAR
   });
 }

@@ -64,8 +64,13 @@ abstract final class GameTheme {
   }
 
   /// Shipping portrait phone width (Samsung A56 ≈ 360; band ~360–430).
+  ///
+  /// Idle Party is phone-only — menus and chrome always use this layout, even
+  /// when a wide browser forgets device metrics. Do not reintroduce tablet /
+  /// desktop menu branches.
   static bool isPhoneWidth(BuildContext context) {
-    return MediaQuery.sizeOf(context).width <= 430;
+    // Width ignored on purpose — product chrome is always the phone band.
+    return true;
   }
 
   /// Short phone / landscape-short: hub CTAs must collapse.

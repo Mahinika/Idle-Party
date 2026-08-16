@@ -165,11 +165,6 @@ class _InventoryDockState extends State<InventoryDock>
         : GameLogic.findEquippedLocation(state, selectedId!);
     final inStash =
         selectedId != null && state.gearStash.any((g) => g.id == selectedId);
-    final cap = GameLogic.maxGearStashFor(state);
-    final bagSlots = List<EquipmentItem?>.generate(
-      cap,
-      (i) => i < state.gearStash.length ? state.gearStash[i] : null,
-    );
 
     Widget actions() {
       return Column(
@@ -216,238 +211,25 @@ class _InventoryDockState extends State<InventoryDock>
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 520;
-        final phone =
-            GameTheme.isPhoneWidth(context) || constraints.maxWidth <= 430;
-        final bag = _gearInlineBag(bagSlots);
-        if (wide) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: 5,
-                child: Column(
-                  children: [
-                    Expanded(child: SingleChildScrollView(child: sheet())),
-                    const SizedBox(height: 6),
-                    actions(),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(flex: 4, child: bag),
-            ],
-          );
-        }
-        // Phone: doll + actions only — bag has its own PARTY tab (readable taps).
-        if (phone) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: SingleChildScrollView(child: sheet())),
-              const SizedBox(height: 6),
-              actions(),
-              const SizedBox(height: 6),
-              KenneyButton(
-                label: 'OPEN BAG',
-                onPressed: () => widget.onTabChanged(PartyTab.bag),
-                style: KenneyButtonStyle.grey,
-              ),
-            ],
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(flex: 58, child: SingleChildScrollView(child: sheet())),
-            const SizedBox(height: 6),
-            actions(),
-            const SizedBox(height: 8),
-            Expanded(flex: 42, child: bag),
-          ],
-        );
-      },
+    // Phone product only: doll + actions; bag lives on its own PARTY tab.
+    // (A side-by-side / stacked bag pane used to appear in wide browsers and
+    // looked nothing like the APK the player installs.)
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: SingleChildScrollView(child: sheet())),
+        const SizedBox(height: 6),
+        actions(),
+        const SizedBox(height: 6),
+        KenneyButton(
+          label: 'OPEN BAG',
+          onPressed: () => widget.onTabChanged(PartyTab.bag),
+          style: KenneyButtonStyle.grey,
+        ),
+      ],
     );
   }
 
-  /// Compact bag pane embedded in the GEAR sheet (reference: Items Bag).
-  Widget _gearInlineBag(List<EquipmentItem?> slots) {
-    final cap = GameLogic.maxGearStashFor(state);
-    final filled = state.gearStash.length;
-    final filter = bagSlotFilter;
-    final filterLabel = filter == null
-        ? null
-        : (CharacterEquipPanel.slotLabels[filter] ?? filter.name);
-    final filtered = filter == null
-        ? slots
-        : [
-            for (final item in state.gearStash)
-              if (_itemMatchesBagFilter(item, filter)) item,
-          ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: GameTheme.panelInset.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(GameTheme.radiusMd),
-        border: Border.all(color: GameTheme.border.withValues(alpha: 0.75)),
-      ),
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text('ITEMS BAG', style: GameTheme.menuTitle(size: 16)),
-              ),
-              Text(
-                '$filled / $cap',
-                style: GameTheme.body(
-                  size: 13,
-                  color: filled >= cap
-                      ? GameTheme.accentWarn
-                      : GameTheme.parchmentDim,
-                ),
-              ),
-            ],
-          ),
-          if (filter != null) ...[
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Slot: $filterLabel',
-                    style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-                  ),
-                ),
-                KenneyButton(
-                  label: 'CLEAR',
-                  onPressed: onClearBagSlotFilter,
-                  style: KenneyButtonStyle.grey,
-                ),
-              ],
-            ),
-          ],
-          const SizedBox(height: 6),
-          Expanded(
-            child: filtered.isEmpty && filter != null
-                ? Center(
-                    child: Text(
-                      'No $filterLabel in bag',
-                      textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 13,
-                        color: GameTheme.parchmentDim,
-                      ),
-                    ),
-                  )
-                : GridView.builder(
-                    itemCount: filtered.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          mainAxisSpacing: 5,
-                          crossAxisSpacing: 5,
-                          mainAxisExtent: 56,
-                        ),
-                    itemBuilder: (context, index) {
-                      final item = filtered[index];
-                      final selected = item != null && item.id == selectedId;
-                      final hero = state.heroes.isEmpty
-                          ? null
-                          : state.heroes[equipHeroIndex.clamp(
-                              0,
-                              state.heroes.length - 1,
-                            )];
-                      return _BagSlot(
-                        item: item,
-                        state: state,
-                        hero: hero,
-                        highlight: selected,
-                        onTap: item == null ? null : () => onSelect(item.id),
-                        onLongPress: null,
-                      );
-                    },
-                  ),
-          ),
-          if (selectedId != null) ...[
-            const SizedBox(height: 6),
-            Builder(
-              builder: (context) {
-                final selected = GameLogic.findGear(state, selectedId!);
-                if (selected == null) return const SizedBox.shrink();
-                if (!state.gearStash.any((g) => g.id == selected.id)) {
-                  return Text(
-                    'Selected on hero — UNEQUIP to move to bag',
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
-                  );
-                }
-                final hero = state.heroes.isEmpty
-                    ? null
-                    : state.heroes[equipHeroIndex.clamp(
-                        0,
-                        state.heroes.length - 1,
-                      )];
-                final cmp = hero == null
-                    ? null
-                    : GameLogic.compareForHero(
-                        hero,
-                        selected,
-                        pairingStash: state.gearStash,
-                      );
-                final scoreLine = cmp == null || cmp.powerDelta == 0
-                    ? null
-                    : (cmp.isUpgrade
-                          ? 'UP ${GameLogic.formatDelta(cmp.powerDelta)}'
-                          : (cmp.powerDelta > 0
-                                ? 'SCORE ${GameLogic.formatDelta(cmp.powerDelta)}'
-                                : 'DN ${GameLogic.formatDelta(cmp.powerDelta)}'));
-                // Phone GEAR: keep compare to one line so the bag grid stays usable.
-                // Long-press an item for the full WoW-style tooltip sheet.
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      [
-                        selected.name,
-                        'i${selected.effectiveItemLevel}',
-                        ?scoreLine,
-                      ].join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 12,
-                        color:
-                            scoreLine != null &&
-                                cmp != null &&
-                                cmp.powerDelta < 0
-                            ? GameTheme.bloodLit
-                            : itemRarityColor(selected.rarity),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      height: 34,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: _equipHeroChipsFor(selected),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ],
-      ),
-    );
-  }
 
   Widget _equipHeroChipsFor(EquipmentItem selected) {
     var bestIndex = -1;
