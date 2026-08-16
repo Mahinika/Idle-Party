@@ -15,17 +15,13 @@ enum AbilityEffectKind {
   grantResource,
   emergencyDefend,
   emergencyHeal,
+
   /// Force loose enemies onto the caster (tank hard taunt).
   taunt,
 }
 
 /// Cast priority for auto-combat kits.
-enum AbilityCastTier {
-  passive,
-  emergency,
-  signature,
-  filler,
-}
+enum AbilityCastTier { passive, emergency, signature, filler }
 
 /// Combat abilities unlocked by hero level (WotLK-inspired kits).
 enum AbilityId {
@@ -362,8 +358,7 @@ enum AbilityId {
   lifebloom,
   nourish,
   tranquility,
-  barkskinResto;
-
+  barkskinResto,
 }
 
 class ClassAbilityDef {
@@ -387,6 +382,7 @@ class ClassAbilityDef {
   });
 
   final AbilityId id;
+
   /// Gear/ratings affinity bucket (not SpecRoleTag).
   final HeroRole gearAffinity;
   final HeroSpecId? specId;
@@ -400,6 +396,7 @@ class ClassAbilityDef {
   final bool showInHud;
   final AbilityEffectKind effect;
   final AbilityCastTier tier;
+
   /// Damage / heal / absorb multiplier vs attack (or resource grant amount).
   final double coeff;
 
@@ -414,8 +411,8 @@ class ClassAbilityDef {
     final cd = cooldown <= 0
         ? 'Passive'
         : cooldown == cooldown.roundToDouble()
-            ? 'CD ${cooldown.round()}s'
-            : 'CD ${cooldown.toStringAsFixed(1)}s';
+        ? 'CD ${cooldown.round()}s'
+        : 'CD ${cooldown.toStringAsFixed(1)}s';
     final cost = resourceCost > 0 ? ' · Cost $resourceCost' : '';
     final gate = requiresShield ? ' · Needs shield' : '';
     return '$name\n$description\n$cd$cost$gate';
@@ -427,7 +424,6 @@ class ClassKits {
   ClassKits._();
 
   static const List<ClassAbilityDef> all = <ClassAbilityDef>[
-
     // —— Warrior (Protection) ——
     ClassAbilityDef(
       id: AbilityId.defensiveStance,
@@ -435,7 +431,8 @@ class ClassKits {
       specId: HeroSpecId.protection,
       name: 'Defensive Stance',
       shortLabel: 'Stance',
-      description: 'Extra guard DEF, stronger aggro, slightly less damage dealt.',
+      description:
+          'Extra guard DEF, stronger aggro, slightly less damage dealt.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: false,
@@ -448,7 +445,8 @@ class ClassKits {
       specId: HeroSpecId.protection,
       name: 'Charge',
       shortLabel: 'Charge',
-      description: 'Rush a foe in line of sight (not too far) and briefly root them.',
+      description:
+          'Rush a foe in line of sight (not too far) and briefly root them.',
       unlockLevel: 4,
       cooldown: 12,
       resourceCost: 10,
@@ -667,10 +665,7 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.0,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFF0C0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0C0),
     ),
     ClassAbilityDef(
       id: AbilityId.penance,
@@ -686,10 +681,7 @@ class ClassKits {
       tier: AbilityCastTier.signature,
       coeff: 0.62,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFE8A0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFE8A0),
     ),
     ClassAbilityDef(
       id: AbilityId.powerWordFortitude,
@@ -718,10 +710,7 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.55,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFF0B0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0B0),
     ),
     ClassAbilityDef(
       id: AbilityId.painSuppression,
@@ -758,10 +747,7 @@ class ClassKits {
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFD070,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFD070),
     ),
 
     // —— Mage (Fire) ——
@@ -859,10 +845,7 @@ class ClassKits {
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF6020,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF6020),
     ),
     ClassAbilityDef(
       id: AbilityId.pyroblast,
@@ -878,10 +861,7 @@ class ClassKits {
       tier: AbilityCastTier.signature,
       coeff: 1.45,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF4010,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF4010),
     ),
     ClassAbilityDef(
       id: AbilityId.iceBlock,
@@ -1387,10 +1367,7 @@ class ClassKits {
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFF0A8,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0A8),
     ),
     ClassAbilityDef(
       id: AbilityId.layOnHands,
@@ -1546,10 +1523,7 @@ class ClassKits {
       effect: AbilityEffectKind.taunt,
       tier: AbilityCastTier.signature,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFE8A0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFE8A0),
     ),
 
     // —— retribution ——
@@ -1649,10 +1623,7 @@ class ClassKits {
       tier: AbilityCastTier.signature,
       coeff: 1.85,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFF0C0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0C0),
     ),
     ClassAbilityDef(
       id: AbilityId.divineShield,
@@ -1922,10 +1893,7 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.25,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF9040,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF9040),
     ),
     ClassAbilityDef(
       id: AbilityId.serpentSting,
@@ -2417,10 +2385,7 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.55,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFE8A0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFE8A0),
     ),
     ClassAbilityDef(
       id: AbilityId.circleOfHealing,
@@ -3099,10 +3064,7 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 0.72,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF8040,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF8040),
     ),
     ClassAbilityDef(
       id: AbilityId.lavaBurst,
@@ -3934,10 +3896,7 @@ class ClassKits {
       tier: AbilityCastTier.signature,
       coeff: 1.62,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF5020,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF5020),
     ),
     ClassAbilityDef(
       id: AbilityId.sacrifice,
@@ -4081,10 +4040,7 @@ class ClassKits {
       tier: AbilityCastTier.signature,
       coeff: 1.64,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF5020,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF5020),
     ),
     ClassAbilityDef(
       id: AbilityId.shadowWard,
@@ -4671,16 +4627,18 @@ class ClassKits {
   static List<ClassAbilityDef> forRole(HeroRole role) {
     final legacySpec = HeroSpecs.fromGearAffinity(role);
     return all
-        .where((d) => d.specId == legacySpec || (d.specId == null && d.gearAffinity == role))
+        .where(
+          (d) =>
+              d.specId == legacySpec ||
+              (d.specId == null && d.gearAffinity == role),
+        )
         .toList(growable: false);
   }
 
   /// Abilities for a talent-tree kit. Never silently falls back to a legacy
   /// role kit — missing rows would cast the wrong class's spells.
   static List<ClassAbilityDef> forSpec(HeroSpecId specId) {
-    return all
-        .where((d) => d.specId == specId)
-        .toList(growable: false);
+    return all.where((d) => d.specId == specId).toList(growable: false);
   }
 
   static bool isUnlocked(AbilityId id, int level) {
@@ -4688,15 +4646,14 @@ class ClassKits {
     return d != null && level >= d.unlockLevel;
   }
 
-  static List<ClassAbilityDef> unlockedAt(HeroRole role, int level) =>
-      forRole(role)
-          .where((d) => level >= d.unlockLevel)
-          .toList(growable: false);
+  static List<ClassAbilityDef> unlockedAt(HeroRole role, int level) => forRole(
+    role,
+  ).where((d) => level >= d.unlockLevel).toList(growable: false);
 
   static List<ClassAbilityDef> unlockedAtSpec(HeroSpecId specId, int level) =>
-      forSpec(specId)
-          .where((d) => level >= d.unlockLevel)
-          .toList(growable: false);
+      forSpec(
+        specId,
+      ).where((d) => level >= d.unlockLevel).toList(growable: false);
 
   static List<ClassAbilityDef> hudAbilitiesAt(HeroRole role, int level) =>
       forRole(role)
@@ -4706,10 +4663,9 @@ class ClassKits {
   static List<ClassAbilityDef> hudAbilitiesAtSpec(
     HeroSpecId specId,
     int level,
-  ) =>
-      forSpec(specId)
-          .where((d) => d.showInHud && level >= d.unlockLevel)
-          .toList(growable: false);
+  ) => forSpec(
+    specId,
+  ).where((d) => d.showInHud && level >= d.unlockLevel).toList(growable: false);
 
   static ClassAbilityDef? nextUnlock(HeroRole role, int level) {
     for (final d in forRole(role)) {
@@ -4744,11 +4700,11 @@ class ClassKits {
   }
 
   static String resourceLabel(HeroRole role) => switch (role) {
-        HeroRole.warrior => 'RAGE',
-        HeroRole.healer => 'MANA',
-        HeroRole.mage => 'MANA',
-        HeroRole.rogue => 'ENERGY',
-      };
+    HeroRole.warrior => 'RAGE',
+    HeroRole.healer => 'MANA',
+    HeroRole.mage => 'MANA',
+    HeroRole.rogue => 'ENERGY',
+  };
 
   static String resourceLabelForSpec(HeroSpecId specId) =>
       switch (HeroSpecs.def(specId).resource) {
@@ -4759,11 +4715,11 @@ class ClassKits {
       };
 
   static int resourceColor(HeroRole role) => switch (role) {
-        HeroRole.warrior => 0xFFC04030,
-        HeroRole.healer => 0xFF5090E0,
-        HeroRole.mage => 0xFF7060D0,
-        HeroRole.rogue => 0xFFE0C040,
-      };
+    HeroRole.warrior => 0xFFC04030,
+    HeroRole.healer => 0xFF5090E0,
+    HeroRole.mage => 0xFF7060D0,
+    HeroRole.rogue => 0xFFE0C040,
+  };
 
   static int resourceColorForSpec(HeroSpecId specId) =>
       switch (HeroSpecs.def(specId).resource) {
@@ -4787,10 +4743,9 @@ class WarriorAbilities {
       ClassKits.nextUnlock(HeroRole.warrior, level);
   static String kitSummary(int level) =>
       ClassKits.kitSummary(HeroRole.warrior, level);
-  static List<ClassAbilityDef> get all =>
-      ClassKits.forRole(HeroRole.warrior);
+  static List<ClassAbilityDef> get all => ClassKits.forRole(HeroRole.warrior);
   static List<ClassAbilityDef> forHero(PartyHero hero) =>
       hero.gearAffinity == HeroRole.warrior
-          ? ClassKits.unlockedAtSpec(hero.specId, hero.level)
-          : const [];
+      ? ClassKits.unlockedAtSpec(hero.specId, hero.level)
+      : const [];
 }

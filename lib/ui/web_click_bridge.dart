@@ -184,6 +184,7 @@ class WebClickScope extends StatefulWidget {
 
 class _WebClickScopeState extends State<WebClickScope> {
   String? _registeredLabel;
+
   /// Layer at first mount — keep underlay buttons on layer 0 when a modal
   /// pushes a higher layer and the parent rebuilds.
   late final int _mountLayer;

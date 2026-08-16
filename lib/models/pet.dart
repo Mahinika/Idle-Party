@@ -1,12 +1,5 @@
 /// Pet combat/meta passive kinds.
-enum PetPassive {
-  attack,
-  goldFind,
-  lootFind,
-  xpFind,
-  mitigate,
-  healBoost,
-}
+enum PetPassive { attack, goldFind, lootFind, xpFind, mitigate, healBoost }
 
 enum PetRarity { common, uncommon, rare, epic, legendary }
 
@@ -131,28 +124,28 @@ abstract final class PetCatalog {
   }
 
   static int rarityWeight(PetRarity r) => switch (r) {
-        PetRarity.common => 50,
-        PetRarity.uncommon => 28,
-        PetRarity.rare => 14,
-        PetRarity.epic => 6,
-        PetRarity.legendary => 2,
-      };
+    PetRarity.common => 50,
+    PetRarity.uncommon => 28,
+    PetRarity.rare => 14,
+    PetRarity.epic => 6,
+    PetRarity.legendary => 2,
+  };
 
   static int rarityAtkBonus(PetRarity r) => switch (r) {
-        PetRarity.common => 0,
-        PetRarity.uncommon => 1,
-        PetRarity.rare => 2,
-        PetRarity.epic => 4,
-        PetRarity.legendary => 7,
-      };
+    PetRarity.common => 0,
+    PetRarity.uncommon => 1,
+    PetRarity.rare => 2,
+    PetRarity.epic => 4,
+    PetRarity.legendary => 7,
+  };
 
   static double rarityPassiveMult(PetRarity r) => switch (r) {
-        PetRarity.common => 1.0,
-        PetRarity.uncommon => 1.15,
-        PetRarity.rare => 1.3,
-        PetRarity.epic => 1.5,
-        PetRarity.legendary => 1.8,
-      };
+    PetRarity.common => 1.0,
+    PetRarity.uncommon => 1.15,
+    PetRarity.rare => 1.3,
+    PetRarity.epic => 1.5,
+    PetRarity.legendary => 1.8,
+  };
 }
 
 class Pet {
@@ -239,18 +232,18 @@ class Pet {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'name': name,
-        'attackBonus': attackBonus,
-        'level': level,
-        'speciesId': speciesId,
-        'rarity': rarity.name,
-        'passive': passive.name,
-        'affinityDungeonId': affinityDungeonId,
-        'bondLevel': bondLevel,
-        'frame': frame.name,
-        'passivePerLevel': passivePerLevel,
-      };
+    'id': id,
+    'name': name,
+    'attackBonus': attackBonus,
+    'level': level,
+    'speciesId': speciesId,
+    'rarity': rarity.name,
+    'passive': passive.name,
+    'affinityDungeonId': affinityDungeonId,
+    'bondLevel': bondLevel,
+    'frame': frame.name,
+    'passivePerLevel': passivePerLevel,
+  };
 
   factory Pet.fromJson(Map<String, dynamic> json) {
     final id = json['id'] as String;
@@ -293,15 +286,16 @@ class Pet {
       speciesId: (json['speciesId'] as String?) ?? species?.id ?? '',
       rarity: rarity,
       passive: passive,
-      affinityDungeonId: (json['affinityDungeonId'] as String?) ??
+      affinityDungeonId:
+          (json['affinityDungeonId'] as String?) ??
           species?.affinityDungeonId ??
           'sandy',
       bondLevel: (json['bondLevel'] as num?)?.toInt() ?? 0,
       frame: frame,
       passivePerLevel:
           (json['passivePerLevel'] as num?)?.toInt() ??
-              species?.passivePerLevel ??
-              1,
+          species?.passivePerLevel ??
+          1,
     );
   }
 }

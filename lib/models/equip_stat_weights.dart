@@ -66,18 +66,18 @@ class EquipStatWeights {
       SpecRoleTag.tank => _tank,
       SpecRoleTag.healer => _healer,
       SpecRoleTag.caster => _caster,
-      SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
-        _meleeLike(spec.gearAffinity),
+      SpecRoleTag.meleeDps ||
+      SpecRoleTag.rangedDps => _meleeLike(spec.gearAffinity),
     };
   }
 
   /// Fallback when only a [HeroRole] loot bias is known (no talent tree).
   static EquipStatWeights forRole(HeroRole role) => switch (role) {
-        HeroRole.warrior => _warriorDps, // Str-first; tanks pass roleTag
-        HeroRole.rogue => _agiDps,
-        HeroRole.healer => _healer,
-        HeroRole.mage => _caster,
-      };
+    HeroRole.warrior => _warriorDps, // Str-first; tanks pass roleTag
+    HeroRole.rogue => _agiDps,
+    HeroRole.healer => _healer,
+    HeroRole.mage => _caster,
+  };
 
   /// Top primary/secondary labels for tooltips (highest weights first).
   static List<String> priorityLabels(HeroSpecDef spec, {int max = 3}) {

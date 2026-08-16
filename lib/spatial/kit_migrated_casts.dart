@@ -62,7 +62,8 @@ abstract final class MigratedKitCasts {
       case AbilityId.frostNova:
         final near = [
           for (final e in world.enemies)
-            if (e.hp > 0 && !e.dormant && SpatialCombat._dist(hero, e) <= 2.4) e,
+            if (e.hp > 0 && !e.dormant && SpatialCombat._dist(hero, e) <= 2.4)
+              e,
         ];
         final peel = near.any((e) => SpatialCombat._dist(hero, e) <= 1.6);
         return near.length >= 2 || peel;
@@ -170,9 +171,8 @@ abstract final class MigratedKitCasts {
   }
 
   static bool _partyStable(SpatialWorld world) => !world.heroes.any(
-        (h) =>
-            h.isAlive && h.hp / math.max(1, h.effectiveMaxHp) < 0.55,
-      );
+    (h) => h.isAlive && h.hp / math.max(1, h.effectiveMaxHp) < 0.55,
+  );
 
   static SpatialActor? _powerInfusionTarget(SpatialWorld world) {
     SpatialActor? dps;
@@ -320,7 +320,14 @@ abstract final class MigratedKitCasts {
         AbilityEffectRunner._spendAndCd(world, hero, def);
         focus.sunderStacks = math.min(5, focus.sunderStacks + 1);
         focus.sunderTimer = 14;
-        AbilityEffectRunner._castDamage(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+        AbilityEffectRunner._castDamage(
+          world,
+          hero,
+          focus,
+          def,
+          rng,
+          reducedVfx: reducedVfx,
+        );
         if (focus.hp > 0 &&
             ClassKits.isUnlocked(AbilityId.shieldSlam, hero.heroLevel) &&
             rng.nextDouble() < 0.18) {
@@ -401,7 +408,14 @@ abstract final class MigratedKitCasts {
 
       case AbilityId.thunderClap:
         AbilityEffectRunner._spendAndCd(world, hero, def);
-        AbilityEffectRunner._castAoe(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+        AbilityEffectRunner._castAoe(
+          world,
+          hero,
+          focus,
+          def,
+          rng,
+          reducedVfx: reducedVfx,
+        );
         for (final e in _enemiesAround(world, hero, 2.7)) {
           e.attackSlowTimer = math.max(e.attackSlowTimer, 3.2);
         }
@@ -424,7 +438,14 @@ abstract final class MigratedKitCasts {
             life: 0.42,
           );
         }
-        AbilityEffectRunner._castAoe(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+        AbilityEffectRunner._castAoe(
+          world,
+          hero,
+          focus,
+          def,
+          rng,
+          reducedVfx: reducedVfx,
+        );
         for (final e in wave) {
           e.rootTimer = math.max(e.rootTimer, 2.2 + hero.kitRootBonus);
         }
@@ -530,8 +551,7 @@ abstract final class MigratedKitCasts {
         if (bubble == null || worstShield >= 0.92) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
         final inner = hero.innerFireActive ? 1.25 : 1.0;
-        final shield =
-            math.max(10, (hero.attack * def.coeff * inner).round());
+        final shield = math.max(10, (hero.attack * def.coeff * inner).round());
         bubble.absorbShield = math.max(bubble.absorbShield, shield);
         hero.attackFlash = 0.2;
         hero.attackAimX = bubble.x;
@@ -570,8 +590,10 @@ abstract final class MigratedKitCasts {
         AbilityEffectRunner._spendAndCd(world, hero, def);
         final pomInner = hero.innerFireActive ? 1.15 : 1.0;
         mend.pomCharges = 5;
-        mend.pomHeal =
-            math.max(5, (hero.attack * def.coeff * pomInner).round());
+        mend.pomHeal = math.max(
+          5,
+          (hero.attack * def.coeff * pomInner).round(),
+        );
         if (!reducedVfx) {
           SpatialCombat._spawnFloater(
             world,
@@ -634,7 +656,8 @@ abstract final class MigratedKitCasts {
 
       case AbilityId.penance:
         final mend = _penanceHealTarget(world);
-        final burnable = focus != null &&
+        final burnable =
+            focus != null &&
             focus.hp > 0 &&
             SpatialCombat._dist(hero, focus) <= hero.attackRange + 1.5;
         if (mend == null && !burnable) return false;
@@ -762,8 +785,10 @@ abstract final class MigratedKitCasts {
         if (focus == null || focus.hp <= 0) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
         focus.livingBombTimer = 8;
-        focus.livingBombDps =
-            math.max(3.0, hero.attack * 0.22 * AbilityEffectRunner._abilityOutScale(hero));
+        focus.livingBombDps = math.max(
+          3.0,
+          hero.attack * 0.22 * AbilityEffectRunner._abilityOutScale(hero),
+        );
         focus.livingBombCasterId = hero.id;
         hero.livingBombArmed = 8;
         if (!reducedVfx) {
@@ -824,7 +849,14 @@ abstract final class MigratedKitCasts {
 
       case AbilityId.blastWave:
         AbilityEffectRunner._spendAndCd(world, hero, def);
-        AbilityEffectRunner._castAoe(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+        AbilityEffectRunner._castAoe(
+          world,
+          hero,
+          focus,
+          def,
+          rng,
+          reducedVfx: reducedVfx,
+        );
         for (final e in _enemiesAround(world, hero, 2.7)) {
           e.attackSlowTimer = math.max(e.attackSlowTimer, 2.5);
         }
@@ -836,7 +868,8 @@ abstract final class MigratedKitCasts {
         hero.attackFlash = 0.18;
         var ball = math.max(
           2,
-          (hero.attack * def.coeff * AbilityEffectRunner._abilityOutScale(hero)).round(),
+          (hero.attack * def.coeff * AbilityEffectRunner._abilityOutScale(hero))
+              .round(),
         );
         if (hero.combustionTimer > 0) ball = (ball * 1.05).round();
         // Hot Streak: two Fireball crits unlock a free Pyroblast.
@@ -882,7 +915,8 @@ abstract final class MigratedKitCasts {
         hero.attackFlash = 0.22;
         var pyro = math.max(
           3,
-          (hero.attack * def.coeff * AbilityEffectRunner._abilityOutScale(hero)).round(),
+          (hero.attack * def.coeff * AbilityEffectRunner._abilityOutScale(hero))
+              .round(),
         );
         if (hero.combustionTimer > 0) pyro = (pyro * 1.08).round();
         SpatialCombat._addProjectile(
@@ -934,14 +968,17 @@ abstract final class MigratedKitCasts {
         SpatialCombat._gainRage(hero, 35);
         final spree = _enemiesAround(world, hero, 4.5)
           ..sort(
-            (a, b) => SpatialCombat._dist(hero, a)
-                .compareTo(SpatialCombat._dist(hero, b)),
+            (a, b) => SpatialCombat._dist(
+              hero,
+              a,
+            ).compareTo(SpatialCombat._dist(hero, b)),
           );
         var prevX = hero.x;
         var prevY = hero.y;
         final hit = math.max(
           2,
-          (hero.attack * def.coeff * AbilityEffectRunner._abilityOutScale(hero)).round(),
+          (hero.attack * def.coeff * AbilityEffectRunner._abilityOutScale(hero))
+              .round(),
         );
         for (final e in spree.take(3)) {
           if (!reducedVfx) {
@@ -972,8 +1009,12 @@ abstract final class MigratedKitCasts {
             life: 0.45,
           );
           if (wasAlive && e.hp <= 0) {
-            final killed =
-                SpatialCombat._onEnemyKilled(world, AbilityEffectRunner._stateOut!, e, rng);
+            final killed = SpatialCombat._onEnemyKilled(
+              world,
+              AbilityEffectRunner._stateOut!,
+              e,
+              rng,
+            );
             AbilityEffectRunner._goldOut += killed.gold;
             AbilityEffectRunner._stateOut = killed.state;
           }
@@ -1070,8 +1111,7 @@ abstract final class MigratedKitCasts {
       case AbilityId.kidneyShot:
         if (focus == null || focus.hp <= 0) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
-        focus.rootTimer =
-            2.0 + hero.comboPoints * 0.25 + hero.kitRootBonus;
+        focus.rootTimer = 2.0 + hero.comboPoints * 0.25 + hero.kitRootBonus;
         hero.comboPoints = 0;
         if (!reducedVfx) {
           SpatialCombat._spawnSpark(
@@ -1102,10 +1142,8 @@ abstract final class MigratedKitCasts {
     SpatialWorld world,
     SpatialActor self,
     double radius,
-  ) =>
-      [
-        for (final e in world.enemies)
-          if (e.hp > 0 && !e.dormant && SpatialCombat._dist(self, e) <= radius)
-            e,
-      ];
+  ) => [
+    for (final e in world.enemies)
+      if (e.hp > 0 && !e.dormant && SpatialCombat._dist(self, e) <= radius) e,
+  ];
 }

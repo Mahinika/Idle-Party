@@ -26,22 +26,22 @@ enum VfxQuality {
   bool get showLootPulse => this == VfxQuality.full;
 
   String get settingsLabel => switch (this) {
-        VfxQuality.full => 'Full VFX',
-        VfxQuality.lite => 'Lite VFX',
-        VfxQuality.minimal => 'Minimal VFX (reduce motion)',
-      };
+    VfxQuality.full => 'Full VFX',
+    VfxQuality.lite => 'Lite VFX',
+    VfxQuality.minimal => 'Minimal VFX (reduce motion)',
+  };
 
   String get settingsHint => switch (this) {
-        VfxQuality.full => 'All combat effects',
-        VfxQuality.lite => 'No floaters/bursts — discs & auras stay',
-        VfxQuality.minimal => 'Reduce motion — auras & discs off too',
-      };
+    VfxQuality.full => 'All combat effects',
+    VfxQuality.lite => 'No floaters/bursts — discs & auras stay',
+    VfxQuality.minimal => 'Reduce motion — auras & discs off too',
+  };
 
   VfxQuality get next => switch (this) {
-        VfxQuality.full => VfxQuality.lite,
-        VfxQuality.lite => VfxQuality.minimal,
-        VfxQuality.minimal => VfxQuality.full,
-      };
+    VfxQuality.full => VfxQuality.lite,
+    VfxQuality.lite => VfxQuality.minimal,
+    VfxQuality.minimal => VfxQuality.full,
+  };
 
   static VfxQuality fromJson(Object? raw, {bool? legacyReduced}) {
     if (raw is String) {

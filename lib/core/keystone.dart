@@ -123,30 +123,30 @@ abstract final class Keystone {
   }
 
   static String label(String affix) => switch (affix) {
-        'glass' => 'Glass',
-        'swarm' => 'Swarm',
-        'elite' => 'Elite',
-        'fortune' => 'Fortune',
-        'iron' => 'Iron',
-        'fortified' => 'Fortified',
-        'tyrannical' => 'Tyrannical',
-        'boss_rush' => 'Boss Rush',
-        'no_flask' => 'No Flask',
-        _ => affix,
-      };
+    'glass' => 'Glass',
+    'swarm' => 'Swarm',
+    'elite' => 'Elite',
+    'fortune' => 'Fortune',
+    'iron' => 'Iron',
+    'fortified' => 'Fortified',
+    'tyrannical' => 'Tyrannical',
+    'boss_rush' => 'Boss Rush',
+    'no_flask' => 'No Flask',
+    _ => affix,
+  };
 
   static String blurb(String affix) => switch (affix) {
-        'glass' => 'Fragile foes, hit harder',
-        'swarm' => 'More enemies',
-        'elite' => 'Tougher packs',
-        'fortune' => 'More gold',
-        'iron' => 'Harder, richer',
-        'fortified' => 'Trash packs tougher',
-        'tyrannical' => 'Bosses tougher',
-        'boss_rush' => 'Elite-heavy pulls',
-        'no_flask' => 'Flasks disabled',
-        _ => affix,
-      };
+    'glass' => 'Fragile foes, hit harder',
+    'swarm' => 'More enemies',
+    'elite' => 'Tougher packs',
+    'fortune' => 'More gold',
+    'iron' => 'Harder, richer',
+    'fortified' => 'Trash packs tougher',
+    'tyrannical' => 'Bosses tougher',
+    'boss_rush' => 'Elite-heavy pulls',
+    'no_flask' => 'Flasks disabled',
+    _ => affix,
+  };
 
   static String formatTimer(int ms) {
     final totalSec = max(0, ms) ~/ 1000;

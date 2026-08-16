@@ -3,6 +3,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
+import '../../core/menu_router.dart';
 import '../../models/hero.dart';
 import '../../models/loot.dart';
 import '../character_equip_panel.dart';
@@ -13,16 +14,18 @@ import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
 import '../meta_overlays.dart';
 import '../item_tooltip.dart';
+import '../web_click_bridge.dart';
 import 'shell_common.dart';
 
 class InventoryDock extends StatefulWidget {
-  const InventoryDock({super.key, 
+  const InventoryDock({
+    super.key,
     required this.state,
     required this.director,
     required this.selectedId,
     required this.combineA,
     required this.combineB,
-    required this.initialTab,
+    required this.tab,
     required this.onTabChanged,
     required this.onSelect,
     required this.onPutCombine,
@@ -53,8 +56,8 @@ class InventoryDock extends StatefulWidget {
   final String? selectedId;
   final String? combineA;
   final String? combineB;
-  final int initialTab;
-  final ValueChanged<int> onTabChanged;
+  final PartyTab tab;
+  final ValueChanged<PartyTab> onTabChanged;
   final bool flatChrome;
   final void Function(String id) onSelect;
   final void Function(String id) onPutCombine;
@@ -85,6 +88,7 @@ class InventoryDock extends StatefulWidget {
 class _InventoryDockState extends State<InventoryDock>
     with TickerProviderStateMixin {
   late final FlexTabs _tabs;
+  List<PartyTab> _visible = const [PartyTab.gear, PartyTab.bag];
 
   GameState get state => widget.state;
   String? get selectedId => widget.selectedId;
@@ -120,22 +124,15 @@ class _InventoryDockState extends State<InventoryDock>
   @override
   void initState() {
     super.initState();
-    // GEAR / BAG always sit at 0 / 1; advanced tabs append as they unlock.
+    // GEAR / BAG always exist; advanced tabs append as they unlock.
     _tabs = FlexTabs(
       vsync: this,
       length: 2,
-      initialIndex: widget.initialTab.clamp(0, 1),
-      onChanged: widget.onTabChanged,
+      initialIndex: widget.tab == PartyTab.gear ? 0 : 1,
+      onChanged: (i) {
+        if (i >= 0 && i < _visible.length) widget.onTabChanged(_visible[i]);
+      },
     );
-  }
-
-  @override
-  void didUpdateWidget(covariant InventoryDock oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final next = widget.initialTab.clamp(0, 4);
-    if (oldWidget.initialTab != widget.initialTab && _tabs.index != next) {
-      _tabs.animateTo(next);
-    }
   }
 
   @override
@@ -165,8 +162,8 @@ class _InventoryDockState extends State<InventoryDock>
     final worn = selectedId == null
         ? null
         : GameLogic.findEquippedLocation(state, selectedId!);
-    final inStash = selectedId != null &&
-        state.gearStash.any((g) => g.id == selectedId);
+    final inStash =
+        selectedId != null && state.gearStash.any((g) => g.id == selectedId);
     final cap = GameLogic.maxGearStashFor(state);
     final bagSlots = List<EquipmentItem?>.generate(
       cap,
@@ -221,8 +218,8 @@ class _InventoryDockState extends State<InventoryDock>
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 520;
-        final phone = GameTheme.isPhoneWidth(context) ||
-            constraints.maxWidth <= 430;
+        final phone =
+            GameTheme.isPhoneWidth(context) || constraints.maxWidth <= 430;
         final bag = _gearInlineBag(bagSlots);
         if (wide) {
           return Row(
@@ -232,19 +229,14 @@ class _InventoryDockState extends State<InventoryDock>
                 flex: 5,
                 child: Column(
                   children: [
-                    Expanded(
-                      child: SingleChildScrollView(child: sheet()),
-                    ),
+                    Expanded(child: SingleChildScrollView(child: sheet())),
                     const SizedBox(height: 6),
                     actions(),
                   ],
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                flex: 4,
-                child: bag,
-              ),
+              Expanded(flex: 4, child: bag),
             ],
           );
         }
@@ -253,15 +245,13 @@ class _InventoryDockState extends State<InventoryDock>
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: SingleChildScrollView(child: sheet()),
-              ),
+              Expanded(child: SingleChildScrollView(child: sheet())),
               const SizedBox(height: 6),
               actions(),
               const SizedBox(height: 6),
               KenneyButton(
                 label: 'OPEN BAG',
-                onPressed: () => _tabs.animateTo(1),
+                onPressed: () => widget.onTabChanged(PartyTab.bag),
                 style: KenneyButtonStyle.grey,
               ),
             ],
@@ -270,10 +260,7 @@ class _InventoryDockState extends State<InventoryDock>
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              flex: 58,
-              child: SingleChildScrollView(child: sheet()),
-            ),
+            Expanded(flex: 58, child: SingleChildScrollView(child: sheet())),
             const SizedBox(height: 6),
             actions(),
             const SizedBox(height: 8),
@@ -312,10 +299,7 @@ class _InventoryDockState extends State<InventoryDock>
           Row(
             children: [
               Expanded(
-                child: Text(
-                  'ITEMS BAG',
-                  style: GameTheme.menuTitle(size: 16),
-                ),
+                child: Text('ITEMS BAG', style: GameTheme.menuTitle(size: 16)),
               ),
               Text(
                 '$filled / $cap',
@@ -335,10 +319,7 @@ class _InventoryDockState extends State<InventoryDock>
                 Expanded(
                   child: Text(
                     'Slot: $filterLabel',
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.torchHot,
-                    ),
+                    style: GameTheme.body(size: 12, color: GameTheme.torchHot),
                   ),
                 ),
                 KenneyButton(
@@ -366,15 +347,14 @@ class _InventoryDockState extends State<InventoryDock>
                     itemCount: filtered.length,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      mainAxisSpacing: 5,
-                      crossAxisSpacing: 5,
-                      mainAxisExtent: 56,
-                    ),
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 5,
+                          crossAxisSpacing: 5,
+                          mainAxisExtent: 56,
+                        ),
                     itemBuilder: (context, index) {
                       final item = filtered[index];
-                      final selected =
-                          item != null && item.id == selectedId;
+                      final selected = item != null && item.id == selectedId;
                       final hero = state.heroes.isEmpty
                           ? null
                           : state.heroes[equipHeroIndex.clamp(
@@ -386,9 +366,7 @@ class _InventoryDockState extends State<InventoryDock>
                         state: state,
                         hero: hero,
                         highlight: selected,
-                        onTap: item == null
-                            ? null
-                            : () => onSelect(item.id),
+                        onTap: item == null ? null : () => onSelect(item.id),
                         onLongPress: null,
                       );
                     },
@@ -425,10 +403,10 @@ class _InventoryDockState extends State<InventoryDock>
                 final scoreLine = cmp == null || cmp.powerDelta == 0
                     ? null
                     : (cmp.isUpgrade
-                        ? 'UP ${GameLogic.formatDelta(cmp.powerDelta)}'
-                        : (cmp.powerDelta > 0
-                            ? 'SCORE ${GameLogic.formatDelta(cmp.powerDelta)}'
-                            : 'DN ${GameLogic.formatDelta(cmp.powerDelta)}'));
+                          ? 'UP ${GameLogic.formatDelta(cmp.powerDelta)}'
+                          : (cmp.powerDelta > 0
+                                ? 'SCORE ${GameLogic.formatDelta(cmp.powerDelta)}'
+                                : 'DN ${GameLogic.formatDelta(cmp.powerDelta)}'));
                 // Phone GEAR: keep compare to one line so the bag grid stays usable.
                 // Long-press an item for the full WoW-style tooltip sheet.
                 return Column(
@@ -444,7 +422,8 @@ class _InventoryDockState extends State<InventoryDock>
                       overflow: TextOverflow.ellipsis,
                       style: GameTheme.body(
                         size: 12,
-                        color: scoreLine != null &&
+                        color:
+                            scoreLine != null &&
                                 cmp != null &&
                                 cmp.powerDelta < 0
                             ? GameTheme.bloodLit
@@ -523,11 +502,13 @@ class _InventoryDockState extends State<InventoryDock>
                 nearFull && filled >= cap
                     ? 'BAG FULL'
                     : nearFull
-                        ? 'NEARLY FULL'
-                        : 'CAPACITY',
+                    ? 'NEARLY FULL'
+                    : 'CAPACITY',
                 style: GameTheme.body(
                   size: 14,
-                  color: nearFull ? GameTheme.accentWarn : GameTheme.parchmentDim,
+                  color: nearFull
+                      ? GameTheme.accentWarn
+                      : GameTheme.parchmentDim,
                 ),
               ),
             ),
@@ -550,8 +531,8 @@ class _InventoryDockState extends State<InventoryDock>
             color: filled >= cap
                 ? GameTheme.bloodLit
                 : nearFull
-                    ? GameTheme.accentWarn
-                    : GameTheme.mossLit,
+                ? GameTheme.accentWarn
+                : GameTheme.mossLit,
           ),
         ),
         const SizedBox(height: 4),
@@ -562,10 +543,7 @@ class _InventoryDockState extends State<InventoryDock>
                 child: Text(
                   'Slot: $filterLabel'
                   '${filteredSlots.isEmpty ? ' · none in bag' : ' · ${filteredSlots.length}'}',
-                  style: GameTheme.body(
-                    size: 13,
-                    color: GameTheme.torchHot,
-                  ),
+                  style: GameTheme.body(size: 13, color: GameTheme.torchHot),
                 ),
               ),
               KenneyButton(
@@ -598,7 +576,8 @@ class _InventoryDockState extends State<InventoryDock>
                 )
               : LayoutBuilder(
                   builder: (context, gridConstraints) {
-                    final phone = GameTheme.isPhoneWidth(context) ||
+                    final phone =
+                        GameTheme.isPhoneWidth(context) ||
                         gridConstraints.maxWidth <= 430;
                     return GridView.builder(
                       itemCount: filteredSlots.length,
@@ -611,9 +590,11 @@ class _InventoryDockState extends State<InventoryDock>
                       itemBuilder: (context, index) {
                         final item = filteredSlots[index];
                         final selected = item != null && item.id == selectedId;
-                        final inCombine = item != null &&
+                        final inCombine =
+                            item != null &&
                             (item.id == combineA || item.id == combineB);
-                        final combineFiltered = primary != null &&
+                        final combineFiltered =
+                            primary != null &&
                             item != null &&
                             item.slot != primary.slot;
                         return _BagSlot(
@@ -681,8 +662,8 @@ class _InventoryDockState extends State<InventoryDock>
                 label: selectedId == null ? 'AUTO MERGE' : 'ADD TO MERGE',
                 onPressed: selectedId != null
                     ? (GameLogic.findStashGear(state, selectedId!) == null
-                        ? null
-                        : () => onPutCombine(selectedId!))
+                          ? null
+                          : () => onPutCombine(selectedId!))
                     : (state.gearStash.length < 2 ? null : onAutoMerge),
                 style: KenneyButtonStyle.grey,
               ),
@@ -713,10 +694,7 @@ class _InventoryDockState extends State<InventoryDock>
                     selected.statsLine,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.torchHot,
-                    ),
+                    style: GameTheme.body(size: 12, color: GameTheme.torchHot),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -830,7 +808,7 @@ class _InventoryDockState extends State<InventoryDock>
                   preview == null
                       ? 'RESULT  —'
                       : 'RESULT  ${GameLogic.rarityNames[preview.rarity]}'
-                          '  i${preview.effectiveItemLevel}',
+                            '  i${preview.effectiveItemLevel}',
                   textAlign: TextAlign.center,
                   style: GameTheme.pixel(
                     size: GameTheme.hudPixel,
@@ -846,10 +824,7 @@ class _InventoryDockState extends State<InventoryDock>
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.parchment,
-                    ),
+                    style: GameTheme.body(size: 12, color: GameTheme.parchment),
                   ),
                 ],
               ],
@@ -886,7 +861,7 @@ class _InventoryDockState extends State<InventoryDock>
             const SizedBox(height: 6),
             KenneyButton(
               label: 'OPEN BAG',
-              onPressed: () => _tabs.animateTo(1),
+              onPressed: () => widget.onTabChanged(PartyTab.bag),
               style: KenneyButtonStyle.grey,
             ),
           ],
@@ -954,43 +929,42 @@ class _InventoryDockState extends State<InventoryDock>
     final phone = GameTheme.isPhoneWidth(context);
     final alert = MenuAlerts.partyAlert(state);
     // Progressive menu: MERGE / LOADOUTS / ROSTER appear once they do something.
+    _visible = MenuRouter.visiblePartyTabs(state);
     final pages = <({String label, Widget body})>[
-      (label: 'GEAR', body: _equipTab()),
-      (label: 'BAG', body: _bagTab(slots, primary)),
-      if (MenuTabs.showMerge(state))
-        (
-          label: 'MERGE',
-          body: _toolsTab(
-            primary: primary,
-            secondary: secondary,
-            canCombine: canCombine,
-            cost: cost,
-            preview: preview,
-            fragmentsNeeded: fragmentsNeeded,
+      for (final tab in _visible)
+        switch (tab) {
+          PartyTab.gear => (label: 'GEAR', body: _equipTab()),
+          PartyTab.bag => (label: 'BAG', body: _bagTab(slots, primary)),
+          PartyTab.merge => (
+            label: 'MERGE',
+            body: _toolsTab(
+              primary: primary,
+              secondary: secondary,
+              canCombine: canCombine,
+              cost: cost,
+              preview: preview,
+              fragmentsNeeded: fragmentsNeeded,
+            ),
           ),
-        ),
-      if (MenuTabs.showLoadouts(state))
-        (
-          label: phone ? 'LOAD' : 'LOADOUTS',
-          body: LoadoutsOverlay(director: widget.director),
-        ),
-      if (MenuTabs.showRoster(state))
-        (
-          label: 'ROSTER',
-          body: SingleChildScrollView(
-            child: TeamCompositionOverlay(director: widget.director),
+          PartyTab.loadouts => (
+            label: phone ? 'LOAD' : 'LOADOUTS',
+            body: LoadoutsOverlay(director: widget.director),
           ),
-        ),
+          PartyTab.roster => (
+            label: 'ROSTER',
+            body: SingleChildScrollView(
+              child: TeamCompositionOverlay(director: widget.director),
+            ),
+          ),
+        },
     ];
-    _tabs.sync(pages.length);
+    _tabs.syncToId(_visible, widget.tab);
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         MenuChrome.tabRail(
           controller: _tabs.controller,
-          tabs: [
-            for (final page in pages) Tab(text: page.label),
-          ],
+          tabs: [for (final page in pages) Tab(text: page.label)],
         ),
         if (!alert.isQuiet)
           Padding(
@@ -1008,9 +982,7 @@ class _InventoryDockState extends State<InventoryDock>
             // Phone: no horizontal swipe between tabs (avoids mid-swipe overlap
             // and fights vertical bag scroll). Tap the tab rail instead.
             physics: const NeverScrollableScrollPhysics(),
-            children: [
-              for (final page in pages) page.body,
-            ],
+            children: [for (final page in pages) page.body],
           ),
         ),
       ],
@@ -1036,9 +1008,7 @@ class _InventoryDockState extends State<InventoryDock>
           ],
         ),
         border: Border(
-          top: BorderSide(
-            color: GameTheme.borderLit.withValues(alpha: 0.4),
-          ),
+          top: BorderSide(color: GameTheme.borderLit.withValues(alpha: 0.4)),
         ),
         boxShadow: [
           BoxShadow(
@@ -1086,7 +1056,9 @@ class _EquipHeroChip extends StatelessWidget {
     );
     final deltaColor = cmp.powerDelta > 0
         ? GameTheme.clear
-        : (cmp.powerDelta < 0 ? const Color(0xFFE07060) : GameTheme.parchmentDim);
+        : (cmp.powerDelta < 0
+              ? const Color(0xFFE07060)
+              : GameTheme.parchmentDim);
     return InkWell(
       onTap: onTap,
       child: ConstrainedBox(
@@ -1131,7 +1103,10 @@ class _EquipHeroChip extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
-                style: GameTheme.pixel(size: GameTheme.hudPixel, color: deltaColor),
+                style: GameTheme.pixel(
+                  size: GameTheme.hudPixel,
+                  color: deltaColor,
+                ),
               ),
               if (cmp.isUpgrade)
                 Text(
@@ -1143,7 +1118,10 @@ class _EquipHeroChip extends StatelessWidget {
                   'power ${GameLogic.formatDelta(cmp.atkDelta)} '
                   'D${GameLogic.formatDelta(cmp.defDelta)} '
                   'STA${GameLogic.formatDelta(cmp.vitDelta)}',
-                  style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+                  style: GameTheme.body(
+                    size: 10,
+                    color: GameTheme.parchmentDim,
+                  ),
                 ),
             ],
           ),
@@ -1207,159 +1185,157 @@ class _BagSlot extends StatelessWidget {
       child: Semantics(
         button: item != null,
         label: a11yLabel,
-        excludeSemantics: true,
-        child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: item == null
+        excludeSemantics: true,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: item == null
+                    ? [
+                        GameTheme.panelInset.withValues(alpha: 0.7),
+                        GameTheme.stoneDeep.withValues(alpha: 0.75),
+                      ]
+                    : [
+                        Color.lerp(GameTheme.stoneRaised, rarityColor, 0.18)!,
+                        Color.lerp(GameTheme.stoneDeep, rarityColor, 0.1)!,
+                      ],
+              ),
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              border: Border.all(
+                color: highlight ? GameTheme.torchHot : rarityColor,
+                width: highlight ? 1.6 : 1.1,
+              ),
+              boxShadow: highlight
                   ? [
-                      GameTheme.panelInset.withValues(alpha: 0.7),
-                      GameTheme.stoneDeep.withValues(alpha: 0.75),
+                      BoxShadow(
+                        color: GameTheme.torch.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                      ),
                     ]
-                  : [
-                      Color.lerp(
-                        GameTheme.stoneRaised,
-                        rarityColor,
-                        0.18,
-                      )!,
-                      Color.lerp(
-                        GameTheme.stoneDeep,
-                        rarityColor,
-                        0.1,
-                      )!,
-                    ],
+                  : null,
             ),
-            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            border: Border.all(
-              color: highlight ? GameTheme.torchHot : rarityColor,
-              width: highlight ? 1.6 : 1.1,
-            ),
-            boxShadow: highlight
-                ? [
-                    BoxShadow(
-                      color: GameTheme.torch.withValues(alpha: 0.25),
-                      blurRadius: 10,
+            clipBehavior: Clip.hardEdge,
+            child: item == null
+                ? Center(
+                    child: Icon(
+                      Icons.add,
+                      size: 14,
+                      color: GameTheme.border.withValues(alpha: 0.55),
                     ),
-                  ]
-                : null,
-          ),
-          clipBehavior: Clip.hardEdge,
-          child: item == null
-              ? Center(
-                  child: Icon(
-                    Icons.add,
-                    size: 14,
-                    color: GameTheme.border.withValues(alpha: 0.55),
-                  ),
-                )
-              : Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: Container(width: 3, color: rarityColor),
-                    ),
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: KenneySprite(
-                          asset: KenneyAssets.equipmentIconFor(item!),
-                          size: 26,
-                        ),
+                  )
+                : Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: Container(width: 3, color: rarityColor),
                       ),
-                    ),
-                    Positioned(
-                      top: 2,
-                      left: 6,
-                      child: ExcludeSemantics(
-                        child: Text(
-                          _slotHint(item!.slot),
-                          style: GameTheme.body(
-                            size: 10,
-                            color: GameTheme.parchmentDim,
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: KenneySprite(
+                            asset: KenneyAssets.equipmentIconFor(item!),
+                            size: 26,
                           ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      bottom: 2,
-                      left: 6,
-                      child: ExcludeSemantics(
-                        child: Text(
-                          'i${item!.effectiveItemLevel}',
-                          style: GameTheme.body(
-                            size: 12,
-                            color: GameTheme.parchment,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (isBest)
                       Positioned(
                         top: 2,
-                        right: 2,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xEE1E4030),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
+                        left: 6,
+                        child: ExcludeSemantics(
                           child: Text(
-                            'BEST',
+                            _slotHint(item!.slot),
                             style: GameTheme.body(
                               size: 10,
-                              color: GameTheme.clear,
+                              color: GameTheme.parchmentDim,
                             ),
                           ),
                         ),
                       ),
-                    if (isSoulboundItem(item!))
                       Positioned(
                         bottom: 2,
-                        right: 3,
-                        child: Text(
-                          'SB',
-                          style: GameTheme.body(
-                            size: 10,
-                            color: GameTheme.torchHot,
+                        left: 6,
+                        child: ExcludeSemantics(
+                          child: Text(
+                            'i${item!.effectiveItemLevel}',
+                            style: GameTheme.body(
+                              size: 12,
+                              color: GameTheme.parchment,
+                            ),
                           ),
                         ),
                       ),
-                    if (item!.slot == EquipmentSlot.weapon &&
-                        !isSoulboundItem(item!))
-                      Positioned(
-                        bottom: 2,
-                        right: 3,
-                        child: Text(
-                          patternGlyph(item!.pattern),
-                          style: GameTheme.body(
-                            size: 11,
-                            color: GameTheme.parchmentDim,
+                      if (isBest)
+                        Positioned(
+                          top: 2,
+                          right: 2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xEE1E4030),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'BEST',
+                              style: GameTheme.body(
+                                size: 10,
+                                color: GameTheme.clear,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
+                      if (isSoulboundItem(item!))
+                        Positioned(
+                          bottom: 2,
+                          right: 3,
+                          child: Text(
+                            'SB',
+                            style: GameTheme.body(
+                              size: 10,
+                              color: GameTheme.torchHot,
+                            ),
+                          ),
+                        ),
+                      if (item!.slot == EquipmentSlot.weapon &&
+                          !isSoulboundItem(item!))
+                        Positioned(
+                          bottom: 2,
+                          right: 3,
+                          child: Text(
+                            patternGlyph(item!.pattern),
+                            style: GameTheme.body(
+                              size: 11,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+          ),
         ),
-      ),
       ),
     );
     if (item == null) return slot;
-    return ItemTooltipAnchor(
-      item: item!,
-      hero: hero,
-      pairingStash: state.gearStash,
-      child: slot,
+    return WebClickScope(
+      label: item!.name,
+      onPressed: onTap,
+      child: ItemTooltipAnchor(
+        item: item!,
+        hero: hero,
+        pairingStash: state.gearStash,
+        child: slot,
+      ),
     );
   }
 }
@@ -1384,10 +1360,7 @@ class _CombineSlot extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: MenuChrome.cardBox(
-          inset: true,
-          selected: item != null,
-        ),
+        decoration: MenuChrome.cardBox(inset: true, selected: item != null),
         child: Row(
           children: [
             SizedBox(

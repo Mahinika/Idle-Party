@@ -23,7 +23,6 @@ void main() {
     final alerts = MenuAlerts.forState(state);
     expect(alerts.party.isQuiet, isTrue);
     expect(alerts.party.badge, isEmpty);
-    expect(alerts.party.labelFor('PARTY'), 'PARTY');
     // New games are marked as having seen the current changelog.
     expect(MetaSystems.hasUnseenChangelog(state), isFalse);
     expect(alerts.meta.isQuiet, isTrue);
@@ -35,7 +34,6 @@ void main() {
     final alert = MenuAlerts.partyAlert(state);
     expect(alert.count, greaterThan(0));
     expect(alert.badge, alert.count.toString());
-    expect(alert.labelFor('PARTY'), 'PARTY ${alert.count}');
     expect(alert.reason.toUpperCase(), contains('EQUIP'));
     expect(MenuAlerts.bagUpgradeCount(state), alert.count);
   });
@@ -65,7 +63,6 @@ void main() {
     final base = GameLogic.createInitialState(now: now);
     final unseen = base.copyWith(seenChangelogVersion: '0.0.1');
     expect(MenuAlerts.metaAlert(unseen).star, isTrue);
-    expect(MenuAlerts.metaAlert(unseen).labelFor('META'), 'META ★');
 
     var claim = GameLogic.ensureWeeklyContract(base, now: now);
     claim = claim.copyWith(

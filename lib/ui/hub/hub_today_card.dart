@@ -10,10 +10,7 @@ import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 
 class HubMetaPulse extends StatelessWidget {
-  const HubMetaPulse({super.key, 
-    required this.state,
-    required this.chaseKind,
-  });
+  const HubMetaPulse({super.key, required this.state, required this.chaseKind});
 
   final GameState state;
   final HubChaseKind chaseKind;
@@ -30,9 +27,7 @@ class HubMetaPulse extends StatelessWidget {
         chaseKind != HubChaseKind.dailyVaultProgress &&
         chaseKind != HubChaseKind.claimDailyVault) {
       bits.add(
-        state.hardmodeLevel <= 0
-            ? 'KEY off'
-            : 'KEY +${state.hardmodeLevel}',
+        state.hardmodeLevel <= 0 ? 'KEY off' : 'KEY +${state.hardmodeLevel}',
       );
     }
 
@@ -72,10 +67,7 @@ class HubMetaPulse extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: GameTheme.body(
-            size: 11,
-            color: GameTheme.parchmentDim,
-          ),
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
       ),
     );
@@ -83,7 +75,8 @@ class HubMetaPulse extends StatelessWidget {
 }
 
 class HubTodayCard extends StatelessWidget {
-  const HubTodayCard({super.key, 
+  const HubTodayCard({
+    super.key,
     required this.chase,
     this.compact = false,
     this.actionLabel,
@@ -102,13 +95,13 @@ class HubTodayCard extends StatelessWidget {
     final accent = ready
         ? GameTheme.torchHot
         : almost
-            ? GameTheme.accentWarn
-            : GameTheme.parchmentDim;
+        ? GameTheme.accentWarn
+        : GameTheme.parchmentDim;
     final chip = ready
         ? 'READY'
         : almost
-            ? 'ALMOST'
-            : null;
+        ? 'ALMOST'
+        : null;
     // Text strip only — no fill box under ENTER.
     return Semantics(
       label: 'TODAY chase: ${chase.title}. ${chase.detail}',
@@ -118,10 +111,7 @@ class HubTodayCard extends StatelessWidget {
           children: [
             KenneySprite(asset: KenneyAssets.iconStar, size: 14),
             const SizedBox(width: 6),
-            Text(
-              'TODAY',
-              style: GameTheme.body(size: 12, color: accent),
-            ),
+            Text('TODAY', style: GameTheme.body(size: 12, color: accent)),
             if (chip != null) ...[
               const SizedBox(width: 6),
               Text(chip, style: GameTheme.body(size: 12, color: accent)),
@@ -132,10 +122,7 @@ class HubTodayCard extends StatelessWidget {
                 chase.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(
-                  size: 13,
-                  color: GameTheme.parchment,
-                ),
+                style: GameTheme.body(size: 13, color: GameTheme.parchment),
               ),
             ),
             if (chase.progressLabel != null) ...[
@@ -171,7 +158,8 @@ class HubTodayCard extends StatelessWidget {
 }
 
 class HubUrgentRow extends StatelessWidget {
-  const HubUrgentRow({super.key, 
+  const HubUrgentRow({
+    super.key,
     required this.claimable,
     required this.canAscend,
     required this.ascendLabel,
@@ -215,7 +203,8 @@ class HubUrgentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showVaultProgress = !weeklyClaimed &&
+    final showVaultProgress =
+        !weeklyClaimed &&
         weeklyProgress > 0 &&
         weeklyProgress < GameLogic.dailyVaultClearTarget &&
         weeklyBestTimedKey < 2;

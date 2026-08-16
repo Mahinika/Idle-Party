@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:games_services/games_services.dart';
 
 import 'flutter_test_env_stub.dart'
-    if (dart.library.io) 'flutter_test_env_io.dart' as test_env;
+    if (dart.library.io) 'flutter_test_env_io.dart'
+    as test_env;
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'play_games_scores.dart';
@@ -84,10 +85,7 @@ abstract final class PlayGamesBridge {
     );
   }
 
-  static void noteGauntletPb({
-    required String monthKey,
-    required int floor,
-  }) {
+  static void noteGauntletPb({required String monthKey, required int floor}) {
     final id = PlayLeaderboardIds.gauntletId(monthKey);
     if (id.isEmpty || !PlayLeaderboardIds.hasBoards(monthKey)) return;
     _pendingGauntletBoard = id;
@@ -161,7 +159,10 @@ abstract final class PlayGamesBridge {
   }
 
   /// Debounced cloud upload after local persist.
-  static void scheduleCloudUpload(GameState state, {Duration delay = const Duration(seconds: 8)}) {
+  static void scheduleCloudUpload(
+    GameState state, {
+    Duration delay = const Duration(seconds: 8),
+  }) {
     if (!isSupported) return;
     _pendingUpload = state;
     _uploadDebounce?.cancel();

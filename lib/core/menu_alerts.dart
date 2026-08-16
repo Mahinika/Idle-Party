@@ -28,10 +28,9 @@ class MenuAlert {
   String get badge => star
       ? '★'
       : count > 0
-          ? '$count'
-          : '';
+      ? '$count'
+      : '';
 
-  String labelFor(String base) => isQuiet ? base : '$base $badge';
 }
 
 /// Menu attention marks — one source for hub buttons and the bottom nav.
@@ -50,10 +49,10 @@ class MenuAlerts {
   final MenuAlert meta;
 
   MenuAlert of(MenuPillar pillar) => switch (pillar) {
-        MenuPillar.party => party,
-        MenuPillar.power => power,
-        MenuPillar.meta => meta,
-      };
+    MenuPillar.party => party,
+    MenuPillar.power => power,
+    MenuPillar.meta => meta,
+  };
 
   static const MenuAlerts none = MenuAlerts(
     party: MenuAlert.quiet,
@@ -62,10 +61,10 @@ class MenuAlerts {
   );
 
   static MenuAlerts forState(GameState state) => MenuAlerts(
-        party: partyAlert(state),
-        power: powerAlert(state),
-        meta: metaAlert(state),
-      );
+    party: partyAlert(state),
+    power: powerAlert(state),
+    meta: metaAlert(state),
+  );
 
   /// PARTY: new heroes to meet, then bag upgrades, then a full bag.
   static MenuAlert partyAlert(GameState state) {
@@ -114,8 +113,9 @@ class MenuAlerts {
       count++;
       reasons.add('essence for CAMP');
     }
-    final hasFlask = state.heroes
-        .any((h) => h.itemIn(EquipmentSlot.consumable) != null);
+    final hasFlask = state.heroes.any(
+      (h) => h.itemIn(EquipmentSlot.consumable) != null,
+    );
     if (!hasFlask &&
         !state.challengeNoFlask &&
         state.gold >= GameLogic.marketFlaskCost(state)) {
@@ -123,10 +123,7 @@ class MenuAlerts {
       reasons.add('gold for a MARKET flask');
     }
     if (count <= 0) return MenuAlert.quiet;
-    return MenuAlert(
-      count: count,
-      reason: 'You have ${reasons.join(' · ')}',
-    );
+    return MenuAlert(count: count, reason: 'You have ${reasons.join(' · ')}');
   }
 
   /// META: What's New first, then claims waiting.
@@ -220,8 +217,7 @@ abstract final class MenuTabs {
       s.ascensionLevel >= 1 || s.metaDepth.pendingHeroReveals.isNotEmpty;
 
   // POWER
-  static bool showCamp(GameState s) =>
-      s.ascensionLevel >= 1 || s.essence > 0;
+  static bool showCamp(GameState s) => s.ascensionLevel >= 1 || s.essence > 0;
   static bool showShop(GameState s) => s.ascensionLevel >= 1;
 
   // META

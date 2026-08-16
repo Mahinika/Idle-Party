@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'game_theme.dart';
-import 'kenney_button.dart';
 import 'kenney_sprite.dart';
 import 'web_click_bridge.dart';
 
@@ -16,9 +15,8 @@ abstract final class MenuChrome {
 
   static BorderRadius get panelRadius =>
       BorderRadius.circular(GameTheme.radiusMd);
-  static BorderRadius get sheetRadius => const BorderRadius.vertical(
-        top: Radius.circular(GameTheme.radiusLg),
-      );
+  static BorderRadius get sheetRadius =>
+      const BorderRadius.vertical(top: Radius.circular(GameTheme.radiusLg));
 
   static BoxDecoration panel({
     BorderRadius? borderRadius,
@@ -29,10 +27,7 @@ abstract final class MenuChrome {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: opaque
-            ? [
-                GameTheme.panel,
-                GameTheme.stoneDeep,
-              ]
+            ? [GameTheme.panel, GameTheme.stoneDeep]
             : [
                 GameTheme.panel.withValues(alpha: 0.94),
                 GameTheme.stoneDeep.withValues(alpha: 0.96),
@@ -70,14 +65,8 @@ abstract final class MenuChrome {
                 GameTheme.stone.withValues(alpha: 0.9),
               ]
             : inset
-                ? [
-                    GameTheme.panelInset.withValues(alpha: 0.9),
-                    card,
-                  ]
-                : [
-                    cardRaised,
-                    card,
-                  ],
+            ? [GameTheme.panelInset.withValues(alpha: 0.9), card]
+            : [cardRaised, card],
       ),
       borderRadius: BorderRadius.circular(GameTheme.radiusSm),
       border: Border.all(
@@ -159,7 +148,8 @@ abstract final class MenuChrome {
       builder: (context, constraints) {
         final phone = GameTheme.isPhoneWidth(context);
         final many = tabs.length >= 5;
-        final scroll = scrollable ?? (phone || many || constraints.maxWidth < 400);
+        final scroll =
+            scrollable ?? (phone || many || constraints.maxWidth < 400);
         final labelSize = phone ? 13.0 : 16.0;
         return Material(
           color: Colors.transparent,
@@ -206,182 +196,105 @@ abstract final class MenuChrome {
     final base = cardBox(selected: selected, inset: inset);
     if (borderColor == null) return base;
     return base.copyWith(
-      border: Border.all(
-        color: borderColor,
-        width: selected ? 1.5 : 1.1,
+      border: Border.all(color: borderColor, width: selected ? 1.5 : 1.1),
+    );
+  }
+
+  /// Small pill of information (HUD counters, stat tiles, filters).
+  ///
+  /// One shape for the whole game — before this there were eight hand-rolled
+  /// chips that drifted apart in padding, radius and font size.
+  static Widget chip({
+    required String label,
+    String? icon,
+    String? value,
+    bool selected = false,
+    bool stacked = false,
+    Color? tone,
+    VoidCallback? onTap,
+    double minWidth = 0,
+  }) {
+    final labelStyle = GameTheme.pixel(
+      size: GameTheme.hudPixel,
+      color: stacked ? GameTheme.parchmentDim : (tone ?? GameTheme.torchHot),
+    );
+    final valueStyle = GameTheme.body(
+      size: stacked ? 18 : 14,
+      color: tone ?? GameTheme.torchHot,
+    );
+    final parts = <Widget>[
+      if (icon != null) ...[
+        KenneySprite(asset: icon, size: 14),
+        SizedBox(width: stacked ? 0 : 4, height: stacked ? 3 : 0),
+      ],
+      Text(label, style: labelStyle),
+      if (value != null) ...[
+        SizedBox(width: stacked ? 0 : 6, height: stacked ? 3 : 0),
+        Text(value, style: valueStyle),
+      ],
+    ];
+    final body = Container(
+      constraints: BoxConstraints(
+        minWidth: minWidth,
+        minHeight: onTap == null ? 0 : GameTheme.minTouch,
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: stacked ? 10 : 6,
+        vertical: stacked ? 8 : 4,
+      ),
+      alignment: Alignment.center,
+      decoration: cardBox(selected: selected, inset: stacked),
+      child: stacked
+          ? Column(mainAxisSize: MainAxisSize.min, children: parts)
+          : Row(mainAxisSize: MainAxisSize.min, children: parts),
+    );
+    if (onTap == null) return body;
+    return WebClickScope(
+      label: value == null ? label : '$label $value',
+      onPressed: onTap,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: value == null ? label : '$label $value',
+        onTap: onTap,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: body,
+          ),
+        ),
       ),
     );
   }
 
-  /// Cave-styled modal bottom sheet (MORE menus, etc.).
-  ///
-  /// Pass either a flat [items] list or grouped [sections] (preferred).
-  /// Optional [icon] is a Kenney/Custom asset path shown left of the label.
-  static Future<void> showMenuSheet({
-    required BuildContext context,
-    required String title,
-    List<({String label, VoidCallback onTap, String? icon})>? items,
-    List<
-            ({
-              String header,
-              List<({String label, VoidCallback onTap, String? icon})> items,
-            })>?
-        sections,
-  }) {
-    assert(
-      items != null || sections != null,
-      'showMenuSheet requires items or sections',
-    );
-    final resolved = sections ??
-        [(header: '', items: items!)];
-    WebClickBridge.pushLayer();
-    return showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      barrierColor: scrim,
-      isScrollControlled: true,
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: DecoratedBox(
-              decoration: panel(borderRadius: sheetRadius, opaque: true),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    sheetHandle(),
-                    Text(
-                      title,
-                      style: GameTheme.menuTitle(size: 20),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      height: 1,
-                      color: GameTheme.borderLit.withValues(alpha: 0.25),
-                    ),
-                    const SizedBox(height: 12),
-                    Flexible(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (var s = 0; s < resolved.length; s++) ...[
-                              if (resolved[s].header.isNotEmpty) ...[
-                                if (s > 0) const SizedBox(height: 8),
-                                sectionLabel(resolved[s].header),
-                              ],
-                              for (final item in resolved[s].items)
-                                menuRow(
-                                  label: item.label,
-                                  icon: item.icon,
-                                  onTap: () {
-                                    Navigator.pop(ctx);
-                                    // After sheet layer pops — avoid overlay
-                                    // buttons registering on a dying layer.
-                                    WidgetsBinding.instance
-                                        .addPostFrameCallback((_) {
-                                      item.onTap();
-                                    });
-                                  },
-                                ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    KenneyButton(
-                      label: 'CLOSE',
-                      style: KenneyButtonStyle.grey,
-                      onPressed: () => Navigator.pop(ctx),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    ).whenComplete(WebClickBridge.popLayer);
-  }
-
-  static Widget menuRow({
+  /// One `label … value` line (offline summary, forge costs, compare sheets).
+  static Widget statRow({
     required String label,
-    required VoidCallback onTap,
-    String? trailing,
-    String? icon,
+    required String value,
+    Color? tone,
+    double size = 15,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 7),
-      child: WebClickScope(
-        label: label,
-        onPressed: onTap,
-        child: Semantics(
-          button: true,
-          label: label,
-          onTap: onTap,
-          excludeSemantics: true,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-              child: Container(
-                constraints:
-                    const BoxConstraints(minHeight: GameTheme.minTouch),
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                decoration: rowTile(),
-                child: Row(
-                  children: [
-                    if (icon != null) ...[
-                      Container(
-                        width: 32,
-                        height: 32,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: GameTheme.panelInset.withValues(alpha: 0.8),
-                          borderRadius:
-                              BorderRadius.circular(GameTheme.radiusSm),
-                          border: Border.all(
-                            color: GameTheme.border.withValues(alpha: 0.7),
-                          ),
-                        ),
-                        child: KenneySprite(asset: icon, size: 18),
-                      ),
-                      const SizedBox(width: 12),
-                    ],
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: GameTheme.body(size: 18, color: GameTheme.parchment),
-                      ),
-                    ),
-                    if (trailing != null)
-                      Text(
-                        trailing,
-                        style: GameTheme.body(
-                          size: 14,
-                          color: GameTheme.parchmentDim,
-                        ),
-                      )
-                    else
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 20,
-                        color: GameTheme.parchmentDim.withValues(alpha: 0.7),
-                      ),
-                  ],
-                ),
-              ),
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: GameTheme.body(size: size, color: GameTheme.parchmentDim),
             ),
           ),
-        ),
+          Text(
+            value,
+            style: GameTheme.body(
+              size: size + 1,
+              color: tone ?? GameTheme.torchHot,
+            ),
+          ),
+        ],
       ),
     );
   }

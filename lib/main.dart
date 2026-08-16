@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'core/equipment_factory.dart';
 import 'core/game_director.dart';
+import 'core/menu_router.dart';
 import 'models/hero_spec.dart';
 import 'ui/boot_intro_screen.dart';
 import 'ui/custom_assets.dart';
@@ -19,6 +20,7 @@ import 'ui/kenney_button.dart';
 import 'ui/kenney_sprite.dart';
 import 'ui/menu_chrome.dart';
 import 'ui/new_game_party_picker.dart';
+import 'ui/shell/menu_surface.dart';
 import 'ui/start_menu_screen.dart';
 import 'ui/web_click_bridge.dart';
 
@@ -97,9 +99,9 @@ class _MyAppState extends State<MyApp> {
                   width: maxW,
                   height: constraints.maxHeight,
                   child: MediaQuery(
-                    data: MediaQuery.of(context).copyWith(
-                      size: Size(maxW, constraints.maxHeight),
-                    ),
+                    data: MediaQuery.of(
+                      context,
+                    ).copyWith(size: Size(maxW, constraints.maxHeight)),
                     child: content,
                   ),
                 ),
@@ -138,7 +140,9 @@ class GameHomePage extends StatefulWidget {
 
 class _GameHomePageState extends State<GameHomePage> {
   GameDirector get _director => widget.director;
-  Is2Overlay? _hubOverlay;
+
+  /// One owner of "which menu is open", shared by hub and dungeon.
+  final MenuRouter _router = MenuRouter();
   _AppPhase _phase = _AppPhase.loading;
 
   @override
@@ -249,6 +253,7 @@ class _GameHomePageState extends State<GameHomePage> {
 
   @override
   void dispose() {
+    _router.dispose();
     _director.dispose();
     super.dispose();
   }
@@ -329,69 +334,34 @@ class _GameHomePageState extends State<GameHomePage> {
           });
         }
 
-        // Drop stale hub MORE overlays when combat starts (ENTER / Daily /
-        // Gauntlet). Otherwise Codex/Guides can reopen on return to hub.
-        if (_director.state.inDungeon && _hubOverlay != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            if (_director.state.inDungeon && _hubOverlay != null) {
-              setState(() => _hubOverlay = null);
-            }
-          });
-        }
-
         final Widget body;
         if (_director.state.inDungeon) {
           body = Is2Shell(
             director: _director,
+            router: _router,
             pulse: 0.5,
             onLeaveDungeon: _director.leaveDungeon,
           );
         } else {
-          body = Stack(
-            children: [
-              IgnorePointer(
-                ignoring: _hubOverlay != null,
-                child: HubScreen(
-                  director: _director,
-                  onEnterDungeon: (id) {
-                    setState(() => _hubOverlay = null);
-                    _director.enterDungeon(dungeonId: id);
-                  },
-                  onOpenParty: () {
-                    _director.ackPendingHeroReveals();
-                    setState(() => _hubOverlay = Is2Overlay.inventory);
-                  },
-                  onOpenPower: () => setState(
-                    () => _hubOverlay = Is2Overlay.power,
-                  ),
-                  onOpenMeta: () => setState(
-                    () => _hubOverlay = Is2Overlay.meta,
-                  ),
-                  onOpenSettings: () => setState(
-                    () => _hubOverlay = Is2Overlay.settings,
+          body = ListenableBuilder(
+            listenable: _router,
+            builder: (context, _) => Stack(
+              children: [
+                IgnorePointer(
+                  ignoring: _router.isOpen,
+                  child: HubScreen(
+                    director: _director,
+                    router: _router,
+                    onEnterDungeon: (id) {
+                      _router.close();
+                      _director.enterDungeon(dungeonId: id);
+                    },
                   ),
                 ),
-              ),
-              if (_hubOverlay == null)
-                FirstSessionTips(director: _director),
-              if (_hubOverlay != null)
-                Positioned.fill(
-                  child: Material(
-                    color: const Color(0xF20A0806),
-                    child: Is2Shell(
-                      key: const ValueKey('hub-meta-shell'),
-                      director: _director,
-                      pulse: 0.5,
-                      hubMode: true,
-                      initialOverlay: _hubOverlay!,
-                      onLeaveDungeon: () => setState(
-                        () => _hubOverlay = null,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+                if (!_router.isOpen) FirstSessionTips(director: _director),
+                MenuSurface(director: _director, router: _router),
+              ],
+            ),
           );
         }
 

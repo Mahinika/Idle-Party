@@ -109,7 +109,7 @@ abstract final class MetaSystems {
     ),
     ChangelogRelease(
       version: '1.12.1',
-        bullets: <String>[
+      bullets: <String>[
         'After the first hour, TODAY chases KEY +1 for better iLvl loot (not Daily). Higher keys raise item level honestly — KEY +10 is a real jump vs the same floor without a key.',
         'GEAR: plate tanks show more ARMOR than leather DPS. Agility is a small dodge crumb — it no longer turns Combat Rogue into the party’s armor king.',
         'Kits: Arms Sweeping Strikes is a cleave window on your swings (HUD shows SWEEP) — not a one-shot nova. Prot Paladin Holy Shield is a block window while you tank; Divine Protection stays the panic bubble.',
@@ -341,9 +341,7 @@ abstract final class MetaSystems {
   ];
 
   /// Flat bullets for backward compat — all releases, newest first.
-  static List<String> get changelog => [
-        for (final r in releases) ...r.bullets,
-      ];
+  static List<String> get changelog => [for (final r in releases) ...r.bullets];
 
   /// True when the player has not acknowledged [currentVersion].
   static bool hasUnseenChangelog(GameState s) =>
@@ -467,83 +465,80 @@ abstract final class MetaSystems {
 
   static final Map<String, bool Function(GameState)> _conditions =
       <String, bool Function(GameState)>{
-    'first_floor': (s) =>
-        s.highestFloorCleared >= 1 || s.metaDepth.lifetimeFloorClears >= 1,
-    'first_boss': (s) =>
-        s.bossVictories >= 1 || s.metaDepth.lifetimeBossKills >= 1,
-    'first_ascend': (s) =>
-        s.ascensionLevel >= 1 || s.metaDepth.lifetimeAscends >= 1,
-    'clear_goblin': (s) => s.highestDungeonCleared >= 1,
-    'hatch_pet': (s) =>
-        s.ownedPets.isNotEmpty || s.metaDepth.lifetimePetHatches >= 1,
-    'daily_clear': (s) => s.dailyClaimed,
-    'full_party': (s) => s.heroes.length >= 4,
-    'party_five': (s) =>
-        s.metaDepth.partySlot5Unlocked && s.heroes.length >= 5,
-    'specs_10': (s) => s.metaDepth.unlockedSpecs.length >= 10,
-    'specs_all': (s) =>
-        s.metaDepth.unlockedSpecs.length >= HeroSpecId.values.length,
-    'clear_sandy': (s) => s.highestDungeonCleared >= 0,
-    'clear_king': (s) => s.highestDungeonCleared >= 2,
-    'clear_underworld': (s) => s.highestDungeonCleared >= 3,
-    'clear_dead': (s) => s.highestDungeonCleared >= 4,
-    'clear_hell': (s) => s.highestDungeonCleared >= 5,
-    'clear_crystal': (s) => s.highestDungeonCleared >= 6,
-    'clear_tide': (s) => s.highestDungeonCleared >= 7,
-    'clear_ember': (s) => s.highestDungeonCleared >= 8,
-    'clear_grove': (s) => s.highestDungeonCleared >= 9,
-    'clear_storm': (s) => s.highestDungeonCleared >= 10,
-    'clear_rime': (s) => s.highestDungeonCleared >= 11,
-    'clear_fen': (s) => s.highestDungeonCleared >= 12,
-    'clear_brass': (s) => s.highestDungeonCleared >= 13,
-    'clear_veil': (s) => s.highestDungeonCleared >= 14,
-    'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
-    'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
-    'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,
-    'gold_10k': (s) => s.lifetimeGoldEarned >= 10000,
-    'gold_100k': (s) => s.lifetimeGoldEarned >= 100000,
-    'gold_1m': (s) => s.lifetimeGoldEarned >= 1000000,
-    'codex_10': (s) =>
-        s.codexEnemies.length + s.codexItems.length >= 10,
-    'codex_25': (s) =>
-        s.codexEnemies.length + s.codexItems.length >= 25,
-    'codex_50': (s) =>
-        s.codexEnemies.length + s.codexItems.length >= 50,
-    'pets_3': (s) => s.ownedPets.length >= 3,
-    'pet_merge': (s) => s.metaDepth.lifetimePetMerges >= 1,
-    'pet_legendary': (s) =>
-        s.ownedPets.any((p) => p.rarity == PetRarity.legendary),
-    'favorite_pet': (s) => s.metaDepth.favoritePetSpecies.isNotEmpty,
-    'ascend_streak_3': (s) => s.metaDepth.ascendStreak >= 3,
-    'al_5': (s) => s.ascensionLevel >= 5,
-    'al_10': (s) => s.ascensionLevel >= 10,
-    'gauntlet_enter': (s) =>
-        s.inGauntlet || s.metaDepth.lifetimeGauntletFloors > 0,
-    'gauntlet_10': (s) => s.metaDepth.gauntletBestFloor >= 10,
-    'casts_100': (s) => s.metaDepth.lifetimeAbilityCasts >= 100,
-    'floors_50': (s) => s.metaDepth.lifetimeFloorClears >= 50,
-    'relic_all': (s) =>
-        s.hasRelic('war_banner') &&
-        s.hasRelic('iron_ward') &&
-        s.hasRelic('phoenix_ember') &&
-        s.hasRelic('god_hand_focus') &&
-        s.hasRelic('chamber_luck') &&
-        s.hasRelic('iron_will'),
-    'sanctuary_12': (s) =>
-        s.sanctuaryGoldLevel >= 12 ||
-        s.sanctuaryPowerLevel >= 12 ||
-        s.sanctuaryVitalityLevel >= 12 ||
-        s.metaDepth.sanctuaryXpLevel >= 12,
-    'god_hand_5': (s) => s.godHandLevel >= 5,
-    'weekly_clear': (s) => s.metaDepth.dailyVaultClaimed,
-    'gauntlet_25': (s) => s.metaDepth.gauntletBestFloor >= 25,
-    'gauntlet_50': (s) => s.metaDepth.gauntletBestFloor >= 50,
-    'gauntlet_100': (s) => s.metaDepth.gauntletBestFloor >= 100,
-    'apex_first': (s) => _apexPieces(s).isNotEmpty,
-    'apex_set_r1': (s) => _hasFullApexSetR1(s),
-    'apex_r3': (s) => _apexPieces(s).any((i) => i.apexRank >= 3),
-    'hidden_egg': (s) => s.metaDepth.lifetimePetHatches >= 10,
-  };
+        'first_floor': (s) =>
+            s.highestFloorCleared >= 1 || s.metaDepth.lifetimeFloorClears >= 1,
+        'first_boss': (s) =>
+            s.bossVictories >= 1 || s.metaDepth.lifetimeBossKills >= 1,
+        'first_ascend': (s) =>
+            s.ascensionLevel >= 1 || s.metaDepth.lifetimeAscends >= 1,
+        'clear_goblin': (s) => s.highestDungeonCleared >= 1,
+        'hatch_pet': (s) =>
+            s.ownedPets.isNotEmpty || s.metaDepth.lifetimePetHatches >= 1,
+        'daily_clear': (s) => s.dailyClaimed,
+        'full_party': (s) => s.heroes.length >= 4,
+        'party_five': (s) =>
+            s.metaDepth.partySlot5Unlocked && s.heroes.length >= 5,
+        'specs_10': (s) => s.metaDepth.unlockedSpecs.length >= 10,
+        'specs_all': (s) =>
+            s.metaDepth.unlockedSpecs.length >= HeroSpecId.values.length,
+        'clear_sandy': (s) => s.highestDungeonCleared >= 0,
+        'clear_king': (s) => s.highestDungeonCleared >= 2,
+        'clear_underworld': (s) => s.highestDungeonCleared >= 3,
+        'clear_dead': (s) => s.highestDungeonCleared >= 4,
+        'clear_hell': (s) => s.highestDungeonCleared >= 5,
+        'clear_crystal': (s) => s.highestDungeonCleared >= 6,
+        'clear_tide': (s) => s.highestDungeonCleared >= 7,
+        'clear_ember': (s) => s.highestDungeonCleared >= 8,
+        'clear_grove': (s) => s.highestDungeonCleared >= 9,
+        'clear_storm': (s) => s.highestDungeonCleared >= 10,
+        'clear_rime': (s) => s.highestDungeonCleared >= 11,
+        'clear_fen': (s) => s.highestDungeonCleared >= 12,
+        'clear_brass': (s) => s.highestDungeonCleared >= 13,
+        'clear_veil': (s) => s.highestDungeonCleared >= 14,
+        'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
+        'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
+        'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,
+        'gold_10k': (s) => s.lifetimeGoldEarned >= 10000,
+        'gold_100k': (s) => s.lifetimeGoldEarned >= 100000,
+        'gold_1m': (s) => s.lifetimeGoldEarned >= 1000000,
+        'codex_10': (s) => s.codexEnemies.length + s.codexItems.length >= 10,
+        'codex_25': (s) => s.codexEnemies.length + s.codexItems.length >= 25,
+        'codex_50': (s) => s.codexEnemies.length + s.codexItems.length >= 50,
+        'pets_3': (s) => s.ownedPets.length >= 3,
+        'pet_merge': (s) => s.metaDepth.lifetimePetMerges >= 1,
+        'pet_legendary': (s) =>
+            s.ownedPets.any((p) => p.rarity == PetRarity.legendary),
+        'favorite_pet': (s) => s.metaDepth.favoritePetSpecies.isNotEmpty,
+        'ascend_streak_3': (s) => s.metaDepth.ascendStreak >= 3,
+        'al_5': (s) => s.ascensionLevel >= 5,
+        'al_10': (s) => s.ascensionLevel >= 10,
+        'gauntlet_enter': (s) =>
+            s.inGauntlet || s.metaDepth.lifetimeGauntletFloors > 0,
+        'gauntlet_10': (s) => s.metaDepth.gauntletBestFloor >= 10,
+        'casts_100': (s) => s.metaDepth.lifetimeAbilityCasts >= 100,
+        'floors_50': (s) => s.metaDepth.lifetimeFloorClears >= 50,
+        'relic_all': (s) =>
+            s.hasRelic('war_banner') &&
+            s.hasRelic('iron_ward') &&
+            s.hasRelic('phoenix_ember') &&
+            s.hasRelic('god_hand_focus') &&
+            s.hasRelic('chamber_luck') &&
+            s.hasRelic('iron_will'),
+        'sanctuary_12': (s) =>
+            s.sanctuaryGoldLevel >= 12 ||
+            s.sanctuaryPowerLevel >= 12 ||
+            s.sanctuaryVitalityLevel >= 12 ||
+            s.metaDepth.sanctuaryXpLevel >= 12,
+        'god_hand_5': (s) => s.godHandLevel >= 5,
+        'weekly_clear': (s) => s.metaDepth.dailyVaultClaimed,
+        'gauntlet_25': (s) => s.metaDepth.gauntletBestFloor >= 25,
+        'gauntlet_50': (s) => s.metaDepth.gauntletBestFloor >= 50,
+        'gauntlet_100': (s) => s.metaDepth.gauntletBestFloor >= 100,
+        'apex_first': (s) => _apexPieces(s).isNotEmpty,
+        'apex_set_r1': (s) => _hasFullApexSetR1(s),
+        'apex_r3': (s) => _apexPieces(s).any((i) => i.apexRank >= 3),
+        'hidden_egg': (s) => s.metaDepth.lifetimePetHatches >= 10,
+      };
 
   static List<EquipmentItem> _apexPieces(GameState s) {
     final out = <EquipmentItem>[];
@@ -625,9 +620,7 @@ abstract final class MetaSystems {
     var bonus = 0;
     if (state.challengeBossRush) bonus += 2;
     if (state.challengeNoFlask) bonus += 2;
-    final key = state.keystoneRunActive
-        ? state.keystoneRunLevel
-        : 0;
+    final key = state.keystoneRunActive ? state.keystoneRunLevel : 0;
     bonus += key.clamp(0, state.effectiveMaxHardmode);
     return bonus;
   }
@@ -653,10 +646,7 @@ abstract final class MetaSystems {
   }
 
   /// Registers every dropped equipment piece's display name as "discovered".
-  static GameState registerItemDrops(
-    GameState state,
-    List<LootDrop> drops,
-  ) {
+  static GameState registerItemDrops(GameState state, List<LootDrop> drops) {
     if (drops.isEmpty) return state;
     final names = <String>{};
     for (final drop in drops) {

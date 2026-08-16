@@ -9,13 +9,16 @@ class ClassProficiency {
   static bool canEquipArmor(HeroRole role, int level, ArmorType type) {
     return switch (role) {
       HeroRole.warrior => type != ArmorType.plate || level >= 40,
-      HeroRole.rogue =>
-        type == ArmorType.cloth || type == ArmorType.leather,
+      HeroRole.rogue => type == ArmorType.cloth || type == ArmorType.leather,
       HeroRole.healer || HeroRole.mage => type == ArmorType.cloth,
     };
   }
 
-  static bool canEquipArmorForSpec(HeroSpecDef spec, int level, ArmorType type) {
+  static bool canEquipArmorForSpec(
+    HeroSpecDef spec,
+    int level,
+    ArmorType type,
+  ) {
     if (!spec.armorTypes.contains(type)) return false;
     // Plate unlocks at 40 except Death Knights (start in plate).
     if (type == ArmorType.plate &&
@@ -45,40 +48,37 @@ class ClassProficiency {
 
     return switch (role) {
       HeroRole.warrior => switch (type) {
-          WeaponType.axe ||
-          WeaponType.sword ||
-          WeaponType.mace ||
-          WeaponType.dagger ||
-          WeaponType.fist ||
-          WeaponType.staff ||
-          WeaponType.polearm =>
-            true,
-          WeaponType.bow ||
-          WeaponType.crossbow ||
-          WeaponType.gun ||
-          WeaponType.thrown ||
-          WeaponType.wand =>
-            false,
-        },
+        WeaponType.axe ||
+        WeaponType.sword ||
+        WeaponType.mace ||
+        WeaponType.dagger ||
+        WeaponType.fist ||
+        WeaponType.staff ||
+        WeaponType.polearm => true,
+        WeaponType.bow ||
+        WeaponType.crossbow ||
+        WeaponType.gun ||
+        WeaponType.thrown ||
+        WeaponType.wand => false,
+      },
       HeroRole.rogue => switch (type) {
-          WeaponType.axe ||
-          WeaponType.sword ||
-          WeaponType.mace ||
-          WeaponType.dagger ||
-          WeaponType.fist =>
-            handed == WeaponHanded.oneHand,
-          _ => false,
-        },
+        WeaponType.axe ||
+        WeaponType.sword ||
+        WeaponType.mace ||
+        WeaponType.dagger ||
+        WeaponType.fist => handed == WeaponHanded.oneHand,
+        _ => false,
+      },
       HeroRole.healer => switch (type) {
-          WeaponType.mace => handed == WeaponHanded.oneHand,
-          WeaponType.dagger || WeaponType.staff => true,
-          _ => false,
-        },
+        WeaponType.mace => handed == WeaponHanded.oneHand,
+        WeaponType.dagger || WeaponType.staff => true,
+        _ => false,
+      },
       HeroRole.mage => switch (type) {
-          WeaponType.sword => handed == WeaponHanded.oneHand,
-          WeaponType.dagger || WeaponType.staff => true,
-          _ => false,
-        },
+        WeaponType.sword => handed == WeaponHanded.oneHand,
+        WeaponType.dagger || WeaponType.staff => true,
+        _ => false,
+      },
     };
   }
 
@@ -108,67 +108,56 @@ class ClassProficiency {
               type == WeaponType.thrown,
         HeroClassId.priest ||
         HeroClassId.mage ||
-        HeroClassId.warlock =>
-          type == WeaponType.wand,
+        HeroClassId.warlock => type == WeaponType.wand,
       };
     }
 
     return switch (spec.classId) {
       HeroClassId.hunter => switch (type) {
-          WeaponType.axe ||
-          WeaponType.sword ||
-          WeaponType.polearm ||
-          WeaponType.staff ||
-          WeaponType.dagger ||
-          WeaponType.fist =>
-            true,
-          _ => false,
-        },
+        WeaponType.axe ||
+        WeaponType.sword ||
+        WeaponType.polearm ||
+        WeaponType.staff ||
+        WeaponType.dagger ||
+        WeaponType.fist => true,
+        _ => false,
+      },
       HeroClassId.shaman => switch (type) {
-          WeaponType.axe ||
-          WeaponType.mace ||
-          WeaponType.staff ||
-          WeaponType.dagger ||
-          WeaponType.fist =>
-            true,
-          _ => false,
-        },
+        WeaponType.axe ||
+        WeaponType.mace ||
+        WeaponType.staff ||
+        WeaponType.dagger ||
+        WeaponType.fist => true,
+        _ => false,
+      },
       HeroClassId.deathKnight => switch (type) {
-          WeaponType.axe ||
-          WeaponType.sword ||
-          WeaponType.mace ||
-          WeaponType.polearm =>
-            true,
-          _ => false,
-        },
+        WeaponType.axe ||
+        WeaponType.sword ||
+        WeaponType.mace ||
+        WeaponType.polearm => true,
+        _ => false,
+      },
       HeroClassId.paladin => switch (type) {
-          WeaponType.axe ||
-          WeaponType.sword ||
-          WeaponType.mace ||
-          WeaponType.polearm =>
-            true,
-          _ => false,
-        },
+        WeaponType.axe ||
+        WeaponType.sword ||
+        WeaponType.mace ||
+        WeaponType.polearm => true,
+        _ => false,
+      },
       HeroClassId.druid => switch (type) {
-          WeaponType.staff ||
-          WeaponType.dagger ||
-          WeaponType.mace ||
-          WeaponType.fist ||
-          WeaponType.polearm =>
-            true,
-          _ => false,
-        },
+        WeaponType.staff ||
+        WeaponType.dagger ||
+        WeaponType.mace ||
+        WeaponType.fist ||
+        WeaponType.polearm => true,
+        _ => false,
+      },
       HeroClassId.warlock => switch (type) {
-          WeaponType.sword => handed == WeaponHanded.oneHand,
-          WeaponType.dagger || WeaponType.staff => true,
-          _ => false,
-        },
-      _ => canEquipWeapon(
-          spec.gearAffinity,
-          type,
-          handed,
-          rangedSlot: false,
-        ),
+        WeaponType.sword => handed == WeaponHanded.oneHand,
+        WeaponType.dagger || WeaponType.staff => true,
+        _ => false,
+      },
+      _ => canEquipWeapon(spec.gearAffinity, type, handed, rangedSlot: false),
     };
   }
 
@@ -194,8 +183,7 @@ class ClassProficiency {
       HeroClassId.shaman =>
         kind == OffHandKind.shield ||
             kind == OffHandKind.frill ||
-            (spec.id == HeroSpecId.enhancement &&
-                kind == OffHandKind.weapon),
+            (spec.id == HeroSpecId.enhancement && kind == OffHandKind.weapon),
       HeroClassId.rogue => kind == OffHandKind.weapon,
       HeroClassId.hunter =>
         kind == OffHandKind.weapon || kind == OffHandKind.frill,
@@ -205,8 +193,7 @@ class ClassProficiency {
             : (kind == OffHandKind.frill || kind == OffHandKind.weapon),
       HeroClassId.priest ||
       HeroClassId.mage ||
-      HeroClassId.warlock =>
-        kind == OffHandKind.frill,
+      HeroClassId.warlock => kind == OffHandKind.frill,
     };
   }
 
@@ -285,12 +272,7 @@ class ClassProficiency {
     required EquipmentItem item,
     HeroSpecId? specId,
   }) =>
-      rejectReason(
-        role: role,
-        level: level,
-        item: item,
-        specId: specId,
-      ) ==
+      rejectReason(role: role, level: level, item: item, specId: specId) ==
       null;
 
   /// Two-handed main-hand conflicts with off-hand.
@@ -303,18 +285,17 @@ class ClassProficiency {
   }
 
   static WeaponHanded defaultHanded(WeaponType type) => switch (type) {
-        WeaponType.dagger ||
-        WeaponType.fist ||
-        WeaponType.wand ||
-        WeaponType.thrown =>
-          WeaponHanded.oneHand,
-        WeaponType.staff ||
-        WeaponType.polearm ||
-        WeaponType.bow ||
-        WeaponType.crossbow ||
-        WeaponType.gun =>
-          WeaponHanded.twoHand,
-        WeaponType.axe || WeaponType.sword || WeaponType.mace =>
-          WeaponHanded.oneHand,
-      };
+    WeaponType.dagger ||
+    WeaponType.fist ||
+    WeaponType.wand ||
+    WeaponType.thrown => WeaponHanded.oneHand,
+    WeaponType.staff ||
+    WeaponType.polearm ||
+    WeaponType.bow ||
+    WeaponType.crossbow ||
+    WeaponType.gun => WeaponHanded.twoHand,
+    WeaponType.axe ||
+    WeaponType.sword ||
+    WeaponType.mace => WeaponHanded.oneHand,
+  };
 }

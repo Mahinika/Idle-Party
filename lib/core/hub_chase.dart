@@ -14,6 +14,7 @@ enum HubChaseKind {
   /// Daily vault ready to claim (API still uses [GameLogic.claimWeekly]).
   claimDailyVault,
   claimMissions,
+
   /// Newly unlocked kit waiting for PARTY meet / acknowledge.
   meetHero,
   ascend,
@@ -22,6 +23,7 @@ enum HubChaseKind {
   gauntletMilestone,
   unlockZone,
   dailyRun,
+
   /// Next KEY run after the first hour (habit until AL cap).
   keystone,
   clearFloors,
@@ -96,8 +98,7 @@ class HubChase {
       );
     }
 
-    final completeMissions =
-        state.missions.where((m) => m.isComplete).length;
+    final completeMissions = state.missions.where((m) => m.isComplete).length;
     if (completeMissions > 0) {
       return HubChase(
         kind: HubChaseKind.claimMissions,
@@ -114,15 +115,15 @@ class HubChase {
     if (meet != null) return meet;
 
     if (GameLogic.canAscend(state)) {
-      final reward = GameLogic.ascendEssenceReward(state.ascensionLevel + 1) +
+      final reward =
+          GameLogic.ascendEssenceReward(state.ascensionLevel + 1) +
           MetaSystems.ascendMilestoneReward(
             state.ascensionLevel,
             state.ascensionLevel + 1,
           );
       final nextAl = state.ascensionLevel + 1;
       final unlock = AscendRoadmap.unlockAtAl(nextAl);
-      final unlockBit =
-          unlock != null ? ' · AL$nextAl unlocks $unlock' : '';
+      final unlockBit = unlock != null ? ' · AL$nextAl unlocks $unlock' : '';
       return HubChase(
         kind: HubChaseKind.ascend,
         title: 'Ascend for lasting power',
@@ -136,14 +137,13 @@ class HubChase {
       );
     }
 
-    final bossesNeed =
-        GameLogic.bossesRequiredForAscension(state.ascensionLevel);
-    final bossesLeft =
-        (bossesNeed - state.bossVictories).clamp(0, bossesNeed);
+    final bossesNeed = GameLogic.bossesRequiredForAscension(
+      state.ascensionLevel,
+    );
+    final bossesLeft = (bossesNeed - state.bossVictories).clamp(0, bossesNeed);
     // Only "almost" once you've banked progress (AL0 needs 1 boss total —
     // 0/1 is the start of the game, not a cliffhanger).
-    final almostAscend =
-        bossesLeft == 1 && state.bossVictories > 0;
+    final almostAscend = bossesLeft == 1 && state.bossVictories > 0;
     if (almostAscend) {
       return _ascendPushChase(
         state,
@@ -344,14 +344,14 @@ class HubChase {
       title: almost
           ? 'Almost Ascend — push ${dungeon.name}'
           : firstHour
-              ? 'Grow the party — ${dungeon.name}'
-              : 'Push ${dungeon.name}',
+          ? 'Grow the party — ${dungeon.name}'
+          : 'Push ${dungeon.name}',
       detail: firstHour
           ? 'Enter the cave. Your party fights on its own. Get stronger and beat the boss.'
           : bossesLeft > 0
           ? (almost
-              ? '1 boss left · then Ascend. $teaser'
-              : 'Clear bosses toward Ascend ($bossesLeft left). $teaser')
+                ? '1 boss left · then Ascend. $teaser'
+                : 'Clear bosses toward Ascend ($bossesLeft left). $teaser')
           : 'Farm gear or push deeper for power. $teaser',
       progressLabel: 'Ascend ${state.bossVictories}/$bossesNeed',
       urgency: urgency,
@@ -426,7 +426,8 @@ class HubChase {
           zoneId: d.id,
         );
       }
-      final almost = d.unlockPrice > 0 &&
+      final almost =
+          d.unlockPrice > 0 &&
           goldNeed <= (d.unlockPrice * 0.12).ceil().clamp(1, d.unlockPrice);
       // Playing the current zone unlocks the next. TODAY only names a zone
       // unlock when gold is a cliffhanger — not as the default grind.

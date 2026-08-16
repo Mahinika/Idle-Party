@@ -11,11 +11,11 @@ abstract final class PlayLeaderboardIds {
   /// Play Console boards for season 2026-08 (Idle Party Games project 986358854278).
   static const Map<String, ({String timedKey, String gauntlet})> byMonth =
       <String, ({String timedKey, String gauntlet})>{
-    '2026-08': (
-      timedKey: 'CgkIhuXGvNocEAIQAA',
-      gauntlet: 'CgkIhuXGvNocEAIQAQ',
-    ),
-  };
+        '2026-08': (
+          timedKey: 'CgkIhuXGvNocEAIQAA',
+          gauntlet: 'CgkIhuXGvNocEAIQAQ',
+        ),
+      };
 
   static String timedKeyId(String monthKey) =>
       byMonth[monthKey]?.timedKey ?? '';

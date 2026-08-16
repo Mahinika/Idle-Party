@@ -34,8 +34,10 @@ abstract final class KenneyAssets {
   static String get floorDirtAlt1 => tile(1);
   static String get floorDirtAlt2 => tile(2);
   static String get floorDirtAlt3 => tile(3);
+
   /// Pebbled dirt — preferred when we want readable texture.
   static String get floorDirtDetail => tile(24);
+
   /// Clean sand (no baked wall-lip). Legacy edged sand is tile 30 — do not use as floor fill.
   static String get floorSand => tile(48);
   static String get floorSandWorn => tile(49);
@@ -62,6 +64,7 @@ abstract final class KenneyAssets {
 
   // —— Hazards / markers ——
   static String get hazardWater => tile(32);
+
   /// Warm red floor stain (distinct from spike trap tile 41).
   static String get hazardLava => tile(12);
   static String get corridorActive => tile(60);
@@ -89,8 +92,10 @@ abstract final class KenneyAssets {
   static String get chestClosed => tile(89);
   static String get chestOpen => tile(90);
   static String get chestMimic => tile(92);
+
   /// Wall fountain / glow — Tiny Dungeon has no free-standing torch sprite.
   static String get torch => tile(8);
+
   /// Warm wall accent (not the slime fountain twin).
   static String get torchAlt => tile(25);
 
@@ -224,17 +229,17 @@ abstract final class KenneyAssets {
   static String get relicPhoenixEmber => CustomAssets.iconRelicPhoenixEmber;
 
   static String heroSpriteForClass(HeroClassId classId) => switch (classId) {
-        HeroClassId.warrior => CustomAssets.heroKnight,
-        HeroClassId.paladin => CustomAssets.heroPaladin,
-        HeroClassId.hunter => CustomAssets.heroHunter,
-        HeroClassId.rogue => CustomAssets.heroRogue,
-        HeroClassId.priest => CustomAssets.heroHealer,
-        HeroClassId.deathKnight => CustomAssets.heroDeathKnight,
-        HeroClassId.shaman => CustomAssets.heroShaman,
-        HeroClassId.mage => CustomAssets.heroWizard,
-        HeroClassId.warlock => CustomAssets.heroWarlock,
-        HeroClassId.druid => CustomAssets.heroDruid,
-      };
+    HeroClassId.warrior => CustomAssets.heroKnight,
+    HeroClassId.paladin => CustomAssets.heroPaladin,
+    HeroClassId.hunter => CustomAssets.heroHunter,
+    HeroClassId.rogue => CustomAssets.heroRogue,
+    HeroClassId.priest => CustomAssets.heroHealer,
+    HeroClassId.deathKnight => CustomAssets.heroDeathKnight,
+    HeroClassId.shaman => CustomAssets.heroShaman,
+    HeroClassId.mage => CustomAssets.heroWizard,
+    HeroClassId.warlock => CustomAssets.heroWarlock,
+    HeroClassId.druid => CustomAssets.heroDruid,
+  };
 
   static String heroSpriteForSpec(HeroSpecId specId) =>
       CustomAssets.heroForClass(HeroIdentity.spriteClassFor(specId));
@@ -263,22 +268,18 @@ abstract final class KenneyAssets {
       'brass' => floorStone, // brass halls — not fen mud twin
       'veil' => floorDirtDetail, // silk dust — not brass stone twin
       _ => switch (DungeonCatalog.byId(dungeonId).layout) {
-          DungeonLayoutKind.cave => floorSand,
-          DungeonLayoutKind.hideout => floorDirtDetail,
-          DungeonLayoutKind.fort || DungeonLayoutKind.arena => floorStone,
-        },
+        DungeonLayoutKind.cave => floorSand,
+        DungeonLayoutKind.hideout => floorDirtDetail,
+        DungeonLayoutKind.fort || DungeonLayoutKind.arena => floorStone,
+      },
     };
   }
 
   /// Single verified floor per dungeon — sand uses a clean + worn pair (no wall-lip tiles).
   static List<String> floorVariantsForDungeon(String dungeonId) {
     return switch (dungeonId) {
-      'sandy' || 'hell' => <String>[
-          floorSand,
-          floorSand,
-          floorSand,
-          floorSandWorn,
-        ],
+      'sandy' ||
+      'hell' => <String>[floorSand, floorSand, floorSand, floorSandWorn],
       // Ash vault: stone + worn sand grit (not hell’s sand-heavy floor).
       'ember' => <String>[floorStone, floorStone, floorSandWorn],
       // Wet silt + clean dirt puddles (not crystal stone).
@@ -329,268 +330,268 @@ abstract final class KenneyAssets {
       open ? doorOpen : doorClosed;
 
   static String propAsset(MapPropKind kind) => switch (kind) {
-        MapPropKind.barrel => barrel,
-        MapPropKind.crate => crate,
-        MapPropKind.table => table,
-        MapPropKind.stool => stool,
-        MapPropKind.torch => torch,
-        MapPropKind.torchAlt => torchAlt,
-        MapPropKind.gravestone => gravestone,
-        MapPropKind.fountain => fountainSlime,
-        MapPropKind.trap => trapSpikes,
-        MapPropKind.pot => propPot,
-        MapPropKind.bones => propBones,
-        MapPropKind.skull => gravestoneAlt,
-        MapPropKind.hatch => hatch,
-        MapPropKind.water => hazardWater,
-        MapPropKind.lava => hazardLava,
-        MapPropKind.anvil => anvil,
-        MapPropKind.shelf => propShelf,
-        MapPropKind.fence => propFence,
-        MapPropKind.pillar => propPillar,
-        MapPropKind.rubble => propRubble,
-        MapPropKind.chest => chestClosed,
-      };
+    MapPropKind.barrel => barrel,
+    MapPropKind.crate => crate,
+    MapPropKind.table => table,
+    MapPropKind.stool => stool,
+    MapPropKind.torch => torch,
+    MapPropKind.torchAlt => torchAlt,
+    MapPropKind.gravestone => gravestone,
+    MapPropKind.fountain => fountainSlime,
+    MapPropKind.trap => trapSpikes,
+    MapPropKind.pot => propPot,
+    MapPropKind.bones => propBones,
+    MapPropKind.skull => gravestoneAlt,
+    MapPropKind.hatch => hatch,
+    MapPropKind.water => hazardWater,
+    MapPropKind.lava => hazardLava,
+    MapPropKind.anvil => anvil,
+    MapPropKind.shelf => propShelf,
+    MapPropKind.fence => propFence,
+    MapPropKind.pillar => propPillar,
+    MapPropKind.rubble => propRubble,
+    MapPropKind.chest => chestClosed,
+  };
 
   /// Weighted pools (duplicates = more common). Keep each zone's clutter distinct.
   static List<MapPropKind> propPoolForDungeon(String dungeonId) =>
       switch (dungeonId) {
         'sandy' => const [
-            MapPropKind.barrel,
-            MapPropKind.barrel,
-            MapPropKind.crate,
-            MapPropKind.crate,
-            MapPropKind.crate,
-            MapPropKind.table,
-            MapPropKind.hatch,
-            MapPropKind.hatch,
-            MapPropKind.shelf,
-            MapPropKind.shelf,
-            MapPropKind.rubble,
-            MapPropKind.torch,
-            MapPropKind.torchAlt,
-          ],
+          MapPropKind.barrel,
+          MapPropKind.barrel,
+          MapPropKind.crate,
+          MapPropKind.crate,
+          MapPropKind.crate,
+          MapPropKind.table,
+          MapPropKind.hatch,
+          MapPropKind.hatch,
+          MapPropKind.shelf,
+          MapPropKind.shelf,
+          MapPropKind.rubble,
+          MapPropKind.torch,
+          MapPropKind.torchAlt,
+        ],
         'goblin' => const [
-            MapPropKind.barrel,
-            MapPropKind.barrel,
-            MapPropKind.crate,
-            MapPropKind.crate,
-            MapPropKind.table,
-            MapPropKind.stool,
-            MapPropKind.bones,
-            MapPropKind.pot,
-            MapPropKind.skull,
-            MapPropKind.shelf,
-            MapPropKind.rubble,
-          ],
+          MapPropKind.barrel,
+          MapPropKind.barrel,
+          MapPropKind.crate,
+          MapPropKind.crate,
+          MapPropKind.table,
+          MapPropKind.stool,
+          MapPropKind.bones,
+          MapPropKind.pot,
+          MapPropKind.skull,
+          MapPropKind.shelf,
+          MapPropKind.rubble,
+        ],
         'king' => const [
-            MapPropKind.torch,
-            MapPropKind.torch,
-            MapPropKind.crate,
-            MapPropKind.anvil,
-            MapPropKind.table,
-            MapPropKind.table,
-            MapPropKind.barrel,
-            MapPropKind.stool,
-            MapPropKind.fence,
-            MapPropKind.pillar,
-            MapPropKind.shelf,
-            MapPropKind.hatch,
-          ],
+          MapPropKind.torch,
+          MapPropKind.torch,
+          MapPropKind.crate,
+          MapPropKind.anvil,
+          MapPropKind.table,
+          MapPropKind.table,
+          MapPropKind.barrel,
+          MapPropKind.stool,
+          MapPropKind.fence,
+          MapPropKind.pillar,
+          MapPropKind.shelf,
+          MapPropKind.hatch,
+        ],
         'underworld' => const [
-            MapPropKind.torch,
-            MapPropKind.torch,
-            MapPropKind.barrel,
-            MapPropKind.fountain,
-            MapPropKind.crate,
-            MapPropKind.bones,
-            MapPropKind.skull,
-            MapPropKind.pillar,
-            MapPropKind.fence,
-            MapPropKind.rubble,
-            MapPropKind.pot,
-          ],
+          MapPropKind.torch,
+          MapPropKind.torch,
+          MapPropKind.barrel,
+          MapPropKind.fountain,
+          MapPropKind.crate,
+          MapPropKind.bones,
+          MapPropKind.skull,
+          MapPropKind.pillar,
+          MapPropKind.fence,
+          MapPropKind.rubble,
+          MapPropKind.pot,
+        ],
         'dead' => const [
-            MapPropKind.gravestone,
-            MapPropKind.gravestone,
-            MapPropKind.bones,
-            MapPropKind.bones,
-            MapPropKind.skull,
-            MapPropKind.crate,
-            MapPropKind.torch,
-            MapPropKind.hatch,
-            MapPropKind.fence,
-            MapPropKind.rubble,
-            MapPropKind.pillar,
-          ],
+          MapPropKind.gravestone,
+          MapPropKind.gravestone,
+          MapPropKind.bones,
+          MapPropKind.bones,
+          MapPropKind.skull,
+          MapPropKind.crate,
+          MapPropKind.torch,
+          MapPropKind.hatch,
+          MapPropKind.fence,
+          MapPropKind.rubble,
+          MapPropKind.pillar,
+        ],
         'hell' => const [
-            MapPropKind.torch,
-            MapPropKind.torchAlt,
-            MapPropKind.torchAlt,
-            MapPropKind.barrel,
-            MapPropKind.trap,
-            MapPropKind.lava,
-            MapPropKind.bones,
-            MapPropKind.skull,
-            MapPropKind.rubble,
-            MapPropKind.pillar,
-            MapPropKind.crate,
-          ],
+          MapPropKind.torch,
+          MapPropKind.torchAlt,
+          MapPropKind.torchAlt,
+          MapPropKind.barrel,
+          MapPropKind.trap,
+          MapPropKind.lava,
+          MapPropKind.bones,
+          MapPropKind.skull,
+          MapPropKind.rubble,
+          MapPropKind.pillar,
+          MapPropKind.crate,
+        ],
         'crystal' => const [
-            MapPropKind.torch,
-            MapPropKind.fountain,
-            MapPropKind.fountain,
-            MapPropKind.crate,
-            MapPropKind.pillar,
-            MapPropKind.pillar,
-            MapPropKind.chest,
-            MapPropKind.fence,
-            MapPropKind.hatch,
-            MapPropKind.anvil,
-            MapPropKind.stool,
-          ],
+          MapPropKind.torch,
+          MapPropKind.fountain,
+          MapPropKind.fountain,
+          MapPropKind.crate,
+          MapPropKind.pillar,
+          MapPropKind.pillar,
+          MapPropKind.chest,
+          MapPropKind.fence,
+          MapPropKind.hatch,
+          MapPropKind.anvil,
+          MapPropKind.stool,
+        ],
         'tide' => const [
-            MapPropKind.water,
-            MapPropKind.water,
-            MapPropKind.water,
-            MapPropKind.water,
-            MapPropKind.fountain,
-            MapPropKind.fountain,
-            MapPropKind.barrel,
-            MapPropKind.barrel,
-            MapPropKind.hatch,
-            MapPropKind.pot,
-            MapPropKind.pillar,
-            MapPropKind.stool,
-          ],
+          MapPropKind.water,
+          MapPropKind.water,
+          MapPropKind.water,
+          MapPropKind.water,
+          MapPropKind.fountain,
+          MapPropKind.fountain,
+          MapPropKind.barrel,
+          MapPropKind.barrel,
+          MapPropKind.hatch,
+          MapPropKind.pot,
+          MapPropKind.pillar,
+          MapPropKind.stool,
+        ],
         'ember' => const [
-            MapPropKind.lava,
-            MapPropKind.lava,
-            MapPropKind.lava,
-            MapPropKind.anvil,
-            MapPropKind.anvil,
-            MapPropKind.torch,
-            MapPropKind.torchAlt,
-            MapPropKind.torchAlt,
-            MapPropKind.pillar,
-            MapPropKind.bones,
-            MapPropKind.rubble,
-            MapPropKind.skull,
-          ],
+          MapPropKind.lava,
+          MapPropKind.lava,
+          MapPropKind.lava,
+          MapPropKind.anvil,
+          MapPropKind.anvil,
+          MapPropKind.torch,
+          MapPropKind.torchAlt,
+          MapPropKind.torchAlt,
+          MapPropKind.pillar,
+          MapPropKind.bones,
+          MapPropKind.rubble,
+          MapPropKind.skull,
+        ],
         'grove' => const [
-            MapPropKind.fence,
-            MapPropKind.fence,
-            MapPropKind.pot,
-            MapPropKind.pot,
-            MapPropKind.fountain,
-            MapPropKind.bones,
-            MapPropKind.bones,
-            MapPropKind.rubble,
-            MapPropKind.shelf,
-            MapPropKind.torch,
-            MapPropKind.crate,
-            MapPropKind.barrel,
-          ],
+          MapPropKind.fence,
+          MapPropKind.fence,
+          MapPropKind.pot,
+          MapPropKind.pot,
+          MapPropKind.fountain,
+          MapPropKind.bones,
+          MapPropKind.bones,
+          MapPropKind.rubble,
+          MapPropKind.shelf,
+          MapPropKind.torch,
+          MapPropKind.crate,
+          MapPropKind.barrel,
+        ],
         'storm' => const [
-            MapPropKind.torch,
-            MapPropKind.torch,
-            MapPropKind.torchAlt,
-            MapPropKind.torchAlt,
-            MapPropKind.rubble,
-            MapPropKind.rubble,
-            MapPropKind.pillar,
-            MapPropKind.fence,
-            MapPropKind.crate,
-            MapPropKind.barrel,
-            MapPropKind.trap,
-            MapPropKind.bones,
-          ],
+          MapPropKind.torch,
+          MapPropKind.torch,
+          MapPropKind.torchAlt,
+          MapPropKind.torchAlt,
+          MapPropKind.rubble,
+          MapPropKind.rubble,
+          MapPropKind.pillar,
+          MapPropKind.fence,
+          MapPropKind.crate,
+          MapPropKind.barrel,
+          MapPropKind.trap,
+          MapPropKind.bones,
+        ],
         'rime' => const [
-            MapPropKind.fountain,
-            MapPropKind.fountain,
-            MapPropKind.water,
-            MapPropKind.pillar,
-            MapPropKind.pillar,
-            MapPropKind.chest,
-            MapPropKind.rubble,
-            MapPropKind.crate,
-            MapPropKind.barrel,
-            MapPropKind.pot,
-            MapPropKind.shelf,
-            MapPropKind.bones,
-            MapPropKind.fence,
-          ],
+          MapPropKind.fountain,
+          MapPropKind.fountain,
+          MapPropKind.water,
+          MapPropKind.pillar,
+          MapPropKind.pillar,
+          MapPropKind.chest,
+          MapPropKind.rubble,
+          MapPropKind.crate,
+          MapPropKind.barrel,
+          MapPropKind.pot,
+          MapPropKind.shelf,
+          MapPropKind.bones,
+          MapPropKind.fence,
+        ],
         'fen' => const [
-            MapPropKind.water,
-            MapPropKind.water,
-            MapPropKind.water,
-            MapPropKind.fountain,
-            MapPropKind.fountain,
-            MapPropKind.bones,
-            MapPropKind.trap,
-            MapPropKind.rubble,
-            MapPropKind.crate,
-            MapPropKind.barrel,
-            MapPropKind.skull,
-            MapPropKind.pot,
-          ],
+          MapPropKind.water,
+          MapPropKind.water,
+          MapPropKind.water,
+          MapPropKind.fountain,
+          MapPropKind.fountain,
+          MapPropKind.bones,
+          MapPropKind.trap,
+          MapPropKind.rubble,
+          MapPropKind.crate,
+          MapPropKind.barrel,
+          MapPropKind.skull,
+          MapPropKind.pot,
+        ],
         'brass' => const [
-            MapPropKind.anvil,
-            MapPropKind.anvil,
-            MapPropKind.pillar,
-            MapPropKind.pillar,
-            MapPropKind.chest,
-            MapPropKind.hatch,
-            MapPropKind.crate,
-            MapPropKind.barrel,
-            MapPropKind.rubble,
-            MapPropKind.torch,
-            MapPropKind.stool,
-            MapPropKind.shelf,
-          ],
+          MapPropKind.anvil,
+          MapPropKind.anvil,
+          MapPropKind.pillar,
+          MapPropKind.pillar,
+          MapPropKind.chest,
+          MapPropKind.hatch,
+          MapPropKind.crate,
+          MapPropKind.barrel,
+          MapPropKind.rubble,
+          MapPropKind.torch,
+          MapPropKind.stool,
+          MapPropKind.shelf,
+        ],
         'veil' => const [
-            MapPropKind.torch,
-            MapPropKind.torchAlt,
-            MapPropKind.bones,
-            MapPropKind.trap,
-            MapPropKind.crate,
-            MapPropKind.barrel,
-            MapPropKind.rubble,
-            MapPropKind.skull,
-            MapPropKind.pot,
-            MapPropKind.fence,
-            MapPropKind.stool,
-          ],
+          MapPropKind.torch,
+          MapPropKind.torchAlt,
+          MapPropKind.bones,
+          MapPropKind.trap,
+          MapPropKind.crate,
+          MapPropKind.barrel,
+          MapPropKind.rubble,
+          MapPropKind.skull,
+          MapPropKind.pot,
+          MapPropKind.fence,
+          MapPropKind.stool,
+        ],
         _ => const [
-            MapPropKind.barrel,
-            MapPropKind.crate,
-            MapPropKind.table,
-            MapPropKind.stool,
-            MapPropKind.shelf,
-            MapPropKind.rubble,
-            MapPropKind.chest,
-          ],
+          MapPropKind.barrel,
+          MapPropKind.crate,
+          MapPropKind.table,
+          MapPropKind.stool,
+          MapPropKind.shelf,
+          MapPropKind.rubble,
+          MapPropKind.chest,
+        ],
       };
 
   static String dungeonIconFor(String dungeonId) => switch (dungeonId) {
-        // Prefer entrance/prop icons — floor tiles look like clipboard blobs on the hub map.
-        'sandy' => hatch,
-        'goblin' => doorClosed,
-        'king' => wallBanner,
-        'underworld' => stairs,
-        'dead' => gravestone,
-        'hell' => doorOpen,
-        'crystal' => doorVariant,
-        'tide' => doorClosed,
-        'ember' => hatch,
-        'grove' => chestClosed,
-        'storm' => torch,
-        'rime' => stairs,
-        'fen' => fountainSlime,
-        'brass' => anvil,
-        'veil' => torchAlt,
-        _ => iconDoor,
-      };
+    // Prefer entrance/prop icons — floor tiles look like clipboard blobs on the hub map.
+    'sandy' => hatch,
+    'goblin' => doorClosed,
+    'king' => wallBanner,
+    'underworld' => stairs,
+    'dead' => gravestone,
+    'hell' => doorOpen,
+    'crystal' => doorVariant,
+    'tide' => doorClosed,
+    'ember' => hatch,
+    'grove' => chestClosed,
+    'storm' => torch,
+    'rime' => stairs,
+    'fen' => fountainSlime,
+    'brass' => anvil,
+    'veil' => torchAlt,
+    _ => iconDoor,
+  };
 
   /// Hub detail portrait for the selected dungeon (boss / theme).
   static String dungeonPortraitFor(String dungeonId) =>
@@ -654,10 +655,7 @@ abstract final class KenneyAssets {
     };
   }
 
-  static String enemySpriteFor(
-    EnemyUnit enemy, {
-    String? dungeonId,
-  }) {
+  static String enemySpriteFor(EnemyUnit enemy, {String? dungeonId}) {
     if (enemy.role == EnemyRole.boss) {
       return enemySpriteForRole(EnemyRole.boss, dungeonId: dungeonId);
     }
@@ -670,124 +668,124 @@ abstract final class KenneyAssets {
   }) {
     return switch (archetype) {
       EnemyArchetype.swarm => switch (dungeonId) {
-          'sandy' => enemySlime,
-          'goblin' => enemyRat,
-          'king' => enemyBat,
-          'underworld' => enemySpider,
-          'dead' => enemyGhost,
-          'crystal' => enemyCrystalMite,
-          'tide' => enemyBat,
-          'ember' => enemyCultist,
-          'grove' => enemySpider,
-          'storm' => enemyStormMite,
-          'rime' => enemyRimeMite,
-          'fen' => enemyFenMite,
-          'brass' => enemyBrassMite,
-          'veil' => enemyVeilMite,
-          _ => enemyRat,
-        },
+        'sandy' => enemySlime,
+        'goblin' => enemyRat,
+        'king' => enemyBat,
+        'underworld' => enemySpider,
+        'dead' => enemyGhost,
+        'crystal' => enemyCrystalMite,
+        'tide' => enemyBat,
+        'ember' => enemyCultist,
+        'grove' => enemySpider,
+        'storm' => enemyStormMite,
+        'rime' => enemyRimeMite,
+        'fen' => enemyFenMite,
+        'brass' => enemyBrassMite,
+        'veil' => enemyVeilMite,
+        _ => enemyRat,
+      },
       EnemyArchetype.brute => switch (dungeonId) {
-          'sandy' => enemyCrab,
-          'goblin' => enemyCyclops,
-          'king' => enemyCyclops,
-          'hell' => enemyBoss,
-          'ember' => enemyCyclops,
-          'crystal' => enemyCrystalBoss,
-          'tide' => enemyCrab,
-          'grove' => enemySpider,
-          'storm' => enemyGolem,
-          'rime' => enemyGolem,
-          'fen' => enemySlime,
-          'brass' => enemyCyclops,
-          'veil' => enemySpider,
-          _ => enemyCyclops,
-        },
+        'sandy' => enemyCrab,
+        'goblin' => enemyCyclops,
+        'king' => enemyCyclops,
+        'hell' => enemyBoss,
+        'ember' => enemyCyclops,
+        'crystal' => enemyCrystalBoss,
+        'tide' => enemyCrab,
+        'grove' => enemySpider,
+        'storm' => enemyGolem,
+        'rime' => enemyGolem,
+        'fen' => enemySlime,
+        'brass' => enemyCyclops,
+        'veil' => enemySpider,
+        _ => enemyCyclops,
+      },
       EnemyArchetype.tank => switch (dungeonId) {
-          'sandy' => enemyCrab,
-          'dead' => enemyGhost,
-          'hell' => enemyBoss,
-          'ember' => enemyGolem,
-          'crystal' => enemyCrystalBoss,
-          'tide' => enemyCrab,
-          'grove' => enemySpider,
-          'storm' => enemyGolem,
-          'rime' => enemyGolem,
-          'fen' => enemySpider,
-          'brass' => enemyGolem,
-          'veil' => enemyGhost,
-          _ => enemyGolem,
-        },
+        'sandy' => enemyCrab,
+        'dead' => enemyGhost,
+        'hell' => enemyBoss,
+        'ember' => enemyGolem,
+        'crystal' => enemyCrystalBoss,
+        'tide' => enemyCrab,
+        'grove' => enemySpider,
+        'storm' => enemyGolem,
+        'rime' => enemyGolem,
+        'fen' => enemySpider,
+        'brass' => enemyGolem,
+        'veil' => enemyGhost,
+        _ => enemyGolem,
+      },
       EnemyArchetype.ranged => switch (dungeonId) {
-          'dead' => enemyGhost,
-          'underworld' => enemySpider,
-          'hell' => enemyCultist,
-          'ember' => enemyBat,
-          'crystal' => enemyCrystalWraith,
-          'tide' => enemySlime,
-          'grove' => enemyRat,
-          'storm' => enemyBat,
-          'rime' => enemyGhost,
-          'fen' => enemyBat,
-          'brass' => enemyBat,
-          'veil' => enemyBat,
-          _ => enemyBat,
-        },
+        'dead' => enemyGhost,
+        'underworld' => enemySpider,
+        'hell' => enemyCultist,
+        'ember' => enemyBat,
+        'crystal' => enemyCrystalWraith,
+        'tide' => enemySlime,
+        'grove' => enemyRat,
+        'storm' => enemyBat,
+        'rime' => enemyGhost,
+        'fen' => enemyBat,
+        'brass' => enemyBat,
+        'veil' => enemyBat,
+        _ => enemyBat,
+      },
       EnemyArchetype.glass => switch (dungeonId) {
-          'dead' => enemyGhost,
-          'underworld' => enemySpider,
-          'hell' => enemyCultist,
-          'ember' => enemyRat,
-          'crystal' => enemyCrystalWraith,
-          'tide' => enemyBat,
-          'grove' => enemySpider,
-          'storm' => enemyRat,
-          'rime' => enemyRimeMite,
-          'fen' => enemyFenMite,
-          'brass' => enemyBrassMite,
-          'veil' => enemySpider,
-          _ => enemyBat,
-        },
+        'dead' => enemyGhost,
+        'underworld' => enemySpider,
+        'hell' => enemyCultist,
+        'ember' => enemyRat,
+        'crystal' => enemyCrystalWraith,
+        'tide' => enemyBat,
+        'grove' => enemySpider,
+        'storm' => enemyRat,
+        'rime' => enemyRimeMite,
+        'fen' => enemyFenMite,
+        'brass' => enemyBrassMite,
+        'veil' => enemySpider,
+        _ => enemyBat,
+      },
       EnemyArchetype.support => switch (dungeonId) {
-          'crystal' => enemyCrystalWraith,
-          'tide' => enemyCrab,
-          'ember' => enemyCultist,
-          'grove' => enemyBat,
-          'storm' => enemyCultist,
-          'rime' => enemyGhost,
-          'fen' => enemyCultist,
-          'brass' => enemyCultist,
-          'veil' => enemyCultist,
-          _ => enemyCultist,
-        },
+        'crystal' => enemyCrystalWraith,
+        'tide' => enemyCrab,
+        'ember' => enemyCultist,
+        'grove' => enemyBat,
+        'storm' => enemyCultist,
+        'rime' => enemyGhost,
+        'fen' => enemyCultist,
+        'brass' => enemyCultist,
+        'veil' => enemyCultist,
+        _ => enemyCultist,
+      },
     };
   }
 
   static List<String> get enemySpriteCatalog => [
-        enemySlime,
-        enemyRat,
-        enemyBat,
-        enemySpider,
-        enemyGhost,
-        enemyCultist,
-        enemyCyclops,
-        enemyCrab,
-        enemyGolem,
-        enemyBoss,
-        enemyHellBoss,
-        enemyCrystalBoss,
-        enemyCrystalWraith,
-        enemyCrystalMite,
-        enemyStormBoss,
-        enemyStormMite,
-        enemyRimeBoss,
-        enemyRimeMite,
-        enemyFenBoss,
-        enemyFenMite,
-        enemyBrassBoss,
-        enemyBrassMite,
-        enemyVeilBoss,
-        enemyVeilMite,
-      ];
+    enemySlime,
+    enemyRat,
+    enemyBat,
+    enemySpider,
+    enemyGhost,
+    enemyCultist,
+    enemyCyclops,
+    enemyCrab,
+    enemyGolem,
+    enemyBoss,
+    enemyHellBoss,
+    enemyCrystalBoss,
+    enemyCrystalWraith,
+    enemyCrystalMite,
+    enemyStormBoss,
+    enemyStormMite,
+    enemyRimeBoss,
+    enemyRimeMite,
+    enemyFenBoss,
+    enemyFenMite,
+    enemyBrassBoss,
+    enemyBrassMite,
+    enemyVeilBoss,
+    enemyVeilMite,
+  ];
 
   static int enemySpriteCatalogIndex(String asset) {
     final i = enemySpriteCatalog.indexOf(asset);
@@ -798,13 +796,13 @@ abstract final class KenneyAssets {
   /// archetype — plus the two shared fallbacks. The stage decodes this set
   /// instead of all 24 sprites, and reloads it when the zone changes.
   static Set<String> enemySpritesForDungeon(String dungeonId) => <String>{
-        enemySlime,
-        enemyBoss,
-        for (final role in EnemyRole.values)
-          enemySpriteForRole(role, dungeonId: dungeonId),
-        for (final archetype in EnemyArchetype.values)
-          enemySpriteForArchetype(archetype, dungeonId: dungeonId),
-      };
+    enemySlime,
+    enemyBoss,
+    for (final role in EnemyRole.values)
+      enemySpriteForRole(role, dungeonId: dungeonId),
+    for (final archetype in EnemyArchetype.values)
+      enemySpriteForArchetype(archetype, dungeonId: dungeonId),
+  };
 
   /// Stable cosmetic sprite for a codex enemy name (aligned with combat families).
   static String enemySpriteForCodexName(String name) {
@@ -833,8 +831,7 @@ abstract final class KenneyAssets {
       'shell leviathan' ||
       'barnacle guard' ||
       'tide brute' ||
-      'coral crusher' =>
-        enemyCrystalBoss,
+      'coral crusher' => enemyCrystalBoss,
       'crystal wraith' ||
       'ice caster' ||
       'frost slinger' ||
@@ -847,54 +844,57 @@ abstract final class KenneyAssets {
       'depth chanter' ||
       'tide adept' ||
       'razor eel' ||
-      'needle urchin' =>
-        enemyCrystalWraith,
+      'needle urchin' => enemyCrystalWraith,
       'crystal mite' ||
       'frost wisp' ||
       'rime bat' ||
       'brine mite' ||
-      'reef tick' =>
-        enemyCrystalMite,
+      'reef tick' => enemyCrystalMite,
       'king crab' || 'cave king' => enemyCrab,
       'hell lord' || 'hellgate tyrant' => enemyHellBoss,
       'vault brute' ||
       'slag brawler' ||
       'basalt golem' ||
-      'ember bulwark' =>
-        enemyBoss,
+      'ember bulwark' => enemyBoss,
       'spark caster' ||
       'cinder slinger' ||
       'ash chanter' ||
       'ember adept' ||
       'ash mite' ||
-      'cinder tick' =>
-        enemyCultist,
+      'cinder tick' => enemyCultist,
       'char blade' || 'soot fang' => enemyRat,
       'moss slime' || 'leaf mite' => enemySlime,
       'root tick' => enemySpider,
-      'grove brute' || 'timber crusher' || 'hollow guard' || 'bark bulwark' =>
-        enemySpider,
+      'grove brute' ||
+      'timber crusher' ||
+      'hollow guard' ||
+      'bark bulwark' => enemySpider,
       'spore bat' ||
       'canopy spitter' ||
       'wyrd chanter' ||
-      'grove adept' =>
-        enemyBat,
+      'grove adept' => enemyBat,
       'thorn skitter' || 'bramble fang' => enemySlime,
       'gale mite' || 'storm tick' || 'spark bat' => enemyStormMite,
-      'storm brute' || 'thunder crusher' || 'gale bulwark' || 'storm guard' =>
-        enemyGolem,
+      'storm brute' ||
+      'thunder crusher' ||
+      'gale bulwark' ||
+      'storm guard' => enemyGolem,
       'volt spitter' || 'gale slinger' => enemyBat,
       'lightning fang' || 'zephyr blade' => enemyRat,
       'storm chanter' || 'tempest adept' => enemyCultist,
       'rime mite' || 'frost tick' || 'glass flea' => enemyRimeMite,
-      'rime brute' || 'frost crusher' || 'glass bulwark' || 'rime guard' =>
-        enemyGolem,
+      'rime brute' ||
+      'frost crusher' ||
+      'glass bulwark' ||
+      'rime guard' => enemyGolem,
       'shard slinger' || 'rime spitter' => enemyGhost,
       'glass fang' || 'frost blade' => enemyRimeMite,
       'glacier chanter' || 'stillfrost adept' => enemyGhost,
       'bile slime' || 'fen tick' || 'spore flea' => enemyFenMite,
-      'fen brute' || 'mire crusher' || 'bog bulwark' || 'fen guard' =>
-        enemySlime,
+      'fen brute' ||
+      'mire crusher' ||
+      'bog bulwark' ||
+      'fen guard' => enemySlime,
       'bile spitter' || 'fen slinger' => enemyBat,
       'rot fang' || 'mire blade' => enemyFenMite,
       'fen chanter' || 'mire adept' => enemyCultist,
@@ -912,35 +912,70 @@ abstract final class KenneyAssets {
       'moth chanter' || 'veil adept' => enemyCultist,
       'cave slime' || 'drip ooze' || 'sand mite' => enemySlime,
       'spit bat' || 'cavern spitter' || 'drill bat' => enemyBat,
-      'needle rat' || 'glass skitter' || 'fort rat' || 'sneak rat' || 'pest' ||
-      'cinder rat' =>
-        enemyRat,
+      'needle rat' ||
+      'glass skitter' ||
+      'fort rat' ||
+      'sneak rat' ||
+      'pest' ||
+      'cinder rat' => enemyRat,
       'rock crab' || 'shellback' || 'stone maw' => enemyCrab,
-      'cave brute' || 'goblin thug' || 'clubber' || 'fort sentry' ||
-      'hall guard' || 'elite brute' || 'bone brute' || 'crypt brute' ||
-      'infernal brute' || 'flame guard' =>
-        enemyCyclops,
-      'bulwark golem' || 'obsidian golem' || 'molten golem' || 'ash colossus' ||
-      'iron ward' || 'gate knight' || 'hideout guard' || 'scrap shield' ||
-      'tomb shield' || 'ossuary guard' || 'pit guard' =>
-        enemyGolem,
-      'hex cultist' || 'glow cultist' || 'mire shaman' || 'hex witch' ||
-      'totem caller' || 'court mage' || 'banner cleric' || 'cult chanter' ||
-      'rift adept' || 'necro acolyte' || 'death chanter' || 'fire cultist' ||
-      'hell chanter' || 'rift priest' =>
-        enemyCultist,
+      'cave brute' ||
+      'goblin thug' ||
+      'clubber' ||
+      'fort sentry' ||
+      'hall guard' ||
+      'elite brute' ||
+      'bone brute' ||
+      'crypt brute' ||
+      'infernal brute' ||
+      'flame guard' => enemyCyclops,
+      'bulwark golem' ||
+      'obsidian golem' ||
+      'molten golem' ||
+      'ash colossus' ||
+      'iron ward' ||
+      'gate knight' ||
+      'hideout guard' ||
+      'scrap shield' ||
+      'tomb shield' ||
+      'ossuary guard' ||
+      'pit guard' => enemyGolem,
+      'hex cultist' ||
+      'glow cultist' ||
+      'mire shaman' ||
+      'hex witch' ||
+      'totem caller' ||
+      'court mage' ||
+      'banner cleric' ||
+      'cult chanter' ||
+      'rift adept' ||
+      'necro acolyte' ||
+      'death chanter' ||
+      'fire cultist' ||
+      'hell chanter' ||
+      'rift priest' => enemyCultist,
       'hex spider' || 'imp swarm' || 'ash tick' => enemySpider,
-      'wailing ghost' || 'risen husk' || 'bone swarm' || 'specter blade' ||
-      'pale reaper' || 'grave knight' =>
-        enemyGhost,
-      'blood stalker' || 'cutthroat' || 'knife kin' || 'royal assassin' ||
-      'blade page' || 'shade stalker' || 'wisp blade' || 'flame assassin' ||
-      'cinder blade' =>
-        enemyRat,
+      'wailing ghost' ||
+      'risen husk' ||
+      'bone swarm' ||
+      'specter blade' ||
+      'pale reaper' ||
+      'grave knight' => enemyGhost,
+      'blood stalker' ||
+      'cutthroat' ||
+      'knife kin' ||
+      'royal assassin' ||
+      'blade page' ||
+      'shade stalker' ||
+      'wisp blade' ||
+      'flame assassin' ||
+      'cinder blade' => enemyRat,
       'goblin scrapper' || 'goblin slinger' || 'dart rascal' => enemyRat,
-      'crossbowman' || 'tower archer' || 'ember archer' || 'bone archer' ||
-      'warden archer' =>
-        enemyBat,
+      'crossbowman' ||
+      'tower archer' ||
+      'ember archer' ||
+      'bone archer' ||
+      'warden archer' => enemyBat,
       'underworld imp' || 'hellspawn' => enemyCultist,
       'warden shield' || 'warden guard' || 'warden adept' => enemyGolem,
       _ => null,
@@ -1164,12 +1199,12 @@ abstract final class KenneyAssets {
   }
 
   static String lootIconFor(LootRarity rarity) => switch (rarity) {
-        LootRarity.common => coinGold,
-        LootRarity.uncommon => potionGreen,
-        LootRarity.rare => vialBlue,
-        LootRarity.epic => chestClosed,
-        LootRarity.legendary => chestClosed,
-      };
+    LootRarity.common => coinGold,
+    LootRarity.uncommon => potionGreen,
+    LootRarity.rare => vialBlue,
+    LootRarity.epic => chestClosed,
+    LootRarity.legendary => chestClosed,
+  };
 
   static String equipmentIconFor(EquipmentItem item) {
     if (item.iconId != null) {
@@ -1201,16 +1236,15 @@ abstract final class KenneyAssets {
       return item.rarity.index >= 1 ? shield : shieldRound;
     }
 
-    if (item.slot == EquipmentSlot.weapon || item.slot == EquipmentSlot.ranged) {
+    if (item.slot == EquipmentSlot.weapon ||
+        item.slot == EquipmentSlot.ranged) {
       return switch (item.weaponType) {
         WeaponType.axe => axe,
-        WeaponType.sword =>
-          item.rarity.index >= 2 ? swordAlt : sword,
+        WeaponType.sword => item.rarity.index >= 2 ? swordAlt : sword,
         WeaponType.mace => hammer,
         WeaponType.dagger => dagger,
         WeaponType.fist => fist,
-        WeaponType.staff =>
-          item.rarity.index >= 2 ? staffBlue : staff,
+        WeaponType.staff => item.rarity.index >= 2 ? staffBlue : staff,
         WeaponType.polearm => spear,
         WeaponType.bow => bow,
         WeaponType.crossbow => crossbow,
@@ -1218,14 +1252,15 @@ abstract final class KenneyAssets {
         WeaponType.thrown => thrown,
         WeaponType.wand => wand,
         null => switch (item.affinity) {
-            'mage' => item.rarity.index >= 2 ? staffBlue : staff,
-            'rogue' => dagger,
-            'healer' => item.rarity.index >= 2 ? staffBlue : spear,
-            'warrior' => item.rarity.index >= 3
+          'mage' => item.rarity.index >= 2 ? staffBlue : staff,
+          'rogue' => dagger,
+          'healer' => item.rarity.index >= 2 ? staffBlue : spear,
+          'warrior' =>
+            item.rarity.index >= 3
                 ? axe
                 : (item.rarity.index >= 2 ? swordAlt : sword),
-            _ => sword,
-          },
+          _ => sword,
+        },
       };
     }
 
@@ -1241,14 +1276,15 @@ abstract final class KenneyAssets {
       EquipmentSlot.boots => boots,
       EquipmentSlot.neck => CustomAssets.iconNeck,
       EquipmentSlot.ring || EquipmentSlot.ring2 => CustomAssets.iconRing,
-      EquipmentSlot.trinket || EquipmentSlot.trinket2 => CustomAssets.iconTrinket,
+      EquipmentSlot.trinket ||
+      EquipmentSlot.trinket2 => CustomAssets.iconTrinket,
       EquipmentSlot.consumable => switch (item.rarity) {
-          LootRarity.common => potionRed,
-          LootRarity.uncommon => potionGreen,
-          LootRarity.rare => potionBlue,
-          LootRarity.epic => vialBlue,
-          LootRarity.legendary => vialBlue,
-        },
+        LootRarity.common => potionRed,
+        LootRarity.uncommon => potionGreen,
+        LootRarity.rare => potionBlue,
+        LootRarity.epic => vialBlue,
+        LootRarity.legendary => vialBlue,
+      },
       _ => sword,
     };
   }
@@ -1266,14 +1302,14 @@ abstract final class KenneyAssets {
   }
 
   static String relicIconFor(String relicId) => switch (relicId) {
-        GameLogic.warBannerRelic => relicWarBanner,
-        GameLogic.ironWardRelic => relicIronWard,
-        GameLogic.phoenixEmberRelic => relicPhoenixEmber,
-        GameLogic.godHandFocusRelic => fist,
-        GameLogic.chamberLuckRelic => iconStar,
-        GameLogic.ironWillRelic => iconTrophy,
-        _ => relicWarBanner,
-      };
+    GameLogic.warBannerRelic => relicWarBanner,
+    GameLogic.ironWardRelic => relicIronWard,
+    GameLogic.phoenixEmberRelic => relicPhoenixEmber,
+    GameLogic.godHandFocusRelic => fist,
+    GameLogic.chamberLuckRelic => iconStar,
+    GameLogic.ironWillRelic => iconTrophy,
+    _ => relicWarBanner,
+  };
 
   static String forgeIconFor(String title) {
     final upper = title.toUpperCase();
@@ -1296,7 +1332,9 @@ abstract final class KenneyAssets {
     if (lower.contains('gold') || lower.contains('coin')) return coinGold;
     if (lower.contains('potion') || lower.contains('flask')) return potionRed;
     if (lower.contains('essence') || lower.contains('vial')) return vialBlue;
-    if (lower.contains('helm') || lower.contains('hood') || lower.contains('crown')) {
+    if (lower.contains('helm') ||
+        lower.contains('hood') ||
+        lower.contains('crown')) {
       return helmet;
     }
     if (lower.contains('boot') || lower.contains('greave')) return boots;
@@ -1304,7 +1342,9 @@ abstract final class KenneyAssets {
     if (lower.contains('cloak') || lower.contains('cape')) return cloak;
     if (lower.contains('shield') || lower.contains('buckler')) return shield;
     if (lower.contains('crossbow')) return crossbow;
-    if (lower.contains('gun') || lower.contains('pistol') || lower.contains('rifle')) {
+    if (lower.contains('gun') ||
+        lower.contains('pistol') ||
+        lower.contains('rifle')) {
       return gun;
     }
     if (lower.contains('bow')) return bow;
@@ -1316,11 +1356,17 @@ abstract final class KenneyAssets {
     if (lower.contains('dagger') || lower.contains('knife')) return dagger;
     if (lower.contains('axe')) return axe;
     if (lower.contains('hammer') || lower.contains('mace')) return hammer;
-    if (lower.contains('ring') || lower.contains('band')) return CustomAssets.iconRing;
-    if (lower.contains('amulet') || lower.contains('neck') || lower.contains('pendant')) {
+    if (lower.contains('ring') || lower.contains('band')) {
+      return CustomAssets.iconRing;
+    }
+    if (lower.contains('amulet') ||
+        lower.contains('neck') ||
+        lower.contains('pendant')) {
       return CustomAssets.iconNeck;
     }
-    if (lower.contains('chest') || lower.contains('mail') || lower.contains('plate')) {
+    if (lower.contains('chest') ||
+        lower.contains('mail') ||
+        lower.contains('plate')) {
       return chestArmor;
     }
     final catalog = <String>[

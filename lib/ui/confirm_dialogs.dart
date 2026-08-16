@@ -79,9 +79,7 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
         },
       ),
     );
-    if (ok == true &&
-        context.mounted &&
-        GameLogic.canAscend(director.state)) {
+    if (ok == true && context.mounted && GameLogic.canAscend(director.state)) {
       director.ascend();
     }
   } finally {

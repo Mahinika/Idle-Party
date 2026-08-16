@@ -107,9 +107,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
         const SizedBox(height: 8),
         if (state.ownedPets.isEmpty) ...[
           const SizedBox(height: 8),
-          Center(
-            child: KenneySprite(asset: CustomAssets.petEgg, size: 56),
-          ),
+          Center(child: KenneySprite(asset: CustomAssets.petEgg, size: 56)),
           const SizedBox(height: 10),
           Text(
             'No beasts yet',
@@ -137,7 +135,8 @@ class _BeastOverlayState extends State<BeastOverlay> {
             KenneyButton(
               label: 'CONFIRM MERGE',
               style: KenneyButtonStyle.red,
-              onPressed: _mergeA != null &&
+              onPressed:
+                  _mergeA != null &&
                       _mergeB != null &&
                       GameLogic.canMergePets(state, _mergeA!, _mergeB!)
                   ? _doMerge
@@ -150,14 +149,15 @@ class _BeastOverlayState extends State<BeastOverlay> {
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: MenuChrome.listCard(
-                  selected: pet.id == _mergeA ||
+                  selected:
+                      pet.id == _mergeA ||
                       pet.id == _mergeB ||
                       state.activePet?.id == pet.id,
                   borderColor: pet.id == _mergeA || pet.id == _mergeB
                       ? GameTheme.clear
                       : state.activePet?.id == pet.id
-                          ? GameTheme.torch
-                          : null,
+                      ? GameTheme.torch
+                      : null,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -169,139 +169,141 @@ class _BeastOverlayState extends State<BeastOverlay> {
                           size: 24,
                         ),
                         const SizedBox(width: 10),
-                          Expanded(
-                            child: Builder(
-                              builder: (context) {
-                                final passive = _passiveLabel(pet);
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${pet.name}  |  ${pet.rarity.name}'
-                                      '${pet.frame != PetFrame.none ? '  [${pet.frame.name}]' : ''}',
-                                      style: GameTheme.body(
-                                        size: 15,
-                                        color: GameTheme.parchment,
-                                      ),
+                        Expanded(
+                          child: Builder(
+                            builder: (context) {
+                              final passive = _passiveLabel(pet);
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${pet.name}  |  ${pet.rarity.name}'
+                                    '${pet.frame != PetFrame.none ? '  [${pet.frame.name}]' : ''}',
+                                    style: GameTheme.body(
+                                      size: 15,
+                                      color: GameTheme.parchment,
                                     ),
-                                    Text(
-                                      'Lv${pet.level}  ATK +${pet.totalAttackBonus}'
-                                      '${passive.isEmpty ? '' : '  $passive'}'
-                                      '  · aff ${_affinityLabel(pet.affinityDungeonId)}'
-                                      '${pet.bondLevel > 0 ? '  bond${pet.bondLevel}' : ''}',
-                                      style: GameTheme.body(
-                                        size: 13,
-                                        color: GameTheme.parchmentDim,
-                                      ),
+                                  ),
+                                  Text(
+                                    'Lv${pet.level}  ATK +${pet.totalAttackBonus}'
+                                    '${passive.isEmpty ? '' : '  $passive'}'
+                                    '  · aff ${_affinityLabel(pet.affinityDungeonId)}'
+                                    '${pet.bondLevel > 0 ? '  bond${pet.bondLevel}' : ''}',
+                                    style: GameTheme.body(
+                                      size: 13,
+                                      color: GameTheme.parchmentDim,
                                     ),
-                                  ],
-                                );
-                              },
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                        if (state.activePet?.id == pet.id)
+                          Text(
+                            'ACTIVE',
+                            style: GameTheme.body(
+                              size: 12,
+                              color: GameTheme.torchHot,
                             ),
                           ),
-                          if (state.activePet?.id == pet.id)
-                            Text(
-                              'ACTIVE',
-                              style: GameTheme.body(
-                                size: 12,
-                                color: GameTheme.torchHot,
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: KenneyButton(
-                              label: state.activePet?.id == pet.id
-                                  ? 'ACTIVE'
-                                  : 'SET ACTIVE',
-                              style: KenneyButtonStyle.grey,
-                              onPressed: state.activePet?.id == pet.id
-                                  ? null
-                                  : () => director.setActivePet(pet.id),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: KenneyButton(
+                            label: state.activePet?.id == pet.id
+                                ? 'ACTIVE'
+                                : 'SET ACTIVE',
+                            style: KenneyButtonStyle.grey,
+                            onPressed: state.activePet?.id == pet.id
+                                ? null
+                                : () => director.setActivePet(pet.id),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: KenneyButton(
+                            label: 'LEVEL ${GameLogic.petLevelUpCost(pet)}e',
+                            onPressed:
+                                state.essence >= GameLogic.petLevelUpCost(pet)
+                                ? () => director.levelUpPet(pet.id)
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: KenneyButton(
+                            label: pet.id == _mergeA || pet.id == _mergeB
+                                ? 'MERGE ✓'
+                                : 'MERGE',
+                            style: KenneyButtonStyle.grey,
+                            onPressed: () => _toggleMerge(pet.id),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: KenneyButton(
+                            label:
+                                state.metaDepth.favoritePetSpecies ==
+                                    pet.resolvedSpecies
+                                ? 'FAV ✓'
+                                : 'FAVORITE',
+                            style: KenneyButtonStyle.grey,
+                            onPressed: () => director.setFavoritePetSpecies(
+                              pet.resolvedSpecies,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: KenneyButton(
-                              label:
-                                  'LEVEL ${GameLogic.petLevelUpCost(pet)}e',
-                              onPressed: state.essence >=
-                                      GameLogic.petLevelUpCost(pet)
-                                  ? () => director.levelUpPet(pet.id)
-                                  : null,
-                            ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: KenneyButton(
+                            label:
+                                'BOND ${GameLogic.bondPetCost(pet.bondLevel)}e',
+                            style: KenneyButtonStyle.grey,
+                            onPressed:
+                                state.essence >=
+                                    GameLogic.bondPetCost(pet.bondLevel)
+                                ? () => director.bondPet(pet.id)
+                                : null,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: KenneyButton(
-                              label: pet.id == _mergeA || pet.id == _mergeB
-                                  ? 'MERGE ✓'
-                                  : 'MERGE',
-                              style: KenneyButtonStyle.grey,
-                              onPressed: () => _toggleMerge(pet.id),
-                            ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Builder(
+                            builder: (context) {
+                              final next = _nextFrame(pet.frame);
+                              final cost = GameLogic.petFrameCost(next);
+                              return KenneyButton(
+                                label: pet.frame == PetFrame.crystal
+                                    ? 'FRAME MAX'
+                                    : 'FRAME ${next.name} ${cost}e',
+                                style: KenneyButtonStyle.grey,
+                                onPressed:
+                                    pet.frame == PetFrame.crystal ||
+                                        state.essence < cost
+                                    ? null
+                                    : () => director.buyPetFrame(pet.id, next),
+                              );
+                            },
                           ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: KenneyButton(
-                              label: state.metaDepth.favoritePetSpecies ==
-                                      pet.resolvedSpecies
-                                  ? 'FAV ✓'
-                                  : 'FAVORITE',
-                              style: KenneyButtonStyle.grey,
-                              onPressed: () => director
-                                  .setFavoritePetSpecies(pet.resolvedSpecies),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: KenneyButton(
-                              label:
-                                  'BOND ${GameLogic.bondPetCost(pet.bondLevel)}e',
-                              style: KenneyButtonStyle.grey,
-                              onPressed: state.essence >=
-                                      GameLogic.bondPetCost(pet.bondLevel)
-                                  ? () => director.bondPet(pet.id)
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Builder(
-                              builder: (context) {
-                                final next = _nextFrame(pet.frame);
-                                final cost = GameLogic.petFrameCost(next);
-                                return KenneyButton(
-                                  label: pet.frame == PetFrame.crystal
-                                      ? 'FRAME MAX'
-                                      : 'FRAME ${next.name} ${cost}e',
-                                  style: KenneyButtonStyle.grey,
-                                  onPressed: pet.frame == PetFrame.crystal ||
-                                          state.essence < cost
-                                      ? null
-                                      : () =>
-                                          director.buyPetFrame(pet.id, next),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
+            ),
         ],
         const SizedBox(height: 8),
         Row(
@@ -313,7 +315,8 @@ class _BeastOverlayState extends State<BeastOverlay> {
                 label: state.ownedPets.length >= cap
                     ? 'ROSTER FULL'
                     : 'HATCH ${GameLogic.hatchPetCost(state)}e',
-                onPressed: state.ownedPets.length < cap &&
+                onPressed:
+                    state.ownedPets.length < cap &&
                         state.essence >= GameLogic.hatchPetCost(state)
                     ? director.hatchPet
                     : null,

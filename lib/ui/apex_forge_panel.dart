@@ -181,9 +181,11 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
       role: _apexRole,
       slot: _apexSlot,
     );
-    final canUpgrade = existingItem != null &&
+    final canUpgrade =
+        existingItem != null &&
         GameLogic.canUpgradeApex(state, existingItem.id);
-    final weaponGate = _apexSlot != EquipmentSlot.weapon &&
+    final weaponGate =
+        _apexSlot != EquipmentSlot.weapon &&
         !GameLogic.hasApexWeaponRank1(state, _apexClass, _apexRole);
     final missing = recipe.costs.entries
         .where((e) => (state.craftMaterials[e.key] ?? 0) < e.value)
@@ -375,12 +377,12 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
   }
 
   static String _roleLabel(SpecRoleTag r) => switch (r) {
-        SpecRoleTag.tank => 'Tank',
-        SpecRoleTag.healer => 'Healer',
-        SpecRoleTag.meleeDps => 'Melee DPS',
-        SpecRoleTag.rangedDps => 'Ranged DPS',
-        SpecRoleTag.caster => 'Caster',
-      };
+    SpecRoleTag.tank => 'Tank',
+    SpecRoleTag.healer => 'Healer',
+    SpecRoleTag.meleeDps => 'Melee DPS',
+    SpecRoleTag.rangedDps => 'Ranged DPS',
+    SpecRoleTag.caster => 'Caster',
+  };
 
   static String _slotLabel(EquipmentSlot s) =>
       CharacterEquipPanel.slotLabels[s] ?? s.name;

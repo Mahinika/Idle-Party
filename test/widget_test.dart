@@ -6,6 +6,7 @@ import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/main.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/ui/game_theme.dart';
+import 'package:idle_party/ui/shell/app_bottom_bar.dart';
 
 void main() {
   testWidgets('renders the idle party hub', (WidgetTester tester) async {
@@ -154,10 +155,15 @@ void main() {
 
     final upgrades = MenuAlerts.bagUpgradeCount(director.state);
     expect(upgrades, greaterThan(0));
-    expect(find.text('PARTY $upgrades'), findsOneWidget);
+    final partyButton = find.widgetWithText(AppBottomBarItem, 'PARTY');
+    expect(partyButton, findsOneWidget);
+    expect(
+      find.descendant(of: partyButton, matching: find.text('$upgrades')),
+      findsOneWidget,
+    );
 
     // Hub keeps ambient animations running, so settle by hand.
-    await tester.tap(find.text('PARTY $upgrades'));
+    await tester.tap(find.text('PARTY'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('EQUIP $upgrades'), findsWidgets);

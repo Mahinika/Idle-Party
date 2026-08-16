@@ -109,8 +109,9 @@ class EquipmentFactory {
   /// Loads `assets/data/item_affixes.json`. Falls back silently on error.
   static Future<void> loadAffixes({AssetBundle? bundle}) async {
     try {
-      final raw =
-          await (bundle ?? rootBundle).loadString('assets/data/item_affixes.json');
+      final raw = await (bundle ?? rootBundle).loadString(
+        'assets/data/item_affixes.json',
+      );
       final decoded = jsonDecode(raw);
       if (decoded is! Map<String, dynamic>) {
         _prefixes = _fallbackPrefixes;
@@ -191,13 +192,11 @@ class EquipmentFactory {
       EquipmentSlot.head ||
       EquipmentSlot.chest ||
       EquipmentSlot.legs ||
-      EquipmentSlot.weapon =>
-        1.0,
+      EquipmentSlot.weapon => 1.0,
       EquipmentSlot.shoulder ||
       EquipmentSlot.hands ||
       EquipmentSlot.waist ||
-      EquipmentSlot.boots =>
-        0.75,
+      EquipmentSlot.boots => 0.75,
       EquipmentSlot.offHand => 0.55,
       EquipmentSlot.ranged => 0.50,
       EquipmentSlot.wrist ||
@@ -206,8 +205,7 @@ class EquipmentFactory {
       EquipmentSlot.ring ||
       EquipmentSlot.ring2 ||
       EquipmentSlot.trinket ||
-      EquipmentSlot.trinket2 =>
-        0.55,
+      EquipmentSlot.trinket2 => 0.55,
       EquipmentSlot.consumable => 0.40,
     };
   }
@@ -274,68 +272,71 @@ class EquipmentFactory {
         level >= 40 && random.nextDouble() < 0.55
             ? ArmorType.plate
             : (random.nextDouble() < 0.7 ? ArmorType.mail : ArmorType.leather),
-      HeroRole.rogue => preferred == ArmorType.mail && random.nextDouble() < 0.8
-          ? ArmorType.mail
-          : (random.nextDouble() < 0.85 ? ArmorType.leather : ArmorType.cloth),
+      HeroRole.rogue =>
+        preferred == ArmorType.mail && random.nextDouble() < 0.8
+            ? ArmorType.mail
+            : (random.nextDouble() < 0.85
+                  ? ArmorType.leather
+                  : ArmorType.cloth),
       HeroRole.healer || HeroRole.mage =>
         (preferred == ArmorType.mail ||
-                preferred == ArmorType.plate ||
-                preferred == ArmorType.leather) &&
-            random.nextDouble() < 0.8
-        ? preferred!
-        : ArmorType.cloth,
+                    preferred == ArmorType.plate ||
+                    preferred == ArmorType.leather) &&
+                random.nextDouble() < 0.8
+            ? preferred!
+            : ArmorType.cloth,
     };
   }
 
   static (WeaponType, WeaponHanded) mainHandFor(HeroRole bias) {
     return switch (bias) {
       HeroRole.warrior => () {
-          final roll = random.nextDouble();
-          if (roll < 0.35) {
-            return (WeaponType.mace, WeaponHanded.oneHand);
-          }
-          if (roll < 0.55) {
-            return (WeaponType.sword, WeaponHanded.oneHand);
-          }
-          if (roll < 0.7) {
-            return (WeaponType.axe, WeaponHanded.oneHand);
-          }
-          if (roll < 0.82) {
-            return (WeaponType.sword, WeaponHanded.twoHand);
-          }
-          if (roll < 0.9) return (WeaponType.polearm, WeaponHanded.twoHand);
-          if (roll < 0.95) return (WeaponType.axe, WeaponHanded.twoHand);
-          return (WeaponType.fist, WeaponHanded.oneHand);
-        }(),
-      HeroRole.rogue => () {
-          final roll = random.nextDouble();
-          if (roll < 0.45) {
-            return (WeaponType.dagger, WeaponHanded.oneHand);
-          }
-          if (roll < 0.7) {
-            return (WeaponType.sword, WeaponHanded.oneHand);
-          }
-          if (roll < 0.88) {
-            return (WeaponType.fist, WeaponHanded.oneHand);
-          }
+        final roll = random.nextDouble();
+        if (roll < 0.35) {
           return (WeaponType.mace, WeaponHanded.oneHand);
-        }(),
+        }
+        if (roll < 0.55) {
+          return (WeaponType.sword, WeaponHanded.oneHand);
+        }
+        if (roll < 0.7) {
+          return (WeaponType.axe, WeaponHanded.oneHand);
+        }
+        if (roll < 0.82) {
+          return (WeaponType.sword, WeaponHanded.twoHand);
+        }
+        if (roll < 0.9) return (WeaponType.polearm, WeaponHanded.twoHand);
+        if (roll < 0.95) return (WeaponType.axe, WeaponHanded.twoHand);
+        return (WeaponType.fist, WeaponHanded.oneHand);
+      }(),
+      HeroRole.rogue => () {
+        final roll = random.nextDouble();
+        if (roll < 0.45) {
+          return (WeaponType.dagger, WeaponHanded.oneHand);
+        }
+        if (roll < 0.7) {
+          return (WeaponType.sword, WeaponHanded.oneHand);
+        }
+        if (roll < 0.88) {
+          return (WeaponType.fist, WeaponHanded.oneHand);
+        }
+        return (WeaponType.mace, WeaponHanded.oneHand);
+      }(),
       HeroRole.healer => () {
-          final roll = random.nextDouble();
-          if (roll < 0.55) return (WeaponType.staff, WeaponHanded.twoHand);
-          if (roll < 0.85) {
-            return (WeaponType.mace, WeaponHanded.oneHand);
-          }
-          return (WeaponType.dagger, WeaponHanded.oneHand);
-        }(),
+        final roll = random.nextDouble();
+        if (roll < 0.55) return (WeaponType.staff, WeaponHanded.twoHand);
+        if (roll < 0.85) {
+          return (WeaponType.mace, WeaponHanded.oneHand);
+        }
+        return (WeaponType.dagger, WeaponHanded.oneHand);
+      }(),
       HeroRole.mage => () {
-          final roll = random.nextDouble();
-          if (roll < 0.55) return (WeaponType.staff, WeaponHanded.twoHand);
-          if (roll < 0.85) {
-            return (WeaponType.sword, WeaponHanded.oneHand);
-          }
-          return (WeaponType.dagger, WeaponHanded.oneHand);
-        }(),
+        final roll = random.nextDouble();
+        if (roll < 0.55) return (WeaponType.staff, WeaponHanded.twoHand);
+        if (roll < 0.85) {
+          return (WeaponType.sword, WeaponHanded.oneHand);
+        }
+        return (WeaponType.dagger, WeaponHanded.oneHand);
+      }(),
     };
   }
 
@@ -343,11 +344,11 @@ class EquipmentFactory {
     return switch (bias) {
       HeroRole.healer || HeroRole.mage => WeaponType.wand,
       _ => [
-          WeaponType.bow,
-          WeaponType.crossbow,
-          WeaponType.gun,
-          WeaponType.thrown,
-        ][random.nextInt(4)],
+        WeaponType.bow,
+        WeaponType.crossbow,
+        WeaponType.gun,
+        WeaponType.thrown,
+      ][random.nextInt(4)],
     };
   }
 
@@ -403,34 +404,31 @@ class EquipmentFactory {
     HeroRole bias = HeroRole.warrior,
     SpecRoleTag? roleTag,
     HeroSpecId? lootSpecId,
-  }) =>
-      switch (kind) {
-        OffHandKind.shield => const [0.34, 0.0, 0.66, 0.0, 0.0, 0.0],
-        OffHandKind.weapon => EquipStatWeights.lootShares(
-            bias: bias,
-            roleTag: roleTag ?? SpecRoleTag.meleeDps,
-            specId: lootSpecId,
-          ),
-        OffHandKind.frill => EquipStatWeights.lootShares(
-            bias: bias == HeroRole.rogue ? HeroRole.healer : bias,
-            roleTag: roleTag ??
-                (bias == HeroRole.mage
-                    ? SpecRoleTag.caster
-                    : SpecRoleTag.healer),
-            specId: lootSpecId,
-          ),
-      };
+  }) => switch (kind) {
+    OffHandKind.shield => const [0.34, 0.0, 0.66, 0.0, 0.0, 0.0],
+    OffHandKind.weapon => EquipStatWeights.lootShares(
+      bias: bias,
+      roleTag: roleTag ?? SpecRoleTag.meleeDps,
+      specId: lootSpecId,
+    ),
+    OffHandKind.frill => EquipStatWeights.lootShares(
+      bias: bias == HeroRole.rogue ? HeroRole.healer : bias,
+      roleTag:
+          roleTag ??
+          (bias == HeroRole.mage ? SpecRoleTag.caster : SpecRoleTag.healer),
+      specId: lootSpecId,
+    ),
+  };
 
   static List<double> _jewelryWeights(
     HeroRole bias, {
     SpecRoleTag? roleTag,
     HeroSpecId? lootSpecId,
-  }) =>
-      EquipStatWeights.lootShares(
-        bias: bias,
-        roleTag: roleTag,
-        specId: lootSpecId,
-      );
+  }) => EquipStatWeights.lootShares(
+    bias: bias,
+    roleTag: roleTag,
+    specId: lootSpecId,
+  );
 
   static ({int str, int agi, int sta, int intel, int spi, int sp}) _distribute(
     int budget,
@@ -472,30 +470,33 @@ class EquipmentFactory {
       final caster = a.intel + a.sp; // Spirit is regen — don't require it
       final spiHeavy = a.spi > a.intel + a.sp;
       return switch (roleTag ?? _fallbackTag(bias)) {
-        SpecRoleTag.tank => melee >= caster && a.sta + a.str >= a.agi,
-        SpecRoleTag.healer =>
-          (a.intel + a.sp + a.spi) >= melee || caster > 0,
-        SpecRoleTag.caster => caster >= melee || a.intel + a.sp > 0,
-        SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
-          bias == HeroRole.warrior
-              ? a.str + a.sta + a.crit >= caster
-              : a.agi + a.str + a.crit + a.aspd >= caster,
-      } &&
+            SpecRoleTag.tank => melee >= caster && a.sta + a.str >= a.agi,
+            SpecRoleTag.healer =>
+              (a.intel + a.sp + a.spi) >= melee || caster > 0,
+            SpecRoleTag.caster => caster >= melee || a.intel + a.sp > 0,
+            SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
+              bias == HeroRole.warrior
+                  ? a.str + a.sta + a.crit >= caster
+                  : a.agi + a.str + a.crit + a.aspd >= caster,
+          } &&
           // Prefer throughput affixes over pure Spirit for casters/healers.
           !(spiHeavy &&
               (roleTag == SpecRoleTag.caster || roleTag == SpecRoleTag.healer));
     }
 
-    final filtered = [for (final a in pool) if (matches(a)) a];
+    final filtered = [
+      for (final a in pool)
+        if (matches(a)) a,
+    ];
     return filtered.isNotEmpty ? filtered : pool;
   }
 
   static SpecRoleTag _fallbackTag(HeroRole bias) => switch (bias) {
-        HeroRole.warrior => SpecRoleTag.meleeDps,
-        HeroRole.rogue => SpecRoleTag.meleeDps,
-        HeroRole.healer => SpecRoleTag.healer,
-        HeroRole.mage => SpecRoleTag.caster,
-      };
+    HeroRole.warrior => SpecRoleTag.meleeDps,
+    HeroRole.rogue => SpecRoleTag.meleeDps,
+    HeroRole.healer => SpecRoleTag.healer,
+    HeroRole.mage => SpecRoleTag.caster,
+  };
 
   /// Apply affix weights as a slice of [affixBudget] (stat points).
   static ({
@@ -507,10 +508,20 @@ class EquipmentFactory {
     int sp,
     int crit,
     int aspd,
-  }) _affixStats(ItemAffixDef affix, int affixBudget) {
+  })
+  _affixStats(ItemAffixDef affix, int affixBudget) {
     final w = affix.weightSum;
     if (w <= 0 || affixBudget <= 0) {
-      return (str: 0, agi: 0, sta: 0, intel: 0, spi: 0, sp: 0, crit: 0, aspd: 0);
+      return (
+        str: 0,
+        agi: 0,
+        sta: 0,
+        intel: 0,
+        spi: 0,
+        sp: 0,
+        crit: 0,
+        aspd: 0,
+      );
     }
     int part(int weight) =>
         weight <= 0 ? 0 : max(1, (affixBudget * weight / w).round());
@@ -539,40 +550,40 @@ class EquipmentFactory {
   }) {
     final rolePrefix = switch (bias) {
       HeroRole.warrior => switch (rarity) {
-          LootRarity.common => 'Guard',
-          LootRarity.uncommon => 'Bulwark',
-          LootRarity.rare => 'Aegis',
-          LootRarity.epic => 'Titan',
-          LootRarity.legendary => 'Eternal',
-        },
+        LootRarity.common => 'Guard',
+        LootRarity.uncommon => 'Bulwark',
+        LootRarity.rare => 'Aegis',
+        LootRarity.epic => 'Titan',
+        LootRarity.legendary => 'Eternal',
+      },
       HeroRole.healer => switch (rarity) {
-          LootRarity.common => 'Soft',
-          LootRarity.uncommon => 'Mending',
-          LootRarity.rare => 'Sanctum',
-          LootRarity.epic => 'Aurora',
-          LootRarity.legendary => 'Celestial',
-        },
+        LootRarity.common => 'Soft',
+        LootRarity.uncommon => 'Mending',
+        LootRarity.rare => 'Sanctum',
+        LootRarity.epic => 'Aurora',
+        LootRarity.legendary => 'Celestial',
+      },
       HeroRole.mage => switch (rarity) {
-          LootRarity.common => 'Spark',
-          LootRarity.uncommon => 'Arcane',
-          LootRarity.rare => 'Runic',
-          LootRarity.epic => 'Astral',
-          LootRarity.legendary => 'Voidforged',
-        },
+        LootRarity.common => 'Spark',
+        LootRarity.uncommon => 'Arcane',
+        LootRarity.rare => 'Runic',
+        LootRarity.epic => 'Astral',
+        LootRarity.legendary => 'Voidforged',
+      },
       HeroRole.rogue => switch (rarity) {
-          LootRarity.common => 'Swift',
-          LootRarity.uncommon => 'Shadow',
-          LootRarity.rare => 'Viper',
-          LootRarity.epic => 'Night',
-          LootRarity.legendary => 'Assassin',
-        },
+        LootRarity.common => 'Swift',
+        LootRarity.uncommon => 'Shadow',
+        LootRarity.rare => 'Viper',
+        LootRarity.epic => 'Night',
+        LootRarity.legendary => 'Assassin',
+      },
       null => switch (rarity) {
-          LootRarity.common => 'Iron',
-          LootRarity.uncommon => 'Hunter',
-          LootRarity.rare => 'Rune',
-          LootRarity.epic => 'Mythic',
-          LootRarity.legendary => 'Legendary',
-        },
+        LootRarity.common => 'Iron',
+        LootRarity.uncommon => 'Hunter',
+        LootRarity.rare => 'Rune',
+        LootRarity.epic => 'Mythic',
+        LootRarity.legendary => 'Legendary',
+      },
     };
 
     final material = switch (armorType) {
@@ -605,8 +616,7 @@ class EquipmentFactory {
         EquipmentSlot.boots => material == null ? 'Boots' : '$material Boots',
         EquipmentSlot.wrist =>
           material == null ? 'Bracers' : '$material Bracers',
-        EquipmentSlot.hands =>
-          material == null ? 'Gloves' : '$material Gloves',
+        EquipmentSlot.hands => material == null ? 'Gloves' : '$material Gloves',
         EquipmentSlot.cloak => 'Cloak',
         EquipmentSlot.neck => 'Amulet',
         EquipmentSlot.ring || EquipmentSlot.ring2 => 'Ring',
@@ -618,7 +628,8 @@ class EquipmentFactory {
       };
     }();
 
-    final base = (material != null && !noun.contains(material) && slot.isArmorSlot)
+    final base =
+        (material != null && !noun.contains(material) && slot.isArmorSlot)
         ? '$rolePrefix $material $noun'
         : '$rolePrefix $noun';
     final withPrefix = affixPrefix == null ? base : '$affixPrefix $base';
@@ -626,19 +637,19 @@ class EquipmentFactory {
   }
 
   static String _weaponNoun(WeaponType t) => switch (t) {
-        WeaponType.axe => 'Axe',
-        WeaponType.sword => 'Sword',
-        WeaponType.mace => 'Mace',
-        WeaponType.dagger => 'Dagger',
-        WeaponType.fist => 'Fist',
-        WeaponType.staff => 'Staff',
-        WeaponType.polearm => 'Polearm',
-        WeaponType.bow => 'Bow',
-        WeaponType.crossbow => 'Crossbow',
-        WeaponType.gun => 'Gun',
-        WeaponType.thrown => 'Thrown',
-        WeaponType.wand => 'Wand',
-      };
+    WeaponType.axe => 'Axe',
+    WeaponType.sword => 'Sword',
+    WeaponType.mace => 'Mace',
+    WeaponType.dagger => 'Dagger',
+    WeaponType.fist => 'Fist',
+    WeaponType.staff => 'Staff',
+    WeaponType.polearm => 'Polearm',
+    WeaponType.bow => 'Bow',
+    WeaponType.crossbow => 'Crossbow',
+    WeaponType.gun => 'Gun',
+    WeaponType.thrown => 'Thrown',
+    WeaponType.wand => 'Wand',
+  };
 
   static EquipmentItem create({
     required EquipmentSlot slot,
@@ -819,7 +830,8 @@ class EquipmentFactory {
     final perAffix = affixCount == 0 ? 0 : max(1, affixPool ~/ affixCount);
 
     // Armor density reserved from primary budget (not stacked on top).
-    final armorPts = slot.isArmorSlot ||
+    final armorPts =
+        slot.isArmorSlot ||
             (slot == EquipmentSlot.offHand && offHandKind == OffHandKind.shield)
         ? armorPointsFor(
             armorType ??
@@ -884,8 +896,8 @@ class EquipmentFactory {
         SpecRoleTag.healer => const ['haste', 'mp5', 'crit'],
         SpecRoleTag.caster => const ['crit', 'haste'],
         SpecRoleTag.tank => const ['haste', 'crit'],
-        SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
-          const ['crit', 'haste'],
+        SpecRoleTag.meleeDps ||
+        SpecRoleTag.rangedDps => const ['crit', 'haste'],
       })
         id,
     ];
@@ -948,20 +960,28 @@ class EquipmentFactory {
     };
     if (random.nextDouble() < effectChance) {
       effectId = switch (classBias) {
-        HeroRole.warrior => random.nextDouble() < 0.55
-            ? GearEffectId.lifesteal
-            : (random.nextBool() ? GearEffectId.goldFind : GearEffectId.haste),
-        HeroRole.healer => random.nextDouble() < 0.55
-            ? GearEffectId.haste
-            : (random.nextBool()
-                ? GearEffectId.lifesteal
-                : GearEffectId.goldFind),
-        HeroRole.mage => random.nextDouble() < 0.5
-            ? GearEffectId.pierce
-            : (random.nextBool() ? GearEffectId.haste : GearEffectId.crit),
-        HeroRole.rogue => random.nextDouble() < 0.55
-            ? GearEffectId.crit
-            : (random.nextBool() ? GearEffectId.haste : GearEffectId.lifesteal),
+        HeroRole.warrior =>
+          random.nextDouble() < 0.55
+              ? GearEffectId.lifesteal
+              : (random.nextBool()
+                    ? GearEffectId.goldFind
+                    : GearEffectId.haste),
+        HeroRole.healer =>
+          random.nextDouble() < 0.55
+              ? GearEffectId.haste
+              : (random.nextBool()
+                    ? GearEffectId.lifesteal
+                    : GearEffectId.goldFind),
+        HeroRole.mage =>
+          random.nextDouble() < 0.5
+              ? GearEffectId.pierce
+              : (random.nextBool() ? GearEffectId.haste : GearEffectId.crit),
+        HeroRole.rogue =>
+          random.nextDouble() < 0.55
+              ? GearEffectId.crit
+              : (random.nextBool()
+                    ? GearEffectId.haste
+                    : GearEffectId.lifesteal),
       };
       effectValue = switch (effectId) {
         GearEffectId.lifesteal => 3 + rarity.index * 2 + secTier,
@@ -975,16 +995,19 @@ class EquipmentFactory {
 
     final pattern = slot == EquipmentSlot.weapon
         ? switch (classBias) {
-            HeroRole.mage => rarity.index >= 2
-                ? ProjectilePattern.pierce
-                : ProjectilePattern.arc,
-            HeroRole.rogue => rarity.index >= 1
-                ? ProjectilePattern.spread
-                : ProjectilePattern.single,
+            HeroRole.mage =>
+              rarity.index >= 2
+                  ? ProjectilePattern.pierce
+                  : ProjectilePattern.arc,
+            HeroRole.rogue =>
+              rarity.index >= 1
+                  ? ProjectilePattern.spread
+                  : ProjectilePattern.single,
             HeroRole.warrior => ProjectilePattern.single,
-            HeroRole.healer => rarity.index >= 2
-                ? ProjectilePattern.arc
-                : ProjectilePattern.single,
+            HeroRole.healer =>
+              rarity.index >= 2
+                  ? ProjectilePattern.arc
+                  : ProjectilePattern.single,
           }
         : ProjectilePattern.single;
 

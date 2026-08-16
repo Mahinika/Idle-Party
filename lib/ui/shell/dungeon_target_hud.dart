@@ -48,10 +48,10 @@ class TargetCornerHud extends StatelessWidget {
 
     final label = enemy == null
         ? (state.isPartyDefeated
-            ? 'WIPED'
-            : awaitingExit
-                ? 'CLEAR'
-                : '—')
+              ? 'WIPED'
+              : awaitingExit
+              ? 'CLEAR'
+              : '—')
         : enemy.name.toUpperCase();
     final role = enemy == null
         ? ''
@@ -80,8 +80,8 @@ class TargetCornerHud extends StatelessWidget {
             color: role == 'BOSS'
                 ? GameTheme.bloodLit.withValues(alpha: 0.7)
                 : (role == 'ELITE'
-                    ? GameTheme.torch.withValues(alpha: 0.55)
-                    : const Color(0x665A5040)),
+                      ? GameTheme.torch.withValues(alpha: 0.55)
+                      : const Color(0x665A5040)),
           ),
         ),
         child: Column(
@@ -130,9 +130,7 @@ class TargetCornerHud extends StatelessWidget {
                   value: hpFrac,
                   minHeight: phone ? 3 : 4,
                   backgroundColor: const Color(0xFF2A241C),
-                  color: hpFrac > 0.35
-                      ? GameTheme.bloodLit
-                      : GameTheme.blood,
+                  color: hpFrac > 0.35 ? GameTheme.bloodLit : GameTheme.blood,
                 ),
               ),
             ] else
@@ -140,10 +138,7 @@ class TargetCornerHud extends StatelessWidget {
                 state.isPartyDefeated
                     ? (state.inGauntlet ? 'End → hub' : 'Retry / Hub')
                     : 'Walk to stairs',
-                style: GameTheme.body(
-                  size: 11,
-                  color: GameTheme.parchmentDim,
-                ),
+                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
               ),
           ],
         ),

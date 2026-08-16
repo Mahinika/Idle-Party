@@ -7,23 +7,23 @@ import '../../models/dungeon_mode.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
 import '../kenney_sprite.dart';
+import '../menu_chrome.dart';
 import '../spatial_dungeon_view.dart';
 import 'shell_common.dart';
 
 class DungeonTopHud extends StatelessWidget {
-  const DungeonTopHud({super.key, 
+  const DungeonTopHud({
+    super.key,
     required this.state,
     required this.director,
     required this.onOpenSettings,
     required this.onOpenContracts,
-    this.hubMode = false,
   });
 
   final GameState state;
   final GameDirector director;
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenContracts;
-  final bool hubMode;
 
   void _claimAllReadyMissions() {
     for (final mission in state.missions) {
@@ -44,57 +44,7 @@ class DungeonTopHud extends StatelessWidget {
     final compact = GameTheme.isCompactWidth(context);
     // CLAIM stays visible mid-fight so contracts aren't buried in MORE.
     final showClaimChip = claimable > 0;
-    final softcap = hubMode ? 0 : GameLogic.levelsUntilSoftcap(state);
-
-    if (hubMode) {
-      final phone = GameTheme.isPhoneWidth(context);
-      return Container(
-        padding: EdgeInsets.fromLTRB(10, phone ? 4 : 8, 6, phone ? 4 : 8),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              GameTheme.ink.withValues(alpha: 0.82),
-              GameTheme.stoneDeep.withValues(alpha: 0.55),
-            ],
-          ),
-          border: Border(
-            bottom: BorderSide(color: GameTheme.border.withValues(alpha: 0.4)),
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                phone ? 'KEEP' : "HERO'S KEEP",
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.pixel(size: GameTheme.hudPixel),
-              ),
-            ),
-            ShellChip(icon: KenneyAssets.coinGold, label: formatCount(state.gold)),
-            const SizedBox(width: 5),
-            ShellChip(
-              icon: KenneyAssets.vialBlue,
-              label: formatCount(state.essence),
-            ),
-            SizedBox(
-              width: GameTheme.minTouch,
-              height: GameTheme.minTouch,
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                onPressed: onOpenSettings,
-                icon: KenneySprite(
-                  asset: KenneyAssets.iconDoor,
-                  size: 18,
-                ),
-                tooltip: 'Settings',
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    final softcap = GameLogic.levelsUntilSoftcap(state);
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -121,266 +71,292 @@ class DungeonTopHud extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           compact
-          ? Row(
-              children: [
-                if (state.inGauntlet)
-                  DungeonModeChip(
-                    label: 'GAUNTLET',
-                    selected: true,
-                    dense: true,
-                    onTap: () {},
-                  )
-                else ...[
-                  DungeonModeChip(
-                    label: 'FARM',
-                    selected: farm,
-                    dense: true,
-                    onTap: () => director.setDungeonMode(DungeonMode.farm),
-                  ),
-                  const SizedBox(width: 3),
-                  DungeonModeChip(
-                    label: 'PUSH',
-                    selected: !farm,
-                    dense: true,
-                    onTap: () => director.setDungeonMode(DungeonMode.push),
-                  ),
-                ],
-                if (world != null) ...[
-                  const SizedBox(width: 4),
-                  ChamberDots(world: world),
-                  const SizedBox(width: 4),
-                  GodHandRing(
-                    cooldown: world.godHandCooldown,
-                    onTap: () => director.godHandAtFocus(),
-                  ),
-                ],
-                const Spacer(),
-                if (showClaimChip) ...[
-                  MissionClaimChip(
-                    count: claimable,
-                    dense: true,
-                    onTap: _claimAllReadyMissions,
-                    onLongPress: onOpenContracts,
-                  ),
-                  const SizedBox(width: 2),
-                ],
-                SizedBox(
-                  width: GameTheme.minTouch,
-                  height: GameTheme.minTouch,
-                  child: Semantics(
-                    button: true,
-                    label: 'Floor / settings',
-                    excludeSemantics: true,
-                    child: PopupMenuButton<String>(
-                    tooltip: 'Floor / settings',
-                    padding: EdgeInsets.zero,
-                    color: GameTheme.stoneDeep,
-                    onSelected: (value) {
-                      switch (value) {
-                        case 'down':
-                          director.travelToFloor(floor - 1);
-                        case 'up':
-                          director.travelToFloor(floor + 1);
-                        case 'settings':
-                          onOpenSettings();
-                        case 'contracts':
-                          onOpenContracts();
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        enabled: false,
-                        child: Text(
-                          'F$floor'
-                          '${state.keystoneRunActive ? ' KEY+${state.keystoneRunLevel}' : ''}'
-                          ' · ${formatCount(state.gold)}g',
-                          style: GameTheme.pixel(
-                            size: GameTheme.hudPixel,
-                            color: GameTheme.parchmentDim,
-                          ),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'down',
-                        enabled: GameLogic.canTravelToFloor(state, floor - 1),
-                        child: Text(
-                          'FLOOR −1',
-                          style: GameTheme.pixel(size: GameTheme.hudPixel),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'up',
-                        enabled: GameLogic.canTravelToFloor(state, floor + 1),
-                        child: Text(
-                          'FLOOR +1',
-                          style: GameTheme.pixel(size: GameTheme.hudPixel),
-                        ),
-                      ),
-                      if (claimable > 0)
-                        PopupMenuItem(
-                          value: 'contracts',
-                          child: Text(
-                            'CONTRACTS ($claimable)',
-                            style: GameTheme.pixel(size: GameTheme.hudPixel),
-                          ),
-                        ),
-                      PopupMenuItem(
-                        value: 'settings',
-                        child: Text(
-                          'SETTINGS',
-                          style: GameTheme.pixel(size: GameTheme.hudPixel),
-                        ),
-                      ),
-                    ],
-                    child: const Center(
-                      child: Icon(
-                        Icons.more_horiz,
-                        size: 22,
-                        color: GameTheme.torchHot,
-                      ),
-                    ),
-                  ),
-                  ),
-                ),
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        '$dungeonName  F$floor'
-                        '${state.keystoneRunActive ? '  KEY+${state.keystoneRunLevel}' : ''}'
-                        '${state.keystoneRunActive ? '  ${Keystone.formatTimer(state.keystoneTimerMs)}/${Keystone.formatTimer(state.keystoneParMs)}' : ''}'
-                        '${state.keystoneOutcome == 'timed' ? '  TIMED' : state.keystoneOutcome == 'depleted' ? '  DEPLETED' : ''}',
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.pixel(size: GameTheme.hudPixel),
-                      ),
-                    ),
-                    if (showClaimChip) ...[
-                      const SizedBox(width: 4),
-                      MissionClaimChip(
-                        count: claimable,
-                        onTap: _claimAllReadyMissions,
-                        onLongPress: onOpenContracts,
-                      ),
-                    ],
-                    const SizedBox(width: 4),
-                    ShellChip(
-                      icon: KenneyAssets.coinGold,
-                      label: formatCount(state.gold),
-                    ),
-                    const SizedBox(width: 4),
-                    ShellChip(
-                      icon: KenneyAssets.vialBlue,
-                      label: formatCount(state.essence),
-                    ),
-                    SizedBox(
-                      width: GameTheme.minTouch,
-                      height: GameTheme.minTouch,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        onPressed: onOpenSettings,
-                        icon: KenneySprite(
-                          asset: KenneyAssets.iconDoor,
-                          size: 18,
-                        ),
-                        tooltip: 'Settings',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
+              ? Row(
                   children: [
                     if (state.inGauntlet)
                       DungeonModeChip(
-                        label: 'GAUNTLET F$floor',
+                        label: 'GAUNTLET',
                         selected: true,
+                        dense: true,
                         onTap: () {},
                       )
                     else ...[
                       DungeonModeChip(
                         label: 'FARM',
                         selected: farm,
+                        dense: true,
                         onTap: () => director.setDungeonMode(DungeonMode.farm),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 3),
                       DungeonModeChip(
                         label: 'PUSH',
                         selected: !farm,
+                        dense: true,
                         onTap: () => director.setDungeonMode(DungeonMode.push),
                       ),
                     ],
-                    const SizedBox(width: 6),
                     if (world != null) ...[
+                      const SizedBox(width: 4),
                       ChamberDots(world: world),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       GodHandRing(
                         cooldown: world.godHandCooldown,
                         onTap: () => director.godHandAtFocus(),
                       ),
                     ],
                     const Spacer(),
+                    if (showClaimChip) ...[
+                      MissionClaimChip(
+                        count: claimable,
+                        dense: true,
+                        onTap: _claimAllReadyMissions,
+                        onLongPress: onOpenContracts,
+                      ),
+                      const SizedBox(width: 2),
+                    ],
                     SizedBox(
                       width: GameTheme.minTouch,
                       height: GameTheme.minTouch,
                       child: Semantics(
                         button: true,
-                        label: 'Floor travel',
+                        label: 'Floor / settings',
                         excludeSemantics: true,
                         child: PopupMenuButton<String>(
-                        tooltip: 'Floor travel',
-                        padding: EdgeInsets.zero,
-                        color: GameTheme.stoneDeep,
-                        onSelected: (value) {
-                          switch (value) {
-                            case 'down':
-                              director.travelToFloor(floor - 1);
-                            case 'up':
-                              director.travelToFloor(floor + 1);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'down',
-                            enabled:
-                                GameLogic.canTravelToFloor(state, floor - 1),
-                            child: Text(
-                              'FLOOR −1',
-                              style:
-                                  GameTheme.pixel(size: GameTheme.hudPixel),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'up',
-                            enabled:
-                                GameLogic.canTravelToFloor(state, floor + 1),
-                            child: Text(
-                              'FLOOR +1',
-                              style:
-                                  GameTheme.pixel(size: GameTheme.hudPixel),
-                            ),
-                          ),
-                        ],
-                        child: Center(
-                            child: Text(
-                              'F±',
-                              style: GameTheme.pixel(
-                                size: GameTheme.hudPixel,
-                                color: GameTheme.torchHot,
+                          tooltip: 'Floor / settings',
+                          padding: EdgeInsets.zero,
+                          color: GameTheme.stoneDeep,
+                          onSelected: (value) {
+                            switch (value) {
+                              case 'down':
+                                director.travelToFloor(floor - 1);
+                              case 'up':
+                                director.travelToFloor(floor + 1);
+                              case 'settings':
+                                onOpenSettings();
+                              case 'contracts':
+                                onOpenContracts();
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              enabled: false,
+                              child: Text(
+                                'F$floor'
+                                '${state.keystoneRunActive ? ' KEY+${state.keystoneRunLevel}' : ''}'
+                                ' · ${formatCount(state.gold)}g',
+                                style: GameTheme.pixel(
+                                  size: GameTheme.hudPixel,
+                                  color: GameTheme.parchmentDim,
+                                ),
                               ),
                             ),
+                            PopupMenuItem(
+                              value: 'down',
+                              enabled: GameLogic.canTravelToFloor(
+                                state,
+                                floor - 1,
+                              ),
+                              child: Text(
+                                'FLOOR −1',
+                                style: GameTheme.pixel(
+                                  size: GameTheme.hudPixel,
+                                ),
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'up',
+                              enabled: GameLogic.canTravelToFloor(
+                                state,
+                                floor + 1,
+                              ),
+                              child: Text(
+                                'FLOOR +1',
+                                style: GameTheme.pixel(
+                                  size: GameTheme.hudPixel,
+                                ),
+                              ),
+                            ),
+                            if (claimable > 0)
+                              PopupMenuItem(
+                                value: 'contracts',
+                                child: Text(
+                                  'CONTRACTS ($claimable)',
+                                  style: GameTheme.pixel(
+                                    size: GameTheme.hudPixel,
+                                  ),
+                                ),
+                              ),
+                            PopupMenuItem(
+                              value: 'settings',
+                              child: Text(
+                                'SETTINGS',
+                                style: GameTheme.pixel(
+                                  size: GameTheme.hudPixel,
+                                ),
+                              ),
+                            ),
+                          ],
+                          child: const Center(
+                            child: Icon(
+                              Icons.more_horiz,
+                              size: 22,
+                              color: GameTheme.torchHot,
+                            ),
                           ),
-                      ),
+                        ),
                       ),
                     ),
                   ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '$dungeonName  F$floor'
+                            '${state.keystoneRunActive ? '  KEY+${state.keystoneRunLevel}' : ''}'
+                            '${state.keystoneRunActive ? '  ${Keystone.formatTimer(state.keystoneTimerMs)}/${Keystone.formatTimer(state.keystoneParMs)}' : ''}'
+                            '${state.keystoneOutcome == 'timed'
+                                ? '  TIMED'
+                                : state.keystoneOutcome == 'depleted'
+                                ? '  DEPLETED'
+                                : ''}',
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.pixel(size: GameTheme.hudPixel),
+                          ),
+                        ),
+                        if (showClaimChip) ...[
+                          const SizedBox(width: 4),
+                          MissionClaimChip(
+                            count: claimable,
+                            onTap: _claimAllReadyMissions,
+                            onLongPress: onOpenContracts,
+                          ),
+                        ],
+                        const SizedBox(width: 4),
+                        MenuChrome.chip(
+                          icon: KenneyAssets.coinGold,
+                          label: formatCount(state.gold),
+                        ),
+                        const SizedBox(width: 4),
+                        MenuChrome.chip(
+                          icon: KenneyAssets.vialBlue,
+                          label: formatCount(state.essence),
+                        ),
+                        SizedBox(
+                          width: GameTheme.minTouch,
+                          height: GameTheme.minTouch,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            onPressed: onOpenSettings,
+                            icon: KenneySprite(
+                              asset: KenneyAssets.iconDoor,
+                              size: 18,
+                            ),
+                            tooltip: 'Settings',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        if (state.inGauntlet)
+                          DungeonModeChip(
+                            label: 'GAUNTLET F$floor',
+                            selected: true,
+                            onTap: () {},
+                          )
+                        else ...[
+                          DungeonModeChip(
+                            label: 'FARM',
+                            selected: farm,
+                            onTap: () =>
+                                director.setDungeonMode(DungeonMode.farm),
+                          ),
+                          const SizedBox(width: 4),
+                          DungeonModeChip(
+                            label: 'PUSH',
+                            selected: !farm,
+                            onTap: () =>
+                                director.setDungeonMode(DungeonMode.push),
+                          ),
+                        ],
+                        const SizedBox(width: 6),
+                        if (world != null) ...[
+                          ChamberDots(world: world),
+                          const SizedBox(width: 6),
+                          GodHandRing(
+                            cooldown: world.godHandCooldown,
+                            onTap: () => director.godHandAtFocus(),
+                          ),
+                        ],
+                        const Spacer(),
+                        SizedBox(
+                          width: GameTheme.minTouch,
+                          height: GameTheme.minTouch,
+                          child: Semantics(
+                            button: true,
+                            label: 'Floor travel',
+                            excludeSemantics: true,
+                            child: PopupMenuButton<String>(
+                              tooltip: 'Floor travel',
+                              padding: EdgeInsets.zero,
+                              color: GameTheme.stoneDeep,
+                              onSelected: (value) {
+                                switch (value) {
+                                  case 'down':
+                                    director.travelToFloor(floor - 1);
+                                  case 'up':
+                                    director.travelToFloor(floor + 1);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'down',
+                                  enabled: GameLogic.canTravelToFloor(
+                                    state,
+                                    floor - 1,
+                                  ),
+                                  child: Text(
+                                    'FLOOR −1',
+                                    style: GameTheme.pixel(
+                                      size: GameTheme.hudPixel,
+                                    ),
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'up',
+                                  enabled: GameLogic.canTravelToFloor(
+                                    state,
+                                    floor + 1,
+                                  ),
+                                  child: Text(
+                                    'FLOOR +1',
+                                    style: GameTheme.pixel(
+                                      size: GameTheme.hudPixel,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              child: Center(
+                                child: Text(
+                                  'F±',
+                                  style: GameTheme.pixel(
+                                    size: GameTheme.hudPixel,
+                                    color: GameTheme.torchHot,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
           if (softcap > 0 && !state.inGauntlet)
             Padding(
               padding: const EdgeInsets.only(top: 3),
@@ -397,7 +373,8 @@ class DungeonTopHud extends StatelessWidget {
 }
 
 class MissionClaimChip extends StatelessWidget {
-  const MissionClaimChip({super.key, 
+  const MissionClaimChip({
+    super.key,
     required this.count,
     required this.onTap,
     this.onLongPress,

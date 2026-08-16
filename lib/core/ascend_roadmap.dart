@@ -51,9 +51,7 @@ abstract final class AscendRoadmap {
   static String? kitUnlockSummary(int al, {int maxNames = 3}) {
     final kits = kitUnlocksByAl[al];
     if (kits == null || kits.isEmpty) return null;
-    final names = [
-      for (final k in kits.take(maxNames)) k.$2,
-    ];
+    final names = [for (final k in kits.take(maxNames)) k.$2];
     final extra = kits.length - names.length;
     final joined = names.join(' · ');
     if (extra > 0) return '$joined · +$extra more';
@@ -69,9 +67,7 @@ abstract final class AscendRoadmap {
     }
     if (al == GameLogic.gauntletMinAscension) {
       final kits = kitUnlockSummary(al);
-      return kits == null
-          ? 'Infinity Gauntlet'
-          : '$kits · Infinity Gauntlet';
+      return kits == null ? 'Infinity Gauntlet' : '$kits · Infinity Gauntlet';
     }
 
     final kits = kitUnlockSummary(al);
@@ -142,9 +138,7 @@ abstract final class AscendRoadmap {
       ];
       if (missing.isEmpty) continue;
       final first = missing.first;
-      final shownList = [
-        for (final k in missing.take(2)) k.$2,
-      ];
+      final shownList = [for (final k in missing.take(2)) k.$2];
       final shown = shownList.join(' · ');
       final rest = missing.length - shownList.length;
       final bit = rest > 0 ? '$shown · +$rest more' : shown;

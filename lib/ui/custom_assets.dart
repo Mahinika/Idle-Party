@@ -13,39 +13,39 @@ abstract final class CustomAssets {
   static const String petWardenCub = '$_root/pets/warden_cub.png';
 
   static String petForTemplateId(String templateId) => switch (templateId) {
-        'ember_pup' => petEmberPup,
-        'cave_bat' => petCaveBat,
-        'loot_sprite' => petLootSprite,
-        'warden_cub' => petWardenCub,
-        'ash_fox' => enemySpider,
-        'spark_pup' => enemySlime,
-        'spirit_moth' => enemyGhost,
-        'xp_wisp' => enemyCrystalMite,
-        'shrine_owl' => enemyBat,
-        'gold_grub' => enemyRat,
-        'coin_imp' => enemyCultist,
-        'vault_beetle' => enemyCrystalWraith,
-        'mire_toad' => enemyCrab,
-        _ => petEgg,
-      };
+    'ember_pup' => petEmberPup,
+    'cave_bat' => petCaveBat,
+    'loot_sprite' => petLootSprite,
+    'warden_cub' => petWardenCub,
+    'ash_fox' => enemySpider,
+    'spark_pup' => enemySlime,
+    'spirit_moth' => enemyGhost,
+    'xp_wisp' => enemyCrystalMite,
+    'shrine_owl' => enemyBat,
+    'gold_grub' => enemyRat,
+    'coin_imp' => enemyCultist,
+    'vault_beetle' => enemyCrystalWraith,
+    'mire_toad' => enemyCrab,
+    _ => petEgg,
+  };
 
   /// Unique portrait paths used by [petForTemplateId] (preload set).
   static List<String> get petPortraitPaths => const [
-        petEmberPup,
-        petCaveBat,
-        petLootSprite,
-        petWardenCub,
-        petEgg,
-        enemySpider,
-        enemySlime,
-        enemyGhost,
-        enemyCrystalMite,
-        enemyBat,
-        enemyRat,
-        enemyCultist,
-        enemyCrystalWraith,
-        enemyCrab,
-      ];
+    petEmberPup,
+    petCaveBat,
+    petLootSprite,
+    petWardenCub,
+    petEgg,
+    enemySpider,
+    enemySlime,
+    enemyGhost,
+    enemyCrystalMite,
+    enemyBat,
+    enemyRat,
+    enemyCultist,
+    enemyCrystalWraith,
+    enemyCrab,
+  ];
 
   /// Pet instance ids look like `ember_pup_12345`.
   /// Combat actors use `classpet_*` / `temppet_*` — map by name theme.
@@ -95,7 +95,9 @@ abstract final class CustomAssets {
     if (key.contains('demon') || key.contains('imp') || key.contains('fel')) {
       return enemySpider;
     }
-    if (key.contains('beast') || key.contains('pet') || key.contains('hunter')) {
+    if (key.contains('beast') ||
+        key.contains('pet') ||
+        key.contains('hunter')) {
       return petCaveBat;
     }
     if (key.contains('totem') || key.contains('element')) {
@@ -144,7 +146,8 @@ abstract final class CustomAssets {
   static const String iconBook = '$_root/icons/book.png';
   static const String iconRelicWarBanner = '$_root/icons/relic_war_banner.png';
   static const String iconRelicIronWard = '$_root/icons/relic_iron_ward.png';
-  static const String iconRelicPhoenixEmber = '$_root/icons/relic_phoenix_ember.png';
+  static const String iconRelicPhoenixEmber =
+      '$_root/icons/relic_phoenix_ember.png';
   static const String iconCrown = '$_root/icons/crown.png';
   static const String iconCampfire = '$_root/icons/campfire.png';
   static const String iconTrophy = '$_root/icons/trophy.png';
@@ -171,32 +174,36 @@ abstract final class CustomAssets {
   static const String portraitVeil = '$_root/portraits/veil.png';
 
   static String dungeonPortrait(String dungeonId) => switch (dungeonId) {
-        'sandy' => portraitSandy,
-        'goblin' => portraitGoblin,
-        'king' => portraitKing,
-        'underworld' => portraitUnderworld,
-        'dead' => portraitDead,
-        'hell' => portraitHell,
-        'crystal' => portraitCrystal,
-        'tide' => portraitTide,
-        'ember' => portraitEmber,
-        'grove' => portraitGrove,
-        'storm' => portraitStorm,
-        'rime' => portraitRime,
-        'fen' => portraitFen,
-        'brass' => portraitBrass,
-        'veil' => portraitVeil,
-        _ => portraitSandy,
-      };
+    'sandy' => portraitSandy,
+    'goblin' => portraitGoblin,
+    'king' => portraitKing,
+    'underworld' => portraitUnderworld,
+    'dead' => portraitDead,
+    'hell' => portraitHell,
+    'crystal' => portraitCrystal,
+    'tide' => portraitTide,
+    'ember' => portraitEmber,
+    'grove' => portraitGrove,
+    'storm' => portraitStorm,
+    'rime' => portraitRime,
+    'fen' => portraitFen,
+    'brass' => portraitBrass,
+    'veil' => portraitVeil,
+    _ => portraitSandy,
+  };
 
   // —— Intro / hub / dungeon painted scenes ——
   static const String introLogo = '$_root/ui/intro_logo.png';
+
   /// Full-bleed cold-start scene (party facing into the cave).
   static const String introScene = '$_root/ui/intro_scene.png';
+
   /// Hub keep / gate plaza behind translucent chrome.
   static const String hubScene = '$_root/ui/hub_scene.png';
+
   /// Scrollable World Path campaign map (portrait).
   static const String worldPathMap = '$_root/ui/world_path_map.png';
+
   /// Generic combat stage backdrop (fallback).
   static const String dungeonBackdrop = '$_root/ui/dungeon_backdrop.png';
 
@@ -207,41 +214,49 @@ abstract final class CustomAssets {
   static const String backdropDead = '$_root/ui/backdrops/dead.png';
   static const String backdropHell = '$_root/ui/backdrops/hell.png';
   static const String backdropCrystal = '$_root/ui/backdrops/crystal.png';
+
   /// Owned Tidehold chamber (teal pressure + silt — not Underworld twin).
   static const String backdropTide = '$_root/ui/backdrops/tide.png';
+
   /// Owned Ashen Vault chamber (cooled ember — not Dead/Hell twin).
   static const String backdropEmber = '$_root/ui/backdrops/ember.png';
+
   /// Owned Hollow Grove chamber (roots + moss — not Sandy twin).
   static const String backdropGrove = '$_root/ui/backdrops/grove.png';
+
   /// Owned Stormwake Hollow arena (violet storm).
   static const String backdropStorm = '$_root/ui/backdrops/storm.png';
+
   /// Owned Rimeglass Rift chamber (cyan ice — quiet after the gale).
   static const String backdropRime = '$_root/ui/backdrops/rime.png';
+
   /// Owned Blightfen Mire chamber (bile swamp — not Grove/Tide twin).
   static const String backdropFen = '$_root/ui/backdrops/fen.png';
+
   /// Owned Brassvault Deep chamber (gold clockwork — not Fen/Ember twin).
   static const String backdropBrass = '$_root/ui/backdrops/brass.png';
+
   /// Owned Mothveil Hollow chamber (lilac silk-dust — not Brass/Storm twin).
   static const String backdropVeil = '$_root/ui/backdrops/veil.png';
 
   static String dungeonBackdropFor(String dungeonId) => switch (dungeonId) {
-        'sandy' => backdropSandy,
-        'goblin' => backdropGoblin,
-        'king' => backdropKing,
-        'underworld' => backdropUnderworld,
-        'dead' => backdropDead,
-        'hell' => backdropHell,
-        'crystal' => backdropCrystal,
-        'tide' => backdropTide,
-        'ember' => backdropEmber,
-        'grove' => backdropGrove,
-        'storm' => backdropStorm,
-        'rime' => backdropRime,
-        'fen' => backdropFen,
-        'brass' => backdropBrass,
-        'veil' => backdropVeil,
-        _ => dungeonBackdrop,
-      };
+    'sandy' => backdropSandy,
+    'goblin' => backdropGoblin,
+    'king' => backdropKing,
+    'underworld' => backdropUnderworld,
+    'dead' => backdropDead,
+    'hell' => backdropHell,
+    'crystal' => backdropCrystal,
+    'tide' => backdropTide,
+    'ember' => backdropEmber,
+    'grove' => backdropGrove,
+    'storm' => backdropStorm,
+    'rime' => backdropRime,
+    'fen' => backdropFen,
+    'brass' => backdropBrass,
+    'veil' => backdropVeil,
+    _ => dungeonBackdrop,
+  };
 
   // —— Party heroes (intro-matched pixel style) ——
   static const String heroKnight = '$_root/heroes/knight.png';
@@ -256,17 +271,17 @@ abstract final class CustomAssets {
   static const String heroDruid = '$_root/heroes/druid.png';
 
   static String heroForClass(HeroClassId classId) => switch (classId) {
-        HeroClassId.warrior => heroKnight,
-        HeroClassId.paladin => heroPaladin,
-        HeroClassId.hunter => heroHunter,
-        HeroClassId.rogue => heroRogue,
-        HeroClassId.priest => heroHealer,
-        HeroClassId.deathKnight => heroDeathKnight,
-        HeroClassId.shaman => heroShaman,
-        HeroClassId.mage => heroWizard,
-        HeroClassId.warlock => heroWarlock,
-        HeroClassId.druid => heroDruid,
-      };
+    HeroClassId.warrior => heroKnight,
+    HeroClassId.paladin => heroPaladin,
+    HeroClassId.hunter => heroHunter,
+    HeroClassId.rogue => heroRogue,
+    HeroClassId.priest => heroHealer,
+    HeroClassId.deathKnight => heroDeathKnight,
+    HeroClassId.shaman => heroShaman,
+    HeroClassId.mage => heroWizard,
+    HeroClassId.warlock => heroWarlock,
+    HeroClassId.druid => heroDruid,
+  };
 
   // —— Combat enemies / bosses ——
   static const String enemySlime = '$_root/enemies/slime.png';

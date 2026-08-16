@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../core/chase_contract.dart';
@@ -17,6 +16,8 @@ import 'feedback_toast.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'meta_overlays.dart';
+import '../core/menu_router.dart';
+import 'shell/app_bottom_bar.dart';
 import 'hub/hub_header.dart';
 import 'hub/hub_today_card.dart';
 import 'hub/hub_world_map.dart';
@@ -26,22 +27,15 @@ class HubScreen extends StatefulWidget {
   const HubScreen({
     super.key,
     required this.director,
+    required this.router,
     required this.onEnterDungeon,
-    required this.onOpenParty,
-    required this.onOpenPower,
-    required this.onOpenMeta,
-    required this.onOpenSettings,
   });
 
   final GameDirector director;
+
+  /// Which menu is open — shared with the dungeon shell.
+  final MenuRouter router;
   final void Function(String dungeonId) onEnterDungeon;
-  /// PARTY pillar (gear / bag / merge / loadouts / roster).
-  final VoidCallback onOpenParty;
-  /// POWER pillar (forge / sanctuary / market / essence).
-  final VoidCallback onOpenPower;
-  /// META pillar (keystone / contracts / info).
-  final VoidCallback onOpenMeta;
-  final VoidCallback onOpenSettings;
 
   /// Honesty helpers for ship_smoke (World Path marker ↔ catalog).
   static List<Offset> get worldPathMarkerNorm => ZonePathMap.markerNorm;
@@ -62,6 +56,7 @@ class _HubScreenState extends State<HubScreen>
   int? _trackedHighestCleared;
 
   GameDirector get director => widget.director;
+  MenuRouter get router => widget.router;
   GameState get state => director.state;
 
   /// Unlocked uncleared frontier zone (World Path NEXT), if any.
@@ -131,7 +126,7 @@ class _HubScreenState extends State<HubScreen>
     await showOfflineProgressDialog(
       context,
       director,
-      onOpenParty: widget.onOpenParty,
+      onOpenParty: () => router.open(MenuRoute.party),
     );
   }
 
@@ -167,7 +162,7 @@ class _HubScreenState extends State<HubScreen>
           'PARTY',
           () {
             director.ackPendingHeroReveals();
-            widget.onOpenParty();
+            router.open(MenuRoute.party);
           },
         );
       case HubChaseKind.ascend:
@@ -246,7 +241,7 @@ class _HubScreenState extends State<HubScreen>
           },
         );
       case HubChaseKind.willRank:
-        return ('POWER', widget.onOpenPower);
+        return ('POWER', () => router.open(MenuRoute.power));
     }
   }
 
@@ -254,7 +249,8 @@ class _HubScreenState extends State<HubScreen>
   Widget build(BuildContext context) {
     if (_trackedAscension != state.ascensionLevel ||
         _trackedHighestCleared != state.highestDungeonCleared) {
-      final ascended = _trackedAscension != null &&
+      final ascended =
+          _trackedAscension != null &&
           _trackedAscension != state.ascensionLevel;
       _trackedAscension = state.ascensionLevel;
       _trackedHighestCleared = state.highestDungeonCleared;
@@ -278,9 +274,7 @@ class _HubScreenState extends State<HubScreen>
     return Stack(
       fit: StackFit.expand,
       children: [
-        RepaintBoundary(
-          child: const HubSceneBackdrop(),
-        ),
+        RepaintBoundary(child: const HubSceneBackdrop()),
         SafeArea(
           child: AnimatedBuilder(
             animation: _torch,
@@ -301,233 +295,205 @@ class _HubScreenState extends State<HubScreen>
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      GameTheme.isPhoneWidth(context) ? 12 : 16,
-                      GameTheme.isPhoneWidth(context) ? 8 : 10,
-                      GameTheme.isPhoneWidth(context) ? 12 : 16,
-                      GameTheme.isPhoneWidth(context) ? 10 : 12,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        HubHeader(
-                          ascensionLevel: state.ascensionLevel,
-                          bossFloor: bossFloor,
-                          gold: state.gold,
-                          essence: state.essence,
-                          soulbound: state.soulboundFragments,
-                          willRank: state.willRankTitle,
-                          collectionScore: state.collectionScore,
-                          displayTitle: state.displayTitle,
-                          zoneTrophies: state.metaDepth.zoneTrophies.length,
-                          torch: flicker,
-                          onOpenSettings: widget.onOpenSettings,
-                        ),
-                        if (director.offlineSummary != null) ...[
-                          const SizedBox(height: 8),
-                          HubOfflineBanner(
-                            text: director.offlineSummary!.headline,
-                            onDismiss: () => showOfflineProgressDialog(
-                              context,
-                              director,
-                              onOpenParty: widget.onOpenParty,
-                            ),
+                  Column(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            GameTheme.isPhoneWidth(context) ? 12 : 16,
+                            GameTheme.isPhoneWidth(context) ? 8 : 10,
+                            GameTheme.isPhoneWidth(context) ? 12 : 16,
+                            GameTheme.isPhoneWidth(context) ? 4 : 6,
                           ),
-                        ],
-                        const SizedBox(height: 6),
-                        // World Path: painted campaign map + tappable rings.
-                        Expanded(
-                          child: ZonePathMap(
-                            dungeons: DungeonCatalog.all,
-                            selectedId: _selectedId,
-                            lifetimeGold: state.lifetimeGoldEarned,
-                            highestCleared: state.highestDungeonCleared,
-                            pulse: _torch.value,
-                            onSelect: (id) => setState(() {
-                              _userPickedZone = true;
-                              _selectedId = id;
-                            }),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        SelectedZoneCaption(
-                          dungeon: DungeonCatalog.byId(_selectedId),
-                          unlocked: unlockedSelected,
-                          lifetimeGold: state.lifetimeGoldEarned,
-                        ),
-                        const SizedBox(height: 6),
-                        Builder(
-                          builder: (context) {
-                            final contract = ChaseContract.fromState(state);
-                            final chase = contract.chase;
-                            final (actionLabel, onAction) =
-                                _chaseAction(context, chase);
-                            final weekMod = state.metaDepth.weeklyModifier;
-                            final showWeekAffix =
-                                !short &&
-                                weekMod.isNotEmpty &&
-                                GameLogic.showKeystoneJargon(state);
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (showWeekAffix) ...[
-                                  Text(
-                                    'Week · ${Keystone.label(weekMod)} — ${Keystone.blurb(weekMod)}',
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GameTheme.body(
-                                      size: 12,
-                                      color: GameTheme.mossLit,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                ],
-                                HubTodayCard(
-                                  chase: chase,
-                                  compact: true,
-                                  actionLabel: actionLabel,
-                                  onAction: onAction,
-                                ),
-                                HubMetaPulse(
-                                  state: state,
-                                  chaseKind: chase.kind,
-                                ),
-                                const SizedBox(height: 6),
-                                Transform.scale(
-                                  scale: 1.0 + (_torch.value * 0.012),
-                                  child: KenneyButton(
-                                    label: 'ENTER DUNGEON',
-                                    style: KenneyButtonStyle.brown,
-                                    primary: true,
-                                    onPressed: unlockedSelected
-                                        ? () =>
-                                            widget.onEnterDungeon(_selectedId)
-                                        : null,
-                                  ),
-                                ),
-                                ChallengeToggles(
-                                  director: director,
-                                  collapsed: true,
-                                ),
-                                HubUrgentRow(
-                                  claimable: state.missions
-                                      .where((m) => m.isComplete)
-                                      .length,
-                                  canAscend: canAscend,
-                                  ascendLabel: canAscend
-                                      ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
-                                      : null,
-                                  hideAscend:
-                                      chase.kind == HubChaseKind.ascend,
-                                  hideVaultClaim: chase.kind ==
-                                      HubChaseKind.claimDailyVault,
-                                  hideMissionClaim: chase.kind ==
-                                      HubChaseKind.claimMissions,
-                                  hideDaily:
-                                      chase.kind == HubChaseKind.dailyRun ||
-                                          chase.kind ==
-                                              HubChaseKind.keystone ||
-                                          chase.kind ==
-                                              HubChaseKind.meetHero ||
-                                          !GameLogic.showDailyChase(state),
-                                  onContracts: () {
-                                    for (final m
-                                        in director.state.missions) {
-                                      if (m.isComplete) {
-                                        director.claimMission(m.id);
-                                      }
-                                    }
-                                  },
-                                  onAscend: () =>
-                                      confirmAscend(context, director),
-                                  dailyClaimed:
-                                      director.isDailyClaimedToday,
-                                  onDaily: () =>
-                                      confirmDailyRun(context, director),
-                                  showGauntlet:
-                                      GameLogic.canEnterGauntlet(state) ||
-                                          state.ascensionLevel >=
-                                              GameLogic.gauntletMinAscension,
-                                  gauntletBest:
-                                      state.metaDepth.gauntletBestFloor,
-                                  onGauntlet: () => confirmGauntletRun(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              HubHeader(
+                                ascensionLevel: state.ascensionLevel,
+                                bossFloor: bossFloor,
+                                gold: state.gold,
+                                essence: state.essence,
+                                soulbound: state.soulboundFragments,
+                                willRank: state.willRankTitle,
+                                collectionScore: state.collectionScore,
+                                displayTitle: state.displayTitle,
+                                zoneTrophies:
+                                    state.metaDepth.zoneTrophies.length,
+                                torch: flicker,
+                                onOpenSettings: () =>
+                                    router.open(MenuRoute.settings),
+                              ),
+                              if (director.offlineSummary != null) ...[
+                                const SizedBox(height: 8),
+                                HubOfflineBanner(
+                                  text: director.offlineSummary!.headline,
+                                  onDismiss: () => showOfflineProgressDialog(
                                     context,
                                     director,
+                                    onOpenParty: () =>
+                                        router.open(MenuRoute.party),
                                   ),
-                                  weeklyReady:
-                                      GameLogic.canClaimDailyVault(state),
-                                  weeklyProgress:
-                                      state.metaDepth.dailyVaultClears,
-                                  weeklyClaimed:
-                                      state.metaDepth.dailyVaultClaimed,
-                                  weeklyBestTimedKey:
-                                      state.metaDepth.dailyBestTimedKey,
-                                  onClaimWeekly: director.claimWeekly,
                                 ),
                               ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 4),
-                        Builder(
-                          builder: (context) {
-                            final alerts = MenuAlerts.forState(state);
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: KenneyButton(
-                                        label:
-                                            alerts.party.labelFor('PARTY'),
-                                        style: KenneyButtonStyle.grey,
-                                        onPressed: widget.onOpenParty,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: KenneyButton(
-                                        label:
-                                            alerts.power.labelFor('POWER'),
-                                        style: KenneyButtonStyle.grey,
-                                        onPressed: widget.onOpenPower,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: KenneyButton(
-                                        label: alerts.meta.labelFor('META'),
-                                        style: KenneyButtonStyle.grey,
-                                        onPressed: widget.onOpenMeta,
-                                      ),
-                                    ),
-                                  ],
+                              const SizedBox(height: 6),
+                              // World Path: painted campaign map + tappable rings.
+                              Expanded(
+                                child: ZonePathMap(
+                                  dungeons: DungeonCatalog.all,
+                                  selectedId: _selectedId,
+                                  lifetimeGold: state.lifetimeGoldEarned,
+                                  highestCleared: state.highestDungeonCleared,
+                                  pulse: _torch.value,
+                                  onSelect: (id) => setState(() {
+                                    _userPickedZone = true;
+                                    _selectedId = id;
+                                  }),
                                 ),
-                                if (!alerts.party.isQuiet ||
-                                    !alerts.meta.isQuiet) ...[
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    alerts.party.isQuiet
-                                        ? alerts.meta.reason
-                                        : alerts.party.reason,
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GameTheme.body(
-                                      size: 11,
-                                      color: GameTheme.torchHot,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            );
-                          },
+                              ),
+                              const SizedBox(height: 4),
+                              SelectedZoneCaption(
+                                dungeon: DungeonCatalog.byId(_selectedId),
+                                unlocked: unlockedSelected,
+                                lifetimeGold: state.lifetimeGoldEarned,
+                              ),
+                              const SizedBox(height: 6),
+                              Builder(
+                                builder: (context) {
+                                  final contract = ChaseContract.fromState(
+                                    state,
+                                  );
+                                  final chase = contract.chase;
+                                  final (actionLabel, onAction) = _chaseAction(
+                                    context,
+                                    chase,
+                                  );
+                                  final weekMod =
+                                      state.metaDepth.weeklyModifier;
+                                  final showWeekAffix =
+                                      !short &&
+                                      weekMod.isNotEmpty &&
+                                      GameLogic.showKeystoneJargon(state);
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      if (showWeekAffix) ...[
+                                        Text(
+                                          'Week · ${Keystone.label(weekMod)} — ${Keystone.blurb(weekMod)}',
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GameTheme.body(
+                                            size: 12,
+                                            color: GameTheme.mossLit,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                      ],
+                                      HubTodayCard(
+                                        chase: chase,
+                                        compact: true,
+                                        actionLabel: actionLabel,
+                                        onAction: onAction,
+                                      ),
+                                      HubMetaPulse(
+                                        state: state,
+                                        chaseKind: chase.kind,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Transform.scale(
+                                        scale: 1.0 + (_torch.value * 0.012),
+                                        child: KenneyButton(
+                                          label: 'ENTER DUNGEON',
+                                          style: KenneyButtonStyle.brown,
+                                          primary: true,
+                                          onPressed: unlockedSelected
+                                              ? () => widget.onEnterDungeon(
+                                                  _selectedId,
+                                                )
+                                              : null,
+                                        ),
+                                      ),
+                                      ChallengeToggles(
+                                        director: director,
+                                        collapsed: true,
+                                      ),
+                                      HubUrgentRow(
+                                        claimable: state.missions
+                                            .where((m) => m.isComplete)
+                                            .length,
+                                        canAscend: canAscend,
+                                        ascendLabel: canAscend
+                                            ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
+                                            : null,
+                                        hideAscend:
+                                            chase.kind == HubChaseKind.ascend,
+                                        hideVaultClaim:
+                                            chase.kind ==
+                                            HubChaseKind.claimDailyVault,
+                                        hideMissionClaim:
+                                            chase.kind ==
+                                            HubChaseKind.claimMissions,
+                                        hideDaily:
+                                            chase.kind ==
+                                                HubChaseKind.dailyRun ||
+                                            chase.kind ==
+                                                HubChaseKind.keystone ||
+                                            chase.kind ==
+                                                HubChaseKind.meetHero ||
+                                            !GameLogic.showDailyChase(state),
+                                        onContracts: () {
+                                          for (final m
+                                              in director.state.missions) {
+                                            if (m.isComplete) {
+                                              director.claimMission(m.id);
+                                            }
+                                          }
+                                        },
+                                        onAscend: () =>
+                                            confirmAscend(context, director),
+                                        dailyClaimed:
+                                            director.isDailyClaimedToday,
+                                        onDaily: () =>
+                                            confirmDailyRun(context, director),
+                                        showGauntlet:
+                                            GameLogic.canEnterGauntlet(state) ||
+                                            state.ascensionLevel >=
+                                                GameLogic.gauntletMinAscension,
+                                        gauntletBest:
+                                            state.metaDepth.gauntletBestFloor,
+                                        onGauntlet: () => confirmGauntletRun(
+                                          context,
+                                          director,
+                                        ),
+                                        weeklyReady:
+                                            GameLogic.canClaimDailyVault(state),
+                                        weeklyProgress:
+                                            state.metaDepth.dailyVaultClears,
+                                        weeklyClaimed:
+                                            state.metaDepth.dailyVaultClaimed,
+                                        weeklyBestTimedKey:
+                                            state.metaDepth.dailyBestTimedKey,
+                                        onClaimWeekly: director.claimWeekly,
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                      // Same nav row as the dungeon — same words, same place.
+                      AppBottomBar(
+                        alerts: MenuAlerts.forState(state),
+                        route: MenuRoute.none,
+                        showReason: true,
+                        onParty: () => router.open(MenuRoute.party),
+                        onPower: () => router.open(MenuRoute.power),
+                        onMeta: () => router.open(MenuRoute.meta),
+                      ),
+                    ],
                   ),
                 ],
               );
@@ -545,7 +511,6 @@ class _HubScreenState extends State<HubScreen>
       ],
     );
   }
-
 }
 
 /// Always-visible KEY / vault / week crumbs under TODAY (phone hub).

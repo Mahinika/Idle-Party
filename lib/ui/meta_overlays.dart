@@ -33,11 +33,11 @@ class AchievementsOverlay extends StatelessWidget {
   final GameDirector director;
 
   static String _categoryLabel(AchievementCategory c) => switch (c) {
-        AchievementCategory.combat => 'COMBAT',
-        AchievementCategory.meta => 'META',
-        AchievementCategory.explorer => 'EXPLORER',
-        AchievementCategory.collector => 'COLLECTOR',
-      };
+    AchievementCategory.combat => 'COMBAT',
+    AchievementCategory.meta => 'META',
+    AchievementCategory.explorer => 'EXPLORER',
+    AchievementCategory.collector => 'COLLECTOR',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -111,8 +111,9 @@ class AchievementsOverlay extends StatelessWidget {
                           vertical: 10,
                         ),
                         decoration: MenuChrome.listCard(
-                          borderColor:
-                              done ? GameTheme.clear : GameTheme.border,
+                          borderColor: done
+                              ? GameTheme.clear
+                              : GameTheme.border,
                         ),
                         child: Row(
                           children: [
@@ -138,7 +139,9 @@ class AchievementsOverlay extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
-                                    hide ? 'Hidden achievement' : def.description,
+                                    hide
+                                        ? 'Hidden achievement'
+                                        : def.description,
                                     style: GameTheme.body(
                                       size: 14,
                                       color: GameTheme.parchmentDim,
@@ -151,8 +154,8 @@ class AchievementsOverlay extends StatelessWidget {
                               hide
                                   ? '---'
                                   : done
-                                      ? 'AWARDED'
-                                      : '+${def.essenceReward}e',
+                                  ? 'AWARDED'
+                                  : '+${def.essenceReward}e',
                               style: GameTheme.pixel(
                                 size: 6,
                                 color: done
@@ -235,8 +238,9 @@ class _CodexOverlayState extends State<CodexOverlay> {
             for (final entry in GameLogic.codexRewardTiers.entries)
               Builder(
                 builder: (context) {
-                  final claimed =
-                      state.metaDepth.codexClaims.contains(entry.key);
+                  final claimed = state.metaDepth.codexClaims.contains(
+                    entry.key,
+                  );
                   final pct = GameLogic.codexCompletionPercent(state);
                   final ready = pct >= entry.value.pct && !claimed;
                   final locked = pct < entry.value.pct;
@@ -244,8 +248,8 @@ class _CodexOverlayState extends State<CodexOverlay> {
                     label: claimed
                         ? '${entry.value.pct}% done'
                         : locked
-                            ? 'Need ${entry.value.pct}%'
-                            : '${entry.value.pct}% +${entry.value.reward}e',
+                        ? 'Need ${entry.value.pct}%'
+                        : '${entry.value.pct}% +${entry.value.reward}e',
                     expanded: false,
                     style: ready
                         ? KenneyButtonStyle.brown
@@ -267,7 +271,10 @@ class _CodexOverlayState extends State<CodexOverlay> {
                         ? 'No monsters discovered yet. Fight your way through a dungeon.'
                         : 'No items discovered yet. Clear floors for gear drops.',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
+                    style: GameTheme.body(
+                      size: 15,
+                      color: GameTheme.parchmentDim,
+                    ),
                   ),
                 )
               : ListView.builder(
@@ -346,10 +353,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
         if (!hasTank || !hasHeal) ...[
           const SizedBox(height: 6),
           Text(
-            [
-              if (!hasTank) 'No Shield',
-              if (!hasHeal) 'No Healer',
-            ].join(' · '),
+            [if (!hasTank) 'No Shield', if (!hasHeal) 'No Healer'].join(' · '),
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.torchHot),
           ),
@@ -361,7 +365,8 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           _ActiveSlotChip(
             index: i,
             hero: i < active.length ? active[i] : null,
-            selected: _pendingSlotReplace ==
+            selected:
+                _pendingSlotReplace ==
                 (i < active.length ? active[i].id : 'empty_$i'),
             locked: state.inDungeon,
             onTap: state.inDungeon
@@ -398,7 +403,8 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
             label:
                 'UNLOCK 5TH SLOT  ${GameLogic.partySlot5EssenceCost}e  AL${GameLogic.partySlot5MinAscension}+',
             style: KenneyButtonStyle.brown,
-            onPressed: state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
+            onPressed:
+                state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
                     state.essence >= GameLogic.partySlot5EssenceCost
                 ? () {
                     director.unlockPartySlot5();
@@ -535,10 +541,10 @@ class _RosterSpecRow extends StatelessWidget {
     final status = !unlocked
         ? (def.unlockHint.isEmpty ? 'LOCKED' : def.unlockHint)
         : inActive
-            ? 'ACTIVE'
-            : onRoster
-                ? 'BENCH'
-                : 'READY';
+        ? 'ACTIVE'
+        : onRoster
+        ? 'BENCH'
+        : 'READY';
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -740,15 +746,15 @@ class _LoadoutSlotRow extends StatelessWidget {
                 TextButton(
                   onPressed: onDelete,
                   style: TextButton.styleFrom(
-                    minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
+                    minimumSize: const Size(
+                      GameTheme.minTouch,
+                      GameTheme.minTouch,
+                    ),
                     padding: EdgeInsets.zero,
                   ),
                   child: Text(
                     'DEL',
-                    style: GameTheme.pixel(
-                      size: 8,
-                      color: GameTheme.bloodLit,
-                    ),
+                    style: GameTheme.pixel(size: 8, color: GameTheme.bloodLit),
                   ),
                 ),
               ],
@@ -772,9 +778,9 @@ Future<void> showOfflineProgressDialog(
   final contract = ChaseContract.fromState(summary.state);
   final chase = contract.chase;
   final rows = summary.highlightRows;
-  final notices = List<String>.from(GameLogic.lastMetaPayoffNotices)
-      .take(2)
-      .toList(growable: false);
+  final notices = List<String>.from(
+    GameLogic.lastMetaPayoffNotices,
+  ).take(2).toList(growable: false);
 
   VoidCallback? readyAction;
   var readyLabel = contract.readyActionLabel ?? '';
@@ -844,52 +850,51 @@ Future<void> showOfflineProgressDialog(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-          Text(
-            'Away for ${OfflineProgressResult.formatOfflineDuration(summary.secondsApplied)}',
-            style: GameTheme.body(size: 16, color: GameTheme.parchment),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            summary.welcomeLead,
-            style: GameTheme.body(size: 14, color: GameTheme.torchHot),
-          ),
-          if (rows.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            for (final row in rows)
-              _OfflineStatRow(label: row.$1, value: row.$2),
-          ],
-          if (notices.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              notices.join(' · '),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 13, color: GameTheme.mossLit),
-            ),
-          ],
-          const SizedBox(height: 10),
-          Text(
-            contract.upNextLine,
-            style: GameTheme.body(
-              size: 14,
-              color: chase.urgency == HubChaseUrgency.normal
-                  ? GameTheme.mossLit
-                  : GameTheme.accentWarn,
-            ),
-          ),
-          Text(
-            chase.detail,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-          ),
+              Text(
+                'Away for ${OfflineProgressResult.formatOfflineDuration(summary.secondsApplied)}',
+                style: GameTheme.body(size: 16, color: GameTheme.parchment),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                summary.welcomeLead,
+                style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+              ),
+              if (rows.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                for (final row in rows)
+                  MenuChrome.statRow(label: row.$1, value: row.$2),
+              ],
+              if (notices.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  notices.join(' · '),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+                ),
+              ],
+              const SizedBox(height: 10),
+              Text(
+                contract.upNextLine,
+                style: GameTheme.body(
+                  size: 14,
+                  color: chase.urgency == HubChaseUrgency.normal
+                      ? GameTheme.mossLit
+                      : GameTheme.accentWarn,
+                ),
+              ),
+              Text(
+                chase.detail,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+              ),
             ],
           ),
         ),
       ),
       actions: [
-        if (chase.urgency == HubChaseUrgency.ready &&
-            readyAction != null) ...[
+        if (chase.urgency == HubChaseUrgency.ready && readyAction != null) ...[
           KenneyButton(
             label: readyLabel,
             expanded: false,
@@ -910,33 +915,6 @@ Future<void> showOfflineProgressDialog(
   ).whenComplete(WebClickBridge.popLayer);
 }
 
-class _OfflineStatRow extends StatelessWidget {
-  const _OfflineStatRow({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
-            ),
-          ),
-          Text(
-            value,
-            style: GameTheme.body(size: 16, color: GameTheme.torchHot),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// In-app "What's new" changelog — marks itself seen once shown.
 class WhatsNewOverlay extends StatelessWidget {
   const WhatsNewOverlay({super.key, required this.director});
@@ -953,7 +931,10 @@ class WhatsNewOverlay extends StatelessWidget {
         final maxH = math.min(420.0, size.height * 0.78);
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
           child: DecoratedBox(
             decoration: MenuChrome.panel(),
             child: Padding(
@@ -1086,11 +1067,11 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
 
     final headerLabel = _expanded
         ? (activeBits.isEmpty
-            ? '▾ KEYSTONE off'
-            : '▾ KEYSTONE ${activeBits.join(' · ')}')
+              ? '▾ KEYSTONE off'
+              : '▾ KEYSTONE ${activeBits.join(' · ')}')
         : (activeBits.isEmpty
-            ? '▸ KEYSTONE off'
-            : '▸ KEYSTONE ${activeBits.join(' · ')}');
+              ? '▸ KEYSTONE off'
+              : '▸ KEYSTONE ${activeBits.join(' · ')}');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1118,9 +1099,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        activeBits.isEmpty
-                            ? 'off'
-                            : activeBits.join(' · '),
+                        activeBits.isEmpty ? 'off' : activeBits.join(' · '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GameTheme.body(
@@ -1191,8 +1170,9 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                   textAlign: TextAlign.center,
                   style: GameTheme.pixel(
                     size: 8,
-                    color:
-                        vaultReady ? GameTheme.torchHot : GameTheme.parchmentDim,
+                    color: vaultReady
+                        ? GameTheme.torchHot
+                        : GameTheme.parchmentDim,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1201,17 +1181,23 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                       ? 'Season rotating…'
                       : '${month.name} · +${GameLogic.seasonWeeklyBonusEssence}e first vault claim',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                  style: GameTheme.body(
+                    size: 11,
+                    color: GameTheme.parchmentDim,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   md.dailyVaultClaimed
                       ? 'Claimed today'
                       : 'Clears ${md.dailyVaultClears}/${GameLogic.dailyVaultClearTarget}'
-                          ' · best timed KEY +${md.dailyBestTimedKey}'
-                          '${vaultReady ? ' · ready' : ''}',
+                            ' · best timed KEY +${md.dailyBestTimedKey}'
+                            '${vaultReady ? ' · ready' : ''}',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                  style: GameTheme.body(
+                    size: 12,
+                    color: GameTheme.parchmentDim,
+                  ),
                 ),
                 if (vaultReady) ...[
                   const SizedBox(height: 6),
@@ -1227,17 +1213,15 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: MenuChrome.cardBox(
-                selected: weekReady || weekAlmost,
-              ),
+              decoration: MenuChrome.cardBox(selected: weekReady || weekAlmost),
               child: Column(
                 children: [
                   Text(
                     weekReady
                         ? 'WEEK GOAL READY'
                         : weekAlmost
-                            ? 'WEEK GOAL ALMOST'
-                            : 'WEEK GOAL',
+                        ? 'WEEK GOAL ALMOST'
+                        : 'WEEK GOAL',
                     textAlign: TextAlign.center,
                     style: GameTheme.pixel(
                       size: 8,
@@ -1257,10 +1241,13 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                     weekClaimed
                         ? 'Claimed · ${week.titleReward ?? week.name}'
                         : '${week.blurb}\n'
-                            '${LocalSeasonCatalog.weekProgressLabel(state, week)}'
-                            '${weekReady ? ' · auto-claims on hub sync' : ''}',
+                              '${LocalSeasonCatalog.weekProgressLabel(state, week)}'
+                              '${weekReady ? ' · auto-claims on hub sync' : ''}',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
+                    ),
                   ),
                 ],
               ),
@@ -1316,14 +1303,19 @@ class _HardmodeStepper extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: GameTheme.pixel(
                     size: 7,
-                    color: level > 0 ? GameTheme.torchHot : GameTheme.parchmentDim,
+                    color: level > 0
+                        ? GameTheme.torchHot
+                        : GameTheme.parchmentDim,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '0 = normal  ·  max +$maxLevel (AL)',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                  style: GameTheme.body(
+                    size: 11,
+                    color: GameTheme.parchmentDim,
+                  ),
                 ),
               ],
             ),
@@ -1337,8 +1329,7 @@ class _HardmodeStepper extends StatelessWidget {
             onPressed: level < maxLevel ? () => onChanged(level + 1) : null,
             child: WebClickScope(
               label: 'KEYSTONE +',
-              onPressed:
-                  level < maxLevel ? () => onChanged(level + 1) : null,
+              onPressed: level < maxLevel ? () => onChanged(level + 1) : null,
               child: Text('+', style: GameTheme.pixel(size: 10)),
             ),
           ),
@@ -1440,9 +1431,7 @@ class SaveTransferSection extends StatelessWidget {
     );
     if (ok != true) return;
     final success = director.importSaveJson(raw);
-    director.showToast(
-      success ? 'Save imported' : 'Could not read that save',
-    );
+    director.showToast(success ? 'Save imported' : 'Could not read that save');
   }
 
   @override
@@ -1450,7 +1439,10 @@ class SaveTransferSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Save transfer (clipboard)', style: GameTheme.body(size: 13, color: GameTheme.parchmentDim)),
+        Text(
+          'Save transfer (clipboard)',
+          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        ),
         const SizedBox(height: 6),
         Row(
           children: [
@@ -1506,87 +1498,88 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
   }
 
   Future<void> _signIn() => _run(() async {
-        final ok = await director.signInPlayGames();
-        if (!ok || !mounted) return;
-        final cloud = await director.loadPlayGamesCloud();
-        if (cloud == null || !mounted) return;
-        final conflict = director.peekCloudConflict(cloud);
-        if (conflict != CloudConflict.askUser) return;
-        final useCloud = await showDialog<bool>(
-          context: context,
-          barrierColor: MenuChrome.scrim,
-          builder: (ctx) => MenuChrome.dialog(
-            title: 'Cloud save differs',
-            content: Text(
-              'This device:\n${director.playGamesConflictHint(director.state)}\n\n'
-              'Play Games:\n${director.playGamesConflictHint(cloud)}\n\n'
-              'Which save should we keep?',
-              style: GameTheme.body(size: 14, color: GameTheme.parchment),
+    final ok = await director.signInPlayGames();
+    if (!ok || !mounted) return;
+    final cloud = await director.loadPlayGamesCloud();
+    if (cloud == null || !mounted) return;
+    final conflict = director.peekCloudConflict(cloud);
+    if (conflict != CloudConflict.askUser) return;
+    final useCloud = await showDialog<bool>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Cloud save differs',
+        content: Text(
+          'This device:\n${director.playGamesConflictHint(director.state)}\n\n'
+          'Play Games:\n${director.playGamesConflictHint(cloud)}\n\n'
+          'Which save should we keep?',
+          style: GameTheme.body(size: 14, color: GameTheme.parchment),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'KEEP DEVICE',
+              style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(
-                  'KEEP DEVICE',
-                  style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-                ),
-              ),
-              KenneyButton(
-                label: 'USE CLOUD',
-                style: KenneyButtonStyle.brown,
-                expanded: false,
-                onPressed: () => Navigator.pop(ctx, true),
-              ),
-            ],
           ),
-        );
-        if (useCloud == true) {
-          await director.restoreFromPlayGames(force: true);
-        }
-      });
+          KenneyButton(
+            label: 'USE CLOUD',
+            style: KenneyButtonStyle.brown,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, true),
+          ),
+        ],
+      ),
+    );
+    if (useCloud == true) {
+      await director.restoreFromPlayGames(force: true);
+    }
+  });
 
   Future<void> _restore() => _run(() async {
-        final cloud = await director.loadPlayGamesCloud();
-        if (cloud == null) {
-          director.showToast('No Play Games save found', life: 2.2);
-          return;
-        }
-        final conflict = director.peekCloudConflict(cloud);
-        if (conflict == CloudConflict.askUser && mounted) {
-          final useCloud = await showDialog<bool>(
-            context: context,
-            barrierColor: MenuChrome.scrim,
-            builder: (ctx) => MenuChrome.dialog(
-              title: 'Restore from Play Games?',
-              content: Text(
-                'This device:\n${director.playGamesConflictHint(director.state)}\n\n'
-                'Play Games:\n${director.playGamesConflictHint(cloud)}',
-                style: GameTheme.body(size: 14, color: GameTheme.parchment),
+    final cloud = await director.loadPlayGamesCloud();
+    if (cloud == null) {
+      director.showToast('No Play Games save found', life: 2.2);
+      return;
+    }
+    final conflict = director.peekCloudConflict(cloud);
+    if (conflict == CloudConflict.askUser && mounted) {
+      final useCloud = await showDialog<bool>(
+        context: context,
+        barrierColor: MenuChrome.scrim,
+        builder: (ctx) => MenuChrome.dialog(
+          title: 'Restore from Play Games?',
+          content: Text(
+            'This device:\n${director.playGamesConflictHint(director.state)}\n\n'
+            'Play Games:\n${director.playGamesConflictHint(cloud)}',
+            style: GameTheme.body(size: 14, color: GameTheme.parchment),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(
+                'CANCEL',
+                style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(
-                    'CANCEL',
-                    style:
-                        GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-                  ),
-                ),
-                KenneyButton(
-                  label: 'RESTORE',
-                  style: KenneyButtonStyle.red,
-                  expanded: false,
-                  onPressed: () => Navigator.pop(ctx, true),
-                ),
-              ],
             ),
-          );
-          if (useCloud != true) return;
-          await director.restoreFromPlayGames(force: true);
-          return;
-        }
-        await director.restoreFromPlayGames(force: conflict == CloudConflict.preferCloud);
-      });
+            KenneyButton(
+              label: 'RESTORE',
+              style: KenneyButtonStyle.red,
+              expanded: false,
+              onPressed: () => Navigator.pop(ctx, true),
+            ),
+          ],
+        ),
+      );
+      if (useCloud != true) return;
+      await director.restoreFromPlayGames(force: true);
+      return;
+    }
+    await director.restoreFromPlayGames(
+      force: conflict == CloudConflict.preferCloud,
+    );
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1676,8 +1669,8 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
                 onPressed: _busy
                     ? null
                     : () => _run(() async {
-                          await director.backupToPlayGames();
-                        }),
+                        await director.backupToPlayGames();
+                      }),
               ),
             ),
             const SizedBox(width: 8),
@@ -1695,7 +1688,7 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
           boardsReady
               ? 'Boards submit on new season PBs while signed in.'
               : 'Leaderboard IDs not set yet — add them in Play Console, then '
-                  'paste into play_leaderboard_ids.dart.',
+                    'paste into play_leaderboard_ids.dart.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
       ],
@@ -1802,8 +1795,7 @@ class PrestigeShopOverlay extends StatelessWidget {
                 'gauntlet_gold' => state.metaDepth.gauntletGoldBonusLevel >= 5,
                 _ => false,
               };
-              final canBuy =
-                  !locked && !atCap && state.essence >= item.cost;
+              final canBuy = !locked && !atCap && state.essence >= item.cost;
               return Container(
                 padding: const EdgeInsets.all(10),
                 decoration: MenuChrome.listCard(),
@@ -1835,9 +1827,9 @@ class PrestigeShopOverlay extends StatelessWidget {
                             locked
                                 ? 'Needs AL${item.minAl}'
                                 : atCap
-                                    ? 'MAX'
-                                    : '${item.cost}e'
-                                        '${ownedCount > 0 ? ' · x$ownedCount' : ''}',
+                                ? 'MAX'
+                                : '${item.cost}e'
+                                      '${ownedCount > 0 ? ' · x$ownedCount' : ''}',
                             style: GameTheme.body(
                               size: 13,
                               color: GameTheme.parchmentDim,
@@ -1848,8 +1840,8 @@ class PrestigeShopOverlay extends StatelessWidget {
                           label: locked
                               ? 'AL${item.minAl}+'
                               : atCap
-                                  ? 'MAX'
-                                  : 'BUY ${item.cost}e',
+                              ? 'MAX'
+                              : 'BUY ${item.cost}e',
                           expanded: false,
                           onPressed: canBuy
                               ? () => director.buyPrestigeShopItem(item.id)

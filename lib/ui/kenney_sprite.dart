@@ -25,8 +25,9 @@ class KenneySprite extends StatelessWidget {
     final box = math.max(width ?? size, height ?? size);
     // Decode no larger than we paint. Kenney tiles are already tiny (decoding
     // never upscales), but custom portraits are 1024px and show as ~32px discs.
-    final decodeWidth =
-        (box * MediaQuery.devicePixelRatioOf(context)).ceil().clamp(16, 1024);
+    final decodeWidth = (box * MediaQuery.devicePixelRatioOf(context))
+        .ceil()
+        .clamp(16, 1024);
     return Image.asset(
       asset,
       width: width ?? size,

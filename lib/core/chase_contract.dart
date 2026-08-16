@@ -8,10 +8,7 @@ import 'hub_chase.dart';
 /// Selection lives in [HubChase.forState]; this facade keeps every surface on
 /// the same title / urgency / teaser (see docs/CHASE_CONTRACT.md).
 class ChaseContract {
-  const ChaseContract({
-    required this.chase,
-    this.ascendTeaser,
-  });
+  const ChaseContract({required this.chase, this.ascendTeaser});
 
   final HubChase chase;
 
@@ -45,16 +42,16 @@ class ChaseContract {
 
   /// Short CTA when [isReady] (hub / offline action buttons).
   String? get readyActionLabel => switch (kind) {
-        HubChaseKind.claimDailyVault => 'CLAIM VAULT',
-        HubChaseKind.claimMissions => 'CLAIM JOBS',
-        HubChaseKind.meetHero => 'PARTY',
-        HubChaseKind.ascend => 'ASCEND',
-        HubChaseKind.dailyRun => 'DAILY',
-        HubChaseKind.keystone => 'ENTER',
-        HubChaseKind.gauntletMilestone => 'GAUNTLET',
-        HubChaseKind.unlockZone => zoneId != null ? 'PATH' : null,
-        _ => null,
-      };
+    HubChaseKind.claimDailyVault => 'CLAIM VAULT',
+    HubChaseKind.claimMissions => 'CLAIM JOBS',
+    HubChaseKind.meetHero => 'PARTY',
+    HubChaseKind.ascend => 'ASCEND',
+    HubChaseKind.dailyRun => 'DAILY',
+    HubChaseKind.keystone => 'ENTER',
+    HubChaseKind.gauntletMilestone => 'GAUNTLET',
+    HubChaseKind.unlockZone => zoneId != null ? 'PATH' : null,
+    _ => null,
+  };
 
   static ChaseContract fromState(GameState state, {DateTime? now}) {
     final chase = HubChase.forState(state, now: now);
@@ -62,7 +59,8 @@ class ChaseContract {
     final firstHour = !GameLogic.showDailyChase(state);
     if (chase.kind == HubChaseKind.ascend ||
         (chase.kind == HubChaseKind.clearFloors && !firstHour)) {
-      teaser = AscendRoadmap.nextMissingKitTeaser(state) ??
+      teaser =
+          AscendRoadmap.nextMissingKitTeaser(state) ??
           AscendRoadmap.chaseTeaser(state.ascensionLevel);
     } else if (chase.kind == HubChaseKind.meetHero) {
       teaser = chase.detail;

@@ -231,20 +231,20 @@ abstract final class ApexCraft {
   static String shardIdForDungeon(String dungeonId) => 'shard_$dungeonId';
 
   static String coreIdForRole(SpecRoleTag role) => switch (role) {
-        SpecRoleTag.tank => 'core_tank',
-        SpecRoleTag.healer => 'core_healer',
-        SpecRoleTag.meleeDps => 'core_melee',
-        SpecRoleTag.rangedDps => 'core_ranged',
-        SpecRoleTag.caster => 'core_caster',
-      };
+    SpecRoleTag.tank => 'core_tank',
+    SpecRoleTag.healer => 'core_healer',
+    SpecRoleTag.meleeDps => 'core_melee',
+    SpecRoleTag.rangedDps => 'core_ranged',
+    SpecRoleTag.caster => 'core_caster',
+  };
 
   static String catalystIdForClass(HeroClassId classId) =>
       'catalyst_${classId.name}';
 
   static Set<SpecRoleTag> validRolesFor(HeroClassId classId) => {
-        for (final d in HeroSpecs.all)
-          if (d.classId == classId) d.roleTag,
-      };
+    for (final d in HeroSpecs.all)
+      if (d.classId == classId) d.roleTag,
+  };
 
   static bool isValidPair(HeroClassId classId, SpecRoleTag role) =>
       validRolesFor(classId).contains(role);
@@ -260,19 +260,19 @@ abstract final class ApexCraft {
   }
 
   static double slotCostMult(EquipmentSlot slot) => switch (slot) {
-        EquipmentSlot.weapon => 2.0,
-        EquipmentSlot.offHand => 1.4,
-        EquipmentSlot.chest || EquipmentSlot.legs => 1.3,
-        EquipmentSlot.head || EquipmentSlot.shoulder => 1.1,
-        _ => 1.0,
-      };
+    EquipmentSlot.weapon => 2.0,
+    EquipmentSlot.offHand => 1.4,
+    EquipmentSlot.chest || EquipmentSlot.legs => 1.3,
+    EquipmentSlot.head || EquipmentSlot.shoulder => 1.1,
+    _ => 1.0,
+  };
 
   static int rankCostMult(int rank) => switch (rank) {
-        1 => 1,
-        2 => 2,
-        3 => 4,
-        _ => 1,
-      };
+    1 => 1,
+    2 => 2,
+    3 => 4,
+    _ => 1,
+  };
 
   /// Absolute mat cost to reach [rank] from nothing (for R1 craft).
   static Map<String, int> absoluteCost({
@@ -292,15 +292,14 @@ abstract final class ApexCraft {
     }
     if (shardsNeeded > dungeonIds.length) {
       final crystal = shardIdForDungeon('crystal');
-      costs[crystal] = (costs[crystal] ?? 0) + (shardsNeeded - dungeonIds.length);
+      costs[crystal] =
+          (costs[crystal] ?? 0) + (shardsNeeded - dungeonIds.length);
     }
     costs[coreIdForRole(role)] = max(1, mult);
     costs[catalystIdForClass(classId)] = max(1, (mult + 1) ~/ 2);
     if (rank >= 2 || slot == EquipmentSlot.weapon) {
       // R1 weapons: 1 slag (was heavier); upgrades stay steeper.
-      costs['apex_slag'] = rank == 1
-          ? 1
-          : max(1, mult ~/ (rank == 2 ? 2 : 1));
+      costs['apex_slag'] = rank == 1 ? 1 : max(1, mult ~/ (rank == 2 ? 2 : 1));
     }
     return costs;
   }
@@ -372,8 +371,7 @@ abstract final class ApexCraft {
     required HeroClassId classId,
     required SpecRoleTag role,
     required EquipmentSlot slot,
-  }) =>
-      'apex_${classId.name}_${role.name}_${slot.name}';
+  }) => 'apex_${classId.name}_${role.name}_${slot.name}';
 
   static String pieceName({
     required HeroClassId classId,
@@ -467,7 +465,8 @@ abstract final class ApexCraft {
     );
     final budget = max(8, (baseBudget * powerMul).round());
 
-    final needsArmor = slot.isArmorSlot ||
+    final needsArmor =
+        slot.isArmorSlot ||
         slot == EquipmentSlot.cloak ||
         (slot == EquipmentSlot.offHand && offHandKind == OffHandKind.shield);
     final armor = needsArmor

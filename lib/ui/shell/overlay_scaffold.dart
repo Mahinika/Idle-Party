@@ -5,7 +5,8 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 
 class OverlayScrim extends StatelessWidget {
-  const OverlayScrim({super.key, 
+  const OverlayScrim({
+    super.key,
     required this.title,
     required this.onClose,
     required this.child,
@@ -140,10 +141,7 @@ class _OverlayPanel extends StatelessWidget {
             children: [
               if (title.isNotEmpty)
                 Expanded(
-                  child: Text(
-                    title,
-                    style: GameTheme.menuTitle(size: 18),
-                  ),
+                  child: Text(title, style: GameTheme.menuTitle(size: 18)),
                 )
               else
                 const Spacer(),

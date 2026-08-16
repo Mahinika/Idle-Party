@@ -43,7 +43,8 @@ abstract final class AbilityEffectRunner {
     final role = hero.heroRole;
     // Saves from before specs existed only carry a role — read the kit off it.
     final specId =
-        hero.heroSpecId ?? (role == null ? null : HeroSpecs.fromGearAffinity(role));
+        hero.heroSpecId ??
+        (role == null ? null : HeroSpecs.fromGearAffinity(role));
     final focus = SpatialCombat._pickSmartFocus(hero, world);
 
     if (specId != null) {
@@ -136,7 +137,8 @@ abstract final class AbilityEffectRunner {
     final focusHpFrac = focus == null || focus.maxHp <= 0
         ? 1.0
         : focus.hp / focus.maxHp;
-    final focusElite = focus != null &&
+    final focusElite =
+        focus != null &&
         (focus.role == EnemyRole.boss || focus.role == EnemyRole.elite);
 
     bool contextOk(ClassAbilityDef d) {
@@ -169,15 +171,11 @@ abstract final class AbilityEffectRunner {
         return false;
       }
       // Hold Rip when a strong bleed is already rolling.
-      if (d.id == AbilityId.rip &&
-          focus != null &&
-          focus.bleedTimer > 2.5) {
+      if (d.id == AbilityId.rip && focus != null && focus.bleedTimer > 2.5) {
         return false;
       }
       // Rake refresh when bleed is missing/about to fall.
-      if (d.id == AbilityId.rake &&
-          focus != null &&
-          focus.bleedTimer > 3.5) {
+      if (d.id == AbilityId.rake && focus != null && focus.bleedTimer > 3.5) {
         return false;
       }
       // DoT maintain: don't refresh the same DoT while it has time left.
@@ -199,7 +197,8 @@ abstract final class AbilityEffectRunner {
       if (d.id == AbilityId.frostNovaMage) {
         final near = [
           for (final e in world.enemies)
-            if (e.hp > 0 && !e.dormant && SpatialCombat._dist(hero, e) <= 2.4) e,
+            if (e.hp > 0 && !e.dormant && SpatialCombat._dist(hero, e) <= 2.4)
+              e,
         ];
         final peel = near.any((e) => SpatialCombat._dist(hero, e) <= 1.6);
         if (near.length < 2 && !peel) return false;
@@ -288,9 +287,11 @@ abstract final class AbilityEffectRunner {
         if (aMove != bMove) return aMove ? -1 : 1;
         // Healers: prefer party/ST heals over enemy AoE when someone is hurt.
         if (def.isHealer && _partyNeedsHeal(world)) {
-          final aHeal = a.effect == AbilityEffectKind.heal ||
+          final aHeal =
+              a.effect == AbilityEffectKind.heal ||
               a.effect == AbilityEffectKind.absorb;
-          final bHeal = b.effect == AbilityEffectKind.heal ||
+          final bHeal =
+              b.effect == AbilityEffectKind.heal ||
               b.effect == AbilityEffectKind.absorb;
           if (aHeal != bHeal) return aHeal ? -1 : 1;
         }
@@ -361,9 +362,9 @@ abstract final class AbilityEffectRunner {
 
   /// Gap-closers / kites whose gate already means "you are out of position".
   static bool _isPositioningAbility(ClassAbilityDef d) => switch (d.id) {
-        AbilityId.charge || AbilityId.blink || AbilityId.sprint => true,
-        _ => false,
-      };
+    AbilityId.charge || AbilityId.blink || AbilityId.sprint => true,
+    _ => false,
+  };
 
   static bool _isExecuteAbility(ClassAbilityDef d) {
     // Rampage keeps id furyExecute but is not an execute finisher.
@@ -378,44 +379,42 @@ abstract final class AbilityEffectRunner {
   }
 
   static bool _isMaintainDot(ClassAbilityDef d) => switch (d.id) {
-        AbilityId.corruption ||
-        AbilityId.unstableAffliction ||
-        AbilityId.curseOfAgony ||
-        AbilityId.shadowWordPain ||
-        AbilityId.vampiricTouch ||
-        AbilityId.devouringPlague ||
-        AbilityId.moonfire ||
-        AbilityId.immolateDemo ||
-        AbilityId.immolateDestro ||
-        AbilityId.serpentSting ||
-        AbilityId.flameShock ||
-        AbilityId.lacerate ||
-        AbilityId.garrote ||
-        AbilityId.rupture ||
-        AbilityId.bloodBoil ||
-        AbilityId.bloodBoilUnholy ||
-        AbilityId.howlingBlast ||
-        AbilityId.scourgeStrike ||
-        AbilityId.heartStrike =>
-          true,
-        _ => false,
-      };
+    AbilityId.corruption ||
+    AbilityId.unstableAffliction ||
+    AbilityId.curseOfAgony ||
+    AbilityId.shadowWordPain ||
+    AbilityId.vampiricTouch ||
+    AbilityId.devouringPlague ||
+    AbilityId.moonfire ||
+    AbilityId.immolateDemo ||
+    AbilityId.immolateDestro ||
+    AbilityId.serpentSting ||
+    AbilityId.flameShock ||
+    AbilityId.lacerate ||
+    AbilityId.garrote ||
+    AbilityId.rupture ||
+    AbilityId.bloodBoil ||
+    AbilityId.bloodBoilUnholy ||
+    AbilityId.howlingBlast ||
+    AbilityId.scourgeStrike ||
+    AbilityId.heartStrike => true,
+    _ => false,
+  };
 
   static bool _isStackingDot(ClassAbilityDef d) => switch (d.id) {
-        AbilityId.corruption ||
-        AbilityId.unstableAffliction ||
-        AbilityId.curseOfAgony ||
-        AbilityId.shadowWordPain ||
-        AbilityId.vampiricTouch ||
-        AbilityId.devouringPlague ||
-        AbilityId.bloodBoil ||
-        AbilityId.bloodBoilUnholy ||
-        AbilityId.howlingBlast ||
-        AbilityId.scourgeStrike ||
-        AbilityId.heartStrike =>
-          true,
-        _ => false,
-      };
+    AbilityId.corruption ||
+    AbilityId.unstableAffliction ||
+    AbilityId.curseOfAgony ||
+    AbilityId.shadowWordPain ||
+    AbilityId.vampiricTouch ||
+    AbilityId.devouringPlague ||
+    AbilityId.bloodBoil ||
+    AbilityId.bloodBoilUnholy ||
+    AbilityId.howlingBlast ||
+    AbilityId.scourgeStrike ||
+    AbilityId.heartStrike => true,
+    _ => false,
+  };
 
   /// Applies always-on kit passive bonuses from [ability.id].
   /// Magnitudes are mild so stacking with GameState auras stays sane.
@@ -470,7 +469,7 @@ abstract final class AbilityEffectRunner {
         // Fairness: ghoul + diseases carry identity; presence is a lean, not a stomp.
         hero.kitOutMul *= 1.10;
         hero.kitHasteMul *= 1.10;
-        // Ghoul companion spawned in SpatialCombat.build.
+      // Ghoul companion spawned in SpatialCombat.build.
       case AbilityId.enhancementWeapons:
         hero.kitOutMul *= 1.26;
       case AbilityId.catForm:
@@ -763,8 +762,8 @@ abstract final class AbilityEffectRunner {
         return true;
       case AbilityEffectKind.absorb:
         // Unholy AMS / Blood Bone Shield are self shells — not party bubbles.
-        final ally = def.id == AbilityId.antiMagicShell ||
-                def.id == AbilityId.boneShield
+        final ally =
+            def.id == AbilityId.antiMagicShell || def.id == AbilityId.boneShield
             ? hero
             : _lowestAlly(world, hero);
         if (ally == null) return false;
@@ -811,8 +810,10 @@ abstract final class AbilityEffectRunner {
         if (def.id == AbilityId.slow) {
           if (focus == null || focus.hp <= 0) return false;
           _spendAndCd(world, hero, def);
-          focus.attackSlowTimer =
-              math.max(focus.attackSlowTimer, 4.0 + hero.kitRootBonus);
+          focus.attackSlowTimer = math.max(
+            focus.attackSlowTimer,
+            4.0 + hero.kitRootBonus,
+          );
           hero.attackFlash = 0.12;
           _announce(world, hero, def.shortLabel, 0xFFB090FF, reducedVfx);
           if (!reducedVfx) {
@@ -832,15 +833,12 @@ abstract final class AbilityEffectRunner {
             def.id == AbilityId.hungeringCold) {
           final nearby = [
             for (final e in world.enemies)
-              if (e.hp > 0 &&
-                  !e.dormant &&
-                  SpatialCombat._dist(hero, e) <= 2.5)
+              if (e.hp > 0 && !e.dormant && SpatialCombat._dist(hero, e) <= 2.5)
                 e,
           ];
           if (nearby.isEmpty) return false;
           if (def.id == AbilityId.frostNovaMage) {
-            final peel =
-                nearby.any((e) => SpatialCombat._dist(hero, e) <= 1.6);
+            final peel = nearby.any((e) => SpatialCombat._dist(hero, e) <= 1.6);
             if (nearby.length < 2 && !peel) return false;
           }
           _spendAndCd(world, hero, def);
@@ -1002,17 +1000,15 @@ abstract final class AbilityEffectRunner {
             : lowest.hp / lowest.effectiveMaxHp;
         final defendTarget =
             (!_actorIsTank(hero) && lowest != null && lowestFrac <= 0.32)
-                ? lowest
-                : hero;
-        defendTarget.shieldWallTimer =
-            math.max(defendTarget.shieldWallTimer, 3.5);
+            ? lowest
+            : hero;
+        defendTarget.shieldWallTimer = math.max(
+          defendTarget.shieldWallTimer,
+          3.5,
+        );
         if (_actorIsTank(hero) && identical(defendTarget, hero)) {
           hero.shieldBlockTimer = math.max(hero.shieldBlockTimer, 3.5);
-          SpatialCombat._tauntLooseEnemies(
-            world,
-            hero,
-            reducedVfx: reducedVfx,
-          );
+          SpatialCombat._tauntLooseEnemies(world, hero, reducedVfx: reducedVfx);
         }
         defendTarget.buffTimers['shield'] = 3.5;
         if (identical(defendTarget, hero) &&
@@ -1093,10 +1089,7 @@ abstract final class AbilityEffectRunner {
     // Arcane Blast stacks; Missiles dump.
     if (def.id == AbilityId.arcaneBlast) {
       hero.arcaneCharges = math.min(4, hero.arcaneCharges + 1);
-      raw = math.max(
-        2,
-        (raw * (1.0 + hero.arcaneCharges * 0.12)).round(),
-      );
+      raw = math.max(2, (raw * (1.0 + hero.arcaneCharges * 0.12)).round());
     } else if (def.id == AbilityId.arcaneMissiles) {
       final charges = hero.arcaneCharges;
       hero.arcaneCharges = 0;
@@ -1123,9 +1116,7 @@ abstract final class AbilityEffectRunner {
       }
     }
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
-    final pet = _petEmpoweredAbility(def)
-        ? _ownedCombatPet(world, hero)
-        : null;
+    final pet = _petEmpoweredAbility(def) ? _ownedCombatPet(world, hero) : null;
     if (pet != null) {
       // BM Kill Command / Demo pet-lean nukes hit harder with companion up.
       final petMul = def.id == AbilityId.killCommand ? 1.55 : 1.22;
@@ -1135,8 +1126,8 @@ abstract final class AbilityEffectRunner {
     final useBolt = def.id == AbilityId.mongooseBite
         ? false
         : (def.id == AbilityId.killCommand && pet != null
-            ? false
-            : (hero.ranged || SpatialCombat._dist(hero, enemy) > 2.2));
+              ? false
+              : (hero.ranged || SpatialCombat._dist(hero, enemy) > 2.2));
     final tint = SpatialCombat.burstArgbForStyle(style);
 
     hero.attackFlash = 0.16;
@@ -1146,7 +1137,8 @@ abstract final class AbilityEffectRunner {
     _applyBleedIfNeeded(world, hero, enemy, def, raw);
 
     if (useBolt) {
-      SpatialCombat._addProjectile(world, 
+      SpatialCombat._addProjectile(
+        world,
         SpatialCombat._spellBolt(
           from: hero,
           to: enemy,
@@ -1184,8 +1176,12 @@ abstract final class AbilityEffectRunner {
       priority: 0,
     );
     if (wasAlive && enemy.hp <= 0) {
-      final killed =
-          SpatialCombat._onEnemyKilled(world, _stateOut!, enemy, rng);
+      final killed = SpatialCombat._onEnemyKilled(
+        world,
+        _stateOut!,
+        enemy,
+        rng,
+      );
       _goldOut += killed.gold;
       _stateOut = killed.state;
     }
@@ -1246,15 +1242,7 @@ abstract final class AbilityEffectRunner {
         key.contains('blizzard') ||
         key.contains('rain of fire') ||
         key.contains('mind sear')) {
-      _rainBolts(
-        world,
-        hero,
-        focus,
-        def,
-        style,
-        rng,
-        reducedVfx: reducedVfx,
-      );
+      _rainBolts(world, hero, focus, def, style, rng, reducedVfx: reducedVfx);
       return;
     }
     // Ground zones — heavier rings + on-target sparks (no projectile spam).
@@ -1307,8 +1295,10 @@ abstract final class AbilityEffectRunner {
     required bool reducedVfx,
   }) {
     const style = SpellBoltStyle.lightning;
-    final base =
-        math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
+    final base = math.max(
+      2,
+      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
+    );
     final targets = <SpatialActor>[];
     SpatialActor? cursor = focus != null && focus.hp > 0 && !focus.dormant
         ? focus
@@ -1347,7 +1337,8 @@ abstract final class AbilityEffectRunner {
       // Nudge off the previous target so hops don't instantly re-hit it.
       final ox = i == 0 ? 0.0 : dx / len * 0.4;
       final oy = i == 0 ? 0.0 : dy / len * 0.4;
-      SpatialCombat._addProjectile(world, 
+      SpatialCombat._addProjectile(
+        world,
         SpatialCombat.spellBoltBetween(
           x0: px + ox,
           y0: py + oy,
@@ -1388,23 +1379,26 @@ abstract final class AbilityEffectRunner {
     required int hops,
     required bool reducedVfx,
   }) {
-    final raw =
-        math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
+    final raw = math.max(
+      2,
+      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
+    );
     final anchor = focus != null && focus.hp > 0 && !focus.dormant
         ? focus
         : hero;
-    final enemies = world.enemies
-        .where((e) => e.hp > 0 && !e.dormant)
-        .toList()
+    final enemies = world.enemies.where((e) => e.hp > 0 && !e.dormant).toList()
       ..sort(
-        (a, b) => SpatialCombat._dist(anchor, a)
-            .compareTo(SpatialCombat._dist(anchor, b)),
+        (a, b) => SpatialCombat._dist(
+          anchor,
+          a,
+        ).compareTo(SpatialCombat._dist(anchor, b)),
       );
     final picks = enemies.take(hops).toList();
     if (picks.isEmpty) return;
     hero.attackFlash = 0.18;
     for (var i = 0; i < picks.length; i++) {
-      SpatialCombat._addProjectile(world,
+      SpatialCombat._addProjectile(
+        world,
         SpatialCombat._spellBolt(
           from: hero,
           to: picks[i],
@@ -1427,8 +1421,10 @@ abstract final class AbilityEffectRunner {
     required bool reducedVfx,
   }) {
     final radius = style == SpellBoltStyle.lightning ? 3.0 : 2.6;
-    final raw =
-        math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
+    final raw = math.max(
+      2,
+      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
+    );
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.18;
 
@@ -1460,7 +1456,8 @@ abstract final class AbilityEffectRunner {
         e.attackSlowTimer = math.max(e.attackSlowTimer, 3.0);
       }
 
-      final fly = hero.ranged ||
+      final fly =
+          hero.ranged ||
           style == SpellBoltStyle.lightning ||
           style == SpellBoltStyle.frost ||
           style == SpellBoltStyle.fire ||
@@ -1468,14 +1465,15 @@ abstract final class AbilityEffectRunner {
           style == SpellBoltStyle.arcane ||
           style == SpellBoltStyle.nature;
       if (fly) {
-        SpatialCombat._addProjectile(world, 
+        SpatialCombat._addProjectile(
+          world,
           SpatialCombat._spellBolt(
             from: hero,
             to: e,
             damage: raw,
             style: style,
             label: null,
-          labelArgb: null,
+            labelArgb: null,
             delay: i * 0.05,
           ),
         );
@@ -1506,8 +1504,12 @@ abstract final class AbilityEffectRunner {
           );
         }
         if (wasAlive && e.hp <= 0) {
-          final killed =
-              SpatialCombat._onEnemyKilled(world, _stateOut!, e, rng);
+          final killed = SpatialCombat._onEnemyKilled(
+            world,
+            _stateOut!,
+            e,
+            rng,
+          );
           _goldOut += killed.gold;
           _stateOut = killed.state;
         }
@@ -1527,8 +1529,10 @@ abstract final class AbilityEffectRunner {
     required bool reducedVfx,
   }) {
     final radius = style == SpellBoltStyle.lightning ? 3.2 : 2.9;
-    final raw =
-        math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
+    final raw = math.max(
+      2,
+      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
+    );
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
     // Ranged kits kite outside self-radius — rain on the focus pack.
@@ -1552,7 +1556,8 @@ abstract final class AbilityEffectRunner {
       if (e.hp <= 0 || e.dormant) continue;
       if (SpatialCombat._dist(anchor, e) > radius) continue;
       if (i >= 4) break;
-      SpatialCombat._addProjectile(world, 
+      SpatialCombat._addProjectile(
+        world,
         SpatialCombat.spellBoltBetween(
           x0: e.x + (rng.nextDouble() - 0.5) * 0.6,
           y0: e.y - 1.35 - rng.nextDouble() * 0.35,
@@ -1591,8 +1596,10 @@ abstract final class AbilityEffectRunner {
     required bool reducedVfx,
   }) {
     final radius = style == SpellBoltStyle.lightning ? 3.0 : 2.7;
-    final raw =
-        math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
+    final raw = math.max(
+      2,
+      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
+    );
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
 
@@ -1695,8 +1702,7 @@ abstract final class AbilityEffectRunner {
         }
       }
       if (wasAlive && e.hp <= 0) {
-        final killed =
-            SpatialCombat._onEnemyKilled(world, _stateOut!, e, rng);
+        final killed = SpatialCombat._onEnemyKilled(world, _stateOut!, e, rng);
         _goldOut += killed.gold;
         _stateOut = killed.state;
       }
@@ -1716,7 +1722,8 @@ abstract final class AbilityEffectRunner {
     _announce(world, hero, def.shortLabel, 0xFF80D0FF, reducedVfx);
 
     if (hero.ranged || SpatialCombat._dist(hero, focus) > 2.0) {
-      SpatialCombat._addProjectile(world, 
+      SpatialCombat._addProjectile(
+        world,
         SpatialCombat._spellBolt(
           from: hero,
           to: focus,
@@ -1748,7 +1755,8 @@ abstract final class AbilityEffectRunner {
   }) {
     final style = SpatialCombat.boltStyleForAbility(caster, def: def);
     final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
-    final isHot = def.id == AbilityId.riptide ||
+    final isHot =
+        def.id == AbilityId.riptide ||
         def.id == AbilityId.renew ||
         def.id == AbilityId.rejuvenation ||
         def.id == AbilityId.lifebloom;
@@ -1870,8 +1878,7 @@ abstract final class AbilityEffectRunner {
     var bestFrac = 2.0;
     for (final h in world.heroes) {
       if (!h.isAlive) continue;
-      final frac =
-          h.effectiveMaxHp <= 0 ? 1.0 : h.hp / h.effectiveMaxHp;
+      final frac = h.effectiveMaxHp <= 0 ? 1.0 : h.hp / h.effectiveMaxHp;
       if (frac < bestFrac) {
         bestFrac = frac;
         best = h;
@@ -1939,16 +1946,17 @@ abstract final class AbilityEffectRunner {
     final maxTargets = living.length.clamp(1, 4);
     for (var i = 0; i < maxTargets; i++) {
       final ally = living[i];
-      _healLowest(world, caster, ally, bounce, def.shortLabel, beaconPeel: false);
+      _healLowest(
+        world,
+        caster,
+        ally,
+        bounce,
+        def.shortLabel,
+        beaconPeel: false,
+      );
       bounce *= 0.72;
     }
-    _announce(
-      world,
-      caster,
-      def.shortLabel,
-      tint,
-      reducedVfx,
-    );
+    _announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
       SpatialCombat._spawnRing(
         world,
@@ -2031,15 +2039,16 @@ abstract final class AbilityEffectRunner {
       AbilityId.bloodBoilUnholy ||
       AbilityId.howlingBlast ||
       AbilityId.scourgeStrike ||
-      AbilityId.heartStrike =>
-        true,
+      AbilityId.heartStrike => true,
       _ => false,
     };
     if (!isBleed) return;
     final duration = switch (def.id) {
       AbilityId.rip => 12.0,
       AbilityId.rake || AbilityId.garrote => 8.0,
-      AbilityId.serpentSting || AbilityId.moonfire || AbilityId.lacerate => 10.0,
+      AbilityId.serpentSting ||
+      AbilityId.moonfire ||
+      AbilityId.lacerate => 10.0,
       AbilityId.corruption ||
       AbilityId.unstableAffliction ||
       AbilityId.curseOfAgony ||
@@ -2048,12 +2057,10 @@ abstract final class AbilityEffectRunner {
       AbilityId.flameShock ||
       AbilityId.shadowWordPain ||
       AbilityId.vampiricTouch ||
-      AbilityId.devouringPlague =>
-        12.0,
+      AbilityId.devouringPlague => 12.0,
       AbilityId.bloodBoil ||
       AbilityId.bloodBoilUnholy ||
-      AbilityId.heartStrike =>
-        12.0,
+      AbilityId.heartStrike => 12.0,
       AbilityId.howlingBlast => 12.0,
       AbilityId.scourgeStrike => 10.0,
       _ => 9.0,
@@ -2070,8 +2077,9 @@ abstract final class AbilityEffectRunner {
       AbilityId.shadowWordPain => 0.13,
       AbilityId.vampiricTouch => 0.14,
       AbilityId.devouringPlague => 0.16,
-      AbilityId.immolateDemo || AbilityId.immolateDestro || AbilityId.flameShock =>
-        0.15,
+      AbilityId.immolateDemo ||
+      AbilityId.immolateDestro ||
+      AbilityId.flameShock => 0.15,
       AbilityId.moonfire => 0.11,
       AbilityId.bloodBoil || AbilityId.bloodBoilUnholy => 0.11,
       AbilityId.howlingBlast => 0.12,
@@ -2079,8 +2087,10 @@ abstract final class AbilityEffectRunner {
       _ => 0.12,
     };
     final fromHit = raw * 0.08;
-    final newDps =
-        math.max(1.5, hero.attack * dpsFrac * hero.kitOutMul + fromHit);
+    final newDps = math.max(
+      1.5,
+      hero.attack * dpsFrac * hero.kitOutMul + fromHit,
+    );
     // Affliction / Shadow: stacking DoTs add instead of fully overwriting.
     if (_isStackingDot(def) &&
         enemy.bleedTimer > 0.4 &&
@@ -2149,8 +2159,10 @@ abstract final class AbilityEffectRunner {
     String label, {
     bool beaconPeel = true,
   }) {
-    final amount =
-        math.max(4, (caster.attack * coeff * caster.kitHealMul).round());
+    final amount = math.max(
+      4,
+      (caster.attack * coeff * caster.kitHealMul).round(),
+    );
     final before = ally.hp;
     ally.hp = math.min(ally.effectiveMaxHp, ally.hp + amount);
     final gained = ally.hp - before;
@@ -2203,8 +2215,10 @@ abstract final class AbilityEffectRunner {
     double coeff,
     String label,
   ) {
-    final amount =
-        math.max(6, (caster.attack * coeff * 1.1 * caster.kitHealMul).round());
+    final amount = math.max(
+      6,
+      (caster.attack * coeff * 1.1 * caster.kitHealMul).round(),
+    );
     ally.absorbShield += amount;
     SpatialCombat._spawnFloater(
       world,

@@ -44,7 +44,7 @@ abstract final class GameGuides {
           'Minimal = reduce motion.\n'
           '• Party HP strip is bottom-left — tap a hero to open their kit, tap again to fold.\n'
           '• Target chip is top-right (name + HP).\n'
-          '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.'
+          '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.',
     ),
     GuideTopic(
       id: 'god_hand',
@@ -335,11 +335,7 @@ abstract final class GameGuides {
 }
 
 class GuideTopic {
-  const GuideTopic({
-    required this.id,
-    required this.title,
-    required this.body,
-  });
+  const GuideTopic({required this.id, required this.title, required this.body});
 
   final String id;
   final String title;

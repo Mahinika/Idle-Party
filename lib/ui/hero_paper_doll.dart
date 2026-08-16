@@ -18,11 +18,11 @@ class RoguelikeCharAtlas {
   static const int stride = 17;
 
   static Rect src(int col, int row) => Rect.fromLTWH(
-        col * stride.toDouble(),
-        row * stride.toDouble(),
-        tileSize.toDouble(),
-        tileSize.toDouble(),
-      );
+    col * stride.toDouble(),
+    row * stride.toDouble(),
+    tileSize.toDouble(),
+    tileSize.toDouble(),
+  );
 }
 
 /// One layer cell in the paper-doll stack (back → front).
@@ -83,9 +83,9 @@ class HeroPaperDoll {
     // Armor columns 6–17: pick role palette × rarity.
     return switch (hero.gearAffinity) {
       HeroRole.warrior => DollLayer(
-          tier >= 2 ? 10 : 6,
-          tier >= 2 ? 5 : tier.clamp(0, 4).toInt(),
-        ),
+        tier >= 2 ? 10 : 6,
+        tier >= 2 ? 5 : tier.clamp(0, 4).toInt(),
+      ),
       HeroRole.healer => DollLayer(7, tier >= 2 ? 5 : tier.clamp(0, 4).toInt()),
       HeroRole.mage => DollLayer(9, tier >= 2 ? 4 : 2),
       HeroRole.rogue => DollLayer(12, tier >= 2 ? 3 : 1),
@@ -189,9 +189,7 @@ class HeroPaperDoll {
   }) {
     final bodyCol = walkFrame.clamp(0, 1);
     final skin = skinRowFor(hero, partyIndex);
-    final layers = <DollLayer>[
-      DollLayer(bodyCol, skin),
-    ];
+    final layers = <DollLayer>[DollLayer(bodyCol, skin)];
 
     final cape = capeFor(hero);
     if (cape != null) layers.add(cape);

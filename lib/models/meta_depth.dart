@@ -89,9 +89,9 @@ abstract final class WillRanks {
 
   /// Thresholds that grant a one-time essence claim (excludes Wandering).
   static List<int> get claimableThresholds => [
-        for (final t in thresholds)
-          if (t.$1 > 0) t.$1,
-      ];
+    for (final t in thresholds)
+      if (t.$1 > 0) t.$1,
+  ];
 
   /// Essence for crossing a Will threshold (claimed once via metaDepth).
   static int essenceForThreshold(int score) => 6 + (score ~/ 25);
@@ -110,11 +110,11 @@ abstract final class GauntletMilestones {
   static const floors = <int>[25, 50, 100];
 
   static int essenceForFloor(int floor) => switch (floor) {
-        25 => 22,
-        50 => 45,
-        100 => 90,
-        _ => 10,
-      };
+    25 => 22,
+    50 => 45,
+    100 => 90,
+    _ => 10,
+  };
 
   static String claimId(int floor) => 'f$floor';
 }
@@ -210,6 +210,7 @@ class MetaDepthState {
   final int godHandCdLevel;
   final int torchKeepLevel;
   final int legacyPoints;
+
   /// Stacking Ascend Blessing packs (ATK/DEF/VIT/gold). Survives Ascend.
   final int ascendBlessings;
   final int ascendStreak;
@@ -391,7 +392,8 @@ class MetaDepthState {
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
-      sanctuaryGoldPrestige: sanctuaryGoldPrestige ?? this.sanctuaryGoldPrestige,
+      sanctuaryGoldPrestige:
+          sanctuaryGoldPrestige ?? this.sanctuaryGoldPrestige,
       sanctuaryPowerPrestige:
           sanctuaryPowerPrestige ?? this.sanctuaryPowerPrestige,
       sanctuaryVitalityPrestige:
@@ -453,8 +455,7 @@ class MetaDepthState {
       seasonKey: seasonKey ?? this.seasonKey,
       claimedSeasonRewards: claimedSeasonRewards ?? this.claimedSeasonRewards,
       claimedWeekGoals: claimedWeekGoals ?? this.claimedWeekGoals,
-      leaderboardSeasonKey:
-          leaderboardSeasonKey ?? this.leaderboardSeasonKey,
+      leaderboardSeasonKey: leaderboardSeasonKey ?? this.leaderboardSeasonKey,
       seasonBestTimedKey: seasonBestTimedKey ?? this.seasonBestTimedKey,
       seasonBestTimedClearMs:
           seasonBestTimedClearMs ?? this.seasonBestTimedClearMs,
@@ -466,69 +467,69 @@ class MetaDepthState {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'sanctuaryXpLevel': sanctuaryXpLevel,
-        'sanctuaryGoldPrestige': sanctuaryGoldPrestige,
-        'sanctuaryPowerPrestige': sanctuaryPowerPrestige,
-        'sanctuaryVitalityPrestige': sanctuaryVitalityPrestige,
-        'sanctuaryXpPrestige': sanctuaryXpPrestige,
-        'stashBonusSlots': stashBonusSlots,
-        'combinatorLuck': combinatorLuck,
-        'godHandCdLevel': godHandCdLevel,
-        'torchKeepLevel': torchKeepLevel,
-        'legacyPoints': legacyPoints,
-        'ascendBlessings': ascendBlessings,
-        'ascendStreak': ascendStreak,
-        'bestAscendStreak': bestAscendStreak,
-        'titles': titles,
-        'activeTitle': activeTitle,
-        'relicTiers': relicTiers,
-        'prestigePurchases': prestigePurchases,
-        'weeklyKey': weeklyKey,
-        'weeklyProgress': weeklyProgress,
-        'weeklyClaimed': weeklyClaimed,
-        'weeklyModifier': weeklyModifier,
-        'weeklyBestTimedKey': weeklyBestTimedKey,
-        'dailyVaultDate': dailyVaultDate,
-        'dailyVaultClears': dailyVaultClears,
-        'dailyBestTimedKey': dailyBestTimedKey,
-        'dailyVaultClaimed': dailyVaultClaimed,
-        'favoritePetSpecies': favoritePetSpecies,
-        'petRosterCapBonus': petRosterCapBonus,
-        'zoneTrophies': zoneTrophies,
-        'jobChainCount': jobChainCount,
-        'lifetimeFloorClears': lifetimeFloorClears,
-        'lifetimeBossKills': lifetimeBossKills,
-        'lifetimeAbilityCasts': lifetimeAbilityCasts,
-        'lifetimePetHatches': lifetimePetHatches,
-        'lifetimePetMerges': lifetimePetMerges,
-        'lifetimeAscends': lifetimeAscends,
-        'highestHardmodeCleared': highestHardmodeCleared,
-        'gauntletBestFloor': gauntletBestFloor,
-        'lifetimeGauntletFloors': lifetimeGauntletFloors,
-        'codexClaims': codexClaims,
-        'soulboundRefine': soulboundRefine,
-        'soulboundIsArmor': soulboundIsArmor,
-        'heirloomAlBonus': heirloomAlBonus,
-        'noWipeAscendReady': noWipeAscendReady,
-        'relicRespecs': relicRespecs,
-        'partySlot5Unlocked': partySlot5Unlocked,
-        'unlockedSpecs': unlockedSpecs,
-        'pendingHeroReveals': pendingHeroReveals,
-        'claimedWillRanks': claimedWillRanks,
-        'claimedGauntletMilestones': claimedGauntletMilestones,
-        'godHandStyle': godHandStyle,
-        'dailyEssenceBonusLevel': dailyEssenceBonusLevel,
-        'gauntletGoldBonusLevel': gauntletGoldBonusLevel,
-        'seasonKey': seasonKey,
-        'claimedSeasonRewards': claimedSeasonRewards,
-        'claimedWeekGoals': claimedWeekGoals,
-        'leaderboardSeasonKey': leaderboardSeasonKey,
-        'seasonBestTimedKey': seasonBestTimedKey,
-        'seasonBestTimedClearMs': seasonBestTimedClearMs,
-        'seasonBestGauntletFloor': seasonBestGauntletFloor,
-        'cloudSaveUpdatedMs': cloudSaveUpdatedMs,
-        'playGamesOptIn': playGamesOptIn,
-      };
+    'sanctuaryXpLevel': sanctuaryXpLevel,
+    'sanctuaryGoldPrestige': sanctuaryGoldPrestige,
+    'sanctuaryPowerPrestige': sanctuaryPowerPrestige,
+    'sanctuaryVitalityPrestige': sanctuaryVitalityPrestige,
+    'sanctuaryXpPrestige': sanctuaryXpPrestige,
+    'stashBonusSlots': stashBonusSlots,
+    'combinatorLuck': combinatorLuck,
+    'godHandCdLevel': godHandCdLevel,
+    'torchKeepLevel': torchKeepLevel,
+    'legacyPoints': legacyPoints,
+    'ascendBlessings': ascendBlessings,
+    'ascendStreak': ascendStreak,
+    'bestAscendStreak': bestAscendStreak,
+    'titles': titles,
+    'activeTitle': activeTitle,
+    'relicTiers': relicTiers,
+    'prestigePurchases': prestigePurchases,
+    'weeklyKey': weeklyKey,
+    'weeklyProgress': weeklyProgress,
+    'weeklyClaimed': weeklyClaimed,
+    'weeklyModifier': weeklyModifier,
+    'weeklyBestTimedKey': weeklyBestTimedKey,
+    'dailyVaultDate': dailyVaultDate,
+    'dailyVaultClears': dailyVaultClears,
+    'dailyBestTimedKey': dailyBestTimedKey,
+    'dailyVaultClaimed': dailyVaultClaimed,
+    'favoritePetSpecies': favoritePetSpecies,
+    'petRosterCapBonus': petRosterCapBonus,
+    'zoneTrophies': zoneTrophies,
+    'jobChainCount': jobChainCount,
+    'lifetimeFloorClears': lifetimeFloorClears,
+    'lifetimeBossKills': lifetimeBossKills,
+    'lifetimeAbilityCasts': lifetimeAbilityCasts,
+    'lifetimePetHatches': lifetimePetHatches,
+    'lifetimePetMerges': lifetimePetMerges,
+    'lifetimeAscends': lifetimeAscends,
+    'highestHardmodeCleared': highestHardmodeCleared,
+    'gauntletBestFloor': gauntletBestFloor,
+    'lifetimeGauntletFloors': lifetimeGauntletFloors,
+    'codexClaims': codexClaims,
+    'soulboundRefine': soulboundRefine,
+    'soulboundIsArmor': soulboundIsArmor,
+    'heirloomAlBonus': heirloomAlBonus,
+    'noWipeAscendReady': noWipeAscendReady,
+    'relicRespecs': relicRespecs,
+    'partySlot5Unlocked': partySlot5Unlocked,
+    'unlockedSpecs': unlockedSpecs,
+    'pendingHeroReveals': pendingHeroReveals,
+    'claimedWillRanks': claimedWillRanks,
+    'claimedGauntletMilestones': claimedGauntletMilestones,
+    'godHandStyle': godHandStyle,
+    'dailyEssenceBonusLevel': dailyEssenceBonusLevel,
+    'gauntletGoldBonusLevel': gauntletGoldBonusLevel,
+    'seasonKey': seasonKey,
+    'claimedSeasonRewards': claimedSeasonRewards,
+    'claimedWeekGoals': claimedWeekGoals,
+    'leaderboardSeasonKey': leaderboardSeasonKey,
+    'seasonBestTimedKey': seasonBestTimedKey,
+    'seasonBestTimedClearMs': seasonBestTimedClearMs,
+    'seasonBestGauntletFloor': seasonBestGauntletFloor,
+    'cloudSaveUpdatedMs': cloudSaveUpdatedMs,
+    'playGamesOptIn': playGamesOptIn,
+  };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
     if (json == null) return empty;
@@ -561,26 +562,25 @@ class MetaDepthState {
       relicTiers: tiers,
       prestigePurchases:
           (json['prestigePurchases'] as List<dynamic>?)?.cast<String>() ??
-              const [],
+          const [],
       weeklyKey: (json['weeklyKey'] as String?) ?? '',
       weeklyProgress: (json['weeklyProgress'] as num?)?.toInt() ?? 0,
       weeklyClaimed: (json['weeklyClaimed'] as bool?) ?? false,
       weeklyModifier: (json['weeklyModifier'] as String?) ?? '',
-      weeklyBestTimedKey:
-          ((json['weeklyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      weeklyBestTimedKey: ((json['weeklyBestTimedKey'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
       dailyVaultDate: (json['dailyVaultDate'] as String?) ?? '',
-      dailyVaultClears:
-          ((json['dailyVaultClears'] as num?)?.toInt() ?? 0).clamp(0, 999),
-      dailyBestTimedKey:
-          ((json['dailyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      dailyVaultClears: ((json['dailyVaultClears'] as num?)?.toInt() ?? 0)
+          .clamp(0, 999),
+      dailyBestTimedKey: ((json['dailyBestTimedKey'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
       dailyVaultClaimed: (json['dailyVaultClaimed'] as bool?) ?? false,
       favoritePetSpecies: (json['favoritePetSpecies'] as String?) ?? '',
       petRosterCapBonus: (json['petRosterCapBonus'] as num?)?.toInt() ?? 0,
       zoneTrophies:
           (json['zoneTrophies'] as List<dynamic>?)?.cast<String>() ?? const [],
       jobChainCount: (json['jobChainCount'] as num?)?.toInt() ?? 0,
-      lifetimeFloorClears:
-          (json['lifetimeFloorClears'] as num?)?.toInt() ?? 0,
+      lifetimeFloorClears: (json['lifetimeFloorClears'] as num?)?.toInt() ?? 0,
       lifetimeBossKills: (json['lifetimeBossKills'] as num?)?.toInt() ?? 0,
       lifetimeAbilityCasts:
           (json['lifetimeAbilityCasts'] as num?)?.toInt() ?? 0,
@@ -601,18 +601,17 @@ class MetaDepthState {
       relicRespecs: (json['relicRespecs'] as num?)?.toInt() ?? 0,
       partySlot5Unlocked: (json['partySlot5Unlocked'] as bool?) ?? false,
       unlockedSpecs:
-          (json['unlockedSpecs'] as List<dynamic>?)?.cast<String>() ??
-              const [],
+          (json['unlockedSpecs'] as List<dynamic>?)?.cast<String>() ?? const [],
       pendingHeroReveals:
           (json['pendingHeroReveals'] as List<dynamic>?)?.cast<String>() ??
-              const [],
+          const [],
       claimedWillRanks:
           (json['claimedWillRanks'] as List<dynamic>?)?.cast<String>() ??
-              const [],
+          const [],
       claimedGauntletMilestones:
           (json['claimedGauntletMilestones'] as List<dynamic>?)
-                  ?.cast<String>() ??
-              const [],
+              ?.cast<String>() ??
+          const [],
       godHandStyle: ((json['godHandStyle'] as num?)?.toInt() ?? 0).clamp(0, 2),
       dailyEssenceBonusLevel:
           (json['dailyEssenceBonusLevel'] as num?)?.toInt() ?? 0,
@@ -621,20 +620,18 @@ class MetaDepthState {
       seasonKey: (json['seasonKey'] as String?) ?? '',
       claimedSeasonRewards:
           (json['claimedSeasonRewards'] as List<dynamic>?)?.cast<String>() ??
-              const [],
+          const [],
       claimedWeekGoals:
           (json['claimedWeekGoals'] as List<dynamic>?)?.cast<String>() ??
-              const [],
-      leaderboardSeasonKey:
-          (json['leaderboardSeasonKey'] as String?) ?? '',
-      seasonBestTimedKey:
-          ((json['seasonBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+          const [],
+      leaderboardSeasonKey: (json['leaderboardSeasonKey'] as String?) ?? '',
+      seasonBestTimedKey: ((json['seasonBestTimedKey'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
       seasonBestTimedClearMs:
           (json['seasonBestTimedClearMs'] as num?)?.toInt() ?? 0,
       seasonBestGauntletFloor:
           (json['seasonBestGauntletFloor'] as num?)?.toInt() ?? 0,
-      cloudSaveUpdatedMs:
-          (json['cloudSaveUpdatedMs'] as num?)?.toInt() ?? 0,
+      cloudSaveUpdatedMs: (json['cloudSaveUpdatedMs'] as num?)?.toInt() ?? 0,
       playGamesOptIn: (json['playGamesOptIn'] as bool?) ?? false,
     );
   }

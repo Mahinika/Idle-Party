@@ -157,7 +157,8 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                 KenneyButton(
                                   label: 'CONTINUE',
                                   style: KenneyButtonStyle.brown,
-                                  onPressed: widget.canContinue && _inputUnlocked
+                                  onPressed:
+                                      widget.canContinue && _inputUnlocked
                                       ? () => _choose(widget.onContinue)
                                       : null,
                                 ),

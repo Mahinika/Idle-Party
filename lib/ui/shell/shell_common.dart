@@ -3,7 +3,6 @@ import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../models/loot.dart';
 import '../game_theme.dart';
-import '../kenney_sprite.dart';
 
 Color rarityBorderColor(LootRarity rarity) => switch (rarity) {
   LootRarity.common => const Color(0xFF5A5040),
@@ -76,38 +75,11 @@ bool isBestStashItem(GameState state, EquipmentItem item) {
   return false;
 }
 
-class ShellChip extends StatelessWidget {
-  const ShellChip({super.key, required this.icon, required this.label});
-  final String icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: GameTheme.stone.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: GameTheme.border.withValues(alpha: 0.8)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          KenneySprite(asset: icon, size: 14),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: GameTheme.pixel(
-              size: GameTheme.hudPixel,
-              color: GameTheme.torchHot,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
+/// Tab controller whose length can grow as menus unlock (progressive tabs).
+///
+/// Callers drive it with a tab **id** (see `MenuRouter`) and hand it the list
+/// of ids that are visible right now; unlocking MERGE must not change what the
+/// tab you were on means.
 class FlexTabs {
   FlexTabs({
     required this.vsync,
@@ -116,6 +88,18 @@ class FlexTabs {
     int initialIndex = 0,
   }) {
     _build(length, initialIndex);
+  }
+
+  /// Keeps the rail in step with [ids] and jumps to [selected].
+  void syncToId<T>(List<T> ids, T selected) {
+    if (ids.isEmpty) return;
+    sync(ids.length);
+    // A tap is already sliding to its target; snapping back here would eat it.
+    if (controller.indexIsChanging) return;
+    final want = ids.indexOf(selected);
+    if (want >= 0 && want != controller.index) {
+      controller.index = want;
+    }
   }
 
   final TickerProvider vsync;

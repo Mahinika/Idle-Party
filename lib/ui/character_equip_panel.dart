@@ -70,10 +70,10 @@ class CharacterEquipPanel extends StatelessWidget {
   ];
 
   static List<EquipmentSlot> get allSlots => [
-        ...leftColumn,
-        ...rightColumn,
-        ...weaponRow,
-      ];
+    ...leftColumn,
+    ...rightColumn,
+    ...weaponRow,
+  ];
 
   static const slotLabels = <EquipmentSlot, String>{
     EquipmentSlot.weapon: 'WEAPON',
@@ -97,25 +97,23 @@ class CharacterEquipPanel extends StatelessWidget {
   };
 
   static String? emptyIconFor(EquipmentSlot slot) => switch (slot) {
-        EquipmentSlot.head => CustomAssets.iconHelm,
-        EquipmentSlot.shoulder => CustomAssets.iconShoulders,
-        EquipmentSlot.chest => CustomAssets.iconChest,
-        EquipmentSlot.hands => CustomAssets.iconGloves,
-        EquipmentSlot.waist => CustomAssets.iconBelt,
-        EquipmentSlot.legs => CustomAssets.iconLegs,
-        EquipmentSlot.boots => CustomAssets.iconBoots,
-        EquipmentSlot.cloak => CustomAssets.iconCloak,
-        EquipmentSlot.neck => CustomAssets.iconNeck,
-        EquipmentSlot.wrist => CustomAssets.iconWrist,
-        EquipmentSlot.ring || EquipmentSlot.ring2 => CustomAssets.iconRing,
-        EquipmentSlot.trinket ||
-        EquipmentSlot.trinket2 =>
-          CustomAssets.iconTrinket,
-        EquipmentSlot.weapon => CustomAssets.iconSword,
-        EquipmentSlot.offHand => CustomAssets.iconShield,
-        EquipmentSlot.ranged => CustomAssets.iconBow,
-        EquipmentSlot.consumable => CustomAssets.iconFlask,
-      };
+    EquipmentSlot.head => CustomAssets.iconHelm,
+    EquipmentSlot.shoulder => CustomAssets.iconShoulders,
+    EquipmentSlot.chest => CustomAssets.iconChest,
+    EquipmentSlot.hands => CustomAssets.iconGloves,
+    EquipmentSlot.waist => CustomAssets.iconBelt,
+    EquipmentSlot.legs => CustomAssets.iconLegs,
+    EquipmentSlot.boots => CustomAssets.iconBoots,
+    EquipmentSlot.cloak => CustomAssets.iconCloak,
+    EquipmentSlot.neck => CustomAssets.iconNeck,
+    EquipmentSlot.wrist => CustomAssets.iconWrist,
+    EquipmentSlot.ring || EquipmentSlot.ring2 => CustomAssets.iconRing,
+    EquipmentSlot.trinket || EquipmentSlot.trinket2 => CustomAssets.iconTrinket,
+    EquipmentSlot.weapon => CustomAssets.iconSword,
+    EquipmentSlot.offHand => CustomAssets.iconShield,
+    EquipmentSlot.ranged => CustomAssets.iconBow,
+    EquipmentSlot.consumable => CustomAssets.iconFlask,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -141,9 +139,10 @@ class CharacterEquipPanel extends StatelessWidget {
       selected ??= _findAnywhere(selectedItemId!);
     }
     final selectedItem = selected;
-    final selectedWornHere = selectedItem != null &&
-        _slotOfSelected(hero, selectedItem.id) != null;
-    final stashPiece = selectedItem != null &&
+    final selectedWornHere =
+        selectedItem != null && _slotOfSelected(hero, selectedItem.id) != null;
+    final stashPiece =
+        selectedItem != null &&
             state.gearStash.any((g) => g.id == selectedItem.id)
         ? selectedItem
         : null;
@@ -216,9 +215,8 @@ class CharacterEquipPanel extends StatelessWidget {
               icon: Icons.chevron_left_rounded,
               label: 'Previous hero',
               enabled: heroes.length > 1,
-              onTap: () => onSelectHero(
-                (index - 1 + heroes.length) % heroes.length,
-              ),
+              onTap: () =>
+                  onSelectHero((index - 1 + heroes.length) % heroes.length),
             ),
             Expanded(
               child: Column(
@@ -233,7 +231,7 @@ class CharacterEquipPanel extends StatelessWidget {
                     state.isPartyDefeated
                         ? 'iLvl ${_avgItemLevel(hero)}  ·  WIPED'
                         : 'iLvl ${_avgItemLevel(hero)}  ·  HP '
-                            '${hero.currentHp.clamp(0, maxHp)}/$maxHp',
+                              '${hero.currentHp.clamp(0, maxHp)}/$maxHp',
                     textAlign: TextAlign.center,
                     style: GameTheme.body(
                       size: 13,
@@ -303,10 +301,7 @@ class CharacterEquipPanel extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.mossLit,
-                      ),
+                      style: GameTheme.body(size: 11, color: GameTheme.mossLit),
                     ),
                   ],
                   SizedBox(height: slotGap + 2),
@@ -348,16 +343,18 @@ class CharacterEquipPanel extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _BigStat(
+              child: MenuChrome.chip(
                 label: 'DAMAGE',
                 value: '$atk',
+                stacked: true,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: _BigStat(
+              child: MenuChrome.chip(
                 label: 'ARMOR',
                 value: '$def',
+                stacked: true,
               ),
             ),
           ],
@@ -390,10 +387,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   ' · i${selected.effectiveItemLevel} · ${selected.statsLine}',
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: GameTheme.parchment,
-                  ),
+                  style: GameTheme.body(size: 12, color: GameTheme.parchment),
                 ),
                 if (selected.setId != null && selected.setId!.isNotEmpty)
                   Text(
@@ -401,9 +395,7 @@ class CharacterEquipPanel extends StatelessWidget {
                       final piece = selected!;
                       final setId = piece.setId!;
                       final n = GearSets.wornCount(hero.equipped, setId);
-                      final bonus = n >= 4
-                          ? '4pc'
-                          : (n >= 2 ? '2pc' : 'set');
+                      final bonus = n >= 4 ? '4pc' : (n >= 2 ? '2pc' : 'set');
                       return '${piece.setLabel} · $n/4 · $bonus';
                     }(),
                     maxLines: 1,
@@ -419,16 +411,16 @@ class CharacterEquipPanel extends StatelessWidget {
                     compare.isUpgrade
                         ? 'vs worn  Score ${GameLogic.formatDelta(compare.powerDelta)}  UPGRADE'
                         : 'vs worn  Score ${GameLogic.formatDelta(compare.powerDelta)}'
-                            '  A${GameLogic.formatDelta(compare.atkDelta)}'
-                            ' D${GameLogic.formatDelta(compare.defDelta)}'
-                            ' V${GameLogic.formatDelta(compare.vitDelta)}',
+                              '  A${GameLogic.formatDelta(compare.atkDelta)}'
+                              ' D${GameLogic.formatDelta(compare.defDelta)}'
+                              ' V${GameLogic.formatDelta(compare.vitDelta)}',
                     style: GameTheme.body(
                       size: 12,
                       color: compare.isUpgrade
                           ? GameTheme.clear
                           : (compare.powerDelta < 0
-                              ? GameTheme.bloodLit
-                              : GameTheme.parchmentDim),
+                                ? GameTheme.bloodLit
+                                : GameTheme.parchmentDim),
                     ),
                   ),
                 ] else if (selectedWornHere)
@@ -480,7 +472,12 @@ class CharacterEquipPanel extends StatelessWidget {
               ('LS', '${hero.gearLifestealPercent}%'),
               ('iLvl', '${_avgItemLevel(hero)}'),
             ])
-              _StatChip(label: entry.$1, value: entry.$2),
+              MenuChrome.chip(
+                label: entry.$1,
+                value: entry.$2,
+                stacked: true,
+                minWidth: 72,
+              ),
           ],
         ),
         const SizedBox(height: 8),
@@ -580,68 +577,6 @@ class _HeroArrow extends StatelessWidget {
   }
 }
 
-class _BigStat extends StatelessWidget {
-  const _BigStat({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        color: GameTheme.panelInset,
-        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-        border: Border.all(color: GameTheme.border.withValues(alpha: 0.8)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: GameTheme.pixel(size: 7, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: GameTheme.menuTitle(size: 22),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  const _StatChip({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 72),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: MenuChrome.cardBox(inset: true),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: GameTheme.pixel(size: 5, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            value,
-            style: GameTheme.pixel(size: 7, color: GameTheme.torchHot),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class PaperDollSlot extends StatelessWidget {
   const PaperDollSlot({
     super.key,
@@ -735,56 +670,50 @@ class PaperDollSlot extends StatelessWidget {
                       ],
                     )
                   : labeled
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (emptyIcon != null)
-                              Opacity(
-                                opacity: 0.22,
-                                child: KenneySprite(
-                                  asset: emptyIcon,
-                                  size: size * 0.38,
-                                ),
-                              ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 2),
-                              child: Text(
-                                short,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GameTheme.pixel(
-                                  size: size >= 44 ? 5 : 4,
-                                  color: GameTheme.parchmentDim,
-                                ),
-                              ),
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (emptyIcon != null)
+                          Opacity(
+                            opacity: 0.22,
+                            child: KenneySprite(
+                              asset: emptyIcon,
+                              size: size * 0.38,
                             ),
-                          ],
-                        )
-                      : emptyIcon != null
-                          ? Opacity(
-                              opacity: 0.28,
-                              child: Padding(
-                                padding: const EdgeInsets.all(6),
-                                child: KenneySprite(
-                                  asset: emptyIcon,
-                                  size: size - 12,
-                                ),
-                              ),
-                            )
-                          : Center(
-                              child: Text(
-                                short.length <= 4
-                                    ? short
-                                    : short.substring(0, 3),
-                                textAlign: TextAlign.center,
-                                style: GameTheme.pixel(
-                                  size: 5,
-                                  color: GameTheme.parchmentDim,
-                                ),
-                              ),
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Text(
+                            short,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.pixel(
+                              size: size >= 44 ? 5 : 4,
+                              color: GameTheme.parchmentDim,
                             ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : emptyIcon != null
+                  ? Opacity(
+                      opacity: 0.28,
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: KenneySprite(asset: emptyIcon, size: size - 12),
+                      ),
+                    )
+                  : Center(
+                      child: Text(
+                        short.length <= 4 ? short : short.substring(0, 3),
+                        textAlign: TextAlign.center,
+                        style: GameTheme.pixel(
+                          size: 5,
+                          color: GameTheme.parchmentDim,
+                        ),
+                      ),
+                    ),
             ),
           ),
         ),
@@ -792,10 +721,7 @@ class PaperDollSlot extends StatelessWidget {
     );
 
     if (item == null) {
-      return Tooltip(
-        message: 'Empty $short — tap to browse bag',
-        child: body,
-      );
+      return Tooltip(message: 'Empty $short — tap to browse bag', child: body);
     }
     return ItemTooltipAnchor(
       item: item!,
@@ -807,9 +733,9 @@ class PaperDollSlot extends StatelessWidget {
 }
 
 Color _rarityColor(LootRarity rarity) => switch (rarity) {
-      LootRarity.common => const Color(0xFF9A9080),
-      LootRarity.uncommon => const Color(0xFF3DD68C),
-      LootRarity.rare => const Color(0xFF4A9EFF),
-      LootRarity.epic => const Color(0xFFC060FF),
-      LootRarity.legendary => const Color(0xFFFF8C40),
-    };
+  LootRarity.common => const Color(0xFF9A9080),
+  LootRarity.uncommon => const Color(0xFF3DD68C),
+  LootRarity.rare => const Color(0xFF4A9EFF),
+  LootRarity.epic => const Color(0xFFC060FF),
+  LootRarity.legendary => const Color(0xFFFF8C40),
+};

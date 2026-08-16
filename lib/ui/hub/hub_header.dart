@@ -26,7 +26,11 @@ class HubSceneBackdrop extends StatelessWidget {
 }
 
 class HubOfflineBanner extends StatelessWidget {
-  const HubOfflineBanner({super.key, required this.text, required this.onDismiss});
+  const HubOfflineBanner({
+    super.key,
+    required this.text,
+    required this.onDismiss,
+  });
 
   final String text;
   final VoidCallback onDismiss;
@@ -66,7 +70,8 @@ class HubOfflineBanner extends StatelessWidget {
 }
 
 class HubHeader extends StatelessWidget {
-  const HubHeader({super.key, 
+  const HubHeader({
+    super.key,
     required this.ascensionLevel,
     required this.bossFloor,
     required this.gold,
@@ -106,7 +111,11 @@ class HubHeader extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: GameTheme.pixel(
                   size: 20,
-                  color: Color.lerp(GameTheme.torch, GameTheme.torchHot, torch)!,
+                  color: Color.lerp(
+                    GameTheme.torch,
+                    GameTheme.torchHot,
+                    torch,
+                  )!,
                   height: 1.25,
                 ),
               ),
@@ -120,10 +129,7 @@ class HubHeader extends StatelessWidget {
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   onPressed: onOpenSettings,
-                  icon: KenneySprite(
-                    asset: KenneyAssets.iconDoor,
-                    size: 18,
-                  ),
+                  icon: KenneySprite(asset: KenneyAssets.iconDoor, size: 18),
                   tooltip: 'Settings',
                 ),
               ),

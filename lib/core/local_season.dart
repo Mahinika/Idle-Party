@@ -212,8 +212,8 @@ abstract final class LocalSeasonCatalog {
       return week.affixOverride!;
     }
     if (currentModifier.isNotEmpty) return currentModifier;
-    return Keystone.weeklyPool[
-        (weekKey.hashCode & 0x7fffffff) % Keystone.weeklyPool.length];
+    return Keystone.weeklyPool[(weekKey.hashCode & 0x7fffffff) %
+        Keystone.weeklyPool.length];
   }
 
   static bool weekGoalClaimed(GameState state, LocalSeasonWeek week) {
@@ -236,7 +236,9 @@ abstract final class LocalSeasonCatalog {
   }
 
   static bool weekGoalAlmost(GameState state, LocalSeasonWeek week) {
-    if (!week.hasGoal || weekGoalClaimed(state, week) || weekGoalReady(state, week)) {
+    if (!week.hasGoal ||
+        weekGoalClaimed(state, week) ||
+        weekGoalReady(state, week)) {
       return false;
     }
     if (week.timedKeyTarget > 0) {

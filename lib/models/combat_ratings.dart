@@ -39,21 +39,20 @@ class CombatRatings {
   static const int kAp = 4;
 
   static int roleHpBase(HeroRole role) => switch (role) {
-        HeroRole.warrior => 28,
-        HeroRole.healer => 16,
-        HeroRole.mage => 12,
-        HeroRole.rogue => 14,
-      };
+    HeroRole.warrior => 28,
+    HeroRole.healer => 16,
+    HeroRole.mage => 12,
+    HeroRole.rogue => 14,
+  };
 
   static int roleBaseArmor(HeroRole role) => switch (role) {
-        HeroRole.warrior => 6,
-        HeroRole.rogue => 3,
-        HeroRole.healer => 1,
-        HeroRole.mage => 1,
-      };
+    HeroRole.warrior => 6,
+    HeroRole.rogue => 3,
+    HeroRole.healer => 1,
+    HeroRole.mage => 1,
+  };
 
-  static int roleBaseCrit(HeroRole role) =>
-      role == HeroRole.rogue ? 12 : 5;
+  static int roleBaseCrit(HeroRole role) => role == HeroRole.rogue ? 12 : 5;
 
   /// Dodge-like crumb into sheet DEF.
   ///
@@ -65,13 +64,12 @@ class CombatRatings {
   /// Per-level primary gains (on top of base [Stats]).
   static ({int str, int agi, int sta, int intel, int spi}) levelGains(
     HeroRole role,
-  ) =>
-      switch (role) {
-        HeroRole.warrior => (str: 2, agi: 1, sta: 2, intel: 0, spi: 0),
-        HeroRole.healer => (str: 0, agi: 0, sta: 1, intel: 2, spi: 2),
-        HeroRole.mage => (str: 0, agi: 0, sta: 1, intel: 2, spi: 1),
-        HeroRole.rogue => (str: 1, agi: 2, sta: 1, intel: 0, spi: 0),
-      };
+  ) => switch (role) {
+    HeroRole.warrior => (str: 2, agi: 1, sta: 2, intel: 0, spi: 0),
+    HeroRole.healer => (str: 0, agi: 0, sta: 1, intel: 2, spi: 2),
+    HeroRole.mage => (str: 0, agi: 0, sta: 1, intel: 2, spi: 1),
+    HeroRole.rogue => (str: 1, agi: 2, sta: 1, intel: 0, spi: 0),
+  };
 
   static double critDivisor(HeroRole role, int level) {
     final base = switch (role) {
@@ -168,24 +166,27 @@ class CombatRatings {
     final sp = spPool;
 
     final isCaster =
-        hero.gearAffinity == HeroRole.mage || hero.gearAffinity == HeroRole.healer;
+        hero.gearAffinity == HeroRole.mage ||
+        hero.gearAffinity == HeroRole.healer;
 
-    final defense = roleBaseArmor(hero.gearAffinity) +
+    final defense =
+        roleBaseArmor(hero.gearAffinity) +
         agilityToDefense(agi) +
         gearArmor +
         metaDefense +
         guardBonus;
 
-    final maxHpFinal =
-        roleHpBase(hero.gearAffinity) + 10 * sta + metaVitality;
+    final maxHpFinal = roleHpBase(hero.gearAffinity) + 10 * sta + metaVitality;
 
     final crit = isCaster
-        ? (5 + intel / spellCritDivisor(hero.gearAffinity, hero.level) + gearCrit)
-            .round()
+        ? (5 +
+                  intel / spellCritDivisor(hero.gearAffinity, hero.level) +
+                  gearCrit)
+              .round()
         : (roleBaseCrit(hero.gearAffinity) +
-                agi / critDivisor(hero.gearAffinity, hero.level) +
-                gearCrit)
-            .round();
+                  agi / critDivisor(hero.gearAffinity, hero.level) +
+                  gearCrit)
+              .round();
 
     final physicalWithMeta = physical + metaAttack + auraBonus;
     final casterWithMeta = casterAtk + metaAttack + auraBonus;

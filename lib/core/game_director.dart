@@ -148,9 +148,11 @@ class GameDirector extends ChangeNotifier {
   int _battleToken = 0;
   int _uiThrottle = 0;
   int _visualFrame = 0;
+
   /// Combat map + corner HUD; bumps every spatial tick (~60 Hz).
   final ValueNotifier<int> combatFrame = ValueNotifier(0);
   bool _awaitingWipeChoice = false;
+
   /// Soft-pause spatial sim while inventory / meta menus are open.
   bool _uiPaused = false;
   String? _toast;
@@ -164,6 +166,7 @@ class GameDirector extends ChangeNotifier {
   int _lastHighestDungeon = -1;
   double _autosaveAccum = 0;
   int _lastStashLen = 0;
+
   /// Loot pickups since last mid-fight auto-equip (debounce thrash).
   int _lootSinceAutoEquip = 0;
   static const double _autosaveIntervalSec = 25;
@@ -182,11 +185,12 @@ class GameDirector extends ChangeNotifier {
     _saveChain = _saveChain
         .then((_) => _storage.save(_state))
         .then((_) {
-      PlayGamesBridge.scheduleCloudUpload(_state);
-      unawaited(PlayGamesBridge.flushPendingScores());
-    }).catchError((Object e, StackTrace st) {
-      debugPrint('save failed: $e\n$st');
-    });
+          PlayGamesBridge.scheduleCloudUpload(_state);
+          unawaited(PlayGamesBridge.flushPendingScores());
+        })
+        .catchError((Object e, StackTrace st) {
+          debugPrint('save failed: $e\n$st');
+        });
   }
 
   Future<void> _persistFlush() {
@@ -208,6 +212,7 @@ class GameDirector extends ChangeNotifier {
 
   static const double _spatialDt = 1 / 60;
   static const Duration _spatialPeriod = Duration(milliseconds: 16);
+
   /// Full shell rebuild cadence while fighting (~10 Hz).
   static const int _shellNotifyEvery = 6;
 
@@ -231,9 +236,7 @@ class GameDirector extends ChangeNotifier {
   /// Test helper: put items in the bag without rebuilding combat.
   @visibleForTesting
   void debugInjectStash(List<EquipmentItem> items) {
-    _state = _state.copyWith(
-      gearStash: [...items, ..._state.gearStash],
-    );
+    _state = _state.copyWith(gearStash: [...items, ..._state.gearStash]);
   }
 
   bool get awaitingWipeChoice => _awaitingWipeChoice;
@@ -363,9 +366,7 @@ class GameDirector extends ChangeNotifier {
         }
       }
       _state = GameLogic.backfillCodexFromInventory(
-        GameLogic.ensureWeeklyContract(
-          GameLogic.ensureRogueHero(loaded),
-        ),
+        GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(loaded)),
       );
       _lastHighestDungeon = _state.highestDungeonCleared;
       GameAudio.muted = _state.soundMuted;
@@ -561,8 +562,7 @@ class GameDirector extends ChangeNotifier {
         // nearly full. Floor clear still auto-equips in GameLogic.
         _lootSinceAutoEquip++;
         final stashCap = GameLogic.maxGearStashFor(_state);
-        final nearFull =
-            _state.gearStash.length >= (stashCap * 0.85).ceil();
+        final nearFull = _state.gearStash.length >= (stashCap * 0.85).ceil();
         final shouldEquip = nearFull || _lootSinceAutoEquip >= 3;
         if (shouldEquip) {
           _lootSinceAutoEquip = 0;
@@ -632,7 +632,8 @@ class GameDirector extends ChangeNotifier {
             life: 4,
           );
         } else {
-          final pushFail = _state.dungeonMode == DungeonMode.push &&
+          final pushFail =
+              _state.dungeonMode == DungeonMode.push &&
               floor > _state.highestFloorCleared;
           showToast(
             pushFail
@@ -682,8 +683,7 @@ class GameDirector extends ChangeNotifier {
         final matGrants = GameLogic.takeCraftMatGrants();
         if (matGrants.isNotEmpty) {
           final labels = [
-            for (final id in matGrants)
-              ApexCraft.materialsById[id]?.name ?? id,
+            for (final id in matGrants) ApexCraft.materialsById[id]?.name ?? id,
           ];
           showToast('+${labels.join(', ')}', life: 2.4);
         }
@@ -884,8 +884,8 @@ class GameDirector extends ChangeNotifier {
         result.kills == 1
             ? (g > 0 ? 'God Hand · 1 kill · +${g}g' : 'God Hand · 1 kill')
             : (g > 0
-                ? 'God Hand · ${result.kills} kills · +${g}g'
-                : 'God Hand · ${result.kills} kills'),
+                  ? 'God Hand · ${result.kills} kills · +${g}g'
+                  : 'God Hand · ${result.kills} kills'),
         life: 1.5,
       );
     } else {
@@ -968,12 +968,7 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     _applyUpgrade(
-      GameLogic.craftApex(
-        _state,
-        classId: classId,
-        role: role,
-        slot: slot,
-      ),
+      GameLogic.craftApex(_state, classId: classId, role: role, slot: slot),
     );
     GameAudio.unlock();
     showToast(
@@ -1082,8 +1077,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.claimMission(_state, missionId));
     if (goldReward != null && essenceReward != null && title != null) {
       GameAudio.loot();
-      final chainBonus =
-          _state.essence - beforeEssence - essenceReward;
+      final chainBonus = _state.essence - beforeEssence - essenceReward;
       if (chainBonus > 0 ||
           (beforeChain == 2 && _state.metaDepth.jobChainCount == 0)) {
         showToast(
@@ -1091,10 +1085,7 @@ class GameDirector extends ChangeNotifier {
           life: 2.8,
         );
       } else {
-        showToast(
-          '$title: +${goldReward}g +${essenceReward}e',
-          life: 2.6,
-        );
+        showToast('$title: +${goldReward}g +${essenceReward}e', life: 2.6);
       }
     }
   }
@@ -1183,9 +1174,7 @@ class GameDirector extends ChangeNotifier {
     final beforeEss = _state.essence;
     final cap = GameLogic.maxGearStashFor(_state);
     final unstick = beforeLen >= (cap * 0.9).ceil();
-    _applyUpgrade(
-      GameLogic.autoDisassembleJunk(_state, unstickBag: unstick),
-    );
+    _applyUpgrade(GameLogic.autoDisassembleJunk(_state, unstickBag: unstick));
     GameLogic.lastAutoDisassembleCount = 0;
     GameLogic.lastAutoDisassembleEssence = 0;
     final scraped = beforeLen - _state.gearStash.length;
@@ -1215,10 +1204,7 @@ class GameDirector extends ChangeNotifier {
     final gold = _state.gold - beforeGold;
     final ess = _state.essence - beforeEss;
     if (cleared > 0) {
-      final bits = <String>[
-        if (gold > 0) '+${gold}g',
-        if (ess > 0) '+${ess}e',
-      ];
+      final bits = <String>[if (gold > 0) '+${gold}g', if (ess > 0) '+${ess}e'];
       showToast(
         bits.isEmpty
             ? 'Cleaned $cleared junk'
@@ -1253,9 +1239,7 @@ class GameDirector extends ChangeNotifier {
 
   void setReducedVfx(bool value) {
     _applyUpgrade(
-      _state.copyWith(
-        vfxQuality: value ? VfxQuality.lite : VfxQuality.full,
-      ),
+      _state.copyWith(vfxQuality: value ? VfxQuality.lite : VfxQuality.full),
     );
   }
 
@@ -1278,15 +1262,11 @@ class GameDirector extends ChangeNotifier {
 
   void setAutoDisassembleMaxIlvl(int value) {
     final cap = GameLogic.maxAutoSellIlvlCap(_state);
-    _applyUpgrade(
-      _state.copyWith(autoDisassembleMaxIlvl: value.clamp(0, cap)),
-    );
+    _applyUpgrade(_state.copyWith(autoDisassembleMaxIlvl: value.clamp(0, cap)));
   }
 
   void setAutoDisassembleMaxRarity(int value) {
-    _applyUpgrade(
-      _state.copyWith(autoDisassembleMaxRarity: value.clamp(0, 4)),
-    );
+    _applyUpgrade(_state.copyWith(autoDisassembleMaxRarity: value.clamp(0, 4)));
   }
 
   void setColorblindMode(bool value) {
@@ -1378,10 +1358,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.unlockSpec(_state, specId));
     if (_state.isSpecUnlocked(specId) && !before) {
       final def = HeroSpecs.def(specId);
-      showToast(
-        '${def.name} · ${HeroIdentity.meetDetail(specId)}',
-        life: 2.8,
-      );
+      showToast('${def.name} · ${HeroIdentity.meetDetail(specId)}', life: 2.8);
     }
   }
 
@@ -1447,9 +1424,7 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     if (_state.ascensionLevel < GameLogic.gauntletMinAscension) {
-      _state = _state.copyWith(
-        ascensionLevel: GameLogic.gauntletMinAscension,
-      );
+      _state = _state.copyWith(ascensionLevel: GameLogic.gauntletMinAscension);
     }
     enterGauntlet();
   }
@@ -1514,9 +1489,7 @@ class GameDirector extends ChangeNotifier {
   void _applyCloudRestore(GameState cloud, {required String toast}) {
     _awaitingWipeChoice = false;
     _hasExistingSave = true;
-    _state = GameLogic.ensureRogueHero(
-      GameLogic.ensureWeeklyContract(cloud),
-    );
+    _state = GameLogic.ensureRogueHero(GameLogic.ensureWeeklyContract(cloud));
     GameAudio.muted = _state.soundMuted;
     SpatialCombat.colorblindMode = _state.colorblindMode;
     if (_state.inDungeon) {
@@ -1566,8 +1539,7 @@ class GameDirector extends ChangeNotifier {
   }
 
   /// Hint lines for cloud conflict dialogs.
-  String playGamesConflictHint(GameState s) =>
-      PlayGamesBridge.conflictHint(s);
+  String playGamesConflictHint(GameState s) => PlayGamesBridge.conflictHint(s);
 
   Future<void> showPlayTimedLeaderboard() async {
     final month = _state.metaDepth.leaderboardSeasonKey.isNotEmpty
@@ -1600,9 +1572,7 @@ class GameDirector extends ChangeNotifier {
   Future<GameState?> loadPlayGamesCloud() => PlayGamesBridge.loadCloud();
 
   void unequipSlot(EquipmentSlot slot, {int heroIndex = 0}) {
-    _applyUpgrade(
-      GameLogic.unequipSlot(_state, slot, heroIndex: heroIndex),
-    );
+    _applyUpgrade(GameLogic.unequipSlot(_state, slot, heroIndex: heroIndex));
   }
 
   void sellGear(String itemId) {
@@ -1652,7 +1622,10 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     GameAudio.loot();
-    showToast('+$bought flask${bought == 1 ? '' : 's'} (−${spent}g)', life: 1.8);
+    showToast(
+      '+$bought flask${bought == 1 ? '' : 's'} (−${spent}g)',
+      life: 1.8,
+    );
   }
 
   void buyMarketBandage() {
@@ -1814,10 +1787,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(next);
     if (!identical(next, before) && _spatial != null && _state.inDungeon) {
       _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
-      SpatialCombat.spawnFlaskHealFx(
-        _spatial!,
-        reducedVfx: _state.reducedVfx,
-      );
+      SpatialCombat.spawnFlaskHealFx(_spatial!, reducedVfx: _state.reducedVfx);
     }
   }
 
@@ -1906,10 +1876,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.upgradeGodHandCd(_state));
     if (_state.metaDepth.godHandCdLevel > before) {
       GameAudio.unlock();
-      showToast(
-        'God Hand CD Lv${_state.metaDepth.godHandCdLevel}',
-        life: 2.2,
-      );
+      showToast('God Hand CD Lv${_state.metaDepth.godHandCdLevel}', life: 2.2);
     }
   }
 
@@ -1966,10 +1933,7 @@ class GameDirector extends ChangeNotifier {
       final notices = GameLogic.takeMetaPayoffNotices();
       final gained = _state.essence - before;
       final extra = notices.isEmpty ? '' : ' · ${notices.join(' · ')}';
-      showToast(
-        'Daily vault claimed · +${gained}e$extra',
-        life: 2.8,
-      );
+      showToast('Daily vault claimed · +${gained}e$extra', life: 2.8);
     }
   }
 
@@ -1978,10 +1942,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.claimCodexReward(_state, tierId));
     if (_state.essence > before) {
       GameAudio.unlock();
-      showToast(
-        'Codex reward · +${_state.essence - before}e',
-        life: 2.2,
-      );
+      showToast('Codex reward · +${_state.essence - before}e', life: 2.2);
     }
   }
 
@@ -2112,9 +2073,10 @@ class GameDirector extends ChangeNotifier {
       final hero = after.heroes[i];
       final oldLevel = i < before.heroes.length ? before.heroes[i].level : 0;
       if (hero.level <= oldLevel) continue;
-      final unlocked = ClassKits.unlockedAtSpec(hero.specId, hero.level).where(
-            (d) => d.unlockLevel > oldLevel && d.unlockLevel <= hero.level,
-          );
+      final unlocked = ClassKits.unlockedAtSpec(
+        hero.specId,
+        hero.level,
+      ).where((d) => d.unlockLevel > oldLevel && d.unlockLevel <= hero.level);
       for (final ability in unlocked) {
         bits.add('${hero.name}: ${ability.shortLabel}');
       }

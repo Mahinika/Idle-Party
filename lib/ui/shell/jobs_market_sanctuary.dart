@@ -74,8 +74,10 @@ class JobsOverlay extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: mission.target <= 0
                               ? 0
-                              : (mission.progress / mission.target)
-                                  .clamp(0.0, 1.0),
+                              : (mission.progress / mission.target).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
                           minHeight: 8,
                           backgroundColor: GameTheme.panelInset,
                           color: mission.isComplete
@@ -108,20 +110,20 @@ class SanctuaryOverlay extends StatelessWidget {
   final GameDirector director;
 
   int _prestigeOf(GameState state, String track) => switch (track) {
-        'gold' => state.metaDepth.sanctuaryGoldPrestige,
-        'power' => state.metaDepth.sanctuaryPowerPrestige,
-        'vitality' => state.metaDepth.sanctuaryVitalityPrestige,
-        'xp' => state.metaDepth.sanctuaryXpPrestige,
-        _ => 0,
-      };
+    'gold' => state.metaDepth.sanctuaryGoldPrestige,
+    'power' => state.metaDepth.sanctuaryPowerPrestige,
+    'vitality' => state.metaDepth.sanctuaryVitalityPrestige,
+    'xp' => state.metaDepth.sanctuaryXpPrestige,
+    _ => 0,
+  };
 
   int _levelOf(GameState state, String track) => switch (track) {
-        'gold' => state.sanctuaryGoldLevel,
-        'power' => state.sanctuaryPowerLevel,
-        'vitality' => state.sanctuaryVitalityLevel,
-        'xp' => state.metaDepth.sanctuaryXpLevel,
-        _ => 0,
-      };
+    'gold' => state.sanctuaryGoldLevel,
+    'power' => state.sanctuaryPowerLevel,
+    'vitality' => state.sanctuaryVitalityLevel,
+    'xp' => state.metaDepth.sanctuaryXpLevel,
+    _ => 0,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -181,10 +183,7 @@ class SanctuaryOverlay extends StatelessWidget {
                   ),
                   Text(
                     'Next: $nextBonus',
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.mossLit,
-                    ),
+                    style: GameTheme.body(size: 12, color: GameTheme.mossLit),
                   ),
                   const SizedBox(height: 6),
                   KenneyProgressBar(
@@ -193,8 +192,8 @@ class SanctuaryOverlay extends StatelessWidget {
                     color: track == 'vitality'
                         ? KenneyBarColor.red
                         : track == 'power'
-                            ? KenneyBarColor.yellow
-                            : KenneyBarColor.green,
+                        ? KenneyBarColor.yellow
+                        : KenneyBarColor.green,
                   ),
                   const SizedBox(height: 6),
                   KenneyButton(
@@ -208,8 +207,7 @@ class SanctuaryOverlay extends StatelessWidget {
                     KenneyButton(
                       label: 'Prestige reset · +${25 + level}e',
                       style: KenneyButtonStyle.brown,
-                      onPressed: () =>
-                          director.prestigeSanctuaryTrack(track),
+                      onPressed: () => director.prestigeSanctuaryTrack(track),
                     ),
                   ],
                   const SizedBox(height: 10),

@@ -30,7 +30,8 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'farm_push',
       title: 'FARM / PUSH',
-      body: 'FARM stays on this floor for extra loot. PUSH goes deeper toward the boss.',
+      body:
+          'FARM stays on this floor for extra loot. PUSH goes deeper toward the boss.',
     ),
     (
       id: 'godhand',
@@ -65,7 +66,8 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'pets',
       title: 'BEAST PEN',
-      body: 'Hatch pets with essence. Loot Sprite boosts gold find; others add ATK.',
+      body:
+          'Hatch pets with essence. Loot Sprite boosts gold find; others add ATK.',
     ),
     (
       id: 'contracts',
@@ -151,10 +153,7 @@ class FirstSessionTips extends StatelessWidget {
       if ((tip.id == 'godhand' || tip.id == 'farm_push') && !inDungeon) {
         continue;
       }
-      if (tip.id == 'bag' &&
-          !inDungeon &&
-          s.gearStash.isEmpty &&
-          s.gold < 10) {
+      if (tip.id == 'bag' && !inDungeon && s.gearStash.isEmpty && s.gold < 10) {
         continue;
       }
       if ((tip.id == 'sanctuary' ||
@@ -216,15 +215,13 @@ class FirstSessionTips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final id = nextTipId(
-      director.state,
-      inDungeon: director.state.inDungeon,
-    );
+    final id = nextTipId(director.state, inDungeon: director.state.inDungeon);
     if (id == null) return const SizedBox.shrink();
     final tip = tips.firstWhere((t) => t.id == id);
-    final body = tip.id == 'weekly' && GameLogic.showKeystoneJargon(director.state)
+    final body =
+        tip.id == 'weekly' && GameLogic.showKeystoneJargon(director.state)
         ? 'Clear 1 floor or time a KEY +2 today, then claim the vault for essence '
-            '(scales with your best timed key). First claim of each month also pays a season bonus.'
+              '(scales with your best timed key). First claim of each month also pays a season bonus.'
         : tip.body;
 
     return Align(
@@ -268,9 +265,8 @@ class FirstSessionTips extends StatelessWidget {
                         const SizedBox(height: 6),
                         KenneyButton(
                           label: 'SKIP ALL TIPS',
-                          onPressed: () => director.dismissAllTips(
-                            tips.map((t) => t.id),
-                          ),
+                          onPressed: () =>
+                              director.dismissAllTips(tips.map((t) => t.id)),
                           style: KenneyButtonStyle.grey,
                         ),
                       ],

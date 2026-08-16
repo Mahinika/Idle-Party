@@ -5,8 +5,7 @@ import 'game_logic.dart';
 /// Short fiction lines for Idle Party — no dialogue trees, just flavor
 /// on existing UI rails (intro, hub, toasts, ascend).
 abstract final class StoryLore {
-  static const String introTagline =
-      'Your party fights while you watch.';
+  static const String introTagline = 'Your party fights while you watch.';
 
   static const String introSubline =
       'Tap to help. Grow stronger. No other game required.';
@@ -47,8 +46,10 @@ abstract final class StoryLore {
       'tide' => 'Salt water fills the hold. Hold your breath.',
       'ember' => 'Ash drifts in the vault. The crown still smolders.',
       'grove' => 'Roots tighten. Something old watches between the trunks.',
-      'storm' => 'Wind screams through the hollow. Lightning answers every step.',
-      'rime' => 'The wind dies. Rimeglass sings underfoot — cold enough to cut.',
+      'storm' =>
+        'Wind screams through the hollow. Lightning answers every step.',
+      'rime' =>
+        'The wind dies. Rimeglass sings underfoot — cold enough to cut.',
       'fen' => 'The ice sweats. Bile water pools where the cold used to sing.',
       'brass' => 'The mire drains through brass grates. Something still ticks.',
       'veil' => 'Brass ticks fade. Moth-dust fills the hollow.',
@@ -70,7 +71,8 @@ abstract final class StoryLore {
       'ember' => 'The Sovereign cools. Embers still whisper.',
       'grove' => 'Wyrd Root stills. The grove exhales moss and quiet.',
       'storm' => 'The Tyrant breaks. Thunder rolls away into quiet.',
-      'rime' => 'The Colossus cracks. Frost settles — the rift holds its breath.',
+      'rime' =>
+        'The Colossus cracks. Frost settles — the rift holds its breath.',
       'fen' => 'The Hydra sinks. The mire keeps bubbling.',
       'brass' => 'The Mainspring stills. Cogs keep ticking in the dark.',
       'veil' => 'The Pale Monarch folds. Silk still drifts.',
@@ -139,8 +141,7 @@ abstract final class StoryLore {
     return 'Reborn · AL$al$bless$unlockBit$mile';
   }
 
-  static const String shadeJoins =
-      'Shade the Rogue answers the call.';
+  static const String shadeJoins = 'Shade the Rogue answers the call.';
 
   static const String loreTipTitle = 'THE ROAD';
   static const String loreTipBody =

@@ -8,7 +8,8 @@ import '../kenney_sprite.dart';
 import '../web_click_bridge.dart';
 
 class SelectedZoneCaption extends StatelessWidget {
-  const SelectedZoneCaption({super.key, 
+  const SelectedZoneCaption({
+    super.key,
     required this.dungeon,
     required this.unlocked,
     required this.lifetimeGold,
@@ -69,7 +70,8 @@ class SelectedZoneCaption extends StatelessWidget {
 }
 
 class ZonePathMap extends StatefulWidget {
-  const ZonePathMap({super.key, 
+  const ZonePathMap({
+    super.key,
     required this.dungeons,
     required this.selectedId,
     required this.lifetimeGold,
@@ -143,8 +145,9 @@ class _ZonePathMapState extends State<ZonePathMap> {
     if (idx < 0 || idx >= ZonePathMap.markerNorm.length) return;
     final y = ZonePathMap.markerNorm[idx].dy * mapH;
     // Keep HERE near vertical center of the path viewport.
-    final target =
-        (y - viewH * 0.45).clamp(0.0, math.max(0.0, mapH - viewH)).toDouble();
+    final target = (y - viewH * 0.45)
+        .clamp(0.0, math.max(0.0, mapH - viewH))
+        .toDouble();
     _scrolledTo = widget.selectedId;
     _lastMapH = mapH;
     _lastViewH = viewH;
@@ -187,7 +190,8 @@ class _ZonePathMapState extends State<ZonePathMap> {
         final hitSize = math.max(discSize, GameTheme.minTouch);
         const statusH = 13.0;
 
-        final needsScroll = _scrolledTo != widget.selectedId ||
+        final needsScroll =
+            _scrolledTo != widget.selectedId ||
             _lastMapH != mapH ||
             _lastViewH != viewH;
         if (needsScroll) {
@@ -290,10 +294,7 @@ class _ZonePathMapState extends State<ZonePathMap> {
             child: SizedBox(
               width: mapW,
               height: mapH,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: pathChildren,
-              ),
+              child: Stack(clipBehavior: Clip.none, children: pathChildren),
             ),
           ),
         );
@@ -303,7 +304,8 @@ class _ZonePathMapState extends State<ZonePathMap> {
 }
 
 class MapZoneMarker extends StatelessWidget {
-  const MapZoneMarker({super.key, 
+  const MapZoneMarker({
+    super.key,
     required this.def,
     required this.discSize,
     required this.hitSize,
@@ -337,10 +339,10 @@ class MapZoneMarker extends StatelessWidget {
     final ring = selected
         ? Color.lerp(GameTheme.torch, GameTheme.torchHot, pulse)!
         : (cleared
-            ? GameTheme.mossLit.withValues(alpha: 0.55)
-            : (unlocked
-                ? GameTheme.torch.withValues(alpha: 0.35)
-                : Colors.transparent));
+              ? GameTheme.mossLit.withValues(alpha: 0.55)
+              : (unlocked
+                    ? GameTheme.torch.withValues(alpha: 0.35)
+                    : Colors.transparent));
     final semanticsLabel =
         '${def.name}, $statusWord${selected ? ', selected' : ''}';
     final iconSize = discSize * 0.82;
@@ -352,10 +354,26 @@ class MapZoneMarker extends StatelessWidget {
     if (!unlocked) {
       portrait = ColorFiltered(
         colorFilter: const ColorFilter.matrix(<double>[
-          0.35, 0.35, 0.35, 0, 0,
-          0.35, 0.35, 0.35, 0, 0,
-          0.35, 0.35, 0.35, 0, 0,
-          0, 0, 0, 0.9, 0,
+          0.35,
+          0.35,
+          0.35,
+          0,
+          0,
+          0.35,
+          0.35,
+          0.35,
+          0,
+          0,
+          0.35,
+          0.35,
+          0.35,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.9,
+          0,
         ]),
         child: portrait,
       );
@@ -395,15 +413,15 @@ class MapZoneMarker extends StatelessWidget {
                         boxShadow: selected
                             ? [
                                 BoxShadow(
-                                  color: GameTheme.torch.withValues(alpha: 0.45),
+                                  color: GameTheme.torch.withValues(
+                                    alpha: 0.45,
+                                  ),
                                   blurRadius: 10 + pulse * 3,
                                 ),
                               ]
                             : null,
                       ),
-                      child: Center(
-                        child: ClipOval(child: portrait),
-                      ),
+                      child: Center(child: ClipOval(child: portrait)),
                     ),
                   ),
                 ),

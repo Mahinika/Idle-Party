@@ -59,19 +59,19 @@ class PartyHero {
       '${specId.name}_${name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_')}';
 
   static HeroRole roleForName(String name) => switch (name) {
-        'Aegis' => HeroRole.warrior,
-        'Vale' => HeroRole.healer,
-        'Ember' => HeroRole.mage,
-        _ => HeroRole.rogue,
-      };
+    'Aegis' => HeroRole.warrior,
+    'Vale' => HeroRole.healer,
+    'Ember' => HeroRole.mage,
+    _ => HeroRole.rogue,
+  };
 
   static HeroSpecId specForName(String name) => switch (name) {
-        'Aegis' => HeroSpecId.protection,
-        'Vale' => HeroSpecId.discipline,
-        'Ember' => HeroSpecId.fire,
-        'Shade' => HeroSpecId.combat,
-        _ => HeroSpecId.combat,
-      };
+    'Aegis' => HeroSpecId.protection,
+    'Vale' => HeroSpecId.discipline,
+    'Ember' => HeroSpecId.fire,
+    'Shade' => HeroSpecId.combat,
+    _ => HeroSpecId.combat,
+  };
 
   /// Locked starting primary sheets from the Classic stats plan.
   static Stats startingStatsFor(HeroRole role) =>
@@ -164,7 +164,8 @@ class PartyHero {
   int get gearVitalityBonus => gearStaminaBonus * 10;
 
   int get gearCritChance {
-    final raw = equipped.values.fold<int>(
+    final raw =
+        equipped.values.fold<int>(
           0,
           (s, i) =>
               s +
@@ -176,7 +177,8 @@ class PartyHero {
   }
 
   int get gearAttackSpeedBonus {
-    final raw = equipped.values.fold<int>(
+    final raw =
+        equipped.values.fold<int>(
           0,
           (s, i) =>
               s +
@@ -209,9 +211,9 @@ class PartyHero {
       equipped[EquipmentSlot.weapon]?.pattern == ProjectilePattern.pierce;
 
   int get gearGoldFindPercent => equipped.values.fold<int>(0, (s, i) {
-        if (i.effectId == GearEffectId.goldFind) return s + i.effectValue;
-        return s;
-      });
+    if (i.effectId == GearEffectId.goldFind) return s + i.effectValue;
+    return s;
+  });
 
   ProjectilePattern get weaponPattern =>
       equipped[EquipmentSlot.weapon]?.pattern ?? ProjectilePattern.single;
@@ -229,7 +231,8 @@ class PartyHero {
 
   PartyHero healToFull() => copyWith(currentHp: maxHp);
 
-  PartyHero levelUp() => copyWith(level: level + 1, xp: 0, currentHp: maxHp + 5);
+  PartyHero levelUp() =>
+      copyWith(level: level + 1, xp: 0, currentHp: maxHp + 5);
 
   PartyHero train() => levelUp();
 
@@ -245,7 +248,8 @@ class PartyHero {
     bool clearEquipped = false,
     @Deprecated('Use specId') HeroRole? role,
   }) {
-    final nextSpec = specId ??
+    final nextSpec =
+        specId ??
         (role != null ? HeroSpecs.fromGearAffinity(role) : this.specId);
     return PartyHero(
       id: id ?? this.id,
@@ -262,19 +266,19 @@ class PartyHero {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'name': name,
-        'level': level,
-        'currentHp': currentHp,
-        'stats': stats.toJson(),
-        'specId': specId.name,
-        // Legacy save key (gear affinity name); prefer specId for identity.
-        'role': gearAffinity.name,
-        'xp': xp,
-        'equipped': equipped.map(
-          (slot, item) => MapEntry(slot.name, item.toJson()),
-        ),
-      };
+    'id': id,
+    'name': name,
+    'level': level,
+    'currentHp': currentHp,
+    'stats': stats.toJson(),
+    'specId': specId.name,
+    // Legacy save key (gear affinity name); prefer specId for identity.
+    'role': gearAffinity.name,
+    'xp': xp,
+    'equipped': equipped.map(
+      (slot, item) => MapEntry(slot.name, item.toJson()),
+    ),
+  };
 
   factory PartyHero.fromJson(Map<String, dynamic> json) {
     int asInt(dynamic v, [int fallback = 0]) {
@@ -287,7 +291,8 @@ class PartyHero {
     final name = json['name'] as String;
     final specRaw = json['specId'] as String?;
     final roleRaw = json['role'] as String?;
-    final specId = HeroSpecs.tryParse(specRaw) ??
+    final specId =
+        HeroSpecs.tryParse(specRaw) ??
         (roleRaw != null
             ? HeroSpecs.fromGearAffinityName(roleRaw)
             : specForName(name));
@@ -324,31 +329,30 @@ class PartyHero {
       final sta = (hp / 10).ceil().clamp(1, 999);
       stats = switch (affinity) {
         HeroRole.warrior => Stats(
-            strength: atk.clamp(1, 999),
-            agility: def.clamp(1, 999),
-            stamina: sta,
-            intellect: 1,
-            spirit: 2,
-          ),
+          strength: atk.clamp(1, 999),
+          agility: def.clamp(1, 999),
+          stamina: sta,
+          intellect: 1,
+          spirit: 2,
+        ),
         HeroRole.rogue => Stats(
-            strength: (atk / 2).ceil().clamp(1, 999),
-            agility: (atk - (atk / 2).ceil()).clamp(1, 999),
-            stamina: sta,
-            intellect: 1,
-            spirit: 2,
-          ),
+          strength: (atk / 2).ceil().clamp(1, 999),
+          agility: (atk - (atk / 2).ceil()).clamp(1, 999),
+          stamina: sta,
+          intellect: 1,
+          spirit: 2,
+        ),
         HeroRole.healer || HeroRole.mage => Stats(
-            strength: 1,
-            agility: 1,
-            stamina: sta,
-            intellect: atk.clamp(1, 999),
-            spirit: def.clamp(1, 999),
-          ),
+          strength: 1,
+          agility: 1,
+          stamina: sta,
+          intellect: atk.clamp(1, 999),
+          spirit: def.clamp(1, 999),
+        ),
       };
     }
 
-    final id = (json['id'] as String?) ??
-        PartyHero._stableIdFor(specId, name);
+    final id = (json['id'] as String?) ?? PartyHero._stableIdFor(specId, name);
 
     return PartyHero(
       id: id,

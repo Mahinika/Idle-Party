@@ -175,7 +175,8 @@ abstract final class DungeonCatalog {
       bossId: 'veil_monarch',
       bossName: 'The Pale Monarch',
       unlockPrice: 10000000,
-      blurb: 'Silk dust hangs where the clockwork ends. Wings beat in the dark.',
+      blurb:
+          'Silk dust hangs where the clockwork ends. Wings beat in the dark.',
     ),
   ];
 
@@ -186,11 +187,16 @@ abstract final class DungeonCatalog {
     return all.first;
   }
 
-  static bool isUnlocked(String id, int goldEarnedLifetime, int highestDungeon) {
+  static bool isUnlocked(
+    String id,
+    int goldEarnedLifetime,
+    int highestDungeon,
+  ) {
     final def = byId(id);
     if (def.number == 0) return true;
     // Unlock by clearing previous dungeon index OR paying price once gold allows.
-    return highestDungeon >= def.number - 1 || goldEarnedLifetime >= def.unlockPrice;
+    return highestDungeon >= def.number - 1 ||
+        goldEarnedLifetime >= def.unlockPrice;
   }
 
   /// Boss appears on floor (5 + ascension level).

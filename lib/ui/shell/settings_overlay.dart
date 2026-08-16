@@ -11,7 +11,8 @@ import '../menu_chrome.dart';
 import '../meta_overlays.dart';
 
 class SettingsOverlay extends StatefulWidget {
-  const SettingsOverlay({super.key, 
+  const SettingsOverlay({
+    super.key,
     required this.director,
     required this.onClose,
   });
@@ -63,143 +64,154 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _SettingsToggle(
-          label: 'Mute sound',
-          value: state.soundMuted,
-          onChanged: director.setSoundMuted,
-        ),
-        const SizedBox(height: 8),
-        _SettingsCycle(
-          label: state.vfxQuality.settingsLabel,
-          hint: state.vfxQuality.settingsHint,
-          onCycle: director.cycleVfxQuality,
-        ),
-        const SizedBox(height: 8),
-        _SettingsToggle(
-          label: 'Colorblind-friendly floaters',
-          value: state.colorblindMode,
-          onChanged: director.setColorblindMode,
-        ),
-        const SizedBox(height: 12),
-        Text('UI text scale', style: GameTheme.body(size: 13, color: GameTheme.parchmentDim)),
-        const SizedBox(height: 6),
-        Semantics(
-          slider: true,
-          label: 'UI text scale',
-          value: '${(state.uiTextScale * 100).round()} percent',
-          child: Row(
-            children: [
-              Expanded(
-                child: _CaveSlider(
-                  value: state.uiTextScale.clamp(0.85, 1.3),
-                  min: 0.85,
-                  max: 1.3,
-                  divisions: 9,
-                  onChanged: director.setUiTextScale,
-                ),
-              ),
-              SizedBox(
-                width: 46,
-                child: Text(
-                  '${(state.uiTextScale * 100).round()}%',
-                  textAlign: TextAlign.right,
-                  style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        MenuChrome.sectionLabel('BAG CLEANUP'),
-        const SizedBox(height: 4),
-        Text(
-          'Near-full bag: merge → sell gold → scrap essence. '
-          'BiS / upgrades are never cleaned. Bag → FILTERS opens these controls.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 10),
-        Text('Auto-sell (gold)', style: GameTheme.body(size: 13, color: GameTheme.parchmentDim)),
-        const SizedBox(height: 6),
-        _IlvlFilterRow(
-          value: state.autoSellMaxPower,
-          max: GameLogic.maxAutoSellIlvlCap(state),
-          onChanged: director.setAutoSellMaxPower,
-          offLabel: 'Off',
-        ),
-        const SizedBox(height: 6),
-        _RarityFilterRow(
-          value: state.autoSellMaxRarity,
-          onChanged: director.setAutoSellMaxRarity,
-          enabled: state.autoSellMaxPower > 0,
-        ),
-        const SizedBox(height: 12),
-        Text('Auto-disassemble (essence)', style: GameTheme.body(size: 13, color: GameTheme.parchmentDim)),
-        const SizedBox(height: 6),
-        _IlvlFilterRow(
-          value: state.autoDisassembleMaxIlvl,
-          max: GameLogic.maxAutoSellIlvlCap(state),
-          onChanged: director.setAutoDisassembleMaxIlvl,
-          offLabel: 'Off',
-        ),
-        const SizedBox(height: 6),
-        _RarityFilterRow(
-          value: state.autoDisassembleMaxRarity,
-          onChanged: director.setAutoDisassembleMaxRarity,
-          enabled: state.autoDisassembleMaxIlvl > 0,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity), then scrap '
-          'leftovers that match disassemble filters. Single-item SELL = essence. '
-          'Market tap = gold.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 16),
-        PlayGamesSection(director: director),
-        const SizedBox(height: 16),
-        SaveTransferSection(director: director),
-        const SizedBox(height: 16),
-        KenneyButton(
-          label: MetaSystems.hasUnseenChangelog(state)
-              ? "WHAT'S NEW ★"
-              : "WHAT'S NEW",
-          style: KenneyButtonStyle.grey,
-          onPressed: () => WhatsNewOverlay.show(context, director),
-        ),
-        if (kDebugMode) ...[
-          const SizedBox(height: 8),
-          KenneyButton(
-            label: director.debugTimeScale >= 9.5
-                ? 'DEV: SPEED 10x (tap → 1x)'
-                : 'DEV: SPEED 1x (tap → 10x)',
-            style: KenneyButtonStyle.grey,
-            onPressed: director.cycleDebugTimeScale,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _SettingsToggle(
+            label: 'Mute sound',
+            value: state.soundMuted,
+            onChanged: director.setSoundMuted,
           ),
           const SizedBox(height: 8),
+          _SettingsCycle(
+            label: state.vfxQuality.settingsLabel,
+            hint: state.vfxQuality.settingsHint,
+            onCycle: director.cycleVfxQuality,
+          ),
+          const SizedBox(height: 8),
+          _SettingsToggle(
+            label: 'Colorblind-friendly floaters',
+            value: state.colorblindMode,
+            onChanged: director.setColorblindMode,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'UI text scale',
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 6),
+          Semantics(
+            slider: true,
+            label: 'UI text scale',
+            value: '${(state.uiTextScale * 100).round()} percent',
+            child: Row(
+              children: [
+                Expanded(
+                  child: _CaveSlider(
+                    value: state.uiTextScale.clamp(0.85, 1.3),
+                    min: 0.85,
+                    max: 1.3,
+                    divisions: 9,
+                    onChanged: director.setUiTextScale,
+                  ),
+                ),
+                SizedBox(
+                  width: 46,
+                  child: Text(
+                    '${(state.uiTextScale * 100).round()}%',
+                    textAlign: TextAlign.right,
+                    style: GameTheme.body(
+                      size: 15,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          MenuChrome.sectionLabel('BAG CLEANUP'),
+          const SizedBox(height: 4),
+          Text(
+            'Near-full bag: merge → sell gold → scrap essence. '
+            'BiS / upgrades are never cleaned. Bag → FILTERS opens these controls.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Auto-sell (gold)',
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 6),
+          _IlvlFilterRow(
+            value: state.autoSellMaxPower,
+            max: GameLogic.maxAutoSellIlvlCap(state),
+            onChanged: director.setAutoSellMaxPower,
+            offLabel: 'Off',
+          ),
+          const SizedBox(height: 6),
+          _RarityFilterRow(
+            value: state.autoSellMaxRarity,
+            onChanged: director.setAutoSellMaxRarity,
+            enabled: state.autoSellMaxPower > 0,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Auto-disassemble (essence)',
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 6),
+          _IlvlFilterRow(
+            value: state.autoDisassembleMaxIlvl,
+            max: GameLogic.maxAutoSellIlvlCap(state),
+            onChanged: director.setAutoDisassembleMaxIlvl,
+            offLabel: 'Off',
+          ),
+          const SizedBox(height: 6),
+          _RarityFilterRow(
+            value: state.autoDisassembleMaxRarity,
+            onChanged: director.setAutoDisassembleMaxRarity,
+            enabled: state.autoDisassembleMaxIlvl > 0,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity), then scrap '
+            'leftovers that match disassemble filters. Single-item SELL = essence. '
+            'Market tap = gold.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 16),
+          PlayGamesSection(director: director),
+          const SizedBox(height: 16),
+          SaveTransferSection(director: director),
+          const SizedBox(height: 16),
           KenneyButton(
-            label: 'DEV: ENTER GAUNTLET (AL10)',
+            label: MetaSystems.hasUnseenChangelog(state)
+                ? "WHAT'S NEW ★"
+                : "WHAT'S NEW",
             style: KenneyButtonStyle.grey,
-            onPressed: state.inDungeon
-                ? null
-                : () {
-                    widget.onClose();
-                    director.devEnterGauntlet();
-                  },
+            onPressed: () => WhatsNewOverlay.show(context, director),
+          ),
+          if (kDebugMode) ...[
+            const SizedBox(height: 8),
+            KenneyButton(
+              label: director.debugTimeScale >= 9.5
+                  ? 'DEV: SPEED 10x (tap → 1x)'
+                  : 'DEV: SPEED 1x (tap → 10x)',
+              style: KenneyButtonStyle.grey,
+              onPressed: director.cycleDebugTimeScale,
+            ),
+            const SizedBox(height: 8),
+            KenneyButton(
+              label: 'DEV: ENTER GAUNTLET (AL10)',
+              style: KenneyButtonStyle.grey,
+              onPressed: state.inDungeon
+                  ? null
+                  : () {
+                      widget.onClose();
+                      director.devEnterGauntlet();
+                    },
+            ),
+          ],
+          const SizedBox(height: 8),
+          KenneyButton(
+            label: 'RESET GAME',
+            style: KenneyButtonStyle.red,
+            onPressed: _confirmReset,
           ),
         ],
-        const SizedBox(height: 8),
-        KenneyButton(
-          label: 'RESET GAME',
-          style: KenneyButtonStyle.red,
-          onPressed: _confirmReset,
-        ),
-      ],
       ),
     );
   }
-
 }
 
 class _IlvlFilterRow extends StatelessWidget {
@@ -305,8 +317,7 @@ class _RarityFilterRow extends StatelessWidget {
               padding: EdgeInsets.zero,
               foregroundColor: GameTheme.parchment,
             ),
-            onPressed:
-                enabled && value < 4 ? () => onChanged(value + 1) : null,
+            onPressed: enabled && value < 4 ? () => onChanged(value + 1) : null,
             child: Text('+', style: GameTheme.pixel(size: 10)),
           ),
         ],
@@ -342,9 +353,7 @@ class _SettingsToggle extends StatelessWidget {
           decoration: MenuChrome.cardBox(),
           child: Row(
             children: [
-              Expanded(
-                child: Text(label, style: GameTheme.body(size: 16)),
-              ),
+              Expanded(child: Text(label, style: GameTheme.body(size: 16))),
               ExcludeSemantics(child: _CaveSwitch(value: value)),
             ],
           ),
@@ -398,10 +407,7 @@ class _SettingsCycle extends StatelessWidget {
               ),
               Text(
                 'TAP',
-                style: GameTheme.pixel(
-                  size: 7,
-                  color: GameTheme.parchmentDim,
-                ),
+                style: GameTheme.pixel(size: 7, color: GameTheme.parchmentDim),
               ),
             ],
           ),

@@ -22,20 +22,20 @@ enum SpecRoleTag { tank, healer, meleeDps, rangedDps, caster }
 /// Plain English job words for players who never played an RPG.
 extension SpecRoleTagPlain on SpecRoleTag {
   String get plainLabel => switch (this) {
-        SpecRoleTag.tank => 'Shield',
-        SpecRoleTag.healer => 'Healer',
-        SpecRoleTag.meleeDps => 'Damage',
-        SpecRoleTag.rangedDps => 'Damage',
-        SpecRoleTag.caster => 'Damage',
-      };
+    SpecRoleTag.tank => 'Shield',
+    SpecRoleTag.healer => 'Healer',
+    SpecRoleTag.meleeDps => 'Damage',
+    SpecRoleTag.rangedDps => 'Damage',
+    SpecRoleTag.caster => 'Damage',
+  };
 
   String get plainJob => switch (this) {
-        SpecRoleTag.tank => 'soaks hits so others can fight',
-        SpecRoleTag.healer => 'keeps the party alive',
-        SpecRoleTag.meleeDps => 'fights up close',
-        SpecRoleTag.rangedDps => 'fights from range',
-        SpecRoleTag.caster => 'casts spells',
-      };
+    SpecRoleTag.tank => 'soaks hits so others can fight',
+    SpecRoleTag.healer => 'keeps the party alive',
+    SpecRoleTag.meleeDps => 'fights up close',
+    SpecRoleTag.rangedDps => 'fights from range',
+    SpecRoleTag.caster => 'casts spells',
+  };
 }
 
 /// Resource type for HUD / regen.
@@ -110,6 +110,7 @@ class HeroSpecDef {
   final String shortLabel;
   final SpecRoleTag roleTag;
   final SpecResource resource;
+
   /// Gear/ratings affinity bucket — not tank/healer/DPS. Prefer [roleTag].
   final HeroRole gearAffinity;
   final Set<ArmorType> armorTypes;
@@ -129,7 +130,12 @@ class HeroSpecDef {
 
 /// Catalog + helpers for [HeroSpecId].
 abstract final class HeroSpecs {
-  static const _plate = {ArmorType.cloth, ArmorType.leather, ArmorType.mail, ArmorType.plate};
+  static const _plate = {
+    ArmorType.cloth,
+    ArmorType.leather,
+    ArmorType.mail,
+    ArmorType.plate,
+  };
   static const _mail = {ArmorType.cloth, ArmorType.leather, ArmorType.mail};
   static const _leather = {ArmorType.cloth, ArmorType.leather};
   static const _cloth = {ArmorType.cloth};
@@ -193,11 +199,11 @@ abstract final class HeroSpecs {
 
   /// Maps save-era HeroRole / affinity names onto a default starter spec.
   static HeroSpecId fromGearAffinity(HeroRole affinity) => switch (affinity) {
-        HeroRole.warrior => HeroSpecId.protection,
-        HeroRole.healer => HeroSpecId.discipline,
-        HeroRole.mage => HeroSpecId.fire,
-        HeroRole.rogue => HeroSpecId.combat,
-      };
+    HeroRole.warrior => HeroSpecId.protection,
+    HeroRole.healer => HeroSpecId.discipline,
+    HeroRole.mage => HeroSpecId.fire,
+    HeroRole.rogue => HeroSpecId.combat,
+  };
 
   static HeroSpecId fromGearAffinityName(String? raw) {
     final parsed = tryParse(raw);
@@ -212,9 +218,9 @@ abstract final class HeroSpecs {
   }
 
   static List<HeroSpecId> forClass(HeroClassId classId) => [
-        for (final d in all)
-          if (d.classId == classId) d.id,
-      ];
+    for (final d in all)
+      if (d.classId == classId) d.id,
+  ];
 
   /// Specs unlocked on a brand-new save.
   static const List<HeroSpecId> starterUnlocked = <HeroSpecId>[
@@ -733,15 +739,15 @@ abstract final class HeroSpecs {
   ];
 
   static String classLabel(HeroClassId id) => switch (id) {
-        HeroClassId.warrior => 'Warrior',
-        HeroClassId.paladin => 'Paladin',
-        HeroClassId.hunter => 'Hunter',
-        HeroClassId.rogue => 'Rogue',
-        HeroClassId.priest => 'Priest',
-        HeroClassId.deathKnight => 'Death Knight',
-        HeroClassId.shaman => 'Shaman',
-        HeroClassId.mage => 'Mage',
-        HeroClassId.warlock => 'Warlock',
-        HeroClassId.druid => 'Druid',
-      };
+    HeroClassId.warrior => 'Warrior',
+    HeroClassId.paladin => 'Paladin',
+    HeroClassId.hunter => 'Hunter',
+    HeroClassId.rogue => 'Rogue',
+    HeroClassId.priest => 'Priest',
+    HeroClassId.deathKnight => 'Death Knight',
+    HeroClassId.shaman => 'Shaman',
+    HeroClassId.mage => 'Mage',
+    HeroClassId.warlock => 'Warlock',
+    HeroClassId.druid => 'Druid',
+  };
 }

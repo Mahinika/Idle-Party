@@ -58,7 +58,10 @@ abstract final class GearSets {
   }
 
   /// Pieces of [setId] currently worn (set slots only).
-  static int wornCount(Map<EquipmentSlot, EquipmentItem> equipped, String setId) {
+  static int wornCount(
+    Map<EquipmentSlot, EquipmentItem> equipped,
+    String setId,
+  ) {
     var n = 0;
     for (final slot in setSlots) {
       final item = equipped[slot];
@@ -167,7 +170,7 @@ abstract final class GearSets {
 
   /// 4pc on-hit combat proc (chance + damage mul + floater tag).
   static ({double chance, double damageMul, String tag, int argb})?
-      fourPieceProc(Map<EquipmentSlot, EquipmentItem> equipped) {
+  fourPieceProc(Map<EquipmentSlot, EquipmentItem> equipped) {
     final id = primarySetId(equipped);
     if (id == null || wornCount(equipped, id) < 4) return null;
     final zone = id.split('_').first;

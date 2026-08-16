@@ -1,59 +1,45 @@
 import 'package:flutter/material.dart';
 import '../../core/menu_alerts.dart';
+import '../../core/menu_router.dart';
 import '../custom_assets.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
 import '../kenney_sprite.dart';
 import '../web_click_bridge.dart';
 
-enum BottomNavTab { none, gear, bag, more, party, power, meta }
-
+/// The one nav row. Hub and dungeon show the same pillars in the same order;
+/// the dungeon adds HUB (leave), the hub does not.
 class AppBottomBar extends StatelessWidget {
-  const AppBottomBar({super.key, 
-    required this.stashCount,
-    required this.active,
-    required this.onGear,
-    required this.onBag,
-    required this.onMore,
-    this.stashCap,
-    this.hubPillars = false,
-    this.alerts = MenuAlerts.none,
-    this.onParty,
-    this.onPower,
-    this.onMeta,
+  const AppBottomBar({
+    super.key,
+    required this.alerts,
+    required this.route,
+    required this.onParty,
+    required this.onPower,
+    required this.onMeta,
     this.onHubClose,
+    this.showReason = false,
   });
-
-  final int stashCount;
-  final int? stashCap;
 
   /// Shared "something waits here" marks (see [MenuAlerts]).
   final MenuAlerts alerts;
-  final BottomNavTab active;
-  final VoidCallback onGear;
-  final VoidCallback onBag;
-  final VoidCallback onMore;
-  /// Unified pillars: PARTY / POWER / META / HUB (hub shell + dungeon).
-  final bool hubPillars;
-  final VoidCallback? onParty;
-  final VoidCallback? onPower;
-  final VoidCallback? onMeta;
+  final MenuRoute route;
+  final VoidCallback onParty;
+  final VoidCallback onPower;
+  final VoidCallback onMeta;
+
+  /// Dungeon only: leaving back to the hub.
   final VoidCallback? onHubClose;
+
+  /// Hub: one plain line saying what is waiting behind a marked button.
+  final bool showReason;
 
   @override
   Widget build(BuildContext context) {
-    final full = stashCap != null && stashCount >= stashCap!;
-    final nearlyFull = !full &&
-        stashCap != null &&
-        stashCount >= (stashCap! * 0.9).ceil();
-    final bagLabel = stashCap == null
-        ? 'BAG $stashCount'
-        : full
-            ? 'BAG FULL $stashCount/$stashCap'
-            : nearlyFull
-                ? 'BAG $stashCount/$stashCap!'
-                : 'BAG $stashCount/$stashCap';
-    return Material(
+    final reason = alerts.party.isQuiet
+        ? alerts.meta.reason
+        : alerts.party.reason;
+    final bar = Material(
       color: Colors.transparent,
       child: Container(
         height: GameTheme.bottomNavHeight,
@@ -67,9 +53,7 @@ class AppBottomBar extends StatelessWidget {
             ],
           ),
           border: Border(
-            top: BorderSide(
-              color: GameTheme.borderLit.withValues(alpha: 0.35),
-            ),
+            top: BorderSide(color: GameTheme.borderLit.withValues(alpha: 0.35)),
           ),
           boxShadow: const [
             BoxShadow(
@@ -79,84 +63,75 @@ class AppBottomBar extends StatelessWidget {
             ),
           ],
         ),
-        child: hubPillars
-            ? Row(
-                children: [
-                  Expanded(
-                    child: AppBottomBarItem(
-                      label: 'PARTY',
-                      icon: KenneyAssets.helmet,
-                      badge: alerts.party.badge,
-                      selected: active == BottomNavTab.party ||
-                          active == BottomNavTab.gear ||
-                          active == BottomNavTab.bag,
-                      onTap: onParty ?? onGear,
-                    ),
-                  ),
-                  Expanded(
-                    child: AppBottomBarItem(
-                      label: 'POWER',
-                      icon: CustomAssets.iconAxe,
-                      badge: alerts.power.badge,
-                      selected: active == BottomNavTab.power,
-                      onTap: onPower ?? onMore,
-                    ),
-                  ),
-                  Expanded(
-                    child: AppBottomBarItem(
-                      label: 'META',
-                      icon: KenneyAssets.book,
-                      badge: alerts.meta.badge,
-                      selected: active == BottomNavTab.meta,
-                      onTap: onMeta ?? onMore,
-                    ),
-                  ),
-                  Expanded(
-                    child: AppBottomBarItem(
-                      label: 'HUB',
-                      icon: KenneyAssets.iconDoor,
-                      selected: false,
-                      onTap: onHubClose ?? onMore,
-                    ),
-                  ),
-                ],
-              )
-            : Row(
-                children: [
-                  Expanded(
-                    child: AppBottomBarItem(
-                      label: 'GEAR',
-                      icon: KenneyAssets.iconSword,
-                      selected: active == BottomNavTab.gear,
-                      onTap: onGear,
-                    ),
-                  ),
-                  Expanded(
-                    child: AppBottomBarItem(
-                      label: bagLabel,
-                      icon: KenneyAssets.chestClosed,
-                      selected: active == BottomNavTab.bag,
-                      urgent: full || nearlyFull,
-                      onTap: onBag,
-                    ),
-                  ),
-                  Expanded(
-                    child: AppBottomBarItem(
-                      label: 'MORE',
-                      icon: KenneyAssets.iconDoor,
-                      selected: active == BottomNavTab.more,
-                      onTap: onMore,
-                    ),
-                  ),
-                ],
+        child: Row(
+          children: [
+            Expanded(
+              child: AppBottomBarItem(
+                label: 'PARTY',
+                icon: KenneyAssets.helmet,
+                badge: alerts.party.badge,
+                selected: route == MenuRoute.party,
+                onTap: onParty,
               ),
+            ),
+            Expanded(
+              child: AppBottomBarItem(
+                label: 'POWER',
+                icon: CustomAssets.iconAxe,
+                badge: alerts.power.badge,
+                selected: route == MenuRoute.power,
+                onTap: onPower,
+              ),
+            ),
+            Expanded(
+              child: AppBottomBarItem(
+                label: 'META',
+                icon: KenneyAssets.book,
+                badge: alerts.meta.badge,
+                selected:
+                    route == MenuRoute.meta ||
+                    route == MenuRoute.settings ||
+                    route == MenuRoute.jobs,
+                onTap: onMeta,
+              ),
+            ),
+            if (onHubClose != null)
+              Expanded(
+                child: AppBottomBarItem(
+                  label: 'HUB',
+                  icon: KenneyAssets.iconDoor,
+                  selected: false,
+                  onTap: onHubClose!,
+                ),
+              ),
+          ],
+        ),
       ),
+    );
+    if (!showReason || reason.isEmpty) return bar;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 3),
+          child: Text(
+            reason,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+          ),
+        ),
+        bar,
+      ],
     );
   }
 }
 
 class AppBottomBarItem extends StatelessWidget {
-  const AppBottomBarItem({super.key, 
+  const AppBottomBarItem({
+    super.key,
     required this.label,
     required this.icon,
     required this.selected,
@@ -198,8 +173,10 @@ class AppBottomBarItem extends StatelessWidget {
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: selected
                         ? GameTheme.torch.withValues(alpha: 0.14)
@@ -235,8 +212,6 @@ class AppBottomBarItem extends StatelessWidget {
     );
   }
 }
-
-/// Tab controller whose length can grow as menus unlock (progressive tabs).
 
 class NavBadge extends StatelessWidget {
   const NavBadge({super.key, required this.text});

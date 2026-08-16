@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/menu_alerts.dart';
+import '../../core/menu_router.dart';
 import '../../core/meta_systems.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -14,8 +15,15 @@ import 'settings_overlay.dart';
 import 'shell_common.dart';
 
 class PowerPillar extends StatefulWidget {
-  const PowerPillar({super.key, required this.director});
+  const PowerPillar({
+    super.key,
+    required this.director,
+    required this.tab,
+    required this.onTabChanged,
+  });
   final GameDirector director;
+  final PowerTab tab;
+  final ValueChanged<PowerTab> onTabChanged;
 
   @override
   State<PowerPillar> createState() => _PowerPillarState();
@@ -24,6 +32,7 @@ class PowerPillar extends StatefulWidget {
 class _PowerPillarState extends State<PowerPillar>
     with TickerProviderStateMixin {
   late final FlexTabs _tabs;
+  List<PowerTab> _visible = const [PowerTab.forge, PowerTab.market];
 
   @override
   void initState() {
@@ -31,7 +40,10 @@ class _PowerPillarState extends State<PowerPillar>
     _tabs = FlexTabs(
       vsync: this,
       length: 2,
-      onChanged: (_) => setState(() {}),
+      onChanged: (i) {
+        if (i >= 0 && i < _visible.length) widget.onTabChanged(_visible[i]);
+        setState(() {});
+      },
     );
   }
 
@@ -52,31 +64,33 @@ class _PowerPillarState extends State<PowerPillar>
         'This run · forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
         'STA +${s.vitalityBonus}';
     // Progressive menu: CAMP and SHOP appear once essence / Ascend exist.
+    _visible = MenuRouter.visiblePowerTabs(s);
     final pages = <({String label, String blurb, Widget body})>[
-      (
-        label: 'FORGE',
-        blurb: 'Forge: gold this run (wipes) · KEEP forever · Apex mats',
-        body: ForgeOverlay(director: d),
-      ),
-      if (MenuTabs.showCamp(s))
-        (
-          label: 'CAMP',
-          blurb: 'Camp: permanent essence tracks — survive Ascend',
-          body: SingleChildScrollView(child: SanctuaryOverlay(director: d)),
-        ),
-      (
-        label: 'MARKET',
-        blurb: 'Market: flasks for the run · sell stash for gold',
-        body: SingleChildScrollView(child: MarketOverlay(director: d)),
-      ),
-      if (MenuTabs.showShop(s))
-        (
-          label: 'SHOP',
-          blurb: 'Shop: essence power that survives Ascend',
-          body: PrestigeShopOverlay(director: d),
-        ),
+      for (final tab in _visible)
+        switch (tab) {
+          PowerTab.forge => (
+            label: 'FORGE',
+            blurb: 'Forge: gold this run (wipes) · KEEP forever · Apex mats',
+            body: ForgeOverlay(director: d),
+          ),
+          PowerTab.camp => (
+            label: 'CAMP',
+            blurb: 'Camp: permanent essence tracks — survive Ascend',
+            body: SingleChildScrollView(child: SanctuaryOverlay(director: d)),
+          ),
+          PowerTab.market => (
+            label: 'MARKET',
+            blurb: 'Market: flasks for the run · sell stash for gold',
+            body: SingleChildScrollView(child: MarketOverlay(director: d)),
+          ),
+          PowerTab.shop => (
+            label: 'SHOP',
+            blurb: 'Shop: essence power that survives Ascend',
+            body: PrestigeShopOverlay(director: d),
+          ),
+        },
     ];
-    _tabs.sync(pages.length);
+    _tabs.syncToId(_visible, widget.tab);
     final alert = MenuAlerts.powerAlert(s);
     final blurb = pages[_tabs.index.clamp(0, pages.length - 1)].blurb;
     return Column(
@@ -103,9 +117,7 @@ class _PowerPillarState extends State<PowerPillar>
         MenuChrome.tabRail(
           controller: _tabs.controller,
           onTap: (_) => setState(() {}),
-          tabs: [
-            for (final page in pages) Tab(text: page.label),
-          ],
+          tabs: [for (final page in pages) Tab(text: page.label)],
         ),
         const SizedBox(height: 4),
         Text(
@@ -113,8 +125,7 @@ class _PowerPillarState extends State<PowerPillar>
           textAlign: TextAlign.center,
           style: GameTheme.body(
             size: 12,
-            color:
-                alert.isQuiet ? GameTheme.parchmentDim : GameTheme.torchHot,
+            color: alert.isQuiet ? GameTheme.parchmentDim : GameTheme.torchHot,
           ),
         ),
         const SizedBox(height: 6),
@@ -129,20 +140,29 @@ class _PowerPillarState extends State<PowerPillar>
 
 /// META pillar — keystone · contracts · beast · collection · help · settings.
 class MetaPillar extends StatefulWidget {
-  const MetaPillar({super.key, 
+  const MetaPillar({
+    super.key,
     required this.director,
+    required this.tab,
+    required this.onTabChanged,
     required this.onOpenWhatsNew,
   });
   final GameDirector director;
+  final MetaTab tab;
+  final ValueChanged<MetaTab> onTabChanged;
   final VoidCallback onOpenWhatsNew;
 
   @override
   State<MetaPillar> createState() => _MetaPillarState();
 }
 
-class _MetaPillarState extends State<MetaPillar>
-    with TickerProviderStateMixin {
+class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
   late final FlexTabs _tabs;
+  List<MetaTab> _visible = const [
+    MetaTab.jobs,
+    MetaTab.guide,
+    MetaTab.settings,
+  ];
 
   @override
   void initState() {
@@ -150,7 +170,10 @@ class _MetaPillarState extends State<MetaPillar>
     _tabs = FlexTabs(
       vsync: this,
       length: 3,
-      onChanged: (_) => setState(() {}),
+      onChanged: (i) {
+        if (i >= 0 && i < _visible.length) widget.onTabChanged(_visible[i]);
+        setState(() {});
+      },
     );
   }
 
@@ -166,67 +189,66 @@ class _MetaPillarState extends State<MetaPillar>
     final s = d.state;
     final alert = MenuAlerts.metaAlert(s);
     // Progressive menu: KEY / BEAST / CODEX appear once they mean something.
+    _visible = MenuRouter.visibleMetaTabs(s);
     final pages = <({String label, Widget body})>[
-      if (MenuTabs.showKey(s))
-        (
-          label: 'KEY',
-          body: SingleChildScrollView(child: ChallengeToggles(director: d)),
-        ),
-      (
-        label: 'JOBS',
-        body: SingleChildScrollView(child: JobsOverlay(director: d)),
-      ),
-      if (MenuTabs.showBeast(s))
-        (
-          label: 'BEAST',
-          body: SingleChildScrollView(child: BeastOverlay(director: d)),
-        ),
-      if (MenuTabs.showCodex(s))
-        (
-          label: 'CODEX',
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: CodexOverlay(director: d)),
-              const Divider(height: 12, color: GameTheme.border),
-              Expanded(child: AchievementsOverlay(director: d)),
-            ],
+      for (final tab in _visible)
+        switch (tab) {
+          MetaTab.key => (
+            label: 'KEY',
+            body: SingleChildScrollView(child: ChallengeToggles(director: d)),
           ),
-        ),
-      (
-        label: 'GUIDE',
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            KenneyButton(
-              label: MetaSystems.hasUnseenChangelog(s)
-                  ? "WHAT'S NEW ★"
-                  : "WHAT'S NEW",
-              style: KenneyButtonStyle.grey,
-              onPressed: widget.onOpenWhatsNew,
+          MetaTab.jobs => (
+            label: 'JOBS',
+            body: SingleChildScrollView(child: JobsOverlay(director: d)),
+          ),
+          MetaTab.beast => (
+            label: 'BEAST',
+            body: SingleChildScrollView(child: BeastOverlay(director: d)),
+          ),
+          MetaTab.codex => (
+            label: 'CODEX',
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: CodexOverlay(director: d)),
+                const Divider(height: 12, color: GameTheme.border),
+                Expanded(child: AchievementsOverlay(director: d)),
+              ],
             ),
-            const SizedBox(height: 8),
-            const Expanded(child: GuidesOverlay()),
-          ],
-        ),
-      ),
-      (
-        label: 'SET',
-        body: SingleChildScrollView(
-          child: SettingsOverlay(director: d, onClose: () {}),
-        ),
-      ),
+          ),
+          MetaTab.guide => (
+            label: 'GUIDE',
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                KenneyButton(
+                  label: MetaSystems.hasUnseenChangelog(s)
+                      ? "WHAT'S NEW ★"
+                      : "WHAT'S NEW",
+                  style: KenneyButtonStyle.grey,
+                  onPressed: widget.onOpenWhatsNew,
+                ),
+                const SizedBox(height: 8),
+                const Expanded(child: GuidesOverlay()),
+              ],
+            ),
+          ),
+          MetaTab.settings => (
+            label: 'SET',
+            body: SingleChildScrollView(
+              child: SettingsOverlay(director: d, onClose: () {}),
+            ),
+          ),
+        },
     ];
-    _tabs.sync(pages.length);
+    _tabs.syncToId(_visible, widget.tab);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         MenuChrome.tabRail(
           controller: _tabs.controller,
           onTap: (_) => setState(() {}),
-          tabs: [
-            for (final page in pages) Tab(text: page.label),
-          ],
+          tabs: [for (final page in pages) Tab(text: page.label)],
         ),
         if (!alert.isQuiet)
           Padding(
@@ -239,9 +261,7 @@ class _MetaPillarState extends State<MetaPillar>
             ),
           ),
         const SizedBox(height: 8),
-        Expanded(
-          child: pages[_tabs.index.clamp(0, pages.length - 1)].body,
-        ),
+        Expanded(child: pages[_tabs.index.clamp(0, pages.length - 1)].body),
       ],
     );
   }

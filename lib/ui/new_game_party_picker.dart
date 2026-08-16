@@ -45,7 +45,10 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
       _slots.map((s) => s!).toSet().length == _slots.length;
 
   String? get _softWarn {
-    final chosen = [for (final s in _slots) if (s != null) HeroSpecs.def(s)];
+    final chosen = [
+      for (final s in _slots)
+        if (s != null) HeroSpecs.def(s),
+    ];
     if (chosen.length < GameLogic.starterPartySize) return null;
     final hasTank = chosen.any((d) => d.isTank);
     final hasHeal = chosen.any((d) => d.isHealer);
@@ -192,9 +195,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                       label: 'START',
                       style: KenneyButtonStyle.brown,
                       onPressed: _ready
-                          ? () => widget.onConfirm(
-                                [for (final s in _slots) s!],
-                              )
+                          ? () => widget.onConfirm([for (final s in _slots) s!])
                           : null,
                     ),
                   ),
@@ -245,10 +246,7 @@ class _SlotCard extends StatelessWidget {
                 Text(
                   def?.shortLabel ?? 'SLOT ${index + 1}',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 13,
-                    color: GameTheme.parchment,
-                  ),
+                  style: GameTheme.body(size: 13, color: GameTheme.parchment),
                 ),
                 Text(
                   def?.roleTag.plainLabel ?? 'Tap to pick',
@@ -297,7 +295,10 @@ class _SpecPickRow extends StatelessWidget {
             child: DecoratedBox(
               decoration: MenuChrome.listCard(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     KenneySprite(
@@ -317,9 +318,7 @@ class _SpecPickRow extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            locked
-                                ? _lockLabel
-                                : def.plainRoleLine,
+                            locked ? _lockLabel : def.plainRoleLine,
                             style: GameTheme.body(
                               size: 11,
                               color: GameTheme.parchmentDim,
@@ -332,15 +331,15 @@ class _SpecPickRow extends StatelessWidget {
                       locked
                           ? 'LOCKED'
                           : taken
-                              ? 'SET'
-                              : 'PICK',
+                          ? 'SET'
+                          : 'PICK',
                       style: GameTheme.body(
                         size: 13,
                         color: locked
                             ? GameTheme.parchmentDim
                             : taken
-                                ? GameTheme.mossLit
-                                : GameTheme.torchHot,
+                            ? GameTheme.mossLit
+                            : GameTheme.torchHot,
                       ),
                     ),
                   ],

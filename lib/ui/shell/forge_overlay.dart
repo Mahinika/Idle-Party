@@ -62,10 +62,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
     final label = recommended
         ? 'BEST · $name $bonus · $costPart'
         : '$name $bonus · $costPart';
-    return KenneyButton(
-      label: label,
-      onPressed: onPressed,
-    );
+    return KenneyButton(label: label, onPressed: onPressed);
   }
 
   @override
@@ -93,9 +90,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
               SingleChildScrollView(
                 child: ApexMaterialsPanel(director: director),
               ),
-              SingleChildScrollView(
-                child: ApexCraftPanel(director: director),
-              ),
+              SingleChildScrollView(child: ApexCraftPanel(director: director)),
             ],
           ),
         ),
@@ -127,8 +122,8 @@ class _ForgeOverlayState extends State<ForgeOverlay>
     final meanLv = state.heroes.isEmpty
         ? 1
         : (state.heroes.fold<int>(0, (s, h) => s + h.level) /
-                state.heroes.length)
-            .round();
+                  state.heroes.length)
+              .round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -161,14 +156,14 @@ class _ForgeOverlayState extends State<ForgeOverlay>
             type: type,
             onPressed: state.gold >= GameLogic.upgradeCostFor(state, type)
                 ? () => switch (type) {
-                      PartyUpgradeType.attack => director.upgradeAttack(),
-                      PartyUpgradeType.defense => director.upgradeDefense(),
-                      PartyUpgradeType.vitality => director.upgradeVitality(),
-                      PartyUpgradeType.moveSpeed => director.upgradeMoveSpeed(),
-                      PartyUpgradeType.attackSpeed =>
-                        director.upgradeAttackSpeed(),
-                      PartyUpgradeType.crit => director.upgradeCrit(),
-                    }
+                    PartyUpgradeType.attack => director.upgradeAttack(),
+                    PartyUpgradeType.defense => director.upgradeDefense(),
+                    PartyUpgradeType.vitality => director.upgradeVitality(),
+                    PartyUpgradeType.moveSpeed => director.upgradeMoveSpeed(),
+                    PartyUpgradeType.attackSpeed =>
+                      director.upgradeAttackSpeed(),
+                    PartyUpgradeType.crit => director.upgradeCrit(),
+                  }
                 : null,
           ),
           const SizedBox(height: 6),
@@ -197,11 +192,11 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         Text(
           canAscend
               ? (director.state.inDungeon
-                  ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
-                  : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
+                    ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
+                    : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
               : 'Ascend ${state.bossVictories}/'
-                  '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} '
-                  'bosses · claim on Hub (not here)',
+                    '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} '
+                    'bosses · claim on Hub (not here)',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -229,10 +224,10 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           state.metaDepth.ascendBlessings <= 0
               ? 'Ascend Blessing: none yet — Ascend on Hub for permanent ATK/DEF/STA/gold'
               : 'Ascend Blessing ×${state.metaDepth.ascendBlessings}: '
-                  '+${state.ascendBlessingAttackBonus} ATK · '
-                  '+${state.ascendBlessingDefenseBonus} DEF · '
-                  '+${state.ascendBlessingVitalityBonus} STA · '
-                  '+${state.ascendBlessingGoldPercent}% gold',
+                    '+${state.ascendBlessingAttackBonus} ATK · '
+                    '+${state.ascendBlessingDefenseBonus} DEF · '
+                    '+${state.ascendBlessingVitalityBonus} STA · '
+                    '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
         const SizedBox(height: 8),
@@ -248,28 +243,34 @@ class _ForgeOverlayState extends State<ForgeOverlay>
               final cost = GameLogic.relicCosts[relicId] ?? 0;
               final tier = owned
                   ? (state.metaDepth.relicTierOf(relicId) < 1
-                      ? 1
-                      : state.metaDepth.relicTierOf(relicId))
+                        ? 1
+                        : state.metaDepth.relicTierOf(relicId))
                   : 0;
               final desc = switch (relicId) {
-                GameLogic.warBannerRelic => owned
-                    ? 'Permanent +${state.relicAttackBonus} team attack (T$tier).'
-                    : 'Permanent +4 team attack per tier.',
-                GameLogic.ironWardRelic => owned
-                    ? 'Permanent +${state.relicDefenseBonus} team defense (T$tier).'
-                    : 'Permanent +2 team defense per tier.',
-                GameLogic.phoenixEmberRelic => owned
-                    ? 'Permanent +${state.relicVitalityBonus} max HP per hero (T$tier).'
-                    : 'Permanent +10 max HP per hero per tier.',
-                GameLogic.godHandFocusRelic => owned
-                    ? '+${state.relicGodHandDamageBonus} God Hand damage (T$tier).'
-                    : '+3 God Hand damage per tier.',
-                GameLogic.chamberLuckRelic => owned
-                    ? '+${state.relicLootFindPercent}% loot find (T$tier).'
-                    : '+5% loot find per tier.',
-                GameLogic.ironWillRelic => owned
-                    ? '+${state.relicMitigateFlat} flat mitigate (T$tier).'
-                    : '+1 flat mitigate per tier.',
+                GameLogic.warBannerRelic =>
+                  owned
+                      ? 'Permanent +${state.relicAttackBonus} team attack (T$tier).'
+                      : 'Permanent +4 team attack per tier.',
+                GameLogic.ironWardRelic =>
+                  owned
+                      ? 'Permanent +${state.relicDefenseBonus} team defense (T$tier).'
+                      : 'Permanent +2 team defense per tier.',
+                GameLogic.phoenixEmberRelic =>
+                  owned
+                      ? 'Permanent +${state.relicVitalityBonus} max HP per hero (T$tier).'
+                      : 'Permanent +10 max HP per hero per tier.',
+                GameLogic.godHandFocusRelic =>
+                  owned
+                      ? '+${state.relicGodHandDamageBonus} God Hand damage (T$tier).'
+                      : '+3 God Hand damage per tier.',
+                GameLogic.chamberLuckRelic =>
+                  owned
+                      ? '+${state.relicLootFindPercent}% loot find (T$tier).'
+                      : '+5% loot find per tier.',
+                GameLogic.ironWillRelic =>
+                  owned
+                      ? '+${state.relicMitigateFlat} flat mitigate (T$tier).'
+                      : '+1 flat mitigate per tier.',
                 _ => GameLogic.relicDescriptions[relicId] ?? '',
               };
               final nextTier = tier + 1;
@@ -286,9 +287,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
                       const SizedBox(width: 8),
                       Expanded(
                         child: KenneyButton(
-                          label: owned
-                              ? '$name  ·  T$tier'
-                              : '$name  ${cost}e',
+                          label: owned ? '$name  ·  T$tier' : '$name  ${cost}e',
                           onPressed: owned || state.essence < cost
                               ? null
                               : () => director.unlockRelic(relicId),
@@ -331,8 +330,9 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         KenneyButton(
           label: 'RESPEC RELICS  ${GameLogic.respecRelicsCost(state)}e',
           style: KenneyButtonStyle.grey,
-          onPressed: (state.unlockedRelics.isNotEmpty ||
-                  state.metaDepth.relicTiers.isNotEmpty) &&
+          onPressed:
+              (state.unlockedRelics.isNotEmpty ||
+                      state.metaDepth.relicTiers.isNotEmpty) &&
                   state.essence >= GameLogic.respecRelicsCost(state)
               ? director.respecRelics
               : null,
@@ -351,9 +351,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           children: [
             Expanded(
               child: KenneyButton(
-                label: state.metaDepth.soulboundIsArmor
-                    ? 'WEAPON'
-                    : 'WEAPON ✓',
+                label: state.metaDepth.soulboundIsArmor ? 'WEAPON' : 'WEAPON ✓',
                 style: state.metaDepth.soulboundIsArmor
                     ? KenneyButtonStyle.grey
                     : KenneyButtonStyle.brown,
@@ -363,9 +361,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
             const SizedBox(width: 6),
             Expanded(
               child: KenneyButton(
-                label: state.metaDepth.soulboundIsArmor
-                    ? 'ARMOR ✓'
-                    : 'ARMOR',
+                label: state.metaDepth.soulboundIsArmor ? 'ARMOR ✓' : 'ARMOR',
                 style: state.metaDepth.soulboundIsArmor
                     ? KenneyButtonStyle.brown
                     : KenneyButtonStyle.grey,
@@ -390,7 +386,8 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           KenneyButton(
             label:
                 'Refine +1 ATK/DEF · ${GameLogic.refineSoulboundCost(state.metaDepth.soulboundRefine)} frag',
-            onPressed: state.soulboundFragments >=
+            onPressed:
+                state.soulboundFragments >=
                     GameLogic.refineSoulboundCost(
                       state.metaDepth.soulboundRefine,
                     )
@@ -412,8 +409,8 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         KenneyButton(
           label:
               'Damage Lv${state.godHandLevel} · ${GameLogic.godHandUpgradeCost(state.godHandLevel)}e',
-          onPressed: state.essence >=
-                  GameLogic.godHandUpgradeCost(state.godHandLevel)
+          onPressed:
+              state.essence >= GameLogic.godHandUpgradeCost(state.godHandLevel)
               ? director.upgradeGodHand
               : null,
         ),
@@ -422,15 +419,15 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           label: state.metaDepth.godHandCdLevel >= 8
               ? 'Cooldown Lv${state.metaDepth.godHandCdLevel} · MAX'
               : 'Cooldown Lv${state.metaDepth.godHandCdLevel} · '
-                  '${GameLogic.godHandCdUpgradeCost(state.metaDepth.godHandCdLevel)}e',
+                    '${GameLogic.godHandCdUpgradeCost(state.metaDepth.godHandCdLevel)}e',
           onPressed: state.metaDepth.godHandCdLevel >= 8
               ? null
               : (state.essence >=
-                      GameLogic.godHandCdUpgradeCost(
-                        state.metaDepth.godHandCdLevel,
-                      )
-                  ? director.upgradeGodHandCd
-                  : null),
+                        GameLogic.godHandCdUpgradeCost(
+                          state.metaDepth.godHandCdLevel,
+                        )
+                    ? director.upgradeGodHandCd
+                    : null),
         ),
         const SizedBox(height: 8),
         Text(
