@@ -11,21 +11,32 @@ abstract final class CustomAssets {
   static const String petCaveBat = '$_root/pets/cave_bat.png';
   static const String petLootSprite = '$_root/pets/loot_sprite.png';
   static const String petWardenCub = '$_root/pets/warden_cub.png';
+  static const String petAshFox = '$_root/pets/ash_fox.png';
+  static const String petSparkPup = '$_root/pets/spark_pup.png';
+  static const String petSpiritMoth = '$_root/pets/spirit_moth.png';
+  static const String petXpWisp = '$_root/pets/xp_wisp.png';
+  static const String petShrineOwl = '$_root/pets/shrine_owl.png';
+  static const String petGoldGrub = '$_root/pets/gold_grub.png';
+  static const String petCoinImp = '$_root/pets/coin_imp.png';
+  static const String petVaultBeetle = '$_root/pets/vault_beetle.png';
+  static const String petMireToad = '$_root/pets/mire_toad.png';
 
+  /// Every collectable pet has its own art — a companion that is just a
+  /// recolored dungeon enemy never reads as *yours*.
   static String petForTemplateId(String templateId) => switch (templateId) {
     'ember_pup' => petEmberPup,
     'cave_bat' => petCaveBat,
     'loot_sprite' => petLootSprite,
     'warden_cub' => petWardenCub,
-    'ash_fox' => enemySpider,
-    'spark_pup' => enemySlime,
-    'spirit_moth' => enemyGhost,
-    'xp_wisp' => enemyCrystalMite,
-    'shrine_owl' => enemyBat,
-    'gold_grub' => enemyRat,
-    'coin_imp' => enemyCultist,
-    'vault_beetle' => enemyCrystalWraith,
-    'mire_toad' => enemyCrab,
+    'ash_fox' => petAshFox,
+    'spark_pup' => petSparkPup,
+    'spirit_moth' => petSpiritMoth,
+    'xp_wisp' => petXpWisp,
+    'shrine_owl' => petShrineOwl,
+    'gold_grub' => petGoldGrub,
+    'coin_imp' => petCoinImp,
+    'vault_beetle' => petVaultBeetle,
+    'mire_toad' => petMireToad,
     _ => petEgg,
   };
 
@@ -36,15 +47,15 @@ abstract final class CustomAssets {
     petLootSprite,
     petWardenCub,
     petEgg,
-    enemySpider,
-    enemySlime,
-    enemyGhost,
-    enemyCrystalMite,
-    enemyBat,
-    enemyRat,
-    enemyCultist,
-    enemyCrystalWraith,
-    enemyCrab,
+    petAshFox,
+    petSparkPup,
+    petSpiritMoth,
+    petXpWisp,
+    petShrineOwl,
+    petGoldGrub,
+    petCoinImp,
+    petVaultBeetle,
+    petMireToad,
   ];
 
   /// Pet instance ids look like `ember_pup_12345`.
@@ -79,7 +90,7 @@ abstract final class CustomAssets {
   static String petForCombatActorId(String petId, [String? displayName]) {
     final key = '${petId}_${displayName ?? ''}'.toLowerCase();
     if (key.contains('water') || key.contains('elemental')) {
-      return enemyCrystalWraith;
+      return petSparkPup;
     }
     if (key.contains('wolf') ||
         key.contains('spirit') ||
@@ -90,10 +101,10 @@ abstract final class CustomAssets {
         key.contains('army') ||
         key.contains('dead') ||
         key.contains('skel')) {
-      return enemyGhost;
+      return petSpiritMoth;
     }
     if (key.contains('demon') || key.contains('imp') || key.contains('fel')) {
-      return enemySpider;
+      return petCoinImp;
     }
     if (key.contains('beast') ||
         key.contains('pet') ||
@@ -101,7 +112,7 @@ abstract final class CustomAssets {
       return petCaveBat;
     }
     if (key.contains('totem') || key.contains('element')) {
-      return enemyGolem;
+      return petShrineOwl;
     }
     return petEmberPup;
   }
@@ -308,4 +319,22 @@ abstract final class CustomAssets {
   static const String enemyBrassMite = '$_root/enemies/brass_mite.png';
   static const String enemyBossVeil = '$_root/enemies/boss_veil.png';
   static const String enemyVeilMite = '$_root/enemies/veil_mite.png';
+  static const String enemyBossSandy = '$_root/enemies/boss_sandy.png';
+  static const String enemySandyMite = '$_root/enemies/sandy_mite.png';
+  static const String enemyBossGoblin = '$_root/enemies/boss_goblin.png';
+  static const String enemyGoblinMite = '$_root/enemies/goblin_mite.png';
+  static const String enemyKingMite = '$_root/enemies/king_mite.png';
+  static const String enemyBossUnderworld =
+      '$_root/enemies/boss_underworld.png';
+  static const String enemyUnderworldMite =
+      '$_root/enemies/underworld_mite.png';
+  static const String enemyBossDead = '$_root/enemies/boss_dead.png';
+  static const String enemyDeadMite = '$_root/enemies/dead_mite.png';
+  static const String enemyHellMite = '$_root/enemies/hell_mite.png';
+  static const String enemyBossTide = '$_root/enemies/boss_tide.png';
+  static const String enemyTideMite = '$_root/enemies/tide_mite.png';
+  static const String enemyBossEmber = '$_root/enemies/boss_ember.png';
+  static const String enemyEmberMite = '$_root/enemies/ember_mite.png';
+  static const String enemyBossGrove = '$_root/enemies/boss_grove.png';
+  static const String enemyGroveMite = '$_root/enemies/grove_mite.png';
 }

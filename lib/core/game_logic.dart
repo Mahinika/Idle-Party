@@ -3280,11 +3280,11 @@ class GameLogic {
         EnemyArchetype.brute: ['Cave Brute', 'Rock Crab'],
         EnemyArchetype.tank: ['Shellback', 'Stone Maw'],
         EnemyArchetype.ranged: ['Spit Bat', 'Cavern Spitter'],
-        EnemyArchetype.glass: ['Needle Rat', 'Glass Skitter'],
+        EnemyArchetype.glass: ['Sand Skitter', 'Glass Skitter'],
         EnemyArchetype.support: ['Mire Shaman', 'Glow Cultist'],
       },
       'goblin' => const {
-        EnemyArchetype.swarm: ['Goblin Scrapper', 'Sneak Rat', 'Pest'],
+        EnemyArchetype.swarm: ['Goblin Scrapper', 'Hideout Runt', 'Pest'],
         EnemyArchetype.brute: ['Goblin Thug', 'Clubber'],
         EnemyArchetype.tank: ['Hideout Guard', 'Scrap Shield'],
         EnemyArchetype.ranged: ['Goblin Slinger', 'Dart Rascal'],
@@ -3292,7 +3292,7 @@ class GameLogic {
         EnemyArchetype.support: ['Hex Witch', 'Totem Caller'],
       },
       'king' => const {
-        EnemyArchetype.swarm: ['Fort Rat', 'Drill Bat'],
+        EnemyArchetype.swarm: ['Fort Rat', 'Keep Gnawer'],
         EnemyArchetype.brute: ['Fort Sentry', 'Hall Guard'],
         EnemyArchetype.tank: ['Iron Ward', 'Gate Knight'],
         EnemyArchetype.ranged: ['Crossbowman', 'Tower Archer'],

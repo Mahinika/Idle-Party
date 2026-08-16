@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
 import '../core/hero_identity.dart';
-import '../models/dungeon_def.dart';
 import '../models/enemy.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import '../models/zone_art.dart';
 import '../spatial/tile_map.dart';
 import 'custom_assets.dart';
 
@@ -136,6 +136,22 @@ abstract final class KenneyAssets {
   static String get enemyBrassMite => CustomAssets.enemyBrassMite;
   static String get enemyVeilBoss => CustomAssets.enemyBossVeil;
   static String get enemyVeilMite => CustomAssets.enemyVeilMite;
+  static String get enemyBossSandy => CustomAssets.enemyBossSandy;
+  static String get enemySandyMite => CustomAssets.enemySandyMite;
+  static String get enemyBossGoblin => CustomAssets.enemyBossGoblin;
+  static String get enemyGoblinMite => CustomAssets.enemyGoblinMite;
+  static String get enemyKingMite => CustomAssets.enemyKingMite;
+  static String get enemyBossUnderworld => CustomAssets.enemyBossUnderworld;
+  static String get enemyUnderworldMite => CustomAssets.enemyUnderworldMite;
+  static String get enemyBossDead => CustomAssets.enemyBossDead;
+  static String get enemyDeadMite => CustomAssets.enemyDeadMite;
+  static String get enemyHellMite => CustomAssets.enemyHellMite;
+  static String get enemyBossTide => CustomAssets.enemyBossTide;
+  static String get enemyTideMite => CustomAssets.enemyTideMite;
+  static String get enemyBossEmber => CustomAssets.enemyBossEmber;
+  static String get enemyEmberMite => CustomAssets.enemyEmberMite;
+  static String get enemyBossGrove => CustomAssets.enemyBossGrove;
+  static String get enemyGroveMite => CustomAssets.enemyGroveMite;
 
   // —— Gear / consumables (custom identity icons; Tiny Dungeon tiles kept as fallback) ——
   static String get shieldRound => CustomAssets.iconShieldRound;
@@ -249,79 +265,19 @@ abstract final class KenneyAssets {
     return argb == null ? null : Color(argb);
   }
 
-  static String floorForDungeon(String dungeonId) {
-    // Prefer textured floors so maps don't read as flat color slabs.
-    return switch (dungeonId) {
-      'sandy' => floorSand,
-      'goblin' => floorDirtDetail,
-      'king' => floorStone,
-      'underworld' => floorDirtDetail,
-      'dead' => floorStone,
-      'hell' => floorSand,
-      'crystal' => floorStone,
-      'tide' => floorDirtDetail, // wet silt vs crystal stone
-      'ember' => floorStone, // ash vault stone (not hell sand twin)
-      'grove' => floorDirtDetail,
-      'storm' => floorStone, // storm arena stone
-      'rime' => floorDirtDetail, // frost silt — not crystal stone twin
-      'fen' => floorDirt, // mire mud — not rime silt twin
-      'brass' => floorStone, // brass halls — not fen mud twin
-      'veil' => floorDirtDetail, // silk dust — not brass stone twin
-      _ => switch (DungeonCatalog.byId(dungeonId).layout) {
-        DungeonLayoutKind.cave => floorSand,
-        DungeonLayoutKind.hideout => floorDirtDetail,
-        DungeonLayoutKind.fort || DungeonLayoutKind.arena => floorStone,
-      },
-    };
-  }
+  static String floorForDungeon(String dungeonId) =>
+      ZoneArt.byId(dungeonId).floor;
 
-  /// Single verified floor per dungeon — sand uses a clean + worn pair (no wall-lip tiles).
-  static List<String> floorVariantsForDungeon(String dungeonId) {
-    return switch (dungeonId) {
-      'sandy' ||
-      'hell' => <String>[floorSand, floorSand, floorSand, floorSandWorn],
-      // Ash vault: stone + worn sand grit (not hell’s sand-heavy floor).
-      'ember' => <String>[floorStone, floorStone, floorSandWorn],
-      // Wet silt + clean dirt puddles (not crystal stone).
-      'tide' => <String>[floorDirtDetail, floorDirt, floorDirtDetail],
-      // Root litter: dirt + detail (not fen’s mud-only twin).
-      'grove' => <String>[floorDirt, floorDirtDetail, floorDirt],
-      'storm' => <String>[floorStone, floorStone, floorStoneAlt1],
-      'rime' => <String>[floorDirtDetail, floorDirtDetail, floorDirt],
-      'fen' => <String>[floorDirt, floorDirt, floorDirtDetail],
-      'brass' => <String>[floorStone, floorStone, floorStoneAlt1],
-      'veil' => <String>[floorDirtDetail, floorDirt, floorDirtDetail],
-      _ => <String>[floorForDungeon(dungeonId)],
-    };
-  }
+  /// Single verified floor per dungeon — sand uses a clean + worn pair.
+  static List<String> floorVariantsForDungeon(String dungeonId) =>
+      ZoneArt.byId(dungeonId).floorVariants;
 
-  static String wallForDungeon(String dungeonId) {
-    return switch (dungeonId) {
-      'king' => wallBanner,
-      _ => wallStone,
-    };
-  }
+  static String wallForDungeon(String dungeonId) =>
+      ZoneArt.byId(dungeonId).wall;
 
   /// Rim wall sprites only (deep walls paint as void).
-  static List<String> wallVariantsForDungeon(String dungeonId) {
-    return switch (dungeonId) {
-      'king' => [wallStone, wallStone, wallStone, wallBanner],
-      'hell' => [wallStone, wallStone, wallBanner],
-      // Ember: scorched banners only — not hell’s same mix weight.
-      'ember' => [wallStone, wallBanner, wallBanner],
-      'dead' => [wallStone, wallStone, wallBannerAlt],
-      // Tide: barnacle alt walls (not crystal’s same pair).
-      'crystal' => [wallStone, wallStoneAlt1],
-      'tide' => [wallStoneAlt1, wallStone, wallStoneAlt1],
-      'grove' => [wallStoneAlt1, wallStone, wallStone],
-      'storm' => [wallStone, wallStone, wallBanner],
-      'rime' => [wallStone, wallStoneAlt1, wallStone],
-      'fen' => [wallStone, wallStone, wallStoneAlt1],
-      'brass' => [wallStone, wallBanner, wallStone],
-      'veil' => [wallStone, wallStoneAlt1, wallStone],
-      _ => [wallStone],
-    };
-  }
+  static List<String> wallVariantsForDungeon(String dungeonId) =>
+      ZoneArt.byId(dungeonId).wallVariants;
 
   static String exitSpriteFor({required bool boss}) =>
       boss ? stairsBoss : stairs;
@@ -353,307 +309,19 @@ abstract final class KenneyAssets {
     MapPropKind.chest => chestClosed,
   };
 
-  /// Weighted pools (duplicates = more common). Keep each zone's clutter distinct.
+  /// Weighted clutter pool (duplicates = more common).
   static List<MapPropKind> propPoolForDungeon(String dungeonId) =>
-      switch (dungeonId) {
-        'sandy' => const [
-          MapPropKind.barrel,
-          MapPropKind.barrel,
-          MapPropKind.crate,
-          MapPropKind.crate,
-          MapPropKind.crate,
-          MapPropKind.table,
-          MapPropKind.hatch,
-          MapPropKind.hatch,
-          MapPropKind.shelf,
-          MapPropKind.shelf,
-          MapPropKind.rubble,
-          MapPropKind.torch,
-          MapPropKind.torchAlt,
-        ],
-        'goblin' => const [
-          MapPropKind.barrel,
-          MapPropKind.barrel,
-          MapPropKind.crate,
-          MapPropKind.crate,
-          MapPropKind.table,
-          MapPropKind.stool,
-          MapPropKind.bones,
-          MapPropKind.pot,
-          MapPropKind.skull,
-          MapPropKind.shelf,
-          MapPropKind.rubble,
-        ],
-        'king' => const [
-          MapPropKind.torch,
-          MapPropKind.torch,
-          MapPropKind.crate,
-          MapPropKind.anvil,
-          MapPropKind.table,
-          MapPropKind.table,
-          MapPropKind.barrel,
-          MapPropKind.stool,
-          MapPropKind.fence,
-          MapPropKind.pillar,
-          MapPropKind.shelf,
-          MapPropKind.hatch,
-        ],
-        'underworld' => const [
-          MapPropKind.torch,
-          MapPropKind.torch,
-          MapPropKind.barrel,
-          MapPropKind.fountain,
-          MapPropKind.crate,
-          MapPropKind.bones,
-          MapPropKind.skull,
-          MapPropKind.pillar,
-          MapPropKind.fence,
-          MapPropKind.rubble,
-          MapPropKind.pot,
-        ],
-        'dead' => const [
-          MapPropKind.gravestone,
-          MapPropKind.gravestone,
-          MapPropKind.bones,
-          MapPropKind.bones,
-          MapPropKind.skull,
-          MapPropKind.crate,
-          MapPropKind.torch,
-          MapPropKind.hatch,
-          MapPropKind.fence,
-          MapPropKind.rubble,
-          MapPropKind.pillar,
-        ],
-        'hell' => const [
-          MapPropKind.torch,
-          MapPropKind.torchAlt,
-          MapPropKind.torchAlt,
-          MapPropKind.barrel,
-          MapPropKind.trap,
-          MapPropKind.lava,
-          MapPropKind.bones,
-          MapPropKind.skull,
-          MapPropKind.rubble,
-          MapPropKind.pillar,
-          MapPropKind.crate,
-        ],
-        'crystal' => const [
-          MapPropKind.torch,
-          MapPropKind.fountain,
-          MapPropKind.fountain,
-          MapPropKind.crate,
-          MapPropKind.pillar,
-          MapPropKind.pillar,
-          MapPropKind.chest,
-          MapPropKind.fence,
-          MapPropKind.hatch,
-          MapPropKind.anvil,
-          MapPropKind.stool,
-        ],
-        'tide' => const [
-          MapPropKind.water,
-          MapPropKind.water,
-          MapPropKind.water,
-          MapPropKind.water,
-          MapPropKind.fountain,
-          MapPropKind.fountain,
-          MapPropKind.barrel,
-          MapPropKind.barrel,
-          MapPropKind.hatch,
-          MapPropKind.pot,
-          MapPropKind.pillar,
-          MapPropKind.stool,
-        ],
-        'ember' => const [
-          MapPropKind.lava,
-          MapPropKind.lava,
-          MapPropKind.lava,
-          MapPropKind.anvil,
-          MapPropKind.anvil,
-          MapPropKind.torch,
-          MapPropKind.torchAlt,
-          MapPropKind.torchAlt,
-          MapPropKind.pillar,
-          MapPropKind.bones,
-          MapPropKind.rubble,
-          MapPropKind.skull,
-        ],
-        'grove' => const [
-          MapPropKind.fence,
-          MapPropKind.fence,
-          MapPropKind.pot,
-          MapPropKind.pot,
-          MapPropKind.fountain,
-          MapPropKind.bones,
-          MapPropKind.bones,
-          MapPropKind.rubble,
-          MapPropKind.shelf,
-          MapPropKind.torch,
-          MapPropKind.crate,
-          MapPropKind.barrel,
-        ],
-        'storm' => const [
-          MapPropKind.torch,
-          MapPropKind.torch,
-          MapPropKind.torchAlt,
-          MapPropKind.torchAlt,
-          MapPropKind.rubble,
-          MapPropKind.rubble,
-          MapPropKind.pillar,
-          MapPropKind.fence,
-          MapPropKind.crate,
-          MapPropKind.barrel,
-          MapPropKind.trap,
-          MapPropKind.bones,
-        ],
-        'rime' => const [
-          MapPropKind.fountain,
-          MapPropKind.fountain,
-          MapPropKind.water,
-          MapPropKind.pillar,
-          MapPropKind.pillar,
-          MapPropKind.chest,
-          MapPropKind.rubble,
-          MapPropKind.crate,
-          MapPropKind.barrel,
-          MapPropKind.pot,
-          MapPropKind.shelf,
-          MapPropKind.bones,
-          MapPropKind.fence,
-        ],
-        'fen' => const [
-          MapPropKind.water,
-          MapPropKind.water,
-          MapPropKind.water,
-          MapPropKind.fountain,
-          MapPropKind.fountain,
-          MapPropKind.bones,
-          MapPropKind.trap,
-          MapPropKind.rubble,
-          MapPropKind.crate,
-          MapPropKind.barrel,
-          MapPropKind.skull,
-          MapPropKind.pot,
-        ],
-        'brass' => const [
-          MapPropKind.anvil,
-          MapPropKind.anvil,
-          MapPropKind.pillar,
-          MapPropKind.pillar,
-          MapPropKind.chest,
-          MapPropKind.hatch,
-          MapPropKind.crate,
-          MapPropKind.barrel,
-          MapPropKind.rubble,
-          MapPropKind.torch,
-          MapPropKind.stool,
-          MapPropKind.shelf,
-        ],
-        'veil' => const [
-          MapPropKind.torch,
-          MapPropKind.torchAlt,
-          MapPropKind.bones,
-          MapPropKind.trap,
-          MapPropKind.crate,
-          MapPropKind.barrel,
-          MapPropKind.rubble,
-          MapPropKind.skull,
-          MapPropKind.pot,
-          MapPropKind.fence,
-          MapPropKind.stool,
-        ],
-        _ => const [
-          MapPropKind.barrel,
-          MapPropKind.crate,
-          MapPropKind.table,
-          MapPropKind.stool,
-          MapPropKind.shelf,
-          MapPropKind.rubble,
-          MapPropKind.chest,
-        ],
-      };
+      ZoneArt.byId(dungeonId).props;
 
-  static String dungeonIconFor(String dungeonId) => switch (dungeonId) {
-    // Prefer entrance/prop icons — floor tiles look like clipboard blobs on the hub map.
-    'sandy' => hatch,
-    'goblin' => doorClosed,
-    'king' => wallBanner,
-    'underworld' => stairs,
-    'dead' => gravestone,
-    'hell' => doorOpen,
-    'crystal' => doorVariant,
-    'tide' => doorClosed,
-    'ember' => hatch,
-    'grove' => chestClosed,
-    'storm' => torch,
-    'rime' => stairs,
-    'fen' => fountainSlime,
-    'brass' => anvil,
-    'veil' => torchAlt,
-    _ => iconDoor,
-  };
+  static String dungeonIconFor(String dungeonId) =>
+      ZoneArt.byId(dungeonId).hubIcon;
 
   /// Hub detail portrait for the selected dungeon (boss / theme).
   static String dungeonPortraitFor(String dungeonId) =>
       CustomAssets.dungeonPortrait(dungeonId);
 
-  static String enemySpriteForRole(EnemyRole role, {String? dungeonId}) {
-    if (role == EnemyRole.boss) {
-      return switch (dungeonId) {
-        'sandy' => enemyCrab,
-        'goblin' => enemyCyclops,
-        'king' => enemyBoss,
-        'underworld' => enemyCultist,
-        'dead' => enemyGhost,
-        'hell' => enemyHellBoss,
-        'crystal' => enemyCrystalBoss,
-        'tide' => enemyCrab,
-        'ember' => enemyCyclops,
-        'grove' => enemySpider,
-        'storm' => enemyStormBoss,
-        'rime' => enemyRimeBoss,
-        'fen' => enemyFenBoss,
-        'brass' => enemyBrassBoss,
-        'veil' => enemyVeilBoss,
-        _ => enemyBoss,
-      };
-    }
-    if (role == EnemyRole.elite) {
-      return switch (dungeonId) {
-        'dead' => enemyGhost,
-        'underworld' => enemySpider,
-        'hell' => enemyCultist,
-        'ember' => enemyGolem,
-        'crystal' => enemyCrystalWraith,
-        'tide' => enemyCrab,
-        'grove' => enemySpider,
-        'storm' => enemyBat,
-        'rime' => enemyGolem,
-        'fen' => enemySpider,
-        'brass' => enemyCyclops,
-        'veil' => enemySpider,
-        _ => enemyCyclops,
-      };
-    }
-    return switch (dungeonId) {
-      'sandy' => enemySlime,
-      'goblin' => enemyRat,
-      'king' => enemyBat,
-      'underworld' => enemySpider,
-      'dead' => enemyGhost,
-      'hell' => enemyCultist,
-      'ember' => enemyCultist,
-      'crystal' => enemyCrystalMite,
-      'tide' => enemyBat,
-      'grove' => enemySpider,
-      'storm' => enemyStormMite,
-      'rime' => enemyRimeMite,
-      'fen' => enemyFenMite,
-      'brass' => enemyBrassMite,
-      'veil' => enemyVeilMite,
-      _ => enemySlime,
-    };
-  }
+  static String enemySpriteForRole(EnemyRole role, {String? dungeonId}) =>
+      ZoneArt.byId(dungeonId ?? '').enemies.forRole(role);
 
   static String enemySpriteFor(EnemyUnit enemy, {String? dungeonId}) {
     if (enemy.role == EnemyRole.boss) {
@@ -665,100 +333,7 @@ abstract final class KenneyAssets {
   static String enemySpriteForArchetype(
     EnemyArchetype archetype, {
     String? dungeonId,
-  }) {
-    return switch (archetype) {
-      EnemyArchetype.swarm => switch (dungeonId) {
-        'sandy' => enemySlime,
-        'goblin' => enemyRat,
-        'king' => enemyBat,
-        'underworld' => enemySpider,
-        'dead' => enemyGhost,
-        'crystal' => enemyCrystalMite,
-        'tide' => enemyBat,
-        'ember' => enemyCultist,
-        'grove' => enemySpider,
-        'storm' => enemyStormMite,
-        'rime' => enemyRimeMite,
-        'fen' => enemyFenMite,
-        'brass' => enemyBrassMite,
-        'veil' => enemyVeilMite,
-        _ => enemyRat,
-      },
-      EnemyArchetype.brute => switch (dungeonId) {
-        'sandy' => enemyCrab,
-        'goblin' => enemyCyclops,
-        'king' => enemyCyclops,
-        'hell' => enemyBoss,
-        'ember' => enemyCyclops,
-        'crystal' => enemyCrystalBoss,
-        'tide' => enemyCrab,
-        'grove' => enemySpider,
-        'storm' => enemyGolem,
-        'rime' => enemyGolem,
-        'fen' => enemySlime,
-        'brass' => enemyCyclops,
-        'veil' => enemySpider,
-        _ => enemyCyclops,
-      },
-      EnemyArchetype.tank => switch (dungeonId) {
-        'sandy' => enemyCrab,
-        'dead' => enemyGhost,
-        'hell' => enemyBoss,
-        'ember' => enemyGolem,
-        'crystal' => enemyCrystalBoss,
-        'tide' => enemyCrab,
-        'grove' => enemySpider,
-        'storm' => enemyGolem,
-        'rime' => enemyGolem,
-        'fen' => enemySpider,
-        'brass' => enemyGolem,
-        'veil' => enemyGhost,
-        _ => enemyGolem,
-      },
-      EnemyArchetype.ranged => switch (dungeonId) {
-        'dead' => enemyGhost,
-        'underworld' => enemySpider,
-        'hell' => enemyCultist,
-        'ember' => enemyBat,
-        'crystal' => enemyCrystalWraith,
-        'tide' => enemySlime,
-        'grove' => enemyRat,
-        'storm' => enemyBat,
-        'rime' => enemyGhost,
-        'fen' => enemyBat,
-        'brass' => enemyBat,
-        'veil' => enemyBat,
-        _ => enemyBat,
-      },
-      EnemyArchetype.glass => switch (dungeonId) {
-        'dead' => enemyGhost,
-        'underworld' => enemySpider,
-        'hell' => enemyCultist,
-        'ember' => enemyRat,
-        'crystal' => enemyCrystalWraith,
-        'tide' => enemyBat,
-        'grove' => enemySpider,
-        'storm' => enemyRat,
-        'rime' => enemyRimeMite,
-        'fen' => enemyFenMite,
-        'brass' => enemyBrassMite,
-        'veil' => enemySpider,
-        _ => enemyBat,
-      },
-      EnemyArchetype.support => switch (dungeonId) {
-        'crystal' => enemyCrystalWraith,
-        'tide' => enemyCrab,
-        'ember' => enemyCultist,
-        'grove' => enemyBat,
-        'storm' => enemyCultist,
-        'rime' => enemyGhost,
-        'fen' => enemyCultist,
-        'brass' => enemyCultist,
-        'veil' => enemyCultist,
-        _ => enemyCultist,
-      },
-    };
-  }
+  }) => ZoneArt.byId(dungeonId ?? '').enemies.forArchetype(archetype);
 
   static List<String> get enemySpriteCatalog => [
     enemySlime,
@@ -785,6 +360,23 @@ abstract final class KenneyAssets {
     enemyBrassMite,
     enemyVeilBoss,
     enemyVeilMite,
+    // Append only — the painter looks sprites up by catalog index.
+    enemyBossSandy,
+    enemySandyMite,
+    enemyBossGoblin,
+    enemyGoblinMite,
+    enemyKingMite,
+    enemyBossUnderworld,
+    enemyUnderworldMite,
+    enemyBossDead,
+    enemyDeadMite,
+    enemyHellMite,
+    enemyBossTide,
+    enemyTideMite,
+    enemyBossEmber,
+    enemyEmberMite,
+    enemyBossGrove,
+    enemyGroveMite,
   ];
 
   static int enemySpriteCatalogIndex(String asset) {
@@ -792,32 +384,25 @@ abstract final class KenneyAssets {
     return i < 0 ? 0 : i;
   }
 
-  /// Every enemy sprite one zone can spawn — boss, elite, trash and each
-  /// archetype — plus the two shared fallbacks. The stage decodes this set
+  /// Every enemy sprite one zone can spawn. The stage decodes this set
   /// instead of all 24 sprites, and reloads it when the zone changes.
-  static Set<String> enemySpritesForDungeon(String dungeonId) => <String>{
-    enemySlime,
-    enemyBoss,
-    for (final role in EnemyRole.values)
-      enemySpriteForRole(role, dungeonId: dungeonId),
-    for (final archetype in EnemyArchetype.values)
-      enemySpriteForArchetype(archetype, dungeonId: dungeonId),
-  };
+  static Set<String> enemySpritesForDungeon(String dungeonId) =>
+      ZoneArt.byId(dungeonId).enemies.all;
 
   /// Stable cosmetic sprite for a codex enemy name (aligned with combat families).
   static String enemySpriteForCodexName(String name) {
     final key = name.trim().toLowerCase();
     final mapped = switch (key) {
       // Catalog bosses — must match enemySpriteForRole(boss, dungeonId:).
-      'earth kraken' => enemyCrab,
-      'hobgoblin lord' => enemyCyclops,
+      'earth kraken' => enemyBossSandy,
+      'hobgoblin lord' => enemyBossGoblin,
       'corrupt king' => enemyBoss,
-      'beholder' => enemyCultist,
-      'the no-one' => enemyGhost,
+      'beholder' => enemyBossUnderworld,
+      'the no-one' => enemyBossDead,
       'cthulhu' || 'chtulu' => enemyHellBoss,
-      'tide leviathan' => enemyCrab,
-      'cinder sovereign' => enemyCyclops,
-      'wyrd root' => enemySpider,
+      'tide leviathan' => enemyBossTide,
+      'cinder sovereign' => enemyBossEmber,
+      'wyrd root' => enemyBossGrove,
       'storm tyrant' => enemyStormBoss,
       'rime colossus' => enemyRimeBoss,
       'fen hydra' => enemyFenBoss,
@@ -845,11 +430,17 @@ abstract final class KenneyAssets {
       'tide adept' ||
       'razor eel' ||
       'needle urchin' => enemyCrystalWraith,
-      'crystal mite' ||
-      'frost wisp' ||
-      'rime bat' ||
-      'brine mite' ||
-      'reef tick' => enemyCrystalMite,
+      'crystal mite' || 'frost wisp' || 'rime bat' => enemyCrystalMite,
+      // Zone trash with its own art (see lib/models/zone_art.dart).
+      'brine mite' || 'reef tick' => enemyTideMite,
+      'sand skitter' || 'glass skitter' => enemySandyMite,
+      'goblin scrapper' || 'hideout runt' || 'pest' => enemyGoblinMite,
+      'fort rat' || 'keep gnawer' => enemyKingMite,
+      'imp swarm' || 'ash tick' => enemyUnderworldMite,
+      'risen husk' || 'bone swarm' => enemyDeadMite,
+      'hellspawn' || 'cinder rat' => enemyHellMite,
+      'ash mite' || 'cinder tick' => enemyEmberMite,
+      'moss slime' || 'root tick' || 'leaf mite' => enemyGroveMite,
       'king crab' || 'cave king' => enemyCrab,
       'hell lord' || 'hellgate tyrant' => enemyHellBoss,
       'vault brute' ||
@@ -859,12 +450,8 @@ abstract final class KenneyAssets {
       'spark caster' ||
       'cinder slinger' ||
       'ash chanter' ||
-      'ember adept' ||
-      'ash mite' ||
-      'cinder tick' => enemyCultist,
+      'ember adept' => enemyCultist,
       'char blade' || 'soot fang' => enemyRat,
-      'moss slime' || 'leaf mite' => enemySlime,
-      'root tick' => enemySpider,
       'grove brute' ||
       'timber crusher' ||
       'hollow guard' ||
@@ -911,13 +498,8 @@ abstract final class KenneyAssets {
       'wing fang' || 'veil blade' => enemySpider,
       'moth chanter' || 'veil adept' => enemyCultist,
       'cave slime' || 'drip ooze' || 'sand mite' => enemySlime,
-      'spit bat' || 'cavern spitter' || 'drill bat' => enemyBat,
-      'needle rat' ||
-      'glass skitter' ||
-      'fort rat' ||
-      'sneak rat' ||
-      'pest' ||
-      'cinder rat' => enemyRat,
+      'spit bat' || 'cavern spitter' => enemyBat,
+      'needle rat' || 'sneak rat' => enemyRat,
       'rock crab' || 'shellback' || 'stone maw' => enemyCrab,
       'cave brute' ||
       'goblin thug' ||
@@ -954,10 +536,8 @@ abstract final class KenneyAssets {
       'fire cultist' ||
       'hell chanter' ||
       'rift priest' => enemyCultist,
-      'hex spider' || 'imp swarm' || 'ash tick' => enemySpider,
+      'hex spider' => enemySpider,
       'wailing ghost' ||
-      'risen husk' ||
-      'bone swarm' ||
       'specter blade' ||
       'pale reaper' ||
       'grave knight' => enemyGhost,
@@ -970,13 +550,13 @@ abstract final class KenneyAssets {
       'wisp blade' ||
       'flame assassin' ||
       'cinder blade' => enemyRat,
-      'goblin scrapper' || 'goblin slinger' || 'dart rascal' => enemyRat,
+      'goblin slinger' || 'dart rascal' => enemyRat,
       'crossbowman' ||
       'tower archer' ||
       'ember archer' ||
       'bone archer' ||
       'warden archer' => enemyBat,
-      'underworld imp' || 'hellspawn' => enemyCultist,
+      'underworld imp' => enemyCultist,
       'warden shield' || 'warden guard' || 'warden adept' => enemyGolem,
       _ => null,
     };
