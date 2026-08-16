@@ -13,7 +13,7 @@ Package id: **`com.idleparty.app`**
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ⏳ | Prep URL: repo `docs/PRIVACY.md` on main |
 | Data safety form | ⏳ | Match PRIVACY: local save; **optional** Play Games (scores + Saved Games); no ads; no Idle Party analytics servers |
-| Play Games Services | ⏳ | Enable login + Saved Games; create monthly Timed KEY + Gauntlet leaderboards; paste IDs into `lib/core/play_leaderboard_ids.dart`; set `game_services_project_id` in `android/app/src/main/res/values/games-ids.xml` |
+| Play Games Services | ⏳ | Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth consent + Android credential + test user. Remaining: publish Games project, Play-installed smoke. |
 | IARC / content rating | ❌ | Mild fantasy combat; no chat / gambling / ads |
 | Store listing copy (EN) | ⏳ | Idle Party short + full; no Flutter placeholders |
 | Screenshots + feature graphic | ❌ | Hub + dungeon; icon `assets/custom/ui/app_icon.png` |
@@ -57,7 +57,10 @@ over Play ops unless the owner asks about Play.
 2. Enable player login + **Saved Games**.
 3. Each calendar month create two leaderboards (e.g. `Timed KEY · 2026-08`, `Gauntlet · 2026-08`) and paste Android IDs into [`lib/core/play_leaderboard_ids.dart`](../lib/core/play_leaderboard_ids.dart).
 4. Put the numeric Games **App ID** in [`android/app/src/main/res/values/games-ids.xml`](../android/app/src/main/res/values/games-ids.xml).
-5. Test on a **Play-installed** build (internal/closed). GitHub sideload may soft-fail sign-in.
+5. OAuth consent screen + Android credential (package `com.idleparty.app` + signing SHA-1) so device sign-in works.
+6. Test on a **Play-installed** build (internal/closed). GitHub sideload may soft-fail sign-in.
+
+**Done for 2026-08:** Saved Games on; App ID `986358854278`; boards `Timed KEY 2026-08` (`CgkIhuXGvNocEAIQAA`) and `Gauntlet 2026-08` (`CgkIhuXGvNocEAIQAQ`); OAuth consent (external Testing) + scopes `games` / `games_lite` / `drive.appdata`; Android credential attached (Play App Signing SHA-1, package `com.idleparty.app`); owner Google account added as OAuth test user. Remaining: publish the Games project, smoke on a Play-installed build. Sideload debug SHA-1 needs a second Android client if you test unsigned APKs.
 
 ## Content rating / store listing notes
 

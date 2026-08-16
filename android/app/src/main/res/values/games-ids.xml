@@ -2,5 +2,5 @@
 <!-- Replace game_services_project_id with the numeric App ID from Play Console
      → Play Games Services → Configuration / Setup (not the package name). -->
 <resources>
-    <string name="game_services_project_id" translatable="false">00000000000</string>
+    <string name="game_services_project_id" translatable="false">986358854278</string>
 </resources>

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/play_games_scores.dart';
+import 'package:idle_party/core/play_leaderboard_ids.dart';
 import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
@@ -107,6 +108,12 @@ void main() {
       expect(next.metaDepth.seasonBestTimedKey, 0);
       expect(next.metaDepth.seasonBestTimedClearMs, 0);
       expect(next.metaDepth.seasonBestGauntletFloor, 0);
+    });
+
+    test('2026-08 Play Console board IDs are wired', () {
+      expect(PlayLeaderboardIds.hasBoards('2026-08'), isTrue);
+      expect(PlayLeaderboardIds.timedKeyId('2026-08'), isNot(contains('XXXX')));
+      expect(PlayLeaderboardIds.gauntletId('2026-08'), isNot(contains('YYYY')));
     });
 
     test('legacy save defaults Play Games fields', () {

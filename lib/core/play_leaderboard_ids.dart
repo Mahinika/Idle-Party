@@ -8,13 +8,12 @@ abstract final class PlayLeaderboardIds {
 
   /// Month → (timed KEY board id, gauntlet board id).
   ///
-  /// First season placeholders — replace after Console setup (see docs/PLAY_STORE.md).
+  /// Play Console boards for season 2026-08 (Idle Party Games project 986358854278).
   static const Map<String, ({String timedKey, String gauntlet})> byMonth =
       <String, ({String timedKey, String gauntlet})>{
-    // Placeholder IDs until Play Console boards are created for 2026-08.
     '2026-08': (
-      timedKey: 'CgkIXXXXXXXXXXXXXXXX',
-      gauntlet: 'CgkIYYYYYYYYYYYYYYYY',
+      timedKey: 'CgkIhuXGvNocEAIQAA',
+      gauntlet: 'CgkIhuXGvNocEAIQAQ',
     ),
   };
 
