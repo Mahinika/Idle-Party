@@ -8,12 +8,12 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ⏳ Alpha | Historical AAB noted **14 / 1.9.3**; ship line **1.12.0** on GitHub |
+| Closed testing | ⏳ Alpha | **1.12.9 (39)** submitted 2026-08-16 (Closed testing – Alpha, in review). Prior live Alpha was **14 / 1.9.3**. GitHub ship line **1.12.0**. |
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ⏳ | Prep URL: repo `docs/PRIVACY.md` on main |
 | Data safety form | ⏳ | Match PRIVACY: local save; **optional** Play Games (scores + Saved Games); no ads; no Idle Party analytics servers |
-| Play Games Services | ⏳ | Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth consent + Android credential + test user. Remaining: publish Games project, Play-installed smoke. |
+| Play Games Services | ⏳ | Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Properties: category Role Playing, icon + feature graphic from `app_icon`. Remaining: paste **Description** in Console → **Publish** Games project (not Android production); Play-installed smoke. |
 | IARC / content rating | ❌ | Mild fantasy combat; no chat / gambling / ads |
 | Store listing copy (EN) | ⏳ | Idle Party short + full; no Flutter placeholders |
 | Screenshots + feature graphic | ❌ | Hub + dungeon; icon `assets/custom/ui/app_icon.png` |
@@ -39,7 +39,7 @@ over Play ops unless the owner asks about Play.
 ## Play Console — closed / internal (ops)
 
 - [x] App exists in Play Console (`com.idleparty.app`) with listing + closed Alpha.
-- [ ] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers.
+- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.9 (39)** sent for review 2026-08-16 (closed Alpha, not production).
 - [ ] Enable Play App Signing if prompted on new uploads.
 - [ ] Add / retain closed testers toward **12 × 14 days** for production access.
 - [ ] Smoke-test install → hub → short dungeon → leave → relaunch (save persists).
@@ -60,7 +60,11 @@ over Play ops unless the owner asks about Play.
 5. OAuth consent screen + Android credential (package `com.idleparty.app` + signing SHA-1) so device sign-in works.
 6. Test on a **Play-installed** build (internal/closed). GitHub sideload may soft-fail sign-in.
 
-**Done for 2026-08:** Saved Games on; App ID `986358854278`; boards `Timed KEY 2026-08` (`CgkIhuXGvNocEAIQAA`) and `Gauntlet 2026-08` (`CgkIhuXGvNocEAIQAQ`); OAuth consent (external Testing) + scopes `games` / `games_lite` / `drive.appdata`; Android credential attached (Play App Signing SHA-1, package `com.idleparty.app`); owner Google account added as OAuth test user. Remaining: publish the Games project, smoke on a Play-installed build. Sideload debug SHA-1 needs a second Android client if you test unsigned APKs.
+**Done for 2026-08:** Saved Games on; App ID `986358854278`; boards `Timed KEY 2026-08` (`CgkIhuXGvNocEAIQAA`) and `Gauntlet 2026-08` (`CgkIhuXGvNocEAIQAQ`); OAuth consent (external Testing) + scopes `games` / `games_lite` / `drive.appdata`; Android credential attached (Play App Signing SHA-1, package `com.idleparty.app`); owner Google account added as OAuth test user; Games **category** Role Playing; **icon** 512 + **feature graphic** 1024×500 from owned `app_icon`. Remaining: Console → Play Games → Configuration → Edit properties → paste Description (English), Save, then Publishing → **Publish** (Games project only). Then smoke on a Play-installed build. Sideload debug SHA-1 needs a second Android client if you test unsigned APKs.
+
+Suggested Description (en-US):
+
+> Grow a party of classic fantasy heroes, farm dungeons while you are away, and chase KEYSTONE, Gauntlet, and Ascend. Optional Play Games leaderboards and cloud save.
 
 ## Content rating / store listing notes
 
