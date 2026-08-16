@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.5';
+  static const String currentVersion = '1.12.6';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.6',
+      bullets: <String>[
+        'Kit AoE gaps filled: Affliction Seed of Corruption, Assassination/Subtlety Fan of Knives, Shadow Mind Sear, Feral Swipe, Holy Paladin Consecration.',
+        'Healers still clear packs via party heals (CoH / Holy Nova / Healing Rain / Wild Growth) — damage AoE was the missing feel on ST-heavy DPS.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.5',
       bullets: <String>[

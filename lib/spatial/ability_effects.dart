@@ -1143,14 +1143,17 @@ abstract final class AbilityEffectRunner {
         def.id == AbilityId.starfall ||
         def.id == AbilityId.thunderstorm ||
         def.id == AbilityId.howlingBlast ||
+        def.id == AbilityId.mindSear ||
         key.contains('hurricane') ||
         key.contains('starfall') ||
-        key.contains('thunderstorm')) {
+        key.contains('thunderstorm') ||
+        key.contains('mind sear')) {
       _rainBolts(world, hero, def, style, rng, reducedVfx: reducedVfx);
       return;
     }
     // Ground zones — heavier rings + on-target sparks (no projectile spam).
     if (def.id == AbilityId.consecration ||
+        def.id == AbilityId.consecrationHoly ||
         def.id == AbilityId.bloodBoil ||
         def.id == AbilityId.bloodBoilUnholy ||
         def.id == AbilityId.bladestorm ||
@@ -1166,6 +1169,10 @@ abstract final class AbilityEffectRunner {
         def.id == AbilityId.frostNovaMage ||
         def.id == AbilityId.bladeFlurry ||
         def.id == AbilityId.swipe ||
+        def.id == AbilityId.feralSwipe ||
+        def.id == AbilityId.fanOfKnives ||
+        def.id == AbilityId.fanOfKnivesSub ||
+        def.id == AbilityId.seedOfCorruption ||
         def.id == AbilityId.handOfGuldan ||
         def.id == AbilityId.explosiveTrap ||
         def.vfx?.groundDisc == true ||
@@ -1174,7 +1181,9 @@ abstract final class AbilityEffectRunner {
         key.contains('bloodboil') ||
         key.contains('bladestorm') ||
         key.contains('whirlwind') ||
-        key.contains('shadowfury')) {
+        key.contains('shadowfury') ||
+        key.contains('fan of knives') ||
+        key.contains('seed of corruption')) {
       _groundNova(world, hero, def, style, rng, reducedVfx: reducedVfx);
       return;
     }

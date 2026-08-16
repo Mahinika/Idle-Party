@@ -3701,6 +3701,7 @@ abstract final class SpatialCombat {
       AbilityId.holyWrath ||
       AbilityId.divineStorm ||
       AbilityId.consecration ||
+      AbilityId.consecrationHoly ||
       AbilityId.hammerOfWrath ||
       AbilityId.holyShock ||
       AbilityId.hammerOfTheRighteous ||
@@ -3780,10 +3781,13 @@ abstract final class SpatialCombat {
       AbilityId.drainLife ||
       AbilityId.mindBlast ||
       AbilityId.mindFlay ||
+      AbilityId.mindSear ||
       AbilityId.devouringPlague ||
       AbilityId.shadowWordPain ||
       AbilityId.handOfGuldan ||
       AbilityId.shadowfury ||
+      AbilityId.seedOfCorruption ||
+      AbilityId.fanOfKnivesSub ||
       AbilityId.deathCoil ||
       AbilityId.vampiricTouch ||
       AbilityId.curseOfAgony ||
@@ -3807,12 +3811,14 @@ abstract final class SpatialCombat {
       AbilityId.kidneyShot ||
       AbilityId.killingSpree ||
       AbilityId.mongooseBite ||
+      AbilityId.fanOfKnives ||
       AbilityId.shred ||
       AbilityId.rake ||
       AbilityId.ferociousBite ||
       AbilityId.rip ||
       AbilityId.mangleBear ||
       AbilityId.swipe ||
+      AbilityId.feralSwipe ||
       AbilityId.maul ||
       AbilityId.overpower ||
       AbilityId.rend ||
@@ -3837,7 +3843,7 @@ abstract final class SpatialCombat {
   /// Lasting ground disc defaults for signature AOEs (life seconds).
   static double? groundDiscLifeFor(AbilityId id) {
     return switch (id) {
-      AbilityId.consecration => 6.0,
+      AbilityId.consecration || AbilityId.consecrationHoly => 6.0,
       AbilityId.healingRain || AbilityId.tranquility => 5.5,
       AbilityId.explosiveTrap => 4.0,
       AbilityId.handOfGuldan || AbilityId.wildGrowth => 3.5,
@@ -3845,7 +3851,7 @@ abstract final class SpatialCombat {
       AbilityId.bladeFlurry ||
       AbilityId.divineStorm =>
         3.2,
-      AbilityId.spiritLink => 3.0,
+      AbilityId.spiritLink || AbilityId.mindSear => 3.0,
       AbilityId.bloodBoil ||
       AbilityId.bloodBoilUnholy ||
       AbilityId.whirlwind ||
@@ -3859,13 +3865,18 @@ abstract final class SpatialCombat {
       AbilityId.frostNovaMage ||
       AbilityId.thunderClap =>
         2.2,
+      AbilityId.seedOfCorruption => 2.0,
       AbilityId.killingSpree => 2.0,
       AbilityId.blastWave ||
       AbilityId.shockwave ||
       AbilityId.arcaneExplosion ||
       AbilityId.shadowfury =>
         1.6,
-      AbilityId.swipe => 1.5,
+      AbilityId.swipe ||
+      AbilityId.feralSwipe ||
+      AbilityId.fanOfKnives ||
+      AbilityId.fanOfKnivesSub =>
+        1.5,
       _ => null,
     };
   }
