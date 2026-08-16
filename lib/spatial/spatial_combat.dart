@@ -2667,6 +2667,281 @@ abstract final class SpatialCombat {
       world.mendTimer += 1.0;
     }
 
+    final party = _stepHeroes(
+      world,
+      nextState,
+      dt: dt,
+      rng: rng,
+      guiding: guiding,
+      reducedVfx: state.reducedVfx,
+    );
+    nextState = party.state;
+    goldFromKills += party.gold;
+
+    // Pets follow their owner (meta pet / class pet) when set, else party leader.
+    final pets = _stepPets(
+      world,
+      nextState,
+      dt: dt,
+      rng: rng,
+      reducedVfx: state.reducedVfx,
+    );
+    nextState = pets.state;
+    goldFromKills += pets.gold;
+
+    final foes = _stepEnemies(
+      world,
+      nextState,
+      dt: dt,
+      rng: rng,
+      reducedVfx: state.reducedVfx,
+    );
+    nextState = foes.state;
+    goldFromKills += foes.gold;
+
+    // Projectiles
+    final shots = _stepProjectiles(
+      world,
+      nextState,
+      dt: dt,
+      rng: rng,
+      reducedVfx: state.reducedVfx,
+    );
+    nextState = shots.state;
+    goldFromKills += shots.gold;
+
+    // Loot becomes real state only when collected (or after its grace period).
+    nextState = _stepGroundLoot(world, nextState, dt);
+
+    _tickFloaters(world, dt);
+
+    nextState = _syncHp(nextState, world);
+
+    if (world.allHeroesDead) {
+      return _stepResult(
+        world,
+        nextState,
+        partyWiped: true,
+        goldFromKills: goldFromKills,
+      );
+    }
+
+    _updateChambers(world, reducedVfx: state.reducedVfx);
+    nextState = _wakeAndFinishFloor(
+      world,
+      nextState,
+      reducedVfx: state.reducedVfx,
+    );
+
+    return _stepResult(world, nextState, goldFromKills: goldFromKills);
+  }
+
+  /// Enemies: prefer the tank, kite if ranged, path around walls.
+  static ({GameState state, int gold}) _stepEnemies(
+    SpatialWorld world,
+    GameState state, {
+    required double dt,
+    required math.Random rng,
+    required bool reducedVfx,
+  }) {
+    var nextState = state;
+    var goldFromKills = 0;
+    // Enemies: prefer the tank, kite if ranged, path around walls.
+    for (final enemy in world.enemies) {
+      if (enemy.hp <= 0 || enemy.dormant) continue;
+      // Living Bomb ticks + splash explode when the fuse ends.
+      if (enemy.livingBombTimer > 0 && enemy.livingBombDps > 0) {
+        enemy.livingBombAcc += enemy.livingBombDps * dt;
+        if (enemy.livingBombAcc >= 1) {
+          final tick = enemy.livingBombAcc.floor();
+          enemy.livingBombAcc -= tick;
+          final wasAlive = enemy.hp > 0;
+          enemy.hp = math.max(0, enemy.hp - tick);
+          final caster = _heroById(world, enemy.livingBombCasterId);
+          if (caster != null) _recordHeroDamage(caster, tick);
+          if (!reducedVfx) {
+            _spawnFloater(
+              world,
+              x: enemy.x,
+              y: enemy.y - 0.25,
+              text: '$tick',
+              argb: 0xFFFF6030,
+              life: 0.4,
+            );
+          }
+          if (wasAlive && enemy.hp <= 0) {
+            final killed = _onEnemyKilled(world, nextState, enemy, rng);
+            goldFromKills += killed.gold;
+            nextState = killed.state;
+          }
+        }
+        if (enemy.livingBombTimer <= dt && enemy.hp > 0) {
+          // Explode for splash.
+          final boom = math.max(4, (enemy.livingBombDps * 3).round());
+          final caster = _heroById(world, enemy.livingBombCasterId);
+          for (final e in world.enemies) {
+            if (e.hp <= 0 || e.dormant) continue;
+            if (_dist(enemy, e) > 2.2) continue;
+            final wasAlive = e.hp > 0;
+            final dealt = math.max(1, boom - e.effectiveDefense ~/ 2);
+            e.hp = math.max(0, e.hp - dealt);
+            if (caster != null) _recordHeroDamage(caster, dealt);
+            if (!reducedVfx) {
+              _spawnFloater(
+                world,
+                x: e.x,
+                y: e.y - 0.2,
+                text: '$dealt',
+                argb: 0xFFFF5020,
+                life: 0.45,
+              );
+            }
+            if (wasAlive && e.hp <= 0) {
+              final killed = _onEnemyKilled(world, nextState, e, rng);
+              goldFromKills += killed.gold;
+              nextState = killed.state;
+            }
+          }
+          if (!reducedVfx) {
+            _spawnBurst(
+              world,
+              x: enemy.x,
+              y: enemy.y,
+              argb: 0xFFFF4010,
+              radius: 1.4,
+              life: 0.35,
+            );
+            _spawnRing(
+              world,
+              x: enemy.x,
+              y: enemy.y,
+              argb: 0xFFFF6020,
+              radius: 1.8,
+              life: 0.45,
+            );
+          }
+        }
+      }
+      // Bleed DoT ticks (Rip / Rake / Rend).
+      if (enemy.bleedTimer > 0 && enemy.bleedDps > 0 && enemy.hp > 0) {
+        enemy.bleedAcc += enemy.bleedDps * dt;
+        if (enemy.bleedAcc >= 1) {
+          final tick = enemy.bleedAcc.floor();
+          enemy.bleedAcc -= tick;
+          final wasAlive = enemy.hp > 0;
+          enemy.hp = math.max(0, enemy.hp - tick);
+          final caster = _heroById(world, enemy.bleedCasterId);
+          if (caster != null) _recordHeroDamage(caster, tick);
+          if (!reducedVfx) {
+            _spawnFloater(
+              world,
+              x: enemy.x,
+              y: enemy.y - 0.2,
+              text: '$tick',
+              argb: 0xFFC05050,
+              life: 0.4,
+            );
+          }
+          if (wasAlive && enemy.hp <= 0) {
+            final killed = _onEnemyKilled(world, nextState, enemy, rng);
+            goldFromKills += killed.gold;
+            nextState = killed.state;
+          }
+        }
+      }
+      final target = _focusHero(enemy, world.heroes);
+      if (target == null) continue;
+      final dist = _dist(enemy, target);
+      final preferred = enemy.preferredRange ?? (enemy.attackRange * 0.75);
+      var tx = target.x;
+      var ty = target.y;
+      var hold = preferred;
+      if (enemy.ranged && dist < preferred * 0.65) {
+        tx = enemy.x - (target.x - enemy.x);
+        ty = enemy.y - (target.y - enemy.y);
+        hold = 0;
+      }
+      _steerActor(
+        enemy,
+        tx,
+        ty,
+        enemy.moveSpeed * enemy.moveSpeedMul * dt,
+        world,
+        holdDistance: hold,
+        separateFrom: world.enemies,
+      );
+
+      final slowRate = enemy.attackSlowTimer > 0 ? 0.8 : 1.0;
+      enemy.fireCooldown -= dt * slowRate;
+
+      // ?? Enemy specials (heal / enrage / slow / execute / boss pulse) ??
+      _tickEnemySpecials(world, enemy, target, dt, reducedVfx: reducedVfx);
+
+      final afterDist = _dist(enemy, target);
+      if (enemy.fireCooldown <= 0 && afterDist <= enemy.attackRange) {
+        enemy.fireCooldown = enemy.attackCooldown;
+        // Armor matters, with a little pierce so mid-DEF never zeros packs.
+        final armorFactor = world.afkAssist ? 0.75 : 0.55;
+        final armor = (target.defense * armorFactor).round();
+        final pierce = math.max(1, (enemy.effectiveAttack * 0.2).round());
+        var raw = math.max(pierce, enemy.effectiveAttack - armor);
+        // Glass execute: bonus damage vs low-HP heroes.
+        if (enemy.archetype == EnemyArchetype.glass &&
+            target.hp < target.effectiveMaxHp * 0.3) {
+          raw = math.max(1, (raw * 1.35).round());
+        }
+        if (world.afkAssist) {
+          raw = math.max(1, (raw * 0.45).round());
+        }
+        if (enemy.ranged) {
+          enemy.attackFlash = 0.12;
+          SpatialCombat._addProjectiles(
+            world,
+            _firePattern(
+              from: enemy,
+              to: target,
+              damage: raw,
+              pattern: ProjectilePattern.single,
+            ),
+          );
+          // Ranged hits apply attack-speed slow.
+          target.attackSlowTimer = math.max(target.attackSlowTimer, 1.6);
+        } else {
+          enemy.attackFlash = 0.16;
+          final dmg = _applyHeroIncomingDamage(
+            world,
+            target,
+            raw,
+            reducedVfx: reducedVfx,
+          );
+          if (!reducedVfx) {
+            _spawnSlash(world, from: enemy, to: target, isCrit: false);
+          }
+          _spawnFloater(
+            world,
+            x: target.x,
+            y: target.y - 0.25,
+            text: '$dmg',
+            argb: _floaterDamage,
+            life: 0.65,
+          );
+        }
+      }
+    }
+    return (state: nextState, gold: goldFromKills);
+  }
+
+  /// Heroes: formation + role ranges + optional God Hand steering.
+  static ({GameState state, int gold}) _stepHeroes(
+    SpatialWorld world,
+    GameState state, {
+    required double dt,
+    required math.Random rng,
+    required bool guiding,
+    required bool reducedVfx,
+  }) {
+    var nextState = state;
+    var goldFromKills = 0;
     // Heroes: formation + role ranges + optional God Hand steering.
     final leader = world.leader;
     SpatialActor? tankAnchor;
@@ -2804,7 +3079,7 @@ abstract final class SpatialCombat {
           nextState,
           dt: dt,
           rng: rng,
-          reducedVfx: state.reducedVfx,
+          reducedVfx: reducedVfx,
           hasShield: hasShield,
         );
         nextState = AbilityEffectRunner.takeState(nextState);
@@ -2870,7 +3145,7 @@ abstract final class SpatialCombat {
             _healLowestAlly(
               world,
               math.max(1, (dealt * 0.35).round()),
-              reducedVfx: state.reducedVfx,
+              reducedVfx: reducedVfx,
               healer: hero,
             );
             _gainRage(hero, 3);
@@ -2883,7 +3158,7 @@ abstract final class SpatialCombat {
               final cleave = math.max(1, (dealt * 0.40).round());
               e.hp = math.max(0, e.hp - cleave);
               _recordHeroDamage(hero, cleave);
-              if (!state.reducedVfx) {
+              if (!reducedVfx) {
                 _spawnFloater(
                   world,
                   x: e.x,
@@ -2902,7 +3177,7 @@ abstract final class SpatialCombat {
                 ? (isCrit || abilityTag != null ? 0.32 : 0.26)
                 : 0.18,
           );
-          if (!state.reducedVfx) {
+          if (!reducedVfx) {
             _spawnSlash(
               world,
               from: hero,
@@ -2925,7 +3200,7 @@ abstract final class SpatialCombat {
             final killed = _onEnemyKilled(world, nextState, target, rng);
             goldFromKills += killed.gold;
             nextState = killed.state;
-            if (!state.reducedVfx) {
+            if (!reducedVfx) {
               _spawnBurst(
                 world,
                 x: target.x,
@@ -2973,402 +3248,74 @@ abstract final class SpatialCombat {
         }
       }
     }
+    return (state: nextState, gold: goldFromKills);
+  }
 
-    // Pets follow their owner (meta pet / class pet) when set, else party leader.
-    final petLeader = world.leader;
-    world.pets.removeWhere((p) {
-      if (p.petLifeTimer <= 0) return false;
-      p.petLifeTimer -= dt;
-      return p.petLifeTimer <= 0;
-    });
-    for (final pet in world.pets) {
-      if (petLeader == null) break;
-      final leashOwner = _heroById(world, pet.petOwnerId) ?? petLeader;
-      final target = _nearestActiveEnemy(pet, world.enemies);
-      if (target == null) {
-        _steerActor(
-          pet,
-          leashOwner.x - 0.55,
-          leashOwner.y + 0.45,
-          pet.moveSpeed * dt,
-          world,
-          holdDistance: 0.35,
-          separateFrom: <SpatialActor>[...world.heroes, ...world.pets],
-        );
-        continue;
-      }
-      final distance = _dist(pet, target);
-      if (distance > pet.attackRange) {
-        _steerActor(
-          pet,
-          target.x,
-          target.y,
-          pet.moveSpeed * dt,
-          world,
-          holdDistance: pet.attackRange * 0.7,
-          separateFrom: <SpatialActor>[...world.heroes, ...world.pets],
-        );
-      }
-      pet.fireCooldown -= dt;
-      if (pet.fireCooldown <= 0 && _dist(pet, target) <= pet.attackRange) {
-        pet.fireCooldown = pet.attackCooldown;
-        final wasAlive = target.hp > 0;
-        final petHit = math.max(1, pet.attack - target.effectiveDefense);
-        target.hp = math.max(0, target.hp - petHit);
-        pet.attackFlash = 0.14;
-        final owner =
-            _heroById(world, pet.petOwnerId) ??
-            (pet.id.startsWith('classpet_')
-                ? _heroById(world, pet.id.replaceFirst('classpet_', ''))
-                : null);
-        if (owner != null) {
-          _recordHeroDamage(owner, petHit);
-        }
-        if (!state.reducedVfx) {
-          _spawnSlash(world, from: pet, to: target, isCrit: false);
-        }
-        _spawnFloater(
-          world,
-          x: target.x,
-          y: target.y - 0.25,
-          text: '$petHit',
-          argb: _floaterDamage,
-          life: 0.6,
-        );
-        if (wasAlive && target.hp <= 0) {
-          final killed = _onEnemyKilled(world, nextState, target, rng);
-          goldFromKills += killed.gold;
-          nextState = killed.state;
+  /// Proximity wake + floor-clear gate: nothing may stay dormant forever,
+  /// and a cleared floor vacuums ground loot before opening the exit.
+  static GameState _wakeAndFinishFloor(
+    SpatialWorld world,
+    GameState state, {
+    required bool reducedVfx,
+  }) {
+    var nextState = state;
+    // Proximity wake: don't leave later chambers forever dormant.
+    for (final enemy in world.enemies) {
+      if (!enemy.dormant || enemy.hp <= 0) continue;
+      for (final hero in world.heroes) {
+        if (!hero.isAlive) continue;
+        if (_dist(hero, enemy) < 11.0) {
+          enemy.dormant = false;
+          break;
         }
       }
     }
-
-    // Enemies: prefer the tank, kite if ranged, path around walls.
-    for (final enemy in world.enemies) {
-      if (enemy.hp <= 0 || enemy.dormant) continue;
-      // Living Bomb ticks + splash explode when the fuse ends.
-      if (enemy.livingBombTimer > 0 && enemy.livingBombDps > 0) {
-        enemy.livingBombAcc += enemy.livingBombDps * dt;
-        if (enemy.livingBombAcc >= 1) {
-          final tick = enemy.livingBombAcc.floor();
-          enemy.livingBombAcc -= tick;
-          final wasAlive = enemy.hp > 0;
-          enemy.hp = math.max(0, enemy.hp - tick);
-          final caster = _heroById(world, enemy.livingBombCasterId);
-          if (caster != null) _recordHeroDamage(caster, tick);
-          if (!state.reducedVfx) {
-            _spawnFloater(
-              world,
-              x: enemy.x,
-              y: enemy.y - 0.25,
-              text: '$tick',
-              argb: 0xFFFF6030,
-              life: 0.4,
-            );
-          }
-          if (wasAlive && enemy.hp <= 0) {
-            final killed = _onEnemyKilled(world, nextState, enemy, rng);
-            goldFromKills += killed.gold;
-            nextState = killed.state;
-          }
-        }
-        if (enemy.livingBombTimer <= dt && enemy.hp > 0) {
-          // Explode for splash.
-          final boom = math.max(4, (enemy.livingBombDps * 3).round());
-          final caster = _heroById(world, enemy.livingBombCasterId);
-          for (final e in world.enemies) {
-            if (e.hp <= 0 || e.dormant) continue;
-            if (_dist(enemy, e) > 2.2) continue;
-            final wasAlive = e.hp > 0;
-            final dealt = math.max(1, boom - e.effectiveDefense ~/ 2);
-            e.hp = math.max(0, e.hp - dealt);
-            if (caster != null) _recordHeroDamage(caster, dealt);
-            if (!state.reducedVfx) {
-              _spawnFloater(
-                world,
-                x: e.x,
-                y: e.y - 0.2,
-                text: '$dealt',
-                argb: 0xFFFF5020,
-                life: 0.45,
-              );
-            }
-            if (wasAlive && e.hp <= 0) {
-              final killed = _onEnemyKilled(world, nextState, e, rng);
-              goldFromKills += killed.gold;
-              nextState = killed.state;
-            }
-          }
-          if (!state.reducedVfx) {
-            _spawnBurst(
-              world,
-              x: enemy.x,
-              y: enemy.y,
-              argb: 0xFFFF4010,
-              radius: 1.4,
-              life: 0.35,
-            );
-            _spawnRing(
-              world,
-              x: enemy.x,
-              y: enemy.y,
-              argb: 0xFFFF6020,
-              radius: 1.8,
-              life: 0.45,
-            );
-          }
-        }
-      }
-      // Bleed DoT ticks (Rip / Rake / Rend).
-      if (enemy.bleedTimer > 0 && enemy.bleedDps > 0 && enemy.hp > 0) {
-        enemy.bleedAcc += enemy.bleedDps * dt;
-        if (enemy.bleedAcc >= 1) {
-          final tick = enemy.bleedAcc.floor();
-          enemy.bleedAcc -= tick;
-          final wasAlive = enemy.hp > 0;
-          enemy.hp = math.max(0, enemy.hp - tick);
-          final caster = _heroById(world, enemy.bleedCasterId);
-          if (caster != null) _recordHeroDamage(caster, tick);
-          if (!state.reducedVfx) {
-            _spawnFloater(
-              world,
-              x: enemy.x,
-              y: enemy.y - 0.2,
-              text: '$tick',
-              argb: 0xFFC05050,
-              life: 0.4,
-            );
-          }
-          if (wasAlive && enemy.hp <= 0) {
-            final killed = _onEnemyKilled(world, nextState, enemy, rng);
-            goldFromKills += killed.gold;
-            nextState = killed.state;
-          }
-        }
-      }
-      final target = _focusHero(enemy, world.heroes);
-      if (target == null) continue;
-      final dist = _dist(enemy, target);
-      final preferred = enemy.preferredRange ?? (enemy.attackRange * 0.75);
-      var tx = target.x;
-      var ty = target.y;
-      var hold = preferred;
-      if (enemy.ranged && dist < preferred * 0.65) {
-        tx = enemy.x - (target.x - enemy.x);
-        ty = enemy.y - (target.y - enemy.y);
-        hold = 0;
-      }
-      _steerActor(
-        enemy,
-        tx,
-        ty,
-        enemy.moveSpeed * enemy.moveSpeedMul * dt,
-        world,
-        holdDistance: hold,
-        separateFrom: world.enemies,
-      );
-
-      final slowRate = enemy.attackSlowTimer > 0 ? 0.8 : 1.0;
-      enemy.fireCooldown -= dt * slowRate;
-
-      // ?? Enemy specials (heal / enrage / slow / execute / boss pulse) ??
-      _tickEnemySpecials(
-        world,
-        enemy,
-        target,
-        dt,
-        reducedVfx: state.reducedVfx,
-      );
-
-      final afterDist = _dist(enemy, target);
-      if (enemy.fireCooldown <= 0 && afterDist <= enemy.attackRange) {
-        enemy.fireCooldown = enemy.attackCooldown;
-        // Armor matters, with a little pierce so mid-DEF never zeros packs.
-        final armorFactor = world.afkAssist ? 0.75 : 0.55;
-        final armor = (target.defense * armorFactor).round();
-        final pierce = math.max(1, (enemy.effectiveAttack * 0.2).round());
-        var raw = math.max(pierce, enemy.effectiveAttack - armor);
-        // Glass execute: bonus damage vs low-HP heroes.
-        if (enemy.archetype == EnemyArchetype.glass &&
-            target.hp < target.effectiveMaxHp * 0.3) {
-          raw = math.max(1, (raw * 1.35).round());
-        }
-        if (world.afkAssist) {
-          raw = math.max(1, (raw * 0.45).round());
-        }
-        if (enemy.ranged) {
-          enemy.attackFlash = 0.12;
-          SpatialCombat._addProjectiles(
+    if (world.allEnemiesDead &&
+        (world.groundLoot.isEmpty ||
+            world.groundLoot.every(
+              (loot) => loot.age > (world.afkAssist ? 1.0 : 4.5),
+            ))) {
+      if (!world.awaitingExit) {
+        // AFK exit gate (1s) is earlier than auto-pickup (4.5s) — vacuum now
+        // so ground loot is never discarded on rebuild.
+        nextState = _vacuumGroundLoot(world, nextState);
+        world.awaitingExit = true;
+        world.exitWaitTimer = 0;
+        if (!reducedVfx) {
+          final ex = world.map.exitPoint.$1 + 0.5;
+          final ey = world.map.exitPoint.$2 + 0.5;
+          _spawnRing(
             world,
-            _firePattern(
-              from: enemy,
-              to: target,
-              damage: raw,
-              pattern: ProjectilePattern.single,
-            ),
-          );
-          // Ranged hits apply attack-speed slow.
-          target.attackSlowTimer = math.max(target.attackSlowTimer, 1.6);
-        } else {
-          enemy.attackFlash = 0.16;
-          final dmg = _applyHeroIncomingDamage(
-            world,
-            target,
-            raw,
-            reducedVfx: state.reducedVfx,
-          );
-          if (!state.reducedVfx) {
-            _spawnSlash(world, from: enemy, to: target, isCrit: false);
-          }
-          _spawnFloater(
-            world,
-            x: target.x,
-            y: target.y - 0.25,
-            text: '$dmg',
-            argb: _floaterDamage,
+            x: ex,
+            y: ey,
+            argb: 0xFF70E0A0,
+            radius: 1.4,
             life: 0.65,
           );
+          _spawnBurst(
+            world,
+            x: ex,
+            y: ey,
+            argb: 0x88A0FFC0,
+            radius: 0.7,
+            life: 0.4,
+          );
         }
       }
     }
+    return nextState;
+  }
 
-    // Projectiles
-    final remaining = <SpatialProjectile>[];
-    for (final p in world.projectiles) {
-      if (p.delay > 0) {
-        p.delay -= dt;
-        remaining.add(p);
-        continue;
-      }
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.life -= dt;
-      if (p.life <= 0 ||
-          p.x < -1 ||
-          p.y < -1 ||
-          p.x > world.cols + 1 ||
-          p.y > world.rows + 1 ||
-          !_projectileCanTravel(world, p.x, p.y)) {
-        continue;
-      }
-
-      final victims = p.team == SpatialTeam.hero ? world.enemies : world.heroes;
-      var hit = false;
-      for (final v in victims) {
-        if (v.hp <= 0 || (v.team == SpatialTeam.enemy && v.dormant)) continue;
-        if (_distPoint(p.x, p.y, v.x, v.y) < 0.55 + p.radius) {
-          final wasAlive = v.hp > 0;
-          final int dealt;
-          if (v.team == SpatialTeam.hero) {
-            // Enemy shots already bake DEF at fire time.
-            dealt = _applyHeroIncomingDamage(
-              world,
-              v,
-              p.damage,
-              reducedVfx: state.reducedVfx,
-            );
-          } else {
-            var hitDmg = p.damage;
-            if (world.afkAssist) hitDmg = (hitDmg * 2.4).round();
-            dealt = math.max(
-              1,
-              hitDmg - v.effectiveDefense ~/ (world.afkAssist ? 3 : 1),
-            );
-            v.hp = math.max(0, v.hp - dealt);
-            final caster = _heroById(world, p.casterId);
-            if (caster != null) {
-              _recordHeroDamage(caster, dealt);
-              _applyTankSoftThreat(caster, v);
-              // Ranged autos/abilities use projectiles — grant resource like
-              // melee direct hits so casters/hunters aren't passive-only.
-              if (dealt > 0) {
-                _grantCombatResource(caster, dealt: dealt);
-              }
-            }
-          }
-          if (dealt > 0 && !state.reducedVfx) {
-            _spawnFloater(
-              world,
-              x: v.x + (rng.nextDouble() - 0.5) * 0.25,
-              y: v.y - 0.3,
-              text: p.isCrit ? 'CRIT $dealt' : '$dealt',
-              argb: p.isCrit ? _floaterCrit : (p.labelArgb ?? _floaterDamage),
-              life: p.isCrit ? 0.65 : 0.4,
-              priority: p.isCrit ? 2 : 0,
-            );
-          }
-          if (p.onHitHealCaster && p.casterId != null && dealt > 0) {
-            for (final h in world.heroes) {
-              if (h.id == p.casterId && h.isAlive) {
-                _healLowestAlly(
-                  world,
-                  math.max(1, (dealt * 0.4).round()),
-                  reducedVfx: state.reducedVfx,
-                  healer: h,
-                );
-                _gainRage(h, 2);
-                break;
-              }
-            }
-          }
-          if (p.isCrit && !state.reducedVfx) {
-            _spawnBurst(world, x: v.x, y: v.y, argb: _floaterCrit, radius: 0.7);
-          } else if (!state.reducedVfx) {
-            final hitArgb = switch (p.style) {
-              SpellBoltStyle.fire => 0xFFFF6030,
-              SpellBoltStyle.holy => 0xFFFFE080,
-              SpellBoltStyle.frost => 0xFF80D0FF,
-              SpellBoltStyle.arcane => 0xFFC070FF,
-              SpellBoltStyle.shadow => 0xFFB060E0,
-              SpellBoltStyle.nature => 0xFF70D070,
-              SpellBoltStyle.lightning => 0xFFA0E8FF,
-              SpellBoltStyle.arrow => 0xFFE8D080,
-              SpellBoltStyle.weapon =>
-                p.team == SpatialTeam.hero ? 0xFFFFE08A : 0xFFFF6A4A,
-            };
-            _spawnBurst(
-              world,
-              x: v.x,
-              y: v.y,
-              argb: hitArgb,
-              radius: p.style == SpellBoltStyle.fire
-                  ? 0.65
-                  : (p.style == SpellBoltStyle.arrow ? 0.28 : 0.35),
-              life: 0.2,
-            );
-          }
-          hit = true;
-          p.hitsRemaining -= 1;
-          if (wasAlive && v.hp <= 0 && v.team == SpatialTeam.enemy) {
-            final killed = _onEnemyKilled(world, nextState, v, rng);
-            goldFromKills += killed.gold;
-            nextState = killed.state;
-            if (!state.reducedVfx) {
-              _spawnBurst(
-                world,
-                x: v.x,
-                y: v.y,
-                argb: _floaterGold,
-                radius: 0.85,
-              );
-            }
-          }
-          if (!p.pierce || p.hitsRemaining <= 0) {
-            break;
-          }
-        }
-      }
-      if (!hit || (p.pierce && p.hitsRemaining > 0)) {
-        if (!(hit && (!p.pierce || p.hitsRemaining <= 0))) {
-          remaining.add(p);
-        }
-      }
-    }
-    world.projectiles
-      ..clear()
-      ..addAll(remaining);
-
-    // Loot becomes real state only when collected (or after its grace period).
+  /// Loot on the floor: magnet toward heroes, then bank it.
+  ///
+  /// A drop only becomes real state when a hero collects it (or the grace
+  /// period ends) — that is what keeps AFK pickups honest.
+  static GameState _stepGroundLoot(
+    SpatialWorld world,
+    GameState state,
+    double dt,
+  ) {
+    var nextState = state;
     final stillOnGround = <GroundLoot>[];
     for (final loot in world.groundLoot) {
       loot.age += dt;
@@ -3437,67 +3384,234 @@ abstract final class SpatialCombat {
     world.groundLoot
       ..clear()
       ..addAll(stillOnGround);
+    return nextState;
+  }
 
-    _tickFloaters(world, dt);
+  /// Every bolt, arrow and thrown weapon in flight this frame.
+  static ({GameState state, int gold}) _stepProjectiles(
+    SpatialWorld world,
+    GameState state, {
+    required double dt,
+    required math.Random rng,
+    required bool reducedVfx,
+  }) {
+    var nextState = state;
+    var goldFromKills = 0;
+    final remaining = <SpatialProjectile>[];
+    for (final p in world.projectiles) {
+      if (p.delay > 0) {
+        p.delay -= dt;
+        remaining.add(p);
+        continue;
+      }
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+      if (p.life <= 0 ||
+          p.x < -1 ||
+          p.y < -1 ||
+          p.x > world.cols + 1 ||
+          p.y > world.rows + 1 ||
+          !_projectileCanTravel(world, p.x, p.y)) {
+        continue;
+      }
 
-    nextState = _syncHp(nextState, world);
-
-    if (world.allHeroesDead) {
-      return _stepResult(
-        world,
-        nextState,
-        partyWiped: true,
-        goldFromKills: goldFromKills,
-      );
-    }
-
-    _updateChambers(world, reducedVfx: state.reducedVfx);
-    // Proximity wake: don't leave later chambers forever dormant.
-    for (final enemy in world.enemies) {
-      if (!enemy.dormant || enemy.hp <= 0) continue;
-      for (final hero in world.heroes) {
-        if (!hero.isAlive) continue;
-        if (_dist(hero, enemy) < 11.0) {
-          enemy.dormant = false;
-          break;
+      final victims = p.team == SpatialTeam.hero ? world.enemies : world.heroes;
+      var hit = false;
+      for (final v in victims) {
+        if (v.hp <= 0 || (v.team == SpatialTeam.enemy && v.dormant)) continue;
+        if (_distPoint(p.x, p.y, v.x, v.y) < 0.55 + p.radius) {
+          final wasAlive = v.hp > 0;
+          final int dealt;
+          if (v.team == SpatialTeam.hero) {
+            // Enemy shots already bake DEF at fire time.
+            dealt = _applyHeroIncomingDamage(
+              world,
+              v,
+              p.damage,
+              reducedVfx: reducedVfx,
+            );
+          } else {
+            var hitDmg = p.damage;
+            if (world.afkAssist) hitDmg = (hitDmg * 2.4).round();
+            dealt = math.max(
+              1,
+              hitDmg - v.effectiveDefense ~/ (world.afkAssist ? 3 : 1),
+            );
+            v.hp = math.max(0, v.hp - dealt);
+            final caster = _heroById(world, p.casterId);
+            if (caster != null) {
+              _recordHeroDamage(caster, dealt);
+              _applyTankSoftThreat(caster, v);
+              // Ranged autos/abilities use projectiles — grant resource like
+              // melee direct hits so casters/hunters aren't passive-only.
+              if (dealt > 0) {
+                _grantCombatResource(caster, dealt: dealt);
+              }
+            }
+          }
+          if (dealt > 0 && !reducedVfx) {
+            _spawnFloater(
+              world,
+              x: v.x + (rng.nextDouble() - 0.5) * 0.25,
+              y: v.y - 0.3,
+              text: p.isCrit ? 'CRIT $dealt' : '$dealt',
+              argb: p.isCrit ? _floaterCrit : (p.labelArgb ?? _floaterDamage),
+              life: p.isCrit ? 0.65 : 0.4,
+              priority: p.isCrit ? 2 : 0,
+            );
+          }
+          if (p.onHitHealCaster && p.casterId != null && dealt > 0) {
+            for (final h in world.heroes) {
+              if (h.id == p.casterId && h.isAlive) {
+                _healLowestAlly(
+                  world,
+                  math.max(1, (dealt * 0.4).round()),
+                  reducedVfx: reducedVfx,
+                  healer: h,
+                );
+                _gainRage(h, 2);
+                break;
+              }
+            }
+          }
+          if (p.isCrit && !reducedVfx) {
+            _spawnBurst(world, x: v.x, y: v.y, argb: _floaterCrit, radius: 0.7);
+          } else if (!reducedVfx) {
+            final hitArgb = switch (p.style) {
+              SpellBoltStyle.fire => 0xFFFF6030,
+              SpellBoltStyle.holy => 0xFFFFE080,
+              SpellBoltStyle.frost => 0xFF80D0FF,
+              SpellBoltStyle.arcane => 0xFFC070FF,
+              SpellBoltStyle.shadow => 0xFFB060E0,
+              SpellBoltStyle.nature => 0xFF70D070,
+              SpellBoltStyle.lightning => 0xFFA0E8FF,
+              SpellBoltStyle.arrow => 0xFFE8D080,
+              SpellBoltStyle.weapon =>
+                p.team == SpatialTeam.hero ? 0xFFFFE08A : 0xFFFF6A4A,
+            };
+            _spawnBurst(
+              world,
+              x: v.x,
+              y: v.y,
+              argb: hitArgb,
+              radius: p.style == SpellBoltStyle.fire
+                  ? 0.65
+                  : (p.style == SpellBoltStyle.arrow ? 0.28 : 0.35),
+              life: 0.2,
+            );
+          }
+          hit = true;
+          p.hitsRemaining -= 1;
+          if (wasAlive && v.hp <= 0 && v.team == SpatialTeam.enemy) {
+            final killed = _onEnemyKilled(world, nextState, v, rng);
+            goldFromKills += killed.gold;
+            nextState = killed.state;
+            if (!reducedVfx) {
+              _spawnBurst(
+                world,
+                x: v.x,
+                y: v.y,
+                argb: _floaterGold,
+                radius: 0.85,
+              );
+            }
+          }
+          if (!p.pierce || p.hitsRemaining <= 0) {
+            break;
+          }
+        }
+      }
+      if (!hit || (p.pierce && p.hitsRemaining > 0)) {
+        if (!(hit && (!p.pierce || p.hitsRemaining <= 0))) {
+          remaining.add(p);
         }
       }
     }
-    if (world.allEnemiesDead &&
-        (world.groundLoot.isEmpty ||
-            world.groundLoot.every(
-              (loot) => loot.age > (world.afkAssist ? 1.0 : 4.5),
-            ))) {
-      if (!world.awaitingExit) {
-        // AFK exit gate (1s) is earlier than auto-pickup (4.5s) — vacuum now
-        // so ground loot is never discarded on rebuild.
-        nextState = _vacuumGroundLoot(world, nextState);
-        world.awaitingExit = true;
-        world.exitWaitTimer = 0;
-        if (!state.reducedVfx) {
-          final ex = world.map.exitPoint.$1 + 0.5;
-          final ey = world.map.exitPoint.$2 + 0.5;
-          _spawnRing(
-            world,
-            x: ex,
-            y: ey,
-            argb: 0xFF70E0A0,
-            radius: 1.4,
-            life: 0.65,
-          );
-          _spawnBurst(
-            world,
-            x: ex,
-            y: ey,
-            argb: 0x88A0FFC0,
-            radius: 0.7,
-            life: 0.4,
-          );
+    world.projectiles
+      ..clear()
+      ..addAll(remaining);
+    return (state: nextState, gold: goldFromKills);
+  }
+
+  /// Pets: follow their owner, then hit whatever the party is hitting.
+  static ({GameState state, int gold}) _stepPets(
+    SpatialWorld world,
+    GameState state, {
+    required double dt,
+    required math.Random rng,
+    required bool reducedVfx,
+  }) {
+    var nextState = state;
+    var goldFromKills = 0;
+    final petLeader = world.leader;
+    world.pets.removeWhere((p) {
+      if (p.petLifeTimer <= 0) return false;
+      p.petLifeTimer -= dt;
+      return p.petLifeTimer <= 0;
+    });
+    for (final pet in world.pets) {
+      if (petLeader == null) break;
+      final leashOwner = _heroById(world, pet.petOwnerId) ?? petLeader;
+      final target = _nearestActiveEnemy(pet, world.enemies);
+      if (target == null) {
+        _steerActor(
+          pet,
+          leashOwner.x - 0.55,
+          leashOwner.y + 0.45,
+          pet.moveSpeed * dt,
+          world,
+          holdDistance: 0.35,
+          separateFrom: <SpatialActor>[...world.heroes, ...world.pets],
+        );
+        continue;
+      }
+      final distance = _dist(pet, target);
+      if (distance > pet.attackRange) {
+        _steerActor(
+          pet,
+          target.x,
+          target.y,
+          pet.moveSpeed * dt,
+          world,
+          holdDistance: pet.attackRange * 0.7,
+          separateFrom: <SpatialActor>[...world.heroes, ...world.pets],
+        );
+      }
+      pet.fireCooldown -= dt;
+      if (pet.fireCooldown <= 0 && _dist(pet, target) <= pet.attackRange) {
+        pet.fireCooldown = pet.attackCooldown;
+        final wasAlive = target.hp > 0;
+        final petHit = math.max(1, pet.attack - target.effectiveDefense);
+        target.hp = math.max(0, target.hp - petHit);
+        pet.attackFlash = 0.14;
+        final owner =
+            _heroById(world, pet.petOwnerId) ??
+            (pet.id.startsWith('classpet_')
+                ? _heroById(world, pet.id.replaceFirst('classpet_', ''))
+                : null);
+        if (owner != null) {
+          _recordHeroDamage(owner, petHit);
+        }
+        if (!reducedVfx) {
+          _spawnSlash(world, from: pet, to: target, isCrit: false);
+        }
+        _spawnFloater(
+          world,
+          x: target.x,
+          y: target.y - 0.25,
+          text: '$petHit',
+          argb: _floaterDamage,
+          life: 0.6,
+        );
+        if (wasAlive && target.hp <= 0) {
+          final killed = _onEnemyKilled(world, nextState, target, rng);
+          goldFromKills += killed.gold;
+          nextState = killed.state;
         }
       }
     }
-
-    return _stepResult(world, nextState, goldFromKills: goldFromKills);
+    return (state: nextState, gold: goldFromKills);
   }
 
   /// God Hand: AOE damage + brief party guidance toward the tap.

@@ -17,6 +17,7 @@ import '../spatial/spatial_combat.dart';
 import '../ui/game_audio.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'gear_service.dart';
 import 'hero_identity.dart';
 import 'logic_notices.dart';
 import 'meta_systems.dart';
@@ -565,9 +566,8 @@ class GameDirector extends ChangeNotifier {
         // Debounce mid-fight auto-equip: every few pickups, or when bag is
         // nearly full. Floor clear still auto-equips in GameLogic.
         _lootSinceAutoEquip++;
-        final stashCap = GameLogic.maxGearStashFor(_state);
-        final nearFull = _state.gearStash.length >= (stashCap * 0.85).ceil();
-        final shouldEquip = nearFull || _lootSinceAutoEquip >= 3;
+        final shouldEquip =
+            GearService.isBagWarning(_state) || _lootSinceAutoEquip >= 3;
         if (shouldEquip) {
           _lootSinceAutoEquip = 0;
           final stashBeforeEquip = _state.gearStash.length;
@@ -1153,8 +1153,7 @@ class GameDirector extends ChangeNotifier {
   void autoSellJunk() {
     final beforeLen = _state.gearStash.length;
     final beforeGold = _state.gold;
-    final cap = GameLogic.maxGearStashFor(_state);
-    final unstick = beforeLen >= (cap * 0.9).ceil();
+    final unstick = GearService.isBagJammed(_state);
     _applyUpgrade(GameLogic.autoSellJunk(_state, unstickBag: unstick));
     LogicNotices.takeBagCleanup(); // reported below, not as a second toast
     final sold = beforeLen - _state.gearStash.length;
@@ -1169,8 +1168,7 @@ class GameDirector extends ChangeNotifier {
   void autoDisassembleJunk() {
     final beforeLen = _state.gearStash.length;
     final beforeEss = _state.essence;
-    final cap = GameLogic.maxGearStashFor(_state);
-    final unstick = beforeLen >= (cap * 0.9).ceil();
+    final unstick = GearService.isBagJammed(_state);
     _applyUpgrade(GameLogic.autoDisassembleJunk(_state, unstickBag: unstick));
     LogicNotices.takeBagCleanup(); // reported below, not as a second toast
     final scraped = beforeLen - _state.gearStash.length;
@@ -1187,8 +1185,7 @@ class GameDirector extends ChangeNotifier {
     final beforeLen = _state.gearStash.length;
     final beforeGold = _state.gold;
     final beforeEss = _state.essence;
-    final cap = GameLogic.maxGearStashFor(_state);
-    final unstick = beforeLen >= (cap * 0.9).ceil();
+    final unstick = GearService.isBagJammed(_state);
     _applyUpgrade(
       GameLogic.cleanBagJunk(_state, unstickBag: unstick, mergeFirst: true),
     );

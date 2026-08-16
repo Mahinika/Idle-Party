@@ -12,6 +12,7 @@ import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
 import '../models/vfx_quality.dart';
+import 'keystone.dart';
 
 int _jsonInt(dynamic value, [int fallback = 0]) {
   if (value == null) return fallback;
@@ -499,7 +500,7 @@ class GameState {
   }
 
   /// AL-gated keystone cap (0–20). AL0 → 3, grows with Ascension.
-  int get effectiveMaxHardmode => min(20, max(2, 3 + ascensionLevel));
+  int get effectiveMaxHardmode => Keystone.maxForAl(ascensionLevel);
 
   /// Sum of all heroes' gear attack (UI / power checks).
   int get equipmentAttackBonus =>

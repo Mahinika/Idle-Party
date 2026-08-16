@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/gear_service.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
@@ -481,7 +482,7 @@ class _InventoryDockState extends State<InventoryDock>
   Widget _bagTab(List<EquipmentItem?> slots, EquipmentItem? primary) {
     final cap = GameLogic.maxGearStashFor(state);
     final filled = state.gearStash.length;
-    final nearFull = filled >= (cap * 0.9).ceil();
+    final nearFull = GearService.isBagJammed(state);
     final filter = bagSlotFilter;
     final filterLabel = filter == null
         ? null

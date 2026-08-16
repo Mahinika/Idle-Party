@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/models/dungeon_def.dart';
 
 /// Mythic+-style keystone runs: level, affixes, idle-friendly timer, upgrade.
 abstract final class Keystone {
@@ -44,7 +45,8 @@ abstract final class Keystone {
     return floors * perFloorMs;
   }
 
-  static int bossFloorForAl(int ascensionLevel) => 5 + ascensionLevel;
+  static int bossFloorForAl(int ascensionLevel) =>
+      DungeonCatalog.bossFloor(ascensionLevel);
 
   /// Affixes locked at run start from key level + ISO week + personal extras.
   static List<String> affixesFor({

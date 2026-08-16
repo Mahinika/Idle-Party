@@ -25,6 +25,22 @@ abstract final class GearService {
   static int maxGearStashFor(GameState state) =>
       maxGearStash + state.metaDepth.stashBonusSlots;
 
+  /// When the bag counts as "filling up" — the badge and the hint use this.
+  static const double bagWarnFraction = 0.85;
+
+  /// When the bag is jammed enough that cleaning may drop kept-tier gear.
+  static const double bagJamFraction = 0.90;
+
+  static int bagWarnAt(int cap) => (cap * bagWarnFraction).ceil();
+
+  static int bagJamAt(int cap) => (cap * bagJamFraction).ceil();
+
+  static bool isBagWarning(GameState state) =>
+      state.gearStash.length >= bagWarnAt(maxGearStashFor(state));
+
+  static bool isBagJammed(GameState state) =>
+      state.gearStash.length >= bagJamAt(maxGearStashFor(state));
+
   /// Puts gear into the inventory stash. Overflow salvages the oldest piece.
   static GameState stashEquipment(GameState state, EquipmentItem item) {
     return stashEquipmentDetailed(state, item).state;
@@ -1279,10 +1295,7 @@ abstract final class GearService {
 
   /// Run merge + auto-sell + auto-disassemble when stash is ≥90% full.
   static GameState unstickBagIfNeeded(GameState state) {
-    final cap = maxGearStashFor(state);
-    if (state.gearStash.length < (cap * 0.9).ceil()) {
-      return state;
-    }
+    if (!isBagJammed(state)) return state;
     return cleanBagJunk(state, unstickBag: true);
   }
 
