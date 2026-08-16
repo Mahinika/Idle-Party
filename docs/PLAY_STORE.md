@@ -12,11 +12,11 @@ Package id: **`com.idleparty.app`**
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ✅ | Console saved 2026-08-16: branch blob `docs/PRIVACY.md` on `cursor/keystone-habit-b46b` (Play Games + delete steps). Switch to `main` after merge. |
-| Data safety form | ⏳ | Started 2026-08-16: collects **optional** Play Games (User IDs, gameplay/Other actions, Files and docs / Saved Games). Draft — usage/handling + submit still open. No ads / no Idle Party analytics. |
+| Data safety form | ✅ | Saved + sent for review 2026-08-16 (with listing + privacy URL; queued after Play pre-checks). Optional Play Games: User IDs, Other actions (gameplay), Files and docs (Saved Games). Collected only (not shared); encrypted in transit; OAuth; delete URLs = branch PRIVACY.md. No ads / no Idle Party analytics. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: Play-installed smoke after 1.12.9 review. |
-| IARC / content rating | ❌ | Mild fantasy combat; no chat / gambling / ads |
-| Store listing copy (EN) | ⏳ | Idle Party short + full; no Flutter placeholders |
-| Screenshots + feature graphic | ❌ | Hub + dungeon; icon `assets/custom/ui/app_icon.png` |
+| IARC / content rating | ✅ | Completed 2026-08-08 (mild fantasy combat). Console shows PEGI 12 / ESRB Everyone 10+ / IARC 7+ (and regional equivalents). No chat / gambling / ads. |
+| Store listing copy (EN) | ✅ | Saved 2026-08-16. Short: KEYSTONE + Ascend. Full: 15 zones, 31 specs, optional Play Games, no ads / no paid store. |
+| Screenshots + feature graphic | ✅ | Phone shots + feature graphic already on listing (2026-08-08). Icon refreshed 2026-08-16 from `assets/custom/ui/app_icon.png`. |
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
 
@@ -49,7 +49,7 @@ over Play ops unless the owner asks about Play.
 - [x] Privacy policy URL in Play Console (2026-08-16):  
   `https://github.com/Mahinika/Idle-Party/blob/cursor/keystone-habit-b46b/docs/PRIVACY.md`  
   (switch to `main` after this branch merges).
-- [ ] Data safety form: **local save**; **optional Play Games** (Game progress / leaderboards / Saved Games when signed in); **no ads**; **no Idle Party analytics servers**; clipboard export/import is optional and user-initiated (see [PRIVACY.md](PRIVACY.md)). Draft started 2026-08-16 — finish usage/handling, then submit from Publishing overview.
+- [x] Data safety form (2026-08-16): **optional Play Games** (User IDs / gameplay Other actions / Saved Games files); collected not shared; encrypted in transit; OAuth; delete account + data URLs point at [PRIVACY.md](PRIVACY.md). **No ads**; **no Idle Party analytics servers**; clipboard export/import is optional and user-initiated. Saved and sent for review from Publishing overview (with listing + privacy URL; Play pre-checks then Google review).
 
 ### Play Games setup (leaderboards + cloud)
 
@@ -68,9 +68,9 @@ Suggested Description (en-US):
 
 ## Content rating / store listing notes
 
-- [ ] Complete the content rating questionnaire (IARC). Expect a general / mild fantasy violence rating for an idle RPG with combat; no real-world gambling, no user-generated chat, no ads in the build described in PRIVACY.
-- [ ] Short description / full description: use product name **Idle Party**; avoid placeholder Flutter text.
-- [ ] Screenshots and feature graphic from current hub/dungeon UI; icon from `assets/custom/ui/app_icon.png` (or Play-exported adaptive icon).
+- [x] Content rating questionnaire (IARC) completed 2026-08-08 — mild fantasy combat; PEGI 12 / ESRB Everyone 10+ / IARC 7+ (no chat, gambling, or ads).
+- [x] Short + full description (en-US) saved 2026-08-16: product name **Idle Party**; 15 zones; KEYSTONE / Ascend / optional Play Games; no Flutter placeholders.
+- [x] Phone screenshots + feature graphic on listing (2026-08-08); high-res icon refreshed 2026-08-16 from `assets/custom/ui/app_icon.png`.
 - [ ] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*`.
 
 ## Production listing
