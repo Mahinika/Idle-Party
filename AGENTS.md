@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.8**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.9**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -31,7 +31,7 @@ for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (historical upload noted as AAB **14 / 1.9.3**); tagged GitHub line is **1.12.0**, working ship **1.12.8**.
+closed Alpha (historical upload noted as AAB **14 / 1.9.3**); tagged GitHub line is **1.12.0**, working ship **1.12.9**.
 Production still needs **12 closed testers × 14 days**. Do not treat Play as the
 primary install channel yet.
 
@@ -196,7 +196,7 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 | Meta blob | `lib/models/meta_depth.dart` |
 | Dungeon catalog | `lib/models/dungeon_def.dart` |
 | Spatial sim | `lib/spatial/spatial_combat.dart` |
-| Ability runtime | `lib/spatial/ability_effects.dart` |
+| Ability runtime | `lib/spatial/ability_effects.dart` + `kit_migrated_casts.dart` |
 | Tile maps | `lib/spatial/tile_map.dart` |
 | Floor blueprint / placement | `lib/spatial/floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart` + `docs/FLOOR_BLUEPRINT.md` |
 | Hub | `lib/ui/hub_screen.dart` |

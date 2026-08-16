@@ -2,8 +2,11 @@ part of 'spatial_combat.dart';
 
 /// Dispatches class-kit casts for live spatial combat.
 ///
-/// Original four specs (protection / discipline / fire / combat) keep their
-/// dedicated tickers; every other [HeroSpecId] uses the shared data-driven path.
+/// Every [HeroSpecId] runs the shared data-driven path: kit passives feed the
+/// sticky `kit*Mul` fields, [contextOk] decides when a row may fire, and
+/// [_resolveEffect] applies it. White-hit riders (Revenge / Shield Slam /
+/// Eviscerate / Living Bomb ticks / Prayer of Mending bounce) still live in
+/// [SpatialCombat] because they hang off swings, not casts.
 abstract final class AbilityEffectRunner {
   static GameState? _stateOut;
   static int _goldOut = 0;
@@ -37,34 +40,18 @@ abstract final class AbilityEffectRunner {
     if (!hero.isAlive) return 0;
 
     final before = world.pendingAbilityCasts;
-    final specId = hero.heroSpecId;
+    final role = hero.heroRole;
+    // Saves from before specs existed only carry a role — read the kit off it.
+    final specId =
+        hero.heroSpecId ?? (role == null ? null : HeroSpecs.fromGearAffinity(role));
     final focus = SpatialCombat._pickSmartFocus(hero, world);
 
-    if (_useLegacyTicker(specId)) {
-      _tickLegacy(
-        world,
-        hero,
-        focus,
-        dt: dt,
-        rng: rng,
-        reducedVfx: reducedVfx,
-        hasShield: hasShield,
-      );
-    } else if (specId != null) {
+    if (specId != null) {
       _tickSpecKit(
         world,
         hero,
         focus,
         specId,
-        dt: dt,
-        rng: rng,
-        reducedVfx: reducedVfx,
-      );
-    } else {
-      _tickLegacy(
-        world,
-        hero,
-        focus,
         dt: dt,
         rng: rng,
         reducedVfx: reducedVfx,
@@ -75,61 +62,6 @@ abstract final class AbilityEffectRunner {
     return world.pendingAbilityCasts - before;
   }
 
-  static bool _useLegacyTicker(HeroSpecId? specId) {
-    if (specId == null) return true;
-    return ClassKits.isLegacySpec(specId);
-  }
-
-  static void _tickLegacy(
-    SpatialWorld world,
-    SpatialActor hero,
-    SpatialActor? focus, {
-    required double dt,
-    required math.Random rng,
-    required bool reducedVfx,
-    required bool hasShield,
-  }) {
-    final role = hero.heroRole;
-    if (role == HeroRole.warrior) {
-      final cast = SpatialCombat._tickWarriorAbilities(
-        world,
-        _stateOut!,
-        hero,
-        focus,
-        dt,
-        rng,
-        reducedVfx: reducedVfx,
-        hasShield: hasShield,
-      );
-      _stateOut = cast.state;
-      _goldOut += cast.gold;
-    } else if (role == HeroRole.healer) {
-      SpatialCombat._tickPriestAbilities(
-        world,
-        hero,
-        focus,
-        dt,
-        reducedVfx: reducedVfx,
-      );
-    } else if (role == HeroRole.mage) {
-      SpatialCombat._tickMageAbilities(
-        world,
-        hero,
-        focus,
-        dt,
-        reducedVfx: reducedVfx,
-      );
-    } else if (role == HeroRole.rogue) {
-      SpatialCombat._tickRogueAbilities(
-        world,
-        hero,
-        focus,
-        dt,
-        reducedVfx: reducedVfx,
-      );
-    }
-  }
-
   static void _tickSpecKit(
     SpatialWorld world,
     SpatialActor hero,
@@ -138,19 +70,17 @@ abstract final class AbilityEffectRunner {
     required double dt,
     required math.Random rng,
     required bool reducedVfx,
+    required bool hasShield,
   }) {
     final def = HeroSpecs.def(specId);
     // Passive resource while near combat.
     if (focus != null) {
-      final rate = switch (def.resource) {
-        // Kit-path regen (legacy tickers keep their own rates).
-        // Rage/mana bumped so mid-kit spenders can fire between openers.
-        SpecResource.rage => 8.0,
-        SpecResource.mana => 9.0,
-        SpecResource.energy => 11.0,
-        SpecResource.runic => 9.0,
-      };
+      final rate = _resourceRate(specId, def.resource);
       SpatialCombat._gainRage(hero, rate * dt);
+      // Combat Rogue floods energy during Killing Spree.
+      if (specId == HeroSpecId.combat && hero.killingSpreeTimer > 0) {
+        SpatialCombat._gainRage(hero, 14 * dt);
+      }
     }
     if (def.resource == SpecResource.mana) {
       SpatialCombat._gainRage(
@@ -166,6 +96,7 @@ abstract final class AbilityEffectRunner {
     hero.kitHealMul = 1.0;
     hero.kitHasteMul = 1.0;
     hero.kitRootBonus = 0.0;
+    hero.innerFireActive = false;
     for (final d in unlocked) {
       if (d.effect != AbilityEffectKind.passive) continue;
       _applyPassive(hero, d, def);
@@ -190,6 +121,7 @@ abstract final class AbilityEffectRunner {
 
     bool can(ClassAbilityDef d) {
       if (!ClassKits.isUnlocked(d.id, hero.heroLevel)) return false;
+      if (d.requiresShield && !hasShield) return false;
       if (SpatialCombat._abilityCdLeft(hero, d.id) > 0) return false;
       if (hero.rage + 0.001 < d.resourceCost) return false;
       return true;
@@ -208,6 +140,20 @@ abstract final class AbilityEffectRunner {
         (focus.role == EnemyRole.boss || focus.role == EnemyRole.elite);
 
     bool contextOk(ClassAbilityDef d) {
+      // Rows migrated off the old dedicated tickers keep their hand-written
+      // gates; a non-null answer wins over the generic heuristics below.
+      final migrated = MigratedKitCasts.contextOk(
+        world,
+        hero,
+        focus,
+        d,
+        nearby: nearby,
+        pack: pack,
+        focusElite: focusElite,
+        focusHpFrac: focusHpFrac,
+        hpFrac: hpFrac,
+      );
+      if (migrated != null) return migrated;
       // AoE only when a pack is present (still allow on lone boss).
       if (d.effect == AbilityEffectKind.aoe) {
         if (pack < 2 && !(pack == 1 && focusElite)) return false;
@@ -335,6 +281,11 @@ abstract final class AbilityEffectRunner {
             d,
       ];
       fillers.sort((a, b) {
+        // Positioning first: their gates already say "you are out of place",
+        // so they must not lose the single filler slot to a big spender.
+        final aMove = _isPositioningAbility(a);
+        final bMove = _isPositioningAbility(b);
+        if (aMove != bMove) return aMove ? -1 : 1;
         // Healers: prefer party/ST heals over enemy AoE when someone is hurt.
         if (def.isHealer && _partyNeedsHeal(world)) {
           final aHeal = a.effect == AbilityEffectKind.heal ||
@@ -384,6 +335,35 @@ abstract final class AbilityEffectRunner {
       }
     }
   }
+
+  /// Resource per second while a focus is up. The four kits that used to run
+  /// dedicated tickers keep their old rates so pacing did not shift on migrate.
+  static double _resourceRate(HeroSpecId specId, SpecResource resource) {
+    switch (specId) {
+      case HeroSpecId.protection:
+        return 6.0;
+      case HeroSpecId.discipline:
+        return 7.0;
+      case HeroSpecId.fire:
+        return 8.0;
+      case HeroSpecId.combat:
+        return 10.0;
+      default:
+        // Rage/mana bumped so mid-kit spenders can fire between openers.
+        return switch (resource) {
+          SpecResource.rage => 8.0,
+          SpecResource.mana => 9.0,
+          SpecResource.energy => 11.0,
+          SpecResource.runic => 9.0,
+        };
+    }
+  }
+
+  /// Gap-closers / kites whose gate already means "you are out of position".
+  static bool _isPositioningAbility(ClassAbilityDef d) => switch (d.id) {
+        AbilityId.charge || AbilityId.blink || AbilityId.sprint => true,
+        _ => false,
+      };
 
   static bool _isExecuteAbility(ClassAbilityDef d) {
     // Rampage keeps id furyExecute but is not an execute finisher.
@@ -533,15 +513,24 @@ abstract final class AbilityEffectRunner {
       case AbilityId.moonkinForm:
         hero.kitOutMul *= 0.96;
 
-      // Legacy kit passives are handled in dedicated tickers.
+      // —— original four kits ——
       case AbilityId.defensiveStance:
+        // White-hit half of the stance lives in [_warriorAttackMods].
+        hero.kitOutMul *= 0.9;
+        hero.kitInMul *= 0.92;
       case AbilityId.revenge:
+        // Rider on blocked swings — no always-on multiplier.
+        break;
       case AbilityId.innerFire:
+        hero.innerFireActive = true;
+        hero.kitHealMul *= 1.36;
+        hero.kitInMul *= 0.94;
       case AbilityId.sinisterStrike:
-        break;
+        // Combo build rides white swings; keep Combat inside the melee band.
+        hero.kitOutMul *= 0.94;
       case AbilityId.arcaneIntellect:
-        // Personal spell power is applied via GameState caster aura / kit path.
-        break;
+        // Personal spell power; party-wide Int is the GameState caster aura.
+        hero.kitOutMul *= 1.22;
       default:
         // Fallback: mild role-appropriate crumb if a new passive is added.
         if (spec.isTank) {
@@ -564,6 +553,15 @@ abstract final class AbilityEffectRunner {
     required math.Random rng,
     required bool reducedVfx,
   }) {
+    final migrated = MigratedKitCasts.resolve(
+      world,
+      hero,
+      focus,
+      def,
+      rng: rng,
+      reducedVfx: reducedVfx,
+    );
+    if (migrated != null) return migrated;
     if (def.id == AbilityId.armyOfDead) {
       _spendAndCd(world, hero, def);
       SpatialCombat.spawnTempPets(
@@ -2230,6 +2228,7 @@ abstract final class AbilityEffectRunner {
         AbilityId.coldBlood => 6.0,
         AbilityId.arcanePower => 7.0,
         AbilityId.furyRecklessness => 8.0,
+        AbilityId.combustion => 4.0,
         _ => 5.0,
       };
       hero.combustionTimer = math.max(hero.combustionTimer, dur);

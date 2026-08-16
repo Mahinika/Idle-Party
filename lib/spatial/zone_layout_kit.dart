@@ -98,14 +98,14 @@ class ZoneLayoutKit {
           dungeonId: 'tide',
           landmarks: <MapPropKind>[
             MapPropKind.water,
+            MapPropKind.water,
             MapPropKind.fountain,
-            MapPropKind.barrel,
             MapPropKind.pillar,
           ],
           preferTreasureAlcove: true,
-          treasureAlcoveChance: 0.28,
+          treasureAlcoveChance: 0.36,
           eliteRoomChest: true,
-          normalRoomChestChance: 0.14,
+          normalRoomChestChance: 0.16,
           landmarkPerChamber: 2,
         ),
         'ember' => const ZoneLayoutKit(
@@ -113,7 +113,7 @@ class ZoneLayoutKit {
           landmarks: <MapPropKind>[
             MapPropKind.lava,
             MapPropKind.anvil,
-            MapPropKind.torch,
+            MapPropKind.skull,
             MapPropKind.pillar,
           ],
           preferChoke: true,
@@ -124,10 +124,10 @@ class ZoneLayoutKit {
         'grove' => const ZoneLayoutKit(
           dungeonId: 'grove',
           landmarks: <MapPropKind>[
-            MapPropKind.fountain,
+            MapPropKind.fence,
             MapPropKind.pot,
             MapPropKind.bones,
-            MapPropKind.rubble,
+            MapPropKind.fountain,
           ],
           preferChoke: true,
           preferTreasureAlcove: false,

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:games_services/games_services.dart';
 
+import 'flutter_test_env_stub.dart'
+    if (dart.library.io) 'flutter_test_env_io.dart' as test_env;
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'play_games_scores.dart';
@@ -28,9 +30,12 @@ abstract final class PlayGamesBridge {
 
   static DateTime? get lastCloudUploadAt => _lastCloudUploadAt;
 
-  /// Platform supports Play Games (Android). iOS/web → false soft-fail.
+  /// Platform supports Play Games (Android). iOS/web/tests → false soft-fail.
   static bool get isSupported {
     if (kIsWeb) return false;
+    // `flutter test` on desktop still reports TargetPlatform.android for this
+    // app — never touch games_services / Timers from unit tests.
+    if (test_env.inFlutterTestProcess()) return false;
     return defaultTargetPlatform == TargetPlatform.android;
   }
 

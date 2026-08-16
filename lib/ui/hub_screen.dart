@@ -8,6 +8,7 @@ import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/hub_chase.dart';
 import '../core/keystone.dart';
+import '../core/local_season.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
@@ -392,6 +393,10 @@ class _HubScreenState extends State<HubScreen>
                                   actionLabel: actionLabel,
                                   onAction: onAction,
                                 ),
+                                _HubMetaPulse(
+                                  state: state,
+                                  chaseKind: chase.kind,
+                                ),
                                 const SizedBox(height: 6),
                                 Transform.scale(
                                   scale: 1.0 + (_torch.value * 0.012),
@@ -531,6 +536,78 @@ class _HubScreenState extends State<HubScreen>
     );
   }
 
+}
+
+/// Always-visible KEY / vault / week crumbs under TODAY (phone hub).
+/// Skips bits that duplicate the active chase so the strip stays quiet.
+class _HubMetaPulse extends StatelessWidget {
+  const _HubMetaPulse({
+    required this.state,
+    required this.chaseKind,
+  });
+
+  final GameState state;
+  final HubChaseKind chaseKind;
+
+  @override
+  Widget build(BuildContext context) {
+    final bits = <String>[];
+    final showKey = GameLogic.showKeystoneJargon(state);
+    if (showKey &&
+        chaseKind != HubChaseKind.keystone &&
+        chaseKind != HubChaseKind.dailyVaultProgress &&
+        chaseKind != HubChaseKind.claimDailyVault) {
+      bits.add(
+        state.hardmodeLevel <= 0
+            ? 'KEY off'
+            : 'KEY +${state.hardmodeLevel}',
+      );
+    }
+
+    if (chaseKind != HubChaseKind.claimDailyVault &&
+        chaseKind != HubChaseKind.dailyVaultProgress) {
+      final clears = state.metaDepth.dailyVaultClears;
+      final target = GameLogic.dailyVaultClearTarget;
+      if (GameLogic.canClaimDailyVault(state)) {
+        bits.add('Vault READY');
+      } else {
+        bits.add('Vault $clears/$target');
+      }
+    }
+
+    if (chaseKind != HubChaseKind.weekGoal) {
+      final weekKey = state.metaDepth.weeklyKey.isNotEmpty
+          ? state.metaDepth.weeklyKey
+          : GameLogic.isoWeekKey(DateTime.now().toUtc());
+      final week = LocalSeasonCatalog.forWeekKey(weekKey);
+      if (week.hasGoal) {
+        if (LocalSeasonCatalog.weekGoalReady(state, week)) {
+          bits.add('Week READY');
+        } else if (!LocalSeasonCatalog.weekGoalClaimed(state, week)) {
+          bits.add(LocalSeasonCatalog.weekProgressLabel(state, week));
+        }
+      }
+    }
+
+    if (bits.isEmpty) return const SizedBox(height: 4);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: 2),
+      child: Semantics(
+        label: 'Meta: ${bits.join(', ')}',
+        child: Text(
+          bits.join(' · '),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.body(
+            size: 11,
+            color: GameTheme.parchmentDim,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _HubTodayCard extends StatelessWidget {

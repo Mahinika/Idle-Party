@@ -466,8 +466,8 @@ class ClassKits {
       cooldown: 8,
       resourceCost: 15,
       requiresShield: true,
-      effect: AbilityEffectKind.emergencyDefend,
-      tier: AbilityCastTier.emergency,
+      effect: AbilityEffectKind.selfBuff,
+      tier: AbilityCastTier.filler,
       coeff: 0.35,
     ),
     ClassAbilityDef(
@@ -790,7 +790,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.08,
+      coeff: 0.95,
     ),
     ClassAbilityDef(
       id: AbilityId.livingBomb,
@@ -831,7 +831,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.45,
+      coeff: 0.42,
     ),
     ClassAbilityDef(
       id: AbilityId.blink,
@@ -876,7 +876,7 @@ class ClassKits {
       resourceCost: 28,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 1.35,
+      coeff: 1.45,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.fire,
@@ -960,7 +960,7 @@ class ClassKits {
       unlockLevel: 9,
       cooldown: 18,
       resourceCost: 20,
-      effect: AbilityEffectKind.aoe,
+      effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
       coeff: 0.48,
     ),
@@ -4663,11 +4663,9 @@ class ClassKits {
     return null;
   }
 
-  static bool isLegacySpec(HeroSpecId id) =>
-      id == HeroSpecId.protection ||
-      id == HeroSpecId.discipline ||
-      id == HeroSpecId.fire ||
-      id == HeroSpecId.combat;
+  /// Every spec now runs the shared [AbilityEffectRunner] kit path. Kept as a
+  /// hook so a future kit can opt out of the data-driven runner if needed.
+  static bool isLegacySpec(HeroSpecId id) => false;
 
   /// Legacy role kits (original four specs only).
   static List<ClassAbilityDef> forRole(HeroRole role) {

@@ -13,9 +13,12 @@ abstract final class DungeonEnvironment {
         'dead' => const Color(0xFF070908),
         'hell' => const Color(0xFF120606),
         'crystal' => const Color(0xFF081018),
-        'tide' => const Color(0xFF021018),
-        'ember' => const Color(0xFF1C0C02),
-        'grove' => const Color(0xFF06140A),
+        // Brine void — cooler/greener than crystal’s blue pit.
+        'tide' => const Color(0xFF02141A),
+        // Charcoal ash pit — warmer brown than hell’s red void.
+        'ember' => const Color(0xFF160A02),
+        // Canopy shade — moss black, not fen’s swamp yellow-green.
+        'grove' => const Color(0xFF041208),
         // Violet void — not crystal blue, not underworld purple twin.
         'storm' => const Color(0xFF0A0614),
         // Deep ice void — quiet cyan after the gale (not crystal twin).
@@ -36,9 +39,12 @@ abstract final class DungeonEnvironment {
         'hell' => const Color(0x4CA02018),
         'crystal' => const Color(0x4450A0F0),
         // Dedicated backdrops — keep washes light like crystal (~0x44–0x50).
-        'tide' => const Color(0x4828C0B0),
-        'ember' => const Color(0x4AF08028),
-        'grove' => const Color(0x4858C040),
+        // Teal brine wash (not crystal’s icy blue twin).
+        'tide' => const Color(0x5020B8A0),
+        // Ember slag orange (not hell’s blood-red wash).
+        'ember' => const Color(0x52E08820),
+        // Leaf canopy green (cooler than fen’s bilious yellow).
+        'grove' => const Color(0x5048A838),
         // Violet haze + electric edge (distinct from crystal blue / underworld).
         'storm' => const Color(0x4A8040D0),
         // Pale cyan frost wash (not storm violet, not crystal blue twin).
@@ -58,9 +64,9 @@ abstract final class DungeonEnvironment {
         'dead' => const Color(0x5A182028),
         'hell' => const Color(0x6A401010),
         'crystal' => const Color(0x5A183050),
-        'tide' => const Color(0x5A186070),
-        'ember' => const Color(0x5A482810),
-        'grove' => const Color(0x5A283818),
+        'tide' => const Color(0x5A146878),
+        'ember' => const Color(0x5A503010),
+        'grove' => const Color(0x5A1E3820),
         'storm' => const Color(0x5A281848),
         'rime' => const Color(0x5A184860),
         'fen' => const Color(0x5A3A4810),
@@ -78,9 +84,9 @@ abstract final class DungeonEnvironment {
         'dead' => const Color(0xFF70A090),
         'hell' => const Color(0xFFE05040),
         'crystal' => const Color(0xFF80D0FF),
-        'tide' => const Color(0xFF40C0B0),
-        'ember' => const Color(0xFFE09040),
-        'grove' => const Color(0xFF68B048),
+        'tide' => const Color(0xFF38D0B8),
+        'ember' => const Color(0xFFE89830),
+        'grove' => const Color(0xFF58B050),
         'storm' => const Color(0xFFE8E040),
         'rime' => const Color(0xFF70E8F0),
         'fen' => const Color(0xFFC8E040),
