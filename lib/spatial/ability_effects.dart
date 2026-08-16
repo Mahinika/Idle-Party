@@ -408,6 +408,8 @@ abstract final class AbilityEffectRunner {
         AbilityId.immolateDemo ||
         AbilityId.immolateDestro ||
         AbilityId.serpentSting ||
+        AbilityId.flameShock ||
+        AbilityId.lacerate ||
         AbilityId.garrote ||
         AbilityId.rupture ||
         AbilityId.bloodBoil ||
@@ -624,6 +626,31 @@ abstract final class AbilityEffectRunner {
       }
       return true;
     }
+    if (def.id == AbilityId.gargoyle) {
+      _spendAndCd(world, hero, def);
+      SpatialCombat.spawnTempPets(
+        world,
+        owner: hero,
+        count: 1,
+        duration: 22,
+        atkScale: 0.48,
+        namePrefix: 'Gargoyle',
+        idPrefix: 'garg',
+      );
+      hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 8.0);
+      _announce(world, hero, def.shortLabel, 0xFFA080C0, reducedVfx);
+      if (!reducedVfx) {
+        SpatialCombat._spawnRing(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: 0xFFA080C0,
+          radius: 1.05,
+          life: 0.45,
+        );
+      }
+      return true;
+    }
     // Shamanistic Rage: resource dump + short DR (copy promised both).
     if (def.id == AbilityId.shamanisticRage) {
       _spendAndCd(world, hero, def);
@@ -737,8 +764,9 @@ abstract final class AbilityEffectRunner {
         _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.absorb:
-        // Unholy AMS is a self shell — not a party bubble on the lowest ally.
-        final ally = def.id == AbilityId.antiMagicShell
+        // Unholy AMS / Blood Bone Shield are self shells — not party bubbles.
+        final ally = def.id == AbilityId.antiMagicShell ||
+                def.id == AbilityId.boneShield
             ? hero
             : _lowestAlly(world, hero);
         if (ally == null) return false;
@@ -849,6 +877,42 @@ abstract final class AbilityEffectRunner {
         return true;
       case AbilityEffectKind.emergencyDefend:
         _spendAndCd(world, hero, def);
+        // Preparation: reset other kit CDs (Prep stays on CD).
+        if (def.id == AbilityId.preparation) {
+          final spec = hero.heroSpecId;
+          if (spec != null) {
+            final kitKeys = {
+              for (final d in ClassKits.forSpec(spec)) d.id.name,
+            };
+            hero.abilityCd.removeWhere(
+              (k, _) => k != AbilityId.preparation.name && kitKeys.contains(k),
+            );
+          } else {
+            hero.abilityCd.removeWhere(
+              (k, _) => k != AbilityId.preparation.name,
+            );
+          }
+          hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 4.0);
+          _announce(
+            world,
+            hero,
+            def.shortLabel,
+            0xFFB8D4FF,
+            reducedVfx,
+            important: true,
+          );
+          if (!reducedVfx) {
+            SpatialCombat._spawnRing(
+              world,
+              x: hero.x,
+              y: hero.y,
+              argb: 0xFF90A0C0,
+              radius: 1.05,
+              life: 0.4,
+            );
+          }
+          return true;
+        }
         // Feign Death: drop aggro + brief untargetable (Vanish pattern).
         if (def.id == AbilityId.feignDeath) {
           hero.vanishTimer = math.max(hero.vanishTimer, 2.2);
@@ -1125,11 +1189,13 @@ abstract final class AbilityEffectRunner {
         key.contains('volley') ||
         key.contains('barrage') ||
         def.id == AbilityId.multiShot ||
+        def.id == AbilityId.multiShotSurv ||
         (style == SpellBoltStyle.arrow &&
             (key.contains('shot') || key.contains('arrow')))) {
       _fanBolts(
         world,
         hero,
+        focus,
         def,
         style,
         rng,
@@ -1144,11 +1210,23 @@ abstract final class AbilityEffectRunner {
         def.id == AbilityId.thunderstorm ||
         def.id == AbilityId.howlingBlast ||
         def.id == AbilityId.mindSear ||
+        def.id == AbilityId.blizzard ||
+        def.id == AbilityId.rainOfFire ||
         key.contains('hurricane') ||
         key.contains('starfall') ||
         key.contains('thunderstorm') ||
+        key.contains('blizzard') ||
+        key.contains('rain of fire') ||
         key.contains('mind sear')) {
-      _rainBolts(world, hero, def, style, rng, reducedVfx: reducedVfx);
+      _rainBolts(
+        world,
+        hero,
+        focus,
+        def,
+        style,
+        rng,
+        reducedVfx: reducedVfx,
+      );
       return;
     }
     // Ground zones — heavier rings + on-target sparks (no projectile spam).
@@ -1275,6 +1353,7 @@ abstract final class AbilityEffectRunner {
   static void _fanBolts(
     SpatialWorld world,
     SpatialActor hero,
+    SpatialActor? focus,
     ClassAbilityDef def,
     SpellBoltStyle style,
     math.Random rng, {
@@ -1283,18 +1362,21 @@ abstract final class AbilityEffectRunner {
   }) {
     final raw =
         math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
+    final anchor = focus != null && focus.hp > 0 && !focus.dormant
+        ? focus
+        : hero;
     final enemies = world.enemies
         .where((e) => e.hp > 0 && !e.dormant)
         .toList()
       ..sort(
-        (a, b) => SpatialCombat._dist(hero, a)
-            .compareTo(SpatialCombat._dist(hero, b)),
+        (a, b) => SpatialCombat._dist(anchor, a)
+            .compareTo(SpatialCombat._dist(anchor, b)),
       );
     final picks = enemies.take(hops).toList();
     if (picks.isEmpty) return;
     hero.attackFlash = 0.18;
     for (var i = 0; i < picks.length; i++) {
-      SpatialCombat._addProjectile(world, 
+      SpatialCombat._addProjectile(world,
         SpatialCombat._spellBolt(
           from: hero,
           to: picks[i],
@@ -1410,6 +1492,7 @@ abstract final class AbilityEffectRunner {
   static void _rainBolts(
     SpatialWorld world,
     SpatialActor hero,
+    SpatialActor? focus,
     ClassAbilityDef def,
     SpellBoltStyle style,
     math.Random rng, {
@@ -1420,12 +1503,16 @@ abstract final class AbilityEffectRunner {
         math.max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
+    // Ranged kits kite outside self-radius — rain on the focus pack.
+    final anchor = focus != null && focus.hp > 0 && !focus.dormant
+        ? focus
+        : hero;
 
     if (!reducedVfx) {
       SpatialCombat._spawnRing(
         world,
-        x: hero.x,
-        y: hero.y,
+        x: anchor.x,
+        y: anchor.y,
         argb: argb,
         radius: radius * 0.45,
         life: 0.5,
@@ -1435,7 +1522,7 @@ abstract final class AbilityEffectRunner {
     var i = 0;
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
-      if (SpatialCombat._dist(hero, e) > radius) continue;
+      if (SpatialCombat._dist(anchor, e) > radius) continue;
       if (i >= 4) break;
       SpatialCombat._addProjectile(world, 
         SpatialCombat.spellBoltBetween(
@@ -1900,12 +1987,14 @@ abstract final class AbilityEffectRunner {
       AbilityId.garrote ||
       AbilityId.rupture ||
       AbilityId.serpentSting ||
+      AbilityId.lacerate ||
       AbilityId.corruption ||
       AbilityId.unstableAffliction ||
       AbilityId.curseOfAgony ||
       AbilityId.moonfire ||
       AbilityId.immolateDemo ||
       AbilityId.immolateDestro ||
+      AbilityId.flameShock ||
       AbilityId.shadowWordPain ||
       AbilityId.vampiricTouch ||
       AbilityId.devouringPlague ||
@@ -1921,12 +2010,13 @@ abstract final class AbilityEffectRunner {
     final duration = switch (def.id) {
       AbilityId.rip => 12.0,
       AbilityId.rake || AbilityId.garrote => 8.0,
-      AbilityId.serpentSting || AbilityId.moonfire => 10.0,
+      AbilityId.serpentSting || AbilityId.moonfire || AbilityId.lacerate => 10.0,
       AbilityId.corruption ||
       AbilityId.unstableAffliction ||
       AbilityId.curseOfAgony ||
       AbilityId.immolateDemo ||
       AbilityId.immolateDestro ||
+      AbilityId.flameShock ||
       AbilityId.shadowWordPain ||
       AbilityId.vampiricTouch ||
       AbilityId.devouringPlague =>
@@ -1944,13 +2034,15 @@ abstract final class AbilityEffectRunner {
       AbilityId.rake || AbilityId.garrote => 0.14,
       AbilityId.rupture => 0.18,
       AbilityId.serpentSting => 0.12,
+      AbilityId.lacerate => 0.13,
       AbilityId.corruption => 0.18,
       AbilityId.unstableAffliction => 0.20,
       AbilityId.curseOfAgony => 0.17,
       AbilityId.shadowWordPain => 0.13,
       AbilityId.vampiricTouch => 0.14,
       AbilityId.devouringPlague => 0.16,
-      AbilityId.immolateDemo || AbilityId.immolateDestro => 0.15,
+      AbilityId.immolateDemo || AbilityId.immolateDestro || AbilityId.flameShock =>
+        0.15,
       AbilityId.moonfire => 0.11,
       AbilityId.bloodBoil || AbilityId.bloodBoilUnholy => 0.11,
       AbilityId.howlingBlast => 0.12,

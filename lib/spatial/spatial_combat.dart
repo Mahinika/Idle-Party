@@ -3661,6 +3661,8 @@ abstract final class SpatialCombat {
       AbilityId.chaosBolt ||
       AbilityId.chaosBoltDemo ||
       AbilityId.lavaBurst ||
+      AbilityId.flameShock ||
+      AbilityId.rainOfFire ||
       AbilityId.lavaLash ||
       AbilityId.fireNova ||
       AbilityId.blastWave ||
@@ -3678,6 +3680,7 @@ abstract final class SpatialCombat {
       AbilityId.frostbolt ||
       AbilityId.iceLance ||
       AbilityId.coneOfCold ||
+      AbilityId.blizzard ||
       AbilityId.frostNova ||
       AbilityId.frostNovaMage ||
       AbilityId.hungeringCold ||
@@ -3755,12 +3758,14 @@ abstract final class SpatialCombat {
       AbilityId.arcanePower ||
       AbilityId.slow ||
       AbilityId.antiMagicShell ||
+      AbilityId.boneShield ||
       AbilityId.presenceOfMind =>
         SpellBoltStyle.arcane,
 
       // —— Arrow (hunter ranged) ——
       AbilityId.arcaneShot ||
       AbilityId.multiShot ||
+      AbilityId.multiShotSurv ||
       AbilityId.aimedShot ||
       AbilityId.steadyShot ||
       AbilityId.chimeraShot ||
@@ -3792,6 +3797,7 @@ abstract final class SpatialCombat {
       AbilityId.vampiricTouch ||
       AbilityId.curseOfAgony ||
       AbilityId.armyOfDead ||
+      AbilityId.gargoyle ||
       AbilityId.runeTap ||
       AbilityId.psychicScream =>
         SpellBoltStyle.shadow,
@@ -3819,6 +3825,7 @@ abstract final class SpatialCombat {
       AbilityId.mangleBear ||
       AbilityId.swipe ||
       AbilityId.feralSwipe ||
+      AbilityId.lacerate ||
       AbilityId.maul ||
       AbilityId.overpower ||
       AbilityId.rend ||

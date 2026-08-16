@@ -19,10 +19,19 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.6';
+  static const String currentVersion = '1.12.7';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.7',
+      bullets: <String>[
+        'Kit fantasy pass: Blood Bone Shield, Guardian Lacerate, Fury Enraged Regeneration, Unholy Gargoyle actually summons, Subtlety Preparation resets CDs.',
+        'Pack tools: Elemental Flame Shock, Frost Mage Blizzard, Destruction Rain of Fire, Survival Multi-Shot — rain/fan AoEs aim at your focus pack.',
+        'Healers unchanged — party heals already cover their fantasy.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.6',
       bullets: <String>[

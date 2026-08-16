@@ -80,6 +80,132 @@ void main() {
     expect(ally.absorbShield, 0);
   });
 
+  test('Blood Bone Shield absorbs on self, not lowest ally', () {
+    final state = _soloSpecParty(HeroSpecId.blood, level: 15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final dk = world.heroes.firstWhere((h) => !h.isPet);
+    final ally = SpatialActor(
+      id: 'hurt_ally',
+      name: 'Ally',
+      team: SpatialTeam.hero,
+      x: dk.x + 0.5,
+      y: dk.y,
+      hp: 20,
+      maxHp: 200,
+      attack: 1,
+      defense: 0,
+      moveSpeed: 0,
+      attackRange: 1,
+      attackCooldown: 1,
+      fireCooldown: 1,
+    );
+    world.heroes.add(ally);
+    dk
+      ..rage = 100
+      ..hp = (dk.maxHp * 0.9).round()
+      ..absorbShield = 0
+      ..x = target.x - 1.5
+      ..y = target.y;
+    _padAbilityCds(dk, except: AbilityId.boneShield);
+
+    var selfShelled = false;
+    for (var i = 0; i < 80; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (dk.absorbShield > 0) {
+        selfShelled = true;
+        break;
+      }
+      dk.rage = 100;
+      ally.hp = 15;
+      dk.hp = (dk.maxHp * 0.9).round();
+    }
+    expect(selfShelled, isTrue);
+    expect(ally.absorbShield, 0);
+  });
+
+  test('Unholy Gargoyle summons a temp pet', () {
+    final state = _soloSpecParty(HeroSpecId.unholy, level: 15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    target.hp = (target.maxHp * 0.35).round();
+    final dk = world.heroes.firstWhere((h) => !h.isPet);
+    dk
+      ..rage = 100
+      ..x = target.x - 1.2
+      ..y = target.y;
+    _padAbilityCds(dk, except: AbilityId.gargoyle);
+
+    var summoned = false;
+    for (var i = 0; i < 80; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (world.pets.any(
+        (p) => p.petOwnerId == dk.id && p.id.contains('garg'),
+      )) {
+        summoned = true;
+        break;
+      }
+      dk.rage = 100;
+      if (target.hp < 10) target.hp = (target.maxHp * 0.35).round();
+    }
+    expect(summoned, isTrue);
+  });
+
+  test('Subtlety Preparation resets other kit cooldowns', () {
+    final state = _soloSpecParty(HeroSpecId.subtlety, level: 16);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final rogue = world.heroes.firstWhere((h) => !h.isPet);
+    rogue
+      ..rage = 100
+      ..hp = (rogue.maxHp * 0.25).round()
+      ..x = target.x - 1.2
+      ..y = target.y
+      ..abilityCd[AbilityId.shadowDance.name] = 40
+      ..abilityCd[AbilityId.hemorrhage.name] = 8;
+    _padAbilityCds(rogue, except: AbilityId.preparation);
+    rogue.abilityCd[AbilityId.shadowDance.name] = 40;
+    rogue.abilityCd[AbilityId.hemorrhage.name] = 8;
+
+    var prepped = false;
+    for (var i = 0; i < 80; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((rogue.abilityCd[AbilityId.preparation.name] ?? 0) > 0 &&
+          (rogue.abilityCd[AbilityId.shadowDance.name] ?? 0) <= 0 &&
+          (rogue.abilityCd[AbilityId.hemorrhage.name] ?? 0) <= 0) {
+        prepped = true;
+        break;
+      }
+      rogue.rage = 100;
+      rogue.hp = (rogue.maxHp * 0.25).round();
+    }
+    expect(prepped, isTrue);
+  });
+
+  test('Elemental Flame Shock applies maintain DoT', () {
+    final state = _soloSpecParty(HeroSpecId.elemental, level: 15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final sham = world.heroes.firstWhere((h) => !h.isPet);
+    sham
+      ..rage = 100
+      ..x = target.x - 3
+      ..y = target.y;
+    _padAbilityCds(sham, except: AbilityId.flameShock);
+
+    var dotted = false;
+    for (var i = 0; i < 60; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (target.bleedTimer > 0 &&
+          target.bleedAbilityId == AbilityId.flameShock.name) {
+        dotted = true;
+        break;
+      }
+      sham.rage = 100;
+    }
+    expect(dotted, isTrue);
+  });
+
   test('Shamanistic Rage grants resource and DR', () {
     final state = _soloSpecParty(HeroSpecId.enhancement, level: 15);
     var world = SpatialCombat.build(state);

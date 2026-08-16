@@ -66,6 +66,9 @@ void main() {
       (AbilityId.mindSear, HeroSpecId.shadow, SpellBoltStyle.shadow),
       (AbilityId.feralSwipe, HeroSpecId.feral, SpellBoltStyle.weapon),
       (AbilityId.consecrationHoly, HeroSpecId.holyPaladin, SpellBoltStyle.holy),
+      (AbilityId.blizzard, HeroSpecId.frostMage, SpellBoltStyle.frost),
+      (AbilityId.rainOfFire, HeroSpecId.destruction, SpellBoltStyle.fire),
+      (AbilityId.multiShotSurv, HeroSpecId.survival, SpellBoltStyle.arrow),
     ];
     for (final (id, spec, want) in cases) {
       final def = ClassKits.defFor(id)!;
