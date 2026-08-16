@@ -8,6 +8,7 @@ import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/keystone.dart';
+import '../core/menu_alerts.dart';
 import '../core/meta_systems.dart';
 import '../models/class_ability.dart';
 import '../models/dungeon_def.dart';
@@ -572,6 +573,7 @@ class _Is2ShellState extends State<Is2Shell> {
                   stashCount: state.gearStash.length,
                   stashCap: GameLogic.maxGearStashFor(state),
                   hubPillars: true,
+                  alerts: MenuAlerts.forState(state),
                   active: _navActive(),
                   onGear: () {
                     setState(() => _inventoryTab = 0);
@@ -672,6 +674,7 @@ class _Is2ShellState extends State<Is2Shell> {
                 stashCount: state.gearStash.length,
                 stashCap: GameLogic.maxGearStashFor(state),
                 hubPillars: true,
+                alerts: MenuAlerts.forState(state),
                 active: _navActive(),
                 onGear: _openGear,
                 onBag: _openBag,
@@ -1203,6 +1206,7 @@ class _BottomNav extends StatelessWidget {
     required this.onMore,
     this.stashCap,
     this.hubPillars = false,
+    this.alerts = MenuAlerts.none,
     this.onParty,
     this.onPower,
     this.onMeta,
@@ -1211,6 +1215,9 @@ class _BottomNav extends StatelessWidget {
 
   final int stashCount;
   final int? stashCap;
+
+  /// Shared "something waits here" marks (see [MenuAlerts]).
+  final MenuAlerts alerts;
   final _BottomNavTab active;
   final VoidCallback onGear;
   final VoidCallback onBag;
@@ -1268,6 +1275,7 @@ class _BottomNav extends StatelessWidget {
                     child: _BottomNavItem(
                       label: 'PARTY',
                       icon: KenneyAssets.helmet,
+                      badge: alerts.party.badge,
                       selected: active == _BottomNavTab.party ||
                           active == _BottomNavTab.gear ||
                           active == _BottomNavTab.bag,
@@ -1278,6 +1286,7 @@ class _BottomNav extends StatelessWidget {
                     child: _BottomNavItem(
                       label: 'POWER',
                       icon: CustomAssets.iconAxe,
+                      badge: alerts.power.badge,
                       selected: active == _BottomNavTab.power,
                       onTap: onPower ?? onMore,
                     ),
@@ -1286,6 +1295,7 @@ class _BottomNav extends StatelessWidget {
                     child: _BottomNavItem(
                       label: 'META',
                       icon: KenneyAssets.book,
+                      badge: alerts.meta.badge,
                       selected: active == _BottomNavTab.meta,
                       onTap: onMeta ?? onMore,
                     ),
@@ -1341,12 +1351,16 @@ class _BottomNavItem extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.urgent = false,
+    this.badge = '',
   });
 
   final String label;
   final String icon;
   final bool selected;
   final bool urgent;
+
+  /// Small count / star drawn on the icon when something waits inside.
+  final String badge;
   final VoidCallback onTap;
 
   @override
@@ -1354,13 +1368,14 @@ class _BottomNavItem extends StatelessWidget {
     final color = urgent
         ? GameTheme.accentWarn
         : (selected ? GameTheme.torchHot : GameTheme.parchmentDim);
+    final semanticsLabel = badge.isEmpty ? label : '$label $badge waiting';
     return WebClickScope(
       label: label,
       onPressed: onTap,
       child: Semantics(
         button: true,
         selected: selected,
-        label: label,
+        label: semanticsLabel,
         onTap: onTap,
         excludeSemantics: true,
         child: InkWell(
@@ -1380,7 +1395,19 @@ class _BottomNavItem extends StatelessWidget {
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(GameTheme.radiusSm),
                   ),
-                  child: KenneySprite(asset: icon, size: 18),
+                  child: badge.isEmpty
+                      ? KenneySprite(asset: icon, size: 18)
+                      : Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            KenneySprite(asset: icon, size: 18),
+                            Positioned(
+                              right: -7,
+                              top: -6,
+                              child: _NavBadge(text: badge),
+                            ),
+                          ],
+                        ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -1393,6 +1420,75 @@ class _BottomNavItem extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Tab controller whose length can grow as menus unlock (progressive tabs).
+class _FlexTabs {
+  _FlexTabs({
+    required this.vsync,
+    required int length,
+    required this.onChanged,
+    int initialIndex = 0,
+  }) {
+    _build(length, initialIndex);
+  }
+
+  final TickerProvider vsync;
+  final ValueChanged<int> onChanged;
+  late TabController controller;
+
+  int get index => controller.index;
+
+  /// Call from build once the visible tab count is known.
+  void sync(int length) {
+    if (length < 1 || controller.length == length) return;
+    final keep = controller.index.clamp(0, length - 1);
+    final old = controller;
+    _build(length, keep);
+    WidgetsBinding.instance.addPostFrameCallback((_) => old.dispose());
+  }
+
+  void animateTo(int index) {
+    controller.animateTo(index.clamp(0, controller.length - 1));
+  }
+
+  void _build(int length, int initialIndex) {
+    controller = TabController(
+      length: length,
+      vsync: vsync,
+      initialIndex: initialIndex.clamp(0, length - 1),
+    );
+    controller.addListener(() {
+      if (!controller.indexIsChanging) onChanged(controller.index);
+    });
+  }
+
+  void dispose() => controller.dispose();
+}
+
+/// Count / star drawn on a nav icon when that menu has something to do.
+class _NavBadge extends StatelessWidget {
+  const _NavBadge({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      decoration: BoxDecoration(
+        color: GameTheme.torchHot,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: GameTheme.ink, width: 1),
+      ),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: GameTheme.body(size: 10, color: GameTheme.ink),
       ),
     );
   }
@@ -2552,8 +2648,8 @@ class _InventoryDock extends StatefulWidget {
 }
 
 class _InventoryDockState extends State<_InventoryDock>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
+    with TickerProviderStateMixin {
+  late final _FlexTabs _tabs;
 
   GameState get state => widget.state;
   String? get selectedId => widget.selectedId;
@@ -2589,16 +2685,13 @@ class _InventoryDockState extends State<_InventoryDock>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(
-      length: 5,
+    // GEAR / BAG always sit at 0 / 1; advanced tabs append as they unlock.
+    _tabs = _FlexTabs(
       vsync: this,
-      initialIndex: widget.initialTab.clamp(0, 4),
+      length: 2,
+      initialIndex: widget.initialTab.clamp(0, 1),
+      onChanged: widget.onTabChanged,
     );
-    _tabs.addListener(() {
-      if (!_tabs.indexIsChanging) {
-        widget.onTabChanged(_tabs.index);
-      }
-    });
   }
 
   @override
@@ -2614,6 +2707,17 @@ class _InventoryDockState extends State<_InventoryDock>
   void dispose() {
     _tabs.dispose();
     super.dispose();
+  }
+
+  /// One-tap "wear the better stuff" — says how many so the bag is not a chore.
+  Widget _autoEquipButton() {
+    final upgrades = MenuAlerts.bagUpgradeCount(state);
+    return KenneyButton(
+      label: upgrades > 0 ? 'EQUIP $upgrades' : 'AUTO EQUIP',
+      onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
+      primary: upgrades > 0,
+      style: upgrades > 0 ? KenneyButtonStyle.brown : KenneyButtonStyle.grey,
+    );
   }
 
   /// Combinator slots only resolve bag items (never equipped).
@@ -2653,13 +2757,7 @@ class _InventoryDockState extends State<_InventoryDock>
                       ),
               ),
               const SizedBox(width: 4),
-              Expanded(
-                child: KenneyButton(
-                  label: 'AUTO EQUIP',
-                  onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
-                  style: KenneyButtonStyle.grey,
-                ),
-              ),
+              Expanded(child: _autoEquipButton()),
             ],
           ),
           const SizedBox(height: 4),
@@ -3141,13 +3239,7 @@ class _InventoryDockState extends State<_InventoryDock>
         const SizedBox(height: 4),
         Row(
           children: [
-            Expanded(
-              child: KenneyButton(
-                label: 'AUTO EQUIP',
-                onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
-                style: KenneyButtonStyle.grey,
-              ),
-            ),
+            Expanded(child: _autoEquipButton()),
             const SizedBox(width: 4),
             Expanded(
               child: KenneyButton(
@@ -3425,40 +3517,64 @@ class _InventoryDockState extends State<_InventoryDock>
         : 3 - state.soulboundFragments;
 
     final phone = GameTheme.isPhoneWidth(context);
+    final alert = MenuAlerts.partyAlert(state);
+    // Progressive menu: MERGE / LOADOUTS / ROSTER appear once they do something.
+    final pages = <({String label, Widget body})>[
+      (label: 'GEAR', body: _equipTab()),
+      (label: 'BAG', body: _bagTab(slots, primary)),
+      if (MenuTabs.showMerge(state))
+        (
+          label: 'MERGE',
+          body: _toolsTab(
+            primary: primary,
+            secondary: secondary,
+            canCombine: canCombine,
+            cost: cost,
+            preview: preview,
+            fragmentsNeeded: fragmentsNeeded,
+          ),
+        ),
+      if (MenuTabs.showLoadouts(state))
+        (
+          label: phone ? 'LOAD' : 'LOADOUTS',
+          body: LoadoutsOverlay(director: widget.director),
+        ),
+      if (MenuTabs.showRoster(state))
+        (
+          label: 'ROSTER',
+          body: SingleChildScrollView(
+            child: TeamCompositionOverlay(director: widget.director),
+          ),
+        ),
+    ];
+    _tabs.sync(pages.length);
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         MenuChrome.tabRail(
-          controller: _tabs,
+          controller: _tabs.controller,
           tabs: [
-            const Tab(text: 'GEAR'),
-            const Tab(text: 'BAG'),
-            const Tab(text: 'MERGE'),
-            Tab(text: phone ? 'LOAD' : 'LOADOUTS'),
-            const Tab(text: 'ROSTER'),
+            for (final page in pages) Tab(text: page.label),
           ],
         ),
+        if (!alert.isQuiet)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              alert.reason,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            ),
+          ),
         Expanded(
           child: TabBarView(
-            controller: _tabs,
+            controller: _tabs.controller,
             // Phone: no horizontal swipe between tabs (avoids mid-swipe overlap
             // and fights vertical bag scroll). Tap the tab rail instead.
             physics: const NeverScrollableScrollPhysics(),
             children: [
-              _equipTab(),
-              _bagTab(slots, primary),
-              _toolsTab(
-                primary: primary,
-                secondary: secondary,
-                canCombine: canCombine,
-                cost: cost,
-                preview: preview,
-                fragmentsNeeded: fragmentsNeeded,
-              ),
-              LoadoutsOverlay(director: widget.director),
-              SingleChildScrollView(
-                child: TeamCompositionOverlay(director: widget.director),
-              ),
+              for (final page in pages) page.body,
             ],
           ),
         ),
@@ -4081,16 +4197,17 @@ class _PowerPillar extends StatefulWidget {
 }
 
 class _PowerPillarState extends State<_PowerPillar>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
+    with TickerProviderStateMixin {
+  late final _FlexTabs _tabs;
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 4, vsync: this);
-    _tabs.addListener(() {
-      if (!_tabs.indexIsChanging) setState(() {});
-    });
+    _tabs = _FlexTabs(
+      vsync: this,
+      length: 2,
+      onChanged: (_) => setState(() {}),
+    );
   }
 
   @override
@@ -4109,12 +4226,34 @@ class _PowerPillarState extends State<_PowerPillar>
     final runLine =
         'This run · forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
         'STA +${s.vitalityBonus}';
-    final blurb = switch (_tabs.index) {
-      0 => 'Forge: gold this run (wipes) · KEEP forever · Apex mats',
-      1 => 'Camp: permanent essence tracks — survive Ascend',
-      2 => 'Market: flasks for the run · sell stash for gold',
-      _ => 'Shop: essence power that survives Ascend',
-    };
+    // Progressive menu: CAMP and SHOP appear once essence / Ascend exist.
+    final pages = <({String label, String blurb, Widget body})>[
+      (
+        label: 'FORGE',
+        blurb: 'Forge: gold this run (wipes) · KEEP forever · Apex mats',
+        body: _ForgeOverlay(director: d),
+      ),
+      if (MenuTabs.showCamp(s))
+        (
+          label: 'CAMP',
+          blurb: 'Camp: permanent essence tracks — survive Ascend',
+          body: SingleChildScrollView(child: _SanctuaryOverlay(director: d)),
+        ),
+      (
+        label: 'MARKET',
+        blurb: 'Market: flasks for the run · sell stash for gold',
+        body: SingleChildScrollView(child: _MarketOverlay(director: d)),
+      ),
+      if (MenuTabs.showShop(s))
+        (
+          label: 'SHOP',
+          blurb: 'Shop: essence power that survives Ascend',
+          body: PrestigeShopOverlay(director: d),
+        ),
+    ];
+    _tabs.sync(pages.length);
+    final alert = MenuAlerts.powerAlert(s);
+    final blurb = pages[_tabs.index.clamp(0, pages.length - 1)].blurb;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -4137,30 +4276,26 @@ class _PowerPillarState extends State<_PowerPillar>
         ),
         const SizedBox(height: 4),
         MenuChrome.tabRail(
-          controller: _tabs,
+          controller: _tabs.controller,
           onTap: (_) => setState(() {}),
-          tabs: const [
-            Tab(text: 'FORGE'),
-            Tab(text: 'CAMP'),
-            Tab(text: 'MARKET'),
-            Tab(text: 'SHOP'),
+          tabs: [
+            for (final page in pages) Tab(text: page.label),
           ],
         ),
         const SizedBox(height: 4),
         Text(
-          blurb,
+          alert.isQuiet ? blurb : alert.reason,
           textAlign: TextAlign.center,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.body(
+            size: 12,
+            color:
+                alert.isQuiet ? GameTheme.parchmentDim : GameTheme.torchHot,
+          ),
         ),
         const SizedBox(height: 6),
         Expanded(
-          child: switch (_tabs.index) {
-            // Forge fills height and scrolls once (nested scroll hid MOVE/HASTE/CRIT).
-            0 => _ForgeOverlay(director: d),
-            1 => SingleChildScrollView(child: _SanctuaryOverlay(director: d)),
-            2 => SingleChildScrollView(child: _MarketOverlay(director: d)),
-            _ => PrestigeShopOverlay(director: d),
-          },
+          // Forge fills height and scrolls once (nested scroll hid MOVE/HASTE/CRIT).
+          child: pages[_tabs.index.clamp(0, pages.length - 1)].body,
         ),
       ],
     );
@@ -4181,16 +4316,17 @@ class _MetaPillar extends StatefulWidget {
 }
 
 class _MetaPillarState extends State<_MetaPillar>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
+    with TickerProviderStateMixin {
+  late final _FlexTabs _tabs;
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 6, vsync: this);
-    _tabs.addListener(() {
-      if (!_tabs.indexIsChanging) setState(() {});
-    });
+    _tabs = _FlexTabs(
+      vsync: this,
+      length: 3,
+      onChanged: (_) => setState(() {}),
+    );
   }
 
   @override
@@ -4202,58 +4338,84 @@ class _MetaPillarState extends State<_MetaPillar>
   @override
   Widget build(BuildContext context) {
     final d = widget.director;
+    final s = d.state;
+    final alert = MenuAlerts.metaAlert(s);
+    // Progressive menu: KEY / BEAST / CODEX appear once they mean something.
+    final pages = <({String label, Widget body})>[
+      if (MenuTabs.showKey(s))
+        (
+          label: 'KEY',
+          body: SingleChildScrollView(child: ChallengeToggles(director: d)),
+        ),
+      (
+        label: 'JOBS',
+        body: SingleChildScrollView(child: _JobsOverlay(director: d)),
+      ),
+      if (MenuTabs.showBeast(s))
+        (
+          label: 'BEAST',
+          body: SingleChildScrollView(child: _BeastOverlay(director: d)),
+        ),
+      if (MenuTabs.showCodex(s))
+        (
+          label: 'CODEX',
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: CodexOverlay(director: d)),
+              const Divider(height: 12, color: GameTheme.border),
+              Expanded(child: AchievementsOverlay(director: d)),
+            ],
+          ),
+        ),
+      (
+        label: 'GUIDE',
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            KenneyButton(
+              label: MetaSystems.hasUnseenChangelog(s)
+                  ? "WHAT'S NEW ★"
+                  : "WHAT'S NEW",
+              style: KenneyButtonStyle.grey,
+              onPressed: widget.onOpenWhatsNew,
+            ),
+            const SizedBox(height: 8),
+            const Expanded(child: GuidesOverlay()),
+          ],
+        ),
+      ),
+      (
+        label: 'SET',
+        body: SingleChildScrollView(
+          child: _SettingsOverlay(director: d, onClose: () {}),
+        ),
+      ),
+    ];
+    _tabs.sync(pages.length);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         MenuChrome.tabRail(
-          controller: _tabs,
+          controller: _tabs.controller,
           onTap: (_) => setState(() {}),
-          tabs: const [
-            Tab(text: 'KEY'),
-            Tab(text: 'JOBS'),
-            Tab(text: 'BEAST'),
-            Tab(text: 'CODEX'),
-            Tab(text: 'GUIDE'),
-            Tab(text: 'SET'),
+          tabs: [
+            for (final page in pages) Tab(text: page.label),
           ],
         ),
+        if (!alert.isQuiet)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              alert.reason,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            ),
+          ),
         const SizedBox(height: 8),
         Expanded(
-          child: switch (_tabs.index) {
-            0 => SingleChildScrollView(
-                child: ChallengeToggles(director: d),
-              ),
-            1 => SingleChildScrollView(child: _JobsOverlay(director: d)),
-            2 => SingleChildScrollView(child: _BeastOverlay(director: d)),
-            3 => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: CodexOverlay(director: d)),
-                  const Divider(height: 12, color: GameTheme.border),
-                  Expanded(child: AchievementsOverlay(director: d)),
-                ],
-              ),
-            4 => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  KenneyButton(
-                    label: MetaSystems.hasUnseenChangelog(d.state)
-                        ? "WHAT'S NEW ★"
-                        : "WHAT'S NEW",
-                    style: KenneyButtonStyle.grey,
-                    onPressed: widget.onOpenWhatsNew,
-                  ),
-                  const SizedBox(height: 8),
-                  const Expanded(child: GuidesOverlay()),
-                ],
-              ),
-            _ => SingleChildScrollView(
-                child: _SettingsOverlay(
-                  director: d,
-                  onClose: () {},
-                ),
-              ),
-          },
+          child: pages[_tabs.index.clamp(0, pages.length - 1)].body,
         ),
       ],
     );

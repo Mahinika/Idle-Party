@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
+import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/main.dart';
+import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/ui/game_theme.dart';
 
 void main() {
@@ -51,7 +54,11 @@ void main() {
   });
 
   testWidgets('entering dungeon shows mobile shell chrome', (WidgetTester tester) async {
-    final director = GameDirector.preview();
+    // Cleared a zone: advanced PARTY tabs (MERGE) are unlocked.
+    final director = GameDirector.preview(
+      initialState:
+          GameLogic.createInitialState().copyWith(highestDungeonCleared: 0),
+    );
     await director.boot();
     director.enterDungeon();
 
@@ -113,6 +120,47 @@ void main() {
     await tester.tap(find.text('BAG'));
     await tester.pumpAndSettle();
     expect(find.textContaining('BAG'), findsWidgets);
+    // First hour: only GEAR / BAG — advanced tabs unlock later.
+    expect(find.text('MERGE'), findsNothing);
+    expect(find.text('ROSTER'), findsNothing);
+  });
+
+  testWidgets('menu badge points at bag upgrades', (WidgetTester tester) async {
+    final seeded = GameLogic.createInitialState().copyWith(
+      gearStash: const [
+        EquipmentItem(
+          id: 'badge_up',
+          name: 'Test Blade',
+          slot: EquipmentSlot.weapon,
+          rarity: LootRarity.epic,
+          attackBonus: 40,
+          strengthBonus: 30,
+          itemLevel: 90,
+        ),
+      ],
+    );
+    final director = GameDirector.preview(initialState: seeded);
+    await director.boot();
+
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: false),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final upgrades = MenuAlerts.bagUpgradeCount(director.state);
+    expect(upgrades, greaterThan(0));
+    expect(find.text('PARTY $upgrades'), findsOneWidget);
+
+    // Hub keeps ambient animations running, so settle by hand.
+    await tester.tap(find.text('PARTY $upgrades'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('EQUIP $upgrades'), findsWidgets);
   });
 
   testWidgets('wide desktop viewport still opens overlays', (WidgetTester tester) async {

@@ -9,6 +9,7 @@ import '../core/game_state.dart';
 import '../core/hub_chase.dart';
 import '../core/keystone.dart';
 import '../core/local_season.dart';
+import '../core/menu_alerts.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
@@ -474,47 +475,60 @@ class _HubScreenState extends State<HubScreen>
                           },
                         ),
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: KenneyButton(
-                                label: 'PARTY',
-                                style: KenneyButtonStyle.grey,
-                                onPressed: widget.onOpenParty,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: KenneyButton(
-                                label: 'POWER',
-                                style: KenneyButtonStyle.grey,
-                                onPressed: widget.onOpenPower,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: KenneyButton(
-                                label: () {
-                                  final unseen =
-                                      MetaSystems.hasUnseenChangelog(state);
-                                  final readyJobs = state.missions
-                                      .where((m) => m.isComplete)
-                                      .length;
-                                  final phone =
-                                      GameTheme.isPhoneWidth(context);
-                                  if (unseen) {
-                                    return phone ? 'META ★' : 'META · NEW';
-                                  }
-                                  if (readyJobs > 0) {
-                                    return phone ? 'META !' : 'META · !';
-                                  }
-                                  return 'META';
-                                }(),
-                                style: KenneyButtonStyle.grey,
-                                onPressed: widget.onOpenMeta,
-                              ),
-                            ),
-                          ],
+                        Builder(
+                          builder: (context) {
+                            final alerts = MenuAlerts.forState(state);
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: KenneyButton(
+                                        label:
+                                            alerts.party.labelFor('PARTY'),
+                                        style: KenneyButtonStyle.grey,
+                                        onPressed: widget.onOpenParty,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: KenneyButton(
+                                        label:
+                                            alerts.power.labelFor('POWER'),
+                                        style: KenneyButtonStyle.grey,
+                                        onPressed: widget.onOpenPower,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: KenneyButton(
+                                        label: alerts.meta.labelFor('META'),
+                                        style: KenneyButtonStyle.grey,
+                                        onPressed: widget.onOpenMeta,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (!alerts.party.isQuiet ||
+                                    !alerts.meta.isQuiet) ...[
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    alerts.party.isQuiet
+                                        ? alerts.meta.reason
+                                        : alerts.party.reason,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GameTheme.body(
+                                      size: 11,
+                                      color: GameTheme.torchHot,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -671,11 +685,17 @@ class _HubTodayCard extends StatelessWidget {
             ),
             if (chase.progressLabel != null) ...[
               const SizedBox(width: 6),
-              Text(
-                chase.progressLabel!,
-                style: GameTheme.body(
-                  size: 12,
-                  color: ready || almost ? accent : GameTheme.mossLit,
+              // Flexible so a 360 px phone keeps title + CTA on one line.
+              Flexible(
+                child: Text(
+                  chase.progressLabel!,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(
+                    size: 12,
+                    color: ready || almost ? accent : GameTheme.mossLit,
+                  ),
                 ),
               ),
             ],

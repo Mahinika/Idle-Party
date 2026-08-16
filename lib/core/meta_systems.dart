@@ -28,6 +28,8 @@ abstract final class MetaSystems {
       bullets: <String>[
         'First hour talks plain English: intro, New Game (Shield / Healer / Damage), and TODAY skip kit names until you beat a boss. No other RPG required.',
         'Guides BASICS / PARTY and first tips explain the loop: party fights on its own, tap ENTER DUNGEON, tap the map to help.',
+        'Menus tell you when to look: PARTY / POWER / META show a number when gear, gold or claims are waiting, and PARTY has a one-tap EQUIP 3.',
+        'Calmer menus early — MERGE, LOADOUTS, ROSTER, CAMP, SHOP, KEY, BEAST and CODEX tabs appear when they unlock instead of on day one.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),

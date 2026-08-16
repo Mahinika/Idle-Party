@@ -43,8 +43,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'bag',
       title: 'BAG & GEAR',
       body:
-          'Open GEAR to dress a hero. BAG is extra items. Tap an empty slot to '
-          'see only that kind of item.',
+          'A number on PARTY means better items are waiting. Open PARTY and tap '
+          'EQUIP — the party wears them. No number means nothing to do.',
     ),
     (
       id: 'sanctuary',

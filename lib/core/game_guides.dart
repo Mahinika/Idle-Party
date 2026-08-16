@@ -12,6 +12,9 @@ abstract final class GameGuides {
           '• Gold buys supplies and run power. Essence buys lasting power.\n'
           '• Bottom buttons (same in hub and dungeon): PARTY (heroes and gear), '
           'POWER (upgrades), META (extras and Guides), HUB (home).\n'
+          '• A number on a button means something waits inside — PARTY 3 means '
+          '3 better items in your bag. No number means nothing to do there.\n'
+          '• Menus stay small at the start; more tabs appear as you unlock them.\n'
           '• You do not need to have played another RPG. Names like PROT / DISC / FIRE '
           'are just the three starter jobs: Shield, Healer, Damage.',
     ),
@@ -85,6 +88,8 @@ abstract final class GameGuides {
       title: 'BAG & GEAR',
       body:
           'Loot drops on the floor, then goes to your stash (BAG).\n\n'
+          '• You never have to hunt for upgrades: when PARTY shows a number, '
+          'open it and tap EQUIP — that number is how many items are better.\n'
           '• BAG: view, sell, scrap, or equip stash gear.\n'
           '• Stats: Primary (Armor, Str/Agi/Int, Sta, Spirit, Spell Power) and '
           'Secondary (Crit, Haste, Mp5) — new drops keep ≤2 secondaries (no Move).\n'
