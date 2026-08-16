@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
+import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
 
 void main() {
@@ -72,6 +73,7 @@ void main() {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
       ascensionLevel: 1,
+      hardmodeLevel: Keystone.maxForAl(1),
       metaDepth: state.metaDepth.copyWith(dailyVaultClaimed: true),
       lastDailyDate: MetaSystems.dailyDateKey(now),
       dailyClaimed: true,
@@ -89,6 +91,7 @@ void main() {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
       ascensionLevel: 10,
+      hardmodeLevel: Keystone.maxForAl(10),
       metaDepth: state.metaDepth.copyWith(
         dailyVaultClaimed: true,
         gauntletBestFloor: 10,
@@ -241,12 +244,43 @@ void main() {
     expect(state.metaDepth.pendingHeroReveals, isEmpty);
   });
 
-  test('after first Ascend, unused Daily is the hub chase', () {
+  test('after first Ascend, unused KEY is the hub chase', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,
     );
     expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+    expect(GameLogic.showKeystoneJargon(state), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.keystone);
+    expect(chase.title.toUpperCase(), contains('KEY'));
+    expect(chase.detail.toUpperCase(), contains('ILVL'));
+    expect(chase.keyLevel, 1);
+    expect(chase.progressLabel, 'KEY +1');
+  });
+
+  test('KEY at AL cap falls through to Daily', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 1,
+      hardmodeLevel: Keystone.maxForAl(1),
+    );
+    expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.dailyRun);
+  });
+
+  test('preferred KEY below cap is the TODAY target', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 1,
+      hardmodeLevel: 2,
+      lastDailyDate: MetaSystems.dailyDateKey(now),
+      dailyClaimed: true,
+      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+            dailyVaultClaimed: true,
+          ),
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.keystone);
+    expect(chase.keyLevel, 2);
+    expect(chase.title, contains('KEY +2'));
   });
 }

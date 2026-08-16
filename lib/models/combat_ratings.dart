@@ -55,6 +55,13 @@ class CombatRatings {
   static int roleBaseCrit(HeroRole role) =>
       role == HeroRole.rogue ? 12 : 5;
 
+  /// Dodge-like crumb into sheet DEF.
+  ///
+  /// Classic's 2 armor per Agi made leather DPS out-armor plate: idle gear
+  /// Armor is budget-carved (tens–hundreds) while Agi stacks from every
+  /// leather piece plus 2 Agi/level on rogues.
+  static int agilityToDefense(int agility) => max(0, agility) ~/ 8;
+
   /// Per-level primary gains (on top of base [Stats]).
   static ({int str, int agi, int sta, int intel, int spi}) levelGains(
     HeroRole role,
@@ -164,7 +171,7 @@ class CombatRatings {
         hero.gearAffinity == HeroRole.mage || hero.gearAffinity == HeroRole.healer;
 
     final defense = roleBaseArmor(hero.gearAffinity) +
-        2 * agi +
+        agilityToDefense(agi) +
         gearArmor +
         metaDefense +
         guardBonus;

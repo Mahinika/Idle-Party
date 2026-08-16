@@ -39,6 +39,16 @@ bool _actorIsMeleeDps(SpatialActor h) {
   return HeroSpecs.def(id).roleTag == SpecRoleTag.meleeDps;
 }
 
+/// Personal ATK fraction for BM / Demo / Unholy companions.
+/// BM stays the pet-family leader; Unholy ghoul is a disease assist.
+double _classCompanionAtkScale(HeroSpecId spec) {
+  return switch (spec) {
+    HeroSpecId.beastMastery => 0.56,
+    HeroSpecId.unholy => 0.40,
+    _ => 0.36,
+  };
+}
+
 /// Resource return on a successful combat hit (melee direct or projectile).
 /// [skipRageTank] when the caller already applied tank/rage-from-dealt.
 void _grantCombatResource(
@@ -214,6 +224,10 @@ class SpatialActor {
   bool hotStreakReady = false;
   /// Arcane Blast charges (0–4); Missiles dump spends them.
   int arcaneCharges = 0;
+
+  /// Holy Paladin Beacon: heals peel onto this ally while [beaconTimer] > 0.
+  String? beaconTargetId;
+  double beaconTimer = 0;
 
   // ?? Rogue (Combat) ??
   int comboPoints = 0;
@@ -627,7 +641,7 @@ abstract final class SpatialCombat {
   static int get _floaterHeal => colorblindMode ? 0xFFCC79A7 : 0xFF7AAB6E;
   static int get _floaterXp => colorblindMode ? 0xFF009E73 : 0xFF9AD0FF;
 
-  static const int _maxFloaters = 12;
+  static const int _maxFloaters = 16;
   static const int _maxBursts = 14;
   static const int _maxProjectiles = 36;
   static const int _maxGroundFx = 6;
@@ -977,6 +991,10 @@ abstract final class SpatialCombat {
       }
       if (a.combustionTimer > 0) {
         a.combustionTimer = math.max(0, a.combustionTimer - dt);
+      }
+      if (a.beaconTimer > 0) {
+        a.beaconTimer = math.max(0, a.beaconTimer - dt);
+        if (a.beaconTimer <= 0) a.beaconTargetId = null;
       }
       if (a.iceBlockTimer > 0) {
         a.iceBlockTimer = math.max(0, a.iceBlockTimer - dt);
@@ -2491,8 +2509,8 @@ abstract final class SpatialCombat {
     if (rogue.heroRole != HeroRole.rogue || !rogue.isAlive) return;
     if (rogue.heroSpecId == HeroSpecId.combat ||
         rogue.heroSpecId == null) {
-      // Combo + Blade Flurry inflate share; keep below melee band.
-      rogue.kitOutMul = 0.86;
+      // Combo + Blade Flurry still inflate; keep near melee band (was 0.86 LOW).
+      rogue.kitOutMul = 0.94;
     }
     if (focusEnemy != null) {
       _gainRage(rogue, 10 * dt);
@@ -3046,12 +3064,7 @@ abstract final class SpatialCombat {
         HeroSpecId.demonology => 'Demon',
         _ => 'Ghoul',
       };
-      final atkScale = switch (spec) {
-        HeroSpecId.beastMastery => 0.72,
-        HeroSpecId.unholy => 0.50,
-        // Demo personal kit was HIGH; companion contributes without dominating.
-        _ => 0.36,
-      };
+      final atkScale = _classCompanionAtkScale(spec!);
       pets.add(
         SpatialActor(
           id: 'classpet_${h.id}',
@@ -3296,11 +3309,7 @@ abstract final class SpatialCombat {
         HeroSpecId.demonology => 'Demon',
         _ => 'Ghoul',
       };
-      final atkScale = switch (spec) {
-        HeroSpecId.beastMastery => 0.72,
-        HeroSpecId.unholy => 0.50,
-        _ => 0.36,
-      };
+      final atkScale = _classCompanionAtkScale(spec!);
       pets.add(
         SpatialActor(
           id: 'classpet_${h.id}',
@@ -3401,6 +3410,8 @@ abstract final class SpatialCombat {
     to.hotStreakStack = from.hotStreakStack;
     to.hotStreakReady = from.hotStreakReady;
     to.arcaneCharges = from.arcaneCharges;
+    to.beaconTargetId = from.beaconTargetId;
+    to.beaconTimer = from.beaconTimer;
     to.comboPoints = from.comboPoints;
     to.sliceAndDiceTimer = from.sliceAndDiceTimer;
     to.bladeFlurryTimer = from.bladeFlurryTimer;
@@ -3650,6 +3661,8 @@ abstract final class SpatialCombat {
       AbilityId.chaosBolt ||
       AbilityId.chaosBoltDemo ||
       AbilityId.lavaBurst ||
+      AbilityId.flameShock ||
+      AbilityId.rainOfFire ||
       AbilityId.lavaLash ||
       AbilityId.fireNova ||
       AbilityId.blastWave ||
@@ -3667,6 +3680,7 @@ abstract final class SpatialCombat {
       AbilityId.frostbolt ||
       AbilityId.iceLance ||
       AbilityId.coneOfCold ||
+      AbilityId.blizzard ||
       AbilityId.frostNova ||
       AbilityId.frostNovaMage ||
       AbilityId.hungeringCold ||
@@ -3690,6 +3704,7 @@ abstract final class SpatialCombat {
       AbilityId.holyWrath ||
       AbilityId.divineStorm ||
       AbilityId.consecration ||
+      AbilityId.consecrationHoly ||
       AbilityId.hammerOfWrath ||
       AbilityId.holyShock ||
       AbilityId.hammerOfTheRighteous ||
@@ -3743,16 +3758,19 @@ abstract final class SpatialCombat {
       AbilityId.arcanePower ||
       AbilityId.slow ||
       AbilityId.antiMagicShell ||
+      AbilityId.boneShield ||
       AbilityId.presenceOfMind =>
         SpellBoltStyle.arcane,
 
       // —— Arrow (hunter ranged) ——
       AbilityId.arcaneShot ||
       AbilityId.multiShot ||
+      AbilityId.multiShotSurv ||
       AbilityId.aimedShot ||
       AbilityId.steadyShot ||
       AbilityId.chimeraShot ||
       AbilityId.scatterShot ||
+      AbilityId.volley ||
       AbilityId.killCommand ||
       AbilityId.serpentSting ||
       AbilityId.blackArrow ||
@@ -3768,14 +3786,18 @@ abstract final class SpatialCombat {
       AbilityId.drainLife ||
       AbilityId.mindBlast ||
       AbilityId.mindFlay ||
+      AbilityId.mindSear ||
       AbilityId.devouringPlague ||
       AbilityId.shadowWordPain ||
       AbilityId.handOfGuldan ||
       AbilityId.shadowfury ||
+      AbilityId.seedOfCorruption ||
+      AbilityId.fanOfKnivesSub ||
       AbilityId.deathCoil ||
       AbilityId.vampiricTouch ||
       AbilityId.curseOfAgony ||
       AbilityId.armyOfDead ||
+      AbilityId.gargoyle ||
       AbilityId.runeTap ||
       AbilityId.psychicScream =>
         SpellBoltStyle.shadow,
@@ -3795,12 +3817,15 @@ abstract final class SpatialCombat {
       AbilityId.kidneyShot ||
       AbilityId.killingSpree ||
       AbilityId.mongooseBite ||
+      AbilityId.fanOfKnives ||
       AbilityId.shred ||
       AbilityId.rake ||
       AbilityId.ferociousBite ||
       AbilityId.rip ||
       AbilityId.mangleBear ||
       AbilityId.swipe ||
+      AbilityId.feralSwipe ||
+      AbilityId.lacerate ||
       AbilityId.maul ||
       AbilityId.overpower ||
       AbilityId.rend ||
@@ -3825,7 +3850,7 @@ abstract final class SpatialCombat {
   /// Lasting ground disc defaults for signature AOEs (life seconds).
   static double? groundDiscLifeFor(AbilityId id) {
     return switch (id) {
-      AbilityId.consecration => 6.0,
+      AbilityId.consecration || AbilityId.consecrationHoly => 6.0,
       AbilityId.healingRain || AbilityId.tranquility => 5.5,
       AbilityId.explosiveTrap => 4.0,
       AbilityId.handOfGuldan || AbilityId.wildGrowth => 3.5,
@@ -3833,24 +3858,32 @@ abstract final class SpatialCombat {
       AbilityId.bladeFlurry ||
       AbilityId.divineStorm =>
         3.2,
+      AbilityId.spiritLink || AbilityId.mindSear => 3.0,
       AbilityId.bloodBoil ||
       AbilityId.bloodBoilUnholy ||
       AbilityId.whirlwind ||
       AbilityId.holyPriestNova ||
       AbilityId.circleOfHealing =>
         2.5,
+      AbilityId.armyOfDead => 2.5,
+      AbilityId.holyWrath || AbilityId.hungeringCold => 2.2,
       AbilityId.fireNova ||
       AbilityId.frostNova ||
       AbilityId.frostNovaMage ||
-      AbilityId.hungeringCold ||
       AbilityId.thunderClap =>
         2.2,
+      AbilityId.seedOfCorruption => 2.0,
+      AbilityId.killingSpree => 2.0,
       AbilityId.blastWave ||
       AbilityId.shockwave ||
       AbilityId.arcaneExplosion ||
       AbilityId.shadowfury =>
         1.6,
-      AbilityId.swipe => 1.5,
+      AbilityId.swipe ||
+      AbilityId.feralSwipe ||
+      AbilityId.fanOfKnives ||
+      AbilityId.fanOfKnivesSub =>
+        1.5,
       _ => null,
     };
   }
@@ -4304,7 +4337,7 @@ abstract final class SpatialCombat {
             for (final e in world.enemies) {
               if (e.id == target.id || e.hp <= 0 || e.dormant) continue;
               if (_dist(hero, e) > 2.2) continue;
-              final cleave = math.max(1, (dealt * 0.55).round());
+              final cleave = math.max(1, (dealt * 0.40).round());
               e.hp = math.max(0, e.hp - cleave);
               _recordHeroDamage(hero, cleave);
               if (!state.reducedVfx) {

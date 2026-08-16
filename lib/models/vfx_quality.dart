@@ -3,10 +3,10 @@ enum VfxQuality {
   /// Full bursts, floaters, auras, trails.
   full,
 
-  /// Skip bursts/floaters; keep projectiles + actor auras (former reduced VFX).
+  /// Skip bursts/floaters; keep projectiles + actor auras + ground discs.
   lite,
 
-  /// Minimal: no bursts/floaters/auras; simple projectiles only.
+  /// Minimal: no bursts/floaters/auras/ground discs; simple projectiles only.
   minimal;
 
   bool get reduced => this != VfxQuality.full;
@@ -15,9 +15,15 @@ enum VfxQuality {
 
   bool get showActorAuras => this != VfxQuality.minimal;
 
+  /// Consecration / Bladestorm / trap discs — persistent, low motion.
+  bool get showGroundFx => this != VfxQuality.minimal;
+
   bool get showGuideAndPulse => this != VfxQuality.minimal;
 
   bool get showProjectileTrails => this == VfxQuality.full;
+
+  /// Fancy loot pulse rings (rare+).
+  bool get showLootPulse => this == VfxQuality.full;
 
   String get settingsLabel => switch (this) {
         VfxQuality.full => 'Full VFX',
@@ -27,8 +33,8 @@ enum VfxQuality {
 
   String get settingsHint => switch (this) {
         VfxQuality.full => 'All combat effects',
-        VfxQuality.lite => 'Less lag — no floaters/bursts',
-        VfxQuality.minimal => 'Reduce motion — auras off too',
+        VfxQuality.lite => 'No floaters/bursts — discs & auras stay',
+        VfxQuality.minimal => 'Reduce motion — auras & discs off too',
       };
 
   VfxQuality get next => switch (this) {

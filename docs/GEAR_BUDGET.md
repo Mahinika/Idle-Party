@@ -11,6 +11,7 @@ Source of truth: `EquipmentFactory.budgetForItemLevel` in `lib/core/equipment_fa
 - Inputs: display **item level**, **rarity** (quality mul), **slot** (and 2H mul).
 - ~`0.88` primary points per iLvl on a main-hand rare before armor carve / affix slice.
 - Rarity mainly raises shown iLvl via `itemLevelFor`; quality mul keeps epic/legendary denser at the same iLvl.
+- KEY loot bonus is `Keystone.lootItemLevelBonus` (`key * 2`) — KEY +10 is +20 iLvl, not `key ~/ 4`.
 
 New drops, merge output, and Apex craft should spend this budget — not invent a parallel power curve.
 
@@ -35,6 +36,7 @@ Rules:
 Combat conversion (must stay aligned with equip weights):
 
 - Melee ATK from Str/Agi via `CombatRatings` (kAp = 4).
+- Sheet DEF is gear Armor + tank guard + a small Agi crumb (`CombatRatings.agilityToDefense`). Plate tanks stay ahead of leather DPS.
 - Caster/healer throughput: **Intellect full**, **Spell Power ≈ half** into the ATK pool.
 
 ## Equip score (`itemBudgetScore`)

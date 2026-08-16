@@ -61,12 +61,12 @@ void main() {
     expect(rime.treasureAlcoveChance, greaterThan(fen.treasureAlcoveChance));
   });
 
-  test('brass kit prefers treasure alcoves vs fen choke', () {
+  test('brass kit prefers treasure alcoves vs veil choke', () {
     final brass = ZoneLayoutKit.forId('brass');
-    final fen = ZoneLayoutKit.forId('fen');
+    final veil = ZoneLayoutKit.forId('veil');
     expect(brass.preferTreasureAlcove, isTrue);
-    expect(fen.preferChoke, isTrue);
-    expect(brass.treasureAlcoveChance, greaterThan(fen.treasureAlcoveChance));
+    expect(veil.preferChoke, isTrue);
+    expect(brass.treasureAlcoveChance, greaterThan(veil.treasureAlcoveChance));
   });
 
   test('every zone kit resolves', () {

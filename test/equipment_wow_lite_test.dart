@@ -459,7 +459,8 @@ void main() {
       dungeonId: 'sandy',
       hardmodeLevel: 10,
     );
-    expect(withHm, greaterThan(sandyF10Rare));
+    expect(withHm, sandyF10Rare + 20);
+    expect(withHm, 51);
 
     // Endless Spire soft-cap: raw would be huge, capped growth after 100.
     final deep = EquipmentFactory.itemLevelFor(

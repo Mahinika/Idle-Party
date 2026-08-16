@@ -350,8 +350,11 @@ void main() {
     final brassFrontier = initial.copyWith(highestDungeonCleared: 12);
     expect(GameLogic.recommendedDungeonId(brassFrontier), 'brass');
 
-    final allClear = initial.copyWith(highestDungeonCleared: 13);
-    expect(GameLogic.recommendedDungeonId(allClear), 'brass');
+    final veilFrontier = initial.copyWith(highestDungeonCleared: 13);
+    expect(GameLogic.recommendedDungeonId(veilFrontier), 'veil');
+
+    final allClear = initial.copyWith(highestDungeonCleared: 14);
+    expect(GameLogic.recommendedDungeonId(allClear), 'veil');
 
     final ready = mid.copyWith(bossVictories: 1);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 4));
@@ -2016,6 +2019,30 @@ void main() {
     expect(state.metaDepth.pendingHeroReveals, isNotEmpty);
     final cleared = GameLogic.ackPendingHeroReveals(state);
     expect(cleared.metaDepth.pendingHeroReveals, isEmpty);
+  });
+
+  test('early-floor gear pressure does not overshoot F3 packs', () {
+    final room = DungeonGenerator.generateFloor(
+      3,
+      dungeonId: 'sandy',
+      layoutSeed: 1,
+    ).first;
+    final fresh = GameLogic.roomCombatBudget(
+      room,
+      dungeonId: 'sandy',
+      gearPressure: 1.0,
+    );
+    final gear10 = GameLogic.roomCombatBudget(
+      room,
+      dungeonId: 'sandy',
+      gearPressure: 1.93,
+    );
+    expect(gear10.hp / fresh.hp, lessThan(1.4));
+    expect(gear10.attack / fresh.attack, lessThan(1.3));
+    expect(
+      GameLogic.appliedGearPressure(1.93, level: 3),
+      closeTo(1.26, 0.02),
+    );
   });
 
   test('fresh ascend dampens AL threat until gear rebuilds', () {

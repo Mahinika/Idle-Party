@@ -22,6 +22,7 @@ abstract final class DungeonEnvironment {
         'rime' => const Color(0xFF041018),
         'fen' => const Color(0xFF0C1404),
         'brass' => const Color(0xFF120A04),
+        'veil' => const Color(0xFF140812),
         _ => const Color(0xFF080706),
       };
 
@@ -44,6 +45,7 @@ abstract final class DungeonEnvironment {
         'rime' => const Color(0x4860D8E0),
         'fen' => const Color(0x48B0C028),
         'brass' => const Color(0x48C89820),
+        'veil' => const Color(0x48E0B8D0),
         _ => const Color(0x22000000),
       };
 
@@ -63,6 +65,7 @@ abstract final class DungeonEnvironment {
         'rime' => const Color(0x5A184860),
         'fen' => const Color(0x5A3A4810),
         'brass' => const Color(0x5A483010),
+        'veil' => const Color(0x5A382438),
         _ => const Color(0x55050403),
       };
 
@@ -82,6 +85,7 @@ abstract final class DungeonEnvironment {
         'rime' => const Color(0xFF70E8F0),
         'fen' => const Color(0xFFC8E040),
         'brass' => const Color(0xFFE0C040),
+        'veil' => const Color(0xFFE8C0F0),
         _ => const Color(0xFFE0C080),
       };
 
@@ -98,6 +102,7 @@ abstract final class DungeonEnvironment {
         'rime' => const Color(0x38081828),
         'fen' => const Color(0x38101808),
         'brass' => const Color(0x38100800),
+        'veil' => const Color(0x38100818),
         _ => const Color(0x2C000000),
       };
 

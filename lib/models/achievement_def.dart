@@ -186,6 +186,13 @@ abstract final class AchievementCatalog {
       essenceReward: 46,
       category: AchievementCategory.explorer,
     ),
+    AchievementDef(
+      id: 'clear_veil',
+      title: 'Veilwalker',
+      description: 'Clear Mothveil Hollow.',
+      essenceReward: 50,
+      category: AchievementCategory.explorer,
+    ),
     // —— Hardmode ——
     AchievementDef(
       id: 'hm_1',

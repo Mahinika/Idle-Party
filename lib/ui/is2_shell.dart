@@ -1784,6 +1784,8 @@ class _PartyRow extends StatelessWidget {
       AbilityId.bladeFlurry => s.bladeFlurryTimer > 0,
       AbilityId.sweepingStrikes => s.bladeFlurryTimer > 0,
       AbilityId.holyShield => s.shieldBlockTimer > 0,
+      AbilityId.beaconOfLight => s.beaconTimer > 0,
+      AbilityId.divineFavor => (s.buffTimers['favor'] ?? 0) > 0,
       AbilityId.sprint => s.sprintTimer > 0,
       AbilityId.vanish => s.vanishTimer > 0,
       AbilityId.killingSpree => s.killingSpreeTimer > 0,
@@ -1949,6 +1951,16 @@ class _PartyRow extends StatelessWidget {
                               style: GameTheme.pixel(
                                 size: 6,
                                 color: GameTheme.torchHot,
+                              ),
+                            ),
+                          ],
+                          if (spatial!.beaconTimer > 0) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              'BEACON',
+                              style: GameTheme.pixel(
+                                size: 6,
+                                color: const Color(0xFFFFF0A8),
                               ),
                             ),
                           ],

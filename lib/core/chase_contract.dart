@@ -49,6 +49,7 @@ class ChaseContract {
         HubChaseKind.meetHero => 'PARTY',
         HubChaseKind.ascend => 'ASCEND',
         HubChaseKind.dailyRun => 'DAILY',
+        HubChaseKind.keystone => 'ENTER',
         HubChaseKind.gauntletMilestone => 'GAUNTLET',
         HubChaseKind.unlockZone => zoneId != null ? 'PATH' : null,
         _ => null,

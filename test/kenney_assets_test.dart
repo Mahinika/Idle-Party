@@ -80,6 +80,14 @@ void main() {
       KenneyAssets.enemySpriteForCodexName('Gale Mite'),
       KenneyAssets.enemyStormMite,
     );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('The Pale Monarch'),
+      KenneyAssets.enemyVeilBoss,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Dust Moth'),
+      KenneyAssets.enemyVeilMite,
+    );
   });
 
   test('sandy swarm codex names map to slime not hash lottery', () {

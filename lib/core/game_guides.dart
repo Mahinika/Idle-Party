@@ -16,9 +16,10 @@ abstract final class GameGuides {
       id: 'world_path',
       title: 'WORLD PATH',
       body:
-          'The hub World Path is a painted map from Sandy Caverns through Brassvault Deep '
-          '(Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, and the rest along the road).\n\n'
+          'The hub World Path is a painted map from Sandy Caverns through Mothveil Hollow '
+          '(Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault, and the rest along the road).\n\n'
           '• Scroll the map and tap a zone portrait on a glowing ring to select it.\n'
+          '• Markers show HERE / OPEN / CLEAR / LOCKED under each portrait.\n'
           '• Unlock the next zone by clearing the previous boss, or by earning enough lifetime gold.\n'
           '• Locked zones dim on the map; the caption under the map shows lifetime gold progress (have / need).\n'
           '• Lifetime gold (not wallet gold) counts for gold unlocks.\n'
@@ -33,6 +34,8 @@ abstract final class GameGuides {
           '• Pick up ground loot (or wait for auto-timeout), then walk to the stairs.\n'
           '• Elite and treasure floors often hide a room chest — grab it like other floor loot.\n'
           '• Boss floors use a special arena.\n'
+          '• Settings VFX: Full = all effects; Lite = no floaters/bursts (discs & auras stay); '
+          'Minimal = reduce motion.\n'
           '• Party HP strip is bottom-left — tap a hero to open their kit, tap again to fold.\n'
           '• Target chip is top-right (name + HP).\n'
           '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.'
@@ -68,7 +71,7 @@ abstract final class GameGuides {
           '• Combat Rogue and Holy Paladin unlock after first Ascend; more kits via clears.\n'
           '• More specs unlock via Ascend level and dungeon clears.\n'
           '• Tap a hero in the HUD for abilities; chips show cooldowns '
-          '(STREAK, SWEEP / FLURRY when those windows are up).\n'
+          '(STREAK, SWEEP / FLURRY, BEACON when those windows are up).\n'
           '• Resources: Rage / Mana / Energy / Runic — kits spend these.\n'
           '• Roster levels persist on Ascend; run gear still resets.\n'
           '• Flask heals the party when you have a potion.',
@@ -218,7 +221,9 @@ abstract final class GameGuides {
       body:
           'Keystone affixes still rotate each ISO week, but the vault is daily.\n\n'
           '• Early on: TODAY tells you to grow the party in the starter zone. '
-          'Daily and vault-start wait until you have beaten a boss (or Ascended).\n'
+          'Daily, KEY, and vault-start wait until you have beaten a boss (or Ascended).\n'
+          '• After that first hour, TODAY chases KEY +1 (higher iLvl loot) until '
+          'your key hits the AL cap — then Daily / vault / Will can surface.\n'
           '• Fill today’s vault with 1 dungeon clear, then claim essence.\n'
           '• Later: time a KEY +2 (or higher) for a bigger claim — META → KEYSTONE.\n'
           '• Hub TODAY and offline Up next share one chase (claim → READY → '
@@ -226,6 +231,8 @@ abstract final class GameGuides {
           '• Welcome-back shows one wow line, a few highlights, then Up next.\n'
           '• TODAY flashes READY / ALMOST when a claim or Ascend is close.\n'
           '• First vault claim of each calendar month also pays a season bonus.\n'
+          '• Each ISO week has a named local season beat (KEY +2 or Gauntlet floor) '
+          '— TODAY / META may chase it; claim pays essence + title.\n'
           '• Progress resets at UTC midnight.\n'
           '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
     ),
@@ -261,7 +268,10 @@ abstract final class GameGuides {
           '• Overtime = depleted (clear still counts, no key upgrade).\n'
           '• Daily vault: 1 clear or timed KEY+2 — claim once per day.\n'
           '• Optional Boss Rush / No Flask add extra affixes + essence.\n'
-          '• Higher keys: denser packs, more gold, better legendary odds.',
+          '• Higher keys drop higher iLvl gear (KEY +10 is a real jump) plus '
+          'denser packs, more gold, and better legendary odds.\n'
+          '• After the first boss/Ascend, hub TODAY points at the next KEY until '
+          'you are at the AL cap.',
     ),
     GuideTopic(
       id: 'ascend',
@@ -283,7 +293,9 @@ abstract final class GameGuides {
       title: 'DAILY RUN',
       body:
           'A daily echo dungeon appears on the hub when available.\n\n'
-          '• TODAY offers Daily after you have beaten a boss or Ascended once.\n'
+          '• After the first hour, TODAY chases KEY — Daily is extra essence, '
+          'not the default habit.\n'
+          '• TODAY offers Daily when your KEY is at the AL cap (or KEY is not the grind).\n'
           '• Clear the required floor(s) for a flat essence reward.\n'
           '• May let you visit a locked zone for the day.\n'
           '• Claim once per day — good free essence.',
@@ -304,7 +316,8 @@ abstract final class GameGuides {
           '• Party strip (bottom-left) fades after idle — tap a hero for kit, tap again to fold.\n'
           '• Target chip sits top-right (name + HP).\n'
           '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.\n'
-          '• Settings: text scale, reduced VFX, colorblind floaters, '
+          '• Settings: text scale, Full / Lite / Minimal VFX (Minimal = reduce motion), '
+          'colorblind floaters, '
           'bag auto-sell / auto-disassemble.\n'
           '• META → GUIDE brings you back here anytime.\n'
           '• Escape / back closes overlays.',

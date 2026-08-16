@@ -68,6 +68,19 @@ class ZoneLayoutKit {
           normalRoomChestChance: 0.22,
           landmarkPerChamber: 2,
         ),
+        'veil' => const ZoneLayoutKit(
+          dungeonId: 'veil',
+          landmarks: <MapPropKind>[
+            MapPropKind.bones,
+            MapPropKind.trap,
+            MapPropKind.torch,
+            MapPropKind.torchAlt,
+          ],
+          preferChoke: true,
+          eliteRoomChest: true,
+          normalRoomChestChance: 0.10,
+          landmarkPerChamber: 1,
+        ),
         'storm' => const ZoneLayoutKit(
           dungeonId: 'storm',
           landmarks: <MapPropKind>[
@@ -90,9 +103,9 @@ class ZoneLayoutKit {
             MapPropKind.pillar,
           ],
           preferTreasureAlcove: true,
-          treasureAlcoveChance: 0.22,
+          treasureAlcoveChance: 0.28,
           eliteRoomChest: true,
-          normalRoomChestChance: 0.12,
+          normalRoomChestChance: 0.14,
           landmarkPerChamber: 2,
         ),
         'ember' => const ZoneLayoutKit(
@@ -106,19 +119,20 @@ class ZoneLayoutKit {
           preferChoke: true,
           eliteRoomChest: true,
           normalRoomChestChance: 0.10,
+          landmarkPerChamber: 2,
         ),
         'grove' => const ZoneLayoutKit(
           dungeonId: 'grove',
           landmarks: <MapPropKind>[
             MapPropKind.fountain,
+            MapPropKind.pot,
             MapPropKind.bones,
-            MapPropKind.crate,
             MapPropKind.rubble,
           ],
-          preferTreasureAlcove: true,
-          treasureAlcoveChance: 0.25,
+          preferChoke: true,
+          preferTreasureAlcove: false,
           eliteRoomChest: true,
-          normalRoomChestChance: 0.14,
+          normalRoomChestChance: 0.12,
           landmarkPerChamber: 2,
         ),
         'crystal' => const ZoneLayoutKit(

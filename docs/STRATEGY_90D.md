@@ -44,7 +44,7 @@ Win-condition om 90 dagar: en ny spelare (telefon A56) förstår *vad de jagar*,
 | Hub TODAY / ChaseContract | Shipped |
 | Offline story + Up next | Shipped |
 | Gear budget honesty | Shipped |
-| Floor blueprint + room chests + 14 zoner (→ Brassvault) | Shipped (1.12.0) |
+| Floor blueprint + room chests + 15 zoner (→ Mothveil) | Shipped (1.12.3) |
 | Ascend Blessing | Shipped |
 | Kit unlock fantasy (Meet … / pending reveals) | Shipped (P3) — Month 2 continues fairness + fantasy polish |
 | Keystone-lager / God Hand-riktning | Shipped soft defaults (P4/P5) — **not** 90-day main track unless chase/kits/zones are satisfied |
@@ -188,3 +188,4 @@ Månadsskifte: en mening i What’s New som spelaren bryr sig om (English).
 |-------|---------|
 | 2026-08-13 | Första 90-dagarsplan: topplistor + Idle Party-lärdomar |
 | 2026-08-13 | M1–M3 shippade (chase, kits, Blightfen). Cadence tar över; Brassvault är nästa zon-slice. |
+| 2026-08-14 | Cadence-slice: Mothveil Hollow (15e zonen) efter Brassvault. |

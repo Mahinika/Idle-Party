@@ -45,6 +45,10 @@ class HubScreen extends StatefulWidget {
   final VoidCallback onOpenMeta;
   final VoidCallback onOpenSettings;
 
+  /// Honesty helpers for ship_smoke (World Path marker ↔ catalog).
+  static List<Offset> get worldPathMarkerNorm => _ZonePathMap.markerNorm;
+  static int get worldPathMarkerCount => _ZonePathMap.markerNorm.length;
+
   @override
   State<HubScreen> createState() => _HubScreenState();
 }
@@ -172,6 +176,26 @@ class _HubScreenState extends State<HubScreen>
         return ('ASCEND', () => confirmAscend(context, director));
       case HubChaseKind.dailyRun:
         return ('DAILY', () => confirmDailyRun(context, director));
+      case HubChaseKind.keystone:
+        final id = chase.zoneId ?? _selectedId;
+        return (
+          'ENTER',
+          () {
+            director.setHardmodeLevel(chase.keyLevel ?? 1);
+            if (chase.zoneId != null) {
+              setState(() {
+                _userPickedZone = true;
+                _selectedId = chase.zoneId!;
+              });
+            }
+            final unlocked = DungeonCatalog.isUnlocked(
+              id,
+              director.state.lifetimeGoldEarned,
+              director.state.highestDungeonCleared,
+            );
+            if (unlocked) widget.onEnterDungeon(id);
+          },
+        );
       case HubChaseKind.gauntletMilestone:
         return ('GAUNTLET', () => confirmGauntletRun(context, director));
       case HubChaseKind.weekGoal:
@@ -401,6 +425,8 @@ class _HubScreenState extends State<HubScreen>
                                       HubChaseKind.claimMissions,
                                   hideDaily:
                                       chase.kind == HubChaseKind.dailyRun ||
+                                          chase.kind ==
+                                              HubChaseKind.keystone ||
                                           chase.kind ==
                                               HubChaseKind.meetHero ||
                                           !GameLogic.showDailyChase(state),
@@ -916,22 +942,46 @@ class _SelectedZoneCaption extends StatelessWidget {
   final bool unlocked;
   final int lifetimeGold;
 
-  static String _gold(int n) {
+  /// Compact lifetime-gold label (1.2M, 750k, …).
+  static String compactGold(int n) {
+    if (n >= 1000000) {
+      final whole = n ~/ 1000000;
+      final rem = n % 1000000;
+      if (rem == 0) return '${whole}M';
+      final tenths = (rem / 100000).floor();
+      if (tenths == 0) return '${whole}M';
+      return '$whole.${tenths}M';
+    }
     if (n >= 1000) return '${n ~/ 1000}k';
     return '$n';
   }
 
   @override
   Widget build(BuildContext context) {
-    final String detail;
     if (unlocked) {
-      detail = 'Boss: ${dungeon.bossName}';
-    } else if (dungeon.unlockPrice > 0) {
-      detail =
-          '${_gold(lifetimeGold)} / ${_gold(dungeon.unlockPrice)} lifetime gold';
-    } else {
-      detail = 'Locked';
+      return Column(
+        children: [
+          Text(
+            '${dungeon.name} · Boss: ${dungeon.bossName}',
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+          if (dungeon.blurb.isNotEmpty)
+            Text(
+              dungeon.blurb,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            ),
+        ],
+      );
     }
+    final detail = dungeon.unlockPrice > 0
+        ? '${compactGold(lifetimeGold)} / ${compactGold(dungeon.unlockPrice)} lifetime gold'
+        : 'Locked';
     return Text(
       '${dungeon.name} · $detail',
       textAlign: TextAlign.center,
@@ -959,26 +1009,27 @@ class _ZonePathMap extends StatefulWidget {
   final double pulse;
   final ValueChanged<String> onSelect;
 
-  /// Marker centers on painted gold rings (zone 0…13 top→bottom).
-  /// Tuned for extended world_path_map (Brassvault strip under Blightfen).
+  /// Marker centers on painted gold rings (zone 0…14 top→bottom).
+  /// Upper path from Stormwake base; endgame rings detected on rebuilt footer.
   static const List<Offset> markerNorm = [
-    Offset(0.492, 0.038), // sandy — cave mouth
-    Offset(0.478, 0.092), // goblin — camp
-    Offset(0.470, 0.152), // king — fort wall
-    Offset(0.508, 0.213), // underworld — purple crystals
-    Offset(0.448, 0.268), // dead — tombs
-    Offset(0.475, 0.329), // hell — spiked gate
-    Offset(0.460, 0.385), // crystal — ice peaks
-    Offset(0.500, 0.439), // tide — sunken ruins
-    Offset(0.458, 0.492), // ember — lava door
-    Offset(0.472, 0.560), // grove — dark forest
-    Offset(0.488, 0.633), // storm — purple chasm
-    Offset(0.500, 0.752), // rime — painted ice-rift ring
-    Offset(0.489, 0.855), // fen — painted mire ring
-    Offset(0.505, 0.960), // brass — painted vault ring
+    Offset(0.491, 0.042), // sandy — cave mouth
+    Offset(0.483, 0.088), // goblin — camp
+    Offset(0.474, 0.146), // king — fort wall
+    Offset(0.514, 0.197), // underworld — purple crystals
+    Offset(0.454, 0.249), // dead — tombs
+    Offset(0.479, 0.303), // hell — spiked gate
+    Offset(0.465, 0.355), // crystal — ice peaks
+    Offset(0.503, 0.403), // tide — sunken ruins
+    Offset(0.466, 0.449), // ember — lava door
+    Offset(0.478, 0.513), // grove — dark forest
+    Offset(0.485, 0.570), // storm — purple chasm
+    Offset(0.544, 0.635), // rime — ice-rift ring
+    Offset(0.506, 0.736), // fen — mire ring
+    Offset(0.507, 0.839), // brass — vault ring
+    Offset(0.499, 0.963), // veil — moth-dust ring
   ];
 
-  static const double mapAspect = 2292 / 1024;
+  static const double mapAspect = 2532 / 1024;
 
   @override
   State<_ZonePathMap> createState() => _ZonePathMapState();
@@ -1055,8 +1106,10 @@ class _ZonePathMapState extends State<_ZonePathMap> {
         final viewH = constraints.maxHeight;
         if (mapW < 8 || viewH < 8) return const SizedBox.shrink();
         final mapH = mapW * _ZonePathMap.mapAspect;
-        // Small portrait discs on painted rings — map art stays primary.
-        final markerSize = (mapW * 0.10).clamp(32.0, 44.0);
+        // Disc stays readable; hit box meets phone minTouch (44).
+        final discSize = (mapW * 0.092).clamp(34.0, 40.0);
+        final hitSize = math.max(discSize, GameTheme.minTouch);
+        const statusH = 13.0;
 
         final needsScroll = _scrolledTo != widget.selectedId ||
             _lastMapH != mapH ||
@@ -1068,6 +1121,10 @@ class _ZonePathMapState extends State<_ZonePathMap> {
         }
 
         final dungeons = widget.dungeons;
+        assert(
+          dungeons.length == _ZonePathMap.markerNorm.length,
+          'World Path markerNorm must match DungeonCatalog (${dungeons.length} vs ${_ZonePathMap.markerNorm.length})',
+        );
         final n = math.min(dungeons.length, _ZonePathMap.markerNorm.length);
 
         final pathChildren = <Widget>[
@@ -1115,17 +1172,20 @@ class _ZonePathMapState extends State<_ZonePathMap> {
           final selected = d.id == widget.selectedId;
           final cx = anchor.dx * mapW;
           final cy = anchor.dy * mapH;
-          final left = (cx - markerSize / 2).clamp(0.0, mapW - markerSize);
-          final top = (cy - markerSize / 2).clamp(0.0, mapH - markerSize);
+          final left = (cx - hitSize / 2).clamp(0.0, mapW - hitSize).toDouble();
+          final top = (cy - hitSize / 2)
+              .clamp(0.0, math.max(0.0, mapH - hitSize - statusH))
+              .toDouble();
           pathChildren.add(
             Positioned(
               left: left,
               top: top,
-              width: markerSize,
-              height: markerSize,
+              width: hitSize,
+              height: hitSize + statusH,
               child: _MapZoneMarker(
                 def: d,
-                size: markerSize,
+                discSize: discSize,
+                hitSize: hitSize,
                 unlocked: unlocked,
                 cleared: cleared,
                 selected: selected,
@@ -1163,7 +1223,8 @@ class _ZonePathMapState extends State<_ZonePathMap> {
 class _MapZoneMarker extends StatelessWidget {
   const _MapZoneMarker({
     required this.def,
-    required this.size,
+    required this.discSize,
+    required this.hitSize,
     required this.unlocked,
     required this.cleared,
     required this.selected,
@@ -1173,13 +1234,21 @@ class _MapZoneMarker extends StatelessWidget {
   });
 
   final DungeonDef def;
-  final double size;
+  final double discSize;
+  final double hitSize;
   final bool unlocked;
   final bool cleared;
   final bool selected;
   final double pulse;
   final String statusWord;
   final VoidCallback onTap;
+
+  Color get _statusColor {
+    if (selected) return GameTheme.torchHot;
+    if (cleared) return GameTheme.mossLit;
+    if (unlocked) return GameTheme.torch;
+    return GameTheme.parchmentDim;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1192,7 +1261,7 @@ class _MapZoneMarker extends StatelessWidget {
                 : Colors.transparent));
     final semanticsLabel =
         '${def.name}, $statusWord${selected ? ', selected' : ''}';
-    final iconSize = size * 0.82;
+    final iconSize = discSize * 0.82;
 
     Widget portrait = KenneySprite(
       asset: KenneyAssets.dungeonPortraitFor(def.id),
@@ -1223,26 +1292,47 @@ class _MapZoneMarker extends StatelessWidget {
         child: GestureDetector(
           onTap: onTap,
           behavior: HitTestBehavior.opaque,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF1A1410).withValues(alpha: 0.75),
-              border: Border.all(
-                color: ring,
-                width: selected ? 2.5 : 1.2,
-              ),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: GameTheme.torch.withValues(alpha: 0.45),
-                        blurRadius: 10 + pulse * 3,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: hitSize,
+                height: hitSize,
+                child: Center(
+                  child: SizedBox(
+                    width: discSize,
+                    height: discSize,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF1A1410).withValues(alpha: 0.75),
+                        border: Border.all(
+                          color: ring,
+                          width: selected ? 2.5 : 1.2,
+                        ),
+                        boxShadow: selected
+                            ? [
+                                BoxShadow(
+                                  color: GameTheme.torch.withValues(alpha: 0.45),
+                                  blurRadius: 10 + pulse * 3,
+                                ),
+                              ]
+                            : null,
                       ),
-                    ]
-                  : null,
-            ),
-            child: Center(
-              child: ClipOval(child: portrait),
-            ),
+                      child: Center(
+                        child: ClipOval(child: portrait),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Text(
+                statusWord,
+                maxLines: 1,
+                overflow: TextOverflow.clip,
+                style: GameTheme.body(size: 11, color: _statusColor),
+              ),
+            ],
           ),
         ),
       ),

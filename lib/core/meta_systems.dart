@@ -19,14 +19,81 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.1';
+  static const String currentVersion = '1.12.8';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
-      version: '1.12.1',
+      version: '1.12.8',
       bullets: <String>[
+        'Combat Rogue hits harder so the kit sits with other melee.',
+        'Holy Priest Guardian Spirit is a real emergency save; Resto Lifebloom is a HoT again.',
+        'Local season weeks named for late summer (Moth Dust / Brass Tempo) + KEYSTONE week-goal card.',
+        'Tide / Ember / Grove layout kits lean harder into water alcoves, lava chokes, and root choke rooms.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.7',
+      bullets: <String>[
+        'Kit fantasy pass: Blood Bone Shield, Guardian Lacerate, Fury Enraged Regeneration, Unholy Gargoyle actually summons, Subtlety Preparation resets CDs.',
+        'Pack tools: Elemental Flame Shock, Frost Mage Blizzard, Destruction Rain of Fire, Survival Multi-Shot — rain/fan AoEs aim at your focus pack.',
+        'Healers unchanged — party heals already cover their fantasy.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.6',
+      bullets: <String>[
+        'Kit AoE gaps filled: Affliction Seed of Corruption, Assassination/Subtlety Fan of Knives, Shadow Mind Sear, Feral Swipe, Holy Paladin Consecration.',
+        'Healers still clear packs via party heals (CoH / Holy Nova / Healing Rain / Wild Growth) — damage AoE was the missing feel on ST-heavy DPS.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.5',
+      bullets: <String>[
+        'VFX: Lite keeps ground discs (Consecration / Bladestorm) and auras — only Full shows floaters/bursts; Minimal still reduces motion.',
+        'Signature kits (Execute, TV, Pyroblast, Chaos Bolt, Tranquility, …) get explicit cast tints / discs so fantasy reads clearer.',
+        'Melee trails read thicker on Full; Lite/Minimal use a short bright slash nub.',
+        'Settings + Guides name Full / Lite / Minimal honestly.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.4',
+      bullets: <String>[
+        'World Path map: endgame road (Rimeglass → Blightfen → Brassvault → Mothveil) painted as continuous terrain — not glued color bands.',
+        'Hub path markers: clearer HERE / OPEN / CLEAR / LOCKED labels, bigger tap targets, lifetime gold as 1.2M / 750k.',
+        'Zone caption shows boss + flavor when unlocked; locked still shows have/need lifetime gold.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.3',
+      bullets: <String>[
+        'World Path: Mothveil Hollow — new end zone after Brassvault (The Pale Monarch).',
+        'Moth-silk identity: lilac dust wash, veil mites, Pale Monarch (not a Brassvault twin).',
+        'World Path map extended with a painted moth-dust strip + 15th ring under the vault.',
+        'Mothveil leans silk chokes; Brassvault keeps cog treasure alcoves.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.2',
+      bullets: <String>[
+        'Holy Paladin: Beacon marks an ally so your heals peel onto them. Holy Shock heals when someone is hurt, or smites when the party is topped. Divine Favor is a heal window — not haste.',
+        'Marksmanship: Volley rains arrows on the pack (not a Scatter root). Aimed Shot still punches the focus.',
+        'World Path still runs Sandy Caverns through Brassvault Deep (Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.1',
+        bullets: <String>[
+        'After the first hour, TODAY chases KEY +1 for better iLvl loot (not Daily). Higher keys raise item level honestly — KEY +10 is a real jump vs the same floor without a key.',
+        'GEAR: plate tanks show more ARMOR than leather DPS. Agility is a small dodge crumb — it no longer turns Combat Rogue into the party’s armor king.',
         'Kits: Arms Sweeping Strikes is a cleave window on your swings (HUD shows SWEEP) — not a one-shot nova. Prot Paladin Holy Shield is a block window while you tank; Divine Protection stays the panic bubble.',
+        'Arms, Beast Mastery, and Unholy sit closer to other DPS — Sweep, pet, and ghoul still look the same; they just hit a bit less.',
         'World Path still runs Sandy Caverns through Brassvault Deep (Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
@@ -409,6 +476,7 @@ abstract final class MetaSystems {
     'clear_rime': (s) => s.highestDungeonCleared >= 11,
     'clear_fen': (s) => s.highestDungeonCleared >= 12,
     'clear_brass': (s) => s.highestDungeonCleared >= 13,
+    'clear_veil': (s) => s.highestDungeonCleared >= 14,
     'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
     'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
     'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,

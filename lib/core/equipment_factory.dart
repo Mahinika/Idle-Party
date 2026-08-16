@@ -10,6 +10,7 @@ import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
+import 'keystone.dart';
 
 /// Affix definition loaded from `item_affixes.json`.
 class ItemAffixDef {
@@ -170,7 +171,7 @@ class EquipmentFactory {
       base +
           zone * 4 +
           ascensionLevel.clamp(0, 40) * 2 +
-          hardmodeLevel.clamp(0, 20) ~/ 4,
+          Keystone.lootItemLevelBonus(hardmodeLevel),
     );
     return softCapItemLevel(ilvl);
   }

@@ -167,6 +167,16 @@ abstract final class DungeonCatalog {
       unlockPrice: 7000000,
       blurb: 'The mire drains into buried clockwork. Something still ticks.',
     ),
+    DungeonDef(
+      number: 14,
+      id: 'veil',
+      name: 'Mothveil Hollow',
+      layout: DungeonLayoutKind.hideout,
+      bossId: 'veil_monarch',
+      bossName: 'The Pale Monarch',
+      unlockPrice: 10000000,
+      blurb: 'Silk dust hangs where the clockwork ends. Wings beat in the dark.',
+    ),
   ];
 
   static DungeonDef byId(String id) {

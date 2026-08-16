@@ -10,10 +10,11 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 1. **Claimables (READY)** — daily vault, finished jobs, Meet new kit  
 2. **Ascend READY** — can Ascend now  
 3. **ALMOST** — one boss from Ascend, KEY+1 vault cliff, then zone / Will / Gauntlet / week almost  
-4. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Skip Daily / vault-start / Will grind so TODAY is not a meta list.  
-5. **Progress grind** — daily run, vault start, Will, Gauntlet, week goal, push floors  
+4. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Skip Daily / KEY / vault-start / Will grind so TODAY is not a meta list.  
+5. **KEY habit** — after first hour, chase the next KEY (honest higher iLvl) until preferred key is at the AL cap. Uses KEY words even before mid-layer vault jargon. When at cap, fall through.  
+6. **Progress grind** — daily run, vault start, Will, Gauntlet, week goal, push floors  
 
-ALMOST always beats Daily / vault-start grind. First hour push beats Daily. Zone unlock is TODAY only when gold is **ALMOST** (playing the current zone is how you unlock the next). Never invent a second priority list in UI.
+ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats Daily and KEY. Zone unlock is TODAY only when gold is **ALMOST** (playing the current zone is how you unlock the next). Never invent a second priority list in UI.
 
 ## Urgency chrome
 
