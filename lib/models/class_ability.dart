@@ -567,6 +567,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
       coeff: 0.9,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFFC070,
+        groundDisc: true,
+        groundLife: 1.6,
+        groundArgb: 0x88FFE08A,
+        groundRadius: 2.4,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.lastStand,
@@ -836,6 +845,11 @@ class ClassKits {
       resourceCost: 30,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.fire,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.fire,
+        castArgb: 0xFFFF6020,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.pyroblast,
@@ -850,6 +864,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.35,
+      boltStyle: SpellBoltStyle.fire,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.fire,
+        castArgb: 0xFFFF4010,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.iceBlock,
@@ -969,6 +988,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
       coeff: 1.1,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFFD080,
+        groundDisc: true,
+        groundLife: 2.0,
+        groundArgb: 0x88FFE08A,
+        groundRadius: 2.2,
+      ),
     ),
 
     // —— arms ——
@@ -1076,6 +1104,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 2.25,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFFB050,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.armsRally,
@@ -1171,6 +1204,11 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFF7070,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.furyExecute,
@@ -1185,6 +1223,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 2.1,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFF9050,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.furyRecklessness,
@@ -1295,6 +1338,11 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFF0A8,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.layOnHands,
@@ -1415,6 +1463,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
       coeff: 0.95,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFE080,
+        groundDisc: true,
+        groundLife: 2.2,
+        groundArgb: 0x88FFE8A0,
+        groundRadius: 2.6,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.divineProtection,
@@ -1440,6 +1497,11 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.taunt,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFE8A0,
+      ),
     ),
 
     // —— retribution ——
@@ -1538,6 +1600,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.85,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFF0C0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.divineShield,
@@ -1646,6 +1713,11 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.arrow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arrow,
+        castArgb: 0xFFFFB060,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.feignDeath,
@@ -1755,6 +1827,11 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.arrow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arrow,
+        castArgb: 0xFFFFE080,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.deterrence,
@@ -1898,6 +1975,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.7,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFF9060C0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.disengage,
@@ -2006,6 +2088,11 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF70D070,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.cloakOfShadows,
@@ -2424,6 +2511,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.75,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFB060E0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.dispersion,
@@ -2532,6 +2624,11 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFF90C0FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.iceboundFortitude,
@@ -2557,6 +2654,11 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.taunt,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFF8050A0,
+      ),
     ),
 
     // —— frostDk ——
@@ -2653,6 +2755,15 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.root,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.frost,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.frost,
+        castArgb: 0xFF90D8FF,
+        groundDisc: true,
+        groundLife: 2.2,
+        groundArgb: 0x6690D8FF,
+        groundRadius: 2.8,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.frostDkIbf,
@@ -2735,6 +2846,11 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFA080C0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.antiMagicShell,
@@ -2763,6 +2879,15 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
       coeff: 0.55,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFF706090,
+        groundDisc: true,
+        groundLife: 2.5,
+        groundArgb: 0x66706090,
+        groundRadius: 2.6,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.unholyIbf,
@@ -2873,6 +2998,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.4,
+      boltStyle: SpellBoltStyle.lightning,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.lightning,
+        castArgb: 0xFFB8F0FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.astralShift,
@@ -2981,6 +3111,11 @@ class ClassKits {
       effect: AbilityEffectKind.grantResource,
       tier: AbilityCastTier.signature,
       coeff: 30,
+      boltStyle: SpellBoltStyle.lightning,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.lightning,
+        castArgb: 0xFFFF9040,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.enhancementAstral,
@@ -3092,6 +3227,15 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.signature,
       coeff: 1.85,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF70D070,
+        groundDisc: true,
+        groundLife: 3.0,
+        groundArgb: 0x6670D070,
+        groundRadius: 2.8,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.natureSwiftness,
@@ -3201,6 +3345,11 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.arcane,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arcane,
+        castArgb: 0xFFC070FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneIceBlock,
@@ -3309,6 +3458,11 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.frost,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.frost,
+        castArgb: 0xFF90D8FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.frostMageIceBlock,
@@ -3440,6 +3594,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.75,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFB060E0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.soulburn,
@@ -3522,6 +3681,11 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFF8040C0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.demonCharge,
@@ -3549,6 +3713,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.62,
+      boltStyle: SpellBoltStyle.fire,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.fire,
+        castArgb: 0xFFFF5020,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.sacrifice,
@@ -3668,6 +3837,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.64,
+      boltStyle: SpellBoltStyle.fire,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.fire,
+        castArgb: 0xFFFF5020,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.shadowWard,
@@ -3906,6 +4080,11 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFF8050,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.rip,
@@ -4028,6 +4207,11 @@ class ClassKits {
       effect: AbilityEffectKind.grantResource,
       tier: AbilityCastTier.signature,
       coeff: 40,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFF8050,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.survivalInstinctsGuard,
@@ -4053,6 +4237,11 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.taunt,
       tier: AbilityCastTier.signature,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFFD070,
+      ),
     ),
 
     // —— restorationDruid ——
@@ -4152,6 +4341,15 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.signature,
       coeff: 2.1,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF90E090,
+        groundDisc: true,
+        groundLife: 5.5,
+        groundArgb: 0x6690E090,
+        groundRadius: 3.2,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.barkskinResto,

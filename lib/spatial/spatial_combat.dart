@@ -641,7 +641,7 @@ abstract final class SpatialCombat {
   static int get _floaterHeal => colorblindMode ? 0xFFCC79A7 : 0xFF7AAB6E;
   static int get _floaterXp => colorblindMode ? 0xFF009E73 : 0xFF9AD0FF;
 
-  static const int _maxFloaters = 12;
+  static const int _maxFloaters = 16;
   static const int _maxBursts = 14;
   static const int _maxProjectiles = 36;
   static const int _maxGroundFx = 6;
@@ -3845,18 +3845,21 @@ abstract final class SpatialCombat {
       AbilityId.bladeFlurry ||
       AbilityId.divineStorm =>
         3.2,
+      AbilityId.spiritLink => 3.0,
       AbilityId.bloodBoil ||
       AbilityId.bloodBoilUnholy ||
       AbilityId.whirlwind ||
       AbilityId.holyPriestNova ||
       AbilityId.circleOfHealing =>
         2.5,
+      AbilityId.armyOfDead => 2.5,
+      AbilityId.holyWrath || AbilityId.hungeringCold => 2.2,
       AbilityId.fireNova ||
       AbilityId.frostNova ||
       AbilityId.frostNovaMage ||
-      AbilityId.hungeringCold ||
       AbilityId.thunderClap =>
         2.2,
+      AbilityId.killingSpree => 2.0,
       AbilityId.blastWave ||
       AbilityId.shockwave ||
       AbilityId.arcaneExplosion ||

@@ -19,10 +19,20 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.4';
+  static const String currentVersion = '1.12.5';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.5',
+      bullets: <String>[
+        'VFX: Lite keeps ground discs (Consecration / Bladestorm) and auras — only Full shows floaters/bursts; Minimal still reduces motion.',
+        'Signature kits (Execute, TV, Pyroblast, Chaos Bolt, Tranquility, …) get explicit cast tints / discs so fantasy reads clearer.',
+        'Melee trails read thicker on Full; Lite/Minimal use a short bright slash nub.',
+        'Settings + Guides name Full / Lite / Minimal honestly.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.4',
       bullets: <String>[

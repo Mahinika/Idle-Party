@@ -844,6 +844,10 @@ class _TileRoomPainter extends CustomPainter {
   bool get reducedVfx => vfxQuality.reduced;
   bool get showAuras => vfxQuality.showActorAuras;
   bool get showGuide => vfxQuality.showGuideAndPulse;
+  bool get showBursts => vfxQuality.showBurstsAndFloaters;
+  bool get showGround => vfxQuality.showGroundFx;
+  bool get showTrails => vfxQuality.showProjectileTrails;
+  bool get showLootPulse => vfxQuality.showLootPulse;
 
   Size? _vignetteSize;
   Paint? _vignettePaint;
@@ -1000,7 +1004,8 @@ class _TileRoomPainter extends CustomPainter {
     }
 
     // Lasting ground discs under actors (Consecration / Bladestorm / etc.).
-    if (!reducedVfx) {
+    // Lite keeps these; Minimal (reduce motion) hides them.
+    if (showGround) {
       for (final g in world.groundFx) {
         if (!_inView(g.x, g.y, pad: g.radius)) continue;
         final frac = (g.life / g.maxLife).clamp(0.0, 1.0);
@@ -1102,16 +1107,16 @@ class _TileRoomPainter extends CustomPainter {
         LootRarity.epic => const Color(0xBBFFE08A),
         LootRarity.legendary => const Color(0xDDFF8C40),
       };
-      final pulse = reducedVfx
-          ? 1.0
-          : 0.85 + 0.15 * math.sin(loot.age * 6);
+      final pulse = showLootPulse
+          ? 0.85 + 0.15 * math.sin(loot.age * 6)
+          : 1.0;
       _fillPaint.color = glow;
       canvas.drawCircle(
         c,
         tile * (0.32 + loot.drop.rarity.index * 0.04) * pulse,
         _fillPaint,
       );
-      if (!reducedVfx && loot.drop.rarity.index >= LootRarity.rare.index) {
+      if (showLootPulse && loot.drop.rarity.index >= LootRarity.rare.index) {
         _strokePaint
           ..color = glow.withValues(alpha: 0.35)
           ..strokeWidth = 2;
@@ -1191,39 +1196,57 @@ class _TileRoomPainter extends CustomPainter {
       canvas.translate(c.dx, c.dy);
       canvas.rotate(angle);
 
-      void drawOrb({required double core, Color? glow}) {
-        canvas.drawCircle(
-          Offset(-len * 0.15, 0),
-          thick * 1.5,
-          Paint()..color = (glow ?? color).withValues(alpha: 0.22),
-        );
-        canvas.drawCircle(Offset.zero, thick * core, Paint()..color = color);
-        canvas.drawCircle(
-          Offset.zero,
-          thick * 0.4,
-          Paint()..color = Colors.white.withValues(alpha: 0.9),
-        );
-      }
-
       void drawTrailBolt() {
+        if (!showTrails) {
+          // Lite/Minimal: short bright slash nub — readable on phone.
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(-len * 0.35, -thick * 0.55, len * 0.75, thick * 1.1),
+              Radius.circular(thick * 0.45),
+            ),
+            Paint()..color = color,
+          );
+          canvas.drawCircle(
+            Offset(len * 0.35, 0),
+            thick * 0.65,
+            Paint()..color = Colors.white.withValues(alpha: 0.9),
+          );
+          return;
+        }
         canvas.drawRRect(
           RRect.fromRectAndRadius(
-            Rect.fromLTWH(-len * 0.85, -thick * 0.9, len * 1.1, thick * 1.8),
+            Rect.fromLTWH(-len * 0.85, -thick * 1.05, len * 1.15, thick * 2.1),
             Radius.circular(thick),
           ),
-          Paint()..color = color.withValues(alpha: 0.28),
+          Paint()..color = color.withValues(alpha: 0.32),
         );
         canvas.drawRRect(
           RRect.fromRectAndRadius(
-            Rect.fromLTWH(-len * 0.55, -thick * 0.45, len, thick * 0.9),
+            Rect.fromLTWH(-len * 0.55, -thick * 0.55, len, thick * 1.1),
             Radius.circular(thick * 0.5),
           ),
           Paint()..color = color,
         );
         canvas.drawCircle(
           Offset(len * 0.45, 0),
-          thick * 0.7,
-          Paint()..color = Colors.white.withValues(alpha: 0.85),
+          thick * 0.85,
+          Paint()..color = Colors.white.withValues(alpha: 0.9),
+        );
+      }
+
+      void drawOrb({required double core, Color? glow}) {
+        if (showTrails) {
+          canvas.drawCircle(
+            Offset(-len * 0.15, 0),
+            thick * 1.5,
+            Paint()..color = (glow ?? color).withValues(alpha: 0.22),
+          );
+        }
+        canvas.drawCircle(Offset.zero, thick * core, Paint()..color = color);
+        canvas.drawCircle(
+          Offset.zero,
+          thick * 0.4,
+          Paint()..color = Colors.white.withValues(alpha: 0.9),
         );
       }
 
@@ -1757,7 +1780,7 @@ class _TileRoomPainter extends CustomPainter {
       }
     }
 
-    if (!reducedVfx) {
+    if (showBursts) {
       for (final burst in world.bursts) {
         final kind = burst.slash ? SpatialBurstKind.slash : burst.kind;
         if (kind == SpatialBurstKind.slash && burst.angle != null) {
@@ -1891,9 +1914,9 @@ class _TileRoomPainter extends CustomPainter {
       }
     }
 
-    if (!reducedVfx) {
+    if (showBursts) {
       final floaters = world.floaters;
-      final start = floaters.length > 8 ? floaters.length - 8 : 0;
+      final start = floaters.length > 10 ? floaters.length - 10 : 0;
       final tp = TextPainter(textDirection: TextDirection.ltr);
       final maxW = tile * 3.6;
       for (var i = start; i < floaters.length; i++) {

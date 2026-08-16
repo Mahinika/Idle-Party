@@ -34,6 +34,8 @@ abstract final class GameGuides {
           '• Pick up ground loot (or wait for auto-timeout), then walk to the stairs.\n'
           '• Elite and treasure floors often hide a room chest — grab it like other floor loot.\n'
           '• Boss floors use a special arena.\n'
+          '• Settings VFX: Full = all effects; Lite = no floaters/bursts (discs & auras stay); '
+          'Minimal = reduce motion.\n'
           '• Party HP strip is bottom-left — tap a hero to open their kit, tap again to fold.\n'
           '• Target chip is top-right (name + HP).\n'
           '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.'
@@ -312,7 +314,8 @@ abstract final class GameGuides {
           '• Party strip (bottom-left) fades after idle — tap a hero for kit, tap again to fold.\n'
           '• Target chip sits top-right (name + HP).\n'
           '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.\n'
-          '• Settings: text scale, reduced VFX, colorblind floaters, '
+          '• Settings: text scale, Full / Lite / Minimal VFX (Minimal = reduce motion), '
+          'colorblind floaters, '
           'bag auto-sell / auto-disassemble.\n'
           '• META → GUIDE brings you back here anytime.\n'
           '• Escape / back closes overlays.',
