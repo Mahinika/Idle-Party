@@ -542,7 +542,7 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 1.36;
         hero.kitHasteMul *= 1.10;
       case AbilityId.trapMastery:
-        hero.kitOutMul *= 1.40;
+        hero.kitOutMul *= 1.32;
         hero.kitRootBonus += 1.0;
 
       // —— casters: identity buffs; spam tax is casterAbilityTax only ——

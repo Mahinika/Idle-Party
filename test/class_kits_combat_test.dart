@@ -3,6 +3,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/models/hero.dart';
+import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 
 void main() {
@@ -46,6 +47,44 @@ void main() {
     expect(
       ClassKits.hudAbilitiesAt(HeroRole.rogue, 15).map((d) => d.id),
       contains(AbilityId.killingSpree),
+    );
+  });
+
+  test('signature dumps and panic buttons are ready on a typical floor', () {
+    for (final def in ClassKits.all) {
+      if (def.tier != AbilityCastTier.signature &&
+          def.tier != AbilityCastTier.emergency) {
+        continue;
+      }
+      expect(
+        def.unlockLevel,
+        lessThanOrEqualTo(12),
+        reason: '${def.specId} ${def.name} still waits until ${def.unlockLevel}',
+      );
+    }
+    expect(
+      ClassKits.hudAbilitiesAtSpec(HeroSpecId.retribution, 12).map((d) => d.id),
+      containsAll([AbilityId.templarsVerdict, AbilityId.divineShield]),
+    );
+    expect(
+      ClassKits.defFor(AbilityId.beastWithin)!.selfBuffKind,
+      AbilitySelfBuffKind.amp,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.trueshot)!.selfBuffKind,
+      AbilitySelfBuffKind.amp,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.zealotry)!.selfBuffKind,
+      AbilitySelfBuffKind.amp,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.pillarOfFrost)!.selfBuffKind,
+      AbilitySelfBuffKind.amp,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.metamorphosis)!.selfBuffKind,
+      AbilitySelfBuffKind.amp,
     );
   });
 

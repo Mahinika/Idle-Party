@@ -34,6 +34,7 @@ abstract final class MetaSystems {
         'Weapons are the same kind of hard gate: a Paladin will not take a dagger, a Priest will not take a sword, and Paladin / DK / Shaman / Druid leave the ranged slot empty.',
         'Balance Druid Moonkin Form thickens the hide, and Barkskin is ready before the floor gets nasty.',
         'Fury Warrior Rampage dumps mid-fight, Recklessness is an all-in damage window, and Death Wish hits harder — not a haste snack.',
+        'Every kit now shows its signature dump and panic button on a typical floor — Templar''s Verdict, Trueshot, Ice Block, Shield Wall, and the rest no longer wait until 15.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
