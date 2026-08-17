@@ -713,6 +713,55 @@ void main() {
     expect(fury.shieldWallTimer, 0);
   });
 
+  test('Fury Rampage dumps at full HP on a typical floor', () {
+    final ramp = ClassKits.defFor(AbilityId.furyExecute)!;
+    expect(ramp.gate.executeHpFrac, isNull);
+    expect(ramp.unlockLevel, lessThanOrEqualTo(12));
+
+    final state = _soloSpecParty(HeroSpecId.fury, level: 12);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final fury = world.heroes.firstWhere((h) => !h.isPet);
+    fury
+      ..rage = 100
+      ..hp = fury.maxHp
+      ..x = target.x - 1.2
+      ..y = target.y;
+    _padAbilityCds(fury, except: AbilityId.furyExecute);
+
+    var fired = false;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((fury.abilityCd[AbilityId.furyExecute.name] ?? 0) > 0) {
+        fired = true;
+        break;
+      }
+      fury
+        ..rage = 100
+        ..hp = fury.maxHp;
+    }
+    expect(fired, isTrue);
+  });
+
+  test('Fury Recklessness is ready at 12; Death Wish is a damage amp', () {
+    expect(
+      ClassKits.defFor(AbilityId.furyRecklessness)!.unlockLevel,
+      lessThanOrEqualTo(12),
+    );
+    expect(
+      ClassKits.defFor(AbilityId.deathWish)!.selfBuffKind,
+      AbilitySelfBuffKind.amp,
+    );
+    expect(
+      ClassKits.hudAbilitiesAtSpec(HeroSpecId.fury, 12).map((d) => d.id),
+      containsAll([
+        AbilityId.furyExecute,
+        AbilityId.furyRecklessness,
+        AbilityId.deathWish,
+      ]),
+    );
+  });
+
   test('Bloodthirst returns rage on hit', () {
     final state = _soloSpecParty(HeroSpecId.fury, level: 15);
     var world = SpatialCombat.build(state);

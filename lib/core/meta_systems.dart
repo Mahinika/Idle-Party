@@ -33,6 +33,7 @@ abstract final class MetaSystems {
         'Each class wears one armor: plate, mail, leather, or cloth — a Paladin will not put on leather just because the stats look bigger.',
         'Weapons are the same kind of hard gate: a Paladin will not take a dagger, a Priest will not take a sword, and Paladin / DK / Shaman / Druid leave the ranged slot empty.',
         'Balance Druid Moonkin Form thickens the hide, and Barkskin is ready before the floor gets nasty.',
+        'Fury Warrior Rampage dumps mid-fight, Recklessness is an all-in damage window, and Death Wish hits harder — not a haste snack.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
