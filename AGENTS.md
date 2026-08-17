@@ -196,7 +196,7 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 | Meta blob | `lib/models/meta_depth.dart` |
 | Dungeon catalog | `lib/models/dungeon_def.dart` |
 | Spatial sim | `lib/spatial/spatial_combat.dart` |
-| Ability runtime | `lib/spatial/ability_effects.dart` + `kit_migrated_casts.dart` |
+| Ability runtime | `lib/spatial/ability_effects.dart` + `kit_migrated_casts.dart` (`ClassAbilityDef.fireMode` / `gate` / `customId`) |
 | Tile maps | `lib/spatial/tile_map.dart` |
 | Floor blueprint / placement | `lib/spatial/floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart` + `docs/FLOOR_BLUEPRINT.md` |
 | Hub | `lib/ui/hub_screen.dart` |

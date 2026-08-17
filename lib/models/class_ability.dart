@@ -23,6 +23,151 @@ enum AbilityEffectKind {
 /// Cast priority for auto-combat kits.
 enum AbilityCastTier { passive, emergency, signature, filler }
 
+/// How the ability actually fires. HUD ready-glow is only for [cast].
+enum AbilityFireMode {
+  cast,
+  swingRider,
+  onBlock,
+  dotTick,
+  onHitBounce,
+  passive,
+}
+
+/// Typed self-buff — catalogs this instead of matching the name string.
+enum AbilitySelfBuffKind { haste, absorb, amp, healAmp, cleave, block }
+
+/// Typed AoE layout — catalogs this instead of matching the name string.
+enum AbilityAoeShape { nova, fan, rain, ground, chain }
+
+/// Rare casts with a named helper in SpatialCombat (not a second engine).
+enum AbilityCustomId {
+  none,
+  charge,
+  shieldBlock,
+  shieldSlam,
+  devastate,
+  demoralizingShout,
+  commandingShout,
+  tauntPull,
+  thunderClap,
+  shockwave,
+  lastStand,
+  shieldWall,
+  painSuppression,
+  powerWordFortitude,
+  powerWordShield,
+  prayerOfMending,
+  powerInfusion,
+  penance,
+  iceBlock,
+  blink,
+  livingBomb,
+  frostNova,
+  blastWave,
+  fireball,
+  pyroblast,
+  vanish,
+  killingSpree,
+  sprint,
+  bladeFlurry,
+  sliceAndDice,
+  kidneyShot,
+  armyOfDead,
+  feralSpirit,
+  waterElemental,
+  gargoyle,
+  shamanisticRage,
+}
+
+/// Picker gates that used to live in AbilityId switches.
+class AbilityGate {
+  const AbilityGate({
+    this.packMin = 0,
+    this.executeHpFrac,
+    this.comboMin = 0,
+    this.minRange,
+    this.maxRange,
+    this.minRangeMul,
+    this.maxRangeMul,
+    this.maxRangePad,
+    this.maintainDot = false,
+    this.holdLongCdOnTrash,
+    this.hotStreakOnly = false,
+    this.hotStreakBlocks = false,
+    this.casterHpMax,
+    this.requireFocus = false,
+    this.needClearCorridor = false,
+    this.notQueued = false,
+    this.peelRange,
+    this.peelScanRange = 2.4,
+    this.nearbyRadius,
+    this.nearPackLeader = false,
+    this.anyCombatWindow = false,
+    this.needsPomTarget = false,
+    this.needsPiTarget = false,
+    this.needsPainTarget = false,
+    this.needsPenance = false,
+    this.arcaneChargesMin = 0,
+    this.sliceAndDiceMin = 0,
+    this.focusRootMax,
+    this.skipIfBleedAbove,
+    this.skipIfBeaconAbove,
+    this.sunderRefresh = false,
+    this.livingBombRefresh = false,
+    this.sliceAndDiceRefresh = false,
+    this.fortitudeRefresh = false,
+    this.atkShoutRefresh = false,
+  });
+
+  static const none = AbilityGate();
+
+  final int packMin;
+  final double? executeHpFrac;
+  final int comboMin;
+  final double? minRange;
+  final double? maxRange;
+
+  /// Minimum distance as a multiple of the caster's attack range.
+  final double? minRangeMul;
+
+  /// Maximum distance as a multiple of preferred range (blink kite).
+  final double? maxRangeMul;
+
+  /// Maximum distance = attackRange + this pad.
+  final double? maxRangePad;
+  final bool maintainDot;
+
+  /// `null` = auto-hold signature CDs ≥ 30s on healthy trash.
+  final bool? holdLongCdOnTrash;
+  final bool hotStreakOnly;
+  final bool hotStreakBlocks;
+  final double? casterHpMax;
+  final bool requireFocus;
+  final bool needClearCorridor;
+  final bool notQueued;
+  final double? peelRange;
+  final double peelScanRange;
+  final double? nearbyRadius;
+  final bool nearPackLeader;
+
+  /// Pack / elite / execute are OR'd (Killing Spree).
+  final bool anyCombatWindow;
+  final bool needsPomTarget;
+  final bool needsPiTarget;
+  final bool needsPainTarget;
+  final bool needsPenance;
+  final int arcaneChargesMin;
+  final int sliceAndDiceMin;
+  final double? focusRootMax;
+  final double? skipIfBleedAbove;
+  final double? skipIfBeaconAbove;
+  final bool sunderRefresh;
+  final bool livingBombRefresh;
+  final bool sliceAndDiceRefresh;
+  final bool fortitudeRefresh;
+  final bool atkShoutRefresh;
+}
+
 /// Combat abilities unlocked by hero level (WotLK-inspired kits).
 enum AbilityId {
   // Warrior — Protection
@@ -379,6 +524,12 @@ class ClassAbilityDef {
     this.coeff = 1.0,
     this.boltStyle,
     this.vfx,
+    this.fireMode = AbilityFireMode.cast,
+    this.gate = AbilityGate.none,
+    this.customId = AbilityCustomId.none,
+    this.selfBuffKind,
+    this.selfBuffDuration = 0,
+    this.aoeShape,
   });
 
   final AbilityId id;
@@ -406,6 +557,39 @@ class ClassAbilityDef {
   /// Optional cast / ground / aura VFX overrides.
   final AbilityVfxSpec? vfx;
 
+  final AbilityFireMode fireMode;
+  final AbilityGate gate;
+  final AbilityCustomId customId;
+  final AbilitySelfBuffKind? selfBuffKind;
+
+  /// Seconds; 0 = kind default (haste 6 / amp 5 / others 3–6).
+  final double selfBuffDuration;
+  final AbilityAoeShape? aoeShape;
+
+  AbilityFireMode get resolvedFireMode {
+    if (fireMode != AbilityFireMode.cast) return fireMode;
+    if (effect == AbilityEffectKind.passive) return AbilityFireMode.passive;
+    return AbilityFireMode.cast;
+  }
+
+  /// Picker may try this row (white-hit riders without a queue-cast stay out).
+  bool get runnerMayCast {
+    if (effect == AbilityEffectKind.passive) return false;
+    return switch (resolvedFireMode) {
+      AbilityFireMode.passive || AbilityFireMode.onBlock => false,
+      AbilityFireMode.swingRider => customId != AbilityCustomId.none,
+      _ => true,
+    };
+  }
+
+  bool get showsInHud {
+    if (!showInHud) return false;
+    return switch (resolvedFireMode) {
+      AbilityFireMode.passive || AbilityFireMode.onBlock => false,
+      _ => true,
+    };
+  }
+
   /// Hover / long-press chip text for the party HUD.
   String get tooltipMessage {
     final cd = cooldown <= 0
@@ -414,8 +598,15 @@ class ClassAbilityDef {
         ? 'CD ${cooldown.round()}s'
         : 'CD ${cooldown.toStringAsFixed(1)}s';
     final cost = resourceCost > 0 ? ' · Cost $resourceCost' : '';
-    final gate = requiresShield ? ' · Needs shield' : '';
-    return '$name\n$description\n$cd$cost$gate';
+    final shield = requiresShield ? ' · Needs shield' : '';
+    final mode = switch (resolvedFireMode) {
+      AbilityFireMode.swingRider => ' · Next auto',
+      AbilityFireMode.onBlock => ' · After block',
+      AbilityFireMode.dotTick => ' · DoT tick',
+      AbilityFireMode.onHitBounce => ' · On hit',
+      _ => '',
+    };
+    return '$name\n$description\n$cd$cost$shield$mode';
   }
 }
 
@@ -452,6 +643,14 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.charge,
+      gate: AbilityGate(
+        requireFocus: true,
+        minRange: 3.5,
+        maxRange: 8.0,
+        needClearCorridor: true,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.shieldBlock,
@@ -467,6 +666,9 @@ class ClassKits {
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
       coeff: 0.35,
+
+      customId: AbilityCustomId.shieldBlock,
+      gate: AbilityGate(requireFocus: true, maxRange: 3.2),
     ),
     ClassAbilityDef(
       id: AbilityId.thunderClap,
@@ -481,6 +683,9 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.55,
+
+      customId: AbilityCustomId.thunderClap,
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.devastate,
@@ -496,6 +701,13 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.55,
+
+      customId: AbilityCustomId.devastate,
+      gate: AbilityGate(
+        requireFocus: true,
+        maxRangePad: 0.35,
+        sunderRefresh: true,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.taunt,
@@ -508,6 +720,8 @@ class ClassKits {
       cooldown: 10,
       effect: AbilityEffectKind.taunt,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.tauntPull,
     ),
     ClassAbilityDef(
       id: AbilityId.demoralizingShout,
@@ -522,6 +736,10 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.2,
+
+      customId: AbilityCustomId.demoralizingShout,
+      aoeShape: AbilityAoeShape.nova,
+      gate: AbilityGate(nearbyRadius: 3.4),
     ),
     ClassAbilityDef(
       id: AbilityId.shieldSlam,
@@ -537,6 +755,10 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.1,
+
+      fireMode: AbilityFireMode.swingRider,
+      customId: AbilityCustomId.shieldSlam,
+      gate: AbilityGate(requireFocus: true, notQueued: true),
     ),
     ClassAbilityDef(
       id: AbilityId.commandingShout,
@@ -550,6 +772,9 @@ class ClassKits {
       resourceCost: 12,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.commandingShout,
+      gate: AbilityGate(requireFocus: true, atkShoutRefresh: true),
     ),
     ClassAbilityDef(
       id: AbilityId.revenge,
@@ -564,6 +789,8 @@ class ClassKits {
       showInHud: false,
       effect: AbilityEffectKind.passive,
       tier: AbilityCastTier.passive,
+
+      fireMode: AbilityFireMode.onBlock,
     ),
     ClassAbilityDef(
       id: AbilityId.shockwave,
@@ -587,6 +814,9 @@ class ClassKits {
         groundArgb: 0x88FFE08A,
         groundRadius: 2.4,
       ),
+
+      customId: AbilityCustomId.shockwave,
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.lastStand,
@@ -599,6 +829,9 @@ class ClassKits {
       cooldown: 45,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.lastStand,
+      gate: AbilityGate(casterHpMax: 0.4),
     ),
     ClassAbilityDef(
       id: AbilityId.shieldWall,
@@ -612,6 +845,9 @@ class ClassKits {
       requiresShield: true,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.shieldWall,
+      gate: AbilityGate(casterHpMax: 0.28),
     ),
 
     // —— Disc Priest ——
@@ -650,6 +886,8 @@ class ClassKits {
         groundArgb: 0x66FFE8A0,
         groundRadius: 1.6,
       ),
+
+      customId: AbilityCustomId.powerWordShield,
     ),
     ClassAbilityDef(
       id: AbilityId.prayerOfMending,
@@ -666,6 +904,10 @@ class ClassKits {
       coeff: 1.0,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0C0),
+
+      customId: AbilityCustomId.prayerOfMending,
+      fireMode: AbilityFireMode.onHitBounce,
+      gate: AbilityGate(needsPomTarget: true),
     ),
     ClassAbilityDef(
       id: AbilityId.penance,
@@ -682,6 +924,9 @@ class ClassKits {
       coeff: 0.62,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFE8A0),
+
+      customId: AbilityCustomId.penance,
+      gate: AbilityGate(needsPenance: true),
     ),
     ClassAbilityDef(
       id: AbilityId.powerWordFortitude,
@@ -695,6 +940,9 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.powerWordFortitude,
+      gate: AbilityGate(fortitudeRefresh: true),
     ),
     ClassAbilityDef(
       id: AbilityId.flashHeal,
@@ -733,6 +981,9 @@ class ClassKits {
         groundArgb: 0x66E0C070,
         groundRadius: 1.5,
       ),
+
+      customId: AbilityCustomId.painSuppression,
+      gate: AbilityGate(needsPainTarget: true),
     ),
     ClassAbilityDef(
       id: AbilityId.powerInfusion,
@@ -748,6 +999,9 @@ class ClassKits {
       tier: AbilityCastTier.signature,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFD070),
+
+      customId: AbilityCustomId.powerInfusion,
+      gate: AbilityGate(requireFocus: true, needsPiTarget: true),
     ),
 
     // —— Mage (Fire) ——
@@ -777,6 +1031,13 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.95,
+
+      customId: AbilityCustomId.fireball,
+      gate: AbilityGate(
+        requireFocus: true,
+        maxRangePad: 0.5,
+        hotStreakBlocks: true,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.livingBomb,
@@ -791,6 +1052,10 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.65,
+
+      customId: AbilityCustomId.livingBomb,
+      fireMode: AbilityFireMode.dotTick,
+      gate: AbilityGate(requireFocus: true, livingBombRefresh: true),
     ),
     ClassAbilityDef(
       id: AbilityId.frostNova,
@@ -804,6 +1069,9 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.root,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.frostNova,
+      gate: AbilityGate(peelRange: 1.6, peelScanRange: 2.4),
     ),
     ClassAbilityDef(
       id: AbilityId.blastWave,
@@ -818,6 +1086,9 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.42,
+
+      customId: AbilityCustomId.blastWave,
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.blink,
@@ -831,6 +1102,9 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.blink,
+      gate: AbilityGate(requireFocus: true, maxRangeMul: 0.55),
     ),
     ClassAbilityDef(
       id: AbilityId.combustion,
@@ -846,6 +1120,10 @@ class ClassKits {
       tier: AbilityCastTier.signature,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF6020),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 4,
+      gate: AbilityGate(requireFocus: true, holdLongCdOnTrash: false),
     ),
     ClassAbilityDef(
       id: AbilityId.pyroblast,
@@ -862,6 +1140,13 @@ class ClassKits {
       coeff: 1.45,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF4010),
+
+      customId: AbilityCustomId.pyroblast,
+      gate: AbilityGate(
+        requireFocus: true,
+        maxRangePad: 0.5,
+        hotStreakOnly: true,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.iceBlock,
@@ -874,6 +1159,9 @@ class ClassKits {
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.iceBlock,
+      gate: AbilityGate(casterHpMax: 0.28),
     ),
 
     // —— Rogue (Combat) ——
@@ -889,6 +1177,8 @@ class ClassKits {
       showInHud: false,
       effect: AbilityEffectKind.passive,
       tier: AbilityCastTier.passive,
+
+      fireMode: AbilityFireMode.passive,
     ),
     ClassAbilityDef(
       id: AbilityId.sliceAndDice,
@@ -902,6 +1192,9 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.sliceAndDice,
+      gate: AbilityGate(comboMin: 2, sliceAndDiceRefresh: true),
     ),
     ClassAbilityDef(
       id: AbilityId.eviscerate,
@@ -916,6 +1209,9 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.05,
+
+      fireMode: AbilityFireMode.swingRider,
+      showInHud: false,
     ),
     ClassAbilityDef(
       id: AbilityId.kidneyShot,
@@ -929,6 +1225,14 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.root,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.kidneyShot,
+      gate: AbilityGate(
+        requireFocus: true,
+        comboMin: 5,
+        sliceAndDiceMin: 2,
+        focusRootMax: 0.5,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.bladeFlurry,
@@ -943,6 +1247,11 @@ class ClassKits {
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
       coeff: 0.48,
+
+      customId: AbilityCustomId.bladeFlurry,
+      selfBuffKind: AbilitySelfBuffKind.cleave,
+      selfBuffDuration: 6,
+      gate: AbilityGate(packMin: 2),
     ),
     ClassAbilityDef(
       id: AbilityId.sprint,
@@ -955,6 +1264,9 @@ class ClassKits {
       cooldown: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.sprint,
+      gate: AbilityGate(nearPackLeader: true, minRangeMul: 1.85),
     ),
     ClassAbilityDef(
       id: AbilityId.vanish,
@@ -967,6 +1279,9 @@ class ClassKits {
       cooldown: 40,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.vanish,
+      gate: AbilityGate(casterHpMax: 0.3),
     ),
     ClassAbilityDef(
       id: AbilityId.killingSpree,
@@ -990,6 +1305,10 @@ class ClassKits {
         groundArgb: 0x88FFE08A,
         groundRadius: 2.2,
       ),
+
+      customId: AbilityCustomId.killingSpree,
+      aoeShape: AbilityAoeShape.nova,
+      gate: AbilityGate(anyCombatWindow: true, packMin: 2, executeHpFrac: 0.35),
     ),
 
     // —— arms ——
@@ -1060,6 +1379,10 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.cleave,
+      selfBuffDuration: 6,
+      gate: AbilityGate(packMin: 2),
     ),
     ClassAbilityDef(
       id: AbilityId.bladestorm,
@@ -1083,6 +1406,8 @@ class ClassKits {
         groundArgb: 0x88FFE08A,
         groundRadius: 2.8,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.armsExecute,
@@ -1102,6 +1427,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFFFFB050,
       ),
+
+      gate: AbilityGate(executeHpFrac: 0.25),
     ),
     ClassAbilityDef(
       id: AbilityId.armsRally,
@@ -1158,6 +1485,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.ragingBlow,
@@ -1184,6 +1513,8 @@ class ClassKits {
       cooldown: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.deathWish,
@@ -1202,6 +1533,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFFFF7070,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.furyExecute,
@@ -1246,6 +1579,9 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 8,
     ),
 
     // —— holyPaladin ——
@@ -1330,6 +1666,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      gate: AbilityGate(skipIfBeaconAbove: 10),
     ),
     ClassAbilityDef(
       id: AbilityId.consecrationHoly,
@@ -1353,6 +1691,8 @@ class ClassKits {
         groundArgb: 0x66FFE8A0,
         groundRadius: 2.7,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.divineFavor,
@@ -1368,6 +1708,9 @@ class ClassKits {
       tier: AbilityCastTier.signature,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0A8),
+
+      selfBuffKind: AbilitySelfBuffKind.healAmp,
+      selfBuffDuration: 8,
     ),
     ClassAbilityDef(
       id: AbilityId.layOnHands,
@@ -1423,6 +1766,9 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.block,
+      selfBuffDuration: 6,
     ),
     ClassAbilityDef(
       id: AbilityId.hammerOfTheRighteous,
@@ -1437,6 +1783,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.7,
+
+      aoeShape: AbilityAoeShape.nova,
     ),
     ClassAbilityDef(
       id: AbilityId.consecration,
@@ -1460,6 +1808,8 @@ class ClassKits {
         groundArgb: 0x66FFE080,
         groundRadius: 2.7,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.shieldOfRighteousness,
@@ -1497,6 +1847,8 @@ class ClassKits {
         groundArgb: 0x88FFE8A0,
         groundRadius: 2.6,
       ),
+
+      aoeShape: AbilityAoeShape.nova,
     ),
     ClassAbilityDef(
       id: AbilityId.divineProtection,
@@ -1581,6 +1933,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.8,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.hammerOfWrath,
@@ -1595,6 +1949,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.5,
+
+      gate: AbilityGate(executeHpFrac: 0.25),
     ),
     ClassAbilityDef(
       id: AbilityId.zealotry,
@@ -1608,6 +1964,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.templarsVerdict,
@@ -1693,6 +2051,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.74,
+
+      aoeShape: AbilityAoeShape.fan,
     ),
     ClassAbilityDef(
       id: AbilityId.bestialWrath,
@@ -1706,6 +2066,8 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.intimidation,
@@ -1737,6 +2099,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.arrow,
         castArgb: 0xFFFFB060,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.feignDeath,
@@ -1820,6 +2184,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.rapidFire,
@@ -1833,6 +2199,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.trueshot,
@@ -1851,6 +2219,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.arrow,
         castArgb: 0xFFFFE080,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.deterrence,
@@ -1913,6 +2283,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.nature,
         castArgb: 0xFF70D050,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.explosiveTrap,
@@ -1936,6 +2308,8 @@ class ClassKits {
         groundArgb: 0x88FF7040,
         groundRadius: 2.6,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.freezingTrap,
@@ -1977,6 +2351,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFFE8C090,
       ),
+
+      gate: AbilityGate(maxRange: 1.85),
     ),
     ClassAbilityDef(
       id: AbilityId.multiShotSurv,
@@ -1996,6 +2372,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.arrow,
         castArgb: 0xFFC0D080,
       ),
+
+      aoeShape: AbilityAoeShape.fan,
     ),
     ClassAbilityDef(
       id: AbilityId.blackArrow,
@@ -2070,6 +2448,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.55,
+
+      gate: AbilityGate(comboMin: 3),
     ),
     ClassAbilityDef(
       id: AbilityId.garrote,
@@ -2084,6 +2464,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.9,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.rupture,
@@ -2098,6 +2480,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.0,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.coldBlood,
@@ -2110,6 +2494,9 @@ class ClassKits {
       cooldown: 35,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 6,
     ),
     ClassAbilityDef(
       id: AbilityId.fanOfKnives,
@@ -2133,6 +2520,8 @@ class ClassKits {
         groundArgb: 0x66A0C050,
         groundRadius: 2.6,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.vendetta,
@@ -2151,6 +2540,9 @@ class ClassKits {
         boltStyle: SpellBoltStyle.nature,
         castArgb: 0xFF70D070,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 8,
     ),
     ClassAbilityDef(
       id: AbilityId.cloakOfShadows,
@@ -2238,6 +2630,8 @@ class ClassKits {
         groundArgb: 0x668060C0,
         groundRadius: 1.4,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.premeditation,
@@ -2273,6 +2667,8 @@ class ClassKits {
         groundArgb: 0x77A070E0,
         groundRadius: 2.2,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.fanOfKnivesSub,
@@ -2296,6 +2692,8 @@ class ClassKits {
         groundArgb: 0x668060C0,
         groundRadius: 2.6,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.eviscerateSub,
@@ -2534,6 +2932,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.15,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.devouringPlague,
@@ -2548,6 +2948,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.35,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.shadowWordPain,
@@ -2562,6 +2964,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.85,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.mindSear,
@@ -2585,6 +2989,8 @@ class ClassKits {
         groundArgb: 0x669040C0,
         groundRadius: 2.9,
       ),
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.psychicScream,
@@ -2672,6 +3078,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.22,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.runeTap,
@@ -2700,6 +3108,9 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+
+      aoeShape: AbilityAoeShape.ground,
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.boneShield,
@@ -2749,6 +3160,9 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFF90C0FF,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 5,
     ),
     ClassAbilityDef(
       id: AbilityId.iceboundFortitude,
@@ -2836,6 +3250,9 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.75,
+
+      aoeShape: AbilityAoeShape.rain,
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.chainsOfIce,
@@ -2862,6 +3279,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.hungeringCold,
@@ -2925,6 +3344,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.12,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.deathCoil,
@@ -2953,6 +3374,9 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.70,
+
+      aoeShape: AbilityAoeShape.ground,
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.gargoyle,
@@ -2971,6 +3395,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.shadow,
         castArgb: 0xFFA080C0,
       ),
+
+      customId: AbilityCustomId.gargoyle,
     ),
     ClassAbilityDef(
       id: AbilityId.antiMagicShell,
@@ -3008,6 +3434,9 @@ class ClassKits {
         groundArgb: 0x66706090,
         groundRadius: 2.6,
       ),
+
+      customId: AbilityCustomId.armyOfDead,
+      aoeShape: AbilityAoeShape.nova,
     ),
     ClassAbilityDef(
       id: AbilityId.unholyIbf,
@@ -3065,6 +3494,8 @@ class ClassKits {
       coeff: 0.72,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF8040),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.lavaBurst,
@@ -3093,6 +3524,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.8,
+
+      aoeShape: AbilityAoeShape.chain,
     ),
     ClassAbilityDef(
       id: AbilityId.thunderstorm,
@@ -3107,6 +3540,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.65,
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.elementalMastery,
@@ -3120,6 +3555,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.earthShock,
@@ -3208,6 +3645,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.75,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.feralSpirit,
@@ -3221,6 +3660,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.feralSpirit,
     ),
     ClassAbilityDef(
       id: AbilityId.frostShock,
@@ -3252,6 +3693,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.lightning,
         castArgb: 0xFFFF9040,
       ),
+
+      customId: AbilityCustomId.shamanisticRage,
     ),
     ClassAbilityDef(
       id: AbilityId.enhancementAstral,
@@ -3428,6 +3871,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.3,
+
+      gate: AbilityGate(arcaneChargesMin: 2),
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneExplosion,
@@ -3442,6 +3887,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.7,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.slow,
@@ -3468,6 +3915,8 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.arcanePower,
@@ -3486,6 +3935,9 @@ class ClassKits {
         boltStyle: SpellBoltStyle.arcane,
         castArgb: 0xFFC070FF,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 7,
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneIceBlock,
@@ -3498,6 +3950,8 @@ class ClassKits {
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.iceBlock,
     ),
 
     // —— frostMage ——
@@ -3555,6 +4009,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.7,
+
+      aoeShape: AbilityAoeShape.nova,
     ),
     ClassAbilityDef(
       id: AbilityId.blizzard,
@@ -3578,6 +4034,8 @@ class ClassKits {
         groundArgb: 0x6690C8FF,
         groundRadius: 2.8,
       ),
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.frostNovaMage,
@@ -3591,6 +4049,8 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.root,
       tier: AbilityCastTier.filler,
+
+      gate: AbilityGate(peelRange: 1.6, peelScanRange: 2.5),
     ),
     ClassAbilityDef(
       id: AbilityId.icyVeins,
@@ -3604,6 +4064,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.summonWaterElemental,
@@ -3622,6 +4084,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.frost,
         castArgb: 0xFF90D8FF,
       ),
+
+      customId: AbilityCustomId.waterElemental,
     ),
     ClassAbilityDef(
       id: AbilityId.frostMageIceBlock,
@@ -3634,6 +4098,8 @@ class ClassKits {
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.iceBlock,
     ),
 
     // —— affliction ——
@@ -3667,6 +4133,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.shadow,
         castArgb: 0xFF6B2D8A,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.unstableAffliction,
@@ -3685,6 +4153,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.shadow,
         castArgb: 0xFF8B3AA8,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.haunt,
@@ -3739,6 +4209,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.shadow,
         castArgb: 0xFF7030A0,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.seedOfCorruption,
@@ -3762,6 +4234,8 @@ class ClassKits {
         groundArgb: 0x668030A0,
         groundRadius: 2.8,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.hauntBurst,
@@ -3836,6 +4310,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.immolateDemo,
@@ -3850,6 +4326,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.98,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.metamorphosis,
@@ -3868,6 +4346,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.shadow,
         castArgb: 0xFF8040C0,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.demonCharge,
@@ -3881,6 +4361,8 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.chaosBoltDemo,
@@ -3966,6 +4448,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.85,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.rainOfFire,
@@ -3989,6 +4473,8 @@ class ClassKits {
         groundArgb: 0x88FF5020,
         groundRadius: 2.8,
       ),
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.shadowfury,
@@ -4012,6 +4498,8 @@ class ClassKits {
         groundArgb: 0x88A040D0,
         groundRadius: 3.0,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.backdraft,
@@ -4025,6 +4513,8 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.chaosBolt,
@@ -4125,6 +4615,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.arcane,
         castArgb: 0xFFA0C0FF,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.hurricane,
@@ -4148,6 +4640,8 @@ class ClassKits {
         groundArgb: 0x6670C048,
         groundRadius: 2.8,
       ),
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.typhoon,
@@ -4184,6 +4678,8 @@ class ClassKits {
         groundArgb: 0x77D0A040,
         groundRadius: 3.0,
       ),
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.barkskinBal,
@@ -4239,6 +4735,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.95,
+
+      gate: AbilityGate(skipIfBleedAbove: 3.5),
     ),
     ClassAbilityDef(
       id: AbilityId.ferociousBite,
@@ -4289,6 +4787,8 @@ class ClassKits {
         groundArgb: 0x88FFE08A,
         groundRadius: 2.5,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.berserk,
@@ -4307,6 +4807,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFFFF8050,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.rip,
@@ -4321,6 +4823,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.55,
+
+      gate: AbilityGate(skipIfBleedAbove: 2.5),
     ),
     ClassAbilityDef(
       id: AbilityId.survivalInstincts,
@@ -4376,6 +4880,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.7,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.lacerate,
@@ -4395,6 +4901,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFFC07050,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.maul,
@@ -4657,15 +5165,15 @@ class ClassKits {
 
   static List<ClassAbilityDef> hudAbilitiesAt(HeroRole role, int level) =>
       forRole(role)
-          .where((d) => d.showInHud && level >= d.unlockLevel)
+          .where((d) => d.showsInHud && level >= d.unlockLevel)
           .toList(growable: false);
 
   static List<ClassAbilityDef> hudAbilitiesAtSpec(
     HeroSpecId specId,
     int level,
-  ) => forSpec(
-    specId,
-  ).where((d) => d.showInHud && level >= d.unlockLevel).toList(growable: false);
+  ) => forSpec(specId)
+      .where((d) => d.showsInHud && level >= d.unlockLevel)
+      .toList(growable: false);
 
   static ClassAbilityDef? nextUnlock(HeroRole role, int level) {
     for (final d in forRole(role)) {

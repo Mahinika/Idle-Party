@@ -1,143 +1,9 @@
 part of 'spatial_combat.dart';
 
-/// Context gates + cast resolves for the four kits formerly on dedicated tickers
-/// (protection / discipline / fire / combat). Called from [AbilityEffectRunner].
-abstract final class MigratedKitCasts {
-  /// Hand-written gates ported from the retired per-role tickers.
-  /// Returns null when the generic AbilityEffectRunner heuristics should decide.
-  static bool? contextOk(
-    SpatialWorld world,
-    SpatialActor hero,
-    SpatialActor? focus,
-    ClassAbilityDef d, {
-    required int nearby,
-    required int pack,
-    required bool focusElite,
-    required double focusHpFrac,
-    required double hpFrac,
-  }) {
-    switch (d.id) {
-      // —— Combat Rogue ——
-      case AbilityId.eviscerate:
-        // Finisher rides the next white swing (_classAttackMods), never a cast.
-        return false;
-      case AbilityId.sliceAndDice:
-        return hero.comboPoints >= 2 && hero.sliceAndDiceTimer < 2;
-      case AbilityId.kidneyShot:
-        return focus != null &&
-            focus.hp > 0 &&
-            hero.comboPoints >= 5 &&
-            hero.sliceAndDiceTimer >= 2 &&
-            focus.rootTimer < 0.5;
-      case AbilityId.bladeFlurry:
-        return nearby >= 2 || (nearby == 1 && focusElite);
-      case AbilityId.sprint:
-        if (focus == null) return false;
-        final leader = _packLeader(world, hero);
-        final nearPack =
-            leader == null || SpatialCombat._dist(hero, leader) < 2.5;
-        return nearPack &&
-            SpatialCombat._dist(hero, focus) > hero.attackRange * 1.85;
-      case AbilityId.killingSpree:
-        return focus != null &&
-            (focusElite || nearby >= 2 || focusHpFrac <= 0.35);
-      case AbilityId.vanish:
-        return hpFrac <= 0.3;
-
-      // —— Fire Mage ——
-      case AbilityId.fireball:
-        if (focus == null || focus.hp <= 0) return false;
-        if (SpatialCombat._dist(hero, focus) > hero.attackRange + 0.5) {
-          return false;
-        }
-        // Hot Streak replaces the Fireball cast — it never stacks on top.
-        return !(hero.hotStreakReady && _pyroblastReady(hero));
-      case AbilityId.pyroblast:
-        return hero.hotStreakReady &&
-            focus != null &&
-            focus.hp > 0 &&
-            SpatialCombat._dist(hero, focus) <= hero.attackRange + 0.5;
-      case AbilityId.livingBomb:
-        return focus != null && focus.hp > 0 && focus.livingBombTimer < 2;
-      case AbilityId.frostNova:
-        final near = [
-          for (final e in world.enemies)
-            if (e.hp > 0 && !e.dormant && SpatialCombat._dist(hero, e) <= 2.4)
-              e,
-        ];
-        final peel = near.any((e) => SpatialCombat._dist(hero, e) <= 1.6);
-        return near.length >= 2 || peel;
-      case AbilityId.combustion:
-        // Fire's main burst — no "hold for elites" tax.
-        return focus != null;
-      case AbilityId.blink:
-        return focus != null &&
-            SpatialCombat._dist(hero, focus) <
-                (hero.preferredRange ?? 3) * 0.55;
-      case AbilityId.iceBlock:
-        return hpFrac <= 0.28;
-
-      // —— Disc Priest ——
-      case AbilityId.prayerOfMending:
-        return _pomTarget(world) != null;
-      case AbilityId.powerWordFortitude:
-        return world.heroes.any((h) => h.isAlive && h.fortitudeTimer < 2);
-      case AbilityId.powerInfusion:
-        return focus != null &&
-            _partyStable(world) &&
-            _powerInfusionTarget(world) != null;
-      case AbilityId.painSuppression:
-        return _painSuppressionTarget(world) != null;
-      case AbilityId.penance:
-        return _penanceHealTarget(world) != null ||
-            (focus != null &&
-                focus.hp > 0 &&
-                SpatialCombat._dist(hero, focus) <= hero.attackRange + 1.5);
-
-      // —— Prot Warrior ——
-      case AbilityId.charge:
-        if (focus == null || focus.hp <= 0 || focus.dormant) return false;
-        final gap = SpatialCombat._dist(hero, focus);
-        return gap > _chargeMinRange &&
-            gap <= _chargeMaxRange &&
-            SpatialCombat._hasClearCorridor(
-              world.map,
-              world.openGateIds,
-              hero.x.floor(),
-              hero.y.floor(),
-              focus.x.floor(),
-              focus.y.floor(),
-            );
-      case AbilityId.shieldBlock:
-        return focus != null && SpatialCombat._dist(hero, focus) <= 3.2;
-      case AbilityId.shieldSlam:
-        return focus != null && !hero.queuedShieldSlam;
-      case AbilityId.devastate:
-        return focus != null &&
-            focus.hp > 0 &&
-            !focus.dormant &&
-            SpatialCombat._dist(hero, focus) <= hero.attackRange + 0.35 &&
-            (focus.sunderStacks < 5 || focus.sunderTimer < 4);
-      case AbilityId.demoralizingShout:
-        return world.enemies.any(
-          (e) => e.hp > 0 && !e.dormant && SpatialCombat._dist(hero, e) <= 3.4,
-        );
-      case AbilityId.commandingShout:
-        return focus != null && (hero.buffTimers['atkShout'] ?? 0) < 2;
-      case AbilityId.lastStand:
-        return hpFrac <= 0.4;
-      case AbilityId.shieldWall:
-        return hpFrac <= 0.28;
-      default:
-        return null;
-    }
-  }
-
-  /// Charge is a short line-of-sight rush, never a map-wide teleport.
-  static const double _chargeMinRange = 3.5;
-  static const double _chargeMaxRange = 8.0;
-
-  static bool _pyroblastReady(SpatialActor hero) {
+/// Named helpers for rare kit casts. Dispatch is [AbilityCustomId] on the def —
+/// not a second combat engine.
+abstract final class KitNamedCasts {
+  static bool pyroblastReady(SpatialActor hero) {
     final pyro = ClassKits.defFor(AbilityId.pyroblast);
     if (pyro == null) return false;
     return ClassKits.isUnlocked(AbilityId.pyroblast, hero.heroLevel) &&
@@ -145,7 +11,7 @@ abstract final class MigratedKitCasts {
         hero.rage + 0.001 >= pyro.resourceCost;
   }
 
-  static SpatialActor? _packLeader(SpatialWorld world, SpatialActor self) {
+  static SpatialActor? packLeader(SpatialWorld world, SpatialActor self) {
     for (final h in world.heroes) {
       if (h.hp > 0 && _actorIsTank(h)) return h;
     }
@@ -156,7 +22,7 @@ abstract final class MigratedKitCasts {
   }
 
   /// Most injured ally without a Prayer of Mending already bouncing.
-  static SpatialActor? _pomTarget(SpatialWorld world) {
+  static SpatialActor? pomTarget(SpatialWorld world) {
     SpatialActor? target;
     var worst = 1.0;
     for (final h in world.heroes) {
@@ -170,11 +36,11 @@ abstract final class MigratedKitCasts {
     return worst < 0.95 ? target : null;
   }
 
-  static bool _partyStable(SpatialWorld world) => !world.heroes.any(
+  static bool partyStable(SpatialWorld world) => !world.heroes.any(
     (h) => h.isAlive && h.hp / math.max(1, h.effectiveMaxHp) < 0.55,
   );
 
-  static SpatialActor? _powerInfusionTarget(SpatialWorld world) {
+  static SpatialActor? powerInfusionTarget(SpatialWorld world) {
     SpatialActor? dps;
     var bestAtk = -1;
     for (final h in world.heroes) {
@@ -188,7 +54,7 @@ abstract final class MigratedKitCasts {
     return dps;
   }
 
-  static SpatialActor? _painSuppressionTarget(SpatialWorld world) {
+  static SpatialActor? painSuppressionTarget(SpatialWorld world) {
     SpatialActor? target;
     var worst = 1.0;
     for (final h in world.heroes) {
@@ -202,7 +68,7 @@ abstract final class MigratedKitCasts {
     return target;
   }
 
-  static SpatialActor? _penanceHealTarget(SpatialWorld world) {
+  static SpatialActor? penanceHealTarget(SpatialWorld world) {
     SpatialActor? ally;
     var worst = 1.0;
     for (final h in world.heroes) {
@@ -216,10 +82,7 @@ abstract final class MigratedKitCasts {
     return worst < 0.85 ? ally : null;
   }
 
-  /// Casts ported from the retired per-role tickers, so the four original kits
-  /// keep the exact feel they shipped with. Returns null when the generic
-  /// [AbilityEffectRunner._resolveEffect] path already does the right thing.
-  static bool? resolve(
+  static bool run(
     SpatialWorld world,
     SpatialActor hero,
     SpatialActor? focus,
@@ -227,9 +90,9 @@ abstract final class MigratedKitCasts {
     required math.Random rng,
     required bool reducedVfx,
   }) {
-    switch (def.id) {
+    switch (def.customId) {
       // ——————————————— Prot Warrior ———————————————
-      case AbilityId.charge:
+      case AbilityCustomId.charge:
         if (focus == null) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
         final dx = focus.x - hero.x;
@@ -269,7 +132,7 @@ abstract final class MigratedKitCasts {
         );
         return true;
 
-      case AbilityId.shieldBlock:
+      case AbilityCustomId.shieldBlock:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.shieldBlockTimer = math.max(hero.shieldBlockTimer, 2.5);
         // Sword and Board–lite: chance to reset Shield Slam.
@@ -299,7 +162,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.shieldSlam:
+      case AbilityCustomId.shieldSlam:
         // Lands as a rider on the next swing (see [_warriorAttackMods]).
         if (focus == null) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
@@ -315,7 +178,7 @@ abstract final class MigratedKitCasts {
         );
         return true;
 
-      case AbilityId.devastate:
+      case AbilityCustomId.devastate:
         if (focus == null || focus.hp <= 0) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
         focus.sunderStacks = math.min(5, focus.sunderStacks + 1);
@@ -335,7 +198,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.demoralizingShout:
+      case AbilityCustomId.demoralizingShout:
         final shouted = _enemiesAround(world, hero, 3.4);
         if (shouted.isEmpty) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
@@ -362,7 +225,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.commandingShout:
+      case AbilityCustomId.commandingShout:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         for (final h in world.heroes) {
           if (h.isAlive && !h.isPet) h.buffTimers['atkShout'] = 14;
@@ -387,7 +250,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.taunt:
+      case AbilityCustomId.tauntPull:
         // Only burn the cooldown when something actually turns around.
         final pulled = SpatialCombat._tauntLooseEnemies(
           world,
@@ -406,7 +269,7 @@ abstract final class MigratedKitCasts {
         );
         return true;
 
-      case AbilityId.thunderClap:
+      case AbilityCustomId.thunderClap:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         AbilityEffectRunner._castAoe(
           world,
@@ -422,7 +285,7 @@ abstract final class MigratedKitCasts {
         SpatialCombat._gainRage(hero, 8);
         return true;
 
-      case AbilityId.shockwave:
+      case AbilityCustomId.shockwave:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.shockwaveFlash = 0.6;
         final wave = _enemiesAround(world, hero, 2.7);
@@ -451,7 +314,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.lastStand:
+      case AbilityCustomId.lastStand:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         final bonus = math.max(8, (hero.maxHp * 0.3).round());
         hero.bonusMaxHp = math.max(hero.bonusMaxHp, bonus);
@@ -467,7 +330,7 @@ abstract final class MigratedKitCasts {
         );
         return true;
 
-      case AbilityId.shieldWall:
+      case AbilityCustomId.shieldWall:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.shieldWallTimer = math.max(hero.shieldWallTimer, 5.0);
         hero.buffTimers['shield'] = 5.0;
@@ -482,8 +345,8 @@ abstract final class MigratedKitCasts {
         return true;
 
       // ——————————————— Disc Priest ———————————————
-      case AbilityId.painSuppression:
-        final target = _painSuppressionTarget(world);
+      case AbilityCustomId.painSuppression:
+        final target = painSuppressionTarget(world);
         if (target == null) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
         target.painSuppressionTimer = 5.5;
@@ -507,7 +370,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.powerWordFortitude:
+      case AbilityCustomId.powerWordFortitude:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         for (final h in world.heroes) {
           if (!h.isAlive) continue;
@@ -537,7 +400,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.powerWordShield:
+      case AbilityCustomId.powerWordShield:
         SpatialActor? bubble;
         var worstShield = 1.0;
         for (final h in world.heroes) {
@@ -584,8 +447,8 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.prayerOfMending:
-        final mend = _pomTarget(world);
+      case AbilityCustomId.prayerOfMending:
+        final mend = pomTarget(world);
         if (mend == null) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
         final pomInner = hero.innerFireActive ? 1.15 : 1.0;
@@ -622,8 +485,8 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.powerInfusion:
-        final dps = _powerInfusionTarget(world);
+      case AbilityCustomId.powerInfusion:
+        final dps = powerInfusionTarget(world);
         if (dps == null || focus == null) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
         dps.powerInfusionTimer = 8;
@@ -654,8 +517,8 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.penance:
-        final mend = _penanceHealTarget(world);
+      case AbilityCustomId.penance:
+        final mend = penanceHealTarget(world);
         final burnable =
             focus != null &&
             focus.hp > 0 &&
@@ -730,7 +593,7 @@ abstract final class MigratedKitCasts {
         return true;
 
       // ——————————————— Fire Mage ———————————————
-      case AbilityId.iceBlock:
+      case AbilityCustomId.iceBlock:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.iceBlockTimer = math.max(hero.iceBlockTimer, 4.0);
         SpatialCombat._announceCast(
@@ -744,7 +607,7 @@ abstract final class MigratedKitCasts {
         );
         return true;
 
-      case AbilityId.blink:
+      case AbilityCustomId.blink:
         if (focus == null) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
         final awayX = hero.x - focus.x;
@@ -781,7 +644,7 @@ abstract final class MigratedKitCasts {
         );
         return true;
 
-      case AbilityId.livingBomb:
+      case AbilityCustomId.livingBomb:
         if (focus == null || focus.hp <= 0) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
         focus.livingBombTimer = 8;
@@ -819,7 +682,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.frostNova:
+      case AbilityCustomId.frostNova:
         final frozen = _enemiesAround(world, hero, 2.4);
         if (frozen.isEmpty) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
@@ -847,7 +710,7 @@ abstract final class MigratedKitCasts {
         );
         return true;
 
-      case AbilityId.blastWave:
+      case AbilityCustomId.blastWave:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         AbilityEffectRunner._castAoe(
           world,
@@ -862,7 +725,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.fireball:
+      case AbilityCustomId.fireball:
         if (focus == null || focus.hp <= 0) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.attackFlash = 0.18;
@@ -906,7 +769,7 @@ abstract final class MigratedKitCasts {
         );
         return true;
 
-      case AbilityId.pyroblast:
+      case AbilityCustomId.pyroblast:
         if (focus == null || focus.hp <= 0) return false;
         // Hot Streak makes it free; the cooldown still starts so it can't chain.
         SpatialCombat._startAbilityCd(world, hero, def.id, def.cooldown);
@@ -942,7 +805,7 @@ abstract final class MigratedKitCasts {
         return true;
 
       // ——————————————— Combat Rogue ———————————————
-      case AbilityId.vanish:
+      case AbilityCustomId.vanish:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.vanishTimer = math.max(hero.vanishTimer, 3.5);
         for (final e in world.enemies) {
@@ -962,7 +825,7 @@ abstract final class MigratedKitCasts {
         );
         return true;
 
-      case AbilityId.killingSpree:
+      case AbilityCustomId.killingSpree:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.killingSpreeTimer = 3.5;
         SpatialCombat._gainRage(hero, 35);
@@ -1039,7 +902,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.sprint:
+      case AbilityCustomId.sprint:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.sprintTimer = math.max(hero.sprintTimer, 4.0);
         if (!reducedVfx) {
@@ -1061,7 +924,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.bladeFlurry:
+      case AbilityCustomId.bladeFlurry:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.bladeFlurryTimer = math.max(hero.bladeFlurryTimer, 6.0);
         hero.buffTimers['buff'] = 6.0;
@@ -1085,7 +948,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.sliceAndDice:
+      case AbilityCustomId.sliceAndDice:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.sliceAndDiceTimer = 6 + hero.comboPoints * 1.5;
         hero.comboPoints = 0;
@@ -1108,7 +971,7 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      case AbilityId.kidneyShot:
+      case AbilityCustomId.kidneyShot:
         if (focus == null || focus.hp <= 0) return false;
         AbilityEffectRunner._spendAndCd(world, hero, def);
         focus.rootTimer = 2.0 + hero.comboPoints * 0.25 + hero.kitRootBonus;
@@ -1133,8 +996,145 @@ abstract final class MigratedKitCasts {
         }
         return true;
 
-      default:
-        return null;
+      case AbilityCustomId.armyOfDead:
+        AbilityEffectRunner._spendAndCd(world, hero, def);
+        SpatialCombat.spawnTempPets(
+          world,
+          owner: hero,
+          count: 4,
+          duration: 16,
+          atkScale: 0.30,
+          namePrefix: 'Ghoul',
+          idPrefix: 'army',
+        );
+        AbilityEffectRunner._castAoe(
+          world,
+          hero,
+          focus,
+          def,
+          rng,
+          reducedVfx: reducedVfx,
+        );
+        return true;
+
+      case AbilityCustomId.feralSpirit:
+        AbilityEffectRunner._spendAndCd(world, hero, def);
+        SpatialCombat.spawnTempPets(
+          world,
+          owner: hero,
+          count: 2,
+          duration: 30,
+          atkScale: 0.42,
+          namePrefix: 'Spirit Wolf',
+          idPrefix: 'wolf',
+        );
+        AbilityEffectRunner._announce(
+          world,
+          hero,
+          def.shortLabel,
+          0xFF90E0FF,
+          reducedVfx,
+        );
+        if (!reducedVfx) {
+          SpatialCombat._spawnRing(
+            world,
+            x: hero.x,
+            y: hero.y,
+            argb: 0xFF90E0FF,
+            radius: 0.95,
+            life: 0.4,
+          );
+        }
+        return true;
+
+      case AbilityCustomId.waterElemental:
+        AbilityEffectRunner._spendAndCd(world, hero, def);
+        SpatialCombat.spawnTempPets(
+          world,
+          owner: hero,
+          count: 1,
+          duration: 28,
+          atkScale: 0.40,
+          namePrefix: 'Water Elemental',
+          idPrefix: 'water',
+        );
+        AbilityEffectRunner._announce(
+          world,
+          hero,
+          def.shortLabel,
+          0xFF80D0FF,
+          reducedVfx,
+        );
+        if (!reducedVfx) {
+          SpatialCombat._spawnRing(
+            world,
+            x: hero.x,
+            y: hero.y,
+            argb: 0xFF80D0FF,
+            radius: 1.0,
+            life: 0.45,
+          );
+        }
+        return true;
+
+      case AbilityCustomId.gargoyle:
+        AbilityEffectRunner._spendAndCd(world, hero, def);
+        SpatialCombat.spawnTempPets(
+          world,
+          owner: hero,
+          count: 1,
+          duration: 22,
+          atkScale: 0.48,
+          namePrefix: 'Gargoyle',
+          idPrefix: 'garg',
+        );
+        hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 8.0);
+        AbilityEffectRunner._announce(
+          world,
+          hero,
+          def.shortLabel,
+          0xFFA080C0,
+          reducedVfx,
+        );
+        if (!reducedVfx) {
+          SpatialCombat._spawnRing(
+            world,
+            x: hero.x,
+            y: hero.y,
+            argb: 0xFFA080C0,
+            radius: 1.05,
+            life: 0.45,
+          );
+        }
+        return true;
+
+      case AbilityCustomId.shamanisticRage:
+        AbilityEffectRunner._spendAndCd(world, hero, def);
+        final grant = def.coeff > 0 ? def.coeff : 30.0;
+        SpatialCombat._gainRage(hero, grant);
+        hero.shieldWallTimer = math.max(hero.shieldWallTimer, 4.0);
+        hero.buffTimers['shield'] = 4.0;
+        AbilityEffectRunner._announce(
+          world,
+          hero,
+          def.shortLabel,
+          0xFFE0C040,
+          reducedVfx,
+        );
+        if (!reducedVfx) {
+          SpatialCombat._spawnRing(
+            world,
+            x: hero.x,
+            y: hero.y,
+            argb: 0xFFE0A040,
+            radius: 0.9,
+            life: 0.4,
+          );
+        }
+        return true;
+
+      case AbilityCustomId.none:
+        return false;
     }
   }
 

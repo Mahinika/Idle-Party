@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/class_ability.dart';
+import 'package:idle_party/models/enemy.dart';
+import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 
@@ -1002,6 +1004,54 @@ void main() {
     expect(a.rootTimer, 0);
     expect(b.rootTimer, 0);
   });
+
+  test('HUD hides white-hit dumps and marks riders', () {
+    expect(
+      ClassKits.hudAbilitiesAtSpec(HeroSpecId.combat, 15).map((d) => d.id),
+      isNot(contains(AbilityId.eviscerate)),
+    );
+    expect(
+      ClassKits.hudAbilitiesAtSpec(HeroSpecId.protection, 15).map((d) => d.id),
+      isNot(contains(AbilityId.revenge)),
+    );
+    expect(
+      ClassKits.defFor(AbilityId.eviscerate)!.resolvedFireMode,
+      AbilityFireMode.swingRider,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.shieldSlam)!.resolvedFireMode,
+      AbilityFireMode.swingRider,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.revenge)!.resolvedFireMode,
+      AbilityFireMode.onBlock,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.sinisterStrike)!.resolvedFireMode,
+      AbilityFireMode.passive,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.livingBomb)!.resolvedFireMode,
+      AbilityFireMode.dotTick,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.prayerOfMending)!.resolvedFireMode,
+      AbilityFireMode.onHitBounce,
+    );
+  });
+
+  test('L15 HUD cast chips enter cooldown', () {
+    final failed = <String>[];
+    for (final spec in HeroSpecId.values) {
+      for (final def in ClassKits.hudAbilitiesAtSpec(spec, 15)) {
+        if (def.resolvedFireMode != AbilityFireMode.cast) continue;
+        if (!_hudCastEntersCd(spec, def)) {
+          failed.add('${spec.name} ${def.id.name}');
+        }
+      }
+    }
+    expect(failed, isEmpty, reason: 'HUD chips never started CD: $failed');
+  });
 }
 
 GameState _soloSpecParty(HeroSpecId specId, {required int level}) {
@@ -1038,4 +1088,166 @@ void _padAbilityCds(SpatialActor actor, {required AbilityId except}) {
     if (def.id == except || def.cooldown <= 0) continue;
     actor.abilityCd[def.id.name] = 99;
   }
+}
+
+bool _hudCastEntersCd(HeroSpecId spec, ClassAbilityDef def) {
+  final state = _soloSpecParty(spec, level: 15);
+  var world = SpatialCombat.build(state);
+  final target = _soloEnemy(world);
+  if (!def.gate.needClearCorridor) {
+    _reviveNeighbor(world, target);
+  }
+  final hero = world.heroes.firstWhere((h) => !h.isPet);
+  final g = def.gate;
+
+  var standX = target.x - 1.4;
+  var standY = target.y;
+  if (g.needClearCorridor) {
+    standX = target.x - 5.5;
+  } else if (g.minRange != null || g.maxRange != null) {
+    final lo = g.minRange ?? 0;
+    final hi = g.maxRange ?? (lo + 2);
+    standX = target.x - ((lo + hi) * 0.5);
+  } else if (g.minRangeMul != null) {
+    standX = target.x - hero.attackRange * g.minRangeMul! - 0.4;
+  } else if (g.maxRangeMul != null) {
+    standX = target.x - 0.4;
+  } else if (g.maxRangePad != null) {
+    standX = target.x - hero.attackRange * 0.6;
+  } else if (def.effect == AbilityEffectKind.taunt) {
+    standX = target.x - 5.0;
+  }
+
+  hero
+    ..rage = 100
+    ..x = standX
+    ..y = standY
+    ..moveSpeed = 0
+    ..fireCooldown = 99
+    ..comboPoints = math.max(hero.comboPoints, g.comboMin)
+    ..arcaneCharges = math.max(hero.arcaneCharges, g.arcaneChargesMin)
+    ..hotStreakReady = g.hotStreakOnly;
+  if (g.sliceAndDiceMin > 0) {
+    hero.sliceAndDiceTimer = g.sliceAndDiceMin + 0.5;
+  }
+  if (g.casterHpMax != null) {
+    hero.hp = math.max(1, (hero.maxHp * g.casterHpMax! * 0.85).round());
+  } else if (def.tier == AbilityCastTier.emergency) {
+    hero.hp = math.max(1, (hero.maxHp * 0.24).round());
+  }
+  target
+    ..moveSpeed = 0
+    ..hp = math.max(
+      8,
+      (target.maxHp * math.min(0.32, (g.executeHpFrac ?? 0.45) * 0.8)).round(),
+    );
+
+  if (g.needsPiTarget || def.effect == AbilityEffectKind.taunt) {
+    world.heroes.add(
+      SpatialActor(
+        id: 'hud_dps',
+        name: 'DPS',
+        team: SpatialTeam.hero,
+        x: target.x + 0.35,
+        y: target.y,
+        hp: 200,
+        maxHp: 200,
+        attack: 80,
+        defense: 0,
+        moveSpeed: 0,
+        attackRange: 1,
+        attackCooldown: 1,
+        heroRole: HeroRole.mage,
+        heroSpecId: HeroSpecId.fire,
+      ),
+    );
+  }
+  if (def.effect == AbilityEffectKind.heal ||
+      def.effect == AbilityEffectKind.absorb ||
+      def.effect == AbilityEffectKind.emergencyHeal ||
+      g.needsPomTarget ||
+      g.needsPainTarget ||
+      g.needsPenance) {
+    hero.hp = math.max(8, (hero.maxHp * 0.24).round());
+    world.heroes.add(
+      SpatialActor(
+        id: 'hud_ally',
+        name: 'Ally',
+        team: SpatialTeam.hero,
+        x: hero.x + 0.3,
+        y: hero.y,
+        hp: 20,
+        maxHp: 200,
+        attack: 1,
+        defense: 0,
+        moveSpeed: 0,
+        attackRange: 1,
+        attackCooldown: 1,
+        heroRole: HeroRole.warrior,
+        heroSpecId: HeroSpecId.arms,
+      ),
+    );
+  }
+
+  _padAbilityCds(hero, except: def.id);
+  const chargeDists = <double>[4.2, 5.0, 5.5, 6.2, 7.0];
+  const chargeAngles = <double>[0, 3.1416, 1.5708, 4.7124];
+  for (var i = 0; i < 50; i++) {
+    if (g.needClearCorridor) {
+      final dist = chargeDists[i % chargeDists.length];
+      final ang = chargeAngles[(i ~/ chargeDists.length) % chargeAngles.length];
+      hero
+        ..x = target.x - dist * math.cos(ang)
+        ..y = target.y - dist * math.sin(ang);
+    }
+    world = SpatialCombat.step(world, state, dt: 0.1).world;
+    if ((hero.abilityCd[def.id.name] ?? 0) > 0.05) return true;
+    hero.rage = 100;
+    if (g.hotStreakOnly) hero.hotStreakReady = true;
+    if (g.comboMin > 0) hero.comboPoints = g.comboMin;
+    if (g.arcaneChargesMin > 0) hero.arcaneCharges = g.arcaneChargesMin;
+    if (g.casterHpMax != null) {
+      hero.hp = math.max(1, (hero.maxHp * g.casterHpMax! * 0.85).round());
+    } else if (def.tier == AbilityCastTier.emergency) {
+      hero.hp = math.max(1, (hero.maxHp * 0.24).round());
+    }
+    if (target.hp < 10) {
+      target.hp = math.max(
+        8,
+        (target.maxHp * math.min(0.32, (g.executeHpFrac ?? 0.45) * 0.8))
+            .round(),
+      );
+    }
+  }
+  return false;
+}
+
+void _reviveNeighbor(SpatialWorld world, SpatialActor keep) {
+  for (final e in world.enemies) {
+    if (identical(e, keep) || e.hp <= 0) continue;
+    e
+      ..dormant = false
+      ..hp = math.max(e.hp, 800)
+      ..x = keep.x + 0.7
+      ..y = keep.y
+      ..moveSpeed = 0;
+    return;
+  }
+  world.enemies.add(
+    SpatialActor(
+      id: '${keep.id}_pack',
+      name: 'Pack',
+      team: SpatialTeam.enemy,
+      x: keep.x + 0.7,
+      y: keep.y,
+      hp: 800,
+      maxHp: 800,
+      attack: 1,
+      defense: 0,
+      moveSpeed: 0,
+      attackRange: 1,
+      attackCooldown: 1,
+      role: EnemyRole.normal,
+    ),
+  );
 }

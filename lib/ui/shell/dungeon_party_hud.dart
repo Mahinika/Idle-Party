@@ -644,7 +644,8 @@ class _InlineAbilityChip extends StatelessWidget {
     final gated = ability.requiresShield && !hasShield;
     final onCd = cdLeft > 0.05;
     final noRage = rage + 0.001 < ability.resourceCost;
-    final ready = !gated && !onCd && !noRage;
+    final isCast = ability.resolvedFireMode == AbilityFireMode.cast;
+    final ready = isCast && !gated && !onCd && !noRage;
     final border = activeBuff
         ? GameTheme.torchHot
         : ready
