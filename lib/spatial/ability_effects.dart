@@ -584,8 +584,8 @@ abstract final class AbilityEffectRunner {
         hero.kitHealMul *= 1.36;
         hero.kitInMul *= 0.94;
       case AbilityId.sinisterStrike:
-        // Combo build rides white swings; keep Combat inside the melee band.
-        hero.kitOutMul *= 0.94;
+        // Combo build rides white swings; 2 AP/Agi already lifts the sheet.
+        hero.kitOutMul *= 0.90;
       case AbilityId.arcaneIntellect:
         // Personal spell power; party-wide Int is the GameState caster aura.
         hero.kitOutMul *= 1.22;
@@ -1074,7 +1074,11 @@ abstract final class AbilityEffectRunner {
       return;
     }
 
-    final dealt = math.max(1, raw - enemy.effectiveDefense);
+    final dealt = CombatRatings.mitigateByArmor(
+      rawDamage: raw,
+      defense: enemy.effectiveDefense,
+      attackerAttack: hero.attack,
+    );
     final wasAlive = enemy.hp > 0;
     enemy.hp = math.max(0, enemy.hp - dealt);
     SpatialCombat._recordHeroDamage(hero, dealt);
@@ -1356,7 +1360,11 @@ abstract final class AbilityEffectRunner {
         _applyBleedIfNeeded(world, hero, e, def, raw);
       } else {
         final wasAlive = e.hp > 0;
-        final dealt = math.max(1, raw - e.effectiveDefense);
+        final dealt = CombatRatings.mitigateByArmor(
+          rawDamage: raw,
+          defense: e.effectiveDefense,
+          attackerAttack: hero.attack,
+        );
         e.hp = math.max(0, e.hp - dealt);
         SpatialCombat._recordHeroDamage(hero, dealt);
         SpatialCombat._applyTankSoftThreat(hero, e);
@@ -1549,7 +1557,11 @@ abstract final class AbilityEffectRunner {
       if (e.hp <= 0 || e.dormant) continue;
       if (SpatialCombat._dist(hero, e) > radius) continue;
       final wasAlive = e.hp > 0;
-      final dealt = math.max(1, raw - e.effectiveDefense);
+      final dealt = CombatRatings.mitigateByArmor(
+        rawDamage: raw,
+        defense: e.effectiveDefense,
+        attackerAttack: hero.attack,
+      );
       e.hp = math.max(0, e.hp - dealt);
       SpatialCombat._recordHeroDamage(hero, dealt);
       SpatialCombat._applyTankSoftThreat(hero, e);

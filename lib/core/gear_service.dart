@@ -649,20 +649,12 @@ abstract final class GearService {
       slot: slot,
       pairingStash: pairingStash,
     );
-    final curAtk =
-        (current?.strengthBonus ?? 0) +
-        (current?.agilityBonus ?? 0) +
-        (current?.intellectBonus ?? 0) +
-        (current?.spellPowerBonus ?? 0) +
-        (current?.attackBonus ?? 0);
+    final curAtk = hero.gearSheetAttack;
+    final nextEquipped = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped);
+    nextEquipped[slot] = candidate;
+    final newAtk = hero.copyWith(equipped: nextEquipped).gearSheetAttack;
     final curDef = current?.resolvedArmor ?? 0;
     final curVit = current?.resolvedStamina ?? 0;
-    final newAtk =
-        candidate.strengthBonus +
-        candidate.agilityBonus +
-        candidate.intellectBonus +
-        candidate.spellPowerBonus +
-        candidate.attackBonus;
     final powerDelta = newScore - curScore;
     return (
       powerDelta: powerDelta,

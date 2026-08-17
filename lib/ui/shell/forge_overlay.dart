@@ -207,6 +207,11 @@ class _ForgeOverlayState extends State<ForgeOverlay>
 
   Widget _metaForgeBody() {
     final state = director.state;
+    final cdMaxed = state.metaDepth.godHandCdLevel >= 8;
+    final cdLabel = cdMaxed
+        ? 'Cooldown ${state.godHandCooldownSeconds.toStringAsFixed(2)}s · MAX'
+        : 'Cooldown ${state.godHandCooldownSeconds.toStringAsFixed(2)}s · '
+              '${GameLogic.godHandCdUpgradeCost(state.metaDepth.godHandCdLevel)}e';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -222,7 +227,11 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         ),
         Text(
           state.metaDepth.ascendBlessings <= 0
-              ? 'Ascend Blessing: none yet — Ascend on Hub for permanent ATK/DEF/STA/gold'
+              ? 'Ascend Blessing: none yet — each Ascend stacks '
+                    '+${GameLogic.ascendBlessingAtk} ATK · '
+                    '+${GameLogic.ascendBlessingDef} DEF · '
+                    '+${GameLogic.ascendBlessingVit} STA · '
+                    '+${GameLogic.ascendBlessingGoldPct}% gold'
               : 'Ascend Blessing ×${state.metaDepth.ascendBlessings}: '
                     '+${state.ascendBlessingAttackBonus} ATK · '
                     '+${state.ascendBlessingDefenseBonus} DEF · '
@@ -230,106 +239,94 @@ class _ForgeOverlayState extends State<ForgeOverlay>
                     '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
+        if (state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
+            !state.metaDepth.partySlot5Unlocked) ...[
+          const SizedBox(height: 8),
+          _sectionTitle(
+            '5TH SLOT',
+            'Extra fighter · survives Ascend. Also on PARTY → ROSTER.',
+          ),
+          KenneyButton(
+            label:
+                'UNLOCK 5TH SLOT  ${GameLogic.partySlot5EssenceCost}e  '
+                'AL${GameLogic.partySlot5MinAscension}+',
+            onPressed: state.essence >= GameLogic.partySlot5EssenceCost
+                ? director.unlockPartySlot5
+                : null,
+          ),
+        ],
         const SizedBox(height: 8),
+        _sectionTitle(
+          'GOD HAND',
+          'Tap in the dungeon to steer + smash. Soft knobs: damage, CD, style.',
+        ),
+        Text(
+          'Lv${state.godHandLevel} · smash ${state.godHandSmashDamage()} · '
+          'blast ${state.godHandSmashRadius.toStringAsFixed(1)} · '
+          'CD ${state.godHandCooldownSeconds.toStringAsFixed(2)}s',
+          style: GameTheme.body(size: 13, color: GameTheme.parchment),
+        ),
+        const SizedBox(height: 6),
+        KenneyButton(
+          label:
+              'Damage Lv${state.godHandLevel} · '
+              '${GameLogic.godHandUpgradeCost(state.godHandLevel)}e',
+          onPressed:
+              state.essence >= GameLogic.godHandUpgradeCost(state.godHandLevel)
+              ? director.upgradeGodHand
+              : null,
+        ),
+        const SizedBox(height: 6),
+        KenneyButton(
+          label: cdLabel,
+          onPressed: cdMaxed
+              ? null
+              : (state.essence >=
+                        GameLogic.godHandCdUpgradeCost(
+                          state.metaDepth.godHandCdLevel,
+                        )
+                    ? director.upgradeGodHandCd
+                    : null),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'BAL = default · FOCUS = harder, smaller blast · '
+          'WIDE = bigger blast, softer hits',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            for (final entry in const <(int, String)>[
+              (0, 'BAL'),
+              (1, 'FOCUS'),
+              (2, 'WIDE'),
+            ]) ...[
+              if (entry.$1 > 0) const SizedBox(width: 6),
+              Expanded(
+                child: KenneyButton(
+                  label: state.metaDepth.godHandStyle == entry.$1
+                      ? '${entry.$2} ✓'
+                      : entry.$2,
+                  style: state.metaDepth.godHandStyle == entry.$1
+                      ? KenneyButtonStyle.brown
+                      : KenneyButtonStyle.grey,
+                  onPressed: () => director.setGodHandStyle(entry.$1),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const Divider(height: 16, color: Color(0x665A5040)),
         _sectionTitle(
           'RELICS',
           'Buy once · upgrade tiers · permanent party auras.',
         ),
-        for (final relicId in GameLogic.relicOrder) ...[
-          Builder(
-            builder: (context) {
-              final owned = state.hasRelic(relicId);
-              final name = GameLogic.relicNames[relicId] ?? relicId;
-              final cost = GameLogic.relicCosts[relicId] ?? 0;
-              final tier = owned
-                  ? (state.metaDepth.relicTierOf(relicId) < 1
-                        ? 1
-                        : state.metaDepth.relicTierOf(relicId))
-                  : 0;
-              final desc = switch (relicId) {
-                GameLogic.warBannerRelic =>
-                  owned
-                      ? 'Permanent +${state.relicAttackBonus} team attack (T$tier).'
-                      : 'Permanent +4 team attack per tier.',
-                GameLogic.ironWardRelic =>
-                  owned
-                      ? 'Permanent +${state.relicDefenseBonus} team defense (T$tier).'
-                      : 'Permanent +2 team defense per tier.',
-                GameLogic.phoenixEmberRelic =>
-                  owned
-                      ? 'Permanent +${state.relicVitalityBonus} max HP per hero (T$tier).'
-                      : 'Permanent +10 max HP per hero per tier.',
-                GameLogic.godHandFocusRelic =>
-                  owned
-                      ? '+${state.relicGodHandDamageBonus} God Hand damage (T$tier).'
-                      : '+3 God Hand damage per tier.',
-                GameLogic.chamberLuckRelic =>
-                  owned
-                      ? '+${state.relicLootFindPercent}% loot find (T$tier).'
-                      : '+5% loot find per tier.',
-                GameLogic.ironWillRelic =>
-                  owned
-                      ? '+${state.relicMitigateFlat} flat mitigate (T$tier).'
-                      : '+1 flat mitigate per tier.',
-                _ => GameLogic.relicDescriptions[relicId] ?? '',
-              };
-              final nextTier = tier + 1;
-              final tierCost = GameLogic.relicTierUpgradeCost(nextTier);
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      KenneySprite(
-                        asset: KenneyAssets.relicIconFor(relicId),
-                        size: 36,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: KenneyButton(
-                          label: owned ? '$name  ·  T$tier' : '$name  ${cost}e',
-                          onPressed: owned || state.essence < cost
-                              ? null
-                              : () => director.unlockRelic(relicId),
-                          style: KenneyButtonStyle.brown,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (owned && tier < 3) ...[
-                    const SizedBox(height: 4),
-                    KenneyButton(
-                      label: 'UPGRADE TIER  T$nextTier  ${tierCost}e',
-                      style: KenneyButtonStyle.grey,
-                      onPressed: state.essence >= tierCost
-                          ? () => director.upgradeRelicTier(relicId)
-                          : null,
-                    ),
-                  ],
-                  if (desc.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 6),
-                      child: Text(
-                        desc,
-                        style: GameTheme.body(
-                          size: 13,
-                          color: owned
-                              ? GameTheme.mossLit
-                              : GameTheme.parchmentDim,
-                        ),
-                      ),
-                    )
-                  else
-                    const SizedBox(height: 6),
-                ],
-              );
-            },
-          ),
-        ],
-        const SizedBox(height: 8),
+        for (final relicId in GameLogic.relicOrder)
+          _relicKeepCard(state, relicId),
         KenneyButton(
-          label: 'RESPEC RELICS  ${GameLogic.respecRelicsCost(state)}e',
-          style: KenneyButtonStyle.grey,
+          label: 'RESPEC · no refund · ${GameLogic.respecRelicsCost(state)}e',
+          style: KenneyButtonStyle.red,
           onPressed:
               (state.unlockedRelics.isNotEmpty ||
                       state.metaDepth.relicTiers.isNotEmpty) &&
@@ -343,7 +340,9 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           'One forever item for the whole party. Bind from a hero → TOOLS (3 fragments).',
         ),
         Text(
-          'Prefer which slot BIND picks first:',
+          '${state.soulboundFragments} fragment'
+          '${state.soulboundFragments == 1 ? '' : 's'} · '
+          'prefer which slot BIND picks first:',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),
@@ -395,67 +394,113 @@ class _ForgeOverlayState extends State<ForgeOverlay>
                 : null,
           ),
         ],
-        const Divider(height: 16, color: Color(0x665A5040)),
-        _sectionTitle(
-          'GOD HAND',
-          'Tap in the dungeon to steer + burst. KEEP upgrades are soft knobs (damage, CD, style).',
-        ),
-        Text(
-          'Lv${state.godHandLevel} · damage ${state.godHandBaseDamage} · '
-          'radius ${state.godHandRadius.toStringAsFixed(1)}',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 6),
-        KenneyButton(
-          label:
-              'Damage Lv${state.godHandLevel} · ${GameLogic.godHandUpgradeCost(state.godHandLevel)}e',
-          onPressed:
-              state.essence >= GameLogic.godHandUpgradeCost(state.godHandLevel)
-              ? director.upgradeGodHand
-              : null,
-        ),
-        const SizedBox(height: 6),
-        KenneyButton(
-          label: state.metaDepth.godHandCdLevel >= 8
-              ? 'Cooldown Lv${state.metaDepth.godHandCdLevel} · MAX'
-              : 'Cooldown Lv${state.metaDepth.godHandCdLevel} · '
-                    '${GameLogic.godHandCdUpgradeCost(state.metaDepth.godHandCdLevel)}e',
-          onPressed: state.metaDepth.godHandCdLevel >= 8
-              ? null
-              : (state.essence >=
-                        GameLogic.godHandCdUpgradeCost(
-                          state.metaDepth.godHandCdLevel,
-                        )
-                    ? director.upgradeGodHandCd
-                    : null),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Style: BAL = default · FOCUS = harder hits, smaller blast · WIDE = bigger blast, softer hits',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            for (final entry in const <(int, String)>[
-              (0, 'BAL'),
-              (1, 'FOCUS'),
-              (2, 'WIDE'),
-            ]) ...[
-              if (entry.$1 > 0) const SizedBox(width: 6),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _relicKeepCard(GameState state, String relicId) {
+    final owned = state.hasRelic(relicId);
+    final name = GameLogic.relicNames[relicId] ?? relicId;
+    final cost = GameLogic.relicCosts[relicId] ?? 0;
+    final tier = owned
+        ? (state.metaDepth.relicTierOf(relicId) < 1
+              ? 1
+              : state.metaDepth.relicTierOf(relicId))
+        : 0;
+    final desc = switch (relicId) {
+      GameLogic.warBannerRelic =>
+        owned
+            ? 'Permanent +${state.relicAttackBonus} team attack (T$tier).'
+            : 'Permanent +4 team attack per tier.',
+      GameLogic.ironWardRelic =>
+        owned
+            ? 'Permanent +${state.relicDefenseBonus} team defense (T$tier).'
+            : 'Permanent +2 team defense per tier.',
+      GameLogic.phoenixEmberRelic =>
+        owned
+            ? 'Permanent +${state.relicVitalityBonus} max HP per hero (T$tier).'
+            : 'Permanent +10 max HP per hero per tier.',
+      GameLogic.godHandFocusRelic =>
+        owned
+            ? '+${state.relicGodHandDamageBonus} God Hand damage (T$tier).'
+            : '+3 God Hand damage per tier.',
+      GameLogic.chamberLuckRelic =>
+        owned
+            ? '+${state.relicLootFindPercent}% loot find (T$tier).'
+            : '+5% loot find per tier.',
+      GameLogic.ironWillRelic =>
+        owned
+            ? '+${state.relicMitigateFlat} flat mitigate (T$tier).'
+            : '+1 flat mitigate per tier.',
+      _ => GameLogic.relicDescriptions[relicId] ?? '',
+    };
+    final nextTier = tier + 1;
+    final tierCost = GameLogic.relicTierUpgradeCost(nextTier);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: MenuChrome.listCard(selected: owned),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              KenneySprite(asset: KenneyAssets.relicIconFor(relicId), size: 36),
+              const SizedBox(width: 8),
               Expanded(
-                child: KenneyButton(
-                  label: entry.$2,
-                  style: state.metaDepth.godHandStyle == entry.$1
-                      ? KenneyButtonStyle.brown
-                      : KenneyButtonStyle.grey,
-                  onPressed: () => director.setGodHandStyle(entry.$1),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      owned ? '$name · T$tier' : name,
+                      style: GameTheme.body(
+                        size: 16,
+                        color: GameTheme.parchment,
+                      ),
+                    ),
+                    if (desc.isNotEmpty)
+                      Text(
+                        desc,
+                        style: GameTheme.body(
+                          size: 13,
+                          color: owned
+                              ? GameTheme.mossLit
+                              : GameTheme.parchmentDim,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
-          ],
-        ),
-      ],
+          ),
+          if (!owned) ...[
+            const SizedBox(height: 6),
+            KenneyButton(
+              label: '$name  ${cost}e',
+              onPressed: state.essence < cost
+                  ? null
+                  : () => director.unlockRelic(relicId),
+            ),
+          ] else if (tier < 3) ...[
+            const SizedBox(height: 6),
+            KenneyButton(
+              label: 'UPGRADE TIER  T$nextTier  ${tierCost}e',
+              style: KenneyButtonStyle.grey,
+              onPressed: state.essence >= tierCost
+                  ? () => director.upgradeRelicTier(relicId)
+                  : null,
+            ),
+          ] else
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                'T3 · MAX',
+                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

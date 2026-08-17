@@ -429,14 +429,17 @@ class GameState {
     return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
   }
 
-  /// Soulbound primaries → flat ATK (melee AP path or caster Int+SP/2).
+  /// Soulbound primaries → flat ATK (same conversion as worn gear / Auto Equip).
   int get soulboundAttackBonus {
     final item = soulboundItem;
     if (item == null) return 0;
-    final meleeAp = 2 * item.strengthBonus + item.agilityBonus;
-    final meleeAtk = (meleeAp / CombatRatings.kAp).round();
-    final casterAtk = item.intellectBonus + (item.spellPowerBonus ~/ 2);
-    return item.attackBonus + max(meleeAtk, casterAtk);
+    return CombatRatings.itemAttackContribution(
+      strength: item.strengthBonus,
+      agility: item.agilityBonus,
+      intellect: item.intellectBonus,
+      spellPower: item.spellPowerBonus,
+      flatAttack: item.attackBonus,
+    );
   }
 
   int get soulboundDefenseBonus {
@@ -719,11 +722,44 @@ class GameState {
     return base * (1 + pct / 100);
   }
 
-  /// God Hand AOE radius in tiles.
+  /// God Hand AOE radius in tiles (before style).
   double get godHandRadius => 1.8 + (godHandLevel * 0.15);
 
-  /// God Hand base damage before AL/ATK scaling.
+  /// God Hand base damage before AL/ATK/relic/style.
   int get godHandBaseDamage => 8 + godHandLevel * 3;
+
+  /// Smash damage after AL / party ATK / relic / style — same as SpatialCombat.
+  int godHandSmashDamage({int? baseDamage}) {
+    var damage =
+        (baseDamage ?? godHandBaseDamage) +
+        ascensionLevel +
+        (totalAttack ~/ 8) +
+        relicGodHandDamageBonus;
+    switch (metaDepth.godHandStyle) {
+      case 1:
+        return (damage * 1.22).round();
+      case 2:
+        return (damage * 0.88).round();
+      default:
+        return damage;
+    }
+  }
+
+  /// Blast radius after BAL / FOCUS / WIDE — same as SpatialCombat.
+  double get godHandSmashRadius {
+    switch (metaDepth.godHandStyle) {
+      case 1:
+        return godHandRadius * 0.82;
+      case 2:
+        return godHandRadius * 1.22;
+      default:
+        return godHandRadius;
+    }
+  }
+
+  /// Cooldown after damage + CD levels — same as SpatialCombat.
+  double get godHandCooldownSeconds =>
+      max(0.45, 1.1 - godHandLevel * 0.05 - metaDepth.godHandCdLevel * 0.06);
 
   GameState copyWith({
     List<PartyHero>? heroes,

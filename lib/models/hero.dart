@@ -159,6 +159,20 @@ class PartyHero {
   int get gearAttackBonus =>
       equipped.values.fold<int>(0, (s, i) => s + i.attackBonus);
 
+  /// Sheet ATK from this hero's gear only (no party Forge/AL/soulbound).
+  int get gearSheetAttack => CombatRatings.fromHeroSheet(
+    hero: this,
+    gearStrength: gearStrengthBonus,
+    gearAgility: gearAgilityBonus,
+    gearStamina: gearStaminaBonus,
+    gearIntellect: gearIntellectBonus,
+    gearSpirit: gearSpiritBonus,
+    gearSpellPower: gearSpellPowerBonus,
+    gearArmor: gearArmorBonus,
+    gearCrit: gearCritChance,
+    gearFlatAttack: gearAttackBonus,
+  ).effectiveAttack;
+
   int get gearDefenseBonus => gearArmorBonus;
 
   int get gearVitalityBonus => gearStaminaBonus * 10;

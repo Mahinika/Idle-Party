@@ -5,8 +5,9 @@ import 'hero_spec.dart';
 ///
 /// Derived from [CombatRatings]:
 /// - Warrior ATK ≈ (2×Str)/4 → Str is the DPS primary
-/// - Rogue ATK ≈ (Str+Agi)/4 → Agi also feeds crit/DEF
-/// - Caster/healer ATK = Int + SP/2 → Int full, SP half
+/// - Rogue-family ATK ≈ (Str+2×Agi)/4 → Agi is the damage primary (+ crit/DEF)
+/// - Caster/healer: level Int full; gear Int and SP both ~/3 into ATK
+///   (Int also feeds spell crit, so BiS still prefers Int over equal SP)
 /// - Spirit / Mp5 → mana regen only (not throughput)
 /// - Sta → HP; gear Armor is sheet DEF; Agi is a small dodge crumb
 ///   ([CombatRatings.agilityToDefense]) so plate tanks stay ahead of leather DPS.
@@ -274,7 +275,7 @@ class EquipStatWeights {
     flatAtk: 2.0,
   );
 
-  /// Int full ATK, SP half — score matches CombatRatings caster path.
+  /// Int primary (ATK + crit); SP is ATK-only at the same ~/3 sheet rate.
   static const _caster = EquipStatWeights(
     str: 0,
     agi: 1.0,

@@ -838,12 +838,18 @@ abstract final class KitNamedCasts {
           );
         var prevX = hero.x;
         var prevY = hero.y;
-        final hit = math.max(
-          2,
-          (hero.attack * def.coeff * AbilityEffectRunner._abilityOutScale(hero))
-              .round(),
-        );
         for (final e in spree.take(3)) {
+          final hit = CombatRatings.mitigateByArmor(
+            rawDamage: math.max(
+              2,
+              (hero.attack *
+                      def.coeff *
+                      AbilityEffectRunner._abilityOutScale(hero))
+                  .round(),
+            ),
+            defense: e.effectiveDefense,
+            attackerAttack: hero.attack,
+          );
           if (!reducedVfx) {
             SpatialCombat._spawnBurst(
               world,

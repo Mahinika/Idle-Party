@@ -22,10 +22,10 @@ void main() {
     );
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
         .copyWith(
-      currentRoom: treasure,
-      dungeonFloor: <DungeonRoom>[treasure],
-      enemies: const [],
-    );
+          currentRoom: treasure,
+          dungeonFloor: <DungeonRoom>[treasure],
+          enemies: const [],
+        );
     var world = SpatialCombat.build(state);
     expect(world.isTreasure, isTrue);
 
@@ -50,8 +50,10 @@ void main() {
     );
     expect(map.roomCenters.length, greaterThanOrEqualTo(3));
     expect(map.enemySpawns, isNotEmpty);
-    expect(map.isWalkable(map.spawnPoints.first.$1, map.spawnPoints.first.$2),
-        isTrue);
+    expect(
+      map.isWalkable(map.spawnPoints.first.$1, map.spawnPoints.first.$2),
+      isTrue,
+    );
   });
 
   test('god hand damages nearby enemies', () {
@@ -70,6 +72,32 @@ void main() {
     expect(target.hp, lessThan(before));
   });
 
+  test('God Hand KEEP preview matches smash, blast, and cooldown', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    expect(state.godHandCooldownSeconds, closeTo(1.1, 0.001));
+    expect(state.godHandSmashRadius, closeTo(state.godHandRadius, 0.001));
+
+    state = GameLogic.setGodHandStyle(state, 1);
+    expect(
+      state.godHandSmashRadius,
+      closeTo(state.godHandRadius * 0.82, 0.001),
+    );
+    final focusSmash = state.godHandSmashDamage();
+
+    state = GameLogic.setGodHandStyle(state, 2);
+    expect(
+      state.godHandSmashRadius,
+      closeTo(state.godHandRadius * 1.22, 0.001),
+    );
+    expect(state.godHandSmashDamage(), lessThan(focusSmash));
+
+    state = state.copyWith(
+      godHandLevel: 4,
+      metaDepth: state.metaDepth.copyWith(godHandCdLevel: 8, godHandStyle: 0),
+    );
+    expect(state.godHandCooldownSeconds, 0.45);
+  });
+
   test('weapon pattern fires spread projectiles', () {
     final weapon = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
@@ -82,10 +110,7 @@ void main() {
     final mageIndex = heroes.indexWhere((h) => h.gearAffinity == HeroRole.mage);
     expect(mageIndex, greaterThanOrEqualTo(0));
     heroes[mageIndex] = heroes[mageIndex].copyWith(
-      equipped: {
-        ...heroes[mageIndex].equipped,
-        EquipmentSlot.weapon: weapon,
-      },
+      equipped: {...heroes[mageIndex].equipped, EquipmentSlot.weapon: weapon},
     );
     state = state.copyWith(heroes: heroes, attackBonus: 20);
     var world = SpatialCombat.build(state);
@@ -118,9 +143,7 @@ void main() {
     expect(world.heroes, isNotEmpty);
     expect(world.enemies, isNotEmpty);
 
-    final start = [
-      for (final h in world.heroes) (h.x, h.y),
-    ];
+    final start = [for (final h in world.heroes) (h.x, h.y)];
     final enemy = world.enemies.first;
     final startDist = [
       for (final h in world.heroes)
@@ -139,11 +162,11 @@ void main() {
       final dx = (h.x - start[i].$1).abs();
       final dy = (h.y - start[i].$2).abs();
       if (dx + dy > 0.2) moved = true;
-      final dist =
-          ((h.x - enemy.x).abs() + (h.y - enemy.y).abs());
+      final dist = ((h.x - enemy.x).abs() + (h.y - enemy.y).abs());
       // Fire Blink / kite can drift away once in range — allow CI slack.
-      final blinkSlack =
-          ClassKits.isUnlocked(AbilityId.blink, h.heroLevel) ? 8.0 : 2.0;
+      final blinkSlack = ClassKits.isUnlocked(AbilityId.blink, h.heroLevel)
+          ? 8.0
+          : 2.0;
       expect(dist, lessThanOrEqualTo(startDist[i] + blinkSlack));
     }
     expect(moved, isTrue);
@@ -194,10 +217,7 @@ void main() {
     expect(map.gates, isNotEmpty);
     final gate = map.gates.first;
     expect(map.isWalkable(gate.x, gate.y), isFalse);
-    expect(
-      map.isWalkable(gate.x, gate.y, openGateIds: {gate.id}),
-      isTrue,
-    );
+    expect(map.isWalkable(gate.x, gate.y, openGateIds: {gate.id}), isTrue);
   });
 
   test('party reaches later chambers after clearing earlier ones', () {
@@ -217,8 +237,7 @@ void main() {
     SpatialCombat.step(world, state, dt: 0.05);
     expect(world.openGateIds, isNotEmpty);
 
-    final later =
-        world.enemies.where((e) => e.hp > 0 && !e.dormant);
+    final later = world.enemies.where((e) => e.hp > 0 && !e.dormant);
     expect(later, isNotEmpty);
 
     // Heroes should be able to path into the next chamber.
@@ -287,9 +306,7 @@ void main() {
       world = step.world;
     }
     expect(
-      world.floaters.any(
-        (f) => f.text.contains('…') || f.text.length > 2,
-      ),
+      world.floaters.any((f) => f.text.contains('…') || f.text.length > 2),
       isTrue,
     );
   });
@@ -321,7 +338,10 @@ void main() {
     expect(state.heroes.first.itemIn(EquipmentSlot.consumable), isNull);
     expect(state.heroes.first.currentHp, greaterThan(before));
     // ~30% of max HP heal (scaled, not flat ~13).
-    expect(state.heroes.first.currentHp - before, greaterThanOrEqualTo(max(8, (maxHp * 0.25).round())));
+    expect(
+      state.heroes.first.currentHp - before,
+      greaterThanOrEqualTo(max(8, (maxHp * 0.25).round())),
+    );
   });
 
   test('useConsumable can drink a stash flask', () {
@@ -371,10 +391,7 @@ void main() {
     state = state.copyWith(
       heroes: [
         first.copyWith(
-          equipped: {
-            ...first.equipped,
-            EquipmentSlot.consumable: flask,
-          },
+          equipped: {...first.equipped, EquipmentSlot.consumable: flask},
         ),
         ...state.heroes.skip(1),
       ],
@@ -387,8 +404,9 @@ void main() {
   });
 
   test('lifetime gold unlocks dungeons, not wallet gold', () {
-    final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
-        .copyWith(gold: 0, lifetimeGoldEarned: 6000);
+    final state = GameLogic.createInitialState(
+      now: DateTime(2026, 7, 4),
+    ).copyWith(gold: 0, lifetimeGoldEarned: 6000);
     expect(
       DungeonCatalog.isUnlocked(
         'goblin',
@@ -400,8 +418,9 @@ void main() {
   });
 
   test('party of 4 can clear exit without soft-lock', () {
-    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
-        .copyWith(rogueUnlocked: true);
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 7, 4),
+    ).copyWith(rogueUnlocked: true);
     state = GameLogic.ensureRogueHero(state);
     expect(state.heroes, hasLength(4));
 
@@ -415,9 +434,7 @@ void main() {
     }
     world.awaitingExit = true;
     world.exitWaitTimer = 0;
-    world.clearedChambers.addAll(
-      world.map.chambers.map((c) => c.index),
-    );
+    world.clearedChambers.addAll(world.map.chambers.map((c) => c.index));
     for (final gate in world.map.gates) {
       world.openGateIds.add(gate.id);
     }
@@ -450,8 +467,9 @@ void main() {
   });
 
   test('exit clears when one hero reaches stairs while others are far', () {
-    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
-        .copyWith(rogueUnlocked: true);
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 7, 4),
+    ).copyWith(rogueUnlocked: true);
     state = GameLogic.ensureRogueHero(state);
     var world = SpatialCombat.build(state);
     expect(world.isTreasure, isFalse);
@@ -490,8 +508,9 @@ void main() {
   });
 
   test('exit force-clears after long stuck wait', () {
-    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
-        .copyWith(rogueUnlocked: true);
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 7, 4),
+    ).copyWith(rogueUnlocked: true);
     state = GameLogic.ensureRogueHero(state);
     var world = SpatialCombat.build(state);
     expect(world.isTreasure, isFalse);

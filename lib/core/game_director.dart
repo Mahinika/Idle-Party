@@ -930,7 +930,7 @@ class GameDirector extends ChangeNotifier {
     if (_state.godHandLevel > before) {
       GameAudio.unlock();
       showToast(
-        'God Hand Lv${_state.godHandLevel} · AOE ${_state.godHandBaseDamage}',
+        'God Hand Lv${_state.godHandLevel} · smash ${_state.godHandSmashDamage()}',
         life: 2.4,
       );
     }
@@ -1845,7 +1845,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.respecRelics(_state));
     if (_state.essence < beforeEssence) {
       GameAudio.ui();
-      showToast('Relics reset', life: 2.0);
+      showToast('Relics wiped — no essence back', life: 2.2);
     }
   }
 

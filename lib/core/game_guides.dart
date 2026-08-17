@@ -128,8 +128,9 @@ abstract final class GameGuides {
           '• GOLD — spend gold this run. Train = +1 level to every hero '
           '(levels keep on Ascend). ATK/DEF/STA/MOVE/HASTE/CRIT wipe on Ascend. '
           'BEST marks the cheapest relative upgrade.\n'
-          '• KEEP — essence that survives Ascend: relics, soulbound refine, '
-          'God Hand damage/cooldown/style.\n'
+          '• KEEP — essence that survives Ascend: Blessing readout, relics, '
+          'soulbound refine, God Hand smash/cooldown/style, and the 5th party '
+          'slot (AL2 · 80e).\n'
           '• MATS / APEX — boss materials and Apex craft.\n\n'
           '• Ascend from the Hub when ready (not from Forge).',
     ),
@@ -140,7 +141,8 @@ abstract final class GameGuides {
           'Ascend grows your roster — TODAY and Ascend teasers name the next kits '
           'with a short fantasy line plus a Watch… combat hook.\n\n'
           '• AL1: Combat Rogue, Arms, Holy Paladin\n'
-          '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot (essence)\n'
+          '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot '
+          '(Forge KEEP · 80e)\n'
           '• AL3: Prot Paladin, Assassination, Resto Shaman, Frost Mage, Resto Druid\n'
           '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'
           '• AL5: Blood DK, Frost DK, Guardian\n'

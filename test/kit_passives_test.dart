@@ -61,7 +61,7 @@ void main() {
     var world = SpatialCombat.build(state);
     world = SpatialCombat.step(world, state, dt: 0.1).world;
     final rogue = world.heroes.firstWhere((h) => !h.isPet);
-    expect(rogue.kitOutMul, closeTo(0.94, 0.001));
+    expect(rogue.kitOutMul, closeTo(0.90, 0.001));
   });
 }
 

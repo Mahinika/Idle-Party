@@ -1,5 +1,7 @@
 # Attributes / stat scaling audit — 2026-08-17
 
+**Shipped in 1.12.12:** percent armor, 2 AP per Agility for rogue-family, Int/SP sheet honesty.
+
 **Depth:** full (code + WotLK identity structure, no Wowhead number scrape)  
 **Playtest:** no  
 **Scope:** primary stats, CombatRatings, gear budget, Auto Equip honesty, armor in SpatialCombat.  

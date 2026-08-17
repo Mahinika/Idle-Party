@@ -19,10 +19,19 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.11';
+  static const String currentVersion = '1.12.12';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.12',
+      bullets: <String>[
+        'Armor now cuts a percent of each hit — more DEF always helps, but nothing is immortal (packs included).',
+        'Agility is the damage stat for rogues, hunters, cats, and Enhancement (Strength still rules plate).',
+        'Caster gear: Intellect and Spell Power both feed damage the same way; Intellect still adds crit.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.11',
       bullets: <String>[

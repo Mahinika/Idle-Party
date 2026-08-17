@@ -1310,7 +1310,15 @@ void main() {
     state = state.copyWith(heroes: heroes);
 
     final cmp = GameLogic.compareForHero(state.heroes[mageIndex], better);
-    expect(cmp.atkDelta, 18 - 4 + 10 - 2);
+    expect(cmp.atkDelta, greaterThan(0));
+    final wornAtk = state.heroes[mageIndex].gearSheetAttack;
+    final swapped = state.heroes[mageIndex].copyWith(
+      equipped: {
+        ...state.heroes[mageIndex].equipped,
+        EquipmentSlot.chest: better,
+      },
+    );
+    expect(cmp.atkDelta, swapped.gearSheetAttack - wornAtk);
   });
 
   test('1H plus stash OH can beat worn two-hand on upgrade score', () {

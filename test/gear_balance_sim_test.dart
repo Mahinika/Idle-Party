@@ -100,7 +100,8 @@ void main() {
             continue;
           }
           expect(dAtks[i], greaterThan(40), reason: '$role gear ATK uplift');
-          expect(dAtks[i], lessThan(320), reason: '$role gear ATK cap');
+          // Rogue-family 2 AP/Agi makes leather sheet ATK jump harder than plate.
+          expect(dAtks[i], lessThan(450), reason: '$role gear ATK cap');
         }
       }
     }

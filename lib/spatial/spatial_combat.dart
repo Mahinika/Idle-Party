@@ -2783,7 +2783,11 @@ abstract final class SpatialCombat {
             if (e.hp <= 0 || e.dormant) continue;
             if (_dist(enemy, e) > 2.2) continue;
             final wasAlive = e.hp > 0;
-            final dealt = math.max(1, boom - e.effectiveDefense ~/ 2);
+            final dealt = CombatRatings.mitigateByArmor(
+              rawDamage: boom,
+              defense: e.effectiveDefense,
+              attackerAttack: caster?.attack ?? boom,
+            );
             e.hp = math.max(0, e.hp - dealt);
             if (caster != null) _recordHeroDamage(caster, dealt);
             if (!reducedVfx) {
@@ -2880,11 +2884,12 @@ abstract final class SpatialCombat {
       final afterDist = _dist(enemy, target);
       if (enemy.fireCooldown <= 0 && afterDist <= enemy.attackRange) {
         enemy.fireCooldown = enemy.attackCooldown;
-        // Armor matters, with a little pierce so mid-DEF never zeros packs.
-        final armorFactor = world.afkAssist ? 0.75 : 0.55;
-        final armor = (target.defense * armorFactor).round();
-        final pierce = math.max(1, (enemy.effectiveAttack * 0.2).round());
-        var raw = math.max(pierce, enemy.effectiveAttack - armor);
+        // Armor matters as a percent — more DEF always helps, never immune.
+        var raw = CombatRatings.mitigateByArmor(
+          rawDamage: enemy.effectiveAttack,
+          defense: target.effectiveDefense,
+          attackerAttack: enemy.effectiveAttack,
+        );
         // Glass execute: bonus damage vs low-HP heroes.
         if (enemy.archetype == EnemyArchetype.glass &&
             target.hp < target.effectiveMaxHp * 0.3) {
@@ -3128,9 +3133,10 @@ abstract final class SpatialCombat {
           final wasAlive = target.hp > 0;
           var hitDmg = damage;
           if (world.afkAssist) hitDmg = (hitDmg * 2.4).round();
-          final dealt = math.max(
-            1,
-            hitDmg - target.effectiveDefense ~/ (world.afkAssist ? 3 : 1),
+          final dealt = CombatRatings.mitigateByArmor(
+            rawDamage: hitDmg,
+            defense: target.effectiveDefense,
+            attackerAttack: hero.attack,
           );
           target.hp = math.max(0, target.hp - dealt);
           _recordHeroDamage(hero, dealt);
@@ -3434,12 +3440,13 @@ abstract final class SpatialCombat {
           } else {
             var hitDmg = p.damage;
             if (world.afkAssist) hitDmg = (hitDmg * 2.4).round();
-            dealt = math.max(
-              1,
-              hitDmg - v.effectiveDefense ~/ (world.afkAssist ? 3 : 1),
+            final caster = _heroById(world, p.casterId);
+            dealt = CombatRatings.mitigateByArmor(
+              rawDamage: hitDmg,
+              defense: v.effectiveDefense,
+              attackerAttack: caster?.attack ?? hitDmg,
             );
             v.hp = math.max(0, v.hp - dealt);
-            final caster = _heroById(world, p.casterId);
             if (caster != null) {
               _recordHeroDamage(caster, dealt);
               _applyTankSoftThreat(caster, v);
@@ -3582,7 +3589,11 @@ abstract final class SpatialCombat {
       if (pet.fireCooldown <= 0 && _dist(pet, target) <= pet.attackRange) {
         pet.fireCooldown = pet.attackCooldown;
         final wasAlive = target.hp > 0;
-        final petHit = math.max(1, pet.attack - target.effectiveDefense);
+        final petHit = CombatRatings.mitigateByArmor(
+          rawDamage: pet.attack,
+          defense: target.effectiveDefense,
+          attackerAttack: pet.attack,
+        );
         target.hp = math.max(0, target.hp - petHit);
         pet.attackFlash = 0.14;
         final owner =
@@ -3628,31 +3639,12 @@ abstract final class SpatialCombat {
     world.guideX = tileX;
     world.guideY = tileY;
     world.guideTimer = 1.35;
-    world.godHandCooldown = math.max(
-      0.45,
-      1.1 - state.godHandLevel * 0.05 - state.metaDepth.godHandCdLevel * 0.06,
-    );
+    world.godHandCooldown = state.godHandCooldownSeconds;
     world.pulseX = tileX;
     world.pulseY = tileY;
     world.pulseTimer = 0.35;
-    world.godHandRadius = state.godHandRadius;
-
-    var damage =
-        (baseDamage ?? state.godHandBaseDamage) +
-        state.ascensionLevel +
-        (state.totalAttack ~/ 8) +
-        state.relicGodHandDamageBonus;
-    var radius = state.godHandRadius;
-    switch (state.metaDepth.godHandStyle) {
-      case 1: // focus — tighter, harder
-        damage = (damage * 1.22).round();
-        radius *= 0.82;
-      case 2: // wide — broader, softer
-        damage = (damage * 0.88).round();
-        radius *= 1.22;
-      default: // balanced
-        break;
-    }
+    final damage = state.godHandSmashDamage(baseDamage: baseDamage);
+    final radius = state.godHandSmashRadius;
     world.godHandRadius = radius;
     final reduced = state.reducedVfx;
     if (!reduced) {

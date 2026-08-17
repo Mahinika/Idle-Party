@@ -35,9 +35,10 @@ Rules:
 
 Combat conversion (must stay aligned with equip weights):
 
-- Melee ATK from Str/Agi via `CombatRatings` (kAp = 4).
+- Melee ATK from Str/Agi via `CombatRatings` (kAp = 4). Plate: 2 AP/Str. Rogue-family: 1 AP/Str + **2 AP/Agi**.
 - Sheet DEF is gear Armor + tank guard + a small Agi crumb (`CombatRatings.agilityToDefense`). Plate tanks stay ahead of leather DPS.
-- Caster/healer throughput: **Intellect full**, **Spell Power ≈ half** into the ATK pool.
+- Caster/healer: **level Intellect full**; **gear Int and Spell Power both ≈ 1/3** into ATK. Int still adds spell crit.
+- Physical hits use percent armor (`CombatRatings.mitigateByArmor`) — more DEF always helps, never immune.
 
 ## Equip score (`itemBudgetScore`)
 

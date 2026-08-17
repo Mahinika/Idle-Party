@@ -6,9 +6,11 @@ import 'stats.dart';
 /// Idle-tuned Classic conversion: AP → ATK uses kAp = 4 (Classic uses 14).
 ///
 /// Gear primary ROI must stay aligned with equip BiS weights
-/// ([EquipStatWeights] / docs/GEAR_BUDGET.md): Str/Agi melee via AP;
-/// casters use Intellect full on the sheet base and gear Int+SP at ~1/3 into ATK
-/// so Int/SP match Str/Agi→ATK value for Auto Equip honesty.
+/// ([EquipStatWeights] / docs/GEAR_BUDGET.md):
+/// - Plate melee: 2 AP per Strength.
+/// - Rogue-family (leather/mail AGI): 1 AP per Strength + 2 AP per Agility.
+/// - Casters: level Intellect is full ATK; gear Int and Spell Power both
+///   contribute ~/3 so they match Str/Agi→ATK ROI. Int still adds spell crit.
 class CombatRatings {
   const CombatRatings({
     required this.strength,
@@ -117,9 +119,39 @@ class CombatRatings {
   }) {
     return switch (role) {
       HeroRole.warrior => 2 * strength + 3 * level,
-      HeroRole.rogue => strength + agility + 2 * level,
+      HeroRole.rogue => strength + 2 * agility + 2 * level,
       HeroRole.healer || HeroRole.mage => strength,
     };
+  }
+
+  /// Item → party ATK (soulbound / compare). Best of plate, AGI-family, caster.
+  static int itemAttackContribution({
+    required int strength,
+    required int agility,
+    required int intellect,
+    required int spellPower,
+    int flatAttack = 0,
+  }) {
+    final warriorAp = 2 * strength;
+    final rogueAp = strength + 2 * agility;
+    final meleeAtk = max(0, (max(warriorAp, rogueAp) / kAp).round());
+    final casterAtk = (intellect + spellPower) ~/ 3;
+    return flatAttack + max(meleeAtk, casterAtk);
+  }
+
+  /// Percent armor: `taken = raw * K / (def + K)`, K ≈ 1.2× attacker ATK.
+  /// High DEF always helps; mitigation caps at 75% (at least 25% of the hit).
+  static int mitigateByArmor({
+    required int rawDamage,
+    required int defense,
+    required int attackerAttack,
+  }) {
+    final hit = max(1, rawDamage);
+    final def = max(0, defense);
+    final k = max(8, (max(1, attackerAttack) * 12 + 5) ~/ 10);
+    final taken = (hit * k / (def + k)).round();
+    final floor = max(1, (hit * 25 + 99) ~/ 100);
+    return max(floor, taken);
   }
 
   factory CombatRatings.fromHeroSheet({
