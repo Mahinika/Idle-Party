@@ -209,7 +209,7 @@ abstract final class ApexForge {
     required EquipmentSlot slot,
   }) {
     if (!ApexCraft.isValidPair(classId, role)) return false;
-    if (!ApexCraft.craftSlots.contains(slot)) return false;
+    if (!ApexCraft.craftSlotsFor(classId, role).contains(slot)) return false;
     if (_findApexItem(
           state,
           ApexCraft.pieceId(classId: classId, role: role, slot: slot),

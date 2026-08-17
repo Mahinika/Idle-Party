@@ -261,6 +261,43 @@ abstract final class ApexCraft {
     return null;
   }
 
+  /// Apex recipes skip off-hand when not every spec in the pair can use one
+  /// (Blood DK, Unholy vs Frost, BM vs Survival).
+  static List<EquipmentSlot> craftSlotsFor(
+    HeroClassId classId,
+    SpecRoleTag role,
+  ) {
+    final kind = apexOffHandKind(classId, role);
+    return [
+      for (final s in craftSlots)
+        if (s != EquipmentSlot.offHand || kind != null) s,
+    ];
+  }
+
+  static OffHandKind? apexOffHandKind(HeroClassId classId, SpecRoleTag role) {
+    final specs = [
+      for (final d in HeroSpecs.all)
+        if (d.classId == classId && d.roleTag == role) d,
+    ];
+    if (specs.isEmpty) return null;
+    if (specs.every(
+      (s) => ClassProficiency.canEquipOffHandForSpec(s, OffHandKind.shield),
+    )) {
+      return OffHandKind.shield;
+    }
+    if (specs.every(
+      (s) => ClassProficiency.canEquipOffHandForSpec(s, OffHandKind.weapon),
+    )) {
+      return OffHandKind.weapon;
+    }
+    if (specs.every(
+      (s) => ClassProficiency.canEquipOffHandForSpec(s, OffHandKind.frill),
+    )) {
+      return OffHandKind.frill;
+    }
+    return null;
+  }
+
   static double slotCostMult(EquipmentSlot slot) => switch (slot) {
     EquipmentSlot.weapon => 2.0,
     EquipmentSlot.offHand => 1.4,
@@ -437,7 +474,9 @@ abstract final class ApexCraft {
     if (slot.isArmorSlot || slot == EquipmentSlot.cloak) {
       armorType = preferredArmor ?? ArmorType.mail;
     } else if (slot == EquipmentSlot.weapon) {
-      final mh = _mainHandFor(affinity, role);
+      final mh = spec != null
+          ? _apexMainHand(spec)
+          : _mainHandFor(affinity, role);
       weaponType = mh.$1;
       handed = mh.$2;
       pattern = switch (role) {
@@ -446,13 +485,22 @@ abstract final class ApexCraft {
         _ => ProjectilePattern.single,
       };
     } else if (slot == EquipmentSlot.offHand) {
-      if (role == SpecRoleTag.tank) {
+      final kind = apexOffHandKind(classId, role);
+      if (kind == OffHandKind.shield) {
         offHandKind = OffHandKind.shield;
-      } else if (role == SpecRoleTag.healer || role == SpecRoleTag.caster) {
+      } else if (kind == OffHandKind.frill) {
         offHandKind = OffHandKind.frill;
       } else {
         offHandKind = OffHandKind.weapon;
-        weaponType = WeaponType.sword;
+        weaponType = spec != null &&
+                ClassProficiency.canEquipWeaponForSpec(
+                  spec,
+                  WeaponType.axe,
+                  WeaponHanded.oneHand,
+                  rangedSlot: false,
+                )
+            ? WeaponType.axe
+            : WeaponType.sword;
         handed = WeaponHanded.oneHand;
       }
     }
@@ -546,6 +594,42 @@ abstract final class ApexCraft {
   }
 
   static int max(int a, int b) => a > b ? a : b;
+
+  static (WeaponType, WeaponHanded) _apexMainHand(HeroSpecDef spec) {
+    return switch (spec.id) {
+      HeroSpecId.protection ||
+      HeroSpecId.holyPaladin ||
+      HeroSpecId.protPaladin ||
+      HeroSpecId.restorationShaman ||
+      HeroSpecId.discipline ||
+      HeroSpecId.holyPriest => (WeaponType.mace, WeaponHanded.oneHand),
+      HeroSpecId.arms ||
+      HeroSpecId.retribution ||
+      HeroSpecId.unholy => (WeaponType.sword, WeaponHanded.twoHand),
+      HeroSpecId.fury ||
+      HeroSpecId.frostDk ||
+      HeroSpecId.enhancement ||
+      HeroSpecId.survival => (WeaponType.axe, WeaponHanded.oneHand),
+      HeroSpecId.blood => (WeaponType.mace, WeaponHanded.twoHand),
+      HeroSpecId.beastMastery ||
+      HeroSpecId.marksmanship ||
+      HeroSpecId.feral ||
+      HeroSpecId.guardian => (WeaponType.polearm, WeaponHanded.twoHand),
+      HeroSpecId.assassination ||
+      HeroSpecId.combat ||
+      HeroSpecId.subtlety => (WeaponType.dagger, WeaponHanded.oneHand),
+      HeroSpecId.shadow ||
+      HeroSpecId.elemental ||
+      HeroSpecId.balance ||
+      HeroSpecId.restorationDruid ||
+      HeroSpecId.arcane ||
+      HeroSpecId.fire ||
+      HeroSpecId.frostMage ||
+      HeroSpecId.affliction ||
+      HeroSpecId.demonology ||
+      HeroSpecId.destruction => (WeaponType.staff, WeaponHanded.twoHand),
+    };
+  }
 
   static (WeaponType, WeaponHanded) _mainHandFor(
     HeroRole affinity,

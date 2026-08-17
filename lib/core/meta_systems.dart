@@ -31,6 +31,7 @@ abstract final class MetaSystems {
         'Caster gear: Intellect and Spell Power both feed damage the same way; Intellect still adds crit.',
         'Drops, starters, and Apex spend power on those same stats — no leftover Attack Power dump.',
         'Each class wears one armor: plate, mail, leather, or cloth — a Paladin will not put on leather just because the stats look bigger.',
+        'Weapons are the same kind of hard gate: a Paladin will not take a dagger, a Priest will not take a sword, and Paladin / DK / Shaman / Druid leave the ranged slot empty.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
@@ -578,7 +579,7 @@ abstract final class MetaSystems {
     for (final classId in HeroClassId.values) {
       for (final role in ApexCraft.validRolesFor(classId)) {
         var ok = true;
-        for (final slot in ApexCraft.craftSlots) {
+        for (final slot in ApexCraft.craftSlotsFor(classId, role)) {
           final id = ApexCraft.pieceId(
             classId: classId,
             role: role,

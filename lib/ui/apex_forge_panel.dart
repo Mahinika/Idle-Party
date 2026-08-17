@@ -145,6 +145,10 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
     if (!roles.contains(_apexRole)) {
       _apexRole = roles.first;
     }
+    final slots = ApexCraft.craftSlotsFor(_apexClass, _apexRole);
+    if (!slots.contains(_apexSlot)) {
+      _apexSlot = slots.first;
+    }
   }
 
   @override
@@ -255,7 +259,10 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
               ChoiceChip(
                 label: Text(_roleLabel(r), style: GameTheme.body(size: 12)),
                 selected: _apexRole == r,
-                onSelected: (_) => setState(() => _apexRole = r),
+                onSelected: (_) => setState(() {
+                  _apexRole = r;
+                  _syncApexRole();
+                }),
               ),
           ],
         ),
@@ -264,7 +271,7 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
           spacing: 6,
           runSpacing: 6,
           children: [
-            for (final s in ApexCraft.craftSlots)
+            for (final s in ApexCraft.craftSlotsFor(_apexClass, _apexRole))
               ChoiceChip(
                 label: Text(_slotLabel(s), style: GameTheme.body(size: 12)),
                 selected: _apexSlot == s,

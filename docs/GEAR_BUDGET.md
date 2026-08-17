@@ -33,6 +33,7 @@ Rules:
 - **No Move** on loot budget.
 - Affinity on an item is **drop bias / tooltip flavour**, not equip-score.
 - **Armor type is a hard `canEquip` gate** (plate / mail / leather / cloth per class). Auto Equip never scores a Paladin into leather.
+- **Weapons / off-hand / ranged are the same hard gate** (WotLK class lists). Auto Equip never puts a dagger on a Paladin or a bow on a Death Knight.
 
 Combat conversion (must stay aligned with equip weights):
 

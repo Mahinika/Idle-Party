@@ -328,13 +328,121 @@ class EquipmentFactory {
   static WeaponType rangedFor(HeroRole bias) {
     return switch (bias) {
       HeroRole.healer || HeroRole.mage => WeaponType.wand,
-      _ => [
+      HeroRole.warrior || HeroRole.rogue => WeaponType.thrown,
+    };
+  }
+
+  static (WeaponType, WeaponHanded) mainHandForSpec(HeroSpecDef spec) {
+    final roll = random.nextDouble();
+    return switch (spec.classId) {
+      HeroClassId.warrior => spec.id == HeroSpecId.fury
+          ? _pick1hAxeSwordMace(roll)
+          : spec.id == HeroSpecId.arms
+          ? _pick2hAxeSwordMacePole(roll)
+          : _pick1hAxeSwordMace(roll),
+      HeroClassId.paladin => spec.id == HeroSpecId.retribution
+          ? _pick2hAxeSwordMacePole(roll)
+          : _pick1hAxeSwordMace(roll),
+      HeroClassId.hunter => spec.id == HeroSpecId.survival
+          ? _pickHunter1h(roll)
+          : _pickHunter2h(roll),
+      HeroClassId.rogue => _pickRogue1h(roll),
+      HeroClassId.priest => roll < 0.55
+          ? (WeaponType.staff, WeaponHanded.twoHand)
+          : roll < 0.85
+          ? (WeaponType.mace, WeaponHanded.oneHand)
+          : (WeaponType.dagger, WeaponHanded.oneHand),
+      HeroClassId.deathKnight => spec.id == HeroSpecId.frostDk
+          ? _pick1hAxeSwordMace(roll)
+          : _pick2hAxeSwordMacePole(roll),
+      HeroClassId.shaman => spec.id == HeroSpecId.enhancement
+          ? _pickShaman1h(roll)
+          : roll < 0.55
+          ? (WeaponType.staff, WeaponHanded.twoHand)
+          : (WeaponType.mace, WeaponHanded.oneHand),
+      HeroClassId.mage || HeroClassId.warlock => roll < 0.55
+          ? (WeaponType.staff, WeaponHanded.twoHand)
+          : roll < 0.85
+          ? (WeaponType.sword, WeaponHanded.oneHand)
+          : (WeaponType.dagger, WeaponHanded.oneHand),
+      HeroClassId.druid =>
+        spec.id == HeroSpecId.feral || spec.id == HeroSpecId.guardian
+            ? (WeaponType.polearm, WeaponHanded.twoHand)
+            : (WeaponType.staff, WeaponHanded.twoHand),
+    };
+  }
+
+  static (WeaponType, WeaponHanded) _pick1hAxeSwordMace(double roll) {
+    if (roll < 0.4) return (WeaponType.mace, WeaponHanded.oneHand);
+    if (roll < 0.7) return (WeaponType.sword, WeaponHanded.oneHand);
+    return (WeaponType.axe, WeaponHanded.oneHand);
+  }
+
+  static (WeaponType, WeaponHanded) _pick2hAxeSwordMacePole(double roll) {
+    if (roll < 0.4) return (WeaponType.sword, WeaponHanded.twoHand);
+    if (roll < 0.7) return (WeaponType.axe, WeaponHanded.twoHand);
+    if (roll < 0.88) return (WeaponType.mace, WeaponHanded.twoHand);
+    return (WeaponType.polearm, WeaponHanded.twoHand);
+  }
+
+  static (WeaponType, WeaponHanded) _pickHunter1h(double roll) {
+    if (roll < 0.4) return (WeaponType.axe, WeaponHanded.oneHand);
+    if (roll < 0.7) return (WeaponType.sword, WeaponHanded.oneHand);
+    if (roll < 0.88) return (WeaponType.dagger, WeaponHanded.oneHand);
+    return (WeaponType.fist, WeaponHanded.oneHand);
+  }
+
+  static (WeaponType, WeaponHanded) _pickHunter2h(double roll) {
+    if (roll < 0.45) return (WeaponType.polearm, WeaponHanded.twoHand);
+    if (roll < 0.75) return (WeaponType.staff, WeaponHanded.twoHand);
+    return (WeaponType.axe, WeaponHanded.twoHand);
+  }
+
+  static (WeaponType, WeaponHanded) _pickRogue1h(double roll) {
+    if (roll < 0.45) return (WeaponType.dagger, WeaponHanded.oneHand);
+    if (roll < 0.7) return (WeaponType.sword, WeaponHanded.oneHand);
+    if (roll < 0.88) return (WeaponType.fist, WeaponHanded.oneHand);
+    return (WeaponType.mace, WeaponHanded.oneHand);
+  }
+
+  static (WeaponType, WeaponHanded) _pickShaman1h(double roll) {
+    if (roll < 0.4) return (WeaponType.axe, WeaponHanded.oneHand);
+    if (roll < 0.7) return (WeaponType.mace, WeaponHanded.oneHand);
+    if (roll < 0.88) return (WeaponType.fist, WeaponHanded.oneHand);
+    return (WeaponType.dagger, WeaponHanded.oneHand);
+  }
+
+  static WeaponType rangedForSpec(HeroSpecDef spec) {
+    return switch (spec.classId) {
+      HeroClassId.hunter => [
         WeaponType.bow,
         WeaponType.crossbow,
         WeaponType.gun,
-        WeaponType.thrown,
-      ][random.nextInt(4)],
+      ][random.nextInt(3)],
+      HeroClassId.warrior || HeroClassId.rogue => WeaponType.thrown,
+      _ => WeaponType.wand,
     };
+  }
+
+  static WeaponType _offHandWeaponForSpec(HeroSpecDef spec) {
+    final opts = <WeaponType>[
+      for (final t in [
+        WeaponType.axe,
+        WeaponType.sword,
+        WeaponType.mace,
+        WeaponType.dagger,
+        WeaponType.fist,
+      ])
+        if (ClassProficiency.canEquipWeaponForSpec(
+          spec,
+          t,
+          WeaponHanded.oneHand,
+          rangedSlot: false,
+        ))
+          t,
+    ];
+    if (opts.isEmpty) return WeaponType.axe;
+    return opts[random.nextInt(opts.length)];
   }
 
   static List<double> _armorWeights(
@@ -649,6 +757,17 @@ class EquipmentFactory {
   }) {
     final classBias = bias ?? HeroRole.values[random.nextInt(4)];
     final dungeon = dungeonId ?? 'sandy';
+    final spec = lootSpecId == null ? null : HeroSpecs.def(lootSpecId);
+    var resolvedSlot = slot;
+    if (spec != null) {
+      if (resolvedSlot == EquipmentSlot.ranged &&
+          !ClassProficiency.usesRangedSlot(spec)) {
+        resolvedSlot = EquipmentSlot.weapon;
+      } else if (resolvedSlot == EquipmentSlot.offHand &&
+          !ClassProficiency.usesOffHandSlot(spec)) {
+        resolvedSlot = EquipmentSlot.weapon;
+      }
+    }
 
     ArmorType? armorType;
     WeaponType? weaponType;
@@ -656,7 +775,7 @@ class EquipmentFactory {
     OffHandKind? offHandKind;
     List<double> weights;
 
-    if (slot.isArmorSlot) {
+    if (resolvedSlot.isArmorSlot) {
       armorType = armorTypeFor(
         classBias,
         max(1, battleNumber),
@@ -668,8 +787,8 @@ class EquipmentFactory {
         roleTag: roleTag,
         lootSpecId: lootSpecId,
       );
-    } else if (slot == EquipmentSlot.weapon) {
-      final mh = mainHandFor(classBias);
+    } else if (resolvedSlot == EquipmentSlot.weapon) {
+      final mh = spec != null ? mainHandForSpec(spec) : mainHandFor(classBias);
       weaponType = mh.$1;
       handed = mh.$2;
       weights = _weaponWeights(
@@ -678,8 +797,8 @@ class EquipmentFactory {
         roleTag: roleTag,
         lootSpecId: lootSpecId,
       );
-    } else if (slot == EquipmentSlot.ranged) {
-      weaponType = rangedFor(classBias);
+    } else if (resolvedSlot == EquipmentSlot.ranged) {
+      weaponType = spec != null ? rangedForSpec(spec) : rangedFor(classBias);
       handed = ClassProficiency.defaultHanded(weaponType);
       weights = _weaponWeights(
         weaponType,
@@ -687,46 +806,41 @@ class EquipmentFactory {
         roleTag: roleTag,
         lootSpecId: lootSpecId,
       );
-    } else if (slot == EquipmentSlot.offHand) {
-      if (classBias == HeroRole.warrior) {
-        offHandKind = OffHandKind.shield;
-        weights = _offHandWeights(
-          OffHandKind.shield,
-          bias: classBias,
-          roleTag: roleTag,
-          lootSpecId: lootSpecId,
-        );
-      } else if (classBias == HeroRole.rogue) {
-        offHandKind = OffHandKind.weapon;
-        final opts = [
-          WeaponType.dagger,
-          WeaponType.sword,
-          WeaponType.fist,
-          WeaponType.mace,
-        ];
-        weaponType = opts[random.nextInt(opts.length)];
+    } else if (resolvedSlot == EquipmentSlot.offHand) {
+      final kind = spec != null
+          ? (ClassProficiency.preferredOffHandKind(spec) ??
+                (ClassProficiency.canUseShield(spec)
+                    ? OffHandKind.shield
+                    : OffHandKind.frill))
+          : classBias == HeroRole.warrior
+          ? OffHandKind.shield
+          : classBias == HeroRole.rogue
+          ? OffHandKind.weapon
+          : OffHandKind.frill;
+      offHandKind = kind;
+      if (kind == OffHandKind.weapon) {
+        weaponType = spec != null
+            ? _offHandWeaponForSpec(spec)
+            : [
+                WeaponType.dagger,
+                WeaponType.sword,
+                WeaponType.fist,
+                WeaponType.mace,
+              ][random.nextInt(4)];
         handed = WeaponHanded.oneHand;
-        weights = _offHandWeights(
-          OffHandKind.weapon,
-          bias: classBias,
-          roleTag: roleTag,
-          lootSpecId: lootSpecId,
-        );
-      } else {
-        offHandKind = OffHandKind.frill;
-        weights = _offHandWeights(
-          OffHandKind.frill,
-          bias: classBias,
-          roleTag: roleTag,
-          lootSpecId: lootSpecId,
-        );
       }
-    } else if (slot == EquipmentSlot.cloak ||
-        slot == EquipmentSlot.neck ||
-        slot == EquipmentSlot.ring ||
-        slot == EquipmentSlot.ring2 ||
-        slot == EquipmentSlot.trinket ||
-        slot == EquipmentSlot.trinket2) {
+      weights = _offHandWeights(
+        kind,
+        bias: classBias,
+        roleTag: roleTag,
+        lootSpecId: lootSpecId,
+      );
+    } else if (resolvedSlot == EquipmentSlot.cloak ||
+        resolvedSlot == EquipmentSlot.neck ||
+        resolvedSlot == EquipmentSlot.ring ||
+        resolvedSlot == EquipmentSlot.ring2 ||
+        resolvedSlot == EquipmentSlot.trinket ||
+        resolvedSlot == EquipmentSlot.trinket2) {
       weights = _jewelryWeights(
         classBias,
         roleTag: roleTag,
@@ -740,7 +854,9 @@ class EquipmentFactory {
       );
     }
 
-    if (slot == EquipmentSlot.offHand && classBias == HeroRole.warrior) {
+    if (spec == null &&
+        resolvedSlot == EquipmentSlot.offHand &&
+        classBias == HeroRole.warrior) {
       offHandKind = OffHandKind.shield;
       weaponType = null;
       handed = null;
@@ -751,7 +867,8 @@ class EquipmentFactory {
         lootSpecId: lootSpecId,
       );
     }
-    if (slot == EquipmentSlot.offHand &&
+    if (spec == null &&
+        resolvedSlot == EquipmentSlot.offHand &&
         (classBias == HeroRole.healer || classBias == HeroRole.mage)) {
       offHandKind = OffHandKind.frill;
       weaponType = null;
@@ -802,7 +919,7 @@ class EquipmentFactory {
     final rawBudget = budgetForItemLevel(
       itemLevel: iLvl,
       rarity: rarity,
-      slot: slot,
+      slot: resolvedSlot,
       handed: handed,
     );
     final affixCount = (prefix != null ? 1 : 0) + (suffix != null ? 1 : 0);
@@ -815,8 +932,9 @@ class EquipmentFactory {
 
     // Armor density reserved from primary budget (not stacked on top).
     final armorPts =
-        slot.isArmorSlot ||
-            (slot == EquipmentSlot.offHand && offHandKind == OffHandKind.shield)
+        resolvedSlot.isArmorSlot ||
+            (resolvedSlot == EquipmentSlot.offHand &&
+                offHandKind == OffHandKind.shield)
         ? armorPointsFor(
             armorType ??
                 (offHandKind == OffHandKind.shield ? ArmorType.plate : null),
@@ -886,7 +1004,8 @@ class EquipmentFactory {
         id,
     ];
     // Weapons / gloves lean Haste first (classic feel).
-    if (slot == EquipmentSlot.weapon || slot == EquipmentSlot.hands) {
+    if (resolvedSlot == EquipmentSlot.weapon ||
+        resolvedSlot == EquipmentSlot.hands) {
       pool.remove('haste');
       pool.insert(0, 'haste');
     }
@@ -977,7 +1096,7 @@ class EquipmentFactory {
       };
     }
 
-    final pattern = slot == EquipmentSlot.weapon
+    final pattern = resolvedSlot == EquipmentSlot.weapon
         ? switch (classBias) {
             HeroRole.mage =>
               rarity.index >= 2
@@ -996,7 +1115,7 @@ class EquipmentFactory {
         : ProjectilePattern.single;
 
     final name = equipmentNameFor(
-      slot: slot,
+      slot: resolvedSlot,
       rarity: rarity,
       bias: classBias,
       armorType: armorType,
@@ -1013,13 +1132,13 @@ class EquipmentFactory {
             dungeonId: dungeon,
             armorType: armorType,
             rarity: rarity,
-            slot: slot,
+            slot: resolvedSlot,
           );
 
     return EquipmentItem(
-      id: '${slot.name}_${rarity.name}_${battleNumber}_${random.nextInt(100000)}',
+      id: '${resolvedSlot.name}_${rarity.name}_${battleNumber}_${random.nextInt(100000)}',
       name: name,
-      slot: slot,
+      slot: resolvedSlot,
       rarity: rarity,
       strengthBonus: str,
       agilityBonus: agi,

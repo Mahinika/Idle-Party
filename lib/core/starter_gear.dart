@@ -74,130 +74,261 @@ abstract final class StarterGear {
       }
     }
 
-    // Swap illegal off-hands (e.g. Guardian Druid inheriting a warrior shield).
-    final oh = out[EquipmentSlot.offHand];
-    if (oh != null &&
-        !ClassProficiency.canEquip(
-          role: spec.gearAffinity,
-          level: 1,
-          item: oh,
-          specId: specId,
-        )) {
-      if (ClassProficiency.canEquipOffHandForSpec(spec, OffHandKind.frill)) {
-        out[EquipmentSlot.offHand] = EquipmentItem(
-          id: 'start_${spec.shortLabel.toLowerCase()}_oh',
-          name: '${spec.shortLabel} Charm',
-          slot: EquipmentSlot.offHand,
-          rarity: LootRarity.common,
-          offHandKind: OffHandKind.frill,
-          intellectBonus: spec.isHealer || spec.roleTag == SpecRoleTag.caster
-              ? 1
-              : 0,
-          staminaBonus: 1,
-          spiritBonus: spec.isHealer ? 1 : 0,
-          spellPowerBonus: spec.isHealer || spec.roleTag == SpecRoleTag.caster
-              ? 1
-              : 0,
-          itemLevel: 5,
-        );
-      } else if (ClassProficiency.canEquipOffHandForSpec(
-        spec,
-        OffHandKind.weapon,
-      )) {
-        out[EquipmentSlot.offHand] = EquipmentItem(
-          id: 'start_${spec.shortLabel.toLowerCase()}_oh',
-          name: '${spec.shortLabel} Sidearm',
-          slot: EquipmentSlot.offHand,
-          rarity: LootRarity.common,
-          offHandKind: OffHandKind.weapon,
-          weaponType: WeaponType.dagger,
-          handed: WeaponHanded.oneHand,
-          agilityBonus: 1,
-          staminaBonus: 1,
-          itemLevel: 5,
-        );
-      } else {
-        out.remove(EquipmentSlot.offHand);
-      }
+    final loadout = _weaponLoadout(spec);
+    out[EquipmentSlot.weapon] = loadout.weapon;
+    if (loadout.offHand != null) {
+      out[EquipmentSlot.offHand] = loadout.offHand!;
+    } else {
+      out.remove(EquipmentSlot.offHand);
     }
-
-    // Swap illegal ranged (Holy Paladin inheriting a priest wand, etc.).
-    final ranged = out[EquipmentSlot.ranged];
-    if (ranged != null &&
-        !ClassProficiency.canEquip(
-          role: spec.gearAffinity,
-          level: 1,
-          item: ranged,
-          specId: specId,
-        )) {
-      final preferWand = ClassProficiency.canEquipWeaponForSpec(
-        spec,
-        WeaponType.wand,
-        WeaponHanded.oneHand,
-        rangedSlot: true,
-      );
-      out[EquipmentSlot.ranged] = EquipmentItem(
-        id: 'start_${spec.shortLabel.toLowerCase()}_rng',
-        name: preferWand
-            ? '${spec.shortLabel} Wand'
-            : '${spec.shortLabel} Thrown',
-        slot: EquipmentSlot.ranged,
-        rarity: LootRarity.common,
-        weaponType: preferWand ? WeaponType.wand : WeaponType.thrown,
-        handed: WeaponHanded.oneHand,
-        intellectBonus: preferWand ? 1 : 0,
-        spellPowerBonus: preferWand ? 2 : 0,
-        strengthBonus: preferWand ? 0 : 1,
-        agilityBonus: preferWand ? 0 : 1,
-        itemLevel: 5,
-      );
-    }
-
-    // Swap illegal main-hand weapons.
-    final weapon = out[EquipmentSlot.weapon];
-    if (weapon != null &&
-        !ClassProficiency.canEquip(
-          role: spec.gearAffinity,
-          level: 1,
-          item: weapon,
-          specId: specId,
-        )) {
-      final useStaff = ClassProficiency.canEquipWeaponForSpec(
-        spec,
-        WeaponType.staff,
-        WeaponHanded.twoHand,
-        rangedSlot: false,
-      );
-      final useMace = ClassProficiency.canEquipWeaponForSpec(
-        spec,
-        WeaponType.mace,
-        WeaponHanded.oneHand,
-        rangedSlot: false,
-      );
-      out[EquipmentSlot.weapon] = EquipmentItem(
-        id: 'start_${spec.shortLabel.toLowerCase()}_wpn',
-        name: useStaff ? '${spec.shortLabel} Staff' : '${spec.shortLabel} Mace',
-        slot: EquipmentSlot.weapon,
-        rarity: LootRarity.common,
-        weaponType: useStaff ? WeaponType.staff : WeaponType.mace,
-        handed: useStaff ? WeaponHanded.twoHand : WeaponHanded.oneHand,
-        intellectBonus: spec.isHealer || spec.roleTag == SpecRoleTag.caster
-            ? 2
-            : 0,
-        spiritBonus: spec.isHealer ? 1 : 0,
-        spellPowerBonus: spec.isHealer || spec.roleTag == SpecRoleTag.caster
-            ? 1
-            : 0,
-        strengthBonus: useMace && !spec.isHealer ? 2 : 0,
-        staminaBonus: 1,
-        itemLevel: 5,
-      );
-      if (useStaff) {
-        out.remove(EquipmentSlot.offHand);
-      }
+    if (loadout.ranged != null) {
+      out[EquipmentSlot.ranged] = loadout.ranged!;
+    } else {
+      out.remove(EquipmentSlot.ranged);
     }
 
     return out;
+  }
+
+  static ({
+    EquipmentItem weapon,
+    EquipmentItem? offHand,
+    EquipmentItem? ranged,
+  })
+  _weaponLoadout(HeroSpecDef spec) {
+    final tag = spec.shortLabel.toLowerCase();
+    final caster = spec.isHealer || spec.roleTag == SpecRoleTag.caster;
+    final agi = spec.gearAffinity == HeroRole.rogue;
+
+    EquipmentItem mh({
+      required String noun,
+      required WeaponType type,
+      required WeaponHanded handed,
+    }) {
+      return EquipmentItem(
+        id: 'start_${tag}_wpn',
+        name: '${spec.shortLabel} $noun',
+        slot: EquipmentSlot.weapon,
+        rarity: LootRarity.common,
+        weaponType: type,
+        handed: handed,
+        strengthBonus: caster
+            ? 0
+            : (handed == WeaponHanded.twoHand ? 4 : 3),
+        agilityBonus: agi && !caster ? 3 : 0,
+        staminaBonus: 2,
+        intellectBonus: caster ? 2 : 0,
+        spiritBonus: spec.isHealer ? 1 : 0,
+        spellPowerBonus: caster ? 1 : 0,
+        critChanceBonus: agi ? 1 : 0,
+        attackSpeedBonus: handed == WeaponHanded.oneHand && !caster ? 1 : 0,
+        mp5Bonus: spec.isHealer ? 1 : 0,
+        itemLevel: 5,
+      );
+    }
+
+    EquipmentItem shield() => EquipmentItem(
+      id: 'start_${tag}_oh',
+      name: '${spec.shortLabel} Shield',
+      slot: EquipmentSlot.offHand,
+      rarity: LootRarity.common,
+      offHandKind: OffHandKind.shield,
+      strengthBonus: spec.isHealer ? 0 : 1,
+      staminaBonus: 2,
+      intellectBonus: spec.isHealer ? 1 : 0,
+      spiritBonus: spec.isHealer ? 1 : 0,
+      spellPowerBonus: spec.isHealer ? 1 : 0,
+      armorBonus: 3,
+      itemLevel: 5,
+    );
+
+    EquipmentItem sidearm(WeaponType type) => EquipmentItem(
+      id: 'start_${tag}_oh',
+      name: '${spec.shortLabel} Sidearm',
+      slot: EquipmentSlot.offHand,
+      rarity: LootRarity.common,
+      offHandKind: OffHandKind.weapon,
+      weaponType: type,
+      handed: WeaponHanded.oneHand,
+      strengthBonus: agi ? 0 : 2,
+      agilityBonus: agi ? 2 : 0,
+      staminaBonus: 1,
+      critChanceBonus: 1,
+      attackSpeedBonus: 1,
+      itemLevel: 5,
+    );
+
+    EquipmentItem tome() => EquipmentItem(
+      id: 'start_${tag}_oh',
+      name: '${spec.shortLabel} Tome',
+      slot: EquipmentSlot.offHand,
+      rarity: LootRarity.common,
+      offHandKind: OffHandKind.frill,
+      intellectBonus: 1,
+      staminaBonus: 1,
+      spiritBonus: spec.isHealer ? 1 : 0,
+      spellPowerBonus: 2,
+      mp5Bonus: spec.isHealer ? 1 : 0,
+      itemLevel: 5,
+    );
+
+    EquipmentItem thrown() => EquipmentItem(
+      id: 'start_${tag}_rng',
+      name: '${spec.shortLabel} Thrown',
+      slot: EquipmentSlot.ranged,
+      rarity: LootRarity.common,
+      weaponType: WeaponType.thrown,
+      handed: WeaponHanded.oneHand,
+      strengthBonus: agi ? 0 : 1,
+      agilityBonus: agi ? 2 : 0,
+      staminaBonus: 1,
+      itemLevel: 5,
+    );
+
+    EquipmentItem bow() => EquipmentItem(
+      id: 'start_${tag}_rng',
+      name: '${spec.shortLabel} Bow',
+      slot: EquipmentSlot.ranged,
+      rarity: LootRarity.common,
+      weaponType: WeaponType.bow,
+      handed: WeaponHanded.twoHand,
+      agilityBonus: 2,
+      itemLevel: 5,
+    );
+
+    EquipmentItem wand() => EquipmentItem(
+      id: 'start_${tag}_rng',
+      name: '${spec.shortLabel} Wand',
+      slot: EquipmentSlot.ranged,
+      rarity: LootRarity.common,
+      weaponType: WeaponType.wand,
+      handed: WeaponHanded.oneHand,
+      intellectBonus: 1,
+      spellPowerBonus: 2,
+      itemLevel: 5,
+    );
+
+    final oneMace = mh(
+      noun: '1H Mace',
+      type: WeaponType.mace,
+      handed: WeaponHanded.oneHand,
+    );
+    final twoSword = mh(
+      noun: '2H Sword',
+      type: WeaponType.sword,
+      handed: WeaponHanded.twoHand,
+    );
+    final oneAxe = mh(
+      noun: '1H Axe',
+      type: WeaponType.axe,
+      handed: WeaponHanded.oneHand,
+    );
+    final twoPole = mh(
+      noun: 'Polearm',
+      type: WeaponType.polearm,
+      handed: WeaponHanded.twoHand,
+    );
+    final staff = mh(
+      noun: 'Staff',
+      type: WeaponType.staff,
+      handed: WeaponHanded.twoHand,
+    );
+    final dagger = mh(
+      noun: 'Dagger',
+      type: WeaponType.dagger,
+      handed: WeaponHanded.oneHand,
+    );
+    final oneSword = mh(
+      noun: '1H Sword',
+      type: WeaponType.sword,
+      handed: WeaponHanded.oneHand,
+    );
+    final twoMace = mh(
+      noun: '2H Mace',
+      type: WeaponType.mace,
+      handed: WeaponHanded.twoHand,
+    );
+
+    return switch (spec.id) {
+      HeroSpecId.protection => (
+        weapon: oneMace,
+        offHand: shield(),
+        ranged: thrown(),
+      ),
+      HeroSpecId.arms => (weapon: twoSword, offHand: null, ranged: thrown()),
+      HeroSpecId.fury => (
+        weapon: oneAxe,
+        offHand: sidearm(WeaponType.axe),
+        ranged: thrown(),
+      ),
+      HeroSpecId.holyPaladin || HeroSpecId.protPaladin => (
+        weapon: oneMace,
+        offHand: shield(),
+        ranged: null,
+      ),
+      HeroSpecId.retribution => (weapon: twoSword, offHand: null, ranged: null),
+      HeroSpecId.beastMastery || HeroSpecId.marksmanship => (
+        weapon: twoPole,
+        offHand: null,
+        ranged: bow(),
+      ),
+      HeroSpecId.survival => (
+        weapon: oneAxe,
+        offHand: sidearm(WeaponType.axe),
+        ranged: bow(),
+      ),
+      HeroSpecId.assassination ||
+      HeroSpecId.combat ||
+      HeroSpecId.subtlety => (
+        weapon: dagger,
+        offHand: sidearm(WeaponType.dagger),
+        ranged: thrown(),
+      ),
+      HeroSpecId.discipline || HeroSpecId.holyPriest => (
+        weapon: oneMace,
+        offHand: tome(),
+        ranged: wand(),
+      ),
+      HeroSpecId.shadow => (weapon: staff, offHand: null, ranged: wand()),
+      HeroSpecId.blood => (weapon: twoMace, offHand: null, ranged: null),
+      HeroSpecId.frostDk => (
+        weapon: oneAxe,
+        offHand: sidearm(WeaponType.axe),
+        ranged: null,
+      ),
+      HeroSpecId.unholy => (weapon: twoSword, offHand: null, ranged: null),
+      HeroSpecId.elemental => (weapon: staff, offHand: null, ranged: null),
+      HeroSpecId.enhancement => (
+        weapon: oneAxe,
+        offHand: sidearm(WeaponType.axe),
+        ranged: null,
+      ),
+      HeroSpecId.restorationShaman => (
+        weapon: oneMace,
+        offHand: shield(),
+        ranged: null,
+      ),
+      HeroSpecId.arcane ||
+      HeroSpecId.fire ||
+      HeroSpecId.frostMage ||
+      HeroSpecId.affliction ||
+      HeroSpecId.demonology ||
+      HeroSpecId.destruction => (
+        weapon: oneSword,
+        offHand: tome(),
+        ranged: wand(),
+      ),
+      HeroSpecId.balance || HeroSpecId.restorationDruid => (
+        weapon: staff,
+        offHand: null,
+        ranged: null,
+      ),
+      HeroSpecId.feral || HeroSpecId.guardian => (
+        weapon: twoPole,
+        offHand: null,
+        ranged: null,
+      ),
+    };
   }
 
   static HeroRole _starterKitRole(HeroSpecDef spec) => switch (spec.classId) {
@@ -431,10 +562,10 @@ abstract final class StarterGear {
       ),
       HeroRole.rogue => piece(
         id: 'start_rog_rng',
-        name: '$prefix Bow',
+        name: '$prefix Thrown',
         slot: EquipmentSlot.ranged,
-        weaponType: WeaponType.bow,
-        handed: WeaponHanded.twoHand,
+        weaponType: WeaponType.thrown,
+        handed: WeaponHanded.oneHand,
         agi: 2,
       ),
     };

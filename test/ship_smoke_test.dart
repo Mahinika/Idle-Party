@@ -172,6 +172,10 @@ void main() {
     final combinator = GameGuides.topics.firstWhere((t) => t.id == 'combinator');
     expect(combinator.body.toLowerCase(), contains('charm'));
     expect(combinator.body.toLowerCase(), contains('gold'));
+
+    final bag = GameGuides.topics.firstWhere((t) => t.id == 'bag_equip');
+    expect(bag.body.toLowerCase(), contains('weapons are a hard gate'));
+    expect(bag.body.toLowerCase(), contains('no daggers'));
   });
 
   test('fresh TODAY chase is grow-the-party, not Daily', () {

@@ -839,7 +839,7 @@ class GameLogic {
           name: HeroSpecs.def(HeroSpecs.ascendUnlockSpec).defaultName,
           specId: HeroSpecs.ascendUnlockSpec,
           stats: PartyHero.startingStatsForSpec(HeroSpecs.ascendUnlockSpec),
-          equipped: StarterGear.forRole(HeroRole.rogue),
+          equipped: StarterGear.forSpec(HeroSpecs.ascendUnlockSpec),
           level: seedLevel,
         ),
       ];
@@ -967,7 +967,7 @@ class GameLogic {
         name: HeroSpecs.def(HeroSpecs.ascendUnlockSpec).defaultName,
         specId: HeroSpecs.ascendUnlockSpec,
         stats: PartyHero.startingStatsForSpec(HeroSpecs.ascendUnlockSpec),
-        equipped: StarterGear.forRole(HeroRole.rogue),
+        equipped: StarterGear.forSpec(HeroSpecs.ascendUnlockSpec),
         level: rosterSeedLevel(next),
       );
       final roster = [...next.heroRoster, rogue];

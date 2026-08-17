@@ -48,11 +48,7 @@ class ClassProficiency {
   }) {
     if (rangedSlot) {
       return switch (role) {
-        HeroRole.warrior || HeroRole.rogue =>
-          type == WeaponType.bow ||
-              type == WeaponType.crossbow ||
-              type == WeaponType.gun ||
-              type == WeaponType.thrown,
+        HeroRole.warrior || HeroRole.rogue => type == WeaponType.thrown,
         HeroRole.healer || HeroRole.mage => type == WeaponType.wand,
       };
     }
@@ -93,7 +89,7 @@ class ClassProficiency {
     };
   }
 
-  /// Class-aware weapons (falls back to [HeroSpecDef.gearAffinity] rules when unspecified).
+  /// WotLK-strict weapons. Paladin / DK / Shaman / Druid have no ranged slot.
   static bool canEquipWeaponForSpec(
     HeroSpecDef spec,
     WeaponType type,
@@ -101,50 +97,28 @@ class ClassProficiency {
     required bool rangedSlot,
   }) {
     if (rangedSlot) {
+      if (!usesRangedSlot(spec)) return false;
       return switch (spec.classId) {
         HeroClassId.hunter =>
           type == WeaponType.bow ||
               type == WeaponType.crossbow ||
-              type == WeaponType.gun ||
-              type == WeaponType.thrown,
-        HeroClassId.warrior ||
-        HeroClassId.rogue ||
-        HeroClassId.deathKnight ||
-        HeroClassId.paladin ||
-        HeroClassId.shaman ||
-        HeroClassId.druid =>
-          type == WeaponType.bow ||
-              type == WeaponType.crossbow ||
-              type == WeaponType.gun ||
-              type == WeaponType.thrown,
+              type == WeaponType.gun,
+        HeroClassId.warrior || HeroClassId.rogue => type == WeaponType.thrown,
         HeroClassId.priest ||
         HeroClassId.mage ||
         HeroClassId.warlock => type == WeaponType.wand,
+        _ => false,
       };
     }
 
     return switch (spec.classId) {
-      HeroClassId.hunter => switch (type) {
-        WeaponType.axe ||
-        WeaponType.sword ||
-        WeaponType.polearm ||
-        WeaponType.staff ||
-        WeaponType.dagger ||
-        WeaponType.fist => true,
-        _ => false,
-      },
-      HeroClassId.shaman => switch (type) {
-        WeaponType.axe ||
-        WeaponType.mace ||
-        WeaponType.staff ||
-        WeaponType.dagger ||
-        WeaponType.fist => true,
-        _ => false,
-      },
-      HeroClassId.deathKnight => switch (type) {
+      HeroClassId.warrior => switch (type) {
         WeaponType.axe ||
         WeaponType.sword ||
         WeaponType.mace ||
+        WeaponType.dagger ||
+        WeaponType.fist ||
+        WeaponType.staff ||
         WeaponType.polearm => true,
         _ => false,
       },
@@ -155,22 +129,79 @@ class ClassProficiency {
         WeaponType.polearm => true,
         _ => false,
       },
-      HeroClassId.druid => switch (type) {
-        WeaponType.staff ||
-        WeaponType.dagger ||
+      HeroClassId.hunter => switch (type) {
+        WeaponType.axe ||
+        WeaponType.sword ||
+        WeaponType.polearm ||
+        WeaponType.staff => true,
+        WeaponType.dagger || WeaponType.fist => handed == WeaponHanded.oneHand,
+        _ => false,
+      },
+      HeroClassId.rogue => switch (type) {
+        WeaponType.axe ||
+        WeaponType.sword ||
         WeaponType.mace ||
-        WeaponType.fist ||
+        WeaponType.dagger ||
+        WeaponType.fist => handed == WeaponHanded.oneHand,
+        _ => false,
+      },
+      HeroClassId.priest => switch (type) {
+        WeaponType.mace => handed == WeaponHanded.oneHand,
+        WeaponType.dagger || WeaponType.staff => true,
+        _ => false,
+      },
+      HeroClassId.deathKnight => switch (type) {
+        WeaponType.axe ||
+        WeaponType.sword ||
+        WeaponType.mace ||
         WeaponType.polearm => true,
         _ => false,
       },
-      HeroClassId.warlock => switch (type) {
+      HeroClassId.shaman => switch (type) {
+        WeaponType.axe || WeaponType.mace || WeaponType.staff => true,
+        WeaponType.dagger || WeaponType.fist => handed == WeaponHanded.oneHand,
+        _ => false,
+      },
+      HeroClassId.mage || HeroClassId.warlock => switch (type) {
         WeaponType.sword => handed == WeaponHanded.oneHand,
         WeaponType.dagger || WeaponType.staff => true,
         _ => false,
       },
-      _ => canEquipWeapon(spec.gearAffinity, type, handed, rangedSlot: false),
+      HeroClassId.druid => switch (type) {
+        WeaponType.staff || WeaponType.polearm || WeaponType.mace => true,
+        WeaponType.dagger || WeaponType.fist => handed == WeaponHanded.oneHand,
+        _ => false,
+      },
     };
   }
+
+  /// Hunter bow/xbow/gun; Warrior/Rogue thrown; cloth casters wand.
+  /// Paladin / DK / Shaman / Druid leave the slot empty.
+  static bool usesRangedSlot(HeroSpecDef spec) => switch (spec.classId) {
+    HeroClassId.hunter ||
+    HeroClassId.warrior ||
+    HeroClassId.rogue ||
+    HeroClassId.priest ||
+    HeroClassId.mage ||
+    HeroClassId.warlock => true,
+    _ => false,
+  };
+
+  /// Off-hand *weapon* (not shield): Rogue, Fury, Enhancement, Frost DK, Survival.
+  static bool canDualWield(HeroSpecDef spec) =>
+      spec.classId == HeroClassId.rogue ||
+      spec.id == HeroSpecId.fury ||
+      spec.id == HeroSpecId.enhancement ||
+      spec.id == HeroSpecId.frostDk ||
+      spec.id == HeroSpecId.survival;
+
+  /// Shields: Warrior, Paladin, Shaman. Not DK / Druid / Hunter.
+  static bool canUseShield(HeroSpecDef spec) => switch (spec.classId) {
+    HeroClassId.warrior ||
+    HeroClassId.paladin ||
+    HeroClassId.shaman => true,
+    _ => false,
+  };
 
   static bool canEquipOffHand(HeroRole role, OffHandKind kind) {
     return switch (role) {
@@ -181,31 +212,29 @@ class ClassProficiency {
   }
 
   static bool canEquipOffHandForSpec(HeroSpecDef spec, OffHandKind kind) {
-    return switch (spec.classId) {
-      HeroClassId.warrior || HeroClassId.deathKnight =>
-        kind == OffHandKind.shield ||
-            (spec.roleTag == SpecRoleTag.meleeDps &&
-                kind == OffHandKind.weapon),
-      HeroClassId.paladin =>
-        kind == OffHandKind.shield ||
-            (spec.isHealer && kind == OffHandKind.frill) ||
-            (spec.roleTag == SpecRoleTag.meleeDps &&
-                kind == OffHandKind.weapon),
-      HeroClassId.shaman =>
-        kind == OffHandKind.shield ||
-            kind == OffHandKind.frill ||
-            (spec.id == HeroSpecId.enhancement && kind == OffHandKind.weapon),
-      HeroClassId.rogue => kind == OffHandKind.weapon,
-      HeroClassId.hunter =>
-        kind == OffHandKind.weapon || kind == OffHandKind.frill,
-      HeroClassId.druid =>
-        spec.isTank
-            ? kind == OffHandKind.frill
-            : (kind == OffHandKind.frill || kind == OffHandKind.weapon),
-      HeroClassId.priest ||
-      HeroClassId.mage ||
-      HeroClassId.warlock => kind == OffHandKind.frill,
+    return switch (kind) {
+      OffHandKind.shield => canUseShield(spec),
+      OffHandKind.weapon => canDualWield(spec),
+      OffHandKind.frill =>
+        spec.classId == HeroClassId.priest ||
+            spec.classId == HeroClassId.mage ||
+            spec.classId == HeroClassId.warlock,
     };
+  }
+
+  static bool usesOffHandSlot(HeroSpecDef spec) =>
+      canUseShield(spec) ||
+      canDualWield(spec) ||
+      canEquipOffHandForSpec(spec, OffHandKind.frill);
+
+  /// Typical off-hand for loot / starters when the spec uses the slot.
+  static OffHandKind? preferredOffHandKind(HeroSpecDef spec) {
+    if (canDualWield(spec)) return OffHandKind.weapon;
+    if (canEquipOffHandForSpec(spec, OffHandKind.frill)) {
+      return OffHandKind.frill;
+    }
+    if (canUseShield(spec)) return OffHandKind.shield;
+    return null;
   }
 
   /// Returns null if OK, otherwise a short reject reason.

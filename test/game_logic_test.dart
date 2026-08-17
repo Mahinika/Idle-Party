@@ -1239,7 +1239,7 @@ void main() {
       bias: HeroRole.warrior,
     ).copyWith(
       id: 'worn_plain',
-      armorType: ArmorType.mail,
+      armorType: ArmorType.plate,
       strengthBonus: 14,
       staminaBonus: 12,
       armorBonus: 18,
@@ -1583,7 +1583,7 @@ void main() {
     expect(sold.gold, greaterThan(state.gold));
   });
 
-  test('auto equip skips plate for low-level warrior; SELL JUNK keeps rare+', () {
+  test('auto equip puts plate on a warrior from level 1; SELL JUNK keeps rare mail', () {
     final plate = GameLogic.createEquipment(
       slot: EquipmentSlot.chest,
       rarity: LootRarity.rare,
@@ -1598,16 +1598,21 @@ void main() {
       itemLevel: 40,
       clearAffinity: true,
     );
+    final mail = plate.copyWith(
+      id: 'mail_chest',
+      armorType: ArmorType.mail,
+    );
 
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     expect(state.heroes[0].level, lessThan(40));
     state = state.copyWith(gearStash: <EquipmentItem>[plate]);
     state = GameLogic.autoEquipBetterGear(state);
-    expect(state.heroes[0].itemIn(EquipmentSlot.chest)?.id, isNot(plate.id));
+    expect(state.heroes[0].itemIn(EquipmentSlot.chest)?.id, plate.id);
 
+    state = state.copyWith(gearStash: <EquipmentItem>[mail]);
     final sold = GameLogic.autoSellJunk(state);
-    // Rare+ is kept for merge / later levels even if nobody can wear it yet.
-    expect(sold.gearStash.any((g) => g.id == plate.id), isTrue);
+    // Rare+ stays for merge even when the starter party cannot wear mail.
+    expect(sold.gearStash.any((g) => g.id == mail.id), isTrue);
   });
 
   test('SELL JUNK sells rare gear at or below the auto-sell iLvl cap', () {
