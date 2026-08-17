@@ -7,9 +7,10 @@ class ClassProficiency {
   ClassProficiency._();
 
   static bool canEquipArmor(HeroRole role, int level, ArmorType type) {
+    assert(level >= 1);
     return switch (role) {
-      HeroRole.warrior => type != ArmorType.plate || level >= 40,
-      HeroRole.rogue => type == ArmorType.cloth || type == ArmorType.leather,
+      HeroRole.warrior => type == ArmorType.plate,
+      HeroRole.rogue => type == ArmorType.leather,
       HeroRole.healer || HeroRole.mage => type == ArmorType.cloth,
     };
   }
@@ -19,14 +20,24 @@ class ClassProficiency {
     int level,
     ArmorType type,
   ) {
-    if (!spec.armorTypes.contains(type)) return false;
-    // Plate unlocks at 40 except Death Knights (start in plate).
-    if (type == ArmorType.plate &&
-        level < 40 &&
-        spec.classId != HeroClassId.deathKnight) {
-      return false;
+    if (spec.classId == HeroClassId.hunter) {
+      if (level < 40) return type == ArmorType.leather;
+      return type == ArmorType.mail;
     }
-    return true;
+    return spec.armorTypes.contains(type);
+  }
+
+  /// Heaviest legal armor at [level] (plate > mail > leather > cloth).
+  static ArmorType? preferredArmor(HeroSpecDef spec, int level) {
+    for (final type in [
+      ArmorType.plate,
+      ArmorType.mail,
+      ArmorType.leather,
+      ArmorType.cloth,
+    ]) {
+      if (canEquipArmorForSpec(spec, level, type)) return type;
+    }
+    return null;
   }
 
   static bool canEquipWeapon(
@@ -239,10 +250,10 @@ class ClassProficiency {
           ? canEquipArmor(role, level, armor)
           : canEquipArmorForSpec(spec, level, armor);
       if (!ok) {
-        if (armor == ArmorType.plate &&
-            (role == HeroRole.warrior ||
-                spec?.armorTypes.contains(ArmorType.plate) == true)) {
-          return 'Requires Plate (40+)';
+        if (armor == ArmorType.mail &&
+            spec?.classId == HeroClassId.hunter &&
+            level < 40) {
+          return 'Requires Mail (40+)';
         }
         return '$label cannot equip ${armor.name}';
       }

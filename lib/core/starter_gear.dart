@@ -25,6 +25,14 @@ abstract final class StarterGear {
         if (next.containsKey(entry.key)) continue;
         // Never put a starter OH under a kept Apex (or any) 2H weapon.
         if (blocksOh && entry.key == EquipmentSlot.offHand) continue;
+        if (!ClassProficiency.canEquip(
+          role: hero.gearAffinity,
+          level: hero.level,
+          item: entry.value,
+          specId: hero.specId,
+        )) {
+          continue;
+        }
         next[entry.key] = entry.value.copyWith(id: '${entry.value.id}_fill');
         heroChanged = true;
         changed = true;
@@ -211,16 +219,8 @@ abstract final class StarterGear {
     _ => spec.gearAffinity,
   };
 
-  /// Heaviest armor the hero may wear at [level] (plate@40 except DK).
-  static ArmorType? preferredArmorForSpec(HeroSpecDef spec, int level) {
-    if (ClassProficiency.canEquipArmorForSpec(spec, level, ArmorType.plate)) {
-      return ArmorType.plate;
-    }
-    if (spec.armorTypes.contains(ArmorType.mail)) return ArmorType.mail;
-    if (spec.armorTypes.contains(ArmorType.leather)) return ArmorType.leather;
-    if (spec.armorTypes.contains(ArmorType.cloth)) return ArmorType.cloth;
-    return null;
-  }
+  static ArmorType? preferredArmorForSpec(HeroSpecDef spec, int level) =>
+      ClassProficiency.preferredArmor(spec, level);
 
   static Map<EquipmentSlot, EquipmentItem> forRole(HeroRole role) {
     EquipmentItem piece({
@@ -276,7 +276,7 @@ abstract final class StarterGear {
       HeroRole.rogue => 'Swift',
     };
     final armorMat = switch (role) {
-      HeroRole.warrior => ArmorType.mail,
+      HeroRole.warrior => ArmorType.plate,
       HeroRole.rogue => ArmorType.leather,
       HeroRole.healer || HeroRole.mage => ArmorType.cloth,
     };

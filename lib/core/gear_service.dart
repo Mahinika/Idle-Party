@@ -25,6 +25,38 @@ abstract final class GearService {
   static int maxGearStashFor(GameState state) =>
       maxGearStash + state.metaDepth.stashBonusSlots;
 
+  /// Move worn pieces the hero cannot use into the bag (save migrate).
+  static GameState unequipIllegalGear(GameState state) {
+    var stash = List<EquipmentItem>.from(state.gearStash);
+    final rebuilt = <PartyHero>[];
+    var changed = false;
+    for (final hero in state.heroRoster) {
+      final next = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped);
+      var heroChanged = false;
+      for (final e in hero.equipped.entries) {
+        if (ClassProficiency.canEquip(
+          role: hero.gearAffinity,
+          level: hero.level,
+          item: e.value,
+          specId: hero.specId,
+        )) {
+          continue;
+        }
+        next.remove(e.key);
+        stash.add(e.value);
+        heroChanged = true;
+        changed = true;
+      }
+      rebuilt.add(heroChanged ? hero.copyWith(equipped: next) : hero);
+    }
+    if (!changed) return state;
+    return state.copyWith(
+      heroRoster: rebuilt,
+      gearStash: stash,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
   /// When the bag counts as "filling up" — the badge and the hint use this.
   static const double bagWarnFraction = 0.85;
 

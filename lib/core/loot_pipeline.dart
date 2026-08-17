@@ -91,7 +91,7 @@ abstract final class LootPipeline {
         return (
           // Naming + affix pool follow gearAffinity (Enh→rogue, Holy→healer).
           target.spec.gearAffinity,
-          GameLogic.preferredArmorForSpec(target.spec, max(1, battleNumber)),
+          GameLogic.preferredArmorForSpec(target.spec, max(1, target.level)),
           target.spec.roleTag,
           target.specId,
         );

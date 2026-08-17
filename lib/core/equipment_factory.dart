@@ -264,27 +264,12 @@ class EquipmentFactory {
     int level, {
     ArmorType? preferred,
   }) {
-    if (preferred != null && random.nextDouble() < 0.82) {
-      return preferred;
-    }
+    if (preferred != null) return preferred;
+    assert(level >= 1);
     return switch (bias) {
-      HeroRole.warrior =>
-        level >= 40 && random.nextDouble() < 0.55
-            ? ArmorType.plate
-            : (random.nextDouble() < 0.7 ? ArmorType.mail : ArmorType.leather),
-      HeroRole.rogue =>
-        preferred == ArmorType.mail && random.nextDouble() < 0.8
-            ? ArmorType.mail
-            : (random.nextDouble() < 0.85
-                  ? ArmorType.leather
-                  : ArmorType.cloth),
-      HeroRole.healer || HeroRole.mage =>
-        (preferred == ArmorType.mail ||
-                    preferred == ArmorType.plate ||
-                    preferred == ArmorType.leather) &&
-                random.nextDouble() < 0.8
-            ? preferred!
-            : ArmorType.cloth,
+      HeroRole.warrior => ArmorType.plate,
+      HeroRole.rogue => ArmorType.leather,
+      HeroRole.healer || HeroRole.mage => ArmorType.cloth,
     };
   }
 

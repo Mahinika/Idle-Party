@@ -130,14 +130,11 @@ class HeroSpecDef {
 
 /// Catalog + helpers for [HeroSpecId].
 abstract final class HeroSpecs {
-  static const _plate = {
-    ArmorType.cloth,
-    ArmorType.leather,
-    ArmorType.mail,
-    ArmorType.plate,
-  };
-  static const _mail = {ArmorType.cloth, ArmorType.leather, ArmorType.mail};
-  static const _leather = {ArmorType.cloth, ArmorType.leather};
+  static const _plate = {ArmorType.plate};
+  static const _mail = {ArmorType.mail};
+  static const _hunter = {ArmorType.leather, ArmorType.mail};
+  static const _rogue = {ArmorType.leather};
+  static const _druid = {ArmorType.cloth, ArmorType.leather};
   static const _cloth = {ArmorType.cloth};
 
   static const Stats _tankStats = Stats(
@@ -339,7 +336,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.rangedDps,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _mail,
+      armorTypes: _hunter,
       ranged: true,
       preferredRange: 4.2,
       attackRange: 5.2,
@@ -355,7 +352,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.rangedDps,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _mail,
+      armorTypes: _hunter,
       ranged: true,
       preferredRange: 4.5,
       attackRange: 5.5,
@@ -371,7 +368,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.rangedDps,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _mail,
+      armorTypes: _hunter,
       ranged: true,
       preferredRange: 3.6,
       attackRange: 4.5,
@@ -388,7 +385,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _leather,
+      armorTypes: _rogue,
       ranged: false,
       preferredRange: 1.2,
       attackRange: 1.8,
@@ -404,7 +401,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _leather,
+      armorTypes: _rogue,
       ranged: false,
       preferredRange: 1.25,
       attackRange: 1.85,
@@ -420,7 +417,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _leather,
+      armorTypes: _rogue,
       ranged: false,
       preferredRange: 1.2,
       attackRange: 1.8,
@@ -680,7 +677,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.mage,
-      armorTypes: _leather,
+      armorTypes: _druid,
       ranged: true,
       preferredRange: 4.0,
       attackRange: 5.0,
@@ -696,7 +693,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _leather,
+      armorTypes: _druid,
       ranged: false,
       preferredRange: 1.2,
       attackRange: 1.8,
@@ -712,7 +709,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.tank,
       resource: SpecResource.rage,
       gearAffinity: HeroRole.warrior,
-      armorTypes: _leather,
+      armorTypes: _druid,
       ranged: false,
       preferredRange: 1.15,
       attackRange: 1.7,
@@ -728,7 +725,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.healer,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.healer,
-      armorTypes: _leather,
+      armorTypes: _druid,
       ranged: true,
       preferredRange: 3.2,
       attackRange: 4.0,

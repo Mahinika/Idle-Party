@@ -30,6 +30,7 @@ abstract final class MetaSystems {
         'Agility is the damage stat for rogues, hunters, cats, and Enhancement (Strength still rules plate).',
         'Caster gear: Intellect and Spell Power both feed damage the same way; Intellect still adds crit.',
         'Drops, starters, and Apex spend power on those same stats — no leftover Attack Power dump.',
+        'Each class wears one armor: plate, mail, leather, or cloth — a Paladin will not put on leather just because the stats look bigger.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),

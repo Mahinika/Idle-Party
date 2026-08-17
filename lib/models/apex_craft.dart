@@ -4,6 +4,7 @@ import 'equip_stat_weights.dart';
 import 'hero.dart';
 import 'hero_spec.dart';
 import 'loot.dart';
+import 'proficiency.dart';
 
 /// Apex crafting materials, pity, and class/role recipe templates.
 abstract final class ApexCraft {
@@ -414,8 +415,8 @@ abstract final class ApexCraft {
   }) {
     final spec = representativeSpec(classId, role);
     final affinity = spec?.gearAffinity ?? HeroRole.warrior;
-    final preferredArmor = spec?.armorTypes.isNotEmpty == true
-        ? spec!.armorTypes.last
+    final preferredArmor = spec != null
+        ? ClassProficiency.preferredArmor(spec, 80)
         : null;
 
     final powerMul = switch (rank.clamp(1, maxRank)) {

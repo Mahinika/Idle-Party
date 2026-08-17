@@ -32,6 +32,7 @@ Rules:
 - At most **two** secondaries on new loot.
 - **No Move** on loot budget.
 - Affinity on an item is **drop bias / tooltip flavour**, not equip-score.
+- **Armor type is a hard `canEquip` gate** (plate / mail / leather / cloth per class). Auto Equip never scores a Paladin into leather.
 
 Combat conversion (must stay aligned with equip weights):
 

@@ -2234,7 +2234,7 @@ class GameLogic {
       next = _beginKeystoneRun(next);
     }
     return MetaSystems.evaluateAchievements(
-      syncSpecUnlocks(ensureRogueHero(next)),
+      syncSpecUnlocks(ensureRogueHero(unequipIllegalGear(next))),
     );
   }
 
@@ -2346,6 +2346,8 @@ class GameLogic {
   // —— Starter gear: moved to starter_gear.dart ——
   static GameState fillMissingStarterGear(GameState state) =>
       StarterGear.fillMissingStarterGear(state);
+  static GameState unequipIllegalGear(GameState state) =>
+      GearService.unequipIllegalGear(state);
   static ArmorType? preferredArmorForSpec(HeroSpecDef spec, int level) =>
       StarterGear.preferredArmorForSpec(spec, level);
   // —— Loot pipeline: moved to loot_pipeline.dart ——
