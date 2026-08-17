@@ -31,11 +31,15 @@ for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (historical upload noted as AAB **14 / 1.9.3**); tagged GitHub line is **1.12.0**, working ship **1.12.12**.
-Production still needs **12 closed testers × 14 days**. Do not treat Play as the
-primary install channel yet.
+closed Alpha (last submit **1.12.11 / 41**, 2026-08-16). Working ship is
+**1.12.12** (not on Play yet). Production still needs **12 closed testers × 14 days**.
+Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
+
+**Optional Play Games** (Android, META → SETTINGS): seasonal Timed KEY + Gauntlet
+boards + cloud save. Opt-in; clipboard export/import still works. IDs in
+`lib/core/play_leaderboard_ids.dart`. Soft-fail on web / sideload.
 
 ## Legal / IP policy (mandatory)
 
@@ -51,11 +55,13 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 ```bash
 flutter pub get
 flutter analyze          # project target: zero issues on lib/test
-flutter test
+flutter test             # local: full suite; CI excludes tag `sim`
 flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
 
-CI uses `flutter analyze lib test --no-fatal-infos` then `flutter test` (includes balance gate).
+CI (`ci.yml`): `flutter analyze lib test --no-fatal-infos` then
+`flutter test --exclude-tags sim` (live-light balance gate still runs).
+Long Monte-Carlo sims are tag `sim` → `.github/workflows/sim-nightly.yml`.
 Runs on push to `main` / `master` / `cursor/**` / `release/**`, and on pull requests.
 
 ### Agent tooling (balance / honesty / QA)
@@ -82,8 +88,9 @@ Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 `verifying-in-browser`, `screenshotting-changelog`, `recording-browser-flow-as-test`,
 `systematic-debugging`, `reviewing-code`, `accessibility-auditing`).
 
-Cadence: `docs/CONTENT_CADENCE.md`. Near-term (90d): `docs/STRATEGY_90D.md`
-(chase → kits → zone). Year roadmap: `docs/ROADMAP.md`. Background research:
+Cadence: `docs/CONTENT_CADENCE.md`. Near-term (90d, M1–M3 **shipped**):
+`docs/STRATEGY_90D.md` (decision table only — operate from cadence). Year roadmap:
+`docs/ROADMAP.md` (historical Q1–Q4; ship line in that file can lag). Background:
 `docs/TOP_GAMES_RESEARCH.md`. Systems rebuild (P1–P5 chase/offline/kits/KEY/GH
 shipped): `docs/SYSTEMS_REBUILD.md`. Chase contract (hub TODAY ↔ offline Up next):
 `docs/CHASE_CONTRACT.md`. Gear budget contract: `docs/GEAR_BUDGET.md`. Floor
@@ -99,28 +106,23 @@ blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`. Play ops: `docs/PLAY_STORE.md`
 - Git: daily work on `main`; `release/*` only when cutting a tag.
 - Ship bar: `.cursor/rules/definition-of-done.mdc`.
 - Fast honesty: `flutter test test/ship_smoke_test.dart`.
-- MCP: `.cursor/mcp.json` → **`idle-party`** (`tool/mcp_idle_party/`) — balance_share,
-  changelog_check, flutter_analyze/test, zone_identity, hub smoke helpers.
+- MCP: `.cursor/mcp.json` → **`idle-party`** (`tool/mcp_idle_party/`; Cursor UI
+  may show `user-idle-party`) — balance_share, changelog_check, flutter_analyze/test,
+  zone_identity, hub smoke helpers.
 
 ## Architecture
 
 ```
 main.dart
  ├─ loading → boot intro → startMenu → optional newGamePicker → play
- ├─ Hub (inDungeon=false) → HubScreen + optional Is2Shell(hubMode) overlays
- └─ Dungeon (inDungeon=true) → Is2Shell
+ ├─ Hub (!inDungeon) → HubScreen + FirstSessionTips + MenuSurface
+ └─ Dungeon (inDungeon) → Is2Shell
       ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
-      └─ Dungeon chrome (FARM/PUSH, God Hand ring, party HUD + flask,
-         target panel, bottom nav: PARTY / POWER / META / HUB —
-         same pillars as hub; PARTY opens gear/bag sheet)
+      └─ chrome (FARM/PUSH, God Hand, party HUD + flask, target panel)
+         + AppBottomBar PARTY / POWER / META / HUB + MenuSurface
 
-GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
-             → GameLogic.simulateSpatialOffline → SpatialCombat.step
-               (AFK: afkAssist + reducedVfx, auto-flask, God Hand)
-GameLogic + GameState   (rules / persistence)
-DungeonCatalog          (15 named zones, bossFloor = 5 + AL)
-RoomLayouts + FloorBlueprint / PlacementPlan / ZoneLayoutKit
-                        (multi-chamber maps, gates, room-chest sockets)
+Shared menus: MenuRouter + MenuAlerts + MenuSurface
+  (same PARTY/POWER/META words in hub and dungeon; dungeon adds HUB = leave)
 ```
 
 **SpatialCombat is the combat authority** for live play and in-dungeon offline
@@ -136,12 +138,20 @@ Spire climb from Hub; wipe/leave → hub; `metaDepth.gauntletBestFloor` survives
 words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up
 next). One chase card — claimables first (vault / jobs / **Meet new kit**), then
 Ascend / progress. Urgency **READY** / **ALMOST** (zone/Will/Gauntlet/Ascend-near
-beat Daily grind; also KEY +1 vault, etc.). New unlocks queue
-`metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast + chase
+beat Daily grind; also KEY +1 vault, etc.). **First hour** (no boss, no Ascend):
+grow the party in the starter zone — skip Daily / KEY / vault-start / kit teasers
+until after the first boss (`GameLogic.showDailyChase`). KEY / weekly-affix jargon
+waits until AL≥2 or Goblin+ cleared (`GameLogic.showKeystoneJargon`). New unlocks
+queue `metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast + chase
 detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next AL
 unlocks — kit ladder AL1–6 (e.g. Combat Rogue / Arms / Holy Paladin, BM/Holy/Arcane + 5th slot, DKs,
 Aff/Demo) plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock
 sprite).
+
+New Game picker: three starters in plain English (**Shield / Healer / Damage**).
+Advanced menu tabs (LOADOUTS, ROSTER, CAMP, SHOP, KEY, BEAST, CODEX, …) gate via
+`MenuTabs` so day-one chrome stays small. PARTY badges mean bag upgrades
+(`MenuAlerts`).
 
 Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat. Offline return
 uses `OfflineProgressResult` (wow headline + ≤3 highlights + “Up next” =
@@ -185,6 +195,19 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 - After all enemies die and loot is picked up (or times out), party walks to
   **stairs/exit** → `completeCurrentRoom`.
 
+## Combat ratings (1.12.12)
+
+Sheet power is `CombatRatings` (`lib/models/combat_ratings.dart`) — keep aligned
+with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
+
+- **Plate melee:** 2 AP per Strength. **Rogue-family** (leather/mail: rogues,
+  hunters, cats, Enhancement): 1 AP/Str + **2 AP/Agility**.
+- **Casters:** level Intellect is full ATK; **gear Int and Spell Power both ~/3**
+  into ATK. Int still adds spell crit.
+- **Armor:** percent mitigation `taken = raw * K / (def + K)` (K ≈ 1.2× attacker
+  ATK), floor **25% of the hit** — more DEF always helps; nothing is immune.
+- Player-facing STA = Stamina. BiS / UPGRADE still use budget score only.
+
 ## Key files
 
 | Area | Path |
@@ -195,16 +218,22 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 | Changelog / meta helpers | `lib/core/meta_systems.dart` |
 | Meta blob | `lib/models/meta_depth.dart` |
 | Dungeon catalog | `lib/models/dungeon_def.dart` |
+| Combat sheet | `lib/models/combat_ratings.dart` + `docs/GEAR_BUDGET.md` |
 | Spatial sim | `lib/spatial/spatial_combat.dart` |
 | Ability runtime | `lib/spatial/ability_effects.dart` + `kit_migrated_casts.dart` (`ClassAbilityDef.fireMode` / `gate` / `customId`) |
 | Tile maps | `lib/spatial/tile_map.dart` |
 | Floor blueprint / placement | `lib/spatial/floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart` + `docs/FLOOR_BLUEPRINT.md` |
+| Shared menus | `lib/core/menu_router.dart`, `menu_alerts.dart` · `lib/ui/shell/menu_surface.dart`, `app_bottom_bar.dart` |
 | Hub | `lib/ui/hub_screen.dart` |
 | Hub TODAY chase | `lib/core/hub_chase.dart` |
 | Chase contract (hub ↔ AFK) | `lib/core/chase_contract.dart` + `docs/CHASE_CONTRACT.md` |
+| Guides copy | `lib/core/game_guides.dart` |
+| Keystone | `lib/core/keystone.dart` |
+| Local season weeks | `lib/core/local_season.dart` |
+| Play Games | `lib/core/play_games_bridge.dart`, `play_leaderboard_ids.dart` |
 | Ascend unlock teasers | `lib/core/ascend_roadmap.dart` |
 | Ascend / lore copy | `lib/core/story_lore.dart` |
-| Dungeon / hub shell | `lib/ui/is2_shell.dart` |
+| Dungeon shell | `lib/ui/is2_shell.dart` |
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
 | Kenney helpers | `lib/ui/kenney_assets.dart` |
 | Custom art helpers | `lib/ui/custom_assets.dart` |
@@ -221,17 +250,20 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 - Loadouts UI label = **LOADOUTS**; dungeon armor 2pc/4pc = **armor sets** (not the same).
 - Gear BiS / UPGRADE: budget-honest score only — see `docs/GEAR_BUDGET.md`
   (`itemBudgetScore`; no affinity/armor/rarity/set crumbs).
+- Split giant files (`game_logic`, `is2_shell`, `spatial_combat`, …) when a change
+  needs a home — do not merge more into them. SpatialCombat stays the only fight sim.
 
 ## Meta (survives Ascend)
 
 **Keeps:** essence (and rewards), relics, sanctuary tracks + prestige, pets,
 soulbound item (may rescale) + fragments, God Hand level + style/CD in `metaDepth`,
 `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
-(mute/VFX/colorblind/text scale/auto-sell), full `metaDepth` (Gauntlet best, Will /
-Gauntlet claims, daily vault / weekly affix season, prestige shop, unlocked specs,
-**`pendingHeroReveals`** (Meet … TODAY until PARTY), party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**, …),
-**hero levels/XP**, **Apex** vault + equipped apex, craft mats/pity, keystone prefs
-(clamped) + challenge toggles, FARM/PUSH preference.
+(mute/VFX/colorblind/text scale/auto-sell/**auto-disassemble**), full `metaDepth`
+(Gauntlet best, Will / Gauntlet claims, daily vault / weekly affix season,
+prestige shop, unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY),
+party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**, Play Games
+opt-in + season PBs, …), **hero levels/XP**, **Apex** vault + equipped apex,
+craft mats/pity, keystone prefs (clamped) + challenge toggles, FARM/PUSH preference.
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
 each Ascend adds **+2 ATK · +1 DEF · +4 STA · +3% gold** on top of AL flats
@@ -247,20 +279,22 @@ Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
 
 ### Keystone (Mythic+-style)
 
-Hub **KEYSTONE** sets preferred key (`hardmodeLevel` 0–20, AL-gated). On enter,
-affixes lock + idle-friendly par timer starts (AFK counts). Boss clear under par
-→ TIMED (upgrade key, vault score); overtime → depleted. Loot iLvl bonus is
-`key * 2` (`Keystone.lootItemLevelBonus`) so higher keys are a visible gear jump.
-After the first hour, hub TODAY chases the next KEY until the AL cap; Daily /
-Will / Gauntlet surface when the preferred key is at cap (ALMOST cliffs stay above).
-**Daily vault** (UTC): 1 clear **or** timed KEY+2; claim once per day (scales with
-best timed key). Affixes still rotate weekly. See `lib/core/keystone.dart`.
+Hub **KEY** (META tab, after jargon unlock) sets preferred key (`hardmodeLevel`
+0–20, AL-gated). On enter, affixes lock + idle-friendly par timer starts (AFK
+counts). Boss clear under par → TIMED (upgrade key, vault score); overtime →
+depleted. Loot iLvl bonus is `key * 2` (`Keystone.lootItemLevelBonus`) so higher
+keys are a visible gear jump. After the first hour, hub TODAY chases the next KEY
+until the AL cap; Daily / Will / Gauntlet surface when the preferred key is at cap
+(ALMOST cliffs stay above). **Daily vault** (UTC): 1 clear **or** timed KEY+2;
+claim once per day (scales with best timed key). Affixes still rotate weekly.
+See `lib/core/keystone.dart`.
 
 ## God Hand
 
 Tap steers the party briefly and deals AOE; has cooldown. Damage upgrades with essence.
 Styles under Forge → KEEP: **BAL** / **FOCUS** (+dmg −radius) / **WIDE** (+radius −dmg).
-Optional CD upgrades: `metaDepth.godHandCdLevel`.
+Optional CD upgrades: `metaDepth.godHandCdLevel`. Soft knobs — do not redesign
+direction without asking.
 
 ## Balance policy
 

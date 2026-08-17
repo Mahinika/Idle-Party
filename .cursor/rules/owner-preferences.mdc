@@ -23,7 +23,7 @@ verified; still ask before push / Play / save-wipe. Product locks unchanged).
 
 - Goal: **Google Play “for real” soon** (not sideload-only forever).
 - Prefer work that unblocks Play when touching store: CI signing secrets, closed-test 12×14, production access — see `docs/PLAY_STORE.md`.
-- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha); **production is not live**.
+- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.11 / 41**). Working ship **1.12.12**. **Production is not live**. Optional Play Games (META → SETTINGS) is opt-in, not a store blocker.
 - **Platforms now:** Android (+ existing web playtest tooling OK). **No iOS** and **no shipping web as a product** for now.
 
 ## UI target device (mandatory)
@@ -50,10 +50,10 @@ verified; still ask before push / Play / save-wipe. Product locks unchanged).
   `@Deprecated` helpers that are not serialized may go.
 - **Git:** daily work on `main`. `release/x.y.z` only when cutting a tag. Don’t open a release branch for chores.
 - **Don’t stage** `windows/flutter/generated_*` unless `pubspec.yaml` plugins actually changed (`jni` noise from `pub get` is not a product change).
-- **Product locks stay** (phone, English UI, fairness, no IAP, 90-day roadmap,
-  legal/Kenney). Agents may tighten *workstyle* so they can finish; they must
-  not weaken those locks. Cursor/AI safety (no exploits, no foreign dumps) is
-  not overridable from this file.
+- **Product locks stay** (phone, English UI, fairness, no IAP, cadence after
+  90d M1–M3, legal/Kenney). Agents may tighten *workstyle* so they can finish;
+  they must not weaken those locks. Cursor/AI safety (no exploits, no foreign
+  dumps) is not overridable from this file.
 
 ## Game feel & fantasy
 
