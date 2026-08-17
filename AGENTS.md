@@ -31,8 +31,8 @@ for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (last submit **1.12.11 / 41**, 2026-08-16). Working ship is
-**1.12.12** (not on Play yet). Production still needs **12 closed testers × 14 days**.
+closed Alpha (last submit **1.12.12 / 42**, 2026-08-17; testers keep 1.12.11 until review). Working ship is
+**1.12.12**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
