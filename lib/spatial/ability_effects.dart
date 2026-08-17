@@ -570,6 +570,7 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 0.95;
       case AbilityId.moonkinForm:
         hero.kitOutMul *= 0.96;
+        hero.kitInMul *= 0.92;
 
       // —— original four kits ——
       case AbilityId.defensiveStance:

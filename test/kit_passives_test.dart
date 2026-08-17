@@ -63,6 +63,24 @@ void main() {
     final rogue = world.heroes.firstWhere((h) => !h.isPet);
     expect(rogue.kitOutMul, closeTo(0.90, 0.001));
   });
+
+  test('Moonkin Form thickens hide; Barkskin is ready at 11', () {
+    final bark = ClassKits.forSpec(HeroSpecId.balance).firstWhere(
+      (d) => d.id == AbilityId.barkskinBal,
+    );
+    expect(bark.unlockLevel, lessThanOrEqualTo(12));
+    expect(
+      ClassKits.hudAbilitiesAtSpec(HeroSpecId.balance, 12).map((d) => d.id),
+      contains(AbilityId.barkskinBal),
+    );
+
+    final state = _soloSpecParty(HeroSpecId.balance, level: 12);
+    var world = SpatialCombat.build(state);
+    world = SpatialCombat.step(world, state, dt: 0.1).world;
+    final owl = world.heroes.firstWhere((h) => !h.isPet);
+    expect(owl.kitInMul, lessThan(1.0));
+    expect(owl.kitOutMul, closeTo(0.96, 0.001));
+  });
 }
 
 GameState _soloSpecParty(HeroSpecId specId, {required int level}) {

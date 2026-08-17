@@ -32,6 +32,7 @@ abstract final class MetaSystems {
         'Drops, starters, and Apex spend power on those same stats — no leftover Attack Power dump.',
         'Each class wears one armor: plate, mail, leather, or cloth — a Paladin will not put on leather just because the stats look bigger.',
         'Weapons are the same kind of hard gate: a Paladin will not take a dagger, a Priest will not take a sword, and Paladin / DK / Shaman / Druid leave the ranged slot empty.',
+        'Balance Druid Moonkin Form thickens the hide, and Barkskin is ready before the floor gets nasty.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
