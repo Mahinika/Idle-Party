@@ -308,6 +308,27 @@ void main() {
     }
   });
 
+  test('KEEP relics AL and Blessing STA match ATK after percent armor', () {
+    expect(GameLogic.forgeDefenseGain, GameLogic.forgeAttackGain * 4);
+    expect(GameLogic.forgeVitalityGain, GameLogic.forgeAttackGain * 12);
+    expect(GameLogic.relicDefensePerTier, GameLogic.relicAttackPerTier * 4);
+    expect(GameLogic.relicVitalityPerTier, GameLogic.relicAttackPerTier * 12);
+    expect(GameLogic.alDefensePerLevel, GameLogic.alAttackPerLevel * 4);
+    expect(GameLogic.alVitalityPerLevel, GameLogic.alAttackPerLevel * 12);
+    expect(GameLogic.ascendBlessingDef, GameLogic.ascendBlessingAtk * 4);
+    expect(GameLogic.ascendBlessingVit, GameLogic.ascendBlessingAtk * 12);
+
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 8, 17));
+    var state = seeded.copyWith(essence: 200);
+    state = GameLogic.unlockRelic(state, GameLogic.ironWardRelic);
+    expect(state.relicDefenseBonus, GameLogic.relicDefensePerTier);
+    state = GameLogic.unlockRelic(state, GameLogic.phoenixEmberRelic);
+    expect(state.relicVitalityBonus, GameLogic.relicVitalityPerTier);
+    state = state.copyWith(ascensionLevel: 1);
+    expect(state.ascensionDefenseBonus, GameLogic.alDefensePerLevel);
+    expect(state.ascensionVitalityBonus, GameLogic.alVitalityPerLevel);
+  });
+
   test('forge haste tracks are infinite and scale combat speed', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
     final hero = state.heroes.first;

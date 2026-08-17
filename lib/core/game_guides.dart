@@ -307,7 +307,7 @@ abstract final class GameGuides {
       title: 'ASCEND',
       body:
           'Prestige when Ascend unlocks in the hub.\n\n'
-          '• Each Ascend grants a lasting Blessing: +2 ATK · +4 DEF · +4 STA · '
+          '• Each Ascend grants a lasting Blessing: +2 ATK · +8 DEF · +24 STA · '
           '+3% gold (stacks forever). See Forge → KEEP.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
           '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'

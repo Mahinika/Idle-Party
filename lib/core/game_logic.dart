@@ -66,11 +66,11 @@ class GameLogic {
   };
   static const Map<String, String> relicDescriptions = <String, String>{
     warBannerRelic: 'Permanent +4 team attack aura.',
-    ironWardRelic: 'Permanent +2 team defense aura.',
-    phoenixEmberRelic: 'Permanent +10 max HP for every hero.',
+    ironWardRelic: 'Permanent +16 team defense aura.',
+    phoenixEmberRelic: 'Permanent +48 max HP for every hero.',
     godHandFocusRelic: '+3 God Hand damage per tier.',
     chamberLuckRelic: '+5% loot find per tier.',
-    ironWillRelic: '+1 flat damage mitigate per tier.',
+    ironWillRelic: '+8 flat damage mitigate per tier.',
   };
   static const Map<String, int> relicCosts = <String, int>{
     warBannerRelic: 6,
@@ -723,10 +723,22 @@ class GameLogic {
   static const int ascendBlessingAtk = 2;
 
   /// Flat DEF granted per Ascend Blessing stack (percent armor needs chunks).
-  static const int ascendBlessingDef = 4;
+  static const int ascendBlessingDef = 8;
 
-  /// Flat VIT granted per Ascend Blessing stack.
-  static const int ascendBlessingVit = 4;
+  /// Flat VIT granted per Ascend Blessing stack (HP, not gear STA ×10).
+  static const int ascendBlessingVit = 24;
+
+  /// Per-AL keep flats (same 1 ATK ≈ 4 DEF ≈ 12 HP as FORGE).
+  static const int alAttackPerLevel = 1;
+  static const int alDefensePerLevel = 4;
+  static const int alVitalityPerLevel = 12;
+
+  static const int relicAttackPerTier = 4;
+  static const int relicDefensePerTier = 16;
+  static const int relicVitalityPerTier = 48;
+  static const int relicMitigatePerTier = 8;
+
+  static const int soulboundRefineDefenseGain = 4;
 
   /// Gold FORGE one-buy gains. Percent armor made +1 DEF / +6 HP a rounding
   /// error next to +2 ATK; CRIT was half of HASTE at the same gold.
@@ -1329,7 +1341,7 @@ class GameLogic {
               hero.currentHp,
               hero.maxHp +
                   state.totalVitalityBonus +
-                  (relicId == phoenixEmberRelic ? 10 : 0),
+                  (relicId == phoenixEmberRelic ? relicVitalityPerTier : 0),
             ),
           ),
         )

@@ -103,7 +103,9 @@ abstract final class StoryLore {
         ? '+${rewardEssence}e (+${milestoneBonus}e milestone) · AL → $nextAl'
         : '+${rewardEssence}e · AL → $nextAl';
     final alPower =
-        'AL power: +1 ATK · +${nextAl ~/ 2 - (nextAl - 1) ~/ 2} DEF · +2 STA · +10% gold';
+        'AL power: +${GameLogic.alAttackPerLevel} ATK · '
+        '+${GameLogic.alDefensePerLevel} DEF · '
+        '+${GameLogic.alVitalityPerLevel} STA · +10% gold';
     final blessAtk = blessingsAfter * GameLogic.ascendBlessingAtk;
     final blessDef = blessingsAfter * GameLogic.ascendBlessingDef;
     final blessVit = blessingsAfter * GameLogic.ascendBlessingVit;

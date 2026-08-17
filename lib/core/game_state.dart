@@ -327,9 +327,9 @@ class GameState {
 
   int get relicAttackBonus => 4 * relicTierOf('war_banner');
 
-  int get relicDefenseBonus => 2 * relicTierOf('iron_ward');
+  int get relicDefenseBonus => 16 * relicTierOf('iron_ward');
 
-  int get relicVitalityBonus => 10 * relicTierOf('phoenix_ember');
+  int get relicVitalityBonus => 48 * relicTierOf('phoenix_ember');
 
   /// Flat God Hand damage from the God Hand Focus relic.
   int get relicGodHandDamageBonus => 3 * relicTierOf('god_hand_focus');
@@ -338,21 +338,20 @@ class GameState {
   int get relicLootFindPercent => 5 * relicTierOf('chamber_luck');
 
   /// Flat incoming damage mitigate from Iron Will relic.
-  int get relicMitigateFlat => 1 * relicTierOf('iron_will');
+  int get relicMitigateFlat => 8 * relicTierOf('iron_will');
 
   /// Flat attack from Ascension Level (+1 ATK per AL).
   int get ascensionAttackBonus => ascensionLevel;
 
-  /// Flat defense from Ascension Level (+1 DEF per AL).
-  int get ascensionDefenseBonus => ascensionLevel;
+  /// Flat defense from Ascension Level (+4 DEF per AL).
+  int get ascensionDefenseBonus => ascensionLevel * 4;
 
-  /// Flat vitality from Ascension Level (+2 HP per AL).
-  int get ascensionVitalityBonus => ascensionLevel * 2;
+  /// Flat vitality from Ascension Level (+12 HP per AL).
+  int get ascensionVitalityBonus => ascensionLevel * 12;
 
   /// Extra gold percent from Ascension Level (+10% per AL).
   int get ascensionGoldBonusPercent => ascensionLevel * 10;
 
-  /// Sanctuary gold find (+5% per level soft-capped, +3% per prestige).
   /// Sanctuary gold find (+5% per level soft-capped, +3% per prestige).
   int get sanctuaryGoldBonusPercent =>
       softForgePercent(sanctuaryGoldLevel * 5, softAt: 100).round() +
@@ -456,18 +455,21 @@ class GameState {
     return item.resolvedStamina * 10;
   }
 
-  int get soulboundRefineBonus => metaDepth.soulboundRefine;
+  int get soulboundRefineAttackBonus => metaDepth.soulboundRefine;
+
+  int get soulboundRefineDefenseBonus =>
+      metaDepth.soulboundRefine * 4;
 
   int get legacyAttackBonus => metaDepth.legacyPoints;
 
   /// Ascend Blessing pack: +2 ATK per stack.
   int get ascendBlessingAttackBonus => metaDepth.ascendBlessings * 2;
 
-  /// Ascend Blessing pack: +4 DEF per stack (percent armor).
-  int get ascendBlessingDefenseBonus => metaDepth.ascendBlessings * 4;
+  /// Ascend Blessing pack: +8 DEF per stack (percent armor).
+  int get ascendBlessingDefenseBonus => metaDepth.ascendBlessings * 8;
 
-  /// Ascend Blessing pack: +4 VIT per stack.
-  int get ascendBlessingVitalityBonus => metaDepth.ascendBlessings * 4;
+  /// Ascend Blessing pack: +24 HP per stack.
+  int get ascendBlessingVitalityBonus => metaDepth.ascendBlessings * 24;
 
   /// Ascend Blessing pack: +3% gold find per stack.
   int get ascendBlessingGoldPercent => metaDepth.ascendBlessings * 3;
@@ -483,7 +485,7 @@ class GameState {
   /// Heirloom AL bonus applied to VIT when soulbound armor is set.
   int get heirloomVitalityBonus {
     if (soulboundItem == null || !metaDepth.soulboundIsArmor) return 0;
-    return metaDepth.heirloomAlBonus;
+    return metaDepth.heirloomAlBonus * 12;
   }
 
   /// Collection score for Will ranks.
@@ -550,7 +552,7 @@ class GameState {
       sanctuaryAttackBonus +
       petAttackBonus +
       soulboundAttackBonus +
-      soulboundRefineBonus +
+      soulboundRefineAttackBonus +
       legacyAttackBonus +
       heirloomAttackBonus +
       ascendBlessingAttackBonus;
@@ -560,7 +562,7 @@ class GameState {
       relicDefenseBonus +
       ascensionDefenseBonus +
       soulboundDefenseBonus +
-      soulboundRefineBonus +
+      soulboundRefineDefenseBonus +
       ascendBlessingDefenseBonus;
 
   int get metaVitalityBonus =>

@@ -357,7 +357,7 @@ void main() {
     state = GameLogic.unlockRelic(state, GameLogic.chamberLuckRelic);
     expect(state.relicLootFindPercent, 5);
     state = GameLogic.unlockRelic(state, GameLogic.ironWillRelic);
-    expect(state.relicMitigateFlat, 1);
+    expect(state.relicMitigateFlat, GameLogic.relicMitigatePerTier);
     state = GameLogic.setGodHandStyle(state, 2);
     expect(state.metaDepth.godHandStyle, 2);
     state = GameLogic.buyPrestigeShopItem(state, 'daily_essence');

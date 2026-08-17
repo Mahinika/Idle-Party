@@ -35,7 +35,7 @@ abstract final class MetaSystems {
         'Balance Druid Moonkin Form thickens the hide, and Barkskin is ready before the floor gets nasty.',
         'Fury Warrior Rampage dumps mid-fight, Recklessness is an all-in damage window, and Death Wish hits harder — not a haste snack.',
         'Every kit now shows its signature dump and panic button on a typical floor — Templar''s Verdict, Trueshot, Ice Block, Shield Wall, and the rest no longer wait until 15.',
-        'POWER → FORGE gold buys match each other again: DEF is a real armor chunk, STA is HP, and CRIT steps with HASTE. CAMP Life Well HP matches War Altar ATK.',
+        'POWER → FORGE gold buys match each other again: DEF is a real armor chunk, STA is HP, and CRIT steps with HASTE. CAMP Life Well HP matches War Altar ATK. KEEP relics, Blessing, and Ascend flats use the same ATK / armor / HP split.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),

@@ -385,13 +385,13 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         else ...[
           Text(
             '${state.soulboundItem!.name}\n'
-            'Refine ${state.metaDepth.soulboundRefine} · each refine +1 ATK & +1 DEF',
+            'Refine ${state.metaDepth.soulboundRefine} · each refine +1 ATK & +4 DEF',
             style: GameTheme.body(size: 14, color: GameTheme.mossLit),
           ),
           const SizedBox(height: 6),
           KenneyButton(
             label:
-                'Refine +1 ATK/DEF · ${GameLogic.refineSoulboundCost(state.metaDepth.soulboundRefine)} frag',
+                'Refine +1 ATK/+4 DEF · ${GameLogic.refineSoulboundCost(state.metaDepth.soulboundRefine)} frag',
             onPressed:
                 state.soulboundFragments >=
                     GameLogic.refineSoulboundCost(
@@ -423,11 +423,11 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       GameLogic.ironWardRelic =>
         owned
             ? 'Permanent +${state.relicDefenseBonus} team defense (T$tier).'
-            : 'Permanent +2 team defense per tier.',
+            : 'Permanent +${GameLogic.relicDefensePerTier} team defense per tier.',
       GameLogic.phoenixEmberRelic =>
         owned
             ? 'Permanent +${state.relicVitalityBonus} max HP per hero (T$tier).'
-            : 'Permanent +10 max HP per hero per tier.',
+            : 'Permanent +${GameLogic.relicVitalityPerTier} max HP per hero per tier.',
       GameLogic.godHandFocusRelic =>
         owned
             ? '+${state.relicGodHandDamageBonus} God Hand damage (T$tier).'
@@ -439,7 +439,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       GameLogic.ironWillRelic =>
         owned
             ? '+${state.relicMitigateFlat} flat mitigate (T$tier).'
-            : '+1 flat mitigate per tier.',
+            : '+${GameLogic.relicMitigatePerTier} flat mitigate per tier.',
       _ => GameLogic.relicDescriptions[relicId] ?? '',
     };
     final nextTier = tier + 1;
