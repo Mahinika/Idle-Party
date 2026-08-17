@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/apex_craft.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
@@ -129,5 +130,98 @@ void main() {
       agiSum += item.agilityBonus;
     }
     expect(intSum, greaterThan(agiSum));
+  });
+
+  test('Apex spends lootShares — no flat ATK dump, plate is Str not Agi', () {
+    final arms = ApexCraft.buildItem(
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.meleeDps,
+      slot: EquipmentSlot.weapon,
+      rank: 1,
+      ascensionLevel: 3,
+    );
+    expect(arms.attackBonus, 0);
+    expect(arms.agilityBonus, 0);
+    expect(arms.strengthBonus, greaterThan(arms.staminaBonus));
+
+    final combat = ApexCraft.buildItem(
+      classId: HeroClassId.rogue,
+      role: SpecRoleTag.meleeDps,
+      slot: EquipmentSlot.weapon,
+      rank: 1,
+      ascensionLevel: 3,
+    );
+    expect(combat.attackBonus, 0);
+    expect(combat.agilityBonus, greaterThan(combat.strengthBonus));
+
+    final hunt = ApexCraft.buildItem(
+      classId: HeroClassId.hunter,
+      role: SpecRoleTag.rangedDps,
+      slot: EquipmentSlot.weapon,
+      rank: 1,
+      ascensionLevel: 3,
+    );
+    expect(hunt.attackBonus, 0);
+    expect(hunt.agilityBonus, greaterThan(hunt.strengthBonus));
+
+    final fire = ApexCraft.buildItem(
+      classId: HeroClassId.mage,
+      role: SpecRoleTag.caster,
+      slot: EquipmentSlot.weapon,
+      rank: 1,
+      ascensionLevel: 3,
+    );
+    expect(fire.attackBonus, 0);
+    expect(fire.intellectBonus, greaterThan(fire.spellPowerBonus));
+
+    final disc = ApexCraft.buildItem(
+      classId: HeroClassId.priest,
+      role: SpecRoleTag.healer,
+      slot: EquipmentSlot.weapon,
+      rank: 1,
+      ascensionLevel: 3,
+    );
+    expect(
+      disc.intellectBonus + disc.spellPowerBonus,
+      greaterThan(disc.spiritBonus),
+    );
+  });
+
+  test('warrior rare drops stay Str/Sta — not Agility', () {
+    var strSum = 0;
+    var agiSum = 0;
+    for (var i = 0; i < 24; i++) {
+      EquipmentFactory.random = Random(2000 + i);
+      final item = EquipmentFactory.create(
+        slot: EquipmentSlot.chest,
+        rarity: LootRarity.rare,
+        battleNumber: 14,
+        bias: HeroRole.warrior,
+        preferredArmor: ArmorType.plate,
+        roleTag: SpecRoleTag.meleeDps,
+      );
+      strSum += item.strengthBonus;
+      agiSum += item.agilityBonus;
+    }
+    expect(strSum, greaterThan(agiSum * 4));
+  });
+
+  test('healer rare drops spend more on Int/SP than Spirit', () {
+    var throughput = 0;
+    var spi = 0;
+    for (var i = 0; i < 24; i++) {
+      EquipmentFactory.random = Random(3000 + i);
+      final item = EquipmentFactory.create(
+        slot: EquipmentSlot.chest,
+        rarity: LootRarity.rare,
+        battleNumber: 14,
+        bias: HeroRole.healer,
+        preferredArmor: ArmorType.cloth,
+        roleTag: SpecRoleTag.healer,
+      );
+      throughput += item.intellectBonus + item.spellPowerBonus;
+      spi += item.spiritBonus;
+    }
+    expect(throughput, greaterThan(spi));
   });
 }

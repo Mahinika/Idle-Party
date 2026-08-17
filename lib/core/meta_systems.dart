@@ -29,6 +29,7 @@ abstract final class MetaSystems {
         'Armor now cuts a percent of each hit — more DEF always helps, but nothing is immortal (packs included).',
         'Agility is the damage stat for rogues, hunters, cats, and Enhancement (Strength still rules plate).',
         'Caster gear: Intellect and Spell Power both feed damage the same way; Intellect still adds crit.',
+        'Drops, starters, and Apex spend power on those same stats — no leftover Attack Power dump.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),

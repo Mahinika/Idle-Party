@@ -430,10 +430,9 @@ class EquipmentFactory {
     specId: lootSpecId,
   );
 
-  static ({int str, int agi, int sta, int intel, int spi, int sp}) _distribute(
-    int budget,
-    List<double> w,
-  ) {
+  /// Split a primary budget into Str/Agi/Sta/Int/Spi/SP (Apex + drops share this).
+  static ({int str, int agi, int sta, int intel, int spi, int sp})
+  distributePrimaries(int budget, List<double> w) {
     final sum = w.fold<double>(0, (a, b) => a + b);
     if (sum <= 0 || budget <= 0) {
       return (str: 0, agi: 0, sta: 0, intel: 0, spi: 0, sp: 0);
@@ -476,7 +475,7 @@ class EquipmentFactory {
             SpecRoleTag.caster => caster >= melee || a.intel + a.sp > 0,
             SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
               bias == HeroRole.warrior
-                  ? a.str + a.sta + a.crit >= caster
+                  ? a.str + a.sta + a.crit >= caster && a.str + a.sta >= a.agi
                   : a.agi + a.str + a.crit + a.aspd >= caster,
           } &&
           // Prefer throughput affixes over pure Spirit for casters/healers.
@@ -841,7 +840,7 @@ class EquipmentFactory {
         : 0;
     final distributeBudget = max(1, primaryBudget - armorPts);
 
-    final dist = _distribute(distributeBudget, weights);
+    final dist = distributePrimaries(distributeBudget, weights);
     var str = dist.str;
     var agi = dist.agi;
     var sta = dist.sta;

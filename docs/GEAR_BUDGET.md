@@ -73,7 +73,9 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 ## Set / Apex / Merge
 
 - **Set 2pc/4pc:** real combat bonuses only; shown on tooltips. No ghost BiS points.
-- **Apex:** own tier + hard-lock vs normal drops.
+- **Apex:** own tier + hard-lock vs normal drops. Stats use the same
+  `lootShares` split as dungeon drops (no parallel Attack Power dump —
+  `attackBonus` is flat sheet ATK, ~2× a Strength point).
 - **Merge:** identity (`setId`, affixes) from **primary** only; fuel adds budget/stats.
 
 ## Player-facing copy

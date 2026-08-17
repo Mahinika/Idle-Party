@@ -412,7 +412,7 @@ class ItemTooltipCard extends StatelessWidget {
       ProjectilePattern.pierce => 'Pierce',
     };
     if (item.attackBonus > 0) {
-      return 'Attack Power +${item.attackBonus} · $pattern';
+      return 'Attack +${item.attackBonus} · $pattern';
     }
     return 'Pattern: $pattern';
   }
@@ -456,7 +456,7 @@ class ItemTooltipCard extends StatelessWidget {
       primary: true,
     );
     add(
-      'Attack Power',
+      'Attack',
       item.attackBonus,
       worn?.attackBonus ?? 0,
       primary: true,

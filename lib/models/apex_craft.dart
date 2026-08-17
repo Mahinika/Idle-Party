@@ -1,5 +1,6 @@
 import '../core/equipment_factory.dart';
 import 'dungeon_def.dart';
+import 'equip_stat_weights.dart';
 import 'hero.dart';
 import 'hero_spec.dart';
 import 'loot.dart';
@@ -478,37 +479,39 @@ abstract final class ApexCraft {
         : 0;
     final pool = max(1, budget - armor);
 
-    var str = 0, agi = 0, sta = 0, intel = 0, spi = 0, sp = 0;
-    var ap = 0, crit = 0, aspd = 0;
+    // Same primary split as dungeon drops (CombatRatings ROI). Never dump
+    // leftover budget into attackBonus — that field is flat ATK (1 = 1 sheet
+    // ATK) while 1 Str/Agi is only ~0.5 ATK.
+    final dist = EquipmentFactory.distributePrimaries(
+      pool,
+      EquipStatWeights.lootShares(
+        bias: affinity,
+        roleTag: role,
+        specId: spec?.id,
+      ),
+    );
+    final str = dist.str;
+    final agi = dist.agi;
+    final sta = dist.sta;
+    final intel = dist.intel;
+    final spi = dist.spi;
+    final sp = dist.sp;
+    const ap = 0;
+    var crit = 0;
+    var aspd = 0;
     final secTier = max(0, (baseIlvl - 5) ~/ 18);
-    // Role weights sum to ~1.0 of [pool] (armor already carved).
     switch (role) {
       case SpecRoleTag.tank:
-        str = (pool * 0.40).round();
-        sta = (pool * 0.55).round();
         crit = 2 + rank + secTier ~/ 2;
       case SpecRoleTag.healer:
-        intel = (pool * 0.30).round();
-        spi = (pool * 0.25).round();
-        sp = (pool * 0.30).round();
-        sta = (pool * 0.15).round();
+        aspd = 2 + rank + secTier ~/ 2;
       case SpecRoleTag.meleeDps:
-        str = (pool * 0.35).round();
-        agi = (pool * 0.25).round();
-        ap = (pool * 0.20).round();
-        sta = (pool * 0.15).round();
         crit = 3 + rank * 2 + secTier ~/ 2;
         aspd = 2 + rank + secTier ~/ 2;
       case SpecRoleTag.rangedDps:
-        agi = (pool * 0.50).round();
-        ap = (pool * 0.30).round();
-        sta = (pool * 0.15).round();
         crit = 4 + rank * 2 + secTier ~/ 2;
         aspd = 3 + rank + secTier ~/ 2;
       case SpecRoleTag.caster:
-        intel = (pool * 0.42).round();
-        sp = (pool * 0.42).round();
-        sta = (pool * 0.15).round();
         crit = 3 + rank * 2 + secTier ~/ 2;
     }
 

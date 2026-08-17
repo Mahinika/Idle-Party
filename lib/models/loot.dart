@@ -239,7 +239,7 @@ class EquipmentItem {
     if (spiritBonus != 0) parts.add('+$spiritBonus Spi');
     if (spellPowerBonus != 0) parts.add('+$spellPowerBonus SP');
     if (resolvedArmor != 0) parts.add('+$resolvedArmor Armor');
-    if (attackBonus != 0) parts.add('+$attackBonus AP');
+    if (attackBonus != 0) parts.add('+$attackBonus ATK');
     if (mp5Bonus != 0) parts.add('+$mp5Bonus Mp5');
     if (critChanceBonus != 0) parts.add('+$critChanceBonus% CRIT');
     if (attackSpeedBonus != 0) parts.add('+$attackSpeedBonus% ASPD');

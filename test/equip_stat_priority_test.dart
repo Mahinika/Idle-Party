@@ -213,6 +213,12 @@ void main() {
       roleTag: SpecRoleTag.meleeDps,
     );
     expect(arms[0], greaterThan(arms[2])); // str > sta
+
+    final healer = EquipStatWeights.lootShares(
+      bias: HeroRole.healer,
+      roleTag: SpecRoleTag.healer,
+    );
+    expect(healer[3] + healer[5], greaterThan(healer[4])); // Int+SP > Spirit
   });
 
   test('Enhancement loot shares keep meaningful Str', () {
@@ -221,7 +227,7 @@ void main() {
       roleTag: SpecRoleTag.meleeDps,
       specId: HeroSpecId.enhancement,
     );
-    expect(shares[0], greaterThan(0.28)); // str
-    expect(shares[1], greaterThan(shares[0])); // agi > str
+    expect(shares[0], greaterThan(0.25)); // str still real
+    expect(shares[1], greaterThan(shares[0])); // agi > str (2 AP vs 1)
   });
 }

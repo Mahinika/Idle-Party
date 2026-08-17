@@ -286,8 +286,8 @@ abstract final class StarterGear {
     final p = switch (role) {
       HeroRole.warrior => (str: 1, agi: 0, sta: 1, intel: 0, spi: 0, sp: 0),
       HeroRole.rogue => (str: 0, agi: 1, sta: 1, intel: 0, spi: 0, sp: 0),
-      HeroRole.healer => (str: 0, agi: 0, sta: 1, intel: 1, spi: 1, sp: 1),
-      HeroRole.mage => (str: 0, agi: 0, sta: 1, intel: 1, spi: 1, sp: 1),
+      HeroRole.healer => (str: 0, agi: 0, sta: 1, intel: 1, spi: 0, sp: 1),
+      HeroRole.mage => (str: 0, agi: 0, sta: 1, intel: 1, spi: 0, sp: 1),
     };
 
     EquipmentItem armorPiece(
@@ -427,7 +427,7 @@ abstract final class StarterGear {
         weaponType: WeaponType.thrown,
         handed: WeaponHanded.oneHand,
         str: 1,
-        agi: 1,
+        sta: 1,
       ),
       HeroRole.rogue => piece(
         id: 'start_rog_rng',
