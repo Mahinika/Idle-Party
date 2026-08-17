@@ -353,6 +353,7 @@ class GameState {
   int get ascensionGoldBonusPercent => ascensionLevel * 10;
 
   /// Sanctuary gold find (+5% per level soft-capped, +3% per prestige).
+  /// Sanctuary gold find (+5% per level soft-capped, +3% per prestige).
   int get sanctuaryGoldBonusPercent =>
       softForgePercent(sanctuaryGoldLevel * 5, softAt: 100).round() +
       metaDepth.sanctuaryGoldPrestige * 3;
@@ -361,9 +362,10 @@ class GameState {
       softForgePercent(sanctuaryPowerLevel, softAt: 40).round() +
       metaDepth.sanctuaryPowerPrestige;
 
+  /// Life Well: +12 HP per level (matches War Altar +1 ATK), +12 HP per prestige.
   int get sanctuaryVitalityBonus =>
-      softForgePercent(sanctuaryVitalityLevel * 2, softAt: 80).round() +
-      metaDepth.sanctuaryVitalityPrestige;
+      softForgePercent(sanctuaryVitalityLevel * 12, softAt: 480).round() +
+      metaDepth.sanctuaryVitalityPrestige * 12;
 
   int get sanctuaryXpBonusPercent =>
       softForgePercent(metaDepth.sanctuaryXpLevel * 4, softAt: 80).round() +

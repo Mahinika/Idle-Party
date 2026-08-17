@@ -449,15 +449,16 @@ class GameLogic {
   static int sanctuaryPrestigeKeepAmount(String track) => switch (track) {
     'gold' => 3,
     'xp' => 2,
-    'power' || 'vitality' => 1,
+    'power' => sanctuaryPowerPerLevel,
+    'vitality' => sanctuaryVitalityPerLevel,
     _ => 0,
   };
 
   /// Short keep line for CAMP buttons (English).
   static String sanctuaryPrestigeKeepShort(String track) => switch (track) {
     'gold' => '+3% gold',
-    'power' => '+1 ATK',
-    'vitality' => '+1 HP',
+    'power' => '+$sanctuaryPowerPerLevel ATK',
+    'vitality' => '+$sanctuaryVitalityPerLevel HP',
     'xp' => '+2% XP',
     _ => '',
   };
@@ -465,10 +466,22 @@ class GameLogic {
   /// Softcapped track bonus only (no prestige). Used for "next level" labels.
   static int sanctuaryTrackBonusAt(String track, int level) {
     return switch (track) {
-      'gold' => GameState.softForgePercent(level * 5, softAt: 100).round(),
-      'power' => GameState.softForgePercent(level, softAt: 40).round(),
-      'vitality' => GameState.softForgePercent(level * 2, softAt: 80).round(),
-      'xp' => GameState.softForgePercent(level * 4, softAt: 80).round(),
+      'gold' => GameState.softForgePercent(
+        level * sanctuaryGoldPctPerLevel,
+        softAt: sanctuaryGoldSoftAt,
+      ).round(),
+      'power' => GameState.softForgePercent(
+        level * sanctuaryPowerPerLevel,
+        softAt: sanctuaryPowerSoftAt,
+      ).round(),
+      'vitality' => GameState.softForgePercent(
+        level * sanctuaryVitalityPerLevel,
+        softAt: sanctuaryVitalitySoftAt,
+      ).round(),
+      'xp' => GameState.softForgePercent(
+        level * sanctuaryXpPctPerLevel,
+        softAt: sanctuaryXpSoftAt,
+      ).round(),
       _ => 0,
     };
   }
@@ -483,8 +496,8 @@ class GameLogic {
     final total = soft + prestBonus;
     final unit = switch (track) {
       'gold' => '% gold find',
-      'power' => ' party attack',
-      'vitality' => ' max HP',
+      'power' => ' ATK',
+      'vitality' => ' HP',
       'xp' => '% XP find',
       _ => '',
     };
@@ -526,7 +539,7 @@ class GameLogic {
               (hero) => hero.copyWith(
                 currentHp: min(
                   next.effectiveHeroMaxHp(hero),
-                  hero.currentHp + 2,
+                  hero.currentHp + sanctuaryVitalityPerLevel,
                 ),
               ),
             )
@@ -723,6 +736,17 @@ class GameLogic {
   static const int forgeMoveGain = 2;
   static const int forgeHasteGain = 2;
   static const int forgeCritGain = 2;
+
+  /// CAMP (sanctuary) per-level gains. Same essence cost; Life Well HP must
+  /// match War Altar ATK the way FORGE STA matches ATK.
+  static const int sanctuaryGoldPctPerLevel = 5;
+  static const int sanctuaryPowerPerLevel = 1;
+  static const int sanctuaryVitalityPerLevel = 12;
+  static const int sanctuaryXpPctPerLevel = 4;
+  static const double sanctuaryPowerSoftAt = 40;
+  static const double sanctuaryVitalitySoftAt = 480; // 40 levels × 12 HP
+  static const double sanctuaryGoldSoftAt = 100;
+  static const double sanctuaryXpSoftAt = 80;
 
   /// Gold-find percent granted per Ascend Blessing stack.
   static const int ascendBlessingGoldPct = 3;

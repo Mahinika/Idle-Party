@@ -2406,9 +2406,18 @@ void main() {
     expect(label, contains('P2'));
     expect(GameLogic.sanctuaryPrestigeKeepShort('gold'), '+3% gold');
     expect(GameLogic.sanctuaryPrestigeKeepShort('power'), '+1 ATK');
-    expect(GameLogic.sanctuaryPrestigeKeepShort('vitality'), '+1 HP');
+    expect(GameLogic.sanctuaryPrestigeKeepShort('vitality'), '+12 HP');
     expect(GameLogic.sanctuaryPrestigeKeepShort('xp'), '+2% XP');
     expect(GameLogic.sanctuaryPrestigeEssenceGain(12), 37);
+    expect(GameLogic.sanctuaryTrackBonusAt('power', 1), 1);
+    expect(
+      GameLogic.sanctuaryTrackBonusAt('vitality', 1),
+      GameLogic.sanctuaryVitalityPerLevel,
+    );
+    expect(
+      GameLogic.sanctuaryPrestigeKeepAmount('vitality'),
+      GameLogic.sanctuaryVitalityPerLevel,
+    );
   });
 
   test('ascend mission board ignores pre-ascend highestFloorCleared', () {

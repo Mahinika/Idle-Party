@@ -172,7 +172,7 @@ abstract final class GameGuides {
           '• Tracks level infinitely — cost scales with level.\n'
           '• Optional prestige from Lv12: reset to Lv0 (upgrades cheap again). '
           'You keep a small forever bonus '
-          '(+3% gold / +1 ATK / +1 HP / +2% XP) and get 25+level essence back. '
+          '(+3% gold / +1 ATK / +12 HP / +2% XP) and get 25+level essence back. '
           'The big level bonus is gone until you buy levels again.\n'
           '• Survives Ascend (meta progress).\n'
           '• Invest early — sanctuary compounds over many runs.',
