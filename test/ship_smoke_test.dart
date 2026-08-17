@@ -153,6 +153,12 @@ void main() {
     expect(forge.body, contains('Blessing'));
     expect(forge.body, contains('5th party'));
     expect(forge.body, contains('KEEP'));
+
+    final sanctuary = GameGuides.topics.firstWhere((t) => t.id == 'sanctuary');
+    expect(sanctuary.body, contains('CAMP'));
+    expect(sanctuary.body, contains('+3% gold'));
+    expect(sanctuary.body, contains('+1 ATK'));
+    expect(sanctuary.body, contains('Lv0'));
   });
 
   test('fresh TODAY chase is grow-the-party, not Daily', () {

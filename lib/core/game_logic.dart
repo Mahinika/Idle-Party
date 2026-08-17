@@ -442,6 +442,26 @@ class GameLogic {
 
   static int sanctuaryCost(int level) => 15 + (level * 12);
 
+  /// Essence paid back when prestigging a track at [level] (Lv12+).
+  static int sanctuaryPrestigeEssenceGain(int level) => 25 + level;
+
+  /// Forever bonus added per prestige stack (does not soft-cap).
+  static int sanctuaryPrestigeKeepAmount(String track) => switch (track) {
+    'gold' => 3,
+    'xp' => 2,
+    'power' || 'vitality' => 1,
+    _ => 0,
+  };
+
+  /// Short keep line for CAMP buttons (English).
+  static String sanctuaryPrestigeKeepShort(String track) => switch (track) {
+    'gold' => '+3% gold',
+    'power' => '+1 ATK',
+    'vitality' => '+1 HP',
+    'xp' => '+2% XP',
+    _ => '',
+  };
+
   /// Softcapped track bonus only (no prestige). Used for "next level" labels.
   static int sanctuaryTrackBonusAt(String track, int level) {
     return switch (track) {
@@ -459,12 +479,7 @@ class GameLogic {
     int prestige = 0,
   }) {
     final soft = sanctuaryTrackBonusAt(track, level);
-    final prestBonus = switch (track) {
-      'gold' => prestige * 3,
-      'xp' => prestige * 2,
-      'power' || 'vitality' => prestige,
-      _ => 0,
-    };
+    final prestBonus = prestige * sanctuaryPrestigeKeepAmount(track);
     final total = soft + prestBonus;
     final unit = switch (track) {
       'gold' => '% gold find',
@@ -534,7 +549,7 @@ class GameLogic {
       _ => -1,
     };
     if (level < 12) return state;
-    final essenceGain = 25 + level;
+    final essenceGain = sanctuaryPrestigeEssenceGain(level);
     final md = state.metaDepth;
     final nextMd = switch (track) {
       'gold' => md.copyWith(

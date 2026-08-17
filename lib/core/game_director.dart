@@ -1823,8 +1823,9 @@ class GameDirector extends ChangeNotifier {
       final name = GameLogic.sanctuaryNames[track] ?? track;
       GameAudio.unlock();
       showToast(
-        '$name prestiged · +${_state.essence - beforeEssence}e',
-        life: 2.6,
+        '$name prestiged · keep ${GameLogic.sanctuaryPrestigeKeepShort(track)} · '
+        '+${_state.essence - beforeEssence}e',
+        life: 2.8,
       );
     }
   }

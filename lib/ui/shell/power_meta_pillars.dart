@@ -75,7 +75,8 @@ class _PowerPillarState extends State<PowerPillar>
           ),
           PowerTab.camp => (
             label: 'CAMP',
-            blurb: 'Camp: permanent essence tracks — survive Ascend',
+            blurb:
+                'Camp: essence tracks that survive Ascend · prestige from Lv12',
             body: SingleChildScrollView(child: SanctuaryOverlay(director: d)),
           ),
           PowerTab.market => (

@@ -2373,6 +2373,11 @@ void main() {
     final label = GameLogic.sanctuaryBonusLabel('gold', 40, prestige: 2);
     expect(label, contains('+${soft + 6}%'));
     expect(label, contains('P2'));
+    expect(GameLogic.sanctuaryPrestigeKeepShort('gold'), '+3% gold');
+    expect(GameLogic.sanctuaryPrestigeKeepShort('power'), '+1 ATK');
+    expect(GameLogic.sanctuaryPrestigeKeepShort('vitality'), '+1 HP');
+    expect(GameLogic.sanctuaryPrestigeKeepShort('xp'), '+2% XP');
+    expect(GameLogic.sanctuaryPrestigeEssenceGain(12), 37);
   });
 
   test('ascend mission board ignores pre-ascend highestFloorCleared', () {
@@ -2734,7 +2739,11 @@ void main() {
     final prestiged = GameLogic.prestigeSanctuaryTrack(state, 'gold');
     expect(prestiged.sanctuaryGoldLevel, 0);
     expect(prestiged.metaDepth.sanctuaryGoldPrestige, 1);
-    expect(prestiged.essence, greaterThan(state.essence));
+    expect(
+      prestiged.essence,
+      state.essence + GameLogic.sanctuaryPrestigeEssenceGain(13),
+    );
+    expect(prestiged.sanctuaryGoldBonusPercent, 3);
   });
 
   test('infinity gauntlet unlocks at AL10 and escalates', () {

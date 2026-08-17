@@ -132,8 +132,10 @@ class SanctuaryOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Permanent essence tracks — survive Ascend. '
-          'Upgrade forever; from Lv12 you can Prestige (reset level, keep a bonus).',
+          'Permanent essence tracks — survive Ascend. Upgrade forever.\n'
+          'Prestige from Lv12: reset to Lv0 (costs go cheap again), keep a '
+          'small forever bonus, and get essence back. Not a power jump — '
+          'the big level bonus is gone until you buy levels again.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (state.metaDepth.ascendBlessings > 0) ...[
@@ -148,75 +150,88 @@ class SanctuaryOverlay extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 10),
-        for (final track in <String>['gold', 'power', 'vitality', 'xp']) ...[
-          Builder(
-            builder: (context) {
-              final level = _levelOf(state, track);
-              final prestige = _prestigeOf(state, track);
-              final nextLevel = level + 1;
-              final cost = GameLogic.sanctuaryCost(level);
-              final nextBonus = GameLogic.sanctuaryBonusLabel(
-                track,
-                nextLevel,
-                prestige: prestige,
-              );
-              final currentBonus = GameLogic.sanctuaryBonusLabel(
-                track,
-                level,
-                prestige: prestige,
-              );
-              final cycle = level <= 0 ? 0.0 : ((level - 1) % 12 + 1) / 12.0;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  MenuChrome.sectionLabel(
-                    GameLogic.sanctuaryNames[track] ?? track,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Lv$level  ·  $currentBonus'
-                    '${prestige > 0 ? '  ·  Prestige $prestige' : ''}',
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchmentDim,
-                    ),
-                  ),
-                  Text(
-                    'Next: $nextBonus',
-                    style: GameTheme.body(size: 12, color: GameTheme.mossLit),
-                  ),
-                  const SizedBox(height: 6),
-                  KenneyProgressBar(
-                    value: cycle.clamp(0.0, 1.0),
-                    height: 12,
-                    color: track == 'vitality'
-                        ? KenneyBarColor.red
-                        : track == 'power'
-                        ? KenneyBarColor.yellow
-                        : KenneyBarColor.green,
-                  ),
-                  const SizedBox(height: 6),
-                  KenneyButton(
-                    label: 'Upgrade · ${cost}e',
-                    onPressed: state.essence >= cost
-                        ? () => director.upgradeSanctuary(track)
-                        : null,
-                  ),
-                  if (level >= 12) ...[
-                    const SizedBox(height: 4),
-                    KenneyButton(
-                      label: 'Prestige reset · +${25 + level}e',
-                      style: KenneyButtonStyle.brown,
-                      onPressed: () => director.prestigeSanctuaryTrack(track),
-                    ),
-                  ],
-                  const SizedBox(height: 10),
-                ],
-              );
-            },
-          ),
-        ],
+        for (final track in <String>['gold', 'power', 'vitality', 'xp'])
+          _campTrackCard(state, track),
       ],
+    );
+  }
+
+  Widget _campTrackCard(GameState state, String track) {
+    final level = _levelOf(state, track);
+    final prestige = _prestigeOf(state, track);
+    final nextLevel = level + 1;
+    final cost = GameLogic.sanctuaryCost(level);
+    final keepShort = GameLogic.sanctuaryPrestigeKeepShort(track);
+    final nextBonus = GameLogic.sanctuaryBonusLabel(
+      track,
+      nextLevel,
+      prestige: prestige,
+    );
+    final currentBonus = GameLogic.sanctuaryBonusLabel(
+      track,
+      level,
+      prestige: prestige,
+    );
+    final cycleStep = level <= 0 ? 0 : ((level - 1) % 12 + 1);
+    final canPrestige = level >= 12;
+    final prestigeGain = GameLogic.sanctuaryPrestigeEssenceGain(level);
+    final afterPrestige = GameLogic.sanctuaryBonusLabel(
+      track,
+      0,
+      prestige: prestige + 1,
+    );
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(10),
+      decoration: MenuChrome.listCard(selected: canPrestige),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MenuChrome.sectionLabel(GameLogic.sanctuaryNames[track] ?? track),
+          Text(
+            'Lv$level  ·  $currentBonus'
+            '${prestige > 0 ? '  ·  Prestige $prestige' : ''}',
+            style: GameTheme.body(size: 13, color: GameTheme.parchment),
+          ),
+          Text(
+            'Next: $nextBonus',
+            style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+          ),
+          Text(
+            canPrestige
+                ? 'Prestige keeps $keepShort forever, refunds ${prestigeGain}e, '
+                      'resets to $afterPrestige. Levels start cheap again.'
+                : 'Each prestige keeps $keepShort forever · ready at Lv12 '
+                      '($cycleStep/12)',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 6),
+          KenneyProgressBar(
+            value: (cycleStep / 12.0).clamp(0.0, 1.0),
+            height: 12,
+            color: track == 'vitality'
+                ? KenneyBarColor.red
+                : track == 'power'
+                ? KenneyBarColor.yellow
+                : KenneyBarColor.green,
+          ),
+          const SizedBox(height: 6),
+          KenneyButton(
+            label: 'Upgrade · ${cost}e',
+            onPressed: state.essence >= cost
+                ? () => director.upgradeSanctuary(track)
+                : null,
+          ),
+          if (canPrestige) ...[
+            const SizedBox(height: 4),
+            KenneyButton(
+              label: 'Prestige · keep $keepShort · +${prestigeGain}e',
+              style: KenneyButtonStyle.brown,
+              onPressed: () => director.prestigeSanctuaryTrack(track),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
