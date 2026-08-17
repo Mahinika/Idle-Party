@@ -343,8 +343,8 @@ class GameState {
   /// Flat attack from Ascension Level (+1 ATK per AL).
   int get ascensionAttackBonus => ascensionLevel;
 
-  /// Flat defense from Ascension Level (+1 DEF every 2 AL).
-  int get ascensionDefenseBonus => ascensionLevel ~/ 2;
+  /// Flat defense from Ascension Level (+1 DEF per AL).
+  int get ascensionDefenseBonus => ascensionLevel;
 
   /// Flat vitality from Ascension Level (+2 HP per AL).
   int get ascensionVitalityBonus => ascensionLevel * 2;
@@ -461,8 +461,8 @@ class GameState {
   /// Ascend Blessing pack: +2 ATK per stack.
   int get ascendBlessingAttackBonus => metaDepth.ascendBlessings * 2;
 
-  /// Ascend Blessing pack: +1 DEF per stack.
-  int get ascendBlessingDefenseBonus => metaDepth.ascendBlessings;
+  /// Ascend Blessing pack: +4 DEF per stack (percent armor).
+  int get ascendBlessingDefenseBonus => metaDepth.ascendBlessings * 4;
 
   /// Ascend Blessing pack: +4 VIT per stack.
   int get ascendBlessingVitalityBonus => metaDepth.ascendBlessings * 4;

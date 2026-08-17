@@ -709,11 +709,20 @@ class GameLogic {
   /// Flat ATK granted per Ascend Blessing stack.
   static const int ascendBlessingAtk = 2;
 
-  /// Flat DEF granted per Ascend Blessing stack.
-  static const int ascendBlessingDef = 1;
+  /// Flat DEF granted per Ascend Blessing stack (percent armor needs chunks).
+  static const int ascendBlessingDef = 4;
 
   /// Flat VIT granted per Ascend Blessing stack.
   static const int ascendBlessingVit = 4;
+
+  /// Gold FORGE one-buy gains. Percent armor made +1 DEF / +6 HP a rounding
+  /// error next to +2 ATK; CRIT was half of HASTE at the same gold.
+  static const int forgeAttackGain = 2;
+  static const int forgeDefenseGain = 8;
+  static const int forgeVitalityGain = 24;
+  static const int forgeMoveGain = 2;
+  static const int forgeHasteGain = 2;
+  static const int forgeCritGain = 2;
 
   /// Gold-find percent granted per Ascend Blessing stack.
   static const int ascendBlessingGoldPct = 3;
@@ -1171,17 +1180,19 @@ class GameLogic {
     return 16 + (totalLevels * 3) + (state.bossVictories * 6);
   }
 
-  static int upgradeCostFor(GameState state, PartyUpgradeType type) {
-    final currentTier = switch (type) {
-      PartyUpgradeType.attack => state.attackBonus ~/ 2,
-      PartyUpgradeType.defense => state.defenseBonus,
-      PartyUpgradeType.vitality => state.vitalityBonus ~/ 6,
-      PartyUpgradeType.moveSpeed => state.moveSpeedBonus ~/ 2,
-      PartyUpgradeType.attackSpeed => state.attackSpeedBonus ~/ 2,
-      PartyUpgradeType.crit => state.critBonus,
+  static int forgeTrackTier(GameState state, PartyUpgradeType type) {
+    return switch (type) {
+      PartyUpgradeType.attack => state.attackBonus ~/ forgeAttackGain,
+      PartyUpgradeType.defense => state.defenseBonus ~/ forgeDefenseGain,
+      PartyUpgradeType.vitality => state.vitalityBonus ~/ forgeVitalityGain,
+      PartyUpgradeType.moveSpeed => state.moveSpeedBonus ~/ forgeMoveGain,
+      PartyUpgradeType.attackSpeed => state.attackSpeedBonus ~/ forgeHasteGain,
+      PartyUpgradeType.crit => state.critBonus ~/ forgeCritGain,
     };
+  }
 
-    return 18 + (currentTier * 10) + (state.bossVictories * 5);
+  static int upgradeCostFor(GameState state, PartyUpgradeType type) {
+    return 18 + (forgeTrackTier(state, type) * 10) + (state.bossVictories * 5);
   }
 
   static GameState trainParty(GameState state) {
@@ -1231,18 +1242,18 @@ class GameLogic {
     switch (type) {
       case PartyUpgradeType.attack:
         return state.copyWith(
-          attackBonus: state.attackBonus + 2,
+          attackBonus: state.attackBonus + forgeAttackGain,
           gold: state.gold - cost,
           lastUpdated: DateTime.now(),
         );
       case PartyUpgradeType.defense:
         return state.copyWith(
-          defenseBonus: state.defenseBonus + 1,
+          defenseBonus: state.defenseBonus + forgeDefenseGain,
           gold: state.gold - cost,
           lastUpdated: DateTime.now(),
         );
       case PartyUpgradeType.vitality:
-        final nextVit = state.vitalityBonus + 6;
+        final nextVit = state.vitalityBonus + forgeVitalityGain;
         final probe = state.copyWith(vitalityBonus: nextVit);
         final healedHeroes = state.heroes
             .map(
@@ -1258,19 +1269,19 @@ class GameLogic {
         );
       case PartyUpgradeType.moveSpeed:
         return state.copyWith(
-          moveSpeedBonus: state.moveSpeedBonus + 2,
+          moveSpeedBonus: state.moveSpeedBonus + forgeMoveGain,
           gold: state.gold - cost,
           lastUpdated: DateTime.now(),
         );
       case PartyUpgradeType.attackSpeed:
         return state.copyWith(
-          attackSpeedBonus: state.attackSpeedBonus + 2,
+          attackSpeedBonus: state.attackSpeedBonus + forgeHasteGain,
           gold: state.gold - cost,
           lastUpdated: DateTime.now(),
         );
       case PartyUpgradeType.crit:
         return state.copyWith(
-          critBonus: state.critBonus + 1,
+          critBonus: state.critBonus + forgeCritGain,
           gold: state.gold - cost,
           lastUpdated: DateTime.now(),
         );
@@ -1778,20 +1789,12 @@ class GameLogic {
   }
 
   static int recommendedForgeUpgrade(GameState state) {
-    // Pick the forge track most behind relative to cost.
+    // Pick the forge track most behind relative to cost (equal combat tiers).
     final scores = <(int, double)>[
       for (final type in PartyUpgradeType.values)
         (
           type.index,
-          switch (type) {
-                PartyUpgradeType.attack => state.attackBonus / 2,
-                PartyUpgradeType.defense => state.defenseBonus.toDouble(),
-                PartyUpgradeType.vitality => state.vitalityBonus / 6,
-                PartyUpgradeType.moveSpeed => state.moveSpeedBonus / 2,
-                PartyUpgradeType.attackSpeed => state.attackSpeedBonus / 2,
-                PartyUpgradeType.crit => state.critBonus.toDouble(),
-              } /
-              max(1, upgradeCostFor(state, type)),
+          forgeTrackTier(state, type) / max(1, upgradeCostFor(state, type)),
         ),
     ];
     scores.sort((a, b) => a.$2.compareTo(b.$2));

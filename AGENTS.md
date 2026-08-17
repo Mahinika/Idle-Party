@@ -266,7 +266,7 @@ opt-in + season PBs, …), **hero levels/XP**, **Apex** vault + equipped apex,
 craft mats/pity, keystone prefs (clamped) + challenge toggles, FARM/PUSH preference.
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
-each Ascend adds **+2 ATK · +1 DEF · +4 STA · +3% gold** on top of AL flats
+each Ascend adds **+2 ATK · +4 DEF · +4 STA · +3% gold** on top of AL flats
 (`+1 ATK` / `DEF = AL~/2` / `+2 STA` / `+10% gold` per AL). Shown in Forge → KEEP
 and Sanctuary. Constants: `GameLogic.ascendBlessing*`. Player-facing label is
 **STA / Stamina** (same as gear); internal fields may still say vitality.

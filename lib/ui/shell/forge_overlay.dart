@@ -45,7 +45,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
     final bonus = switch (type) {
       PartyUpgradeType.attack => '+${state.attackBonus}',
       PartyUpgradeType.defense => '+${state.defenseBonus}',
-      PartyUpgradeType.vitality => '+${state.vitalityBonus}',
+      PartyUpgradeType.vitality => '+${state.vitalityBonus} HP',
       PartyUpgradeType.moveSpeed =>
         '+${GameState.softForgePercent(state.moveSpeedBonus).round()}%',
       PartyUpgradeType.attackSpeed =>
@@ -138,21 +138,24 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         const SizedBox(height: 4),
         Text(
           'Bought: ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
-          'STA +${state.vitalityBonus}  '
+          'STA +${state.vitalityBonus} HP  '
           'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%  '
           'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '
           'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
           style: GameTheme.body(size: 13, color: GameTheme.parchment),
         ),
         Text(
-          'With gear · ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
-          'STA +${state.totalVitalityBonus}',
+          'Each hero gets these forge bonuses on top of their own gear.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _sectionTitle(
           'RUN BONUSES (GOLD)',
-          'Cheapest relative gain shows BEST. All wipe when you Ascend.',
+          'One buy is meant to feel similar: +${GameLogic.forgeAttackGain} ATK, '
+          '+${GameLogic.forgeDefenseGain} DEF (armor), '
+          '+${GameLogic.forgeVitalityGain} HP, '
+          '+${GameLogic.forgeHasteGain}% HASTE or CRIT. '
+          'BEST marks the cheapest relative gain. All wipe when you Ascend.',
         ),
         for (final type in PartyUpgradeType.values) ...[
           _upgradeButton(

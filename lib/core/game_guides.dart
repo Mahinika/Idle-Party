@@ -137,7 +137,9 @@ abstract final class GameGuides {
           'Tabs:\n'
           '• GOLD — spend gold this run. Train = +1 level to every hero '
           '(levels keep on Ascend). ATK/DEF/STA/MOVE/HASTE/CRIT wipe on Ascend. '
-          'BEST marks the cheapest relative upgrade.\n'
+          'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
+          'HASTE and CRIT are the same percent step. BEST marks the cheapest '
+          'relative upgrade.\n'
           '• KEEP — essence that survives Ascend: Blessing readout, relics, '
           'soulbound refine, God Hand smash/cooldown/style, and the 5th party '
           'slot (AL2 · 80e).\n'
@@ -305,7 +307,7 @@ abstract final class GameGuides {
       title: 'ASCEND',
       body:
           'Prestige when Ascend unlocks in the hub.\n\n'
-          '• Each Ascend grants a lasting Blessing: +2 ATK · +1 DEF · +4 STA · '
+          '• Each Ascend grants a lasting Blessing: +2 ATK · +4 DEF · +4 STA · '
           '+3% gold (stacks forever). See Forge → KEEP.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
           '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'

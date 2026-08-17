@@ -276,10 +276,36 @@ void main() {
     final defenseUpgraded = GameLogic.upgradeDefense(initial);
     final vitalityUpgraded = GameLogic.upgradeVitality(initial);
 
-    expect(attackUpgraded.attackBonus, 2);
-    expect(defenseUpgraded.defenseBonus, 1);
-    expect(vitalityUpgraded.vitalityBonus, 6);
+    expect(attackUpgraded.attackBonus, GameLogic.forgeAttackGain);
+    expect(defenseUpgraded.defenseBonus, GameLogic.forgeDefenseGain);
+    expect(vitalityUpgraded.vitalityBonus, GameLogic.forgeVitalityGain);
     expect(attackUpgraded.gold, 0);
+  });
+
+  test('forge gold buys share one cost tier', () {
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 8, 17));
+    for (final type in PartyUpgradeType.values) {
+      expect(GameLogic.forgeTrackTier(seeded, type), 0);
+      expect(
+        GameLogic.upgradeCostFor(seeded, type),
+        GameLogic.upgradeCostFor(seeded, PartyUpgradeType.attack),
+      );
+    }
+    final gold = GameLogic.upgradeCostFor(seeded, PartyUpgradeType.attack);
+    var state = seeded.copyWith(gold: gold * PartyUpgradeType.values.length);
+    for (final type in PartyUpgradeType.values) {
+      state = switch (type) {
+        PartyUpgradeType.attack => GameLogic.upgradeAttack(state),
+        PartyUpgradeType.defense => GameLogic.upgradeDefense(state),
+        PartyUpgradeType.vitality => GameLogic.upgradeVitality(state),
+        PartyUpgradeType.moveSpeed => GameLogic.upgradeMoveSpeed(state),
+        PartyUpgradeType.attackSpeed => GameLogic.upgradeAttackSpeed(state),
+        PartyUpgradeType.crit => GameLogic.upgradeCrit(state),
+      };
+    }
+    for (final type in PartyUpgradeType.values) {
+      expect(GameLogic.forgeTrackTier(state, type), 1);
+    }
   });
 
   test('forge haste tracks are infinite and scale combat speed', () {
@@ -301,7 +327,7 @@ void main() {
 
     expect(state.moveSpeedBonus, 24);
     expect(state.attackSpeedBonus, 24);
-    expect(state.critBonus, 12);
+    expect(state.critBonus, 24);
     expect(state.effectiveHeroMoveSpeed(hero), greaterThan(baseMove));
     expect(state.effectiveHeroAttackSpeed(hero), greaterThan(baseAtkSpd));
     expect(state.effectiveHeroCrit(hero), greaterThan(baseCrit));
