@@ -1526,6 +1526,26 @@ class GameLogic {
 
   static const int dailyVaultClearTarget = 1;
 
+  /// Extra vault / Daily Run essence per Dawn Tithe shop level.
+  static const int dawnTitheEssencePerLevel = 5;
+
+  /// Daily vault claim payout (timed-key table + Dawn Tithe).
+  static int dailyVaultClaimEssence(GameState state) =>
+      Keystone.dailyVaultEssence(state.metaDepth.dailyBestTimedKey) +
+      state.metaDepth.dailyEssenceBonusLevel * dawnTitheEssencePerLevel;
+
+  /// Essence shown on CLAIM VAULT — same as [claimDailyVault], including
+  /// the first-of-month season bonus when it is still unclaimed.
+  static int dailyVaultClaimPreviewEssence(GameState state, {DateTime? now}) {
+    var gain = dailyVaultClaimEssence(state);
+    final month = isoMonthKey((now ?? DateTime.now()).toUtc());
+    if (month.isNotEmpty &&
+        !state.metaDepth.claimedSeasonRewards.contains(month)) {
+      gain += seasonWeeklyBonusEssence;
+    }
+    return gain;
+  }
+
   /// Mid+ players see KEY / weekly affix jargon; early stays vault-simple.
   ///
   /// AL≥2 or two zones cleared (Goblin+) — see docs/SYSTEMS_REBUILD.md P4.
@@ -1561,7 +1581,7 @@ class GameLogic {
         md.dailyBestTimedKey < 2) {
       return next;
     }
-    var essenceGain = Keystone.dailyVaultEssence(md.dailyBestTimedKey);
+    var essenceGain = dailyVaultClaimEssence(next);
     final seasonClaims = List<String>.from(md.claimedSeasonRewards);
     final month = isoMonthKey((now ?? DateTime.now()).toUtc());
     final notices = <String>[];
@@ -2130,7 +2150,8 @@ class GameLogic {
     if (day == null) return state;
     if (probe.dungeonId != MetaSystems.dailyDungeonId(day)) return state;
     if (probe.layoutSeed != MetaSystems.dailySeed(day)) return state;
-    final dailyEssenceReward = 25 + state.metaDepth.dailyEssenceBonusLevel * 5;
+    final dailyEssenceReward =
+        25 + state.metaDepth.dailyEssenceBonusLevel * dawnTitheEssencePerLevel;
     return state.copyWith(
       dailyClaimed: true,
       essence: state.essence + dailyEssenceReward,
@@ -2658,8 +2679,8 @@ class GameLogic {
   static int petFrameCost(PetFrame frame) => PetService.petFrameCost(frame);
   static GameState buyPetFrame(GameState state, String petId, PetFrame frame) =>
       PetService.buyPetFrame(state, petId, frame);
-  // MANUAL DELEGATE NEEDED: maxPetBondLevel
-  // MANUAL DELEGATE NEEDED: maxPetLevel
+  static const int maxPetBondLevel = PetService.maxPetBondLevel;
+  static const int maxPetLevel = PetService.maxPetLevel;
   static int bondPetCost(int bondLevel) => PetService.bondPetCost(bondLevel);
   static GameState bondPet(GameState state, String petId) =>
       PetService.bondPet(state, petId);

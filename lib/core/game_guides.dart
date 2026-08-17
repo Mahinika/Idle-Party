@@ -117,6 +117,7 @@ abstract final class GameGuides {
           '• Check RESULT preview and gold cost, then MERGE.\n'
           '• AUTO MERGE: repeatedly merges junk pairs of the same slot '
           '(skips BiS / clear upgrades) while you can afford the cost.\n'
+          '• Combinator Charm in POWER → SHOP lowers MERGE gold (−3g per luck).\n'
           '• Both inputs are consumed. Soulbind is separate (3 fragments).',
     ),
     GuideTopic(
@@ -200,9 +201,10 @@ abstract final class GameGuides {
       title: 'BEAST PEN',
       body:
           'META → BEAST.\n\n'
-          '• Hatch and level pets with essence.\n'
-          '• Merge two same-species pets into a higher rarity.\n'
-          '• Favorite a species, bond for power, buy portrait frames.\n'
+          '• Hatch and level pets with essence (random species and rarity).\n'
+          '• Merge two same-species pets of the same rarity into a higher rarity.\n'
+          '• Favorite a species: +1 ATK and a stronger passive while that pet is ACTIVE.\n'
+          '• Bond for +1 ATK every 5 ranks (max 25). Frames are looks only.\n'
           '• Active pet follows in combat and chips damage.\n'
           '• Pets are meta — they survive Ascend.',
     ),
@@ -211,7 +213,9 @@ abstract final class GameGuides {
       title: 'ESSENCE SHOP',
       body:
           'POWER → SHOP (AL-gated).\n\n'
-          '• Spend essence on permanent stash slots, pet roster, GH CD, and more.\n'
+          '• Spend essence on stash slots, cheaper MERGE gold, pet roster, '
+          'God Hand CD (same levels as Forge → KEEP), Dawn Tithe '
+          '(vault + Daily Run), and more.\n'
           '• Purchases survive Ascend.\n'
           '• Unlock higher offerings as Ascension Level rises.',
     ),

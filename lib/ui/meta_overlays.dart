@@ -412,6 +412,12 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
                   }
                 : null,
           ),
+          const SizedBox(height: 4),
+          Text(
+            'Same buy as POWER → FORGE → KEEP.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
         ],
         const SizedBox(height: 12),
         MenuChrome.sectionLabel('ROSTER'),
@@ -1045,7 +1051,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
     final maxKey = state.effectiveMaxHardmode;
     final vaultReady = GameLogic.canClaimDailyVault(state);
     final affixes = Keystone.previewAffixes(state);
-    final vaultE = Keystone.dailyVaultEssence(md.dailyBestTimedKey);
+    final vaultE = GameLogic.dailyVaultClaimPreviewEssence(state);
     final weekKey = md.weeklyKey.isNotEmpty
         ? md.weeklyKey
         : GameLogic.isoWeekKey(DateTime.now().toUtc());
@@ -1126,7 +1132,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           Text(
             state.hardmodeLevel <= 0
                 ? 'Normal · max KEY +$maxKey'
-                : 'KEY +${state.hardmodeLevel} locks affixes on enter',
+                : 'KEY +${state.hardmodeLevel} · loot +${Keystone.lootItemLevelBonus(state.hardmodeLevel)} iLvl',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
@@ -1820,6 +1826,19 @@ class PrestigeShopOverlay extends StatelessWidget {
                         color: GameTheme.parchmentDim,
                       ),
                     ),
+                    Builder(
+                      builder: (context) {
+                        final have = _prestigeHaveLine(state, item.id);
+                        if (have.isEmpty) return const SizedBox.shrink();
+                        return Text(
+                          have,
+                          style: GameTheme.body(
+                            size: 12,
+                            color: GameTheme.mossLit,
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -1858,5 +1877,27 @@ class PrestigeShopOverlay extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  static String _prestigeHaveLine(GameState state, String id) {
+    final md = state.metaDepth;
+    return switch (id) {
+      'stash_slot' => 'Have ${md.stashBonusSlots} extra bag slots (max 20)',
+      'combine_luck' =>
+        'Luck ${md.combinatorLuck}/5 · MERGE −${md.combinatorLuck * 3}g',
+      'torch_keep' =>
+        'Now +${state.torchOfflineGoldPercent}% hub AFK gold (max 80%)',
+      'gh_cdr' =>
+        'CD ${state.godHandCooldownSeconds.toStringAsFixed(2)}s · '
+            'Lv${md.godHandCdLevel}/8 · same as Forge KEEP',
+      'roster_cap' => 'Roster +${md.petRosterCapBonus} (max +10)',
+      'legacy_spark' => 'Legacy ATK +${md.legacyPoints} (max 20)',
+      'daily_essence' =>
+        'Vault claim +${GameLogic.dailyVaultClaimEssence(state)}e '
+            '· Daily Run ${25 + md.dailyEssenceBonusLevel * GameLogic.dawnTitheEssencePerLevel}e',
+      'gauntlet_gold' =>
+        '+${md.gauntletGoldBonusLevel * 4}% Gauntlet gold (max 20%)',
+      _ => '',
+    };
   }
 }

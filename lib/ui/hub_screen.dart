@@ -314,16 +314,16 @@ class _HubScreenState extends State<HubScreen>
                               AnimatedBuilder(
                                 animation: _torch,
                                 builder: (context, _) => HubHeader(
-                                ascensionLevel: state.ascensionLevel,
-                                bossFloor: bossFloor,
-                                gold: state.gold,
-                                essence: state.essence,
-                                soulbound: state.soulboundFragments,
-                                willRank: state.willRankTitle,
-                                collectionScore: state.collectionScore,
-                                displayTitle: state.displayTitle,
-                                zoneTrophies:
-                                    state.metaDepth.zoneTrophies.length,
+                                  ascensionLevel: state.ascensionLevel,
+                                  bossFloor: bossFloor,
+                                  gold: state.gold,
+                                  essence: state.essence,
+                                  soulbound: state.soulboundFragments,
+                                  willRank: state.willRankTitle,
+                                  collectionScore: state.collectionScore,
+                                  displayTitle: state.displayTitle,
+                                  zoneTrophies:
+                                      state.metaDepth.zoneTrophies.length,
                                   torch: 0.55 + (_torch.value * 0.45),
                                   onOpenSettings: () =>
                                       router.open(MenuRoute.settings),
@@ -414,9 +414,10 @@ class _HubScreenState extends State<HubScreen>
                                         animation: _torch,
                                         builder: (context, child) =>
                                             Transform.scale(
-                                          scale: 1.0 + (_torch.value * 0.012),
-                                          child: child,
-                                        ),
+                                              scale:
+                                                  1.0 + (_torch.value * 0.012),
+                                              child: child,
+                                            ),
                                         child: KenneyButton(
                                           label: 'ENTER DUNGEON',
                                           style: KenneyButtonStyle.brown,
@@ -488,6 +489,10 @@ class _HubScreenState extends State<HubScreen>
                                             state.metaDepth.dailyVaultClaimed,
                                         weeklyBestTimedKey:
                                             state.metaDepth.dailyBestTimedKey,
+                                        vaultClaimEssence:
+                                            GameLogic.dailyVaultClaimPreviewEssence(
+                                          state,
+                                        ),
                                         onClaimWeekly: director.claimWeekly,
                                       ),
                                     ],

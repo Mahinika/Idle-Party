@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/hub_chase.dart';
-import '../../core/keystone.dart';
 import '../../core/local_season.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
@@ -174,6 +173,7 @@ class HubUrgentRow extends StatelessWidget {
     required this.weeklyProgress,
     required this.weeklyClaimed,
     required this.weeklyBestTimedKey,
+    required this.vaultClaimEssence,
     required this.onClaimWeekly,
     this.hideAscend = false,
     this.hideVaultClaim = false,
@@ -195,6 +195,7 @@ class HubUrgentRow extends StatelessWidget {
   final int weeklyProgress;
   final bool weeklyClaimed;
   final int weeklyBestTimedKey;
+  final int vaultClaimEssence;
   final VoidCallback onClaimWeekly;
   final bool hideAscend;
   final bool hideVaultClaim;
@@ -227,7 +228,7 @@ class HubUrgentRow extends StatelessWidget {
         if (showVault) ...[
           KenneyButton(
             label:
-                'CLAIM VAULT  +${Keystone.dailyVaultEssence(weeklyBestTimedKey)}e',
+                'CLAIM VAULT  +${vaultClaimEssence}e',
             style: KenneyButtonStyle.brown,
             primary: true,
             onPressed: onClaimWeekly,

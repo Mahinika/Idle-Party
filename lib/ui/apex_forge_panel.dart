@@ -42,19 +42,25 @@ class ApexMaterialsPanel extends StatelessWidget {
         const SizedBox(height: 10),
         if (owned.isEmpty)
           Text(
-            'No materials yet — clear dungeon bosses (PUSH helps).',
+            'No materials yet — clear dungeon bosses (PUSH helps). '
+            'APEX names the next farm.',
             style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
           )
         else ...[
-          Text('OWNED', style: GameTheme.pixel(size: 7)),
+          Text(
+            'OWNED',
+            style: GameTheme.body(size: 12, color: GameTheme.accentInfo),
+          ),
           const SizedBox(height: 4),
           for (final m in owned) _matRow(m, state.craftMaterials[m.id] ?? 0),
         ],
         if (missing.isNotEmpty) ...[
           const SizedBox(height: 10),
-          Text('NOT FOUND YET', style: GameTheme.pixel(size: 7)),
-          const SizedBox(height: 4),
-          for (final m in missing) _matRow(m, 0),
+          Text(
+            '${missing.length} mat type${missing.length == 1 ? '' : 's'} not found yet — '
+            'APEX names the next boss to farm.',
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
         ],
       ],
     );
@@ -81,8 +87,8 @@ class ApexMaterialsPanel extends StatelessWidget {
               children: [
                 Text(
                   m.name,
-                  style: GameTheme.pixel(
-                    size: 7,
+                  style: GameTheme.body(
+                    size: 14,
                     color: owned ? GameTheme.parchment : GameTheme.parchmentDim,
                   ),
                 ),
@@ -98,9 +104,9 @@ class ApexMaterialsPanel extends StatelessWidget {
             ),
           ),
           Text(
-            owned ? '×$count' : '×0',
-            style: GameTheme.pixel(
-              size: 8,
+            '×$count',
+            style: GameTheme.body(
+              size: 14,
               color: owned ? GameTheme.torchHot : GameTheme.parchmentDim,
             ),
           ),
@@ -206,7 +212,8 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Craft Apex BiS with materials (not gold). Craft weapon R1 first, then armor. Survives Ascend.',
+          'Craft lasting Apex gear with boss materials (not gold). '
+          'Weapon rank 1 first, then armor. Survives Ascend.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (nextFarm != null) ...[

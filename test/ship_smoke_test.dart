@@ -159,6 +159,19 @@ void main() {
     expect(sanctuary.body, contains('+3% gold'));
     expect(sanctuary.body, contains('+1 ATK'));
     expect(sanctuary.body, contains('Lv0'));
+
+    final shop = GameGuides.topics.firstWhere((t) => t.id == 'prestige_shop');
+    expect(shop.body, contains('KEEP'));
+    expect(shop.body.toLowerCase(), contains('vault'));
+    expect(shop.body.toLowerCase(), contains('merge gold'));
+
+    final pets = GameGuides.topics.firstWhere((t) => t.id == 'pets');
+    expect(pets.body.toLowerCase(), contains('same rarity'));
+    expect(pets.body.toLowerCase(), contains('looks only'));
+
+    final combinator = GameGuides.topics.firstWhere((t) => t.id == 'combinator');
+    expect(combinator.body.toLowerCase(), contains('charm'));
+    expect(combinator.body.toLowerCase(), contains('gold'));
   });
 
   test('fresh TODAY chase is grow-the-party, not Daily', () {

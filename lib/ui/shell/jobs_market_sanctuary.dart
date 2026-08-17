@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../models/loot.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
 import '../kenney_bar.dart';
@@ -22,7 +23,8 @@ class JobsOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Contracts — clear goals while you dungeon. Claim for gold + essence.',
+          'Contracts — clear goals while you dungeon. Claim for gold + essence.\n'
+          'Chain ${state.metaDepth.jobChainCount}/3 · the 3rd claim in a row pays +5e extra.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (ready > 0)
@@ -255,7 +257,7 @@ class MarketOverlay extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Buy heals with gold. Tap a stash item here to sell it for gold.\n'
+          'Buy heals with gold. Empty flask slots first, extras go to BAG.\n'
           'In the bag: SELL JUNK = gold · SCRAP = essence (Settings filters).',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -294,7 +296,8 @@ class MarketOverlay extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Flask: whole party (~30% HP). Bandage: lowest hero (~40% HP).',
+                'Flask: whole party (~30% HP). Bandage: lowest hero (~40% HP).\n'
+                '${_marketHealCount(state)}',
                 style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
               ),
             ),
@@ -361,5 +364,32 @@ class MarketOverlay extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  static String _marketHealCount(GameState state) {
+    var flasks = 0;
+    var bandages = 0;
+    var emptySlots = 0;
+    for (final h in state.heroes) {
+      final c = h.itemIn(EquipmentSlot.consumable);
+      if (c == null) {
+        emptySlots++;
+      } else if (c.iconId == 'flask') {
+        flasks++;
+      } else {
+        bandages++;
+      }
+    }
+    for (final g in state.gearStash) {
+      if (g.slot != EquipmentSlot.consumable) continue;
+      if (g.iconId == 'flask') {
+        flasks++;
+      } else {
+        bandages++;
+      }
+    }
+    return 'Have $flasks flask${flasks == 1 ? '' : 's'} · '
+        '$bandages bandage${bandages == 1 ? '' : 's'} · '
+        '$emptySlots empty slot${emptySlots == 1 ? '' : 's'}';
   }
 }

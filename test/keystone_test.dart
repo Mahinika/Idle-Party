@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
@@ -23,10 +24,7 @@ void main() {
       weeklyKey: '2026-W32',
     );
     expect(mid, contains('swarm'));
-    expect(
-      mid.any((a) => a == 'fortified' || a == 'tyrannical'),
-      isTrue,
-    );
+    expect(mid.any((a) => a == 'fortified' || a == 'tyrannical'), isTrue);
 
     final high = Keystone.affixesFor(
       key: 12,
@@ -97,19 +95,18 @@ void main() {
 
   test('daily vault claim accepts timed key without a clear', () {
     final day = MetaSystems.dailyDateKey(DateTime(2026, 8, 9, 12));
-    final state = GameLogic.createInitialState(
-      now: DateTime(2026, 8, 9, 12),
-    ).copyWith(
-      metaDepth: MetaDepthState(
-        weeklyKey: '2026-W32',
-        weeklyModifier: 'iron',
-        seasonKey: '2026-W32 · 2026-08',
-        dailyVaultDate: day,
-        dailyVaultClears: 0,
-        dailyBestTimedKey: 5,
-        dailyVaultClaimed: false,
-      ),
-    );
+    final state = GameLogic.createInitialState(now: DateTime(2026, 8, 9, 12))
+        .copyWith(
+          metaDepth: MetaDepthState(
+            weeklyKey: '2026-W32',
+            weeklyModifier: 'iron',
+            seasonKey: '2026-W32 · 2026-08',
+            dailyVaultDate: day,
+            dailyVaultClears: 0,
+            dailyBestTimedKey: 5,
+            dailyVaultClaimed: false,
+          ),
+        );
     expect(GameLogic.canClaimDailyVault(state), isTrue);
     final claimed = GameLogic.claimDailyVault(
       state,
@@ -119,6 +116,54 @@ void main() {
     expect(
       claimed.essence,
       greaterThanOrEqualTo(Keystone.dailyVaultEssence(5)),
+    );
+  });
+
+  test('Dawn Tithe adds to daily vault claim', () {
+    final now = DateTime.utc(2026, 8, 9, 12);
+    final day = MetaSystems.dailyDateKey(now);
+    final month = GameLogic.isoMonthKey(now);
+    GameState vaultState({required int tithe}) {
+      return GameLogic.createInitialState(now: now).copyWith(
+        essence: 0,
+        metaDepth: MetaDepthState(
+          weeklyKey: '2026-W32',
+          weeklyModifier: 'iron',
+          seasonKey: '2026-W32 · 2026-08',
+          dailyVaultDate: day,
+          dailyVaultClears: 1,
+          dailyBestTimedKey: 0,
+          dailyVaultClaimed: false,
+          dailyEssenceBonusLevel: tithe,
+          claimedSeasonRewards: [month],
+        ),
+      );
+    }
+
+    final without = GameLogic.claimDailyVault(vaultState(tithe: 0), now: now);
+    final withTithe = GameLogic.claimDailyVault(vaultState(tithe: 2), now: now);
+    expect(
+      withTithe.essence - without.essence,
+      2 * GameLogic.dawnTitheEssencePerLevel,
+    );
+  });
+
+  test('CLAIM VAULT preview includes unclaimed season bonus', () {
+    final now = DateTime.utc(2026, 8, 9, 12);
+    final day = MetaSystems.dailyDateKey(now);
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      metaDepth: MetaDepthState(
+        dailyVaultDate: day,
+        dailyVaultClears: 1,
+        dailyBestTimedKey: 0,
+        dailyVaultClaimed: false,
+        claimedSeasonRewards: const [],
+      ),
+    );
+    expect(
+      GameLogic.dailyVaultClaimPreviewEssence(state, now: now),
+      GameLogic.dailyVaultClaimEssence(state) +
+          GameLogic.seasonWeeklyBonusEssence,
     );
   });
 
@@ -152,29 +197,29 @@ void main() {
     expect(loaded.keystoneRunActive, isFalse);
   });
 
-  test('stateFromJson re-locks KEY run when dungeon save lacks keystone flag', () {
-    final json = GameLogic.createInitialState()
-        .copyWith(
-          ascensionLevel: 5,
-          inDungeon: true,
-          hardmodeLevel: 6,
-          keystoneRunActive: false,
-          keystoneRunLevel: 0,
-        )
-        .toJson();
-    final loaded = GameLogic.stateFromJson(json);
-    expect(loaded.keystoneRunActive, isTrue);
-    expect(loaded.keystoneRunLevel, 6);
-    expect(Keystone.combatLevel(loaded), 6);
-  });
+  test(
+    'stateFromJson re-locks KEY run when dungeon save lacks keystone flag',
+    () {
+      final json = GameLogic.createInitialState()
+          .copyWith(
+            ascensionLevel: 5,
+            inDungeon: true,
+            hardmodeLevel: 6,
+            keystoneRunActive: false,
+            keystoneRunLevel: 0,
+          )
+          .toJson();
+      final loaded = GameLogic.stateFromJson(json);
+      expect(loaded.keystoneRunActive, isTrue);
+      expect(loaded.keystoneRunLevel, 6);
+      expect(Keystone.combatLevel(loaded), 6);
+    },
+  );
 
   test('ascend keeps high KEY preference up to AL-gated max', () {
-    final ready = GameLogic.createInitialState(now: DateTime(2026, 8, 1))
-        .copyWith(
-          ascensionLevel: 15,
-          bossVictories: 16,
-          hardmodeLevel: 15,
-        );
+    final ready = GameLogic.createInitialState(
+      now: DateTime(2026, 8, 1),
+    ).copyWith(ascensionLevel: 15, bossVictories: 16, hardmodeLevel: 15);
     expect(GameLogic.canAscend(ready), isTrue);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 2));
     expect(ascended.ascensionLevel, 16);

@@ -46,9 +46,12 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       PartyUpgradeType.attack => '+${state.attackBonus}',
       PartyUpgradeType.defense => '+${state.defenseBonus}',
       PartyUpgradeType.vitality => '+${state.vitalityBonus}',
-      PartyUpgradeType.moveSpeed => '+${state.moveSpeedBonus}%',
-      PartyUpgradeType.attackSpeed => '+${state.attackSpeedBonus}%',
-      PartyUpgradeType.crit => '+${state.critBonus}%',
+      PartyUpgradeType.moveSpeed =>
+        '+${GameState.softForgePercent(state.moveSpeedBonus).round()}%',
+      PartyUpgradeType.attackSpeed =>
+        '+${GameState.softForgePercent(state.attackSpeedBonus).round()}%',
+      PartyUpgradeType.crit =>
+        '+${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
     };
     final name = switch (type) {
       PartyUpgradeType.attack => 'ATK',
@@ -136,12 +139,13 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         Text(
           'Bought: ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
           'STA +${state.vitalityBonus}  '
-          'MOVE +${state.moveSpeedBonus}%  HASTE +${state.attackSpeedBonus}%  '
-          'CRIT +${state.critBonus}%',
+          'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%  '
+          'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '
+          'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
           style: GameTheme.body(size: 13, color: GameTheme.parchment),
         ),
         Text(
-          'Party now: ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
+          'With gear · ATK +${state.totalAttackBonus}  DEF +${state.totalDefenseBonus}  '
           'STA +${state.totalVitalityBonus}',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),

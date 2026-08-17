@@ -32,8 +32,9 @@ void main() {
   });
 
   test('hatch respects roster and rolls rarity fields', () {
-    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 31))
-        .copyWith(essence: 5000);
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 7, 31),
+    ).copyWith(essence: 5000);
     state = GameLogic.hatchPet(state);
     expect(state.ownedPets, isNotEmpty);
     final pet = state.ownedPets.first;
@@ -45,10 +46,10 @@ void main() {
   test('prestige shop and weekly contract operate', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 31))
         .copyWith(
-      essence: 500,
-      ascensionLevel: 5,
-      metaDepth: const MetaDepthState(weeklyProgress: 3),
-    );
+          essence: 500,
+          ascensionLevel: 5,
+          metaDepth: const MetaDepthState(weeklyProgress: 3),
+        );
     state = GameLogic.ensureWeeklyContract(state);
     expect(state.metaDepth.weeklyKey, isNotEmpty);
     state = GameLogic.buyPrestigeShopItem(state, 'torch_keep');
@@ -72,8 +73,9 @@ void main() {
   });
 
   test('merge pets upgrades rarity', () {
-    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 31))
-        .copyWith(essence: 200);
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 7, 31),
+    ).copyWith(essence: 200);
     final a = Pet(
       id: 'ember_pup_1',
       name: 'Ember Pup',
@@ -95,7 +97,10 @@ void main() {
     state = state.copyWith(ownedPets: [a, b], activePet: a);
     state = GameLogic.mergePets(state, a.id, b.id);
     expect(state.ownedPets.length, 1);
-    expect(state.ownedPets.first.rarity.index, greaterThan(PetRarity.common.index));
+    expect(
+      state.ownedPets.first.rarity.index,
+      greaterThan(PetRarity.common.index),
+    );
     expect(state.metaDepth.lifetimePetMerges, 1);
   });
 
@@ -104,7 +109,11 @@ void main() {
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.ensureWeeklyContract(state, now: now);
     expect(state.metaDepth.dailyVaultClears, 0);
-    state = GameLogic.completeCurrentRoom(state, goldGain: 10, skipLootRoll: true);
+    state = GameLogic.completeCurrentRoom(
+      state,
+      goldGain: 10,
+      skipLootRoll: true,
+    );
     expect(state.metaDepth.dailyVaultClears, 1);
     expect(state.metaDepth.lifetimeFloorClears, greaterThanOrEqualTo(1));
     // Ascend must not wipe daily vault progress.
@@ -128,7 +137,11 @@ void main() {
         weeklyModifier: 'swarm',
       ),
     );
-    state = GameLogic.completeCurrentRoom(state, goldGain: 10, skipLootRoll: true);
+    state = GameLogic.completeCurrentRoom(
+      state,
+      goldGain: 10,
+      skipLootRoll: true,
+    );
     final key = GameLogic.isoWeekKey(DateTime.now().toUtc());
     expect(state.metaDepth.weeklyKey, key);
     expect(state.metaDepth.weeklyProgress, 0);
@@ -145,10 +158,10 @@ void main() {
     );
     final baseState = GameLogic.createInitialState(now: DateTime(2026, 7, 31))
         .copyWith(
-      keystoneRunActive: true,
-      keystoneRunLevel: 2,
-      keystoneRunAffixes: const <String>['elite'],
-    );
+          keystoneRunActive: true,
+          keystoneRunLevel: 2,
+          keystoneRunAffixes: const <String>['elite'],
+        );
     final plain = GameLogic.createEnemyGroup(room, fromState: baseState);
     final glassState = baseState.copyWith(
       keystoneRunAffixes: const <String>['glass'],
@@ -177,16 +190,17 @@ void main() {
       level: 5,
       passivePerLevel: 2,
     );
-    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 31)).copyWith(
-      activePet: xpPet,
-      ownedPets: [xpPet],
-      metaDepth: const MetaDepthState(sanctuaryXpLevel: 5),
-    );
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 31))
+        .copyWith(
+          activePet: xpPet,
+          ownedPets: [xpPet],
+          metaDepth: const MetaDepthState(sanctuaryXpLevel: 5),
+        );
     final beforeXp = state.heroes.first.xp;
     final amount = 20;
-    final expectedBoost = amount +
-        (amount *
-                (state.sanctuaryXpBonusPercent + state.petXpFindPercent)) ~/
+    final expectedBoost =
+        amount +
+        (amount * (state.sanctuaryXpBonusPercent + state.petXpFindPercent)) ~/
             100;
     state = GameLogic.awardPartyXp(state, amount);
     expect(state.heroes.first.level, 1);
@@ -212,8 +226,9 @@ void main() {
       passive: PetPassive.attack,
       affinityDungeonId: 'hell',
     );
-    final state = GameLogic.createInitialState(now: DateTime(2026, 7, 31))
-        .copyWith(ownedPets: [a, b], activePet: a);
+    final state = GameLogic.createInitialState(
+      now: DateTime(2026, 7, 31),
+    ).copyWith(ownedPets: [a, b], activePet: a);
     expect(GameLogic.canMergePets(state, a.id, b.id), isFalse);
     final next = GameLogic.mergePets(state, a.id, b.id);
     expect(identical(next, state) || next.ownedPets.length == 2, isTrue);
@@ -222,23 +237,28 @@ void main() {
   });
 
   test('prestige shop respects level caps', () {
-    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 31)).copyWith(
-      essence: 5000,
-      ascensionLevel: 20,
-      metaDepth: const MetaDepthState(torchKeepLevel: 10),
-    );
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 31))
+        .copyWith(
+          essence: 5000,
+          ascensionLevel: 20,
+          metaDepth: const MetaDepthState(torchKeepLevel: 10),
+        );
     final blocked = GameLogic.buyPrestigeShopItem(state, 'torch_keep');
     expect(blocked.metaDepth.torchKeepLevel, 10);
     expect(blocked.essence, state.essence);
 
-    state = state.copyWith(
-      metaDepth: const MetaDepthState(combinatorLuck: 4),
-    );
+    state = state.copyWith(metaDepth: const MetaDepthState(combinatorLuck: 4));
     state = GameLogic.buyPrestigeShopItem(state, 'combine_luck');
     expect(state.metaDepth.combinatorLuck, 5);
     final atCap = GameLogic.buyPrestigeShopItem(state, 'combine_luck');
     expect(atCap.metaDepth.combinatorLuck, 5);
     expect(atCap.essence, state.essence);
+  });
+
+  test('Combinator Charm cheapens MERGE gold, not odds', () {
+    final item = PrestigeShopCatalog.all.firstWhere((i) => i.id == 'combine_luck');
+    expect(item.description.toLowerCase(), contains('gold'));
+    expect(item.description.toLowerCase(), isNot(contains('odds')));
   });
 
   test('MetaDepthState.fromJson parses num ints safely', () {
@@ -292,8 +312,8 @@ void main() {
     expect(state.metaDepth.seasonKey, contains('2026-08'));
     expect(GameLogic.canClaimDailyVault(state), isTrue);
     final before = state.essence;
-    final expectedMin = Keystone.dailyVaultEssence(0) +
-        GameLogic.seasonWeeklyBonusEssence;
+    final expectedMin =
+        Keystone.dailyVaultEssence(0) + GameLogic.seasonWeeklyBonusEssence;
     state = GameLogic.claimWeekly(state, now: now);
     expect(state.metaDepth.dailyVaultClaimed, isTrue);
     expect(state.essence, greaterThanOrEqualTo(before + expectedMin));
@@ -311,7 +331,10 @@ void main() {
     final before = state.essence;
     state = GameLogic.syncMetaPayoffs(state);
     expect(state.metaDepth.claimedWillRanks, isNotEmpty);
-    expect(state.metaDepth.claimedGauntletMilestones, containsAll(['f25', 'f50']));
+    expect(
+      state.metaDepth.claimedGauntletMilestones,
+      containsAll(['f25', 'f50']),
+    );
     expect(state.metaDepth.claimedGauntletMilestones.contains('f100'), isFalse);
     expect(state.essence, greaterThan(before));
     final mid = state.essence;
@@ -320,9 +343,14 @@ void main() {
   });
 
   test('new relics and prestige sinks wire through', () {
-    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 7))
-        .copyWith(essence: 500, ascensionLevel: 12);
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 8, 7),
+    ).copyWith(essence: 500, ascensionLevel: 12);
     expect(GameLogic.relicOrder, contains(GameLogic.godHandFocusRelic));
+    expect(
+      PrestigeShopCatalog.all.firstWhere((i) => i.id == 'gh_cdr').name,
+      contains('Cadence'),
+    );
     state = GameLogic.unlockRelic(state, GameLogic.godHandFocusRelic);
     expect(state.hasRelic(GameLogic.godHandFocusRelic), isTrue);
     expect(state.relicGodHandDamageBonus, 3);

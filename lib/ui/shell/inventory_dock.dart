@@ -543,7 +543,8 @@ class _InventoryDockState extends State<InventoryDock>
           MenuChrome.sectionLabel('COMBINATOR'),
           const SizedBox(height: 4),
           Text(
-            'Sacrifice two bag items of the same slot for one upgraded result. Equipped gear is never used.',
+            'Sacrifice two bag items of the same slot for one upgraded result. Equipped gear is never used.'
+            '${state.metaDepth.combinatorLuck > 0 ? ' Charm luck ${state.metaDepth.combinatorLuck}/5 · −${state.metaDepth.combinatorLuck * 3}g on MERGE.' : ''}',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
           if (slotLabel != null) ...[

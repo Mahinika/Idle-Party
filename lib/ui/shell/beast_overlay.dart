@@ -96,6 +96,13 @@ class _BeastOverlayState extends State<BeastOverlay> {
           textAlign: TextAlign.center,
           style: GameTheme.menuTitle(size: 16, color: GameTheme.torchHot),
         ),
+        const SizedBox(height: 4),
+        Text(
+          'Favorite species: +1 ATK and a stronger passive while that pet is ACTIVE. '
+          'Bond +1 ATK every 5 ranks. Frames are looks only.',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
         if (state.metaDepth.favoritePetSpecies.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text(
@@ -116,8 +123,8 @@ class _BeastOverlayState extends State<BeastOverlay> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Hatch an egg with essence — companions fight beside the party '
-            'and grant passives (gold, loot, mitigate…).',
+            'Hatch an egg with essence — random species and rarity. '
+            'Companions fight beside the party and grant passives (gold, loot, mitigate…).',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
           ),
@@ -125,8 +132,10 @@ class _BeastOverlayState extends State<BeastOverlay> {
         ] else ...[
           Text(
             canMerge
-                ? 'Tap MERGE to combine same-species pets'
-                : 'Tap MERGE on two same-species pets',
+                ? (GameLogic.canMergePets(state, _mergeA!, _mergeB!)
+                      ? 'CONFIRM — both become one higher-rarity pet'
+                      : 'Need the same species and same rarity (legendary cannot merge)')
+                : 'Tap MERGE on two same-species pets of the same rarity',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
@@ -226,9 +235,13 @@ class _BeastOverlayState extends State<BeastOverlay> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: KenneyButton(
-                            label: 'LEVEL ${GameLogic.petLevelUpCost(pet)}e',
+                            label: pet.level >= GameLogic.maxPetLevel
+                                ? 'LEVEL MAX'
+                                : 'LEVEL ${GameLogic.petLevelUpCost(pet)}e · +1 ATK',
                             onPressed:
-                                state.essence >= GameLogic.petLevelUpCost(pet)
+                                pet.level < GameLogic.maxPetLevel &&
+                                    state.essence >=
+                                        GameLogic.petLevelUpCost(pet)
                                 ? () => director.levelUpPet(pet.id)
                                 : null,
                           ),
@@ -268,12 +281,15 @@ class _BeastOverlayState extends State<BeastOverlay> {
                       children: [
                         Expanded(
                           child: KenneyButton(
-                            label:
-                                'BOND ${GameLogic.bondPetCost(pet.bondLevel)}e',
+                            label: pet.bondLevel >= GameLogic.maxPetBondLevel
+                                ? 'BOND MAX'
+                                : 'BOND ${GameLogic.bondPetCost(pet.bondLevel)}e'
+                                      '${(pet.bondLevel + 1) ~/ 5 > pet.bondLevel ~/ 5 ? ' · +1 ATK' : ''}',
                             style: KenneyButtonStyle.grey,
                             onPressed:
-                                state.essence >=
-                                    GameLogic.bondPetCost(pet.bondLevel)
+                                pet.bondLevel < GameLogic.maxPetBondLevel &&
+                                    state.essence >=
+                                        GameLogic.bondPetCost(pet.bondLevel)
                                 ? () => director.bondPet(pet.id)
                                 : null,
                           ),
@@ -287,7 +303,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                               return KenneyButton(
                                 label: pet.frame == PetFrame.crystal
                                     ? 'FRAME MAX'
-                                    : 'FRAME ${next.name} ${cost}e',
+                                    : 'FRAME ${next.name} ${cost}e · looks',
                                 style: KenneyButtonStyle.grey,
                                 onPressed:
                                     pet.frame == PetFrame.crystal ||
