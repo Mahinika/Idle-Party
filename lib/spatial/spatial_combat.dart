@@ -537,6 +537,7 @@ class SpatialWorld {
     this.pendingFeelLevelUps = 0,
     this.pendingFeelKills = 0,
     this.pendingFeelPickups = 0,
+    this.pendingFeelStairs = 0,
     this.godHandRadius = 1.8,
     List<SpatialFloater>? floaters,
     List<SpatialBurst>? bursts,
@@ -604,6 +605,9 @@ class SpatialWorld {
   /// Ground-loot pickups this step (audio/haptics).
   int pendingFeelPickups;
 
+  /// Stairs just opened this step (GO juice).
+  int pendingFeelStairs;
+
   /// Cached God Hand radius for guide ring paint (set on cast).
   double godHandRadius;
 
@@ -649,6 +653,7 @@ class SpatialStepResult {
     this.critHits = 0,
     this.heroLevelUps = 0,
     this.lootPickups = 0,
+    this.stairsOpened = false,
   });
 
   final SpatialWorld world;
@@ -669,6 +674,9 @@ class SpatialStepResult {
 
   /// Ground loot collected this result (audio/haptics).
   final int lootPickups;
+
+  /// Floor is cleared and the stairs just opened this result.
+  final bool stairsOpened;
 }
 
 abstract final class SpatialCombat {
@@ -1958,6 +1966,7 @@ abstract final class SpatialCombat {
       pendingFeelLevelUps: world.pendingFeelLevelUps,
       pendingFeelKills: world.pendingFeelKills,
       pendingFeelPickups: world.pendingFeelPickups,
+      pendingFeelStairs: world.pendingFeelStairs,
       floaters: world.floaters,
       bursts: world.bursts,
       groundFx: world.groundFx,
@@ -2516,6 +2525,8 @@ abstract final class SpatialCombat {
     world.pendingFeelKills = 0;
     final pickups = world.pendingFeelPickups;
     world.pendingFeelPickups = 0;
+    final stairs = world.pendingFeelStairs;
+    world.pendingFeelStairs = 0;
     return SpatialStepResult(
       world: world,
       state: state,
@@ -2527,6 +2538,7 @@ abstract final class SpatialCombat {
       critHits: crits,
       heroLevelUps: levels,
       lootPickups: pickups,
+      stairsOpened: stairs > 0,
     );
   }
 
@@ -3355,6 +3367,7 @@ abstract final class SpatialCombat {
         nextState = _vacuumGroundLoot(world, nextState);
         world.awaitingExit = true;
         world.exitWaitTimer = 0;
+        world.pendingFeelStairs++;
         if (!reducedVfx) {
           final ex = world.map.exitPoint.$1 + 0.5;
           final ey = world.map.exitPoint.$2 + 0.5;
@@ -3373,6 +3386,15 @@ abstract final class SpatialCombat {
             argb: 0x88A0FFC0,
             radius: 0.7,
             life: 0.4,
+          );
+          _spawnFloater(
+            world,
+            x: ex,
+            y: ey - 0.55,
+            text: 'GO',
+            argb: _floaterHeal,
+            life: 1.55,
+            priority: 2,
           );
         }
       }

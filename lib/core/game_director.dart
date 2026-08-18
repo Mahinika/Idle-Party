@@ -584,6 +584,9 @@ class GameDirector extends ChangeNotifier {
         GameAudio.loot();
         playedLoot = true;
       }
+      if (result.stairsOpened) {
+        GameAudio.clear();
+      }
       if (result.state.gearStash.length > _lastStashLen) {
         if (!playedLoot) {
           GameAudio.loot();

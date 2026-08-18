@@ -384,7 +384,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                           child: Text(
                             'BOSS — ${world.bossBannerName}',
                             style: GameTheme.pixel(
-                              size: 8,
+                              size: GameTheme.hudPixelComfort,
                               color: GameTheme.torchHot,
                             ),
                           ),
@@ -574,13 +574,13 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                     ? (state.inGauntlet
                           ? 'WIPED — End Run returns to hub'
                           : 'WIPED — use the Retry / Hub panel')
-                    : 'STAIRS OPEN — party advances when someone reaches exit',
+                    : 'GO — stairs are open',
                 textAlign: TextAlign.center,
                 style: GameTheme.body(
-                  size: 13,
+                  size: 14,
                   color: state.isPartyDefeated
                       ? GameTheme.torchHot
-                      : GameTheme.parchmentDim,
+                      : GameTheme.clear,
                 ),
               ),
             ),
@@ -989,6 +989,21 @@ class _TileRoomPainter extends CustomPainter {
               tile * 0.32 * pulse,
               Paint()..color = const Color(0x3380FFB0),
             );
+            final go = TextPainter(
+              text: TextSpan(
+                text: 'GO',
+                style: GameTheme.pixelCached(
+                  size: math.max(GameTheme.hudPixelComfort, tile * 0.42),
+                  color: const Color(0xEE80FFB0),
+                ),
+              ),
+              textDirection: TextDirection.ltr,
+            )..layout();
+            go.paint(
+              canvas,
+              Offset(dst.center.dx - go.width / 2, dst.top - go.height - 2),
+            );
+            go.dispose();
           }
         } else if (kind == TileKind.spawn) {
           _fillPaint.color = const Color(0x14C88840);

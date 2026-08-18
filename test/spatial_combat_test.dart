@@ -745,4 +745,29 @@ void main() {
       isTrue,
     );
   });
+
+  test('cleared floor shouts GO on the stairs', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 19));
+    var world = SpatialCombat.build(state);
+    for (final e in world.enemies) {
+      e.hp = 0;
+    }
+    world.groundLoot.clear();
+    SpatialStepResult? opened;
+    for (var i = 0; i < 8; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+      if (step.stairsOpened) {
+        opened = step;
+        break;
+      }
+    }
+    expect(opened, isNotNull);
+    expect(world.awaitingExit, isTrue);
+    expect(
+      world.floaters.any((f) => f.text == 'GO' && f.priority >= 2),
+      isTrue,
+    );
+  });
 }
