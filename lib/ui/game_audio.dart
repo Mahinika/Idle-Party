@@ -12,6 +12,9 @@ abstract final class GameAudio {
       case 'hit':
         SystemSound.play(SystemSoundType.click);
         HapticFeedback.selectionClick();
+      case 'kill':
+        SystemSound.play(SystemSoundType.click);
+        HapticFeedback.mediumImpact();
       case 'crit':
         SystemSound.play(SystemSoundType.click);
         HapticFeedback.mediumImpact();
@@ -44,6 +47,7 @@ abstract final class GameAudio {
   }
 
   static void hit() => play('hit');
+  static void kill() => play('kill');
   static void crit() => play('crit');
   static void loot() => play('loot');
   static void levelUp() => play('level');

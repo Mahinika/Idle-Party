@@ -37,7 +37,7 @@ abstract final class GameGuides {
       body:
           'Each floor is one combat wave on a multi-chamber map.\n\n'
           '• Clear a chamber to open gates into the next.\n'
-          '• Pick up ground loot (or wait for auto-timeout), then walk to the stairs.\n'
+          '• Pick up ground loot (or wait for auto-timeout), then walk to the stairs. Gold and gear names pop bigger than damage ticks.\n'
           '• Elite and treasure floors often hide a room chest — grab it like other floor loot.\n'
           '• Boss floors use a special arena.\n'
           '• Settings VFX: Full = all effects; Lite = no floaters/bursts (discs & auras stay); '

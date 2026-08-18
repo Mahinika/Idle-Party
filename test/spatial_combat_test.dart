@@ -621,4 +621,83 @@ void main() {
       isTrue,
     );
   });
+
+  test('white-hit last-kill counts as a kill pop, not only God Hand', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 19));
+    var world = SpatialCombat.build(state);
+    expect(world.enemies, isNotEmpty);
+    for (final e in world.enemies) {
+      e.hp = 1;
+      e.dormant = false;
+    }
+    final target = world.enemies.first;
+    final hero = world.heroes.firstWhere((h) => h.hp > 0);
+    hero.x = target.x;
+    hero.y = target.y;
+    hero.attackCooldown = 0;
+    SpatialStepResult? killed;
+    for (var i = 0; i < 120; i++) {
+      final step = SpatialCombat.step(world, state, dt: 1 / 60);
+      world = step.world;
+      state = step.state;
+      if (step.kills > 0) {
+        killed = step;
+        break;
+      }
+    }
+    expect(killed, isNotNull, reason: 'party should finish a 1-HP pack member');
+    expect(killed!.kills, greaterThan(0));
+    expect(
+      world.bursts,
+      isNotEmpty,
+      reason: 'kills spawn a death burst on Full VFX',
+    );
+    expect(
+      world.floaters.any((f) => f.priority >= 1),
+      isTrue,
+      reason: 'gold/XP on a kill must outrank damage ticks',
+    );
+  });
+
+  test('picking up gear names the item at loot priority', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 19));
+    var world = SpatialCombat.build(state);
+    final hero = world.heroes.firstWhere((h) => h.hp > 0);
+    final gear = GameLogic.createEquipment(
+      slot: EquipmentSlot.ring,
+      rarity: LootRarity.rare,
+      battleNumber: 4,
+    );
+    world.groundLoot
+      ..clear()
+      ..add(
+        GroundLoot(
+          x: hero.x,
+          y: hero.y,
+          drop: LootDrop(
+            name: gear.name,
+            amount: 1,
+            rarity: gear.rarity,
+            equipment: gear,
+          ),
+        ),
+      );
+    final step = SpatialCombat.step(world, state, dt: 0.05);
+    expect(step.lootPickups, greaterThan(0));
+    expect(
+      step.world.floaters.any(
+        (f) => f.priority >= 2 && f.text.contains(gear.name.split(' ').first),
+      ),
+      isTrue,
+    );
+  });
+
+  test('loot and level-up combat text is larger than damage ticks', () {
+    expect(SpatialCombat.floaterReadScale(0), 1.0);
+    expect(SpatialCombat.floaterReadScale(1), greaterThan(1.0));
+    expect(
+      SpatialCombat.floaterReadScale(2),
+      greaterThan(SpatialCombat.floaterReadScale(1)),
+    );
+  });
 }

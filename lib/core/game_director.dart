@@ -174,6 +174,9 @@ class GameDirector extends ChangeNotifier {
 
   /// Throttle crit haptics so a cleave does not buzz the phone every frame.
   double _feelCritCooldown = 0;
+
+  /// Throttle kill pops so a pack wipe is one thump, not five.
+  double _feelKillCooldown = 0;
   static const double _autosaveIntervalSec = 25;
 
   /// Serializes SharedPreferences writes so overlapping unawaited saves cannot
@@ -335,6 +338,9 @@ class GameDirector extends ChangeNotifier {
     }
     if (_feelCritCooldown > 0) {
       _feelCritCooldown = (_feelCritCooldown - dt).clamp(0, 99);
+    }
+    if (_feelKillCooldown > 0) {
+      _feelKillCooldown = (_feelKillCooldown - dt).clamp(0, 99);
     }
   }
 
@@ -535,6 +541,11 @@ class GameDirector extends ChangeNotifier {
         GameAudio.crit();
         _feelCritCooldown = 0.16;
       }
+      if (result.kills > 0 && _feelKillCooldown <= 0) {
+        GameAudio.kill();
+        _feelKillCooldown = 0.22;
+        playedHit = true;
+      }
 
       // Live auto-flask (same threshold as AFK): avg living HP < 35%.
       if (step == 0 &&
@@ -567,6 +578,10 @@ class GameDirector extends ChangeNotifier {
       if (result.goldFromKills > 0 && !playedHit) {
         GameAudio.hit();
         playedHit = true;
+      }
+      if (result.lootPickups > 0 && !playedLoot) {
+        GameAudio.loot();
+        playedLoot = true;
       }
       if (result.state.gearStash.length > _lastStashLen) {
         if (!playedLoot) {

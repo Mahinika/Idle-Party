@@ -535,6 +535,8 @@ class SpatialWorld {
     this.pendingAbilityCasts = 0,
     this.pendingFeelCrits = 0,
     this.pendingFeelLevelUps = 0,
+    this.pendingFeelKills = 0,
+    this.pendingFeelPickups = 0,
     this.godHandRadius = 1.8,
     List<SpatialFloater>? floaters,
     List<SpatialBurst>? bursts,
@@ -596,6 +598,12 @@ class SpatialWorld {
   /// Hero level-ups this step (audio/haptics; counted even when VFX is reduced).
   int pendingFeelLevelUps;
 
+  /// Enemies slain this step (audio/haptics; counted even when VFX is reduced).
+  int pendingFeelKills;
+
+  /// Ground-loot pickups this step (audio/haptics).
+  int pendingFeelPickups;
+
   /// Cached God Hand radius for guide ring paint (set on cast).
   double godHandRadius;
 
@@ -640,6 +648,7 @@ class SpatialStepResult {
     this.abilityCasts = 0,
     this.critHits = 0,
     this.heroLevelUps = 0,
+    this.lootPickups = 0,
   });
 
   final SpatialWorld world;
@@ -657,6 +666,9 @@ class SpatialStepResult {
 
   /// Party members who gained a level this result.
   final int heroLevelUps;
+
+  /// Ground loot collected this result (audio/haptics).
+  final int lootPickups;
 }
 
 abstract final class SpatialCombat {
@@ -1944,6 +1956,8 @@ abstract final class SpatialCombat {
       pendingAbilityCasts: world.pendingAbilityCasts,
       pendingFeelCrits: world.pendingFeelCrits,
       pendingFeelLevelUps: world.pendingFeelLevelUps,
+      pendingFeelKills: world.pendingFeelKills,
+      pendingFeelPickups: world.pendingFeelPickups,
       floaters: world.floaters,
       bursts: world.bursts,
       groundFx: world.groundFx,
@@ -2491,7 +2505,6 @@ abstract final class SpatialCombat {
     bool roomCleared = false,
     bool partyWiped = false,
     int goldFromKills = 0,
-    int kills = 0,
   }) {
     final casts = world.pendingAbilityCasts;
     world.pendingAbilityCasts = 0;
@@ -2499,6 +2512,10 @@ abstract final class SpatialCombat {
     world.pendingFeelCrits = 0;
     final levels = world.pendingFeelLevelUps;
     world.pendingFeelLevelUps = 0;
+    final kills = world.pendingFeelKills;
+    world.pendingFeelKills = 0;
+    final pickups = world.pendingFeelPickups;
+    world.pendingFeelPickups = 0;
     return SpatialStepResult(
       world: world,
       state: state,
@@ -2509,6 +2526,7 @@ abstract final class SpatialCombat {
       abilityCasts: casts,
       critHits: crits,
       heroLevelUps: levels,
+      lootPickups: pickups,
     );
   }
 
@@ -2518,6 +2536,21 @@ abstract final class SpatialCombat {
 
   static void _noteFeelLevelUp(SpatialWorld world) {
     world.pendingFeelLevelUps++;
+  }
+
+  static void _noteFeelKill(SpatialWorld world) {
+    world.pendingFeelKills++;
+  }
+
+  static void _noteFeelPickup(SpatialWorld world) {
+    world.pendingFeelPickups++;
+  }
+
+  /// Phone combat text: loot / level-up / gold read larger than damage ticks.
+  static double floaterReadScale(int priority) {
+    if (priority >= 2) return 1.75;
+    if (priority >= 1) return 1.35;
+    return 1.0;
   }
 
   /// Advances spatial combat by [dt] seconds and syncs HP into [state].
@@ -3404,6 +3437,18 @@ abstract final class SpatialCombat {
                   : (goldPickup || loot.kind == GroundLootKind.gold
                         ? '+${loot.drop.amount}g'
                         : '+essence'));
+        _noteFeelPickup(world);
+        if (!nextState.reducedVfx) {
+          _spawnSpark(
+            world,
+            x: loot.x,
+            y: loot.y,
+            argb: salvaged
+                ? _floaterEssence
+                : (loot.drop.isEquipment ? _floaterGear : _floaterGold),
+            radius: loot.drop.isEquipment ? 0.42 : 0.28,
+          );
+        }
         _spawnFloater(
           world,
           x: loot.x,
@@ -3416,7 +3461,8 @@ abstract final class SpatialCombat {
                     : (goldPickup || loot.kind == GroundLootKind.gold
                           ? _floaterGold
                           : _floaterEssence)),
-          life: salvaged ? 1.4 : 1.05,
+          life: salvaged || loot.drop.isEquipment ? 1.4 : 1.15,
+          priority: salvaged || loot.drop.isEquipment ? 2 : 1,
         );
       } else {
         stillOnGround.add(loot);
@@ -3702,7 +3748,6 @@ abstract final class SpatialCombat {
       );
     }
     var gold = 0;
-    var kills = 0;
     var nextState = state;
     final rng = GameLogic.random;
     for (final enemy in world.enemies) {
@@ -3723,7 +3768,6 @@ abstract final class SpatialCombat {
         if (wasAlive && enemy.hp <= 0) {
           final killed = _onEnemyKilled(world, nextState, enemy, rng);
           gold += killed.gold;
-          kills += 1;
           nextState = killed.state;
         }
       }
@@ -3734,7 +3778,6 @@ abstract final class SpatialCombat {
       world,
       synced,
       goldFromKills: gold,
-      kills: kills,
     );
   }
 
@@ -3989,6 +4032,45 @@ abstract final class SpatialCombat {
         ? state.enemies[index]
         : null;
     final rewardGold = unit?.rewardGold ?? 0;
+    _noteFeelKill(world);
+    if (!state.reducedVfx) {
+      if (enemy.role == EnemyRole.boss) {
+        _spawnRing(
+          world,
+          x: enemy.x,
+          y: enemy.y,
+          argb: _floaterCrit,
+          radius: 1.35,
+          life: 0.48,
+        );
+        _spawnBurst(
+          world,
+          x: enemy.x,
+          y: enemy.y,
+          argb: 0xAAFFF0A0,
+          radius: 0.85,
+          life: 0.38,
+        );
+      } else if (enemy.role == EnemyRole.elite) {
+        _spawnRing(
+          world,
+          x: enemy.x,
+          y: enemy.y,
+          argb: _floaterGold,
+          radius: 0.95,
+          life: 0.36,
+        );
+      } else {
+        _spawnBurst(
+          world,
+          x: enemy.x,
+          y: enemy.y,
+          argb: 0xAAFFE8A0,
+          radius: 0.55,
+          life: 0.28,
+        );
+      }
+    }
     final drops = GameLogic.rollKillLoot(
       state.battleNumber,
       ascensionLevel: state.ascensionLevel,
@@ -4027,7 +4109,8 @@ abstract final class SpatialCombat {
         y: enemy.y - 0.55,
         text: '+${rewardGold}g',
         argb: _floaterGold,
-        life: 1.0,
+        life: 1.15,
+        priority: 1,
       );
     }
     var next = state;
@@ -4041,7 +4124,8 @@ abstract final class SpatialCombat {
         y: enemy.y - 0.75,
         text: '+${xp}XP',
         argb: _floaterXp,
-        life: 0.9,
+        life: 1.05,
+        priority: 1,
       );
       var leveledFloater = false;
       for (var i = 0; i < next.heroes.length; i++) {

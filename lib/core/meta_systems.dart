@@ -27,6 +27,7 @@ abstract final class MetaSystems {
       version: '1.12.13',
       bullets: <String>[
         'Crits thump in your hand, and LEVEL UP stays on screen instead of hiding behind damage numbers.',
+        'Kills pop on the map. Gold, XP, and gear names stay bigger than damage ticks so pickups read on a phone.',
         'Tapping God Hand slams when it fires — waiting on cooldown stays quiet.',
         'Floor clear holds a beat so gold and a level-up are readable on a phone.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',

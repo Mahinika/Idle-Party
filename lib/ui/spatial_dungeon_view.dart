@@ -1929,17 +1929,19 @@ class _TileRoomPainter extends CustomPainter {
 
     if (showBursts) {
       final floaters = world.floaters;
-      final start = floaters.length > 10 ? floaters.length - 10 : 0;
       final tp = TextPainter(textDirection: TextDirection.ltr);
-      final maxW = tile * 3.6;
-      for (var i = start; i < floaters.length; i++) {
+      final maxW = tile * 4.4;
+      for (var i = 0; i < floaters.length; i++) {
         final floater = floaters[i];
         if (!_inView(floater.x, floater.y, pad: 0.5)) continue;
-        final alpha = (floater.life / 0.7).clamp(0.0, 1.0);
+        final fadeFor = floater.priority >= 1 ? 1.15 : 0.7;
+        final alpha = (floater.life / fadeFor).clamp(0.0, 1.0);
+        final size =
+            tile * 0.32 * SpatialCombat.floaterReadScale(floater.priority);
         tp.text = TextSpan(
           text: floater.text,
           style: GameTheme.pixelCached(
-            size: math.max(8, tile * 0.32),
+            size: math.max(GameTheme.hudPixel, size),
             color: Color(floater.argb).withValues(alpha: alpha),
           ),
         );
