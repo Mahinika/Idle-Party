@@ -1140,6 +1140,27 @@ class _TileRoomPainter extends CustomPainter {
         tile * (0.32 + loot.drop.rarity.index * 0.04) * pulse,
         _fillPaint,
       );
+      if (showLootPulse && loot.age > 0.28) {
+        SpatialActor? magnet;
+        var best = 4.6;
+        for (final h in world.heroes) {
+          if (h.hp <= 0) continue;
+          final dx = h.x - loot.x;
+          final dy = h.y - loot.y;
+          final d = math.sqrt(dx * dx + dy * dy);
+          if (d < best && d > 0.55) {
+            best = d;
+            magnet = h;
+          }
+        }
+        if (magnet != null) {
+          final hc = center(magnet.x, magnet.y);
+          _strokePaint
+            ..color = glow.withValues(alpha: 0.45)
+            ..strokeWidth = math.max(1.2, tile * 0.055);
+          canvas.drawLine(c, hc, _strokePaint);
+        }
+      }
       if (showLootPulse && loot.drop.rarity.index >= LootRarity.rare.index) {
         _strokePaint
           ..color = glow.withValues(alpha: 0.35)

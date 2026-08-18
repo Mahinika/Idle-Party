@@ -88,6 +88,19 @@ void main() {
     );
   });
 
+  test('signature dumps flash the HUD chip on the first beat of cooldown', () {
+    final dump = ClassKits.defFor(AbilityId.templarsVerdict)!;
+    expect(dump.tier, AbilityCastTier.signature);
+    expect(dump.justFiredHud(dump.cooldown), isTrue);
+    expect(dump.justFiredHud(dump.cooldown - 0.1), isTrue);
+    expect(dump.justFiredHud(dump.cooldown * 0.4), isFalse);
+    expect(dump.justFiredHud(0), isFalse);
+    final filler = ClassKits.all.firstWhere(
+      (d) => d.tier == AbilityCastTier.filler && d.cooldown > 1,
+    );
+    expect(filler.justFiredHud(filler.cooldown), isFalse);
+  });
+
   test('Inner Fire arms on Disc Priest once combat ticks', () {
     final state = _partyAtLevel(15);
     var world = SpatialCombat.build(state);

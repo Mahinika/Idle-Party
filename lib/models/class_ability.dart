@@ -608,6 +608,16 @@ class ClassAbilityDef {
     };
     return '$name\n$description\n$cd$cost$shield$mode';
   }
+
+  /// Party HUD: gold flash for the first beat after a dump/panic fires.
+  bool justFiredHud(double cdLeft) {
+    if (tier != AbilityCastTier.signature &&
+        tier != AbilityCastTier.emergency) {
+      return false;
+    }
+    if (cooldown <= 0.4) return false;
+    return cdLeft > 0.05 && cdLeft >= cooldown - 0.42;
+  }
 }
 
 /// Class kits adapted for Idle Party auto-combat (Wrath of the Lich King).

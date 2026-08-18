@@ -570,6 +570,7 @@ class GameDirector extends ChangeNotifier {
                 _spatial!,
                 reducedVfx: _state.reducedVfx,
               );
+              GameAudio.flask();
             }
           }
         }
@@ -1821,6 +1822,7 @@ class GameDirector extends ChangeNotifier {
     if (!identical(next, before) && _spatial != null && _state.inDungeon) {
       _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
       SpatialCombat.spawnFlaskHealFx(_spatial!, reducedVfx: _state.reducedVfx);
+      GameAudio.flask();
     }
   }
 

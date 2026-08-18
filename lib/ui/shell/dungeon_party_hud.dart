@@ -645,8 +645,11 @@ class _InlineAbilityChip extends StatelessWidget {
     final onCd = cdLeft > 0.05;
     final noRage = rage + 0.001 < ability.resourceCost;
     final isCast = ability.resolvedFireMode == AbilityFireMode.cast;
+    final justFired = ability.justFiredHud(cdLeft);
     final ready = isCast && !gated && !onCd && !noRage;
-    final border = activeBuff
+    final border = justFired
+        ? GameTheme.torchHot
+        : activeBuff
         ? GameTheme.torchHot
         : ready
         ? GameTheme.clear
@@ -661,17 +664,19 @@ class _InlineAbilityChip extends StatelessWidget {
       message: ability.tooltipMessage,
       waitDuration: const Duration(milliseconds: 350),
       child: Opacity(
-        opacity: gated ? 0.4 : (ready || activeBuff ? 1 : 0.7),
+        opacity: gated ? 0.4 : (ready || activeBuff || justFired ? 1 : 0.7),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
           decoration: BoxDecoration(
-            color: activeBuff
+            color: justFired
+                ? const Color(0xFF4A3010)
+                : activeBuff
                 ? const Color(0xFF3A2A14)
                 : const Color(0xFF221810),
             borderRadius: BorderRadius.circular(2),
             border: Border.all(
               color: border,
-              width: activeBuff || ready ? 1.2 : 1,
+              width: justFired || activeBuff || ready ? 1.4 : 1,
             ),
           ),
           child: Text(
@@ -680,6 +685,8 @@ class _InlineAbilityChip extends StatelessWidget {
               size: 13,
               color: gated
                   ? GameTheme.bloodLit
+                  : justFired
+                  ? GameTheme.torchHot
                   : onCd
                   ? GameTheme.parchmentDim
                   : GameTheme.parchment,

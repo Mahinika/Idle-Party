@@ -735,4 +735,14 @@ void main() {
       isTrue,
     );
   });
+
+  test('flask heal shouts FLASK bigger than damage ticks', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 8, 19));
+    final world = SpatialCombat.build(state);
+    SpatialCombat.spawnFlaskHealFx(world, reducedVfx: false);
+    expect(
+      world.floaters.any((f) => f.text == 'FLASK' && f.priority >= 2),
+      isTrue,
+    );
+  });
 }

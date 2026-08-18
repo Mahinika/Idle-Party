@@ -24,6 +24,9 @@ abstract final class GameAudio {
         Future<void>.delayed(const Duration(milliseconds: 40), () {
           if (!muted) SystemSound.play(SystemSoundType.click);
         });
+      case 'flask':
+        SystemSound.play(SystemSoundType.click);
+        HapticFeedback.mediumImpact();
       case 'level':
         SystemSound.play(SystemSoundType.alert);
         HapticFeedback.mediumImpact();
@@ -50,6 +53,7 @@ abstract final class GameAudio {
   static void kill() => play('kill');
   static void crit() => play('crit');
   static void loot() => play('loot');
+  static void flask() => play('flask');
   static void levelUp() => play('level');
   static void wipe() => play('wipe');
   static void boss() => play('boss');

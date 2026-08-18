@@ -861,8 +861,8 @@ abstract final class SpatialCombat {
         y: h.y - 0.45,
         text: 'FLASK',
         argb: 0xFF70F090,
-        life: 0.55,
-        priority: 1,
+        life: 1.2,
+        priority: 2,
       );
     }
   }
