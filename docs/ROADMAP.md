@@ -5,9 +5,9 @@ Baseline (historical): app **v1.9.3**, full-game audit ~**92%**
 ([audits/2026-08-03-full-game.md](audits/2026-08-03-full-game.md)) — audit predates
 Tide/Ember/meta polish; treat as historical closeout, not current completeness.
 
-**Current ship line:** **1.12.12** (`pubspec` ↔ `MetaSystems.currentVersion`).
+**Current ship line:** **1.12.13** (`pubspec` ↔ `MetaSystems.currentVersion`).
 Mothveil Hollow (15th zone) shipped in **1.12.3**. Last Play closed Alpha:
-**1.12.11 (41)**. Operate from [CONTENT_CADENCE.md](CONTENT_CADENCE.md).
+**1.12.12 (42)** (2026-08-17). Operate from [CONTENT_CADENCE.md](CONTENT_CADENCE.md).
 
 **Status:** dokumenterad; Q1–Q4 kärna + success-spår Habit→Season→Zone i kod; Play closed
 Alpha igång (produktion väntar 12×14). GitHub Releases är primär install.

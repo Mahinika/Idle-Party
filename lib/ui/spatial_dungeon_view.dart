@@ -19,7 +19,6 @@ import '../spatial/tile_map.dart';
 import 'custom_assets.dart';
 import 'decoded_image_cache.dart';
 import 'dungeon_environment.dart';
-import 'game_audio.dart';
 import 'game_theme.dart';
 import 'hero_paper_doll.dart';
 import 'kenney_assets.dart';
@@ -310,7 +309,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                               widget.director.reviveParty();
                               return;
                             }
-                            GameAudio.hit();
                             widget.director.godHandAtWorld(
                               camera.camX +
                                   details.localPosition.dx / camera.tileSize,

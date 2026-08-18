@@ -32,7 +32,7 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 | PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
 | polish hub / weekly / tips | `hub-smoke`, `browser-playtest` |
 | I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — that *is* the batch |
-| “gör spelet bättre” / vad härnäst (no other target) | `docs/CONTENT_CADENCE.md` after 90d (not `/init` or cleanup) |
+| “gör spelet bättre” / vad härnäst (no other target) | core-loop feel slice via `docs/CONTENT_CADENCE.md` (not new zone/class, not `/init` or cleanup) |
 | Play Store / listing / privacy / AAB | `play-store-prep` (+ `docs/PLAY_STORE.md`) |
 | **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules` with how the game works now |
 | Ascend / “what am I chasing” feel | check `hub_chase`, `ascend_roadmap`, Blessing in `metaDepth` — not a separate skill |

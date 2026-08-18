@@ -1,20 +1,21 @@
 ---
 description: >-
-  Owner product preferences for Idle Party — content focus, progression fantasy,
-  polish kits, more zones, big batches, English UI; commit locally, ask before push.
+  Owner product preferences for Idle Party — core-loop feel, progression fantasy,
+  polish kits, no new zones/classes for now, big batches, English UI; commit locally, ask before push.
 alwaysApply: true
 ---
 
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
-Last preference sync: **2026-08-13** (workstyle: commit locally when a batch is
-verified; still ask before push / Play / save-wipe. Product locks unchanged).
+Last preference sync: **2026-08-18** (no new zones/classes; core-loop feel.
+Workstyle: commit locally when a batch is verified; still ask before push /
+Play / save-wipe. Other product locks unchanged).
 
 ## Near-term focus
 
-- **Default roadmap:** 90-day M1–M3 shipped (chase → kits → Blightfen). Operate from `docs/CONTENT_CADENCE.md` — balance + one player-visible slice + What’s New. Keep STRATEGY_90D decision table (kits before new specs; new zone if chase is clear). Don’t invent a competing list. **Now:** monthly cadence (zones + kit polish).
-- Vague “gör spelet bättre / vad härnäst” → **cadence slice**, not `/init`, cleanup, or CI chores.
+- **Default roadmap:** 90-day M1–M3 shipped. Operate from `docs/CONTENT_CADENCE.md` — balance + one player-visible slice + What’s New. Keep STRATEGY_90D decision table (kits before new specs). Don’t invent a competing list. **Now:** **core-loop feel** so people keep playing — not new zones, not new classes.
+- Vague “gör spelet bättre / vad härnäst” → **feel of the existing loop** (power beats, combat juice, readable rewards), not a new dungeon or spec, not `/init` / cleanup / CI chores.
 - Prefer **game feel / content** over Play ops busywork (closed-test recruitment can idle in background).
 - Play production remains a goal, but day-to-day work defaults to **content + feel** unless the owner asks about Play.
 - Background why (optional read): `docs/TOP_GAMES_RESEARCH.md`.
@@ -64,8 +65,9 @@ verified; still ask before push / Play / save-wipe. Product locks unchanged).
 
 ## Content priorities
 
-- **Kits:** polish what exists (fairness + clarity + fantasy) before adding many new specs.
-- **Zones:** prefer **more zones** when adding content (still use `zone-art-identity` so they don’t feel like reskins).
+- **Kits:** polish what exists (fairness + clarity + fantasy) before adding many new specs. **No new classes/specs** until the owner revisits.
+- **Zones:** **no new zones for now.** Identity polish of existing floors is OK if it serves feel; do not start dungeon #16 unless asked.
+- **Feel / retention:** make the loop they already have (fight → loot → level → claim) punchier and more readable so a short phone session wants “one more floor.”
 - **Meta loops** (daily vault / Will / Gauntlet / season): push toward **“I always know what I’m chasing today”** — hub TODAY with READY/ALMOST, Ascend Blessing + unlock teasers, clear claims.
 - **God Hand:** owner undecided (fun steer vs deeper strategy) — don’t redesign GH direction without asking.
 - **Monetization:** **no IAP / no paid store** for a while longer (stay free, no ads unless owner revisits).

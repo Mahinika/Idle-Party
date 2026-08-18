@@ -19,10 +19,19 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.12';
+  static const String currentVersion = '1.12.13';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.13',
+      bullets: <String>[
+        'Crits thump in your hand, and LEVEL UP stays on screen instead of hiding behind damage numbers.',
+        'Tapping God Hand slams when it fires — waiting on cooldown stays quiet.',
+        'Floor clear holds a beat so gold and a level-up are readable on a phone.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.12',
       bullets: <String>[

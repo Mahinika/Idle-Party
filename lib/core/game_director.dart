@@ -171,6 +171,9 @@ class GameDirector extends ChangeNotifier {
 
   /// Loot pickups since last mid-fight auto-equip (debounce thrash).
   int _lootSinceAutoEquip = 0;
+
+  /// Throttle crit haptics so a cleave does not buzz the phone every frame.
+  double _feelCritCooldown = 0;
   static const double _autosaveIntervalSec = 25;
 
   /// Serializes SharedPreferences writes so overlapping unawaited saves cannot
@@ -329,6 +332,9 @@ class GameDirector extends ChangeNotifier {
     if (_offlineSummaryLife > 0) {
       _offlineSummaryLife = (_offlineSummaryLife - dt).clamp(0, 99);
       if (_offlineSummaryLife <= 0) _offlineSummary = null;
+    }
+    if (_feelCritCooldown > 0) {
+      _feelCritCooldown = (_feelCritCooldown - dt).clamp(0, 99);
     }
   }
 
@@ -525,6 +531,10 @@ class GameDirector extends ChangeNotifier {
       _tickUiTimers(_spatialDt);
       _announceAbilityUnlocks(before, _state);
       _announceAchievementUnlocks(before, _state);
+      if (result.critHits > 0 && _feelCritCooldown <= 0) {
+        GameAudio.crit();
+        _feelCritCooldown = 0.16;
+      }
 
       // Live auto-flask (same threshold as AFK): avg living HP < 35%.
       if (step == 0 &&
@@ -585,7 +595,7 @@ class GameDirector extends ChangeNotifier {
               equippedN == 1
                   ? 'Equipped 1 upgrade'
                   : 'Equipped $equippedN upgrades',
-              life: 1.4,
+              life: 2.2,
             );
           }
         }
@@ -670,6 +680,16 @@ class GameDirector extends ChangeNotifier {
         _state = MetaSystems.evaluateAchievements(_state);
         final goldDelta = _state.gold - beforeClear.gold;
         final essDelta = _state.essence - beforeClear.essence;
+        var leveled = false;
+        for (var i = 0; i < _state.heroes.length; i++) {
+          final oldLevel = i < beforeClear.heroes.length
+              ? beforeClear.heroes[i].level
+              : 0;
+          if (_state.heroes[i].level > oldLevel) {
+            leveled = true;
+            break;
+          }
+        }
         _clearSummary = goldDelta > 0
             ? 'FLOOR $floorNo CLEAR  +${goldDelta}g'
             : 'FLOOR $floorNo CLEAR';
@@ -677,6 +697,9 @@ class GameDirector extends ChangeNotifier {
           _clearSummary = essDelta > 0
               ? 'GAUNTLET F$floorNo  +${goldDelta}g  +${essDelta}e'
               : 'GAUNTLET F$floorNo  +${goldDelta}g';
+        }
+        if (leveled) {
+          _clearSummary = '$_clearSummary  · LEVEL UP';
         }
         final matGrants = LogicNotices.takeCraftMats();
         if (matGrants.isNotEmpty) {
@@ -689,8 +712,8 @@ class GameDirector extends ChangeNotifier {
         if (payoffNotices.isNotEmpty) {
           showToast(payoffNotices.join(' · '), life: 3.0);
         }
-        // Short enough to fade before the next floor's first fight reads clearly.
-        _clearSummaryLife = 1.35;
+        // Long enough to read gold / LEVEL UP on a phone before the next pack.
+        _clearSummaryLife = 2.05;
         if (_state.highestDungeonCleared > beforeDungeon) {
           GameAudio.unlock();
           String? nextId;
@@ -865,6 +888,8 @@ class GameDirector extends ChangeNotifier {
         _state.isPartyDefeated) {
       return;
     }
+    if (_spatial!.godHandCooldown > 0) return;
+    final before = _state;
     final result = SpatialCombat.godHand(
       _spatial!,
       _state,
@@ -876,6 +901,9 @@ class GameDirector extends ChangeNotifier {
     if (result.goldFromKills > 0) {
       _state = GameLogic.creditCombatGold(_state, result.goldFromKills);
     }
+    GameAudio.crit();
+    _announceAbilityUnlocks(before, _state);
+    _announceAchievementUnlocks(before, _state);
     if (result.kills > 0) {
       final g = result.goldFromKills;
       showToast(
@@ -2060,10 +2088,12 @@ class GameDirector extends ChangeNotifier {
 
   void _announceAbilityUnlocks(GameState before, GameState after) {
     final bits = <String>[];
+    var leveled = false;
     for (var i = 0; i < after.heroes.length; i++) {
       final hero = after.heroes[i];
       final oldLevel = i < before.heroes.length ? before.heroes[i].level : 0;
       if (hero.level <= oldLevel) continue;
+      leveled = true;
       final unlocked = ClassKits.unlockedAtSpec(
         hero.specId,
         hero.level,
@@ -2072,8 +2102,12 @@ class GameDirector extends ChangeNotifier {
         bits.add('${hero.name}: ${ability.shortLabel}');
       }
     }
-    if (bits.isEmpty) return;
-    GameAudio.unlock();
+    if (!leveled) return;
+    GameAudio.levelUp();
+    if (bits.isEmpty) {
+      showToast('LEVEL UP!', life: 2.2);
+      return;
+    }
     // One toast — avoids spam when several heroes level in the same clear.
     showToast(
       bits.length == 1 ? '${bits.first}!' : '${bits.take(3).join(' · ')}!',

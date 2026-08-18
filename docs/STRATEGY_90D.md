@@ -161,7 +161,7 @@ Månadsskifte: en mening i What’s New som spelaren bryr sig om (English).
 | Om ni tvekar mellan … | Välj |
 |------------------------|------|
 | Ny spec vs polisha kit | Polisha kit |
-| Ny zon vs mer hub-chrome | Ny zon *om* chase redan är tydlig; annars chase |
+| Ny zon vs mer hub-chrome | Core-loop feel först (owner 2026-08-18: inga nya zoner). Hub-chrome bara om chase ljuger. |
 | Cool affinity-nudge vs budget | Budget |
 | Skippa test “för att CI flakar” | Fixa kontraktet / mjuk gate med anledning — gutta inte |
 | Stor rewrite vs small ship | Small ship + avsnitt |
@@ -189,3 +189,4 @@ Månadsskifte: en mening i What’s New som spelaren bryr sig om (English).
 | 2026-08-13 | Första 90-dagarsplan: topplistor + Idle Party-lärdomar |
 | 2026-08-13 | M1–M3 shippade (chase, kits, Blightfen). Cadence tar över; Brassvault är nästa zon-slice. |
 | 2026-08-14 | Cadence-slice: Mothveil Hollow (15e zonen) efter Brassvault. |
+| 2026-08-18 | Owner: inga nya zoner/klasser. Nästa cadence = känslan i loopen. |

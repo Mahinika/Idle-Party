@@ -533,6 +533,8 @@ class SpatialWorld {
     this.petMitigateFlat = 0,
     this.petHealBoost = 0,
     this.pendingAbilityCasts = 0,
+    this.pendingFeelCrits = 0,
+    this.pendingFeelLevelUps = 0,
     this.godHandRadius = 1.8,
     List<SpatialFloater>? floaters,
     List<SpatialBurst>? bursts,
@@ -588,6 +590,12 @@ class SpatialWorld {
   /// Ability casts this [SpatialCombat.step] (flushed into [SpatialStepResult]).
   int pendingAbilityCasts;
 
+  /// Crit hits this step (audio/haptics; counted even when VFX is reduced).
+  int pendingFeelCrits;
+
+  /// Hero level-ups this step (audio/haptics; counted even when VFX is reduced).
+  int pendingFeelLevelUps;
+
   /// Cached God Hand radius for guide ring paint (set on cast).
   double godHandRadius;
 
@@ -630,6 +638,8 @@ class SpatialStepResult {
     this.goldFromKills = 0,
     this.kills = 0,
     this.abilityCasts = 0,
+    this.critHits = 0,
+    this.heroLevelUps = 0,
   });
 
   final SpatialWorld world;
@@ -641,6 +651,12 @@ class SpatialStepResult {
   /// Enemies slain this result (God Hand / step kill bank).
   final int kills;
   final int abilityCasts;
+
+  /// Crits landed this result — live juice only (offline ignores).
+  final int critHits;
+
+  /// Party members who gained a level this result.
+  final int heroLevelUps;
 }
 
 abstract final class SpatialCombat {
@@ -1926,6 +1942,8 @@ abstract final class SpatialCombat {
       petMitigateFlat: state.petMitigateFlat,
       petHealBoost: state.petHealBoost,
       pendingAbilityCasts: world.pendingAbilityCasts,
+      pendingFeelCrits: world.pendingFeelCrits,
+      pendingFeelLevelUps: world.pendingFeelLevelUps,
       floaters: world.floaters,
       bursts: world.bursts,
       groundFx: world.groundFx,
@@ -2473,17 +2491,33 @@ abstract final class SpatialCombat {
     bool roomCleared = false,
     bool partyWiped = false,
     int goldFromKills = 0,
+    int kills = 0,
   }) {
     final casts = world.pendingAbilityCasts;
     world.pendingAbilityCasts = 0;
+    final crits = world.pendingFeelCrits;
+    world.pendingFeelCrits = 0;
+    final levels = world.pendingFeelLevelUps;
+    world.pendingFeelLevelUps = 0;
     return SpatialStepResult(
       world: world,
       state: state,
       roomCleared: roomCleared,
       partyWiped: partyWiped,
       goldFromKills: goldFromKills,
+      kills: kills,
       abilityCasts: casts,
+      critHits: crits,
+      heroLevelUps: levels,
     );
+  }
+
+  static void _noteFeelCrit(SpatialWorld world) {
+    world.pendingFeelCrits++;
+  }
+
+  static void _noteFeelLevelUp(SpatialWorld world) {
+    world.pendingFeelLevelUps++;
   }
 
   /// Advances spatial combat by [dt] seconds and syncs HP into [state].
@@ -3140,6 +3174,7 @@ abstract final class SpatialCombat {
           );
           target.hp = math.max(0, target.hp - dealt);
           _recordHeroDamage(hero, dealt);
+          if (isCrit && dealt > 0) _noteFeelCrit(world);
           final resource = _actorResource(hero);
           if (_actorIsTank(hero)) {
             _gainRage(hero, 4 + dealt * 0.15);
@@ -3457,6 +3492,7 @@ abstract final class SpatialCombat {
               }
             }
           }
+          if (dealt > 0 && p.isCrit) _noteFeelCrit(world);
           if (dealt > 0 && !reducedVfx) {
             _spawnFloater(
               world,
@@ -3694,9 +3730,9 @@ abstract final class SpatialCombat {
     }
     _updateChambers(world, reducedVfx: reduced);
     final synced = _syncHp(nextState, world);
-    return SpatialStepResult(
-      world: world,
-      state: synced,
+    return _stepResult(
+      world,
+      synced,
       goldFromKills: gold,
       kills: kills,
     );
@@ -3979,7 +4015,8 @@ abstract final class SpatialCombat {
           y: enemy.y - 0.15,
           text: 'LOOT!',
           argb: _floaterGear,
-          life: 0.7,
+          life: 0.9,
+          priority: 2,
         );
       }
     }
@@ -4011,13 +4048,15 @@ abstract final class SpatialCombat {
         if (next.heroes[i].level > beforeLevels[i]) {
           if (!leveledFloater) {
             leveledFloater = true;
+            _noteFeelLevelUp(world);
             _spawnFloater(
               world,
               x: world.heroes.length > i ? world.heroes[i].x : enemy.x,
               y: (world.heroes.length > i ? world.heroes[i].y : enemy.y) - 0.9,
               text: 'LEVEL UP!',
               argb: _floaterXp,
-              life: 1.0,
+              life: 1.45,
+              priority: 2,
             );
           }
           if (i < world.heroes.length) {

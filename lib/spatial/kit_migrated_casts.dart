@@ -754,6 +754,7 @@ abstract final class KitNamedCasts {
             to: focus,
             damage: ball,
             style: SpellBoltStyle.fire,
+            isCrit: isCrit,
             label: isCrit ? 'CRIT' : 'FIREBALL',
             labelArgb: 0xFFFF8040,
           ),

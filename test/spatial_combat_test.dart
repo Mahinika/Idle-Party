@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/class_ability.dart';
@@ -56,20 +57,65 @@ void main() {
     );
   });
 
-  test('god hand damages nearby enemies', () {
-    final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+  test('God Hand last-hit reports a party level-up', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final need = GameLogic.xpPoolForLevel(1);
+    state = state.copyWith(
+      heroes: [for (final h in state.heroes) h.copyWith(xp: need - 1)],
+    );
     final world = SpatialCombat.build(state);
     expect(world.enemies, isNotEmpty);
+    for (final e in world.enemies) {
+      e.hp = 1;
+    }
     final target = world.enemies.first;
-    final before = target.hp;
+    final result = SpatialCombat.godHand(
+      world,
+      state,
+      tileX: target.x,
+      tileY: target.y,
+      baseDamage: 9999,
+    );
+    expect(result.kills, greaterThan(0));
+    expect(result.heroLevelUps, greaterThan(0));
+    expect(result.state.heroes.any((h) => h.level > 1), isTrue);
+  });
+
+  test('God Hand on cooldown does not smash again', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final world = SpatialCombat.build(state);
+    final target = world.enemies.first;
     SpatialCombat.godHand(
       world,
       state,
       tileX: target.x,
       tileY: target.y,
-      baseDamage: 50,
+      baseDamage: 4,
     );
-    expect(target.hp, lessThan(before));
+    final hp = target.hp;
+    final again = SpatialCombat.godHand(
+      world,
+      state,
+      tileX: target.x,
+      tileY: target.y,
+      baseDamage: 9999,
+    );
+    expect(target.hp, hp);
+    expect(again.kills, 0);
+  });
+
+  test('director God Hand on cooldown does not toast again', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState(now: DateTime(2026, 7, 4)),
+    );
+    await director.boot();
+    director.enterDungeon();
+    director.godHandAtFocus();
+    final first = director.toast;
+    expect(first, isNotNull);
+    director.godHandAtFocus();
+    expect(director.toast, first);
   });
 
   test('God Hand KEEP preview matches smash, blast, and cooldown', () {

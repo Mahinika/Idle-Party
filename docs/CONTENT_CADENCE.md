@@ -20,7 +20,7 @@ Ship habit → second layer → content cadence:
 
 1. **Habit** — hub TODAY READY/ALMOST always visible on phone; claim/progress CTAs.
 2. **Local season** — `lib/core/local_season.dart` week/month rows (reuse SpatialCombat + vault/Gauntlet).
-3. **Zones / kits** — prefer new zones + kit fantasy polish over new specs; Play 12×14 stays background.
+3. **Zones / kits** — owner lock **2026-08-18:** no new zones or classes. Prefer **core-loop feel** (power beats, combat juice) + kit fantasy polish. Play 12×14 stays background.
 
 See [ROADMAP.md](ROADMAP.md) “Success-spår”.  
 Near-term (90 days): [STRATEGY_90D.md](STRATEGY_90D.md).

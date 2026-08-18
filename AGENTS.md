@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.12**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.13**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -14,13 +14,13 @@ Agents **must** choose methods, skills, and verify steps themselves — see
 
 Preferences (do not re-ask): **content/feel over Play busywork**, first-hour
 **progression/power**, early calm / **endgame grindy OK**, **polish kits** before
-many new specs, **more zones**, hub TODAY / Ascend Blessing / unlock teasers for
+many new specs, **no new zones or classes for now**, hub TODAY / Ascend Blessing / unlock teasers for
 “what am I chasing”, **no IAP for now**, **Android phone-only** (portrait; no
 iOS/web product), **large batches**, English in-game copy, fairness-first balance,
 **commit locally when a batch is verified**, ask before push / PR / tag.
 Near-term execution order:
 `docs/CONTENT_CADENCE.md` after 90d M1–M3 shipped. **Default next work:**
-monthly cadence (zones + kit polish) unless the owner names something else.
+**core-loop feel** (power beats in the fight you already have) unless the owner names something else.
 Chat in plain Swedish; ask only product/risk questions. Full detail:
 `.cursor/rules/owner-preferences.mdc`.
 
@@ -32,7 +32,7 @@ for real players — tap / long-press.
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (last submit **1.12.12 / 42**, 2026-08-17; testers keep 1.12.11 until review). Working ship is
-**1.12.12**. Production still needs **12 closed testers × 14 days**.
+**1.12.13**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
