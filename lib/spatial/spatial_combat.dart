@@ -3266,8 +3266,8 @@ abstract final class SpatialCombat {
               argb: isCrit
                   ? _floaterCrit
                   : (abilityTag != null ? abilityTagArgb : _floaterDamage),
-              life: isCrit ? 0.7 : 0.45,
-              priority: isCrit ? 2 : 0,
+              life: isCrit ? 0.7 : (abilityTag != null ? 0.58 : 0.45),
+              priority: isCrit ? 2 : (abilityTag != null ? 1 : 0),
             );
           }
           if (wasAlive && target.hp <= 0) {
@@ -3546,8 +3546,8 @@ abstract final class SpatialCombat {
               y: v.y - 0.3,
               text: p.isCrit ? 'CRIT $dealt' : '$dealt',
               argb: p.isCrit ? _floaterCrit : (p.labelArgb ?? _floaterDamage),
-              life: p.isCrit ? 0.65 : 0.4,
-              priority: p.isCrit ? 2 : 0,
+              life: p.isCrit ? 0.65 : (p.labelArgb != null ? 0.55 : 0.4),
+              priority: p.isCrit ? 2 : (p.labelArgb != null ? 1 : 0),
             );
           }
           if (p.onHitHealCaster && p.casterId != null && dealt > 0) {
@@ -3879,6 +3879,15 @@ abstract final class SpatialCombat {
           y: gate.y + 0.5,
           argb: 0xFFFFF0A0,
           radius: 0.55,
+        );
+        _spawnFloater(
+          world,
+          x: gate.x + 0.5,
+          y: gate.y - 0.45,
+          text: 'OPEN',
+          argb: _floaterGold,
+          life: 1.25,
+          priority: 2,
         );
       }
     }

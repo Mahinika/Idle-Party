@@ -282,6 +282,11 @@ void main() {
     }
     SpatialCombat.step(world, state, dt: 0.05);
     expect(world.openGateIds, isNotEmpty);
+    expect(
+      world.floaters.any((f) => f.text == 'OPEN' && f.priority >= 2),
+      isTrue,
+      reason: 'a newly opened gate should shout OPEN on a phone',
+    );
 
     final later = world.enemies.where((e) => e.hp > 0 && !e.dormant);
     expect(later, isNotEmpty);

@@ -36,7 +36,7 @@ abstract final class GameGuides {
       title: 'COMBAT',
       body:
           'Each floor is one combat wave on a multi-chamber map.\n\n'
-          '• Clear a chamber to open gates into the next.\n'
+          '• Clear a chamber to open gates into the next — OPEN pops on the door.\n'
           '• Pick up ground loot (or wait for auto-timeout), then walk to the stairs. Gold and gear names pop bigger than damage ticks.\n'
           '• Elite and treasure floors often hide a room chest — grab it like other floor loot.\n'
           '• Boss floors use a special arena.\n'
