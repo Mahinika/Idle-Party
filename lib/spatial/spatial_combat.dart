@@ -4060,6 +4060,15 @@ abstract final class SpatialCombat {
           radius: 0.85,
           life: 0.38,
         );
+        _spawnFloater(
+          world,
+          x: enemy.x,
+          y: enemy.y - 0.85,
+          text: 'BOSS DOWN',
+          argb: _floaterCrit,
+          life: 1.55,
+          priority: 2,
+        );
       } else if (enemy.role == EnemyRole.elite) {
         _spawnRing(
           world,

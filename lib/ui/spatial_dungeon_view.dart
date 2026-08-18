@@ -406,7 +406,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                           child: Text(
                             widget.director.clearSummary!,
                             style: GameTheme.pixel(
-                              size: GameTheme.hudPixel,
+                              size: GameTheme.hudPixelComfort,
                               color: GameTheme.clear,
                             ),
                           ),

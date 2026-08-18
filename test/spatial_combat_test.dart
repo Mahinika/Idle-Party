@@ -7,6 +7,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_room.dart';
+import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
@@ -703,6 +704,35 @@ void main() {
     expect(
       SpatialCombat.floaterReadScale(2),
       greaterThan(SpatialCombat.floaterReadScale(1)),
+    );
+  });
+
+  test('boss last-hit shouts BOSS DOWN', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 19));
+    final first = state.enemies.first;
+    state = state.copyWith(
+      enemies: [
+        first.copyWith(role: EnemyRole.boss, currentHp: 1),
+        for (var i = 1; i < state.enemies.length; i++)
+          state.enemies[i].copyWith(currentHp: 0),
+      ],
+    );
+    final world = SpatialCombat.build(state);
+    expect(world.enemies.first.role, EnemyRole.boss);
+    world.enemies.first
+      ..hp = 1
+      ..dormant = false;
+    final result = SpatialCombat.godHand(
+      world,
+      state,
+      tileX: world.enemies.first.x,
+      tileY: world.enemies.first.y,
+      baseDamage: 9999,
+    );
+    expect(result.kills, greaterThan(0));
+    expect(
+      world.floaters.any((f) => f.text == 'BOSS DOWN' && f.priority >= 2),
+      isTrue,
     );
   });
 }

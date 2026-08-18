@@ -30,7 +30,7 @@ abstract final class MetaSystems {
         'Kills pop on the map. Gold, XP, and gear names stay bigger than damage ticks so pickups read on a phone.',
         'Clearing a chamber shouts OPEN on the door so the next pack is obvious.',
         'Tapping God Hand slams when it fires — waiting on cooldown stays quiet.',
-        'Floor clear holds a beat so gold and a level-up are readable on a phone.',
+        'Floor clear holds a beat in bigger type so gold and a level-up are readable on a phone. Boss kills shout BOSS DOWN.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
