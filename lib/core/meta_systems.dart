@@ -30,6 +30,7 @@ abstract final class MetaSystems {
         'Kills pop on the map. Gold, XP, and gear names stay bigger than damage ticks so pickups read on a phone.',
         'Clearing a chamber shouts OPEN on the door so the next pack is obvious.',
         'When the pack is down, stairs shout GO so the next floor is obvious.',
+        'Party strip shows level and XP on a phone, so you see growth mid-fight.',
         'Kit chips flash when a dump fires. Flasks shout FLASK, and loot streaks into the party.',
         'Tapping God Hand slams when it fires — waiting on cooldown stays quiet.',
         'Floor clear holds a beat in bigger type so gold and a level-up are readable on a phone. Boss kills shout BOSS DOWN.',

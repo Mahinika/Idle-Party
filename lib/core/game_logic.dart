@@ -2833,6 +2833,13 @@ class GameLogic {
       EncounterFactory.partyGearPressure(state);
   static int xpPoolForLevel(int level) =>
       EncounterFactory.xpPoolForLevel(level);
+
+  /// 0–1 fill toward the next hero level.
+  static double xpProgress(PartyHero hero) {
+    final need = xpPoolForLevel(hero.level);
+    if (need <= 0) return 0;
+    return (hero.xp / need).clamp(0.0, 1.0);
+  }
   static int xpForEnemy(EnemyUnit enemy) => EncounterFactory.xpForEnemy(enemy);
   static GameState awardPartyXp(GameState state, int amount) =>
       EncounterFactory.awardPartyXp(state, amount);

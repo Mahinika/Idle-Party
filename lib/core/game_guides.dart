@@ -79,6 +79,7 @@ abstract final class GameGuides {
           '• More hero types unlock as you grow — you do not need another game.\n'
           '• Tap a hero in the HUD for abilities; chips show cooldowns '
           '(STREAK, SWEEP / FLURRY, BEACON when those windows are up).\n'
+          '• The strip shows level and a thin XP bar so growth is visible mid-fight.\n'
           '• Resources: Rage / Mana / Energy / Runic — kits spend these.\n'
           '• Roster levels persist on Ascend; run gear still resets.\n'
           '• Flask heals the party when you have a potion.',

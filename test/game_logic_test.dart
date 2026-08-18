@@ -29,7 +29,11 @@ void main() {
     state = GameLogic.awardPartyXp(state, need);
     expect(state.heroes.first.level, before + 1);
     expect(state.heroes.first.xp, 0);
+    expect(GameLogic.xpProgress(state.heroes.first), 0);
     expect(GameLogic.xpForEnemy(enemy), greaterThan(0));
+    final half = GameLogic.xpPoolForLevel(state.heroes.first.level) ~/ 2;
+    state = GameLogic.awardPartyXp(state, half);
+    expect(GameLogic.xpProgress(state.heroes.first), closeTo(0.5, 0.05));
   });
 
   test('enemy groups use varied archetypes', () {

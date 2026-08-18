@@ -449,11 +449,7 @@ class _PartyRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      phone
-                          ? roleShort
-                          : (compact
-                                ? '$roleShort L${hero.level}'
-                                : '${hero.roleLabel}  L${hero.level}'),
+                      '$roleShort L${hero.level}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GameTheme.pixel(
@@ -469,6 +465,18 @@ class _PartyRow extends StatelessWidget {
                         minHeight: phone ? 2.5 : (compact ? 3.5 : 4.5),
                         backgroundColor: const Color(0xFF2A2218),
                         color: hpColor,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(1),
+                      child: LinearProgressIndicator(
+                        value: GameLogic.xpProgress(hero),
+                        minHeight: phone ? 1.5 : 2,
+                        backgroundColor: const Color(0xFF1A2430),
+                        color: SpatialCombat.colorblindMode
+                            ? const Color(0xFF009E73)
+                            : const Color(0xFF9AD0FF),
                       ),
                     ),
                     if (showKit) ...[
