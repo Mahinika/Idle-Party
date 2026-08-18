@@ -104,6 +104,14 @@ class DungeonTopHud extends StatelessWidget {
                         onTap: () => director.godHandAtFocus(),
                       ),
                     ],
+                    const SizedBox(width: 4),
+                    Semantics(
+                      label: 'Gold ${state.gold}',
+                      child: MenuChrome.chip(
+                        icon: KenneyAssets.coinGold,
+                        label: formatCount(state.gold),
+                      ),
+                    ),
                     const Spacer(),
                     if (showClaimChip) ...[
                       MissionClaimChip(
@@ -146,7 +154,7 @@ class DungeonTopHud extends StatelessWidget {
                                 ' · ${formatCount(state.gold)}g',
                                 style: GameTheme.pixel(
                                   size: GameTheme.hudPixel,
-                                  color: GameTheme.parchmentDim,
+                                  color: GameTheme.torchHot,
                                 ),
                               ),
                             ),

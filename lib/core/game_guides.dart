@@ -42,7 +42,8 @@ abstract final class GameGuides {
           '• Boss floors use a special arena.\n'
           '• Settings VFX: Full = all effects; Lite = no floaters/bursts (discs & auras stay); '
           'Minimal = reduce motion.\n'
-          '• Party HP strip is bottom-left — tap a hero to open their kit, tap again to fold.\n'
+          '• Party HP strip is bottom-left — tap a hero to open their kit, tap again to fold. Level and XP sit under HP.\n'
+          '• Gold in the top bar ticks up as pickups land.\n'
           '• Target chip is top-right (name + HP).\n'
           '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.',
     ),
