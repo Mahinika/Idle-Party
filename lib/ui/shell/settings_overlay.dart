@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../core/community_links.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
@@ -174,6 +175,20 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           const SizedBox(height: 16),
           SaveTransferSection(director: director),
           const SizedBox(height: 16),
+          MenuChrome.sectionLabel('COMMUNITY'),
+          const SizedBox(height: 6),
+          KenneyButton(
+            label: 'JOIN DISCORD',
+            tip: 'Opens Discord so you can join the Idle Party server',
+            style: KenneyButtonStyle.brown,
+            onPressed: () async {
+              final ok = await CommunityLinks.openDiscord();
+              if (!ok && mounted) {
+                director.showToast('Could not open Discord link', life: 2.2);
+              }
+            },
+          ),
+          const SizedBox(height: 8),
           KenneyButton(
             label: MetaSystems.hasUnseenChangelog(state)
                 ? "WHAT'S NEW ★"
