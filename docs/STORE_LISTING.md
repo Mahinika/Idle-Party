@@ -83,13 +83,29 @@ Install, start a party, and take one more floor.
 
 Keep 1024×500 from owned `app_icon` / brand art. Refresh only if title treatment looks dated; do not paste competitor screenshots.
 
+## How we capture screenshots (lessons)
+
+Do **not** start from a blank day-one save. Pipeline:
+
+1. `flutter test tool/store_listing/export_showcase_save_test.dart` → `showcase_save.json`
+2. Flutter web on `:8080` + `py -3 tool/store_listing/capture_playwright.py`
+3. `py -3 tool/store_listing/compose_shots.py` → `out/` (1080×1920, caption on **top**)
+
+Hard-won rules:
+
+| Pitfall | Fix |
+|---------|-----|
+| CONTINUE disabled after inject | Web SharedPreferences JSON-encodes strings → `JSON.stringify(raw)` into `flutter.idle_party_save_v2` |
+| Tabs (FORGE / KEEP / GEAR) ignore clicks | `MenuChrome.bridgedTab` + `__idlePartyClick` (CanvasKit TabBar is not DOM) |
+| Widget-test screenshots look blank | Prefer Playwright; Google Fonts + `toImage` fights you |
+| AL0 / all LOCKED / forge +0 | Use showcase save (AL3+, clears on World Path, real rates) |
+| Fat caption covering HUD | Top caption band in `compose_shots.py`, crop bias per shot |
+| Play Console file picker blocked | CORS-serve `out/`, CDP `fetch` + `DataTransfer` (same idea as AAB) |
+
+Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
+
 ## Play Console status (2026-08-20)
 
-- Short + full description saved from this doc (honesty fix pending re-submit).
-- Phone screenshots refreshed again **2026-08-20** (showcase save AL3, World Path
-  with clears, live combat, GEAR doll, FORGE→KEEP, INCOME rates) via
-  `tool/store_listing/capture_playwright.py` + `compose_shots.py` (top caption
-  band, 1080×1920). Upload to Play Console when ready.
-- Compose helpers: `tool/store_listing/compose_shots.py`,
-  `capture_playwright.py`, `export_showcase_save_test.dart`.
-- Feature graphic + icon still from owned `app_icon` (unchanged this pass).
+- Short + full description + six phone screenshots in `tool/store_listing/out/`.
+- **Submitted 2026-08-20** on Play Console (en-US listing + phone screenshots) — status “Ändringarna granskas”. Also bundled a closed Alpha tester-group line in the same 4-change submit.
+- Feature graphic + icon still from owned `app_icon`.
