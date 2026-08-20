@@ -90,18 +90,41 @@ class _MyAppState extends State<MyApp> {
         if (!kIsWeb) return content;
         return LayoutBuilder(
           builder: (context, constraints) {
-            // Match Samsung A56 CSS width so web playtest matches the APK.
-            const maxW = 360.0;
-            final h = constraints.maxHeight;
-            final framed = MediaQuery(
-              data: MediaQuery.of(context).copyWith(size: Size(maxW, h)),
-              child: content,
-            );
-            if (constraints.maxWidth <= maxW) return framed;
+            // Samsung Galaxy A56: 1080×2340 @ DPR 3 → 360×780 CSS.
+            // Always letterbox to that phone frame so web playtest matches the
+            // APK — never stretch to a tall/wide Cursor browser panel.
+            const phoneW = 360.0;
+            const phoneH = 780.0;
+            // Approx status bar + gesture home indicator (logical / CSS px).
+            const padTop = 28.0;
+            const padBottom = 20.0;
+            final mq = MediaQuery.of(context);
             return ColoredBox(
               color: const Color(0xFF05070A),
               child: Center(
-                child: SizedBox(width: maxW, height: h, child: framed),
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: SizedBox(
+                    width: phoneW,
+                    height: phoneH,
+                    child: MediaQuery(
+                      data: mq.copyWith(
+                        size: const Size(phoneW, phoneH),
+                        padding: const EdgeInsets.only(
+                          top: padTop,
+                          bottom: padBottom,
+                        ),
+                        viewPadding: const EdgeInsets.only(
+                          top: padTop,
+                          bottom: padBottom,
+                        ),
+                        viewInsets: EdgeInsets.zero,
+                        devicePixelRatio: 3,
+                      ),
+                      child: content,
+                    ),
+                  ),
+                ),
               ),
             );
           },
