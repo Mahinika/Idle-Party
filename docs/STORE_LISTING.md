@@ -107,5 +107,5 @@ Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshot
 ## Play Console status (2026-08-20)
 
 - Short + full description + six phone screenshots in `tool/store_listing/out/`.
-- **Submitted 2026-08-20** on Play Console (en-US listing + phone screenshots) — status “Ändringarna granskas”. Also bundled a closed Alpha tester-group line in the same 4-change submit.
+- Honesty copy last submitted **2026-08-20**. Refresh listing when shipping **1.12.25** (closed Alpha AAB + same en-US copy).
 - Feature graphic + icon still from owned `app_icon`.
