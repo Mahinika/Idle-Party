@@ -709,7 +709,17 @@ class _InventoryDockState extends State<InventoryDock>
       children: [
         MenuChrome.tabRail(
           controller: _tabs.controller,
-          tabs: [for (final page in pages) Tab(text: page.label)],
+          tabs: [
+            for (var i = 0; i < pages.length; i++)
+              MenuChrome.bridgedTab(
+                pages[i].label,
+                onSelect: () {
+                  _tabs.controller.animateTo(i);
+                  widget.onTabChanged(_visible[i]);
+                  setState(() {});
+                },
+              ),
+          ],
         ),
         if (!alert.isQuiet)
           Padding(

@@ -15,8 +15,8 @@ Package id: **`com.idleparty.app`**
 | Data safety form | ✅ | Published 2026-08-16 with listing + privacy URL. Optional Play Games: User IDs, Other actions (gameplay), Files and docs (Saved Games). Collected only (not shared); encrypted in transit; OAuth; delete URLs = branch PRIVACY.md. No ads / no Idle Party analytics. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed 1.12.9 build. |
 | IARC / content rating | ✅ | Completed 2026-08-08 (mild fantasy combat). Console shows PEGI 12 / ESRB Everyone 10+ / IARC 7+ (and regional equivalents). No chat / gambling / ads. |
-| Store listing copy (EN) | ⏳ | Honesty fix 2026-08-20: drop “free / no ads / no paid store” forever-claims; short+full in `docs/STORE_LISTING.md`. Re-submit after new screenshots. |
-| Screenshots + feature graphic | ✅ | Phone screenshots refreshed **2026-08-20** (live UI + captions, 1080×1920) via `tool/store_listing/`; submitted for review with listing copy. Feature graphic + icon unchanged (owned `app_icon`). Tablet shots still older (phone-first product). |
+| Store listing copy (EN) | ⏳ | Honesty fix 2026-08-20: drop “free / no ads / no paid store” forever-claims; short+full in `docs/STORE_LISTING.md`. Re-submit with new screenshots. |
+| Screenshots + feature graphic | ⏳ | Phone screenshots re-shot **2026-08-20** (showcase AL3 UI + top captions, 1080×1920) via `tool/store_listing/` — **not uploaded yet**. Feature graphic + icon unchanged (owned `app_icon`). Tablet shots still older (phone-first product). |
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
 
@@ -70,7 +70,7 @@ Suggested Description (en-US):
 
 - [x] Content rating questionnaire (IARC) completed 2026-08-08 — mild fantasy combat; PEGI 12 / ESRB Everyone 10+ / IARC 7+ (no chat, gambling, or ads).
 - [x] Short + full description (en-US) refreshed 2026-08-20 from `docs/STORE_LISTING.md` (submitted for review with screenshots).
-- [x] Phone screenshots refreshed 2026-08-20 (`tool/store_listing/`); feature graphic + icon still from owned `app_icon` (icon refresh 2026-08-16).
+- [ ] Phone screenshots re-shot 2026-08-20 (`tool/store_listing/out/`) — upload to Play with honesty copy; feature graphic + icon still from owned `app_icon` (icon refresh 2026-08-16).
 - [ ] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*`.
 
 ## Production listing

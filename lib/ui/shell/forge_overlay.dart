@@ -83,10 +83,19 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         MenuChrome.tabRail(
           controller: _tabs,
           onTap: (_) => setState(() {}),
-          tabs: const [
-            Tab(text: 'GOLD'),
-            Tab(text: 'KEEP'),
-            Tab(text: 'APEX'),
+          tabs: [
+            for (final entry in <(String, int)>[
+              ('GOLD', 0),
+              ('KEEP', 1),
+              ('APEX', 2),
+            ])
+              MenuChrome.bridgedTab(
+                entry.$1,
+                onSelect: () {
+                  _tabs.animateTo(entry.$2);
+                  setState(() {});
+                },
+              ),
           ],
         ),
         const SizedBox(height: 8),

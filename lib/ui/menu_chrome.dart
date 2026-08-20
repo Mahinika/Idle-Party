@@ -135,6 +135,23 @@ abstract final class MenuChrome {
     );
   }
 
+  /// Tab label that also registers with [WebClickBridge] (CanvasKit playtest).
+  static Widget bridgedTab(String label, {required VoidCallback onSelect}) {
+    return Tab(
+      child: WebClickScope(
+        label: label,
+        onPressed: onSelect,
+        child: Semantics(
+          button: true,
+          label: label,
+          onTap: onSelect,
+          excludeSemantics: true,
+          child: Text(label),
+        ),
+      ),
+    );
+  }
+
   /// GEAR-style inset tab rail (torch wash on selected tab).
   ///
   /// On phone width (or 5+ tabs), scrolls instead of crushing labels.

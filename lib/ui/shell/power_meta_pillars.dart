@@ -124,7 +124,17 @@ class _PowerPillarState extends State<PowerPillar>
         MenuChrome.tabRail(
           controller: _tabs.controller,
           onTap: (_) => setState(() {}),
-          tabs: [for (final page in pages) Tab(text: page.label)],
+          tabs: [
+            for (var i = 0; i < pages.length; i++)
+              MenuChrome.bridgedTab(
+                pages[i].label,
+                onSelect: () {
+                  _tabs.controller.animateTo(i);
+                  widget.onTabChanged(_visible[i]);
+                  setState(() {});
+                },
+              ),
+          ],
         ),
         const SizedBox(height: 4),
         Text(
@@ -257,7 +267,17 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
         MenuChrome.tabRail(
           controller: _tabs.controller,
           onTap: (_) => setState(() {}),
-          tabs: [for (final page in pages) Tab(text: page.label)],
+          tabs: [
+            for (var i = 0; i < pages.length; i++)
+              MenuChrome.bridgedTab(
+                pages[i].label,
+                onSelect: () {
+                  _tabs.controller.animateTo(i);
+                  widget.onTabChanged(_visible[i]);
+                  setState(() {});
+                },
+              ),
+          ],
         ),
         if (!alert.isQuiet)
           Padding(

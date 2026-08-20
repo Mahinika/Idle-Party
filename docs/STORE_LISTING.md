@@ -85,6 +85,11 @@ Keep 1024×500 from owned `app_icon` / brand art. Refresh only if title treatmen
 
 ## Play Console status (2026-08-20)
 
-- Short + full description saved from this doc.
-- Six phone screenshots (1080×1920, captioned) uploaded and **submitted for review** with the listing change (`Ändringarna granskas`).
-- Compose helpers: `tool/store_listing/compose_shots.py` (+ raw capture → out/).
+- Short + full description saved from this doc (honesty fix pending re-submit).
+- Phone screenshots refreshed again **2026-08-20** (showcase save AL3, World Path
+  with clears, live combat, GEAR doll, FORGE→KEEP, INCOME rates) via
+  `tool/store_listing/capture_playwright.py` + `compose_shots.py` (top caption
+  band, 1080×1920). Upload to Play Console when ready.
+- Compose helpers: `tool/store_listing/compose_shots.py`,
+  `capture_playwright.py`, `export_showcase_save_test.dart`.
+- Feature graphic + icon still from owned `app_icon` (unchanged this pass).
