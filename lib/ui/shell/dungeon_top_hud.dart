@@ -100,25 +100,37 @@ class DungeonTopHud extends StatelessWidget {
                         onTap: () => director.setDungeonMode(DungeonMode.push),
                       ),
                     ],
-                    if (world != null) ...[
-                      const SizedBox(width: 4),
-                      ChamberDots(world: world),
-                      const SizedBox(width: 4),
-                      GodHandRing(
-                        cooldown: world.godHandCooldown,
-                        onTap: () => director.godHandAtFocus(),
-                      ),
-                    ],
-                    const SizedBox(width: 4),
-                    Semantics(
-                      label: 'Gold ${state.gold}',
-                      child: MenuChrome.chip(
-                        icon: KenneyAssets.coinGold,
-                        label: formatCount(state.gold),
+                    // Shrink dots / God Hand / gold when CLAIM + ⋯ crowd 360px.
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (world != null) ...[
+                              const SizedBox(width: 4),
+                              ChamberDots(world: world),
+                              const SizedBox(width: 4),
+                              GodHandRing(
+                                cooldown: world.godHandCooldown,
+                                onTap: () => director.godHandAtFocus(),
+                              ),
+                            ],
+                            const SizedBox(width: 4),
+                            Semantics(
+                              label: 'Gold ${state.gold}',
+                              child: MenuChrome.chip(
+                                icon: KenneyAssets.coinGold,
+                                label: formatCount(state.gold),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const Spacer(),
                     if (showClaimChip) ...[
+                      const SizedBox(width: 2),
                       MissionClaimChip(
                         count: claimable,
                         dense: true,
