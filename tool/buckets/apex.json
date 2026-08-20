@@ -17,12 +17,8 @@
     "canUpgradeApex",
     "upgradeApex",
     "equipFromApexVault",
-    "keepApexOnly",
-    "bindSoulbound",
-    "refineSoulboundCost",
-    "refineSoulbound",
-    "setSoulboundPreferArmor"
+    "keepApexOnly"
   ],
   "no_delegate": [],
-  "header": "import 'dart:math';\n\nimport '../models/apex_craft.dart';\nimport '../models/hero.dart';\nimport '../models/hero_spec.dart';\nimport '../models/loot.dart';\nimport '../models/proficiency.dart';\nimport '../models/stats.dart';\nimport 'game_logic.dart';\nimport 'game_state.dart';\nimport 'gear_service.dart';\nimport 'logic_notices.dart';\nimport 'meta_systems.dart';\n\n/// Apex weapons and the soulbound item: the two pieces of gear that survive.\n///\n/// Boss-only mats with pity (farm loops are diluted on purpose), crafting,\n/// rank upgrades, and the vault that keeps an Apex through Ascend.\nabstract final class ApexForge {"
+  "header": "import 'dart:math';\n\nimport '../models/apex_craft.dart';\nimport '../models/hero.dart';\nimport '../models/hero_spec.dart';\nimport '../models/loot.dart';\nimport '../models/proficiency.dart';\nimport '../models/stats.dart';\nimport 'game_logic.dart';\nimport 'game_state.dart';\nimport 'gear_service.dart';\nimport 'logic_notices.dart';\nimport 'meta_systems.dart';\n\n/// Apex weapons: the gear that survives Ascend.\n///\n/// Boss-only mats with pity (farm loops are diluted on purpose), crafting,\n/// rank upgrades, and the vault that keeps an Apex through Ascend.\nabstract final class ApexForge {"
 }

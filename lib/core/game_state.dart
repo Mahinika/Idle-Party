@@ -192,10 +192,10 @@ class GameState {
   /// Named dungeon id (e.g. sandy).
   final String dungeonId;
 
-  /// Soulbound prestige currency (survives Ascend).
+  /// Legacy heirloom fragments. No longer granted; kept so old saves load.
   final int soulboundFragments;
 
-  /// Optional permanent soulbound gear piece (survives Ascend).
+  /// Legacy heirloom piece from retired soulbind. Still applies party meta.
   final EquipmentItem? soulboundItem;
 
   /// Apex crafting Materials Bag (survives Ascend). Never mixed with gear stash.

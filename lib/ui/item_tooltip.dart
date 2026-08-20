@@ -53,8 +53,10 @@ class ItemTooltipCard extends StatelessWidget {
     final slotLabel =
         CharacterEquipPanel.slotLabels[item.slot] ?? item.slot.name;
     final type = _typeLine(item);
-    final binding = item.id.startsWith('soulbound_') || item.isApex
-        ? 'Soulbound'
+    final binding = item.isApex
+        ? 'Apex · survives Ascend'
+        : item.id.startsWith('soulbound_')
+        ? 'Heirloom (legacy)'
         : 'Binds when equipped';
     final gold = GameLogic.equipmentGoldValue(item);
     final essence = GameLogic.equipmentEssenceValue(item);

@@ -108,7 +108,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'apex',
       title: 'APEX FORGE',
       body:
-          'Apex slag from Gauntlet/Crystal crafts soulbound apex gear in Forge. Ranks persist through Ascend.',
+          'Apex slag from Gauntlet/Crystal crafts class Apex gear in Forge. Ranks persist through Ascend.',
     ),
     (
       id: 'gauntlet',

@@ -779,8 +779,6 @@ class GameLogic {
   static const int relicVitalityPerTier = 48;
   static const int relicMitigatePerTier = 8;
 
-  static const int soulboundRefineDefenseGain = 4;
-
   /// Gold FORGE one-buy gains. Percent armor made +1 DEF / +6 HP a rounding
   /// error next to +2 ATK; CRIT was half of HASTE at the same gold.
   static const int forgeAttackGain = 2;
@@ -841,7 +839,7 @@ class GameLogic {
     return applyMissionProgress(paid, goldEarned: gained);
   }
 
-  /// Prestige: reset the run, keep essence/relics/sanctuary/pets/soulbound, bump AL.
+  /// Prestige: reset the run, keep essence/relics/sanctuary/pets/Apex, bump AL.
   /// Returns [state] unchanged if Ascend is locked.
   static GameState ascend(GameState state, {DateTime? now}) {
     if (!canAscend(state)) {
@@ -854,7 +852,6 @@ class GameLogic {
       nextLevel,
     );
     final preservedRelics = List<String>.from(state.unlockedRelics);
-    final fragmentGain = 1 + (state.highestFloorCleared ~/ 3);
 
     final streak = state.metaDepth.noWipeAscendReady
         ? state.metaDepth.ascendStreak + 1
@@ -960,7 +957,7 @@ class GameLogic {
       highestFloorCleared: 0,
       highestDungeonCleared: state.highestDungeonCleared,
       inDungeon: false,
-      soulboundFragments: state.soulboundFragments + fragmentGain,
+      soulboundFragments: state.soulboundFragments,
       soulboundItem: state.soulboundItem == null
           ? null
           : scaleSoulboundForAl(state.soulboundItem!, nextLevel),
@@ -2990,14 +2987,6 @@ class GameLogic {
   );
   static Map<EquipmentSlot, EquipmentItem> keepApexOnly(PartyHero h) =>
       ApexForge.keepApexOnly(h);
-  static GameState bindSoulbound(GameState state, {int? heroIndex}) =>
-      ApexForge.bindSoulbound(state, heroIndex: heroIndex);
-  static int refineSoulboundCost(int refineLevel) =>
-      ApexForge.refineSoulboundCost(refineLevel);
-  static GameState refineSoulbound(GameState state) =>
-      ApexForge.refineSoulbound(state);
-  static GameState setSoulboundPreferArmor(GameState state, bool preferArmor) =>
-      ApexForge.setSoulboundPreferArmor(state, preferArmor);
 
   // —— Market and flasks: moved to market_service.dart ——
   static bool canUseConsumable(GameState state) =>

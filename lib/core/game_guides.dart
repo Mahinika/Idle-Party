@@ -37,8 +37,10 @@ abstract final class GameGuides {
       body:
           'Each floor is one combat wave on a multi-chamber map.\n\n'
           '• Clear a chamber to open gates into the next — OPEN pops on the door.\n'
-          '• Pick up ground loot (or wait for auto-timeout), then walk to the stairs — GO marks the exit.\n'
-          '• Elite and treasure floors often hide a room chest — grab it like other floor loot.\n'
+          '• When the pack is dead, ground loot banks instantly and the party '
+          'heads to the stairs — GO marks the exit.\n'
+          '• Elite and treasure floors often hide a room chest — grabbed with '
+          'the floor clear.\n'
           '• Boss floors use a special arena.\n'
           '• Settings VFX: Full = all effects; Lite = no floaters/bursts (discs & auras stay); '
           'Minimal = reduce motion.\n'
@@ -129,7 +131,7 @@ abstract final class GameGuides {
           '• AUTO MERGE: repeatedly merges junk pairs of the same slot '
           '(skips BiS / clear upgrades) while you can afford the cost.\n'
           '• Combinator Charm in POWER → SHOP lowers MERGE gold (−3g per luck).\n'
-          '• Both inputs are consumed. Soulbind is separate (3 fragments).',
+          '• Both inputs are consumed.',
     ),
     GuideTopic(
       id: 'income',
@@ -156,7 +158,7 @@ abstract final class GameGuides {
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
           'relative upgrade.\n'
           '• KEEP — essence that survives Ascend: Blessing readout, relics, '
-          'soulbound refine, God Hand smash/cooldown/style, and the 5th party '
+          'God Hand smash/cooldown/style, and the 5th party '
           'slot (AL2 · 80e).\n'
           '• MATS / APEX — one Apex station: materials, craft goals, target meter, vault.\n\n'
           '• Ascend from the Hub when ready (not from Forge).',
@@ -329,7 +331,7 @@ abstract final class GameGuides {
           '+3% gold (stacks forever). See Forge → KEEP.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
           '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
-          '• Keeps: essence, relics, sanctuary, pets, soulbound, God Hand, '
+          '• Keeps: essence, relics, sanctuary, pets, God Hand, '
           'highest dungeon cleared, lifetime gold, unlocked specs, '
           'roster levels/XP, Apex, and 5th party slot.\n'
           '• Resets: wallet gold, floors, run gear, loadouts, forge gold upgrades.\n'

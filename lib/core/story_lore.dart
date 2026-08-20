@@ -95,7 +95,6 @@ abstract final class StoryLore {
     required int nextAl,
     int milestoneBonus = 0,
     int godHandLevel = 0,
-    int soulboundFragments = 0,
     int blessingsAfter = 1,
     bool unlockCombatRogue = false,
   }) {
@@ -124,10 +123,10 @@ abstract final class StoryLore {
         '$alPower\n'
         '$blessLine$unlockLine\n'
         '$ahead\n\n'
-        'Keep: hero levels/XP, essence, relics, pets, sanctuary, soulbound, '
+        'Keep: hero levels/XP, essence, relics, pets, sanctuary, '
         'God Hand, Apex, meta unlocks.\n'
         'Reset: wallet gold, floors, run gear, loadouts, forge gold upgrades.\n'
-        'God Hand Lv$godHandLevel kept · $soulboundFragments soulbound frag';
+        'God Hand Lv$godHandLevel kept';
   }
 
   static String ascendToast({

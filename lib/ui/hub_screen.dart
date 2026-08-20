@@ -319,7 +319,6 @@ class _HubScreenState extends State<HubScreen>
                                   bossFloor: bossFloor,
                                   gold: state.gold,
                                   essence: state.essence,
-                                  soulbound: state.soulboundFragments,
                                   willRank: state.willRankTitle,
                                   collectionScore: state.collectionScore,
                                   displayTitle: state.displayTitle,

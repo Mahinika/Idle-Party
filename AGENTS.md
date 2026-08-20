@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.17**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.19**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -32,7 +32,7 @@ for real players — tap / long-press.
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (last submit **1.12.12 / 42**, 2026-08-17; testers keep 1.12.11 until review). Working ship is
-**1.12.17**. Production still needs **12 closed testers × 14 days**.
+**1.12.19**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -190,10 +190,10 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 - Maps are **multi-chamber** with corridor **gates** after a chamber clears.
 - Enemies in later chambers start **dormant**; wake when prior chambers clear
   (and can wake on **proximity** so soft-locks are rare).
-- **Room chests** on elite/treasure beats drop gold/gear pickups — same AFK
-  vacuum / timeout path as kill loot.
-- After all enemies die and loot is picked up (or times out), party walks to
-  **stairs/exit** → `completeCurrentRoom`.
+- **Room chests** on elite/treasure beats drop gold/gear pickups — vacuumed
+  with kill loot when the floor clears (same bank path).
+- After all enemies die, ground loot is vacuumed immediately and the party
+  walks to **stairs/exit** → `completeCurrentRoom`.
 
 ## Combat ratings (1.12.12)
 
@@ -259,13 +259,14 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 ## Meta (survives Ascend)
 
 **Keeps:** essence (and rewards), relics, sanctuary tracks + prestige, pets,
-soulbound item (may rescale) + fragments, God Hand level + style/CD in `metaDepth`,
+God Hand level + style/CD in `metaDepth`, **Apex** vault + equipped apex,
+legacy heirloom item if an old save still has one (no new binds; may rescale),
 `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
 (mute/VFX/colorblind/text scale/auto-sell/**auto-disassemble**), full `metaDepth`
 (Gauntlet best, Will / Gauntlet claims, daily vault / weekly affix season,
 prestige shop, unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY),
 party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**, Play Games
-opt-in + season PBs, …), **hero levels/XP**, **Apex** vault + equipped apex,
+opt-in + season PBs, …), **hero levels/XP**,
 craft mats/pity, keystone prefs (clamped) + challenge toggles, FARM/PUSH preference.
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):

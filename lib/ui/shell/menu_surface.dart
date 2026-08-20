@@ -186,7 +186,6 @@ class _MenuSurfaceState extends State<MenuSurface> {
         );
         router.clearCombine();
       },
-      onBindSoulbound: () => d.bindSoulbound(heroIndex: router.equipHeroIndex),
       onAutoSell: d.autoSellJunk,
       onAutoDisassemble: d.autoDisassembleJunk,
       onCleanBag: d.cleanBagJunk,

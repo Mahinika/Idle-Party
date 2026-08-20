@@ -551,7 +551,7 @@ void main() {
       ascended.ascendBlessingGoldPercent,
       GameLogic.ascendBlessingGoldPct,
     );
-    expect(ascended.soulboundFragments, greaterThan(0));
+    expect(ascended.soulboundFragments, 0);
     expect(ascended.inDungeon, isFalse);
   });
 
@@ -614,7 +614,7 @@ void main() {
     expect(ascended.lifetimeGoldEarned, 12000);
     expect(ascended.highestDungeonCleared, 1);
     expect(ascended.godHandLevel, 3);
-    expect(ascended.soulboundFragments, greaterThanOrEqualTo(5));
+    expect(ascended.soulboundFragments, 5);
     expect(ascended.sanctuaryPowerLevel, 2);
     expect(ascended.activePet?.id, pet.id);
     expect(ascended.loadouts, isEmpty);
@@ -624,6 +624,25 @@ void main() {
     );
     expect(kept, isNotEmpty);
     expect(kept.every((h) => h.level == 12 && h.xp == 40), isTrue);
+  });
+
+  test('ascend keeps legacy heirloom and does not grant fragments', () {
+    final heirloom = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      battleNumber: 10,
+    ).copyWith(id: 'soulbound_old', name: 'Soulbound Old');
+    var ready = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
+      bossVictories: 1,
+      highestFloorCleared: 12,
+      soulboundFragments: 4,
+      soulboundItem: heirloom,
+    );
+    final ascended = GameLogic.ascend(ready, now: DateTime(2026, 7, 5));
+    expect(ascended.soulboundFragments, 4);
+    expect(ascended.soulboundItem, isNotNull);
+    expect(ascended.soulboundItem!.id, 'soulbound_old');
+    expect(ascended.soulboundAttackBonus, greaterThan(0));
   });
 
   test('ascension gold bonus applies to room rewards', () {
@@ -2468,25 +2487,10 @@ void main() {
     expect(fresh, hasLength(3));
   });
 
-  test('soulbound bind and god hand upgrade', () {
-    final weapon = GameLogic.createEquipment(
-      slot: EquipmentSlot.weapon,
-      rarity: LootRarity.rare,
-      battleNumber: 10,
-    );
+  test('god hand upgrade spends essence', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
       essence: 100,
-      soulboundFragments: 3,
     );
-    final hero0 = state.heroes.first.copyWith(
-      equipped: <EquipmentSlot, EquipmentItem>{EquipmentSlot.weapon: weapon},
-    );
-    state = state.copyWith(heroes: [hero0, ...state.heroes.skip(1)]);
-    state = GameLogic.bindSoulbound(state);
-    expect(state.soulboundItem, isNotNull);
-    expect(state.heroes.first.itemIn(EquipmentSlot.weapon), isNull);
-    expect(state.soulboundFragments, 0);
-
     final before = state.godHandLevel;
     state = GameLogic.upgradeGodHand(state);
     expect(state.godHandLevel, before + 1);
@@ -2998,15 +3002,6 @@ void main() {
     expect(offline.enemies.first.maxHp, live.enemies.first.maxHp);
     final sim = GameLogic.simulateSpatialOffline(farm, 60);
     expect(sim.state.gold, greaterThanOrEqualTo(farm.gold));
-  });
-
-  test('soulbound prefer armor toggles meta flag', () {
-    final state = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
-    expect(state.metaDepth.soulboundIsArmor, isFalse);
-    final armor = GameLogic.setSoulboundPreferArmor(state, true);
-    expect(armor.metaDepth.soulboundIsArmor, isTrue);
-    final weapon = GameLogic.setSoulboundPreferArmor(armor, false);
-    expect(weapon.metaDepth.soulboundIsArmor, isFalse);
   });
 
   test('loot: kill has no fillers; clear grants gold pouch as wallet gold', () {

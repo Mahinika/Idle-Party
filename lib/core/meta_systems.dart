@@ -19,10 +19,25 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.17';
+  static const String currentVersion = '1.12.19';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.19',
+      bullets: <String>[
+        'Floor clear: when the last enemy dies, loot banks instantly and the party walks straight to the stairs — no more idle shuffle waiting for vacuum.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.18',
+      bullets: <String>[
+        'Apex is the forever gear. Heirloom soulbind (fragments / bind / refine) is retired — FORGE → APEX is the keep path.',
+        'Older saves still keep a bound heirloom’s party bonus. New runs do not earn soulbind fragments.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.17',
       bullets: <String>[

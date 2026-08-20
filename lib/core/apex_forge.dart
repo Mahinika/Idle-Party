@@ -26,7 +26,7 @@ class ApexAutoEquipResult {
   final int skipped;
 }
 
-/// Apex weapons and the soulbound item: the two pieces of gear that survive.
+/// Apex weapons: the gear that survives Ascend.
 ///
 /// Boss-only mats with pity (farm loops are diluted on purpose), crafting,
 /// rank upgrades, and the vault that keeps an Apex through Ascend.
@@ -666,116 +666,4 @@ abstract final class ApexForge {
     for (final e in h.equipped.entries)
       if (e.value.isApex) e.key: e.value,
   };
-
-  /// Bind an equipped weapon (or armor when preferred) into the permanent
-  /// soulbound slot.
-  static GameState bindSoulbound(GameState state, {int? heroIndex}) {
-    if (state.soulboundFragments < 3) {
-      return state;
-    }
-    final preferArmor = state.metaDepth.soulboundIsArmor;
-    final preferredSlots = preferArmor
-        ? <EquipmentSlot>[EquipmentSlot.chest, EquipmentSlot.cloak]
-        : <EquipmentSlot>[EquipmentSlot.weapon];
-    final fallbackSlots = preferArmor
-        ? <EquipmentSlot>[EquipmentSlot.weapon]
-        : <EquipmentSlot>[EquipmentSlot.chest, EquipmentSlot.cloak];
-
-    var sourceIndex = heroIndex;
-    EquipmentItem? piece;
-    EquipmentSlot? pieceSlot;
-
-    EquipmentItem? findOnHero(int i, List<EquipmentSlot> slots) {
-      for (final slot in slots) {
-        final candidate = state.heroes[i].itemIn(slot);
-        if (candidate != null) return candidate;
-      }
-      return null;
-    }
-
-    EquipmentSlot? slotOf(PartyHero hero, EquipmentItem item) {
-      for (final e in hero.equipped.entries) {
-        if (e.value.id == item.id) return e.key;
-      }
-      return null;
-    }
-
-    if (sourceIndex != null &&
-        sourceIndex >= 0 &&
-        sourceIndex < state.heroes.length) {
-      piece =
-          findOnHero(sourceIndex, preferredSlots) ??
-          findOnHero(sourceIndex, fallbackSlots);
-      if (piece != null) {
-        pieceSlot = slotOf(state.heroes[sourceIndex], piece);
-      }
-    }
-    // Fall back to any hero if the selected one has nothing bindable.
-    if (piece == null) {
-      for (var i = 0; i < state.heroes.length; i++) {
-        piece = findOnHero(i, preferredSlots);
-        if (piece != null) {
-          sourceIndex = i;
-          pieceSlot = slotOf(state.heroes[i], piece);
-          break;
-        }
-      }
-    }
-    if (piece == null) {
-      for (var i = 0; i < state.heroes.length; i++) {
-        piece = findOnHero(i, fallbackSlots);
-        if (piece != null) {
-          sourceIndex = i;
-          pieceSlot = slotOf(state.heroes[i], piece);
-          break;
-        }
-      }
-    }
-    if (piece == null || sourceIndex == null || pieceSlot == null) {
-      return state;
-    }
-    final isArmor =
-        pieceSlot == EquipmentSlot.chest || pieceSlot == EquipmentSlot.cloak;
-    final bound = piece.copyWith(
-      id: 'soulbound_${piece.id}',
-      name: 'Soulbound ${piece.name}',
-    );
-    final hero = state.heroes[sourceIndex];
-    final nextHeroGear = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped)
-      ..remove(pieceSlot);
-    final heroes = [...state.heroes];
-    heroes[sourceIndex] = hero.copyWith(equipped: nextHeroGear);
-    return state.copyWith(
-      heroes: heroes,
-      equipped: const <EquipmentSlot, EquipmentItem>{},
-      soulboundItem: bound,
-      soulboundFragments: state.soulboundFragments - 3,
-      metaDepth: state.metaDepth.copyWith(soulboundIsArmor: isArmor),
-      lastUpdated: DateTime.now(),
-    );
-  }
-
-  /// Spend soulbound fragments to refine the bound piece (+1 refine).
-  static int refineSoulboundCost(int refineLevel) => 2 + (refineLevel ~/ 3);
-
-  static GameState refineSoulbound(GameState state) {
-    if (state.soulboundItem == null) return state;
-    final cost = refineSoulboundCost(state.metaDepth.soulboundRefine);
-    if (state.soulboundFragments < cost) return state;
-    return state.copyWith(
-      soulboundFragments: state.soulboundFragments - cost,
-      metaDepth: state.metaDepth.copyWith(
-        soulboundRefine: state.metaDepth.soulboundRefine + 1,
-      ),
-      lastUpdated: DateTime.now(),
-    );
-  }
-
-  static GameState setSoulboundPreferArmor(GameState state, bool preferArmor) {
-    if (state.metaDepth.soulboundIsArmor == preferArmor) return state;
-    return state.copyWith(
-      metaDepth: state.metaDepth.copyWith(soulboundIsArmor: preferArmor),
-      lastUpdated: DateTime.now(),
-    );
-  }
 }

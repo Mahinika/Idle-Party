@@ -43,7 +43,6 @@ class InventoryDock extends StatefulWidget {
     required this.onClearCombineA,
     required this.onClearCombineB,
     required this.onCombine,
-    required this.onBindSoulbound,
     required this.onAutoSell,
     required this.onAutoDisassemble,
     required this.onCleanBag,
@@ -75,7 +74,6 @@ class InventoryDock extends StatefulWidget {
   final VoidCallback onClearCombineA;
   final VoidCallback onClearCombineB;
   final VoidCallback onCombine;
-  final VoidCallback onBindSoulbound;
   final VoidCallback onAutoSell;
   final VoidCallback onAutoDisassemble;
   final VoidCallback onCleanBag;
@@ -111,7 +109,6 @@ class _InventoryDockState extends State<InventoryDock>
   VoidCallback get onClearCombineA => widget.onClearCombineA;
   VoidCallback get onClearCombineB => widget.onClearCombineB;
   VoidCallback get onCombine => widget.onCombine;
-  VoidCallback get onBindSoulbound => widget.onBindSoulbound;
   VoidCallback get onAutoSell => widget.onAutoSell;
   VoidCallback get onAutoDisassemble => widget.onAutoDisassemble;
   VoidCallback get onCleanBag => widget.onCleanBag;
@@ -516,7 +513,6 @@ class _InventoryDockState extends State<InventoryDock>
     required bool canCombine,
     required int cost,
     required EquipmentItem? preview,
-    required int fragmentsNeeded,
   }) {
     final slotLabel = primary?.slot.name ?? secondary?.slot.name;
     final goldOk = canCombine && state.gold >= cost;
@@ -649,36 +645,6 @@ class _InventoryDockState extends State<InventoryDock>
               style: KenneyButtonStyle.grey,
             ),
           ],
-          const SizedBox(height: 14),
-          MenuChrome.sectionLabel('SOULBIND'),
-          const SizedBox(height: 4),
-          Text(
-            'Lock a weapon or chest/cloak forever (3 fragments).',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 6),
-          KenneyButton(
-            label: 'SOULBIND  3 frag',
-            onPressed:
-                state.soulboundFragments >= 3 &&
-                    state.heroes.any(
-                      (h) =>
-                          h.itemIn(EquipmentSlot.weapon) != null ||
-                          h.itemIn(EquipmentSlot.chest) != null ||
-                          h.itemIn(EquipmentSlot.cloak) != null,
-                    )
-                ? onBindSoulbound
-                : null,
-            style: KenneyButtonStyle.grey,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            fragmentsNeeded == 0
-                ? 'Have ${state.soulboundFragments} fragments'
-                : 'Need $fragmentsNeeded more (have ${state.soulboundFragments})',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
           const SizedBox(height: 10),
           Text(
             'Flask: party HUD · Pets: META → Beast · God Hand: POWER → Forge → KEEP',
@@ -706,10 +672,6 @@ class _InventoryDockState extends State<InventoryDock>
       GameLogic.maxGearStashFor(state),
       (i) => i < state.gearStash.length ? state.gearStash[i] : null,
     );
-    final fragmentsNeeded = state.soulboundFragments >= 3
-        ? 0
-        : 3 - state.soulboundFragments;
-
     final phone = GameTheme.isPhoneWidth(context);
     final alert = MenuAlerts.partyAlert(state);
     // Progressive menu: MERGE / LOADOUTS / ROSTER appear once they do something.
@@ -727,7 +689,6 @@ class _InventoryDockState extends State<InventoryDock>
               canCombine: canCombine,
               cost: cost,
               preview: preview,
-              fragmentsNeeded: fragmentsNeeded,
             ),
           ),
           PartyTab.loadouts => (

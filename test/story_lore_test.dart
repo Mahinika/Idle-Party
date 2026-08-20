@@ -24,7 +24,6 @@ void main() {
       nextAl: 1,
       milestoneBonus: 2,
       godHandLevel: 3,
-      soulboundFragments: 1,
     );
     expect(body, contains('+7e'));
     expect(body, contains('milestone'));

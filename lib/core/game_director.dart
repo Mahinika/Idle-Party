@@ -1119,20 +1119,6 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  void bindSoulbound({int? heroIndex}) {
-    final beforeFrags = _state.soulboundFragments;
-    _applyUpgrade(GameLogic.bindSoulbound(_state, heroIndex: heroIndex));
-    if (_state.soulboundFragments < beforeFrags) {
-      GameAudio.unlock();
-      final name = _state.soulboundItem?.name ?? 'gear';
-      showToast('Soulbound: $name', life: 2.2);
-    } else if (beforeFrags < 3) {
-      showToast('Need 3 soulbound fragments', life: 1.8);
-    } else {
-      showToast('No gear to bind on this hero', life: 1.8);
-    }
-  }
-
   void craftApex({
     required HeroClassId classId,
     required SpecRoleTag role,
@@ -1572,10 +1558,6 @@ class GameDirector extends ChangeNotifier {
     } else {
       showToast('Loadout applied', life: 1.6);
     }
-  }
-
-  void setSoulboundPreferArmor(bool preferArmor) {
-    _applyUpgrade(GameLogic.setSoulboundPreferArmor(_state, preferArmor));
   }
 
   void deleteLoadout(String id) {
@@ -2156,18 +2138,6 @@ class GameDirector extends ChangeNotifier {
     if (_state.essence < beforeEssence) {
       GameAudio.ui();
       showToast('Relics wiped — no essence back', life: 2.2);
-    }
-  }
-
-  void refineSoulbound() {
-    final before = _state.metaDepth.soulboundRefine;
-    _applyUpgrade(GameLogic.refineSoulbound(_state));
-    if (_state.metaDepth.soulboundRefine > before) {
-      GameAudio.unlock();
-      showToast(
-        'Soulbound refine +${_state.metaDepth.soulboundRefine}',
-        life: 2.2,
-      );
     }
   }
 

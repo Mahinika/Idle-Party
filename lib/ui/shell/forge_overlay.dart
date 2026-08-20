@@ -377,64 +377,16 @@ class _ForgeOverlayState extends State<ForgeOverlay>
               ? director.respecRelics
               : null,
         ),
-        const Divider(height: 16, color: Color(0x665A5040)),
-        _sectionTitle(
-          'SOULBOUND',
-          'One forever item for the whole party. Bind from a hero → TOOLS (3 fragments).',
-        ),
-        Text(
-          '${state.soulboundFragments} fragment'
-          '${state.soulboundFragments == 1 ? '' : 's'} · '
-          'prefer which slot BIND picks first:',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Expanded(
-              child: KenneyButton(
-                label: state.metaDepth.soulboundIsArmor ? 'WEAPON' : 'WEAPON ✓',
-                style: state.metaDepth.soulboundIsArmor
-                    ? KenneyButtonStyle.grey
-                    : KenneyButtonStyle.brown,
-                onPressed: () => director.setSoulboundPreferArmor(false),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: KenneyButton(
-                label: state.metaDepth.soulboundIsArmor ? 'ARMOR ✓' : 'ARMOR',
-                style: state.metaDepth.soulboundIsArmor
-                    ? KenneyButtonStyle.brown
-                    : KenneyButtonStyle.grey,
-                onPressed: () => director.setSoulboundPreferArmor(true),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        if (state.soulboundItem == null)
-          Text(
-            'None yet. Equip a weapon or chest/cloak, open that hero → TOOLS → SOULBIND.',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-          )
-        else ...[
-          Text(
-            '${state.soulboundItem!.name}\n'
-            'Refine ${state.metaDepth.soulboundRefine} · each refine +1 ATK & +4 DEF',
-            style: GameTheme.body(size: 14, color: GameTheme.mossLit),
+        if (state.soulboundItem != null) ...[
+          const Divider(height: 16, color: Color(0x665A5040)),
+          _sectionTitle(
+            'HEIRLOOM',
+            'Older save. Apex is forever gear now — this still adds party power.',
           ),
-          const SizedBox(height: 6),
-          KenneyButton(
-            label:
-                'Refine +1 ATK/+4 DEF · ${GameLogic.refineSoulboundCost(state.metaDepth.soulboundRefine)} frag',
-            onPressed:
-                state.soulboundFragments >=
-                    GameLogic.refineSoulboundCost(
-                      state.metaDepth.soulboundRefine,
-                    )
-                ? director.refineSoulbound
-                : null,
+          Text(
+            '${state.soulboundItem!.name}'
+            '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine}' : ''}',
+            style: GameTheme.body(size: 14, color: GameTheme.mossLit),
           ),
         ],
         const SizedBox(height: 12),

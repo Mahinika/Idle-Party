@@ -76,7 +76,6 @@ class HubHeader extends StatelessWidget {
     required this.bossFloor,
     required this.gold,
     required this.essence,
-    required this.soulbound,
     required this.willRank,
     required this.collectionScore,
     required this.displayTitle,
@@ -91,7 +90,6 @@ class HubHeader extends StatelessWidget {
   final int bossFloor;
   final int gold;
   final int essence;
-  final int soulbound;
   final String willRank;
   final int collectionScore;
   final String displayTitle;
@@ -158,11 +156,6 @@ class HubHeader extends StatelessWidget {
               icon: KenneyAssets.iconCrown,
               label: 'Ascend $ascensionLevel',
             ),
-            if (soulbound > 0)
-              HubStatPill(
-                icon: KenneyAssets.iconTrophy,
-                label: 'Bound $soulbound',
-              ),
           ],
         ),
         const SizedBox(height: 4),
