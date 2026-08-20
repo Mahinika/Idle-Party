@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/loot_pipeline.dart';
 import 'package:idle_party/models/apex_craft.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
@@ -277,5 +278,99 @@ void main() {
     expect(disc.mp5Bonus, greaterThan(0));
     expect(disc.attackSpeedBonus, 0);
     expect(disc.critChanceBonus, greaterThan(0));
+  });
+
+  test('starter party drops every wearable family including shields', () {
+    final party = GameLogic.createInitialState().heroes;
+    final seen = <EquipmentSlot>{};
+    var shields = 0;
+    var tomes = 0;
+    var ring2 = 0;
+    var trinket2 = 0;
+    var chests = 0;
+    var rings = 0;
+    var gear = 0;
+    for (var seed = 0; seed < 500; seed++) {
+      GameLogic.random = Random(seed);
+      for (final drop in GameLogic.rollKillLoot(
+        8,
+        party: party,
+        dungeonId: 'sandy',
+      )) {
+        final item = drop.equipment;
+        if (item == null) continue;
+        gear++;
+        seen.add(item.slot);
+        if (item.slot == EquipmentSlot.chest) chests++;
+        if (item.slot == EquipmentSlot.ring) rings++;
+        if (item.slot == EquipmentSlot.ring2) ring2++;
+        if (item.slot == EquipmentSlot.trinket2) trinket2++;
+        if (item.offHandKind == OffHandKind.shield) shields++;
+        if (item.offHandKind == OffHandKind.frill) tomes++;
+      }
+    }
+    expect(gear, greaterThan(400));
+    for (final slot in LootPipeline.dropFamilies) {
+      expect(seen.contains(slot), isTrue, reason: '$slot never dropped');
+    }
+    expect(ring2, 0);
+    expect(trinket2, 0);
+    expect(shields, greaterThan(8), reason: 'Prot in party should see shields');
+    expect(tomes, greaterThan(0));
+    expect(rings, lessThan(chests * 3));
+  });
+
+  test('Prot-only off-hands are shields', () {
+    final tank = PartyHero.starting(
+      name: 'Aegis',
+      specId: HeroSpecId.protection,
+      level: 20,
+    );
+    var offHands = 0;
+    var shields = 0;
+    for (var seed = 0; seed < 250; seed++) {
+      GameLogic.random = Random(9100 + seed);
+      for (final drop in GameLogic.rollKillLoot(
+        10,
+        party: [tank],
+        dungeonId: 'sandy',
+      )) {
+        final item = drop.equipment;
+        if (item == null) continue;
+        if (item.slot != EquipmentSlot.offHand) continue;
+        offHands++;
+        if (item.offHandKind == OffHandKind.shield) shields++;
+      }
+    }
+    expect(offHands, greaterThan(8));
+    expect(shields, offHands);
+  });
+
+  test('hunter-only party skips off-hand instead of turning it into weapons', () {
+    final hunt = PartyHero.starting(
+      name: 'Hunt',
+      specId: HeroSpecId.beastMastery,
+      level: 20,
+    );
+    var offHand = 0;
+    var weapons = 0;
+    var gear = 0;
+    for (var seed = 0; seed < 300; seed++) {
+      GameLogic.random = Random(8000 + seed);
+      for (final drop in GameLogic.rollKillLoot(
+        10,
+        party: [hunt],
+        dungeonId: 'sandy',
+      )) {
+        final item = drop.equipment;
+        if (item == null) continue;
+        gear++;
+        if (item.slot == EquipmentSlot.offHand) offHand++;
+        if (item.slot == EquipmentSlot.weapon) weapons++;
+      }
+    }
+    expect(offHand, 0);
+    expect(weapons, lessThan((gear * 0.14).round()));
+    expect(weapons, greaterThan((gear * 0.03).round()));
   });
 }

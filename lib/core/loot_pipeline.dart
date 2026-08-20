@@ -5,6 +5,7 @@ import '../models/enemy.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import '../models/proficiency.dart';
 import 'dungeon_generator.dart';
 import 'equipment_factory.dart';
 import 'game_logic.dart';
@@ -78,55 +79,14 @@ abstract final class LootPipeline {
       }
     }
 
-    final slots = EquipmentSlot.values
-        .where((s) => s != EquipmentSlot.consumable)
-        .toList();
-
-    (
-      HeroRole bias,
-      ArmorType? preferred,
-      SpecRoleTag? roleTag,
-      HeroSpecId? specId,
-    )
-    pickBias() {
-      final target = _lootTargetHero(party);
-      if (target != null) {
-        return (
-          // Naming + affix pool follow gearAffinity (Enh→rogue, Holy→healer).
-          target.spec.gearAffinity,
-          GameLogic.preferredArmorForSpec(target.spec, max(1, target.level)),
-          target.spec.roleTag,
-          target.specId,
-        );
-      }
-      return (
-        HeroRole.values[GameLogic.random.nextInt(HeroRole.values.length)],
-        null,
-        null,
-        null,
-      );
-    }
-
-    final slot = slots[GameLogic.random.nextInt(slots.length)];
-    final (bias, preferredArmor, roleTag, lootSpecId) = pickBias();
-    final piece = createEquipment(
-      slot: slot,
-      rarity: primaryRarity,
-      battleNumber: battleNumber,
-      bias: bias,
-      preferredArmor: preferredArmor,
-      roleTag: roleTag,
-      lootSpecId: lootSpecId,
-      dungeonId: dungeonId,
-      ascensionLevel: ascensionLevel,
-      hardmodeLevel: hardmodeLevel,
-    );
     final drops = <LootDrop>[
-      LootDrop(
-        name: piece.name,
-        amount: 1,
+      _rollGearDrop(
+        battleNumber: battleNumber,
         rarity: primaryRarity,
-        equipment: piece,
+        party: party,
+        dungeonId: dungeonId,
+        ascensionLevel: ascensionLevel,
+        hardmodeLevel: hardmodeLevel,
       ),
     ];
 
@@ -143,29 +103,17 @@ abstract final class LootPipeline {
     final secondCap = battleNumber >= 6 ? 0.55 : 0.28;
     if (battleNumber >= 4 &&
         GameLogic.random.nextDouble() < secondChance.clamp(0.0, secondCap)) {
-      final slot2 = slots[GameLogic.random.nextInt(slots.length)];
-      final (bias2, preferred2, roleTag2, lootSpecId2) = pickBias();
       final rarity2 = primaryRarity.index > 0
           ? LootRarity.values[primaryRarity.index - 1]
           : LootRarity.common;
-      final piece2 = createEquipment(
-        slot: slot2,
-        rarity: rarity2,
-        battleNumber: battleNumber,
-        bias: bias2,
-        preferredArmor: preferred2,
-        roleTag: roleTag2,
-        lootSpecId: lootSpecId2,
-        dungeonId: dungeonId,
-        ascensionLevel: ascensionLevel,
-        hardmodeLevel: hardmodeLevel,
-      );
       drops.add(
-        LootDrop(
-          name: piece2.name,
-          amount: 1,
+        _rollGearDrop(
+          battleNumber: battleNumber,
           rarity: rarity2,
-          equipment: piece2,
+          party: party,
+          dungeonId: dungeonId,
+          ascensionLevel: ascensionLevel,
+          hardmodeLevel: hardmodeLevel,
         ),
       );
     }
@@ -319,14 +267,145 @@ abstract final class LootPipeline {
     return out;
   }
 
-  static PartyHero? _lootTargetHero(List<PartyHero>? party) {
-    if (party == null || party.isEmpty) return null;
+  /// Wearable drop families. `ring2` / `trinket2` share the ring / trinket
+  /// pool so jewelry is not twice as common as a chest. Auto Equip still
+  /// fills either finger / trinket slot.
+  static const List<EquipmentSlot> dropFamilies = <EquipmentSlot>[
+    EquipmentSlot.weapon,
+    EquipmentSlot.offHand,
+    EquipmentSlot.ranged,
+    EquipmentSlot.head,
+    EquipmentSlot.neck,
+    EquipmentSlot.shoulder,
+    EquipmentSlot.chest,
+    EquipmentSlot.waist,
+    EquipmentSlot.legs,
+    EquipmentSlot.boots,
+    EquipmentSlot.wrist,
+    EquipmentSlot.hands,
+    EquipmentSlot.cloak,
+    EquipmentSlot.ring,
+    EquipmentSlot.trinket,
+  ];
+
+  static LootDrop _rollGearDrop({
+    required int battleNumber,
+    required LootRarity rarity,
+    required List<PartyHero>? party,
+    required String dungeonId,
+    required int ascensionLevel,
+    required int hardmodeLevel,
+  }) {
+    final (slot, target) = _pickSlotAndTarget(party);
+    late final HeroRole bias;
+    late final ArmorType? preferredArmor;
+    late final SpecRoleTag? roleTag;
+    late final HeroSpecId? lootSpecId;
+    if (target != null) {
+      bias = target.spec.gearAffinity;
+      preferredArmor = GameLogic.preferredArmorForSpec(
+        target.spec,
+        max(1, target.level),
+      );
+      roleTag = target.spec.roleTag;
+      lootSpecId = target.specId;
+    } else {
+      bias = HeroRole.values[GameLogic.random.nextInt(HeroRole.values.length)];
+      preferredArmor = null;
+      roleTag = null;
+      lootSpecId = null;
+    }
+    final piece = createEquipment(
+      slot: slot,
+      rarity: rarity,
+      battleNumber: battleNumber,
+      bias: bias,
+      preferredArmor: preferredArmor,
+      roleTag: roleTag,
+      lootSpecId: lootSpecId,
+      dungeonId: dungeonId,
+      ascensionLevel: ascensionLevel,
+      hardmodeLevel: hardmodeLevel,
+    );
+    return LootDrop(
+      name: piece.name,
+      amount: 1,
+      rarity: rarity,
+      equipment: piece,
+    );
+  }
+
+  static (EquipmentSlot slot, PartyHero? target) _pickSlotAndTarget(
+    List<PartyHero>? party,
+  ) {
+    final rng = GameLogic.random;
+    if (party == null || party.isEmpty) {
+      return (dropFamilies[rng.nextInt(dropFamilies.length)], null);
+    }
     final living = [
       for (final h in party)
         if (h.isAlive) h,
     ];
     final pool = living.isNotEmpty ? living : party;
-    return pool[GameLogic.random.nextInt(pool.length)];
+    final usable = [
+      for (final s in dropFamilies)
+        if (pool.any((h) => _heroUsesDropSlot(h, s))) s,
+    ];
+    final slotPool = usable.isNotEmpty ? usable : dropFamilies;
+    final slot = slotPool[rng.nextInt(slotPool.length)];
+    final candidates = [
+      for (final h in pool)
+        if (_heroUsesDropSlot(h, slot)) h,
+    ];
+    if (candidates.isEmpty) {
+      return (slot, pool[rng.nextInt(pool.length)]);
+    }
+    if (slot == EquipmentSlot.offHand) {
+      final pick = _pickWeighted<PartyHero>(
+        candidates,
+        _offHandTargetWeight,
+        rng,
+      );
+      return (slot, pick);
+    }
+    return (slot, candidates[rng.nextInt(candidates.length)]);
+  }
+
+  static bool _heroUsesDropSlot(PartyHero hero, EquipmentSlot slot) {
+    return switch (slot) {
+      EquipmentSlot.ranged => ClassProficiency.usesRangedSlot(hero.spec),
+      EquipmentSlot.offHand => ClassProficiency.usesOffHandSlot(hero.spec),
+      EquipmentSlot.consumable => false,
+      _ => true,
+    };
+  }
+
+  /// Shield-users get double weight so a Prot tank actually sees shields.
+  static int _offHandTargetWeight(PartyHero hero) {
+    if (!ClassProficiency.usesOffHandSlot(hero.spec)) return 0;
+    if (ClassProficiency.preferredOffHandKind(hero.spec) ==
+        OffHandKind.shield) {
+      return 2;
+    }
+    return 1;
+  }
+
+  static T _pickWeighted<T>(
+    List<T> items,
+    int Function(T) weight,
+    Random rng,
+  ) {
+    var total = 0;
+    for (final item in items) {
+      total += max(0, weight(item));
+    }
+    if (total <= 0) return items[rng.nextInt(items.length)];
+    var roll = rng.nextInt(total);
+    for (final item in items) {
+      roll -= max(0, weight(item));
+      if (roll < 0) return item;
+    }
+    return items.last;
   }
 
   static EquipmentItem createEquipment({

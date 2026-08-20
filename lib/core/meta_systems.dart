@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.23';
+  static const String currentVersion = '1.12.24';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.24',
+      bullets: <String>[
+        'Drops cover every slot you can wear: rings/trinkets are not twice as common as a chest, and shields show up when someone in the party can use them.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.23',
       bullets: <String>[

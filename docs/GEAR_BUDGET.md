@@ -15,6 +15,16 @@ Source of truth: `EquipmentFactory.budgetForItemLevel` in `lib/core/equipment_fa
 
 New drops, merge output, and Apex craft should spend this budget — not invent a parallel power curve.
 
+## Drop slots
+
+Kill loot rolls one **family** at a time (`LootPipeline.dropFamilies`): weapon,
+off-hand, ranged, eight armor pieces, cloak, neck, **one** ring, **one** trinket.
+`ring2` / `trinket2` are equip slots only — Auto Equip still fills either finger.
+
+Then it picks a living party member who can actually wear that family (ranged /
+off-hand are skipped if nobody uses them). Shield-users get extra off-hand
+weight so a Prot tank sees shields instead of a silent remap into extra weapons.
+
 ## Stat split
 
 Configured in `EquipStatWeights.lootShares` / `forSpec` (`lib/models/equip_stat_weights.dart`).
