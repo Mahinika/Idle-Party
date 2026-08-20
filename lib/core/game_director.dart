@@ -745,9 +745,11 @@ class GameDirector extends ChangeNotifier {
         }
       }
       final stashCap = GameLogic.maxGearStashFor(_state);
+      var bagFullHandled = false;
       if (before.gearStash.length < stashCap &&
           _state.gearStash.length >= stashCap) {
         // Light auto-clean so salvage floaters don't spam every pickup.
+        bagFullHandled = true;
         final beforeClean = _state.gearStash.length;
         _state = GameLogic.cleanBagJunk(
           _state,
@@ -758,15 +760,15 @@ class GameDirector extends ChangeNotifier {
         final cleared = beforeClean - _state.gearStash.length;
         if (cleared > 0) {
           showToast(
-            'Bag full — cleaned $cleared junk (oldest salvage → essence)',
-            life: 2.6,
+            'Bag cleared $cleared junk — keep farming',
+            life: 2.4,
           );
         } else {
-          showToast('Bag full — oldest loot salvages to essence', life: 2.4);
+          showToast('Bag full — oldest loot → essence', life: 2.2);
         }
       }
       final cleanup = LogicNotices.takeBagCleanup();
-      if (!cleanup.isEmpty) {
+      if (!cleanup.isEmpty && !bagFullHandled) {
         final bits = <String>[
           if (cleanup.sold > 0)
             'sold ${cleanup.sold} (+${cleanup.goldGained}g)',

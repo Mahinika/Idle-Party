@@ -64,13 +64,13 @@ class TargetCornerHud extends StatelessWidget {
         ? 0.0
         : (enemy.hp / enemy.maxHp).clamp(0.0, 1.0);
     final phone = GameTheme.isPhoneWidth(context);
-    // Name only — role is color/border so the chip stays one readable line.
     final titleColor = role == 'BOSS'
         ? GameTheme.bloodLit
         : (role == 'ELITE' ? GameTheme.torch : GameTheme.parchment);
 
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: phone ? 128.0 : 148.0),
+      // Wider + two-line layout so elite names stay readable on 360px.
+      constraints: BoxConstraints(maxWidth: phone ? 168.0 : 180.0),
       child: Container(
         padding: EdgeInsets.fromLTRB(6, phone ? 3 : 4, 6, phone ? 4 : 5),
         decoration: BoxDecoration(
@@ -88,31 +88,42 @@ class TargetCornerHud extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                if (role.isNotEmpty) ...[
-                  Text(
-                    role == 'BOSS' ? 'B' : 'E',
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
-                      color: titleColor,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                ],
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
-                      color: titleColor,
-                    ),
-                  ),
+            if (role.isNotEmpty)
+              Text(
+                role,
+                style: GameTheme.pixel(
+                  size: GameTheme.hudPixel,
+                  color: titleColor,
                 ),
-                if (enemy != null)
+              ),
+            Text(
+              label,
+              maxLines: 2,
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.pixel(
+                size: GameTheme.hudPixel,
+                color: titleColor,
+              ),
+            ),
+            if (enemy != null) ...[
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(1),
+                      child: LinearProgressIndicator(
+                        value: hpFrac,
+                        minHeight: phone ? 3 : 4,
+                        backgroundColor: const Color(0xFF2A241C),
+                        color: hpFrac > 0.35
+                            ? GameTheme.bloodLit
+                            : GameTheme.blood,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
                   Text(
                     '${(hpFrac * 100).round()}%',
                     style: GameTheme.body(
@@ -120,18 +131,7 @@ class TargetCornerHud extends StatelessWidget {
                       color: GameTheme.parchmentDim,
                     ),
                   ),
-              ],
-            ),
-            if (enemy != null) ...[
-              const SizedBox(height: 2),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(1),
-                child: LinearProgressIndicator(
-                  value: hpFrac,
-                  minHeight: phone ? 3 : 4,
-                  backgroundColor: const Color(0xFF2A241C),
-                  color: hpFrac > 0.35 ? GameTheme.bloodLit : GameTheme.blood,
-                ),
+                ],
               ),
             ] else
               Text(

@@ -42,11 +42,11 @@ abstract final class GameTheme {
   /// Gap between interactive clusters (Material ≥8dp).
   static const double clusterGap = 8;
 
-  /// Bottom nav chrome height (minTouch + label padding).
-  static const double bottomNavHeight = minTouch + 14;
+  /// Bottom nav chrome height (minTouch + label padding + finger comfort).
+  static const double bottomNavHeight = minTouch + 18;
 
   /// Clearance above bottom nav for floating combat HUD.
-  static const double hudAboveNav = clusterGap + 4;
+  static const double hudAboveNav = clusterGap + 6;
 
   /// HUD pixel labels — keep readable on mobile chrome.
   static const double hudPixel = 9;

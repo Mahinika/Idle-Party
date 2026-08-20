@@ -167,7 +167,7 @@ class AppBottomBarItem extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: SizedBox(
-            height: GameTheme.minTouch + 4,
+            height: GameTheme.minTouch + 8,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

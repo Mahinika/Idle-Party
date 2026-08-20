@@ -385,6 +385,25 @@ class _HubScreenState extends State<HubScreen>
                                     context,
                                     chase,
                                   );
+                                  // One primary CTA on phone: fold TODAY ENTER
+                                  // into the big button so KEY/ENTER don't double.
+                                  final foldEnter =
+                                      onAction != null &&
+                                      (actionLabel == 'ENTER' ||
+                                          actionLabel == 'DAILY');
+                                  final primaryLabel =
+                                      chase.kind == HubChaseKind.keystone
+                                      ? 'ENTER KEY +${chase.keyLevel ?? state.hardmodeLevel}'
+                                      : (chase.kind == HubChaseKind.dailyRun
+                                            ? 'DAILY RUN'
+                                            : 'ENTER DUNGEON');
+                                  final primaryAction = foldEnter
+                                      ? onAction
+                                      : (unlockedSelected
+                                            ? () => widget.onEnterDungeon(
+                                                _selectedId,
+                                              )
+                                            : null);
                                   final weekMod =
                                       state.metaDepth.weeklyModifier;
                                   final showWeekAffix =
@@ -411,8 +430,10 @@ class _HubScreenState extends State<HubScreen>
                                       HubTodayCard(
                                         chase: chase,
                                         compact: true,
-                                        actionLabel: actionLabel,
-                                        onAction: onAction,
+                                        actionLabel: foldEnter
+                                            ? null
+                                            : actionLabel,
+                                        onAction: foldEnter ? null : onAction,
                                       ),
                                       HubMetaPulse(
                                         state: state,
@@ -428,14 +449,14 @@ class _HubScreenState extends State<HubScreen>
                                               child: child,
                                             ),
                                         child: KenneyButton(
-                                          label: 'ENTER DUNGEON',
+                                          label: primaryLabel,
+                                          tip: chase.kind ==
+                                                  HubChaseKind.keystone
+                                              ? 'Starts your preferred KEY on this zone'
+                                              : 'Enter the selected dungeon',
                                           style: KenneyButtonStyle.brown,
                                           primary: true,
-                                          onPressed: unlockedSelected
-                                              ? () => widget.onEnterDungeon(
-                                                  _selectedId,
-                                                )
-                                              : null,
+                                          onPressed: primaryAction,
                                         ),
                                       ),
                                       ChallengeToggles(

@@ -896,6 +896,16 @@ Future<void> showOfflineProgressDialog(
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
               ),
+              if (contract.ascendTeaser != null &&
+                  contract.ascendTeaser!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  contract.ascendTeaser!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(size: 13, color: GameTheme.torch),
+                ),
+              ],
             ],
           ),
         ),
@@ -961,9 +971,48 @@ class WhatsNewOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
-    final sections = MetaSystems.hasUnseenChangelog(state)
+    final unseen = MetaSystems.hasUnseenChangelog(state);
+    final current = MetaSystems.releases.isEmpty
+        ? null
+        : MetaSystems.releases.first;
+    final older = MetaSystems.releases.length <= 1
+        ? const <ChangelogRelease>[]
+        : MetaSystems.releases.sublist(1);
+    final focus = unseen
         ? MetaSystems.unseenReleases(state)
-        : MetaSystems.releases;
+        : (current == null
+              ? const <ChangelogRelease>[]
+              : <ChangelogRelease>[current]);
+
+    Widget releaseBlock(ChangelogRelease release) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'VERSION ${release.version}',
+            style: GameTheme.menuTitle(size: 14, color: GameTheme.torch),
+          ),
+          const SizedBox(height: 6),
+          for (final entry in release.bullets)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '•  ',
+                    style: GameTheme.body(size: 16, color: GameTheme.torch),
+                  ),
+                  Expanded(
+                    child: Text(entry, style: GameTheme.body(size: 15)),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 8),
+        ],
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -977,33 +1026,25 @@ class WhatsNewOverlay extends StatelessWidget {
         Expanded(
           child: ListView(
             children: [
-              for (final release in sections) ...[
-                Text(
-                  'VERSION ${release.version}',
-                  style: GameTheme.menuTitle(size: 14, color: GameTheme.torch),
-                ),
-                const SizedBox(height: 6),
-                for (final entry in release.bullets)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '•  ',
-                          style: GameTheme.body(
-                            size: 16,
-                            color: GameTheme.torch,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(entry, style: GameTheme.body(size: 15)),
-                        ),
-                      ],
+              for (final release in focus) releaseBlock(release),
+              if (!unseen && older.isNotEmpty)
+                Theme(
+                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    childrenPadding: EdgeInsets.zero,
+                    title: Text(
+                      'Older versions',
+                      style: GameTheme.body(
+                        size: 14,
+                        color: GameTheme.parchmentDim,
+                      ),
                     ),
+                    children: [
+                      for (final release in older) releaseBlock(release),
+                    ],
                   ),
-                const SizedBox(height: 8),
-              ],
+                ),
             ],
           ),
         ),

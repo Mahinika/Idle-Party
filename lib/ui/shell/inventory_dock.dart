@@ -7,6 +7,7 @@ import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
 import '../../models/hero.dart';
 import '../../models/loot.dart';
+import '../../models/proficiency.dart';
 import '../character_equip_panel.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
@@ -144,6 +145,9 @@ class _InventoryDockState extends State<InventoryDock>
     final upgrades = MenuAlerts.bagUpgradeCount(state);
     return KenneyButton(
       label: upgrades > 0 ? 'EQUIP $upgrades' : 'AUTO EQUIP',
+      tip: upgrades > 0
+          ? 'Equips better bag gear across the whole party'
+          : 'Equips any bag upgrades the party can use',
       onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
       primary: upgrades > 0,
       style: upgrades > 0 ? KenneyButtonStyle.brown : KenneyButtonStyle.grey,
@@ -401,6 +405,7 @@ class _InventoryDockState extends State<InventoryDock>
         const SizedBox(height: 4),
         KenneyButton(
           label: 'CLEAN BAG',
+          tip: 'Merge junk pairs, then sell gold, then scrap essence',
           onPressed: state.gearStash.isEmpty ? null : onCleanBag,
           style: KenneyButtonStyle.brown,
         ),
@@ -410,6 +415,7 @@ class _InventoryDockState extends State<InventoryDock>
             Expanded(
               child: KenneyButton(
                 label: 'SELL JUNK',
+                tip: 'Sells common/uncommon junk under your FILTERS iLvl cap',
                 onPressed: state.gearStash.isEmpty ? null : onAutoSell,
                 style: KenneyButtonStyle.grey,
               ),
@@ -418,6 +424,7 @@ class _InventoryDockState extends State<InventoryDock>
             Expanded(
               child: KenneyButton(
                 label: 'SCRAP',
+                tip: 'Scraps junk for essence under your FILTERS caps',
                 onPressed: state.gearStash.isEmpty ? null : onAutoDisassemble,
                 style: KenneyButtonStyle.grey,
               ),
@@ -816,11 +823,20 @@ class _EquipHeroChip extends StatelessWidget {
       candidate,
       pairingStash: pairingStash,
     );
-    final deltaColor = cmp.powerDelta > 0
-        ? GameTheme.clear
-        : (cmp.powerDelta < 0
-              ? const Color(0xFFE07060)
-              : GameTheme.parchmentDim);
+    final reject = ClassProficiency.rejectReason(
+      role: hero.gearAffinity,
+      level: hero.level,
+      item: candidate,
+      specId: hero.specId,
+    );
+    final cannotUse = reject != null || cmp.powerDelta <= -9000;
+    final deltaColor = cannotUse
+        ? GameTheme.parchmentDim
+        : (cmp.powerDelta > 0
+              ? GameTheme.clear
+              : (cmp.powerDelta < 0
+                    ? const Color(0xFFE07060)
+                    : GameTheme.parchmentDim));
     return InkWell(
       onTap: onTap,
       child: ConstrainedBox(
@@ -828,9 +844,11 @@ class _EquipHeroChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: cmp.isUpgrade
-                ? const Color(0xFF2A3A1C)
-                : const Color(0xFF3A2A18),
+            color: cannotUse
+                ? const Color(0xFF2A241C)
+                : (cmp.isUpgrade
+                      ? const Color(0xFF2A3A1C)
+                      : const Color(0xFF3A2A18)),
             borderRadius: BorderRadius.circular(3),
             border: Border.all(
               color: isBest
@@ -863,28 +881,40 @@ class _EquipHeroChip extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 2),
-              Text(
-                'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: deltaColor,
-                ),
-              ),
-              if (cmp.isUpgrade)
+              if (cannotUse)
                 Text(
-                  'UPGRADE',
-                  style: GameTheme.body(size: 10, color: GameTheme.clear),
-                )
-              else
-                Text(
-                  'power ${GameLogic.formatDelta(cmp.atkDelta)} '
-                  'D${GameLogic.formatDelta(cmp.defDelta)} '
-                  'STA${GameLogic.formatDelta(cmp.vitDelta)}',
+                  reject ?? 'Cannot use',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(
                     size: 10,
-                    color: GameTheme.parchmentDim,
+                    color: GameTheme.accentWarn,
+                  ),
+                )
+              else ...[
+                Text(
+                  'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
+                  style: GameTheme.pixel(
+                    size: GameTheme.hudPixel,
+                    color: deltaColor,
                   ),
                 ),
+                if (cmp.isUpgrade)
+                  Text(
+                    'UPGRADE',
+                    style: GameTheme.body(size: 10, color: GameTheme.clear),
+                  )
+                else
+                  Text(
+                    'power ${GameLogic.formatDelta(cmp.atkDelta)} '
+                    'D${GameLogic.formatDelta(cmp.defDelta)} '
+                    'STA${GameLogic.formatDelta(cmp.vitDelta)}',
+                    style: GameTheme.body(
+                      size: 10,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+              ],
             ],
           ),
         ),

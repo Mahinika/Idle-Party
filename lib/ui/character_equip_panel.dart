@@ -191,7 +191,7 @@ class CharacterEquipPanel extends StatelessWidget {
       children: [
         if (showHeroStrip) ...[
           SizedBox(
-            height: 40,
+            height: GameTheme.minTouch,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: heroes.length,
@@ -201,21 +201,27 @@ class CharacterEquipPanel extends StatelessWidget {
                 final active = i == index;
                 return InkWell(
                   onTap: () => onSelectHero(i),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minHeight: GameTheme.minTouch,
                     ),
-                    decoration: MenuChrome.cardBox(selected: active),
-                    child: Row(
-                      children: [
-                        HeroDollSprite(hero: h, partyIndex: i, size: 24),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${h.roleLabel} · L${h.level}',
-                          style: GameTheme.pixel(size: 8),
-                        ),
-                      ],
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      alignment: Alignment.center,
+                      decoration: MenuChrome.cardBox(selected: active),
+                      child: Row(
+                        children: [
+                          HeroDollSprite(hero: h, partyIndex: i, size: 26),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${h.roleLabel} · L${h.level}',
+                            style: GameTheme.pixel(size: 9),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );

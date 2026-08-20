@@ -700,7 +700,7 @@ abstract final class SpatialCombat {
   static int get _floaterHeal => colorblindMode ? 0xFFCC79A7 : 0xFF7AAB6E;
   static int get _floaterXp => colorblindMode ? 0xFF009E73 : 0xFF9AD0FF;
 
-  static const int _maxFloaters = 16;
+  static const int _maxFloaters = 12;
   static const int _maxBursts = 14;
   static const int _maxProjectiles = 36;
   static const int _maxGroundFx = 6;
@@ -3524,7 +3524,7 @@ abstract final class SpatialCombat {
         final showFloater =
             !salvaged || world.bagFullFloaterCooldown <= 0;
         if (salvaged) {
-          world.bagFullFloaterCooldown = 1.15;
+          world.bagFullFloaterCooldown = 2.0;
         }
         if (showFloater) {
           _spawnFloater(
@@ -4188,15 +4188,21 @@ abstract final class SpatialCombat {
         ),
       );
       if (drop.isEquipment) {
-        _spawnFloater(
-          world,
-          x: enemy.x + 0.2 + i * 0.05,
-          y: enemy.y - 0.15,
-          text: 'LOOT!',
-          argb: _floaterGear,
-          life: 0.9,
-          priority: 2,
-        );
+        // One LOOT! per kill pack — skip extras when the screen is already busy.
+        final busyLoot = world.floaters
+            .where((f) => f.text == 'LOOT!' || f.priority >= 2)
+            .length;
+        if (busyLoot < 2) {
+          _spawnFloater(
+            world,
+            x: enemy.x + 0.2 + i * 0.05,
+            y: enemy.y - 0.15,
+            text: 'LOOT!',
+            argb: _floaterGear,
+            life: 0.95,
+            priority: 2,
+          );
+        }
       }
     }
     if (rewardGold > 0) {
@@ -4221,8 +4227,8 @@ abstract final class SpatialCombat {
         y: enemy.y - 0.75,
         text: '+${xp}XP',
         argb: _floaterXp,
-        life: 1.05,
-        priority: 1,
+        life: 0.85,
+        priority: 0,
       );
       var leveledFloater = false;
       for (var i = 0; i < next.heroes.length; i++) {

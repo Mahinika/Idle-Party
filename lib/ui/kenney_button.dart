@@ -13,6 +13,7 @@ class KenneyButton extends StatelessWidget {
     this.style = KenneyButtonStyle.brown,
     this.expanded = true,
     this.primary = false,
+    this.tip,
   });
 
   final String label;
@@ -22,6 +23,9 @@ class KenneyButton extends StatelessWidget {
 
   /// Material-sized primary CTA (ENTER / Ascend / MERGE).
   final bool primary;
+
+  /// Long-press / hover hint (phone + accessibility).
+  final String? tip;
 
   ({Color top, Color bottom, Color border, Color text, Color glow})
   get _palette => switch (style) {
@@ -71,6 +75,19 @@ class KenneyButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
+        onLongPress: tip == null || !enabled
+            ? null
+            : () {
+                final messenger = ScaffoldMessenger.maybeOf(context);
+                messenger?.hideCurrentSnackBar();
+                messenger?.showSnackBar(
+                  SnackBar(
+                    content: Text(tip!),
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
         borderRadius: radius,
         child: Ink(
           decoration: BoxDecoration(
@@ -116,17 +133,21 @@ class KenneyButton extends StatelessWidget {
       ),
     );
 
-    return WebClickScope(
+    final scoped = WebClickScope(
       label: label,
       onPressed: onPressed,
       child: Semantics(
         button: true,
         enabled: enabled,
-        label: label,
+        label: tip == null ? label : '$label. $tip',
         onTap: onPressed,
         excludeSemantics: true,
-        child: button,
+        child: tip == null
+            ? button
+            : Tooltip(message: tip!, preferBelow: false, child: button),
       ),
     );
+
+    return scoped;
   }
 }
