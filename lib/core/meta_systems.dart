@@ -19,10 +19,26 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.15';
+  static const String currentVersion = '1.12.17';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.17',
+      bullets: <String>[
+        'FORGE → APEX: one station — party craft goals, target material meter, vault cards, and Auto Equip All.',
+        'Boss clears now build a guaranteed mat toward your craft goal (PUSH fills the meter faster than FARM). Craft tries to equip on the matching hero automatically.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.16',
+      bullets: <String>[
+        'POWER → INCOME: Hub and Run gold/min, gold % multipliers, and Gold Find as your keep generator — one tab for the incremental loop.',
+        'Gold Find: buy one level or up to five at once when you can afford them; affordable upgrades glow on INCOME and CAMP.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.15',
       bullets: <String>[

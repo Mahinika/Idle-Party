@@ -1148,14 +1148,35 @@ class GameDirector extends ChangeNotifier {
       showToast('Missing mats or unlock gate', life: 1.8);
       return;
     }
+    final pieceId = ApexCraft.pieceId(
+      classId: classId,
+      role: role,
+      slot: slot,
+    );
+    final name = ApexCraft.pieceName(
+      classId: classId,
+      role: role,
+      slot: slot,
+    );
     _applyUpgrade(
-      GameLogic.craftApex(_state, classId: classId, role: role, slot: slot),
+      GameLogic.setApexCraftGoal(
+        GameLogic.craftApex(_state, classId: classId, role: role, slot: slot),
+        classId: classId,
+        role: role,
+        slot: slot,
+      ),
     );
     GameAudio.unlock();
-    showToast(
-      'Crafted ${ApexCraft.pieceName(classId: classId, role: role, slot: slot)}',
-      life: 2.4,
+    final equippedOnHero = _state.heroes.any(
+      (h) => h.equipped.values.any((g) => g.id == pieceId),
     );
+    if (equippedOnHero) {
+      showToast('Crafted & equipped $name', life: 2.6);
+    } else if (_state.apexVault.any((i) => i.id == pieceId)) {
+      showToast('Crafted $name · try Auto Equip All', life: 2.6);
+    } else {
+      showToast('Crafted $name', life: 2.4);
+    }
   }
 
   void upgradeApex(String itemId) {
@@ -1174,10 +1195,15 @@ class GameDirector extends ChangeNotifier {
 
   void equipFromApexVault(
     String itemId, {
-    int heroIndex = 0,
+    int? heroIndex,
     EquipmentSlot? intoSlot,
   }) {
     if (_isLoading) return;
+    final reason = GameLogic.apexEquipBlockReason(
+      _state,
+      itemId,
+      heroIndex: heroIndex,
+    );
     final before = _state.apexVault.length;
     _applyUpgrade(
       GameLogic.equipFromApexVault(
@@ -1190,8 +1216,51 @@ class GameDirector extends ChangeNotifier {
     if (_state.apexVault.length < before) {
       showToast('Equipped Apex', life: 1.6);
     } else {
-      showToast('Cannot equip Apex', life: 1.6);
+      showToast(reason ?? 'Cannot equip Apex', life: 2.0);
     }
+  }
+
+  void autoEquipAllApex() {
+    if (_isLoading) return;
+    if (_state.apexVault.isEmpty) {
+      showToast('Apex vault is empty', life: 1.6);
+      return;
+    }
+    final result = GameLogic.autoEquipAllApexVault(_state);
+    _applyUpgrade(result.state);
+    if (result.equipped > 0) {
+      GameAudio.unlock();
+      final skip = result.skipped > 0 ? ' · ${result.skipped} skipped' : '';
+      showToast(
+        'Equipped ${result.equipped} Apex$skip',
+        life: 2.4,
+      );
+    } else {
+      showToast('No Apex could equip — check party match', life: 2.2);
+    }
+  }
+
+  void setApexCraftGoal({
+    required HeroClassId classId,
+    required SpecRoleTag role,
+    required EquipmentSlot slot,
+  }) {
+    _applyUpgrade(
+      GameLogic.setApexCraftGoal(
+        _state,
+        classId: classId,
+        role: role,
+        slot: slot,
+      ),
+    );
+  }
+
+  void setApexTargetMat(String matId) {
+    _applyUpgrade(GameLogic.setApexTargetMat(_state, matId));
+  }
+
+  void clearApexTargetMatOverride() {
+    _applyUpgrade(GameLogic.clearApexTargetMatOverride(_state));
   }
 
   void applyTraining() {
@@ -2031,6 +2100,28 @@ class GameDirector extends ChangeNotifier {
       } else {
         showToast('$name Lv$after · $bonus', life: 2.4);
       }
+    }
+  }
+
+  void upgradeSanctuaryGoldBulk({int maxLevels = GoldIncome.sanctuaryGoldBulkMax}) {
+    final before = _state.sanctuaryGoldLevel;
+    final hubBefore = GoldIncome.hubGoldPerMinute(_state);
+    _applyUpgrade(
+      GameLogic.upgradeSanctuaryBulk(
+        _state,
+        'gold',
+        maxLevels: maxLevels,
+      ),
+    );
+    final after = _state.sanctuaryGoldLevel;
+    if (after > before) {
+      final rate = GoldIncome.hubGoldPerMinute(_state);
+      GameAudio.unlock();
+      showToast(
+        'Gold Find Lv$after · Hub ${GoldIncome.perMinuteLabel(rate)} '
+        '(+${rate - hubBefore})',
+        life: 2.8,
+      );
     }
   }
 

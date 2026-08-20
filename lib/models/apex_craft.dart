@@ -23,6 +23,15 @@ abstract final class ApexCraft {
   static const double catalystPBase = 0.03;
   static const double slagPBase = 0.12;
 
+  /// Boss clears (PUSH) to fill the target-material meter (100 units).
+  static const int targetMeterRequired = 100;
+
+  /// Progress per boss clear toward [targetMeterRequired].
+  static const int targetMeterPushTick = 20;
+
+  /// FARM boss clears tick slower (same meter cap).
+  static const int targetMeterFarmTick = 5;
+
   static const List<EquipmentSlot> craftSlots = <EquipmentSlot>[
     EquipmentSlot.weapon,
     EquipmentSlot.offHand,

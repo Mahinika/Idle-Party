@@ -27,7 +27,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 4, vsync: this);
+    _tabs = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -86,7 +86,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           tabs: const [
             Tab(text: 'GOLD'),
             Tab(text: 'KEEP'),
-            Tab(text: 'MATS'),
             Tab(text: 'APEX'),
           ],
         ),
@@ -97,10 +96,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
             children: [
               SingleChildScrollView(child: _classicForgeBody()),
               SingleChildScrollView(child: _metaForgeBody()),
-              SingleChildScrollView(
-                child: ApexMaterialsPanel(director: director),
-              ),
-              SingleChildScrollView(child: ApexCraftPanel(director: director)),
+              SingleChildScrollView(child: ApexHubPanel(director: director)),
             ],
           ),
         ),
@@ -144,13 +140,13 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         ),
         const SizedBox(height: 4),
         Text(
-          GoldIncome.ratesLine(state, runGpm: director.runGoldPerMinute),
-          style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+          'Hub / Run rates → POWER → INCOME.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         if (director.lastFloorClearSec != null)
           Text(
             'Last floor ${director.lastFloorClearSec}s — ATK / HASTE / MOVE '
-            'make the next one faster (not extra g/min on the button).',
+            'make the next one faster.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         const SizedBox(height: 4),

@@ -13,6 +13,19 @@ import 'keystone.dart';
 import 'logic_notices.dart';
 import 'meta_systems.dart';
 
+/// Result of equipping all Apex from the vault.
+class ApexAutoEquipResult {
+  const ApexAutoEquipResult({
+    required this.state,
+    this.equipped = 0,
+    this.skipped = 0,
+  });
+
+  final GameState state;
+  final int equipped;
+  final int skipped;
+}
+
 /// Apex weapons and the soulbound item: the two pieces of gear that survive.
 ///
 /// Boss-only mats with pity (farm loops are diluted on purpose), crafting,
@@ -171,7 +184,250 @@ abstract final class ApexForge {
       }
     }
 
+    // Target-material meter (deterministic progress; RNG/pity still run above).
+    next = _tickTargetMeter(next, farm: farm);
+
     return next.copyWith(craftPity: pity, lastUpdated: DateTime.now());
+  }
+
+  static GameState _tickTargetMeter(GameState state, {required bool farm}) {
+    final targetId = resolveTargetMatId(state);
+    if (targetId == null || targetId.isEmpty) return state;
+    final tick = farm ? ApexCraft.targetMeterFarmTick : ApexCraft.targetMeterPushTick;
+    var progress = state.metaDepth.apexTargetProgress + tick;
+    var next = state;
+    if (progress >= ApexCraft.targetMeterRequired) {
+      next = _addCraftMat(next, targetId);
+      LogicNotices.addCraftMat(targetId);
+      progress = 0;
+    }
+    return next.copyWith(
+      metaDepth: next.metaDepth.copyWith(apexTargetProgress: progress),
+    );
+  }
+
+  /// Craft goal from meta, if valid.
+  static ({HeroClassId classId, SpecRoleTag role, EquipmentSlot slot})?
+  craftGoalFromState(GameState state) {
+    final md = state.metaDepth;
+    if (md.apexCraftClassId.isEmpty ||
+        md.apexCraftRoleTag.isEmpty ||
+        md.apexCraftSlot.isEmpty) {
+      return null;
+    }
+    try {
+      final classId = HeroClassId.values.byName(md.apexCraftClassId);
+      final role = SpecRoleTag.values.byName(md.apexCraftRoleTag);
+      final slot = EquipmentSlot.values.byName(md.apexCraftSlot);
+      if (!ApexCraft.isValidPair(classId, role)) return null;
+      if (!ApexCraft.craftSlotsFor(classId, role).contains(slot)) return null;
+      return (classId: classId, role: role, slot: slot);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static GameState setApexCraftGoal(
+    GameState state, {
+    required HeroClassId classId,
+    required SpecRoleTag role,
+    required EquipmentSlot slot,
+  }) {
+    if (!ApexCraft.isValidPair(classId, role)) return state;
+    if (!ApexCraft.craftSlotsFor(classId, role).contains(slot)) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        apexCraftClassId: classId.name,
+        apexCraftRoleTag: role.name,
+        apexCraftSlot: slot.name,
+        apexTargetMatId: '',
+      ),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  static GameState setApexTargetMat(GameState state, String matId) {
+    if (!ApexCraft.materialsById.containsKey(matId)) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(apexTargetMatId: matId),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  static GameState clearApexTargetMatOverride(GameState state) {
+    if (state.metaDepth.apexTargetMatId.isEmpty) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(apexTargetMatId: ''),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// Missing mats for a craft goal, largest shortage first.
+  static List<MapEntry<String, int>> sortedMatShortages(
+    GameState state, {
+    required HeroClassId classId,
+    required SpecRoleTag role,
+    required EquipmentSlot slot,
+    int rank = 1,
+  }) {
+    final costs = ApexCraft.absoluteCost(
+      classId: classId,
+      role: role,
+      slot: slot,
+      rank: rank,
+    );
+    final missing = <MapEntry<String, int>>[];
+    for (final e in costs.entries) {
+      final have = state.craftMaterials[e.key] ?? 0;
+      final need = e.value - have;
+      if (need > 0) missing.add(MapEntry(e.key, need));
+    }
+    missing.sort((a, b) => b.value.compareTo(a.value));
+    return missing;
+  }
+
+  /// Active target mat: manual override, else largest shortage for craft goal.
+  static String? resolveTargetMatId(GameState state) {
+    final manual = state.metaDepth.apexTargetMatId;
+    if (manual.isNotEmpty) return manual;
+    final goal = craftGoalFromState(state);
+    if (goal == null) return null;
+    final shortages = sortedMatShortages(
+      state,
+      classId: goal.classId,
+      role: goal.role,
+      slot: goal.slot,
+    );
+    return shortages.isEmpty ? null : shortages.first.key;
+  }
+
+  static int bossesUntilTargetGrant(GameState state) {
+    final farm = state.dungeonMode == DungeonMode.farm;
+    final tick = farm ? ApexCraft.targetMeterFarmTick : ApexCraft.targetMeterPushTick;
+    if (tick <= 0) return 0;
+    final left = ApexCraft.targetMeterRequired - state.metaDepth.apexTargetProgress;
+    return (left / tick).ceil();
+  }
+
+  static bool heroMatchesApexPiece(PartyHero hero, EquipmentItem item) {
+    if (!item.isApex) return false;
+    final cls = item.apexClassId;
+    final role = item.apexRoleTag;
+    if (cls != null && cls != hero.spec.classId.name) return false;
+    if (role != null && role != hero.spec.roleTag.name) return false;
+    return true;
+  }
+
+  /// Best active-party hero index for an Apex vault piece, or null.
+  static int? bestHeroIndexForApex(GameState state, EquipmentItem item) {
+    final candidates = <int>[];
+    for (var i = 0; i < state.heroes.length; i++) {
+      if (heroMatchesApexPiece(state.heroes[i], item)) {
+        candidates.add(i);
+      }
+    }
+    if (candidates.isEmpty) return null;
+    if (candidates.length == 1) return candidates.first;
+
+    int apexCount(PartyHero h) =>
+        h.equipped.values.where((g) => g.isApex).length;
+
+    candidates.sort((a, b) {
+      final ha = state.heroes[a];
+      final hb = state.heroes[b];
+      final slot = item.slot;
+      final ia = ha.itemIn(slot)?.effectiveItemLevel ?? 0;
+      final ib = hb.itemIn(slot)?.effectiveItemLevel ?? 0;
+      final cmpIlvl = ia.compareTo(ib);
+      if (cmpIlvl != 0) return cmpIlvl;
+      return apexCount(ha).compareTo(apexCount(hb));
+    });
+    return candidates.first;
+  }
+
+  static String? equipBlockReason(
+    GameState state,
+    String itemId, {
+    int? heroIndex,
+  }) {
+    EquipmentItem? item;
+    for (final candidate in state.apexVault) {
+      if (candidate.id == itemId) {
+        item = candidate;
+        break;
+      }
+    }
+    if (item == null) return 'Not in vault';
+    final idx = heroIndex ?? bestHeroIndexForApex(state, item);
+    if (idx == null) return 'No matching hero in party';
+    if (idx < 0 || idx >= state.heroes.length) return 'Invalid hero';
+    final targetSlot = item.slot;
+    if (!GearService.equipTargetsFor(item).contains(targetSlot)) {
+      return 'Invalid slot';
+    }
+    if (!GearService.canHeroReceive(
+      state.heroes[idx],
+      item,
+      slot: targetSlot,
+    )) {
+      return 'Hero cannot wear this piece';
+    }
+    return null;
+  }
+
+  static int _slotEquipPriority(EquipmentSlot slot) => switch (slot) {
+    EquipmentSlot.weapon => 0,
+    EquipmentSlot.offHand => 1,
+    EquipmentSlot.head => 2,
+    EquipmentSlot.shoulder => 3,
+    EquipmentSlot.chest => 4,
+    EquipmentSlot.hands => 5,
+    EquipmentSlot.waist => 6,
+    EquipmentSlot.legs => 7,
+    EquipmentSlot.boots => 8,
+    EquipmentSlot.wrist => 9,
+    EquipmentSlot.cloak => 10,
+    _ => 20,
+  };
+
+  static ApexAutoEquipResult autoEquipAllApexVault(GameState state) {
+    var next = state;
+    var equipped = 0;
+    var skipped = 0;
+    for (var pass = 0; pass < 8; pass++) {
+      if (next.apexVault.isEmpty) break;
+      final vault = [...next.apexVault]
+        ..sort(
+          (a, b) => _slotEquipPriority(a.slot).compareTo(
+            _slotEquipPriority(b.slot),
+          ),
+        );
+      var passEquipped = 0;
+      for (final item in vault) {
+        if (!next.apexVault.any((g) => g.id == item.id)) continue;
+        final before = next.apexVault.length;
+        next = equipFromApexVault(next, item.id);
+        if (next.apexVault.length < before) {
+          equipped++;
+          passEquipped++;
+        } else {
+          skipped++;
+        }
+      }
+      if (passEquipped == 0) break;
+    }
+    return ApexAutoEquipResult(state: next, equipped: equipped, skipped: skipped);
+  }
+
+  static GameState _updateHeroRosterGear(
+    GameState state,
+    PartyHero updated,
+  ) {
+    final roster = [...state.heroRoster];
+    final ri = roster.indexWhere((h) => h.id == updated.id);
+    if (ri < 0) return state;
+    roster[ri] = updated;
+    return state.copyWith(heroRoster: roster);
   }
 
   static bool hasApexWeaponRank1(
@@ -257,7 +513,15 @@ abstract final class ApexForge {
       apexVault: [...next.apexVault, item],
       lastUpdated: DateTime.now(),
     );
-    return MetaSystems.evaluateAchievements(next);
+    next = MetaSystems.evaluateAchievements(next);
+    final idx = bestHeroIndexForApex(next, item);
+    if (idx != null) {
+      final equipped = equipFromApexVault(next, item.id, heroIndex: idx);
+      if (equipped.apexVault.length < next.apexVault.length) {
+        return equipped;
+      }
+    }
+    return next;
   }
 
   static bool canUpgradeApex(GameState state, String itemId) {
@@ -335,10 +599,9 @@ abstract final class ApexForge {
   static GameState equipFromApexVault(
     GameState state,
     String itemId, {
-    int heroIndex = 0,
+    int? heroIndex,
     EquipmentSlot? intoSlot,
   }) {
-    if (heroIndex < 0 || heroIndex >= state.heroes.length) return state;
     EquipmentItem? item;
     for (final candidate in state.apexVault) {
       if (candidate.id == itemId) {
@@ -348,10 +611,19 @@ abstract final class ApexForge {
     }
     if (item == null) return state;
 
+    final resolvedHero = heroIndex ?? bestHeroIndexForApex(state, item);
+    if (resolvedHero == null ||
+        resolvedHero < 0 ||
+        resolvedHero >= state.heroes.length) {
+      return state;
+    }
+
     final targetSlot = intoSlot ?? item.slot;
     if (!GearService.equipTargetsFor(item).contains(targetSlot)) return state;
-    final heroCheck = state.heroes[heroIndex];
-    if (!GearService.canHeroReceive(heroCheck, item, slot: targetSlot)) return state;
+    final heroCheck = state.heroes[resolvedHero];
+    if (!GearService.canHeroReceive(heroCheck, item, slot: targetSlot)) {
+      return state;
+    }
 
     final equippedItem = item.slot == targetSlot
         ? item
@@ -359,11 +631,10 @@ abstract final class ApexForge {
     var next = state.copyWith(
       apexVault: state.apexVault.where((g) => g.id != itemId).toList(),
     );
-    final hero = next.heroes[heroIndex];
+    final hero = next.heroes[resolvedHero];
     final prev = hero.itemIn(targetSlot);
     final gear = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped);
     gear[targetSlot] = equippedItem;
-    // 2H weapon clears off-hand into vault if apex / stash otherwise
     if (targetSlot == EquipmentSlot.weapon &&
         ClassProficiency.weaponBlocksOffHand(equippedItem)) {
       final off = gear.remove(EquipmentSlot.offHand);
@@ -383,12 +654,9 @@ abstract final class ApexForge {
         next = next.copyWith(gearStash: [...next.gearStash, prev]);
       }
     }
-    final roster = [...next.heroRoster];
-    final ri = roster.indexWhere((h) => h.id == hero.id);
-    if (ri < 0) return state;
-    roster[ri] = hero.copyWith(equipped: gear);
+    final updatedHero = hero.copyWith(equipped: gear);
+    next = _updateHeroRosterGear(next, updatedHero);
     return next.copyWith(
-      heroRoster: roster,
       apexVault: vault,
       lastUpdated: DateTime.now(),
     );

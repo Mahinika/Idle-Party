@@ -12,7 +12,7 @@ enum MenuRoute { none, party, power, meta, settings, jobs }
 /// later (MERGE, LOADOUTS, ROSTER) used to shift what a saved index meant.
 enum PartyTab { gear, bag, merge, loadouts, roster }
 
-enum PowerTab { forge, camp, market, shop }
+enum PowerTab { income, forge, camp, market, shop }
 
 enum MetaTab { key, jobs, beast, codex, guide, settings }
 
@@ -26,7 +26,7 @@ class MenuRouter extends ChangeNotifier {
 
   /// PARTY opens on the paper doll — "what am I wearing" before "what did I loot".
   PartyTab _partyTab = PartyTab.gear;
-  PowerTab _powerTab = PowerTab.forge;
+  PowerTab _powerTab = PowerTab.income;
   MetaTab _metaTab = MetaTab.jobs;
 
   String? _selectedItemId;
@@ -242,6 +242,7 @@ class MenuRouter extends ChangeNotifier {
   ];
 
   static List<PowerTab> visiblePowerTabs(GameState s) => <PowerTab>[
+    PowerTab.income,
     PowerTab.forge,
     if (MenuTabs.showCamp(s)) PowerTab.camp,
     PowerTab.market,

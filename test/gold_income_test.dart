@@ -99,4 +99,17 @@ void main() {
     expect(GoldIncome.ratesLine(state), GoldIncome.hubRateLine(state));
     expect(GoldIncome.ratesLine(state, runGpm: 180), contains('Run 180g/min'));
   });
+
+  test('gold find bulk respects essence cap and max levels', () {
+    var state = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 8, 20),
+    ).copyWith(essence: 500);
+    expect(GoldIncome.goldFindBulkAffordableLevels(state), 5);
+    state = state.copyWith(essence: 20);
+    expect(GoldIncome.goldFindBulkAffordableLevels(state), 1);
+    final before = state.sanctuaryGoldLevel;
+    final afford = GoldIncome.goldFindBulkAffordableLevels(state);
+    final bulked = GameLogic.upgradeSanctuaryBulk(state, 'gold', maxLevels: 5);
+    expect(bulked.sanctuaryGoldLevel, before + afford);
+  });
 }

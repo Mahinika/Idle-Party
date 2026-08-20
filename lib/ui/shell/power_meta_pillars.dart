@@ -10,6 +10,7 @@ import '../meta_overlays.dart';
 import '../guides_overlay.dart';
 import 'beast_overlay.dart';
 import 'forge_overlay.dart';
+import 'income_overlay.dart';
 import 'jobs_market_sanctuary.dart';
 import 'settings_overlay.dart';
 import 'shell_common.dart';
@@ -68,6 +69,11 @@ class _PowerPillarState extends State<PowerPillar>
     final pages = <({String label, String blurb, Widget body})>[
       for (final tab in _visible)
         switch (tab) {
+          PowerTab.income => (
+            label: 'INCOME',
+            blurb: 'Income: Hub / Run gold per min · Gold Find generator',
+            body: SingleChildScrollView(child: IncomeOverlay(director: d)),
+          ),
           PowerTab.forge => (
             label: 'FORGE',
             blurb: 'Forge: gold this run (wipes) · KEEP forever · Apex mats',

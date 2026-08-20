@@ -132,23 +132,33 @@ abstract final class GameGuides {
           '• Both inputs are consumed. Soulbind is separate (3 fragments).',
     ),
     GuideTopic(
+      id: 'income',
+      title: 'INCOME',
+      body:
+          'POWER → INCOME.\n\n'
+          'Your incremental dashboard: Hub gold/min, Run gold/min (from real '
+          'loot in the last couple of minutes), gold % multipliers, and Gold Find '
+          '— the keep generator that raises Hub rate.\n\n'
+          'Buy one Gold Find level or up to five at once when you can afford them. '
+          'Affordable upgrades glow here and on CAMP.',
+    ),
+    GuideTopic(
       id: 'forge',
       title: 'FORGE',
       body:
           'POWER → FORGE.\n\n'
           'Tabs:\n'
-          '• GOLD — spend gold this run. The tab shows Hub gold/min and Run gold/min '
-          '(Run is loot you actually earned in the last couple of minutes, not a guess from ATK). '
+          '• GOLD — spend gold this run. ATK/DEF/STA/MOVE/HASTE/CRIT. '
           'Train = +1 level to every hero '
           '(levels keep on Ascend). ATK/DEF/STA/MOVE/HASTE/CRIT wipe on Ascend. '
-          'ATK, HASTE, and MOVE speed up clears. '
+          'ATK, HASTE, and MOVE speed up clears — see INCOME for rates. '
           'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
           'relative upgrade.\n'
           '• KEEP — essence that survives Ascend: Blessing readout, relics, '
           'soulbound refine, God Hand smash/cooldown/style, and the 5th party '
           'slot (AL2 · 80e).\n'
-          '• MATS / APEX — boss materials and Apex craft.\n\n'
+          '• MATS / APEX — one Apex station: materials, craft goals, target meter, vault.\n\n'
           '• Ascend from the Hub when ready (not from Forge).',
     ),
     GuideTopic(
@@ -173,6 +183,7 @@ abstract final class GameGuides {
       title: 'SANCTUARY',
       body:
           'POWER → CAMP. Spend essence on permanent tracks.\n\n'
+          '• See POWER → INCOME for Hub / Run rates and Gold Find upgrades.\n'
           '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
           '• Hub gold/min ticks while you sit at the keep — Gold Find raises that rate (shown on the hub and on CAMP).\n'
           '• Tracks level infinitely — cost scales with level.\n'
@@ -197,12 +208,13 @@ abstract final class GameGuides {
       id: 'apex',
       title: 'APEX FORGE',
       body:
-          'FORGE → MATS / APEX.\n\n'
-          '• Craft the strongest class/role gear from boss-only materials.\n'
-          '• Materials live in a separate bag (not gear stash) and survive Ascend.\n'
-          '• Farm bosses on each dungeon — trash packs never drop mats.\n'
-          '• Craft weapon R1 first, then armor; upgrade pieces in place to R3.\n'
-          '• Apex gear stays equipped through Ascend.',
+          'FORGE → APEX.\n\n'
+          '• One screen: materials, party craft goals, target meter, craft, vault.\n'
+          '• Tap a party goal card to chase that hero\'s next Apex piece.\n'
+          '• Target meter: every boss clear builds toward a guaranteed mat (PUSH faster than FARM).\n'
+          '• Tap a recipe mat to lock the target; Auto Equip All equips vault Apex on matching heroes.\n'
+          '• Craft weapon R1 first, then armor; upgrade in place to R3.\n'
+          '• Apex gear and materials survive Ascend.',
     ),
     GuideTopic(
       id: 'market',

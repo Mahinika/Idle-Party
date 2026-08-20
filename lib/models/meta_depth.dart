@@ -200,6 +200,11 @@ class MetaDepthState {
     this.playGamesOptIn = false,
     this.hubIdleSubSec = 0,
     this.hubAfkSec = 0,
+    this.apexCraftClassId = '',
+    this.apexCraftRoleTag = '',
+    this.apexCraftSlot = '',
+    this.apexTargetMatId = '',
+    this.apexTargetProgress = 0,
   });
 
   final int sanctuaryXpLevel;
@@ -326,6 +331,17 @@ class MetaDepthState {
   /// Cumulative hub AFK seconds for essence (same 10min gate as offline).
   final int hubAfkSec;
 
+  /// Active Apex craft goal ([HeroClassId.name] / [SpecRoleTag.name] / slot).
+  final String apexCraftClassId;
+  final String apexCraftRoleTag;
+  final String apexCraftSlot;
+
+  /// Manual target mat override; empty = auto from craft goal shortages.
+  final String apexTargetMatId;
+
+  /// Boss-clear progress toward guaranteed target mat (resets on grant).
+  final int apexTargetProgress;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -399,6 +415,11 @@ class MetaDepthState {
     bool? playGamesOptIn,
     int? hubIdleSubSec,
     int? hubAfkSec,
+    String? apexCraftClassId,
+    String? apexCraftRoleTag,
+    String? apexCraftSlot,
+    String? apexTargetMatId,
+    int? apexTargetProgress,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -475,6 +496,11 @@ class MetaDepthState {
       playGamesOptIn: playGamesOptIn ?? this.playGamesOptIn,
       hubIdleSubSec: hubIdleSubSec ?? this.hubIdleSubSec,
       hubAfkSec: hubAfkSec ?? this.hubAfkSec,
+      apexCraftClassId: apexCraftClassId ?? this.apexCraftClassId,
+      apexCraftRoleTag: apexCraftRoleTag ?? this.apexCraftRoleTag,
+      apexCraftSlot: apexCraftSlot ?? this.apexCraftSlot,
+      apexTargetMatId: apexTargetMatId ?? this.apexTargetMatId,
+      apexTargetProgress: apexTargetProgress ?? this.apexTargetProgress,
     );
   }
 
@@ -543,6 +569,11 @@ class MetaDepthState {
     'playGamesOptIn': playGamesOptIn,
     'hubIdleSubSec': hubIdleSubSec,
     'hubAfkSec': hubAfkSec,
+    'apexCraftClassId': apexCraftClassId,
+    'apexCraftRoleTag': apexCraftRoleTag,
+    'apexCraftSlot': apexCraftSlot,
+    'apexTargetMatId': apexTargetMatId,
+    'apexTargetProgress': apexTargetProgress,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -649,6 +680,11 @@ class MetaDepthState {
       playGamesOptIn: (json['playGamesOptIn'] as bool?) ?? false,
       hubIdleSubSec: (json['hubIdleSubSec'] as num?)?.toInt() ?? 0,
       hubAfkSec: (json['hubAfkSec'] as num?)?.toInt() ?? 0,
+      apexCraftClassId: (json['apexCraftClassId'] as String?) ?? '',
+      apexCraftRoleTag: (json['apexCraftRoleTag'] as String?) ?? '',
+      apexCraftSlot: (json['apexCraftSlot'] as String?) ?? '',
+      apexTargetMatId: (json['apexTargetMatId'] as String?) ?? '',
+      apexTargetProgress: (json['apexTargetProgress'] as num?)?.toInt() ?? 0,
     );
   }
 }

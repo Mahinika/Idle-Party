@@ -551,6 +551,47 @@ class GameLogic {
     );
   }
 
+  /// How many consecutive [track] upgrades essence can afford (cap [maxLevels]).
+  static int sanctuaryBulkAffordableLevels(
+    GameState state,
+    String track, {
+    int maxLevels = 5,
+  }) {
+    var essence = state.essence;
+    var level = switch (track) {
+      'gold' => state.sanctuaryGoldLevel,
+      'power' => state.sanctuaryPowerLevel,
+      'vitality' => state.sanctuaryVitalityLevel,
+      'xp' => state.metaDepth.sanctuaryXpLevel,
+      _ => -1,
+    };
+    if (level < 0) return 0;
+    var count = 0;
+    while (count < maxLevels) {
+      final cost = sanctuaryCost(level);
+      if (essence < cost) break;
+      essence -= cost;
+      level++;
+      count++;
+    }
+    return count;
+  }
+
+  /// Buy up to [maxLevels] sanctuary levels on one track while essence lasts.
+  static GameState upgradeSanctuaryBulk(
+    GameState state,
+    String track, {
+    int maxLevels = 5,
+  }) {
+    var next = state;
+    for (var i = 0; i < maxLevels; i++) {
+      final before = next;
+      next = upgradeSanctuary(next, track);
+      if (identical(next, before)) break;
+    }
+    return next;
+  }
+
   /// Optional compress: reset track to 0 for essence + lasting prestige bonus.
   /// Available from level 12+; tracks may also keep leveling infinitely.
   static GameState prestigeSanctuaryTrack(GameState state, String track) {
@@ -2898,13 +2939,54 @@ class GameLogic {
   static GameState equipFromApexVault(
     GameState state,
     String itemId, {
-    int heroIndex = 0,
+    int? heroIndex,
     EquipmentSlot? intoSlot,
   }) => ApexForge.equipFromApexVault(
     state,
     itemId,
     heroIndex: heroIndex,
     intoSlot: intoSlot,
+  );
+  static ApexAutoEquipResult autoEquipAllApexVault(GameState state) =>
+      ApexForge.autoEquipAllApexVault(state);
+  static GameState setApexCraftGoal(
+    GameState state, {
+    required HeroClassId classId,
+    required SpecRoleTag role,
+    required EquipmentSlot slot,
+  }) => ApexForge.setApexCraftGoal(
+    state,
+    classId: classId,
+    role: role,
+    slot: slot,
+  );
+  static GameState setApexTargetMat(GameState state, String matId) =>
+      ApexForge.setApexTargetMat(state, matId);
+  static GameState clearApexTargetMatOverride(GameState state) =>
+      ApexForge.clearApexTargetMatOverride(state);
+  static String? resolveApexTargetMatId(GameState state) =>
+      ApexForge.resolveTargetMatId(state);
+  static int apexBossesUntilTargetGrant(GameState state) =>
+      ApexForge.bossesUntilTargetGrant(state);
+  static String? apexEquipBlockReason(
+    GameState state,
+    String itemId, {
+    int? heroIndex,
+  }) => ApexForge.equipBlockReason(state, itemId, heroIndex: heroIndex);
+  static int? apexBestHeroIndexForItem(GameState state, EquipmentItem item) =>
+      ApexForge.bestHeroIndexForApex(state, item);
+  static List<MapEntry<String, int>> apexSortedMatShortages(
+    GameState state, {
+    required HeroClassId classId,
+    required SpecRoleTag role,
+    required EquipmentSlot slot,
+    int rank = 1,
+  }) => ApexForge.sortedMatShortages(
+    state,
+    classId: classId,
+    role: role,
+    slot: slot,
+    rank: rank,
   );
   static Map<EquipmentSlot, EquipmentItem> keepApexOnly(PartyHero h) =>
       ApexForge.keepApexOnly(h);

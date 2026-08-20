@@ -189,10 +189,13 @@ class SanctuaryOverlay extends StatelessWidget {
       0,
       prestige: prestige + 1,
     );
+    final canAfford = state.essence >= cost;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(10),
-      decoration: MenuChrome.listCard(selected: canPrestige),
+      decoration: MenuChrome.listCard(
+        selected: canPrestige || (track == 'gold' && canAfford),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -252,10 +255,33 @@ class SanctuaryOverlay extends StatelessWidget {
           const SizedBox(height: 6),
           KenneyButton(
             label: 'Upgrade · ${cost}e',
-            onPressed: state.essence >= cost
+            onPressed: canAfford
                 ? () => director.upgradeSanctuary(track)
                 : null,
           ),
+          if (track == 'gold') ...[
+            Builder(
+              builder: (_) {
+                final bulk = GoldIncome.goldFindBulkAffordableLevels(state);
+                if (bulk <= 1) return const SizedBox.shrink();
+                final target = level + bulk;
+                final hubNow = GoldIncome.hubGoldPerMinute(state);
+                final hubAfter = GoldIncome.hubGoldPerMinuteAtGoldLevel(
+                  state,
+                  target,
+                );
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: KenneyButton(
+                    label:
+                        'Buy $bulk · Lv$target · +${hubAfter - hubNow} g/min',
+                    style: KenneyButtonStyle.brown,
+                    onPressed: () => director.upgradeSanctuaryGoldBulk(),
+                  ),
+                );
+              },
+            ),
+          ],
           if (canPrestige) ...[
             const SizedBox(height: 4),
             KenneyButton(

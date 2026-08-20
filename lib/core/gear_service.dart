@@ -190,6 +190,10 @@ abstract final class GearService {
       if (className != null && className != hero.spec.classId.name) {
         return false;
       }
+      final roleName = item.apexRoleTag;
+      if (roleName != null && roleName != hero.spec.roleTag.name) {
+        return false;
+      }
     }
     final remapped = item.slot == slot ? item : item.copyWith(slot: slot);
     if (!ClassProficiency.canEquip(

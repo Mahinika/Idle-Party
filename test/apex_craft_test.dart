@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/core/logic_notices.dart';
 import 'package:idle_party/models/apex_craft.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
@@ -93,9 +94,16 @@ void main() {
       role: SpecRoleTag.tank,
       slot: EquipmentSlot.weapon,
     );
-    expect(state.apexVault, isNotEmpty);
-    expect(state.apexVault.first.isApex, isTrue);
-    expect(state.apexVault.first.apexRank, 1);
+    final wIdx = state.heroes.indexWhere(
+      (h) =>
+          h.spec.classId == HeroClassId.warrior &&
+          h.spec.roleTag == SpecRoleTag.tank,
+    );
+    expect(wIdx, greaterThanOrEqualTo(0));
+    final weapon = state.heroes[wIdx].itemIn(EquipmentSlot.weapon);
+    expect(weapon?.isApex, isTrue);
+    expect(weapon?.apexRank, 1);
+    expect(state.apexVault, isEmpty);
     expect(state.achievements, contains('apex_first'));
 
     expect(
@@ -108,11 +116,11 @@ void main() {
       isTrue,
     );
 
-    final id = state.apexVault.first.id;
+    final id = weapon!.id;
     state = GameLogic.upgradeApex(state, id);
-    expect(state.apexVault.first.apexRank, 2);
+    expect(state.heroes[wIdx].itemIn(EquipmentSlot.weapon)?.apexRank, 2);
     state = GameLogic.upgradeApex(state, id);
-    expect(state.apexVault.first.apexRank, 3);
+    expect(state.heroes[wIdx].itemIn(EquipmentSlot.weapon)?.apexRank, 3);
     expect(state.achievements, contains('apex_r3'));
   });
 
@@ -284,5 +292,98 @@ void main() {
       rank: 1,
     );
     expect(r1['apex_slag'], 1);
+  });
+
+  test('target meter grants mat and resets on push boss clear', () {
+    var state = GameLogic.createInitialState().copyWith(
+      metaDepth: const MetaDepthState(
+        apexCraftClassId: 'warrior',
+        apexCraftRoleTag: 'tank',
+        apexCraftSlot: 'weapon',
+        apexTargetProgress: 90,
+      ),
+      dungeonMode: DungeonMode.push,
+      inDungeon: true,
+      dungeonId: 'sandy',
+    );
+    final beforeMats = Map<String, int>.from(state.craftMaterials);
+    state = GameLogic.grantBossCraftMats(state, clearedBoss: true);
+    expect(state.metaDepth.apexTargetProgress, 0);
+    expect(
+      state.craftMaterials.length > beforeMats.length ||
+          state.craftMaterials.values.fold<int>(0, (s, v) => s + v) >
+              beforeMats.values.fold<int>(0, (s, v) => s + v),
+      isTrue,
+    );
+  });
+
+  test('auto equip all places vault apex on matching party hero', () {
+    var state = GameLogic.createInitialState();
+    final wIdx = state.heroes.indexWhere(
+      (h) =>
+          h.spec.classId == HeroClassId.warrior &&
+          h.spec.roleTag == SpecRoleTag.tank,
+    );
+    if (wIdx < 0) {
+      final hero = state.heroes.first;
+      final roster = [...state.heroRoster];
+      final ri = roster.indexWhere((h) => h.id == hero.id);
+      roster[ri] = hero.copyWith(
+        specId: HeroSpecId.protection,
+      );
+      state = state.copyWith(heroRoster: roster);
+    }
+    final apex = ApexCraft.buildItem(
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.weapon,
+      rank: 1,
+      ascensionLevel: 0,
+    );
+    state = state.copyWith(apexVault: [apex]);
+    final result = GameLogic.autoEquipAllApexVault(state);
+    expect(result.equipped, 1);
+    expect(result.state.apexVault, isEmpty);
+    expect(
+      result.state.heroes.any(
+        (h) => h.equipped.values.any((g) => g.id == apex.id),
+      ),
+      isTrue,
+    );
+  });
+
+  test('craft apex auto-equips when party hero matches', () {
+    var state = GameLogic.createInitialState();
+    final mats = <String, int>{for (final m in ApexCraft.materials) m.id: 99};
+    state = state.copyWith(craftMaterials: mats);
+    state = GameLogic.setApexCraftGoal(
+      state,
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.weapon,
+    );
+    final wIdx = state.heroes.indexWhere(
+      (h) =>
+          h.spec.classId == HeroClassId.warrior &&
+          h.spec.roleTag == SpecRoleTag.tank,
+    );
+    expect(wIdx, greaterThanOrEqualTo(0));
+    state = GameLogic.craftApex(
+      state,
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.weapon,
+    );
+    expect(state.apexVault, isEmpty);
+    expect(
+      state.heroes[wIdx].itemIn(EquipmentSlot.weapon)?.isApex,
+      isTrue,
+    );
+  });
+
+  test('legacy save defaults apex target fields', () {
+    final loaded = MetaDepthState.fromJson(<String, dynamic>{});
+    expect(loaded.apexCraftClassId, '');
+    expect(loaded.apexTargetProgress, 0);
   });
 }

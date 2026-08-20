@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'game_state.dart';
+import 'game_logic.dart';
 
 /// Hub gold rate and AFK yield — one formula for live ticks, CAMP preview,
 /// and sanctuary offline. Dungeon combat gold is separate.
@@ -113,6 +114,15 @@ abstract final class GoldIncome {
   static int nextGoldFindDeltaPerMinute(GameState state) =>
       hubGoldPerMinuteAtGoldLevel(state, state.sanctuaryGoldLevel + 1) -
       hubGoldPerMinute(state);
+
+  static const int sanctuaryGoldBulkMax = 5;
+
+  static int goldFindBulkAffordableLevels(GameState state) =>
+      GameLogic.sanctuaryBulkAffordableLevels(
+        state,
+        'gold',
+        maxLevels: sanctuaryGoldBulkMax,
+      );
 
   static int essenceDue(int totalSec, int sanctuaryPowerLevel) {
     if (totalSec < 600) return 0;
