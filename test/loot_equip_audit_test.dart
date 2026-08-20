@@ -224,4 +224,58 @@ void main() {
     }
     expect(throughput, greaterThan(spi));
   });
+
+  test('healer rares roll Mp5/Crit before Haste', () {
+    var mp5Hits = 0;
+    var critHits = 0;
+    var hasteHits = 0;
+    for (var i = 0; i < 40; i++) {
+      EquipmentFactory.random = Random(4100 + i);
+      final item = EquipmentFactory.create(
+        slot: EquipmentSlot.chest,
+        rarity: LootRarity.rare,
+        battleNumber: 18,
+        bias: HeroRole.healer,
+        preferredArmor: ArmorType.cloth,
+        roleTag: SpecRoleTag.healer,
+      );
+      if (item.mp5Bonus > 0) mp5Hits++;
+      if (item.critChanceBonus > 0) critHits++;
+      if (item.attackSpeedBonus > 0) hasteHits++;
+    }
+    expect(mp5Hits, greaterThan(hasteHits));
+    expect(mp5Hits + critHits, greaterThan(hasteHits * 2));
+  });
+
+  test('healer weapons do not haste-first', () {
+    var mp5Hits = 0;
+    var hasteHits = 0;
+    for (var i = 0; i < 32; i++) {
+      EquipmentFactory.random = Random(4200 + i);
+      final item = EquipmentFactory.create(
+        slot: EquipmentSlot.weapon,
+        rarity: LootRarity.rare,
+        battleNumber: 18,
+        bias: HeroRole.healer,
+        roleTag: SpecRoleTag.healer,
+        lootSpecId: HeroSpecId.discipline,
+      );
+      if (item.mp5Bonus > 0) mp5Hits++;
+      if (item.attackSpeedBonus > 0) hasteHits++;
+    }
+    expect(mp5Hits, greaterThan(hasteHits));
+  });
+
+  test('healer Apex spends Mp5 not Haste', () {
+    final disc = ApexCraft.buildItem(
+      classId: HeroClassId.priest,
+      role: SpecRoleTag.healer,
+      slot: EquipmentSlot.weapon,
+      rank: 1,
+      ascensionLevel: 3,
+    );
+    expect(disc.mp5Bonus, greaterThan(0));
+    expect(disc.attackSpeedBonus, 0);
+    expect(disc.critChanceBonus, greaterThan(0));
+  });
 }

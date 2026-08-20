@@ -995,7 +995,8 @@ class EquipmentFactory {
 
     final pool = <String>[
       for (final id in switch (tag) {
-        SpecRoleTag.healer => const ['haste', 'mp5', 'crit'],
+        // Heals ignore haste (ability CDs are wall-clock) — Mp5/Crit first.
+        SpecRoleTag.healer => const ['mp5', 'crit', 'haste'],
         SpecRoleTag.caster => const ['crit', 'haste'],
         SpecRoleTag.tank => const ['haste', 'crit'],
         SpecRoleTag.meleeDps ||
@@ -1003,9 +1004,10 @@ class EquipmentFactory {
       })
         id,
     ];
-    // Weapons / gloves lean Haste first (classic feel).
-    if (resolvedSlot == EquipmentSlot.weapon ||
-        resolvedSlot == EquipmentSlot.hands) {
+    // Weapons / gloves lean Haste first (classic feel) — not healers.
+    if (tag != SpecRoleTag.healer &&
+        (resolvedSlot == EquipmentSlot.weapon ||
+            resolvedSlot == EquipmentSlot.hands)) {
       pool.remove('haste');
       pool.insert(0, 'haste');
     }
@@ -1071,7 +1073,7 @@ class EquipmentFactory {
                     : GearEffectId.haste),
         HeroRole.healer =>
           random.nextDouble() < 0.55
-              ? GearEffectId.haste
+              ? GearEffectId.crit
               : (random.nextBool()
                     ? GearEffectId.lifesteal
                     : GearEffectId.goldFind),

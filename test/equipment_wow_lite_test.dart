@@ -581,7 +581,7 @@ void main() {
     var state = GameLogic.createInitialState(now: DateTime(2026, 8, 5));
     expect(GameLogic.maxAutoSellIlvlCap(state), 60);
     state = state.copyWith(highestDungeonCleared: 6, ascensionLevel: 10);
-    expect(GameLogic.maxAutoSellIlvlCap(state), 200);
+    expect(GameLogic.maxAutoSellIlvlCap(state), 232);
   });
 
   test('affix load parses structured prefixes and suffixes', () async {

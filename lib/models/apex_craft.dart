@@ -574,12 +574,15 @@ abstract final class ApexCraft {
     const ap = 0;
     var crit = 0;
     var aspd = 0;
+    var mp5 = 0;
     final secTier = max(0, (baseIlvl - 5) ~/ 18);
     switch (role) {
       case SpecRoleTag.tank:
         crit = 2 + rank + secTier ~/ 2;
       case SpecRoleTag.healer:
-        aspd = 2 + rank + secTier ~/ 2;
+        // Heals ignore haste — Mp5 + a little crit, same honesty as dungeon loot.
+        mp5 = 2 + rank + secTier ~/ 2;
+        crit = 1 + rank + secTier ~/ 3;
       case SpecRoleTag.meleeDps:
         crit = 3 + rank * 2 + secTier ~/ 2;
         aspd = 2 + rank + secTier ~/ 2;
@@ -605,6 +608,7 @@ abstract final class ApexCraft {
       attackBonus: ap,
       critChanceBonus: crit,
       attackSpeedBonus: aspd,
+      mp5Bonus: mp5,
       itemLevel: baseIlvl,
       armorType: armorType,
       weaponType: weaponType,

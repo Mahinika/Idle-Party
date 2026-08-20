@@ -25,11 +25,12 @@ Configured in `EquipStatWeights.lootShares` / `forSpec` (`lib/models/equip_stat_
 | Str melee | Str + Sta | Crit, Haste |
 | Agi melee / hunter | Agi + Sta (+ some Str) | Crit, Haste |
 | Caster | Int + Sta + Spell Power | Crit, Haste |
-| Healer | Int + Sta + SP + Spirit | Mp5, Crit, Haste |
+| Healer | Int + Sta + SP + Spirit | **Mp5, Crit** (Haste last — heals ignore haste) |
 
 Rules:
 
 - At most **two** secondaries on new loot.
+- Healer loot fills **Mp5 then Crit** (weapons/gloves do not haste-first). Haste is the leftover line.
 - **No Move** on loot budget.
 - Affinity on an item is **drop bias / tooltip flavour**, not equip-score.
 - **Armor type is a hard `canEquip` gate** (plate / mail / leather / cloth per class). Auto Equip never scores a Paladin into leather.
@@ -49,6 +50,7 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 **Counts**
 
 - Role-weighted stat mass (Str/Agi/Sta/Int/Spi/SP/Armor/Crit/Haste/Mp5/flat ATK) — same DNA as `EquipStatWeights.forSpec`.
+- **Crit fades** once the hero's sheet crit is 70+ (zero at the 75 combat cap) so Auto Equip does not chase a clamped stat.
 - Gear effects that spend real effect value (lifesteal, crit, haste, …).
 - Apex tier bonus (soul-kept craft power).
 - 1H vs 2H net: `score(2H)` vs `score(1H) + best bag OH` (and 2H minus worn OH).

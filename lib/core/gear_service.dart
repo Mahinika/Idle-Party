@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import '../models/combat_ratings.dart';
 import '../models/equip_stat_weights.dart';
 import '../models/gear_loadout.dart';
 import '../models/hero.dart';
@@ -501,6 +502,9 @@ abstract final class GearService {
   }
 
   /// Role-weighted item power for BiS / Auto Equip / UPGRADE (GEAR_BUDGET).
+  ///
+  /// Crit score fades once this hero's sheet is near the 75% combat cap so
+  /// Auto Equip stops chasing a clamped stat (rogue-family late sets).
   static int itemBudgetScore(PartyHero hero, EquipmentItem item) {
     final role = _equipScoreRole(hero.spec);
     var score = roleEquipScore(
@@ -508,6 +512,7 @@ abstract final class GearService {
       item,
       specId: hero.specId,
       level: hero.level,
+      critMul: critScoreMul(hero),
     );
     if (item.isApex) {
       score += 80 + item.apexRank * 40;
@@ -549,6 +554,7 @@ abstract final class GearService {
     EquipmentItem item, {
     HeroSpecId? specId,
     int level = 60,
+    double critMul = 1.0,
   }) {
     // [level] reserved for future armor-gate soft hints; hard gate is canEquip.
     final spec = specId != null ? HeroSpecs.def(specId) : null;
@@ -557,6 +563,7 @@ abstract final class GearService {
         : EquipStatWeights.forRole(role);
     final roleTag = spec?.roleTag;
     assert(level >= 1);
+    final critW = critMul.clamp(0.0, 1.0);
     final effect = switch (item.effectId) {
       GearEffectId.lifesteal => switch (roleTag ?? _tagForRole(role)) {
         SpecRoleTag.tank => item.effectValue * 5,
@@ -568,14 +575,19 @@ abstract final class GearService {
         SpecRoleTag.meleeDps || SpecRoleTag.rangedDps => 12,
         _ => 6,
       },
-      GearEffectId.crit => switch (roleTag ?? _tagForRole(role)) {
-        SpecRoleTag.meleeDps || SpecRoleTag.rangedDps => item.effectValue * 4,
-        SpecRoleTag.caster => item.effectValue * 3,
-        SpecRoleTag.healer => item.effectValue * 2,
-        _ => item.effectValue,
-      },
+      GearEffectId.crit =>
+        (switch (roleTag ?? _tagForRole(role)) {
+                  SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
+                    item.effectValue * 4,
+                  SpecRoleTag.caster => item.effectValue * 3,
+                  SpecRoleTag.healer => item.effectValue * 2,
+                  _ => item.effectValue,
+                } *
+                critW)
+            .round(),
       GearEffectId.haste => switch (roleTag ?? _tagForRole(role)) {
-        SpecRoleTag.caster || SpecRoleTag.healer => item.effectValue * 3,
+        SpecRoleTag.caster => item.effectValue * 3,
+        SpecRoleTag.healer => item.effectValue,
         SpecRoleTag.meleeDps || SpecRoleTag.rangedDps => item.effectValue * 2,
         _ => item.effectValue,
       },
@@ -592,13 +604,41 @@ abstract final class GearService {
                 item.spiritBonus * w.spi +
                 item.spellPowerBonus * w.sp +
                 item.resolvedArmor * w.armor +
-                item.critChanceBonus * w.crit +
+                item.critChanceBonus * w.crit * critW +
                 item.attackSpeedBonus * w.aspd +
                 item.moveSpeedBonus * w.move +
                 item.mp5Bonus * w.mp5)
             .round() +
         (item.attackBonus * w.flatAtk).round();
     return core + effect;
+  }
+
+  /// Sheet crit saturates at 75 in combat. Near that, extra Crit on loot is
+  /// ghost power — fade BiS weight from 70, zero at 75.
+  static const int critScoreSoftSheet = 70;
+  static const int critScoreHardSheet = 75;
+
+  static int sheetCritForEquip(PartyHero hero) {
+    return CombatRatings.fromHeroSheet(
+      hero: hero,
+      gearStrength: hero.gearStrengthBonus,
+      gearAgility: hero.gearAgilityBonus,
+      gearStamina: hero.gearStaminaBonus,
+      gearIntellect: hero.gearIntellectBonus,
+      gearSpirit: hero.gearSpiritBonus,
+      gearSpellPower: hero.gearSpellPowerBonus,
+      gearArmor: hero.gearArmorBonus,
+      gearCrit: hero.gearCritChance,
+      gearFlatAttack: hero.gearAttackBonus,
+    ).critChance;
+  }
+
+  static double critScoreMul(PartyHero hero) {
+    final sheet = sheetCritForEquip(hero);
+    if (sheet < critScoreSoftSheet) return 1;
+    if (sheet >= critScoreHardSheet) return 0;
+    return (critScoreHardSheet - sheet) /
+        (critScoreHardSheet - critScoreSoftSheet);
   }
 
   static SpecRoleTag _tagForRole(HeroRole role) => switch (role) {
@@ -734,6 +774,7 @@ abstract final class GearService {
   /// Role-weighted primary mass (excludes rarity / ilvl / affinity crumbs).
   static double roleRelevantStatMass(PartyHero hero, EquipmentItem item) {
     final w = EquipStatWeights.forSpec(hero.spec);
+    final critW = critScoreMul(hero);
     return item.strengthBonus * w.str +
         item.agilityBonus * w.agi +
         item.resolvedStamina * w.sta +
@@ -741,7 +782,7 @@ abstract final class GearService {
         item.spiritBonus * w.spi +
         item.spellPowerBonus * w.sp +
         item.resolvedArmor * w.armor +
-        item.critChanceBonus * w.crit +
+        item.critChanceBonus * w.crit * critW +
         item.attackSpeedBonus * w.aspd +
         item.attackBonus * w.flatAtk;
   }
