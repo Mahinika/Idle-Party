@@ -592,9 +592,8 @@ void main() {
     var world = SpatialCombat.build(state, afkAssist: true);
     expect(world.afkAssist, isTrue);
 
-    // Room chests spawn fresh loot (age 0) — AFK exit waits until every
-    // drop is past the 1s vacuum gate. Clear + reseed so this test only
-    // checks vacuum-on-exit, not chest aging.
+    // Fresh room-chest loot (age 0) must vacuum the same step the pack dies —
+    // no idle wait for the old AFK age gate.
     world.groundLoot.clear();
     final drop = GameLogic.createEquipment(
       slot: EquipmentSlot.ring,
@@ -611,7 +610,7 @@ void main() {
           rarity: drop.rarity,
           equipment: drop,
         ),
-        age: 1.05,
+        age: 0,
       ),
     );
     for (final e in world.enemies) {
@@ -626,6 +625,40 @@ void main() {
       state.gearStash.length > stashBefore || state.essence > essenceBefore,
       isTrue,
     );
+  });
+
+  test('live clear vacuums fresh loot and opens stairs same step', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 20));
+    final stashBefore = state.gearStash.length;
+    var world = SpatialCombat.build(state);
+    final drop = GameLogic.createEquipment(
+      slot: EquipmentSlot.ring,
+      rarity: LootRarity.uncommon,
+      battleNumber: 3,
+    );
+    world.groundLoot
+      ..clear()
+      ..add(
+        GroundLoot(
+          x: world.heroes.first.x + 2.0,
+          y: world.heroes.first.y,
+          drop: LootDrop(
+            name: drop.name,
+            amount: 1,
+            rarity: drop.rarity,
+            equipment: drop,
+          ),
+          age: 0,
+        ),
+      );
+    for (final e in world.enemies) {
+      e.hp = 0;
+    }
+    final step = SpatialCombat.step(world, state, dt: 0.05);
+    expect(step.stairsOpened, isTrue);
+    expect(step.world.awaitingExit, isTrue);
+    expect(step.world.groundLoot, isEmpty);
+    expect(step.state.gearStash.length, greaterThan(stashBefore));
   });
 
   test('white-hit last-kill counts as a kill pop, not only God Hand', () {

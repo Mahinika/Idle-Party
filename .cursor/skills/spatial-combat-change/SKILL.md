@@ -23,7 +23,7 @@ Do **not** add a second combat simulator for offline.
 - Multi-chamber maps + corridor gates: `lib/spatial/tile_map.dart` (`RoomLayouts`, `TileKind.gate`)
 - Later chambers start **dormant**; wake when prior chambers clear (`_updateChambers`)
 - Soft-unlock if only dormant packs remain or path blocked — preserve these safeties
-- Clear: all dead → loot pickup/timeout → walk to exit → `roomCleared` → `completeCurrentRoom`
+- Clear: all dead → vacuum ground loot → walk to exit → `roomCleared` → `completeCurrentRoom`
 
 ## State rules
 

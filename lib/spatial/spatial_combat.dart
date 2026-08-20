@@ -3337,8 +3337,8 @@ abstract final class SpatialCombat {
     return (state: nextState, gold: goldFromKills);
   }
 
-  /// Proximity wake + floor-clear gate: nothing may stay dormant forever,
-  /// and a cleared floor vacuums ground loot before opening the exit.
+  /// Proximity wake + floor-clear gate: nothing may stay dormant forever.
+  /// When the pack is dead, bank ground loot immediately and open the exit.
   static GameState _wakeAndFinishFloor(
     SpatialWorld world,
     GameState state, {
@@ -3356,47 +3356,40 @@ abstract final class SpatialCombat {
         }
       }
     }
-    if (world.allEnemiesDead &&
-        (world.groundLoot.isEmpty ||
-            world.groundLoot.every(
-              (loot) => loot.age > (world.afkAssist ? 1.0 : 4.5),
-            ))) {
-      if (!world.awaitingExit) {
-        // AFK exit gate (1s) is earlier than auto-pickup (4.5s) — vacuum now
-        // so ground loot is never discarded on rebuild.
-        nextState = _vacuumGroundLoot(world, nextState);
-        world.awaitingExit = true;
-        world.exitWaitTimer = 0;
-        world.pendingFeelStairs++;
-        if (!reducedVfx) {
-          final ex = world.map.exitPoint.$1 + 0.5;
-          final ey = world.map.exitPoint.$2 + 0.5;
-          _spawnRing(
-            world,
-            x: ex,
-            y: ey,
-            argb: 0xFF70E0A0,
-            radius: 1.4,
-            life: 0.65,
-          );
-          _spawnBurst(
-            world,
-            x: ex,
-            y: ey,
-            argb: 0x88A0FFC0,
-            radius: 0.7,
-            life: 0.4,
-          );
-          _spawnFloater(
-            world,
-            x: ex,
-            y: ey - 0.55,
-            text: 'GO',
-            argb: _floaterHeal,
-            life: 1.55,
-            priority: 2,
-          );
-        }
+    if (world.allEnemiesDead && !world.awaitingExit) {
+      // Instant vacuum — no idle shuffle while loot ages out on the floor.
+      nextState = _vacuumGroundLoot(world, nextState);
+      world.awaitingExit = true;
+      world.exitWaitTimer = 0;
+      world.pendingFeelStairs++;
+      if (!reducedVfx) {
+        final ex = world.map.exitPoint.$1 + 0.5;
+        final ey = world.map.exitPoint.$2 + 0.5;
+        _spawnRing(
+          world,
+          x: ex,
+          y: ey,
+          argb: 0xFF70E0A0,
+          radius: 1.4,
+          life: 0.65,
+        );
+        _spawnBurst(
+          world,
+          x: ex,
+          y: ey,
+          argb: 0x88A0FFC0,
+          radius: 0.7,
+          life: 0.4,
+        );
+        _spawnFloater(
+          world,
+          x: ex,
+          y: ey - 0.55,
+          text: 'GO',
+          argb: _floaterHeal,
+          life: 1.55,
+          priority: 2,
+        );
       }
     }
     return nextState;
@@ -3404,8 +3397,8 @@ abstract final class SpatialCombat {
 
   /// Loot on the floor: magnet toward heroes, then bank it.
   ///
-  /// A drop only becomes real state when a hero collects it (or the grace
-  /// period ends) — that is what keeps AFK pickups honest.
+  /// Mid-fight pickups still use proximity / a short grace period. Once the
+  /// pack is dead, [_wakeAndFinishFloor] vacuums everything immediately.
   static GameState _stepGroundLoot(
     SpatialWorld world,
     GameState state,
