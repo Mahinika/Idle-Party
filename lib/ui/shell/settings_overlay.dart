@@ -188,6 +188,15 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
               }
             },
           ),
+          if (director.showPlayUpdateNotice) ...[
+            const SizedBox(height: 8),
+            KenneyButton(
+              label: 'GET UPDATE',
+              tip: 'A newer Idle Party is ready on Google Play',
+              style: KenneyButtonStyle.brown,
+              onPressed: director.openPlayUpdate,
+            ),
+          ],
           const SizedBox(height: 8),
           KenneyButton(
             label: MetaSystems.hasUnseenChangelog(state)
@@ -197,6 +206,12 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             onPressed: () => WhatsNewOverlay.show(context, director),
           ),
           if (kDebugMode) ...[
+            const SizedBox(height: 8),
+            KenneyButton(
+              label: 'DEV: FAKE PLAY UPDATE',
+              style: KenneyButtonStyle.grey,
+              onPressed: director.debugForcePlayUpdateNotice,
+            ),
             const SizedBox(height: 8),
             KenneyButton(
               label: director.debugTimeScale >= 9.5

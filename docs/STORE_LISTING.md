@@ -25,6 +25,8 @@ fairness, no IAP).
 4. **Phone portrait** 9:16, ≥1080 px wide (Play featuring bar).
 5. **Copy matches ship** — 15 zones, 31 specs, KEYSTONE (not invented systems).
    Do **not** promise “no ads / no paid store forever” — monetization may come later.
+6. **English only on the store page** — default locale **en-US**. Do not add
+   translated Play listings (sv-SE or otherwise). Screenshot captions stay English.
 
 ### Idle Party pitch (one line)
 

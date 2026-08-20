@@ -292,6 +292,7 @@ void main() {
     expect(md.dailyEssenceBonusLevel, 0);
     expect(md.gauntletGoldBonusLevel, 0);
     expect(md.ascendBlessings, 0);
+    expect(md.dismissedPlayUpdateVersionCode, 0);
   });
 
   test('daily vault claim pays essence and seasons rotate', () {

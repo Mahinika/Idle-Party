@@ -25,6 +25,7 @@ import 'meta_systems.dart';
 import 'play_games_bridge.dart';
 import 'play_games_scores.dart';
 import 'play_leaderboard_ids.dart';
+import 'play_store_update.dart';
 import 'story_lore.dart';
 import '../models/dungeon_def.dart';
 
@@ -190,6 +191,7 @@ class GameDirector extends ChangeNotifier {
   double _clearSummaryLife = 0;
   OfflineProgressResult? _offlineSummary;
   double _offlineSummaryLife = 0;
+  int? _playUpdateVersionCode;
   int _lastHighestDungeon = -1;
   double _autosaveAccum = 0;
   int _lastStashLen = 0;
@@ -538,6 +540,7 @@ class GameDirector extends ChangeNotifier {
       _isLoading = false;
       _syncHubIdleTimer();
       notifyListeners();
+      unawaited(refreshPlayUpdateNotice());
     }
   }
 
@@ -1743,6 +1746,51 @@ class GameDirector extends ChangeNotifier {
     notifyListeners();
     unawaited(_persistFlush());
     return true;
+  }
+
+  /// True when Play reports a newer version than this install, and LATER was
+  /// not tapped for that versionCode.
+  bool get showPlayUpdateNotice {
+    final code = _playUpdateVersionCode;
+    if (code == null || code <= 0) return false;
+    return code > _state.metaDepth.dismissedPlayUpdateVersionCode;
+  }
+
+  Future<void> refreshPlayUpdateNotice() async {
+    final code = await PlayStoreUpdate.availableVersionCode();
+    if (code == _playUpdateVersionCode) return;
+    _playUpdateVersionCode = code;
+    notifyListeners();
+  }
+
+  void dismissPlayUpdateNotice() {
+    final code = _playUpdateVersionCode;
+    if (code == null || code <= 0) return;
+    _state = _state.copyWith(
+      metaDepth: _state.metaDepth.copyWith(
+        dismissedPlayUpdateVersionCode: code,
+      ),
+    );
+    notifyListeners();
+    unawaited(_persistFlush());
+  }
+
+  Future<void> openPlayUpdate() async {
+    final started = await PlayStoreUpdate.startFlexibleUpdate();
+    if (started) {
+      showToast('Downloading on Google Play…', life: 3.2);
+      return;
+    }
+    final opened = await PlayStoreUpdate.openListing();
+    if (!opened) {
+      showToast('Could not open Google Play', life: 2.2);
+    }
+  }
+
+  /// Debug hub layout — pretends Play has a newer build.
+  void debugForcePlayUpdateNotice() {
+    _playUpdateVersionCode = 999999;
+    notifyListeners();
   }
 
   /// Opt-in Play Games sign-in (leaderboards + cloud). Returns true when signed in.

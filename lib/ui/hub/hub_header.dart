@@ -3,6 +3,7 @@ import '../custom_assets.dart';
 import '../cave_atmosphere.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
+import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
@@ -63,6 +64,74 @@ class HubOfflineBanner extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Calm Play-store update row. English copy only.
+class HubPlayUpdateBanner extends StatelessWidget {
+  const HubPlayUpdateBanner({
+    super.key,
+    required this.onUpdate,
+    required this.onLater,
+  });
+
+  final VoidCallback onUpdate;
+  final VoidCallback onLater;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      label: 'Update on Google Play',
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        decoration: MenuChrome.cardBox(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'UPDATE ON GOOGLE PLAY',
+              textAlign: TextAlign.center,
+              style: GameTheme.pixel(
+                size: GameTheme.hudPixel,
+                color: GameTheme.mossLit,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'A newer Idle Party is ready.',
+              textAlign: TextAlign.center,
+              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: KenneyButton(
+                    label: 'LATER',
+                    style: KenneyButtonStyle.grey,
+                    expanded: true,
+                    onPressed: onLater,
+                    tip: 'Hide until a newer Play build',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: KenneyButton(
+                    label: 'GET UPDATE',
+                    style: KenneyButtonStyle.brown,
+                    expanded: true,
+                    onPressed: onUpdate,
+                    tip: 'Open Google Play',
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

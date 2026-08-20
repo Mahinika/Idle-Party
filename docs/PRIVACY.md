@@ -32,6 +32,8 @@ The app may let you **copy a save to the clipboard** or **paste a save from the 
 
 Aside from normal OS / store behavior (install, updates) and optional Play Games calls when you opt in, Idle Party does not require an Idle Party account or Idle Party cloud service.
 
+On **Google Play installs** (Android), the app may ask Google Play whether a newer Idle Party is available and show an in-app notice. That check goes to Google, not to an Idle Party server. Sideloaded APKs skip it.
+
 ## Delete your data / sign-out
 
 Idle Party does not create its own username or password. Optional Play Games sign-in uses your Google account.

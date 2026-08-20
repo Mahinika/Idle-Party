@@ -350,6 +350,13 @@ class _HubScreenState extends State<HubScreen>
                                   ),
                                 ),
                               ],
+                              if (director.showPlayUpdateNotice) ...[
+                                const SizedBox(height: 8),
+                                HubPlayUpdateBanner(
+                                  onUpdate: director.openPlayUpdate,
+                                  onLater: director.dismissPlayUpdateNotice,
+                                ),
+                              ],
                               const SizedBox(height: 6),
                               // World Path: painted campaign map + tappable rings.
                               Expanded(

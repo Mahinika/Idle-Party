@@ -230,6 +230,7 @@ class MetaDepthState {
     this.seasonBestGauntletFloor = 0,
     this.cloudSaveUpdatedMs = 0,
     this.playGamesOptIn = false,
+    this.dismissedPlayUpdateVersionCode = 0,
     this.hubIdleSubSec = 0,
     this.hubAfkSec = 0,
     this.apexCraftClassId = '',
@@ -369,6 +370,9 @@ class MetaDepthState {
   /// Player opted into Play Games (sign-in succeeded at least once).
   final bool playGamesOptIn;
 
+  /// Play versionCode the player tapped LATER on (hub update notice).
+  final int dismissedPlayUpdateVersionCode;
+
   /// Seconds banked toward the next hub gold tick (live 1s AFK).
   final int hubIdleSubSec;
 
@@ -461,6 +465,7 @@ class MetaDepthState {
     int? seasonBestGauntletFloor,
     int? cloudSaveUpdatedMs,
     bool? playGamesOptIn,
+    int? dismissedPlayUpdateVersionCode,
     int? hubIdleSubSec,
     int? hubAfkSec,
     String? apexCraftClassId,
@@ -547,6 +552,8 @@ class MetaDepthState {
           seasonBestGauntletFloor ?? this.seasonBestGauntletFloor,
       cloudSaveUpdatedMs: cloudSaveUpdatedMs ?? this.cloudSaveUpdatedMs,
       playGamesOptIn: playGamesOptIn ?? this.playGamesOptIn,
+      dismissedPlayUpdateVersionCode:
+          dismissedPlayUpdateVersionCode ?? this.dismissedPlayUpdateVersionCode,
       hubIdleSubSec: hubIdleSubSec ?? this.hubIdleSubSec,
       hubAfkSec: hubAfkSec ?? this.hubAfkSec,
       apexCraftClassId: apexCraftClassId ?? this.apexCraftClassId,
@@ -624,6 +631,7 @@ class MetaDepthState {
     'seasonBestGauntletFloor': seasonBestGauntletFloor,
     'cloudSaveUpdatedMs': cloudSaveUpdatedMs,
     'playGamesOptIn': playGamesOptIn,
+    'dismissedPlayUpdateVersionCode': dismissedPlayUpdateVersionCode,
     'hubIdleSubSec': hubIdleSubSec,
     'hubAfkSec': hubAfkSec,
     'apexCraftClassId': apexCraftClassId,
@@ -743,6 +751,8 @@ class MetaDepthState {
           (json['seasonBestGauntletFloor'] as num?)?.toInt() ?? 0,
       cloudSaveUpdatedMs: (json['cloudSaveUpdatedMs'] as num?)?.toInt() ?? 0,
       playGamesOptIn: (json['playGamesOptIn'] as bool?) ?? false,
+      dismissedPlayUpdateVersionCode:
+          (json['dismissedPlayUpdateVersionCode'] as num?)?.toInt() ?? 0,
       hubIdleSubSec: (json['hubIdleSubSec'] as num?)?.toInt() ?? 0,
       hubAfkSec: (json['hubAfkSec'] as num?)?.toInt() ?? 0,
       apexCraftClassId: (json['apexCraftClassId'] as String?) ?? '',
