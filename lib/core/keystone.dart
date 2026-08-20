@@ -161,10 +161,6 @@ abstract final class Keystone {
   static int dailyVaultEssence(int bestTimedKey) =>
       14 + bestTimedKey.clamp(0, maxLevel) * 3;
 
-  @Deprecated('Use dailyVaultEssence')
-  static int weeklyVaultEssence(int bestTimedKey) =>
-      dailyVaultEssence(bestTimedKey);
-
   /// Extra essence when timing a keystone boss clear.
   static int timedClearBonus(int key) => 4 + key.clamp(0, maxLevel) * 2;
 }

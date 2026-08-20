@@ -148,7 +148,7 @@ class _HubScreenState extends State<HubScreen>
   (String?, VoidCallback?) _chaseAction(BuildContext context, HubChase chase) {
     switch (chase.kind) {
       case HubChaseKind.claimDailyVault:
-        return ('CLAIM VAULT', director.claimWeekly);
+        return ('CLAIM VAULT', director.claimDailyVault);
       case HubChaseKind.claimMissions:
         return (
           'CLAIM JOBS',
@@ -242,7 +242,13 @@ class _HubScreenState extends State<HubScreen>
           },
         );
       case HubChaseKind.willRank:
-        return ('POWER', () => router.open(MenuRoute.power));
+        return (
+          MenuTabs.showCodex(state) ? 'CODEX' : 'META',
+          () => router.open(
+            MenuRoute.meta,
+            meta: MenuTabs.showCodex(state) ? MetaTab.codex : null,
+          ),
+        );
     }
   }
 
@@ -496,7 +502,8 @@ class _HubScreenState extends State<HubScreen>
                                             GameLogic.dailyVaultClaimPreviewEssence(
                                           state,
                                         ),
-                                        onClaimWeekly: director.claimWeekly,
+                                        onClaimDailyVault:
+                                            director.claimDailyVault,
                                       ),
                                     ],
                                   );

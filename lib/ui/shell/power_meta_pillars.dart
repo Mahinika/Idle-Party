@@ -153,11 +153,13 @@ class MetaPillar extends StatefulWidget {
     required this.tab,
     required this.onTabChanged,
     required this.onOpenWhatsNew,
+    required this.onClose,
   });
   final GameDirector director;
   final MetaTab tab;
   final ValueChanged<MetaTab> onTabChanged;
   final VoidCallback onOpenWhatsNew;
+  final VoidCallback onClose;
 
   @override
   State<MetaPillar> createState() => _MetaPillarState();
@@ -243,7 +245,7 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
           MetaTab.settings => (
             label: 'SET',
             body: SingleChildScrollView(
-              child: SettingsOverlay(director: d, onClose: () {}),
+              child: SettingsOverlay(director: d, onClose: widget.onClose),
             ),
           ),
         },

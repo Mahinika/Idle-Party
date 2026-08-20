@@ -11,7 +11,7 @@ import 'meta_systems.dart';
 
 /// Kind of hub "today" chase — claimables first, then progress goals.
 enum HubChaseKind {
-  /// Daily vault ready to claim (API still uses [GameLogic.claimWeekly]).
+  /// Daily vault ready to claim ([GameLogic.claimDailyVault]).
   claimDailyVault,
   claimMissions,
 

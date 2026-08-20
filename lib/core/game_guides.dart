@@ -1,4 +1,4 @@
-/// In-game guide copy for More → Guides.
+/// In-game guide copy for META → GUIDE.
 abstract final class GameGuides {
   static const topics = <GuideTopic>[
     GuideTopic(
@@ -160,7 +160,7 @@ abstract final class GameGuides {
           '• KEEP — essence that survives Ascend: Blessing readout, relics, '
           'God Hand smash/cooldown/style, and the 5th party '
           'slot (AL2 · 80e).\n'
-          '• MATS / APEX — one Apex station: materials, craft goals, target meter, vault.\n\n'
+          '• APEX — one Apex station: materials, craft goals, target meter, vault.\n\n'
           '• Ascend from the Hub when ready (not from Forge).',
     ),
     GuideTopic(
@@ -274,7 +274,7 @@ abstract final class GameGuides {
           '• After that first hour, TODAY chases KEY +1 (higher iLvl loot) until '
           'your key hits the AL cap — then Daily / vault / Will can surface.\n'
           '• Fill today’s vault with 1 dungeon clear, then claim essence.\n'
-          '• Later: time a KEY +2 (or higher) for a bigger claim — META → KEYSTONE.\n'
+          '• Later: time a KEY +2 (or higher) for a bigger claim — META → KEY.\n'
           '• Hub TODAY and offline Up next share one chase (claim → READY → '
           'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
           '• Welcome-back shows one wow line, a few highlights, then Up next.\n'
@@ -310,7 +310,7 @@ abstract final class GameGuides {
       id: 'hardmode',
       title: 'KEYSTONE RUNS',
       body:
-          'Mythic+-style keys from the hub KEYSTONE panel — set before you enter.\n\n'
+          'Mythic+-style keys from the hub KEY panel (META → KEY) — set before you enter.\n\n'
           '• Key level is AL-gated (cap rises with Ascension, up to +20).\n'
           '• Affixes lock on enter (weekly + Fortified/Tyrannical at +4, more at higher keys).\n'
           '• Idle-friendly timer: AFK time counts; beat the boss under par to TIMED upgrade.\n'

@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.19**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.20**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -32,7 +32,7 @@ for real players — tap / long-press.
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (last submit **1.12.12 / 42**, 2026-08-17; testers keep 1.12.11 until review). Working ship is
-**1.12.19**. Production still needs **12 closed testers × 14 days**.
+**1.12.20**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -126,7 +126,10 @@ Shared menus: MenuRouter + MenuAlerts + MenuSurface
 ```
 
 **SpatialCombat is the combat authority** for live play and in-dungeon offline
-catch-up (full enemy stats; same kits/abilities/chambers).
+catch-up (full enemy stats; same kits/abilities/chambers). Offline / AFK
+catch-up uses `afkAssist: true` inside the same `build`/`step` API — enemy
+hits are softer and hero hits harder so long catch-up stays snappy. Hub AFK
+(`!inDungeon`) is sanctuary idle gold only — no combat.
 
 **Content inventory:** 10 classes / **31 specs** (`HeroSpecId`) · **15 zones**
 through Mothveil Hollow.
@@ -153,7 +156,8 @@ Advanced menu tabs (LOADOUTS, ROSTER, CAMP, SHOP, KEY, BEAST, CODEX, …) gate v
 `MenuTabs` so day-one chrome stays small. PARTY badges mean bag upgrades
 (`MenuAlerts`).
 
-Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat. Offline return
+Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat (see SpatialCombat
+note above for dungeon offline assist). Offline return
 uses `OfflineProgressResult` (wow headline + ≤3 highlights + “Up next” =
 ChaseContract).
 
@@ -236,7 +240,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Play Games | `lib/core/play_games_bridge.dart`, `play_leaderboard_ids.dart` |
 | Ascend unlock teasers | `lib/core/ascend_roadmap.dart` |
 | Ascend / lore copy | `lib/core/story_lore.dart` |
-| Dungeon shell | `lib/ui/is2_shell.dart` |
+| Dungeon shell | `lib/ui/is2_shell.dart` (~thin; HUD in `lib/ui/shell/*`) |
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
 | Kenney helpers | `lib/ui/kenney_assets.dart` |
 | Custom art helpers | `lib/ui/custom_assets.dart` |
@@ -253,8 +257,9 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 - Loadouts UI label = **LOADOUTS**; dungeon armor 2pc/4pc = **armor sets** (not the same).
 - Gear BiS / UPGRADE: budget-honest score only — see `docs/GEAR_BUDGET.md`
   (`itemBudgetScore`; no affinity/armor/rarity/set crumbs).
-- Split giant files (`game_logic`, `is2_shell`, `spatial_combat`, …) when a change
-  needs a home — do not merge more into them. SpatialCombat stays the only fight sim.
+- Split giant files (`game_logic`, `spatial_combat`, …) when a change needs a
+  home — do not merge more into them. `is2_shell` is already thin; put new HUD
+  under `lib/ui/shell/`. SpatialCombat stays the only fight sim.
 
 ## Meta (survives Ascend)
 

@@ -223,6 +223,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
           tab: router.metaTab,
           onTabChanged: (tab) => router.metaTab = tab,
           onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
+          onClose: router.close,
         ),
         MenuRoute.jobs => SingleChildScrollView(
           child: JobsOverlay(director: d),

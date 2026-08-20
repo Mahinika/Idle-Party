@@ -5143,10 +5143,6 @@ class ClassKits {
     return null;
   }
 
-  /// Every spec now runs the shared [AbilityEffectRunner] kit path. Kept as a
-  /// hook so a future kit can opt out of the data-driven runner if needed.
-  static bool isLegacySpec(HeroSpecId id) => false;
-
   /// Legacy role kits (original four specs only).
   static List<ClassAbilityDef> forRole(HeroRole role) {
     final legacySpec = HeroSpecs.fromGearAffinity(role);

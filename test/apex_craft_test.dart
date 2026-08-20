@@ -386,4 +386,34 @@ void main() {
     expect(loaded.apexCraftClassId, '');
     expect(loaded.apexTargetProgress, 0);
   });
+
+  test('craft goal and target mat changes reset target progress', () {
+    var state = GameLogic.createInitialState().copyWith(
+      metaDepth: const MetaDepthState(
+        apexCraftClassId: 'warrior',
+        apexCraftRoleTag: 'tank',
+        apexCraftSlot: 'weapon',
+        apexTargetMatId: 'shard_sandy',
+        apexTargetProgress: 80,
+      ),
+    );
+    state = GameLogic.setApexCraftGoal(
+      state,
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.head,
+    );
+    expect(state.metaDepth.apexTargetProgress, 0);
+    expect(state.metaDepth.apexTargetMatId, '');
+
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        apexTargetMatId: 'shard_sandy',
+        apexTargetProgress: 55,
+      ),
+    );
+    state = GameLogic.setApexTargetMat(state, 'apex_slag');
+    expect(state.metaDepth.apexTargetMatId, 'apex_slag');
+    expect(state.metaDepth.apexTargetProgress, 0);
+  });
 }

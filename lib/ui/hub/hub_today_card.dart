@@ -174,7 +174,7 @@ class HubUrgentRow extends StatelessWidget {
     required this.weeklyClaimed,
     required this.weeklyBestTimedKey,
     required this.vaultClaimEssence,
-    required this.onClaimWeekly,
+    required this.onClaimDailyVault,
     this.hideAscend = false,
     this.hideVaultClaim = false,
     this.hideMissionClaim = false,
@@ -196,7 +196,7 @@ class HubUrgentRow extends StatelessWidget {
   final bool weeklyClaimed;
   final int weeklyBestTimedKey;
   final int vaultClaimEssence;
-  final VoidCallback onClaimWeekly;
+  final VoidCallback onClaimDailyVault;
   final bool hideAscend;
   final bool hideVaultClaim;
   final bool hideMissionClaim;
@@ -231,7 +231,7 @@ class HubUrgentRow extends StatelessWidget {
                 'CLAIM VAULT  +${vaultClaimEssence}e',
             style: KenneyButtonStyle.brown,
             primary: true,
-            onPressed: onClaimWeekly,
+            onPressed: onClaimDailyVault,
           ),
           const SizedBox(height: 4),
         ] else if (showVaultProgress) ...[

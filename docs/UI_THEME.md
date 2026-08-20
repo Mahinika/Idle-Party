@@ -18,7 +18,7 @@ Code sources of truth:
 | Colors, radii, type | `lib/ui/game_theme.dart` |
 | Panels, tabs, cards, sheets | `lib/ui/menu_chrome.dart` |
 | Primary actions | `lib/ui/kenney_button.dart` |
-| Reference layout | `lib/ui/character_equip_panel.dart`, inventory dock in `is2_shell.dart` |
+| Reference layout | `lib/ui/character_equip_panel.dart`, `lib/ui/shell/inventory_dock.dart` |
 
 ---
 

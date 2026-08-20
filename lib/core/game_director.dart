@@ -55,7 +55,9 @@ class SharedPreferencesGameStorage implements GameStorage {
   @override
   Future<GameState?> load() async {
     final prefs = await _prefs;
-    final raw = prefs.getString(_saveKey) ?? prefs.getString(_legacySaveKey);
+    final rawV2 = prefs.getString(_saveKey);
+    final rawV1 = prefs.getString(_legacySaveKey);
+    final raw = (rawV2 != null && rawV2.isNotEmpty) ? rawV2 : rawV1;
     if (raw == null || raw.isEmpty) {
       return null;
     }
@@ -63,9 +65,25 @@ class SharedPreferencesGameStorage implements GameStorage {
     try {
       return GameLogic.stateFromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (e, st) {
-      // Quarantine corrupt blob so Continue is not stuck; keep a copy for debug.
       debugPrint('save load failed (quarantined): $e\n$st');
       await prefs.setString(_corruptSaveKey, raw);
+      // If v2 was corrupt, try a still-valid legacy v1 before wiping both.
+      if (rawV2 != null &&
+          rawV2.isNotEmpty &&
+          rawV1 != null &&
+          rawV1.isNotEmpty &&
+          raw == rawV2) {
+        try {
+          final recovered = GameLogic.stateFromJson(
+            jsonDecode(rawV1) as Map<String, dynamic>,
+          );
+          await prefs.remove(_saveKey);
+          debugPrint('save load recovered from legacy v1 after corrupt v2');
+          return recovered;
+        } catch (e2, st2) {
+          debugPrint('legacy v1 also failed: $e2\n$st2');
+        }
+      }
       await prefs.remove(_saveKey);
       await prefs.remove(_legacySaveKey);
       return null;
@@ -979,17 +997,6 @@ class GameDirector extends ChangeNotifier {
     GameAudio.ui();
     notifyListeners();
     unawaited(_persistFlush());
-  }
-
-  /// God Hand tap — AOE damage at normalized dungeon coords (0..1).
-  void godHandAt(double nx, double ny) {
-    if (_spatial == null) {
-      return;
-    }
-    godHandAtWorld(
-      nx.clamp(0.0, 1.0) * _spatial!.cols,
-      ny.clamp(0.0, 1.0) * _spatial!.rows,
-    );
   }
 
   /// God Hand aimed at the nearest live enemy to the party, else party center.
@@ -2195,9 +2202,9 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  void claimWeekly() {
+  void claimDailyVault() {
     final before = _state.essence;
-    _applyUpgrade(GameLogic.claimWeekly(_state));
+    _applyUpgrade(GameLogic.claimDailyVault(_state));
     if (_state.essence > before) {
       GameAudio.unlock();
       final notices = LogicNotices.takeMetaPayoffs();

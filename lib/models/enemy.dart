@@ -91,20 +91,34 @@ class EnemyUnit {
   };
 
   factory EnemyUnit.fromJson(Map<String, dynamic> json) {
+    int asInt(dynamic v, [int fallback = 0]) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse('$v') ?? fallback;
+    }
+
+    T enumOr<T extends Enum>(List<T> values, String? name, T fallback) {
+      if (name == null || name.isEmpty) return fallback;
+      for (final v in values) {
+        if (v.name == name) return v;
+      }
+      return fallback;
+    }
+
     final roleName = json['role'] as String?;
     final archName = json['archetype'] as String?;
+    final statsJson = json['stats'];
     return EnemyUnit(
-      name: json['name'] as String,
-      level: json['level'] as int,
-      currentHp: json['currentHp'] as int,
-      stats: Stats.fromJson(json['stats'] as Map<String, dynamic>),
-      rewardGold: json['rewardGold'] as int,
-      role: roleName == null
-          ? EnemyRole.normal
-          : EnemyRole.values.byName(roleName),
-      archetype: archName == null
-          ? EnemyArchetype.brute
-          : EnemyArchetype.values.byName(archName),
+      name: '${json['name'] ?? 'Enemy'}',
+      level: asInt(json['level'], 1).clamp(1, 9999),
+      currentHp: asInt(json['currentHp']),
+      stats: statsJson is Map<String, dynamic>
+          ? Stats.fromJson(statsJson)
+          : Stats.enemy(attack: 1, defense: 0, maxHp: 1),
+      rewardGold: asInt(json['rewardGold']),
+      role: enumOr(EnemyRole.values, roleName, EnemyRole.normal),
+      archetype: enumOr(EnemyArchetype.values, archName, EnemyArchetype.brute),
     );
   }
 }

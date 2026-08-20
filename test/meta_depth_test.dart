@@ -314,7 +314,7 @@ void main() {
     final before = state.essence;
     final expectedMin =
         Keystone.dailyVaultEssence(0) + GameLogic.seasonWeeklyBonusEssence;
-    state = GameLogic.claimWeekly(state, now: now);
+    state = GameLogic.claimDailyVault(state, now: now);
     expect(state.metaDepth.dailyVaultClaimed, isTrue);
     expect(state.essence, greaterThanOrEqualTo(before + expectedMin));
     expect(state.achievements, contains('weekly_clear'));

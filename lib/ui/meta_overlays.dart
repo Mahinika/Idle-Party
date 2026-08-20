@@ -794,7 +794,7 @@ Future<void> showOfflineProgressDialog(
   switch (chase.kind) {
     case HubChaseKind.claimDailyVault:
       readyAction = () {
-        director.claimWeekly();
+        director.claimDailyVault();
         director.dismissOfflineSummary();
         Navigator.pop(context);
       };
@@ -1210,7 +1210,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                   const SizedBox(height: 6),
                   KenneyButton(
                     label: 'CLAIM VAULT  +${vaultE}e',
-                    onPressed: director.claimWeekly,
+                    onPressed: director.claimDailyVault,
                   ),
                 ],
               ],

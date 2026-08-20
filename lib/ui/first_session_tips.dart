@@ -62,7 +62,9 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'forge',
       title: 'FORGE',
-      body: 'Train the party and buy relics. Power here stacks with gear.',
+      body:
+          'POWER → FORGE: GOLD for this-run power, KEEP for relics / God Hand / Blessing, '
+          'APEX for forever gear. Train levels keep on Ascend.',
     ),
     (
       id: 'pets',
@@ -74,7 +76,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'contracts',
       title: 'CONTRACTS',
       body:
-          'Hub CONTRACTS pay gold and essence. Claim completes; every 3 claims grants a +5e chain bonus.',
+          'META → JOBS (or the CONTRACTS sheet) pays gold and essence. '
+          'Claim completes; every 3 claims grants a +5e chain bonus.',
     ),
     (
       id: 'ascend',

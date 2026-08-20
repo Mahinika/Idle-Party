@@ -241,6 +241,7 @@ abstract final class ApexForge {
         apexCraftRoleTag: role.name,
         apexCraftSlot: slot.name,
         apexTargetMatId: '',
+        apexTargetProgress: 0,
       ),
       lastUpdated: DateTime.now(),
     );
@@ -248,8 +249,12 @@ abstract final class ApexForge {
 
   static GameState setApexTargetMat(GameState state, String matId) {
     if (!ApexCraft.materialsById.containsKey(matId)) return state;
+    if (state.metaDepth.apexTargetMatId == matId) return state;
     return state.copyWith(
-      metaDepth: state.metaDepth.copyWith(apexTargetMatId: matId),
+      metaDepth: state.metaDepth.copyWith(
+        apexTargetMatId: matId,
+        apexTargetProgress: 0,
+      ),
       lastUpdated: DateTime.now(),
     );
   }
@@ -257,7 +262,10 @@ abstract final class ApexForge {
   static GameState clearApexTargetMatOverride(GameState state) {
     if (state.metaDepth.apexTargetMatId.isEmpty) return state;
     return state.copyWith(
-      metaDepth: state.metaDepth.copyWith(apexTargetMatId: ''),
+      metaDepth: state.metaDepth.copyWith(
+        apexTargetMatId: '',
+        apexTargetProgress: 0,
+      ),
       lastUpdated: DateTime.now(),
     );
   }

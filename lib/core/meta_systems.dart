@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.19';
+  static const String currentVersion = '1.12.20';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.20',
+      bullets: <String>[
+        'Apex target meter resets when you change craft goal or locked mat — no free carry into the next shortage.',
+        'Safer Continue: corrupt v2 tries legacy v1 before wipe. Soft enemy save parse. META SET closes cleanly (incl. DEV Gauntlet).',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.19',
       bullets: <String>[

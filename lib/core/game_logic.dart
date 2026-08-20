@@ -1655,9 +1655,6 @@ class GameLogic {
         md.dailyBestTimedKey >= 2;
   }
 
-  /// Legacy name — daily vault.
-  static bool canClaimWeekly(GameState state) => canClaimDailyVault(state);
-
   static GameState claimDailyVault(GameState state, {DateTime? now}) {
     var next = ensureWeeklyContract(state, now: now);
     final md = next.metaDepth;
@@ -1694,10 +1691,6 @@ class GameLogic {
     );
     return MetaSystems.evaluateAchievements(next);
   }
-
-  /// Legacy name — daily vault.
-  static GameState claimWeekly(GameState state, {DateTime? now}) =>
-      claimDailyVault(state, now: now);
 
   /// God Hand style: 0 balanced, 1 focus, 2 wide.
   static GameState setGodHandStyle(GameState state, int style) {
