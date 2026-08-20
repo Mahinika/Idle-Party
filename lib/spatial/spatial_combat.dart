@@ -13,6 +13,7 @@ import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/spell_bolt_style.dart';
 import '../ui/kenney_assets.dart';
+import 'hideout_stash.dart';
 import 'tile_map.dart';
 
 export '../models/spell_bolt_style.dart';
@@ -1692,6 +1693,57 @@ abstract final class SpatialCombat {
             x: cell.$1 + 0.5 + math.cos(ang) * 0.2,
             y: cell.$2 + 0.5 + math.sin(ang) * 0.2,
             drop: drops[i],
+          ),
+        );
+      }
+    }
+
+    // Goblin Hideout: chests are stolen stashes — ambush guards wake nearby.
+    if (HideoutStash.isHideout(state.dungeonId)) {
+      var templateHp = 40;
+      var templateAtk = 6;
+      var templateDef = 1;
+      for (final e in enemies) {
+        if (e.role != EnemyRole.boss) {
+          templateHp = e.maxHp;
+          templateAtk = e.attack;
+          templateDef = e.defense;
+          break;
+        }
+      }
+      final ambushes = HideoutStash.planAmbushes(
+        map: map,
+        firstCombatChamber: firstCombat,
+        threatScale: threatScale,
+        rng: math.Random(state.layoutSeed ^ 0x57A5A),
+        templateHp: templateHp,
+        templateAtk: templateAtk,
+        templateDef: templateDef,
+      );
+      for (final a in ambushes) {
+        enemies.add(
+          SpatialActor(
+            id: a.id,
+            name: a.name,
+            team: SpatialTeam.enemy,
+            x: a.x,
+            y: a.y,
+            hp: a.hp,
+            maxHp: a.hp,
+            attack: a.attack,
+            defense: a.defense,
+            moveSpeed: a.moveSpeed,
+            attackRange: 1.4,
+            attackCooldown: a.attackCooldown,
+            assetIndex: KenneyAssets.enemySpriteCatalogIndex(a.spritePath),
+            role: EnemyRole.normal,
+            archetype: a.archetype,
+            fireCooldown: 0.25,
+            pattern: ProjectilePattern.single,
+            ranged: false,
+            preferredRange: 1.15,
+            chamberIndex: a.chamberIndex,
+            dormant: a.dormant,
           ),
         );
       }

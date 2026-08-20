@@ -57,7 +57,7 @@ abstract final class ApexCraft {
       id: 'shard_goblin',
       name: 'Hideout Shard',
       family: CraftMatFamily.shard,
-      bossSources: 'Goblin Hideout boss',
+      bossSources: "Goblin's Hideout boss",
     ),
     CraftMatDef(
       id: 'shard_king',

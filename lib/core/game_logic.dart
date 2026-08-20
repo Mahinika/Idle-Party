@@ -1633,7 +1633,7 @@ class GameLogic {
 
   /// Mid+ players see KEY / weekly affix jargon; early stays vault-simple.
   ///
-  /// AL≥2 or two zones cleared (Goblin+) — see docs/SYSTEMS_REBUILD.md P4.
+  /// AL≥2 or King's Fort cleared (`highestDungeonCleared >= 2`).
   static bool showKeystoneJargon(GameState state) =>
       state.ascensionLevel >= 2 || state.highestDungeonCleared >= 2;
 

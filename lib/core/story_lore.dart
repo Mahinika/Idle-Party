@@ -37,7 +37,8 @@ abstract final class StoryLore {
     final def = DungeonCatalog.byId(dungeonId);
     return switch (dungeonId) {
       'sandy' => 'The caverns open. Aegis takes the lead.',
-      'goblin' => "Torches in the Hideout. They know you're coming.",
+      'goblin' =>
+          'Torches in the Hideout. Stolen stashes everywhere — they know you are coming.',
       'king' => "The Fort's banners hang wrong. Press on.",
       'underworld' => 'No sky here. Only watching.',
       'dead' => 'Footsteps echo where no one walks.',
@@ -61,7 +62,8 @@ abstract final class StoryLore {
     final def = DungeonCatalog.byId(dungeonId);
     return switch (dungeonId) {
       'sandy' => '${def.bossName} falls. The sand goes quiet.',
-      'goblin' => 'The Lord is broken. The wound still hums.',
+      'goblin' =>
+          'The Lord is broken. The wound still hums — and the stashes are yours.',
       'king' => 'The crown cracks. Deeper still.',
       'underworld' => 'The Beholder closes. For now.',
       'dead' => 'The No-One fades. Names return briefly.',

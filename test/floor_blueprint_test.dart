@@ -53,6 +53,16 @@ void main() {
     expect(treasure.beats.map((b) => b.kind), contains(FloorBeatKind.treasure));
   });
 
+  test('goblin kit is a raider den (choke + stash alcoves)', () {
+    final goblin = ZoneLayoutKit.forId('goblin');
+    final sandy = ZoneLayoutKit.forId('sandy');
+    expect(goblin.preferChoke, isTrue);
+    expect(goblin.preferTreasureAlcove, isTrue);
+    expect(goblin.treasureAlcoveChance, greaterThan(0.2));
+    expect(goblin.normalRoomChestChance, greaterThan(sandy.normalRoomChestChance));
+    expect(goblin.landmarkPerChamber, greaterThanOrEqualTo(2));
+  });
+
   test('rime kit prefers treasure alcoves vs fen choke', () {
     final rime = ZoneLayoutKit.forId('rime');
     final fen = ZoneLayoutKit.forId('fen');

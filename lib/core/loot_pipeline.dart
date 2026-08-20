@@ -10,6 +10,7 @@ import 'equipment_factory.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'keystone.dart';
+import '../spatial/hideout_stash.dart';
 
 /// What a kill, a chest or a cleared floor is worth, and the item it rolls.
 ///
@@ -25,7 +26,9 @@ abstract final class LootPipeline {
   static bool isWalletGoldDrop(LootDrop drop) {
     if (drop.equipment != null) return false;
     final n = drop.name.toLowerCase();
-    return n.contains('gold pouch') || n.contains('coin pouch');
+    return n.contains('gold pouch') ||
+        n.contains('coin pouch') ||
+        n.contains('stolen coin');
   }
 
   /// Per-kill loot: gear (or Faded Dust). No room fillers — those are
@@ -201,6 +204,13 @@ abstract final class LootPipeline {
           amount: 1,
           rarity: LootRarity.rare,
         ),
+      );
+    }
+    if (HideoutStash.isHideout(state.dungeonId)) {
+      return HideoutStash.enrichChestLoot(
+        drops,
+        rng: rng,
+        baseGold: gold,
       );
     }
     return drops;

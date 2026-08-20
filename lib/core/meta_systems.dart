@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.20';
+  static const String currentVersion = '1.12.21';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.21',
+      bullets: <String>[
+        "Goblin's Hideout: stolen-stash chests (richer pouches + Stolen Coin) wake Stash Guard / Loot Snatcher ambushes — more alcoves, choke dens, and a distinct raider pack.",
+        'Hideout identity polish: dirt floors, boarded door rims, spider/crab/ghost mid-pack (not King twins). Codex slingers match combat bats.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.20',
       bullets: <String>[

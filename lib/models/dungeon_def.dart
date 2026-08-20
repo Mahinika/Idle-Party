@@ -45,7 +45,7 @@ abstract final class DungeonCatalog {
       bossId: 'hobgoblin',
       bossName: 'Hobgoblin Lord',
       unlockPrice: 5000,
-      blurb: 'Raiders nest above a wound they do not understand.',
+      blurb: 'Raiders nest on stolen stashes — chests wake ambushes.',
     ),
     DungeonDef(
       number: 2,

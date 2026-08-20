@@ -546,6 +546,16 @@ abstract final class EncounterFactory {
       return bossName;
     }
     if (type == RoomType.elite) {
+      if (dungeonId == 'goblin') {
+        return switch (archetype) {
+          EnemyArchetype.tank => 'Stash Bulwark',
+          EnemyArchetype.ranged => 'Raid Slinger',
+          EnemyArchetype.glass => 'Coin Cutter',
+          EnemyArchetype.support => 'Hex Hag',
+          EnemyArchetype.swarm => 'Raid Pack',
+          EnemyArchetype.brute => 'Club Champion',
+        };
+      }
       return switch (archetype) {
         EnemyArchetype.tank => 'Bulwark Golem',
         EnemyArchetype.ranged => 'Hex Cultist',
@@ -556,6 +566,16 @@ abstract final class EncounterFactory {
       };
     }
     if (type == RoomType.boss) {
+      if (dungeonId == 'goblin') {
+        return switch (archetype) {
+          EnemyArchetype.ranged => 'Lord Slinger',
+          EnemyArchetype.tank => 'Lord Guard',
+          EnemyArchetype.support => 'Lord Hexer',
+          EnemyArchetype.glass => 'Lord Blade',
+          EnemyArchetype.swarm => 'Lord Pack',
+          EnemyArchetype.brute => 'Lord Thug',
+        };
+      }
       return switch (archetype) {
         EnemyArchetype.ranged => 'Warden Archer',
         EnemyArchetype.tank => 'Warden Shield',

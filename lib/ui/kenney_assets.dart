@@ -501,9 +501,8 @@ abstract final class KenneyAssets {
       'spit bat' || 'cavern spitter' => enemyBat,
       'needle rat' || 'sneak rat' => enemyRat,
       'rock crab' || 'shellback' || 'stone maw' => enemyCrab,
+      'goblin thug' || 'clubber' || 'club champion' || 'lord thug' => enemyCrab,
       'cave brute' ||
-      'goblin thug' ||
-      'clubber' ||
       'fort sentry' ||
       'hall guard' ||
       'elite brute' ||
@@ -511,22 +510,22 @@ abstract final class KenneyAssets {
       'crypt brute' ||
       'infernal brute' ||
       'flame guard' => enemyCyclops,
+      'stash bulwark' ||
       'bulwark golem' ||
       'obsidian golem' ||
       'molten golem' ||
       'ash colossus' ||
       'iron ward' ||
       'gate knight' ||
-      'hideout guard' ||
-      'scrap shield' ||
       'tomb shield' ||
       'ossuary guard' ||
       'pit guard' => enemyGolem,
+      'hideout guard' ||
+      'scrap shield' ||
+      'lord guard' => enemyCyclops,
       'hex cultist' ||
       'glow cultist' ||
       'mire shaman' ||
-      'hex witch' ||
-      'totem caller' ||
       'court mage' ||
       'banner cleric' ||
       'cult chanter' ||
@@ -536,6 +535,10 @@ abstract final class KenneyAssets {
       'fire cultist' ||
       'hell chanter' ||
       'rift priest' => enemyCultist,
+      'hex witch' ||
+      'totem caller' ||
+      'hex hag' ||
+      'lord hexer' => enemyGhost,
       'hex spider' => enemySpider,
       'wailing ghost' ||
       'specter blade' ||
@@ -544,13 +547,20 @@ abstract final class KenneyAssets {
       'blood stalker' ||
       'cutthroat' ||
       'knife kin' ||
+      'coin cutter' ||
+      'lord blade' ||
+      'loot snatcher' ||
       'royal assassin' ||
       'blade page' ||
       'shade stalker' ||
       'wisp blade' ||
       'flame assassin' ||
       'cinder blade' => enemyRat,
-      'goblin slinger' || 'dart rascal' => enemyRat,
+      'stash guard' || 'raid pack' || 'lord pack' => enemyGoblinMite,
+      'goblin slinger' ||
+      'dart rascal' ||
+      'raid slinger' ||
+      'lord slinger' => enemyBat,
       'crossbowman' ||
       'tower archer' ||
       'ember archer' ||
