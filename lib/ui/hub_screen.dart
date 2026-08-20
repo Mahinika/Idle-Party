@@ -4,6 +4,7 @@ import '../core/chase_contract.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/gold_income.dart';
 import '../core/hub_chase.dart';
 import '../core/keystone.dart';
 import '../core/menu_alerts.dart';
@@ -327,6 +328,9 @@ class _HubScreenState extends State<HubScreen>
                                   torch: 0.55 + (_torch.value * 0.45),
                                   onOpenSettings: () =>
                                       router.open(MenuRoute.settings),
+                                  incomeLine: GoldIncome.hubRateLine(state),
+                                  multiplierLine:
+                                      GoldIncome.multiplierLine(state),
                                 ),
                               ),
                               if (director.offlineSummary != null) ...[

@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.13';
+  static const String currentVersion = '1.12.14';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.14',
+      bullets: <String>[
+        'The keep pays gold while you sit there — hub gold/min is on the header, and it ticks live (same rate as sanctuary AFK).',
+        'POWER → CAMP shows that rate plus AL / CAMP / Blessing gold %. Gold Find preview is +g/min, and buying it bumps the keep rate immediately.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.13',
       bullets: <String>[

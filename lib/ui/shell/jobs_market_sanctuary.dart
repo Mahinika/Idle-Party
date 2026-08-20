@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/gold_income.dart';
 import '../../core/game_state.dart';
 import '../../models/loot.dart';
 import '../game_theme.dart';
@@ -135,10 +136,16 @@ class SanctuaryOverlay extends StatelessWidget {
       children: [
         Text(
           'Permanent essence tracks — survive Ascend. Upgrade forever.\n'
+          'Gold Find raises Hub gold/min at the keep (ticks while you sit here). '
           'Prestige from Lv12: reset to Lv0 (costs go cheap again), keep a '
           'small forever bonus, and get essence back. Not a power jump — '
           'the big level bonus is gone until you buy levels again.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '${GoldIncome.hubRateLine(state)} · ${GoldIncome.multiplierLine(state)}',
+          style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
         if (state.metaDepth.ascendBlessings > 0) ...[
           const SizedBox(height: 6),
@@ -196,7 +203,10 @@ class SanctuaryOverlay extends StatelessWidget {
             style: GameTheme.body(size: 13, color: GameTheme.parchment),
           ),
           Text(
-            'Next: $nextBonus',
+            track == 'gold'
+                ? 'Next: $nextBonus · Hub ${GoldIncome.perMinuteLabel(GoldIncome.hubGoldPerMinuteAtGoldLevel(state, nextLevel))} '
+                    '(+${GoldIncome.nextGoldFindDeltaPerMinute(state)}g/min)'
+                : 'Next: $nextBonus',
             style: GameTheme.body(size: 12, color: GameTheme.mossLit),
           ),
           Text(

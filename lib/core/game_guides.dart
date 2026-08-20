@@ -171,6 +171,7 @@ abstract final class GameGuides {
       body:
           'POWER → CAMP. Spend essence on permanent tracks.\n\n'
           '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
+          '• Hub gold/min ticks while you sit at the keep — Gold Find raises that rate (shown on the hub and on CAMP).\n'
           '• Tracks level infinitely — cost scales with level.\n'
           '• Optional prestige from Lv12: reset to Lv0 (upgrades cheap again). '
           'You keep a small forever bonus '

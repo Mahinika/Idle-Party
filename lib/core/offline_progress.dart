@@ -3,6 +3,7 @@ import 'dart:math';
 import '../spatial/spatial_combat.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'gold_income.dart';
 import 'offline_sim.dart';
 
 /// What the party did while the phone was in a pocket.
@@ -115,28 +116,8 @@ abstract final class OfflineProgress {
   }
 
   /// Hub-only AFK: small gold (and rare essence) from sanctuary — no combat ticks.
-  static GameState applyHubIdleProgress(GameState state, int seconds) {
-    if (seconds <= 0) return state;
-    final perMinute =
-        2 +
-        state.sanctuaryGoldLevel +
-        state.ascensionLevel +
-        (state.highestDungeonCleared + 1);
-    final rawGold = max(0, (seconds * perMinute) ~/ 60);
-    final gold = GameLogic.applyGoldGain(
-      state,
-      rawGold + (rawGold * state.torchOfflineGoldPercent) ~/ 100,
-    );
-    final essence = seconds >= 600
-        ? (seconds ~/ 900) + (state.sanctuaryPowerLevel ~/ 2)
-        : 0;
-    if (gold <= 0 && essence <= 0) return state;
-    return state.copyWith(
-      gold: state.gold + gold,
-      lifetimeGoldEarned: state.lifetimeGoldEarned + gold,
-      essence: state.essence + essence,
-    );
-  }
+  static GameState applyHubIdleProgress(GameState state, int seconds) =>
+      GoldIncome.applyHubIdle(state, seconds);
 
   /// How many room clears offline combat may award for [seconds] away.
   /// Front-loaded for the first 30 minutes, then half rate, hard-capped.

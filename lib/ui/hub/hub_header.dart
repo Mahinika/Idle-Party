@@ -83,6 +83,8 @@ class HubHeader extends StatelessWidget {
     required this.zoneTrophies,
     required this.torch,
     required this.onOpenSettings,
+    required this.incomeLine,
+    required this.multiplierLine,
   });
 
   final int ascensionLevel;
@@ -96,6 +98,8 @@ class HubHeader extends StatelessWidget {
   final int zoneTrophies;
   final double torch;
   final VoidCallback onOpenSettings;
+  final String incomeLine;
+  final String multiplierLine;
 
   @override
   Widget build(BuildContext context) {
@@ -160,6 +164,22 @@ class HubHeader extends StatelessWidget {
                 label: 'Bound $soulbound',
               ),
           ],
+        ),
+        const SizedBox(height: 4),
+        Semantics(
+          label: incomeLine,
+          child: Text(
+            incomeLine,
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+          ),
+        ),
+        Text(
+          multiplierLine,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         if (displayTitle.isNotEmpty || collectionScore > 0) ...[
           const SizedBox(height: 3),

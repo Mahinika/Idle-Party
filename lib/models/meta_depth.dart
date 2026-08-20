@@ -198,6 +198,8 @@ class MetaDepthState {
     this.seasonBestGauntletFloor = 0,
     this.cloudSaveUpdatedMs = 0,
     this.playGamesOptIn = false,
+    this.hubIdleSubSec = 0,
+    this.hubAfkSec = 0,
   });
 
   final int sanctuaryXpLevel;
@@ -318,6 +320,12 @@ class MetaDepthState {
   /// Player opted into Play Games (sign-in succeeded at least once).
   final bool playGamesOptIn;
 
+  /// Seconds banked toward the next hub gold tick (live 1s AFK).
+  final int hubIdleSubSec;
+
+  /// Cumulative hub AFK seconds for essence (same 10min gate as offline).
+  final int hubAfkSec;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -389,6 +397,8 @@ class MetaDepthState {
     int? seasonBestGauntletFloor,
     int? cloudSaveUpdatedMs,
     bool? playGamesOptIn,
+    int? hubIdleSubSec,
+    int? hubAfkSec,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -463,6 +473,8 @@ class MetaDepthState {
           seasonBestGauntletFloor ?? this.seasonBestGauntletFloor,
       cloudSaveUpdatedMs: cloudSaveUpdatedMs ?? this.cloudSaveUpdatedMs,
       playGamesOptIn: playGamesOptIn ?? this.playGamesOptIn,
+      hubIdleSubSec: hubIdleSubSec ?? this.hubIdleSubSec,
+      hubAfkSec: hubAfkSec ?? this.hubAfkSec,
     );
   }
 
@@ -529,6 +541,8 @@ class MetaDepthState {
     'seasonBestGauntletFloor': seasonBestGauntletFloor,
     'cloudSaveUpdatedMs': cloudSaveUpdatedMs,
     'playGamesOptIn': playGamesOptIn,
+    'hubIdleSubSec': hubIdleSubSec,
+    'hubAfkSec': hubAfkSec,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -633,6 +647,8 @@ class MetaDepthState {
           (json['seasonBestGauntletFloor'] as num?)?.toInt() ?? 0,
       cloudSaveUpdatedMs: (json['cloudSaveUpdatedMs'] as num?)?.toInt() ?? 0,
       playGamesOptIn: (json['playGamesOptIn'] as bool?) ?? false,
+      hubIdleSubSec: (json['hubIdleSubSec'] as num?)?.toInt() ?? 0,
+      hubAfkSec: (json['hubAfkSec'] as num?)?.toInt() ?? 0,
     );
   }
 }

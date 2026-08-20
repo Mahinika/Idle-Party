@@ -19,6 +19,7 @@ import 'game_logic.dart';
 import 'game_state.dart';
 import 'gear_service.dart';
 import 'hero_identity.dart';
+import 'gold_income.dart';
 import 'logic_notices.dart';
 import 'meta_systems.dart';
 import 'play_games_bridge.dart';
@@ -147,6 +148,7 @@ class GameDirector extends ChangeNotifier {
   SpatialWorld? _spatial;
   Timer? _spatialTimer;
   Timer? _uiTimer;
+  Timer? _hubIdleTimer;
   int _battleToken = 0;
   int _uiThrottle = 0;
   int _visualFrame = 0;
@@ -344,6 +346,52 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
+  void _syncHubIdleTimer() {
+    final want =
+        enableSpatialLoop && !_isLoading && !_state.inDungeon;
+    if (!want) {
+      _hubIdleTimer?.cancel();
+      _hubIdleTimer = null;
+      return;
+    }
+    if (_hubIdleTimer != null) return;
+    _hubIdleTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _tickHubIdle();
+    });
+  }
+
+  void _tickHubIdle() {
+    if (_isLoading || _state.inDungeon) {
+      _syncHubIdleTimer();
+      return;
+    }
+    final now = DateTime.now();
+    final seconds = now.difference(_state.lastUpdated).inSeconds;
+    if (seconds < 1) return;
+    final beforeGold = _state.gold;
+    final beforeEssence = _state.essence;
+    _state = GoldIncome.applyHubIdle(_state, seconds).copyWith(lastUpdated: now);
+    _autosaveAccum += seconds.toDouble();
+    if (_autosaveAccum >= _autosaveIntervalSec) {
+      _autosaveAccum = 0;
+      _persist();
+    }
+    if (_state.gold != beforeGold || _state.essence != beforeEssence) {
+      notifyListeners();
+    }
+  }
+
+  void _flushHubIdle() {
+    if (_isLoading || _state.inDungeon) return;
+    final now = DateTime.now();
+    final seconds = now.difference(_state.lastUpdated).inSeconds;
+    if (seconds < 1) {
+      _state = _state.copyWith(lastUpdated: now);
+      return;
+    }
+    _state = GoldIncome.applyHubIdle(_state, seconds).copyWith(lastUpdated: now);
+  }
+
   Future<void> boot({bool deferCombatLoop = false}) async {
     try {
       final saved = await _storage.load();
@@ -415,6 +463,7 @@ class GameDirector extends ChangeNotifier {
       _spatial = null;
     } finally {
       _isLoading = false;
+      _syncHubIdleTimer();
       notifyListeners();
     }
   }
@@ -434,6 +483,7 @@ class GameDirector extends ChangeNotifier {
     SpatialCombat.colorblindMode = _state.colorblindMode;
     _lastHighestDungeon = _state.highestDungeonCleared;
     _ensureUiTimer();
+    _syncHubIdleTimer();
     notifyListeners();
     await _persistFlush();
   }
@@ -442,6 +492,7 @@ class GameDirector extends ChangeNotifier {
   void continueGame() {
     if (!_hasExistingSave) return;
     ensureCombatLoop();
+    _syncHubIdleTimer();
     notifyListeners();
   }
 
@@ -783,6 +834,8 @@ class GameDirector extends ChangeNotifier {
       _state = GameLogic.exitToHubHealed(_state);
       _spatialTimer?.cancel();
       _spatial = null;
+      _state = _state.copyWith(lastUpdated: DateTime.now());
+      _syncHubIdleTimer();
       showToast(
         'Gauntlet ended on F$floor · best F${_state.metaDepth.gauntletBestFloor}',
         life: 3.2,
@@ -842,6 +895,8 @@ class GameDirector extends ChangeNotifier {
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _spatial = null;
+    _state = _state.copyWith(lastUpdated: DateTime.now());
+    _syncHubIdleTimer();
     final payoffs = LogicNotices.takeMetaPayoffs();
     showToast(
       payoffs.isNotEmpty ? payoffs.join(' · ') : 'Returned to hub',
@@ -942,6 +997,7 @@ class GameDirector extends ChangeNotifier {
   void enterDungeon({String dungeonId = 'sandy'}) {
     if (_isLoading) return;
     _awaitingWipeChoice = false;
+    _flushHubIdle();
     _state = GameLogic.enterDungeon(_state, dungeonId: dungeonId);
     _lastStashLen = _state.gearStash.length;
     _autosaveAccum = 0;
@@ -949,6 +1005,7 @@ class GameDirector extends ChangeNotifier {
     if (enableSpatialLoop) {
       _startSpatialLoop();
     }
+    _syncHubIdleTimer();
     showToast(StoryLore.enterDungeon(dungeonId), life: 2.8);
     notifyListeners();
     unawaited(_persistFlush());
@@ -961,6 +1018,8 @@ class GameDirector extends ChangeNotifier {
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _spatial = null;
+    _state = _state.copyWith(lastUpdated: DateTime.now());
+    _syncHubIdleTimer();
     final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {
       showToast(payoffs.join(' · '), life: 3.0);
@@ -1409,6 +1468,7 @@ class GameDirector extends ChangeNotifier {
 
   void enterDaily() {
     if (_isLoading) return;
+    _flushHubIdle();
     _state = GameLogic.enterDaily(_state);
     _lastStashLen = _state.gearStash.length;
     _autosaveAccum = 0;
@@ -1416,6 +1476,7 @@ class GameDirector extends ChangeNotifier {
     if (enableSpatialLoop) {
       _startSpatialLoop();
     }
+    _syncHubIdleTimer();
     showToast(StoryLore.dailyRun(_state.dungeonId), life: 3.2);
     notifyListeners();
     unawaited(_persistFlush());
@@ -1437,6 +1498,7 @@ class GameDirector extends ChangeNotifier {
       );
       return;
     }
+    _flushHubIdle();
     _state = GameLogic.enterGauntlet(_state);
     _lastStashLen = _state.gearStash.length;
     _autosaveAccum = 0;
@@ -1444,6 +1506,7 @@ class GameDirector extends ChangeNotifier {
     if (enableSpatialLoop) {
       _startSpatialLoop();
     }
+    _syncHubIdleTimer();
     showToast(
       'Infinity Gauntlet · best F${_state.metaDepth.gauntletBestFloor}',
       life: 3.0,
@@ -1860,7 +1923,21 @@ class GameDirector extends ChangeNotifier {
         prestige: prestige,
       );
       GameAudio.unlock();
-      showToast('$name Lv$after · $bonus', life: 2.4);
+      if (track == 'gold') {
+        final rate = GoldIncome.hubGoldPerMinute(_state);
+        final prev = GoldIncome.hubGoldPerMinuteAtGoldLevel(
+          _state,
+          after - 1,
+        );
+        final gained = rate - prev;
+        showToast(
+          '$name Lv$after · Hub ${GoldIncome.perMinuteLabel(rate)}'
+          '${gained > 0 ? ' (+$gained)' : ''}',
+          life: 2.6,
+        );
+      } else {
+        showToast('$name Lv$after · $bonus', life: 2.4);
+      }
     }
   }
 
@@ -2150,6 +2227,7 @@ class GameDirector extends ChangeNotifier {
   void dispose() {
     _spatialTimer?.cancel();
     _uiTimer?.cancel();
+    _hubIdleTimer?.cancel();
     combatFrame.dispose();
     super.dispose();
   }
