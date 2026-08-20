@@ -27,6 +27,7 @@ abstract final class MetaSystems {
       version: '1.12.26',
       bullets: <String>[
         'Play installs can see a hub notice when a newer Idle Party is ready on Google Play (sideload APKs stay quiet). SETTINGS has GET UPDATE when that notice is up.',
+        'Warrior, Paladin, and Shaman can wear shields — Protection Paladin (and Resto/Ele Shaman) no longer get stuck on a two-hander that blocked the off-hand.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),

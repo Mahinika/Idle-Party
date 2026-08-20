@@ -133,11 +133,11 @@ abstract final class StarterGear {
       slot: EquipmentSlot.offHand,
       rarity: LootRarity.common,
       offHandKind: OffHandKind.shield,
-      strengthBonus: spec.isHealer ? 0 : 1,
+      strengthBonus: caster ? 0 : 1,
       staminaBonus: 2,
-      intellectBonus: spec.isHealer ? 1 : 0,
+      intellectBonus: caster ? 1 : 0,
       spiritBonus: spec.isHealer ? 1 : 0,
-      spellPowerBonus: spec.isHealer ? 1 : 0,
+      spellPowerBonus: caster ? 1 : 0,
       armorBonus: 3,
       itemLevel: 5,
     );
@@ -297,7 +297,11 @@ abstract final class StarterGear {
         ranged: null,
       ),
       HeroSpecId.unholy => (weapon: twoSword, offHand: null, ranged: null),
-      HeroSpecId.elemental => (weapon: staff, offHand: null, ranged: null),
+      HeroSpecId.elemental => (
+        weapon: oneMace,
+        offHand: shield(),
+        ranged: null,
+      ),
       HeroSpecId.enhancement => (
         weapon: oneAxe,
         offHand: sidearm(WeaponType.axe),

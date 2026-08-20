@@ -74,8 +74,12 @@ void main() {
     expect(can(HeroSpecId.fury, oh(OffHandKind.weapon, weaponType: WeaponType.axe)), isTrue);
     expect(can(HeroSpecId.arms, oh(OffHandKind.weapon, weaponType: WeaponType.axe)), isFalse);
     expect(can(HeroSpecId.protection, oh(OffHandKind.shield)), isTrue);
+    expect(can(HeroSpecId.protPaladin, oh(OffHandKind.shield)), isTrue);
+    expect(can(HeroSpecId.retribution, oh(OffHandKind.shield)), isTrue);
     expect(can(HeroSpecId.retribution, oh(OffHandKind.weapon, weaponType: WeaponType.sword)), isFalse);
     expect(can(HeroSpecId.holyPaladin, oh(OffHandKind.shield)), isTrue);
+    expect(can(HeroSpecId.elemental, oh(OffHandKind.shield)), isTrue);
+    expect(can(HeroSpecId.enhancement, oh(OffHandKind.shield)), isTrue);
     expect(can(HeroSpecId.frostDk, oh(OffHandKind.weapon, weaponType: WeaponType.axe)), isTrue);
     expect(can(HeroSpecId.frostDk, oh(OffHandKind.shield)), isFalse);
     expect(can(HeroSpecId.blood, oh(OffHandKind.shield)), isFalse);
@@ -214,5 +218,114 @@ void main() {
         }
       }
     }
+  });
+
+  test('shield kits start 1H+shield and never loot a two-hander', () {
+    const ids = [
+      HeroSpecId.protection,
+      HeroSpecId.protPaladin,
+      HeroSpecId.holyPaladin,
+      HeroSpecId.restorationShaman,
+      HeroSpecId.elemental,
+    ];
+    for (final id in ids) {
+      expect(
+        ClassProficiency.prefersOneHandAndShield(HeroSpecs.def(id)),
+        isTrue,
+        reason: '$id should live on 1H+shield',
+      );
+      final kit = StarterGear.forSpec(id);
+      expect(kit[EquipmentSlot.weapon]!.handed, WeaponHanded.oneHand);
+      expect(kit[EquipmentSlot.offHand]!.offHandKind, OffHandKind.shield);
+      for (var i = 0; i < 40; i++) {
+        EquipmentFactory.random = Random(i + 11);
+        final rolled = EquipmentFactory.mainHandForSpec(HeroSpecs.def(id));
+        expect(
+          rolled.$2,
+          WeaponHanded.oneHand,
+          reason: '$id loot MH was ${rolled.$1} ${rolled.$2} on seed $i',
+        );
+      }
+    }
+    expect(
+      ClassProficiency.prefersOneHandAndShield(HeroSpecs.def(HeroSpecId.arms)),
+      isFalse,
+    );
+    expect(
+      ClassProficiency.prefersOneHandAndShield(
+        HeroSpecs.def(HeroSpecId.enhancement),
+      ),
+      isFalse,
+    );
+  });
+
+  test('prot paladin can tap a shield off a two-hander', () {
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 8, 20),
+      partySpecs: [
+        HeroSpecId.protPaladin,
+        HeroSpecId.discipline,
+        HeroSpecId.fire,
+      ],
+    );
+    final hi = state.heroes.indexWhere(
+      (h) => h.specId == HeroSpecId.protPaladin,
+    );
+    final twoH = EquipmentItem(
+      id: 'pprot_2h',
+      name: 'Greatsword',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      weaponType: WeaponType.sword,
+      handed: WeaponHanded.twoHand,
+      strengthBonus: 20,
+      staminaBonus: 8,
+      itemLevel: 30,
+    );
+    final shield = EquipmentItem(
+      id: 'pprot_sh',
+      name: 'Tower Shield',
+      slot: EquipmentSlot.offHand,
+      rarity: LootRarity.rare,
+      offHandKind: OffHandKind.shield,
+      defenseBonus: 12,
+      armorBonus: 14,
+      staminaBonus: 10,
+      strengthBonus: 4,
+      itemLevel: 30,
+    );
+    final equipped = Map<EquipmentSlot, EquipmentItem>.from(
+      state.heroes[hi].equipped,
+    )
+      ..[EquipmentSlot.weapon] = twoH
+      ..remove(EquipmentSlot.offHand);
+    final heroes = [...state.heroes];
+    heroes[hi] = heroes[hi].copyWith(equipped: equipped);
+    state = state.copyWith(heroes: heroes, gearStash: <EquipmentItem>[shield]);
+
+    expect(
+      GameLogic.canHeroReceive(
+        state.heroes[hi],
+        shield,
+        slot: EquipmentSlot.offHand,
+      ),
+      isTrue,
+    );
+    final cmp = GameLogic.compareForHero(state.heroes[hi], shield);
+    expect(cmp.powerDelta, greaterThan(-9000));
+
+    state = GameLogic.equipFromStash(state, shield.id, heroIndex: hi);
+    expect(state.heroes[hi].itemIn(EquipmentSlot.offHand)?.id, shield.id);
+    expect(state.heroes[hi].itemIn(EquipmentSlot.weapon), isNull);
+    expect(state.gearStash.any((g) => g.id == twoH.id), isTrue);
+
+    state = GameLogic.autoEquipBetterGear(state);
+    expect(state.heroes[hi].itemIn(EquipmentSlot.offHand)?.id, shield.id);
+    expect(
+      ClassProficiency.weaponBlocksOffHand(
+        state.heroes[hi].itemIn(EquipmentSlot.weapon),
+      ),
+      isFalse,
+    );
   });
 }

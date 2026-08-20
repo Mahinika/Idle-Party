@@ -237,6 +237,13 @@ class ClassProficiency {
     return null;
   }
 
+  /// Prot / Holy Paladin / Resto+Ele Shaman live on 1H + shield (not 2H).
+  /// Arms / Ret can *wear* a shield but keep two-hand fantasy.
+  static bool prefersOneHandAndShield(HeroSpecDef spec) {
+    if (preferredOffHandKind(spec) != OffHandKind.shield) return false;
+    return spec.roleTag != SpecRoleTag.meleeDps;
+  }
+
   /// Returns null if OK, otherwise a short reject reason.
   static String? rejectReason({
     required HeroRole role,

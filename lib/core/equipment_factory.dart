@@ -334,7 +334,7 @@ class EquipmentFactory {
 
   static (WeaponType, WeaponHanded) mainHandForSpec(HeroSpecDef spec) {
     final roll = random.nextDouble();
-    return switch (spec.classId) {
+    final picked = switch (spec.classId) {
       HeroClassId.warrior => spec.id == HeroSpecId.fury
           ? _pick1hAxeSwordMace(roll)
           : spec.id == HeroSpecId.arms
@@ -355,11 +355,7 @@ class EquipmentFactory {
       HeroClassId.deathKnight => spec.id == HeroSpecId.frostDk
           ? _pick1hAxeSwordMace(roll)
           : _pick2hAxeSwordMacePole(roll),
-      HeroClassId.shaman => spec.id == HeroSpecId.enhancement
-          ? _pickShaman1h(roll)
-          : roll < 0.55
-          ? (WeaponType.staff, WeaponHanded.twoHand)
-          : (WeaponType.mace, WeaponHanded.oneHand),
+      HeroClassId.shaman => _pickShaman1h(roll),
       HeroClassId.mage || HeroClassId.warlock => roll < 0.55
           ? (WeaponType.staff, WeaponHanded.twoHand)
           : roll < 0.85
@@ -370,6 +366,13 @@ class EquipmentFactory {
             ? (WeaponType.polearm, WeaponHanded.twoHand)
             : (WeaponType.staff, WeaponHanded.twoHand),
     };
+    if (ClassProficiency.prefersOneHandAndShield(spec) &&
+        picked.$2 == WeaponHanded.twoHand) {
+      return spec.classId == HeroClassId.shaman
+          ? _pickShaman1h(roll)
+          : _pick1hAxeSwordMace(roll);
+    }
+    return picked;
   }
 
   static (WeaponType, WeaponHanded) _pick1hAxeSwordMace(double roll) {

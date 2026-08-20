@@ -228,12 +228,8 @@ abstract final class GearService {
     )) {
       return false;
     }
-    if (slot == EquipmentSlot.offHand &&
-        ClassProficiency.weaponBlocksOffHand(
-          hero.itemIn(EquipmentSlot.weapon),
-        )) {
-      return false;
-    }
+    // A two-hander occupying both hands is not a proficiency fail — equipping
+    // an off-hand parks the 2H in the bag (shield kits must be able to tap).
     return true;
   }
 
@@ -299,6 +295,14 @@ abstract final class GearService {
       final off = nextGear.remove(EquipmentSlot.offHand);
       if (off != null) {
         next = stashEquipment(next, off);
+      }
+    }
+    // Off-hand parks a two-hander (Prot Pala tapping a shield off a 2H).
+    if (targetSlot == EquipmentSlot.offHand) {
+      final wep = nextGear[EquipmentSlot.weapon];
+      if (ClassProficiency.weaponBlocksOffHand(wep)) {
+        nextGear.remove(EquipmentSlot.weapon);
+        next = stashEquipment(next, wep!);
       }
     }
 
@@ -408,6 +412,9 @@ abstract final class GearService {
   ///
   /// One-hand weapons swapping off a two-hand add the best wearable off-hand
   /// from [pairingStash] (bag), so 1H+shield can beat a lonely staff.
+  ///
+  /// Off-hand while a 2H is worn subtracts that 2H (it will be parked) unless
+  /// the spec lives on 1H+shield — those kits should prefer the shield.
   static int slotEquipScore(
     PartyHero hero,
     EquipmentItem? item, {
@@ -416,6 +423,12 @@ abstract final class GearService {
   }) {
     if (item == null) return 0;
     if (!canHeroReceive(hero, item, slot: slot)) {
+      return -999999;
+    }
+    if (slot == EquipmentSlot.weapon &&
+        ClassProficiency.prefersOneHandAndShield(hero.spec) &&
+        ClassProficiency.weaponBlocksOffHand(item)) {
+      // Prot / Holy Pala / Resto+Ele stay on 1H+shield in Auto Equip / BEST.
       return -999999;
     }
     var score = specEquipScore(hero, item);
@@ -436,6 +449,12 @@ abstract final class GearService {
         pairingStash,
         excludeItemId: item.id,
       );
+    } else if (slot == EquipmentSlot.offHand &&
+        ClassProficiency.weaponBlocksOffHand(
+          hero.itemIn(EquipmentSlot.weapon),
+        ) &&
+        !ClassProficiency.prefersOneHandAndShield(hero.spec)) {
+      score -= specEquipScore(hero, hero.itemIn(EquipmentSlot.weapon)!);
     }
     return score;
   }
@@ -928,7 +947,8 @@ abstract final class GearService {
         for (final group in equipSlotGroups()) {
           if (blocksOffHand &&
               group.length == 1 &&
-              group.first == EquipmentSlot.offHand) {
+              group.first == EquipmentSlot.offHand &&
+              !ClassProficiency.prefersOneHandAndShield(hero.spec)) {
             continue;
           }
 
