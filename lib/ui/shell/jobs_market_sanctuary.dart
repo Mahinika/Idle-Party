@@ -144,7 +144,7 @@ class SanctuaryOverlay extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          '${GoldIncome.hubRateLine(state)} · ${GoldIncome.multiplierLine(state)}',
+          '${GoldIncome.ratesLine(state, runGpm: director.runGoldPerMinute)} · ${GoldIncome.multiplierLine(state)}',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
         if (state.metaDepth.ascendBlessings > 0) ...[
@@ -204,8 +204,30 @@ class SanctuaryOverlay extends StatelessWidget {
           ),
           Text(
             track == 'gold'
-                ? 'Next: $nextBonus · Hub ${GoldIncome.perMinuteLabel(GoldIncome.hubGoldPerMinuteAtGoldLevel(state, nextLevel))} '
-                    '(+${GoldIncome.nextGoldFindDeltaPerMinute(state)}g/min)'
+                ? () {
+                    final hubNext = GoldIncome.hubGoldPerMinuteAtGoldLevel(
+                      state,
+                      nextLevel,
+                    );
+                    final hubDelta = GoldIncome.nextGoldFindDeltaPerMinute(
+                      state,
+                    );
+                    final run = director.runGoldPerMinute;
+                    final oldP = GoldIncome.goldFindPercent(state);
+                    final newP = GoldIncome.goldFindPercent(
+                      state.copyWith(sanctuaryGoldLevel: nextLevel),
+                    );
+                    final runDelta = GoldIncome.goldFindDeltaOnRate(
+                      run,
+                      oldP,
+                      newP,
+                    );
+                    final runBit = run > 0
+                        ? ' · Run +${runDelta}g/min'
+                        : '';
+                    return 'Next: $nextBonus · Hub ${GoldIncome.perMinuteLabel(hubNext)} '
+                        '(+${hubDelta}g/min)$runBit';
+                  }()
                 : 'Next: $nextBonus',
             style: GameTheme.body(size: 12, color: GameTheme.mossLit),
           ),

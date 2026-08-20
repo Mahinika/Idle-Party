@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/gold_income.dart';
 import '../../core/game_state.dart';
 import '../apex_forge_panel.dart';
 import '../game_theme.dart';
@@ -53,6 +54,12 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       PartyUpgradeType.crit =>
         '+${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
     };
+    final speedHint = switch (type) {
+      PartyUpgradeType.attack ||
+      PartyUpgradeType.moveSpeed ||
+      PartyUpgradeType.attackSpeed => ' · faster clears',
+      _ => '',
+    };
     final name = switch (type) {
       PartyUpgradeType.attack => 'ATK',
       PartyUpgradeType.defense => 'DEF',
@@ -63,8 +70,8 @@ class _ForgeOverlayState extends State<ForgeOverlay>
     };
     final costPart = onPressed != null ? '${cost}g' : 'Need ${cost}g';
     final label = recommended
-        ? 'BEST · $name $bonus · $costPart'
-        : '$name $bonus · $costPart';
+        ? 'BEST · $name $bonus$speedHint · $costPart'
+        : '$name $bonus$speedHint · $costPart';
     return KenneyButton(label: label, onPressed: onPressed);
   }
 
@@ -135,6 +142,17 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           'Train levels stay forever.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
+        const SizedBox(height: 4),
+        Text(
+          GoldIncome.ratesLine(state, runGpm: director.runGoldPerMinute),
+          style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+        ),
+        if (director.lastFloorClearSec != null)
+          Text(
+            'Last floor ${director.lastFloorClearSec}s — ATK / HASTE / MOVE '
+            'make the next one faster (not extra g/min on the button).',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
         const SizedBox(height: 4),
         Text(
           'Bought: ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
@@ -245,6 +263,28 @@ class _ForgeOverlayState extends State<ForgeOverlay>
                     '+${state.ascendBlessingVitalityBonus} STA · '
                     '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+        ),
+        Builder(
+          builder: (_) {
+            final hub = GoldIncome.hubGoldPerMinute(state);
+            final run = director.runGoldPerMinute;
+            final oldP = GoldIncome.goldFindPercent(state);
+            final newP = oldP + GameLogic.ascendBlessingGoldPct;
+            final hubGain = GoldIncome.goldFindDeltaOnRate(hub, oldP, newP);
+            final runGain = GoldIncome.goldFindDeltaOnRate(run, oldP, newP);
+            return Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                'Next Blessing +${GameLogic.ascendBlessingGoldPct}% gold'
+                ' · Hub +${hubGain}g/min'
+                '${run > 0 ? ' · Run +${runGain}g/min' : ''}',
+                style: GameTheme.body(
+                  size: 12,
+                  color: GameTheme.parchmentDim,
+                ),
+              ),
+            );
+          },
         ),
         if (state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
             !state.metaDepth.partySlot5Unlocked) ...[

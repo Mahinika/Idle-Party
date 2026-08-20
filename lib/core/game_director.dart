@@ -152,6 +152,11 @@ class GameDirector extends ChangeNotifier {
   int _battleToken = 0;
   int _uiThrottle = 0;
   int _visualFrame = 0;
+  final List<(int ms, int gold)> _runGoldSamples = <(int, int)>[];
+  int _runGoldPerMinute = 0;
+  bool _runIncomeFrozen = false;
+  DateTime? _floorStartedAt;
+  int? _lastFloorClearSec;
 
   /// Combat map + corner HUD; bumps every spatial tick (~60 Hz).
   final ValueNotifier<int> combatFrame = ValueNotifier(0);
@@ -251,6 +256,12 @@ class GameDirector extends ChangeNotifier {
 
   bool get awaitingWipeChoice => _awaitingWipeChoice;
   bool get uiPaused => _uiPaused;
+
+  /// Combat gold/min from the last ~2 minutes of credited dungeon gold.
+  int get runGoldPerMinute => _runGoldPerMinute;
+
+  /// Seconds for the last finished floor, if any this session.
+  int? get lastFloorClearSec => _lastFloorClearSec;
 
   /// Freeze dungeon combat while the player is in inventory / overlays.
   void setUiPaused(bool paused) {
@@ -390,6 +401,50 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     _state = GoldIncome.applyHubIdle(_state, seconds).copyWith(lastUpdated: now);
+  }
+
+  void _beginRunIncomeSession() {
+    _runGoldSamples.clear();
+    _runGoldPerMinute = 0;
+    _runIncomeFrozen = false;
+    _beginFloorClock();
+  }
+
+  void _beginFloorClock() {
+    _floorStartedAt = DateTime.now();
+  }
+
+  void _freezeRunIncome() {
+    _refreshRunGpm(DateTime.now().millisecondsSinceEpoch);
+    _runIncomeFrozen = true;
+  }
+
+  void _noteRunGold(int gained) {
+    if (gained <= 0 || _runIncomeFrozen) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _runGoldSamples.add((now, gained));
+    _refreshRunGpm(now);
+  }
+
+  void _noteLifetimeGold(GameState before, GameState after) {
+    _noteRunGold(after.lifetimeGoldEarned - before.lifetimeGoldEarned);
+  }
+
+  void _refreshRunGpm(int nowMs) {
+    if (_runIncomeFrozen) return;
+    _runGoldSamples.removeWhere(
+      (s) => s.$1 < nowMs - GoldIncome.sessionWindowMs,
+    );
+    _runGoldPerMinute = GoldIncome.runGoldPerMinuteFromSamples(
+      _runGoldSamples,
+      nowMs: nowMs,
+    );
+  }
+
+  String _forgeSpeedToast(String name) {
+    final sec = _lastFloorClearSec;
+    if (sec == null) return '$name up · faster clears';
+    return '$name up · last floor ${sec}s · faster clears';
   }
 
   Future<void> boot({bool deferCombatLoop = false}) async {
@@ -576,6 +631,7 @@ class GameDirector extends ChangeNotifier {
       if (result.goldFromKills > 0) {
         _state = GameLogic.creditCombatGold(_state, result.goldFromKills);
       }
+      _noteLifetimeGold(before, _state);
       // Count casts live; defer achievement scan to room clear / discrete events.
       if (result.abilityCasts > 0) {
         _state = _state.copyWith(
@@ -727,6 +783,13 @@ class GameDirector extends ChangeNotifier {
       if (result.roomCleared) {
         _lootSinceAutoEquip = 0;
         final floorNo = _state.currentRoom.floorNumber;
+        final started = _floorStartedAt;
+        if (started != null) {
+          _lastFloorClearSec = DateTime.now()
+              .difference(started)
+              .inSeconds
+              .clamp(1, 9999);
+        }
         final wasTreasure = _spatial?.isTreasure ?? false;
         // Combat gold already credited per kill; treasure pays scaled chest budget.
         final gold = wasTreasure ? GameLogic.treasureGoldBudget(_state) : 0;
@@ -740,6 +803,7 @@ class GameDirector extends ChangeNotifier {
           goldGain: gold,
           skipLootRoll: !wasTreasure,
         ).copyWith(lastUpdated: DateTime.now());
+        _noteLifetimeGold(beforeClear, _state);
         _announceAbilityUnlocks(beforeClear, _state);
         _announceAchievementUnlocks(beforeClear, _state);
         if (wasBoss) {
@@ -806,9 +870,11 @@ class GameDirector extends ChangeNotifier {
         }
         if (_state.inDungeon) {
           _rebuildSpatial();
+          _beginFloorClock();
         } else {
           _spatialTimer?.cancel();
           _spatial = null;
+          _freezeRunIncome();
           showToast(StoryLore.dungeonCleared(beforeClear.dungeonId), life: 3.2);
         }
         _bumpCombatFrame();
@@ -821,6 +887,11 @@ class GameDirector extends ChangeNotifier {
     }
 
     _uiThrottle++;
+    if (!_runIncomeFrozen &&
+        _state.inDungeon &&
+        _uiThrottle % 60 == 0) {
+      _refreshRunGpm(DateTime.now().millisecondsSinceEpoch);
+    }
     // Shell chrome (~10 Hz); map/HUD corners listen to [combatFrame] at 60 Hz.
     if (_uiThrottle % _shellNotifyEvery == 0) {
       notifyListeners();
@@ -834,6 +905,7 @@ class GameDirector extends ChangeNotifier {
       _state = GameLogic.exitToHubHealed(_state);
       _spatialTimer?.cancel();
       _spatial = null;
+      _freezeRunIncome();
       _state = _state.copyWith(lastUpdated: DateTime.now());
       _syncHubIdleTimer();
       showToast(
@@ -874,6 +946,7 @@ class GameDirector extends ChangeNotifier {
     if (enableSpatialLoop) {
       _startSpatialLoop();
     }
+    _beginFloorClock();
     notifyListeners();
     unawaited(_persistFlush());
   }
@@ -895,6 +968,7 @@ class GameDirector extends ChangeNotifier {
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _spatial = null;
+    _freezeRunIncome();
     _state = _state.copyWith(lastUpdated: DateTime.now());
     _syncHubIdleTimer();
     final payoffs = LogicNotices.takeMetaPayoffs();
@@ -975,6 +1049,7 @@ class GameDirector extends ChangeNotifier {
     if (result.goldFromKills > 0) {
       _state = GameLogic.creditCombatGold(_state, result.goldFromKills);
     }
+    _noteLifetimeGold(before, _state);
     GameAudio.crit();
     _announceAbilityUnlocks(before, _state);
     _announceAchievementUnlocks(before, _state);
@@ -1001,6 +1076,7 @@ class GameDirector extends ChangeNotifier {
     _state = GameLogic.enterDungeon(_state, dungeonId: dungeonId);
     _lastStashLen = _state.gearStash.length;
     _autosaveAccum = 0;
+    _beginRunIncomeSession();
     _rebuildSpatial();
     if (enableSpatialLoop) {
       _startSpatialLoop();
@@ -1018,6 +1094,7 @@ class GameDirector extends ChangeNotifier {
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _spatial = null;
+    _freezeRunIncome();
     _state = _state.copyWith(lastUpdated: DateTime.now());
     _syncHubIdleTimer();
     final payoffs = LogicNotices.takeMetaPayoffs();
@@ -1131,7 +1208,11 @@ class GameDirector extends ChangeNotifier {
   }
 
   void upgradeAttack() {
+    final before = _state.attackBonus;
     _applyUpgrade(GameLogic.upgradeAttack(_state));
+    if (_state.attackBonus > before) {
+      showToast(_forgeSpeedToast('ATK'), life: 2.0);
+    }
   }
 
   void upgradeDefense() {
@@ -1143,11 +1224,19 @@ class GameDirector extends ChangeNotifier {
   }
 
   void upgradeMoveSpeed() {
+    final before = _state.moveSpeedBonus;
     _applyUpgrade(GameLogic.upgradeMoveSpeed(_state));
+    if (_state.moveSpeedBonus > before) {
+      showToast(_forgeSpeedToast('MOVE'), life: 2.0);
+    }
   }
 
   void upgradeAttackSpeed() {
+    final before = _state.attackSpeedBonus;
     _applyUpgrade(GameLogic.upgradeAttackSpeed(_state));
+    if (_state.attackSpeedBonus > before) {
+      showToast(_forgeSpeedToast('HASTE'), life: 2.0);
+    }
   }
 
   void upgradeCrit() {
@@ -1223,6 +1312,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.travelToFloor(_state, floorNumber));
     final after = _state.currentRoom.floorNumber;
     if (after != before) {
+      _beginFloorClock();
       showToast('Floor $after', life: 1.6);
     }
   }
@@ -1472,6 +1562,7 @@ class GameDirector extends ChangeNotifier {
     _state = GameLogic.enterDaily(_state);
     _lastStashLen = _state.gearStash.length;
     _autosaveAccum = 0;
+    _beginRunIncomeSession();
     _rebuildSpatial();
     if (enableSpatialLoop) {
       _startSpatialLoop();
@@ -1502,6 +1593,7 @@ class GameDirector extends ChangeNotifier {
     _state = GameLogic.enterGauntlet(_state);
     _lastStashLen = _state.gearStash.length;
     _autosaveAccum = 0;
+    _beginRunIncomeSession();
     _rebuildSpatial();
     if (enableSpatialLoop) {
       _startSpatialLoop();
@@ -1932,7 +2024,8 @@ class GameDirector extends ChangeNotifier {
         final gained = rate - prev;
         showToast(
           '$name Lv$after · Hub ${GoldIncome.perMinuteLabel(rate)}'
-          '${gained > 0 ? ' (+$gained)' : ''}',
+          '${gained > 0 ? ' (+$gained)' : ''}'
+          '${_runGoldPerMinute > 0 ? ' · Run ${GoldIncome.perMinuteLabel(_runGoldPerMinute)}' : ''}',
           life: 2.6,
         );
       } else {

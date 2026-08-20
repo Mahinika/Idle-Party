@@ -44,6 +44,50 @@ abstract final class GoldIncome {
   static String hubRateLine(GameState state) =>
       'Hub ${perMinuteLabel(hubGoldPerMinute(state))}';
 
+  /// Rolling combat gold/min from credited samples (not a DPS formula).
+  static const int sessionWindowMs = 120000;
+  static const int sessionWarmupMs = 15000;
+
+  static int runGoldPerMinuteFromSamples(
+    List<(int ms, int gold)> samples, {
+    required int nowMs,
+    int windowMs = sessionWindowMs,
+    int warmupMs = sessionWarmupMs,
+  }) {
+    final cutoff = nowMs - windowMs;
+    var gold = 0;
+    var first = nowMs;
+    var any = false;
+    for (final s in samples) {
+      if (s.$1 < cutoff) continue;
+      any = true;
+      gold += s.$2;
+      if (s.$1 < first) first = s.$1;
+    }
+    if (!any || gold <= 0) return 0;
+    final spanMs = nowMs - first;
+    if (spanMs < warmupMs) return 0;
+    return (gold * 60000) ~/ spanMs;
+  }
+
+  static String ratesLine(GameState state, {int runGpm = 0}) {
+    final hub = hubRateLine(state);
+    if (runGpm <= 0) return hub;
+    return '$hub · Run ${perMinuteLabel(runGpm)}';
+  }
+
+  /// Scale an observed rate when gold-find percent changes (combat already
+  /// includes find — this is the honest +X g/min on CAMP / Blessing).
+  static int scaledGpm(int gpm, int oldPercent, int newPercent) {
+    if (gpm <= 0) return 0;
+    final oldMul = 100 + oldPercent;
+    if (oldMul <= 0) return gpm;
+    return (gpm * (100 + newPercent)) ~/ oldMul;
+  }
+
+  static int goldFindDeltaOnRate(int gpm, int oldPercent, int newPercent) =>
+      scaledGpm(gpm, oldPercent, newPercent) - gpm;
+
   static List<(String, int)> multiplierParts(GameState state) {
     return <(String, int)>[
       ('AL', state.ascensionGoldBonusPercent),

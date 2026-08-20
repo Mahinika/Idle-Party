@@ -137,8 +137,11 @@ abstract final class GameGuides {
       body:
           'POWER → FORGE.\n\n'
           'Tabs:\n'
-          '• GOLD — spend gold this run. Train = +1 level to every hero '
+          '• GOLD — spend gold this run. The tab shows Hub gold/min and Run gold/min '
+          '(Run is loot you actually earned in the last couple of minutes, not a guess from ATK). '
+          'Train = +1 level to every hero '
           '(levels keep on Ascend). ATK/DEF/STA/MOVE/HASTE/CRIT wipe on Ascend. '
+          'ATK, HASTE, and MOVE speed up clears. '
           'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
           'relative upgrade.\n'

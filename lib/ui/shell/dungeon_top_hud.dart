@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/gold_income.dart';
 import '../../core/keystone.dart';
 import '../../models/dungeon_mode.dart';
 import '../game_theme.dart';
@@ -45,6 +46,10 @@ class DungeonTopHud extends StatelessWidget {
     // CLAIM stays visible mid-fight so contracts aren't buried in MORE.
     final showClaimChip = claimable > 0;
     final softcap = GameLogic.levelsUntilSoftcap(state);
+    final rates = GoldIncome.ratesLine(
+      state,
+      runGpm: director.runGoldPerMinute,
+    );
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -365,6 +370,19 @@ class DungeonTopHud extends StatelessWidget {
                     ),
                   ],
                 ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Semantics(
+              label: rates,
+              child: Text(
+                rates,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+              ),
+            ),
+          ),
           if (softcap > 0 && !state.inGauntlet)
             Padding(
               padding: const EdgeInsets.only(top: 3),

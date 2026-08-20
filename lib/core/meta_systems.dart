@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.14';
+  static const String currentVersion = '1.12.15';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.15',
+      bullets: <String>[
+        'Dungeon gold/min is real loot from the last couple of minutes — Hub and Run sit on the floor HUD and POWER → FORGE GOLD.',
+        'Gold Find and Blessing preview +g/min on both rates. ATK / HASTE / MOVE say faster clears (and last floor time) instead of fake gold.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.14',
       bullets: <String>[

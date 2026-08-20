@@ -72,4 +72,31 @@ void main() {
     state = GoldIncome.applyHubIdle(state, 600);
     expect(state.essence, greaterThan(startE));
   });
+
+  test('run gold/min uses credited samples after warmup, not a burst', () {
+    const t0 = 1_000_000;
+    final samples = <(int, int)>[
+      (t0, 40),
+      (t0 + 20000, 40),
+    ];
+    expect(
+      GoldIncome.runGoldPerMinuteFromSamples(samples, nowMs: t0 + 5000),
+      0,
+    );
+    expect(
+      GoldIncome.runGoldPerMinuteFromSamples(samples, nowMs: t0 + 20000),
+      240,
+    );
+  });
+
+  test('gold-find percent scales an observed run rate', () {
+    expect(GoldIncome.scaledGpm(100, 0, 10), 110);
+    expect(GoldIncome.goldFindDeltaOnRate(100, 0, 10), 10);
+  });
+
+  test('rates line adds Run only when the session has a rate', () {
+    final state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 20));
+    expect(GoldIncome.ratesLine(state), GoldIncome.hubRateLine(state));
+    expect(GoldIncome.ratesLine(state, runGpm: 180), contains('Run 180g/min'));
+  });
 }
