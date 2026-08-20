@@ -5,6 +5,7 @@ import '../core/game_state.dart';
 import '../models/gear_set.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
+import '../models/proficiency.dart';
 import 'custom_assets.dart';
 import 'game_theme.dart';
 import 'hero_doll_sprite.dart';
@@ -77,7 +78,7 @@ class CharacterEquipPanel extends StatelessWidget {
 
   static const slotLabels = <EquipmentSlot, String>{
     EquipmentSlot.weapon: 'WEAPON',
-    EquipmentSlot.offHand: 'SHIELD',
+    EquipmentSlot.offHand: 'OFFHAND',
     EquipmentSlot.ranged: 'RANGED',
     EquipmentSlot.head: 'HELM',
     EquipmentSlot.shoulder: 'SHOULDER',
@@ -96,24 +97,38 @@ class CharacterEquipPanel extends StatelessWidget {
     EquipmentSlot.consumable: 'FLASK',
   };
 
-  static String? emptyIconFor(EquipmentSlot slot) => switch (slot) {
-    EquipmentSlot.head => CustomAssets.iconHelm,
-    EquipmentSlot.shoulder => CustomAssets.iconShoulders,
-    EquipmentSlot.chest => CustomAssets.iconChest,
-    EquipmentSlot.hands => CustomAssets.iconGloves,
-    EquipmentSlot.waist => CustomAssets.iconBelt,
-    EquipmentSlot.legs => CustomAssets.iconLegs,
-    EquipmentSlot.boots => CustomAssets.iconBoots,
-    EquipmentSlot.cloak => CustomAssets.iconCloak,
-    EquipmentSlot.neck => CustomAssets.iconNeck,
-    EquipmentSlot.wrist => CustomAssets.iconWrist,
-    EquipmentSlot.ring || EquipmentSlot.ring2 => CustomAssets.iconRing,
-    EquipmentSlot.trinket || EquipmentSlot.trinket2 => CustomAssets.iconTrinket,
-    EquipmentSlot.weapon => CustomAssets.iconSword,
-    EquipmentSlot.offHand => CustomAssets.iconShield,
-    EquipmentSlot.ranged => CustomAssets.iconBow,
-    EquipmentSlot.consumable => CustomAssets.iconFlask,
+  /// Paper-doll label for an empty or filled off-hand (shield / tome / weapon).
+  static String offHandLabel(OffHandKind? kind) => switch (kind) {
+    OffHandKind.shield => 'SHIELD',
+    OffHandKind.frill => 'TOME',
+    OffHandKind.weapon => 'OFFHAND',
+    null => 'OFFHAND',
   };
+
+  static String? emptyIconFor(EquipmentSlot slot, {OffHandKind? offHandKind}) =>
+      switch (slot) {
+        EquipmentSlot.head => CustomAssets.iconHelm,
+        EquipmentSlot.shoulder => CustomAssets.iconShoulders,
+        EquipmentSlot.chest => CustomAssets.iconChest,
+        EquipmentSlot.hands => CustomAssets.iconGloves,
+        EquipmentSlot.waist => CustomAssets.iconBelt,
+        EquipmentSlot.legs => CustomAssets.iconLegs,
+        EquipmentSlot.boots => CustomAssets.iconBoots,
+        EquipmentSlot.cloak => CustomAssets.iconCloak,
+        EquipmentSlot.neck => CustomAssets.iconNeck,
+        EquipmentSlot.wrist => CustomAssets.iconWrist,
+        EquipmentSlot.ring || EquipmentSlot.ring2 => CustomAssets.iconRing,
+        EquipmentSlot.trinket ||
+        EquipmentSlot.trinket2 => CustomAssets.iconTrinket,
+        EquipmentSlot.weapon => CustomAssets.iconSword,
+        EquipmentSlot.offHand => switch (offHandKind) {
+          OffHandKind.frill => CustomAssets.iconTome,
+          OffHandKind.weapon => CustomAssets.iconSwordAlt,
+          _ => CustomAssets.iconShield,
+        },
+        EquipmentSlot.ranged => CustomAssets.iconBow,
+        EquipmentSlot.consumable => CustomAssets.iconFlask,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -606,8 +621,17 @@ class PaperDollSlot extends StatelessWidget {
     final border = item == null
         ? GameTheme.border
         : itemRarityBorder(item!.rarity);
-    final emptyIcon = CharacterEquipPanel.emptyIconFor(slot);
-    final short = CharacterEquipPanel.slotLabels[slot] ?? slot.name;
+    final ohKind = item?.offHandKind ??
+        (hero != null
+            ? ClassProficiency.preferredOffHandKind(hero!.spec)
+            : null);
+    final emptyIcon = CharacterEquipPanel.emptyIconFor(
+      slot,
+      offHandKind: slot == EquipmentSlot.offHand ? ohKind : null,
+    );
+    final short = slot == EquipmentSlot.offHand
+        ? CharacterEquipPanel.offHandLabel(ohKind)
+        : (CharacterEquipPanel.slotLabels[slot] ?? slot.name);
     final a11y = item == null
         ? 'Empty $short — browse bag'
         : '${item!.name} ${item!.effectiveItemLevel}';

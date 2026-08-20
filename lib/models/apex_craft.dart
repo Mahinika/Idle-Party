@@ -270,8 +270,8 @@ abstract final class ApexCraft {
     return null;
   }
 
-  /// Apex recipes skip off-hand when not every spec in the pair can use one
-  /// (Blood DK, Unholy vs Frost, BM vs Survival).
+  /// Apex recipes skip off-hand when specs in the pair disagree or all use 2H
+  /// (Blood DK, Arms vs Fury, BM/MM vs Survival, Ret 2H, …).
   static List<EquipmentSlot> craftSlotsFor(
     HeroClassId classId,
     SpecRoleTag role,
@@ -283,28 +283,37 @@ abstract final class ApexCraft {
     ];
   }
 
+  /// Shared off-hand kind for a class×role Apex recipe, or null if none.
+  ///
+  /// Uses each spec's Apex off-hand (DW / frill / shield) — not a class-wide
+  /// "can use shield" dump — so Enhancement gets a weapon, Mage/Priest a tome,
+  /// and Ret/Arms (2H melee) get no off-hand even though they *can* wear shields.
   static OffHandKind? apexOffHandKind(HeroClassId classId, SpecRoleTag role) {
     final specs = [
       for (final d in HeroSpecs.all)
         if (d.classId == classId && d.roleTag == role) d,
     ];
     if (specs.isEmpty) return null;
-    if (specs.every(
-      (s) => ClassProficiency.canEquipOffHandForSpec(s, OffHandKind.shield),
-    )) {
-      return OffHandKind.shield;
-    }
-    if (specs.every(
-      (s) => ClassProficiency.canEquipOffHandForSpec(s, OffHandKind.weapon),
-    )) {
-      return OffHandKind.weapon;
-    }
-    if (specs.every(
-      (s) => ClassProficiency.canEquipOffHandForSpec(s, OffHandKind.frill),
-    )) {
-      return OffHandKind.frill;
-    }
+    final preferred = [for (final s in specs) _apexPreferredOh(s)];
+    // Any spec that does not use an off-hand → no shared OH recipe.
+    if (preferred.any((k) => k == null)) return null;
+    final first = preferred.first;
+    if (preferred.every((k) => k == first)) return first;
     return null;
+  }
+
+  /// Per-spec Apex off-hand. Frill/DW always count; shields skip pure 2H melee
+  /// fantasy (Ret, Arms). Casters like Elemental keep shield + forced 1H MH.
+  static OffHandKind? _apexPreferredOh(HeroSpecDef spec) {
+    final pref = ClassProficiency.preferredOffHandKind(spec);
+    if (pref == null) return null;
+    if (pref == OffHandKind.frill || pref == OffHandKind.weapon) return pref;
+    if (pref == OffHandKind.shield &&
+        _apexMainHandRaw(spec).$2 == WeaponHanded.twoHand &&
+        spec.roleTag == SpecRoleTag.meleeDps) {
+      return null;
+    }
+    return pref;
   }
 
   static double slotCostMult(EquipmentSlot slot) => switch (slot) {
@@ -436,7 +445,12 @@ abstract final class ApexCraft {
     };
     final slotLabel = switch (slot) {
       EquipmentSlot.weapon => 'Edge',
-      EquipmentSlot.offHand => 'Ward',
+      EquipmentSlot.offHand => switch (apexOffHandKind(classId, role)) {
+        OffHandKind.shield => 'Bulwark',
+        OffHandKind.frill => 'Tome',
+        OffHandKind.weapon => 'Fang',
+        null => 'Ward',
+      },
       EquipmentSlot.head => 'Crown',
       EquipmentSlot.shoulder => 'Mantle',
       EquipmentSlot.chest => 'Cuirass',
@@ -483,9 +497,15 @@ abstract final class ApexCraft {
     if (slot.isArmorSlot || slot == EquipmentSlot.cloak) {
       armorType = preferredArmor ?? ArmorType.mail;
     } else if (slot == EquipmentSlot.weapon) {
-      final mh = spec != null
-          ? _apexMainHand(spec)
+      // If this recipe also crafts an off-hand, keep MH one-handed so the
+      // Apex set is actually wearable together (no 2H staff + tome).
+      var mh = spec != null
+          ? _apexMainHandRaw(spec)
           : _mainHandFor(affinity, role);
+      final ohKind = apexOffHandKind(classId, role);
+      if (ohKind != null && mh.$2 == WeaponHanded.twoHand && spec != null) {
+        mh = _apexOneHandFor(spec);
+      }
       weaponType = mh.$1;
       handed = mh.$2;
       pattern = switch (role) {
@@ -499,18 +519,15 @@ abstract final class ApexCraft {
         offHandKind = OffHandKind.shield;
       } else if (kind == OffHandKind.frill) {
         offHandKind = OffHandKind.frill;
-      } else {
+      } else if (kind == OffHandKind.weapon) {
         offHandKind = OffHandKind.weapon;
-        weaponType = spec != null &&
-                ClassProficiency.canEquipWeaponForSpec(
-                  spec,
-                  WeaponType.axe,
-                  WeaponHanded.oneHand,
-                  rangedSlot: false,
-                )
-            ? WeaponType.axe
+        weaponType = spec != null
+            ? _apexOneHandFor(spec).$1
             : WeaponType.sword;
         handed = WeaponHanded.oneHand;
+      } else {
+        // Caller should not request OH when kind is null.
+        offHandKind = OffHandKind.frill;
       }
     }
 
@@ -604,7 +621,8 @@ abstract final class ApexCraft {
 
   static int max(int a, int b) => a > b ? a : b;
 
-  static (WeaponType, WeaponHanded) _apexMainHand(HeroSpecDef spec) {
+  /// Fantasy main-hand before off-hand pairing adjustments.
+  static (WeaponType, WeaponHanded) _apexMainHandRaw(HeroSpecDef spec) {
     return switch (spec.id) {
       HeroSpecId.protection ||
       HeroSpecId.holyPaladin ||
@@ -638,6 +656,28 @@ abstract final class ApexCraft {
       HeroSpecId.demonology ||
       HeroSpecId.destruction => (WeaponType.staff, WeaponHanded.twoHand),
     };
+  }
+
+  /// Legal one-hand when an Apex off-hand is part of the same recipe.
+  static (WeaponType, WeaponHanded) _apexOneHandFor(HeroSpecDef spec) {
+    final candidates = <(WeaponType, WeaponHanded)>[
+      (WeaponType.mace, WeaponHanded.oneHand),
+      (WeaponType.sword, WeaponHanded.oneHand),
+      (WeaponType.axe, WeaponHanded.oneHand),
+      (WeaponType.dagger, WeaponHanded.oneHand),
+      (WeaponType.fist, WeaponHanded.oneHand),
+    ];
+    for (final c in candidates) {
+      if (ClassProficiency.canEquipWeaponForSpec(
+        spec,
+        c.$1,
+        c.$2,
+        rangedSlot: false,
+      )) {
+        return c;
+      }
+    }
+    return (WeaponType.dagger, WeaponHanded.oneHand);
   }
 
   static (WeaponType, WeaponHanded) _mainHandFor(

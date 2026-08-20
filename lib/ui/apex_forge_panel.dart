@@ -286,7 +286,11 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                 label: Text(_roleLabel(r), style: GameTheme.body(size: 12)),
                 selected: _apexRole == r,
                 onSelected: (_) {
-                  _setCraftGoal(_apexClass, r, _apexSlot);
+                  final slots = ApexCraft.craftSlotsFor(_apexClass, r);
+                  final slot = slots.contains(_apexSlot)
+                      ? _apexSlot
+                      : EquipmentSlot.weapon;
+                  _setCraftGoal(_apexClass, r, slot);
                 },
               ),
           ],
@@ -298,7 +302,10 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           children: [
             for (final s in ApexCraft.craftSlotsFor(_apexClass, _apexRole))
               ChoiceChip(
-                label: Text(_slotLabel(s), style: GameTheme.body(size: 12)),
+                label: Text(
+                  _slotLabel(s, _apexClass, _apexRole),
+                  style: GameTheme.body(size: 12),
+                ),
                 selected: _apexSlot == s,
                 onSelected: (_) => _setCraftGoal(_apexClass, _apexRole, s),
               ),
@@ -408,7 +415,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  '${h.roleLabel} · ${_slotLabel(slot)} R1',
+                  '${h.roleLabel} · ${_slotLabel(slot, classId, role)} R1',
                   style: GameTheme.body(
                     size: 14,
                     color: selected ? GameTheme.torchHot : GameTheme.parchment,
@@ -604,6 +611,15 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     SpecRoleTag.caster => 'Caster',
   };
 
-  static String _slotLabel(EquipmentSlot s) =>
-      CharacterEquipPanel.slotLabels[s] ?? s.name;
+  String _slotLabel(EquipmentSlot s, HeroClassId classId, SpecRoleTag role) {
+    if (s == EquipmentSlot.offHand) {
+      return switch (ApexCraft.apexOffHandKind(classId, role)) {
+        OffHandKind.shield => 'SHIELD',
+        OffHandKind.frill => 'TOME',
+        OffHandKind.weapon => 'OFFHAND',
+        null => 'OFFHAND',
+      };
+    }
+    return CharacterEquipPanel.slotLabels[s] ?? s.name;
+  }
 }
