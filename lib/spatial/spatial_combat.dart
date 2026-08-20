@@ -51,6 +51,15 @@ double _classCompanionAtkScale(HeroSpecId spec) {
   };
 }
 
+String _classCompanionLabel(HeroSpecId spec) {
+  return switch (spec) {
+    HeroSpecId.beastMastery => 'Hunter Pet',
+    HeroSpecId.demonology => 'Felguard',
+    HeroSpecId.unholy => 'Ghoul',
+    _ => 'Pet',
+  };
+}
+
 /// Resource return on a successful combat hit (melee direct or projectile).
 /// [skipRageTank] when the caller already applied tank/rage-from-dealt.
 void _grantCombatResource(
@@ -699,6 +708,7 @@ abstract final class SpatialCombat {
   static int get _floaterGear => colorblindMode ? 0xFF0072B2 : 0xFFB8E986;
   static int get _floaterHeal => colorblindMode ? 0xFFCC79A7 : 0xFF7AAB6E;
   static int get _floaterXp => colorblindMode ? 0xFF009E73 : 0xFF9AD0FF;
+  static int get _floaterPet => colorblindMode ? 0xFF56B4E9 : 0xFF7CE8FF;
 
   static const int _maxFloaters = 12;
   static const int _maxBursts = 14;
@@ -1659,12 +1669,8 @@ abstract final class SpatialCombat {
           spec != HeroSpecId.unholy) {
         continue;
       }
-      final label = switch (spec) {
-        HeroSpecId.beastMastery => 'Beast',
-        HeroSpecId.demonology => 'Demon',
-        _ => 'Ghoul',
-      };
-      final atkScale = _classCompanionAtkScale(spec!);
+      final label = _classCompanionLabel(spec!);
+      final atkScale = _classCompanionAtkScale(spec);
       pets.add(
         SpatialActor(
           id: 'classpet_${h.id}',
@@ -1955,12 +1961,8 @@ abstract final class SpatialCombat {
           break;
         }
       }
-      final label = switch (spec) {
-        HeroSpecId.beastMastery => 'Beast',
-        HeroSpecId.demonology => 'Demon',
-        _ => 'Ghoul',
-      };
-      final atkScale = _classCompanionAtkScale(spec!);
+      final label = _classCompanionLabel(spec!);
+      final atkScale = _classCompanionAtkScale(spec);
       pets.add(
         SpatialActor(
           id: 'classpet_${h.id}',
@@ -3773,7 +3775,7 @@ abstract final class SpatialCombat {
           x: target.x,
           y: target.y - 0.25,
           text: '$petHit',
-          argb: _floaterDamage,
+          argb: _floaterPet,
           life: 0.6,
         );
         if (wasAlive && target.hp <= 0) {

@@ -81,6 +81,44 @@ class GameLogic {
     ironWillRelic: 48,
   };
 
+  /// Per-tier payout shown on KEEP / CAMP (English).
+  static String relicPerTierPayout(String relicId) => switch (relicId) {
+    warBannerRelic => '+$relicAttackPerTier ATK',
+    ironWardRelic => '+$relicDefensePerTier DEF',
+    phoenixEmberRelic => '+$relicVitalityPerTier HP',
+    godHandFocusRelic => '+3 God Hand',
+    chamberLuckRelic => '+5% loot',
+    ironWillRelic => '+$relicMitigatePerTier mitigate',
+    _ => '',
+  };
+
+  static String relicOwnedPayout(GameState state, String relicId) =>
+      switch (relicId) {
+        warBannerRelic => '+${state.relicAttackBonus} ATK',
+        ironWardRelic => '+${state.relicDefenseBonus} DEF',
+        phoenixEmberRelic => '+${state.relicVitalityBonus} HP',
+        godHandFocusRelic => '+${state.relicGodHandDamageBonus} God Hand',
+        chamberLuckRelic => '+${state.relicLootFindPercent}% loot',
+        ironWillRelic => '+${state.relicMitigateFlat} mitigate',
+        _ => '',
+      };
+
+  /// One CAMP/KEEP line of owned relic bonuses, or null if none.
+  static String? relicKeepSummary(GameState state) {
+    final bits = <String>[
+      if (state.relicAttackBonus > 0) '+${state.relicAttackBonus} ATK',
+      if (state.relicDefenseBonus > 0) '+${state.relicDefenseBonus} DEF',
+      if (state.relicVitalityBonus > 0) '+${state.relicVitalityBonus} HP',
+      if (state.relicGodHandDamageBonus > 0)
+        '+${state.relicGodHandDamageBonus} God Hand',
+      if (state.relicLootFindPercent > 0)
+        '+${state.relicLootFindPercent}% loot',
+      if (state.relicMitigateFlat > 0) '+${state.relicMitigateFlat} mitigate',
+    ];
+    if (bits.isEmpty) return null;
+    return 'KEEP relics · ${bits.join(' · ')}';
+  }
+
   static const int starterPartySize = 3;
 
   static GameState createInitialState({

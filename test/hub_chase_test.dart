@@ -3,6 +3,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
+import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 8, 12);
@@ -88,6 +89,7 @@ void main() {
     expect(chase.kind, HubChaseKind.willRank);
     expect(chase.title, contains('Kindled Will'));
     expect(chase.progressLabel, contains('/25'));
+    expect(chase.detail, contains('+${WillRanks.essenceForThreshold(25)}e'));
   });
 
   test('Gauntlet milestone chase at AL10+', () {
@@ -111,6 +113,7 @@ void main() {
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.gauntletMilestone);
     expect(chase.title, contains('25'));
+    expect(chase.detail, contains('+${GauntletMilestones.essenceForFloor(25)}e'));
   });
 
   test('normal zone unlock does not beat pushing the current dungeon', () {

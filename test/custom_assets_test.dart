@@ -104,6 +104,10 @@ void main() {
       CustomAssets.petSparkPup,
     );
     expect(
+      CustomAssets.petForCombatActorId('classpet_h1', 'Felguard'),
+      CustomAssets.petCoinImp,
+    );
+    expect(
       CustomAssets.petForInstanceId('classpet_hero1'),
       isNot(CustomAssets.petEgg),
     );

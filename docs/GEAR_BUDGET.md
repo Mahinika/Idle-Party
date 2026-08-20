@@ -90,7 +90,11 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 - **Apex:** own tier + hard-lock vs normal drops. Stats use the same
   `lootShares` split as dungeon drops (no parallel Attack Power dump —
   `attackBonus` is flat sheet ATK, ~2× a Strength point).
-- **Merge:** identity (`setId`, affixes) from **primary** only; fuel adds budget/stats.
+- **Merge:** identity (`setId`, affixes) from **primary** only; fuel adds ~50%
+  stats. RESULT preview shows the SCORE jump. If both pieces have an on-item
+  effect, the stronger value wins.
+- **Charms (trinkets):** always roll an on-item effect (other slots still use
+  rarity chance). Charm names match the CHARM slot.
 
 ## Player-facing copy
 

@@ -131,6 +131,7 @@ class SanctuaryOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    final relicLine = GameLogic.relicKeepSummary(state);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -155,6 +156,13 @@ class SanctuaryOverlay extends StatelessWidget {
             '+${state.ascendBlessingDefenseBonus} DEF · '
             '+${state.ascendBlessingVitalityBonus} STA · '
             '+${state.ascendBlessingGoldPercent}% gold',
+            style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+          ),
+        ],
+        if (relicLine != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            relicLine,
             style: GameTheme.body(size: 13, color: GameTheme.mossLit),
           ),
         ],

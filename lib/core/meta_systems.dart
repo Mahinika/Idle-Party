@@ -19,14 +19,15 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.24';
+  static const String currentVersion = '1.12.25';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
-      version: '1.12.24',
+      version: '1.12.25',
       bullets: <String>[
-        'Drops cover every slot you can wear: rings/trinkets are not twice as common as a chest, and shields show up when someone in the party can use them.',
+        'Companions read as yours: bigger pet sprites, ally rings, cyan pet hits. MERGE RESULT shows the SCORE jump. Charms always drop with a real on-item effect.',
+        'KEEP relics spell the next tier (and CAMP lists what you already own). TODAY names the essence on Will, Gauntlet, and the week goal.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),

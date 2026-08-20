@@ -712,7 +712,7 @@ class EquipmentFactory {
         EquipmentSlot.cloak => 'Cloak',
         EquipmentSlot.neck => 'Amulet',
         EquipmentSlot.ring || EquipmentSlot.ring2 => 'Ring',
-        EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'Trinket',
+        EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'Charm',
         EquipmentSlot.consumable => 'Flask',
         EquipmentSlot.weapon => 'Weapon',
         EquipmentSlot.ranged => 'Ranged',
@@ -1063,7 +1063,10 @@ class EquipmentFactory {
       LootRarity.epic => 0.92,
       LootRarity.legendary => 1.0,
     };
-    if (random.nextDouble() < effectChance) {
+    final isTrinket =
+        resolvedSlot == EquipmentSlot.trinket ||
+        resolvedSlot == EquipmentSlot.trinket2;
+    if (isTrinket || random.nextDouble() < effectChance) {
       effectId = switch (classBias) {
         HeroRole.warrior =>
           random.nextDouble() < 0.55
@@ -1096,6 +1099,11 @@ class EquipmentFactory {
         GearEffectId.haste => 3 + rarity.index * 2 + secTier,
         GearEffectId.none => 0,
       };
+      if (isTrinket &&
+          effectValue > 0 &&
+          effectId != GearEffectId.pierce) {
+        effectValue += 2;
+      }
     }
 
     final pattern = resolvedSlot == EquipmentSlot.weapon

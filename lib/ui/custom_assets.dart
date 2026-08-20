@@ -103,7 +103,10 @@ abstract final class CustomAssets {
         key.contains('skel')) {
       return petSpiritMoth;
     }
-    if (key.contains('demon') || key.contains('imp') || key.contains('fel')) {
+    if (key.contains('demon') ||
+        key.contains('imp') ||
+        key.contains('fel') ||
+        key.contains('felguard')) {
       return petCoinImp;
     }
     if (key.contains('beast') ||

@@ -373,4 +373,20 @@ void main() {
     expect(weapons, lessThan((gear * 0.14).round()));
     expect(weapons, greaterThan((gear * 0.03).round()));
   });
+
+  test('charm drops always roll an on-item effect', () {
+    for (var seed = 0; seed < 40; seed++) {
+      GameLogic.random = Random(9000 + seed);
+      final item = EquipmentFactory.create(
+        slot: EquipmentSlot.trinket,
+        rarity: LootRarity.common,
+        battleNumber: 8,
+        bias: HeroRole.warrior,
+        dungeonId: 'sandy',
+      );
+      expect(item.slot, EquipmentSlot.trinket);
+      expect(item.effectId, isNot(GearEffectId.none));
+      expect(item.name.toLowerCase(), contains('charm'));
+    }
+  });
 }

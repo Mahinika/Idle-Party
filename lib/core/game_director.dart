@@ -1329,7 +1329,11 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.unlockRelic(_state, relicId));
     if (!before && _state.hasRelic(relicId)) {
       GameAudio.unlock();
-      showToast('Relic: $name', life: 2.4);
+      final pay = GameLogic.relicOwnedPayout(_state, relicId);
+      showToast(
+        pay.isEmpty ? 'Relic: $name' : 'Relic: $name · $pay',
+        life: 2.4,
+      );
     }
   }
 
@@ -1364,12 +1368,29 @@ class GameDirector extends ChangeNotifier {
   }
 
   void combineGear({required String primaryId, required String secondaryId}) {
+    final primary = GameLogic.findStashGear(_state, primaryId);
+    final secondary = GameLogic.findStashGear(_state, secondaryId);
+    final beforeGold = _state.gold;
+    final preview = primary != null && secondary != null
+        ? GameLogic.previewCombine(primary, secondary)
+        : null;
     _applyUpgrade(
       GameLogic.combineGear(
         _state,
         primaryId: primaryId,
         secondaryId: secondaryId,
       ),
+    );
+    if (preview == null || _state.gold >= beforeGold || primary == null) {
+      return;
+    }
+    GameAudio.loot();
+    final delta = preview.powerScore - primary.powerScore;
+    showToast(
+      delta > 0
+          ? 'Merged ${preview.name} · i${preview.effectiveItemLevel} · SCORE +$delta'
+          : 'Merged ${preview.name} · i${preview.effectiveItemLevel}',
+      life: 2.4,
     );
   }
 
@@ -2153,7 +2174,11 @@ class GameDirector extends ChangeNotifier {
     if (after > before) {
       final name = GameLogic.relicNames[relicId] ?? relicId;
       GameAudio.unlock();
-      showToast('$name · Tier $after', life: 2.2);
+      final pay = GameLogic.relicOwnedPayout(_state, relicId);
+      showToast(
+        pay.isEmpty ? '$name · Tier $after' : '$name · T$after · $pay',
+        life: 2.2,
+      );
     }
   }
 

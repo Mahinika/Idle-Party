@@ -594,8 +594,15 @@ class _InventoryDockState extends State<InventoryDock>
                 Text(
                   preview == null
                       ? 'RESULT  —'
-                      : 'RESULT  ${GameLogic.rarityNames[preview.rarity]}'
-                            '  i${preview.effectiveItemLevel}',
+                      : () {
+                          final delta = primary == null
+                              ? 0
+                              : preview.powerScore - primary.powerScore;
+                          final jump = delta > 0 ? '  +$delta' : '';
+                          return 'RESULT  ${GameLogic.rarityNames[preview.rarity]}'
+                              '  i${preview.effectiveItemLevel}'
+                              '  SCORE ${preview.powerScore}$jump';
+                        }(),
                   textAlign: TextAlign.center,
                   style: GameTheme.pixel(
                     size: GameTheme.hudPixel,
@@ -613,6 +620,15 @@ class _InventoryDockState extends State<InventoryDock>
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.body(size: 12, color: GameTheme.parchment),
                   ),
+                  if (preview.effectLabel.isNotEmpty)
+                    Text(
+                      preview.effectLabel,
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(
+                        size: 12,
+                        color: GameTheme.mossLit,
+                      ),
+                    ),
                 ],
               ],
             ),

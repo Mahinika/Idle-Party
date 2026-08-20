@@ -288,7 +288,7 @@ class HubChase {
       return HubChase(
         kind: HubChaseKind.weekGoal,
         title: 'Almost · ${week.name}',
-        detail: week.blurb,
+        detail: '${week.blurb} · +${week.essenceReward}e',
         progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
         urgency: HubChaseUrgency.almost,
       );
@@ -299,7 +299,7 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.weekGoal,
       title: week.name,
-      detail: week.blurb,
+      detail: '${week.blurb} · +${week.essenceReward}e',
       progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
     );
   }
@@ -366,12 +366,13 @@ class HubChase {
       if (threshold <= 0 || score >= threshold) continue;
       final need = threshold - score;
       final almost = need <= 3;
+      final pay = WillRanks.essenceForThreshold(threshold);
       return HubChase(
         kind: HubChaseKind.willRank,
         title: almost ? 'Almost ${entry.$2}' : 'Chase ${entry.$2}',
         detail: need == 1
-            ? '1 collection point to the next Will rank (+essence).'
-            : '$need collection points to the next Will rank (+essence).',
+            ? '1 collection point to ${entry.$2} (+${pay}e).'
+            : '$need collection points to ${entry.$2} (+${pay}e).',
         progressLabel: '$score/$threshold',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
@@ -393,14 +394,15 @@ class HubChase {
       }
       final need = floor - best;
       final almost = need <= 5 && best > 0;
+      final pay = GauntletMilestones.essenceForFloor(floor);
       return HubChase(
         kind: HubChaseKind.gauntletMilestone,
         title: almost
             ? 'Almost Gauntlet floor $floor'
             : 'Gauntlet floor $floor',
         detail: best <= 0
-            ? 'Enter Infinity Gauntlet and climb for a milestone reward.'
-            : 'Best F$best — $need floors to the next milestone.',
+            ? 'Enter Infinity Gauntlet and climb for +${pay}e.'
+            : 'Best F$best — $need floors to F$floor (+${pay}e).',
         progressLabel: 'F$best → F$floor',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );

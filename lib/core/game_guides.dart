@@ -110,8 +110,8 @@ abstract final class GameGuides {
           'Survival. Shields are Warrior / Paladin / Shaman. Paladin / DK / Shaman / '
           'Druid have no ranged slot (empty is fine). Drops skip slots nobody '
           'in the party can wear, so a tank still sees shields.\n'
-          '• Item level is the power size; green UPGRADE means Auto Equip would swap '
-          '(same score for both — no affinity/armor ghost points).\n'
+          '• CHARM (trinket) drops always come with an on-item effect '
+          '(lifesteal, crit, gold find, …).\n'
           '• GEAR: paper-doll per hero — UNEQUIP worn pieces, AUTO EQUIP from bag.\n'
           '• Tap an empty GEAR slot to open BAG filtered to that slot.\n'
           '• SELL only scraps items in BAG (unequip first).\n'
@@ -131,7 +131,7 @@ abstract final class GameGuides {
           '• In BAG: select an item → ADD TO MERGE.\n'
           '• Long-press any item for the full tip card.\n'
           '• Add a second item of the same slot; MERGE opens when ready.\n'
-          '• Check RESULT preview and gold cost, then MERGE.\n'
+          '• Check RESULT preview (rarity, iLvl, SCORE jump) and gold cost, then MERGE.\n'
           '• AUTO MERGE: repeatedly merges junk pairs of the same slot '
           '(skips BiS / clear upgrades) while you can afford the cost.\n'
           '• Combinator Charm in POWER → SHOP lowers MERGE gold (−3g per luck).\n'
@@ -197,6 +197,7 @@ abstract final class GameGuides {
           'You keep a small forever bonus '
           '(+3% gold / +1 ATK / +12 HP / +2% XP) and get 25+level essence back. '
           'The big level bonus is gone until you buy levels again.\n'
+          '• Owned KEEP relics (ATK / DEF / HP / loot) also list on CAMP.\n'
           '• Survives Ascend (meta progress).\n'
           '• Invest early — sanctuary compounds over many runs.',
     ),
@@ -240,7 +241,10 @@ abstract final class GameGuides {
           '• Merge two same-species pets of the same rarity into a higher rarity.\n'
           '• Favorite a species: +1 ATK and a stronger passive while that pet is ACTIVE.\n'
           '• Bond for +1 ATK every 5 ranks (max 25). Frames are looks only.\n'
-          '• Active pet follows in combat and chips damage.\n'
+          '• Active pet follows in combat and chips damage (cyan hits, ally ring).\n'
+          '• Beast Mastery / Demonology / Unholy also bring a class companion '
+          '(Hunter Pet / Felguard / Ghoul). Enhancement wolves and Frost Water '
+          'Elemental are timed summons.\n'
           '• Pets are meta — they survive Ascend.',
     ),
     GuideTopic(

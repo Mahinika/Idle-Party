@@ -1214,9 +1214,15 @@ abstract final class GearService {
     final pattern = secondary.rarity.index > primary.rarity.index
         ? secondary.pattern
         : primary.pattern;
-    final effectId = primary.effectId != GearEffectId.none
-        ? primary.effectId
-        : secondary.effectId;
+    final keepSecondaryEffect =
+        primary.effectId != GearEffectId.none &&
+        secondary.effectId != GearEffectId.none &&
+        secondary.effectValue > primary.effectValue;
+    final effectId = keepSecondaryEffect
+        ? secondary.effectId
+        : (primary.effectId != GearEffectId.none
+              ? primary.effectId
+              : secondary.effectId);
     final effectValue = effectId == GearEffectId.none
         ? 0
         : max(primary.effectValue, secondary.effectValue);

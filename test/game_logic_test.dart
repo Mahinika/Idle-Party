@@ -492,6 +492,8 @@ void main() {
     expect(unlocked.hasRelic(GameLogic.warBannerRelic), isTrue);
     expect(unlocked.essence, 0);
     expect(unlocked.totalAttackBonus, 4);
+    expect(GameLogic.relicKeepSummary(unlocked), contains('+4 ATK'));
+    expect(GameLogic.relicPerTierPayout(GameLogic.warBannerRelic), '+4 ATK');
   });
 
   test('ascension is locked until required bosses are cleared', () {

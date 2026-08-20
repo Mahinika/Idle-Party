@@ -439,6 +439,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
             : '+${GameLogic.relicMitigatePerTier} flat mitigate per tier.',
       _ => GameLogic.relicDescriptions[relicId] ?? '',
     };
+    final nextPayout = GameLogic.relicPerTierPayout(relicId);
     final nextTier = tier + 1;
     final tierCost = GameLogic.relicTierUpgradeCost(nextTier);
     return Container(
@@ -489,7 +490,9 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           ] else if (tier < 3) ...[
             const SizedBox(height: 6),
             KenneyButton(
-              label: 'UPGRADE TIER  T$nextTier  ${tierCost}e',
+              label: nextPayout.isEmpty
+                  ? 'UPGRADE TIER  T$nextTier  ${tierCost}e'
+                  : 'T$nextTier · $nextPayout · ${tierCost}e',
               style: KenneyButtonStyle.grey,
               onPressed: state.essence >= tierCost
                   ? () => director.upgradeRelicTier(relicId)

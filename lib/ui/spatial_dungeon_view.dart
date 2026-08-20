@@ -1820,18 +1820,34 @@ class _TileRoomPainter extends CustomPainter {
     for (final pet in world.pets) {
       final flash = pet.attackFlash;
       final c = center(pet.x, pet.y);
-      final petPath =
-          pet.id.startsWith('classpet_') || pet.id.startsWith('temppet_')
+      final isClass = pet.id.startsWith('classpet_');
+      final isTemp = pet.id.startsWith('temppet_');
+      final petPath = isClass || isTemp
           ? CustomAssets.petForCombatActorId(pet.id, pet.name)
           : CustomAssets.petForInstanceId(
               pet.id.startsWith('pet_') ? pet.id.substring(4) : pet.id,
             );
       final petImg = petsByPath[petPath];
-      drawSprite(petImg ?? coin, c, 0.52 * (1 + flash * 0.22));
+      final ringArgb = isTemp
+          ? 0xAA90D8FF
+          : isClass
+          ? 0xAA50E0A8
+          : 0xAAFFE08A;
+      canvas.drawCircle(
+        c,
+        tile * 0.4,
+        Paint()
+          ..color = Color(ringArgb)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(1.4, tile * 0.055),
+      );
+      final scale =
+          (isClass ? 0.78 : isTemp ? 0.72 : 0.68) * (1 + flash * 0.22);
+      drawSprite(petImg ?? coin, c, scale);
       if (flash > 0.02) {
         canvas.drawCircle(
           c,
-          tile * 0.28 * flash,
+          tile * 0.32 * flash,
           Paint()..color = const Color(0x66FFE8A0),
         );
       }
