@@ -53,6 +53,34 @@ abstract final class PrestigeShopCatalog {
       minAl: 5,
     ),
     PrestigeShopItem(
+      id: 'loadout_slot',
+      name: 'Loadout Folio',
+      description: '+1 gear loadout slot (max 5 total).',
+      cost: 45,
+      minAl: 4,
+    ),
+    PrestigeShopItem(
+      id: 'flask_discount',
+      name: 'Apothecary Writ',
+      description: '−5% market flask & bandage gold (max 25%).',
+      cost: 40,
+      minAl: 4,
+    ),
+    PrestigeShopItem(
+      id: 'filter_span',
+      name: 'Junk Magnifier',
+      description: '+8 auto-sell/scrap iLvl ceiling in Settings (max +40).',
+      cost: 45,
+      minAl: 6,
+    ),
+    PrestigeShopItem(
+      id: 'offline_ledger',
+      name: 'Away Ledger',
+      description: '+1 Welcome Back highlight row (max 6).',
+      cost: 35,
+      minAl: 6,
+    ),
+    PrestigeShopItem(
       id: 'legacy_spark',
       name: 'Legacy Spark',
       description: '+1 Legacy Point (tiny permanent ATK).',
@@ -189,6 +217,10 @@ class MetaDepthState {
     this.godHandStyle = 0,
     this.dailyEssenceBonusLevel = 0,
     this.gauntletGoldBonusLevel = 0,
+    this.loadoutBonusSlots = 0,
+    this.marketDiscountLevel = 0,
+    this.filterSpanLevel = 0,
+    this.offlineHighlightBonus = 0,
     this.seasonKey = '',
     this.claimedSeasonRewards = const <String>[],
     this.claimedWeekGoals = const <String>[],
@@ -298,6 +330,18 @@ class MetaDepthState {
   /// Prestige: extra Gauntlet gold (+4% per level).
   final int gauntletGoldBonusLevel;
 
+  /// Prestige: extra LOADOUTS slots beyond the base 3 (max +2 → 5).
+  final int loadoutBonusSlots;
+
+  /// Prestige: market flask/bandage gold discount (−5% per level, max 5).
+  final int marketDiscountLevel;
+
+  /// Prestige: raise Settings auto-sell/scrap iLvl ceiling (+8 per level).
+  final int filterSpanLevel;
+
+  /// Prestige: extra Welcome Back highlight rows (+1 per level, max 3).
+  final int offlineHighlightBonus;
+
   /// Local season key (ISO week + month); shown on weekly UI.
   final String seasonKey;
 
@@ -404,6 +448,10 @@ class MetaDepthState {
     int? godHandStyle,
     int? dailyEssenceBonusLevel,
     int? gauntletGoldBonusLevel,
+    int? loadoutBonusSlots,
+    int? marketDiscountLevel,
+    int? filterSpanLevel,
+    int? offlineHighlightBonus,
     String? seasonKey,
     List<String>? claimedSeasonRewards,
     List<String>? claimedWeekGoals,
@@ -483,6 +531,11 @@ class MetaDepthState {
           dailyEssenceBonusLevel ?? this.dailyEssenceBonusLevel,
       gauntletGoldBonusLevel:
           gauntletGoldBonusLevel ?? this.gauntletGoldBonusLevel,
+      loadoutBonusSlots: loadoutBonusSlots ?? this.loadoutBonusSlots,
+      marketDiscountLevel: marketDiscountLevel ?? this.marketDiscountLevel,
+      filterSpanLevel: filterSpanLevel ?? this.filterSpanLevel,
+      offlineHighlightBonus:
+          offlineHighlightBonus ?? this.offlineHighlightBonus,
       seasonKey: seasonKey ?? this.seasonKey,
       claimedSeasonRewards: claimedSeasonRewards ?? this.claimedSeasonRewards,
       claimedWeekGoals: claimedWeekGoals ?? this.claimedWeekGoals,
@@ -558,6 +611,10 @@ class MetaDepthState {
     'godHandStyle': godHandStyle,
     'dailyEssenceBonusLevel': dailyEssenceBonusLevel,
     'gauntletGoldBonusLevel': gauntletGoldBonusLevel,
+    'loadoutBonusSlots': loadoutBonusSlots,
+    'marketDiscountLevel': marketDiscountLevel,
+    'filterSpanLevel': filterSpanLevel,
+    'offlineHighlightBonus': offlineHighlightBonus,
     'seasonKey': seasonKey,
     'claimedSeasonRewards': claimedSeasonRewards,
     'claimedWeekGoals': claimedWeekGoals,
@@ -662,6 +719,14 @@ class MetaDepthState {
           (json['dailyEssenceBonusLevel'] as num?)?.toInt() ?? 0,
       gauntletGoldBonusLevel:
           (json['gauntletGoldBonusLevel'] as num?)?.toInt() ?? 0,
+      loadoutBonusSlots: ((json['loadoutBonusSlots'] as num?)?.toInt() ?? 0)
+          .clamp(0, 2),
+      marketDiscountLevel: ((json['marketDiscountLevel'] as num?)?.toInt() ?? 0)
+          .clamp(0, 5),
+      filterSpanLevel: ((json['filterSpanLevel'] as num?)?.toInt() ?? 0)
+          .clamp(0, 5),
+      offlineHighlightBonus:
+          ((json['offlineHighlightBonus'] as num?)?.toInt() ?? 0).clamp(0, 3),
       seasonKey: (json['seasonKey'] as String?) ?? '',
       claimedSeasonRewards:
           (json['claimedSeasonRewards'] as List<dynamic>?)?.cast<String>() ??

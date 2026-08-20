@@ -375,7 +375,8 @@ abstract final class LootPipeline {
   static int maxAutoSellIlvlCap(GameState state) {
     final fromDungeon = state.highestDungeonCleared * 22;
     final fromAl = state.ascensionLevel * 4;
-    return (60 + fromDungeon + fromAl).clamp(60, 200);
+    final fromShop = state.metaDepth.filterSpanLevel.clamp(0, 5) * 8;
+    return (60 + fromDungeon + fromAl + fromShop).clamp(60, 240);
   }
 
   /// Scale a soulbound piece so Ascend AL keeps it relevant vs new drops.

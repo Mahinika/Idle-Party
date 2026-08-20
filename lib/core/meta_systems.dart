@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.21';
+  static const String currentVersion = '1.12.22';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.22',
+      bullets: <String>[
+        'POWER → SHOP: Loadout Folio, Apothecary Writ, Junk Magnifier, and Away Ledger — permanent QoL that survives Ascend (extra loadouts, cheaper flasks, higher auto-sell/scrap caps, more Welcome Back rows).',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.21',
       bullets: <String>[

@@ -145,8 +145,23 @@ abstract final class MarketService {
     return max(8, (maxHp * 0.30).round());
   }
 
-  static int marketFlaskCost(GameState state) =>
-      40 + (state.highestFloorCleared * 3) + (state.ascensionLevel * 15);
+  static int marketFlaskCost(GameState state) {
+    final raw =
+        40 + (state.highestFloorCleared * 3) + (state.ascensionLevel * 15);
+    return _applyMarketDiscount(state, raw);
+  }
+
+  static int marketBandageCost(GameState state) {
+    final raw =
+        25 + (state.highestFloorCleared * 2) + (state.ascensionLevel * 10);
+    return _applyMarketDiscount(state, raw);
+  }
+
+  static int _applyMarketDiscount(GameState state, int raw) {
+    final lv = state.metaDepth.marketDiscountLevel.clamp(0, 5);
+    final mul = 100 - lv * 5;
+    return max(1, raw * mul ~/ 100);
+  }
 
   static EquipmentItem createMarketFlask({int salt = 0}) {
     final id = 'flask_${DateTime.now().microsecondsSinceEpoch}_$salt';
@@ -192,9 +207,6 @@ abstract final class MarketService {
     }
     return next;
   }
-
-  static int marketBandageCost(GameState state) =>
-      25 + (state.highestFloorCleared * 2) + (state.ascensionLevel * 10);
 
   static EquipmentItem createMarketBandage({int salt = 0}) {
     final id = 'bandage_${DateTime.now().microsecondsSinceEpoch}_$salt';

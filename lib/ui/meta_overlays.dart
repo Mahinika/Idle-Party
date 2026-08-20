@@ -656,17 +656,22 @@ class LoadoutsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    final slotCount = GameLogic.maxLoadoutsFor(state);
+    final slotIds = [
+      for (var i = 1; i <= slotCount; i++) '$i',
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           'Save equipped gear into a preset, then swap instantly. '
-          'Empty slots: SAVE first — APPLY stays off until something is saved.',
+          'Empty slots: SAVE first — APPLY stays off until something is saved.'
+          '${slotCount > 3 ? ' Extra slots from POWER → SHOP.' : ''}',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 12),
-        for (final slotId in const ['1', '2', '3']) ...[
+        for (final slotId in slotIds) ...[
           _LoadoutSlotRow(
             slotId: slotId,
             loadout: _findLoadout(state, slotId),
@@ -1827,6 +1832,10 @@ class PrestigeShopOverlay extends StatelessWidget {
                 'torch_keep' => state.metaDepth.torchKeepLevel,
                 'gh_cdr' => state.metaDepth.godHandCdLevel,
                 'roster_cap' => state.metaDepth.petRosterCapBonus ~/ 2,
+                'loadout_slot' => state.metaDepth.loadoutBonusSlots,
+                'flask_discount' => state.metaDepth.marketDiscountLevel,
+                'filter_span' => state.metaDepth.filterSpanLevel,
+                'offline_ledger' => state.metaDepth.offlineHighlightBonus,
                 'legacy_spark' => state.metaDepth.legacyPoints,
                 'daily_essence' => state.metaDepth.dailyEssenceBonusLevel,
                 'gauntlet_gold' => state.metaDepth.gauntletGoldBonusLevel,
@@ -1838,6 +1847,10 @@ class PrestigeShopOverlay extends StatelessWidget {
                 'torch_keep' => state.metaDepth.torchKeepLevel >= 10,
                 'gh_cdr' => state.metaDepth.godHandCdLevel >= 8,
                 'roster_cap' => state.metaDepth.petRosterCapBonus >= 10,
+                'loadout_slot' => state.metaDepth.loadoutBonusSlots >= 2,
+                'flask_discount' => state.metaDepth.marketDiscountLevel >= 5,
+                'filter_span' => state.metaDepth.filterSpanLevel >= 5,
+                'offline_ledger' => state.metaDepth.offlineHighlightBonus >= 3,
                 'legacy_spark' => state.metaDepth.legacyPoints >= 20,
                 'daily_essence' => state.metaDepth.dailyEssenceBonusLevel >= 5,
                 'gauntlet_gold' => state.metaDepth.gauntletGoldBonusLevel >= 5,
@@ -1932,6 +1945,16 @@ class PrestigeShopOverlay extends StatelessWidget {
         'CD ${state.godHandCooldownSeconds.toStringAsFixed(2)}s · '
             'Lv${md.godHandCdLevel}/8 · same as Forge KEEP',
       'roster_cap' => 'Roster +${md.petRosterCapBonus} (max +10)',
+      'loadout_slot' =>
+        'Loadouts ${GameLogic.maxLoadoutsFor(state)} '
+            '(base 3 · shop +${md.loadoutBonusSlots}/2)',
+      'flask_discount' =>
+        'Market −${md.marketDiscountLevel * 5}% gold (max 25%)',
+      'filter_span' =>
+        'Auto-sell/scrap max iLvl ${GameLogic.maxAutoSellIlvlCap(state)} '
+            '(+${md.filterSpanLevel * 8} from shop)',
+      'offline_ledger' =>
+        'Welcome Back rows ${3 + md.offlineHighlightBonus} (max 6)',
       'legacy_spark' => 'Legacy ATK +${md.legacyPoints} (max 20)',
       'daily_essence' =>
         'Vault claim +${GameLogic.dailyVaultClaimEssence(state)}e '

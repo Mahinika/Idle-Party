@@ -246,8 +246,9 @@ abstract final class GameGuides {
       body:
           'POWER → SHOP (AL-gated).\n\n'
           '• Spend essence on stash slots, cheaper MERGE gold, pet roster, '
-          'God Hand CD (same levels as Forge → KEEP), Dawn Tithe '
-          '(vault + Daily Run), and more.\n'
+          'extra loadout slots, cheaper market flasks, higher auto-sell/scrap '
+          'ceilings, more Welcome Back rows, God Hand CD (same as Forge → KEEP), '
+          'Dawn Tithe (vault + Daily Run), and more.\n'
           '• Purchases survive Ascend.\n'
           '• Unlock higher offerings as Ascension Level rises.',
     ),

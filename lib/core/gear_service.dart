@@ -1692,11 +1692,19 @@ abstract final class GearService {
     return next.copyWith(gold: next.gold + value, lastUpdated: DateTime.now());
   }
 
-  static const int maxLoadouts = 3;
+  static const int baseMaxLoadouts = 3;
+  static const int maxLoadoutBonus = 2;
+
+  /// Base slots without prestige ([baseMaxLoadouts]). Prefer [maxLoadoutsFor].
+  static const int maxLoadouts = baseMaxLoadouts;
+
+  static int maxLoadoutsFor(GameState state) =>
+      (baseMaxLoadouts + state.metaDepth.loadoutBonusSlots)
+          .clamp(baseMaxLoadouts, baseMaxLoadouts + maxLoadoutBonus);
 
   /// Captures each hero's currently-equipped gear as a named preset.
   /// Replaces an existing loadout with the same [id], otherwise appends
-  /// (capped at [maxLoadouts] — oldest is dropped to make room).
+  /// (capped at [maxLoadoutsFor] — oldest is dropped to make room).
   static GameState saveLoadout(
     GameState state, {
     required String id,
@@ -1718,10 +1726,11 @@ abstract final class GearService {
     );
     final next = List<GearLoadout>.from(state.loadouts);
     final existingIndex = next.indexWhere((l) => l.id == id);
+    final cap = maxLoadoutsFor(state);
     if (existingIndex >= 0) {
       next[existingIndex] = loadout;
     } else {
-      if (next.length >= maxLoadouts) {
+      if (next.length >= cap) {
         next.removeAt(0);
       }
       next.add(loadout);

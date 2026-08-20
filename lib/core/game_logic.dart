@@ -1472,6 +1472,10 @@ class GameLogic {
       'torch_keep' => md.torchKeepLevel >= 10,
       'gh_cdr' => md.godHandCdLevel >= 8,
       'roster_cap' => md.petRosterCapBonus >= 10,
+      'loadout_slot' => md.loadoutBonusSlots >= 2,
+      'flask_discount' => md.marketDiscountLevel >= 5,
+      'filter_span' => md.filterSpanLevel >= 5,
+      'offline_ledger' => md.offlineHighlightBonus >= 3,
       'legacy_spark' => md.legacyPoints >= 20,
       'daily_essence' => md.dailyEssenceBonusLevel >= 5,
       'gauntlet_gold' => md.gauntletGoldBonusLevel >= 5,
@@ -1492,6 +1496,18 @@ class GameLogic {
       'gh_cdr' => md.copyWith(godHandCdLevel: min(8, md.godHandCdLevel + 1)),
       'roster_cap' => md.copyWith(
         petRosterCapBonus: min(10, md.petRosterCapBonus + 2),
+      ),
+      'loadout_slot' => md.copyWith(
+        loadoutBonusSlots: min(2, md.loadoutBonusSlots + 1),
+      ),
+      'flask_discount' => md.copyWith(
+        marketDiscountLevel: min(5, md.marketDiscountLevel + 1),
+      ),
+      'filter_span' => md.copyWith(
+        filterSpanLevel: min(5, md.filterSpanLevel + 1),
+      ),
+      'offline_ledger' => md.copyWith(
+        offlineHighlightBonus: min(3, md.offlineHighlightBonus + 1),
       ),
       'legacy_spark' => md.copyWith(legacyPoints: min(20, md.legacyPoints + 1)),
       'daily_essence' => md.copyWith(
@@ -2710,7 +2726,9 @@ class GameLogic {
       GearService.rarityFilterLabel(rarityIndex);
   static GameState sellGearForGold(GameState state, String itemId) =>
       GearService.sellGearForGold(state, itemId);
-  static const int maxLoadouts = GearService.maxLoadouts;
+  static const int maxLoadouts = GearService.baseMaxLoadouts;
+  static int maxLoadoutsFor(GameState state) =>
+      GearService.maxLoadoutsFor(state);
   static GameState saveLoadout(
     GameState state, {
     required String id,
@@ -3102,7 +3120,7 @@ class OfflineProgressResult {
     return 'Welcome back.';
   }
 
-  /// Top reward rows for the welcome dialog — bosses / levels first, max 3.
+  /// Top reward rows for the welcome dialog — bosses / levels first.
   List<(String, String)> get highlightRows {
     final ranked = <(int priority, String label, String value)>[];
     if (bossDelta > 0) {
@@ -3127,7 +3145,9 @@ class OfflineProgressResult {
       ranked.add((6, 'Gold earned', '+${goldGained}g'));
     }
     ranked.sort((a, b) => a.$1.compareTo(b.$1));
-    return [for (final row in ranked.take(maxHighlightRows)) (row.$2, row.$3)];
+    final take = maxHighlightRows +
+        state.metaDepth.offlineHighlightBonus.clamp(0, 3);
+    return [for (final row in ranked.take(take)) (row.$2, row.$3)];
   }
 
   static String formatOfflineDuration(int seconds) {

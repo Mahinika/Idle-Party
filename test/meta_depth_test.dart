@@ -369,4 +369,38 @@ void main() {
       greaterThan(GameLogic.gauntletGoldMul(1)),
     );
   });
+
+  test('new prestige QoL shop items apply and round-trip', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 20))
+        .copyWith(essence: 2000, ascensionLevel: 10);
+    final flaskBefore = GameLogic.marketFlaskCost(state);
+    final capBefore = GameLogic.maxAutoSellIlvlCap(state);
+    expect(GameLogic.maxLoadoutsFor(state), 3);
+
+    state = GameLogic.buyPrestigeShopItem(state, 'loadout_slot');
+    expect(state.metaDepth.loadoutBonusSlots, 1);
+    expect(GameLogic.maxLoadoutsFor(state), 4);
+
+    state = GameLogic.buyPrestigeShopItem(state, 'flask_discount');
+    expect(state.metaDepth.marketDiscountLevel, 1);
+    expect(GameLogic.marketFlaskCost(state), lessThan(flaskBefore));
+
+    state = GameLogic.buyPrestigeShopItem(state, 'filter_span');
+    expect(state.metaDepth.filterSpanLevel, 1);
+    expect(GameLogic.maxAutoSellIlvlCap(state), capBefore + 8);
+
+    state = GameLogic.buyPrestigeShopItem(state, 'offline_ledger');
+    expect(state.metaDepth.offlineHighlightBonus, 1);
+
+    final json = state.metaDepth.toJson();
+    json.remove('loadoutBonusSlots');
+    final legacy = MetaDepthState.fromJson(json);
+    expect(legacy.loadoutBonusSlots, 0);
+
+    final round = MetaDepthState.fromJson(state.metaDepth.toJson());
+    expect(round.loadoutBonusSlots, 1);
+    expect(round.marketDiscountLevel, 1);
+    expect(round.filterSpanLevel, 1);
+    expect(round.offlineHighlightBonus, 1);
+  });
 }
