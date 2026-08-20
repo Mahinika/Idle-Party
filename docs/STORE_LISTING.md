@@ -50,7 +50,7 @@ Idle Party is a single-player idle RPG for phones: grow a fantasy party, clear p
 WHAT YOU DO
 • Build a party of classic kits (tanks, healers, DPS) — 10 classes and 31 specs.
 • Enter the World Path: 15 zones from Sandy Caverns through Mothveil Hollow.
-• Fight on multi-chamber floors with loot, room chests, and bosses.
+• Fight on multi-chamber floors with loot, room chests, and bosses. Companions follow and hit.
 • Leave the dungeon when you want — AFK catch-up keeps the party moving.
 • Hub TODAY shows one clear chase (READY / ALMOST) so you always know the next beat.
 
@@ -58,7 +58,7 @@ LONG-TERM GOALS
 • KEYSTONE: set a key, beat the boss under par, climb vault rewards.
 • Ascend: reset the run, keep essence / Apex / pets / meta upgrades, unlock more kits.
 • Infinity Gauntlet (Ascend Level 10+): endless Crystal Spire climb.
-• Apex forge: craft forever gear that survives Ascend.
+• Apex forge: craft forever gear that survives Ascend. MERGE two bag pieces into one stronger item.
 
 FAIR PLAY
 • Single-player — no idle-party account required.
@@ -106,6 +106,7 @@ Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshot
 
 ## Play Console status (2026-08-20)
 
-- Short + full description + six phone screenshots in `tool/store_listing/out/`.
-- Honesty copy last submitted **2026-08-20**. Refresh listing when shipping **1.12.25** (closed Alpha AAB + same en-US copy).
+- Short description unchanged. Full description submitted with companions + MERGE (this file).
+- Six phone screenshots from earlier the same day (`tool/store_listing/out/`) — not recaptured for 1.12.25.
+- Closed Alpha AAB **55 (1.12.25)** + listing copy submitted 2026-08-20 (“Ändringarna granskas”). Testers keep **1.12.21** until Google publishes.
 - Feature graphic + icon still from owned `app_icon`.

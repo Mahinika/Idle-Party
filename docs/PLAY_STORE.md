@@ -8,14 +8,14 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ✅ Alpha | **1.12.21 (51)** submitted 2026-08-20 (Closed testing – Alpha; pre-checks → Google review). Testers keep **1.12.12 (42)** until review publishes. Production still ❌. |
+| Closed testing | ⏳ review | **1.12.25 (55)** submitted 2026-08-20 (Closed testing – Alpha; pre-checks then Google review). Testers keep **1.12.21 (51)** until review publishes. Production still ❌. |
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ✅ | Console saved 2026-08-16: branch blob `docs/PRIVACY.md` on `cursor/keystone-habit-b46b` (Play Games + delete steps). Switch to `main` after merge. |
 | Data safety form | ✅ | Published 2026-08-16 with listing + privacy URL. Optional Play Games: User IDs, Other actions (gameplay), Files and docs (Saved Games). Collected only (not shared); encrypted in transit; OAuth; delete URLs = branch PRIVACY.md. No ads / no Idle Party analytics. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed 1.12.9 build. |
 | IARC / content rating | ✅ | Completed 2026-08-08 (mild fantasy combat). Console shows PEGI 12 / ESRB Everyone 10+ / IARC 7+ (and regional equivalents). No chat / gambling / ads. |
-| Store listing copy (EN) | ⏳ review | Honesty copy (no forever free/ads claims) from `docs/STORE_LISTING.md` — **submitted 2026-08-20** with screenshots (“Ändringarna granskas”). |
+| Store listing copy (EN) | ⏳ review | Honesty copy from `docs/STORE_LISTING.md` (companions + MERGE) — **submitted 2026-08-20** with Alpha **55**. Screenshots unchanged (same day as 1.12.21 pack). |
 | Screenshots + feature graphic | ⏳ review | Six phone shots (showcase AL3 + top captions, 1080×1920) uploaded **2026-08-20** via `tool/store_listing/` + CORS serve; under review with listing copy. Feature graphic + icon unchanged (owned `app_icon`). Tablet shots still older (phone-first). |
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
@@ -39,7 +39,7 @@ over Play ops unless the owner asks about Play.
 ## Play Console — closed / internal (ops)
 
 - [x] App exists in Play Console (`com.idleparty.app`) with listing + closed Alpha.
-- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.21 (51)** submitted 2026-08-20 (closed Alpha). Testers keep **1.12.12 (42)** until review publishes.
+- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.25 (55)** submitted 2026-08-20 (closed Alpha). Testers keep **1.12.21 (51)** until review publishes.
 - [ ] Enable Play App Signing if prompted on new uploads.
 - [ ] Add / retain closed testers toward **12 × 14 days** for production access.
 - [ ] Smoke-test install → hub → short dungeon → leave → relaunch (save persists).
@@ -69,7 +69,7 @@ Suggested Description (en-US):
 ## Content rating / store listing notes
 
 - [x] Content rating questionnaire (IARC) completed 2026-08-08 — mild fantasy combat; PEGI 12 / ESRB Everyone 10+ / IARC 7+ (no chat, gambling, or ads).
-- [x] Short + full description (en-US) refreshed 2026-08-20 from `docs/STORE_LISTING.md` — submitted for review with screenshots (“Ändringarna granskas”).
+- [x] Short + full description (en-US) refreshed 2026-08-20 from `docs/STORE_LISTING.md` (companions + MERGE) — submitted for review with Alpha **55**.
 - [x] Phone screenshots re-shot + uploaded 2026-08-20 (`tool/store_listing/out/`, top captions); feature graphic + icon still from owned `app_icon` (icon refresh 2026-08-16).
 - [ ] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*`.
 
