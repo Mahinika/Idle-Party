@@ -763,6 +763,11 @@ abstract final class GearService {
     required bool slotEmpty,
     EquipmentItem? worn,
   }) {
+    // Apex is soul-kept: never treat a normal bag piece as an Auto Equip /
+    // badge upgrade over worn Apex (equipFromStash also refuses the swap).
+    if (worn != null && worn.isApex && !item.isApex) {
+      return false;
+    }
     final delta = newScore - curScore;
     if (delta <= 0) return false;
     if (slotEmpty) {
