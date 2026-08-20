@@ -721,16 +721,23 @@ class _InventoryDockState extends State<InventoryDock>
               ),
           ],
         ),
-        if (!alert.isQuiet)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              alert.reason,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-            ),
-          ),
+        Builder(
+          builder: (context) {
+            final reason = widget.tab == PartyTab.gear
+                ? MenuAlerts.gearEquipHint(state, equipHeroIndex)
+                : (alert.isQuiet ? '' : alert.reason);
+            if (reason.isEmpty) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                reason,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+              ),
+            );
+          },
+        ),
         Expanded(
           child: TabBarView(
             controller: _tabs.controller,

@@ -540,6 +540,7 @@ class SpatialWorld {
     this.pendingFeelPickups = 0,
     this.pendingFeelStairs = 0,
     this.godHandRadius = 1.8,
+    this.bagFullFloaterCooldown = 0,
     List<SpatialFloater>? floaters,
     List<SpatialBurst>? bursts,
     List<SpatialGroundFx>? groundFx,
@@ -611,6 +612,9 @@ class SpatialWorld {
 
   /// Cached God Hand radius for guide ring paint (set on cast).
   double godHandRadius;
+
+  /// Suppress stacked "BAG FULL +Ne" floaters while salvage spam is high.
+  double bagFullFloaterCooldown;
 
   int get cols => map.cols;
   int get rows => map.rows;
@@ -2628,6 +2632,7 @@ abstract final class SpatialCombat {
     final rng = GameLogic.random;
 
     world.godHandCooldown = math.max(0, world.godHandCooldown - dt);
+    world.bagFullFloaterCooldown = math.max(0, world.bagFullFloaterCooldown - dt);
     world.pulseTimer = math.max(0, world.pulseTimer - dt);
     world.guideTimer = math.max(0, world.guideTimer - dt);
     _updateChambers(world, reducedVfx: state.reducedVfx);
@@ -3498,7 +3503,7 @@ abstract final class SpatialCombat {
             resolved.essenceGained > 0;
         final goldPickup = resolved?.outcome == LootOutcome.gold;
         final label = salvaged
-            ? 'BAG FULL +${resolved.essenceGained}e'
+            ? 'FULL +${resolved.essenceGained}e'
             : (loot.drop.isEquipment
                   ? loot.drop.name
                   : (goldPickup || loot.kind == GroundLootKind.gold
@@ -3516,21 +3521,28 @@ abstract final class SpatialCombat {
             radius: loot.drop.isEquipment ? 0.42 : 0.28,
           );
         }
-        _spawnFloater(
-          world,
-          x: loot.x,
-          y: loot.y - 0.2,
-          text: _shortFloaterLabel(label),
-          argb: salvaged
-              ? _floaterEssence
-              : (loot.drop.isEquipment
-                    ? _floaterGear
-                    : (goldPickup || loot.kind == GroundLootKind.gold
-                          ? _floaterGold
-                          : _floaterEssence)),
-          life: salvaged || loot.drop.isEquipment ? 1.4 : 1.15,
-          priority: salvaged || loot.drop.isEquipment ? 2 : 1,
-        );
+        final showFloater =
+            !salvaged || world.bagFullFloaterCooldown <= 0;
+        if (salvaged) {
+          world.bagFullFloaterCooldown = 1.15;
+        }
+        if (showFloater) {
+          _spawnFloater(
+            world,
+            x: loot.x,
+            y: loot.y - 0.2,
+            text: _shortFloaterLabel(label),
+            argb: salvaged
+                ? _floaterEssence
+                : (loot.drop.isEquipment
+                      ? _floaterGear
+                      : (goldPickup || loot.kind == GroundLootKind.gold
+                            ? _floaterGold
+                            : _floaterEssence)),
+            life: salvaged || loot.drop.isEquipment ? 1.4 : 1.15,
+            priority: salvaged || loot.drop.isEquipment ? 2 : 1,
+          );
+        }
       } else {
         stillOnGround.add(loot);
       }

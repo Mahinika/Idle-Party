@@ -78,6 +78,29 @@ abstract final class GearService {
     return stashEquipmentDetailed(state, item).state;
   }
 
+  /// Salvage oldest bag pieces until length ≤ cap (bad saves / illegal unequip).
+  static GameState clampStashToCap(GameState state) {
+    final cap = maxGearStashFor(state);
+    if (state.gearStash.length <= cap) return state;
+    final stash = List<EquipmentItem>.from(state.gearStash);
+    var essence = state.essence;
+    final vault = List<EquipmentItem>.from(state.apexVault);
+    while (stash.length > cap) {
+      final overflow = stash.removeAt(0);
+      if (overflow.isApex) {
+        vault.add(overflow);
+      } else {
+        essence += LootPipeline.equipmentEssenceValue(overflow);
+      }
+    }
+    return state.copyWith(
+      gearStash: stash,
+      apexVault: vault,
+      essence: essence,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
   /// Like [stashEquipment], also reporting overflow salvage for UI feedback.
   static ({GameState state, int overflowEssence, String? overflowName})
   stashEquipmentDetailed(GameState state, EquipmentItem item) {

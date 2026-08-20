@@ -13,7 +13,7 @@ abstract final class GameGuides {
           '• Bottom buttons (same in hub and dungeon): PARTY (heroes and gear), '
           'POWER (upgrades), META (extras and Guides), HUB (home).\n'
           '• A number on a button means something waits inside — PARTY 3 means '
-          '3 better items in your bag. No number means nothing to do there.\n'
+          '3 better items for the party. No number means nothing to do there.\n'
           '• Menus stay small at the start; more tabs appear as you unlock them.\n'
           '• You do not need to have played another RPG. Names like PROT / DISC / FIRE '
           'are just the three starter jobs: Shield, Healer, Damage.',

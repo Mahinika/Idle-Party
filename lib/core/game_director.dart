@@ -747,7 +747,23 @@ class GameDirector extends ChangeNotifier {
       final stashCap = GameLogic.maxGearStashFor(_state);
       if (before.gearStash.length < stashCap &&
           _state.gearStash.length >= stashCap) {
-        showToast('Bag full — oldest loot salvages to essence', life: 2.4);
+        // Light auto-clean so salvage floaters don't spam every pickup.
+        final beforeClean = _state.gearStash.length;
+        _state = GameLogic.cleanBagJunk(
+          _state,
+          unstickBag: true,
+          mergeFirst: true,
+        );
+        LogicNotices.takeBagCleanup();
+        final cleared = beforeClean - _state.gearStash.length;
+        if (cleared > 0) {
+          showToast(
+            'Bag full — cleaned $cleared junk (oldest salvage → essence)',
+            life: 2.6,
+          );
+        } else {
+          showToast('Bag full — oldest loot salvages to essence', life: 2.4);
+        }
       }
       final cleanup = LogicNotices.takeBagCleanup();
       if (!cleanup.isEmpty) {

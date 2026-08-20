@@ -82,8 +82,8 @@ class MenuAlerts {
       return MenuAlert(
         count: upgrades,
         reason: upgrades == 1
-            ? '1 better item in the bag — tap EQUIP 1'
-            : '$upgrades better items in the bag — tap EQUIP $upgrades',
+            ? '1 better item for the party — tap EQUIP 1'
+            : '$upgrades better items for the party — tap EQUIP $upgrades',
       );
     }
     if (isBagFull(state)) {
@@ -172,6 +172,39 @@ class MenuAlerts {
   static int bagUpgradeCount(GameState state) {
     if (state.gearStash.isEmpty) return 0;
     return GameLogic.planBiSAssignments(state).length;
+  }
+
+  /// Subset of [bagUpgradeCount] that would land on [heroIndex].
+  static int bagUpgradeCountForHero(GameState state, int heroIndex) {
+    if (state.gearStash.isEmpty) return 0;
+    if (heroIndex < 0 || heroIndex >= state.heroes.length) return 0;
+    var n = 0;
+    for (final step in GameLogic.planBiSAssignments(state)) {
+      if (step.heroIndex == heroIndex) n++;
+    }
+    return n;
+  }
+
+  /// GEAR-tab line: don't imply every upgrade is for the doll you are staring at.
+  static String gearEquipHint(GameState state, int heroIndex) {
+    final total = bagUpgradeCount(state);
+    if (total <= 0) {
+      return isBagFull(state)
+          ? 'Bag is full — SELL JUNK or SCRAP in BAG'
+          : '';
+    }
+    final forHero = bagUpgradeCountForHero(state, heroIndex);
+    if (forHero <= 0) {
+      return total == 1
+          ? '1 better item for another hero — tap EQUIP 1'
+          : '$total better items for other heroes — tap EQUIP $total';
+    }
+    if (forHero == total) {
+      return forHero == 1
+          ? '1 better item for this hero — tap EQUIP 1'
+          : '$forHero better items for this hero — tap EQUIP $forHero';
+    }
+    return '$forHero for this hero · $total party — tap EQUIP $total';
   }
 }
 

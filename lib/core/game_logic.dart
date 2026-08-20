@@ -2304,7 +2304,11 @@ class GameLogic {
       next = _beginKeystoneRun(next);
     }
     return MetaSystems.evaluateAchievements(
-      syncSpecUnlocks(ensureRogueHero(unequipIllegalGear(next))),
+      syncSpecUnlocks(
+        ensureRogueHero(
+          GearService.clampStashToCap(unequipIllegalGear(next)),
+        ),
+      ),
     );
   }
 

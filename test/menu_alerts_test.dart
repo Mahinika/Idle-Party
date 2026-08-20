@@ -35,7 +35,45 @@ void main() {
     expect(alert.count, greaterThan(0));
     expect(alert.badge, alert.count.toString());
     expect(alert.reason.toUpperCase(), contains('EQUIP'));
+    expect(alert.reason.toLowerCase(), contains('party'));
     expect(MenuAlerts.bagUpgradeCount(state), alert.count);
+  });
+
+  test('GEAR hint admits when upgrades are for other heroes', () {
+    final base = GameLogic.createInitialState(now: now);
+    // Epic blade is a party-wide upgrade; first hero usually claims it.
+    final state = base.copyWith(gearStash: [bigWeapon('up_other')]);
+    final total = MenuAlerts.bagUpgradeCount(state);
+    expect(total, greaterThan(0));
+    final for0 = MenuAlerts.bagUpgradeCountForHero(state, 0);
+    final hint0 = MenuAlerts.gearEquipHint(state, 0);
+    expect(hint0.toUpperCase(), contains('EQUIP'));
+    if (for0 == 0) {
+      expect(hint0.toLowerCase(), contains('other'));
+    } else if (for0 == total) {
+      expect(hint0.toLowerCase(), contains('this hero'));
+    } else {
+      expect(hint0.toLowerCase(), contains('party'));
+    }
+  });
+
+  test('overfull bag clamps on load salvage', () {
+    final base = GameLogic.createInitialState(now: now);
+    final junk = <EquipmentItem>[
+      for (var i = 0; i < 60; i++)
+        EquipmentItem(
+          id: 'junk_$i',
+          name: 'Junk $i',
+          slot: EquipmentSlot.ring,
+          rarity: LootRarity.common,
+          itemLevel: 1,
+        ),
+    ];
+    final bloated = base.copyWith(gearStash: junk);
+    expect(bloated.gearStash.length, greaterThan(GameLogic.maxGearStashFor(bloated)));
+    final loaded = GameLogic.stateFromJson(bloated.toJson());
+    expect(loaded.gearStash.length, lessThanOrEqualTo(GameLogic.maxGearStashFor(loaded)));
+    expect(loaded.essence, greaterThan(base.essence));
   });
 
   test('upgrade count follows the bag, not a stale cache', () {
