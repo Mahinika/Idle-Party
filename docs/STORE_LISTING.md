@@ -23,7 +23,8 @@ fairness, no IAP).
 2. **Benefit order** — screenshot 1 = chase / hub fantasy; 2 = combat feel; 3 = grow stronger; later = KEY / Ascend / keep gear.
 3. **Captions short** (≤ ~8 words) if used; never cover critical HUD.
 4. **Phone portrait** 9:16, ≥1080 px wide (Play featuring bar).
-5. **Copy matches ship** — 15 zones, 31 specs, KEYSTONE (not invented systems), free / no ads / no IAP.
+5. **Copy matches ship** — 15 zones, 31 specs, KEYSTONE (not invented systems).
+   Do **not** promise “no ads / no paid store forever” — monetization may come later.
 
 ### Idle Party pitch (one line)
 
@@ -36,10 +37,10 @@ fairness, no IAP).
 ### Short description (80 chars max)
 
 ```
-Grow a party, farm dungeons AFK, chase KEY & Ascend. Free · no ads.
+Grow a party, farm dungeons AFK, chase KEYSTONE and Ascend.
 ```
 
-(69 characters)
+(59 characters)
 
 ### Full description
 
@@ -59,8 +60,8 @@ LONG-TERM GOALS
 • Infinity Gauntlet (Ascend Level 10+): endless Crystal Spire climb.
 • Apex forge: craft forever gear that survives Ascend.
 
-FAIR & FREE
-• No ads. No paid store. No idle-party account required.
+FAIR PLAY
+• Single-player — no idle-party account required.
 • Optional Google Play Games for seasonal boards and cloud save (you can stay offline).
 • Built for portrait phones.
 
@@ -76,7 +77,7 @@ Install, start a party, and take one more floor.
 | 3 | GEAR / bag / upgrade | Grow stronger every floor |
 | 4 | POWER → FORGE → KEEP | Keep power when you Ascend |
 | 5 | Hub World Path (15 zones) | 15 zones · World Path |
-| 6 | POWER → INCOME | Free · no ads · no paid store |
+| 6 | POWER → INCOME | See your gold per minute |
 
 ### Feature graphic note
 

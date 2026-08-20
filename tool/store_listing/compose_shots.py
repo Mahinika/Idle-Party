@@ -26,7 +26,7 @@ SHOTS = [
     ("03_gear.png", "Grow stronger every floor"),
     ("04_meta.png", "Keep power when you Ascend"),
     ("05_zone.png", "15 zones · World Path"),
-    ("06_power.png", "Free · no ads · no paid store"),
+    ("06_power.png", "See your gold per minute"),
 ]
 
 W, H = 1080, 1920
