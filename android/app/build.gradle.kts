@@ -41,12 +41,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        // Live AdMob app id from android/admob.properties or ADMOB_APP_ID.
-        // Google sample id until those exist (test ads, no payout).
+        // Live Idle Party AdMob app id; override via android/admob.properties.
         val admobAppId = (admobProperties["admobAppId"] as String?)
             ?: (project.findProperty("admobAppId") as String?)
             ?: System.getenv("ADMOB_APP_ID")
-            ?: "ca-app-pub-3940256099942544~3347511713"
+            ?: "ca-app-pub-4980376195917009~4491640230"
         manifestPlaceholders["admobAppId"] = admobAppId
     }
 

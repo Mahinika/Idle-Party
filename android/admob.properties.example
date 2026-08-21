@@ -1,5 +1,4 @@
-# Copy to admob.properties (gitignored). From AdMob → Apps → Idle Party.
-# App ID looks like ca-app-pub-XXXX~YYYY (tilde).
-# Rewarded unit looks like ca-app-pub-XXXX/ZZZZ (slash).
-admobAppId=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
-admobRewardedUnitId=ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ
+# Optional local override (gitignored). Live Idle Party defaults are already
+# in lib/core/ad_config.dart and android/app/build.gradle.kts.
+admobAppId=ca-app-pub-4980376195917009~4491640230
+admobRewardedUnitId=ca-app-pub-4980376195917009/5225353586

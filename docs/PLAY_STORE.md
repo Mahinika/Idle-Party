@@ -56,19 +56,15 @@ over Play ops unless the owner asks about Play.
 
 Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not through Idle Party servers.
 
-**You click (Google):**
+**Wired (2026-08-21):** Idle Party is in AdMob (not store-linked yet). App ID and rewarded unit **POWERUPS hour** live in `lib/core/ad_config.dart`. Release Android builds use them; debug `flutter run` still uses Google sample ads so you do not click your own ads.
 
-1. Open [AdMob](https://admob.google.com) with the same Google account as Play Console.
-2. Apps → **Add app** → Android. Package `com.idleparty.app`. If Play search misses it (not in production yet), add as unpublished with that package name.
-3. Create an ad unit: **Rewarded** (not banner, not interstitial). Name it e.g. `powerups_hour`.
-4. Copy two values:
-   - **App ID** (`ca-app-pub-…~…` with a `~`)
-   - **Rewarded unit ID** (`ca-app-pub-…/…` with a `/`)
-5. **Privacy & messaging** → European regulations → create a GDPR message for the app (needed in Sweden / EEA or ads stay thin).
-6. **Payments**: legal name, address, tax, bank. Google pays after their threshold (often around USD 100) on their schedule.
-7. Optional but important for real fill: **app-ads.txt** on the developer website listed in Play Store settings, with your AdMob publisher `pub-…` line. Paste the publisher ID here and we can host the file.
+**Still you in AdMob / Play:**
 
-**Then paste the two IDs in chat** (or GitHub secrets `ADMOB_APP_ID` + `ADMOB_REWARDED_UNIT_ID`). Local file is `android/admob.properties` (copy from `admob.properties.example`). Until those exist, builds use Google **sample** IDs = test ads = **$0**.
+1. App status **Requires review** until Google has seen a live-ads build. First real impressions can take a while.
+2. **Privacy & messaging** → European regulations → GDPR message for the app (Sweden / EEA; otherwise fill stays thin).
+3. **Payments**: legal name, address, tax, bank. Google pays after their threshold (often around USD 100).
+4. Optional later: **app-ads.txt** on the developer website in Play settings (`pub-4980376195917009`).
+5. Play Data safety + IARC ads questions before the next Play AAB with live ads.
 
 **Play Console before the next ads AAB:**
 
