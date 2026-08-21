@@ -33,6 +33,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | UI change “does it look ok?” | `verifying-in-browser` |
 | Play Store / listing / privacy / IARC | `play-store-prep` |
 | `/init` / resync AGENTS + rules | `init` |
+| `/repo auditandcleaning` / full repo audit (no edits) | `repo-audit-and-cleaning` |
 | Strategi / 90 dagar / prioritering | 90d shipped → read `docs/CONTENT_CADENCE.md` (silently) |
 | Topplistor / varför bra spel | `docs/TOP_GAMES_RESEARCH.md` background only — don’t derail |
 

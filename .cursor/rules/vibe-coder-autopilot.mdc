@@ -38,6 +38,7 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 | “gör spelet bättre” / vad härnäst (no other target) | AL20 hub chase + dungeon wipe-advice / dead chrome via `docs/CONTENT_CADENCE.md` (not first-hour, not new zone/class, not `/init` or cleanup) |
 | Play Store / listing / privacy / AAB | `play-store-prep` (+ `docs/PLAY_STORE.md`) |
 | **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules` with how the game works now |
+| **`/repo auditandcleaning`** | `repo-audit-and-cleaning` — full repo audit report; **no code changes** |
 | Ascend / “what am I chasing” feel | check `hub_chase`, `ascend_roadmap`, Blessing in `metaDepth` — not a separate skill |
 | strategi / vad härnäst / 90 dagar / prioritering | read `docs/CONTENT_CADENCE.md` (silently) — decision table + feel slice |
 | topplistor / varför bra spel | `docs/TOP_GAMES_RESEARCH.md` as background — don’t derail into more research unless asked |
@@ -46,8 +47,8 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 6. **After UI/meta changes**: verify somehow (tests and/or short browser check) without asking permission. Browser checks **always** use Samsung A56 phone metrics (**360×780**) — see `browser-playtest`.
 7. **After kit number tweaks**: run the fast balance check; if CI gate would fail, keep fixing (`grinding-until-pass`) before declaring done.
 8. **Commits / push / PR / tags:** when analyze/tests are green, **commit
-   locally** (see `owner-preferences`). Hand a **phone APK** + a short test
-   list; **wait**. Do not GitHub-release or Play-upload until they reply.
+   locally** (see `owner-preferences`). Short test list; **APK only if they
+   asked**. Wait for play notes.
    Then ask once before push / PR / tag / Play. Do not push silently.
 
 ## Questions you MAY ask

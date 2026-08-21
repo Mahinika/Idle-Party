@@ -9,8 +9,8 @@ alwaysApply: true
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
 Last preference sync: **2026-08-21** (work loop: AL20 save, large independent
-batches, owner tests phone APK before GitHub/Play; short “what to test” then
-wait. Play Alpha fact still **1.12.27 / 57**; no IAP. Other product locks
+batches, owner plays their AL20 save; APK only when they ask; short “what to
+test” then wait. Play Alpha fact still **1.12.27 / 57**; no IAP. Other product locks
 unchanged).
 
 ## Near-term focus
@@ -49,14 +49,15 @@ unchanged).
 
 - Prefer **large batches** the agent can finish alone (including ~1h
   autonomous passes). Few check-ins mid-batch.
-- Verify with analyze/tests (and hub smoke if UI) **before** handing the
-  phone APK to the owner.
-- **Loop:** build → **sideload APK to the owner’s phone** → **≤5 lines:
-  what to tap / what to look for** → **wait** for text (screenshot only if
-  it helps). Do not write essays. Do not GitHub-release or upload Play AAB
-  until they answered that test list.
-- **Then** ship both: GitHub APK/AAB **and** Play Alpha. Testers never get
-  a build before the owner has played it.
+- Verify with analyze/tests (and hub smoke if UI) **before** handing notes
+  to the owner.
+- **Loop:** build → verify with analyze/tests → **≤5 lines: what
+  changed / what to look for** → **wait**. Do **not** build or copy a
+  sideload APK unless the owner **explicitly** asks for one. Do not write
+  essays. Do not GitHub-release or upload Play AAB until they answered.
+- **Then** (after they OK play notes **and** asked for a build): ship both
+  GitHub APK/AAB **and** Play Alpha. Testers never get a build before the
+  owner has played it.
 - **Commit locally** when analyze/tests are green so work is not lost. Don’t
   wait for “ska jag commita?”. Still **ask** before push / PR / tag / Play.
   Never force-push or skip hooks unless they say so in that turn.
