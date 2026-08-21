@@ -32,7 +32,6 @@ class InventoryDock extends StatefulWidget {
     required this.onSelect,
     required this.onPutCombine,
     required this.onEquip,
-    required this.onSell,
     required this.onUnequip,
     required this.bagSlotFilter,
     required this.onBrowseBagSlot,
@@ -44,8 +43,6 @@ class InventoryDock extends StatefulWidget {
     required this.onClearCombineA,
     required this.onClearCombineB,
     required this.onCombine,
-    required this.onAutoSell,
-    required this.onAutoDisassemble,
     required this.onCleanBag,
     required this.onOpenFilters,
     required this.onAutoMerge,
@@ -63,7 +60,6 @@ class InventoryDock extends StatefulWidget {
   final void Function(String id) onSelect;
   final void Function(String id) onPutCombine;
   final VoidCallback onEquip;
-  final VoidCallback onSell;
   final void Function(EquipmentSlot slot) onUnequip;
   final EquipmentSlot? bagSlotFilter;
   final void Function(EquipmentSlot slot) onBrowseBagSlot;
@@ -75,8 +71,6 @@ class InventoryDock extends StatefulWidget {
   final VoidCallback onClearCombineA;
   final VoidCallback onClearCombineB;
   final VoidCallback onCombine;
-  final VoidCallback onAutoSell;
-  final VoidCallback onAutoDisassemble;
   final VoidCallback onCleanBag;
   final VoidCallback onOpenFilters;
   final VoidCallback onAutoMerge;
@@ -97,7 +91,6 @@ class _InventoryDockState extends State<InventoryDock>
   void Function(String id) get onSelect => widget.onSelect;
   void Function(String id) get onPutCombine => widget.onPutCombine;
   VoidCallback get onEquip => widget.onEquip;
-  VoidCallback get onSell => widget.onSell;
   void Function(EquipmentSlot slot) get onUnequip => widget.onUnequip;
   EquipmentSlot? get bagSlotFilter => widget.bagSlotFilter;
   void Function(EquipmentSlot slot) get onBrowseBagSlot =>
@@ -110,8 +103,6 @@ class _InventoryDockState extends State<InventoryDock>
   VoidCallback get onClearCombineA => widget.onClearCombineA;
   VoidCallback get onClearCombineB => widget.onClearCombineB;
   VoidCallback get onCombine => widget.onCombine;
-  VoidCallback get onAutoSell => widget.onAutoSell;
-  VoidCallback get onAutoDisassemble => widget.onAutoDisassemble;
   VoidCallback get onCleanBag => widget.onCleanBag;
   VoidCallback get onOpenFilters => widget.onOpenFilters;
   VoidCallback get onAutoMerge => widget.onAutoMerge;
@@ -188,12 +179,6 @@ class _InventoryDockState extends State<InventoryDock>
               const SizedBox(width: 4),
               Expanded(child: _autoEquipButton()),
             ],
-          ),
-          const SizedBox(height: 4),
-          KenneyButton(
-            label: 'SELL',
-            onPressed: inStash ? onSell : null,
-            style: KenneyButtonStyle.grey,
           ),
         ],
       );
@@ -342,7 +327,7 @@ class _InventoryDockState extends State<InventoryDock>
           Text(
             nearFull && filled >= cap
                 ? 'CLEAN merges → sells gold → scraps essence'
-                : 'junk→gold · scrap→essence · FILTERS set caps',
+                : 'CLEAN BAG uses FILTERS (gold then essence)',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         const SizedBox(height: 6),
@@ -410,34 +395,10 @@ class _InventoryDockState extends State<InventoryDock>
           style: KenneyButtonStyle.brown,
         ),
         const SizedBox(height: 4),
-        Row(
-          children: [
-            Expanded(
-              child: KenneyButton(
-                label: 'SELL JUNK',
-                tip: 'Sells common/uncommon junk under your FILTERS iLvl cap',
-                onPressed: state.gearStash.isEmpty ? null : onAutoSell,
-                style: KenneyButtonStyle.grey,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: KenneyButton(
-                label: 'SCRAP',
-                tip: 'Scraps junk for essence under your FILTERS caps',
-                onPressed: state.gearStash.isEmpty ? null : onAutoDisassemble,
-                style: KenneyButtonStyle.grey,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: KenneyButton(
-                label: 'FILTERS',
-                onPressed: onOpenFilters,
-                style: KenneyButtonStyle.grey,
-              ),
-            ),
-          ],
+        KenneyButton(
+          label: 'FILTERS',
+          onPressed: onOpenFilters,
+          style: KenneyButtonStyle.grey,
         ),
         const SizedBox(height: 4),
         Row(
@@ -697,8 +658,14 @@ class _InventoryDockState extends State<InventoryDock>
     );
     final phone = GameTheme.isPhoneWidth(context);
     final alert = MenuAlerts.partyAlert(state);
-    // Progressive menu: MERGE / LOADOUTS / ROSTER appear once they do something.
+    // Progressive menu: MERGE / ROSTER appear once they do something.
     _visible = MenuRouter.visiblePartyTabs(state);
+    final safeTab = _visible.contains(widget.tab) ? widget.tab : _visible.first;
+    if (safeTab != widget.tab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onTabChanged(safeTab);
+      });
+    }
     final pages = <({String label, Widget body})>[
       for (final tab in _visible)
         switch (tab) {
@@ -726,7 +693,7 @@ class _InventoryDockState extends State<InventoryDock>
           ),
         },
     ];
-    _tabs.syncToId(_visible, widget.tab);
+    _tabs.syncToId(_visible, safeTab);
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -746,7 +713,7 @@ class _InventoryDockState extends State<InventoryDock>
         ),
         Builder(
           builder: (context) {
-            final reason = widget.tab == PartyTab.gear
+            final reason = safeTab == PartyTab.gear
                 ? MenuAlerts.gearEquipHint(state, equipHeroIndex)
                 : (alert.isQuiet ? '' : alert.reason);
             if (reason.isEmpty) return const SizedBox.shrink();

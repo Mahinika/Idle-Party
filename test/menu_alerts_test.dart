@@ -131,7 +131,7 @@ void main() {
       highestFloorCleared: 12,
     );
     expect(MenuTabs.showMerge(veteran), isTrue);
-    expect(MenuTabs.showLoadouts(veteran), isTrue);
+    expect(MenuTabs.showLoadouts(veteran), isFalse);
     expect(MenuTabs.showRoster(veteran), isTrue);
     expect(MenuTabs.showCamp(veteran), isTrue);
     expect(MenuTabs.showShop(veteran), isTrue);

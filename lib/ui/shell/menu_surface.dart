@@ -152,16 +152,6 @@ class _MenuSurfaceState extends State<MenuSurface> {
         if (router.selectedItemId == null) return;
         _equipSelectedTo(router.equipHeroIndex);
       },
-      onSell: () {
-        final id = router.selectedItemId ?? router.combineA;
-        if (id == null) return;
-        if (!state.gearStash.any((g) => g.id == id)) {
-          d.showToast('Unequip first — SELL only works from BAG', life: 2.4);
-          return;
-        }
-        d.sellGear(id);
-        router.dropMissingIds(d.state.gearStash.map((g) => g.id).toSet());
-      },
       onUnequip: (slot) {
         d.unequipSlot(slot, heroIndex: router.equipHeroIndex);
         router.clearSelection();
@@ -186,8 +176,6 @@ class _MenuSurfaceState extends State<MenuSurface> {
         );
         router.clearCombine();
       },
-      onAutoSell: d.autoSellJunk,
-      onAutoDisassemble: d.autoDisassembleJunk,
       onCleanBag: d.cleanBagJunk,
       onOpenFilters: () => router.open(MenuRoute.settings),
       onAutoMerge: () {

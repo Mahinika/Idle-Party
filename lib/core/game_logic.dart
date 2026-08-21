@@ -31,6 +31,7 @@ import 'local_season.dart';
 import 'meta_systems.dart';
 import 'play_games_bridge.dart';
 import 'play_games_scores.dart';
+import 'wipe_advice.dart';
 
 class GameLogic {
   /// Injectable randomness for enemy targeting (seed in tests).
@@ -1052,6 +1053,9 @@ class GameLogic {
       seenChangelogVersion: state.seenChangelogVersion,
       lastUpdated: now ?? DateTime.now(),
       clearEquipped: true,
+      wipeStreakKey: '',
+      wipeStreakCount: 0,
+      wipeAdviceLine: '',
     );
     withMeta = ensureRogueHero(withMeta);
     withMeta = syncSpecUnlocks(withMeta);
@@ -1926,6 +1930,40 @@ class GameLogic {
     return state.copyWith(seenTips: seen.toList(), lastUpdated: DateTime.now());
   }
 
+  static String wipeFloorKey(GameState state) {
+    final g = state.inGauntlet ? ':g' : '';
+    return '${state.dungeonId}:${state.currentRoom.floorNumber}$g';
+  }
+
+  static GameState clearWipeStreak(GameState state) {
+    if (state.wipeStreakCount == 0 &&
+        state.wipeAdviceLine.isEmpty &&
+        state.wipeStreakKey.isEmpty) {
+      return state;
+    }
+    return state.copyWith(
+      wipeStreakKey: '',
+      wipeStreakCount: 0,
+      wipeAdviceLine: '',
+    );
+  }
+
+  /// Live wipe only. Stacks the same floor; writes [GameState.wipeAdviceLine]
+  /// from fight numbers after [WipeAdvice.streakNeeded] wipes.
+  static GameState notePartyWipe(GameState state, WipeFightSnapshot fight) {
+    final key = wipeFloorKey(state);
+    final count = state.wipeStreakKey == key ? state.wipeStreakCount + 1 : 1;
+    var line = '';
+    if (count >= WipeAdvice.streakNeeded) {
+      line = WipeAdvice.lineFor(state: state, fight: fight) ?? '';
+    }
+    return state.copyWith(
+      wipeStreakKey: key,
+      wipeStreakCount: count,
+      wipeAdviceLine: line,
+    );
+  }
+
   static int recommendedForgeUpgrade(GameState state) {
     // Pick the forge track most behind relative to cost (equal combat tiers).
     final scores = <(int, double)>[
@@ -2163,6 +2201,7 @@ class GameLogic {
     next = MetaSystems.registerItemDrops(next, drops);
     // Probe [before] — after already rolled a new layoutSeed on advance.
     next = _claimDailyIfEligible(next, dailyProbe: before);
+    next = clearWipeStreak(next);
     final farmLoop = before.dungeonMode == DungeonMode.farm;
     // Gauntlet is endless — same mint rules as farm (no challenge/weekly cheese).
     final suppressMetaMint = farmLoop || before.inGauntlet;

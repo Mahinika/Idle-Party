@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.28';
+  static const String currentVersion = '1.12.29';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.29',
+      bullets: <String>[
+        'Three wipes on the same floor: the dungeon names a real fix when the fight proves it — equip bag upgrades, drop a floor, or FORGE ATK / DEF / STA. No guessed tips.',
+        'BAG/GEAR dropped SELL JUNK, SCRAP, GEAR Sell, and LOADOUTS. CLEAN BAG + FILTERS + MARKET still clear junk.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.28',
       bullets: <String>[

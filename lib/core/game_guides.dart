@@ -108,7 +108,7 @@ abstract final class GameGuides {
           'Loot drops on the floor, then goes to your stash (BAG).\n\n'
           '• You never have to hunt for upgrades: when PARTY shows a number, '
           'open it and tap EQUIP — that number is how many items are better.\n'
-          '• BAG: view, sell, scrap, or equip stash gear.\n'
+          '• BAG: view and equip stash gear. CLEAN BAG sells gold then scraps essence using FILTERS.\n'
           '• Stats: plate wants Strength, leather/mail damage wants Agility, '
           'casters want Intellect and Spell Power. Spirit is mana, not damage. '
           'Secondaries are Crit / Haste / Mp5 — new drops keep ≤2 (no Move). '
@@ -127,7 +127,6 @@ abstract final class GameGuides {
           '(lifesteal, crit, gold find, …).\n'
           '• GEAR: paper-doll per hero — UNEQUIP worn pieces, AUTO EQUIP from bag.\n'
           '• Tap an empty GEAR slot to open BAG filtered to that slot.\n'
-          '• SELL only scraps items in BAG (unequip first).\n'
           '• Auto-Equip follows budget stats (skips crumbs; will not swap to clearly '
           'lower iLvl without a real power jump; 1H+off-hand can beat a lonely 2H).\n'
           '• Armor sets (2pc/4pc) give combat bonuses — not fake BiS score.\n'
@@ -314,12 +313,10 @@ abstract final class GameGuides {
       id: 'loadouts',
       title: 'LOADOUTS',
       body:
-          'PARTY → LOADOUTS (named gear presets).\n\n'
-          '• Save up to 3 named presets (by hero id).\n'
-          '• Apply a loadout to swap equipped gear quickly.\n'
-          '• Handy when switching Farm vs Push or Keystone setups.\n'
-          '• Party lineup is separate — use PARTY → ROSTER.\n'
-          '• Not the same as dungeon armor sets (2pc/4pc bonuses + combat procs).',
+          'PARTY → LOADOUTS is hidden — named gear presets were unused.\n\n'
+          '• Old saves still keep any stored presets (they reset on Ascend).\n'
+          '• Swap who is fighting in PARTY → ROSTER.\n'
+          '• Armor sets (2pc/4pc) are dungeon bonuses, not presets.',
     ),
     GuideTopic(
       id: 'armor_sets',
@@ -329,7 +326,7 @@ abstract final class GameGuides {
           '• 2pc: flat stamina (or spirit on cloth).\n'
           '• 4pc: more stats + role fantasy + a chance for a tagged set proc on autos.\n'
           '• Set names follow the zone (Tidehold, Ashen, Spire, …).\n'
-          '• Loadouts are separate presets — see LOADOUTS.',
+          '• Not the same as old gear presets (LOADOUTS tab is hidden).',
     ),
     GuideTopic(
       id: 'hardmode',

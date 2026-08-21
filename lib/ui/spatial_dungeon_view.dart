@@ -505,6 +505,17 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                         color: GameTheme.parchmentDim,
                                       ),
                                     ),
+                                    if (state.wipeAdviceLine.isNotEmpty) ...[
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        state.wipeAdviceLine,
+                                        textAlign: TextAlign.center,
+                                        style: GameTheme.body(
+                                          size: 15,
+                                          color: GameTheme.torchHot,
+                                        ),
+                                      ),
+                                    ],
                                     const SizedBox(height: 14),
                                     if (!state.inGauntlet)
                                       KenneyButton(

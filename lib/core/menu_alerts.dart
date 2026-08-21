@@ -89,7 +89,7 @@ class MenuAlerts {
     if (isBagFull(state)) {
       return const MenuAlert(
         star: true,
-        reason: 'Bag is full — SELL JUNK or SCRAP in BAG',
+        reason: 'Bag is full — CLEAN BAG',
       );
     }
     return MenuAlert.quiet;
@@ -190,7 +190,7 @@ class MenuAlerts {
     final total = bagUpgradeCount(state);
     if (total <= 0) {
       return isBagFull(state)
-          ? 'Bag is full — SELL JUNK or SCRAP in BAG'
+          ? 'Bag is full — CLEAN BAG'
           : '';
     }
     final forHero = bagUpgradeCountForHero(state, heroIndex);
@@ -221,8 +221,7 @@ abstract final class MenuTabs {
   // PARTY
   static bool showMerge(GameState s) =>
       s.ascensionLevel >= 1 || s.highestDungeonCleared >= 0;
-  static bool showLoadouts(GameState s) =>
-      s.ascensionLevel >= 1 || s.highestDungeonCleared >= 1;
+  static bool showLoadouts(GameState _) => false;
   static bool showRoster(GameState s) =>
       s.ascensionLevel >= 1 || s.metaDepth.pendingHeroReveals.isNotEmpty;
 

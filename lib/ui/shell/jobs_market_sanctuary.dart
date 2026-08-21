@@ -325,7 +325,7 @@ class MarketOverlay extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Buy heals with gold. Empty flask slots first, extras go to BAG.\n'
-          'In the bag: SELL JUNK = gold · SCRAP = essence (Settings filters).',
+          'Full bag: CLEAN BAG (FILTERS) or tap stash here for gold.',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),

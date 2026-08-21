@@ -101,6 +101,9 @@ class GameState {
     this.lastDailyDate,
     this.dailyClaimed = false,
     this.seenChangelogVersion = '',
+    this.wipeStreakKey = '',
+    this.wipeStreakCount = 0,
+    this.wipeAdviceLine = '',
   });
 
   /// All unlocked heroes (bench + active).
@@ -297,6 +300,15 @@ class GameState {
 
   /// Highest changelog version the player has seen in Settings → What's New.
   final String seenChangelogVersion;
+
+  /// Last floor that stacked live wipes (`dungeonId:floor` or `…:g` in Gauntlet).
+  final String wipeStreakKey;
+
+  /// Consecutive live wipes on [wipeStreakKey]. Resets on a floor clear.
+  final int wipeStreakCount;
+
+  /// Dungeon wipe-panel line after 3 stacked wipes; empty if the sim is unsure.
+  final String wipeAdviceLine;
 
   /// Global room counter derived from the authoritative room position.
   int get battleNumber => currentRoom.globalBattleNumber;
@@ -841,6 +853,9 @@ class GameState {
     String? lastDailyDate,
     bool? dailyClaimed,
     String? seenChangelogVersion,
+    String? wipeStreakKey,
+    int? wipeStreakCount,
+    String? wipeAdviceLine,
     bool clearEquipped = false,
     bool clearActivePet = false,
     bool clearSoulboundItem = false,
@@ -940,6 +955,9 @@ class GameState {
       lastDailyDate: lastDailyDate ?? this.lastDailyDate,
       dailyClaimed: dailyClaimed ?? this.dailyClaimed,
       seenChangelogVersion: seenChangelogVersion ?? this.seenChangelogVersion,
+      wipeStreakKey: wipeStreakKey ?? this.wipeStreakKey,
+      wipeStreakCount: wipeStreakCount ?? this.wipeStreakCount,
+      wipeAdviceLine: wipeAdviceLine ?? this.wipeAdviceLine,
     );
   }
 
@@ -1061,6 +1079,9 @@ class GameState {
     if (lastDailyDate != null) 'lastDailyDate': lastDailyDate,
     'dailyClaimed': dailyClaimed,
     'seenChangelogVersion': seenChangelogVersion,
+    'wipeStreakKey': wipeStreakKey,
+    'wipeStreakCount': wipeStreakCount,
+    'wipeAdviceLine': wipeAdviceLine,
   };
 
   /// Parses a v2-v4 save. Legacy fields are migrated.
@@ -1302,6 +1323,9 @@ class GameState {
       lastDailyDate: json['lastDailyDate'] as String?,
       dailyClaimed: (json['dailyClaimed'] as bool?) ?? false,
       seenChangelogVersion: (json['seenChangelogVersion'] as String?) ?? '',
+      wipeStreakKey: (json['wipeStreakKey'] as String?) ?? '',
+      wipeStreakCount: _jsonInt(json['wipeStreakCount']),
+      wipeAdviceLine: (json['wipeAdviceLine'] as String?) ?? '',
     );
   }
 }

@@ -29,6 +29,7 @@ import 'play_games_scores.dart';
 import 'play_leaderboard_ids.dart';
 import 'play_store_update.dart';
 import 'story_lore.dart';
+import 'wipe_advice.dart';
 import '../models/dungeon_def.dart';
 
 abstract class GameStorage {
@@ -796,6 +797,13 @@ class GameDirector extends ChangeNotifier {
         _spatialTimer?.cancel();
         _spatialTimer = null;
         GameAudio.wipe();
+        final spatial = _spatial;
+        if (spatial != null) {
+          _state = GameLogic.notePartyWipe(
+            _state,
+            WipeFightSnapshot.fromWorld(spatial),
+          );
+        }
         final floor = _state.currentRoom.floorNumber;
         if (_state.inGauntlet) {
           showToast(

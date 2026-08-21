@@ -167,8 +167,7 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           const SizedBox(height: 8),
           Text(
             'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity), then scrap '
-            'leftovers that match disassemble filters. Single-item SELL = essence. '
-            'Market tap = gold.',
+            'leftovers that match disassemble filters. Market tap = gold.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 16),

@@ -212,4 +212,16 @@ void main() {
     expect(prefs.getString('idle_party_save_v1'), isNotNull);
     expect(prefs.getString('idle_party_save_v2_corrupt'), '{not-json');
   });
+
+  test('legacy save without wipe streak fields stays quiet', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 8, 21));
+    final json = Map<String, dynamic>.from(state.toJson());
+    json.remove('wipeStreakKey');
+    json.remove('wipeStreakCount');
+    json.remove('wipeAdviceLine');
+    final loaded = GameLogic.stateFromJson(json);
+    expect(loaded.wipeStreakKey, '');
+    expect(loaded.wipeStreakCount, 0);
+    expect(loaded.wipeAdviceLine, '');
+  });
 }
