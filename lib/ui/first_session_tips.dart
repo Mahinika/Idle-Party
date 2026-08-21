@@ -19,8 +19,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'first_run',
       title: 'TODAY',
       body:
-          'The TODAY line is your chase. Tap ENTER DUNGEON — grow the party in '
-          'Sandy Caverns. Clear floors, get stronger, beat the first boss.',
+          'This line is your next job. Tap ENTER DUNGEON. Your party fights on '
+          'its own — watch them, pick up loot, get stronger, beat the first boss.',
     ),
     (
       id: 'lore_descent',
@@ -30,26 +30,30 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'farm_push',
       title: 'FARM / PUSH',
-      body: 'FARM loops this floor for loot. PUSH advances when you clear.',
+      body:
+          'FARM stays on this floor for extra loot. PUSH goes deeper toward the boss.',
     ),
     (
       id: 'godhand',
       title: 'GOD HAND',
       body:
-          'Tap the dungeon to steer the party and smash packs. Cooldown is the '
-          'ring top-right. Later: Forge → KEEP for BAL / FOCUS / WIDE.',
+          'Tap the map once to help: smash enemies and steer the party. Wait '
+          'for the ring (top-right) to refill, then tap again.',
     ),
     (
       id: 'bag',
       title: 'BAG & GEAR',
       body:
-          'Open GEAR for the paper-doll, BAG for stash. Tap an empty slot to filter the bag.',
+          'A number on PARTY means better items are waiting. Open PARTY and tap '
+          'EQUIP — the party wears them. No number means nothing to do.',
     ),
     (
       id: 'sanctuary',
       title: 'SANCTUARY',
       body:
-          'Spend essence here for idle gold and party power that persists between runs.',
+          'Spend essence here for idle gold and party power that persists between runs. '
+          'Hub gold/min ticks at the keep overnight (enough to buy forge). '
+          'Gold Find makes that number go up.',
     ),
     (
       id: 'market',
@@ -59,18 +63,22 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'forge',
       title: 'FORGE',
-      body: 'Train the party and buy relics. Power here stacks with gear.',
+      body:
+          'POWER → FORGE: GOLD for this-run power, KEEP for relics / God Hand / Blessing, '
+          'APEX for forever gear. Train levels keep on Ascend.',
     ),
     (
       id: 'pets',
       title: 'BEAST PEN',
-      body: 'Hatch pets with essence. Loot Sprite boosts gold find; others add ATK.',
+      body:
+          'Hatch pets with essence. Loot Sprite boosts gold find; others add ATK.',
     ),
     (
       id: 'contracts',
       title: 'CONTRACTS',
       body:
-          'Hub CONTRACTS pay gold and essence. Claim completes; every 3 claims grants a +5e chain bonus.',
+          'META → JOBS (or the CONTRACTS sheet) pays gold and essence. '
+          'Claim completes; every 3 claims grants a +5e chain bonus.',
     ),
     (
       id: 'ascend',
@@ -104,7 +112,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'apex',
       title: 'APEX FORGE',
       body:
-          'Apex slag from Gauntlet/Crystal crafts soulbound apex gear in Forge. Ranks persist through Ascend.',
+          'Apex slag from Gauntlet/Crystal crafts class Apex gear in Forge. Ranks persist through Ascend.',
     ),
     (
       id: 'gauntlet',
@@ -150,10 +158,7 @@ class FirstSessionTips extends StatelessWidget {
       if ((tip.id == 'godhand' || tip.id == 'farm_push') && !inDungeon) {
         continue;
       }
-      if (tip.id == 'bag' &&
-          !inDungeon &&
-          s.gearStash.isEmpty &&
-          s.gold < 10) {
+      if (tip.id == 'bag' && !inDungeon && s.gearStash.isEmpty && s.gold < 10) {
         continue;
       }
       if ((tip.id == 'sanctuary' ||
@@ -215,15 +220,13 @@ class FirstSessionTips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final id = nextTipId(
-      director.state,
-      inDungeon: director.state.inDungeon,
-    );
+    final id = nextTipId(director.state, inDungeon: director.state.inDungeon);
     if (id == null) return const SizedBox.shrink();
     final tip = tips.firstWhere((t) => t.id == id);
-    final body = tip.id == 'weekly' && GameLogic.showKeystoneJargon(director.state)
+    final body =
+        tip.id == 'weekly' && GameLogic.showKeystoneJargon(director.state)
         ? 'Clear 1 floor or time a KEY +2 today, then claim the vault for essence '
-            '(scales with your best timed key). First claim of each month also pays a season bonus.'
+              '(scales with your best timed key). First claim of each month also pays a season bonus.'
         : tip.body;
 
     return Align(
@@ -267,9 +270,8 @@ class FirstSessionTips extends StatelessWidget {
                         const SizedBox(height: 6),
                         KenneyButton(
                           label: 'SKIP ALL TIPS',
-                          onPressed: () => director.dismissAllTips(
-                            tips.map((t) => t.id),
-                          ),
+                          onPressed: () =>
+                              director.dismissAllTips(tips.map((t) => t.id)),
                           style: KenneyButtonStyle.grey,
                         ),
                       ],

@@ -13,6 +13,7 @@ void main() {
     expect(contract.kind, hub.kind);
     expect(contract.title, hub.title);
     expect(contract.urgency, hub.urgency);
+    expect(contract.ascendTeaser, isNull);
   });
 
   test('claimable vault is READY and beats grind', () {

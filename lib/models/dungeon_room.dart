@@ -44,13 +44,13 @@ class DungeonRoom {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'floorNumber': floorNumber,
-        'roomIndex': roomIndex,
-        'type': type.toString(),
-        'enemyLevel': enemyLevel,
-        'isCleared': isCleared,
-        'enemyCount': enemyCount,
-      };
+    'floorNumber': floorNumber,
+    'roomIndex': roomIndex,
+    'type': type.toString(),
+    'enemyLevel': enemyLevel,
+    'isCleared': isCleared,
+    'enemyCount': enemyCount,
+  };
 
   factory DungeonRoom.fromJson(Map<String, dynamic> json) {
     return DungeonRoom(

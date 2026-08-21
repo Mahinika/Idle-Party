@@ -344,6 +344,30 @@ void main() {
     expect(merged.setId, isNull);
   });
 
+  test('merge keeps the stronger on-item effect', () {
+    final primary = EquipmentItem(
+      id: 'p_fx',
+      name: 'Weak Charm',
+      slot: EquipmentSlot.trinket,
+      rarity: LootRarity.uncommon,
+      effectId: GearEffectId.lifesteal,
+      effectValue: 3,
+      itemLevel: 10,
+    );
+    final secondary = EquipmentItem(
+      id: 's_fx',
+      name: 'Strong Charm',
+      slot: EquipmentSlot.trinket,
+      rarity: LootRarity.rare,
+      effectId: GearEffectId.goldFind,
+      effectValue: 12,
+      itemLevel: 14,
+    );
+    final merged = GameLogic.mergeEquipment(primary, secondary);
+    expect(merged.effectId, GearEffectId.goldFind);
+    expect(merged.effectValue, 12);
+  });
+
   test('higher-ilvl non-set beats set completion score nudge', () {
     final hero = PartyHero.starting(
       name: 'Aegis',
@@ -581,7 +605,7 @@ void main() {
     var state = GameLogic.createInitialState(now: DateTime(2026, 8, 5));
     expect(GameLogic.maxAutoSellIlvlCap(state), 60);
     state = state.copyWith(highestDungeonCleared: 6, ascensionLevel: 10);
-    expect(GameLogic.maxAutoSellIlvlCap(state), 200);
+    expect(GameLogic.maxAutoSellIlvlCap(state), 232);
   });
 
   test('affix load parses structured prefixes and suffixes', () async {

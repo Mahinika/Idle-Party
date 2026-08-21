@@ -19,10 +19,179 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.8';
+  static const String currentVersion = '1.12.28';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.28',
+      bullets: <String>[
+        'Healers open a floor with mana, and Spirit actually refills it — Disc can heal on the pull instead of waiting half the fight.',
+        'Hub gold/min at the keep is a real overnight trickle (enough to buy forge), not a 2g/min joke next to a dungeon run.',
+        'KEY gold now tracks the harder packs. KEY +10 shows gold ×5.5 next to the +20 iLvl jump — not a gold tax.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.27',
+      bullets: <String>[
+        'Hub POWERUPS: watch an optional ad for 1 hour of double gold and +25% attack. Watch again to add another hour (up to 24h). Ads never interrupt a fight.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.26',
+      bullets: <String>[
+        'Play installs can see a hub notice when a newer Idle Party is ready on Google Play (sideload APKs stay quiet). SETTINGS has GET UPDATE when that notice is up.',
+        'Warrior, Paladin, and Shaman can wear shields — Protection Paladin (and Resto/Ele Shaman) no longer get stuck on a two-hander that blocked the off-hand.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.25',
+      bullets: <String>[
+        'Companions read as yours: bigger pet sprites, ally rings, cyan pet hits. MERGE RESULT shows the SCORE jump. Charms always drop with a real on-item effect.',
+        'KEEP relics spell the next tier (and CAMP lists what you already own). TODAY names the essence on Will, Gauntlet, and the week goal.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.23',
+      bullets: <String>[
+        'Healer drops lean Mp5 and Crit — Haste was sitting unused (heals do not haste). Rogue-family Auto Equip stops chasing Crit once you are near the 75% cap.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.22',
+      bullets: <String>[
+        'POWER → SHOP: Loadout Folio, Apothecary Writ, Junk Magnifier, and Away Ledger — permanent QoL that survives Ascend (extra loadouts, cheaper flasks, higher auto-sell/scrap caps, more Welcome Back rows).',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.21',
+      bullets: <String>[
+        "Goblin's Hideout: stolen-stash chests (richer pouches + Stolen Coin) wake Stash Guard / Loot Snatcher ambushes — more alcoves, choke dens, and a distinct raider pack.",
+        'Hideout identity polish: dirt floors, boarded door rims, spider/crab/ghost mid-pack (not King twins). Codex slingers match combat bats.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.20',
+      bullets: <String>[
+        'Apex target meter resets when you change craft goal or locked mat — no free carry into the next shortage.',
+        'Safer Continue: corrupt v2 tries legacy v1 before wipe. Soft enemy save parse. META SET closes cleanly (incl. DEV Gauntlet).',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.19',
+      bullets: <String>[
+        'Floor clear: when the last enemy dies, loot banks instantly and the party walks straight to the stairs — no more idle shuffle waiting for vacuum.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.18',
+      bullets: <String>[
+        'Apex is the forever gear. Heirloom soulbind (fragments / bind / refine) is retired — FORGE → APEX is the keep path.',
+        'Older saves still keep a bound heirloom’s party bonus. New runs do not earn soulbind fragments.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.17',
+      bullets: <String>[
+        'FORGE → APEX: one station — party craft goals, target material meter, vault cards, and Auto Equip All.',
+        'Boss clears now build a guaranteed mat toward your craft goal (PUSH fills the meter faster than FARM). Craft tries to equip on the matching hero automatically.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.16',
+      bullets: <String>[
+        'POWER → INCOME: Hub and Run gold/min, gold % multipliers, and Gold Find as your keep generator — one tab for the incremental loop.',
+        'Gold Find: buy one level or up to five at once when you can afford them; affordable upgrades glow on INCOME and CAMP.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.15',
+      bullets: <String>[
+        'Dungeon gold/min is real loot from the last couple of minutes — Hub and Run sit on the floor HUD and POWER → FORGE GOLD.',
+        'Gold Find and Blessing preview +g/min on both rates. ATK / HASTE / MOVE say faster clears (and last floor time) instead of fake gold.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.14',
+      bullets: <String>[
+        'The keep pays gold while you sit there — hub gold/min is on the header, and it ticks live (same rate as sanctuary AFK).',
+        'POWER → CAMP shows that rate plus AL / CAMP / Blessing gold %. Gold Find preview is +g/min, and buying it bumps the keep rate immediately.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.13',
+      bullets: <String>[
+        'Crits thump in your hand, and LEVEL UP stays on screen instead of hiding behind damage numbers.',
+        'Kills pop on the map. Gold, XP, and gear names stay bigger than damage ticks so pickups read on a phone.',
+        'Clearing a chamber shouts OPEN on the door so the next pack is obvious.',
+        'When the pack is down, stairs shout GO so the next floor is obvious.',
+        'On a phone the party strip shows level and XP, and the dungeon HUD shows gold ticking up.',
+        'Kit chips flash when a dump fires. Flasks shout FLASK, and loot streaks into the party.',
+        'Tapping God Hand slams when it fires — waiting on cooldown stays quiet.',
+        'Floor clear holds a beat in bigger type so gold and a level-up are readable on a phone. Boss kills shout BOSS DOWN.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.12',
+      bullets: <String>[
+        'Armor now cuts a percent of each hit — more DEF always helps, but nothing is immortal (packs included).',
+        'Agility is the damage stat for rogues, hunters, cats, and Enhancement (Strength still rules plate).',
+        'Caster gear: Intellect and Spell Power both feed damage the same way; Intellect still adds crit.',
+        'Drops, starters, and Apex spend power on those same stats — no leftover Attack Power dump.',
+        'Each class wears one armor: plate, mail, leather, or cloth — a Paladin will not put on leather just because the stats look bigger.',
+        'Weapons are the same kind of hard gate: a Paladin will not take a dagger, a Priest will not take a sword, and Paladin / DK / Shaman / Druid leave the ranged slot empty.',
+        'Balance Druid Moonkin Form thickens the hide, and Barkskin is ready before the floor gets nasty.',
+        'Fury Warrior Rampage dumps mid-fight, Recklessness is an all-in damage window, and Death Wish hits harder — not a haste snack.',
+        'Every kit now shows its signature dump and panic button on a typical floor — Templar''s Verdict, Trueshot, Ice Block, Shield Wall, and the rest no longer wait until 15.',
+        'POWER → FORGE gold buys match each other again: DEF is a real armor chunk, STA is HP, and CRIT steps with HASTE. CAMP Life Well HP matches War Altar ATK. KEEP relics, Blessing, and Ascend flats use the same ATK / armor / HP split.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.11',
+      bullets: <String>[
+        'Lighter install and snappier hub: less art baggage, and the map only redraws what moved.',
+        'One bottom bar in hub and dungeon — PARTY / POWER / META keep the same tab when you enter or leave a floor.',
+        'Every zone has its own boss and trash look (plus pets stop borrowing enemy sprites).',
+        'Long AFK returns without freezing the phone; bag cleanup and craft mat toasts stay honest.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.10',
+      bullets: <String>[
+        'First hour talks plain English: intro, New Game (Shield / Healer / Damage), and TODAY skip kit names until you beat a boss. No other RPG required.',
+        'Guides BASICS / PARTY and first tips explain the loop: party fights on its own, tap ENTER DUNGEON, tap the map to help.',
+        'Menus tell you when to look: PARTY / POWER / META show a number when gear, gold or claims are waiting, and PARTY has a one-tap EQUIP 3.',
+        'Calmer menus early — MERGE, LOADOUTS, ROSTER, CAMP, SHOP, KEY, BEAST and CODEX tabs appear when they unlock instead of on day one.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.9',
+      bullets: <String>[
+        'Optional Play Games in MORE: seasonal Timed KEY + Gauntlet boards and cloud save (sign-in; clipboard backup still works).',
+        'Protection / Discipline / Fire / Combat kits now share the same cast engine as every other spec (same feel, cleaner wiring).',
+        'Tidehold / Ashen Vault / Hollow Grove read clearer apart from Crystal / Hell / Fen (wash, floors, props, trash sprites).',
+        'Hub TODAY shows KEY · Vault · Week crumbs under the chase so you always see today’s meta on a phone.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.8',
       bullets: <String>[
@@ -89,7 +258,7 @@ abstract final class MetaSystems {
     ),
     ChangelogRelease(
       version: '1.12.1',
-        bullets: <String>[
+      bullets: <String>[
         'After the first hour, TODAY chases KEY +1 for better iLvl loot (not Daily). Higher keys raise item level honestly — KEY +10 is a real jump vs the same floor without a key.',
         'GEAR: plate tanks show more ARMOR than leather DPS. Agility is a small dodge crumb — it no longer turns Combat Rogue into the party’s armor king.',
         'Kits: Arms Sweeping Strikes is a cleave window on your swings (HUD shows SWEEP) — not a one-shot nova. Prot Paladin Holy Shield is a block window while you tank; Divine Protection stays the panic bubble.',
@@ -321,9 +490,7 @@ abstract final class MetaSystems {
   ];
 
   /// Flat bullets for backward compat — all releases, newest first.
-  static List<String> get changelog => [
-        for (final r in releases) ...r.bullets,
-      ];
+  static List<String> get changelog => [for (final r in releases) ...r.bullets];
 
   /// True when the player has not acknowledged [currentVersion].
   static bool hasUnseenChangelog(GameState s) =>
@@ -447,83 +614,80 @@ abstract final class MetaSystems {
 
   static final Map<String, bool Function(GameState)> _conditions =
       <String, bool Function(GameState)>{
-    'first_floor': (s) =>
-        s.highestFloorCleared >= 1 || s.metaDepth.lifetimeFloorClears >= 1,
-    'first_boss': (s) =>
-        s.bossVictories >= 1 || s.metaDepth.lifetimeBossKills >= 1,
-    'first_ascend': (s) =>
-        s.ascensionLevel >= 1 || s.metaDepth.lifetimeAscends >= 1,
-    'clear_goblin': (s) => s.highestDungeonCleared >= 1,
-    'hatch_pet': (s) =>
-        s.ownedPets.isNotEmpty || s.metaDepth.lifetimePetHatches >= 1,
-    'daily_clear': (s) => s.dailyClaimed,
-    'full_party': (s) => s.heroes.length >= 4,
-    'party_five': (s) =>
-        s.metaDepth.partySlot5Unlocked && s.heroes.length >= 5,
-    'specs_10': (s) => s.metaDepth.unlockedSpecs.length >= 10,
-    'specs_all': (s) =>
-        s.metaDepth.unlockedSpecs.length >= HeroSpecId.values.length,
-    'clear_sandy': (s) => s.highestDungeonCleared >= 0,
-    'clear_king': (s) => s.highestDungeonCleared >= 2,
-    'clear_underworld': (s) => s.highestDungeonCleared >= 3,
-    'clear_dead': (s) => s.highestDungeonCleared >= 4,
-    'clear_hell': (s) => s.highestDungeonCleared >= 5,
-    'clear_crystal': (s) => s.highestDungeonCleared >= 6,
-    'clear_tide': (s) => s.highestDungeonCleared >= 7,
-    'clear_ember': (s) => s.highestDungeonCleared >= 8,
-    'clear_grove': (s) => s.highestDungeonCleared >= 9,
-    'clear_storm': (s) => s.highestDungeonCleared >= 10,
-    'clear_rime': (s) => s.highestDungeonCleared >= 11,
-    'clear_fen': (s) => s.highestDungeonCleared >= 12,
-    'clear_brass': (s) => s.highestDungeonCleared >= 13,
-    'clear_veil': (s) => s.highestDungeonCleared >= 14,
-    'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
-    'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
-    'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,
-    'gold_10k': (s) => s.lifetimeGoldEarned >= 10000,
-    'gold_100k': (s) => s.lifetimeGoldEarned >= 100000,
-    'gold_1m': (s) => s.lifetimeGoldEarned >= 1000000,
-    'codex_10': (s) =>
-        s.codexEnemies.length + s.codexItems.length >= 10,
-    'codex_25': (s) =>
-        s.codexEnemies.length + s.codexItems.length >= 25,
-    'codex_50': (s) =>
-        s.codexEnemies.length + s.codexItems.length >= 50,
-    'pets_3': (s) => s.ownedPets.length >= 3,
-    'pet_merge': (s) => s.metaDepth.lifetimePetMerges >= 1,
-    'pet_legendary': (s) =>
-        s.ownedPets.any((p) => p.rarity == PetRarity.legendary),
-    'favorite_pet': (s) => s.metaDepth.favoritePetSpecies.isNotEmpty,
-    'ascend_streak_3': (s) => s.metaDepth.ascendStreak >= 3,
-    'al_5': (s) => s.ascensionLevel >= 5,
-    'al_10': (s) => s.ascensionLevel >= 10,
-    'gauntlet_enter': (s) =>
-        s.inGauntlet || s.metaDepth.lifetimeGauntletFloors > 0,
-    'gauntlet_10': (s) => s.metaDepth.gauntletBestFloor >= 10,
-    'casts_100': (s) => s.metaDepth.lifetimeAbilityCasts >= 100,
-    'floors_50': (s) => s.metaDepth.lifetimeFloorClears >= 50,
-    'relic_all': (s) =>
-        s.hasRelic('war_banner') &&
-        s.hasRelic('iron_ward') &&
-        s.hasRelic('phoenix_ember') &&
-        s.hasRelic('god_hand_focus') &&
-        s.hasRelic('chamber_luck') &&
-        s.hasRelic('iron_will'),
-    'sanctuary_12': (s) =>
-        s.sanctuaryGoldLevel >= 12 ||
-        s.sanctuaryPowerLevel >= 12 ||
-        s.sanctuaryVitalityLevel >= 12 ||
-        s.metaDepth.sanctuaryXpLevel >= 12,
-    'god_hand_5': (s) => s.godHandLevel >= 5,
-    'weekly_clear': (s) => s.metaDepth.dailyVaultClaimed,
-    'gauntlet_25': (s) => s.metaDepth.gauntletBestFloor >= 25,
-    'gauntlet_50': (s) => s.metaDepth.gauntletBestFloor >= 50,
-    'gauntlet_100': (s) => s.metaDepth.gauntletBestFloor >= 100,
-    'apex_first': (s) => _apexPieces(s).isNotEmpty,
-    'apex_set_r1': (s) => _hasFullApexSetR1(s),
-    'apex_r3': (s) => _apexPieces(s).any((i) => i.apexRank >= 3),
-    'hidden_egg': (s) => s.metaDepth.lifetimePetHatches >= 10,
-  };
+        'first_floor': (s) =>
+            s.highestFloorCleared >= 1 || s.metaDepth.lifetimeFloorClears >= 1,
+        'first_boss': (s) =>
+            s.bossVictories >= 1 || s.metaDepth.lifetimeBossKills >= 1,
+        'first_ascend': (s) =>
+            s.ascensionLevel >= 1 || s.metaDepth.lifetimeAscends >= 1,
+        'clear_goblin': (s) => s.highestDungeonCleared >= 1,
+        'hatch_pet': (s) =>
+            s.ownedPets.isNotEmpty || s.metaDepth.lifetimePetHatches >= 1,
+        'daily_clear': (s) => s.dailyClaimed,
+        'full_party': (s) => s.heroes.length >= 4,
+        'party_five': (s) =>
+            s.metaDepth.partySlot5Unlocked && s.heroes.length >= 5,
+        'specs_10': (s) => s.metaDepth.unlockedSpecs.length >= 10,
+        'specs_all': (s) =>
+            s.metaDepth.unlockedSpecs.length >= HeroSpecId.values.length,
+        'clear_sandy': (s) => s.highestDungeonCleared >= 0,
+        'clear_king': (s) => s.highestDungeonCleared >= 2,
+        'clear_underworld': (s) => s.highestDungeonCleared >= 3,
+        'clear_dead': (s) => s.highestDungeonCleared >= 4,
+        'clear_hell': (s) => s.highestDungeonCleared >= 5,
+        'clear_crystal': (s) => s.highestDungeonCleared >= 6,
+        'clear_tide': (s) => s.highestDungeonCleared >= 7,
+        'clear_ember': (s) => s.highestDungeonCleared >= 8,
+        'clear_grove': (s) => s.highestDungeonCleared >= 9,
+        'clear_storm': (s) => s.highestDungeonCleared >= 10,
+        'clear_rime': (s) => s.highestDungeonCleared >= 11,
+        'clear_fen': (s) => s.highestDungeonCleared >= 12,
+        'clear_brass': (s) => s.highestDungeonCleared >= 13,
+        'clear_veil': (s) => s.highestDungeonCleared >= 14,
+        'hm_1': (s) => s.metaDepth.highestHardmodeCleared >= 1,
+        'hm_5': (s) => s.metaDepth.highestHardmodeCleared >= 5,
+        'hm_10': (s) => s.metaDepth.highestHardmodeCleared >= 10,
+        'gold_10k': (s) => s.lifetimeGoldEarned >= 10000,
+        'gold_100k': (s) => s.lifetimeGoldEarned >= 100000,
+        'gold_1m': (s) => s.lifetimeGoldEarned >= 1000000,
+        'codex_10': (s) => s.codexEnemies.length + s.codexItems.length >= 10,
+        'codex_25': (s) => s.codexEnemies.length + s.codexItems.length >= 25,
+        'codex_50': (s) => s.codexEnemies.length + s.codexItems.length >= 50,
+        'pets_3': (s) => s.ownedPets.length >= 3,
+        'pet_merge': (s) => s.metaDepth.lifetimePetMerges >= 1,
+        'pet_legendary': (s) =>
+            s.ownedPets.any((p) => p.rarity == PetRarity.legendary),
+        'favorite_pet': (s) => s.metaDepth.favoritePetSpecies.isNotEmpty,
+        'ascend_streak_3': (s) => s.metaDepth.ascendStreak >= 3,
+        'al_5': (s) => s.ascensionLevel >= 5,
+        'al_10': (s) => s.ascensionLevel >= 10,
+        'gauntlet_enter': (s) =>
+            s.inGauntlet || s.metaDepth.lifetimeGauntletFloors > 0,
+        'gauntlet_10': (s) => s.metaDepth.gauntletBestFloor >= 10,
+        'casts_100': (s) => s.metaDepth.lifetimeAbilityCasts >= 100,
+        'floors_50': (s) => s.metaDepth.lifetimeFloorClears >= 50,
+        'relic_all': (s) =>
+            s.hasRelic('war_banner') &&
+            s.hasRelic('iron_ward') &&
+            s.hasRelic('phoenix_ember') &&
+            s.hasRelic('god_hand_focus') &&
+            s.hasRelic('chamber_luck') &&
+            s.hasRelic('iron_will'),
+        'sanctuary_12': (s) =>
+            s.sanctuaryGoldLevel >= 12 ||
+            s.sanctuaryPowerLevel >= 12 ||
+            s.sanctuaryVitalityLevel >= 12 ||
+            s.metaDepth.sanctuaryXpLevel >= 12,
+        'god_hand_5': (s) => s.godHandLevel >= 5,
+        'weekly_clear': (s) => s.metaDepth.dailyVaultClaimed,
+        'gauntlet_25': (s) => s.metaDepth.gauntletBestFloor >= 25,
+        'gauntlet_50': (s) => s.metaDepth.gauntletBestFloor >= 50,
+        'gauntlet_100': (s) => s.metaDepth.gauntletBestFloor >= 100,
+        'apex_first': (s) => _apexPieces(s).isNotEmpty,
+        'apex_set_r1': (s) => _hasFullApexSetR1(s),
+        'apex_r3': (s) => _apexPieces(s).any((i) => i.apexRank >= 3),
+        'hidden_egg': (s) => s.metaDepth.lifetimePetHatches >= 10,
+      };
 
   static List<EquipmentItem> _apexPieces(GameState s) {
     final out = <EquipmentItem>[];
@@ -542,7 +706,7 @@ abstract final class MetaSystems {
     for (final classId in HeroClassId.values) {
       for (final role in ApexCraft.validRolesFor(classId)) {
         var ok = true;
-        for (final slot in ApexCraft.craftSlots) {
+        for (final slot in ApexCraft.craftSlotsFor(classId, role)) {
           final id = ApexCraft.pieceId(
             classId: classId,
             role: role,
@@ -605,9 +769,7 @@ abstract final class MetaSystems {
     var bonus = 0;
     if (state.challengeBossRush) bonus += 2;
     if (state.challengeNoFlask) bonus += 2;
-    final key = state.keystoneRunActive
-        ? state.keystoneRunLevel
-        : 0;
+    final key = state.keystoneRunActive ? state.keystoneRunLevel : 0;
     bonus += key.clamp(0, state.effectiveMaxHardmode);
     return bonus;
   }
@@ -633,10 +795,7 @@ abstract final class MetaSystems {
   }
 
   /// Registers every dropped equipment piece's display name as "discovered".
-  static GameState registerItemDrops(
-    GameState state,
-    List<LootDrop> drops,
-  ) {
+  static GameState registerItemDrops(GameState state, List<LootDrop> drops) {
     if (drops.isEmpty) return state;
     final names = <String>{};
     for (final drop in drops) {

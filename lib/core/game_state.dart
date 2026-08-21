@@ -12,6 +12,8 @@ import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
 import '../models/vfx_quality.dart';
+import 'ad_boost.dart';
+import 'keystone.dart';
 
 int _jsonInt(dynamic value, [int fallback = 0]) {
   if (value == null) return fallback;
@@ -75,9 +77,9 @@ class GameState {
     this.layoutSeed = 0,
     this.soundMuted = false,
     this.vfxQuality = VfxQuality.full,
-    this.autoSellMaxPower = 24,
+    this.autoSellMaxPower = 48,
     this.autoSellMaxRarity = 1,
-    this.autoDisassembleMaxIlvl = 24,
+    this.autoDisassembleMaxIlvl = 48,
     this.autoDisassembleMaxRarity = 2,
     this.rogueUnlocked = false,
     this.seenTips = const <String>[],
@@ -111,9 +113,7 @@ class GameState {
   /// when the active list is empty.
   List<PartyHero> get heroes {
     if (activeHeroIds.isEmpty) return heroRoster;
-    final byId = <String, PartyHero>{
-      for (final h in heroRoster) h.id: h,
-    };
+    final byId = <String, PartyHero>{for (final h in heroRoster) h.id: h};
     return [
       for (final id in activeHeroIds)
         if (byId[id] != null) byId[id]!,
@@ -193,10 +193,10 @@ class GameState {
   /// Named dungeon id (e.g. sandy).
   final String dungeonId;
 
-  /// Soulbound prestige currency (survives Ascend).
+  /// Legacy heirloom fragments. No longer granted; kept so old saves load.
   final int soulboundFragments;
 
-  /// Optional permanent soulbound gear piece (survives Ascend).
+  /// Legacy heirloom piece from retired soulbind. Still applies party meta.
   final EquipmentItem? soulboundItem;
 
   /// Apex crafting Materials Bag (survives Ascend). Never mixed with gear stash.
@@ -328,9 +328,9 @@ class GameState {
 
   int get relicAttackBonus => 4 * relicTierOf('war_banner');
 
-  int get relicDefenseBonus => 2 * relicTierOf('iron_ward');
+  int get relicDefenseBonus => 16 * relicTierOf('iron_ward');
 
-  int get relicVitalityBonus => 10 * relicTierOf('phoenix_ember');
+  int get relicVitalityBonus => 48 * relicTierOf('phoenix_ember');
 
   /// Flat God Hand damage from the God Hand Focus relic.
   int get relicGodHandDamageBonus => 3 * relicTierOf('god_hand_focus');
@@ -339,16 +339,16 @@ class GameState {
   int get relicLootFindPercent => 5 * relicTierOf('chamber_luck');
 
   /// Flat incoming damage mitigate from Iron Will relic.
-  int get relicMitigateFlat => 1 * relicTierOf('iron_will');
+  int get relicMitigateFlat => 8 * relicTierOf('iron_will');
 
   /// Flat attack from Ascension Level (+1 ATK per AL).
   int get ascensionAttackBonus => ascensionLevel;
 
-  /// Flat defense from Ascension Level (+1 DEF every 2 AL).
-  int get ascensionDefenseBonus => ascensionLevel ~/ 2;
+  /// Flat defense from Ascension Level (+4 DEF per AL).
+  int get ascensionDefenseBonus => ascensionLevel * 4;
 
-  /// Flat vitality from Ascension Level (+2 HP per AL).
-  int get ascensionVitalityBonus => ascensionLevel * 2;
+  /// Flat vitality from Ascension Level (+12 HP per AL).
+  int get ascensionVitalityBonus => ascensionLevel * 12;
 
   /// Extra gold percent from Ascension Level (+10% per AL).
   int get ascensionGoldBonusPercent => ascensionLevel * 10;
@@ -362,9 +362,10 @@ class GameState {
       softForgePercent(sanctuaryPowerLevel, softAt: 40).round() +
       metaDepth.sanctuaryPowerPrestige;
 
+  /// Life Well: +12 HP per level (matches War Altar +1 ATK), +12 HP per prestige.
   int get sanctuaryVitalityBonus =>
-      softForgePercent(sanctuaryVitalityLevel * 2, softAt: 80).round() +
-      metaDepth.sanctuaryVitalityPrestige;
+      softForgePercent(sanctuaryVitalityLevel * 12, softAt: 480).round() +
+      metaDepth.sanctuaryVitalityPrestige * 12;
 
   int get sanctuaryXpBonusPercent =>
       softForgePercent(metaDepth.sanctuaryXpLevel * 4, softAt: 80).round() +
@@ -373,7 +374,8 @@ class GameState {
   int get petAttackBonus {
     final pet = activePet;
     if (pet == null) return 0;
-    final fav = metaDepth.favoritePetSpecies.isNotEmpty &&
+    final fav =
+        metaDepth.favoritePetSpecies.isNotEmpty &&
         pet.resolvedSpecies == metaDepth.favoritePetSpecies;
     return pet.totalAttackBonus + (fav ? 1 : 0);
   }
@@ -429,14 +431,17 @@ class GameState {
     return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
   }
 
-  /// Soulbound primaries → flat ATK (melee AP path or caster Int+SP/2).
+  /// Soulbound primaries → flat ATK (same conversion as worn gear / Auto Equip).
   int get soulboundAttackBonus {
     final item = soulboundItem;
     if (item == null) return 0;
-    final meleeAp = 2 * item.strengthBonus + item.agilityBonus;
-    final meleeAtk = (meleeAp / CombatRatings.kAp).round();
-    final casterAtk = item.intellectBonus + (item.spellPowerBonus ~/ 2);
-    return item.attackBonus + max(meleeAtk, casterAtk);
+    return CombatRatings.itemAttackContribution(
+      strength: item.strengthBonus,
+      agility: item.agilityBonus,
+      intellect: item.intellectBonus,
+      spellPower: item.spellPowerBonus,
+      flatAttack: item.attackBonus,
+    );
   }
 
   int get soulboundDefenseBonus {
@@ -451,18 +456,21 @@ class GameState {
     return item.resolvedStamina * 10;
   }
 
-  int get soulboundRefineBonus => metaDepth.soulboundRefine;
+  int get soulboundRefineAttackBonus => metaDepth.soulboundRefine;
+
+  int get soulboundRefineDefenseBonus =>
+      metaDepth.soulboundRefine * 4;
 
   int get legacyAttackBonus => metaDepth.legacyPoints;
 
   /// Ascend Blessing pack: +2 ATK per stack.
   int get ascendBlessingAttackBonus => metaDepth.ascendBlessings * 2;
 
-  /// Ascend Blessing pack: +1 DEF per stack.
-  int get ascendBlessingDefenseBonus => metaDepth.ascendBlessings;
+  /// Ascend Blessing pack: +8 DEF per stack (percent armor).
+  int get ascendBlessingDefenseBonus => metaDepth.ascendBlessings * 8;
 
-  /// Ascend Blessing pack: +4 VIT per stack.
-  int get ascendBlessingVitalityBonus => metaDepth.ascendBlessings * 4;
+  /// Ascend Blessing pack: +24 HP per stack.
+  int get ascendBlessingVitalityBonus => metaDepth.ascendBlessings * 24;
 
   /// Ascend Blessing pack: +3% gold find per stack.
   int get ascendBlessingGoldPercent => metaDepth.ascendBlessings * 3;
@@ -478,7 +486,7 @@ class GameState {
   /// Heirloom AL bonus applied to VIT when soulbound armor is set.
   int get heirloomVitalityBonus {
     if (soulboundItem == null || !metaDepth.soulboundIsArmor) return 0;
-    return metaDepth.heirloomAlBonus;
+    return metaDepth.heirloomAlBonus * 12;
   }
 
   /// Collection score for Will ranks.
@@ -500,25 +508,19 @@ class GameState {
   }
 
   /// AL-gated keystone cap (0–20). AL0 → 3, grows with Ascension.
-  int get effectiveMaxHardmode => min(20, max(2, 3 + ascensionLevel));
+  int get effectiveMaxHardmode => Keystone.maxForAl(ascensionLevel);
 
   /// Sum of all heroes' gear attack (UI / power checks).
-  int get equipmentAttackBonus => heroes.fold<int>(
-        0,
-        (s, h) => s + h.gearAttackBonus,
-      ) +
+  int get equipmentAttackBonus =>
+      heroes.fold<int>(0, (s, h) => s + h.gearAttackBonus) +
       soulboundAttackBonus;
 
-  int get equipmentDefenseBonus => heroes.fold<int>(
-        0,
-        (s, h) => s + h.gearDefenseBonus,
-      ) +
+  int get equipmentDefenseBonus =>
+      heroes.fold<int>(0, (s, h) => s + h.gearDefenseBonus) +
       soulboundDefenseBonus;
 
-  int get equipmentVitalityBonus => heroes.fold<int>(
-        0,
-        (s, h) => s + h.gearVitalityBonus,
-      ) +
+  int get equipmentVitalityBonus =>
+      heroes.fold<int>(0, (s, h) => s + h.gearVitalityBonus) +
       soulboundVitalityBonus;
 
   int get gearGoldFindPercent {
@@ -551,7 +553,7 @@ class GameState {
       sanctuaryAttackBonus +
       petAttackBonus +
       soulboundAttackBonus +
-      soulboundRefineBonus +
+      soulboundRefineAttackBonus +
       legacyAttackBonus +
       heirloomAttackBonus +
       ascendBlessingAttackBonus;
@@ -561,7 +563,7 @@ class GameState {
       relicDefenseBonus +
       ascensionDefenseBonus +
       soulboundDefenseBonus +
-      soulboundRefineBonus +
+      soulboundRefineDefenseBonus +
       ascendBlessingDefenseBonus;
 
   int get metaVitalityBonus =>
@@ -573,13 +575,14 @@ class GameState {
       heirloomVitalityBonus +
       ascendBlessingVitalityBonus;
 
-  int get totalAttackBonus => metaAttackBonus +
-      heroes.fold<int>(0, (s, h) => s + h.gearAttackBonus);
+  int get totalAttackBonus =>
+      metaAttackBonus + heroes.fold<int>(0, (s, h) => s + h.gearAttackBonus);
 
-  int get totalDefenseBonus => metaDefenseBonus +
-      heroes.fold<int>(0, (s, h) => s + h.gearDefenseBonus);
+  int get totalDefenseBonus =>
+      metaDefenseBonus + heroes.fold<int>(0, (s, h) => s + h.gearDefenseBonus);
 
-  int get totalVitalityBonus => metaVitalityBonus +
+  int get totalVitalityBonus =>
+      metaVitalityBonus +
       heroes.fold<int>(0, (s, h) => s + h.gearVitalityBonus);
 
   int get totalAttack => heroes
@@ -600,8 +603,8 @@ class GameState {
   bool get isPartyDefeated => aliveHeroes == 0;
 
   bool get hasLivingCaster => heroes.any(
-        (hero) => hero.isAlive && hero.spec.roleTag == SpecRoleTag.caster,
-      );
+    (hero) => hero.isAlive && hero.spec.roleTag == SpecRoleTag.caster,
+  );
 
   bool get hasLivingHealer =>
       heroes.any((hero) => hero.isAlive && hero.spec.isHealer);
@@ -660,7 +663,7 @@ class GameState {
   }
 
   CombatRatings ratingsFor(PartyHero hero) {
-    return CombatRatings.fromHeroSheet(
+    final sheet = CombatRatings.fromHeroSheet(
       hero: hero,
       gearStrength: hero.gearStrengthBonus,
       gearAgility: hero.gearAgilityBonus,
@@ -677,6 +680,10 @@ class GameState {
       guardBonus: tankGuardBonusFor(hero),
       auraBonus: casterAuraBonusFor(hero),
     );
+    final atkPct = AdBoost.isActive(metaDepth.adBoostUntilMs)
+        ? AdBoost.attackPercent
+        : 0;
+    return sheet.withAttackPercent(atkPct);
   }
 
   int effectiveHeroAttack(PartyHero hero) => ratingsFor(hero).effectiveAttack;
@@ -709,8 +716,7 @@ class GameState {
       HeroRole.healer => 1.43,
       HeroRole.warrior => 1.35,
     };
-    final pct =
-        hero.gearAttackSpeedBonus + softForgePercent(attackSpeedBonus);
+    final pct = hero.gearAttackSpeedBonus + softForgePercent(attackSpeedBonus);
     return base * (1 + pct / 100);
   }
 
@@ -725,11 +731,44 @@ class GameState {
     return base * (1 + pct / 100);
   }
 
-  /// God Hand AOE radius in tiles.
+  /// God Hand AOE radius in tiles (before style).
   double get godHandRadius => 1.8 + (godHandLevel * 0.15);
 
-  /// God Hand base damage before AL/ATK scaling.
+  /// God Hand base damage before AL/ATK/relic/style.
   int get godHandBaseDamage => 8 + godHandLevel * 3;
+
+  /// Smash damage after AL / party ATK / relic / style — same as SpatialCombat.
+  int godHandSmashDamage({int? baseDamage}) {
+    var damage =
+        (baseDamage ?? godHandBaseDamage) +
+        ascensionLevel +
+        (totalAttack ~/ 8) +
+        relicGodHandDamageBonus;
+    switch (metaDepth.godHandStyle) {
+      case 1:
+        return (damage * 1.22).round();
+      case 2:
+        return (damage * 0.88).round();
+      default:
+        return damage;
+    }
+  }
+
+  /// Blast radius after BAL / FOCUS / WIDE — same as SpatialCombat.
+  double get godHandSmashRadius {
+    switch (metaDepth.godHandStyle) {
+      case 1:
+        return godHandRadius * 0.82;
+      case 2:
+        return godHandRadius * 1.22;
+      default:
+        return godHandRadius;
+    }
+  }
+
+  /// Cooldown after damage + CD levels — same as SpatialCombat.
+  double get godHandCooldownSeconds =>
+      max(0.45, 1.1 - godHandLevel * 0.05 - metaDepth.godHandCdLevel * 0.06);
 
   GameState copyWith({
     List<PartyHero>? heroes,
@@ -809,6 +848,13 @@ class GameState {
     var nextRoster = heroRoster ?? this.heroRoster;
     var nextActive = activeHeroIds ?? this.activeHeroIds;
     if (heroes != null) {
+      assert(
+        heroRoster != null ||
+            activeHeroIds != null ||
+            _sameParty(this.activeHeroIds, heroes),
+        'copyWith(heroes:) updates hero data for the party that is already '
+        'active. Use withActiveParty() to change who is in the party.',
+      );
       nextRoster = _mergeHeroesIntoRoster(nextRoster, heroes);
       nextActive = [for (final h in heroes) h.id];
     }
@@ -863,7 +909,8 @@ class GameState {
       godHandLevel: godHandLevel ?? this.godHandLevel,
       layoutSeed: layoutSeed ?? this.layoutSeed,
       soundMuted: soundMuted ?? this.soundMuted,
-      vfxQuality: vfxQuality ??
+      vfxQuality:
+          vfxQuality ??
           (reducedVfx == null
               ? this.vfxQuality
               : (reducedVfx ? VfxQuality.lite : VfxQuality.full)),
@@ -896,14 +943,30 @@ class GameState {
     );
   }
 
+  /// Swaps *who* fights: roster keeps everyone, [party] becomes the active five.
+  ///
+  /// Separate from `copyWith(heroes:)` on purpose — that one means "same party,
+  /// new numbers" and used to reorder the party by accident when a caller
+  /// passed a different list.
+  GameState withActiveParty(List<PartyHero> party) => copyWith(
+    heroRoster: _mergeHeroesIntoRoster(heroRoster, party),
+    activeHeroIds: [for (final h in party) h.id],
+  );
+
+  static bool _sameParty(List<String> activeIds, List<PartyHero> heroes) {
+    if (activeIds.length != heroes.length) return false;
+    for (var i = 0; i < heroes.length; i++) {
+      if (activeIds[i] != heroes[i].id) return false;
+    }
+    return true;
+  }
+
   /// Merges [updates] into [roster] by hero id (order preserved; new ids append).
   static List<PartyHero> _mergeHeroesIntoRoster(
     List<PartyHero> roster,
     List<PartyHero> updates,
   ) {
-    final byId = <String, PartyHero>{
-      for (final h in roster) h.id: h,
-    };
+    final byId = <String, PartyHero>{for (final h in roster) h.id: h};
     for (final h in updates) {
       byId[h.id] = h;
     }
@@ -919,8 +982,12 @@ class GameState {
     return merged;
   }
 
+  /// Save format written by [toJson]. Readers branch on it in
+  /// `GameLogic.saveVersionOf`; bump it when a field changes meaning.
+  static const int saveVersion = 4;
+
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'version': 4,
+    'version': saveVersion,
     'heroRoster': heroRoster.map((hero) => hero.toJson()).toList(),
     'activeHeroIds': activeHeroIds,
     'heroes': heroes.map((hero) => hero.toJson()).toList(),
@@ -1010,14 +1077,15 @@ class GameState {
     final ownedPetsRaw = petsJson == null
         ? <Pet>[]
         : petsJson.cast<Map<String, dynamic>>().map(Pet.fromJson).toList();
-    final activePetRaw =
-        activePetJson == null ? null : Pet.fromJson(activePetJson);
+    final activePetRaw = activePetJson == null
+        ? null
+        : Pet.fromJson(activePetJson);
     // Keep active pet in roster (and drop orphan active if roster empty).
     final syncedOwnedPets = activePetRaw == null
         ? ownedPetsRaw
         : ownedPetsRaw.any((p) => p.id == activePetRaw.id)
-            ? ownedPetsRaw
-            : [...ownedPetsRaw, activePetRaw];
+        ? ownedPetsRaw
+        : [...ownedPetsRaw, activePetRaw];
     final syncedActivePet = activePetRaw == null
         ? null
         : () {
@@ -1048,7 +1116,8 @@ class GameState {
       }
     }
 
-    var heroes = (json['heroes'] as List<dynamic>?)
+    var heroes =
+        (json['heroes'] as List<dynamic>?)
             ?.cast<Map<String, dynamic>>()
             .map(PartyHero.fromJson)
             .toList() ??
@@ -1057,9 +1126,9 @@ class GameState {
     var heroRoster = rosterJson == null
         ? List<PartyHero>.from(heroes)
         : rosterJson
-            .cast<Map<String, dynamic>>()
-            .map(PartyHero.fromJson)
-            .toList();
+              .cast<Map<String, dynamic>>()
+              .map(PartyHero.fromJson)
+              .toList();
     // Migrate legacy party loadout onto first hero without per-hero gear.
     final anyHeroGear = heroRoster.any((h) => h.equipped.isNotEmpty);
     var legacyEquipped = equipped;
@@ -1074,7 +1143,8 @@ class GameState {
     }
 
     final activeRaw = json['activeHeroIds'] as List<dynamic>?;
-    var activeHeroIds = activeRaw?.map((e) => e.toString()).toList() ??
+    var activeHeroIds =
+        activeRaw?.map((e) => e.toString()).toList() ??
         [for (final h in heroRoster) h.id];
     // Old saves only had `heroes` — treat that list as both roster and active.
     if (rosterJson == null && heroes.isNotEmpty) {
@@ -1164,7 +1234,8 @@ class GameState {
           : EquipmentItem.fromJson(soulboundJson),
       craftMaterials: _jsonStringIntMap(json['craftMaterials']),
       craftPity: _jsonStringIntMap(json['craftPity']),
-      apexVault: (json['apexVault'] as List<dynamic>?)
+      apexVault:
+          (json['apexVault'] as List<dynamic>?)
               ?.cast<Map<String, dynamic>>()
               .map(EquipmentItem.fromJson)
               .toList() ??
@@ -1176,43 +1247,52 @@ class GameState {
         json['vfxQuality'],
         legacyReduced: json['reducedVfx'] as bool?,
       ),
-      autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 24),
+      autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 48),
       autoSellMaxRarity: _jsonInt(json['autoSellMaxRarity'], 1).clamp(0, 4),
-      autoDisassembleMaxIlvl: _jsonInt(json['autoDisassembleMaxIlvl'], 24),
-      autoDisassembleMaxRarity:
-          _jsonInt(json['autoDisassembleMaxRarity'], 2).clamp(0, 4),
+      autoDisassembleMaxIlvl: _jsonInt(json['autoDisassembleMaxIlvl'], 48),
+      autoDisassembleMaxRarity: _jsonInt(
+        json['autoDisassembleMaxRarity'],
+        2,
+      ).clamp(0, 4),
       rogueUnlocked: rogueUnlocked,
-      seenTips: (json['seenTips'] as List<dynamic>?)
+      seenTips:
+          (json['seenTips'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const <String>[],
-      loadouts: (json['loadouts'] as List<dynamic>?)
+      loadouts:
+          (json['loadouts'] as List<dynamic>?)
               ?.map((e) => GearLoadout.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <GearLoadout>[],
-      achievements: (json['achievements'] as List<dynamic>?)
+      achievements:
+          (json['achievements'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const <String>[],
-      codexEnemies: (json['codexEnemies'] as List<dynamic>?)
+      codexEnemies:
+          (json['codexEnemies'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const <String>[],
-      codexItems: (json['codexItems'] as List<dynamic>?)
+      codexItems:
+          (json['codexItems'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const <String>[],
       challengeBossRush: (json['challengeBossRush'] as bool?) ?? false,
       challengeNoFlask: (json['challengeNoFlask'] as bool?) ?? false,
-      hardmodeLevel:
-          ((json['hardmodeLevel'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      hardmodeLevel: ((json['hardmodeLevel'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        20,
+      ),
       keystoneRunActive: (json['keystoneRunActive'] as bool?) ?? false,
-      keystoneRunLevel:
-          ((json['keystoneRunLevel'] as num?)?.toInt() ?? 0).clamp(0, 20),
-      keystoneTimerMs:
-          max(0, (json['keystoneTimerMs'] as num?)?.toInt() ?? 0),
+      keystoneRunLevel: ((json['keystoneRunLevel'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
+      keystoneTimerMs: max(0, (json['keystoneTimerMs'] as num?)?.toInt() ?? 0),
       keystoneParMs: max(0, (json['keystoneParMs'] as num?)?.toInt() ?? 0),
-      keystoneRunAffixes: (json['keystoneRunAffixes'] as List<dynamic>?)
+      keystoneRunAffixes:
+          (json['keystoneRunAffixes'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const <String>[],

@@ -1,6 +1,9 @@
 # Idle Party — monthly content cadence
 
-Operational rhythm for solo / small-time shipping. Ties to the yearly plan in [ROADMAP.md](ROADMAP.md) (Q4 “Månadsrytm”).
+Operational rhythm after 90d M1–M3 shipped. Optional background:
+[TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md). Live contracts:
+[CHASE_CONTRACT.md](CHASE_CONTRACT.md) · [GEAR_BUDGET.md](GEAR_BUDGET.md) ·
+[FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md).
 
 ## Cadence (every 2–4 weeks; aim monthly)
 
@@ -11,19 +14,33 @@ Each tagged `1.x.y` release should include:
    - Reads `tool/out/class_balance_share.json` + markdown board
    - CI: `test/class_balance_gate_test.dart` (live light, fails on DPS `**HIGH**`)
    - Mid band still manual / long (`class_balance_mid_sim_test`) when casters feel spicy
-2. **Content slice** — one player-visible piece: dungeon beat, kit identity, meta sink, **local season week row**, Weekly/Gauntlet beat, or a11y/save polish. Prefer one hero feature per quarter (see ROADMAP).
+2. **Content slice** — one player-visible piece: dungeon beat, kit identity, meta sink, **local season week row**, Weekly/Gauntlet beat, or a11y/save polish. Prefer **core-loop feel** over new zones/classes (owner lock).
 3. **Release notes** — What’s New in `lib/core/meta_systems.dart`; `test/changelog_sync_test.dart` keeps pubspec ↔ version ↔ zone tokens honest.
 
 ### Success-spår (research-backed)
 
-Ship habit → second layer → content cadence:
-
 1. **Habit** — hub TODAY READY/ALMOST always visible on phone; claim/progress CTAs.
 2. **Local season** — `lib/core/local_season.dart` week/month rows (reuse SpatialCombat + vault/Gauntlet).
-3. **Zones / kits** — prefer new zones + kit fantasy polish over new specs; Play 12×14 stays background.
+3. **Feel / kits** — owner lock **2026-08-18:** no new zones or classes. Prefer **core-loop feel** (power beats, combat juice) + kit fantasy polish. Play 12×14 stays background.
 
-See [ROADMAP.md](ROADMAP.md) “Success-spår”.  
-Near-term (90 days): [STRATEGY_90D.md](STRATEGY_90D.md).
+## Decision table (when unsure)
+
+| Om ni tvekar mellan … | Välj |
+|------------------------|------|
+| Ny spec vs polisha kit | Polisha kit |
+| Ny zon vs mer hub-chrome | Core-loop feel först (inga nya zoner). Hub-chrome bara om chase ljuger. |
+| Cool affinity-nudge vs budget | Budget |
+| Skippa test “för att CI flakar” | Fixa kontraktet — gutta inte |
+| Stor rewrite vs small ship | Small ship + synlig What’s New |
+
+## Non-goals (unless owner asks)
+
+- IAP / paid shop (optional hub **POWERUPS** rewarded ads are OK)
+- iOS or web-as-product
+- SpatialCombat rewrite
+- God Hand philosophy redesign
+- Play production as the main work track
+- Many new specs “for the list”
 
 ## Checklist before tagging
 
@@ -49,4 +66,4 @@ Near-term (90 days): [STRATEGY_90D.md](STRATEGY_90D.md).
 
 ## Out of cadence
 
-Do not couple rewrites of SpatialCombat, new account servers, or commercial art dumps to the monthly train. Stretch (Windows zip, score-share image) stays optional per ROADMAP Q4.
+Do not couple rewrites of SpatialCombat, new account servers, or commercial art dumps to the monthly train. Optional stretch (Windows zip, score-share image) only if the owner asks.

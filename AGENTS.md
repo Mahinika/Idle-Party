@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.8**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.28**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -14,13 +14,14 @@ Agents **must** choose methods, skills, and verify steps themselves — see
 
 Preferences (do not re-ask): **content/feel over Play busywork**, first-hour
 **progression/power**, early calm / **endgame grindy OK**, **polish kits** before
-many new specs, **more zones**, hub TODAY / Ascend Blessing / unlock teasers for
-“what am I chasing”, **no IAP for now**, **Android phone-only** (portrait; no
+many new specs, **no new zones or classes for now**, hub TODAY / Ascend Blessing / unlock teasers for
+“what am I chasing”, **no IAP for now**, optional hub **POWERUPS** rewarded ads
+(1 ad = 1 hour, stackable), **Android phone-only** (portrait; no
 iOS/web product), **large batches**, English in-game copy, fairness-first balance,
 **commit locally when a batch is verified**, ask before push / PR / tag.
 Near-term execution order:
 `docs/CONTENT_CADENCE.md` after 90d M1–M3 shipped. **Default next work:**
-monthly cadence (zones + kit polish) unless the owner names something else.
+**core-loop feel** (power beats in the fight you already have) unless the owner names something else.
 Chat in plain Swedish; ask only product/risk questions. Full detail:
 `.cursor/rules/owner-preferences.mdc`.
 
@@ -31,11 +32,18 @@ for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (historical upload noted as AAB **14 / 1.9.3**); tagged GitHub line is **1.12.0**, working ship **1.12.8**.
-Production still needs **12 closed testers × 14 days**. Do not treat Play as the
-primary install channel yet.
+closed Alpha (**1.12.27 / 57** submitted 2026-08-21; testers may still be on
+**1.12.25 / 55** until review publishes). Working ship is
+**1.12.28**. Production still needs **12 closed testers × 14 days**.
+Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
+
+**Play update notice** (Android, Play-installed only): hub banner + SETTINGS **GET UPDATE** when Google Play has a newer versionCode. Sideload / web stay quiet. Listing opens with `hl=en`.
+
+**Optional Play Games** (Android, META → SETTINGS): seasonal Timed KEY + Gauntlet
+boards + cloud save. Opt-in; clipboard export/import still works. IDs in
+`lib/core/play_leaderboard_ids.dart`. Soft-fail on web / sideload.
 
 ## Legal / IP policy (mandatory)
 
@@ -51,11 +59,13 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 ```bash
 flutter pub get
 flutter analyze          # project target: zero issues on lib/test
-flutter test
+flutter test             # local: full suite; CI excludes tag `sim`
 flutter run -d web-server --web-hostname=localhost --web-port=8080
 ```
 
-CI uses `flutter analyze lib test --no-fatal-infos` then `flutter test` (includes balance gate).
+CI (`ci.yml`): `flutter analyze lib test --no-fatal-infos` then
+`flutter test --exclude-tags sim` (live-light balance gate still runs).
+Long Monte-Carlo sims are tag `sim` → `.github/workflows/sim-nightly.yml`.
 Runs on push to `main` / `master` / `cursor/**` / `release/**`, and on pull requests.
 
 ### Agent tooling (balance / honesty / QA)
@@ -82,49 +92,47 @@ Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 `verifying-in-browser`, `screenshotting-changelog`, `recording-browser-flow-as-test`,
 `systematic-debugging`, `reviewing-code`, `accessibility-auditing`).
 
-Cadence: `docs/CONTENT_CADENCE.md`. Near-term (90d): `docs/STRATEGY_90D.md`
-(chase → kits → zone). Year roadmap: `docs/ROADMAP.md`. Background research:
-`docs/TOP_GAMES_RESEARCH.md`. Systems rebuild (P1–P5 chase/offline/kits/KEY/GH
-shipped): `docs/SYSTEMS_REBUILD.md`. Chase contract (hub TODAY ↔ offline Up next):
-`docs/CHASE_CONTRACT.md`. Gear budget contract: `docs/GEAR_BUDGET.md`. Floor
-blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`. Play ops: `docs/PLAY_STORE.md`
-+ skill `play-store-prep`.
+Cadence: `docs/CONTENT_CADENCE.md` (decision table + tag rhythm; 90d M1–M3
+shipped). Background (optional): `docs/TOP_GAMES_RESEARCH.md`. Chase contract
+(hub TODAY ↔ offline Up next): `docs/CHASE_CONTRACT.md`. Gear budget:
+`docs/GEAR_BUDGET.md`. Floor blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`.
+Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`.
 
 ### Cursor automation
 
-- Project hooks: `.cursor/hooks.json` — **sessionStart** injects current STRATEGY
-  month; after game/docs edits, **stop** runs `flutter analyze lib test`, plus
+- Project hooks: `.cursor/hooks.json` — **sessionStart** injects cadence context;
+  after game/docs edits, **stop** runs `flutter analyze lib test`, plus
   changelog sync when version/What’s New files touched, plus `ship_smoke_test`
   when hub/chase/guides files touched.
 - Git: daily work on `main`; `release/*` only when cutting a tag.
 - Ship bar: `.cursor/rules/definition-of-done.mdc`.
 - Fast honesty: `flutter test test/ship_smoke_test.dart`.
-- MCP: `.cursor/mcp.json` → **`idle-party`** (`tool/mcp_idle_party/`) — balance_share,
-  changelog_check, flutter_analyze/test, zone_identity, hub smoke helpers.
+- MCP: `.cursor/mcp.json` → **`idle-party`** (`tool/mcp_idle_party/`; Cursor UI
+  may show `user-idle-party`) — balance_share, changelog_check, flutter_analyze/test,
+  zone_identity, hub smoke helpers.
 
 ## Architecture
 
 ```
 main.dart
  ├─ loading → boot intro → startMenu → optional newGamePicker → play
- ├─ Hub (inDungeon=false) → HubScreen + optional Is2Shell(hubMode) overlays
- └─ Dungeon (inDungeon=true) → Is2Shell
+ ├─ Hub (!inDungeon) → HubScreen + FirstSessionTips + MenuSurface
+ └─ Dungeon (inDungeon) → Is2Shell
       ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
-      └─ Dungeon chrome (FARM/PUSH, God Hand ring, party HUD + flask,
-         target panel, bottom nav: PARTY / POWER / META / HUB —
-         same pillars as hub; PARTY opens gear/bag sheet)
+      └─ chrome (FARM/PUSH, God Hand, party HUD + flask, target panel)
+         + AppBottomBar PARTY / POWER / META / HUB + MenuSurface
 
-GameDirector → SpatialCombat.step @ ~60Hz (live dungeon)
-             → GameLogic.simulateSpatialOffline → SpatialCombat.step
-               (AFK: afkAssist + reducedVfx, auto-flask, God Hand)
-GameLogic + GameState   (rules / persistence)
-DungeonCatalog          (15 named zones, bossFloor = 5 + AL)
-RoomLayouts + FloorBlueprint / PlacementPlan / ZoneLayoutKit
-                        (multi-chamber maps, gates, room-chest sockets)
+Shared menus: MenuRouter + MenuAlerts + MenuSurface
+  (same PARTY/POWER/META words in hub and dungeon; dungeon adds HUB = leave)
 ```
 
 **SpatialCombat is the combat authority** for live play and in-dungeon offline
-catch-up (full enemy stats; same kits/abilities/chambers).
+catch-up (full enemy stats; same kits/abilities/chambers). Offline / AFK
+catch-up uses `afkAssist: true` inside the same `build`/`step` API — enemy
+hits are softer and hero hits harder so long catch-up stays snappy. Hub AFK
+(`!inDungeon`) is sanctuary idle gold only — no combat. Healers open each floor
+with mana; **Spirit** refills mana over time (not a damage stat). Warrior /
+Paladin / Shaman can equip **shields** in the off-hand.
 
 **Content inventory:** 10 classes / **31 specs** (`HeroSpecId`) · **15 zones**
 through Mothveil Hollow.
@@ -136,18 +144,35 @@ Spire climb from Hub; wipe/leave → hub; `metaDepth.gauntletBestFloor` survives
 words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up
 next). One chase card — claimables first (vault / jobs / **Meet new kit**), then
 Ascend / progress. Urgency **READY** / **ALMOST** (zone/Will/Gauntlet/Ascend-near
-beat Daily grind; also KEY +1 vault, etc.). New unlocks queue
-`metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast + chase
+beat Daily grind; also KEY +1 vault, etc.). **First hour** (no boss, no Ascend):
+grow the party in the starter zone — skip Daily / KEY / vault-start / kit teasers
+until after the first boss (`GameLogic.showDailyChase`). After that, TODAY may
+chase the next KEY (`ENTER KEY +N`) as a habit. META → KEY tab, week-affix line,
+and KEYSTONE tips wait until AL≥2 or King's Fort cleared
+(`GameLogic.showKeystoneJargon`). New unlocks
+queue `metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast + chase
 detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next AL
 unlocks — kit ladder AL1–6 (e.g. Combat Rogue / Arms / Holy Paladin, BM/Holy/Arcane + 5th slot, DKs,
 Aff/Demo) plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock
 sprite).
 
-Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat. Offline return
+New Game picker: three starters in plain English (**Shield / Healer / Damage**).
+Advanced menu tabs (LOADOUTS, ROSTER, CAMP, SHOP, KEY, BEAST, CODEX, …) gate via
+`MenuTabs` so day-one chrome stays small. PARTY badges mean bag upgrades
+(`MenuAlerts`).
+
+Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat (see SpatialCombat
+note above for dungeon offline assist). Offline return
 uses `OfflineProgressResult` (wow headline + ≤3 highlights + “Up next” =
 ChaseContract).
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
+
+**Hub POWERUPS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded` +
+`ad_config.dart` (live AdMob ids on release Android; sample ids in debug). 1 ad =
+1 hour of ×2 gold and +25% ATK; duration stacks (max 24h) in
+`metaDepth.adBoostUntilMs` (survives Ascend). Web playtest grants a preview hour.
+Ads never interrupt combat. SETTINGS **AD PRIVACY** withdraws AdMob GDPR consent.
 
 ## World path (15 zones)
 
@@ -180,10 +205,23 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 - Maps are **multi-chamber** with corridor **gates** after a chamber clears.
 - Enemies in later chambers start **dormant**; wake when prior chambers clear
   (and can wake on **proximity** so soft-locks are rare).
-- **Room chests** on elite/treasure beats drop gold/gear pickups — same AFK
-  vacuum / timeout path as kill loot.
-- After all enemies die and loot is picked up (or times out), party walks to
-  **stairs/exit** → `completeCurrentRoom`.
+- **Room chests** on elite/treasure beats drop gold/gear pickups — vacuumed
+  with kill loot when the floor clears (same bank path).
+- After all enemies die, ground loot is vacuumed immediately and the party
+  walks to **stairs/exit** → `completeCurrentRoom`.
+
+## Combat ratings (1.12.12)
+
+Sheet power is `CombatRatings` (`lib/models/combat_ratings.dart`) — keep aligned
+with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
+
+- **Plate melee:** 2 AP per Strength. **Rogue-family** (leather/mail: rogues,
+  hunters, cats, Enhancement): 1 AP/Str + **2 AP/Agility**.
+- **Casters:** level Intellect is full ATK; **gear Int and Spell Power both ~/3**
+  into ATK. Int still adds spell crit.
+- **Armor:** percent mitigation `taken = raw * K / (def + K)` (K ≈ 1.2× attacker
+  ATK), floor **25% of the hit** — more DEF always helps; nothing is immune.
+- Player-facing STA = Stamina. BiS / UPGRADE still use budget score only.
 
 ## Key files
 
@@ -195,16 +233,26 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 | Changelog / meta helpers | `lib/core/meta_systems.dart` |
 | Meta blob | `lib/models/meta_depth.dart` |
 | Dungeon catalog | `lib/models/dungeon_def.dart` |
+| Combat sheet | `lib/models/combat_ratings.dart` + `docs/GEAR_BUDGET.md` |
 | Spatial sim | `lib/spatial/spatial_combat.dart` |
-| Ability runtime | `lib/spatial/ability_effects.dart` |
+| Ability runtime | `lib/spatial/ability_effects.dart` + `kit_migrated_casts.dart` (`ClassAbilityDef.fireMode` / `gate` / `customId`) |
 | Tile maps | `lib/spatial/tile_map.dart` |
 | Floor blueprint / placement | `lib/spatial/floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart` + `docs/FLOOR_BLUEPRINT.md` |
+| Shared menus | `lib/core/menu_router.dart`, `menu_alerts.dart` · `lib/ui/shell/menu_surface.dart`, `app_bottom_bar.dart` |
 | Hub | `lib/ui/hub_screen.dart` |
 | Hub TODAY chase | `lib/core/hub_chase.dart` |
+| Hub POWERUPS ads | `lib/core/ad_boost.dart`, `ad_rewarded.dart`, `ad_config.dart` · `lib/ui/hub/hub_powerups.dart` |
+| Hub gold/min (keep AFK) | `lib/core/gold_income.dart` |
+| POWER INCOME tab | `lib/ui/shell/income_overlay.dart` |
+| Apex hub (craft / vault / target meter) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) |
 | Chase contract (hub ↔ AFK) | `lib/core/chase_contract.dart` + `docs/CHASE_CONTRACT.md` |
+| Guides copy | `lib/core/game_guides.dart` |
+| Keystone | `lib/core/keystone.dart` |
+| Local season weeks | `lib/core/local_season.dart` |
+| Play Games | `lib/core/play_games_bridge.dart`, `play_leaderboard_ids.dart` |
 | Ascend unlock teasers | `lib/core/ascend_roadmap.dart` |
 | Ascend / lore copy | `lib/core/story_lore.dart` |
-| Dungeon / hub shell | `lib/ui/is2_shell.dart` |
+| Dungeon shell | `lib/ui/is2_shell.dart` (~thin; HUD in `lib/ui/shell/*`) |
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
 | Kenney helpers | `lib/ui/kenney_assets.dart` |
 | Custom art helpers | `lib/ui/custom_assets.dart` |
@@ -221,37 +269,46 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
 - Loadouts UI label = **LOADOUTS**; dungeon armor 2pc/4pc = **armor sets** (not the same).
 - Gear BiS / UPGRADE: budget-honest score only — see `docs/GEAR_BUDGET.md`
   (`itemBudgetScore`; no affinity/armor/rarity/set crumbs).
+- Split giant files (`game_logic`, `spatial_combat`, …) when a change needs a
+  home — do not merge more into them. `is2_shell` is already thin; put new HUD
+  under `lib/ui/shell/`. SpatialCombat stays the only fight sim.
 
 ## Meta (survives Ascend)
 
 **Keeps:** essence (and rewards), relics, sanctuary tracks + prestige, pets,
-soulbound item (may rescale) + fragments, God Hand level + style/CD in `metaDepth`,
+God Hand level + style/CD in `metaDepth`, **Apex** vault + equipped apex,
+legacy heirloom item if an old save still has one (no new binds; may rescale),
 `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
-(mute/VFX/colorblind/text scale/auto-sell), full `metaDepth` (Gauntlet best, Will /
-Gauntlet claims, daily vault / weekly affix season, prestige shop, unlocked specs,
-**`pendingHeroReveals`** (Meet … TODAY until PARTY), party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**, …),
-**hero levels/XP**, **Apex** vault + equipped apex, craft mats/pity, keystone prefs
-(clamped) + challenge toggles, FARM/PUSH preference.
+(mute/VFX/colorblind/text scale/auto-sell/**auto-disassemble**), full `metaDepth`
+(Gauntlet best, Will / Gauntlet claims, daily vault / weekly affix season,
+**prestige shop** purchases — Loadout Folio / Apothecary Writ / Junk Magnifier /
+Away Ledger / …, unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY),
+party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**,
+**`adBoostUntilMs`**, Play Games opt-in + season PBs, …), **hero levels/XP**,
+craft mats/pity, keystone prefs (clamped) + challenge toggles, FARM/PUSH preference.
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
-each Ascend adds **+2 ATK · +1 DEF · +4 STA · +3% gold** on top of AL flats
-(`+1 ATK` / `DEF = AL~/2` / `+2 STA` / `+10% gold` per AL). Shown in Forge → KEEP
+each Ascend adds **+2 ATK · +8 DEF · +24 STA · +3% gold** on top of AL flats
+(`+1 ATK` / `+4 DEF` / `+12 STA` / `+10% gold` per AL). Shown in Forge → KEEP
 and Sanctuary. Constants: `GameLogic.ascendBlessing*`. Player-facing label is
 **STA / Stamina** (same as gear); internal fields may still say vitality.
 
 **Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades
-(ATK/DEF/STA/move/haste/crit), non-Apex gear/stash, **loadouts**, leave dungeon
-(`inDungeon=false`); mission board rebuilt for new AL.
+(ATK/DEF/STA/move/haste/crit), non-Apex gear/stash, **loadout presets** (slot
+*count* from prestige Folio stays), leave dungeon (`inDungeon=false`); mission
+board rebuilt for new AL.
 
 Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
 
 ### Keystone (Mythic+-style)
 
-Hub **KEYSTONE** sets preferred key (`hardmodeLevel` 0–20, AL-gated). On enter,
-affixes lock + idle-friendly par timer starts (AFK counts). Boss clear under par
-→ TIMED (upgrade key, vault score); overtime → depleted. Loot iLvl bonus is
-`key * 2` (`Keystone.lootItemLevelBonus`) so higher keys are a visible gear jump.
-After the first hour, hub TODAY chases the next KEY until the AL cap; Daily /
+Hub **KEY** (META tab, after jargon unlock) sets preferred key (`hardmodeLevel`
+0–20, AL-gated). On enter, affixes lock + idle-friendly par timer starts (AFK
+counts). Boss clear under par → TIMED (upgrade key, vault score); overtime →
+depleted. Loot iLvl bonus is `key * 2` (`Keystone.lootItemLevelBonus`) so higher
+keys are a visible gear jump. Combat **gold** scales with the same curve as threat
+(`Keystone.goldMul` — e.g. KEY +10 ≈ gold ×5.5) so harder keys are not a gold/hour
+tax. After the first hour, hub TODAY chases the next KEY until the AL cap; Daily /
 Will / Gauntlet surface when the preferred key is at cap (ALMOST cliffs stay above).
 **Daily vault** (UTC): 1 clear **or** timed KEY+2; claim once per day (scales with
 best timed key). Affixes still rotate weekly. See `lib/core/keystone.dart`.
@@ -260,7 +317,8 @@ best timed key). Affixes still rotate weekly. See `lib/core/keystone.dart`.
 
 Tap steers the party briefly and deals AOE; has cooldown. Damage upgrades with essence.
 Styles under Forge → KEEP: **BAL** / **FOCUS** (+dmg −radius) / **WIDE** (+radius −dmg).
-Optional CD upgrades: `metaDepth.godHandCdLevel`.
+Optional CD upgrades: `metaDepth.godHandCdLevel`. Soft knobs — do not redesign
+direction without asking.
 
 ## Balance policy
 

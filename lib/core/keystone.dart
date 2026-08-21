@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/models/dungeon_def.dart';
 
 /// Mythic+-style keystone runs: level, affixes, idle-friendly timer, upgrade.
 abstract final class Keystone {
@@ -23,9 +24,24 @@ abstract final class Keystone {
   /// Threat / pack density vs old HM+10 ≈ 10× at key 20.
   static double threatMul(int key) => 1.0 + key.clamp(0, maxLevel) * 0.45;
 
-  static double goldMul(int key) => 1.0 + key.clamp(0, maxLevel) * 0.075;
+  /// Combat gold tracks threat so KEY is not a gold/hour tax.
+  /// iLvl remains the extra prize (`lootItemLevelBonus`).
+  static double goldMul(int key) => threatMul(key);
 
   static double densityMul(int key) => 1.0 + key.clamp(0, maxLevel) * 0.45;
+
+  /// Extra KEY bodies pay this slice of density into pack gold (1.0 = full).
+  static const double densityGoldShare = 0.85;
+
+  /// Phone line: `gold ×5.5` on KEY +10.
+  static String goldMulLabel(int key) {
+    final m = goldMul(key);
+    if (m <= 1.01) return 'gold ×1';
+    final text = (m * 10).round() % 10 == 0
+        ? m.toStringAsFixed(0)
+        : m.toStringAsFixed(1);
+    return 'gold ×$text';
+  }
 
   /// Legendary direct-drop chance contribution (key 20 ≈ old HM+10).
   static double legendaryChance(int key) =>
@@ -44,7 +60,8 @@ abstract final class Keystone {
     return floors * perFloorMs;
   }
 
-  static int bossFloorForAl(int ascensionLevel) => 5 + ascensionLevel;
+  static int bossFloorForAl(int ascensionLevel) =>
+      DungeonCatalog.bossFloor(ascensionLevel);
 
   /// Affixes locked at run start from key level + ISO week + personal extras.
   static List<String> affixesFor({
@@ -123,30 +140,30 @@ abstract final class Keystone {
   }
 
   static String label(String affix) => switch (affix) {
-        'glass' => 'Glass',
-        'swarm' => 'Swarm',
-        'elite' => 'Elite',
-        'fortune' => 'Fortune',
-        'iron' => 'Iron',
-        'fortified' => 'Fortified',
-        'tyrannical' => 'Tyrannical',
-        'boss_rush' => 'Boss Rush',
-        'no_flask' => 'No Flask',
-        _ => affix,
-      };
+    'glass' => 'Glass',
+    'swarm' => 'Swarm',
+    'elite' => 'Elite',
+    'fortune' => 'Fortune',
+    'iron' => 'Iron',
+    'fortified' => 'Fortified',
+    'tyrannical' => 'Tyrannical',
+    'boss_rush' => 'Boss Rush',
+    'no_flask' => 'No Flask',
+    _ => affix,
+  };
 
   static String blurb(String affix) => switch (affix) {
-        'glass' => 'Fragile foes, hit harder',
-        'swarm' => 'More enemies',
-        'elite' => 'Tougher packs',
-        'fortune' => 'More gold',
-        'iron' => 'Harder, richer',
-        'fortified' => 'Trash packs tougher',
-        'tyrannical' => 'Bosses tougher',
-        'boss_rush' => 'Elite-heavy pulls',
-        'no_flask' => 'Flasks disabled',
-        _ => affix,
-      };
+    'glass' => 'Fragile foes, hit harder',
+    'swarm' => 'More enemies',
+    'elite' => 'Tougher packs',
+    'fortune' => 'More gold',
+    'iron' => 'Harder, richer',
+    'fortified' => 'Trash packs tougher',
+    'tyrannical' => 'Bosses tougher',
+    'boss_rush' => 'Elite-heavy pulls',
+    'no_flask' => 'Flasks disabled',
+    _ => affix,
+  };
 
   static String formatTimer(int ms) {
     final totalSec = max(0, ms) ~/ 1000;
@@ -158,10 +175,6 @@ abstract final class Keystone {
   /// Essence for claiming daily vault (scales with today's best timed key).
   static int dailyVaultEssence(int bestTimedKey) =>
       14 + bestTimedKey.clamp(0, maxLevel) * 3;
-
-  @Deprecated('Use dailyVaultEssence')
-  static int weeklyVaultEssence(int bestTimedKey) =>
-      dailyVaultEssence(bestTimedKey);
 
   /// Extra essence when timing a keystone boss clear.
   static int timedClearBonus(int key) => 4 + key.clamp(0, maxLevel) * 2;

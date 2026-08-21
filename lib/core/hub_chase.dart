@@ -11,9 +11,10 @@ import 'meta_systems.dart';
 
 /// Kind of hub "today" chase — claimables first, then progress goals.
 enum HubChaseKind {
-  /// Daily vault ready to claim (API still uses [GameLogic.claimWeekly]).
+  /// Daily vault ready to claim ([GameLogic.claimDailyVault]).
   claimDailyVault,
   claimMissions,
+
   /// Newly unlocked kit waiting for PARTY meet / acknowledge.
   meetHero,
   ascend,
@@ -22,6 +23,7 @@ enum HubChaseKind {
   gauntletMilestone,
   unlockZone,
   dailyRun,
+
   /// Next KEY run after the first hour (habit until AL cap).
   keystone,
   clearFloors,
@@ -96,8 +98,7 @@ class HubChase {
       );
     }
 
-    final completeMissions =
-        state.missions.where((m) => m.isComplete).length;
+    final completeMissions = state.missions.where((m) => m.isComplete).length;
     if (completeMissions > 0) {
       return HubChase(
         kind: HubChaseKind.claimMissions,
@@ -114,15 +115,15 @@ class HubChase {
     if (meet != null) return meet;
 
     if (GameLogic.canAscend(state)) {
-      final reward = GameLogic.ascendEssenceReward(state.ascensionLevel + 1) +
+      final reward =
+          GameLogic.ascendEssenceReward(state.ascensionLevel + 1) +
           MetaSystems.ascendMilestoneReward(
             state.ascensionLevel,
             state.ascensionLevel + 1,
           );
       final nextAl = state.ascensionLevel + 1;
       final unlock = AscendRoadmap.unlockAtAl(nextAl);
-      final unlockBit =
-          unlock != null ? ' · AL$nextAl unlocks $unlock' : '';
+      final unlockBit = unlock != null ? ' · AL$nextAl unlocks $unlock' : '';
       return HubChase(
         kind: HubChaseKind.ascend,
         title: 'Ascend for lasting power',
@@ -136,14 +137,13 @@ class HubChase {
       );
     }
 
-    final bossesNeed =
-        GameLogic.bossesRequiredForAscension(state.ascensionLevel);
-    final bossesLeft =
-        (bossesNeed - state.bossVictories).clamp(0, bossesNeed);
+    final bossesNeed = GameLogic.bossesRequiredForAscension(
+      state.ascensionLevel,
+    );
+    final bossesLeft = (bossesNeed - state.bossVictories).clamp(0, bossesNeed);
     // Only "almost" once you've banked progress (AL0 needs 1 boss total —
     // 0/1 is the start of the game, not a cliffhanger).
-    final almostAscend =
-        bossesLeft == 1 && state.bossVictories > 0;
+    final almostAscend = bossesLeft == 1 && state.bossVictories > 0;
     if (almostAscend) {
       return _ascendPushChase(
         state,
@@ -288,7 +288,7 @@ class HubChase {
       return HubChase(
         kind: HubChaseKind.weekGoal,
         title: 'Almost · ${week.name}',
-        detail: week.blurb,
+        detail: '${week.blurb} · +${week.essenceReward}e',
         progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
         urgency: HubChaseUrgency.almost,
       );
@@ -299,7 +299,7 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.weekGoal,
       title: week.name,
-      detail: week.blurb,
+      detail: '${week.blurb} · +${week.essenceReward}e',
       progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
     );
   }
@@ -318,8 +318,8 @@ class HubChase {
       kind: HubChaseKind.keystone,
       title: firstKey ? 'Run KEY +1' : 'Time KEY +$target',
       detail: firstKey
-          ? 'Higher keys drop higher iLvl loot — start with KEY +1.'
-          : 'Time KEY +$target for better iLvl loot and the next key unlock.',
+          ? 'Higher keys drop higher iLvl loot and pay more gold — start with KEY +1.'
+          : 'Time KEY +$target for better iLvl, more gold, and the next key unlock.',
       progressLabel: 'KEY +$target',
       keyLevel: target,
       zoneId: GameLogic.recommendedDungeonId(state),
@@ -344,14 +344,14 @@ class HubChase {
       title: almost
           ? 'Almost Ascend — push ${dungeon.name}'
           : firstHour
-              ? 'Grow the party — ${dungeon.name}'
-              : 'Push ${dungeon.name}',
+          ? 'Grow the party — ${dungeon.name}'
+          : 'Push ${dungeon.name}',
       detail: firstHour
-          ? 'Enter, fight, get stronger. 1 boss then you can Ascend. $teaser'
+          ? 'Enter the cave. Your party fights on its own. Get stronger and beat the boss.'
           : bossesLeft > 0
           ? (almost
-              ? '1 boss left · then Ascend. $teaser'
-              : 'Clear bosses toward Ascend ($bossesLeft left). $teaser')
+                ? '1 boss left · then Ascend. $teaser'
+                : 'Clear bosses toward Ascend ($bossesLeft left). $teaser')
           : 'Farm gear or push deeper for power. $teaser',
       progressLabel: 'Ascend ${state.bossVictories}/$bossesNeed',
       urgency: urgency,
@@ -366,12 +366,13 @@ class HubChase {
       if (threshold <= 0 || score >= threshold) continue;
       final need = threshold - score;
       final almost = need <= 3;
+      final pay = WillRanks.essenceForThreshold(threshold);
       return HubChase(
         kind: HubChaseKind.willRank,
         title: almost ? 'Almost ${entry.$2}' : 'Chase ${entry.$2}',
         detail: need == 1
-            ? '1 collection point to the next Will rank (+essence).'
-            : '$need collection points to the next Will rank (+essence).',
+            ? '1 collection point to ${entry.$2} (+${pay}e).'
+            : '$need collection points to ${entry.$2} (+${pay}e).',
         progressLabel: '$score/$threshold',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
@@ -393,14 +394,15 @@ class HubChase {
       }
       final need = floor - best;
       final almost = need <= 5 && best > 0;
+      final pay = GauntletMilestones.essenceForFloor(floor);
       return HubChase(
         kind: HubChaseKind.gauntletMilestone,
         title: almost
             ? 'Almost Gauntlet floor $floor'
             : 'Gauntlet floor $floor',
         detail: best <= 0
-            ? 'Enter Infinity Gauntlet and climb for a milestone reward.'
-            : 'Best F$best — $need floors to the next milestone.',
+            ? 'Enter Infinity Gauntlet and climb for +${pay}e.'
+            : 'Best F$best — $need floors to F$floor (+${pay}e).',
         progressLabel: 'F$best → F$floor',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
@@ -426,7 +428,8 @@ class HubChase {
           zoneId: d.id,
         );
       }
-      final almost = d.unlockPrice > 0 &&
+      final almost =
+          d.unlockPrice > 0 &&
           goldNeed <= (d.unlockPrice * 0.12).ceil().clamp(1, d.unlockPrice);
       // Playing the current zone unlocks the next. TODAY only names a zone
       // unlock when gold is a cliffhanger — not as the default grind.

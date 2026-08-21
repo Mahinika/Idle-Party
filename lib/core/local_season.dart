@@ -101,6 +101,26 @@ abstract final class LocalSeasonCatalog {
       titleReward: 'Late Spire',
     ),
     LocalSeasonWeek(
+      id: 'veil_tempo',
+      name: 'Veil Tempo',
+      blurb: 'Silk packs — bank a timed KEY +2 under Swarm.',
+      weekKey: '2026-W36',
+      affixOverride: 'swarm',
+      timedKeyTarget: 2,
+      essenceReward: 12,
+      titleReward: 'Veil Timer',
+    ),
+    LocalSeasonWeek(
+      id: 'ember_climb',
+      name: 'Ember Climb',
+      blurb: 'Climb Infinity Gauntlet to floor 25 this week.',
+      weekKey: '2026-W37',
+      affixOverride: 'fortune',
+      gauntletFloorTarget: 25,
+      essenceReward: 14,
+      titleReward: 'Ember Climber',
+    ),
+    LocalSeasonWeek(
       id: 'glass_tempo',
       name: 'Glass Tempo',
       blurb: 'Fragile packs — time a KEY +2 this week.',
@@ -212,8 +232,8 @@ abstract final class LocalSeasonCatalog {
       return week.affixOverride!;
     }
     if (currentModifier.isNotEmpty) return currentModifier;
-    return Keystone.weeklyPool[
-        (weekKey.hashCode & 0x7fffffff) % Keystone.weeklyPool.length];
+    return Keystone.weeklyPool[(weekKey.hashCode & 0x7fffffff) %
+        Keystone.weeklyPool.length];
   }
 
   static bool weekGoalClaimed(GameState state, LocalSeasonWeek week) {
@@ -236,7 +256,9 @@ abstract final class LocalSeasonCatalog {
   }
 
   static bool weekGoalAlmost(GameState state, LocalSeasonWeek week) {
-    if (!week.hasGoal || weekGoalClaimed(state, week) || weekGoalReady(state, week)) {
+    if (!week.hasGoal ||
+        weekGoalClaimed(state, week) ||
+        weekGoalReady(state, week)) {
       return false;
     }
     if (week.timedKeyTarget > 0) {

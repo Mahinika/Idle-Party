@@ -12,20 +12,20 @@ import 'game_theme.dart';
 
 /// Classic WoW-style rarity name colors.
 Color itemRarityColor(LootRarity rarity) => switch (rarity) {
-      LootRarity.common => const Color(0xFFFFFFFF),
-      LootRarity.uncommon => const Color(0xFF1EFF00),
-      LootRarity.rare => const Color(0xFF0070DD),
-      LootRarity.epic => const Color(0xFFA335EE),
-      LootRarity.legendary => const Color(0xFFFF8000),
-    };
+  LootRarity.common => const Color(0xFFFFFFFF),
+  LootRarity.uncommon => const Color(0xFF1EFF00),
+  LootRarity.rare => const Color(0xFF0070DD),
+  LootRarity.epic => const Color(0xFFA335EE),
+  LootRarity.legendary => const Color(0xFFFF8000),
+};
 
 Color itemRarityBorder(LootRarity rarity) => switch (rarity) {
-      LootRarity.common => const Color(0xFF9D9D9D),
-      LootRarity.uncommon => const Color(0xFF1EFF00),
-      LootRarity.rare => const Color(0xFF0070DD),
-      LootRarity.epic => const Color(0xFFA335EE),
-      LootRarity.legendary => const Color(0xFFFF8000),
-    };
+  LootRarity.common => const Color(0xFF9D9D9D),
+  LootRarity.uncommon => const Color(0xFF1EFF00),
+  LootRarity.rare => const Color(0xFF0070DD),
+  LootRarity.epic => const Color(0xFFA335EE),
+  LootRarity.legendary => const Color(0xFFFF8000),
+};
 
 /// WoW-inspired item tooltip body (dark panel, rarity name, stacked stats).
 class ItemTooltipCard extends StatelessWidget {
@@ -39,6 +39,7 @@ class ItemTooltipCard extends StatelessWidget {
 
   final EquipmentItem item;
   final PartyHero? hero;
+
   /// Bag gear used so 1H vs worn 2H can credit a shield/tome.
   final List<EquipmentItem>? pairingStash;
   final bool compact;
@@ -52,8 +53,10 @@ class ItemTooltipCard extends StatelessWidget {
     final slotLabel =
         CharacterEquipPanel.slotLabels[item.slot] ?? item.slot.name;
     final type = _typeLine(item);
-    final binding = item.id.startsWith('soulbound_') || item.isApex
-        ? 'Soulbound'
+    final binding = item.isApex
+        ? 'Apex · survives Ascend'
+        : item.id.startsWith('soulbound_')
+        ? 'Heirloom (legacy)'
         : 'Binds when equipped';
     final gold = GameLogic.equipmentGoldValue(item);
     final essence = GameLogic.equipmentEssenceValue(item);
@@ -92,14 +95,12 @@ class ItemTooltipCard extends StatelessWidget {
     final setLines = <({String text, bool active})>[];
     final setId = item.setId;
     if (setId != null && setId.isNotEmpty) {
-      final wornCount =
-          hero == null ? 0 : GearSets.wornCount(hero!.equipped, setId);
+      final wornCount = hero == null
+          ? 0
+          : GearSets.wornCount(hero!.equipped, setId);
       final name = GearSets.displayName(setId);
       setHeader = '$name ($wornCount/4)';
-      setLines.add((
-        text: '2 piece: +stats',
-        active: wornCount >= 2,
-      ));
+      setLines.add((text: '2 piece: +stats', active: wornCount >= 2));
       setLines.add((
         text: '4 piece: +stats · 10% set proc on auto',
         active: wornCount >= 4,
@@ -152,19 +153,13 @@ class ItemTooltipCard extends StatelessWidget {
                 ),
                 Text(
                   binding,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: GameTheme.parchment,
-                  ),
+                  style: GameTheme.body(size: 12, color: GameTheme.parchment),
                 ),
                 if (item.isApex)
                   Text(
                     'Apex Rank ${item.apexRank}'
                     '${item.apexClassId != null ? ' · ${item.apexClassId}' : ''}',
-                    style: GameTheme.body(
-                      size: 12,
-                      color: _gold,
-                    ),
+                    style: GameTheme.body(size: 12, color: _gold),
                   ),
                 if (alreadyEquipped) ...[
                   const SizedBox(height: 4),
@@ -213,10 +208,7 @@ class ItemTooltipCard extends StatelessWidget {
                     item.weaponType != null) ...[
                   Text(
                     _weaponSwingLine(item),
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.parchment,
-                    ),
+                    style: GameTheme.body(size: 12, color: GameTheme.parchment),
                   ),
                 ],
                 if (statRows.isNotEmpty) ...[
@@ -271,10 +263,7 @@ class ItemTooltipCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     EquipStatWeights.priorityBlurb(hero!.spec),
-                    style: GameTheme.body(
-                      size: 11,
-                      color: _gold,
-                    ),
+                    style: GameTheme.body(size: 11, color: _gold),
                   ),
                 ],
                 if (item.affinity != null && item.affinity!.isNotEmpty)
@@ -289,19 +278,14 @@ class ItemTooltipCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     setHeader,
-                    style: GameTheme.body(
-                      size: 12,
-                      color: _gold,
-                    ),
+                    style: GameTheme.body(size: 12, color: _gold),
                   ),
                   for (final line in setLines)
                     Text(
                       line.text,
                       style: GameTheme.body(
                         size: 11,
-                        color: line.active
-                            ? _green
-                            : GameTheme.parchmentDim,
+                        color: line.active ? _green : GameTheme.parchmentDim,
                       ),
                     ),
                 ],
@@ -314,19 +298,18 @@ class ItemTooltipCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: (isUpgrade
-                              ? _green
-                              : (powerDelta < 0
-                                  ? _red
-                                  : GameTheme.parchmentDim))
-                          .withValues(alpha: 0.12),
+                      color:
+                          (isUpgrade
+                                  ? _green
+                                  : (powerDelta < 0
+                                        ? _red
+                                        : GameTheme.parchmentDim))
+                              .withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
                         color: isUpgrade
                             ? _green
-                            : (powerDelta < 0
-                                ? _red
-                                : GameTheme.parchmentDim),
+                            : (powerDelta < 0 ? _red : GameTheme.parchmentDim),
                         width: 1,
                       ),
                     ),
@@ -334,20 +317,18 @@ class ItemTooltipCard extends StatelessWidget {
                       isUpgrade
                           ? 'UPGRADE  Score ${GameLogic.formatDelta(powerDelta)}'
                           : (powerDelta > 0
-                              ? (worn == null
-                                  ? 'SCORE +$powerDelta · too weak to fill'
-                                  : 'SCORE +$powerDelta · not enough to swap')
-                              : (powerDelta < 0
-                                  ? 'WEAKER  Score ${GameLogic.formatDelta(powerDelta)}'
-                                  : 'SAME SCORE')),
+                                ? (worn == null
+                                      ? 'SCORE +$powerDelta · too weak to fill'
+                                      : 'SCORE +$powerDelta · not enough to swap')
+                                : (powerDelta < 0
+                                      ? 'WEAKER  Score ${GameLogic.formatDelta(powerDelta)}'
+                                      : 'SAME SCORE')),
                       textAlign: TextAlign.center,
                       style: GameTheme.body(
                         size: 12,
                         color: isUpgrade
                             ? _green
-                            : (powerDelta < 0
-                                ? _red
-                                : GameTheme.parchmentDim),
+                            : (powerDelta < 0 ? _red : GameTheme.parchmentDim),
                       ),
                     ),
                   ),
@@ -397,10 +378,7 @@ class ItemTooltipCard extends StatelessWidget {
           ),
         ),
         if (deltaText != null)
-          Text(
-            deltaText,
-            style: GameTheme.body(size: 11, color: deltaColor!),
-          ),
+          Text(deltaText, style: GameTheme.body(size: 11, color: deltaColor!)),
       ],
     );
   }
@@ -436,7 +414,7 @@ class ItemTooltipCard extends StatelessWidget {
       ProjectilePattern.pierce => 'Pierce',
     };
     if (item.attackBonus > 0) {
-      return 'Attack Power +${item.attackBonus} · $pattern';
+      return 'Attack +${item.attackBonus} · $pattern';
     }
     return 'Pattern: $pattern';
   }
@@ -445,10 +423,7 @@ class ItemTooltipCard extends StatelessWidget {
   /// Primary = Armor + Str/Agi/Sta/Int/Spi/SP (+ legacy AP).
   /// Secondary = Crit / Haste / Mp5 / Move (WotLK-lite ratings).
   static List<({String name, int value, int delta, bool primary})>
-      _compareStatRows(
-    EquipmentItem item,
-    EquipmentItem? worn,
-  ) {
+  _compareStatRows(EquipmentItem item, EquipmentItem? worn) {
     final rows = <({String name, int value, int delta, bool primary})>[];
     void add(String name, int neu, int old, {required bool primary}) {
       if (neu == 0 && old == 0) return;
@@ -456,23 +431,57 @@ class ItemTooltipCard extends StatelessWidget {
     }
 
     add('Armor', item.resolvedArmor, worn?.resolvedArmor ?? 0, primary: true);
-    add('Strength', item.strengthBonus, worn?.strengthBonus ?? 0, primary: true);
+    add(
+      'Strength',
+      item.strengthBonus,
+      worn?.strengthBonus ?? 0,
+      primary: true,
+    );
     add('Agility', item.agilityBonus, worn?.agilityBonus ?? 0, primary: true);
-    add('Stamina', item.resolvedStamina, worn?.resolvedStamina ?? 0,
-        primary: true);
-    add('Intellect', item.intellectBonus, worn?.intellectBonus ?? 0,
-        primary: true);
+    add(
+      'Stamina',
+      item.resolvedStamina,
+      worn?.resolvedStamina ?? 0,
+      primary: true,
+    );
+    add(
+      'Intellect',
+      item.intellectBonus,
+      worn?.intellectBonus ?? 0,
+      primary: true,
+    );
     add('Spirit', item.spiritBonus, worn?.spiritBonus ?? 0, primary: true);
-    add('Spell Power', item.spellPowerBonus, worn?.spellPowerBonus ?? 0,
-        primary: true);
-    add('Attack Power', item.attackBonus, worn?.attackBonus ?? 0, primary: true);
-    add('Crit %', item.critChanceBonus, worn?.critChanceBonus ?? 0,
-        primary: false);
-    add('Haste %', item.attackSpeedBonus, worn?.attackSpeedBonus ?? 0,
-        primary: false);
+    add(
+      'Spell Power',
+      item.spellPowerBonus,
+      worn?.spellPowerBonus ?? 0,
+      primary: true,
+    );
+    add(
+      'Attack',
+      item.attackBonus,
+      worn?.attackBonus ?? 0,
+      primary: true,
+    );
+    add(
+      'Crit %',
+      item.critChanceBonus,
+      worn?.critChanceBonus ?? 0,
+      primary: false,
+    );
+    add(
+      'Haste %',
+      item.attackSpeedBonus,
+      worn?.attackSpeedBonus ?? 0,
+      primary: false,
+    );
     add('Mp5', item.mp5Bonus, worn?.mp5Bonus ?? 0, primary: false);
-    add('Move %', item.moveSpeedBonus, worn?.moveSpeedBonus ?? 0,
-        primary: false);
+    add(
+      'Move %',
+      item.moveSpeedBonus,
+      worn?.moveSpeedBonus ?? 0,
+      primary: false,
+    );
     return rows;
   }
 
@@ -535,6 +544,7 @@ class _StatCompareRow extends StatelessWidget {
     );
   }
 }
+
 /// Phone-first item tooltip: **long-press** opens a centered card + scrim.
 /// Hover still works for wide web playtest. Short tap is left to the child
 /// (select / equip) so bag selection stays usable.
@@ -678,10 +688,7 @@ class _ItemTooltipAnchorState extends State<ItemTooltipAnchor> {
         if (target == null) return const SizedBox.shrink();
 
         return CustomSingleChildLayout(
-          delegate: _ItemTooltipLayoutDelegate(
-            target: target,
-            screen: screen,
-          ),
+          delegate: _ItemTooltipLayoutDelegate(target: target, screen: screen),
           child: MouseRegion(
             onEnter: (_) => _cancelHide(),
             onExit: (_) => _scheduleHide(),
@@ -708,10 +715,7 @@ class _ItemTooltipAnchorState extends State<ItemTooltipAnchor> {
 /// Places the tip beside the slot and keeps the full card inside the viewport
 /// for every bag row (top rows flip below / clamp; bottom rows flip above).
 class _ItemTooltipLayoutDelegate extends SingleChildLayoutDelegate {
-  _ItemTooltipLayoutDelegate({
-    required this.target,
-    required this.screen,
-  });
+  _ItemTooltipLayoutDelegate({required this.target, required this.screen});
 
   final Rect target;
   final Size screen;

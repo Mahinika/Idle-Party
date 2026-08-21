@@ -14,6 +14,9 @@ void main() {
     int spi = 0,
     int sp = 0,
     int armor = 0,
+    int crit = 0,
+    int haste = 0,
+    int mp5 = 0,
     ArmorType? armorType,
   }) {
     return EquipmentItem(
@@ -28,6 +31,9 @@ void main() {
       spiritBonus: spi,
       spellPowerBonus: sp,
       armorBonus: armor,
+      critChanceBonus: crit,
+      attackSpeedBonus: haste,
+      mp5Bonus: mp5,
       armorType: armorType,
       itemLevel: 40,
     );
@@ -213,6 +219,12 @@ void main() {
       roleTag: SpecRoleTag.meleeDps,
     );
     expect(arms[0], greaterThan(arms[2])); // str > sta
+
+    final healer = EquipStatWeights.lootShares(
+      bias: HeroRole.healer,
+      roleTag: SpecRoleTag.healer,
+    );
+    expect(healer[3] + healer[5], greaterThan(healer[4])); // Int+SP > Spirit
   });
 
   test('Enhancement loot shares keep meaningful Str', () {
@@ -221,7 +233,46 @@ void main() {
       roleTag: SpecRoleTag.meleeDps,
       specId: HeroSpecId.enhancement,
     );
-    expect(shares[0], greaterThan(0.28)); // str
-    expect(shares[1], greaterThan(shares[0])); // agi > str
+    expect(shares[0], greaterThan(0.25)); // str still real
+    expect(shares[1], greaterThan(shares[0])); // agi > str (2 AP vs 1)
+  });
+
+  test('naked Combat still values Crit over equal Haste', () {
+    final combat = hero(HeroSpecId.combat);
+    final critPiece = item(agi: 2, crit: 12, armorType: ArmorType.leather);
+    final hastePiece = item(agi: 2, haste: 12, armorType: ArmorType.leather);
+    expect(
+      GameLogic.specEquipScore(combat, critPiece),
+      greaterThan(GameLogic.specEquipScore(combat, hastePiece)),
+    );
+  });
+
+  test('Combat near 75% sheet crit stops paying for more Crit', () {
+    final combat = hero(HeroSpecId.combat, level: 60).copyWith(
+      equipped: {
+        EquipmentSlot.chest: item(
+          agi: 550,
+          crit: 80,
+          armorType: ArmorType.leather,
+        ),
+      },
+    );
+    expect(combat.gearCritChance, 40);
+    final critPiece = item(agi: 2, crit: 12, armorType: ArmorType.leather);
+    final hastePiece = item(agi: 2, haste: 12, armorType: ArmorType.leather);
+    expect(
+      GameLogic.specEquipScore(combat, hastePiece),
+      greaterThan(GameLogic.specEquipScore(combat, critPiece)),
+    );
+  });
+
+  test('Healer BiS prefers Mp5 over equal Haste', () {
+    final disc = hero(HeroSpecId.discipline);
+    final mp5Piece = item(intel: 4, mp5: 10, armorType: ArmorType.cloth);
+    final hastePiece = item(intel: 4, haste: 10, armorType: ArmorType.cloth);
+    expect(
+      GameLogic.specEquipScore(disc, mp5Piece),
+      greaterThan(GameLogic.specEquipScore(disc, hastePiece)),
+    );
   });
 }

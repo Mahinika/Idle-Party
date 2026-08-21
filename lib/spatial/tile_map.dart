@@ -26,24 +26,25 @@ enum MapPropKind {
   water,
   lava,
   anvil,
+
   /// Stacked crates / shelf clutter.
   shelf,
+
   /// Iron bars / railing accent.
   fence,
+
   /// Tall stone/metal pillar accent.
   pillar,
+
   /// Floor debris / rubble pile.
   rubble,
+
   /// Interactive-looking room chest (also a GroundLoot socket).
   chest,
 }
 
 class MapProp {
-  const MapProp({
-    required this.x,
-    required this.y,
-    required this.kind,
-  });
+  const MapProp({required this.x, required this.y, required this.kind});
 
   final int x;
   final int y;
@@ -161,8 +162,7 @@ class TileMap {
     double x,
     double y, {
     Set<int> openGateIds = const <int>{},
-  }) =>
-      isWalkable(x.floor(), y.floor(), openGateIds: openGateIds);
+  }) => isWalkable(x.floor(), y.floor(), openGateIds: openGateIds);
 
   /// Walkable cells suitable for combat spawns (floor/spawn, not exit/gate).
   bool isSpawnable(int x, int y) {
@@ -428,13 +428,7 @@ abstract final class RoomLayouts {
     set(cols - 3, rows ~/ 2, TileKind.exit);
     _carveExitPlaza(tiles, cols, rows, cols - 3, rows ~/ 2);
 
-    final chamber = Chamber(
-      index: 0,
-      x: 2,
-      y: 2,
-      w: cols - 4,
-      h: rows - 4,
-    );
+    final chamber = Chamber(index: 0, x: 2, y: 2, w: cols - 4, h: rows - 4);
 
     final spawnPoints = _partySpawnCluster(
       tiles: tiles,
@@ -564,13 +558,7 @@ abstract final class RoomLayouts {
     set(exitX, exitY, TileKind.exit);
     _carveExitPlaza(tiles, cols, rows, exitX, exitY);
 
-    final chamber = Chamber(
-      index: 0,
-      x: 2,
-      y: 2,
-      w: cols - 4,
-      h: rows - 4,
-    );
+    final chamber = Chamber(index: 0, x: 2, y: 2, w: cols - 4, h: rows - 4);
     final spawnPoints = _partySpawnCluster(
       tiles: tiles,
       cols: cols,
@@ -670,6 +658,7 @@ abstract final class RoomLayouts {
         tiles[y * cols + x] = k;
       }
     }
+
     for (var y = 2; y < rows - 2; y++) {
       for (var x = 2; x < cols - 2; x++) {
         set(x, y, TileKind.floor);
@@ -775,14 +764,7 @@ abstract final class RoomLayouts {
         if (tiles[ti] == TileKind.wall) continue;
         final id = gateList.length;
         set(gx, gy, TileKind.gate);
-        gateList.add(
-          GateInfo(
-            id: id,
-            x: gx,
-            y: gy,
-            opensAfterChamber: i,
-          ),
-        );
+        gateList.add(GateInfo(id: id, x: gx, y: gy, opensAfterChamber: i));
       }
     }
 
@@ -802,8 +784,7 @@ abstract final class RoomLayouts {
     }
     gateList.removeWhere(
       (g) =>
-          (g.x, g.y) == (start.cx, start.cy) ||
-          (g.x, g.y) == (end.cx, end.cy),
+          (g.x, g.y) == (start.cx, start.cy) || (g.x, g.y) == (end.cx, end.cy),
     );
 
     final spawnPoints = _partySpawnCluster(
@@ -832,15 +813,12 @@ abstract final class RoomLayouts {
     final seenSpawns = <String>{};
     final combatRooms = rooms.length == 1
         ? <(int, _Rect)>[(0, rooms.first)]
-        : [
-            for (var i = 1; i < rooms.length; i++) (i, rooms[i]),
-          ];
+        : [for (var i = 1; i < rooms.length; i++) (i, rooms[i])];
 
     final partyPad = <String>{
       for (final p in spawnPoints) '${p.$1},${p.$2}',
       for (var dy = -1; dy <= 1; dy++)
-        for (var dx = -1; dx <= 1; dx++)
-          '${start.cx + dx},${start.cy + dy}',
+        for (var dx = -1; dx <= 1; dx++) '${start.cx + dx},${start.cy + dy}',
     };
 
     bool tileSpawnable(int x, int y) {
@@ -1021,11 +999,7 @@ abstract final class RoomLayouts {
       if (used.contains(key)) return;
       used.add(key);
       props.add(
-        MapProp(
-          x: cell.$1,
-          y: cell.$2,
-          kind: pool[rng.nextInt(pool.length)],
-        ),
+        MapProp(x: cell.$1, y: cell.$2, kind: pool[rng.nextInt(pool.length)]),
       );
     }
 

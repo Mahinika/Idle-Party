@@ -27,21 +27,21 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'combine_luck',
       name: 'Combinator Charm',
-      description: '+1 combinator luck (better merge odds).',
+      description: 'Cheaper MERGE gold (−3g per luck, max 5).',
       cost: 55,
       minAl: 3,
     ),
     PrestigeShopItem(
       id: 'torch_keep',
       name: 'Keep Torch',
-      description: '+8% hub offline gold.',
+      description: '+8% hub AFK gold per level (sanctuary idle).',
       cost: 35,
       minAl: 3,
     ),
     PrestigeShopItem(
       id: 'gh_cdr',
-      name: 'God Hand Focus',
-      description: 'Faster God Hand cooldown.',
+      name: 'God Hand Cadence',
+      description: 'Same cooldown as Forge → KEEP. One CD level (max 8).',
       cost: 45,
       minAl: 5,
     ),
@@ -53,6 +53,34 @@ abstract final class PrestigeShopCatalog {
       minAl: 5,
     ),
     PrestigeShopItem(
+      id: 'loadout_slot',
+      name: 'Loadout Folio',
+      description: '+1 gear loadout slot (max 5 total).',
+      cost: 45,
+      minAl: 4,
+    ),
+    PrestigeShopItem(
+      id: 'flask_discount',
+      name: 'Apothecary Writ',
+      description: '−5% market flask & bandage gold (max 25%).',
+      cost: 40,
+      minAl: 4,
+    ),
+    PrestigeShopItem(
+      id: 'filter_span',
+      name: 'Junk Magnifier',
+      description: '+8 auto-sell/scrap iLvl ceiling in Settings (max +40).',
+      cost: 45,
+      minAl: 6,
+    ),
+    PrestigeShopItem(
+      id: 'offline_ledger',
+      name: 'Away Ledger',
+      description: '+1 Welcome Back highlight row (max 6).',
+      cost: 35,
+      minAl: 6,
+    ),
+    PrestigeShopItem(
       id: 'legacy_spark',
       name: 'Legacy Spark',
       description: '+1 Legacy Point (tiny permanent ATK).',
@@ -62,7 +90,7 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'daily_essence',
       name: 'Dawn Tithe',
-      description: '+5 essence on Daily Run claim per level.',
+      description: '+5e per level on Daily vault and Daily Run claims.',
       cost: 50,
       minAl: 8,
     ),
@@ -89,9 +117,9 @@ abstract final class WillRanks {
 
   /// Thresholds that grant a one-time essence claim (excludes Wandering).
   static List<int> get claimableThresholds => [
-        for (final t in thresholds)
-          if (t.$1 > 0) t.$1,
-      ];
+    for (final t in thresholds)
+      if (t.$1 > 0) t.$1,
+  ];
 
   /// Essence for crossing a Will threshold (claimed once via metaDepth).
   static int essenceForThreshold(int score) => 6 + (score ~/ 25);
@@ -110,11 +138,11 @@ abstract final class GauntletMilestones {
   static const floors = <int>[25, 50, 100];
 
   static int essenceForFloor(int floor) => switch (floor) {
-        25 => 22,
-        50 => 45,
-        100 => 90,
-        _ => 10,
-      };
+    25 => 22,
+    50 => 45,
+    100 => 90,
+    _ => 10,
+  };
 
   static String claimId(int floor) => 'f$floor';
 }
@@ -189,9 +217,28 @@ class MetaDepthState {
     this.godHandStyle = 0,
     this.dailyEssenceBonusLevel = 0,
     this.gauntletGoldBonusLevel = 0,
+    this.loadoutBonusSlots = 0,
+    this.marketDiscountLevel = 0,
+    this.filterSpanLevel = 0,
+    this.offlineHighlightBonus = 0,
     this.seasonKey = '',
     this.claimedSeasonRewards = const <String>[],
     this.claimedWeekGoals = const <String>[],
+    this.leaderboardSeasonKey = '',
+    this.seasonBestTimedKey = 0,
+    this.seasonBestTimedClearMs = 0,
+    this.seasonBestGauntletFloor = 0,
+    this.cloudSaveUpdatedMs = 0,
+    this.playGamesOptIn = false,
+    this.dismissedPlayUpdateVersionCode = 0,
+    this.hubIdleSubSec = 0,
+    this.hubAfkSec = 0,
+    this.apexCraftClassId = '',
+    this.apexCraftRoleTag = '',
+    this.apexCraftSlot = '',
+    this.apexTargetMatId = '',
+    this.apexTargetProgress = 0,
+    this.adBoostUntilMs = 0,
   });
 
   final int sanctuaryXpLevel;
@@ -204,6 +251,7 @@ class MetaDepthState {
   final int godHandCdLevel;
   final int torchKeepLevel;
   final int legacyPoints;
+
   /// Stacking Ascend Blessing packs (ATK/DEF/VIT/gold). Survives Ascend.
   final int ascendBlessings;
   final int ascendStreak;
@@ -284,6 +332,18 @@ class MetaDepthState {
   /// Prestige: extra Gauntlet gold (+4% per level).
   final int gauntletGoldBonusLevel;
 
+  /// Prestige: extra LOADOUTS slots beyond the base 3 (max +2 → 5).
+  final int loadoutBonusSlots;
+
+  /// Prestige: market flask/bandage gold discount (−5% per level, max 5).
+  final int marketDiscountLevel;
+
+  /// Prestige: raise Settings auto-sell/scrap iLvl ceiling (+8 per level).
+  final int filterSpanLevel;
+
+  /// Prestige: extra Welcome Back highlight rows (+1 per level, max 3).
+  final int offlineHighlightBonus;
+
   /// Local season key (ISO week + month); shown on weekly UI.
   final String seasonKey;
 
@@ -292,6 +352,47 @@ class MetaDepthState {
 
   /// Local week goals already claimed (`yyyy-Www:goalId`).
   final List<String> claimedWeekGoals;
+
+  /// Calendar month (`yyyy-MM`) for Play Games seasonal PBs.
+  final String leaderboardSeasonKey;
+
+  /// Best TIMED keystone level this [leaderboardSeasonKey].
+  final int seasonBestTimedKey;
+
+  /// Clear time (ms) for [seasonBestTimedKey] (lower is better).
+  final int seasonBestTimedClearMs;
+
+  /// Best Infinity Gauntlet floor this [leaderboardSeasonKey].
+  final int seasonBestGauntletFloor;
+
+  /// UTC millis when this save was last written for cloud conflict checks.
+  final int cloudSaveUpdatedMs;
+
+  /// Player opted into Play Games (sign-in succeeded at least once).
+  final bool playGamesOptIn;
+
+  /// Play versionCode the player tapped LATER on (hub update notice).
+  final int dismissedPlayUpdateVersionCode;
+
+  /// Seconds banked toward the next hub gold tick (live 1s AFK).
+  final int hubIdleSubSec;
+
+  /// Cumulative hub AFK seconds for essence (same 10min gate as offline).
+  final int hubAfkSec;
+
+  /// Active Apex craft goal ([HeroClassId.name] / [SpecRoleTag.name] / slot).
+  final String apexCraftClassId;
+  final String apexCraftRoleTag;
+  final String apexCraftSlot;
+
+  /// Manual target mat override; empty = auto from craft goal shortages.
+  final String apexTargetMatId;
+
+  /// Boss-clear progress toward guaranteed target mat (resets on grant).
+  final int apexTargetProgress;
+
+  /// UTC millis when optional POWERUPS (ad boost) ends. 0 = none. Survives Ascend.
+  final int adBoostUntilMs;
 
   static const empty = MetaDepthState();
 
@@ -355,13 +456,33 @@ class MetaDepthState {
     int? godHandStyle,
     int? dailyEssenceBonusLevel,
     int? gauntletGoldBonusLevel,
+    int? loadoutBonusSlots,
+    int? marketDiscountLevel,
+    int? filterSpanLevel,
+    int? offlineHighlightBonus,
     String? seasonKey,
     List<String>? claimedSeasonRewards,
     List<String>? claimedWeekGoals,
+    String? leaderboardSeasonKey,
+    int? seasonBestTimedKey,
+    int? seasonBestTimedClearMs,
+    int? seasonBestGauntletFloor,
+    int? cloudSaveUpdatedMs,
+    bool? playGamesOptIn,
+    int? dismissedPlayUpdateVersionCode,
+    int? hubIdleSubSec,
+    int? hubAfkSec,
+    String? apexCraftClassId,
+    String? apexCraftRoleTag,
+    String? apexCraftSlot,
+    String? apexTargetMatId,
+    int? apexTargetProgress,
+    int? adBoostUntilMs,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
-      sanctuaryGoldPrestige: sanctuaryGoldPrestige ?? this.sanctuaryGoldPrestige,
+      sanctuaryGoldPrestige:
+          sanctuaryGoldPrestige ?? this.sanctuaryGoldPrestige,
       sanctuaryPowerPrestige:
           sanctuaryPowerPrestige ?? this.sanctuaryPowerPrestige,
       sanctuaryVitalityPrestige:
@@ -420,70 +541,112 @@ class MetaDepthState {
           dailyEssenceBonusLevel ?? this.dailyEssenceBonusLevel,
       gauntletGoldBonusLevel:
           gauntletGoldBonusLevel ?? this.gauntletGoldBonusLevel,
+      loadoutBonusSlots: loadoutBonusSlots ?? this.loadoutBonusSlots,
+      marketDiscountLevel: marketDiscountLevel ?? this.marketDiscountLevel,
+      filterSpanLevel: filterSpanLevel ?? this.filterSpanLevel,
+      offlineHighlightBonus:
+          offlineHighlightBonus ?? this.offlineHighlightBonus,
       seasonKey: seasonKey ?? this.seasonKey,
       claimedSeasonRewards: claimedSeasonRewards ?? this.claimedSeasonRewards,
       claimedWeekGoals: claimedWeekGoals ?? this.claimedWeekGoals,
+      leaderboardSeasonKey: leaderboardSeasonKey ?? this.leaderboardSeasonKey,
+      seasonBestTimedKey: seasonBestTimedKey ?? this.seasonBestTimedKey,
+      seasonBestTimedClearMs:
+          seasonBestTimedClearMs ?? this.seasonBestTimedClearMs,
+      seasonBestGauntletFloor:
+          seasonBestGauntletFloor ?? this.seasonBestGauntletFloor,
+      cloudSaveUpdatedMs: cloudSaveUpdatedMs ?? this.cloudSaveUpdatedMs,
+      playGamesOptIn: playGamesOptIn ?? this.playGamesOptIn,
+      dismissedPlayUpdateVersionCode:
+          dismissedPlayUpdateVersionCode ?? this.dismissedPlayUpdateVersionCode,
+      hubIdleSubSec: hubIdleSubSec ?? this.hubIdleSubSec,
+      hubAfkSec: hubAfkSec ?? this.hubAfkSec,
+      apexCraftClassId: apexCraftClassId ?? this.apexCraftClassId,
+      apexCraftRoleTag: apexCraftRoleTag ?? this.apexCraftRoleTag,
+      apexCraftSlot: apexCraftSlot ?? this.apexCraftSlot,
+      apexTargetMatId: apexTargetMatId ?? this.apexTargetMatId,
+      apexTargetProgress: apexTargetProgress ?? this.apexTargetProgress,
+      adBoostUntilMs: adBoostUntilMs ?? this.adBoostUntilMs,
     );
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'sanctuaryXpLevel': sanctuaryXpLevel,
-        'sanctuaryGoldPrestige': sanctuaryGoldPrestige,
-        'sanctuaryPowerPrestige': sanctuaryPowerPrestige,
-        'sanctuaryVitalityPrestige': sanctuaryVitalityPrestige,
-        'sanctuaryXpPrestige': sanctuaryXpPrestige,
-        'stashBonusSlots': stashBonusSlots,
-        'combinatorLuck': combinatorLuck,
-        'godHandCdLevel': godHandCdLevel,
-        'torchKeepLevel': torchKeepLevel,
-        'legacyPoints': legacyPoints,
-        'ascendBlessings': ascendBlessings,
-        'ascendStreak': ascendStreak,
-        'bestAscendStreak': bestAscendStreak,
-        'titles': titles,
-        'activeTitle': activeTitle,
-        'relicTiers': relicTiers,
-        'prestigePurchases': prestigePurchases,
-        'weeklyKey': weeklyKey,
-        'weeklyProgress': weeklyProgress,
-        'weeklyClaimed': weeklyClaimed,
-        'weeklyModifier': weeklyModifier,
-        'weeklyBestTimedKey': weeklyBestTimedKey,
-        'dailyVaultDate': dailyVaultDate,
-        'dailyVaultClears': dailyVaultClears,
-        'dailyBestTimedKey': dailyBestTimedKey,
-        'dailyVaultClaimed': dailyVaultClaimed,
-        'favoritePetSpecies': favoritePetSpecies,
-        'petRosterCapBonus': petRosterCapBonus,
-        'zoneTrophies': zoneTrophies,
-        'jobChainCount': jobChainCount,
-        'lifetimeFloorClears': lifetimeFloorClears,
-        'lifetimeBossKills': lifetimeBossKills,
-        'lifetimeAbilityCasts': lifetimeAbilityCasts,
-        'lifetimePetHatches': lifetimePetHatches,
-        'lifetimePetMerges': lifetimePetMerges,
-        'lifetimeAscends': lifetimeAscends,
-        'highestHardmodeCleared': highestHardmodeCleared,
-        'gauntletBestFloor': gauntletBestFloor,
-        'lifetimeGauntletFloors': lifetimeGauntletFloors,
-        'codexClaims': codexClaims,
-        'soulboundRefine': soulboundRefine,
-        'soulboundIsArmor': soulboundIsArmor,
-        'heirloomAlBonus': heirloomAlBonus,
-        'noWipeAscendReady': noWipeAscendReady,
-        'relicRespecs': relicRespecs,
-        'partySlot5Unlocked': partySlot5Unlocked,
-        'unlockedSpecs': unlockedSpecs,
-        'pendingHeroReveals': pendingHeroReveals,
-        'claimedWillRanks': claimedWillRanks,
-        'claimedGauntletMilestones': claimedGauntletMilestones,
-        'godHandStyle': godHandStyle,
-        'dailyEssenceBonusLevel': dailyEssenceBonusLevel,
-        'gauntletGoldBonusLevel': gauntletGoldBonusLevel,
-        'seasonKey': seasonKey,
-        'claimedSeasonRewards': claimedSeasonRewards,
-        'claimedWeekGoals': claimedWeekGoals,
-      };
+    'sanctuaryXpLevel': sanctuaryXpLevel,
+    'sanctuaryGoldPrestige': sanctuaryGoldPrestige,
+    'sanctuaryPowerPrestige': sanctuaryPowerPrestige,
+    'sanctuaryVitalityPrestige': sanctuaryVitalityPrestige,
+    'sanctuaryXpPrestige': sanctuaryXpPrestige,
+    'stashBonusSlots': stashBonusSlots,
+    'combinatorLuck': combinatorLuck,
+    'godHandCdLevel': godHandCdLevel,
+    'torchKeepLevel': torchKeepLevel,
+    'legacyPoints': legacyPoints,
+    'ascendBlessings': ascendBlessings,
+    'ascendStreak': ascendStreak,
+    'bestAscendStreak': bestAscendStreak,
+    'titles': titles,
+    'activeTitle': activeTitle,
+    'relicTiers': relicTiers,
+    'prestigePurchases': prestigePurchases,
+    'weeklyKey': weeklyKey,
+    'weeklyProgress': weeklyProgress,
+    'weeklyClaimed': weeklyClaimed,
+    'weeklyModifier': weeklyModifier,
+    'weeklyBestTimedKey': weeklyBestTimedKey,
+    'dailyVaultDate': dailyVaultDate,
+    'dailyVaultClears': dailyVaultClears,
+    'dailyBestTimedKey': dailyBestTimedKey,
+    'dailyVaultClaimed': dailyVaultClaimed,
+    'favoritePetSpecies': favoritePetSpecies,
+    'petRosterCapBonus': petRosterCapBonus,
+    'zoneTrophies': zoneTrophies,
+    'jobChainCount': jobChainCount,
+    'lifetimeFloorClears': lifetimeFloorClears,
+    'lifetimeBossKills': lifetimeBossKills,
+    'lifetimeAbilityCasts': lifetimeAbilityCasts,
+    'lifetimePetHatches': lifetimePetHatches,
+    'lifetimePetMerges': lifetimePetMerges,
+    'lifetimeAscends': lifetimeAscends,
+    'highestHardmodeCleared': highestHardmodeCleared,
+    'gauntletBestFloor': gauntletBestFloor,
+    'lifetimeGauntletFloors': lifetimeGauntletFloors,
+    'codexClaims': codexClaims,
+    'soulboundRefine': soulboundRefine,
+    'soulboundIsArmor': soulboundIsArmor,
+    'heirloomAlBonus': heirloomAlBonus,
+    'noWipeAscendReady': noWipeAscendReady,
+    'relicRespecs': relicRespecs,
+    'partySlot5Unlocked': partySlot5Unlocked,
+    'unlockedSpecs': unlockedSpecs,
+    'pendingHeroReveals': pendingHeroReveals,
+    'claimedWillRanks': claimedWillRanks,
+    'claimedGauntletMilestones': claimedGauntletMilestones,
+    'godHandStyle': godHandStyle,
+    'dailyEssenceBonusLevel': dailyEssenceBonusLevel,
+    'gauntletGoldBonusLevel': gauntletGoldBonusLevel,
+    'loadoutBonusSlots': loadoutBonusSlots,
+    'marketDiscountLevel': marketDiscountLevel,
+    'filterSpanLevel': filterSpanLevel,
+    'offlineHighlightBonus': offlineHighlightBonus,
+    'seasonKey': seasonKey,
+    'claimedSeasonRewards': claimedSeasonRewards,
+    'claimedWeekGoals': claimedWeekGoals,
+    'leaderboardSeasonKey': leaderboardSeasonKey,
+    'seasonBestTimedKey': seasonBestTimedKey,
+    'seasonBestTimedClearMs': seasonBestTimedClearMs,
+    'seasonBestGauntletFloor': seasonBestGauntletFloor,
+    'cloudSaveUpdatedMs': cloudSaveUpdatedMs,
+    'playGamesOptIn': playGamesOptIn,
+    'dismissedPlayUpdateVersionCode': dismissedPlayUpdateVersionCode,
+    'hubIdleSubSec': hubIdleSubSec,
+    'hubAfkSec': hubAfkSec,
+    'apexCraftClassId': apexCraftClassId,
+    'apexCraftRoleTag': apexCraftRoleTag,
+    'apexCraftSlot': apexCraftSlot,
+    'apexTargetMatId': apexTargetMatId,
+    'apexTargetProgress': apexTargetProgress,
+    'adBoostUntilMs': adBoostUntilMs,
+  };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
     if (json == null) return empty;
@@ -516,26 +679,25 @@ class MetaDepthState {
       relicTiers: tiers,
       prestigePurchases:
           (json['prestigePurchases'] as List<dynamic>?)?.cast<String>() ??
-              const [],
+          const [],
       weeklyKey: (json['weeklyKey'] as String?) ?? '',
       weeklyProgress: (json['weeklyProgress'] as num?)?.toInt() ?? 0,
       weeklyClaimed: (json['weeklyClaimed'] as bool?) ?? false,
       weeklyModifier: (json['weeklyModifier'] as String?) ?? '',
-      weeklyBestTimedKey:
-          ((json['weeklyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      weeklyBestTimedKey: ((json['weeklyBestTimedKey'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
       dailyVaultDate: (json['dailyVaultDate'] as String?) ?? '',
-      dailyVaultClears:
-          ((json['dailyVaultClears'] as num?)?.toInt() ?? 0).clamp(0, 999),
-      dailyBestTimedKey:
-          ((json['dailyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      dailyVaultClears: ((json['dailyVaultClears'] as num?)?.toInt() ?? 0)
+          .clamp(0, 999),
+      dailyBestTimedKey: ((json['dailyBestTimedKey'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
       dailyVaultClaimed: (json['dailyVaultClaimed'] as bool?) ?? false,
       favoritePetSpecies: (json['favoritePetSpecies'] as String?) ?? '',
       petRosterCapBonus: (json['petRosterCapBonus'] as num?)?.toInt() ?? 0,
       zoneTrophies:
           (json['zoneTrophies'] as List<dynamic>?)?.cast<String>() ?? const [],
       jobChainCount: (json['jobChainCount'] as num?)?.toInt() ?? 0,
-      lifetimeFloorClears:
-          (json['lifetimeFloorClears'] as num?)?.toInt() ?? 0,
+      lifetimeFloorClears: (json['lifetimeFloorClears'] as num?)?.toInt() ?? 0,
       lifetimeBossKills: (json['lifetimeBossKills'] as num?)?.toInt() ?? 0,
       lifetimeAbilityCasts:
           (json['lifetimeAbilityCasts'] as num?)?.toInt() ?? 0,
@@ -556,30 +718,56 @@ class MetaDepthState {
       relicRespecs: (json['relicRespecs'] as num?)?.toInt() ?? 0,
       partySlot5Unlocked: (json['partySlot5Unlocked'] as bool?) ?? false,
       unlockedSpecs:
-          (json['unlockedSpecs'] as List<dynamic>?)?.cast<String>() ??
-              const [],
+          (json['unlockedSpecs'] as List<dynamic>?)?.cast<String>() ?? const [],
       pendingHeroReveals:
           (json['pendingHeroReveals'] as List<dynamic>?)?.cast<String>() ??
-              const [],
+          const [],
       claimedWillRanks:
           (json['claimedWillRanks'] as List<dynamic>?)?.cast<String>() ??
-              const [],
+          const [],
       claimedGauntletMilestones:
           (json['claimedGauntletMilestones'] as List<dynamic>?)
-                  ?.cast<String>() ??
-              const [],
+              ?.cast<String>() ??
+          const [],
       godHandStyle: ((json['godHandStyle'] as num?)?.toInt() ?? 0).clamp(0, 2),
       dailyEssenceBonusLevel:
           (json['dailyEssenceBonusLevel'] as num?)?.toInt() ?? 0,
       gauntletGoldBonusLevel:
           (json['gauntletGoldBonusLevel'] as num?)?.toInt() ?? 0,
+      loadoutBonusSlots: ((json['loadoutBonusSlots'] as num?)?.toInt() ?? 0)
+          .clamp(0, 2),
+      marketDiscountLevel: ((json['marketDiscountLevel'] as num?)?.toInt() ?? 0)
+          .clamp(0, 5),
+      filterSpanLevel: ((json['filterSpanLevel'] as num?)?.toInt() ?? 0)
+          .clamp(0, 5),
+      offlineHighlightBonus:
+          ((json['offlineHighlightBonus'] as num?)?.toInt() ?? 0).clamp(0, 3),
       seasonKey: (json['seasonKey'] as String?) ?? '',
       claimedSeasonRewards:
           (json['claimedSeasonRewards'] as List<dynamic>?)?.cast<String>() ??
-              const [],
+          const [],
       claimedWeekGoals:
           (json['claimedWeekGoals'] as List<dynamic>?)?.cast<String>() ??
-              const [],
+          const [],
+      leaderboardSeasonKey: (json['leaderboardSeasonKey'] as String?) ?? '',
+      seasonBestTimedKey: ((json['seasonBestTimedKey'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
+      seasonBestTimedClearMs:
+          (json['seasonBestTimedClearMs'] as num?)?.toInt() ?? 0,
+      seasonBestGauntletFloor:
+          (json['seasonBestGauntletFloor'] as num?)?.toInt() ?? 0,
+      cloudSaveUpdatedMs: (json['cloudSaveUpdatedMs'] as num?)?.toInt() ?? 0,
+      playGamesOptIn: (json['playGamesOptIn'] as bool?) ?? false,
+      dismissedPlayUpdateVersionCode:
+          (json['dismissedPlayUpdateVersionCode'] as num?)?.toInt() ?? 0,
+      hubIdleSubSec: (json['hubIdleSubSec'] as num?)?.toInt() ?? 0,
+      hubAfkSec: (json['hubAfkSec'] as num?)?.toInt() ?? 0,
+      apexCraftClassId: (json['apexCraftClassId'] as String?) ?? '',
+      apexCraftRoleTag: (json['apexCraftRoleTag'] as String?) ?? '',
+      apexCraftSlot: (json['apexCraftSlot'] as String?) ?? '',
+      apexTargetMatId: (json['apexTargetMatId'] as String?) ?? '',
+      apexTargetProgress: (json['apexTargetProgress'] as num?)?.toInt() ?? 0,
+      adBoostUntilMs: (json['adBoostUntilMs'] as num?)?.toInt() ?? 0,
     );
   }
 }

@@ -1,0 +1,28 @@
+name: Sim nightly
+
+# The long balance/difficulty Monte-Carlo probes are tagged `sim` and excluded
+# from push/PR CI so a red build means a real regression, not seed noise.
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  sims:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencies
+        run: flutter pub get
+
+      - name: Simulations
+        run: flutter test --tags sim --reporter expanded

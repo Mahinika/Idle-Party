@@ -4,14 +4,7 @@ import '../models/dungeon_room.dart';
 import 'zone_layout_kit.dart';
 
 /// One story beat on a floor (plan: docs/FLOOR_BLUEPRINT.md).
-enum FloorBeatKind {
-  approach,
-  choke,
-  elite,
-  treasure,
-  boss,
-  exitHold,
-}
+enum FloorBeatKind { approach, choke, elite, treasure, boss, exitHold }
 
 class FloorBeat {
   const FloorBeat(this.kind, {this.enemyBudget = 0});
@@ -73,22 +66,18 @@ class FloorBlueprint {
         beats.add(FloorBeat(FloorBeatKind.approach, enemyBudget: 0));
         beats.add(FloorBeat(FloorBeatKind.elite, enemyBudget: mid));
         if (kit.preferChoke || rng.nextDouble() < 0.55) {
-          beats.add(
-            FloorBeat(FloorBeatKind.choke, enemyBudget: budget - mid),
-          );
+          beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget - mid));
         } else {
           beats.add(
-            FloorBeat(
-              FloorBeatKind.approach,
-              enemyBudget: budget - mid,
-            ),
+            FloorBeat(FloorBeatKind.approach, enemyBudget: budget - mid),
           );
         }
         beats.add(const FloorBeat(FloorBeatKind.exitHold));
       case RoomType.normal:
         beats.add(FloorBeat(FloorBeatKind.approach, enemyBudget: 0));
         final preferTreasure =
-            kit.preferTreasureAlcove && rng.nextDouble() < kit.treasureAlcoveChance;
+            kit.preferTreasureAlcove &&
+            rng.nextDouble() < kit.treasureAlcoveChance;
         if (preferTreasure && budget >= 4) {
           final fight = max(1, (budget * 0.7).round());
           beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: fight));

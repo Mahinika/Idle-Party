@@ -1,20 +1,25 @@
 ---
 description: >-
-  Owner product preferences for Idle Party — content focus, progression fantasy,
-  polish kits, more zones, big batches, English UI; commit locally, ask before push.
+  Owner product preferences for Idle Party — core-loop feel, progression fantasy,
+  polish kits, no new zones/classes for now, big batches, English UI; commit locally, ask before push.
 alwaysApply: true
 ---
 
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
-Last preference sync: **2026-08-13** (workstyle: commit locally when a batch is
-verified; still ask before push / Play / save-wipe. Product locks unchanged).
+Last preference sync: **2026-08-21** (/init: Play Alpha fact → **1.12.27 / 57**;
+optional hub POWERUPS rewarded ads; still no IAP. Workstyle: commit locally when
+a batch is verified; still ask before push / Play / save-wipe. Other product
+locks unchanged).
 
 ## Near-term focus
 
-- **Default roadmap:** 90-day M1–M3 shipped (chase → kits → Blightfen). Operate from `docs/CONTENT_CADENCE.md` — balance + one player-visible slice + What’s New. Keep STRATEGY_90D decision table (kits before new specs; new zone if chase is clear). Don’t invent a competing list. **Now:** monthly cadence (zones + kit polish).
-- Vague “gör spelet bättre / vad härnäst” → **cadence slice**, not `/init`, cleanup, or CI chores.
+- **Default roadmap:** 90-day M1–M3 shipped. Operate from `docs/CONTENT_CADENCE.md`
+  — balance + one player-visible slice + What’s New + decision table (kits before
+  new specs). Don’t invent a competing list. **Now:** **core-loop feel** so people
+  keep playing — not new zones, not new classes.
+- Vague “gör spelet bättre / vad härnäst” → **feel of the existing loop** (power beats, combat juice, readable rewards), not a new dungeon or spec, not `/init` / cleanup / CI chores.
 - Prefer **game feel / content** over Play ops busywork (closed-test recruitment can idle in background).
 - Play production remains a goal, but day-to-day work defaults to **content + feel** unless the owner asks about Play.
 - Background why (optional read): `docs/TOP_GAMES_RESEARCH.md`.
@@ -23,7 +28,7 @@ verified; still ask before push / Play / save-wipe. Product locks unchanged).
 
 - Goal: **Google Play “for real” soon** (not sideload-only forever).
 - Prefer work that unblocks Play when touching store: CI signing secrets, closed-test 12×14, production access — see `docs/PLAY_STORE.md`.
-- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha); **production is not live**.
+- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.27 / 57**, 2026-08-21; testers may still be on **1.12.25 / 55** until review publishes). Working ship is **1.12.28**. **Production is not live**. Optional Play Games (META → SETTINGS) is opt-in, not a store blocker.
 - **Platforms now:** Android (+ existing web playtest tooling OK). **No iOS** and **no shipping web as a product** for now.
 
 ## UI target device (mandatory)
@@ -50,10 +55,10 @@ verified; still ask before push / Play / save-wipe. Product locks unchanged).
   `@Deprecated` helpers that are not serialized may go.
 - **Git:** daily work on `main`. `release/x.y.z` only when cutting a tag. Don’t open a release branch for chores.
 - **Don’t stage** `windows/flutter/generated_*` unless `pubspec.yaml` plugins actually changed (`jni` noise from `pub get` is not a product change).
-- **Product locks stay** (phone, English UI, fairness, no IAP, 90-day roadmap,
-  legal/Kenney). Agents may tighten *workstyle* so they can finish; they must
-  not weaken those locks. Cursor/AI safety (no exploits, no foreign dumps) is
-  not overridable from this file.
+- **Product locks stay** (phone, English UI, fairness, no IAP, cadence after
+  90d M1–M3, legal/Kenney). Agents may tighten *workstyle* so they can finish;
+  they must not weaken those locks. Cursor/AI safety (no exploits, no foreign
+  dumps) is not overridable from this file.
 
 ## Game feel & fantasy
 
@@ -64,11 +69,14 @@ verified; still ask before push / Play / save-wipe. Product locks unchanged).
 
 ## Content priorities
 
-- **Kits:** polish what exists (fairness + clarity + fantasy) before adding many new specs.
-- **Zones:** prefer **more zones** when adding content (still use `zone-art-identity` so they don’t feel like reskins).
+- **Kits:** polish what exists (fairness + clarity + fantasy) before adding many new specs. **No new classes/specs** until the owner revisits.
+- **Zones:** **no new zones for now.** Identity polish of existing floors is OK if it serves feel; do not start dungeon #16 unless asked.
+- **Feel / retention:** make the loop they already have (fight → loot → level → claim) punchier and more readable so a short phone session wants “one more floor.”
 - **Meta loops** (daily vault / Will / Gauntlet / season): push toward **“I always know what I’m chasing today”** — hub TODAY with READY/ALMOST, Ascend Blessing + unlock teasers, clear claims.
 - **God Hand:** owner undecided (fun steer vs deeper strategy) — don’t redesign GH direction without asking.
-- **Monetization:** **no IAP / no paid store** for a while longer (stay free, no ads unless owner revisits).
+- **Monetization:** **no IAP / no paid store** for now. Optional hub **POWERUPS**
+  rewarded ads (1 finished ad = 1 hour of ×2 gold + 25% ATK, stack time up to
+  24h). Ads never interrupt combat. Still no paid shop unless the owner asks.
 
 ## Language
 

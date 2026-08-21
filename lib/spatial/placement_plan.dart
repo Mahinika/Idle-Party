@@ -96,7 +96,8 @@ class PlacementPlan {
       props.add(MapProp(x: cell.$1, y: cell.$2, kind: kind));
     }
 
-    final wantChest = blueprint.wantsRoomChest ||
+    final wantChest =
+        blueprint.wantsRoomChest ||
         (blueprint.legacyType == RoomType.elite && kit.eliteRoomChest) ||
         (blueprint.legacyType == RoomType.normal &&
             rng.nextDouble() < kit.normalRoomChestChance);
@@ -120,17 +121,16 @@ class PlacementPlan {
       if (chest != null) {
         chests.add(chest);
         used.add('${chest.$1},${chest.$2}');
-        props.add(
-          MapProp(x: chest.$1, y: chest.$2, kind: MapPropKind.chest),
-        );
+        props.add(MapProp(x: chest.$1, y: chest.$2, kind: MapPropKind.chest));
         edgeCells.remove(chest);
       } else {
         violations.add('no_chest_socket');
       }
     }
 
-    final landmarkPool =
-        kit.landmarks.isNotEmpty ? kit.landmarks : kit.edgeClutter;
+    final landmarkPool = kit.landmarks.isNotEmpty
+        ? kit.landmarks
+        : kit.edgeClutter;
     for (final chamber in chambers) {
       final localEdge = <(int, int)>[];
       for (final cell in edgeCells) {
@@ -149,8 +149,9 @@ class PlacementPlan {
 
     final floorCount = edgeCells.length + openCells.length + used.length;
     final target = (floorCount * 0.12).floor().clamp(16, 80);
-    final clutterPool =
-        kit.edgeClutter.isNotEmpty ? kit.edgeClutter : landmarkPool;
+    final clutterPool = kit.edgeClutter.isNotEmpty
+        ? kit.edgeClutter
+        : landmarkPool;
     while (props.length < target) {
       final preferEdge = rng.nextDouble() < 0.75;
       var cell = preferEdge ? takeFrom(edgeCells) : takeFrom(openCells);

@@ -5,8 +5,9 @@ import 'hero_spec.dart';
 ///
 /// Derived from [CombatRatings]:
 /// - Warrior ATK ≈ (2×Str)/4 → Str is the DPS primary
-/// - Rogue ATK ≈ (Str+Agi)/4 → Agi also feeds crit/DEF
-/// - Caster/healer ATK = Int + SP/2 → Int full, SP half
+/// - Rogue-family ATK ≈ (Str+2×Agi)/4 → Agi is the damage primary (+ crit/DEF)
+/// - Caster/healer: level Int full; gear Int and SP both ~/3 into ATK
+///   (Int also feeds spell crit, so BiS still prefers Int over equal SP)
 /// - Spirit / Mp5 → mana regen only (not throughput)
 /// - Sta → HP; gear Armor is sheet DEF; Agi is a small dodge crumb
 ///   ([CombatRatings.agilityToDefense]) so plate tanks stay ahead of leather DPS.
@@ -66,18 +67,18 @@ class EquipStatWeights {
       SpecRoleTag.tank => _tank,
       SpecRoleTag.healer => _healer,
       SpecRoleTag.caster => _caster,
-      SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
-        _meleeLike(spec.gearAffinity),
+      SpecRoleTag.meleeDps ||
+      SpecRoleTag.rangedDps => _meleeLike(spec.gearAffinity),
     };
   }
 
   /// Fallback when only a [HeroRole] loot bias is known (no talent tree).
   static EquipStatWeights forRole(HeroRole role) => switch (role) {
-        HeroRole.warrior => _warriorDps, // Str-first; tanks pass roleTag
-        HeroRole.rogue => _agiDps,
-        HeroRole.healer => _healer,
-        HeroRole.mage => _caster,
-      };
+    HeroRole.warrior => _warriorDps, // Str-first; tanks pass roleTag
+    HeroRole.rogue => _agiDps,
+    HeroRole.healer => _healer,
+    HeroRole.mage => _caster,
+  };
 
   /// Top primary/secondary labels for tooltips (highest weights first).
   static List<String> priorityLabels(HeroSpecDef spec, {int max = 3}) {
@@ -120,8 +121,8 @@ class EquipStatWeights {
     if (specId != null) {
       switch (specId) {
         case HeroSpecId.enhancement:
-          // Hybrid mail: Agi lead + Str + Sta.
-          return const [0.38, 0.40, 0.22, 0.0, 0.0, 0.0];
+          // Hybrid mail: Agi lead (2 AP) + real Str (1 AP) + Sta.
+          return const [0.30, 0.48, 0.22, 0.0, 0.0, 0.0];
         case HeroSpecId.beastMastery:
         case HeroSpecId.marksmanship:
         case HeroSpecId.survival:
@@ -138,7 +139,7 @@ class EquipStatWeights {
     if (roleTag != null) {
       return switch (roleTag) {
         SpecRoleTag.tank => const [0.34, 0.0, 0.66, 0.0, 0.0, 0.0],
-        SpecRoleTag.healer => const [0.0, 0.0, 0.26, 0.40, 0.18, 0.16],
+        SpecRoleTag.healer => const [0.0, 0.0, 0.26, 0.44, 0.10, 0.20],
         SpecRoleTag.caster => const [0.0, 0.0, 0.28, 0.50, 0.0, 0.22],
         SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
           bias == HeroRole.warrior
@@ -149,7 +150,7 @@ class EquipStatWeights {
     return switch (bias) {
       HeroRole.warrior => const [0.68, 0.0, 0.32, 0.0, 0.0, 0.0],
       HeroRole.rogue => const [0.18, 0.58, 0.24, 0.0, 0.0, 0.0],
-      HeroRole.healer => const [0.0, 0.0, 0.26, 0.40, 0.18, 0.16],
+      HeroRole.healer => const [0.0, 0.0, 0.26, 0.44, 0.10, 0.20],
       HeroRole.mage => const [0.0, 0.0, 0.28, 0.50, 0.0, 0.22],
     };
   }
@@ -175,7 +176,7 @@ class EquipStatWeights {
     aspd: 1.5,
     move: 1.0,
     mp5: 0.5,
-    flatAtk: 2.0,
+    flatAtk: 13.0,
   );
 
   /// Blood leans self-heal threat — a touch more Str than generic tank.
@@ -191,13 +192,14 @@ class EquipStatWeights {
     aspd: 1.5,
     move: 1.0,
     mp5: 0.5,
-    flatAtk: 2.5,
+    flatAtk: 15.0,
   );
 
   /// Plate/mail Str melee (Arms, Fury, Ret, Frost/Unholy DK).
+  /// Agi is crit/DEF crumb only — CombatRatings warrior AP is 2×Str.
   static const _warriorDps = EquipStatWeights(
     str: 10.0,
-    agi: 4.0,
+    agi: 1.5,
     sta: 3.5,
     intel: 0,
     spi: 0.5,
@@ -207,7 +209,7 @@ class EquipStatWeights {
     aspd: 4.5,
     move: 2.0,
     mp5: 0,
-    flatAtk: 2.5,
+    flatAtk: 20.0,
   );
 
   /// Agi melee / feral baseline.
@@ -223,7 +225,7 @@ class EquipStatWeights {
     aspd: 5.5,
     move: 3.0,
     mp5: 0,
-    flatAtk: 2.0,
+    flatAtk: 20.0,
   );
 
   /// Enh: dual-wield hybrid — Agi lead but Str still matters.
@@ -239,7 +241,7 @@ class EquipStatWeights {
     aspd: 5.5,
     move: 2.5,
     mp5: 0,
-    flatAtk: 2.0,
+    flatAtk: 19.0,
   );
 
   /// Hunters: pure ranged Agi — Str is filler.
@@ -255,7 +257,7 @@ class EquipStatWeights {
     aspd: 5.0,
     move: 2.5,
     mp5: 0,
-    flatAtk: 1.5,
+    flatAtk: 22.0,
   );
 
   /// Cat: crit window fantasy.
@@ -271,10 +273,10 @@ class EquipStatWeights {
     aspd: 5.5,
     move: 3.5,
     mp5: 0,
-    flatAtk: 2.0,
+    flatAtk: 21.0,
   );
 
-  /// Int full ATK, SP half — score matches CombatRatings caster path.
+  /// Int primary (ATK + crit); SP is ATK-only at the same ~/3 sheet rate.
   static const _caster = EquipStatWeights(
     str: 0,
     agi: 1.0,
@@ -287,7 +289,7 @@ class EquipStatWeights {
     aspd: 4.0,
     move: 1.0,
     mp5: 2.5,
-    flatAtk: 0,
+    flatAtk: 30.0,
   );
 
   /// Shadow: crit/haste lean; Spirit helps DoT mana more than pure Fire.
@@ -303,7 +305,7 @@ class EquipStatWeights {
     aspd: 5.0,
     move: 1.0,
     mp5: 3.0,
-    flatAtk: 0,
+    flatAtk: 30.0,
   );
 
   /// Affliction: sustain DoTs — Spi/Mp5 a bit above nuke casters.
@@ -319,10 +321,11 @@ class EquipStatWeights {
     aspd: 4.5,
     move: 1.0,
     mp5: 3.5,
-    flatAtk: 0,
+    flatAtk: 30.0,
   );
 
   /// Heal throughput uses same ATK pool as casters; Spi/Mp5 are regen only.
+  /// Haste is last — heals ignore it (ability CDs are wall-clock).
   static const _healer = EquipStatWeights(
     str: 0,
     agi: 1.0,
@@ -332,10 +335,10 @@ class EquipStatWeights {
     sp: 5.5,
     armor: 1.0,
     crit: 4.0,
-    aspd: 3.5,
+    aspd: 1.5,
     move: 1.0,
     mp5: 5.0,
-    flatAtk: 0,
+    flatAtk: 30.0,
   );
 
   /// Disc: slight crit for absorb/penance fantasy; still Mp5-heavy.
@@ -348,9 +351,9 @@ class EquipStatWeights {
     sp: 5.5,
     armor: 1.0,
     crit: 5.5,
-    aspd: 3.5,
+    aspd: 1.5,
     move: 1.0,
     mp5: 5.0,
-    flatAtk: 0,
+    flatAtk: 30.0,
   );
 }

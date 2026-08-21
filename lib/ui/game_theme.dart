@@ -10,6 +10,7 @@ abstract final class GameTheme {
   static const Color stoneRaised = Color(0xFF1E2733);
   static const Color panel = Color(0xFF182028);
   static const Color panelInset = Color(0xFF0F141C);
+
   /// Translucent list/card fill used inside overlays.
   static const Color menuCard = Color(0xB8121820);
   static const Color moss = Color(0xFF2F4A3C);
@@ -41,11 +42,11 @@ abstract final class GameTheme {
   /// Gap between interactive clusters (Material ≥8dp).
   static const double clusterGap = 8;
 
-  /// Bottom nav chrome height (minTouch + label padding).
-  static const double bottomNavHeight = minTouch + 14;
+  /// Bottom nav chrome height (minTouch + label padding + finger comfort).
+  static const double bottomNavHeight = minTouch + 18;
 
   /// Clearance above bottom nav for floating combat HUD.
-  static const double hudAboveNav = clusterGap + 4;
+  static const double hudAboveNav = clusterGap + 6;
 
   /// HUD pixel labels — keep readable on mobile chrome.
   static const double hudPixel = 9;
@@ -63,8 +64,13 @@ abstract final class GameTheme {
   }
 
   /// Shipping portrait phone width (Samsung A56 ≈ 360; band ~360–430).
+  ///
+  /// Idle Party is phone-only — menus and chrome always use this layout, even
+  /// when a wide browser forgets device metrics. Do not reintroduce tablet /
+  /// desktop menu branches.
   static bool isPhoneWidth(BuildContext context) {
-    return MediaQuery.sizeOf(context).width <= 430;
+    // Width ignored on purpose — product chrome is always the phone band.
+    return true;
   }
 
   /// Short phone / landscape-short: hub CTAs must collapse.
@@ -103,8 +109,7 @@ abstract final class GameTheme {
     double size = 11,
     Color color = torchHot,
     double height = 1.4,
-  }) =>
-      pixelCached(size: size, color: color, height: height);
+  }) => pixelCached(size: size, color: color, height: height);
 
   /// Same as [pixel] — explicit name for hot paint paths.
   static TextStyle pixelCached({
@@ -122,21 +127,14 @@ abstract final class GameTheme {
         color: color,
         height: height,
         shadows: const [
-          Shadow(
-            color: Color(0x99000000),
-            offset: Offset(1, 1),
-            blurRadius: 0,
-          ),
+          Shadow(color: Color(0x99000000), offset: Offset(1, 1), blurRadius: 0),
         ],
       ),
     );
   }
 
   /// Menu / sheet titles — premium forge display (not pixel glitter).
-  static TextStyle menuTitle({
-    double size = 18,
-    Color color = parchment,
-  }) {
+  static TextStyle menuTitle({double size = 18, Color color = parchment}) {
     final key = Object.hash(size, color.toARGB32());
     return _titleCache.putIfAbsent(
       key,
@@ -151,26 +149,16 @@ abstract final class GameTheme {
   }
 
   /// Readable body / HUD copy.
-  static TextStyle body({
-    double size = 17,
-    Color color = parchment,
-  }) {
+  static TextStyle body({double size = 17, Color color = parchment}) {
     final key = Object.hash(size, color.toARGB32());
     return _bodyCache.putIfAbsent(
       key,
-      () => GoogleFonts.vt323(
-        fontSize: size,
-        color: color,
-        height: 1.2,
-      ),
+      () => GoogleFonts.vt323(fontSize: size, color: color, height: 1.2),
     );
   }
 
   /// Button labels — large VT323 so long words stay legible.
-  static TextStyle button({
-    double size = 20,
-    Color color = parchment,
-  }) {
+  static TextStyle button({double size = 20, Color color = parchment}) {
     final key = Object.hash(size, color.toARGB32());
     return _buttonCache.putIfAbsent(
       key,

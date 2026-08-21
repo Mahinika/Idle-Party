@@ -219,8 +219,7 @@ def zone_identity(dungeon_id: str = "", neighbor_id: str = "") -> str:
     """
     root = _root()
     custom = (root / "lib" / "ui" / "custom_assets.dart").read_text(encoding="utf-8")
-    kenney = (root / "lib" / "ui" / "kenney_assets.dart").read_text(encoding="utf-8")
-    env = (root / "lib" / "ui" / "dungeon_environment.dart").read_text(encoding="utf-8")
+    zone_art = (root / "lib" / "models" / "zone_art.dart").read_text(encoding="utf-8")
 
     pairs: list[tuple[str, str]] = []
     d = dungeon_id.strip()
@@ -228,7 +227,7 @@ def zone_identity(dungeon_id: str = "", neighbor_id: str = "") -> str:
     if d and n:
         pairs.append((d, n))
     elif d:
-        guess = {"tide": "crystal", "ember": "hell"}.get(d, "")
+        guess = {"tide": "crystal", "ember": "hell", "goblin": "sandy"}.get(d, "")
         if not guess:
             return f"Provide neighbor_id for dungeon_id={d}"
         pairs.append((d, guess))
@@ -261,24 +260,27 @@ def zone_identity(dungeon_id: str = "", neighbor_id: str = "") -> str:
         elif ba and bb:
             lines.append("  OK: backdrops differ")
 
-        # Boss sprites in enemySpriteForRole
-        boss_block = re.search(
-            r"if \(role == EnemyRole\.boss\) \{(.*?)\}",
-            kenney,
-            re.S,
-        )
-        if boss_block:
-            block = boss_block.group(1)
-            sa = re.search(rf"'{a}'\s*=>\s*([^,\n]+)", block)
-            sb = re.search(rf"'{b}'\s*=>\s*([^,\n]+)", block)
-            lines.append(f"- boss {a}: {sa.group(1).strip() if sa else 'missing'}")
-            lines.append(f"- boss {b}: {sb.group(1).strip() if sb else 'missing'}")
-            if sa and sb and sa.group(1).strip() == sb.group(1).strip():
-                lines.append("  FAIL: boss sprites identical")
-            elif sa and sb:
-                lines.append("  OK: boss sprites differ")
+        # Boss sprites live on ZoneArt enemies.boss (ZoneArt migration).
+        def _boss_asset(zid: str) -> str | None:
+            m = re.search(
+                rf"'{zid}'\s*:\s*ZoneArtDef\((.*?)enemies:\s*ZoneEnemyArt\((.*?)\)",
+                zone_art,
+                re.S,
+            )
+            if not m:
+                return None
+            bm = re.search(r"boss:\s*([^,\n]+)", m.group(2))
+            return bm.group(1).strip() if bm else None
 
-        env_hit = f"'{a}'" in env
+        sa, sb = _boss_asset(a), _boss_asset(b)
+        lines.append(f"- boss {a}: {sa or 'missing'}")
+        lines.append(f"- boss {b}: {sb or 'missing'}")
+        if sa and sb and sa == sb:
+            lines.append("  FAIL: boss sprites identical")
+        elif sa and sb:
+            lines.append("  OK: boss sprites differ")
+
+        env_hit = re.search(rf"'{a}'\s*:\s*ZoneArtDef", zone_art) is not None
         lines.append(
             f"- environment entries for {a}: {'present' if env_hit else 'MISSING'}"
         )

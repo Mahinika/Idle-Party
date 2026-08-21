@@ -5,25 +5,24 @@ import 'game_logic.dart';
 /// Short fiction lines for Idle Party — no dialogue trees, just flavor
 /// on existing UI rails (intro, hub, toasts, ascend).
 abstract final class StoryLore {
-  static const String introTagline =
-      'A party that fights while you watch.';
+  static const String introTagline = 'Your party fights while you watch.';
 
   static const String introSubline =
-      'You are the distant will. Guide them into the deep.';
+      'Tap to help. Grow stronger. No other game required.';
 
   /// Cold-start beats before CONTINUE / NEW GAME. Short, skippable.
   static const introBeats = <({String title, String body})>[
     (
       title: 'IDLE PARTY',
-      body: 'A party that fights while you watch.',
+      body: 'Your heroes fight on their own while you watch.',
     ),
     (
-      title: 'THE KEEP',
-      body: 'Fifteen gates. Something wrong sleeps beneath.',
+      title: 'THE CAVE',
+      body: 'Send them into a dungeon. They clear rooms and pick up loot.',
     ),
     (
-      title: 'YOUR WILL',
-      body: 'Guide them. Grow them. Descend.',
+      title: 'YOUR JOB',
+      body: 'Tap the map to help. Grow the party. Beat the first boss.',
     ),
   ];
 
@@ -38,7 +37,8 @@ abstract final class StoryLore {
     final def = DungeonCatalog.byId(dungeonId);
     return switch (dungeonId) {
       'sandy' => 'The caverns open. Aegis takes the lead.',
-      'goblin' => "Torches in the Hideout. They know you're coming.",
+      'goblin' =>
+          'Torches in the Hideout. Stolen stashes everywhere — they know you are coming.',
       'king' => "The Fort's banners hang wrong. Press on.",
       'underworld' => 'No sky here. Only watching.',
       'dead' => 'Footsteps echo where no one walks.',
@@ -47,8 +47,10 @@ abstract final class StoryLore {
       'tide' => 'Salt water fills the hold. Hold your breath.',
       'ember' => 'Ash drifts in the vault. The crown still smolders.',
       'grove' => 'Roots tighten. Something old watches between the trunks.',
-      'storm' => 'Wind screams through the hollow. Lightning answers every step.',
-      'rime' => 'The wind dies. Rimeglass sings underfoot — cold enough to cut.',
+      'storm' =>
+        'Wind screams through the hollow. Lightning answers every step.',
+      'rime' =>
+        'The wind dies. Rimeglass sings underfoot — cold enough to cut.',
       'fen' => 'The ice sweats. Bile water pools where the cold used to sing.',
       'brass' => 'The mire drains through brass grates. Something still ticks.',
       'veil' => 'Brass ticks fade. Moth-dust fills the hollow.',
@@ -60,7 +62,8 @@ abstract final class StoryLore {
     final def = DungeonCatalog.byId(dungeonId);
     return switch (dungeonId) {
       'sandy' => '${def.bossName} falls. The sand goes quiet.',
-      'goblin' => 'The Lord is broken. The wound still hums.',
+      'goblin' =>
+          'The Lord is broken. The wound still hums — and the stashes are yours.',
       'king' => 'The crown cracks. Deeper still.',
       'underworld' => 'The Beholder closes. For now.',
       'dead' => 'The No-One fades. Names return briefly.',
@@ -70,7 +73,8 @@ abstract final class StoryLore {
       'ember' => 'The Sovereign cools. Embers still whisper.',
       'grove' => 'Wyrd Root stills. The grove exhales moss and quiet.',
       'storm' => 'The Tyrant breaks. Thunder rolls away into quiet.',
-      'rime' => 'The Colossus cracks. Frost settles — the rift holds its breath.',
+      'rime' =>
+        'The Colossus cracks. Frost settles — the rift holds its breath.',
       'fen' => 'The Hydra sinks. The mire keeps bubbling.',
       'brass' => 'The Mainspring stills. Cogs keep ticking in the dark.',
       'veil' => 'The Pale Monarch folds. Silk still drifts.',
@@ -93,7 +97,6 @@ abstract final class StoryLore {
     required int nextAl,
     int milestoneBonus = 0,
     int godHandLevel = 0,
-    int soulboundFragments = 0,
     int blessingsAfter = 1,
     bool unlockCombatRogue = false,
   }) {
@@ -101,7 +104,9 @@ abstract final class StoryLore {
         ? '+${rewardEssence}e (+${milestoneBonus}e milestone) · AL → $nextAl'
         : '+${rewardEssence}e · AL → $nextAl';
     final alPower =
-        'AL power: +1 ATK · +${nextAl ~/ 2 - (nextAl - 1) ~/ 2} DEF · +2 STA · +10% gold';
+        'AL power: +${GameLogic.alAttackPerLevel} ATK · '
+        '+${GameLogic.alDefensePerLevel} DEF · '
+        '+${GameLogic.alVitalityPerLevel} STA · +10% gold';
     final blessAtk = blessingsAfter * GameLogic.ascendBlessingAtk;
     final blessDef = blessingsAfter * GameLogic.ascendBlessingDef;
     final blessVit = blessingsAfter * GameLogic.ascendBlessingVit;
@@ -120,10 +125,10 @@ abstract final class StoryLore {
         '$alPower\n'
         '$blessLine$unlockLine\n'
         '$ahead\n\n'
-        'Keep: hero levels/XP, essence, relics, pets, sanctuary, soulbound, '
+        'Keep: hero levels/XP, essence, relics, pets, sanctuary, '
         'God Hand, Apex, meta unlocks.\n'
         'Reset: wallet gold, floors, run gear, loadouts, forge gold upgrades.\n'
-        'God Hand Lv$godHandLevel kept · $soulboundFragments soulbound frag';
+        'God Hand Lv$godHandLevel kept';
   }
 
   static String ascendToast({
@@ -139,10 +144,10 @@ abstract final class StoryLore {
     return 'Reborn · AL$al$bless$unlockBit$mile';
   }
 
-  static const String shadeJoins =
-      'Shade the Rogue answers the call.';
+  static const String shadeJoins = 'Shade the Rogue answers the call.';
 
-  static const String loreTipTitle = 'THE DESCENT';
+  static const String loreTipTitle = 'THE ROAD';
   static const String loreTipBody =
-      'Fifteen gates. One wrongness below. Clear deeper zones, then Ascend.';
+      'More caves wait after this one. Beat bosses to open the road. '
+      'Later you can Ascend — a fresh run that keeps hero levels.';
 }

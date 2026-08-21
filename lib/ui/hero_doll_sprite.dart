@@ -31,9 +31,6 @@ class HeroDollSprite extends StatelessWidget {
         child: sprite,
       );
     }
-    return Opacity(
-      opacity: alive ? 1 : 0.35,
-      child: sprite,
-    );
+    return Opacity(opacity: alive ? 1 : 0.35, child: sprite);
   }
 }

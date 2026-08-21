@@ -43,11 +43,37 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
           printf '%s\n' "$KEY_PROPERTIES" > android/key.properties
 
+      - name: Write AdMob ids (optional)
+        env:
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+        run: |
+          if [ -z "$ADMOB_APP_ID" ]; then
+            echo "No ADMOB_APP_ID secret; Android manifest keeps Google sample App ID (test ads)."
+            exit 0
+          fi
+          printf 'admobAppId=%s\n' "$ADMOB_APP_ID" > android/admob.properties
+
       - name: Build release APK
-        run: flutter build apk --release
+        env:
+          ADMOB_REWARDED_UNIT_ID: ${{ secrets.ADMOB_REWARDED_UNIT_ID }}
+        run: |
+          if [ -n "$ADMOB_REWARDED_UNIT_ID" ]; then
+            flutter build apk --release \
+              --dart-define=ADMOB_REWARDED_UNIT_ID="$ADMOB_REWARDED_UNIT_ID"
+          else
+            flutter build apk --release
+          fi
 
       - name: Build release App Bundle
-        run: flutter build appbundle --release
+        env:
+          ADMOB_REWARDED_UNIT_ID: ${{ secrets.ADMOB_REWARDED_UNIT_ID }}
+        run: |
+          if [ -n "$ADMOB_REWARDED_UNIT_ID" ]; then
+            flutter build appbundle --release \
+              --dart-define=ADMOB_REWARDED_UNIT_ID="$ADMOB_REWARDED_UNIT_ID"
+          else
+            flutter build appbundle --release
+          fi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

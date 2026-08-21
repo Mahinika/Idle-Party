@@ -5,7 +5,7 @@
 Idle Party is a cozy-but-crunchy **idle RPG**: a hero party crawls spatial dungeon floors, clears chambers, farms loot, and grows stronger between runs. Tap in for God Hand moments, or let the corridor combat cook offline.
 
 <p align="center">
-  <img src="assets/custom/ui/app_icon.png" alt="Idle Party app icon" width="160" />
+  <img src="tool/art_backups/app_icon.png" alt="Idle Party app icon" width="160" />
 </p>
 
 **[Download Android APK (latest)](https://github.com/Mahinika/Idle-Party/releases/latest)** · **[All releases](https://github.com/Mahinika/Idle-Party/releases)**
@@ -17,7 +17,7 @@ Primary Android distribution is **GitHub Releases (sideload)**; Play Store is op
 ## Why you’ll want to try it
 
 - **Real dungeon crawling, not a fake progress bar** — multi-chamber maps, gates that open after clears, and a party that actually walks the floor.
-- **A full party with class kits** — 10 classes and ~30 talent specs (Warrior through Druid). Pick your starters on New Game; unlock more via Ascend and clears. Abilities, buffs, and a live DPS share meter.
+- **A full party with class kits** — 10 classes and **31 specs**. Pick your starters on New Game; unlock more via Ascend and clears. Abilities, buffs, and a live DPS share meter.
 - **Farm or Push** — milk a floor for loot, or shove deeper until the wipe. Your call.
 - **God Hand** — tap the map to steer and smash. Upgrade it with essence.
 - **Gear that feels good** — equip, auto-equip, sell junk, merge in the combinator, save loadouts.
@@ -48,13 +48,16 @@ flutter run -d web-server --web-hostname=localhost --web-port=8080
 
 | Layer | What you do |
 |--------|-------------|
-| **Hub** | Pick a zone, Hardmode, Boss Rush / No Flask, daily run, Ascend when ready |
+| **Hub** | TODAY chase, pick a zone, KEYSTONE, daily run, Ascend when ready |
 | **Dungeon** | Clear chambers → loot → stairs. Watch the party fight live |
-| **Bag & Forge** | Gear, combinator, training, relics, sanctuary |
+| **Bag & Forge** | Gear, combinator (MERGE SCORE), training, relics, sanctuary |
 | **Meta** | Pets, prestige sinks, contracts, weekly challenge, Will rank & titles |
 
-Zones stretch from Sandy Caverns through Tide / Ember / Grove / Stormwake to
-**Rimeglass Rift** (12 named zones) — each with its own look, packs, and bosses.
+World Path is **15 zones** from Sandy Caverns through Mothveil Hollow
+(Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on
+the road) — each with its own look, packs, and bosses.
+
+**Ship:** [latest GitHub Release](https://github.com/Mahinika/Idle-Party/releases/latest) (1.12.28 — What’s New is also in-game).
 
 ---
 
@@ -70,7 +73,7 @@ CI builds an APK (+ App Bundle) on tags matching `v*` (`.github/workflows/build-
 
 **Package id:** `com.idleparty.app` · **Saves:** SharedPreferences (`idle_party_save_v2`)
 
-Privacy: [docs/PRIVACY.md](docs/PRIVACY.md) · Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md) · Play checklist: [docs/PLAY_STORE.md](docs/PLAY_STORE.md)
+Privacy: [docs/PRIVACY.md](docs/PRIVACY.md) · Cadence: [docs/CONTENT_CADENCE.md](docs/CONTENT_CADENCE.md) · Play checklist: [docs/PLAY_STORE.md](docs/PLAY_STORE.md)
 
 ---
 

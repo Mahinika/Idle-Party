@@ -1,0 +1,123 @@
+# Idle Party — store listing (research + copy)
+
+**Updated:** 2026-08-21 · Target: Google Play (en-US) · Honesty first.
+
+## Research: what makes people tap Install
+
+Sources: Play Console Help (preview assets), ASO / CRO guides 2025–2026
+(ASOMobile, AppDrift, InspiringApps), plus Idle Party prefs (phone-only,
+fairness, no IAP).
+
+| Rank | Asset | Why it moves installs |
+|------|--------|------------------------|
+| 1 | **Icon** | Seen in search before the page; must read at tiny size and look unlike neighbors. |
+| 2 | **First 2–3 screenshots** | Visible in search carousels; most users never scroll further. Lead with the *promise*, not settings. |
+| 3 | **Short description** (≤80 chars) | Under the title in search; one sentence of genre + hook. |
+| 4 | **Feature graphic** | Top of the listing page (not always search). Atmosphere + readable title. |
+| 5 | **Full description** | For people who already almost decided; keywords + honesty. |
+| 6 | **Preview video** | Strong for games when available; optional for Alpha. |
+
+### Rules we follow for Idle Party
+
+1. **Real UI only** — no fake chrome, no “#1 idle” badges, no borrowed art.
+2. **Benefit order** — screenshot 1 = chase / hub fantasy; 2 = combat feel; 3 = grow stronger; later = KEY / Ascend / keep gear.
+3. **Captions short** (≤ ~8 words) if used; never cover critical HUD.
+4. **Phone portrait** 9:16, ≥1080 px wide (Play featuring bar).
+5. **Copy matches ship** — 15 zones, 31 specs, KEYSTONE (not invented systems).
+   Do **not** promise “no ads / no paid store forever” — monetization may come later.
+6. **English only on the store page** — default locale **en-US**. Do not add
+   translated Play listings (sv-SE or otherwise). Screenshot captions stay English.
+
+### Idle Party pitch (one line)
+
+*Grow a fantasy party that keeps fighting while you are away — and always know what you are chasing today.*
+
+---
+
+## en-US copy (paste into Play Console)
+
+### Short description (80 chars max)
+
+```
+Grow a party, farm dungeons AFK, chase KEYSTONE and Ascend.
+```
+
+(59 characters)
+
+### Full description
+
+```
+Idle Party is a single-player idle RPG for phones: grow a fantasy party, clear painted dungeons, and come back to real progress.
+
+WHAT YOU DO
+• Build a party of classic kits (tanks, healers, DPS) — 10 classes and 31 specs.
+• Enter the World Path: 15 zones from Sandy Caverns through Mothveil Hollow.
+• Fight on multi-chamber floors with loot, room chests, and bosses. Companions follow and hit.
+• Leave the dungeon when you want — AFK catch-up keeps the party moving.
+• Hub TODAY shows one clear chase (READY / ALMOST) so you always know the next beat.
+
+LONG-TERM GOALS
+• KEYSTONE: set a key, beat the boss under par, climb vault rewards.
+• Ascend: reset the run, keep essence / Apex / pets / meta upgrades, unlock more kits.
+• Infinity Gauntlet (Ascend Level 10+): endless Crystal Spire climb.
+• Apex forge: craft forever gear that survives Ascend. MERGE two bag pieces into one stronger item.
+
+FAIR PLAY
+• Single-player — no idle-party account required.
+• Optional Google Play Games for seasonal boards and cloud save (you can stay offline).
+• Optional rewarded ads on the hub (POWERUPS) for a timed boost — never mid-fight.
+• Built for portrait phones.
+
+Install, start a party, and take one more floor.
+```
+
+### Screenshot caption plan (Play phone carousel, 2026-08-21)
+
+Promo cards in `tool/store_listing/marketing/` (English, 1080×1920). Play max is **8** phone shots; #10 is extra on disk.
+
+| # | File | Caption |
+|---|--------|---------|
+| Feature | `01_feature_graphic_1024x500.png` | IDLE PARTY · Grow a party. Farm AFK. |
+| 1 | `02_todays_chase_1080x1920.png` | Always know today's chase |
+| 2 | `03_party_fights_1080x1920.png` | Your party keeps fighting |
+| 3 | `04_grow_stronger_1080x1920.png` | Grow stronger every floor |
+| 4 | `05_build_party_1080x1920.png` | 10 classes. 31 kits. |
+| 5 | `06_world_path_1080x1920.png` | 15 zones. One World Path. |
+| 6 | `07_afk_progress_1080x1920.png` | Progress while you're away |
+| 7 | `08_keystone_1080x1920.png` | KEYSTONE. Beat the clock. |
+| 8 | `09_ascend_1080x1920.png` | Ascend. Keep your power. |
+| extra | `10_one_more_floor_1080x1920.png` | Take one more floor. |
+
+These are branded explainer cards (owned pixel look), not live HUD captures. Swap back to `tool/store_listing/out/` Playwright shots if Google flags them as not representing the app.
+
+### Feature graphic note
+
+Current Play feature graphic is `01_feature_graphic_1024x500.png` (party + title). Icon stays owned `app_icon`.
+
+## How we capture screenshots (lessons)
+
+Do **not** start from a blank day-one save. Pipeline:
+
+1. `flutter test tool/store_listing/export_showcase_save_test.dart` → `showcase_save.json`
+2. Flutter web on `:8080` + `py -3 tool/store_listing/capture_playwright.py`
+3. `py -3 tool/store_listing/compose_shots.py` → `out/` (1080×1920, caption on **top**)
+
+Hard-won rules:
+
+| Pitfall | Fix |
+|---------|-----|
+| CONTINUE disabled after inject | Web SharedPreferences JSON-encodes strings → `JSON.stringify(raw)` into `flutter.idle_party_save_v2` |
+| Tabs (FORGE / KEEP / GEAR) ignore clicks | `MenuChrome.bridgedTab` + `__idlePartyClick` (CanvasKit TabBar is not DOM) |
+| Widget-test screenshots look blank | Prefer Playwright; Google Fonts + `toImage` fights you |
+| AL0 / all LOCKED / forge +0 | Use showcase save (AL3+, clears on World Path, real rates) |
+| Fat caption covering HUD | Top caption band in `compose_shots.py`, crop bias per shot |
+| Play Console file picker blocked | CORS-serve `out/`, CDP `fetch` + `DataTransfer` (same idea as AAB) |
+
+Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
+
+## Play Console status (2026-08-21)
+
+- Short + full description unchanged (honesty copy in this file).
+- Phone screenshots (8) + feature graphic submitted 2026-08-21 from `tool/store_listing/marketing/` (“Ändringarna granskas”; pre-checks up to ~13 min).
+- Extra card `10_one_more_floor_1080x1920.png` not uploaded (Play cap is 8 phone shots).
+- Closed Alpha AAB **57 (1.12.27)** still in review separately. Testers may still be on **1.12.25 (55)** until Google publishes.

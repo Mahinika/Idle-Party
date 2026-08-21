@@ -13,40 +13,44 @@ class KenneyButton extends StatelessWidget {
     this.style = KenneyButtonStyle.brown,
     this.expanded = true,
     this.primary = false,
+    this.tip,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final KenneyButtonStyle style;
   final bool expanded;
+
   /// Material-sized primary CTA (ENTER / Ascend / MERGE).
   final bool primary;
 
+  /// Long-press / hover hint (phone + accessibility).
+  final String? tip;
+
   ({Color top, Color bottom, Color border, Color text, Color glow})
-      get _palette =>
-          switch (style) {
-            KenneyButtonStyle.brown => (
-              top: const Color(0xFF6B4E2E),
-              bottom: const Color(0xFF3E2A18),
-              border: GameTheme.borderLit.withValues(alpha: 0.75),
-              text: GameTheme.parchment,
-              glow: GameTheme.torch.withValues(alpha: 0.22),
-            ),
-            KenneyButtonStyle.grey => (
-              top: const Color(0xFF2A3340),
-              bottom: const Color(0xFF171E28),
-              border: GameTheme.border.withValues(alpha: 0.95),
-              text: GameTheme.parchment,
-              glow: Colors.transparent,
-            ),
-            KenneyButtonStyle.red => (
-              top: const Color(0xFF9A4030),
-              bottom: const Color(0xFF5A2018),
-              border: GameTheme.bloodLit.withValues(alpha: 0.85),
-              text: GameTheme.torchHot,
-              glow: GameTheme.bloodLit.withValues(alpha: 0.2),
-            ),
-          };
+  get _palette => switch (style) {
+    KenneyButtonStyle.brown => (
+      top: const Color(0xFF6B4E2E),
+      bottom: const Color(0xFF3E2A18),
+      border: GameTheme.borderLit.withValues(alpha: 0.75),
+      text: GameTheme.parchment,
+      glow: GameTheme.torch.withValues(alpha: 0.22),
+    ),
+    KenneyButtonStyle.grey => (
+      top: const Color(0xFF2A3340),
+      bottom: const Color(0xFF171E28),
+      border: GameTheme.border.withValues(alpha: 0.95),
+      text: GameTheme.parchment,
+      glow: Colors.transparent,
+    ),
+    KenneyButtonStyle.red => (
+      top: const Color(0xFF9A4030),
+      bottom: const Color(0xFF5A2018),
+      border: GameTheme.bloodLit.withValues(alpha: 0.85),
+      text: GameTheme.torchHot,
+      glow: GameTheme.bloodLit.withValues(alpha: 0.2),
+    ),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +75,19 @@ class KenneyButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
+        onLongPress: tip == null || !enabled
+            ? null
+            : () {
+                final messenger = ScaffoldMessenger.maybeOf(context);
+                messenger?.hideCurrentSnackBar();
+                messenger?.showSnackBar(
+                  SnackBar(
+                    content: Text(tip!),
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
         borderRadius: radius,
         child: Ink(
           decoration: BoxDecoration(
@@ -80,10 +97,7 @@ class KenneyButton extends StatelessWidget {
               end: Alignment.bottomCenter,
               colors: enabled
                   ? [palette.top, palette.bottom]
-                  : [
-                      const Color(0xFF151A22),
-                      const Color(0xFF0E1218),
-                    ],
+                  : [const Color(0xFF151A22), const Color(0xFF0E1218)],
             ),
             border: Border.all(
               color: enabled ? palette.border : const Color(0xFF2A3340),
@@ -106,8 +120,7 @@ class KenneyButton extends StatelessWidget {
           ),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight:
-                  primary ? GameTheme.primaryTouch : GameTheme.minTouch,
+              minHeight: primary ? GameTheme.primaryTouch : GameTheme.minTouch,
             ),
             child: expanded
                 ? SizedBox(
@@ -120,17 +133,21 @@ class KenneyButton extends StatelessWidget {
       ),
     );
 
-    return WebClickScope(
+    final scoped = WebClickScope(
       label: label,
       onPressed: onPressed,
       child: Semantics(
         button: true,
         enabled: enabled,
-        label: label,
+        label: tip == null ? label : '$label. $tip',
         onTap: onPressed,
         excludeSemantics: true,
-        child: button,
+        child: tip == null
+            ? button
+            : Tooltip(message: tip!, preferBelow: false, child: button),
       ),
     );
+
+    return scoped;
   }
 }

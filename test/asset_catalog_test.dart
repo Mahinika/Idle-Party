@@ -143,7 +143,7 @@ void main() {
     }
   });
 
-  test('enemySpriteCatalog files exist and Kenney extras/icons/runes exist', () {
+  test('enemySpriteCatalog and identity icon files exist', () {
     for (final path in KenneyAssets.enemySpriteCatalog) {
       expect(exists(path), isTrue, reason: path);
     }

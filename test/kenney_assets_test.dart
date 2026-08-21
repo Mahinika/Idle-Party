@@ -30,9 +30,20 @@ void main() {
       ...KenneyAssets.enemySpriteCatalog,
       for (final role in EnemyRole.values)
         KenneyAssets.enemySpriteForRole(role, dungeonId: 'sandy'),
-      KenneyAssets.enemySpriteForCodexName('Goblin Scout'),
+      KenneyAssets.enemySpriteForCodexName('Goblin Scrapper'),
+      KenneyAssets.enemySpriteForCodexName('Goblin Slinger'),
+      KenneyAssets.enemySpriteForCodexName('Stash Guard'),
       KenneyAssets.enemySpriteForCodexName('Crystal Warden'),
     };
+
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Goblin Slinger'),
+      KenneyAssets.enemyBat,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Stash Guard'),
+      KenneyAssets.enemyGoblinMite,
+    );
 
     for (final path in paths) {
       final file = File(path);

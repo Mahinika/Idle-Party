@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/ascend_roadmap.dart';
 import '../core/game_logic.dart';
 import '../models/hero_spec.dart';
 import 'custom_assets.dart';
@@ -46,13 +45,18 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
       _slots.map((s) => s!).toSet().length == _slots.length;
 
   String? get _softWarn {
-    final chosen = [for (final s in _slots) if (s != null) HeroSpecs.def(s)];
+    final chosen = [
+      for (final s in _slots)
+        if (s != null) HeroSpecs.def(s),
+    ];
     if (chosen.length < GameLogic.starterPartySize) return null;
     final hasTank = chosen.any((d) => d.isTank);
     final hasHeal = chosen.any((d) => d.isHealer);
-    if (!hasTank && !hasHeal) return 'No tank or healer — hard mode';
-    if (!hasTank) return 'No tank tagged — glass cannon OK';
-    if (!hasHeal) return 'No healer tagged — flasks matter more';
+    if (!hasTank && !hasHeal) {
+      return 'No Shield or Healer — the cave will hit much harder';
+    }
+    if (!hasTank) return 'No Shield — enemies hit the whole party more';
+    if (!hasHeal) return 'No Healer — buy flasks when someone is low';
     return null;
   }
 
@@ -95,7 +99,8 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Pick ${GameLogic.starterPartySize} starters. More kits after Ascend.',
+                'Pick ${GameLogic.starterPartySize} heroes. Easy start: one Shield, '
+                'one Healer, one Damage.',
                 textAlign: TextAlign.center,
                 style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
               ),
@@ -163,7 +168,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                         ),
                       const SizedBox(height: 8),
                       Text(
-                        'Rogues, hunters, DKs and more unlock as you Ascend.',
+                        'More hero types unlock as you grow. You do not need another game.',
                         textAlign: TextAlign.center,
                         style: GameTheme.body(
                           size: 12,
@@ -190,9 +195,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                       label: 'START',
                       style: KenneyButtonStyle.brown,
                       onPressed: _ready
-                          ? () => widget.onConfirm(
-                                [for (final s in _slots) s!],
-                              )
+                          ? () => widget.onConfirm([for (final s in _slots) s!])
                           : null,
                     ),
                   ),
@@ -243,16 +246,11 @@ class _SlotCard extends StatelessWidget {
                 Text(
                   def?.shortLabel ?? 'SLOT ${index + 1}',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 13,
-                    color: GameTheme.parchment,
-                  ),
+                  style: GameTheme.body(size: 13, color: GameTheme.parchment),
                 ),
                 Text(
-                  def?.name ?? 'Tap to pick',
+                  def?.roleTag.plainLabel ?? 'Tap to pick',
                   textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(
                     size: 11,
                     color: GameTheme.parchmentDim,
@@ -280,12 +278,7 @@ class _SpecPickRow extends StatelessWidget {
   final bool taken;
   final VoidCallback onTap;
 
-  String get _lockLabel {
-    final al = AscendRoadmap.ascendLevelForKit(def.id);
-    if (al != null) return 'AL$al';
-    if (def.unlockHint.isNotEmpty) return def.unlockHint;
-    return 'Later';
-  }
+  String get _lockLabel => 'Unlocks later';
 
   @override
   Widget build(BuildContext context) {
@@ -302,7 +295,10 @@ class _SpecPickRow extends StatelessWidget {
             child: DecoratedBox(
               decoration: MenuChrome.listCard(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     KenneySprite(
@@ -322,9 +318,7 @@ class _SpecPickRow extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            locked
-                                ? _lockLabel
-                                : '${def.roleTag.name} · ${def.resource.name}',
+                            locked ? _lockLabel : def.plainRoleLine,
                             style: GameTheme.body(
                               size: 11,
                               color: GameTheme.parchmentDim,
@@ -337,15 +331,15 @@ class _SpecPickRow extends StatelessWidget {
                       locked
                           ? 'LOCKED'
                           : taken
-                              ? 'SET'
-                              : 'PICK',
+                          ? 'SET'
+                          : 'PICK',
                       style: GameTheme.body(
                         size: 13,
                         color: locked
                             ? GameTheme.parchmentDim
                             : taken
-                                ? GameTheme.mossLit
-                                : GameTheme.torchHot,
+                            ? GameTheme.mossLit
+                            : GameTheme.torchHot,
                       ),
                     ),
                   ],

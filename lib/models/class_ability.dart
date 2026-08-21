@@ -15,16 +15,157 @@ enum AbilityEffectKind {
   grantResource,
   emergencyDefend,
   emergencyHeal,
+
   /// Force loose enemies onto the caster (tank hard taunt).
   taunt,
 }
 
 /// Cast priority for auto-combat kits.
-enum AbilityCastTier {
+enum AbilityCastTier { passive, emergency, signature, filler }
+
+/// How the ability actually fires. HUD ready-glow is only for [cast].
+enum AbilityFireMode {
+  cast,
+  swingRider,
+  onBlock,
+  dotTick,
+  onHitBounce,
   passive,
-  emergency,
-  signature,
-  filler,
+}
+
+/// Typed self-buff — catalogs this instead of matching the name string.
+enum AbilitySelfBuffKind { haste, absorb, amp, healAmp, cleave, block }
+
+/// Typed AoE layout — catalogs this instead of matching the name string.
+enum AbilityAoeShape { nova, fan, rain, ground, chain }
+
+/// Rare casts with a named helper in SpatialCombat (not a second engine).
+enum AbilityCustomId {
+  none,
+  charge,
+  shieldBlock,
+  shieldSlam,
+  devastate,
+  demoralizingShout,
+  commandingShout,
+  tauntPull,
+  thunderClap,
+  shockwave,
+  lastStand,
+  shieldWall,
+  painSuppression,
+  powerWordFortitude,
+  powerWordShield,
+  prayerOfMending,
+  powerInfusion,
+  penance,
+  iceBlock,
+  blink,
+  livingBomb,
+  frostNova,
+  blastWave,
+  fireball,
+  pyroblast,
+  vanish,
+  killingSpree,
+  sprint,
+  bladeFlurry,
+  sliceAndDice,
+  kidneyShot,
+  armyOfDead,
+  feralSpirit,
+  waterElemental,
+  gargoyle,
+  shamanisticRage,
+}
+
+/// Picker gates that used to live in AbilityId switches.
+class AbilityGate {
+  const AbilityGate({
+    this.packMin = 0,
+    this.executeHpFrac,
+    this.comboMin = 0,
+    this.minRange,
+    this.maxRange,
+    this.minRangeMul,
+    this.maxRangeMul,
+    this.maxRangePad,
+    this.maintainDot = false,
+    this.holdLongCdOnTrash,
+    this.hotStreakOnly = false,
+    this.hotStreakBlocks = false,
+    this.casterHpMax,
+    this.requireFocus = false,
+    this.needClearCorridor = false,
+    this.notQueued = false,
+    this.peelRange,
+    this.peelScanRange = 2.4,
+    this.nearbyRadius,
+    this.nearPackLeader = false,
+    this.anyCombatWindow = false,
+    this.needsPomTarget = false,
+    this.needsPiTarget = false,
+    this.needsPainTarget = false,
+    this.needsPenance = false,
+    this.arcaneChargesMin = 0,
+    this.sliceAndDiceMin = 0,
+    this.focusRootMax,
+    this.skipIfBleedAbove,
+    this.skipIfBeaconAbove,
+    this.sunderRefresh = false,
+    this.livingBombRefresh = false,
+    this.sliceAndDiceRefresh = false,
+    this.fortitudeRefresh = false,
+    this.atkShoutRefresh = false,
+  });
+
+  static const none = AbilityGate();
+
+  final int packMin;
+  final double? executeHpFrac;
+  final int comboMin;
+  final double? minRange;
+  final double? maxRange;
+
+  /// Minimum distance as a multiple of the caster's attack range.
+  final double? minRangeMul;
+
+  /// Maximum distance as a multiple of preferred range (blink kite).
+  final double? maxRangeMul;
+
+  /// Maximum distance = attackRange + this pad.
+  final double? maxRangePad;
+  final bool maintainDot;
+
+  /// `null` = auto-hold signature CDs ≥ 30s on healthy trash.
+  final bool? holdLongCdOnTrash;
+  final bool hotStreakOnly;
+  final bool hotStreakBlocks;
+  final double? casterHpMax;
+  final bool requireFocus;
+  final bool needClearCorridor;
+  final bool notQueued;
+  final double? peelRange;
+  final double peelScanRange;
+  final double? nearbyRadius;
+  final bool nearPackLeader;
+
+  /// Pack / elite / execute are OR'd (Killing Spree).
+  final bool anyCombatWindow;
+  final bool needsPomTarget;
+  final bool needsPiTarget;
+  final bool needsPainTarget;
+  final bool needsPenance;
+  final int arcaneChargesMin;
+  final int sliceAndDiceMin;
+  final double? focusRootMax;
+  final double? skipIfBleedAbove;
+  final double? skipIfBeaconAbove;
+  final bool sunderRefresh;
+  final bool livingBombRefresh;
+  final bool sliceAndDiceRefresh;
+  final bool fortitudeRefresh;
+  final bool atkShoutRefresh;
 }
 
 /// Combat abilities unlocked by hero level (WotLK-inspired kits).
@@ -362,8 +503,7 @@ enum AbilityId {
   lifebloom,
   nourish,
   tranquility,
-  barkskinResto;
-
+  barkskinResto,
 }
 
 class ClassAbilityDef {
@@ -384,9 +524,16 @@ class ClassAbilityDef {
     this.coeff = 1.0,
     this.boltStyle,
     this.vfx,
+    this.fireMode = AbilityFireMode.cast,
+    this.gate = AbilityGate.none,
+    this.customId = AbilityCustomId.none,
+    this.selfBuffKind,
+    this.selfBuffDuration = 0,
+    this.aoeShape,
   });
 
   final AbilityId id;
+
   /// Gear/ratings affinity bucket (not SpecRoleTag).
   final HeroRole gearAffinity;
   final HeroSpecId? specId;
@@ -400,6 +547,7 @@ class ClassAbilityDef {
   final bool showInHud;
   final AbilityEffectKind effect;
   final AbilityCastTier tier;
+
   /// Damage / heal / absorb multiplier vs attack (or resource grant amount).
   final double coeff;
 
@@ -409,16 +557,66 @@ class ClassAbilityDef {
   /// Optional cast / ground / aura VFX overrides.
   final AbilityVfxSpec? vfx;
 
+  final AbilityFireMode fireMode;
+  final AbilityGate gate;
+  final AbilityCustomId customId;
+  final AbilitySelfBuffKind? selfBuffKind;
+
+  /// Seconds; 0 = kind default (haste 6 / amp 5 / others 3–6).
+  final double selfBuffDuration;
+  final AbilityAoeShape? aoeShape;
+
+  AbilityFireMode get resolvedFireMode {
+    if (fireMode != AbilityFireMode.cast) return fireMode;
+    if (effect == AbilityEffectKind.passive) return AbilityFireMode.passive;
+    return AbilityFireMode.cast;
+  }
+
+  /// Picker may try this row (white-hit riders without a queue-cast stay out).
+  bool get runnerMayCast {
+    if (effect == AbilityEffectKind.passive) return false;
+    return switch (resolvedFireMode) {
+      AbilityFireMode.passive || AbilityFireMode.onBlock => false,
+      AbilityFireMode.swingRider => customId != AbilityCustomId.none,
+      _ => true,
+    };
+  }
+
+  bool get showsInHud {
+    if (!showInHud) return false;
+    return switch (resolvedFireMode) {
+      AbilityFireMode.passive || AbilityFireMode.onBlock => false,
+      _ => true,
+    };
+  }
+
   /// Hover / long-press chip text for the party HUD.
   String get tooltipMessage {
     final cd = cooldown <= 0
         ? 'Passive'
         : cooldown == cooldown.roundToDouble()
-            ? 'CD ${cooldown.round()}s'
-            : 'CD ${cooldown.toStringAsFixed(1)}s';
+        ? 'CD ${cooldown.round()}s'
+        : 'CD ${cooldown.toStringAsFixed(1)}s';
     final cost = resourceCost > 0 ? ' · Cost $resourceCost' : '';
-    final gate = requiresShield ? ' · Needs shield' : '';
-    return '$name\n$description\n$cd$cost$gate';
+    final shield = requiresShield ? ' · Needs shield' : '';
+    final mode = switch (resolvedFireMode) {
+      AbilityFireMode.swingRider => ' · Next auto',
+      AbilityFireMode.onBlock => ' · After block',
+      AbilityFireMode.dotTick => ' · DoT tick',
+      AbilityFireMode.onHitBounce => ' · On hit',
+      _ => '',
+    };
+    return '$name\n$description\n$cd$cost$shield$mode';
+  }
+
+  /// Party HUD: gold flash for the first beat after a dump/panic fires.
+  bool justFiredHud(double cdLeft) {
+    if (tier != AbilityCastTier.signature &&
+        tier != AbilityCastTier.emergency) {
+      return false;
+    }
+    if (cooldown <= 0.4) return false;
+    return cdLeft > 0.05 && cdLeft >= cooldown - 0.42;
   }
 }
 
@@ -427,7 +625,6 @@ class ClassKits {
   ClassKits._();
 
   static const List<ClassAbilityDef> all = <ClassAbilityDef>[
-
     // —— Warrior (Protection) ——
     ClassAbilityDef(
       id: AbilityId.defensiveStance,
@@ -435,7 +632,8 @@ class ClassKits {
       specId: HeroSpecId.protection,
       name: 'Defensive Stance',
       shortLabel: 'Stance',
-      description: 'Extra guard DEF, stronger aggro, slightly less damage dealt.',
+      description:
+          'Extra guard DEF, stronger aggro, slightly less damage dealt.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: false,
@@ -448,12 +646,21 @@ class ClassKits {
       specId: HeroSpecId.protection,
       name: 'Charge',
       shortLabel: 'Charge',
-      description: 'Rush a foe in line of sight (not too far) and briefly root them.',
+      description:
+          'Rush a foe in line of sight (not too far) and briefly root them.',
       unlockLevel: 4,
       cooldown: 12,
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.charge,
+      gate: AbilityGate(
+        requireFocus: true,
+        minRange: 3.5,
+        maxRange: 8.0,
+        needClearCorridor: true,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.shieldBlock,
@@ -466,9 +673,12 @@ class ClassKits {
       cooldown: 8,
       resourceCost: 15,
       requiresShield: true,
-      effect: AbilityEffectKind.emergencyDefend,
-      tier: AbilityCastTier.emergency,
+      effect: AbilityEffectKind.selfBuff,
+      tier: AbilityCastTier.filler,
       coeff: 0.35,
+
+      customId: AbilityCustomId.shieldBlock,
+      gate: AbilityGate(requireFocus: true, maxRange: 3.2),
     ),
     ClassAbilityDef(
       id: AbilityId.thunderClap,
@@ -483,6 +693,9 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.55,
+
+      customId: AbilityCustomId.thunderClap,
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.devastate,
@@ -498,6 +711,13 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.55,
+
+      customId: AbilityCustomId.devastate,
+      gate: AbilityGate(
+        requireFocus: true,
+        maxRangePad: 0.35,
+        sunderRefresh: true,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.taunt,
@@ -510,6 +730,8 @@ class ClassKits {
       cooldown: 10,
       effect: AbilityEffectKind.taunt,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.tauntPull,
     ),
     ClassAbilityDef(
       id: AbilityId.demoralizingShout,
@@ -524,6 +746,10 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.2,
+
+      customId: AbilityCustomId.demoralizingShout,
+      aoeShape: AbilityAoeShape.nova,
+      gate: AbilityGate(nearbyRadius: 3.4),
     ),
     ClassAbilityDef(
       id: AbilityId.shieldSlam,
@@ -539,6 +765,10 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.1,
+
+      fireMode: AbilityFireMode.swingRider,
+      customId: AbilityCustomId.shieldSlam,
+      gate: AbilityGate(requireFocus: true, notQueued: true),
     ),
     ClassAbilityDef(
       id: AbilityId.commandingShout,
@@ -552,6 +782,9 @@ class ClassKits {
       resourceCost: 12,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.commandingShout,
+      gate: AbilityGate(requireFocus: true, atkShoutRefresh: true),
     ),
     ClassAbilityDef(
       id: AbilityId.revenge,
@@ -566,6 +799,8 @@ class ClassKits {
       showInHud: false,
       effect: AbilityEffectKind.passive,
       tier: AbilityCastTier.passive,
+
+      fireMode: AbilityFireMode.onBlock,
     ),
     ClassAbilityDef(
       id: AbilityId.shockwave,
@@ -574,7 +809,7 @@ class ClassKits {
       name: 'Shockwave',
       shortLabel: 'Shock',
       description: 'Cone smash — AoE damage and stun.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 16,
       resourceCost: 22,
       effect: AbilityEffectKind.aoe,
@@ -589,6 +824,9 @@ class ClassKits {
         groundArgb: 0x88FFE08A,
         groundRadius: 2.4,
       ),
+
+      customId: AbilityCustomId.shockwave,
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.lastStand,
@@ -597,10 +835,13 @@ class ClassKits {
       name: 'Last Stand',
       shortLabel: 'Stand',
       description: 'Emergency temporary bonus health.',
-      unlockLevel: 14,
+      unlockLevel: 12,
       cooldown: 45,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.lastStand,
+      gate: AbilityGate(casterHpMax: 0.4),
     ),
     ClassAbilityDef(
       id: AbilityId.shieldWall,
@@ -609,11 +850,14 @@ class ClassKits {
       name: 'Shield Wall',
       shortLabel: 'Wall',
       description: 'Massive damage reduction. Requires shield.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 60,
       requiresShield: true,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.shieldWall,
+      gate: AbilityGate(casterHpMax: 0.28),
     ),
 
     // —— Disc Priest ——
@@ -652,6 +896,8 @@ class ClassKits {
         groundArgb: 0x66FFE8A0,
         groundRadius: 1.6,
       ),
+
+      customId: AbilityCustomId.powerWordShield,
     ),
     ClassAbilityDef(
       id: AbilityId.prayerOfMending,
@@ -667,10 +913,11 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.0,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFF0C0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0C0),
+
+      customId: AbilityCustomId.prayerOfMending,
+      fireMode: AbilityFireMode.onHitBounce,
+      gate: AbilityGate(needsPomTarget: true),
     ),
     ClassAbilityDef(
       id: AbilityId.penance,
@@ -686,10 +933,10 @@ class ClassKits {
       tier: AbilityCastTier.signature,
       coeff: 0.62,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFE8A0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFE8A0),
+
+      customId: AbilityCustomId.penance,
+      gate: AbilityGate(needsPenance: true),
     ),
     ClassAbilityDef(
       id: AbilityId.powerWordFortitude,
@@ -703,6 +950,9 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.powerWordFortitude,
+      gate: AbilityGate(fortitudeRefresh: true),
     ),
     ClassAbilityDef(
       id: AbilityId.flashHeal,
@@ -718,10 +968,7 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.55,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFF0B0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0B0),
     ),
     ClassAbilityDef(
       id: AbilityId.painSuppression,
@@ -730,7 +977,7 @@ class ClassKits {
       name: 'Pain Suppression',
       shortLabel: 'PS',
       description: 'Emergency damage reduction on a critically low ally.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 40,
       resourceCost: 10,
       effect: AbilityEffectKind.emergencyDefend,
@@ -744,6 +991,9 @@ class ClassKits {
         groundArgb: 0x66E0C070,
         groundRadius: 1.5,
       ),
+
+      customId: AbilityCustomId.painSuppression,
+      gate: AbilityGate(needsPainTarget: true),
     ),
     ClassAbilityDef(
       id: AbilityId.powerInfusion,
@@ -752,16 +1002,16 @@ class ClassKits {
       name: 'Power Infusion',
       shortLabel: 'PI',
       description: 'Haste buff on your strongest damage dealer.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFD070,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFD070),
+
+      customId: AbilityCustomId.powerInfusion,
+      gate: AbilityGate(requireFocus: true, needsPiTarget: true),
     ),
 
     // —— Mage (Fire) ——
@@ -790,7 +1040,14 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.08,
+      coeff: 0.95,
+
+      customId: AbilityCustomId.fireball,
+      gate: AbilityGate(
+        requireFocus: true,
+        maxRangePad: 0.5,
+        hotStreakBlocks: true,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.livingBomb,
@@ -805,6 +1062,10 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.65,
+
+      customId: AbilityCustomId.livingBomb,
+      fireMode: AbilityFireMode.dotTick,
+      gate: AbilityGate(requireFocus: true, livingBombRefresh: true),
     ),
     ClassAbilityDef(
       id: AbilityId.frostNova,
@@ -818,6 +1079,9 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.root,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.frostNova,
+      gate: AbilityGate(peelRange: 1.6, peelScanRange: 2.4),
     ),
     ClassAbilityDef(
       id: AbilityId.blastWave,
@@ -831,7 +1095,10 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.45,
+      coeff: 0.42,
+
+      customId: AbilityCustomId.blastWave,
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.blink,
@@ -845,6 +1112,9 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.blink,
+      gate: AbilityGate(requireFocus: true, maxRangeMul: 0.55),
     ),
     ClassAbilityDef(
       id: AbilityId.combustion,
@@ -859,10 +1129,11 @@ class ClassKits {
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF6020,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF6020),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 4,
+      gate: AbilityGate(requireFocus: true, holdLongCdOnTrash: false),
     ),
     ClassAbilityDef(
       id: AbilityId.pyroblast,
@@ -871,16 +1142,20 @@ class ClassKits {
       name: 'Pyroblast',
       shortLabel: 'Pyro',
       description: 'Free Pyroblast after two Fireball crits (Hot Streak).',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 15,
       resourceCost: 28,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 1.35,
+      coeff: 1.45,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF4010,
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF4010),
+
+      customId: AbilityCustomId.pyroblast,
+      gate: AbilityGate(
+        requireFocus: true,
+        maxRangePad: 0.5,
+        hotStreakOnly: true,
       ),
     ),
     ClassAbilityDef(
@@ -890,10 +1165,13 @@ class ClassKits {
       name: 'Ice Block',
       shortLabel: 'Ice Block',
       description: 'Emergency immunity bubble when near death.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.iceBlock,
+      gate: AbilityGate(casterHpMax: 0.28),
     ),
 
     // —— Rogue (Combat) ——
@@ -909,6 +1187,8 @@ class ClassKits {
       showInHud: false,
       effect: AbilityEffectKind.passive,
       tier: AbilityCastTier.passive,
+
+      fireMode: AbilityFireMode.passive,
     ),
     ClassAbilityDef(
       id: AbilityId.sliceAndDice,
@@ -922,6 +1202,9 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.sliceAndDice,
+      gate: AbilityGate(comboMin: 2, sliceAndDiceRefresh: true),
     ),
     ClassAbilityDef(
       id: AbilityId.eviscerate,
@@ -936,6 +1219,9 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.05,
+
+      fireMode: AbilityFireMode.swingRider,
+      showInHud: false,
     ),
     ClassAbilityDef(
       id: AbilityId.kidneyShot,
@@ -949,6 +1235,14 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.root,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.kidneyShot,
+      gate: AbilityGate(
+        requireFocus: true,
+        comboMin: 5,
+        sliceAndDiceMin: 2,
+        focusRootMax: 0.5,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.bladeFlurry,
@@ -960,9 +1254,14 @@ class ClassKits {
       unlockLevel: 9,
       cooldown: 18,
       resourceCost: 20,
-      effect: AbilityEffectKind.aoe,
+      effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
       coeff: 0.48,
+
+      customId: AbilityCustomId.bladeFlurry,
+      selfBuffKind: AbilitySelfBuffKind.cleave,
+      selfBuffDuration: 6,
+      gate: AbilityGate(packMin: 2),
     ),
     ClassAbilityDef(
       id: AbilityId.sprint,
@@ -975,6 +1274,9 @@ class ClassKits {
       cooldown: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.sprint,
+      gate: AbilityGate(nearPackLeader: true, minRangeMul: 1.85),
     ),
     ClassAbilityDef(
       id: AbilityId.vanish,
@@ -983,10 +1285,13 @@ class ClassKits {
       name: 'Vanish',
       shortLabel: 'Vanish',
       description: 'Drop aggro and reset when low.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 40,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.vanish,
+      gate: AbilityGate(casterHpMax: 0.3),
     ),
     ClassAbilityDef(
       id: AbilityId.killingSpree,
@@ -995,7 +1300,7 @@ class ClassKits {
       name: 'Killing Spree',
       shortLabel: 'Spree',
       description: 'Dash between foes with a flurry of strikes.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       resourceCost: 0,
       effect: AbilityEffectKind.aoe,
@@ -1010,6 +1315,10 @@ class ClassKits {
         groundArgb: 0x88FFE08A,
         groundRadius: 2.2,
       ),
+
+      customId: AbilityCustomId.killingSpree,
+      aoeShape: AbilityAoeShape.nova,
+      gate: AbilityGate(anyCombatWindow: true, packMin: 2, executeHpFrac: 0.35),
     ),
 
     // —— arms ——
@@ -1080,6 +1389,10 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.cleave,
+      selfBuffDuration: 6,
+      gate: AbilityGate(packMin: 2),
     ),
     ClassAbilityDef(
       id: AbilityId.bladestorm,
@@ -1103,6 +1416,8 @@ class ClassKits {
         groundArgb: 0x88FFE08A,
         groundRadius: 2.8,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.armsExecute,
@@ -1111,7 +1426,7 @@ class ClassKits {
       name: 'Execute',
       shortLabel: 'Exec',
       description: 'Finisher on wounded foes.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 6.5,
       resourceCost: 15,
       effect: AbilityEffectKind.damage,
@@ -1122,6 +1437,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFFFFB050,
       ),
+
+      gate: AbilityGate(executeHpFrac: 0.25),
     ),
     ClassAbilityDef(
       id: AbilityId.armsRally,
@@ -1130,7 +1447,7 @@ class ClassKits {
       name: 'Rallying Cry',
       shortLabel: 'Rally',
       description: 'Emergency party absorb.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 45,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -1178,14 +1495,16 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.ragingBlow,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.fury,
-      name: 'Raging Blow',
-      shortLabel: 'Rage',
-      description: 'Empowered twin strike.',
+      name: 'Slam',
+      shortLabel: 'Slam',
+      description: 'Heavy rage strike.',
       unlockLevel: 7,
       cooldown: 4.5,
       resourceCost: 15,
@@ -1204,6 +1523,8 @@ class ClassKits {
       cooldown: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.deathWish,
@@ -1211,7 +1532,7 @@ class ClassKits {
       specId: HeroSpecId.fury,
       name: 'Death Wish',
       shortLabel: 'Wish',
-      description: 'Signature damage buff.',
+      description: 'Signature damage window — hit harder, take more.',
       unlockLevel: 11,
       cooldown: 40,
       resourceCost: 10,
@@ -1222,6 +1543,9 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFFFF7070,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 8,
     ),
     ClassAbilityDef(
       id: AbilityId.furyExecute,
@@ -1229,8 +1553,8 @@ class ClassKits {
       specId: HeroSpecId.fury,
       name: 'Rampage',
       shortLabel: 'Ramp',
-      description: 'Burst finisher flurry.',
-      unlockLevel: 13,
+      description: 'Burst flurry — not waiting for a low target.',
+      unlockLevel: 11,
       cooldown: 10,
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
@@ -1249,7 +1573,7 @@ class ClassKits {
       name: 'Enraged Regeneration',
       shortLabel: 'EReg',
       description: 'Emergency heal + DR while fighting.',
-      unlockLevel: 14,
+      unlockLevel: 12,
       cooldown: 45,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -1261,11 +1585,14 @@ class ClassKits {
       name: 'Recklessness',
       shortLabel: 'Reck',
       description: 'All-in damage window — not a panic wall.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 50,
       resourceCost: 25,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 8,
     ),
 
     // —— holyPaladin ——
@@ -1350,6 +1677,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      gate: AbilityGate(skipIfBeaconAbove: 10),
     ),
     ClassAbilityDef(
       id: AbilityId.consecrationHoly,
@@ -1373,6 +1702,8 @@ class ClassKits {
         groundArgb: 0x66FFE8A0,
         groundRadius: 2.7,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.divineFavor,
@@ -1381,16 +1712,16 @@ class ClassKits {
       name: 'Divine Favor',
       shortLabel: 'Favor',
       description: 'Heal window — your next heals hit harder.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 40,
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFF0A8,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0A8),
+
+      selfBuffKind: AbilitySelfBuffKind.healAmp,
+      selfBuffDuration: 8,
     ),
     ClassAbilityDef(
       id: AbilityId.layOnHands,
@@ -1399,7 +1730,7 @@ class ClassKits {
       name: 'Lay on Hands',
       shortLabel: 'LoH',
       description: 'Emergency big heal on lowest ally.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 60,
       effect: AbilityEffectKind.emergencyHeal,
       tier: AbilityCastTier.emergency,
@@ -1426,10 +1757,11 @@ class ClassKits {
       specId: HeroSpecId.protPaladin,
       name: 'Avenger\'s Shield',
       shortLabel: 'AShield',
-      description: 'Ranged bash on nearest foe.',
+      description: 'Ranged bash on nearest foe. Requires shield.',
       unlockLevel: 3,
       cooldown: 8,
       resourceCost: 18,
+      requiresShield: true,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.1,
@@ -1440,12 +1772,16 @@ class ClassKits {
       specId: HeroSpecId.protPaladin,
       name: 'Holy Shield',
       shortLabel: 'HShield',
-      description: 'Holy charges on your shield — block more while you tank.',
+      description: 'Holy charges on your shield — block more while you tank. Requires shield.',
       unlockLevel: 5,
       cooldown: 10,
       resourceCost: 15,
+      requiresShield: true,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.block,
+      selfBuffDuration: 6,
     ),
     ClassAbilityDef(
       id: AbilityId.hammerOfTheRighteous,
@@ -1460,6 +1796,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.7,
+
+      aoeShape: AbilityAoeShape.nova,
     ),
     ClassAbilityDef(
       id: AbilityId.consecration,
@@ -1483,6 +1821,8 @@ class ClassKits {
         groundArgb: 0x66FFE080,
         groundRadius: 2.7,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.shieldOfRighteousness,
@@ -1490,10 +1830,11 @@ class ClassKits {
       specId: HeroSpecId.protPaladin,
       name: 'Shield of Righteousness',
       shortLabel: 'SoR',
-      description: 'Heavy shield strike.',
+      description: 'Heavy shield strike. Requires shield.',
       unlockLevel: 11,
       cooldown: 5.5,
       resourceCost: 20,
+      requiresShield: true,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.25,
@@ -1505,7 +1846,7 @@ class ClassKits {
       name: 'Holy Wrath',
       shortLabel: 'Wrath',
       description: 'Signature stun AoE.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 22,
       resourceCost: 25,
       effect: AbilityEffectKind.aoe,
@@ -1520,6 +1861,8 @@ class ClassKits {
         groundArgb: 0x88FFE8A0,
         groundRadius: 2.6,
       ),
+
+      aoeShape: AbilityAoeShape.nova,
     ),
     ClassAbilityDef(
       id: AbilityId.divineProtection,
@@ -1528,7 +1871,7 @@ class ClassKits {
       name: 'Divine Protection',
       shortLabel: 'DProt',
       description: 'Emergency DR bubble.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -1546,10 +1889,7 @@ class ClassKits {
       effect: AbilityEffectKind.taunt,
       tier: AbilityCastTier.signature,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFE8A0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFE8A0),
     ),
 
     // —— retribution ——
@@ -1607,6 +1947,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.8,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.hammerOfWrath,
@@ -1621,6 +1963,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.5,
+
+      gate: AbilityGate(executeHpFrac: 0.25),
     ),
     ClassAbilityDef(
       id: AbilityId.zealotry,
@@ -1628,12 +1972,15 @@ class ClassKits {
       specId: HeroSpecId.retribution,
       name: 'Zealotry',
       shortLabel: 'Zeal',
-      description: 'Self haste window.',
+      description: 'Holy damage window — hit harder.',
       unlockLevel: 11,
       cooldown: 35,
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 8,
     ),
     ClassAbilityDef(
       id: AbilityId.templarsVerdict,
@@ -1642,17 +1989,14 @@ class ClassKits {
       name: 'Templar\'s Verdict',
       shortLabel: 'TV',
       description: 'Signature heavy finisher.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 8,
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.85,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFF0C0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0C0),
     ),
     ClassAbilityDef(
       id: AbilityId.divineShield,
@@ -1661,7 +2005,7 @@ class ClassKits {
       name: 'Divine Shield',
       shortLabel: 'Bubble',
       description: 'Emergency immunity.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 60,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -1722,6 +2066,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.74,
+
+      aoeShape: AbilityAoeShape.fan,
     ),
     ClassAbilityDef(
       id: AbilityId.bestialWrath,
@@ -1735,6 +2081,8 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.intimidation,
@@ -1756,7 +2104,7 @@ class ClassKits {
       name: 'The Beast Within',
       shortLabel: 'Beast',
       description: 'Signature damage window.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 40,
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
@@ -1766,6 +2114,9 @@ class ClassKits {
         boltStyle: SpellBoltStyle.arrow,
         castArgb: 0xFFFFB060,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 8,
     ),
     ClassAbilityDef(
       id: AbilityId.feignDeath,
@@ -1774,7 +2125,7 @@ class ClassKits {
       name: 'Feign Death',
       shortLabel: 'Feign',
       description: 'Emergency drop aggro.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 45,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -1849,6 +2200,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.rapidFire,
@@ -1862,6 +2215,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.trueshot,
@@ -1870,7 +2225,7 @@ class ClassKits {
       name: 'Trueshot',
       shortLabel: 'True',
       description: 'Signature ranged amplify.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 45,
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
@@ -1880,6 +2235,9 @@ class ClassKits {
         boltStyle: SpellBoltStyle.arrow,
         castArgb: 0xFFFFE080,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 8,
     ),
     ClassAbilityDef(
       id: AbilityId.deterrence,
@@ -1888,7 +2246,7 @@ class ClassKits {
       name: 'Deterrence',
       shortLabel: 'Deter',
       description: 'Emergency self shield.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -1922,10 +2280,7 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.25,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF9040,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF9040),
     ),
     ClassAbilityDef(
       id: AbilityId.serpentSting,
@@ -1945,6 +2300,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.nature,
         castArgb: 0xFF70D050,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.explosiveTrap,
@@ -1968,6 +2325,8 @@ class ClassKits {
         groundArgb: 0x88FF7040,
         groundRadius: 2.6,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.freezingTrap,
@@ -2009,6 +2368,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFFE8C090,
       ),
+
+      gate: AbilityGate(maxRange: 1.85),
     ),
     ClassAbilityDef(
       id: AbilityId.multiShotSurv,
@@ -2028,6 +2389,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.arrow,
         castArgb: 0xFFC0D080,
       ),
+
+      aoeShape: AbilityAoeShape.fan,
     ),
     ClassAbilityDef(
       id: AbilityId.blackArrow,
@@ -2036,12 +2399,12 @@ class ClassKits {
       name: 'Black Arrow',
       shortLabel: 'BArrow',
       description: 'Signature dark bolt.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 14,
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 1.7,
+      coeff: 1.4,
       boltStyle: SpellBoltStyle.shadow,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.shadow,
@@ -2055,7 +2418,7 @@ class ClassKits {
       name: 'Disengage',
       shortLabel: 'Dis',
       description: 'Emergency kite buff.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 25,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -2102,6 +2465,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.55,
+
+      gate: AbilityGate(comboMin: 3),
     ),
     ClassAbilityDef(
       id: AbilityId.garrote,
@@ -2116,6 +2481,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.9,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.rupture,
@@ -2130,6 +2497,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.0,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.coldBlood,
@@ -2142,6 +2511,9 @@ class ClassKits {
       cooldown: 35,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 6,
     ),
     ClassAbilityDef(
       id: AbilityId.fanOfKnives,
@@ -2165,6 +2537,8 @@ class ClassKits {
         groundArgb: 0x66A0C050,
         groundRadius: 2.6,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.vendetta,
@@ -2173,7 +2547,7 @@ class ClassKits {
       name: 'Vendetta',
       shortLabel: 'Vend',
       description: 'Signature damage amp on your attacks.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 45,
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
@@ -2183,6 +2557,9 @@ class ClassKits {
         boltStyle: SpellBoltStyle.nature,
         castArgb: 0xFF70D070,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 8,
     ),
     ClassAbilityDef(
       id: AbilityId.cloakOfShadows,
@@ -2191,7 +2568,7 @@ class ClassKits {
       name: 'Cloak of Shadows',
       shortLabel: 'Cloak',
       description: 'Emergency cleanse DR.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -2270,6 +2647,8 @@ class ClassKits {
         groundArgb: 0x668060C0,
         groundRadius: 1.4,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.premeditation,
@@ -2305,6 +2684,8 @@ class ClassKits {
         groundArgb: 0x77A070E0,
         groundRadius: 2.2,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.fanOfKnivesSub,
@@ -2328,6 +2709,8 @@ class ClassKits {
         groundArgb: 0x668060C0,
         groundRadius: 2.6,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.eviscerateSub,
@@ -2356,7 +2739,7 @@ class ClassKits {
       name: 'Cheap Shot',
       shortLabel: 'Cheap',
       description: 'Stun nearest foe.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 14,
       resourceCost: 20,
       effect: AbilityEffectKind.root,
@@ -2369,7 +2752,7 @@ class ClassKits {
       name: 'Preparation',
       shortLabel: 'Prep',
       description: 'Emergency: reset your other combat cooldowns.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -2417,10 +2800,7 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.55,
       boltStyle: SpellBoltStyle.holy,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.holy,
-        castArgb: 0xFFFFE8A0,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFE8A0),
     ),
     ClassAbilityDef(
       id: AbilityId.circleOfHealing,
@@ -2498,7 +2878,7 @@ class ClassKits {
       name: 'Divine Hymn',
       shortLabel: 'Hymn',
       description: 'Signature party heal.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 40,
       resourceCost: 30,
       effect: AbilityEffectKind.heal,
@@ -2521,7 +2901,7 @@ class ClassKits {
       name: 'Desperate Prayer',
       shortLabel: 'DP',
       description: 'Emergency self heal.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 50,
       effect: AbilityEffectKind.emergencyHeal,
       tier: AbilityCastTier.emergency,
@@ -2569,6 +2949,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.15,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.devouringPlague,
@@ -2583,6 +2965,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.35,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.shadowWordPain,
@@ -2597,6 +2981,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.85,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.mindSear,
@@ -2620,6 +3006,8 @@ class ClassKits {
         groundArgb: 0x669040C0,
         groundRadius: 2.9,
       ),
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.psychicScream,
@@ -2641,7 +3029,7 @@ class ClassKits {
       name: 'Mind Blast',
       shortLabel: 'Blast',
       description: 'Signature shadow nuke.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 7,
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
@@ -2660,7 +3048,7 @@ class ClassKits {
       name: 'Dispersion',
       shortLabel: 'Disp',
       description: 'Emergency DR / mana.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -2707,6 +3095,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.22,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.runeTap,
@@ -2735,6 +3125,9 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+
+      aoeShape: AbilityAoeShape.ground,
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.boneShield,
@@ -2774,7 +3167,7 @@ class ClassKits {
       name: 'Dancing Rune Weapon',
       shortLabel: 'DRW',
       description: 'Signature damage buff.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 45,
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
@@ -2784,6 +3177,9 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFF90C0FF,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 5,
     ),
     ClassAbilityDef(
       id: AbilityId.iceboundFortitude,
@@ -2792,7 +3188,7 @@ class ClassKits {
       name: 'Icebound Fortitude',
       shortLabel: 'IBF',
       description: 'Emergency DR.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -2871,6 +3267,9 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.75,
+
+      aoeShape: AbilityAoeShape.rain,
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.chainsOfIce,
@@ -2897,6 +3296,9 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 8,
     ),
     ClassAbilityDef(
       id: AbilityId.hungeringCold,
@@ -2905,7 +3307,7 @@ class ClassKits {
       name: 'Hungering Cold',
       shortLabel: 'Hunger',
       description: 'Freeze the pack in place.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 35,
       resourceCost: 25,
       effect: AbilityEffectKind.root,
@@ -2927,7 +3329,7 @@ class ClassKits {
       name: 'Icebound Fortitude',
       shortLabel: 'IBF',
       description: 'Emergency DR.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -2960,6 +3362,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.12,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.deathCoil,
@@ -2988,6 +3392,9 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.70,
+
+      aoeShape: AbilityAoeShape.ground,
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.gargoyle,
@@ -3006,6 +3413,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.shadow,
         castArgb: 0xFFA080C0,
       ),
+
+      customId: AbilityCustomId.gargoyle,
     ),
     ClassAbilityDef(
       id: AbilityId.antiMagicShell,
@@ -3028,7 +3437,7 @@ class ClassKits {
       name: 'Army of the Dead',
       shortLabel: 'Army',
       description: 'Summon a short-lived ghoul swarm.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 50,
       resourceCost: 30,
       effect: AbilityEffectKind.aoe,
@@ -3043,6 +3452,9 @@ class ClassKits {
         groundArgb: 0x66706090,
         groundRadius: 2.6,
       ),
+
+      customId: AbilityCustomId.armyOfDead,
+      aoeShape: AbilityAoeShape.nova,
     ),
     ClassAbilityDef(
       id: AbilityId.unholyIbf,
@@ -3051,7 +3463,7 @@ class ClassKits {
       name: 'Icebound Fortitude',
       shortLabel: 'IBF',
       description: 'Emergency DR.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -3099,10 +3511,9 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 0.72,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF8040,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF8040),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.lavaBurst,
@@ -3131,6 +3542,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.8,
+
+      aoeShape: AbilityAoeShape.chain,
     ),
     ClassAbilityDef(
       id: AbilityId.thunderstorm,
@@ -3145,6 +3558,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.65,
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.elementalMastery,
@@ -3158,6 +3573,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.earthShock,
@@ -3166,7 +3583,7 @@ class ClassKits {
       name: 'Earth Shock',
       shortLabel: 'Shock',
       description: 'Signature interrupt hit.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 6,
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
@@ -3185,7 +3602,7 @@ class ClassKits {
       name: 'Astral Shift',
       shortLabel: 'Shift',
       description: 'Emergency DR.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -3246,6 +3663,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.75,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.feralSpirit,
@@ -3259,6 +3678,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      customId: AbilityCustomId.feralSpirit,
     ),
     ClassAbilityDef(
       id: AbilityId.frostShock,
@@ -3280,7 +3701,7 @@ class ClassKits {
       name: 'Shamanistic Rage',
       shortLabel: 'SRage',
       description: 'Grant resource + DR.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 30,
       effect: AbilityEffectKind.grantResource,
       tier: AbilityCastTier.signature,
@@ -3290,6 +3711,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.lightning,
         castArgb: 0xFFFF9040,
       ),
+
+      customId: AbilityCustomId.shamanisticRage,
     ),
     ClassAbilityDef(
       id: AbilityId.enhancementAstral,
@@ -3298,7 +3721,7 @@ class ClassKits {
       name: 'Astral Shift',
       shortLabel: 'Shift',
       description: 'Emergency DR.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -3395,7 +3818,7 @@ class ClassKits {
       name: 'Spirit Link',
       shortLabel: 'Link',
       description: 'Signature party mend.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 40,
       resourceCost: 25,
       effect: AbilityEffectKind.heal,
@@ -3418,7 +3841,7 @@ class ClassKits {
       name: 'Nature\'s Swiftness',
       shortLabel: 'NS',
       description: 'Emergency big heal.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       effect: AbilityEffectKind.emergencyHeal,
       tier: AbilityCastTier.emergency,
@@ -3466,6 +3889,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.3,
+
+      gate: AbilityGate(arcaneChargesMin: 2),
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneExplosion,
@@ -3480,6 +3905,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.7,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.slow,
@@ -3506,6 +3933,8 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.arcanePower,
@@ -3514,7 +3943,7 @@ class ClassKits {
       name: 'Arcane Power',
       shortLabel: 'AP',
       description: 'Signature damage amp for Arcane spells.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 40,
       resourceCost: 25,
       effect: AbilityEffectKind.selfBuff,
@@ -3524,6 +3953,9 @@ class ClassKits {
         boltStyle: SpellBoltStyle.arcane,
         castArgb: 0xFFC070FF,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 7,
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneIceBlock,
@@ -3532,10 +3964,12 @@ class ClassKits {
       name: 'Ice Block',
       shortLabel: 'Block',
       description: 'Emergency immunity.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.iceBlock,
     ),
 
     // —— frostMage ——
@@ -3593,6 +4027,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.7,
+
+      aoeShape: AbilityAoeShape.nova,
     ),
     ClassAbilityDef(
       id: AbilityId.blizzard,
@@ -3616,6 +4052,8 @@ class ClassKits {
         groundArgb: 0x6690C8FF,
         groundRadius: 2.8,
       ),
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.frostNovaMage,
@@ -3629,6 +4067,8 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.root,
       tier: AbilityCastTier.filler,
+
+      gate: AbilityGate(peelRange: 1.6, peelScanRange: 2.5),
     ),
     ClassAbilityDef(
       id: AbilityId.icyVeins,
@@ -3642,6 +4082,8 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.summonWaterElemental,
@@ -3650,7 +4092,7 @@ class ClassKits {
       name: 'Water Elemental',
       shortLabel: 'Water',
       description: 'Summon a Water Elemental ally for 28s.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 40,
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
@@ -3660,6 +4102,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.frost,
         castArgb: 0xFF90D8FF,
       ),
+
+      customId: AbilityCustomId.waterElemental,
     ),
     ClassAbilityDef(
       id: AbilityId.frostMageIceBlock,
@@ -3668,10 +4112,12 @@ class ClassKits {
       name: 'Ice Block',
       shortLabel: 'Block',
       description: 'Emergency immunity.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
+
+      customId: AbilityCustomId.iceBlock,
     ),
 
     // —— affliction ——
@@ -3705,6 +4151,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.shadow,
         castArgb: 0xFF6B2D8A,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.unstableAffliction,
@@ -3723,6 +4171,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.shadow,
         castArgb: 0xFF8B3AA8,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.haunt,
@@ -3777,6 +4227,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.shadow,
         castArgb: 0xFF7030A0,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.seedOfCorruption,
@@ -3800,6 +4252,8 @@ class ClassKits {
         groundArgb: 0x668030A0,
         groundRadius: 2.8,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.hauntBurst,
@@ -3808,7 +4262,7 @@ class ClassKits {
       name: 'Haunt Burst',
       shortLabel: 'Burst',
       description: 'Signature shadow finisher.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 18,
       resourceCost: 28,
       effect: AbilityEffectKind.damage,
@@ -3827,7 +4281,7 @@ class ClassKits {
       name: 'Soulburn',
       shortLabel: 'Burn',
       description: 'Emergency self shield.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -3874,6 +4328,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.immolateDemo,
@@ -3888,6 +4344,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.98,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.metamorphosis,
@@ -3895,7 +4353,7 @@ class ClassKits {
       specId: HeroSpecId.demonology,
       name: 'Metamorphosis',
       shortLabel: 'Meta',
-      description: 'Signature form buff.',
+      description: 'Demon form — hit harder.',
       unlockLevel: 9,
       cooldown: 45,
       resourceCost: 25,
@@ -3906,6 +4364,9 @@ class ClassKits {
         boltStyle: SpellBoltStyle.shadow,
         castArgb: 0xFF8040C0,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.amp,
+      selfBuffDuration: 8,
     ),
     ClassAbilityDef(
       id: AbilityId.demonCharge,
@@ -3919,6 +4380,8 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.chaosBoltDemo,
@@ -3927,17 +4390,14 @@ class ClassKits {
       name: 'Chaos Bolt',
       shortLabel: 'Chaos',
       description: 'Heavy chaos nuke.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 10,
       resourceCost: 22,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.62,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF5020,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF5020),
     ),
     ClassAbilityDef(
       id: AbilityId.sacrifice,
@@ -3946,7 +4406,7 @@ class ClassKits {
       name: 'Demonic Sacrifice',
       shortLabel: 'Sac',
       description: 'Emergency absorb.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -4007,6 +4467,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.85,
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.rainOfFire,
@@ -4030,6 +4492,8 @@ class ClassKits {
         groundArgb: 0x88FF5020,
         groundRadius: 2.8,
       ),
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.shadowfury,
@@ -4053,6 +4517,8 @@ class ClassKits {
         groundArgb: 0x88A040D0,
         groundRadius: 3.0,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.backdraft,
@@ -4066,6 +4532,8 @@ class ClassKits {
       resourceCost: 10,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.chaosBolt,
@@ -4074,17 +4542,14 @@ class ClassKits {
       name: 'Chaos Bolt',
       shortLabel: 'Chaos',
       description: 'Signature chaos nuke.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 10,
       resourceCost: 22,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.64,
       boltStyle: SpellBoltStyle.fire,
-      vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.fire,
-        castArgb: 0xFFFF5020,
-      ),
+      vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF5020),
     ),
     ClassAbilityDef(
       id: AbilityId.shadowWard,
@@ -4093,7 +4558,7 @@ class ClassKits {
       name: 'Shadow Ward',
       shortLabel: 'Ward',
       description: 'Emergency absorb.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 50,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -4106,7 +4571,7 @@ class ClassKits {
       specId: HeroSpecId.balance,
       name: 'Moonkin Form',
       shortLabel: 'Form',
-      description: 'Always on: astral power.',
+      description: 'Always on: owl form — more power, thicker hide.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: false,
@@ -4169,6 +4634,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.arcane,
         castArgb: 0xFFA0C0FF,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.hurricane,
@@ -4192,6 +4659,8 @@ class ClassKits {
         groundArgb: 0x6670C048,
         groundRadius: 2.8,
       ),
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.typhoon,
@@ -4213,7 +4682,7 @@ class ClassKits {
       name: 'Starfall',
       shortLabel: 'Fall',
       description: 'Signature AoE rain.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 40,
       resourceCost: 30,
       effect: AbilityEffectKind.aoe,
@@ -4228,6 +4697,8 @@ class ClassKits {
         groundArgb: 0x77D0A040,
         groundRadius: 3.0,
       ),
+
+      aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
       id: AbilityId.barkskinBal,
@@ -4235,8 +4706,8 @@ class ClassKits {
       specId: HeroSpecId.balance,
       name: 'Barkskin',
       shortLabel: 'Bark',
-      description: 'Emergency DR.',
-      unlockLevel: 15,
+      description: 'Emergency bark — take less while low.',
+      unlockLevel: 11,
       cooldown: 45,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -4283,6 +4754,8 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.95,
+
+      gate: AbilityGate(skipIfBleedAbove: 3.5),
     ),
     ClassAbilityDef(
       id: AbilityId.ferociousBite,
@@ -4333,6 +4806,8 @@ class ClassKits {
         groundArgb: 0x88FFE08A,
         groundRadius: 2.5,
       ),
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.berserk,
@@ -4351,6 +4826,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFFFF8050,
       ),
+
+      selfBuffKind: AbilitySelfBuffKind.haste,
     ),
     ClassAbilityDef(
       id: AbilityId.rip,
@@ -4359,12 +4836,14 @@ class ClassKits {
       name: 'Rip',
       shortLabel: 'Rip',
       description: 'Maintain a deep bleed on the foe.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 6,
       resourceCost: 20,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.55,
+
+      gate: AbilityGate(skipIfBleedAbove: 2.5),
     ),
     ClassAbilityDef(
       id: AbilityId.survivalInstincts,
@@ -4373,7 +4852,7 @@ class ClassKits {
       name: 'Survival Instincts',
       shortLabel: 'SI',
       description: 'Emergency DR.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -4420,6 +4899,8 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.7,
+
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.lacerate,
@@ -4439,6 +4920,8 @@ class ClassKits {
         boltStyle: SpellBoltStyle.weapon,
         castArgb: 0xFFC07050,
       ),
+
+      gate: AbilityGate(maintainDot: true),
     ),
     ClassAbilityDef(
       id: AbilityId.maul,
@@ -4487,7 +4970,7 @@ class ClassKits {
       name: 'Berserk',
       shortLabel: 'Berserk',
       description: 'Signature rage window.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 45,
       effect: AbilityEffectKind.grantResource,
       tier: AbilityCastTier.signature,
@@ -4505,7 +4988,7 @@ class ClassKits {
       name: 'Survival Instincts',
       shortLabel: 'SI',
       description: 'Emergency big DR.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 55,
       effect: AbilityEffectKind.emergencyDefend,
       tier: AbilityCastTier.emergency,
@@ -4625,7 +5108,7 @@ class ClassKits {
       name: 'Tranquility',
       shortLabel: 'Tranq',
       description: 'Signature party mend.',
-      unlockLevel: 13,
+      unlockLevel: 11,
       cooldown: 45,
       resourceCost: 35,
       effect: AbilityEffectKind.heal,
@@ -4648,7 +5131,7 @@ class ClassKits {
       name: 'Nature\'s Swiftness',
       shortLabel: 'NS',
       description: 'Emergency big heal.',
-      unlockLevel: 15,
+      unlockLevel: 12,
       cooldown: 45,
       effect: AbilityEffectKind.emergencyHeal,
       tier: AbilityCastTier.emergency,
@@ -4663,26 +5146,22 @@ class ClassKits {
     return null;
   }
 
-  static bool isLegacySpec(HeroSpecId id) =>
-      id == HeroSpecId.protection ||
-      id == HeroSpecId.discipline ||
-      id == HeroSpecId.fire ||
-      id == HeroSpecId.combat;
-
   /// Legacy role kits (original four specs only).
   static List<ClassAbilityDef> forRole(HeroRole role) {
     final legacySpec = HeroSpecs.fromGearAffinity(role);
     return all
-        .where((d) => d.specId == legacySpec || (d.specId == null && d.gearAffinity == role))
+        .where(
+          (d) =>
+              d.specId == legacySpec ||
+              (d.specId == null && d.gearAffinity == role),
+        )
         .toList(growable: false);
   }
 
   /// Abilities for a talent-tree kit. Never silently falls back to a legacy
   /// role kit — missing rows would cast the wrong class's spells.
   static List<ClassAbilityDef> forSpec(HeroSpecId specId) {
-    return all
-        .where((d) => d.specId == specId)
-        .toList(growable: false);
+    return all.where((d) => d.specId == specId).toList(growable: false);
   }
 
   static bool isUnlocked(AbilityId id, int level) {
@@ -4690,28 +5169,26 @@ class ClassKits {
     return d != null && level >= d.unlockLevel;
   }
 
-  static List<ClassAbilityDef> unlockedAt(HeroRole role, int level) =>
-      forRole(role)
-          .where((d) => level >= d.unlockLevel)
-          .toList(growable: false);
+  static List<ClassAbilityDef> unlockedAt(HeroRole role, int level) => forRole(
+    role,
+  ).where((d) => level >= d.unlockLevel).toList(growable: false);
 
   static List<ClassAbilityDef> unlockedAtSpec(HeroSpecId specId, int level) =>
-      forSpec(specId)
-          .where((d) => level >= d.unlockLevel)
-          .toList(growable: false);
+      forSpec(
+        specId,
+      ).where((d) => level >= d.unlockLevel).toList(growable: false);
 
   static List<ClassAbilityDef> hudAbilitiesAt(HeroRole role, int level) =>
       forRole(role)
-          .where((d) => d.showInHud && level >= d.unlockLevel)
+          .where((d) => d.showsInHud && level >= d.unlockLevel)
           .toList(growable: false);
 
   static List<ClassAbilityDef> hudAbilitiesAtSpec(
     HeroSpecId specId,
     int level,
-  ) =>
-      forSpec(specId)
-          .where((d) => d.showInHud && level >= d.unlockLevel)
-          .toList(growable: false);
+  ) => forSpec(specId)
+      .where((d) => d.showsInHud && level >= d.unlockLevel)
+      .toList(growable: false);
 
   static ClassAbilityDef? nextUnlock(HeroRole role, int level) {
     for (final d in forRole(role)) {
@@ -4746,11 +5223,11 @@ class ClassKits {
   }
 
   static String resourceLabel(HeroRole role) => switch (role) {
-        HeroRole.warrior => 'RAGE',
-        HeroRole.healer => 'MANA',
-        HeroRole.mage => 'MANA',
-        HeroRole.rogue => 'ENERGY',
-      };
+    HeroRole.warrior => 'RAGE',
+    HeroRole.healer => 'MANA',
+    HeroRole.mage => 'MANA',
+    HeroRole.rogue => 'ENERGY',
+  };
 
   static String resourceLabelForSpec(HeroSpecId specId) =>
       switch (HeroSpecs.def(specId).resource) {
@@ -4761,11 +5238,11 @@ class ClassKits {
       };
 
   static int resourceColor(HeroRole role) => switch (role) {
-        HeroRole.warrior => 0xFFC04030,
-        HeroRole.healer => 0xFF5090E0,
-        HeroRole.mage => 0xFF7060D0,
-        HeroRole.rogue => 0xFFE0C040,
-      };
+    HeroRole.warrior => 0xFFC04030,
+    HeroRole.healer => 0xFF5090E0,
+    HeroRole.mage => 0xFF7060D0,
+    HeroRole.rogue => 0xFFE0C040,
+  };
 
   static int resourceColorForSpec(HeroSpecId specId) =>
       switch (HeroSpecs.def(specId).resource) {
@@ -4789,10 +5266,9 @@ class WarriorAbilities {
       ClassKits.nextUnlock(HeroRole.warrior, level);
   static String kitSummary(int level) =>
       ClassKits.kitSummary(HeroRole.warrior, level);
-  static List<ClassAbilityDef> get all =>
-      ClassKits.forRole(HeroRole.warrior);
+  static List<ClassAbilityDef> get all => ClassKits.forRole(HeroRole.warrior);
   static List<ClassAbilityDef> forHero(PartyHero hero) =>
       hero.gearAffinity == HeroRole.warrior
-          ? ClassKits.unlockedAtSpec(hero.specId, hero.level)
-          : const [];
+      ? ClassKits.unlockedAtSpec(hero.specId, hero.level)
+      : const [];
 }

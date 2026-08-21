@@ -1,0 +1,26 @@
+{
+  "source": "lib/core/game_logic.dart",
+  "class": "GameLogic",
+  "bucket": "Pets",
+  "target_class": "PetService",
+  "out": "lib/core/pet_service.dart",
+  "members": [
+    "_rollPetRarity",
+    "hatchPetCost",
+    "hatchPet",
+    "canMergePets",
+    "mergePets",
+    "setFavoritePetSpecies",
+    "petFrameCost",
+    "buyPetFrame",
+    "maxPetBondLevel",
+    "maxPetLevel",
+    "bondPetCost",
+    "bondPet",
+    "setActivePet",
+    "petLevelUpCost",
+    "levelUpPet"
+  ],
+  "no_delegate": [],
+  "header": "import 'dart:math';\n\nimport '../models/pet.dart';\nimport 'game_logic.dart';\nimport 'game_state.dart';\nimport 'meta_systems.dart';\n\n/// Hatching, bonding, merging and framing pets.\n///\n/// Pets survive Ascend (see AGENTS.md), so everything here writes through\n/// `metaDepth` / the pet collection rather than run state.\nabstract final class PetService {"
+}

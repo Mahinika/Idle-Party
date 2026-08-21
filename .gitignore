@@ -18,6 +18,11 @@ migrate_working_dir/
 *.iws
 .idea/
 
+# Obsidian vault UI (local). Not used for project docs — leave ignored if present.
+.obsidian/
+
+
+
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
@@ -36,12 +41,11 @@ migrate_working_dir/
 # Local simulation reports
 /tool/out/
 
-# Local world-path map rebuild source (11-zone)
-assets/custom/ui/world_path_map_11zone_bak.png
-assets/custom/ui/world_path_map_12zone_bak.png
-assets/custom/ui/world_path_map_13zone_bak.png
-assets/custom/ui/world_path_map_14zone_bak.png
-assets/custom/ui/world_path_map_pre_footer_polish_bak.png
+# Local art sources for tool/extend_world_path_*.py.
+# These live outside assets/ so Flutter does not bundle them into the app.
+/tool/art_backups/*
+# The launcher/store icon source stays tracked (README + Play listing use it).
+!/tool/art_backups/app_icon.png
 
 # Symbolication related
 app.*.symbols
@@ -56,6 +60,7 @@ app.*.map.json
 
 # Release signing (never commit secrets)
 /android/key.properties
+/android/admob.properties
 *.jks
 *.keystore
 
@@ -103,3 +108,10 @@ IdleSword*
 
 # Local MCP venv
 /tool/mcp_idle_party/.venv/
+
+# Local Play AAB CORS helper (often has a machine-specific path)
+/tool/_serve_aab_cors.py
+
+# Play Store listing captures (regenerate with compose_shots.py)
+/tool/store_listing/raw/
+/tool/store_listing/out/

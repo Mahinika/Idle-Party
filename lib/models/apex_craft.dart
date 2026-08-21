@@ -1,8 +1,10 @@
 import '../core/equipment_factory.dart';
 import 'dungeon_def.dart';
+import 'equip_stat_weights.dart';
 import 'hero.dart';
 import 'hero_spec.dart';
 import 'loot.dart';
+import 'proficiency.dart';
 
 /// Apex crafting materials, pity, and class/role recipe templates.
 abstract final class ApexCraft {
@@ -20,6 +22,15 @@ abstract final class ApexCraft {
   static const double corePBase = 0.18;
   static const double catalystPBase = 0.03;
   static const double slagPBase = 0.12;
+
+  /// Boss clears (PUSH) to fill the target-material meter (100 units).
+  static const int targetMeterRequired = 100;
+
+  /// Progress per boss clear toward [targetMeterRequired].
+  static const int targetMeterPushTick = 20;
+
+  /// FARM boss clears tick slower (same meter cap).
+  static const int targetMeterFarmTick = 5;
 
   static const List<EquipmentSlot> craftSlots = <EquipmentSlot>[
     EquipmentSlot.weapon,
@@ -46,7 +57,7 @@ abstract final class ApexCraft {
       id: 'shard_goblin',
       name: 'Hideout Shard',
       family: CraftMatFamily.shard,
-      bossSources: 'Goblin Hideout boss',
+      bossSources: "Goblin's Hideout boss",
     ),
     CraftMatDef(
       id: 'shard_king',
@@ -231,20 +242,20 @@ abstract final class ApexCraft {
   static String shardIdForDungeon(String dungeonId) => 'shard_$dungeonId';
 
   static String coreIdForRole(SpecRoleTag role) => switch (role) {
-        SpecRoleTag.tank => 'core_tank',
-        SpecRoleTag.healer => 'core_healer',
-        SpecRoleTag.meleeDps => 'core_melee',
-        SpecRoleTag.rangedDps => 'core_ranged',
-        SpecRoleTag.caster => 'core_caster',
-      };
+    SpecRoleTag.tank => 'core_tank',
+    SpecRoleTag.healer => 'core_healer',
+    SpecRoleTag.meleeDps => 'core_melee',
+    SpecRoleTag.rangedDps => 'core_ranged',
+    SpecRoleTag.caster => 'core_caster',
+  };
 
   static String catalystIdForClass(HeroClassId classId) =>
       'catalyst_${classId.name}';
 
   static Set<SpecRoleTag> validRolesFor(HeroClassId classId) => {
-        for (final d in HeroSpecs.all)
-          if (d.classId == classId) d.roleTag,
-      };
+    for (final d in HeroSpecs.all)
+      if (d.classId == classId) d.roleTag,
+  };
 
   static bool isValidPair(HeroClassId classId, SpecRoleTag role) =>
       validRolesFor(classId).contains(role);
@@ -259,20 +270,66 @@ abstract final class ApexCraft {
     return null;
   }
 
+  /// Apex recipes skip off-hand when specs in the pair disagree or all use 2H
+  /// (Blood DK, Arms vs Fury, BM/MM vs Survival, Ret 2H, …).
+  static List<EquipmentSlot> craftSlotsFor(
+    HeroClassId classId,
+    SpecRoleTag role,
+  ) {
+    final kind = apexOffHandKind(classId, role);
+    return [
+      for (final s in craftSlots)
+        if (s != EquipmentSlot.offHand || kind != null) s,
+    ];
+  }
+
+  /// Shared off-hand kind for a class×role Apex recipe, or null if none.
+  ///
+  /// Uses each spec's Apex off-hand (DW / frill / shield) — not a class-wide
+  /// "can use shield" dump — so Enhancement gets a weapon, Mage/Priest a tome,
+  /// and Ret/Arms (2H melee) get no off-hand even though they *can* wear shields.
+  static OffHandKind? apexOffHandKind(HeroClassId classId, SpecRoleTag role) {
+    final specs = [
+      for (final d in HeroSpecs.all)
+        if (d.classId == classId && d.roleTag == role) d,
+    ];
+    if (specs.isEmpty) return null;
+    final preferred = [for (final s in specs) _apexPreferredOh(s)];
+    // Any spec that does not use an off-hand → no shared OH recipe.
+    if (preferred.any((k) => k == null)) return null;
+    final first = preferred.first;
+    if (preferred.every((k) => k == first)) return first;
+    return null;
+  }
+
+  /// Per-spec Apex off-hand. Frill/DW always count; shields skip pure 2H melee
+  /// fantasy (Ret, Arms). Casters like Elemental keep shield + forced 1H MH.
+  static OffHandKind? _apexPreferredOh(HeroSpecDef spec) {
+    final pref = ClassProficiency.preferredOffHandKind(spec);
+    if (pref == null) return null;
+    if (pref == OffHandKind.frill || pref == OffHandKind.weapon) return pref;
+    if (pref == OffHandKind.shield &&
+        _apexMainHandRaw(spec).$2 == WeaponHanded.twoHand &&
+        spec.roleTag == SpecRoleTag.meleeDps) {
+      return null;
+    }
+    return pref;
+  }
+
   static double slotCostMult(EquipmentSlot slot) => switch (slot) {
-        EquipmentSlot.weapon => 2.0,
-        EquipmentSlot.offHand => 1.4,
-        EquipmentSlot.chest || EquipmentSlot.legs => 1.3,
-        EquipmentSlot.head || EquipmentSlot.shoulder => 1.1,
-        _ => 1.0,
-      };
+    EquipmentSlot.weapon => 2.0,
+    EquipmentSlot.offHand => 1.4,
+    EquipmentSlot.chest || EquipmentSlot.legs => 1.3,
+    EquipmentSlot.head || EquipmentSlot.shoulder => 1.1,
+    _ => 1.0,
+  };
 
   static int rankCostMult(int rank) => switch (rank) {
-        1 => 1,
-        2 => 2,
-        3 => 4,
-        _ => 1,
-      };
+    1 => 1,
+    2 => 2,
+    3 => 4,
+    _ => 1,
+  };
 
   /// Absolute mat cost to reach [rank] from nothing (for R1 craft).
   static Map<String, int> absoluteCost({
@@ -292,15 +349,14 @@ abstract final class ApexCraft {
     }
     if (shardsNeeded > dungeonIds.length) {
       final crystal = shardIdForDungeon('crystal');
-      costs[crystal] = (costs[crystal] ?? 0) + (shardsNeeded - dungeonIds.length);
+      costs[crystal] =
+          (costs[crystal] ?? 0) + (shardsNeeded - dungeonIds.length);
     }
     costs[coreIdForRole(role)] = max(1, mult);
     costs[catalystIdForClass(classId)] = max(1, (mult + 1) ~/ 2);
     if (rank >= 2 || slot == EquipmentSlot.weapon) {
       // R1 weapons: 1 slag (was heavier); upgrades stay steeper.
-      costs['apex_slag'] = rank == 1
-          ? 1
-          : max(1, mult ~/ (rank == 2 ? 2 : 1));
+      costs['apex_slag'] = rank == 1 ? 1 : max(1, mult ~/ (rank == 2 ? 2 : 1));
     }
     return costs;
   }
@@ -372,8 +428,7 @@ abstract final class ApexCraft {
     required HeroClassId classId,
     required SpecRoleTag role,
     required EquipmentSlot slot,
-  }) =>
-      'apex_${classId.name}_${role.name}_${slot.name}';
+  }) => 'apex_${classId.name}_${role.name}_${slot.name}';
 
   static String pieceName({
     required HeroClassId classId,
@@ -390,7 +445,12 @@ abstract final class ApexCraft {
     };
     final slotLabel = switch (slot) {
       EquipmentSlot.weapon => 'Edge',
-      EquipmentSlot.offHand => 'Ward',
+      EquipmentSlot.offHand => switch (apexOffHandKind(classId, role)) {
+        OffHandKind.shield => 'Bulwark',
+        OffHandKind.frill => 'Tome',
+        OffHandKind.weapon => 'Fang',
+        null => 'Ward',
+      },
       EquipmentSlot.head => 'Crown',
       EquipmentSlot.shoulder => 'Mantle',
       EquipmentSlot.chest => 'Cuirass',
@@ -415,8 +475,8 @@ abstract final class ApexCraft {
   }) {
     final spec = representativeSpec(classId, role);
     final affinity = spec?.gearAffinity ?? HeroRole.warrior;
-    final preferredArmor = spec?.armorTypes.isNotEmpty == true
-        ? spec!.armorTypes.last
+    final preferredArmor = spec != null
+        ? ClassProficiency.preferredArmor(spec, 80)
         : null;
 
     final powerMul = switch (rank.clamp(1, maxRank)) {
@@ -437,7 +497,15 @@ abstract final class ApexCraft {
     if (slot.isArmorSlot || slot == EquipmentSlot.cloak) {
       armorType = preferredArmor ?? ArmorType.mail;
     } else if (slot == EquipmentSlot.weapon) {
-      final mh = _mainHandFor(affinity, role);
+      // If this recipe also crafts an off-hand, keep MH one-handed so the
+      // Apex set is actually wearable together (no 2H staff + tome).
+      var mh = spec != null
+          ? _apexMainHandRaw(spec)
+          : _mainHandFor(affinity, role);
+      final ohKind = apexOffHandKind(classId, role);
+      if (ohKind != null && mh.$2 == WeaponHanded.twoHand && spec != null) {
+        mh = _apexOneHandFor(spec);
+      }
       weaponType = mh.$1;
       handed = mh.$2;
       pattern = switch (role) {
@@ -446,14 +514,20 @@ abstract final class ApexCraft {
         _ => ProjectilePattern.single,
       };
     } else if (slot == EquipmentSlot.offHand) {
-      if (role == SpecRoleTag.tank) {
+      final kind = apexOffHandKind(classId, role);
+      if (kind == OffHandKind.shield) {
         offHandKind = OffHandKind.shield;
-      } else if (role == SpecRoleTag.healer || role == SpecRoleTag.caster) {
+      } else if (kind == OffHandKind.frill) {
         offHandKind = OffHandKind.frill;
-      } else {
+      } else if (kind == OffHandKind.weapon) {
         offHandKind = OffHandKind.weapon;
-        weaponType = WeaponType.sword;
+        weaponType = spec != null
+            ? _apexOneHandFor(spec).$1
+            : WeaponType.sword;
         handed = WeaponHanded.oneHand;
+      } else {
+        // Caller should not request OH when kind is null.
+        offHandKind = OffHandKind.frill;
       }
     }
 
@@ -467,7 +541,8 @@ abstract final class ApexCraft {
     );
     final budget = max(8, (baseBudget * powerMul).round());
 
-    final needsArmor = slot.isArmorSlot ||
+    final needsArmor =
+        slot.isArmorSlot ||
         slot == EquipmentSlot.cloak ||
         (slot == EquipmentSlot.offHand && offHandKind == OffHandKind.shield);
     final armor = needsArmor
@@ -479,37 +554,42 @@ abstract final class ApexCraft {
         : 0;
     final pool = max(1, budget - armor);
 
-    var str = 0, agi = 0, sta = 0, intel = 0, spi = 0, sp = 0;
-    var ap = 0, crit = 0, aspd = 0;
+    // Same primary split as dungeon drops (CombatRatings ROI). Never dump
+    // leftover budget into attackBonus — that field is flat ATK (1 = 1 sheet
+    // ATK) while 1 Str/Agi is only ~0.5 ATK.
+    final dist = EquipmentFactory.distributePrimaries(
+      pool,
+      EquipStatWeights.lootShares(
+        bias: affinity,
+        roleTag: role,
+        specId: spec?.id,
+      ),
+    );
+    final str = dist.str;
+    final agi = dist.agi;
+    final sta = dist.sta;
+    final intel = dist.intel;
+    final spi = dist.spi;
+    final sp = dist.sp;
+    const ap = 0;
+    var crit = 0;
+    var aspd = 0;
+    var mp5 = 0;
     final secTier = max(0, (baseIlvl - 5) ~/ 18);
-    // Role weights sum to ~1.0 of [pool] (armor already carved).
     switch (role) {
       case SpecRoleTag.tank:
-        str = (pool * 0.40).round();
-        sta = (pool * 0.55).round();
         crit = 2 + rank + secTier ~/ 2;
       case SpecRoleTag.healer:
-        intel = (pool * 0.30).round();
-        spi = (pool * 0.25).round();
-        sp = (pool * 0.30).round();
-        sta = (pool * 0.15).round();
+        // Heals ignore haste — Mp5 + a little crit, same honesty as dungeon loot.
+        mp5 = 2 + rank + secTier ~/ 2;
+        crit = 1 + rank + secTier ~/ 3;
       case SpecRoleTag.meleeDps:
-        str = (pool * 0.35).round();
-        agi = (pool * 0.25).round();
-        ap = (pool * 0.20).round();
-        sta = (pool * 0.15).round();
         crit = 3 + rank * 2 + secTier ~/ 2;
         aspd = 2 + rank + secTier ~/ 2;
       case SpecRoleTag.rangedDps:
-        agi = (pool * 0.50).round();
-        ap = (pool * 0.30).round();
-        sta = (pool * 0.15).round();
         crit = 4 + rank * 2 + secTier ~/ 2;
         aspd = 3 + rank + secTier ~/ 2;
       case SpecRoleTag.caster:
-        intel = (pool * 0.42).round();
-        sp = (pool * 0.42).round();
-        sta = (pool * 0.15).round();
         crit = 3 + rank * 2 + secTier ~/ 2;
     }
 
@@ -528,6 +608,7 @@ abstract final class ApexCraft {
       attackBonus: ap,
       critChanceBonus: crit,
       attackSpeedBonus: aspd,
+      mp5Bonus: mp5,
       itemLevel: baseIlvl,
       armorType: armorType,
       weaponType: weaponType,
@@ -543,6 +624,65 @@ abstract final class ApexCraft {
   }
 
   static int max(int a, int b) => a > b ? a : b;
+
+  /// Fantasy main-hand before off-hand pairing adjustments.
+  static (WeaponType, WeaponHanded) _apexMainHandRaw(HeroSpecDef spec) {
+    return switch (spec.id) {
+      HeroSpecId.protection ||
+      HeroSpecId.holyPaladin ||
+      HeroSpecId.protPaladin ||
+      HeroSpecId.restorationShaman ||
+      HeroSpecId.discipline ||
+      HeroSpecId.holyPriest => (WeaponType.mace, WeaponHanded.oneHand),
+      HeroSpecId.arms ||
+      HeroSpecId.retribution ||
+      HeroSpecId.unholy => (WeaponType.sword, WeaponHanded.twoHand),
+      HeroSpecId.fury ||
+      HeroSpecId.frostDk ||
+      HeroSpecId.enhancement ||
+      HeroSpecId.survival => (WeaponType.axe, WeaponHanded.oneHand),
+      HeroSpecId.blood => (WeaponType.mace, WeaponHanded.twoHand),
+      HeroSpecId.beastMastery ||
+      HeroSpecId.marksmanship ||
+      HeroSpecId.feral ||
+      HeroSpecId.guardian => (WeaponType.polearm, WeaponHanded.twoHand),
+      HeroSpecId.assassination ||
+      HeroSpecId.combat ||
+      HeroSpecId.subtlety => (WeaponType.dagger, WeaponHanded.oneHand),
+      HeroSpecId.shadow ||
+      HeroSpecId.elemental ||
+      HeroSpecId.balance ||
+      HeroSpecId.restorationDruid ||
+      HeroSpecId.arcane ||
+      HeroSpecId.fire ||
+      HeroSpecId.frostMage ||
+      HeroSpecId.affliction ||
+      HeroSpecId.demonology ||
+      HeroSpecId.destruction => (WeaponType.staff, WeaponHanded.twoHand),
+    };
+  }
+
+  /// Legal one-hand when an Apex off-hand is part of the same recipe.
+  static (WeaponType, WeaponHanded) _apexOneHandFor(HeroSpecDef spec) {
+    final candidates = <(WeaponType, WeaponHanded)>[
+      (WeaponType.mace, WeaponHanded.oneHand),
+      (WeaponType.sword, WeaponHanded.oneHand),
+      (WeaponType.axe, WeaponHanded.oneHand),
+      (WeaponType.dagger, WeaponHanded.oneHand),
+      (WeaponType.fist, WeaponHanded.oneHand),
+    ];
+    for (final c in candidates) {
+      if (ClassProficiency.canEquipWeaponForSpec(
+        spec,
+        c.$1,
+        c.$2,
+        rangedSlot: false,
+      )) {
+        return c;
+      }
+    }
+    return (WeaponType.dagger, WeaponHanded.oneHand);
+  }
 
   static (WeaponType, WeaponHanded) _mainHandFor(
     HeroRole affinity,

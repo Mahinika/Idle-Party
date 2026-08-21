@@ -1,3 +1,6 @@
+@Tags(['sim'])
+library;
+
 import 'package:flutter_test/flutter_test.dart';
 
 import '../tool/sim_class_balance.dart';

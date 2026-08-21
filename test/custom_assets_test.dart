@@ -94,17 +94,18 @@ void main() {
       CustomAssets.petForInstanceId('ember_pup_42'),
       CustomAssets.petEmberPup,
     );
-    expect(
-      CustomAssets.petForInstanceId('ash_fox_9'),
-      CustomAssets.enemySpider,
-    );
+    expect(CustomAssets.petForInstanceId('ash_fox_9'), CustomAssets.petAshFox);
     expect(
       CustomAssets.petForTemplateId('gold_grub'),
-      CustomAssets.enemyRat,
+      CustomAssets.petGoldGrub,
     );
     expect(
       CustomAssets.petForCombatActorId('temppet_water_h1_0', 'Water Elemental'),
-      CustomAssets.enemyCrystalWraith,
+      CustomAssets.petSparkPup,
+    );
+    expect(
+      CustomAssets.petForCombatActorId('classpet_h1', 'Felguard'),
+      CustomAssets.petCoinImp,
     );
     expect(
       CustomAssets.petForInstanceId('classpet_hero1'),

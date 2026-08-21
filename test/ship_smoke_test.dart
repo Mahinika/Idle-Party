@@ -12,26 +12,23 @@ void main() {
   test('world path ships fifteen named zones including mothveil', () {
     expect(DungeonCatalog.all.length, 15);
     final ids = DungeonCatalog.all.map((d) => d.id).toList();
-    expect(
-      ids,
-      <String>[
-        'sandy',
-        'goblin',
-        'king',
-        'underworld',
-        'dead',
-        'hell',
-        'crystal',
-        'tide',
-        'ember',
-        'grove',
-        'storm',
-        'rime',
-        'fen',
-        'brass',
-        'veil',
-      ],
-    );
+    expect(ids, <String>[
+      'sandy',
+      'goblin',
+      'king',
+      'underworld',
+      'dead',
+      'hell',
+      'crystal',
+      'tide',
+      'ember',
+      'grove',
+      'storm',
+      'rime',
+      'fen',
+      'brass',
+      'veil',
+    ]);
     expect(DungeonCatalog.byId('tide').name, 'Sunken Tidehold');
     expect(DungeonCatalog.byId('ember').name, 'Ashen Vault');
     expect(DungeonCatalog.byId('grove').name, 'Hollow Grove');
@@ -139,6 +136,8 @@ void main() {
     expect(AscendRoadmap.unlockAtAl(1), contains('Holy Paladin'));
     expect(AscendRoadmap.unlockAtAl(2), contains('Beast Mastery'));
     expect(AscendRoadmap.unlockAtAl(2), contains('5th party slot'));
+    expect(AscendRoadmap.unlockAtAl(2), contains('Forge'));
+    expect(GameLogic.partySlot5EssenceCost, 80);
     expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
     expect(AscendRoadmap.unlockAtAl(10), contains('Gauntlet'));
     expect(AscendRoadmap.chaseTeaser(0), contains('AL1'));
@@ -148,6 +147,41 @@ void main() {
     expect(classes.body, contains('AL2'));
     expect(classes.body, contains('Beast Mastery'));
     expect(classes.body, contains('Holy Paladin'));
+    expect(classes.body, contains('Forge KEEP'));
+
+    final forge = GameGuides.topics.firstWhere((t) => t.id == 'forge');
+    expect(forge.body, contains('Blessing'));
+    expect(forge.body, contains('5th party'));
+    expect(forge.body, contains('KEEP'));
+
+    final sanctuary = GameGuides.topics.firstWhere((t) => t.id == 'sanctuary');
+    expect(sanctuary.body, contains('CAMP'));
+    expect(sanctuary.body, contains('+3% gold'));
+    expect(sanctuary.body, contains('+1 ATK'));
+    expect(sanctuary.body, contains('Lv0'));
+
+    final shop = GameGuides.topics.firstWhere((t) => t.id == 'prestige_shop');
+    expect(shop.body, contains('KEEP'));
+    expect(shop.body.toLowerCase(), contains('vault'));
+    expect(shop.body.toLowerCase(), contains('merge gold'));
+
+    final pets = GameGuides.topics.firstWhere((t) => t.id == 'pets');
+    expect(pets.body.toLowerCase(), contains('same rarity'));
+    expect(pets.body.toLowerCase(), contains('looks only'));
+
+    final combinator = GameGuides.topics.firstWhere((t) => t.id == 'combinator');
+    expect(combinator.body.toLowerCase(), contains('charm'));
+    expect(combinator.body.toLowerCase(), contains('gold'));
+
+    final bag = GameGuides.topics.firstWhere((t) => t.id == 'bag_equip');
+    expect(bag.body.toLowerCase(), contains('weapons are a hard gate'));
+    expect(bag.body.toLowerCase(), contains('no daggers'));
+
+    final powerups = GameGuides.topics.firstWhere((t) => t.id == 'powerups');
+    expect(powerups.title, 'POWERUPS');
+    expect(powerups.body.toLowerCase(), contains('ad'));
+    expect(powerups.body.toLowerCase(), contains('1 hour'));
+    expect(powerups.body.toLowerCase(), contains('24 hours'));
   });
 
   test('fresh TODAY chase is grow-the-party, not Daily', () {

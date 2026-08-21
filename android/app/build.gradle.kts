@@ -15,6 +15,12 @@ if (hasReleaseKeystore) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+val admobProperties = Properties()
+val admobPropertiesFile = rootProject.file("admob.properties")
+if (admobPropertiesFile.exists()) {
+    admobProperties.load(FileInputStream(admobPropertiesFile))
+}
+
 android {
     namespace = "com.idleparty.app"
     compileSdk = flutter.compileSdkVersion
@@ -35,6 +41,12 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Live Idle Party AdMob app id; override via android/admob.properties.
+        val admobAppId = (admobProperties["admobAppId"] as String?)
+            ?: (project.findProperty("admobAppId") as String?)
+            ?: System.getenv("ADMOB_APP_ID")
+            ?: "ca-app-pub-4980376195917009~4491640230"
+        manifestPlaceholders["admobAppId"] = admobAppId
     }
 
     signingConfigs {

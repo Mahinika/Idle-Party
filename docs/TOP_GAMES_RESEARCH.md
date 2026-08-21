@@ -236,7 +236,7 @@ Använd som snabb audit när ni designar features:
 
 ## 6. Koppling till Idle Party (läs när ni planerar content)
 
-**Handlingsplan:** [STRATEGY_90D.md](STRATEGY_90D.md) (90 dagar: chase → kits → zon).
+**Handlingsplan:** [CONTENT_CADENCE.md](CONTENT_CADENCE.md) (balance + feel slice + What’s New).
 
 Inte krav — bara översättning av mönstren till vårt spel:
 

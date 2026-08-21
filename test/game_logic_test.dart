@@ -29,7 +29,11 @@ void main() {
     state = GameLogic.awardPartyXp(state, need);
     expect(state.heroes.first.level, before + 1);
     expect(state.heroes.first.xp, 0);
+    expect(GameLogic.xpProgress(state.heroes.first), 0);
     expect(GameLogic.xpForEnemy(enemy), greaterThan(0));
+    final half = GameLogic.xpPoolForLevel(state.heroes.first.level) ~/ 2;
+    state = GameLogic.awardPartyXp(state, half);
+    expect(GameLogic.xpProgress(state.heroes.first), closeTo(0.5, 0.05));
   });
 
   test('enemy groups use varied archetypes', () {
@@ -276,10 +280,57 @@ void main() {
     final defenseUpgraded = GameLogic.upgradeDefense(initial);
     final vitalityUpgraded = GameLogic.upgradeVitality(initial);
 
-    expect(attackUpgraded.attackBonus, 2);
-    expect(defenseUpgraded.defenseBonus, 1);
-    expect(vitalityUpgraded.vitalityBonus, 6);
+    expect(attackUpgraded.attackBonus, GameLogic.forgeAttackGain);
+    expect(defenseUpgraded.defenseBonus, GameLogic.forgeDefenseGain);
+    expect(vitalityUpgraded.vitalityBonus, GameLogic.forgeVitalityGain);
     expect(attackUpgraded.gold, 0);
+  });
+
+  test('forge gold buys share one cost tier', () {
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 8, 17));
+    for (final type in PartyUpgradeType.values) {
+      expect(GameLogic.forgeTrackTier(seeded, type), 0);
+      expect(
+        GameLogic.upgradeCostFor(seeded, type),
+        GameLogic.upgradeCostFor(seeded, PartyUpgradeType.attack),
+      );
+    }
+    final gold = GameLogic.upgradeCostFor(seeded, PartyUpgradeType.attack);
+    var state = seeded.copyWith(gold: gold * PartyUpgradeType.values.length);
+    for (final type in PartyUpgradeType.values) {
+      state = switch (type) {
+        PartyUpgradeType.attack => GameLogic.upgradeAttack(state),
+        PartyUpgradeType.defense => GameLogic.upgradeDefense(state),
+        PartyUpgradeType.vitality => GameLogic.upgradeVitality(state),
+        PartyUpgradeType.moveSpeed => GameLogic.upgradeMoveSpeed(state),
+        PartyUpgradeType.attackSpeed => GameLogic.upgradeAttackSpeed(state),
+        PartyUpgradeType.crit => GameLogic.upgradeCrit(state),
+      };
+    }
+    for (final type in PartyUpgradeType.values) {
+      expect(GameLogic.forgeTrackTier(state, type), 1);
+    }
+  });
+
+  test('KEEP relics AL and Blessing STA match ATK after percent armor', () {
+    expect(GameLogic.forgeDefenseGain, GameLogic.forgeAttackGain * 4);
+    expect(GameLogic.forgeVitalityGain, GameLogic.forgeAttackGain * 12);
+    expect(GameLogic.relicDefensePerTier, GameLogic.relicAttackPerTier * 4);
+    expect(GameLogic.relicVitalityPerTier, GameLogic.relicAttackPerTier * 12);
+    expect(GameLogic.alDefensePerLevel, GameLogic.alAttackPerLevel * 4);
+    expect(GameLogic.alVitalityPerLevel, GameLogic.alAttackPerLevel * 12);
+    expect(GameLogic.ascendBlessingDef, GameLogic.ascendBlessingAtk * 4);
+    expect(GameLogic.ascendBlessingVit, GameLogic.ascendBlessingAtk * 12);
+
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 8, 17));
+    var state = seeded.copyWith(essence: 200);
+    state = GameLogic.unlockRelic(state, GameLogic.ironWardRelic);
+    expect(state.relicDefenseBonus, GameLogic.relicDefensePerTier);
+    state = GameLogic.unlockRelic(state, GameLogic.phoenixEmberRelic);
+    expect(state.relicVitalityBonus, GameLogic.relicVitalityPerTier);
+    state = state.copyWith(ascensionLevel: 1);
+    expect(state.ascensionDefenseBonus, GameLogic.alDefensePerLevel);
+    expect(state.ascensionVitalityBonus, GameLogic.alVitalityPerLevel);
   });
 
   test('forge haste tracks are infinite and scale combat speed', () {
@@ -301,7 +352,7 @@ void main() {
 
     expect(state.moveSpeedBonus, 24);
     expect(state.attackSpeedBonus, 24);
-    expect(state.critBonus, 12);
+    expect(state.critBonus, 24);
     expect(state.effectiveHeroMoveSpeed(hero), greaterThan(baseMove));
     expect(state.effectiveHeroAttackSpeed(hero), greaterThan(baseAtkSpd));
     expect(state.effectiveHeroCrit(hero), greaterThan(baseCrit));
@@ -441,6 +492,8 @@ void main() {
     expect(unlocked.hasRelic(GameLogic.warBannerRelic), isTrue);
     expect(unlocked.essence, 0);
     expect(unlocked.totalAttackBonus, 4);
+    expect(GameLogic.relicKeepSummary(unlocked), contains('+4 ATK'));
+    expect(GameLogic.relicPerTierPayout(GameLogic.warBannerRelic), '+4 ATK');
   });
 
   test('ascension is locked until required bosses are cleared', () {
@@ -500,7 +553,7 @@ void main() {
       ascended.ascendBlessingGoldPercent,
       GameLogic.ascendBlessingGoldPct,
     );
-    expect(ascended.soulboundFragments, greaterThan(0));
+    expect(ascended.soulboundFragments, 0);
     expect(ascended.inDungeon, isFalse);
   });
 
@@ -563,7 +616,7 @@ void main() {
     expect(ascended.lifetimeGoldEarned, 12000);
     expect(ascended.highestDungeonCleared, 1);
     expect(ascended.godHandLevel, 3);
-    expect(ascended.soulboundFragments, greaterThanOrEqualTo(5));
+    expect(ascended.soulboundFragments, 5);
     expect(ascended.sanctuaryPowerLevel, 2);
     expect(ascended.activePet?.id, pet.id);
     expect(ascended.loadouts, isEmpty);
@@ -573,6 +626,25 @@ void main() {
     );
     expect(kept, isNotEmpty);
     expect(kept.every((h) => h.level == 12 && h.xp == 40), isTrue);
+  });
+
+  test('ascend keeps legacy heirloom and does not grant fragments', () {
+    final heirloom = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      battleNumber: 10,
+    ).copyWith(id: 'soulbound_old', name: 'Soulbound Old');
+    var ready = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
+      bossVictories: 1,
+      highestFloorCleared: 12,
+      soulboundFragments: 4,
+      soulboundItem: heirloom,
+    );
+    final ascended = GameLogic.ascend(ready, now: DateTime(2026, 7, 5));
+    expect(ascended.soulboundFragments, 4);
+    expect(ascended.soulboundItem, isNotNull);
+    expect(ascended.soulboundItem!.id, 'soulbound_old');
+    expect(ascended.soulboundAttackBonus, greaterThan(0));
   });
 
   test('ascension gold bonus applies to room rewards', () {
@@ -749,12 +821,9 @@ void main() {
     );
 
     // Auto Equip: tank-only empty party takes the shield from stash.
-    state = state.copyWith(
-      heroes: [
-        prot.copyWith(level: 20, clearEquipped: true),
-      ],
-      gearStash: <EquipmentItem>[tankShield],
-    );
+    state = state
+        .withActiveParty([prot.copyWith(level: 20, clearEquipped: true)])
+        .copyWith(gearStash: <EquipmentItem>[tankShield]);
     state = GameLogic.autoEquipBetterGear(state);
     expect(
       state.heroes.single.itemIn(EquipmentSlot.offHand)?.id,
@@ -764,12 +833,9 @@ void main() {
     // Fire-only empty party takes the Int/SP staff.
     state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final mage = state.heroes.firstWhere((h) => h.role == HeroRole.mage);
-    state = state.copyWith(
-      heroes: [
-        mage.copyWith(level: 20, clearEquipped: true),
-      ],
-      gearStash: <EquipmentItem>[mageStaff],
-    );
+    state = state
+        .withActiveParty([mage.copyWith(level: 20, clearEquipped: true)])
+        .copyWith(gearStash: <EquipmentItem>[mageStaff]);
     state = GameLogic.autoEquipBetterGear(state);
     expect(
       state.heroes.single.itemIn(EquipmentSlot.weapon)?.id,
@@ -1245,7 +1311,7 @@ void main() {
       bias: HeroRole.warrior,
     ).copyWith(
       id: 'worn_plain',
-      armorType: ArmorType.mail,
+      armorType: ArmorType.plate,
       strengthBonus: 14,
       staminaBonus: 12,
       armorBonus: 18,
@@ -1316,7 +1382,15 @@ void main() {
     state = state.copyWith(heroes: heroes);
 
     final cmp = GameLogic.compareForHero(state.heroes[mageIndex], better);
-    expect(cmp.atkDelta, 18 - 4 + 10 - 2);
+    expect(cmp.atkDelta, greaterThan(0));
+    final wornAtk = state.heroes[mageIndex].gearSheetAttack;
+    final swapped = state.heroes[mageIndex].copyWith(
+      equipped: {
+        ...state.heroes[mageIndex].equipped,
+        EquipmentSlot.chest: better,
+      },
+    );
+    expect(cmp.atkDelta, swapped.gearSheetAttack - wornAtk);
   });
 
   test('1H plus stash OH can beat worn two-hand on upgrade score', () {
@@ -1581,7 +1655,7 @@ void main() {
     expect(sold.gold, greaterThan(state.gold));
   });
 
-  test('auto equip skips plate for low-level warrior; SELL JUNK keeps rare+', () {
+  test('auto equip puts plate on a warrior from level 1; SELL JUNK keeps rare mail', () {
     final plate = GameLogic.createEquipment(
       slot: EquipmentSlot.chest,
       rarity: LootRarity.rare,
@@ -1596,16 +1670,21 @@ void main() {
       itemLevel: 40,
       clearAffinity: true,
     );
+    final mail = plate.copyWith(
+      id: 'mail_chest',
+      armorType: ArmorType.mail,
+    );
 
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     expect(state.heroes[0].level, lessThan(40));
     state = state.copyWith(gearStash: <EquipmentItem>[plate]);
     state = GameLogic.autoEquipBetterGear(state);
-    expect(state.heroes[0].itemIn(EquipmentSlot.chest)?.id, isNot(plate.id));
+    expect(state.heroes[0].itemIn(EquipmentSlot.chest)?.id, plate.id);
 
+    state = state.copyWith(gearStash: <EquipmentItem>[mail]);
     final sold = GameLogic.autoSellJunk(state);
-    // Rare+ is kept for merge / later levels even if nobody can wear it yet.
-    expect(sold.gearStash.any((g) => g.id == plate.id), isTrue);
+    // Rare+ stays for merge even when the starter party cannot wear mail.
+    expect(sold.gearStash.any((g) => g.id == mail.id), isTrue);
   });
 
   test('SELL JUNK sells rare gear at or below the auto-sell iLvl cap', () {
@@ -2371,6 +2450,20 @@ void main() {
     final label = GameLogic.sanctuaryBonusLabel('gold', 40, prestige: 2);
     expect(label, contains('+${soft + 6}%'));
     expect(label, contains('P2'));
+    expect(GameLogic.sanctuaryPrestigeKeepShort('gold'), '+3% gold');
+    expect(GameLogic.sanctuaryPrestigeKeepShort('power'), '+1 ATK');
+    expect(GameLogic.sanctuaryPrestigeKeepShort('vitality'), '+12 HP');
+    expect(GameLogic.sanctuaryPrestigeKeepShort('xp'), '+2% XP');
+    expect(GameLogic.sanctuaryPrestigeEssenceGain(12), 37);
+    expect(GameLogic.sanctuaryTrackBonusAt('power', 1), 1);
+    expect(
+      GameLogic.sanctuaryTrackBonusAt('vitality', 1),
+      GameLogic.sanctuaryVitalityPerLevel,
+    );
+    expect(
+      GameLogic.sanctuaryPrestigeKeepAmount('vitality'),
+      GameLogic.sanctuaryVitalityPerLevel,
+    );
   });
 
   test('ascend mission board ignores pre-ascend highestFloorCleared', () {
@@ -2396,25 +2489,10 @@ void main() {
     expect(fresh, hasLength(3));
   });
 
-  test('soulbound bind and god hand upgrade', () {
-    final weapon = GameLogic.createEquipment(
-      slot: EquipmentSlot.weapon,
-      rarity: LootRarity.rare,
-      battleNumber: 10,
-    );
+  test('god hand upgrade spends essence', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
       essence: 100,
-      soulboundFragments: 3,
     );
-    final hero0 = state.heroes.first.copyWith(
-      equipped: <EquipmentSlot, EquipmentItem>{EquipmentSlot.weapon: weapon},
-    );
-    state = state.copyWith(heroes: [hero0, ...state.heroes.skip(1)]);
-    state = GameLogic.bindSoulbound(state);
-    expect(state.soulboundItem, isNotNull);
-    expect(state.heroes.first.itemIn(EquipmentSlot.weapon), isNull);
-    expect(state.soulboundFragments, 0);
-
     final before = state.godHandLevel;
     state = GameLogic.upgradeGodHand(state);
     expect(state.godHandLevel, before + 1);
@@ -2732,7 +2810,11 @@ void main() {
     final prestiged = GameLogic.prestigeSanctuaryTrack(state, 'gold');
     expect(prestiged.sanctuaryGoldLevel, 0);
     expect(prestiged.metaDepth.sanctuaryGoldPrestige, 1);
-    expect(prestiged.essence, greaterThan(state.essence));
+    expect(
+      prestiged.essence,
+      state.essence + GameLogic.sanctuaryPrestigeEssenceGain(13),
+    );
+    expect(prestiged.sanctuaryGoldBonusPercent, 3);
   });
 
   test('infinity gauntlet unlocks at AL10 and escalates', () {
@@ -2922,15 +3004,6 @@ void main() {
     expect(offline.enemies.first.maxHp, live.enemies.first.maxHp);
     final sim = GameLogic.simulateSpatialOffline(farm, 60);
     expect(sim.state.gold, greaterThanOrEqualTo(farm.gold));
-  });
-
-  test('soulbound prefer armor toggles meta flag', () {
-    final state = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
-    expect(state.metaDepth.soulboundIsArmor, isFalse);
-    final armor = GameLogic.setSoulboundPreferArmor(state, true);
-    expect(armor.metaDepth.soulboundIsArmor, isTrue);
-    final weapon = GameLogic.setSoulboundPreferArmor(armor, false);
-    expect(weapon.metaDepth.soulboundIsArmor, isFalse);
   });
 
   test('loot: kill has no fillers; clear grants gold pouch as wallet gold', () {

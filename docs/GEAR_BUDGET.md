@@ -15,6 +15,16 @@ Source of truth: `EquipmentFactory.budgetForItemLevel` in `lib/core/equipment_fa
 
 New drops, merge output, and Apex craft should spend this budget — not invent a parallel power curve.
 
+## Drop slots
+
+Kill loot rolls one **family** at a time (`LootPipeline.dropFamilies`): weapon,
+off-hand, ranged, eight armor pieces, cloak, neck, **one** ring, **one** trinket.
+`ring2` / `trinket2` are equip slots only — Auto Equip still fills either finger.
+
+Then it picks a living party member who can actually wear that family (ranged /
+off-hand are skipped if nobody uses them). Shield-users get extra off-hand
+weight so a Prot tank sees shields instead of a silent remap into extra weapons.
+
 ## Stat split
 
 Configured in `EquipStatWeights.lootShares` / `forSpec` (`lib/models/equip_stat_weights.dart`).
@@ -25,19 +35,24 @@ Configured in `EquipStatWeights.lootShares` / `forSpec` (`lib/models/equip_stat_
 | Str melee | Str + Sta | Crit, Haste |
 | Agi melee / hunter | Agi + Sta (+ some Str) | Crit, Haste |
 | Caster | Int + Sta + Spell Power | Crit, Haste |
-| Healer | Int + Sta + SP + Spirit | Mp5, Crit, Haste |
+| Healer | Int + Sta + SP + Spirit | **Mp5, Crit** (Haste last — heals ignore haste) |
 
 Rules:
 
 - At most **two** secondaries on new loot.
+- Healer loot fills **Mp5 then Crit** (weapons/gloves do not haste-first). Haste is the leftover line.
 - **No Move** on loot budget.
 - Affinity on an item is **drop bias / tooltip flavour**, not equip-score.
+- **Armor type is a hard `canEquip` gate** (plate / mail / leather / cloth per class). Auto Equip never scores a Paladin into leather.
+- **Weapons / off-hand / ranged are the same hard gate** (WotLK class lists). Auto Equip never puts a dagger on a Paladin or a bow on a Death Knight.
 
 Combat conversion (must stay aligned with equip weights):
 
-- Melee ATK from Str/Agi via `CombatRatings` (kAp = 4).
+- Melee ATK from Str/Agi via `CombatRatings` (kAp = 4). Plate: 2 AP/Str. Rogue-family: 1 AP/Str + **2 AP/Agi**.
 - Sheet DEF is gear Armor + tank guard + a small Agi crumb (`CombatRatings.agilityToDefense`). Plate tanks stay ahead of leather DPS.
-- Caster/healer throughput: **Intellect full**, **Spell Power ≈ half** into the ATK pool.
+- Caster/healer: **level Intellect full**; **gear Int and Spell Power both ≈ 1/3** into ATK. Int still adds spell crit.
+- Healer Spirit → mana: `1.25 + Spirit × 0.06` /s. Mp5 → `value / 5` /s.
+- Physical hits use percent armor (`CombatRatings.mitigateByArmor`) — more DEF always helps, never immune.
 
 ## Equip score (`itemBudgetScore`)
 
@@ -46,6 +61,7 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 **Counts**
 
 - Role-weighted stat mass (Str/Agi/Sta/Int/Spi/SP/Armor/Crit/Haste/Mp5/flat ATK) — same DNA as `EquipStatWeights.forSpec`.
+- **Crit fades** once the hero's sheet crit is 70+ (zero at the 75 combat cap) so Auto Equip does not chase a clamped stat.
 - Gear effects that spend real effect value (lifesteal, crit, haste, …).
 - Apex tier bonus (soul-kept craft power).
 - 1H vs 2H net: `score(2H)` vs `score(1H) + best bag OH` (and 2H minus worn OH).
@@ -72,8 +88,14 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 ## Set / Apex / Merge
 
 - **Set 2pc/4pc:** real combat bonuses only; shown on tooltips. No ghost BiS points.
-- **Apex:** own tier + hard-lock vs normal drops.
-- **Merge:** identity (`setId`, affixes) from **primary** only; fuel adds budget/stats.
+- **Apex:** own tier + hard-lock vs normal drops. Stats use the same
+  `lootShares` split as dungeon drops (no parallel Attack Power dump —
+  `attackBonus` is flat sheet ATK, ~2× a Strength point).
+- **Merge:** identity (`setId`, affixes) from **primary** only; fuel adds ~50%
+  stats. RESULT preview shows the SCORE jump. If both pieces have an on-item
+  effect, the stronger value wins.
+- **Charms (trinkets):** always roll an on-item effect (other slots still use
+  rarity chance). Charm names match the CHARM slot.
 
 ## Player-facing copy
 

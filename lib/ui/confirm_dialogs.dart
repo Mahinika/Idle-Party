@@ -53,7 +53,6 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
                 nextAl: nextAl,
                 milestoneBonus: milestone,
                 godHandLevel: state.godHandLevel,
-                soulboundFragments: state.soulboundFragments,
                 blessingsAfter: state.metaDepth.ascendBlessings + 1,
                 unlockCombatRogue: state.ascensionLevel == 0,
               ),
@@ -79,9 +78,7 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
         },
       ),
     );
-    if (ok == true &&
-        context.mounted &&
-        GameLogic.canAscend(director.state)) {
+    if (ok == true && context.mounted && GameLogic.canAscend(director.state)) {
       director.ascend();
     }
   } finally {

@@ -9,7 +9,7 @@ Status: **SHIPPED (P0–P4)** — Blueprint + PlacementPlan + zone kits wired th
 Showcase: **Rimeglass** (treasure alcoves) vs **Stormwake** (choke). All catalog
 zones have a `ZoneLayoutKit`.
 
-Relaterat: [SYSTEMS_REBUILD.md](SYSTEMS_REBUILD.md) (klar), [GEAR_BUDGET.md](GEAR_BUDGET.md) (klar), [zone-art-identity](../.cursor/skills/zone-art-identity/SKILL.md).
+Relaterat: [GEAR_BUDGET.md](GEAR_BUDGET.md) (klar), [zone-art-identity](../.cursor/skills/zone-art-identity/SKILL.md), [CONTENT_CADENCE.md](CONTENT_CADENCE.md).
 
 ---
 

@@ -1,0 +1,23 @@
+{
+  "source": "lib/core/game_logic.dart",
+  "class": "GameLogic",
+  "bucket": "Market and flasks",
+  "target_class": "MarketService",
+  "out": "lib/core/market_service.dart",
+  "members": [
+    "canUseConsumable",
+    "useConsumable",
+    "isBandageConsumable",
+    "_healLowestHero",
+    "_flaskHealAmount",
+    "marketFlaskCost",
+    "createMarketFlask",
+    "buyMarketFlask",
+    "buyMarketFlasks",
+    "marketBandageCost",
+    "createMarketBandage",
+    "buyMarketBandage"
+  ],
+  "no_delegate": [],
+  "header": "import 'dart:math';\n\nimport '../models/hero.dart';\nimport '../models/loot.dart';\nimport '../models/stats.dart';\nimport 'game_logic.dart';\nimport 'game_state.dart';\nimport 'gear_service.dart';\n\n/// Flasks and bandages: the only things gold buys that get used up.\n///\n/// Flasks heal the whole party, bandages the one hero who needs it most —\n/// both auto-fire during AFK, so the rules live away from UI code.\nabstract final class MarketService {"
+}

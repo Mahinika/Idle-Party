@@ -40,7 +40,7 @@ Use `_jsonInt` / `as num?` for ints (web JSON). Bump `'version'` only for docs u
 
 ## Ascend (trust `GameLogic.ascend`)
 
-**Keeps:** essence, relics, AL, lifetime gold, highestDungeonCleared, hero levels/XP/roster (gear stripped), pets, sanctuary tracks, metaDepth, soulbound, God Hand, settings, achievements/codex, challenge toggles.
+**Keeps:** essence, relics, AL, lifetime gold, highestDungeonCleared, hero levels/XP/roster (gear stripped), pets, sanctuary tracks, metaDepth, Apex, legacy heirloom if present, God Hand, settings, achievements/codex, challenge toggles.
 
 **Resets:** wallet gold, bossVictories, floor progress, ATK/DEF/VIT gold upgrades, equipped gear, gearStash, **loadouts**, enemies/rooms, `inDungeon`, missions.
 

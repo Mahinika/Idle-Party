@@ -19,6 +19,8 @@ void main() {
     expect(LocalSeasonCatalog.forWeekKey('2026-W32').id, 'fen_tide');
     expect(LocalSeasonCatalog.forWeekKey('2026-W33').id, 'moth_dust');
     expect(LocalSeasonCatalog.forWeekKey('2026-W34').id, 'brass_tempo');
+    expect(LocalSeasonCatalog.forWeekKey('2026-W36').id, 'veil_tempo');
+    expect(LocalSeasonCatalog.forWeekKey('2026-W37').id, 'ember_climb');
     expect(LocalSeasonCatalog.forMonthKey('2026-08').id, 'veil_month');
   });
 

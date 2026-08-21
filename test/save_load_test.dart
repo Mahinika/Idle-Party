@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
@@ -190,6 +191,25 @@ void main() {
     expect(await storage.hasSave(), isTrue);
     expect(await storage.load(), isNull);
     expect(await storage.hasSave(), isFalse);
+    expect(prefs.getString('idle_party_save_v2_corrupt'), '{not-json');
+  });
+
+  test('corrupt v2 recovers from valid legacy v1', () async {
+    final v1 = await File(
+      'test/fixtures/save_v1.json',
+    ).readAsString();
+    SharedPreferences.setMockInitialValues({
+      'idle_party_save_v2': '{not-json',
+      'idle_party_save_v1': v1,
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final storage = SharedPreferencesGameStorage(preferences: prefs);
+
+    final loaded = await storage.load();
+    expect(loaded, isNotNull);
+    expect(loaded!.gold, 1450);
+    expect(prefs.getString('idle_party_save_v2'), isNull);
+    expect(prefs.getString('idle_party_save_v1'), isNotNull);
     expect(prefs.getString('idle_party_save_v2_corrupt'), '{not-json');
   });
 }
