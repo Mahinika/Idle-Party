@@ -39,7 +39,7 @@ for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.27 / 57** submitted 2026-08-21; testers may still be on
 **1.12.25 / 55** until review publishes). Working ship is
-**1.12.29**. Production still needs **12 closed testers × 14 days**.
+**1.12.32**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`

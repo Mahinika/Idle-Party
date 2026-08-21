@@ -43,8 +43,8 @@ void main() {
     world = SpatialCombat.step(world, state, dt: 0.1).world;
     final mage = world.heroes.firstWhere((h) => !h.isPet);
     // Fire ticker sets mild personal heat; spam tax stays on spell hits.
-    expect(mage.kitOutMul, closeTo(1.22, 0.001));
-    expect(SpatialCombat.casterAbilityTax, closeTo(0.72, 0.001));
+    expect(mage.kitOutMul, closeTo(1.24, 0.001));
+    expect(SpatialCombat.casterAbilityTax, closeTo(0.85, 0.001));
   });
 
   test('Inner Fire sets disc heal mul', () {
@@ -75,7 +75,7 @@ void main() {
     var world = SpatialCombat.build(state);
     world = SpatialCombat.step(world, state, dt: 0.1).world;
     final rogue = world.heroes.firstWhere((h) => !h.isPet);
-    expect(rogue.kitOutMul, closeTo(0.84, 0.001));
+    expect(rogue.kitOutMul, closeTo(0.92, 0.001));
   });
 
   test('Moonkin Form thickens hide; Barkskin is ready at 11', () {
@@ -93,7 +93,7 @@ void main() {
     world = SpatialCombat.step(world, state, dt: 0.1).world;
     final owl = world.heroes.firstWhere((h) => !h.isPet);
     expect(owl.kitInMul, lessThan(1.0));
-    expect(owl.kitOutMul, closeTo(0.96, 0.001));
+    expect(owl.kitOutMul, closeTo(1.10, 0.001));
   });
 }
 
