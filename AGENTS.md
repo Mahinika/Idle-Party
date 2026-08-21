@@ -98,10 +98,10 @@ shipped). Background (optional): `docs/TOP_GAMES_RESEARCH.md`. Chase contract
 `docs/GEAR_BUDGET.md`. Floor blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`.
 Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`.
 
-**Obsidian (owner):** visual map in `notes/` (`Home`, **Dev log**, Ship, Combat,
-Hub TODAY, Play, Vad härnäst) with `[[wikilinks]]` into `docs/` + this file.
-After a visible batch, agents prepend `notes/Dev log.md` (see DoD). Local
-`.obsidian/` is gitignored — commit notes, not vault UI settings.
+**Obsidian (owner):** app architecture map in `notes/` — start at `App` (Hub,
+Dungeon, PARTY/POWER/META, TODAY, SpatialCombat). Also `Home`, **Dev log**,
+Ship, Play. After a visible batch, agents prepend `Dev log` and update arch
+notes if menus/surfaces changed (DoD). Local `.obsidian/` is gitignored.
 
 ### Cursor automation
 

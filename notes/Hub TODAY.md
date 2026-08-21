@@ -16,6 +16,7 @@
 
 ## Relaterat
 
-- [[Combat]]
+- [[TODAY]] — arkitektur-nod (samma sak, kortare)
+- [[Hub]] · [[App]]
 - [[Vad härnäst]]
 - [[Home]]

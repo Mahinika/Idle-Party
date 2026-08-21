@@ -1,21 +1,20 @@
 # Idle Party — karta
 
-Öppna den här noten i Obsidian och använd **Graph view**. De här sidorna är din översikt; detaljerna ligger i `docs/` och [[AGENTS]].
+## Spelets arkitektur (det du ville se)
 
-## Start här
+Öppna [[App]] → **Local graph**. Där syns Hub / Dungeon / PARTY / POWER / META.
 
-- [[Dev log]] — vad som hände i development (nyast överst)
-- [[Ship]] — version, What’s New, hur man skeppar
-- [[Combat]] — fight, zon, gear
-- [[Hub TODAY]] — vad spelaren jagar
-- [[Play]] — GitHub Releases + Play Console
-- [[Vad härnäst]] — vad du ska be agenten om härnäst
+- [[App]] — startsida för arkitektur
+- [[Hub]] · [[Dungeon]]
+- [[PARTY]] · [[POWER]] · [[META]]
+- [[TODAY]] · [[SpatialCombat]] · [[GameDirector]]
 
-## Sanningen i koden
+## Development / docs
 
-- [[AGENTS]] — agenternas karta (arkitektur, meta, tooling)
-- [[CONTENT_CADENCE]] — månadsrytm + beslutstabell
+- [[Dev log]] — vad som hände i development
+- [[Ship]] · [[Play]] · [[Vad härnäst]]
+- [[AGENTS]] · [[CONTENT_CADENCE]]
 
 ## Tips
 
-Skriv egna anteckningar under `notes/` och länka med `[[så här]]`. Committa gärna `notes/` — men **inte** mappen `.obsidian/` (den ignoreras av git).
+Local graph på [[App]] eller [[Hub]]. Global Graph med orphans av = brus.

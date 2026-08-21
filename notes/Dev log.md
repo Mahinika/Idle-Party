@@ -12,6 +12,12 @@ Format:
 
 ---
 
+## 2026-08-21 — App-arkitektur i Obsidian
+
+- Nya noder: [[App]] → [[Hub]] / [[Dungeon]] / [[PARTY]] / [[POWER]] / [[META]] / [[TODAY]] / [[SpatialCombat]]
+- Öppna [[App]] + Local graph för att se hur ytorna hänger ihop
+- Länkar: [[Home]]
+
 ## 2026-08-21 — Obsidian + doc-städ
 
 - Kartan i `notes/` + Dev log; `.obsidian/` gitignoreras
