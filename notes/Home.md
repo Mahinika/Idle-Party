@@ -4,6 +4,7 @@
 
 ## Start här
 
+- [[Dev log]] — vad som hände i development (nyast överst)
 - [[Ship]] — version, What’s New, hur man skeppar
 - [[Combat]] — fight, zon, gear
 - [[Hub TODAY]] — vad spelaren jagar

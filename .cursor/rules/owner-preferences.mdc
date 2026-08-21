@@ -45,7 +45,8 @@ locks unchanged).
 - Still verify (analyze/tests / hub smoke as needed) before calling done.
 - **Commit locally** when the requested batch is verified (DoD). Don’t wait for
   a second “ska jag commita?”. **Ask before push, PR, and release tags.** Never
-  force-push or skip hooks unless the owner says so in that turn.
+  force-push or skip hooks unless the owner says so in that turn. Visible
+  batches also get a short prepend on `notes/Dev log.md` (Obsidian).
 - **Code shape:** prefer splitting a giant file (`game_logic`, `is2_shell`,
   `spatial_combat`, …) when a change needs a home. Do **not** merge more into
   those files. Keep SpatialCombat as combat authority (extract helpers, don’t

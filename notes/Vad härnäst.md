@@ -19,6 +19,7 @@ Default när du säger “gör spelet bättre” utan annat mål:
 
 ## Relaterat
 
+- [[Dev log]] — vad som nyss shippades
 - [[Ship]] — nästa tag
 - [[Play]] — bara om du frågar om Play
 - [[Home]]

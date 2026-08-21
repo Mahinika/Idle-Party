@@ -16,6 +16,7 @@
 
 ## Relaterat
 
+- [[Dev log]] — tidslinje
 - [[Play]] — var spelare installerar
 - [[Vad härnäst]] — vad som ska in i nästa tag
 - [[Home]]
