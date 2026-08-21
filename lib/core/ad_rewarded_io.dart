@@ -31,6 +31,19 @@ Future<void> warmup() async {
   }
 }
 
+Future<void> showPrivacyOptions() async {
+  if (!realAdsAvailable) return;
+  await _requestConsent();
+  final done = Completer<void>();
+  ConsentForm.showPrivacyOptionsForm((FormError? error) {
+    if (error != null) {
+      debugPrint('UMP privacy options: ${error.message}');
+    }
+    if (!done.isCompleted) done.complete();
+  });
+  await done.future.timeout(const Duration(seconds: 30), onTimeout: () {});
+}
+
 Future<AdWatchResult> showRewarded() async {
   if (!realAdsAvailable) return AdWatchResult.unavailable;
   await warmup();

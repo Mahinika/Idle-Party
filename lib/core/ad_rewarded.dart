@@ -10,4 +10,7 @@ abstract final class AdRewarded {
   static Future<void> warmup() => impl.warmup();
 
   static Future<AdWatchResult> showRewarded() => impl.showRewarded();
+
+  /// SETTINGS → AD PRIVACY. Lets EU players change or withdraw AdMob consent.
+  static Future<void> showPrivacyOptions() => impl.showPrivacyOptions();
 }

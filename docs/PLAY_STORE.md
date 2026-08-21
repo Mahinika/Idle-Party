@@ -58,13 +58,13 @@ Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not
 
 **Wired (2026-08-21):** Idle Party is in AdMob (not store-linked yet). App ID and rewarded unit **POWERUPS hour** live in `lib/core/ad_config.dart`. Release Android builds use them; debug `flutter run` still uses Google sample ads so you do not click your own ads.
 
-**Still you in AdMob / Play:**
+**AdMob done (2026-08-21):** GDPR message **Idle Party GDPR** published (Consent / Do not consent / Manage options). Privacy URL is this repo’s `docs/PRIVACY.md`. SETTINGS **AD PRIVACY** withdraws consent. Payment profile is complete. Account verification is in progress (~24h, sometimes up to 2 weeks). Store-link waits until Play is public (closed Alpha cannot be linked).
 
-1. App status **Requires review** until Google has seen a live-ads build. First real impressions can take a while.
-2. **Privacy & messaging** → European regulations → GDPR message for the app (Sweden / EEA; otherwise fill stays thin).
-3. **Payments**: legal name, address, tax, bank. Google pays after their threshold (often around USD 100).
-4. Optional later: **app-ads.txt** on the developer website in Play settings (`pub-4980376195917009`).
-5. Play Data safety + IARC ads questions before the next Play AAB with live ads.
+**Still later:**
+
+1. Wait for AdMob **account verification**, then a live-ads Android build so the app can leave **Requires review**.
+2. Optional: **app-ads.txt** on the Play developer website (`pub-4980376195917009`) once ads are live.
+3. Play Data safety + IARC ads questions before the next Play AAB with live ads.
 
 **Play Console before the next ads AAB:**
 
