@@ -1011,7 +1011,11 @@ class ClassKits {
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFD070),
 
       customId: AbilityCustomId.powerInfusion,
-      gate: AbilityGate(requireFocus: true, needsPiTarget: true),
+      gate: AbilityGate(
+        requireFocus: true,
+        needsPiTarget: true,
+        holdLongCdOnTrash: false,
+      ),
     ),
 
     // —— Mage (Fire) ——
@@ -1252,15 +1256,15 @@ class ClassKits {
       shortLabel: 'Flurry',
       description: 'Cleave nearby enemies for a short window.',
       unlockLevel: 9,
-      cooldown: 22,
+      cooldown: 24,
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
-      coeff: 0.28,
+      coeff: 0.24,
 
       customId: AbilityCustomId.bladeFlurry,
       selfBuffKind: AbilitySelfBuffKind.cleave,
-      selfBuffDuration: 5,
+      selfBuffDuration: 4,
       gate: AbilityGate(packMin: 2),
     ),
     ClassAbilityDef(
@@ -1305,7 +1309,7 @@ class ClassKits {
       resourceCost: 0,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
-      coeff: 0.72,
+      coeff: 0.62,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -1385,13 +1389,13 @@ class ClassKits {
       shortLabel: 'Sweep',
       description: 'Your strikes cleave nearby foes for a few seconds.',
       unlockLevel: 9,
-      cooldown: 18,
+      cooldown: 20,
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
 
       selfBuffKind: AbilitySelfBuffKind.cleave,
-      selfBuffDuration: 6,
+      selfBuffDuration: 5,
       gate: AbilityGate(packMin: 2),
     ),
     ClassAbilityDef(
@@ -1402,11 +1406,11 @@ class ClassKits {
       shortLabel: 'Storm',
       description: 'Spinning AoE carnage.',
       unlockLevel: 11,
-      cooldown: 35,
+      cooldown: 38,
       resourceCost: 25,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
-      coeff: 0.88,
+      coeff: 0.62,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -3541,7 +3545,7 @@ class ClassKits {
       resourceCost: 24,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.8,
+      coeff: 1.05,
 
       aoeShape: AbilityAoeShape.chain,
     ),
@@ -3553,11 +3557,11 @@ class ClassKits {
       shortLabel: 'Storm',
       description: 'Knock / AoE around self.',
       unlockLevel: 9,
-      cooldown: 16,
+      cooldown: 14,
       resourceCost: 18,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.65,
+      coeff: 0.85,
 
       aoeShape: AbilityAoeShape.rain,
     ),

@@ -5,6 +5,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
+import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
@@ -225,24 +226,59 @@ GameState enterFloor(
   required String dungeonId,
   required int floor,
   required int seed,
+
+  /// When set, force a dense AoE trash pack (normal room, N bodies).
+  /// Total combat budget stays floor-scaled; it is split across [aoeEnemyCount].
+  int? aoeEnemyCount,
 }) {
   var state = GameLogic.enterDungeon(base, dungeonId: dungeonId);
   state = GameLogic.setDungeonMode(state, DungeonMode.push);
   if (floor > 1) {
-    state = state.copyWith(highestFloorCleared: floor);
+    // Unlock travel up to [floor], then jump there (AL boards e.g. F21).
+    state = state.copyWith(highestFloorCleared: max(0, floor - 1));
     if (GameLogic.canTravelToFloor(state, floor)) {
       state = GameLogic.travelToFloor(state, floor);
     }
   }
   state = state.copyWith(layoutSeed: seed);
+  final room = aoeEnemyCount != null
+      ? state.currentRoom.copyWith(
+          type: RoomType.normal,
+          enemyCount: aoeEnemyCount.clamp(1, 40),
+        )
+      : state.currentRoom;
   state = state.copyWith(
+    currentRoom: room,
     enemies: GameLogic.createEnemyGroup(
-      state.currentRoom,
+      room,
       dungeonId: dungeonId,
       fromState: state,
     ),
   );
   return fullHeal(state);
+}
+
+/// Wake every enemy and clump them around the party so cleave/AoE kits can
+/// actually hit the full pack (multi-chamber dormancy would hide most of them).
+void prepareAoePackWorld(SpatialWorld world) {
+  if (world.heroes.isEmpty || world.enemies.isEmpty) return;
+  for (final gate in world.map.gates) {
+    world.openGateIds.add(gate.id);
+  }
+  final hx = world.heroes.first.x;
+  final hy = world.heroes.first.y;
+  final n = world.enemies.length;
+  for (var i = 0; i < n; i++) {
+    final e = world.enemies[i];
+    e.dormant = false;
+    final ang = (2 * pi * i) / n;
+    final r = 1.35 + (i % 3) * 0.35;
+    final tx = hx + r * cos(ang);
+    final ty = hy + r * sin(ang);
+    final snapped = world.map.snapToSpawnable(tx.round(), ty.round());
+    e.x = snapped.$1 + 0.5;
+    e.y = snapped.$2 + 0.5;
+  }
 }
 
 /// Prepare a party the way live/AFK combat actually sees it.
@@ -263,6 +299,9 @@ FloorSimResult simulateFloor(
   double maxSeconds = 90,
   double? dt,
   SimPlayMode mode = SimPlayMode.live,
+
+  /// Dense pack: wake + clump all enemies so AoE share is measurable.
+  bool aoePack = false,
 }) {
   final useAssist = mode == SimPlayMode.afk;
   final stepDt = dt ??
@@ -279,6 +318,9 @@ FloorSimResult simulateFloor(
       : max(1, (1.0 / stepDt).round());
 
   var world = SpatialCombat.build(state, afkAssist: useAssist);
+  if (aoePack) {
+    prepareAoePackWorld(world);
+  }
   var current = state;
   var elapsed = 0.0;
   var gold = 0;

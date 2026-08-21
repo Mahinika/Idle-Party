@@ -19,25 +19,25 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.32';
+  static const String currentVersion = '1.12.33';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.33',
+      bullets: <String>[
+        'Spells look like the spell: Fireball flames, Frost shards, Lightning zigzags, Holy crosses, Shadow coils, nature drips, rain for Blizzard/Hurricane/Healing Rain, and Consecration/Bladestorm ground that matches the kit — not a generic colored ring.',
+        'Combat reads cleaner on phone: fewer hit/crit numbers (crits still pop), no cleave spam, and chamber doors shout OPEN once — not a stuck stack of labels.',
+        'Dungeon pathing is lighter on phone: faster soft-lock unlocks, less frame hitching on big packs and busy bolt fights.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.32',
       bullets: <String>[
         'POWER → SHOP no longer sells Loadout Folio — LOADOUTS stays hidden. Extra slots you already bought still sit on the save.',
         'Safer title screen: sitting there will not overwrite a real save with a blank one if boot hiccups.',
         'Party fights feel less robotic: soft run-up and turn, idle breathe, Fire kites farther, Arcane sidesteps, and low-HP DPS limp toward the healer. Combat barks sit in small bubbles.',
-        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
-      ],
-    ),
-    ChangelogRelease(
-      version: '1.12.31',
-      bullets: <String>[
-        'Spells look like the spell: Fireball flames, Frost shards, Lightning zigzags, Holy crosses, Shadow coils, nature drips, rain for Blizzard/Hurricane/Healing Rain, and Consecration/Bladestorm ground that matches the kit — not a generic colored ring.',
-        'Combat reads cleaner on phone: fewer hit/crit numbers (crits still pop), no cleave spam, and chamber doors shout OPEN once — not a stuck stack of labels.',
-        'Dungeon pathing is lighter on phone: faster soft-lock unlocks, less frame hitching on big packs and busy bolt fights.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),

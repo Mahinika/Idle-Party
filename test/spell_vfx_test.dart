@@ -231,4 +231,64 @@ void main() {
       expect(def.vfx!.boltStyle ?? def.boltStyle, isNotNull);
     }
   });
+
+  test('themed burst kinds match spell identity', () {
+    expect(
+      SpellVfx.burstKindFor(
+        style: SpellBoltStyle.fire,
+        id: AbilityId.fireball,
+      ),
+      SpatialBurstKind.flame,
+    );
+    expect(
+      SpellVfx.burstKindFor(
+        style: SpellBoltStyle.frost,
+        id: AbilityId.howlingBlast,
+      ),
+      SpatialBurstKind.shards,
+    );
+    expect(
+      SpellVfx.burstKindFor(
+        style: SpellBoltStyle.lightning,
+        id: AbilityId.chainLightning,
+      ),
+      SpatialBurstKind.beam,
+    );
+    expect(
+      SpellVfx.burstKindFor(
+        style: SpellBoltStyle.holy,
+        id: AbilityId.consecration,
+      ),
+      SpatialBurstKind.cross,
+    );
+    expect(
+      SpellVfx.burstKindFor(
+        style: SpellBoltStyle.nature,
+        shape: AbilityAoeShape.rain,
+        id: AbilityId.hurricane,
+      ),
+      SpatialBurstKind.rain,
+    );
+    expect(
+      SpellVfx.burstKindFor(
+        style: SpellBoltStyle.shadow,
+        id: AbilityId.deathCoil,
+      ),
+      SpatialBurstKind.skull,
+    );
+    expect(
+      SpellVfx.groundKindFor(
+        style: SpellBoltStyle.holy,
+        id: AbilityId.consecration,
+      ),
+      SpatialGroundFxKind.holy,
+    );
+    expect(
+      SpellVfx.groundKindFor(
+        style: SpellBoltStyle.weapon,
+        id: AbilityId.bladestorm,
+      ),
+      SpatialGroundFxKind.steel,
+    );
+  });
 }

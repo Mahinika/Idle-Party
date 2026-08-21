@@ -44,7 +44,7 @@ void main() {
     final mage = world.heroes.firstWhere((h) => !h.isPet);
     // Fire ticker sets mild personal heat; spam tax stays on spell hits.
     expect(mage.kitOutMul, closeTo(1.24, 0.001));
-    expect(SpatialCombat.casterAbilityTax, closeTo(0.85, 0.001));
+    expect(SpatialCombat.casterAbilityTax, closeTo(0.92, 0.001));
   });
 
   test('Inner Fire sets disc heal mul', () {
@@ -93,7 +93,7 @@ void main() {
     world = SpatialCombat.step(world, state, dt: 0.1).world;
     final owl = world.heroes.firstWhere((h) => !h.isPet);
     expect(owl.kitInMul, lessThan(1.0));
-    expect(owl.kitOutMul, closeTo(1.10, 0.001));
+    expect(owl.kitOutMul, closeTo(1.16, 0.001));
   });
 }
 

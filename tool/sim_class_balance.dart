@@ -31,6 +31,7 @@ import 'sim_harness.dart';
 /// - `--quick` — light band, F5, Prot+Disc only (CI gate).
 /// - `--share-only` — like quick but compact share table + JSON; skip clear% noise.
 /// - `--focus=a,b` — only these DPS [HeroSpecId.name] values.
+/// - `--aoe-enemies=N` — dense AoE pack of N awake trash (clumped near party).
 ///
 /// Direct (may fail outside Flutter embedder on some SDKs):
 /// ```
@@ -49,20 +50,27 @@ String runClassBalanceSim(List<String> args) {
   final dungeonId = _argString(args, 'dungeon') ?? 'sandy';
   final mode = _parseMode(_argString(args, 'mode') ?? 'live');
   final focus = _parseFocus(_argString(args, 'focus'));
+  final aoeEnemyCount = _argInt(args, 'aoe-enemies', 0);
+  final useAoe = aoeEnemyCount > 0;
+  final ascensionLevel = _argInt(args, 'al', 0);
+  final floorOverride = _argInt(args, 'floor', 0);
 
   seedEquipmentRng(42);
 
-  final bands = quick
-      ? <String>['light']
-      : (bandFilter != null
-          ? <String>[bandFilter]
+  final bands = bandFilter != null
+      ? <String>[bandFilter]
+      : (quick
+          ? <String>['light']
           : <String>['fresh', 'light', 'mid']);
   // Mid focuses on clear-rate gates (F5 + boss). Fresh/light keep F1+F5.
-  final floors = quick
-      ? <int>[5]
-      : (bands.length == 1 && bands.first == 'mid')
+  // `--floor=N` pins a single floor (e.g. AL20 F21 AoE board).
+  final floors = floorOverride > 0
+      ? <int>[floorOverride]
+      : (quick
           ? <int>[5]
-          : <int>[1, 5];
+          : (bands.length == 1 && bands.first == 'mid')
+              ? <int>[5]
+              : <int>[1, 5]);
 
   final buf = StringBuffer();
   void log(String line) {
@@ -75,11 +83,14 @@ String runClassBalanceSim(List<String> args) {
   log('');
   log('- trials: $trials');
   log('- party level: $partyLevel');
+  log('- ascension: AL$ascensionLevel');
   log('- bands: ${bands.join(', ')}');
   log('- dungeon: $dungeonId');
   log('- mode: ${mode.name} (flask+GH+auto-equip unless bare)');
   log('- quick: $quick');
   if (shareOnly) log('- share-only: true');
+  if (useAoe) log('- aoe-enemies: $aoeEnemyCount (awake + clumped)');
+  if (floorOverride > 0) log('- floor: $floorOverride');
   if (focus.isNotEmpty) log('- focus: ${focus.join(', ')}');
   log('');
 
@@ -123,7 +134,10 @@ String runClassBalanceSim(List<String> args) {
           ),
       };
       for (final floor in floorList) {
-        log('## DPS · $band · ${anchor.$1} · F$floor · ${mode.name}');
+        final packLabel = useAoe ? ' · AoE×$aoeEnemyCount' : '';
+        log(
+          '## DPS · $band · ${anchor.$1} · F$floor · ${mode.name}$packLabel',
+        );
         log('');
         final rows = <_AggRow>[];
         for (final dps in dpsSpecs) {
@@ -138,6 +152,8 @@ String runClassBalanceSim(List<String> args) {
               partyLevel: partyLevel,
               trials: trials,
               mode: mode,
+              aoeEnemyCount: useAoe ? aoeEnemyCount : null,
+              ascensionLevel: ascensionLevel,
             ),
           );
         }
@@ -281,6 +297,8 @@ _AggRow _runAgg({
   required int partyLevel,
   required int trials,
   required SimPlayMode mode,
+  int? aoeEnemyCount,
+  int ascensionLevel = 0,
 }) {
   var clears = 0;
   var wipes = 0;
@@ -290,20 +308,38 @@ _AggRow _runAgg({
   final shares = <double>[];
   final dpsVals = <double>[];
   final focusHp = <double>[];
+  final useAoe = aoeEnemyCount != null && aoeEnemyCount > 0;
+  final maxSeconds = useAoe || ascensionLevel >= 10 ? 180.0 : 90.0;
 
   for (var t = 0; t < trials; t++) {
     final trialSeed = 1000 + t * 97 + floor * 13 + focusSpec.index * 3;
     seedEquipmentRng(42 + t);
     GameLogic.random = Random(trialSeed ^ 0x5EED);
     var state = createPartyState(partySpecs: partySpecs);
+    if (ascensionLevel > 0) {
+      state = state.copyWith(
+        ascensionLevel: ascensionLevel,
+        highestDungeonCleared: 14,
+        // Blessing stacks roughly track Ascend count for endgame boards.
+        metaDepth: state.metaDepth.copyWith(
+          ascendBlessings: ascensionLevel,
+        ),
+      );
+    }
     state = prepareSimParty(state, band: band, partyLevel: partyLevel);
     state = enterFloor(
       state,
       dungeonId: dungeonId,
       floor: floor,
       seed: trialSeed,
+      aoeEnemyCount: useAoe ? aoeEnemyCount : null,
     );
-    final r = simulateFloor(state, mode: mode);
+    final r = simulateFloor(
+      state,
+      mode: mode,
+      maxSeconds: maxSeconds,
+      aoePack: useAoe,
+    );
     if (r.cleared) {
       clears++;
       clearTimes.add(r.seconds);

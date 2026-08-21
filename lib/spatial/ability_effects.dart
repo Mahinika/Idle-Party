@@ -506,9 +506,9 @@ abstract final class AbilityEffectRunner {
         // HoT healer amp — match / slightly lead peer healer passives.
         hero.kitHealMul *= 1.34;
 
-      // —— melee DPS (target ~1.22–1.34; lift Arms/Ret/Frost DK off the floor) ——
+      // —— melee DPS (target ~1.22–1.34; Arms leans on Sweeping, not raw mul) ——
       case AbilityId.armsStance:
-        hero.kitOutMul *= 1.28;
+        hero.kitOutMul *= 1.26;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
         hero.kitOutMul *= 1.30;
@@ -549,28 +549,28 @@ abstract final class AbilityEffectRunner {
 
       // —— casters: identity buffs; spam tax is casterAbilityTax only ——
       case AbilityId.shadowform:
-        hero.kitOutMul *= 1.10;
+        hero.kitOutMul *= 1.16;
         hero.kitInMul *= 1.04;
       case AbilityId.elementalFocus:
-        hero.kitOutMul *= 1.08;
-        hero.kitHasteMul *= 1.08;
+        hero.kitOutMul *= 1.20;
+        hero.kitHasteMul *= 1.10;
       case AbilityId.arcanePowerPassive:
-        hero.kitOutMul *= 1.06;
+        hero.kitOutMul *= 1.12;
       case AbilityId.frostArmor:
         hero.kitInMul *= 0.92;
-        hero.kitOutMul *= 1.08;
+        hero.kitOutMul *= 1.12;
         hero.kitRootBonus += 0.5;
       case AbilityId.soulSiphon:
-        hero.kitOutMul *= 1.08;
+        hero.kitOutMul *= 1.14;
         hero.kitHealMul *= 1.08;
       case AbilityId.demonicKnowledge:
         // Pet-family identity: personal power + haste; pet AA/empower carries share.
-        hero.kitOutMul *= 0.98;
+        hero.kitOutMul *= 1.02;
         hero.kitHasteMul *= 1.06;
       case AbilityId.cataclysm:
-        hero.kitOutMul *= 1.06;
+        hero.kitOutMul *= 1.12;
       case AbilityId.moonkinForm:
-        hero.kitOutMul *= 1.10;
+        hero.kitOutMul *= 1.16;
         hero.kitInMul *= 0.92;
 
       // —— original four kits ——
@@ -1079,6 +1079,26 @@ abstract final class AbilityEffectRunner {
           labelArgb: null,
         ),
       );
+      if (!reducedVfx) {
+        SpellVfx.spawnCast(
+          world,
+          hero: hero,
+          style: style,
+          id: def.id,
+          radius: 0.55,
+        );
+        if (style == SpellBoltStyle.lightning || style == SpellBoltStyle.holy) {
+          SpellVfx.spawnBeam(
+            world,
+            x: hero.x,
+            y: hero.y,
+            x2: enemy.x,
+            y2: enemy.y,
+            argb: tint,
+            life: 0.22,
+          );
+        }
+      }
       return;
     }
 
@@ -1093,12 +1113,13 @@ abstract final class AbilityEffectRunner {
     SpatialCombat._applyTankSoftThreat(hero, enemy);
     SpatialCombat._spawnSlash(world, from: hero, to: enemy, isCrit: false);
     if (!reducedVfx) {
-      SpatialCombat._spawnSpark(
+      SpellVfx.spawnImpact(
         world,
         x: enemy.x,
         y: enemy.y,
-        argb: tint,
-        radius: 0.45,
+        style: style,
+        id: def.id,
+        radius: 0.5,
       );
     }
     SpatialCombat._spawnFloater(
@@ -1138,6 +1159,16 @@ abstract final class AbilityEffectRunner {
       SpatialCombat.burstArgbForStyle(style),
       reducedVfx,
     );
+    if (!reducedVfx) {
+      SpellVfx.spawnCast(
+        world,
+        hero: hero,
+        style: style,
+        shape: def.aoeShape,
+        id: def.id,
+        radius: 0.85,
+      );
+    }
 
     final shape =
         def.aoeShape ??
@@ -1241,13 +1272,23 @@ abstract final class AbilityEffectRunner {
         ),
       );
       if (!reducedVfx) {
-        SpatialCombat._spawnSpark(
+        SpellVfx.spawnBeam(
+          world,
+          x: px,
+          y: py,
+          x2: t.x,
+          y2: t.y,
+          argb: SpatialCombat.burstArgbForStyle(style),
+          life: 0.32 + delay * 0.1,
+        );
+        SpellVfx.spawnImpact(
           world,
           x: t.x,
           y: t.y,
-          argb: SpatialCombat.burstArgbForStyle(style),
-          radius: 0.55 - i * 0.06,
-          life: 0.35 + delay * 0.15,
+          style: style,
+          shape: AbilityAoeShape.chain,
+          id: def.id,
+          radius: 0.5 - i * 0.05,
         );
       }
       px = t.x;
@@ -1316,6 +1357,14 @@ abstract final class AbilityEffectRunner {
     hero.attackFlash = 0.18;
 
     if (!reducedVfx) {
+      SpellVfx.spawnCast(
+        world,
+        hero: hero,
+        style: style,
+        shape: AbilityAoeShape.nova,
+        id: def.id,
+        radius: radius * 0.45,
+      );
       SpatialCombat._spawnRing(
         world,
         x: hero.x,
@@ -1323,14 +1372,6 @@ abstract final class AbilityEffectRunner {
         argb: argb,
         radius: radius * 0.55,
         life: 0.4,
-      );
-      SpatialCombat._spawnBurst(
-        world,
-        x: hero.x,
-        y: hero.y,
-        argb: argb,
-        radius: radius * 0.35,
-        life: 0.28,
       );
     }
 
@@ -1378,11 +1419,13 @@ abstract final class AbilityEffectRunner {
         SpatialCombat._applyTankSoftThreat(hero, e);
         _applyBleedIfNeeded(world, hero, e, def, raw);
         if (!reducedVfx) {
-          SpatialCombat._spawnSpark(
+          SpellVfx.spawnImpact(
             world,
             x: e.x,
             y: e.y,
-            argb: argb,
+            style: style,
+            shape: AbilityAoeShape.nova,
+            id: def.id,
             radius: 0.5,
           );
           SpatialCombat._spawnFloater(
@@ -1432,6 +1475,15 @@ abstract final class AbilityEffectRunner {
         : hero;
 
     if (!reducedVfx) {
+      SpatialCombat._spawnBurst(
+        world,
+        x: anchor.x,
+        y: anchor.y,
+        argb: argb,
+        radius: radius * 0.55,
+        kind: SpatialBurstKind.rain,
+        life: 0.55,
+      );
       SpatialCombat._spawnRing(
         world,
         x: anchor.x,
@@ -1464,13 +1516,14 @@ abstract final class AbilityEffectRunner {
         ),
       );
       if (!reducedVfx) {
-        SpatialCombat._spawnSpark(
+        SpellVfx.spawnImpact(
           world,
           x: e.x,
           y: e.y,
-          argb: argb,
+          style: style,
+          shape: AbilityAoeShape.rain,
+          id: def.id,
           radius: 0.45,
-          life: 0.35 + i * 0.04,
         );
       }
       i++;
@@ -1495,6 +1548,14 @@ abstract final class AbilityEffectRunner {
     hero.attackFlash = 0.2;
 
     if (!reducedVfx) {
+      SpellVfx.spawnCast(
+        world,
+        hero: hero,
+        style: style,
+        shape: AbilityAoeShape.ground,
+        id: def.id,
+        radius: radius * 0.4,
+      );
       SpatialCombat._spawnRing(
         world,
         x: hero.x,
@@ -1510,14 +1571,6 @@ abstract final class AbilityEffectRunner {
         argb: (argb & 0x00FFFFFF) | 0x66000000,
         radius: radius * 0.7,
         life: 0.4,
-      );
-      SpatialCombat._spawnBurst(
-        world,
-        x: hero.x,
-        y: hero.y,
-        argb: argb,
-        radius: radius * 0.35,
-        life: 0.3,
       );
       // Signature spin arcs for Bladestorm.
       if (def.id == AbilityId.bladestorm) {
@@ -1536,13 +1589,13 @@ abstract final class AbilityEffectRunner {
       }
       // Purple nova pop for Shadowfury.
       if (def.id == AbilityId.shadowfury) {
-        SpatialCombat._spawnRing(
+        SpellVfx.spawnImpact(
           world,
           x: hero.x,
           y: hero.y,
-          argb: 0xFFB060E0,
-          radius: radius * 0.9,
-          life: 0.55,
+          style: SpellBoltStyle.shadow,
+          id: AbilityId.shadowfury,
+          radius: radius * 0.7,
         );
       }
       final vfx = def.vfx;
@@ -1556,6 +1609,7 @@ abstract final class AbilityEffectRunner {
           argb: vfx?.groundArgb ?? ((argb & 0x00FFFFFF) | 0x55000000),
           radius: vfx?.groundRadius ?? radius,
           life: discLife ?? 2.5,
+          kind: SpellVfx.groundKindFor(style: style, id: def.id),
         );
       }
     }
@@ -1576,11 +1630,13 @@ abstract final class AbilityEffectRunner {
       _applyBleedIfNeeded(world, hero, e, def, raw);
       hitCount++;
       if (!reducedVfx) {
-        SpatialCombat._spawnSpark(
+        SpellVfx.spawnImpact(
           world,
           x: e.x,
           y: e.y,
-          argb: argb,
+          style: style,
+          shape: AbilityAoeShape.ground,
+          id: def.id,
           radius: 0.55,
         );
         // Cap per-target numbers on big ground AOEs.
@@ -1630,13 +1686,13 @@ abstract final class AbilityEffectRunner {
       );
     }
     if (!reducedVfx) {
-      SpatialCombat._spawnRing(
+      SpellVfx.spawnImpact(
         world,
         x: focus.x,
         y: focus.y,
-        argb: 0xAA80D0FF,
+        style: style,
+        id: def.id,
         radius: 0.7,
-        life: 0.45,
       );
     }
   }
@@ -1667,12 +1723,13 @@ abstract final class AbilityEffectRunner {
     }
     _announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
-      SpatialCombat._spawnSpark(
+      SpellVfx.spawnImpact(
         world,
         x: ally.x,
         y: ally.y,
-        argb: tint,
-        radius: 0.55,
+        style: style,
+        id: def.id,
+        radius: 0.6,
       );
       SpatialCombat._spawnRing(
         world,
@@ -1697,6 +1754,14 @@ abstract final class AbilityEffectRunner {
     _absorbLowest(world, caster, ally, def.coeff, def.shortLabel);
     _announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
+      SpellVfx.spawnImpact(
+        world,
+        x: ally.x,
+        y: ally.y,
+        style: style,
+        id: def.id,
+        radius: 0.7,
+      );
       SpatialCombat._spawnRing(
         world,
         x: ally.x,
@@ -1853,6 +1918,13 @@ abstract final class AbilityEffectRunner {
     }
     _announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
+      SpellVfx.spawnCast(
+        world,
+        hero: caster,
+        style: style,
+        id: def.id,
+        radius: 1.1,
+      );
       SpatialCombat._spawnRing(
         world,
         x: caster.x,
@@ -1870,6 +1942,7 @@ abstract final class AbilityEffectRunner {
           argb: (tint & 0x00FFFFFF) | 0x55000000,
           radius: def.vfx?.groundRadius ?? 2.8,
           life: def.vfx?.groundLife ?? discLife ?? 4.0,
+          kind: SpellVfx.groundKindFor(style: style, id: def.id),
         );
       }
     }
