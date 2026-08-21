@@ -29,7 +29,7 @@ Never invent a public privacy host or Play listing URL.
 |---------|-------------|
 | Signing secrets | `KEYSTORE_BASE64` + `KEY_PROPERTIES` work for CI tag builds |
 | Privacy URL | URL opens in a normal browser (raw/GitHub blob OK for prep) |
-| Data safety | Form matches [PRIVACY.md](../../../docs/PRIVACY.md): local save, no ads/accounts |
+| Data safety | Form matches [PRIVACY.md](../../../docs/PRIVACY.md): local save, optional Play Games, optional rewarded ads |
 | IARC / rating | Questionnaire done; mild fantasy combat expectations |
 | Listing copy | Idle Party short + full description (English), no Flutter placeholders |
 | Screenshots | 4–6 current hub/dungeon shots + feature graphic; icon from custom app icon |

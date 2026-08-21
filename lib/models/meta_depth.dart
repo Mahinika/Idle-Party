@@ -238,6 +238,7 @@ class MetaDepthState {
     this.apexCraftSlot = '',
     this.apexTargetMatId = '',
     this.apexTargetProgress = 0,
+    this.adBoostUntilMs = 0,
   });
 
   final int sanctuaryXpLevel;
@@ -390,6 +391,9 @@ class MetaDepthState {
   /// Boss-clear progress toward guaranteed target mat (resets on grant).
   final int apexTargetProgress;
 
+  /// UTC millis when optional POWERUPS (ad boost) ends. 0 = none. Survives Ascend.
+  final int adBoostUntilMs;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -473,6 +477,7 @@ class MetaDepthState {
     String? apexCraftSlot,
     String? apexTargetMatId,
     int? apexTargetProgress,
+    int? adBoostUntilMs,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -561,6 +566,7 @@ class MetaDepthState {
       apexCraftSlot: apexCraftSlot ?? this.apexCraftSlot,
       apexTargetMatId: apexTargetMatId ?? this.apexTargetMatId,
       apexTargetProgress: apexTargetProgress ?? this.apexTargetProgress,
+      adBoostUntilMs: adBoostUntilMs ?? this.adBoostUntilMs,
     );
   }
 
@@ -639,6 +645,7 @@ class MetaDepthState {
     'apexCraftSlot': apexCraftSlot,
     'apexTargetMatId': apexTargetMatId,
     'apexTargetProgress': apexTargetProgress,
+    'adBoostUntilMs': adBoostUntilMs,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -760,6 +767,7 @@ class MetaDepthState {
       apexCraftSlot: (json['apexCraftSlot'] as String?) ?? '',
       apexTargetMatId: (json['apexTargetMatId'] as String?) ?? '',
       apexTargetProgress: (json['apexTargetProgress'] as num?)?.toInt() ?? 0,
+      adBoostUntilMs: (json['adBoostUntilMs'] as num?)?.toInt() ?? 0,
     );
   }
 }

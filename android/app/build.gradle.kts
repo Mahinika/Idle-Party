@@ -35,6 +35,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Google sample AdMob app id until KEYSTORE / AdMob production IDs exist.
+        val admobAppId = (project.findProperty("admobAppId") as String?)
+            ?: System.getenv("ADMOB_APP_ID")
+            ?: "ca-app-pub-3940256099942544~3347511713"
+        manifestPlaceholders["admobAppId"] = admobAppId
     }
 
     signingConfigs {

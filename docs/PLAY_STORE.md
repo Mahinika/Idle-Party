@@ -12,9 +12,9 @@ Package id: **`com.idleparty.app`**
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ✅ | Console saved 2026-08-16: branch blob `docs/PRIVACY.md` on `cursor/keystone-habit-b46b` (Play Games + delete steps). Switch to `main` after merge. |
-| Data safety form | ✅ | Published 2026-08-16 with listing + privacy URL. Optional Play Games: User IDs, Other actions (gameplay), Files and docs (Saved Games). Collected only (not shared); encrypted in transit; OAuth; delete URLs = branch PRIVACY.md. No ads / no Idle Party analytics. |
+| Data safety form | ⏳ ads | **Must update** before a Play build with POWERUPS ads: Advertising ID + Ads. Was published 2026-08-16 as no-ads + optional Play Games. |
+| IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). Re-answer ads questions before shipping ads to Play testers. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed 1.12.9 build. |
-| IARC / content rating | ✅ | Completed 2026-08-08 (mild fantasy combat). Console shows PEGI 12 / ESRB Everyone 10+ / IARC 7+ (and regional equivalents). No chat / gambling / ads. |
 | Store listing copy (EN) | ✅ live | Default locale **en-US only** (no extra listing languages). Honesty copy from `docs/STORE_LISTING.md`. Verified 2026-08-20. |
 | Screenshots + feature graphic | ✅ live | Six phone shots (showcase AL3 + English top captions, 1080×1920). Feature graphic + icon from owned `app_icon`. Tablet shots still older (phone-first). |
 
@@ -49,7 +49,18 @@ over Play ops unless the owner asks about Play.
 - [x] Privacy policy URL in Play Console (2026-08-16):  
   `https://github.com/Mahinika/Idle-Party/blob/cursor/keystone-habit-b46b/docs/PRIVACY.md`  
   (switch to `main` after this branch merges).
-- [x] Data safety form (2026-08-16): **optional Play Games** (User IDs / gameplay Other actions / Saved Games files); collected not shared; encrypted in transit; OAuth; delete account + data URLs point at [PRIVACY.md](PRIVACY.md). **No ads**; **no Idle Party analytics servers**; clipboard export/import is optional and user-initiated. Saved and **published** 2026-08-16 from Publishing overview (with listing + privacy URL).
+- [x] Data safety form (2026-08-16): **optional Play Games** (User IDs / gameplay Other actions / Saved Games files); collected not shared; encrypted in transit; OAuth; delete account + data URLs point at [PRIVACY.md](PRIVACY.md). **No Idle Party analytics servers**; clipboard export/import is optional and user-initiated.
+- [ ] **Rewarded ads (1.12.27):** update Data safety (Ads + Advertising ID, shared with Google AdMob) and re-run IARC ads questions before the next Play AAB. Privacy copy is in [PRIVACY.md](PRIVACY.md). Until a real AdMob app exists, builds use Google **sample** App/unit IDs (`android/app/build.gradle.kts` `admobAppId` + `--dart-define=ADMOB_REWARDED_UNIT_ID`).
+
+### Rewarded ads / AdMob
+
+Hub **POWERUPS**: player-started rewarded ad → +1 hour of ×2 gold and +25% ATK (stack duration, max 24h).
+
+1. Create an AdMob app for `com.idleparty.app` and a **rewarded** unit.
+2. Set Gradle `admobAppId` (or env `ADMOB_APP_ID`) to the real App ID.
+3. Build with `--dart-define=ADMOB_REWARDED_UNIT_ID=ca-app-pub-…/…` (real unit).
+4. Turn on GDPR UMP messaging in AdMob (owner is in the EEA).
+5. Update Play Data safety + IARC; do not ship sample IDs as “live” ads on production.
 
 ### Play Games setup (leaderboards + cloud)
 
@@ -68,7 +79,7 @@ Suggested Description (en-US):
 
 ## Content rating / store listing notes
 
-- [x] Content rating questionnaire (IARC) completed 2026-08-08 — mild fantasy combat; PEGI 12 / ESRB Everyone 10+ / IARC 7+ (no chat, gambling, or ads).
+- [x] Content rating questionnaire (IARC) completed 2026-08-08 — mild fantasy combat; PEGI 12 / ESRB Everyone 10+ / IARC 7+ (no chat / gambling). **Re-answer the ads questions** before shipping POWERUPS ads to Play.
 - [x] Short + full description (en-US only — no extra listing locales) live 2026-08-20 from `docs/STORE_LISTING.md`.
 - [x] Phone screenshots re-shot + uploaded 2026-08-20 (`tool/store_listing/out/`, top captions); feature graphic + icon still from owned `app_icon` (icon refresh 2026-08-16).
 - [ ] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*`.

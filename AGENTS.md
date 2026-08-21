@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.26**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.27**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -15,7 +15,8 @@ Agents **must** choose methods, skills, and verify steps themselves — see
 Preferences (do not re-ask): **content/feel over Play busywork**, first-hour
 **progression/power**, early calm / **endgame grindy OK**, **polish kits** before
 many new specs, **no new zones or classes for now**, hub TODAY / Ascend Blessing / unlock teasers for
-“what am I chasing”, **no IAP for now**, **Android phone-only** (portrait; no
+“what am I chasing”, **no IAP for now**, optional hub **POWERUPS** rewarded ads
+(1 ad = 1 hour, stackable), **Android phone-only** (portrait; no
 iOS/web product), **large batches**, English in-game copy, fairness-first balance,
 **commit locally when a batch is verified**, ask before push / PR / tag.
 Near-term execution order:
@@ -32,7 +33,7 @@ for real players — tap / long-press.
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (last submit **1.12.25 / 55**, 2026-08-20; now live for testers). Working ship is
-**1.12.26**. Production still needs **12 closed testers × 14 days**.
+**1.12.27**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -165,6 +166,8 @@ ChaseContract).
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
+**Hub POWERUPS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded`. 1 ad = 1 hour of ×2 gold and +25% ATK; duration stacks (max 24h). Web playtest grants a preview hour. Ads never interrupt combat.
+
 ## World path (15 zones)
 
 | # | id | Name |
@@ -232,6 +235,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Shared menus | `lib/core/menu_router.dart`, `menu_alerts.dart` · `lib/ui/shell/menu_surface.dart`, `app_bottom_bar.dart` |
 | Hub | `lib/ui/hub_screen.dart` |
 | Hub TODAY chase | `lib/core/hub_chase.dart` |
+| Hub POWERUPS ads | `lib/core/ad_boost.dart`, `ad_rewarded.dart` · `lib/ui/hub/hub_powerups.dart` |
 | Hub gold/min (keep AFK) | `lib/core/gold_income.dart` |
 | POWER INCOME tab | `lib/ui/shell/income_overlay.dart` |
 | Apex hub (craft / vault / target meter) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) |

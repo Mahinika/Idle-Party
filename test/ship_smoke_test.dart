@@ -176,6 +176,12 @@ void main() {
     final bag = GameGuides.topics.firstWhere((t) => t.id == 'bag_equip');
     expect(bag.body.toLowerCase(), contains('weapons are a hard gate'));
     expect(bag.body.toLowerCase(), contains('no daggers'));
+
+    final powerups = GameGuides.topics.firstWhere((t) => t.id == 'powerups');
+    expect(powerups.title, 'POWERUPS');
+    expect(powerups.body.toLowerCase(), contains('ad'));
+    expect(powerups.body.toLowerCase(), contains('1 hour'));
+    expect(powerups.body.toLowerCase(), contains('24 hours'));
   });
 
   test('fresh TODAY chase is grow-the-party, not Daily', () {

@@ -15,6 +15,8 @@ import '../models/pet.dart';
 import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
 import '../ui/game_audio.dart';
+import 'ad_boost.dart';
+import 'ad_rewarded.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'gear_service.dart';
@@ -541,6 +543,7 @@ class GameDirector extends ChangeNotifier {
       _syncHubIdleTimer();
       notifyListeners();
       unawaited(refreshPlayUpdateNotice());
+      unawaited(AdRewarded.warmup());
     }
   }
 
@@ -2306,6 +2309,53 @@ class GameDirector extends ChangeNotifier {
       final gained = _state.essence - before;
       final extra = notices.isEmpty ? '' : ' · ${notices.join(' · ')}';
       showToast('Daily vault claimed · +${gained}e$extra', life: 2.8);
+    }
+  }
+
+  /// Playtest / web: grant one POWERUPS hour without an ad.
+  void grantPowerupHour({int? nowMs}) {
+    final before = AdBoost.remainingMs(
+      _state.metaDepth.adBoostUntilMs,
+      nowMs: nowMs,
+    );
+    _applyUpgrade(GameLogic.grantAdBoostHour(_state, nowMs: nowMs));
+    final after = AdBoost.remainingMs(
+      _state.metaDepth.adBoostUntilMs,
+      nowMs: nowMs,
+    );
+    if (after > before) {
+      GameAudio.unlock();
+      final left = AdBoost.formatRemaining(
+        _state.metaDepth.adBoostUntilMs,
+        nowMs: nowMs,
+      );
+      showToast('Powerups +1 hour · $left left', life: 2.4);
+    } else {
+      showToast('Powerups already stacked to 24 hours', life: 2.0);
+    }
+  }
+
+  /// Android: show a rewarded ad, then stack +1 hour on success.
+  Future<void> watchPowerupAd() async {
+    if (AdBoost.atStackCap(_state.metaDepth.adBoostUntilMs)) {
+      showToast('Powerups already stacked to 24 hours', life: 2.0);
+      return;
+    }
+    if (!AdRewarded.realAdsAvailable) {
+      showToast('Ads play on the Android app', life: 2.2);
+      return;
+    }
+    showToast('Loading ad…', life: 1.4);
+    final result = await AdRewarded.showRewarded();
+    switch (result) {
+      case AdWatchResult.rewarded:
+        grantPowerupHour();
+      case AdWatchResult.skipped:
+        showToast('Watch the whole ad to get the hour', life: 2.2);
+      case AdWatchResult.failed:
+        showToast('Ad not ready — try again in a bit', life: 2.2);
+      case AdWatchResult.unavailable:
+        showToast('Ads play on the Android app', life: 2.2);
     }
   }
 

@@ -19,6 +19,19 @@ abstract final class GameGuides {
           'are just the three starter jobs: Shield, Healer, Damage.',
     ),
     GuideTopic(
+      id: 'powerups',
+      title: 'POWERUPS',
+      body:
+          'Hub POWERUPS is optional. Watch a short ad for 1 hour of double gold '
+          'and +25% attack.\n\n'
+          '• One finished ad = one hour. Watch again to add another hour.\n'
+          '• Time stacks up to 24 hours. The gold and attack bonuses do not stack '
+          'higher — only the timer does.\n'
+          '• Double gold applies to hub AFK gold and combat gold.\n'
+          '• Ads never pop up in a fight. You choose when to watch.\n'
+          '• Remaining time survives Ascend.',
+    ),
+    GuideTopic(
       id: 'world_path',
       title: 'WORLD PATH',
       body:

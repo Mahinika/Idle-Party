@@ -65,6 +65,7 @@ LONG-TERM GOALS
 FAIR PLAY
 • Single-player — no idle-party account required.
 • Optional Google Play Games for seasonal boards and cloud save (you can stay offline).
+• Optional rewarded ads on the hub (POWERUPS) for a timed boost — never mid-fight.
 • Built for portrait phones.
 
 Install, start a party, and take one more floor.

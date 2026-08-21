@@ -12,6 +12,7 @@ import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
 import '../models/vfx_quality.dart';
+import 'ad_boost.dart';
 import 'keystone.dart';
 
 int _jsonInt(dynamic value, [int fallback = 0]) {
@@ -662,7 +663,7 @@ class GameState {
   }
 
   CombatRatings ratingsFor(PartyHero hero) {
-    return CombatRatings.fromHeroSheet(
+    final sheet = CombatRatings.fromHeroSheet(
       hero: hero,
       gearStrength: hero.gearStrengthBonus,
       gearAgility: hero.gearAgilityBonus,
@@ -679,6 +680,10 @@ class GameState {
       guardBonus: tankGuardBonusFor(hero),
       auraBonus: casterAuraBonusFor(hero),
     );
+    final atkPct = AdBoost.isActive(metaDepth.adBoostUntilMs)
+        ? AdBoost.attackPercent
+        : 0;
+    return sheet.withAttackPercent(atkPct);
   }
 
   int effectiveHeroAttack(PartyHero hero) => ratingsFor(hero).effectiveAttack;

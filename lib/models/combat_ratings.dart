@@ -240,6 +240,24 @@ class CombatRatings {
   }
 
   int get effectiveAttack => physicalAttack;
+
+  /// Optional timed POWERUPS (+ATK%). HP/DEF/crit stay the same.
+  CombatRatings withAttackPercent(int percent) {
+    if (percent <= 0) return this;
+    return CombatRatings(
+      strength: strength,
+      agility: agility,
+      stamina: stamina,
+      intellect: intellect,
+      spirit: spirit,
+      attackPower: attackPower,
+      physicalAttack: physicalAttack + (physicalAttack * percent) ~/ 100,
+      spellPower: spellPower + (spellPower * percent) ~/ 100,
+      maxHp: maxHp,
+      defense: defense,
+      critChance: critChance,
+    );
+  }
 }
 
 /// Spirit → mana regen (idle, no 5SR). kSpirit ≈ 0.2.

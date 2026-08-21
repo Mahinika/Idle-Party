@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'ad_boost.dart';
 import 'game_state.dart';
 import 'game_logic.dart';
 
@@ -24,8 +25,11 @@ abstract final class GoldIncome {
     if (raw <= 0) return 0;
     final torched = raw + (raw * state.torchOfflineGoldPercent) ~/ 100;
     final percent = goldFindPercent(state);
-    if (percent <= 0) return torched;
-    return torched + (torched * percent) ~/ 100;
+    final found = percent <= 0
+        ? torched
+        : torched + (torched * percent) ~/ 100;
+    if (!AdBoost.isActive(state.metaDepth.adBoostUntilMs)) return found;
+    return found * 2;
   }
 
   static int rawFromSeconds(GameState state, int seconds) {
@@ -104,6 +108,10 @@ abstract final class GoldIncome {
     final bits = [
       for (final p in multiplierParts(state)) '${p.$1} +${p.$2}%',
     ];
+    if (AdBoost.isActive(state.metaDepth.adBoostUntilMs)) {
+      bits.add('Ad ×2 gold');
+      bits.add('Ad +${AdBoost.attackPercent}% ATK');
+    }
     if (bits.isEmpty) return 'Gold +0%';
     return bits.join(' · ');
   }

@@ -20,6 +20,7 @@ import 'meta_overlays.dart';
 import '../core/menu_router.dart';
 import 'shell/app_bottom_bar.dart';
 import 'hub/hub_header.dart';
+import 'hub/hub_powerups.dart';
 import 'hub/hub_today_card.dart';
 import 'hub/hub_world_map.dart';
 
@@ -441,6 +442,13 @@ class _HubScreenState extends State<HubScreen>
                                             ? null
                                             : actionLabel,
                                         onAction: foldEnter ? null : onAction,
+                                      ),
+                                      HubPowerupsCard(
+                                        state: state,
+                                        onOpen: () => openPowerupsSheet(
+                                          context,
+                                          director,
+                                        ),
                                       ),
                                       HubMetaPulse(
                                         state: state,

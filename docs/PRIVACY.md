@@ -6,7 +6,7 @@ Idle Party is a single-player idle RPG. This document describes how the app hand
 
 - **No Idle Party account.** You do not create a username/password with us.
 - **Optional Google Play Games.** You may sign in with Play Games for seasonal leaderboards and cloud save. This is opt-in and not required to play.
-- **No ads.** The app does not show advertising.
+- **Optional rewarded ads.** On the Android app you may choose to watch a short ad (hub **POWERUPS**) for a timed gold and attack boost. Ads do not play unless you start them. Ad serving uses Google AdMob.
 - **No analytics servers.** The app does not send gameplay or device data to Idle Party (or third-party analytics) backends.
 - **Local save by default.** Progress is stored on your device (e.g. SharedPreferences / platform equivalent).
 
@@ -34,6 +34,17 @@ Aside from normal OS / store behavior (install, updates) and optional Play Games
 
 On **Google Play installs** (Android), the app may ask Google Play whether a newer Idle Party is available and show an in-app notice. That check goes to Google, not to an Idle Party server. Sideloaded APKs skip it.
 
+On **Android**, if you tap hub **POWERUPS** and watch an ad, Google AdMob may load an ad over the network. That can include an advertising ID and a consent prompt (EU/EEA). Skipping POWERUPS means those ad calls are not started by you. Web playtest builds do not show real ads.
+
+## Optional rewarded ads (Android)
+
+Hub **POWERUPS** is opt-in:
+
+- You choose when to watch. Combat is never interrupted by an ad.
+- One finished ad grants one hour of double gold and +25% attack. Further ads add more time (capped).
+- Google AdMob serves the ad. Idle Party does not run its own ad server.
+- In the EU/EEA, a Google consent form (UMP) may appear before ads can be requested.
+
 ## Delete your data / sign-out
 
 Idle Party does not create its own username or password. Optional Play Games sign-in uses your Google account.
@@ -48,7 +59,7 @@ Local save on the device is removed when you clear the app’s storage or uninst
 
 ## Children
 
-The game is intended as a general-audience idle RPG. It does not collect personal information for profiles or ads beyond what Google Play Games may process when you opt in.
+The game is intended as a general-audience idle RPG. It does not collect personal information for profiles. Optional Play Games and optional rewarded ads (AdMob) may process identifiers under Google’s policies when you use those features. The game is not directed at children.
 
 ## Changes
 

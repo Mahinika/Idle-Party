@@ -13,6 +13,7 @@ import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
 import '../spatial/spatial_combat.dart';
+import 'ad_boost.dart';
 import 'dungeon_generator.dart';
 import 'game_state.dart';
 import 'keystone.dart';
@@ -852,9 +853,25 @@ class GameLogic {
         state.gearGoldFindPercent +
         state.petGoldFindPercent;
     if (percent <= 0) {
-      return baseGold;
+      return AdBoost.isActive(state.metaDepth.adBoostUntilMs)
+          ? baseGold * 2
+          : baseGold;
     }
-    return baseGold + (baseGold * percent) ~/ 100;
+    final found = baseGold + (baseGold * percent) ~/ 100;
+    if (!AdBoost.isActive(state.metaDepth.adBoostUntilMs)) return found;
+    return found * 2;
+  }
+
+  /// Optional POWERUPS: +1 hour of double gold and +25% ATK. Stacks duration.
+  static GameState grantAdBoostHour(GameState state, {int? nowMs}) {
+    final until = AdBoost.addHour(
+      state.metaDepth.adBoostUntilMs,
+      nowMs: nowMs,
+    );
+    if (until == state.metaDepth.adBoostUntilMs) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(adBoostUntilMs: until),
+    );
   }
 
   /// Credit kill / God Hand gold immediately (survives wipe; matches floaters).
