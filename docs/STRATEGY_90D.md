@@ -177,8 +177,7 @@ Månadsskifte: en mening i What’s New som spelaren bryr sig om (English).
 | [GEAR_BUDGET.md](GEAR_BUDGET.md) | Power-ärlighet |
 | [FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md) | Månad 3 pipeline |
 | [SYSTEMS_REBUILD.md](SYSTEMS_REBUILD.md) | P3 kits → efter M1; P4/P5 efter 90d |
-| [CONTENT_CADENCE.md](CONTENT_CADENCE.md) | Tag-rytm |
-| [ROADMAP.md](ROADMAP.md) | Årshorisont — detta doc är *nästa kvartal* |
+| [CONTENT_CADENCE.md](CONTENT_CADENCE.md) | Tag-rytm (operativ efter M1–M3) |
 
 ---
 

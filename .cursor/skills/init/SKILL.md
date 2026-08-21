@@ -24,7 +24,8 @@ Make `AGENTS.md` and `.cursor/rules/*.mdc` accurate for **today’s** codebase a
    - `AGENTS.md` (architecture, meta, combat authority, build/test, MCP/skills)
    - `.cursor/rules/` (`vibe-coder-autopilot`, `owner-preferences`, `definition-of-done`, others)
    - Key systems: `GameDirector`, `GameLogic`, `SpatialCombat`, hub/dungeon UI, `DungeonCatalog`, `metaDepth`, Ascend keep/reset
-   - Docs that claim “current”: `docs/ROADMAP.md` checklist, `docs/PLAY_STORE.md`, `docs/CONTENT_CADENCE.md` (only if AGENTS/rules point at stale claims)
+   - Docs that claim “current”: `docs/PLAY_STORE.md`, `docs/CONTENT_CADENCE.md`,
+     `docs/STRATEGY_90D.md` (only if AGENTS/rules point at stale claims)
    - Optional fast honesty: `flutter test test/ship_smoke_test.dart` and/or MCP `changelog_check` / `zone_identity` if helpful
 
 2. **Diff claims vs code**

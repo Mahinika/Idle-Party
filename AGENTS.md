@@ -93,8 +93,7 @@ Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 `systematic-debugging`, `reviewing-code`, `accessibility-auditing`).
 
 Cadence: `docs/CONTENT_CADENCE.md`. Near-term (90d, M1–M3 **shipped**):
-`docs/STRATEGY_90D.md` (decision table only — operate from cadence). Year roadmap:
-`docs/ROADMAP.md` (historical Q1–Q4; ship line in that file can lag). Background:
+`docs/STRATEGY_90D.md` (decision table only — operate from cadence). Background:
 `docs/TOP_GAMES_RESEARCH.md`. Systems rebuild (P1–P5 chase/offline/kits/KEY/GH
 shipped): `docs/SYSTEMS_REBUILD.md`. Chase contract (hub TODAY ↔ offline Up next):
 `docs/CHASE_CONTRACT.md`. Gear budget contract: `docs/GEAR_BUDGET.md`. Floor

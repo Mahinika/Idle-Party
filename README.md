@@ -73,7 +73,7 @@ CI builds an APK (+ App Bundle) on tags matching `v*` (`.github/workflows/build-
 
 **Package id:** `com.idleparty.app` · **Saves:** SharedPreferences (`idle_party_save_v2`)
 
-Privacy: [docs/PRIVACY.md](docs/PRIVACY.md) · Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md) · Play checklist: [docs/PLAY_STORE.md](docs/PLAY_STORE.md)
+Privacy: [docs/PRIVACY.md](docs/PRIVACY.md) · Cadence: [docs/CONTENT_CADENCE.md](docs/CONTENT_CADENCE.md) · Play checklist: [docs/PLAY_STORE.md](docs/PLAY_STORE.md)
 
 ---
 

@@ -1,6 +1,8 @@
 # Idle Party — monthly content cadence
 
-Operational rhythm for solo / small-time shipping. Ties to the yearly plan in [ROADMAP.md](ROADMAP.md) (Q4 “Månadsrytm”).
+Operational rhythm for solo / small-time shipping after 90d M1–M3 shipped.
+Decision table: [STRATEGY_90D.md](STRATEGY_90D.md). Why/background:
+[TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md).
 
 ## Cadence (every 2–4 weeks; aim monthly)
 
@@ -11,7 +13,7 @@ Each tagged `1.x.y` release should include:
    - Reads `tool/out/class_balance_share.json` + markdown board
    - CI: `test/class_balance_gate_test.dart` (live light, fails on DPS `**HIGH**`)
    - Mid band still manual / long (`class_balance_mid_sim_test`) when casters feel spicy
-2. **Content slice** — one player-visible piece: dungeon beat, kit identity, meta sink, **local season week row**, Weekly/Gauntlet beat, or a11y/save polish. Prefer one hero feature per quarter (see ROADMAP).
+2. **Content slice** — one player-visible piece: dungeon beat, kit identity, meta sink, **local season week row**, Weekly/Gauntlet beat, or a11y/save polish. Prefer **core-loop feel** over new zones/classes (owner lock).
 3. **Release notes** — What’s New in `lib/core/meta_systems.dart`; `test/changelog_sync_test.dart` keeps pubspec ↔ version ↔ zone tokens honest.
 
 ### Success-spår (research-backed)
@@ -22,7 +24,6 @@ Ship habit → second layer → content cadence:
 2. **Local season** — `lib/core/local_season.dart` week/month rows (reuse SpatialCombat + vault/Gauntlet).
 3. **Zones / kits** — owner lock **2026-08-18:** no new zones or classes. Prefer **core-loop feel** (power beats, combat juice) + kit fantasy polish. Play 12×14 stays background.
 
-See [ROADMAP.md](ROADMAP.md) “Success-spår”.  
 Near-term (90 days): [STRATEGY_90D.md](STRATEGY_90D.md).
 
 ## Checklist before tagging
@@ -49,4 +50,4 @@ Near-term (90 days): [STRATEGY_90D.md](STRATEGY_90D.md).
 
 ## Out of cadence
 
-Do not couple rewrites of SpatialCombat, new account servers, or commercial art dumps to the monthly train. Stretch (Windows zip, score-share image) stays optional per ROADMAP Q4.
+Do not couple rewrites of SpatialCombat, new account servers, or commercial art dumps to the monthly train. Optional stretch (Windows zip, score-share image) only if the owner asks.
