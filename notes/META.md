@@ -16,7 +16,3 @@ Bottenrad — djupare system och info.
 ## Kopplat till jakt
 
 [[TODAY]] kan peka på KEY / vault / jobs — men **valet** av jakt sker i ChaseContract, inte i varje flik för sig.
-
-## Upp
-
-- [[App]] · [[Hub]] · [[Dungeon]] · [[Play]]

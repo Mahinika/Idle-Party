@@ -1,20 +1,14 @@
 # Idle Party — karta
 
-## Spelets arkitektur (det du ville se)
+## Spelets arkitektur
 
-Öppna [[App]] → **Local graph**. Där syns Hub / Dungeon / PARTY / POWER / META.
+1. Öppna noten **App**
+2. Local graph → kugghjul: **Depth 2**, stäng **Incoming links**
 
-- [[App]] — startsida för arkitektur
-- [[Hub]] · [[Dungeon]]
-- [[PARTY]] · [[POWER]] · [[META]]
-- [[TODAY]] · [[SpatialCombat]] · [[GameDirector]]
+- [[App]]
 
-## Development / docs
+## Development
 
-- [[Dev log]] — vad som hände i development
+- [[Dev log]]
 - [[Ship]] · [[Play]] · [[Vad härnäst]]
 - [[AGENTS]] · [[CONTENT_CADENCE]]
-
-## Tips
-
-Local graph på [[App]] eller [[Hub]]. Global Graph med orphans av = brus.

@@ -20,7 +20,3 @@ PARTY-prick = bag-upgrades att hämta (`MenuAlerts`).
 
 - Gear-score: [[GEAR_BUDGET]]
 - Nya kits “Meet …” dyker upp via [[TODAY]] tills du öppnar PARTY
-
-## Upp
-
-- [[App]] · [[Hub]] · [[Dungeon]]

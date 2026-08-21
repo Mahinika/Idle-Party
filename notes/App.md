@@ -1,25 +1,28 @@
 # App — Idle Party
 
-Spelets ytor som spelaren rör. Öppna **Local graph** härifrån.
+Spelets ytor. Öppna **Local graph** här · Depth **2** · stäng **Incoming links** (kugghjul).
 
 ```text
-Start → Hub  ←→  Dungeon (ENTER / HUB leave)
-           └── bottenrad: PARTY · POWER · META
+App
+├── Hub ────────── TODAY, PARTY, POWER, META
+├── Dungeon ────── SpatialCombat, PARTY, POWER, META
+├── PARTY / POWER / META  (bottenrad)
+└── GameDirector
 ```
 
 ## Skärmar
 
-- [[Hub]] — keep / World Path / TODAY / ENTER (ingen fight)
-- [[Dungeon]] — SpatialCombat + HUD (FARM/PUSH, God Hand)
+- [[Hub]] — keep / World Path / TODAY / ENTER
+- [[Dungeon]] — fight + God Hand
 
-## Bottenrad (samma i hub och dungeon)
+## Bottenrad
 
-- [[PARTY]] — grejer på hjältarna
-- [[POWER]] — guld, forge, shop
-- [[META]] — KEY, jobs, guides, settings
+- [[PARTY]]
+- [[POWER]]
+- [[META]]
 
-## Motor under huven
+## Motor
 
-- [[GameDirector]] — äger state, spar, timer
-- [[SpatialCombat]] — enda fight-simmen
-- [[TODAY]] — vad du jagar (ChaseContract)
+- [[GameDirector]]
+- [[SpatialCombat]]
+- [[TODAY]]

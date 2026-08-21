@@ -14,7 +14,7 @@ Format:
 
 ## 2026-08-21 — App-arkitektur i Obsidian
 
-- Spelets ytor som länkade noder — öppna [[App]] + Local graph (inte Dev log)
+- Spelets ytor som länkade noder — öppna noten App + Local graph (Depth 2, Incoming av)
 - Hub / Dungeon / PARTY / POWER / META / TODAY / SpatialCombat
 - Länkar: [[Home]]
 

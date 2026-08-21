@@ -15,7 +15,3 @@ Bottenrad — ekonomi och permanent power.
 ## Hub-extra
 
 [[Hub]] **POWERUPS** (ads) hör hit känslomässigt — boost på guld/ATK — men knappen sitter på hubben.
-
-## Upp
-
-- [[App]] · [[Hub]] · [[Dungeon]]

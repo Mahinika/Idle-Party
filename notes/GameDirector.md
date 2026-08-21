@@ -12,7 +12,3 @@
 ## Tester
 
 `GameDirector.preview()` — ingen timer / ingen disk.
-
-## Upp
-
-- [[App]] · [[AGENTS]]

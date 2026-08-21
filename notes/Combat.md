@@ -16,7 +16,7 @@
 
 ## Relaterat
 
-- [[SpatialCombat]] · [[Dungeon]] · [[App]]
-- [[TODAY]] — jakt efter fighten
+- [[SpatialCombat]] · [[Dungeon]]
+- [[TODAY]]
 - [[Ship]]
 - [[Home]]

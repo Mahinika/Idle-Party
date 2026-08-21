@@ -17,9 +17,3 @@ FloorBlueprint → rum/chambers → kill → loot vacuum → stairs → nästa
 ## Offline / AFK i dungeon
 
 Samma `SpatialCombat.step` med `afkAssist` — inte en andra sim.
-
-## Upp
-
-- [[App]]
-- [[SpatialCombat]]
-- [[FLOOR_BLUEPRINT]]

@@ -21,7 +21,3 @@ Bara keep-guld (`gold_income`) — se [[POWER]] → INCOME. Fight-AFK händer ba
 ## Kod (om du vill gräva)
 
 `lib/ui/hub_screen.dart` · chase: `hub_chase` / `chase_contract`
-
-## Upp
-
-- [[App]]

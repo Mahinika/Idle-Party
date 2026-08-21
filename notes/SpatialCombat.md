@@ -16,7 +16,3 @@
 ## Kod
 
 `lib/spatial/spatial_combat.dart` · abilities · [[FLOOR_BLUEPRINT]] · [[GEAR_BUDGET]]
-
-## Upp
-
-- [[Dungeon]] · [[App]] · [[Combat]]

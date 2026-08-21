@@ -18,7 +18,3 @@ Innan första boss: växa partyt — hoppa över KEY-jargong och daily-brus.
 ## Kod
 
 `HubChase` väljer · `ChaseContract` = orden överallt · [[CHASE_CONTRACT]]
-
-## Upp
-
-- [[Hub]] · [[App]] · [[Hub TODAY]]
