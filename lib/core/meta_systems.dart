@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.28';
+  static const String currentVersion = '1.12.29';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.29',
+      bullets: <String>[
+        'Party fights feel less robotic: soft run-up and turn, idle breathe in formation, Fire mages kite farther while Arcane sidesteps, and low-HP DPS limp toward the healer.',
+        'Combat speech barks (taunt, crits, emergency heals, “looking at me!”) sit in small bubbles — colorblind-safe hues, quiet during AFK catch-up.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.28',
       bullets: <String>[

@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.28**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.29**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -34,7 +34,7 @@ for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.27 / 57** submitted 2026-08-21; testers may still be on
 **1.12.25 / 55** until review publishes). Working ship is
-**1.12.28**. Production still needs **12 closed testers × 14 days**.
+**1.12.29**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -235,6 +235,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Dungeon catalog | `lib/models/dungeon_def.dart` |
 | Combat sheet | `lib/models/combat_ratings.dart` + `docs/GEAR_BUDGET.md` |
 | Spatial sim | `lib/spatial/spatial_combat.dart` |
+| Combat presence (idle/inertia/barks) | `lib/spatial/combat_presence.dart` |
 | Ability runtime | `lib/spatial/ability_effects.dart` + `kit_migrated_casts.dart` (`ClassAbilityDef.fireMode` / `gate` / `customId`) |
 | Tile maps | `lib/spatial/tile_map.dart` |
 | Floor blueprint / placement | `lib/spatial/floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart` + `docs/FLOOR_BLUEPRINT.md` |

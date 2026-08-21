@@ -4477,10 +4477,6 @@ abstract final class SpatialCombat {
     return true;
   }
 
-  /// Test hook for [CombatPresence] taunt bark wiring.
-  static bool debugTauntLooseEnemies(SpatialWorld world, SpatialActor tank) =>
-      _tauntLooseEnemies(world, tank, reducedVfx: false);
-
   /// Enemies focus the tank when possible (aggro toward frontliner).
   static SpatialActor? _focusHero(
     SpatialActor enemy,
