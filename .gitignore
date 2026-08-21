@@ -109,6 +109,9 @@ IdleSword*
 # Local MCP venv
 /tool/mcp_idle_party/.venv/
 
+# Local Play AAB CORS helper (often has a machine-specific path)
+/tool/_serve_aab_cors.py
+
 # Play Store listing captures (regenerate with compose_shots.py)
 /tool/store_listing/raw/
 /tool/store_listing/out/

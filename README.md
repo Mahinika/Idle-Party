@@ -57,7 +57,7 @@ World Path is **15 zones** from Sandy Caverns through Mothveil Hollow
 (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on
 the road) — each with its own look, packs, and bosses.
 
-**Ship:** [latest GitHub Release](https://github.com/Mahinika/Idle-Party/releases/latest) (1.12.25 — What’s New is also in-game).
+**Ship:** [latest GitHub Release](https://github.com/Mahinika/Idle-Party/releases/latest) (1.12.28 — What’s New is also in-game).
 
 ---
 

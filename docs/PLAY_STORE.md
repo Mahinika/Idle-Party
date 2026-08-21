@@ -11,12 +11,12 @@ Package id: **`com.idleparty.app`**
 | Closed testing | ⏳ review | **1.12.27 (57)** submitted to closed Alpha 2026-08-21 (POWERUPS ads + Play update notice + shield fix). Testers still on **1.12.25 (55)** until Google publishes. Production still ❌. |
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
-| Privacy URL opens in browser | ✅ | Console saved 2026-08-16: branch blob `docs/PRIVACY.md` on `cursor/keystone-habit-b46b` (Play Games + delete steps). Switch to `main` after merge. |
+| Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
 | Data safety form | ⏳ review | Updated 2026-08-21 for AdMob (device IDs collected+shared, advertising purpose) + Advertising ID declaration Yes. Submitted with Alpha **57**. |
 | IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). Re-answer ads questions if Console asks after this review. |
-| Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed 1.12.9 build. |
+| Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN) | ✅ live | Default locale **en-US only** (no extra listing languages). Honesty copy from `docs/STORE_LISTING.md`. Verified 2026-08-20. |
-| Screenshots + feature graphic | ⏳ review | **8 phone + new feature graphic** submitted 2026-08-21 (promo cards in `tool/store_listing/marketing/`, 1080×1920 + 1024×500). Icon unchanged. Tablet shots still older (phone-first). |
+| Screenshots + feature graphic | ⏳ review | **9 phone + feature graphic** submitted 2026-08-21 (promo cards in `tool/store_listing/marketing/`, 1080×1920 + 1024×500). Icon unchanged. Tablet shots still older (phone-first). |
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
 
@@ -47,8 +47,8 @@ over Play ops unless the owner asks about Play.
 ## Privacy / Data safety
 
 - [x] Privacy policy URL in Play Console (2026-08-16):  
-  `https://github.com/Mahinika/Idle-Party/blob/cursor/keystone-habit-b46b/docs/PRIVACY.md`  
-  (switch to `main` after this branch merges).
+  Prefer `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md`  
+  after this branch merges (branch blob still works until then).
 - [x] Data safety form (2026-08-16): **optional Play Games** (User IDs / gameplay Other actions / Saved Games files); collected not shared; encrypted in transit; OAuth; delete account + data URLs point at [PRIVACY.md](PRIVACY.md). **No Idle Party analytics servers**; clipboard export/import is optional and user-initiated.
 - [x] **Rewarded ads (1.12.27):** AdMob live IDs in app. Data safety + Advertising ID declaration updated 2026-08-21 and submitted with Alpha **57**. Privacy copy in [PRIVACY.md](PRIVACY.md). IARC ads questions still ⏳ if Console prompts.
 
@@ -83,7 +83,7 @@ Closed testers watching a few ads will not pay rent. Real money needs many playe
 5. OAuth consent screen + Android credential (package `com.idleparty.app` + signing SHA-1) so device sign-in works.
 6. Test on a **Play-installed** build (internal/closed). GitHub sideload may soft-fail sign-in.
 
-**Done for 2026-08:** Saved Games on; App ID `986358854278`; boards `Timed KEY 2026-08` (`CgkIhuXGvNocEAIQAA`) and `Gauntlet 2026-08` (`CgkIhuXGvNocEAIQAQ`); OAuth consent (external Testing) + scopes `games` / `games_lite` / `drive.appdata`; Android credential attached (Play App Signing SHA-1, package `com.idleparty.app`); owner Google account added as OAuth test user; Games **category** Role Playing; **icon** 512 + **feature graphic** 1024×500 from owned `app_icon`; **Description saved + Games project published**. Smoke on a Play-installed 1.12.9 closed-test build. Sideload debug SHA-1 needs a second Android client if you test unsigned APKs. Leave Cloud OAuth consent in **Testing** (do not click Cloud “Publish app”).
+**Done for 2026-08:** Saved Games on; App ID `986358854278`; boards `Timed KEY 2026-08` (`CgkIhuXGvNocEAIQAA`) and `Gauntlet 2026-08` (`CgkIhuXGvNocEAIQAQ`); OAuth consent (external Testing) + scopes `games` / `games_lite` / `drive.appdata`; Android credential attached (Play App Signing SHA-1, package `com.idleparty.app`); owner Google account added as OAuth test user; Games **category** Role Playing; **icon** 512 + **feature graphic** 1024×500 from owned `app_icon`; **Description saved + Games project published**. Smoke on a Play-installed closed-test build near ship line. Sideload debug SHA-1 needs a second Android client if you test unsigned APKs. Leave Cloud OAuth consent in **Testing** (do not click Cloud “Publish app”).
 
 Suggested Description (en-US):
 

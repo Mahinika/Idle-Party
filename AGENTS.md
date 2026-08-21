@@ -146,8 +146,10 @@ next). One chase card — claimables first (vault / jobs / **Meet new kit**), th
 Ascend / progress. Urgency **READY** / **ALMOST** (zone/Will/Gauntlet/Ascend-near
 beat Daily grind; also KEY +1 vault, etc.). **First hour** (no boss, no Ascend):
 grow the party in the starter zone — skip Daily / KEY / vault-start / kit teasers
-until after the first boss (`GameLogic.showDailyChase`). KEY / weekly-affix jargon
-waits until AL≥2 or King's Fort cleared (`GameLogic.showKeystoneJargon`). New unlocks
+until after the first boss (`GameLogic.showDailyChase`). After that, TODAY may
+chase the next KEY (`ENTER KEY +N`) as a habit. META → KEY tab, week-affix line,
+and KEYSTONE tips wait until AL≥2 or King's Fort cleared
+(`GameLogic.showKeystoneJargon`). New unlocks
 queue `metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast + chase
 detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next AL
 unlocks — kit ladder AL1–6 (e.g. Combat Rogue / Arms / Holy Paladin, BM/Holy/Arcane + 5th slot, DKs,

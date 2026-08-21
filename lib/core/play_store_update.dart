@@ -39,7 +39,10 @@ abstract final class PlayStoreUpdate {
   static Future<bool> openListing() async {
     try {
       if (!await canLaunchUrl(listingUri)) return false;
-      return launchUrl(listingUri, mode: LaunchMode.externalApplication);
+      return await launchUrl(
+        listingUri,
+        mode: LaunchMode.externalApplication,
+      );
     } catch (e, st) {
       debugPrint('PlayStoreUpdate openListing failed: $e\n$st');
       return false;
