@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.34';
+  static const String currentVersion = '1.12.35';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.35',
+      bullets: <String>[
+        'SETTINGS: text presets S/M/L/XL (wider slider), dungeon zoom Close / Normal / Wide, haptics on/off, keep screen on in dungeon, and RESET DISPLAY DEFAULTS — phone comfort without changing OS resolution.',
+        'POWER → FORGE → GOLD still has ×1 / 5% / 25% / 50% / 100% spend and SPEND ALL · EVEN.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.34',
       bullets: <String>[

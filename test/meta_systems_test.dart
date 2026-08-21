@@ -5,6 +5,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_def.dart';
+import 'package:idle_party/models/dungeon_zoom.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/pet.dart';
@@ -324,6 +325,9 @@ void main() {
         challengeNoFlask: true,
         colorblindMode: true,
         uiTextScale: 1.15,
+        dungeonZoom: DungeonZoom.wide,
+        hapticsEnabled: false,
+        keepScreenAwake: false,
         lastDailyDate: '2026-07-27',
         dailyClaimed: true,
         seenChangelogVersion: '1.0.0',
@@ -338,6 +342,9 @@ void main() {
       expect(round.challengeNoFlask, isTrue);
       expect(round.colorblindMode, isTrue);
       expect(round.uiTextScale, closeTo(1.15, 0.001));
+      expect(round.dungeonZoom, DungeonZoom.wide);
+      expect(round.hapticsEnabled, isFalse);
+      expect(round.keepScreenAwake, isFalse);
       expect(round.lastDailyDate, '2026-07-27');
       expect(round.dailyClaimed, isTrue);
       expect(round.seenChangelogVersion, '1.0.0');
@@ -354,6 +361,9 @@ void main() {
         ..remove('challengeNoFlask')
         ..remove('colorblindMode')
         ..remove('uiTextScale')
+        ..remove('dungeonZoom')
+        ..remove('hapticsEnabled')
+        ..remove('keepScreenAwake')
         ..remove('lastDailyDate')
         ..remove('dailyClaimed')
         ..remove('seenChangelogVersion')
@@ -367,6 +377,9 @@ void main() {
       expect(decoded.challengeNoFlask, isFalse);
       expect(decoded.colorblindMode, isFalse);
       expect(decoded.uiTextScale, 1.0);
+      expect(decoded.dungeonZoom, DungeonZoom.normal);
+      expect(decoded.hapticsEnabled, isTrue);
+      expect(decoded.keepScreenAwake, isTrue);
       expect(decoded.lastDailyDate, isNull);
       expect(decoded.dailyClaimed, isFalse);
       expect(decoded.seenChangelogVersion, '');

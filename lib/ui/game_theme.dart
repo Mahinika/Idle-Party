@@ -95,7 +95,7 @@ abstract final class GameTheme {
     required double gameScale,
   }) {
     final os = platform.scale(1.0);
-    final combined = (os * gameScale).clamp(0.85, 1.4);
+    final combined = (os * gameScale).clamp(0.80, 1.55);
     return TextScaler.linear(combined);
   }
 

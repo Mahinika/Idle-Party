@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/apex_craft.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
+import '../models/dungeon_zoom.dart';
 import '../models/class_ability.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
@@ -28,6 +29,7 @@ import 'play_games_bridge.dart';
 import 'play_games_scores.dart';
 import 'play_leaderboard_ids.dart';
 import 'play_store_update.dart';
+import 'screen_awake.dart';
 import 'story_lore.dart';
 import 'wipe_advice.dart';
 import '../models/dungeon_def.dart';
@@ -144,8 +146,7 @@ class GameDirector extends ChangeNotifier {
     GameState? initialState,
     this.enableSpatialLoop = true,
   }) : _state = initialState ?? GameLogic.createInitialState() {
-    GameAudio.muted = _state.soundMuted;
-    SpatialCombat.colorblindMode = _state.colorblindMode;
+    _syncDevicePrefs();
   }
 
   factory GameDirector.persistent() {
@@ -493,8 +494,7 @@ class GameDirector extends ChangeNotifier {
         // Do NOT start the live spatial loop until after offline catch-up.
         _state = GameLogic.ensureRogueHero(saved);
         _lastHighestDungeon = _state.highestDungeonCleared;
-        GameAudio.muted = _state.soundMuted;
-        SpatialCombat.colorblindMode = _state.colorblindMode;
+        _syncDevicePrefs();
         _ensureUiTimer();
         // Keep loading flag true until finally{} when intro is deferred —
         // early notify would flash hub/dungeon under the title card.
@@ -522,8 +522,7 @@ class GameDirector extends ChangeNotifier {
         GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(loaded)),
       );
       _lastHighestDungeon = _state.highestDungeonCleared;
-      GameAudio.muted = _state.soundMuted;
-      SpatialCombat.colorblindMode = _state.colorblindMode;
+      _syncDevicePrefs();
       _ensureUiTimer();
       if (_state.inDungeon) {
         _rebuildSpatial();
@@ -569,8 +568,7 @@ class GameDirector extends ChangeNotifier {
       partySpecs: GameLogic.normalizeNewGameParty(partySpecs),
     );
     _hasExistingSave = true;
-    GameAudio.muted = false;
-    SpatialCombat.colorblindMode = _state.colorblindMode;
+    _syncDevicePrefs();
     _lastHighestDungeon = _state.highestDungeonCleared;
     _ensureUiTimer();
     _syncHubIdleTimer();
@@ -1600,8 +1598,15 @@ class GameDirector extends ChangeNotifier {
   }
 
   void setSoundMuted(bool muted) {
-    GameAudio.muted = muted;
     _applyUpgrade(_state.copyWith(soundMuted: muted));
+  }
+
+  void setHapticsEnabled(bool enabled) {
+    _applyUpgrade(_state.copyWith(hapticsEnabled: enabled));
+  }
+
+  void setKeepScreenAwake(bool enabled) {
+    _applyUpgrade(_state.copyWith(keepScreenAwake: enabled));
   }
 
   void setVfxQuality(VfxQuality value) {
@@ -1610,6 +1615,14 @@ class GameDirector extends ChangeNotifier {
 
   void cycleVfxQuality() {
     setVfxQuality(_state.vfxQuality.next);
+  }
+
+  void setDungeonZoom(DungeonZoom value) {
+    _applyUpgrade(_state.copyWith(dungeonZoom: value));
+  }
+
+  void cycleDungeonZoom() {
+    setDungeonZoom(_state.dungeonZoom.next);
   }
 
   void setAutoSellMaxPower(int value) {
@@ -1631,12 +1644,29 @@ class GameDirector extends ChangeNotifier {
   }
 
   void setColorblindMode(bool value) {
-    SpatialCombat.colorblindMode = value;
     _applyUpgrade(_state.copyWith(colorblindMode: value));
   }
 
   void setUiTextScale(double value) {
-    _applyUpgrade(_state.copyWith(uiTextScale: value.clamp(0.85, 1.3)));
+    _applyUpgrade(
+      _state.copyWith(
+        uiTextScale: value.clamp(kUiTextScaleMin, kUiTextScaleMax),
+      ),
+    );
+  }
+
+  void resetDisplayDefaults() {
+    _applyUpgrade(
+      _state.copyWith(
+        uiTextScale: 1.0,
+        dungeonZoom: DungeonZoom.normal,
+        vfxQuality: VfxQuality.full,
+        colorblindMode: false,
+        hapticsEnabled: true,
+        keepScreenAwake: true,
+        soundMuted: false,
+      ),
+    );
   }
 
   void setChallengeBossRush(bool value) {
@@ -1803,8 +1833,7 @@ class GameDirector extends ChangeNotifier {
     _awaitingWipeChoice = false;
     _state = GameLogic.ensureRogueHero(imported);
     _hasExistingSave = true;
-    GameAudio.muted = _state.soundMuted;
-    SpatialCombat.colorblindMode = _state.colorblindMode;
+    _syncDevicePrefs();
     if (_state.inDungeon) {
       _rebuildSpatial();
       if (enableSpatialLoop) {
@@ -1899,8 +1928,7 @@ class GameDirector extends ChangeNotifier {
     _awaitingWipeChoice = false;
     _hasExistingSave = true;
     _state = GameLogic.ensureRogueHero(GameLogic.ensureWeeklyContract(cloud));
-    GameAudio.muted = _state.soundMuted;
-    SpatialCombat.colorblindMode = _state.colorblindMode;
+    _syncDevicePrefs();
     if (_state.inDungeon) {
       _rebuildSpatial();
       if (enableSpatialLoop) _startSpatialLoop();
@@ -2520,7 +2548,7 @@ class GameDirector extends ChangeNotifier {
     _state = GameLogic.createInitialState();
     _hasExistingSave = false;
     _pendingStartMenu = true;
-    GameAudio.muted = false;
+    _syncDevicePrefs();
     _spatialTimer?.cancel();
     _spatial = null;
     notifyListeners();
@@ -2533,6 +2561,7 @@ class GameDirector extends ChangeNotifier {
 
     final before = _state;
     _state = updated;
+    _syncDevicePrefs();
     _announceAbilityUnlocks(before, _state);
     _announceAchievementUnlocks(before, _state);
     if (!_state.inDungeon) {
@@ -2548,6 +2577,15 @@ class GameDirector extends ChangeNotifier {
     }
     notifyListeners();
     unawaited(_persistFlush());
+  }
+
+  void _syncDevicePrefs() {
+    GameAudio.muted = _state.soundMuted;
+    GameAudio.hapticsEnabled = _state.hapticsEnabled;
+    SpatialCombat.colorblindMode = _state.colorblindMode;
+    unawaited(
+      ScreenAwake.setEnabled(_state.keepScreenAwake && _state.inDungeon),
+    );
   }
 
   void _announceAbilityUnlocks(GameState before, GameState after) {

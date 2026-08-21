@@ -29,6 +29,13 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
   GameDirector get director => widget.director;
   GameState get state => director.state;
 
+  static const List<(String, double)> _textPresets = <(String, double)>[
+    ('S', 0.85),
+    ('M', 1.0),
+    ('L', 1.15),
+    ('XL', 1.30),
+  ];
+
   Future<void> _confirmReset() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -62,33 +69,40 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
     }
   }
 
+  void _resetDisplayDefaults() {
+    director.resetDisplayDefaults();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _SettingsToggle(
-            label: 'Mute sound',
-            value: state.soundMuted,
-            onChanged: director.setSoundMuted,
-          ),
-          const SizedBox(height: 8),
-          _SettingsCycle(
-            label: state.vfxQuality.settingsLabel,
-            hint: state.vfxQuality.settingsHint,
-            onCycle: director.cycleVfxQuality,
-          ),
-          const SizedBox(height: 8),
-          _SettingsToggle(
-            label: 'Colorblind-friendly floaters',
-            value: state.colorblindMode,
-            onChanged: director.setColorblindMode,
+          Text(
+            'Phone preferences — text size, dungeon zoom, sound, and comfort. '
+            'OS display size still applies on top.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 12),
+          MenuChrome.sectionLabel('DISPLAY'),
+          const SizedBox(height: 6),
           Text(
             'UI text scale',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final preset in _textPresets)
+                ChoiceChip(
+                  label: Text(preset.$1, style: GameTheme.body(size: 12)),
+                  selected: (state.uiTextScale - preset.$2).abs() < 0.02,
+                  onSelected: (_) => director.setUiTextScale(preset.$2),
+                ),
+            ],
           ),
           const SizedBox(height: 6),
           Semantics(
@@ -99,10 +113,13 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
               children: [
                 Expanded(
                   child: _CaveSlider(
-                    value: state.uiTextScale.clamp(0.85, 1.3),
-                    min: 0.85,
-                    max: 1.3,
-                    divisions: 9,
+                    value: state.uiTextScale.clamp(
+                      kUiTextScaleMin,
+                      kUiTextScaleMax,
+                    ),
+                    min: kUiTextScaleMin,
+                    max: kUiTextScaleMax,
+                    divisions: 13,
                     onChanged: director.setUiTextScale,
                   ),
                 ),
@@ -120,7 +137,54 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
               ],
             ),
           ),
+          const SizedBox(height: 10),
+          _SettingsCycle(
+            label: state.dungeonZoom.settingsLabel,
+            hint: state.dungeonZoom.settingsHint,
+            onCycle: director.cycleDungeonZoom,
+          ),
+          const SizedBox(height: 8),
+          _SettingsToggle(
+            label: 'Keep screen on in dungeon',
+            value: state.keepScreenAwake,
+            onChanged: director.setKeepScreenAwake,
+          ),
           const SizedBox(height: 12),
+          MenuChrome.sectionLabel('SOUND & FEEL'),
+          const SizedBox(height: 6),
+          _SettingsToggle(
+            label: 'Mute sound',
+            value: state.soundMuted,
+            onChanged: director.setSoundMuted,
+          ),
+          const SizedBox(height: 8),
+          _SettingsToggle(
+            label: 'Haptics (vibration)',
+            value: state.hapticsEnabled,
+            onChanged: director.setHapticsEnabled,
+          ),
+          const SizedBox(height: 12),
+          MenuChrome.sectionLabel('COMBAT LOOK'),
+          const SizedBox(height: 6),
+          _SettingsCycle(
+            label: state.vfxQuality.settingsLabel,
+            hint: state.vfxQuality.settingsHint,
+            onCycle: director.cycleVfxQuality,
+          ),
+          const SizedBox(height: 8),
+          _SettingsToggle(
+            label: 'Colorblind-friendly floaters',
+            value: state.colorblindMode,
+            onChanged: director.setColorblindMode,
+          ),
+          const SizedBox(height: 8),
+          KenneyButton(
+            label: 'RESET DISPLAY DEFAULTS',
+            tip: 'Text 100% · Zoom Normal · Full VFX · sound & haptics on',
+            style: KenneyButtonStyle.grey,
+            onPressed: _resetDisplayDefaults,
+          ),
+          const SizedBox(height: 16),
           MenuChrome.sectionLabel('BAG CLEANUP'),
           const SizedBox(height: 4),
           Text(

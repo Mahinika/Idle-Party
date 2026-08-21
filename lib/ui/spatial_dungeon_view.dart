@@ -283,7 +283,11 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final camera = _TileCamera.forWorld(world, constraints);
+                final camera = _TileCamera.forWorld(
+                  world,
+                  constraints,
+                  targetCols: state.dungeonZoom.targetCols,
+                );
                 return Stack(
                   fit: StackFit.expand,
                   children: [
@@ -2560,8 +2564,9 @@ class _TileCamera {
 
   factory _TileCamera.forWorld(
     SpatialWorld? world,
-    BoxConstraints constraints,
-  ) {
+    BoxConstraints constraints, {
+    double targetCols = 20,
+  }) {
     if (world == null) {
       return const _TileCamera(
         camX: 0,
@@ -2571,23 +2576,21 @@ class _TileCamera {
         visibleRows: 1,
       );
     }
-    // Show more of the floor so combat doesn't feel claustrophobic.
-    // ~20 tiles wide on phones; a bit more on tablets/desktop.
-    final targetCols = constraints.maxWidth < 700 ? 20.0 : 24.0;
-    final visibleCols = math.min(targetCols, world.cols.toDouble());
-    final tileSize = constraints.maxWidth / visibleCols;
+    // Phone product: zoom setting picks how many tiles fit across the stage.
+    final cols = math.min(targetCols, world.cols.toDouble());
+    final tileSize = constraints.maxWidth / cols;
     final visibleRows = constraints.maxHeight / tileSize;
     final leader =
         world.leader ?? (world.heroes.isNotEmpty ? world.heroes.first : null);
     final centerX = leader?.x ?? world.cols / 2;
     final centerY = leader?.y ?? world.rows / 2;
-    final maxCamX = math.max(0.0, world.cols - visibleCols);
+    final maxCamX = math.max(0.0, world.cols - cols);
     final maxCamY = math.max(0.0, world.rows - visibleRows);
     return _TileCamera(
-      camX: (centerX - visibleCols / 2).clamp(0.0, maxCamX).toDouble(),
+      camX: (centerX - cols / 2).clamp(0.0, maxCamX).toDouble(),
       camY: (centerY - visibleRows / 2).clamp(0.0, maxCamY).toDouble(),
       tileSize: tileSize,
-      visibleCols: visibleCols,
+      visibleCols: cols,
       visibleRows: visibleRows,
     );
   }

@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models/combat_ratings.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
+import '../models/dungeon_zoom.dart';
 import '../models/enemy.dart';
 import '../models/gear_loadout.dart';
 import '../models/hero.dart';
@@ -14,6 +15,10 @@ import '../models/pet.dart';
 import '../models/vfx_quality.dart';
 import 'ad_boost.dart';
 import 'keystone.dart';
+
+/// UI text scale clamps (SETTINGS slider + MediaQuery compose).
+const double kUiTextScaleMin = 0.80;
+const double kUiTextScaleMax = 1.45;
 
 int _jsonInt(dynamic value, [int fallback = 0]) {
   if (value == null) return fallback;
@@ -98,6 +103,9 @@ class GameState {
     this.keystoneOutcome = '',
     this.colorblindMode = false,
     this.uiTextScale = 1.0,
+    this.dungeonZoom = DungeonZoom.normal,
+    this.hapticsEnabled = true,
+    this.keepScreenAwake = true,
     this.lastDailyDate,
     this.dailyClaimed = false,
     this.seenChangelogVersion = '',
@@ -291,6 +299,15 @@ class GameState {
 
   /// Accessibility: UI text scale multiplier.
   final double uiTextScale;
+
+  /// Dungeon camera framing (close / normal / wide).
+  final DungeonZoom dungeonZoom;
+
+  /// Phone vibration on combat / UI cues (independent of mute).
+  final bool hapticsEnabled;
+
+  /// Keep the screen on while in a dungeon (Android).
+  final bool keepScreenAwake;
 
   /// Last UTC calendar date (`yyyy-mm-dd`) the Daily Run was entered.
   final String? lastDailyDate;
@@ -850,6 +867,9 @@ class GameState {
     String? keystoneOutcome,
     bool? colorblindMode,
     double? uiTextScale,
+    DungeonZoom? dungeonZoom,
+    bool? hapticsEnabled,
+    bool? keepScreenAwake,
     String? lastDailyDate,
     bool? dailyClaimed,
     String? seenChangelogVersion,
@@ -952,6 +972,9 @@ class GameState {
       keystoneOutcome: keystoneOutcome ?? this.keystoneOutcome,
       colorblindMode: colorblindMode ?? this.colorblindMode,
       uiTextScale: uiTextScale ?? this.uiTextScale,
+      dungeonZoom: dungeonZoom ?? this.dungeonZoom,
+      hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
+      keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
       lastDailyDate: lastDailyDate ?? this.lastDailyDate,
       dailyClaimed: dailyClaimed ?? this.dailyClaimed,
       seenChangelogVersion: seenChangelogVersion ?? this.seenChangelogVersion,
@@ -1076,6 +1099,9 @@ class GameState {
     'keystoneOutcome': keystoneOutcome,
     'colorblindMode': colorblindMode,
     'uiTextScale': uiTextScale,
+    'dungeonZoom': dungeonZoom.name,
+    'hapticsEnabled': hapticsEnabled,
+    'keepScreenAwake': keepScreenAwake,
     if (lastDailyDate != null) 'lastDailyDate': lastDailyDate,
     'dailyClaimed': dailyClaimed,
     'seenChangelogVersion': seenChangelogVersion,
@@ -1319,7 +1345,13 @@ class GameState {
           const <String>[],
       keystoneOutcome: (json['keystoneOutcome'] as String?) ?? '',
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
-      uiTextScale: (json['uiTextScale'] as num?)?.toDouble() ?? 1.0,
+      uiTextScale: ((json['uiTextScale'] as num?)?.toDouble() ?? 1.0).clamp(
+        kUiTextScaleMin,
+        kUiTextScaleMax,
+      ),
+      dungeonZoom: DungeonZoom.fromJson(json['dungeonZoom']),
+      hapticsEnabled: (json['hapticsEnabled'] as bool?) ?? true,
+      keepScreenAwake: (json['keepScreenAwake'] as bool?) ?? true,
       lastDailyDate: json['lastDailyDate'] as String?,
       dailyClaimed: (json['dailyClaimed'] as bool?) ?? false,
       seenChangelogVersion: (json['seenChangelogVersion'] as String?) ?? '',

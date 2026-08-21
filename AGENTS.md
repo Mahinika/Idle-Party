@@ -288,7 +288,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 God Hand level + style/CD in `metaDepth`, **Apex** vault + equipped apex,
 legacy heirloom item if an old save still has one (no new binds; may rescale),
 `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
-(mute/VFX/colorblind/text scale/auto-sell/**auto-disassemble**), full `metaDepth`
+(mute/VFX/colorblind/text scale/dungeon zoom/haptics/keep-awake/auto-sell/**auto-disassemble**), full `metaDepth`
 (Gauntlet best, Will / Gauntlet claims, daily vault / weekly affix season,
 **prestige shop** purchases — Apothecary Writ / Junk Magnifier /
 Away Ledger / …, unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY),

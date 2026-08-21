@@ -389,8 +389,9 @@ abstract final class GameGuides {
           '• Party strip (bottom-left) fades after idle — tap a hero for kit, tap again to fold.\n'
           '• Target chip sits top-right (name + HP).\n'
           '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.\n'
-          '• Settings: text scale, Full / Lite / Minimal VFX (Minimal = reduce motion), '
-          'colorblind floaters, '
+          '• Settings: text scale (S/M/L/XL), dungeon zoom Close/Normal/Wide, '
+          'mute + haptics, keep screen on in dungeon, Full / Lite / Minimal VFX '
+          '(Minimal = reduce motion), colorblind floaters, '
           'bag auto-sell / auto-disassemble.\n'
           '• META → GUIDE brings you back here anytime.\n'
           '• Escape / back closes overlays.',
