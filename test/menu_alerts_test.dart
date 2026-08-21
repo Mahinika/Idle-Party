@@ -115,6 +115,24 @@ void main() {
     expect(alert.reason.toLowerCase(), contains('claim'));
   });
 
+  test('full bag without upgrades points at CLEAN BAG', () {
+    final base = GameLogic.createInitialState(now: now);
+    final cap = GameLogic.maxGearStashFor(base);
+    final junk = List<EquipmentItem>.generate(
+      cap,
+      (i) => EquipmentItem(
+        id: 'junk_$i',
+        name: 'Pebble',
+        slot: EquipmentSlot.trinket,
+        rarity: LootRarity.common,
+        itemLevel: 1,
+      ),
+    );
+    final state = base.copyWith(gearStash: junk);
+    expect(MenuAlerts.partyAlert(state).reason, contains('CLEAN BAG'));
+    expect(MenuAlerts.gearEquipHint(state, 0), contains('CLEAN BAG'));
+  });
+
   test('first-hour menus hide advanced tabs, Ascend opens them', () {
     final fresh = GameLogic.createInitialState(now: now);
     expect(MenuTabs.showMerge(fresh), isFalse);

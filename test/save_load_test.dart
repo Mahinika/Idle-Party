@@ -35,6 +35,9 @@ void main() {
       rogueUnlocked: true,
       offlineSecondsRecovered: 90,
       layoutSeed: 4242,
+      wipeStreakKey: 'sandy:3',
+      wipeStreakCount: 3,
+      wipeAdviceLine: 'Upgrade ATK in FORGE',
     );
     state = GameLogic.ensureRogueHero(state);
 
@@ -70,6 +73,9 @@ void main() {
     expect(decoded.dungeonId, 'sandy');
     expect(decoded.dungeonMode, DungeonMode.farm);
     expect(decoded.inDungeon, isTrue);
+    expect(decoded.wipeStreakKey, 'sandy:3');
+    expect(decoded.wipeStreakCount, 3);
+    expect(decoded.wipeAdviceLine, 'Upgrade ATK in FORGE');
     expect(decoded.heroes.length, state.heroes.length);
     // Load may run syncSpecUnlocks and bump lastUpdated.
     expect(

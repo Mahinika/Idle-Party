@@ -3,6 +3,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/wipe_advice.dart';
 import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/models/loot.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 21);
@@ -128,6 +129,27 @@ void main() {
     state = GameLogic.clearWipeStreak(state);
     expect(state.wipeStreakCount, 0);
     expect(state.wipeAdviceLine, '');
+  });
+
+  test('bag upgrades beat forge tips', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      gearStash: [
+        EquipmentItem(
+          id: 'up_atk',
+          name: 'Test Blade',
+          slot: EquipmentSlot.weapon,
+          rarity: LootRarity.epic,
+          attackBonus: 40,
+          strengthBonus: 30,
+          itemLevel: 90,
+        ),
+      ],
+    );
+    expect(
+      WipeAdvice.lineFor(state: state, fight: atkLack()),
+      'Equip the better item in PARTY',
+    );
   });
 
   test('LOADOUTS tab stays off even after Ascend', () {
