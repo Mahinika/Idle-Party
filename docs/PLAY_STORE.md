@@ -8,12 +8,12 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ✅ Alpha | **1.12.25 (55)** live for closed testers (published 2026-08-20). Next ship **1.12.26** adds the in-app Play update notice. Production still ❌. |
+| Closed testing | ⏳ review | **1.12.27 (57)** submitted to closed Alpha 2026-08-21 (POWERUPS ads + Play update notice + shield fix). Testers still on **1.12.25 (55)** until Google publishes. Production still ❌. |
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ✅ | Console saved 2026-08-16: branch blob `docs/PRIVACY.md` on `cursor/keystone-habit-b46b` (Play Games + delete steps). Switch to `main` after merge. |
-| Data safety form | ⏳ ads | **Must update** before a Play build with POWERUPS ads: Advertising ID + Ads. Was published 2026-08-16 as no-ads + optional Play Games. |
-| IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). Re-answer ads questions before shipping ads to Play testers. |
+| Data safety form | ⏳ review | Updated 2026-08-21 for AdMob (device IDs collected+shared, advertising purpose) + Advertising ID declaration Yes. Submitted with Alpha **57**. |
+| IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). Re-answer ads questions if Console asks after this review. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed 1.12.9 build. |
 | Store listing copy (EN) | ✅ live | Default locale **en-US only** (no extra listing languages). Honesty copy from `docs/STORE_LISTING.md`. Verified 2026-08-20. |
 | Screenshots + feature graphic | ✅ live | Six phone shots (showcase AL3 + English top captions, 1080×1920). Feature graphic + icon from owned `app_icon`. Tablet shots still older (phone-first). |
@@ -39,7 +39,7 @@ over Play ops unless the owner asks about Play.
 ## Play Console — closed / internal (ops)
 
 - [x] App exists in Play Console (`com.idleparty.app`) with listing + closed Alpha.
-- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.25 (55)** live for closed testers (2026-08-20). **1.12.26** (Play update notice) is not on Play yet.
+- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.27 (57)** submitted 2026-08-21 (review). Previous live for testers: **1.12.25 (55)**.
 - [ ] Enable Play App Signing if prompted on new uploads.
 - [ ] Add / retain closed testers toward **12 × 14 days** for production access.
 - [ ] Smoke-test install → hub → short dungeon → leave → relaunch (save persists).
@@ -50,7 +50,7 @@ over Play ops unless the owner asks about Play.
   `https://github.com/Mahinika/Idle-Party/blob/cursor/keystone-habit-b46b/docs/PRIVACY.md`  
   (switch to `main` after this branch merges).
 - [x] Data safety form (2026-08-16): **optional Play Games** (User IDs / gameplay Other actions / Saved Games files); collected not shared; encrypted in transit; OAuth; delete account + data URLs point at [PRIVACY.md](PRIVACY.md). **No Idle Party analytics servers**; clipboard export/import is optional and user-initiated.
-- [ ] **Rewarded ads (1.12.27):** AdMob account + live IDs (not Google sample). Update Data safety (Ads + Advertising ID, shared with Google AdMob) and re-run IARC ads questions before the next Play AAB. Privacy copy is in [PRIVACY.md](PRIVACY.md).
+- [x] **Rewarded ads (1.12.27):** AdMob live IDs in app. Data safety + Advertising ID declaration updated 2026-08-21 and submitted with Alpha **57**. Privacy copy in [PRIVACY.md](PRIVACY.md). IARC ads questions still ⏳ if Console prompts.
 
 ### Rewarded ads / AdMob (how money actually arrives)
 
@@ -64,12 +64,12 @@ Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not
 
 1. Wait for AdMob **account verification**, then a live-ads Android build so the app can leave **Requires review**.
 2. Optional: **app-ads.txt** on the Play developer website (`pub-4980376195917009`) once ads are live.
-3. Play Data safety + IARC ads questions before the next Play AAB with live ads.
+3. Wait for Play review of Alpha **57**; then smoke POWERUPS on a Play-installed build (do not click your own ads on a personal release device if you can avoid it).
+4. IARC ads questions if Console asks after review.
 
-**Play Console before the next ads AAB:**
+**Play Console (2026-08-21):**
 
-- Data safety: Yes ads; Advertising ID collected/shared with Google AdMob.
-- IARC: re-answer the ads questions.
+- Data safety + Advertising ID declaration submitted with Alpha **57**.
 - Do not ship sample IDs as “live” ads on production.
 
 Closed testers watching a few ads will not pay rent. Real money needs many players (Play production or a large sideload audience).
