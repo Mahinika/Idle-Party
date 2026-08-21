@@ -16,7 +16,7 @@ Package id: **`com.idleparty.app`**
 | IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). Re-answer ads questions if Console asks after this review. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed 1.12.9 build. |
 | Store listing copy (EN) | ✅ live | Default locale **en-US only** (no extra listing languages). Honesty copy from `docs/STORE_LISTING.md`. Verified 2026-08-20. |
-| Screenshots + feature graphic | ✅ live | Six phone shots (showcase AL3 + English top captions, 1080×1920). Feature graphic + icon from owned `app_icon`. Tablet shots still older (phone-first). |
+| Screenshots + feature graphic | ⏳ review | **8 phone + new feature graphic** submitted 2026-08-21 (promo cards in `tool/store_listing/marketing/`, 1080×1920 + 1024×500). Icon unchanged. Tablet shots still older (phone-first). |
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
 
@@ -93,7 +93,7 @@ Suggested Description (en-US):
 
 - [x] Content rating questionnaire (IARC) completed 2026-08-08 — mild fantasy combat; PEGI 12 / ESRB Everyone 10+ / IARC 7+ (no chat / gambling). **Re-answer the ads questions** before shipping POWERUPS ads to Play.
 - [x] Short + full description (en-US only — no extra listing locales) live 2026-08-20 from `docs/STORE_LISTING.md`.
-- [x] Phone screenshots re-shot + uploaded 2026-08-20 (`tool/store_listing/out/`, top captions); feature graphic + icon still from owned `app_icon` (icon refresh 2026-08-16).
+- [x] Phone screenshots + feature graphic refreshed 2026-08-21 (`tool/store_listing/marketing/`, 8×1080×1920 promo cards + 1024×500 banner). Submitted for review with listing graphics. Icon still from owned `app_icon` (refresh 2026-08-16). Tablet shots unchanged.
 - [ ] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*`.
 
 ## Production listing

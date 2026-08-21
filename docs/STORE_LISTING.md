@@ -1,6 +1,6 @@
 # Idle Party — store listing (research + copy)
 
-**Updated:** 2026-08-20 · Target: Google Play (en-US) · Honesty first.
+**Updated:** 2026-08-21 · Target: Google Play (en-US) · Honesty first.
 
 ## Research: what makes people tap Install
 
@@ -71,20 +71,28 @@ FAIR PLAY
 Install, start a party, and take one more floor.
 ```
 
-### Screenshot caption plan (optional overlays)
+### Screenshot caption plan (Play phone carousel, 2026-08-21)
 
-| # | Scene | Caption |
+Promo cards in `tool/store_listing/marketing/` (English, 1080×1920). Play max is **8** phone shots; #10 is extra on disk.
+
+| # | File | Caption |
 |---|--------|---------|
-| 1 | Hub + World Path / TODAY | Always know today’s chase |
-| 2 | Dungeon combat (party vs pack) | Your party keeps fighting |
-| 3 | GEAR / bag / upgrade | Grow stronger every floor |
-| 4 | POWER → FORGE → KEEP | Keep power when you Ascend |
-| 5 | Hub World Path (15 zones) | 15 zones · World Path |
-| 6 | POWER → INCOME | See your gold per minute |
+| Feature | `01_feature_graphic_1024x500.png` | IDLE PARTY · Grow a party. Farm AFK. |
+| 1 | `02_todays_chase_1080x1920.png` | Always know today's chase |
+| 2 | `03_party_fights_1080x1920.png` | Your party keeps fighting |
+| 3 | `04_grow_stronger_1080x1920.png` | Grow stronger every floor |
+| 4 | `05_build_party_1080x1920.png` | 10 classes. 31 kits. |
+| 5 | `06_world_path_1080x1920.png` | 15 zones. One World Path. |
+| 6 | `07_afk_progress_1080x1920.png` | Progress while you're away |
+| 7 | `08_keystone_1080x1920.png` | KEYSTONE. Beat the clock. |
+| 8 | `09_ascend_1080x1920.png` | Ascend. Keep your power. |
+| extra | `10_one_more_floor_1080x1920.png` | Take one more floor. |
+
+These are branded explainer cards (owned pixel look), not live HUD captures. Swap back to `tool/store_listing/out/` Playwright shots if Google flags them as not representing the app.
 
 ### Feature graphic note
 
-Keep 1024×500 from owned `app_icon` / brand art. Refresh only if title treatment looks dated; do not paste competitor screenshots.
+Current Play feature graphic is `01_feature_graphic_1024x500.png` (party + title). Icon stays owned `app_icon`.
 
 ## How we capture screenshots (lessons)
 
@@ -107,9 +115,9 @@ Hard-won rules:
 
 Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
 
-## Play Console status (2026-08-20)
+## Play Console status (2026-08-21)
 
-- Short description unchanged. Full description submitted with companions + MERGE (this file).
-- Six phone screenshots from earlier the same day (`tool/store_listing/out/`) — not recaptured for 1.12.25.
-- Closed Alpha AAB **55 (1.12.25)** + listing copy submitted 2026-08-20 (“Ändringarna granskas”). Testers keep **1.12.21** until Google publishes.
-- Feature graphic + icon still from owned `app_icon`.
+- Short + full description unchanged (honesty copy in this file).
+- Phone screenshots (8) + feature graphic submitted 2026-08-21 from `tool/store_listing/marketing/` (“Ändringarna granskas”; pre-checks up to ~13 min).
+- Extra card `10_one_more_floor_1080x1920.png` not uploaded (Play cap is 8 phone shots).
+- Closed Alpha AAB **57 (1.12.27)** still in review separately. Testers may still be on **1.12.25 (55)** until Google publishes.
