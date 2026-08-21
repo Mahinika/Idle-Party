@@ -50,7 +50,8 @@ Make `AGENTS.md` and `.cursor/rules/*.mdc` accurate for **today’s** codebase a
 
 - Large refactors, balance retunes, new content
 - Committing/pushing unless the user already said yes this turn
-- Rewriting historical audits under `docs/audits/` (add a one-line “historical” note only if AGENTS wrongly treats them as current)
+- Rewriting or treating `docs/audits/` snapshots as current kit truth (archive
+  only; re-run `class-audit` for live verdicts)
 
 ## Done when
 

@@ -1,12 +1,12 @@
-# Class / kit audits — historical
+# Class / kit audits
 
-These files are **point-in-time snapshots**, not current kit truth.
+Folder for **optional** archives from the `class-audit` skill:
 
-- **Do not** treat Verdict WIP/tune/ship as live without re-running `class-audit`.
-- Current game: [AGENTS.md](../../AGENTS.md) + code (`HeroSpecId`, `ClassKits`, SpatialCombat).
-- Post-fix rollup: [2026-08-10-all-specs-quick.md](2026-08-10-all-specs-quick.md).
-- Stats / CombatRatings / armor: [2026-08-17-attributes-scaling.md](2026-08-17-attributes-scaling.md).
-- Crit / haste / lifesteal caps (all 31 specs): [2026-08-20-stats-cap.md](2026-08-20-stats-cap.md).
-- Affliction / Demonology reports already say historical at the top; others may still read as WIP.
+`docs/audits/YYYY-MM-DD-<specs>.md`
 
-Use [CLASS_AUDIT_TEMPLATE.md](../CLASS_AUDIT_TEMPLATE.md) for a new audit.
+These are point-in-time snapshots — not live kit truth. Current game:
+[AGENTS.md](../../AGENTS.md) + code. New audit template:
+[CLASS_AUDIT_TEMPLATE.md](../CLASS_AUDIT_TEMPLATE.md).
+
+Old Aug 2026 snapshots were removed (git history still has them). Re-run
+`class-audit` when you need a fresh verdict.
