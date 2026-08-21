@@ -14,8 +14,8 @@ Format:
 
 ## 2026-08-21 — App-arkitektur i Obsidian
 
-- Nya noder: [[App]] → [[Hub]] / [[Dungeon]] / [[PARTY]] / [[POWER]] / [[META]] / [[TODAY]] / [[SpatialCombat]]
-- Öppna [[App]] + Local graph för att se hur ytorna hänger ihop
+- Spelets ytor som länkade noder — öppna [[App]] + Local graph (inte Dev log)
+- Hub / Dungeon / PARTY / POWER / META / TODAY / SpatialCombat
 - Länkar: [[Home]]
 
 ## 2026-08-21 — Obsidian + doc-städ
