@@ -28,6 +28,7 @@ abstract final class MetaSystems {
       bullets: <String>[
         'POWER → SHOP no longer sells Loadout Folio — LOADOUTS stays hidden. Extra slots you already bought still sit on the save.',
         'Safer title screen: sitting there will not overwrite a real save with a blank one if boot hiccups.',
+        'Party fights feel less robotic: soft run-up and turn, idle breathe, Fire kites farther, Arcane sidesteps, and low-HP DPS limp toward the healer. Combat barks sit in small bubbles.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),

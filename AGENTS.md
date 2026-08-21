@@ -243,6 +243,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Dungeon catalog | `lib/models/dungeon_def.dart` |
 | Combat sheet | `lib/models/combat_ratings.dart` + `docs/GEAR_BUDGET.md` |
 | Spatial sim | `lib/spatial/spatial_combat.dart` |
+| Combat presence (idle/inertia/barks) | `lib/spatial/combat_presence.dart` |
 | Ability runtime | `lib/spatial/ability_effects.dart` + `kit_migrated_casts.dart` (`ClassAbilityDef.fireMode` / `gate` / `customId`) |
 | Tile maps | `lib/spatial/tile_map.dart` |
 | Floor blueprint / placement | `lib/spatial/floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart` + `docs/FLOOR_BLUEPRINT.md` |

@@ -1087,10 +1087,20 @@ class _TileRoomPainter extends CustomPainter {
       double scale, {
       double alpha = 1,
       Color? tint,
+      bool flipX = false,
     }) {
       final s = tile * scale;
       final dst = Rect.fromCenter(center: c, width: s, height: s);
-      _drawImage(canvas, image, dst, alpha: alpha, tint: tint);
+      if (flipX) {
+        canvas.save();
+        canvas.translate(c.dx, c.dy);
+        canvas.scale(-1, 1);
+        canvas.translate(-c.dx, -c.dy);
+        _drawImage(canvas, image, dst, alpha: alpha, tint: tint);
+        canvas.restore();
+      } else {
+        _drawImage(canvas, image, dst, alpha: alpha, tint: tint);
+      }
     }
 
     for (final prop in world.map.props) {
@@ -1545,10 +1555,17 @@ class _TileRoomPainter extends CustomPainter {
       final partyHero = party.isEmpty ? null : party[idx];
       final flash = hero.attackFlash;
       var c = center(hero.x, hero.y);
+      // Prefer smoothed face aim; fall back to attack punch aim.
+      final aimX = (hero.faceAimX != 0 || hero.faceAimY != 0)
+          ? hero.faceAimX
+          : hero.attackAimX;
+      final aimY = (hero.faceAimX != 0 || hero.faceAimY != 0)
+          ? hero.faceAimY
+          : hero.attackAimY;
       // Melee lunge toward the target while attacking (warrior especially).
-      if (flash > 0.02 && (hero.attackAimX != 0 || hero.attackAimY != 0)) {
-        final adx = hero.attackAimX - hero.x;
-        final ady = hero.attackAimY - hero.y;
+      if (flash > 0.02 && (aimX != 0 || aimY != 0)) {
+        final adx = aimX - hero.x;
+        final ady = aimY - hero.y;
         final alen = math.sqrt(adx * adx + ady * ady);
         if (alen > 0.05) {
           final punch = hero.heroRole == HeroRole.warrior ? 0.38 : 0.22;
@@ -1557,7 +1574,19 @@ class _TileRoomPainter extends CustomPainter {
             c.dy + (ady / alen) * tile * punch * flash,
           );
         }
+      } else if (aimX != 0 || aimY != 0) {
+        // Tiny lean toward facing so idle kits don't look glued forward.
+        final adx = aimX - hero.x;
+        final ady = aimY - hero.y;
+        final alen = math.sqrt(adx * adx + ady * ady);
+        if (alen > 0.08) {
+          c = Offset(
+            c.dx + (adx / alen) * tile * 0.06,
+            c.dy + (ady / alen) * tile * 0.04,
+          );
+        }
       }
+      final flipX = (aimX - hero.x) < -0.15;
       final scale =
           0.95 * (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
       final alpha = hero.isAlive ? 1.0 : 0.25;
@@ -1577,6 +1606,7 @@ class _TileRoomPainter extends CustomPainter {
           scale,
           alpha: hero.vanishTimer > 0 ? 0.35 : alpha,
           tint: tint,
+          flipX: flipX,
         );
       } else if (partyHero != null) {
         final walk = flash > 0.05
@@ -1997,10 +2027,14 @@ class _TileRoomPainter extends CustomPainter {
       for (var i = 0; i < floaters.length; i++) {
         final floater = floaters[i];
         if (!_inView(floater.x, floater.y, pad: 0.5)) continue;
-        final fadeFor = floater.priority >= 1 ? 1.15 : 0.7;
+        final speech = floater.kind == SpatialFloaterKind.speech;
+        final fadeFor = speech
+            ? 1.35
+            : (floater.priority >= 1 ? 1.15 : 0.7);
         final alpha = (floater.life / fadeFor).clamp(0.0, 1.0);
-        final size =
-            tile * 0.32 * SpatialCombat.floaterReadScale(floater.priority);
+        final size = tile *
+            (speech ? 0.28 : 0.32) *
+            SpatialCombat.floaterReadScale(floater.priority);
         tp.text = TextSpan(
           text: floater.text,
           style: GameTheme.pixelCached(
@@ -2010,6 +2044,30 @@ class _TileRoomPainter extends CustomPainter {
         );
         tp.layout(maxWidth: maxW);
         final c = center(floater.x, floater.y);
+        if (speech) {
+          final padX = tile * 0.12;
+          final padY = tile * 0.06;
+          final bubble = RRect.fromRectAndRadius(
+            Rect.fromLTWH(
+              c.dx - tp.width / 2 - padX,
+              c.dy - tp.height / 2 - padY,
+              tp.width + padX * 2,
+              tp.height + padY * 2,
+            ),
+            Radius.circular(tile * 0.12),
+          );
+          canvas.drawRRect(
+            bubble,
+            Paint()..color = const Color(0xCC1A1420).withValues(alpha: alpha),
+          );
+          canvas.drawRRect(
+            bubble,
+            Paint()
+              ..color = Color(floater.argb).withValues(alpha: alpha * 0.55)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(1.0, tile * 0.03),
+          );
+        }
         tp.paint(canvas, Offset(c.dx - tp.width / 2, c.dy - tp.height / 2));
       }
       tp.dispose();

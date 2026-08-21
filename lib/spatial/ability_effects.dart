@@ -682,12 +682,18 @@ abstract final class AbilityEffectRunner {
         if (_isPartyHeal(def)) {
           _spendAndCd(world, hero, def);
           _castPartyHeal(world, hero, def, reducedVfx: reducedVfx);
+          CombatPresence.onEmergencyHeal(
+            world,
+            hero,
+            reducedVfx: reducedVfx,
+          );
           return true;
         }
         final ally = _lowestAlly(world, hero);
         if (ally == null) return false;
         _spendAndCd(world, hero, def);
         _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
+        CombatPresence.onEmergencyHeal(world, hero, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.absorb:
         // Unholy AMS / Blood Bone Shield are self shells — not party bubbles.
