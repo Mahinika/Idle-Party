@@ -31,10 +31,11 @@ void main() {
     expect(find.text('POWER'), findsOneWidget);
     expect(find.textContaining('META'), findsOneWidget);
     expect(find.textContaining('Ascend'), findsWidgets);
-    expect(find.textContaining('KEYSTONE'), findsWidgets);
+    // Fresh save: KEY jargon gated — no KEYSTONE strip under ENTER.
+    expect(find.textContaining('KEYSTONE'), findsNothing);
   });
 
-  testWidgets('short hub keeps KEYSTONE and pillars', (WidgetTester tester) async {
+  testWidgets('short hub keeps pillars without early KEYSTONE', (WidgetTester tester) async {
     final director = GameDirector.preview();
 
     tester.view.physicalSize = const Size(390, 640);
@@ -47,11 +48,30 @@ void main() {
 
     expect(GameTheme.isShortHeight(tester.element(find.text('ENTER DUNGEON'))), isTrue);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
-    expect(find.textContaining('KEYSTONE'), findsWidgets);
+    expect(find.textContaining('KEYSTONE'), findsNothing);
     expect(find.text('PARTY'), findsOneWidget);
     expect(find.text('POWER'), findsOneWidget);
     expect(find.textContaining('META'), findsOneWidget);
     expect(find.textContaining('Bosses'), findsNothing);
+  });
+
+  testWidgets('hub shows KEYSTONE after jargon unlock', (WidgetTester tester) async {
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState().copyWith(
+        highestDungeonCleared: 2,
+      ),
+    );
+
+    tester.view.physicalSize = const Size(400, 860);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(GameLogic.showKeystoneJargon(director.state), isTrue);
+    expect(find.textContaining('KEYSTONE'), findsWidgets);
   });
 
   testWidgets('entering dungeon shows mobile shell chrome', (WidgetTester tester) async {

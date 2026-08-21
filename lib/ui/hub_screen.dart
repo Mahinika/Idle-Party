@@ -474,10 +474,13 @@ class _HubScreenState extends State<HubScreen>
                                           onPressed: primaryAction,
                                         ),
                                       ),
-                                      ChallengeToggles(
-                                        director: director,
-                                        collapsed: true,
-                                      ),
+                                      // Same gate as META KEY tab / tips — first
+                                      // hour stays grow-the-party, not KEY chrome.
+                                      if (GameLogic.showKeystoneJargon(state))
+                                        ChallengeToggles(
+                                          director: director,
+                                          collapsed: true,
+                                        ),
                                       HubUrgentRow(
                                         claimable: state.missions
                                             .where((m) => m.isComplete)
