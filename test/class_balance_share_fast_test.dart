@@ -14,14 +14,12 @@ void main() {
       '--share-only',
       '--trials=2',
       '--mode=live',
-      '--focus=demonology,affliction,destruction,combat',
+      '--focus=combat,arms,fury,assassination,subtlety,fire,affliction,destruction,demonology',
     ]);
     expect(report, contains('share-only: true'));
-    expect(
-      report,
-      contains('focus: demonology, affliction, destruction, combat'),
-    );
+    expect(report, contains('focus: combat'));
     expect(report, contains('| spec | share% | vs med | flag |'));
     expect(report, contains('Wrote tool/out/class_balance_share.json'));
+    expect(report.contains('- **HIGH** combat'), isFalse);
   }, timeout: const Timeout(Duration(minutes: 4)));
 }

@@ -340,7 +340,8 @@ class SpatialActor {
   double get attackSpeedMul {
     var m = kitHasteMul;
     if (sliceAndDiceTimer > 0) m *= 1.35;
-    if (killingSpreeTimer > 0) m *= 1.55;
+    // Combat Spree: haste fantasy without turning pack whites into a blender.
+    if (killingSpreeTimer > 0) m *= 1.18;
     if (powerInfusionTimer > 0) {
       final caster =
           heroSpecId != null &&
@@ -3253,7 +3254,7 @@ abstract final class SpatialCombat {
             ? 5
             : nextState.effectiveHeroCrit(partyHero);
         final isCrit = rng.nextInt(100) < critChance;
-        var damage = executeBonus ? (hero.attack * 1.4).round() : hero.attack;
+        var damage = executeBonus ? (hero.attack * 1.15).round() : hero.attack;
         String? abilityTag;
         var abilityTagArgb = _floaterDamage;
         final mods = _classAttackMods(world, hero, damage);
@@ -3307,7 +3308,9 @@ abstract final class SpatialCombat {
             for (final e in world.enemies) {
               if (e.id == target.id || e.hp <= 0 || e.dormant) continue;
               if (_dist(hero, e) > 2.2) continue;
-              final cleave = math.max(1, (dealt * 0.40).round());
+              // Combat: SnD + Spree haste made 40% pack-cleave a blender.
+              final frac = hero.heroSpecId == HeroSpecId.combat ? 0.22 : 0.40;
+              final cleave = math.max(1, (dealt * frac).round());
               e.hp = math.max(0, e.hp - cleave);
               _recordHeroDamage(hero, cleave);
               if (!reducedVfx) {

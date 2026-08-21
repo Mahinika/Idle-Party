@@ -26,7 +26,8 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.29',
       bullets: <String>[
-        'Three wipes on the same floor: the dungeon names a real fix when the fight proves it — equip bag upgrades, drop a floor, or FORGE ATK / DEF / STA. No guessed tips.',
+        'Combat Rogue pack damage was stomping peers — Blade Flurry cleave, Killing Spree haste/hits, and execute whites are trimmed so AoE sits with other DPS.',
+        'Three wipes on the same floor: the dungeon names a real fix when the fight proves it — equip bag upgrades, drop a floor, or FORGE ATK / DEF / STA. PUSH retreats keep that streak (clearing a lower floor does not erase it). No guessed tips.',
         'BAG/GEAR dropped SELL JUNK, SCRAP, GEAR Sell, and LOADOUTS. CLEAN BAG + FILTERS + MARKET still clear junk.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],

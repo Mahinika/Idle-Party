@@ -828,8 +828,8 @@ abstract final class KitNamedCasts {
 
       case AbilityCustomId.killingSpree:
         AbilityEffectRunner._spendAndCd(world, hero, def);
-        hero.killingSpreeTimer = 3.5;
-        SpatialCombat._gainRage(hero, 35);
+        hero.killingSpreeTimer = 3.0;
+        SpatialCombat._gainRage(hero, 15);
         final spree = _enemiesAround(world, hero, 4.5)
           ..sort(
             (a, b) => SpatialCombat._dist(
@@ -839,7 +839,7 @@ abstract final class KitNamedCasts {
           );
         var prevX = hero.x;
         var prevY = hero.y;
-        for (final e in spree.take(3)) {
+        for (final e in spree.take(2)) {
           final hit = CombatRatings.mitigateByArmor(
             rawDamage: math.max(
               2,
@@ -933,8 +933,9 @@ abstract final class KitNamedCasts {
 
       case AbilityCustomId.bladeFlurry:
         AbilityEffectRunner._spendAndCd(world, hero, def);
-        hero.bladeFlurryTimer = math.max(hero.bladeFlurryTimer, 6.0);
-        hero.buffTimers['buff'] = 6.0;
+        final dur = def.selfBuffDuration > 0 ? def.selfBuffDuration : 5.0;
+        hero.bladeFlurryTimer = math.max(hero.bladeFlurryTimer, dur);
+        hero.buffTimers['buff'] = dur;
         if (!reducedVfx) {
           SpatialCombat._spawnRing(
             world,

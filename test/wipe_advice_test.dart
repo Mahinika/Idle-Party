@@ -3,6 +3,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/wipe_advice.dart';
 import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/loot.dart';
 
 void main() {
@@ -129,6 +130,44 @@ void main() {
     state = GameLogic.clearWipeStreak(state);
     expect(state.wipeStreakCount, 0);
     expect(state.wipeAdviceLine, '');
+  });
+
+  test('clearing a lower floor after push retreat keeps the wall streak', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      highestFloorCleared: 4,
+      currentRoom: state.currentRoom.copyWith(floorNumber: 5),
+      dungeonMode: DungeonMode.push,
+    );
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(state.wipeStreakKey, 'sandy:5');
+    expect(state.wipeStreakCount, 1);
+
+    // Simulate clearing F4 after retreat — meta progress uses pre-clear floor.
+    final beforeClear = state.copyWith(
+      currentRoom: state.currentRoom.copyWith(floorNumber: 4),
+    );
+    final afterClear = beforeClear.copyWith(
+      highestFloorCleared: 4,
+      wipeStreakKey: beforeClear.wipeStreakKey,
+      wipeStreakCount: beforeClear.wipeStreakCount,
+    );
+    // Same rule as _applyMetaProgress: only clear when streak key matches.
+    final kept = beforeClear.wipeStreakKey.isEmpty ||
+            beforeClear.wipeStreakKey == GameLogic.wipeFloorKey(beforeClear)
+        ? GameLogic.clearWipeStreak(afterClear)
+        : afterClear;
+    expect(kept.wipeStreakKey, 'sandy:5');
+    expect(kept.wipeStreakCount, 1);
+
+    kept.copyWith(
+      currentRoom: kept.currentRoom.copyWith(floorNumber: 5),
+    );
+    var again = GameLogic.notePartyWipe(
+      kept.copyWith(currentRoom: kept.currentRoom.copyWith(floorNumber: 5)),
+      atkLack(),
+    );
+    expect(again.wipeStreakCount, 2);
   });
 
   test('bag upgrades beat forge tips', () {

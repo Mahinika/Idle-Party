@@ -81,7 +81,7 @@ abstract final class AbilityEffectRunner {
       SpatialCombat._gainRage(hero, rate * dt);
       // Combat Rogue floods energy during Killing Spree.
       if (specId == HeroSpecId.combat && hero.killingSpreeTimer > 0) {
-        SpatialCombat._gainRage(hero, 14 * dt);
+        SpatialCombat._gainRage(hero, 6 * dt);
       }
     }
     if (def.resource == SpecResource.mana) {
@@ -540,8 +540,8 @@ abstract final class AbilityEffectRunner {
       case AbilityId.aspectOfHawk:
         hero.kitOutMul *= 1.22;
       case AbilityId.trueshotAura:
-        hero.kitOutMul *= 1.32;
-        hero.kitHasteMul *= 1.10;
+        hero.kitOutMul *= 1.26;
+        hero.kitHasteMul *= 1.08;
       case AbilityId.trapMastery:
         hero.kitOutMul *= 1.32;
         hero.kitRootBonus += 1.0;

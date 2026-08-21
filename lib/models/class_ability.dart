@@ -1252,15 +1252,15 @@ class ClassKits {
       shortLabel: 'Flurry',
       description: 'Cleave nearby enemies for a short window.',
       unlockLevel: 9,
-      cooldown: 18,
+      cooldown: 22,
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
-      coeff: 0.48,
+      coeff: 0.28,
 
       customId: AbilityCustomId.bladeFlurry,
       selfBuffKind: AbilitySelfBuffKind.cleave,
-      selfBuffDuration: 6,
+      selfBuffDuration: 5,
       gate: AbilityGate(packMin: 2),
     ),
     ClassAbilityDef(
@@ -1305,7 +1305,7 @@ class ClassKits {
       resourceCost: 0,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
-      coeff: 1.1,
+      coeff: 0.72,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -2171,7 +2171,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.85,
+      coeff: 1.72,
     ),
     ClassAbilityDef(
       id: AbilityId.chimeraShot,

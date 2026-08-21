@@ -2201,7 +2201,13 @@ class GameLogic {
     next = MetaSystems.registerItemDrops(next, drops);
     // Probe [before] — after already rolled a new layoutSeed on advance.
     next = _claimDailyIfEligible(next, dailyProbe: before);
-    next = clearWipeStreak(next);
+    // Only clear when they beat the floor they kept wiping on. Clearing a
+    // lower floor after a PUSH retreat must keep the wall streak (else advice
+    // never reaches 3 on a cliff floor).
+    if (before.wipeStreakKey.isEmpty ||
+        before.wipeStreakKey == wipeFloorKey(before)) {
+      next = clearWipeStreak(next);
+    }
     final farmLoop = before.dungeonMode == DungeonMode.farm;
     // Gauntlet is endless — same mint rules as farm (no challenge/weekly cheese).
     final suppressMetaMint = farmLoop || before.inGauntlet;
