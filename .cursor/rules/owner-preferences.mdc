@@ -8,18 +8,21 @@ alwaysApply: true
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
-Last preference sync: **2026-08-21** (/init: Play Alpha fact → **1.12.27 / 57**;
-optional hub POWERUPS rewarded ads; still no IAP. Workstyle: commit locally when
-a batch is verified; still ask before push / Play / save-wipe. Other product
-locks unchanged).
+Last preference sync: **2026-08-21** (work loop: AL20 save, large independent
+batches, owner tests phone APK before GitHub/Play; short “what to test” then
+wait. Play Alpha fact still **1.12.27 / 57**; no IAP. Other product locks
+unchanged).
 
 ## Near-term focus
 
 - **Default roadmap:** 90-day M1–M3 shipped. Operate from `docs/CONTENT_CADENCE.md`
   — balance + one player-visible slice + What’s New + decision table (kits before
-  new specs). Don’t invent a competing list. **Now:** **core-loop feel** so people
-  keep playing — not new zones, not new classes.
-- Vague “gör spelet bättre / vad härnäst” → **feel of the existing loop** (power beats, combat juice, readable rewards), not a new dungeon or spec, not `/init` / cleanup / CI chores.
+  new specs). Don’t invent a competing list. **Now:** **AL20 hub + dungeon feel**
+  so the owner’s save always knows what to chase — not new zones, not new classes.
+- Vague “gör spelet bättre / vad härnäst” → **AL20 hub + dungeon** (chase
+  clarity, wipe advice the game can prove, dead menu chrome). Not first-hour
+  onboarding, not a new dungeon or spec, not `/init` / cleanup / CI chores.
+  First-hour systems may stay for new players; they are not the default work.
 - Prefer **game feel / content** over Play ops busywork (closed-test recruitment can idle in background).
 - Play production remains a goal, but day-to-day work defaults to **content + feel** unless the owner asks about Play.
 - Background why (optional read): `docs/TOP_GAMES_RESEARCH.md`.
@@ -37,15 +40,26 @@ locks unchanged).
 - **Owner reference phone: Samsung Galaxy A56** (1080×2340 @ DPR 3 → **360×780** CSS). Cursor browser playtest must always emulate this (or equivalent 360-wide portrait) via CDP device metrics — never judge UI at desktop/tablet width.
 - Hub, GEAR/BAG, menus, tooltips, touch targets: assume **finger + portrait**. Hover-only UX is playtest-only; phone must work with tap / long-press.
 - Flutter **web** remains a Cursor playtest harness with **forced phone emulation** — never treat wide desktop chrome as the shipping UI.
-- **Owner play notes win.** If they write what the first hour felt like (TODAY lied, tips got in the way, “what do I chase?”), that *is* the Month 1 batch — fix those surfaces. Don’t wait for a formal audit. Don’t invent a 10-minute phone pass without their notes unless they asked you to playtest in the Cursor browser.
+- **Owner play notes win.** They play **their own AL20 save** on the A56
+  (~60+ min/week). Hub “am I doing the right thing?” notes, wipe notes, and
+  unused-menu notes *are* the batch. No tester telemetry yet — do not wait on
+  closed testers. Don’t invent a 10-minute browser pass instead of their phone.
 
 ## Work style
 
-- Prefer **large batches** (“gör allt X”) — fewer tiny back-and-forths.
-- Still verify (analyze/tests / hub smoke as needed) before calling done.
-- **Commit locally** when the requested batch is verified (DoD). Don’t wait for
-  a second “ska jag commita?”. **Ask before push, PR, and release tags.** Never
-  force-push or skip hooks unless the owner says so in that turn.
+- Prefer **large batches** the agent can finish alone (including ~1h
+  autonomous passes). Few check-ins mid-batch.
+- Verify with analyze/tests (and hub smoke if UI) **before** handing the
+  phone APK to the owner.
+- **Loop:** build → **sideload APK to the owner’s phone** → **≤5 lines:
+  what to tap / what to look for** → **wait** for text (screenshot only if
+  it helps). Do not write essays. Do not GitHub-release or upload Play AAB
+  until they answered that test list.
+- **Then** ship both: GitHub APK/AAB **and** Play Alpha. Testers never get
+  a build before the owner has played it.
+- **Commit locally** when analyze/tests are green so work is not lost. Don’t
+  wait for “ska jag commita?”. Still **ask** before push / PR / tag / Play.
+  Never force-push or skip hooks unless they say so in that turn.
 - **Code shape:** prefer splitting a giant file (`game_logic`, `is2_shell`,
   `spatial_combat`, …) when a change needs a home. Do **not** merge more into
   those files. Keep SpatialCombat as combat authority (extract helpers, don’t
@@ -62,10 +76,17 @@ locks unchanged).
 
 ## Game feel & fantasy
 
-- First-hour / player fantasy priority: **progression / power** (grow the party, feel stronger).
+- **Owner lens is endgame (AL20).** Hub must make “what do I do next?”
+  obvious on that save. Progression / power still matters; first-hour stays
+  calm for new players but is not the default polish target.
 - Keep hub/UI **readable and low-panic** (not sweaty esports chrome).
+- After **3 wipes on the same floor**, dungeon may suggest a fix **only if
+  the sim knows the deficit** (e.g. ATK vs DEF vs wrong zone). No guessed
+  tips. Show it **in the dungeon**, not after they are already back in hub.
+- **Dead chrome the owner tried and does not use — hide or remove, don’t
+  polish:** BAG **Scrap**, **Sell junk**, GEAR **Sell**, **Loadouts**. Keep
+  save fields if old saves still have them.
 - **Early game:** approachable. **Endgame** (high AL / Gauntlet / late zones): OK to be **competitive / grindy**.
-- Challenges/Gauntlet are welcome depth; don’t make the first hour feel like a raid.
 
 ## Content priorities
 
@@ -81,7 +102,8 @@ locks unchanged).
 ## Language
 
 - **In-game copy stays English** (UI, tips, What’s New, guides).
-- Agent ↔ owner chat: plain Swedish (or their language). No jargon quizzes.
+- Agent ↔ owner chat: plain Swedish (or their language). After a coding pass:
+  what to test on the phone, then wait. No jargon quizzes.
 
 ## Balance vs fantasy
 

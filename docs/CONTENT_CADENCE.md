@@ -14,21 +14,24 @@ Each tagged `1.x.y` release should include:
    - Reads `tool/out/class_balance_share.json` + markdown board
    - CI: `test/class_balance_gate_test.dart` (live light, fails on DPS `**HIGH**`)
    - Mid band still manual / long (`class_balance_mid_sim_test`) when casters feel spicy
-2. **Content slice** — one player-visible piece: dungeon beat, kit identity, meta sink, **local season week row**, Weekly/Gauntlet beat, or a11y/save polish. Prefer **core-loop feel** over new zones/classes (owner lock).
+2. **Content slice** — one player-visible piece. Prefer **AL20 hub + dungeon
+   feel** (chase clarity, proven wipe advice, hide dead chrome) over new
+   zones/classes (owner lock).
 3. **Release notes** — What’s New in `lib/core/meta_systems.dart`; `test/changelog_sync_test.dart` keeps pubspec ↔ version ↔ zone tokens honest.
 
 ### Success-spår (research-backed)
 
 1. **Habit** — hub TODAY READY/ALMOST always visible on phone; claim/progress CTAs.
 2. **Local season** — `lib/core/local_season.dart` week/month rows (reuse SpatialCombat + vault/Gauntlet).
-3. **Feel / kits** — owner lock **2026-08-18:** no new zones or classes. Prefer **core-loop feel** (power beats, combat juice) + kit fantasy polish. Play 12×14 stays background.
+3. **Feel / kits** — owner lock **2026-08-21:** no new zones or classes. Prefer
+   **AL20 hub + dungeon** (what to chase, wipe advice the sim can prove). Play 12×14 stays background.
 
 ## Decision table (when unsure)
 
 | Om ni tvekar mellan … | Välj |
 |------------------------|------|
 | Ny spec vs polisha kit | Polisha kit |
-| Ny zon vs mer hub-chrome | Core-loop feel först (inga nya zoner). Hub-chrome bara om chase ljuger. |
+| Ny zon vs mer hub-chrome | AL20 hub + dungeon feel först (inga nya zoner). Hub-chrome om chase ljuger. |
 | Cool affinity-nudge vs budget | Budget |
 | Skippa test “för att CI flakar” | Fixa kontraktet — gutta inte |
 | Stor rewrite vs small ship | Small ship + synlig What’s New |

@@ -12,17 +12,22 @@ The owner describes goals in plain language and does not pick tools/skills.
 Agents **must** choose methods, skills, and verify steps themselves — see
 `.cursor/rules/vibe-coder-autopilot.mdc` and `.cursor/rules/owner-preferences.mdc`.
 
-Preferences (do not re-ask): **content/feel over Play busywork**, first-hour
-**progression/power**, early calm / **endgame grindy OK**, **polish kits** before
-many new specs, **no new zones or classes for now**, hub TODAY / Ascend Blessing / unlock teasers for
-“what am I chasing”, **no IAP for now**, optional hub **POWERUPS** rewarded ads
+Preferences (do not re-ask): **content/feel over Play busywork**, owner plays
+**AL20 on their own save** (hub chase clarity; in-dungeon wipe advice only when
+the sim knows the deficit), early calm for new players / **endgame grindy OK**,
+**polish kits** before many new specs, **no new zones or classes for now**,
+**hide unused chrome** (BAG Scrap, Sell junk, GEAR Sell, Loadouts) rather than
+polish it, **no IAP for now**, optional hub **POWERUPS** rewarded ads
 (1 ad = 1 hour, stackable), **Android phone-only** (portrait; no
-iOS/web product), **large batches**, English in-game copy, fairness-first balance,
-**commit locally when a batch is verified**, ask before push / PR / tag.
+iOS/web product), **large independent batches**, English in-game copy,
+fairness-first balance. After a batch: **short test list + sideload APK**,
+wait for owner notes; **then** GitHub APK **and** Play AAB. Testers do not
+get a build before the owner. Commit locally when tests are green; ask before
+push / PR / tag / Play.
 Near-term execution order:
 `docs/CONTENT_CADENCE.md` after 90d M1–M3 shipped. **Default next work:**
-**core-loop feel** (power beats in the fight you already have) unless the owner names something else.
-Chat in plain Swedish; ask only product/risk questions. Full detail:
+**AL20 hub + dungeon feel** unless the owner names something else.
+Chat in plain Swedish; after code, say what to test and wait. Full detail:
 `.cursor/rules/owner-preferences.mdc`.
 
 **UI target:** ship for **portrait phones** (~360–430 px). Owner reference:

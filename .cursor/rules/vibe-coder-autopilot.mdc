@@ -16,7 +16,10 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
    choice (game design, Play publish, delete save, force-push, God Hand
    redesign, IAP). Splitting a large file, deleting unused non-save code, and
    running analyze/tests are **not** questions.
-3. **Talk plain** — short Swedish (or their language). No jargon walls. If a term is needed, one plain synonym: “balanceringskoll” not “DPS share median ±20% band”.
+3. **Talk plain and short** — Swedish (or their language). After a coding
+   pass: what to test on the phone, then **stop and wait**. No jargon walls.
+   If a term is needed, one plain synonym: “balanceringskoll” not “DPS share
+   median ±20% band”.
 4. **Pick skills by task** (don't wait to be told):
 
 | They say something like… | You use… |
@@ -31,8 +34,8 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 | What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
 | PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
 | polish hub / weekly / tips | `hub-smoke`, `browser-playtest` |
-| I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — that *is* the batch |
-| “gör spelet bättre” / vad härnäst (no other target) | core-loop feel slice via `docs/CONTENT_CADENCE.md` (not new zone/class, not `/init` or cleanup) |
+| I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — that *is* the batch (owner plays **AL20 save**) |
+| “gör spelet bättre” / vad härnäst (no other target) | AL20 hub chase + dungeon wipe-advice / dead chrome via `docs/CONTENT_CADENCE.md` (not first-hour, not new zone/class, not `/init` or cleanup) |
 | Play Store / listing / privacy / AAB | `play-store-prep` (+ `docs/PLAY_STORE.md`) |
 | **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules` with how the game works now |
 | Ascend / “what am I chasing” feel | check `hub_chase`, `ascend_roadmap`, Blessing in `metaDepth` — not a separate skill |
@@ -42,9 +45,10 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 5. **`suggesting-skills`**: prefer **silently following** the right skill over asking “vill du att jag använder skill X?”. Only mention a skill name if teaching them later helps — default is just do it.
 6. **After UI/meta changes**: verify somehow (tests and/or short browser check) without asking permission. Browser checks **always** use Samsung A56 phone metrics (**360×780**) — see `browser-playtest`.
 7. **After kit number tweaks**: run the fast balance check; if CI gate would fail, keep fixing (`grinding-until-pass`) before declaring done.
-8. **Commits / push / PR / tags:** when the batch is verified, **commit
-   locally** (see `owner-preferences`). Then **ask once** before push / PR /
-   tag. Do not push silently.
+8. **Commits / push / PR / tags:** when analyze/tests are green, **commit
+   locally** (see `owner-preferences`). Hand a **phone APK** + a short test
+   list; **wait**. Do not GitHub-release or Play-upload until they reply.
+   Then ask once before push / PR / tag / Play. Do not push silently.
 
 ## Questions you MAY ask
 
@@ -64,4 +68,7 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 
 ## How done looks to them
 
-One short summary: what improved, how you checked it, what they can click in the game. No essay of tool names unless they ask “hur gjorde du?”.
+A short test list for **their AL20 phone save** (what to tap, what should
+happen). Then wait for text / optional screenshot. No essay of tool names
+unless they ask “hur gjorde du?”. GitHub + Play only after they said the
+test was OK.

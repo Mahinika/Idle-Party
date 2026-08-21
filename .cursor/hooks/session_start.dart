@@ -8,8 +8,8 @@ void main() {
       'Idle Party default work this session: $now '
       'Do that unless the owner named something else. '
       'Do not start /init, repo cleanup, or Play ops unprompted. '
-      'If they paste play notes (TODAY felt wrong, did not know what to chase), '
-      'that is the batch — fix ChaseContract / hub / tips. '
+      'If they paste play notes (hub chase unclear, same-floor wipes, dead menus), '
+      'that is the batch. After code: short phone test list, wait; no GitHub/Play before they play. '
       'Prefer git branch main for daily work; release/* only when cutting a tag. '
       'Do not stage windows/flutter/generated_* unless pubspec plugins changed.';
   stdout.write(
