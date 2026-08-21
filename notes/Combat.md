@@ -18,5 +18,5 @@
 
 - [[SpatialCombat]] · [[Dungeon]]
 - [[TODAY]]
-- [[Ship]]
+- [[Play]]
 - [[Home]]

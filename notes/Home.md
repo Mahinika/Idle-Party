@@ -10,5 +10,5 @@
 ## Development
 
 - [[Dev log]]
-- [[Ship]] · [[Play]] · [[Vad härnäst]]
+- [[Play]] · [[Vad härnäst]]
 - [[AGENTS]] · [[CONTENT_CADENCE]]

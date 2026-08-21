@@ -100,8 +100,8 @@ Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`.
 
 **Obsidian (owner):** app architecture map in `notes/` — start at `App` (Hub,
 Dungeon, PARTY/POWER/META, TODAY, SpatialCombat). Also `Home`, **Dev log**,
-Ship, Play. After a visible batch, agents prepend `Dev log` and update arch
-notes if menus/surfaces changed (DoD). Local `.obsidian/` is gitignored.
+Play. After a visible batch, agents prepend `Dev log` and update arch notes if
+menus/surfaces changed (DoD). Local `.obsidian/` is gitignored.
 
 ### Cursor automation
 

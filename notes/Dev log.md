@@ -12,6 +12,11 @@ Format:
 
 ---
 
+## 2026-08-21 — Drop notes/Ship
+
+- Ship var dubbel (version + tag-flöde fanns i [[Play]] / AGENTS / DoD) → bort
+- Tag→Releases ligger under [[Play]]
+
 ## 2026-08-21 — App-arkitektur i Obsidian
 
 - Spelets ytor som länkade noder — öppna noten App + Local graph (Depth 2, Incoming av)
@@ -23,10 +28,10 @@ Format:
 - Kartan i `notes/` + Dev log; `.obsidian/` gitignoreras
 - Bort: död ROADMAP / STRATEGY_90D / SYSTEMS_REBUILD + historiska kit-audits + oanvända Kenney-katalog-md
 - Operativ plan = [[CONTENT_CADENCE]] (beslutstabell där)
-- Länkar: [[Home]] [[Ship]] [[AGENTS]]
+- Länkar: [[Home]] [[Play]] [[AGENTS]]
 
 ## 2026-08-21 — /init + ship-sanning 1.12.28
 
 - AGENTS/prefs synkade (Play Alpha 1.12.27/57, KEY-guld, Spirit/mana, ads/privacy)
 - Spel-ship: **1.12.28** — healer mana, hub-guld, KEY-guld (se What’s New i spelet)
-- Länkar: [[Ship]] [[Play]] [[Combat]] [[CONTENT_CADENCE]]
+- Länkar: [[Play]] [[Combat]] [[CONTENT_CADENCE]]
