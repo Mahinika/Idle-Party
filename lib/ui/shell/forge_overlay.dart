@@ -21,6 +21,7 @@ class ForgeOverlay extends StatefulWidget {
 class _ForgeOverlayState extends State<ForgeOverlay>
     with SingleTickerProviderStateMixin {
   late final TabController _tabs;
+  ForgeGoldSpendMode _spendMode = ForgeGoldSpendMode.one;
 
   GameDirector get director => widget.director;
 
@@ -43,6 +44,8 @@ class _ForgeOverlayState extends State<ForgeOverlay>
   }) {
     final recommended = GameLogic.recommendedForgeUpgrade(state) == type.index;
     final cost = GameLogic.upgradeCostFor(state, type);
+    final preview =
+        GameLogic.previewForgeGoldSpend(state, type, _spendMode);
     final bonus = switch (type) {
       PartyUpgradeType.attack => '+${state.attackBonus}',
       PartyUpgradeType.defense => '+${state.defenseBonus}',
@@ -68,7 +71,15 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       PartyUpgradeType.attackSpeed => 'HASTE',
       PartyUpgradeType.crit => 'CRIT',
     };
-    final costPart = onPressed != null ? '${cost}g' : 'Need ${cost}g';
+    final String costPart;
+    if (onPressed == null) {
+      costPart = 'Need ${cost}g';
+    } else if (_spendMode == ForgeGoldSpendMode.one) {
+      costPart = '${cost}g';
+    } else {
+      costPart =
+          '${_spendMode.chipLabel} · ${preview.buys}× · ${preview.spent}g';
+    }
     final label = recommended
         ? 'BEST · $name $bonus$speedHint · $costPart'
         : '$name $bonus$speedHint · $costPart';
@@ -175,24 +186,56 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         _sectionTitle(
           'RUN BONUSES (GOLD)',
           'One buy is meant to feel similar: +${GameLogic.forgeAttackGain} ATK, '
-          '+${GameLogic.forgeDefenseGain} DEF (armor), '
-          '+${GameLogic.forgeVitalityGain} HP, '
-          '+${GameLogic.forgeHasteGain}% HASTE or CRIT. '
-          'BEST marks the cheapest relative gain. All wipe when you Ascend.',
+              '+${GameLogic.forgeDefenseGain} DEF (armor), '
+              '+${GameLogic.forgeVitalityGain} HP, '
+              '+${GameLogic.forgeHasteGain}% HASTE or CRIT. '
+              'BEST marks the cheapest relative gain. All wipe when you Ascend.',
+        ),
+        Text(
+          'Spend amount (wallet gold):',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final mode in ForgeGoldSpendMode.values)
+              ChoiceChip(
+                label: Text(mode.chipLabel, style: GameTheme.body(size: 12)),
+                selected: _spendMode == mode,
+                onSelected: (_) => setState(() => _spendMode = mode),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        KenneyButton(
+          label: GameLogic.canForgeGoldSpendEven(state)
+              ? 'SPEND ALL · EVEN'
+              : 'SPEND ALL · EVEN · Need gold',
+          onPressed: GameLogic.canForgeGoldSpendEven(state)
+              ? () {
+                  director.upgradeSpendAllEvenly();
+                  setState(() {});
+                }
+              : null,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 6),
+          child: Text(
+            'EVEN splits wallet gold round-robin across ATK / DEF / STA / '
+            'MOVE / HASTE / CRIT until you cannot buy another step.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
         ),
         for (final type in PartyUpgradeType.values) ...[
           _upgradeButton(
             state: state,
             type: type,
-            onPressed: state.gold >= GameLogic.upgradeCostFor(state, type)
-                ? () => switch (type) {
-                    PartyUpgradeType.attack => director.upgradeAttack(),
-                    PartyUpgradeType.defense => director.upgradeDefense(),
-                    PartyUpgradeType.vitality => director.upgradeVitality(),
-                    PartyUpgradeType.moveSpeed => director.upgradeMoveSpeed(),
-                    PartyUpgradeType.attackSpeed =>
-                      director.upgradeAttackSpeed(),
-                    PartyUpgradeType.crit => director.upgradeCrit(),
+            onPressed: GameLogic.canForgeGoldSpend(state, type, _spendMode)
+                ? () {
+                    director.upgradePartyTrack(type, mode: _spendMode);
+                    setState(() {});
                   }
                 : null,
           ),

@@ -1311,40 +1311,96 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(updated);
   }
 
-  void upgradeAttack() {
-    final before = _state.attackBonus;
-    _applyUpgrade(GameLogic.upgradeAttack(_state));
-    if (_state.attackBonus > before) {
+  void upgradeAttack({
+    ForgeGoldSpendMode mode = ForgeGoldSpendMode.one,
+  }) {
+    _upgradePartyTrack(PartyUpgradeType.attack, mode: mode);
+  }
+
+  void upgradeDefense({
+    ForgeGoldSpendMode mode = ForgeGoldSpendMode.one,
+  }) {
+    _upgradePartyTrack(PartyUpgradeType.defense, mode: mode);
+  }
+
+  void upgradeVitality({
+    ForgeGoldSpendMode mode = ForgeGoldSpendMode.one,
+  }) {
+    _upgradePartyTrack(PartyUpgradeType.vitality, mode: mode);
+  }
+
+  void upgradeMoveSpeed({
+    ForgeGoldSpendMode mode = ForgeGoldSpendMode.one,
+  }) {
+    _upgradePartyTrack(PartyUpgradeType.moveSpeed, mode: mode);
+  }
+
+  void upgradeAttackSpeed({
+    ForgeGoldSpendMode mode = ForgeGoldSpendMode.one,
+  }) {
+    _upgradePartyTrack(PartyUpgradeType.attackSpeed, mode: mode);
+  }
+
+  void upgradeCrit({
+    ForgeGoldSpendMode mode = ForgeGoldSpendMode.one,
+  }) {
+    _upgradePartyTrack(PartyUpgradeType.crit, mode: mode);
+  }
+
+  void upgradePartyTrack(
+    PartyUpgradeType type, {
+    ForgeGoldSpendMode mode = ForgeGoldSpendMode.one,
+  }) {
+    _upgradePartyTrack(type, mode: mode);
+  }
+
+  void upgradeSpendAllEvenly() {
+    if (_isLoading) {
+      return;
+    }
+    final beforeAtk = _state.attackBonus;
+    final beforeMove = _state.moveSpeedBonus;
+    final beforeHaste = _state.attackSpeedBonus;
+    final updated = GameLogic.upgradeSpendAllEvenly(_state);
+    if (identical(updated, _state)) {
+      return;
+    }
+    _applyUpgrade(updated);
+    if (_state.attackBonus > beforeAtk ||
+        _state.moveSpeedBonus > beforeMove ||
+        _state.attackSpeedBonus > beforeHaste) {
+      showToast('Forge gold spent evenly', life: 2.0);
+    }
+  }
+
+  void _upgradePartyTrack(
+    PartyUpgradeType type, {
+    required ForgeGoldSpendMode mode,
+  }) {
+    if (_isLoading) {
+      return;
+    }
+    final beforeAtk = _state.attackBonus;
+    final beforeMove = _state.moveSpeedBonus;
+    final beforeHaste = _state.attackSpeedBonus;
+    final updated = GameLogic.upgradeWithSpendMode(
+      _state,
+      type: type,
+      mode: mode,
+    );
+    if (identical(updated, _state)) {
+      return;
+    }
+    _applyUpgrade(updated);
+    if (type == PartyUpgradeType.attack && _state.attackBonus > beforeAtk) {
       showToast(_forgeSpeedToast('ATK'), life: 2.0);
-    }
-  }
-
-  void upgradeDefense() {
-    _applyUpgrade(GameLogic.upgradeDefense(_state));
-  }
-
-  void upgradeVitality() {
-    _applyUpgrade(GameLogic.upgradeVitality(_state));
-  }
-
-  void upgradeMoveSpeed() {
-    final before = _state.moveSpeedBonus;
-    _applyUpgrade(GameLogic.upgradeMoveSpeed(_state));
-    if (_state.moveSpeedBonus > before) {
+    } else if (type == PartyUpgradeType.moveSpeed &&
+        _state.moveSpeedBonus > beforeMove) {
       showToast(_forgeSpeedToast('MOVE'), life: 2.0);
-    }
-  }
-
-  void upgradeAttackSpeed() {
-    final before = _state.attackSpeedBonus;
-    _applyUpgrade(GameLogic.upgradeAttackSpeed(_state));
-    if (_state.attackSpeedBonus > before) {
+    } else if (type == PartyUpgradeType.attackSpeed &&
+        _state.attackSpeedBonus > beforeHaste) {
       showToast(_forgeSpeedToast('HASTE'), life: 2.0);
     }
-  }
-
-  void upgradeCrit() {
-    _applyUpgrade(GameLogic.upgradeCrit(_state));
   }
 
   void unlockRelic(String relicId) {

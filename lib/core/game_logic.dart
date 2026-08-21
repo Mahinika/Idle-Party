@@ -1328,6 +1328,137 @@ class GameLogic {
     return 18 + (forgeTrackTier(state, type) * 10) + (state.bossVictories * 5);
   }
 
+  /// Wallet gold budget for a FORGE GOLD spend mode (×1 uses next buy cost).
+  static int forgeGoldBudget(GameState state, ForgeGoldSpendMode mode) {
+    return switch (mode) {
+      ForgeGoldSpendMode.one => 0,
+      ForgeGoldSpendMode.pct5 => (state.gold * 5) ~/ 100,
+      ForgeGoldSpendMode.pct25 => (state.gold * 25) ~/ 100,
+      ForgeGoldSpendMode.pct50 => (state.gold * 50) ~/ 100,
+      ForgeGoldSpendMode.pct100 => state.gold,
+    };
+  }
+
+  static bool canForgeGoldSpend(
+    GameState state,
+    PartyUpgradeType type,
+    ForgeGoldSpendMode mode,
+  ) {
+    final cost = upgradeCostFor(state, type);
+    if (state.gold < cost) {
+      return false;
+    }
+    if (mode == ForgeGoldSpendMode.one) {
+      return true;
+    }
+    return forgeGoldBudget(state, mode) >= cost;
+  }
+
+  static bool canForgeGoldSpendEven(GameState state) {
+    for (final type in PartyUpgradeType.values) {
+      if (state.gold >= upgradeCostFor(state, type)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// How many buys / gold a spend mode would use on [type] from [state].
+  static ({int buys, int spent}) previewForgeGoldSpend(
+    GameState state,
+    PartyUpgradeType type,
+    ForgeGoldSpendMode mode,
+  ) {
+    if (mode == ForgeGoldSpendMode.one) {
+      final cost = upgradeCostFor(state, type);
+      if (state.gold < cost) {
+        return (buys: 0, spent: 0);
+      }
+      return (buys: 1, spent: cost);
+    }
+    final budget = forgeGoldBudget(state, mode);
+    var remaining = min(budget, state.gold);
+    var cur = state;
+    var buys = 0;
+    var spent = 0;
+    for (var i = 0; i < 10000; i++) {
+      final cost = upgradeCostFor(cur, type);
+      if (cost > remaining || cost > cur.gold) {
+        break;
+      }
+      final next = _applyUpgrade(cur, type: type);
+      if (identical(next, cur)) {
+        break;
+      }
+      remaining -= cost;
+      spent += cost;
+      buys += 1;
+      cur = next;
+    }
+    return (buys: buys, spent: spent);
+  }
+
+  /// Buy one track once, or dump a % of wallet gold into that track.
+  static GameState upgradeWithSpendMode(
+    GameState state, {
+    required PartyUpgradeType type,
+    required ForgeGoldSpendMode mode,
+  }) {
+    if (mode == ForgeGoldSpendMode.one) {
+      return _applyUpgrade(state, type: type);
+    }
+    final budget = forgeGoldBudget(state, mode);
+    if (budget <= 0) {
+      return state;
+    }
+    return _upgradeWithBudget(state, type: type, budget: budget);
+  }
+
+  static GameState _upgradeWithBudget(
+    GameState state, {
+    required PartyUpgradeType type,
+    required int budget,
+  }) {
+    var remaining = min(budget, state.gold);
+    var cur = state;
+    for (var i = 0; i < 10000; i++) {
+      final cost = upgradeCostFor(cur, type);
+      if (cost > remaining || cost > cur.gold) {
+        break;
+      }
+      final next = _applyUpgrade(cur, type: type);
+      if (identical(next, cur)) {
+        break;
+      }
+      remaining -= cost;
+      cur = next;
+    }
+    return cur;
+  }
+
+  /// Spend wallet gold round-robin across ATK/DEF/STA/MOVE/HASTE/CRIT.
+  static GameState upgradeSpendAllEvenly(GameState state) {
+    var cur = state;
+    for (var round = 0; round < 10000; round++) {
+      var bought = false;
+      for (final type in PartyUpgradeType.values) {
+        final cost = upgradeCostFor(cur, type);
+        if (cur.gold < cost) {
+          continue;
+        }
+        final next = _applyUpgrade(cur, type: type);
+        if (!identical(next, cur)) {
+          cur = next;
+          bought = true;
+        }
+      }
+      if (!bought) {
+        break;
+      }
+    }
+    return cur;
+  }
+
   static GameState trainParty(GameState state) {
     final trainingCost = partyTrainingCostFor(state);
     if (state.gold < trainingCost) {
@@ -3268,4 +3399,23 @@ enum PartyUpgradeType {
   moveSpeed,
   attackSpeed,
   crit,
+}
+
+/// How much wallet gold a FORGE GOLD row spends when tapped.
+enum ForgeGoldSpendMode {
+  one,
+  pct5,
+  pct25,
+  pct50,
+  pct100,
+}
+
+extension ForgeGoldSpendModeLabels on ForgeGoldSpendMode {
+  String get chipLabel => switch (this) {
+        ForgeGoldSpendMode.one => '×1',
+        ForgeGoldSpendMode.pct5 => '5%',
+        ForgeGoldSpendMode.pct25 => '25%',
+        ForgeGoldSpendMode.pct50 => '50%',
+        ForgeGoldSpendMode.pct100 => '100%',
+      };
 }

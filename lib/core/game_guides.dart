@@ -168,6 +168,8 @@ abstract final class GameGuides {
           'POWER → FORGE.\n\n'
           'Tabs:\n'
           '• GOLD — spend gold this run. ATK/DEF/STA/MOVE/HASTE/CRIT. '
+          'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
+          'SPEND ALL · EVEN to split gold round-robin across every track. '
           'Train = +1 level to every hero '
           '(levels keep on Ascend). ATK/DEF/STA/MOVE/HASTE/CRIT wipe on Ascend. '
           'ATK, HASTE, and MOVE speed up clears — see INCOME for rates. '

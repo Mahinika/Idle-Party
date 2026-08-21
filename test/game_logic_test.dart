@@ -270,6 +270,40 @@ void main() {
     );
   });
 
+  test('forge gold spend modes dump a wallet percent into one track', () {
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 8, 21));
+    final state = seeded.copyWith(gold: 1000);
+    final preview = GameLogic.previewForgeGoldSpend(
+      state,
+      PartyUpgradeType.attack,
+      ForgeGoldSpendMode.pct25,
+    );
+    expect(preview.buys, greaterThan(1));
+    expect(preview.spent, lessThanOrEqualTo(250));
+
+    final spent = GameLogic.upgradeWithSpendMode(
+      state,
+      type: PartyUpgradeType.attack,
+      mode: ForgeGoldSpendMode.pct25,
+    );
+    expect(spent.attackBonus, GameLogic.forgeAttackGain * preview.buys);
+    expect(spent.gold, state.gold - preview.spent);
+    expect(state.gold - spent.gold, lessThanOrEqualTo(250));
+  });
+
+  test('forge gold spend all evenly round-robins tracks', () {
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 8, 21));
+    final state = seeded.copyWith(gold: 500);
+    final next = GameLogic.upgradeSpendAllEvenly(state);
+    expect(next.gold, lessThan(state.gold));
+    final tiers = [
+      for (final type in PartyUpgradeType.values)
+        GameLogic.forgeTrackTier(next, type),
+    ];
+    expect(tiers.reduce(max) - tiers.reduce(min), lessThanOrEqualTo(1));
+    expect(GameLogic.canForgeGoldSpendEven(next), isFalse);
+  });
+
   test('upgrade paths spend gold and change bonuses', () {
     final seeded = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final initial = seeded.copyWith(

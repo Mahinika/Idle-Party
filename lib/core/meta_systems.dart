@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.33';
+  static const String currentVersion = '1.12.34';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.34',
+      bullets: <String>[
+        'POWER → FORGE → GOLD: pick ×1 / 5% / 25% / 50% / 100% of wallet gold when buying ATK / DEF / STA / MOVE / HASTE / CRIT, or SPEND ALL · EVEN to split gold round-robin across every track.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.33',
       bullets: <String>[

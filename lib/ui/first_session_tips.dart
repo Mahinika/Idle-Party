@@ -64,7 +64,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'forge',
       title: 'FORGE',
       body:
-          'POWER → FORGE: GOLD for this-run power, KEEP for relics / God Hand / Blessing, '
+          'POWER → FORGE: GOLD for this-run power (×1 / % spend / EVEN split), '
+          'KEEP for relics / God Hand / Blessing, '
           'APEX for forever gear. Train levels keep on Ascend.',
     ),
     (
