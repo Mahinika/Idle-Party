@@ -21,6 +21,7 @@ export '../models/spell_bolt_style.dart';
 part 'ability_effects.dart';
 part 'kit_migrated_casts.dart';
 part 'hero_focus.dart';
+part 'combat_presence.dart';
 
 enum SpatialTeam { hero, enemy }
 
@@ -187,6 +188,29 @@ class SpatialActor {
   /// World aim of the last attack (for lunge / facing during [attackFlash]).
   double attackAimX = 0;
   double attackAimY = 0;
+
+  /// Smoothed facing aim (lerps toward attack / move target).
+  double faceAimX = 0;
+  double faceAimY = 0;
+
+  /// Steering velocity in tiles/sec (soft inertia).
+  double vx = 0;
+  double vy = 0;
+
+  /// 0–1 personality: higher breaks pack leash sooner / prefers nearer foes.
+  double impatience = 0.5;
+
+  /// Preferred-range multiplier (Fire panic kite >1, Arcane closer <1).
+  double kiteMul = 1.0;
+
+  /// Sidestep bias while kiting (−1 / +1).
+  double kiteSide = 0;
+
+  /// Seconds until another speech bark may fire.
+  double barkCd = 0;
+
+  /// One low-HP bark per distress streak.
+  bool lowHpBarked = false;
 
   /// Class resource 0?100 (rage / mana / energy).
   double rage = 0;
@@ -435,6 +459,14 @@ class GroundLoot {
 
 enum GroundLootKind { gold, essence, gear, chest }
 
+enum SpatialFloaterKind {
+  /// Damage / heal / loot numbers.
+  combat,
+
+  /// Short speech bark above a hero.
+  speech,
+}
+
 class SpatialFloater {
   SpatialFloater({
     required this.x,
@@ -445,6 +477,7 @@ class SpatialFloater {
     this.vx = 0,
     this.vy = -2.1,
     this.priority = 0,
+    this.kind = SpatialFloaterKind.combat,
   });
 
   double x;
@@ -457,6 +490,8 @@ class SpatialFloater {
 
   /// 0 = routine damage, 1 = heal/ability, 2 = crit/loot/wipe-critical.
   final int priority;
+
+  final SpatialFloaterKind kind;
 }
 
 class SpatialBurst {
@@ -730,6 +765,7 @@ abstract final class SpatialCombat {
     required int argb,
     double life = 0.55,
     int priority = 0,
+    SpatialFloaterKind kind = SpatialFloaterKind.combat,
   }) {
     // Skip empty / whitespace-only.
     if (text.isEmpty) return;
@@ -741,16 +777,18 @@ abstract final class SpatialCombat {
     final lane = nearby % 5;
     final jx = (lane - 2) * 0.22;
     final jy = (lane % 3) * 0.12;
+    final speech = kind == SpatialFloaterKind.speech;
     world.floaters.add(
       SpatialFloater(
-        x: x + jx,
-        y: y - jy,
+        x: x + (speech ? 0 : jx),
+        y: y - (speech ? 0 : jy),
         text: text,
         argb: argb,
         life: life,
-        vx: jx * 0.35,
-        vy: -2.1 - lane * 0.08,
+        vx: speech ? 0 : jx * 0.35,
+        vy: speech ? -0.55 : (-2.1 - lane * 0.08),
         priority: priority,
+        kind: kind,
       ),
     );
     _trimFloaters(world);
@@ -988,6 +1026,8 @@ abstract final class SpatialCombat {
     from.attackFlash = life;
     from.attackAimX = to.x;
     from.attackAimY = to.y;
+    // Facing catches up smoothly; punch aim snaps for the lunge.
+    CombatPresence.updateFacing(from, to.x, to.y, 0.08);
   }
 
   static void _tickCombatBuffs(SpatialWorld world, double dt) {
@@ -1141,6 +1181,7 @@ abstract final class SpatialCombat {
           if (gained > 0) a.healingDone += gained;
         }
       }
+      CombatPresence.tick(a, dt);
     }
   }
 
@@ -1246,6 +1287,9 @@ abstract final class SpatialCombat {
         argb: 0xFF9AD0FF,
         life: 0.4,
       );
+    }
+    if (dealt > 0) {
+      CombatPresence.onLowHp(world, hero, reducedVfx: reducedVfx);
     }
     return dealt;
   }
@@ -1554,6 +1598,7 @@ abstract final class SpatialCombat {
       if (hero.spec.isHealer) {
         actor.rage = healerOpeningMana;
       }
+      CombatPresence.seed(actor);
       heroes.add(actor);
     }
 
@@ -1914,8 +1959,11 @@ abstract final class SpatialCombat {
       );
       if (prev != null) {
         _copyHeroRuntime(prev, actor);
-      } else if (hero.spec.isHealer) {
-        actor.rage = healerOpeningMana;
+      } else {
+        CombatPresence.seed(actor);
+        if (hero.spec.isHealer) {
+          actor.rage = healerOpeningMana;
+        }
       }
       final setProc = GearSets.fourPieceProc(hero.equipped);
       if (setProc != null) {
@@ -2053,6 +2101,15 @@ abstract final class SpatialCombat {
     to.attackFlash = from.attackFlash;
     to.attackAimX = from.attackAimX;
     to.attackAimY = from.attackAimY;
+    to.faceAimX = from.faceAimX;
+    to.faceAimY = from.faceAimY;
+    to.vx = from.vx;
+    to.vy = from.vy;
+    to.impatience = from.impatience;
+    to.kiteMul = from.kiteMul;
+    to.kiteSide = from.kiteSide;
+    to.barkCd = from.barkCd;
+    to.lowHpBarked = from.lowHpBarked;
     to.rage = from.rage;
     to.abilityCd
       ..clear()
@@ -2731,8 +2788,9 @@ abstract final class SpatialCombat {
           hero,
           snapped.$1,
           snapped.$2,
-          hero.moveSpeed * 1.35 * dt,
+          hero.moveSpeed * 1.35,
           world,
+          dt: dt,
           holdDistance: guiding ? 0.35 : 0.22,
           separateFrom: livingHeroes,
           separationRadius: 0.5,
@@ -3026,8 +3084,9 @@ abstract final class SpatialCombat {
         enemy,
         tx,
         ty,
-        enemy.moveSpeed * enemy.moveSpeedMul * dt,
+        enemy.moveSpeed * enemy.moveSpeedMul,
         world,
+        dt: dt,
         holdDistance: hold,
         separateFrom: world.enemies,
       );
@@ -3087,6 +3146,13 @@ abstract final class SpatialCombat {
             argb: _floaterDamage,
             life: 0.65,
           );
+          if (dmg > 0) {
+            CombatPresence.onPulledAggro(
+              world,
+              target,
+              reducedVfx: reducedVfx,
+            );
+          }
         }
       }
     }
@@ -3139,7 +3205,10 @@ abstract final class SpatialCombat {
         hold = 0.35;
       } else if (target != null) {
         final dist = _dist(hero, target);
-        var preferred = hero.preferredRange ?? (hero.attackRange * 0.7);
+        var preferred = CombatPresence.preferredFightRange(
+          hero,
+          hero.preferredRange ?? (hero.attackRange * 0.7),
+        );
         if (isHealer) {
           preferred = math.max(preferred, hero.attackRange * 0.92);
         }
@@ -3168,9 +3237,10 @@ abstract final class SpatialCombat {
         } else if (isBackliner &&
             dist < preferred * (isHealer ? 0.88 : 0.72) &&
             hasLos) {
-          // Kite away while keeping LOS toward target.
-          tx = hero.x - (target.x - hero.x);
-          ty = hero.y - (target.y - hero.y);
+          // Kite away — Fire panics straight back, Arcane sidesteps.
+          final kite = CombatPresence.kiteTarget(hero, target);
+          tx = kite.$1;
+          ty = kite.$2;
           hold = 0;
         } else {
           tx = target.x;
@@ -3198,11 +3268,28 @@ abstract final class SpatialCombat {
         hold = 0.45;
       }
 
+      var speedMul = hero.moveSpeedMul;
+      // Low HP: limp toward healer / behind the tank instead of holding the line.
+      if (!guiding) {
+        CombatPresence.tryEmergencyRetreat(
+          hero,
+          world,
+          packAnchor: packAnchor,
+          setGoal: (rtx, rty, rhold, limp) {
+            tx = rtx;
+            ty = rty;
+            hold = rhold;
+            speedMul *= limp;
+          },
+        );
+      }
+
       // Keep melee DPS from racing a chamber ahead of the tank.
+      // Impatient kits get a longer leash before the snap-back.
       if (packAnchor != null &&
           hero.id != packAnchor.id &&
           _actorIsMeleeDps(hero) &&
-          _dist(hero, packAnchor) > 1.7) {
+          _dist(hero, packAnchor) > CombatPresence.packLeash(hero)) {
         tx = packAnchor.x;
         ty = packAnchor.y;
         hold = 0.45;
@@ -3222,8 +3309,9 @@ abstract final class SpatialCombat {
         hero,
         tx,
         ty,
-        hero.moveSpeed * hero.moveSpeedMul * dt,
+        hero.moveSpeed * speedMul,
         world,
+        dt: dt,
         holdDistance: hold,
         separateFrom: world.heroes,
       );
@@ -3297,7 +3385,15 @@ abstract final class SpatialCombat {
           );
           target.hp = math.max(0, target.hp - dealt);
           _recordHeroDamage(hero, dealt);
-          if (isCrit && dealt > 0) _noteFeelCrit(world);
+          if (isCrit && dealt > 0) {
+            _noteFeelCrit(world);
+            CombatPresence.onCrit(
+              world,
+              hero,
+              reducedVfx: reducedVfx,
+              rng: rng,
+            );
+          }
           final resource = _actorResource(hero);
           if (_actorIsTank(hero)) {
             _gainRage(hero, 4 + dealt * 0.15);
@@ -3638,7 +3734,18 @@ abstract final class SpatialCombat {
               }
             }
           }
-          if (dealt > 0 && p.isCrit) _noteFeelCrit(world);
+          if (dealt > 0 && p.isCrit) {
+            _noteFeelCrit(world);
+            final caster = _heroById(world, p.casterId);
+            if (caster != null) {
+              CombatPresence.onCrit(
+                world,
+                caster,
+                reducedVfx: reducedVfx,
+                rng: rng,
+              );
+            }
+          }
           if (dealt > 0 && !reducedVfx) {
             _spawnFloater(
               world,
@@ -3750,8 +3857,9 @@ abstract final class SpatialCombat {
           pet,
           leashOwner.x - 0.55,
           leashOwner.y + 0.45,
-          pet.moveSpeed * dt,
+          pet.moveSpeed,
           world,
+          dt: dt,
           holdDistance: 0.35,
           separateFrom: <SpatialActor>[...world.heroes, ...world.pets],
         );
@@ -3763,8 +3871,9 @@ abstract final class SpatialCombat {
           pet,
           target.x,
           target.y,
-          pet.moveSpeed * dt,
+          pet.moveSpeed,
           world,
+          dt: dt,
           holdDistance: pet.attackRange * 0.7,
           separateFrom: <SpatialActor>[...world.heroes, ...world.pets],
         );
@@ -4358,6 +4467,7 @@ abstract final class SpatialCombat {
         argb: 0xFFFFAA55,
         life: 0.7,
       );
+      CombatPresence.onTaunt(world, tank, reducedVfx: reducedVfx);
     }
     return true;
   }
@@ -4402,29 +4512,32 @@ abstract final class SpatialCombat {
   }
 
   /// Steering: path around walls, hold preferred range, separate from allies.
+  /// Soft inertia + idle jitter so holds don't look robotic.
   static void _steerActor(
     SpatialActor a,
     double tx,
     double ty,
-    double step,
+    double speed,
     SpatialWorld world, {
+    required double dt,
     double holdDistance = 0,
     List<SpatialActor>? separateFrom,
     double separationRadius = 0.95,
     double separationWeight = 1.4,
   }) {
-    if (step <= 0) return;
+    if (speed <= 0 || dt <= 0) return;
     final dist = _distPoint(a.x, a.y, tx, ty);
     if (holdDistance > 0 && dist <= holdDistance) {
-      // Soft orbit / idle ? only apply separation.
-      _applySeparation(
+      CombatPresence.applyIdlePresence(
         a,
         world,
-        separateFrom,
-        step * 0.55,
-        radius: separationRadius,
-        weight: separationWeight,
+        dt,
+        separateFrom: separateFrom,
+        separationRadius: separationRadius,
+        separationWeight: separationWeight,
+        stepBudget: speed * dt * 0.55,
       );
+      CombatPresence.updateFacing(a, tx, ty, dt);
       return;
     }
 
@@ -4459,23 +4572,35 @@ abstract final class SpatialCombat {
     }
 
     final len = math.sqrt(dx * dx + dy * dy);
-    if (len < 0.001) return;
-    final move = math.min(step, dist > 0 ? dist : step);
-    final nx = a.x + dx / len * move;
-    final ny = a.y + dy / len * move;
-
-    // Try diagonal, then slide on axes (corner-friendly).
-    if (world.canWalk(nx, ny)) {
-      a.x = nx;
-      a.y = ny;
+    if (len < 0.001) {
+      CombatPresence.applyIdlePresence(
+        a,
+        world,
+        dt,
+        separateFrom: separateFrom,
+        separationRadius: separationRadius,
+        separationWeight: separationWeight,
+        stepBudget: speed * dt * 0.4,
+      );
       return;
     }
-    if (world.canWalk(nx, a.y)) {
-      a.x = nx;
+    var desiredVx = dx / len * speed;
+    var desiredVy = dy / len * speed;
+    // Short remaining distance: ease so we don't overshoot the hold ring.
+    if (dist < speed * 0.2) {
+      final ease = (dist / math.max(0.05, speed * 0.2)).clamp(0.15, 1.0);
+      desiredVx *= ease;
+      desiredVy *= ease;
     }
-    if (world.canWalk(a.x, ny)) {
-      a.y = ny;
-    }
+    CombatPresence.applyVelocityMove(
+      a,
+      world,
+      desiredVx: desiredVx,
+      desiredVy: desiredVy,
+      dt: dt,
+      maxSpeed: speed,
+    );
+    CombatPresence.updateFacing(a, tx, ty, dt);
   }
 
   static void _applySeparation(

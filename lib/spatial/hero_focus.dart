@@ -199,6 +199,8 @@ abstract final class HeroFocus {
       score += lockBonus;
     }
 
+    score += CombatPresence.impatienceFocusBias(self, d);
+
     return score;
   }
 }
