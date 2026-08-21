@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.29**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.32**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -20,8 +20,8 @@ the sim knows the deficit), early calm for new players / **endgame grindy OK**,
 polish it, **no IAP for now**, optional hub **POWERUPS** rewarded ads
 (1 ad = 1 hour, stackable), **Android phone-only** (portrait; no
 iOS/web product), **large independent batches**, English in-game copy,
-fairness-first balance. After a batch: **short test list + sideload APK**,
-wait for owner notes; **then** GitHub APK **and** Play AAB. Testers do not
+fairness-first balance. After a batch: **short test list**; **APK only when
+they ask**; wait for owner notes; **then** GitHub APK **and** Play AAB. Testers do not
 get a build before the owner. Commit locally when tests are green; ask before
 push / PR / tag / Play.
 Near-term execution order:
@@ -91,11 +91,14 @@ flutter test test/ship_smoke_test.dart
 
 Skills under `.cursor/skills/`: domain (`spatial-combat-change`, `add-ability`,
 `new-dungeon`, `zone-art-identity`, `save-migrate`, `class-audit`, `assets-legal`,
-`flutter-verify`, `browser-playtest`, `hub-smoke`, `play-store-prep`, `init`) and
+`flutter-verify`, `browser-playtest`, `hub-smoke`, `play-store-prep`, `init`,
+`repo-audit-and-cleaning`) and
 Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 `grinding-until-pass`, `babysitting-pr`, `parallel-ci-triage`,
 `verifying-in-browser`, `screenshotting-changelog`, `recording-browser-flow-as-test`,
 `systematic-debugging`, `reviewing-code`, `accessibility-auditing`).
+Slash: `/init` resyncs AGENTS/rules; `/repo auditandcleaning` runs a read-only
+full-repo audit (see `.cursor/commands/repo-auditandcleaning.md`).
 
 Cadence: `docs/CONTENT_CADENCE.md` (decision table + tag rhythm; 90d M1–M3
 shipped). Background (optional): `docs/TOP_GAMES_RESEARCH.md`. Chase contract
@@ -286,7 +289,7 @@ legacy heirloom item if an old save still has one (no new binds; may rescale),
 `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
 (mute/VFX/colorblind/text scale/auto-sell/**auto-disassemble**), full `metaDepth`
 (Gauntlet best, Will / Gauntlet claims, daily vault / weekly affix season,
-**prestige shop** purchases — Loadout Folio / Apothecary Writ / Junk Magnifier /
+**prestige shop** purchases — Apothecary Writ / Junk Magnifier /
 Away Ledger / …, unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY),
 party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**,
 **`adBoostUntilMs`**, Play Games opt-in + season PBs, …), **hero levels/XP**,

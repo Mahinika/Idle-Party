@@ -6,6 +6,7 @@ class PrestigeShopItem {
     required this.description,
     required this.cost,
     required this.minAl,
+    this.listedInShop = true,
   });
 
   final String id;
@@ -13,6 +14,9 @@ class PrestigeShopItem {
   final String description;
   final int cost;
   final int minAl;
+
+  /// False = keep save math / old purchases, hide from POWER → SHOP.
+  final bool listedInShop;
 }
 
 abstract final class PrestigeShopCatalog {
@@ -58,6 +62,7 @@ abstract final class PrestigeShopCatalog {
       description: '+1 gear loadout slot (max 5 total).',
       cost: 45,
       minAl: 4,
+      listedInShop: false,
     ),
     PrestigeShopItem(
       id: 'flask_discount',
@@ -102,6 +107,16 @@ abstract final class PrestigeShopCatalog {
       minAl: 10,
     ),
   ];
+
+  static List<PrestigeShopItem> get offered =>
+      all.where((i) => i.listedInShop).toList(growable: false);
+
+  static PrestigeShopItem? byId(String id) {
+    for (final item in all) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
 }
 
 /// Will-rank titles from collection score.

@@ -8,6 +8,7 @@ import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/hero.dart';
+import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/pet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -229,5 +230,51 @@ void main() {
     expect(loaded.wipeStreakKey, '');
     expect(loaded.wipeStreakCount, 0);
     expect(loaded.wipeAdviceLine, '');
+  });
+
+  test('title screen does not persist until New Game', () async {
+    final storage = InMemoryGameStorage();
+    final director = GameDirector(storage, enableSpatialLoop: false);
+    await director.boot();
+    expect(director.hasExistingSave, isFalse);
+    await director.debugTryPersist();
+    expect(await storage.load(), isNull);
+
+    await director.startNewGame(HeroSpecs.starterUnlocked);
+    expect(director.hasExistingSave, isTrue);
+    expect(await storage.load(), isNotNull);
+    director.dispose();
+  });
+
+  test('clipboard import marks the save real and writes storage', () async {
+    final storage = InMemoryGameStorage();
+    final director = GameDirector(storage, enableSpatialLoop: false);
+    await director.boot();
+    final raw = GameLogic.exportSaveJson(
+      GameLogic.createInitialState(now: DateTime(2026, 8, 21)).copyWith(gold: 999),
+    );
+    expect(director.importSaveJson(raw), isTrue);
+    expect(director.hasExistingSave, isTrue);
+    await director.debugTryPersist();
+    expect((await storage.load())?.gold, 999);
+    director.dispose();
+  });
+
+  test('director will not sell hidden Loadout Folio', () async {
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 8, 21))
+        .copyWith(essence: 500, ascensionLevel: 10);
+    final storage = InMemoryGameStorage(seeded);
+    final director = GameDirector(
+      storage,
+      initialState: seeded,
+      enableSpatialLoop: false,
+    );
+    await director.boot();
+    final essence = director.state.essence;
+    final slots = director.state.metaDepth.loadoutBonusSlots;
+    director.buyPrestigeShopItem('loadout_slot');
+    expect(director.state.essence, essence);
+    expect(director.state.metaDepth.loadoutBonusSlots, slots);
+    director.dispose();
   });
 }

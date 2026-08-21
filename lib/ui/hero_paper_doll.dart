@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../models/hero.dart';
 import '../models/loot.dart';
-import 'decoded_image_cache.dart';
-import 'hero_doll_sprite.dart';
 
 /// Kenney Roguelike Characters atlas (16×16 tiles, 1px margin).
 class RoguelikeCharAtlas {
@@ -247,84 +245,4 @@ class HeroPaperDoll {
       );
     }
   }
-}
-
-/// Equip-panel paper doll: layered Roguelike tiles from worn gear.
-///
-/// Falls back to the custom class sprite while the atlas loads.
-class HeroPaperDollView extends StatelessWidget {
-  const HeroPaperDollView({
-    super.key,
-    required this.hero,
-    this.partyIndex = 0,
-    this.size = 64,
-    this.walkFrame = 0,
-  });
-
-  final PartyHero hero;
-  final int partyIndex;
-  final double size;
-  final int walkFrame;
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<ui.Image>(
-      // Native atlas is only ~918×203 — never downscale, or tile src rects
-      // (16px / stride 17) sample the wrong cells and look like a 2×2 mash.
-      future: DecodedImageCache.load(RoguelikeCharAtlas.assetPath),
-      builder: (context, snap) {
-        if (!snap.hasData) {
-          return HeroDollSprite(
-            hero: hero,
-            partyIndex: partyIndex,
-            size: size,
-            walkFrame: walkFrame,
-          );
-        }
-        return CustomPaint(
-          size: Size(size, size),
-          painter: _HeroPaperDollPainter(
-            atlas: snap.data!,
-            hero: hero,
-            partyIndex: partyIndex,
-            walkFrame: walkFrame,
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _HeroPaperDollPainter extends CustomPainter {
-  const _HeroPaperDollPainter({
-    required this.atlas,
-    required this.hero,
-    required this.partyIndex,
-    required this.walkFrame,
-  });
-
-  final ui.Image atlas;
-  final PartyHero hero;
-  final int partyIndex;
-  final int walkFrame;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    HeroPaperDoll.paint(
-      canvas,
-      atlas,
-      Offset(size.width / 2, size.height / 2),
-      size.shortestSide,
-      hero: hero,
-      partyIndex: partyIndex,
-      walkFrame: walkFrame,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _HeroPaperDollPainter old) =>
-      old.atlas != atlas ||
-      old.hero != hero ||
-      old.partyIndex != partyIndex ||
-      old.walkFrame != walkFrame;
 }

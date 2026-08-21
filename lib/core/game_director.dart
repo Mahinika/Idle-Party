@@ -214,6 +214,9 @@ class GameDirector extends ChangeNotifier {
   Future<void> _saveChain = Future.value();
 
   void _persist() {
+    // Title-screen placeholder and boot-failure empty state must not overwrite
+    // a real save (hub idle used to write after 25s).
+    if (!_hasExistingSave) return;
     final stamped = _state.copyWith(
       metaDepth: _state.metaDepth.copyWith(
         cloudSaveUpdatedMs: DateTime.now().toUtc().millisecondsSinceEpoch,
@@ -232,6 +235,13 @@ class GameDirector extends ChangeNotifier {
   }
 
   Future<void> _persistFlush() {
+    _persist();
+    return _saveChain;
+  }
+
+  /// Test hook: attempt a persist (no-op unless a real save exists).
+  @visibleForTesting
+  Future<void> debugTryPersist() {
     _persist();
     return _saveChain;
   }
@@ -1538,12 +1548,6 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(_state.copyWith(soundMuted: muted));
   }
 
-  void setReducedVfx(bool value) {
-    _applyUpgrade(
-      _state.copyWith(vfxQuality: value ? VfxQuality.lite : VfxQuality.full),
-    );
-  }
-
   void setVfxQuality(VfxQuality value) {
     _applyUpgrade(_state.copyWith(vfxQuality: value));
   }
@@ -1742,6 +1746,7 @@ class GameDirector extends ChangeNotifier {
     if (imported == null) return false;
     _awaitingWipeChoice = false;
     _state = GameLogic.ensureRogueHero(imported);
+    _hasExistingSave = true;
     GameAudio.muted = _state.soundMuted;
     SpatialCombat.colorblindMode = _state.colorblindMode;
     if (_state.inDungeon) {
@@ -1921,16 +1926,6 @@ class GameDirector extends ChangeNotifier {
 
   void unequipSlot(EquipmentSlot slot, {int heroIndex = 0}) {
     _applyUpgrade(GameLogic.unequipSlot(_state, slot, heroIndex: heroIndex));
-  }
-
-  void sellGear(String itemId) {
-    final before = _state.essence;
-    _applyUpgrade(GameLogic.sellGear(_state, itemId));
-    final gained = _state.essence - before;
-    if (gained > 0) {
-      GameAudio.loot();
-      showToast('+$gained ess', life: 1.5);
-    }
   }
 
   void sellGearForGold(String itemId) {
@@ -2273,6 +2268,8 @@ class GameDirector extends ChangeNotifier {
   }
 
   void buyPrestigeShopItem(String id) {
+    final catalog = PrestigeShopCatalog.byId(id);
+    if (catalog == null || !catalog.listedInShop) return;
     final before = _state.essence;
     final md = _state.metaDepth;
     final atCap = switch (id) {
@@ -2543,6 +2540,7 @@ class GameDirector extends ChangeNotifier {
     _uiTimer?.cancel();
     _hubIdleTimer?.cancel();
     combatFrame.dispose();
+    PlayGamesBridge.cancelPendingUpload();
     super.dispose();
   }
 }

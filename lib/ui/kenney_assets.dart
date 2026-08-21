@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../core/game_logic.dart';
 import '../core/hero_identity.dart';
+import '../core/relic_ids.dart';
 import '../models/enemy.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
@@ -187,7 +187,7 @@ abstract final class KenneyAssets {
   static String get belt => CustomAssets.iconBelt;
   static String get propSkull => gravestoneAlt;
 
-  // —— Extras (custom identity; Kenney extras kept on disk as legacy) ——
+  // —— Identity icons (custom; not Kenney extras) ——
   static String get book => CustomAssets.iconBook;
   static String get coinGold => CustomAssets.iconCoinGold;
   static String get ring => CustomAssets.iconRing;
@@ -892,12 +892,12 @@ abstract final class KenneyAssets {
   }
 
   static String relicIconFor(String relicId) => switch (relicId) {
-    GameLogic.warBannerRelic => relicWarBanner,
-    GameLogic.ironWardRelic => relicIronWard,
-    GameLogic.phoenixEmberRelic => relicPhoenixEmber,
-    GameLogic.godHandFocusRelic => fist,
-    GameLogic.chamberLuckRelic => iconStar,
-    GameLogic.ironWillRelic => iconTrophy,
+    RelicIds.warBanner => relicWarBanner,
+    RelicIds.ironWard => relicIronWard,
+    RelicIds.phoenixEmber => relicPhoenixEmber,
+    RelicIds.godHandFocus => fist,
+    RelicIds.chamberLuck => iconStar,
+    RelicIds.ironWill => iconTrophy,
     _ => relicWarBanner,
   };
 

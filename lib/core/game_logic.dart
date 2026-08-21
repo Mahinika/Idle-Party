@@ -12,8 +12,8 @@ import '../models/loot.dart';
 import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
-import '../spatial/spatial_combat.dart';
 import 'ad_boost.dart';
+import 'relic_ids.dart';
 import 'dungeon_generator.dart';
 import 'game_state.dart';
 import 'keystone.dart';
@@ -37,12 +37,12 @@ class GameLogic {
   /// Injectable randomness for enemy targeting (seed in tests).
   static Random random = Random();
 
-  static const String warBannerRelic = 'war_banner';
-  static const String ironWardRelic = 'iron_ward';
-  static const String phoenixEmberRelic = 'phoenix_ember';
-  static const String godHandFocusRelic = 'god_hand_focus';
-  static const String chamberLuckRelic = 'chamber_luck';
-  static const String ironWillRelic = 'iron_will';
+  static const String warBannerRelic = RelicIds.warBanner;
+  static const String ironWardRelic = RelicIds.ironWard;
+  static const String phoenixEmberRelic = RelicIds.phoenixEmber;
+  static const String godHandFocusRelic = RelicIds.godHandFocus;
+  static const String chamberLuckRelic = RelicIds.chamberLuck;
+  static const String ironWillRelic = RelicIds.ironWill;
   static const List<String> relicOrder = <String>[
     warBannerRelic,
     ironWardRelic,
@@ -2858,8 +2858,6 @@ class GameLogic {
     GameState state,
     int seconds,
   ) => OfflineProgress.simulateSpatialOffline(state, seconds);
-  static (double, double)? godHandAim(SpatialWorld world) =>
-      OfflineProgress.godHandAim(world);
 
   // —— Pets: moved to pet_service.dart ——
   static int hatchPetCost(GameState state) => PetService.hatchPetCost(state);

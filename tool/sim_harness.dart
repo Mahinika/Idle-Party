@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
@@ -382,7 +383,7 @@ FloorSimResult simulateFloor(
 
   bool tryGodHand() {
     if (world.godHandCooldown > 0) return false;
-    final aim = GameLogic.godHandAim(world);
+    final aim = OfflineProgress.godHandAim(world);
     if (aim == null) return false;
     final gh = SpatialCombat.godHand(
       world,

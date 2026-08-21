@@ -7,6 +7,7 @@ import '../spatial/spatial_combat.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'meta_systems.dart';
+import 'offline_progress.dart';
 
 /// AFK catch-up: replays the dungeon through [SpatialCombat] — the same
 /// authority as live play — in slices the caller controls.
@@ -179,7 +180,7 @@ class OfflineSim {
       // God Hand toward nearest live enemy when ready.
       // Soft cadence: every ~4.3s of sim time so AFK doesn't hard-carry mid PUSH.
       if (step % 36 == 0 && _world.godHandCooldown <= 0) {
-        final aim = GameLogic.godHandAim(_world);
+        final aim = OfflineProgress.godHandAim(_world);
         if (aim != null) {
           final gh = SpatialCombat.godHand(
             _world,

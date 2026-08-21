@@ -404,4 +404,17 @@ void main() {
     expect(round.filterSpanLevel, 1);
     expect(round.offlineHighlightBonus, 1);
   });
+
+  test('Loadout Folio stays off POWER SHOP but save math still works', () {
+    expect(
+      PrestigeShopCatalog.offered.any((i) => i.id == 'loadout_slot'),
+      isFalse,
+    );
+    expect(PrestigeShopCatalog.byId('loadout_slot')?.listedInShop, isFalse);
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 21))
+        .copyWith(essence: 200, ascensionLevel: 10);
+    state = GameLogic.buyPrestigeShopItem(state, 'loadout_slot');
+    expect(state.metaDepth.loadoutBonusSlots, 1);
+  });
 }

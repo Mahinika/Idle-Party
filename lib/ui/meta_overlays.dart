@@ -1749,45 +1749,6 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
   }
 }
 
-/// Ascend milestone strip — small horizontal AL progress markers for the hub.
-class AscendMilestonesStrip extends StatelessWidget {
-  const AscendMilestonesStrip({super.key, required this.state});
-  final GameState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final milestones = MetaSystems.ascendMilestones;
-    return SizedBox(
-      height: 34,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: milestones.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (context, i) {
-          final target = milestones[i];
-          final reached = state.ascensionLevel >= target;
-          final reward = MetaSystems.ascendMilestoneEssence(target);
-          return Tooltip(
-            message: 'AL$target · +${reward}e on first reach',
-            child: Container(
-              width: 52,
-              alignment: Alignment.center,
-              decoration: MenuChrome.listCard(selected: reached),
-              child: Text(
-                'AL$target',
-                style: GameTheme.body(
-                  size: 13,
-                  color: reached ? GameTheme.torchHot : GameTheme.parchmentDim,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
 /// AL-gated essence sinks that survive Ascend.
 class PrestigeShopOverlay extends StatelessWidget {
   const PrestigeShopOverlay({super.key, required this.director});
@@ -1821,10 +1782,10 @@ class PrestigeShopOverlay extends StatelessWidget {
         const SizedBox(height: 10),
         Expanded(
           child: ListView.separated(
-            itemCount: PrestigeShopCatalog.all.length,
+            itemCount: PrestigeShopCatalog.offered.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, i) {
-              final item = PrestigeShopCatalog.all[i];
+              final item = PrestigeShopCatalog.offered[i];
               final locked = state.ascensionLevel < item.minAl;
               final ownedCount = switch (item.id) {
                 'stash_slot' => state.metaDepth.stashBonusSlots ~/ 2,

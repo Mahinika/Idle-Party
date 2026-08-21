@@ -175,6 +175,13 @@ abstract final class PlayGamesBridge {
     });
   }
 
+  /// Drop a queued upload (director dispose / tests).
+  static void cancelPendingUpload() {
+    _uploadDebounce?.cancel();
+    _uploadDebounce = null;
+    _pendingUpload = null;
+  }
+
   static Future<bool> saveCloud(GameState state) async {
     if (!isSupported) return false;
     if (!_signedInCache && !await refreshSignedIn()) return false;
