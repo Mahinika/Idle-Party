@@ -23,9 +23,3 @@ Start → Hub  ←→  Dungeon (ENTER / HUB leave)
 - [[GameDirector]] — äger state, spar, timer
 - [[SpatialCombat]] — enda fight-simmen
 - [[TODAY]] — vad du jagar (ChaseContract)
-
-## Relaterat
-
-- [[Home]] — doc/Dev-log karta
-- [[AGENTS]] — koddetaljer
-- [[Dev log]]
