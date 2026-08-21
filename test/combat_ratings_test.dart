@@ -130,4 +130,10 @@ void main() {
     final agi = CombatRatings.fromHeroSheet(hero: rogue, gearAgility: 12);
     expect(agi.physicalAttack, greaterThan(str.physicalAttack));
   });
+
+  test('Spirit mana regen scales so gear Spirit is not a crumb', () {
+    expect(spiritManaRegenPerSec(0), closeTo(1.25, 0.001));
+    expect(spiritManaRegenPerSec(20), closeTo(1.25 + 1.2, 0.001));
+    expect(spiritManaRegenPerSec(40), greaterThan(spiritManaRegenPerSec(10) + 1.5));
+  });
 }

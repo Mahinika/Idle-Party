@@ -329,7 +329,10 @@ abstract final class EncounterFactory {
     final density = count / baseCount;
     var packAttack = (budget.attack * density).round();
     var packHp = (budget.hp * density).round();
-    var packGold = (budget.gold * (1.0 + (density - 1.0) * 0.25)).round();
+    var packGold =
+        (budget.gold *
+                (1.0 + (density - 1.0) * Keystone.densityGoldShare))
+            .round();
     // 5-man parties hit harder — scale threat so early floors stay fair.
     final partySize = fromState?.heroes.length ?? 4;
     if (partySize >= 5) {

@@ -43,6 +43,14 @@ void main() {
     expect(Keystone.lootItemLevelBonus(20), 40);
   });
 
+  test('KEY gold tracks threat so it is not a gold/hour tax', () {
+    expect(Keystone.goldMul(0), 1.0);
+    expect(Keystone.goldMul(10), Keystone.threatMul(10));
+    expect(Keystone.goldMul(10), closeTo(5.5, 0.001));
+    expect(Keystone.goldMulLabel(10), 'gold ×5.5');
+    expect(Keystone.densityGoldShare, closeTo(0.85, 0.001));
+  });
+
   test('enter dungeon locks keystone run; leave clears it', () {
     final base = GameLogic.createInitialState().copyWith(hardmodeLevel: 3);
     final entered = GameLogic.enterDungeon(base, dungeonId: 'sandy');

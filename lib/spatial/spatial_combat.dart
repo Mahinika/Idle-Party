@@ -45,7 +45,7 @@ bool _actorIsMeleeDps(SpatialActor h) {
 /// BM stays the pet-family leader; Unholy ghoul is a disease assist.
 double _classCompanionAtkScale(HeroSpecId spec) {
   return switch (spec) {
-    HeroSpecId.beastMastery => 0.56,
+    HeroSpecId.beastMastery => 0.51,
     HeroSpecId.unholy => 0.40,
     _ => 0.36,
   };
@@ -1469,6 +1469,9 @@ abstract final class SpatialCombat {
     }
   }
 
+  /// Fresh-floor mana so a healer's first spell is not a 10s wait from 0.
+  static const double healerOpeningMana = 55;
+
   static SpatialWorld build(
     GameState state, {
     double threatScale = 1.0,
@@ -1508,38 +1511,40 @@ abstract final class SpatialCombat {
         3 => 0.45,
         _ => -0.45,
       };
-      heroes.add(
-        SpatialActor(
-          id: 'hero_$i',
-          name: hero.name,
-          team: SpatialTeam.hero,
-          x: spawn.$1 + 0.5 + ox,
-          y: spawn.$2 + 0.5 + oy,
-          hp: hero.currentHp,
-          maxHp: state.effectiveHeroMaxHp(hero),
-          attack: state.effectiveHeroAttack(hero),
-          defense: state.effectiveHeroDefense(hero),
-          moveSpeed: state.effectiveHeroMoveSpeed(hero),
-          attackRange: hero.spec.attackRange,
-          attackCooldown: 1.0 / state.effectiveHeroAttackSpeed(hero),
-          assetIndex: i,
-          heroRole: hero.gearAffinity,
-          heroSpecId: hero.specId,
-          partyIndex: i,
-          heroLevel: hero.level,
-          fireCooldown: i * 0.12,
-          pattern: pattern,
-          ranged: ranged,
-          preferredRange: preferred,
-          blockValue: _partyHeroIsTank(hero)
-              ? state.effectiveHeroStrength(hero) ~/ 20
-              : 0,
-          spiritRegenBonus: (hero.spec.resource == SpecResource.mana)
-              ? spiritManaRegenPerSec(state.effectiveHeroSpirit(hero))
-              : 0,
-          mp5RegenBonus: mp5ManaRegenPerSec(hero.gearMp5Bonus),
-        ),
+      final actor = SpatialActor(
+        id: 'hero_$i',
+        name: hero.name,
+        team: SpatialTeam.hero,
+        x: spawn.$1 + 0.5 + ox,
+        y: spawn.$2 + 0.5 + oy,
+        hp: hero.currentHp,
+        maxHp: state.effectiveHeroMaxHp(hero),
+        attack: state.effectiveHeroAttack(hero),
+        defense: state.effectiveHeroDefense(hero),
+        moveSpeed: state.effectiveHeroMoveSpeed(hero),
+        attackRange: hero.spec.attackRange,
+        attackCooldown: 1.0 / state.effectiveHeroAttackSpeed(hero),
+        assetIndex: i,
+        heroRole: hero.gearAffinity,
+        heroSpecId: hero.specId,
+        partyIndex: i,
+        heroLevel: hero.level,
+        fireCooldown: i * 0.12,
+        pattern: pattern,
+        ranged: ranged,
+        preferredRange: preferred,
+        blockValue: _partyHeroIsTank(hero)
+            ? state.effectiveHeroStrength(hero) ~/ 20
+            : 0,
+        spiritRegenBonus: (hero.spec.resource == SpecResource.mana)
+            ? spiritManaRegenPerSec(state.effectiveHeroSpirit(hero))
+            : 0,
+        mp5RegenBonus: mp5ManaRegenPerSec(hero.gearMp5Bonus),
       );
+      if (hero.spec.isHealer) {
+        actor.rage = healerOpeningMana;
+      }
+      heroes.add(actor);
     }
 
     final firstCombat = map.chambers.length <= 1 ? 0 : 1;
@@ -1899,6 +1904,8 @@ abstract final class SpatialCombat {
       );
       if (prev != null) {
         _copyHeroRuntime(prev, actor);
+      } else if (hero.spec.isHealer) {
+        actor.rage = healerOpeningMana;
       }
       final setProc = GearSets.fourPieceProc(hero.equipped);
       if (setProc != null) {

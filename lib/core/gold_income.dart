@@ -8,11 +8,14 @@ import 'game_logic.dart';
 /// and sanctuary offline. Dungeon combat gold is separate.
 abstract final class GoldIncome {
   /// Raw gold per minute before Torch and gold-find percent.
+  ///
+  /// Hub is slower than a dungeon run, but overnight at the keep should still
+  /// buy forge — not sit at 2g/min while combat prints ~90.
   static int hubRawPerMinute(GameState state) =>
-      2 +
+      10 +
       state.sanctuaryGoldLevel +
-      state.ascensionLevel +
-      (state.highestDungeonCleared + 1);
+      state.ascensionLevel * 2 +
+      (state.highestDungeonCleared + 1) * 2;
 
   static int goldFindPercent(GameState state) =>
       state.ascensionGoldBonusPercent +

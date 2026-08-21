@@ -318,8 +318,8 @@ class HubChase {
       kind: HubChaseKind.keystone,
       title: firstKey ? 'Run KEY +1' : 'Time KEY +$target',
       detail: firstKey
-          ? 'Higher keys drop higher iLvl loot — start with KEY +1.'
-          : 'Time KEY +$target for better iLvl loot and the next key unlock.',
+          ? 'Higher keys drop higher iLvl loot and pay more gold — start with KEY +1.'
+          : 'Time KEY +$target for better iLvl, more gold, and the next key unlock.',
       progressLabel: 'KEY +$target',
       keyLevel: target,
       zoneId: GameLogic.recommendedDungeonId(state),

@@ -74,8 +74,9 @@ abstract final class AbilityEffectRunner {
     required bool hasShield,
   }) {
     final def = HeroSpecs.def(specId);
-    // Passive resource while near combat.
-    if (focus != null) {
+    // Passive resource while near combat. Healers also tick without a
+    // target so the first heal is not gated on picking a focus.
+    if (focus != null || def.isHealer) {
       final rate = _resourceRate(specId, def.resource);
       SpatialCombat._gainRage(hero, rate * dt);
       // Combat Rogue floods energy during Killing Spree.
@@ -537,9 +538,9 @@ abstract final class AbilityEffectRunner {
 
       // —— ranged (MM/Surv/BM were low share) ——
       case AbilityId.aspectOfHawk:
-        hero.kitOutMul *= 1.28;
+        hero.kitOutMul *= 1.22;
       case AbilityId.trueshotAura:
-        hero.kitOutMul *= 1.36;
+        hero.kitOutMul *= 1.32;
         hero.kitHasteMul *= 1.10;
       case AbilityId.trapMastery:
         hero.kitOutMul *= 1.32;
@@ -586,7 +587,7 @@ abstract final class AbilityEffectRunner {
         hero.kitInMul *= 0.94;
       case AbilityId.sinisterStrike:
         // Combo build rides white swings; 2 AP/Agi already lifts the sheet.
-        hero.kitOutMul *= 0.90;
+        hero.kitOutMul *= 0.84;
       case AbilityId.arcaneIntellect:
         // Personal spell power; party-wide Int is the GameState caster aura.
         hero.kitOutMul *= 1.22;

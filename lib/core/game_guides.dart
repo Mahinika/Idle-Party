@@ -158,8 +158,9 @@ abstract final class GameGuides {
           'Your incremental dashboard: Hub gold/min, Run gold/min (from real '
           'loot in the last couple of minutes), gold % multipliers, and Gold Find '
           '— the keep generator that raises Hub rate.\n\n'
-          'Buy one Gold Find level or up to five at once when you can afford them. '
-          'Affordable upgrades glow here and on CAMP.',
+          'Hub ticks while you sit at the keep (slower than a dungeon run, but '
+          'overnight still buys forge). Buy one Gold Find level or up to five '
+          'at once when you can afford them. Affordable upgrades glow here and on CAMP.',
     ),
     GuideTopic(
       id: 'forge',
@@ -204,7 +205,9 @@ abstract final class GameGuides {
           'POWER → CAMP. Spend essence on permanent tracks.\n\n'
           '• See POWER → INCOME for Hub / Run rates and Gold Find upgrades.\n'
           '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
-          '• Hub gold/min ticks while you sit at the keep — Gold Find raises that rate (shown on the hub and on CAMP).\n'
+          '• Hub gold/min ticks while you sit at the keep — slower than a dungeon '
+          'run, but overnight still buys forge. Gold Find raises that rate '
+          '(shown on the hub and on CAMP).\n'
           '• Tracks level infinitely — cost scales with level.\n'
           '• Optional prestige from Lv12: reset to Lv0 (upgrades cheap again). '
           'You keep a small forever bonus '
@@ -339,8 +342,8 @@ abstract final class GameGuides {
           '• Overtime = depleted (clear still counts, no key upgrade).\n'
           '• Daily vault: 1 clear or timed KEY+2 — claim once per day.\n'
           '• Optional Boss Rush / No Flask add extra affixes + essence.\n'
-          '• Higher keys drop higher iLvl gear (KEY +10 is a real jump) plus '
-          'denser packs, more gold, and better legendary odds.\n'
+          '• Higher keys drop higher iLvl gear (KEY +10 is +20 iLvl) and pay '
+          'gold in line with the harder packs — not a gold tax.\n'
           '• After the first boss/Ascend, hub TODAY points at the next KEY until '
           'you are at the AL cap.',
     ),

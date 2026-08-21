@@ -56,12 +56,26 @@ void main() {
     expect(priest.kitHealMul, greaterThan(1.0));
   });
 
+  test('healers open a floor with mana; DPS casters start empty', () {
+    final disc = SpatialCombat.build(
+      _soloSpecParty(HeroSpecId.discipline, level: 1),
+    );
+    final fire = SpatialCombat.build(
+      _soloSpecParty(HeroSpecId.fire, level: 1),
+    );
+    expect(
+      disc.heroes.firstWhere((h) => !h.isPet).rage,
+      SpatialCombat.healerOpeningMana,
+    );
+    expect(fire.heroes.firstWhere((h) => !h.isPet).rage, 0);
+  });
+
   test('Combat rogue kitOutMul sits near melee band', () {
     final state = _soloSpecParty(HeroSpecId.combat, level: 5);
     var world = SpatialCombat.build(state);
     world = SpatialCombat.step(world, state, dt: 0.1).world;
     final rogue = world.heroes.firstWhere((h) => !h.isPet);
-    expect(rogue.kitOutMul, closeTo(0.90, 0.001));
+    expect(rogue.kitOutMul, closeTo(0.84, 0.001));
   });
 
   test('Moonkin Form thickens hide; Barkskin is ready at 11', () {

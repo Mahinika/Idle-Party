@@ -52,7 +52,8 @@ class FirstSessionTips extends StatelessWidget {
       title: 'SANCTUARY',
       body:
           'Spend essence here for idle gold and party power that persists between runs. '
-          'Hub gold/min ticks at the keep; Gold Find makes that number go up.',
+          'Hub gold/min ticks at the keep overnight (enough to buy forge). '
+          'Gold Find makes that number go up.',
     ),
     (
       id: 'market',

@@ -1178,7 +1178,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           Text(
             state.hardmodeLevel <= 0
                 ? 'Normal · max KEY +$maxKey'
-                : 'KEY +${state.hardmodeLevel} · loot +${Keystone.lootItemLevelBonus(state.hardmodeLevel)} iLvl',
+                : 'KEY +${state.hardmodeLevel} · loot +${Keystone.lootItemLevelBonus(state.hardmodeLevel)} iLvl · ${Keystone.goldMulLabel(state.hardmodeLevel)}',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),

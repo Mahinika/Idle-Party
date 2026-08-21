@@ -137,7 +137,8 @@ class SanctuaryOverlay extends StatelessWidget {
       children: [
         Text(
           'Permanent essence tracks — survive Ascend. Upgrade forever.\n'
-          'Gold Find raises Hub gold/min at the keep (ticks while you sit here). '
+          'Gold Find raises Hub gold/min at the keep (ticks while you sit here — '
+          'slower than a run, enough overnight to buy forge). '
           'Prestige from Lv12: reset to Lv0 (costs go cheap again), keep a '
           'small forever bonus, and get essence back. Not a power jump — '
           'the big level bonus is gone until you buy levels again.',

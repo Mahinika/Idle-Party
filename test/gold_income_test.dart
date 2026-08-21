@@ -4,9 +4,9 @@ import 'package:idle_party/core/gold_income.dart';
 import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
-  test('starter hub rate is a few gold per minute', () {
+  test('starter hub rate is a real overnight trickle', () {
     final state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 20));
-    expect(GoldIncome.hubRawPerMinute(state), greaterThanOrEqualTo(2));
+    expect(GoldIncome.hubRawPerMinute(state), 10);
     expect(GoldIncome.hubGoldPerMinute(state), GoldIncome.hubRawPerMinute(state));
     expect(GoldIncome.hubRateLine(state), contains('g/min'));
     expect(GoldIncome.multiplierLine(state), 'Gold +0%');

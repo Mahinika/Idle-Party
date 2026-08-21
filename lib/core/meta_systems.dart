@@ -19,10 +19,19 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.27';
+  static const String currentVersion = '1.12.28';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.28',
+      bullets: <String>[
+        'Healers open a floor with mana, and Spirit actually refills it — Disc can heal on the pull instead of waiting half the fight.',
+        'Hub gold/min at the keep is a real overnight trickle (enough to buy forge), not a 2g/min joke next to a dungeon run.',
+        'KEY gold now tracks the harder packs. KEY +10 shows gold ×5.5 next to the +20 iLvl jump — not a gold tax.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.27',
       bullets: <String>[

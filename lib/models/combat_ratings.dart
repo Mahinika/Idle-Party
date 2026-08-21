@@ -260,9 +260,12 @@ class CombatRatings {
   }
 }
 
-/// Spirit → mana regen (idle, no 5SR). kSpirit ≈ 0.2.
-double spiritManaRegenPerSec(int spirit, {double kSpirit = 0.2}) {
-  return ((spirit / 4) + 12.5) / 2 * kSpirit;
+/// Spirit → mana regen (idle, no 5SR).
+///
+/// Small base so a naked healer ticks, then **0.06 mana/s per Spirit** so
+/// gear Spirit is readable next to Mp5 (`mp5 / 5`).
+double spiritManaRegenPerSec(int spirit, {double perSpirit = 0.06}) {
+  return 1.25 + max(0, spirit) * perSpirit;
 }
 
 /// Mp5 gear → mana/s.

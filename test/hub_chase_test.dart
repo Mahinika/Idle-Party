@@ -260,6 +260,7 @@ void main() {
     expect(chase.kind, HubChaseKind.keystone);
     expect(chase.title.toUpperCase(), contains('KEY'));
     expect(chase.detail.toUpperCase(), contains('ILVL'));
+    expect(chase.detail.toLowerCase(), contains('gold'));
     expect(chase.keyLevel, 1);
     expect(chase.progressLabel, 'KEY +1');
   });

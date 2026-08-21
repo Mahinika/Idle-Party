@@ -24,9 +24,24 @@ abstract final class Keystone {
   /// Threat / pack density vs old HM+10 ≈ 10× at key 20.
   static double threatMul(int key) => 1.0 + key.clamp(0, maxLevel) * 0.45;
 
-  static double goldMul(int key) => 1.0 + key.clamp(0, maxLevel) * 0.075;
+  /// Combat gold tracks threat so KEY is not a gold/hour tax.
+  /// iLvl remains the extra prize (`lootItemLevelBonus`).
+  static double goldMul(int key) => threatMul(key);
 
   static double densityMul(int key) => 1.0 + key.clamp(0, maxLevel) * 0.45;
+
+  /// Extra KEY bodies pay this slice of density into pack gold (1.0 = full).
+  static const double densityGoldShare = 0.85;
+
+  /// Phone line: `gold ×5.5` on KEY +10.
+  static String goldMulLabel(int key) {
+    final m = goldMul(key);
+    if (m <= 1.01) return 'gold ×1';
+    final text = (m * 10).round() % 10 == 0
+        ? m.toStringAsFixed(0)
+        : m.toStringAsFixed(1);
+    return 'gold ×$text';
+  }
 
   /// Legendary direct-drop chance contribution (key 20 ≈ old HM+10).
   static double legendaryChance(int key) =>
