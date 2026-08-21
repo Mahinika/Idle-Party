@@ -1,0 +1,5 @@
+# Copy to admob.properties (gitignored). From AdMob → Apps → Idle Party.
+# App ID looks like ca-app-pub-XXXX~YYYY (tilde).
+# Rewarded unit looks like ca-app-pub-XXXX/ZZZZ (slash).
+admobAppId=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
+admobRewardedUnitId=ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ

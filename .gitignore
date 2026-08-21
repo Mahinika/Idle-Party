@@ -55,6 +55,7 @@ app.*.map.json
 
 # Release signing (never commit secrets)
 /android/key.properties
+/android/admob.properties
 *.jks
 *.keystore
 

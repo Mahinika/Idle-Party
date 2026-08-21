@@ -1,12 +1,17 @@
-/// AdMob IDs. Google sample values until a real AdMob app is wired.
+/// AdMob IDs. Empty / sample values = Google test ads (no payout).
 ///
-/// Replace both the Android manifest `admobAppId` and [rewardedUnitId]
-/// with production IDs before a Play build that shows live ads.
-/// Override the unit at build time: `--dart-define=ADMOB_REWARDED_UNIT_ID=…`
+/// Live unit: `--dart-define=ADMOB_REWARDED_UNIT_ID=ca-app-pub-…/…`
+/// or GitHub secret `ADMOB_REWARDED_UNIT_ID` on tag builds.
+/// App ID lives in AndroidManifest via `android/admob.properties`.
 abstract final class AdConfig {
-  /// Google sample rewarded unit (safe for debug / closed test until live IDs).
+  static const String testRewardedUnitId =
+      'ca-app-pub-3940256099942544/5224354917';
+
   static const String rewardedUnitId = String.fromEnvironment(
     'ADMOB_REWARDED_UNIT_ID',
-    defaultValue: 'ca-app-pub-3940256099942544/5224354917',
+    defaultValue: testRewardedUnitId,
   );
+
+  static bool get isLiveUnit =>
+      rewardedUnitId.isNotEmpty && rewardedUnitId != testRewardedUnitId;
 }

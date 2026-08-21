@@ -50,17 +50,33 @@ over Play ops unless the owner asks about Play.
   `https://github.com/Mahinika/Idle-Party/blob/cursor/keystone-habit-b46b/docs/PRIVACY.md`  
   (switch to `main` after this branch merges).
 - [x] Data safety form (2026-08-16): **optional Play Games** (User IDs / gameplay Other actions / Saved Games files); collected not shared; encrypted in transit; OAuth; delete account + data URLs point at [PRIVACY.md](PRIVACY.md). **No Idle Party analytics servers**; clipboard export/import is optional and user-initiated.
-- [ ] **Rewarded ads (1.12.27):** update Data safety (Ads + Advertising ID, shared with Google AdMob) and re-run IARC ads questions before the next Play AAB. Privacy copy is in [PRIVACY.md](PRIVACY.md). Until a real AdMob app exists, builds use Google **sample** App/unit IDs (`android/app/build.gradle.kts` `admobAppId` + `--dart-define=ADMOB_REWARDED_UNIT_ID`).
+- [ ] **Rewarded ads (1.12.27):** AdMob account + live IDs (not Google sample). Update Data safety (Ads + Advertising ID, shared with Google AdMob) and re-run IARC ads questions before the next Play AAB. Privacy copy is in [PRIVACY.md](PRIVACY.md).
 
-### Rewarded ads / AdMob
+### Rewarded ads / AdMob (how money actually arrives)
 
-Hub **POWERUPS**: player-started rewarded ad → +1 hour of ×2 gold and +25% ATK (stack duration, max 24h).
+Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not through Idle Party servers.
 
-1. Create an AdMob app for `com.idleparty.app` and a **rewarded** unit.
-2. Set Gradle `admobAppId` (or env `ADMOB_APP_ID`) to the real App ID.
-3. Build with `--dart-define=ADMOB_REWARDED_UNIT_ID=ca-app-pub-…/…` (real unit).
-4. Turn on GDPR UMP messaging in AdMob (owner is in the EEA).
-5. Update Play Data safety + IARC; do not ship sample IDs as “live” ads on production.
+**You click (Google):**
+
+1. Open [AdMob](https://admob.google.com) with the same Google account as Play Console.
+2. Apps → **Add app** → Android. Package `com.idleparty.app`. If Play search misses it (not in production yet), add as unpublished with that package name.
+3. Create an ad unit: **Rewarded** (not banner, not interstitial). Name it e.g. `powerups_hour`.
+4. Copy two values:
+   - **App ID** (`ca-app-pub-…~…` with a `~`)
+   - **Rewarded unit ID** (`ca-app-pub-…/…` with a `/`)
+5. **Privacy & messaging** → European regulations → create a GDPR message for the app (needed in Sweden / EEA or ads stay thin).
+6. **Payments**: legal name, address, tax, bank. Google pays after their threshold (often around USD 100) on their schedule.
+7. Optional but important for real fill: **app-ads.txt** on the developer website listed in Play Store settings, with your AdMob publisher `pub-…` line. Paste the publisher ID here and we can host the file.
+
+**Then paste the two IDs in chat** (or GitHub secrets `ADMOB_APP_ID` + `ADMOB_REWARDED_UNIT_ID`). Local file is `android/admob.properties` (copy from `admob.properties.example`). Until those exist, builds use Google **sample** IDs = test ads = **$0**.
+
+**Play Console before the next ads AAB:**
+
+- Data safety: Yes ads; Advertising ID collected/shared with Google AdMob.
+- IARC: re-answer the ads questions.
+- Do not ship sample IDs as “live” ads on production.
+
+Closed testers watching a few ads will not pay rent. Real money needs many players (Play production or a large sideload audience).
 
 ### Play Games setup (leaderboards + cloud)
 

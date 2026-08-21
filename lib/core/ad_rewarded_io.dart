@@ -67,6 +67,9 @@ Future<void> _ensureSdk() async {
     }
     await MobileAds.instance.initialize();
     _sdkReady = true;
+    debugPrint(
+      'AdMob ready (${AdConfig.isLiveUnit ? 'live unit' : 'sample test unit'})',
+    );
   } catch (e, st) {
     debugPrint('AdMob init failed: $e\n$st');
   }
