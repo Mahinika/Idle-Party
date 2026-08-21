@@ -8,7 +8,7 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ⏳ review | **1.12.27 (57)** submitted to closed Alpha 2026-08-21 (POWERUPS ads + Play update notice + shield fix). Testers still on **1.12.25 (55)** until Google publishes. Production still ❌. |
+| Closed testing | ⏳ review | **1.12.32 (62)** submitted to closed Alpha 2026-08-21 (Folio hide, safer title save, combat presence). Testers still on **1.12.27 (57)** until Google publishes. Production still ❌. |
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
@@ -39,7 +39,7 @@ over Play ops unless the owner asks about Play.
 ## Play Console — closed / internal (ops)
 
 - [x] App exists in Play Console (`com.idleparty.app`) with listing + closed Alpha.
-- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.27 (57)** submitted 2026-08-21 (review). Previous live for testers: **1.12.25 (55)**.
+- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.32 (62)** submitted 2026-08-21 (review). Previous live for testers: **1.12.27 (57)**.
 - [ ] Enable Play App Signing if prompted on new uploads.
 - [ ] Add / retain closed testers toward **12 × 14 days** for production access.
 - [ ] Smoke-test install → hub → short dungeon → leave → relaunch (save persists).
