@@ -101,6 +101,10 @@ shipped): `docs/SYSTEMS_REBUILD.md`. Chase contract (hub TODAY ↔ offline Up ne
 blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`. Play ops: `docs/PLAY_STORE.md`
 + skill `play-store-prep`.
 
+**Obsidian (owner):** visual map in `notes/` (`Home`, Ship, Combat, Hub TODAY,
+Play, Vad härnäst) with `[[wikilinks]]` into `docs/` + this file. Local
+`.obsidian/` is gitignored — commit notes, not vault UI settings.
+
 ### Cursor automation
 
 - Project hooks: `.cursor/hooks.json` — **sessionStart** injects current STRATEGY
