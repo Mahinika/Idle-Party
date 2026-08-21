@@ -18,7 +18,7 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# Obsidian vault UI (local layout/plugins). Keep project notes under notes/.
+# Obsidian vault UI (local). Not used for project docs — leave ignored if present.
 .obsidian/
 
 
