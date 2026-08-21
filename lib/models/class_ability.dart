@@ -1918,7 +1918,7 @@ class ClassKits {
       resourceCost: 12,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.15,
+      coeff: 1.32,
     ),
     ClassAbilityDef(
       id: AbilityId.judgment,
@@ -1932,7 +1932,7 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.25,
+      coeff: 1.40,
     ),
     ClassAbilityDef(
       id: AbilityId.divineStorm,
@@ -1946,7 +1946,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.8,
+      coeff: 0.95,
 
       aoeShape: AbilityAoeShape.ground,
     ),
@@ -1994,7 +1994,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 1.85,
+      coeff: 2.05,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0C0),
     ),
@@ -3238,7 +3238,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.4,
+      coeff: 1.55,
     ),
     ClassAbilityDef(
       id: AbilityId.frostStrike,
@@ -3252,7 +3252,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.25,
+      coeff: 1.40,
     ),
     ClassAbilityDef(
       id: AbilityId.howlingBlast,
@@ -3266,7 +3266,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.75,
+      coeff: 0.88,
 
       aoeShape: AbilityAoeShape.rain,
       gate: AbilityGate(maintainDot: true),

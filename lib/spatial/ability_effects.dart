@@ -506,28 +506,29 @@ abstract final class AbilityEffectRunner {
         // HoT healer amp — match / slightly lead peer healer passives.
         hero.kitHealMul *= 1.34;
 
-      // —— melee DPS (target ~1.22–1.30; Arms was wildly overtuned at 1.55) ——
+      // —— melee DPS (target ~1.22–1.34; lift Arms/Ret/Frost DK off the floor) ——
       case AbilityId.armsStance:
-        hero.kitOutMul *= 1.18;
+        hero.kitOutMul *= 1.28;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
         hero.kitOutMul *= 1.30;
         hero.kitHasteMul *= 1.12;
         hero.kitInMul *= 1.06;
       case AbilityId.sealOfCommand:
-        hero.kitOutMul *= 1.26;
+        hero.kitOutMul *= 1.40;
       case AbilityId.improvedPoisons:
-        hero.kitOutMul *= 1.36;
+        // Assass led the board — slight lean so lows can rise without HIGH.
+        hero.kitOutMul *= 1.28;
       case AbilityId.masterOfSubtlety:
         // Opener fantasy: damage + slight haste for ambush windows.
-        hero.kitOutMul *= 1.34;
+        hero.kitOutMul *= 1.32;
         hero.kitHasteMul *= 1.08;
       case AbilityId.frostPresence:
-        hero.kitOutMul *= 1.26;
+        hero.kitOutMul *= 1.40;
         hero.kitInMul *= 0.97;
       case AbilityId.unholyPresence:
         // Fairness: ghoul + diseases carry identity; presence is a lean, not a stomp.
-        hero.kitOutMul *= 1.10;
+        hero.kitOutMul *= 1.16;
         hero.kitHasteMul *= 1.10;
       // Ghoul companion spawned in SpatialCombat.build.
       case AbilityId.enhancementWeapons:
@@ -536,41 +537,40 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 1.28;
         hero.kitHasteMul *= 1.10;
 
-      // —— ranged (MM/Surv/BM were low share) ——
+      // —— ranged ——
       case AbilityId.aspectOfHawk:
-        hero.kitOutMul *= 1.22;
+        hero.kitOutMul *= 1.18;
       case AbilityId.trueshotAura:
-        hero.kitOutMul *= 1.26;
-        hero.kitHasteMul *= 1.08;
+        hero.kitOutMul *= 1.22;
+        hero.kitHasteMul *= 1.06;
       case AbilityId.trapMastery:
-        hero.kitOutMul *= 1.32;
+        hero.kitOutMul *= 1.26;
         hero.kitRootBonus += 1.0;
 
       // —— casters: identity buffs; spam tax is casterAbilityTax only ——
-      // Mild trim so live-light gate stays inside ±20% (aff/demo/destro tip HIGH).
       case AbilityId.shadowform:
-        hero.kitOutMul *= 1.02;
+        hero.kitOutMul *= 1.10;
         hero.kitInMul *= 1.04;
       case AbilityId.elementalFocus:
-        hero.kitOutMul *= 0.98;
-        hero.kitHasteMul *= 1.04;
+        hero.kitOutMul *= 1.08;
+        hero.kitHasteMul *= 1.08;
       case AbilityId.arcanePowerPassive:
-        hero.kitOutMul *= 0.98;
+        hero.kitOutMul *= 1.06;
       case AbilityId.frostArmor:
         hero.kitInMul *= 0.92;
-        hero.kitOutMul *= 1.00;
+        hero.kitOutMul *= 1.08;
         hero.kitRootBonus += 0.5;
       case AbilityId.soulSiphon:
-        hero.kitOutMul *= 1.02;
+        hero.kitOutMul *= 1.08;
         hero.kitHealMul *= 1.08;
       case AbilityId.demonicKnowledge:
-        // Pet-family identity: modest personal power + haste; pet AA/empower carries share.
-        hero.kitOutMul *= 0.90;
-        hero.kitHasteMul *= 1.04;
+        // Pet-family identity: personal power + haste; pet AA/empower carries share.
+        hero.kitOutMul *= 0.98;
+        hero.kitHasteMul *= 1.06;
       case AbilityId.cataclysm:
-        hero.kitOutMul *= 0.95;
+        hero.kitOutMul *= 1.06;
       case AbilityId.moonkinForm:
-        hero.kitOutMul *= 0.96;
+        hero.kitOutMul *= 1.10;
         hero.kitInMul *= 0.92;
 
       // —— original four kits ——
@@ -587,10 +587,10 @@ abstract final class AbilityEffectRunner {
         hero.kitInMul *= 0.94;
       case AbilityId.sinisterStrike:
         // Combo build rides white swings; 2 AP/Agi already lifts the sheet.
-        hero.kitOutMul *= 0.84;
+        hero.kitOutMul *= 0.92;
       case AbilityId.arcaneIntellect:
         // Personal spell power; party-wide Int is the GameState caster aura.
-        hero.kitOutMul *= 1.22;
+        hero.kitOutMul *= 1.24;
       default:
         // Fallback: mild role-appropriate crumb if a new passive is added.
         if (spec.isTank) {

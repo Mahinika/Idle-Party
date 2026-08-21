@@ -1365,7 +1365,8 @@ abstract final class SpatialCombat {
   /// Single caster outgoing tax (Int kits spam harder than Str melee).
   /// Applied once in [AbilityEffectRunner._abilityOutScale].
   /// Passives must NOT also crush kitOutMul (would double-tax kit casters).
-  static const double casterAbilityTax = 0.72;
+  /// Was 0.72 — left casters feeling ~30% soft vs hunters/rogues.
+  static const double casterAbilityTax = 0.85;
 
   static ({int damage, String? tag, int tagArgb}) _classAttackMods(
     SpatialWorld world,

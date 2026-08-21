@@ -27,6 +27,7 @@ abstract final class MetaSystems {
       version: '1.12.29',
       bullets: <String>[
         'Combat Rogue pack damage was stomping peers — Blade Flurry cleave, Killing Spree haste/hits, and execute whites are trimmed so AoE sits with other DPS.',
+        'Caster kits were paying a heavy spell tax, and Arms / Ret / Frost DK / Balance sat soft — passives and key hits are lifted so the field feels closer without anyone going HIGH.',
         'Three wipes on the same floor: the dungeon names a real fix when the fight proves it — equip bag upgrades, drop a floor, or FORGE ATK / DEF / STA. PUSH retreats keep that streak (clearing a lower floor does not erase it). No guessed tips.',
         'BAG/GEAR dropped SELL JUNK, SCRAP, GEAR Sell, and LOADOUTS. CLEAN BAG + FILTERS + MARKET still clear junk.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
