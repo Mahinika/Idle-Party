@@ -8,9 +8,10 @@ alwaysApply: true
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
-Last preference sync: **2026-08-21** (optional hub POWERUPS rewarded ads; still no IAP.
-Workstyle: commit locally when a batch is verified; still ask before push /
-Play / save-wipe. Other product locks unchanged).
+Last preference sync: **2026-08-21** (/init: Play Alpha fact → **1.12.27 / 57**;
+optional hub POWERUPS rewarded ads; still no IAP. Workstyle: commit locally when
+a batch is verified; still ask before push / Play / save-wipe. Other product
+locks unchanged).
 
 ## Near-term focus
 
@@ -24,7 +25,7 @@ Play / save-wipe. Other product locks unchanged).
 
 - Goal: **Google Play “for real” soon** (not sideload-only forever).
 - Prefer work that unblocks Play when touching store: CI signing secrets, closed-test 12×14, production access — see `docs/PLAY_STORE.md`.
-- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.25 / 55**, 2026-08-20; now live for testers). **Production is not live**. Optional Play Games (META → SETTINGS) is opt-in, not a store blocker.
+- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.27 / 57**, 2026-08-21; testers may still be on **1.12.25 / 55** until review publishes). Working ship is **1.12.28**. **Production is not live**. Optional Play Games (META → SETTINGS) is opt-in, not a store blocker.
 - **Platforms now:** Android (+ existing web playtest tooling OK). **No iOS** and **no shipping web as a product** for now.
 
 ## UI target device (mandatory)

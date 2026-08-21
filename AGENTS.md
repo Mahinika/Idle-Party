@@ -133,7 +133,9 @@ Shared menus: MenuRouter + MenuAlerts + MenuSurface
 catch-up (full enemy stats; same kits/abilities/chambers). Offline / AFK
 catch-up uses `afkAssist: true` inside the same `build`/`step` API — enemy
 hits are softer and hero hits harder so long catch-up stays snappy. Hub AFK
-(`!inDungeon`) is sanctuary idle gold only — no combat.
+(`!inDungeon`) is sanctuary idle gold only — no combat. Healers open each floor
+with mana; **Spirit** refills mana over time (not a damage stat). Warrior /
+Paladin / Shaman can equip **shields** in the off-hand.
 
 **Content inventory:** 10 classes / **31 specs** (`HeroSpecId`) · **15 zones**
 through Mothveil Hollow.
@@ -167,7 +169,11 @@ ChaseContract).
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
-**Hub POWERUPS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded`. 1 ad = 1 hour of ×2 gold and +25% ATK; duration stacks (max 24h). Web playtest grants a preview hour. Ads never interrupt combat.
+**Hub POWERUPS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded` +
+`ad_config.dart` (live AdMob ids on release Android; sample ids in debug). 1 ad =
+1 hour of ×2 gold and +25% ATK; duration stacks (max 24h) in
+`metaDepth.adBoostUntilMs` (survives Ascend). Web playtest grants a preview hour.
+Ads never interrupt combat. SETTINGS **AD PRIVACY** withdraws AdMob GDPR consent.
 
 ## World path (15 zones)
 
@@ -236,7 +242,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Shared menus | `lib/core/menu_router.dart`, `menu_alerts.dart` · `lib/ui/shell/menu_surface.dart`, `app_bottom_bar.dart` |
 | Hub | `lib/ui/hub_screen.dart` |
 | Hub TODAY chase | `lib/core/hub_chase.dart` |
-| Hub POWERUPS ads | `lib/core/ad_boost.dart`, `ad_rewarded.dart` · `lib/ui/hub/hub_powerups.dart` |
+| Hub POWERUPS ads | `lib/core/ad_boost.dart`, `ad_rewarded.dart`, `ad_config.dart` · `lib/ui/hub/hub_powerups.dart` |
 | Hub gold/min (keep AFK) | `lib/core/gold_income.dart` |
 | POWER INCOME tab | `lib/ui/shell/income_overlay.dart` |
 | Apex hub (craft / vault / target meter) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) |
@@ -276,9 +282,10 @@ legacy heirloom item if an old save still has one (no new binds; may rescale),
 `highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
 (mute/VFX/colorblind/text scale/auto-sell/**auto-disassemble**), full `metaDepth`
 (Gauntlet best, Will / Gauntlet claims, daily vault / weekly affix season,
-prestige shop, unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY),
-party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**, Play Games
-opt-in + season PBs, …), **hero levels/XP**,
+**prestige shop** purchases — Loadout Folio / Apothecary Writ / Junk Magnifier /
+Away Ledger / …, unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY),
+party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**,
+**`adBoostUntilMs`**, Play Games opt-in + season PBs, …), **hero levels/XP**,
 craft mats/pity, keystone prefs (clamped) + challenge toggles, FARM/PUSH preference.
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
@@ -288,8 +295,9 @@ and Sanctuary. Constants: `GameLogic.ascendBlessing*`. Player-facing label is
 **STA / Stamina** (same as gear); internal fields may still say vitality.
 
 **Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades
-(ATK/DEF/STA/move/haste/crit), non-Apex gear/stash, **loadouts**, leave dungeon
-(`inDungeon=false`); mission board rebuilt for new AL.
+(ATK/DEF/STA/move/haste/crit), non-Apex gear/stash, **loadout presets** (slot
+*count* from prestige Folio stays), leave dungeon (`inDungeon=false`); mission
+board rebuilt for new AL.
 
 Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
 
@@ -299,11 +307,12 @@ Hub **KEY** (META tab, after jargon unlock) sets preferred key (`hardmodeLevel`
 0–20, AL-gated). On enter, affixes lock + idle-friendly par timer starts (AFK
 counts). Boss clear under par → TIMED (upgrade key, vault score); overtime →
 depleted. Loot iLvl bonus is `key * 2` (`Keystone.lootItemLevelBonus`) so higher
-keys are a visible gear jump. After the first hour, hub TODAY chases the next KEY
-until the AL cap; Daily / Will / Gauntlet surface when the preferred key is at cap
-(ALMOST cliffs stay above). **Daily vault** (UTC): 1 clear **or** timed KEY+2;
-claim once per day (scales with best timed key). Affixes still rotate weekly.
-See `lib/core/keystone.dart`.
+keys are a visible gear jump. Combat **gold** scales with the same curve as threat
+(`Keystone.goldMul` — e.g. KEY +10 ≈ gold ×5.5) so harder keys are not a gold/hour
+tax. After the first hour, hub TODAY chases the next KEY until the AL cap; Daily /
+Will / Gauntlet surface when the preferred key is at cap (ALMOST cliffs stay above).
+**Daily vault** (UTC): 1 clear **or** timed KEY+2; claim once per day (scales with
+best timed key). Affixes still rotate weekly. See `lib/core/keystone.dart`.
 
 ## God Hand
 
