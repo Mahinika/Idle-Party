@@ -13,8 +13,7 @@
 ## Sanningen i koden
 
 - [[AGENTS]] — agenternas karta (arkitektur, meta, tooling)
-- [[CONTENT_CADENCE]] — månadsrytm efter 90d
-- [[STRATEGY_90D]] — M1–M3 shippade; decision table
+- [[CONTENT_CADENCE]] — månadsrytm + beslutstabell
 
 ## Tips
 

@@ -3083,7 +3083,7 @@ class GameLogic {
 
 /// Snapshot of what AFK time awarded on a single apply.
 ///
-/// Player contract (docs/SYSTEMS_REBUILD.md P2): **1 wow headline**,
+/// Player contract ([ChaseContract] / offline Up next): **1 wow headline**,
 /// **≤3 highlight rows**, then Up next via [ChaseContract] in the UI.
 class OfflineProgressResult {
   const OfflineProgressResult({

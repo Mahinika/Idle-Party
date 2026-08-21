@@ -5,8 +5,7 @@
 ## Läs
 
 - [[AGENTS]] — ship-rad, build/test, DoD
-- [[CONTENT_CADENCE]] — balance + en synlig slice + What’s New per tag
-- [[STRATEGY_90D]] — M1–M3 klara; decision table
+- [[CONTENT_CADENCE]] — balance + en synlig slice + What’s New + beslutstabell
 
 ## Flöde (kort)
 

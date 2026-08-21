@@ -92,13 +92,11 @@ Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 `verifying-in-browser`, `screenshotting-changelog`, `recording-browser-flow-as-test`,
 `systematic-debugging`, `reviewing-code`, `accessibility-auditing`).
 
-Cadence: `docs/CONTENT_CADENCE.md`. Near-term (90d, M1–M3 **shipped**):
-`docs/STRATEGY_90D.md` (decision table only — operate from cadence). Background:
-`docs/TOP_GAMES_RESEARCH.md`. Systems rebuild (P1–P5 chase/offline/kits/KEY/GH
-shipped): `docs/SYSTEMS_REBUILD.md`. Chase contract (hub TODAY ↔ offline Up next):
-`docs/CHASE_CONTRACT.md`. Gear budget contract: `docs/GEAR_BUDGET.md`. Floor
-blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`. Play ops: `docs/PLAY_STORE.md`
-+ skill `play-store-prep`.
+Cadence: `docs/CONTENT_CADENCE.md` (decision table + tag rhythm; 90d M1–M3
+shipped). Background (optional): `docs/TOP_GAMES_RESEARCH.md`. Chase contract
+(hub TODAY ↔ offline Up next): `docs/CHASE_CONTRACT.md`. Gear budget:
+`docs/GEAR_BUDGET.md`. Floor blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`.
+Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`.
 
 **Obsidian (owner):** visual map in `notes/` (`Home`, Ship, Combat, Hub TODAY,
 Play, Vad härnäst) with `[[wikilinks]]` into `docs/` + this file. Local
@@ -106,8 +104,8 @@ Play, Vad härnäst) with `[[wikilinks]]` into `docs/` + this file. Local
 
 ### Cursor automation
 
-- Project hooks: `.cursor/hooks.json` — **sessionStart** injects current STRATEGY
-  month; after game/docs edits, **stop** runs `flutter analyze lib test`, plus
+- Project hooks: `.cursor/hooks.json` — **sessionStart** injects cadence context;
+  after game/docs edits, **stop** runs `flutter analyze lib test`, plus
   changelog sync when version/What’s New files touched, plus `ship_smoke_test`
   when hub/chase/guides files touched.
 - Git: daily work on `main`; `release/*` only when cutting a tag.

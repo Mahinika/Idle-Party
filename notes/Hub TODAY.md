@@ -6,7 +6,7 @@
 
 - [[CHASE_CONTRACT]] — kontraktet
 - [[AGENTS]] — TODAY / Ascend Blessing / unlock-teasers
-- [[SYSTEMS_REBUILD]] — historik P1–P5 (chase/offline/KEY/GH) — shippat
+- [[CONTENT_CADENCE]] — vad som ska in i nästa tag
 
 ## Vad spelaren ska känna
 

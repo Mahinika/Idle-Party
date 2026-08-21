@@ -15,7 +15,10 @@ locks unchanged).
 
 ## Near-term focus
 
-- **Default roadmap:** 90-day M1–M3 shipped. Operate from `docs/CONTENT_CADENCE.md` — balance + one player-visible slice + What’s New. Keep STRATEGY_90D decision table (kits before new specs). Don’t invent a competing list. **Now:** **core-loop feel** so people keep playing — not new zones, not new classes.
+- **Default roadmap:** 90-day M1–M3 shipped. Operate from `docs/CONTENT_CADENCE.md`
+  — balance + one player-visible slice + What’s New + decision table (kits before
+  new specs). Don’t invent a competing list. **Now:** **core-loop feel** so people
+  keep playing — not new zones, not new classes.
 - Vague “gör spelet bättre / vad härnäst” → **feel of the existing loop** (power beats, combat juice, readable rewards), not a new dungeon or spec, not `/init` / cleanup / CI chores.
 - Prefer **game feel / content** over Play ops busywork (closed-test recruitment can idle in background).
 - Play production remains a goal, but day-to-day work defaults to **content + feel** unless the owner asks about Play.

@@ -1,8 +1,9 @@
 # Idle Party — monthly content cadence
 
-Operational rhythm for solo / small-time shipping after 90d M1–M3 shipped.
-Decision table: [STRATEGY_90D.md](STRATEGY_90D.md). Why/background:
-[TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md).
+Operational rhythm after 90d M1–M3 shipped. Optional background:
+[TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md). Live contracts:
+[CHASE_CONTRACT.md](CHASE_CONTRACT.md) · [GEAR_BUDGET.md](GEAR_BUDGET.md) ·
+[FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md).
 
 ## Cadence (every 2–4 weeks; aim monthly)
 
@@ -18,13 +19,28 @@ Each tagged `1.x.y` release should include:
 
 ### Success-spår (research-backed)
 
-Ship habit → second layer → content cadence:
-
 1. **Habit** — hub TODAY READY/ALMOST always visible on phone; claim/progress CTAs.
 2. **Local season** — `lib/core/local_season.dart` week/month rows (reuse SpatialCombat + vault/Gauntlet).
-3. **Zones / kits** — owner lock **2026-08-18:** no new zones or classes. Prefer **core-loop feel** (power beats, combat juice) + kit fantasy polish. Play 12×14 stays background.
+3. **Feel / kits** — owner lock **2026-08-18:** no new zones or classes. Prefer **core-loop feel** (power beats, combat juice) + kit fantasy polish. Play 12×14 stays background.
 
-Near-term (90 days): [STRATEGY_90D.md](STRATEGY_90D.md).
+## Decision table (when unsure)
+
+| Om ni tvekar mellan … | Välj |
+|------------------------|------|
+| Ny spec vs polisha kit | Polisha kit |
+| Ny zon vs mer hub-chrome | Core-loop feel först (inga nya zoner). Hub-chrome bara om chase ljuger. |
+| Cool affinity-nudge vs budget | Budget |
+| Skippa test “för att CI flakar” | Fixa kontraktet — gutta inte |
+| Stor rewrite vs small ship | Small ship + synlig What’s New |
+
+## Non-goals (unless owner asks)
+
+- IAP / paid shop (optional hub **POWERUPS** rewarded ads are OK)
+- iOS or web-as-product
+- SpatialCombat rewrite
+- God Hand philosophy redesign
+- Play production as the main work track
+- Many new specs “for the list”
 
 ## Checklist before tagging
 

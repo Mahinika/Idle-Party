@@ -7,8 +7,7 @@ Default när du säger “gör spelet bättre” utan annat mål:
 
 ## Läs
 
-- [[CONTENT_CADENCE]] — operativ rytm
-- [[STRATEGY_90D]] — M1–M3 klara; decision table (kits före nya specs)
+- [[CONTENT_CADENCE]] — operativ rytm + beslutstabell (kits före nya specs)
 - [[TOP_GAMES_RESEARCH]] — bakgrund (låt den inte kapa spåret)
 - [[AGENTS]] — owner prefs i kortform
 
