@@ -20,6 +20,7 @@ export '../models/spell_bolt_style.dart';
 
 part 'ability_effects.dart';
 part 'kit_migrated_casts.dart';
+part 'hero_focus.dart';
 
 enum SpatialTeam { hero, enemy }
 
@@ -258,6 +259,12 @@ class SpatialActor {
   /// Enemy: forced to attack [forcedTargetId] while timer > 0.
   String? forcedTargetId;
   double forcedTargetTimer = 0;
+
+  /// Hero: sticky combat focus (runtime only; not saved).
+  String? focusEnemyId;
+
+  /// Hero: soft lock after acquiring [focusEnemyId] (seconds).
+  double focusLockTimer = 0;
 
   /// Enemy: attack cadence slowed while > 0.
   double attackSlowTimer = 0;
@@ -1001,6 +1008,9 @@ abstract final class SpatialCombat {
       if (a.forcedTargetTimer > 0) {
         a.forcedTargetTimer = math.max(0, a.forcedTargetTimer - dt);
         if (a.forcedTargetTimer <= 0) a.forcedTargetId = null;
+      }
+      if (a.focusLockTimer > 0) {
+        a.focusLockTimer = math.max(0, a.focusLockTimer - dt);
       }
       if (a.attackSlowTimer > 0) {
         a.attackSlowTimer = math.max(0, a.attackSlowTimer - dt);
@@ -2085,6 +2095,8 @@ abstract final class SpatialCombat {
     to.killingSpreeTimer = from.killingSpreeTimer;
     to.forcedTargetId = from.forcedTargetId;
     to.forcedTargetTimer = from.forcedTargetTimer;
+    to.focusEnemyId = from.focusEnemyId;
+    to.focusLockTimer = from.focusLockTimer;
     to.attackSlowTimer = from.attackSlowTimer;
     to.sunderStacks = from.sunderStacks;
     to.sunderTimer = from.sunderTimer;
@@ -3730,7 +3742,9 @@ abstract final class SpatialCombat {
     for (final pet in world.pets) {
       if (petLeader == null) break;
       final leashOwner = _heroById(world, pet.petOwnerId) ?? petLeader;
-      final target = _nearestActiveEnemy(pet, world.enemies);
+      final ownerFocus = HeroFocus.stickyEnemy(leashOwner, world);
+      final target =
+          ownerFocus ?? _nearestActiveEnemy(pet, world.enemies);
       if (target == null) {
         _steerActor(
           pet,
@@ -4279,110 +4293,17 @@ abstract final class SpatialCombat {
   static SpatialActor? _nearestActiveEnemy(
     SpatialActor self,
     List<SpatialActor> enemies,
-  ) {
-    SpatialActor? best;
-    var bestD = double.infinity;
-    for (final enemy in enemies) {
-      if (enemy.hp <= 0 || enemy.dormant) continue;
-      final distance = _dist(self, enemy);
-      if (distance < bestD) {
-        bestD = distance;
-        best = enemy;
-      }
-    }
-    if (best != null) return best;
-    // Next chamber still dormant: path toward them so floors don't soft-lock.
-    for (final enemy in enemies) {
-      if (enemy.hp <= 0) continue;
-      final distance = _dist(self, enemy);
-      if (distance < bestD) {
-        bestD = distance;
-        best = enemy;
-      }
-    }
-    return best;
-  }
+  ) => HeroFocus.nearestActiveEnemy(self, enemies);
 
-  /// Role-aware focus: boss/elite, low HP, tank's target, threats on backline.
-  /// Falls back to nearest (incl. dormant) when nothing is scored.
-  static SpatialActor? _pickSmartFocus(SpatialActor self, SpatialWorld world) {
-    SpatialActor? tank;
-    SpatialActor? tankFocus;
-    for (final h in world.heroes) {
-      if (!h.isAlive || !_actorIsTank(h)) continue;
-      tank = h;
-      tankFocus = _nearestActiveEnemy(h, world.enemies);
-      break;
-    }
+  /// Role-aware focus: peel extras off tank, sticky lock, boss/execute bias.
+  static SpatialActor? _pickSmartFocus(SpatialActor self, SpatialWorld world) =>
+      HeroFocus.pickSmartFocus(self, world);
 
-    var anyActive = false;
-    for (final e in world.enemies) {
-      if (e.hp > 0 && !e.dormant) {
-        anyActive = true;
-        break;
-      }
-    }
-
-    SpatialActor? best;
-    var bestScore = -1e12;
-    for (final e in world.enemies) {
-      if (e.hp <= 0) continue;
-      if (anyActive && e.dormant) continue;
-
-      final d = _dist(self, e);
-      final maxHp = math.max(1, e.maxHp);
-      final hpFrac = e.hp / maxHp;
-      final inRange = d <= self.attackRange + 1.4;
-
-      var score = 0.0;
-      if (inRange) {
-        score += 45;
-      } else {
-        score -= d * 3.5;
-      }
-
-      score += switch (e.role) {
-        EnemyRole.boss => 130,
-        EnemyRole.elite => 55,
-        EnemyRole.normal => 0,
-      };
-      // Finish wounded targets.
-      score += (1.0 - hpFrac) * 60;
-
-      if (tankFocus != null && e.id == tankFocus.id) score += 40;
-
-      // Threat on backline.
-      if (e.forcedTargetTimer > 0 && e.forcedTargetId != null) {
-        for (final h in world.heroes) {
-          if (!h.isAlive || h.id != e.forcedTargetId) continue;
-          if (_actorIsHealer(h)) {
-            score += 50;
-          } else if (h.ranged ||
-              (h.heroSpecId != null &&
-                  HeroSpecs.def(h.heroSpecId!).roleTag == SpecRoleTag.caster)) {
-            score += 28;
-          }
-          break;
-        }
-      }
-
-      if (_actorIsTank(self)) {
-        // Peel: prefer enemies hitting allies over ones already on us.
-        if (e.forcedTargetId != null && e.forcedTargetId != self.id) {
-          score += 42;
-        }
-      } else if (tank != null && self.id != tank.id) {
-        // Non-tanks lightly prefer staying on the tank's fight.
-        if (tankFocus != null && e.id == tankFocus.id) score += 12;
-      }
-
-      if (score > bestScore) {
-        bestScore = score;
-        best = e;
-      }
-    }
-    return best ?? _nearestActiveEnemy(self, world.enemies);
-  }
+  /// Test hook for peel / sticky focus scoring.
+  static SpatialActor? pickSmartFocusForTest(
+    SpatialActor self,
+    SpatialWorld world,
+  ) => HeroFocus.pickSmartFocus(self, world);
 
   static int _countNearbyEnemies(
     SpatialActor self,
