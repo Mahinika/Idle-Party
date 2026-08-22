@@ -16,6 +16,7 @@ import 'dungeon_environment.dart';
 import 'feedback_toast.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
+import 'menu_chrome.dart';
 import 'meta_overlays.dart';
 import '../core/menu_router.dart';
 import 'shell/app_bottom_bar.dart';
@@ -393,25 +394,69 @@ class _HubScreenState extends State<HubScreen>
                                     context,
                                     chase,
                                   );
+                                  final ready =
+                                      chase.urgency == HubChaseUrgency.ready;
                                   // One primary CTA on phone: fold TODAY ENTER
                                   // into the big button so KEY/ENTER don't double.
                                   final foldEnter =
                                       onAction != null &&
                                       (actionLabel == 'ENTER' ||
                                           actionLabel == 'DAILY');
-                                  final primaryLabel =
+                                  final readyPrimary =
+                                      ready &&
+                                      onAction != null &&
+                                      actionLabel != null &&
+                                      !foldEnter;
+                                  final enterLabel =
                                       chase.kind == HubChaseKind.keystone
                                       ? 'ENTER KEY +${chase.keyLevel ?? state.hardmodeLevel}'
                                       : (chase.kind == HubChaseKind.dailyRun
                                             ? 'DAILY RUN'
                                             : 'ENTER DUNGEON');
-                                  final primaryAction = foldEnter
-                                      ? onAction
-                                      : (unlockedSelected
-                                            ? () => widget.onEnterDungeon(
-                                                _selectedId,
-                                              )
-                                            : null);
+                                  final enterAction = unlockedSelected
+                                      ? () => widget.onEnterDungeon(_selectedId)
+                                      : null;
+                                  final String primaryLabel;
+                                  final VoidCallback? primaryAction;
+                                  final String? secondaryLabel;
+                                  final VoidCallback? secondaryAction;
+                                  if (foldEnter) {
+                                    primaryLabel = enterLabel;
+                                    primaryAction = onAction;
+                                    secondaryLabel = null;
+                                    secondaryAction = null;
+                                  } else if (readyPrimary) {
+                                    primaryLabel = actionLabel;
+                                    primaryAction = onAction;
+                                    final showSecondaryEnter =
+                                        enterAction != null &&
+                                        chase.kind !=
+                                            HubChaseKind.claimDailyVault &&
+                                        chase.kind !=
+                                            HubChaseKind.claimMissions &&
+                                        chase.kind != HubChaseKind.ascend &&
+                                        chase.kind != HubChaseKind.meetHero &&
+                                        chase.kind != HubChaseKind.dailyRun;
+                                    secondaryLabel = showSecondaryEnter
+                                        ? enterLabel
+                                        : null;
+                                    secondaryAction = showSecondaryEnter
+                                        ? enterAction
+                                        : null;
+                                  } else {
+                                    primaryLabel = enterLabel;
+                                    primaryAction = enterAction;
+                                    secondaryLabel = null;
+                                    secondaryAction = null;
+                                  }
+                                  final chaseOwnsKeyChrome =
+                                      chase.kind ==
+                                          HubChaseKind.claimDailyVault ||
+                                      chase.kind ==
+                                          HubChaseKind.dailyVaultProgress ||
+                                      chase.kind == HubChaseKind.keystone ||
+                                      ready ||
+                                      chase.urgency == HubChaseUrgency.almost;
                                   final weekMod =
                                       state.metaDepth.weeklyModifier;
                                   final showWeekAffix =
@@ -438,10 +483,14 @@ class _HubScreenState extends State<HubScreen>
                                       HubTodayCard(
                                         chase: chase,
                                         compact: true,
-                                        actionLabel: foldEnter
+                                        actionLabel:
+                                            foldEnter || readyPrimary
                                             ? null
                                             : actionLabel,
-                                        onAction: foldEnter ? null : onAction,
+                                        onAction:
+                                            foldEnter || readyPrimary
+                                            ? null
+                                            : onAction,
                                       ),
                                       HubPowerupsCard(
                                         state: state,
@@ -453,6 +502,7 @@ class _HubScreenState extends State<HubScreen>
                                       HubMetaPulse(
                                         state: state,
                                         chaseKind: chase.kind,
+                                        chaseUrgency: chase.urgency,
                                       ),
                                       const SizedBox(height: 6),
                                       AnimatedBuilder(
@@ -468,23 +518,41 @@ class _HubScreenState extends State<HubScreen>
                                           tip: chase.kind ==
                                                   HubChaseKind.keystone
                                               ? 'Starts your preferred KEY on this zone'
+                                              : readyPrimary
+                                              ? 'TODAY — do this first'
                                               : 'Enter the selected dungeon',
                                           style: KenneyButtonStyle.brown,
                                           primary: true,
                                           onPressed: primaryAction,
                                         ),
                                       ),
-                                      // Same gate as META KEY tab / tips — first
-                                      // hour stays grow-the-party, not KEY chrome.
-                                      if (GameLogic.showKeystoneJargon(state))
-                                        ChallengeToggles(
-                                          director: director,
-                                          collapsed: true,
+                                      if (secondaryLabel != null &&
+                                          secondaryAction != null) ...[
+                                        const SizedBox(height: 4),
+                                        KenneyButton(
+                                          label: secondaryLabel,
+                                          tip: 'Skip TODAY for now',
+                                          style: KenneyButtonStyle.grey,
+                                          onPressed: secondaryAction,
                                         ),
-                                      HubUrgentRow(
-                                        claimable: state.missions
-                                            .where((m) => m.isComplete)
-                                            .length,
+                                      ],
+                                      if (GameLogic.showKeystoneJargon(state) &&
+                                          !chaseOwnsKeyChrome) ...[
+                                        const SizedBox(height: 2),
+                                        MenuChrome.textLink(
+                                          label: 'META → KEY',
+                                          onPressed: () => router.open(
+                                            MenuRoute.meta,
+                                            meta: MetaTab.key,
+                                          ),
+                                        ),
+                                      ],
+                                      if (chase.urgency !=
+                                          HubChaseUrgency.ready)
+                                        HubUrgentRow(
+                                          claimable: state.missions
+                                              .where((m) => m.isComplete)
+                                              .length,
                                         canAscend: canAscend,
                                         ascendLabel: canAscend
                                             ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'

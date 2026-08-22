@@ -182,7 +182,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         const SizedBox(height: 10),
         _materialsSection(state),
         const SizedBox(height: 12),
-        MenuChrome.sectionLabel('TARGET MATERIAL'),
+        MenuChrome.sectionLabelScoped('TARGET MATERIAL', scope: MenuScope.account),
         if (targetDef == null)
           Text(
             'Pick a craft goal below — progress fills toward the mat you need most.',
@@ -239,10 +239,10 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           ),
         ],
         const SizedBox(height: 12),
-        MenuChrome.sectionLabel('PARTY CRAFT GOALS'),
+        MenuChrome.sectionLabelScoped('PARTY CRAFT GOALS', scope: MenuScope.account),
         ..._partyGoalCards(state),
         const SizedBox(height: 12),
-        MenuChrome.sectionLabel('CRAFT STATION'),
+        MenuChrome.sectionLabelScoped('CRAFT STATION', scope: MenuScope.account),
         if (shortages.isNotEmpty) ...[
           Container(
             padding: const EdgeInsets.all(8),
@@ -312,7 +312,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           ],
         ),
         const SizedBox(height: 8),
-        Text('RECIPE R1', style: GameTheme.pixel(size: 7)),
+        Text('RECIPE R1', style: GameTheme.body(size: 12, color: GameTheme.torchHot)),
         const SizedBox(height: 4),
         for (final e in recipe.costs.entries)
           _matProgressRow(
@@ -363,7 +363,10 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           ),
         ],
         const SizedBox(height: 12),
-        MenuChrome.sectionLabel('VAULT (${state.apexVault.length})'),
+        MenuChrome.sectionLabelScoped(
+          'VAULT (${state.apexVault.length})',
+          scope: MenuScope.account,
+        ),
         if (state.apexVault.isNotEmpty) ...[
           KenneyButton(
             label: 'AUTO EQUIP ALL APEX',
@@ -451,7 +454,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MenuChrome.sectionLabel('MATERIALS'),
+        MenuChrome.sectionLabelScoped('MATERIALS', scope: MenuScope.account),
         Text(
           'Zone shards · role cores · class catalysts · Slag (Gauntlet/Spire).',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

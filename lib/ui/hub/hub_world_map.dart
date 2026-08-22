@@ -405,7 +405,7 @@ class MapZoneMarker extends StatelessWidget {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: const Color(0xFF1A1410).withValues(alpha: 0.75),
+                        color: GameTheme.hudMapCaption.withValues(alpha: 0.75),
                         border: Border.all(
                           color: ring,
                           width: selected ? 2.5 : 1.2,

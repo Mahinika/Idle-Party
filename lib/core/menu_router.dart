@@ -35,6 +35,7 @@ class MenuRouter extends ChangeNotifier {
   int _equipHeroIndex = 0;
   int _abilityHeroIndex = 0;
   EquipmentSlot? _bagSlotFilter;
+  int _bagFiltersScrollNonce = 0;
 
   MenuRoute get route => _route;
   bool get isOpen => _route != MenuRoute.none;
@@ -48,6 +49,15 @@ class MenuRouter extends ChangeNotifier {
   int get equipHeroIndex => _equipHeroIndex;
   int get abilityHeroIndex => _abilityHeroIndex;
   EquipmentSlot? get bagSlotFilter => _bagSlotFilter;
+  int get bagFiltersScrollNonce => _bagFiltersScrollNonce;
+
+  /// BAG → FILTERS: META settings tab, scrolled to bag cleanup controls.
+  void openBagFilters() {
+    _metaTab = MetaTab.settings;
+    _route = MenuRoute.meta;
+    _bagFiltersScrollNonce++;
+    notifyListeners();
+  }
 
   /// Title shown on the sheet.
   String get title => switch (_route) {
@@ -71,6 +81,12 @@ class MenuRouter extends ChangeNotifier {
     PowerTab? power,
     MetaTab? meta,
   }) {
+    if (route == MenuRoute.settings) {
+      _metaTab = MetaTab.settings;
+      _route = MenuRoute.meta;
+      notifyListeners();
+      return;
+    }
     if (party != null) _partyTab = party;
     if (power != null) _powerTab = power;
     if (meta != null) _metaTab = meta;

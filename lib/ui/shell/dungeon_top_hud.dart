@@ -114,6 +114,7 @@ class DungeonTopHud extends StatelessWidget {
                               const SizedBox(width: 4),
                               GodHandRing(
                                 cooldown: world.godHandCooldown,
+                                urgent: state.wipeStreakCount >= 2,
                                 onTap: () => director.godHandAtFocus(),
                               ),
                             ],
@@ -315,6 +316,7 @@ class DungeonTopHud extends StatelessWidget {
                           const SizedBox(width: 6),
                           GodHandRing(
                             cooldown: world.godHandCooldown,
+                            urgent: state.wipeStreakCount >= 2,
                             onTap: () => director.godHandAtFocus(),
                           ),
                         ],
@@ -444,7 +446,7 @@ class MissionClaimChip extends StatelessWidget {
               ),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: const Color(0xFF3A5018),
+                color: GameTheme.hudFarmGreen,
                 borderRadius: BorderRadius.circular(3),
                 border: Border.all(color: GameTheme.clear),
               ),

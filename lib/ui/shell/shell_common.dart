@@ -5,11 +5,11 @@ import '../../models/loot.dart';
 import '../game_theme.dart';
 
 Color rarityBorderColor(LootRarity rarity) => switch (rarity) {
-  LootRarity.common => const Color(0xFF5A5040),
-  LootRarity.uncommon => const Color(0xFF70C050),
-  LootRarity.rare => const Color(0xFF5090E0),
+  LootRarity.common => GameTheme.rarityCommon,
+  LootRarity.uncommon => GameTheme.rarityUncommon,
+  LootRarity.rare => GameTheme.rarityRare,
   LootRarity.epic => GameTheme.borderLit,
-  LootRarity.legendary => const Color(0xFFFF8C40),
+  LootRarity.legendary => GameTheme.rarityLegendary,
 };
 
 String patternGlyph(ProjectilePattern pattern) => switch (pattern) {

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'game_theme.dart';
+import 'kenney_button.dart';
 import 'kenney_sprite.dart';
 import 'web_click_bridge.dart';
 
-/// Shared forge-menu chrome — layered glass panels, soft torch edges.
+/// RUN / TODAY / ACCOUNT scope for section headers and chips.
+enum MenuScope { run, today, account }
+
+/// Shared menu chrome — tokens + reusable widgets.
 ///
-/// Visual guide: `docs/UI_THEME.md` (GEAR sheet is the reference look).
+/// Visual guide: `docs/UI_THEME.md` (menu sheets ≈ GEAR; hub/HUD are separate families).
 abstract final class MenuChrome {
   static const Color scrim = Color(0xE006080C);
   static const Color card = Color(0xB8121820);
@@ -92,6 +96,20 @@ abstract final class MenuChrome {
     );
   }
 
+  /// Hub banners / offline row — lighter than menu sheet [cardBox].
+  static BoxDecoration hubPanel({bool selected = false}) {
+    return BoxDecoration(
+      color: GameTheme.panel.withValues(alpha: selected ? 0.62 : 0.52),
+      borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+      border: Border.all(
+        color: selected
+            ? GameTheme.torch.withValues(alpha: 0.45)
+            : GameTheme.border.withValues(alpha: 0.65),
+        width: selected ? 1.4 : 1,
+      ),
+    );
+  }
+
   static BoxDecoration rowTile() {
     return BoxDecoration(
       gradient: LinearGradient(
@@ -129,9 +147,94 @@ abstract final class MenuChrome {
         text.toUpperCase(),
         style: GameTheme.body(
           size: 13,
-          color: GameTheme.accentInfo.withValues(alpha: 0.9),
+          color: GameTheme.scopeAccount.withValues(alpha: 0.9),
         ),
       ),
+    );
+  }
+
+  /// RUN / TODAY / ACCOUNT scope for POWER and hub section headers.
+  static Widget sectionLabelScoped(
+    String title, {
+    MenuScope? scope,
+  }) {
+    final tone = scope == null
+        ? GameTheme.scopeAccount
+        : switch (scope) {
+            MenuScope.run => GameTheme.scopeRun,
+            MenuScope.today => GameTheme.scopeToday,
+            MenuScope.account => GameTheme.scopeAccount,
+          };
+    return Padding(
+      padding: const EdgeInsets.only(left: 6, bottom: 6, top: 2),
+      child: Row(
+        children: [
+          if (scope != null) ...[
+            scopeChip(scope.name.toUpperCase()),
+            const SizedBox(width: 8),
+          ],
+          Expanded(
+            child: Text(
+              title.toUpperCase(),
+              style: GameTheme.body(
+                size: 13,
+                color: tone.withValues(alpha: 0.9),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Compact +/- for sliders (settings filters, KEY level).
+  static Widget stepperButton({
+    required String label,
+    required String sign,
+    VoidCallback? onPressed,
+    double size = GameTheme.minTouch,
+  }) {
+    final enabled = onPressed != null;
+    return WebClickScope(
+      label: label,
+      onPressed: onPressed,
+      child: Semantics(
+        button: true,
+        enabled: enabled,
+        label: label,
+        onTap: onPressed,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: Opacity(
+              opacity: enabled ? 1 : 0.4,
+              child: Container(
+                width: size,
+                height: size,
+                alignment: Alignment.center,
+                decoration: cardBox(inset: true),
+                child: Text(sign, style: GameTheme.pixel(size: 10)),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Dialog secondary action — ghost Kenney face, not Material [TextButton].
+  static Widget dialogCancel({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return KenneyButton(
+      label: label,
+      style: KenneyButtonStyle.ghost,
+      expanded: false,
+      onPressed: onPressed,
     );
   }
 
@@ -281,6 +384,69 @@ abstract final class MenuChrome {
             onTap: onTap,
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
             child: body,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Tab-owned status (JOBS claim hint, GUIDE What's New) — not global META noise.
+  static Widget tabBanner(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+      ),
+    );
+  }
+
+  /// RUN / TODAY / ACCOUNT scope chip for section headers and guides.
+  static Widget scopeChip(String scope) {
+    final key = scope.toUpperCase();
+    final tone = switch (key) {
+      'RUN' => GameTheme.scopeRun,
+      'TODAY' => GameTheme.scopeToday,
+      'ACCOUNT' => GameTheme.scopeAccount,
+      _ => GameTheme.parchmentDim,
+    };
+    return chip(label: key, tone: tone);
+  }
+
+  /// Low-emphasis navigation (hub shortcuts, “see META → KEY”).
+  static Widget textLink({
+    required String label,
+    VoidCallback? onPressed,
+  }) {
+    final enabled = onPressed != null;
+    return WebClickScope(
+      label: label,
+      onPressed: onPressed,
+      child: Semantics(
+        button: true,
+        enabled: enabled,
+        label: label,
+        onTap: onPressed,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: GameTheme.body(
+                  size: 13,
+                  color: enabled ? GameTheme.torchHot : GameTheme.parchmentDim,
+                ),
+              ),
+            ),
           ),
         ),
       ),

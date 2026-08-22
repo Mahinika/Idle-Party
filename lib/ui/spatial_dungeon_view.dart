@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/wipe_advice.dart';
 import '../core/hero_identity.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_mode.dart';
@@ -45,6 +46,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   ui.Image? _stairsBoss;
   ui.Image? _doorClosed;
   ui.Image? _doorOpen;
+  ui.Image? _zoneStairs;
+  ui.Image? _zoneStairsBoss;
+  ui.Image? _zoneDoorClosed;
+  ui.Image? _zoneDoorOpen;
   Map<MapPropKind, ui.Image?> _propImages = const {};
   ui.Image? _hero0;
   ui.Image? _hero1;
@@ -66,10 +71,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   bool get _tilesReady =>
       _floorReady.isNotEmpty &&
       _wallReady.isNotEmpty &&
-      _stairs != null &&
-      _stairsBoss != null &&
-      _doorClosed != null &&
-      _doorOpen != null;
+      (_zoneStairs ?? _stairs) != null &&
+      (_zoneStairsBoss ?? _stairsBoss) != null &&
+      (_zoneDoorClosed ?? _doorClosed) != null &&
+      (_zoneDoorOpen ?? _doorOpen) != null;
 
   @override
   void initState() {
@@ -228,12 +233,27 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     // painter looks sprites up by `EnemyUnit.assetIndex`.
     final catalog = KenneyAssets.enemySpriteCatalog;
     final zoneEnemyAssets = KenneyAssets.enemySpritesForDungeon(dungeonId);
+    final customDungeon = CustomAssets.usesCustomDungeonArt(dungeonId);
+    final structuralPaths = customDungeon
+        ? <String>[
+            KenneyAssets.exitSpriteFor(boss: false, dungeonId: dungeonId),
+            KenneyAssets.exitSpriteFor(boss: true, dungeonId: dungeonId),
+            KenneyAssets.gateSprite(open: false, dungeonId: dungeonId),
+            KenneyAssets.gateSprite(open: true, dungeonId: dungeonId),
+          ]
+        : const <String>[];
 
     final zone = await Future.wait([
       ...floorPaths.map((a) => load(a, targetWidth: 64)),
       ...wallPaths.map((a) => load(a, targetWidth: 64)),
-      ...propKinds.map((k) => load(KenneyAssets.propAsset(k), targetWidth: 64)),
+      ...propKinds.map(
+        (k) => load(
+          KenneyAssets.propAsset(k, dungeonId: dungeonId),
+          targetWidth: 64,
+        ),
+      ),
       ...zoneEnemyAssets.map((a) => load(a, targetWidth: 128)),
+      ...structuralPaths.map((a) => load(a, targetWidth: 64)),
     ]);
     if (!mounted) return;
 
@@ -251,6 +271,16 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     for (final asset in zoneEnemyAssets) {
       enemySprites[KenneyAssets.enemySpriteCatalogIndex(asset)] = zone[zi++];
     }
+    ui.Image? zoneStairs;
+    ui.Image? zoneStairsBoss;
+    ui.Image? zoneDoorClosed;
+    ui.Image? zoneDoorOpen;
+    if (customDungeon) {
+      zoneStairs = zone[zi++];
+      zoneStairsBoss = zone[zi++];
+      zoneDoorClosed = zone[zi++];
+      zoneDoorOpen = zone[zi++];
+    }
 
     setState(() {
       _loadedDungeonId = dungeonId;
@@ -258,6 +288,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       _wallReady = wallVariants;
       _propImages = propImages;
       _enemySprites = enemySprites;
+      _zoneStairs = zoneStairs;
+      _zoneStairsBoss = zoneStairsBoss;
+      _zoneDoorClosed = zoneDoorClosed;
+      _zoneDoorOpen = zoneDoorOpen;
     });
   }
 
@@ -339,10 +373,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                       party: state.heroes,
                                       floorVariants: _floorReady,
                                       wallVariants: _wallReady,
-                                      stairs: _stairs!,
-                                      stairsBoss: _stairsBoss!,
-                                      doorClosed: _doorClosed!,
-                                      doorOpen: _doorOpen!,
+                                      stairs: _zoneStairs ?? _stairs!,
+                                      stairsBoss: _zoneStairsBoss ?? _stairsBoss!,
+                                      doorClosed: _zoneDoorClosed ?? _doorClosed!,
+                                      doorOpen: _zoneDoorOpen ?? _doorOpen!,
                                       propImages: _propImages,
                                       roomType: room.type,
                                       dungeonId: state.dungeonId,
@@ -466,7 +500,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 320),
                             child: DecoratedBox(
-                              decoration: MenuChrome.panel(),
+                              decoration: MenuChrome.hubPanel(),
                               child: Padding(
                                 padding: const EdgeInsets.fromLTRB(
                                   16,
@@ -517,6 +551,18 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                         style: GameTheme.body(
                                           size: 15,
                                           color: GameTheme.torchHot,
+                                        ),
+                                      ),
+                                    ],
+                                    if (WipeAdvice.godHandHintFor(state) !=
+                                        null) ...[
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        WipeAdvice.godHandHintFor(state)!,
+                                        textAlign: TextAlign.center,
+                                        style: GameTheme.body(
+                                          size: 14,
+                                          color: GameTheme.mossLit,
                                         ),
                                       ),
                                     ],
@@ -696,16 +742,28 @@ class DungeonModeChip extends StatelessWidget {
 }
 
 class GodHandRing extends StatelessWidget {
-  const GodHandRing({super.key, required this.cooldown, this.onTap});
+  const GodHandRing({
+    super.key,
+    required this.cooldown,
+    this.onTap,
+    this.urgent = false,
+  });
   final double cooldown;
   final VoidCallback? onTap;
+
+  /// Brighter ring after repeated wipes on the same floor (nudge, not redesign).
+  final bool urgent;
 
   @override
   Widget build(BuildContext context) {
     final ready = cooldown <= 0;
     final t = ready ? 1.0 : (1.0 - (cooldown / 1.1).clamp(0.0, 1.0));
-    final color = ready ? GameTheme.torchHot : GameTheme.parchmentDim;
-    final label = ready ? 'God Hand ready' : 'God Hand cooling down';
+    final color = ready
+        ? (urgent ? GameTheme.accentWarn : GameTheme.torchHot)
+        : GameTheme.parchmentDim;
+    final label = ready
+        ? (urgent ? 'God Hand ready — tap for steer + smash' : 'God Hand ready')
+        : 'God Hand cooling down';
     final action = onTap != null && ready ? onTap : null;
     return WebClickScope(
       label: label,

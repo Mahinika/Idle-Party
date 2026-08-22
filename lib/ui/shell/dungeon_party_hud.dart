@@ -405,12 +405,12 @@ class _PartyRow extends StatelessWidget {
     final hpColor = () {
       final cb = SpatialCombat.colorblindMode;
       if (liveHp <= 0) {
-        return cb ? const Color(0xFFD55E00) : GameTheme.blood;
+        return cb ? GameTheme.hudHpLowCb : GameTheme.blood;
       }
       if (frac <= 0.35) {
-        return cb ? const Color(0xFFE69F00) : GameTheme.bloodLit;
+        return cb ? GameTheme.hudHpMidCb : GameTheme.bloodLit;
       }
-      return cb ? const Color(0xFF009E73) : GameTheme.clear;
+      return cb ? GameTheme.hudCastOk : GameTheme.clear;
     }();
 
     // Default: thin strip. Kit only when tapped open.
@@ -463,7 +463,7 @@ class _PartyRow extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: frac,
                         minHeight: phone ? 2.5 : (compact ? 3.5 : 4.5),
-                        backgroundColor: const Color(0xFF2A2218),
+                        backgroundColor: GameTheme.hudHpFill,
                         color: hpColor,
                       ),
                     ),
@@ -473,10 +473,10 @@ class _PartyRow extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: GameLogic.xpProgress(hero),
                         minHeight: phone ? 1.5 : 2,
-                        backgroundColor: const Color(0xFF1A2430),
+                        backgroundColor: GameTheme.hudManaFill,
                         color: SpatialCombat.colorblindMode
-                            ? const Color(0xFF009E73)
-                            : const Color(0xFF9AD0FF),
+                            ? GameTheme.hudCastOk
+                            : GameTheme.hudManaBright,
                       ),
                     ),
                     if (showKit) ...[
@@ -497,7 +497,7 @@ class _PartyRow extends StatelessWidget {
                               child: LinearProgressIndicator(
                                 value: resource / 100,
                                 minHeight: 3,
-                                backgroundColor: const Color(0xFF2A1810),
+                                backgroundColor: GameTheme.hudHpFill,
                                 color: Color(
                                   ClassKits.resourceColorForSpec(hero.specId),
                                 ),
@@ -551,7 +551,7 @@ class _PartyRow extends StatelessWidget {
                               'BEACON',
                               style: GameTheme.pixel(
                                 size: 6,
-                                color: const Color(0xFFFFF0A8),
+                                color: GameTheme.hudSpiritText,
                               ),
                             ),
                           ],
@@ -561,7 +561,7 @@ class _PartyRow extends StatelessWidget {
                               'ABS${spatial!.absorbShield}',
                               style: GameTheme.pixel(
                                 size: 6,
-                                color: const Color(0xFF80C0FF),
+                                color: GameTheme.hudManaText,
                               ),
                             ),
                           ],
@@ -677,10 +677,10 @@ class _InlineAbilityChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
           decoration: BoxDecoration(
             color: justFired
-                ? const Color(0xFF4A3010)
+                ? GameTheme.hudPartyRowHot
                 : activeBuff
-                ? const Color(0xFF3A2A14)
-                : const Color(0xFF221810),
+                ? GameTheme.hudPartyRowWarm
+                : GameTheme.hudPartyRowIdle,
             borderRadius: BorderRadius.circular(2),
             border: Border.all(
               color: border,
@@ -870,7 +870,7 @@ class _DpsMeterState extends State<DpsMeter> {
                 child: LinearProgressIndicator(
                   value: row.bar.clamp(0.0, 1.0),
                   minHeight: 3,
-                  backgroundColor: const Color(0xFF2A241C),
+                  backgroundColor: GameTheme.equipChipBlocked,
                   color: row.highlight ? GameTheme.torchHot : GameTheme.mossLit,
                 ),
               ),

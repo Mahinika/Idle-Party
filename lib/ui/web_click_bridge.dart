@@ -97,15 +97,13 @@ abstract final class WebClickBridge {
     final exact = _byKey[key];
     if (exact != null && exact.layer == _layer) return exact.onPressed;
 
-    // Prefix / contains match for dynamic labels ("BAG 0", multiline picker).
+    // Prefix match for dynamic labels ("BAG 0", multiline picker) — not broad
+    // contains, which stole taps from unrelated buttons on web.
     _Entry? best;
     var bestLen = -1;
     for (final e in _activeEntries) {
       final ek = _key(e.label);
-      if (key.startsWith(ek) ||
-          ek.startsWith(key) ||
-          key.contains(ek) ||
-          ek.contains(key)) {
+      if (key.startsWith(ek) || ek.startsWith(key)) {
         if (ek.length > bestLen) {
           best = e;
           bestLen = ek.length;

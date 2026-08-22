@@ -8,7 +8,7 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ⏳ review | **1.12.33 (63)** submitted to closed Alpha 2026-08-21 (spell VFX + pathing). Testers may still be on **1.12.32 (62)** until Google publishes. Production still ❌. |
+| Closed testing | ⏳ review | **1.12.37 (67)** next ship after owner play. Alpha **1.12.33 (63)** on review (2026-08-21). Production still ❌. Alpha countries: **all + rest of world** submitted 2026-08-22 (was Sweden only). |
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
@@ -16,7 +16,17 @@ Package id: **`com.idleparty.app`**
 | IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). Re-answer ads questions if Console asks after this review. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN) | ✅ live | Default locale **en-US only** (no extra listing languages). Honesty copy from `docs/STORE_LISTING.md`. Verified 2026-08-20. |
-| Screenshots + feature graphic | ⏳ review | **9 phone + feature graphic** submitted 2026-08-21 (promo cards in `tool/store_listing/marketing/`, 1080×1920 + 1024×500). Icon unchanged. Tablet shots still older (phone-first). |
+| Screenshots + feature graphic | ⏳ review | **9 phone + feature graphic** submitted 2026-08-21 (1080×1920 + 1024×500). **Re-capture at 360×780 CSS** (Samsung A56) before production — tablet shots stale. |
+
+## Production gate (12 × 14)
+
+Track closed testers who **install from Play** and stay opted in:
+
+- [ ] **12** unique testers enrolled on closed track
+- [ ] **14 consecutive days** with at least one tester active (Console dashboard)
+- [ ] Owner played **1.12.37+** on A56 before uploading production AAB
+- [ ] Phone screenshots match hub TODAY + dungeon (not desktop/tablet)
+- [ ] IARC ads questionnaire re-done if Console prompts after AdMob Alpha
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
 

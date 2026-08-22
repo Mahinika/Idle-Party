@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/ad_rewarded.dart';
 import '../../core/community_links.dart';
 import '../../core/game_director.dart';
@@ -17,9 +18,11 @@ class SettingsOverlay extends StatefulWidget {
     super.key,
     required this.director,
     required this.onClose,
+    this.bagFiltersScrollNonce = 0,
   });
   final GameDirector director;
   final VoidCallback onClose;
+  final int bagFiltersScrollNonce;
 
   @override
   State<SettingsOverlay> createState() => _SettingsOverlayState();
@@ -28,6 +31,8 @@ class SettingsOverlay extends StatefulWidget {
 class _SettingsOverlayState extends State<SettingsOverlay> {
   GameDirector get director => widget.director;
   GameState get state => director.state;
+  final GlobalKey _bagCleanupKey = GlobalKey();
+  int _seenBagFiltersScrollNonce = 0;
 
   static const List<(String, double)> _textPresets = <(String, double)>[
     ('S', 0.85),
@@ -35,6 +40,35 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
     ('L', 1.15),
     ('XL', 1.30),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _maybeScrollToBagFilters();
+  }
+
+  @override
+  void didUpdateWidget(covariant SettingsOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.bagFiltersScrollNonce != oldWidget.bagFiltersScrollNonce) {
+      _maybeScrollToBagFilters();
+    }
+  }
+
+  void _maybeScrollToBagFilters() {
+    if (widget.bagFiltersScrollNonce <= _seenBagFiltersScrollNonce) return;
+    _seenBagFiltersScrollNonce = widget.bagFiltersScrollNonce;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _bagCleanupKey.currentContext;
+      if (target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+        alignment: 0.05,
+      );
+    });
+  }
 
   Future<void> _confirmReset() async {
     final ok = await showDialog<bool>(
@@ -47,19 +81,15 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           style: GameTheme.body(size: 16, color: GameTheme.parchmentDim),
         ),
         actions: [
-          TextButton(
+          MenuChrome.dialogCancel(
+            label: 'CANCEL',
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Cancel',
-              style: GameTheme.body(size: 16, color: GameTheme.parchmentDim),
-            ),
           ),
-          TextButton(
+          KenneyButton(
+            label: 'RESET',
+            style: KenneyButtonStyle.red,
+            expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              'RESET',
-              style: GameTheme.body(size: 16, color: GameTheme.bloodLit),
-            ),
           ),
         ],
       ),
@@ -185,7 +215,13 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             onPressed: _resetDisplayDefaults,
           ),
           const SizedBox(height: 16),
-          MenuChrome.sectionLabel('BAG CLEANUP'),
+          KeyedSubtree(
+            key: _bagCleanupKey,
+            child: MenuChrome.sectionLabelScoped(
+              'BAG CLEANUP',
+              scope: MenuScope.account,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             'Near-full bag: merge → sell gold → scrap essence. '
@@ -238,19 +274,55 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           PlayGamesSection(director: director),
           if (AdRewarded.realAdsAvailable) ...[
             const SizedBox(height: 16),
-            MenuChrome.sectionLabel('ADS'),
+            MenuChrome.sectionLabelScoped('ADS', scope: MenuScope.account),
             const SizedBox(height: 6),
             KenneyButton(
               label: 'AD PRIVACY',
               tip: 'Change or withdraw ad consent (EU / EEA)',
-              style: KenneyButtonStyle.brown,
+              style: KenneyButtonStyle.grey,
               onPressed: () => AdRewarded.showPrivacyOptions(),
+            ),
+          ],
+          const SizedBox(height: 16),
+          MenuChrome.sectionLabelScoped(
+            'PLAY NOTES (local)',
+            scope: MenuScope.account,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Optional session log on this device only — chase, wipes, God Hand. '
+            'Never uploaded. Copy to clipboard for your own notes.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 8),
+          _SettingsToggle(
+            label: 'Session log',
+            value: state.sessionTelemetryOptIn,
+            onChanged: director.setSessionTelemetryOptIn,
+          ),
+          if (state.sessionTelemetryOptIn) ...[
+            const SizedBox(height: 8),
+            KenneyButton(
+              label: 'COPY LOG',
+              style: KenneyButtonStyle.grey,
+              onPressed: () async {
+                await Clipboard.setData(
+                  ClipboardData(text: director.sessionTelemetryExport()),
+                );
+                director.showToast('Session log copied', life: 1.8);
+              },
+            ),
+            const SizedBox(height: 6),
+            KenneyButton(
+              label: 'CLEAR LOG',
+              style: KenneyButtonStyle.grey,
+              onPressed: director.clearSessionTelemetry,
             ),
           ],
           const SizedBox(height: 16),
           SaveTransferSection(director: director),
           const SizedBox(height: 16),
-          MenuChrome.sectionLabel('COMMUNITY'),
+          MenuChrome.sectionLabelScoped('COMMUNITY', scope: MenuScope.account),
           const SizedBox(height: 6),
           KenneyButton(
             label: 'JOIN DISCORD',
@@ -268,7 +340,7 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             KenneyButton(
               label: 'GET UPDATE',
               tip: 'A newer Idle Party is ready on Google Play',
-              style: KenneyButtonStyle.brown,
+              style: KenneyButtonStyle.grey,
               onPressed: director.openPlayUpdate,
             ),
           ],
@@ -336,14 +408,10 @@ class _IlvlFilterRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        TextButton(
-          style: TextButton.styleFrom(
-            minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
-            padding: EdgeInsets.zero,
-            foregroundColor: GameTheme.parchment,
-          ),
+        MenuChrome.stepperButton(
+          label: '$offLabel decrease',
+          sign: '-',
           onPressed: value > 0 ? () => onChanged(value - 1) : null,
-          child: Text('-', style: GameTheme.pixel(size: 10)),
         ),
         Expanded(
           child: _CaveSlider(
@@ -354,14 +422,10 @@ class _IlvlFilterRow extends StatelessWidget {
             onChanged: (v) => onChanged(v.round()),
           ),
         ),
-        TextButton(
-          style: TextButton.styleFrom(
-            minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
-            padding: EdgeInsets.zero,
-            foregroundColor: GameTheme.parchment,
-          ),
+        MenuChrome.stepperButton(
+          label: '$offLabel increase',
+          sign: '+',
           onPressed: value < max ? () => onChanged(value + 1) : null,
-          child: Text('+', style: GameTheme.pixel(size: 10)),
         ),
         SizedBox(
           width: 52,
@@ -399,31 +463,23 @@ class _RarityFilterRow extends StatelessWidget {
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
           const Spacer(),
-          TextButton(
-            style: TextButton.styleFrom(
-              minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
-              padding: EdgeInsets.zero,
-              foregroundColor: GameTheme.parchment,
-            ),
+          MenuChrome.stepperButton(
+            label: 'Max rarity decrease',
+            sign: '-',
             onPressed: enabled && value > 0 ? () => onChanged(value - 1) : null,
-            child: Text('-', style: GameTheme.pixel(size: 10)),
           ),
           SizedBox(
             width: 88,
             child: Text(
               label,
               textAlign: TextAlign.center,
-              style: GameTheme.pixel(size: 7, color: GameTheme.torchHot),
+              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
             ),
           ),
-          TextButton(
-            style: TextButton.styleFrom(
-              minimumSize: const Size(GameTheme.minTouch, GameTheme.minTouch),
-              padding: EdgeInsets.zero,
-              foregroundColor: GameTheme.parchment,
-            ),
+          MenuChrome.stepperButton(
+            label: 'Max rarity increase',
+            sign: '+',
             onPressed: enabled && value < 4 ? () => onChanged(value + 1) : null,
-            child: Text('+', style: GameTheme.pixel(size: 10)),
           ),
         ],
       ),
@@ -512,7 +568,7 @@ class _SettingsCycle extends StatelessWidget {
               ),
               Text(
                 'TAP',
-                style: GameTheme.pixel(size: 7, color: GameTheme.parchmentDim),
+                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
               ),
             ],
           ),

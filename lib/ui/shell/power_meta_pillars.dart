@@ -58,48 +58,57 @@ class _PowerPillarState extends State<PowerPillar>
   Widget build(BuildContext context) {
     final d = widget.director;
     final s = d.state;
-    final keepLine =
-        'Keep · AL${s.ascensionLevel} · Bless ×${s.metaDepth.ascendBlessings} · '
+    final keepStats =
+        'AL${s.ascensionLevel} · Bless ×${s.metaDepth.ascendBlessings} · '
         '${s.essence}e';
-    final runLine =
-        'This run · forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
+    final runStats =
+        'forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
         'STA +${s.vitalityBonus}';
     // Progressive menu: CAMP and SHOP appear once essence / Ascend exist.
     _visible = MenuRouter.visiblePowerTabs(s);
-    final pages = <({String label, String blurb, Widget body})>[
+    final pages = <({
+      String label,
+      String scope,
+      String blurb,
+      Widget body,
+    })>[
       for (final tab in _visible)
         switch (tab) {
           PowerTab.income => (
             label: 'INCOME',
-            blurb: 'Income: Hub / Run gold per min · Gold Find generator',
+            scope: 'ACCOUNT',
+            blurb: 'hub gold/min · Gold Find generator (survives Ascend)',
             body: SingleChildScrollView(child: IncomeOverlay(director: d)),
           ),
           PowerTab.forge => (
             label: 'FORGE',
-            blurb: 'Forge: gold this run (wipes) · KEEP forever · Apex mats',
+            scope: 'RUN',
+            blurb: 'gold this run (wipes) · KEEP forever · Apex mats',
             body: ForgeOverlay(director: d),
           ),
           PowerTab.camp => (
             label: 'CAMP',
-            blurb:
-                'Camp: essence tracks that survive Ascend · prestige from Lv12',
+            scope: 'ACCOUNT',
+            blurb: 'essence tracks survive Ascend · prestige from Lv12',
             body: SingleChildScrollView(child: SanctuaryOverlay(director: d)),
           ),
           PowerTab.market => (
             label: 'MARKET',
-            blurb: 'Market: flasks for the run · sell stash for gold',
+            scope: 'RUN',
+            blurb: 'flasks for this run · sell stash for gold',
             body: SingleChildScrollView(child: MarketOverlay(director: d)),
           ),
           PowerTab.shop => (
             label: 'SHOP',
-            blurb: 'Shop: essence power that survives Ascend',
+            scope: 'ACCOUNT',
+            blurb: 'essence upgrades survive Ascend',
             body: PrestigeShopOverlay(director: d),
           ),
         },
     ];
     _tabs.syncToId(_visible, widget.tab);
     final alert = MenuAlerts.powerAlert(s);
-    final blurb = pages[_tabs.index.clamp(0, pages.length - 1)].blurb;
+    final active = pages[_tabs.index.clamp(0, pages.length - 1)];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -107,16 +116,9 @@ class _PowerPillarState extends State<PowerPillar>
           padding: const EdgeInsets.fromLTRB(8, 2, 8, 0),
           child: Column(
             children: [
-              Text(
-                keepLine,
-                textAlign: TextAlign.center,
-                style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-              ),
-              Text(
-                runLine,
-                textAlign: TextAlign.center,
-                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-              ),
+              _PowerScopeLine(scope: 'ACCOUNT', text: keepStats),
+              const SizedBox(height: 2),
+              _PowerScopeLine(scope: 'RUN', text: runStats),
             ],
           ),
         ),
@@ -137,18 +139,47 @@ class _PowerPillarState extends State<PowerPillar>
           ],
         ),
         const SizedBox(height: 4),
-        Text(
-          alert.isQuiet ? blurb : alert.reason,
-          textAlign: TextAlign.center,
-          style: GameTheme.body(
-            size: 12,
-            color: alert.isQuiet ? GameTheme.parchmentDim : GameTheme.torchHot,
+        if (alert.isQuiet)
+          _PowerScopeLine(scope: active.scope, text: active.blurb)
+        else
+          Text(
+            alert.reason,
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
           ),
-        ),
         const SizedBox(height: 6),
         Expanded(
           // Forge fills height and scrolls once (nested scroll hid MOVE/HASTE/CRIT).
-          child: pages[_tabs.index.clamp(0, pages.length - 1)].body,
+          child: active.body,
+        ),
+      ],
+    );
+  }
+}
+
+class _PowerScopeLine extends StatelessWidget {
+  const _PowerScopeLine({required this.scope, required this.text});
+
+  final String scope;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 6,
+      runSpacing: 4,
+      children: [
+        MenuChrome.scopeChip(scope),
+        Text(
+          text,
+          style: GameTheme.body(
+            size: scope == 'ACCOUNT' ? 12 : 11,
+            color: scope == 'ACCOUNT'
+                ? GameTheme.torchHot
+                : GameTheme.parchmentDim,
+          ),
         ),
       ],
     );
@@ -164,12 +195,14 @@ class MetaPillar extends StatefulWidget {
     required this.onTabChanged,
     required this.onOpenWhatsNew,
     required this.onClose,
+    this.bagFiltersScrollNonce = 0,
   });
   final GameDirector director;
   final MetaTab tab;
   final ValueChanged<MetaTab> onTabChanged;
   final VoidCallback onOpenWhatsNew;
   final VoidCallback onClose;
+  final int bagFiltersScrollNonce;
 
   @override
   State<MetaPillar> createState() => _MetaPillarState();
@@ -229,9 +262,15 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(child: CodexOverlay(director: d)),
-                const Divider(height: 12, color: GameTheme.border),
-                Expanded(child: AchievementsOverlay(director: d)),
+                Expanded(
+                  flex: 3,
+                  child: CodexOverlay(director: d),
+                ),
+                const Divider(height: 8, color: GameTheme.border),
+                Expanded(
+                  flex: 2,
+                  child: AchievementsOverlay(director: d),
+                ),
               ],
             ),
           ),
@@ -253,14 +292,24 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
             ),
           ),
           MetaTab.settings => (
-            label: 'SET',
+            label: 'SETTINGS',
             body: SingleChildScrollView(
-              child: SettingsOverlay(director: d, onClose: widget.onClose),
+              child: SettingsOverlay(
+                director: d,
+                onClose: widget.onClose,
+                bagFiltersScrollNonce: widget.bagFiltersScrollNonce,
+              ),
             ),
           ),
         },
     ];
     _tabs.syncToId(_visible, widget.tab);
+    final activeTab = _visible[_tabs.index.clamp(0, _visible.length - 1)];
+    final tabBanner = switch (activeTab) {
+      MetaTab.jobs when !alert.isQuiet && !alert.star => alert.reason,
+      MetaTab.guide when alert.star => alert.reason,
+      _ => null,
+    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -279,16 +328,7 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
               ),
           ],
         ),
-        if (!alert.isQuiet)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              alert.reason,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-            ),
-          ),
+        if (tabBanner != null) MenuChrome.tabBanner(tabBanner),
         const SizedBox(height: 8),
         Expanded(child: pages[_tabs.index.clamp(0, pages.length - 1)].body),
       ],

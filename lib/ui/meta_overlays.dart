@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -11,7 +9,6 @@ import '../core/hub_chase.dart';
 import '../core/keystone.dart';
 import '../core/local_season.dart';
 import '../core/logic_notices.dart';
-import '../core/meta_systems.dart';
 import '../core/play_games_bridge.dart';
 import '../core/play_games_scores.dart';
 import '../core/play_leaderboard_ids.dart';
@@ -27,6 +24,8 @@ import 'kenney_button.dart';
 import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
 import 'web_click_bridge.dart';
+
+export 'shell/whats_new_overlay.dart';
 
 /// Local achievements list — unlocked ids come from `GameState.achievements`.
 class AchievementsOverlay extends StatelessWidget {
@@ -98,7 +97,10 @@ class AchievementsOverlay extends StatelessWidget {
           child: ListView(
             children: [
               for (final cat in categories) ...[
-                MenuChrome.sectionLabel(_categoryLabel(cat)),
+                MenuChrome.sectionLabelScoped(
+                  _categoryLabel(cat),
+                  scope: MenuScope.account,
+                ),
                 const SizedBox(height: 6),
                 for (final def in byCategory[cat]!) ...[
                   Builder(
@@ -157,8 +159,8 @@ class AchievementsOverlay extends StatelessWidget {
                                   : done
                                   ? 'AWARDED'
                                   : '+${def.essenceReward}e',
-                              style: GameTheme.pixel(
-                                size: 6,
+                              style: GameTheme.body(
+                                size: 11,
                                 color: done
                                     ? GameTheme.clear
                                     : GameTheme.parchmentDim,
@@ -230,40 +232,37 @@ class _CodexOverlayState extends State<CodexOverlay> {
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          alignment: WrapAlignment.center,
-          children: [
-            for (final entry in GameLogic.codexRewardTiers.entries)
-              Builder(
-                builder: (context) {
-                  final claimed = state.metaDepth.codexClaims.contains(
-                    entry.key,
-                  );
-                  final pct = GameLogic.codexCompletionPercent(state);
-                  final ready = pct >= entry.value.pct && !claimed;
-                  final locked = pct < entry.value.pct;
-                  return KenneyButton(
-                    label: claimed
-                        ? '${entry.value.pct}% done'
-                        : locked
-                        ? 'Need ${entry.value.pct}%'
-                        : '${entry.value.pct}% +${entry.value.reward}e',
-                    expanded: false,
-                    style: ready
-                        ? KenneyButtonStyle.brown
-                        : KenneyButtonStyle.grey,
-                    onPressed: ready
-                        ? () => widget.director.claimCodexReward(entry.key)
-                        : null,
-                  );
-                },
-              ),
-          ],
+        const SizedBox(height: 4),
+        SizedBox(
+          height: 34,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: GameLogic.codexRewardTiers.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 6),
+            itemBuilder: (context, i) {
+              final entry = GameLogic.codexRewardTiers.entries.elementAt(i);
+              final claimed = state.metaDepth.codexClaims.contains(entry.key);
+              final pct = GameLogic.codexCompletionPercent(state);
+              final ready = pct >= entry.value.pct && !claimed;
+              final locked = pct < entry.value.pct;
+              return KenneyButton(
+                label: claimed
+                    ? '${entry.value.pct}% done'
+                    : locked
+                    ? 'Need ${entry.value.pct}%'
+                    : '${entry.value.pct}% +${entry.value.reward}e',
+                expanded: false,
+                style: ready
+                    ? KenneyButtonStyle.brown
+                    : KenneyButtonStyle.grey,
+                onPressed: ready
+                    ? () => widget.director.claimCodexReward(entry.key)
+                    : null,
+              );
+            },
+          ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         Expanded(
           child: entries.isEmpty
               ? Center(
@@ -360,7 +359,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           ),
         ],
         const SizedBox(height: 10),
-        MenuChrome.sectionLabel('ACTIVE'),
+        MenuChrome.sectionLabelScoped('ACTIVE', scope: MenuScope.account),
         const SizedBox(height: 6),
         for (var i = 0; i < maxSlots; i++) ...[
           _ActiveSlotChip(
@@ -420,7 +419,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           ),
         ],
         const SizedBox(height: 12),
-        MenuChrome.sectionLabel('ROSTER'),
+        MenuChrome.sectionLabelScoped('ROSTER', scope: MenuScope.account),
         const SizedBox(height: 6),
         for (final classId in HeroClassId.values) ...[
           Text(
@@ -603,12 +602,9 @@ class LoadoutsOverlay extends StatelessWidget {
           decoration: const InputDecoration(hintText: 'Loadout name'),
         ),
         actions: [
-          TextButton(
+          MenuChrome.dialogCancel(
+            label: 'CANCEL',
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'CANCEL',
-              style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-            ),
           ),
           KenneyButton(
             label: 'SAVE',
@@ -634,12 +630,9 @@ class LoadoutsOverlay extends StatelessWidget {
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
-          TextButton(
+          MenuChrome.dialogCancel(
+            label: 'CANCEL',
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'CANCEL',
-              style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-            ),
           ),
           KenneyButton(
             label: 'DELETE',
@@ -755,19 +748,11 @@ class _LoadoutSlotRow extends StatelessWidget {
               ),
               if (saved) ...[
                 const SizedBox(width: 8),
-                TextButton(
+                KenneyButton(
+                  label: 'DEL',
+                  style: KenneyButtonStyle.red,
+                  expanded: false,
                   onPressed: onDelete,
-                  style: TextButton.styleFrom(
-                    minimumSize: const Size(
-                      GameTheme.minTouch,
-                      GameTheme.minTouch,
-                    ),
-                    padding: EdgeInsets.zero,
-                  ),
-                  child: Text(
-                    'DEL',
-                    style: GameTheme.pixel(size: 8, color: GameTheme.bloodLit),
-                  ),
                 ),
               ],
             ],
@@ -937,135 +922,6 @@ Future<void> showOfflineProgressDialog(
   ).whenComplete(WebClickBridge.popLayer);
 }
 
-/// In-app "What's new" changelog — marks itself seen once shown.
-class WhatsNewOverlay extends StatelessWidget {
-  const WhatsNewOverlay({super.key, required this.director});
-  final GameDirector director;
-
-  /// Dialog host used by hub auto-show and Settings → What's New.
-  static Future<void> show(BuildContext context, GameDirector director) {
-    return showDialog<void>(
-      context: context,
-      barrierColor: MenuChrome.scrim,
-      builder: (ctx) {
-        final size = MediaQuery.sizeOf(ctx);
-        final maxW = math.min(420.0, size.width - 32);
-        final maxH = math.min(420.0, size.height * 0.78);
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 24,
-          ),
-          child: DecoratedBox(
-            decoration: MenuChrome.panel(),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: maxW,
-                height: maxH,
-                child: WhatsNewOverlay(director: director),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final state = director.state;
-    final unseen = MetaSystems.hasUnseenChangelog(state);
-    final current = MetaSystems.releases.isEmpty
-        ? null
-        : MetaSystems.releases.first;
-    final older = MetaSystems.releases.length <= 1
-        ? const <ChangelogRelease>[]
-        : MetaSystems.releases.sublist(1);
-    final focus = unseen
-        ? MetaSystems.unseenReleases(state)
-        : (current == null
-              ? const <ChangelogRelease>[]
-              : <ChangelogRelease>[current]);
-
-    Widget releaseBlock(ChangelogRelease release) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'VERSION ${release.version}',
-            style: GameTheme.menuTitle(size: 14, color: GameTheme.torch),
-          ),
-          const SizedBox(height: 6),
-          for (final entry in release.bullets)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '•  ',
-                    style: GameTheme.body(size: 16, color: GameTheme.torch),
-                  ),
-                  Expanded(
-                    child: Text(entry, style: GameTheme.body(size: 15)),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 8),
-        ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          "WHAT'S NEW",
-          textAlign: TextAlign.center,
-          style: GameTheme.menuTitle(size: 20),
-        ),
-        const SizedBox(height: 10),
-        Expanded(
-          child: ListView(
-            children: [
-              for (final release in focus) releaseBlock(release),
-              if (!unseen && older.isNotEmpty)
-                Theme(
-                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                  child: ExpansionTile(
-                    tilePadding: EdgeInsets.zero,
-                    childrenPadding: EdgeInsets.zero,
-                    title: Text(
-                      'Older versions',
-                      style: GameTheme.body(
-                        size: 14,
-                        color: GameTheme.parchmentDim,
-                      ),
-                    ),
-                    children: [
-                      for (final release in older) releaseBlock(release),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        KenneyButton(
-          label: 'GOT IT',
-          onPressed: () {
-            director.markChangelogSeen();
-            Navigator.of(context).maybePop();
-          },
-        ),
-      ],
-    );
-  }
-}
-
 /// Keystone run prefs — set before entering a dungeon (Mythic+-style).
 class ChallengeToggles extends StatefulWidget {
   const ChallengeToggles({
@@ -1144,10 +1000,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                   children: [
                     Text(
                       _expanded ? '▾ KEYSTONE' : '▸ KEYSTONE',
-                      style: GameTheme.pixel(
-                        size: 8,
-                        color: GameTheme.torchHot,
-                      ),
+                      style: GameTheme.body(size: 12, color: GameTheme.torchHot),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -1187,7 +1040,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             Text(
               affixes.map(Keystone.label).join(' · '),
               textAlign: TextAlign.center,
-              style: GameTheme.pixel(size: 7, color: GameTheme.torchHot),
+              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
             ),
           ],
           const SizedBox(height: 6),
@@ -1221,8 +1074,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 Text(
                   'DAILY VAULT',
                   textAlign: TextAlign.center,
-                  style: GameTheme.pixel(
-                    size: 8,
+                  style: GameTheme.body(
+                    size: 12,
                     color: vaultReady
                         ? GameTheme.torchHot
                         : GameTheme.parchmentDim,
@@ -1276,8 +1129,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                         ? 'WEEK GOAL ALMOST'
                         : 'WEEK GOAL',
                     textAlign: TextAlign.center,
-                    style: GameTheme.pixel(
-                      size: 8,
+                    style: GameTheme.body(
+                      size: 12,
                       color: weekReady || weekAlmost
                           ? GameTheme.torchHot
                           : GameTheme.parchmentDim,
@@ -1335,18 +1188,11 @@ class _HardmodeStepper extends StatelessWidget {
       decoration: MenuChrome.cardBox(selected: level > 0),
       child: Row(
         children: [
-          TextButton(
-            style: TextButton.styleFrom(
-              minimumSize: const Size(36, 36),
-              padding: EdgeInsets.zero,
-              foregroundColor: GameTheme.parchment,
-            ),
+          MenuChrome.stepperButton(
+            label: 'KEYSTONE -',
+            sign: '-',
             onPressed: level > 0 ? () => onChanged(level - 1) : null,
-            child: WebClickScope(
-              label: 'KEYSTONE -',
-              onPressed: level > 0 ? () => onChanged(level - 1) : null,
-              child: Text('-', style: GameTheme.pixel(size: 10)),
-            ),
+            size: 36,
           ),
           Expanded(
             child: Column(
@@ -1354,8 +1200,8 @@ class _HardmodeStepper extends StatelessWidget {
                 Text(
                   level <= 0 ? 'KEYSTONE  OFF' : 'KEYSTONE  +$level',
                   textAlign: TextAlign.center,
-                  style: GameTheme.pixel(
-                    size: 7,
+                  style: GameTheme.body(
+                    size: 12,
                     color: level > 0
                         ? GameTheme.torchHot
                         : GameTheme.parchmentDim,
@@ -1373,18 +1219,11 @@ class _HardmodeStepper extends StatelessWidget {
               ],
             ),
           ),
-          TextButton(
-            style: TextButton.styleFrom(
-              minimumSize: const Size(36, 36),
-              padding: EdgeInsets.zero,
-              foregroundColor: GameTheme.parchment,
-            ),
+          MenuChrome.stepperButton(
+            label: 'KEYSTONE +',
+            sign: '+',
             onPressed: level < maxLevel ? () => onChanged(level + 1) : null,
-            child: WebClickScope(
-              label: 'KEYSTONE +',
-              onPressed: level < maxLevel ? () => onChanged(level + 1) : null,
-              child: Text('+', style: GameTheme.pixel(size: 10)),
-            ),
+            size: 36,
           ),
         ],
       ),
@@ -1466,12 +1305,9 @@ class SaveTransferSection extends StatelessWidget {
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
-          TextButton(
+          MenuChrome.dialogCancel(
+            label: 'CANCEL',
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'CANCEL',
-              style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-            ),
           ),
           KenneyButton(
             label: 'IMPORT',
@@ -1569,12 +1405,9 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
           style: GameTheme.body(size: 14, color: GameTheme.parchment),
         ),
         actions: [
-          TextButton(
+          MenuChrome.dialogCancel(
+            label: 'KEEP DEVICE',
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'KEEP DEVICE',
-              style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-            ),
           ),
           KenneyButton(
             label: 'USE CLOUD',
@@ -1609,12 +1442,9 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
             style: GameTheme.body(size: 14, color: GameTheme.parchment),
           ),
           actions: [
-            TextButton(
+            MenuChrome.dialogCancel(
+              label: 'CANCEL',
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text(
-                'CANCEL',
-                style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-              ),
             ),
             KenneyButton(
               label: 'RESTORE',
@@ -1659,7 +1489,7 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
       children: [
         Text(
           'PLAY GAMES',
-          style: GameTheme.pixel(size: 8, color: GameTheme.torchHot),
+          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
         ),
         const SizedBox(height: 4),
         Text(

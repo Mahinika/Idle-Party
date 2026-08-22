@@ -13,6 +13,9 @@ class ZoneLayoutKit {
     this.eliteRoomChest = true,
     this.normalRoomChestChance = 0.0,
     this.landmarkPerChamber = 1,
+    this.customDungeonArt = false,
+    this.clutterDensity = 0.12,
+    this.clutterPerChamberMin = 6,
   });
 
   final String dungeonId;
@@ -23,6 +26,9 @@ class ZoneLayoutKit {
   final bool eliteRoomChest;
   final double normalRoomChestChance;
   final int landmarkPerChamber;
+  final bool customDungeonArt;
+  final double clutterDensity;
+  final int clutterPerChamberMin;
 
   /// Edge clutter falls back to the Kenney prop pool for this zone.
   List<MapPropKind> get edgeClutter =>
@@ -39,6 +45,9 @@ class ZoneLayoutKit {
       treasureAlcoveChance: art.treasureAlcoveChance,
       normalRoomChestChance: art.normalRoomChestChance,
       landmarkPerChamber: art.landmarkPerChamber,
+      customDungeonArt: art.customDungeonArt,
+      clutterDensity: art.clutterDensity,
+      clutterPerChamberMin: art.clutterPerChamberMin,
     );
   }
 }

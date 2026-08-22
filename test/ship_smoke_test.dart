@@ -5,6 +5,8 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/dungeon_def.dart';
+import 'package:idle_party/models/zone_art.dart';
+import 'package:idle_party/spatial/tile_map.dart';
 import 'package:idle_party/ui/hub_screen.dart';
 
 /// Fast honesty checks: world path, unlock rules, guides, release version.
@@ -110,7 +112,7 @@ void main() {
     expect(world.body.toLowerCase(), contains('lifetime gold'));
 
     final loadouts = GameGuides.topics.firstWhere((t) => t.id == 'loadouts');
-    expect(loadouts.title, 'LOADOUTS');
+    expect(loadouts.title, 'GEAR PRESETS (hidden)');
     expect(loadouts.body, contains('LOADOUTS'));
 
     final armor = GameGuides.topics.where((t) => t.id == 'armor_sets');
@@ -182,6 +184,32 @@ void main() {
     expect(powerups.body.toLowerCase(), contains('ad'));
     expect(powerups.body.toLowerCase(), contains('1 hour'));
     expect(powerups.body.toLowerCase(), contains('24 hours'));
+  });
+
+  test('late zones tide brass veil have distinct layout identity', () {
+    final tide = ZoneArt.byId('tide');
+    final brass = ZoneArt.byId('brass');
+    final veil = ZoneArt.byId('veil');
+    for (final z in [tide, brass, veil]) {
+      expect(z.customDungeonArt, isTrue);
+      expect(z.clutterDensity, lessThan(0.12));
+    }
+    expect(tide.preferChoke, isTrue);
+    expect(brass.preferTreasureAlcove, isTrue);
+    expect(brass.treasureAlcoveChance, greaterThanOrEqualTo(0.40));
+    expect(veil.preferChoke, isTrue);
+    expect(veil.landmarkPerChamber, greaterThanOrEqualTo(2));
+  });
+
+  test('mid zones ember grove storm have distinct layout identity', () {
+    final ember = ZoneArt.byId('ember');
+    final grove = ZoneArt.byId('grove');
+    final storm = ZoneArt.byId('storm');
+    expect(ember.preferChoke, isTrue);
+    expect(ember.landmarks, contains(MapPropKind.lava));
+    expect(grove.landmarks.where((l) => l == MapPropKind.fence).length, 2);
+    expect(storm.landmarkPerChamber, 2);
+    expect(storm.landmarks, contains(MapPropKind.trap));
   });
 
   test('fresh TODAY chase is grow-the-party, not Daily', () {

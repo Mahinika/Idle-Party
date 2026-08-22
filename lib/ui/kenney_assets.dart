@@ -279,13 +279,28 @@ abstract final class KenneyAssets {
   static List<String> wallVariantsForDungeon(String dungeonId) =>
       ZoneArt.byId(dungeonId).wallVariants;
 
-  static String exitSpriteFor({required bool boss}) =>
-      boss ? stairsBoss : stairs;
+  static String exitSpriteFor({required bool boss, String? dungeonId}) {
+    if (dungeonId != null) {
+      final custom = CustomAssets.dungeonExitPath(dungeonId, boss: boss);
+      if (custom != null) return custom;
+    }
+    return boss ? stairsBoss : stairs;
+  }
 
-  static String gateSprite({required bool open}) =>
-      open ? doorOpen : doorClosed;
+  static String gateSprite({required bool open, String? dungeonId}) {
+    if (dungeonId != null) {
+      final custom = CustomAssets.dungeonGatePath(dungeonId, open: open);
+      if (custom != null) return custom;
+    }
+    return open ? doorOpen : doorClosed;
+  }
 
-  static String propAsset(MapPropKind kind) => switch (kind) {
+  static String propAsset(MapPropKind kind, {String? dungeonId}) {
+    if (dungeonId != null) {
+      final custom = CustomAssets.dungeonPropPath(dungeonId, kind);
+      if (custom != null) return custom;
+    }
+    return switch (kind) {
     MapPropKind.barrel => barrel,
     MapPropKind.crate => crate,
     MapPropKind.table => table,
@@ -307,13 +322,15 @@ abstract final class KenneyAssets {
     MapPropKind.pillar => propPillar,
     MapPropKind.rubble => propRubble,
     MapPropKind.chest => chestClosed,
-  };
+    };
+  }
 
   /// Weighted clutter pool (duplicates = more common).
   static List<MapPropKind> propPoolForDungeon(String dungeonId) =>
       ZoneArt.byId(dungeonId).props;
 
   static String dungeonIconFor(String dungeonId) =>
+      CustomAssets.dungeonHubIconPath(dungeonId) ??
       ZoneArt.byId(dungeonId).hubIcon;
 
   /// Hub detail portrait for the selected dungeon (boss / theme).

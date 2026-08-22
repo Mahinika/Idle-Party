@@ -211,7 +211,7 @@ class MenuAlerts {
 /// Progressive menus: hide advanced tabs until they can do something.
 ///
 /// A brand new player sees PARTY · GEAR/BAG, POWER · FORGE/MARKET,
-/// META · JOBS/GUIDE/SET. Tabs appear as the systems behind them unlock.
+/// META · JOBS/GUIDE/SETTINGS. Tabs appear as the systems behind them unlock.
 abstract final class MenuTabs {
   static bool _clearedAFloor(GameState s) =>
       s.highestFloorCleared >= 1 ||

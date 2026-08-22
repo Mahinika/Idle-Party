@@ -102,3 +102,15 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 - iLvl is the readable power size.
 - Green **UPGRADE** means Auto Equip would swap.
 - Guides / What’s New should stay honest to this contract.
+
+## Code ownership (Factory vs Service)
+
+Keep new gear features on the right side of this line:
+
+| Layer | File | Owns |
+|-------|------|------|
+| **Factory** | [`lib/core/equipment_factory.dart`](../lib/core/equipment_factory.dart) | Rolling new items: iLvl budget, stat split, rarity, slot, effects, merge output, Apex craft rolls. `budgetForItemLevel`, loot generation helpers. |
+| **Service** | [`lib/core/gear_service.dart`](../lib/core/gear_service.dart) | Live inventory: equip/unequip, stash, Auto Equip / BiS, sell/disassemble, loadout save fields, `itemBudgetScore` / upgrade predicates. |
+| **Pipeline** | [`lib/core/loot_pipeline.dart`](../lib/core/loot_pipeline.dart) | Kill drops: which slot family, who can wear it, vacuum on clear — calls Factory, not parallel stat math. |
+
+**Rule:** if it creates item stats from iLvl → **Factory**. If it moves or scores existing items → **Service**. Never duplicate budget math in UI or `GameLogic` — delegate to one of the two.

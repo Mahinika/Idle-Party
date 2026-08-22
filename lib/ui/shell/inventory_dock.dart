@@ -392,7 +392,7 @@ class _InventoryDockState extends State<InventoryDock>
           label: 'CLEAN BAG',
           tip: 'Merge junk pairs, then sell gold, then scrap essence',
           onPressed: state.gearStash.isEmpty ? null : onCleanBag,
-          style: KenneyButtonStyle.brown,
+          style: KenneyButtonStyle.grey,
         ),
         const SizedBox(height: 4),
         KenneyButton(
@@ -447,8 +447,8 @@ class _InventoryDockState extends State<InventoryDock>
                   const SizedBox(height: 4),
                   Text(
                     'Equip on:',
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
+                    style: GameTheme.body(
+                      size: 12,
                       color: GameTheme.parchmentDim,
                     ),
                   ),
@@ -504,7 +504,7 @@ class _InventoryDockState extends State<InventoryDock>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          MenuChrome.sectionLabel('COMBINATOR'),
+          MenuChrome.sectionLabelScoped('COMBINATOR', scope: MenuScope.run),
           const SizedBox(height: 4),
           Text(
             'Sacrifice two bag items of the same slot for one upgraded result. Equipped gear is never used.'
@@ -515,10 +515,7 @@ class _InventoryDockState extends State<InventoryDock>
             const SizedBox(height: 4),
             Text(
               'Slot filter: $slotLabel',
-              style: GameTheme.pixel(
-                size: GameTheme.hudPixel,
-                color: GameTheme.torchHot,
-              ),
+              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
             ),
           ],
           const SizedBox(height: 8),
@@ -533,10 +530,7 @@ class _InventoryDockState extends State<InventoryDock>
             child: Text(
               '+',
               textAlign: TextAlign.center,
-              style: GameTheme.pixel(
-                size: GameTheme.hudPixelComfort,
-                color: GameTheme.parchmentDim,
-              ),
+              style: GameTheme.body(size: 16, color: GameTheme.parchmentDim),
             ),
           ),
           _CombineSlot(
@@ -565,8 +559,8 @@ class _InventoryDockState extends State<InventoryDock>
                               '  SCORE ${preview.powerScore}$jump';
                         }(),
                   textAlign: TextAlign.center,
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
+                  style: GameTheme.body(
+                    size: 12,
                     color: preview == null
                         ? GameTheme.parchmentDim
                         : GameTheme.torchHot,
@@ -818,7 +812,7 @@ class _EquipHeroChip extends StatelessWidget {
         : (cmp.powerDelta > 0
               ? GameTheme.clear
               : (cmp.powerDelta < 0
-                    ? const Color(0xFFE07060)
+                    ? GameTheme.statDown
                     : GameTheme.parchmentDim));
     return InkWell(
       onTap: onTap,
@@ -828,10 +822,10 @@ class _EquipHeroChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
             color: cannotUse
-                ? const Color(0xFF2A241C)
+                ? GameTheme.equipChipBlocked
                 : (cmp.isUpgrade
-                      ? const Color(0xFF2A3A1C)
-                      : const Color(0xFF3A2A18)),
+                      ? GameTheme.equipChipUpgrade
+                      : GameTheme.equipChipNeutral),
             borderRadius: BorderRadius.circular(3),
             border: Border.all(
               color: isBest
@@ -849,14 +843,14 @@ class _EquipHeroChip extends StatelessWidget {
                 children: [
                   Text(
                     hero.roleLabel,
-                    style: GameTheme.pixel(size: GameTheme.hudPixel),
+                    style: GameTheme.body(size: 11, color: GameTheme.parchment),
                   ),
                   if (isBest) ...[
                     const SizedBox(width: 3),
                     Text(
                       'BEST',
-                      style: GameTheme.pixel(
-                        size: GameTheme.hudPixel,
+                      style: GameTheme.body(
+                        size: 11,
                         color: GameTheme.torchHot,
                       ),
                     ),
@@ -877,10 +871,7 @@ class _EquipHeroChip extends StatelessWidget {
               else ...[
                 Text(
                   'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
-                    color: deltaColor,
-                  ),
+                  style: GameTheme.body(size: 11, color: deltaColor),
                 ),
                 if (cmp.isUpgrade)
                   Text(
@@ -949,7 +940,7 @@ class _BagSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rarityColor = item == null
-        ? const Color(0xFF5A5040)
+        ? GameTheme.rarityCommon
         : rarityBorderColor(item!.rarity);
     final isBest = item != null && isBestStashItem(state, item!);
     final a11yLabel = item == null
@@ -1142,8 +1133,8 @@ class _CombineSlot extends StatelessWidget {
               width: 44,
               child: Text(
                 label,
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
+                style: GameTheme.body(
+                  size: 12,
                   color: item != null
                       ? GameTheme.torchHot
                       : GameTheme.parchmentDim,
@@ -1180,10 +1171,7 @@ class _CombineSlot extends StatelessWidget {
               ),
               Text(
                 '✕',
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: GameTheme.parchmentDim,
-                ),
+                style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
               ),
             ] else
               Expanded(

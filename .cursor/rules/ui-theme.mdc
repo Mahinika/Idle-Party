@@ -1,20 +1,21 @@
 ---
-description: Idle Party menu UI must match the GEAR sheet theme (MenuChrome / GameTheme).
+description: Idle Party UI — tokens and patterns (not a layout straitjacket).
 globs: lib/ui/**/*.dart
 alwaysApply: false
 ---
 
-# UI theme (GEAR look)
+# UI theme
 
 When editing menus, overlays, sheets, or dialogs under `lib/ui/`:
 
-1. Follow **`docs/UI_THEME.md`** (reference = GEAR inventory sheet).
-2. **Phone-first / portrait only** — assume ~360–430 px width; finger taps. Do not ship desktop-only hover UX.
-3. Prefer **`MenuChrome`** + **`GameTheme`** primitives — do not invent new colors/radii.
-4. Titles → `GameTheme.menuTitle`; sections → `MenuChrome.sectionLabel`; lists → `cardBox` / `listCard`.
-5. Multi-tab overlays → `MenuChrome.tabRail` (same as GEAR/BAG/TOOLS).
-6. Actions → `KenneyButton` (brown / grey / red). No Material `TextButton` in forge dialogs.
-7. Press Start (`GameTheme.pixel`) only for combat HUD and tiny tags — not menu titles.
-8. Skip restyling: combat HUD, bottom nav, start menu, hub world-path scene. Item tooltips: phone long-press + compact bag compare (see `item_tooltip.dart`).
+1. Read **`docs/UI_THEME.md`** — tokens, action hierarchy, layout escape hatches, system map.
+2. **Phone-first / portrait only** (~360–430 px); tap / long-press, not hover-only.
+3. Use **`GameTheme`** + **`MenuChrome`** colors/radii — no random hex (combat VFX + Kenney button palette excepted).
+4. **Pick the visual family:** menu sheet (≈ GEAR) vs hub vs combat HUD vs brand vs tooltip — do not force GEAR chrome onto hub or dungeon.
+5. **Action hierarchy:** one brown primary per view when possible; grey secondary; `textLink` / `ghost` for nav; red for destructive.
+6. **IA copy:** RUN / TODAY / ACCOUNT — `scopeChip`, `sectionLabelScoped`, `tabBanner` for tab-owned status.
+7. **Layout:** scroll, split flex, horizontal lists when content overflows — overflow stripes are bugs.
+8. Actions → `KenneyButton`. Dialog cancel → `MenuChrome.dialogCancel`; +/- → `stepperButton`.
+9. Press Start (`GameTheme.pixel`) for combat HUD and tiny tags only — menu body uses `body`.
 
-English in-game copy. If you add a new shared chrome helper, put it on `MenuChrome` and mention it in `docs/UI_THEME.md`.
+English in-game copy. New shared helpers → `MenuChrome` or `KenneyButton` + one line in `docs/UI_THEME.md`.

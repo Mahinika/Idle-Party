@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/pet.dart';
+import 'package:idle_party/spatial/tile_map.dart';
 import 'package:idle_party/ui/custom_assets.dart';
 import 'package:idle_party/ui/kenney_assets.dart';
 
@@ -72,6 +73,26 @@ void main() {
     for (final path in paths) {
       expect(File(path).existsSync(), isTrue, reason: 'missing $path');
     }
+  });
+
+  test('custom dungeon interior assets exist on disk', () {
+    for (final path in CustomAssets.customDungeonAssetPaths) {
+      expect(File(path).existsSync(), isTrue, reason: 'missing $path');
+    }
+    expect(CustomAssets.usesCustomDungeonArt('tide'), isTrue);
+    expect(CustomAssets.usesCustomDungeonArt('sandy'), isTrue);
+    expect(
+      CustomAssets.dungeonPropPath('tide', MapPropKind.water),
+      CustomAssets.tidePropWater,
+    );
+    expect(
+      KenneyAssets.propAsset(MapPropKind.water, dungeonId: 'tide'),
+      CustomAssets.tidePropWater,
+    );
+    expect(
+      KenneyAssets.propAsset(MapPropKind.water, dungeonId: 'sandy'),
+      isNot(CustomAssets.tidePropWater),
+    );
   });
 
   test('equipment and portraits resolve to custom assets', () {

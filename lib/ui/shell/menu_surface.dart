@@ -11,7 +11,6 @@ import 'inventory_dock.dart';
 import 'jobs_market_sanctuary.dart';
 import 'overlay_scaffold.dart';
 import 'power_meta_pillars.dart';
-import 'settings_overlay.dart';
 
 /// The one menu sheet, shared by hub and dungeon.
 ///
@@ -177,7 +176,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
         router.clearCombine();
       },
       onCleanBag: d.cleanBagJunk,
-      onOpenFilters: () => router.open(MenuRoute.settings),
+      onOpenFilters: router.openBagFilters,
       onAutoMerge: () {
         d.autoMergeJunk();
         router.dropMissingIds(d.state.gearStash.map((g) => g.id).toSet());
@@ -206,19 +205,16 @@ class _MenuSurfaceState extends State<MenuSurface> {
           tab: router.powerTab,
           onTabChanged: (tab) => router.powerTab = tab,
         ),
-        MenuRoute.meta => MetaPillar(
+        MenuRoute.meta || MenuRoute.settings => MetaPillar(
           director: d,
           tab: router.metaTab,
           onTabChanged: (tab) => router.metaTab = tab,
           onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
           onClose: router.close,
+          bagFiltersScrollNonce: router.bagFiltersScrollNonce,
         ),
         MenuRoute.jobs => SingleChildScrollView(
           child: JobsOverlay(director: d),
-        ),
-        MenuRoute.settings => SettingsOverlay(
-          director: d,
-          onClose: router.close,
         ),
         MenuRoute.none => const SizedBox.shrink(),
       },

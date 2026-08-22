@@ -11,8 +11,53 @@ abstract final class GameTheme {
   static const Color panel = Color(0xFF182028);
   static const Color panelInset = Color(0xFF0F141C);
 
-  /// Translucent list/card fill used inside overlays.
-  static const Color menuCard = Color(0xB8121820);
+  /// Loot border colors (bag slots, gear rows).
+  static const Color rarityCommon = Color(0xFF5A5040);
+  static const Color rarityUncommon = Color(0xFF70C050);
+  static const Color rarityRare = Color(0xFF5090E0);
+  static const Color rarityLegendary = Color(0xFFFF8C40);
+
+  /// Bag equip-chip fills (upgrade / blocked / neutral).
+  static const Color equipChipBlocked = Color(0xFF2A241C);
+  static const Color equipChipUpgrade = Color(0xFF2A3A1C);
+  static const Color equipChipNeutral = Color(0xFF3A2A18);
+  static const Color statDown = Color(0xFFE07060);
+
+  /// WoW-style tooltip name colors (brighter than border tokens).
+  static const Color tooltipCommon = Color(0xFFFFFFFF);
+  static const Color tooltipUncommon = Color(0xFF1EFF00);
+  static const Color tooltipRare = Color(0xFF0070DD);
+  static const Color tooltipEpic = Color(0xFFA335EE);
+  static const Color tooltipLegendary = Color(0xFFFF8000);
+  static const Color tooltipBorderCommon = Color(0xFF9D9D9D);
+  static const Color tooltipStatUp = Color(0xFF1EFF00);
+  static const Color tooltipStatDown = Color(0xFFFF4040);
+  static const Color tooltipGold = Color(0xFFFFD100);
+
+  /// GEAR paper-doll backdrop.
+  static const Color dollBackdropTop = Color(0xFF101820);
+  static const Color dollBackdropBottom = Color(0xFF080C12);
+
+  /// Combat HUD fills (bars, party rows, map captions).
+  static const Color hudHpFill = Color(0xFF2A2218);
+  static const Color hudManaFill = Color(0xFF1A2430);
+  static const Color hudManaBright = Color(0xFF9AD0FF);
+  static const Color hudCastOk = Color(0xFF009E73);
+  static const Color hudHpLowCb = Color(0xFFD55E00);
+  static const Color hudHpMidCb = Color(0xFFE69F00);
+  static const Color hudHpDamage = Color(0xFFE05050);
+  static const Color hudPartyRowHot = Color(0xFF4A3010);
+  static const Color hudPartyRowWarm = Color(0xFF3A2A14);
+  static const Color hudPartyRowIdle = Color(0xFF221810);
+  static const Color hudSpiritText = Color(0xFFFFF0A8);
+  static const Color hudManaText = Color(0xFF80C0FF);
+  static const Color hudFarmGreen = Color(0xFF3A5018);
+  static const Color hudMapCaption = Color(0xFF1A1410);
+
+  /// RUN / TODAY / ACCOUNT scope tones (hub + POWER section headers).
+  static const Color scopeRun = mossLit;
+  static const Color scopeToday = accentWarn;
+  static const Color scopeAccount = accentInfo;
   static const Color moss = Color(0xFF2F4A3C);
   static const Color mossLit = Color(0xFF7DCF9A);
   static const Color torch = Color(0xFFE4B04A);
@@ -57,11 +102,8 @@ abstract final class GameTheme {
   static const double radiusMd = 12;
   static const double radiusLg = 18;
 
-  /// Phone / narrow layout: Android Compact width (~600) or width under ~700.
-  static bool isCompactWidth(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    return size.shortestSide < 600 || size.width < 700;
-  }
+  /// Dungeon HUD density — shipping product is phone-only; always compact.
+  static bool isCompactWidth(BuildContext context) => isPhoneWidth(context);
 
   /// Shipping portrait phone width (Samsung A56 ≈ 360; band ~360–430).
   ///

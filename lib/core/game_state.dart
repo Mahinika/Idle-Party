@@ -112,6 +112,8 @@ class GameState {
     this.wipeStreakKey = '',
     this.wipeStreakCount = 0,
     this.wipeAdviceLine = '',
+    this.sessionTelemetryOptIn = false,
+    this.sessionTelemetryLog = const <String>[],
   });
 
   /// All unlocked heroes (bench + active).
@@ -324,8 +326,14 @@ class GameState {
   /// Consecutive live wipes on [wipeStreakKey]. Resets on a floor clear.
   final int wipeStreakCount;
 
-  /// Dungeon wipe-panel line after 3 stacked wipes; empty if the sim is unsure.
+  /// Dungeon wipe-panel line after stacked wipes; empty if the sim is unsure.
   final String wipeAdviceLine;
+
+  /// Opt-in local session log (SETTINGS). Never uploaded by Idle Party.
+  final bool sessionTelemetryOptIn;
+
+  /// Rolling session events (`ISO|kind|detail`), capped in [SessionTelemetry].
+  final List<String> sessionTelemetryLog;
 
   /// Global room counter derived from the authoritative room position.
   int get battleNumber => currentRoom.globalBattleNumber;
@@ -876,6 +884,8 @@ class GameState {
     String? wipeStreakKey,
     int? wipeStreakCount,
     String? wipeAdviceLine,
+    bool? sessionTelemetryOptIn,
+    List<String>? sessionTelemetryLog,
     bool clearEquipped = false,
     bool clearActivePet = false,
     bool clearSoulboundItem = false,
@@ -981,6 +991,9 @@ class GameState {
       wipeStreakKey: wipeStreakKey ?? this.wipeStreakKey,
       wipeStreakCount: wipeStreakCount ?? this.wipeStreakCount,
       wipeAdviceLine: wipeAdviceLine ?? this.wipeAdviceLine,
+      sessionTelemetryOptIn:
+          sessionTelemetryOptIn ?? this.sessionTelemetryOptIn,
+      sessionTelemetryLog: sessionTelemetryLog ?? this.sessionTelemetryLog,
     );
   }
 
@@ -1108,6 +1121,8 @@ class GameState {
     'wipeStreakKey': wipeStreakKey,
     'wipeStreakCount': wipeStreakCount,
     'wipeAdviceLine': wipeAdviceLine,
+    'sessionTelemetryOptIn': sessionTelemetryOptIn,
+    'sessionTelemetryLog': sessionTelemetryLog,
   };
 
   /// Parses a v2-v4 save. Legacy fields are migrated.
@@ -1358,6 +1373,10 @@ class GameState {
       wipeStreakKey: (json['wipeStreakKey'] as String?) ?? '',
       wipeStreakCount: _jsonInt(json['wipeStreakCount']),
       wipeAdviceLine: (json['wipeAdviceLine'] as String?) ?? '',
+      sessionTelemetryOptIn: (json['sessionTelemetryOptIn'] as bool?) ?? false,
+      sessionTelemetryLog:
+          (json['sessionTelemetryLog'] as List<dynamic>?)?.cast<String>() ??
+          const <String>[],
     );
   }
 }

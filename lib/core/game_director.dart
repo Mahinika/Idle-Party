@@ -31,6 +31,8 @@ import 'play_leaderboard_ids.dart';
 import 'play_store_update.dart';
 import 'screen_awake.dart';
 import 'story_lore.dart';
+import 'chase_contract.dart';
+import 'session_telemetry.dart';
 import 'wipe_advice.dart';
 import '../models/dungeon_def.dart';
 
@@ -177,6 +179,7 @@ class GameDirector extends ChangeNotifier {
   int _visualFrame = 0;
   final List<(int ms, int gold)> _runGoldSamples = <(int, int)>[];
   int _runGoldPerMinute = 0;
+  String? _lastTelemetryChaseKey;
   bool _runIncomeFrozen = false;
   DateTime? _floorStartedAt;
   int? _lastFloorClearSec;
@@ -811,6 +814,13 @@ class GameDirector extends ChangeNotifier {
             _state,
             WipeFightSnapshot.fromWorld(spatial),
           );
+          _state = SessionTelemetry.append(
+            _state,
+            'wipe',
+            'F${_state.currentRoom.floorNumber}|'
+                'streak${_state.wipeStreakCount}|'
+                '${_state.wipeAdviceLine.isEmpty ? 'quiet' : _state.wipeAdviceLine}',
+          );
         }
         final floor = _state.currentRoom.floorNumber;
         if (_state.inGauntlet) {
@@ -1113,6 +1123,11 @@ class GameDirector extends ChangeNotifier {
     } else {
       showToast('God Hand · steered', life: 1.1);
     }
+    _state = SessionTelemetry.append(
+      _state,
+      'god_hand',
+      'kills${result.kills}',
+    );
     notifyListeners();
   }
 
@@ -1143,6 +1158,7 @@ class GameDirector extends ChangeNotifier {
     _spatial = null;
     _freezeRunIncome();
     _state = _state.copyWith(lastUpdated: DateTime.now());
+    _maybeLogHubChase();
     _syncHubIdleTimer();
     final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {
@@ -1645,6 +1661,27 @@ class GameDirector extends ChangeNotifier {
 
   void setColorblindMode(bool value) {
     _applyUpgrade(_state.copyWith(colorblindMode: value));
+  }
+
+  void setSessionTelemetryOptIn(bool value) {
+    _applyUpgrade(SessionTelemetry.setOptIn(_state, value));
+  }
+
+  void clearSessionTelemetry() {
+    _applyUpgrade(SessionTelemetry.clearLog(_state));
+  }
+
+  String sessionTelemetryExport() => SessionTelemetry.exportText(_state);
+
+  void _maybeLogHubChase() {
+    if (!_state.sessionTelemetryOptIn || _state.inDungeon) return;
+    final contract = ChaseContract.fromState(_state);
+    final chase = contract.chase;
+    final key =
+        '${chase.kind.name}|${chase.urgency.name}|${chase.title}|AL${_state.ascensionLevel}';
+    if (_lastTelemetryChaseKey == key) return;
+    _lastTelemetryChaseKey = key;
+    _state = SessionTelemetry.append(_state, 'hub_chase', key);
   }
 
   void setUiTextScale(double value) {

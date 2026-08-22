@@ -85,6 +85,35 @@ class PlacementPlan {
       return cells.removeAt(idx);
     }
 
+    int distFromSpawn((int, int) cell) {
+      var best = 9999;
+      for (final s in spawnPoints) {
+        final d = (cell.$1 - s.$1).abs() + (cell.$2 - s.$2).abs();
+        if (d < best) best = d;
+      }
+      return best;
+    }
+
+    (int, int)? takeFarFromSpawn(List<(int, int)> cells) {
+      if (cells.isEmpty) return null;
+      var bestI = 0;
+      var bestD = -1;
+      for (var i = 0; i < cells.length; i++) {
+        final d = distFromSpawn(cells[i]);
+        if (d > bestD) {
+          bestD = d;
+          bestI = i;
+        }
+      }
+      return cells.removeAt(bestI);
+    }
+
+    (int, int)? takeCell(List<(int, int)> cells) =>
+        kit.customDungeonArt ? takeFarFromSpawn(cells) : takeFrom(cells);
+
+    bool wetKind(MapPropKind kind) =>
+        kind == MapPropKind.water || kind == MapPropKind.fountain;
+
     final used = <String>{};
     final props = <MapProp>[];
     final chests = <(int, int)>[];
@@ -117,12 +146,37 @@ class PlacementPlan {
       if (candidates.isEmpty) {
         candidates.addAll(edgeCells);
       }
-      final chest = takeFrom(candidates);
+      final chest = takeCell(candidates);
       if (chest != null) {
         chests.add(chest);
         used.add('${chest.$1},${chest.$2}');
         props.add(MapProp(x: chest.$1, y: chest.$2, kind: MapPropKind.chest));
         edgeCells.remove(chest);
+        if (kit.customDungeonArt) {
+          for (final neighbor in <(int, int)>[
+            (chest.$1 - 1, chest.$2),
+            (chest.$1 + 1, chest.$2),
+            (chest.$1, chest.$2 - 1),
+            (chest.$1, chest.$2 + 1),
+          ]) {
+            final key = '${neighbor.$1},${neighbor.$2}';
+            if (!isFloor(neighbor.$1, neighbor.$2)) continue;
+            if (blocked.contains(key) || used.contains(key)) continue;
+            if (!touchesWall(neighbor.$1, neighbor.$2)) continue;
+            used.add(key);
+            props.add(
+              MapProp(
+                x: neighbor.$1,
+                y: neighbor.$2,
+                kind: MapPropKind.water,
+              ),
+            );
+            edgeCells.removeWhere(
+              (c) => c.$1 == neighbor.$1 && c.$2 == neighbor.$2,
+            );
+            break;
+          }
+        }
       } else {
         violations.add('no_chest_socket');
       }
@@ -139,29 +193,44 @@ class PlacementPlan {
       }
       final want = kit.landmarkPerChamber.clamp(0, 3);
       for (var i = 0; i < want; i++) {
-        final cell = takeFrom(localEdge);
+        final cell = takeCell(localEdge);
         if (cell == null) break;
         edgeCells.remove(cell);
-        final kind = landmarkPool[rng.nextInt(landmarkPool.length)];
+        MapPropKind kind;
+        if (kit.customDungeonArt && i == 0) {
+          final wet = landmarkPool.where(wetKind).toList();
+          kind = wet.isNotEmpty
+              ? wet[rng.nextInt(wet.length)]
+              : landmarkPool[rng.nextInt(landmarkPool.length)];
+        } else {
+          kind = landmarkPool[rng.nextInt(landmarkPool.length)];
+        }
         placeProp(cell, kind);
       }
     }
 
     final floorCount = edgeCells.length + openCells.length + used.length;
-    final target = (floorCount * 0.12).floor().clamp(16, 80);
+    final density = kit.clutterDensity.clamp(0.04, 0.16);
+    final target = (floorCount * density).floor().clamp(16, 80);
     final clutterPool = kit.edgeClutter.isNotEmpty
         ? kit.edgeClutter
         : landmarkPool;
     while (props.length < target) {
-      final preferEdge = rng.nextDouble() < 0.75;
+      final preferEdge = kit.customDungeonArt || rng.nextDouble() < 0.75;
       var cell = preferEdge ? takeFrom(edgeCells) : takeFrom(openCells);
       cell ??= takeFrom(edgeCells) ?? takeFrom(openCells);
       if (cell == null) break;
-      final kind = clutterPool[rng.nextInt(clutterPool.length)];
+      var kind = clutterPool[rng.nextInt(clutterPool.length)];
+      if (kit.customDungeonArt && wetKind(kind) && !touchesWall(cell.$1, cell.$2)) {
+        final wetPool = clutterPool.where(wetKind).toList();
+        final dryPool = clutterPool.where((k) => !wetKind(k)).toList();
+        kind = (dryPool.isNotEmpty ? dryPool : wetPool)[
+            rng.nextInt((dryPool.isNotEmpty ? dryPool : wetPool).length)];
+      }
       placeProp(cell, kind);
     }
 
-    const perChamberMin = 6;
+    final perChamberMin = kit.clutterPerChamberMin.clamp(3, 12);
     for (final chamber in chambers) {
       var count = props.where((p) => inChamber(chamber, p.x, p.y)).length;
       if (count >= perChamberMin) continue;
@@ -181,11 +250,17 @@ class PlacementPlan {
         }
       }
       while (count < perChamberMin) {
-        final preferEdge = rng.nextDouble() < 0.8;
+        final preferEdge = kit.customDungeonArt || rng.nextDouble() < 0.8;
         var cell = preferEdge ? takeFrom(localEdge) : takeFrom(localOpen);
         cell ??= takeFrom(localEdge) ?? takeFrom(localOpen);
         if (cell == null) break;
-        final kind = clutterPool[rng.nextInt(clutterPool.length)];
+        var kind = clutterPool[rng.nextInt(clutterPool.length)];
+        if (kit.customDungeonArt && wetKind(kind) && !touchesWall(cell.$1, cell.$2)) {
+          final dryPool = clutterPool.where((k) => !wetKind(k)).toList();
+          if (dryPool.isNotEmpty) {
+            kind = dryPool[rng.nextInt(dryPool.length)];
+          }
+        }
         placeProp(cell, kind);
         count++;
       }

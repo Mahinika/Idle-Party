@@ -52,7 +52,20 @@ class WipeFightSnapshot {
 
 /// Player-facing wipe hint. Returns null when the sim cannot prove a deficit.
 abstract final class WipeAdvice {
-  static const int streakNeeded = 3;
+  /// FORGE tips wait for two wipes on the same floor (was three).
+  static const int streakNeeded = 2;
+
+  /// High-confidence tips safe on the first wipe (bag, floor gap, early melt).
+  static bool isImmediate(String line) =>
+      line.startsWith('Equip') ||
+      line.contains('too far') ||
+      line == 'Upgrade DEF in FORGE';
+
+  /// Nudge God Hand after repeated wipes on the same floor (commit path — no redesign).
+  static String? godHandHintFor(GameState state) {
+    if (state.wipeStreakCount < 2 || state.inGauntlet) return null;
+    return 'Before retry: tap God Hand — steer party + AOE smash';
+  }
 
   /// English line for the dungeon wipe panel, or null if we must stay quiet.
   static String? lineFor({

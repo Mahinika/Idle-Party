@@ -124,13 +124,17 @@ class _ForgeOverlayState extends State<ForgeOverlay>
     );
   }
 
-  Widget _sectionTitle(String title, String blurb) {
+  Widget _sectionTitle(
+    String title,
+    String blurb, {
+    MenuScope? scope,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          MenuChrome.sectionLabel(title),
+          MenuChrome.sectionLabelScoped(title, scope: scope),
           Text(
             blurb,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -184,12 +188,13 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         ),
         const SizedBox(height: 8),
         _sectionTitle(
-          'RUN BONUSES (GOLD)',
+          'BONUSES (GOLD)',
           'One buy is meant to feel similar: +${GameLogic.forgeAttackGain} ATK, '
               '+${GameLogic.forgeDefenseGain} DEF (armor), '
               '+${GameLogic.forgeVitalityGain} HP, '
               '+${GameLogic.forgeHasteGain}% HASTE or CRIT. '
               'BEST marks the cheapest relative gain. All wipe when you Ascend.',
+          scope: MenuScope.run,
         ),
         Text(
           'Spend amount (wallet gold):',
@@ -245,6 +250,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         _sectionTitle(
           'TRAIN (LEVELS)',
           'Pays gold · +1 level to every hero · levels survive Ascend.',
+          scope: MenuScope.account,
         ),
         KenneyButton(
           label: state.gold >= training
@@ -340,6 +346,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           _sectionTitle(
             '5TH SLOT',
             'Extra fighter · survives Ascend. Also on PARTY → ROSTER.',
+            scope: MenuScope.account,
           ),
           KenneyButton(
             label:
@@ -354,6 +361,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         _sectionTitle(
           'GOD HAND',
           'Tap in the dungeon to steer + smash. Soft knobs: damage, CD, style.',
+          scope: MenuScope.account,
         ),
         Text(
           'Lv${state.godHandLevel} · smash ${state.godHandSmashDamage()} · '
@@ -412,10 +420,14 @@ class _ForgeOverlayState extends State<ForgeOverlay>
             ],
           ],
         ),
-        const Divider(height: 16, color: Color(0x665A5040)),
+        Divider(
+          height: 16,
+          color: GameTheme.rarityCommon.withValues(alpha: 0.4),
+        ),
         _sectionTitle(
           'RELICS',
           'Buy once · upgrade tiers · permanent party auras.',
+          scope: MenuScope.account,
         ),
         for (final relicId in GameLogic.relicOrder)
           _relicKeepCard(state, relicId),
@@ -430,10 +442,14 @@ class _ForgeOverlayState extends State<ForgeOverlay>
               : null,
         ),
         if (state.soulboundItem != null) ...[
-          const Divider(height: 16, color: Color(0x665A5040)),
+          Divider(
+            height: 16,
+            color: GameTheme.rarityCommon.withValues(alpha: 0.4),
+          ),
           _sectionTitle(
             'HEIRLOOM',
             'Older save. Apex is forever gear now — this still adds party power.',
+            scope: MenuScope.account,
           ),
           Text(
             '${state.soulboundItem!.name}'

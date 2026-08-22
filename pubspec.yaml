@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.12.35+65
+version: 1.12.41+71
 
 environment:
   sdk: ^3.11.0
@@ -75,6 +75,51 @@ flutter:
     - assets/custom/heroes/
     - assets/custom/ui/
     - assets/custom/ui/backdrops/
+    - assets/custom/dungeon/sandy/tiles/
+    - assets/custom/dungeon/sandy/props/
+    - assets/custom/dungeon/sandy/hub_icon.png
+    - assets/custom/dungeon/goblin/tiles/
+    - assets/custom/dungeon/goblin/props/
+    - assets/custom/dungeon/goblin/hub_icon.png
+    - assets/custom/dungeon/king/tiles/
+    - assets/custom/dungeon/king/props/
+    - assets/custom/dungeon/king/hub_icon.png
+    - assets/custom/dungeon/underworld/tiles/
+    - assets/custom/dungeon/underworld/props/
+    - assets/custom/dungeon/underworld/hub_icon.png
+    - assets/custom/dungeon/dead/tiles/
+    - assets/custom/dungeon/dead/props/
+    - assets/custom/dungeon/dead/hub_icon.png
+    - assets/custom/dungeon/hell/tiles/
+    - assets/custom/dungeon/hell/props/
+    - assets/custom/dungeon/hell/hub_icon.png
+    - assets/custom/dungeon/crystal/tiles/
+    - assets/custom/dungeon/crystal/props/
+    - assets/custom/dungeon/crystal/hub_icon.png
+    - assets/custom/dungeon/tide/tiles/
+    - assets/custom/dungeon/tide/props/
+    - assets/custom/dungeon/tide/hub_icon.png
+    - assets/custom/dungeon/ember/tiles/
+    - assets/custom/dungeon/ember/props/
+    - assets/custom/dungeon/ember/hub_icon.png
+    - assets/custom/dungeon/grove/tiles/
+    - assets/custom/dungeon/grove/props/
+    - assets/custom/dungeon/grove/hub_icon.png
+    - assets/custom/dungeon/storm/tiles/
+    - assets/custom/dungeon/storm/props/
+    - assets/custom/dungeon/storm/hub_icon.png
+    - assets/custom/dungeon/rime/tiles/
+    - assets/custom/dungeon/rime/props/
+    - assets/custom/dungeon/rime/hub_icon.png
+    - assets/custom/dungeon/fen/tiles/
+    - assets/custom/dungeon/fen/props/
+    - assets/custom/dungeon/fen/hub_icon.png
+    - assets/custom/dungeon/brass/tiles/
+    - assets/custom/dungeon/brass/props/
+    - assets/custom/dungeon/brass/hub_icon.png
+    - assets/custom/dungeon/veil/tiles/
+    - assets/custom/dungeon/veil/props/
+    - assets/custom/dungeon/veil/hub_icon.png
     - assets/data/
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -46,14 +46,14 @@ class HubOfflineBanner extends StatelessWidget {
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: MenuChrome.cardBox(),
+          decoration: MenuChrome.hubPanel(),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   text,
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
+                  style: GameTheme.body(
+                    size: 12,
                     color: GameTheme.mossLit,
                   ),
                 ),
@@ -89,15 +89,15 @@ class HubPlayUpdateBanner extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-        decoration: MenuChrome.cardBox(),
+        decoration: MenuChrome.hubPanel(selected: true),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               'UPDATE ON GOOGLE PLAY',
               textAlign: TextAlign.center,
-              style: GameTheme.pixel(
-                size: GameTheme.hudPixel,
+              style: GameTheme.body(
+                size: 12,
                 color: GameTheme.mossLit,
               ),
             ),
@@ -223,7 +223,7 @@ class HubHeader extends StatelessWidget {
             HubStatPill(icon: KenneyAssets.vialBlue, label: '$essence'),
             HubStatPill(
               icon: KenneyAssets.iconCrown,
-              label: 'Ascend $ascensionLevel',
+              label: 'AL $ascensionLevel',
             ),
           ],
         ),

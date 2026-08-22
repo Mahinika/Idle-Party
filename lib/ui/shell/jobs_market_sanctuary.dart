@@ -136,7 +136,7 @@ class SanctuaryOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Permanent essence tracks — survive Ascend. Upgrade forever.\n'
+          'Permanent ACCOUNT tracks — survive Ascend. Upgrade forever.\n'
           'Gold Find raises Hub gold/min at the keep (ticks while you sit here — '
           'slower than a run, enough overnight to buy forge). '
           'Prestige from Lv12: reset to Lv0 (costs go cheap again), keep a '
@@ -208,7 +208,10 @@ class SanctuaryOverlay extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          MenuChrome.sectionLabel(GameLogic.sanctuaryNames[track] ?? track),
+          MenuChrome.sectionLabelScoped(
+            GameLogic.sanctuaryNames[track] ?? track,
+            scope: MenuScope.account,
+          ),
           Text(
             'Lv$level  ·  $currentBonus'
             '${prestige > 0 ? '  ·  Prestige $prestige' : ''}',
@@ -295,7 +298,7 @@ class SanctuaryOverlay extends StatelessWidget {
             const SizedBox(height: 4),
             KenneyButton(
               label: 'Prestige · keep $keepShort · +${prestigeGain}e',
-              style: KenneyButtonStyle.brown,
+              style: KenneyButtonStyle.grey,
               onPressed: () => director.prestigeSanctuaryTrack(track),
             ),
           ],
@@ -330,7 +333,7 @@ class MarketOverlay extends StatelessWidget {
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 12),
-        MenuChrome.sectionLabel('CONSUMABLES'),
+        MenuChrome.sectionLabelScoped('CONSUMABLES', scope: MenuScope.run),
         const SizedBox(height: 6),
         KenneyButton(
           label: state.gold >= flaskCost
@@ -371,7 +374,10 @@ class MarketOverlay extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        MenuChrome.sectionLabel('SELL STASH (TAP = GOLD)'),
+        MenuChrome.sectionLabelScoped(
+          'SELL STASH (TAP = GOLD)',
+          scope: MenuScope.run,
+        ),
         const SizedBox(height: 6),
         if (stash.isEmpty)
           Text(

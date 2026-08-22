@@ -218,7 +218,7 @@ class CharacterEquipPanel extends StatelessWidget {
                           const SizedBox(width: 6),
                           Text(
                             '${h.roleLabel} · L${h.level}',
-                            style: GameTheme.pixel(size: 9),
+                            style: GameTheme.body(size: 11, color: GameTheme.torchHot),
                           ),
                         ],
                       ),
@@ -291,8 +291,8 @@ class CharacterEquipPanel extends StatelessWidget {
                         radius: 0.85,
                         colors: [
                           Color(0x5540A090),
-                          Color(0xFF101820),
-                          Color(0xFF080C12),
+                          GameTheme.dollBackdropTop,
+                          GameTheme.dollBackdropBottom,
                         ],
                         stops: [0.0, 0.45, 1.0],
                       ),
@@ -388,7 +388,7 @@ class CharacterEquipPanel extends StatelessWidget {
             decoration: BoxDecoration(
               color: GameTheme.panelInset,
               borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-              border: Border.all(color: _rarityColor(selected.rarity)),
+              border: Border.all(color: itemRarityColor(selected.rarity)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,7 +399,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(
                     size: 14,
-                    color: _rarityColor(selected.rarity),
+                    color: itemRarityColor(selected.rarity),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -468,7 +468,7 @@ class CharacterEquipPanel extends StatelessWidget {
         Text(
           'HERO STATS',
           textAlign: TextAlign.center,
-          style: GameTheme.pixel(size: 7, color: GameTheme.parchmentDim),
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         Wrap(
@@ -691,8 +691,8 @@ class PaperDollSlot extends StatelessWidget {
                             bottom: 1,
                             child: Text(
                               '${item!.effectiveItemLevel}',
-                              style: GameTheme.pixel(
-                                size: 5,
+                              style: GameTheme.body(
+                                size: 9,
                                 color: GameTheme.parchment,
                               ),
                             ),
@@ -718,8 +718,8 @@ class PaperDollSlot extends StatelessWidget {
                             textAlign: TextAlign.center,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GameTheme.pixel(
-                              size: size >= 44 ? 5 : 4,
+                            style: GameTheme.body(
+                              size: 10,
                               color: GameTheme.parchmentDim,
                             ),
                           ),
@@ -738,8 +738,8 @@ class PaperDollSlot extends StatelessWidget {
                       child: Text(
                         short.length <= 4 ? short : short.substring(0, 3),
                         textAlign: TextAlign.center,
-                        style: GameTheme.pixel(
-                          size: 5,
+                        style: GameTheme.body(
+                          size: 10,
                           color: GameTheme.parchmentDim,
                         ),
                       ),
@@ -761,11 +761,3 @@ class PaperDollSlot extends StatelessWidget {
     );
   }
 }
-
-Color _rarityColor(LootRarity rarity) => switch (rarity) {
-  LootRarity.common => const Color(0xFF9A9080),
-  LootRarity.uncommon => const Color(0xFF3DD68C),
-  LootRarity.rare => const Color(0xFF4A9EFF),
-  LootRarity.epic => const Color(0xFFC060FF),
-  LootRarity.legendary => const Color(0xFFFF8C40),
-};

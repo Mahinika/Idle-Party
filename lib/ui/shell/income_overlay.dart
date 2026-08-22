@@ -33,7 +33,7 @@ class IncomeOverlay extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          MenuChrome.sectionLabel('RATES'),
+          MenuChrome.sectionLabelScoped('RATES', scope: MenuScope.account),
           Text(
             GoldIncome.hubRateLine(state),
             style: GameTheme.body(size: 15, color: GameTheme.mossLit),
@@ -50,7 +50,10 @@ class IncomeOverlay extends StatelessWidget {
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 12),
-          MenuChrome.sectionLabel('GOLD FIND'),
+          MenuChrome.sectionLabelScoped(
+            'GOLD FIND',
+            scope: MenuScope.account,
+          ),
           Container(
             padding: const EdgeInsets.all(10),
             decoration: MenuChrome.listCard(

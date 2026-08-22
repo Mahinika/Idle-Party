@@ -33,6 +33,8 @@ import 'play_games_bridge.dart';
 import 'play_games_scores.dart';
 import 'wipe_advice.dart';
 
+part 'game_logic_ascend.dart';
+
 class GameLogic {
   /// Injectable randomness for enemy targeting (seed in tests).
   static Random random = Random();
@@ -896,190 +898,8 @@ class GameLogic {
   }
 
   /// Prestige: reset the run, keep essence/relics/sanctuary/pets/Apex, bump AL.
-  /// Returns [state] unchanged if Ascend is locked.
-  static GameState ascend(GameState state, {DateTime? now}) {
-    if (!canAscend(state)) {
-      return state;
-    }
-
-    final nextLevel = state.ascensionLevel + 1;
-    final milestoneBonus = MetaSystems.ascendMilestoneReward(
-      state.ascensionLevel,
-      nextLevel,
-    );
-    final preservedRelics = List<String>.from(state.unlockedRelics);
-
-    final streak = state.metaDepth.noWipeAscendReady
-        ? state.metaDepth.ascendStreak + 1
-        : 0;
-    final bestStreak = max(state.metaDepth.bestAscendStreak, streak);
-    final streakEssence = streak > 0 && streak % 3 == 0 ? (10 + streak * 2) : 0;
-    final preservedEssence =
-        state.essence +
-        ascendEssenceReward(nextLevel) +
-        milestoneBonus +
-        streakEssence;
-    final legacyGain = (nextLevel ~/ 5) - (state.ascensionLevel ~/ 5);
-    final titles = List<String>.from(state.metaDepth.titles);
-    for (final entry in AscendTitles.byAl.entries) {
-      if (nextLevel >= entry.key && !titles.contains(entry.value)) {
-        titles.add(entry.value);
-      }
-    }
-    final trophies = List<String>.from(state.metaDepth.zoneTrophies);
-    for (final d in DungeonCatalog.all) {
-      if (d.number <= state.highestDungeonCleared && !trophies.contains(d.id)) {
-        trophies.add(d.id);
-      }
-    }
-    final unlockedSpecs = <String>{
-      ...state.metaDepth.unlockedSpecs,
-      for (final s in HeroSpecs.starterUnlocked) s.name,
-      HeroSpecs.ascendUnlockSpec.name,
-    }.toList();
-    final nextMeta = state.metaDepth.copyWith(
-      ascendStreak: streak,
-      bestAscendStreak: bestStreak,
-      lifetimeAscends: state.metaDepth.lifetimeAscends + 1,
-      titles: titles,
-      legacyPoints: state.metaDepth.legacyPoints + legacyGain,
-      heirloomAlBonus: nextLevel ~/ 5,
-      zoneTrophies: trophies,
-      noWipeAscendReady: true,
-      unlockedSpecs: unlockedSpecs,
-      ascendBlessings: state.metaDepth.ascendBlessings + 1,
-    );
-
-    final fresh = createInitialState(now: now);
-    final hmCap = Keystone.maxForAl(nextLevel);
-
-    // Preserve roster levels/XP; strip run gear but keep Apex. Combat unlocks.
-    final stashApex = [
-      for (final g in state.gearStash)
-        if (g.isApex) g,
-    ];
-    final preservedVault = [...state.apexVault, ...stashApex];
-    var preservedRoster = [
-      for (final h in state.heroRoster) h.copyWith(equipped: keepApexOnly(h)),
-    ];
-    if (!preservedRoster.any((h) => h.specId == HeroSpecs.ascendUnlockSpec)) {
-      final seedPool = preservedRoster.isNotEmpty
-          ? preservedRoster
-          : state.heroes;
-      final seedLevel = seedPool.isEmpty
-          ? 1
-          : max(
-              1,
-              seedPool.fold<int>(0, (s, h) => s + h.level) ~/ seedPool.length,
-            );
-      preservedRoster = [
-        ...preservedRoster,
-        PartyHero.starting(
-          name: HeroSpecs.def(HeroSpecs.ascendUnlockSpec).defaultName,
-          specId: HeroSpecs.ascendUnlockSpec,
-          stats: PartyHero.startingStatsForSpec(HeroSpecs.ascendUnlockSpec),
-          equipped: StarterGear.forSpec(HeroSpecs.ascendUnlockSpec),
-          level: seedLevel,
-        ),
-      ];
-    }
-    final maxActive = state.metaDepth.partySlot5Unlocked ? 5 : 4;
-    var preservedActive = [
-      for (final id in state.activeHeroIds)
-        if (preservedRoster.any((h) => h.id == id)) id,
-    ];
-    if (preservedActive.isEmpty) {
-      preservedActive = [for (final h in preservedRoster.take(maxActive)) h.id];
-    }
-
-    var withMeta = fresh.copyWith(
-      heroRoster: preservedRoster,
-      activeHeroIds: preservedActive,
-      essence: preservedEssence,
-      lifetimeGoldEarned: state.lifetimeGoldEarned,
-      unlockedRelics: preservedRelics,
-      ascensionLevel: nextLevel,
-      // Size board off post-Ascend progress (HFC resets) — not pre-Ascend depth.
-      missions: createMissionBoardFor(
-        state.copyWith(ascensionLevel: nextLevel, highestFloorCleared: 0),
-      ),
-      activePet: state.activePet,
-      ownedPets: List<Pet>.from(state.ownedPets),
-      sanctuaryGoldLevel: state.sanctuaryGoldLevel,
-      sanctuaryPowerLevel: state.sanctuaryPowerLevel,
-      sanctuaryVitalityLevel: state.sanctuaryVitalityLevel,
-      metaDepth: nextMeta,
-      dungeonMode: state.dungeonMode,
-      highestFloorCleared: 0,
-      highestDungeonCleared: state.highestDungeonCleared,
-      inDungeon: false,
-      soulboundFragments: state.soulboundFragments,
-      soulboundItem: state.soulboundItem == null
-          ? null
-          : scaleSoulboundForAl(state.soulboundItem!, nextLevel),
-      craftMaterials: Map<String, int>.from(state.craftMaterials),
-      craftPity: Map<String, int>.from(state.craftPity),
-      apexVault: preservedVault,
-      godHandLevel: state.godHandLevel,
-      soundMuted: state.soundMuted,
-      vfxQuality: state.vfxQuality,
-      autoSellMaxPower: state.autoSellMaxPower,
-      autoSellMaxRarity: state.autoSellMaxRarity,
-      autoDisassembleMaxIlvl: state.autoDisassembleMaxIlvl,
-      autoDisassembleMaxRarity: state.autoDisassembleMaxRarity,
-      rogueUnlocked: true,
-      seenTips: [
-        for (final t in state.seenTips)
-          if (t != 'post_ascend') t,
-      ],
-      // Gear was wiped — presets would only hold dead item ids.
-      loadouts: const <GearLoadout>[],
-      achievements: List<String>.from(state.achievements),
-      codexEnemies: List<String>.from(state.codexEnemies),
-      codexItems: List<String>.from(state.codexItems),
-      challengeBossRush: state.challengeBossRush,
-      challengeNoFlask: state.challengeNoFlask,
-      hardmodeLevel: state.hardmodeLevel.clamp(0, hmCap),
-      keystoneRunActive: false,
-      keystoneRunLevel: 0,
-      keystoneTimerMs: 0,
-      keystoneParMs: 0,
-      keystoneRunAffixes: const <String>[],
-      keystoneOutcome: '',
-      colorblindMode: state.colorblindMode,
-      uiTextScale: state.uiTextScale,
-      dungeonZoom: state.dungeonZoom,
-      hapticsEnabled: state.hapticsEnabled,
-      keepScreenAwake: state.keepScreenAwake,
-      lastDailyDate: state.lastDailyDate,
-      dailyClaimed: state.dailyClaimed,
-      seenChangelogVersion: state.seenChangelogVersion,
-      lastUpdated: now ?? DateTime.now(),
-      clearEquipped: true,
-      wipeStreakKey: '',
-      wipeStreakCount: 0,
-      wipeAdviceLine: '',
-    );
-    withMeta = ensureRogueHero(withMeta);
-    withMeta = syncSpecUnlocks(withMeta);
-    withMeta = withMeta.copyWith(
-      heroes: withMeta.heroes
-          .map(
-            (hero) =>
-                hero.copyWith(currentHp: withMeta.effectiveHeroMaxHp(hero)),
-          )
-          .toList(),
-    );
-    withMeta = ensureWeeklyContract(withMeta, now: now);
-    withMeta = MetaSystems.evaluateAchievements(withMeta);
-    withMeta = syncMetaPayoffs(withMeta);
-    // Point hub ENTER at frontier / deepest unlocked — not always Sandy.
-    final recommend = recommendedDungeonId(withMeta);
-    if (recommend != withMeta.dungeonId) {
-      withMeta = withMeta.copyWith(dungeonId: recommend);
-    }
-    return withMeta;
-  }
+  static GameState ascend(GameState state, {DateTime? now}) =>
+      _ascendGameState(state, now: now);
 
   /// Mean level used when seeding a newly unlocked roster hero.
   static int rosterSeedLevel(GameState state) {
@@ -2088,8 +1908,10 @@ class GameLogic {
     final key = wipeFloorKey(state);
     final count = state.wipeStreakKey == key ? state.wipeStreakCount + 1 : 1;
     var line = '';
-    if (count >= WipeAdvice.streakNeeded) {
-      line = WipeAdvice.lineFor(state: state, fight: fight) ?? '';
+    final advice = WipeAdvice.lineFor(state: state, fight: fight);
+    if (advice != null &&
+        (WipeAdvice.isImmediate(advice) || count >= WipeAdvice.streakNeeded)) {
+      line = advice;
     }
     return state.copyWith(
       wipeStreakKey: key,

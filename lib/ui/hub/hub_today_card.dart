@@ -9,14 +9,25 @@ import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 
 class HubMetaPulse extends StatelessWidget {
-  const HubMetaPulse({super.key, required this.state, required this.chaseKind});
+  const HubMetaPulse({
+    super.key,
+    required this.state,
+    required this.chaseKind,
+    this.chaseUrgency = HubChaseUrgency.normal,
+  });
 
   final GameState state;
   final HubChaseKind chaseKind;
+  final HubChaseUrgency chaseUrgency;
 
   @override
   Widget build(BuildContext context) {
     if (!GameLogic.showDailyChase(state)) {
+      return const SizedBox(height: 4);
+    }
+    // READY / ALMOST already owns the strip — skip competing KEY/vault crumbs.
+    if (chaseUrgency == HubChaseUrgency.ready ||
+        chaseUrgency == HubChaseUrgency.almost) {
       return const SizedBox(height: 4);
     }
     final bits = <String>[];
@@ -144,7 +155,7 @@ class HubTodayCard extends StatelessWidget {
               const SizedBox(width: 6),
               KenneyButton(
                 label: actionLabel!,
-                style: KenneyButtonStyle.brown,
+                style: KenneyButtonStyle.grey,
                 expanded: false,
                 onPressed: onAction,
               ),
@@ -249,7 +260,9 @@ class HubUrgentRow extends StatelessWidget {
                 Expanded(
                   child: KenneyButton(
                     label: 'CLAIM ($claimable)',
-                    style: KenneyButtonStyle.brown,
+                    style: showVault
+                        ? KenneyButtonStyle.grey
+                        : KenneyButtonStyle.brown,
                     onPressed: onContracts,
                   ),
                 ),

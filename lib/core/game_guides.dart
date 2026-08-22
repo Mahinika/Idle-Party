@@ -9,6 +9,9 @@ abstract final class GameGuides {
           '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
           '• Watch them clear rooms. Tap the map (God Hand) when you want to help.\n'
           '• TODAY on the hub always names the next job — start there.\n'
+          '• Three buckets: RUN (this Ascend — dungeon + FORGE gold), TODAY '
+          '(claims — vault, jobs, daily), ACCOUNT (forever — essence, Apex, '
+          'Blessing, CAMP tracks).\n'
           '• Gold buys supplies and run power. Essence buys lasting power.\n'
           '• Bottom buttons (same in hub and dungeon): PARTY (heroes and gear), '
           'POWER (upgrades), META (extras and Guides), HUB (home).\n'
@@ -153,7 +156,7 @@ abstract final class GameGuides {
       id: 'income',
       title: 'INCOME',
       body:
-          'POWER → INCOME.\n\n'
+          'POWER → INCOME (ACCOUNT hub gold).\n\n'
           'Your incremental dashboard: Hub gold/min, Run gold/min (from real '
           'loot in the last couple of minutes), gold % multipliers, and Gold Find '
           '— the keep generator that raises Hub rate.\n\n'
@@ -165,7 +168,7 @@ abstract final class GameGuides {
       id: 'forge',
       title: 'FORGE',
       body:
-          'POWER → FORGE.\n\n'
+          'POWER → FORGE — RUN gold (GOLD tab) vs ACCOUNT forever (KEEP, APEX).\n\n'
           'Tabs:\n'
           '• GOLD — spend gold this run. ATK/DEF/STA/MOVE/HASTE/CRIT. '
           'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
@@ -313,12 +316,11 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'loadouts',
-      title: 'LOADOUTS',
+      title: 'GEAR PRESETS (hidden)',
       body:
-          'PARTY → LOADOUTS is hidden — named gear presets were unused.\n\n'
-          '• Old saves still keep any stored presets (they reset on Ascend).\n'
-          '• Swap who is fighting in PARTY → ROSTER.\n'
-          '• Armor sets (2pc/4pc) are dungeon bonuses, not presets.',
+          'Named LOADOUTS were removed — swap gear in PARTY → GEAR / BAG.\n\n'
+          '• Armor sets (2pc/4pc) are dungeon bonuses on rare+ zone gear.\n'
+          '• Old saves may still hold preset data until Ascend resets it.',
     ),
     GuideTopic(
       id: 'armor_sets',

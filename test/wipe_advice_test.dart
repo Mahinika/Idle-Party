@@ -18,20 +18,34 @@ void main() {
     elapsedSec: 20,
   );
 
-  test('no line until three wipes on the same floor', () {
+  test('FORGE tip after two wipes; floor gap on first wipe', () {
     var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      highestFloorCleared: 2,
+      currentRoom: state.currentRoom.copyWith(floorNumber: 6),
+    );
+    const farFight = WipeFightSnapshot(
+      waveHp: 5000,
+      remainingHp: 3000,
+      damageDealt: 800,
+      damageTaken: 400,
+      partyMaxHp: 400,
+      elapsedSec: 12,
+    );
+    state = GameLogic.notePartyWipe(state, farFight);
+    expect(state.wipeStreakCount, 1);
+    expect(state.wipeAdviceLine, 'This floor is too far — retry a lower floor');
+
+    state = GameLogic.createInitialState(now: now);
     state = GameLogic.notePartyWipe(state, atkLack());
     expect(state.wipeStreakCount, 1);
     expect(state.wipeAdviceLine, '');
     state = GameLogic.notePartyWipe(state, atkLack());
     expect(state.wipeStreakCount, 2);
-    expect(state.wipeAdviceLine, '');
-    state = GameLogic.notePartyWipe(state, atkLack());
-    expect(state.wipeStreakCount, 3);
     expect(state.wipeAdviceLine, 'Upgrade ATK in FORGE');
   });
 
-  test('melted pack points at DEF, not ATK', () {
+  test('melted pack points at DEF on first wipe', () {
     const fight = WipeFightSnapshot(
       waveHp: 8000,
       remainingHp: 6000,
@@ -40,11 +54,9 @@ void main() {
       partyMaxHp: 400,
       elapsedSec: 4,
     );
-    final state = GameLogic.createInitialState(now: now);
-    expect(
-      WipeAdvice.lineFor(state: state, fight: fight),
-      'Upgrade DEF in FORGE',
-    );
+    var state = GameLogic.createInitialState(now: now);
+    state = GameLogic.notePartyWipe(state, fight);
+    expect(state.wipeAdviceLine, 'Upgrade DEF in FORGE');
   });
 
   test('almost-cleared chip death points at STA', () {
@@ -111,6 +123,7 @@ void main() {
 
   test('a different floor restarts the streak', () {
     var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(highestFloorCleared: 8);
     state = GameLogic.notePartyWipe(state, atkLack());
     state = GameLogic.notePartyWipe(state, atkLack());
     state = state.copyWith(
@@ -200,6 +213,17 @@ void main() {
     expect(
       MenuRouter.visiblePartyTabs(veteran),
       isNot(contains(PartyTab.loadouts)),
+    );
+  });
+
+  test('God Hand hint after two wipes on same floor', () {
+    var state = GameLogic.createInitialState(now: now);
+    expect(WipeAdvice.godHandHintFor(state), isNull);
+    state = GameLogic.notePartyWipe(state, atkLack());
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(
+      WipeAdvice.godHandHintFor(state),
+      contains('God Hand'),
     );
   });
 }

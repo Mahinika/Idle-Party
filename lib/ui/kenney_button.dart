@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'game_theme.dart';
 import 'web_click_bridge.dart';
 
-enum KenneyButtonStyle { brown, grey, red }
+enum KenneyButtonStyle { brown, grey, red, ghost }
 
 class KenneyButton extends StatelessWidget {
   const KenneyButton({
@@ -49,6 +49,13 @@ class KenneyButton extends StatelessWidget {
       border: GameTheme.bloodLit.withValues(alpha: 0.85),
       text: GameTheme.torchHot,
       glow: GameTheme.bloodLit.withValues(alpha: 0.2),
+    ),
+    KenneyButtonStyle.ghost => (
+      top: GameTheme.panelInset.withValues(alpha: 0.55),
+      bottom: GameTheme.panelInset.withValues(alpha: 0.35),
+      border: GameTheme.border.withValues(alpha: 0.75),
+      text: GameTheme.torchHot,
+      glow: Colors.transparent,
     ),
   };
 

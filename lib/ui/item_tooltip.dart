@@ -12,19 +12,19 @@ import 'game_theme.dart';
 
 /// Classic WoW-style rarity name colors.
 Color itemRarityColor(LootRarity rarity) => switch (rarity) {
-  LootRarity.common => const Color(0xFFFFFFFF),
-  LootRarity.uncommon => const Color(0xFF1EFF00),
-  LootRarity.rare => const Color(0xFF0070DD),
-  LootRarity.epic => const Color(0xFFA335EE),
-  LootRarity.legendary => const Color(0xFFFF8000),
+  LootRarity.common => GameTheme.tooltipCommon,
+  LootRarity.uncommon => GameTheme.tooltipUncommon,
+  LootRarity.rare => GameTheme.tooltipRare,
+  LootRarity.epic => GameTheme.tooltipEpic,
+  LootRarity.legendary => GameTheme.tooltipLegendary,
 };
 
 Color itemRarityBorder(LootRarity rarity) => switch (rarity) {
-  LootRarity.common => const Color(0xFF9D9D9D),
-  LootRarity.uncommon => const Color(0xFF1EFF00),
-  LootRarity.rare => const Color(0xFF0070DD),
-  LootRarity.epic => const Color(0xFFA335EE),
-  LootRarity.legendary => const Color(0xFFFF8000),
+  LootRarity.common => GameTheme.tooltipBorderCommon,
+  LootRarity.uncommon => GameTheme.tooltipUncommon,
+  LootRarity.rare => GameTheme.tooltipRare,
+  LootRarity.epic => GameTheme.tooltipEpic,
+  LootRarity.legendary => GameTheme.tooltipLegendary,
 };
 
 /// WoW-inspired item tooltip body (dark panel, rarity name, stacked stats).
@@ -44,9 +44,9 @@ class ItemTooltipCard extends StatelessWidget {
   final List<EquipmentItem>? pairingStash;
   final bool compact;
 
-  static const _green = Color(0xFF1EFF00);
-  static const _red = Color(0xFFFF4040);
-  static const _gold = Color(0xFFFFD100);
+  static const _green = GameTheme.tooltipStatUp;
+  static const _red = GameTheme.tooltipStatDown;
+  static const _gold = GameTheme.tooltipGold;
 
   @override
   Widget build(BuildContext context) {
@@ -58,8 +58,6 @@ class ItemTooltipCard extends StatelessWidget {
         : item.id.startsWith('soulbound_')
         ? 'Heirloom (legacy)'
         : 'Binds when equipped';
-    final gold = GameLogic.equipmentGoldValue(item);
-    final essence = GameLogic.equipmentEssenceValue(item);
 
     EquipmentItem? worn;
     var intoSlot = item.slot;
@@ -333,14 +331,16 @@ class ItemTooltipCard extends StatelessWidget {
                     ),
                   ),
                 ],
-                const SizedBox(height: 6),
-                Text(
-                  'Sell: $gold gold · Scrap: $essence essence',
-                  style: GameTheme.body(
-                    size: 11,
-                    color: GameTheme.parchmentDim,
+                if (!alreadyEquipped) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    'BAG → CLEAN or FILTERS clears junk',
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -515,8 +515,8 @@ class _StatCompareRow extends StatelessWidget {
   final int? delta;
   final bool emphasizeDelta;
 
-  static const _green = Color(0xFF1EFF00);
-  static const _red = Color(0xFFFF4040);
+  static const _green = GameTheme.tooltipStatUp;
+  static const _red = GameTheme.tooltipStatDown;
 
   @override
   Widget build(BuildContext context) {

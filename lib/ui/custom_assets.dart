@@ -1,4 +1,5 @@
 import '../models/hero_spec.dart';
+import '../spatial/tile_map.dart' show MapPropKind;
 
 /// Original Idle Party art (AI-generated pixel icons/portraits).
 /// Prefer these for identity; fall back to Kenney for world tiles.
@@ -340,4 +341,131 @@ abstract final class CustomAssets {
   static const String enemyEmberMite = '$_root/enemies/ember_mite.png';
   static const String enemyBossGrove = '$_root/enemies/boss_grove.png';
   static const String enemyGroveMite = '$_root/enemies/grove_mite.png';
+
+  // —— Custom dungeon interiors (docs/DUNGEON_ART.md) ——
+  static const String _dungeonRoot = '$_root/dungeon';
+
+  /// Shipped zones with owned floor/wall/prop art (Kenney tiny_dungeon fallback off).
+  static const Set<String> customDungeonZones = {
+    'sandy',
+    'goblin',
+    'king',
+    'underworld',
+    'dead',
+    'hell',
+    'crystal',
+    'tide',
+    'ember',
+    'grove',
+    'storm',
+    'rime',
+    'fen',
+    'brass',
+    'veil',
+  };
+
+  static const List<String> _dungeonCoreTiles = [
+    'floor_a',
+    'floor_b',
+    'wall_a',
+    'wall_b',
+    'stairs',
+    'stairs_boss',
+    'door_closed',
+    'door_open',
+  ];
+
+  static const List<String> _dungeonPropFiles = [
+    'barrel',
+    'crate',
+    'table',
+    'stool',
+    'torch',
+    'torch_alt',
+    'gravestone',
+    'fountain',
+    'trap',
+    'pot',
+    'bones',
+    'skull',
+    'hatch',
+    'water',
+    'lava',
+    'anvil',
+    'shelf',
+    'fence',
+    'pillar',
+    'rubble',
+    'chest',
+  ];
+
+  static bool usesCustomDungeonArt(String dungeonId) =>
+      customDungeonZones.contains(dungeonId);
+
+  static Iterable<String> get customDungeonAssetPaths sync* {
+    for (final zoneId in customDungeonZones) {
+      yield* dungeonAssetPathsFor(zoneId);
+    }
+  }
+
+  static String dungeonZoneRoot(String zoneId) => '$_dungeonRoot/$zoneId';
+
+  static String dungeonTile(String zoneId, String name) =>
+      '${dungeonZoneRoot(zoneId)}/tiles/$name.png';
+
+  static String dungeonHubIcon(String zoneId) =>
+      '${dungeonZoneRoot(zoneId)}/hub_icon.png';
+
+  static List<String> dungeonFloorVariants(String zoneId) => [
+    dungeonTile(zoneId, 'floor_a'),
+    dungeonTile(zoneId, 'floor_b'),
+    dungeonTile(zoneId, 'floor_a'),
+  ];
+
+  static List<String> dungeonWallVariants(String zoneId) => [
+    dungeonTile(zoneId, 'wall_a'),
+    dungeonTile(zoneId, 'wall_b'),
+    dungeonTile(zoneId, 'wall_a'),
+  ];
+
+  static String dungeonPropFile(MapPropKind kind) => switch (kind) {
+    MapPropKind.torchAlt => 'torch_alt.png',
+    _ => '${kind.name}.png',
+  };
+
+  static List<String> dungeonAssetPathsFor(String zoneId) {
+    if (!customDungeonZones.contains(zoneId)) return const [];
+    final root = dungeonZoneRoot(zoneId);
+    return [
+      for (final name in _dungeonCoreTiles) '$root/tiles/$name.png',
+      '$root/hub_icon.png',
+      for (final file in _dungeonPropFiles) '$root/props/$file.png',
+    ];
+  }
+
+  /// Tide showcase aliases (tests / docs).
+  static List<String> get tideDungeonAssetPaths => dungeonAssetPathsFor('tide');
+  static String get tidePropWater =>
+      '${dungeonZoneRoot('tide')}/props/water.png';
+
+  /// Owned prop sprite for [dungeonId], or null → Kenney fallback.
+  static String? dungeonPropPath(String dungeonId, MapPropKind kind) {
+    if (!usesCustomDungeonArt(dungeonId)) return null;
+    return '${dungeonZoneRoot(dungeonId)}/props/${dungeonPropFile(kind)}';
+  }
+
+  static String? dungeonExitPath(String dungeonId, {required bool boss}) {
+    if (!usesCustomDungeonArt(dungeonId)) return null;
+    return dungeonTile(dungeonId, boss ? 'stairs_boss' : 'stairs');
+  }
+
+  static String? dungeonGatePath(String dungeonId, {required bool open}) {
+    if (!usesCustomDungeonArt(dungeonId)) return null;
+    return dungeonTile(dungeonId, open ? 'door_open' : 'door_closed');
+  }
+
+  static String? dungeonHubIconPath(String dungeonId) {
+    if (!usesCustomDungeonArt(dungeonId)) return null;
+    return dungeonHubIcon(dungeonId);
+  }
 }

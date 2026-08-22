@@ -46,7 +46,7 @@ class HubPowerupsCard extends StatelessWidget {
               onTap: onOpen,
               borderRadius: BorderRadius.circular(GameTheme.radiusSm),
               child: Ink(
-                decoration: MenuChrome.cardBox(selected: active),
+                decoration: MenuChrome.hubPanel(selected: active),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     minHeight: GameTheme.minTouch,

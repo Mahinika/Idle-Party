@@ -93,6 +93,9 @@ class ZoneArtDef {
     this.treasureAlcoveChance = 0.0,
     this.normalRoomChestChance = 0.0,
     this.landmarkPerChamber = 1,
+    this.customDungeonArt = false,
+    this.clutterDensity = 0.12,
+    this.clutterPerChamberMin = 6,
   }) : _floorVariants = floorVariants,
        _wall = wall,
        _corridorShade = corridorShade;
@@ -137,6 +140,11 @@ class ZoneArtDef {
   final double treasureAlcoveChance;
   final double normalRoomChestChance;
   final int landmarkPerChamber;
+
+  /// Owned tiles/props (`assets/custom/dungeon/`) — less random clutter.
+  final bool customDungeonArt;
+  final double clutterDensity;
+  final int clutterPerChamberMin;
 
   final ZoneEnemyArt enemies;
 
@@ -200,18 +208,53 @@ abstract final class ZoneArt {
     MapPropKind.chest,
   ];
 
+  /// Owned dungeon tiles/props/hub icon (`assets/custom/dungeon/<id>/`).
+  static ZoneArtDef _customZone({
+    required String id,
+    required List<MapPropKind> props,
+    required List<MapPropKind> landmarks,
+    required Color ambient,
+    required Color wash,
+    required Color floorBlend,
+    required Color projectileTint,
+    required ZoneEnemyArt enemies,
+    String? wall,
+    Color? corridorShade,
+    bool preferChoke = false,
+    bool preferTreasureAlcove = false,
+    double treasureAlcoveChance = 0.0,
+    double normalRoomChestChance = 0.0,
+    int landmarkPerChamber = 1,
+  }) =>
+      ZoneArtDef(
+        id: id,
+        customDungeonArt: true,
+        clutterDensity: 0.08,
+        clutterPerChamberMin: 4,
+        floor: CustomAssets.dungeonTile(id, 'floor_a'),
+        floorVariants: CustomAssets.dungeonFloorVariants(id),
+        wallVariants: CustomAssets.dungeonWallVariants(id),
+        hubIcon: CustomAssets.dungeonHubIcon(id),
+        props: props,
+        landmarks: landmarks,
+        ambient: ambient,
+        wash: wash,
+        floorBlend: floorBlend,
+        projectileTint: projectileTint,
+        enemies: enemies,
+        wall: wall,
+        corridorShade: corridorShade,
+        preferChoke: preferChoke,
+        preferTreasureAlcove: preferTreasureAlcove,
+        treasureAlcoveChance: treasureAlcoveChance,
+        normalRoomChestChance: normalRoomChestChance,
+        landmarkPerChamber: landmarkPerChamber,
+      );
+
   // Not const: some Kenney tile paths resolve through getters.
   static final Map<String, ZoneArtDef> _byId = {
-    'sandy': ZoneArtDef(
+    'sandy': _customZone(
       id: 'sandy',
-      floor: KenneyAssets.floorSand,
-      floorVariants: [
-        KenneyAssets.floorSand,
-        KenneyAssets.floorSand,
-        KenneyAssets.floorSand,
-        KenneyAssets.floorSandWorn,
-      ],
-      wallVariants: [KenneyAssets.wallStone],
       props: [
         MapPropKind.barrel,
         MapPropKind.barrel,
@@ -228,7 +271,6 @@ abstract final class ZoneArt {
         MapPropKind.torchAlt,
       ],
       landmarks: [MapPropKind.hatch, MapPropKind.crate, MapPropKind.barrel],
-      hubIcon: KenneyAssets.hatch,
       ambient: Color(0xFF0C0A08),
       wash: Color(0x44C88840),
       floorBlend: Color(0x66A07038),
@@ -246,22 +288,9 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyCultist,
       ),
     ),
-    'goblin': ZoneArtDef(
+    'goblin': _customZone(
       id: 'goblin',
       // Worn dirt (not Underworld's detail tile) + boarded door rims.
-      floor: KenneyAssets.floorDirt,
-      floorVariants: [
-        KenneyAssets.floorDirt,
-        KenneyAssets.floorDirt,
-        KenneyAssets.floorDirtAlt1,
-        KenneyAssets.floorDirtAlt2,
-      ],
-      wallVariants: [
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStone,
-        KenneyAssets.doorClosed,
-        KenneyAssets.wallStone,
-      ],
       props: [
         MapPropKind.barrel,
         MapPropKind.barrel,
@@ -284,7 +313,6 @@ abstract final class ZoneArt {
         MapPropKind.skull,
         MapPropKind.torch,
       ],
-      hubIcon: KenneyAssets.doorClosed,
       ambient: Color(0xFF0A0C09),
       wash: Color(0x3A28A050),
       floorBlend: Color(0x5A284828),
@@ -307,16 +335,9 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyGhost,
       ),
     ),
-    'king': ZoneArtDef(
+    'king': _customZone(
       id: 'king',
-      floor: KenneyAssets.floorStone,
       wall: KenneyAssets.wallBanner,
-      wallVariants: [
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStone,
-        KenneyAssets.wallBanner,
-      ],
       props: [
         MapPropKind.torch,
         MapPropKind.torch,
@@ -337,7 +358,6 @@ abstract final class ZoneArt {
         MapPropKind.table,
         MapPropKind.chest,
       ],
-      hubIcon: KenneyAssets.wallBanner,
       ambient: Color(0xFF080A10),
       wash: Color(0x3A3060A0),
       floorBlend: Color(0x5A203048),
@@ -355,10 +375,8 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyCultist,
       ),
     ),
-    'underworld': ZoneArtDef(
+    'underworld': _customZone(
       id: 'underworld',
-      floor: KenneyAssets.floorDirtDetail,
-      wallVariants: [KenneyAssets.wallStone],
       props: [
         MapPropKind.torch,
         MapPropKind.torch,
@@ -378,7 +396,6 @@ abstract final class ZoneArt {
         MapPropKind.torchAlt,
         MapPropKind.pillar,
       ],
-      hubIcon: KenneyAssets.stairs,
       ambient: Color(0xFF0A0810),
       wash: Color(0x447040B0),
       floorBlend: Color(0x66281840),
@@ -397,14 +414,8 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyCultist,
       ),
     ),
-    'dead': ZoneArtDef(
+    'dead': _customZone(
       id: 'dead',
-      floor: KenneyAssets.floorStone,
-      wallVariants: [
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStone,
-        KenneyAssets.wallBannerAlt,
-      ],
       props: [
         MapPropKind.gravestone,
         MapPropKind.gravestone,
@@ -424,7 +435,6 @@ abstract final class ZoneArt {
         MapPropKind.skull,
         MapPropKind.fence,
       ],
-      hubIcon: KenneyAssets.gravestone,
       ambient: Color(0xFF070908),
       wash: Color(0x3A305040),
       floorBlend: Color(0x5A182028),
@@ -443,20 +453,8 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyCultist,
       ),
     ),
-    'hell': ZoneArtDef(
+    'hell': _customZone(
       id: 'hell',
-      floor: KenneyAssets.floorSand,
-      floorVariants: [
-        KenneyAssets.floorSand,
-        KenneyAssets.floorSand,
-        KenneyAssets.floorSand,
-        KenneyAssets.floorSandWorn,
-      ],
-      wallVariants: [
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStone,
-        KenneyAssets.wallBanner,
-      ],
       props: [
         MapPropKind.torch,
         MapPropKind.torchAlt,
@@ -476,7 +474,6 @@ abstract final class ZoneArt {
         MapPropKind.bones,
         MapPropKind.torch,
       ],
-      hubIcon: KenneyAssets.doorOpen,
       ambient: Color(0xFF120606),
       wash: Color(0x4CA02018),
       floorBlend: Color(0x6A401010),
@@ -495,10 +492,8 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyCultist,
       ),
     ),
-    'crystal': ZoneArtDef(
+    'crystal': _customZone(
       id: 'crystal',
-      floor: KenneyAssets.floorStone,
-      wallVariants: [KenneyAssets.wallStone, KenneyAssets.wallStoneAlt1],
       props: [
         MapPropKind.torch,
         MapPropKind.fountain,
@@ -517,7 +512,6 @@ abstract final class ZoneArt {
         MapPropKind.fountain,
         MapPropKind.chest,
       ],
-      hubIcon: KenneyAssets.doorVariant,
       ambient: Color(0xFF081018),
       wash: Color(0x4450A0F0),
       floorBlend: Color(0x5A183050),
@@ -536,19 +530,8 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyCrystalWraith,
       ),
     ),
-    'tide': ZoneArtDef(
+    'tide': _customZone(
       id: 'tide',
-      floor: KenneyAssets.floorDirtDetail,
-      floorVariants: [
-        KenneyAssets.floorDirtDetail,
-        KenneyAssets.floorDirt,
-        KenneyAssets.floorDirtDetail,
-      ],
-      wallVariants: [
-        KenneyAssets.wallStoneAlt1,
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStoneAlt1,
-      ],
       props: [
         MapPropKind.water,
         MapPropKind.water,
@@ -557,11 +540,9 @@ abstract final class ZoneArt {
         MapPropKind.fountain,
         MapPropKind.fountain,
         MapPropKind.barrel,
-        MapPropKind.barrel,
         MapPropKind.hatch,
         MapPropKind.pot,
         MapPropKind.pillar,
-        MapPropKind.stool,
       ],
       landmarks: [
         MapPropKind.water,
@@ -569,12 +550,12 @@ abstract final class ZoneArt {
         MapPropKind.fountain,
         MapPropKind.pillar,
       ],
-      hubIcon: KenneyAssets.doorClosed,
       ambient: Color(0xFF02141A),
       wash: Color(0x5020B8A0),
       floorBlend: Color(0x5A146878),
       projectileTint: Color(0xFF38D0B8),
       corridorShade: Color(0x38001820),
+      preferChoke: true,
       preferTreasureAlcove: true,
       treasureAlcoveChance: 0.36,
       normalRoomChestChance: 0.16,
@@ -591,20 +572,10 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyCrab,
       ),
     ),
-    'ember': ZoneArtDef(
+    'ember': _customZone(
       id: 'ember',
-      floor: KenneyAssets.floorStone,
-      floorVariants: [
-        KenneyAssets.floorStone,
-        KenneyAssets.floorStone,
-        KenneyAssets.floorSandWorn,
-      ],
-      wallVariants: [
-        KenneyAssets.wallStone,
-        KenneyAssets.wallBanner,
-        KenneyAssets.wallBanner,
-      ],
       props: [
+        MapPropKind.lava,
         MapPropKind.lava,
         MapPropKind.lava,
         MapPropKind.lava,
@@ -614,19 +585,17 @@ abstract final class ZoneArt {
         MapPropKind.torchAlt,
         MapPropKind.torchAlt,
         MapPropKind.pillar,
-        MapPropKind.bones,
-        MapPropKind.rubble,
         MapPropKind.skull,
+        MapPropKind.rubble,
       ],
       landmarks: [
         MapPropKind.lava,
+        MapPropKind.lava,
         MapPropKind.anvil,
         MapPropKind.skull,
-        MapPropKind.pillar,
       ],
-      hubIcon: KenneyAssets.hatch,
       ambient: Color(0xFF160A02),
-      wash: Color(0x52E08820),
+      wash: Color(0x58E08820),
       floorBlend: Color(0x5A503010),
       projectileTint: Color(0xFFE89830),
       corridorShade: Color(0x3C100800),
@@ -645,26 +614,15 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyCultist,
       ),
     ),
-    'grove': ZoneArtDef(
+    'grove': _customZone(
       id: 'grove',
-      floor: KenneyAssets.floorDirtDetail,
-      floorVariants: [
-        KenneyAssets.floorDirt,
-        KenneyAssets.floorDirtDetail,
-        KenneyAssets.floorDirt,
-      ],
-      wallVariants: [
-        KenneyAssets.wallStoneAlt1,
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStone,
-      ],
       props: [
+        MapPropKind.fence,
         MapPropKind.fence,
         MapPropKind.fence,
         MapPropKind.pot,
         MapPropKind.pot,
         MapPropKind.fountain,
-        MapPropKind.bones,
         MapPropKind.bones,
         MapPropKind.rubble,
         MapPropKind.shelf,
@@ -674,13 +632,12 @@ abstract final class ZoneArt {
       ],
       landmarks: [
         MapPropKind.fence,
+        MapPropKind.fence,
         MapPropKind.pot,
-        MapPropKind.bones,
         MapPropKind.fountain,
       ],
-      hubIcon: KenneyAssets.chestClosed,
       ambient: Color(0xFF041208),
-      wash: Color(0x5048A838),
+      wash: Color(0x5848A838),
       floorBlend: Color(0x5A1E3820),
       projectileTint: Color(0xFF58B050),
       corridorShade: Color(0x38081008),
@@ -699,47 +656,36 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyBat,
       ),
     ),
-    'storm': ZoneArtDef(
+    'storm': _customZone(
       id: 'storm',
-      floor: KenneyAssets.floorStone,
-      floorVariants: [
-        KenneyAssets.floorStone,
-        KenneyAssets.floorStone,
-        KenneyAssets.floorStoneAlt1,
-      ],
-      wallVariants: [
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStone,
-        KenneyAssets.wallBanner,
-      ],
       props: [
+        MapPropKind.trap,
+        MapPropKind.trap,
         MapPropKind.torch,
         MapPropKind.torch,
         MapPropKind.torchAlt,
         MapPropKind.torchAlt,
-        MapPropKind.rubble,
-        MapPropKind.rubble,
         MapPropKind.pillar,
+        MapPropKind.pillar,
+        MapPropKind.rubble,
         MapPropKind.fence,
         MapPropKind.crate,
-        MapPropKind.barrel,
-        MapPropKind.trap,
         MapPropKind.bones,
       ],
       landmarks: [
-        MapPropKind.torch,
+        MapPropKind.trap,
         MapPropKind.torchAlt,
         MapPropKind.pillar,
-        MapPropKind.trap,
+        MapPropKind.torch,
       ],
-      hubIcon: KenneyAssets.torch,
       ambient: Color(0xFF0A0614),
-      wash: Color(0x4A8040D0),
+      wash: Color(0x528040D0),
       floorBlend: Color(0x5A281848),
       projectileTint: Color(0xFFE8E040),
       corridorShade: Color(0x3A100828),
       preferChoke: true,
       normalRoomChestChance: 0.08,
+      landmarkPerChamber: 2,
       enemies: ZoneEnemyArt(
         boss: CustomAssets.enemyBossStorm,
         elite: CustomAssets.enemyBat,
@@ -751,19 +697,8 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyCultist,
       ),
     ),
-    'rime': ZoneArtDef(
+    'rime': _customZone(
       id: 'rime',
-      floor: KenneyAssets.floorDirtDetail,
-      floorVariants: [
-        KenneyAssets.floorDirtDetail,
-        KenneyAssets.floorDirtDetail,
-        KenneyAssets.floorDirt,
-      ],
-      wallVariants: [
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStoneAlt1,
-        KenneyAssets.wallStone,
-      ],
       props: [
         MapPropKind.fountain,
         MapPropKind.fountain,
@@ -785,7 +720,6 @@ abstract final class ZoneArt {
         MapPropKind.chest,
         MapPropKind.water,
       ],
-      hubIcon: KenneyAssets.stairs,
       ambient: Color(0xFF041018),
       wash: Color(0x4860D8E0),
       floorBlend: Color(0x5A184860),
@@ -806,19 +740,8 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyGhost,
       ),
     ),
-    'fen': ZoneArtDef(
+    'fen': _customZone(
       id: 'fen',
-      floor: KenneyAssets.floorDirt,
-      floorVariants: [
-        KenneyAssets.floorDirt,
-        KenneyAssets.floorDirt,
-        KenneyAssets.floorDirtDetail,
-      ],
-      wallVariants: [
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStoneAlt1,
-      ],
       props: [
         MapPropKind.water,
         MapPropKind.water,
@@ -839,7 +762,6 @@ abstract final class ZoneArt {
         MapPropKind.bones,
         MapPropKind.trap,
       ],
-      hubIcon: KenneyAssets.fountainSlime,
       ambient: Color(0xFF0C1404),
       wash: Color(0x48B0C028),
       floorBlend: Color(0x5A3A4810),
@@ -858,19 +780,8 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyCultist,
       ),
     ),
-    'brass': ZoneArtDef(
+    'brass': _customZone(
       id: 'brass',
-      floor: KenneyAssets.floorStone,
-      floorVariants: [
-        KenneyAssets.floorStone,
-        KenneyAssets.floorStone,
-        KenneyAssets.floorStoneAlt1,
-      ],
-      wallVariants: [
-        KenneyAssets.wallStone,
-        KenneyAssets.wallBanner,
-        KenneyAssets.wallStone,
-      ],
       props: [
         MapPropKind.anvil,
         MapPropKind.anvil,
@@ -891,14 +802,14 @@ abstract final class ZoneArt {
         MapPropKind.chest,
         MapPropKind.hatch,
       ],
-      hubIcon: KenneyAssets.anvil,
       ambient: Color(0xFF120A04),
       wash: Color(0x48C89820),
       floorBlend: Color(0x5A483010),
       projectileTint: Color(0xFFE0C040),
       corridorShade: Color(0x38100800),
+      preferChoke: true,
       preferTreasureAlcove: true,
-      treasureAlcoveChance: 0.40,
+      treasureAlcoveChance: 0.44,
       normalRoomChestChance: 0.22,
       landmarkPerChamber: 2,
       enemies: ZoneEnemyArt(
@@ -912,46 +823,36 @@ abstract final class ZoneArt {
         support: CustomAssets.enemyCultist,
       ),
     ),
-    'veil': ZoneArtDef(
+    'veil': _customZone(
       id: 'veil',
-      floor: KenneyAssets.floorDirtDetail,
-      floorVariants: [
-        KenneyAssets.floorDirtDetail,
-        KenneyAssets.floorDirt,
-        KenneyAssets.floorDirtDetail,
-      ],
-      wallVariants: [
-        KenneyAssets.wallStone,
-        KenneyAssets.wallStoneAlt1,
-        KenneyAssets.wallStone,
-      ],
       props: [
+        MapPropKind.trap,
+        MapPropKind.trap,
+        MapPropKind.fence,
+        MapPropKind.fence,
         MapPropKind.torch,
         MapPropKind.torchAlt,
         MapPropKind.bones,
-        MapPropKind.trap,
         MapPropKind.crate,
         MapPropKind.barrel,
         MapPropKind.rubble,
         MapPropKind.skull,
         MapPropKind.pot,
-        MapPropKind.fence,
-        MapPropKind.stool,
       ],
       landmarks: [
-        MapPropKind.bones,
         MapPropKind.trap,
-        MapPropKind.torch,
+        MapPropKind.fence,
+        MapPropKind.bones,
         MapPropKind.torchAlt,
       ],
-      hubIcon: KenneyAssets.torchAlt,
       ambient: Color(0xFF140812),
-      wash: Color(0x48E0B8D0),
+      wash: Color(0x52E8C8F8),
       floorBlend: Color(0x5A382438),
       projectileTint: Color(0xFFE8C0F0),
       corridorShade: Color(0x38100818),
       preferChoke: true,
       normalRoomChestChance: 0.10,
+      landmarkPerChamber: 2,
       enemies: ZoneEnemyArt(
         boss: CustomAssets.enemyBossVeil,
         elite: CustomAssets.enemySpider,

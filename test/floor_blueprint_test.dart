@@ -79,6 +79,21 @@ void main() {
     expect(brass.treasureAlcoveChance, greaterThan(veil.treasureAlcoveChance));
   });
 
+  test('every zone kit uses owned dungeon art + calmer clutter', () {
+    for (final def in DungeonCatalog.all) {
+      final kit = ZoneLayoutKit.forId(def.id);
+      expect(kit.customDungeonArt, isTrue);
+      expect(kit.clutterDensity, lessThan(0.12));
+      expect(kit.clutterPerChamberMin, lessThan(6));
+    }
+  });
+
+  test('tide kit keeps choke + treasure grammar', () {
+    final tide = ZoneLayoutKit.forId('tide');
+    expect(tide.preferChoke, isTrue);
+    expect(tide.preferTreasureAlcove, isTrue);
+  });
+
   test('every zone kit resolves', () {
     for (final def in DungeonCatalog.all) {
       final kit = ZoneLayoutKit.forId(def.id);

@@ -19,10 +19,70 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.35';
+  static const String currentVersion = '1.12.41';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.41',
+      bullets: <String>[
+        'All 15 dungeons use owned custom floor/wall/prop art — each zone has its own palette (Hell bloodstone vs Ember forge, Sandy sand, Tide silt, and more).',
+        'UI architecture pass: one primary brown per screen (BAG, CAMP, SETTINGS); scoped labels on SETTINGS/APEX/META.',
+        'Gear rarity + tooltip stats + combat HUD bars use shared GameTheme tokens — fewer stray hex colors.',
+        'Hub cards use hubPanel; GEAR/META menus use body text instead of pixel glitter on labels.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.40',
+      bullets: <String>[
+        'UI theme audit: POWER tabs and FORGE sections show RUN / ACCOUNT scope chips.',
+        'Hub ALMOST claims use one brown CTA; META → KEY is a text link under TODAY.',
+        'Hub banners use hubPanel (not menu sheet boxes); bag colors and tooltips use GameTheme tokens.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.39',
+      bullets: <String>[
+        'BAG → FILTERS jumps to META → SETTINGS bag cleanup (auto-sell / disassemble).',
+        'Menu buttons and +/- steppers use the same Kenney chrome — fewer stray Material buttons.',
+        'POWER INCOME section headers show ACCOUNT scope chips (RUN / TODAY / ACCOUNT pattern).',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.38',
+      bullets: <String>[
+        'Hub READY: one big button for TODAY (claim or enter) — ENTER drops to grey when a claim is ready.',
+        'KEY / vault live in META → KEY; hub shows META → KEY instead of a second KEYSTONE panel.',
+        'META claim hints only on JOBS (and What\'s New on GUIDE) — no stale yellow row on CODEX/KEY.',
+        'CODEX layout fixed on phone (no overflow stripe). SETTINGS tab renamed; hub gear opens the same META screen.',
+        'POWER copy labels RUN vs ACCOUNT; hub header shows AL instead of Ascend.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.37',
+      bullets: <String>[
+        'Two wipes on the same floor: dungeon names God Hand as a steer + smash nudge (ring highlights when ready).',
+        'Ashen Vault, Hollow Grove, and Stormwake layouts read more distinct — lava choke, root fences, trap corridors.',
+        'Hub TODAY stays one primary CTA when READY; wipe help lands sooner when the fight proves it.',
+        'Optional SETTINGS session log (local only) for chase, wipes, and God Hand taps.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.36',
+      bullets: <String>[
+        'Hub TODAY stays one primary CTA when READY — KEY/vault crumbs and extra claim rows hide so ENTER / CLAIM owns the strip.',
+        'Dungeon wipe help lands sooner when the fight proves it: bag upgrades, “floor too far”, and early melts on wipe 1; FORGE ATK/DEF/STA after two wipes on the same floor (was three).',
+        'Dead chrome cleanup: item tooltips no longer tease Sell/Scrap; guides call LOADOUTS hidden presets.',
+        'Optional SETTINGS session log (local only) — chase kind, wipes, God Hand taps for your own play notes.',
+        'Zone identity pass on Sunken Tidehold, Brassvault Deep, and Mothveil Hollow — wet chokes, treasure vaults, silk-trap corridors.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.35',
       bullets: <String>[
@@ -68,7 +128,7 @@ abstract final class MetaSystems {
       bullets: <String>[
         'Combat Rogue pack damage was stomping peers — Blade Flurry cleave, Killing Spree haste/hits, and execute whites are trimmed so AoE sits with other DPS.',
         'Caster kits were paying a heavy spell tax, and Arms / Ret / Frost DK / Balance sat soft — passives and key hits are lifted so the field feels closer without anyone going HIGH.',
-        'Three wipes on the same floor: the dungeon names a real fix when the fight proves it — equip bag upgrades, drop a floor, or FORGE ATK / DEF / STA. PUSH retreats keep that streak (clearing a lower floor does not erase it). No guessed tips.',
+        'Three wipes on the same floor: the dungeon names a real fix when the fight proves it — equip bag upgrades, drop a floor, or FORGE ATK / DEF / STA after two same-floor wipes (high-confidence tips on wipe 1). PUSH retreats keep that streak (clearing a lower floor does not erase it). No guessed tips.',
         'BAG/GEAR dropped SELL JUNK, SCRAP, GEAR Sell, and LOADOUTS. CLEAN BAG + FILTERS + MARKET still clear junk.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],

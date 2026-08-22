@@ -116,7 +116,7 @@ class TargetCornerHud extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: hpFrac,
                         minHeight: phone ? 3 : 4,
-                        backgroundColor: const Color(0xFF2A241C),
+                        backgroundColor: GameTheme.equipChipBlocked,
                         color: hpFrac > 0.35
                             ? GameTheme.bloodLit
                             : GameTheme.blood,

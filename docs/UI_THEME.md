@@ -1,129 +1,257 @@
-# Idle Party UI theme (GEAR look)
+# Idle Party UI theme
 
-**Device target:** **portrait phone only** (~360–430 CSS px). Shipping UI is
-Android phone (owner reference: **Samsung Galaxy A56** → 360×780 CSS);
-Flutter web is a playtest harness (always emulate that phone viewport).
-Do not design for desktop/tablet as the product. Prefer tap / long-press over
-hover-only interactions.
+**Purpose:** shared **tokens and patterns** so menus feel like one game — not a straitjacket on layout, copy, or UX. When clarity needs a new row, scroll, or hub-specific chrome, **ship it** using tokens below. IA (what the player chases) is separate from visuals.
 
-**Reference surface:** the GEAR inventory sheet. On phone width, GEAR is the
-hero doll + actions (bag lives on the **BAG** tab). Wider playtest layouts may
-still show doll + ITEMS BAG side-by-side. When adding or restyling menus, match
-this chrome — don’t invent a new palette.
+---
 
-Code sources of truth:
+## System map (what UI theme steers)
+
+```mermaid
+flowchart TB
+  subgraph Guide["Guide layer"]
+    DOC["docs/UI_THEME.md"]
+    RULE[".cursor/rules/ui-theme.mdc"]
+    DOC --> RULE
+  end
+
+  subgraph Constraints["Product constraints (guide, not tokens)"]
+    PHONE["Portrait phone ~360–430px"]
+    TAP["Tap / long-press only"]
+    EN["English in-game copy"]
+  end
+
+  Guide --> Constraints
+
+  subgraph Tokens["Code — tokens & widgets"]
+    GT["GameTheme.dart<br/>colors · radii · touch · type scale"]
+    MC["MenuChrome.dart<br/>panel · tabs · chips · helpers"]
+    KB["KenneyButton.dart<br/>brown · grey · ghost · red"]
+    GT --> MC
+    MC --> KB
+  end
+
+  Guide --> Tokens
+
+  subgraph IA["IA layer (copy & labels — not a palette)"]
+    RUN["RUN — spends this Ascend"]
+    TODAY["TODAY — session habits"]
+    ACCT["ACCOUNT — survives Ascend"]
+    RUN --- TODAY
+    TODAY --- ACCT
+  end
+
+  MC --> IA
+
+  subgraph Actions["Action hierarchy (one screen)"]
+    P1["Primary brown"]
+    P2["Secondary grey"]
+    P3["Tertiary ghost / textLink"]
+    PD["Destructive red"]
+    P1 --> P2 --> P3
+    P1 -.-> PD
+  end
+
+  KB --> Actions
+  MC --> Actions
+
+  subgraph Families["Visual families — pick one per surface"]
+    MS["Menu sheet<br/>PARTY · POWER · META"]
+    HUB["Hub<br/>world path · TODAY stack"]
+    HUD["Combat HUD<br/>FARM/PUSH · party · God Hand"]
+    BR["Brand<br/>boot · new game · What's New"]
+  end
+
+  Tokens --> Families
+
+  subgraph MenuShell["Menu sheet pipeline"]
+    OR["MenuRouter + MenuSurface"]
+    OS["OverlayScrim + tabRail"]
+    OR --> OS
+  end
+
+  MS --> MenuShell
+  MC --> MenuShell
+  KB --> MenuShell
+
+  subgraph Layout["Layout escape hatches (when content overflows)"]
+    SC["SingleChildScrollView"]
+    FX["Expanded flex split"]
+    HL["Horizontal ListView"]
+    CO["Collapse / link out"]
+  end
+
+  Guide --> Layout
+  Layout --> MS
+  Layout --> HUB
+
+  subgraph Consumers["Screens (examples)"]
+    INV["inventory_dock / character_equip_panel"]
+    PWR["power_meta_pillars · forge · income"]
+    HS["hub_screen · hub_header"]
+    DG["is2_shell · spatial HUD"]
+    TT["item_tooltip (own family)"]
+  end
+
+  subgraph Wiring["Routing & IA copy"]
+    MR["core/menu_router.dart"]
+    GC["core/game_guides.dart"]
+    CC["core/chase_contract.dart"]
+    WCB["web_click_bridge.dart"]
+  end
+
+  MR --> MenuShell
+  GC --> IA
+  CC --> HUB
+  WCB --> MC
+  WCB --> KB
+
+  MS --> INV
+  MS --> PWR
+  HUB --> HS
+  HUD --> DG
+  TT --> GT
+
+  subgraph Anti["Do not force menu sheet chrome onto"]
+    HUD
+    HUB
+    BR
+  end
+
+  Guide --> Anti
+```
+
+**How to read it:** `UI_THEME.md` sets rules and patterns; **`GameTheme` → `MenuChrome` → `KenneyButton`** is the implementation stack. **RUN / TODAY / ACCOUNT** is information architecture (section labels, guides, chips) — orthogonal to colors. **Visual family** chooses which token subset applies; hub and dungeon intentionally skip full GEAR sheet chrome.
+
+---
+
+**Code sources of truth:**
 
 | Piece | File |
 |-------|------|
-| Colors, radii, type | `lib/ui/game_theme.dart` |
-| Panels, tabs, cards, sheets | `lib/ui/menu_chrome.dart` |
-| Primary actions | `lib/ui/kenney_button.dart` |
-| Reference layout | `lib/ui/character_equip_panel.dart`, `lib/ui/shell/inventory_dock.dart` |
+| Colors, radii, touch, type scale | [`lib/ui/game_theme.dart`](../lib/ui/game_theme.dart) |
+| Panels, tabs, chips, helpers | [`lib/ui/menu_chrome.dart`](../lib/ui/menu_chrome.dart) |
+| Actions | [`lib/ui/kenney_button.dart`](../lib/ui/kenney_button.dart) |
+| Menu sheet reference layout | [`lib/ui/character_equip_panel.dart`](../lib/ui/character_equip_panel.dart), [`lib/ui/shell/inventory_dock.dart`](../lib/ui/shell/inventory_dock.dart) |
 
 ---
 
-## Surfaces
+## Product constraints (not design limits)
 
-- **Sheet / overlay shell:** `MenuChrome.panel()` — charcoal gradient, warm gold `borderLit` edge, soft torch glow.
-- **Scrim:** `MenuChrome.scrim`
-- **Bottom sheets:** `MenuChrome.sheetRadius` + `sheetHandle()` + `menuTitle` + hairline gold rule.
-- **Dialogs:** `MenuChrome.dialog(...)` + `KenneyButton` actions (not Material `TextButton`).
+- **Portrait phone only** (~360–430 CSS px). Owner reference: **Samsung A56** → **360×780** in web playtest.
+- **Tap / long-press** — no hover-only flows for real players.
+- **English** in-game copy.
 
-Avoid flat `GameTheme.menuCard` boxes with radius 4–6. Prefer:
-
-```dart
-decoration: MenuChrome.cardBox()           // raised card
-decoration: MenuChrome.cardBox(inset: true)
-decoration: MenuChrome.cardBox(selected: true)
-decoration: MenuChrome.listCard(borderColor: ...)  // missions / shop rows
-```
-
-Radii: `GameTheme.radiusSm` (8) / `radiusMd` (12) / `radiusLg` (18).
+Everything else (hub density, Gauntlet label, chase-driven CTAs, collapsible sections) is **game UX**, not theme violations.
 
 ---
 
-## Typography
+## Visual families (pick the right one)
 
-| Role | API | Font |
-|------|-----|------|
-| Sheet / overlay titles | `GameTheme.menuTitle(...)` | Cinzel |
-| Body, tabs, readable copy | `GameTheme.body(...)` | VT323 |
-| Section headers | `MenuChrome.sectionLabel('FOO')` | VT323 info tint |
-| Buttons | `GameTheme.button` via KenneyButton | VT323 |
-| Tiny tags only (iLvl chips, combat HUD) | `GameTheme.pixel(...)` | Press Start |
+| Family | Where | Goal |
+|--------|--------|------|
+| **Menu sheet** | PARTY / POWER / META overlays | GEAR-adjacent panel: `MenuChrome.panel`, `tabRail`, `cardBox` |
+| **Hub** | World path, TODAY, enter stack | Painted scene + torch accents; **not** a full inventory sheet |
+| **Combat HUD** | Dungeon FARM/PUSH, party bars, God Hand | Pixel HUD (`GameTheme.pixel`) |
+| **Brand** | Boot, new game, What’s New hero | Cinzel + scene art; rules are looser |
 
-**Do not** use Press Start for menu titles or list row names.
-
----
-
-## Tabs
-
-Use the GEAR inset rail everywhere (Forge, inventory, …):
-
-```dart
-MenuChrome.tabRail(
-  controller: _tabs,
-  tabs: const [
-    Tab(text: 'FORGE'),
-    Tab(text: 'META'),
-  ],
-)
-```
-
-Selected tab = torch wash + `torchHot` label. No Material underline + pixel labels.
+GEAR is the **default reference for menu sheets**, not a mold for hub or dungeon.
 
 ---
 
-## Buttons
+## Action hierarchy (use all levels)
 
-| Intent | Style |
-|--------|--------|
-| Primary / buy / equip | `KenneyButtonStyle.brown` (or default) |
-| Secondary / cancel / clear | `KenneyButtonStyle.grey` |
-| Destructive / merge commit | `KenneyButtonStyle.red` + `primary: true` when needed |
+Avoid stacking multiple **brown** full-width buttons on one screen (especially hub).
 
-Always wire `Semantics` / `WebClickScope` (KenneyButton already does).
+| Level | When | API |
+|-------|------|-----|
+| **Primary** | One main job on this screen (ENTER, CLAIM, BUY) | `KenneyButtonStyle.brown`, `primary: true` for hero CTAs |
+| **Secondary** | Valid alternate (skip for now, cancel, ENTER when claim is READY) | `KenneyButtonStyle.grey` |
+| **Tertiary / nav** | Open another menu (“META → KEY”), inline | `MenuChrome.textLink` or `KenneyButtonStyle.ghost` |
+| **Text link** | Low emphasis, inline | `MenuChrome.textLink` |
+| **Destructive** | Ascend, merge commit, wipe confirm | `KenneyButtonStyle.red` |
 
----
-
-## Color tokens (quick)
-
-- Ink / deep: `ink`, `stoneDeep`, `stone`, `panel`, `panelInset`
-- Text: `parchment`, `parchmentDim`
-- Accent: `torch`, `torchHot`, `borderLit`
-- Good / bad: `clear` / `mossLit`, `bloodLit`
-- Info / warn: `accentInfo`, `accentWarn`
-
-Item rarity (tooltips only): `itemRarityColor` / `itemRarityBorder` in `item_tooltip.dart`.
+Semantics / `WebClickScope`: `KenneyButton` and `MenuChrome` helpers already wire labels for playtest.
 
 ---
 
-## Checklist for a new menu
+## Information architecture (not colors)
 
-1. Shell = `MenuChrome.panel` / `showMenuSheet` / `_OverlayPanel` pattern.
-2. Title = `menuTitle`; sections = `sectionLabel`.
-3. Lists = `listCard` / `cardBox`, not raw `menuCard`.
-4. Tabs = `tabRail` if multi-page.
-5. Actions = `KenneyButton` only.
-6. English copy; combat HUD stays pixel on purpose.
+Three buckets — use in copy, section labels, and guides (not a new palette):
 
----
+| Bucket | Meaning | Examples |
+|--------|---------|----------|
+| **RUN** | Resets or spends on this Ascend | FORGE → GOLD, MARKET flasks, dungeon |
+| **TODAY** | Session habits & claims | vault, jobs, daily run, hub TODAY |
+| **ACCOUNT** | Survives Ascend | essence, CAMP, KEEP, Apex, codex |
 
-## Intentionally different (skip)
+Helpers: `MenuChrome.scopeChip`, `sectionLabelScoped(title, scope: MenuScope.run|today|account)`, or plain `sectionLabel` when scope is obvious.
 
-- Combat / dungeon HUD (FARM/PUSH, God Hand, party bars) — pixel HUD chrome.
-- Bottom nav bar.
-- Start menu / intro / new-game picker — brand surfaces.
-- Item tooltips — warm rarity panels (`item_tooltip.dart`): **long-press** on
-  phone (centered card + scrim); hover OK for web playtest only. Bag selection
-  compare stays **compact** so the grid remains usable.
-- Hub world-path scene cards — adjacent forge palette, not the inventory sheet.
+**Hub stack (phone):** TODAY text → at most **one brown** primary + **one grey** secondary under it; everything else tertiary/link/chip. MetaPulse crumbs hide when TODAY is READY/ALMOST.
+
+**Tab context:** status that belongs to one tab (e.g. “Claim: …”) → **`MenuChrome.tabBanner`** on that tab only, not every META sub-tab.
 
 ---
 
-## Anti-patterns
+## Tokens (quick)
 
-- Pixel titles on MORE overlays (“WHAT’S NEW”, “ACTIVE”, shop names).
-- Hard-coded brown borders (`0xFF5A5040`) — use `GameTheme.border` / `panelInset`.
-- Mixing `TextButton` into forge dialogs.
-- Full-width overlay tooltips without `UnconstrainedBox` / measured layout.
+**Surfaces:** `MenuChrome.panel`, `scrim`, `cardBox`, `listCard`, `hubPanel` (hub banners), `sheetRadius`  
+**Radii:** `GameTheme.radiusSm` (8) / `radiusMd` (12) / `radiusLg` (18)  
+**Type:** `menuTitle` (Cinzel) · `body` (VT323) · `sectionLabel` / `sectionLabelScoped` · `button` · `pixel` (HUD/tags only)  
+**Color:** `parchment` / `parchmentDim` · `torch` / `torchHot` · `mossLit` · `scopeRun/Today/Account` · `rarity*` · `tooltip*` (item tips)  
+**Touch:** `minTouch` 44 · `primaryTouch` 48  
+
+Prefer tokens over hex literals. Hub uses `hubPanel`, not full `cardBox` sheet chrome.
+
+---
+
+## Layout escape hatches (when content doesn’t fit)
+
+Phone height is the real limit, not the theme. Use these **before** dropping information:
+
+1. **`SingleChildScrollView`** on dense tabs (CAMP, SETTINGS).
+2. **Split `Expanded` flex** (e.g. CODEX milestones scroll horizontally; list gets remaining height).
+3. **`tabRail` scrollable** — long tab names (SETTINGS) are fine.
+4. **Collapse / link out** — hub KEY detail lives in META → KEY, not a second full panel on hub.
+5. **Horizontal `ListView`** for chip/button rows that used to `Wrap` and overflow.
+
+Overflow stripes = layout bug, not “theme says no.”
+
+---
+
+## Menu sheet checklist (new overlay)
+
+1. Shell: `OverlayScrim` / `MenuChrome.panel` pattern in [`menu_surface.dart`](../lib/ui/shell/menu_surface.dart).
+2. Title: `GameTheme.menuTitle` or router title.
+3. Multi-page → `MenuChrome.tabRail` + `MenuChrome.bridgedTab`.
+4. Lists → `listCard` / `cardBox`.
+5. Actions → hierarchy table above.
+6. Tab-specific status → `tabBanner` on that tab only.
+
+---
+
+## Intentionally different surfaces
+
+Do **not** force GEAR sheet chrome onto:
+
+- Combat / dungeon HUD  
+- Bottom nav  
+- Start menu / intro / new-game picker  
+- Hub world-path scene (caption + chase stack are hub-native)  
+- Item tooltips (long-press on phone; compact compare in bag)
+
+---
+
+## Anti-patterns (actual harm)
+
+- Raw hex borders/colors that bypass `GameTheme` / `MenuChrome`
+- Material `TextButton` in forge-style confirm dialogs (use `MenuChrome.dialog` + `KenneyButton`)
+- Press Start for menu **titles** or long body paragraphs
+- **Three+ brown full-width CTAs** on one hub view
+- Global alert banners on every tab when only one tab owns the message
+- Hover-only affordances on shipping phone UI
+
+---
+
+## Agents
+
+When adding shared chrome, put helpers on **`MenuChrome`** (or `KenneyButton` styles) and add **one line** here. Extend the theme; don’t fork colors in a single screen.
