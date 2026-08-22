@@ -6,6 +6,7 @@ import 'package:flutter/semantics.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/equipment_factory.dart';
+import 'core/gear/drop_tables.dart';
 import 'core/game_director.dart';
 import 'core/menu_router.dart';
 import 'models/hero_spec.dart';
@@ -173,6 +174,7 @@ class _GameHomePageState extends State<GameHomePage> {
 
   Future<void> _bootstrap() async {
     unawaited(EquipmentFactory.loadAffixes());
+    unawaited(DropTables.load());
     // Defer combat loop until after start menu so dungeon ticks cannot steal focus.
     await _director.boot(deferCombatLoop: widget.showIntro);
     GameAudio.muted = _director.state.soundMuted;

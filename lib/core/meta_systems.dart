@@ -19,10 +19,21 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.41';
+  static const String currentVersion = '1.12.42';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.42',
+      bullets: <String>[
+        'Combat pass: tanks can DODGE / PARRY / BLOCK melee — mastery block trims blocked hits.',
+        'Casters roll Spell Power; melee kits use Physical Attack — spells and swings read separately on the sheet.',
+        'Spec mastery hooks (Deep Healing, Ignite-style fire, tank block value, and more) shape kit identity in fights.',
+        'Spirit regen slows in combat after you take damage; CC roots shorten when spammed on the same pack.',
+        'Loot uses zone drop tables; gear can roll Mastery as a secondary stat.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.41',
       bullets: <String>[

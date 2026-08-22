@@ -910,6 +910,14 @@ class GameDirector extends ChangeNotifier {
           ];
           showToast('+${labels.join(', ')}', life: 2.4);
         }
+        final floorLoot = LogicNotices.takeFloorLootLine();
+        if (floorLoot != null) {
+          showToast(floorLoot, life: 2.2);
+        }
+        final floorEquip = LogicNotices.takeFloorEquipLine();
+        if (floorEquip != null) {
+          showToast(floorEquip, life: 2.2);
+        }
         final payoffNotices = LogicNotices.takeMetaPayoffs();
         if (payoffNotices.isNotEmpty) {
           showToast(payoffNotices.join(' · '), life: 3.0);

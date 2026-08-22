@@ -168,6 +168,7 @@ class PartyHero {
     gearIntellect: gearIntellectBonus,
     gearSpirit: gearSpiritBonus,
     gearSpellPower: gearSpellPowerBonus,
+    gearMasteryRating: gearMasteryBonus,
     gearArmor: gearArmorBonus,
     gearCrit: gearCritChance,
     gearFlatAttack: gearAttackBonus,
@@ -189,6 +190,9 @@ class PartyHero {
         GearSets.setCritBonus(equipped);
     return _softCapStat(raw, soft: 18, hard: 40);
   }
+
+  int get gearMasteryBonus =>
+      equipped.values.fold<int>(0, (s, i) => s + i.masteryBonus);
 
   int get gearAttackSpeedBonus {
     final raw =

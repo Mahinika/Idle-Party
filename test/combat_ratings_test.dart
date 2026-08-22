@@ -42,7 +42,7 @@ void main() {
     );
   });
 
-  test('gear Int and Spell Power add the same sheet ATK', () {
+  test('gear Int and Spell Power add the same caster spell power', () {
     final mage = hero(HeroSpecId.fire, level: 20);
     final intGear = CombatRatings.fromHeroSheet(
       hero: mage,
@@ -52,11 +52,11 @@ void main() {
       hero: mage,
       gearSpellPower: 90,
     );
-    expect(intGear.physicalAttack, spGear.physicalAttack);
+    expect(intGear.spellPower, spGear.spellPower);
     expect(intGear.critChance, greaterThan(spGear.critChance));
   });
 
-  test('level Intellect is full ATK; gear Int is ~/3', () {
+  test('level Intellect is full spell power; gear Int uses budget ROI', () {
     const base = Stats(
       strength: 1,
       agility: 1,
@@ -67,8 +67,9 @@ void main() {
     final mage = hero(HeroSpecId.fire, level: 1, stats: base);
     final naked = CombatRatings.fromHeroSheet(hero: mage);
     final geared = CombatRatings.fromHeroSheet(hero: mage, gearIntellect: 9);
-    expect(naked.physicalAttack, 10);
-    expect(geared.physicalAttack, 10 + 9 ~/ 3);
+    expect(naked.spellPower, 10);
+    expect(geared.spellPower, 10 + 9 ~/ 3);
+    expect(geared.effectiveAttack, geared.spellPower);
   });
 
   test('soulbound item conversion matches worn gear ROI', () {
@@ -97,7 +98,7 @@ void main() {
         intellect: 12,
         spellPower: 12,
       ),
-      (12 + 12) ~/ 3,
+      12 + 12,
     );
   });
 
@@ -128,12 +129,24 @@ void main() {
     final rogue = hero(HeroSpecId.combat, level: 20);
     final str = CombatRatings.fromHeroSheet(hero: rogue, gearStrength: 12);
     final agi = CombatRatings.fromHeroSheet(hero: rogue, gearAgility: 12);
-    expect(agi.physicalAttack, greaterThan(str.physicalAttack));
+    expect(agi.effectiveAttack, greaterThan(str.effectiveAttack));
   });
 
   test('Spirit mana regen scales so gear Spirit is not a crumb', () {
     expect(spiritManaRegenPerSec(0), closeTo(1.25, 0.001));
     expect(spiritManaRegenPerSec(20), closeTo(1.25 + 1.2, 0.001));
     expect(spiritManaRegenPerSec(40), greaterThan(spiritManaRegenPerSec(10) + 1.5));
+  });
+
+  test('5SR reduces in-combat regen after recent damage', () {
+    final full = spiritManaRegenPerSec(30);
+    final combat = spiritManaRegenPerSec(30, inCombat: true);
+    final paused = spiritManaRegenPerSec(
+      30,
+      inCombat: true,
+      recentlyDamaged: true,
+    );
+    expect(combat, lessThan(full));
+    expect(paused, lessThan(combat));
   });
 }

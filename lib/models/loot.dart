@@ -90,6 +90,7 @@ class EquipmentItem {
     this.defenseBonus = 0,
     this.vitalityBonus = 0,
     this.critChanceBonus = 0,
+    this.masteryBonus = 0,
     this.attackSpeedBonus = 0,
     this.moveSpeedBonus = 0,
     this.pattern = ProjectilePattern.single,
@@ -135,6 +136,7 @@ class EquipmentItem {
   final int vitalityBonus;
 
   final int critChanceBonus;
+  final int masteryBonus;
   final int attackSpeedBonus;
   final int moveSpeedBonus;
 
@@ -189,6 +191,7 @@ class EquipmentItem {
       (attackBonus * 3) +
       mp5Bonus +
       critChanceBonus +
+      masteryBonus +
       attackSpeedBonus +
       moveSpeedBonus +
       effectValue;
@@ -242,6 +245,7 @@ class EquipmentItem {
     if (attackBonus != 0) parts.add('+$attackBonus ATK');
     if (mp5Bonus != 0) parts.add('+$mp5Bonus Mp5');
     if (critChanceBonus != 0) parts.add('+$critChanceBonus% CRIT');
+    if (masteryBonus != 0) parts.add('+$masteryBonus Mastery');
     if (attackSpeedBonus != 0) parts.add('+$attackSpeedBonus% ASPD');
     if (moveSpeedBonus != 0) parts.add('+$moveSpeedBonus% MOVE');
     if (effectLabel.isNotEmpty) parts.add(effectLabel);
@@ -300,6 +304,7 @@ class EquipmentItem {
     'defenseBonus': defenseBonus,
     'vitalityBonus': vitalityBonus,
     'critChanceBonus': critChanceBonus,
+    'masteryBonus': masteryBonus,
     'attackSpeedBonus': attackSpeedBonus,
     'moveSpeedBonus': moveSpeedBonus,
     'pattern': pattern.name,
@@ -394,6 +399,7 @@ class EquipmentItem {
       defenseBonus: defense,
       vitalityBonus: vitality,
       critChanceBonus: asInt(json['critChanceBonus']),
+      masteryBonus: asInt(json['masteryBonus']),
       attackSpeedBonus: asInt(json['attackSpeedBonus']),
       moveSpeedBonus: asInt(json['moveSpeedBonus']),
       pattern: patternRaw == null
@@ -439,6 +445,7 @@ class EquipmentItem {
     int? defenseBonus,
     int? vitalityBonus,
     int? critChanceBonus,
+    int? masteryBonus,
     int? attackSpeedBonus,
     int? moveSpeedBonus,
     ProjectilePattern? pattern,
@@ -480,6 +487,7 @@ class EquipmentItem {
       defenseBonus: defenseBonus ?? this.defenseBonus,
       vitalityBonus: vitalityBonus ?? this.vitalityBonus,
       critChanceBonus: critChanceBonus ?? this.critChanceBonus,
+      masteryBonus: masteryBonus ?? this.masteryBonus,
       attackSpeedBonus: attackSpeedBonus ?? this.attackSpeedBonus,
       moveSpeedBonus: moveSpeedBonus ?? this.moveSpeedBonus,
       pattern: pattern ?? this.pattern,

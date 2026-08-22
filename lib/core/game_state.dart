@@ -164,8 +164,8 @@ class GameState {
   /// Persistent meta-progress. Survives Ascend; hard reset clears it.
   final int ascensionLevel;
 
-  /// Legacy party loadout field (pre per-hero gear). Kept for save migration only.
-  /// Prefer [PartyHero.equipped]. Cleared after migrate / Ascend.
+  /// Legacy single-hero equip map (pre per-hero gear). Kept for save migration only.
+  /// Prefer [PartyHero.equipped] and [GearLoadout] presets. Cleared after migrate / Ascend.
   final Map<EquipmentSlot, EquipmentItem> equipped;
 
   /// Up to 3 active contracts. Refreshed on Ascend; claimed slots roll anew.
@@ -255,7 +255,7 @@ class GameState {
   /// Dismissed first-run tip ids (survives Ascend).
   final List<String> seenTips;
 
-  /// Up to 3 saved gear presets (survives Ascend).
+  /// Up to 3 saved gear presets (cleared on Ascend — slot count from prestige).
   final List<GearLoadout> loadouts;
 
   /// Unlocked local achievement ids (survives Ascend / hard reset persists
@@ -708,6 +708,7 @@ class GameState {
       gearIntellect: hero.gearIntellectBonus,
       gearSpirit: hero.gearSpiritBonus,
       gearSpellPower: hero.gearSpellPowerBonus,
+      gearMasteryRating: hero.gearMasteryBonus,
       gearArmor: hero.gearArmorBonus,
       gearCrit: hero.gearCritChance,
       gearFlatAttack: hero.gearAttackBonus,
@@ -724,6 +725,11 @@ class GameState {
   }
 
   int effectiveHeroAttack(PartyHero hero) => ratingsFor(hero).effectiveAttack;
+
+  int effectiveHeroPhysicalAttack(PartyHero hero) =>
+      ratingsFor(hero).physicalAttack;
+
+  int effectiveHeroSpellPower(PartyHero hero) => ratingsFor(hero).spellPower;
 
   int effectiveHeroDefense(PartyHero hero) => ratingsFor(hero).defense;
 

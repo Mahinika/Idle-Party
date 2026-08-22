@@ -1,16 +1,15 @@
 import 'dart:math';
 
+import '../spatial/combat_avoidance.dart';
 import 'hero.dart';
+import 'spec_mastery.dart';
 import 'stats.dart';
 
 /// Idle-tuned Classic conversion: AP → ATK uses kAp = 4 (Classic uses 14).
 ///
-/// Gear primary ROI must stay aligned with equip BiS weights
-/// ([EquipStatWeights] / docs/GEAR_BUDGET.md):
-/// - Plate melee: 2 AP per Strength.
-/// - Rogue-family (leather/mail AGI): 1 AP per Strength + 2 AP per Agility.
-/// - Casters: level Intellect is full ATK; gear Int and Spell Power both
-///   contribute ~/3 so they match Str/Agi→ATK ROI. Int still adds spell crit.
+/// Cataclysm v2: separate physicalAttack / spellPower; mastery + dodge/parry on
+/// sheet. Gear primary ROI stays aligned with equip BiS weights
+/// ([EquipStatWeights] / docs/GEAR_BUDGET.md).
 class CombatRatings {
   const CombatRatings({
     required this.strength,
@@ -24,6 +23,10 @@ class CombatRatings {
     required this.maxHp,
     required this.defense,
     required this.critChance,
+    this.masteryRating = 0,
+    this.masteryPoints = 0,
+    this.dodgePercent = 0,
+    this.parryPercent = 0,
   });
 
   final int strength;
@@ -37,6 +40,10 @@ class CombatRatings {
   final int maxHp;
   final int defense;
   final int critChance;
+  final int masteryRating;
+  final double masteryPoints;
+  final double dodgePercent;
+  final double parryPercent;
 
   static const int kAp = 4;
 
@@ -56,11 +63,7 @@ class CombatRatings {
 
   static int roleBaseCrit(HeroRole role) => role == HeroRole.rogue ? 12 : 5;
 
-  /// Dodge-like crumb into sheet DEF.
-  ///
-  /// Classic's 2 armor per Agi made leather DPS out-armor plate: idle gear
-  /// Armor is budget-carved (tens–hundreds) while Agi stacks from every
-  /// leather piece plus 2 Agi/level on rogues.
+  /// Dodge-like crumb into sheet DEF (non-tanks only — tanks use dodge %).
   static int agilityToDefense(int agility) => max(0, agility) ~/ 8;
 
   /// Per-level primary gains (on top of base [Stats]).
@@ -135,12 +138,11 @@ class CombatRatings {
     final warriorAp = 2 * strength;
     final rogueAp = strength + 2 * agility;
     final meleeAtk = max(0, (max(warriorAp, rogueAp) / kAp).round());
-    final casterAtk = (intellect + spellPower) ~/ 3;
+    final casterAtk = intellect + spellPower;
     return flatAttack + max(meleeAtk, casterAtk);
   }
 
   /// Percent armor: `taken = raw * K / (def + K)`, K ≈ 1.2× attacker ATK.
-  /// High DEF always helps; mitigation caps at 75% (at least 25% of the hit).
   static int mitigateByArmor({
     required int rawDamage,
     required int defense,
@@ -162,6 +164,7 @@ class CombatRatings {
     int gearIntellect = 0,
     int gearSpirit = 0,
     int gearSpellPower = 0,
+    int gearMasteryRating = 0,
     int gearArmor = 0,
     int gearCrit = 0,
     int gearFlatAttack = 0,
@@ -189,21 +192,20 @@ class CombatRatings {
       level: hero.level,
     );
     final physical = max(1, (ap / kAp).round()) + gearFlatAttack;
-    // Casters: base Int full; gear Int+SP at ~1/3 — matches Str/Agi→ATK ROI.
-    final spPool = intel + gearSpellPower;
-    final casterAtk = max(
-      1,
-      grown.intel + ((gearIntellect + gearSpellPower) ~/ 3),
-    );
-    final sp = spPool;
 
     final isCaster =
         hero.gearAffinity == HeroRole.mage ||
         hero.gearAffinity == HeroRole.healer;
+    final isTank = hero.spec.isTank;
+
+    // Cata direction: level Int is full SP; gear Int+SP use ~/3 ROI (GEAR_BUDGET fairness).
+    final sp = isCaster
+        ? max(1, grown.intel + ((gearIntellect + gearSpellPower) ~/ 3))
+        : intel + gearSpellPower;
 
     final defense =
         roleBaseArmor(hero.gearAffinity) +
-        agilityToDefense(agi) +
+        (isTank ? 0 : agilityToDefense(agi)) +
         gearArmor +
         metaDefense +
         guardBonus;
@@ -221,8 +223,19 @@ class CombatRatings {
               .round();
 
     final physicalWithMeta = physical + metaAttack + auraBonus;
-    final casterWithMeta = casterAtk + metaAttack + auraBonus;
-    final spWithMeta = sp + (isCaster ? metaAttack + auraBonus : 0);
+    final spWithMeta = isCaster ? sp + metaAttack + auraBonus : sp;
+
+    final masteryRating = max(0, gearMasteryRating);
+    final masteryPoints = SpecMastery.masteryPointsFrom(
+      masteryRating,
+      hero.level,
+    );
+    final avoid = CombatAvoidance.sheetAvoidance(
+      agility: agi,
+      masteryRating: masteryRating,
+      level: hero.level,
+      isTank: isTank,
+    );
 
     return CombatRatings(
       strength: str,
@@ -231,15 +244,20 @@ class CombatRatings {
       intellect: intel,
       spirit: spi,
       attackPower: ap,
-      physicalAttack: isCaster ? casterWithMeta : physicalWithMeta,
+      physicalAttack: physicalWithMeta,
       spellPower: spWithMeta,
       maxHp: maxHpFinal,
       defense: defense,
       critChance: crit,
+      masteryRating: masteryRating,
+      masteryPoints: masteryPoints,
+      dodgePercent: avoid.dodgePercent,
+      parryPercent: avoid.parryPercent,
     );
   }
 
-  int get effectiveAttack => physicalAttack;
+  /// Role-appropriate primary attack (melee AP or caster SP).
+  int get effectiveAttack => max(physicalAttack, spellPower);
 
   /// Optional timed POWERUPS (+ATK%). HP/DEF/crit stay the same.
   CombatRatings withAttackPercent(int percent) {
@@ -256,16 +274,28 @@ class CombatRatings {
       maxHp: maxHp,
       defense: defense,
       critChance: critChance,
+      masteryRating: masteryRating,
+      masteryPoints: masteryPoints,
+      dodgePercent: dodgePercent,
+      parryPercent: parryPercent,
     );
   }
 }
 
-/// Spirit → mana regen (idle, no 5SR).
-///
-/// Small base so a naked healer ticks, then **0.06 mana/s per Spirit** so
-/// gear Spirit is readable next to Mp5 (`mp5 / 5`).
-double spiritManaRegenPerSec(int spirit, {double perSpirit = 0.06}) {
-  return 1.25 + max(0, spirit) * perSpirit;
+/// Spirit → mana regen. Optional 5-second rule when [inCombat] and recently damaged.
+double spiritManaRegenPerSec(
+  int spirit, {
+  double perSpirit = 0.06,
+  bool inCombat = false,
+  bool recentlyDamaged = false,
+}) {
+  var regen = 1.25 + max(0, spirit) * perSpirit;
+  if (inCombat && recentlyDamaged) {
+    regen *= 0.15;
+  } else if (inCombat) {
+    regen *= 0.55;
+  }
+  return regen;
 }
 
 /// Mp5 gear → mana/s.

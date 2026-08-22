@@ -31,6 +31,8 @@ abstract final class LogicNotices {
   static BagCleanupReceipt _bag = const BagCleanupReceipt();
   static List<String> _craftMats = const <String>[];
   static List<String> _metaPayoffs = const <String>[];
+  static String? _floorLootLine;
+  static String? _floorEquipLine;
 
   /// Reads and clears what the last auto-sell / disassemble pass cleared out.
   static BagCleanupReceipt takeBagCleanup() {
@@ -88,10 +90,36 @@ abstract final class LogicNotices {
     _metaPayoffs = List<String>.unmodifiable([..._metaPayoffs, ...lines]);
   }
 
+  /// Short loot grant summary from floor clear ([LootGrantResult.summaryLine]).
+  static String? takeFloorLootLine() {
+    final out = _floorLootLine;
+    _floorLootLine = null;
+    return out;
+  }
+
+  static void recordFloorLootLine(String line) {
+    if (line.isEmpty) return;
+    _floorLootLine = line;
+  }
+
+  /// Post-floor auto-equip summary (`Equipped N · M kept in bag`).
+  static String? takeFloorEquipLine() {
+    final out = _floorEquipLine;
+    _floorEquipLine = null;
+    return out;
+  }
+
+  static void recordFloorEquipLine(String line) {
+    if (line.isEmpty) return;
+    _floorEquipLine = line;
+  }
+
   /// Test/reset hook — drops every pending receipt.
   static void reset() {
     _bag = const BagCleanupReceipt();
     _craftMats = const <String>[];
     _metaPayoffs = const <String>[];
+    _floorLootLine = null;
+    _floorEquipLine = null;
   }
 }

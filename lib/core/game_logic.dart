@@ -15,6 +15,7 @@ import '../models/pet.dart';
 import 'ad_boost.dart';
 import 'relic_ids.dart';
 import 'dungeon_generator.dart';
+import 'economy_service.dart';
 import 'game_state.dart';
 import 'keystone.dart';
 import 'logic_notices.dart';
@@ -845,25 +846,8 @@ class GameLogic {
   static const int ascendBlessingGoldPct = 3;
 
   /// Applies Ascension + Sanctuary + Blessing + gear + pet gold bonuses.
-  static int applyGoldGain(GameState state, int baseGold) {
-    if (baseGold <= 0) {
-      return baseGold;
-    }
-    final percent =
-        state.ascensionGoldBonusPercent +
-        state.sanctuaryGoldBonusPercent +
-        state.ascendBlessingGoldPercent +
-        state.gearGoldFindPercent +
-        state.petGoldFindPercent;
-    if (percent <= 0) {
-      return AdBoost.isActive(state.metaDepth.adBoostUntilMs)
-          ? baseGold * 2
-          : baseGold;
-    }
-    final found = baseGold + (baseGold * percent) ~/ 100;
-    if (!AdBoost.isActive(state.metaDepth.adBoostUntilMs)) return found;
-    return found * 2;
-  }
+  static int applyGoldGain(GameState state, int baseGold) =>
+      EconomyService.applyGoldGain(state, baseGold);
 
   /// Optional POWERUPS: +1 hour of double gold and +25% ATK. Stacks duration.
   static GameState grantAdBoostHour(GameState state, {int? nowMs}) {
@@ -1973,6 +1957,7 @@ class GameLogic {
 
     late GameState awarded;
     late List<LootDrop> drops;
+    var lootReceipt = const LootGrantResult();
     // Floor fillers (sigil / pouch / relic / vial) once per clear.
     final floorDrops = rollFloorClearLoot(
       room.globalBattleNumber,
@@ -1980,9 +1965,10 @@ class GameLogic {
     );
     if (skipLootRoll) {
       // Combat: kill gear already applied on pickup; still grant floor fillers.
-      final lootResult = applyLootDrops(state, floorDrops);
+      final lootResult = grantLoot(state, floorDrops);
       awarded = lootResult.state;
       drops = lootResult.resolved;
+      lootReceipt = lootReceipt.merge(lootResult.receipt);
     } else {
       // Treasure (and any explicit full roll): chest gear + floor fillers.
       final rawDrops = LootPipeline.finalizeLootDrops([
@@ -1996,9 +1982,14 @@ class GameLogic {
         ),
         ...floorDrops,
       ]);
-      final lootResult = applyLootDrops(state, rawDrops);
+      final lootResult = grantLoot(state, rawDrops);
       awarded = lootResult.state;
       drops = lootResult.resolved;
+      lootReceipt = lootReceipt.merge(lootResult.receipt);
+    }
+    final lootLine = lootReceipt.summaryLine();
+    if (lootLine.isNotEmpty) {
+      LogicNotices.recordFloorLootLine(lootLine);
     }
     // recentLoot arg kept for call-site compat; clear loot is authoritative.
     if (recentLoot != null && recentLoot.isNotEmpty && drops.isEmpty) {
@@ -2023,7 +2014,14 @@ class GameLogic {
         : max(awarded.highestFloorCleared, room.floorNumber);
     awarded = grantBossCraftMats(awarded, clearedBoss: clearedBoss);
     // Auto-wear clear upgrades so bag loot powers the party every Ascension.
+    final stashBeforeEquip = awarded.gearStash.length;
     awarded = autoEquipBetterGear(awarded);
+    final equippedOnClear = stashBeforeEquip - awarded.gearStash.length;
+    if (equippedOnClear > 0) {
+      LogicNotices.recordFloorEquipLine(
+        'Equipped $equippedOnClear · ${awarded.gearStash.length} kept in bag',
+      );
+    }
 
     // Push + boss floor clear → dungeon cleared, back to hub.
     // Gauntlet never exits on boss — endless climb.
@@ -2757,6 +2755,12 @@ class GameLogic {
     GameState state,
     List<LootDrop> drops,
   ) => GearService.applyLootDrops(state, drops);
+
+  static ({GameState state, List<LootDrop> resolved, LootGrantResult receipt})
+  grantLoot(
+    GameState state,
+    List<LootDrop> drops,
+  ) => GearService.grantLoot(state, drops);
   static GameState unstickBagIfNeeded(GameState state) =>
       GearService.unstickBagIfNeeded(state);
   static GameState cleanBagJunk(

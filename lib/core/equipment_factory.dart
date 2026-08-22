@@ -965,9 +965,10 @@ class EquipmentFactory {
       str = (str * dpsBump).round();
       agi = (agi * dpsBump).round();
     }
-    // Secondaries (WotLK-lite / GEAR_BUDGET): Crit / Haste (/ Mp5 healers).
+    // Secondaries (WotLK-lite / GEAR_BUDGET): Crit / Mastery (/ Mp5 healers).
     // Cap 2 lines. Never roll Move on loot.
     var crit = 0;
+    var mastery = 0;
     var aspd = 0;
     var mp5 = 0;
 
@@ -999,25 +1000,26 @@ class EquipmentFactory {
     final pool = <String>[
       for (final id in switch (tag) {
         // Heals ignore haste (ability CDs are wall-clock) — Mp5/Crit first.
-        SpecRoleTag.healer => const ['mp5', 'crit', 'haste'],
-        SpecRoleTag.caster => const ['crit', 'haste'],
-        SpecRoleTag.tank => const ['haste', 'crit'],
+        SpecRoleTag.healer => const ['mp5', 'crit', 'mastery'],
+        SpecRoleTag.caster => const ['crit', 'mastery'],
+        SpecRoleTag.tank => const ['mastery', 'crit'],
         SpecRoleTag.meleeDps ||
-        SpecRoleTag.rangedDps => const ['crit', 'haste'],
+        SpecRoleTag.rangedDps => const ['crit', 'mastery'],
       })
         id,
     ];
-    // Weapons / gloves lean Haste first (classic feel) — not healers.
+    // Weapons / gloves lean Mastery first (Cata secondary) — not healers.
     if (tag != SpecRoleTag.healer &&
         (resolvedSlot == EquipmentSlot.weapon ||
             resolvedSlot == EquipmentSlot.hands)) {
-      pool.remove('haste');
-      pool.insert(0, 'haste');
+      pool.remove('mastery');
+      pool.insert(0, 'mastery');
     }
 
     int secondaryLines() {
       var n = 0;
       if (crit > 0) n++;
+      if (mastery > 0) n++;
       if (aspd > 0) n++;
       if (mp5 > 0) n++;
       return n;
@@ -1028,6 +1030,8 @@ class EquipmentFactory {
       switch (pick) {
         case 'crit':
           if (crit <= 0) crit = secAmt;
+        case 'mastery':
+          if (mastery <= 0) mastery = secAmt;
         case 'haste':
           if (aspd <= 0) aspd = secAmt;
         case 'mp5':
@@ -1039,16 +1043,20 @@ class EquipmentFactory {
     if (secondaryLines() > 2) {
       final ranked = <({String id, int v})>[
         if (crit > 0) (id: 'crit', v: crit),
+        if (mastery > 0) (id: 'mastery', v: mastery),
         if (aspd > 0) (id: 'aspd', v: aspd),
         if (mp5 > 0) (id: 'mp5', v: mp5),
       ]..sort((a, b) => b.v.compareTo(a.v));
       crit = 0;
+      mastery = 0;
       aspd = 0;
       mp5 = 0;
       for (final e in ranked.take(2)) {
         switch (e.id) {
           case 'crit':
             crit = e.v;
+          case 'mastery':
+            mastery = e.v;
           case 'aspd':
             aspd = e.v;
           case 'mp5':
@@ -1162,6 +1170,7 @@ class EquipmentFactory {
       armorBonus: armorPts,
       mp5Bonus: mp5,
       critChanceBonus: crit,
+      masteryBonus: mastery,
       attackSpeedBonus: aspd,
       moveSpeedBonus: 0, // GEAR_BUDGET: no Move on loot
       pattern: pattern,

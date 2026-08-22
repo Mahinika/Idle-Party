@@ -10,6 +10,7 @@ import 'dungeon_generator.dart';
 import 'equipment_factory.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'gear/drop_tables.dart';
 import 'keystone.dart';
 import '../spatial/hideout_stash.dart';
 
@@ -44,19 +45,16 @@ abstract final class LootPipeline {
     EnemyRole enemyRole = EnemyRole.normal,
   }) {
     final hm = hardmodeLevel.clamp(0, Keystone.maxLevel);
-    final roleSkipRelief = switch (enemyRole) {
-      EnemyRole.boss => 0.25,
-      EnemyRole.elite => 0.12,
-      EnemyRole.normal => 0.0,
-    };
+    final kill = DropTables.current.killLoot;
+    final roleSkipRelief = kill.roleSkipRelief.forRole(enemyRole);
 
     // AL drop penalty: chance to skip gear entirely (pets / HM / elites blunt).
     final skipChance =
         (ascensionLevel * GameLogic.ascensionDropPenalty -
-                lootFindPercent / 100.0 -
-                hm * 0.012 -
+                lootFindPercent / kill.lootFindDivisor -
+                hm * kill.hmSkipFactor -
                 roleSkipRelief)
-            .clamp(0.0, 0.55);
+            .clamp(kill.skipChanceMin, kill.skipChanceMax);
     if (GameLogic.random.nextDouble() < skipChance) {
       return <LootDrop>[
         const LootDrop(
@@ -68,11 +66,7 @@ abstract final class LootPipeline {
     }
 
     var primaryRarity = _rarityForBattle(battleNumber, hardmodeLevel: hm);
-    final rarityBumps = switch (enemyRole) {
-      EnemyRole.boss => 2,
-      EnemyRole.elite => 1,
-      EnemyRole.normal => 0,
-    };
+    final rarityBumps = kill.rarityBumps.forRole(enemyRole);
     for (var i = 0; i < rarityBumps; i++) {
       if (primaryRarity.index < LootRarity.values.length - 1) {
         primaryRarity = LootRarity.values[primaryRarity.index + 1];
@@ -90,18 +84,17 @@ abstract final class LootPipeline {
       ),
     ];
 
-    final roleSecondMul = switch (enemyRole) {
-      EnemyRole.boss => 1.75,
-      EnemyRole.elite => 1.35,
-      EnemyRole.normal => 1.0,
-    };
+    final roleSecondMul = kill.roleSecondMul.forRole(enemyRole);
+    final highBattle = battleNumber >= kill.secondHighBattleThreshold;
     final secondChance =
-        (battleNumber >= 6
-            ? (0.22 + lootFindPercent / 200.0)
-            : (0.08 + lootFindPercent / 250.0)) *
-        roleSecondMul;
-    final secondCap = battleNumber >= 6 ? 0.55 : 0.28;
-    if (battleNumber >= 4 &&
+        (highBattle
+                ? (kill.secondHighBase +
+                      lootFindPercent / kill.secondHighLootFindDivisor)
+                : (kill.secondLowBase +
+                      lootFindPercent / kill.secondLowLootFindDivisor)) *
+            roleSecondMul;
+    final secondCap = highBattle ? kill.secondHighCap : kill.secondLowCap;
+    if (battleNumber >= kill.secondDropMinBattle &&
         GameLogic.random.nextDouble() < secondChance.clamp(0.0, secondCap)) {
       final rarity2 = primaryRarity.index > 0
           ? LootRarity.values[primaryRarity.index - 1]
@@ -125,11 +118,12 @@ abstract final class LootPipeline {
   static List<LootDrop> rollRoomChestLoot(GameState state, {Random? random}) {
     final rng =
         random ?? Random(state.layoutSeed ^ state.battleNumber ^ 0xC7E57);
-    final gold = max(4, treasureGoldBudget(state) ~/ 5);
+    final chest = DropTables.current.roomChest;
+    final gold = max(chest.goldMin, treasureGoldBudget(state) ~/ chest.goldBudgetDivisor);
     final drops = <LootDrop>[
       LootDrop(name: 'Gold Pouch', amount: gold, rarity: LootRarity.common),
     ];
-    if (rng.nextDouble() < 0.42) {
+    if (rng.nextDouble() < chest.gearChance) {
       final gear = rollKillLoot(
         state.battleNumber,
         ascensionLevel: state.ascensionLevel,
@@ -171,7 +165,8 @@ abstract final class LootPipeline {
     required RoomType roomType,
   }) {
     final drops = <LootDrop>[];
-    if (battleNumber % 4 == 0) {
+    final floor = DropTables.current.floorClear;
+    if (battleNumber % floor.goldPouchEvery == 0) {
       drops.add(
         LootDrop(
           name: 'Gold Pouch',
@@ -180,7 +175,7 @@ abstract final class LootPipeline {
         ),
       );
     }
-    if (battleNumber % 9 == 0) {
+    if (battleNumber % floor.relicEvery == 0) {
       drops.add(
         const LootDrop(name: 'Relic Shard', amount: 1, rarity: LootRarity.rare),
       );
@@ -239,7 +234,7 @@ abstract final class LootPipeline {
   /// Keep all gear / sigil / relic / vial; fill remaining slots with filler
   /// (gold pouch). Soft cap 5 — never discards important drops.
   static List<LootDrop> finalizeLootDrops(List<LootDrop> drops) {
-    const softCap = 5;
+    final softCap = DropTables.current.finalize.softCap;
     if (drops.length <= softCap) return List<LootDrop>.from(drops);
 
     bool important(LootDrop d) {
@@ -383,11 +378,12 @@ abstract final class LootPipeline {
   /// Shield-users get double weight so a Prot tank actually sees shields.
   static int _offHandTargetWeight(PartyHero hero) {
     if (!ClassProficiency.usesOffHandSlot(hero.spec)) return 0;
+    final w = DropTables.current.offHandTargetWeight;
     if (ClassProficiency.preferredOffHandKind(hero.spec) ==
         OffHandKind.shield) {
-      return 2;
+      return w.shield;
     }
-    return 1;
+    return w.defaultWeight;
   }
 
   static T _pickWeighted<T>(
@@ -623,12 +619,13 @@ abstract final class LootPipeline {
       return LootRarity.legendary;
     }
 
+    final rar = DropTables.current.rarityForBattle;
     var rarity = LootRarity.common;
-    if (battleNumber % 12 == 0) {
+    if (battleNumber % rar.epicEvery == 0) {
       rarity = LootRarity.epic;
-    } else if (battleNumber % 6 == 0) {
+    } else if (battleNumber % rar.rareEvery == 0) {
       rarity = LootRarity.rare;
-    } else if (battleNumber % 3 == 0) {
+    } else if (battleNumber % rar.uncommonEvery == 0) {
       rarity = LootRarity.uncommon;
     }
 

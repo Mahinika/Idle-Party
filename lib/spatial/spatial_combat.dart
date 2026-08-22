@@ -11,8 +11,10 @@ import '../models/gear_set.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import '../models/spec_mastery.dart';
 import '../models/spell_bolt_style.dart';
 import '../ui/kenney_assets.dart';
+import 'combat_avoidance.dart';
 import 'hideout_stash.dart';
 import 'tile_map.dart';
 
@@ -98,6 +100,43 @@ SpecResource? _actorResource(SpatialActor h) {
 
 bool _partyHeroIsTank(PartyHero hero) => hero.spec.isTank;
 
+MasteryCombatant _masteryView(SpatialActor a) => MasteryCombatant(
+  specId: a.heroSpecId,
+  masteryPoints: a.masteryPoints,
+  rage: a.rage,
+  hp: a.hp,
+  maxHp: a.effectiveMaxHp,
+  rooted: a.rootTimer > 0,
+  eclipseArcane: (a.buffTimers['eclipse_arcane'] ?? 0) > 0,
+  eclipseNature: (a.buffTimers['eclipse_nature'] ?? 0) > 0,
+);
+
+void _applyEnemyRoot(SpatialActor enemy, double baseDuration) {
+  final dr = enemy.ccRootDrLevel;
+  final dur = CombatAvoidance.ccRootDuration(baseDuration, dr);
+  if (dur <= 0) return;
+  enemy.rootTimer = math.max(enemy.rootTimer, dur);
+  enemy.ccRootDrLevel = math.min(3, dr + 1);
+}
+
+void _syncHeroCataStats(SpatialActor actor, PartyHero hero, GameState state) {
+  final ratings = state.ratingsFor(hero);
+  actor.attack = state.effectiveHeroAttack(hero);
+  actor.physicalAttack = ratings.physicalAttack;
+  actor.spellPower = ratings.spellPower;
+  actor.dodgePercent = ratings.dodgePercent;
+  actor.parryPercent = ratings.parryPercent;
+  actor.masteryPoints = ratings.masteryPoints;
+  actor.blockChance = SpecMastery.blockChance(
+    MasteryCombatant(
+      specId: hero.specId,
+      masteryPoints: ratings.masteryPoints,
+    ),
+  );
+  actor.uncrittable = hero.spec.isTank;
+  actor.defense = state.effectiveHeroDefense(hero);
+}
+
 class SpatialActor {
   SpatialActor({
     required this.id,
@@ -131,6 +170,13 @@ class SpatialActor {
     this.blockValue = 0,
     this.spiritRegenBonus = 0,
     this.mp5RegenBonus = 0,
+    this.physicalAttack = 0,
+    this.spellPower = 0,
+    this.dodgePercent = 0,
+    this.parryPercent = 0,
+    this.blockChance = 0,
+    this.masteryPoints = 0,
+    this.uncrittable = false,
   });
 
   final String id;
@@ -142,6 +188,13 @@ class SpatialActor {
   int maxHp;
   int attack;
   int defense;
+  int physicalAttack;
+  int spellPower;
+  double dodgePercent;
+  double parryPercent;
+  double blockChance;
+  double masteryPoints;
+  bool uncrittable;
   double moveSpeed;
   final double attackRange;
   double attackCooldown;
@@ -180,6 +233,16 @@ class SpatialActor {
 
   /// Extra mana regen /s from Mp5 gear.
   final double mp5RegenBonus;
+
+  /// Seconds until Spirit regen recovers after taking damage (5SR).
+  double spiritRegenPaused = 0;
+
+  /// CC diminishing-return stack for roots/stuns.
+  int ccRootDrLevel = 0;
+
+  /// Cast-bar lockout for signature spells.
+  double castingTimer = 0;
+  String? pendingCastDef;
 
   /// Waiting for chamber unlock (gated rooms).
   bool dormant;
@@ -1195,6 +1258,15 @@ abstract final class SpatialCombat {
     }
     if (a.rootTimer > 0) {
       a.rootTimer = math.max(0, a.rootTimer - dt);
+    } else if (a.ccRootDrLevel > 0) {
+      a.ccRootDrLevel = math.max(0, a.ccRootDrLevel - 1);
+    }
+    if (a.castingTimer > 0) {
+      a.castingTimer = math.max(0, a.castingTimer - dt);
+      if (a.castingTimer <= 0) a.pendingCastDef = null;
+    }
+    if (a.spiritRegenPaused > 0) {
+      a.spiritRegenPaused = math.max(0, a.spiritRegenPaused - dt);
     }
     if (a.painSuppressionTimer > 0) {
       a.painSuppressionTimer = math.max(0, a.painSuppressionTimer - dt);
@@ -1305,6 +1377,8 @@ abstract final class SpatialCombat {
     SpatialActor hero,
     int rawDamage, {
     required bool reducedVfx,
+    required math.Random rng,
+    bool isMelee = true,
   }) {
     if (hero.iceBlockTimer > 0 || hero.vanishTimer > 0) {
       if (!reducedVfx) {
@@ -1319,25 +1393,57 @@ abstract final class SpatialCombat {
       }
       return 0;
     }
-    var mul = hero.kitInMul;
+
+    var dealt = rawDamage;
     var blocked = false;
+
+    if (isMelee && dealt > 0) {
+      final avoid = CombatAvoidance.resolveIncomingMelee(
+        rawDamage: dealt,
+        dodgePercent: hero.dodgePercent,
+        parryPercent: hero.parryPercent,
+        blockChance: hero.blockChance,
+        blockValue: hero.blockValue,
+        shieldBlockActive: hero.shieldBlockTimer > 0,
+        rng: rng,
+      );
+      dealt = avoid.damage;
+      blocked = avoid.blocked;
+      if (avoid.avoided && !reducedVfx) {
+        _spawnFloater(
+          world,
+          x: hero.x,
+          y: hero.y - 0.45,
+          text: avoid.dodged ? 'DODGE' : 'PARRY',
+          argb: 0xFF90E0A0,
+          life: 0.35,
+        );
+      }
+      if (blocked &&
+          hero.shieldBlockTimer > 0 &&
+          WarriorAbilities.isUnlocked(AbilityId.revenge, hero.heroLevel)) {
+        hero.revengeReady = true;
+      }
+    }
+
+    if (dealt <= 0) return 0;
+
+    var mul = hero.kitInMul;
     if (hero.shieldWallTimer > 0) {
       mul *= 0.45;
     }
     if (hero.painSuppressionTimer > 0) {
       mul *= 0.55;
     }
-    if (hero.shieldBlockTimer > 0) {
+    // Active Shield Block window stacks DR on top of mastery block (−30%).
+    if (hero.shieldBlockTimer > 0 && !blocked) {
       mul *= 0.55;
       blocked = true;
       if (WarriorAbilities.isUnlocked(AbilityId.revenge, hero.heroLevel)) {
         hero.revengeReady = true;
       }
     }
-    var dealt = math.max(1, (rawDamage * mul).round());
-    if (blocked && hero.blockValue > 0) {
-      dealt = math.max(1, dealt - hero.blockValue);
-    }
+    dealt = math.max(1, (dealt * mul).round());
     if (world.petMitigateFlat > 0) {
       dealt = math.max(1, dealt - world.petMitigateFlat);
     }
@@ -1365,6 +1471,7 @@ abstract final class SpatialCombat {
     hero.hp = math.max(0, hero.hp - dealt);
     held += dealt;
     _recordHeroTaken(hero, held);
+    hero.spiritRegenPaused = 5.0;
     if (dealt > 0) {
       _triggerPrayerOfMending(world, hero);
     }
@@ -1692,6 +1799,7 @@ abstract final class SpatialCombat {
         actor.rage = healerOpeningMana;
       }
       CombatPresence.seed(actor);
+      _syncHeroCataStats(actor, hero, state);
       heroes.add(actor);
     }
 
@@ -2058,6 +2166,7 @@ abstract final class SpatialCombat {
           actor.rage = healerOpeningMana;
         }
       }
+      _syncHeroCataStats(actor, hero, state);
       final setProc = GearSets.fourPieceProc(hero.equipped);
       if (setProc != null) {
         actor.setProcChance = setProc.chance;
@@ -2263,6 +2372,17 @@ abstract final class SpatialCombat {
     to.hotHps = from.hotHps;
     to.hotAcc = from.hotAcc;
     to.rootTimer = from.rootTimer;
+    to.ccRootDrLevel = from.ccRootDrLevel;
+    to.castingTimer = from.castingTimer;
+    to.pendingCastDef = from.pendingCastDef;
+    to.spiritRegenPaused = from.spiritRegenPaused;
+    to.physicalAttack = from.physicalAttack;
+    to.spellPower = from.spellPower;
+    to.dodgePercent = from.dodgePercent;
+    to.parryPercent = from.parryPercent;
+    to.blockChance = from.blockChance;
+    to.masteryPoints = from.masteryPoints;
+    to.uncrittable = from.uncrittable;
     to.damageDealt = from.damageDealt;
     to.healingDone = from.healingDone;
     to.damageTaken = from.damageTaken;
@@ -3063,16 +3183,23 @@ abstract final class SpatialCombat {
         if (enemy.livingBombAcc >= 1) {
           final tick = enemy.livingBombAcc.floor();
           enemy.livingBombAcc -= tick;
-          final wasAlive = enemy.hp > 0;
-          enemy.hp = math.max(0, enemy.hp - tick);
           final caster = _heroById(world, enemy.livingBombCasterId);
-          if (caster != null) _recordHeroDamage(caster, tick);
+          var tickDmg = tick;
+          if (caster != null) {
+            tickDmg = math.max(
+              1,
+              (tick * SpecMastery.dotTickMul(_masteryView(caster))).round(),
+            );
+          }
+          final wasAlive = enemy.hp > 0;
+          enemy.hp = math.max(0, enemy.hp - tickDmg);
+          if (caster != null) _recordHeroDamage(caster, tickDmg);
           if (!reducedVfx) {
             _spawnFloater(
               world,
               x: enemy.x,
               y: enemy.y - 0.25,
-              text: '$tick',
+              text: '$tickDmg',
               argb: 0xFFFF6030,
               life: 0.4,
             );
@@ -3140,16 +3267,23 @@ abstract final class SpatialCombat {
         if (enemy.bleedAcc >= 1) {
           final tick = enemy.bleedAcc.floor();
           enemy.bleedAcc -= tick;
-          final wasAlive = enemy.hp > 0;
-          enemy.hp = math.max(0, enemy.hp - tick);
           final caster = _heroById(world, enemy.bleedCasterId);
-          if (caster != null) _recordHeroDamage(caster, tick);
+          var tickDmg = tick;
+          if (caster != null) {
+            tickDmg = math.max(
+              1,
+              (tick * SpecMastery.dotTickMul(_masteryView(caster))).round(),
+            );
+          }
+          final wasAlive = enemy.hp > 0;
+          enemy.hp = math.max(0, enemy.hp - tickDmg);
+          if (caster != null) _recordHeroDamage(caster, tickDmg);
           if (!reducedVfx) {
             _spawnFloater(
               world,
               x: enemy.x,
               y: enemy.y - 0.2,
-              text: '$tick',
+              text: '$tickDmg',
               argb: 0xFFC05050,
               life: 0.4,
             );
@@ -3188,7 +3322,7 @@ abstract final class SpatialCombat {
       enemy.fireCooldown -= dt * slowRate;
 
       // ?? Enemy specials (heal / enrage / slow / execute / boss pulse) ??
-      _tickEnemySpecials(world, enemy, target, dt, reducedVfx: reducedVfx);
+      _tickEnemySpecials(world, enemy, target, dt, rng: rng, reducedVfx: reducedVfx);
 
       final afterDist = _dist(enemy, target);
       if (enemy.fireCooldown <= 0 && afterDist <= enemy.attackRange) {
@@ -3227,6 +3361,8 @@ abstract final class SpatialCombat {
             target,
             raw,
             reducedVfx: reducedVfx,
+            rng: rng,
+            isMelee: true,
           );
           if (!reducedVfx) {
             _spawnSlash(world, from: enemy, to: target, isCrit: false);
@@ -3828,6 +3964,8 @@ abstract final class SpatialCombat {
                 v,
                 p.damage,
                 reducedVfx: reducedVfx,
+                rng: rng,
+                isMelee: false,
               );
             } else {
               var hitDmg = p.damage;
@@ -4784,6 +4922,7 @@ abstract final class SpatialCombat {
     SpatialActor enemy,
     SpatialActor focus,
     double dt, {
+    required math.Random rng,
     required bool reducedVfx,
   }) {
     // Tank / boss: enrage under 40% HP.
@@ -4856,7 +4995,14 @@ abstract final class SpatialCombat {
         if (_dist(enemy, h) > 2.6) continue;
         var chip = math.max(2, (enemy.effectiveAttack * 0.35).round());
         if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
-        _applyHeroIncomingDamage(world, h, chip, reducedVfx: reducedVfx);
+        _applyHeroIncomingDamage(
+          world,
+          h,
+          chip,
+          reducedVfx: reducedVfx,
+          rng: rng,
+          isMelee: true,
+        );
         hit = true;
       }
       if (hit) {
@@ -4898,7 +5044,14 @@ abstract final class SpatialCombat {
         if (_dist(enemy, h) > 3.4) continue;
         var pulse = math.max(4, (enemy.effectiveAttack * 0.55).round());
         if (world.afkAssist) pulse = math.max(1, (pulse * 0.35).round());
-        _applyHeroIncomingDamage(world, h, pulse, reducedVfx: reducedVfx);
+        _applyHeroIncomingDamage(
+          world,
+          h,
+          pulse,
+          reducedVfx: reducedVfx,
+          rng: rng,
+          isMelee: true,
+        );
         hit = true;
       }
       if (hit) {

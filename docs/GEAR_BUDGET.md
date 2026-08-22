@@ -80,7 +80,7 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 
 1. `newScore - curScore <= 0` → not an upgrade.
 2. Empty slot → fill only if score/mass clears a level-scaled floor (`emptySlotWorthFilling`).
-3. Worn slot → delta must clear `max(6, ~3% of curScore)`; lower-iLvl candidates need a stricter real-stat jump.
+3. Worn slot → delta must clear `max(6, ~3% of curScore)` (AL20 / level 50+: `max(8, ~4%)`); lower-iLvl candidates need a stricter real-stat jump.
 4. Non-Apex never replaces Apex.
 
 **BEST** = highest `powerDelta` among candidates with `isUpgrade == true`.
@@ -103,14 +103,23 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 - Green **UPGRADE** means Auto Equip would swap.
 - Guides / What’s New should stay honest to this contract.
 
-## Code ownership (Factory vs Service)
+## Code ownership (Factory vs Service vs Pipeline)
 
 Keep new gear features on the right side of this line:
 
-| Layer | File | Owns |
+| Layer | Path | Owns |
 |-------|------|------|
 | **Factory** | [`lib/core/equipment_factory.dart`](../lib/core/equipment_factory.dart) | Rolling new items: iLvl budget, stat split, rarity, slot, effects, merge output, Apex craft rolls. `budgetForItemLevel`, loot generation helpers. |
-| **Service** | [`lib/core/gear_service.dart`](../lib/core/gear_service.dart) | Live inventory: equip/unequip, stash, Auto Equip / BiS, sell/disassemble, loadout save fields, `itemBudgetScore` / upgrade predicates. |
-| **Pipeline** | [`lib/core/loot_pipeline.dart`](../lib/core/loot_pipeline.dart) | Kill drops: which slot family, who can wear it, vacuum on clear — calls Factory, not parallel stat math. |
+| **Stash** | [`lib/core/gear/gear_stash.dart`](../lib/core/gear/gear_stash.dart) | Bag capacity, stash/overflow, find/remove. |
+| **Equip** | [`lib/core/gear/gear_equip.dart`](../lib/core/gear/gear_equip.dart) | Equip/unequip, slot targets, illegal-gear migrate. |
+| **Scorer** | [`lib/core/gear/gear_scorer.dart`](../lib/core/gear/gear_scorer.dart) | `itemBudgetScore`, upgrade predicates, compare/BEST. |
+| **BiS** | [`lib/core/gear/gear_bis_planner.dart`](../lib/core/gear/gear_bis_planner.dart) | BiS plan cache, Auto Equip passes (empty slots first). |
+| **Cleanup** | [`lib/core/gear/gear_cleanup.dart`](../lib/core/gear/gear_cleanup.dart) | Merge/sell/disassemble, bag unstick, loadout presets, `shouldKeepInBag` (BiS + near-iLvl slot backup). |
+| **Grant** | [`lib/core/gear/loot_resolver.dart`](../lib/core/gear/loot_resolver.dart) | **Roll → Grant**: apply drops to wallet/bag/filters; `LootGrantResult` receipt. |
+| **Facade** | [`lib/core/gear_service.dart`](../lib/core/gear_service.dart) | Stable public API — forwards to modules above. |
+| **Pipeline** | [`lib/core/loot_pipeline.dart`](../lib/core/loot_pipeline.dart) | **Roll**: kill drops (slot family, who can wear it). Reads [`drop_tables.json`](../assets/data/drop_tables.json) via [`drop_tables.dart`](../lib/core/gear/drop_tables.dart). Calls Factory; hands results to Grant. |
+| **Economy** | [`lib/core/economy_service.dart`](../lib/core/economy_service.dart) | Gold-find bonuses on wallet credit (combat, loot grant, market). |
 
-**Rule:** if it creates item stats from iLvl → **Factory**. If it moves or scores existing items → **Service**. Never duplicate budget math in UI or `GameLogic` — delegate to one of the two.
+**Glossary:** **Roll** = what dropped (`LootPipeline`). **Grant** = where it went (`LootResolver.grant` → gold/essence/stash/auto-sell).
+
+**Rule:** if it creates item stats from iLvl → **Factory**. If it moves or scores existing items → **Service modules**. Never duplicate budget math in UI or `GameLogic` — delegate to one of the above.

@@ -530,6 +530,8 @@ class ClassAbilityDef {
     this.selfBuffKind,
     this.selfBuffDuration = 0,
     this.aoeShape,
+    this.usesSpellPower,
+    this.castDelaySeconds = 0,
   });
 
   final AbilityId id;
@@ -565,6 +567,30 @@ class ClassAbilityDef {
   /// Seconds; 0 = kind default (haste 6 / amp 5 / others 3–6).
   final double selfBuffDuration;
   final AbilityAoeShape? aoeShape;
+
+  /// When true, ability damage/heal scales from spell power instead of physical attack.
+  final bool? usesSpellPower;
+
+  /// Signature cast delay before damage resolves (haste reduces in combat).
+  final double castDelaySeconds;
+
+  /// Infer spell vs physical scaling when [usesSpellPower] is null.
+  static bool inferUsesSpellPower(ClassAbilityDef d) {
+    if (d.usesSpellPower != null) return d.usesSpellPower!;
+    if (d.effect == AbilityEffectKind.heal ||
+        d.effect == AbilityEffectKind.emergencyHeal ||
+        d.effect == AbilityEffectKind.absorb) {
+      return d.gearAffinity == HeroRole.mage ||
+          d.gearAffinity == HeroRole.healer;
+    }
+    if (d.effect != AbilityEffectKind.damage &&
+        d.effect != AbilityEffectKind.aoe) {
+      return false;
+    }
+    return d.gearAffinity == HeroRole.mage ||
+        d.gearAffinity == HeroRole.healer ||
+        d.boltStyle != null;
+  }
 
   AbilityFireMode get resolvedFireMode {
     if (fireMode != AbilityFireMode.cast) return fireMode;
@@ -1045,6 +1071,7 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.95,
+      castDelaySeconds: 1.8,
 
       customId: AbilityCustomId.fireball,
       gate: AbilityGate(
@@ -1152,6 +1179,7 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.45,
+      castDelaySeconds: 2.4,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF4010),
 
@@ -3772,6 +3800,7 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 1.55,
+      castDelaySeconds: 1.6,
     ),
     ClassAbilityDef(
       id: AbilityId.chainHeal,

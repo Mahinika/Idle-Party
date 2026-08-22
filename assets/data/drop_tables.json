@@ -1,0 +1,41 @@
+{
+  "killLoot": {
+    "roleSkipRelief": { "boss": 0.25, "elite": 0.12, "normal": 0.0 },
+    "skipChanceClamp": { "min": 0.0, "max": 0.55 },
+    "hmSkipFactor": 0.012,
+    "lootFindDivisor": 100.0,
+    "rarityBumps": { "boss": 2, "elite": 1, "normal": 0 },
+    "secondDropMinBattle": 4,
+    "secondChance": {
+      "highBattleThreshold": 6,
+      "highBase": 0.22,
+      "highLootFindDivisor": 200.0,
+      "lowBase": 0.08,
+      "lowLootFindDivisor": 250.0,
+      "highCap": 0.55,
+      "lowCap": 0.28
+    },
+    "roleSecondMul": { "boss": 1.75, "elite": 1.35, "normal": 1.0 }
+  },
+  "roomChest": {
+    "goldMin": 4,
+    "goldBudgetDivisor": 5,
+    "gearChance": 0.42
+  },
+  "floorClear": {
+    "goldPouchEvery": 4,
+    "relicEvery": 9
+  },
+  "finalize": {
+    "softCap": 5
+  },
+  "rarityForBattle": {
+    "epicEvery": 12,
+    "rareEvery": 6,
+    "uncommonEvery": 3
+  },
+  "offHandTargetWeight": {
+    "shield": 2,
+    "default": 1
+  }
+}

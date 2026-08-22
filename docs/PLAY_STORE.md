@@ -8,14 +8,14 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ⏳ review | **1.12.37 (67)** next ship after owner play. Alpha **1.12.33 (63)** on review (2026-08-21). Production still ❌. Alpha countries: **all + rest of world** submitted 2026-08-22 (was Sweden only). |
+| Closed testing | ⏳ review | **1.12.42 (72)** submitted 2026-08-22 (Alpha AAB — Cata combat v2 + loot tables). Previous live for testers: **1.12.41 (71)** / **1.12.33 (63)** until Google publishes. Alpha countries: all + rest of world. |
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit) |
 | Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
 | Data safety form | ⏳ review | Updated 2026-08-21 for AdMob (device IDs collected+shared, advertising purpose) + Advertising ID declaration Yes. Submitted with Alpha **57**. |
 | IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). Re-answer ads questions if Console asks after this review. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
-| Store listing copy (EN) | ✅ live | Default locale **en-US only** (no extra listing languages). Honesty copy from `docs/STORE_LISTING.md`. Verified 2026-08-20. |
+| Store listing copy (EN) | ⏳ review | Default locale **en-US only** (no extra listing languages). Full description updated 2026-08-22 (custom dungeon art line). Submitted with Alpha **71**. |
 | Screenshots + feature graphic | ⏳ review | **9 phone + feature graphic** submitted 2026-08-21 (1080×1920 + 1024×500). **Re-capture at 360×780 CSS** (Samsung A56) before production — tablet shots stale. |
 
 ## Production gate (12 × 14)
@@ -49,7 +49,7 @@ over Play ops unless the owner asks about Play.
 ## Play Console — closed / internal (ops)
 
 - [x] App exists in Play Console (`com.idleparty.app`) with listing + closed Alpha.
-- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.33 (63)** submitted 2026-08-21 (review). Previous live for testers: **1.12.32 (62)**.
+- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.42 (72)** submitted 2026-08-22 (review). Previous live for testers: **1.12.41 (71)** / **1.12.33 (63)**.
 - [ ] Enable Play App Signing if prompted on new uploads.
 - [ ] Add / retain closed testers toward **12 × 14 days** for production access.
 - [ ] Smoke-test install → hub → short dungeon → leave → relaunch (save persists).

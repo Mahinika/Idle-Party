@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/gear/gear_scorer.dart';
 import 'package:idle_party/core/loot_pipeline.dart';
 import 'package:idle_party/models/apex_craft.dart';
 import 'package:idle_party/models/hero.dart';
@@ -388,5 +389,46 @@ void main() {
       expect(item.effectId, isNot(GearEffectId.none));
       expect(item.name.toLowerCase(), contains('charm'));
     }
+  });
+
+  test('AL20 worn-slot upgrade bar is stricter at level 50+', () {
+    final hero60 = heroFor(HeroSpecId.protection, name: 'Tank', level: 60);
+    final hero40 = heroFor(HeroSpecId.protection, name: 'Tank', level: 40);
+    final worn = piece(
+      armor: ArmorType.plate,
+      affinity: HeroRole.warrior,
+      str: 20,
+      sta: 16,
+    ).copyWith(id: 'worn', itemLevel: 80);
+    const curScore = 200;
+    const newScore = 207;
+    const delta = newScore - curScore;
+    expect(delta, 7);
+
+    expect(
+      GearScorer.isMeaningfulEquipUpgrade(
+        hero: hero60,
+        item: worn,
+        worn: worn,
+        curScore: curScore,
+        newScore: newScore,
+        slotEmpty: false,
+      ),
+      isFalse,
+      reason: 'Level 50+ needs max(8, 4%) — delta 7 should not pass',
+    );
+
+    expect(
+      GearScorer.isMeaningfulEquipUpgrade(
+        hero: hero40,
+        item: worn,
+        worn: worn,
+        curScore: curScore,
+        newScore: newScore,
+        slotEmpty: false,
+      ),
+      isTrue,
+      reason: 'Below 50 uses max(6, 3%) — delta 7 clears floor of 6',
+    );
   });
 }

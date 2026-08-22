@@ -1,6 +1,6 @@
 # Idle Party — store listing (research + copy)
 
-**Updated:** 2026-08-21 · Target: Google Play (en-US) · Honesty first.
+**Updated:** 2026-08-22 · Target: Google Play (en-US) · Honesty first.
 
 ## Research: what makes people tap Install
 
@@ -51,7 +51,7 @@ Idle Party is a single-player idle RPG for phones: grow a fantasy party, clear p
 
 WHAT YOU DO
 • Build a party of classic kits (tanks, healers, DPS) — 10 classes and 31 specs.
-• Enter the World Path: 15 zones from Sandy Caverns through Mothveil Hollow.
+• Enter the World Path: 15 zones from Sandy Caverns through Mothveil Hollow — each with its own owned dungeon art (floors, walls, props).
 • Fight on multi-chamber floors with loot, room chests, and bosses. Companions follow and hit.
 • Leave the dungeon when you want — AFK catch-up keeps the party moving.
 • Hub TODAY shows one clear chase (READY / ALMOST) so you always know the next beat.
@@ -69,6 +69,14 @@ FAIR PLAY
 • Built for portrait phones.
 
 Install, start a party, and take one more floor.
+```
+
+### Release notes — Alpha 1.12.41 (en-US, paste into Play Console)
+
+```
+• All 15 dungeons now use owned custom zone art — distinct palettes per zone (Hell vs Ember, Sandy sand, Tide silt, and more).
+• UI polish: clearer hub/menus, shared theme tokens on gear tooltips and combat HUD bars.
+• Bug fixes and performance improvements.
 ```
 
 ### Screenshot caption plan (Play phone carousel, 2026-08-21)
@@ -115,9 +123,8 @@ Hard-won rules:
 
 Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
 
-## Play Console status (2026-08-21)
+## Play Console status (2026-08-22)
 
-- Short + full description unchanged (honesty copy in this file).
-- Phone screenshots (8) + feature graphic submitted 2026-08-21 from `tool/store_listing/marketing/` (“Ändringarna granskas”; pre-checks up to ~13 min).
-- Extra card `10_one_more_floor_1080x1920.png` not uploaded (Play cap is 8 phone shots).
-- Closed Alpha AAB **57 (1.12.27)** still in review separately. Testers may still be on **1.12.25 (55)** until Google publishes.
+- Short + full description: en-US only (this file). Updated 2026-08-22 for custom dungeon art line.
+- Phone screenshots (8) + feature graphic from `tool/store_listing/marketing/` (submitted 2026-08-21).
+- Closed Alpha **1.12.41 (71)** submitted 2026-08-22 after owner play OK on GitHub APK.

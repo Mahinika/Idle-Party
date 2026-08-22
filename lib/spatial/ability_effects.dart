@@ -24,6 +24,28 @@ abstract final class AbilityEffectRunner {
     return g;
   }
 
+  static int _abilityPower(SpatialActor hero, ClassAbilityDef def) {
+    if (ClassAbilityDef.inferUsesSpellPower(def)) {
+      return hero.spellPower > 0 ? hero.spellPower : hero.attack;
+    }
+    return hero.physicalAttack > 0 ? hero.physicalAttack : hero.attack;
+  }
+
+  static int _healPower(SpatialActor hero) {
+    return hero.spellPower >= hero.physicalAttack
+        ? (hero.spellPower > 0 ? hero.spellPower : hero.attack)
+        : (hero.physicalAttack > 0 ? hero.physicalAttack : hero.attack);
+  }
+
+  static double _castDelaySeconds(SpatialActor hero, ClassAbilityDef def) {
+    if (def.castDelaySeconds <= 0) return 0;
+    final haste = math.max(
+      0.45,
+      hero.kitHasteMul * hero.attackSpeedMul,
+    );
+    return def.castDelaySeconds / haste;
+  }
+
   /// Returns ability cast count this tick (also increments
   /// [SpatialWorld.pendingAbilityCasts] via [_startAbilityCd]).
   static int tick(
@@ -85,9 +107,15 @@ abstract final class AbilityEffectRunner {
       }
     }
     if (def.resource == SpecResource.mana) {
+      var spiritMul = 1.0;
+      if (hero.spiritRegenPaused > 0) {
+        spiritMul = 0.15;
+      } else if (focus != null) {
+        spiritMul = 0.55;
+      }
       SpatialCombat._gainRage(
         hero,
-        (hero.spiritRegenBonus + hero.mp5RegenBonus) * dt,
+        (hero.spiritRegenBonus * spiritMul + hero.mp5RegenBonus) * dt,
       );
     }
 
@@ -124,6 +152,7 @@ abstract final class AbilityEffectRunner {
     bool can(ClassAbilityDef d) {
       if (!ClassKits.isUnlocked(d.id, hero.heroLevel)) return false;
       if (d.requiresShield && !hasShield) return false;
+      if (hero.castingTimer > 0) return false;
       if (SpatialCombat._abilityCdLeft(hero, d.id) > 0) return false;
       if (hero.rage + 0.001 < d.resourceCost) return false;
       return true;
@@ -775,7 +804,7 @@ abstract final class AbilityEffectRunner {
           _spendAndCd(world, hero, def);
           final rootDur = 2.4 + hero.kitRootBonus;
           for (final e in nearby) {
-            e.rootTimer = math.max(e.rootTimer, rootDur);
+            _applyEnemyRoot(e, rootDur);
             e.attackSlowTimer = math.max(e.attackSlowTimer, 3.0);
           }
           hero.attackFlash = 0.14;
@@ -1009,9 +1038,24 @@ abstract final class AbilityEffectRunner {
     math.Random rng, {
     required bool reducedVfx,
   }) {
+    final delay = _castDelaySeconds(hero, def);
+    if (delay > 0) {
+      hero.castingTimer = math.max(hero.castingTimer, delay);
+      hero.pendingCastDef = def.id.name;
+    }
     var raw = math.max(
       2,
-      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
+      (_abilityPower(hero, def) * def.coeff * _abilityOutScale(hero)).round(),
+    );
+    raw = math.max(
+      2,
+      (raw *
+              SpecMastery.damageMul(
+                _masteryView(hero),
+                def,
+                _masteryView(enemy),
+              ))
+          .round(),
     );
     // Damage amp window (Vendetta / Cold Blood / Arcane Power).
     if (hero.combustionTimer > 0) {
@@ -1668,7 +1712,7 @@ abstract final class AbilityEffectRunner {
     required bool reducedVfx,
   }) {
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
-    focus.rootTimer = math.max(focus.rootTimer, 2.2 + hero.kitRootBonus);
+    _applyEnemyRoot(focus, 2.2 + hero.kitRootBonus);
     hero.attackFlash = 0.14;
     _announce(world, hero, def.shortLabel, 0xFF80D0FF, reducedVfx);
 
@@ -2054,10 +2098,11 @@ abstract final class AbilityEffectRunner {
       AbilityId.scourgeStrike || AbilityId.heartStrike => 0.10,
       _ => 0.12,
     };
+    final dotMul = SpecMastery.dotTickMul(_masteryView(hero));
     final fromHit = raw * 0.08;
     final newDps = math.max(
       1.5,
-      hero.attack * dpsFrac * hero.kitOutMul + fromHit,
+      _abilityPower(hero, def) * dpsFrac * hero.kitOutMul * dotMul + fromHit,
     );
     // Affliction / Shadow: stacking DoTs add instead of fully overwriting.
     if (_isStackingDot(def) &&
@@ -2127,9 +2172,14 @@ abstract final class AbilityEffectRunner {
     String label, {
     bool beaconPeel = true,
   }) {
+    final missing = ally.effectiveMaxHp <= 0
+        ? 0.0
+        : (1.0 - ally.hp / ally.effectiveMaxHp).clamp(0.0, 1.0);
+    final healMul =
+        SpecMastery.healMul(_masteryView(caster), missing) * caster.kitHealMul;
     final amount = math.max(
       4,
-      (caster.attack * coeff * caster.kitHealMul).round(),
+      (_healPower(caster) * coeff * healMul).round(),
     );
     final before = ally.hp;
     ally.hp = math.min(ally.effectiveMaxHp, ally.hp + amount);
@@ -2185,7 +2235,12 @@ abstract final class AbilityEffectRunner {
   ) {
     final amount = math.max(
       6,
-      (caster.attack * coeff * 1.1 * caster.kitHealMul).round(),
+      (_healPower(caster) *
+              coeff *
+              1.1 *
+              caster.kitHealMul *
+              SpecMastery.absorbStrengthMul(_masteryView(caster)))
+          .round(),
     );
     ally.absorbShield += amount;
     SpatialCombat._spawnFloater(
