@@ -124,6 +124,18 @@ abstract final class GearCleanup {
     final plan = GearBiSPlanner.planBiSAssignments(state);
     if (plan.any((p) => p.itemId == item.id)) return false;
 
+    var anyHeroCanUse = false;
+    for (final hero in state.heroes) {
+      for (final slot in GearEquip.equipTargetsFor(item)) {
+        if (GearEquip.canHeroReceive(hero, item, slot: slot)) {
+          anyHeroCanUse = true;
+          break;
+        }
+      }
+      if (anyHeroCanUse) break;
+    }
+    if (!anyHeroCanUse) return false;
+
     var refIlvl = 0;
     for (final hero in state.heroes) {
       for (final slot in GearEquip.equipTargetsFor(item)) {

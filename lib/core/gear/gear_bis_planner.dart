@@ -79,8 +79,7 @@ abstract final class GearBiSPlanner {
         for (final group in GearScorer.equipSlotGroups()) {
           if (blocksOffHand &&
               group.length == 1 &&
-              group.first == EquipmentSlot.offHand &&
-              !ClassProficiency.prefersOneHandAndShield(hero.spec)) {
+              group.first == EquipmentSlot.offHand) {
             continue;
           }
 
@@ -267,9 +266,9 @@ abstract final class GearBiSPlanner {
   static GameState autoEquipBetterGear(GameState state) {
     var next = state;
     for (var pass = 0; pass < 8; pass++) {
-      final beforeLen = next.gearStash.length;
+      final sigBefore = gearPlanSignature(next);
       next = autoEquipPass(next);
-      if (next.gearStash.length >= beforeLen) {
+      if (gearPlanSignature(next) == sigBefore) {
         break;
       }
     }

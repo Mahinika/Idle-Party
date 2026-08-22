@@ -1623,7 +1623,7 @@ void main() {
       offHandKind: OffHandKind.frill,
       intellectBonus: 1,
       spellPowerBonus: 1,
-      itemLevel: 30,
+      itemLevel: 18,
       clearAffinity: true,
     );
     // Strong frills so other heroes do not BiS-keep the junk tome.

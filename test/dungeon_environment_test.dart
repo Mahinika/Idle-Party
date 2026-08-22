@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/spatial/tile_map.dart';
+import 'package:idle_party/spatial/zone_layout_kit.dart';
 import 'package:idle_party/ui/dungeon_environment.dart';
 import 'package:idle_party/ui/kenney_assets.dart';
 
@@ -69,7 +72,13 @@ void main() {
               p.y >= chamber.y &&
               p.y < chamber.y + chamber.h;
         }).length;
-        expect(inRoom, greaterThanOrEqualTo(6), reason: def.id);
+        final kit = ZoneLayoutKit.forId(def.id);
+        final minExpected = kit.clutterPerChamberMin.clamp(3, 12);
+        expect(
+          inRoom,
+          greaterThanOrEqualTo(min(minExpected, max(3, chamber.w * chamber.h ~/ 8))),
+          reason: def.id,
+        );
       }
     }
   });

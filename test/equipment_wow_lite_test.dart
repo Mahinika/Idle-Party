@@ -717,8 +717,16 @@ void main() {
       ascensionLevel: 5,
     );
     expect(high.effectiveItemLevel, greaterThan(low.effectiveItemLevel + 20));
-    final lowSec = low.critChanceBonus + low.attackSpeedBonus + low.mp5Bonus;
-    final highSec = high.critChanceBonus + high.attackSpeedBonus + high.mp5Bonus;
+    final lowSec =
+        low.critChanceBonus +
+        low.attackSpeedBonus +
+        low.mp5Bonus +
+        low.masteryBonus;
+    final highSec =
+        high.critChanceBonus +
+        high.attackSpeedBonus +
+        high.mp5Bonus +
+        high.masteryBonus;
     expect(highSec, greaterThan(lowSec));
   });
 
