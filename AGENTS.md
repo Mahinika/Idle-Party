@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.43**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.44**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -37,9 +37,9 @@ for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (**1.12.33 / 63** submitted 2026-08-21; testers may still be on
-**1.12.32 / 62** until review publishes). Working ship is
-**1.12.43**. Production still needs **12 closed testers × 14 days**.
+closed Alpha (**1.12.42 / 72** submitted 2026-08-22; testers may still be on
+**1.12.41 / 71** until review publishes). Working ship is
+**1.12.44**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -109,9 +109,12 @@ Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`.
 ### Cursor automation
 
 - Project hooks: `.cursor/hooks.json` — **sessionStart** injects cadence context;
-  after game/docs edits, **stop** runs `flutter analyze lib test`, plus
-  changelog sync when version/What’s New files touched, plus `ship_smoke_test`
-  when hub/chase/guides files touched.
+  **afterFileEdit** marks `.cursor/hooks/.verify-dirty` when `lib/` / `test/` /
+  docs / rules change; **stop** verifies only if that flag exists
+  (`flutter analyze lib test --no-fatal-infos`), plus `changelog_sync_test` when
+  version / What’s New / `dungeon_def.dart` touched, plus `ship_smoke_test` when
+  hub / chase / guides files touched.
+- UI chrome: `.cursor/rules/ui-theme.mdc` (globs `lib/ui/**`).
 - Git: daily work on `main`; `release/*` only when cutting a tag.
 - Ship bar: `.cursor/rules/definition-of-done.mdc`.
 - Fast honesty: `flutter test test/ship_smoke_test.dart`.
@@ -146,41 +149,43 @@ Paladin / Shaman can equip **shields** in the off-hand.
 through Mothveil Hollow.
 
 **Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = AL10+): endless Crystal
-Spire climb from Hub; wipe/leave → hub; `metaDepth.gauntletBestFloor` survives Ascend.
+Spire climb from Hub; **boss every 5 floors**; wipe/leave → hub;
+`metaDepth.gauntletBestFloor` survives Ascend.
 
 **Hub TODAY** — selection in `HubChase.forState`; every surface reads the same
 words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up
-next). One chase card — claimables first (vault / jobs / **Meet new kit**), then
-Ascend / progress. Urgency **READY** / **ALMOST** (zone/Will/Gauntlet/Ascend-near
-beat Daily grind; also KEY +1 vault, etc.). **First hour** (no boss, no Ascend):
-grow the party in the starter zone — skip Daily / KEY / vault-start / kit teasers
-until after the first boss (`GameLogic.showDailyChase`). After that, TODAY may
-chase the next KEY (`ENTER KEY +N`) as a habit. META → KEY tab, week-affix line,
-and KEYSTONE tips wait until AL≥2 or King's Fort cleared
-(`GameLogic.showKeystoneJargon`). New unlocks
-queue `metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast + chase
-detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next AL
-unlocks — kit ladder AL1–6 (e.g. Combat Rogue / Arms / Holy Paladin, BM/Holy/Arcane + 5th slot, DKs,
-Aff/Demo) plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock
-sprite).
+next). One chase card — claimables first (vault / jobs / **Meet new kit** /
+**equip BAG** / **MARKET upgrade**), then Ascend / progress. Urgency **READY** /
+**ALMOST** (zone/Will/Gauntlet/Ascend-near beat Daily grind; also KEY +1 vault,
+etc.). Local-season **week goal** can surface as a chase. **First hour** (no
+boss, no Ascend): grow the party in the starter zone — skip Daily / KEY /
+vault-start / kit teasers until after the first boss
+(`GameLogic.showDailyChase`). After that, TODAY may chase the next KEY
+(`ENTER KEY +N`) as a habit. META → KEY tab, week-affix line, and KEYSTONE tips
+wait until AL≥2 or King's Fort cleared (`GameLogic.showKeystoneJargon`). New
+unlocks queue `metaDepth.pendingHeroReveals` until PARTY opens. Ascend
+confirm/toast + chase detail use **`AscendRoadmap`**
+(`lib/core/ascend_roadmap.dart`) for next AL unlocks — kit ladder AL1–6 (e.g.
+Combat Rogue / Arms / Holy Paladin, BM/Holy/Arcane + 5th slot, DKs, Aff/Demo)
+plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock sprite).
 
-New Game picker: three starters in plain English (**Shield / Healer / Damage**).
-Advanced menu tabs (LOADOUTS, ROSTER, CAMP, SHOP, KEY, BEAST, CODEX, …) gate via
-`MenuTabs` so day-one chrome stays small. PARTY badges mean bag upgrades
-(`MenuAlerts`).
+New Game picker: choose **3 unique specs** from the starter pool. Role copy is
+**Shield / Healer / Damage** (easy start = one of each), not three fixed buttons.
+Advanced menu tabs (ROSTER, CAMP, SHOP, KEY, BEAST, CODEX, …) gate via
+`MenuTabs` so day-one chrome stays small. **LOADOUTS** tab is hidden/removed
+(save fields may remain). PARTY badges mean bag upgrades (`MenuAlerts`).
 
-Hub AFK (`!inDungeon`) is sanctuary idle gold only — no combat (see SpatialCombat
-note above for dungeon offline assist). Offline return
-uses `OfflineProgressResult` (wow headline + ≤3 highlights + “Up next” =
-ChaseContract).
+Offline return uses `OfflineProgressResult` (wow headline + ≤3 highlights +
+“Up next” = ChaseContract).
 
 Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
 **Hub POWERUPS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded` +
 `ad_config.dart` (live AdMob ids on release Android; sample ids in debug). 1 ad =
 3 hours of ×2 gold and +25% ATK; duration stacks (max 24h) in
-`metaDepth.adBoostUntilMs` (survives Ascend). Web playtest grants a preview hour.
-Ads never interrupt combat. SETTINGS **AD PRIVACY** withdraws AdMob GDPR consent.
+`metaDepth.adBoostUntilMs` (survives Ascend). Web playtest grants the same
+**3 hours**. Ads never interrupt combat. SETTINGS **AD PRIVACY** withdraws AdMob
+GDPR consent.
 
 ## World path (15 zones)
 
@@ -217,6 +222,9 @@ Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
   with kill loot when the floor clears (same bank path).
 - After all enemies die, ground loot is vacuumed immediately and the party
   walks to **stairs/exit** → `completeCurrentRoom`.
+- **Wipe advice** (in-dungeon panel only): FORGE tips after **2** wipes on the
+  same floor (`WipeAdvice.streakNeeded`); bag / floor-too-far / early DEF /
+  MARKET can fire on wipe 1. Stay quiet if the sim cannot prove a deficit.
 
 ## Combat ratings (1.12.12)
 
@@ -263,6 +271,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Ascend / lore copy | `lib/core/story_lore.dart` |
 | Dungeon shell | `lib/ui/is2_shell.dart` (~thin; HUD in `lib/ui/shell/*`) |
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
+| Wipe advice | `lib/core/wipe_advice.dart` |
 | Kenney helpers | `lib/ui/kenney_assets.dart` |
 | Custom art helpers | `lib/ui/custom_assets.dart` |
 | Gear budget contract | `docs/GEAR_BUDGET.md` |
@@ -275,7 +284,8 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 - `GameDirector.preview()` for tests (no SharedPreferences / no spatial timer).
 - Asset paths only through `KenneyAssets` / `CustomAssets` (no raw `assets/...` in UI).
 - Pixel sprites: `filterQuality: FilterQuality.none`.
-- Loadouts UI label = **LOADOUTS**; dungeon armor 2pc/4pc = **armor sets** (not the same).
+- **LOADOUTS** tab is hidden; leftover save presets reset on Ascend. Dungeon
+  armor 2pc/4pc = **armor sets** (not the same).
 - Gear BiS / UPGRADE: budget-honest score only — see `docs/GEAR_BUDGET.md`
   (`itemBudgetScore`; no affinity/armor/rarity/set crumbs).
 - Split giant files (`game_logic`, `spatial_combat`, …) when a change needs a
@@ -285,16 +295,20 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 ## Meta (survives Ascend)
 
 **Keeps:** essence (and rewards), relics, sanctuary tracks + prestige, pets,
-God Hand level + style/CD in `metaDepth`, **Apex** vault + equipped apex,
-legacy heirloom item if an old save still has one (no new binds; may rescale),
-`highestDungeonCleared`, `lifetimeGoldEarned`, achievements/codex, settings
-(mute/VFX/colorblind/text scale/dungeon zoom/haptics/keep-awake/auto-sell/**auto-disassemble**), full `metaDepth`
-(Gauntlet best, Will / Gauntlet claims, daily vault / weekly affix season,
-**prestige shop** purchases — Apothecary Writ / Junk Magnifier /
-Away Ledger / …, unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY),
-party slot 5, ascend streak/titles/trophies, **`ascendBlessings`**,
-**`adBoostUntilMs`**, Play Games opt-in + season PBs, …), **hero levels/XP**,
-craft mats/pity, keystone prefs (clamped) + challenge toggles, FARM/PUSH preference.
+God Hand **level** on `GameState.godHandLevel` (style/CD in `metaDepth`),
+**Apex** vault + equipped apex, soulbound item + fragments (rescale on AL; old
+saves may still have a legacy heirloom), `highestDungeonCleared`,
+`lifetimeGoldEarned`, achievements/codex, settings
+(mute/VFX/colorblind/text scale/dungeon zoom/haptics/keep-awake/auto-sell/**auto-disassemble**),
+full `metaDepth` (Gauntlet best, Will / Gauntlet claims, daily vault / weekly
+affix season, **prestige shop** purchases — Apothecary Writ / Junk Magnifier /
+Away Ledger / …; Loadout Folio is delisted but old slot-count purchases stay),
+unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY), party slot
+5, ascend streak/titles/trophies, **`ascendBlessings`**, **`adBoostUntilMs`**,
+Play Games opt-in + season PBs, **`sessionTelemetryOptIn`** / log, …),
+**hero levels/XP**, craft mats/pity, keystone **dial** (`hardmodeLevel`,
+clamped) + challenge toggles, FARM/PUSH (`dungeonMode`), daily vault UI
+(`lastDailyDate` / `dailyClaimed`).
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
 each Ascend adds **+2 ATK · +8 DEF · +24 STA · +3% gold** on top of AL flats
@@ -304,8 +318,9 @@ and Sanctuary. Constants: `GameLogic.ascendBlessing*`. Player-facing label is
 
 **Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades
 (ATK/DEF/STA/move/haste/crit), non-Apex gear/stash, **loadout presets** (slot
-*count* from prestige Folio stays), leave dungeon (`inDungeon=false`); mission
-board rebuilt for new AL.
+*count* from prestige Folio stays), **MARKET listings**, wipe streak/advice,
+keystone **run** state (timer/affixes/outcome; dial stays), leave dungeon
+(`inDungeon=false`); mission board rebuilt for new AL.
 
 Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
 

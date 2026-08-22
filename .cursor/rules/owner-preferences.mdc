@@ -8,9 +8,9 @@ alwaysApply: true
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
-Last preference sync: **2026-08-21** (work loop: AL20 save, large independent
+Last preference sync: **2026-08-22** (work loop: AL20 save, large independent
 batches, owner plays their AL20 save; APK only when they ask; short “what to
-test” then wait. Play Alpha fact still **1.12.33 / 63**; no IAP. Other product locks
+test” then wait. Play Alpha fact still **1.12.42 / 72**; no IAP. Other product locks
 unchanged).
 
 ## Near-term focus
@@ -31,7 +31,7 @@ unchanged).
 
 - Goal: **Google Play “for real” soon** (not sideload-only forever).
 - Prefer work that unblocks Play when touching store: CI signing secrets, closed-test 12×14, production access — see `docs/PLAY_STORE.md`.
-- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.33 / 63**, 2026-08-21; testers may still be on **1.12.32 / 62** until review publishes). Working ship is **1.12.33**. **Production is not live**. Optional Play Games (META → SETTINGS) is opt-in, not a store blocker.
+- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.42 / 72**, 2026-08-22; testers may still be on **1.12.41 / 71** until review publishes). Working ship is **1.12.44**. **Production is not live**. Optional Play Games (META → SETTINGS) is opt-in, not a store blocker.
 - **Platforms now:** Android (+ existing web playtest tooling OK). **No iOS** and **no shipping web as a product** for now.
 
 ## UI target device (mandatory)
@@ -61,10 +61,11 @@ unchanged).
 - **Commit locally** when analyze/tests are green so work is not lost. Don’t
   wait for “ska jag commita?”. Still **ask** before push / PR / tag / Play.
   Never force-push or skip hooks unless they say so in that turn.
-- **Code shape:** prefer splitting a giant file (`game_logic`, `is2_shell`,
-  `spatial_combat`, …) when a change needs a home. Do **not** merge more into
-  those files. Keep SpatialCombat as combat authority (extract helpers, don’t
-  add a second fight sim).
+- **Code shape:** prefer splitting a giant file (`game_logic`, `spatial_combat`,
+  …) when a change needs a home. Do **not** merge more into those files.
+  `is2_shell` is already thin — new HUD goes in `lib/ui/shell/`. Keep
+  SpatialCombat as combat authority (extract helpers, don’t add a second fight
+  sim).
 - **Dead code:** delete unused files/APIs with zero callers. Keep JSON/save
   fields that old saves may still contain (`save-migrate`). Unused
   `@Deprecated` helpers that are not serialized may go.
@@ -81,9 +82,10 @@ unchanged).
   obvious on that save. Progression / power still matters; first-hour stays
   calm for new players but is not the default polish target.
 - Keep hub/UI **readable and low-panic** (not sweaty esports chrome).
-- After **3 wipes on the same floor**, dungeon may suggest a fix **only if
-  the sim knows the deficit** (e.g. ATK vs DEF vs wrong zone). No guessed
-  tips. Show it **in the dungeon**, not after they are already back in hub.
+- After **2 wipes on the same floor**, dungeon may suggest a FORGE fix **only
+  if the sim knows the deficit** (e.g. ATK vs DEF vs wrong zone). Bag /
+  floor-too-far / early DEF / MARKET may fire on wipe 1. No guessed tips.
+  Show it **in the dungeon**, not after they are already back in hub.
 - **Dead chrome the owner tried and does not use — hide or remove, don’t
   polish:** BAG **Scrap**, **Sell junk**, GEAR **Sell**, **Loadouts**. Keep
   save fields if old saves still have them.
@@ -97,7 +99,7 @@ unchanged).
 - **Meta loops** (daily vault / Will / Gauntlet / season): push toward **“I always know what I’m chasing today”** — hub TODAY with READY/ALMOST, Ascend Blessing + unlock teasers, clear claims.
 - **God Hand:** owner undecided (fun steer vs deeper strategy) — don’t redesign GH direction without asking.
 - **Monetization:** **no IAP / no paid store** for now. Optional hub **POWERUPS**
-  rewarded ads (1 finished ad = 1 hour of ×2 gold + 25% ATK, stack time up to
+  rewarded ads (1 finished ad = 3 hours of ×2 gold + 25% ATK, stack time up to
   24h). Ads never interrupt combat. Still no paid shop unless the owner asks.
 
 ## Language
