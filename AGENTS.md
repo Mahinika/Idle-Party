@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.45**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.46**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -39,12 +39,12 @@ for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.42 / 72** submitted 2026-08-22; testers may still be on
 **1.12.41 / 71** until review publishes). Working ship is
-**1.12.45**. Production still needs **12 closed testers × 14 days**.
+**1.12.46**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
-**Play update notice** (Android, Play-installed only): hub banner + SETTINGS **GET UPDATE** when Google Play has a newer versionCode. Sideload / web stay quiet. Listing opens with `hl=en`.
+**Play update notice** (Android, Play-installed only): **mandatory cold-start gate** when Play has a newer versionCode (no play until updated); hub banner + SETTINGS **GET UPDATE** with LATER for optional nudge. Sideload / web stay quiet. Listing opens with `hl=en`.
 
 **Optional Play Games** (Android, META → SETTINGS): seasonal Timed KEY + Gauntlet
 boards + cloud save. Opt-in; clipboard export/import still works. IDs in

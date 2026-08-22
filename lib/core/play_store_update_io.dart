@@ -19,6 +19,23 @@ Future<int?> probeAvailableVersionCode() async {
   return null;
 }
 
+/// Full-screen Play update when allowed. False → try flexible or listing.
+Future<bool> startImmediatePlayUpdate() async {
+  if (test_env.inFlutterTestProcess()) return false;
+  try {
+    final info = await InAppUpdate.checkForUpdate();
+    if (info.updateAvailability != UpdateAvailability.updateAvailable) {
+      return false;
+    }
+    if (!info.immediateUpdateAllowed) return false;
+    final result = await InAppUpdate.performImmediateUpdate();
+    return result == AppUpdateResult.success;
+  } catch (e, st) {
+    debugPrint('PlayStoreUpdate immediate failed: $e\n$st');
+    return false;
+  }
+}
+
 /// Starts a flexible Play download when allowed. False → caller opens listing.
 Future<bool> startFlexiblePlayUpdate() async {
   if (test_env.inFlutterTestProcess()) return false;

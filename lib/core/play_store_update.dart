@@ -31,9 +31,28 @@ abstract final class PlayStoreUpdate {
     return play_core.probeAvailableVersionCode();
   }
 
+  /// True when Play reports a newer build on the user's track.
+  static Future<bool> isUpdateRequired() async {
+    final code = await availableVersionCode();
+    return code != null && code > 0;
+  }
+
+  static Future<bool> startImmediateUpdate() async {
+    if (!isSupported) return false;
+    return play_core.startImmediatePlayUpdate();
+  }
+
   static Future<bool> startFlexibleUpdate() async {
     if (!isSupported) return false;
     return play_core.startFlexiblePlayUpdate();
+  }
+
+  /// Mandatory cold-start path: immediate → flexible → Play listing.
+  static Future<bool> startMandatoryUpdate() async {
+    if (!isSupported) return false;
+    if (await startImmediateUpdate()) return true;
+    if (await startFlexibleUpdate()) return true;
+    return await openListing();
   }
 
   static Future<bool> openListing() async {

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/play_store_update.dart';
 import 'package:idle_party/ui/hub/hub_header.dart';
+import 'package:idle_party/ui/play_update_required_screen.dart';
 
 void main() {
   test('Play listing URL is English en-US', () {
@@ -27,6 +28,27 @@ void main() {
     director.dismissPlayUpdateNotice();
     expect(director.showPlayUpdateNotice, isFalse);
     expect(director.state.metaDepth.dismissedPlayUpdateVersionCode, 999999);
+  });
+
+  test('mandatory gate flag clears when Play probe is quiet', () {
+    final director = GameDirector.preview();
+    director.debugForceMandatoryPlayUpdate();
+    expect(director.mandatoryPlayUpdateRequired, isTrue);
+    return director.checkMandatoryPlayUpdate().then((blocked) {
+      expect(blocked, isFalse);
+      expect(director.mandatoryPlayUpdateRequired, isFalse);
+    });
+  });
+
+  testWidgets('mandatory update screen has no LATER', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PlayUpdateRequiredScreen(onUpdate: () {}),
+      ),
+    );
+    expect(find.text('UPDATE REQUIRED'), findsOneWidget);
+    expect(find.text('UPDATE'), findsOneWidget);
+    expect(find.text('LATER'), findsNothing);
   });
 
   testWidgets('hub banner copy is English', (tester) async {

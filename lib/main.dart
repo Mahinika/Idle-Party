@@ -22,6 +22,7 @@ import 'ui/kenney_button.dart';
 import 'ui/loading_splash.dart';
 import 'ui/menu_chrome.dart';
 import 'ui/new_game_party_picker.dart';
+import 'ui/play_update_required_screen.dart';
 import 'ui/save_import_flow.dart';
 import 'ui/shell/menu_surface.dart';
 import 'ui/start_menu_screen.dart';
@@ -143,7 +144,14 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-enum _AppPhase { loading, bootIntro, startMenu, newGamePicker, play }
+enum _AppPhase {
+  loading,
+  playUpdateRequired,
+  bootIntro,
+  startMenu,
+  newGamePicker,
+  play,
+}
 
 class GameHomePage extends StatefulWidget {
   const GameHomePage({
@@ -161,17 +169,34 @@ class GameHomePage extends StatefulWidget {
   State<GameHomePage> createState() => _GameHomePageState();
 }
 
-class _GameHomePageState extends State<GameHomePage> {
+class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver {
   GameDirector get _director => widget.director;
 
   /// One owner of "which menu is open", shared by hub and dungeon.
   final MenuRouter _router = MenuRouter();
   _AppPhase _phase = _AppPhase.loading;
+  bool _playUpdateTapBusy = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _bootstrap();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _router.dispose();
+    _director.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (_phase != _AppPhase.playUpdateRequired) return;
+    unawaited(_recheckMandatoryPlayUpdate());
   }
 
   Future<void> _bootstrap() async {
@@ -187,13 +212,47 @@ class _GameHomePageState extends State<GameHomePage> {
       );
     }
     if (!mounted) return;
+
+    final blocked = await _director.checkMandatoryPlayUpdate();
+    if (!mounted) return;
+    if (blocked) {
+      setState(() => _phase = _AppPhase.playUpdateRequired);
+      return;
+    }
+
+    _enterAfterBootChecks();
+    unawaited(_precacheScenes());
+  }
+
+  void _enterAfterBootChecks() {
     setState(() {
       _phase = widget.showIntro ? _AppPhase.bootIntro : _AppPhase.play;
     });
     if (_phase == _AppPhase.play) {
       _director.ensureCombatLoop();
     }
-    unawaited(_precacheScenes());
+  }
+
+  Future<void> _recheckMandatoryPlayUpdate() async {
+    final blocked = await _director.checkMandatoryPlayUpdate();
+    if (!mounted) return;
+    if (blocked) {
+      setState(() {
+        _phase = _AppPhase.playUpdateRequired;
+        _playUpdateTapBusy = false;
+      });
+      return;
+    }
+    _enterAfterBootChecks();
+  }
+
+  Future<void> _startMandatoryPlayUpdate() async {
+    if (_playUpdateTapBusy) return;
+    setState(() => _playUpdateTapBusy = true);
+    await _director.startMandatoryPlayUpdate();
+    if (!mounted) return;
+    setState(() => _playUpdateTapBusy = false);
+    await _recheckMandatoryPlayUpdate();
   }
 
   /// Warms the two painted scenes the player hits first, while the intro or
@@ -286,18 +345,19 @@ class _GameHomePageState extends State<GameHomePage> {
   }
 
   @override
-  void dispose() {
-    _router.dispose();
-    _director.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     // Intro is outside the director AnimatedBuilder so toast/combat notifies
     // cannot rebuild or accidentally dismiss the title card.
     if (_phase == _AppPhase.loading) {
       return const LoadingSplash();
+    }
+
+    if (_phase == _AppPhase.playUpdateRequired) {
+      return PlayUpdateRequiredScreen(
+        key: const ValueKey('play-update-required'),
+        updating: _playUpdateTapBusy,
+        onUpdate: () => unawaited(_startMandatoryPlayUpdate()),
+      );
     }
 
     if (_phase == _AppPhase.bootIntro) {

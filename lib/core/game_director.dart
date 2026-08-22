@@ -200,6 +200,7 @@ class GameDirector extends ChangeNotifier {
   OfflineProgressResult? _offlineSummary;
   double _offlineSummaryLife = 0;
   int? _playUpdateVersionCode;
+  bool _mandatoryPlayUpdateRequired = false;
   int _lastHighestDungeon = -1;
   double _autosaveAccum = 0;
   int _lastStashLen = 0;
@@ -1904,6 +1905,32 @@ class GameDirector extends ChangeNotifier {
     return true;
   }
 
+  /// Play-installed Android with a newer build on the store — blocks cold start.
+  bool get mandatoryPlayUpdateRequired => _mandatoryPlayUpdateRequired;
+
+  /// Probe Play for a mandatory update gate. Sideload / web / tests → false.
+  Future<bool> checkMandatoryPlayUpdate() async {
+    if (!PlayStoreUpdate.isSupported) {
+      _mandatoryPlayUpdateRequired = false;
+      return false;
+    }
+    final code = await PlayStoreUpdate.availableVersionCode();
+    _playUpdateVersionCode = code;
+    _mandatoryPlayUpdateRequired = code != null && code > 0;
+    notifyListeners();
+    return _mandatoryPlayUpdateRequired;
+  }
+
+  /// Immediate Play update, then flexible, then listing. Stays blocking on deny.
+  Future<void> startMandatoryPlayUpdate() async {
+    final started = await PlayStoreUpdate.startMandatoryUpdate();
+    if (started) {
+      showToast('Updating from Google Play…', life: 3.2);
+      return;
+    }
+    showToast('Could not open Google Play', life: 2.4);
+  }
+
   /// True when Play reports a newer version than this install, and LATER was
   /// not tapped for that versionCode.
   bool get showPlayUpdateNotice {
@@ -1941,6 +1968,13 @@ class GameDirector extends ChangeNotifier {
     if (!opened) {
       showToast('Could not open Google Play', life: 2.2);
     }
+  }
+
+  /// Debug cold-start gate — pretends Play has a newer build.
+  void debugForceMandatoryPlayUpdate() {
+    _playUpdateVersionCode = 999999;
+    _mandatoryPlayUpdateRequired = true;
+    notifyListeners();
   }
 
   /// Debug hub layout — pretends Play has a newer build.
