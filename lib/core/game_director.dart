@@ -562,7 +562,10 @@ class GameDirector extends ChangeNotifier {
   }
 
   /// Hard start: wipe save and create a fresh party from [partySpecs] (3 heroes).
-  Future<void> startNewGame(List<HeroSpecId> partySpecs) async {
+  Future<void> startNewGame(
+    List<HeroSpecId> partySpecs, {
+    String? partyName,
+  }) async {
     _awaitingWipeChoice = false;
     _offlineSummary = null;
     _offlineSummaryLife = 0;
@@ -570,6 +573,7 @@ class GameDirector extends ChangeNotifier {
     _spatial = null;
     _state = GameLogic.createInitialState(
       partySpecs: GameLogic.normalizeNewGameParty(partySpecs),
+      partyName: partyName,
     );
     _hasExistingSave = true;
     _syncDevicePrefs();

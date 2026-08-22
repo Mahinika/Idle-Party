@@ -240,10 +240,38 @@ void main() {
     await director.debugTryPersist();
     expect(await storage.load(), isNull);
 
-    await director.startNewGame(HeroSpecs.starterUnlocked);
+    await director.startNewGame(
+      HeroSpecs.starterUnlocked,
+      partyName: 'Cave Company',
+    );
     expect(director.hasExistingSave, isTrue);
+    expect(director.state.partyName, 'Cave Company');
     expect(await storage.load(), isNotNull);
+    expect((await storage.load())!.partyName, 'Cave Company');
     director.dispose();
+  });
+
+  test('partyName round-trips, defaults on legacy, and survives Ascend', () {
+    final named = GameLogic.createInitialState(
+      now: DateTime(2026, 8, 22),
+      partyName: 'The Ember Guard',
+    );
+    expect(named.partyName, 'The Ember Guard');
+    expect(GameLogic.stateFromJson(named.toJson()).partyName, 'The Ember Guard');
+
+    final json = Map<String, dynamic>.from(
+      GameLogic.createInitialState(now: DateTime(2026, 8, 22)).toJson(),
+    );
+    json.remove('partyName');
+    expect(GameLogic.stateFromJson(json).partyName, 'The Party');
+
+    json['partyName'] = 'sh1t';
+    expect(GameLogic.stateFromJson(json).partyName, 'The Party');
+
+    final ready = named.copyWith(bossVictories: 1);
+    final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 23));
+    expect(ascended.partyName, 'The Ember Guard');
+    expect(ascended.ascensionLevel, 1);
   });
 
   test('clipboard import marks the save real and writes storage', () async {

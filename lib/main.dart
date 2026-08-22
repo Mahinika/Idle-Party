@@ -9,6 +9,7 @@ import 'core/equipment_factory.dart';
 import 'core/gear/drop_tables.dart';
 import 'core/game_director.dart';
 import 'core/menu_router.dart';
+import 'models/dungeon_def.dart';
 import 'models/hero_spec.dart';
 import 'ui/boot_intro_screen.dart';
 import 'ui/custom_assets.dart';
@@ -18,9 +19,10 @@ import 'ui/game_theme.dart';
 import 'ui/hub_screen.dart';
 import 'ui/is2_shell.dart';
 import 'ui/kenney_button.dart';
-import 'ui/kenney_sprite.dart';
+import 'ui/loading_splash.dart';
 import 'ui/menu_chrome.dart';
 import 'ui/new_game_party_picker.dart';
+import 'ui/save_import_flow.dart';
 import 'ui/shell/menu_surface.dart';
 import 'ui/start_menu_screen.dart';
 import 'ui/web_click_bridge.dart';
@@ -228,7 +230,17 @@ class _GameHomePageState extends State<GameHomePage> {
     setState(() => _phase = _AppPhase.newGamePicker);
   }
 
-  Future<void> _confirmNewGame(List<HeroSpecId> specs) async {
+  Future<void> _restoreSave() async {
+    if (_phase != _AppPhase.startMenu) return;
+    final ok = await SaveImportFlow.fromClipboard(
+      context: context,
+      director: _director,
+    );
+    if (!ok || !mounted) return;
+    _continueGame();
+  }
+
+  Future<void> _confirmNewGame(List<HeroSpecId> specs, String partyName) async {
     if (_director.hasExistingSave) {
       WebClickBridge.pushLayer();
       bool? ok;
@@ -266,7 +278,7 @@ class _GameHomePageState extends State<GameHomePage> {
         return;
       }
     }
-    await _director.startNewGame(specs);
+    await _director.startNewGame(specs, partyName: partyName);
     if (!mounted) return;
     _director.clearPendingStartMenu();
     setState(() => _phase = _AppPhase.play);
@@ -285,32 +297,7 @@ class _GameHomePageState extends State<GameHomePage> {
     // Intro is outside the director AnimatedBuilder so toast/combat notifies
     // cannot rebuild or accidentally dismiss the title card.
     if (_phase == _AppPhase.loading) {
-      return Scaffold(
-        backgroundColor: GameTheme.ink,
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            ColoredBox(color: GameTheme.ink),
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  KenneySprite(asset: CustomAssets.introLogo, size: 96),
-                  const SizedBox(height: 18),
-                  SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: GameTheme.torch.withValues(alpha: 0.85),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
+      return const LoadingSplash();
     }
 
     if (_phase == _AppPhase.bootIntro) {
@@ -330,8 +317,12 @@ class _GameHomePageState extends State<GameHomePage> {
         body: StartMenuScreen(
           key: const ValueKey('start-menu'),
           canContinue: _director.hasExistingSave,
+          saveSummary: _director.hasExistingSave
+              ? '${_director.state.partyName} · ${DungeonCatalog.byId(_director.state.dungeonId).name}'
+              : null,
           onContinue: _continueGame,
           onNewGame: _openNewGamePicker,
+          onRestore: _restoreSave,
         ),
       );
     }

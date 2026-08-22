@@ -14,7 +14,7 @@ abstract final class StoryLore {
   static const introBeats = <({String title, String body})>[
     (
       title: 'IDLE PARTY',
-      body: 'Your heroes fight on their own while you watch.',
+      body: 'A small party waits at the cave mouth. They fight without you.',
     ),
     (
       title: 'THE CAVE',

@@ -153,6 +153,7 @@ class HubHeader extends StatelessWidget {
     required this.onOpenSettings,
     required this.incomeLine,
     required this.multiplierLine,
+    this.partyName = 'The Party',
   });
 
   final int ascensionLevel;
@@ -167,6 +168,7 @@ class HubHeader extends StatelessWidget {
   final VoidCallback onOpenSettings;
   final String incomeLine;
   final String multiplierLine;
+  final String partyName;
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +211,7 @@ class HubHeader extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Hero\'s Keep · Boss F$bossFloor',
+          '$partyName · Boss F$bossFloor',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),

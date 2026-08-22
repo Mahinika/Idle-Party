@@ -35,6 +35,7 @@ import 'meta_systems.dart';
 import 'play_games_bridge.dart';
 import 'play_games_scores.dart';
 import 'wipe_advice.dart';
+import 'party_name_filter.dart';
 
 part 'game_logic_ascend.dart';
 
@@ -131,6 +132,7 @@ class GameLogic {
   static GameState createInitialState({
     DateTime? now,
     List<HeroSpecId>? partySpecs,
+    String? partyName,
   }) {
     final timestamp = now ?? DateTime.now();
     final layoutSeed = newLayoutSeed();
@@ -154,6 +156,9 @@ class GameLogic {
     var state = GameState(
       heroRoster: roster,
       activeHeroIds: [for (final h in roster) h.id],
+      partyName:
+          PartyNameFilter.sanitize(partyName ?? '') ??
+          PartyNameFilter.defaultName,
       enemies: createEnemyGroup(firstRoom, dungeonId: 'sandy'),
       gold: 0,
       lifetimeGoldEarned: 0,

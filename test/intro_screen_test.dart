@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
+import 'package:idle_party/core/meta_systems.dart';
+import 'package:idle_party/core/party_name_filter.dart';
 import 'package:idle_party/core/story_lore.dart';
 import 'package:idle_party/main.dart';
 import 'package:idle_party/models/hero_spec.dart';
@@ -41,7 +43,11 @@ void main() {
     expect(find.byType(BootIntroScreen), findsOneWidget);
     expect(find.text(StoryLore.introBeats.first.title), findsWidgets);
     expect(find.text(StoryLore.introBeats.first.body), findsOneWidget);
+    expect(find.text('Tap to continue'), findsNothing);
     expect(find.byType(StartMenuScreen), findsNothing);
+
+    await tester.pump(BootIntroScreen.inputUnlock);
+    expect(find.text('Tap to continue'), findsOneWidget);
 
     await tester.pump(BootIntroScreen.beatDuration);
     await tester.pump(const Duration(milliseconds: 80));
@@ -71,6 +77,9 @@ void main() {
     expect(find.text(StoryLore.introTagline), findsOneWidget);
     expect(find.text('CONTINUE'), findsOneWidget);
     expect(find.text('NEW GAME'), findsOneWidget);
+    expect(find.text('RESTORE SAVE'), findsOneWidget);
+    expect(find.text(MetaSystems.currentVersion), findsOneWidget);
+    expect(find.textContaining('The Party ·'), findsOneWidget);
 
     // Still on menu after time passes (no auto-dismiss).
     await tester.pump(const Duration(seconds: 3));
@@ -91,6 +100,9 @@ void main() {
     expect(find.text('Healer'), findsWidgets);
     expect(find.text('Damage'), findsWidgets);
     expect(find.text('Unlocks later'), findsWidgets);
+    expect(find.text('Party name'), findsOneWidget);
+    expect(find.text('The Ember Guard'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
   });
 
   testWidgets('new game start reaches hub with chosen party size',
@@ -130,9 +142,72 @@ void main() {
     expect(find.byType(NewGamePartyPicker), findsNothing);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(director.state.heroes.length, 3);
+    expect(director.state.partyName, PartyNameFilter.defaultName);
     expect(
       director.state.heroes.map((h) => h.specId).toSet(),
       HeroSpecs.starterUnlocked.toSet(),
     );
+  });
+
+  testWidgets('first launch hides Continue and starts with a named party',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final director = GameDirector(
+      InMemoryGameStorage(),
+      enableSpatialLoop: false,
+    );
+
+    await tester.binding.setSurfaceSize(const Size(360, 780));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: true),
+    );
+    await skipBootIntro(tester);
+
+    expect(find.byType(StartMenuScreen), findsOneWidget);
+    expect(find.text('CONTINUE'), findsNothing);
+    expect(find.text('NEW GAME'), findsOneWidget);
+    expect(find.text('RESTORE SAVE'), findsOneWidget);
+    expect(director.hasExistingSave, isFalse);
+
+    await tester.tap(find.text('NEW GAME'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(NewGamePartyPicker), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'The Ember Guard');
+    await tester.ensureVisible(find.text('START'));
+    await tester.tap(find.text('START'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Overwrite save?'), findsNothing);
+    expect(find.text('ENTER DUNGEON'), findsOneWidget);
+    expect(director.state.partyName, 'The Ember Guard');
+    expect(find.textContaining('The Ember Guard · Boss F'), findsOneWidget);
+  });
+
+  testWidgets('blocked party name stays on the picker', (tester) async {
+    var started = false;
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: NewGamePartyPicker(
+          onConfirm: (_, _) => started = true,
+          onBack: () {},
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(TextField), 'ass');
+    await tester.ensureVisible(find.text('START'));
+    await tester.tap(find.text('START'));
+    await tester.pump();
+
+    expect(started, isFalse);
+    expect(find.byType(NewGamePartyPicker), findsOneWidget);
+    expect(find.text('Choose another party name'), findsOneWidget);
   });
 }

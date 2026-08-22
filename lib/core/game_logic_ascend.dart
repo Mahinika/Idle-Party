@@ -96,6 +96,7 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
   var withMeta = fresh.copyWith(
     heroRoster: preservedRoster,
     activeHeroIds: preservedActive,
+    partyName: state.partyName,
     essence: preservedEssence,
     lifetimeGoldEarned: state.lifetimeGoldEarned,
     unlockedRelics: preservedRelics,

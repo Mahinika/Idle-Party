@@ -126,43 +126,54 @@ class _BootIntroScreenState extends State<BootIntroScreen>
                       const Spacer(flex: 2),
                       Opacity(
                         opacity: opacity,
-                        child: Column(
-                          children: [
-                            if (first) ...[
-                              KenneySprite(
-                                asset: CustomAssets.introLogo,
-                                size: 88,
+                        child: Semantics(
+                          header: true,
+                          label: '${beat.title}. ${beat.body}',
+                          child: Column(
+                            children: [
+                              if (first) ...[
+                                KenneySprite(
+                                  asset: CustomAssets.introLogo,
+                                  size: 88,
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                              Text(
+                                beat.title,
+                                textAlign: TextAlign.center,
+                                style: GameTheme.menuTitle(
+                                  size: first ? 22 : 20,
+                                ),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 12),
+                              Text(
+                                beat.body,
+                                textAlign: TextAlign.center,
+                                style: GameTheme.body(
+                                  size: 16,
+                                  color: GameTheme.parchment,
+                                ),
+                              ),
                             ],
-                            Text(
-                              beat.title,
-                              textAlign: TextAlign.center,
-                              style: GameTheme.menuTitle(size: first ? 22 : 20),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              beat.body,
-                              textAlign: TextAlign.center,
-                              style: GameTheme.body(
-                                size: 16,
-                                color: GameTheme.parchment,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Spacer(flex: 3),
-                      Text(
-                        'Tap to continue',
-                        textAlign: TextAlign.center,
-                        style: GameTheme.body(
-                          size: 13,
-                          color: GameTheme.parchmentDim.withValues(
-                            alpha: 0.45 + _glow.value * 0.35,
                           ),
                         ),
                       ),
+                      const Spacer(flex: 3),
+                      if (_inputUnlocked)
+                        Semantics(
+                          button: true,
+                          label: 'Tap to continue',
+                          child: Text(
+                            'Tap to continue',
+                            textAlign: TextAlign.center,
+                            style: GameTheme.body(
+                              size: 13,
+                              color: GameTheme.parchmentDim.withValues(
+                                alpha: 0.45 + _glow.value * 0.35,
+                              ),
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 10),
                       KenneyButton(
                         label: 'SKIP',

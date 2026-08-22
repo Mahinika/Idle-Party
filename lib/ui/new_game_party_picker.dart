@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
+import '../core/party_name_filter.dart';
 import '../models/hero_spec.dart';
 import 'custom_assets.dart';
 import 'game_theme.dart';
@@ -17,7 +18,7 @@ class NewGamePartyPicker extends StatefulWidget {
     this.initialSpecs,
   });
 
-  final ValueChanged<List<HeroSpecId>> onConfirm;
+  final void Function(List<HeroSpecId> specs, String partyName) onConfirm;
   final VoidCallback onBack;
   final List<HeroSpecId>? initialSpecs;
 
@@ -27,8 +28,10 @@ class NewGamePartyPicker extends StatefulWidget {
 
 class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   late final List<HeroSpecId?> _slots;
+  late final TextEditingController _nameCtrl;
   HeroClassId _filter = HeroSpecs.def(HeroSpecs.starterUnlocked.first).classId;
   int _activeSlot = 0;
+  bool _nameError = false;
 
   @override
   void initState() {
@@ -38,6 +41,23 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     for (var i = 0; i < _slots.length && i < seed.length; i++) {
       _slots[i] = seed[i];
     }
+    _nameCtrl = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  void _tryStart() {
+    if (!_ready) return;
+    final name = PartyNameFilter.sanitize(_nameCtrl.text);
+    if (name == null) {
+      setState(() => _nameError = true);
+      return;
+    }
+    widget.onConfirm([for (final s in _slots) s!], name);
   }
 
   bool get _ready =>
@@ -104,6 +124,55 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                 textAlign: TextAlign.center,
                 style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
               ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _nameCtrl,
+                maxLength: PartyNameFilter.maxLen,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.done,
+                autocorrect: false,
+                enableSuggestions: false,
+                style: GameTheme.body(size: 15, color: GameTheme.parchment),
+                cursorColor: GameTheme.torchHot,
+                onChanged: (_) {
+                  if (_nameError) setState(() => _nameError = false);
+                },
+                decoration: InputDecoration(
+                  counterText: '',
+                  labelText: 'Party name',
+                  hintText: 'The Ember Guard',
+                  labelStyle: GameTheme.body(
+                    size: 13,
+                    color: GameTheme.parchmentDim,
+                  ),
+                  hintStyle: GameTheme.body(
+                    size: 14,
+                    color: GameTheme.parchmentDim,
+                  ),
+                  filled: true,
+                  fillColor: GameTheme.panelInset,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                    borderSide: BorderSide(color: GameTheme.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                    borderSide: BorderSide(color: GameTheme.torchHot),
+                  ),
+                ),
+              ),
+              if (_nameError) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Choose another party name',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(size: 12, color: GameTheme.bloodLit),
+                ),
+              ],
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -194,9 +263,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                     child: KenneyButton(
                       label: 'START',
                       style: KenneyButtonStyle.brown,
-                      onPressed: _ready
-                          ? () => widget.onConfirm([for (final s in _slots) s!])
-                          : null,
+                      onPressed: _ready ? _tryStart : null,
                     ),
                   ),
                 ],

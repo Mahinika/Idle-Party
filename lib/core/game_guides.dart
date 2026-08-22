@@ -46,7 +46,7 @@ abstract final class GameGuides {
           '• Locked zones dim on the map; the caption under the map shows lifetime gold progress (have / need).\n'
           '• Lifetime gold (not wallet gold) counts for gold unlocks.\n'
           "• Goblin's Hideout: stolen-stash chests pay better gold but wake ambush guards.\n"
-          '• Boss floor is shown under Hero\'s Keep (Boss F n).',
+          '• Boss floor is shown under your party name (Boss F n).',
     ),
     GuideTopic(
       id: 'combat',

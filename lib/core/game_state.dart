@@ -16,10 +16,18 @@ import '../models/pet.dart';
 import '../models/vfx_quality.dart';
 import 'ad_boost.dart';
 import 'keystone.dart';
+import 'party_name_filter.dart';
 
 /// UI text scale clamps (SETTINGS slider + MediaQuery compose).
 const double kUiTextScaleMin = 0.80;
 const double kUiTextScaleMax = 1.45;
+
+String _readPartyName(dynamic raw) {
+  if (raw is! String || raw.trim().isEmpty) {
+    return PartyNameFilter.defaultName;
+  }
+  return PartyNameFilter.sanitize(raw) ?? PartyNameFilter.defaultName;
+}
 
 int _jsonInt(dynamic value, [int fallback = 0]) {
   if (value == null) return fallback;
@@ -41,6 +49,7 @@ class GameState {
   const GameState({
     required this.heroRoster,
     required this.activeHeroIds,
+    this.partyName = 'The Party',
     required this.enemies,
     required this.gold,
     this.lifetimeGoldEarned = 0,
@@ -124,6 +133,9 @@ class GameState {
 
   /// Ordered ids of the active party (subset of [heroRoster]).
   final List<String> activeHeroIds;
+
+  /// Player-chosen party name. Survives Ascend. Old saves default to The Party.
+  final String partyName;
 
   /// Active party resolved from [activeHeroIds]. Falls back to full roster
   /// when the active list is empty.
@@ -398,6 +410,19 @@ class GameState {
 
   /// Extra gold percent from Ascension Level (+10% per AL).
   int get ascensionGoldBonusPercent => ascensionLevel * 10;
+
+  /// Raw stacked gold-find before the economy soft cap.
+  int get totalGoldFindPercent =>
+      ascensionGoldBonusPercent +
+      sanctuaryGoldBonusPercent +
+      ascendBlessingGoldPercent +
+      gearGoldFindPercent +
+      petGoldFindPercent;
+
+  /// Combat + hub gold grants — soft-cap stacked find so AL20 KEY runs stay
+  /// rich without printing infinite wallet gold.
+  int get effectiveGoldFindPercent =>
+      softForgePercent(totalGoldFindPercent, softAt: 220).round();
 
   /// Sanctuary gold find (+5% per level soft-capped, +3% per prestige).
   int get sanctuaryGoldBonusPercent =>
@@ -826,6 +851,7 @@ class GameState {
     List<PartyHero>? heroes,
     List<PartyHero>? heroRoster,
     List<String>? activeHeroIds,
+    String? partyName,
     List<EnemyUnit>? enemies,
     int? gold,
     int? lifetimeGoldEarned,
@@ -923,6 +949,7 @@ class GameState {
     return GameState(
       heroRoster: nextRoster,
       activeHeroIds: nextActive,
+      partyName: partyName ?? this.partyName,
       enemies: enemies ?? this.enemies,
       gold: gold ?? this.gold,
       lifetimeGoldEarned: lifetimeGoldEarned ?? this.lifetimeGoldEarned,
@@ -1064,6 +1091,7 @@ class GameState {
     'version': saveVersion,
     'heroRoster': heroRoster.map((hero) => hero.toJson()).toList(),
     'activeHeroIds': activeHeroIds,
+    'partyName': partyName,
     'heroes': heroes.map((hero) => hero.toJson()).toList(),
     'enemies': enemies.map((enemy) => enemy.toJson()).toList(),
     'gold': gold,
@@ -1253,6 +1281,7 @@ class GameState {
     return GameState(
       heroRoster: heroRoster,
       activeHeroIds: activeHeroIds,
+      partyName: _readPartyName(json['partyName']),
       enemies: (json['enemies'] as List<dynamic>)
           .cast<Map<String, dynamic>>()
           .map(EnemyUnit.fromJson)

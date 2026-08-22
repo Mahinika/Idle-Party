@@ -359,6 +359,7 @@ class _HubScreenState extends State<HubScreen>
                                   incomeLine: GoldIncome.hubRateLine(state),
                                   multiplierLine:
                                       GoldIncome.multiplierLine(state),
+                                  partyName: state.partyName,
                                 ),
                               ),
                               if (director.offlineSummary != null) ...[

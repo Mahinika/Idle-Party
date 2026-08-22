@@ -23,7 +23,7 @@ void main() {
 
     expect(find.text('IDLE PARTY'), findsOneWidget);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
-    expect(find.textContaining("Hero's Keep"), findsOneWidget);
+    expect(find.textContaining('The Party · Boss F'), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp(r'Sandy Caverns')), findsWidgets);
     expect(find.textContaining('Boss F'), findsWidgets);
     expect(find.textContaining('Boss:'), findsOneWidget);
@@ -71,7 +71,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(GameLogic.showKeystoneJargon(director.state), isTrue);
-    expect(find.textContaining('KEYSTONE'), findsWidgets);
+    expect(find.text('META → KEY'), findsOneWidget);
   });
 
   testWidgets('entering dungeon shows mobile shell chrome', (WidgetTester tester) async {
@@ -183,7 +183,7 @@ void main() {
     );
 
     // Hub keeps ambient animations running, so settle by hand.
-    await tester.tap(find.text('PARTY'));
+    await tester.tap(find.text('PARTY').last);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('EQUIP $upgrades'), findsWidgets);

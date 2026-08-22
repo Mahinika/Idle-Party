@@ -23,6 +23,7 @@ import 'kenney_assets.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
+import 'save_import_flow.dart';
 import 'web_click_bridge.dart';
 
 export 'shell/discord_thanks_overlay.dart';
@@ -1301,40 +1302,7 @@ class SaveTransferSection extends StatelessWidget {
   }
 
   Future<void> _import(BuildContext context) async {
-    final data = await Clipboard.getData('text/plain');
-    final raw = data?.text;
-    if (raw == null || raw.isEmpty) {
-      director.showToast('Clipboard is empty');
-      return;
-    }
-    if (!context.mounted) return;
-    final ok = await showDialog<bool>(
-      context: context,
-      barrierColor: MenuChrome.scrim,
-      builder: (ctx) => MenuChrome.dialog(
-        title: 'Import save?',
-        content: Text(
-          'This replaces your current save with the clipboard contents. '
-          'This cannot be undone.',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
-        ),
-        actions: [
-          MenuChrome.dialogCancel(
-            label: 'CANCEL',
-            onPressed: () => Navigator.pop(ctx, false),
-          ),
-          KenneyButton(
-            label: 'IMPORT',
-            style: KenneyButtonStyle.red,
-            expanded: false,
-            onPressed: () => Navigator.pop(ctx, true),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-    final success = director.importSaveJson(raw);
-    director.showToast(success ? 'Save imported' : 'Could not read that save');
+    await SaveImportFlow.fromClipboard(context: context, director: director);
   }
 
   @override

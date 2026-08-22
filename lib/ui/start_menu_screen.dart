@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../core/meta_systems.dart';
 import '../core/story_lore.dart';
 import 'cave_atmosphere.dart';
 import 'custom_assets.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
+import 'menu_chrome.dart';
 
 /// Cold-start menu: brand scene + Continue / New Game.
 class StartMenuScreen extends StatefulWidget {
@@ -13,11 +15,17 @@ class StartMenuScreen extends StatefulWidget {
     required this.canContinue,
     required this.onContinue,
     required this.onNewGame,
+    required this.onRestore,
+    this.saveSummary,
   });
 
   final bool canContinue;
   final VoidCallback onContinue;
   final VoidCallback onNewGame;
+  final VoidCallback onRestore;
+
+  /// Party name + zone when a save exists, e.g. "The Ember Guard · Sandy Caverns".
+  final String? saveSummary;
 
   @override
   State<StartMenuScreen> createState() => _StartMenuScreenState();
@@ -115,12 +123,16 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                           const Spacer(flex: 2),
                           Opacity(
                             opacity: titleOpacity,
-                            child: Text(
-                              'IDLE PARTY',
-                              textAlign: TextAlign.center,
-                              style: GameTheme.pixel(
-                                size: titleSize,
-                                color: GameTheme.torchHot,
+                            child: Semantics(
+                              header: true,
+                              label: 'Idle Party',
+                              child: Text(
+                                'IDLE PARTY',
+                                textAlign: TextAlign.center,
+                                style: GameTheme.pixel(
+                                  size: titleSize,
+                                  color: GameTheme.torchHot,
+                                ),
                               ),
                             ),
                           ),
@@ -148,39 +160,70 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               ),
                             ),
                           ),
+                          if (widget.canContinue &&
+                              widget.saveSummary != null &&
+                              widget.saveSummary!.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Opacity(
+                              opacity: copyOpacity,
+                              child: Text(
+                                widget.saveSummary!,
+                                textAlign: TextAlign.center,
+                                style: GameTheme.body(
+                                  size: 13,
+                                  color: GameTheme.torchHot,
+                                ),
+                              ),
+                            ),
+                          ],
                           const Spacer(flex: 3),
                           Opacity(
                             opacity: ctaOpacity,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                KenneyButton(
-                                  label: 'CONTINUE',
-                                  style: KenneyButtonStyle.brown,
-                                  onPressed:
-                                      widget.canContinue && _inputUnlocked
-                                      ? () => _choose(widget.onContinue)
-                                      : null,
-                                ),
-                                const SizedBox(height: 8),
-                                KenneyButton(
-                                  label: 'NEW GAME',
-                                  style: KenneyButtonStyle.grey,
-                                  onPressed: _inputUnlocked
-                                      ? () => _choose(widget.onNewGame)
-                                      : null,
-                                ),
-                                if (!widget.canContinue) ...[
+                                if (widget.canContinue) ...[
+                                  KenneyButton(
+                                    label: 'CONTINUE',
+                                    style: KenneyButtonStyle.brown,
+                                    onPressed: _inputUnlocked
+                                        ? () => _choose(widget.onContinue)
+                                        : null,
+                                  ),
                                   const SizedBox(height: 8),
-                                  Text(
-                                    'No save yet — start a new party',
-                                    textAlign: TextAlign.center,
-                                    style: GameTheme.body(
-                                      size: 12,
-                                      color: GameTheme.parchmentDim,
+                                  KenneyButton(
+                                    label: 'NEW GAME',
+                                    style: KenneyButtonStyle.grey,
+                                    onPressed: _inputUnlocked
+                                        ? () => _choose(widget.onNewGame)
+                                        : null,
+                                  ),
+                                ] else
+                                  KenneyButton(
+                                    label: 'NEW GAME',
+                                    style: KenneyButtonStyle.brown,
+                                    onPressed: _inputUnlocked
+                                        ? () => _choose(widget.onNewGame)
+                                        : null,
+                                  ),
+                                const SizedBox(height: 8),
+                                MenuChrome.textLink(
+                                  label: 'RESTORE SAVE',
+                                  onPressed: _inputUnlocked
+                                      ? widget.onRestore
+                                      : null,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  MetaSystems.currentVersion,
+                                  textAlign: TextAlign.center,
+                                  style: GameTheme.body(
+                                    size: 11,
+                                    color: GameTheme.parchmentDim.withValues(
+                                      alpha: 0.7,
                                     ),
                                   ),
-                                ],
+                                ),
                               ],
                             ),
                           ),
