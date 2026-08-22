@@ -68,14 +68,29 @@ Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not
 
 **Wired (2026-08-21):** Idle Party is in AdMob (not store-linked yet). App ID and rewarded unit **POWERUPS hour** live in `lib/core/ad_config.dart`. Release Android builds use them; debug `flutter run` still uses Google sample ads so you do not click your own ads.
 
-**AdMob done (2026-08-21):** GDPR message **Idle Party GDPR** published (Consent / Do not consent / Manage options). Privacy URL is this repo’s `docs/PRIVACY.md`. SETTINGS **AD PRIVACY** withdraws consent. Payment profile is complete. Account verification is in progress (~24h, sometimes up to 2 weeks). Store-link waits until Play is public (closed Alpha cannot be linked).
+**AdMob check (2026-08-22):**
 
-**Still later:**
+| Item | Status |
+|------|--------|
+| Account | ✅ Approved (“Ditt konto är godkänt”) |
+| GDPR message | ✅ 1 active (Europeiska förordningar) |
+| App ID | ✅ `ca-app-pub-4980376195917009~4491640230` |
+| Rewarded unit | ✅ **POWERUPS hour** `…/5225353586` (matches code) |
+| Store link | ❌ empty — home setup **3/4**; needs Play store listing |
+| App approval | ⏳ **Requires review** until store-linked + Google reviews |
+| app-ads.txt | ✅ Hosted at `https://mahinika.github.io/app-ads.txt`; Play Website set to `https://mahinika.github.io` (2026-08-22). AdMob crawl may take up to 24h |
+| Revenue today | ~0.54 SEK estimated (ads can fill a little even while in review) |
+| Identity payout verify | Later — only when earnings hit Google’s threshold |
 
-1. Wait for AdMob **account verification**, then a live-ads Android build so the app can leave **Requires review**.
-2. Optional: **app-ads.txt** on the Play developer website (`pub-4980376195917009`) once ads are live.
-3. Wait for Play review of Alpha **57**; then smoke POWERUPS on a Play-installed build (do not click your own ads on a personal release device if you can avoid it).
+**Still later (AdMob checklist):**
+
+1. **Store-link** Idle Party in AdMob → App settings → Add store listing when Play is public (closed Alpha **cannot** link). That is the last setup step and what clears **Requires review**.
+2. After link + review: smoke POWERUPS on a Play-installed build; confirm Apps → Idle Party shows requests/impressions. Prefer a tester account; avoid click-farming your own live ads.
+3. **app-ads.txt (2026-08-22):** file is live at `https://mahinika.github.io/app-ads.txt` (repo `Mahinika/Mahinika.github.io`). Play store contact **Website** must be `https://mahinika.github.io` (not the GitHub repo URL — AdMob crawls the domain root). Wait up to 24h for AdMob crawl; then open AdMob → Apps → Idle Party → app-ads.txt and refresh status.
 4. IARC ads questions if Console asks after review.
+5. Optional later: US-state privacy message (not required for EU-first ship).
+
+**Code fix (2026-08-22):** rewarded show used to finish when the ad *opened*, dispose the ad, and skip the hour. It now waits until the ad is dismissed and only then grants POWERUPS. Duration: **1 ad = 3 hours** (stacks to 24h).
 
 **Play Console (2026-08-21):**
 

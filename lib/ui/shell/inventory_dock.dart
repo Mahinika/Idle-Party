@@ -111,6 +111,28 @@ class _InventoryDockState extends State<InventoryDock>
     return GameLogic.equipTargetsFor(item).contains(filter);
   }
 
+  String _partyTabReason(PartyTab tab) {
+    final meet = MenuAlerts.meetRosterHint(state);
+    if (meet.isNotEmpty && tab != PartyTab.roster) return meet;
+
+    switch (tab) {
+      case PartyTab.gear:
+        return MenuAlerts.gearEquipHint(state, equipHeroIndex);
+      case PartyTab.bag:
+        final upgrades = MenuAlerts.bagUpgradeCount(state);
+        if (upgrades > 0) {
+          return upgrades == 1
+              ? '1 better item in bag — tap EQUIP 1'
+              : '$upgrades better items in bag — tap EQUIP $upgrades';
+        }
+        return MenuAlerts.bagStatusLine(state);
+      case PartyTab.merge:
+      case PartyTab.roster:
+        final alert = MenuAlerts.partyAlert(state);
+        return alert.isQuiet ? '' : alert.reason;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -325,7 +347,9 @@ class _InventoryDockState extends State<InventoryDock>
           const SizedBox(height: 4),
         ] else
           Text(
-            nearFull && filled >= cap
+            MenuAlerts.bagStatusLine(state).isNotEmpty
+                ? MenuAlerts.bagStatusLine(state)
+                : nearFull && filled >= cap
                 ? 'CLEAN merges → sells gold → scraps essence'
                 : 'CLEAN BAG uses FILTERS (gold then essence)',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -650,8 +674,6 @@ class _InventoryDockState extends State<InventoryDock>
       GameLogic.maxGearStashFor(state),
       (i) => i < state.gearStash.length ? state.gearStash[i] : null,
     );
-    final phone = GameTheme.isPhoneWidth(context);
-    final alert = MenuAlerts.partyAlert(state);
     // Progressive menu: MERGE / ROSTER appear once they do something.
     _visible = MenuRouter.visiblePartyTabs(state);
     final safeTab = _visible.contains(widget.tab) ? widget.tab : _visible.first;
@@ -674,10 +696,6 @@ class _InventoryDockState extends State<InventoryDock>
               cost: cost,
               preview: preview,
             ),
-          ),
-          PartyTab.loadouts => (
-            label: phone ? 'LOAD' : 'LOADOUTS',
-            body: LoadoutsOverlay(director: widget.director),
           ),
           PartyTab.roster => (
             label: 'ROSTER',
@@ -707,9 +725,7 @@ class _InventoryDockState extends State<InventoryDock>
         ),
         Builder(
           builder: (context) {
-            final reason = safeTab == PartyTab.gear
-                ? MenuAlerts.gearEquipHint(state, equipHeroIndex)
-                : (alert.isQuiet ? '' : alert.reason);
+            final reason = _partyTabReason(safeTab);
             if (reason.isEmpty) return const SizedBox.shrink();
             return Padding(
               padding: const EdgeInsets.only(top: 4),

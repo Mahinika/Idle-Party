@@ -639,6 +639,12 @@ class _MarketOverlayState extends State<MarketOverlay> {
                     'UPGRADE → $upgradeHero',
                     style: GameTheme.body(size: 12, color: GameTheme.mossLit),
                   ),
+                ] else if (MarketListingsService.isGapFillListing(state, listing)) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    _gapFillLine(state, listing),
+                    style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                  ),
                 ],
               ],
             ),
@@ -689,6 +695,19 @@ class _MarketOverlayState extends State<MarketOverlay> {
       if (cmp.isUpgrade) return hero.name;
     }
     return null;
+  }
+
+  String _gapFillLine(GameState state, MarketListing listing) {
+    final wornILvl =
+        MarketListingsService.wornItemLevelForListing(state, listing);
+    final heroName = listing.targetHeroIndex >= 0 &&
+            listing.targetHeroIndex < state.heroes.length
+        ? state.heroes[listing.targetHeroIndex].name
+        : 'hero';
+    if (wornILvl != null) {
+      return 'GAP FILL → $heroName · worn iLvl $wornILvl';
+    }
+    return 'GAP FILL → $heroName · empty slot';
   }
 
   static String _marketHealCount(GameState state) {

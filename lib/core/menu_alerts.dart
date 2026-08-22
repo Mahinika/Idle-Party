@@ -88,9 +88,9 @@ class MenuAlerts {
       );
     }
     if (isBagFull(state)) {
-      return const MenuAlert(
+      return MenuAlert(
         star: true,
-        reason: 'Bag is full — CLEAN BAG',
+        reason: bagStatusLine(state),
       );
     }
     return MenuAlert.quiet;
@@ -190,13 +190,28 @@ class MenuAlerts {
     return n;
   }
 
+  /// Full-bag line when nothing is an Auto Equip upgrade (shared across PARTY UI).
+  static String bagStatusLine(GameState state) {
+    if (bagUpgradeCount(state) > 0) return '';
+    if (!isBagFull(state)) return '';
+    if (state.gearStash.isEmpty) return 'Bag is full — CLEAN BAG';
+    return 'Bag full — backups kept; CLEAN BAG or merge';
+  }
+
+  /// Pending kit unlock — nudge toward ROSTER, not GEAR doll.
+  static String meetRosterHint(GameState state) {
+    if (state.metaDepth.pendingHeroReveals.isEmpty) return '';
+    return 'New kit — open ROSTER tab';
+  }
+
   /// GEAR-tab line: don't imply every upgrade is for the doll you are staring at.
   static String gearEquipHint(GameState state, int heroIndex) {
+    final meet = meetRosterHint(state);
+    if (meet.isNotEmpty) return meet;
+
     final total = bagUpgradeCount(state);
     if (total <= 0) {
-      return isBagFull(state)
-          ? 'Bag is full — CLEAN BAG'
-          : '';
+      return bagStatusLine(state);
     }
     final forHero = bagUpgradeCountForHero(state, heroIndex);
     if (forHero <= 0) {
@@ -226,7 +241,6 @@ abstract final class MenuTabs {
   // PARTY
   static bool showMerge(GameState s) =>
       s.ascensionLevel >= 1 || s.highestDungeonCleared >= 0;
-  static bool showLoadouts(GameState _) => false;
   static bool showRoster(GameState s) =>
       s.ascensionLevel >= 1 || s.metaDepth.pendingHeroReveals.isNotEmpty;
 

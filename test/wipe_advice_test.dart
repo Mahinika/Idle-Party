@@ -205,16 +205,17 @@ void main() {
     );
   });
 
-  test('LOADOUTS tab stays off even after Ascend', () {
+  test('PARTY tabs for AL20 veteran include ROSTER not dead loadouts', () {
     final veteran = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 20,
       highestDungeonCleared: 14,
     );
-    expect(MenuTabs.showLoadouts(veteran), isFalse);
-    expect(
-      MenuRouter.visiblePartyTabs(veteran),
-      isNot(contains(PartyTab.loadouts)),
-    );
+    expect(MenuTabs.showMerge(veteran), isTrue);
+    expect(MenuTabs.showRoster(veteran), isTrue);
+    final tabs = MenuRouter.visiblePartyTabs(veteran);
+    expect(tabs, contains(PartyTab.roster));
+    expect(tabs, contains(PartyTab.merge));
+    expect(tabs.length, 4);
   });
 
   test('forge gap prefers MARKET when listing is affordable', () {

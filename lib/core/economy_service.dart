@@ -11,12 +11,7 @@ abstract final class EconomyService {
     if (baseGold <= 0) {
       return baseGold;
     }
-    final percent =
-        state.ascensionGoldBonusPercent +
-        state.sanctuaryGoldBonusPercent +
-        state.ascendBlessingGoldPercent +
-        state.gearGoldFindPercent +
-        state.petGoldFindPercent;
+    final percent = state.effectiveGoldFindPercent;
     if (percent <= 0) {
       return AdBoost.isActive(state.metaDepth.adBoostUntilMs)
           ? baseGold * 2

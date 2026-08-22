@@ -19,11 +19,13 @@ abstract final class MarketListingsService {
   static const int targetedCount = 3;
   static const int refreshIntervalMs = 6 * 60 * 60 * 1000;
   static const int paidRefreshBaseGold = 25000;
+  static const int targetedRerollAttempts = 8;
+  static const int largeGapILvlThreshold = 12;
 
   static int nowMs() => DateTime.now().millisecondsSinceEpoch;
 
   static int paidRefreshCost(GameState state) =>
-      paidRefreshBaseGold + state.ascensionLevel * 500;
+      paidRefreshBaseGold + state.ascensionLevel * 1000;
 
   static bool isStale(GameState state, {int? nowMs}) {
     final now = nowMs ?? MarketListingsService.nowMs();
@@ -187,6 +189,7 @@ abstract final class MarketListingsService {
         rng: rng,
         nowMs: nowMs,
         salt: salt++,
+        slotGap: gap.gap,
       );
       listings.add(listing);
     }
@@ -221,13 +224,119 @@ abstract final class MarketListingsService {
     required int nowMs,
     required int salt,
     bool targeted = true,
+    int slotGap = 0,
   }) {
-    final battleNumber = marketBattleNumber(state);
-    final rarity = LootPipeline.rarityForBattle(
-      battleNumber,
+    if (targeted) {
+      return _rollTargetedListing(
+        state,
+        heroIndex: heroIndex,
+        hero: hero,
+        slot: slot,
+        rng: rng,
+        nowMs: nowMs,
+        salt: salt,
+        slotGap: slotGap,
+      );
+    }
+
+    final item = _createListingItem(
+      state,
+      hero: hero,
+      slot: slot,
+      rng: rng,
+      battleNumber: marketBattleNumber(state),
+      slotGap: 0,
+      attempt: 0,
+    );
+    final resolvedSlot = _resolveEquipSlot(slot, item);
+    final price = priceForItem(state, item, resolvedSlot);
+    final id = 'ml_${nowMs}_${salt}_${rng.nextInt(99999)}';
+    return MarketListing(
+      id: id,
+      item: item,
+      priceGold: price,
+      targetHeroIndex: -1,
+      slot: resolvedSlot,
+    );
+  }
+
+  /// Gap-targeted row: re-roll for budget-honest UPGRADE; large gaps bump iLvl.
+  static MarketListing _rollTargetedListing(
+    GameState state, {
+    required int heroIndex,
+    required PartyHero? hero,
+    required EquipmentSlot slot,
+    required Random rng,
+    required int nowMs,
+    required int salt,
+    required int slotGap,
+  }) {
+    final largeGap = slotGap > largeGapILvlThreshold;
+    final battleNumber = largeGap
+        ? max(1, state.battleNumber)
+        : marketBattleNumber(state);
+
+    EquipmentItem chosen = _createListingItem(
+      state,
+      hero: hero,
+      slot: slot,
+      rng: rng,
+      battleNumber: battleNumber,
+      slotGap: slotGap,
+      attempt: 0,
+    );
+    EquipmentSlot chosenSlot = _resolveEquipSlot(slot, chosen);
+
+    for (var attempt = 0; attempt < targetedRerollAttempts; attempt++) {
+      final item = _createListingItem(
+        state,
+        hero: hero,
+        slot: slot,
+        rng: rng,
+        battleNumber: battleNumber,
+        slotGap: slotGap,
+        attempt: attempt + salt,
+      );
+      final resolvedSlot = _resolveEquipSlot(slot, item);
+      if (isUpgradeForAnyHero(state, item, resolvedSlot)) {
+        chosen = item;
+        chosenSlot = resolvedSlot;
+        break;
+      }
+      chosen = item;
+      chosenSlot = resolvedSlot;
+    }
+
+    final price = priceForItem(state, chosen, chosenSlot);
+    final id = 'ml_${nowMs}_${salt}_${rng.nextInt(99999)}';
+    return MarketListing(
+      id: id,
+      item: chosen,
+      priceGold: price,
+      targetHeroIndex: heroIndex >= 0 ? heroIndex : -1,
+      slot: chosenSlot,
+    );
+  }
+
+  static EquipmentItem _createListingItem(
+    GameState state, {
+    required PartyHero? hero,
+    required EquipmentSlot slot,
+    required Random rng,
+    required int battleNumber,
+    required int slotGap,
+    required int attempt,
+  }) {
+    var rarity = LootPipeline.rarityForBattle(
+      battleNumber + attempt,
       hardmodeLevel: state.hardmodeLevel,
       rng: rng,
     );
+    if (slotGap > largeGapILvlThreshold &&
+        rarity.index < LootRarity.epic.index) {
+      rarity = LootRarity.epic;
+    }
+
     HeroRole bias = HeroRole.warrior;
     ArmorType? preferredArmor;
     SpecRoleTag? roleTag;
@@ -241,7 +350,7 @@ abstract final class MarketListingsService {
       roleTag = hero.spec.roleTag;
       lootSpecId = hero.specId;
     }
-    final item = LootPipeline.createEquipment(
+    return LootPipeline.createEquipment(
       slot: slot,
       rarity: rarity,
       battleNumber: battleNumber,
@@ -253,16 +362,22 @@ abstract final class MarketListingsService {
       ascensionLevel: state.ascensionLevel,
       hardmodeLevel: state.hardmodeLevel,
     );
-    final resolvedSlot = _resolveEquipSlot(slot, item);
-    final price = priceForItem(state, item, resolvedSlot);
-    final id = 'ml_${nowMs}_${salt}_${rng.nextInt(99999)}';
-    return MarketListing(
-      id: id,
-      item: item,
-      priceGold: price,
-      targetHeroIndex: targeted && heroIndex >= 0 ? heroIndex : -1,
-      slot: resolvedSlot,
-    );
+  }
+
+  /// Targeted listing for a hero slot that is not a budget UPGRADE (GAP FILL).
+  static bool isGapFillListing(GameState state, MarketListing listing) {
+    if (listing.targetHeroIndex < 0) return false;
+    return !isUpgradeForAnyHero(state, listing.item, listing.slot);
+  }
+
+  /// Worn iLvl on the gap-target hero for GAP FILL copy.
+  static int? wornItemLevelForListing(GameState state, MarketListing listing) {
+    if (listing.targetHeroIndex < 0 ||
+        listing.targetHeroIndex >= state.heroes.length) {
+      return null;
+    }
+    final worn = state.heroes[listing.targetHeroIndex].itemIn(listing.slot);
+    return worn?.effectiveItemLevel;
   }
 
   static EquipmentSlot _resolveEquipSlot(EquipmentSlot slot, EquipmentItem item) {

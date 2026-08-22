@@ -19,10 +19,22 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.46';
+  static const String currentVersion = '1.12.47';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.47',
+      bullets: <String>[
+        'Economy tune: stacked gold-find soft-caps near AL20 so KEY runs stay rich without infinite wallet gold.',
+        'FORGE gold costs scale with Ascension Level — late runs spend gold on upgrades, not just MARKET.',
+        'Daily vault pays a bit more essence at high KEY; hub AFK essence ticks slightly faster.',
+        'MARKET paid refresh costs a little more at high AL (still one floor or two, not a tax).',
+        'MARKET gap listings re-roll for UPGRADE or show GAP FILL; bag hint when backups fill the stash.',
+        'Auto Equip swaps 1H + off-hand without leaving an empty weapon slot.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.46',
       bullets: <String>[

@@ -144,6 +144,88 @@ void main() {
     );
   });
 
+  test('targeted listings are upgrade or explicit gap fill', () {
+    final priest = PartyHero.starting(
+      name: 'Ana',
+      specId: HeroSpecId.holyPriest,
+      stats: PartyHero.startingStatsForSpec(HeroSpecId.holyPriest),
+      equipped: {
+        for (final e in StarterGear.forSpec(HeroSpecId.holyPriest).entries)
+          if (e.key != EquipmentSlot.head) e.key: e.value,
+      },
+      level: 60,
+    );
+    var state = seeded();
+    state = state.copyWith(
+      heroRoster: [priest],
+      activeHeroIds: [priest.id],
+    );
+    final fresh = GameLogic.ensureMarketListings(state, nowMs: now + 8);
+    final targeted = fresh.marketListings.where(
+      (l) => l.targetHeroIndex >= 0,
+    );
+    expect(targeted, isNotEmpty);
+    for (final listing in targeted) {
+      final upgrade = MarketListingsService.isUpgradeForAnyHero(
+        fresh,
+        listing.item,
+        listing.slot,
+      );
+      final gapFill = MarketListingsService.isGapFillListing(fresh, listing);
+      expect(upgrade || gapFill, isTrue);
+    }
+  });
+
+  test('large slot gap can use live battle iLvl on targeted listing', () {
+    final wornHead = EquipmentItem(
+      id: 'old_head',
+      name: 'Rusty Hood',
+      slot: EquipmentSlot.head,
+      rarity: LootRarity.common,
+      intellectBonus: 4,
+      spiritBonus: 2,
+      itemLevel: 40,
+      iconId: 'head',
+      armorType: ArmorType.cloth,
+    );
+    final priest = PartyHero.starting(
+      name: 'Ana',
+      specId: HeroSpecId.holyPriest,
+      stats: PartyHero.startingStatsForSpec(HeroSpecId.holyPriest),
+      equipped: {
+        EquipmentSlot.head: wornHead,
+        for (final e in StarterGear.forSpec(HeroSpecId.holyPriest).entries)
+          if (e.key != EquipmentSlot.head) e.key: e.value,
+      },
+      level: 60,
+    );
+    var state = seeded();
+    state = state.copyWith(
+      heroRoster: [priest],
+      activeHeroIds: [priest.id],
+      currentRoom: state.currentRoom.copyWith(floorNumber: 45),
+    );
+    final fresh = GameLogic.ensureMarketListings(state, nowMs: now + 9);
+    final targeted = fresh.marketListings.where(
+      (l) => l.targetHeroIndex >= 0,
+    );
+    expect(targeted, isNotEmpty);
+    expect(
+      targeted.any(
+        (l) => l.item.effectiveItemLevel > wornHead.effectiveItemLevel,
+      ),
+      isTrue,
+    );
+    final liveRare = MarketListingsService.liveDropItemLevel(
+      state,
+      LootRarity.epic,
+    );
+    expect(
+      targeted.any((l) => l.item.effectiveItemLevel >= liveRare - 4),
+      isTrue,
+    );
+  });
+
   test('market listings round-trip save JSON', () {
     var state = seeded();
     state = GameLogic.ensureMarketListings(state, nowMs: now + 7);

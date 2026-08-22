@@ -6,15 +6,21 @@ import 'package:idle_party/core/menu_router.dart';
 void main() {
   final now = DateTime.utc(2026, 8, 22);
 
-  test('LOADOUTS tab stays hidden for AL20 veteran', () {
+  test('AL20 veteran sees GEAR BAG MERGE ROSTER only', () {
     final veteran = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 20,
       highestDungeonCleared: 14,
     );
-    expect(MenuTabs.showLoadouts(veteran), isFalse);
+    expect(MenuTabs.showMerge(veteran), isTrue);
+    expect(MenuTabs.showRoster(veteran), isTrue);
     expect(
       MenuRouter.visiblePartyTabs(veteran),
-      isNot(contains(PartyTab.loadouts)),
+      equals(const [
+        PartyTab.gear,
+        PartyTab.bag,
+        PartyTab.merge,
+        PartyTab.roster,
+      ]),
     );
   });
 

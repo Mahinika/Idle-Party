@@ -129,14 +129,13 @@ void main() {
       ),
     );
     final state = base.copyWith(gearStash: junk);
-    expect(MenuAlerts.partyAlert(state).reason, contains('CLEAN BAG'));
-    expect(MenuAlerts.gearEquipHint(state, 0), contains('CLEAN BAG'));
+    expect(MenuAlerts.partyAlert(state).reason, contains('backups kept'));
+    expect(MenuAlerts.gearEquipHint(state, 0), contains('backups kept'));
   });
 
   test('first-hour menus hide advanced tabs, Ascend opens them', () {
     final fresh = GameLogic.createInitialState(now: now);
     expect(MenuTabs.showMerge(fresh), isFalse);
-    expect(MenuTabs.showLoadouts(fresh), isFalse);
     expect(MenuTabs.showRoster(fresh), isFalse);
     expect(MenuTabs.showCamp(fresh), isFalse);
     expect(MenuTabs.showShop(fresh), isFalse);
@@ -149,7 +148,6 @@ void main() {
       highestFloorCleared: 12,
     );
     expect(MenuTabs.showMerge(veteran), isTrue);
-    expect(MenuTabs.showLoadouts(veteran), isFalse);
     expect(MenuTabs.showRoster(veteran), isTrue);
     expect(MenuTabs.showCamp(veteran), isTrue);
     expect(MenuTabs.showShop(veteran), isTrue);

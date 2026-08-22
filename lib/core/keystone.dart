@@ -174,7 +174,7 @@ abstract final class Keystone {
 
   /// Essence for claiming daily vault (scales with today's best timed key).
   static int dailyVaultEssence(int bestTimedKey) =>
-      14 + bestTimedKey.clamp(0, maxLevel) * 3;
+      16 + bestTimedKey.clamp(0, maxLevel) * 4;
 
   /// Extra essence when timing a keystone boss clear.
   static int timedClearBonus(int key) => 4 + key.clamp(0, maxLevel) * 2;

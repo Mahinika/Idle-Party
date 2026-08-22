@@ -2,15 +2,15 @@ import 'package:flutter/foundation.dart';
 
 import '../models/loot.dart';
 import 'game_state.dart';
+import 'hub_chase.dart';
 import 'menu_alerts.dart';
-
 /// Which menu sheet is open. Hub and dungeon share these — the same route
 /// means the same words and the same content in both places.
 enum MenuRoute { none, party, power, meta, settings, jobs }
 
 /// Tabs inside PARTY. Identified by name, never by index: a tab that unlocks
 /// later (MERGE, LOADOUTS, ROSTER) used to shift what a saved index meant.
-enum PartyTab { gear, bag, merge, loadouts, roster }
+enum PartyTab { gear, bag, merge, roster }
 
 enum PowerTab { income, forge, camp, market, shop }
 
@@ -66,7 +66,6 @@ class MenuRouter extends ChangeNotifier {
       PartyTab.gear => 'GEAR',
       PartyTab.bag => 'BAG',
       PartyTab.merge => 'MERGE',
-      PartyTab.loadouts => 'LOADOUTS',
       PartyTab.roster => 'ROSTER',
     },
     MenuRoute.power => 'POWER',
@@ -121,6 +120,21 @@ class MenuRouter extends ChangeNotifier {
     _route = MenuRoute.none;
     _bagSlotFilter = null;
     notifyListeners();
+  }
+
+  /// Hub chase / offline “open PARTY” with the right tab pre-selected.
+  void openForHubChase(GameState state, HubChaseKind kind) {
+    switch (kind) {
+      case HubChaseKind.meetHero:
+        open(
+          MenuRoute.party,
+          party: MenuTabs.showRoster(state) ? PartyTab.roster : PartyTab.gear,
+        );
+      case HubChaseKind.equipBag:
+        open(MenuRoute.party, party: PartyTab.bag);
+      default:
+        open(MenuRoute.party);
+    }
   }
 
   set partyTab(PartyTab tab) {
@@ -253,7 +267,6 @@ class MenuRouter extends ChangeNotifier {
     PartyTab.gear,
     PartyTab.bag,
     if (MenuTabs.showMerge(s)) PartyTab.merge,
-    if (MenuTabs.showLoadouts(s)) PartyTab.loadouts,
     if (MenuTabs.showRoster(s)) PartyTab.roster,
   ];
 

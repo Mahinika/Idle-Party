@@ -132,7 +132,8 @@ class _HubScreenState extends State<HubScreen>
     await showOfflineProgressDialog(
       context,
       director,
-      onOpenParty: () => router.open(MenuRoute.party),
+      onOpenParty: (kind) =>
+          router.openForHubChase(director.state, kind),
     );
   }
 
@@ -176,13 +177,13 @@ class _HubScreenState extends State<HubScreen>
           'PARTY',
           () {
             director.ackPendingHeroReveals();
-            router.open(MenuRoute.party);
+            router.openForHubChase(director.state, HubChaseKind.meetHero);
           },
         );
       case HubChaseKind.equipBag:
         return (
           'PARTY',
-          () => router.open(MenuRoute.party, party: PartyTab.bag),
+          () => router.openForHubChase(director.state, HubChaseKind.equipBag),
         );
       case HubChaseKind.marketUpgrade:
         return (
@@ -369,8 +370,10 @@ class _HubScreenState extends State<HubScreen>
                                   onDismiss: () => showOfflineProgressDialog(
                                     context,
                                     director,
-                                    onOpenParty: () =>
-                                        router.open(MenuRoute.party),
+                                    onOpenParty: (kind) => router.openForHubChase(
+                                      director.state,
+                                      kind,
+                                    ),
                                   ),
                                 ),
                               ],

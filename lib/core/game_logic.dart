@@ -1140,7 +1140,10 @@ class GameLogic {
   }
 
   static int upgradeCostFor(GameState state, PartyUpgradeType type) {
-    return 18 + (forgeTrackTier(state, type) * 10) + (state.bossVictories * 5);
+    return 18 +
+        (forgeTrackTier(state, type) * 10) +
+        (state.bossVictories * 5) +
+        (state.ascensionLevel * 25);
   }
 
   /// Wallet gold budget for a FORGE GOLD spend mode (×1 uses next buy cost).

@@ -770,7 +770,7 @@ class _LoadoutSlotRow extends StatelessWidget {
 Future<void> showOfflineProgressDialog(
   BuildContext context,
   GameDirector director, {
-  VoidCallback? onOpenParty,
+  void Function(HubChaseKind kind)? onOpenParty,
 }) async {
   final summary = director.offlineSummary;
   if (summary == null) return;
@@ -825,7 +825,7 @@ Future<void> showOfflineProgressDialog(
         Navigator.pop(context);
         // Hub passes onOpenParty (acks + opens PARTY). Fallback: ack only.
         if (onOpenParty != null) {
-          onOpenParty();
+          onOpenParty(HubChaseKind.meetHero);
         } else {
           director.ackPendingHeroReveals();
         }
@@ -835,7 +835,7 @@ Future<void> showOfflineProgressDialog(
       readyAction = () {
         director.dismissOfflineSummary();
         Navigator.pop(context);
-        onOpenParty?.call();
+        onOpenParty?.call(HubChaseKind.equipBag);
       };
     case HubChaseKind.marketUpgrade:
       readyLabel = 'MARKET';

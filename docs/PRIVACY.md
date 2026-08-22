@@ -41,7 +41,7 @@ On **Android**, if you tap hub **POWERUPS** and watch an ad, Google AdMob may lo
 Hub **POWERUPS** is opt-in:
 
 - You choose when to watch. Combat is never interrupted by an ad.
-- One finished ad grants one hour of double gold and +25% attack. Further ads add more time (capped).
+- One finished ad grants 3 hours of double gold and +25% attack. Further ads add more time (capped).
 - Google AdMob serves the ad. Idle Party does not run its own ad server.
 - In the EU/EEA, a Google consent form (UMP) may appear before ads can be requested.
 - You can change or withdraw that consent later in **SETTINGS → AD PRIVACY** (Android).

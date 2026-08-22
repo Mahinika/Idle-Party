@@ -18,11 +18,7 @@ abstract final class GoldIncome {
       (state.highestDungeonCleared + 1) * 2;
 
   static int goldFindPercent(GameState state) =>
-      state.ascensionGoldBonusPercent +
-      state.sanctuaryGoldBonusPercent +
-      state.ascendBlessingGoldPercent +
-      state.gearGoldFindPercent +
-      state.petGoldFindPercent;
+      state.effectiveGoldFindPercent;
 
   static int goldFromRaw(GameState state, int raw) {
     if (raw <= 0) return 0;
@@ -137,7 +133,7 @@ abstract final class GoldIncome {
 
   static int essenceDue(int totalSec, int sanctuaryPowerLevel) {
     if (totalSec < 600) return 0;
-    return (totalSec ~/ 900) + (sanctuaryPowerLevel ~/ 2);
+    return (totalSec ~/ 750) + (sanctuaryPowerLevel ~/ 2);
   }
 
   /// Credit hub AFK for [seconds], banking leftover seconds toward the next
