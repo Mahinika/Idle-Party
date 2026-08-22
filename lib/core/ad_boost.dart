@@ -5,6 +5,12 @@ abstract final class AdBoost {
   static const int hourMs = 60 * 60 * 1000;
   static const int maxStackMs = 24 * hourMs;
 
+  /// Hours added per finished rewarded ad.
+  static const int hoursPerAd = 3;
+
+  /// Duration granted by one finished ad.
+  static const int rewardMs = hoursPerAd * hourMs;
+
   /// Extra attack while a boost is running.
   static const int attackPercent = 25;
 
@@ -24,13 +30,14 @@ abstract final class AdBoost {
     return remainingMs(untilMs, nowMs: nowMs) >= maxStackMs;
   }
 
-  /// One watched ad → +1 hour from remaining time (or from now). Caps at 24h.
+  /// One watched ad → +[hoursPerAd] hours from remaining time (or from now).
+  /// Caps at 24h.
   static int addHour(int untilMs, {int? nowMs}) {
     final now = nowMs ?? AdBoost.nowMs();
     final base = untilMs > now ? untilMs : now;
     final cap = now + maxStackMs;
     if (base >= cap) return untilMs;
-    final next = base + hourMs;
+    final next = base + rewardMs;
     return next > cap ? cap : next;
   }
 

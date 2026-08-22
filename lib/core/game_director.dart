@@ -11,6 +11,7 @@ import '../models/dungeon_zoom.dart';
 import '../models/class_ability.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import '../models/market_listing.dart';
 import '../models/meta_depth.dart';
 import '../models/pet.dart';
 import '../models/vfx_quality.dart';
@@ -1586,7 +1587,12 @@ class GameDirector extends ChangeNotifier {
     final beforeEss = _state.essence;
     final unstick = GearService.isBagJammed(_state);
     _applyUpgrade(
-      GameLogic.cleanBagJunk(_state, unstickBag: unstick, mergeFirst: true),
+      GameLogic.cleanBagJunk(
+        _state,
+        unstickBag: unstick,
+        mergeFirst: true,
+        manualClean: true,
+      ),
     );
     LogicNotices.takeBagCleanup(); // reported below, not as a second toast
     final cleared = beforeLen - _state.gearStash.length;
@@ -2111,6 +2117,49 @@ class GameDirector extends ChangeNotifier {
     showToast('Field Bandage acquired', life: 1.8);
   }
 
+  void ensureMarketListings() {
+    final before = _state.marketListingsRefreshMs;
+    _applyUpgrade(GameLogic.ensureMarketListings(_state));
+    if (_state.marketListingsRefreshMs != before &&
+        _state.marketListings.isNotEmpty) {
+      // Quiet refresh — no toast on timer roll.
+    }
+  }
+
+  void buyMarketListing(String listingId) {
+    MarketListing? found;
+    for (final l in _state.marketListings) {
+      if (l.id == listingId) {
+        found = l;
+        break;
+      }
+    }
+    if (found == null) return;
+    if (_state.gold < found.priceGold) {
+      showToast('Need ${found.priceGold}g', life: 2);
+      return;
+    }
+    final beforeGold = _state.gold;
+    _applyUpgrade(GameLogic.buyMarketListing(_state, listingId));
+    if (_state.gold < beforeGold) {
+      GameAudio.loot();
+      showToast('${found.item.name} · −${found.priceGold}g', life: 2.2);
+    }
+  }
+
+  void refreshMarketListings() {
+    final cost = GameLogic.marketListingsPaidRefreshCost(_state);
+    if (_state.gold < cost) {
+      showToast('Need ${cost}g to refresh listings', life: 2);
+      return;
+    }
+    final beforeGold = _state.gold;
+    _applyUpgrade(GameLogic.refreshMarketListingsPaid(_state));
+    if (_state.gold < beforeGold) {
+      showToast('Listings refreshed · −${beforeGold - _state.gold}g', life: 2);
+    }
+  }
+
   static int _countFlasks(GameState state) {
     var n = 0;
     for (final h in state.heroes) {
@@ -2446,7 +2495,7 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  /// Playtest / web: grant one POWERUPS hour without an ad.
+  /// Playtest / web: grant one POWERUPS ad reward without an ad.
   void grantPowerupHour({int? nowMs}) {
     final before = AdBoost.remainingMs(
       _state.metaDepth.adBoostUntilMs,
@@ -2463,13 +2512,16 @@ class GameDirector extends ChangeNotifier {
         _state.metaDepth.adBoostUntilMs,
         nowMs: nowMs,
       );
-      showToast('Powerups +1 hour · $left left', life: 2.4);
+      showToast(
+        'Powerups +${AdBoost.hoursPerAd} hours · $left left',
+        life: 2.4,
+      );
     } else {
       showToast('Powerups already stacked to 24 hours', life: 2.0);
     }
   }
 
-  /// Android: show a rewarded ad, then stack +1 hour on success.
+  /// Android: show a rewarded ad, then stack +[AdBoost.hoursPerAd] hours.
   Future<void> watchPowerupAd() async {
     if (AdBoost.atStackCap(_state.metaDepth.adBoostUntilMs)) {
       showToast('Powerups already stacked to 24 hours', life: 2.0);
@@ -2485,7 +2537,10 @@ class GameDirector extends ChangeNotifier {
       case AdWatchResult.rewarded:
         grantPowerupHour();
       case AdWatchResult.skipped:
-        showToast('Watch the whole ad to get the hour', life: 2.2);
+        showToast(
+          'Watch the whole ad to get ${AdBoost.hoursPerAd} hours',
+          life: 2.2,
+        );
       case AdWatchResult.failed:
         showToast('Ad not ready — try again in a bit', life: 2.2);
       case AdWatchResult.unavailable:

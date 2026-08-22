@@ -24,14 +24,30 @@ abstract final class GearCleanup {
     GameState state, {
     bool unstickBag = false,
     bool mergeFirst = true,
+    bool manualClean = false,
   }) {
     var next = state;
     if (mergeFirst) {
       next = autoMergeJunk(next).state;
     }
-    next = autoSellJunk(next, unstickBag: unstickBag);
-    next = autoDisassembleJunk(next, unstickBag: unstickBag);
+    next = autoSellJunk(
+      next,
+      unstickBag: unstickBag,
+      manualClean: manualClean,
+    );
+    next = autoDisassembleJunk(
+      next,
+      unstickBag: unstickBag,
+      manualClean: manualClean,
+    );
     return next;
+  }
+
+  static bool _isProtectedGear(EquipmentItem item) {
+    if (item.isApex) return true;
+    if (item.id.contains('soulbound')) return true;
+    if (item.name.toLowerCase().startsWith('soulbound')) return true;
+    return false;
   }
 
   static bool matchesIlvlRarityFilter(
@@ -145,13 +161,26 @@ abstract final class GearCleanup {
     EquipmentItem item, {
     required bool forSell,
     bool unstickBag = false,
+    bool manualClean = false,
   }) {
+    if (_isProtectedGear(item)) return true;
+
+    if (manualClean) {
+      final matches = forSell
+          ? matchesIlvlRarityFilter(
+              item,
+              maxIlvl: state.autoSellMaxPower,
+              maxRarity: state.autoSellMaxRarity,
+            )
+          : matchesIlvlRarityFilter(
+              item,
+              maxIlvl: state.autoDisassembleMaxIlvl,
+              maxRarity: state.autoDisassembleMaxRarity,
+            );
+      return !matches;
+    }
+
     if (unstickBag) {
-      if (item.isApex ||
-          item.id.contains('soulbound') ||
-          item.name.toLowerCase().startsWith('soulbound')) {
-        return true;
-      }
       final plan = GearBiSPlanner.planBiSAssignments(state);
       if (plan.any((p) => p.itemId == item.id)) {
         return true;
@@ -478,7 +507,11 @@ abstract final class GearCleanup {
     return (state: next, merges: merges);
   }
 
-  static GameState autoSellJunk(GameState state, {bool unstickBag = false}) {
+  static GameState autoSellJunk(
+    GameState state, {
+    bool unstickBag = false,
+    bool manualClean = false,
+  }) {
     var gold = state.gold;
     var lifetime = state.lifetimeGoldEarned;
     var stash = List<EquipmentItem>.from(state.gearStash);
@@ -495,6 +528,7 @@ abstract final class GearCleanup {
           item,
           forSell: true,
           unstickBag: unstickBag,
+          manualClean: manualClean,
         )) {
           sellItem = item;
           break;
@@ -519,6 +553,7 @@ abstract final class GearCleanup {
   static GameState autoDisassembleJunk(
     GameState state, {
     bool unstickBag = false,
+    bool manualClean = false,
   }) {
     var essence = state.essence;
     var stash = List<EquipmentItem>.from(state.gearStash);
@@ -535,6 +570,7 @@ abstract final class GearCleanup {
           item,
           forSell: false,
           unstickBag: unstickBag,
+          manualClean: manualClean,
         )) {
           scrap = item;
           break;

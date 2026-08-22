@@ -7,19 +7,20 @@ import 'package:idle_party/models/meta_depth.dart';
 void main() {
   const now = 1_700_000_000_000;
 
-  test('one ad adds one hour from now', () {
+  test('one ad adds hoursPerAd from now', () {
     final until = AdBoost.addHour(0, nowMs: now);
-    expect(until, now + AdBoost.hourMs);
+    expect(until, now + AdBoost.rewardMs);
     expect(AdBoost.isActive(until, nowMs: now), isTrue);
-    expect(AdBoost.remainingMs(until, nowMs: now), AdBoost.hourMs);
-    expect(AdBoost.formatRemaining(until, nowMs: now), '1h');
+    expect(AdBoost.remainingMs(until, nowMs: now), AdBoost.rewardMs);
+    expect(AdBoost.formatRemaining(until, nowMs: now), '3h');
+    expect(AdBoost.hoursPerAd, 3);
   });
 
   test('watching again stacks on remaining time', () {
     final first = AdBoost.addHour(0, nowMs: now);
     final second = AdBoost.addHour(first, nowMs: now);
-    expect(second, now + 2 * AdBoost.hourMs);
-    expect(AdBoost.formatRemaining(second, nowMs: now), '2h');
+    expect(second, now + 2 * AdBoost.rewardMs);
+    expect(AdBoost.formatRemaining(second, nowMs: now), '6h');
   });
 
   test('stack caps at 24 hours remaining', () {
@@ -43,7 +44,7 @@ void main() {
     var state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
     state = GameLogic.grantAdBoostHour(state, nowMs: now);
     state = GameLogic.grantAdBoostHour(state, nowMs: now);
-    expect(state.metaDepth.adBoostUntilMs, now + 2 * AdBoost.hourMs);
+    expect(state.metaDepth.adBoostUntilMs, now + 2 * AdBoost.rewardMs);
 
     final loaded = MetaDepthState.fromJson(state.metaDepth.toJson());
     expect(loaded.adBoostUntilMs, state.metaDepth.adBoostUntilMs);

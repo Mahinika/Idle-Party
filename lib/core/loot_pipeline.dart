@@ -611,11 +611,19 @@ abstract final class LootPipeline {
   static LootRarity _rarityForBattle(
     int battleNumber, {
     int hardmodeLevel = 0,
+  }) =>
+      rarityForBattle(battleNumber, hardmodeLevel: hardmodeLevel);
+
+  /// Public rarity roll (market listings, tests).
+  static LootRarity rarityForBattle(
+    int battleNumber, {
+    int hardmodeLevel = 0,
+    Random? rng,
   }) {
+    final random = rng ?? GameLogic.random;
     final hm = hardmodeLevel.clamp(0, Keystone.maxLevel);
-    // Direct legendary roll — key 20 ≈ old HM+10.
     final legendaryChance = Keystone.legendaryChance(hm);
-    if (GameLogic.random.nextDouble() < legendaryChance) {
+    if (random.nextDouble() < legendaryChance) {
       return LootRarity.legendary;
     }
 
@@ -629,15 +637,14 @@ abstract final class LootPipeline {
       rarity = LootRarity.uncommon;
     }
 
-    // Keystone can bump the base tier (never past legendary).
     final bumpChance = Keystone.rarityBump(hm);
     if (rarity.index < LootRarity.legendary.index &&
-        GameLogic.random.nextDouble() < bumpChance) {
+        random.nextDouble() < bumpChance) {
       rarity = LootRarity.values[rarity.index + 1];
     }
     if (rarity.index < LootRarity.legendary.index &&
         hm >= 14 &&
-        GameLogic.random.nextDouble() < bumpChance * 0.5) {
+        random.nextDouble() < bumpChance * 0.5) {
       rarity = LootRarity.values[rarity.index + 1];
     }
     return rarity;

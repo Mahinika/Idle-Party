@@ -7,6 +7,8 @@ import 'game_state.dart';
 import 'hero_identity.dart';
 import 'keystone.dart';
 import 'local_season.dart';
+import 'market_listings_service.dart';
+import 'menu_alerts.dart';
 import 'meta_systems.dart';
 
 /// Kind of hub "today" chase — claimables first, then progress goals.
@@ -17,6 +19,12 @@ enum HubChaseKind {
 
   /// Newly unlocked kit waiting for PARTY meet / acknowledge.
   meetHero,
+
+  /// Better gear already in BAG — equip before farming or buying.
+  equipBag,
+
+  /// Affordable UPGRADE on POWER → MARKET when drops miss a slot.
+  marketUpgrade,
   ascend,
   dailyVaultProgress,
   willRank,
@@ -113,6 +121,12 @@ class HubChase {
 
     final meet = _pendingMeetChase(state);
     if (meet != null) return meet;
+
+    final bagEquip = _equipBagChase(state);
+    if (bagEquip != null) return bagEquip;
+
+    final market = _marketUpgradeChase(state);
+    if (market != null) return market;
 
     if (GameLogic.canAscend(state)) {
       final reward =
@@ -249,6 +263,34 @@ class HubChase {
       urgency: bossesLeft == 1 && state.bossVictories > 0
           ? HubChaseUrgency.almost
           : HubChaseUrgency.normal,
+    );
+  }
+
+  static HubChase? _equipBagChase(GameState state) {
+    final upgrades = MenuAlerts.bagUpgradeCount(state);
+    if (upgrades <= 0) return null;
+    return HubChase(
+      kind: HubChaseKind.equipBag,
+      title: upgrades == 1 ? 'Equip upgrade in PARTY' : 'Equip upgrades in PARTY',
+      detail: upgrades == 1
+          ? '1 better item in BAG — tap EQUIP before you farm deeper.'
+          : '$upgrades better items in BAG — tap EQUIP before you farm deeper.',
+      progressLabel: upgrades == 1 ? 'EQUIP 1' : 'EQUIP $upgrades',
+      urgency: HubChaseUrgency.ready,
+    );
+  }
+
+  static HubChase? _marketUpgradeChase(GameState state) {
+    final listing = MarketListingsService.bestAffordableUpgradeListing(state);
+    if (listing == null) return null;
+    final slot = listing.slot.name.toUpperCase().replaceAll('_', '-');
+    return HubChase(
+      kind: HubChaseKind.marketUpgrade,
+      title: 'Buy MARKET upgrade',
+      detail:
+          '${listing.item.name} · $slot · ${listing.priceGold}g — listings beat bad drops.',
+      progressLabel: 'MARKET',
+      urgency: HubChaseUrgency.almost,
     );
   }
 

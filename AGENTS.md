@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.41**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.43**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -18,7 +18,7 @@ the sim knows the deficit), early calm for new players / **endgame grindy OK**,
 **polish kits** before many new specs, **no new zones or classes for now**,
 **hide unused chrome** (BAG Scrap, Sell junk, GEAR Sell, Loadouts) rather than
 polish it, **no IAP for now**, optional hub **POWERUPS** rewarded ads
-(1 ad = 1 hour, stackable), **Android phone-only** (portrait; no
+(1 ad = 3 hours, stackable), **Android phone-only** (portrait; no
 iOS/web product), **large independent batches**, English in-game copy,
 fairness-first balance. After a batch: **short test list**; **APK only when
 they ask**; wait for owner notes; **then** GitHub APK **and** Play AAB. Testers do not
@@ -39,7 +39,7 @@ for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.33 / 63** submitted 2026-08-21; testers may still be on
 **1.12.32 / 62** until review publishes). Working ship is
-**1.12.41**. Production still needs **12 closed testers × 14 days**.
+**1.12.43**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -178,7 +178,7 @@ Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
 
 **Hub POWERUPS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded` +
 `ad_config.dart` (live AdMob ids on release Android; sample ids in debug). 1 ad =
-1 hour of ×2 gold and +25% ATK; duration stacks (max 24h) in
+3 hours of ×2 gold and +25% ATK; duration stacks (max 24h) in
 `metaDepth.adBoostUntilMs` (survives Ascend). Web playtest grants a preview hour.
 Ads never interrupt combat. SETTINGS **AD PRIVACY** withdraws AdMob GDPR consent.
 

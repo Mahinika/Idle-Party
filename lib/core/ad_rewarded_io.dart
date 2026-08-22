@@ -44,6 +44,12 @@ Future<void> showPrivacyOptions() async {
   await done.future.timeout(const Duration(seconds: 30), onTimeout: () {});
 }
 
+/// Show a rewarded ad and wait until it is dismissed.
+///
+/// [RewardedAd.show] completes when the ad is *presented*, not when the user
+/// finishes. Without waiting for [FullScreenContentCallback], we used to
+/// dispose early and treat a full watch as [AdWatchResult.skipped] — so the
+/// ad played but POWERUPS never granted.
 Future<AdWatchResult> showRewarded() async {
   if (!realAdsAvailable) return AdWatchResult.unavailable;
   await warmup();
@@ -52,19 +58,54 @@ Future<AdWatchResult> showRewarded() async {
   _ready = null;
   ad ??= await _loadAd();
   if (ad == null) return AdWatchResult.failed;
+
+  final finished = Completer<AdWatchResult>();
   var earned = false;
+
+  ad.fullScreenContentCallback = FullScreenContentCallback(
+    onAdDismissedFullScreenContent: (RewardedAd closed) {
+      closed.dispose();
+      if (!finished.isCompleted) {
+        finished.complete(
+          earned ? AdWatchResult.rewarded : AdWatchResult.skipped,
+        );
+      }
+    },
+    onAdFailedToShowFullScreenContent: (RewardedAd closed, AdError error) {
+      debugPrint('rewarded ad failed to show: $error');
+      closed.dispose();
+      if (!finished.isCompleted) {
+        finished.complete(AdWatchResult.failed);
+      }
+    },
+  );
+
   try {
     await ad.show(
       onUserEarnedReward: (AdWithoutView adView, RewardItem reward) {
         earned = true;
+        debugPrint(
+          'rewarded ad earned: ${reward.amount} ${reward.type}',
+        );
       },
     );
-    return earned ? AdWatchResult.rewarded : AdWatchResult.skipped;
   } catch (e, st) {
     debugPrint('rewarded ad show failed: $e\n$st');
-    return AdWatchResult.failed;
-  } finally {
     ad.dispose();
+    unawaited(_preload());
+    return AdWatchResult.failed;
+  }
+
+  try {
+    return await finished.future.timeout(
+      const Duration(minutes: 5),
+      onTimeout: () {
+        debugPrint('rewarded ad dismiss timed out');
+        ad?.dispose();
+        return earned ? AdWatchResult.rewarded : AdWatchResult.failed;
+      },
+    );
+  } finally {
     unawaited(_preload());
   }
 }

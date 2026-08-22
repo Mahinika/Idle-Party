@@ -19,10 +19,21 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.42';
+  static const String currentVersion = '1.12.43';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.43',
+      bullets: <String>[
+        'Hub welcome: thank-you message with JOIN DISCORD (once per save).',
+        'CLEAN BAG now sells/scraps everything matching your auto-sell filters — no silent keeps.',
+        'TODAY chases MARKET when an affordable listing beats your gear; BAG equip wins first.',
+        'Wipe advice points at POWER → MARKET when listings fix the same gap as FORGE.',
+        'MARKET listings refresh when you reach the hub; UPGRADE badge only when you can afford it.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.42',
       bullets: <String>[
@@ -31,6 +42,7 @@ abstract final class MetaSystems {
         'Spec mastery hooks (Deep Healing, Ignite-style fire, tank block value, and more) shape kit identity in fights.',
         'Spirit regen slows in combat after you take damage; CC roots shorten when spammed on the same pack.',
         'Loot uses zone drop tables; gear can roll Mastery as a secondary stat.',
+        'POWER → MARKET gear listings: browse slot filters when drops miss your upgrade (AH-style, run-only; refreshes every 6h).',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
     ),
@@ -156,7 +168,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.27',
       bullets: <String>[
-        'Hub POWERUPS: watch an optional ad for 1 hour of double gold and +25% attack. Watch again to add another hour (up to 24h). Ads never interrupt a fight.',
+        'Hub POWERUPS: watch an optional ad for 3 hours of double gold and +25% attack. Watch again to add another 3 hours (up to 24h). Ads never interrupt a fight.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),

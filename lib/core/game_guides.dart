@@ -25,9 +25,9 @@ abstract final class GameGuides {
       id: 'powerups',
       title: 'POWERUPS',
       body:
-          'Hub POWERUPS is optional. Watch a short ad for 1 hour of double gold '
+          'Hub POWERUPS is optional. Watch a short ad for 3 hours of double gold '
           'and +25% attack.\n\n'
-          '• One finished ad = one hour. Watch again to add another hour.\n'
+          '• One finished ad = 3 hours. Watch again to add another 3 hours.\n'
           '• Time stacks up to 24 hours. The gold and attack bonuses do not stack '
           'higher — only the timer does.\n'
           '• Double gold applies to hub AFK gold and combat gold.\n'
@@ -135,7 +135,9 @@ abstract final class GameGuides {
           '• Armor sets (2pc/4pc) give combat bonuses — not fake BiS score.\n'
           '• Settings / Bag FILTERS: auto-sell weak drops for gold, '
           'auto-disassemble for essence (iLvl + rarity filters).\n'
-          '• Near-full bag: merge → sell → scrap automatically.\n'
+          '• CLEAN BAG (BAG button): sells/scraps everything at or below your '
+          'filters — keeps Apex and soulbound only.\n'
+          '• Near-full bag: light auto-clean while looting (still protects upgrades).\n'
           '• Compare shows Score (BiS) — swapped pieces return to the bag.',
     ),
     GuideTopic(
@@ -248,7 +250,12 @@ abstract final class GameGuides {
       title: 'MARKET',
       body:
           'POWER → MARKET.\n\n'
-          '• Buy flasks and consumables with gold.\n'
+          '• GEAR LISTINGS: browse traveling auctions when drops miss your slot '
+          '(filter HEAD / hero, UPGRADE badge when you can afford it). Listings refresh every 6 hours '
+          'or pay gold to reroll. Gear bought here is for this run only.\n'
+          '• Hub TODAY can chase MARKET when an affordable listing beats your gear.\n'
+          '• Wipe advice may point at MARKET when listings beat FORGE for the same gap.\n'
+          '• Buy flasks and bandages with gold.\n'
           '• Sell stash junk when the bag is full.\n'
           '• Keep at least one flask for tough floors and bosses.',
     ),

@@ -95,7 +95,7 @@ class _PowerPillarState extends State<PowerPillar>
           PowerTab.market => (
             label: 'MARKET',
             scope: 'RUN',
-            blurb: 'flasks for this run · sell stash for gold',
+            blurb: 'gear listings + flasks · gold this run',
             body: SingleChildScrollView(child: MarketOverlay(director: d)),
           ),
           PowerTab.shop => (

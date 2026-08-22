@@ -1,6 +1,7 @@
 import '../models/loot.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'market_listings_service.dart';
 import 'meta_systems.dart';
 
 /// Which bottom-nav pillar an alert belongs to.
@@ -121,6 +122,10 @@ class MenuAlerts {
         state.gold >= GameLogic.marketFlaskCost(state)) {
       count++;
       reasons.add('gold for a MARKET flask');
+    }
+    if (MarketListingsService.hasAffordableUpgradeListing(state)) {
+      count++;
+      reasons.add('gold for MARKET upgrade');
     }
     if (count <= 0) return MenuAlert.quiet;
     return MenuAlert(count: count, reason: 'You have ${reasons.join(' · ')}');

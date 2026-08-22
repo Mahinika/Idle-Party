@@ -274,10 +274,12 @@ abstract final class GearService {
     GameState state, {
     bool unstickBag = false,
     bool mergeFirst = true,
+    bool manualClean = false,
   }) => GearCleanup.cleanBagJunk(
     state,
     unstickBag: unstickBag,
     mergeFirst: mergeFirst,
+    manualClean: manualClean,
   );
 
   static bool shouldKeepInBag(GameState state, EquipmentItem item) =>
@@ -288,11 +290,13 @@ abstract final class GearService {
     EquipmentItem item, {
     required bool forSell,
     bool unstickBag = false,
+    bool manualClean = false,
   }) => GearCleanup.shouldKeepWhenCleaning(
     state,
     item,
     forSell: forSell,
     unstickBag: unstickBag,
+    manualClean: manualClean,
   );
 
   static ({GameState state, int merges}) autoMergeJunk(

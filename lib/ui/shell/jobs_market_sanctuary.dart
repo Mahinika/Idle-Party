@@ -3,7 +3,11 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/gold_income.dart';
 import '../../core/game_state.dart';
+import '../../core/gear/gear_scorer.dart';
+import '../../core/market_listings_service.dart';
+import '../../models/hero.dart';
 import '../../models/loot.dart';
+import '../../models/market_listing.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
 import '../kenney_bar.dart';
@@ -308,15 +312,34 @@ class SanctuaryOverlay extends StatelessWidget {
   }
 }
 
-class MarketOverlay extends StatelessWidget {
+class MarketOverlay extends StatefulWidget {
   const MarketOverlay({super.key, required this.director});
   final GameDirector director;
 
   @override
+  State<MarketOverlay> createState() => _MarketOverlayState();
+}
+
+class _MarketOverlayState extends State<MarketOverlay> {
+  EquipmentSlot? _slotFilter;
+  int? _heroFilterIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.director.ensureMarketListings();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final director = widget.director;
     final state = director.state;
     final flaskCost = GameLogic.marketFlaskCost(state);
     final stash = state.gearStash;
+    final refreshLabel = MarketListingsService.formatRefreshRemaining(state);
+    final refreshCost = GameLogic.marketListingsPaidRefreshCost(state);
+    final listings = _filteredListings(state);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -325,16 +348,54 @@ class MarketOverlay extends StatelessWidget {
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
+        MenuChrome.sectionLabelScoped('GEAR LISTINGS', scope: MenuScope.run),
+        const SizedBox(height: 4),
         Text(
-          'Buy heals with gold. Empty flask slots first, extras go to BAG.\n'
-          'Full bag: CLEAN BAG (FILTERS) or tap stash here for gold.',
+          'Traveling listings · $refreshLabel',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 12),
-        MenuChrome.sectionLabelScoped('CONSUMABLES', scope: MenuScope.run),
         const SizedBox(height: 6),
+        KenneyButton(
+          label: state.gold >= refreshCost
+              ? 'REFRESH · ${formatCount(refreshCost)}g'
+              : 'REFRESH · Need ${formatCount(refreshCost)}g',
+          style: KenneyButtonStyle.grey,
+          onPressed: state.gold >= refreshCost
+              ? director.refreshMarketListings
+              : null,
+        ),
+        const SizedBox(height: 8),
+        _slotFilterRow(),
+        const SizedBox(height: 6),
+        _heroFilterRow(state),
+        const SizedBox(height: 8),
+        if (listings.isEmpty)
+          Text(
+            'No listings match this filter.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          )
+        else
+          for (final listing in listings) _listingCard(state, director, listing),
+        const SizedBox(height: 12),
+        Text(
+          'Buy gear when drops miss your slot. Listings roll for this run only '
+          '(clears on Ascend). Farm still beats market iLvl.',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 12),
+        MenuChrome.sectionLabelScoped('SUPPLIES', scope: MenuScope.run),
+        const SizedBox(height: 6),
+        Text(
+          'Empty flask slots first, extras go to BAG.\n'
+          'Full bag: CLEAN BAG (FILTERS) or tap stash below for gold.',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
         KenneyButton(
           label: state.gold >= flaskCost
               ? 'Buy flask · ${flaskCost}g'
@@ -437,6 +498,197 @@ class MarketOverlay extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  List<MarketListing> _filteredListings(GameState state) {
+    return [
+      for (final listing in state.marketListings)
+        if (_matchesFilters(state, listing)) listing,
+    ];
+  }
+
+  bool _matchesFilters(GameState state, MarketListing listing) {
+    if (_slotFilter != null && listing.slot != _slotFilter) return false;
+    if (_heroFilterIndex != null) {
+      return _heroCanWearListing(state.heroes[_heroFilterIndex!], listing);
+    }
+    return true;
+  }
+
+  bool _heroCanWearListing(PartyHero hero, MarketListing listing) {
+    return GearScorer.compareForHeroSlot(
+      hero,
+      listing.item,
+      listing.slot,
+      pairingStash: const [],
+    ).powerDelta > -9999;
+  }
+
+  Widget _slotFilterRow() {
+    const filters = <(String, EquipmentSlot?)>[
+      ('ALL', null),
+      ('HEAD', EquipmentSlot.head),
+      ('CHEST', EquipmentSlot.chest),
+      ('WEAPON', EquipmentSlot.weapon),
+      ('OFF-HAND', EquipmentSlot.offHand),
+    ];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final (label, slot) in filters)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: ChoiceChip(
+                label: Text(label, style: GameTheme.body(size: 11)),
+                selected: _slotFilter == slot,
+                onSelected: (_) => setState(() => _slotFilter = slot),
+                selectedColor: GameTheme.torchHot.withValues(alpha: 0.35),
+                backgroundColor: GameTheme.panelInset,
+                side: BorderSide(color: GameTheme.border.withValues(alpha: 0.8)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _heroFilterRow(GameState state) {
+    if (state.heroes.isEmpty) return const SizedBox.shrink();
+    return Row(
+      children: [
+        Text(
+          'Hero',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int?>(
+              isExpanded: true,
+              value: _heroFilterIndex,
+              hint: Text(
+                'Any',
+                style: GameTheme.body(size: 13, color: GameTheme.parchment),
+              ),
+              items: [
+                DropdownMenuItem<int?>(
+                  value: null,
+                  child: Text('Any', style: GameTheme.body(size: 13)),
+                ),
+                for (var i = 0; i < state.heroes.length; i++)
+                  DropdownMenuItem<int?>(
+                    value: i,
+                    child: Text(
+                      state.heroes[i].name,
+                      style: GameTheme.body(size: 13),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+              onChanged: (v) => setState(() => _heroFilterIndex = v),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _listingCard(
+    GameState state,
+    GameDirector director,
+    MarketListing listing,
+  ) {
+    final item = listing.item;
+    final upgradeHero = _upgradeHeroName(state, listing);
+    final armorLine = item.armorType != null
+        ? ' · ${item.armorType!.name}'
+        : '';
+    final canBuy = state.gold >= listing.priceGold;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: MenuChrome.listCard(
+        borderColor: rarityBorderColor(item.rarity).withValues(alpha: 0.85),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          KenneySprite(
+            asset: KenneyAssets.equipmentIconFor(item),
+            size: 28,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  style: GameTheme.body(size: 14, color: GameTheme.parchment),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${listing.slot.name.toUpperCase()} · '
+                  'iLvl ${item.effectiveItemLevel}$armorLine',
+                  style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                ),
+                if (upgradeHero != null && canBuy) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'UPGRADE → $upgradeHero',
+                    style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${formatCount(listing.priceGold)}g',
+                style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+              ),
+              const SizedBox(height: 4),
+              KenneyButton(
+                label: 'BUY',
+                style: KenneyButtonStyle.brown,
+                expanded: false,
+                onPressed: canBuy
+                    ? () => director.buyMarketListing(listing.id)
+                    : null,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String? _upgradeHeroName(GameState state, MarketListing listing) {
+    if (listing.targetHeroIndex >= 0 &&
+        listing.targetHeroIndex < state.heroes.length) {
+      final hero = state.heroes[listing.targetHeroIndex];
+      final cmp = GearScorer.compareForHeroSlot(
+        hero,
+        listing.item,
+        listing.slot,
+        pairingStash: state.gearStash,
+      );
+      if (cmp.isUpgrade) return hero.name;
+    }
+    for (final hero in state.heroes) {
+      final cmp = GearScorer.compareForHeroSlot(
+        hero,
+        listing.item,
+        listing.slot,
+        pairingStash: state.gearStash,
+      );
+      if (cmp.isUpgrade) return hero.name;
+    }
+    return null;
   }
 
   static String _marketHealCount(GameState state) {

@@ -54,6 +54,7 @@ class _HubScreenState extends State<HubScreen>
   late final AnimationController _torch;
   bool _offlineDialogShown = false;
   bool _offeredWhatsNew = false;
+  bool _offeredDiscordThanks = false;
   bool _userPickedZone = false;
   int? _trackedAscension;
   int? _trackedHighestCleared;
@@ -116,8 +117,10 @@ class _HubScreenState extends State<HubScreen>
       duration: const Duration(milliseconds: 1600),
     )..repeat(reverse: true);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      director.ensureMarketListings();
       await _maybeShowOffline();
       await _maybeShowWhatsNew();
+      await _maybeShowDiscordThanks();
     });
   }
 
@@ -139,6 +142,14 @@ class _HubScreenState extends State<HubScreen>
     if (!MetaSystems.hasUnseenChangelog(director.state)) return;
     _offeredWhatsNew = true;
     await WhatsNewOverlay.show(context, director);
+  }
+
+  Future<void> _maybeShowDiscordThanks() async {
+    if (_offeredDiscordThanks || !mounted) return;
+    if (director.state.inDungeon) return;
+    if (!DiscordThanksOverlay.shouldOffer(director)) return;
+    _offeredDiscordThanks = true;
+    await DiscordThanksOverlay.show(context, director);
   }
 
   @override
@@ -167,6 +178,16 @@ class _HubScreenState extends State<HubScreen>
             director.ackPendingHeroReveals();
             router.open(MenuRoute.party);
           },
+        );
+      case HubChaseKind.equipBag:
+        return (
+          'PARTY',
+          () => router.open(MenuRoute.party, party: PartyTab.bag),
+        );
+      case HubChaseKind.marketUpgrade:
+        return (
+          'MARKET',
+          () => router.open(MenuRoute.power, power: PowerTab.market),
         );
       case HubChaseKind.ascend:
         return ('ASCEND', () => confirmAscend(context, director));
@@ -436,6 +457,8 @@ class _HubScreenState extends State<HubScreen>
                                             HubChaseKind.claimMissions &&
                                         chase.kind != HubChaseKind.ascend &&
                                         chase.kind != HubChaseKind.meetHero &&
+                                        chase.kind != HubChaseKind.equipBag &&
+                                        chase.kind != HubChaseKind.marketUpgrade &&
                                         chase.kind != HubChaseKind.dailyRun;
                                     secondaryLabel = showSecondaryEnter
                                         ? enterLabel
@@ -443,6 +466,15 @@ class _HubScreenState extends State<HubScreen>
                                     secondaryAction = showSecondaryEnter
                                         ? enterAction
                                         : null;
+                                  } else if (chase.kind == HubChaseKind.marketUpgrade &&
+                                      onAction != null &&
+                                      actionLabel != null) {
+                                    primaryLabel = actionLabel;
+                                    primaryAction = onAction;
+                                    secondaryLabel = enterAction != null
+                                        ? enterLabel
+                                        : null;
+                                    secondaryAction = enterAction;
                                   } else {
                                     primaryLabel = enterLabel;
                                     primaryAction = enterAction;

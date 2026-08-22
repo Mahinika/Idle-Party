@@ -1,5 +1,6 @@
 import '../spatial/spatial_combat.dart';
 import 'game_state.dart';
+import 'market_listings_service.dart';
 import 'menu_alerts.dart';
 
 /// Fight numbers from SpatialCombat at the wipe frame.
@@ -59,7 +60,26 @@ abstract final class WipeAdvice {
   static bool isImmediate(String line) =>
       line.startsWith('Equip') ||
       line.contains('too far') ||
-      line == 'Upgrade DEF in FORGE';
+      line == 'Upgrade DEF in FORGE' ||
+      line.contains('MARKET has an upgrade');
+
+  /// Short nudge under the wipe advice when the fix lives in hub menus.
+  static String? hubHintFor(String adviceLine) {
+    if (adviceLine.isEmpty) return null;
+    if (adviceLine.contains('MARKET') ||
+        adviceLine.startsWith('Equip') ||
+        adviceLine.contains('FORGE')) {
+      return 'Tap HUB when safe to fix gear';
+    }
+    return null;
+  }
+
+  static String _forgeOrMarket(GameState state, String forgeLine) {
+    if (MarketListingsService.hasAffordableUpgradeListing(state)) {
+      return 'POWER → MARKET has an upgrade';
+    }
+    return forgeLine;
+  }
 
   /// Nudge God Hand after repeated wipes on the same floor (commit path — no redesign).
   static String? godHandHintFor(GameState state) {
@@ -93,21 +113,25 @@ abstract final class WipeAdvice {
 
     // Melted before the pack moved: incoming damage, not a long DPS check.
     if (fight.elapsedSec <= 6 && leftover >= 0.50) {
-      return 'Upgrade DEF in FORGE';
+      return _forgeOrMarket(state, 'Upgrade DEF in FORGE');
     }
 
     final dps = fight.damageDealt / fight.elapsedSec;
     final ttk = fight.waveHp / dps;
     final atkGap = ttk / fight.elapsedSec;
     if (atkGap >= 1.35 && leftover >= 0.35) {
-      return 'Upgrade ATK in FORGE';
+      return _forgeOrMarket(state, 'Upgrade ATK in FORGE');
     }
 
     // DPS was enough to nearly finish; they ran out of body.
     if (atkGap <= 0.75 && leftover < 0.40 && fight.partyMaxHp > 0) {
       final overkill = fight.damageTaken / fight.partyMaxHp;
-      if (overkill >= 1.20) return 'Upgrade DEF in FORGE';
-      if (overkill <= 1.08) return 'Upgrade STA in FORGE';
+      if (overkill >= 1.20) {
+        return _forgeOrMarket(state, 'Upgrade DEF in FORGE');
+      }
+      if (overkill <= 1.08) {
+        return _forgeOrMarket(state, 'Upgrade STA in FORGE');
+      }
     }
     return null;
   }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/ad_boost.dart';
@@ -29,7 +31,7 @@ class HubPowerupsCard extends StatelessWidget {
     final left = AdBoost.formatRemaining(until);
     final detail = active
         ? '×2 gold · +${AdBoost.attackPercent}% ATK · $left left'
-        : 'Watch ad · 1 hour of ×2 gold and +${AdBoost.attackPercent}% ATK';
+        : 'Watch ad · ${AdBoost.hoursPerAd}h of ×2 gold and +${AdBoost.attackPercent}% ATK';
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: WebClickScope(
@@ -150,10 +152,11 @@ Future<void> openPowerupsSheet(
                       Text('POWERUPS', style: GameTheme.menuTitle(size: 18)),
                       const SizedBox(height: 8),
                       Text(
-                        'Watch a short ad for 1 hour of double gold and '
-                        '+${AdBoost.attackPercent}% attack. Watch again to add '
-                        'another hour (up to 24 hours). Optional — fights never '
-                        'pause for an ad.',
+                        'Watch a short ad for ${AdBoost.hoursPerAd} hours of '
+                        'double gold and +${AdBoost.attackPercent}% attack. '
+                        'Watch again to add another ${AdBoost.hoursPerAd} hours '
+                        '(up to 24 hours). Optional — fights never pause for an '
+                        'ad.',
                         style: GameTheme.body(
                           size: 15,
                           color: GameTheme.parchment,
@@ -162,7 +165,9 @@ Future<void> openPowerupsSheet(
                       const SizedBox(height: 10),
                       MenuChrome.statRow(
                         label: 'Gold',
-                        value: active ? '×2 now' : '×2 for 1 hour',
+                        value: active
+                            ? '×2 now'
+                            : '×2 for ${AdBoost.hoursPerAd} hours',
                       ),
                       MenuChrome.statRow(
                         label: 'Attack',
@@ -177,13 +182,14 @@ Future<void> openPowerupsSheet(
                         KenneyButton(
                           label: capped
                               ? 'STACKED TO 24H'
-                              : 'WATCH AD · +1 HOUR',
+                              : 'WATCH AD · +${AdBoost.hoursPerAd} HOURS',
                           style: KenneyButtonStyle.brown,
                           primary: true,
                           onPressed: capped
                               ? null
                               : () {
-                                  director.watchPowerupAd();
+                                  // Keep sheet open; grant + toast land after dismiss.
+                                  unawaited(director.watchPowerupAd());
                                 },
                         )
                       else ...[
@@ -199,7 +205,7 @@ Future<void> openPowerupsSheet(
                         KenneyButton(
                           label: capped
                               ? 'STACKED TO 24H'
-                              : 'PREVIEW +1 HOUR',
+                              : 'PREVIEW +${AdBoost.hoursPerAd} HOURS',
                           style: KenneyButtonStyle.brown,
                           primary: true,
                           onPressed: capped

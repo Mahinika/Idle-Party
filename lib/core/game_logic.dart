@@ -9,6 +9,7 @@ import '../models/gear_loadout.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import '../models/market_listing.dart';
 import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
@@ -22,6 +23,7 @@ import 'logic_notices.dart';
 import 'apex_forge.dart';
 import 'encounter_factory.dart';
 import 'market_service.dart';
+import 'market_listings_service.dart';
 import 'gear_service.dart';
 import 'mission_board.dart';
 import 'loot_pipeline.dart';
@@ -849,7 +851,8 @@ class GameLogic {
   static int applyGoldGain(GameState state, int baseGold) =>
       EconomyService.applyGoldGain(state, baseGold);
 
-  /// Optional POWERUPS: +1 hour of double gold and +25% ATK. Stacks duration.
+  /// Optional POWERUPS: +[AdBoost.hoursPerAd] hours of double gold and +25% ATK.
+  /// Stacks duration only (effects do not multiply).
   static GameState grantAdBoostHour(GameState state, {int? nowMs}) {
     final until = AdBoost.addHour(
       state.metaDepth.adBoostUntilMs,
@@ -2767,10 +2770,12 @@ class GameLogic {
     GameState state, {
     bool unstickBag = false,
     bool mergeFirst = true,
+    bool manualClean = false,
   }) => GearService.cleanBagJunk(
     state,
     unstickBag: unstickBag,
     mergeFirst: mergeFirst,
+    manualClean: manualClean,
   );
   static ({GameState state, int merges}) autoMergeJunk(
     GameState state, {
@@ -3082,6 +3087,16 @@ class GameLogic {
       MarketService.createMarketBandage(salt: salt);
   static GameState buyMarketBandage(GameState state, {int salt = 0}) =>
       MarketService.buyMarketBandage(state, salt: salt);
+
+  // —— Market gear listings (AH-style) ——
+  static GameState ensureMarketListings(GameState state, {int? nowMs}) =>
+      MarketListingsService.ensureFresh(state, nowMs: nowMs);
+  static GameState buyMarketListing(GameState state, String listingId) =>
+      MarketListingsService.buyListing(state, listingId);
+  static GameState refreshMarketListingsPaid(GameState state, {int? nowMs}) =>
+      MarketListingsService.paidRefresh(state, nowMs: nowMs);
+  static int marketListingsPaidRefreshCost(GameState state) =>
+      MarketListingsService.paidRefreshCost(state);
 }
 
 /// Snapshot of what AFK time awarded on a single apply.

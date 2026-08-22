@@ -157,6 +157,8 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
     sessionTelemetryLog: state.sessionTelemetryLog,
     lastUpdated: now ?? DateTime.now(),
     clearEquipped: true,
+    marketListings: const <MarketListing>[],
+    marketListingsRefreshMs: 0,
     wipeStreakKey: '',
     wipeStreakCount: 0,
     wipeAdviceLine: '',

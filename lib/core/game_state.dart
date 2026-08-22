@@ -9,6 +9,7 @@ import '../models/gear_loadout.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import '../models/market_listing.dart';
 import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
@@ -61,6 +62,8 @@ class GameState {
     this.equipped = const <EquipmentSlot, EquipmentItem>{},
     this.missions = const <Mission>[],
     this.gearStash = const <EquipmentItem>[],
+    this.marketListings = const <MarketListing>[],
+    this.marketListingsRefreshMs = 0,
     this.dungeonMode = DungeonMode.push,
     this.highestFloorCleared = 0,
     this.highestDungeonCleared = -1,
@@ -173,6 +176,12 @@ class GameState {
 
   /// Inventory / Combinator stash. Cleared on Ascend / hard reset.
   final List<EquipmentItem> gearStash;
+
+  /// Traveling gear listings on POWER → MARKET. Cleared on Ascend.
+  final List<MarketListing> marketListings;
+
+  /// UTC ms when [marketListings] last rolled (6h free refresh).
+  final int marketListingsRefreshMs;
 
   /// Farm loops the floor; Push advances after clear.
   final DungeonMode dungeonMode;
@@ -838,6 +847,8 @@ class GameState {
     Map<EquipmentSlot, EquipmentItem>? equipped,
     List<Mission>? missions,
     List<EquipmentItem>? gearStash,
+    List<MarketListing>? marketListings,
+    int? marketListingsRefreshMs,
     DungeonMode? dungeonMode,
     int? highestFloorCleared,
     int? highestDungeonCleared,
@@ -936,6 +947,9 @@ class GameState {
           : (equipped ?? this.equipped),
       missions: missions ?? this.missions,
       gearStash: gearStash ?? this.gearStash,
+      marketListings: marketListings ?? this.marketListings,
+      marketListingsRefreshMs:
+          marketListingsRefreshMs ?? this.marketListingsRefreshMs,
       dungeonMode: dungeonMode ?? this.dungeonMode,
       highestFloorCleared: highestFloorCleared ?? this.highestFloorCleared,
       highestDungeonCleared:
@@ -1075,6 +1089,8 @@ class GameState {
     ),
     'missions': missions.map((mission) => mission.toJson()).toList(),
     'gearStash': gearStash.map((item) => item.toJson()).toList(),
+    'marketListings': marketListings.map((l) => l.toJson()).toList(),
+    'marketListingsRefreshMs': marketListingsRefreshMs,
     'dungeonMode': dungeonMode.name,
     'highestFloorCleared': highestFloorCleared,
     'highestDungeonCleared': highestDungeonCleared,
@@ -1137,6 +1153,7 @@ class GameState {
     final unlockedRelicsJson = json['unlockedRelics'] as List<dynamic>?;
     final missionsJson = json['missions'] as List<dynamic>?;
     final stashJson = json['gearStash'] as List<dynamic>?;
+    final marketJson = json['marketListings'] as List<dynamic>?;
     final petsJson = json['ownedPets'] as List<dynamic>?;
     final activePetJson = json['activePet'] as Map<String, dynamic>?;
     final modeRaw = json['dungeonMode'] as String?;
@@ -1282,6 +1299,13 @@ class GameState {
                 .cast<Map<String, dynamic>>()
                 .map(EquipmentItem.fromJson)
                 .toList(),
+      marketListings: marketJson == null
+          ? const <MarketListing>[]
+          : marketJson
+                .cast<Map<String, dynamic>>()
+                .map(MarketListing.fromJson)
+                .toList(),
+      marketListingsRefreshMs: _jsonInt(json['marketListingsRefreshMs']),
       dungeonMode: modeRaw == null
           ? DungeonMode.push
           : DungeonMode.values.byName(modeRaw),

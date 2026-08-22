@@ -553,6 +553,22 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                           color: GameTheme.torchHot,
                                         ),
                                       ),
+                                      if (WipeAdvice.hubHintFor(
+                                            state.wipeAdviceLine,
+                                          ) !=
+                                          null) ...[
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          WipeAdvice.hubHintFor(
+                                            state.wipeAdviceLine,
+                                          )!,
+                                          textAlign: TextAlign.center,
+                                          style: GameTheme.body(
+                                            size: 13,
+                                            color: GameTheme.parchmentDim,
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                     if (WipeAdvice.godHandHintFor(state) !=
                                         null) ...[

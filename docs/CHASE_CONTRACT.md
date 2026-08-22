@@ -7,9 +7,10 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 
 ## Priority (high → low)
 
-1. **Claimables (READY)** — daily vault, finished jobs, Meet new kit  
-2. **Ascend READY** — can Ascend now  
-3. **ALMOST** — one boss from Ascend, KEY+1 vault cliff, then zone / Will / Gauntlet / week almost  
+1. **Claimables (READY)** — daily vault, finished jobs, Meet new kit, **equip BAG upgrade**
+2. **MARKET ALMOST** — affordable UPGRADE listing on POWER → MARKET (after bag equip)
+3. **Ascend READY** — can Ascend now  
+4. **ALMOST** — one boss from Ascend, KEY+1 vault cliff, then zone / Will / Gauntlet / week almost  
 4. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Skip Daily / KEY / vault-start / Will grind so TODAY is not a meta list. Skip kit teasers (`Combat Rogue` / AL1) until after the first boss.  
 5. **KEY habit** — after first hour, chase the next KEY (honest higher iLvl) until preferred key is at the AL cap. Uses KEY words even before mid-layer vault jargon. When at cap, fall through.  
 6. **Progress grind** — daily run, vault start, Will, Gauntlet, week goal, push floors  

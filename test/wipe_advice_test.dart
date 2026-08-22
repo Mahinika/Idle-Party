@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/market_listings_service.dart';
 import 'package:idle_party/core/wipe_advice.dart';
 import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/menu_router.dart';
@@ -213,6 +214,34 @@ void main() {
     expect(
       MenuRouter.visiblePartyTabs(veteran),
       isNot(contains(PartyTab.loadouts)),
+    );
+  });
+
+  test('forge gap prefers MARKET when listing is affordable', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = GameLogic.enterDungeon(state, dungeonId: 'brass');
+    state = GameLogic.ensureMarketListings(
+      state.copyWith(
+        ascensionLevel: 20,
+        gold: 500_000,
+        hardmodeLevel: 12,
+      ),
+      nowMs: 1_750_000_000_000,
+    );
+    expect(MarketListingsService.hasAffordableUpgradeListing(state), isTrue);
+    state = GameLogic.notePartyWipe(state, atkLack());
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(state.wipeAdviceLine, 'POWER → MARKET has an upgrade');
+  });
+
+  test('hub hint nudges HUB for gear fixes', () {
+    expect(
+      WipeAdvice.hubHintFor('POWER → MARKET has an upgrade'),
+      contains('HUB'),
+    );
+    expect(
+      WipeAdvice.hubHintFor('Equip the better item in PARTY'),
+      contains('HUB'),
     );
   });
 

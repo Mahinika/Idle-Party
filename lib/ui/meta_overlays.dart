@@ -25,6 +25,7 @@ import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
 import 'web_click_bridge.dart';
 
+export 'shell/discord_thanks_overlay.dart';
 export 'shell/whats_new_overlay.dart';
 
 /// Local achievements list — unlocked ids come from `GameState.achievements`.
@@ -827,6 +828,19 @@ Future<void> showOfflineProgressDialog(
         } else {
           director.ackPendingHeroReveals();
         }
+      };
+    case HubChaseKind.equipBag:
+      readyLabel = 'PARTY';
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+        onOpenParty?.call();
+      };
+    case HubChaseKind.marketUpgrade:
+      readyLabel = 'MARKET';
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
       };
     default:
       break;

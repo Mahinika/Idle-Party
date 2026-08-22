@@ -28,6 +28,7 @@ class ChaseContract {
       kind == HubChaseKind.claimDailyVault ||
       kind == HubChaseKind.claimMissions ||
       kind == HubChaseKind.meetHero ||
+      kind == HubChaseKind.equipBag ||
       kind == HubChaseKind.ascend;
 
   /// Offline welcome + any “Up next” chrome — same words as hub TODAY.
@@ -45,6 +46,8 @@ class ChaseContract {
     HubChaseKind.claimDailyVault => 'CLAIM VAULT',
     HubChaseKind.claimMissions => 'CLAIM JOBS',
     HubChaseKind.meetHero => 'PARTY',
+    HubChaseKind.equipBag => 'PARTY',
+    HubChaseKind.marketUpgrade => 'MARKET',
     HubChaseKind.ascend => 'ASCEND',
     HubChaseKind.dailyRun => 'DAILY',
     HubChaseKind.keystone => 'ENTER',

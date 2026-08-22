@@ -124,4 +124,39 @@ void main() {
     expect(GearCleanup.shouldAutoSellOnPickup(state, backup), isFalse);
     expect(GearCleanup.shouldAutoSellOnPickup(state, junkChest), isTrue);
   });
+
+  test('manual CLEAN BAG sells filter matches even when upgrade backup', () {
+    final worn = EquipmentItem(
+      id: 'worn_chest',
+      name: 'Worn',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      staminaBonus: 40,
+      itemLevel: 42,
+    );
+    final backup = EquipmentItem(
+      id: 'backup_chest',
+      name: 'Backup',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      staminaBonus: 38,
+      itemLevel: 40,
+    );
+    var state = GameLogic.createInitialState().copyWith(
+      autoSellMaxPower: 50,
+      autoSellMaxRarity: LootRarity.epic.index,
+      autoDisassembleMaxIlvl: 0,
+      gearStash: [backup],
+    );
+    final heroes = [...state.heroes];
+    heroes[0] = heroes[0].copyWith(
+      equipped: {EquipmentSlot.chest: worn},
+    );
+    state = state.copyWith(heroes: heroes);
+    expect(GearCleanup.shouldKeepInBag(state, backup), isTrue);
+
+    final cleaned = GameLogic.cleanBagJunk(state, manualClean: true);
+    expect(cleaned.gearStash.any((g) => g.id == 'backup_chest'), isFalse);
+    expect(cleaned.gold, greaterThan(state.gold));
+  });
 }
