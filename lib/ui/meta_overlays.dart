@@ -1344,31 +1344,24 @@ class SaveTransferSection extends StatelessWidget {
   }
 }
 
-/// Opt-in Play Games: seasonal boards + cloud save (Google hosts; no Idle Party server).
-class PlayGamesSection extends StatefulWidget {
-  const PlayGamesSection({super.key, required this.director});
-  final GameDirector director;
+/// Shared busy flag + Play Games sign-in / cloud restore dialogs.
+mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
+  bool playGamesBusy = false;
 
-  @override
-  State<PlayGamesSection> createState() => _PlayGamesSectionState();
-}
+  GameDirector get playGamesDirector;
 
-class _PlayGamesSectionState extends State<PlayGamesSection> {
-  bool _busy = false;
-
-  GameDirector get director => widget.director;
-
-  Future<void> _run(Future<void> Function() action) async {
-    if (_busy) return;
-    setState(() => _busy = true);
+  Future<void> runPlayGames(Future<void> Function() action) async {
+    if (playGamesBusy) return;
+    setState(() => playGamesBusy = true);
     try {
       await action();
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) setState(() => playGamesBusy = false);
     }
   }
 
-  Future<void> _signIn() => _run(() async {
+  Future<void> signInPlayGamesFlow() => runPlayGames(() async {
+    final director = playGamesDirector;
     final ok = await director.signInPlayGames();
     if (!ok || !mounted) return;
     final cloud = await director.loadPlayGamesCloud();
@@ -1405,7 +1398,8 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
     }
   });
 
-  Future<void> _restore() => _run(() async {
+  Future<void> restorePlayGamesFlow() => runPlayGames(() async {
+    final director = playGamesDirector;
     final cloud = await director.loadPlayGamesCloud();
     if (cloud == null) {
       director.showToast('No Play Games save found', life: 2.2);
@@ -1445,11 +1439,26 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
       force: conflict == CloudConflict.preferCloud,
     );
   });
+}
+
+/// META → KEY: seasonal Timed KEY + Gauntlet boards (Google hosts).
+class PlayGamesBoardsSection extends StatefulWidget {
+  const PlayGamesBoardsSection({super.key, required this.director});
+  final GameDirector director;
+
+  @override
+  State<PlayGamesBoardsSection> createState() => _PlayGamesBoardsSectionState();
+}
+
+class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
+    with _PlayGamesActions {
+  @override
+  GameDirector get playGamesDirector => widget.director;
 
   @override
   Widget build(BuildContext context) {
-    final state = director.state;
-    final md = state.metaDepth;
+    final director = widget.director;
+    final md = director.state.metaDepth;
     final month = md.leaderboardSeasonKey.isNotEmpty
         ? md.leaderboardSeasonKey
         : GameLogic.isoMonthKey(DateTime.now().toUtc());
@@ -1464,6 +1473,96 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
         : 'No Gauntlet floor yet';
     final boardsReady = PlayLeaderboardIds.hasBoards(month);
     final signedIn = PlayGamesBridge.isSignedInCached || md.playGamesOptIn;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'BOARDS',
+          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Season $month · Timed KEY + Gauntlet ranks (Play Games)',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          timedLabel,
+          style: GameTheme.body(size: 13, color: GameTheme.parchment),
+        ),
+        Text(
+          gauntletLabel,
+          style: GameTheme.body(size: 13, color: GameTheme.parchment),
+        ),
+        if (!signedIn) ...[
+          const SizedBox(height: 8),
+          KenneyButton(
+            label: 'SIGN IN TO RANK',
+            style: KenneyButtonStyle.brown,
+            onPressed: playGamesBusy ? null : signInPlayGamesFlow,
+          ),
+        ],
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: KenneyButton(
+                label: 'VIEW KEY',
+                style: KenneyButtonStyle.grey,
+                onPressed: playGamesBusy || !boardsReady
+                    ? null
+                    : () => runPlayGames(director.showPlayTimedLeaderboard),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: KenneyButton(
+                label: 'VIEW GAUNTLET',
+                style: KenneyButtonStyle.grey,
+                onPressed: playGamesBusy || !boardsReady
+                    ? null
+                    : () => runPlayGames(director.showPlayGauntletLeaderboard),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          boardsReady
+              ? signedIn
+                    ? 'New season PBs submit while signed in. Cloud save: SETTINGS.'
+                    : 'Sign in to submit ranks. Cloud save stays under SETTINGS.'
+              : 'Leaderboard IDs not set yet — add them in Play Console, then '
+                    'paste into play_leaderboard_ids.dart.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+      ],
+    );
+  }
+}
+
+/// META → SETTINGS: Play Games sign-in + cloud backup (boards live under KEY).
+class PlayGamesSection extends StatefulWidget {
+  const PlayGamesSection({super.key, required this.director});
+  final GameDirector director;
+
+  @override
+  State<PlayGamesSection> createState() => _PlayGamesSectionState();
+}
+
+class _PlayGamesSectionState extends State<PlayGamesSection>
+    with _PlayGamesActions {
+  @override
+  GameDirector get playGamesDirector => widget.director;
+
+  @override
+  Widget build(BuildContext context) {
+    final md = widget.director.state.metaDepth;
+    final month = md.leaderboardSeasonKey.isNotEmpty
+        ? md.leaderboardSeasonKey
+        : GameLogic.isoMonthKey(DateTime.now().toUtc());
+    final signedIn = PlayGamesBridge.isSignedInCached || md.playGamesOptIn;
     final lastBackup = PlayGamesBridge.lastCloudUploadAt;
 
     return Column(
@@ -1475,17 +1574,8 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Season $month · opt-in boards + cloud backup',
+          'Season $month · cloud backup. Boards: META → KEY.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          timedLabel,
-          style: GameTheme.body(size: 13, color: GameTheme.parchment),
-        ),
-        Text(
-          gauntletLabel,
-          style: GameTheme.body(size: 13, color: GameTheme.parchment),
         ),
         if (lastBackup != null) ...[
           const SizedBox(height: 4),
@@ -1498,31 +1588,7 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
         KenneyButton(
           label: signedIn ? 'SIGNED IN' : 'SIGN IN WITH PLAY GAMES',
           style: KenneyButtonStyle.brown,
-          onPressed: _busy || signedIn ? null : _signIn,
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Expanded(
-              child: KenneyButton(
-                label: 'VIEW KEY',
-                style: KenneyButtonStyle.grey,
-                onPressed: _busy || !boardsReady
-                    ? null
-                    : () => _run(director.showPlayTimedLeaderboard),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: KenneyButton(
-                label: 'VIEW GAUNTLET',
-                style: KenneyButtonStyle.grey,
-                onPressed: _busy || !boardsReady
-                    ? null
-                    : () => _run(director.showPlayGauntletLeaderboard),
-              ),
-            ),
-          ],
+          onPressed: playGamesBusy || signedIn ? null : signInPlayGamesFlow,
         ),
         const SizedBox(height: 6),
         Row(
@@ -1531,10 +1597,10 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
               child: KenneyButton(
                 label: 'BACKUP NOW',
                 style: KenneyButtonStyle.grey,
-                onPressed: _busy
+                onPressed: playGamesBusy
                     ? null
-                    : () => _run(() async {
-                        await director.backupToPlayGames();
+                    : () => runPlayGames(() async {
+                        await widget.director.backupToPlayGames();
                       }),
               ),
             ),
@@ -1543,18 +1609,10 @@ class _PlayGamesSectionState extends State<PlayGamesSection> {
               child: KenneyButton(
                 label: 'RESTORE',
                 style: KenneyButtonStyle.grey,
-                onPressed: _busy ? null : _restore,
+                onPressed: playGamesBusy ? null : restorePlayGamesFlow,
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          boardsReady
-              ? 'Boards submit on new season PBs while signed in.'
-              : 'Leaderboard IDs not set yet — add them in Play Console, then '
-                    'paste into play_leaderboard_ids.dart.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
       ],
     );

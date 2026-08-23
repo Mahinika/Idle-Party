@@ -52,7 +52,7 @@ Idle Party does not create its own username or password. Optional Play Games sig
 
 To stop sharing progress or scores with Play Games:
 
-1. In the app, open **MORE** and sign out of Play Games if you are signed in.
+1. In the app, open **META → SETTINGS** (Play Games) and stop using cloud/boards; you can also revoke access in Google Account.
 2. On the web, open your [Google Account third-party apps](https://myaccount.google.com/permissions) and remove Idle Party / Play Games access.
 3. You can also delete Play Games activity from your Google Account.
 

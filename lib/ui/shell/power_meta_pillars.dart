@@ -247,7 +247,16 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
         switch (tab) {
           MetaTab.key => (
             label: 'KEY',
-            body: SingleChildScrollView(child: ChallengeToggles(director: d)),
+            body: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ChallengeToggles(director: d),
+                  const SizedBox(height: 16),
+                  PlayGamesBoardsSection(director: d),
+                ],
+              ),
+            ),
           ),
           MetaTab.jobs => (
             label: 'JOBS',
