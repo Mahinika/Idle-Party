@@ -443,7 +443,7 @@ class DungeonTopHud extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 3),
               child: Text(
-                'Underleveled · train ~$softcap lvl or farm gear',
+                'Underleveled · gain ~$softcap lvl or farm gear',
                 textAlign: TextAlign.center,
                 style: GameTheme.body(size: 11, color: GameTheme.torchHot),
               ),

@@ -1022,7 +1022,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
   }
 }
 
-/// META → KEY: Rift tier dial (party Lv60 endgame).
+/// META → KEY: Rift tier dial (party max-level endgame).
 class RiftHubPanel extends StatelessWidget {
   const RiftHubPanel({super.key, required this.director});
   final GameDirector director;
@@ -1096,7 +1096,7 @@ class RiftHubPanel extends StatelessWidget {
   }
 }
 
-/// META → KEY: Greater Rift tier dial (party Lv60 prestige + boards).
+/// META → KEY: Greater Rift tier dial (party max-level prestige + boards).
 class GreaterRiftHubPanel extends StatelessWidget {
   const GreaterRiftHubPanel({super.key, required this.director});
   final GameDirector director;

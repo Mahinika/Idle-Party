@@ -236,13 +236,13 @@ class GameState {
   /// Hub vs dungeon: combat loop only runs while in dungeon.
   final bool inDungeon;
 
-  /// Infinity Gauntlet run (AL20 endless climb). Cleared when leaving hub.
+  /// Infinity Gauntlet run (party-max-level endless climb). Cleared when leaving hub.
   final bool inGauntlet;
 
-  /// Timed farm Rift run (AL20 kill quota). Cleared when leaving hub.
+  /// Timed farm Rift run (party-max-level kill quota). Cleared when leaving hub.
   final bool inRift;
 
-  /// Timed Greater Rift run (AL20 prestige ladder). Cleared when leaving hub.
+  /// Timed Greater Rift run (party-max-level prestige ladder). Cleared when leaving hub.
   final bool inGreaterRift;
 
   /// Named dungeon id (e.g. sandy).

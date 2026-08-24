@@ -39,10 +39,10 @@ fairness, no IAP).
 ### Short description (80 chars max)
 
 ```
-Grow a party, farm dungeons AFK, chase KEYSTONE and Ascend.
+Grow a party, farm AFK, chase KEYSTONE, Gauntlet, and Greater Rifts.
 ```
 
-(59 characters)
+(67 characters)
 
 ### Full description
 
@@ -57,9 +57,9 @@ WHAT YOU DO
 • Hub TODAY shows one clear chase (READY / ALMOST) so you always know the next beat.
 
 LONG-TERM GOALS
-• KEYSTONE: set a key, beat the boss under par, climb vault rewards.
-• Ascend: reset the run, keep essence / Apex / pets / meta upgrades, unlock more kits.
-• Infinity Gauntlet (Ascend Level 10+): endless Crystal Spire climb.
+• Ascend through AL20 — keep essence / Apex / pets / meta upgrades and unlock more kits.
+• Level the party to 100 for endgame: KEYSTONE keys in normal zones, Infinity Gauntlet climb, farm Rifts, and Greater Rifts (prestige timed kills ranked on optional Play Games boards).
+• World Path unlocks by party level (Sandy from Lv1) or by clearing the prior zone.
 • Apex forge: craft forever gear that survives Ascend. MERGE two bag pieces into one stronger item.
 
 FAIR PLAY
@@ -71,12 +71,13 @@ FAIR PLAY
 Install, start a party, and take one more floor.
 ```
 
-### Release notes — Alpha 1.12.41 (en-US, paste into Play Console)
+### Release notes — Alpha 1.12.53 (en-US, paste into Play Console)
 
 ```
-• All 15 dungeons now use owned custom zone art — distinct palettes per zone (Hell vs Ember, Sandy sand, Tide silt, and more).
-• UI polish: clearer hub/menus, shared theme tokens on gear tooltips and combat HUD bars.
-• Bug fixes and performance improvements.
+• Hero cap Lv100 — KEY / Gauntlet / Rifts when the whole party is max level.
+• Zones unlock by even party levels (Sandy from Lv1) or prior clear.
+• AL20 remains Ascend cap only.
+• Bug fixes and balance polish.
 ```
 
 ### Screenshot caption plan (Play phone carousel, 2026-08-21)
@@ -123,8 +124,8 @@ Hard-won rules:
 
 Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
 
-## Play Console status (2026-08-22)
+## Play Console status (2026-08-24)
 
-- Short + full description: en-US only (this file). Updated 2026-08-22 for custom dungeon art line.
+- Short + full description: en-US only (this file). Updated 2026-08-24 for Lv100 endgame + level-gated World Path (draft for next Alpha).
 - Phone screenshots (8) + feature graphic from `tool/store_listing/marketing/` (submitted 2026-08-21).
-- Closed Alpha **1.12.41 (71)** submitted 2026-08-22 after owner play OK on GitHub APK.
+- Closed Alpha **1.12.52 (82)** submitted 2026-08-24 (upload-signed local AAB; GitHub `v1.12.52` AAB was debug-signed — fix CI keystore path before next tag). Working ship **1.12.53**.

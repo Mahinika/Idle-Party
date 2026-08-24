@@ -225,7 +225,7 @@ class HubChase {
       );
     }
 
-    // Near endgame: level the party to 60 before KEY / Gauntlet / Rifts.
+    // Near endgame: level the party to max before KEY / Gauntlet / Rifts.
     final levelPush = _partyLevelChase(state);
     if (levelPush != null) return levelPush;
 

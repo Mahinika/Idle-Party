@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.52**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.53**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -39,7 +39,7 @@ for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.52 / 82** submitted 2026-08-24; testers may still be on
 **1.12.47 / 77** until review publishes). Working ship is
-**1.12.52**. Production still needs **12 closed testers × 14 days**.
+**1.12.53**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -350,7 +350,7 @@ and Sanctuary. Constants: `GameLogic.ascendBlessing*`. Player-facing label is
 keystone **run** state (timer/affixes/outcome; dial stays), leave dungeon
 (`inDungeon=false`); mission board rebuilt for new AL.
 
-Dungeon unlock uses **lifetime gold** (and prior clears), not wallet gold.
+Dungeon unlock uses **party mean level** (and prior clears), not lifetime gold.
 
 ### Keystone (Mythic+-style)
 

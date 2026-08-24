@@ -369,7 +369,7 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             ),
             const SizedBox(height: 8),
             KenneyButton(
-              label: 'DEV: ENTER GAUNTLET (Lv60)',
+              label: 'DEV: ENTER GAUNTLET (Lv${GameLogic.maxHeroLevel})',
               style: KenneyButtonStyle.grey,
               onPressed: state.inDungeon
                   ? null

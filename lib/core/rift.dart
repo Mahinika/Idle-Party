@@ -1,6 +1,6 @@
 import 'dart:math';
 
-/// Farm Rift — AL20 timed kill challenge with mid-run gold and gear.
+/// Farm Rift — timed kill challenge with mid-run gold and gear (party max level).
 ///
 /// Kill [killTarget] enemies before [parTimeMs] expires. Success unlocks the
 /// next tier (+2 if finished with ≥25% time remaining). Not ranked on Play

@@ -76,7 +76,7 @@ GameState createPartyState({
 }
 
 GameState levelPartyTo(GameState state, int level) {
-  final lvl = level.clamp(1, 60);
+  final lvl = level.clamp(1, GameLogic.maxHeroLevel);
   final leveled = [
     for (final h in state.heroes) h.copyWith(level: lvl),
   ];

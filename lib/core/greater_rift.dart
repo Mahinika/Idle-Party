@@ -1,6 +1,6 @@
 import 'dart:math';
 
-/// Greater Rift — AL20 prestige timed kill ladder (Play Games ranked).
+/// Greater Rift — prestige timed kill ladder (party max level; Play Games ranked).
 ///
 /// Harder packs than farm [Rift], thinner mid-run loot (gold OK, no gear),
 /// bigger clear payout. Higher GR tier always ranks above lower; same tier

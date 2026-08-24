@@ -2830,9 +2830,9 @@ class GameLogic {
     return json.containsKey('enemies') ? 2 : 1;
   }
 
-  /// Zones unlock on **lifetime** gold, so a save that never stored it (or
-  /// stored less than the run itself proves) would re-lock zones the player
-  /// already walked into. Raise it to the smallest honest value instead.
+  /// Lifetime gold is tracked for achievements / stats. Older saves may
+  /// under-count it vs gold already earned; raise it to the smallest honest
+  /// floor so gold-milestone achievements stay fair.
   static GameState _backfillLifetimeGold(GameState state) {
     var floor = state.gold;
     for (final d in DungeonCatalog.all) {

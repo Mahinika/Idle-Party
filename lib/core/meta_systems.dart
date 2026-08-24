@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.52';
+  static const String currentVersion = '1.12.53';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.53',
+      bullets: <String>[
+        'Hero level cap is 100 — combat XP only (no gold Train). KEY, Gauntlet, farm Rifts, and Greater Rifts unlock when every active hero is Lv100.',
+        'AL20 stays the Ascension cap (kits / Blessing). Endgame content is no longer gated on AL alone.',
+        'World Path unlocks by party mean level in even steps (Sandy from Lv1 … Mothveil at Lv100), or by clearing the previous zone — still Sandy through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.52',
       bullets: <String>[
