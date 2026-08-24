@@ -264,7 +264,7 @@ class GameLogic {
     final def = DungeonCatalog.byId(dungeonId);
     final unlocked = DungeonCatalog.isUnlocked(
       dungeonId,
-      state.lifetimeGoldEarned,
+      partyMeanLevel(state),
       state.highestDungeonCleared,
     );
     if (!unlocked && def.number > 0) {
@@ -423,7 +423,7 @@ class GameLogic {
 
   /// Hero level hard cap — XP stops here; endgame unlocks when the
   /// active party is fully capped.
-  static const int maxHeroLevel = 60;
+  static const int maxHeroLevel = 100;
 
   /// Legacy aliases (older copy / tests). Prefer [endgameUnlocked].
   static const int gauntletMinAscension = maxAscensionLevel;
@@ -439,6 +439,13 @@ class GameLogic {
       if (h.level < maxHeroLevel) return false;
     }
     return true;
+  }
+
+  /// Mean level of the active party (zone unlock / softcap helpers).
+  static int partyMeanLevel(GameState state) {
+    if (state.heroes.isEmpty) return 1;
+    final sum = state.heroes.fold<int>(0, (s, h) => s + h.level);
+    return max(1, sum ~/ state.heroes.length);
   }
 
   /// KEY / Gauntlet / Rifts / Greater Rifts / KEY jargon.
@@ -1187,9 +1194,9 @@ class GameLogic {
   /// Hub / Ascend pick: NEXT frontier zone, else deepest unlocked.
   static String recommendedDungeonId(GameState state) {
     final highest = state.highestDungeonCleared;
-    final gold = state.lifetimeGoldEarned;
+    final partyLv = partyMeanLevel(state);
     for (final d in DungeonCatalog.all) {
-      final unlocked = DungeonCatalog.isUnlocked(d.id, gold, highest);
+      final unlocked = DungeonCatalog.isUnlocked(d.id, partyLv, highest);
       final cleared = highest >= d.number;
       if (unlocked && !cleared && d.number == highest + 1) {
         return d.id;
@@ -1198,7 +1205,7 @@ class GameLogic {
     var bestId = DungeonCatalog.all.first.id;
     var bestNum = -1;
     for (final d in DungeonCatalog.all) {
-      if (!DungeonCatalog.isUnlocked(d.id, gold, highest)) continue;
+      if (!DungeonCatalog.isUnlocked(d.id, partyLv, highest)) continue;
       if (d.number >= bestNum) {
         bestNum = d.number;
         bestId = d.id;
@@ -3128,7 +3135,7 @@ class GameLogic {
     HeroRole role,
     EquipmentItem item, {
     HeroSpecId? specId,
-    int level = 60,
+    int level = 100,
   }) => GearService.roleEquipScore(role, item, specId: specId, level: level);
   static ({
     int powerDelta,

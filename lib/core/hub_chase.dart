@@ -606,34 +606,35 @@ class HubChase {
   }
 
   static HubChase? _nextZoneChase(GameState state) {
-    final lifetime = state.lifetimeGoldEarned;
+    final partyLv = GameLogic.partyMeanLevel(state);
     final cleared = state.highestDungeonCleared;
     for (final d in DungeonCatalog.all) {
-      if (DungeonCatalog.isUnlocked(d.id, lifetime, cleared)) continue;
-      final goldNeed = (d.unlockPrice - lifetime).clamp(0, d.unlockPrice);
+      if (DungeonCatalog.isUnlocked(d.id, partyLv, cleared)) continue;
+      final need = DungeonCatalog.unlockHeroLevel(d);
       final prevName = d.number <= 0
           ? 'the start'
           : DungeonCatalog.all[d.number - 1].name;
-      if (goldNeed <= 0) {
+      final levelsShort = (need - partyLv).clamp(0, need);
+      if (levelsShort <= 0) {
         return HubChase(
           kind: HubChaseKind.unlockZone,
           title: 'Unlock ${d.name}',
-          detail: 'Clear $prevName (or earn lifetime gold) to open the path.',
+          detail: 'Clear $prevName (or reach party Lv$need) to open the path.',
           urgency: HubChaseUrgency.almost,
           zoneId: d.id,
         );
       }
-      final almost =
-          d.unlockPrice > 0 &&
-          goldNeed <= (d.unlockPrice * 0.12).ceil().clamp(1, d.unlockPrice);
-      // Playing the current zone unlocks the next. TODAY only names a zone
-      // unlock when gold is a cliffhanger — not as the default grind.
+      final almost = levelsShort <= 3;
+      // TODAY only names a zone unlock when level is a cliffhanger —
+      // clearing the prior zone still opens the path anytime.
       if (!almost) return null;
       return HubChase(
         kind: HubChaseKind.unlockZone,
         title: 'Almost ${d.name}',
-        detail: 'Need $goldNeed more lifetime gold — or clear $prevName.',
-        progressLabel: '$lifetime / ${d.unlockPrice}g',
+        detail: levelsShort == 1
+            ? '1 more party level (Lv$need) — or clear $prevName.'
+            : '$levelsShort more party levels (Lv$need) — or clear $prevName.',
+        progressLabel: 'Lv$partyLv / Lv$need',
         urgency: HubChaseUrgency.almost,
         zoneId: d.id,
       );

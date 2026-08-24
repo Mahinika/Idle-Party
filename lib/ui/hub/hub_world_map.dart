@@ -12,26 +12,12 @@ class SelectedZoneCaption extends StatelessWidget {
     super.key,
     required this.dungeon,
     required this.unlocked,
-    required this.lifetimeGold,
+    required this.partyLevel,
   });
 
   final DungeonDef dungeon;
   final bool unlocked;
-  final int lifetimeGold;
-
-  /// Compact lifetime-gold label (1.2M, 750k, …).
-  static String compactGold(int n) {
-    if (n >= 1000000) {
-      final whole = n ~/ 1000000;
-      final rem = n % 1000000;
-      if (rem == 0) return '${whole}M';
-      final tenths = (rem / 100000).floor();
-      if (tenths == 0) return '${whole}M';
-      return '$whole.${tenths}M';
-    }
-    if (n >= 1000) return '${n ~/ 1000}k';
-    return '$n';
-  }
+  final int partyLevel;
 
   @override
   Widget build(BuildContext context) {
@@ -56,8 +42,9 @@ class SelectedZoneCaption extends StatelessWidget {
         ],
       );
     }
-    final detail = dungeon.unlockPrice > 0
-        ? '${compactGold(lifetimeGold)} / ${compactGold(dungeon.unlockPrice)} lifetime gold'
+    final need = DungeonCatalog.unlockHeroLevel(dungeon);
+    final detail = need > 1
+        ? 'Party Lv$partyLevel / Lv$need to unlock'
         : 'Locked';
     return Text(
       '${dungeon.name} · $detail',
@@ -74,7 +61,7 @@ class ZonePathMap extends StatefulWidget {
     super.key,
     required this.dungeons,
     required this.selectedId,
-    required this.lifetimeGold,
+    required this.partyLevel,
     required this.highestCleared,
     required this.pulse,
     required this.onSelect,
@@ -82,7 +69,7 @@ class ZonePathMap extends StatefulWidget {
 
   final List<DungeonDef> dungeons;
   final String selectedId;
-  final int lifetimeGold;
+  final int partyLevel;
   final int highestCleared;
   final double pulse;
   final ValueChanged<String> onSelect;
@@ -251,7 +238,7 @@ class _ZonePathMapState extends State<ZonePathMap> {
           final anchor = ZonePathMap.markerNorm[i];
           final unlocked = DungeonCatalog.isUnlocked(
             d.id,
-            widget.lifetimeGold,
+            widget.partyLevel,
             widget.highestCleared,
           );
           final cleared = widget.highestCleared >= d.number;

@@ -83,7 +83,7 @@ class CombatRatings {
       HeroRole.healer => 59.2,
       HeroRole.mage => 59.5,
     };
-    final lvl = level.clamp(1, 60);
+    final lvl = level.clamp(1, 100);
     return base * (0.5 + 0.5 * lvl / 60);
   }
 
@@ -93,7 +93,7 @@ class CombatRatings {
       HeroRole.mage => 59.5,
       _ => 60.0,
     };
-    final lvl = level.clamp(1, 60);
+    final lvl = level.clamp(1, 100);
     return base * (0.5 + 0.5 * lvl / 60);
   }
 

@@ -20,7 +20,7 @@ abstract final class Keystone {
   /// KEY unlocks when every active hero is at [heroLevelGate] (endgame).
   /// Keep in sync with [GameLogic.maxHeroLevel].
   static const int minAscension = 20;
-  static const int heroLevelGate = 60;
+  static const int heroLevelGate = 100;
 
   /// Full KEY dial once the party is capped; 0 before.
   static int maxForState(GameState state) {

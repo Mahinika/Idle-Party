@@ -69,7 +69,7 @@ class _HubScreenState extends State<HubScreen>
     for (final d in DungeonCatalog.all) {
       final unlocked = DungeonCatalog.isUnlocked(
         d.id,
-        state.lifetimeGoldEarned,
+        GameLogic.partyMeanLevel(state),
         highest,
       );
       final cleared = highest >= d.number;
@@ -208,7 +208,7 @@ class _HubScreenState extends State<HubScreen>
             }
             final unlocked = DungeonCatalog.isUnlocked(
               id,
-              director.state.lifetimeGoldEarned,
+              GameLogic.partyMeanLevel(director.state),
               director.state.highestDungeonCleared,
             );
             if (unlocked) widget.onEnterDungeon(id);
@@ -231,7 +231,7 @@ class _HubScreenState extends State<HubScreen>
             final id = chase.zoneId ?? _selectedId;
             final unlocked = DungeonCatalog.isUnlocked(
               id,
-              director.state.lifetimeGoldEarned,
+              GameLogic.partyMeanLevel(director.state),
               director.state.highestDungeonCleared,
             );
             if (unlocked) widget.onEnterDungeon(id);
@@ -251,7 +251,7 @@ class _HubScreenState extends State<HubScreen>
             }
             final unlocked = DungeonCatalog.isUnlocked(
               id,
-              director.state.lifetimeGoldEarned,
+              GameLogic.partyMeanLevel(director.state),
               director.state.highestDungeonCleared,
             );
             if (unlocked) widget.onEnterDungeon(id);
@@ -300,7 +300,7 @@ class _HubScreenState extends State<HubScreen>
     final bossFloor = GameLogic.bossFloorFor(state);
     final unlockedSelected = DungeonCatalog.isUnlocked(
       _selectedId,
-      state.lifetimeGoldEarned,
+      GameLogic.partyMeanLevel(state),
       state.highestDungeonCleared,
     );
 
@@ -396,7 +396,7 @@ class _HubScreenState extends State<HubScreen>
                                   builder: (context, _) => ZonePathMap(
                                     dungeons: DungeonCatalog.all,
                                     selectedId: _selectedId,
-                                    lifetimeGold: state.lifetimeGoldEarned,
+                                    partyLevel: GameLogic.partyMeanLevel(state),
                                     highestCleared: state.highestDungeonCleared,
                                     pulse: _torch.value,
                                     onSelect: (id) => setState(() {
@@ -410,7 +410,7 @@ class _HubScreenState extends State<HubScreen>
                               SelectedZoneCaption(
                                 dungeon: DungeonCatalog.byId(_selectedId),
                                 unlocked: unlockedSelected,
-                                lifetimeGold: state.lifetimeGoldEarned,
+                                partyLevel: GameLogic.partyMeanLevel(state),
                               ),
                               const SizedBox(height: 6),
                               Builder(

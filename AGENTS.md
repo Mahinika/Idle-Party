@@ -150,7 +150,7 @@ Paladin / Shaman can equip **shields** in the off-hand.
 through Mothveil Hollow.
 
 **Infinity Gauntlet** (`GameLogic.endgameUnlocked` = active party all at
-`maxHeroLevel` **60**): endless Crystal
+`maxHeroLevel` **100**): endless Crystal
 Spire climb from Hub; **boss every 5 floors**; wipe/leave → hub;
 `metaDepth.gauntletBestFloor` survives Ascend.
 
@@ -167,9 +167,14 @@ no mid-run gear, larger clear payout; season PB on Play Games BOARDS.
 
 **Ascension cap:** `GameLogic.maxAscensionLevel` = **AL20** — Ascend stops here
 (Blessing / kit roadmap). **Endgame content** (KEY +20, Gauntlet, Rifts, Greater
-Rifts) unlocks when the **active party is all Lv60**, not at AL20 alone.
-`GameLogic.maxHeroLevel` = **60**; combat XP only (no gold Train +1 level).
-FORGE gold tracks (ATK/DEF/STA/MOVE/HASTE/CRIT) still buyable (wipe on Ascend).
+Rifts) unlocks when the **active party is all Lv100**, not at AL20 alone.
+**Hero level cap:** `GameLogic.maxHeroLevel` = **100**; combat XP only (no gold
+Train +1 level). Endgame (KEY / Gauntlet / Rifts) when every active hero is
+Lv100. FORGE gold tracks (ATK/DEF/STA/MOVE/HASTE/CRIT) still buyable (wipe on
+Ascend).
+
+**Zone unlock:** party **mean level** (even steps 1…100 across 15 zones) **or**
+prior zone clear. Zone 0 (Sandy) from Lv1. Lifetime gold no longer unlocks zones.
 
 **QUESTS** (META tab; was JOBS/contracts): 3-slot board — **Daily** (UTC kill
 quest), **Bounty** ladder (100/500/1000 at endgame), **Side** rotating

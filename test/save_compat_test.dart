@@ -67,7 +67,7 @@ void main() {
     expect(
       DungeonCatalog.isUnlocked(
         'fen',
-        loaded.lifetimeGoldEarned,
+        GameLogic.partyMeanLevel(loaded),
         loaded.highestDungeonCleared,
       ),
       isTrue,

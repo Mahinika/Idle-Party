@@ -457,14 +457,22 @@ void main() {
     expect(world.heroes.first.hp, state.heroes.first.currentHp);
   });
 
-  test('lifetime gold unlocks dungeons, not wallet gold', () {
+  test('party level unlocks dungeons, not wallet gold', () {
     final state = GameLogic.createInitialState(
       now: DateTime(2026, 7, 4),
-    ).copyWith(gold: 0, lifetimeGoldEarned: 6000);
+    ).copyWith(
+      gold: 0,
+      heroes: [
+        for (final h in GameLogic.createInitialState(
+          now: DateTime(2026, 7, 4),
+        ).heroes)
+          h.copyWith(level: 8, xp: 0),
+      ],
+    );
     expect(
       DungeonCatalog.isUnlocked(
         'goblin',
-        state.lifetimeGoldEarned,
+        GameLogic.partyMeanLevel(state),
         state.highestDungeonCleared,
       ),
       isTrue,

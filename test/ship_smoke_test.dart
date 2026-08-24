@@ -61,43 +61,51 @@ void main() {
     }
   });
 
-  test('zone unlock uses lifetime gold or prior clear, not wallet gold', () {
-    expect(DungeonCatalog.isUnlocked('sandy', 0, -1), isTrue);
-    expect(DungeonCatalog.isUnlocked('goblin', 0, -1), isFalse);
-    expect(DungeonCatalog.isUnlocked('goblin', 5000, -1), isTrue);
-    expect(DungeonCatalog.isUnlocked('goblin', 0, 0), isTrue);
+  test('zone unlock uses party level or prior clear', () {
+    expect(DungeonCatalog.unlockHeroLevel(DungeonCatalog.byId('sandy')), 1);
+    expect(DungeonCatalog.isUnlocked('sandy', 1, -1), isTrue);
 
-    expect(DungeonCatalog.isUnlocked('tide', 749999, 5), isFalse);
-    expect(DungeonCatalog.isUnlocked('tide', 750000, 5), isTrue);
-    expect(DungeonCatalog.isUnlocked('tide', 0, 6), isTrue);
+    final goblinNeed = DungeonCatalog.unlockHeroLevel(
+      DungeonCatalog.byId('goblin'),
+    );
+    expect(goblinNeed, 8);
+    expect(DungeonCatalog.isUnlocked('goblin', 1, -1), isFalse);
+    expect(DungeonCatalog.isUnlocked('goblin', goblinNeed, -1), isTrue);
+    expect(DungeonCatalog.isUnlocked('goblin', 1, 0), isTrue);
 
-    expect(DungeonCatalog.isUnlocked('ember', 1199999, 6), isFalse);
-    expect(DungeonCatalog.isUnlocked('ember', 1200000, 6), isTrue);
-    expect(DungeonCatalog.isUnlocked('ember', 0, 7), isTrue);
+    for (final id in [
+      'tide',
+      'ember',
+      'grove',
+      'storm',
+      'rime',
+      'fen',
+      'brass',
+      'veil',
+    ]) {
+      final def = DungeonCatalog.byId(id);
+      final need = DungeonCatalog.unlockHeroLevel(def);
+      expect(
+        DungeonCatalog.isUnlocked(id, need - 1, def.number - 2),
+        isFalse,
+        reason: '$id should stay locked below Lv$need without prior clear',
+      );
+      expect(
+        DungeonCatalog.isUnlocked(id, need, def.number - 2),
+        isTrue,
+        reason: '$id unlocks at party Lv$need',
+      );
+      expect(
+        DungeonCatalog.isUnlocked(id, 1, def.number - 1),
+        isTrue,
+        reason: '$id unlocks after clearing previous zone',
+      );
+    }
 
-    expect(DungeonCatalog.isUnlocked('grove', 1799999, 7), isFalse);
-    expect(DungeonCatalog.isUnlocked('grove', 1800000, 7), isTrue);
-    expect(DungeonCatalog.isUnlocked('grove', 0, 8), isTrue);
-
-    expect(DungeonCatalog.isUnlocked('storm', 2599999, 8), isFalse);
-    expect(DungeonCatalog.isUnlocked('storm', 2600000, 8), isTrue);
-    expect(DungeonCatalog.isUnlocked('storm', 0, 9), isTrue);
-
-    expect(DungeonCatalog.isUnlocked('rime', 3599999, 9), isFalse);
-    expect(DungeonCatalog.isUnlocked('rime', 3600000, 9), isTrue);
-    expect(DungeonCatalog.isUnlocked('rime', 0, 10), isTrue);
-
-    expect(DungeonCatalog.isUnlocked('fen', 4999999, 10), isFalse);
-    expect(DungeonCatalog.isUnlocked('fen', 5000000, 10), isTrue);
-    expect(DungeonCatalog.isUnlocked('fen', 0, 11), isTrue);
-
-    expect(DungeonCatalog.isUnlocked('brass', 6999999, 11), isFalse);
-    expect(DungeonCatalog.isUnlocked('brass', 7000000, 11), isTrue);
-    expect(DungeonCatalog.isUnlocked('brass', 0, 12), isTrue);
-
-    expect(DungeonCatalog.isUnlocked('veil', 9999999, 12), isFalse);
-    expect(DungeonCatalog.isUnlocked('veil', 10000000, 12), isTrue);
-    expect(DungeonCatalog.isUnlocked('veil', 0, 13), isTrue);
+    expect(
+      DungeonCatalog.unlockHeroLevel(DungeonCatalog.byId('veil')),
+      100,
+    );
   });
 
   test('guides cover World Path endgame zones and LOADOUTS vs armor sets', () {
@@ -126,8 +134,8 @@ void main() {
     expect(market.body.toLowerCase(), contains('today'));
   });
 
-  test('Gauntlet / KEY / Rift gates use party Lv60 and What’s New version is non-empty', () {
-    expect(GameLogic.maxHeroLevel, 60);
+  test('Gauntlet / KEY / Rift gates use party max level and What’s New version is non-empty', () {
+    expect(GameLogic.maxHeroLevel, 100);
     expect(GameLogic.endgameUnlocked(GameLogic.createInitialState()), isFalse);
     final maxed = GameLogic.createInitialState().copyWith(
       heroRoster: [

@@ -193,13 +193,16 @@ void main() {
   });
 
   test('zone ALMOST beats daily run', () {
-    // Goblin unlock 5k — within 12% goldNeed counts as ALMOST.
-    var state = GameLogic.createInitialState(now: now).copyWith(
-      lifetimeGoldEarned: 4500,
+    // Goblin unlocks at party Lv8 — within 3 levels counts as ALMOST.
+    final base = GameLogic.createInitialState(now: now);
+    var state = base.copyWith(
       highestDungeonCleared: -1,
-      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-            dailyVaultClaimed: true,
-          ),
+      heroes: [
+        for (final h in base.heroes) h.copyWith(level: 6, xp: 0),
+      ],
+      metaDepth: base.metaDepth.copyWith(
+        dailyVaultClaimed: true,
+      ),
     );
     expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
     final chase = HubChase.forState(state, now: now);

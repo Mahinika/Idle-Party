@@ -187,16 +187,27 @@ abstract final class DungeonCatalog {
     return all.first;
   }
 
+  /// Party mean level to unlock this zone (zone 0 = 1, last zone = 100).
+  /// Even steps across [1 .. 100] for the catalog order.
+  static int unlockHeroLevel(DungeonDef def) {
+    if (def.number <= 0) return 1;
+    const cap = 100;
+    final last = all.length - 1;
+    if (last <= 0) return 1;
+    return 1 + ((def.number * (cap - 1)) / last).round();
+  }
+
+  /// Unlocked by clearing the previous zone **or** reaching [unlockHeroLevel].
+  /// [partyLevel] is the active party's mean hero level.
   static bool isUnlocked(
     String id,
-    int goldEarnedLifetime,
+    int partyLevel,
     int highestDungeon,
   ) {
     final def = byId(id);
     if (def.number == 0) return true;
-    // Unlock by clearing previous dungeon index OR paying price once gold allows.
     return highestDungeon >= def.number - 1 ||
-        goldEarnedLifetime >= def.unlockPrice;
+        partyLevel >= unlockHeroLevel(def);
   }
 
   /// Boss appears on floor (5 + ascension level).

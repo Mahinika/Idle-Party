@@ -165,7 +165,7 @@ abstract final class GearScorer {
     HeroRole role,
     EquipmentItem item, {
     HeroSpecId? specId,
-    int level = 60,
+    int level = 100,
     double critMul = 1.0,
   }) {
     final spec = specId != null ? HeroSpecs.def(specId) : null;

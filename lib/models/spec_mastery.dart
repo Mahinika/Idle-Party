@@ -108,7 +108,7 @@ class SpecMastery {
   /// Rating → mastery points (Cata-like curve, idle-tuned).
   static double masteryPointsFrom(int rating, int level) {
     if (rating <= 0) return 0;
-    final lvl = level.clamp(1, 60);
+    final lvl = level.clamp(1, 100);
     return rating / (90.0 + lvl * 4.0);
   }
 

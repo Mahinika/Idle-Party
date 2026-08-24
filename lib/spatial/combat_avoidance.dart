@@ -10,7 +10,7 @@ class CombatAvoidance {
   /// Rating → % with diminishing returns vs level.
   static double ratingToPercent(int rating, int level, {double scale = 130}) {
     if (rating <= 0) return 0;
-    final lvl = level.clamp(1, 60);
+    final lvl = level.clamp(1, 100);
     return 100.0 * rating / (rating + scale * lvl);
   }
 
