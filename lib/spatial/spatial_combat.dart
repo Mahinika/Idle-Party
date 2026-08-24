@@ -1683,6 +1683,37 @@ abstract final class SpatialCombat {
       tagArgb = hero.setProcArgb;
     }
 
+    // Spec mastery white-hit procs (Arms / MM / Combat). Skip finishers.
+    if (tag != 'EVIS') {
+      final mastery = _masteryView(hero);
+      final roll = GameLogic.random.nextDouble();
+      switch (hero.heroSpecId) {
+        case HeroSpecId.arms:
+          final chance = SpecMastery.extraSwingProcChance(mastery);
+          if (chance > 0 && roll < chance) {
+            damage = math.max(1, (damage * 2.0).round());
+            tag = 'SWING';
+            tagArgb = 0xFFFFC060;
+          }
+        case HeroSpecId.marksmanship:
+          final chance = SpecMastery.extraAutoShotProcChance(mastery);
+          if (chance > 0 && roll < chance) {
+            damage = math.max(1, (damage * 2.0).round());
+            tag = 'WILD QUIVER';
+            tagArgb = 0xFF80E080;
+          }
+        case HeroSpecId.combat:
+          final chance = SpecMastery.mainGaucheProcChance(mastery);
+          if (chance > 0 && roll < chance) {
+            damage = math.max(1, (damage * 1.55).round());
+            tag ??= 'MAIN GAUCHE';
+            tagArgb = 0xFFFF9060;
+          }
+        default:
+          break;
+      }
+    }
+
     return (damage: damage, tag: tag, tagArgb: tagArgb);
   }
 
@@ -2709,7 +2740,6 @@ abstract final class SpatialCombat {
       AbilityId.aimedShot ||
       AbilityId.steadyShot ||
       AbilityId.chimeraShot ||
-      AbilityId.scatterShot ||
       AbilityId.volley ||
       AbilityId.killCommand ||
       AbilityId.serpentSting ||
@@ -3592,6 +3622,20 @@ abstract final class SpatialCombat {
         abilityTagArgb = mods.tagArgb;
         if (isCrit) {
           damage = (damage * 1.75).round();
+        }
+        if (!reducedVfx &&
+            (abilityTag == 'SWING' ||
+                abilityTag == 'WILD QUIVER' ||
+                abilityTag == 'MAIN GAUCHE')) {
+          _spawnFloater(
+            world,
+            x: target.x,
+            y: target.y - 0.55,
+            text: abilityTag!,
+            argb: abilityTagArgb,
+            life: 0.55,
+            priority: 1,
+          );
         }
         final hasLos = _hasClearCorridor(
           world.map,

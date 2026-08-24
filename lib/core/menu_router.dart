@@ -9,7 +9,7 @@ import 'menu_alerts.dart';
 enum MenuRoute { none, party, power, meta, settings, jobs }
 
 /// Tabs inside PARTY. Identified by name, never by index: a tab that unlocks
-/// later (MERGE, LOADOUTS, ROSTER) used to shift what a saved index meant.
+/// later (MERGE, ROSTER) used to shift what a saved index meant.
 enum PartyTab { gear, bag, merge, roster }
 
 enum PowerTab { income, forge, camp, market, shop }

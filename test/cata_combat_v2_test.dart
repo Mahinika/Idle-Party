@@ -78,6 +78,62 @@ void main() {
     expect(low, greaterThan(high));
   });
 
+  test('Arms / MM / Combat white-hit mastery procs have real chances', () {
+    const arms = MasteryCombatant(
+      specId: HeroSpecId.arms,
+      masteryPoints: 10,
+    );
+    const mm = MasteryCombatant(
+      specId: HeroSpecId.marksmanship,
+      masteryPoints: 10,
+    );
+    const combat = MasteryCombatant(
+      specId: HeroSpecId.combat,
+      masteryPoints: 10,
+    );
+    expect(SpecMastery.extraSwingProcChance(arms), greaterThan(0.04));
+    expect(SpecMastery.extraAutoShotProcChance(mm), greaterThan(0.05));
+    expect(SpecMastery.mainGaucheProcChance(combat), greaterThan(0.04));
+    expect(
+      SpecMastery.extraSwingProcChance(
+        const MasteryCombatant(specId: HeroSpecId.fury),
+      ),
+      0,
+    );
+  });
+
+  test('Arms white-hit mastery can tag SWING floaters', () {
+    final base = GameLogic.createInitialState(now: DateTime(2026, 8, 1));
+    final state = base.withActiveParty([
+      base.heroes.first.copyWith(
+        specId: HeroSpecId.arms,
+        level: 20,
+      ),
+    ]);
+    var world = SpatialCombat.build(state);
+    final hero = world.heroes.firstWhere((h) => !h.isPet);
+    hero.masteryPoints = 40; // ~28% swing chance ceiling path
+    var sawSwing = false;
+    for (var i = 0; i < 400 && !sawSwing; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      for (final f in world.floaters) {
+        if (f.text == 'SWING') {
+          sawSwing = true;
+          break;
+        }
+      }
+      // Keep packs alive so whites keep landing.
+      for (final e in world.enemies) {
+        if (e.hp > 0 && !e.dormant) {
+          e.hp = max(e.hp, 500);
+        }
+      }
+      hero.fireCooldown = 0;
+    }
+    expect(sawSwing, isTrue);
+  });
+
   test('tank sheet skips Agi DEF crumb but keeps dodge', () {
     final prot = GameLogic.createInitialState().heroes.first.copyWith(
       specId: HeroSpecId.protection,

@@ -1655,36 +1655,7 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  void autoSellJunk() {
-    final beforeLen = _state.gearStash.length;
-    final beforeGold = _state.gold;
-    final unstick = GearService.isBagJammed(_state);
-    _applyUpgrade(GameLogic.autoSellJunk(_state, unstickBag: unstick));
-    LogicNotices.takeBagCleanup(); // reported below, not as a second toast
-    final sold = beforeLen - _state.gearStash.length;
-    final gold = _state.gold - beforeGold;
-    if (sold > 0) {
-      showToast('Sold $sold junk · +${gold}g', life: 1.9);
-    } else {
-      showToast('No junk to sell (check iLvl/rarity)', life: 1.5);
-    }
-  }
-
-  void autoDisassembleJunk() {
-    final beforeLen = _state.gearStash.length;
-    final beforeEss = _state.essence;
-    final unstick = GearService.isBagJammed(_state);
-    _applyUpgrade(GameLogic.autoDisassembleJunk(_state, unstickBag: unstick));
-    LogicNotices.takeBagCleanup(); // reported below, not as a second toast
-    final scraped = beforeLen - _state.gearStash.length;
-    final gained = _state.essence - beforeEss;
-    if (scraped > 0) {
-      showToast('Disassembled $scraped · +$gained ess', life: 1.9);
-    } else {
-      showToast('No junk to disassemble (check iLvl/rarity)', life: 1.5);
-    }
-  }
-
+  // —— Bag cleanup ——————————————————————————————————————————————
   /// Merge → sell gold → disassemble essence (bag cleanup / near-full).
   void cleanBagJunk() {
     final beforeLen = _state.gearStash.length;
@@ -1842,32 +1813,6 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(
       _state.copyWith(seenChangelogVersion: MetaSystems.currentVersion),
     );
-  }
-
-  // —— Gear loadouts ——————————————————————————————————————————
-
-  void saveLoadout({required String id, required String name}) {
-    _applyUpgrade(GameLogic.saveLoadout(_state, id: id, name: name));
-    showToast('Loadout "$name" saved', life: 1.8);
-  }
-
-  void applyLoadout(String id) {
-    final result = GameLogic.applyLoadout(_state, id);
-    _applyUpgrade(result.state);
-    GameAudio.ui();
-    if (result.skipped > 0) {
-      showToast(
-        'Loadout applied · ${result.skipped} slot'
-        '${result.skipped == 1 ? '' : 's'} skipped',
-        life: 2.0,
-      );
-    } else {
-      showToast('Loadout applied', life: 1.6);
-    }
-  }
-
-  void deleteLoadout(String id) {
-    _applyUpgrade(GameLogic.deleteLoadout(_state, id));
   }
 
   // —— Team composition ————————————————————————————————————————

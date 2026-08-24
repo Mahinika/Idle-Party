@@ -287,7 +287,8 @@ class MetaDepthState {
   final bool weeklyClaimed;
   final String weeklyModifier;
 
-  /// Legacy weekly vault score (kept for save compat; unused by daily vault).
+  /// Best timed KEY this local-season week (week goal / LOCAL SEASON progress).
+  /// Separate from [dailyBestTimedKey] (daily vault).
   final int weeklyBestTimedKey;
 
   /// UTC date key (`yyyy-mm-dd`) for the daily keystone vault.

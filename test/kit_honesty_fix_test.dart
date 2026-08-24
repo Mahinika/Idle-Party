@@ -986,7 +986,6 @@ void main() {
   test('Marksmanship Volley hits a pack, not a single-target root', () {
     final def = ClassKits.defFor(AbilityId.volley)!;
     expect(def.effect, AbilityEffectKind.aoe);
-    expect(ClassKits.defFor(AbilityId.scatterShot), isNull);
     final state = _soloSpecParty(HeroSpecId.marksmanship, level: 15);
     var world = SpatialCombat.build(state);
     SpatialActor? a;

@@ -284,7 +284,6 @@ enum AbilityId {
   steadyShot,
   aimedShot,
   chimeraShot,
-  scatterShot,
   volley,
   rapidFire,
   trueshot,
@@ -479,7 +478,6 @@ enum AbilityId {
   tigersFury,
   feralSwipe,
   berserk,
-  mangle,
   rip,
   survivalInstincts,
 
