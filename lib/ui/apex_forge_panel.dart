@@ -179,6 +179,18 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           'All survives Ascend.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
+        if (GameLogic.endgameUnlocked(state)) ...[
+          const SizedBox(height: 8),
+          KenneyButton(
+            label: state.metaDepth.apexTrialCleared
+                ? 'APEX TRIAL · cleared this month'
+                : 'START APEX TRIAL (non-Apex gear ignored)',
+            style: KenneyButtonStyle.grey,
+            onPressed: state.metaDepth.apexTrialCleared || state.inDungeon
+                ? null
+                : director.startApexTrial,
+          ),
+        ],
         const SizedBox(height: 10),
         _materialsSection(state),
         const SizedBox(height: 12),

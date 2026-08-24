@@ -15,6 +15,7 @@ import '../models/mission.dart';
 import '../models/pet.dart';
 import '../models/vfx_quality.dart';
 import 'ad_boost.dart';
+import 'blessing_constellation.dart';
 import 'keystone.dart';
 import 'party_name_filter.dart';
 
@@ -107,6 +108,10 @@ class GameState {
     this.codexEnemies = const <String>[],
     this.codexItems = const <String>[],
     this.challengeBossRush = false,
+    this.challengeTiny = false,
+    this.inWorldBoss = false,
+    this.worldBossPractice = false,
+    this.apexTrialActive = false,
     this.challengeNoFlask = false,
     this.hardmodeLevel = 0,
     this.keystoneRunActive = false,
@@ -154,12 +159,22 @@ class GameState {
   /// Active party resolved from [activeHeroIds]. Falls back to full roster
   /// when the active list is empty.
   List<PartyHero> get heroes {
-    if (activeHeroIds.isEmpty) return heroRoster;
+    if (activeHeroIds.isEmpty) {
+      final full = heroRoster;
+      if (challengeTiny && inDungeon && full.length > 3) {
+        return full.take(3).toList(growable: false);
+      }
+      return full;
+    }
     final byId = <String, PartyHero>{for (final h in heroRoster) h.id: h};
-    return [
+    final active = [
       for (final id in activeHeroIds)
         if (byId[id] != null) byId[id]!,
     ];
+    if (challengeTiny && inDungeon && active.length > 3) {
+      return active.take(3).toList(growable: false);
+    }
+    return active;
   }
 
   final List<EnemyUnit> enemies;
@@ -313,6 +328,10 @@ class GameState {
   /// Challenge toggle: packs skew to elite/boss-heavy mixes. Chosen before
   /// entering a dungeon; survives Ascend as a standing preference.
   final bool challengeBossRush;
+  final bool challengeTiny;
+  final bool inWorldBoss;
+  final bool worldBossPractice;
+  final bool apexTrialActive;
 
   /// Challenge toggle: flasks are disabled entirely.
   final bool challengeNoFlask;
@@ -794,27 +813,43 @@ class GameState {
   }
 
   CombatRatings ratingsFor(PartyHero hero) {
+    // Apex Trial: non-Apex gear contributes 0 (bag untouched).
+    final apexOnly = apexTrialActive;
+    int fold(int Function(EquipmentItem i) read) {
+      var s = 0;
+      for (final i in hero.equipped.values) {
+        if (apexOnly && !i.isApex) continue;
+        s += read(i);
+      }
+      return s;
+    }
+
     final sheet = CombatRatings.fromHeroSheet(
       hero: hero,
-      gearStrength: hero.gearStrengthBonus,
-      gearAgility: hero.gearAgilityBonus,
-      gearStamina: hero.gearStaminaBonus,
-      gearIntellect: hero.gearIntellectBonus,
-      gearSpirit: hero.gearSpiritBonus,
-      gearSpellPower: hero.gearSpellPowerBonus,
-      gearMasteryRating: hero.gearMasteryBonus,
-      gearArmor: hero.gearArmorBonus,
-      gearCrit: hero.gearCritChance,
-      gearFlatAttack: hero.gearAttackBonus,
+      gearStrength: apexOnly ? fold((i) => i.strengthBonus) : hero.gearStrengthBonus,
+      gearAgility: apexOnly ? fold((i) => i.agilityBonus) : hero.gearAgilityBonus,
+      gearStamina: apexOnly ? fold((i) => i.staminaBonus) : hero.gearStaminaBonus,
+      gearIntellect:
+          apexOnly ? fold((i) => i.intellectBonus) : hero.gearIntellectBonus,
+      gearSpirit: apexOnly ? fold((i) => i.spiritBonus) : hero.gearSpiritBonus,
+      gearSpellPower:
+          apexOnly ? fold((i) => i.spellPowerBonus) : hero.gearSpellPowerBonus,
+      gearMasteryRating:
+          apexOnly ? fold((i) => i.masteryBonus) : hero.gearMasteryBonus,
+      gearArmor: apexOnly ? fold((i) => i.resolvedArmor) : hero.gearArmorBonus,
+      gearCrit: apexOnly ? fold((i) => i.critChanceBonus) : hero.gearCritChance,
+      gearFlatAttack:
+          apexOnly ? fold((i) => i.attackBonus) : hero.gearAttackBonus,
       metaAttack: metaAttackBonus,
-      metaDefense: metaDefenseBonus,
-      metaVitality: metaVitalityBonus,
+      metaDefense: metaDefenseBonus + BlessingConstellation.defAdd(this),
+      metaVitality: metaVitalityBonus + BlessingConstellation.staAdd(this),
       guardBonus: tankGuardBonusFor(hero),
       auraBonus: casterAuraBonusFor(hero),
     );
-    final atkPct = AdBoost.isActive(metaDepth.adBoostUntilMs)
+    var atkPct = AdBoost.isActive(metaDepth.adBoostUntilMs)
         ? AdBoost.attackPercent
         : 0;
+    atkPct += ((BlessingConstellation.atkMul(this) - 1.0) * 100).round();
     return sheet.withAttackPercent(atkPct);
   }
 
@@ -970,6 +1005,10 @@ class GameState {
     List<String>? codexEnemies,
     List<String>? codexItems,
     bool? challengeBossRush,
+    bool? challengeTiny,
+    bool? inWorldBoss,
+    bool? worldBossPractice,
+    bool? apexTrialActive,
     bool? challengeNoFlask,
     int? hardmodeLevel,
     bool? keystoneRunActive,
@@ -1095,6 +1134,10 @@ class GameState {
       codexEnemies: codexEnemies ?? this.codexEnemies,
       codexItems: codexItems ?? this.codexItems,
       challengeBossRush: challengeBossRush ?? this.challengeBossRush,
+      challengeTiny: challengeTiny ?? this.challengeTiny,
+      inWorldBoss: inWorldBoss ?? this.inWorldBoss,
+      worldBossPractice: worldBossPractice ?? this.worldBossPractice,
+      apexTrialActive: apexTrialActive ?? this.apexTrialActive,
       challengeNoFlask: challengeNoFlask ?? this.challengeNoFlask,
       hardmodeLevel: hardmodeLevel ?? this.hardmodeLevel,
       keystoneRunActive: keystoneRunActive ?? this.keystoneRunActive,
@@ -1242,6 +1285,10 @@ class GameState {
     'codexEnemies': codexEnemies,
     'codexItems': codexItems,
     'challengeBossRush': challengeBossRush,
+    'challengeTiny': challengeTiny,
+    'inWorldBoss': inWorldBoss,
+    'worldBossPractice': worldBossPractice,
+    'apexTrialActive': apexTrialActive,
     'challengeNoFlask': challengeNoFlask,
     'hardmodeLevel': hardmodeLevel,
     'keystoneRunActive': keystoneRunActive,
@@ -1506,6 +1553,10 @@ class GameState {
               .toList() ??
           const <String>[],
       challengeBossRush: (json['challengeBossRush'] as bool?) ?? false,
+      challengeTiny: (json['challengeTiny'] as bool?) ?? false,
+      inWorldBoss: (json['inWorldBoss'] as bool?) ?? false,
+      worldBossPractice: (json['worldBossPractice'] as bool?) ?? false,
+      apexTrialActive: (json['apexTrialActive'] as bool?) ?? false,
       challengeNoFlask: (json['challengeNoFlask'] as bool?) ?? false,
       hardmodeLevel: ((json['hardmodeLevel'] as num?)?.toInt() ?? 0).clamp(
         0,

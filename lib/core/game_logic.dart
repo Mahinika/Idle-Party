@@ -38,8 +38,11 @@ import 'play_games_bridge.dart';
 import 'play_games_scores.dart';
 import 'wipe_advice.dart';
 import 'party_name_filter.dart';
+import 'world_boss.dart';
+import 'party_power.dart';
 
 part 'game_logic_ascend.dart';
+part 'game_logic_endgame.dart';
 
 class GameLogic {
   /// Injectable randomness for enemy targeting (seed in tests).
@@ -270,7 +273,9 @@ class GameLogic {
     if (!unlocked && def.number > 0) {
       return state;
     }
-    final layoutSeed = newLayoutSeed();
+    final baseSeed = newLayoutSeed();
+    final mirrorSalt = LocalSeasonCatalog.mirrorLayoutSeed(state);
+    final layoutSeed = mirrorSalt == 0 ? baseSeed : baseSeed ^ mirrorSalt;
     final floor = DungeonGenerator.generateFloor(
       1,
       ascensionLevel: state.ascensionLevel,
@@ -390,6 +395,9 @@ class GameLogic {
             inGauntlet: false,
             inRift: false,
             inGreaterRift: false,
+            inWorldBoss: false,
+            worldBossPractice: false,
+            apexTrialActive: false,
             heroes: heroes,
             lastUpdated: DateTime.now(),
           ),
@@ -453,6 +461,19 @@ class GameLogic {
 
   static bool canEnterGauntlet(GameState state) =>
       endgameUnlocked(state) && !state.inDungeon;
+
+  static GameState claimMonthPass(GameState state, {DateTime? now}) =>
+      _claimMonthPass(state, now: now);
+
+  static GameState enterWorldBoss(GameState state, {bool practice = false}) =>
+      _enterWorldBoss(state, practice: practice);
+
+  static GameState startApexTrial(GameState state) => _startApexTrial(state);
+
+  static GameState applyRosterExhibition(GameState state) =>
+      _applyRosterExhibition(state);
+
+  static int partyPowerScore(GameState state) => PartyPower.score(state);
 
   /// Escalating threat: +10% enemy stats per floor beyond 1.
   static double gauntletThreatMul(int floor) => 1.0 + max(0, floor - 1) * 0.10;
@@ -1976,6 +1997,8 @@ class GameLogic {
     var next = ensureLeaderboardSeason(state, now: t);
     if (next.metaDepth.weeklyKey != key || next.metaDepth.seasonKey != season) {
       final sameWeek = next.metaDepth.weeklyKey == key;
+      final monthKey = isoMonthKey(t);
+      final sameMonth = next.metaDepth.monthPassKey == monthKey;
       final mod = LocalSeasonCatalog.resolveAffix(
         weekKey: key,
         currentModifier: sameWeek ? next.metaDepth.weeklyModifier : '',
@@ -1988,10 +2011,14 @@ class GameLogic {
           weeklyClaimed: sameWeek ? next.metaDepth.weeklyClaimed : false,
           weeklyModifier: sameWeek ? next.metaDepth.weeklyModifier : mod,
           weeklyBestTimedKey: sameWeek ? next.metaDepth.weeklyBestTimedKey : 0,
+          monthPassKey: monthKey,
+          monthlyBestTimedKey:
+              sameMonth ? next.metaDepth.monthlyBestTimedKey : 0,
           seasonKey: season,
         ),
       );
     }
+    next = WorldBoss.ensureWeek(next, now: t);
     return ensureDailyVault(next, now: t);
   }
 
@@ -2465,24 +2492,38 @@ class GameLogic {
     // Daily echo: claim on first clear, then return to hub (one floor).
     final wasDaily = MetaSystems.isActiveDailyRun(state);
     if (!farmLoop && clearedBoss && !gauntlet && !rift) {
-      final def = DungeonCatalog.byId(awarded.dungeonId);
-      var progressed = awarded.copyWith(
-        gold: awarded.gold + goldAwarded,
-        lifetimeGoldEarned: awarded.lifetimeGoldEarned + goldAwarded,
-        bossVictories: awarded.bossVictories + bossesCleared,
+      var preLeave = awarded;
+      if (state.inWorldBoss) {
+        preLeave = WorldBoss.onBossClear(preLeave);
+      }
+      if (state.apexTrialActive && !preLeave.metaDepth.apexTrialCleared) {
+        preLeave = preLeave.copyWith(
+          essence: preLeave.essence + 20,
+          metaDepth: preLeave.metaDepth.copyWith(apexTrialCleared: true),
+        );
+      }
+      final def = DungeonCatalog.byId(preLeave.dungeonId);
+      var progressed = preLeave.copyWith(
+        gold: preLeave.gold + goldAwarded,
+        lifetimeGoldEarned: preLeave.lifetimeGoldEarned + goldAwarded,
+        bossVictories: preLeave.bossVictories + bossesCleared,
         highestFloorCleared: highest,
-        highestDungeonCleared: max(awarded.highestDungeonCleared, def.number),
+        highestDungeonCleared: max(preLeave.highestDungeonCleared, def.number),
         inDungeon: false,
+        inWorldBoss: false,
+        worldBossPractice: false,
+        apexTrialActive: false,
         recentLoot: drops,
-        heroes: awarded.heroes
+        heroes: preLeave.heroes
             .map(
               (hero) =>
-                  hero.copyWith(currentHp: awarded.effectiveHeroMaxHp(hero)),
+                  hero.copyWith(currentHp: preLeave.effectiveHeroMaxHp(hero)),
             )
             .toList(),
       );
       progressed = _clearKeystoneRun(progressed);
       progressed = _applyMetaProgress(state, progressed, drops);
+      progressed = _applyRosterExhibition(progressed);
       return applyMissionProgress(
         progressed,
         enemiesDefeated: enemiesDefeated,
@@ -2658,6 +2699,32 @@ class GameLogic {
         keystoneNotices.add(
           'KEY +$key TIMED · next KEY +$preferredKey · +${bonus}e',
         );
+        final monthBest = max(next.metaDepth.monthlyBestTimedKey, key);
+        if (monthBest != next.metaDepth.monthlyBestTimedKey) {
+          next = next.copyWith(
+            metaDepth: next.metaDepth.copyWith(monthlyBestTimedKey: monthBest),
+          );
+        }
+        // Challenge PBs (personal toggles).
+        var mdCh = next.metaDepth;
+        if (before.challengeBossRush) {
+          mdCh = mdCh.copyWith(
+            challengeBestBossRushKey: max(mdCh.challengeBestBossRushKey, key),
+          );
+        }
+        if (before.challengeNoFlask) {
+          mdCh = mdCh.copyWith(
+            challengeBestNoFlaskKey: max(mdCh.challengeBestNoFlaskKey, key),
+          );
+        }
+        if (before.challengeTiny) {
+          mdCh = mdCh.copyWith(
+            challengeBestTinyKey: max(mdCh.challengeBestTinyKey, key),
+          );
+        }
+        if (mdCh != next.metaDepth) {
+          next = next.copyWith(metaDepth: mdCh);
+        }
         final md = next.metaDepth;
         final clearMs = before.keystoneTimerMs;
         if (PlayGamesScores.isBetterTimed(

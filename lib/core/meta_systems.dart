@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.53';
+  static const String currentVersion = '1.12.54';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.54',
+      bullets: <String>[
+        'Endgame pack: month season pass, extended QUESTS bounty (to 25k kills), Tiny challenge, Party Power score, Ashen Crown world boss, Blessing Constellation (AL20), Apex Trial, God Hand mastery, and Full Bench roster exhibition.',
+        'Mirror weeks reuse season affix + layout seed on existing zones — no separate mode. KEY / Gauntlet / farm Rifts / Greater Rifts still unlock at party Lv100.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.53',
       bullets: <String>[

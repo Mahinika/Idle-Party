@@ -180,6 +180,9 @@ class HubUrgentRow extends StatelessWidget {
     required this.showGauntlet,
     required this.gauntletBest,
     required this.onGauntlet,
+    required this.showWorldBoss,
+    required this.worldBossTickets,
+    required this.onWorldBoss,
     required this.showRift,
     required this.riftBest,
     required this.onRift,
@@ -208,6 +211,9 @@ class HubUrgentRow extends StatelessWidget {
   final bool showGauntlet;
   final int gauntletBest;
   final VoidCallback onGauntlet;
+  final bool showWorldBoss;
+  final int worldBossTickets;
+  final VoidCallback onWorldBoss;
   final bool showRift;
   final int riftBest;
   final VoidCallback onRift;
@@ -298,6 +304,14 @@ class HubUrgentRow extends StatelessWidget {
                 : 'INFINITY GAUNTLET',
             style: KenneyButtonStyle.red,
             onPressed: onGauntlet,
+          ),
+        ],
+        if (showWorldBoss) ...[
+          const SizedBox(height: 6),
+          KenneyButton(
+            label: 'ASHEN CROWN  ·  $worldBossTickets tix',
+            style: KenneyButtonStyle.brown,
+            onPressed: onWorldBoss,
           ),
         ],
         if (showRift) ...[

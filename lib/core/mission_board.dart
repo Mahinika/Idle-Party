@@ -11,8 +11,19 @@ abstract final class MissionBoard {
   static const int bountySlot = 1;
   static const int sideSlot = 2;
 
-  static const List<int> bountyTargetsEndgame = <int>[100, 500, 1000];
+  /// Endgame ladder continues past 1000 (rungs 0…5).
+  static const List<int> bountyTargetsEndgame = <int>[
+    100,
+    500,
+    1000,
+    5000,
+    10000,
+    25000,
+  ];
   static const List<int> bountyTargetsEarly = <int>[25, 75, 150];
+
+  static int bountyRungMax({required bool endgame}) =>
+      (endgame ? bountyTargetsEndgame : bountyTargetsEarly).length - 1;
 
   static const List<MissionType> sideTypes = <MissionType>[
     MissionType.clearBosses,
@@ -32,7 +43,7 @@ abstract final class MissionBoard {
     Random? random,
   }) {
     final rng = random ?? GameLogic.random;
-    final rung = bountyRung.clamp(0, 2);
+    final rung = bountyRung.clamp(0, bountyRungMax(endgame: endgame));
     return [
       createDailyMission(
         ascensionLevel: ascensionLevel,
@@ -174,7 +185,7 @@ abstract final class MissionBoard {
       highestFloorCleared: highestFloorCleared,
       hardmodeLevel: hardmodeLevel,
     );
-    final rung = bountyRung.clamp(0, 2);
+    final rung = bountyRung.clamp(0, bountyRungMax(endgame: endgame));
     final target = bountyKillTarget(bountyRung: rung, endgame: endgame);
     final rungLabel = rung + 1;
     return Mission(
@@ -451,10 +462,12 @@ abstract final class MissionBoard {
       missions[index] = mission.copyWith(claimed: true);
       nextDailyDate = MetaSystems.dailyDateKey(DateTime.now().toUtc());
     } else if (index == bountySlot) {
-      nextRung = min(2, state.metaDepth.bountyRung + 1);
-      // Top rung repeats: stay at 2 after claim.
-      if (state.metaDepth.bountyRung >= 2) {
-        nextRung = 2;
+      final endgame = GameLogic.endgameUnlocked(state);
+      final maxRung = bountyRungMax(endgame: endgame);
+      nextRung = min(maxRung, state.metaDepth.bountyRung + 1);
+      // Top rung repeats after claim.
+      if (state.metaDepth.bountyRung >= maxRung) {
+        nextRung = maxRung;
       }
       final afterRung = state.copyWith(
         metaDepth: state.metaDepth.copyWith(bountyRung: nextRung),
@@ -465,7 +478,7 @@ abstract final class MissionBoard {
         highestFloorCleared: afterRung.highestFloorCleared,
         hardmodeLevel: afterRung.hardmodeLevel,
         bountyRung: nextRung,
-        endgame: GameLogic.endgameUnlocked(afterRung),
+        endgame: endgame,
       );
     } else {
       missions[index] = rollReplacementMission(

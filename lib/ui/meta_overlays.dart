@@ -620,6 +620,12 @@ Future<void> showOfflineProgressDialog(
         director.dismissOfflineSummary();
         Navigator.pop(context);
       };
+    case HubChaseKind.monthGoal:
+      readyAction = () {
+        director.claimMonthPass();
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+      };
     case HubChaseKind.ascend:
       readyAction = () {
         director.dismissOfflineSummary();
@@ -819,6 +825,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
       if (state.hardmodeLevel > 0) 'KEY+${state.hardmodeLevel}',
       if (state.challengeBossRush) 'Boss Rush',
       if (state.challengeNoFlask) 'No Flask',
+      if (state.challengeTiny) 'Tiny',
       if (vaultReady) 'Vault ready',
       if (weekReady) 'Week ready',
     ];
@@ -913,6 +920,29 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 6),
+          _ChallengeChip(
+            label: 'TINY (3 heroes)',
+            active: state.challengeTiny,
+            onTap: () => director.setChallengeTiny(!state.challengeTiny),
+          ),
+          if (state.metaDepth.challengeBestBossRushKey > 0 ||
+              state.metaDepth.challengeBestNoFlaskKey > 0 ||
+              state.metaDepth.challengeBestTinyKey > 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              'PB · Rush +${state.metaDepth.challengeBestBossRushKey} · '
+              'Flask +${state.metaDepth.challengeBestNoFlaskKey} · '
+              'Tiny +${state.metaDepth.challengeBestTinyKey}',
+              textAlign: TextAlign.center,
+              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            ),
+          ],
+          Text(
+            'Power ${GameLogic.partyPowerScore(state)}',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 11, color: GameTheme.mossLit),
           ),
           const SizedBox(height: 6),
           Container(

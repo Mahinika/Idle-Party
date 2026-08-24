@@ -27,6 +27,7 @@ class ChaseContract {
   bool get isClaimable =>
       kind == HubChaseKind.claimDailyVault ||
       kind == HubChaseKind.claimMissions ||
+      kind == HubChaseKind.monthGoal ||
       kind == HubChaseKind.meetHero ||
       kind == HubChaseKind.equipBag ||
       kind == HubChaseKind.ascend;
@@ -45,6 +46,7 @@ class ChaseContract {
   String? get readyActionLabel => switch (kind) {
     HubChaseKind.claimDailyVault => 'CLAIM VAULT',
     HubChaseKind.claimMissions => 'CLAIM QUESTS',
+    HubChaseKind.monthGoal => 'CLAIM MONTH',
     HubChaseKind.meetHero => 'PARTY',
     HubChaseKind.equipBag => 'PARTY',
     HubChaseKind.marketUpgrade => 'MARKET',

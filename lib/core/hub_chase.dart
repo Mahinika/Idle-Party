@@ -21,6 +21,9 @@ enum HubChaseKind {
   claimDailyVault,
   claimMissions,
 
+  /// Month season pass ready to claim.
+  monthGoal,
+
   /// Newly unlocked kit waiting for PARTY meet / acknowledge.
   meetHero,
 
@@ -124,6 +127,9 @@ class HubChase {
         urgency: HubChaseUrgency.ready,
       );
     }
+
+    final monthPass = _monthPassChase(state, clock);
+    if (monthPass != null) return monthPass;
 
     final meet = _pendingMeetChase(state);
     if (meet != null) return meet;
@@ -331,6 +337,32 @@ class HubChase {
       title: extra > 0 ? 'Meet ${def.name} · +$extra' : 'Meet ${def.name}',
       detail: '${HeroIdentity.meetDetail(first)} Open PARTY to field them.',
       progressLabel: 'New',
+      urgency: HubChaseUrgency.ready,
+    );
+  }
+
+  static HubChase? _monthPassChase(GameState state, DateTime clock) {
+    final monthKey = state.metaDepth.monthPassKey.isNotEmpty
+        ? state.metaDepth.monthPassKey
+        : GameLogic.isoMonthKey(clock);
+    final month = LocalSeasonCatalog.forMonthKey(monthKey);
+    if (!LocalSeasonCatalog.monthPassReady(state, month)) {
+      if (LocalSeasonCatalog.monthPassAlmost(state, month)) {
+        return HubChase(
+          kind: HubChaseKind.monthGoal,
+          title: 'Almost · ${month.name}',
+          detail: 'Finish the month pass for +${month.essenceReward}e.',
+          progressLabel: LocalSeasonCatalog.monthProgressLabel(state, month),
+          urgency: HubChaseUrgency.almost,
+        );
+      }
+      return null;
+    }
+    return HubChase(
+      kind: HubChaseKind.monthGoal,
+      title: 'Claim ${month.name}',
+      detail: 'Month pass ready · +${month.essenceReward}e.',
+      progressLabel: LocalSeasonCatalog.monthProgressLabel(state, month),
       urgency: HubChaseUrgency.ready,
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'ad_boost.dart';
+import 'blessing_constellation.dart';
 import 'game_state.dart';
 import 'game_logic.dart';
 
@@ -17,8 +18,11 @@ abstract final class GoldIncome {
       state.ascensionLevel * 2 +
       (state.highestDungeonCleared + 1) * 2;
 
-  static int goldFindPercent(GameState state) =>
-      state.effectiveGoldFindPercent;
+  static int goldFindPercent(GameState state) {
+    var pct = state.effectiveGoldFindPercent;
+    if (BlessingConstellation.isLit(state, 'for_gold')) pct += 3;
+    return pct;
+  }
 
   static int goldFromRaw(GameState state, int raw) {
     if (raw <= 0) return 0;

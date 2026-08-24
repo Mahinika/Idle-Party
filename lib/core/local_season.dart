@@ -40,19 +40,42 @@ class LocalSeasonWeek {
   bool get hasGoal => timedKeyTarget > 0 || gauntletFloorTarget > 0;
 }
 
-/// Calendar-month cosmetic / copy overlay (first vault still pays essence).
+/// Calendar-month pass — KEY or Greater Rift PB (no permanent gold stamps).
 class LocalSeasonMonth {
   const LocalSeasonMonth({
     required this.id,
     required this.name,
     this.monthKey,
     this.titleReward,
+    this.timedKeyTarget = 0,
+    this.grTierTarget = 0,
+    this.essenceReward = 20,
+    this.mirrorZoneId,
+    this.mirrorSeedSalt = 0,
   });
 
   final String id;
   final String name;
   final String? monthKey;
   final String? titleReward;
+
+  /// Claim when monthly best timed KEY ≥ this (0 = ignore).
+  final int timedKeyTarget;
+
+  /// Claim when [MetaDepthState.grBestTier] ≥ this (0 = ignore).
+  final int grTierTarget;
+
+  final int essenceReward;
+
+  /// Optional zone for weekly mirror layout seed (catalog id).
+  final String? mirrorZoneId;
+
+  /// Extra salt mixed into floor RNG for mirror weeks.
+  final int mirrorSeedSalt;
+
+  String claimIdForMonth(String monthKey) => '$monthKey:$id';
+
+  bool get hasPassGoal => timedKeyTarget > 0 || grTierTarget > 0;
 }
 
 /// Table-driven local seasons keyed by ISO week / month.
@@ -182,21 +205,37 @@ abstract final class LocalSeasonCatalog {
       name: 'Veil Month',
       monthKey: '2026-08',
       titleReward: 'Veil Season',
+      timedKeyTarget: 8,
+      essenceReward: 24,
+      mirrorZoneId: 'veil',
+      mirrorSeedSalt: 8,
     ),
     LocalSeasonMonth(
       id: 'ember_month',
       name: 'Ember Month',
       titleReward: 'Ember Season',
+      timedKeyTarget: 10,
+      essenceReward: 24,
+      mirrorZoneId: 'ember',
+      mirrorSeedSalt: 9,
     ),
     LocalSeasonMonth(
       id: 'tide_month',
       name: 'Tide Month',
       titleReward: 'Tide Season',
+      grTierTarget: 5,
+      essenceReward: 26,
+      mirrorZoneId: 'tide',
+      mirrorSeedSalt: 10,
     ),
     LocalSeasonMonth(
       id: 'crystal_month',
       name: 'Crystal Month',
       titleReward: 'Crystal Season',
+      timedKeyTarget: 12,
+      essenceReward: 28,
+      mirrorZoneId: 'crystal',
+      mirrorSeedSalt: 11,
     ),
   ];
 
@@ -286,5 +325,74 @@ abstract final class LocalSeasonCatalog {
       return 'F${state.metaDepth.gauntletBestFloor} → F${week.gauntletFloorTarget}';
     }
     return week.name;
+  }
+
+  static bool monthPassClaimed(GameState state, LocalSeasonMonth month) {
+    final key = month.claimIdForMonth(state.metaDepth.monthPassKey);
+    return state.metaDepth.claimedMonthGoals.contains(key);
+  }
+
+  static bool monthPassReady(GameState state, LocalSeasonMonth month) {
+    if (!month.hasPassGoal) return false;
+    if (monthPassClaimed(state, month)) return false;
+    if (Keystone.maxForState(state) <= 0) return false;
+    if (month.timedKeyTarget > 0 &&
+        state.metaDepth.monthlyBestTimedKey < month.timedKeyTarget) {
+      return false;
+    }
+    if (month.grTierTarget > 0 &&
+        state.metaDepth.grBestTier < month.grTierTarget) {
+      return false;
+    }
+    return true;
+  }
+
+  static bool monthPassAlmost(GameState state, LocalSeasonMonth month) {
+    if (!month.hasPassGoal ||
+        monthPassClaimed(state, month) ||
+        monthPassReady(state, month) ||
+        Keystone.maxForState(state) <= 0) {
+      return false;
+    }
+    if (month.timedKeyTarget > 0) {
+      final best = state.metaDepth.monthlyBestTimedKey;
+      if (best > 0 && best + 1 >= month.timedKeyTarget) return true;
+    }
+    if (month.grTierTarget > 0) {
+      final best = state.metaDepth.grBestTier;
+      final need = month.grTierTarget - best;
+      if (best > 0 && need > 0 && need <= 1) return true;
+    }
+    return false;
+  }
+
+  static String monthProgressLabel(GameState state, LocalSeasonMonth month) {
+    if (month.timedKeyTarget > 0) {
+      return 'KEY +${state.metaDepth.monthlyBestTimedKey}/+${month.timedKeyTarget}';
+    }
+    if (month.grTierTarget > 0) {
+      return 'GR${state.metaDepth.grBestTier} → GR${month.grTierTarget}';
+    }
+    return month.name;
+  }
+
+  /// Mirror layout seed for the current week (0 = no mirror salt).
+  static int mirrorLayoutSeed(GameState state) {
+    final weekKey = state.metaDepth.weeklyKey;
+    if (weekKey.isEmpty) return 0;
+    final mk = state.metaDepth.monthPassKey.isNotEmpty
+        ? state.metaDepth.monthPassKey
+        : '2026-08';
+    final month = forMonthKey(mk);
+    if (month.mirrorZoneId == null) return weekKey.hashCode;
+    return weekKey.hashCode ^
+        month.mirrorSeedSalt ^
+        month.mirrorZoneId.hashCode;
+  }
+
+  static String? mirrorZoneId(GameState state) {
+    final mk = state.metaDepth.monthPassKey;
+    if (mk.isEmpty) return null;
+    return forMonthKey(mk).mirrorZoneId;
   }
 }

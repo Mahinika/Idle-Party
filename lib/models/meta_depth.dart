@@ -263,6 +263,22 @@ class MetaDepthState {
     this.apexTargetMatId = '',
     this.apexTargetProgress = 0,
     this.adBoostUntilMs = 0,
+    this.monthPassKey = '',
+    this.monthlyBestTimedKey = 0,
+    this.claimedMonthGoals = const <String>[],
+    this.challengeBestBossRushKey = 0,
+    this.challengeBestNoFlaskKey = 0,
+    this.challengeBestTinyKey = 0,
+    this.worldBossWeekKey = '',
+    this.worldBossTickets = 3,
+    this.worldBossClearedWeek = false,
+    this.constellationNodes = const <String>[],
+    this.constellationPointsSpent = 0,
+    this.apexTrialMonthKey = '',
+    this.apexTrialCleared = false,
+    this.godHandSmashCount = 0,
+    this.claimedGodHandMastery = const <String>[],
+    this.rosterExhibition = false,
   });
 
   final int sanctuaryXpLevel;
@@ -456,6 +472,25 @@ class MetaDepthState {
   /// UTC millis when optional POWERUPS (ad boost) ends. 0 = none. Survives Ascend.
   final int adBoostUntilMs;
 
+
+  /// UTC month key for month pass progress (yyyy-mm).
+  final String monthPassKey;
+  final int monthlyBestTimedKey;
+  final List<String> claimedMonthGoals;
+  final int challengeBestBossRushKey;
+  final int challengeBestNoFlaskKey;
+  final int challengeBestTinyKey;
+  final String worldBossWeekKey;
+  final int worldBossTickets;
+  final bool worldBossClearedWeek;
+  final List<String> constellationNodes;
+  final int constellationPointsSpent;
+  final String apexTrialMonthKey;
+  final bool apexTrialCleared;
+  final int godHandSmashCount;
+  final List<String> claimedGodHandMastery;
+  final bool rosterExhibition;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -552,6 +587,22 @@ class MetaDepthState {
     String? apexTargetMatId,
     int? apexTargetProgress,
     int? adBoostUntilMs,
+    String? monthPassKey,
+    int? monthlyBestTimedKey,
+    List<String>? claimedMonthGoals,
+    int? challengeBestBossRushKey,
+    int? challengeBestNoFlaskKey,
+    int? challengeBestTinyKey,
+    String? worldBossWeekKey,
+    int? worldBossTickets,
+    bool? worldBossClearedWeek,
+    List<String>? constellationNodes,
+    int? constellationPointsSpent,
+    String? apexTrialMonthKey,
+    bool? apexTrialCleared,
+    int? godHandSmashCount,
+    List<String>? claimedGodHandMastery,
+    bool? rosterExhibition,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -654,6 +705,26 @@ class MetaDepthState {
       apexTargetMatId: apexTargetMatId ?? this.apexTargetMatId,
       apexTargetProgress: apexTargetProgress ?? this.apexTargetProgress,
       adBoostUntilMs: adBoostUntilMs ?? this.adBoostUntilMs,
+      monthPassKey: monthPassKey ?? this.monthPassKey,
+      monthlyBestTimedKey: monthlyBestTimedKey ?? this.monthlyBestTimedKey,
+      claimedMonthGoals: claimedMonthGoals ?? this.claimedMonthGoals,
+      challengeBestBossRushKey:
+          challengeBestBossRushKey ?? this.challengeBestBossRushKey,
+      challengeBestNoFlaskKey:
+          challengeBestNoFlaskKey ?? this.challengeBestNoFlaskKey,
+      challengeBestTinyKey: challengeBestTinyKey ?? this.challengeBestTinyKey,
+      worldBossWeekKey: worldBossWeekKey ?? this.worldBossWeekKey,
+      worldBossTickets: worldBossTickets ?? this.worldBossTickets,
+      worldBossClearedWeek: worldBossClearedWeek ?? this.worldBossClearedWeek,
+      constellationNodes: constellationNodes ?? this.constellationNodes,
+      constellationPointsSpent:
+          constellationPointsSpent ?? this.constellationPointsSpent,
+      apexTrialMonthKey: apexTrialMonthKey ?? this.apexTrialMonthKey,
+      apexTrialCleared: apexTrialCleared ?? this.apexTrialCleared,
+      godHandSmashCount: godHandSmashCount ?? this.godHandSmashCount,
+      claimedGodHandMastery:
+          claimedGodHandMastery ?? this.claimedGodHandMastery,
+      rosterExhibition: rosterExhibition ?? this.rosterExhibition,
     );
   }
 
@@ -745,6 +816,22 @@ class MetaDepthState {
     'apexTargetMatId': apexTargetMatId,
     'apexTargetProgress': apexTargetProgress,
     'adBoostUntilMs': adBoostUntilMs,
+    'monthPassKey': monthPassKey,
+    'monthlyBestTimedKey': monthlyBestTimedKey,
+    'claimedMonthGoals': claimedMonthGoals,
+    'challengeBestBossRushKey': challengeBestBossRushKey,
+    'challengeBestNoFlaskKey': challengeBestNoFlaskKey,
+    'challengeBestTinyKey': challengeBestTinyKey,
+    'worldBossWeekKey': worldBossWeekKey,
+    'worldBossTickets': worldBossTickets,
+    'worldBossClearedWeek': worldBossClearedWeek,
+    'constellationNodes': constellationNodes,
+    'constellationPointsSpent': constellationPointsSpent,
+    'apexTrialMonthKey': apexTrialMonthKey,
+    'apexTrialCleared': apexTrialCleared,
+    'godHandSmashCount': godHandSmashCount,
+    'claimedGodHandMastery': claimedGodHandMastery,
+    'rosterExhibition': rosterExhibition,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -797,7 +884,7 @@ class MetaDepthState {
           (json['zoneTrophies'] as List<dynamic>?)?.cast<String>() ?? const [],
       jobChainCount: (json['jobChainCount'] as num?)?.toInt() ?? 0,
       dailyQuestDate: (json['dailyQuestDate'] as String?) ?? '',
-      bountyRung: ((json['bountyRung'] as num?)?.toInt() ?? 0).clamp(0, 2),
+      bountyRung: ((json['bountyRung'] as num?)?.toInt() ?? 0).clamp(0, 5),
       lifetimeFloorClears: (json['lifetimeFloorClears'] as num?)?.toInt() ?? 0,
       lifetimeBossKills: (json['lifetimeBossKills'] as num?)?.toInt() ?? 0,
       lifetimeAbilityCasts:
@@ -886,6 +973,34 @@ class MetaDepthState {
       apexTargetMatId: (json['apexTargetMatId'] as String?) ?? '',
       apexTargetProgress: (json['apexTargetProgress'] as num?)?.toInt() ?? 0,
       adBoostUntilMs: (json['adBoostUntilMs'] as num?)?.toInt() ?? 0,
+      monthPassKey: (json['monthPassKey'] as String?) ?? '',
+      monthlyBestTimedKey:
+          ((json['monthlyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      claimedMonthGoals:
+          (json['claimedMonthGoals'] as List<dynamic>?)?.cast<String>() ??
+          const [],
+      challengeBestBossRushKey:
+          ((json['challengeBestBossRushKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      challengeBestNoFlaskKey:
+          ((json['challengeBestNoFlaskKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      challengeBestTinyKey:
+          ((json['challengeBestTinyKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      worldBossWeekKey: (json['worldBossWeekKey'] as String?) ?? '',
+      worldBossTickets:
+          ((json['worldBossTickets'] as num?)?.toInt() ?? 3).clamp(0, 3),
+      worldBossClearedWeek: (json['worldBossClearedWeek'] as bool?) ?? false,
+      constellationNodes:
+          (json['constellationNodes'] as List<dynamic>?)?.cast<String>() ??
+          const [],
+      constellationPointsSpent:
+          (json['constellationPointsSpent'] as num?)?.toInt() ?? 0,
+      apexTrialMonthKey: (json['apexTrialMonthKey'] as String?) ?? '',
+      apexTrialCleared: (json['apexTrialCleared'] as bool?) ?? false,
+      godHandSmashCount: (json['godHandSmashCount'] as num?)?.toInt() ?? 0,
+      claimedGodHandMastery:
+          (json['claimedGodHandMastery'] as List<dynamic>?)?.cast<String>() ??
+          const [],
+      rosterExhibition: (json['rosterExhibition'] as bool?) ?? false,
     );
   }
 }

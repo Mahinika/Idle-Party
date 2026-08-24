@@ -37,6 +37,9 @@ import 'story_lore.dart';
 import 'chase_contract.dart';
 import 'session_telemetry.dart';
 import 'wipe_advice.dart';
+import 'world_boss.dart';
+import 'blessing_constellation.dart';
+import 'god_hand_mastery.dart';
 import '../models/dungeon_def.dart';
 
 abstract class GameStorage {
@@ -1217,6 +1220,7 @@ class GameDirector extends ChangeNotifier {
     );
     _spatial = result.world;
     _state = result.state;
+    _state = GodHandMastery.noteSmash(_state);
     if (result.goldFromKills > 0) {
       _state = GameLogic.creditCombatGold(_state, result.goldFromKills);
     }
@@ -1793,6 +1797,77 @@ class GameDirector extends ChangeNotifier {
 
   void setChallengeNoFlask(bool value) {
     _applyUpgrade(_state.copyWith(challengeNoFlask: value));
+  }
+
+  void setChallengeTiny(bool value) {
+    _applyUpgrade(_state.copyWith(challengeTiny: value));
+  }
+
+  void claimMonthPass() {
+    final before = _state.essence;
+    _applyUpgrade(GameLogic.claimMonthPass(_state));
+    if (_state.essence > before) {
+      showToast('Month pass · +${_state.essence - before}e', life: 2.4);
+    }
+  }
+
+  void enterWorldBoss({bool practice = false}) {
+    if (!WorldBoss.canEnter(_state)) {
+      showToast(
+        GameLogic.endgameUnlocked(_state)
+            ? 'Leave the dungeon first'
+            : 'World Boss unlocks at party level ${GameLogic.maxHeroLevel}',
+        life: 2.4,
+      );
+      return;
+    }
+    if (!practice && WorldBoss.ensureWeek(_state).metaDepth.worldBossTickets <= 0) {
+      showToast('No World Boss tickets this week — try Practice', life: 2.6);
+      return;
+    }
+    _state = GameLogic.enterWorldBoss(_state, practice: practice);
+    notifyListeners();
+    showToast(
+      practice ? 'Practice · ${WorldBoss.name}' : '${WorldBoss.name} · ticket spent',
+      life: 2.4,
+    );
+  }
+
+  void startApexTrial() {
+    if (!GameLogic.endgameUnlocked(_state) || _state.inDungeon) {
+      showToast(
+        _state.inDungeon
+            ? 'Leave the dungeon first'
+            : 'Apex Trial needs party Lv${GameLogic.maxHeroLevel}',
+        life: 2.6,
+      );
+      return;
+    }
+    final month = GameLogic.isoMonthKey(DateTime.now().toUtc());
+    if (_state.metaDepth.apexTrialMonthKey == month &&
+        _state.metaDepth.apexTrialCleared) {
+      showToast('Apex Trial already cleared this month', life: 2.6);
+      return;
+    }
+    _state = GameLogic.startApexTrial(_state);
+    notifyListeners();
+    showToast('Apex Trial — non-Apex gear ignored', life: 2.6);
+  }
+
+  void lightConstellationNode(String id) {
+    final before = _state.metaDepth.constellationNodes.length;
+    _applyUpgrade(BlessingConstellation.lightNode(_state, id));
+    if (_state.metaDepth.constellationNodes.length > before) {
+      showToast('Constellation lit', life: 2.0);
+    }
+  }
+
+  void claimGodHandMastery(String id) {
+    final before = _state.essence;
+    _applyUpgrade(GodHandMastery.claim(_state, id));
+    if (_state.essence > before) {
+      showToast('God Hand mastery · +${_state.essence - before}e', life: 2.4);
+    }
   }
 
   void setHardmodeLevel(int level) {

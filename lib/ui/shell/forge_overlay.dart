@@ -3,6 +3,8 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/gold_income.dart';
 import '../../core/game_state.dart';
+import '../../core/blessing_constellation.dart';
+import '../../core/god_hand_mastery.dart';
 import '../apex_forge_panel.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
@@ -294,6 +296,44 @@ class _ForgeOverlayState extends State<ForgeOverlay>
                     '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
+        if (BlessingConstellation.unlocked(state)) ...[
+          const SizedBox(height: 8),
+          Text(
+            'CONSTELLATION · ${BlessingConstellation.pointsAvailable(state)} pts · '
+            '${state.metaDepth.constellationNodes.length}/${BlessingConstellation.maxLit} lit',
+            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+          ),
+          for (final n in BlessingConstellation.nodes)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: KenneyButton(
+                label:
+                    '${BlessingConstellation.isLit(state, n.$1) ? 'LIT' : 'LIGHT'} '
+                    '${n.$2} (${n.$3} · ${n.$4}p)',
+                style: BlessingConstellation.isLit(state, n.$1)
+                    ? KenneyButtonStyle.red
+                    : KenneyButtonStyle.grey,
+                onPressed: BlessingConstellation.isLit(state, n.$1)
+                    ? null
+                    : () => director.lightConstellationNode(n.$1),
+              ),
+            ),
+        ],
+        for (final m in GodHandMastery.milestones)
+          if (GodHandMastery.ready(state, m.$1) ||
+              state.metaDepth.claimedGodHandMastery.contains(m.$1))
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: KenneyButton(
+                label: state.metaDepth.claimedGodHandMastery.contains(m.$1)
+                    ? 'DONE · ${m.$2}'
+                    : 'CLAIM · ${m.$2}',
+                style: KenneyButtonStyle.grey,
+                onPressed: state.metaDepth.claimedGodHandMastery.contains(m.$1)
+                    ? null
+                    : () => director.claimGodHandMastery(m.$1),
+              ),
+            ),
         Builder(
           builder: (_) {
             if (GameLogic.isMaxAscension(state)) {

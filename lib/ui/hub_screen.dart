@@ -9,6 +9,7 @@ import '../core/hub_chase.dart';
 import '../core/keystone.dart';
 import '../core/menu_alerts.dart';
 import '../core/meta_systems.dart';
+import '../core/world_boss.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
 import 'cave_atmosphere.dart';
@@ -172,6 +173,8 @@ class _HubScreenState extends State<HubScreen>
             }
           },
         );
+      case HubChaseKind.monthGoal:
+        return ('CLAIM MONTH', director.claimMonthPass);
       case HubChaseKind.meetHero:
         return (
           'PARTY',
@@ -636,6 +639,13 @@ class _HubScreenState extends State<HubScreen>
                                           context,
                                           director,
                                         ),
+                                        showWorldBoss:
+                                            GameLogic.endgameUnlocked(state),
+                                        worldBossTickets: WorldBoss.ensureWeek(
+                                          state,
+                                        ).metaDepth.worldBossTickets,
+                                        onWorldBoss: () =>
+                                            director.enterWorldBoss(),
                                         showRift:
                                             GameLogic.canEnterRift(state) ||
                                             GameLogic.endgameUnlocked(state),
