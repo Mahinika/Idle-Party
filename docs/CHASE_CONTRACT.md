@@ -14,11 +14,12 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 5. **Level the party** — before endgame unlock, chase active party toward **Lv100** when that is the gate
 6. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Skip Daily / KEY / vault-start / Will grind so TODAY is not a meta list. Skip kit teasers until after the first boss.
 7. **KEY habit (endgame only)** — chase the next KEY until preferred key is at the dial cap. When at cap or before party max level, fall through.
-8. **Progress grind** — daily run, vault start, Will, Gauntlet, Rift, week goal, push floors / single endgame fallback
+8. **Endgame ladder (party Lv100)** — after KEY at cap: Greater Rift → Gauntlet → Rift → Ashen Crown (ticket week). One hunt — not Daily/Will shuffle.
+9. **Progress grind** — daily run, vault start, Will, leftover endgame (pre–Lv100), week goal, then **one** endgame fallback (time KEY at dial / push GR — never a stats dump)
 
 ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats Daily and KEY. Zone unlock is TODAY only when party level is **ALMOST** (or prior clear opens the path). Never invent a second priority list in UI.
 
-**Endgame unlock:** active party all at [`GameLogic.maxHeroLevel`](../lib/core/game_logic.dart) (**100**) via `endgameUnlocked` — not AL20 alone. AL20 remains the Ascend cap. KEY, Infinity Gauntlet, Rifts, and Greater Rifts share the hub once unlocked. TODAY picks the nearest ALMOST cliff among them, then week / Will, then one actionable fallback (not a stats dump).
+**Endgame unlock:** active party all at [`GameLogic.maxHeroLevel`](../lib/core/game_logic.dart) (**100**) via `endgameUnlocked` — not AL20 alone. AL20 remains the Ascend cap. KEY, Infinity Gauntlet, Rifts, Greater Rifts, and Ashen Crown share the hub once unlocked. At AL20 + party max, TODAY prefers the endgame ladder before Daily, then one actionable fallback (not a multi-line stats dump).
 
 **Zones:** unlock by party mean level (even steps Lv1…Lv100) or by clearing the previous zone.
 

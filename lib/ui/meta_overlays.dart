@@ -658,6 +658,12 @@ Future<void> showOfflineProgressDialog(
         Navigator.pop(context);
         confirmGreaterRiftRun(context, director);
       };
+    case HubChaseKind.worldBoss:
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+        director.enterWorldBoss();
+      };
     case HubChaseKind.meetHero:
       readyLabel = 'PARTY';
       readyAction = () {

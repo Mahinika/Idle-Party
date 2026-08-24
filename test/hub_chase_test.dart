@@ -4,6 +4,10 @@ import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
+import 'package:idle_party/core/local_season.dart';
+import 'package:idle_party/core/world_boss.dart';
+import 'package:idle_party/core/greater_rift.dart';
+import 'package:idle_party/core/rift.dart';
 import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
@@ -101,6 +105,8 @@ void main() {
         hardmodeLevel: GameLogic.maxAscensionLevel,
         metaDepth: state.metaDepth.copyWith(
           dailyVaultClaimed: true,
+          grBestTier: GreaterRift.maxTier,
+          claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
           gauntletBestFloor: 10,
         ),
         lastDailyDate: MetaSystems.dailyDateKey(now),
@@ -335,7 +341,9 @@ void main() {
           dailyVaultClaimed: true,
           gauntletBestFloor: 100,
           claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
-          riftBestTier: 3,
+          grBestTier: GreaterRift.maxTier,
+          claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
+          riftBestTier: 0,
         ),
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
@@ -349,6 +357,118 @@ void main() {
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.riftMilestone);
     expect(chase.title, contains('Rift'));
+  });
+
+  test('AL20 party-max prefers Greater Rift over Daily', () {
+    final state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: false,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+            ),
+        achievements: [
+          for (var i = 0; i < 200; i++) 'ach_$i',
+        ],
+        highestDungeonCleared: 14,
+        lifetimeGoldEarned: 50_000_000,
+      ),
+    );
+    expect(GameLogic.endgameUnlocked(state), isTrue);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.greaterRiftMilestone);
+    expect(chase.title, contains('Greater Rift'));
+    expect(chase.kind, isNot(HubChaseKind.dailyRun));
+  });
+
+  test('Ashen Crown chase when GR Gauntlet Rift ladder is done', () {
+    var md = GameLogic.createInitialState(now: now).metaDepth.copyWith(
+      dailyVaultClaimed: true,
+      grBestTier: GreaterRift.maxTier,
+      claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
+      gauntletBestFloor: 100,
+      claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+      riftBestTier: Rift.maxTier,
+      claimedRiftMilestones: const ['r5', 'r10', 'r20'],
+      worldBossTickets: 2,
+      worldBossClearedWeek: false,
+    );
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: md,
+        achievements: [
+          for (var i = 0; i < 200; i++) 'ach_$i',
+        ],
+        highestDungeonCleared: 14,
+        lifetimeGoldEarned: 50_000_000,
+      ),
+    );
+    state = WorldBoss.ensureWeek(state, now: now);
+    // ensureWeek refreshes tickets; keep a clear available.
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        worldBossTickets: 2,
+        worldBossClearedWeek: false,
+      ),
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.worldBoss);
+    expect(chase.title, contains(WorldBoss.name));
+  });
+
+  test('endgame fallback is one KEY action not a stats dump', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+          dailyVaultClaimed: true,
+          grBestTier: GreaterRift.maxTier,
+          claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
+          gauntletBestFloor: 100,
+          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          riftBestTier: Rift.maxTier,
+          claimedRiftMilestones: const ['r5', 'r10', 'r20'],
+          worldBossTickets: 0,
+          worldBossClearedWeek: true,
+        ),
+        achievements: [
+          for (var i = 0; i < 400; i++) 'ach_$i',
+        ],
+        highestDungeonCleared: 14,
+        lifetimeGoldEarned: 50_000_000,
+      ),
+    );
+    state = WorldBoss.ensureWeek(state, now: now);
+    final weekKey = state.metaDepth.weeklyKey.isNotEmpty
+        ? state.metaDepth.weeklyKey
+        : GameLogic.isoWeekKey(now);
+    final week = LocalSeasonCatalog.forWeekKey(weekKey);
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        weeklyKey: weekKey,
+        worldBossTickets: 0,
+        worldBossClearedWeek: true,
+        claimedWeekGoals: <String>{
+          ...state.metaDepth.claimedWeekGoals,
+          week.claimIdForWeek(weekKey),
+        }.toList(),
+      ),
+    );
+    expect(state.collectionScore, greaterThanOrEqualTo(320));
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.keystone);
+    expect(chase.title, startsWith('Time KEY'));
+    expect(chase.detail.toLowerCase(), isNot(contains('gauntlet')));
+    expect(chase.detail.toLowerCase(), isNot(contains('blessing')));
   });
 }
 

@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.55';
+  static const String currentVersion = '1.12.56';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.56',
+      bullets: <String>[
+        'AL20 TODAY: after KEY at dial cap, chase Greater Rift -> Gauntlet -> Rift -> Ashen Crown (ticket week) before Daily - one hunt, not a meta shuffle.',
+        'Endgame fallback is a single Time KEY / push GR line - no multi-stat dump on the hub card.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.55',
       bullets: <String>[

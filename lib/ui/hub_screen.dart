@@ -223,6 +223,8 @@ class _HubScreenState extends State<HubScreen>
         return ('RIFT', () => confirmRiftRun(context, director));
       case HubChaseKind.greaterRiftMilestone:
         return ('GREATER', () => confirmGreaterRiftRun(context, director));
+      case HubChaseKind.worldBoss:
+        return ('ASHEN CROWN', () => director.enterWorldBoss());
       case HubChaseKind.weekGoal:
         // Prefer ENTER for vault-style week goals; Gauntlet button if title hints.
         if (chase.title.toLowerCase().contains('gauntlet')) {
