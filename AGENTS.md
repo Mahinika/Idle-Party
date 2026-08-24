@@ -235,7 +235,7 @@ GDPR consent.
 | 13 | brass | Brassvault Deep |
 | 14 | veil | Mothveil Hollow |
 
-Unlock: prior clear **or** enough **lifetime gold** (not wallet gold).
+Unlock: prior clear **or** party **mean level** gate (even steps Lv1…Lv100).
 
 ## Floor / chamber model
 
