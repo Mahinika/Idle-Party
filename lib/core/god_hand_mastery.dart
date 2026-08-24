@@ -1,6 +1,6 @@
 import 'game_state.dart';
 
-/// God Hand mastery milestones — independent of World Boss.
+/// God Hand mastery milestones — independent of Ashen Crown.
 abstract final class GodHandMastery {
   static const List<(String id, String label, int needLevel, int needCd)>
   milestones = <(String, String, int, int)>[

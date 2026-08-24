@@ -14,7 +14,7 @@ import 'menu_alerts.dart';
 import 'meta_systems.dart';
 import 'rift.dart';
 import 'greater_rift.dart';
-import 'world_boss.dart';
+import 'ashen_crown.dart';
 
 /// Kind of hub "today" chase - claimables first, then progress goals.
 enum HubChaseKind {
@@ -48,7 +48,7 @@ enum HubChaseKind {
   weekGoal,
 
   /// Ticket Ashen Crown clear (endgame).
-  worldBoss,
+  ashenCrown,
 }
 
 /// How close the chase is to a payoff - drives TODAY chrome.
@@ -316,22 +316,22 @@ class HubChase {
     if (gauntlet != null) return gauntlet;
     final rift = _nextRiftChase(state);
     if (rift != null) return rift;
-    final crown = _worldBossChase(state);
+    final crown = _ashenCrownChase(state);
     if (crown != null) return crown;
     return null;
   }
 
-  static HubChase? _worldBossChase(GameState state) {
-    if (!WorldBoss.canEnter(state)) return null;
-    final tickets = WorldBoss.ensureWeek(state).metaDepth.worldBossTickets;
+  static HubChase? _ashenCrownChase(GameState state) {
+    if (!AshenCrown.canEnter(state)) return null;
+    final tickets = AshenCrown.ensureWeek(state).metaDepth.worldBossTickets;
     if (tickets <= 0) return null;
     if (state.metaDepth.worldBossClearedWeek) return null;
     return HubChase(
-      kind: HubChaseKind.worldBoss,
-      title: 'Clear ${WorldBoss.name}',
+      kind: HubChaseKind.ashenCrown,
+      title: 'Clear ${AshenCrown.name}',
       detail: tickets == 1
-          ? '1 ticket left this week - spend it for +${WorldBoss.essenceReward}e.'
-          : '$tickets tickets left - clear for +${WorldBoss.essenceReward}e.',
+          ? '1 ticket left this week - spend it for +${AshenCrown.essenceReward}e.'
+          : '$tickets tickets left - clear for +${AshenCrown.essenceReward}e.',
       progressLabel: '$tickets tix',
       urgency: tickets <= 1 ? HubChaseUrgency.almost : HubChaseUrgency.normal,
     );

@@ -327,7 +327,9 @@ class GameState {
   /// entering a dungeon; survives Ascend as a standing preference.
   final bool challengeBossRush;
   final bool challengeTiny;
+  /// Ashen Crown ticket run (save JSON: `inWorldBoss`).
   final bool inWorldBoss;
+  /// Free practice run for Ashen Crown (save JSON: `worldBossPractice`).
   final bool worldBossPractice;
   final bool apexTrialActive;
 

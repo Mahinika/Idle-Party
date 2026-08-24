@@ -39,7 +39,7 @@ import 'play_games_bridge.dart';
 import 'play_games_scores.dart';
 import 'wipe_advice.dart';
 import 'party_name_filter.dart';
-import 'world_boss.dart';
+import 'ashen_crown.dart';
 import 'party_power.dart';
 
 part 'game_logic_ascend.dart';
@@ -459,7 +459,8 @@ class GameLogic {
     return max(1, sum ~/ state.heroes.length);
   }
 
-  /// KEY / Gauntlet / Rifts / Greater Rifts / KEY jargon.
+  /// Endgame modes unlock when every active hero is [maxHeroLevel] — not AL20 alone.
+  /// Includes KEY jargon, Gauntlet, Rifts, Greater Rifts, and Ashen Crown.
   static bool endgameUnlocked(GameState state) => partyAtMaxLevel(state);
 
   static bool canEnterGauntlet(GameState state) =>
@@ -468,8 +469,8 @@ class GameLogic {
   static GameState claimMonthPass(GameState state, {DateTime? now}) =>
       _claimMonthPass(state, now: now);
 
-  static GameState enterWorldBoss(GameState state, {bool practice = false}) =>
-      _enterWorldBoss(state, practice: practice);
+  static GameState enterAshenCrown(GameState state, {bool practice = false}) =>
+      _enterAshenCrown(state, practice: practice);
 
   static GameState startApexTrial(GameState state) => _startApexTrial(state);
 
@@ -2036,7 +2037,7 @@ class GameLogic {
         ),
       );
     }
-    next = WorldBoss.ensureWeek(next, now: t);
+    next = AshenCrown.ensureWeek(next, now: t);
     next = BlessingConstellation.ensure(next);
     return ensureDailyVault(next, now: t);
   }
@@ -2513,7 +2514,7 @@ class GameLogic {
     if (!farmLoop && clearedBoss && !gauntlet && !rift) {
       var preLeave = awarded;
       if (state.inWorldBoss) {
-        preLeave = WorldBoss.onBossClear(preLeave);
+        preLeave = AshenCrown.onBossClear(preLeave);
       }
       if (state.apexTrialActive && !preLeave.metaDepth.apexTrialCleared) {
         preLeave = preLeave.copyWith(

@@ -4,11 +4,11 @@ import 'game_state.dart';
 /// AL20 Blessing constellation — spend earned points on permanent nodes.
 ///
 /// Points are **not** Ascend Blessing stacks (those stay flat ATK/DEF/VIT/gold).
-/// Earn constellation points from AL20 unlock, ticket World Boss, and Apex Trial.
+/// Earn constellation points from AL20 unlock, Ashen Crown tickets, and Apex Trial.
 abstract final class BlessingConstellation {
   static const int maxLit = 6;
   static const int starterPointsAtAl20 = 3;
-  static const int worldBossPointReward = 1;
+  static const int ashenCrownPointReward = 1;
   static const int apexTrialPointReward = 1;
 
   static const List<(String id, String label, String branch, int cost)> nodes =

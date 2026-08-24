@@ -27,7 +27,7 @@ class OfflineSim {
       return;
     }
     _current = state.copyWith(vfxQuality: VfxQuality.minimal);
-    // Ticket World Boss: no AFK soft clear — practice / normal runs keep assist.
+    // Ticket Ashen Crown: no AFK soft clear — practice / normal runs keep assist.
     final ticketBoss =
         state.inWorldBoss && !state.worldBossPractice;
     _world = SpatialCombat.build(

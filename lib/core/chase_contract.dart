@@ -56,7 +56,7 @@ class ChaseContract {
     HubChaseKind.gauntletMilestone => 'GAUNTLET',
     HubChaseKind.riftMilestone => 'RIFT',
     HubChaseKind.greaterRiftMilestone => 'GREATER',
-    HubChaseKind.worldBoss => 'ASHEN CROWN',
+    HubChaseKind.ashenCrown => 'ASHEN CROWN',
     HubChaseKind.unlockZone => zoneId != null ? 'PATH' : null,
     _ => null,
   };

@@ -2,9 +2,11 @@ import 'blessing_constellation.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 
-/// Solo endgame world boss — tickets / UTC week; practice is free.
-abstract final class WorldBoss {
-  static const String id = 'world_boss';
+/// Weekly ticket solo boss **Ashen Crown** (ember zone art).
+///
+/// Save/meta fields still use `worldBoss*` JSON keys for older exports.
+abstract final class AshenCrown {
+  static const String id = 'ashen_crown';
   static const String name = 'Ashen Crown';
   static const String blurb =
       'Weekly solo boss. Ticket clears pay essence; practice is free.';
@@ -45,7 +47,7 @@ abstract final class WorldBoss {
     );
     return BlessingConstellation.grantPoints(
       rewarded,
-      BlessingConstellation.worldBossPointReward,
+      BlessingConstellation.ashenCrownPointReward,
     );
   }
 }

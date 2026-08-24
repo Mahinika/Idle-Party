@@ -270,6 +270,7 @@ class MetaDepthState {
     this.challengeBestBossRushKey = 0,
     this.challengeBestNoFlaskKey = 0,
     this.challengeBestTinyKey = 0,
+    // Ashen Crown weekly tickets — JSON keys kept as worldBoss* for saves.
     this.worldBossWeekKey = '',
     this.worldBossTickets = 3,
     this.worldBossClearedWeek = false,

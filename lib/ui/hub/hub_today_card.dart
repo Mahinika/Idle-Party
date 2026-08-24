@@ -180,10 +180,10 @@ class HubUrgentRow extends StatelessWidget {
     required this.showGauntlet,
     required this.gauntletBest,
     required this.onGauntlet,
-    required this.showWorldBoss,
-    required this.worldBossTickets,
-    required this.onWorldBoss,
-    this.onWorldBossPractice,
+    required this.showAshenCrown,
+    required this.ashenCrownTickets,
+    required this.onAshenCrown,
+    this.onAshenCrownPractice,
     required this.showRift,
     required this.riftBest,
     required this.onRift,
@@ -212,10 +212,10 @@ class HubUrgentRow extends StatelessWidget {
   final bool showGauntlet;
   final int gauntletBest;
   final VoidCallback onGauntlet;
-  final bool showWorldBoss;
-  final int worldBossTickets;
-  final VoidCallback onWorldBoss;
-  final VoidCallback? onWorldBossPractice;
+  final bool showAshenCrown;
+  final int ashenCrownTickets;
+  final VoidCallback onAshenCrown;
+  final VoidCallback? onAshenCrownPractice;
   final bool showRift;
   final int riftBest;
   final VoidCallback onRift;
@@ -308,23 +308,23 @@ class HubUrgentRow extends StatelessWidget {
             onPressed: onGauntlet,
           ),
         ],
-        if (showWorldBoss) ...[
+        if (showAshenCrown) ...[
           const SizedBox(height: 6),
           Row(
             children: [
               Expanded(
                 child: KenneyButton(
-                  label: 'ASHEN CROWN  ·  $worldBossTickets tix',
+                  label: 'ASHEN CROWN  ·  $ashenCrownTickets tix',
                   style: KenneyButtonStyle.brown,
-                  onPressed: onWorldBoss,
+                  onPressed: onAshenCrown,
                 ),
               ),
-              if (onWorldBossPractice != null) ...[
+              if (onAshenCrownPractice != null) ...[
                 const SizedBox(width: 6),
                 KenneyButton(
                   label: 'PRACTICE',
                   style: KenneyButtonStyle.grey,
-                  onPressed: onWorldBossPractice,
+                  onPressed: onAshenCrownPractice,
                 ),
               ],
             ],

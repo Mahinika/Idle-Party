@@ -6,7 +6,7 @@ import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/local_season.dart';
 import 'package:idle_party/core/mission_board.dart';
 import 'package:idle_party/core/party_power.dart';
-import 'package:idle_party/core/world_boss.dart';
+import 'package:idle_party/core/ashen_crown.dart';
 import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
@@ -50,12 +50,12 @@ void main() {
     expect(BlessingConstellation.unlocked(al20), isTrue);
   });
 
-  test('world boss week resets tickets', () {
-    final state = WorldBoss.ensureWeek(
+  test('Ashen Crown week resets tickets', () {
+    final state = AshenCrown.ensureWeek(
       GameLogic.createInitialState(),
       now: DateTime.utc(2026, 8, 24),
     );
-    expect(state.metaDepth.worldBossTickets, WorldBoss.ticketsPerWeek);
+    expect(state.metaDepth.worldBossTickets, AshenCrown.ticketsPerWeek);
   });
 
   test('god hand mastery smash milestone', () {

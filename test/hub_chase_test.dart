@@ -5,7 +5,7 @@ import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/local_season.dart';
-import 'package:idle_party/core/world_boss.dart';
+import 'package:idle_party/core/ashen_crown.dart';
 import 'package:idle_party/core/greater_rift.dart';
 import 'package:idle_party/core/rift.dart';
 import 'package:idle_party/models/meta_depth.dart';
@@ -409,7 +409,7 @@ void main() {
         lifetimeGoldEarned: 50_000_000,
       ),
     );
-    state = WorldBoss.ensureWeek(state, now: now);
+    state = AshenCrown.ensureWeek(state, now: now);
     // ensureWeek refreshes tickets; keep a clear available.
     state = state.copyWith(
       metaDepth: state.metaDepth.copyWith(
@@ -418,8 +418,8 @@ void main() {
       ),
     );
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.worldBoss);
-    expect(chase.title, contains(WorldBoss.name));
+    expect(chase.kind, HubChaseKind.ashenCrown);
+    expect(chase.title, contains(AshenCrown.name));
   });
 
   test('endgame fallback is one KEY action not a stats dump', () {
@@ -447,7 +447,7 @@ void main() {
         lifetimeGoldEarned: 50_000_000,
       ),
     );
-    state = WorldBoss.ensureWeek(state, now: now);
+    state = AshenCrown.ensureWeek(state, now: now);
     final weekKey = state.metaDepth.weeklyKey.isNotEmpty
         ? state.metaDepth.weeklyKey
         : GameLogic.isoWeekKey(now);

@@ -37,7 +37,7 @@ import 'story_lore.dart';
 import 'chase_contract.dart';
 import 'session_telemetry.dart';
 import 'wipe_advice.dart';
-import 'world_boss.dart';
+import 'ashen_crown.dart';
 import 'blessing_constellation.dart';
 import 'god_hand_mastery.dart';
 import '../models/dungeon_def.dart';
@@ -619,10 +619,10 @@ class GameDirector extends ChangeNotifier {
   }
 
   void _rebuildSpatial() {
-    final ticketBoss = _state.inWorldBoss && !_state.worldBossPractice;
+    final ticketAshenCrown = _state.inWorldBoss && !_state.worldBossPractice;
     _spatial = SpatialCombat.build(
       _state,
-      afkAssist: ticketBoss ? false : null,
+      afkAssist: ticketAshenCrown ? false : null,
     );
     _battleToken = _state.battleNumber;
   }
@@ -1815,24 +1815,27 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  void enterWorldBoss({bool practice = false}) {
-    if (!WorldBoss.canEnter(_state)) {
+  void enterAshenCrown({bool practice = false}) {
+    if (!AshenCrown.canEnter(_state)) {
       showToast(
         GameLogic.endgameUnlocked(_state)
             ? 'Leave the dungeon first'
-            : 'World Boss unlocks at party level ${GameLogic.maxHeroLevel}',
+            : 'Ashen Crown unlocks at party level ${GameLogic.maxHeroLevel}',
         life: 2.4,
       );
       return;
     }
-    if (!practice && WorldBoss.ensureWeek(_state).metaDepth.worldBossTickets <= 0) {
-      showToast('No World Boss tickets this week — try Practice', life: 2.6);
+    if (!practice &&
+        AshenCrown.ensureWeek(_state).metaDepth.worldBossTickets <= 0) {
+      showToast('No Ashen Crown tickets this week — try Practice', life: 2.6);
       return;
     }
-    _state = GameLogic.enterWorldBoss(_state, practice: practice);
+    _state = GameLogic.enterAshenCrown(_state, practice: practice);
     notifyListeners();
     showToast(
-      practice ? 'Practice · ${WorldBoss.name}' : '${WorldBoss.name} · ticket spent',
+      practice
+          ? 'Practice · ${AshenCrown.name}'
+          : '${AshenCrown.name} · ticket spent',
       life: 2.4,
     );
   }

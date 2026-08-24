@@ -9,7 +9,7 @@ import '../core/hub_chase.dart';
 import '../core/keystone.dart';
 import '../core/menu_alerts.dart';
 import '../core/meta_systems.dart';
-import '../core/world_boss.dart';
+import '../core/ashen_crown.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
 import 'cave_atmosphere.dart';
@@ -223,8 +223,8 @@ class _HubScreenState extends State<HubScreen>
         return ('RIFT', () => confirmRiftRun(context, director));
       case HubChaseKind.greaterRiftMilestone:
         return ('GREATER', () => confirmGreaterRiftRun(context, director));
-      case HubChaseKind.worldBoss:
-        return ('ASHEN CROWN', () => director.enterWorldBoss());
+      case HubChaseKind.ashenCrown:
+        return ('ASHEN CROWN', () => director.enterAshenCrown());
       case HubChaseKind.weekGoal:
         // Prefer ENTER for vault-style week goals; Gauntlet button if title hints.
         if (chase.title.toLowerCase().contains('gauntlet')) {
@@ -641,14 +641,14 @@ class _HubScreenState extends State<HubScreen>
                                           context,
                                           director,
                                         ),
-                                        showWorldBoss:
+                                        showAshenCrown:
                                             GameLogic.endgameUnlocked(state),
-                                        worldBossTickets: WorldBoss.ensureWeek(
+                                        ashenCrownTickets: AshenCrown.ensureWeek(
                                           state,
                                         ).metaDepth.worldBossTickets,
-                                        onWorldBoss: () => director.enterWorldBoss(),
-                                        onWorldBossPractice: () =>
-                                            director.enterWorldBoss(practice: true),
+                                        onAshenCrown: () => director.enterAshenCrown(),
+                                        onAshenCrownPractice: () =>
+                                            director.enterAshenCrown(practice: true),
                                         showRift:
                                             GameLogic.canEnterRift(state) ||
                                             GameLogic.endgameUnlocked(state),
