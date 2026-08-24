@@ -40,8 +40,12 @@ jobs:
             echo "No upload keystore secrets; Flutter will use debug signing."
             exit 0
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          # storeFile in KEY_PROPERTIES is typically ../upload-keystore.jks
+          # (relative to android/app/) → android/upload-keystore.jks
+          echo "$KEYSTORE_BASE64" | base64 -d > android/upload-keystore.jks
           printf '%s\n' "$KEY_PROPERTIES" > android/key.properties
+          test -f android/upload-keystore.jks
+          test -f android/key.properties
 
       - name: Write AdMob ids (optional)
         env:
