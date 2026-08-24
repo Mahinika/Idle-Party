@@ -156,21 +156,19 @@ class GameState {
   /// Player-chosen party name. Survives Ascend. Old saves default to The Party.
   final String partyName;
 
-  /// Active party resolved from [activeHeroIds]. Falls back to full roster
-  /// when the active list is empty.
+  /// Active party from [activeHeroIds] (full PARTY list — never Tiny-trimmed).
   List<PartyHero> get heroes {
-    if (activeHeroIds.isEmpty) {
-      final full = heroRoster;
-      if (challengeTiny && inDungeon && full.length > 3) {
-        return full.take(3).toList(growable: false);
-      }
-      return full;
-    }
+    if (activeHeroIds.isEmpty) return heroRoster;
     final byId = <String, PartyHero>{for (final h in heroRoster) h.id: h};
-    final active = [
+    return [
       for (final id in activeHeroIds)
         if (byId[id] != null) byId[id]!,
     ];
+  }
+
+  /// Party that actually fights. Tiny challenge caps at 3 **in combat only**.
+  List<PartyHero> get combatHeroes {
+    final active = heroes;
     if (challengeTiny && inDungeon && active.length > 3) {
       return active.take(3).toList(growable: false);
     }
@@ -496,7 +494,8 @@ class GameState {
       sanctuaryGoldBonusPercent +
       ascendBlessingGoldPercent +
       gearGoldFindPercent +
-      petGoldFindPercent;
+      petGoldFindPercent +
+      BlessingConstellation.goldFindPercent(this);
 
   /// Combat + hub gold grants — soft-cap stacked find so AL20 KEY runs stay
   /// rich without printing infinite wallet gold.
@@ -866,7 +865,10 @@ class GameState {
 
   int effectiveHeroCrit(PartyHero hero) {
     final forge = softForgePercent(critBonus, softAt: 25).round();
-    return (ratingsFor(hero).critChance + forge).clamp(0, 75);
+    return (ratingsFor(hero).critChance +
+            forge +
+            BlessingConstellation.critAdd(this).round())
+        .clamp(0, 75);
   }
 
   int effectiveHeroSpirit(PartyHero hero) => ratingsFor(hero).spirit;

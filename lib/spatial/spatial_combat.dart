@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../core/blessing_constellation.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/keystone.dart';
@@ -132,7 +133,7 @@ void _syncHeroCataStats(SpatialActor actor, PartyHero hero, GameState state) {
       specId: hero.specId,
       masteryPoints: ratings.masteryPoints,
     ),
-  );
+  ) + BlessingConstellation.blockChanceAdd(state);
   actor.uncrittable = hero.spec.isTank;
   actor.defense = state.effectiveHeroDefense(hero);
 }
@@ -1773,8 +1774,9 @@ abstract final class SpatialCombat {
     final isTreasure = room.type == RoomType.treasure || state.enemies.isEmpty;
 
     final heroes = <SpatialActor>[];
-    for (var i = 0; i < state.heroes.length; i++) {
-      final hero = state.heroes[i];
+    final party = state.combatHeroes;
+    for (var i = 0; i < party.length; i++) {
+      final hero = party[i];
       final spawn = i < map.spawnPoints.length
           ? map.spawnPoints[i]
           : map.spawnPoints[i % map.spawnPoints.length];
@@ -2118,8 +2120,9 @@ abstract final class SpatialCombat {
   /// Refresh party combat stats after gear/forge/train without resetting the floor.
   static SpatialWorld syncPartyFromState(SpatialWorld world, GameState state) {
     final heroes = <SpatialActor>[];
-    for (var i = 0; i < state.heroes.length; i++) {
-      final hero = state.heroes[i];
+    final party = state.combatHeroes;
+    for (var i = 0; i < party.length; i++) {
+      final hero = party[i];
       SpatialActor? prev;
       for (final h in world.heroes) {
         if (h.partyIndex == i) {
@@ -3623,6 +3626,9 @@ abstract final class SpatialCombat {
         if (isCrit) {
           damage = (damage * 1.75).round();
         }
+        if (target.role == EnemyRole.boss) {
+          damage = (damage * BlessingConstellation.bossAtkMul(nextState)).round();
+        }
         if (!reducedVfx &&
             (abilityTag == 'SWING' ||
                 abilityTag == 'WILD QUIVER' ||
@@ -4297,16 +4303,16 @@ abstract final class SpatialCombat {
   }
 
   static GameState _syncHp(GameState state, SpatialWorld world) {
+    final fighting = state.combatHeroes;
+    final hpById = <String, int>{};
     var heroesDirty = false;
-    for (var i = 0; i < state.heroes.length; i++) {
-      final h = state.heroes[i];
+    for (var i = 0; i < fighting.length; i++) {
+      final h = fighting[i];
       final spatial = i < world.heroes.length ? world.heroes[i] : null;
       final baseMax = state.effectiveHeroMaxHp(h);
       final nextHp = spatial?.hp.clamp(0, baseMax) ?? 0;
-      if (nextHp != h.currentHp) {
-        heroesDirty = true;
-        break;
-      }
+      hpById[h.id] = nextHp;
+      if (nextHp != h.currentHp) heroesDirty = true;
     }
     var enemiesDirty = false;
     for (var i = 0; i < state.enemies.length; i++) {
@@ -4322,13 +4328,14 @@ abstract final class SpatialCombat {
 
     List<PartyHero>? heroes;
     if (heroesDirty) {
-      heroes = <PartyHero>[];
-      for (var i = 0; i < state.heroes.length; i++) {
-        final h = state.heroes[i];
-        final spatial = i < world.heroes.length ? world.heroes[i] : null;
-        final baseMax = state.effectiveHeroMaxHp(h);
-        heroes.add(h.copyWith(currentHp: spatial?.hp.clamp(0, baseMax) ?? 0));
-      }
+      // Keep full active party membership; Tiny only fights a subset.
+      heroes = [
+        for (final h in state.heroes)
+          if (hpById.containsKey(h.id))
+            h.copyWith(currentHp: hpById[h.id])
+          else
+            h,
+      ];
     }
     List<EnemyUnit>? enemies;
     if (enemiesDirty) {

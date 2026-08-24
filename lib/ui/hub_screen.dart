@@ -644,8 +644,9 @@ class _HubScreenState extends State<HubScreen>
                                         worldBossTickets: WorldBoss.ensureWeek(
                                           state,
                                         ).metaDepth.worldBossTickets,
-                                        onWorldBoss: () =>
-                                            director.enterWorldBoss(),
+                                        onWorldBoss: () => director.enterWorldBoss(),
+                                        onWorldBossPractice: () =>
+                                            director.enterWorldBoss(practice: true),
                                         showRift:
                                             GameLogic.canEnterRift(state) ||
                                             GameLogic.endgameUnlocked(state),

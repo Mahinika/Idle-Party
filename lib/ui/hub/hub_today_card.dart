@@ -183,6 +183,7 @@ class HubUrgentRow extends StatelessWidget {
     required this.showWorldBoss,
     required this.worldBossTickets,
     required this.onWorldBoss,
+    this.onWorldBossPractice,
     required this.showRift,
     required this.riftBest,
     required this.onRift,
@@ -214,6 +215,7 @@ class HubUrgentRow extends StatelessWidget {
   final bool showWorldBoss;
   final int worldBossTickets;
   final VoidCallback onWorldBoss;
+  final VoidCallback? onWorldBossPractice;
   final bool showRift;
   final int riftBest;
   final VoidCallback onRift;
@@ -308,10 +310,24 @@ class HubUrgentRow extends StatelessWidget {
         ],
         if (showWorldBoss) ...[
           const SizedBox(height: 6),
-          KenneyButton(
-            label: 'ASHEN CROWN  ·  $worldBossTickets tix',
-            style: KenneyButtonStyle.brown,
-            onPressed: onWorldBoss,
+          Row(
+            children: [
+              Expanded(
+                child: KenneyButton(
+                  label: 'ASHEN CROWN  ·  $worldBossTickets tix',
+                  style: KenneyButtonStyle.brown,
+                  onPressed: onWorldBoss,
+                ),
+              ),
+              if (onWorldBossPractice != null) ...[
+                const SizedBox(width: 6),
+                KenneyButton(
+                  label: 'PRACTICE',
+                  style: KenneyButtonStyle.grey,
+                  onPressed: onWorldBossPractice,
+                ),
+              ],
+            ],
           ),
         ],
         if (showRift) ...[

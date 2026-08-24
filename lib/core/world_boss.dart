@@ -1,3 +1,4 @@
+import 'blessing_constellation.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 
@@ -35,12 +36,16 @@ abstract final class WorldBoss {
     if (!titles.contains(titleReward)) {
       titles.add(titleReward);
     }
-    return state.copyWith(
+    final rewarded = state.copyWith(
       essence: state.essence + essenceReward,
       metaDepth: state.metaDepth.copyWith(
         worldBossClearedWeek: true,
         titles: titles,
       ),
+    );
+    return BlessingConstellation.grantPoints(
+      rewarded,
+      BlessingConstellation.worldBossPointReward,
     );
   }
 }

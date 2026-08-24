@@ -27,10 +27,13 @@ class OfflineSim {
       return;
     }
     _current = state.copyWith(vfxQuality: VfxQuality.minimal);
+    // Ticket World Boss: no AFK soft clear — practice / normal runs keep assist.
+    final ticketBoss =
+        state.inWorldBoss && !state.worldBossPractice;
     _world = SpatialCombat.build(
       _current,
       threatScale: _threatScale,
-      afkAssist: _afkAssist,
+      afkAssist: ticketBoss ? false : _afkAssist,
     );
     _maxSteps = min(12000, max(240, _maxFloors * 420));
   }
@@ -249,10 +252,12 @@ class OfflineSim {
   }
 
   void _rebuildWorld() {
+    final ticketBoss =
+        _current.inWorldBoss && !_current.worldBossPractice;
     _world = SpatialCombat.build(
       _current,
       threatScale: _threatScale,
-      afkAssist: _afkAssist,
+      afkAssist: ticketBoss ? false : _afkAssist,
     );
   }
 }

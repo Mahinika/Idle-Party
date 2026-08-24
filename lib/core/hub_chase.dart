@@ -128,8 +128,8 @@ class HubChase {
       );
     }
 
-    final monthPass = _monthPassChase(state, clock);
-    if (monthPass != null) return monthPass;
+    final monthReady = _monthPassChase(state, clock, readyOnly: true);
+    if (monthReady != null) return monthReady;
 
     final meet = _pendingMeetChase(state);
     if (meet != null) return meet;
@@ -193,6 +193,9 @@ class HubChase {
         urgency: HubChaseUrgency.almost,
       );
     }
+
+    final monthAlmost = _monthPassChase(state, clock, almostOnly: true);
+    if (monthAlmost != null) return monthAlmost;
 
     // Other ALMOST cliffs beat Daily / vault-start grind (see CHASE_CONTRACT.md).
     final zoneAlmost = _nextZoneChase(state);
@@ -341,13 +344,14 @@ class HubChase {
     );
   }
 
-  static HubChase? _monthPassChase(GameState state, DateTime clock) {
+  static HubChase? _monthPassChase(GameState state, DateTime clock, {bool readyOnly = false, bool almostOnly = false}) {
     final monthKey = state.metaDepth.monthPassKey.isNotEmpty
         ? state.metaDepth.monthPassKey
         : GameLogic.isoMonthKey(clock);
     final month = LocalSeasonCatalog.forMonthKey(monthKey);
     if (!LocalSeasonCatalog.monthPassReady(state, month)) {
       if (LocalSeasonCatalog.monthPassAlmost(state, month)) {
+        if (readyOnly) return null;
         return HubChase(
           kind: HubChaseKind.monthGoal,
           title: 'Almost · ${month.name}',
@@ -358,6 +362,7 @@ class HubChase {
       }
       return null;
     }
+    if (almostOnly) return null;
     return HubChase(
       kind: HubChaseKind.monthGoal,
       title: 'Claim ${month.name}',

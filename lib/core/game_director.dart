@@ -619,7 +619,11 @@ class GameDirector extends ChangeNotifier {
   }
 
   void _rebuildSpatial() {
-    _spatial = SpatialCombat.build(_state);
+    final ticketBoss = _state.inWorldBoss && !_state.worldBossPractice;
+    _spatial = SpatialCombat.build(
+      _state,
+      afkAssist: ticketBoss ? false : null,
+    );
     _battleToken = _state.battleNumber;
   }
 

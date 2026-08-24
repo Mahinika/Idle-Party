@@ -27,7 +27,7 @@ class ChaseContract {
   bool get isClaimable =>
       kind == HubChaseKind.claimDailyVault ||
       kind == HubChaseKind.claimMissions ||
-      kind == HubChaseKind.monthGoal ||
+      (kind == HubChaseKind.monthGoal && isReady) ||
       kind == HubChaseKind.meetHero ||
       kind == HubChaseKind.equipBag ||
       kind == HubChaseKind.ascend;

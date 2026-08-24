@@ -17,6 +17,7 @@ import 'ad_boost.dart';
 import 'relic_ids.dart';
 import 'dungeon_generator.dart';
 import 'economy_service.dart';
+import 'blessing_constellation.dart';
 import 'game_state.dart';
 import 'keystone.dart';
 import 'logic_notices.dart';
@@ -319,10 +320,12 @@ class GameLogic {
       personalBossRush: state.challengeBossRush,
       personalNoFlask: state.challengeNoFlask,
     );
-    final par = Keystone.parTimeMs(
-      bossFloor: Keystone.bossFloorForAl(state.ascensionLevel),
-      key: key,
-    );
+    final par = (Keystone.parTimeMs(
+              bossFloor: Keystone.bossFloorForAl(state.ascensionLevel),
+              key: key,
+            ) *
+            BlessingConstellation.keyParMul(state))
+        .round();
     return state.copyWith(
       keystoneRunActive: true,
       keystoneRunLevel: key,
@@ -865,6 +868,7 @@ class GameLogic {
       grOutcome: 'timed',
       metaDepth: md.copyWith(
         grBestTier: best,
+        monthlyBestGrTier: max(md.monthlyBestGrTier, best),
         grPreferredTier: GreaterRift.maxSelectableTier(best),
         lifetimeGrClears: md.lifetimeGrClears + 1,
         seasonBestGrTier: seasonTier,
@@ -1214,6 +1218,14 @@ class GameLogic {
 
   /// Hub / Ascend pick: NEXT frontier zone, else deepest unlocked.
   static String recommendedDungeonId(GameState state) {
+    final mirror = LocalSeasonCatalog.mirrorZoneId(state);
+    if (mirror != null) {
+      final partyLv = partyMeanLevel(state);
+      final highest = state.highestDungeonCleared;
+      if (DungeonCatalog.isUnlocked(mirror, partyLv, highest)) {
+        return mirror;
+      }
+    }
     final highest = state.highestDungeonCleared;
     final partyLv = partyMeanLevel(state);
     for (final d in DungeonCatalog.all) {
@@ -2014,11 +2026,18 @@ class GameLogic {
           monthPassKey: monthKey,
           monthlyBestTimedKey:
               sameMonth ? next.metaDepth.monthlyBestTimedKey : 0,
+          monthlyBestGrTier:
+              sameMonth ? next.metaDepth.monthlyBestGrTier : 0,
+          apexTrialMonthKey:
+              sameMonth ? next.metaDepth.apexTrialMonthKey : monthKey,
+          apexTrialCleared:
+              sameMonth ? next.metaDepth.apexTrialCleared : false,
           seasonKey: season,
         ),
       );
     }
     next = WorldBoss.ensureWeek(next, now: t);
+    next = BlessingConstellation.ensure(next);
     return ensureDailyVault(next, now: t);
   }
 
@@ -2438,7 +2457,7 @@ class GameLogic {
         ...rollKillLoot(
           room.globalBattleNumber,
           ascensionLevel: state.ascensionLevel,
-          lootFindPercent: state.petLootFindPercent,
+          lootFindPercent: state.petLootFindPercent + BlessingConstellation.lootFindPercent(state),
           hardmodeLevel: Keystone.combatLevel(state),
           party: state.heroes,
           dungeonId: state.dungeonId,
@@ -2500,6 +2519,10 @@ class GameLogic {
         preLeave = preLeave.copyWith(
           essence: preLeave.essence + 20,
           metaDepth: preLeave.metaDepth.copyWith(apexTrialCleared: true),
+        );
+        preLeave = BlessingConstellation.grantPoints(
+          preLeave,
+          BlessingConstellation.apexTrialPointReward,
         );
       }
       final def = DungeonCatalog.byId(preLeave.dungeonId);

@@ -341,7 +341,7 @@ abstract final class LocalSeasonCatalog {
       return false;
     }
     if (month.grTierTarget > 0 &&
-        state.metaDepth.grBestTier < month.grTierTarget) {
+        state.metaDepth.monthlyBestGrTier < month.grTierTarget) {
       return false;
     }
     return true;
@@ -359,7 +359,7 @@ abstract final class LocalSeasonCatalog {
       if (best > 0 && best + 1 >= month.timedKeyTarget) return true;
     }
     if (month.grTierTarget > 0) {
-      final best = state.metaDepth.grBestTier;
+      final best = state.metaDepth.monthlyBestGrTier;
       final need = month.grTierTarget - best;
       if (best > 0 && need > 0 && need <= 1) return true;
     }
@@ -371,7 +371,7 @@ abstract final class LocalSeasonCatalog {
       return 'KEY +${state.metaDepth.monthlyBestTimedKey}/+${month.timedKeyTarget}';
     }
     if (month.grTierTarget > 0) {
-      return 'GR${state.metaDepth.grBestTier} → GR${month.grTierTarget}';
+      return 'GR${state.metaDepth.monthlyBestGrTier} → GR${month.grTierTarget}';
     }
     return month.name;
   }

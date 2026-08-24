@@ -19,10 +19,19 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.54';
+  static const String currentVersion = '1.12.55';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.55',
+      bullets: <String>[
+        'Endgame honesty: Tiny only shrinks the fight party (not your saved roster). Ticket World Boss no longer soft-clears on AFK — use PRACTICE to learn the fight.',
+        'Blessing Constellation points are earned (AL20 starter + boss/trial), not double-dipped from Blessing stacks. Crit / gold / block / loot / KEY par / boss ATK nodes actually apply.',
+        'Month pass tracks Greater Rift progress this month; Apex Trial resets each month; TODAY only CLAIM MONTH when ready; mirror month picks the featured zone when unlocked.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.54',
       bullets: <String>[

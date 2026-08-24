@@ -181,14 +181,22 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         ),
         if (GameLogic.endgameUnlocked(state)) ...[
           const SizedBox(height: 8),
-          KenneyButton(
-            label: state.metaDepth.apexTrialCleared
-                ? 'APEX TRIAL · cleared this month'
-                : 'START APEX TRIAL (non-Apex gear ignored)',
-            style: KenneyButtonStyle.grey,
-            onPressed: state.metaDepth.apexTrialCleared || state.inDungeon
-                ? null
-                : director.startApexTrial,
+          Builder(
+            builder: (_) {
+              final month = GameLogic.isoMonthKey(DateTime.now().toUtc());
+              final clearedThisMonth =
+                  state.metaDepth.apexTrialMonthKey == month &&
+                  state.metaDepth.apexTrialCleared;
+              return KenneyButton(
+                label: clearedThisMonth
+                    ? 'APEX TRIAL · cleared this month'
+                    : 'START APEX TRIAL (non-Apex gear ignored)',
+                style: KenneyButtonStyle.grey,
+                onPressed: clearedThisMonth || state.inDungeon
+                    ? null
+                    : director.startApexTrial,
+              );
+            },
           ),
         ],
         const SizedBox(height: 10),

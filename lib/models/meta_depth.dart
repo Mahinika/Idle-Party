@@ -265,6 +265,7 @@ class MetaDepthState {
     this.adBoostUntilMs = 0,
     this.monthPassKey = '',
     this.monthlyBestTimedKey = 0,
+    this.monthlyBestGrTier = 0,
     this.claimedMonthGoals = const <String>[],
     this.challengeBestBossRushKey = 0,
     this.challengeBestNoFlaskKey = 0,
@@ -273,7 +274,9 @@ class MetaDepthState {
     this.worldBossTickets = 3,
     this.worldBossClearedWeek = false,
     this.constellationNodes = const <String>[],
+    this.constellationPointsEarned = 0,
     this.constellationPointsSpent = 0,
+    this.constellationStarterGranted = false,
     this.apexTrialMonthKey = '',
     this.apexTrialCleared = false,
     this.godHandSmashCount = 0,
@@ -476,6 +479,7 @@ class MetaDepthState {
   /// UTC month key for month pass progress (yyyy-mm).
   final String monthPassKey;
   final int monthlyBestTimedKey;
+  final int monthlyBestGrTier;
   final List<String> claimedMonthGoals;
   final int challengeBestBossRushKey;
   final int challengeBestNoFlaskKey;
@@ -484,7 +488,9 @@ class MetaDepthState {
   final int worldBossTickets;
   final bool worldBossClearedWeek;
   final List<String> constellationNodes;
+  final int constellationPointsEarned;
   final int constellationPointsSpent;
+  final bool constellationStarterGranted;
   final String apexTrialMonthKey;
   final bool apexTrialCleared;
   final int godHandSmashCount;
@@ -589,6 +595,7 @@ class MetaDepthState {
     int? adBoostUntilMs,
     String? monthPassKey,
     int? monthlyBestTimedKey,
+    int? monthlyBestGrTier,
     List<String>? claimedMonthGoals,
     int? challengeBestBossRushKey,
     int? challengeBestNoFlaskKey,
@@ -597,7 +604,9 @@ class MetaDepthState {
     int? worldBossTickets,
     bool? worldBossClearedWeek,
     List<String>? constellationNodes,
+    int? constellationPointsEarned,
     int? constellationPointsSpent,
+    bool? constellationStarterGranted,
     String? apexTrialMonthKey,
     bool? apexTrialCleared,
     int? godHandSmashCount,
@@ -707,6 +716,7 @@ class MetaDepthState {
       adBoostUntilMs: adBoostUntilMs ?? this.adBoostUntilMs,
       monthPassKey: monthPassKey ?? this.monthPassKey,
       monthlyBestTimedKey: monthlyBestTimedKey ?? this.monthlyBestTimedKey,
+      monthlyBestGrTier: monthlyBestGrTier ?? this.monthlyBestGrTier,
       claimedMonthGoals: claimedMonthGoals ?? this.claimedMonthGoals,
       challengeBestBossRushKey:
           challengeBestBossRushKey ?? this.challengeBestBossRushKey,
@@ -717,8 +727,12 @@ class MetaDepthState {
       worldBossTickets: worldBossTickets ?? this.worldBossTickets,
       worldBossClearedWeek: worldBossClearedWeek ?? this.worldBossClearedWeek,
       constellationNodes: constellationNodes ?? this.constellationNodes,
+      constellationPointsEarned:
+          constellationPointsEarned ?? this.constellationPointsEarned,
       constellationPointsSpent:
           constellationPointsSpent ?? this.constellationPointsSpent,
+      constellationStarterGranted:
+          constellationStarterGranted ?? this.constellationStarterGranted,
       apexTrialMonthKey: apexTrialMonthKey ?? this.apexTrialMonthKey,
       apexTrialCleared: apexTrialCleared ?? this.apexTrialCleared,
       godHandSmashCount: godHandSmashCount ?? this.godHandSmashCount,
@@ -818,6 +832,7 @@ class MetaDepthState {
     'adBoostUntilMs': adBoostUntilMs,
     'monthPassKey': monthPassKey,
     'monthlyBestTimedKey': monthlyBestTimedKey,
+    'monthlyBestGrTier': monthlyBestGrTier,
     'claimedMonthGoals': claimedMonthGoals,
     'challengeBestBossRushKey': challengeBestBossRushKey,
     'challengeBestNoFlaskKey': challengeBestNoFlaskKey,
@@ -826,7 +841,9 @@ class MetaDepthState {
     'worldBossTickets': worldBossTickets,
     'worldBossClearedWeek': worldBossClearedWeek,
     'constellationNodes': constellationNodes,
+    'constellationPointsEarned': constellationPointsEarned,
     'constellationPointsSpent': constellationPointsSpent,
+    'constellationStarterGranted': constellationStarterGranted,
     'apexTrialMonthKey': apexTrialMonthKey,
     'apexTrialCleared': apexTrialCleared,
     'godHandSmashCount': godHandSmashCount,
@@ -976,6 +993,8 @@ class MetaDepthState {
       monthPassKey: (json['monthPassKey'] as String?) ?? '',
       monthlyBestTimedKey:
           ((json['monthlyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      monthlyBestGrTier:
+          ((json['monthlyBestGrTier'] as num?)?.toInt() ?? 0).clamp(0, 20),
       claimedMonthGoals:
           (json['claimedMonthGoals'] as List<dynamic>?)?.cast<String>() ??
           const [],
@@ -992,8 +1011,15 @@ class MetaDepthState {
       constellationNodes:
           (json['constellationNodes'] as List<dynamic>?)?.cast<String>() ??
           const [],
+      constellationPointsEarned:
+          (json['constellationPointsEarned'] as num?)?.toInt() ??
+              (json['constellationPointsSpent'] as num?)?.toInt() ??
+              0,
       constellationPointsSpent:
           (json['constellationPointsSpent'] as num?)?.toInt() ?? 0,
+      constellationStarterGranted:
+          (json['constellationStarterGranted'] as bool?) ??
+              (json['constellationPointsEarned'] != null),
       apexTrialMonthKey: (json['apexTrialMonthKey'] as String?) ?? '',
       apexTrialCleared: (json['apexTrialCleared'] as bool?) ?? false,
       godHandSmashCount: (json['godHandSmashCount'] as num?)?.toInt() ?? 0,
