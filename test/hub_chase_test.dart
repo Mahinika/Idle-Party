@@ -144,9 +144,24 @@ void main() {
     expect(chase.title.toLowerCase(), isNot(contains('unlock')));
   });
 
-  test('claimables and Ascend mark READY urgency', () {
+  test('first boss on AL0 chases Daily not sole Ascend button', () {
     var state = GameLogic.createInitialState(now: now).copyWith(
       bossVictories: 1,
+      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+            dailyVaultClaimed: true,
+          ),
+    );
+    expect(GameLogic.canAscend(state), isTrue);
+    expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.dailyRun);
+    expect(chase.kind, isNot(HubChaseKind.ascend));
+  });
+
+  test('claimables and Ascend mark READY urgency', () {
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 1,
+      bossVictories: 2,
       metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
             dailyVaultClaimed: true,
           ),
@@ -156,7 +171,7 @@ void main() {
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.ascend);
     expect(chase.urgency, HubChaseUrgency.ready);
-    expect(chase.detail, contains('AL1'));
+    expect(chase.detail, contains('AL2'));
   });
 
   test('AL20 max blocks Ascend chase', () {

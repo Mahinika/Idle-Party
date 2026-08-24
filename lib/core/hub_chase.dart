@@ -145,26 +145,30 @@ class HubChase {
     if (market != null) return market;
 
     if (GameLogic.canAscend(state)) {
-      final reward =
-          GameLogic.ascendEssenceReward(state.ascensionLevel + 1) +
-          MetaSystems.ascendMilestoneReward(
-            state.ascensionLevel,
-            state.ascensionLevel + 1,
-          );
-      final nextAl = state.ascensionLevel + 1;
-      final unlock = AscendRoadmap.unlockAtAl(nextAl);
-      final unlockBit = unlock != null ? ' · AL$nextAl unlocks $unlock' : '';
-      return HubChase(
-        kind: HubChaseKind.ascend,
-        title: 'Ascend for lasting power',
-        detail:
-            '+${reward}e · Blessing +${GameLogic.ascendBlessingAtk} ATK/'
-            '+${GameLogic.ascendBlessingDef} DEF/'
-            '+${GameLogic.ascendBlessingVit} STA/'
-            '+${GameLogic.ascendBlessingGoldPct}% gold$unlockBit',
-        progressLabel: 'Ready',
-        urgency: HubChaseUrgency.ready,
-      );
+      // AL0 first Ascend is optional — keep TODAY on Daily / farming; Ascend
+      // stays on the hub urgent row so new saves are not trapped on one button.
+      if (state.ascensionLevel > 0) {
+        final reward =
+            GameLogic.ascendEssenceReward(state.ascensionLevel + 1) +
+            MetaSystems.ascendMilestoneReward(
+              state.ascensionLevel,
+              state.ascensionLevel + 1,
+            );
+        final nextAl = state.ascensionLevel + 1;
+        final unlock = AscendRoadmap.unlockAtAl(nextAl);
+        final unlockBit = unlock != null ? ' · AL$nextAl unlocks $unlock' : '';
+        return HubChase(
+          kind: HubChaseKind.ascend,
+          title: 'Ascend for lasting power',
+          detail:
+              '+${reward}e · Blessing +${GameLogic.ascendBlessingAtk} ATK/'
+              '+${GameLogic.ascendBlessingDef} DEF/'
+              '+${GameLogic.ascendBlessingVit} STA/'
+              '+${GameLogic.ascendBlessingGoldPct}% gold$unlockBit',
+          progressLabel: 'Ready',
+          urgency: HubChaseUrgency.ready,
+        );
+      }
     }
 
     final bossesNeed = GameLogic.bossesRequiredForAscension(
@@ -530,6 +534,8 @@ class HubChase {
           ? (almost
                 ? '1 boss left · then Ascend. $teaser'
                 : 'Clear bosses toward Ascend ($bossesLeft left). $teaser')
+          : state.ascensionLevel == 0 && GameLogic.canAscend(state)
+          ? 'Ascend is ready when you want it — farm more floors or gear first. $teaser'
           : 'Farm gear or push deeper for power. $teaser',
       progressLabel: 'Ascend ${state.bossVictories}/$bossesNeed',
       urgency: urgency,

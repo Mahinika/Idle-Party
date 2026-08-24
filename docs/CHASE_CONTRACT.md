@@ -9,7 +9,7 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 
 1. **Claimables (READY)** — daily vault, finished **QUESTS**, Meet new kit, **equip BAG upgrade**
 2. **MARKET ALMOST** — affordable UPGRADE listing on POWER → MARKET (after bag equip)
-3. **Ascend READY** — can Ascend now (blocked at AL20 cap)
+3. **Ascend READY** — can Ascend now (blocked at AL20 cap). **Exception:** on **AL0** after the first boss, TODAY stays Daily / farming; Ascend shows on the urgent row only (not the sole big button).
 4. **ALMOST** — one boss from Ascend, KEY+1 vault cliff (endgame only), then zone / Will / Gauntlet / Rift / week almost
 5. **Level the party** — before endgame unlock, chase active party toward **Lv100** when that is the gate
 6. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Skip Daily / KEY / vault-start / Will grind so TODAY is not a meta list. Skip kit teasers until after the first boss.

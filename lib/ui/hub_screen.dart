@@ -468,11 +468,12 @@ class _HubScreenState extends State<HubScreen>
                                             HubChaseKind.claimDailyVault &&
                                         chase.kind !=
                                             HubChaseKind.claimMissions &&
-                                        chase.kind != HubChaseKind.ascend &&
                                         chase.kind != HubChaseKind.meetHero &&
                                         chase.kind != HubChaseKind.equipBag &&
                                         chase.kind != HubChaseKind.marketUpgrade &&
-                                        chase.kind != HubChaseKind.dailyRun;
+                                        chase.kind != HubChaseKind.dailyRun &&
+                                        (chase.kind != HubChaseKind.ascend ||
+                                            state.ascensionLevel == 0);
                                     secondaryLabel = showSecondaryEnter
                                         ? enterLabel
                                         : null;
