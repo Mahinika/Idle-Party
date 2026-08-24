@@ -75,6 +75,8 @@ class OfflineSim {
     var maxFloors = GameLogic.offlineFloorBudget(seconds);
     // Gauntlet AFK: hard soft-cap so offline can't mint endless climb rewards.
     if (state.inGauntlet) maxFloors = min(maxFloors, 6);
+    // Rift AFK: at most one wave budget — timer/kills resolve the run.
+    if (state.inRift) maxFloors = min(maxFloors, 3);
     return maxFloors;
   }
 
@@ -105,6 +107,21 @@ class OfflineSim {
       if (result.goldFromKills > 0) {
         _current = GameLogic.creditCombatGold(_current, result.goldFromKills);
       }
+      if (_current.inRift) {
+        _current = GameLogic.advanceRiftTimer(
+          _current,
+          (_dt * 1000).round(),
+        );
+        if (result.kills > 0) {
+          _current = GameLogic.noteRiftKills(_current, result.kills);
+        }
+        final resolved = GameLogic.tryResolveRift(_current);
+        if (resolved != null) {
+          _current = resolved;
+          _done = true;
+          break;
+        }
+      }
       _abilityCasts += result.abilityCasts;
       // Live parity: wear clear upgrades mid-floor and sync actor sheets.
       if (_current.gearStash.length > stashLenBefore) {
@@ -124,8 +141,8 @@ class OfflineSim {
 
       // Wipe before flask/God Hand — avoid post-wipe loot/XP from assist.
       if (result.partyWiped) {
-        // Gauntlet wipe always ends the run (same as live hub exit).
-        if (_current.inGauntlet) {
+        // Gauntlet / Rift wipe always ends the run (same as live hub exit).
+        if (_current.inGauntlet || _current.inRift) {
           _current = GameLogic.exitToHubHealed(_current);
           _done = true;
           break;

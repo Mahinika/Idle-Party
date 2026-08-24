@@ -142,17 +142,22 @@ void main() {
     expect(MenuTabs.showKey(fresh), isFalse);
     expect(MenuTabs.showCodex(fresh), isFalse);
 
-    final veteran = fresh.copyWith(
+    final mid = fresh.copyWith(
       ascensionLevel: 2,
       highestDungeonCleared: 2,
       highestFloorCleared: 12,
     );
-    expect(MenuTabs.showMerge(veteran), isTrue);
-    expect(MenuTabs.showRoster(veteran), isTrue);
-    expect(MenuTabs.showCamp(veteran), isTrue);
-    expect(MenuTabs.showShop(veteran), isTrue);
-    expect(MenuTabs.showKey(veteran), isTrue);
-    expect(MenuTabs.showBeast(veteran), isTrue);
-    expect(MenuTabs.showCodex(veteran), isTrue);
+    expect(MenuTabs.showMerge(mid), isTrue);
+    expect(MenuTabs.showRoster(mid), isTrue);
+    expect(MenuTabs.showCamp(mid), isTrue);
+    expect(MenuTabs.showShop(mid), isTrue);
+    expect(MenuTabs.showKey(mid), isFalse);
+    expect(MenuTabs.showBeast(mid), isTrue);
+    expect(MenuTabs.showCodex(mid), isTrue);
+
+    final endgame = mid.copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel,
+    );
+    expect(MenuTabs.showKey(endgame), isTrue);
   });
 }

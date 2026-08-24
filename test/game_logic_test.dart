@@ -540,6 +540,17 @@ void main() {
     expect(GameLogic.canAscend(ready), isTrue);
   });
 
+  test('AL20 is max Ascension — no further Ascend even with bosses', () {
+    final atCap = GameLogic.createInitialState(now: DateTime(2026, 7, 4))
+        .copyWith(
+          ascensionLevel: GameLogic.maxAscensionLevel,
+          bossVictories: 99,
+        );
+    expect(GameLogic.isMaxAscension(atCap), isTrue);
+    expect(GameLogic.canAscend(atCap), isFalse);
+    expect(identical(GameLogic.ascend(atCap), atCap), isTrue);
+  });
+
   test('ascend resets run and keeps meta progress', () {
     final weapon = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
@@ -2851,13 +2862,16 @@ void main() {
     expect(prestiged.sanctuaryGoldBonusPercent, 3);
   });
 
-  test('infinity gauntlet unlocks at AL10 and escalates', () {
+  test('infinity gauntlet unlocks at AL20 and escalates', () {
     final locked = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
     expect(GameLogic.canEnterGauntlet(locked), isFalse);
     expect(GameLogic.enterGauntlet(locked).inGauntlet, isFalse);
 
+    final mid = locked.copyWith(ascensionLevel: 10);
+    expect(GameLogic.canEnterGauntlet(mid), isFalse);
+
     var state = locked.copyWith(
-      ascensionLevel: 10,
+      ascensionLevel: GameLogic.maxAscensionLevel,
       highestFloorCleared: 27,
     );
     expect(GameLogic.canEnterGauntlet(state), isTrue);
@@ -2919,7 +2933,7 @@ void main() {
     // Single gold mul on clear (F1 → mul 1.0).
     expect(state.gold - goldBefore, expectedGold);
 
-    // Challenge mint suppressed in gauntlet; daily vault counts at AL10+.
+    // Challenge mint suppressed in gauntlet; daily vault counts at AL20.
     final vaultBefore = state.metaDepth.dailyVaultClears;
     final withChallenges = state.copyWith(
       challengeBossRush: true,
@@ -2953,7 +2967,7 @@ void main() {
 
     // Offline soft-cap: even long AFK clears at most 6 gauntlet floors.
     final afk = GameLogic.enterGauntlet(
-      locked.copyWith(ascensionLevel: 10),
+      locked.copyWith(ascensionLevel: GameLogic.maxAscensionLevel),
     );
     final sim = GameLogic.simulateSpatialOffline(afk, 60 * 60);
     expect(sim.roomsCleared, lessThanOrEqualTo(6));
@@ -2962,7 +2976,7 @@ void main() {
   test('gauntlet wipe exits to hub healed (live helper + offline)', () {
     final base = GameLogic.createInitialState(
       now: DateTime(2026, 8, 3),
-    ).copyWith(ascensionLevel: 10);
+    ).copyWith(ascensionLevel: GameLogic.maxAscensionLevel);
     var state = GameLogic.enterGauntlet(base);
     expect(state.inGauntlet, isTrue);
     state = state.copyWith(

@@ -55,10 +55,25 @@ void main() {
     expect(find.textContaining('Bosses'), findsNothing);
   });
 
-  testWidgets('hub shows KEYSTONE after jargon unlock', (WidgetTester tester) async {
+  testWidgets('hub shows KEYSTONE after AL20 unlock', (WidgetTester tester) async {
     final director = GameDirector.preview(
       initialState: GameLogic.createInitialState().copyWith(
-        highestDungeonCleared: 2,
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        highestDungeonCleared: 14,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        lastDailyDate: '2099-01-01',
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState().metaDepth.copyWith(
+          dailyVaultClaimed: true,
+          gauntletBestFloor: 100,
+          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          riftBestTier: 20,
+          claimedRiftMilestones: const ['r5', 'r10', 'r20'],
+        ),
+        achievements: [
+          for (var i = 0; i < 200; i++) 'ach_$i',
+        ],
+        lifetimeGoldEarned: 50_000_000,
       ),
     );
 
@@ -72,6 +87,7 @@ void main() {
 
     expect(GameLogic.showKeystoneJargon(director.state), isTrue);
     expect(find.text('META → KEY'), findsOneWidget);
+    expect(find.textContaining('RIFT'), findsWidgets);
   });
 
   testWidgets('entering dungeon shows mobile shell chrome', (WidgetTester tester) async {

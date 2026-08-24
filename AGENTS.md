@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.48**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.51**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -39,7 +39,7 @@ for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.42 / 72** submitted 2026-08-22; testers may still be on
 **1.12.41 / 71** until review publishes). Working ship is
-**1.12.48**. Production still needs **12 closed testers × 14 days**.
+**1.12.51**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -149,9 +149,19 @@ Paladin / Shaman can equip **shields** in the off-hand.
 **Content inventory:** 10 classes / **31 specs** (`HeroSpecId`) · **15 zones**
 through Mothveil Hollow.
 
-**Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = AL10+): endless Crystal
+**Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = **AL20**): endless Crystal
 Spire climb from Hub; **boss every 5 floors**; wipe/leave → hub;
 `metaDepth.gauntletBestFloor` survives Ascend.
+
+**KEYSTONE** (`GameLogic.keystoneMinAscension` = **AL20**): Mythic+-style keys on
+normal zone runs — dial under META → KEY. Mid-game (AL1–19) has no KEY habit.
+
+**Rifts** (`Rift.minAscension` = **AL20**): timed kill-quota challenges from hub /
+META → KEY. Success unlocks higher tiers; wipe/timeout ends the run.
+`metaDepth.riftBestTier` survives Ascend.
+
+**Ascension cap:** `GameLogic.maxAscensionLevel` = **AL20** — endgame (KEY +20,
+Gauntlet, Rifts, vault, boards). No further Ascend after AL20.
 
 **Hub TODAY** — selection in `HubChase.forState`; every surface reads the same
 words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up
@@ -168,7 +178,7 @@ unlocks queue `metaDepth.pendingHeroReveals` until PARTY opens. Ascend
 confirm/toast + chase detail use **`AscendRoadmap`**
 (`lib/core/ascend_roadmap.dart`) for next AL unlocks — kit ladder AL1–6 (e.g.
 Combat Rogue / Arms / Holy Paladin, BM/Holy/Arcane + 5th slot, DKs, Aff/Demo)
-plus AL10 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock sprite).
+plus AL20 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock sprite).
 
 New Game picker: choose **3 unique specs** from the starter pool. Role copy is
 **Shield / Healer / Damage** (easy start = one of each), not three fixed buttons.

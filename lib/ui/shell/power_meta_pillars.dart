@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
+import '../../core/game_logic.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
 import '../../core/meta_systems.dart';
@@ -59,7 +60,7 @@ class _PowerPillarState extends State<PowerPillar>
     final d = widget.director;
     final s = d.state;
     final keepStats =
-        'AL${s.ascensionLevel} · Bless ×${s.metaDepth.ascendBlessings} · '
+        'AL${s.ascensionLevel}${s.ascensionLevel >= GameLogic.maxAscensionLevel ? ' · MAX' : ''} · Bless ×${s.metaDepth.ascendBlessings} · '
         '${s.essence}e';
     final runStats =
         'forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
@@ -252,6 +253,8 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ChallengeToggles(director: d),
+                  const SizedBox(height: 16),
+                  RiftHubPanel(director: d),
                   const SizedBox(height: 16),
                   PlayGamesBoardsSection(director: d),
                 ],

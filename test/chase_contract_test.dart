@@ -68,15 +68,13 @@ void main() {
     expect(offline.kind, hub.kind);
   });
 
-  test('after first Ascend, KEY habit is Up next ENTER', () {
+  test('after first Ascend, Daily is Up next (KEY waits for AL20)', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,
     );
     final contract = ChaseContract.fromState(state, now: now);
-    expect(contract.kind, HubChaseKind.keystone);
-    expect(contract.title.toUpperCase(), contains('KEY'));
-    expect(contract.readyActionLabel, 'ENTER');
+    expect(contract.kind, HubChaseKind.dailyRun);
+    expect(contract.kind, isNot(HubChaseKind.keystone));
     expect(contract.upNextLine, startsWith('Up next:'));
-    expect(contract.isReady, isFalse);
   });
 }

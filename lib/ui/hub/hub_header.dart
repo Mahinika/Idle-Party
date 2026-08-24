@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/game_logic.dart';
 import '../custom_assets.dart';
 import '../cave_atmosphere.dart';
 import '../game_theme.dart';
@@ -225,7 +226,9 @@ class HubHeader extends StatelessWidget {
             HubStatPill(icon: KenneyAssets.vialBlue, label: '$essence'),
             HubStatPill(
               icon: KenneyAssets.iconCrown,
-              label: 'AL $ascensionLevel',
+              label: ascensionLevel >= GameLogic.maxAscensionLevel
+                  ? 'AL $ascensionLevel · MAX'
+                  : 'AL $ascensionLevel',
             ),
           ],
         ),

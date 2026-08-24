@@ -12,6 +12,7 @@ import '../core/logic_notices.dart';
 import '../core/play_games_bridge.dart';
 import '../core/play_games_scores.dart';
 import '../core/play_leaderboard_ids.dart';
+import '../core/rift.dart';
 import '../models/achievement_def.dart';
 import '../models/gear_loadout.dart';
 import '../models/hero.dart';
@@ -818,6 +819,12 @@ Future<void> showOfflineProgressDialog(
         Navigator.pop(context);
         confirmGauntletRun(context, director);
       };
+    case HubChaseKind.riftMilestone:
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+        confirmRiftRun(context, director);
+      };
     case HubChaseKind.meetHero:
       readyLabel = 'PARTY';
       readyAction = () {
@@ -1176,11 +1183,87 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           ],
           const SizedBox(height: 2),
           Text(
-            'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2.',
+            state.ascensionLevel < GameLogic.keystoneMinAscension
+                ? 'KEYSTONE unlocks at AL${GameLogic.keystoneMinAscension} with Gauntlet and Rift.'
+                : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
         ],
+      ],
+    );
+  }
+}
+
+/// META → KEY: Rift tier dial (AL20 endgame).
+class RiftHubPanel extends StatelessWidget {
+  const RiftHubPanel({super.key, required this.director});
+  final GameDirector director;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = director.state;
+    if (state.ascensionLevel < Rift.minAscension) {
+      return Text(
+        'RIFT unlocks at AL${Rift.minAscension} — timed kill challenges with escalating tiers.',
+        textAlign: TextAlign.center,
+        style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+      );
+    }
+    final best = state.metaDepth.riftBestTier;
+    final maxSel = Rift.maxSelectableTier(best);
+    final pref = Rift.clampTier(
+      state.metaDepth.riftPreferredTier.clamp(Rift.minTier, maxSel),
+    );
+    final kills = Rift.killTarget(pref);
+    final par = Rift.formatTimer(Rift.parTimeMs(pref));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'RIFT',
+          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Best R$best · kill $kills before $par · '
+          '+${Rift.successEssence(pref)}e / +${Rift.successGold(pref)}g',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            MenuChrome.stepperButton(
+              label: 'RIFT -',
+              sign: '-',
+              onPressed: pref > Rift.minTier
+                  ? () => director.setRiftPreferredTier(pref - 1)
+                  : null,
+            ),
+            Expanded(
+              child: Text(
+                'R$pref',
+                textAlign: TextAlign.center,
+                style: GameTheme.body(size: 16, color: GameTheme.parchment),
+              ),
+            ),
+            MenuChrome.stepperButton(
+              label: 'RIFT +',
+              sign: '+',
+              onPressed: pref < maxSel
+                  ? () => director.setRiftPreferredTier(pref + 1)
+                  : null,
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        KenneyButton(
+          label: 'ENTER RIFT R$pref',
+          style: KenneyButtonStyle.brown,
+          onPressed: GameLogic.canEnterRift(state)
+              ? () => confirmRiftRun(context, director)
+              : null,
+        ),
       ],
     );
   }

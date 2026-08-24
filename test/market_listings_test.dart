@@ -107,13 +107,14 @@ void main() {
   });
 
   test('ascend clears market listings', () {
-    var state = seeded();
+    var state = seeded(al: GameLogic.maxAscensionLevel - 1);
     state = GameLogic.ensureMarketListings(state, nowMs: now + 6);
     expect(state.marketListings, isNotEmpty);
     state = state.copyWith(
       bossVictories: 21,
       metaDepth: state.metaDepth.copyWith(noWipeAscendReady: true),
     );
+    expect(GameLogic.canAscend(state), isTrue);
     final ascended = GameLogic.ascend(state);
     expect(ascended.marketListings, isEmpty);
     expect(ascended.marketListingsRefreshMs, 0);

@@ -84,6 +84,7 @@ class GameState {
     this.metaDepth = MetaDepthState.empty,
     this.inDungeon = false,
     this.inGauntlet = false,
+    this.inRift = false,
     this.dungeonId = 'sandy',
     this.soulboundFragments = 0,
     this.soulboundItem,
@@ -113,6 +114,12 @@ class GameState {
     this.keystoneParMs = 0,
     this.keystoneRunAffixes = const <String>[],
     this.keystoneOutcome = '',
+    this.riftTier = 0,
+    this.riftTimerMs = 0,
+    this.riftParMs = 0,
+    this.riftKillTarget = 0,
+    this.riftKills = 0,
+    this.riftOutcome = '',
     this.colorblindMode = false,
     this.uiTextScale = 1.0,
     this.dungeonZoom = DungeonZoom.normal,
@@ -221,8 +228,11 @@ class GameState {
   /// Hub vs dungeon: combat loop only runs while in dungeon.
   final bool inDungeon;
 
-  /// Infinity Gauntlet run (AL10+ endless climb). Cleared when leaving hub.
+  /// Infinity Gauntlet run (AL20 endless climb). Cleared when leaving hub.
   final bool inGauntlet;
+
+  /// Timed Rift run (AL20 kill quota). Cleared when leaving hub.
+  final bool inRift;
 
   /// Named dungeon id (e.g. sandy).
   final String dungeonId;
@@ -316,6 +326,24 @@ class GameState {
 
   /// '' | `timed` | `depleted` after boss resolution this run.
   final String keystoneOutcome;
+
+  /// Active Rift tier (0 when not in a rift).
+  final int riftTier;
+
+  /// Elapsed Rift timer (ms).
+  final int riftTimerMs;
+
+  /// Par time for the active Rift.
+  final int riftParMs;
+
+  /// Kill quota for the active Rift.
+  final int riftKillTarget;
+
+  /// Kills banked this Rift run.
+  final int riftKills;
+
+  /// '' | `timed` | `depleted` after Rift resolution.
+  final String riftOutcome;
 
   /// Accessibility: colorblind-friendly combat floater palette.
   final bool colorblindMode;
@@ -886,6 +914,7 @@ class GameState {
     MetaDepthState? metaDepth,
     bool? inDungeon,
     bool? inGauntlet,
+    bool? inRift,
     String? dungeonId,
     int? soulboundFragments,
     EquipmentItem? soulboundItem,
@@ -916,6 +945,12 @@ class GameState {
     int? keystoneParMs,
     List<String>? keystoneRunAffixes,
     String? keystoneOutcome,
+    int? riftTier,
+    int? riftTimerMs,
+    int? riftParMs,
+    int? riftKillTarget,
+    int? riftKills,
+    String? riftOutcome,
     bool? colorblindMode,
     double? uiTextScale,
     DungeonZoom? dungeonZoom,
@@ -990,6 +1025,7 @@ class GameState {
       metaDepth: metaDepth ?? this.metaDepth,
       inDungeon: inDungeon ?? this.inDungeon,
       inGauntlet: inGauntlet ?? this.inGauntlet,
+      inRift: inRift ?? this.inRift,
       dungeonId: dungeonId ?? this.dungeonId,
       soulboundFragments: soulboundFragments ?? this.soulboundFragments,
       soulboundItem: clearSoulboundItem
@@ -1027,6 +1063,12 @@ class GameState {
       keystoneParMs: keystoneParMs ?? this.keystoneParMs,
       keystoneRunAffixes: keystoneRunAffixes ?? this.keystoneRunAffixes,
       keystoneOutcome: keystoneOutcome ?? this.keystoneOutcome,
+      riftTier: riftTier ?? this.riftTier,
+      riftTimerMs: riftTimerMs ?? this.riftTimerMs,
+      riftParMs: riftParMs ?? this.riftParMs,
+      riftKillTarget: riftKillTarget ?? this.riftKillTarget,
+      riftKills: riftKills ?? this.riftKills,
+      riftOutcome: riftOutcome ?? this.riftOutcome,
       colorblindMode: colorblindMode ?? this.colorblindMode,
       uiTextScale: uiTextScale ?? this.uiTextScale,
       dungeonZoom: dungeonZoom ?? this.dungeonZoom,
@@ -1130,6 +1172,7 @@ class GameState {
     'metaDepth': metaDepth.toJson(),
     'inDungeon': inDungeon,
     'inGauntlet': inGauntlet,
+    'inRift': inRift,
     'dungeonId': dungeonId,
     'soulboundFragments': soulboundFragments,
     if (soulboundItem != null) 'soulboundItem': soulboundItem!.toJson(),
@@ -1160,6 +1203,12 @@ class GameState {
     'keystoneParMs': keystoneParMs,
     'keystoneRunAffixes': keystoneRunAffixes,
     'keystoneOutcome': keystoneOutcome,
+    'riftTier': riftTier,
+    'riftTimerMs': riftTimerMs,
+    'riftParMs': riftParMs,
+    'riftKillTarget': riftKillTarget,
+    'riftKills': riftKills,
+    'riftOutcome': riftOutcome,
     'colorblindMode': colorblindMode,
     'uiTextScale': uiTextScale,
     'dungeonZoom': dungeonZoom.name,
@@ -1348,6 +1397,7 @@ class GameState {
       metaDepth: metaDepth,
       inDungeon: (json['inDungeon'] as bool?) ?? false,
       inGauntlet: (json['inGauntlet'] as bool?) ?? false,
+      inRift: (json['inRift'] as bool?) ?? false,
       dungeonId: (json['dungeonId'] as String?) ?? 'sandy',
       soulboundFragments: _jsonInt(json['soulboundFragments']),
       soulboundItem: soulboundJson == null
@@ -1418,6 +1468,12 @@ class GameState {
               .toList() ??
           const <String>[],
       keystoneOutcome: (json['keystoneOutcome'] as String?) ?? '',
+      riftTier: max(0, (json['riftTier'] as num?)?.toInt() ?? 0),
+      riftTimerMs: max(0, (json['riftTimerMs'] as num?)?.toInt() ?? 0),
+      riftParMs: max(0, (json['riftParMs'] as num?)?.toInt() ?? 0),
+      riftKillTarget: max(0, (json['riftKillTarget'] as num?)?.toInt() ?? 0),
+      riftKills: max(0, (json['riftKills'] as num?)?.toInt() ?? 0),
+      riftOutcome: (json['riftOutcome'] as String?) ?? '',
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
       uiTextScale: ((json['uiTextScale'] as num?)?.toDouble() ?? 1.0).clamp(
         kUiTextScaleMin,

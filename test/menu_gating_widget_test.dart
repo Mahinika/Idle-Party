@@ -24,7 +24,7 @@ void main() {
     );
   });
 
-  test('KEY jargon hidden before AL2 and King\'s Fort', () {
+  test('KEY jargon hidden until AL20', () {
     final early = GameLogic.createInitialState(now: now);
     expect(GameLogic.showKeystoneJargon(early), isFalse);
     expect(MenuTabs.showKey(early), isFalse);
@@ -33,7 +33,14 @@ void main() {
       ascensionLevel: 2,
       highestDungeonCleared: 0,
     );
-    expect(GameLogic.showKeystoneJargon(mid), isTrue);
-    expect(MenuTabs.showKey(mid), isTrue);
+    expect(GameLogic.showKeystoneJargon(mid), isFalse);
+    expect(MenuTabs.showKey(mid), isFalse);
+
+    final endgame = early.copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel,
+      highestDungeonCleared: 14,
+    );
+    expect(GameLogic.showKeystoneJargon(endgame), isTrue);
+    expect(MenuTabs.showKey(endgame), isTrue);
   });
 }

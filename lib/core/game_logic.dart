@@ -20,6 +20,7 @@ import 'economy_service.dart';
 import 'game_state.dart';
 import 'keystone.dart';
 import 'logic_notices.dart';
+import 'rift.dart';
 import 'apex_forge.dart';
 import 'encounter_factory.dart';
 import 'market_service.dart';
@@ -293,6 +294,9 @@ class GameLogic {
 
   /// Locks preferred key + affixes + idle-friendly par timer for a dungeon run.
   static GameState _beginKeystoneRun(GameState state) {
+    if (state.ascensionLevel < keystoneMinAscension) {
+      return _clearKeystoneRun(state.copyWith(hardmodeLevel: 0));
+    }
     final key = state.hardmodeLevel.clamp(0, state.effectiveMaxHardmode);
     if (key <= 0) {
       return _clearKeystoneRun(state);
@@ -345,18 +349,32 @@ class GameLogic {
   }
 
   static GameState leaveDungeon(GameState state) {
+    var working = state;
+    if (state.inRift && state.riftOutcome.isEmpty) {
+      final essence = Rift.failEssence(state.riftTier);
+      working = working.copyWith(
+        essence: working.essence + essence,
+        riftOutcome: 'depleted',
+      );
+      LogicNotices.addMetaPayoffs([
+        'Rift R${Rift.clampTier(state.riftTier)} ended · +${essence}e',
+      ]);
+    }
     final heroes = [
-      for (final h in state.heroes)
+      for (final h in working.heroes)
         h.copyWith(
-          currentHp: h.currentHp.clamp(0, state.effectiveHeroMaxHp(h)),
+          currentHp: h.currentHp.clamp(0, working.effectiveHeroMaxHp(h)),
         ),
     ];
-    var next = _clearKeystoneRun(
-      state.copyWith(
-        inDungeon: false,
-        inGauntlet: false,
-        heroes: heroes,
-        lastUpdated: DateTime.now(),
+    var next = _clearRiftRun(
+      _clearKeystoneRun(
+        working.copyWith(
+          inDungeon: false,
+          inGauntlet: false,
+          inRift: false,
+          heroes: heroes,
+          lastUpdated: DateTime.now(),
+        ),
       ),
     );
     if (state.inGauntlet) {
@@ -380,7 +398,17 @@ class GameLogic {
     );
   }
 
-  static const int gauntletMinAscension = 10;
+  /// Hard cap — endgame lives here (KEY +20, Gauntlet, vault, boards).
+  static const int maxAscensionLevel = 20;
+
+  /// Infinity Gauntlet unlocks at max AL (endgame climb).
+  static const int gauntletMinAscension = maxAscensionLevel;
+
+  /// KEYSTONE dial / runs unlock at max AL (same endgame gate as Gauntlet).
+  static const int keystoneMinAscension = maxAscensionLevel;
+
+  static bool isMaxAscension(GameState state) =>
+      state.ascensionLevel >= maxAscensionLevel;
 
   static bool canEnterGauntlet(GameState state) =>
       state.ascensionLevel >= gauntletMinAscension && !state.inDungeon;
@@ -424,7 +452,7 @@ class GameLogic {
     );
   }
 
-  /// AL10+ endless climb — Crystal Spire art, boss every 5 floors, no hub exit.
+  /// AL20 endless climb — Crystal Spire art, boss every 5 floors, no hub exit.
   static const int gauntletBossEvery = 5;
 
   static GameState enterGauntlet(GameState state) {
@@ -465,6 +493,158 @@ class GameLogic {
         lastUpdated: DateTime.now(),
       ),
     );
+  }
+
+  static bool canEnterRift(GameState state) =>
+      state.ascensionLevel >= Rift.minAscension && !state.inDungeon;
+
+  /// Timed kill-quota run — Crystal Spire art, dense packs, hub exit on resolve.
+  static GameState enterRift(GameState state, {int? tier}) {
+    if (!canEnterRift(state)) return state;
+    final preferred = tier ?? state.metaDepth.riftPreferredTier;
+    final maxSel = Rift.maxSelectableTier(state.metaDepth.riftBestTier);
+    final t = Rift.clampTier(preferred.clamp(Rift.minTier, maxSel));
+    final layoutSeed = newLayoutSeed();
+    final floor = DungeonGenerator.generateFloor(
+      1,
+      ascensionLevel: state.ascensionLevel,
+      dungeonId: Rift.dungeonId,
+      layoutSeed: layoutSeed,
+    );
+    final room = floor.first;
+    final cleared = _clearKeystoneRun(_clearRiftRun(state));
+    return MetaSystems.evaluateAchievements(
+      cleared.copyWith(
+        inDungeon: true,
+        inGauntlet: false,
+        inRift: true,
+        dungeonId: Rift.dungeonId,
+        dungeonMode: DungeonMode.push,
+        currentRoom: room,
+        dungeonFloor: floor,
+        enemies: createEnemyGroup(
+          room,
+          dungeonId: Rift.dungeonId,
+          fromState: cleared.copyWith(inRift: true, riftTier: t),
+        ),
+        layoutSeed: layoutSeed,
+        riftTier: t,
+        riftTimerMs: 0,
+        riftParMs: Rift.parTimeMs(t),
+        riftKillTarget: Rift.killTarget(t),
+        riftKills: 0,
+        riftOutcome: '',
+        metaDepth: cleared.metaDepth.copyWith(riftPreferredTier: t),
+        heroes: cleared.heroes
+            .map(
+              (hero) =>
+                  hero.copyWith(currentHp: cleared.effectiveHeroMaxHp(hero)),
+            )
+            .toList(),
+        lastUpdated: DateTime.now(),
+      ),
+    );
+  }
+
+  static GameState _clearRiftRun(GameState state) {
+    if (!state.inRift &&
+        state.riftTier == 0 &&
+        state.riftTimerMs == 0 &&
+        state.riftParMs == 0 &&
+        state.riftKillTarget == 0 &&
+        state.riftKills == 0 &&
+        state.riftOutcome.isEmpty) {
+      return state;
+    }
+    return state.copyWith(
+      inRift: false,
+      riftTier: 0,
+      riftTimerMs: 0,
+      riftParMs: 0,
+      riftKillTarget: 0,
+      riftKills: 0,
+      riftOutcome: '',
+    );
+  }
+
+  static GameState setRiftPreferredTier(GameState state, int tier) {
+    if (state.ascensionLevel < Rift.minAscension) return state;
+    final maxSel = Rift.maxSelectableTier(state.metaDepth.riftBestTier);
+    final t = Rift.clampTier(tier.clamp(Rift.minTier, maxSel));
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(riftPreferredTier: t),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  static GameState advanceRiftTimer(GameState state, int deltaMs) {
+    if (!state.inRift || deltaMs <= 0) return state;
+    if (state.riftOutcome.isNotEmpty) return state;
+    return state.copyWith(riftTimerMs: state.riftTimerMs + deltaMs);
+  }
+
+  static GameState noteRiftKills(GameState state, int kills) {
+    if (!state.inRift || kills <= 0) return state;
+    if (state.riftOutcome.isNotEmpty) return state;
+    return state.copyWith(riftKills: state.riftKills + kills);
+  }
+
+  /// Success if kill quota met under par; fail if over par.
+  static GameState? tryResolveRift(GameState state) {
+    if (!state.inRift || state.riftOutcome.isNotEmpty) return null;
+    if (state.riftKills >= state.riftKillTarget &&
+        state.riftTimerMs <= state.riftParMs) {
+      return resolveRiftSuccess(state);
+    }
+    if (state.riftTimerMs > state.riftParMs) {
+      return resolveRiftFail(state);
+    }
+    return null;
+  }
+
+  static GameState resolveRiftSuccess(GameState state) {
+    if (!state.inRift) return state;
+    final tier = Rift.clampTier(state.riftTier);
+    final unlock = Rift.unlockTierAfterSuccess(
+      clearedTier: tier,
+      timerMs: state.riftTimerMs,
+      parMs: state.riftParMs,
+    );
+    final best = max(state.metaDepth.riftBestTier, unlock);
+    final essence = Rift.successEssence(tier);
+    final gold = Rift.successGold(tier);
+    var next = state.copyWith(
+      gold: state.gold + gold,
+      essence: state.essence + essence,
+      lifetimeGoldEarned: state.lifetimeGoldEarned + gold,
+      riftOutcome: 'timed',
+      metaDepth: state.metaDepth.copyWith(
+        riftBestTier: best,
+        riftPreferredTier: Rift.maxSelectableTier(best),
+        lifetimeRiftClears: state.metaDepth.lifetimeRiftClears + 1,
+      ),
+    );
+    next = syncMetaPayoffs(next);
+    LogicNotices.addMetaPayoffs([
+      'Rift R$tier timed · +${essence}e · +${gold}g'
+          '${unlock > tier + 1 ? ' · unlock R$unlock' : ''}',
+    ]);
+    return exitToHubHealed(next);
+  }
+
+  static GameState resolveRiftFail(GameState state) {
+    if (!state.inRift) return state;
+    if (state.riftOutcome.isNotEmpty) return exitToHubHealed(state);
+    final tier = Rift.clampTier(state.riftTier);
+    final essence = Rift.failEssence(tier);
+    final next = state.copyWith(
+      essence: state.essence + essence,
+      riftOutcome: 'depleted',
+    );
+    LogicNotices.addMetaPayoffs([
+      'Rift R$tier failed · +${essence}e consolation',
+    ]);
+    return exitToHubHealed(next);
   }
 
   static int godHandUpgradeCost(int level) => 10 + level * 8;
@@ -708,8 +888,8 @@ class GameLogic {
   }
 
   static GameState setDungeonMode(GameState state, DungeonMode mode) {
-    if (state.inGauntlet) {
-      // Gauntlet is endless PUSH only.
+    if (state.inGauntlet || state.inRift) {
+      // Gauntlet / Rift are endless PUSH only.
       return state.copyWith(
         dungeonMode: DungeonMode.push,
         lastUpdated: DateTime.now(),
@@ -722,7 +902,7 @@ class GameLogic {
   }
 
   static bool canTravelToFloor(GameState state, int floorNumber) {
-    if (state.inGauntlet) return false;
+    if (state.inGauntlet || state.inRift) return false;
     if (floorNumber < 1) {
       return false;
     }
@@ -782,6 +962,7 @@ class GameLogic {
       ascensionLevel + 1;
 
   static bool canAscend(GameState state) =>
+      !isMaxAscension(state) &&
       state.bossVictories >= bossesRequiredForAscension(state.ascensionLevel);
 
   /// Hub / Ascend pick: NEXT frontier zone, else deepest unlocked.
@@ -1655,11 +1836,11 @@ class GameLogic {
     return gain;
   }
 
-  /// Mid+ players see KEY / weekly affix jargon; early stays vault-simple.
+  /// Endgame players see KEY / weekly affix jargon; earlier stays vault-simple.
   ///
-  /// AL≥2 or King's Fort cleared (`highestDungeonCleared >= 2`).
+  /// KEY unlocks at [keystoneMinAscension] (AL20) with Gauntlet / Rift.
   static bool showKeystoneJargon(GameState state) =>
-      state.ascensionLevel >= 2 || state.highestDungeonCleared >= 2;
+      state.ascensionLevel >= keystoneMinAscension;
 
   /// Daily / vault-start / KEY habit as TODAY after the first boss or first Ascend.
   ///
@@ -1762,6 +1943,18 @@ class GameLogic {
       }
     }
 
+    final riftClaims = List<String>.from(next.metaDepth.claimedRiftMilestones);
+    final riftBest = next.metaDepth.riftBestTier;
+    for (final tier in RiftMilestones.tiers) {
+      final id = RiftMilestones.claimId(tier);
+      if (riftBest >= tier && !riftClaims.contains(id)) {
+        riftClaims.add(id);
+        final gain = RiftMilestones.essenceForTier(tier);
+        essenceGain += gain;
+        notices.add('Rift R$tier · +${gain}e');
+      }
+    }
+
     // Local week goals (timed KEY / Gauntlet floor).
     final weekClaims = List<String>.from(next.metaDepth.claimedWeekGoals);
     final weekKey = next.metaDepth.weeklyKey;
@@ -1785,6 +1978,7 @@ class GameLogic {
         willClaims.length == next.metaDepth.claimedWillRanks.length &&
         gauntletClaims.length ==
             next.metaDepth.claimedGauntletMilestones.length &&
+        riftClaims.length == next.metaDepth.claimedRiftMilestones.length &&
         weekClaims.length == next.metaDepth.claimedWeekGoals.length &&
         titles.length == next.metaDepth.titles.length) {
       LogicNotices.setMetaPayoffs(const []);
@@ -1796,6 +1990,7 @@ class GameLogic {
       metaDepth: next.metaDepth.copyWith(
         claimedWillRanks: willClaims,
         claimedGauntletMilestones: gauntletClaims,
+        claimedRiftMilestones: riftClaims,
         claimedWeekGoals: weekClaims,
         titles: titles,
       ),
@@ -1855,6 +2050,9 @@ class GameLogic {
   /// Clamp preferred keystone level (hub only — ignored while a run is locked).
   static GameState setHardmodeLevel(GameState state, int level) {
     if (state.inDungeon && state.keystoneRunActive) return state;
+    if (state.ascensionLevel < keystoneMinAscension) {
+      return state.copyWith(hardmodeLevel: 0, lastUpdated: DateTime.now());
+    }
     final capped = level.clamp(0, state.effectiveMaxHardmode);
     return MetaSystems.evaluateAchievements(
       state.copyWith(hardmodeLevel: capped, lastUpdated: DateTime.now()),
@@ -2018,9 +2216,10 @@ class GameLogic {
     final farmLoop = awarded.dungeonMode == DungeonMode.farm;
     final clearedBoss = bossesCleared > 0;
     final gauntlet = awarded.inGauntlet;
+    final rift = awarded.inRift;
     // Zone HFC only — Gauntlet climb lives on metaDepth.gauntletBestFloor
     // so Ascend fragments keep using real zone clears.
-    final highest = gauntlet
+    final highest = (gauntlet || rift)
         ? awarded.highestFloorCleared
         : max(awarded.highestFloorCleared, room.floorNumber);
     awarded = grantBossCraftMats(awarded, clearedBoss: clearedBoss);
@@ -2035,10 +2234,10 @@ class GameLogic {
     }
 
     // Push + boss floor clear → dungeon cleared, back to hub.
-    // Gauntlet never exits on boss — endless climb.
+    // Gauntlet / Rift never exit on boss — endless climb / kill waves.
     // Daily echo: claim on first clear, then return to hub (one floor).
     final wasDaily = MetaSystems.isActiveDailyRun(state);
-    if (!farmLoop && clearedBoss && !gauntlet) {
+    if (!farmLoop && clearedBoss && !gauntlet && !rift) {
       final def = DungeonCatalog.byId(awarded.dungeonId);
       var progressed = awarded.copyWith(
         gold: awarded.gold + goldAwarded,
@@ -2191,7 +2390,7 @@ class GameLogic {
         trophies.add(before.dungeonId);
       }
     }
-    // Daily vault: push clears (or any boss). Gauntlet clears count at AL10+.
+    // Daily vault: push clears (or any boss). Gauntlet clears count at AL20.
     // Farm loops never mint vault progress.
     final gauntletVault =
         before.inGauntlet && before.ascensionLevel >= gauntletMinAscension;
@@ -2376,6 +2575,11 @@ class GameLogic {
     if (next.ascensionLevel > 0) {
       next = next.copyWith(rogueUnlocked: true);
     }
+    // KEY is AL20-only — clamp legacy mid-progress preferred keys.
+    if (next.ascensionLevel < keystoneMinAscension &&
+        (next.hardmodeLevel > 0 || next.keystoneRunActive)) {
+      next = _clearKeystoneRun(next.copyWith(hardmodeLevel: 0));
+    }
     // Legacy / incomplete dungeon saves: preferred KEY was set but the run
     // never locked — re-begin so combat scaling matches hub KEY preference.
     if (next.inDungeon &&
@@ -2474,7 +2678,10 @@ class GameLogic {
           : unlockedRelicsJson.cast<String>(),
       currentRoom: room,
       dungeonFloor: floor,
-      ascensionLevel: (json['ascensionLevel'] as int?) ?? 0,
+      ascensionLevel: min(
+        maxAscensionLevel,
+        (json['ascensionLevel'] as int?) ?? 0,
+      ),
       equipped: () {
         final map = <EquipmentSlot, EquipmentItem>{};
         if (json['equippedWeapon'] != null) {

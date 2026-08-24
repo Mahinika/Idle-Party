@@ -180,6 +180,9 @@ class HubUrgentRow extends StatelessWidget {
     required this.showGauntlet,
     required this.gauntletBest,
     required this.onGauntlet,
+    required this.showRift,
+    required this.riftBest,
+    required this.onRift,
     required this.weeklyReady,
     required this.weeklyProgress,
     required this.weeklyClaimed,
@@ -202,6 +205,9 @@ class HubUrgentRow extends StatelessWidget {
   final bool showGauntlet;
   final int gauntletBest;
   final VoidCallback onGauntlet;
+  final bool showRift;
+  final int riftBest;
+  final VoidCallback onRift;
   final bool weeklyReady;
   final int weeklyProgress;
   final bool weeklyClaimed;
@@ -286,6 +292,16 @@ class HubUrgentRow extends StatelessWidget {
                 : 'INFINITY GAUNTLET',
             style: KenneyButtonStyle.red,
             onPressed: onGauntlet,
+          ),
+        ],
+        if (showRift) ...[
+          const SizedBox(height: 6),
+          KenneyButton(
+            label: riftBest > 0
+                ? 'RIFT  ·  best R$riftBest'
+                : 'RIFT',
+            style: KenneyButtonStyle.brown,
+            onPressed: onRift,
           ),
         ],
       ],

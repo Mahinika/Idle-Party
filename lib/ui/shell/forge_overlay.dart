@@ -269,7 +269,9 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         ),
         const SizedBox(height: 8),
         Text(
-          canAscend
+          GameLogic.isMaxAscension(state)
+              ? 'AL20 · max Ascension — endgame: KEY, Gauntlet, Rifts, vault'
+              : canAscend
               ? (director.state.inDungeon
                     ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
                     : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
@@ -320,6 +322,9 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         ),
         Builder(
           builder: (_) {
+            if (GameLogic.isMaxAscension(state)) {
+              return const SizedBox.shrink();
+            }
             final hub = GoldIncome.hubGoldPerMinute(state);
             final run = director.runGoldPerMinute;
             final oldP = GoldIncome.goldFindPercent(state);

@@ -47,6 +47,7 @@ void main() {
     expect(week.timedKeyTarget, greaterThan(0));
 
     state = state.copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel,
       metaDepth: state.metaDepth.copyWith(
         dailyVaultClaimed: true,
         weeklyBestTimedKey: week.timedKeyTarget - 1,

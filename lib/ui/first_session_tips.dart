@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/rift.dart';
 import '../core/story_lore.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
@@ -99,8 +100,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'hardmode',
       title: 'KEYSTONE',
       body:
-          'Under KEYSTONE, pick a key level before you enter. Affixes lock in, a generous timer runs '
-          '(AFK counts), and beating the boss under par upgrades your key.',
+          'At AL20, under META → KEY pick a key level before you enter. Affixes lock in, '
+          'a generous timer runs (AFK counts), and beating the boss under par upgrades your key.',
     ),
     (
       id: 'weekly',
@@ -119,7 +120,13 @@ class FirstSessionTips extends StatelessWidget {
       id: 'gauntlet',
       title: 'CRYSTAL SPIRE',
       body:
-          'At AL10+, Infinity Gauntlet is an endless climb from the hub. Best floor survives Ascend.',
+          'At AL20, Infinity Gauntlet is an endless climb from the hub. Best floor survives Ascend.',
+    ),
+    (
+      id: 'rift',
+      title: 'RIFTS',
+      body:
+          'At AL20, Rifts are timed kill challenges from the hub. Clear the quota before the timer for essence and the next tier.',
     ),
     (
       id: 'prestige',
@@ -184,11 +191,10 @@ class FirstSessionTips extends StatelessWidget {
           s.metaDepth.lifetimeFloorClears < 1) {
         continue;
       }
-      // KEYSTONE tip waits for mid-layer jargon (AL≥2 or zone 3+ cleared).
+      // KEYSTONE tip waits for AL20 endgame unlock.
       if (tip.id == 'hardmode' &&
           (!GameLogic.showKeystoneJargon(s) ||
-              s.effectiveMaxHardmode <= 0 ||
-              (s.highestDungeonCleared < 0 && s.ascensionLevel < 1))) {
+              s.effectiveMaxHardmode <= 0)) {
         continue;
       }
       if (tip.id == 'weekly' &&
@@ -206,6 +212,11 @@ class FirstSessionTips extends StatelessWidget {
       if (tip.id == 'gauntlet' &&
           s.ascensionLevel < GameLogic.gauntletMinAscension &&
           !GameLogic.canEnterGauntlet(s)) {
+        continue;
+      }
+      if (tip.id == 'rift' &&
+          s.ascensionLevel < Rift.minAscension &&
+          !GameLogic.canEnterRift(s)) {
         continue;
       }
       if (tip.id == 'prestige' &&

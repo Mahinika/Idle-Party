@@ -125,11 +125,17 @@ void main() {
     expect(market.body.toLowerCase(), contains('today'));
   });
 
-  test('Gauntlet gate stays AL10+ and What’s New version is non-empty', () {
-    expect(GameLogic.gauntletMinAscension, 10);
+  test('Gauntlet / KEY / Rift gates stay AL20 and What’s New version is non-empty', () {
+    expect(GameLogic.gauntletMinAscension, GameLogic.maxAscensionLevel);
+    expect(GameLogic.keystoneMinAscension, GameLogic.maxAscensionLevel);
+    expect(GameLogic.gauntletMinAscension, 20);
     expect(MetaSystems.currentVersion, isNotEmpty);
     expect(MetaSystems.releases.first.version, MetaSystems.currentVersion);
     expect(MetaSystems.releases.first.bullets, isNotEmpty);
+    expect(
+      MetaSystems.releases.first.bullets.join(' ').toUpperCase(),
+      contains('RIFT'),
+    );
   });
 
   test('guides and Ascend roadmap stay honest for TODAY chase', () {
@@ -145,9 +151,15 @@ void main() {
     expect(AscendRoadmap.unlockAtAl(2), contains('Forge'));
     expect(GameLogic.partySlot5EssenceCost, 80);
     expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
-    expect(AscendRoadmap.unlockAtAl(10), contains('Gauntlet'));
+    expect(AscendRoadmap.unlockAtAl(20), contains('Gauntlet'));
+    expect(AscendRoadmap.unlockAtAl(20), contains('KEYSTONE'));
+    expect(AscendRoadmap.unlockAtAl(20), contains('Rifts'));
     expect(AscendRoadmap.chaseTeaser(0), contains('AL1'));
     expect(AscendRoadmap.kitUnlockSummary(4), isNotNull);
+
+    final rift = GameGuides.topics.firstWhere((t) => t.id == 'rift');
+    expect(rift.title.toUpperCase(), contains('RIFT'));
+    expect(rift.body, contains('AL20'));
 
     final classes = GameGuides.topics.firstWhere((t) => t.id == 'classes');
     expect(classes.body, contains('AL2'));

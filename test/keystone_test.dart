@@ -52,7 +52,10 @@ void main() {
   });
 
   test('enter dungeon locks keystone run; leave clears it', () {
-    final base = GameLogic.createInitialState().copyWith(hardmodeLevel: 3);
+    final base = GameLogic.createInitialState().copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel,
+      hardmodeLevel: 3,
+    );
     final entered = GameLogic.enterDungeon(base, dungeonId: 'sandy');
     expect(entered.keystoneRunActive, isTrue);
     expect(entered.keystoneRunLevel, 3);
@@ -67,6 +70,7 @@ void main() {
 
   test('timed boss clear upgrades preferred key and vault score', () {
     var state = GameLogic.createInitialState().copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel,
       hardmodeLevel: 2,
       dungeonMode: DungeonMode.push,
       metaDepth: const MetaDepthState(
@@ -176,12 +180,15 @@ void main() {
   });
 
   test('challenge essence uses run level, not hub dial alone', () {
-    final hubOnly = GameLogic.createInitialState().copyWith(hardmodeLevel: 5);
+    final hubOnly = GameLogic.createInitialState().copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel,
+      hardmodeLevel: 5,
+    );
     expect(MetaSystems.challengeClearEssenceBonus(hubOnly), 0);
 
     final inRun = hubOnly.copyWith(
       keystoneRunActive: true,
-      keystoneRunLevel: 3, // AL0 cap is KEY +3
+      keystoneRunLevel: 3,
     );
     expect(MetaSystems.challengeClearEssenceBonus(inRun), 3);
   });
@@ -196,12 +203,12 @@ void main() {
     expect(GameLogic.canUseConsumable(state), isFalse);
   });
 
-  test('legacy hardmodeLevel migrates within new 0–20 clamp', () {
+  test('legacy hardmodeLevel clamps to 0 before AL20', () {
     final json = GameLogic.createInitialState()
         .copyWith(hardmodeLevel: 10)
         .toJson();
     final loaded = GameLogic.stateFromJson(json);
-    expect(loaded.hardmodeLevel, 10);
+    expect(loaded.hardmodeLevel, 0);
     expect(loaded.keystoneRunActive, isFalse);
   });
 
@@ -210,7 +217,7 @@ void main() {
     () {
       final json = GameLogic.createInitialState()
           .copyWith(
-            ascensionLevel: 5,
+            ascensionLevel: GameLogic.maxAscensionLevel,
             inDungeon: true,
             hardmodeLevel: 6,
             keystoneRunActive: false,
@@ -224,15 +231,19 @@ void main() {
     },
   );
 
-  test('ascend keeps high KEY preference up to AL-gated max', () {
+  test('ascend at AL20 keeps KEY preference', () {
     final ready = GameLogic.createInitialState(
       now: DateTime(2026, 8, 1),
-    ).copyWith(ascensionLevel: 15, bossVictories: 16, hardmodeLevel: 15);
+    ).copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel - 1,
+      bossVictories: 99,
+      hardmodeLevel: 0,
+    );
     expect(GameLogic.canAscend(ready), isTrue);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 2));
-    expect(ascended.ascensionLevel, 16);
-    expect(ascended.effectiveMaxHardmode, 19);
-    expect(ascended.hardmodeLevel, 15);
+    expect(ascended.ascensionLevel, GameLogic.maxAscensionLevel);
+    expect(ascended.effectiveMaxHardmode, Keystone.maxLevel);
+    expect(GameLogic.showKeystoneJargon(ascended), isTrue);
   });
 
   test('ensureDailyVault migrates legacy weekly progress once', () {

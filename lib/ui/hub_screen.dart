@@ -9,6 +9,7 @@ import '../core/hub_chase.dart';
 import '../core/keystone.dart';
 import '../core/menu_alerts.dart';
 import '../core/meta_systems.dart';
+import '../core/rift.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
 import 'cave_atmosphere.dart';
@@ -216,6 +217,8 @@ class _HubScreenState extends State<HubScreen>
         );
       case HubChaseKind.gauntletMilestone:
         return ('GAUNTLET', () => confirmGauntletRun(context, director));
+      case HubChaseKind.riftMilestone:
+        return ('RIFT', () => confirmRiftRun(context, director));
       case HubChaseKind.weekGoal:
         // Prefer ENTER for vault-style week goals; Gauntlet button if title hints.
         if (chase.title.toLowerCase().contains('gauntlet')) {
@@ -633,6 +636,14 @@ class _HubScreenState extends State<HubScreen>
                                           context,
                                           director,
                                         ),
+                                        showRift:
+                                            GameLogic.canEnterRift(state) ||
+                                            state.ascensionLevel >=
+                                                Rift.minAscension,
+                                        riftBest:
+                                            state.metaDepth.riftBestTier,
+                                        onRift: () =>
+                                            confirmRiftRun(context, director),
                                         weeklyReady:
                                             GameLogic.canClaimDailyVault(state),
                                         weeklyProgress:

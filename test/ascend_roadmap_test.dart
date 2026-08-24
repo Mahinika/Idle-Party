@@ -12,6 +12,14 @@ void main() {
       AscendRoadmap.unlockAtAl(GameLogic.gauntletMinAscension),
       contains('Gauntlet'),
     );
+    expect(
+      AscendRoadmap.unlockAtAl(GameLogic.gauntletMinAscension),
+      contains('KEYSTONE'),
+    );
+    expect(
+      AscendRoadmap.unlockAtAl(GameLogic.gauntletMinAscension),
+      contains('Rifts'),
+    );
     expect(AscendRoadmap.unlockAtAl(5), contains('Guardian'));
     expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
     expect(AscendRoadmap.unlockAtAl(4), contains('Survival'));
@@ -22,7 +30,9 @@ void main() {
   test('nextGoalLine points at the nearest unlock', () {
     expect(AscendRoadmap.nextGoalLine(0), contains('AL1'));
     expect(AscendRoadmap.nextGoalLine(1), contains('AL2'));
-    expect(AscendRoadmap.nextGoalLine(9), contains('Gauntlet'));
+    expect(AscendRoadmap.nextGoalLine(9), contains('AL10'));
+    expect(AscendRoadmap.nextGoalLine(19), contains('Gauntlet'));
+    expect(AscendRoadmap.nextGoalLine(19), contains('Rifts'));
     expect(AscendRoadmap.chaseTeaser(0), contains('AL1'));
   });
 }

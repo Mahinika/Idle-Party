@@ -200,7 +200,7 @@ abstract final class GameGuides {
           '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'
           '• AL5: Blood DK, Frost DK, Guardian\n'
           '• AL6: Affliction, Demonology\n'
-          '• AL10: Infinity Gauntlet\n\n'
+          '• AL20: KEYSTONE, Infinity Gauntlet, and Rifts (endgame)\n\n'
           'Some kits also unlock from zone clears or the Prestige Shop — see each '
           'spec’s unlock hint in PARTY.',
     ),
@@ -227,11 +227,23 @@ abstract final class GameGuides {
       id: 'gauntlet',
       title: 'INFINITY GAUNTLET',
       body:
-          'Unlocks at Ascension Level 10 (Spireborn).\n\n'
+          'Unlocks at Ascension Level 20 (endgame).\n\n'
           '• Endless Crystal Spire climb — each floor gets harder.\n'
           '• Gold and essence scale with floor; boss every 5 floors.\n'
           '• Wipe or leave returns to hub; best floor is saved.\n'
           '• Does not count toward Ascend boss requirements.',
+    ),
+    GuideTopic(
+      id: 'rift',
+      title: 'RIFTS',
+      body:
+          'Unlocks at Ascension Level 20 (AL20) with KEY and Gauntlet.\n\n'
+          '• Timed kill challenges — clear the kill quota before the par timer.\n'
+          '• Higher tiers: tougher packs and less time.\n'
+          '• Success pays essence + gold and unlocks the next tier '
+          '(fast clears unlock +2).\n'
+          '• Wipe or timeout ends the run with a small consolation.\n'
+          '• Set preferred tier under META → KEY · RIFT, or tap RIFT on the hub.',
     ),
     GuideTopic(
       id: 'apex',
@@ -306,18 +318,17 @@ abstract final class GameGuides {
       body:
           'Keystone affixes still rotate each ISO week, but the vault is daily.\n\n'
           '• Early on: TODAY tells you to grow the party in the starter zone. '
-          'Daily, KEY, and vault-start wait until you have beaten a boss (or Ascended).\n'
-          '• After that first hour, TODAY chases KEY +1 (higher iLvl loot) until '
-          'your key hits the AL cap — then Daily / vault / Will can surface.\n'
+          'Daily and vault-start wait until you have beaten a boss (or Ascended).\n'
           '• Fill today’s vault with 1 dungeon clear, then claim essence.\n'
-          '• Later: time a KEY +2 (or higher) for a bigger claim — META → KEY.\n'
+          '• At AL20: KEYSTONE unlocks — time a KEY +2 (or higher) for a bigger '
+          'vault claim (META → KEY). TODAY may chase KEY / Gauntlet / Rift.\n'
           '• Hub TODAY and offline Up next share one chase (claim → READY → '
           'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
           '• Welcome-back shows one wow line, a few highlights, then Up next.\n'
           '• TODAY flashes READY / ALMOST when a claim or Ascend is close.\n'
           '• First vault claim of each calendar month also pays a season bonus.\n'
           '• Each ISO week has a named local season beat (KEY +2 or Gauntlet floor) '
-          '— TODAY / META may chase it; claim pays essence + title.\n'
+          '— TODAY / META may chase it after AL20 for KEY weeks; claim pays essence + title.\n'
           '• Progress resets at UTC midnight.\n'
           '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
     ),
@@ -343,8 +354,9 @@ abstract final class GameGuides {
       id: 'hardmode',
       title: 'KEYSTONE RUNS',
       body:
-          'Mythic+-style keys from the hub KEY panel (META → KEY) — set before you enter.\n\n'
-          '• Key level is AL-gated (cap rises with Ascension, up to +20).\n'
+          'Mythic+-style keys from the hub KEY panel (META → KEY) — unlocks at AL20.\n\n'
+          '• Endgame only: set key before you enter a normal zone dungeon.\n'
+          '• Key level caps at +20 at AL20.\n'
           '• Affixes lock on enter (weekly + Fortified/Tyrannical at +4, more at higher keys).\n'
           '• Idle-friendly timer: AFK time counts; beat the boss under par to TIMED upgrade.\n'
           '• Overtime = depleted (clear still counts, no key upgrade).\n'
@@ -352,14 +364,14 @@ abstract final class GameGuides {
           '• Optional Boss Rush / No Flask add extra affixes + essence.\n'
           '• Higher keys drop higher iLvl gear (KEY +10 is +20 iLvl) and pay '
           'gold in line with the harder packs — not a gold tax.\n'
-          '• After the first boss/Ascend, hub TODAY points at the next KEY until '
-          'you are at the AL cap.',
+          '• At AL20, hub TODAY may chase KEY until your preferred key is at the cap.',
     ),
     GuideTopic(
       id: 'ascend',
       title: 'ASCEND',
       body:
-          'Prestige when Ascend unlocks in the hub.\n\n'
+          'Prestige when Ascend unlocks in the hub (AL1–AL20).\n\n'
+          '• AL20 is the cap — endgame is KEY +20, Gauntlet, Rifts, vault, and boards.\n'
           '• Each Ascend grants a lasting Blessing: +2 ATK · +8 DEF · +24 STA · '
           '+3% gold (stacks forever). See Forge → KEEP.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
@@ -375,9 +387,10 @@ abstract final class GameGuides {
       title: 'DAILY RUN',
       body:
           'A daily echo dungeon appears on the hub when available.\n\n'
-          '• After the first hour, TODAY chases KEY — Daily is extra essence, '
-          'not the default habit.\n'
-          '• TODAY offers Daily when your KEY is at the AL cap (or KEY is not the grind).\n'
+          '• After the first hour, TODAY chases Ascend / zones / Daily — not KEY '
+          '(KEY unlocks at AL20).\n'
+          '• At AL20, TODAY may chase KEY when your preferred key is below cap; '
+          'Daily is extra essence when KEY is capped.\n'
           '• Clear the required floor(s) for a flat essence reward.\n'
           '• May let you visit a locked zone for the day.\n'
           '• Claim once per day — good free essence.',

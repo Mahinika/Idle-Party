@@ -170,9 +170,6 @@ abstract final class AscendTitles {
     10: 'Spireborn',
     15: 'Deep Will',
     20: 'Mythic Echo',
-    25: 'Worldwalker',
-    30: 'Crownless',
-    40: 'Idle Sovereign',
   };
 }
 
@@ -229,6 +226,10 @@ class MetaDepthState {
     this.pendingHeroReveals = const <String>[],
     this.claimedWillRanks = const <String>[],
     this.claimedGauntletMilestones = const <String>[],
+    this.riftBestTier = 0,
+    this.riftPreferredTier = 1,
+    this.lifetimeRiftClears = 0,
+    this.claimedRiftMilestones = const <String>[],
     this.godHandStyle = 0,
     this.dailyEssenceBonusLevel = 0,
     this.gauntletGoldBonusLevel = 0,
@@ -314,6 +315,18 @@ class MetaDepthState {
 
   /// Lifetime gauntlet floor clears.
   final int lifetimeGauntletFloors;
+
+  /// Highest Rift tier cleared (meta — survives Ascend).
+  final int riftBestTier;
+
+  /// Preferred Rift tier dial on hub (1…best+1).
+  final int riftPreferredTier;
+
+  /// Lifetime successful Rift clears.
+  final int lifetimeRiftClears;
+
+  /// Claimed Rift milestone ids (`r5`, `r10`, `r20`).
+  final List<String> claimedRiftMilestones;
 
   final List<String> codexClaims;
   final int soulboundRefine;
@@ -457,6 +470,10 @@ class MetaDepthState {
     int? highestHardmodeCleared,
     int? gauntletBestFloor,
     int? lifetimeGauntletFloors,
+    int? riftBestTier,
+    int? riftPreferredTier,
+    int? lifetimeRiftClears,
+    List<String>? claimedRiftMilestones,
     List<String>? codexClaims,
     int? soulboundRefine,
     bool? soulboundIsArmor,
@@ -539,6 +556,11 @@ class MetaDepthState {
       gauntletBestFloor: gauntletBestFloor ?? this.gauntletBestFloor,
       lifetimeGauntletFloors:
           lifetimeGauntletFloors ?? this.lifetimeGauntletFloors,
+      riftBestTier: riftBestTier ?? this.riftBestTier,
+      riftPreferredTier: riftPreferredTier ?? this.riftPreferredTier,
+      lifetimeRiftClears: lifetimeRiftClears ?? this.lifetimeRiftClears,
+      claimedRiftMilestones:
+          claimedRiftMilestones ?? this.claimedRiftMilestones,
       codexClaims: codexClaims ?? this.codexClaims,
       soulboundRefine: soulboundRefine ?? this.soulboundRefine,
       soulboundIsArmor: soulboundIsArmor ?? this.soulboundIsArmor,
@@ -625,6 +647,10 @@ class MetaDepthState {
     'highestHardmodeCleared': highestHardmodeCleared,
     'gauntletBestFloor': gauntletBestFloor,
     'lifetimeGauntletFloors': lifetimeGauntletFloors,
+    'riftBestTier': riftBestTier,
+    'riftPreferredTier': riftPreferredTier,
+    'lifetimeRiftClears': lifetimeRiftClears,
+    'claimedRiftMilestones': claimedRiftMilestones,
     'codexClaims': codexClaims,
     'soulboundRefine': soulboundRefine,
     'soulboundIsArmor': soulboundIsArmor,
@@ -724,6 +750,13 @@ class MetaDepthState {
       gauntletBestFloor: (json['gauntletBestFloor'] as num?)?.toInt() ?? 0,
       lifetimeGauntletFloors:
           (json['lifetimeGauntletFloors'] as num?)?.toInt() ?? 0,
+      riftBestTier: ((json['riftBestTier'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      riftPreferredTier: ((json['riftPreferredTier'] as num?)?.toInt() ?? 1)
+          .clamp(1, 20),
+      lifetimeRiftClears: (json['lifetimeRiftClears'] as num?)?.toInt() ?? 0,
+      claimedRiftMilestones:
+          (json['claimedRiftMilestones'] as List<dynamic>?)?.cast<String>() ??
+          const [],
       codexClaims:
           (json['codexClaims'] as List<dynamic>?)?.cast<String>() ?? const [],
       soulboundRefine: (json['soulboundRefine'] as num?)?.toInt() ?? 0,

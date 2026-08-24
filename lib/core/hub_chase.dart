@@ -10,6 +10,7 @@ import 'local_season.dart';
 import 'market_listings_service.dart';
 import 'menu_alerts.dart';
 import 'meta_systems.dart';
+import 'rift.dart';
 
 /// Kind of hub "today" chase — claimables first, then progress goals.
 enum HubChaseKind {
@@ -29,6 +30,7 @@ enum HubChaseKind {
   dailyVaultProgress,
   willRank,
   gauntletMilestone,
+  riftMilestone,
   unlockZone,
   dailyRun,
 
@@ -168,18 +170,16 @@ class HubChase {
     }
 
     // KEY +1 timed but not yet claimable (need KEY +2) — cliffhanger.
-    // Early players get soft copy; KEY jargon waits for mid layer.
-    if (!md.dailyVaultClaimed &&
+    // Only after KEY unlocks at AL20.
+    if (GameLogic.showKeystoneJargon(state) &&
+        !md.dailyVaultClaimed &&
         md.dailyVaultClears < GameLogic.dailyVaultClearTarget &&
         md.dailyBestTimedKey == 1) {
-      final keyTalk = GameLogic.showKeystoneJargon(state);
-      return HubChase(
+      return const HubChase(
         kind: HubChaseKind.dailyVaultProgress,
-        title: keyTalk ? 'Almost — time KEY +2' : 'Almost — fill the vault',
-        detail: keyTalk
-            ? 'Best timed KEY +1 today — one higher key fills the vault.'
-            : 'One more strong timed clear fills today’s vault.',
-        progressLabel: keyTalk ? 'KEY +1' : 'Almost',
+        title: 'Almost — time KEY +2',
+        detail: 'Best timed KEY +1 today — one higher key fills the vault.',
+        progressLabel: 'KEY +1',
         urgency: HubChaseUrgency.almost,
       );
     }
@@ -197,6 +197,10 @@ class HubChase {
     if (gauntletAlmost != null &&
         gauntletAlmost.urgency == HubChaseUrgency.almost) {
       return gauntletAlmost;
+    }
+    final riftAlmost = _nextRiftChase(state);
+    if (riftAlmost != null && riftAlmost.urgency == HubChaseUrgency.almost) {
+      return riftAlmost;
     }
     final weekAlmostEarly = _weekGoalChase(state, clock, almostOnly: true);
     if (weekAlmostEarly != null) return weekAlmostEarly;
@@ -249,6 +253,9 @@ class HubChase {
 
     final gauntlet = _nextGauntletChase(state);
     if (gauntlet != null) return gauntlet;
+
+    final rift = _nextRiftChase(state);
+    if (rift != null) return rift;
 
     final weekAlmost = _weekGoalChase(state, clock, almostOnly: true);
     if (weekAlmost != null) return weekAlmost;
@@ -323,6 +330,12 @@ class HubChase {
         : GameLogic.isoWeekKey(clock);
     final week = LocalSeasonCatalog.forWeekKey(weekKey);
     if (!week.hasGoal) return null;
+    // KEY-only weeks stay quiet until AL20 unlock.
+    if (week.timedKeyTarget > 0 &&
+        week.gauntletFloorTarget <= 0 &&
+        state.ascensionLevel < GameLogic.keystoneMinAscension) {
+      return null;
+    }
     if (LocalSeasonCatalog.weekGoalClaimed(state, week)) return null;
     if (LocalSeasonCatalog.weekGoalReady(state, week)) return null;
 
@@ -346,12 +359,11 @@ class HubChase {
     );
   }
 
-  /// Next KEY after the first hour, until preferred key hits the AL cap.
-  ///
-  /// Uses KEY words even before [GameLogic.showKeystoneJargon] — this is the
-  /// habit loop, not mid-layer vault copy.
+  /// Next KEY after AL20 unlock, until preferred key hits the AL cap.
   static HubChase? _keystonePushChase(GameState state) {
+    if (state.ascensionLevel < GameLogic.keystoneMinAscension) return null;
     final cap = Keystone.maxForAl(state.ascensionLevel);
+    if (cap <= 0) return null;
     final pref = state.hardmodeLevel.clamp(0, cap);
     if (pref >= cap) return null;
     final target = pref <= 0 ? 1 : pref;
@@ -374,6 +386,9 @@ class HubChase {
     required int bossesLeft,
     required HubChaseUrgency urgency,
   }) {
+    if (GameLogic.isMaxAscension(state)) {
+      return _endgamePushChase(state);
+    }
     final dungeonId = GameLogic.recommendedDungeonId(state);
     final dungeon = DungeonCatalog.byId(dungeonId);
     final kitTeaser = AscendRoadmap.nextMissingKitTeaser(state);
@@ -398,6 +413,26 @@ class HubChase {
       progressLabel: 'Ascend ${state.bossVictories}/$bossesNeed',
       urgency: urgency,
       zoneId: dungeonId,
+    );
+  }
+
+  /// AL20 cap — no more Ascend; chase KEY / Gauntlet / Rift / vault.
+  static HubChase _endgamePushChase(GameState state) {
+    final md = state.metaDepth;
+    final cap = state.effectiveMaxHardmode;
+    final pref = state.hardmodeLevel.clamp(0, cap);
+    final gauntlet = md.gauntletBestFloor;
+    final rift = md.riftBestTier;
+    final timed = md.seasonBestTimedKey;
+    final timedBit = timed > 0 ? 'Best timed KEY +$timed · ' : '';
+    return HubChase(
+      kind: HubChaseKind.clearFloors,
+      title: 'AL20 endgame',
+      detail:
+          '${timedBit}Gauntlet F$gauntlet · Rift R$rift · vault · boards · '
+          'Blessing ×${md.ascendBlessings}',
+      progressLabel: 'KEY +$pref · G F$gauntlet · R$rift',
+      zoneId: GameLogic.recommendedDungeonId(state),
     );
   }
 
@@ -447,6 +482,43 @@ class HubChase {
             : 'Best F$best — $need floors to F$floor (+${pay}e).',
         progressLabel: 'F$best → F$floor',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
+      );
+    }
+    return null;
+  }
+
+  static HubChase? _nextRiftChase(GameState state) {
+    if (state.ascensionLevel < Rift.minAscension) return null;
+    final best = state.metaDepth.riftBestTier;
+    final claimed = state.metaDepth.claimedRiftMilestones;
+    for (final tier in RiftMilestones.tiers) {
+      final id = RiftMilestones.claimId(tier);
+      if (claimed.contains(id)) continue;
+      if (best >= tier) continue;
+      final need = tier - best;
+      final almost = need <= 2 && best > 0;
+      final pay = RiftMilestones.essenceForTier(tier);
+      return HubChase(
+        kind: HubChaseKind.riftMilestone,
+        title: almost ? 'Almost Rift R$tier' : 'Rift R$tier',
+        detail: best <= 0
+            ? 'Enter a Rift and clear tiers for +${pay}e at R$tier.'
+            : 'Best R$best — $need tiers to R$tier (+${pay}e).',
+        progressLabel: 'R$best → R$tier',
+        urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
+      );
+    }
+    // No milestone left — nudge next selectable tier if below max.
+    final next = Rift.maxSelectableTier(best);
+    if (best < Rift.maxTier && next > best) {
+      return HubChase(
+        kind: HubChaseKind.riftMilestone,
+        title: 'Clear Rift R$next',
+        detail:
+            'Timed kill challenge — ${Rift.killTarget(next)} kills before '
+            '${Rift.formatTimer(Rift.parTimeMs(next))}.',
+        progressLabel: 'R$next',
+        urgency: HubChaseUrgency.normal,
       );
     }
     return null;

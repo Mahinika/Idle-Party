@@ -19,10 +19,32 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.48';
+  static const String currentVersion = '1.12.51';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.51',
+      bullets: <String>[
+        'AL20 endgame: KEYSTONE and Infinity Gauntlet unlock at AL20 — mid-game chases Ascend, zones, Daily, and vault clears.',
+        'New Rifts at AL20: timed kill challenges with escalating tiers, essence/gold payouts, and hub + META → KEY entry.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.50',
+      bullets: <String>[
+        'Infinity Gauntlet unlocks at AL20 — endgame climb, not mid-progress.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.49',
+      bullets: <String>[
+        'AL20 is now the Ascension cap — endgame lives here (KEY +20, Gauntlet, vault, boards). Hub and Forge say MAX at AL20.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.48',
       bullets: <String>[

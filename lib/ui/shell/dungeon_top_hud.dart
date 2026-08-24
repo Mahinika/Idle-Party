@@ -4,6 +4,7 @@ import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/gold_income.dart';
 import '../../core/keystone.dart';
+import '../../core/rift.dart';
 import '../../models/dungeon_mode.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
@@ -81,6 +82,14 @@ class DungeonTopHud extends StatelessWidget {
                     if (state.inGauntlet)
                       DungeonModeChip(
                         label: 'GAUNTLET',
+                        selected: true,
+                        dense: true,
+                        onTap: () {},
+                      )
+                    else if (state.inRift)
+                      DungeonModeChip(
+                        label:
+                            'R${state.riftTier} ${state.riftKills}/${state.riftKillTarget}',
                         selected: true,
                         dense: true,
                         onTap: () {},
@@ -292,6 +301,18 @@ class DungeonTopHud extends StatelessWidget {
                         if (state.inGauntlet)
                           DungeonModeChip(
                             label: 'GAUNTLET F$floor',
+                            selected: true,
+                            onTap: () {},
+                          )
+                        else if (state.inRift)
+                          DungeonModeChip(
+                            label: Rift.progressLabel(
+                              kills: state.riftKills,
+                              target: state.riftKillTarget,
+                              timerMs: state.riftTimerMs,
+                              parMs: state.riftParMs,
+                              tier: state.riftTier,
+                            ),
                             selected: true,
                             onTap: () {},
                           )

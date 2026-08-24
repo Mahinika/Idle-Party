@@ -10,6 +10,7 @@ import 'dungeon_generator.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'keystone.dart';
+import 'rift.dart';
 
 /// How hard a room is, who stands in it, and what killing it is worth.
 ///
@@ -344,6 +345,12 @@ abstract final class EncounterFactory {
       packAttack = max(1, (packAttack * threat).round());
       packHp = max(1, (packHp * threat).round());
       // Gold mul applied once on clear via goldGain — not here.
+    }
+    if (fromState?.inRift ?? false) {
+      final threat = Rift.threatMul(fromState!.riftTier);
+      final dens = Rift.densityMul(fromState.riftTier);
+      packAttack = max(1, (packAttack * threat * dens).round());
+      packHp = max(1, (packHp * threat * dens).round());
     }
     final dungeon = DungeonCatalog.byId(id);
     final bossName = dungeon.bossName;

@@ -67,7 +67,8 @@ abstract final class AscendRoadmap {
     }
     if (al == GameLogic.gauntletMinAscension) {
       final kits = kitUnlockSummary(al);
-      return kits == null ? 'Infinity Gauntlet' : '$kits · Infinity Gauntlet';
+      const endgame = 'KEYSTONE · Infinity Gauntlet · Rifts';
+      return kits == null ? endgame : '$kits · $endgame';
     }
 
     final kits = kitUnlockSummary(al);
@@ -96,7 +97,10 @@ abstract final class AscendRoadmap {
 
   /// Next meaningful goal from the player’s **current** AL (before Ascend).
   static String nextGoalLine(int currentAl) {
-    for (var al = currentAl + 1; al <= 40; al++) {
+    if (currentAl >= GameLogic.maxAscensionLevel) {
+      return 'Endgame: KEY +${GameLogic.maxAscensionLevel}, Gauntlet, Rifts, vault, boards';
+    }
+    for (var al = currentAl + 1; al <= GameLogic.maxAscensionLevel; al++) {
       final unlock = unlockAtAl(al);
       if (unlock == null) continue;
       return 'Next: AL$al unlocks $unlock';
@@ -116,7 +120,10 @@ abstract final class AscendRoadmap {
 
   /// Compact teaser for TODAY / hub chase detail.
   static String chaseTeaser(int currentAl) {
-    for (var al = currentAl + 1; al <= 40; al++) {
+    if (currentAl >= GameLogic.maxAscensionLevel) {
+      return 'KEY +${GameLogic.maxAscensionLevel} · Gauntlet · Rifts · vault · boards';
+    }
+    for (var al = currentAl + 1; al <= GameLogic.maxAscensionLevel; al++) {
       final unlock = unlockAtAl(al);
       if (unlock == null) continue;
       return 'AL$al → $unlock';

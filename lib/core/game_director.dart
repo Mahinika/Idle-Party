@@ -27,6 +27,7 @@ import 'gold_income.dart';
 import 'logic_notices.dart';
 import 'meta_systems.dart';
 import 'play_games_bridge.dart';
+import 'rift.dart';
 import 'play_games_scores.dart';
 import 'play_leaderboard_ids.dart';
 import 'play_store_update.dart';
@@ -667,6 +668,32 @@ class GameDirector extends ChangeNotifier {
           (_spatialDt * 1000).round(),
         );
       }
+      if (_state.inRift) {
+        _state = GameLogic.advanceRiftTimer(
+          _state,
+          (_spatialDt * 1000).round(),
+        );
+        if (result.kills > 0) {
+          _state = GameLogic.noteRiftKills(_state, result.kills);
+        }
+        final resolved = GameLogic.tryResolveRift(_state);
+        if (resolved != null) {
+          _state = resolved;
+          _spatialTimer?.cancel();
+          _spatialTimer = null;
+          _spatial = null;
+          _awaitingWipeChoice = false;
+          showToast(
+            _state.metaDepth.riftBestTier > 0
+                ? 'Rift resolved · best R${_state.metaDepth.riftBestTier}'
+                : 'Rift ended',
+            life: 3.0,
+          );
+          notifyListeners();
+          unawaited(_persistFlush());
+          return;
+        }
+      }
       // Only bank this-tick kill gold — clear-frame must not re-fold the room.
       // Kill gold is credited immediately below (survives wipe).
       // Credit kill gold immediately so wipe cannot erase floater "+Ng".
@@ -834,6 +861,11 @@ class GameDirector extends ChangeNotifier {
             'WIPED — Gauntlet ends on F$floor (best floor saved)',
             life: 4,
           );
+        } else if (_state.inRift) {
+          showToast(
+            'WIPED — Rift R${_state.riftTier} ends',
+            life: 4,
+          );
         } else if (MetaSystems.isActiveDailyRun(_state)) {
           showToast(
             'WIPED — Daily echo · Retry restarts this floor, or Hub',
@@ -994,6 +1026,24 @@ class GameDirector extends ChangeNotifier {
         'Gauntlet ended on F$floor · best F${_state.metaDepth.gauntletBestFloor}',
         life: 3.2,
       );
+      final payoffs = LogicNotices.takeMetaPayoffs();
+      if (payoffs.isNotEmpty) {
+        showToast(payoffs.join(' · '), life: 3.0);
+      }
+      GameAudio.ui();
+      notifyListeners();
+      unawaited(_persistFlush());
+      return;
+    }
+    if (_state.inRift) {
+      final tier = _state.riftTier;
+      _state = GameLogic.exitToHubHealed(_state);
+      _spatialTimer?.cancel();
+      _spatial = null;
+      _freezeRunIncome();
+      _state = _state.copyWith(lastUpdated: DateTime.now());
+      _syncHubIdleTimer();
+      showToast('Rift R$tier ended', life: 3.2);
       final payoffs = LogicNotices.takeMetaPayoffs();
       if (payoffs.isNotEmpty) {
         showToast(payoffs.join(' · '), life: 3.0);
@@ -1862,6 +1912,42 @@ class GameDirector extends ChangeNotifier {
     );
     notifyListeners();
     unawaited(_persistFlush());
+  }
+
+  void enterRift({int? tier}) {
+    if (_isLoading) return;
+    if (!GameLogic.canEnterRift(_state)) {
+      showToast(
+        _state.ascensionLevel < Rift.minAscension
+            ? 'Rift unlocks at AL${Rift.minAscension}'
+            : 'Leave the dungeon first',
+        life: 2.0,
+      );
+      return;
+    }
+    _flushHubIdle();
+    _state = GameLogic.enterRift(_state, tier: tier);
+    _lastStashLen = _state.gearStash.length;
+    _autosaveAccum = 0;
+    _beginRunIncomeSession();
+    _rebuildSpatial();
+    if (enableSpatialLoop) {
+      _startSpatialLoop();
+    }
+    _syncHubIdleTimer();
+    showToast(
+      'Rift R${_state.riftTier} · ${_state.riftKillTarget} kills · '
+      '${Rift.formatTimer(_state.riftParMs)}',
+      life: 3.0,
+    );
+    notifyListeners();
+    unawaited(_persistFlush());
+  }
+
+  void setRiftPreferredTier(int tier) {
+    _state = GameLogic.setRiftPreferredTier(_state, tier);
+    notifyListeners();
+    _persist();
   }
 
   /// Playtest helper: bump AL to unlock threshold then enter Gauntlet.

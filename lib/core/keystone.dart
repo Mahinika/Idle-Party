@@ -17,9 +17,14 @@ abstract final class Keystone {
     'iron',
   ];
 
-  /// AL-gated key cap (0 = off). AL0 → 3, grows to [maxLevel].
-  static int maxForAl(int ascensionLevel) =>
-      min(maxLevel, max(2, 3 + ascensionLevel));
+  /// KEY unlocks at endgame AL (same band as Gauntlet / max Ascension).
+  static const int minAscension = 20;
+
+  /// AL-gated key cap (0 = off until [minAscension], then up to [maxLevel]).
+  static int maxForAl(int ascensionLevel) {
+    if (ascensionLevel < minAscension) return 0;
+    return min(maxLevel, max(2, 3 + ascensionLevel));
+  }
 
   /// Threat / pack density vs old HM+10 ≈ 10× at key 20.
   static double threatMul(int key) => 1.0 + key.clamp(0, maxLevel) * 0.45;
