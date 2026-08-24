@@ -28,6 +28,7 @@ import 'logic_notices.dart';
 import 'meta_systems.dart';
 import 'play_games_bridge.dart';
 import 'rift.dart';
+import 'greater_rift.dart';
 import 'play_games_scores.dart';
 import 'play_leaderboard_ids.dart';
 import 'play_store_update.dart';
@@ -694,6 +695,32 @@ class GameDirector extends ChangeNotifier {
           return;
         }
       }
+      if (_state.inGreaterRift) {
+        _state = GameLogic.advanceGreaterRiftTimer(
+          _state,
+          (_spatialDt * 1000).round(),
+        );
+        if (result.kills > 0) {
+          _state = GameLogic.noteGreaterRiftKills(_state, result.kills);
+        }
+        final resolved = GameLogic.tryResolveGreaterRift(_state);
+        if (resolved != null) {
+          _state = resolved;
+          _spatialTimer?.cancel();
+          _spatialTimer = null;
+          _spatial = null;
+          _awaitingWipeChoice = false;
+          showToast(
+            _state.metaDepth.grBestTier > 0
+                ? 'Greater Rift · best GR${_state.metaDepth.grBestTier}'
+                : 'Greater Rift ended',
+            life: 3.0,
+          );
+          notifyListeners();
+          unawaited(_persistFlush());
+          return;
+        }
+      }
       // Only bank this-tick kill gold — clear-frame must not re-fold the room.
       // Kill gold is credited immediately below (survives wipe).
       // Credit kill gold immediately so wipe cannot erase floater "+Ng".
@@ -866,6 +893,11 @@ class GameDirector extends ChangeNotifier {
             'WIPED — Rift R${_state.riftTier} ends',
             life: 4,
           );
+        } else if (_state.inGreaterRift) {
+          showToast(
+            'WIPED — Greater Rift GR${_state.grTier} ends',
+            life: 4,
+          );
         } else if (MetaSystems.isActiveDailyRun(_state)) {
           showToast(
             'WIPED — Daily echo · Retry restarts this floor, or Hub',
@@ -907,7 +939,7 @@ class GameDirector extends ChangeNotifier {
         _state = GameLogic.completeCurrentRoom(
           _state,
           goldGain: gold,
-          skipLootRoll: !wasTreasure,
+          skipLootRoll: _state.inGreaterRift || !wasTreasure,
         ).copyWith(lastUpdated: DateTime.now());
         _noteLifetimeGold(beforeClear, _state);
         _announceAbilityUnlocks(beforeClear, _state);
@@ -1044,6 +1076,24 @@ class GameDirector extends ChangeNotifier {
       _state = _state.copyWith(lastUpdated: DateTime.now());
       _syncHubIdleTimer();
       showToast('Rift R$tier ended', life: 3.2);
+      final payoffs = LogicNotices.takeMetaPayoffs();
+      if (payoffs.isNotEmpty) {
+        showToast(payoffs.join(' · '), life: 3.0);
+      }
+      GameAudio.ui();
+      notifyListeners();
+      unawaited(_persistFlush());
+      return;
+    }
+    if (_state.inGreaterRift) {
+      final tier = _state.grTier;
+      _state = GameLogic.exitToHubHealed(_state);
+      _spatialTimer?.cancel();
+      _spatial = null;
+      _freezeRunIncome();
+      _state = _state.copyWith(lastUpdated: DateTime.now());
+      _syncHubIdleTimer();
+      showToast('Greater Rift GR$tier ended', life: 3.2);
       final payoffs = LogicNotices.takeMetaPayoffs();
       if (payoffs.isNotEmpty) {
         showToast(payoffs.join(' · '), life: 3.0);
@@ -1950,6 +2000,42 @@ class GameDirector extends ChangeNotifier {
     _persist();
   }
 
+  void enterGreaterRift({int? tier}) {
+    if (_isLoading) return;
+    if (!GameLogic.canEnterGreaterRift(_state)) {
+      showToast(
+        _state.ascensionLevel < GreaterRift.minAscension
+            ? 'Greater Rift unlocks at AL${GreaterRift.minAscension}'
+            : 'Leave the dungeon first',
+        life: 2.0,
+      );
+      return;
+    }
+    _flushHubIdle();
+    _state = GameLogic.enterGreaterRift(_state, tier: tier);
+    _lastStashLen = _state.gearStash.length;
+    _autosaveAccum = 0;
+    _beginRunIncomeSession();
+    _rebuildSpatial();
+    if (enableSpatialLoop) {
+      _startSpatialLoop();
+    }
+    _syncHubIdleTimer();
+    showToast(
+      'Greater Rift GR${_state.grTier} · ${_state.grKillTarget} kills · '
+      '${GreaterRift.formatTimer(_state.grParMs)}',
+      life: 3.0,
+    );
+    notifyListeners();
+    unawaited(_persistFlush());
+  }
+
+  void setGrPreferredTier(int tier) {
+    _state = GameLogic.setGrPreferredTier(_state, tier);
+    notifyListeners();
+    _persist();
+  }
+
   /// Playtest helper: bump AL to unlock threshold then enter Gauntlet.
   /// Call only from debug UI (`kDebugMode`).
   void devEnterGauntlet() {
@@ -2173,6 +2259,17 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     await PlayGamesBridge.showGauntletLeaderboard(month);
+  }
+
+  Future<void> showPlayGreaterRiftLeaderboard() async {
+    final month = _state.metaDepth.leaderboardSeasonKey.isNotEmpty
+        ? _state.metaDepth.leaderboardSeasonKey
+        : GameLogic.isoMonthKey(DateTime.now().toUtc());
+    if (!PlayLeaderboardIds.hasGreaterRiftBoard(month)) {
+      showToast('Greater Rift board not configured yet', life: 2.4);
+      return;
+    }
+    await PlayGamesBridge.showGreaterRiftLeaderboard(month);
   }
 
   CloudConflict peekCloudConflict(GameState cloud) =>

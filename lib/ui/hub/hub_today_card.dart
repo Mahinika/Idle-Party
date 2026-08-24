@@ -183,6 +183,9 @@ class HubUrgentRow extends StatelessWidget {
     required this.showRift,
     required this.riftBest,
     required this.onRift,
+    required this.showGreaterRift,
+    required this.grBest,
+    required this.onGreaterRift,
     required this.weeklyReady,
     required this.weeklyProgress,
     required this.weeklyClaimed,
@@ -208,6 +211,9 @@ class HubUrgentRow extends StatelessWidget {
   final bool showRift;
   final int riftBest;
   final VoidCallback onRift;
+  final bool showGreaterRift;
+  final int grBest;
+  final VoidCallback onGreaterRift;
   final bool weeklyReady;
   final int weeklyProgress;
   final bool weeklyClaimed;
@@ -302,6 +308,16 @@ class HubUrgentRow extends StatelessWidget {
                 : 'RIFT',
             style: KenneyButtonStyle.brown,
             onPressed: onRift,
+          ),
+        ],
+        if (showGreaterRift) ...[
+          const SizedBox(height: 6),
+          KenneyButton(
+            label: grBest > 0
+                ? 'GREATER  ·  best GR$grBest'
+                : 'GREATER RIFT',
+            style: KenneyButtonStyle.red,
+            onPressed: onGreaterRift,
           ),
         ],
       ],

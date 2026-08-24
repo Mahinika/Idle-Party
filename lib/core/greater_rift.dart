@@ -1,52 +1,45 @@
 import 'dart:math';
 
-/// Farm Rift — AL20 timed kill challenge with mid-run gold and gear.
+/// Greater Rift — AL20 prestige timed kill ladder (Play Games ranked).
 ///
-/// Kill [killTarget] enemies before [parTimeMs] expires. Success unlocks the
-/// next tier (+2 if finished with ≥25% time remaining). Not ranked on Play
-/// Games (see [GreaterRift] for prestige boards). SpatialCombat stays the
-/// fight authority — this module is rules + payout only.
-abstract final class Rift {
+/// Harder packs than farm [Rift], thinner mid-run loot (gold OK, no gear),
+/// bigger clear payout. Higher GR tier always ranks above lower; same tier
+/// prefers faster clear.
+abstract final class GreaterRift {
   static const int maxTier = 20;
   static const int minTier = 1;
-
-  /// Same endgame gate as KEY / Gauntlet.
   static const int minAscension = 20;
-
-  /// Zone art for rift chambers.
   static const String dungeonId = 'crystal';
 
   static int clampTier(int tier) => tier.clamp(minTier, maxTier);
 
-  /// Preferred hub dial: 1…best+1 (capped).
   static int maxSelectableTier(int bestCleared) =>
       clampTier(max(minTier, bestCleared + 1));
 
   static int killTarget(int tier) {
     final t = clampTier(tier);
-    return 20 + t * 3; // R1=23 … R20=80
+    return 22 + t * 4; // GR1=26 … GR20=102
   }
 
-  /// Par window — higher tiers get less time.
   static int parTimeMs(int tier) {
     final t = clampTier(tier);
-    return max(45000, 120000 - t * 3000); // R1≈117s … R20=60s
+    return max(40000, 110000 - t * 3200); // tighter than farm Rift
   }
 
-  static double threatMul(int tier) => 1.0 + clampTier(tier) * 0.12;
+  /// ~1.5× farm Rift threat at the same tier band.
+  static double threatMul(int tier) => 1.0 + clampTier(tier) * 0.20;
 
-  static double densityMul(int tier) => 1.0 + clampTier(tier) * 0.08;
+  static double densityMul(int tier) => 1.0 + clampTier(tier) * 0.12;
 
-  static int successEssence(int tier) => 8 + clampTier(tier) * 2;
+  static int successEssence(int tier) => 14 + clampTier(tier) * 3;
 
-  static int failEssence(int tier) => max(1, clampTier(tier) ~/ 4);
+  static int failEssence(int tier) => max(1, clampTier(tier) ~/ 3);
 
   static int successGold(int tier) {
     final t = clampTier(tier);
-    return 80 + t * 35;
+    return 120 + t * 50;
   }
 
-  /// Unlock next tier; +2 when remaining time ≥ 25% of par.
   static int unlockTierAfterSuccess({
     required int clearedTier,
     required int timerMs,
@@ -72,19 +65,19 @@ abstract final class Rift {
     required int parMs,
     required int tier,
   }) =>
-      'R$tier · $kills/$target · ${formatTimer(timerMs)}/${formatTimer(parMs)}';
+      'GR$tier · $kills/$target · ${formatTimer(timerMs)}/${formatTimer(parMs)}';
 }
 
-/// One-time essence at Rift tier milestones.
-abstract final class RiftMilestones {
+/// One-time essence at Greater Rift tier milestones.
+abstract final class GreaterRiftMilestones {
   static const tiers = <int>[5, 10, 20];
 
   static int essenceForTier(int tier) => switch (tier) {
-        5 => 18,
-        10 => 36,
-        20 => 72,
-        _ => 10,
+        5 => 24,
+        10 => 48,
+        20 => 96,
+        _ => 12,
       };
 
-  static String claimId(int tier) => 'r$tier';
+  static String claimId(int tier) => 'gr$tier';
 }

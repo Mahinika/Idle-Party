@@ -200,7 +200,7 @@ abstract final class GameGuides {
           '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'
           '• AL5: Blood DK, Frost DK, Guardian\n'
           '• AL6: Affliction, Demonology\n'
-          '• AL20: KEYSTONE, Infinity Gauntlet, and Rifts (endgame)\n\n'
+          '• AL20: KEYSTONE, Infinity Gauntlet, Rifts, and Greater Rifts (endgame)\n\n'
           'Some kits also unlock from zone clears or the Prestige Shop — see each '
           'spec’s unlock hint in PARTY.',
     ),
@@ -237,13 +237,24 @@ abstract final class GameGuides {
       id: 'rift',
       title: 'RIFTS',
       body:
-          'Unlocks at Ascension Level 20 (AL20) with KEY and Gauntlet.\n\n'
+          'Farm mode at Ascension Level 20 (AL20).\n\n'
           '• Timed kill challenges — clear the kill quota before the par timer.\n'
-          '• Higher tiers: tougher packs and less time.\n'
-          '• Success pays essence + gold and unlocks the next tier '
-          '(fast clears unlock +2).\n'
+          '• Gold and gear drop during the run; success also pays essence + gold.\n'
+          '• Higher tiers: tougher packs and less time; fast clears unlock +2.\n'
           '• Wipe or timeout ends the run with a small consolation.\n'
+          '• Not ranked on Play Games — use Greater Rift for boards.\n'
           '• Set preferred tier under META → KEY · RIFT, or tap RIFT on the hub.',
+    ),
+    GuideTopic(
+      id: 'greater_rift',
+      title: 'GREATER RIFTS',
+      body:
+          'Prestige mode at Ascension Level 20 — harder than farm Rifts.\n\n'
+          '• Timed kill quota on a tougher ladder (GR1–GR20).\n'
+          '• Mid-run: gold OK, no gear drops — big essence + gold on clear.\n'
+          '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
+          '• Season ranks on META → KEY · BOARDS (Play Games).\n'
+          '• Tap GREATER on the hub or set tier under META → KEY.',
     ),
     GuideTopic(
       id: 'apex',
@@ -371,7 +382,7 @@ abstract final class GameGuides {
       title: 'ASCEND',
       body:
           'Prestige when Ascend unlocks in the hub (AL1–AL20).\n\n'
-          '• AL20 is the cap — endgame is KEY +20, Gauntlet, Rifts, vault, and boards.\n'
+          '• AL20 is the cap — endgame is KEY +20, Gauntlet, Rifts, Greater Rifts, vault, and boards.\n'
           '• Each Ascend grants a lasting Blessing: +2 ATK · +8 DEF · +24 STA · '
           '+3% gold (stacks forever). See Forge → KEEP.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'

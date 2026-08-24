@@ -75,8 +75,9 @@ class OfflineSim {
     var maxFloors = GameLogic.offlineFloorBudget(seconds);
     // Gauntlet AFK: hard soft-cap so offline can't mint endless climb rewards.
     if (state.inGauntlet) maxFloors = min(maxFloors, 6);
-    // Rift AFK: at most one wave budget — timer/kills resolve the run.
+    // Rift / Greater Rift AFK: short wave budget — timer/kills resolve the run.
     if (state.inRift) maxFloors = min(maxFloors, 3);
+    if (state.inGreaterRift) maxFloors = min(maxFloors, 2);
     return maxFloors;
   }
 
@@ -122,6 +123,21 @@ class OfflineSim {
           break;
         }
       }
+      if (_current.inGreaterRift) {
+        _current = GameLogic.advanceGreaterRiftTimer(
+          _current,
+          (_dt * 1000).round(),
+        );
+        if (result.kills > 0) {
+          _current = GameLogic.noteGreaterRiftKills(_current, result.kills);
+        }
+        final resolved = GameLogic.tryResolveGreaterRift(_current);
+        if (resolved != null) {
+          _current = resolved;
+          _done = true;
+          break;
+        }
+      }
       _abilityCasts += result.abilityCasts;
       // Live parity: wear clear upgrades mid-floor and sync actor sheets.
       if (_current.gearStash.length > stashLenBefore) {
@@ -142,7 +158,7 @@ class OfflineSim {
       // Wipe before flask/God Hand — avoid post-wipe loot/XP from assist.
       if (result.partyWiped) {
         // Gauntlet / Rift wipe always ends the run (same as live hub exit).
-        if (_current.inGauntlet || _current.inRift) {
+        if (_current.inGauntlet || _current.inAnyRiftMode) {
           _current = GameLogic.exitToHubHealed(_current);
           _done = true;
           break;
@@ -221,7 +237,7 @@ class OfflineSim {
       _current = GameLogic.completeCurrentRoom(
         _current,
         goldGain: gold,
-        skipLootRoll: !wasTreasure,
+        skipLootRoll: _current.inGreaterRift || !wasTreasure,
       );
       _floorsCleared++;
       if (!_current.inDungeon || _floorsCleared >= _maxFloors) {

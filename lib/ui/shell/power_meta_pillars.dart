@@ -256,6 +256,8 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
                   const SizedBox(height: 16),
                   RiftHubPanel(director: d),
                   const SizedBox(height: 16),
+                  GreaterRiftHubPanel(director: d),
+                  const SizedBox(height: 16),
                   PlayGamesBoardsSection(director: d),
                 ],
               ),

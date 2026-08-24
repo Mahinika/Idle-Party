@@ -53,6 +53,7 @@ class ChaseContract {
     HubChaseKind.keystone => 'ENTER',
     HubChaseKind.gauntletMilestone => 'GAUNTLET',
     HubChaseKind.riftMilestone => 'RIFT',
+    HubChaseKind.greaterRiftMilestone => 'GREATER',
     HubChaseKind.unlockZone => zoneId != null ? 'PATH' : null,
     _ => null,
   };

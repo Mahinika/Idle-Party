@@ -26,6 +26,8 @@ abstract final class PlayGamesBridge {
   static String? _pendingTimedBoard;
   static int? _pendingGauntletScore;
   static String? _pendingGauntletBoard;
+  static int? _pendingGreaterRiftScore;
+  static String? _pendingGreaterRiftBoard;
 
   static bool get isSignedInCached => _signedInCache;
 
@@ -92,6 +94,22 @@ abstract final class PlayGamesBridge {
     _pendingGauntletScore = floor.clamp(0, 999999);
   }
 
+  static void noteGreaterRiftPb({
+    required String monthKey,
+    required int tier,
+    required int clearMs,
+  }) {
+    final id = PlayLeaderboardIds.greaterRiftId(monthKey);
+    if (id.isEmpty || !PlayLeaderboardIds.hasGreaterRiftBoard(monthKey)) {
+      return;
+    }
+    _pendingGreaterRiftBoard = id;
+    _pendingGreaterRiftScore = PlayGamesScores.encodeGreaterRift(
+      tier: tier,
+      clearMs: clearMs,
+    );
+  }
+
   static Future<void> flushPendingScores() async {
     if (!_signedInCache && !await refreshSignedIn()) return;
     final timed = _pendingTimedScore;
@@ -128,6 +146,23 @@ abstract final class PlayGamesBridge {
         debugPrint('PlayGames submit gauntlet failed: $e\n$st');
       }
     }
+    final gr = _pendingGreaterRiftScore;
+    final grBoard = _pendingGreaterRiftBoard;
+    if (gr != null && grBoard != null && grBoard.isNotEmpty) {
+      try {
+        await Leaderboards.submitScore(
+          score: Score(
+            androidLeaderboardID: grBoard,
+            iOSLeaderboardID: '',
+            value: gr,
+          ),
+        );
+        _pendingGreaterRiftScore = null;
+        _pendingGreaterRiftBoard = null;
+      } catch (e, st) {
+        debugPrint('PlayGames submit greater rift failed: $e\n$st');
+      }
+    }
   }
 
   static Future<void> showTimedLeaderboard(String monthKey) async {
@@ -155,6 +190,20 @@ abstract final class PlayGamesBridge {
       );
     } catch (e, st) {
       debugPrint('PlayGames show gauntlet board failed: $e\n$st');
+    }
+  }
+
+  static Future<void> showGreaterRiftLeaderboard(String monthKey) async {
+    final id = PlayLeaderboardIds.greaterRiftId(monthKey);
+    if (id.isEmpty) return;
+    if (!_signedInCache && !await signIn()) return;
+    try {
+      await Leaderboards.showLeaderboards(
+        androidLeaderboardID: id,
+        iOSLeaderboardID: '',
+      );
+    } catch (e, st) {
+      debugPrint('PlayGames show greater rift board failed: $e\n$st');
     }
   }
 
@@ -222,6 +271,6 @@ abstract final class PlayGamesBridge {
 
   static String conflictHint(GameState s) {
     final gold = s.lifetimeGoldEarned;
-    return 'AL${s.ascensionLevel} · ${gold}g life · Gauntlet F${s.metaDepth.gauntletBestFloor}';
+    return 'AL${s.ascensionLevel} · ${gold}g life · Gauntlet F${s.metaDepth.gauntletBestFloor} · GR${s.metaDepth.grBestTier}';
   }
 }

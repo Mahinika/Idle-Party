@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.51';
+  static const String currentVersion = '1.12.52';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.52',
+      bullets: <String>[
+        'Greater Rifts at AL20: harder timed kill ladder, no mid-run gear, big clear payouts — ranks on META → KEY · BOARDS (Play Games).',
+        'Farm Rifts stay loot-friendly and unranked; hub shows both RIFT and GREATER.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.51',
       bullets: <String>[

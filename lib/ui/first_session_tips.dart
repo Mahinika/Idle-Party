@@ -4,6 +4,7 @@ import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/rift.dart';
+import '../core/greater_rift.dart';
 import '../core/story_lore.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
@@ -126,7 +127,13 @@ class FirstSessionTips extends StatelessWidget {
       id: 'rift',
       title: 'RIFTS',
       body:
-          'At AL20, Rifts are timed kill challenges from the hub. Clear the quota before the timer for essence and the next tier.',
+          'At AL20, farm Rifts are timed kill challenges from the hub. Gold and gear drop during the run. Clear the quota before the timer for essence and the next tier.',
+    ),
+    (
+      id: 'greater_rift',
+      title: 'GREATER RIFTS',
+      body:
+          'At AL20, Greater Rifts are the prestige ladder — harder packs, no mid-run gear, and season ranks on META → KEY · BOARDS.',
     ),
     (
       id: 'prestige',
@@ -217,6 +224,11 @@ class FirstSessionTips extends StatelessWidget {
       if (tip.id == 'rift' &&
           s.ascensionLevel < Rift.minAscension &&
           !GameLogic.canEnterRift(s)) {
+        continue;
+      }
+      if (tip.id == 'greater_rift' &&
+          s.ascensionLevel < GreaterRift.minAscension &&
+          !GameLogic.canEnterGreaterRift(s)) {
         continue;
       }
       if (tip.id == 'prestige' &&

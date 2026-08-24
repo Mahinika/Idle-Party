@@ -522,6 +522,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                     Text(
                                       state.inGauntlet
                                           ? 'Gauntlet run ends here. Best floor is saved. Return to hub to climb again.'
+                                          : state.inGreaterRift
+                                          ? 'Greater Rift ends here. Return to hub to climb again.'
                                           : state.inRift
                                           ? 'Rift run ends here. Return to hub to try again.'
                                           : dailyEcho
@@ -585,7 +587,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                       ),
                                     ],
                                     const SizedBox(height: 14),
-                                    if (!state.inGauntlet && !state.inRift)
+                                    if (!state.inGauntlet && !state.inAnyRiftMode)
                                       KenneyButton(
                                         label: (farm || dailyEcho)
                                             ? 'RETRY FLOOR'
@@ -605,7 +607,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                             widget.director.retryAfterWipe,
                                       ),
                                     if (!state.inGauntlet &&
-                                        !state.inRift &&
+                                        !state.inAnyRiftMode &&
                                         state.gearStash.length >=
                                             GameLogic.maxGearStashFor(
                                               state,
@@ -619,10 +621,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                         },
                                       ),
                                     ],
-                                    if (!state.inGauntlet && !state.inRift)
+                                    if (!state.inGauntlet && !state.inAnyRiftMode)
                                       const SizedBox(height: 8),
                                     KenneyButton(
-                                      label: state.inGauntlet || state.inRift
+                                      label: state.inGauntlet || state.inAnyRiftMode
                                           ? 'END RUN → HUB'
                                           : 'RETURN TO HUB',
                                       style: KenneyButtonStyle.grey,
@@ -651,7 +653,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Text(
                 state.isPartyDefeated
-                    ? (state.inGauntlet || state.inRift
+                    ? (state.inGauntlet || state.inAnyRiftMode
                           ? 'WIPED — End Run returns to hub'
                           : 'WIPED — use the Retry / Hub panel')
                     : 'GO — stairs are open',

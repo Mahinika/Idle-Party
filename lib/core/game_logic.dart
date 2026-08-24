@@ -21,6 +21,7 @@ import 'game_state.dart';
 import 'keystone.dart';
 import 'logic_notices.dart';
 import 'rift.dart';
+import 'greater_rift.dart';
 import 'apex_forge.dart';
 import 'encounter_factory.dart';
 import 'market_service.dart';
@@ -360,20 +361,33 @@ class GameLogic {
         'Rift R${Rift.clampTier(state.riftTier)} ended · +${essence}e',
       ]);
     }
+    if (state.inGreaterRift && state.grOutcome.isEmpty) {
+      final essence = GreaterRift.failEssence(state.grTier);
+      working = working.copyWith(
+        essence: working.essence + essence,
+        grOutcome: 'depleted',
+      );
+      LogicNotices.addMetaPayoffs([
+        'Greater Rift GR${GreaterRift.clampTier(state.grTier)} ended · +${essence}e',
+      ]);
+    }
     final heroes = [
       for (final h in working.heroes)
         h.copyWith(
           currentHp: h.currentHp.clamp(0, working.effectiveHeroMaxHp(h)),
         ),
     ];
-    var next = _clearRiftRun(
-      _clearKeystoneRun(
-        working.copyWith(
-          inDungeon: false,
-          inGauntlet: false,
-          inRift: false,
-          heroes: heroes,
-          lastUpdated: DateTime.now(),
+    var next = _clearGreaterRiftRun(
+      _clearRiftRun(
+        _clearKeystoneRun(
+          working.copyWith(
+            inDungeon: false,
+            inGauntlet: false,
+            inRift: false,
+            inGreaterRift: false,
+            heroes: heroes,
+            lastUpdated: DateTime.now(),
+          ),
         ),
       ),
     );
@@ -512,12 +526,15 @@ class GameLogic {
       layoutSeed: layoutSeed,
     );
     final room = floor.first;
-    final cleared = _clearKeystoneRun(_clearRiftRun(state));
+    final cleared = _clearKeystoneRun(
+      _clearGreaterRiftRun(_clearRiftRun(state)),
+    );
     return MetaSystems.evaluateAchievements(
       cleared.copyWith(
         inDungeon: true,
         inGauntlet: false,
         inRift: true,
+        inGreaterRift: false,
         dungeonId: Rift.dungeonId,
         dungeonMode: DungeonMode.push,
         currentRoom: room,
@@ -643,6 +660,188 @@ class GameLogic {
     );
     LogicNotices.addMetaPayoffs([
       'Rift R$tier failed · +${essence}e consolation',
+    ]);
+    return exitToHubHealed(next);
+  }
+
+  static bool canEnterGreaterRift(GameState state) =>
+      state.ascensionLevel >= GreaterRift.minAscension && !state.inDungeon;
+
+  /// Prestige timed kill ladder — harder packs, no mid-run gear, Play ranked.
+  static GameState enterGreaterRift(GameState state, {int? tier}) {
+    if (!canEnterGreaterRift(state)) return state;
+    final preferred = tier ?? state.metaDepth.grPreferredTier;
+    final maxSel = GreaterRift.maxSelectableTier(state.metaDepth.grBestTier);
+    final t = GreaterRift.clampTier(
+      preferred.clamp(GreaterRift.minTier, maxSel),
+    );
+    final layoutSeed = newLayoutSeed();
+    final floor = DungeonGenerator.generateFloor(
+      1,
+      ascensionLevel: state.ascensionLevel,
+      dungeonId: GreaterRift.dungeonId,
+      layoutSeed: layoutSeed,
+    );
+    final room = floor.first;
+    final cleared = _clearKeystoneRun(
+      _clearRiftRun(_clearGreaterRiftRun(state)),
+    );
+    return MetaSystems.evaluateAchievements(
+      cleared.copyWith(
+        inDungeon: true,
+        inGauntlet: false,
+        inRift: false,
+        inGreaterRift: true,
+        dungeonId: GreaterRift.dungeonId,
+        dungeonMode: DungeonMode.push,
+        currentRoom: room,
+        dungeonFloor: floor,
+        enemies: createEnemyGroup(
+          room,
+          dungeonId: GreaterRift.dungeonId,
+          fromState: cleared.copyWith(inGreaterRift: true, grTier: t),
+        ),
+        layoutSeed: layoutSeed,
+        grTier: t,
+        grTimerMs: 0,
+        grParMs: GreaterRift.parTimeMs(t),
+        grKillTarget: GreaterRift.killTarget(t),
+        grKills: 0,
+        grOutcome: '',
+        metaDepth: cleared.metaDepth.copyWith(grPreferredTier: t),
+        heroes: cleared.heroes
+            .map(
+              (hero) =>
+                  hero.copyWith(currentHp: cleared.effectiveHeroMaxHp(hero)),
+            )
+            .toList(),
+        lastUpdated: DateTime.now(),
+      ),
+    );
+  }
+
+  static GameState _clearGreaterRiftRun(GameState state) {
+    if (!state.inGreaterRift &&
+        state.grTier == 0 &&
+        state.grTimerMs == 0 &&
+        state.grParMs == 0 &&
+        state.grKillTarget == 0 &&
+        state.grKills == 0 &&
+        state.grOutcome.isEmpty) {
+      return state;
+    }
+    return state.copyWith(
+      inGreaterRift: false,
+      grTier: 0,
+      grTimerMs: 0,
+      grParMs: 0,
+      grKillTarget: 0,
+      grKills: 0,
+      grOutcome: '',
+    );
+  }
+
+  static GameState setGrPreferredTier(GameState state, int tier) {
+    if (state.ascensionLevel < GreaterRift.minAscension) return state;
+    final maxSel = GreaterRift.maxSelectableTier(state.metaDepth.grBestTier);
+    final t = GreaterRift.clampTier(
+      tier.clamp(GreaterRift.minTier, maxSel),
+    );
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(grPreferredTier: t),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  static GameState advanceGreaterRiftTimer(GameState state, int deltaMs) {
+    if (!state.inGreaterRift || deltaMs <= 0) return state;
+    if (state.grOutcome.isNotEmpty) return state;
+    return state.copyWith(grTimerMs: state.grTimerMs + deltaMs);
+  }
+
+  static GameState noteGreaterRiftKills(GameState state, int kills) {
+    if (!state.inGreaterRift || kills <= 0) return state;
+    if (state.grOutcome.isNotEmpty) return state;
+    return state.copyWith(grKills: state.grKills + kills);
+  }
+
+  static GameState? tryResolveGreaterRift(GameState state) {
+    if (!state.inGreaterRift || state.grOutcome.isNotEmpty) return null;
+    if (state.grKills >= state.grKillTarget &&
+        state.grTimerMs <= state.grParMs) {
+      return resolveGreaterRiftSuccess(state);
+    }
+    if (state.grTimerMs > state.grParMs) {
+      return resolveGreaterRiftFail(state);
+    }
+    return null;
+  }
+
+  static GameState resolveGreaterRiftSuccess(GameState state) {
+    if (!state.inGreaterRift) return state;
+    var next = ensureLeaderboardSeason(state);
+    final tier = GreaterRift.clampTier(next.grTier);
+    final unlock = GreaterRift.unlockTierAfterSuccess(
+      clearedTier: tier,
+      timerMs: next.grTimerMs,
+      parMs: next.grParMs,
+    );
+    final best = max(next.metaDepth.grBestTier, unlock);
+    final essence = GreaterRift.successEssence(tier);
+    final gold = GreaterRift.successGold(tier);
+    final clearMs = next.grTimerMs;
+    final md = next.metaDepth;
+    final betterSeason = PlayGamesScores.isBetterTimed(
+      newKey: tier,
+      newClearMs: clearMs,
+      bestKey: md.seasonBestGrTier,
+      bestClearMs: md.seasonBestGrClearMs,
+    );
+    var seasonTier = md.seasonBestGrTier;
+    var seasonMs = md.seasonBestGrClearMs;
+    if (betterSeason) {
+      seasonTier = tier;
+      seasonMs = clearMs;
+      PlayGamesBridge.noteGreaterRiftPb(
+        monthKey: md.leaderboardSeasonKey.isNotEmpty
+            ? md.leaderboardSeasonKey
+            : isoMonthKey(DateTime.now().toUtc()),
+        tier: tier,
+        clearMs: clearMs,
+      );
+    }
+    next = next.copyWith(
+      gold: next.gold + gold,
+      essence: next.essence + essence,
+      lifetimeGoldEarned: next.lifetimeGoldEarned + gold,
+      grOutcome: 'timed',
+      metaDepth: md.copyWith(
+        grBestTier: best,
+        grPreferredTier: GreaterRift.maxSelectableTier(best),
+        lifetimeGrClears: md.lifetimeGrClears + 1,
+        seasonBestGrTier: seasonTier,
+        seasonBestGrClearMs: seasonMs,
+      ),
+    );
+    next = syncMetaPayoffs(next);
+    LogicNotices.addMetaPayoffs([
+      'Greater Rift GR$tier timed · +${essence}e · +${gold}g'
+          '${unlock > tier + 1 ? ' · unlock GR$unlock' : ''}',
+    ]);
+    return exitToHubHealed(next);
+  }
+
+  static GameState resolveGreaterRiftFail(GameState state) {
+    if (!state.inGreaterRift) return state;
+    if (state.grOutcome.isNotEmpty) return exitToHubHealed(state);
+    final tier = GreaterRift.clampTier(state.grTier);
+    final essence = GreaterRift.failEssence(tier);
+    final next = state.copyWith(
+      essence: state.essence + essence,
+      grOutcome: 'depleted',
+    );
+    LogicNotices.addMetaPayoffs([
+      'Greater Rift GR$tier failed · +${essence}e consolation',
     ]);
     return exitToHubHealed(next);
   }
@@ -888,8 +1087,8 @@ class GameLogic {
   }
 
   static GameState setDungeonMode(GameState state, DungeonMode mode) {
-    if (state.inGauntlet || state.inRift) {
-      // Gauntlet / Rift are endless PUSH only.
+    if (state.inGauntlet || state.inAnyRiftMode) {
+      // Gauntlet / Rift / Greater Rift are endless PUSH only.
       return state.copyWith(
         dungeonMode: DungeonMode.push,
         lastUpdated: DateTime.now(),
@@ -902,7 +1101,7 @@ class GameLogic {
   }
 
   static bool canTravelToFloor(GameState state, int floorNumber) {
-    if (state.inGauntlet || state.inRift) return false;
+    if (state.inGauntlet || state.inAnyRiftMode) return false;
     if (floorNumber < 1) {
       return false;
     }
@@ -1747,6 +1946,8 @@ class GameLogic {
         seasonBestTimedKey: 0,
         seasonBestTimedClearMs: 0,
         seasonBestGauntletFloor: 0,
+        seasonBestGrTier: 0,
+        seasonBestGrClearMs: 0,
       ),
     );
   }
@@ -1955,6 +2156,18 @@ class GameLogic {
       }
     }
 
+    final grClaims = List<String>.from(next.metaDepth.claimedGrMilestones);
+    final grBest = next.metaDepth.grBestTier;
+    for (final tier in GreaterRiftMilestones.tiers) {
+      final id = GreaterRiftMilestones.claimId(tier);
+      if (grBest >= tier && !grClaims.contains(id)) {
+        grClaims.add(id);
+        final gain = GreaterRiftMilestones.essenceForTier(tier);
+        essenceGain += gain;
+        notices.add('Greater Rift GR$tier · +${gain}e');
+      }
+    }
+
     // Local week goals (timed KEY / Gauntlet floor).
     final weekClaims = List<String>.from(next.metaDepth.claimedWeekGoals);
     final weekKey = next.metaDepth.weeklyKey;
@@ -1979,6 +2192,7 @@ class GameLogic {
         gauntletClaims.length ==
             next.metaDepth.claimedGauntletMilestones.length &&
         riftClaims.length == next.metaDepth.claimedRiftMilestones.length &&
+        grClaims.length == next.metaDepth.claimedGrMilestones.length &&
         weekClaims.length == next.metaDepth.claimedWeekGoals.length &&
         titles.length == next.metaDepth.titles.length) {
       LogicNotices.setMetaPayoffs(const []);
@@ -1991,6 +2205,7 @@ class GameLogic {
         claimedWillRanks: willClaims,
         claimedGauntletMilestones: gauntletClaims,
         claimedRiftMilestones: riftClaims,
+        claimedGrMilestones: grClaims,
         claimedWeekGoals: weekClaims,
         titles: titles,
       ),
@@ -2216,7 +2431,7 @@ class GameLogic {
     final farmLoop = awarded.dungeonMode == DungeonMode.farm;
     final clearedBoss = bossesCleared > 0;
     final gauntlet = awarded.inGauntlet;
-    final rift = awarded.inRift;
+    final rift = awarded.inAnyRiftMode;
     // Zone HFC only — Gauntlet climb lives on metaDepth.gauntletBestFloor
     // so Ascend fragments keep using real zone clears.
     final highest = (gauntlet || rift)
@@ -2234,7 +2449,7 @@ class GameLogic {
     }
 
     // Push + boss floor clear → dungeon cleared, back to hub.
-    // Gauntlet / Rift never exit on boss — endless climb / kill waves.
+    // Gauntlet / Rift / Greater Rift never exit on boss — endless climb / kill waves.
     // Daily echo: claim on first clear, then return to hub (one floor).
     final wasDaily = MetaSystems.isActiveDailyRun(state);
     if (!farmLoop && clearedBoss && !gauntlet && !rift) {

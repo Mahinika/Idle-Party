@@ -136,7 +136,7 @@ class TargetCornerHud extends StatelessWidget {
             ] else
               Text(
                 state.isPartyDefeated
-                    ? (state.inGauntlet || state.inRift
+                    ? (state.inGauntlet || state.inAnyRiftMode
                         ? 'End → hub'
                         : 'Retry / Hub')
                     : 'Walk to stairs',

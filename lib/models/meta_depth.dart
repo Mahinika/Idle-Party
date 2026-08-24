@@ -230,6 +230,10 @@ class MetaDepthState {
     this.riftPreferredTier = 1,
     this.lifetimeRiftClears = 0,
     this.claimedRiftMilestones = const <String>[],
+    this.grBestTier = 0,
+    this.grPreferredTier = 1,
+    this.lifetimeGrClears = 0,
+    this.claimedGrMilestones = const <String>[],
     this.godHandStyle = 0,
     this.dailyEssenceBonusLevel = 0,
     this.gauntletGoldBonusLevel = 0,
@@ -244,6 +248,8 @@ class MetaDepthState {
     this.seasonBestTimedKey = 0,
     this.seasonBestTimedClearMs = 0,
     this.seasonBestGauntletFloor = 0,
+    this.seasonBestGrTier = 0,
+    this.seasonBestGrClearMs = 0,
     this.cloudSaveUpdatedMs = 0,
     this.playGamesOptIn = false,
     this.dismissedPlayUpdateVersionCode = 0,
@@ -316,17 +322,29 @@ class MetaDepthState {
   /// Lifetime gauntlet floor clears.
   final int lifetimeGauntletFloors;
 
-  /// Highest Rift tier cleared (meta — survives Ascend).
+  /// Highest farm Rift tier cleared (meta — survives Ascend).
   final int riftBestTier;
 
-  /// Preferred Rift tier dial on hub (1…best+1).
+  /// Preferred farm Rift tier dial on hub (1…best+1).
   final int riftPreferredTier;
 
-  /// Lifetime successful Rift clears.
+  /// Lifetime successful farm Rift clears.
   final int lifetimeRiftClears;
 
-  /// Claimed Rift milestone ids (`r5`, `r10`, `r20`).
+  /// Claimed farm Rift milestone ids (`r5`, `r10`, `r20`).
   final List<String> claimedRiftMilestones;
+
+  /// Highest Greater Rift tier cleared (meta — survives Ascend).
+  final int grBestTier;
+
+  /// Preferred Greater Rift tier dial on hub (1…best+1).
+  final int grPreferredTier;
+
+  /// Lifetime successful Greater Rift clears.
+  final int lifetimeGrClears;
+
+  /// Claimed Greater Rift milestone ids (`gr5`, `gr10`, `gr20`).
+  final List<String> claimedGrMilestones;
 
   final List<String> codexClaims;
   final int soulboundRefine;
@@ -392,6 +410,12 @@ class MetaDepthState {
 
   /// Best Infinity Gauntlet floor this [leaderboardSeasonKey].
   final int seasonBestGauntletFloor;
+
+  /// Best Greater Rift tier this [leaderboardSeasonKey].
+  final int seasonBestGrTier;
+
+  /// Clear time (ms) for [seasonBestGrTier] (lower is better).
+  final int seasonBestGrClearMs;
 
   /// UTC millis when this save was last written for cloud conflict checks.
   final int cloudSaveUpdatedMs;
@@ -474,6 +498,10 @@ class MetaDepthState {
     int? riftPreferredTier,
     int? lifetimeRiftClears,
     List<String>? claimedRiftMilestones,
+    int? grBestTier,
+    int? grPreferredTier,
+    int? lifetimeGrClears,
+    List<String>? claimedGrMilestones,
     List<String>? codexClaims,
     int? soulboundRefine,
     bool? soulboundIsArmor,
@@ -499,6 +527,8 @@ class MetaDepthState {
     int? seasonBestTimedKey,
     int? seasonBestTimedClearMs,
     int? seasonBestGauntletFloor,
+    int? seasonBestGrTier,
+    int? seasonBestGrClearMs,
     int? cloudSaveUpdatedMs,
     bool? playGamesOptIn,
     int? dismissedPlayUpdateVersionCode,
@@ -561,6 +591,10 @@ class MetaDepthState {
       lifetimeRiftClears: lifetimeRiftClears ?? this.lifetimeRiftClears,
       claimedRiftMilestones:
           claimedRiftMilestones ?? this.claimedRiftMilestones,
+      grBestTier: grBestTier ?? this.grBestTier,
+      grPreferredTier: grPreferredTier ?? this.grPreferredTier,
+      lifetimeGrClears: lifetimeGrClears ?? this.lifetimeGrClears,
+      claimedGrMilestones: claimedGrMilestones ?? this.claimedGrMilestones,
       codexClaims: codexClaims ?? this.codexClaims,
       soulboundRefine: soulboundRefine ?? this.soulboundRefine,
       soulboundIsArmor: soulboundIsArmor ?? this.soulboundIsArmor,
@@ -592,6 +626,8 @@ class MetaDepthState {
           seasonBestTimedClearMs ?? this.seasonBestTimedClearMs,
       seasonBestGauntletFloor:
           seasonBestGauntletFloor ?? this.seasonBestGauntletFloor,
+      seasonBestGrTier: seasonBestGrTier ?? this.seasonBestGrTier,
+      seasonBestGrClearMs: seasonBestGrClearMs ?? this.seasonBestGrClearMs,
       cloudSaveUpdatedMs: cloudSaveUpdatedMs ?? this.cloudSaveUpdatedMs,
       playGamesOptIn: playGamesOptIn ?? this.playGamesOptIn,
       dismissedPlayUpdateVersionCode:
@@ -651,6 +687,10 @@ class MetaDepthState {
     'riftPreferredTier': riftPreferredTier,
     'lifetimeRiftClears': lifetimeRiftClears,
     'claimedRiftMilestones': claimedRiftMilestones,
+    'grBestTier': grBestTier,
+    'grPreferredTier': grPreferredTier,
+    'lifetimeGrClears': lifetimeGrClears,
+    'claimedGrMilestones': claimedGrMilestones,
     'codexClaims': codexClaims,
     'soulboundRefine': soulboundRefine,
     'soulboundIsArmor': soulboundIsArmor,
@@ -676,6 +716,8 @@ class MetaDepthState {
     'seasonBestTimedKey': seasonBestTimedKey,
     'seasonBestTimedClearMs': seasonBestTimedClearMs,
     'seasonBestGauntletFloor': seasonBestGauntletFloor,
+    'seasonBestGrTier': seasonBestGrTier,
+    'seasonBestGrClearMs': seasonBestGrClearMs,
     'cloudSaveUpdatedMs': cloudSaveUpdatedMs,
     'playGamesOptIn': playGamesOptIn,
     'dismissedPlayUpdateVersionCode': dismissedPlayUpdateVersionCode,
@@ -757,6 +799,13 @@ class MetaDepthState {
       claimedRiftMilestones:
           (json['claimedRiftMilestones'] as List<dynamic>?)?.cast<String>() ??
           const [],
+      grBestTier: ((json['grBestTier'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      grPreferredTier: ((json['grPreferredTier'] as num?)?.toInt() ?? 1)
+          .clamp(1, 20),
+      lifetimeGrClears: (json['lifetimeGrClears'] as num?)?.toInt() ?? 0,
+      claimedGrMilestones:
+          (json['claimedGrMilestones'] as List<dynamic>?)?.cast<String>() ??
+          const [],
       codexClaims:
           (json['codexClaims'] as List<dynamic>?)?.cast<String>() ?? const [],
       soulboundRefine: (json['soulboundRefine'] as num?)?.toInt() ?? 0,
@@ -804,6 +853,9 @@ class MetaDepthState {
           (json['seasonBestTimedClearMs'] as num?)?.toInt() ?? 0,
       seasonBestGauntletFloor:
           (json['seasonBestGauntletFloor'] as num?)?.toInt() ?? 0,
+      seasonBestGrTier: ((json['seasonBestGrTier'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
+      seasonBestGrClearMs: (json['seasonBestGrClearMs'] as num?)?.toInt() ?? 0,
       cloudSaveUpdatedMs: (json['cloudSaveUpdatedMs'] as num?)?.toInt() ?? 0,
       playGamesOptIn: (json['playGamesOptIn'] as bool?) ?? false,
       dismissedPlayUpdateVersionCode:

@@ -4525,15 +4525,17 @@ abstract final class SpatialCombat {
         );
       }
     }
-    final drops = GameLogic.rollKillLoot(
-      state.battleNumber,
-      ascensionLevel: state.ascensionLevel,
-      lootFindPercent: state.petLootFindPercent,
-      hardmodeLevel: Keystone.combatLevel(state),
-      party: state.heroes,
-      dungeonId: state.dungeonId,
-      enemyRole: enemy.role,
-    );
+    final drops = state.inGreaterRift
+        ? const <LootDrop>[]
+        : GameLogic.rollKillLoot(
+            state.battleNumber,
+            ascensionLevel: state.ascensionLevel,
+            lootFindPercent: state.petLootFindPercent,
+            hardmodeLevel: Keystone.combatLevel(state),
+            party: state.heroes,
+            dungeonId: state.dungeonId,
+            enemyRole: enemy.role,
+          );
     for (var i = 0; i < drops.length; i++) {
       final drop = drops[i];
       final angle = (i / math.max(1, drops.length)) * math.pi * 2;

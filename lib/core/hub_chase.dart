@@ -11,6 +11,7 @@ import 'market_listings_service.dart';
 import 'menu_alerts.dart';
 import 'meta_systems.dart';
 import 'rift.dart';
+import 'greater_rift.dart';
 
 /// Kind of hub "today" chase — claimables first, then progress goals.
 enum HubChaseKind {
@@ -31,6 +32,7 @@ enum HubChaseKind {
   willRank,
   gauntletMilestone,
   riftMilestone,
+  greaterRiftMilestone,
   unlockZone,
   dailyRun,
 
@@ -202,6 +204,10 @@ class HubChase {
     if (riftAlmost != null && riftAlmost.urgency == HubChaseUrgency.almost) {
       return riftAlmost;
     }
+    final grAlmost = _nextGreaterRiftChase(state);
+    if (grAlmost != null && grAlmost.urgency == HubChaseUrgency.almost) {
+      return grAlmost;
+    }
     final weekAlmostEarly = _weekGoalChase(state, clock, almostOnly: true);
     if (weekAlmostEarly != null) return weekAlmostEarly;
 
@@ -256,6 +262,9 @@ class HubChase {
 
     final rift = _nextRiftChase(state);
     if (rift != null) return rift;
+
+    final greaterRift = _nextGreaterRiftChase(state);
+    if (greaterRift != null) return greaterRift;
 
     final weekAlmost = _weekGoalChase(state, clock, almostOnly: true);
     if (weekAlmost != null) return weekAlmost;
@@ -416,22 +425,23 @@ class HubChase {
     );
   }
 
-  /// AL20 cap — no more Ascend; chase KEY / Gauntlet / Rift / vault.
+  /// AL20 cap — no more Ascend; chase KEY / Gauntlet / Rift / Greater / vault.
   static HubChase _endgamePushChase(GameState state) {
     final md = state.metaDepth;
     final cap = state.effectiveMaxHardmode;
     final pref = state.hardmodeLevel.clamp(0, cap);
     final gauntlet = md.gauntletBestFloor;
     final rift = md.riftBestTier;
+    final gr = md.grBestTier;
     final timed = md.seasonBestTimedKey;
     final timedBit = timed > 0 ? 'Best timed KEY +$timed · ' : '';
     return HubChase(
       kind: HubChaseKind.clearFloors,
       title: 'AL20 endgame',
       detail:
-          '${timedBit}Gauntlet F$gauntlet · Rift R$rift · vault · boards · '
+          '${timedBit}Gauntlet F$gauntlet · Rift R$rift · GR$gr · vault · boards · '
           'Blessing ×${md.ascendBlessings}',
-      progressLabel: 'KEY +$pref · G F$gauntlet · R$rift',
+      progressLabel: 'KEY +$pref · G F$gauntlet · R$rift · GR$gr',
       zoneId: GameLogic.recommendedDungeonId(state),
     );
   }
@@ -518,6 +528,42 @@ class HubChase {
             'Timed kill challenge — ${Rift.killTarget(next)} kills before '
             '${Rift.formatTimer(Rift.parTimeMs(next))}.',
         progressLabel: 'R$next',
+        urgency: HubChaseUrgency.normal,
+      );
+    }
+    return null;
+  }
+
+  static HubChase? _nextGreaterRiftChase(GameState state) {
+    if (state.ascensionLevel < GreaterRift.minAscension) return null;
+    final best = state.metaDepth.grBestTier;
+    final claimed = state.metaDepth.claimedGrMilestones;
+    for (final tier in GreaterRiftMilestones.tiers) {
+      final id = GreaterRiftMilestones.claimId(tier);
+      if (claimed.contains(id)) continue;
+      if (best >= tier) continue;
+      final need = tier - best;
+      final almost = need <= 2 && best > 0;
+      final pay = GreaterRiftMilestones.essenceForTier(tier);
+      return HubChase(
+        kind: HubChaseKind.greaterRiftMilestone,
+        title: almost ? 'Almost Greater Rift GR$tier' : 'Greater Rift GR$tier',
+        detail: best <= 0
+            ? 'Enter Greater Rift for prestige ranks (+${pay}e at GR$tier).'
+            : 'Best GR$best — $need tiers to GR$tier (+${pay}e).',
+        progressLabel: 'GR$best → GR$tier',
+        urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
+      );
+    }
+    final next = GreaterRift.maxSelectableTier(best);
+    if (best < GreaterRift.maxTier && next > best) {
+      return HubChase(
+        kind: HubChaseKind.greaterRiftMilestone,
+        title: 'Clear Greater Rift GR$next',
+        detail:
+            'Harder packs, no mid-run gear — ${GreaterRift.killTarget(next)} kills '
+            'before ${GreaterRift.formatTimer(GreaterRift.parTimeMs(next))}.',
+        progressLabel: 'GR$next',
         urgency: HubChaseUrgency.normal,
       );
     }

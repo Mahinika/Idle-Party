@@ -85,6 +85,7 @@ class GameState {
     this.inDungeon = false,
     this.inGauntlet = false,
     this.inRift = false,
+    this.inGreaterRift = false,
     this.dungeonId = 'sandy',
     this.soulboundFragments = 0,
     this.soulboundItem,
@@ -120,6 +121,12 @@ class GameState {
     this.riftKillTarget = 0,
     this.riftKills = 0,
     this.riftOutcome = '',
+    this.grTier = 0,
+    this.grTimerMs = 0,
+    this.grParMs = 0,
+    this.grKillTarget = 0,
+    this.grKills = 0,
+    this.grOutcome = '',
     this.colorblindMode = false,
     this.uiTextScale = 1.0,
     this.dungeonZoom = DungeonZoom.normal,
@@ -231,8 +238,11 @@ class GameState {
   /// Infinity Gauntlet run (AL20 endless climb). Cleared when leaving hub.
   final bool inGauntlet;
 
-  /// Timed Rift run (AL20 kill quota). Cleared when leaving hub.
+  /// Timed farm Rift run (AL20 kill quota). Cleared when leaving hub.
   final bool inRift;
+
+  /// Timed Greater Rift run (AL20 prestige ladder). Cleared when leaving hub.
+  final bool inGreaterRift;
 
   /// Named dungeon id (e.g. sandy).
   final String dungeonId;
@@ -327,23 +337,44 @@ class GameState {
   /// '' | `timed` | `depleted` after boss resolution this run.
   final String keystoneOutcome;
 
-  /// Active Rift tier (0 when not in a rift).
+  /// Active farm Rift tier (0 when not in a rift).
   final int riftTier;
 
-  /// Elapsed Rift timer (ms).
+  /// Elapsed farm Rift timer (ms).
   final int riftTimerMs;
 
-  /// Par time for the active Rift.
+  /// Par time for the active farm Rift.
   final int riftParMs;
 
-  /// Kill quota for the active Rift.
+  /// Kill quota for the active farm Rift.
   final int riftKillTarget;
 
-  /// Kills banked this Rift run.
+  /// Kills banked this farm Rift run.
   final int riftKills;
 
-  /// '' | `timed` | `depleted` after Rift resolution.
+  /// '' | `timed` | `depleted` after farm Rift resolution.
   final String riftOutcome;
+
+  /// Active Greater Rift tier (0 when not in a GR).
+  final int grTier;
+
+  /// Elapsed Greater Rift timer (ms).
+  final int grTimerMs;
+
+  /// Par time for the active Greater Rift.
+  final int grParMs;
+
+  /// Kill quota for the active Greater Rift.
+  final int grKillTarget;
+
+  /// Kills banked this Greater Rift run.
+  final int grKills;
+
+  /// '' | `timed` | `depleted` after Greater Rift resolution.
+  final String grOutcome;
+
+  /// True if either farm Rift or Greater Rift is active.
+  bool get inAnyRiftMode => inRift || inGreaterRift;
 
   /// Accessibility: colorblind-friendly combat floater palette.
   final bool colorblindMode;
@@ -915,6 +946,7 @@ class GameState {
     bool? inDungeon,
     bool? inGauntlet,
     bool? inRift,
+    bool? inGreaterRift,
     String? dungeonId,
     int? soulboundFragments,
     EquipmentItem? soulboundItem,
@@ -951,6 +983,12 @@ class GameState {
     int? riftKillTarget,
     int? riftKills,
     String? riftOutcome,
+    int? grTier,
+    int? grTimerMs,
+    int? grParMs,
+    int? grKillTarget,
+    int? grKills,
+    String? grOutcome,
     bool? colorblindMode,
     double? uiTextScale,
     DungeonZoom? dungeonZoom,
@@ -1026,6 +1064,7 @@ class GameState {
       inDungeon: inDungeon ?? this.inDungeon,
       inGauntlet: inGauntlet ?? this.inGauntlet,
       inRift: inRift ?? this.inRift,
+      inGreaterRift: inGreaterRift ?? this.inGreaterRift,
       dungeonId: dungeonId ?? this.dungeonId,
       soulboundFragments: soulboundFragments ?? this.soulboundFragments,
       soulboundItem: clearSoulboundItem
@@ -1069,6 +1108,12 @@ class GameState {
       riftKillTarget: riftKillTarget ?? this.riftKillTarget,
       riftKills: riftKills ?? this.riftKills,
       riftOutcome: riftOutcome ?? this.riftOutcome,
+      grTier: grTier ?? this.grTier,
+      grTimerMs: grTimerMs ?? this.grTimerMs,
+      grParMs: grParMs ?? this.grParMs,
+      grKillTarget: grKillTarget ?? this.grKillTarget,
+      grKills: grKills ?? this.grKills,
+      grOutcome: grOutcome ?? this.grOutcome,
       colorblindMode: colorblindMode ?? this.colorblindMode,
       uiTextScale: uiTextScale ?? this.uiTextScale,
       dungeonZoom: dungeonZoom ?? this.dungeonZoom,
@@ -1173,6 +1218,7 @@ class GameState {
     'inDungeon': inDungeon,
     'inGauntlet': inGauntlet,
     'inRift': inRift,
+    'inGreaterRift': inGreaterRift,
     'dungeonId': dungeonId,
     'soulboundFragments': soulboundFragments,
     if (soulboundItem != null) 'soulboundItem': soulboundItem!.toJson(),
@@ -1209,6 +1255,12 @@ class GameState {
     'riftKillTarget': riftKillTarget,
     'riftKills': riftKills,
     'riftOutcome': riftOutcome,
+    'grTier': grTier,
+    'grTimerMs': grTimerMs,
+    'grParMs': grParMs,
+    'grKillTarget': grKillTarget,
+    'grKills': grKills,
+    'grOutcome': grOutcome,
     'colorblindMode': colorblindMode,
     'uiTextScale': uiTextScale,
     'dungeonZoom': dungeonZoom.name,
@@ -1398,6 +1450,7 @@ class GameState {
       inDungeon: (json['inDungeon'] as bool?) ?? false,
       inGauntlet: (json['inGauntlet'] as bool?) ?? false,
       inRift: (json['inRift'] as bool?) ?? false,
+      inGreaterRift: (json['inGreaterRift'] as bool?) ?? false,
       dungeonId: (json['dungeonId'] as String?) ?? 'sandy',
       soulboundFragments: _jsonInt(json['soulboundFragments']),
       soulboundItem: soulboundJson == null
@@ -1474,6 +1527,12 @@ class GameState {
       riftKillTarget: max(0, (json['riftKillTarget'] as num?)?.toInt() ?? 0),
       riftKills: max(0, (json['riftKills'] as num?)?.toInt() ?? 0),
       riftOutcome: (json['riftOutcome'] as String?) ?? '',
+      grTier: max(0, (json['grTier'] as num?)?.toInt() ?? 0),
+      grTimerMs: max(0, (json['grTimerMs'] as num?)?.toInt() ?? 0),
+      grParMs: max(0, (json['grParMs'] as num?)?.toInt() ?? 0),
+      grKillTarget: max(0, (json['grKillTarget'] as num?)?.toInt() ?? 0),
+      grKills: max(0, (json['grKills'] as num?)?.toInt() ?? 0),
+      grOutcome: (json['grOutcome'] as String?) ?? '',
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
       uiTextScale: ((json['uiTextScale'] as num?)?.toDouble() ?? 1.0).clamp(
         kUiTextScaleMin,

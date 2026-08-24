@@ -58,6 +58,16 @@ void main() {
         contains('KEY +7'),
       );
     });
+
+    test('Greater Rift encode prefers higher tier', () {
+      final low = PlayGamesScores.encodeGreaterRift(tier: 3, clearMs: 1000);
+      final high = PlayGamesScores.encodeGreaterRift(tier: 4, clearMs: 500000);
+      expect(high, greaterThan(low));
+      expect(
+        PlayGamesScores.formatGreaterRiftLabel(4, 60000),
+        contains('GR4'),
+      );
+    });
   });
 
   group('cloud conflict', () {

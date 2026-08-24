@@ -83,7 +83,9 @@ abstract final class WipeAdvice {
 
   /// Nudge God Hand after repeated wipes on the same floor (commit path — no redesign).
   static String? godHandHintFor(GameState state) {
-    if (state.wipeStreakCount < 2 || state.inGauntlet || state.inRift) {
+    if (state.wipeStreakCount < 2 ||
+        state.inGauntlet ||
+        state.inAnyRiftMode) {
       return null;
     }
     return 'Before retry: tap God Hand — steer party + AOE smash';

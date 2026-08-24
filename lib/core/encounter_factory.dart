@@ -11,6 +11,7 @@ import 'game_logic.dart';
 import 'game_state.dart';
 import 'keystone.dart';
 import 'rift.dart';
+import 'greater_rift.dart';
 
 /// How hard a room is, who stands in it, and what killing it is worth.
 ///
@@ -349,6 +350,12 @@ abstract final class EncounterFactory {
     if (fromState?.inRift ?? false) {
       final threat = Rift.threatMul(fromState!.riftTier);
       final dens = Rift.densityMul(fromState.riftTier);
+      packAttack = max(1, (packAttack * threat * dens).round());
+      packHp = max(1, (packHp * threat * dens).round());
+    }
+    if (fromState?.inGreaterRift ?? false) {
+      final threat = GreaterRift.threatMul(fromState!.grTier);
+      final dens = GreaterRift.densityMul(fromState.grTier);
       packAttack = max(1, (packAttack * threat * dens).round());
       packHp = max(1, (packHp * threat * dens).round());
     }

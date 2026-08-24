@@ -134,7 +134,7 @@ void main() {
     expect(MetaSystems.releases.first.bullets, isNotEmpty);
     expect(
       MetaSystems.releases.first.bullets.join(' ').toUpperCase(),
-      contains('RIFT'),
+      contains('GREATER'),
     );
   });
 
@@ -160,6 +160,11 @@ void main() {
     final rift = GameGuides.topics.firstWhere((t) => t.id == 'rift');
     expect(rift.title.toUpperCase(), contains('RIFT'));
     expect(rift.body, contains('AL20'));
+    expect(rift.body.toLowerCase(), contains('farm'));
+
+    final gr = GameGuides.topics.firstWhere((t) => t.id == 'greater_rift');
+    expect(gr.title.toUpperCase(), contains('GREATER'));
+    expect(gr.body.toUpperCase(), contains('BOARDS'));
 
     final classes = GameGuides.topics.firstWhere((t) => t.id == 'classes');
     expect(classes.body, contains('AL2'));

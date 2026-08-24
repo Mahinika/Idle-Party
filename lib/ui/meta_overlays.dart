@@ -13,6 +13,7 @@ import '../core/play_games_bridge.dart';
 import '../core/play_games_scores.dart';
 import '../core/play_leaderboard_ids.dart';
 import '../core/rift.dart';
+import '../core/greater_rift.dart';
 import '../models/achievement_def.dart';
 import '../models/gear_loadout.dart';
 import '../models/hero.dart';
@@ -825,6 +826,12 @@ Future<void> showOfflineProgressDialog(
         Navigator.pop(context);
         confirmRiftRun(context, director);
       };
+    case HubChaseKind.greaterRiftMilestone:
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+        confirmGreaterRiftRun(context, director);
+      };
     case HubChaseKind.meetHero:
       readyLabel = 'PARTY';
       readyAction = () {
@@ -1226,7 +1233,7 @@ class RiftHubPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Best R$best · kill $kills before $par · '
+          'Farm Rift — gold and gear mid-run. Best R$best · kill $kills before $par · '
           '+${Rift.successEssence(pref)}e / +${Rift.successGold(pref)}g',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -1262,6 +1269,82 @@ class RiftHubPanel extends StatelessWidget {
           style: KenneyButtonStyle.brown,
           onPressed: GameLogic.canEnterRift(state)
               ? () => confirmRiftRun(context, director)
+              : null,
+        ),
+      ],
+    );
+  }
+}
+
+/// META → KEY: Greater Rift tier dial (AL20 prestige + boards).
+class GreaterRiftHubPanel extends StatelessWidget {
+  const GreaterRiftHubPanel({super.key, required this.director});
+  final GameDirector director;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = director.state;
+    if (state.ascensionLevel < GreaterRift.minAscension) {
+      return Text(
+        'GREATER RIFT unlocks at AL${GreaterRift.minAscension} — '
+        'prestige ladder ranked on BOARDS.',
+        textAlign: TextAlign.center,
+        style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+      );
+    }
+    final best = state.metaDepth.grBestTier;
+    final maxSel = GreaterRift.maxSelectableTier(best);
+    final pref = GreaterRift.clampTier(
+      state.metaDepth.grPreferredTier.clamp(GreaterRift.minTier, maxSel),
+    );
+    final kills = GreaterRift.killTarget(pref);
+    final par = GreaterRift.formatTimer(GreaterRift.parTimeMs(pref));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'GREATER RIFT',
+          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Best GR$best · kill $kills before $par · '
+          '+${GreaterRift.successEssence(pref)}e / +${GreaterRift.successGold(pref)}g · '
+          'no mid-run gear',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            MenuChrome.stepperButton(
+              label: 'GR -',
+              sign: '-',
+              onPressed: pref > GreaterRift.minTier
+                  ? () => director.setGrPreferredTier(pref - 1)
+                  : null,
+            ),
+            Expanded(
+              child: Text(
+                'GR$pref',
+                textAlign: TextAlign.center,
+                style: GameTheme.body(size: 16, color: GameTheme.parchment),
+              ),
+            ),
+            MenuChrome.stepperButton(
+              label: 'GR +',
+              sign: '+',
+              onPressed: pref < maxSel
+                  ? () => director.setGrPreferredTier(pref + 1)
+                  : null,
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        KenneyButton(
+          label: 'ENTER GR$pref',
+          style: KenneyButtonStyle.red,
+          onPressed: GameLogic.canEnterGreaterRift(state)
+              ? () => confirmGreaterRiftRun(context, director)
               : null,
         ),
       ],
@@ -1554,7 +1637,14 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
     final gauntletLabel = md.seasonBestGauntletFloor > 0
         ? 'Gauntlet F${md.seasonBestGauntletFloor}'
         : 'No Gauntlet floor yet';
+    final grLabel = md.seasonBestGrTier > 0
+        ? PlayGamesScores.formatGreaterRiftLabel(
+            md.seasonBestGrTier,
+            md.seasonBestGrClearMs,
+          )
+        : 'No Greater Rift yet';
     final boardsReady = PlayLeaderboardIds.hasBoards(month);
+    final grBoardReady = PlayLeaderboardIds.hasGreaterRiftBoard(month);
     final signedIn = PlayGamesBridge.isSignedInCached || md.playGamesOptIn;
 
     return Column(
@@ -1566,7 +1656,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         ),
         const SizedBox(height: 4),
         Text(
-          'Season $month · Timed KEY + Gauntlet ranks (Play Games)',
+          'Season $month · Timed KEY + Gauntlet + Greater Rift (Play Games)',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
@@ -1576,6 +1666,10 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         ),
         Text(
           gauntletLabel,
+          style: GameTheme.body(size: 13, color: GameTheme.parchment),
+        ),
+        Text(
+          grLabel,
           style: GameTheme.body(size: 13, color: GameTheme.parchment),
         ),
         if (!signedIn) ...[
@@ -1611,6 +1705,14 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           ],
         ),
         const SizedBox(height: 6),
+        KenneyButton(
+          label: 'VIEW GR',
+          style: KenneyButtonStyle.grey,
+          onPressed: playGamesBusy || !grBoardReady
+              ? null
+              : () => runPlayGames(director.showPlayGreaterRiftLeaderboard),
+        ),
+        const SizedBox(height: 6),
         Text(
           boardsReady
               ? signedIn
@@ -1620,6 +1722,13 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
                     'paste into play_leaderboard_ids.dart.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
+        if (!grBoardReady) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Greater Rift board ID empty — create in Play Console, then paste.',
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          ),
+        ],
       ],
     );
   }

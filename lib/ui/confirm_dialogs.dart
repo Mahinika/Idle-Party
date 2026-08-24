@@ -4,6 +4,7 @@ import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/meta_systems.dart';
 import '../core/rift.dart';
+import '../core/greater_rift.dart';
 import '../core/story_lore.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
@@ -201,9 +202,11 @@ Future<void> confirmRiftRun(
         title: 'Rift R$tier?',
         content: Text(
           'AL${Rift.minAscension} timed kill challenge.\n\n'
-          'Kill $kills enemies before $par. Success pays +${essence}e · +${gold}g '
-          'and unlocks higher tiers (faster clears unlock +2).\n\n'
-          'Wipe or timeout ends the run. Best clear: R$best',
+          'Kill $kills enemies before $par. Gold and gear drop during the run. '
+          'Success pays +${essence}e · +${gold}g and unlocks higher tiers '
+          '(faster clears unlock +2).\n\n'
+          'Farm mode — not ranked on Play Games. Wipe or timeout ends the run. '
+          'Best clear: R$best',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
@@ -224,6 +227,61 @@ Future<void> confirmRiftRun(
     );
     if (ok == true && context.mounted) {
       director.enterRift(tier: tier);
+    }
+  } finally {
+    WebClickBridge.popLayer();
+  }
+}
+
+Future<void> confirmGreaterRiftRun(
+  BuildContext context,
+  GameDirector director,
+) async {
+  final state = director.state;
+  if (!GameLogic.canEnterGreaterRift(state)) return;
+  final tier = GreaterRift.clampTier(
+    state.metaDepth.grPreferredTier.clamp(
+      GreaterRift.minTier,
+      GreaterRift.maxSelectableTier(state.metaDepth.grBestTier),
+    ),
+  );
+  final kills = GreaterRift.killTarget(tier);
+  final par = GreaterRift.formatTimer(GreaterRift.parTimeMs(tier));
+  final essence = GreaterRift.successEssence(tier);
+  final gold = GreaterRift.successGold(tier);
+  final best = state.metaDepth.grBestTier;
+  WebClickBridge.pushLayer();
+  try {
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Greater Rift GR$tier?',
+        content: Text(
+          'AL${GreaterRift.minAscension} prestige ladder — harder than farm Rifts.\n\n'
+          'Kill $kills enemies before $par. Gold OK mid-run; no gear drops. '
+          'Clear pays +${essence}e · +${gold}g and ranks on META → KEY · BOARDS.\n\n'
+          'Fast clears unlock +2. Best clear: GR$best',
+          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        ),
+        actions: [
+          KenneyButton(
+            label: 'CANCEL',
+            style: KenneyButtonStyle.grey,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, false),
+          ),
+          KenneyButton(
+            label: 'ENTER GR$tier',
+            style: KenneyButtonStyle.red,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, true),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) {
+      director.enterGreaterRift(tier: tier);
     }
   } finally {
     WebClickBridge.popLayer();
