@@ -369,7 +369,7 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             ),
             const SizedBox(height: 8),
             KenneyButton(
-              label: 'DEV: ENTER GAUNTLET (AL20)',
+              label: 'DEV: ENTER GAUNTLET (Lv60)',
               style: KenneyButtonStyle.grey,
               onPressed: state.inDungeon
                   ? null

@@ -9,8 +9,6 @@ import '../core/hub_chase.dart';
 import '../core/keystone.dart';
 import '../core/menu_alerts.dart';
 import '../core/meta_systems.dart';
-import '../core/rift.dart';
-import '../core/greater_rift.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
 import 'cave_atmosphere.dart';
@@ -167,10 +165,10 @@ class _HubScreenState extends State<HubScreen>
         return ('CLAIM VAULT', director.claimDailyVault);
       case HubChaseKind.claimMissions:
         return (
-          'CLAIM JOBS',
+          'CLAIM QUESTS',
           () {
             for (final m in director.state.missions) {
-              if (m.isComplete) director.claimMission(m.id);
+              if (m.canClaim) director.claimMission(m.id);
             }
           },
         );
@@ -593,7 +591,7 @@ class _HubScreenState extends State<HubScreen>
                                           HubChaseUrgency.ready)
                                         HubUrgentRow(
                                           claimable: state.missions
-                                              .where((m) => m.isComplete)
+                                              .where((m) => m.canClaim)
                                               .length,
                                         canAscend: canAscend,
                                         ascendLabel: canAscend
@@ -618,7 +616,7 @@ class _HubScreenState extends State<HubScreen>
                                         onContracts: () {
                                           for (final m
                                               in director.state.missions) {
-                                            if (m.isComplete) {
+                                            if (m.canClaim) {
                                               director.claimMission(m.id);
                                             }
                                           }
@@ -631,8 +629,7 @@ class _HubScreenState extends State<HubScreen>
                                             confirmDailyRun(context, director),
                                         showGauntlet:
                                             GameLogic.canEnterGauntlet(state) ||
-                                            state.ascensionLevel >=
-                                                GameLogic.gauntletMinAscension,
+                                            GameLogic.endgameUnlocked(state),
                                         gauntletBest:
                                             state.metaDepth.gauntletBestFloor,
                                         onGauntlet: () => confirmGauntletRun(
@@ -641,8 +638,7 @@ class _HubScreenState extends State<HubScreen>
                                         ),
                                         showRift:
                                             GameLogic.canEnterRift(state) ||
-                                            state.ascensionLevel >=
-                                                Rift.minAscension,
+                                            GameLogic.endgameUnlocked(state),
                                         riftBest:
                                             state.metaDepth.riftBestTier,
                                         onRift: () =>
@@ -651,8 +647,7 @@ class _HubScreenState extends State<HubScreen>
                                             GameLogic.canEnterGreaterRift(
                                                   state,
                                                 ) ||
-                                            state.ascensionLevel >=
-                                                GreaterRift.minAscension,
+                                            GameLogic.endgameUnlocked(state),
                                         grBest: state.metaDepth.grBestTier,
                                         onGreaterRift: () =>
                                             confirmGreaterRiftRun(

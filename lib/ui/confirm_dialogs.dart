@@ -146,7 +146,7 @@ Future<void> confirmGauntletRun(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Infinity Gauntlet?',
         content: Text(
-          'AL${GameLogic.gauntletMinAscension}+ endgame climb in the Crystal Spire.\n\n'
+          'Party level ${GameLogic.maxHeroLevel} endgame climb in the Crystal Spire.\n\n'
           'Floors escalate forever — harder packs, bigger gold & essence. '
           'Boss every 5 floors. Wipe or leave returns to hub.\n\n'
           'Best clear: F$best',
@@ -201,7 +201,7 @@ Future<void> confirmRiftRun(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Rift R$tier?',
         content: Text(
-          'AL${Rift.minAscension} timed kill challenge.\n\n'
+          'Party level ${GameLogic.maxHeroLevel} timed kill challenge.\n\n'
           'Kill $kills enemies before $par. Gold and gear drop during the run. '
           'Success pays +${essence}e · +${gold}g and unlocks higher tiers '
           '(faster clears unlock +2).\n\n'
@@ -258,7 +258,7 @@ Future<void> confirmGreaterRiftRun(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Greater Rift GR$tier?',
         content: Text(
-          'AL${GreaterRift.minAscension} prestige ladder — harder than farm Rifts.\n\n'
+          'Party level ${GameLogic.maxHeroLevel} prestige ladder — harder than farm Rifts.\n\n'
           'Kill $kills enemies before $par. Gold OK mid-run; no gear drops. '
           'Clear pays +${essence}e · +${gold}g and ranks on META → KEY · BOARDS.\n\n'
           'Fast clears unlock +2. Best clear: GR$best',

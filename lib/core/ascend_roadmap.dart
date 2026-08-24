@@ -65,10 +65,11 @@ abstract final class AscendRoadmap {
       return '$kits · 5th party slot '
           '(Forge · ${GameLogic.partySlot5EssenceCost}e)';
     }
-    if (al == GameLogic.gauntletMinAscension) {
+    if (al == GameLogic.maxAscensionLevel) {
       final kits = kitUnlockSummary(al);
-      const endgame = 'KEYSTONE · Infinity Gauntlet · Rifts';
-      return kits == null ? endgame : '$kits · $endgame';
+      final cap =
+          'Ascension cap · level party to ${GameLogic.maxHeroLevel} for KEY / Gauntlet / Rifts';
+      return kits == null ? cap : '$kits · $cap';
     }
 
     final kits = kitUnlockSummary(al);
@@ -98,7 +99,7 @@ abstract final class AscendRoadmap {
   /// Next meaningful goal from the player’s **current** AL (before Ascend).
   static String nextGoalLine(int currentAl) {
     if (currentAl >= GameLogic.maxAscensionLevel) {
-      return 'Endgame: KEY +${GameLogic.maxAscensionLevel}, Gauntlet, Rifts, vault, boards';
+      return 'Endgame at party Lv${GameLogic.maxHeroLevel}: KEY +20, Gauntlet, Rifts, vault, boards';
     }
     for (var al = currentAl + 1; al <= GameLogic.maxAscensionLevel; al++) {
       final unlock = unlockAtAl(al);
@@ -121,7 +122,7 @@ abstract final class AscendRoadmap {
   /// Compact teaser for TODAY / hub chase detail.
   static String chaseTeaser(int currentAl) {
     if (currentAl >= GameLogic.maxAscensionLevel) {
-      return 'KEY +${GameLogic.maxAscensionLevel} · Gauntlet · Rifts · vault · boards';
+      return 'Party Lv${GameLogic.maxHeroLevel} · KEY · Gauntlet · Rifts · vault · boards';
     }
     for (var al = currentAl + 1; al <= GameLogic.maxAscensionLevel; al++) {
       final unlock = unlockAtAl(al);

@@ -207,7 +207,7 @@ abstract final class EncounterFactory {
       var xp = hero.xp + gain;
       var hp = hero.currentHp;
       var guard = 0;
-      while (guard < 40) {
+      while (guard < 40 && level < GameLogic.maxHeroLevel) {
         guard++;
         final need = xpPoolForLevel(level);
         if (xp < need) break;
@@ -221,6 +221,10 @@ abstract final class EncounterFactory {
             hp + 5 + state.vitalityBonus ~/ 4,
           );
         }
+      }
+      if (level >= GameLogic.maxHeroLevel) {
+        level = GameLogic.maxHeroLevel;
+        xp = 0;
       }
       heroes.add(hero.copyWith(level: level, xp: xp, currentHp: hp));
     }

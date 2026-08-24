@@ -68,7 +68,7 @@ void main() {
     expect(offline.kind, hub.kind);
   });
 
-  test('after first Ascend, Daily is Up next (KEY waits for AL20)', () {
+  test('after first Ascend, Daily is Up next (KEY waits for party Lv60)', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,
     );

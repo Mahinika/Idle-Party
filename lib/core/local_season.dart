@@ -244,9 +244,8 @@ abstract final class LocalSeasonCatalog {
   static bool weekGoalReady(GameState state, LocalSeasonWeek week) {
     if (!week.hasGoal) return false;
     if (weekGoalClaimed(state, week)) return false;
-    // KEY week goals need AL20 KEY unlock.
-    if (week.timedKeyTarget > 0 &&
-        state.ascensionLevel < Keystone.minAscension) {
+    // KEY week goals need party-max-level KEY unlock.
+    if (week.timedKeyTarget > 0 && Keystone.maxForState(state) <= 0) {
       return false;
     }
     if (week.timedKeyTarget > 0 &&
@@ -267,7 +266,7 @@ abstract final class LocalSeasonCatalog {
       return false;
     }
     if (week.timedKeyTarget > 0) {
-      if (state.ascensionLevel < Keystone.minAscension) return false;
+      if (Keystone.maxForState(state) <= 0) return false;
       final best = state.metaDepth.weeklyBestTimedKey;
       if (best > 0 && best + 1 >= week.timedKeyTarget) return true;
     }

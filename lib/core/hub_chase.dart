@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../models/dungeon_def.dart';
 import '../models/hero_spec.dart';
 import '../models/meta_depth.dart';
@@ -36,7 +38,7 @@ enum HubChaseKind {
   unlockZone,
   dailyRun,
 
-  /// Next KEY run after the first hour (habit until AL cap).
+  /// Next KEY run after the first hour (habit until KEY dial cap).
   keystone,
   clearFloors,
   weekGoal,
@@ -110,14 +112,14 @@ class HubChase {
       );
     }
 
-    final completeMissions = state.missions.where((m) => m.isComplete).length;
+    final completeMissions = state.missions.where((m) => m.canClaim).length;
     if (completeMissions > 0) {
       return HubChase(
         kind: HubChaseKind.claimMissions,
         title: completeMissions == 1
-            ? 'Claim contract reward'
-            : 'Claim contract rewards',
-        detail: 'Finished jobs are waiting on the hub.',
+            ? 'Claim quest reward'
+            : 'Claim quest rewards',
+        detail: 'Finished quests wait under META → QUESTS.',
         progressLabel: '$completeMissions ready',
         urgency: HubChaseUrgency.ready,
       );
@@ -172,7 +174,7 @@ class HubChase {
     }
 
     // KEY +1 timed but not yet claimable (need KEY +2) — cliffhanger.
-    // Only after KEY unlocks at AL20.
+    // Only after KEY unlocks (party at max level).
     if (GameLogic.showKeystoneJargon(state) &&
         !md.dailyVaultClaimed &&
         md.dailyVaultClears < GameLogic.dailyVaultClearTarget &&
@@ -223,7 +225,11 @@ class HubChase {
       );
     }
 
-    // Habit after the first hour: chase the next KEY until the AL cap.
+    // Near endgame: level the party to 60 before KEY / Gauntlet / Rifts.
+    final levelPush = _partyLevelChase(state);
+    if (levelPush != null) return levelPush;
+
+    // Habit after the first hour: chase the next KEY until the dial cap.
     final keyPush = _keystonePushChase(state);
     if (keyPush != null) return keyPush;
 
@@ -339,10 +345,10 @@ class HubChase {
         : GameLogic.isoWeekKey(clock);
     final week = LocalSeasonCatalog.forWeekKey(weekKey);
     if (!week.hasGoal) return null;
-    // KEY-only weeks stay quiet until AL20 unlock.
+    // KEY-only weeks stay quiet until party-max-level endgame unlock.
     if (week.timedKeyTarget > 0 &&
         week.gauntletFloorTarget <= 0 &&
-        state.ascensionLevel < GameLogic.keystoneMinAscension) {
+        !GameLogic.endgameUnlocked(state)) {
       return null;
     }
     if (LocalSeasonCatalog.weekGoalClaimed(state, week)) return null;
@@ -368,10 +374,10 @@ class HubChase {
     );
   }
 
-  /// Next KEY after AL20 unlock, until preferred key hits the AL cap.
+  /// Next KEY after endgame unlock, until preferred key hits the dial cap.
   static HubChase? _keystonePushChase(GameState state) {
-    if (state.ascensionLevel < GameLogic.keystoneMinAscension) return null;
-    final cap = Keystone.maxForAl(state.ascensionLevel);
+    if (!GameLogic.endgameUnlocked(state)) return null;
+    final cap = Keystone.maxForState(state);
     if (cap <= 0) return null;
     final pref = state.hardmodeLevel.clamp(0, cap);
     if (pref >= cap) return null;
@@ -389,6 +395,33 @@ class HubChase {
     );
   }
 
+  /// Level the party toward [GameLogic.maxHeroLevel] near Ascension cap.
+  static HubChase? _partyLevelChase(GameState state) {
+    if (GameLogic.endgameUnlocked(state)) return null;
+    final heroes = state.heroes;
+    if (heroes.isEmpty) return null;
+    final minLv = heroes.fold<int>(heroes.first.level, (m, h) => min(m, h.level));
+    final maxLv = heroes.fold<int>(heroes.first.level, (m, h) => max(m, h.level));
+    final near =
+        GameLogic.isMaxAscension(state) || minLv >= (GameLogic.maxHeroLevel - 15);
+    if (!near) return null;
+    final need = GameLogic.maxHeroLevel - minLv;
+    final almost = need <= 5 && minLv > 0;
+    return HubChase(
+      kind: HubChaseKind.clearFloors,
+      title: almost
+          ? 'Almost party Lv${GameLogic.maxHeroLevel}'
+          : 'Level the party to ${GameLogic.maxHeroLevel}',
+      detail: almost
+          ? 'Lowest hero Lv$minLv — a few more levels unlock KEY, Gauntlet, and Rifts.'
+          : 'Heroes Lv$minLv–$maxLv. Combat XP to ${GameLogic.maxHeroLevel} unlocks '
+              'KEY, Gauntlet, and Rifts.',
+      progressLabel: 'Lv$minLv/${GameLogic.maxHeroLevel}',
+      urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
+      zoneId: GameLogic.recommendedDungeonId(state),
+    );
+  }
+
   static HubChase _ascendPushChase(
     GameState state, {
     required int bossesNeed,
@@ -396,6 +429,8 @@ class HubChase {
     required HubChaseUrgency urgency,
   }) {
     if (GameLogic.isMaxAscension(state)) {
+      final levelChase = _partyLevelChase(state);
+      if (levelChase != null) return levelChase;
       return _endgamePushChase(state);
     }
     final dungeonId = GameLogic.recommendedDungeonId(state);
@@ -425,7 +460,7 @@ class HubChase {
     );
   }
 
-  /// AL20 cap — no more Ascend; chase KEY / Gauntlet / Rift / Greater / vault.
+  /// Party at max level — no more Ascend; chase KEY / Gauntlet / Rift / Greater / vault.
   static HubChase _endgamePushChase(GameState state) {
     final md = state.metaDepth;
     final cap = state.effectiveMaxHardmode;
@@ -437,7 +472,7 @@ class HubChase {
     final timedBit = timed > 0 ? 'Best timed KEY +$timed · ' : '';
     return HubChase(
       kind: HubChaseKind.clearFloors,
-      title: 'AL20 endgame',
+      title: 'Party Lv${GameLogic.maxHeroLevel} endgame',
       detail:
           '${timedBit}Gauntlet F$gauntlet · Rift R$rift · GR$gr · vault · boards · '
           'Blessing ×${md.ascendBlessings}',
@@ -468,7 +503,7 @@ class HubChase {
   }
 
   static HubChase? _nextGauntletChase(GameState state) {
-    if (state.ascensionLevel < GameLogic.gauntletMinAscension) {
+    if (!GameLogic.endgameUnlocked(state)) {
       return null;
     }
     final best = state.metaDepth.gauntletBestFloor;
@@ -498,7 +533,7 @@ class HubChase {
   }
 
   static HubChase? _nextRiftChase(GameState state) {
-    if (state.ascensionLevel < Rift.minAscension) return null;
+    if (!GameLogic.endgameUnlocked(state)) return null;
     final best = state.metaDepth.riftBestTier;
     final claimed = state.metaDepth.claimedRiftMilestones;
     for (final tier in RiftMilestones.tiers) {
@@ -535,7 +570,7 @@ class HubChase {
   }
 
   static HubChase? _nextGreaterRiftChase(GameState state) {
-    if (state.ascensionLevel < GreaterRift.minAscension) return null;
+    if (!GameLogic.endgameUnlocked(state)) return null;
     final best = state.metaDepth.grBestTier;
     final claimed = state.metaDepth.claimedGrMilestones;
     for (final tier in GreaterRiftMilestones.tiers) {

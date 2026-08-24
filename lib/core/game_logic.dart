@@ -190,7 +190,12 @@ class GameLogic {
       sanctuaryGoldLevel: 0,
       sanctuaryPowerLevel: 0,
       sanctuaryVitalityLevel: 0,
-      metaDepth: MetaDepthState(unlockedSpecs: [for (final s in specs) s.name]),
+      metaDepth: MetaDepthState(
+        unlockedSpecs: [for (final s in specs) s.name],
+        dailyQuestDate: MetaSystems.dailyDateKey(
+          (now ?? DateTime.now()).toUtc(),
+        ),
+      ),
       inDungeon: false,
       dungeonId: 'sandy',
       soulboundFragments: 0,
@@ -295,7 +300,7 @@ class GameLogic {
 
   /// Locks preferred key + affixes + idle-friendly par timer for a dungeon run.
   static GameState _beginKeystoneRun(GameState state) {
-    if (state.ascensionLevel < keystoneMinAscension) {
+    if (!endgameUnlocked(state)) {
       return _clearKeystoneRun(state.copyWith(hardmodeLevel: 0));
     }
     final key = state.hardmodeLevel.clamp(0, state.effectiveMaxHardmode);
@@ -412,20 +417,35 @@ class GameLogic {
     );
   }
 
-  /// Hard cap — endgame lives here (KEY +20, Gauntlet, vault, boards).
+  /// Hard Ascend cap (Blessing / kit roadmap). Endgame content uses
+  /// [endgameUnlocked] (party at [maxHeroLevel]), not this AL gate.
   static const int maxAscensionLevel = 20;
 
-  /// Infinity Gauntlet unlocks at max AL (endgame climb).
-  static const int gauntletMinAscension = maxAscensionLevel;
+  /// Hero level hard cap — XP stops here; endgame unlocks when the
+  /// active party is fully capped.
+  static const int maxHeroLevel = 60;
 
-  /// KEYSTONE dial / runs unlock at max AL (same endgame gate as Gauntlet).
+  /// Legacy aliases (older copy / tests). Prefer [endgameUnlocked].
+  static const int gauntletMinAscension = maxAscensionLevel;
   static const int keystoneMinAscension = maxAscensionLevel;
 
   static bool isMaxAscension(GameState state) =>
       state.ascensionLevel >= maxAscensionLevel;
 
+  /// Active party every hero at [maxHeroLevel].
+  static bool partyAtMaxLevel(GameState state) {
+    if (state.heroes.isEmpty) return false;
+    for (final h in state.heroes) {
+      if (h.level < maxHeroLevel) return false;
+    }
+    return true;
+  }
+
+  /// KEY / Gauntlet / Rifts / Greater Rifts / KEY jargon.
+  static bool endgameUnlocked(GameState state) => partyAtMaxLevel(state);
+
   static bool canEnterGauntlet(GameState state) =>
-      state.ascensionLevel >= gauntletMinAscension && !state.inDungeon;
+      endgameUnlocked(state) && !state.inDungeon;
 
   /// Escalating threat: +10% enemy stats per floor beyond 1.
   static double gauntletThreatMul(int floor) => 1.0 + max(0, floor - 1) * 0.10;
@@ -510,7 +530,7 @@ class GameLogic {
   }
 
   static bool canEnterRift(GameState state) =>
-      state.ascensionLevel >= Rift.minAscension && !state.inDungeon;
+      endgameUnlocked(state) && !state.inDungeon;
 
   /// Timed kill-quota run — Crystal Spire art, dense packs, hub exit on resolve.
   static GameState enterRift(GameState state, {int? tier}) {
@@ -585,7 +605,7 @@ class GameLogic {
   }
 
   static GameState setRiftPreferredTier(GameState state, int tier) {
-    if (state.ascensionLevel < Rift.minAscension) return state;
+    if (!endgameUnlocked(state)) return state;
     final maxSel = Rift.maxSelectableTier(state.metaDepth.riftBestTier);
     final t = Rift.clampTier(tier.clamp(Rift.minTier, maxSel));
     return state.copyWith(
@@ -665,7 +685,7 @@ class GameLogic {
   }
 
   static bool canEnterGreaterRift(GameState state) =>
-      state.ascensionLevel >= GreaterRift.minAscension && !state.inDungeon;
+      endgameUnlocked(state) && !state.inDungeon;
 
   /// Prestige timed kill ladder — harder packs, no mid-run gear, Play ranked.
   static GameState enterGreaterRift(GameState state, {int? tier}) {
@@ -742,7 +762,7 @@ class GameLogic {
   }
 
   static GameState setGrPreferredTier(GameState state, int tier) {
-    if (state.ascensionLevel < GreaterRift.minAscension) return state;
+    if (!endgameUnlocked(state)) return state;
     final maxSel = GreaterRift.maxSelectableTier(state.metaDepth.grBestTier);
     final t = GreaterRift.clampTier(
       tier.clamp(GreaterRift.minTier, maxSel),
@@ -1657,22 +1677,8 @@ class GameLogic {
     return cur;
   }
 
-  static GameState trainParty(GameState state) {
-    final trainingCost = partyTrainingCostFor(state);
-    if (state.gold < trainingCost) {
-      return state;
-    }
-
-    final trainedHeroes = state.heroes.map((hero) {
-      final next = hero.copyWith(level: hero.level + 1, xp: 0);
-      return next.copyWith(currentHp: state.effectiveHeroMaxHp(next));
-    }).toList();
-    return state.copyWith(
-      heroes: trainedHeroes,
-      gold: state.gold - trainingCost,
-      lastUpdated: DateTime.now(),
-    );
-  }
+  /// Gold Train (+1 Lv party-wide) is retired — levels come from combat XP only.
+  static GameState trainParty(GameState state) => state;
 
   static GameState upgradeAttack(GameState state) =>
       _applyUpgrade(state, type: PartyUpgradeType.attack);
@@ -2039,9 +2045,8 @@ class GameLogic {
 
   /// Endgame players see KEY / weekly affix jargon; earlier stays vault-simple.
   ///
-  /// KEY unlocks at [keystoneMinAscension] (AL20) with Gauntlet / Rift.
-  static bool showKeystoneJargon(GameState state) =>
-      state.ascensionLevel >= keystoneMinAscension;
+  /// KEY unlocks with Gauntlet / Rift when the active party hits max level.
+  static bool showKeystoneJargon(GameState state) => endgameUnlocked(state);
 
   /// Daily / vault-start / KEY habit as TODAY after the first boss or first Ascend.
   ///
@@ -2265,7 +2270,7 @@ class GameLogic {
   /// Clamp preferred keystone level (hub only — ignored while a run is locked).
   static GameState setHardmodeLevel(GameState state, int level) {
     if (state.inDungeon && state.keystoneRunActive) return state;
-    if (state.ascensionLevel < keystoneMinAscension) {
+    if (!endgameUnlocked(state)) {
       return state.copyWith(hardmodeLevel: 0, lastUpdated: DateTime.now());
     }
     final capped = level.clamp(0, state.effectiveMaxHardmode);
@@ -2605,10 +2610,9 @@ class GameLogic {
         trophies.add(before.dungeonId);
       }
     }
-    // Daily vault: push clears (or any boss). Gauntlet clears count at AL20.
+    // Daily vault: push clears (or any boss). Gauntlet clears count in endgame.
     // Farm loops never mint vault progress.
-    final gauntletVault =
-        before.inGauntlet && before.ascensionLevel >= gauntletMinAscension;
+    final gauntletVault = before.inGauntlet && endgameUnlocked(before);
     final vaultBump =
         (!farmLoop && (!before.inGauntlet || gauntletVault)) ||
             (bossKill > 0 && !before.inGauntlet)
@@ -2771,30 +2775,26 @@ class GameLogic {
     final loaded = saveVersionOf(json) <= 1
         ? _migrateV1(json)
         : _backfillLifetimeGold(GameState.fromJson(json));
-    final legacyBoard = loaded.missions.any(
-      (m) =>
-          m.id == 'defeat_enemies' ||
-          m.id == 'clear_bosses' ||
-          m.id == 'earn_gold',
-    );
-    var next = loaded.missions.isNotEmpty && !legacyBoard
+    final rebuildQuests = MissionBoard.needsQuestBoardRebuild(loaded.missions);
+    var next = loaded.missions.isNotEmpty && !rebuildQuests
         ? loaded
         : loaded.copyWith(
-            missions: createMissionBoard(
-              ascensionLevel: loaded.ascensionLevel,
-              highestDungeonCleared: loaded.highestDungeonCleared,
-              highestFloorCleared: loaded.highestFloorCleared,
-              hardmodeLevel: loaded.hardmodeLevel,
+            missions: createMissionBoardFor(loaded),
+            metaDepth: loaded.metaDepth.copyWith(
+              dailyQuestDate: MetaSystems.dailyDateKey(DateTime.now().toUtc()),
             ),
           );
+    next = MissionBoard.ensureDailyQuest(next);
     if (next.ascensionLevel > 0) {
       next = next.copyWith(rogueUnlocked: true);
     }
-    // KEY is AL20-only — clamp legacy mid-progress preferred keys.
-    if (next.ascensionLevel < keystoneMinAscension &&
+    // KEY is party-max-level endgame — clamp preferred keys before unlock.
+    if (!endgameUnlocked(next) &&
         (next.hardmodeLevel > 0 || next.keystoneRunActive)) {
       next = _clearKeystoneRun(next.copyWith(hardmodeLevel: 0));
     }
+    // Legacy saves may store hero levels above the hard cap.
+    next = _clampHeroLevels(next);
     // Legacy / incomplete dungeon saves: preferred KEY was set but the run
     // never locked — re-begin so combat scaling matches hub KEY preference.
     if (next.inDungeon &&
@@ -2835,6 +2835,21 @@ class GameLogic {
     }
     if (state.lifetimeGoldEarned >= floor) return state;
     return state.copyWith(lifetimeGoldEarned: floor);
+  }
+
+  /// Cap roster levels at [maxHeroLevel] (legacy / bad saves).
+  static GameState _clampHeroLevels(GameState state) {
+    var dirty = false;
+    final roster = <PartyHero>[];
+    for (final h in state.heroRoster) {
+      if (h.level > maxHeroLevel) {
+        dirty = true;
+        roster.add(h.copyWith(level: maxHeroLevel, xp: 0));
+      } else {
+        roster.add(h);
+      }
+    }
+    return dirty ? state.copyWith(heroRoster: roster) : state;
   }
 
   // —— Save export / import (clipboard JSON, no server) ——————————
@@ -3283,18 +3298,24 @@ class GameLogic {
     int highestDungeonCleared = 0,
     int highestFloorCleared = 1,
     int hardmodeLevel = 0,
+    int bountyRung = 0,
+    bool endgame = false,
     Random? random,
   }) => MissionBoard.createMissionBoard(
     ascensionLevel: ascensionLevel,
     highestDungeonCleared: highestDungeonCleared,
     highestFloorCleared: highestFloorCleared,
     hardmodeLevel: hardmodeLevel,
+    bountyRung: bountyRung,
+    endgame: endgame,
     random: random,
   );
   static List<Mission> createMissionBoardFor(
     GameState state, {
     Random? random,
   }) => MissionBoard.createMissionBoardFor(state, random: random);
+  static GameState ensureDailyQuest(GameState state, {DateTime? now}) =>
+      MissionBoard.ensureDailyQuest(state, now: now);
   static int missionDepthScore({
     required int ascensionLevel,
     int highestDungeonCleared = 0,

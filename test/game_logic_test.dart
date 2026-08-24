@@ -236,7 +236,7 @@ void main() {
     expect(flasks, 3);
   });
 
-  test('training spends gold and levels up the party', () {
+  test('trainParty is a no-op (levels come from combat XP)', () {
     final seeded = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     final initial = seeded.copyWith(
       gold: GameLogic.partyTrainingCostFor(seeded),
@@ -244,12 +244,8 @@ void main() {
 
     final trained = GameLogic.trainParty(initial);
 
-    expect(trained.gold, 0);
-    expect(trained.heroes.first.level, initial.heroes.first.level + 1);
-    expect(
-      trained.heroes.first.currentHp,
-      trained.effectiveHeroMaxHp(trained.heroes.first),
-    );
+    expect(trained.gold, initial.gold);
+    expect(trained.heroes.first.level, initial.heroes.first.level);
   });
 
   test('loot rolls after battle victories', () {
@@ -2636,14 +2632,14 @@ void main() {
     }), isTrue);
   });
 
-  test('mission board starts with three distinct contracts', () {
+  test('quest board is Daily kill, Bounty kill, Side non-kill', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     expect(state.missions, hasLength(3));
-    expect(state.missions.map((m) => m.type).toSet(), hasLength(3));
-    expect(
-      state.missions.every((m) => MissionType.values.contains(m.type)),
-      isTrue,
-    );
+    expect(state.missions[0].type, MissionType.defeatEnemies);
+    expect(state.missions[1].type, MissionType.defeatEnemies);
+    expect(state.missions[2].type, isNot(MissionType.defeatEnemies));
+    expect(state.missions[0].title, startsWith('Daily:'));
+    expect(state.missions[1].title, startsWith('Bounty'));
   });
 
   test('clearing rooms progresses and claim pays out missions', () {
@@ -2656,18 +2652,26 @@ void main() {
             type: MissionType.defeatEnemies,
             ascensionLevel: 0,
             random: Random(1),
+            slot: 0,
           ),
           GameLogic.createMission(
             type: MissionType.earnGold,
             ascensionLevel: 0,
             random: Random(2),
+            slot: 1,
           ),
           GameLogic.createMission(
             type: MissionType.clearBosses,
             ascensionLevel: 0,
             random: Random(3),
+            slot: 2,
           ),
         ],
+        metaDepth: initial.metaDepth.copyWith(
+          dailyQuestDate: MetaSystems.dailyDateKey(
+            DateTime(2026, 7, 4).toUtc(),
+          ),
+        ),
       ),
       dungeonId: 'sandy',
     );
@@ -2694,9 +2698,82 @@ void main() {
     expect(claimed.gold, ready.gold + defeat.goldReward);
     expect(claimed.essence, ready.essence + defeat.essenceReward);
     final idx = ready.missions.indexWhere((m) => m.id == defeat.id);
-    final replacement = claimed.missions[idx];
-    expect(replacement.progress, 0);
-    expect(replacement.type, isNot(MissionType.defeatEnemies));
+    final after = claimed.missions[idx];
+    // Slot 0 Daily stays claimed until next UTC day.
+    if (idx == 0) {
+      expect(after.claimed, isTrue);
+      expect(after.id, defeat.id);
+    } else {
+      expect(after.progress, 0);
+    }
+  });
+
+  test('daily quest stays claimed until next UTC day', () {
+    final day = DateTime.utc(2026, 8, 24);
+    var state = GameLogic.createInitialState(now: day).copyWith(
+      metaDepth: GameLogic.createInitialState(now: day).metaDepth.copyWith(
+        dailyQuestDate: MetaSystems.dailyDateKey(day),
+      ),
+    );
+    state = GameLogic.ensureDailyQuest(state, now: day);
+    final daily = state.missions[0].copyWith(progress: state.missions[0].target);
+    state = state.copyWith(
+      missions: [daily, ...state.missions.skip(1)],
+    );
+    final claimed = GameLogic.claimMission(state, daily.id);
+    expect(claimed.missions[0].claimed, isTrue);
+    expect(claimed.missions[0].canClaim, isFalse);
+    expect(claimed.metaDepth.dailyQuestDate, MetaSystems.dailyDateKey(day));
+
+    // Same day: stays claimed.
+    final sameDay = GameLogic.ensureDailyQuest(claimed, now: day);
+    expect(sameDay.missions[0].claimed, isTrue);
+    expect(sameDay.missions[0].id, claimed.missions[0].id);
+
+    // Next UTC day: fresh Daily.
+    final next = GameLogic.ensureDailyQuest(
+      claimed,
+      now: day.add(const Duration(days: 1)),
+    );
+    expect(next.missions[0].claimed, isFalse);
+    expect(next.missions[0].progress, 0);
+    expect(next.missions[0].id, isNot(claimed.missions[0].id));
+    expect(
+      next.metaDepth.dailyQuestDate,
+      MetaSystems.dailyDateKey(day.add(const Duration(days: 1))),
+    );
+  });
+
+  test('bounty claim advances rung and top rung repeats', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 24));
+    expect(state.metaDepth.bountyRung, 0);
+    expect(state.missions[1].target, 25); // early ladder rung 0
+
+    final ready0 = state.missions[1].copyWith(progress: state.missions[1].target);
+    state = state.copyWith(
+      missions: [state.missions[0], ready0, state.missions[2]],
+    );
+    state = GameLogic.claimMission(state, ready0.id);
+    expect(state.metaDepth.bountyRung, 1);
+    expect(state.missions[1].target, 75);
+    expect(state.missions[1].progress, 0);
+
+    final ready1 = state.missions[1].copyWith(progress: state.missions[1].target);
+    state = state.copyWith(
+      missions: [state.missions[0], ready1, state.missions[2]],
+    );
+    state = GameLogic.claimMission(state, ready1.id);
+    expect(state.metaDepth.bountyRung, 2);
+    expect(state.missions[1].target, 150);
+
+    final ready2 = state.missions[1].copyWith(progress: state.missions[1].target);
+    state = state.copyWith(
+      missions: [state.missions[0], ready2, state.missions[2]],
+    );
+    state = GameLogic.claimMission(state, ready2.id);
+    expect(state.metaDepth.bountyRung, 2);
+    expect(state.missions[1].target, 150);
+    expect(state.missions[1].progress, 0);
   });
 
   test('ascend refreshes mission board for new depth', () {
@@ -2712,22 +2789,19 @@ void main() {
     expect(ascended.ascensionLevel, 1);
     expect(ascended.missions, hasLength(3));
     expect(ascended.missions.every((m) => m.progress == 0), isTrue);
-    final kill = ascended.missions.where(
-      (m) => m.type == MissionType.defeatEnemies,
-    );
-    if (kill.isNotEmpty) {
-      expect(kill.first.target, greaterThan(8));
-    }
+    expect(ascended.missions[0].type, MissionType.defeatEnemies);
+    expect(ascended.missions[1].type, MissionType.defeatEnemies);
+    expect(ascended.missions[2].type, isNot(MissionType.defeatEnemies));
   });
 
-  test('deeper accounts get harder kill contracts', () {
+  test('deeper accounts get harder Side kill-adjacent targets', () {
     final early = GameLogic.createMission(
-      type: MissionType.defeatEnemies,
+      type: MissionType.defeatElites,
       ascensionLevel: 0,
       random: Random(7),
     );
     final deep = GameLogic.createMission(
-      type: MissionType.defeatEnemies,
+      type: MissionType.defeatElites,
       ascensionLevel: 3,
       highestDungeonCleared: 4,
       highestFloorCleared: 20,
@@ -2736,6 +2810,76 @@ void main() {
     );
     expect(deep.target, greaterThan(early.target));
     expect(deep.goldReward, greaterThan(early.goldReward));
+  });
+
+  test('endgame bounty and daily use 100/500/1000 and 100', () {
+    final board = GameLogic.createMissionBoard(
+      ascensionLevel: 20,
+      bountyRung: 0,
+      endgame: true,
+      random: Random(1),
+    );
+    expect(board[0].target, 100);
+    expect(board[1].target, 100);
+    expect(
+      GameLogic.createMissionBoard(
+        ascensionLevel: 20,
+        bountyRung: 1,
+        endgame: true,
+        random: Random(1),
+      )[1].target,
+      500,
+    );
+    expect(
+      GameLogic.createMissionBoard(
+        ascensionLevel: 20,
+        bountyRung: 2,
+        endgame: true,
+        random: Random(1),
+      )[1].target,
+      1000,
+    );
+  });
+
+  test('legacy random board rebuilds into quest slots on load', () {
+    final base = GameLogic.createInitialState(now: DateTime(2026, 8, 24));
+    final legacy = base.copyWith(
+      missions: [
+        GameLogic.createMission(
+          type: MissionType.earnGold,
+          ascensionLevel: 0,
+          random: Random(1),
+        ),
+        GameLogic.createMission(
+          type: MissionType.clearBosses,
+          ascensionLevel: 0,
+          random: Random(2),
+        ),
+        GameLogic.createMission(
+          type: MissionType.defeatElites,
+          ascensionLevel: 0,
+          random: Random(3),
+        ),
+      ],
+    );
+    final loaded = GameLogic.stateFromJson(legacy.toJson());
+    expect(loaded.missions[0].type, MissionType.defeatEnemies);
+    expect(loaded.missions[1].type, MissionType.defeatEnemies);
+    expect(loaded.missions[2].type, isNot(MissionType.defeatEnemies));
+    expect(loaded.metaDepth.dailyQuestDate, isNotEmpty);
+  });
+
+  test('metaDepth dailyQuestDate and bountyRung round-trip with defaults', () {
+    final empty = MetaDepthState.fromJson(<String, dynamic>{});
+    expect(empty.dailyQuestDate, '');
+    expect(empty.bountyRung, 0);
+    final filled = const MetaDepthState(
+      dailyQuestDate: '2026-08-24',
+      bountyRung: 2,
+    );
+    final back = MetaDepthState.fromJson(filled.toJson());
+    expect(back.dailyQuestDate, '2026-08-24');
+    expect(back.bountyRung, 2);
   });
 
   test('farm mode loops the same floor after clear', () {
@@ -2862,7 +3006,7 @@ void main() {
     expect(prestiged.sanctuaryGoldBonusPercent, 3);
   });
 
-  test('infinity gauntlet unlocks at AL20 and escalates', () {
+  test('infinity gauntlet unlocks at party Lv60 and escalates', () {
     final locked = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
     expect(GameLogic.canEnterGauntlet(locked), isFalse);
     expect(GameLogic.enterGauntlet(locked).inGauntlet, isFalse);
@@ -2870,9 +3014,17 @@ void main() {
     final mid = locked.copyWith(ascensionLevel: 10);
     expect(GameLogic.canEnterGauntlet(mid), isFalse);
 
-    var state = locked.copyWith(
+    final alOnly = locked.copyWith(
       ascensionLevel: GameLogic.maxAscensionLevel,
       highestFloorCleared: 27,
+    );
+    expect(GameLogic.canEnterGauntlet(alOnly), isFalse);
+
+    var state = _withPartyMaxLevel(
+      locked.copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        highestFloorCleared: 27,
+      ),
     );
     expect(GameLogic.canEnterGauntlet(state), isTrue);
     state = GameLogic.enterGauntlet(state);
@@ -2967,16 +3119,20 @@ void main() {
 
     // Offline soft-cap: even long AFK clears at most 6 gauntlet floors.
     final afk = GameLogic.enterGauntlet(
-      locked.copyWith(ascensionLevel: GameLogic.maxAscensionLevel),
+      _withPartyMaxLevel(
+        locked.copyWith(ascensionLevel: GameLogic.maxAscensionLevel),
+      ),
     );
     final sim = GameLogic.simulateSpatialOffline(afk, 60 * 60);
     expect(sim.roomsCleared, lessThanOrEqualTo(6));
   });
 
   test('gauntlet wipe exits to hub healed (live helper + offline)', () {
-    final base = GameLogic.createInitialState(
-      now: DateTime(2026, 8, 3),
-    ).copyWith(ascensionLevel: GameLogic.maxAscensionLevel);
+    final base = _withPartyMaxLevel(
+      GameLogic.createInitialState(
+        now: DateTime(2026, 8, 3),
+      ).copyWith(ascensionLevel: GameLogic.maxAscensionLevel),
+    );
     var state = GameLogic.enterGauntlet(base);
     expect(state.inGauntlet, isTrue);
     state = state.copyWith(
@@ -3179,3 +3335,10 @@ void main() {
     );
   });
 }
+
+GameState _withPartyMaxLevel(GameState state) => state.copyWith(
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );

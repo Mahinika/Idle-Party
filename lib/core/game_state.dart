@@ -197,7 +197,8 @@ class GameState {
   /// Prefer [PartyHero.equipped] and [GearLoadout] presets. Cleared after migrate / Ascend.
   final Map<EquipmentSlot, EquipmentItem> equipped;
 
-  /// Up to 3 active contracts. Refreshed on Ascend; claimed slots roll anew.
+  /// Up to 3 active quests (Daily / Bounty / Side). Daily refreshes UTC;
+  /// claimed Daily stays until next day; Bounty advances rung; Side rolls anew.
   final List<Mission> missions;
 
   /// Inventory / Combinator stash. Cleared on Ascend / hard reset.
@@ -637,8 +638,8 @@ class GameState {
     return '';
   }
 
-  /// AL-gated keystone cap (0–20). AL0 → 3, grows with Ascension.
-  int get effectiveMaxHardmode => Keystone.maxForAl(ascensionLevel);
+  /// KEY dial cap once the active party is at max hero level (0 before).
+  int get effectiveMaxHardmode => Keystone.maxForState(this);
 
   /// Sum of all heroes' gear attack (UI / power checks).
   int get equipmentAttackBonus =>

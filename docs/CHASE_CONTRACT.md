@@ -7,17 +7,18 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 
 ## Priority (high → low)
 
-1. **Claimables (READY)** — daily vault, finished jobs, Meet new kit, **equip BAG upgrade**
+1. **Claimables (READY)** — daily vault, finished **QUESTS**, Meet new kit, **equip BAG upgrade**
 2. **MARKET ALMOST** — affordable UPGRADE listing on POWER → MARKET (after bag equip)
 3. **Ascend READY** — can Ascend now (blocked at AL20 cap)
-4. **ALMOST** — one boss from Ascend, KEY+1 vault cliff (AL20 only), then zone / Will / Gauntlet / Rift / week almost
-5. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Skip Daily / KEY / vault-start / Will grind so TODAY is not a meta list. Skip kit teasers (`Combat Rogue` / AL1) until after the first boss.
-6. **KEY habit (AL20 only)** — chase the next KEY until preferred key is at the AL cap. When at cap or before AL20, fall through.
-7. **Progress grind** — daily run, vault start, Will, Gauntlet, Rift, week goal, push floors / endgame fallback
+4. **ALMOST** — one boss from Ascend, KEY+1 vault cliff (endgame only), then zone / Will / Gauntlet / Rift / week almost
+5. **Level the party** — before endgame unlock, chase active party toward **Lv60** when that is the gate
+6. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Skip Daily / KEY / vault-start / Will grind so TODAY is not a meta list. Skip kit teasers until after the first boss.
+7. **KEY habit (endgame only)** — chase the next KEY until preferred key is at the dial cap. When at cap or before party max level, fall through.
+8. **Progress grind** — daily run, vault start, Will, Gauntlet, Rift, week goal, push floors / single endgame fallback
 
-ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats Daily and KEY. Zone unlock is TODAY only when gold is **ALMOST** (playing the current zone is how you unlock the next). Never invent a second priority list in UI.
+ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats Daily and KEY. Zone unlock is TODAY only when gold is **ALMOST**. Never invent a second priority list in UI.
 
-**Endgame (AL20):** KEY, Infinity Gauntlet, and Rifts share the hub. TODAY picks the nearest ALMOST cliff among them, then week / Will, then a combined endgame fallback.
+**Endgame unlock:** active party all at [`GameLogic.maxHeroLevel`](../lib/core/game_logic.dart) (**60**) via `endgameUnlocked` — not AL20 alone. AL20 remains the Ascend cap. KEY, Infinity Gauntlet, Rifts, and Greater Rifts share the hub once unlocked. TODAY picks the nearest ALMOST cliff among them, then week / Will, then one actionable fallback (not a stats dump).
 
 ## Urgency chrome
 

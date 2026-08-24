@@ -273,10 +273,12 @@ GameState _blankMeta() =>
 
 GameState _partyNaked() {
   var s = GameLogic.createInitialState(now: DateTime(2026, 8, 11));
-  s = s.copyWith(gold: 50000);
-  for (var i = 0; i < 5; i++) {
-    s = GameLogic.trainParty(s);
-  }
+  s = s.copyWith(
+    gold: 50000,
+    heroRoster: [
+      for (final h in s.heroRoster) h.copyWith(level: h.level + 5),
+    ],
+  );
   return s;
 }
 

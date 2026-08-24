@@ -615,7 +615,7 @@ Future<void> showOfflineProgressDialog(
     case HubChaseKind.claimMissions:
       readyAction = () {
         for (final m in director.state.missions) {
-          if (m.isComplete) director.claimMission(m.id);
+          if (m.canClaim) director.claimMission(m.id);
         }
         director.dismissOfflineSummary();
         Navigator.pop(context);
@@ -1010,8 +1010,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           ],
           const SizedBox(height: 2),
           Text(
-            state.ascensionLevel < GameLogic.keystoneMinAscension
-                ? 'KEYSTONE unlocks at AL${GameLogic.keystoneMinAscension} with Gauntlet and Rift.'
+            !GameLogic.endgameUnlocked(state)
+                ? 'KEYSTONE unlocks at party level ${GameLogic.maxHeroLevel} with Gauntlet and Rift.'
                 : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
@@ -1022,7 +1022,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
   }
 }
 
-/// META → KEY: Rift tier dial (AL20 endgame).
+/// META → KEY: Rift tier dial (party Lv60 endgame).
 class RiftHubPanel extends StatelessWidget {
   const RiftHubPanel({super.key, required this.director});
   final GameDirector director;
@@ -1030,9 +1030,9 @@ class RiftHubPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
-    if (state.ascensionLevel < Rift.minAscension) {
+    if (!GameLogic.endgameUnlocked(state)) {
       return Text(
-        'RIFT unlocks at AL${Rift.minAscension} — timed kill challenges with escalating tiers.',
+        'RIFT unlocks at party level ${GameLogic.maxHeroLevel} — timed kill challenges with escalating tiers.',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
       );
@@ -1096,7 +1096,7 @@ class RiftHubPanel extends StatelessWidget {
   }
 }
 
-/// META → KEY: Greater Rift tier dial (AL20 prestige + boards).
+/// META → KEY: Greater Rift tier dial (party Lv60 prestige + boards).
 class GreaterRiftHubPanel extends StatelessWidget {
   const GreaterRiftHubPanel({super.key, required this.director});
   final GameDirector director;
@@ -1104,9 +1104,9 @@ class GreaterRiftHubPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
-    if (state.ascensionLevel < GreaterRift.minAscension) {
+    if (!GameLogic.endgameUnlocked(state)) {
       return Text(
-        'GREATER RIFT unlocks at AL${GreaterRift.minAscension} — '
+        'GREATER RIFT unlocks at party level ${GameLogic.maxHeroLevel} — '
         'prestige ladder ranked on BOARDS.',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

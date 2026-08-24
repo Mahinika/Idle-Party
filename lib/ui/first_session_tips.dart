@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
-import '../core/rift.dart';
-import '../core/greater_rift.dart';
 import '../core/story_lore.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
@@ -16,7 +14,7 @@ class FirstSessionTips extends StatelessWidget {
 
   final GameDirector director;
 
-  static const tips = <({String id, String title, String body})>[
+  static final tips = <({String id, String title, String body})>[
     (
       id: 'first_run',
       title: 'TODAY',
@@ -68,7 +66,7 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'POWER → FORGE: GOLD for this-run power (×1 / % spend / EVEN split), '
           'KEEP for relics / God Hand / Blessing, '
-          'APEX for forever gear. Train levels keep on Ascend.',
+          'APEX for forever gear. Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
     ),
     (
       id: 'pets',
@@ -78,9 +76,9 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'contracts',
-      title: 'CONTRACTS',
+      title: 'QUESTS',
       body:
-          'META → JOBS (or the CONTRACTS sheet) pays gold and essence. '
+          'META → QUESTS pays gold and essence. '
           'Claim completes; every 3 claims grants a +5e chain bonus.',
     ),
     (
@@ -101,7 +99,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'hardmode',
       title: 'KEYSTONE',
       body:
-          'At AL20, under META → KEY pick a key level before you enter. Affixes lock in, '
+          'At party level ${GameLogic.maxHeroLevel}, under META → KEY pick a key level before you enter. Affixes lock in, '
           'a generous timer runs (AFK counts), and beating the boss under par upgrades your key.',
     ),
     (
@@ -121,19 +119,19 @@ class FirstSessionTips extends StatelessWidget {
       id: 'gauntlet',
       title: 'CRYSTAL SPIRE',
       body:
-          'At AL20, Infinity Gauntlet is an endless climb from the hub. Best floor survives Ascend.',
+          'At party level ${GameLogic.maxHeroLevel}, Infinity Gauntlet is an endless climb from the hub. Best floor survives Ascend.',
     ),
     (
       id: 'rift',
       title: 'RIFTS',
       body:
-          'At AL20, farm Rifts are timed kill challenges from the hub. Gold and gear drop during the run. Clear the quota before the timer for essence and the next tier.',
+          'At party level ${GameLogic.maxHeroLevel}, farm Rifts are timed kill challenges from the hub. Gold and gear drop during the run. Clear the quota before the timer for essence and the next tier.',
     ),
     (
       id: 'greater_rift',
       title: 'GREATER RIFTS',
       body:
-          'At AL20, Greater Rifts are the prestige ladder — harder packs, no mid-run gear, and season ranks on META → KEY · BOARDS.',
+          'At party level ${GameLogic.maxHeroLevel}, Greater Rifts are the prestige ladder — harder packs, no mid-run gear, and season ranks on META → KEY · BOARDS.',
     ),
     (
       id: 'prestige',
@@ -198,7 +196,7 @@ class FirstSessionTips extends StatelessWidget {
           s.metaDepth.lifetimeFloorClears < 1) {
         continue;
       }
-      // KEYSTONE tip waits for AL20 endgame unlock.
+      // KEYSTONE tip waits for party-max-level endgame unlock.
       if (tip.id == 'hardmode' &&
           (!GameLogic.showKeystoneJargon(s) ||
               s.effectiveMaxHardmode <= 0)) {
@@ -217,17 +215,17 @@ class FirstSessionTips extends StatelessWidget {
         continue;
       }
       if (tip.id == 'gauntlet' &&
-          s.ascensionLevel < GameLogic.gauntletMinAscension &&
+          !GameLogic.endgameUnlocked(s) &&
           !GameLogic.canEnterGauntlet(s)) {
         continue;
       }
       if (tip.id == 'rift' &&
-          s.ascensionLevel < Rift.minAscension &&
+          !GameLogic.endgameUnlocked(s) &&
           !GameLogic.canEnterRift(s)) {
         continue;
       }
       if (tip.id == 'greater_rift' &&
-          s.ascensionLevel < GreaterRift.minAscension &&
+          !GameLogic.endgameUnlocked(s) &&
           !GameLogic.canEnterGreaterRift(s)) {
         continue;
       }

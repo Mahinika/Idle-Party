@@ -9,16 +9,16 @@ void main() {
     expect(AscendRoadmap.unlockAtAl(2), contains('5th party'));
     expect(AscendRoadmap.unlockAtAl(2), contains('80e'));
     expect(
-      AscendRoadmap.unlockAtAl(GameLogic.gauntletMinAscension),
-      contains('Gauntlet'),
+      AscendRoadmap.unlockAtAl(GameLogic.maxAscensionLevel),
+      contains('Ascension cap'),
     );
     expect(
-      AscendRoadmap.unlockAtAl(GameLogic.gauntletMinAscension),
-      contains('KEYSTONE'),
+      AscendRoadmap.unlockAtAl(GameLogic.maxAscensionLevel),
+      contains('${GameLogic.maxHeroLevel}'),
     );
     expect(
-      AscendRoadmap.unlockAtAl(GameLogic.gauntletMinAscension),
-      contains('Rifts'),
+      AscendRoadmap.unlockAtAl(GameLogic.maxAscensionLevel),
+      contains('KEY'),
     );
     expect(AscendRoadmap.unlockAtAl(5), contains('Guardian'));
     expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
@@ -31,8 +31,8 @@ void main() {
     expect(AscendRoadmap.nextGoalLine(0), contains('AL1'));
     expect(AscendRoadmap.nextGoalLine(1), contains('AL2'));
     expect(AscendRoadmap.nextGoalLine(9), contains('AL10'));
-    expect(AscendRoadmap.nextGoalLine(19), contains('Gauntlet'));
-    expect(AscendRoadmap.nextGoalLine(19), contains('Rifts'));
+    expect(AscendRoadmap.nextGoalLine(19), contains('Ascension cap'));
+    expect(AscendRoadmap.nextGoalLine(19), contains('${GameLogic.maxHeroLevel}'));
     expect(AscendRoadmap.chaseTeaser(0), contains('AL1'));
   });
 }

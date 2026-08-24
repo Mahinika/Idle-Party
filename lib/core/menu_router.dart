@@ -71,7 +71,7 @@ class MenuRouter extends ChangeNotifier {
     MenuRoute.power => 'POWER',
     MenuRoute.meta => 'META',
     MenuRoute.settings => 'SETTINGS',
-    MenuRoute.jobs => 'CONTRACTS',
+    MenuRoute.jobs => 'QUESTS',
   };
 
   void open(

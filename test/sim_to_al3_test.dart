@@ -1,6 +1,8 @@
 @Tags(['sim'])
 library;
 
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
@@ -90,9 +92,14 @@ GameState _spendGold(GameState state) {
   var spent = true;
   while (spent) {
     spent = false;
-    final train = GameLogic.partyTrainingCostFor(s);
-    if (s.gold >= train && s.heroes.first.level < 10 + s.ascensionLevel * 2) {
-      s = GameLogic.trainParty(s);
+    final targetLevel = 10 + s.ascensionLevel * 2;
+    if (s.heroes.isNotEmpty && s.heroes.first.level < targetLevel) {
+      s = s.copyWith(
+        heroRoster: [
+          for (final h in s.heroRoster)
+            h.copyWith(level: min(targetLevel, h.level + 1)),
+        ],
+      );
       spent = true;
       continue;
     }

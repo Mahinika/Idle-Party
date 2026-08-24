@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/rift.dart';
 
@@ -34,14 +35,17 @@ void main() {
     );
   });
 
-  test('Rift enter requires AL20', () {
+  test('Rift enter requires party Lv60', () {
     final early = GameLogic.createInitialState(now: now);
     expect(GameLogic.canEnterRift(early), isFalse);
     expect(GameLogic.enterRift(early).inRift, isFalse);
 
-    final al20 = early.copyWith(ascensionLevel: GameLogic.maxAscensionLevel);
-    expect(GameLogic.canEnterRift(al20), isTrue);
-    final run = GameLogic.enterRift(al20, tier: 1);
+    final alOnly = early.copyWith(ascensionLevel: GameLogic.maxAscensionLevel);
+    expect(GameLogic.canEnterRift(alOnly), isFalse);
+
+    final endgame = _withPartyMaxLevel(alOnly);
+    expect(GameLogic.canEnterRift(endgame), isTrue);
+    final run = GameLogic.enterRift(endgame, tier: 1);
     expect(run.inRift, isTrue);
     expect(run.inDungeon, isTrue);
     expect(run.riftTier, 1);
@@ -50,11 +54,11 @@ void main() {
     expect(run.dungeonId, Rift.dungeonId);
   });
 
-  test('KEY dial blocked below AL20 and clamped on load', () {
+  test('KEY dial blocked before party Lv60 and clamped on load', () {
     final early = GameLogic.createInitialState(now: now).copyWith(
       hardmodeLevel: 5,
     );
-    expect(Keystone.maxForAl(early.ascensionLevel), 0);
+    expect(Keystone.maxForState(early), 0);
     final blocked = GameLogic.setHardmodeLevel(early, 3);
     expect(blocked.hardmodeLevel, 0);
 
@@ -64,8 +68,10 @@ void main() {
   });
 
   test('Rift success pays out and unlocks next tier', () {
-    var state = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+      ),
     );
     state = GameLogic.enterRift(state, tier: 1);
     final goldBefore = state.gold;
@@ -85,11 +91,13 @@ void main() {
   });
 
   test('Rift fail on timeout keeps best tier', () {
-    var state = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
-      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-            riftBestTier: 4,
-          ),
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              riftBestTier: 4,
+            ),
+      ),
     );
     state = GameLogic.enterRift(state, tier: 5);
     state = state.copyWith(riftTimerMs: state.riftParMs + 1);
@@ -100,3 +108,10 @@ void main() {
     expect(resolved.essence, greaterThan(0));
   });
 }
+
+GameState _withPartyMaxLevel(GameState state) => state.copyWith(
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );

@@ -1,6 +1,8 @@
+import 'game_logic.dart';
+
 /// In-game guide copy for META → GUIDE.
 abstract final class GameGuides {
-  static const topics = <GuideTopic>[
+  static final topics = <GuideTopic>[
     GuideTopic(
       id: 'basics',
       title: 'BASICS',
@@ -10,7 +12,7 @@ abstract final class GameGuides {
           '• Watch them clear rooms. Tap the map (God Hand) when you want to help.\n'
           '• TODAY on the hub always names the next job — start there.\n'
           '• Three buckets: RUN (this Ascend — dungeon + FORGE gold), TODAY '
-          '(claims — vault, jobs, daily), ACCOUNT (forever — essence, Apex, '
+          '(claims — vault, quests, daily), ACCOUNT (forever — essence, Apex, '
           'Blessing, CAMP tracks).\n'
           '• Gold buys supplies and run power. Essence buys lasting power.\n'
           '• Bottom buttons (same in hub and dungeon): PARTY (heroes and gear), '
@@ -175,8 +177,8 @@ abstract final class GameGuides {
           '• GOLD — spend gold this run. ATK/DEF/STA/MOVE/HASTE/CRIT. '
           'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
           'SPEND ALL · EVEN to split gold round-robin across every track. '
-          'Train = +1 level to every hero '
-          '(levels keep on Ascend). ATK/DEF/STA/MOVE/HASTE/CRIT wipe on Ascend. '
+          'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}) and keep on Ascend. '
+          'ATK/DEF/STA/MOVE/HASTE/CRIT wipe on Ascend. '
           'ATK, HASTE, and MOVE speed up clears — see INCOME for rates. '
           'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
@@ -200,7 +202,8 @@ abstract final class GameGuides {
           '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'
           '• AL5: Blood DK, Frost DK, Guardian\n'
           '• AL6: Affliction, Demonology\n'
-          '• AL20: KEYSTONE, Infinity Gauntlet, Rifts, and Greater Rifts (endgame)\n\n'
+          '• Party Lv${GameLogic.maxHeroLevel}: KEYSTONE, Infinity Gauntlet, Rifts, '
+          'and Greater Rifts (endgame)\n\n'
           'Some kits also unlock from zone clears or the Prestige Shop — see each '
           'spec’s unlock hint in PARTY.',
     ),
@@ -227,7 +230,7 @@ abstract final class GameGuides {
       id: 'gauntlet',
       title: 'INFINITY GAUNTLET',
       body:
-          'Unlocks at Ascension Level 20 (endgame).\n\n'
+          'Unlocks when every active hero reaches level ${GameLogic.maxHeroLevel} (endgame).\n\n'
           '• Endless Crystal Spire climb — each floor gets harder.\n'
           '• Gold and essence scale with floor; boss every 5 floors.\n'
           '• Wipe or leave returns to hub; best floor is saved.\n'
@@ -237,7 +240,7 @@ abstract final class GameGuides {
       id: 'rift',
       title: 'RIFTS',
       body:
-          'Farm mode at Ascension Level 20 (AL20).\n\n'
+          'Farm mode at party level ${GameLogic.maxHeroLevel}.\n\n'
           '• Timed kill challenges — clear the kill quota before the par timer.\n'
           '• Gold and gear drop during the run; success also pays essence + gold.\n'
           '• Higher tiers: tougher packs and less time; fast clears unlock +2.\n'
@@ -249,7 +252,7 @@ abstract final class GameGuides {
       id: 'greater_rift',
       title: 'GREATER RIFTS',
       body:
-          'Prestige mode at Ascension Level 20 — harder than farm Rifts.\n\n'
+          'Prestige mode at party level ${GameLogic.maxHeroLevel} — harder than farm Rifts.\n\n'
           '• Timed kill quota on a tougher ladder (GR1–GR20).\n'
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear.\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
@@ -311,16 +314,17 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'jobs',
-      title: 'CONTRACTS',
+      title: 'QUESTS',
       body:
-          'META → JOBS.\n\n'
-          '• Goals rotate: kills, elites, floors, bosses, gold.\n'
-          '• Hard / Brutal variants pay more and take longer.\n'
-          '• Targets scale with Ascension, zones cleared, and hardmode.\n'
-          '• Claiming rolls a new contract (usually a different type).\n'
+          'META → QUESTS.\n\n'
+          '• Three slots: Daily (UTC kill goal), Bounty (kill ladder), Side '
+          '(bosses, elites, floors, or gold).\n'
+          '• Daily returns next UTC day after you claim.\n'
+          '• Bounty ladder climbs 100 → 500 → 1000 at endgame '
+          '(smaller rungs earlier); top rung repeats.\n'
           '• Claim 3 in a row for a +5e chain bonus.\n'
           '• Hub META badge may show ! when claims are ready.\n'
-          '• The top CLAIM chip claims all ready contracts at once '
+          '• The top CLAIM chip claims all ready quests at once '
           '(visible in combat too; long-press opens the list).',
     ),
     GuideTopic(
@@ -331,7 +335,7 @@ abstract final class GameGuides {
           '• Early on: TODAY tells you to grow the party in the starter zone. '
           'Daily and vault-start wait until you have beaten a boss (or Ascended).\n'
           '• Fill today’s vault with 1 dungeon clear, then claim essence.\n'
-          '• At AL20: KEYSTONE unlocks — time a KEY +2 (or higher) for a bigger '
+          '• At party Lv${GameLogic.maxHeroLevel}: KEYSTONE unlocks — time a KEY +2 (or higher) for a bigger '
           'vault claim (META → KEY). TODAY may chase KEY / Gauntlet / Rift.\n'
           '• Hub TODAY and offline Up next share one chase (claim → READY → '
           'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
@@ -339,7 +343,7 @@ abstract final class GameGuides {
           '• TODAY flashes READY / ALMOST when a claim or Ascend is close.\n'
           '• First vault claim of each calendar month also pays a season bonus.\n'
           '• Each ISO week has a named local season beat (KEY +2 or Gauntlet floor) '
-          '— TODAY / META may chase it after AL20 for KEY weeks; claim pays essence + title.\n'
+          '— TODAY / META may chase it after party Lv${GameLogic.maxHeroLevel} for KEY weeks; claim pays essence + title.\n'
           '• Progress resets at UTC midnight.\n'
           '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
     ),
@@ -365,9 +369,10 @@ abstract final class GameGuides {
       id: 'hardmode',
       title: 'KEYSTONE RUNS',
       body:
-          'Mythic+-style keys from the hub KEY panel (META → KEY) — unlocks at AL20.\n\n'
+          'Mythic+-style keys from the hub KEY panel (META → KEY) — unlocks at '
+          'party level ${GameLogic.maxHeroLevel}.\n\n'
           '• Endgame only: set key before you enter a normal zone dungeon.\n'
-          '• Key level caps at +20 at AL20.\n'
+          '• Key level caps at +20 once the party is max level.\n'
           '• Affixes lock on enter (weekly + Fortified/Tyrannical at +4, more at higher keys).\n'
           '• Idle-friendly timer: AFK time counts; beat the boss under par to TIMED upgrade.\n'
           '• Overtime = depleted (clear still counts, no key upgrade).\n'
@@ -375,14 +380,15 @@ abstract final class GameGuides {
           '• Optional Boss Rush / No Flask add extra affixes + essence.\n'
           '• Higher keys drop higher iLvl gear (KEY +10 is +20 iLvl) and pay '
           'gold in line with the harder packs — not a gold tax.\n'
-          '• At AL20, hub TODAY may chase KEY until your preferred key is at the cap.',
+          '• At party Lv${GameLogic.maxHeroLevel}, hub TODAY may chase KEY until your preferred key is at the cap.',
     ),
     GuideTopic(
       id: 'ascend',
       title: 'ASCEND',
       body:
           'Prestige when Ascend unlocks in the hub (AL1–AL20).\n\n'
-          '• AL20 is the cap — endgame is KEY +20, Gauntlet, Rifts, Greater Rifts, vault, and boards.\n'
+          '• AL20 is the Ascension cap. Endgame (KEY +20, Gauntlet, Rifts, Greater Rifts, '
+          'vault, boards) unlocks when every active hero reaches level ${GameLogic.maxHeroLevel}.\n'
           '• Each Ascend grants a lasting Blessing: +2 ATK · +8 DEF · +24 STA · '
           '+3% gold (stacks forever). See Forge → KEEP.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
@@ -399,8 +405,8 @@ abstract final class GameGuides {
       body:
           'A daily echo dungeon appears on the hub when available.\n\n'
           '• After the first hour, TODAY chases Ascend / zones / Daily — not KEY '
-          '(KEY unlocks at AL20).\n'
-          '• At AL20, TODAY may chase KEY when your preferred key is below cap; '
+          '(KEY unlocks at party Lv${GameLogic.maxHeroLevel}).\n'
+          '• At party Lv${GameLogic.maxHeroLevel}, TODAY may chase KEY when your preferred key is below cap; '
           'Daily is extra essence when KEY is capped.\n'
           '• Clear the required floor(s) for a flat essence reward.\n'
           '• May let you visit a locked zone for the day.\n'

@@ -30,7 +30,7 @@ class DungeonTopHud extends StatelessWidget {
 
   void _claimAllReadyMissions() {
     for (final mission in state.missions) {
-      if (mission.isComplete) {
+      if (mission.canClaim) {
         director.claimMission(mission.id);
       }
     }
@@ -40,12 +40,12 @@ class DungeonTopHud extends StatelessWidget {
   Widget build(BuildContext context) {
     final dungeonName =
         GameLogic.dungeonNames[state.dungeonId] ?? state.dungeonId;
-    final claimable = state.missions.where((m) => m.isComplete).length;
+    final claimable = state.missions.where((m) => m.canClaim).length;
     final floor = state.currentRoom.floorNumber;
     final world = director.spatial;
     final farm = state.dungeonMode == DungeonMode.farm;
     final compact = GameTheme.isCompactWidth(context);
-    // CLAIM stays visible mid-fight so contracts aren't buried in MORE.
+    // CLAIM stays visible mid-fight so quests aren't buried in MORE.
     final showClaimChip = claimable > 0;
     final softcap = GameLogic.levelsUntilSoftcap(state);
     final rates = GoldIncome.ratesLine(
@@ -177,7 +177,7 @@ class DungeonTopHud extends StatelessWidget {
                                 director.travelToFloor(floor + 1);
                               case 'settings':
                                 onOpenSettings();
-                              case 'contracts':
+                              case 'quests':
                                 onOpenContracts();
                             }
                           },
@@ -222,9 +222,9 @@ class DungeonTopHud extends StatelessWidget {
                             ),
                             if (claimable > 0)
                               PopupMenuItem(
-                                value: 'contracts',
+                                value: 'quests',
                                 child: Text(
-                                  'CONTRACTS ($claimable)',
+                                  'QUESTS ($claimable)',
                                   style: GameTheme.pixel(
                                     size: GameTheme.hudPixel,
                                   ),
@@ -471,7 +471,7 @@ class MissionClaimChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: count == 1 ? 'Claim 1 mission' : 'Claim $count missions',
+      label: count == 1 ? 'Claim 1 quest' : 'Claim $count quests',
       excludeSemantics: true,
       child: Material(
         color: Colors.transparent,

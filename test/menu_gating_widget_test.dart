@@ -24,7 +24,7 @@ void main() {
     );
   });
 
-  test('KEY jargon hidden until AL20', () {
+  test('KEY jargon hidden until party Lv60', () {
     final early = GameLogic.createInitialState(now: now);
     expect(GameLogic.showKeystoneJargon(early), isFalse);
     expect(MenuTabs.showKey(early), isFalse);
@@ -36,9 +36,18 @@ void main() {
     expect(GameLogic.showKeystoneJargon(mid), isFalse);
     expect(MenuTabs.showKey(mid), isFalse);
 
-    final endgame = early.copyWith(
+    final alOnly = early.copyWith(
       ascensionLevel: GameLogic.maxAscensionLevel,
       highestDungeonCleared: 14,
+    );
+    expect(GameLogic.showKeystoneJargon(alOnly), isFalse);
+    expect(MenuTabs.showKey(alOnly), isFalse);
+
+    final endgame = alOnly.copyWith(
+      heroRoster: [
+        for (final h in alOnly.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
     );
     expect(GameLogic.showKeystoneJargon(endgame), isTrue);
     expect(MenuTabs.showKey(endgame), isTrue);

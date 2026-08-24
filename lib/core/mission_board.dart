@@ -3,34 +3,61 @@ import 'dart:math';
 import '../models/mission.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'meta_systems.dart';
 
-/// The mission board: what it offers, how progress lands, what a claim pays.
-///
-/// Rebuilt on Ascend for the new level, so offers scale with how deep the
-/// player actually is rather than with wallet gold.
+/// Fixed board roles: Daily (0) · Bounty (1) · Side (2).
 abstract final class MissionBoard {
-  /// Builds a 3-contract board from a shuffled type pool, scaled by progress.
+  static const int dailySlot = 0;
+  static const int bountySlot = 1;
+  static const int sideSlot = 2;
+
+  static const List<int> bountyTargetsEndgame = <int>[100, 500, 1000];
+  static const List<int> bountyTargetsEarly = <int>[25, 75, 150];
+
+  static const List<MissionType> sideTypes = <MissionType>[
+    MissionType.clearBosses,
+    MissionType.earnGold,
+    MissionType.clearFloors,
+    MissionType.defeatElites,
+  ];
+
+  /// Builds the 3-slot QUESTS board (Daily / Bounty / Side).
   static List<Mission> createMissionBoard({
     required int ascensionLevel,
     int highestDungeonCleared = 0,
     int highestFloorCleared = 1,
     int hardmodeLevel = 0,
+    int bountyRung = 0,
+    bool endgame = false,
     Random? random,
   }) {
     final rng = random ?? GameLogic.random;
-    final pool = List<MissionType>.from(MissionType.values)..shuffle(rng);
-    final picked = pool.take(3).toList();
+    final rung = bountyRung.clamp(0, 2);
     return [
-      for (var i = 0; i < picked.length; i++)
-        createMission(
-          type: picked[i],
-          ascensionLevel: ascensionLevel,
-          highestDungeonCleared: highestDungeonCleared,
-          highestFloorCleared: highestFloorCleared,
-          hardmodeLevel: hardmodeLevel,
-          random: rng,
-          slot: i,
-        ),
+      createDailyMission(
+        ascensionLevel: ascensionLevel,
+        highestDungeonCleared: highestDungeonCleared,
+        highestFloorCleared: highestFloorCleared,
+        hardmodeLevel: hardmodeLevel,
+        endgame: endgame,
+        random: rng,
+      ),
+      createBountyMission(
+        ascensionLevel: ascensionLevel,
+        highestDungeonCleared: highestDungeonCleared,
+        highestFloorCleared: highestFloorCleared,
+        hardmodeLevel: hardmodeLevel,
+        bountyRung: rung,
+        endgame: endgame,
+        random: rng,
+      ),
+      createSideMission(
+        ascensionLevel: ascensionLevel,
+        highestDungeonCleared: highestDungeonCleared,
+        highestFloorCleared: highestFloorCleared,
+        hardmodeLevel: hardmodeLevel,
+        random: rng,
+      ),
     ];
   }
 
@@ -43,11 +70,29 @@ abstract final class MissionBoard {
       highestDungeonCleared: state.highestDungeonCleared,
       highestFloorCleared: state.highestFloorCleared,
       hardmodeLevel: state.hardmodeLevel,
+      bountyRung: state.metaDepth.bountyRung,
+      endgame: GameLogic.endgameUnlocked(state),
       random: random,
     );
   }
 
-  /// Depth score used to scale contract targets with real account progress.
+  /// True when the board is the legacy random 3-type layout (pre-QUESTS).
+  static bool needsQuestBoardRebuild(List<Mission> missions) {
+    if (missions.length != 3) return true;
+    if (missions.any(
+      (m) =>
+          m.id == 'defeat_enemies' ||
+          m.id == 'clear_bosses' ||
+          m.id == 'earn_gold',
+    )) {
+      return true;
+    }
+    return missions[dailySlot].type != MissionType.defeatEnemies ||
+        missions[bountySlot].type != MissionType.defeatEnemies ||
+        missions[sideSlot].type == MissionType.defeatEnemies;
+  }
+
+  /// Depth score used to scale Side contract targets with account progress.
   static int missionDepthScore({
     required int ascensionLevel,
     int highestDungeonCleared = 0,
@@ -59,6 +104,112 @@ abstract final class MissionBoard {
         highestDungeonCleared * 2 +
         (floorBand < 0 ? 0 : floorBand) +
         hardmodeLevel;
+  }
+
+  /// Daily kill target: endgame 100; early lower round numbers.
+  static int dailyKillTarget({
+    required int ascensionLevel,
+    required bool endgame,
+  }) {
+    if (endgame) return 100;
+    if (ascensionLevel >= 15) return 75;
+    if (ascensionLevel >= 10) return 50;
+    if (ascensionLevel >= 5) return 40;
+    if (ascensionLevel >= 2) return 30;
+    return 20;
+  }
+
+  static int bountyKillTarget({
+    required int bountyRung,
+    required bool endgame,
+  }) {
+    final ladder = endgame ? bountyTargetsEndgame : bountyTargetsEarly;
+    return ladder[bountyRung.clamp(0, ladder.length - 1)];
+  }
+
+  static Mission createDailyMission({
+    required int ascensionLevel,
+    int highestDungeonCleared = 0,
+    int highestFloorCleared = 1,
+    int hardmodeLevel = 0,
+    bool endgame = false,
+    Random? random,
+  }) {
+    final rng = random ?? GameLogic.random;
+    final depth = missionDepthScore(
+      ascensionLevel: ascensionLevel,
+      highestDungeonCleared: highestDungeonCleared,
+      highestFloorCleared: highestFloorCleared,
+      hardmodeLevel: hardmodeLevel,
+    );
+    final target = dailyKillTarget(
+      ascensionLevel: ascensionLevel,
+      endgame: endgame,
+    );
+    return Mission(
+      id: 'daily_s0_${rng.nextInt(1 << 20)}',
+      type: MissionType.defeatEnemies,
+      title: 'Daily: Slay foes',
+      target: target,
+      progress: 0,
+      goldReward: max(1, 24 + depth * 10 + target ~/ 4),
+      essenceReward: max(1, 3 + depth + target ~/ 40),
+      tier: 0,
+    );
+  }
+
+  static Mission createBountyMission({
+    required int ascensionLevel,
+    int highestDungeonCleared = 0,
+    int highestFloorCleared = 1,
+    int hardmodeLevel = 0,
+    int bountyRung = 0,
+    bool endgame = false,
+    Random? random,
+  }) {
+    final rng = random ?? GameLogic.random;
+    final depth = missionDepthScore(
+      ascensionLevel: ascensionLevel,
+      highestDungeonCleared: highestDungeonCleared,
+      highestFloorCleared: highestFloorCleared,
+      hardmodeLevel: hardmodeLevel,
+    );
+    final rung = bountyRung.clamp(0, 2);
+    final target = bountyKillTarget(bountyRung: rung, endgame: endgame);
+    final rungLabel = rung + 1;
+    return Mission(
+      id: 'bounty_s1_r$rung}_${rng.nextInt(1 << 20)}',
+      type: MissionType.defeatEnemies,
+      title: 'Bounty $rungLabel: Slay foes',
+      target: target,
+      progress: 0,
+      goldReward: max(1, 30 + depth * 12 + target ~/ 5),
+      essenceReward: max(1, 4 + depth + target ~/ 50),
+      tier: rung == 0 ? 0 : (rung == 1 ? 1 : 2),
+    );
+  }
+
+  static Mission createSideMission({
+    required int ascensionLevel,
+    int highestDungeonCleared = 0,
+    int highestFloorCleared = 1,
+    int hardmodeLevel = 0,
+    MissionType? avoid,
+    Random? random,
+  }) {
+    final rng = random ?? GameLogic.random;
+    final pool = List<MissionType>.from(sideTypes);
+    if (avoid != null) pool.remove(avoid);
+    final type = pool[rng.nextInt(pool.length)];
+    return createMission(
+      type: type,
+      ascensionLevel: ascensionLevel,
+      highestDungeonCleared: highestDungeonCleared,
+      highestFloorCleared: highestFloorCleared,
+      hardmodeLevel: hardmodeLevel,
+      random: rng,
+      slot: sideSlot,
+    );
   }
 
   static Mission createMission({
@@ -78,7 +229,7 @@ abstract final class MissionBoard {
       hardmodeLevel: hardmodeLevel,
     );
 
-    // Bias toward harder contracts as the account deepens.
+    // Bias toward harder Side quests as the account deepens.
     final roll = rng.nextInt(100);
     final hardBias = min(25, depth * 2);
     final brutalBias = min(15, depth);
@@ -161,25 +312,45 @@ abstract final class MissionBoard {
     };
   }
 
-  /// Picks a replacement contract, preferring a different type than [avoid].
+  /// Picks a replacement Side quest (never defeatEnemies).
   static Mission rollReplacementMission(
     GameState state, {
     MissionType? avoid,
-    int slot = 0,
+    int slot = sideSlot,
     Random? random,
   }) {
     final rng = random ?? GameLogic.random;
-    final pool = List<MissionType>.from(MissionType.values);
-    if (avoid != null && pool.length > 1) {
-      pool.remove(avoid);
+    if (slot == dailySlot) {
+      return createDailyMission(
+        ascensionLevel: state.ascensionLevel,
+        highestDungeonCleared: state.highestDungeonCleared,
+        highestFloorCleared: state.highestFloorCleared,
+        hardmodeLevel: state.hardmodeLevel,
+        endgame: GameLogic.endgameUnlocked(state),
+        random: rng,
+      );
     }
-    // Prefer types not already on the board.
-    final occupied = state.missions.map((m) => m.type).toSet();
+    if (slot == bountySlot) {
+      return createBountyMission(
+        ascensionLevel: state.ascensionLevel,
+        highestDungeonCleared: state.highestDungeonCleared,
+        highestFloorCleared: state.highestFloorCleared,
+        hardmodeLevel: state.hardmodeLevel,
+        bountyRung: state.metaDepth.bountyRung,
+        endgame: GameLogic.endgameUnlocked(state),
+        random: rng,
+      );
+    }
+    final occupied = state.missions
+        .where((m) => m.type != MissionType.defeatEnemies)
+        .map((m) => m.type)
+        .toSet();
     if (avoid != null) occupied.remove(avoid);
+    final pool = List<MissionType>.from(sideTypes);
+    if (avoid != null && pool.length > 1) pool.remove(avoid);
     final fresh = pool.where((t) => !occupied.contains(t)).toList();
-    final type = (fresh.isNotEmpty
-        ? fresh
-        : pool)[rng.nextInt((fresh.isNotEmpty ? fresh : pool).length)];
+    final type = (fresh.isNotEmpty ? fresh : pool)[
+        rng.nextInt((fresh.isNotEmpty ? fresh : pool).length)];
     return createMission(
       type: type,
       ascensionLevel: state.ascensionLevel,
@@ -187,7 +358,31 @@ abstract final class MissionBoard {
       highestFloorCleared: state.highestFloorCleared,
       hardmodeLevel: state.hardmodeLevel,
       random: rng,
-      slot: slot,
+      slot: sideSlot,
+    );
+  }
+
+  /// Refresh Daily when the UTC calendar day rolls.
+  static GameState ensureDailyQuest(GameState state, {DateTime? now}) {
+    final day = MetaSystems.dailyDateKey((now ?? DateTime.now()).toUtc());
+    if (state.missions.length != 3) {
+      return state.copyWith(
+        missions: createMissionBoardFor(state),
+        metaDepth: state.metaDepth.copyWith(dailyQuestDate: day),
+      );
+    }
+    if (state.metaDepth.dailyQuestDate == day) return state;
+    final missions = List<Mission>.from(state.missions);
+    missions[dailySlot] = createDailyMission(
+      ascensionLevel: state.ascensionLevel,
+      highestDungeonCleared: state.highestDungeonCleared,
+      highestFloorCleared: state.highestFloorCleared,
+      hardmodeLevel: state.hardmodeLevel,
+      endgame: GameLogic.endgameUnlocked(state),
+    );
+    return state.copyWith(
+      missions: missions,
+      metaDepth: state.metaDepth.copyWith(dailyQuestDate: day),
     );
   }
 
@@ -199,6 +394,7 @@ abstract final class MissionBoard {
     int floorsCleared = 0,
     int elitesDefeated = 0,
   }) {
+    state = ensureDailyQuest(state);
     if (state.missions.isEmpty) {
       return state;
     }
@@ -211,7 +407,7 @@ abstract final class MissionBoard {
     }
 
     final updated = state.missions.map((mission) {
-      if (mission.isComplete) {
+      if (mission.claimed || mission.isComplete) {
         return mission;
       }
       final add = switch (mission.type) {
@@ -232,8 +428,10 @@ abstract final class MissionBoard {
     return state.copyWith(missions: updated);
   }
 
-  /// Claims a completed mission, grants rewards, and rolls a fresh contract.
+  /// Claims a completed quest. Daily stays until next UTC day; Bounty advances
+  /// rung; Side rolls a fresh non-kill quest. Chain streak unchanged.
   static GameState claimMission(GameState state, String missionId) {
+    state = ensureDailyQuest(state);
     final index = state.missions.indexWhere(
       (mission) => mission.id == missionId,
     );
@@ -241,16 +439,41 @@ abstract final class MissionBoard {
       return state;
     }
     final mission = state.missions[index];
-    if (!mission.isComplete) {
+    if (!mission.canClaim) {
       return state;
     }
 
     final missions = List<Mission>.from(state.missions);
-    missions[index] = rollReplacementMission(
-      state,
-      avoid: mission.type,
-      slot: index,
-    );
+    var nextRung = state.metaDepth.bountyRung;
+    var nextDailyDate = state.metaDepth.dailyQuestDate;
+
+    if (index == dailySlot) {
+      missions[index] = mission.copyWith(claimed: true);
+      nextDailyDate = MetaSystems.dailyDateKey(DateTime.now().toUtc());
+    } else if (index == bountySlot) {
+      nextRung = min(2, state.metaDepth.bountyRung + 1);
+      // Top rung repeats: stay at 2 after claim.
+      if (state.metaDepth.bountyRung >= 2) {
+        nextRung = 2;
+      }
+      final afterRung = state.copyWith(
+        metaDepth: state.metaDepth.copyWith(bountyRung: nextRung),
+      );
+      missions[index] = createBountyMission(
+        ascensionLevel: afterRung.ascensionLevel,
+        highestDungeonCleared: afterRung.highestDungeonCleared,
+        highestFloorCleared: afterRung.highestFloorCleared,
+        hardmodeLevel: afterRung.hardmodeLevel,
+        bountyRung: nextRung,
+        endgame: GameLogic.endgameUnlocked(afterRung),
+      );
+    } else {
+      missions[index] = rollReplacementMission(
+        state,
+        avoid: mission.type,
+        slot: sideSlot,
+      );
+    }
 
     var nextChain = state.metaDepth.jobChainCount + 1;
     var chainBonus = 0;
@@ -264,7 +487,11 @@ abstract final class MissionBoard {
       lifetimeGoldEarned: state.lifetimeGoldEarned + mission.goldReward,
       essence: state.essence + mission.essenceReward + chainBonus,
       missions: missions,
-      metaDepth: state.metaDepth.copyWith(jobChainCount: nextChain),
+      metaDepth: state.metaDepth.copyWith(
+        jobChainCount: nextChain,
+        bountyRung: nextRung,
+        dailyQuestDate: nextDailyDate,
+      ),
       lastUpdated: DateTime.now(),
     );
   }

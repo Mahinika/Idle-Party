@@ -164,10 +164,12 @@ void main() {
 }
 
 GameState _lightForge(GameState s) {
-  var next = s.copyWith(gold: 50000);
-  for (var i = 0; i < 3; i++) {
-    next = GameLogic.trainParty(next);
-  }
+  var next = s.copyWith(
+    gold: 50000,
+    heroRoster: [
+      for (final h in s.heroRoster) h.copyWith(level: h.level + 3),
+    ],
+  );
   for (var i = 0; i < 2; i++) {
     next = GameLogic.upgradeAttack(next);
     next = GameLogic.upgradeDefense(next);
@@ -183,9 +185,11 @@ GameState _midPower(GameState s) {
     rogueUnlocked: true,
   );
   next = GameLogic.ensureRogueHero(next);
-  for (var i = 0; i < 8; i++) {
-    next = GameLogic.trainParty(next);
-  }
+  next = next.copyWith(
+    heroRoster: [
+      for (final h in next.heroRoster) h.copyWith(level: h.level + 8),
+    ],
+  );
   for (var i = 0; i < 6; i++) {
     next = GameLogic.upgradeAttack(next);
     next = GameLogic.upgradeDefense(next);
@@ -573,16 +577,21 @@ void _simEconomyLoop(
       ],
     );
 
-    // Spend greedily on train then cheapest forge upgrade.
+    // Spend greedily on level bumps then cheapest forge upgrade.
     var safety = 0;
     while (safety++ < 30) {
-      final trainCost = GameLogic.partyTrainingCostFor(state);
       final atk = GameLogic.upgradeCostFor(state, PartyUpgradeType.attack);
       final def = GameLogic.upgradeCostFor(state, PartyUpgradeType.defense);
       final vit = GameLogic.upgradeCostFor(state, PartyUpgradeType.vitality);
-      if (state.gold >= trainCost && trains < upgrades + 3) {
-        state = GameLogic.trainParty(state);
-        spent += trainCost;
+      if (trains < upgrades + 3) {
+        state = state.copyWith(
+          heroRoster: [
+            for (final h in state.heroRoster)
+              h.copyWith(
+                level: math.min(GameLogic.maxHeroLevel, h.level + 1),
+              ),
+          ],
+        );
         trains++;
         continue;
       }

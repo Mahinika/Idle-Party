@@ -390,7 +390,7 @@ abstract final class MenuChrome {
     );
   }
 
-  /// Tab-owned status (JOBS claim hint, GUIDE What's New) — not global META noise.
+  /// Tab-owned status (QUESTS claim hint, GUIDE What's New) — not global META noise.
   static Widget tabBanner(String text) {
     return Padding(
       padding: const EdgeInsets.only(top: 4),

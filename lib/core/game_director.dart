@@ -1427,16 +1427,7 @@ class GameDirector extends ChangeNotifier {
   }
 
   void applyTraining() {
-    if (_isLoading) {
-      return;
-    }
-
-    final updated = GameLogic.trainParty(_state);
-    if (identical(updated, _state)) {
-      return;
-    }
-
-    _applyUpgrade(updated);
+    // Gold Train removed — levels come from combat XP only (cap maxHeroLevel).
   }
 
   void upgradeAttack({
@@ -1552,7 +1543,7 @@ class GameDirector extends ChangeNotifier {
     final beforeChain = _state.metaDepth.jobChainCount;
     final beforeEssence = _state.essence;
     for (final m in _state.missions) {
-      if (m.id == missionId && m.isComplete) {
+      if (m.id == missionId && m.canClaim) {
         goldReward = m.goldReward;
         essenceReward = m.essenceReward;
         title = m.title;
@@ -1884,8 +1875,8 @@ class GameDirector extends ChangeNotifier {
     if (_isLoading) return;
     if (!GameLogic.canEnterGauntlet(_state)) {
       showToast(
-        _state.ascensionLevel < GameLogic.gauntletMinAscension
-            ? 'Gauntlet unlocks at AL${GameLogic.gauntletMinAscension}'
+        !GameLogic.endgameUnlocked(_state)
+            ? 'Gauntlet unlocks at party level ${GameLogic.maxHeroLevel}'
             : 'Leave the dungeon first',
         life: 2.0,
       );
@@ -1913,8 +1904,8 @@ class GameDirector extends ChangeNotifier {
     if (_isLoading) return;
     if (!GameLogic.canEnterRift(_state)) {
       showToast(
-        _state.ascensionLevel < Rift.minAscension
-            ? 'Rift unlocks at AL${Rift.minAscension}'
+        !GameLogic.endgameUnlocked(_state)
+            ? 'Rift unlocks at party level ${GameLogic.maxHeroLevel}'
             : 'Leave the dungeon first',
         life: 2.0,
       );
@@ -1949,8 +1940,8 @@ class GameDirector extends ChangeNotifier {
     if (_isLoading) return;
     if (!GameLogic.canEnterGreaterRift(_state)) {
       showToast(
-        _state.ascensionLevel < GreaterRift.minAscension
-            ? 'Greater Rift unlocks at AL${GreaterRift.minAscension}'
+        !GameLogic.endgameUnlocked(_state)
+            ? 'Greater Rift unlocks at party level ${GameLogic.maxHeroLevel}'
             : 'Leave the dungeon first',
         life: 2.0,
       );
@@ -1981,7 +1972,7 @@ class GameDirector extends ChangeNotifier {
     _persist();
   }
 
-  /// Playtest helper: bump AL to unlock threshold then enter Gauntlet.
+  /// Playtest helper: max party levels (and AL if needed) then enter Gauntlet.
   /// Call only from debug UI (`kDebugMode`).
   void devEnterGauntlet() {
     if (_isLoading) return;
@@ -1989,8 +1980,16 @@ class GameDirector extends ChangeNotifier {
       showToast('Leave the dungeon first', life: 2.0);
       return;
     }
-    if (_state.ascensionLevel < GameLogic.gauntletMinAscension) {
-      _state = _state.copyWith(ascensionLevel: GameLogic.gauntletMinAscension);
+    if (_state.ascensionLevel < GameLogic.maxAscensionLevel) {
+      _state = _state.copyWith(ascensionLevel: GameLogic.maxAscensionLevel);
+    }
+    if (!GameLogic.endgameUnlocked(_state)) {
+      _state = _state.copyWith(
+        heroRoster: [
+          for (final h in _state.heroRoster)
+            h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+        ],
+      );
     }
     enterGauntlet();
   }

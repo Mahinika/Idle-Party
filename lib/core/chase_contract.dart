@@ -44,7 +44,7 @@ class ChaseContract {
   /// Short CTA when [isReady] (hub / offline action buttons).
   String? get readyActionLabel => switch (kind) {
     HubChaseKind.claimDailyVault => 'CLAIM VAULT',
-    HubChaseKind.claimMissions => 'CLAIM JOBS',
+    HubChaseKind.claimMissions => 'CLAIM QUESTS',
     HubChaseKind.meetHero => 'PARTY',
     HubChaseKind.equipBag => 'PARTY',
     HubChaseKind.marketUpgrade => 'MARKET',

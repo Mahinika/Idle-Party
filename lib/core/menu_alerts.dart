@@ -105,8 +105,7 @@ class MenuAlerts {
     final reasons = <String>[];
     final forgeType =
         PartyUpgradeType.values[GameLogic.recommendedForgeUpgrade(state)];
-    if (state.gold >= GameLogic.upgradeCostFor(state, forgeType) * 3 ||
-        state.gold >= GameLogic.partyTrainingCostFor(state) * 3) {
+    if (state.gold >= GameLogic.upgradeCostFor(state, forgeType) * 3) {
       count++;
       reasons.add('gold for FORGE');
     }
@@ -141,10 +140,10 @@ class MenuAlerts {
     }
     var count = 0;
     final reasons = <String>[];
-    final jobs = state.missions.where((m) => m.isComplete).length;
+    final jobs = state.missions.where((m) => m.canClaim).length;
     if (jobs > 0) {
       count += jobs;
-      reasons.add(jobs == 1 ? '1 job done' : '$jobs jobs done');
+      reasons.add(jobs == 1 ? '1 quest done' : '$jobs quests done');
     }
     if (GameLogic.canClaimDailyVault(state)) {
       count++;
@@ -231,7 +230,7 @@ class MenuAlerts {
 /// Progressive menus: hide advanced tabs until they can do something.
 ///
 /// A brand new player sees PARTY · GEAR/BAG, POWER · FORGE/MARKET,
-/// META · JOBS/GUIDE/SETTINGS. Tabs appear as the systems behind them unlock.
+/// META · QUESTS/GUIDE/SETTINGS. Tabs appear as the systems behind them unlock.
 abstract final class MenuTabs {
   static bool _clearedAFloor(GameState s) =>
       s.highestFloorCleared >= 1 ||

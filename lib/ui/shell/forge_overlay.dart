@@ -146,20 +146,13 @@ class _ForgeOverlayState extends State<ForgeOverlay>
 
   Widget _classicForgeBody() {
     final state = director.state;
-    final training = GameLogic.partyTrainingCostFor(state);
     final canAscend = GameLogic.canAscend(state);
-    final softcap = GameLogic.levelsUntilSoftcap(state);
-    final meanLv = state.heroes.isEmpty
-        ? 1
-        : (state.heroes.fold<int>(0, (s, h) => s + h.level) /
-                  state.heroes.length)
-              .round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           'Gold this run — forge upgrades wipe on Ascend. '
-          'Train levels stay forever.',
+          'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),
@@ -247,30 +240,11 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           const SizedBox(height: 6),
         ],
         const SizedBox(height: 8),
-        _sectionTitle(
-          'TRAIN (LEVELS)',
-          'Pays gold · +1 level to every hero · levels survive Ascend.',
-          scope: MenuScope.account,
-        ),
-        KenneyButton(
-          label: state.gold >= training
-              ? 'Train party +1 Lv · ${training}g'
-              : 'Train · Need ${training}g',
-          onPressed: state.gold >= training ? director.applyTraining : null,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            softcap > 0
-                ? 'Avg Lv$meanLv · ~$softcap more level${softcap == 1 ? '' : 's'} to match floor'
-                : 'Avg Lv$meanLv · party level matches this floor',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-        ),
-        const SizedBox(height: 8),
         Text(
-          GameLogic.isMaxAscension(state)
-              ? 'AL20 · max Ascension — endgame: KEY, Gauntlet, Rifts, vault'
+          GameLogic.endgameUnlocked(state)
+              ? 'Party Lv${GameLogic.maxHeroLevel} · endgame: KEY, Gauntlet, Rifts'
+              : GameLogic.isMaxAscension(state)
+              ? 'AL20 · level the party to ${GameLogic.maxHeroLevel} for KEY / Gauntlet / Rifts'
               : canAscend
               ? (director.state.inDungeon
                     ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'

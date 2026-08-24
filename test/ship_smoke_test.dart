@@ -3,6 +3,7 @@ import 'package:idle_party/core/ascend_roadmap.dart';
 import 'package:idle_party/core/game_guides.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
+import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/zone_art.dart';
@@ -125,10 +126,17 @@ void main() {
     expect(market.body.toLowerCase(), contains('today'));
   });
 
-  test('Gauntlet / KEY / Rift gates stay AL20 and What’s New version is non-empty', () {
-    expect(GameLogic.gauntletMinAscension, GameLogic.maxAscensionLevel);
-    expect(GameLogic.keystoneMinAscension, GameLogic.maxAscensionLevel);
-    expect(GameLogic.gauntletMinAscension, 20);
+  test('Gauntlet / KEY / Rift gates use party Lv60 and What’s New version is non-empty', () {
+    expect(GameLogic.maxHeroLevel, 60);
+    expect(GameLogic.endgameUnlocked(GameLogic.createInitialState()), isFalse);
+    final maxed = GameLogic.createInitialState().copyWith(
+      heroRoster: [
+        for (final h in GameLogic.createInitialState().heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );
+    expect(GameLogic.endgameUnlocked(maxed), isTrue);
+    expect(Keystone.maxForState(maxed), Keystone.maxLevel);
     expect(MetaSystems.currentVersion, isNotEmpty);
     expect(MetaSystems.releases.first.version, MetaSystems.currentVersion);
     expect(MetaSystems.releases.first.bullets, isNotEmpty);
@@ -151,15 +159,15 @@ void main() {
     expect(AscendRoadmap.unlockAtAl(2), contains('Forge'));
     expect(GameLogic.partySlot5EssenceCost, 80);
     expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
-    expect(AscendRoadmap.unlockAtAl(20), contains('Gauntlet'));
-    expect(AscendRoadmap.unlockAtAl(20), contains('KEYSTONE'));
-    expect(AscendRoadmap.unlockAtAl(20), contains('Rifts'));
+    expect(AscendRoadmap.unlockAtAl(20), contains('Ascension cap'));
+    expect(AscendRoadmap.unlockAtAl(20), contains('${GameLogic.maxHeroLevel}'));
+    expect(AscendRoadmap.unlockAtAl(20), contains('KEY'));
     expect(AscendRoadmap.chaseTeaser(0), contains('AL1'));
     expect(AscendRoadmap.kitUnlockSummary(4), isNotNull);
 
     final rift = GameGuides.topics.firstWhere((t) => t.id == 'rift');
     expect(rift.title.toUpperCase(), contains('RIFT'));
-    expect(rift.body, contains('AL20'));
+    expect(rift.body, contains('${GameLogic.maxHeroLevel}'));
     expect(rift.body.toLowerCase(), contains('farm'));
 
     final gr = GameGuides.topics.firstWhere((t) => t.id == 'greater_rift');

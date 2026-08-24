@@ -98,10 +98,12 @@ GameState fullHeal(GameState state) => state.copyWith(
     );
 
 GameState withLightForge(GameState state) {
-  var next = state.copyWith(gold: 50000);
-  for (var i = 0; i < 3; i++) {
-    next = GameLogic.trainParty(next);
-  }
+  var next = state.copyWith(
+    gold: 50000,
+    heroRoster: [
+      for (final h in state.heroRoster) h.copyWith(level: h.level + 3),
+    ],
+  );
   for (var i = 0; i < 2; i++) {
     next = GameLogic.upgradeAttack(next);
     next = GameLogic.upgradeDefense(next);
@@ -112,9 +114,11 @@ GameState withLightForge(GameState state) {
 
 GameState withMidForge(GameState state) {
   var next = withLightForge(state).copyWith(gold: 200000, essence: 80);
-  for (var i = 0; i < 8; i++) {
-    next = GameLogic.trainParty(next);
-  }
+  next = next.copyWith(
+    heroRoster: [
+      for (final h in next.heroRoster) h.copyWith(level: h.level + 8),
+    ],
+  );
   for (var i = 0; i < 6; i++) {
     next = GameLogic.upgradeAttack(next);
     next = GameLogic.upgradeDefense(next);

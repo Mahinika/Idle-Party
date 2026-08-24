@@ -206,6 +206,8 @@ class MetaDepthState {
     this.petRosterCapBonus = 0,
     this.zoneTrophies = const <String>[],
     this.jobChainCount = 0,
+    this.dailyQuestDate = '',
+    this.bountyRung = 0,
     this.lifetimeFloorClears = 0,
     this.lifetimeBossKills = 0,
     this.lifetimeAbilityCasts = 0,
@@ -307,6 +309,13 @@ class MetaDepthState {
   final int petRosterCapBonus;
   final List<String> zoneTrophies;
   final int jobChainCount;
+
+  /// UTC date key (`yyyy-mm-dd`) for today's Daily quest slot.
+  final String dailyQuestDate;
+
+  /// Bounty ladder rung (0..2). Survives Ascend; claim advances.
+  final int bountyRung;
+
   final int lifetimeFloorClears;
   final int lifetimeBossKills;
   final int lifetimeAbilityCasts;
@@ -486,6 +495,8 @@ class MetaDepthState {
     int? petRosterCapBonus,
     List<String>? zoneTrophies,
     int? jobChainCount,
+    String? dailyQuestDate,
+    int? bountyRung,
     int? lifetimeFloorClears,
     int? lifetimeBossKills,
     int? lifetimeAbilityCasts,
@@ -576,6 +587,8 @@ class MetaDepthState {
       petRosterCapBonus: petRosterCapBonus ?? this.petRosterCapBonus,
       zoneTrophies: zoneTrophies ?? this.zoneTrophies,
       jobChainCount: jobChainCount ?? this.jobChainCount,
+      dailyQuestDate: dailyQuestDate ?? this.dailyQuestDate,
+      bountyRung: bountyRung ?? this.bountyRung,
       lifetimeFloorClears: lifetimeFloorClears ?? this.lifetimeFloorClears,
       lifetimeBossKills: lifetimeBossKills ?? this.lifetimeBossKills,
       lifetimeAbilityCasts: lifetimeAbilityCasts ?? this.lifetimeAbilityCasts,
@@ -675,6 +688,8 @@ class MetaDepthState {
     'petRosterCapBonus': petRosterCapBonus,
     'zoneTrophies': zoneTrophies,
     'jobChainCount': jobChainCount,
+    'dailyQuestDate': dailyQuestDate,
+    'bountyRung': bountyRung,
     'lifetimeFloorClears': lifetimeFloorClears,
     'lifetimeBossKills': lifetimeBossKills,
     'lifetimeAbilityCasts': lifetimeAbilityCasts,
@@ -781,6 +796,8 @@ class MetaDepthState {
       zoneTrophies:
           (json['zoneTrophies'] as List<dynamic>?)?.cast<String>() ?? const [],
       jobChainCount: (json['jobChainCount'] as num?)?.toInt() ?? 0,
+      dailyQuestDate: (json['dailyQuestDate'] as String?) ?? '',
+      bountyRung: ((json['bountyRung'] as num?)?.toInt() ?? 0).clamp(0, 2),
       lifetimeFloorClears: (json['lifetimeFloorClears'] as num?)?.toInt() ?? 0,
       lifetimeBossKills: (json['lifetimeBossKills'] as num?)?.toInt() ?? 0,
       lifetimeAbilityCasts:

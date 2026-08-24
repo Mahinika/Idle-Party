@@ -37,8 +37,8 @@ for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (**1.12.42 / 72** submitted 2026-08-22; testers may still be on
-**1.12.41 / 71** until review publishes). Working ship is
+closed Alpha (**1.12.52 / 82** submitted 2026-08-24; testers may still be on
+**1.12.47 / 77** until review publishes). Working ship is
 **1.12.52**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
@@ -149,23 +149,31 @@ Paladin / Shaman can equip **shields** in the off-hand.
 **Content inventory:** 10 classes / **31 specs** (`HeroSpecId`) · **15 zones**
 through Mothveil Hollow.
 
-**Infinity Gauntlet** (`GameLogic.gauntletMinAscension` = **AL20**): endless Crystal
+**Infinity Gauntlet** (`GameLogic.endgameUnlocked` = active party all at
+`maxHeroLevel` **60**): endless Crystal
 Spire climb from Hub; **boss every 5 floors**; wipe/leave → hub;
 `metaDepth.gauntletBestFloor` survives Ascend.
 
-**KEYSTONE** (`GameLogic.keystoneMinAscension` = **AL20**): Mythic+-style keys on
-normal zone runs — dial under META → KEY. Mid-game (AL1–19) has no KEY habit.
+**KEYSTONE** (same party-max-level gate): Mythic+-style keys on
+normal zone runs — dial under META → KEY. Before party max level there is no KEY habit.
 
-**Rifts** (`Rift.minAscension` = **AL20**): farm timed kill-quota from hub /
+**Rifts** (same gate): farm timed kill-quota from hub /
 META → KEY — gold and gear mid-run; not Play-ranked.
 `metaDepth.riftBestTier` survives Ascend.
 
-**Greater Rifts** (`GreaterRift.minAscension` = **AL20**): harder timed ladder,
+**Greater Rifts** (same gate): harder timed ladder,
 no mid-run gear, larger clear payout; season PB on Play Games BOARDS.
 `metaDepth.grBestTier` / `seasonBestGrTier` survive Ascend.
 
-**Ascension cap:** `GameLogic.maxAscensionLevel` = **AL20** — endgame (KEY +20,
-Gauntlet, Rifts, Greater Rifts, vault, boards). No further Ascend after AL20.
+**Ascension cap:** `GameLogic.maxAscensionLevel` = **AL20** — Ascend stops here
+(Blessing / kit roadmap). **Endgame content** (KEY +20, Gauntlet, Rifts, Greater
+Rifts) unlocks when the **active party is all Lv60**, not at AL20 alone.
+`GameLogic.maxHeroLevel` = **60**; combat XP only (no gold Train +1 level).
+FORGE gold tracks (ATK/DEF/STA/MOVE/HASTE/CRIT) still buyable (wipe on Ascend).
+
+**QUESTS** (META tab; was JOBS/contracts): 3-slot board — **Daily** (UTC kill
+quest), **Bounty** ladder (100/500/1000 at endgame), **Side** rotating
+non-kill. Claim via TODAY **CLAIM QUESTS**.
 
 **Hub TODAY** — selection in `HubChase.forState`; every surface reads the same
 words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up

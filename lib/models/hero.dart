@@ -249,8 +249,10 @@ class PartyHero {
 
   PartyHero healToFull() => copyWith(currentHp: maxHp);
 
-  PartyHero levelUp() =>
-      copyWith(level: level + 1, xp: 0, currentHp: maxHp + 5);
+  PartyHero levelUp() {
+    if (level >= 60) return copyWith(xp: 0);
+    return copyWith(level: level + 1, xp: 0, currentHp: maxHp + 5);
+  }
 
   PartyHero train() => levelUp();
 

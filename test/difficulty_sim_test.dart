@@ -125,10 +125,12 @@ void main() {
 }
 
 GameState _lightForge(GameState s) {
-  var next = s.copyWith(gold: 50000);
-  for (var i = 0; i < 3; i++) {
-    next = GameLogic.trainParty(next);
-  }
+  var next = s.copyWith(
+    gold: 50000,
+    heroRoster: [
+      for (final h in s.heroRoster) h.copyWith(level: h.level + 3),
+    ],
+  );
   for (var i = 0; i < 2; i++) {
     next = GameLogic.upgradeAttack(next);
     next = GameLogic.upgradeDefense(next);
@@ -172,9 +174,11 @@ GameState _midPower(GameState s) {
     rogueUnlocked: true,
   );
   next = GameLogic.ensureRogueHero(next);
-  for (var i = 0; i < 10; i++) {
-    next = GameLogic.trainParty(next);
-  }
+  next = next.copyWith(
+    heroRoster: [
+      for (final h in next.heroRoster) h.copyWith(level: h.level + 10),
+    ],
+  );
   for (var i = 0; i < 8; i++) {
     next = GameLogic.upgradeAttack(next);
     next = GameLogic.upgradeDefense(next);

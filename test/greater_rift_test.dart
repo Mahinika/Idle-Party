@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/greater_rift.dart';
 import 'package:idle_party/core/play_games_scores.dart';
 import 'package:idle_party/core/rift.dart';
@@ -14,14 +15,17 @@ void main() {
     expect(GreaterRift.parTimeMs(12), lessThan(Rift.parTimeMs(12)));
   });
 
-  test('Greater Rift enter requires AL20', () {
+  test('Greater Rift enter requires party Lv60', () {
     final early = GameLogic.createInitialState(now: now);
     expect(GameLogic.canEnterGreaterRift(early), isFalse);
     expect(GameLogic.enterGreaterRift(early).inGreaterRift, isFalse);
 
-    final al20 = early.copyWith(ascensionLevel: GameLogic.maxAscensionLevel);
-    expect(GameLogic.canEnterGreaterRift(al20), isTrue);
-    final run = GameLogic.enterGreaterRift(al20, tier: 1);
+    final alOnly = early.copyWith(ascensionLevel: GameLogic.maxAscensionLevel);
+    expect(GameLogic.canEnterGreaterRift(alOnly), isFalse);
+
+    final endgame = _withPartyMaxLevel(alOnly);
+    expect(GameLogic.canEnterGreaterRift(endgame), isTrue);
+    final run = GameLogic.enterGreaterRift(endgame, tier: 1);
     expect(run.inGreaterRift, isTrue);
     expect(run.inRift, isFalse);
     expect(run.grTier, 1);
@@ -29,8 +33,10 @@ void main() {
   });
 
   test('Greater Rift success updates season PB and best tier', () {
-    var state = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+      ),
     );
     state = GameLogic.enterGreaterRift(state, tier: 1);
     final goldBefore = state.gold;
@@ -62,8 +68,10 @@ void main() {
   });
 
   test('farm Rift success does not set Greater season PB', () {
-    var state = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+      ),
     );
     state = GameLogic.enterRift(state, tier: 1);
     state = state.copyWith(
@@ -75,3 +83,10 @@ void main() {
     expect(resolved.metaDepth.riftBestTier, greaterThan(0));
   });
 }
+
+GameState _withPartyMaxLevel(GameState state) => state.copyWith(
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );

@@ -17,13 +17,24 @@ abstract final class Keystone {
     'iron',
   ];
 
-  /// KEY unlocks at endgame AL (same band as Gauntlet / max Ascension).
+  /// KEY unlocks when every active hero is at [heroLevelGate] (endgame).
+  /// Keep in sync with [GameLogic.maxHeroLevel].
   static const int minAscension = 20;
+  static const int heroLevelGate = 60;
 
-  /// AL-gated key cap (0 = off until [minAscension], then up to [maxLevel]).
+  /// Full KEY dial once the party is capped; 0 before.
+  static int maxForState(GameState state) {
+    if (state.heroes.isEmpty) return 0;
+    for (final h in state.heroes) {
+      if (h.level < heroLevelGate) return 0;
+    }
+    return maxLevel;
+  }
+
+  /// Legacy AL helper — prefer [maxForState].
   static int maxForAl(int ascensionLevel) {
     if (ascensionLevel < minAscension) return 0;
-    return min(maxLevel, max(2, 3 + ascensionLevel));
+    return maxLevel;
   }
 
   /// Threat / pack density vs old HM+10 ≈ 10× at key 20.
@@ -110,7 +121,7 @@ abstract final class Keystone {
 
   /// Preview affixes for hub UI (preference dial, not an active run).
   static List<String> previewAffixes(GameState state) {
-    final key = state.hardmodeLevel.clamp(0, maxForAl(state.ascensionLevel));
+    final key = state.hardmodeLevel.clamp(0, maxForState(state));
     return affixesFor(
       key: key,
       weeklyModifier: state.metaDepth.weeklyModifier,

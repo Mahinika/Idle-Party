@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
@@ -92,22 +93,24 @@ void main() {
     expect(chase.detail, contains('+${WillRanks.essenceForThreshold(25)}e'));
   });
 
-  test('Gauntlet milestone chase at AL20', () {
+  test('Gauntlet milestone chase at party Lv60', () {
     var state = GameLogic.createInitialState(now: now);
-    state = state.copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
-      hardmodeLevel: GameLogic.maxAscensionLevel,
-      metaDepth: state.metaDepth.copyWith(
-        dailyVaultClaimed: true,
-        gauntletBestFloor: 10,
+    state = _withPartyMaxLevel(
+      state.copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        metaDepth: state.metaDepth.copyWith(
+          dailyVaultClaimed: true,
+          gauntletBestFloor: 10,
+        ),
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        achievements: [
+          for (var i = 0; i < 160; i++) 'ach_$i',
+        ],
+        highestDungeonCleared: 8,
+        lifetimeGoldEarned: 5_000_000,
       ),
-      lastDailyDate: MetaSystems.dailyDateKey(now),
-      dailyClaimed: true,
-      achievements: [
-        for (var i = 0; i < 160; i++) 'ach_$i',
-      ],
-      highestDungeonCleared: 8,
-      lifetimeGoldEarned: 5_000_000,
     );
     expect(state.collectionScore, greaterThanOrEqualTo(320));
     final chase = HubChase.forState(state, now: now);
@@ -151,17 +154,19 @@ void main() {
   });
 
   test('AL20 max blocks Ascend chase', () {
-    var state = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
-      bossVictories: 99,
-      hardmodeLevel: GameLogic.maxAscensionLevel,
-      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-            dailyVaultClaimed: true,
-            gauntletBestFloor: 42,
-            ascendBlessings: 20,
-          ),
-      lastDailyDate: MetaSystems.dailyDateKey(now),
-      dailyClaimed: true,
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        bossVictories: 99,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+              gauntletBestFloor: 42,
+              ascendBlessings: 20,
+            ),
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+      ),
     );
     expect(GameLogic.canAscend(state), isFalse);
     final chase = HubChase.forState(state, now: now);
@@ -203,7 +208,7 @@ void main() {
     expect(chase.title, contains('Almost'));
   });
 
-  test('vault start before AL20 never uses KEY jargon', () {
+  test('vault start before party Lv60 never uses KEY jargon', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
       ascensionLevel: 1,
@@ -220,17 +225,19 @@ void main() {
     expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
   });
 
-  test('AL20 vault almost uses KEY jargon', () {
-    var state = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
-      highestDungeonCleared: 14,
-      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-            dailyVaultClears: 0,
-            dailyVaultClaimed: false,
-            dailyBestTimedKey: 1,
-          ),
-      lastDailyDate: MetaSystems.dailyDateKey(now),
-      dailyClaimed: true,
+  test('party Lv60 vault almost uses KEY jargon', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        highestDungeonCleared: 14,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClears: 0,
+              dailyVaultClaimed: false,
+              dailyBestTimedKey: 1,
+            ),
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+      ),
     );
     expect(GameLogic.showKeystoneJargon(state), isTrue);
     final chase = HubChase.forState(state, now: now);
@@ -266,7 +273,7 @@ void main() {
     expect(state.metaDepth.pendingHeroReveals, isEmpty);
   });
 
-  test('after first Ascend, Daily is the hub chase (KEY waits for AL20)', () {
+  test('after first Ascend, Daily is the hub chase (KEY waits for party Lv60)', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,
     );
@@ -277,24 +284,26 @@ void main() {
     expect(chase.kind, isNot(HubChaseKind.keystone));
   });
 
-  test('KEY habit at AL20 when preferred key below cap', () {
-    final state = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
-      hardmodeLevel: 2,
-      lastDailyDate: MetaSystems.dailyDateKey(now),
-      dailyClaimed: true,
-      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-            dailyVaultClaimed: true,
-            gauntletBestFloor: 100,
-            claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
-            riftBestTier: 20,
-            claimedRiftMilestones: const ['r5', 'r10', 'r20'],
-          ),
-      achievements: [
-        for (var i = 0; i < 200; i++) 'ach_$i',
-      ],
-      highestDungeonCleared: 14,
-      lifetimeGoldEarned: 50_000_000,
+  test('KEY habit at party Lv60 when preferred key below cap', () {
+    final state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 2,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+              gauntletBestFloor: 100,
+              claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+              riftBestTier: 20,
+              claimedRiftMilestones: const ['r5', 'r10', 'r20'],
+            ),
+        achievements: [
+          for (var i = 0; i < 200; i++) 'ach_$i',
+        ],
+        highestDungeonCleared: 14,
+        lifetimeGoldEarned: 50_000_000,
+      ),
     );
     expect(GameLogic.showKeystoneJargon(state), isTrue);
     final chase = HubChase.forState(state, now: now);
@@ -303,7 +312,7 @@ void main() {
     expect(chase.title, contains('KEY +2'));
   });
 
-  test('KEY at AL cap falls through to Daily before AL20', () {
+  test('KEY at AL cap falls through to Daily before party Lv60', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,
       hardmodeLevel: 0,
@@ -313,27 +322,36 @@ void main() {
     expect(chase.kind, HubChaseKind.dailyRun);
   });
 
-  test('Rift milestone chase at AL20', () {
+  test('Rift milestone chase at party Lv60', () {
     var state = GameLogic.createInitialState(now: now);
-    state = state.copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
-      hardmodeLevel: GameLogic.maxAscensionLevel,
-      metaDepth: state.metaDepth.copyWith(
-        dailyVaultClaimed: true,
-        gauntletBestFloor: 100,
-        claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
-        riftBestTier: 3,
+    state = _withPartyMaxLevel(
+      state.copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        metaDepth: state.metaDepth.copyWith(
+          dailyVaultClaimed: true,
+          gauntletBestFloor: 100,
+          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          riftBestTier: 3,
+        ),
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        achievements: [
+          for (var i = 0; i < 200; i++) 'ach_$i',
+        ],
+        highestDungeonCleared: 14,
+        lifetimeGoldEarned: 50_000_000,
       ),
-      lastDailyDate: MetaSystems.dailyDateKey(now),
-      dailyClaimed: true,
-      achievements: [
-        for (var i = 0; i < 200; i++) 'ach_$i',
-      ],
-      highestDungeonCleared: 14,
-      lifetimeGoldEarned: 50_000_000,
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.riftMilestone);
     expect(chase.title, contains('Rift'));
   });
 }
+
+GameState _withPartyMaxLevel(GameState state) => state.copyWith(
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );

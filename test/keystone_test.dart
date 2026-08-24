@@ -52,9 +52,11 @@ void main() {
   });
 
   test('enter dungeon locks keystone run; leave clears it', () {
-    final base = GameLogic.createInitialState().copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
-      hardmodeLevel: 3,
+    final base = _withPartyMaxLevel(
+      GameLogic.createInitialState().copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 3,
+      ),
     );
     final entered = GameLogic.enterDungeon(base, dungeonId: 'sandy');
     expect(entered.keystoneRunActive, isTrue);
@@ -69,14 +71,16 @@ void main() {
   });
 
   test('timed boss clear upgrades preferred key and vault score', () {
-    var state = GameLogic.createInitialState().copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
-      hardmodeLevel: 2,
-      dungeonMode: DungeonMode.push,
-      metaDepth: const MetaDepthState(
-        weeklyKey: '2026-W32',
-        weeklyModifier: 'fortune',
-        seasonKey: '2026-W32 · 2026-08',
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState().copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 2,
+        dungeonMode: DungeonMode.push,
+        metaDepth: const MetaDepthState(
+          weeklyKey: '2026-W32',
+          weeklyModifier: 'fortune',
+          seasonKey: '2026-W32 · 2026-08',
+        ),
       ),
     );
     state = GameLogic.enterDungeon(state, dungeonId: 'sandy');
@@ -180,9 +184,11 @@ void main() {
   });
 
   test('challenge essence uses run level, not hub dial alone', () {
-    final hubOnly = GameLogic.createInitialState().copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
-      hardmodeLevel: 5,
+    final hubOnly = _withPartyMaxLevel(
+      GameLogic.createInitialState().copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 5,
+      ),
     );
     expect(MetaSystems.challengeClearEssenceBonus(hubOnly), 0);
 
@@ -203,7 +209,7 @@ void main() {
     expect(GameLogic.canUseConsumable(state), isFalse);
   });
 
-  test('legacy hardmodeLevel clamps to 0 before AL20', () {
+  test('legacy hardmodeLevel clamps to 0 before party Lv60', () {
     final json = GameLogic.createInitialState()
         .copyWith(hardmodeLevel: 10)
         .toJson();
@@ -215,15 +221,14 @@ void main() {
   test(
     'stateFromJson re-locks KEY run when dungeon save lacks keystone flag',
     () {
-      final json = GameLogic.createInitialState()
-          .copyWith(
-            ascensionLevel: GameLogic.maxAscensionLevel,
-            inDungeon: true,
-            hardmodeLevel: 6,
-            keystoneRunActive: false,
-            keystoneRunLevel: 0,
-          )
-          .toJson();
+      final base = GameLogic.createInitialState().copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        inDungeon: true,
+        hardmodeLevel: 6,
+        keystoneRunActive: false,
+        keystoneRunLevel: 0,
+      );
+      final json = _withPartyMaxLevel(base).toJson();
       final loaded = GameLogic.stateFromJson(json);
       expect(loaded.keystoneRunActive, isTrue);
       expect(loaded.keystoneRunLevel, 6);
@@ -231,19 +236,22 @@ void main() {
     },
   );
 
-  test('ascend at AL20 keeps KEY preference', () {
-    final ready = GameLogic.createInitialState(
-      now: DateTime(2026, 8, 1),
-    ).copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel - 1,
-      bossVictories: 99,
-      hardmodeLevel: 0,
+  test('ascend at AL20 keeps KEY preference when party is maxed', () {
+    final ready = _withPartyMaxLevel(
+      GameLogic.createInitialState(
+        now: DateTime(2026, 8, 1),
+      ).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel - 1,
+        bossVictories: 99,
+        hardmodeLevel: 5,
+      ),
     );
     expect(GameLogic.canAscend(ready), isTrue);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 2));
     expect(ascended.ascensionLevel, GameLogic.maxAscensionLevel);
     expect(ascended.effectiveMaxHardmode, Keystone.maxLevel);
     expect(GameLogic.showKeystoneJargon(ascended), isTrue);
+    expect(ascended.hardmodeLevel, 5);
   });
 
   test('ensureDailyVault migrates legacy weekly progress once', () {
@@ -263,3 +271,10 @@ void main() {
     expect(migrated.metaDepth.dailyVaultClaimed, isFalse);
   });
 }
+
+GameState _withPartyMaxLevel(GameState state) => state.copyWith(
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );

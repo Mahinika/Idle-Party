@@ -52,10 +52,14 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
     noWipeAscendReady: true,
     unlockedSpecs: unlockedSpecs,
     ascendBlessings: state.metaDepth.ascendBlessings + 1,
+    dailyQuestDate: MetaSystems.dailyDateKey(
+      (now ?? DateTime.now()).toUtc(),
+    ),
   );
 
   final fresh = GameLogic.createInitialState(now: now);
-  final hmCap = Keystone.maxForAl(nextLevel);
+  // Party levels survive Ascend — KEY dial follows maxForState, not AL alone.
+  final hmCap = Keystone.maxForState(state);
 
   final stashApex = [
     for (final g in state.gearStash)

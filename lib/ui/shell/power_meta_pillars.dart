@@ -187,7 +187,7 @@ class _PowerScopeLine extends StatelessWidget {
   }
 }
 
-/// META pillar — keystone · contracts · beast · collection · help · settings.
+/// META pillar — keystone · quests · beast · collection · help · settings.
 class MetaPillar extends StatefulWidget {
   const MetaPillar({
     super.key,
@@ -264,7 +264,7 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
             ),
           ),
           MetaTab.jobs => (
-            label: 'JOBS',
+            label: 'QUESTS',
             body: SingleChildScrollView(child: JobsOverlay(director: d)),
           ),
           MetaTab.beast => (
