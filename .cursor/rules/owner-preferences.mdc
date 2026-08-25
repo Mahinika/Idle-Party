@@ -10,7 +10,7 @@ alwaysApply: true
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
 Last preference sync: **2026-08-22** (work loop: AL20 save, large independent
 batches, owner plays their AL20 save; APK only when they ask; short “what to
-test” then wait. Play Alpha fact still **1.12.42 / 72**; no IAP. Other product locks
+test” then wait. Play Alpha fact still **1.12.60 / 90**; no IAP. Other product locks
 unchanged).
 
 ## Near-term focus
