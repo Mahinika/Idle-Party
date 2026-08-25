@@ -11,8 +11,8 @@ abstract final class GameGuides {
           '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
           '• Watch them clear rooms. Tap the map (God Hand) when you want to help.\n'
           '• TODAY on the hub always names the next job — start there.\n'
-          '• Three buckets: RUN (this Ascend — dungeon + FORGE gold), TODAY '
-          '(claims — vault, quests, daily), ACCOUNT (forever — essence, Apex, '
+          '• Three buckets: RUN (wallet gold — dungeon + FORGE), TODAY '
+          '(claims — vault, quests, daily), ACCOUNT (essence, Apex, '
           'Blessing, CAMP tracks).\n'
           '• Gold buys supplies and run power. Essence buys lasting power.\n'
           '• Bottom buttons (same in hub and dungeon): PARTY (heroes and gear), '
@@ -106,7 +106,7 @@ abstract final class GameGuides {
           '(STREAK, SWEEP / FLURRY, BEACON when those windows are up).\n'
           '• The strip shows level and a thin XP bar so growth is visible mid-fight.\n'
           '• Resources: Rage / Mana / Energy / Runic — kits spend these.\n'
-          '• Roster levels persist on Ascend; run gear still resets.\n'
+          '• Roster levels, gear, and forge keep on Ascend.\n'
           '• Flask heals the party when you have a potion.',
     ),
     GuideTopic(
@@ -175,14 +175,14 @@ abstract final class GameGuides {
       id: 'forge',
       title: 'FORGE',
       body:
-          'POWER → FORGE — RUN gold (GOLD tab) vs ACCOUNT forever (KEEP, APEX).\n\n'
+          'POWER → FORGE — RUN gold (GOLD tab) vs ACCOUNT essence (KEEP, APEX).\n\n'
           'Tabs:\n'
-          '• GOLD — spend gold this run. ATK/DEF/STA/MOVE/HASTE/CRIT. '
+          '• GOLD — spend wallet gold on party ATK/DEF/STA/MOVE/HASTE/CRIT. '
           'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
           'SPEND ALL · EVEN to split gold round-robin across every track. '
-          'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}) and keep on Ascend. '
+          'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}). '
           'Harder kills (higher enemy level than the hero) pay more XP; heroes far behind the party catch up faster.\n'
-          'ATK/DEF/STA/MOVE/HASTE/CRIT wipe on Ascend. '
+          'Forge gold tracks keep when you Ascend. '
           'ATK, HASTE, and MOVE speed up clears — see INCOME for rates. '
           'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
@@ -357,7 +357,7 @@ abstract final class GameGuides {
       body:
           'Named LOADOUTS were removed — swap gear in PARTY → GEAR / BAG.\n\n'
           '• Armor sets (2pc/4pc) are dungeon bonuses on rare+ zone gear.\n'
-          '• Old saves may still hold preset data until Ascend resets it.',
+          '• Old saves may still hold unused preset data in the save file.',
     ),
     GuideTopic(
       id: 'armor_sets',
@@ -390,18 +390,19 @@ abstract final class GameGuides {
       id: 'ascend',
       title: 'ASCEND',
       body:
-          'Prestige when Ascend unlocks in the hub (AL1–AL20).\n\n'
+          'Claim Ascend in the hub when ready (AL1–AL20) — power up, no soft wipe.\n\n'
           '• AL20 is the Ascension cap. Endgame (KEY +20, Gauntlet, Rifts, Greater Rifts, '
           'vault, boards) unlocks when every active hero reaches level ${GameLogic.maxHeroLevel}.\n'
           '• Each Ascend grants a lasting Blessing: +5 ATK · +20 DEF · +60 STA · '
           '+8% gold (stacks forever). See Forge → KEEP.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
           '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
-          '• Keeps: essence, relics, sanctuary, pets, God Hand, '
+          '• Keeps: wallet gold, forge, gear, floors, loadouts, market, '
+          'essence, relics, sanctuary, pets, God Hand, '
           'highest dungeon cleared, lifetime gold, unlocked specs, '
           'roster levels/XP, Apex, and 5th party slot.\n'
-          '• Resets: wallet gold, floors, run gear, loadouts, forge gold upgrades.\n'
-          '• AL makes later runs tougher but richer in meta power.',
+          '• Clears: boss victories toward the next Ascend (and leaves any active dungeon).\n'
+          '• AL adds permanent party power; Ascend is a reward, not a restart.',
     ),
     GuideTopic(
       id: 'daily',

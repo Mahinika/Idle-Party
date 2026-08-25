@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.58**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.59**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -39,7 +39,7 @@ for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.52 / 82** submitted 2026-08-24; testers may still be on
 **1.12.47 / 77** until review publishes). Working ship is
-**1.12.58**. Production still needs **12 closed testers × 14 days**.
+**1.12.59**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -312,8 +312,8 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 - `GameDirector.preview()` for tests (no SharedPreferences / no spatial timer).
 - Asset paths only through `KenneyAssets` / `CustomAssets` (no raw `assets/...` in UI).
 - Pixel sprites: `filterQuality: FilterQuality.none`.
-- **LOADOUTS** tab is hidden; leftover save presets reset on Ascend. Dungeon
-  armor 2pc/4pc = **armor sets** (not the same).
+- **LOADOUTS** tab is hidden; leftover save presets may still exist in JSON.
+  Dungeon armor 2pc/4pc = **armor sets** (not the same).
 - Gear BiS / UPGRADE: budget-honest score only — see `docs/GEAR_BUDGET.md`
   (`itemBudgetScore`; no affinity/armor/rarity/set crumbs).
 - Split giant files (`game_logic`, `spatial_combat`, …) when a change needs a
@@ -344,11 +344,11 @@ each Ascend adds **+5 ATK · +20 DEF · +60 STA · +8% gold** on top of AL flats
 and Sanctuary. Constants: `GameLogic.ascendBlessing*`. Player-facing label is
 **STA / Stamina** (same as gear); internal fields may still say vitality.
 
-**Resets:** wallet gold, floor progress (`highestFloorCleared`), gold party upgrades
-(ATK/DEF/STA/move/haste/crit), non-Apex gear/stash, **loadout presets** (slot
-*count* from prestige Folio stays), **MARKET listings**, wipe streak/advice,
-keystone **run** state (timer/affixes/outcome; dial stays), leave dungeon
-(`inDungeon=false`); mission board rebuilt for new AL.
+**Ascend claim (no soft-reset):** raises AL, stacks Blessing, unlocks kits,
+pays essence. **Keeps** wallet gold, forge gold tracks, gear/stash, floors,
+loadouts, market listings. **Clears** `bossVictories` (work toward next AL),
+wipe streak/advice, active keystone/rift/GR run flags via leave-dungeon;
+mission board rebuilt for new AL.
 
 Dungeon unlock uses **party mean level** (and prior clears), not lifetime gold.
 

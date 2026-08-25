@@ -153,7 +153,8 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Gold this run — forge upgrades wipe on Ascend. '
+          'Spend wallet gold on ATK / DEF / STA / MOVE / HASTE / CRIT — '
+          'keeps when you Ascend. '
           'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),

@@ -1,17 +1,20 @@
 part of 'game_logic.dart';
 
-/// Prestige: reset the run, keep essence/relics/sanctuary/pets/Apex, bump AL.
+/// Ascend claim: raise AL, stack Blessing, unlock kits — **no soft-reset**.
+///
+/// Keeps wallet gold, forge, gear, floors, loadouts, and market. Only clears
+/// bossVictories (work toward the next AL) and leaves any active dungeon run.
 GameState _ascendGameState(GameState state, {DateTime? now}) {
   if (!GameLogic.canAscend(state)) {
     return state;
   }
 
+  final clock = (now ?? DateTime.now()).toUtc();
   final nextLevel = state.ascensionLevel + 1;
   final milestoneBonus = MetaSystems.ascendMilestoneReward(
     state.ascensionLevel,
     nextLevel,
   );
-  final preservedRelics = List<String>.from(state.unlockedRelics);
 
   final streak = state.metaDepth.noWipeAscendReady
       ? state.metaDepth.ascendStreak + 1
@@ -52,25 +55,17 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
     noWipeAscendReady: true,
     unlockedSpecs: unlockedSpecs,
     ascendBlessings: state.metaDepth.ascendBlessings + 1,
-    dailyQuestDate: MetaSystems.dailyDateKey(
-      (now ?? DateTime.now()).toUtc(),
-    ),
+    dailyQuestDate: MetaSystems.dailyDateKey(clock),
   );
 
-  final fresh = GameLogic.createInitialState(now: now);
-  // Party levels survive Ascend — KEY dial follows maxForState, not AL alone.
-  final hmCap = Keystone.maxForState(state);
+  // Leave any active dungeon/KEY/rift without wiping hub power.
+  var base = GameLogic.leaveDungeon(state);
 
-  final stashApex = [
-    for (final g in state.gearStash)
-      if (g.isApex) g,
-  ];
-  final preservedVault = [...state.apexVault, ...stashApex];
-  var preservedRoster = [
-    for (final h in state.heroRoster) h.copyWith(equipped: GameLogic.keepApexOnly(h)),
-  ];
+  // Keep full gear — Ascend is a power unlock, not a wipe.
+  var preservedRoster = List<PartyHero>.from(base.heroRoster);
   if (!preservedRoster.any((h) => h.specId == HeroSpecs.ascendUnlockSpec)) {
-    final seedPool = preservedRoster.isNotEmpty ? preservedRoster : state.heroes;
+    final seedPool =
+        preservedRoster.isNotEmpty ? preservedRoster : base.heroes;
     final seedLevel = seedPool.isEmpty
         ? 1
         : max(
@@ -88,103 +83,55 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
       ),
     ];
   }
-  final maxActive = state.metaDepth.partySlot5Unlocked ? 5 : 4;
+  final maxActive = base.metaDepth.partySlot5Unlocked ? 5 : 4;
   var preservedActive = [
-    for (final id in state.activeHeroIds)
+    for (final id in base.activeHeroIds)
       if (preservedRoster.any((h) => h.id == id)) id,
   ];
   if (preservedActive.isEmpty) {
     preservedActive = [for (final h in preservedRoster.take(maxActive)) h.id];
+  } else {
+    for (final h in preservedRoster) {
+      if (preservedActive.length >= maxActive) break;
+      if (!preservedActive.contains(h.id)) {
+        preservedActive = [...preservedActive, h.id];
+      }
+    }
   }
 
-  var withMeta = fresh.copyWith(
+  final hmCap = Keystone.maxForState(
+    base.copyWith(ascensionLevel: nextLevel, heroRoster: preservedRoster),
+  );
+
+  var withMeta = base.copyWith(
     heroRoster: preservedRoster,
     activeHeroIds: preservedActive,
-    partyName: state.partyName,
     essence: preservedEssence,
-    lifetimeGoldEarned: state.lifetimeGoldEarned,
-    unlockedRelics: preservedRelics,
     ascensionLevel: nextLevel,
-    missions: GameLogic.createMissionBoardFor(
-      state.copyWith(ascensionLevel: nextLevel, highestFloorCleared: 0),
-    ),
-    activePet: state.activePet,
-    ownedPets: List<Pet>.from(state.ownedPets),
-    sanctuaryGoldLevel: state.sanctuaryGoldLevel,
-    sanctuaryPowerLevel: state.sanctuaryPowerLevel,
-    sanctuaryVitalityLevel: state.sanctuaryVitalityLevel,
-    metaDepth: nextMeta,
-    dungeonMode: state.dungeonMode,
-    highestFloorCleared: 0,
-    highestDungeonCleared: state.highestDungeonCleared,
-    inDungeon: false,
-    soulboundFragments: state.soulboundFragments,
-    soulboundItem: state.soulboundItem == null
-        ? null
-        : GameLogic.scaleSoulboundForAl(state.soulboundItem!, nextLevel),
-    craftMaterials: Map<String, int>.from(state.craftMaterials),
-    craftPity: Map<String, int>.from(state.craftPity),
-    apexVault: preservedVault,
-    godHandLevel: state.godHandLevel,
-    soundMuted: state.soundMuted,
-    vfxQuality: state.vfxQuality,
-    autoSellMaxPower: state.autoSellMaxPower,
-    autoSellMaxRarity: state.autoSellMaxRarity,
-    autoDisassembleMaxIlvl: state.autoDisassembleMaxIlvl,
-    autoDisassembleMaxRarity: state.autoDisassembleMaxRarity,
+    bossVictories: 0,
     rogueUnlocked: true,
+    missions: GameLogic.createMissionBoardFor(
+      base.copyWith(
+        ascensionLevel: nextLevel,
+        heroRoster: preservedRoster,
+        activeHeroIds: preservedActive,
+      ),
+    ),
+    metaDepth: nextMeta,
+    soulboundItem: base.soulboundItem == null
+        ? null
+        : GameLogic.scaleSoulboundForAl(base.soulboundItem!, nextLevel),
     seenTips: [
-      for (final t in state.seenTips)
+      for (final t in base.seenTips)
         if (t != 'post_ascend') t,
     ],
-    loadouts: const <GearLoadout>[],
-    achievements: List<String>.from(state.achievements),
-    codexEnemies: List<String>.from(state.codexEnemies),
-    codexItems: List<String>.from(state.codexItems),
-    challengeBossRush: state.challengeBossRush,
-    challengeNoFlask: state.challengeNoFlask,
-    challengeTiny: state.challengeTiny,
-    hardmodeLevel: state.hardmodeLevel.clamp(0, hmCap),
-    keystoneRunActive: false,
-    keystoneRunLevel: 0,
-    keystoneTimerMs: 0,
-    keystoneParMs: 0,
-    keystoneRunAffixes: const <String>[],
-    keystoneOutcome: '',
-    inRift: false,
-    riftTier: 0,
-    riftTimerMs: 0,
-    riftParMs: 0,
-    riftKillTarget: 0,
-    riftKills: 0,
-    riftOutcome: '',
-    inGreaterRift: false,
-    grTier: 0,
-    grTimerMs: 0,
-    grParMs: 0,
-    grKillTarget: 0,
-    grKills: 0,
-    grOutcome: '',
-    inWorldBoss: false,
-    worldBossPractice: false,
-    apexTrialActive: false,    colorblindMode: state.colorblindMode,
-    uiTextScale: state.uiTextScale,
-    dungeonZoom: state.dungeonZoom,
-    hapticsEnabled: state.hapticsEnabled,
-    keepScreenAwake: state.keepScreenAwake,
-    lastDailyDate: state.lastDailyDate,
-    dailyClaimed: state.dailyClaimed,
-    seenChangelogVersion: state.seenChangelogVersion,
-    sessionTelemetryOptIn: state.sessionTelemetryOptIn,
-    sessionTelemetryLog: state.sessionTelemetryLog,
-    lastUpdated: now ?? DateTime.now(),
-    clearEquipped: true,
-    marketListings: const <MarketListing>[],
-    marketListingsRefreshMs: 0,
+    hardmodeLevel: base.hardmodeLevel.clamp(0, hmCap),
     wipeStreakKey: '',
     wipeStreakCount: 0,
     wipeAdviceLine: '',
+    lastUpdated: now ?? DateTime.now(),
   );
+
   withMeta = GameLogic.ensureRogueHero(withMeta);
   withMeta = GameLogic.syncSpecUnlocks(withMeta);
   withMeta = withMeta.copyWith(

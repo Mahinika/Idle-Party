@@ -189,13 +189,13 @@ class GameState {
   final int defenseBonus;
   final int vitalityBonus;
 
-  /// Forge move-speed points (≈% before soft-cap). Cleared on Ascend.
+  /// Forge move-speed points (≈% before soft-cap). Kept on Ascend.
   final int moveSpeedBonus;
 
-  /// Forge attack-speed points (≈% before soft-cap). Cleared on Ascend.
+  /// Forge attack-speed points (≈% before soft-cap). Kept on Ascend.
   final int attackSpeedBonus;
 
-  /// Forge crit-chance points (≈% before soft-cap). Cleared on Ascend.
+  /// Forge crit-chance points (≈% before soft-cap). Kept on Ascend.
   final int critBonus;
 
   final List<LootDrop> recentLoot;
@@ -207,17 +207,17 @@ class GameState {
   final int ascensionLevel;
 
   /// Legacy single-hero equip map (pre per-hero gear). Kept for save migration only.
-  /// Prefer [PartyHero.equipped] and [GearLoadout] presets. Cleared after migrate / Ascend.
+  /// Prefer [PartyHero.equipped] and [GearLoadout] presets. Cleared after migrate.
   final Map<EquipmentSlot, EquipmentItem> equipped;
 
   /// Up to 3 active quests (Daily / Bounty / Side). Daily refreshes UTC;
   /// claimed Daily stays until next day; Bounty advances rung; Side rolls anew.
   final List<Mission> missions;
 
-  /// Inventory / Combinator stash. Cleared on Ascend / hard reset.
+  /// Inventory / Combinator stash. Kept on Ascend; hard reset clears.
   final List<EquipmentItem> gearStash;
 
-  /// Traveling gear listings on POWER → MARKET. Cleared on Ascend.
+  /// Traveling gear listings on POWER → MARKET. Kept on Ascend.
   final List<MarketListing> marketListings;
 
   /// UTC ms when [marketListings] last rolled (6h free refresh).
@@ -310,7 +310,7 @@ class GameState {
   /// Dismissed first-run tip ids (survives Ascend).
   final List<String> seenTips;
 
-  /// Up to 3 saved gear presets (cleared on Ascend — slot count from prestige).
+  /// Up to 3 saved gear presets (LOADOUTS UI hidden; data kept on Ascend).
   final List<GearLoadout> loadouts;
 
   /// Unlocked local achievement ids (survives Ascend / hard reset persists

@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.58';
+  static const String currentVersion = '1.12.59';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.59',
+      bullets: <String>[
+        'Ascend is a claim, not a wipe: keep gold, forge, gear, floors, loadouts, and market. You still gain AL power, Blessing, kits, and essence — only boss victories toward the next Ascend clear.',
+        'KEY / Gauntlet / Greater Rifts still unlock at party Lv100. World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.58',
       bullets: <String>[

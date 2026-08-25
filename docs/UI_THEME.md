@@ -33,9 +33,9 @@ flowchart TB
   Guide --> Tokens
 
   subgraph IA["IA layer (copy & labels — not a palette)"]
-    RUN["RUN — spends this Ascend"]
+    RUN["RUN — wallet gold / dungeon"]
     TODAY["TODAY — session habits"]
-    ACCT["ACCOUNT — survives Ascend"]
+    ACCT["ACCOUNT — essence / forever"]
     RUN --- TODAY
     TODAY --- ACCT
   end
@@ -180,9 +180,9 @@ Three buckets — use in copy, section labels, and guides (not a new palette):
 
 | Bucket | Meaning | Examples |
 |--------|---------|----------|
-| **RUN** | Resets or spends on this Ascend | FORGE → GOLD, MARKET flasks, dungeon |
+| **RUN** | Wallet gold / dungeon spend | FORGE → GOLD, MARKET flasks, dungeon |
 | **TODAY** | Session habits & claims | vault, jobs, daily run, hub TODAY |
-| **ACCOUNT** | Survives Ascend | essence, CAMP, KEEP, Apex, codex |
+| **ACCOUNT** | Essence / forever meta | essence, CAMP, KEEP, Apex, codex |
 
 Helpers: `MenuChrome.scopeChip`, `sectionLabelScoped(title, scope: MenuScope.run|today|account)`, or plain `sectionLabel` when scope is obvious.
 

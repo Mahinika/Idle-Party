@@ -390,7 +390,7 @@ void main() {
     expect(GameState.softForgePercent(100), lessThan(100));
   });
 
-  test('ascend clears forge haste tracks with ATK/DEF/VIT', () {
+  test('ascend keeps forge haste tracks with ATK/DEF/VIT', () {
     final ready = GameLogic.createInitialState(now: DateTime(2026, 8, 3))
         .copyWith(
           bossVictories: 1,
@@ -400,10 +400,10 @@ void main() {
           critBonus: 5,
         );
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 4));
-    expect(ascended.attackBonus, 0);
-    expect(ascended.moveSpeedBonus, 0);
-    expect(ascended.attackSpeedBonus, 0);
-    expect(ascended.critBonus, 0);
+    expect(ascended.attackBonus, 4);
+    expect(ascended.moveSpeedBonus, 10);
+    expect(ascended.attackSpeedBonus, 8);
+    expect(ascended.critBonus, 5);
   });
 
   test('recommendedDungeonId prefers frontier; ascend updates dungeonId', () {
@@ -547,7 +547,7 @@ void main() {
     expect(identical(GameLogic.ascend(atCap), atCap), isTrue);
   });
 
-  test('ascend resets run and keeps meta progress', () {
+  test('ascend claims AL and keeps run power', () {
     final weapon = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
       rarity: LootRarity.rare,
@@ -569,26 +569,20 @@ void main() {
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 7, 5));
 
     expect(ascended.ascensionLevel, 1);
-    expect(ascended.gold, 0);
+    expect(ascended.gold, 500);
     expect(ascended.bossVictories, 0);
-    expect(ascended.attackBonus, 0);
-    expect(ascended.battleNumber, 1);
-    expect(ascended.equipped, isEmpty);
+    expect(ascended.attackBonus, 4);
+    expect(ascended.highestFloorCleared, 3);
+    expect(ascended.equipped[EquipmentSlot.weapon]?.id, weapon.id);
     expect(ascended.unlockedRelics, contains(GameLogic.warBannerRelic));
-    expect(
-      ascended.essence,
-      12 +
-          GameLogic.ascendEssenceReward(1) +
-          MetaSystems.ascendMilestoneReward(0, 1) +
-          (AchievementCatalog.byId('first_ascend')?.essenceReward ?? 0) +
-          (AchievementCatalog.byId('full_party')?.essenceReward ?? 0),
-    );
+    expect(ascended.essence, greaterThanOrEqualTo(12 + GameLogic.ascendEssenceReward(1)));
     expect(ascended.achievements, contains('first_ascend'));
+    expect(ascended.heroes.length, greaterThanOrEqualTo(4));
     expect(ascended.metaDepth.ascendBlessings, 1);
     expect(
-      ascended.totalAttackBonus,
-      1 + 4 + GameLogic.ascendBlessingAtk,
-    ); // AL + war banner + Blessing
+      ascended.metaAttackBonus,
+      1 + 4 + 4 + GameLogic.ascendBlessingAtk,
+    ); // AL + forge + war banner + Blessing
     expect(ascended.ascensionGoldBonusPercent, 10);
     expect(
       ascended.ascendBlessingGoldPercent,
@@ -633,7 +627,7 @@ void main() {
     expect(depth.ascendBlessings, 0);
   });
 
-  test('ascend keeps hero levels and meta, clears run loadouts', () {
+  test('ascend keeps hero levels, meta, loadouts, and stash', () {
     final pet = const Pet(id: 'p_meta', name: 'Cub', attackBonus: 1);
     var ready = GameLogic.createInitialState(now: DateTime(2026, 7, 4)).copyWith(
       bossVictories: 1,
@@ -652,6 +646,12 @@ void main() {
     );
     ready = GameLogic.saveLoadout(ready, id: 'bis', name: 'BIS');
     expect(ready.loadouts, hasLength(1));
+    final stashItem = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.uncommon,
+      battleNumber: 4,
+    );
+    ready = ready.copyWith(gearStash: <EquipmentItem>[stashItem]);
 
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 7, 5));
     expect(ascended.lifetimeGoldEarned, 12000);
@@ -660,8 +660,9 @@ void main() {
     expect(ascended.soulboundFragments, 5);
     expect(ascended.sanctuaryPowerLevel, 2);
     expect(ascended.activePet?.id, pet.id);
-    expect(ascended.loadouts, isEmpty);
-    expect(ascended.gearStash, isEmpty);
+    expect(ascended.loadouts, hasLength(1));
+    expect(ascended.loadouts.first.name, 'BIS');
+    expect(ascended.gearStash.map((e) => e.id), contains(stashItem.id));
     final kept = ascended.heroRoster.where(
       (h) => ready.heroRoster.any((r) => r.id == h.id),
     );
@@ -2988,19 +2989,17 @@ void main() {
 
     final ready = state.copyWith(bossVictories: 1);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 7, 5));
-    expect(ascended.equipped, isEmpty);
-    // Fresh AL heroes get class starter kits (not previous run's gear).
-    expect(ascended.heroes.every((h) => h.equipped.isNotEmpty), isTrue);
+    // Ascend keeps worn gear — no soft wipe.
     expect(
       ascended.heroes.any(
         (h) => h.itemIn(EquipmentSlot.weapon)?.id == stashItem.id,
       ),
-      isFalse,
+      isTrue,
     );
     expect(ascended.sanctuaryGoldLevel, 1);
     expect(ascended.activePet?.id, pet.id);
     expect(ascended.ownedPets, hasLength(1));
-    expect(ascended.highestFloorCleared, 0);
+    expect(ascended.highestFloorCleared, ready.highestFloorCleared);
     expect(ascended.dungeonMode, DungeonMode.push);
   });
 

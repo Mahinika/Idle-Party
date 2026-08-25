@@ -120,14 +120,16 @@ abstract final class StoryLore {
         ? '\nUnlock: Combat Rogue (Shade) joins the roster.'
         : (thisUnlock != null ? '\n$thisUnlock' : '');
     final ahead = AscendRoadmap.nextGoalLine(nextAl);
-    return 'You grow stronger — then start a fresh run.\n\n'
+    return 'Claim Ascend power — your run stays.\n\n'
         '$rewardLine\n'
         '$alPower\n'
         '$blessLine$unlockLine\n'
         '$ahead\n\n'
-        'Keep: hero levels/XP, essence, relics, pets, sanctuary, '
+        'Keep: gold, forge, gear, floors, loadouts, market, '
+        'hero levels/XP, essence, relics, pets, sanctuary, '
         'God Hand, Apex, meta unlocks.\n'
-        'Reset: wallet gold, floors, run gear, loadouts, forge gold upgrades.\n'
+        'Clears: boss victories toward the next Ascend '
+        '(leaves any active dungeon).\n'
         'God Hand Lv$godHandLevel kept';
   }
 
@@ -149,5 +151,5 @@ abstract final class StoryLore {
   static const String loreTipTitle = 'THE ROAD';
   static const String loreTipBody =
       'More caves wait after this one. Beat bosses to open the road. '
-      'Later you can Ascend — a fresh run that keeps hero levels.';
+      'Later you can Ascend — claim AL power and kits without wiping your run.';
 }

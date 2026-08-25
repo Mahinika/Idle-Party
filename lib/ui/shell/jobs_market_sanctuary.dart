@@ -418,8 +418,8 @@ class _MarketOverlayState extends State<MarketOverlay> {
           for (final listing in listings) _listingCard(state, director, listing),
         const SizedBox(height: 12),
         Text(
-          'Buy gear when drops miss your slot. Listings roll for this run only '
-          '(clears on Ascend). Farm still beats market iLvl.',
+          'Buy gear when drops miss your slot. Listings refresh over time. '
+          'Farm still beats market iLvl.',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),

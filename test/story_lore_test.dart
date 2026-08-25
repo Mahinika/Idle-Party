@@ -30,6 +30,9 @@ void main() {
     expect(body, contains('God Hand'));
     expect(body, contains('Lv3'));
     expect(body, contains('levels/XP'));
+    expect(body, contains('Claim Ascend'));
+    expect(body, isNot(contains('fresh run')));
+    expect(body, isNot(contains('Reset: wallet')));
     expect(body, isNot(contains('Reset this run (gear, levels,')));
   });
 }

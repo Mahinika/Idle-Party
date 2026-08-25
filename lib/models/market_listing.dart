@@ -1,6 +1,6 @@
 import 'loot.dart';
 
-/// One gear row on POWER → MARKET (run-scoped; clears on Ascend).
+/// One gear row on POWER → MARKET (refreshes over time; kept on Ascend).
 class MarketListing {
   const MarketListing({
     required this.id,

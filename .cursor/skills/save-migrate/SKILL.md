@@ -30,7 +30,7 @@ New field:
 - [ ] 3. toJson key
 - [ ] 4. fromJson safe default if missing
 - [ ] 5. Nested? MetaDepthState / model fromJson defaults
-- [ ] 6. Ascend: re-copy in GameLogic.ascend OR intentionally reset
+- [ ] 6. Ascend: usually **keep** (Ascend is claim-only). Only clear if the field is run-state (active KEY timer, etc.)
 - [ ] 7. New Game: seed in createInitialState only if needed
 - [ ] 8. Round-trip + legacy-missing tests
 - [ ] 9. Mutate only via GameLogic + director (so persist runs)
@@ -40,11 +40,15 @@ Use `_jsonInt` / `as num?` for ints (web JSON). Bump `'version'` only for docs u
 
 ## Ascend (trust `GameLogic.ascend`)
 
-**Keeps:** essence, relics, AL, lifetime gold, highestDungeonCleared, hero levels/XP/roster (gear stripped), pets, sanctuary tracks, metaDepth, Apex, legacy heirloom if present, God Hand, settings, achievements/codex, challenge toggles.
+**Claim:** raise AL, stack Blessing, unlock kits, pay essence. **No soft-reset.**
 
-**Resets:** wallet gold, bossVictories, floor progress, ATK/DEF/VIT gold upgrades, equipped gear, gearStash, **loadouts**, enemies/rooms, `inDungeon`, missions.
+**Keeps:** wallet gold, forge ATK/DEF/STA/move/haste/crit, gear/stash, floors,
+loadouts, market listings, essence, relics, hero levels/XP/roster gear, pets,
+sanctuary, metaDepth, Apex, legacy heirloom if present, God Hand, settings,
+achievements/codex, challenge toggles, KEY dial.
 
-Ignore outdated comments that say loadouts survive Ascend — code clears them.
+**Clears:** bossVictories (toward next AL), wipe streak/advice, active dungeon /
+KEY / rift / GR run via leave-dungeon; mission board rebuilt for new AL.
 
 ## Tests
 
