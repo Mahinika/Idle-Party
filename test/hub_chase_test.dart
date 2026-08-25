@@ -194,6 +194,48 @@ void main() {
     expect(chase.kind, isNot(HubChaseKind.ascend));
   });
 
+  test('fresh prestige bag chases re-kit not KEY', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 5,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+              freshPrestige: true,
+              ascendBlessings: 20,
+            ),
+      ),
+    );
+    expect(GameLogic.endgameUnlocked(state), isTrue);
+    expect(GameLogic.isFreshPrestigeGear(state), isTrue);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.title, contains('Rebuild your bag'));
+    expect(chase.kind, isNot(HubChaseKind.keystone));
+    expect(chase.title.toUpperCase(), isNot(contains('REBORN')));
+  });
+
+  test('AL20 KEY chase stays when bag is not a fresh prestige wipe', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 5,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+              freshPrestige: false,
+              ascendBlessings: 20,
+            ),
+      ),
+    );
+    expect(GameLogic.isFreshPrestigeGear(state), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.keystone);
+  });
+
   test('one boss from Ascend marks ALMOST and beats daily', () {
     // AL1 needs 2 bosses — bank 1 so one remains.
     var state = GameLogic.createInitialState(now: now).copyWith(

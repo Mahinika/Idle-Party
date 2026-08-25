@@ -189,13 +189,13 @@ class GameState {
   final int defenseBonus;
   final int vitalityBonus;
 
-  /// Forge move-speed points (≈% before soft-cap). Kept on Ascend.
+  /// Forge move-speed points (≈% before soft-cap). Reset on Ascend.
   final int moveSpeedBonus;
 
-  /// Forge attack-speed points (≈% before soft-cap). Kept on Ascend.
+  /// Forge attack-speed points (≈% before soft-cap). Reset on Ascend.
   final int attackSpeedBonus;
 
-  /// Forge crit-chance points (≈% before soft-cap). Kept on Ascend.
+  /// Forge crit-chance points (≈% before soft-cap). Reset on Ascend.
   final int critBonus;
 
   final List<LootDrop> recentLoot;
@@ -214,10 +214,10 @@ class GameState {
   /// claimed Daily stays until next day; Bounty advances rung; Side rolls anew.
   final List<Mission> missions;
 
-  /// Inventory / Combinator stash. Kept on Ascend; hard reset clears.
+  /// Inventory / Combinator stash. Reset on Ascend (Apex pieces move to the vault).
   final List<EquipmentItem> gearStash;
 
-  /// Traveling gear listings on POWER → MARKET. Kept on Ascend.
+  /// Traveling gear listings on POWER → MARKET. Reset on Ascend.
   final List<MarketListing> marketListings;
 
   /// UTC ms when [marketListings] last rolled (6h free refresh).
@@ -310,7 +310,7 @@ class GameState {
   /// Dismissed first-run tip ids (survives Ascend).
   final List<String> seenTips;
 
-  /// Up to 3 saved gear presets (LOADOUTS UI hidden; data kept on Ascend).
+  /// Up to 3 saved gear presets (LOADOUTS UI hidden; cleared on Ascend).
   final List<GearLoadout> loadouts;
 
   /// Unlocked local achievement ids (survives Ascend / hard reset persists

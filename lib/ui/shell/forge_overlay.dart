@@ -6,6 +6,7 @@ import '../../core/game_state.dart';
 import '../../core/blessing_constellation.dart';
 import '../../core/god_hand_mastery.dart';
 import '../apex_forge_panel.dart';
+import '../confirm_dialogs.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
 import '../kenney_button.dart';
@@ -154,7 +155,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       children: [
         Text(
           'Spend wallet gold on ATK / DEF / STA / MOVE / HASTE / CRIT — '
-          'keeps when you Ascend. '
+          'resets when you Ascend. '
           'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -275,7 +276,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       children: [
         Text(
           'Keep forever — essence spends survive Ascend. '
-          'Run gold lives on the GOLD tab.',
+          'Gold forge tracks and the bag reset. Run gold lives on the GOLD tab.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),
@@ -297,6 +298,21 @@ class _ForgeOverlayState extends State<ForgeOverlay>
                     '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
+        if (GameLogic.canRebornAtCap(state)) ...[
+          const SizedBox(height: 8),
+          KenneyButton(
+            label: 'REBORN',
+            style: KenneyButtonStyle.red,
+            expanded: false,
+            onPressed: () => confirmRebornAtCap(context, director),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Optional empty-bag climb. AL stays 20 — no extra Blessing. '
+            'Apex stays. TODAY will not nag you to press this.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ],
         if (BlessingConstellation.unlocked(state)) ...[
           const SizedBox(height: 8),
           Text(

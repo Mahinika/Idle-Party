@@ -157,6 +157,10 @@ void main() {
 
     final endgame = mid.copyWith(
       ascensionLevel: GameLogic.maxAscensionLevel,
+      heroRoster: [
+        for (final h in mid.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
     );
     expect(MenuTabs.showKey(endgame), isTrue);
   });

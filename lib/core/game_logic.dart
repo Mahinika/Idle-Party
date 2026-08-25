@@ -5,9 +5,11 @@ import '../models/dungeon_def.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
+import '../models/gear_loadout.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import '../models/market_listing.dart';
 import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
@@ -1328,9 +1330,23 @@ class GameLogic {
     return applyMissionProgress(paid, goldEarned: gained);
   }
 
-  /// Prestige claim: raise AL / Blessing / kits — no soft-reset of the run.
+  /// Prestige: raise AL / Blessing / kits and reset gold, forge, drops, floors.
   static GameState ascend(GameState state, {DateTime? now}) =>
       _ascendGameState(state, now: now);
+
+  /// AL20 optional Reborn — same bag wipe, no extra AL or Blessing.
+  static bool canRebornAtCap(GameState state) => isMaxAscension(state);
+
+  static int rebornEssenceReward() => ascendEssenceReward(maxAscensionLevel);
+
+  static GameState rebornAtCap(GameState state, {DateTime? now}) =>
+      _rebornAtCapGameState(state, now: now);
+
+  /// TODAY skip KEY / Gauntlet / Rift until real drops raise gear pressure.
+  static bool isFreshPrestigeGear(GameState state) =>
+      state.metaDepth.freshPrestige &&
+      EncounterFactory.partyGearPressure(state) <=
+          EncounterFactory.freshPrestigeGearMax;
 
   /// Mean level used when seeding a newly unlocked roster hero.
   static int rosterSeedLevel(GameState state) {

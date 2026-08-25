@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.59';
+  static const String currentVersion = '1.12.60';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.60',
+      bullets: <String>[
+        'Ascend is prestige again: your party stays (levels, open zones, Apex, Blessing) but gold, forge, bag drops, market, and floors reset. TODAY says Rebuild your bag — not ENTER KEY — until you loot real gear. AL20 Forge KEEP has optional REBORN (same wipe, no extra Blessing).',
+        'KEY / Gauntlet / Greater Rifts still unlock at party Lv100. World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.59',
       bullets: <String>[

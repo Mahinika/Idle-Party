@@ -48,6 +48,10 @@ void main() {
 
     state = state.copyWith(
       ascensionLevel: GameLogic.maxAscensionLevel,
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
       metaDepth: state.metaDepth.copyWith(
         dailyVaultClaimed: true,
         weeklyBestTimedKey: week.timedKeyTarget - 1,

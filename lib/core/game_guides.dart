@@ -106,7 +106,7 @@ abstract final class GameGuides {
           '(STREAK, SWEEP / FLURRY, BEACON when those windows are up).\n'
           '• The strip shows level and a thin XP bar so growth is visible mid-fight.\n'
           '• Resources: Rage / Mana / Energy / Runic — kits spend these.\n'
-          '• Roster levels, gear, and forge keep on Ascend.\n'
+          '• Roster levels and open zones keep on Ascend; bag, gold, and forge reset.\n'
           '• Flask heals the party when you have a potion.',
     ),
     GuideTopic(
@@ -182,16 +182,16 @@ abstract final class GameGuides {
           'SPEND ALL · EVEN to split gold round-robin across every track. '
           'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}). '
           'Harder kills (higher enemy level than the hero) pay more XP; heroes far behind the party catch up faster.\n'
-          'Forge gold tracks keep when you Ascend. '
+          'Forge gold tracks reset when you Ascend. '
           'ATK, HASTE, and MOVE speed up clears — see INCOME for rates. '
           'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
           'relative upgrade.\n'
           '• KEEP — essence that survives Ascend: Blessing readout, relics, '
-          'God Hand smash/cooldown/style, and the 5th party '
+          'God Hand smash/cooldown/style, optional AL20 REBORN, and the 5th party '
           'slot (AL2 · 80e).\n'
           '• APEX — one Apex station: materials, craft goals, target meter, vault.\n\n'
-          '• Ascend from the Hub when ready (not from Forge).',
+          '• Ascend from the Hub when ready (not from Forge). REBORN at AL20 is on KEEP.',
     ),
     GuideTopic(
       id: 'classes',
@@ -390,19 +390,20 @@ abstract final class GameGuides {
       id: 'ascend',
       title: 'ASCEND',
       body:
-          'Claim Ascend in the hub when ready (AL1–AL20) — power up, no soft wipe.\n\n'
+          'Claim Ascend in the hub when ready (AL1–AL20) — same party, empty bag, '
+          'stronger Blessing.\n\n'
           '• AL20 is the Ascension cap. Endgame (KEY +20, Gauntlet, Rifts, Greater Rifts, '
           'vault, boards) unlocks when every active hero reaches level ${GameLogic.maxHeroLevel}.\n'
           '• Each Ascend grants a lasting Blessing: +5 ATK · +20 DEF · +60 STA · '
           '+8% gold (stacks forever). See Forge → KEEP.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
           '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
-          '• Keeps: wallet gold, forge, gear, floors, loadouts, market, '
-          'essence, relics, sanctuary, pets, God Hand, '
-          'highest dungeon cleared, lifetime gold, unlocked specs, '
-          'roster levels/XP, Apex, and 5th party slot.\n'
-          '• Clears: boss victories toward the next Ascend (and leaves any active dungeon).\n'
-          '• AL adds permanent party power; Ascend is a reward, not a restart.',
+          '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
+          'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
+          '• Reset: wallet gold, forge tracks, bag and worn drops, market, loadouts, '
+          'floor height (starter gear back on). Boss victories toward the next Ascend clear.\n'
+          '• At AL20, Forge → KEEP offers optional REBORN (same bag wipe, AL stays 20, '
+          'no extra Blessing). TODAY never nags you to press it.',
     ),
     GuideTopic(
       id: 'daily',

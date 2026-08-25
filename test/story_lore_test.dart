@@ -30,9 +30,23 @@ void main() {
     expect(body, contains('God Hand'));
     expect(body, contains('Lv3'));
     expect(body, contains('levels/XP'));
-    expect(body, contains('Claim Ascend'));
-    expect(body, isNot(contains('fresh run')));
-    expect(body, isNot(contains('Reset: wallet')));
-    expect(body, isNot(contains('Reset this run (gear, levels,')));
+    expect(body, contains('Your party stays'));
+    expect(body, contains('Apex stays'));
+    expect(body, contains('Reset: wallet'));
+    expect(body, isNot(contains('your run stays')));
+  });
+
+  test('reborn confirm matches prestige wipe without extra Blessing', () {
+    final body = StoryLore.rebornConfirmBody(
+      rewardEssence: 64,
+      godHandLevel: 4,
+      blessings: 20,
+    );
+    expect(body, contains('Your party stays'));
+    expect(body, contains('Apex stays'));
+    expect(body, contains('AL stays'));
+    expect(body, contains('No extra Blessing'));
+    expect(body, contains('+64e'));
+    expect(body, contains('constellation'));
   });
 }

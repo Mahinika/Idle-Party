@@ -120,16 +120,15 @@ abstract final class StoryLore {
         ? '\nUnlock: Combat Rogue (Shade) joins the roster.'
         : (thisUnlock != null ? '\n$thisUnlock' : '');
     final ahead = AscendRoadmap.nextGoalLine(nextAl);
-    return 'Claim Ascend power — your run stays.\n\n'
+    return 'Your party stays. Bag, gold, forge, and floors reset. Apex stays.\n\n'
         '$rewardLine\n'
         '$alPower\n'
         '$blessLine$unlockLine\n'
         '$ahead\n\n'
-        'Keep: gold, forge, gear, floors, loadouts, market, '
-        'hero levels/XP, essence, relics, pets, sanctuary, '
+        'Keep: hero levels/XP, open zones, essence, relics, pets, sanctuary, '
         'God Hand, Apex, meta unlocks.\n'
-        'Clears: boss victories toward the next Ascend '
-        '(leaves any active dungeon).\n'
+        'Reset: wallet gold, forge tracks, bag and worn drops, market, '
+        'loadouts, floor height (starter gear back on).\n'
         'God Hand Lv$godHandLevel kept';
   }
 
@@ -143,7 +142,26 @@ abstract final class StoryLore {
     final unlock = AscendRoadmap.unlockAtAl(al);
     final unlockBit = unlock != null ? ' · $unlock' : '';
     final mile = milestoneBonus > 0 ? ' · +${milestoneBonus}e' : '';
-    return 'Reborn · AL$al$bless$unlockBit$mile';
+    return 'Ascended · AL$al$bless$unlockBit$mile';
+  }
+
+  static String rebornConfirmBody({
+    required int rewardEssence,
+    required int godHandLevel,
+    required int blessings,
+  }) {
+    return 'Your party stays. Bag, gold, forge, and floors reset. Apex stays.\n\n'
+        'AL stays ${GameLogic.maxAscensionLevel}. No extra Blessing '
+        '(still ×$blessings).\n'
+        '+${rewardEssence}e · +1 constellation point.\n\n'
+        'Keep: hero levels/XP, open zones, essence spends, relics, pets, '
+        'sanctuary, God Hand Lv$godHandLevel, Apex.\n'
+        'Reset: wallet gold, forge tracks, bag and worn drops, market, '
+        'loadouts, floor height.';
+  }
+
+  static String rebornToast({required int essence}) {
+    return 'Reborn · bag reset · +${essence}e';
   }
 
   static const String shadeJoins = 'Shade the Rogue answers the call.';
@@ -151,5 +169,5 @@ abstract final class StoryLore {
   static const String loreTipTitle = 'THE ROAD';
   static const String loreTipBody =
       'More caves wait after this one. Beat bosses to open the road. '
-      'Later you can Ascend — claim AL power and kits without wiping your run.';
+      'Later you can Ascend — same party, empty bag, stronger Blessing.';
 }

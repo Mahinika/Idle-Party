@@ -152,6 +152,14 @@ void main() {
       MetaSystems.releases.first.bullets.join(' ').toUpperCase(),
       contains('GREATER'),
     );
+    expect(
+      MetaSystems.releases.first.bullets.join(' '),
+      contains('Rebuild your bag'),
+    );
+    expect(
+      MetaSystems.releases.first.bullets.join(' ').toUpperCase(),
+      contains('REBORN'),
+    );
   });
 
   test('guides and Ascend roadmap stay honest for TODAY chase', () {
@@ -192,6 +200,13 @@ void main() {
     expect(forge.body, contains('Blessing'));
     expect(forge.body, contains('5th party'));
     expect(forge.body, contains('KEEP'));
+    expect(forge.body.toUpperCase(), contains('REBORN'));
+    expect(forge.body.toLowerCase(), contains('reset when you ascend'));
+
+    final ascendGuide = GameGuides.topics.firstWhere((t) => t.id == 'ascend');
+    expect(ascendGuide.body.toLowerCase(), contains('empty bag'));
+    expect(ascendGuide.body.toUpperCase(), contains('REBORN'));
+    expect(ascendGuide.body.toLowerCase(), contains('wallet gold'));
 
     final sanctuary = GameGuides.topics.firstWhere((t) => t.id == 'sanctuary');
     expect(sanctuary.body, contains('CAMP'));

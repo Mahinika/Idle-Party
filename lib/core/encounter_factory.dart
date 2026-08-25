@@ -44,7 +44,8 @@ abstract final class EncounterFactory {
     final hmGold = Keystone.goldMul(hm);
     final alThreatRaw = 1.0 + ascensionLevel.clamp(0, 40) * 0.08;
     // Fresh post-ascend (gear wiped) — soften AL threat until kit rebuilds.
-    final freshAscendEase = gearPressure <= 1.08 && ascensionLevel > 0
+    final freshAscendEase =
+        gearPressure <= freshPrestigeGearMax && ascensionLevel > 0
         ? 0.65
         : 1.0;
     final alThreat = alThreatRaw * freshAscendEase;
@@ -124,6 +125,9 @@ abstract final class EncounterFactory {
       _ => gpRaw,
     };
   }
+
+  /// Gear pressure at or below this counts as a fresh prestige bag (starters).
+  static const double freshPrestigeGearMax = 1.08;
 
   /// How much equipped loot should pull dungeon threat.
   /// Starters barely register; ~8–12 real upgrades is where pressure bites.

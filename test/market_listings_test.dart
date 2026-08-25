@@ -106,23 +106,17 @@ void main() {
     );
   });
 
-  test('ascend keeps market listings', () {
+  test('ascend clears market listings', () {
     var state = seeded(al: GameLogic.maxAscensionLevel - 1);
     state = GameLogic.ensureMarketListings(state, nowMs: now + 6);
     expect(state.marketListings, isNotEmpty);
-    final beforeIds = state.marketListings.map((l) => l.id).toSet();
-    final refreshMs = state.marketListingsRefreshMs;
     state = state.copyWith(
       bossVictories: 21,
       metaDepth: state.metaDepth.copyWith(noWipeAscendReady: true),
     );
     expect(GameLogic.canAscend(state), isTrue);
     final ascended = GameLogic.ascend(state);
-    expect(
-      ascended.marketListings.map((l) => l.id).toSet(),
-      beforeIds,
-    );
-    expect(ascended.marketListingsRefreshMs, refreshMs);
+    expect(ascended.marketListings, isEmpty);
   });
 
   test('upgrade listings cost more than vendor baseline', () {

@@ -324,6 +324,7 @@ class HubUrgentRow extends StatelessWidget {
                 KenneyButton(
                   label: 'PRACTICE',
                   style: KenneyButtonStyle.grey,
+                  expanded: false,
                   onPressed: onAshenCrownPractice,
                 ),
               ],

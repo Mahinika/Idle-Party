@@ -164,7 +164,8 @@ class HubChase {
               '+${reward}e · Blessing +${GameLogic.ascendBlessingAtk} ATK/'
               '+${GameLogic.ascendBlessingDef} DEF/'
               '+${GameLogic.ascendBlessingVit} STA/'
-              '+${GameLogic.ascendBlessingGoldPct}% gold$unlockBit',
+              '+${GameLogic.ascendBlessingGoldPct}% gold · bag, gold, forge, '
+              'and floors reset$unlockBit',
           progressLabel: 'Ready',
           urgency: HubChaseUrgency.ready,
         );
@@ -184,6 +185,20 @@ class HubChase {
         bossesNeed: bossesNeed,
         bossesLeft: bossesLeft,
         urgency: HubChaseUrgency.almost,
+      );
+    }
+
+    if (GameLogic.isFreshPrestigeGear(state)) {
+      final zoneId = GameLogic.recommendedDungeonId(state);
+      final zoneName = DungeonCatalog.byId(zoneId).name;
+      return HubChase(
+        kind: HubChaseKind.clearFloors,
+        title: 'Rebuild your bag',
+        detail:
+            'Farm early floors in $zoneName. Party stays — bag, gold, forge, '
+            'and floors reset.',
+        progressLabel: 'Floor 1',
+        zoneId: zoneId,
       );
     }
 

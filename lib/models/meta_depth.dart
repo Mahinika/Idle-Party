@@ -283,6 +283,7 @@ class MetaDepthState {
     this.godHandSmashCount = 0,
     this.claimedGodHandMastery = const <String>[],
     this.rosterExhibition = false,
+    this.freshPrestige = false,
   });
 
   final int sanctuaryXpLevel;
@@ -498,6 +499,11 @@ class MetaDepthState {
   final List<String> claimedGodHandMastery;
   final bool rosterExhibition;
 
+  /// Set on Ascend / Reborn bag wipe. TODAY farms gear instead of KEY until
+  /// real drops raise [EncounterFactory.partyGearPressure]. Default false on
+  /// old saves.
+  final bool freshPrestige;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -613,6 +619,7 @@ class MetaDepthState {
     int? godHandSmashCount,
     List<String>? claimedGodHandMastery,
     bool? rosterExhibition,
+    bool? freshPrestige,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -740,6 +747,7 @@ class MetaDepthState {
       claimedGodHandMastery:
           claimedGodHandMastery ?? this.claimedGodHandMastery,
       rosterExhibition: rosterExhibition ?? this.rosterExhibition,
+      freshPrestige: freshPrestige ?? this.freshPrestige,
     );
   }
 
@@ -850,6 +858,7 @@ class MetaDepthState {
     'godHandSmashCount': godHandSmashCount,
     'claimedGodHandMastery': claimedGodHandMastery,
     'rosterExhibition': rosterExhibition,
+    'freshPrestige': freshPrestige,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -1028,6 +1037,7 @@ class MetaDepthState {
           (json['claimedGodHandMastery'] as List<dynamic>?)?.cast<String>() ??
           const [],
       rosterExhibition: (json['rosterExhibition'] as bool?) ?? false,
+      freshPrestige: (json['freshPrestige'] as bool?) ?? false,
     );
   }
 }

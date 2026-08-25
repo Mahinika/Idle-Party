@@ -85,15 +85,17 @@ class FirstSessionTips extends StatelessWidget {
       id: 'ascend',
       title: 'ASCEND',
       body:
-          'When Ascend unlocks, prestige for essence. Gear resets — Farm early floors to re-kit before Pushing deep zones.',
+          'When Ascend unlocks, prestige for essence. Gear, gold, and forge '
+          'reset — farm early floors in an unlocked zone to re-kit. Apex stays.',
     ),
     (
       id: 'post_ascend',
       title: 'AFTER ASCEND',
       body:
           'New kits land in PARTY — TODAY shows Meet … when something unlocked. '
-          'Gold & forge tracks wiped: farm Sandy → Forge GOLD → Market flasks. '
-          'Spend essence under Forge → KEEP (relics / God Hand). Apex mats survive.',
+          'Gold & forge tracks wiped: farm early floors in a zone you already '
+          'opened, then Forge GOLD. '
+          'Spend essence under Forge → KEEP (relics / God Hand). Apex stays.',
     ),
     (
       id: 'hardmode',

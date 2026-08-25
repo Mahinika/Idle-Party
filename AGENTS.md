@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.59**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.60**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -39,7 +39,7 @@ for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.52 / 82** submitted 2026-08-24; testers may still be on
 **1.12.47 / 77** until review publishes). Working ship is
-**1.12.59**. Production still needs **12 closed testers × 14 days**.
+**1.12.60**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -336,7 +336,8 @@ unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY), party slo
 Play Games opt-in + season PBs, **`sessionTelemetryOptIn`** / log, …),
 **hero levels/XP**, craft mats/pity, keystone **dial** (`hardmodeLevel`,
 clamped) + challenge toggles, FARM/PUSH (`dungeonMode`), daily vault UI
-(`lastDailyDate` / `dailyClaimed`).
+(`lastDailyDate` / `dailyClaimed`). **Does not keep** wallet gold, forge gold
+tracks, normal gear/stash/market/loadouts, or `highestFloorCleared`.
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
 each Ascend adds **+5 ATK · +20 DEF · +60 STA · +8% gold** on top of AL flats
@@ -344,11 +345,15 @@ each Ascend adds **+5 ATK · +20 DEF · +60 STA · +8% gold** on top of AL flats
 and Sanctuary. Constants: `GameLogic.ascendBlessing*`. Player-facing label is
 **STA / Stamina** (same as gear); internal fields may still say vitality.
 
-**Ascend claim (no soft-reset):** raises AL, stacks Blessing, unlocks kits,
-pays essence. **Keeps** wallet gold, forge gold tracks, gear/stash, floors,
-loadouts, market listings. **Clears** `bossVictories` (work toward next AL),
-wipe streak/advice, active keystone/rift/GR run flags via leave-dungeon;
-mission board rebuilt for new AL.
+**Ascend prestige:** raises AL, stacks Blessing, unlocks kits, pays essence,
+and **resets the run bag** (gold, forge tracks, worn/stash drops, market,
+loadouts, floors → starter gear). **Keeps** hero levels/XP, open zones
+(`highestDungeonCleared`), essence, relics, pets, sanctuary, God Hand, Apex,
+soulbound, settings. Sets `metaDepth.freshPrestige` so TODAY farms gear instead
+of KEY until real drops land. **Clears** `bossVictories`, wipe streak/advice,
+active dungeon / KEY / rift via leave-dungeon; mission board rebuilt.
+**AL20 REBORN** (Forge → KEEP, optional): same bag wipe, AL and Blessing
+unchanged, essence + 1 constellation point. Never a TODAY chase.
 
 Dungeon unlock uses **party mean level** (and prior clears), not lifetime gold.
 

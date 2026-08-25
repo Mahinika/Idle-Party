@@ -2865,6 +2865,40 @@ class GameDirector extends ChangeNotifier {
     unawaited(_persistFlush());
   }
 
+  void rebornAtCap() {
+    if (_isLoading) {
+      return;
+    }
+    if (!GameLogic.canRebornAtCap(_state)) {
+      return;
+    }
+    final updated = GameLogic.rebornAtCap(_state);
+    if (identical(updated, _state)) {
+      return;
+    }
+    _state = updated;
+    GameAudio.unlock();
+    showToast(
+      StoryLore.rebornToast(
+        essence: GameLogic.rebornEssenceReward(),
+      ),
+      life: 3.6,
+    );
+    final payoffs = LogicNotices.takeMetaPayoffs();
+    if (payoffs.isNotEmpty) {
+      showToast(payoffs.join(' · '), life: 3.0);
+    }
+    if (_state.inDungeon) {
+      _rebuildSpatial();
+    } else {
+      _spatialTimer?.cancel();
+      _spatialTimer = null;
+      _spatial = null;
+    }
+    notifyListeners();
+    unawaited(_persistFlush());
+  }
+
   void reviveParty() {
     if (_isLoading || !_state.isPartyDefeated) return;
     // Soft-lock recovery: dead party without modal still exits/retries.

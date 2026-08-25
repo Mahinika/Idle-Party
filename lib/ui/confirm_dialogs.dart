@@ -90,6 +90,79 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
 }
 
 bool _ascendDialogOpen = false;
+bool _rebornDialogOpen = false;
+
+Future<void> confirmRebornAtCap(
+  BuildContext context,
+  GameDirector director,
+) async {
+  final state = director.state;
+  if (!GameLogic.canRebornAtCap(state)) return;
+  if (_rebornDialogOpen) return;
+  _rebornDialogOpen = true;
+
+  final nav = Navigator.of(context);
+  nav.popUntil((route) => route is! ModalBottomSheetRoute);
+
+  final reward = GameLogic.rebornEssenceReward();
+  WebClickBridge.pushLayer();
+  try {
+    final ok = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: false,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => ListenableBuilder(
+        listenable: director,
+        builder: (ctx, _) {
+          if (!GameLogic.canRebornAtCap(director.state)) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (ctx.mounted &&
+                  Navigator.of(ctx, rootNavigator: true).canPop()) {
+                Navigator.of(ctx, rootNavigator: true).pop(false);
+              }
+            });
+          }
+          return MenuChrome.dialog(
+            title: 'Reborn?',
+            content: Text(
+              StoryLore.rebornConfirmBody(
+                rewardEssence: reward,
+                godHandLevel: state.godHandLevel,
+                blessings: state.metaDepth.ascendBlessings,
+              ),
+              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            ),
+            actions: [
+              KenneyButton(
+                label: 'CANCEL',
+                style: KenneyButtonStyle.grey,
+                expanded: false,
+                onPressed: () =>
+                    Navigator.of(ctx, rootNavigator: true).pop(false),
+              ),
+              KenneyButton(
+                label: 'CONFIRM REBORN',
+                style: KenneyButtonStyle.red,
+                expanded: false,
+                onPressed: () =>
+                    Navigator.of(ctx, rootNavigator: true).pop(true),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    if (ok == true &&
+        context.mounted &&
+        GameLogic.canRebornAtCap(director.state)) {
+      director.rebornAtCap();
+    }
+  } finally {
+    WebClickBridge.popLayer();
+    _rebornDialogOpen = false;
+  }
+}
 
 Future<void> confirmLeaveDungeon(
   BuildContext context,

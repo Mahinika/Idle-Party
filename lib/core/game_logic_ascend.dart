@@ -1,9 +1,51 @@
 part of 'game_logic.dart';
 
-/// Ascend claim: raise AL, stack Blessing, unlock kits — **no soft-reset**.
-///
-/// Keeps wallet gold, forge, gear, floors, loadouts, and market. Only clears
-/// bossVictories (work toward the next AL) and leaves any active dungeon run.
+/// Prestige wipe shared by Ascend and AL20 Reborn: gold, forge, drops, floors.
+/// Keeps hero levels, zone clears, Apex, relics, and other meta.
+GameState _applyPrestigeRunWipe(GameState state) {
+  var apexVault = List<EquipmentItem>.from(state.apexVault);
+  for (final item in state.gearStash) {
+    if (item.isApex) apexVault.add(item);
+  }
+  return state.copyWith(
+    gold: 0,
+    attackBonus: 0,
+    defenseBonus: 0,
+    vitalityBonus: 0,
+    moveSpeedBonus: 0,
+    attackSpeedBonus: 0,
+    critBonus: 0,
+    gearStash: const <EquipmentItem>[],
+    marketListings: const <MarketListing>[],
+    loadouts: const <GearLoadout>[],
+    recentLoot: const <LootDrop>[],
+    highestFloorCleared: 0,
+    heroRoster: [
+      for (final hero in state.heroRoster)
+        hero.copyWith(equipped: _starterKeepingApex(hero)),
+    ],
+    apexVault: apexVault,
+    clearEquipped: true,
+  );
+}
+
+Map<EquipmentSlot, EquipmentItem> _starterKeepingApex(PartyHero hero) {
+  final next = <EquipmentSlot, EquipmentItem>{};
+  for (final e in hero.equipped.entries) {
+    if (e.value.isApex) next[e.key] = e.value;
+  }
+  final starter = StarterGear.forSpec(hero.specId);
+  final weapon = next[EquipmentSlot.weapon] ?? starter[EquipmentSlot.weapon];
+  final blocksOh = weapon?.handed == WeaponHanded.twoHand;
+  for (final e in starter.entries) {
+    if (next.containsKey(e.key)) continue;
+    if (blocksOh && e.key == EquipmentSlot.offHand) continue;
+    next[e.key] = e.value;
+  }
+  return next;
+}
+
+/// Ascend prestige: raise AL, stack Blessing, unlock kits, reset the run bag.
 GameState _ascendGameState(GameState state, {DateTime? now}) {
   if (!GameLogic.canAscend(state)) {
     return state;
@@ -56,12 +98,11 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
     unlockedSpecs: unlockedSpecs,
     ascendBlessings: state.metaDepth.ascendBlessings + 1,
     dailyQuestDate: MetaSystems.dailyDateKey(clock),
+    freshPrestige: true,
   );
 
-  // Leave any active dungeon/KEY/rift without wiping hub power.
-  var base = GameLogic.leaveDungeon(state);
+  var base = _applyPrestigeRunWipe(GameLogic.leaveDungeon(state));
 
-  // Keep full gear — Ascend is a power unlock, not a wipe.
   var preservedRoster = List<PartyHero>.from(base.heroRoster);
   if (!preservedRoster.any((h) => h.specId == HeroSpecs.ascendUnlockSpec)) {
     final seedPool =
@@ -132,6 +173,45 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
     lastUpdated: now ?? DateTime.now(),
   );
 
+  return _finishPrestigeState(withMeta, now: now);
+}
+
+/// AL20 optional Reborn: same bag wipe, AL and Blessing unchanged.
+GameState _rebornAtCapGameState(GameState state, {DateTime? now}) {
+  if (!GameLogic.canRebornAtCap(state)) {
+    return state;
+  }
+
+  final clock = (now ?? DateTime.now()).toUtc();
+  final essence =
+      state.essence + GameLogic.rebornEssenceReward();
+  var base = _applyPrestigeRunWipe(GameLogic.leaveDungeon(state));
+  var nextMeta = base.metaDepth.copyWith(
+    lifetimeAscends: base.metaDepth.lifetimeAscends + 1,
+    freshPrestige: true,
+    dailyQuestDate: MetaSystems.dailyDateKey(clock),
+    noWipeAscendReady: true,
+  );
+
+  var withMeta = base.copyWith(
+    essence: essence,
+    bossVictories: 0,
+    missions: GameLogic.createMissionBoardFor(base),
+    metaDepth: nextMeta,
+    seenTips: [
+      for (final t in base.seenTips)
+        if (t != 'post_ascend') t,
+    ],
+    wipeStreakKey: '',
+    wipeStreakCount: 0,
+    wipeAdviceLine: '',
+    lastUpdated: now ?? DateTime.now(),
+  );
+  withMeta = BlessingConstellation.grantPoints(withMeta, 1);
+  return _finishPrestigeState(withMeta, now: now);
+}
+
+GameState _finishPrestigeState(GameState withMeta, {DateTime? now}) {
   withMeta = GameLogic.ensureRogueHero(withMeta);
   withMeta = GameLogic.syncSpecUnlocks(withMeta);
   withMeta = withMeta.copyWith(
