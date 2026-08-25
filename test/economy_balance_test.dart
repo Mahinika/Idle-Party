@@ -22,7 +22,7 @@ void main() {
     );
     expect(state.totalGoldFindPercent, greaterThan(250));
     expect(state.effectiveGoldFindPercent, lessThan(state.totalGoldFindPercent));
-    expect(state.effectiveGoldFindPercent, inInclusiveRange(240, 280));
+    expect(state.effectiveGoldFindPercent, inInclusiveRange(290, 310));
 
     final rawGain = 10000;
     final cappedGain = EconomyService.applyGoldGain(state, rawGain);

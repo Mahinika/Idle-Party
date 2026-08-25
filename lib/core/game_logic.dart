@@ -1251,14 +1251,14 @@ class GameLogic {
   /// Essence granted when ascending into [newLevel].
   static int ascendEssenceReward(int newLevel) => 4 + (newLevel * 3);
 
-  /// Flat ATK granted per Ascend Blessing stack.
-  static const int ascendBlessingAtk = 2;
+  /// Flat ATK granted per Ascend Blessing stack (~2.5 forge ATK buys that keep).
+  static const int ascendBlessingAtk = 5;
 
   /// Flat DEF granted per Ascend Blessing stack (percent armor needs chunks).
-  static const int ascendBlessingDef = 8;
+  static const int ascendBlessingDef = 20;
 
   /// Flat VIT granted per Ascend Blessing stack (HP, not gear STA ×10).
-  static const int ascendBlessingVit = 24;
+  static const int ascendBlessingVit = 60;
 
   /// Per-AL keep flats (same 1 ATK ≈ 4 DEF ≈ 12 HP as FORGE).
   static const int alAttackPerLevel = 1;
@@ -1291,7 +1291,7 @@ class GameLogic {
   static const double sanctuaryXpSoftAt = 80;
 
   /// Gold-find percent granted per Ascend Blessing stack.
-  static const int ascendBlessingGoldPct = 3;
+  static const int ascendBlessingGoldPct = 8;
 
   /// Applies Ascension + Sanctuary + Blessing + gear + pet gold bonuses.
   static int applyGoldGain(GameState state, int baseGold) =>

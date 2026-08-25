@@ -3,8 +3,9 @@ import 'game_state.dart';
 /// Wallet mutations shared by combat, loot grant, and market — no upward
 /// deps to [GameLogic].
 abstract final class EconomyService {
-  /// Gold-find percent granted per Ascend Blessing stack.
-  static const int ascendBlessingGoldPct = 3;
+  /// Gold-find percent per Ascend Blessing stack — keep in sync with
+  /// [GameLogic.ascendBlessingGoldPct].
+  static const int ascendBlessingGoldPct = 8;
 
   /// Applies Ascension + Sanctuary + Blessing + gear + pet gold bonuses.
   static int applyGoldGain(GameState state, int baseGold) {

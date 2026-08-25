@@ -2709,7 +2709,8 @@ void main() {
   });
 
   test('daily quest stays claimed until next UTC day', () {
-    final day = DateTime.utc(2026, 8, 24);
+    final now = DateTime.now().toUtc();
+    final day = DateTime.utc(now.year, now.month, now.day);
     var state = GameLogic.createInitialState(now: day).copyWith(
       metaDepth: GameLogic.createInitialState(now: day).metaDepth.copyWith(
         dailyQuestDate: MetaSystems.dailyDateKey(day),

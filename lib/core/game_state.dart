@@ -614,17 +614,17 @@ class GameState {
 
   int get legacyAttackBonus => metaDepth.legacyPoints;
 
-  /// Ascend Blessing pack: +2 ATK per stack.
-  int get ascendBlessingAttackBonus => metaDepth.ascendBlessings * 2;
+  /// Ascend Blessing pack — keep in sync with [GameLogic.ascendBlessingAtk].
+  int get ascendBlessingAttackBonus => metaDepth.ascendBlessings * 5;
 
-  /// Ascend Blessing pack: +8 DEF per stack (percent armor).
-  int get ascendBlessingDefenseBonus => metaDepth.ascendBlessings * 8;
+  /// Ascend Blessing pack — keep in sync with [GameLogic.ascendBlessingDef].
+  int get ascendBlessingDefenseBonus => metaDepth.ascendBlessings * 20;
 
-  /// Ascend Blessing pack: +24 HP per stack.
-  int get ascendBlessingVitalityBonus => metaDepth.ascendBlessings * 24;
+  /// Ascend Blessing pack — keep in sync with [GameLogic.ascendBlessingVit].
+  int get ascendBlessingVitalityBonus => metaDepth.ascendBlessings * 60;
 
-  /// Ascend Blessing pack: +3% gold find per stack.
-  int get ascendBlessingGoldPercent => metaDepth.ascendBlessings * 3;
+  /// Ascend Blessing pack — keep in sync with [GameLogic.ascendBlessingGoldPct].
+  int get ascendBlessingGoldPercent => metaDepth.ascendBlessings * 8;
 
   int get torchOfflineGoldPercent => metaDepth.torchKeepLevel * 8;
 

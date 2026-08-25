@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.56';
+  static const String currentVersion = '1.12.57';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.57',
+      bullets: <String>[
+        'Ascend Blessing packs are stronger: each Ascend keeps +5 ATK · +20 DEF · +60 STA · +8% gold (was +2/+8/+24/+3%). Existing Blessing stacks use the new rates. KEY / Gauntlet / Greater Rifts still unlock at party Lv100.',
+        'First Ascend on a new save is optional - TODAY leads Daily / farming after the first boss; Ascend stays on the hub as a side button.',
+        'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.56',
       bullets: <String>[

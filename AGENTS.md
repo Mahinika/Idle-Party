@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.56**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.57**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -39,7 +39,7 @@ for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.52 / 82** submitted 2026-08-24; testers may still be on
 **1.12.47 / 77** until review publishes). Working ship is
-**1.12.56**. Production still needs **12 closed testers × 14 days**.
+**1.12.57**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -339,7 +339,7 @@ clamped) + challenge toggles, FARM/PUSH (`dungeonMode`), daily vault UI
 (`lastDailyDate` / `dailyClaimed`).
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
-each Ascend adds **+2 ATK · +8 DEF · +24 STA · +3% gold** on top of AL flats
+each Ascend adds **+5 ATK · +20 DEF · +60 STA · +8% gold** on top of AL flats
 (`+1 ATK` / `+4 DEF` / `+12 STA` / `+10% gold` per AL). Shown in Forge → KEEP
 and Sanctuary. Constants: `GameLogic.ascendBlessing*`. Player-facing label is
 **STA / Stamina** (same as gear); internal fields may still say vitality.
