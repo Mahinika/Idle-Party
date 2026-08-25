@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.57';
+  static const String currentVersion = '1.12.58';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.58',
+      bullets: <String>[
+        'Combat XP: harder kills (enemy above your hero level) pay more XP; heroes behind the party catch up faster. Push deeper floors to level quicker.',
+        'KEY / Gauntlet / Greater Rifts still unlock at party Lv100. World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.57',
       bullets: <String>[

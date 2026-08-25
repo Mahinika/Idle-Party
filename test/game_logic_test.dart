@@ -2092,7 +2092,23 @@ void main() {
     state = state.copyWith(heroes: heroes);
     state = GameLogic.awardPartyXp(state, 10);
     expect(state.heroes[0].xp, 10);
-    expect(state.heroes[2].xp, 14); // 1.4× catch-up
+    // Mean 16→17; Lv10 is 6–7 behind → 1.85× catch-up.
+    expect(state.heroes[2].xp, 19);
+  });
+
+  test('awardPartyXp overlevel mul pays more when enemy is stronger', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    state = state.copyWith(
+      heroes: [
+        for (final h in state.heroes) h.copyWith(level: 10, xp: 0),
+      ],
+    );
+    state = GameLogic.awardPartyXp(state, 10, enemyLevel: 20);
+    // gap 10 → 1.8× overlevel, no catch-up (even party).
+    expect(state.heroes.first.xp, 18);
+    expect(GameLogic.xpOverlevelMul(10, 10), 1.0);
+    expect(GameLogic.xpOverlevelMul(10, 15), closeTo(1.4, 0.01));
+    expect(GameLogic.xpCatchUpMul(18, 20), 1.55);
   });
 
   test('unlockSpec seeds new roster heroes near party mean level', () {

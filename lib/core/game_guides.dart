@@ -181,6 +181,7 @@ abstract final class GameGuides {
           'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
           'SPEND ALL · EVEN to split gold round-robin across every track. '
           'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}) and keep on Ascend. '
+          'Harder kills (higher enemy level than the hero) pay more XP; heroes far behind the party catch up faster.\n'
           'ATK/DEF/STA/MOVE/HASTE/CRIT wipe on Ascend. '
           'ATK, HASTE, and MOVE speed up clears — see INCOME for rates. '
           'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '

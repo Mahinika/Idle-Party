@@ -182,9 +182,33 @@ abstract final class EncounterFactory {
     return xp;
   }
 
+  /// Extra XP when the kill is above the hero's level (push deeper = faster).
+  /// Soft-caps so deep floors speed catch-up without printing infinite levels.
+  static double xpOverlevelMul(int heroLevel, int enemyLevel) {
+    final gap = enemyLevel - max(1, heroLevel);
+    if (gap <= 0) return 1.0;
+    if (gap <= 10) return 1.0 + gap * 0.08;
+    return (1.8 + (gap - 10) * 0.04).clamp(1.0, 2.5);
+  }
+
+  /// Soft catch-up when a hero lags the party mean (2+ levels behind).
+  static double xpCatchUpMul(int heroLevel, int partyMeanLevel) {
+    final behind = partyMeanLevel - heroLevel;
+    if (behind < 2) return 1.0;
+    if (behind < 5) return 1.55;
+    if (behind < 10) return 1.85;
+    return 2.1;
+  }
+
   /// Awards [amount] XP to every hero (living or downed); levels up when pools fill.
-  /// Heroes 3+ levels behind party mean get a soft catch-up bonus.
-  static GameState awardPartyXp(GameState state, int amount) {
+  ///
+  /// Optional [enemyLevel] applies [xpOverlevelMul] per hero. Heroes behind the
+  /// party mean also get [xpCatchUpMul].
+  static GameState awardPartyXp(
+    GameState state,
+    int amount, {
+    int? enemyLevel,
+  }) {
     if (amount <= 0) return state;
     final boosted =
         amount +
@@ -200,9 +224,11 @@ abstract final class EncounterFactory {
     final heroes = <PartyHero>[];
     var leveled = false;
     for (final hero in state.heroes) {
-      final gain = hero.level + 3 < meanLevel
-          ? (boosted * 1.4).round()
-          : boosted;
+      final over = enemyLevel == null
+          ? 1.0
+          : xpOverlevelMul(hero.level, enemyLevel);
+      final catchUp = xpCatchUpMul(hero.level, meanLevel);
+      final gain = max(1, (boosted * over * catchUp).round());
       var level = hero.level;
       var xp = hero.xp + gain;
       var hp = hero.currentHp;
@@ -233,7 +259,7 @@ abstract final class EncounterFactory {
   }
 
   static GameState awardEnemyKillXp(GameState state, EnemyUnit enemy) =>
-      awardPartyXp(state, xpForEnemy(enemy));
+      awardPartyXp(state, xpForEnemy(enemy), enemyLevel: enemy.level);
 
   /// Builds the enemy group for a room. Treasure rooms have no enemies.
   /// [threatScale] < 1 softens packs (used for AFK spatial sim).

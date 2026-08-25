@@ -3506,8 +3506,15 @@ class GameLogic {
     return (hero.xp / need).clamp(0.0, 1.0);
   }
   static int xpForEnemy(EnemyUnit enemy) => EncounterFactory.xpForEnemy(enemy);
-  static GameState awardPartyXp(GameState state, int amount) =>
-      EncounterFactory.awardPartyXp(state, amount);
+  static double xpOverlevelMul(int heroLevel, int enemyLevel) =>
+      EncounterFactory.xpOverlevelMul(heroLevel, enemyLevel);
+  static double xpCatchUpMul(int heroLevel, int partyMeanLevel) =>
+      EncounterFactory.xpCatchUpMul(heroLevel, partyMeanLevel);
+  static GameState awardPartyXp(
+    GameState state,
+    int amount, {
+    int? enemyLevel,
+  }) => EncounterFactory.awardPartyXp(state, amount, enemyLevel: enemyLevel);
   static GameState awardEnemyKillXp(GameState state, EnemyUnit enemy) =>
       EncounterFactory.awardEnemyKillXp(state, enemy);
   static List<EnemyUnit> createEnemyGroup(
