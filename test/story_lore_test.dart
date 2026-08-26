@@ -48,5 +48,6 @@ void main() {
     expect(body, contains('No extra Blessing'));
     expect(body, contains('+64e'));
     expect(body, contains('constellation'));
+    expect(body, contains('Rebuild your bag'));
   });
 }

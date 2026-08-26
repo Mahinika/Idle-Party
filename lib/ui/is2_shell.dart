@@ -101,6 +101,9 @@ class _Is2ShellState extends State<Is2Shell> {
                 director: d,
                 onOpenSettings: () => router.open(MenuRoute.settings),
                 onOpenContracts: () => router.open(MenuRoute.jobs),
+                onOpenForge: () =>
+                    router.open(MenuRoute.power, power: PowerTab.forge),
+                onOpenParty: () => router.toggleParty(PartyTab.gear),
               ),
               Expanded(
                 child: Stack(
@@ -144,6 +147,7 @@ class _Is2ShellState extends State<Is2Shell> {
               AppBottomBar(
                 alerts: MenuAlerts.forState(state),
                 route: router.route,
+                showReason: true,
                 onParty: () => router.toggleParty(router.partyTab),
                 onPower: () => router.toggle(MenuRoute.power),
                 onMeta: () => router.toggle(MenuRoute.meta),
@@ -179,9 +183,9 @@ class _DungeonScrimBloom extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        CaveAtmosphere.readabilityScrim(top: 0.25, bottom: 0.35),
+        CaveAtmosphere.readabilityScrim(top: 0.18, bottom: 0.28),
         CaveAtmosphere.torchBloom(
-          intensity: 0.65,
+          intensity: 0.45,
           alignment: const Alignment(0, 0.15),
           sizeFactor: 0.7,
         ),

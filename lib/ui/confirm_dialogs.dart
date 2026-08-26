@@ -50,16 +50,23 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
           }
           return MenuChrome.dialog(
             title: 'Ascend?',
-            content: Text(
-              StoryLore.ascendConfirmBody(
-                rewardEssence: baseReward + milestone,
-                nextAl: nextAl,
-                milestoneBonus: milestone,
-                godHandLevel: state.godHandLevel,
-                blessingsAfter: state.metaDepth.ascendBlessings + 1,
-                unlockCombatRogue: state.ascensionLevel == 0,
+            content: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(ctx).height * 0.5,
               ),
-              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+              child: SingleChildScrollView(
+                child: Text(
+                  StoryLore.ascendConfirmBody(
+                    rewardEssence: baseReward + milestone,
+                    nextAl: nextAl,
+                    milestoneBonus: milestone,
+                    godHandLevel: state.godHandLevel,
+                    blessingsAfter: state.metaDepth.ascendBlessings + 1,
+                    unlockCombatRogue: state.ascensionLevel == 0,
+                  ),
+                  style: GameTheme.body(size: 15, color: GameTheme.parchment),
+                ),
+              ),
             ),
             actions: [
               KenneyButton(
@@ -126,13 +133,20 @@ Future<void> confirmRebornAtCap(
           }
           return MenuChrome.dialog(
             title: 'Reborn?',
-            content: Text(
-              StoryLore.rebornConfirmBody(
-                rewardEssence: reward,
-                godHandLevel: state.godHandLevel,
-                blessings: state.metaDepth.ascendBlessings,
+            content: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(ctx).height * 0.5,
               ),
-              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+              child: SingleChildScrollView(
+                child: Text(
+                  StoryLore.rebornConfirmBody(
+                    rewardEssence: reward,
+                    godHandLevel: state.godHandLevel,
+                    blessings: state.metaDepth.ascendBlessings,
+                  ),
+                  style: GameTheme.body(size: 15, color: GameTheme.parchment),
+                ),
+              ),
             ),
             actions: [
               KenneyButton(
@@ -177,8 +191,8 @@ Future<void> confirmLeaveDungeon(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Return to hub?',
         content: Text(
-          'Leave the dungeon and return to the hub. '
-          'Mid-floor combat progress on this room is lost.',
+          'Leave to hub now? This floor’s fight progress is lost '
+          '(FARM loop restarts from the hub). Gear and gold already banked stay.',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [

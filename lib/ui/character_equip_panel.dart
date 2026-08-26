@@ -90,10 +90,10 @@ class CharacterEquipPanel extends StatelessWidget {
     EquipmentSlot.wrist: 'WRIST',
     EquipmentSlot.cloak: 'CAPE',
     EquipmentSlot.neck: 'NECK',
-    EquipmentSlot.ring: 'RING',
-    EquipmentSlot.ring2: 'RING',
-    EquipmentSlot.trinket: 'CHARM',
-    EquipmentSlot.trinket2: 'CHARM',
+    EquipmentSlot.ring: 'RING1',
+    EquipmentSlot.ring2: 'RING2',
+    EquipmentSlot.trinket: 'CHARM1',
+    EquipmentSlot.trinket2: 'CHARM2',
     EquipmentSlot.consumable: 'FLASK',
   };
 
@@ -217,7 +217,7 @@ class CharacterEquipPanel extends StatelessWidget {
                           HeroDollSprite(hero: h, partyIndex: i, size: 26),
                           const SizedBox(width: 6),
                           Text(
-                            '${h.roleLabel} · L${h.level}',
+                            '${h.spec.shortLabel} · L${h.level}',
                             style: GameTheme.body(size: 11, color: GameTheme.torchHot),
                           ),
                         ],
@@ -243,7 +243,7 @@ class CharacterEquipPanel extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    '${hero.roleLabel} — Level ${hero.level}',
+                    '${hero.spec.name} — L${hero.level}',
                     textAlign: TextAlign.center,
                     style: GameTheme.menuTitle(size: compact ? 18 : 20),
                   ),
@@ -365,7 +365,7 @@ class CharacterEquipPanel extends StatelessWidget {
           children: [
             Expanded(
               child: MenuChrome.chip(
-                label: 'DAMAGE',
+                label: 'ATK',
                 value: '$atk',
                 stacked: true,
               ),
@@ -373,7 +373,7 @@ class CharacterEquipPanel extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: MenuChrome.chip(
-                label: 'ARMOR',
+                label: 'DEF',
                 value: '$def',
                 stacked: true,
               ),

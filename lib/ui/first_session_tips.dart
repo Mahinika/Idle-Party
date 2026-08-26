@@ -51,14 +51,16 @@ class FirstSessionTips extends StatelessWidget {
       id: 'sanctuary',
       title: 'SANCTUARY',
       body:
-          'Spend essence here for idle gold and party power that persists between runs. '
-          'Hub gold/min ticks at the keep overnight (enough to buy forge). '
-          'Gold Find makes that number go up.',
+          'Spend essence under POWER → CAMP for idle gold and party power that '
+          'persists between runs. Hub gold/min ticks at the keep overnight '
+          '(enough to buy forge). Gold Find makes that number go up.',
     ),
     (
       id: 'market',
       title: 'MARKET',
-      body: 'Buy flasks in POWER → MARKET. When the bag is full, use BAG → CLEAN BAG / MERGE or SETTINGS auto-sell.',
+      body:
+          'Buy flasks in POWER → MARKET. When the bag is full, use BAG → CLEAN BAG / '
+          'MERGE or SETTINGS auto-sell — there is no Sell junk button.',
     ),
     (
       id: 'forge',
@@ -119,9 +121,9 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'gauntlet',
-      title: 'CRYSTAL SPIRE',
+      title: 'INFINITY GAUNTLET',
       body:
-          'At party level ${GameLogic.maxHeroLevel}, Infinity Gauntlet is an endless climb from the hub. Best floor survives Ascend.',
+          'At party level ${GameLogic.maxHeroLevel}, Infinity Gauntlet is an endless Crystal Spire climb from the hub. Best floor survives Ascend.',
     ),
     (
       id: 'rift',
@@ -136,10 +138,22 @@ class FirstSessionTips extends StatelessWidget {
           'At party level ${GameLogic.maxHeroLevel}, Greater Rifts are the prestige ladder — harder packs, no mid-run gear, and season ranks on META → KEY · BOARDS.',
     ),
     (
+      id: 'ashen_crown',
+      title: 'ASHEN CROWN',
+      body:
+          'At party level ${GameLogic.maxHeroLevel}, Ashen Crown is a weekly ticket boss under META → KEY. First ticket clear pays essence; PRACTICE is free after.',
+    ),
+    (
+      id: 'powerups',
+      title: 'POWERUPS',
+      body:
+          'Hub POWERUPS: watch an optional ad for 3 hours of ×2 gold and +25% ATK. Stack time up to 24h. Ads never interrupt combat.',
+    ),
+    (
       id: 'prestige',
       title: 'ESSENCE SHOP',
       body:
-          'Spend essence in the Essence Shop and Forge → KEEP for relics, God Hand, and prestige power that lasts.',
+          'Spend essence in POWER → SHOP and Forge → KEEP for relics, God Hand, and prestige power that lasts.',
     ),
   ];
 
@@ -185,6 +199,8 @@ class FirstSessionTips extends StatelessWidget {
               tip.id == 'weekly' ||
               tip.id == 'apex' ||
               tip.id == 'gauntlet' ||
+              tip.id == 'ashen_crown' ||
+              tip.id == 'powerups' ||
               tip.id == 'prestige') &&
           (inDungeon || !porch)) {
         continue;
@@ -229,6 +245,12 @@ class FirstSessionTips extends StatelessWidget {
       if (tip.id == 'greater_rift' &&
           !GameLogic.endgameUnlocked(s) &&
           !GameLogic.canEnterGreaterRift(s)) {
+        continue;
+      }
+      if (tip.id == 'ashen_crown' && !GameLogic.endgameUnlocked(s)) {
+        continue;
+      }
+      if (tip.id == 'powerups' && !porch) {
         continue;
       }
       if (tip.id == 'prestige' &&
@@ -296,7 +318,7 @@ class FirstSessionTips extends StatelessWidget {
                           label: 'SKIP ALL TIPS',
                           onPressed: () =>
                               director.dismissAllTips(tips.map((t) => t.id)),
-                          style: KenneyButtonStyle.grey,
+                          style: KenneyButtonStyle.brown,
                         ),
                       ],
                     ),

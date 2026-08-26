@@ -30,7 +30,7 @@ void main() {
     expect(contract.kind, HubChaseKind.claimDailyVault);
     expect(contract.isReady, isTrue);
     expect(contract.isClaimable, isTrue);
-    expect(contract.upNextLine, startsWith('Up next — ready:'));
+    expect(contract.upNextLine, startsWith('Up next:'));
     expect(contract.readyActionLabel, 'CLAIM VAULT');
   });
 
@@ -47,7 +47,7 @@ void main() {
     final contract = ChaseContract.fromState(state, now: now);
     expect(contract.kind, HubChaseKind.clearFloors);
     expect(contract.isAlmost, isTrue);
-    expect(contract.upNextLine, startsWith('Up next — almost:'));
+    expect(contract.upNextLine, startsWith('Up next:'));
     expect(contract.ascendTeaser, isNotNull);
   });
 

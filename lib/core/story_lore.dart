@@ -154,6 +154,7 @@ abstract final class StoryLore {
         'AL stays ${GameLogic.maxAscensionLevel}. No extra Blessing '
         '(still ×$blessings).\n'
         '+${rewardEssence}e · +1 constellation point.\n\n'
+        'TODAY will say Rebuild your bag until you loot real gear again.\n\n'
         'Keep: hero levels/XP, open zones, essence spends, relics, pets, '
         'sanctuary, God Hand Lv$godHandLevel, Apex.\n'
         'Reset: wallet gold, forge tracks, bag and worn drops, market, '

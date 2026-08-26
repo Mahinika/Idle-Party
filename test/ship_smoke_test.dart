@@ -123,10 +123,19 @@ void main() {
     expect(world.body.toLowerCase(), isNot(contains('lifetime gold')));
 
     expect(GameGuides.topics.any((t) => t.id == 'loadouts'), isFalse);
+    expect(GameGuides.topics.any((t) => t.id == 'constellation'), isTrue);
 
     final ashen = GameGuides.topics.firstWhere((t) => t.id == 'ashen_crown');
     expect(ashen.body.toLowerCase(), contains('practice'));
     expect(ashen.body.toLowerCase(), contains('ticket'));
+
+    final keystone = GameGuides.topics.firstWhere((t) => t.id == 'hardmode');
+    expect(keystone.body.toLowerCase(), contains('ashen'));
+
+    final ascend = GameGuides.topics.firstWhere((t) => t.id == 'ascend');
+    expect(ascend.body, contains('AL20'));
+    expect(ascend.body, contains('${GameLogic.maxHeroLevel}'));
+    expect(ascend.body.toLowerCase(), contains('not from al20 alone'));
 
     final armor = GameGuides.topics.where((t) => t.id == 'armor_sets');
     if (armor.isNotEmpty) {
@@ -136,6 +145,7 @@ void main() {
     final market = GameGuides.topics.firstWhere((t) => t.id == 'market');
     expect(market.body.toLowerCase(), contains('listings'));
     expect(market.body.toLowerCase(), contains('today'));
+    expect(market.body.toLowerCase(), contains('no separate sell junk'));
   });
 
   test('Gauntlet / KEY / Rift gates use party max level and What’s New version is non-empty', () {

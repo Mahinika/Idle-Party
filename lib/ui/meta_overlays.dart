@@ -15,6 +15,7 @@ import '../core/play_leaderboard_ids.dart';
 import '../core/rift.dart';
 import '../core/greater_rift.dart';
 import '../models/achievement_def.dart';
+import '../models/dungeon_def.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/meta_depth.dart';
@@ -593,6 +594,8 @@ Future<void> showOfflineProgressDialog(
   BuildContext context,
   GameDirector director, {
   void Function(HubChaseKind kind)? onOpenParty,
+  VoidCallback? onOpenMarket,
+  void Function(String dungeonId)? onEnterDungeon,
 }) async {
   final summary = director.offlineSummary;
   if (summary == null) return;
@@ -639,7 +642,27 @@ Future<void> showOfflineProgressDialog(
         confirmDailyRun(context, director);
       };
     case HubChaseKind.keystone:
-      break;
+      final key = chase.keyLevel ?? 1;
+      readyLabel = 'ENTER KEY +$key';
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+        director.setHardmodeLevel(key);
+        final id =
+            chase.zoneId ?? GameLogic.recommendedDungeonId(director.state);
+        final unlocked = DungeonCatalog.isUnlocked(
+          id,
+          GameLogic.partyMeanLevel(director.state),
+          director.state.highestDungeonCleared,
+        );
+        if (unlocked) {
+          if (onEnterDungeon != null) {
+            onEnterDungeon(id);
+          } else {
+            director.enterDungeon(dungeonId: id);
+          }
+        }
+      };
     case HubChaseKind.gauntletMilestone:
       readyAction = () {
         director.dismissOfflineSummary();
@@ -669,11 +692,9 @@ Future<void> showOfflineProgressDialog(
       readyAction = () {
         director.dismissOfflineSummary();
         Navigator.pop(context);
-        // Hub passes onOpenParty (acks + opens PARTY). Fallback: ack only.
+        // Hub passes onOpenParty. Fallback: open still works via toast only.
         if (onOpenParty != null) {
           onOpenParty(HubChaseKind.meetHero);
-        } else {
-          director.ackPendingHeroReveals();
         }
       };
     case HubChaseKind.equipBag:
@@ -688,10 +709,41 @@ Future<void> showOfflineProgressDialog(
       readyAction = () {
         director.dismissOfflineSummary();
         Navigator.pop(context);
+        onOpenMarket?.call();
+      };
+    case HubChaseKind.unlockZone:
+    case HubChaseKind.clearFloors:
+    case HubChaseKind.dailyVaultProgress:
+      final id = chase.zoneId ?? GameLogic.recommendedDungeonId(summary.state);
+      readyLabel = 'ENTER';
+      readyAction = () {
+        director.dismissOfflineSummary();
+        Navigator.pop(context);
+        final unlocked = DungeonCatalog.isUnlocked(
+          id,
+          GameLogic.partyMeanLevel(director.state),
+          director.state.highestDungeonCleared,
+        );
+        if (unlocked) {
+          if (onEnterDungeon != null) {
+            onEnterDungeon(id);
+          } else {
+            director.enterDungeon(dungeonId: id);
+          }
+        }
       };
     default:
       break;
   }
+
+  final showChaseCta = readyAction != null &&
+      (chase.urgency == HubChaseUrgency.ready ||
+          chase.urgency == HubChaseUrgency.almost ||
+          chase.kind == HubChaseKind.keystone ||
+          chase.kind == HubChaseKind.unlockZone ||
+          chase.kind == HubChaseKind.clearFloors ||
+          chase.kind == HubChaseKind.dailyVaultProgress ||
+          chase.kind == HubChaseKind.marketUpgrade);
 
   WebClickBridge.pushLayer();
   await showDialog<void>(
@@ -762,7 +814,7 @@ Future<void> showOfflineProgressDialog(
         ),
       ),
       actions: [
-        if (chase.urgency == HubChaseUrgency.ready && readyAction != null) ...[
+        if (showChaseCta) ...[
           KenneyButton(
             label: readyLabel,
             expanded: false,
@@ -803,7 +855,11 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
   @override
   void initState() {
     super.initState();
-    _expanded = !widget.collapsed;
+    final keyOn = widget.director.state.hardmodeLevel > 0 ||
+        widget.director.state.challengeBossRush ||
+        widget.director.state.challengeNoFlask ||
+        widget.director.state.challengeTiny;
+    _expanded = !widget.collapsed || keyOn;
   }
 
   @override
@@ -900,7 +956,9 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           if (affixes.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              affixes.map(Keystone.label).join(' · '),
+              affixes
+                  .map((a) => '${Keystone.label(a)} (${Keystone.blurb(a)})')
+                  .join(' · '),
               textAlign: TextAlign.center,
               style: GameTheme.body(size: 12, color: GameTheme.torchHot),
             ),
@@ -927,11 +985,27 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
               ),
             ],
           ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Boss Rush: bosses only · No Flask: healing flasks disabled',
+              textAlign: TextAlign.center,
+              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            ),
+          ),
           const SizedBox(height: 6),
           _ChallengeChip(
             label: 'TINY (3 heroes)',
             active: state.challengeTiny,
             onTap: () => director.setChallengeTiny(!state.challengeTiny),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Tiny: run with 3 heroes max — harder, smaller party',
+              textAlign: TextAlign.center,
+              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            ),
           ),
           if (state.metaDepth.challengeBestBossRushKey > 0 ||
               state.metaDepth.challengeBestNoFlaskKey > 0 ||

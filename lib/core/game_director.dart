@@ -619,6 +619,7 @@ class GameDirector extends ChangeNotifier {
   }
 
   void _rebuildSpatial() {
+    hudFocusEnemyId = null;
     final ticketAshenCrown = _state.inWorldBoss && !_state.worldBossPractice;
     _spatial = SpatialCombat.build(
       _state,
@@ -1170,6 +1171,31 @@ class GameDirector extends ChangeNotifier {
     unawaited(_persistFlush());
   }
 
+  /// Player-picked enemy for the target corner HUD (runtime only).
+  String? hudFocusEnemyId;
+
+  /// Prefer an enemy under a map tap for the target HUD (within ~1.6 tiles).
+  void setHudFocusAtWorld(double tileX, double tileY) {
+    final spatial = _spatial;
+    if (spatial == null) return;
+    SpatialActor? best;
+    var bestD2 = 2.6; // ~1.6 tiles
+    for (final e in spatial.enemies) {
+      if (e.hp <= 0 || e.dormant) continue;
+      final dx = e.x - tileX;
+      final dy = e.y - tileY;
+      final d2 = dx * dx + dy * dy;
+      if (d2 < bestD2) {
+        bestD2 = d2;
+        best = e;
+      }
+    }
+    if (best == null) return;
+    if (hudFocusEnemyId == best.id) return;
+    hudFocusEnemyId = best.id;
+    notifyListeners();
+  }
+
   /// God Hand aimed at the nearest live enemy to the party, else party center.
   void godHandAtFocus() {
     final spatial = _spatial;
@@ -1272,6 +1298,7 @@ class GameDirector extends ChangeNotifier {
   }
 
   void leaveDungeon() {
+    hudFocusEnemyId = null;
     if (_isLoading) return;
     _awaitingWipeChoice = false;
     _state = GameLogic.ensureWeeklyContract(GameLogic.leaveDungeon(_state));

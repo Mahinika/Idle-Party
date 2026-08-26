@@ -35,9 +35,10 @@ void main() {
     );
     final chase = HubChase.forState(state);
     expect(chase.kind, HubChaseKind.marketUpgrade);
-    expect(chase.urgency, HubChaseUrgency.almost);
+    expect(chase.urgency, HubChaseUrgency.ready);
     expect(chase.title.toLowerCase(), contains('market'));
     final contract = ChaseContract.fromState(state);
+    expect(contract.isClaimable, isTrue);
     expect(contract.readyActionLabel, 'MARKET');
   });
 

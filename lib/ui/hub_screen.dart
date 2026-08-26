@@ -167,9 +167,22 @@ class _HubScreenState extends State<HubScreen>
         return (
           'CLAIM QUESTS',
           () {
+            var claimed = 0;
             for (final m in director.state.missions) {
-              if (m.canClaim) director.claimMission(m.id);
+              if (m.canClaim) {
+                director.claimMission(m.id);
+                claimed++;
+              }
             }
+            if (claimed > 0) {
+              director.showToast(
+                claimed == 1
+                    ? 'Claimed 1 quest'
+                    : 'Claimed $claimed quests',
+                life: 2.2,
+              );
+            }
+            router.open(MenuRoute.meta, meta: MetaTab.jobs);
           },
         );
       case HubChaseKind.monthGoal:
@@ -178,7 +191,7 @@ class _HubScreenState extends State<HubScreen>
         return (
           'PARTY',
           () {
-            director.ackPendingHeroReveals();
+            // Ack when leaving PARTY (menu_surface) so kit fantasy can be read first.
             router.openForHubChase(director.state, HubChaseKind.meetHero);
           },
         );
@@ -201,13 +214,28 @@ class _HubScreenState extends State<HubScreen>
         return (
           'ENTER KEY +${chase.keyLevel ?? 1}',
           () {
-            director.setHardmodeLevel(chase.keyLevel ?? 1);
+            final key = chase.keyLevel ?? 1;
+            director.setHardmodeLevel(key);
             if (chase.zoneId != null) {
               setState(() {
                 _userPickedZone = true;
                 _selectedId = chase.zoneId!;
               });
             }
+            final affixes = Keystone.previewAffixes(director.state);
+            final affixBit = affixes.isEmpty
+                ? 'no affixes'
+                : affixes.map(Keystone.label).join(' · ');
+            final par = Keystone.formatTimer(
+              Keystone.parTimeMs(
+                bossFloor: GameLogic.bossFloorFor(director.state),
+                key: key,
+              ),
+            );
+            director.showToast(
+              'KEY +$key · $affixBit · par $par',
+              life: 2.8,
+            );
             final unlocked = DungeonCatalog.isUnlocked(
               id,
               GameLogic.partyMeanLevel(director.state),
@@ -265,15 +293,23 @@ class _HubScreenState extends State<HubScreen>
           },
         );
       case HubChaseKind.unlockZone:
-        final id = chase.zoneId;
-        if (id == null) return (null, null);
+        final lockedId = chase.zoneId;
+        if (lockedId == null) return (null, null);
+        // Farm the recommended (usually prior) zone — PATH alone felt empty.
+        final enterId = GameLogic.recommendedDungeonId(director.state);
         return (
-          'PATH',
+          'ENTER',
           () {
             setState(() {
               _userPickedZone = true;
-              _selectedId = id;
+              _selectedId = enterId;
             });
+            final unlocked = DungeonCatalog.isUnlocked(
+              enterId,
+              GameLogic.partyMeanLevel(director.state),
+              director.state.highestDungeonCleared,
+            );
+            if (unlocked) widget.onEnterDungeon(enterId);
           },
         );
       case HubChaseKind.willRank:
@@ -310,7 +346,6 @@ class _HubScreenState extends State<HubScreen>
       GameLogic.partyMeanLevel(state),
       state.highestDungeonCleared,
     );
-
     final short = GameTheme.isShortHeight(context);
 
     return Stack(
@@ -385,6 +420,11 @@ class _HubScreenState extends State<HubScreen>
                                       director.state,
                                       kind,
                                     ),
+                                    onOpenMarket: () => router.open(
+                                      MenuRoute.power,
+                                      power: PowerTab.market,
+                                    ),
+                                    onEnterDungeon: widget.onEnterDungeon,
                                   ),
                                 ),
                               ],
@@ -413,13 +453,15 @@ class _HubScreenState extends State<HubScreen>
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              SelectedZoneCaption(
-                                dungeon: DungeonCatalog.byId(_selectedId),
-                                unlocked: unlockedSelected,
-                                partyLevel: GameLogic.partyMeanLevel(state),
-                              ),
-                              const SizedBox(height: 6),
+                              if (!short) ...[
+                                const SizedBox(height: 4),
+                                SelectedZoneCaption(
+                                  dungeon: DungeonCatalog.byId(_selectedId),
+                                  unlocked: unlockedSelected,
+                                  partyLevel: GameLogic.partyMeanLevel(state),
+                                ),
+                              ],
+                              SizedBox(height: short ? 4 : 6),
                               Builder(
                                 builder: (context) {
                                   final contract = ChaseContract.fromState(
@@ -527,7 +569,6 @@ class _HubScreenState extends State<HubScreen>
                                   final weekMod =
                                       state.metaDepth.weeklyModifier;
                                   final showWeekAffix =
-                                      !short &&
                                       weekMod.isNotEmpty &&
                                       GameLogic.showKeystoneJargon(state);
                                   return Column(
@@ -558,13 +599,6 @@ class _HubScreenState extends State<HubScreen>
                                             foldEnter || readyPrimary
                                             ? null
                                             : onAction,
-                                      ),
-                                      HubPowerupsCard(
-                                        state: state,
-                                        onOpen: () => openPowerupsSheet(
-                                          context,
-                                          director,
-                                        ),
                                       ),
                                       HubMetaPulse(
                                         state: state,
@@ -598,11 +632,21 @@ class _HubScreenState extends State<HubScreen>
                                         const SizedBox(height: 4),
                                         KenneyButton(
                                           label: secondaryLabel,
-                                          tip: 'Skip TODAY for now',
+                                          tip: secondaryLabel.startsWith('ENTER') ||
+                                                  secondaryLabel == 'DAILY RUN'
+                                              ? 'Farm the selected zone'
+                                              : 'Also available',
                                           style: KenneyButtonStyle.grey,
                                           onPressed: secondaryAction,
                                         ),
                                       ],
+                                      HubPowerupsCard(
+                                        state: state,
+                                        onOpen: () => openPowerupsSheet(
+                                          context,
+                                          director,
+                                        ),
+                                      ),
                                       if (GameLogic.showKeystoneJargon(state) &&
                                           !chaseOwnsKeyChrome) ...[
                                         const SizedBox(height: 2),
@@ -637,6 +681,8 @@ class _HubScreenState extends State<HubScreen>
                                                 HubChaseKind.dailyRun ||
                                             chase.kind ==
                                                 HubChaseKind.keystone ||
+                                            chase.kind ==
+                                                HubChaseKind.dailyVaultProgress ||
                                             chase.kind ==
                                                 HubChaseKind.meetHero ||
                                             !GameLogic.showDailyChase(state),

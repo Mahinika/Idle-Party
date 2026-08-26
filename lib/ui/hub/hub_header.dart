@@ -203,7 +203,11 @@ class HubHeader extends StatelessWidget {
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   onPressed: onOpenSettings,
-                  icon: KenneySprite(asset: KenneyAssets.iconDoor, size: 18),
+                  icon: Icon(
+                    Icons.settings,
+                    size: 20,
+                    color: GameTheme.parchment,
+                  ),
                   tooltip: 'Settings',
                 ),
               ),
@@ -222,10 +226,19 @@ class HubHeader extends StatelessWidget {
           spacing: 12,
           runSpacing: 4,
           children: [
-            HubStatPill(icon: KenneyAssets.coinGold, label: '$gold'),
-            HubStatPill(icon: KenneyAssets.vialBlue, label: '$essence'),
+            HubStatPill(
+              icon: KenneyAssets.coinGold,
+              caption: 'Gold',
+              label: '$gold',
+            ),
+            HubStatPill(
+              icon: KenneyAssets.vialBlue,
+              caption: 'Essence',
+              label: '$essence',
+            ),
             HubStatPill(
               icon: KenneyAssets.iconCrown,
+              caption: 'Ascend',
               label: ascensionLevel >= GameLogic.maxAscensionLevel
                   ? 'AL $ascensionLevel · MAX'
                   : 'AL $ascensionLevel',
@@ -274,9 +287,15 @@ class HubHeader extends StatelessWidget {
 }
 
 class HubStatPill extends StatelessWidget {
-  const HubStatPill({super.key, required this.icon, required this.label});
+  const HubStatPill({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.caption,
+  });
   final String icon;
   final String label;
+  final String? caption;
 
   @override
   Widget build(BuildContext context) {
@@ -286,6 +305,13 @@ class HubStatPill extends StatelessWidget {
       children: [
         KenneySprite(asset: icon, size: 14),
         const SizedBox(width: 4),
+        if (caption != null) ...[
+          Text(
+            caption!,
+            style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(width: 3),
+        ],
         Text(
           label,
           style: GameTheme.body(size: 14, color: GameTheme.parchment),

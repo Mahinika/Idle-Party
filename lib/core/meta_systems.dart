@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.61';
+  static const String currentVersion = '1.12.62';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.62',
+      bullets: <String>[
+        'Feel audit pass: hub week affix + POWERUPS under ENTER, tap map to pin target mid-fight, floor jump list, clearer wipe tips, kit HUD labels, zone packs less copy-paste. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / Greater Rift / KEY hunts.',
+        'Guides/tips honesty (no sell-junk / loadouts ghosts). MARKET upgrade badges, FORGE STA wording, KEY affix risk words. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.61',
       bullets: <String>[
@@ -42,7 +49,7 @@ abstract final class MetaSystems {
       version: '1.12.59',
       bullets: <String>[
         'Was briefly claim-only (kept gold/gear/floors); 1.12.60 restored prestige '
-            'Ascend bag wipe — keep levels/zones/Apex, rebuild the bag.',
+            'Ascend bag wipe — keep levels/zones/Apex, rebuild the bag. (superseded)',
         'KEY / Gauntlet / Greater Rifts still unlock at party Lv100. World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
     ),
@@ -333,7 +340,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.22',
       bullets: <String>[
-        'POWER → SHOP: Loadout Folio, Apothecary Writ, Junk Magnifier, and Away Ledger — permanent QoL that survives Ascend (extra loadouts, cheaper flasks, higher auto-sell/scrap caps, more Welcome Back rows).',
+        'POWER → SHOP: Loadout Folio, Apothecary Writ, Junk Magnifier, and Away Ledger — permanent QoL that survives Ascend (extra loadouts, cheaper flasks, higher auto-sell/scrap caps, more Welcome Back rows). (superseded — Loadout Folio delisted; LOADOUTS hidden)',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
@@ -669,7 +676,7 @@ abstract final class MetaSystems {
       version: '1.9.8',
       bullets: <String>[
         'Bag cleanup: auto-sell pays gold; new auto-disassemble pays essence (Settings: iLvl + rarity for each).',
-        'Near-full bag: AUTO MERGE → sell → scrap. CLEAN BAG / SELL JUNK / SCRAP buttons in the bag.',
+        'Near-full bag: AUTO MERGE → sell → scrap. CLEAN BAG / SELL JUNK / SCRAP buttons in the bag. (superseded — SELL JUNK / SCRAP buttons removed; use CLEAN BAG + FILTERS)',
         'World Path: Sunken Tidehold and Ashen Vault remain the endgame gates.',
       ],
     ),

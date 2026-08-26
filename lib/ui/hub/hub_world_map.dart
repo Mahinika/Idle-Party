@@ -43,8 +43,11 @@ class SelectedZoneCaption extends StatelessWidget {
       );
     }
     final need = DungeonCatalog.unlockHeroLevel(dungeon);
+    final prevName = dungeon.number <= 0
+        ? 'the start'
+        : DungeonCatalog.all[dungeon.number - 1].name;
     final detail = need > 1
-        ? 'Party Lv$partyLevel / Lv$need to unlock'
+        ? 'Clear $prevName or party Lv$need'
         : 'Locked';
     return Text(
       '${dungeon.name} · $detail',
@@ -157,9 +160,11 @@ class _ZonePathMapState extends State<ZonePathMap> {
     required bool unlocked,
     required bool cleared,
     required bool selected,
+    required bool frontier,
   }) {
     if (selected) return 'HERE';
     if (cleared) return 'CLEAR';
+    if (frontier && unlocked) return 'NEXT';
     if (unlocked) return 'OPEN';
     return 'LOCKED';
   }
@@ -243,6 +248,9 @@ class _ZonePathMapState extends State<ZonePathMap> {
           );
           final cleared = widget.highestCleared >= d.number;
           final selected = d.id == widget.selectedId;
+          // Frontier = lowest uncleared unlocked zone (what to push next).
+          final frontier =
+              unlocked && !cleared && d.number == widget.highestCleared + 1;
           final cx = anchor.dx * mapW;
           final cy = anchor.dy * mapH;
           final left = (cx - hitSize / 2).clamp(0.0, mapW - hitSize).toDouble();
@@ -267,6 +275,7 @@ class _ZonePathMapState extends State<ZonePathMap> {
                   unlocked: unlocked,
                   cleared: cleared,
                   selected: selected,
+                  frontier: frontier,
                 ),
                 onTap: () => widget.onSelect(d.id),
               ),

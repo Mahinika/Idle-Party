@@ -1,4 +1,6 @@
+import '../models/loot.dart';
 import '../spatial/spatial_combat.dart';
+import 'game_logic.dart';
 import 'game_state.dart';
 import 'market_listings_service.dart';
 import 'menu_alerts.dart';
@@ -66,10 +68,14 @@ abstract final class WipeAdvice {
   /// Short nudge under the wipe advice when the fix lives in hub menus.
   static String? hubHintFor(String adviceLine) {
     if (adviceLine.isEmpty) return null;
-    if (adviceLine.contains('MARKET') ||
-        adviceLine.startsWith('Equip') ||
-        adviceLine.contains('FORGE')) {
-      return 'Tap HUB when safe to fix gear';
+    if (adviceLine.contains('MARKET')) {
+      return 'HUB → POWER → MARKET for the listing';
+    }
+    if (adviceLine.startsWith('Equip')) {
+      return 'HUB → PARTY to equip the upgrade';
+    }
+    if (adviceLine.contains('FORGE')) {
+      return 'HUB → POWER → FORGE to buy the track';
     }
     return null;
   }
@@ -79,6 +85,39 @@ abstract final class WipeAdvice {
       return 'POWER → MARKET has an upgrade';
     }
     return forgeLine;
+  }
+
+  static String _slotLabel(EquipmentSlot slot) => switch (slot) {
+        EquipmentSlot.weapon => 'weapon',
+        EquipmentSlot.offHand => 'off-hand',
+        EquipmentSlot.ranged => 'ranged',
+        EquipmentSlot.head => 'helm',
+        EquipmentSlot.chest => 'chest',
+        EquipmentSlot.boots => 'boots',
+        EquipmentSlot.ring || EquipmentSlot.ring2 => 'ring',
+        EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'trinket',
+        _ => slot.name,
+      };
+
+  static String? _bagUpgradeLine(GameState state) {
+    final upgrades = MenuAlerts.bagUpgradeCount(state);
+    if (upgrades <= 0) return null;
+    final plan = GameLogic.planBiSAssignments(state);
+    if (plan.isEmpty) {
+      return upgrades == 1
+          ? 'Equip the better item in PARTY'
+          : 'Equip better gear in PARTY';
+    }
+    final first = plan.first;
+    final heroName =
+        first.heroIndex >= 0 && first.heroIndex < state.heroes.length
+            ? state.heroes[first.heroIndex].name
+            : 'a hero';
+    final slotName = _slotLabel(first.slot);
+    if (upgrades == 1) {
+      return 'Equip better $slotName on $heroName (PARTY)';
+    }
+    return 'Equip better gear on $heroName +${upgrades - 1} more (PARTY)';
   }
 
   /// Nudge God Hand after repeated wipes on the same floor (commit path — no redesign).
@@ -96,14 +135,10 @@ abstract final class WipeAdvice {
     required GameState state,
     required WipeFightSnapshot fight,
   }) {
-    final upgrades = MenuAlerts.bagUpgradeCount(state);
-    if (upgrades > 0) {
-      return upgrades == 1
-          ? 'Equip the better item in PARTY'
-          : 'Equip better gear in PARTY';
-    }
+    final bag = _bagUpgradeLine(state);
+    if (bag != null) return bag;
 
-    if (fight.elapsedSec < 2 || fight.waveHp < 1 || fight.damageDealt < 1) {
+    if (fight.elapsedSec < 1 || fight.waveHp < 1 || fight.damageDealt < 1) {
       return null;
     }
 

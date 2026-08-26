@@ -203,7 +203,7 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           ),
           const SizedBox(height: 8),
           _SettingsToggle(
-            label: 'Colorblind-friendly floaters',
+            label: 'Colorblind-friendly combat numbers',
             value: state.colorblindMode,
             onChanged: director.setColorblindMode,
           ),
@@ -224,13 +224,13 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Near-full bag: merge → sell gold → scrap essence. '
-            'BiS / upgrades are never cleaned. Bag → FILTERS opens these controls.',
+            'Near-full bag auto-rules (also BAG → AUTO-SELL FILTERS). '
+            'Sell = gold. Scrap/disassemble = essence. BiS / upgrades are never cleaned.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 10),
           Text(
-            'Auto-sell (gold)',
+            'Auto-sell → gold (junk sold for coins)',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
@@ -248,7 +248,7 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Auto-disassemble (essence)',
+            'Auto-scrap → essence (junk broken for essence)',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),

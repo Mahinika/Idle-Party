@@ -299,7 +299,7 @@ abstract final class HeroSpecs {
       id: HeroSpecId.protPaladin,
       classId: HeroClassId.paladin,
       name: 'Protection Paladin',
-      shortLabel: 'PPROT',
+      shortLabel: 'PTank',
       roleTag: SpecRoleTag.tank,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.warrior,

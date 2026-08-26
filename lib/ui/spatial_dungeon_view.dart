@@ -377,16 +377,18 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                               widget.director.reviveParty();
                               return;
                             }
-                            // Mid-pack: use the fist ring — map taps misfire too easily.
+                            final tileX = camera.camX +
+                                details.localPosition.dx / camera.tileSize;
+                            final tileY = camera.camY +
+                                details.localPosition.dy / camera.tileSize;
+                            // Mid-pack: pin target HUD — fist ring for God Hand.
                             final fighting =
                                 world?.enemies.any((e) => e.isAlive) ?? false;
-                            if (fighting) return;
-                            widget.director.godHandAtWorld(
-                              camera.camX +
-                                  details.localPosition.dx / camera.tileSize,
-                              camera.camY +
-                                  details.localPosition.dy / camera.tileSize,
-                            );
+                            if (fighting) {
+                              widget.director.setHudFocusAtWorld(tileX, tileY);
+                              return;
+                            }
+                            widget.director.godHandAtWorld(tileX, tileY);
                           },
                           child:
                               world == null ||
@@ -395,7 +397,18 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                   _sword == null ||
                                   _vial == null ||
                                   _charAtlas == null
-                              ? const ColoredBox(color: GameTheme.stone)
+                              ? ColoredBox(
+                                  color: GameTheme.stone,
+                                  child: Center(
+                                    child: Text(
+                                      'Loading floor…',
+                                      style: GameTheme.body(
+                                        size: 15,
+                                        color: GameTheme.parchmentDim,
+                                      ),
+                                    ),
+                                  ),
+                                )
                               : RepaintBoundary(
                                   child: CustomPaint(
                                     size: Size(
@@ -555,11 +568,11 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                     const SizedBox(height: 10),
                                     Text(
                                       state.inGauntlet
-                                          ? 'Gauntlet run ends here. Best floor is saved. Return to hub to climb again.'
+                                          ? 'Gauntlet run ends here. PB F${state.metaDepth.gauntletBestFloor}. Return to hub to climb again.'
                                           : state.inGreaterRift
-                                          ? 'Greater Rift ends here. Return to hub to climb again.'
+                                          ? 'Greater Rift ends here. Best tier ${state.metaDepth.grBestTier}. Return to hub to climb again.'
                                           : state.inRift
-                                          ? 'Rift run ends here. Return to hub to try again.'
+                                          ? 'Rift run ends here. Best tier ${state.metaDepth.riftBestTier}. Return to hub to try again.'
                                           : dailyEcho
                                           ? 'Daily echo — RETRY restarts this floor. HUB ends the run (claim needs a clear).'
                                           : farm
@@ -694,21 +707,64 @@ class ChamberDots extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var i = 0; i < total; i++)
-          Container(
-            width: 7,
-            height: 7,
-            margin: const EdgeInsets.only(right: 3),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: world.clearedChambers.contains(i)
-                  ? GameTheme.clear
-                  : (i == world.activeChamber
-                        ? GameTheme.torchHot
-                        : const Color(0xFF4A4030)),
-              border: Border.all(color: GameTheme.border),
+          Padding(
+            padding: const EdgeInsets.only(right: 3),
+            child: _ChamberDot(
+              cleared: world.clearedChambers.contains(i),
+              active: i == world.activeChamber,
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Shape + color so colorblind play can tell cleared / active / ahead.
+class _ChamberDot extends StatelessWidget {
+  const _ChamberDot({required this.cleared, required this.active});
+
+  final bool cleared;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = cleared
+        ? GameTheme.clear
+        : (active ? GameTheme.torchHot : const Color(0xFF4A4030));
+    if (cleared) {
+      // Square = done.
+      return Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(
+          color: color,
+          border: Border.all(color: GameTheme.border),
+        ),
+      );
+    }
+    if (active) {
+      // Diamond = here.
+      return Transform.rotate(
+        angle: math.pi / 4,
+        child: Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: color,
+            border: Border.all(color: GameTheme.border),
+          ),
+        ),
+      );
+    }
+    // Circle = ahead.
+    return Container(
+      width: 7,
+      height: 7,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        border: Border.all(color: GameTheme.border),
+      ),
     );
   }
 }
@@ -805,7 +861,7 @@ class GodHandRing extends StatelessWidget {
         ? (urgent ? GameTheme.accentWarn : GameTheme.torchHot)
         : GameTheme.parchmentDim;
     final label = ready
-        ? (urgent ? 'God Hand ready — tap for steer + smash' : 'God Hand ready')
+        ? (urgent ? 'God Hand ready — TAP to steer + smash' : 'God Hand ready')
         : 'God Hand ${cooldown.toStringAsFixed(1)}s';
     final action = onTap != null && ready ? onTap : null;
     return WebClickScope(
@@ -832,29 +888,46 @@ class GodHandRing extends StatelessWidget {
                   child: SizedBox(
                     width: 28,
                     height: 28,
-                    child: CustomPaint(
-                      painter: _GodHandRingPainter(
-                        progress: t,
-                        color: color,
-                        ready: ready,
-                      ),
-                      child: Center(
-                        child: ready
-                            ? KenneySprite(
-                                asset: KenneyAssets.fist,
-                                size: 14,
-                                color: color,
-                              )
-                            : Text(
-                                cooldown < 10
-                                    ? cooldown.toStringAsFixed(1)
-                                    : '${cooldown.round()}',
-                                style: GameTheme.pixel(
-                                  size: 6,
-                                  color: color,
-                                ),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        CustomPaint(
+                          painter: _GodHandRingPainter(
+                            progress: t,
+                            color: color,
+                            ready: ready,
+                          ),
+                          child: Center(
+                            child: ready
+                                ? KenneySprite(
+                                    asset: KenneyAssets.fist,
+                                    size: 14,
+                                    color: color,
+                                  )
+                                : Text(
+                                    cooldown < 10
+                                        ? cooldown.toStringAsFixed(1)
+                                        : '${cooldown.round()}',
+                                    style: GameTheme.pixel(
+                                      size: 6,
+                                      color: color,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        if (urgent && ready)
+                          Positioned(
+                            right: -6,
+                            top: -4,
+                            child: Text(
+                              '!',
+                              style: GameTheme.pixel(
+                                size: 8,
+                                color: GameTheme.accentWarn,
                               ),
-                      ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -1100,21 +1173,24 @@ class _TileRoomPainter extends CustomPainter {
         } else if (kind == TileKind.exit) {
           final exitImg = roomType == RoomType.boss ? stairsBoss : stairs;
           _drawImage(canvas, exitImg, dst);
-          if (world.awaitingExit && showGuide) {
-            final pulse = 0.75 + 0.25 * math.sin(visualFrame * 0.18);
-            canvas.drawCircle(
-              dst.center,
-              tile * 0.55 * pulse,
-              Paint()
-                ..color = const Color(0x6670E0A0)
-                ..style = PaintingStyle.stroke
-                ..strokeWidth = math.max(2, tile * 0.08),
-            );
-            canvas.drawCircle(
-              dst.center,
-              tile * 0.32 * pulse,
-              Paint()..color = const Color(0x3380FFB0),
-            );
+          if (world.awaitingExit) {
+            if (showGuide) {
+              final pulse = 0.75 + 0.25 * math.sin(visualFrame * 0.18);
+              canvas.drawCircle(
+                dst.center,
+                tile * 0.55 * pulse,
+                Paint()
+                  ..color = const Color(0x6670E0A0)
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = math.max(2, tile * 0.08),
+              );
+              canvas.drawCircle(
+                dst.center,
+                tile * 0.32 * pulse,
+                Paint()..color = const Color(0x3380FFB0),
+              );
+            }
+            // GO stays visible even on Minimal VFX — stairs must stay obvious.
             final go = TextPainter(
               text: TextSpan(
                 text: 'GO',

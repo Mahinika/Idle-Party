@@ -22,12 +22,134 @@ class DungeonTopHud extends StatelessWidget {
     required this.director,
     required this.onOpenSettings,
     required this.onOpenContracts,
+    this.onOpenForge,
+    this.onOpenParty,
   });
 
   final GameState state;
   final GameDirector director;
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenContracts;
+  final VoidCallback? onOpenForge;
+  final VoidCallback? onOpenParty;
+
+  static String _godHandStyleLabel(int style) => switch (style.clamp(0, 2)) {
+        0 => 'BAL',
+        1 => 'FOCUS',
+        2 => 'WIDE',
+        _ => 'BAL',
+      };
+
+  List<PopupMenuEntry<String>> _floorMenuItems({
+    required int floor,
+    required bool includeExtras,
+  }) {
+    final maxFloor = state.maxReachableFloor;
+    final items = <PopupMenuEntry<String>>[
+      PopupMenuItem(
+        enabled: false,
+        child: Text(
+          'Floor · F$floor'
+          '${state.keystoneRunActive ? ' · KEY+${state.keystoneRunLevel}' : ''}',
+          style: GameTheme.pixel(
+            size: GameTheme.hudPixel,
+            color: GameTheme.torchHot,
+          ),
+        ),
+      ),
+    ];
+    for (var f = 1; f <= maxFloor; f++) {
+      final here = f == floor;
+      final unlocked = GameLogic.canTravelToFloor(state, f);
+      items.add(
+        PopupMenuItem(
+          value: 'floor_$f',
+          enabled: unlocked && !here,
+          child: Text(
+            here
+                ? 'F$f · here'
+                : unlocked
+                    ? 'F$f'
+                    : 'F$f · locked',
+            style: GameTheme.pixel(
+              size: GameTheme.hudPixel,
+              color: here
+                  ? GameTheme.torchHot
+                  : unlocked
+                      ? GameTheme.parchment
+                      : GameTheme.parchmentDim,
+            ),
+          ),
+        ),
+      );
+    }
+    final canDown = GameLogic.canTravelToFloor(state, floor - 1);
+    final canUp = GameLogic.canTravelToFloor(state, floor + 1);
+    items.add(const PopupMenuDivider());
+    items.add(
+      PopupMenuItem(
+        value: 'down',
+        enabled: canDown,
+        child: Text(
+          canDown ? 'FLOOR −1' : 'FLOOR −1 · locked',
+          style: GameTheme.pixel(size: GameTheme.hudPixel),
+        ),
+      ),
+    );
+    items.add(
+      PopupMenuItem(
+        value: 'up',
+        enabled: canUp,
+        child: Text(
+          canUp ? 'FLOOR +1' : 'FLOOR +1 · locked',
+          style: GameTheme.pixel(size: GameTheme.hudPixel),
+        ),
+      ),
+    );
+    if (includeExtras) {
+      final claimable = state.missions.where((m) => m.canClaim).length;
+      if (claimable > 0) {
+        items.add(
+          PopupMenuItem(
+            value: 'quests',
+            child: Text(
+              'QUESTS ($claimable)',
+              style: GameTheme.pixel(size: GameTheme.hudPixel),
+            ),
+          ),
+        );
+      }
+      items.add(const PopupMenuDivider());
+      items.add(
+        PopupMenuItem(
+          value: 'settings',
+          child: Text(
+            'SETTINGS',
+            style: GameTheme.pixel(size: GameTheme.hudPixel),
+          ),
+        ),
+      );
+    }
+    return items;
+  }
+
+  void _onFloorMenu(String value, int floor) {
+    if (value.startsWith('floor_')) {
+      final target = int.tryParse(value.substring(6));
+      if (target != null) director.travelToFloor(target);
+      return;
+    }
+    switch (value) {
+      case 'down':
+        director.travelToFloor(floor - 1);
+      case 'up':
+        director.travelToFloor(floor + 1);
+      case 'settings':
+        onOpenSettings();
+      case 'quests':
+        onOpenContracts();
+    }
+  }
 
   void _claimAllReadyMissions() {
     for (final mission in state.missions) {
@@ -59,9 +181,21 @@ class DungeonTopHud extends StatelessWidget {
     final placeLine = state.inGauntlet
         ? 'Gauntlet · F$floor'
         : state.inRift
-        ? 'Rift R${state.riftTier} · ${state.riftKills}/${state.riftKillTarget}'
+        ? Rift.progressLabel(
+            kills: state.riftKills,
+            target: state.riftKillTarget,
+            timerMs: state.riftTimerMs,
+            parMs: state.riftParMs,
+            tier: state.riftTier,
+          )
         : state.inGreaterRift
-        ? 'GR${state.grTier} · ${state.grKills}/${state.grKillTarget}'
+        ? GreaterRift.progressLabel(
+            kills: state.grKills,
+            target: state.grKillTarget,
+            timerMs: state.grTimerMs,
+            parMs: state.grParMs,
+            tier: state.grTier,
+          )
         : state.inWorldBoss
         ? 'Ashen Crown'
         : '$dungeonName · F$floor$keyBit';
@@ -141,8 +275,13 @@ class DungeonTopHud extends StatelessWidget {
                       )
                     else if (state.inRift)
                       DungeonModeChip(
-                        label:
-                            'R${state.riftTier} ${state.riftKills}/${state.riftKillTarget}',
+                        label: Rift.progressLabel(
+                          kills: state.riftKills,
+                          target: state.riftKillTarget,
+                          timerMs: state.riftTimerMs,
+                          parMs: state.riftParMs,
+                          tier: state.riftTier,
+                        ),
                         selected: true,
                         dense: true,
                         interactive: false,
@@ -150,8 +289,13 @@ class DungeonTopHud extends StatelessWidget {
                       )
                     else if (state.inGreaterRift)
                       DungeonModeChip(
-                        label:
-                            'GR${state.grTier} ${state.grKills}/${state.grKillTarget}',
+                        label: GreaterRift.progressLabel(
+                          kills: state.grKills,
+                          target: state.grKillTarget,
+                          timerMs: state.grTimerMs,
+                          parMs: state.grParMs,
+                          tier: state.grTier,
+                        ),
                         selected: true,
                         dense: true,
                         interactive: false,
@@ -186,6 +330,16 @@ class DungeonTopHud extends StatelessWidget {
                               const SizedBox(width: 4),
                               ChamberDots(world: world),
                               const SizedBox(width: 4),
+                              Text(
+                                _godHandStyleLabel(
+                                  state.metaDepth.godHandStyle,
+                                ),
+                                style: GameTheme.pixel(
+                                  size: 6,
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              ),
+                              const SizedBox(width: 2),
                               GodHandRing(
                                 cooldown: world.godHandCooldown,
                                 urgent: state.wipeStreakCount >= 2,
@@ -219,88 +373,22 @@ class DungeonTopHud extends StatelessWidget {
                       height: GameTheme.minTouch,
                       child: Semantics(
                         button: true,
-                        label: 'Floor / settings',
+                        label: 'Floor menu',
                         excludeSemantics: true,
                         child: PopupMenuButton<String>(
-                          tooltip: 'Floor / settings',
+                          tooltip: 'Floor',
                           padding: EdgeInsets.zero,
                           color: GameTheme.stoneDeep,
-                          onSelected: (value) {
-                            switch (value) {
-                              case 'down':
-                                director.travelToFloor(floor - 1);
-                              case 'up':
-                                director.travelToFloor(floor + 1);
-                              case 'settings':
-                                onOpenSettings();
-                              case 'quests':
-                                onOpenContracts();
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              enabled: false,
-                              child: Text(
-                                'F$floor'
-                                '${state.keystoneRunActive ? ' KEY+${state.keystoneRunLevel}' : ''}'
-                                ' · ${formatCount(state.gold)}g',
-                                style: GameTheme.pixel(
-                                  size: GameTheme.hudPixel,
-                                  color: GameTheme.torchHot,
-                                ),
+                          onSelected: (value) => _onFloorMenu(value, floor),
+                          itemBuilder: (context) =>
+                              _floorMenuItems(floor: floor, includeExtras: true),
+                          child: Center(
+                            child: Text(
+                              'F$floor',
+                              style: GameTheme.pixel(
+                                size: GameTheme.hudPixel,
+                                color: GameTheme.torchHot,
                               ),
-                            ),
-                            PopupMenuItem(
-                              value: 'down',
-                              enabled: GameLogic.canTravelToFloor(
-                                state,
-                                floor - 1,
-                              ),
-                              child: Text(
-                                'FLOOR −1',
-                                style: GameTheme.pixel(
-                                  size: GameTheme.hudPixel,
-                                ),
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'up',
-                              enabled: GameLogic.canTravelToFloor(
-                                state,
-                                floor + 1,
-                              ),
-                              child: Text(
-                                'FLOOR +1',
-                                style: GameTheme.pixel(
-                                  size: GameTheme.hudPixel,
-                                ),
-                              ),
-                            ),
-                            if (claimable > 0)
-                              PopupMenuItem(
-                                value: 'quests',
-                                child: Text(
-                                  'QUESTS ($claimable)',
-                                  style: GameTheme.pixel(
-                                    size: GameTheme.hudPixel,
-                                  ),
-                                ),
-                              ),
-                            PopupMenuItem(
-                              value: 'settings',
-                              child: Text(
-                                'SETTINGS',
-                                style: GameTheme.pixel(
-                                  size: GameTheme.hudPixel,
-                                ),
-                              ),
-                            ),
-                          ],
-                          child: const Center(
-                            child: Icon(
-                              Icons.more_horiz,
-                              size: 22,
-                              color: GameTheme.torchHot,
                             ),
                           ),
                         ),
@@ -415,6 +503,14 @@ class DungeonTopHud extends StatelessWidget {
                         if (world != null) ...[
                           ChamberDots(world: world),
                           const SizedBox(width: 6),
+                          Text(
+                            _godHandStyleLabel(state.metaDepth.godHandStyle),
+                            style: GameTheme.pixel(
+                              size: GameTheme.hudPixel,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
                           GodHandRing(
                             cooldown: world.godHandCooldown,
                             urgent: state.wipeStreakCount >= 2,
@@ -427,51 +523,21 @@ class DungeonTopHud extends StatelessWidget {
                           height: GameTheme.minTouch,
                           child: Semantics(
                             button: true,
-                            label: 'Floor travel',
+                            label: 'Floor menu',
                             excludeSemantics: true,
                             child: PopupMenuButton<String>(
-                              tooltip: 'Floor travel',
+                              tooltip: 'Floor',
                               padding: EdgeInsets.zero,
                               color: GameTheme.stoneDeep,
-                              onSelected: (value) {
-                                switch (value) {
-                                  case 'down':
-                                    director.travelToFloor(floor - 1);
-                                  case 'up':
-                                    director.travelToFloor(floor + 1);
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'down',
-                                  enabled: GameLogic.canTravelToFloor(
-                                    state,
-                                    floor - 1,
-                                  ),
-                                  child: Text(
-                                    'FLOOR −1',
-                                    style: GameTheme.pixel(
-                                      size: GameTheme.hudPixel,
-                                    ),
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'up',
-                                  enabled: GameLogic.canTravelToFloor(
-                                    state,
-                                    floor + 1,
-                                  ),
-                                  child: Text(
-                                    'FLOOR +1',
-                                    style: GameTheme.pixel(
-                                      size: GameTheme.hudPixel,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              onSelected: (value) =>
+                                  _onFloorMenu(value, floor),
+                              itemBuilder: (context) => _floorMenuItems(
+                                floor: floor,
+                                includeExtras: false,
+                              ),
                               child: Center(
                                 child: Text(
-                                  'F±',
+                                  'Floor',
                                   style: GameTheme.pixel(
                                     size: GameTheme.hudPixel,
                                     color: GameTheme.torchHot,
@@ -499,26 +565,63 @@ class DungeonTopHud extends StatelessWidget {
                 ),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Semantics(
-              label: rates,
-              child: Text(
-                rates,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+          if (!compact)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Semantics(
+                label: rates,
+                child: Text(
+                  rates,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+                ),
               ),
             ),
-          ),
           if (softcap > 0 && !state.inGauntlet)
             Padding(
               padding: const EdgeInsets.only(top: 3),
-              child: Text(
-                'Underleveled · gain ~$softcap lvl or farm gear',
-                textAlign: TextAlign.center,
-                style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      'Underleveled · ~$softcap lvl or gear',
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(
+                        size: 11,
+                        color: GameTheme.torchHot,
+                      ),
+                    ),
+                  ),
+                  if (onOpenForge != null) ...[
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: onOpenForge,
+                      child: Text(
+                        'FORGE',
+                        style: GameTheme.pixel(
+                          size: GameTheme.hudPixel,
+                          color: GameTheme.clear,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (onOpenParty != null) ...[
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: onOpenParty,
+                      child: Text(
+                        'PARTY',
+                        style: GameTheme.pixel(
+                          size: GameTheme.hudPixel,
+                          color: GameTheme.clear,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
         ],

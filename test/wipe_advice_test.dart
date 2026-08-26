@@ -201,7 +201,11 @@ void main() {
     );
     expect(
       WipeAdvice.lineFor(state: state, fight: atkLack()),
-      'Equip the better item in PARTY',
+      contains('Equip better'),
+    );
+    expect(
+      WipeAdvice.lineFor(state: state, fight: atkLack()),
+      contains('PARTY'),
     );
   });
 

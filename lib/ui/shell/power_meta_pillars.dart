@@ -78,25 +78,25 @@ class _PowerPillarState extends State<PowerPillar>
           PowerTab.income => (
             label: 'INCOME',
             scope: 'ACCOUNT',
-            blurb: 'hub gold/min · Gold Find generator (survives Ascend)',
+            blurb: 'ACCOUNT · hub gold/min · Gold Find (not MARKET sell)',
             body: SingleChildScrollView(child: IncomeOverlay(director: d)),
           ),
           PowerTab.forge => (
             label: 'FORGE',
             scope: 'RUN',
-            blurb: 'gold this run (wipes) · KEEP forever · Apex mats',
+            blurb: 'RUN · gold this run (wipes on Ascend) · KEEP forever',
             body: ForgeOverlay(director: d),
           ),
           PowerTab.camp => (
             label: 'CAMP',
             scope: 'ACCOUNT',
-            blurb: 'essence tracks survive Ascend · prestige from Lv12',
+            blurb: 'ACCOUNT · essence tracks · Gold Find lives here too',
             body: SingleChildScrollView(child: SanctuaryOverlay(director: d)),
           ),
           PowerTab.market => (
             label: 'MARKET',
             scope: 'RUN',
-            blurb: 'gear listings + flasks · gold this run',
+            blurb: 'RUN · buy gear listings · sell lives in PARTY BAG',
             body: SingleChildScrollView(child: MarketOverlay(director: d)),
           ),
           PowerTab.shop => (
@@ -247,7 +247,7 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
       for (final tab in _visible)
         switch (tab) {
           MetaTab.key => (
-            label: 'KEY',
+            label: 'KEYSTONE',
             body: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

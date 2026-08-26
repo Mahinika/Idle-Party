@@ -30,17 +30,12 @@ class ChaseContract {
       (kind == HubChaseKind.monthGoal && isReady) ||
       kind == HubChaseKind.meetHero ||
       kind == HubChaseKind.equipBag ||
+      kind == HubChaseKind.marketUpgrade ||
       kind == HubChaseKind.ascend;
 
   /// Offline welcome + any “Up next” chrome — same words as hub TODAY.
-  String get upNextLine {
-    final t = title;
-    return switch (urgency) {
-      HubChaseUrgency.ready => 'Up next — ready: $t',
-      HubChaseUrgency.almost => 'Up next — almost: $t',
-      HubChaseUrgency.normal => 'Up next: $t',
-    };
-  }
+  /// Urgency stays on the hub chip; this line is title-only (no READY echo).
+  String get upNextLine => 'Up next: $title';
 
   /// Short CTA when [isReady] (hub / offline action buttons).
   String? get readyActionLabel => switch (kind) {
@@ -55,7 +50,7 @@ class ChaseContract {
     HubChaseKind.keystone => 'ENTER',
     HubChaseKind.gauntletMilestone => 'GAUNTLET',
     HubChaseKind.riftMilestone => 'RIFT',
-    HubChaseKind.greaterRiftMilestone => 'GREATER',
+    HubChaseKind.greaterRiftMilestone => 'GREATER RIFT',
     HubChaseKind.ashenCrown => 'ASHEN CROWN',
     HubChaseKind.unlockZone => zoneId != null ? 'PATH' : null,
     _ => null,

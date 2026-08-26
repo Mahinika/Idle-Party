@@ -22,9 +22,9 @@ class JobsOverlay extends StatelessWidget {
   final GameDirector director;
 
   static String _slotBadge(int index) => switch (index) {
-    0 => 'DAILY',
-    1 => 'BOUNTY',
-    _ => 'SIDE',
+    0 => 'DAILY · easy',
+    1 => 'BOUNTY · climb',
+    _ => 'SIDE · variety',
   };
 
   @override
@@ -133,16 +133,20 @@ class JobsOverlay extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          KenneyButton(
-            label: mission.claimed
-                ? 'CLAIMED'
-                : (mission.canClaim ? 'CLAIM' : 'IN PROGRESS'),
-            onPressed: mission.canClaim
-                ? () => director.claimMission(mission.id)
-                : null,
-            style: KenneyButtonStyle.grey,
-            expanded: false,
-          ),
+          if (mission.canClaim || mission.claimed)
+            KenneyButton(
+              label: mission.claimed ? 'CLAIMED' : 'CLAIM',
+              onPressed: mission.canClaim
+                  ? () => director.claimMission(mission.id)
+                  : null,
+              style: KenneyButtonStyle.grey,
+              expanded: false,
+            )
+          else
+            Text(
+              'Active',
+              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            ),
         ],
       ),
     );
@@ -179,10 +183,9 @@ class SanctuaryOverlay extends StatelessWidget {
         Text(
           'Permanent ACCOUNT tracks — survive Ascend. Upgrade forever.\n'
           'Gold Find raises Hub gold/min at the keep (ticks while you sit here — '
-          'slower than a run, enough overnight to buy forge). '
-          'Prestige from Lv12: reset to Lv0 (costs go cheap again), keep a '
-          'small forever bonus, and get essence back. Not a power jump — '
-          'the big level bonus is gone until you buy levels again.',
+          'slower than a run, enough overnight to buy forge).\n'
+          'CAMP Prestige (from Lv12) is not Ascend: it only resets this track '
+          'to cheap levels again, keeps a small forever bonus, and refunds essence.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
@@ -289,13 +292,19 @@ class SanctuaryOverlay extends StatelessWidget {
           ),
           Text(
             canPrestige
-                ? 'Prestige keeps $keepShort forever, refunds ${prestigeGain}e, '
-                      'resets to $afterPrestige. Levels start cheap again.'
-                : 'Each prestige keeps $keepShort forever · ready at Lv12 '
-                      '($cycleStep/12)',
+                ? 'CAMP Prestige (not Ascend): keeps $keepShort forever, '
+                      'refunds ${prestigeGain}e, resets to $afterPrestige. '
+                      'Levels start cheap again.'
+                : 'Each CAMP Prestige keeps $keepShort forever · ready at Lv12 '
+                      '(cycle $cycleStep/12) — separate from Ascend',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
+          Text(
+            'Prestige cycle $cycleStep/12 (not hero XP)',
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 4),
           KenneyProgressBar(
             value: (cycleStep / 12.0).clamp(0.0, 1.0),
             height: 12,
@@ -338,18 +347,19 @@ class SanctuaryOverlay extends StatelessWidget {
           if (canPrestige) ...[
             const SizedBox(height: 4),
             KenneyButton(
-              label: 'Prestige · keep $keepShort · +${prestigeGain}e',
+              label: 'CAMP Prestige · keep $keepShort · +${prestigeGain}e',
               style: KenneyButtonStyle.grey,
               onPressed: () async {
                 final ok = await showDialog<bool>(
                   context: context,
                   barrierColor: MenuChrome.scrim,
                   builder: (ctx) => MenuChrome.dialog(
-                    title: 'Prestige this track?',
+                    title: 'CAMP Prestige this track?',
                     content: Text(
-                      'Resets the CAMP track to Lv1. Keeps $keepShort forever '
+                      'Resets this CAMP track to Lv1. Keeps $keepShort forever '
                       'and refunds ${prestigeGain}e.\n\n'
-                      'This is not Ascend — only this sanctuary track.',
+                      'This is not Ascend — only this sanctuary track. '
+                      'Ascend (hub claim) resets the run bag and raises AL.',
                       style: GameTheme.body(
                         size: 15,
                         color: GameTheme.parchment,
@@ -408,6 +418,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
     final flaskCost = GameLogic.marketFlaskCost(state);
     final refreshLabel = MarketListingsService.formatRefreshRemaining(state);
     final refreshCost = GameLogic.marketListingsPaidRefreshCost(state);
+    final msReady = MarketListingsService.refreshRemainingMs(state) <= 0;
     final listings = _filteredListings(state);
 
     return Column(
@@ -422,19 +433,25 @@ class _MarketOverlayState extends State<MarketOverlay> {
         MenuChrome.sectionLabelScoped('GEAR LISTINGS', scope: MenuScope.run),
         const SizedBox(height: 4),
         Text(
-          'Traveling listings · $refreshLabel',
+          msReady
+              ? 'Traveling listings · free refresh ready'
+              : 'Traveling listings · free refresh in $refreshLabel',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         KenneyButton(
-          label: state.gold >= refreshCost
-              ? 'REFRESH · ${formatCount(refreshCost)}g'
-              : 'REFRESH · Need ${formatCount(refreshCost)}g',
+          label: msReady
+              ? 'LISTINGS FRESH'
+              : (state.gold >= refreshCost
+                    ? 'REFRESH NOW · ${formatCount(refreshCost)}g'
+                    : 'REFRESH · Need ${formatCount(refreshCost)}g'),
           style: KenneyButtonStyle.grey,
-          onPressed: state.gold >= refreshCost
-              ? director.refreshMarketListings
-              : null,
+          onPressed: msReady
+              ? null
+              : (state.gold >= refreshCost
+                    ? director.refreshMarketListings
+                    : null),
         ),
         const SizedBox(height: 8),
         _slotFilterRow(),
@@ -452,7 +469,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
         const SizedBox(height: 12),
         Text(
           'Buy gear when drops miss your slot. Listings refresh over time. '
-          'Farm still beats market iLvl.',
+          'Fill empty slots here — dungeon loot still scales higher later.',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
@@ -522,7 +539,21 @@ class _MarketOverlayState extends State<MarketOverlay> {
   }
 
   bool _matchesFilters(GameState state, MarketListing listing) {
-    if (_slotFilter != null && listing.slot != _slotFilter) return false;
+    if (_slotFilter != null) {
+      if (_slotFilter == EquipmentSlot.ring) {
+        if (listing.slot != EquipmentSlot.ring &&
+            listing.slot != EquipmentSlot.ring2) {
+          return false;
+        }
+      } else if (_slotFilter == EquipmentSlot.trinket) {
+        if (listing.slot != EquipmentSlot.trinket &&
+            listing.slot != EquipmentSlot.trinket2) {
+          return false;
+        }
+      } else if (listing.slot != _slotFilter) {
+        return false;
+      }
+    }
     if (_heroFilterIndex != null) {
       return _heroCanWearListing(state.heroes[_heroFilterIndex!], listing);
     }
@@ -543,8 +574,11 @@ class _MarketOverlayState extends State<MarketOverlay> {
       ('ALL', null),
       ('HEAD', EquipmentSlot.head),
       ('CHEST', EquipmentSlot.chest),
+      ('BOOTS', EquipmentSlot.boots),
       ('WEAPON', EquipmentSlot.weapon),
       ('OFF-HAND', EquipmentSlot.offHand),
+      ('RING', EquipmentSlot.ring),
+      ('TRINKET', EquipmentSlot.trinket),
     ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -647,11 +681,26 @@ class _MarketOverlayState extends State<MarketOverlay> {
                   'iLvl ${item.effectiveItemLevel}$armorLine',
                   style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
                 ),
-                if (upgradeHero != null && canBuy) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    'UPGRADE → $upgradeHero',
-                    style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+                if (upgradeHero != null) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: GameTheme.mossLit.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                      border: Border.all(
+                        color: GameTheme.mossLit.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    child: Text(
+                      canBuy
+                          ? 'UPGRADE · $upgradeHero'
+                          : 'UPGRADE · $upgradeHero (need gold)',
+                      style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+                    ),
                   ),
                 ] else if (MarketListingsService.isGapFillListing(state, listing)) ...[
                   const SizedBox(height: 2),

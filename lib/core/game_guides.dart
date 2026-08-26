@@ -206,9 +206,11 @@ abstract final class GameGuides {
           '• AL3: Prot Paladin, Assassination, Resto Shaman, Frost Mage, Resto Druid\n'
           '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'
           '• AL5: Blood DK, Frost DK, Guardian\n'
-          '• AL6: Affliction, Demonology\n'
+          '• AL6: Affliction, Demonology\n\n'
+          'Endgame (not Ascend):\n'
           '• Party Lv${GameLogic.maxHeroLevel}: KEYSTONE, Infinity Gauntlet, Rifts, '
-          'and Greater Rifts (endgame)\n\n'
+          'Greater Rifts, and Ashen Crown unlock when every active hero is max level '
+          '— AL20 alone is not enough.\n\n'
           'Some kits also unlock from zone clears or the Prestige Shop — see each '
           'spec’s unlock hint in PARTY.',
     ),
@@ -262,7 +264,7 @@ abstract final class GameGuides {
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear.\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks on META → KEY · BOARDS (Play Games).\n'
-          '• Tap GREATER on the hub or set tier under META → KEY.',
+          '• Tap GREATER RIFT on the hub or set tier under META → KEY.',
     ),
     GuideTopic(
       id: 'apex',
@@ -313,8 +315,9 @@ abstract final class GameGuides {
           'POWER → SHOP (AL-gated).\n\n'
           '• Spend essence on stash slots, cheaper MERGE gold, pet roster, '
           'cheaper market flasks, higher auto-sell/scrap ceilings, more Welcome '
-          'Back rows, God Hand CD (same as Forge → KEEP), Dawn Tithe '
-          '(vault + Daily Run), and more.\n'
+          'Back rows, Dawn Tithe (vault + Daily Run), and more.\n'
+          '• God Hand cooldown upgrades also live on Forge → KEEP — same spend, '
+          'two doors into one upgrade.\n'
           '• Loadout Folio is delisted — LOADOUTS tab is hidden; old slot '
           'purchases still count in the save if you bought them earlier.\n'
           '• Purchases survive Ascend.\n'
@@ -364,6 +367,16 @@ abstract final class GameGuides {
           '• 4pc: more stats + role fantasy + a chance for a tagged set proc on autos.\n'
           '• Set names follow the zone (Tidehold, Ashen, Spire, …).\n'
           '• Not the same as old gear presets (LOADOUTS tab is hidden).',
+    ),
+    GuideTopic(
+      id: 'constellation',
+      title: 'BLESSING CONSTELLATION',
+      body:
+          'At AL20, Forge → KEEP opens a small constellation board.\n\n'
+          '• Separate from Ascend Blessing stacks (+ATK/DEF/STA/gold).\n'
+          '• Earn points from reaching AL20, Ashen Crown, and Apex Trial.\n'
+          '• Spend points on permanent nodes (crit, gold, block, KEY par, …).\n'
+          '• Points and lit nodes survive Ascend / REBORN.',
     ),
     GuideTopic(
       id: 'ashen_crown',

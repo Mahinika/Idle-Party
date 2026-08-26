@@ -56,11 +56,13 @@ class _MenuSurfaceState extends State<MenuSurface> {
   /// Side effects that used to live in `Is2Shell._setOverlay`.
   void _applyRoute() {
     final route = router.route;
+    final prev = _lastRoute;
     _lastRoute = route;
     if (route != MenuRoute.none && route != MenuRoute.party) {
       widget.director.clearToast();
     }
-    if (route == MenuRoute.party) {
+    // Ack Meet … after the player leaves PARTY (not on open) so kit fantasy can be read.
+    if (prev == MenuRoute.party && route != MenuRoute.party) {
       widget.director.ackPendingHeroReveals();
     }
     _ensureBridgeLayer(route != MenuRoute.none);

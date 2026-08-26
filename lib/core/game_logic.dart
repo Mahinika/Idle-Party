@@ -918,7 +918,7 @@ class GameLogic {
   static const Map<String, String> sanctuaryNames = <String, String>{
     'gold': 'Gold Find',
     'power': 'War Altar',
-    'vitality': 'Life Well',
+    'vitality': 'Life Well (STA)',
     'xp': 'Lore Font',
   };
 
@@ -940,7 +940,7 @@ class GameLogic {
   static String sanctuaryPrestigeKeepShort(String track) => switch (track) {
     'gold' => '+3% gold',
     'power' => '+$sanctuaryPowerPerLevel ATK',
-    'vitality' => '+$sanctuaryVitalityPerLevel HP',
+    'vitality' => '+$sanctuaryVitalityPerLevel STA',
     'xp' => '+2% XP',
     _ => '',
   };
@@ -979,7 +979,7 @@ class GameLogic {
     final unit = switch (track) {
       'gold' => '% gold find',
       'power' => ' ATK',
-      'vitality' => ' HP',
+      'vitality' => ' STA',
       'xp' => '% XP find',
       _ => '',
     };
@@ -3731,6 +3731,11 @@ class OfflineProgressResult {
   /// Dialog lead — single feeling sentence (not a stat list).
   String get welcomeLead {
     if (bossDelta > 0) {
+      if (state.ascensionLevel >= GameLogic.maxAscensionLevel) {
+        return bossDelta == 1
+            ? 'A boss fell while you were away.'
+            : '$bossDelta bosses fell while you were away.';
+      }
       return bossDelta == 1
           ? 'A boss fell while you were away — Ascend moved.'
           : '$bossDelta bosses fell while you were away — Ascend moved.';

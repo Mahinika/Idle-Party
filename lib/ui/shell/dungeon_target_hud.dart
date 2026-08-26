@@ -8,33 +8,57 @@ class TargetCornerHud extends StatelessWidget {
   const TargetCornerHud({super.key, required this.director});
   final GameDirector director;
 
+  static String _archetypeLabel(EnemyArchetype a) => switch (a) {
+        EnemyArchetype.swarm => 'SWARM',
+        EnemyArchetype.brute => 'MELEE',
+        EnemyArchetype.tank => 'TANK',
+        EnemyArchetype.ranged => 'RANGED',
+        EnemyArchetype.glass => 'GLASS',
+        EnemyArchetype.support => 'SUPPORT',
+      };
+
   @override
   Widget build(BuildContext context) {
     final world = director.spatial;
     final state = director.state;
     SpatialActor? focus;
     if (world != null) {
-      for (final e in world.enemies) {
-        if (e.hp <= 0 || e.dormant) continue;
-        if (e.livingBombTimer > 0) {
-          focus = e;
-          break;
+      final pinnedId = director.hudFocusEnemyId;
+      if (pinnedId != null) {
+        for (final e in world.enemies) {
+          if (e.id == pinnedId && e.hp > 0 && !e.dormant) {
+            focus = e;
+            break;
+          }
         }
       }
       if (focus == null) {
+        SpatialActor? boss;
+        SpatialActor? bomb;
         final leader = world.leader;
         final lx = leader?.x ?? 0;
         final ly = leader?.y ?? 0;
         double best = double.infinity;
+        SpatialActor? nearest;
         for (final e in world.enemies) {
           if (e.hp <= 0 || e.dormant) continue;
+          if (e.role == EnemyRole.boss) boss ??= e;
+          if (e.livingBombTimer > 0) bomb ??= e;
           final dx = e.x - lx;
           final dy = e.y - ly;
           final d = dx * dx + dy * dy;
           if (d < best) {
             best = d;
-            focus = e;
+            nearest = e;
           }
+        }
+        // Living Bomb highlights trash — don't steal the boss frame.
+        if (boss != null) {
+          focus = boss;
+        } else if (bomb != null) {
+          focus = bomb;
+        } else {
+          focus = nearest;
         }
       }
     }
@@ -58,7 +82,7 @@ class TargetCornerHud extends StatelessWidget {
         : switch (enemy.role) {
             EnemyRole.boss => 'BOSS',
             EnemyRole.elite => 'ELITE',
-            EnemyRole.normal => '',
+            EnemyRole.normal => _archetypeLabel(enemy.archetype),
           };
     final hpFrac = enemy == null || enemy.maxHp <= 0
         ? 0.0
@@ -69,8 +93,7 @@ class TargetCornerHud extends StatelessWidget {
         : (role == 'ELITE' ? GameTheme.torch : GameTheme.parchment);
 
     return ConstrainedBox(
-      // Wider + two-line layout so elite names stay readable on 360px.
-      constraints: BoxConstraints(maxWidth: phone ? 168.0 : 180.0),
+      constraints: BoxConstraints(maxWidth: phone ? 200.0 : 180.0),
       child: Container(
         padding: EdgeInsets.fromLTRB(6, phone ? 3 : 4, 6, phone ? 4 : 5),
         decoration: BoxDecoration(
@@ -125,7 +148,7 @@ class TargetCornerHud extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '${(hpFrac * 100).round()}%',
+                    '${enemy.hp} ${(hpFrac * 100).round()}%',
                     style: GameTheme.body(
                       size: 11,
                       color: GameTheme.parchmentDim,

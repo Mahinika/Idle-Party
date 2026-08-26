@@ -3,7 +3,7 @@
 **Datum:** 2026-08-26  
 **Scope:** Spelarkänsla (hub, dungeon, menyer, kits, zoner, copy, AL20 endgame, telefon).  
 **Inte inkluderat:** ren refaktor, dependensuppgraderingar, tester utan spelar-symptom.  
-**Status:** **1.12.61** shipped the Top 20 + high-impact P0/P1 (guides, hub CTA/Ashen, MARKET hide, dungeon HUD, hell/storm art, Shadow, Eviscerate HUD). Remaining table rows are lower polish backlog — not all 500 coded.
+**Status:** **1.12.62** — large feel-audit fix pass. Most P0 + majority of high-impact P1 (hub/dungeon/guides/kits/zones) + many P2 chrome/copy items shipped. Remaining rows are lower polish (heavy layout redesign, combat AI focus for kits mid-fight, some zone prop/landmark limits without new art). See agent batches in git history; not every ID coded 1:1.
 
 Varje punkt: `ID · yta · allvar · mening · fil`
 

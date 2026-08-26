@@ -350,8 +350,8 @@ class _InventoryDockState extends State<InventoryDock>
             MenuAlerts.bagStatusLine(state).isNotEmpty
                 ? MenuAlerts.bagStatusLine(state)
                 : nearFull && filled >= cap
-                ? 'CLEAN merges → sells gold → scraps essence'
-                : 'CLEAN BAG uses FILTERS (gold then essence)',
+                ? 'CLEAN: sell junk for gold, then scrap leftovers for essence'
+                : 'CLEAN BAG: sell for gold first, then scrap for essence',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         const SizedBox(height: 6),
@@ -414,13 +414,14 @@ class _InventoryDockState extends State<InventoryDock>
         const SizedBox(height: 4),
         KenneyButton(
           label: 'CLEAN BAG',
-          tip: 'Merge junk pairs, then sell gold, then scrap essence',
+          tip: 'Merge junk pairs → sell gold → scrap essence (BiS kept)',
           onPressed: state.gearStash.isEmpty ? null : onCleanBag,
           style: KenneyButtonStyle.grey,
         ),
         const SizedBox(height: 4),
         KenneyButton(
-          label: 'FILTERS',
+          label: 'AUTO-SELL FILTERS',
+          tip: 'When bag is near full: sell gold vs scrap essence rules',
           onPressed: onOpenFilters,
           style: KenneyButtonStyle.grey,
         ),

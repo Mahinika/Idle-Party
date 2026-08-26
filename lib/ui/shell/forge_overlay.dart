@@ -52,7 +52,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
     final bonus = switch (type) {
       PartyUpgradeType.attack => '+${state.attackBonus}',
       PartyUpgradeType.defense => '+${state.defenseBonus}',
-      PartyUpgradeType.vitality => '+${state.vitalityBonus} HP',
+      PartyUpgradeType.vitality => '+${state.vitalityBonus} STA',
       PartyUpgradeType.moveSpeed =>
         '+${GameState.softForgePercent(state.moveSpeedBonus).round()}%',
       PartyUpgradeType.attackSpeed =>
@@ -173,7 +173,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         const SizedBox(height: 4),
         Text(
           'Bought: ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
-          'STA +${state.vitalityBonus} HP  '
+          'STA +${state.vitalityBonus}  '
           'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%  '
           'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '
           'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
@@ -225,8 +225,10 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 6),
           child: Text(
-            'EVEN splits wallet gold round-robin across ATK / DEF / STA / '
-            'MOVE / HASTE / CRIT until you cannot buy another step.',
+            'EVEN walks wallet gold one step at a time across ATK → DEF → '
+            'STA → MOVE → HASTE → CRIT (round-robin) until a track cannot '
+            'buy another step. No track is skipped early; cheaper tracks '
+            'usually get more steps.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         ),
@@ -298,59 +300,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
                     '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
-        if (GameLogic.canRebornAtCap(state)) ...[
-          const SizedBox(height: 8),
-          KenneyButton(
-            label: 'REBORN',
-            style: KenneyButtonStyle.grey,
-            expanded: false,
-            onPressed: () => confirmRebornAtCap(context, director),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Optional empty-bag climb (confirm next). AL stays 20 — no extra Blessing. '
-            'Apex stays. TODAY will not nag you to press this.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-        ],
-        if (BlessingConstellation.unlocked(state)) ...[
-          const SizedBox(height: 8),
-          Text(
-            'CONSTELLATION · ${BlessingConstellation.pointsAvailable(state)} pts · '
-            '${state.metaDepth.constellationNodes.length}/${BlessingConstellation.maxLit} lit',
-            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-          ),
-          for (final n in BlessingConstellation.nodes)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: KenneyButton(
-                label:
-                    '${BlessingConstellation.isLit(state, n.$1) ? 'LIT' : 'LIGHT'} '
-                    '${n.$2} (${n.$3} · ${n.$4}p)',
-                style: BlessingConstellation.isLit(state, n.$1)
-                    ? KenneyButtonStyle.red
-                    : KenneyButtonStyle.grey,
-                onPressed: BlessingConstellation.isLit(state, n.$1)
-                    ? null
-                    : () => director.lightConstellationNode(n.$1),
-              ),
-            ),
-        ],
-        for (final m in GodHandMastery.milestones)
-          if (GodHandMastery.ready(state, m.$1) ||
-              state.metaDepth.claimedGodHandMastery.contains(m.$1))
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: KenneyButton(
-                label: state.metaDepth.claimedGodHandMastery.contains(m.$1)
-                    ? 'DONE · ${m.$2}'
-                    : 'CLAIM · ${m.$2}',
-                style: KenneyButtonStyle.grey,
-                onPressed: state.metaDepth.claimedGodHandMastery.contains(m.$1)
-                    ? null
-                    : () => director.claimGodHandMastery(m.$1),
-              ),
-            ),
         Builder(
           builder: (_) {
             if (GameLogic.isMaxAscension(state)) {
@@ -376,23 +325,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
             );
           },
         ),
-        if (state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
-            !state.metaDepth.partySlot5Unlocked) ...[
-          const SizedBox(height: 8),
-          _sectionTitle(
-            '5TH SLOT',
-            'Extra fighter · survives Ascend. Also on PARTY → ROSTER.',
-            scope: MenuScope.account,
-          ),
-          KenneyButton(
-            label:
-                'UNLOCK 5TH SLOT  ${GameLogic.partySlot5EssenceCost}e  '
-                'AL${GameLogic.partySlot5MinAscension}+',
-            onPressed: state.essence >= GameLogic.partySlot5EssenceCost
-                ? director.unlockPartySlot5
-                : null,
-          ),
-        ],
         const SizedBox(height: 8),
         _sectionTitle(
           'GOD HAND',
@@ -429,17 +361,24 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         ),
         const SizedBox(height: 8),
         Text(
-          'BAL = default · FOCUS = harder, smaller blast · '
-          'WIDE = bigger blast, softer hits',
+          'BAL · r${state.godHandRadius.toStringAsFixed(1)} · '
+          'FOCUS · r${(state.godHandRadius * 0.82).toStringAsFixed(1)} (+dmg) · '
+          'WIDE · r${(state.godHandRadius * 1.22).toStringAsFixed(1)} (−dmg)',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),
         Row(
           children: [
-            for (final entry in const <(int, String)>[
-              (0, 'BAL'),
-              (1, 'FOCUS'),
-              (2, 'WIDE'),
+            for (final entry in <(int, String)>[
+              (0, 'BAL · r${state.godHandRadius.toStringAsFixed(1)}'),
+              (
+                1,
+                'FOCUS · r${(state.godHandRadius * 0.82).toStringAsFixed(1)}',
+              ),
+              (
+                2,
+                'WIDE · r${(state.godHandRadius * 1.22).toStringAsFixed(1)}',
+              ),
             ]) ...[
               if (entry.$1 > 0) const SizedBox(width: 6),
               Expanded(
@@ -456,6 +395,61 @@ class _ForgeOverlayState extends State<ForgeOverlay>
             ],
           ],
         ),
+        for (final m in GodHandMastery.milestones)
+          if (GodHandMastery.ready(state, m.$1) ||
+              state.metaDepth.claimedGodHandMastery.contains(m.$1))
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: KenneyButton(
+                label: state.metaDepth.claimedGodHandMastery.contains(m.$1)
+                    ? 'DONE · ${m.$2}'
+                    : 'CLAIM · ${m.$2}',
+                style: KenneyButtonStyle.grey,
+                onPressed: state.metaDepth.claimedGodHandMastery.contains(m.$1)
+                    ? null
+                    : () => director.claimGodHandMastery(m.$1),
+              ),
+            ),
+        if (BlessingConstellation.unlocked(state)) ...[
+          const SizedBox(height: 8),
+          Text(
+            'CONSTELLATION · ${BlessingConstellation.pointsAvailable(state)} pts · '
+            '${state.metaDepth.constellationNodes.length}/${BlessingConstellation.maxLit} lit',
+            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+          ),
+          for (final n in BlessingConstellation.nodes)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: KenneyButton(
+                label:
+                    '${BlessingConstellation.isLit(state, n.$1) ? 'LIT' : 'LIGHT'} '
+                    '${n.$2} (${n.$3} · ${n.$4}p)',
+                style: BlessingConstellation.isLit(state, n.$1)
+                    ? KenneyButtonStyle.red
+                    : KenneyButtonStyle.grey,
+                onPressed: BlessingConstellation.isLit(state, n.$1)
+                    ? null
+                    : () => director.lightConstellationNode(n.$1),
+              ),
+            ),
+        ],
+        if (state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
+            !state.metaDepth.partySlot5Unlocked) ...[
+          const SizedBox(height: 8),
+          _sectionTitle(
+            '5TH SLOT',
+            'Extra fighter · survives Ascend. Also on PARTY → ROSTER.',
+            scope: MenuScope.account,
+          ),
+          KenneyButton(
+            label:
+                'UNLOCK 5TH SLOT  ${GameLogic.partySlot5EssenceCost}e  '
+                'AL${GameLogic.partySlot5MinAscension}+',
+            onPressed: state.essence >= GameLogic.partySlot5EssenceCost
+                ? director.unlockPartySlot5
+                : null,
+          ),
+        ],
         Divider(
           height: 16,
           color: GameTheme.rarityCommon.withValues(alpha: 0.4),
@@ -477,6 +471,29 @@ class _ForgeOverlayState extends State<ForgeOverlay>
               ? director.respecRelics
               : null,
         ),
+        if (GameLogic.canRebornAtCap(state)) ...[
+          Divider(
+            height: 16,
+            color: GameTheme.rarityCommon.withValues(alpha: 0.4),
+          ),
+          _sectionTitle(
+            'REBORN (optional)',
+            'Empty-bag climb at AL20 — not Ascend. Confirm before pressing.',
+            scope: MenuScope.account,
+          ),
+          KenneyButton(
+            label: 'REBORN',
+            style: KenneyButtonStyle.grey,
+            expanded: false,
+            onPressed: () => confirmRebornAtCap(context, director),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'AL stays 20 — no extra Blessing. Apex stays. '
+            'TODAY will not nag you to press this.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ],
         if (state.soulboundItem != null) ...[
           Divider(
             height: 16,

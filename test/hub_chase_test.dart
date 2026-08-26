@@ -55,7 +55,8 @@ void main() {
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.claimDailyVault);
-    expect(chase.title.toLowerCase(), contains('season'));
+    expect(chase.title.toLowerCase(), contains('vault'));
+    expect(chase.detail.toLowerCase(), contains('season'));
   });
 
   test('complete missions surface as claim chase', () {

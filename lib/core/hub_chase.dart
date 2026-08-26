@@ -120,12 +120,10 @@ class HubChase {
       final keyTalk = GameLogic.showKeystoneJargon(state);
       return HubChase(
         kind: HubChaseKind.claimDailyVault,
-        title: seasonPending
-            ? 'Claim daily vault · season bonus'
-            : 'Claim daily vault',
+        title: 'Claim daily vault',
         detail: best >= 2 && keyTalk
-            ? 'Best timed KEY +$best - grab your essence$seasonBit.'
-            : 'You filled today’s vault - grab your essence$seasonBit.',
+            ? 'Vault filled (best timed KEY +$best) — grab your essence$seasonBit.'
+            : 'Vault filled — grab your essence$seasonBit.',
         progressLabel: best >= 2 && keyTalk
             ? 'KEY +$best ready'
             : '${GameLogic.dailyVaultClearTarget}/${GameLogic.dailyVaultClearTarget} ready',
@@ -180,7 +178,7 @@ class HubChase {
               '+${GameLogic.ascendBlessingVit} STA/'
               '+${GameLogic.ascendBlessingGoldPct}% gold · bag, gold, forge, '
               'and floors reset$unlockBit',
-          progressLabel: 'Ready',
+          progressLabel: '+${reward}e',
           urgency: HubChaseUrgency.ready,
         );
       }
@@ -209,9 +207,9 @@ class HubChase {
         kind: HubChaseKind.clearFloors,
         title: 'Rebuild your bag',
         detail:
-            'Farm early floors in $zoneName. Party stays — bag, gold, forge, '
-            'and floors reset.',
-        progressLabel: 'Floor 1',
+            'Zones stay open. Farm early floors in $zoneName to re-kit — '
+            'bag, gold, and forge wiped (floor height back to starter).',
+        progressLabel: 'Re-kit',
         zoneId: zoneId,
       );
     }
@@ -224,8 +222,9 @@ class HubChase {
         md.dailyBestTimedKey == 1) {
       return const HubChase(
         kind: HubChaseKind.dailyVaultProgress,
-        title: 'Almost - time KEY +2',
-        detail: 'Best timed KEY +1 today - one higher key fills the vault.',
+        title: 'Vault halfway — KEY +2',
+        detail:
+            'Timed KEY +1 already counts. Time KEY +2 to fill and claim the vault.',
         progressLabel: 'KEY +1',
         urgency: HubChaseUrgency.almost,
       );
@@ -290,7 +289,7 @@ class HubChase {
       return const HubChase(
         kind: HubChaseKind.dailyRun,
         title: 'Run today’s Daily',
-        detail: 'A short echo dungeon - clear it for bonus essence.',
+        detail: 'A short echo dungeon — clear it for bonus essence.',
         progressLabel: 'Available',
       );
     }
@@ -303,7 +302,8 @@ class HubChase {
         kind: HubChaseKind.dailyVaultProgress,
         title: 'Start daily vault',
         detail: keyTalk
-            ? 'Clear ${GameLogic.dailyVaultClearTarget} floor or time a KEY +2.'
+            ? 'Clear ${GameLogic.dailyVaultClearTarget} floor for the vault. '
+                'Or time KEY +2 for a bigger claim.'
             : 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for vault essence.',
         progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
       );
@@ -365,7 +365,7 @@ class HubChase {
       detail: tickets == 1
           ? '1 ticket — first clear pays +${AshenCrown.essenceReward}e. PRACTICE is free after.'
           : '$tickets tickets — one paid clear/week (+${AshenCrown.essenceReward}e); then PRACTICE is free.',
-      progressLabel: '$tickets tix',
+      progressLabel: tickets == 1 ? '1 ticket' : '$tickets tickets',
       urgency: tickets <= 1 ? HubChaseUrgency.almost : HubChaseUrgency.normal,
     );
   }
@@ -377,8 +377,8 @@ class HubChase {
       kind: HubChaseKind.equipBag,
       title: upgrades == 1 ? 'Equip upgrade in PARTY' : 'Equip upgrades in PARTY',
       detail: upgrades == 1
-          ? '1 better item in BAG - tap EQUIP before you farm deeper.'
-          : '$upgrades better items in BAG - tap EQUIP before you farm deeper.',
+          ? '1 better item in BAG — tap EQUIP before you farm deeper.'
+          : '$upgrades better items in BAG — tap EQUIP before you farm deeper.',
       progressLabel: upgrades == 1 ? 'EQUIP 1' : 'EQUIP $upgrades',
       urgency: HubChaseUrgency.ready,
     );
@@ -392,9 +392,9 @@ class HubChase {
       kind: HubChaseKind.marketUpgrade,
       title: 'Buy MARKET upgrade',
       detail:
-          '${listing.item.name} · $slot · ${listing.priceGold}g - listings beat bad drops.',
-      progressLabel: 'MARKET',
-      urgency: HubChaseUrgency.almost,
+          '${listing.item.name} · $slot · ${listing.priceGold}g — listings beat bad drops.',
+      progressLabel: 'BUY',
+      urgency: HubChaseUrgency.ready,
     );
   }
 
@@ -497,8 +497,11 @@ class HubChase {
       kind: HubChaseKind.keystone,
       title: firstKey ? 'Run KEY +1' : 'Time KEY +$target',
       detail: firstKey
-          ? 'Higher keys drop higher iLvl loot and pay more gold - start with KEY +1.'
-          : 'Time KEY +$target for better iLvl, more gold, and the next key unlock.',
+          ? 'ENTER sets KEY +1 (even if dial shows off). Example: KEY +5 ≈ '
+              '+${Keystone.lootItemLevelBonus(5)} iLvl and ${Keystone.goldMulLabel(5)} gold.'
+          : 'Time KEY +$target for +${Keystone.lootItemLevelBonus(target)} iLvl '
+              '(e.g. KEY +5 ≈ +${Keystone.lootItemLevelBonus(5)} iLvl), more gold, '
+              'and the next key unlock.',
       progressLabel: 'KEY +$target',
       keyLevel: target,
       zoneId: GameLogic.recommendedDungeonId(state),
@@ -523,8 +526,8 @@ class HubChase {
           ? 'Almost party Lv${GameLogic.maxHeroLevel}'
           : 'Level the party to ${GameLogic.maxHeroLevel}',
       detail: almost
-          ? 'Lowest hero Lv$minLv - a few more levels unlock KEY, Gauntlet, and Rifts.'
-          : 'Heroes Lv$minLv-$maxLv. Combat XP to ${GameLogic.maxHeroLevel} unlocks '
+          ? 'Lowest hero Lv$minLv — a few more levels unlock KEY, Gauntlet, and Rifts.'
+          : 'Heroes Lv$minLv–$maxLv. Combat XP to ${GameLogic.maxHeroLevel} unlocks '
               'KEY, Gauntlet, and Rifts.',
       progressLabel: 'Lv$minLv/${GameLogic.maxHeroLevel}',
       urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
@@ -553,9 +556,9 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.clearFloors,
       title: almost
-          ? 'Almost Ascend - push ${dungeon.name}'
+          ? 'Almost Ascend — push ${dungeon.name}'
           : firstHour
-          ? 'Grow the party - ${dungeon.name}'
+          ? 'Grow the party — ${dungeon.name}'
           : 'Push ${dungeon.name}',
       detail: firstHour
           ? 'Enter the cave. Your party fights on its own. Get stronger and beat the boss.'
@@ -572,7 +575,7 @@ class HubChase {
     );
   }
 
-  /// Ladder exhausted - one actionable KEY/GR habit (never a stats dump).
+  /// Ladder exhausted — one actionable KEY/GR habit (never a stats dump).
   static HubChase _endgamePushChase(GameState state) {
     final cap = state.effectiveMaxHardmode;
     final pref = state.hardmodeLevel.clamp(0, cap);
@@ -581,7 +584,8 @@ class HubChase {
         kind: HubChaseKind.keystone,
         title: 'Time KEY +$pref',
         detail:
-            'Dial is at cap - time KEY +$pref for vault score and a personal best.',
+            'Ladder clear — fall back to timing KEY +$pref for vault score '
+            'and a personal best.',
         progressLabel: 'KEY +$pref',
         keyLevel: pref,
         zoneId: GameLogic.recommendedDungeonId(state),
@@ -592,7 +596,9 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.greaterRiftMilestone,
       title: 'Push Greater Rift GR$nextGr',
-      detail: 'No Ascend left - climb Greater Rifts for prestige and essence.',
+      detail:
+          'Ladder clear — no Ascend left. Climb Greater Rifts for prestige '
+          'and essence (no mid-run gear).',
       progressLabel: 'GR$nextGr',
       zoneId: GameLogic.recommendedDungeonId(state),
     );
@@ -610,8 +616,8 @@ class HubChase {
         kind: HubChaseKind.willRank,
         title: almost ? 'Almost ${entry.$2}' : 'Chase ${entry.$2}',
         detail: need == 1
-            ? '1 collection point to ${entry.$2} (+${pay}e).'
-            : '$need collection points to ${entry.$2} (+${pay}e).',
+            ? '1 point to ${entry.$2} (+${pay}e). Points from codex, pets, relics, achievements, trophies.'
+            : '$need points to ${entry.$2} (+${pay}e). Points from codex, pets, relics, achievements, trophies.',
         progressLabel: '$score/$threshold',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
@@ -640,8 +646,9 @@ class HubChase {
             ? 'Almost Gauntlet floor $floor'
             : 'Gauntlet floor $floor',
         detail: best <= 0
-            ? 'Enter Infinity Gauntlet and climb for +${pay}e.'
-            : 'Best F$best - $need floors to F$floor (+${pay}e).',
+            ? 'Enter Infinity Gauntlet — boss every 5 floors; wipe or leave '
+                'returns to hub. Climb for +${pay}e.'
+            : 'Best F$best — $need floors to F$floor (+${pay}e).',
         progressLabel: 'F$best → F$floor',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
@@ -664,20 +671,20 @@ class HubChase {
         kind: HubChaseKind.riftMilestone,
         title: almost ? 'Almost Rift R$tier' : 'Rift R$tier',
         detail: best <= 0
-            ? 'Enter a Rift and clear tiers for +${pay}e at R$tier.'
-            : 'Best R$best - $need tiers to R$tier (+${pay}e).',
+            ? 'Enter a Rift (tier dial on META → KEY) — clear for +${pay}e at R$tier.'
+            : 'Best R$best — $need tiers to R$tier (+${pay}e).',
         progressLabel: 'R$best → R$tier',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
     }
-    // No milestone left - nudge next selectable tier if below max.
+    // No milestone left — nudge next selectable tier if below max.
     final next = Rift.maxSelectableTier(best);
     if (best < Rift.maxTier && next > best) {
       return HubChase(
         kind: HubChaseKind.riftMilestone,
         title: 'Clear Rift R$next',
         detail:
-            'Timed kill challenge - ${Rift.killTarget(next)} kills before '
+            'R$next · timed kill challenge — ${Rift.killTarget(next)} kills before '
             '${Rift.formatTimer(Rift.parTimeMs(next))}.',
         progressLabel: 'R$next',
         urgency: HubChaseUrgency.normal,
@@ -701,8 +708,8 @@ class HubChase {
         kind: HubChaseKind.greaterRiftMilestone,
         title: almost ? 'Almost Greater Rift GR$tier' : 'Greater Rift GR$tier',
         detail: best <= 0
-            ? 'Enter Greater Rift for prestige ranks (+${pay}e at GR$tier).'
-            : 'Best GR$best - $need tiers to GR$tier (+${pay}e).',
+            ? 'No mid-run gear — prestige ladder (+${pay}e at GR$tier).'
+            : 'Best GR$best — $need tiers to GR$tier (+${pay}e). No mid-run gear.',
         progressLabel: 'GR$best → GR$tier',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
@@ -713,7 +720,7 @@ class HubChase {
         kind: HubChaseKind.greaterRiftMilestone,
         title: 'Clear Greater Rift GR$next',
         detail:
-            'Harder packs, no mid-run gear - ${GreaterRift.killTarget(next)} kills '
+            'No mid-run gear — harder packs · ${GreaterRift.killTarget(next)} kills '
             'before ${GreaterRift.formatTimer(GreaterRift.parTimeMs(next))}.',
         progressLabel: 'GR$next',
         urgency: HubChaseUrgency.normal,
@@ -749,8 +756,8 @@ class HubChase {
         kind: HubChaseKind.unlockZone,
         title: 'Almost ${d.name}',
         detail: levelsShort == 1
-            ? '1 more party level (Lv$need) - or clear $prevName.'
-            : '$levelsShort more party levels (Lv$need) - or clear $prevName.',
+            ? '1 more party level (Lv$need) — or clear $prevName.'
+            : '$levelsShort more party levels (Lv$need) — or clear $prevName.',
         progressLabel: 'Lv$partyLv / Lv$need',
         urgency: HubChaseUrgency.almost,
         zoneId: d.id,

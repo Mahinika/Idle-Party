@@ -30,10 +30,10 @@ class HubPowerupsCard extends StatelessWidget {
     final active = AdBoost.isActive(until);
     final left = AdBoost.formatRemaining(until);
     final status = active
-        ? '×2 · $left'
-        : 'WATCH · ${AdBoost.hoursPerAd}h';
+        ? '×2 · +${AdBoost.attackPercent}% ATK · $left'
+        : 'WATCH · ${AdBoost.hoursPerAd}h · ×2 gold · +${AdBoost.attackPercent}% ATK';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(top: 4, bottom: 2),
       child: WebClickScope(
         label: 'POWERUPS',
         onPressed: onOpen,
@@ -50,11 +50,11 @@ class HubPowerupsCard extends StatelessWidget {
               child: Ink(
                 decoration: MenuChrome.hubPanel(selected: active),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 36),
+                  constraints: const BoxConstraints(minHeight: 44),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
-                      vertical: 4,
+                      vertical: 6,
                     ),
                     child: Row(
                       children: [
@@ -72,16 +72,19 @@ class HubPowerupsCard extends StatelessWidget {
                                 : GameTheme.parchment,
                           ),
                         ),
-                        const Spacer(),
-                        Text(
-                          status,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GameTheme.body(
-                            size: 11,
-                            color: active
-                                ? GameTheme.torchHot
-                                : GameTheme.parchmentDim,
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            status,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right,
+                            style: GameTheme.body(
+                              size: 11,
+                              color: active
+                                  ? GameTheme.torchHot
+                                  : GameTheme.parchmentDim,
+                            ),
                           ),
                         ),
                       ],
@@ -167,10 +170,21 @@ Future<void> openPowerupsSheet(
                         value: active ? left : 'None',
                       ),
                       const SizedBox(height: 12),
+                      if (capped) ...[
+                        Text(
+                          'Stacked to 24h — wait until some time burns off, '
+                          'then watch again.',
+                          style: GameTheme.body(
+                            size: 13,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       if (realAds)
                         KenneyButton(
                           label: capped
-                              ? 'STACKED TO 24H'
+                              ? 'FULL · WAIT FOR BURN'
                               : 'WATCH AD · +${AdBoost.hoursPerAd} HOURS',
                           style: KenneyButtonStyle.brown,
                           primary: true,
@@ -193,7 +207,7 @@ Future<void> openPowerupsSheet(
                         const SizedBox(height: 8),
                         KenneyButton(
                           label: capped
-                              ? 'STACKED TO 24H'
+                              ? 'FULL · WAIT FOR BURN'
                               : 'PREVIEW +${AdBoost.hoursPerAd} HOURS',
                           style: KenneyButtonStyle.brown,
                           primary: true,

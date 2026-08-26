@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/game_state.dart';
 import '../../models/class_ability.dart';
 import '../../models/enemy.dart';
 import '../../models/hero.dart';
@@ -83,14 +84,71 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     return null;
   }
 
+  static int _flaskCount(GameState state) {
+    var n = 0;
+    for (final h in state.heroes) {
+      final c = h.itemIn(EquipmentSlot.consumable);
+      if (c != null && c.iconId == 'flask') n++;
+    }
+    for (final g in state.gearStash) {
+      if (g.slot == EquipmentSlot.consumable && g.iconId == 'flask') n++;
+    }
+    return n;
+  }
+
   void _onHeroTap(int i) {
     _bump();
+    final fighting =
+        widget.director.spatial?.enemies.any((e) => e.isAlive) ?? false;
     if (widget.selectedHeroIndex == i && _kitOpen) {
+      // Keep kit open mid-fight so a second tap doesn't hide CD chips.
+      if (fighting) return;
       setState(() => _kitOpen = false);
       return;
     }
     widget.onSelectHero(i);
     setState(() => _kitOpen = true);
+  }
+
+  Future<void> _onLongPressGear() async {
+    _bump();
+    final fighting =
+        widget.director.spatial?.enemies.any((e) => e.isAlive) ?? false;
+    if (!fighting || !mounted) {
+      widget.onOpenEquip();
+      return;
+    }
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: GameTheme.stoneDeep,
+        title: Text(
+          'Open gear?',
+          style: GameTheme.pixel(size: 12, color: GameTheme.torchHot),
+        ),
+        content: Text(
+          'You are mid-fight. Open GEAR anyway?',
+          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'CANCEL',
+              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'OPEN GEAR',
+              style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && mounted) widget.onOpenEquip();
   }
 
   @override
@@ -101,7 +159,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final compact = GameTheme.isCompactWidth(context);
     final phone = GameTheme.isPhoneWidth(context);
     // Thin strip: reclaim map; kit expands in place when tapped.
-    final fullWidth = phone ? 148.0 : (compact ? 188.0 : 228.0);
+    final fullWidth = phone ? 168.0 : (compact ? 188.0 : 228.0);
     var partyCritical = false;
     final bossFight =
         world != null &&
@@ -121,12 +179,14 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
           break;
         }
       }
-      final threshold = bossFight ? 0.5 : 0.35;
+      final threshold = 0.35;
       if (hp > 0 && hp / maxHp <= threshold) {
         partyCritical = true;
         break;
       }
     }
+
+    final flaskCount = _flaskCount(state);
 
     final panel = ConstrainedBox(
       constraints: BoxConstraints(maxWidth: fullWidth),
@@ -163,16 +223,13 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                           '${state.heroes[i].roleLabel} — tap for kit, '
                           'long-press for gear',
                       onTap: () => _onHeroTap(i),
-                      onLongPress: widget.onOpenEquip,
+                      onLongPress: _onLongPressGear,
                       excludeSemantics: true,
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () => _onHeroTap(i),
-                          onLongPress: () {
-                            _bump();
-                            widget.onOpenEquip();
-                          },
+                          onLongPress: _onLongPressGear,
                           borderRadius: BorderRadius.circular(3),
                           child: _PartyRow(
                             index: i,
@@ -182,6 +239,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                             compact:
                                 phone || compact || state.heroes.length >= 4,
                             phone: phone,
+                            inCombat: world?.enemies.any((e) => e.isAlive) ??
+                                false,
                             liveHp: () {
                               final s = _spatialFor(world, i);
                               return s?.hp ?? state.heroes[i].currentHp;
@@ -208,6 +267,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
             _FlaskQuickSlot(
               urgent: partyCritical,
               phone: phone,
+              count: flaskCount,
               onTap: () {
                 _bump();
                 widget.onUseConsumable();
@@ -248,19 +308,22 @@ class _FlaskQuickSlot extends StatelessWidget {
     required this.onTap,
     this.urgent = false,
     this.phone = false,
+    this.count = 0,
   });
   final VoidCallback onTap;
   final bool urgent;
   final bool phone;
+  final int count;
 
   @override
   Widget build(BuildContext context) {
     final borderColor = urgent
         ? GameTheme.torchHot
         : GameTheme.bloodLit.withValues(alpha: 0.8);
+    final countBit = count > 0 ? ' ×$count' : '';
     final semanticsLabel = urgent
-        ? 'Use healing flask, party critical'
-        : 'Use healing flask';
+        ? 'Use healing flask$countBit, party critical'
+        : 'Use healing flask$countBit';
     return WebClickScope(
       label: semanticsLabel,
       onPressed: onTap,
@@ -299,7 +362,7 @@ class _FlaskQuickSlot extends StatelessWidget {
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    urgent ? 'FLASK!' : 'FLASK',
+                    '${urgent ? 'FLASK!' : 'FLASK'}$countBit',
                     style: GameTheme.pixel(
                       size: GameTheme.hudPixel,
                       color: urgent ? GameTheme.torchHot : GameTheme.parchment,
@@ -325,6 +388,7 @@ class _PartyRow extends StatelessWidget {
     this.kitOpen = false,
     this.compact = false,
     this.phone = false,
+    this.inCombat = false,
     this.spatial,
   });
 
@@ -336,6 +400,7 @@ class _PartyRow extends StatelessWidget {
   final bool kitOpen;
   final bool compact;
   final bool phone;
+  final bool inCombat;
   final SpatialActor? spatial;
 
   bool _abilityBuffActive(ClassAbilityDef ability, SpatialActor s) {
@@ -382,9 +447,8 @@ class _PartyRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final frac = maxHp <= 0 ? 0.0 : (liveHp / maxHp).clamp(0.0, 1.0);
-    final roleShort = hero.roleLabel.length <= 4
-        ? hero.roleLabel
-        : hero.roleLabel.substring(0, 3);
+    // Keep full shortLabel (PROT/COMBAT/…) — only ellipsis if the strip is tiny.
+    final roleShort = hero.roleLabel;
     final showKit = kitOpen && spatial != null && spatial!.isAlive;
     final resource = showKit ? spatial!.rage.clamp(0.0, 100.0).toDouble() : 0.0;
     final off = hero.itemIn(EquipmentSlot.offHand);
@@ -392,13 +456,14 @@ class _PartyRow extends StatelessWidget {
     final abilities = showKit
         ? ClassKits.hudAbilitiesAtSpec(hero.specId, hero.level)
         : const <ClassAbilityDef>[];
+    final maxChips = phone ? 4 : (compact ? 3 : 4);
     final visibleAbilities = showKit
         ? _prioritizeHudAbilities(
             abilities,
             spatial: spatial!,
             resource: resource,
             hasShield: hasShield,
-            maxChips: phone ? 3 : (compact ? 3 : 4),
+            maxChips: maxChips,
           )
         : const <ClassAbilityDef>[];
 
@@ -468,26 +533,31 @@ class _PartyRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 1),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(1),
-                      child: LinearProgressIndicator(
-                        value: GameLogic.xpProgress(hero),
-                        minHeight: phone ? 1.5 : 2,
-                        backgroundColor: GameTheme.hudManaFill,
-                        color: SpatialCombat.colorblindMode
-                            ? GameTheme.hudCastOk
-                            : GameTheme.hudManaBright,
+                    if (!inCombat)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(1),
+                        child: LinearProgressIndicator(
+                          value: GameLogic.xpProgress(hero),
+                          minHeight: phone ? 1.5 : 2,
+                          backgroundColor: GameTheme.hudManaFill,
+                          color: SpatialCombat.colorblindMode
+                              ? GameTheme.hudCastOk
+                              : GameTheme.hudManaBright,
+                        ),
                       ),
-                    ),
                     if (showKit) ...[
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          Text(
-                            ClassKits.resourceLabelForSpec(hero.specId),
-                            style: GameTheme.body(
-                              size: 11,
-                              color: GameTheme.parchmentDim,
+                          Flexible(
+                            child: Text(
+                              ClassKits.resourceLabelForSpec(hero.specId),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GameTheme.body(
+                                size: 11,
+                                color: GameTheme.parchmentDim,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -573,9 +643,11 @@ class _PartyRow extends StatelessWidget {
               ),
               SizedBox(width: phone ? 4 : 5),
               Text(
-                phone ? '${(frac * 100).round()}%' : '$liveHp',
+                phone
+                    ? '$liveHp ${(frac * 100).round()}%'
+                    : '$liveHp',
                 style: GameTheme.body(
-                  size: phone ? 11 : 12,
+                  size: phone ? 10 : 12,
                   color: GameTheme.parchmentDim,
                 ),
               ),

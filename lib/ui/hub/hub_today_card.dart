@@ -25,11 +25,7 @@ class HubMetaPulse extends StatelessWidget {
     if (!GameLogic.showDailyChase(state)) {
       return const SizedBox(height: 4);
     }
-    // READY / ALMOST already owns the strip — skip competing KEY/vault crumbs.
-    if (chaseUrgency == HubChaseUrgency.ready ||
-        chaseUrgency == HubChaseUrgency.almost) {
-      return const SizedBox(height: 4);
-    }
+    // Soft mute on READY/ALMOST: still show vault/KEY crumbs unless chase owns them.
     final bits = <String>[];
     final showKey = GameLogic.showKeystoneJargon(state);
     if (showKey &&
@@ -37,7 +33,7 @@ class HubMetaPulse extends StatelessWidget {
         chaseKind != HubChaseKind.dailyVaultProgress &&
         chaseKind != HubChaseKind.claimDailyVault) {
       bits.add(
-        state.hardmodeLevel <= 0 ? 'KEY off' : 'KEY +${state.hardmodeLevel}',
+        state.hardmodeLevel <= 0 ? 'KEY dial off' : 'KEY +${state.hardmodeLevel}',
       );
     }
 
@@ -52,7 +48,8 @@ class HubMetaPulse extends StatelessWidget {
       }
     }
 
-    if (chaseKind != HubChaseKind.weekGoal) {
+    if (chaseKind != HubChaseKind.weekGoal &&
+        chaseUrgency != HubChaseUrgency.ready) {
       final weekKey = state.metaDepth.weeklyKey.isNotEmpty
           ? state.metaDepth.weeklyKey
           : GameLogic.isoWeekKey(DateTime.now().toUtc());
@@ -170,7 +167,7 @@ class HubTodayCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 chase.detail,
-                maxLines: compact ? 1 : 2,
+                maxLines: compact ? 2 : 2,
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
               ),
@@ -268,7 +265,9 @@ class HubUrgentRow extends StatelessWidget {
               if (showMissions) ...[
                 Expanded(
                   child: KenneyButton(
-                    label: 'CLAIM ($claimable)',
+                    label: claimable == 1
+                        ? 'CLAIM QUESTS'
+                        : 'CLAIM QUESTS ($claimable)',
                     style: showVault
                         ? KenneyButtonStyle.grey
                         : KenneyButtonStyle.brown,
