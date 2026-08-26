@@ -15,7 +15,7 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 6. **Level the party** — before endgame unlock, chase active party toward **Lv100** when that is the gate
 7. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Skip Daily / KEY / vault-start / Will grind so TODAY is not a meta list. Skip kit teasers until after the first boss.
 8. **KEY habit (endgame only)** — chase the next KEY until preferred key is at the dial cap. When at cap or before party max level, fall through.
-9. **Endgame ladder (party Lv100)** — after KEY at cap: Greater Rift → Gauntlet → Rift → Ashen Crown (ticket week). One hunt — not Daily/Will shuffle.
+9. **Endgame ladder (party Lv100)** — after KEY at cap: Gauntlet → Greater Rift → Rift → Ashen Crown (ticket week). One hunt — not Daily/Will shuffle.
 10. **Progress grind** — daily run, vault start, Will, leftover endgame (pre–Lv100), week goal, then **one** endgame fallback (time KEY at dial / push GR — never a stats dump)
 
 ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats Daily and KEY. Zone unlock is TODAY only when party level is **ALMOST** (or prior clear opens the path). Never invent a second priority list in UI.

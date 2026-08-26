@@ -3,7 +3,7 @@
 **Datum:** 2026-08-26  
 **Scope:** Spelarkänsla (hub, dungeon, menyer, kits, zoner, copy, AL20 endgame, telefon).  
 **Inte inkluderat:** ren refaktor, dependensuppgraderingar, tester utan spelar-symptom.  
-**Status:** **1.12.62** — large feel-audit fix pass. Most P0 + majority of high-impact P1 (hub/dungeon/guides/kits/zones) + many P2 chrome/copy items shipped. Remaining rows are lower polish (heavy layout redesign, combat AI focus for kits mid-fight, some zone prop/landmark limits without new art). See agent batches in git history; not every ID coded 1:1.
+**Status:** **1.12.63** — second large feel-audit wave (hub leftover P1/P2, dungeon/BAG/GEAR polish, zone props/wash). Most actionable audit rows are shipped; remaining are combat redesign / new-art / heavy layout.
 
 Varje punkt: `ID · yta · allvar · mening · fil`
 

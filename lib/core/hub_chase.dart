@@ -274,11 +274,14 @@ class HubChase {
     final levelPush = _partyLevelChase(state);
     if (levelPush != null) return levelPush;
 
-    // Habit after the first hour: chase the next KEY until the dial cap.
+    // FEEL 059: unfinished Daily beats KEY habit only — endgame ladder still
+    // outranks Daily so AL20 keeps one clear hunt.
     final keyPush = _keystonePushChase(state);
-    if (keyPush != null) return keyPush;
+    if (keyPush != null && MetaSystems.isDailyClaimedToday(state, now: clock)) {
+      return keyPush;
+    }
 
-    // At party max level: ladder GR → Gauntlet → Rift → Ashen Crown before
+    // At party max level: ladder Gauntlet → GR → Rift → Ashen Crown before
     // Daily/Will so AL20 TODAY is one clear hunt, not a meta shuffle.
     if (GameLogic.endgameUnlocked(state)) {
       final endgameLadder = _endgameLadderChase(state);
@@ -288,7 +291,7 @@ class HubChase {
     if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
       return const HubChase(
         kind: HubChaseKind.dailyRun,
-        title: 'Run today’s Daily',
+        title: "Run today's Daily",
         detail: 'A short echo dungeon — clear it for bonus essence.',
         progressLabel: 'Available',
       );
@@ -343,10 +346,11 @@ class HubChase {
 
   /// One clear endgame hunt (not a stats dump). KEY habit already handled.
   static HubChase? _endgameLadderChase(GameState state) {
-    final greaterRift = _nextGreaterRiftChase(state);
-    if (greaterRift != null) return greaterRift;
+    // Spire fans: Gauntlet before Greater Rift (FEEL 060 / 240).
     final gauntlet = _nextGauntletChase(state);
     if (gauntlet != null) return gauntlet;
+    final greaterRift = _nextGreaterRiftChase(state);
+    if (greaterRift != null) return greaterRift;
     final rift = _nextRiftChase(state);
     if (rift != null) return rift;
     final crown = _ashenCrownChase(state);
@@ -373,12 +377,36 @@ class HubChase {
   static HubChase? _equipBagChase(GameState state) {
     final upgrades = MenuAlerts.bagUpgradeCount(state);
     if (upgrades <= 0) return null;
+    final plan = GameLogic.planBiSAssignments(state);
+    String? itemName;
+    String? heroBit;
+    if (plan.isNotEmpty) {
+      final step = plan.first;
+      for (final item in state.gearStash) {
+        if (item.id == step.itemId) {
+          itemName = item.name;
+          break;
+        }
+      }
+      if (step.heroIndex >= 0 && step.heroIndex < state.heroes.length) {
+        heroBit = state.heroes[step.heroIndex].name;
+      }
+    }
+    final named = itemName == null
+        ? null
+        : (heroBit == null ? itemName : '$itemName → $heroBit');
     return HubChase(
       kind: HubChaseKind.equipBag,
-      title: upgrades == 1 ? 'Equip upgrade in PARTY' : 'Equip upgrades in PARTY',
+      title: upgrades == 1
+          ? (itemName != null ? 'Equip $itemName' : 'Equip upgrade in PARTY')
+          : 'Equip upgrades in PARTY',
       detail: upgrades == 1
-          ? '1 better item in BAG — tap EQUIP before you farm deeper.'
-          : '$upgrades better items in BAG — tap EQUIP before you farm deeper.',
+          ? (named != null
+              ? '$named is better in BAG — open PARTY and tap EQUIP.'
+              : '1 better item in BAG — tap EQUIP before you farm deeper.')
+          : (named != null
+              ? '$upgrades better items in BAG (first: $named) — tap EQUIP.'
+              : '$upgrades better items in BAG — tap EQUIP before you farm deeper.'),
       progressLabel: upgrades == 1 ? 'EQUIP 1' : 'EQUIP $upgrades',
       urgency: HubChaseUrgency.ready,
     );
@@ -439,7 +467,9 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.monthGoal,
       title: 'Claim ${month.name}',
-      detail: 'Month pass ready · +${month.essenceReward}e.',
+      detail:
+          'Month pass ready · +${month.essenceReward}e · '
+          '${LocalSeasonCatalog.monthProgressLabel(state, month)}.',
       progressLabel: LocalSeasonCatalog.monthProgressLabel(state, month),
       urgency: HubChaseUrgency.ready,
     );
@@ -462,7 +492,18 @@ class HubChase {
       return null;
     }
     if (LocalSeasonCatalog.weekGoalClaimed(state, week)) return null;
-    if (LocalSeasonCatalog.weekGoalReady(state, week)) return null;
+    if (LocalSeasonCatalog.weekGoalReady(state, week)) {
+      if (almostOnly) return null;
+      return HubChase(
+        kind: HubChaseKind.weekGoal,
+        title: 'Claim ${week.name}',
+        detail:
+            'Week goal done — reward auto-claims on hub sync '
+            '(+${week.essenceReward}e).',
+        progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
+        urgency: HubChaseUrgency.ready,
+      );
+    }
 
     if (LocalSeasonCatalog.weekGoalAlmost(state, week)) {
       return HubChase(
@@ -529,7 +570,9 @@ class HubChase {
           ? 'Lowest hero Lv$minLv — a few more levels unlock KEY, Gauntlet, and Rifts.'
           : 'Heroes Lv$minLv–$maxLv. Combat XP to ${GameLogic.maxHeroLevel} unlocks '
               'KEY, Gauntlet, and Rifts.',
-      progressLabel: 'Lv$minLv/${GameLogic.maxHeroLevel}',
+      progressLabel: minLv == maxLv
+          ? 'Lv$minLv/${GameLogic.maxHeroLevel}'
+          : 'Lv$minLv–$maxLv/${GameLogic.maxHeroLevel}',
       urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       zoneId: GameLogic.recommendedDungeonId(state),
     );
@@ -743,7 +786,9 @@ class HubChase {
         return HubChase(
           kind: HubChaseKind.unlockZone,
           title: 'Unlock ${d.name}',
-          detail: 'Clear $prevName (or reach party Lv$need) to open the path.',
+          detail:
+              'Clear $prevName (or reach party Lv$need) to open the path. '
+              'PATH farms the open prior zone.',
           urgency: HubChaseUrgency.almost,
           zoneId: d.id,
         );

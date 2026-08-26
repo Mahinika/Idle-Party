@@ -50,7 +50,7 @@ class HubPowerupsCard extends StatelessWidget {
               child: Ink(
                 decoration: MenuChrome.hubPanel(selected: active),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 44),
+                  constraints: const BoxConstraints(minHeight: 44 /* FEEL 251 */),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,

@@ -417,7 +417,7 @@ void main() {
     expect(chase.title, contains('Rift'));
   });
 
-  test('AL20 party-max prefers Greater Rift over Daily', () {
+  test('AL20 party-max prefers endgame ladder over Daily', () {
     final state = _withPartyMaxLevel(
       GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: GameLogic.maxAscensionLevel,
@@ -436,8 +436,9 @@ void main() {
     );
     expect(GameLogic.endgameUnlocked(state), isTrue);
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.greaterRiftMilestone);
-    expect(chase.title, contains('Greater Rift'));
+    // Spire-first ladder: Gauntlet before Greater Rift (FEEL 060 / 240).
+    expect(chase.kind, HubChaseKind.gauntletMilestone);
+    expect(chase.title, contains('Gauntlet'));
     expect(chase.kind, isNot(HubChaseKind.dailyRun));
   });
 

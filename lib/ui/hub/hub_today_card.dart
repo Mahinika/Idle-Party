@@ -33,7 +33,7 @@ class HubMetaPulse extends StatelessWidget {
         chaseKind != HubChaseKind.dailyVaultProgress &&
         chaseKind != HubChaseKind.claimDailyVault) {
       bits.add(
-        state.hardmodeLevel <= 0 ? 'KEY dial off' : 'KEY +${state.hardmodeLevel}',
+        state.hardmodeLevel <= 0 ? 'KEY off · META → KEY' : 'KEY +${state.hardmodeLevel}',
       );
     }
 
@@ -41,9 +41,7 @@ class HubMetaPulse extends StatelessWidget {
         chaseKind != HubChaseKind.dailyVaultProgress) {
       final clears = state.metaDepth.dailyVaultClears;
       final target = GameLogic.dailyVaultClearTarget;
-      if (GameLogic.canClaimDailyVault(state)) {
-        bits.add('Vault READY');
-      } else {
+      if (!GameLogic.canClaimDailyVault(state)) {
         bits.add('Vault $clears/$target');
       }
     }
@@ -56,7 +54,7 @@ class HubMetaPulse extends StatelessWidget {
       final week = LocalSeasonCatalog.forWeekKey(weekKey);
       if (week.hasGoal) {
         if (LocalSeasonCatalog.weekGoalReady(state, week)) {
-          bits.add('Week READY');
+          bits.add('Week READY · auto');
         } else if (!LocalSeasonCatalog.weekGoalClaimed(state, week)) {
           bits.add(LocalSeasonCatalog.weekProgressLabel(state, week));
         }
@@ -132,7 +130,7 @@ class HubTodayCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     chase.title,
-                    maxLines: 1,
+                    maxLines: 2 /* FEEL 068 */,
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.body(size: 13, color: GameTheme.parchment),
                   ),
@@ -167,7 +165,7 @@ class HubTodayCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 chase.detail,
-                maxLines: compact ? 2 : 2,
+                maxLines: compact ? 3 : 3,
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
               ),

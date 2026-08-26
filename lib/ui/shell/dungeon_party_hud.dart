@@ -740,10 +740,7 @@ class _InlineAbilityChip extends StatelessWidget {
         ? cdLeft.toStringAsFixed(1)
         : cdLeft.round().toString();
     final label = onCd ? '${ability.shortLabel} $cdText' : ability.shortLabel;
-    return Tooltip(
-      message: ability.tooltipMessage,
-      waitDuration: const Duration(milliseconds: 350),
-      child: Opacity(
+    final chip = Opacity(
         opacity: gated ? 0.4 : (ready || activeBuff || justFired ? 1 : 0.7),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -760,7 +757,7 @@ class _InlineAbilityChip extends StatelessWidget {
             ),
           ),
           child: Text(
-            gated ? '${ability.shortLabel}!' : label,
+            gated ? '${ability.shortLabel}! (shield)' : label,
             style: GameTheme.body(
               size: 13,
               color: gated
@@ -773,6 +770,26 @@ class _InlineAbilityChip extends StatelessWidget {
             ),
           ),
         ),
+      );
+    return Tooltip(
+      message: ability.tooltipMessage,
+      waitDuration: const Duration(milliseconds: 350),
+      child: GestureDetector(
+        onLongPress: () {
+          final messenger = ScaffoldMessenger.maybeOf(context);
+          messenger?.hideCurrentSnackBar();
+          messenger?.showSnackBar(
+            SnackBar(
+              duration: const Duration(seconds: 3),
+              content: Text(
+                gated
+                    ? '${ability.tooltipMessage} · equip a shield'
+                    : ability.tooltipMessage,
+              ),
+            ),
+          );
+        },
+        child: chip,
       ),
     );
   }
@@ -904,6 +921,11 @@ class _DpsMeterState extends State<DpsMeter> {
                 size: GameTheme.hudPixel,
                 color: GameTheme.parchmentDim,
               ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'dps damage · hps heal · dtps tank',
+              style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
             ),
             const SizedBox(height: 3),
             for (final row in rows) ...[

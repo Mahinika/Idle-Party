@@ -63,7 +63,8 @@ abstract final class WipeAdvice {
       line.startsWith('Equip') ||
       line.contains('too far') ||
       line == 'Upgrade DEF in FORGE' ||
-      line.contains('MARKET has an upgrade');
+      line.contains('MARKET has an upgrade') ||
+      line.startsWith('MARKET:');
 
   /// Short nudge under the wipe advice when the fix lives in hub menus.
   static String? hubHintFor(String adviceLine) {
@@ -81,8 +82,9 @@ abstract final class WipeAdvice {
   }
 
   static String _forgeOrMarket(GameState state, String forgeLine) {
-    if (MarketListingsService.hasAffordableUpgradeListing(state)) {
-      return 'POWER → MARKET has an upgrade';
+    final listing = MarketListingsService.bestAffordableUpgradeListing(state);
+    if (listing != null) {
+      return 'MARKET: ${listing.item.name} · ${listing.priceGold}g';
     }
     return forgeLine;
   }

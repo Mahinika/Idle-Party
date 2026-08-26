@@ -637,6 +637,19 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                                     ? 'RETRY → F$safe'
                                                     : 'RETRY FLOOR';
                                               }(),
+                                        tip: (farm || dailyEcho)
+                                            ? 'Restarts this floor'
+                                            : () {
+                                                final safe = state
+                                                    .highestFloorCleared
+                                                    .clamp(1, 999);
+                                                final cur = state
+                                                    .currentRoom
+                                                    .floorNumber;
+                                                return safe < cur
+                                                    ? 'Retreats to last cleared floor (PUSH)'
+                                                    : 'Restarts this floor (still PUSH)';
+                                              }(),
                                         primary: true,
                                         onPressed:
                                             widget.director.retryAfterWipe,
@@ -644,12 +657,26 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                     if (!state.inGauntlet &&
                                         !state.inAnyRiftMode &&
                                         state.gearStash.length >=
-                                            GameLogic.maxGearStashFor(
-                                              state,
-                                            )) ...[
+                                            (GameLogic.maxGearStashFor(
+                                                  state,
+                                                ) -
+                                                2)
+                                                .clamp(
+                                                  1,
+                                                  GameLogic.maxGearStashFor(
+                                                    state,
+                                                  ),
+                                                )) ...[
                                       const SizedBox(height: 8),
                                       KenneyButton(
-                                        label: 'CLEAN BAG',
+                                        label: state.gearStash.length >=
+                                                GameLogic.maxGearStashFor(
+                                                  state,
+                                                )
+                                            ? 'CLEAN BAG'
+                                            : 'CLEAN BAG (near full)',
+                                        tip:
+                                            'Sells junk / scraps leftovers so new drops fit',
                                         style: KenneyButtonStyle.grey,
                                         onPressed: () {
                                           widget.director.cleanBagJunk();
@@ -703,7 +730,9 @@ class ChamberDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = math.max(1, world.map.chambers.length);
-    return Row(
+    final cleared = world.clearedChambers.length;
+    final active = world.activeChamber + 1;
+    final dots = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var i = 0; i < total; i++)
@@ -715,6 +744,25 @@ class ChamberDots extends StatelessWidget {
             ),
           ),
       ],
+    );
+    return GestureDetector(
+      onTap: () {
+        final messenger = ScaffoldMessenger.maybeOf(context);
+        messenger?.hideCurrentSnackBar();
+        messenger?.showSnackBar(
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text(
+              'Chambers $active/$total · cleared $cleared · '
+              'square=done · diamond=here · circle=ahead',
+            ),
+          ),
+        );
+      },
+      child: Tooltip(
+        message: 'Tap: chamber overview · square done · diamond here · circle ahead',
+        child: dots,
+      ),
     );
   }
 }

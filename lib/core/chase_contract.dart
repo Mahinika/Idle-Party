@@ -28,6 +28,7 @@ class ChaseContract {
       kind == HubChaseKind.claimDailyVault ||
       kind == HubChaseKind.claimMissions ||
       (kind == HubChaseKind.monthGoal && isReady) ||
+      (kind == HubChaseKind.weekGoal && isReady) ||
       kind == HubChaseKind.meetHero ||
       kind == HubChaseKind.equipBag ||
       kind == HubChaseKind.marketUpgrade ||
@@ -42,6 +43,7 @@ class ChaseContract {
     HubChaseKind.claimDailyVault => 'CLAIM VAULT',
     HubChaseKind.claimMissions => 'CLAIM QUESTS',
     HubChaseKind.monthGoal => 'CLAIM MONTH',
+    HubChaseKind.weekGoal => 'CLAIM WEEK',
     HubChaseKind.meetHero => 'PARTY',
     HubChaseKind.equipBag => 'PARTY',
     HubChaseKind.marketUpgrade => 'MARKET',

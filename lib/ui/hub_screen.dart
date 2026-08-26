@@ -6,6 +6,7 @@ import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/gold_income.dart';
 import '../core/hub_chase.dart';
+import '../core/local_season.dart';
 import '../core/keystone.dart';
 import '../core/menu_alerts.dart';
 import '../core/meta_systems.dart';
@@ -64,6 +65,8 @@ class _HubScreenState extends State<HubScreen>
   GameState get state => director.state;
 
   /// Unlocked uncleared frontier zone (World Path NEXT), if any.
+  // Kept for map / tests; selection no longer auto-snaps CLEAR → NEXT (FEEL 078).
+  // ignore: unused_element
   static String? frontierDungeonId(GameState state) {
     final highest = state.highestDungeonCleared;
     for (final d in DungeonCatalog.all) {
@@ -88,16 +91,7 @@ class _HubScreenState extends State<HubScreen>
       return;
     }
     if (_userPickedZone) {
-      // Still snap off a CLEAR node when a NEXT frontier exists.
-      final frontier = frontierDungeonId(state);
-      if (frontier != null) {
-        final sel = DungeonCatalog.byId(_selectedId);
-        if (state.highestDungeonCleared >= sel.number &&
-            _selectedId != frontier) {
-          _selectedId = frontier;
-          _userPickedZone = false;
-        }
-      }
+      // FEEL 078: keep CLEAR selection — no silent jump to NEXT.
       return;
     }
     if (_selectedId != preferred) {
@@ -119,6 +113,9 @@ class _HubScreenState extends State<HubScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       director.ensureMarketListings();
       await _maybeShowOffline();
+      // FEEL 298
+      await Future<void>.delayed(const Duration(milliseconds: 450));
+      if (!mounted) return;
       await _maybeShowWhatsNew();
       await _maybeShowDiscordThanks();
     });
@@ -247,18 +244,31 @@ class _HubScreenState extends State<HubScreen>
       case HubChaseKind.gauntletMilestone:
         return ('GAUNTLET', () => confirmGauntletRun(context, director));
       case HubChaseKind.riftMilestone:
-        return ('RIFT', () => confirmRiftRun(context, director));
+        return ('◈ RIFT', () => confirmRiftRun(context, director));
       case HubChaseKind.greaterRiftMilestone:
-        return ('GREATER RIFT', () => confirmGreaterRiftRun(context, director));
+        return ('◆ GREATER RIFT', () => confirmGreaterRiftRun(context, director));
       case HubChaseKind.ashenCrown:
         return (
           'ASHEN CROWN',
           () => confirmAshenCrown(context, director, practice: false),
         );
       case HubChaseKind.weekGoal:
-        // Prefer ENTER for vault-style week goals; Gauntlet button if title hints.
-        if (chase.title.toLowerCase().contains('gauntlet')) {
-          return ('GAUNTLET', () => confirmGauntletRun(context, director));
+        // FEEL 067: prefer Gauntlet when week target is a floor climb.
+        final weekKey = director.state.metaDepth.weeklyKey.isNotEmpty
+            ? director.state.metaDepth.weeklyKey
+            : GameLogic.isoWeekKey(DateTime.now().toUtc());
+        final week = LocalSeasonCatalog.forWeekKey(weekKey);
+        if (chase.urgency == HubChaseUrgency.ready) {
+          return (
+            'CLAIM WEEK',
+            () {
+              // Week goals settle through GameLogic.syncMetaPayoffs on hub ticks.
+              director.syncMetaPayoffs();
+            },
+          );
+        }
+        if (week.gauntletFloorTarget > 0) {
+          return ('⚔ GAUNTLET', () => confirmGauntletRun(context, director));
         }
         return (
           'ENTER',
@@ -298,7 +308,7 @@ class _HubScreenState extends State<HubScreen>
         // Farm the recommended (usually prior) zone — PATH alone felt empty.
         final enterId = GameLogic.recommendedDungeonId(director.state);
         return (
-          'ENTER',
+          'PATH',
           () {
             setState(() {
               _userPickedZone = true;
@@ -468,6 +478,13 @@ class _HubScreenState extends State<HubScreen>
                                     state,
                                   );
                                   final chase = contract.chase;
+                                  // FEEL 040
+                                  if (chase.kind == HubChaseKind.keystone &&
+                                      chase.zoneId != null &&
+                                      !_userPickedZone &&
+                                      _selectedId != chase.zoneId) {
+                                    _selectedId = chase.zoneId!;
+                                  }
                                   final (actionLabel, onAction) = _chaseAction(
                                     context,
                                     chase,
@@ -558,14 +575,9 @@ class _HubScreenState extends State<HubScreen>
                                     secondaryLabel = null;
                                     secondaryAction = null;
                                   }
-                                  final chaseOwnsKeyChrome =
-                                      chase.kind ==
-                                          HubChaseKind.claimDailyVault ||
-                                      chase.kind ==
-                                          HubChaseKind.dailyVaultProgress ||
-                                      chase.kind == HubChaseKind.keystone ||
-                                      ready ||
-                                      chase.urgency == HubChaseUrgency.almost;
+                                  // FEEL 052: always offer META → KEY when jargon is on.
+                                  final showMetaKeyLink =
+                                      GameLogic.showKeystoneJargon(state);
                                   final weekMod =
                                       state.metaDepth.weeklyModifier;
                                   final showWeekAffix =
@@ -647,8 +659,7 @@ class _HubScreenState extends State<HubScreen>
                                           director,
                                         ),
                                       ),
-                                      if (GameLogic.showKeystoneJargon(state) &&
-                                          !chaseOwnsKeyChrome) ...[
+                                      if (showMetaKeyLink) ...[ // FEEL 052
                                         const SizedBox(height: 2),
                                         MenuChrome.textLink(
                                           label: 'META → KEY',
@@ -668,8 +679,10 @@ class _HubScreenState extends State<HubScreen>
                                         ascendLabel: canAscend
                                             ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
                                             : null,
-                                        hideAscend:
-                                            chase.kind == HubChaseKind.ascend,
+                                        hideAscend: // FEEL 050
+                                            chase.kind == HubChaseKind.ascend ||
+                                            (state.ascensionLevel == 0 &&
+                                                chase.kind == HubChaseKind.dailyRun),
                                         hideVaultClaim:
                                             chase.kind ==
                                             HubChaseKind.claimDailyVault,
@@ -744,7 +757,7 @@ class _HubScreenState extends State<HubScreen>
             child: FeedbackToast(
               message: director.toast!,
               maxLines: 3,
-              alignment: const Alignment(0, -0.72),
+              alignment: const Alignment(0, -0.55),
             ),
           ),
       ],

@@ -30,7 +30,6 @@ class JobsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
-    final ready = state.missions.where((m) => m.canClaim).length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -39,14 +38,6 @@ class JobsOverlay extends StatelessWidget {
           'Chain ${state.metaDepth.jobChainCount}/3 · the 3rd claim in a row pays +5e extra.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
-        if (ready > 0)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              '$ready ready to claim',
-              style: GameTheme.body(size: 13, color: GameTheme.mossLit),
-            ),
-          ),
         const SizedBox(height: 8),
         for (var i = 0; i < state.missions.length; i++)
           _questCard(state.missions[i], i),
@@ -111,9 +102,12 @@ class JobsOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${mission.progress}/${mission.target}  '
-                  '+${mission.goldReward}g +${mission.essenceReward}e',
+                  'Progress ${mission.progress}/${mission.target}',
                   style: GameTheme.body(size: 14),
+                ),
+                Text(
+                  '+${mission.goldReward}g +${mission.essenceReward}e',
+                  style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
                 ),
                 const SizedBox(height: 6),
                 ClipRRect(
@@ -135,7 +129,11 @@ class JobsOverlay extends StatelessWidget {
           const SizedBox(width: 8),
           if (mission.canClaim || mission.claimed)
             KenneyButton(
-              label: mission.claimed ? 'CLAIMED' : 'CLAIM',
+              label: mission.claimed
+                  ? 'CLAIMED'
+                  : (director.state.metaDepth.jobChainCount == 2
+                      ? 'CLAIM · chain +5e'
+                      : 'CLAIM'),
               onPressed: mission.canClaim
                   ? () => director.claimMission(mission.id)
                   : null,

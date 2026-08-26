@@ -124,8 +124,15 @@ class _ZonePathMapState extends State<ZonePathMap> {
     super.dispose();
   }
 
+  DateTime? _userPanAt; // FEEL 077
+
   void _ensureSelectedVisible(double mapH, double viewH) {
     if (!_scroll.hasClients) return;
+    if (_userPanAt != null &&
+        DateTime.now().difference(_userPanAt!) <
+            const Duration(seconds: 2)) {
+      return;
+    }
     if (_scrolledTo == widget.selectedId &&
         _lastMapH == mapH &&
         _lastViewH == viewH) {

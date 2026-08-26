@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.62';
+  static const String currentVersion = '1.12.63';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.63',
+      bullets: <String>[
+        'Hub TODAY: week goals can CLAIM WEEK; equip chase names the bag item; PATH farms the open road; Gauntlet leads Greater when that is the hunt; vault/Ascend no longer double-shout. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'Phone hub: TODAY wraps long titles and shows READY why; map HERE syncs with KEY enter; META → KEY stays visible; endgame buttons carry icons; month/week progress stays on the card. Dungeon: pin target, stairs hint, chamber dots, ability long-press, PARTY pause toast. Zones: ember/storm wash + landmarks. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
+
     ChangelogRelease(
       version: '1.12.62',
       bullets: <String>[

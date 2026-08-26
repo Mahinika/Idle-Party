@@ -948,7 +948,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           const SizedBox(height: 4),
           Text(
             state.hardmodeLevel <= 0
-                ? 'Normal · max KEY +$maxKey'
+                ? 'KEY +0 (normal) · no key loot bonus · max KEY +$maxKey'
                 : 'KEY +${state.hardmodeLevel} · loot +${Keystone.lootItemLevelBonus(state.hardmodeLevel)} iLvl · ${Keystone.goldMulLabel(state.hardmodeLevel)}',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -1020,7 +1020,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             ),
           ],
           Text(
-            'Power ${GameLogic.partyPowerScore(state)}',
+            'Power ${GameLogic.partyPowerScore(state)} · sheet score (not a clear guarantee)',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.mossLit),
           ),

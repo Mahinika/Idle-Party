@@ -159,8 +159,8 @@ class _InventoryDockState extends State<InventoryDock>
     return KenneyButton(
       label: upgrades > 0 ? 'EQUIP $upgrades' : 'AUTO EQUIP',
       tip: upgrades > 0
-          ? 'Equips better bag gear across the whole party'
-          : 'Equips any bag upgrades the party can use',
+          ? 'One tap: equip all $upgrades upgrades now'
+          : 'No upgrades waiting — scans bag when new gear drops',
       onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
       primary: upgrades > 0,
       style: upgrades > 0 ? KenneyButtonStyle.brown : KenneyButtonStyle.grey,
@@ -636,7 +636,7 @@ class _InventoryDockState extends State<InventoryDock>
           ),
           const SizedBox(height: 4),
           Text(
-            'Merges junk pairs of the same slot (skips upgrades / BiS). Uses gold.',
+            'Merges junk pairs of the same slot (skips upgrades and BiS (kept safe)). Uses gold.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),

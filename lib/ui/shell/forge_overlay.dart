@@ -190,7 +190,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
               '+${GameLogic.forgeDefenseGain} DEF (armor), '
               '+${GameLogic.forgeVitalityGain} HP, '
               '+${GameLogic.forgeHasteGain}% HASTE or CRIT. '
-              'BEST marks the cheapest relative gain. All wipe when you Ascend.',
+              'BEST marks the cheapest relative gain. HASTE/CRIT soft-cap after ~25% — more still helps a little. All wipe when you Ascend.',
           scope: MenuScope.run,
         ),
         Text(
@@ -203,10 +203,10 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           runSpacing: 6,
           children: [
             for (final mode in ForgeGoldSpendMode.values)
-              ChoiceChip(
-                label: Text(mode.chipLabel, style: GameTheme.body(size: 12)),
+              MenuChrome.chip(
+                label: mode.chipLabel,
                 selected: _spendMode == mode,
-                onSelected: (_) => setState(() => _spendMode = mode),
+                onTap: () => setState(() => _spendMode = mode),
               ),
           ],
         ),
@@ -423,7 +423,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
               child: KenneyButton(
                 label:
                     '${BlessingConstellation.isLit(state, n.$1) ? 'LIT' : 'LIGHT'} '
-                    '${n.$2} (${n.$3} · ${n.$4}p)',
+                    '${n.$2} — ${n.$3} · ${n.$4} pts',
                 style: BlessingConstellation.isLit(state, n.$1)
                     ? KenneyButtonStyle.red
                     : KenneyButtonStyle.grey,

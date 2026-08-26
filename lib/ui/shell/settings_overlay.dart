@@ -271,18 +271,6 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 16),
-          PlayGamesSection(director: director),
-          if (AdRewarded.realAdsAvailable) ...[
-            const SizedBox(height: 16),
-            MenuChrome.sectionLabelScoped('ADS', scope: MenuScope.account),
-            const SizedBox(height: 6),
-            KenneyButton(
-              label: 'AD PRIVACY',
-              tip: 'Change or withdraw ad consent (EU / EEA)',
-              style: KenneyButtonStyle.grey,
-              onPressed: () => AdRewarded.showPrivacyOptions(),
-            ),
-          ],
           const SizedBox(height: 16),
           MenuChrome.sectionLabelScoped(
             'PLAY NOTES (local)',
@@ -320,6 +308,18 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             ),
           ],
           const SizedBox(height: 16),
+          PlayGamesSection(director: director),
+          if (AdRewarded.realAdsAvailable) ...[
+            const SizedBox(height: 16),
+            MenuChrome.sectionLabelScoped('ADS', scope: MenuScope.account),
+            const SizedBox(height: 6),
+            KenneyButton(
+              label: 'AD PRIVACY',
+              tip: 'Change or withdraw ad consent (EU / EEA)',
+              style: KenneyButtonStyle.grey,
+              onPressed: () => AdRewarded.showPrivacyOptions(),
+            ),
+          ],
           SaveTransferSection(director: director),
           const SizedBox(height: 16),
           MenuChrome.sectionLabelScoped('COMMUNITY', scope: MenuScope.account),

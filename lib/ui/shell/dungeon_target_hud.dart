@@ -162,12 +162,28 @@ class TargetCornerHud extends StatelessWidget {
                     ? (state.inGauntlet || state.inAnyRiftMode
                         ? 'End → hub'
                         : 'Retry / Hub')
-                    : 'Walk to stairs',
+                    : _stairsHint(world),
                 style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
               ),
           ],
         ),
       ),
     );
+  }
+
+  static String _stairsHint(SpatialWorld? world) {
+    if (world == null) return 'Walk to stairs';
+    final leader = world.leader;
+    if (leader == null) return 'Walk to stairs';
+    final ex = world.map.exitPoint.$1 + 0.5;
+    final ey = world.map.exitPoint.$2 + 0.5;
+    final dx = ex - leader.x;
+    final dy = ey - leader.y;
+    if (dx * dx + dy * dy < 1.2) return 'Stairs · here';
+    // Screen y grows down; map y grows up — flip N/S for reading.
+    String horiz = dx.abs() < 0.35 ? '' : (dx > 0 ? 'E' : 'W');
+    String vert = dy.abs() < 0.35 ? '' : (dy > 0 ? 'N' : 'S');
+    final dir = '$vert$horiz';
+    return dir.isEmpty ? 'Walk to stairs' : 'Stairs · $dir';
   }
 }

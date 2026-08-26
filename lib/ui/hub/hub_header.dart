@@ -60,7 +60,7 @@ class HubOfflineBanner extends StatelessWidget {
                 ),
               ),
               Text(
-                'TAP',
+                'OPEN',
                 style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
               ),
             ],
@@ -185,11 +185,7 @@ class HubHeader extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: GameTheme.pixel(
                   size: 20,
-                  color: Color.lerp(
-                    GameTheme.torch,
-                    GameTheme.torchHot,
-                    torch,
-                  )!,
+                  color: GameTheme.torch, // FEEL 274,
                   height: 1.25,
                 ),
               ),
@@ -240,7 +236,7 @@ class HubHeader extends StatelessWidget {
               icon: KenneyAssets.iconCrown,
               caption: 'Ascend',
               label: ascensionLevel >= GameLogic.maxAscensionLevel
-                  ? 'AL $ascensionLevel · MAX'
+                  ? 'AL $ascensionLevel · MAX · endgame'
                   : 'AL $ascensionLevel',
             ),
           ],

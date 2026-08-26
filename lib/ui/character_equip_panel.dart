@@ -429,12 +429,11 @@ class CharacterEquipPanel extends StatelessWidget {
                 if (compare != null) ...[
                   const SizedBox(height: 4),
                   Text(
-                    compare.isUpgrade
-                        ? 'vs worn  Score ${GameLogic.formatDelta(compare.powerDelta)}  UPGRADE'
-                        : 'vs worn  Score ${GameLogic.formatDelta(compare.powerDelta)}'
-                              '  A${GameLogic.formatDelta(compare.atkDelta)}'
-                              ' D${GameLogic.formatDelta(compare.defDelta)}'
-                              ' V${GameLogic.formatDelta(compare.vitDelta)}',
+                    'vs worn  Score ${GameLogic.formatDelta(compare.powerDelta)}'
+                        '  A${GameLogic.formatDelta(compare.atkDelta)}'
+                        '  D${GameLogic.formatDelta(compare.defDelta)}'
+                        '  V${GameLogic.formatDelta(compare.vitDelta)}'
+                        '${compare.isUpgrade ? '  UPGRADE' : ''}',
                     style: GameTheme.body(
                       size: 12,
                       color: compare.isUpgrade
@@ -459,7 +458,7 @@ class CharacterEquipPanel extends StatelessWidget {
         if (onEmptySlotTap != null) ...[
           const SizedBox(height: 8),
           Text(
-            'Tap empty slot to filter the bag.',
+            'Tip: tap an empty gear slot to filter BAG to that slot.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),

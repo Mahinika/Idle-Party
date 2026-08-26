@@ -1269,7 +1269,7 @@ class GameDirector extends ChangeNotifier {
         life: 1.5,
       );
     } else {
-      showToast('God Hand · steered', life: 1.1);
+      showToast('God Hand · steered party (no kill)', life: 1.3);
     }
     _state = SessionTelemetry.append(
       _state,
@@ -2778,6 +2778,23 @@ class GameDirector extends ChangeNotifier {
       final gained = _state.essence - before;
       final extra = notices.isEmpty ? '' : ' · ${notices.join(' · ')}';
       showToast('Daily vault claimed · +${gained}e$extra', life: 2.8);
+    }
+  }
+
+  /// Settle Will / Gauntlet / week / GR payoffs that auto-claim on hub sync.
+  void syncMetaPayoffs() {
+    final before = _state.essence;
+    _applyUpgrade(GameLogic.syncMetaPayoffs(_state));
+    final notices = LogicNotices.takeMetaPayoffs();
+    final gained = _state.essence - before;
+    if (gained > 0 || notices.isNotEmpty) {
+      GameAudio.unlock();
+      final body = notices.isNotEmpty
+          ? notices.join(' · ')
+          : 'Meta rewards · +${gained}e';
+      showToast(body, life: 2.6);
+    } else {
+      showToast('No week rewards waiting — keep pushing.', life: 2.0);
     }
   }
 

@@ -236,7 +236,8 @@ void main() {
     expect(MarketListingsService.hasAffordableUpgradeListing(state), isTrue);
     state = GameLogic.notePartyWipe(state, atkLack());
     state = GameLogic.notePartyWipe(state, atkLack());
-    expect(state.wipeAdviceLine, 'POWER → MARKET has an upgrade');
+    expect(state.wipeAdviceLine, startsWith('MARKET:'));
+    expect(state.wipeAdviceLine, contains('g'));
   });
 
   test('hub hint nudges HUB for gear fixes', () {

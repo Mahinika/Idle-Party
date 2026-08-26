@@ -80,6 +80,20 @@ class _Is2ShellState extends State<Is2Shell> {
     );
   }
 
+  void _openMenuFeel(VoidCallback open) {
+    final wasOpen = router.isOpen;
+    open();
+    if (!wasOpen &&
+        router.isOpen &&
+        state.inDungeon &&
+        !state.isPartyDefeated) {
+      widget.director.showToast(
+        'Fight paused in menu — close to resume',
+        life: 1.6,
+      );
+    }
+  }
+
   Widget _buildBody(GameDirector d) {
     final hudSide = GameTheme.edgeGap;
     final hudBottom = GameTheme.hudAboveNav;
@@ -148,9 +162,15 @@ class _Is2ShellState extends State<Is2Shell> {
                 alerts: MenuAlerts.forState(state),
                 route: router.route,
                 showReason: true,
-                onParty: () => router.toggleParty(router.partyTab),
-                onPower: () => router.toggle(MenuRoute.power),
-                onMeta: () => router.toggle(MenuRoute.meta),
+                onParty: () => _openMenuFeel(
+                  () => router.toggleParty(router.partyTab),
+                ),
+                onPower: () => _openMenuFeel(
+                  () => router.toggle(MenuRoute.power),
+                ),
+                onMeta: () => _openMenuFeel(
+                  () => router.toggle(MenuRoute.meta),
+                ),
                 onHubClose: widget.onLeaveDungeon == null
                     ? null
                     : () =>
@@ -159,6 +179,12 @@ class _Is2ShellState extends State<Is2Shell> {
             ],
           ),
         ),
+        if (router.isOpen)
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: ColoredBox(color: Color(0x6614100C)),
+            ),
+          ),
         MenuSurface(director: d, router: router),
         FirstSessionTips(director: d),
         if (d.toast != null)

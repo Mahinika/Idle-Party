@@ -282,7 +282,7 @@ class FirstSessionTips extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 72),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final maxH = MediaQuery.sizeOf(context).height * 0.42;
+              final maxH = MediaQuery.sizeOf(context).height * 0.55;
               return ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxH),
                 child: DecoratedBox(
