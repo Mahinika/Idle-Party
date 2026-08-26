@@ -28,8 +28,8 @@ ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats
 
 | Urgency | Player-facing | Surfaces |
 |---------|---------------|----------|
-| `ready` | READY / claim CTA | TODAY card, Up next — ready |
-| `almost` | ALMOST | TODAY card, Up next — almost |
+| `ready` | READY / claim CTA | TODAY card; Up next uses title only |
+| `almost` | ALMOST | TODAY card; Up next uses title only |
 | `normal` | (none) | TODAY title only |
 
 ## Ascend teasers
