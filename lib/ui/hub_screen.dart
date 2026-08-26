@@ -698,7 +698,7 @@ class _HubScreenState extends State<HubScreen>
                         showReason: true,
                         onParty: () => router.open(MenuRoute.party),
                         onPower: () => router.open(MenuRoute.power),
-                        onMeta: () => router.open(MenuRoute.meta),
+                        onMeta: () => router.open(MenuRoute.meta, state: state),
                       ),
                     ],
                   ),

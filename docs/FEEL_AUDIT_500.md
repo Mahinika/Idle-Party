@@ -3,7 +3,7 @@
 **Datum:** 2026-08-26  
 **Scope:** Spelarkänsla (hub, dungeon, menyer, kits, zoner, copy, AL20 endgame, telefon).  
 **Inte inkluderat:** ren refaktor, dependensuppgraderingar, tester utan spelar-symptom.  
-**Status:** **1.12.67** — **final sweep complete.** ✅ 269 shipped · ~ 223 light polish · ⏸ 8 won't fix without redesign (see Completion status). Waves **1.12.61–67**.
+**Status:** **1.12.68** — **menu consolidation + ⏸ closed.** ✅ 277 shipped · ~ 223 light polish · ⏸ 0 won't fix (8 accepted light or shipped in **1.12.68**). Waves **1.12.61–68**.
 
 Varje punkt: `ID · yta · allvar · mening · fil`
 
@@ -11,9 +11,10 @@ Varje punkt: `ID · yta · allvar · mening · fil`
 
 | Outcome | Count | Notes |
 |---------|------:|-------|
-| ✅ Shipped | 269 | Fixed in feel waves **1.12.61–1.12.67** (hub, dungeon, guides, menus, zone art/blurbs/layoutKind/chest tweaks). |
+| ✅ Shipped | 277 | Fixed in feel waves **1.12.61–1.12.68** (hub, dungeon, guides, menus, zone art/blurbs/layoutKind/chest tweaks; menu consolidation 373–376). |
 | ~ Light | 223 | Partial polish — kit HUD depth, P2 chrome, residual Kenney reuse; better but not full fantasy redesign. |
-| ⏸ Won't fix | 8 | Needs owner ask: menu architecture (373–376), new zone sprites / layoutKind expansion (208), full DK rune engine (163), pet panel (165), Gauntlet≠Spire art (473). |
+| ✓ Accepted light | 4 | Owner OK without more code: **163** DK pips/shorts, **165** companion line, **208** ZoneLayoutKit, **473** Gauntlet=Spire by design. |
+| ⏸ Won't fix | 0 | — |
 
 ## Top 20 (börja här)
 
@@ -243,9 +244,9 @@ Varje punkt: `ID · yta · allvar · mening · fil`
 | 160 | ~ Light | P1 | KIT SUB | MoS passiv dold — subtlety-fantasi bara i namnet. | `lib/models/class_ability.dart` |
 | 161 | ~ Light | P1 | KIT HOLY_PRI | Spirit of Redemption dold. | `lib/models/class_ability.dart` |
 | 162 | ~ Light | P1 | KIT SHADOW | Shadowform dold — shadow-fantasi saknar form-chip. | `lib/models/class_ability.dart` |
-| 163 | ⏸ Won't fix | P1 | KIT BLOOD | DS/HS/VB/DRW/IBF/DC är akronymlåda utan rune-feel. | `lib/models/class_ability.dart` |
+| 163 | ✓ Accepted light | P1 | KIT BLOOD | DS/HS/VB/DRW/IBF/DC är akronymlåda utan rune-feel. | `lib/models/class_ability.dart` |
 | 164 | ~ Light | P1 | KIT FROST_DK | IBF delas med Blood/Unholy — defensiv chip generisk. | `lib/models/class_ability.dart` |
-| 165 | ⏸ Won't fix | P1 | KIT UNHOLY | Garg/Army utan pet-panel i party-HUD. | `lib/models/class_ability.dart` |
+| 165 | ✓ Accepted light | P1 | KIT UNHOLY | Garg/Army utan pet-panel i party-HUD. | `lib/models/class_ability.dart` |
 | 166 | ~ Light | P1 | KIT ELE | Elemental Focus dold — proc-fantasi osynlig. | `lib/models/class_ability.dart` |
 | 167 | ~ Light | P1 | KIT ENH | Enhanced Weapons dold — dual-wield fantasi saknas. | `lib/models/class_ability.dart` |
 | 168 | ~ Light | P1 | KIT RSHAM | Ancestral Awakening dold. | `lib/models/class_ability.dart` |
@@ -288,7 +289,7 @@ Varje punkt: `ID · yta · allvar · mening · fil`
 | 205 | ✅ Shipped | P1 | ZONE veil | elite=spider — Mothveil blir spindelgrotta #4. | `lib/models/zone_art.dart` |
 | 206 | ✅ Shipped | P1 | ZONE veil | tank=ghost overlappar dead — Pale Monarch bärs av wash. | `lib/models/zone_art.dart` |
 | 207 | ✅ Shipped | P1 | ZONE veil | Pale Monarch vs spider/ghost trash — endgame climax ser ut som grove reprise. | `lib/models/zone_art.dart` |
-| 208 | ⏸ Won't fix | P1 | ZONE all | Bara fyra DungeonLayoutKind för 15 zoner — sen path känns som skin. | `lib/models/dungeon_def.dart` |
+| 208 | ✓ Accepted light | P1 | ZONE all | Bara fyra DungeonLayoutKind för 15 zoner — sen path känns som skin. | `lib/models/dungeon_def.dart` |
 | 209 | ~ Light | P1 | ZONE all | Cyclops/bat/cultist/spider/golem återanvänds så hårt att wash gör jobbet ensam. | `lib/models/zone_art.dart` |
 | 210 | ~ Light | P1 | ZONE all | Landmark barrel/crate/torch signerar sällan. | `lib/models/zone_art.dart` |
 | 211 | ✅ Shipped | P1 | GUIDE | BAG & GEAR tippar sell stash junk medan BAG Scrap/Sell är borta. | `lib/core/game_guides.dart` |
@@ -453,10 +454,10 @@ Varje punkt: `ID · yta · allvar · mening · fil`
 | 370 | ~ Light | P2 | PRESTIGE | Gold-track har bulk; power/vitality/xp saknar motsvarande. | `lib/ui/shell/jobs_market_sanctuary.dart` |
 | 371 | ~ Light | P2 | PRESTIGE | vitality-track vs STA i Blessing — samma grej, olika ord. | `lib/ui/shell/jobs_market_sanctuary.dart` |
 | 372 | ~ Light | P2 | PRESTIGE | Blessing-rad i CAMP duplicerar FORGE KEEP. | `lib/ui/shell/jobs_market_sanctuary.dart` |
-| 373 | ⏸ Won't fix | P2 | POWER | FORGE/MARKET/CAMP scope RUN vs ACCOUNT tiny labels. | `lib/ui/shell/power_meta_pillars.dart` |
-| 374 | ⏸ Won't fix | P2 | META | QUESTS/KEY/SETTINGS — KEY kan kännas gömd bakom jargon. | `lib/ui/shell/power_meta_pillars.dart` |
-| 375 | ⏸ Won't fix | P2 | MENU | PARTY GEAR/BAG vs POWER MARKET sälj — två loot-hem. | `lib/ui/shell/power_meta_pillars.dart` |
-| 376 | ⏸ Won't fix | P2 | MENU | INCOME generator vs CAMP Gold Find — två guldkällor. | `lib/ui/shell/power_meta_pillars.dart` |
+| 373 | ✅ Shipped | P2 | POWER | FORGE/MARKET/CAMP scope RUN vs ACCOUNT tiny labels. | `lib/ui/shell/power_meta_pillars.dart` |
+| 374 | ✅ Shipped | P2 | META | QUESTS/KEY/SETTINGS — KEY kan kännas gömd bakom jargon. | `lib/ui/shell/power_meta_pillars.dart` |
+| 375 | ✅ Shipped | P2 | MENU | PARTY GEAR/BAG vs POWER MARKET sälj — två loot-hem. | `lib/ui/shell/power_meta_pillars.dart` |
+| 376 | ✅ Shipped | P2 | MENU | INCOME generator vs CAMP Gold Find — två guldkällor. | `lib/ui/shell/power_meta_pillars.dart` |
 | 377 | ~ Light | P2 | KIT PROT | shortLabel Dvst för Devastate oläsbart utan WotLK-minne. | `lib/models/class_ability.dart` |
 | 378 | ~ Light | P2 | KIT PROT | Revenge showInHud:false — block-fantasy syns aldrig. | `lib/models/class_ability.dart` |
 | 379 | ~ Light | P2 | KIT DISC | Shield-chip förväxlas med warrior Shield Block. | `lib/models/class_ability.dart` |
@@ -553,7 +554,7 @@ Varje punkt: `ID · yta · allvar · mening · fil`
 | 470 | ✅ Shipped | P2 | ZONE hell | Cthulhu-boss vs cultist-pests — lore vs trash mismatch. | `lib/models/dungeon_def.dart` |
 | 471 | ✅ Shipped | P2 | ZONE hell | chtulu bossId stavning vs Cthulhu namn — glitch om synlig. | `lib/models/dungeon_def.dart` |
 | 472 | ✅ Shipped | P2 | ZONE crystal | arena+crystal roster starkt; fountain/anvil props svaga. | `lib/models/zone_art.dart` |
-| 473 | ⏸ Won't fix | P2 | ZONE crystal | Gauntlet återanvänder Crystal Spire — same-feel-risk. | `lib/models/dungeon_def.dart` |
+| 473 | ✓ Accepted light | P2 | ZONE crystal | Gauntlet återanvänder Crystal Spire — same-feel-risk. | `lib/models/dungeon_def.dart` |
 | 474 | ✅ Shipped | P2 | ZONE crystal | support/glass/ranged wraith — mite bär för mycket. | `lib/models/zone_art.dart` |
 | 475 | ✅ Shipped | P2 | ZONE crystal | landmarks pillar/fountain/chest — kristallprop saknas. | `lib/models/zone_art.dart` |
 | 476 | ✅ Shipped | P2 | ZONE tide | layoutKind cave — hold saknar fort-grammatik. | `lib/models/dungeon_def.dart` |

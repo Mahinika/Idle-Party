@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/loot.dart';
+import 'game_logic.dart';
 import 'game_state.dart';
 import 'hub_chase.dart';
 import 'menu_alerts.dart';
@@ -26,7 +27,7 @@ class MenuRouter extends ChangeNotifier {
 
   /// PARTY opens on the paper doll — "what am I wearing" before "what did I loot".
   PartyTab _partyTab = PartyTab.gear;
-  PowerTab _powerTab = PowerTab.income;
+  PowerTab _powerTab = PowerTab.forge;
   MetaTab _metaTab = MetaTab.jobs;
 
   String? _selectedItemId;
@@ -74,11 +75,15 @@ class MenuRouter extends ChangeNotifier {
     MenuRoute.jobs => 'QUESTS',
   };
 
+  static PowerTab resolvePowerTab(PowerTab tab) =>
+      tab == PowerTab.income ? PowerTab.camp : tab;
+
   void open(
     MenuRoute route, {
     PartyTab? party,
     PowerTab? power,
     MetaTab? meta,
+    GameState? state,
   }) {
     if (route == MenuRoute.settings) {
       _metaTab = MetaTab.settings;
@@ -87,8 +92,16 @@ class MenuRouter extends ChangeNotifier {
       return;
     }
     if (party != null) _partyTab = party;
-    if (power != null) _powerTab = power;
-    if (meta != null) _metaTab = meta;
+    if (power != null) _powerTab = resolvePowerTab(power);
+    if (meta != null) {
+      _metaTab = meta;
+    } else if (route == MenuRoute.meta &&
+        _route != MenuRoute.meta &&
+        state != null &&
+        GameLogic.endgameUnlocked(state) &&
+        MenuTabs.showKey(state)) {
+      _metaTab = MetaTab.key;
+    }
     // A fresh open from the nav shows the whole bag; slot browse sets its own
     // filter right after opening.
     if (route == MenuRoute.party && _route != MenuRoute.party) {
@@ -107,12 +120,12 @@ class MenuRouter extends ChangeNotifier {
     open(MenuRoute.party, party: tab);
   }
 
-  void toggle(MenuRoute route) {
+  void toggle(MenuRoute route, {GameState? state}) {
     if (_route == route) {
       close();
       return;
     }
-    open(route);
+    open(route, state: state);
   }
 
   void close() {
@@ -144,8 +157,9 @@ class MenuRouter extends ChangeNotifier {
   }
 
   set powerTab(PowerTab tab) {
-    if (_powerTab == tab) return;
-    _powerTab = tab;
+    final resolved = resolvePowerTab(tab);
+    if (_powerTab == resolved) return;
+    _powerTab = resolved;
     notifyListeners();
   }
 
@@ -271,10 +285,9 @@ class MenuRouter extends ChangeNotifier {
   ];
 
   static List<PowerTab> visiblePowerTabs(GameState s) => <PowerTab>[
-    PowerTab.income,
     PowerTab.forge,
-    if (MenuTabs.showCamp(s)) PowerTab.camp,
     PowerTab.market,
+    PowerTab.camp,
     if (MenuTabs.showShop(s)) PowerTab.shop,
   ];
 

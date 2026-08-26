@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/gold_income.dart';
+import '../../core/menu_alerts.dart';
 import '../../core/game_state.dart';
 import '../../core/gear/gear_scorer.dart';
 import '../../core/market_listings_service.dart';
@@ -15,6 +16,7 @@ import '../kenney_bar.dart';
 import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
+import 'income_overlay.dart';
 import 'shell_common.dart';
 
 class JobsOverlay extends StatelessWidget {
@@ -182,21 +184,17 @@ class SanctuaryOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = director.state;
     final relicLine = GameLogic.relicKeepSummary(state);
+    final campOpen = MenuTabs.showCamp(state);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        CampRatesSection(director: director),
+        const SizedBox(height: 10),
         Text(
           'Permanent ACCOUNT tracks — survive Ascend. Upgrade forever.\n'
-          'Gold Find raises Hub gold/min at the keep (ticks while you sit here — '
-          'slower than a run, enough overnight to buy forge).\n'
           'CAMP Prestige (from Lv12) is not Ascend: it only resets this track '
           'to cheap levels again, keeps a small forever bonus, and refunds essence.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '${GoldIncome.ratesLine(state, runGpm: director.runGoldPerMinute)} · ${GoldIncome.multiplierLine(state)}',
-          style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
         if (state.metaDepth.ascendBlessings > 0) ...[
           const SizedBox(height: 6),
@@ -214,8 +212,14 @@ class SanctuaryOverlay extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 10),
-        for (final track in <String>['gold', 'power', 'vitality', 'xp'])
-          _campTrackCard(context, state, track),
+        if (campOpen)
+          for (final track in <String>['gold', 'power', 'vitality', 'xp'])
+            _campTrackCard(context, state, track)
+        else
+          Text(
+            'War Altar, Life Well, and Lore Font appear here once CAMP unlocks.',
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
       ],
     );
   }
@@ -434,6 +438,12 @@ class _MarketOverlayState extends State<MarketOverlay> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text(
+          'Buy gear · sell & clean in PARTY → BAG',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+        ),
+        const SizedBox(height: 6),
         Text(
           'Gold ${formatCount(state.gold)} · Essence ${formatCount(state.essence)}',
           textAlign: TextAlign.center,

@@ -46,6 +46,7 @@ class InventoryDock extends StatefulWidget {
     required this.onCleanBag,
     required this.onOpenFilters,
     required this.onAutoMerge,
+    this.onOpenMarket,
     this.flatChrome = false,
   });
 
@@ -74,6 +75,7 @@ class InventoryDock extends StatefulWidget {
   final VoidCallback onCleanBag;
   final VoidCallback onOpenFilters;
   final VoidCallback onAutoMerge;
+  final VoidCallback? onOpenMarket;
 
   @override
   State<InventoryDock> createState() => _InventoryDockState();
@@ -106,6 +108,7 @@ class _InventoryDockState extends State<InventoryDock>
   VoidCallback get onCleanBag => widget.onCleanBag;
   VoidCallback get onOpenFilters => widget.onOpenFilters;
   VoidCallback get onAutoMerge => widget.onAutoMerge;
+  VoidCallback? get onOpenMarket => widget.onOpenMarket;
 
   bool _itemMatchesBagFilter(EquipmentItem item, EquipmentSlot filter) {
     return GameLogic.equipTargetsFor(item).contains(filter);
@@ -360,6 +363,14 @@ class _InventoryDockState extends State<InventoryDock>
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         const SizedBox(height: 6),
+        if (onOpenMarket != null)
+          Center(
+            child: MenuChrome.chip(
+              label: 'Need gear? → MARKET',
+              onTap: onOpenMarket,
+            ),
+          ),
+        if (onOpenMarket != null) const SizedBox(height: 6),
         Expanded(
           child: filteredSlots.isEmpty && filter != null
               ? Center(

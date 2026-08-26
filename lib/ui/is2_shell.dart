@@ -188,7 +188,7 @@ class _Is2ShellState extends State<Is2Shell> {
                   () => router.toggle(MenuRoute.power),
                 ),
                 onMeta: () => _openMenuFeel(
-                  () => router.toggle(MenuRoute.meta),
+                  () => router.toggle(MenuRoute.meta, state: state),
                 ),
                 onHubClose: widget.onLeaveDungeon == null
                     ? null

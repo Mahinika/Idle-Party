@@ -11,7 +11,6 @@ import '../meta_overlays.dart';
 import '../guides_overlay.dart';
 import 'beast_overlay.dart';
 import 'forge_overlay.dart';
-import 'income_overlay.dart';
 import 'jobs_market_sanctuary.dart';
 import 'settings_overlay.dart';
 import 'shell_common.dart';
@@ -70,46 +69,40 @@ class _PowerPillarState extends State<PowerPillar>
     final pages = <({
       String label,
       String scope,
-      String blurb,
       Widget body,
     })>[
       for (final tab in _visible)
         switch (tab) {
-          PowerTab.income => (
-            label: 'INCOME',
-            scope: 'ACCOUNT',
-            blurb: 'ACCOUNT · hub gold/min · Gold Find (not MARKET sell)',
-            body: SingleChildScrollView(child: IncomeOverlay(director: d)),
-          ),
           PowerTab.forge => (
             label: 'FORGE',
             scope: 'RUN',
-            blurb: 'RUN · gold this run (wipes on Ascend) · KEEP forever',
             body: ForgeOverlay(director: d),
           ),
           PowerTab.camp => (
             label: 'CAMP',
             scope: 'ACCOUNT',
-            blurb: 'ACCOUNT · essence tracks · Gold Find lives here too',
             body: SingleChildScrollView(child: SanctuaryOverlay(director: d)),
           ),
           PowerTab.market => (
             label: 'MARKET',
             scope: 'RUN',
-            blurb: 'RUN · buy gear listings · sell lives in PARTY BAG',
             body: MarketOverlay(director: d),
           ),
           PowerTab.shop => (
             label: 'SHOP',
             scope: 'ACCOUNT',
-            blurb: 'essence upgrades survive Ascend',
             body: PrestigeShopOverlay(director: d),
+          ),
+          PowerTab.income => (
+            label: 'CAMP',
+            scope: 'ACCOUNT',
+            body: SingleChildScrollView(child: SanctuaryOverlay(director: d)),
           ),
         },
     ];
     _tabs.syncToId(_visible, widget.tab);
     final alert = MenuAlerts.powerAlert(s);
-    final active = pages[_tabs.index.clamp(0, pages.length - 1)];
+    final activeIndex = _tabs.index.clamp(0, pages.length - 1);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -143,16 +136,13 @@ class _PowerPillarState extends State<PowerPillar>
         if (!MenuTabs.showCamp(s)) ...[
           const SizedBox(height: 4),
           Text(
-            'CAMP unlocks after Ascend or when you earn essence — permanent '
-            'Gold Find & tracks (also under INCOME).',
+            'Sanctuary tracks unlock after Ascend or when you earn essence.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
         ],
         const SizedBox(height: 4),
-        if (alert.isQuiet)
-          _PowerScopeLine(scope: active.scope, text: active.blurb)
-        else
+        if (!alert.isQuiet)
           Text(
             alert.reason,
             textAlign: TextAlign.center,
@@ -161,7 +151,7 @@ class _PowerPillarState extends State<PowerPillar>
         const SizedBox(height: 6),
         Expanded(
           // Forge fills height and scrolls once (nested scroll hid MOVE/HASTE/CRIT).
-          child: active.body,
+          child: pages[activeIndex].body,
         ),
       ],
     );

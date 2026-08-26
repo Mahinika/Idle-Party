@@ -183,6 +183,8 @@ class _MenuSurfaceState extends State<MenuSurface> {
         d.autoMergeJunk();
         router.dropMissingIds(d.state.gearStash.map((g) => g.id).toSet());
       },
+      onOpenMarket: () =>
+          router.open(MenuRoute.power, power: PowerTab.market),
     );
   }
 

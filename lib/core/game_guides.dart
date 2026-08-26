@@ -164,15 +164,15 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'income',
-      title: 'INCOME',
+      title: 'CAMP RATES',
       body:
-          'POWER → INCOME (ACCOUNT hub gold).\n\n'
+          'POWER → CAMP (ACCOUNT hub gold).\n\n'
           'Your incremental dashboard: Hub gold/min, Run gold/min (from real '
           'loot in the last couple of minutes), gold % multipliers, and Gold Find '
-          '— the keep generator that raises Hub rate.\n\n'
+          '— the keep generator on the Gold Find track below.\n\n'
           'Hub ticks while you sit at the keep (slower than a dungeon run, but '
-          'overnight still buys forge). Buy one Gold Find level or up to five '
-          'at once when you can afford them. Affordable upgrades glow here and on CAMP.',
+          'overnight still buys forge). Buy one Gold Find level or bulk levels '
+          'when you can afford them.',
     ),
     GuideTopic(
       id: 'forge',
@@ -186,7 +186,7 @@ abstract final class GameGuides {
           'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}). '
           'Harder kills (higher enemy level than the hero) pay more XP; heroes far behind the party catch up faster.\n'
           'Forge gold tracks reset when you Ascend. '
-          'ATK, HASTE, and MOVE speed up clears — see INCOME for rates. '
+          'ATK, HASTE, and MOVE speed up clears — see CAMP for rates. '
           'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
           'relative upgrade.\n'
@@ -222,7 +222,7 @@ abstract final class GameGuides {
       body:
           'POWER → CAMP. Spend essence on permanent tracks.\n\n'
           '• CAMP unlocks after your first Ascend or when you earn essence.\n'
-          '• See POWER → INCOME for Hub / Run rates and Gold Find upgrades.\n'
+          '• Hub gold/min and Gold Find live on POWER → CAMP (rates at top).\n'
           '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
           '• Hub gold/min ticks while you sit at the keep — slower than a dungeon '
           'run, but overnight still buys forge. Gold Find raises that rate '
@@ -398,7 +398,8 @@ abstract final class GameGuides {
       id: 'hardmode',
       title: 'KEYSTONE RUNS',
       body:
-          'Mythic+-style keys from the hub KEY panel (META → KEY) — unlocks at '
+          'Mythic+-style keys from the hub KEY panel (META → KEY — first tab when '
+          'party is Lv${GameLogic.maxHeroLevel}) — unlocks at '
           'party level ${GameLogic.maxHeroLevel}.\n\n'
           '• Endgame only: set key before you enter a normal zone dungeon.\n'
           '• Key level caps at +20 once the party is max level.\n'

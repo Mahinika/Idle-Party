@@ -131,7 +131,7 @@ class MenuAlerts {
     return MenuAlert(count: count, reason: 'You have ${reasons.join(' · ')}');
   }
 
-  /// META: What's New first, then claims waiting.
+  /// META: What's New first, then claims waiting, then KEY dial nudge at endgame.
   static MenuAlert metaAlert(GameState state) {
     if (MetaSystems.hasUnseenChangelog(state)) {
       return const MenuAlert(
@@ -150,8 +150,19 @@ class MenuAlerts {
       count++;
       reasons.add('daily vault ready');
     }
-    if (count <= 0) return MenuAlert.quiet;
-    return MenuAlert(count: count, reason: 'Claim: ${reasons.join(' · ')}');
+    if (count > 0) {
+      return MenuAlert(count: count, reason: 'Claim: ${reasons.join(' · ')}');
+    }
+    if (GameLogic.endgameUnlocked(state) && MenuTabs.showKey(state)) {
+      final cap = state.ascensionLevel.clamp(0, GameLogic.maxAscensionLevel);
+      if (state.hardmodeLevel < cap) {
+        return MenuAlert(
+          count: 1,
+          reason: 'KEY +${state.hardmodeLevel + 1} — first META tab',
+        );
+      }
+    }
+    return MenuAlert.quiet;
   }
 
   /// Cheapest next Sanctuary track level (gold / power / stamina / lore).

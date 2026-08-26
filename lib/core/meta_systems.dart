@@ -19,15 +19,16 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.67';
+  static const String currentVersion = '1.12.68';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
-      version: '1.12.67',
+      version: '1.12.68',
       bullets: <String>[
-        'Final feel-audit sweep: hub map scroll on short phones; HP cur/max; kit labels and gates across 31 specs; POWER RUN/ACCOUNT tabs; BAG slot chips and merge clarity. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
-        'Zone packs and boss blurbs less copy-paste. See docs/FEEL_AUDIT_500.md — 269 shipped, 223 light polish, 8 need redesign. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'Menu consolidation: POWER drops INCOME — hub gold/min and Gold Find live on CAMP only (FORGE / MARKET / CAMP / SHOP). MARKET is buy-only with a BAG link; sell and CLEAN stay in PARTY → BAG.',
+        'Endgame META opens on KEYSTONE first when party is Lv100; META badge nudges KEY dial below cap. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
       ],
     ),
     ChangelogRelease(
