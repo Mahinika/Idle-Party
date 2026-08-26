@@ -284,20 +284,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
                     '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
-        Text(
-          GameLogic.endgameUnlocked(state)
-              ? 'Party Lv${GameLogic.maxHeroLevel} · endgame: KEY, Gauntlet, Rifts'
-              : GameLogic.isMaxAscension(state)
-              ? 'AL20 · level the party to ${GameLogic.maxHeroLevel} for KEY / Gauntlet / Rifts'
-              : GameLogic.canAscend(state)
-              ? (state.inDungeon
-                    ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
-                    : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
-              : 'Ascend ${state.bossVictories}/'
-                    '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} '
-                    'bosses · claim on Hub',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
         Builder(
           builder: (_) {
             if (GameLogic.isMaxAscension(state)) {
@@ -324,6 +310,34 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           },
         ),
         const SizedBox(height: 8),
+        if (BlessingConstellation.unlocked(state)) ...[
+          _sectionTitle(
+            'CONSTELLATION',
+            'AL20 perk tree — light nodes with constellation points.',
+            scope: MenuScope.account,
+          ),
+          Text(
+            '${BlessingConstellation.pointsAvailable(state)} pts · '
+            '${state.metaDepth.constellationNodes.length}/${BlessingConstellation.maxLit} lit',
+            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+          ),
+          for (final n in BlessingConstellation.nodes)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: KenneyButton(
+                label:
+                    '${BlessingConstellation.isLit(state, n.$1) ? 'LIT' : 'LIGHT'} '
+                    '${n.$2} — ${n.$3} · ${n.$4} pts',
+                style: BlessingConstellation.isLit(state, n.$1)
+                    ? KenneyButtonStyle.red
+                    : KenneyButtonStyle.grey,
+                onPressed: BlessingConstellation.isLit(state, n.$1)
+                    ? null
+                    : () => director.lightConstellationNode(n.$1),
+              ),
+            ),
+          const SizedBox(height: 8),
+        ],
         _sectionTitle(
           'GOD HAND',
           'Tap in the dungeon to steer + smash. Soft knobs: damage, CD, style.',
@@ -421,29 +435,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
                 ),
               ),
         ],
-        if (BlessingConstellation.unlocked(state)) ...[
-          const SizedBox(height: 8),
-          Text(
-            'CONSTELLATION · ${BlessingConstellation.pointsAvailable(state)} pts · '
-            '${state.metaDepth.constellationNodes.length}/${BlessingConstellation.maxLit} lit',
-            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-          ),
-          for (final n in BlessingConstellation.nodes)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: KenneyButton(
-                label:
-                    '${BlessingConstellation.isLit(state, n.$1) ? 'LIT' : 'LIGHT'} '
-                    '${n.$2} — ${n.$3} · ${n.$4} pts',
-                style: BlessingConstellation.isLit(state, n.$1)
-                    ? KenneyButtonStyle.red
-                    : KenneyButtonStyle.grey,
-                onPressed: BlessingConstellation.isLit(state, n.$1)
-                    ? null
-                    : () => director.lightConstellationNode(n.$1),
-              ),
-            ),
-        ],
         if (state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
             !state.metaDepth.partySlot5Unlocked) ...[
           const SizedBox(height: 8),
@@ -482,11 +473,29 @@ class _ForgeOverlayState extends State<ForgeOverlay>
               ? director.respecRelics
               : null,
         ),
-        if (GameLogic.canRebornAtCap(state)) ...[
+        if (state.soulboundItem != null) ...[
           Divider(
             height: 16,
             color: GameTheme.rarityCommon.withValues(alpha: 0.4),
           ),
+          _sectionTitle(
+            'HEIRLOOM',
+            'Older save. Apex is forever gear now — this still adds party power.',
+            scope: MenuScope.account,
+          ),
+          Text(
+            '${state.soulboundItem!.name}'
+            '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine}' : ''}',
+            style: GameTheme.body(size: 14, color: GameTheme.mossLit),
+          ),
+        ],
+        if (GameLogic.canRebornAtCap(state)) ...[
+          const SizedBox(height: 20),
+          Divider(
+            height: 16,
+            color: GameTheme.bloodLit.withValues(alpha: 0.35),
+          ),
+          const SizedBox(height: 4),
           _sectionTitle(
             'REBORN (optional)',
             'Empty-bag climb at AL20 — not Ascend. Confirm before pressing.',
@@ -503,22 +512,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
             'AL stays 20 — no extra Blessing. Apex stays. '
             'TODAY will not nag you to press this.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-        ],
-        if (state.soulboundItem != null) ...[
-          Divider(
-            height: 16,
-            color: GameTheme.rarityCommon.withValues(alpha: 0.4),
-          ),
-          _sectionTitle(
-            'HEIRLOOM',
-            'Older save. Apex is forever gear now — this still adds party power.',
-            scope: MenuScope.account,
-          ),
-          Text(
-            '${state.soulboundItem!.name}'
-            '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine}' : ''}',
-            style: GameTheme.body(size: 14, color: GameTheme.mossLit),
           ),
         ],
         const SizedBox(height: 12),

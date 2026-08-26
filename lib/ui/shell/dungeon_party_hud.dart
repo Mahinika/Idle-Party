@@ -281,7 +281,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                               return s?.effectiveMaxHp ??
                                   state.effectiveHeroMaxHp(state.heroes[i]);
                             }(),
-                            spatial: (widget.selectedHeroIndex == i && _kitOpen)
+                            spatial: _spatialFor(world, i),
+                            kitSpatial: (widget.selectedHeroIndex == i && _kitOpen)
                                 ? _spatialFor(world, i)
                                 : null,
                             world: world,
@@ -424,6 +425,7 @@ class _PartyRow extends StatelessWidget {
     this.phone = false,
     this.inCombat = false,
     this.spatial,
+    this.kitSpatial,
     this.world,
   });
 
@@ -437,7 +439,62 @@ class _PartyRow extends StatelessWidget {
   final bool phone;
   final bool inCombat;
   final SpatialActor? spatial;
+  final SpatialActor? kitSpatial;
   final SpatialWorld? world;
+
+  static const int _runicPipCount = 6;
+
+  static int _runicPipsFilled(double resource) =>
+      (resource / 100.0 * _runicPipCount).floor().clamp(0, _runicPipCount);
+
+  static String _runicPipLabel(double resource) {
+    final filled = _runicPipsFilled(resource);
+    return '${'R' * filled}${'·' * (_runicPipCount - filled)}';
+  }
+
+  static String? _companionLine(
+    SpatialActor? spatial,
+    SpatialWorld? world,
+    HeroSpecId specId,
+  ) {
+    if (spatial == null || world == null || !spatial.isAlive) return null;
+    final ownerId = spatial.id;
+    switch (specId) {
+      case HeroSpecId.beastMastery:
+        for (final p in world.pets) {
+          if (p.petOwnerId == ownerId &&
+              p.hp > 0 &&
+              (p.id.startsWith('classpet_') || p.id.startsWith('pet_'))) {
+            return p.name;
+          }
+        }
+        return null;
+      case HeroSpecId.demonology:
+        for (final p in world.pets) {
+          if (p.petOwnerId == ownerId &&
+              p.id.startsWith('classpet_') &&
+              p.hp > 0) {
+            return p.name;
+          }
+        }
+        return null;
+      case HeroSpecId.unholy:
+        final parts = <String>[];
+        for (final p in world.pets) {
+          if (p.petOwnerId != ownerId || p.hp <= 0) continue;
+          if (p.id.startsWith('temppet_garg_') && p.petLifeTimer > 0) {
+            parts.add('Garg ${p.petLifeTimer.ceil()}s');
+          } else if (p.id.startsWith('temppet_army_') && p.petLifeTimer > 0) {
+            parts.add('Army ${p.petLifeTimer.ceil()}s');
+          } else if (p.id.startsWith('classpet_')) {
+            parts.add(p.name);
+          }
+        }
+        return parts.isEmpty ? null : parts.join(' · ');
+      default:
+        return null;
+    }
+  }
 
   bool _abilityBuffActive(ClassAbilityDef ability, SpatialActor s) {
     return switch (ability.id) {
@@ -485,8 +542,11 @@ class _PartyRow extends StatelessWidget {
     final frac = maxHp <= 0 ? 0.0 : (liveHp / maxHp).clamp(0.0, 1.0);
     // Keep full shortLabel (PROT/COMBAT/…) — only ellipsis if the strip is tiny.
     final roleShort = hero.roleLabel;
-    final showKit = kitOpen && spatial != null && spatial!.isAlive;
-    final resource = showKit ? spatial!.rage.clamp(0.0, 100.0).toDouble() : 0.0;
+    final kitActor = kitSpatial;
+    final showKit = kitOpen && kitActor != null && kitActor.isAlive;
+    final isRunic = HeroSpecs.def(hero.specId).resource == SpecResource.runic;
+    final resource = showKit ? kitActor.rage.clamp(0.0, 100.0).toDouble() : 0.0;
+    final companionLine = _companionLine(spatial, world, hero.specId);
     final off = hero.itemIn(EquipmentSlot.offHand);
     final hasShield = off?.offHandKind == OffHandKind.shield;
     final abilities = showKit
@@ -496,7 +556,7 @@ class _PartyRow extends StatelessWidget {
     final visibleAbilities = showKit
         ? _prioritizeHudAbilities(
             abilities,
-            spatial: spatial!,
+            spatial: kitActor,
             resource: resource,
             hasShield: hasShield,
             maxChips: maxChips,
@@ -583,6 +643,18 @@ class _PartyRow extends StatelessWidget {
                               : GameTheme.hudManaBright,
                         ),
                       ),
+                    if (companionLine != null) ...[
+                      const SizedBox(height: 1),
+                      Text(
+                        companionLine,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.body(
+                          size: 10,
+                          color: GameTheme.parchmentDim,
+                        ),
+                      ),
+                    ],
                     if (showKit) ...[
                       const SizedBox(height: 2),
                       Row(
@@ -599,39 +671,56 @@ class _PartyRow extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(1),
-                              child: LinearProgressIndicator(
-                                value: resource / 100,
-                                minHeight: 3,
-                                backgroundColor: GameTheme.hudHpFill,
-                                color: Color(
-                                  ClassKits.resourceColorForSpec(hero.specId),
+                          if (isRunic) ...[
+                            Expanded(
+                              child: Text(
+                                _runicPipLabel(resource),
+                                maxLines: 1,
+                                style: GameTheme.pixel(
+                                  size: 7,
+                                  color: Color(
+                                    ClassKits.resourceColorForSpec(hero.specId),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${resource.round()}',
-                            style: GameTheme.body(
-                              size: 11,
-                              color: GameTheme.parchmentDim,
+                          ] else ...[
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(1),
+                                child: LinearProgressIndicator(
+                                  value: resource / 100,
+                                  minHeight: 3,
+                                  backgroundColor: GameTheme.hudHpFill,
+                                  color: Color(
+                                    ClassKits.resourceColorForSpec(
+                                      hero.specId,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                          if (hero.gearAffinity == HeroRole.rogue &&
-                              spatial!.comboPoints > 0) ...[
                             const SizedBox(width: 4),
                             Text(
-                              'CP${spatial!.comboPoints}',
+                              '${resource.round()}',
+                              style: GameTheme.body(
+                                size: 11,
+                                color: GameTheme.parchmentDim,
+                              ),
+                            ),
+                          ],
+                          if (hero.gearAffinity == HeroRole.rogue &&
+                              kitActor.comboPoints > 0) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              'CP${kitActor.comboPoints}',
                               style: GameTheme.pixel(
                                 size: 6,
                                 color: GameTheme.torchHot,
                               ),
                             ),
                           ],
-                          if (spatial!.hotStreakReady) ...[
+                          if (kitActor.hotStreakReady) ...[
                             const SizedBox(width: 4),
                             Text(
                               'STREAK',
@@ -641,7 +730,7 @@ class _PartyRow extends StatelessWidget {
                               ),
                             ),
                           ],
-                          if (spatial!.bladeFlurryTimer > 0) ...[
+                          if (kitActor.bladeFlurryTimer > 0) ...[
                             const SizedBox(width: 4),
                             Text(
                               hero.gearAffinity == HeroRole.rogue
@@ -653,7 +742,7 @@ class _PartyRow extends StatelessWidget {
                               ),
                             ),
                           ],
-                          if (spatial!.beaconTimer > 0) ...[
+                          if (kitActor.beaconTimer > 0) ...[
                             const SizedBox(width: 4),
                             Text(
                               'BEACON',
@@ -663,10 +752,10 @@ class _PartyRow extends StatelessWidget {
                               ),
                             ),
                           ],
-                          if (spatial!.absorbShield > 0) ...[
+                          if (kitActor.absorbShield > 0) ...[
                             const SizedBox(width: 4),
                             Text(
-                              'ABS${spatial!.absorbShield}',
+                              'ABS${kitActor.absorbShield}',
                               style: GameTheme.pixel(
                                 size: 6,
                                 color: GameTheme.hudManaText,
@@ -700,12 +789,13 @@ class _PartyRow extends StatelessWidget {
                 for (final ability in visibleAbilities)
                   _InlineAbilityChip(
                     ability: ability,
-                    cdLeft: spatial!.abilityCd[ability.id.name] ?? 0,
+                    cdLeft: kitActor.abilityCd[ability.id.name] ?? 0,
                     rage: resource,
                     hasShield: hasShield,
-                    activeBuff: _abilityBuffActive(ability, spatial!),
-                    focusHpFrac: _focusHpFrac(spatial!, world),
-                    bombUp: _focusBombUp(spatial!, world),
+                    activeBuff: _abilityBuffActive(ability, kitActor),
+                    focusHpFrac: _focusHpFrac(kitActor, world),
+                    bombUp: _focusBombUp(kitActor, world),
+                    isRunic: isRunic,
                   ),
               ],
             ),
@@ -810,6 +900,7 @@ class _InlineAbilityChip extends StatelessWidget {
     required this.activeBuff,
     this.focusHpFrac = 1.0,
     this.bombUp = false,
+    this.isRunic = false,
   });
 
   final ClassAbilityDef ability;
@@ -819,6 +910,7 @@ class _InlineAbilityChip extends StatelessWidget {
   final bool activeBuff;
   final double focusHpFrac;
   final bool bombUp;
+  final bool isRunic;
 
   @override
   Widget build(BuildContext context) {
@@ -854,7 +946,9 @@ class _InlineAbilityChip extends StatelessWidget {
     } else if (bombWaiting) {
       label = 'Bomb';
     } else {
-      label = ability.shortLabel;
+      label = isRunic && ability.resourceCost > 0
+          ? '${ability.shortLabel}·${ability.resourceCost}'
+          : ability.shortLabel;
     }
     final chip = Opacity(
       opacity: gated || softGated

@@ -229,7 +229,7 @@ class HubUrgentRow extends StatelessWidget {
     final showAscend = canAscend && ascendLabel != null && !hideAscend;
     final showVault = weeklyReady && !hideVaultClaim;
     final showMissions = claimable > 0 && !hideMissionClaim;
-    final showDaily = !hideDaily;
+    final showDaily = !hideDaily && !dailyClaimed;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

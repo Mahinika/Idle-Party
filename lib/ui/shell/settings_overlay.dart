@@ -246,11 +246,20 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 10),
+          MenuChrome.sectionLabelScoped(
+            'AUTO-SELL · gold',
+            scope: MenuScope.account,
+          ),
+          const SizedBox(height: 4),
           Text(
-            'Auto-sell → gold (junk sold for coins)',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            'Junk sold for coins when bag is near full or you CLEAN BAG.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
+          Text(
+            'Max iLvl to sell',
+            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+          ),
           _IlvlFilterRow(
             value: state.autoSellMaxPower,
             max: GameLogic.maxAutoSellIlvlCap(state),
@@ -271,11 +280,20 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             ),
           ],
           const SizedBox(height: 12),
+          MenuChrome.sectionLabelScoped(
+            'AUTO-SCRAP · essence',
+            scope: MenuScope.account,
+          ),
+          const SizedBox(height: 4),
           Text(
-            'Auto-scrap → essence (junk broken for essence)',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            'Leftovers broken for essence after sell pass — not the same as sell.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
+          Text(
+            'Max iLvl to scrap',
+            style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+          ),
           _IlvlFilterRow(
             value: state.autoDisassembleMaxIlvl,
             max: GameLogic.maxAutoSellIlvlCap(state),
@@ -403,6 +421,13 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
                     },
             ),
           ],
+          const SizedBox(height: 24),
+          MenuChrome.sectionLabelScoped('DANGER', scope: MenuScope.account),
+          const SizedBox(height: 6),
+          Text(
+            'Deletes this save on device — separate from Play Games cloud.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
           const SizedBox(height: 8),
           KenneyButton(
             label: 'RESET GAME',

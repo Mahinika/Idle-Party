@@ -3338,6 +3338,12 @@ class GameLogic {
     GameState state, {
     int maxMerges = 40,
   }) => GearService.autoMergeJunk(state, maxMerges: maxMerges);
+
+  static List<String> autoMergeKeptNames(GameState state, {int max = 3}) =>
+      GearService.autoMergeKeptNames(state, max: max);
+
+  static int autoMergeKeptCount(GameState state) =>
+      GearService.autoMergeKeptCount(state);
   static GameState autoSellJunk(GameState state, {bool unstickBag = false}) =>
       GearService.autoSellJunk(state, unstickBag: unstickBag);
   static GameState autoDisassembleJunk(

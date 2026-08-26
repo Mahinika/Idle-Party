@@ -304,6 +304,12 @@ abstract final class GearService {
     int maxMerges = 40,
   }) => GearCleanup.autoMergeJunk(state, maxMerges: maxMerges);
 
+  static List<String> autoMergeKeptNames(GameState state, {int max = 3}) =>
+      GearCleanup.autoMergeKeptNames(state, max: max);
+
+  static int autoMergeKeptCount(GameState state) =>
+      GearCleanup.autoMergeKeptCount(state);
+
   static GameState autoSellJunk(GameState state, {bool unstickBag = false}) =>
       GearCleanup.autoSellJunk(state, unstickBag: unstickBag);
 

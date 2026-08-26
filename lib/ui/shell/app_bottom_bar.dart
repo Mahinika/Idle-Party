@@ -102,10 +102,12 @@ class AppBottomBar extends StatelessWidget {
             ),
             if (onHubClose != null)
               Expanded(
+                flex: 2,
                 child: AppBottomBarItem(
                   label: 'HUB',
                   icon: KenneyAssets.iconDoor,
                   selected: false,
+                  urgent: true,
                   dense: dense,
                   onTap: onHubClose!,
                 ),

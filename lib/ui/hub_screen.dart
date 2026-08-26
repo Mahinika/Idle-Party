@@ -404,6 +404,9 @@ class _HubScreenState extends State<HubScreen>
                                   multiplierLine:
                                       GoldIncome.multiplierLine(state),
                                   partyName: state.partyName,
+                                  dimIncome: hubChaseOwnsEndgameRow(
+                                    HubChase.forState(state).kind,
+                                  ),
                                 ),
                               ),
                               if (director.offlineSummary != null) ...[

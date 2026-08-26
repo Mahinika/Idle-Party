@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.65';
+  static const String currentVersion = '1.12.66';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.66',
+      bullets: <String>[
+        'Clear HOLD chip pauses stairs walk ~8s; BM/Unholy/Demo show companion line; DK RUNIC as RRRRRR pips. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'Hub: hide DAILY done row; dim g/min on endgame chase. KEY Soft/Hard/Brutal chips; BAG one EQUIP CTA; SETTINGS sell vs scrap + RESET in DANGER. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.65',
       bullets: <String>[

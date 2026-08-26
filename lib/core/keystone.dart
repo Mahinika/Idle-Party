@@ -181,6 +181,25 @@ abstract final class Keystone {
     _ => affix,
   };
 
+  /// Soft / Hard / Brutal — for KEY affix risk chips in META → KEY.
+  static String riskTier(String affix) {
+    final b = blurb(affix).toLowerCase();
+    if (affix == 'fortune' ||
+        affix == 'glass' ||
+        b.contains('more gold') ||
+        b.contains('fragile')) {
+      return 'Soft';
+    }
+    if (affix == 'tyrannical' ||
+        affix == 'boss_rush' ||
+        affix == 'no_flask' ||
+        b.contains('boss') ||
+        b.contains('flask')) {
+      return 'Brutal';
+    }
+    return 'Hard';
+  }
+
   static String formatTimer(int ms) {
     final totalSec = max(0, ms) ~/ 1000;
     final m = totalSec ~/ 60;

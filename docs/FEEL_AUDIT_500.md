@@ -3,7 +3,7 @@
 **Datum:** 2026-08-26  
 **Scope:** Spelarkänsla (hub, dungeon, menyer, kits, zoner, copy, AL20 endgame, telefon).  
 **Inte inkluderat:** ren refaktor, dependensuppgraderingar, tester utan spelar-symptom.  
-**Status:** **1.12.65** — fourth feel wave (safe map taps, loot names, zoom chip, KEY/FORGE/MARKET/GEAR polish). Remaining heavy: hold-at-stairs mode, pet panels, DK rune UI.
+**Status:** **1.12.66** — fifth feel wave (HOLD stairs, companion line, DK pips, BAG/KEY/SETTINGS polish). FEEL_AUDIT actionable backlog largely shipped; remaining are structural redesigns.
 
 Varje punkt: `ID · yta · allvar · mening · fil`
 

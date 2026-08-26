@@ -854,6 +854,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
   void initState() {
     super.initState();
     final keyOn = widget.director.state.hardmodeLevel > 0 ||
+        GameLogic.endgameUnlocked(widget.director.state) ||
         widget.director.state.challengeBossRush ||
         widget.director.state.challengeNoFlask ||
         widget.director.state.challengeTiny;
@@ -953,12 +954,18 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           ),
           if (affixes.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(
-              affixes
-                  .map((a) => '${Keystone.label(a)} (${Keystone.blurb(a)})')
-                  .join(' · '),
-              textAlign: TextAlign.center,
-              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                for (final a in affixes)
+                  _KeyAffixChip(
+                    label: Keystone.label(a),
+                    blurb: Keystone.blurb(a),
+                    risk: Keystone.riskTier(a),
+                  ),
+              ],
             ),
           ],
           if (week.hasGoal) ...[
@@ -1346,6 +1353,57 @@ class _HardmodeStepper extends StatelessWidget {
             sign: '+',
             onPressed: level < maxLevel ? () => onChanged(level + 1) : null,
             size: 36,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KeyAffixChip extends StatelessWidget {
+  const _KeyAffixChip({
+    required this.label,
+    required this.blurb,
+    required this.risk,
+  });
+
+  final String label;
+  final String blurb;
+  final String risk;
+
+  Color get _riskColor => switch (risk) {
+    'Soft' => GameTheme.mossLit,
+    'Brutal' => GameTheme.bloodLit,
+    _ => GameTheme.accentWarn,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: GameTheme.panelInset,
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+        border: Border.all(color: _riskColor.withValues(alpha: 0.65)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: _riskColor.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Text(
+              risk,
+              style: GameTheme.pixel(size: 8, color: _riskColor),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$label · $blurb',
+            style: GameTheme.body(size: 11, color: GameTheme.parchment),
           ),
         ],
       ),

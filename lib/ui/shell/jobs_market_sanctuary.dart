@@ -52,12 +52,12 @@ class JobsOverlay extends StatelessWidget {
         ],
         const SizedBox(height: 8),
         for (var i = 0; i < state.missions.length; i++)
-          _questCard(state.missions[i], i),
+          _questCard(state.missions[i], i, hideClaim: claimable > 0),
       ],
     );
   }
 
-  Widget _questCard(Mission mission, int index) {
+  Widget _questCard(Mission mission, int index, {bool hideClaim = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
@@ -139,7 +139,7 @@ class JobsOverlay extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          if (mission.canClaim || mission.claimed)
+          if (!hideClaim && (mission.canClaim || mission.claimed))
             KenneyButton(
               label: mission.claimed
                   ? 'CLAIMED'
@@ -151,11 +151,6 @@ class JobsOverlay extends StatelessWidget {
                   : null,
               style: KenneyButtonStyle.grey,
               expanded: false,
-            )
-          else
-            Text(
-              'Active',
-              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
             ),
         ],
       ),

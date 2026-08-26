@@ -181,26 +181,22 @@ class _InventoryDockState extends State<InventoryDock>
         selectedId != null && state.gearStash.any((g) => g.id == selectedId);
 
     Widget actions() {
+      final upgrades = MenuAlerts.bagUpgradeCount(state);
+      if (upgrades > 0) {
+        return _autoEquipButton();
+      }
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: worn != null
-                    ? KenneyButton(
-                        label: 'UNEQUIP',
-                        onPressed: () => onUnequip(worn.slot),
-                        style: KenneyButtonStyle.grey,
-                      )
-                    : KenneyButton(
-                        label: 'EQUIP',
-                        onPressed: inStash ? onEquip : null,
-                      ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(child: _autoEquipButton()),
-            ],
+          KenneyButton(
+            label: worn != null ? 'UNEQUIP' : 'EQUIP',
+            onPressed: worn != null
+                ? () => onUnequip(worn.slot)
+                : (inStash ? onEquip : null),
+            style: worn != null
+                ? KenneyButtonStyle.grey
+                : KenneyButtonStyle.brown,
+            primary: inStash,
           ),
         ],
       );
@@ -426,22 +422,19 @@ class _InventoryDockState extends State<InventoryDock>
           style: KenneyButtonStyle.grey,
         ),
         const SizedBox(height: 4),
-        Row(
-          children: [
-            Expanded(child: _autoEquipButton()),
-            const SizedBox(width: 4),
-            Expanded(
-              child: KenneyButton(
-                label: selectedId == null ? 'AUTO MERGE' : 'ADD TO MERGE',
-                onPressed: selectedId != null
-                    ? (GameLogic.findStashGear(state, selectedId!) == null
-                          ? null
-                          : () => onPutCombine(selectedId!))
-                    : (state.gearStash.length < 2 ? null : onAutoMerge),
-                style: KenneyButtonStyle.grey,
-              ),
-            ),
-          ],
+        _autoEquipButton(),
+        const SizedBox(height: 4),
+        KenneyButton(
+          label: selectedId == null ? 'AUTO MERGE' : 'ADD TO MERGE',
+          tip: selectedId == null
+              ? 'Merge junk pairs — skips BiS and bag upgrades'
+              : null,
+          onPressed: selectedId != null
+              ? (GameLogic.findStashGear(state, selectedId!) == null
+                    ? null
+                    : () => onPutCombine(selectedId!))
+              : (state.gearStash.length < 2 ? null : onAutoMerge),
+          style: KenneyButtonStyle.grey,
         ),
         if (selectedId != null) ...[
           const SizedBox(height: 4),

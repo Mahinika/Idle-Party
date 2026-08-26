@@ -155,6 +155,7 @@ class HubHeader extends StatelessWidget {
     required this.incomeLine,
     required this.multiplierLine,
     this.partyName = 'The Party',
+    this.dimIncome = false,
   });
 
   final int ascensionLevel;
@@ -170,6 +171,7 @@ class HubHeader extends StatelessWidget {
   final String incomeLine;
   final String multiplierLine;
   final String partyName;
+  final bool dimIncome;
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +249,10 @@ class HubHeader extends StatelessWidget {
           child: Text(
             incomeLine,
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+            style: GameTheme.body(
+              size: 13,
+              color: dimIncome ? GameTheme.parchmentDim : GameTheme.mossLit,
+            ),
           ),
         ),
         Text(

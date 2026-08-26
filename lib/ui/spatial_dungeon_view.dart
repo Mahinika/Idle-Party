@@ -322,20 +322,73 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                   : const Color(0xEE0A0907),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                child: Text(
-                  state.isPartyDefeated
-                      ? (state.inGauntlet || state.inAnyRiftMode
+                child: state.isPartyDefeated
+                    ? Text(
+                        state.inGauntlet || state.inAnyRiftMode
                             ? 'WIPED — End Run returns to hub'
-                            : 'WIPED — use the Retry / Hub panel')
-                      : 'GO — stairs are open',
-                  textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 15,
-                    color: state.isPartyDefeated
-                        ? GameTheme.torchHot
-                        : GameTheme.clear,
-                  ),
-                ),
+                            : 'WIPED — use the Retry / Hub panel',
+                        textAlign: TextAlign.center,
+                        style: GameTheme.body(
+                          size: 15,
+                          color: GameTheme.torchHot,
+                        ),
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              widget.director.exitHoldActive
+                                  ? 'HOLD — walk resumes soon'
+                                  : 'GO — stairs are open',
+                              textAlign: TextAlign.center,
+                              style: GameTheme.body(
+                                size: 15,
+                                color: GameTheme.clear,
+                              ),
+                            ),
+                          ),
+                          if (!widget.director.exitHoldActive)
+                            WebClickScope(
+                              label: 'Hold at stairs',
+                              onPressed: widget.director.startExitHold,
+                              child: Semantics(
+                                button: true,
+                                label: 'Hold — pause walk to stairs for 8 seconds',
+                                onTap: widget.director.startExitHold,
+                                excludeSemantics: true,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: widget.director.startExitHold,
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0x332A4030),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                          color: GameTheme.clear.withValues(
+                                            alpha: 0.65,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'HOLD',
+                                        style: GameTheme.pixel(
+                                          size: GameTheme.hudPixel,
+                                          color: GameTheme.clear,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
               ),
             ),
           Expanded(
@@ -680,6 +733,15 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                         ),
                                       ],
                                     ],
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      WipeAdvice.timingFootnote,
+                                      textAlign: TextAlign.center,
+                                      style: GameTheme.body(
+                                        size: 12,
+                                        color: GameTheme.parchmentDim,
+                                      ),
+                                    ),
                                     const SizedBox(height: 14),
                                     if (!state.inGauntlet && !state.inAnyRiftMode)
                                       KenneyButton(
@@ -820,7 +882,19 @@ class ChamberDots extends StatelessWidget {
       },
       child: Tooltip(
         message: 'Tap: chamber overview · square done · diamond here · circle ahead',
-        child: dots,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            dots,
+            if (total > 1) ...[
+              const SizedBox(width: 4),
+              Text(
+                '$active/$total',
+                style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

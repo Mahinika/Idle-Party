@@ -119,6 +119,26 @@ abstract final class GearCleanup {
     return false;
   }
 
+  /// Names of bag items AUTO MERGE skips (BiS / upgrades).
+  static List<String> autoMergeKeptNames(GameState state, {int max = 3}) {
+    final names = <String>[];
+    for (final item in state.gearStash) {
+      if (shouldKeepInBag(state, item)) {
+        names.add(item.name);
+      }
+    }
+    names.sort();
+    return names.take(max).toList();
+  }
+
+  static int autoMergeKeptCount(GameState state) {
+    var n = 0;
+    for (final item in state.gearStash) {
+      if (shouldKeepInBag(state, item)) n++;
+    }
+    return n;
+  }
+
   /// Keeps one non-BiS backup per slot near the party's worn iLvl for that slot.
   static bool isNearIlvlSlotBackup(GameState state, EquipmentItem item) {
     final plan = GearBiSPlanner.planBiSAssignments(state);

@@ -1207,6 +1207,18 @@ class GameDirector extends ChangeNotifier {
   /// Player-picked enemy for the target corner HUD (runtime only).
   String? hudFocusEnemyId;
 
+  /// True while the player paused auto-walk to stairs after a clear.
+  bool get exitHoldActive => (_spatial?.exitHoldSec ?? 0) > 0;
+
+  /// Pause exit-seek for ~8s so the party can stay on the floor.
+  void startExitHold() {
+    final spatial = _spatial;
+    if (spatial == null || !spatial.awaitingExit) return;
+    spatial.exitHoldSec = 8.0;
+    showToast('Holding — walk resumes soon', life: 2.4);
+    notifyListeners();
+  }
+
   /// Prefer an enemy under a map tap for the target HUD (within ~1.6 tiles).
   void setHudFocusAtWorld(double tileX, double tileY) {
     final spatial = _spatial;
@@ -1794,18 +1806,30 @@ class GameDirector extends ChangeNotifier {
 
   /// Merge junk bag pairs (same slot, not BiS/upgrades) while gold lasts.
   void autoMergeJunk() {
+    final kept = GameLogic.autoMergeKeptCount(_state);
+    final sample = GameLogic.autoMergeKeptNames(_state);
     final result = GameLogic.autoMergeJunk(_state);
     if (result.merges <= 0) {
-      showToast('No junk pairs to merge', life: 1.5);
+      if (kept > 0 && sample.isNotEmpty) {
+        final tail = kept > sample.length ? ' +${kept - sample.length}' : '';
+        showToast(
+          'No pairs — kept ${sample.join(', ')}$tail',
+          life: 2.2,
+        );
+      } else {
+        showToast('No junk pairs to merge', life: 1.5);
+      }
       return;
     }
     _applyUpgrade(result.state);
-    showToast(
-      result.merges == 1
-          ? 'Auto-merged 1 pair'
-          : 'Auto-merged ${result.merges} pairs',
-      life: 1.9,
-    );
+    var msg = result.merges == 1
+        ? 'Auto-merged 1 pair'
+        : 'Auto-merged ${result.merges} pairs';
+    if (kept > 0 && sample.isNotEmpty) {
+      final tail = kept > sample.length ? ' +${kept - sample.length}' : '';
+      msg += ' · skipped ${sample.join(', ')}$tail';
+    }
+    showToast(msg, life: 2.2);
   }
 
   void setSoundMuted(bool muted) {

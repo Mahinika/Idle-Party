@@ -81,6 +81,10 @@ abstract final class WipeAdvice {
     return null;
   }
 
+  /// When bag vs FORGE tips appear (streakNeeded = 2 for FORGE).
+  static String get timingFootnote =>
+      'Bag tips can show on wipe 1; FORGE tips after 2 on this floor.';
+
   static String _forgeOrMarket(GameState state, String forgeLine) {
     final listing = MarketListingsService.bestAffordableUpgradeListing(state);
     if (listing != null) {

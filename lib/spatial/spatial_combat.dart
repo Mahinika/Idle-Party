@@ -673,6 +673,7 @@ class SpatialWorld {
     this.treasureTimer = 0,
     this.awaitingExit = false,
     this.exitWaitTimer = 0,
+    this.exitHoldSec = 0,
     this.guideX,
     this.guideY,
     this.guideTimer = 0,
@@ -728,6 +729,9 @@ class SpatialWorld {
 
   /// Seconds spent in [awaitingExit] (anti soft-lock).
   double exitWaitTimer;
+
+  /// While > 0, party stays put instead of walking to stairs (player HOLD).
+  double exitHoldSec;
   double? guideX;
   double? guideY;
   double guideTimer;
@@ -2310,6 +2314,7 @@ abstract final class SpatialCombat {
       treasureTimer: world.treasureTimer,
       awaitingExit: world.awaitingExit,
       exitWaitTimer: world.exitWaitTimer,
+      exitHoldSec: world.exitHoldSec,
       guideX: world.guideX,
       guideY: world.guideY,
       guideTimer: world.guideTimer,
@@ -2999,11 +3004,16 @@ abstract final class SpatialCombat {
     // Cleared: walk to exit. ONE living hero on the stairs clears the floor.
     // (Requiring the full party in a tight cluster soft-locks when someone jams.)
     if (world.awaitingExit) {
-      world.exitWaitTimer += dt;
       // Ensure every gate is open so the exit path can't soft-lock.
       for (final gate in world.map.gates) {
         world.openGateIds.add(gate.id);
       }
+      if (world.exitHoldSec > 0) {
+        world.exitHoldSec = math.max(0, world.exitHoldSec - dt);
+        nextState = _syncHp(nextState, world);
+        return _stepResult(world, nextState);
+      }
+      world.exitWaitTimer += dt;
       final exitX = world.map.exitPoint.$1 + 0.5;
       final exitY = world.map.exitPoint.$2 + 0.5;
       final guiding =
