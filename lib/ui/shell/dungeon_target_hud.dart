@@ -165,7 +165,17 @@ class TargetCornerHud extends StatelessWidget {
                     : _stairsHint(world),
                 style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
               ),
-          ],
+                      if (_gateLocked(world))
+              Text(
+                'Gate closed — chamber locked',
+                style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+              ),
+            if (_hasDormantAhead(world))
+              Text(
+                'Next chamber dormant',
+                style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+              ),
+],
         ),
       ),
     );
@@ -185,5 +195,18 @@ class TargetCornerHud extends StatelessWidget {
     String vert = dy.abs() < 0.35 ? '' : (dy > 0 ? 'N' : 'S');
     final dir = '$vert$horiz';
     return dir.isEmpty ? 'Walk to stairs' : 'Stairs · $dir';
+  }
+
+  static bool _gateLocked(SpatialWorld? world) {
+    if (world == null || world.awaitingExit) return false;
+    for (final g in world.map.gates) {
+      if (!world.openGateIds.contains(g.id)) return true;
+    }
+    return false;
+  }
+
+  static bool _hasDormantAhead(SpatialWorld? world) {
+    if (world == null) return false;
+    return world.enemies.any((e) => e.hp > 0 && e.dormant);
   }
 }

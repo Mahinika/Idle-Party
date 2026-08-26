@@ -30,6 +30,7 @@ class JobsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    final claimable = state.missions.where((m) => m.canClaim).length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -38,6 +39,17 @@ class JobsOverlay extends StatelessWidget {
           'Chain ${state.metaDepth.jobChainCount}/3 · the 3rd claim in a row pays +5e extra.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
+        if (claimable > 0) ...[
+          const SizedBox(height: 8),
+          KenneyButton(
+            label: claimable == 1
+                ? 'CLAIM QUESTS'
+                : 'CLAIM QUESTS ($claimable)',
+            onPressed: () => director.claimAllReadyMissions(),
+            style: KenneyButtonStyle.brown,
+            primary: true,
+          ),
+        ],
         const SizedBox(height: 8),
         for (var i = 0; i < state.missions.length; i++)
           _questCard(state.missions[i], i),

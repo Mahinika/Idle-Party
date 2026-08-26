@@ -3,7 +3,7 @@
 **Datum:** 2026-08-26  
 **Scope:** Spelarkänsla (hub, dungeon, menyer, kits, zoner, copy, AL20 endgame, telefon).  
 **Inte inkluderat:** ren refaktor, dependensuppgraderingar, tester utan spelar-symptom.  
-**Status:** **1.12.63** — second large feel-audit wave (hub leftover P1/P2, dungeon/BAG/GEAR polish, zone props/wash). Most actionable audit rows are shipped; remaining are combat redesign / new-art / heavy layout.
+**Status:** **1.12.64** — third feel-audit wave (compact dungeon HUD, kit gates/priority, forge BEST, CLAIM sync). Remaining: true combat redesign (hold-at-stairs mode, pet panels, rune resources), heavy nav layout, loot pickup list.
 
 Varje punkt: `ID · yta · allvar · mening · fil`
 

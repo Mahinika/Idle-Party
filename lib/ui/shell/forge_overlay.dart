@@ -83,8 +83,9 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       costPart =
           '${_spendMode.chipLabel} · ${preview.buys}× · ${preview.spent}g';
     }
+    // FEEL 126: short BEST label so GOLD rows do not wrap on phone.
     final label = recommended
-        ? 'BEST · $name $bonus$speedHint · $costPart'
+        ? 'BEST · $name · $costPart'
         : '$name $bonus$speedHint · $costPart';
     return KenneyButton(label: label, onPressed: onPressed);
   }

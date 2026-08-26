@@ -491,6 +491,15 @@ class GameDirector extends ChangeNotifier {
     return '$name up · last floor ${sec}s · faster clears';
   }
 
+  static String _forgeTrackShort(PartyUpgradeType type) => switch (type) {
+    PartyUpgradeType.attack => 'ATK',
+    PartyUpgradeType.defense => 'DEF',
+    PartyUpgradeType.vitality => 'STA',
+    PartyUpgradeType.moveSpeed => 'MOVE',
+    PartyUpgradeType.attackSpeed => 'HASTE',
+    PartyUpgradeType.crit => 'CRIT',
+  };
+
   Future<void> boot({bool deferCombatLoop = false}) async {
     try {
       final saved = await _storage.load();
@@ -797,6 +806,7 @@ class GameDirector extends ChangeNotifier {
       }
       if (result.stairsOpened) {
         GameAudio.clear();
+        showToast('Walking to stairs — tap map to steer', life: 2.6);
       }
       if (result.state.gearStash.length > _lastStashLen) {
         if (!playedLoot) {
@@ -1029,7 +1039,12 @@ class GameDirector extends ChangeNotifier {
           _spatialTimer?.cancel();
           _spatial = null;
           _freezeRunIncome();
-          showToast(StoryLore.dungeonCleared(beforeClear.dungeonId), life: 3.2);
+          showToast(
+            beforeClear.dungeonMode == DungeonMode.push && wasBoss
+                ? 'Zone clear — hub'
+                : StoryLore.dungeonCleared(beforeClear.dungeonId),
+            life: 3.2,
+          );
         }
         _bumpCombatFrame();
         notifyListeners();
@@ -1512,6 +1527,7 @@ class GameDirector extends ChangeNotifier {
     if (_isLoading) {
       return;
     }
+    final beforeRec = GameLogic.recommendedForgeUpgrade(_state);
     final beforeAtk = _state.attackBonus;
     final beforeMove = _state.moveSpeedBonus;
     final beforeHaste = _state.attackSpeedBonus;
@@ -1520,7 +1536,11 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     _applyUpgrade(updated);
-    if (_state.attackBonus > beforeAtk ||
+    final afterRec = GameLogic.recommendedForgeUpgrade(_state);
+    if (afterRec != beforeRec) {
+      final name = _forgeTrackShort(PartyUpgradeType.values[afterRec]);
+      showToast('BEST is now $name', life: 2.0);
+    } else if (_state.attackBonus > beforeAtk ||
         _state.moveSpeedBonus > beforeMove ||
         _state.attackSpeedBonus > beforeHaste) {
       showToast('Forge gold spent evenly', life: 2.0);
@@ -1534,6 +1554,7 @@ class GameDirector extends ChangeNotifier {
     if (_isLoading) {
       return;
     }
+    final beforeRec = GameLogic.recommendedForgeUpgrade(_state);
     final beforeAtk = _state.attackBonus;
     final beforeMove = _state.moveSpeedBonus;
     final beforeHaste = _state.attackSpeedBonus;
@@ -1546,6 +1567,12 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     _applyUpgrade(updated);
+    final afterRec = GameLogic.recommendedForgeUpgrade(_state);
+    if (afterRec != beforeRec) {
+      final name = _forgeTrackShort(PartyUpgradeType.values[afterRec]);
+      showToast('BEST is now $name', life: 2.0);
+      return;
+    }
     if (type == PartyUpgradeType.attack && _state.attackBonus > beforeAtk) {
       showToast(_forgeSpeedToast('ATK'), life: 2.0);
     } else if (type == PartyUpgradeType.moveSpeed &&
@@ -1571,7 +1598,7 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  void claimMission(String missionId) {
+  void claimMission(String missionId, {bool silent = false}) {
     int? goldReward;
     int? essenceReward;
     String? title;
@@ -1586,19 +1613,46 @@ class GameDirector extends ChangeNotifier {
       }
     }
     _applyUpgrade(GameLogic.claimMission(_state, missionId));
-    if (goldReward != null && essenceReward != null && title != null) {
-      GameAudio.loot();
-      final chainBonus = _state.essence - beforeEssence - essenceReward;
-      if (chainBonus > 0 ||
-          (beforeChain == 2 && _state.metaDepth.jobChainCount == 0)) {
-        showToast(
-          '$title: +${goldReward}g +${essenceReward}e · chain +5e!',
-          life: 2.8,
-        );
-      } else {
-        showToast('$title: +${goldReward}g +${essenceReward}e', life: 2.6);
-      }
+    if (silent ||
+        goldReward == null ||
+        essenceReward == null ||
+        title == null) {
+      return;
     }
+    GameAudio.loot();
+    final chainBonus = _state.essence - beforeEssence - essenceReward;
+    if (chainBonus > 0 ||
+        (beforeChain == 2 && _state.metaDepth.jobChainCount == 0)) {
+      showToast(
+        '$title: +${goldReward}g +${essenceReward}e · chain +5e!',
+        life: 2.8,
+      );
+    } else {
+      showToast('$title: +${goldReward}g +${essenceReward}e', life: 2.6);
+    }
+  }
+
+  /// Claims every ready quest once and toasts the count (TODAY / QUESTS sync).
+  int claimAllReadyMissions() {
+    if (_isLoading) return 0;
+    final ready = _state.missions.where((m) => m.canClaim).toList();
+    if (ready.isEmpty) return 0;
+    final beforeGold = _state.gold;
+    final beforeEssence = _state.essence;
+    for (final m in ready) {
+      claimMission(m.id, silent: true);
+    }
+    final claimed = ready.length;
+    final gold = _state.gold - beforeGold;
+    final essence = _state.essence - beforeEssence;
+    GameAudio.loot();
+    showToast(
+      claimed == 1
+          ? 'Claimed 1 quest · +${gold}g +${essence}e'
+          : 'Claimed $claimed quests · +${gold}g +${essence}e',
+      life: 2.4,
+    );
+    return claimed;
   }
 
   void combineGear({required String primaryId, required String secondaryId}) {
@@ -1643,6 +1697,13 @@ class GameDirector extends ChangeNotifier {
   }
 
   void travelToFloor(int floorNumber) {
+    if (_state.inGauntlet || _state.inAnyRiftMode) {
+      showToast(
+        _state.inGauntlet ? 'Gauntlet — no floor jump' : 'Rift — no floor jump',
+        life: 2.0,
+      );
+      return;
+    }
     final before = _state.currentRoom.floorNumber;
     _applyUpgrade(GameLogic.travelToFloor(_state, floorNumber));
     final after = _state.currentRoom.floorNumber;

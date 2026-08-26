@@ -253,6 +253,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                             spatial: (widget.selectedHeroIndex == i && _kitOpen)
                                 ? _spatialFor(world, i)
                                 : null,
+                            world: world,
                           ),
                         ),
                       ),
@@ -390,6 +391,7 @@ class _PartyRow extends StatelessWidget {
     this.phone = false,
     this.inCombat = false,
     this.spatial,
+    this.world,
   });
 
   final int index;
@@ -402,6 +404,7 @@ class _PartyRow extends StatelessWidget {
   final bool phone;
   final bool inCombat;
   final SpatialActor? spatial;
+  final SpatialWorld? world;
 
   bool _abilityBuffActive(ClassAbilityDef ability, SpatialActor s) {
     return switch (ability.id) {
@@ -464,6 +467,8 @@ class _PartyRow extends StatelessWidget {
             resource: resource,
             hasShield: hasShield,
             maxChips: maxChips,
+            world: world,
+            heroHpFrac: maxHp <= 0 ? 1.0 : liveHp / maxHp,
           )
         : const <ClassAbilityDef>[];
 
@@ -666,6 +671,8 @@ class _PartyRow extends StatelessWidget {
                     rage: resource,
                     hasShield: hasShield,
                     activeBuff: _abilityBuffActive(ability, spatial!),
+                    focusHpFrac: _focusHpFrac(spatial!, world),
+                    bombUp: _focusBombUp(spatial!, world),
                   ),
               ],
             ),
@@ -676,29 +683,86 @@ class _PartyRow extends StatelessWidget {
   }
 
   /// Prefer active / ready chips so a 4-hero HUD stays readable.
+  SpatialActor? _focusEnemy(SpatialActor spatial, SpatialWorld? world) {
+    final id = spatial.focusEnemyId;
+    if (id == null || world == null) return null;
+    for (final e in world.enemies) {
+      if (e.id == id && e.hp > 0) return e;
+    }
+    return null;
+  }
+
+  double _focusHpFrac(SpatialActor spatial, SpatialWorld? world) {
+    final focus = _focusEnemy(spatial, world);
+    if (focus == null || focus.effectiveMaxHp <= 0) return 1.0;
+    return (focus.hp / focus.effectiveMaxHp).clamp(0.0, 1.0);
+  }
+
+  bool _focusBombUp(SpatialActor spatial, SpatialWorld? world) {
+    final focus = _focusEnemy(spatial, world);
+    return focus != null && focus.livingBombTimer >= 2;
+  }
+
+  /// Prefer active / ready chips so a 4-hero HUD stays readable.
   List<ClassAbilityDef> _prioritizeHudAbilities(
     List<ClassAbilityDef> abilities, {
     required SpatialActor spatial,
     required double resource,
     required bool hasShield,
     required int maxChips,
+    SpatialWorld? world,
+    double heroHpFrac = 1.0,
   }) {
     if (abilities.length <= maxChips) return abilities;
+
+    final focusHp = _focusHpFrac(spatial, world);
+    final bombUp = _focusBombUp(spatial, world);
+    final partyHealthy = heroHpFrac > 0.45;
+    final defOrder = <AbilityId, int>{
+      for (var i = 0; i < ClassKits.all.length; i++) ClassKits.all[i].id: i,
+    };
+
     int rank(ClassAbilityDef a) {
       if (_abilityBuffActive(a, spatial)) return 0;
       final gated = a.requiresShield && !hasShield;
       final cd = spatial.abilityCd[a.id.name] ?? 0;
       final noRage = resource + 0.001 < a.resourceCost;
-      if (!gated && cd <= 0.05 && !noRage) return 1;
-      if (cd > 0.05) return 2;
-      return 3;
+      final execFrac = a.gate.executeHpFrac;
+      final execWaiting = execFrac != null && focusHp > execFrac;
+      final bombWaiting = a.gate.livingBombRefresh && bombUp;
+      final demoteWall = partyHealthy &&
+          (a.id == AbilityId.shieldWall || a.id == AbilityId.lastStand);
+      if (!gated && cd <= 0.05 && !noRage && !execWaiting && !bombWaiting) {
+        return demoteWall ? 2 : 1;
+      }
+      if (cd > 0.05) return demoteWall ? 3 : 2;
+      return demoteWall ? 4 : 3;
+    }
+
+    int fantasyBias(ClassAbilityDef a) {
+      // Lower = prefer. Fantasy signatures beat fillers / long CD walls.
+      return switch (a.id) {
+        AbilityId.pyroblast => 0,
+        AbilityId.combustion => 2,
+        AbilityId.aimedShot || AbilityId.chimeraShot => 0,
+        AbilityId.steadyShot => 3,
+        AbilityId.charge || AbilityId.taunt => 0,
+        AbilityId.shieldWall || AbilityId.lastStand => partyHealthy ? 6 : 2,
+        _ => 4,
+      };
     }
 
     final ranked = [...abilities]
       ..sort((a, b) {
-        final cmp = rank(a).compareTo(rank(b));
-        if (cmp != 0) return cmp;
-        return a.shortLabel.compareTo(b.shortLabel);
+        final byRank = rank(a).compareTo(rank(b));
+        if (byRank != 0) return byRank;
+        final byFantasy = fantasyBias(a).compareTo(fantasyBias(b));
+        if (byFantasy != 0) return byFantasy;
+        final byUnlock = a.unlockLevel.compareTo(b.unlockLevel);
+        if (byUnlock != 0) return byUnlock;
+        final byDmg = b.coeff.compareTo(a.coeff);
+        if (byDmg != 0) return byDmg;
+        return (defOrder[a.id] ?? 0).compareTo(defOrder[b.id] ?? 0);
       });
     return ranked.take(maxChips).toList();
   }
@@ -711,6 +775,8 @@ class _InlineAbilityChip extends StatelessWidget {
     required this.rage,
     required this.hasShield,
     required this.activeBuff,
+    this.focusHpFrac = 1.0,
+    this.bombUp = false,
   });
 
   final ClassAbilityDef ability;
@@ -718,6 +784,8 @@ class _InlineAbilityChip extends StatelessWidget {
   final double rage;
   final bool hasShield;
   final bool activeBuff;
+  final double focusHpFrac;
+  final bool bombUp;
 
   @override
   Widget build(BuildContext context) {
@@ -726,7 +794,11 @@ class _InlineAbilityChip extends StatelessWidget {
     final noRage = rage + 0.001 < ability.resourceCost;
     final isCast = ability.resolvedFireMode == AbilityFireMode.cast;
     final justFired = ability.justFiredHud(cdLeft);
-    final ready = isCast && !gated && !onCd && !noRage;
+    final execFrac = ability.gate.executeHpFrac;
+    final execWaiting = execFrac != null && focusHpFrac > execFrac;
+    final bombWaiting = ability.gate.livingBombRefresh && bombUp;
+    final softGated = execWaiting || bombWaiting;
+    final ready = isCast && !gated && !onCd && !noRage && !softGated;
     final border = justFired
         ? GameTheme.torchHot
         : activeBuff
@@ -739,38 +811,53 @@ class _InlineAbilityChip extends StatelessWidget {
     final cdText = cdLeft < 10
         ? cdLeft.toStringAsFixed(1)
         : cdLeft.round().toString();
-    final label = onCd ? '${ability.shortLabel} $cdText' : ability.shortLabel;
+    final String label;
+    if (gated) {
+      label = '${ability.shortLabel}! (shield)';
+    } else if (onCd) {
+      label = '${ability.shortLabel} $cdText';
+    } else if (execWaiting) {
+      label = '${ability.shortLabel} ${(execFrac * 100).round()}%';
+    } else if (bombWaiting) {
+      label = 'Bomb';
+    } else {
+      label = ability.shortLabel;
+    }
     final chip = Opacity(
-        opacity: gated ? 0.4 : (ready || activeBuff || justFired ? 1 : 0.7),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          decoration: BoxDecoration(
-            color: justFired
-                ? GameTheme.hudPartyRowHot
-                : activeBuff
-                ? GameTheme.hudPartyRowWarm
-                : GameTheme.hudPartyRowIdle,
-            borderRadius: BorderRadius.circular(2),
-            border: Border.all(
-              color: border,
-              width: justFired || activeBuff || ready ? 1.4 : 1,
-            ),
-          ),
-          child: Text(
-            gated ? '${ability.shortLabel}! (shield)' : label,
-            style: GameTheme.body(
-              size: 13,
-              color: gated
-                  ? GameTheme.bloodLit
-                  : justFired
-                  ? GameTheme.torchHot
-                  : onCd
-                  ? GameTheme.parchmentDim
-                  : GameTheme.parchment,
-            ),
+      opacity: gated || softGated
+          ? 0.4
+          : (ready || activeBuff || justFired ? 1 : 0.7),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          color: justFired
+              ? GameTheme.hudPartyRowHot
+              : activeBuff
+              ? GameTheme.hudPartyRowWarm
+              : GameTheme.hudPartyRowIdle,
+          borderRadius: BorderRadius.circular(2),
+          border: Border.all(
+            color: border,
+            width: justFired || activeBuff || ready ? 1.4 : 1,
           ),
         ),
-      );
+        child: Text(
+          label,
+          style: GameTheme.body(
+            size: 13,
+            color: gated
+                ? GameTheme.bloodLit
+                : softGated
+                ? GameTheme.parchmentDim
+                : justFired
+                ? GameTheme.torchHot
+                : onCd
+                ? GameTheme.parchmentDim
+                : GameTheme.parchment,
+          ),
+        ),
+      ),
+    );
     return Tooltip(
       message: ability.tooltipMessage,
       waitDuration: const Duration(milliseconds: 350),
@@ -783,7 +870,7 @@ class _InlineAbilityChip extends StatelessWidget {
               duration: const Duration(seconds: 3),
               content: Text(
                 gated
-                    ? '${ability.tooltipMessage} · equip a shield'
+                    ? '${ability.tooltipMessage} - equip a shield'
                     : ability.tooltipMessage,
               ),
             ),
@@ -819,7 +906,7 @@ class _DpsMeterState extends State<DpsMeter> {
           };
     return switch (raw) {
       'COMBAT' => 'COM',
-      _ => raw.length <= 4 ? raw : raw.substring(0, 4),
+      _ => raw.length <= 6 ? raw : raw.substring(0, 6),
     };
   }
 
@@ -869,7 +956,21 @@ class _DpsMeterState extends State<DpsMeter> {
       }
     }
     if (peak == 0) {
-      return const SizedBox.shrink();
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+        decoration: BoxDecoration(
+          color: const Color(0xCC14110C),
+          borderRadius: BorderRadius.circular(3),
+          border: Border.all(color: const Color(0x665A5040)),
+        ),
+        child: Text(
+          '— dps',
+          style: GameTheme.pixel(
+            size: GameTheme.hudPixel,
+            color: GameTheme.parchmentDim,
+          ),
+        ),
+      );
     }
     final peakForBar = peak.clamp(1, 1 << 30);
 

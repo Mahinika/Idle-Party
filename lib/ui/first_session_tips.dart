@@ -37,8 +37,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'godhand',
       title: 'GOD HAND',
       body:
-          'Tap the map once to help: smash enemies and steer the party. Wait '
-          'for the ring (top-right) to refill, then tap again.',
+          'God Hand: fist button (top bar). Tap it to smash and steer. Wait '
+          'for the ring to refill, then tap again.',
     ),
     (
       id: 'bag',
@@ -51,9 +51,10 @@ class FirstSessionTips extends StatelessWidget {
       id: 'sanctuary',
       title: 'SANCTUARY',
       body:
-          'Spend essence under POWER → CAMP for idle gold and party power that '
-          'persists between runs. Hub gold/min ticks at the keep overnight '
-          '(enough to buy forge). Gold Find makes that number go up.',
+          'POWER → CAMP unlocks after your first Ascend or when you earn essence. '
+          'Spend essence there for idle gold and party power that persists between '
+          'runs. Hub gold/min ticks at the keep overnight (enough to buy forge). '
+          'Gold Find makes that number go up.',
     ),
     (
       id: 'market',
@@ -95,9 +96,8 @@ class FirstSessionTips extends StatelessWidget {
       title: 'AFTER ASCEND',
       body:
           'New kits land in PARTY — TODAY shows Meet … when something unlocked. '
-          'Gold & forge tracks wiped: farm early floors in a zone you already '
-          'opened, then Forge GOLD. '
-          'Spend essence under Forge → KEEP (relics / God Hand). Apex stays.',
+          'Spend essence under Forge → KEEP (relics / God Hand) and POWER → CAMP. '
+          'Apex stays.',
     ),
     (
       id: 'hardmode',
@@ -153,7 +153,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'prestige',
       title: 'ESSENCE SHOP',
       body:
-          'Spend essence in POWER → SHOP and Forge → KEEP for relics, God Hand, and prestige power that lasts.',
+          'Essence lasts between Ascends: POWER → CAMP for sanctuary tracks, '
+          'POWER → SHOP for prestige buys, Forge → KEEP for relics and God Hand.',
     ),
   ];
 
@@ -181,7 +182,11 @@ class FirstSessionTips extends StatelessWidget {
       if (tip.id == 'ascend' && !GameLogic.canAscend(s)) {
         continue;
       }
-      if (tip.id == 'post_ascend' && (s.ascensionLevel < 1 || inDungeon)) {
+      if (tip.id == 'post_ascend' &&
+          (s.ascensionLevel < 1 ||
+              inDungeon ||
+              // Rebuild chase owns the re-kit copy — avoid doubling AFTER ASCEND.
+              GameLogic.isFreshPrestigeGear(s))) {
         continue;
       }
       if ((tip.id == 'godhand' || tip.id == 'farm_push') && !inDungeon) {

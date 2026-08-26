@@ -617,9 +617,7 @@ Future<void> showOfflineProgressDialog(
       };
     case HubChaseKind.claimMissions:
       readyAction = () {
-        for (final m in director.state.missions) {
-          if (m.canClaim) director.claimMission(m.id);
-        }
+        director.claimAllReadyMissions();
         director.dismissOfflineSummary();
         Navigator.pop(context);
       };

@@ -164,21 +164,7 @@ class _HubScreenState extends State<HubScreen>
         return (
           'CLAIM QUESTS',
           () {
-            var claimed = 0;
-            for (final m in director.state.missions) {
-              if (m.canClaim) {
-                director.claimMission(m.id);
-                claimed++;
-              }
-            }
-            if (claimed > 0) {
-              director.showToast(
-                claimed == 1
-                    ? 'Claimed 1 quest'
-                    : 'Claimed $claimed quests',
-                life: 2.2,
-              );
-            }
+            director.claimAllReadyMissions();
             router.open(MenuRoute.meta, meta: MetaTab.jobs);
           },
         );
@@ -700,12 +686,7 @@ class _HubScreenState extends State<HubScreen>
                                                 HubChaseKind.meetHero ||
                                             !GameLogic.showDailyChase(state),
                                         onContracts: () {
-                                          for (final m
-                                              in director.state.missions) {
-                                            if (m.canClaim) {
-                                              director.claimMission(m.id);
-                                            }
-                                          }
+                                          director.claimAllReadyMissions();
                                         },
                                         onAscend: () =>
                                             confirmAscend(context, director),

@@ -477,7 +477,12 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                       ),
                     if (widget.director.clearSummary != null)
                       Align(
-                        alignment: const Alignment(0, -0.35),
+                        alignment: Alignment(
+                          0,
+                          (world != null && world.bossBannerTimer > 0)
+                              ? 0.08
+                              : -0.35,
+                        ),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -892,10 +897,14 @@ class GodHandRing extends StatelessWidget {
   const GodHandRing({
     super.key,
     required this.cooldown,
+    this.maxCooldown = 1.1,
     this.onTap,
     this.urgent = false,
   });
   final double cooldown;
+
+  /// Full CD length (matches [GameState.godHandCooldownSeconds]).
+  final double maxCooldown;
   final VoidCallback? onTap;
 
   /// Brighter ring after repeated wipes on the same floor (nudge, not redesign).
@@ -904,7 +913,8 @@ class GodHandRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ready = cooldown <= 0;
-    final t = ready ? 1.0 : (1.0 - (cooldown / 1.1).clamp(0.0, 1.0));
+    final cdMax = maxCooldown > 0.05 ? maxCooldown : 1.1;
+    final t = ready ? 1.0 : (1.0 - (cooldown / cdMax).clamp(0.0, 1.0));
     final color = ready
         ? (urgent ? GameTheme.accentWarn : GameTheme.torchHot)
         : GameTheme.parchmentDim;
@@ -949,7 +959,7 @@ class GodHandRing extends StatelessWidget {
                             child: ready
                                 ? KenneySprite(
                                     asset: KenneyAssets.fist,
-                                    size: 14,
+                                    size: 18,
                                     color: color,
                                   )
                                 : Text(

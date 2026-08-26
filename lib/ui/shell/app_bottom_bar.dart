@@ -36,6 +36,8 @@ class AppBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // FEEL 329: four dungeon pillars (PARTY/POWER/META/HUB) need denser labels.
+    final dense = onHubClose != null;
     final reason = alerts.party.isQuiet
         ? alerts.meta.reason
         : alerts.party.reason;
@@ -71,6 +73,7 @@ class AppBottomBar extends StatelessWidget {
                 icon: KenneyAssets.helmet,
                 badge: alerts.party.badge,
                 selected: route == MenuRoute.party,
+                dense: dense,
                 onTap: onParty,
               ),
             ),
@@ -80,6 +83,7 @@ class AppBottomBar extends StatelessWidget {
                 icon: CustomAssets.iconAxe,
                 badge: alerts.power.badge,
                 selected: route == MenuRoute.power,
+                dense: dense,
                 onTap: onPower,
               ),
             ),
@@ -92,6 +96,7 @@ class AppBottomBar extends StatelessWidget {
                     route == MenuRoute.meta ||
                     route == MenuRoute.settings ||
                     route == MenuRoute.jobs,
+                dense: dense,
                 onTap: onMeta,
               ),
             ),
@@ -101,6 +106,7 @@ class AppBottomBar extends StatelessWidget {
                   label: 'HUB',
                   icon: KenneyAssets.iconDoor,
                   selected: false,
+                  dense: dense,
                   onTap: onHubClose!,
                 ),
               ),
@@ -138,6 +144,7 @@ class AppBottomBarItem extends StatelessWidget {
     required this.onTap,
     this.urgent = false,
     this.badge = '',
+    this.dense = false,
   });
 
   final String label;
@@ -147,6 +154,9 @@ class AppBottomBarItem extends StatelessWidget {
 
   /// Small count / star drawn on the icon when something waits inside.
   final String badge;
+
+  /// Tighter icon/label when four dungeon pillars share ~360px.
+  final bool dense;
   final VoidCallback onTap;
 
   @override
@@ -155,6 +165,8 @@ class AppBottomBarItem extends StatelessWidget {
         ? GameTheme.accentWarn
         : (selected ? GameTheme.torchHot : GameTheme.parchmentDim);
     final semanticsLabel = badge.isEmpty ? label : '$label $badge waiting';
+    final iconSize = dense ? 16.0 : 18.0;
+    final labelSize = dense ? 11.0 : 12.0;
     return WebClickScope(
       label: label,
       onPressed: onTap,
@@ -173,8 +185,8 @@ class AppBottomBarItem extends StatelessWidget {
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: dense ? 6 : 10,
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
@@ -184,11 +196,11 @@ class AppBottomBarItem extends StatelessWidget {
                     borderRadius: BorderRadius.circular(GameTheme.radiusSm),
                   ),
                   child: badge.isEmpty
-                      ? KenneySprite(asset: icon, size: 18)
+                      ? KenneySprite(asset: icon, size: iconSize)
                       : Stack(
                           clipBehavior: Clip.none,
                           children: [
-                            KenneySprite(asset: icon, size: 18),
+                            KenneySprite(asset: icon, size: iconSize),
                             Positioned(
                               right: -7,
                               top: -6,
@@ -202,7 +214,7 @@ class AppBottomBarItem extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 13, color: color),
+                  style: GameTheme.body(size: labelSize, color: color),
                 ),
               ],
             ),

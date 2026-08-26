@@ -140,7 +140,7 @@ abstract final class WipeAdvice {
     final bag = _bagUpgradeLine(state);
     if (bag != null) return bag;
 
-    if (fight.elapsedSec < 1 || fight.waveHp < 1 || fight.damageDealt < 1) {
+    if (fight.elapsedSec < 0.5 || fight.waveHp < 1 || fight.damageDealt < 1) {
       return null;
     }
 

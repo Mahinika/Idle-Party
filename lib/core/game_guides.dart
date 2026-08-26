@@ -67,7 +67,9 @@ abstract final class GameGuides {
           '• Boss floors use a special arena.\n'
           '• Settings VFX: Full = all effects; Lite = no floaters/bursts (discs & auras stay); '
           'Minimal = reduce motion.\n'
-          '• Party HP strip is bottom-left — tap a hero to open their kit, tap again to fold. Level and XP sit under HP.\n'
+          '• Party HP strip is bottom-left — tap a hero to open their kit. '
+          'Between fights, tap the same hero again to fold. Mid-fight the kit stays open. '
+          'Level and XP sit under HP.\n'
           '• Gold in the top bar ticks up as pickups land.\n'
           '• Target chip is top-right (name + HP).\n'
           '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.',
@@ -219,6 +221,7 @@ abstract final class GameGuides {
       title: 'SANCTUARY',
       body:
           'POWER → CAMP. Spend essence on permanent tracks.\n\n'
+          '• CAMP unlocks after your first Ascend or when you earn essence.\n'
           '• See POWER → INCOME for Hub / Run rates and Gold Find upgrades.\n'
           '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
           '• Hub gold/min ticks while you sit at the keep — slower than a dungeon '
@@ -335,7 +338,8 @@ abstract final class GameGuides {
           '(smaller rungs earlier); top rung repeats.\n'
           '• Claim 3 in a row for a +5e chain bonus.\n'
           '• Hub META badge may show ! when claims are ready.\n'
-          '• The top CLAIM chip claims all ready quests at once '
+          '• TODAY and META → QUESTS both use CLAIM QUESTS (count when several).\n'
+          '• The dungeon top CLAIM chip claims all ready quests at once '
           '(visible in combat too; long-press opens the list).',
     ),
     GuideTopic(
@@ -458,7 +462,8 @@ abstract final class GameGuides {
       id: 'ui',
       title: 'UI TIPS',
       body:
-          '• Party strip (bottom-left) fades after idle — tap a hero for kit, tap again to fold.\n'
+          '• Party strip (bottom-left) fades after idle — tap a hero for kit. '
+          'Between fights, tap again to fold; mid-fight the kit stays open.\n'
           '• Target chip sits top-right (name + HP).\n'
           '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.\n'
           '• Settings: text scale (S/M/L/XL), dungeon zoom Close/Normal/Wide, '

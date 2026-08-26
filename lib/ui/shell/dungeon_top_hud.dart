@@ -49,8 +49,10 @@ class DungeonTopHud extends StatelessWidget {
       PopupMenuItem(
         enabled: false,
         child: Text(
-          'Floor · F$floor'
-          '${state.keystoneRunActive ? ' · KEY+${state.keystoneRunLevel}' : ''}',
+          (state.inGauntlet || state.inAnyRiftMode)
+              ? 'Gauntlet — no floor jump'
+              : 'Floor · F$floor'
+                  '${state.keystoneRunActive ? ' · KEY+${state.keystoneRunLevel}' : ''}',
           style: GameTheme.pixel(
             size: GameTheme.hudPixel,
             color: GameTheme.torchHot,
@@ -133,17 +135,54 @@ class DungeonTopHud extends StatelessWidget {
     return items;
   }
 
-  void _onFloorMenu(String value, int floor) {
+    void _requestTravel(BuildContext context, int target) {
+    final fighting =
+        director.spatial?.enemies.any((e) => e.isAlive) ?? false;
+    if (!fighting) {
+      director.travelToFloor(target);
+      return;
+    }
+    showDialog<bool>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Leave this fight?',
+        content: Text(
+          'Enemies are still alive on this floor.\n\n'
+          'Jump to F$target anyway? Progress on this chamber is lost.',
+          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        ),
+        actions: [
+          KenneyButton(
+            label: 'CANCEL',
+            style: KenneyButtonStyle.grey,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, false),
+          ),
+          KenneyButton(
+            label: 'JUMP',
+            style: KenneyButtonStyle.brown,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, true),
+          ),
+        ],
+      ),
+    ).then((ok) {
+      if (ok == true) director.travelToFloor(target);
+    });
+  }
+
+  void _onFloorMenu(BuildContext context, String value, int floor) {
     if (value.startsWith('floor_')) {
       final target = int.tryParse(value.substring(6));
-      if (target != null) director.travelToFloor(target);
+      if (target != null) _requestTravel(context, target);
       return;
     }
     switch (value) {
       case 'down':
-        director.travelToFloor(floor - 1);
+        _requestTravel(context, floor - 1);
       case 'up':
-        director.travelToFloor(floor + 1);
+        _requestTravel(context, floor + 1);
       case 'settings':
         onOpenSettings();
       case 'quests':
@@ -152,11 +191,7 @@ class DungeonTopHud extends StatelessWidget {
   }
 
   void _claimAllReadyMissions() {
-    for (final mission in state.missions) {
-      if (mission.canClaim) {
-        director.claimMission(mission.id);
-      }
-    }
+    director.claimAllReadyMissions();
   }
 
   @override
@@ -178,6 +213,16 @@ class DungeonTopHud extends StatelessWidget {
     final keyBit = state.keystoneRunActive
         ? ' · KEY +${state.keystoneRunLevel}'
         : (state.hardmodeLevel > 0 ? ' · KEY +${state.hardmodeLevel}' : '');
+    final keyTimerBit = state.keystoneRunActive
+        ? ' · ${Keystone.formatTimer(state.keystoneTimerMs)}/'
+            '${Keystone.formatTimer(state.keystoneParMs)}'
+        : '';
+    final zoneShort = () {
+      final parts = dungeonName.split(RegExp(r"[\s']+"));
+      final word =
+          parts.firstWhere((p) => p.isNotEmpty, orElse: () => dungeonName);
+      return word.length > 10 ? word.substring(0, 10) : word;
+    }();
     final placeLine = state.inGauntlet
         ? 'Gauntlet · F$floor'
         : state.inRift
@@ -198,7 +243,7 @@ class DungeonTopHud extends StatelessWidget {
           )
         : state.inWorldBoss
         ? 'Ashen Crown'
-        : '$dungeonName · F$floor$keyBit';
+        : '$zoneShort · F$floor$keyBit$keyTimerBit';
     void setMode(DungeonMode mode) {
       final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);
       if (fighting && state.dungeonMode != mode) {
@@ -303,22 +348,41 @@ class DungeonTopHud extends StatelessWidget {
                       )
                     else ...[
                       DungeonModeChip(
-                        label: 'FARM',
+                        label: 'LOOP',
                         selected: farm,
                         dense: true,
-                        tip: 'Loop this floor after clear for loot',
+                        tip: 'FARM — loop this floor after clear for loot',
                         onTap: () => setMode(DungeonMode.farm),
                       ),
                       const SizedBox(width: 3),
                       DungeonModeChip(
-                        label: 'PUSH',
+                        label: 'CLIMB',
                         selected: !farm,
                         dense: true,
-                        tip: 'Advance floors toward the boss',
+                        tip: 'PUSH — advance floors toward the boss',
                         onTap: () => setMode(DungeonMode.push),
                       ),
                     ],
-                    // Shrink dots / God Hand / gold when CLAIM + ⋯ crowd 360px.
+                    // Keep God Hand ≥ minTouch; only gold/essence may shrink.
+                    if (world != null) ...[
+                      const SizedBox(width: 4),
+                      ChamberDots(world: world),
+                      const SizedBox(width: 4),
+                      Text(
+                        _godHandStyleLabel(state.metaDepth.godHandStyle),
+                        style: GameTheme.pixel(
+                          size: 6,
+                          color: GameTheme.parchmentDim,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      GodHandRing(
+                        cooldown: world.godHandCooldown,
+                        maxCooldown: state.godHandCooldownSeconds,
+                        urgent: state.wipeStreakCount >= 2,
+                        onTap: () => director.godHandAtFocus(),
+                      ),
+                    ],
                     Expanded(
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
@@ -326,24 +390,16 @@ class DungeonTopHud extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (world != null) ...[
+                            if (state.keystoneRunActive ||
+                                state.inGauntlet ||
+                                state.inAnyRiftMode) ...[
                               const SizedBox(width: 4),
-                              ChamberDots(world: world),
-                              const SizedBox(width: 4),
-                              Text(
-                                _godHandStyleLabel(
-                                  state.metaDepth.godHandStyle,
+                              Semantics(
+                                label: 'Essence ${state.essence}',
+                                child: MenuChrome.chip(
+                                  icon: KenneyAssets.vialBlue,
+                                  label: formatCount(state.essence),
                                 ),
-                                style: GameTheme.pixel(
-                                  size: 6,
-                                  color: GameTheme.parchmentDim,
-                                ),
-                              ),
-                              const SizedBox(width: 2),
-                              GodHandRing(
-                                cooldown: world.godHandCooldown,
-                                urgent: state.wipeStreakCount >= 2,
-                                onTap: () => director.godHandAtFocus(),
                               ),
                             ],
                             const SizedBox(width: 4),
@@ -379,7 +435,7 @@ class DungeonTopHud extends StatelessWidget {
                           tooltip: 'Floor',
                           padding: EdgeInsets.zero,
                           color: GameTheme.stoneDeep,
-                          onSelected: (value) => _onFloorMenu(value, floor),
+                          onSelected: (value) => _onFloorMenu(context, value, floor),
                           itemBuilder: (context) =>
                               _floorMenuItems(floor: floor, includeExtras: true),
                           child: Center(
@@ -486,14 +542,14 @@ class DungeonTopHud extends StatelessWidget {
                           )
                         else ...[
                           DungeonModeChip(
-                            label: 'FARM',
+                            label: 'LOOP FARM',
                             selected: farm,
                             tip: 'Loop this floor after clear for loot',
                             onTap: () => setMode(DungeonMode.farm),
                           ),
                           const SizedBox(width: 4),
                           DungeonModeChip(
-                            label: 'PUSH',
+                            label: 'CLIMB PUSH',
                             selected: !farm,
                             tip: 'Advance floors toward the boss',
                             onTap: () => setMode(DungeonMode.push),
@@ -513,7 +569,8 @@ class DungeonTopHud extends StatelessWidget {
                           const SizedBox(width: 4),
                           GodHandRing(
                             cooldown: world.godHandCooldown,
-                            urgent: state.wipeStreakCount >= 2,
+                            maxCooldown: state.godHandCooldownSeconds,
+                                urgent: state.wipeStreakCount >= 2,
                             onTap: () => director.godHandAtFocus(),
                           ),
                         ],
@@ -530,7 +587,7 @@ class DungeonTopHud extends StatelessWidget {
                               padding: EdgeInsets.zero,
                               color: GameTheme.stoneDeep,
                               onSelected: (value) =>
-                                  _onFloorMenu(value, floor),
+                                  _onFloorMenu(context, value, floor),
                               itemBuilder: (context) => _floorMenuItems(
                                 floor: floor,
                                 includeExtras: false,

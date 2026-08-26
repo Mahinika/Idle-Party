@@ -104,7 +104,7 @@ void main() {
       damageDealt: 10,
       damageTaken: 10,
       partyMaxHp: 400,
-      elapsedSec: 0.8,
+      elapsedSec: 0.4,
     );
     expect(WipeAdvice.lineFor(state: state, fight: fight), isNull);
   });

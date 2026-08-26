@@ -3705,7 +3705,7 @@ class OfflineProgressResult {
       levelsGained > 0;
 
   bool get hasSummary =>
-      secondsApplied >= 45 &&
+      secondsApplied >= 30 &&
       (goldGained > 0 ||
           essenceGained > 0 ||
           roomsCleared > 0 ||
