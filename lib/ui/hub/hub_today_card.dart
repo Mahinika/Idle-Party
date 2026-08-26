@@ -197,6 +197,7 @@ class HubUrgentRow extends StatelessWidget {
     required this.onClaimDailyVault,
     this.hideAscend = false,
     this.hideVaultClaim = false,
+    this.hideVaultProgress = false,
     this.hideMissionClaim = false,
     this.hideDaily = false,
   });
@@ -216,12 +217,14 @@ class HubUrgentRow extends StatelessWidget {
   final VoidCallback onClaimDailyVault;
   final bool hideAscend;
   final bool hideVaultClaim;
+  final bool hideVaultProgress;
   final bool hideMissionClaim;
   final bool hideDaily;
 
   @override
   Widget build(BuildContext context) {
     final showVaultProgress =
+        !hideVaultProgress &&
         !weeklyClaimed &&
         weeklyProgress > 0 &&
         weeklyProgress < GameLogic.dailyVaultClearTarget &&

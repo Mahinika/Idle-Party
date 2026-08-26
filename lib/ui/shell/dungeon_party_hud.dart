@@ -452,6 +452,15 @@ class _PartyRow extends StatelessWidget {
     return '${'R' * filled}${'·' * (_runicPipCount - filled)}';
   }
 
+  static bool _showsComboPoints(HeroSpecId specId) =>
+      switch (specId) {
+        HeroSpecId.combat ||
+        HeroSpecId.subtlety ||
+        HeroSpecId.assassination ||
+        HeroSpecId.feral => true,
+        _ => false,
+      };
+
   static String? _companionLine(
     SpatialActor? spatial,
     SpatialWorld? world,
@@ -709,7 +718,7 @@ class _PartyRow extends StatelessWidget {
                               ),
                             ),
                           ],
-                          if (hero.gearAffinity == HeroRole.rogue &&
+                          if (_showsComboPoints(hero.specId) &&
                               kitActor.comboPoints > 0) ...[
                             const SizedBox(width: 4),
                             Text(
@@ -770,9 +779,7 @@ class _PartyRow extends StatelessWidget {
               ),
               SizedBox(width: phone ? 4 : 5),
               Text(
-                phone
-                    ? '$liveHp ${(frac * 100).round()}%'
-                    : '$liveHp',
+                '$liveHp/$maxHp',
                 style: GameTheme.body(
                   size: phone ? 10 : 12,
                   color: GameTheme.parchmentDim,
@@ -796,6 +803,7 @@ class _PartyRow extends StatelessWidget {
                     focusHpFrac: _focusHpFrac(kitActor, world),
                     bombUp: _focusBombUp(kitActor, world),
                     isRunic: isRunic,
+                    isHealer: hero.gearAffinity == HeroRole.healer,
                   ),
               ],
             ),
@@ -869,7 +877,11 @@ class _PartyRow extends StatelessWidget {
         AbilityId.combustion => 2,
         AbilityId.aimedShot || AbilityId.chimeraShot => 0,
         AbilityId.steadyShot => 3,
-        AbilityId.charge || AbilityId.taunt => 0,
+        AbilityId.charge ||
+        AbilityId.taunt ||
+        AbilityId.handOfReckoning ||
+        AbilityId.darkCommand ||
+        AbilityId.growl => 0,
         AbilityId.shieldWall || AbilityId.lastStand => partyHealthy ? 6 : 2,
         _ => 4,
       };
@@ -901,6 +913,7 @@ class _InlineAbilityChip extends StatelessWidget {
     this.focusHpFrac = 1.0,
     this.bombUp = false,
     this.isRunic = false,
+    this.isHealer = false,
   });
 
   final ClassAbilityDef ability;
@@ -911,6 +924,7 @@ class _InlineAbilityChip extends StatelessWidget {
   final double focusHpFrac;
   final bool bombUp;
   final bool isRunic;
+  final bool isHealer;
 
   @override
   Widget build(BuildContext context) {
@@ -944,7 +958,7 @@ class _InlineAbilityChip extends StatelessWidget {
     } else if (execWaiting) {
       label = '${ability.shortLabel} ${(execFrac * 100).round()}%';
     } else if (bombWaiting) {
-      label = 'Bomb';
+      label = '${ability.shortLabel}·up';
     } else {
       label = isRunic && ability.resourceCost > 0
           ? '${ability.shortLabel}·${ability.resourceCost}'
@@ -971,7 +985,7 @@ class _InlineAbilityChip extends StatelessWidget {
         child: Text(
           label,
           style: GameTheme.body(
-            size: 13,
+            size: isHealer ? 14 : 13,
             color: gated
                 ? GameTheme.bloodLit
                 : softGated
@@ -980,6 +994,8 @@ class _InlineAbilityChip extends StatelessWidget {
                 ? GameTheme.torchHot
                 : onCd
                 ? GameTheme.parchmentDim
+                : isHealer
+                ? GameTheme.hudSpiritText
                 : GameTheme.parchment,
           ),
         ),

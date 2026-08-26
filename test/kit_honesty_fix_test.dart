@@ -1053,14 +1053,29 @@ void main() {
     expect(b.rootTimer, 0);
   });
 
-  test('HUD hides white-hit dumps and marks riders', () {
+  test('HUD shows key passives and marks rider fire modes', () {
     expect(
       ClassKits.hudAbilitiesAtSpec(HeroSpecId.combat, 15).map((d) => d.id),
-      isNot(contains(AbilityId.eviscerate)),
+      containsAll([
+        AbilityId.sinisterStrike,
+        AbilityId.eviscerate,
+        AbilityId.sliceAndDice,
+      ]),
     );
     expect(
       ClassKits.hudAbilitiesAtSpec(HeroSpecId.protection, 15).map((d) => d.id),
-      isNot(contains(AbilityId.revenge)),
+      containsAll([
+        AbilityId.defensiveStance,
+        AbilityId.revenge,
+      ]),
+    );
+    expect(
+      ClassKits.hudAbilitiesAtSpec(HeroSpecId.arms, 12).map((d) => d.id),
+      contains(AbilityId.armsStance),
+    );
+    expect(
+      ClassKits.hudAbilitiesAtSpec(HeroSpecId.fury, 12).map((d) => d.id),
+      contains(AbilityId.berserkerStance),
     );
     expect(
       ClassKits.defFor(AbilityId.eviscerate)!.resolvedFireMode,

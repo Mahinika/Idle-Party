@@ -240,16 +240,40 @@ abstract final class MenuChrome {
 
   /// Tab label that also registers with [WebClickBridge] (CanvasKit playtest).
   static Widget bridgedTab(String label, {required VoidCallback onSelect}) {
+    return bridgedTabScoped(label, onSelect: onSelect);
+  }
+
+  /// Tab with a tiny RUN / ACCOUNT scope line (POWER pillar clarity).
+  static Widget bridgedTabScoped(
+    String label, {
+    String? scope,
+    required VoidCallback onSelect,
+  }) {
+    final semantics = scope == null ? label : '$label · $scope';
     return Tab(
       child: WebClickScope(
-        label: label,
+        label: semantics,
         onPressed: onSelect,
         child: Semantics(
           button: true,
-          label: label,
+          label: semantics,
           onTap: onSelect,
           excludeSemantics: true,
-          child: Text(label),
+          child: scope == null
+              ? Text(label)
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(label),
+                    Text(
+                      scope,
+                      style: GameTheme.pixel(
+                        size: 8,
+                        color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );

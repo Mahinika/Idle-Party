@@ -494,6 +494,8 @@ class _MarketOverlayState extends State<MarketOverlay> {
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 10),
+        const Divider(height: 1, color: GameTheme.border),
+        const SizedBox(height: 8),
         MenuChrome.sectionLabelScoped('GEAR LISTINGS', scope: MenuScope.run),
         const SizedBox(height: 4),
         Text(

@@ -196,7 +196,7 @@ class _HubScreenState extends State<HubScreen>
       case HubChaseKind.keystone:
         final id = chase.zoneId ?? _selectedId;
         return (
-          'ENTER KEY +${chase.keyLevel ?? 1}',
+          '🔑 ENTER KEY +${chase.keyLevel ?? 1}',
           () {
             final key = chase.keyLevel ?? 1;
             director.setHardmodeLevel(key);
@@ -229,7 +229,7 @@ class _HubScreenState extends State<HubScreen>
           },
         );
       case HubChaseKind.gauntletMilestone:
-        return ('GAUNTLET', () => confirmGauntletRun(context, director));
+        return ('⚔ GAUNTLET', () => confirmGauntletRun(context, director));
       case HubChaseKind.riftMilestone:
         return ('◈ RIFT', () => confirmRiftRun(context, director));
       case HubChaseKind.greaterRiftMilestone:
@@ -318,6 +318,207 @@ class _HubScreenState extends State<HubScreen>
           ),
         );
     }
+  }
+
+  Widget _hubActionColumn(
+    BuildContext context, {
+    required bool short,
+    required bool unlockedSelected,
+    required bool canAscend,
+  }) {
+    final contract = ChaseContract.fromState(state);
+    final chase = contract.chase;
+    // FEEL 040: KEY enter zone matches map HERE.
+    if (chase.kind == HubChaseKind.keystone &&
+        chase.zoneId != null &&
+        !_userPickedZone &&
+        _selectedId != chase.zoneId) {
+      _selectedId = chase.zoneId!;
+    }
+    final (actionLabel, onAction) = _chaseAction(context, chase);
+    final chaseActionLabel = actionLabel;
+    final ready = chase.urgency == HubChaseUrgency.ready;
+    // One primary CTA on phone: fold TODAY ENTER into the big button.
+    final foldEnter =
+        onAction != null &&
+        (chaseActionLabel == 'ENTER' ||
+            chaseActionLabel == 'DAILY' ||
+            (chaseActionLabel?.contains('ENTER KEY') ?? false));
+    final endgamePrimary =
+        onAction != null &&
+        chaseActionLabel != null &&
+        hubChaseOwnsEndgameRow(chase.kind);
+    final readyPrimary =
+        ready &&
+        onAction != null &&
+        chaseActionLabel != null &&
+        !foldEnter;
+    final enterLabel = chase.kind == HubChaseKind.keystone
+        ? '🔑 ENTER KEY +${chase.keyLevel ?? state.hardmodeLevel}'
+        : (chase.kind == HubChaseKind.dailyRun ? 'DAILY RUN' : 'ENTER DUNGEON');
+    final enterAction =
+        unlockedSelected ? () => widget.onEnterDungeon(_selectedId) : null;
+    final String primaryLabel;
+    final VoidCallback? primaryAction;
+    final String? secondaryLabel;
+    final VoidCallback? secondaryAction;
+    if (foldEnter || endgamePrimary) {
+      primaryLabel = foldEnter ? enterLabel : chaseActionLabel!;
+      primaryAction = onAction;
+      if (chase.kind == HubChaseKind.ashenCrown &&
+          GameLogic.endgameUnlocked(state)) {
+        secondaryLabel = 'PRACTICE';
+        secondaryAction = () => confirmAshenCrown(
+          context,
+          director,
+          practice: true,
+        );
+      } else {
+        secondaryLabel = null;
+        secondaryAction = null;
+      }
+    } else if (readyPrimary) {
+      primaryLabel = chaseActionLabel;
+      primaryAction = onAction;
+      final showSecondaryEnter =
+          enterAction != null &&
+          chase.kind != HubChaseKind.claimDailyVault &&
+          chase.kind != HubChaseKind.claimMissions &&
+          chase.kind != HubChaseKind.meetHero &&
+          chase.kind != HubChaseKind.equipBag &&
+          chase.kind != HubChaseKind.marketUpgrade &&
+          chase.kind != HubChaseKind.dailyRun &&
+          (chase.kind != HubChaseKind.ascend || state.ascensionLevel == 0);
+      secondaryLabel = showSecondaryEnter ? enterLabel : null;
+      secondaryAction = showSecondaryEnter ? enterAction : null;
+    } else if (chase.kind == HubChaseKind.marketUpgrade &&
+        onAction != null &&
+        chaseActionLabel != null) {
+      primaryLabel = chaseActionLabel;
+      primaryAction = onAction;
+      secondaryLabel = enterAction != null ? enterLabel : null;
+      secondaryAction = enterAction;
+    } else {
+      primaryLabel = enterLabel;
+      primaryAction = enterAction;
+      secondaryLabel = null;
+      secondaryAction = null;
+    }
+    final showMetaKeyLink = GameLogic.showKeystoneJargon(state);
+    final weekMod = state.metaDepth.weeklyModifier;
+    final showWeekAffix =
+        !short && weekMod.isNotEmpty && GameLogic.showKeystoneJargon(state);
+    final powerupsActive =
+        AdBoost.isActive(state.metaDepth.adBoostUntilMs);
+    final showPowerups = !short || powerupsActive;
+    final vaultOwnedByChase =
+        chase.kind == HubChaseKind.claimDailyVault ||
+        chase.kind == HubChaseKind.dailyVaultProgress;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showWeekAffix) ...[
+          Text(
+            'Week · ${Keystone.label(weekMod)} — ${Keystone.blurb(weekMod)}',
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+          ),
+          const SizedBox(height: 4),
+        ],
+        HubTodayCard(
+          chase: chase,
+          compact: true,
+          hideDetail: short,
+          actionLabel: foldEnter || readyPrimary ? null : chaseActionLabel,
+          onAction: foldEnter || readyPrimary ? null : onAction,
+        ),
+        if (!short)
+          HubMetaPulse(
+            state: state,
+            chaseKind: chase.kind,
+            chaseUrgency: chase.urgency,
+          ),
+        SizedBox(height: short ? 4 : 6),
+        AnimatedBuilder(
+          animation: _torch,
+          builder: (context, child) => Transform.scale(
+            scale: 1.0 + (_torch.value * 0.012),
+            child: child,
+          ),
+          child: KenneyButton(
+            label: primaryLabel,
+            tip: chase.kind == HubChaseKind.keystone
+                ? 'Starts your preferred KEY on this zone'
+                : readyPrimary
+                ? 'TODAY — do this first'
+                : 'Enter the selected dungeon',
+            style: KenneyButtonStyle.brown,
+            primary: true,
+            onPressed: primaryAction,
+          ),
+        ),
+        if (secondaryLabel != null && secondaryAction != null) ...[
+          const SizedBox(height: 4),
+          KenneyButton(
+            label: secondaryLabel,
+            tip: secondaryLabel.startsWith('ENTER') ||
+                    secondaryLabel == 'DAILY RUN'
+                ? 'Farm the selected zone'
+                : 'Also available',
+            style: KenneyButtonStyle.grey,
+            onPressed: secondaryAction,
+          ),
+        ],
+        if (showPowerups)
+          HubPowerupsCard(
+            state: state,
+            onOpen: () => openPowerupsSheet(context, director),
+          ),
+        if (showMetaKeyLink) ...[
+          const SizedBox(height: 2),
+          MenuChrome.textLink(
+            label: 'META → KEY',
+            onPressed: () =>
+                router.open(MenuRoute.meta, meta: MetaTab.key),
+          ),
+        ],
+        if (chase.urgency != HubChaseUrgency.ready)
+          HubUrgentRow(
+            claimable: state.missions.where((m) => m.canClaim).length,
+            canAscend: canAscend,
+            ascendLabel: canAscend
+                ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
+                : null,
+            hideAscend: // FEEL 050
+                chase.kind == HubChaseKind.ascend ||
+                chase.kind == HubChaseKind.dailyRun,
+            hideVaultClaim: vaultOwnedByChase,
+            hideVaultProgress: vaultOwnedByChase,
+            hideMissionClaim: chase.kind == HubChaseKind.claimMissions,
+            hideDaily:
+                chase.kind == HubChaseKind.dailyRun ||
+                chase.kind == HubChaseKind.keystone ||
+                chase.kind == HubChaseKind.dailyVaultProgress ||
+                chase.kind == HubChaseKind.meetHero ||
+                !GameLogic.showDailyChase(state),
+            onContracts: () {
+              director.claimAllReadyMissions();
+            },
+            onAscend: () => confirmAscend(context, director),
+            dailyClaimed: director.isDailyClaimedToday,
+            onDaily: () => confirmDailyRun(context, director),
+            weeklyReady: GameLogic.canClaimDailyVault(state),
+            weeklyProgress: state.metaDepth.dailyVaultClears,
+            weeklyClaimed: state.metaDepth.dailyVaultClaimed,
+            weeklyBestTimedKey: state.metaDepth.dailyBestTimedKey,
+            vaultClaimEssence: GameLogic.dailyVaultClaimPreviewEssence(state),
+            onClaimDailyVault: director.claimDailyVault,
+          ),
+      ],
+    );
   }
 
   @override
@@ -410,8 +611,9 @@ class _HubScreenState extends State<HubScreen>
                                 ),
                               ),
                               if (director.offlineSummary != null) ...[
-                                const SizedBox(height: 8),
+                                SizedBox(height: short ? 4 : 8),
                                 HubOfflineBanner(
+                                  compact: short,
                                   text: director.offlineSummary!.headline,
                                   onDismiss: () => showOfflineProgressDialog(
                                     context,
@@ -429,16 +631,17 @@ class _HubScreenState extends State<HubScreen>
                                 ),
                               ],
                               if (director.showPlayUpdateNotice) ...[
-                                const SizedBox(height: 8),
+                                SizedBox(height: short ? 4 : 8),
                                 HubPlayUpdateBanner(
+                                  compact: short,
                                   onUpdate: director.openPlayUpdate,
                                   onLater: director.dismissPlayUpdateNotice,
                                 ),
                               ],
-                              const SizedBox(height: 6),
+                              SizedBox(height: short ? 4 : 6),
                               // World Path: painted campaign map + tappable rings.
                               Expanded(
-                                flex: short ? 5 : 3,
+                                flex: short ? 7 : 1,
                                 child: AnimatedBuilder(
                                   animation: _torch,
                                   builder: (context, _) => ZonePathMap(
@@ -462,271 +665,28 @@ class _HubScreenState extends State<HubScreen>
                                   partyLevel: GameLogic.partyMeanLevel(state),
                                 ),
                               ],
-                              SizedBox(height: short ? 2 : 6),
-                              Builder(
-                                builder: (context) {
-                                  final contract = ChaseContract.fromState(
-                                    state,
-                                  );
-                                  final chase = contract.chase;
-                                  // FEEL 040
-                                  if (chase.kind == HubChaseKind.keystone &&
-                                      chase.zoneId != null &&
-                                      !_userPickedZone &&
-                                      _selectedId != chase.zoneId) {
-                                    _selectedId = chase.zoneId!;
-                                  }
-                                  final (actionLabel, onAction) = _chaseAction(
-                                    context,
-                                    chase,
-                                  );
-                                  final ready =
-                                      chase.urgency == HubChaseUrgency.ready;
-                                  // One primary CTA on phone: fold TODAY ENTER
-                                  // into the big button so KEY/ENTER don't double.
-                                  final foldEnter =
-                                      onAction != null &&
-                                      (actionLabel == 'ENTER' ||
-                                          actionLabel == 'DAILY' ||
-                                          (actionLabel?.startsWith('ENTER KEY') ??
-                                              false));
-                                  final endgamePrimary =
-                                      onAction != null &&
-                                      actionLabel != null &&
-                                      hubChaseOwnsEndgameRow(chase.kind);
-                                  final readyPrimary =
-                                      ready &&
-                                      onAction != null &&
-                                      actionLabel != null &&
-                                      !foldEnter;
-                                  final enterLabel =
-                                      chase.kind == HubChaseKind.keystone
-                                      ? 'ENTER KEY +${chase.keyLevel ?? state.hardmodeLevel}'
-                                      : (chase.kind == HubChaseKind.dailyRun
-                                            ? 'DAILY RUN'
-                                            : 'ENTER DUNGEON');
-                                  final enterAction = unlockedSelected
-                                      ? () => widget.onEnterDungeon(_selectedId)
-                                      : null;
-                                  final String primaryLabel;
-                                  final VoidCallback? primaryAction;
-                                  final String? secondaryLabel;
-                                  final VoidCallback? secondaryAction;
-                                  if (foldEnter || endgamePrimary) {
-                                    primaryLabel = foldEnter
-                                        ? enterLabel
-                                        : actionLabel!;
-                                    primaryAction = onAction;
-                                    // Ashen: PRACTICE as secondary when ticket chase.
-                                    if (chase.kind == HubChaseKind.ashenCrown &&
-                                        GameLogic.endgameUnlocked(state)) {
-                                      secondaryLabel = 'PRACTICE';
-                                      secondaryAction = () => confirmAshenCrown(
-                                        context,
-                                        director,
-                                        practice: true,
-                                      );
-                                    } else {
-                                      secondaryLabel = null;
-                                      secondaryAction = null;
-                                    }
-                                  } else if (readyPrimary) {
-                                    primaryLabel = actionLabel;
-                                    primaryAction = onAction;
-                                    final showSecondaryEnter =
-                                        enterAction != null &&
-                                        chase.kind !=
-                                            HubChaseKind.claimDailyVault &&
-                                        chase.kind !=
-                                            HubChaseKind.claimMissions &&
-                                        chase.kind != HubChaseKind.meetHero &&
-                                        chase.kind != HubChaseKind.equipBag &&
-                                        chase.kind != HubChaseKind.marketUpgrade &&
-                                        chase.kind != HubChaseKind.dailyRun &&
-                                        (chase.kind != HubChaseKind.ascend ||
-                                            state.ascensionLevel == 0);
-                                    secondaryLabel = showSecondaryEnter
-                                        ? enterLabel
-                                        : null;
-                                    secondaryAction = showSecondaryEnter
-                                        ? enterAction
-                                        : null;
-                                  } else if (chase.kind == HubChaseKind.marketUpgrade &&
-                                      onAction != null &&
-                                      actionLabel != null) {
-                                    primaryLabel = actionLabel;
-                                    primaryAction = onAction;
-                                    secondaryLabel = enterAction != null
-                                        ? enterLabel
-                                        : null;
-                                    secondaryAction = enterAction;
-                                  } else {
-                                    primaryLabel = enterLabel;
-                                    primaryAction = enterAction;
-                                    secondaryLabel = null;
-                                    secondaryAction = null;
-                                  }
-                                  // FEEL 052: always offer META → KEY when jargon is on.
-                                  final showMetaKeyLink =
-                                      GameLogic.showKeystoneJargon(state);
-                                  final weekMod =
-                                      state.metaDepth.weeklyModifier;
-                                  final showWeekAffix =
-                                      !short &&
-                                      weekMod.isNotEmpty &&
-                                      GameLogic.showKeystoneJargon(state);
-                                  final powerupsActive =
-                                      AdBoost.isActive(
-                                    state.metaDepth.adBoostUntilMs,
-                                  );
-                                  final showPowerups = !short || powerupsActive;
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      if (showWeekAffix) ...[
-                                        Text(
-                                          'Week · ${Keystone.label(weekMod)} — ${Keystone.blurb(weekMod)}',
-                                          textAlign: TextAlign.center,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: GameTheme.body(
-                                            size: 12,
-                                            color: GameTheme.mossLit,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                      ],
-                                      HubTodayCard(
-                                        chase: chase,
-                                        compact: true,
-                                        hideDetail: short,
-                                        actionLabel:
-                                            foldEnter || readyPrimary
-                                            ? null
-                                            : actionLabel,
-                                        onAction:
-                                            foldEnter || readyPrimary
-                                            ? null
-                                            : onAction,
-                                      ),
-                                      if (!short)
-                                        HubMetaPulse(
-                                          state: state,
-                                          chaseKind: chase.kind,
-                                          chaseUrgency: chase.urgency,
-                                        ),
-                                      SizedBox(height: short ? 4 : 6),
-                                      AnimatedBuilder(
-                                        animation: _torch,
-                                        builder: (context, child) =>
-                                            Transform.scale(
-                                              scale:
-                                                  1.0 + (_torch.value * 0.012),
-                                              child: child,
-                                            ),
-                                        child: KenneyButton(
-                                          label: primaryLabel,
-                                          tip: chase.kind ==
-                                                  HubChaseKind.keystone
-                                              ? 'Starts your preferred KEY on this zone'
-                                              : readyPrimary
-                                              ? 'TODAY — do this first'
-                                              : 'Enter the selected dungeon',
-                                          style: KenneyButtonStyle.brown,
-                                          primary: true,
-                                          onPressed: primaryAction,
-                                        ),
-                                      ),
-                                      if (secondaryLabel != null &&
-                                          secondaryAction != null) ...[
-                                        const SizedBox(height: 4),
-                                        KenneyButton(
-                                          label: secondaryLabel,
-                                          tip: secondaryLabel.startsWith('ENTER') ||
-                                                  secondaryLabel == 'DAILY RUN'
-                                              ? 'Farm the selected zone'
-                                              : 'Also available',
-                                          style: KenneyButtonStyle.grey,
-                                          onPressed: secondaryAction,
-                                        ),
-                                      ],
-                                      if (showPowerups)
-                                        HubPowerupsCard(
-                                          state: state,
-                                          onOpen: () => openPowerupsSheet(
-                                            context,
-                                            director,
-                                          ),
-                                        ),
-                                      if (showMetaKeyLink) ...[ // FEEL 052
-                                        const SizedBox(height: 2),
-                                        MenuChrome.textLink(
-                                          label: 'META → KEY',
-                                          onPressed: () => router.open(
-                                            MenuRoute.meta,
-                                            meta: MetaTab.key,
-                                          ),
-                                        ),
-                                      ],
-                                      if (chase.urgency !=
-                                          HubChaseUrgency.ready)
-                                        HubUrgentRow(
-                                          claimable: state.missions
-                                              .where((m) => m.canClaim)
-                                              .length,
-                                        canAscend: canAscend,
-                                        ascendLabel: canAscend
-                                            ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
-                                            : null,
-                                        hideAscend: // FEEL 050
-                                            chase.kind == HubChaseKind.ascend ||
-                                            (state.ascensionLevel == 0 &&
-                                                chase.kind == HubChaseKind.dailyRun),
-                                        hideVaultClaim:
-                                            chase.kind ==
-                                            HubChaseKind.claimDailyVault,
-                                        hideMissionClaim:
-                                            chase.kind ==
-                                            HubChaseKind.claimMissions,
-                                        hideDaily:
-                                            chase.kind ==
-                                                HubChaseKind.dailyRun ||
-                                            chase.kind ==
-                                                HubChaseKind.keystone ||
-                                            chase.kind ==
-                                                HubChaseKind.dailyVaultProgress ||
-                                            chase.kind ==
-                                                HubChaseKind.meetHero ||
-                                            !GameLogic.showDailyChase(state),
-                                        onContracts: () {
-                                          director.claimAllReadyMissions();
-                                        },
-                                        onAscend: () =>
-                                            confirmAscend(context, director),
-                                        dailyClaimed:
-                                            director.isDailyClaimedToday,
-                                        onDaily: () =>
-                                            confirmDailyRun(context, director),
-                                        weeklyReady:
-                                            GameLogic.canClaimDailyVault(state),
-                                        weeklyProgress:
-                                            state.metaDepth.dailyVaultClears,
-                                        weeklyClaimed:
-                                            state.metaDepth.dailyVaultClaimed,
-                                        weeklyBestTimedKey:
-                                            state.metaDepth.dailyBestTimedKey,
-                                        vaultClaimEssence:
-                                            GameLogic.dailyVaultClaimPreviewEssence(
-                                          state,
-                                        ),
-                                        onClaimDailyVault:
-                                            director.claimDailyVault,
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
+                              if (short)
+                                Expanded(
+                                  flex: 3,
+                                  child: SingleChildScrollView(
+                                    physics: const ClampingScrollPhysics(),
+                                    child: _hubActionColumn(
+                                      context,
+                                      short: short,
+                                      unlockedSelected: unlockedSelected,
+                                      canAscend: canAscend,
+                                    ),
+                                  ),
+                                )
+                              else ...[
+                                const SizedBox(height: 6),
+                                _hubActionColumn(
+                                  context,
+                                  short: short,
+                                  unlockedSelected: unlockedSelected,
+                                  canAscend: canAscend,
+                                ),
+                              ],
                             ],
                           ),
                         ),

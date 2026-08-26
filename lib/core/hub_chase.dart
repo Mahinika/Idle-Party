@@ -115,15 +115,16 @@ class HubChase {
       final month = GameLogic.isoMonthKey(clock);
       final seasonPending = !md.claimedSeasonRewards.contains(month);
       final seasonBit = seasonPending
-          ? ' · season +${GameLogic.seasonWeeklyBonusEssence}e'
+          ? ' · season bonus +${GameLogic.seasonWeeklyBonusEssence}e'
           : '';
       final keyTalk = GameLogic.showKeystoneJargon(state);
+      final preview = GameLogic.dailyVaultClaimPreviewEssence(state);
       return HubChase(
         kind: HubChaseKind.claimDailyVault,
         title: 'Claim daily vault',
         detail: best >= 2 && keyTalk
-            ? 'Vault filled (best timed KEY +$best) — grab your essence$seasonBit.'
-            : 'Vault filled — grab your essence$seasonBit.',
+            ? 'Vault ready (KEY +$best timed) — claim +${preview}e$seasonBit.'
+            : 'Vault ready — claim +${preview}e$seasonBit.',
         progressLabel: best >= 2 && keyTalk
             ? 'KEY +$best ready'
             : '${GameLogic.dailyVaultClearTarget}/${GameLogic.dailyVaultClearTarget} ready',
@@ -305,8 +306,8 @@ class HubChase {
         kind: HubChaseKind.dailyVaultProgress,
         title: 'Start daily vault',
         detail: keyTalk
-            ? 'Clear ${GameLogic.dailyVaultClearTarget} floor for the vault. '
-                'Or time KEY +2 for a bigger claim.'
+            ? 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for the vault, '
+                'or time KEY +2 under par for a bigger claim.'
             : 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for vault essence.',
         progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
       );

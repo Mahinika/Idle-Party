@@ -324,30 +324,39 @@ class _InventoryDockState extends State<InventoryDock>
         ),
         const SizedBox(height: 4),
         if (filter != null) ...[
-          Row(
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Expanded(
-                child: Text(
-                  'Slot: $filterLabel'
-                  '${filteredSlots.isEmpty ? ' · none in bag' : ' · ${filteredSlots.length}'}',
-                  style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-                ),
+              MenuChrome.chip(
+                label: filterLabel ?? filter.name,
+                selected: true,
+                tone: GameTheme.torchHot,
               ),
-              KenneyButton(
+              Text(
+                filteredSlots.isEmpty
+                    ? 'none in bag'
+                    : '${filteredSlots.length} in bag',
+                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              ),
+              MenuChrome.chip(
                 label: 'CLEAR',
-                onPressed: onClearBagSlotFilter,
-                style: KenneyButtonStyle.grey,
+                onTap: onClearBagSlotFilter,
               ),
             ],
           ),
           const SizedBox(height: 4),
         ] else
           Text(
-            MenuAlerts.bagStatusLine(state).isNotEmpty
-                ? MenuAlerts.bagStatusLine(state)
-                : nearFull && filled >= cap
-                ? 'CLEAN: sell junk for gold, then scrap leftovers for essence'
-                : 'CLEAN BAG: sell for gold first, then scrap for essence',
+            () {
+              final line = MenuAlerts.bagStatusLine(state);
+              if (line.isNotEmpty) return line;
+              if (nearFull && filled >= cap) {
+                return 'CLEAN: sell junk for gold, then scrap leftovers for essence';
+              }
+              return 'CLEAN BAG: sell for gold first, then scrap for essence';
+            }(),
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         const SizedBox(height: 6),
@@ -593,6 +602,20 @@ class _InventoryDockState extends State<InventoryDock>
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.body(size: 12, color: GameTheme.parchment),
                   ),
+                  if (primary != null && secondary != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Cost $cost g · '
+                      '${GameLogic.rarityNames[primary.rarity]} i${primary.effectiveItemLevel} + '
+                      '${GameLogic.rarityNames[secondary.rarity]} i${secondary.effectiveItemLevel}'
+                      ' → ${GameLogic.rarityNames[preview.rarity]} i${preview.effectiveItemLevel}',
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(
+                        size: 11,
+                        color: GameTheme.torchHot,
+                      ),
+                    ),
+                  ],
                   if (preview.effectLabel.isNotEmpty)
                     Text(
                       preview.effectLabel,

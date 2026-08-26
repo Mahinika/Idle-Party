@@ -1,4 +1,5 @@
 import '../models/loot.dart';
+import 'gear_service.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'market_listings_service.dart';
@@ -192,9 +193,12 @@ class MenuAlerts {
   /// Full-bag line when nothing is an Auto Equip upgrade (shared across PARTY UI).
   static String bagStatusLine(GameState state) {
     if (bagUpgradeCount(state) > 0) return '';
+    if (GearService.isBagJammed(state) && !isBagFull(state)) {
+      return 'Nearly full — SETTINGS auto-sell may junk weak gear; CLEAN BAG or MERGE';
+    }
     if (!isBagFull(state)) return '';
     if (state.gearStash.isEmpty) return 'Bag is full — CLEAN BAG';
-    return 'Bag full — backups kept; CLEAN BAG or merge';
+    return 'Bag full — backups kept; CLEAN BAG or MERGE';
   }
 
   /// Pending kit unlock — nudge toward ROSTER, not GEAR doll.

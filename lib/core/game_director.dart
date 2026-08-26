@@ -817,7 +817,7 @@ class GameDirector extends ChangeNotifier {
         final lootLine = result.vacuumLootLine;
         if (lootLine != null && lootLine.isNotEmpty) {
           _clearSummary = lootLine;
-          _clearSummaryLife = 3.2;
+          _clearSummaryLife = 3.5;
           showToast(lootLine, life: 2.6);
         } else {
           showToast('Walking to stairs — use fist to steer', life: 2.4);
@@ -1739,7 +1739,7 @@ class GameDirector extends ChangeNotifier {
     final after = _state.currentRoom.floorNumber;
     if (after != before) {
       _beginFloorClock();
-      showToast('Floor $after', life: 1.6);
+      showToast('Floor $after · party healed', life: 2.0);
     }
   }
 

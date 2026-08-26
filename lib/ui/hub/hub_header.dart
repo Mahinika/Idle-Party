@@ -32,10 +32,12 @@ class HubOfflineBanner extends StatelessWidget {
     super.key,
     required this.text,
     required this.onDismiss,
+    this.compact = false,
   });
 
   final String text;
   final VoidCallback onDismiss;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +48,10 @@ class HubOfflineBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 8 : 12,
+            vertical: compact ? 6 : 10,
+          ),
           decoration: MenuChrome.hubPanel(),
           child: Row(
             children: [
@@ -77,10 +82,12 @@ class HubPlayUpdateBanner extends StatelessWidget {
     super.key,
     required this.onUpdate,
     required this.onLater,
+    this.compact = false,
   });
 
   final VoidCallback onUpdate;
   final VoidCallback onLater;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +96,12 @@ class HubPlayUpdateBanner extends StatelessWidget {
       label: 'Update on Google Play',
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        padding: EdgeInsets.fromLTRB(
+          compact ? 8 : 10,
+          compact ? 5 : 8,
+          compact ? 8 : 10,
+          compact ? 5 : 8,
+        ),
         decoration: MenuChrome.hubPanel(selected: true),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

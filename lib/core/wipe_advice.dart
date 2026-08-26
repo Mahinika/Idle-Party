@@ -133,7 +133,7 @@ abstract final class WipeAdvice {
         state.inAnyRiftMode) {
       return null;
     }
-    return 'Before retry: tap God Hand — steer party + AOE smash';
+    return 'Tap God Hand — steer party + AOE smash';
   }
 
   /// English line for the dungeon wipe panel, or null if we must stay quiet.
@@ -143,6 +143,16 @@ abstract final class WipeAdvice {
   }) {
     final bag = _bagUpgradeLine(state);
     if (bag != null) return bag;
+
+    if (state.gearStash.length >= GameLogic.maxGearStashFor(state) - 1) {
+      return 'Bag nearly full — equip upgrades or CLEAN BAG';
+    }
+
+    if (state.hardmodeLevel > 0 &&
+        state.hardmodeLevel > state.ascensionLevel + 4 &&
+        fight.leftover >= 0.35) {
+      return 'KEY +${state.hardmodeLevel} may be high — dial down on META → KEY';
+    }
 
     if (fight.elapsedSec < 0.5 || fight.waveHp < 1 || fight.damageDealt < 1) {
       return null;

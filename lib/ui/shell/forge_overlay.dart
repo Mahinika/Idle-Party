@@ -66,6 +66,10 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       PartyUpgradeType.attackSpeed => ' · faster clears',
       _ => '',
     };
+    final softCapHint = switch (type) {
+      PartyUpgradeType.attackSpeed || PartyUpgradeType.crit => ' · cap ~25%',
+      _ => '',
+    };
     final name = switch (type) {
       PartyUpgradeType.attack => 'ATK',
       PartyUpgradeType.defense => 'DEF',
@@ -86,7 +90,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
     // FEEL 126: short BEST label so GOLD rows do not wrap on phone.
     final label = recommended
         ? 'BEST · $name · $costPart'
-        : '$name $bonus$speedHint · $costPart';
+        : '$name $bonus$speedHint$softCapHint · $costPart';
     return KenneyButton(label: label, onPressed: onPressed);
   }
 

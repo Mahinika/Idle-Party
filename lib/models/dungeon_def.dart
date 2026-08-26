@@ -35,7 +35,8 @@ abstract final class DungeonCatalog {
       bossId: 'kraken',
       bossName: 'Earth Kraken',
       unlockPrice: 0,
-      blurb: 'Sand beasts and buried hatches — the earth still stirs below.',
+      blurb:
+          'Shell kin and buried hatches — the Earth Kraken still pulls the sand.',
     ),
     DungeonDef(
       number: 1,
@@ -55,7 +56,8 @@ abstract final class DungeonCatalog {
       bossId: 'king',
       bossName: 'Corrupt King',
       unlockPrice: 20000,
-      blurb: 'Corrupt banners line a throne bent toward the same downward light.',
+      blurb:
+          'Corrupt banners and king-mites — the throne still wears its soldiers.',
     ),
     DungeonDef(
       number: 3,
@@ -65,7 +67,8 @@ abstract final class DungeonCatalog {
       bossId: 'eyes',
       bossName: 'Beholder',
       unlockPrice: 50000,
-      blurb: 'Eyes open between kingdoms — shrine pillars watch the dark.',
+      blurb:
+          'Shrine eyes and cyclops sentries — the Beholder watches between kingdoms.',
     ),
     DungeonDef(
       number: 4,
@@ -85,7 +88,8 @@ abstract final class DungeonCatalog {
       bossId: 'cthulhu',
       bossName: 'Cthulhu',
       unlockPrice: 200000,
-      blurb: 'Named gate, cult fire, and a hunger that answers below.',
+      blurb:
+          'Cult swarms serve the gate — Cthulhu answers below the fire.',
     ),
     DungeonDef(
       number: 6,
@@ -126,7 +130,8 @@ abstract final class DungeonCatalog {
       bossId: 'grove_wyrd',
       bossName: 'Wyrd Root',
       unlockPrice: 1800000,
-      blurb: 'Root fences and canopy pots drink the dark between Tidehold and Ashen.',
+      blurb:
+          'Root fences and grove-slime — Wyrd Root drinks between Tidehold and Ashen.',
     ),
     DungeonDef(
       number: 10,
@@ -136,7 +141,8 @@ abstract final class DungeonCatalog {
       bossId: 'storm_tyrant',
       bossName: 'Storm Tyrant',
       unlockPrice: 2600000,
-      blurb: 'Wind tears the last gate — lightning remembers every will.',
+      blurb:
+          'Lightning traps and wraith packs — the Storm Tyrant rides the gale.',
     ),
     DungeonDef(
       number: 11,
@@ -158,7 +164,8 @@ abstract final class DungeonCatalog {
       bossId: 'fen_hydra',
       bossName: 'Fen Hydra',
       unlockPrice: 5000000,
-      blurb: 'Open poisoned bog — wet traps and something many-headed still hunts.',
+      blurb:
+          'Open poison bog — slime kin and many-headed hunger still hunt the fen.',
     ),
     DungeonDef(
       number: 13,
@@ -179,7 +186,7 @@ abstract final class DungeonCatalog {
       bossName: 'The Pale Monarch',
       unlockPrice: 10000000,
       blurb:
-          'Silk fences choke the hollow. Wings beat where the clockwork ends.',
+          'Silk fences and moth swarms — wings beat where the clockwork ends.',
     ),
   ];
 

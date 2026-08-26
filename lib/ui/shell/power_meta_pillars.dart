@@ -129,8 +129,9 @@ class _PowerPillarState extends State<PowerPillar>
           onTap: (_) => setState(() {}),
           tabs: [
             for (var i = 0; i < pages.length; i++)
-              MenuChrome.bridgedTab(
+              MenuChrome.bridgedTabScoped(
                 pages[i].label,
+                scope: pages[i].scope,
                 onSelect: () {
                   _tabs.controller.animateTo(i);
                   widget.onTabChanged(_visible[i]);
@@ -139,6 +140,15 @@ class _PowerPillarState extends State<PowerPillar>
               ),
           ],
         ),
+        if (!MenuTabs.showCamp(s)) ...[
+          const SizedBox(height: 4),
+          Text(
+            'CAMP unlocks after Ascend or when you earn essence — permanent '
+            'Gold Find & tracks (also under INCOME).',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          ),
+        ],
         const SizedBox(height: 4),
         if (alert.isQuiet)
           _PowerScopeLine(scope: active.scope, text: active.blurb)
