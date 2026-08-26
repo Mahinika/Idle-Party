@@ -887,8 +887,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
       if (state.challengeNoFlask) 'No Flask',
       if (state.challengeTiny) 'Tiny',
       if (vaultReady) 'Vault ready',
-      if (weekReady) 'Week ready',
     ];
+    final chase = ChaseContract.fromState(state);
 
     final headerLabel = _expanded
         ? (activeBits.isEmpty
@@ -959,6 +959,50 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                   .join(' · '),
               textAlign: TextAlign.center,
               style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            ),
+          ],
+          if (week.hasGoal) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: MenuChrome.cardBox(selected: weekReady || weekAlmost),
+              child: Column(
+                children: [
+                  Text(
+                    weekReady
+                        ? 'WEEK GOAL READY'
+                        : weekAlmost
+                        ? 'WEEK GOAL ALMOST'
+                        : 'WEEK GOAL',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 12,
+                      color: weekReady || weekAlmost
+                          ? GameTheme.torchHot
+                          : GameTheme.parchmentDim,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    week.name,
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(size: 13, color: GameTheme.parchment),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    weekClaimed
+                        ? 'Claimed · ${week.titleReward ?? week.name}'
+                        : '${week.blurb}\n'
+                              '${LocalSeasonCatalog.weekProgressLabel(state, week)}'
+                              '${weekReady ? ' · auto-claims on hub sync' : ''}',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
           const SizedBox(height: 6),
@@ -1040,25 +1084,28 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  md.seasonKey.isEmpty
-                      ? 'Season rotating…'
-                      : '${month.name} · +${GameLogic.seasonWeeklyBonusEssence}e first vault claim',
-                  textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 11,
-                    color: GameTheme.parchmentDim,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
                   md.dailyVaultClaimed
-                      ? 'Claimed today'
-                      : 'Clears ${md.dailyVaultClears}/${GameLogic.dailyVaultClearTarget}'
+                      ? 'Today: claimed'
+                      : 'Today: clears ${md.dailyVaultClears}/'
+                            '${GameLogic.dailyVaultClearTarget}'
                             ' · best timed KEY +${md.dailyBestTimedKey}'
                             '${vaultReady ? ' · ready' : ''}',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(
                     size: 12,
+                    color: GameTheme.parchmentDim,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  md.seasonKey.isEmpty
+                      ? 'Season: rotating…'
+                      : 'Season: ${month.name} · '
+                            '+${GameLogic.seasonWeeklyBonusEssence}e '
+                            'first vault claim',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(
+                    size: 11,
                     color: GameTheme.parchmentDim,
                   ),
                 ),
@@ -1072,48 +1119,14 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
               ],
             ),
           ),
-          if (week.hasGoal) ...[
+          if (GameLogic.endgameUnlocked(state)) ...[
             const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: MenuChrome.cardBox(selected: weekReady || weekAlmost),
-              child: Column(
-                children: [
-                  Text(
-                    weekReady
-                        ? 'WEEK GOAL READY'
-                        : weekAlmost
-                        ? 'WEEK GOAL ALMOST'
-                        : 'WEEK GOAL',
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 12,
-                      color: weekReady || weekAlmost
-                          ? GameTheme.torchHot
-                          : GameTheme.parchmentDim,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    week.name,
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(size: 13, color: GameTheme.parchment),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    weekClaimed
-                        ? 'Claimed · ${week.titleReward ?? week.name}'
-                        : '${week.blurb}\n'
-                              '${LocalSeasonCatalog.weekProgressLabel(state, week)}'
-                              '${weekReady ? ' · auto-claims on hub sync' : ''}',
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
-                  ),
-                ],
-              ),
+            Text(
+              'TODAY · ${chase.title}',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
             ),
           ],
           const SizedBox(height: 2),

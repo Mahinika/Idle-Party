@@ -7,6 +7,7 @@ import '../../core/keystone.dart';
 import '../../core/rift.dart';
 import '../../core/greater_rift.dart';
 import '../../models/dungeon_mode.dart';
+import '../../models/dungeon_zoom.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
 import '../kenney_sprite.dart';
@@ -368,6 +369,20 @@ class DungeonTopHud extends StatelessWidget {
                       const SizedBox(width: 4),
                       ChamberDots(world: world),
                       const SizedBox(width: 4),
+                      DungeonModeChip(
+                        label: state.dungeonZoom.hudChipLabel,
+                        selected: state.dungeonZoom != DungeonZoom.normal,
+                        dense: true,
+                        tip: state.dungeonZoom.settingsHint,
+                        onTap: () {
+                          director.cycleDungeonZoom();
+                          director.showToast(
+                            director.state.dungeonZoom.settingsLabel,
+                            life: 1.4,
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 4),
                       Text(
                         _godHandStyleLabel(state.metaDepth.godHandStyle),
                         style: GameTheme.pixel(
@@ -558,6 +573,20 @@ class DungeonTopHud extends StatelessWidget {
                         const SizedBox(width: 6),
                         if (world != null) ...[
                           ChamberDots(world: world),
+                          const SizedBox(width: 6),
+                          DungeonModeChip(
+                            label: state.dungeonZoom.hudChipLabel,
+                            selected: state.dungeonZoom != DungeonZoom.normal,
+                            dense: true,
+                            tip: state.dungeonZoom.settingsHint,
+                            onTap: () {
+                              director.cycleDungeonZoom();
+                              director.showToast(
+                                director.state.dungeonZoom.settingsLabel,
+                                life: 1.4,
+                              );
+                            },
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             _godHandStyleLabel(state.metaDepth.godHandStyle),

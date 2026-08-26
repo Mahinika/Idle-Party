@@ -65,13 +65,36 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     if (_opacity < _fullOpacity) {
       setState(() => _opacity = _fullOpacity);
     }
+    final fighting =
+        widget.director.spatial?.enemies.any((e) => e.isAlive) ?? false;
+    if (fighting) return;
     final phone = mounted && GameTheme.isPhoneWidth(context);
     _scheduleFade(phone: phone);
   }
 
   void _scheduleFade({bool phone = false}) {
+    _fadeTimer?.cancel();
     _fadeTimer = Timer(phone ? _idleFadePhone : _idleFade, () {
       if (!mounted) return;
+      final fighting =
+          widget.director.spatial?.enemies.any((e) => e.isAlive) ?? false;
+      if (fighting) {
+        // Stay readable mid-fight; reschedule until the pack is dead.
+        _scheduleFade(phone: phone);
+        return;
+      }
+      final world = widget.director.spatial;
+      final state = widget.director.state;
+      for (var i = 0; i < state.heroes.length; i++) {
+        final s = _spatialFor(world, i);
+        final hp = s?.hp ?? state.heroes[i].currentHp;
+        final maxHp =
+            s?.effectiveMaxHp ?? state.effectiveHeroMaxHp(state.heroes[i]);
+        if (maxHp > 0 && hp > 0 && hp / maxHp <= 0.35) {
+          _scheduleFade(phone: phone);
+          return;
+        }
+      }
       setState(() => _opacity = phone ? _dimOpacityPhone : _dimOpacity);
     });
   }
@@ -187,6 +210,14 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     }
 
     final flaskCount = _flaskCount(state);
+    final fighting =
+        world?.enemies.any((e) => e.isAlive) ?? false;
+    final keepBright = partyCritical || fighting;
+    if (keepBright) {
+      _fadeTimer?.cancel();
+    } else if (_fadeTimer == null || !_fadeTimer!.isActive) {
+      _scheduleFade(phone: phone);
+    }
 
     final panel = ConstrainedBox(
       constraints: BoxConstraints(maxWidth: fullWidth),
@@ -280,7 +311,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     );
 
     return AnimatedOpacity(
-      opacity: partyCritical ? _fullOpacity : _opacity,
+      opacity: keepBright ? _fullOpacity : _opacity,
       duration: const Duration(milliseconds: 400),
       child: Listener(
         behavior: HitTestBehavior.deferToChild,
@@ -289,7 +320,9 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
           if (_opacity < _fullOpacity) {
             setState(() => _opacity = _fullOpacity);
           }
-          _scheduleFade(phone: phone);
+          if (!keepBright) {
+            _scheduleFade(phone: phone);
+          }
         },
         child: SizedBox(
           width: fullWidth * _hudScale,
@@ -883,8 +916,13 @@ class _InlineAbilityChip extends StatelessWidget {
 }
 
 class DpsMeter extends StatefulWidget {
-  const DpsMeter({super.key, required this.director});
+  const DpsMeter({
+    super.key,
+    required this.director,
+    this.onOpenChanged,
+  });
   final GameDirector director;
+  final ValueChanged<bool>? onOpenChanged;
 
   @override
   State<DpsMeter> createState() => _DpsMeterState();
@@ -892,6 +930,12 @@ class DpsMeter extends StatefulWidget {
 
 class _DpsMeterState extends State<DpsMeter> {
   bool _open = false;
+
+  void _setOpen(bool value) {
+    if (_open == value) return;
+    setState(() => _open = value);
+    widget.onOpenChanged?.call(value);
+  }
 
   static String _heroTag(SpatialActor h) {
     final specId = h.heroSpecId;
@@ -1078,14 +1122,14 @@ class _DpsMeterState extends State<DpsMeter> {
 
     return WebClickScope(
       label: _open ? 'Collapse party meter' : 'Expand party meter',
-      onPressed: () => setState(() => _open = !_open),
+      onPressed: () => _setOpen(!_open),
       child: Semantics(
         button: true,
         label: _open ? 'Collapse party meter' : 'Expand party meter',
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => setState(() => _open = !_open),
+            onTap: () => _setOpen(!_open),
             borderRadius: BorderRadius.circular(3),
             child: _open ? panel : chip,
           ),

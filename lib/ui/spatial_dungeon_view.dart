@@ -357,18 +357,53 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                           widget.director.reviveParty();
                           return;
                         }
+                        // Mid-fight: pin nearest to party. Idle/clear: fist only.
                         final fighting =
                             world?.enemies.any((e) => e.isAlive) ?? false;
-                        if (fighting) {
-                          widget.director.godHandAtFocus();
-                          return;
+                        if (!fighting || world == null) return;
+                        final alive =
+                            world.heroes.where((h) => h.hp > 0).toList();
+                        if (alive.isEmpty) return;
+                        var cx = 0.0;
+                        var cy = 0.0;
+                        for (final h in alive) {
+                          cx += h.x;
+                          cy += h.y;
                         }
-                        widget.director.godHandAtFocus();
+                        widget.director.setHudFocusAtWorld(
+                          cx / alive.length,
+                          cy / alive.length,
+                        );
                       },
                       child: Semantics(
                         button: true,
-                        label: 'Dungeon map — tap to use God Hand',
-                        onTap: widget.director.godHandAtFocus,
+                        label:
+                            'Dungeon map — tap to pin target while fighting; '
+                            'long-press for God Hand; fist button also works',
+                        onTap: () {
+                          if (widget.director.awaitingWipeChoice) return;
+                          if (state.isPartyDefeated) {
+                            widget.director.reviveParty();
+                            return;
+                          }
+                          final fighting =
+                              world?.enemies.any((e) => e.isAlive) ?? false;
+                          if (!fighting || world == null) return;
+                          final alive =
+                              world.heroes.where((h) => h.hp > 0).toList();
+                          if (alive.isEmpty) return;
+                          var cx = 0.0;
+                          var cy = 0.0;
+                          for (final h in alive) {
+                            cx += h.x;
+                            cy += h.y;
+                          }
+                          widget.director.setHudFocusAtWorld(
+                            cx / alive.length,
+                            cy / alive.length,
+                          );
+                        },
+                        onLongPress: widget.director.godHandAtFocus,
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTapDown: (details) {
@@ -381,13 +416,21 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                 details.localPosition.dx / camera.tileSize;
                             final tileY = camera.camY +
                                 details.localPosition.dy / camera.tileSize;
-                            // Mid-pack: pin target HUD — fist ring for God Hand.
+                            // Mid-pack: pin target HUD — fist / long-press for GH.
                             final fighting =
                                 world?.enemies.any((e) => e.isAlive) ?? false;
                             if (fighting) {
                               widget.director.setHudFocusAtWorld(tileX, tileY);
-                              return;
                             }
+                            // Idle / clear: map tap does not fire God Hand.
+                          },
+                          onLongPressStart: (details) {
+                            if (widget.director.awaitingWipeChoice) return;
+                            if (state.isPartyDefeated) return;
+                            final tileX = camera.camX +
+                                details.localPosition.dx / camera.tileSize;
+                            final tileY = camera.camY +
+                                details.localPosition.dy / camera.tileSize;
                             widget.director.godHandAtWorld(tileX, tileY);
                           },
                           child:
@@ -579,7 +622,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                           : state.inRift
                                           ? 'Rift run ends here. Best tier ${state.metaDepth.riftBestTier}. Return to hub to try again.'
                                           : dailyEcho
-                                          ? 'Daily echo — RETRY restarts this floor. HUB ends the run (claim needs a clear).'
+                                          ? 'RETRY this floor · HUB ends run'
                                           : farm
                                           ? 'RETRY restarts this floor (F${state.currentRoom.floorNumber}). HUB ends the run.'
                                           : () {
@@ -599,6 +642,17 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                         color: GameTheme.parchmentDim,
                                       ),
                                     ),
+                                    if (dailyEcho) ...[
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        'Claim needs a clear',
+                                        textAlign: TextAlign.center,
+                                        style: GameTheme.body(
+                                          size: 12,
+                                          color: GameTheme.parchmentDim,
+                                        ),
+                                      ),
+                                    ],
                                     if (state.wipeAdviceLine.isNotEmpty) ...[
                                       const SizedBox(height: 10),
                                       Text(

@@ -3,7 +3,7 @@
 **Datum:** 2026-08-26  
 **Scope:** Spelarkänsla (hub, dungeon, menyer, kits, zoner, copy, AL20 endgame, telefon).  
 **Inte inkluderat:** ren refaktor, dependensuppgraderingar, tester utan spelar-symptom.  
-**Status:** **1.12.64** — third feel-audit wave (compact dungeon HUD, kit gates/priority, forge BEST, CLAIM sync). Remaining: true combat redesign (hold-at-stairs mode, pet panels, rune resources), heavy nav layout, loot pickup list.
+**Status:** **1.12.65** — fourth feel wave (safe map taps, loot names, zoom chip, KEY/FORGE/MARKET/GEAR polish). Remaining heavy: hold-at-stairs mode, pet panels, DK rune UI.
 
 Varje punkt: `ID · yta · allvar · mening · fil`
 

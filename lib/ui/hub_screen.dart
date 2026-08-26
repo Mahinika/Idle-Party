@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/chase_contract.dart';
+import '../core/ad_boost.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
@@ -434,6 +435,7 @@ class _HubScreenState extends State<HubScreen>
                               const SizedBox(height: 6),
                               // World Path: painted campaign map + tappable rings.
                               Expanded(
+                                flex: short ? 5 : 3,
                                 child: AnimatedBuilder(
                                   animation: _torch,
                                   builder: (context, _) => ZonePathMap(
@@ -457,7 +459,7 @@ class _HubScreenState extends State<HubScreen>
                                   partyLevel: GameLogic.partyMeanLevel(state),
                                 ),
                               ],
-                              SizedBox(height: short ? 4 : 6),
+                              SizedBox(height: short ? 2 : 6),
                               Builder(
                                 builder: (context) {
                                   final contract = ChaseContract.fromState(
@@ -567,8 +569,14 @@ class _HubScreenState extends State<HubScreen>
                                   final weekMod =
                                       state.metaDepth.weeklyModifier;
                                   final showWeekAffix =
+                                      !short &&
                                       weekMod.isNotEmpty &&
                                       GameLogic.showKeystoneJargon(state);
+                                  final powerupsActive =
+                                      AdBoost.isActive(
+                                    state.metaDepth.adBoostUntilMs,
+                                  );
+                                  final showPowerups = !short || powerupsActive;
                                   return Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
@@ -589,6 +597,7 @@ class _HubScreenState extends State<HubScreen>
                                       HubTodayCard(
                                         chase: chase,
                                         compact: true,
+                                        hideDetail: short,
                                         actionLabel:
                                             foldEnter || readyPrimary
                                             ? null
@@ -598,12 +607,13 @@ class _HubScreenState extends State<HubScreen>
                                             ? null
                                             : onAction,
                                       ),
-                                      HubMetaPulse(
-                                        state: state,
-                                        chaseKind: chase.kind,
-                                        chaseUrgency: chase.urgency,
-                                      ),
-                                      const SizedBox(height: 6),
+                                      if (!short)
+                                        HubMetaPulse(
+                                          state: state,
+                                          chaseKind: chase.kind,
+                                          chaseUrgency: chase.urgency,
+                                        ),
+                                      SizedBox(height: short ? 4 : 6),
                                       AnimatedBuilder(
                                         animation: _torch,
                                         builder: (context, child) =>
@@ -638,13 +648,14 @@ class _HubScreenState extends State<HubScreen>
                                           onPressed: secondaryAction,
                                         ),
                                       ],
-                                      HubPowerupsCard(
-                                        state: state,
-                                        onOpen: () => openPowerupsSheet(
-                                          context,
-                                          director,
+                                      if (showPowerups)
+                                        HubPowerupsCard(
+                                          state: state,
+                                          onOpen: () => openPowerupsSheet(
+                                            context,
+                                            director,
+                                          ),
                                         ),
-                                      ),
                                       if (showMetaKeyLink) ...[ // FEEL 052
                                         const SizedBox(height: 2),
                                         MenuChrome.textLink(

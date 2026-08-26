@@ -97,7 +97,7 @@ class _PowerPillarState extends State<PowerPillar>
             label: 'MARKET',
             scope: 'RUN',
             blurb: 'RUN · buy gear listings · sell lives in PARTY BAG',
-            body: SingleChildScrollView(child: MarketOverlay(director: d)),
+            body: MarketOverlay(director: d),
           ),
           PowerTab.shop => (
             label: 'SHOP',

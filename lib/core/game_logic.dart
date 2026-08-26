@@ -3704,15 +3704,25 @@ class OfflineProgressResult {
       bossDelta > 0 ||
       levelsGained > 0;
 
-  bool get hasSummary =>
-      secondsApplied >= 30 &&
-      (goldGained > 0 ||
-          essenceGained > 0 ||
-          roomsCleared > 0 ||
-          highestFloorDelta > 0 ||
-          bossDelta > 0 ||
-          levelsGained > 0 ||
-          gearFinds > 0);
+  /// Banner + Welcome Back share this gate.
+  /// Gold / clears show even under 20s; other rewards need ≥20s away.
+  bool get hasSummary {
+    final earned = goldGained > 0 ||
+        essenceGained > 0 ||
+        roomsCleared > 0 ||
+        highestFloorDelta > 0 ||
+        bossDelta > 0 ||
+        levelsGained > 0 ||
+        gearFinds > 0;
+    if (!earned) return false;
+    if (goldGained > 0 ||
+        roomsCleared > 0 ||
+        bossDelta > 0 ||
+        highestFloorDelta > 0) {
+      return true;
+    }
+    return secondsApplied >= 20;
+  }
 
   /// Compact hub banner — wow + away time (no number dump).
   String get headline {

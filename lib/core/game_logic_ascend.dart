@@ -20,6 +20,7 @@ GameState _applyPrestigeRunWipe(GameState state) {
     loadouts: const <GearLoadout>[],
     recentLoot: const <LootDrop>[],
     highestFloorCleared: 0,
+    lastFloorClearSec: 0,
     heroRoster: [
       for (final hero in state.heroRoster)
         hero.copyWith(equipped: _starterKeepingApex(hero)),

@@ -76,6 +76,7 @@ class GameState {
     this.marketListingsRefreshMs = 0,
     this.dungeonMode = DungeonMode.push,
     this.highestFloorCleared = 0,
+    this.lastFloorClearSec = 0,
     this.highestDungeonCleared = -1,
     this.activePet,
     this.ownedPets = const <Pet>[],
@@ -228,6 +229,9 @@ class GameState {
 
   /// Highest floor whose wave was cleared this run (0 = none yet).
   final int highestFloorCleared;
+
+  /// Last cleared floor duration in seconds (forge tip). 0 = none yet.
+  final int lastFloorClearSec;
 
   /// Highest dungeon catalog index cleared (meta — survives Ascend). -1 = none.
   final int highestDungeonCleared;
@@ -976,6 +980,7 @@ class GameState {
     int? marketListingsRefreshMs,
     DungeonMode? dungeonMode,
     int? highestFloorCleared,
+    int? lastFloorClearSec,
     int? highestDungeonCleared,
     Pet? activePet,
     List<Pet>? ownedPets,
@@ -1096,6 +1101,7 @@ class GameState {
           marketListingsRefreshMs ?? this.marketListingsRefreshMs,
       dungeonMode: dungeonMode ?? this.dungeonMode,
       highestFloorCleared: highestFloorCleared ?? this.highestFloorCleared,
+      lastFloorClearSec: lastFloorClearSec ?? this.lastFloorClearSec,
       highestDungeonCleared:
           highestDungeonCleared ?? this.highestDungeonCleared,
       activePet: clearActivePet ? null : (activePet ?? this.activePet),
@@ -1256,6 +1262,7 @@ class GameState {
     'marketListingsRefreshMs': marketListingsRefreshMs,
     'dungeonMode': dungeonMode.name,
     'highestFloorCleared': highestFloorCleared,
+    'lastFloorClearSec': lastFloorClearSec,
     'highestDungeonCleared': highestDungeonCleared,
     if (activePet != null) 'activePet': activePet!.toJson(),
     'ownedPets': ownedPets.map((pet) => pet.toJson()).toList(),
@@ -1492,6 +1499,7 @@ class GameState {
           ? DungeonMode.push
           : DungeonMode.values.byName(modeRaw),
       highestFloorCleared: _jsonInt(json['highestFloorCleared']),
+      lastFloorClearSec: _jsonInt(json['lastFloorClearSec']),
       highestDungeonCleared: _jsonInt(json['highestDungeonCleared'], -1),
       activePet: syncedActivePet,
       ownedPets: syncedOwnedPets,

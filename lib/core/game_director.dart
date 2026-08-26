@@ -187,8 +187,8 @@ class GameDirector extends ChangeNotifier {
   int _runGoldPerMinute = 0;
   String? _lastTelemetryChaseKey;
   bool _runIncomeFrozen = false;
-  DateTime? _floorStartedAt;
   int? _lastFloorClearSec;
+  DateTime? _floorStartedAt;
 
   /// Combat map + corner HUD; bumps every spatial tick (~60 Hz).
   final ValueNotifier<int> combatFrame = ValueNotifier(0);
@@ -304,8 +304,13 @@ class GameDirector extends ChangeNotifier {
   /// Combat gold/min from the last ~2 minutes of credited dungeon gold.
   int get runGoldPerMinute => _runGoldPerMinute;
 
-  /// Seconds for the last finished floor, if any this session.
-  int? get lastFloorClearSec => _lastFloorClearSec;
+  /// Seconds for the last finished floor (session + saved for forge tip).
+  int? get lastFloorClearSec {
+    final live = _lastFloorClearSec;
+    if (live != null && live > 0) return live;
+    final saved = _state.lastFloorClearSec;
+    return saved > 0 ? saved : null;
+  }
 
   /// Freeze dungeon combat while the player is in inventory / overlays.
   void setUiPaused(bool paused) {
@@ -541,6 +546,9 @@ class GameDirector extends ChangeNotifier {
         GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(loaded)),
       );
       _lastHighestDungeon = _state.highestDungeonCleared;
+      if (_state.lastFloorClearSec > 0) {
+        _lastFloorClearSec = _state.lastFloorClearSec;
+      }
       _syncDevicePrefs();
       _ensureUiTimer();
       if (_state.inDungeon) {
@@ -806,7 +814,14 @@ class GameDirector extends ChangeNotifier {
       }
       if (result.stairsOpened) {
         GameAudio.clear();
-        showToast('Walking to stairs — tap map to steer', life: 2.6);
+        final lootLine = result.vacuumLootLine;
+        if (lootLine != null && lootLine.isNotEmpty) {
+          _clearSummary = lootLine;
+          _clearSummaryLife = 3.2;
+          showToast(lootLine, life: 2.6);
+        } else {
+          showToast('Walking to stairs — use fist to steer', life: 2.4);
+        }
       }
       if (result.state.gearStash.length > _lastStashLen) {
         if (!playedLoot) {
@@ -918,8 +933,8 @@ class GameDirector extends ChangeNotifier {
           );
         } else if (MetaSystems.isActiveDailyRun(_state)) {
           showToast(
-            'WIPED — Daily echo · Retry restarts this floor, or Hub',
-            life: 4,
+            'WIPED — Daily echo · RETRY or HUB',
+            life: 3.2,
           );
         } else {
           final pushFail =
@@ -958,7 +973,10 @@ class GameDirector extends ChangeNotifier {
           _state,
           goldGain: gold,
           skipLootRoll: _state.inGreaterRift || !wasTreasure,
-        ).copyWith(lastUpdated: DateTime.now());
+        ).copyWith(
+          lastUpdated: DateTime.now(),
+          lastFloorClearSec: _lastFloorClearSec ?? _state.lastFloorClearSec,
+        );
         _noteLifetimeGold(beforeClear, _state);
         _announceAbilityUnlocks(beforeClear, _state);
         _announceAchievementUnlocks(beforeClear, _state);
@@ -2425,9 +2443,16 @@ class GameDirector extends ChangeNotifier {
       showToast('Need ${cost}g for flask', life: 2);
       return;
     }
+    final beforeEss = _state.essence;
     _applyUpgrade(GameLogic.buyMarketFlask(_state));
     GameAudio.loot();
-    showToast('Flask acquired', life: 1.8);
+    final salvage = _state.essence - beforeEss;
+    showToast(
+      salvage > 0
+          ? 'Flask acquired · bag full — salvaged oldest (+${salvage}e)'
+          : 'Flask acquired',
+      life: salvage > 0 ? 2.4 : 1.8,
+    );
   }
 
   void buyMarketFlasks({int count = 3}) {
@@ -2439,6 +2464,7 @@ class GameDirector extends ChangeNotifier {
     }
     final beforeGold = _state.gold;
     final beforeFlasks = _countFlasks(_state);
+    final beforeEss = _state.essence;
     _applyUpgrade(GameLogic.buyMarketFlasks(_state, count: count));
     final bought = _countFlasks(_state) - beforeFlasks;
     final spent = beforeGold - _state.gold;
@@ -2447,9 +2473,13 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     GameAudio.loot();
+    final salvage = _state.essence - beforeEss;
     showToast(
-      '+$bought flask${bought == 1 ? '' : 's'} (−${spent}g)',
-      life: 1.8,
+      salvage > 0
+          ? '+$bought flask${bought == 1 ? '' : 's'} (−${spent}g) · '
+                'bag full — salvaged (+${salvage}e)'
+          : '+$bought flask${bought == 1 ? '' : 's'} (−${spent}g)',
+      life: salvage > 0 ? 2.4 : 1.8,
     );
   }
 
@@ -2459,9 +2489,16 @@ class GameDirector extends ChangeNotifier {
       showToast('Need ${cost}g for bandage', life: 2);
       return;
     }
+    final beforeEss = _state.essence;
     _applyUpgrade(GameLogic.buyMarketBandage(_state));
     GameAudio.loot();
-    showToast('Field Bandage acquired', life: 1.8);
+    final salvage = _state.essence - beforeEss;
+    showToast(
+      salvage > 0
+          ? 'Field Bandage acquired · bag full — salvaged oldest (+${salvage}e)'
+          : 'Field Bandage acquired',
+      life: salvage > 0 ? 2.4 : 1.8,
+    );
   }
 
   void ensureMarketListings() {
@@ -2711,24 +2748,49 @@ class GameDirector extends ChangeNotifier {
   }
 
   void upgradeSanctuaryGoldBulk({int maxLevels = GoldIncome.sanctuaryGoldBulkMax}) {
-    final before = _state.sanctuaryGoldLevel;
-    final hubBefore = GoldIncome.hubGoldPerMinute(_state);
+    upgradeSanctuaryBulk('gold', maxLevels: maxLevels);
+  }
+
+  void upgradeSanctuaryBulk(
+    String track, {
+    int maxLevels = GoldIncome.sanctuaryGoldBulkMax,
+  }) {
+    final beforeLevel = switch (track) {
+      'gold' => _state.sanctuaryGoldLevel,
+      'power' => _state.sanctuaryPowerLevel,
+      'vitality' => _state.sanctuaryVitalityLevel,
+      'xp' => _state.metaDepth.sanctuaryXpLevel,
+      _ => -1,
+    };
+    if (beforeLevel < 0) return;
+    final hubBefore = track == 'gold' ? GoldIncome.hubGoldPerMinute(_state) : 0;
     _applyUpgrade(
       GameLogic.upgradeSanctuaryBulk(
         _state,
-        'gold',
+        track,
         maxLevels: maxLevels,
       ),
     );
-    final after = _state.sanctuaryGoldLevel;
-    if (after > before) {
-      final rate = GoldIncome.hubGoldPerMinute(_state);
+    final after = switch (track) {
+      'gold' => _state.sanctuaryGoldLevel,
+      'power' => _state.sanctuaryPowerLevel,
+      'vitality' => _state.sanctuaryVitalityLevel,
+      'xp' => _state.metaDepth.sanctuaryXpLevel,
+      _ => beforeLevel,
+    };
+    if (after > beforeLevel) {
+      final name = GameLogic.sanctuaryNames[track] ?? track;
       GameAudio.unlock();
-      showToast(
-        'Gold Find Lv$after · Hub ${GoldIncome.perMinuteLabel(rate)} '
-        '(+${rate - hubBefore})',
-        life: 2.8,
-      );
+      if (track == 'gold') {
+        final rate = GoldIncome.hubGoldPerMinute(_state);
+        showToast(
+          'Gold Find Lv$after · Hub ${GoldIncome.perMinuteLabel(rate)} '
+          '(+${rate - hubBefore})',
+          life: 2.8,
+        );
+      } else {
+        showToast('$name Lv$after · bought ${after - beforeLevel}', life: 2.6);
+      }
     }
   }
 

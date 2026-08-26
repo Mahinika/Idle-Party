@@ -7,11 +7,28 @@ import '../../core/community_links.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/gear/gear_cleanup.dart';
 import '../../core/meta_systems.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../meta_overlays.dart';
+
+int _autoSellPreviewCount(GameState state) {
+  var n = 0;
+  for (final item in state.gearStash) {
+    if (!GearCleanup.matchesIlvlRarityFilter(
+      item,
+      maxIlvl: state.autoSellMaxPower,
+      maxRarity: state.autoSellMaxRarity,
+    )) {
+      continue;
+    }
+    if (GearCleanup.shouldKeepInBag(state, item)) continue;
+    n++;
+  }
+  return n;
+}
 
 class SettingsOverlay extends StatefulWidget {
   const SettingsOverlay({
@@ -246,6 +263,13 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             onChanged: director.setAutoSellMaxRarity,
             enabled: state.autoSellMaxPower > 0,
           ),
+          if (state.autoSellMaxPower > 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Sells ~${_autoSellPreviewCount(state)} stash items',
+              style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+            ),
+          ],
           const SizedBox(height: 12),
           Text(
             'Auto-scrap → essence (junk broken for essence)',

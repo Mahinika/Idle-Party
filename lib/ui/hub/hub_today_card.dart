@@ -23,7 +23,7 @@ class HubMetaPulse extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!GameLogic.showDailyChase(state)) {
-      return const SizedBox(height: 4);
+      return const SizedBox.shrink();
     }
     // Soft mute on READY/ALMOST: still show vault/KEY crumbs unless chase owns them.
     final bits = <String>[];
@@ -61,7 +61,7 @@ class HubMetaPulse extends StatelessWidget {
       }
     }
 
-    if (bits.isEmpty) return const SizedBox(height: 4);
+    if (bits.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(top: 2, bottom: 2),
@@ -84,12 +84,14 @@ class HubTodayCard extends StatelessWidget {
     super.key,
     required this.chase,
     this.compact = false,
+    this.hideDetail = false,
     this.actionLabel,
     this.onAction,
   });
 
   final HubChase chase;
   final bool compact;
+  final bool hideDetail;
   final String? actionLabel;
   final VoidCallback? onAction;
 
@@ -107,7 +109,7 @@ class HubTodayCard extends StatelessWidget {
         : almost
         ? 'ALMOST'
         : null;
-    final showDetail = chase.detail.isNotEmpty;
+    final showDetail = !hideDetail && chase.detail.isNotEmpty;
     // Text strip only — no fill box under ENTER.
     return Semantics(
       label: 'TODAY chase: ${chase.title}. ${chase.detail}',

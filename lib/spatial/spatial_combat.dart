@@ -697,6 +697,7 @@ class SpatialWorld {
     this.pendingFeelKills = 0,
     this.pendingFeelPickups = 0,
     this.pendingFeelStairs = 0,
+    this.pendingVacuumLootLine,
     this.godHandRadius = 1.8,
     this.bagFullFloaterCooldown = 0,
     List<SpatialFloater>? floaters,
@@ -768,6 +769,9 @@ class SpatialWorld {
   /// Stairs just opened this step (GO juice).
   int pendingFeelStairs;
 
+  /// Short vacuum pickup line (≤3 item names + gold) for stairs-open toast.
+  String? pendingVacuumLootLine;
+
   /// Cached God Hand radius for guide ring paint (set on cast).
   double godHandRadius;
 
@@ -817,6 +821,7 @@ class SpatialStepResult {
     this.heroLevelUps = 0,
     this.lootPickups = 0,
     this.stairsOpened = false,
+    this.vacuumLootLine,
   });
 
   final SpatialWorld world;
@@ -840,6 +845,9 @@ class SpatialStepResult {
 
   /// Floor is cleared and the stairs just opened this result.
   final bool stairsOpened;
+
+  /// Vacuum pickup list when stairs opened (≤3 names + gold).
+  final String? vacuumLootLine;
 }
 
 abstract final class SpatialCombat {
@@ -2326,6 +2334,7 @@ abstract final class SpatialCombat {
       pendingFeelKills: world.pendingFeelKills,
       pendingFeelPickups: world.pendingFeelPickups,
       pendingFeelStairs: world.pendingFeelStairs,
+      pendingVacuumLootLine: world.pendingVacuumLootLine,
       floaters: world.floaters,
       bursts: world.bursts,
       groundFx: world.groundFx,
@@ -2907,6 +2916,8 @@ abstract final class SpatialCombat {
     world.pendingFeelPickups = 0;
     final stairs = world.pendingFeelStairs;
     world.pendingFeelStairs = 0;
+    final vacuumLine = world.pendingVacuumLootLine;
+    world.pendingVacuumLootLine = null;
     return SpatialStepResult(
       world: world,
       state: state,
@@ -2919,6 +2930,7 @@ abstract final class SpatialCombat {
       heroLevelUps: levels,
       lootPickups: pickups,
       stairsOpened: stairs > 0,
+      vacuumLootLine: vacuumLine,
     );
   }
 
@@ -4501,8 +4513,26 @@ abstract final class SpatialCombat {
   static GameState _vacuumGroundLoot(SpatialWorld world, GameState state) {
     if (world.groundLoot.isEmpty) return state;
     final drops = <LootDrop>[for (final loot in world.groundLoot) loot.drop];
+    final names = <String>[];
+    for (final drop in drops) {
+      if (!drop.isEquipment) continue;
+      if (names.length >= 3) break;
+      final label = drop.equipment?.name ?? drop.name;
+      if (label.isNotEmpty) names.add(label);
+    }
     world.groundLoot.clear();
-    return GameLogic.applyLootDrops(state, drops).state;
+    final granted = GameLogic.grantLoot(state, drops);
+    world.pendingFeelPickups += drops.length;
+    final bits = <String>[...names];
+    if (granted.receipt.goldGained > 0) {
+      bits.add('+${granted.receipt.goldGained}g');
+    } else if (names.isEmpty && granted.receipt.essenceGained > 0) {
+      bits.add('+${granted.receipt.essenceGained}e');
+    }
+    if (bits.isNotEmpty) {
+      world.pendingVacuumLootLine = bits.join(' · ');
+    }
+    return granted.state;
   }
 
   static ({int gold, GameState state}) _onEnemyKilled(

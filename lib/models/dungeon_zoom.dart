@@ -27,6 +27,13 @@ enum DungeonZoom {
         DungeonZoom.wide => 'See more of the floor at once',
       };
 
+  /// Compact in-dungeon chip label.
+  String get hudChipLabel => switch (this) {
+        DungeonZoom.close => 'Z·C',
+        DungeonZoom.normal => 'Z·N',
+        DungeonZoom.wide => 'Z·W',
+      };
+
   DungeonZoom get next => switch (this) {
         DungeonZoom.close => DungeonZoom.normal,
         DungeonZoom.normal => DungeonZoom.wide,

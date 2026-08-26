@@ -41,6 +41,7 @@ class Is2Shell extends StatefulWidget {
 class _Is2ShellState extends State<Is2Shell> {
   GameState get state => widget.director.state;
   MenuRouter get router => widget.router;
+  bool _dpsMeterOpen = false;
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
@@ -97,6 +98,9 @@ class _Is2ShellState extends State<Is2Shell> {
   Widget _buildBody(GameDirector d) {
     final hudSide = GameTheme.edgeGap;
     final hudBottom = GameTheme.hudAboveNav;
+    final awaitingExit = d.spatial?.awaitingExit == true;
+    // Raise party strip while walking to stairs so GO / exit stays visible.
+    final partyBottom = awaitingExit ? hudBottom + 52 : hudBottom;
 
     return Stack(
       fit: StackFit.expand,
@@ -132,11 +136,26 @@ class _Is2ShellState extends State<Is2Shell> {
                     // Reading every hero and every enemy 60 times a second only
                     // bought digits nobody can read that fast.
                     if (!d.awaitingWipeChoice) ...[
+                      // Light map dim while the DPS meter panel is open.
+                      if (_dpsMeterOpen)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: ColoredBox(
+                              color: const Color(0x4414100C),
+                            ),
+                          ),
+                        ),
                       // Calm map-first HUD: meter (tap), target chip, party strip.
                       Positioned(
                         left: hudSide,
                         top: GameTheme.clusterGap / 2,
-                        child: DpsMeter(director: d),
+                        child: DpsMeter(
+                          director: d,
+                          onOpenChanged: (open) {
+                            if (_dpsMeterOpen == open) return;
+                            setState(() => _dpsMeterOpen = open);
+                          },
+                        ),
                       ),
                       Positioned(
                         right: hudSide,
@@ -145,7 +164,7 @@ class _Is2ShellState extends State<Is2Shell> {
                       ),
                       Positioned(
                         left: hudSide,
-                        bottom: hudBottom,
+                        bottom: partyBottom,
                         child: PartyCornerHud(
                           director: d,
                           selectedHeroIndex: router.abilityHeroIndex,

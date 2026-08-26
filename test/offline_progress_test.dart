@@ -28,6 +28,14 @@ void main() {
     );
   }
 
+  test('hasSummary shows gold/clears under 20s; other rewards need 20s', () {
+    expect(result(gold: 10, seconds: 5).hasSummary, isTrue);
+    expect(result(rooms: 1, seconds: 8).hasSummary, isTrue);
+    expect(result(essence: 3, seconds: 10).hasSummary, isFalse);
+    expect(result(essence: 3, seconds: 20).hasSummary, isTrue);
+    expect(result(seconds: 60).hasSummary, isFalse);
+  });
+
   test('banner headline is wow + away, not a number dump', () {
     final r = result(bosses: 2, gold: 500, essence: 12, rooms: 4);
     expect(r.headline, startsWith('Bosses fell'));

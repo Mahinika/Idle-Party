@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.64';
+  static const String currentVersion = '1.12.65';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.65',
+      bullets: <String>[
+        'Feel polish: God Hand only via fist / long-press (map idle taps safe); loot vacuum names drops; zoom chip in dungeon; party HUD stays bright in fight and lifts on stairs. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'META KEY vault Today vs Season; FORGE KEEP Ascend + God Hand Mastery; MARKET bag-full toast; GEAR shield/flask/min iLvl; auto-sell preview. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.64',
       bullets: <String>[

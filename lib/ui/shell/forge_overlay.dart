@@ -150,7 +150,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
 
   Widget _classicForgeBody() {
     final state = director.state;
-    final canAscend = GameLogic.canAscend(state);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -247,22 +246,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           const SizedBox(height: 6),
         ],
         const SizedBox(height: 8),
-        Text(
-          GameLogic.endgameUnlocked(state)
-              ? 'Party Lv${GameLogic.maxHeroLevel} · endgame: KEY, Gauntlet, Rifts'
-              : GameLogic.isMaxAscension(state)
-              ? 'AL20 · level the party to ${GameLogic.maxHeroLevel} for KEY / Gauntlet / Rifts'
-              : canAscend
-              ? (director.state.inDungeon
-                    ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
-                    : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
-              : 'Ascend ${state.bossVictories}/'
-                    '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} '
-                    'bosses · claim on Hub (not here)',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 8),
       ],
     );
   }
@@ -300,6 +283,20 @@ class _ForgeOverlayState extends State<ForgeOverlay>
                     '+${state.ascendBlessingVitalityBonus} STA · '
                     '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+        ),
+        Text(
+          GameLogic.endgameUnlocked(state)
+              ? 'Party Lv${GameLogic.maxHeroLevel} · endgame: KEY, Gauntlet, Rifts'
+              : GameLogic.isMaxAscension(state)
+              ? 'AL20 · level the party to ${GameLogic.maxHeroLevel} for KEY / Gauntlet / Rifts'
+              : GameLogic.canAscend(state)
+              ? (state.inDungeon
+                    ? 'Ascend ready — return to Hub · AL${state.ascensionLevel + 1}'
+                    : 'Ascend ready on Hub · AL${state.ascensionLevel + 1}')
+              : 'Ascend ${state.bossVictories}/'
+                    '${GameLogic.bossesRequiredForAscension(state.ascensionLevel)} '
+                    'bosses · claim on Hub',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         Builder(
           builder: (_) {
@@ -396,21 +393,34 @@ class _ForgeOverlayState extends State<ForgeOverlay>
             ],
           ],
         ),
-        for (final m in GodHandMastery.milestones)
-          if (GodHandMastery.ready(state, m.$1) ||
-              state.metaDepth.claimedGodHandMastery.contains(m.$1))
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: KenneyButton(
-                label: state.metaDepth.claimedGodHandMastery.contains(m.$1)
-                    ? 'DONE · ${m.$2}'
-                    : 'CLAIM · ${m.$2}',
-                style: KenneyButtonStyle.grey,
-                onPressed: state.metaDepth.claimedGodHandMastery.contains(m.$1)
-                    ? null
-                    : () => director.claimGodHandMastery(m.$1),
+        if (GodHandMastery.milestones.any(
+          (m) =>
+              GodHandMastery.ready(state, m.$1) ||
+              state.metaDepth.claimedGodHandMastery.contains(m.$1),
+        )) ...[
+          const SizedBox(height: 8),
+          _sectionTitle(
+            'GOD HAND MASTERY',
+            'Milestones from Hand level, CD upgrades, and smash count.',
+            scope: MenuScope.account,
+          ),
+          for (final m in GodHandMastery.milestones)
+            if (GodHandMastery.ready(state, m.$1) ||
+                state.metaDepth.claimedGodHandMastery.contains(m.$1))
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: KenneyButton(
+                  label: state.metaDepth.claimedGodHandMastery.contains(m.$1)
+                      ? 'DONE · ${m.$2}'
+                      : 'CLAIM · ${m.$2}',
+                  style: KenneyButtonStyle.grey,
+                  onPressed:
+                      state.metaDepth.claimedGodHandMastery.contains(m.$1)
+                      ? null
+                      : () => director.claimGodHandMastery(m.$1),
+                ),
               ),
-            ),
+        ],
         if (BlessingConstellation.unlocked(state)) ...[
           const SizedBox(height: 8),
           Text(

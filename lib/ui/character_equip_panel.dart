@@ -250,8 +250,8 @@ class CharacterEquipPanel extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     state.isPartyDefeated
-                        ? 'iLvl ${_avgItemLevel(hero)}  ·  WIPED'
-                        : 'iLvl ${_avgItemLevel(hero)}  ·  HP '
+                        ? 'iLvl ${_avgItemLevel(hero)} · min ${_minItemLevel(hero)}  ·  WIPED'
+                        : 'iLvl ${_avgItemLevel(hero)} · min ${_minItemLevel(hero)}  ·  HP '
                               '${hero.currentHp.clamp(0, maxHp)}/$maxHp',
                     textAlign: TextAlign.center,
                     style: GameTheme.body(
@@ -335,6 +335,28 @@ class CharacterEquipPanel extends StatelessWidget {
                       slotFor(EquipmentSlot.offHand, size: weaponSize),
                     ],
                   ),
+                  if (ClassProficiency.canUseShield(hero.spec)) ...[
+                    const SizedBox(height: 2),
+                    Builder(
+                      builder: (_) {
+                        final hasShield =
+                            hero.itemIn(EquipmentSlot.offHand)?.offHandKind ==
+                            OffHandKind.shield;
+                        return Text(
+                          hasShield
+                              ? 'Off-hand: shield equipped'
+                              : 'Off-hand: Warrior / Paladin / Shaman need a shield',
+                          textAlign: TextAlign.center,
+                          style: GameTheme.body(
+                            size: 11,
+                            color: hasShield
+                                ? GameTheme.parchmentDim
+                                : GameTheme.torchHot,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                   SizedBox(height: slotGap),
                   Wrap(
                     alignment: WrapAlignment.center,
@@ -349,6 +371,15 @@ class CharacterEquipPanel extends StatelessWidget {
                       ])
                         slotFor(s),
                     ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'FLASK · Dungeon heal',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
+                    ),
                   ),
                 ],
               ),
@@ -491,6 +522,7 @@ class CharacterEquipPanel extends StatelessWidget {
               ),
               ('LS', '${hero.gearLifestealPercent}%'),
               ('iLvl', '${_avgItemLevel(hero)}'),
+              ('min', '${_minItemLevel(hero)}'),
             ])
               MenuChrome.chip(
                 label: entry.$1,
@@ -532,6 +564,20 @@ class CharacterEquipPanel extends StatelessWidget {
       sum += hero.itemIn(slot)?.effectiveItemLevel ?? 0;
     }
     return (sum / slots.length).round();
+  }
+
+  int _minItemLevel(PartyHero hero) {
+    var minIlvl = 0;
+    var any = false;
+    for (final slot in allSlots) {
+      final il = hero.itemIn(slot)?.effectiveItemLevel ?? 0;
+      if (il <= 0) continue;
+      if (!any || il < minIlvl) {
+        minIlvl = il;
+        any = true;
+      }
+    }
+    return minIlvl;
   }
 }
 

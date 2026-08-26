@@ -207,10 +207,7 @@ class SanctuaryOverlay extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Ascend Blessing ×${state.metaDepth.ascendBlessings} · '
-            '+${state.ascendBlessingAttackBonus} ATK · '
-            '+${state.ascendBlessingDefenseBonus} DEF · '
-            '+${state.ascendBlessingVitalityBonus} STA · '
-            '+${state.ascendBlessingGoldPercent}% gold',
+            'see Forge → KEEP',
             style: GameTheme.body(size: 13, color: GameTheme.mossLit),
           ),
         ],
@@ -331,12 +328,12 @@ class SanctuaryOverlay extends StatelessWidget {
                 ? () => director.upgradeSanctuary(track)
                 : null,
           ),
-          if (track == 'gold') ...[
-            Builder(
-              builder: (_) {
-                final bulk = GoldIncome.goldFindBulkAffordableLevels(state);
-                if (bulk <= 1) return const SizedBox.shrink();
-                final target = level + bulk;
+          Builder(
+            builder: (_) {
+              final bulk = GameLogic.sanctuaryBulkAffordableLevels(state, track);
+              if (bulk <= 1) return const SizedBox.shrink();
+              final target = level + bulk;
+              if (track == 'gold') {
                 final hubNow = GoldIncome.hubGoldPerMinute(state);
                 final hubAfter = GoldIncome.hubGoldPerMinuteAtGoldLevel(
                   state,
@@ -348,12 +345,20 @@ class SanctuaryOverlay extends StatelessWidget {
                     label:
                         'Buy $bulk · Lv$target · +${hubAfter - hubNow} g/min',
                     style: KenneyButtonStyle.brown,
-                    onPressed: () => director.upgradeSanctuaryGoldBulk(),
+                    onPressed: () => director.upgradeSanctuaryBulk(track),
                   ),
                 );
-              },
-            ),
-          ],
+              }
+              return Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: KenneyButton(
+                  label: 'Buy $bulk · Lv$target',
+                  style: KenneyButtonStyle.brown,
+                  onPressed: () => director.upgradeSanctuaryBulk(track),
+                ),
+              );
+            },
+          ),
           if (canPrestige) ...[
             const SizedBox(height: 4),
             KenneyButton(
@@ -439,6 +444,60 @@ class _MarketOverlayState extends State<MarketOverlay> {
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
+        const SizedBox(height: 8),
+        MenuChrome.sectionLabelScoped('SUPPLIES', scope: MenuScope.run),
+        const SizedBox(height: 4),
+        Text(
+          'Empty flask slots first, extras go to BAG.\n'
+          'Full bag: BAG → CLEAN BAG / MERGE, or SETTINGS auto-sell.',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        KenneyButton(
+          label: state.gold >= flaskCost
+              ? 'Buy flask · ${flaskCost}g'
+              : 'Buy flask · Need ${flaskCost}g',
+          onPressed: state.gold >= flaskCost ? director.buyMarketFlask : null,
+        ),
+        const SizedBox(height: 4),
+        KenneyButton(
+          label: state.gold >= flaskCost * 3
+              ? 'Buy 3 flasks · ${flaskCost * 3}g'
+              : 'Buy 3 flasks · Need ${flaskCost * 3}g',
+          onPressed: state.gold >= flaskCost * 3
+              ? () => director.buyMarketFlasks()
+              : null,
+        ),
+        const SizedBox(height: 4),
+        KenneyButton(
+          label: state.gold >= GameLogic.marketBandageCost(state)
+              ? 'Buy bandage · ${GameLogic.marketBandageCost(state)}g'
+              : 'Buy bandage · Need ${GameLogic.marketBandageCost(state)}g',
+          onPressed: state.gold >= GameLogic.marketBandageCost(state)
+              ? director.buyMarketBandage
+              : null,
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            KenneySprite(asset: KenneyAssets.potionRed, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Flask: whole party (~30% HP). Bandage: lowest hero (~40% HP).\n'
+                '${_marketHealCount(state)}',
+                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Bag cleanup: use BAG → CLEAN BAG / MERGE, or SETTINGS auto-sell '
+          'and auto-disassemble. Tap-sell stash is hidden.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
         const SizedBox(height: 10),
         MenuChrome.sectionLabelScoped('GEAR LISTINGS', scope: MenuScope.run),
         const SizedBox(height: 4),
@@ -463,79 +522,40 @@ class _MarketOverlayState extends State<MarketOverlay> {
                     ? director.refreshMarketListings
                     : null),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         _slotFilterRow(),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         _heroFilterRow(state),
-        const SizedBox(height: 8),
-        if (listings.isEmpty)
-          Text(
-            'No listings match this filter.',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-          )
-        else
-          for (final listing in listings) _listingCard(state, director, listing),
-        const SizedBox(height: 12),
-        Text(
-          'Buy gear when drops miss your slot. Listings refresh over time. '
-          'Fill empty slots here — dungeon loot still scales higher later.',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 12),
-        MenuChrome.sectionLabelScoped('SUPPLIES', scope: MenuScope.run),
         const SizedBox(height: 6),
-        Text(
-          'Empty flask slots first, extras go to BAG.\n'
-          'Full bag: BAG → CLEAN BAG / MERGE, or SETTINGS auto-sell.',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 8),
-        KenneyButton(
-          label: state.gold >= flaskCost
-              ? 'Buy flask · ${flaskCost}g'
-              : 'Buy flask · Need ${flaskCost}g',
-          onPressed: state.gold >= flaskCost ? director.buyMarketFlask : null,
-        ),
-        const SizedBox(height: 6),
-        KenneyButton(
-          label: state.gold >= flaskCost * 3
-              ? 'Buy 3 flasks · ${flaskCost * 3}g'
-              : 'Buy 3 flasks · Need ${flaskCost * 3}g',
-          onPressed: state.gold >= flaskCost * 3
-              ? () => director.buyMarketFlasks()
-              : null,
-        ),
-        const SizedBox(height: 6),
-        KenneyButton(
-          label: state.gold >= GameLogic.marketBandageCost(state)
-              ? 'Buy bandage · ${GameLogic.marketBandageCost(state)}g'
-              : 'Buy bandage · Need ${GameLogic.marketBandageCost(state)}g',
-          onPressed: state.gold >= GameLogic.marketBandageCost(state)
-              ? director.buyMarketBandage
-              : null,
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            KenneySprite(asset: KenneyAssets.potionRed, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Flask: whole party (~30% HP). Bandage: lowest hero (~40% HP).\n'
-                '${_marketHealCount(state)}',
-                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Bag cleanup: use BAG → CLEAN BAG / MERGE, or SETTINGS auto-sell '
-          'and auto-disassemble. Tap-sell stash is hidden.',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        Expanded(
+          child: listings.isEmpty
+              ? Center(
+                  child: Text(
+                    'No listings match this filter.',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                )
+              : ListView(
+                  children: [
+                    for (final listing in listings)
+                      _listingCard(state, director, listing),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Buy gear when drops miss your slot. Listings refresh '
+                      'over time. Fill empty slots here — dungeon loot still '
+                      'scales higher later.',
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(
+                        size: 11,
+                        color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ],
     );
