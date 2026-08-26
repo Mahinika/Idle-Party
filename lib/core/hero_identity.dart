@@ -7,8 +7,8 @@ abstract final class HeroIdentity {
   /// Which class body to draw (some specs borrow a sibling fantasy).
   static HeroClassId spriteClassFor(HeroSpecId specId) {
     return switch (specId) {
-      // Shadow reads as void caster, not white-robe healer.
-      HeroSpecId.shadow => HeroClassId.warlock,
+      // Shadow keeps priest class art; purple tint sells void fantasy.
+      HeroSpecId.shadow => HeroClassId.priest,
       _ => HeroSpecs.def(specId).classId,
     };
   }

@@ -9,7 +9,6 @@ import '../core/hub_chase.dart';
 import '../core/keystone.dart';
 import '../core/menu_alerts.dart';
 import '../core/meta_systems.dart';
-import '../core/ashen_crown.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
 import 'cave_atmosphere.dart';
@@ -200,7 +199,7 @@ class _HubScreenState extends State<HubScreen>
       case HubChaseKind.keystone:
         final id = chase.zoneId ?? _selectedId;
         return (
-          'ENTER',
+          'ENTER KEY +${chase.keyLevel ?? 1}',
           () {
             director.setHardmodeLevel(chase.keyLevel ?? 1);
             if (chase.zoneId != null) {
@@ -222,9 +221,12 @@ class _HubScreenState extends State<HubScreen>
       case HubChaseKind.riftMilestone:
         return ('RIFT', () => confirmRiftRun(context, director));
       case HubChaseKind.greaterRiftMilestone:
-        return ('GREATER', () => confirmGreaterRiftRun(context, director));
+        return ('GREATER RIFT', () => confirmGreaterRiftRun(context, director));
       case HubChaseKind.ashenCrown:
-        return ('ASHEN CROWN', () => director.enterAshenCrown());
+        return (
+          'ASHEN CROWN',
+          () => confirmAshenCrown(context, director, practice: false),
+        );
       case HubChaseKind.weekGoal:
         // Prefer ENTER for vault-style week goals; Gauntlet button if title hints.
         if (chase.title.toLowerCase().contains('gauntlet')) {
@@ -435,7 +437,13 @@ class _HubScreenState extends State<HubScreen>
                                   final foldEnter =
                                       onAction != null &&
                                       (actionLabel == 'ENTER' ||
-                                          actionLabel == 'DAILY');
+                                          actionLabel == 'DAILY' ||
+                                          (actionLabel?.startsWith('ENTER KEY') ??
+                                              false));
+                                  final endgamePrimary =
+                                      onAction != null &&
+                                      actionLabel != null &&
+                                      hubChaseOwnsEndgameRow(chase.kind);
                                   final readyPrimary =
                                       ready &&
                                       onAction != null &&
@@ -454,11 +462,24 @@ class _HubScreenState extends State<HubScreen>
                                   final VoidCallback? primaryAction;
                                   final String? secondaryLabel;
                                   final VoidCallback? secondaryAction;
-                                  if (foldEnter) {
-                                    primaryLabel = enterLabel;
+                                  if (foldEnter || endgamePrimary) {
+                                    primaryLabel = foldEnter
+                                        ? enterLabel
+                                        : actionLabel!;
                                     primaryAction = onAction;
-                                    secondaryLabel = null;
-                                    secondaryAction = null;
+                                    // Ashen: PRACTICE as secondary when ticket chase.
+                                    if (chase.kind == HubChaseKind.ashenCrown &&
+                                        GameLogic.endgameUnlocked(state)) {
+                                      secondaryLabel = 'PRACTICE';
+                                      secondaryAction = () => confirmAshenCrown(
+                                        context,
+                                        director,
+                                        practice: true,
+                                      );
+                                    } else {
+                                      secondaryLabel = null;
+                                      secondaryAction = null;
+                                    }
                                   } else if (readyPrimary) {
                                     primaryLabel = actionLabel;
                                     primaryAction = onAction;
@@ -633,41 +654,6 @@ class _HubScreenState extends State<HubScreen>
                                             director.isDailyClaimedToday,
                                         onDaily: () =>
                                             confirmDailyRun(context, director),
-                                        showGauntlet:
-                                            GameLogic.canEnterGauntlet(state) ||
-                                            GameLogic.endgameUnlocked(state),
-                                        gauntletBest:
-                                            state.metaDepth.gauntletBestFloor,
-                                        onGauntlet: () => confirmGauntletRun(
-                                          context,
-                                          director,
-                                        ),
-                                        showAshenCrown:
-                                            GameLogic.endgameUnlocked(state),
-                                        ashenCrownTickets: AshenCrown.ensureWeek(
-                                          state,
-                                        ).metaDepth.worldBossTickets,
-                                        onAshenCrown: () => director.enterAshenCrown(),
-                                        onAshenCrownPractice: () =>
-                                            director.enterAshenCrown(practice: true),
-                                        showRift:
-                                            GameLogic.canEnterRift(state) ||
-                                            GameLogic.endgameUnlocked(state),
-                                        riftBest:
-                                            state.metaDepth.riftBestTier,
-                                        onRift: () =>
-                                            confirmRiftRun(context, director),
-                                        showGreaterRift:
-                                            GameLogic.canEnterGreaterRift(
-                                                  state,
-                                                ) ||
-                                            GameLogic.endgameUnlocked(state),
-                                        grBest: state.metaDepth.grBestTier,
-                                        onGreaterRift: () =>
-                                            confirmGreaterRiftRun(
-                                          context,
-                                          director,
-                                        ),
                                         weeklyReady:
                                             GameLogic.canClaimDailyVault(state),
                                         weeklyProgress:

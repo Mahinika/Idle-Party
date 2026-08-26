@@ -1,4 +1,5 @@
 import 'game_logic.dart';
+import 'ashen_crown.dart';
 
 /// In-game guide copy for META → GUIDE.
 abstract final class GameGuides {
@@ -47,9 +48,9 @@ abstract final class GameGuides {
           '• Unlock the next zone by clearing the previous boss, or when your '
           'party mean level reaches that zone’s gate (even steps from Lv1 on '
           'Sandy Caverns through Lv100 on Mothveil).\n'
+          '• Zones unlock by party mean level or prior clear — gold does not unlock them.\n'
           '• Locked zones dim on the map; the caption under the map shows '
           'party level progress (have / need).\n'
-          '• Lifetime gold (not wallet gold) counts for gold unlocks.\n'
           "• Goblin's Hideout: stolen-stash chests pay better gold but wake ambush guards.\n"
           '• Boss floor is shown under your party name (Boss F n).',
     ),
@@ -286,7 +287,8 @@ abstract final class GameGuides {
           '• Hub TODAY can chase MARKET when an affordable listing beats your gear.\n'
           '• Wipe advice may point at MARKET when listings beat FORGE for the same gap.\n'
           '• Buy flasks and bandages with gold.\n'
-          '• Sell stash junk when the bag is full.\n'
+          '• Clear a full bag with BAG → CLEAN BAG, MERGE, or SETTINGS auto-sell / '
+          'auto-disassemble — there is no separate Sell junk button.\n'
           '• Keep at least one flask for tough floors and bosses.',
     ),
     GuideTopic(
@@ -310,9 +312,11 @@ abstract final class GameGuides {
       body:
           'POWER → SHOP (AL-gated).\n\n'
           '• Spend essence on stash slots, cheaper MERGE gold, pet roster, '
-          'extra loadout slots, cheaper market flasks, higher auto-sell/scrap '
-          'ceilings, more Welcome Back rows, God Hand CD (same as Forge → KEEP), '
-          'Dawn Tithe (vault + Daily Run), and more.\n'
+          'cheaper market flasks, higher auto-sell/scrap ceilings, more Welcome '
+          'Back rows, God Hand CD (same as Forge → KEEP), Dawn Tithe '
+          '(vault + Daily Run), and more.\n'
+          '• Loadout Folio is delisted — LOADOUTS tab is hidden; old slot '
+          'purchases still count in the save if you bought them earlier.\n'
           '• Purchases survive Ascend.\n'
           '• Unlock higher offerings as Ascension Level rises.',
     ),
@@ -352,14 +356,6 @@ abstract final class GameGuides {
           '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
     ),
     GuideTopic(
-      id: 'loadouts',
-      title: 'GEAR PRESETS (hidden)',
-      body:
-          'Named LOADOUTS were removed — swap gear in PARTY → GEAR / BAG.\n\n'
-          '• Armor sets (2pc/4pc) are dungeon bonuses on rare+ zone gear.\n'
-          '• Old saves may still hold unused preset data in the save file.',
-    ),
-    GuideTopic(
       id: 'armor_sets',
       title: 'ARMOR SETS',
       body:
@@ -368,6 +364,18 @@ abstract final class GameGuides {
           '• 4pc: more stats + role fantasy + a chance for a tagged set proc on autos.\n'
           '• Set names follow the zone (Tidehold, Ashen, Spire, …).\n'
           '• Not the same as old gear presets (LOADOUTS tab is hidden).',
+    ),
+    GuideTopic(
+      id: 'ashen_crown',
+      title: 'ASHEN CROWN',
+      body:
+          'Weekly ticket boss (party Lv${GameLogic.maxHeroLevel}). Hub TODAY or META → KEY.\n\n'
+          '• ${AshenCrown.ticketsPerWeek} tickets each ISO week. The first ticket clear '
+          'pays +${AshenCrown.essenceReward}e and a title.\n'
+          '• After that clear, further tickets do not pay — use PRACTICE (free, no ticket) '
+          'to rehearse the fight.\n'
+          '• Confirm before a ticket run. PRACTICE never spends a ticket.\n'
+          '• Uses Ashen Vault staging; leave or wipe returns you to the hub.',
     ),
     GuideTopic(
       id: 'hardmode',
@@ -380,11 +388,12 @@ abstract final class GameGuides {
           '• Affixes lock on enter (weekly + Fortified/Tyrannical at +4, more at higher keys).\n'
           '• Idle-friendly timer: AFK time counts; beat the boss under par to TIMED upgrade.\n'
           '• Overtime = depleted (clear still counts, no key upgrade).\n'
-          '• Daily vault: 1 clear or timed KEY+2 — claim once per day.\n'
-          '• Optional Boss Rush / No Flask add extra affixes + essence.\n'
+          '• Daily vault: 1 clear or timed KEY +2 — claim once per day.\n'
+          '• Optional Boss Rush / No Flask / Tiny add extra challenge + essence.\n'
           '• Higher keys drop higher iLvl gear (KEY +10 is +20 iLvl) and pay '
           'gold in line with the harder packs — not a gold tax.\n'
-          '• At party Lv${GameLogic.maxHeroLevel}, hub TODAY may chase KEY until your preferred key is at the cap.',
+          '• At party Lv${GameLogic.maxHeroLevel}, hub TODAY may chase KEY until your preferred key is at the cap.\n'
+          '• Ashen Crown tickets and PRACTICE live under the same endgame KEY home.',
     ),
     GuideTopic(
       id: 'ascend',
@@ -393,15 +402,18 @@ abstract final class GameGuides {
           'Claim Ascend in the hub when ready (AL1–AL20) — same party, empty bag, '
           'stronger Blessing.\n\n'
           '• AL20 is the Ascension cap. Endgame (KEY +20, Gauntlet, Rifts, Greater Rifts, '
-          'vault, boards) unlocks when every active hero reaches level ${GameLogic.maxHeroLevel}.\n'
+          'Ashen Crown, vault, boards) unlocks when every active hero reaches level '
+          '${GameLogic.maxHeroLevel} — not from AL20 alone.\n'
           '• Each Ascend grants a lasting Blessing: +5 ATK · +20 DEF · +60 STA · '
           '+8% gold (stacks forever). See Forge → KEEP.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
           '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
           '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
           'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
-          '• Reset: wallet gold, forge tracks, bag and worn drops, market, loadouts, '
-          'floor height (starter gear back on). Boss victories toward the next Ascend clear.\n'
+          '• Reset: wallet gold, forge tracks, bag and worn drops, market, floor height '
+          '(starter gear back on). Legacy loadout presets in the save wipe too '
+          '(LOADOUTS tab is hidden).\n'
+          '• Boss victories toward the next Ascend clear.\n'
           '• At AL20, Forge → KEEP offers optional REBORN (same bag wipe, AL stays 20, '
           'no extra Blessing). TODAY never nags you to press it.',
     ),
@@ -410,10 +422,12 @@ abstract final class GameGuides {
       title: 'DAILY RUN',
       body:
           'A daily echo dungeon appears on the hub when available.\n\n'
-          '• After the first hour, TODAY chases Ascend / zones / Daily — not KEY '
-          '(KEY unlocks at party Lv${GameLogic.maxHeroLevel}).\n'
-          '• At party Lv${GameLogic.maxHeroLevel}, TODAY may chase KEY when your preferred key is below cap; '
-          'Daily is extra essence when KEY is capped.\n'
+          '• Early (before first boss): TODAY focuses on growing the party — Daily '
+          'may wait.\n'
+          '• After the first hour, TODAY may chase Ascend, zones, vault, Daily, or '
+          '(at party Lv${GameLogic.maxHeroLevel}) KEY / Gauntlet / Rifts — one hunt at a time.\n'
+          '• When KEY is below dial cap, KEY often wins TODAY; Daily is still free '
+          'essence from the hub or Urgent row.\n'
           '• Clear the required floor(s) for a flat essence reward.\n'
           '• May let you visit a locked zone for the day.\n'
           '• Claim once per day — good free essence.',

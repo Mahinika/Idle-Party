@@ -1251,7 +1251,7 @@ class ClassKits {
       coeff: 1.05,
 
       fireMode: AbilityFireMode.swingRider,
-      showInHud: false,
+      showInHud: true,
     ),
     ClassAbilityDef(
       id: AbilityId.kidneyShot,
@@ -2755,7 +2755,7 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.65,
-      showInHud: false,
+      showInHud: true,
       boltStyle: SpellBoltStyle.shadow,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.shadow,

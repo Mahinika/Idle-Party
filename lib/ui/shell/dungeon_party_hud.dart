@@ -38,14 +38,14 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   static const _idleFadePhone = Duration(seconds: 5);
   static const _fullOpacity = 1.0;
   static const _dimOpacity = 0.55;
-  static const _dimOpacityPhone = 0.4;
+  static const _dimOpacityPhone = 0.85;
   static const _hudScale = 1.0;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;
 
   /// Kit chips only when the player taps a strip (map stays clear by default).
-  bool _kitOpen = false;
+  bool _kitOpen = true;
 
   @override
   void initState() {
@@ -398,7 +398,7 @@ class _PartyRow extends StatelessWidget {
             spatial: spatial!,
             resource: resource,
             hasShield: hasShield,
-            maxChips: phone ? 2 : (compact ? 3 : 4),
+            maxChips: phone ? 3 : (compact ? 3 : 4),
           )
         : const <ClassAbilityDef>[];
 
@@ -573,7 +573,7 @@ class _PartyRow extends StatelessWidget {
               ),
               SizedBox(width: phone ? 4 : 5),
               Text(
-                phone ? '${(frac * 100).round()}' : '$liveHp',
+                phone ? '${(frac * 100).round()}%' : '$liveHp',
                 style: GameTheme.body(
                   size: phone ? 11 : 12,
                   color: GameTheme.parchmentDim,

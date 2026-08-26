@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.60';
+  static const String currentVersion = '1.12.61';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.61',
+      bullets: <String>[
+        'Hub feel: TODAY endgame hunts (Gauntlet / Rift / Greater Rift / Ashen / KEY) drive the big button; READY shows why; Ashen has confirm + PRACTICE; tickets stop after the paid weekly clear. Prestige Ascend still Rebuild your bag until you loot; AL20 KEEP still has optional REBORN.',
+        'Guides honesty + MARKET tap-sell stash hidden (BAG CLEAN / SETTINGS auto-sell). Dungeon: zone/floor/KEY in compact top, FARM/PUSH tips, God Hand CD seconds, kit chips open, GO stairs on top.',
+        'Hell packs less King-like; Stormwake elites less bat-heavy. Shadow keeps priest art. Eviscerate shows in HUD. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.60',
       bullets: <String>[
@@ -33,7 +41,8 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.59',
       bullets: <String>[
-        'Ascend is a claim, not a wipe: keep gold, forge, gear, floors, loadouts, and market. You still gain AL power, Blessing, kits, and essence — only boss victories toward the next Ascend clear.',
+        'Was briefly claim-only (kept gold/gear/floors); 1.12.60 restored prestige '
+            'Ascend bag wipe — keep levels/zones/Apex, rebuild the bag.',
         'KEY / Gauntlet / Greater Rifts still unlock at party Lv100. World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
     ),

@@ -302,13 +302,13 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           const SizedBox(height: 8),
           KenneyButton(
             label: 'REBORN',
-            style: KenneyButtonStyle.red,
+            style: KenneyButtonStyle.grey,
             expanded: false,
             onPressed: () => confirmRebornAtCap(context, director),
           ),
           const SizedBox(height: 4),
           Text(
-            'Optional empty-bag climb. AL stays 20 — no extra Blessing. '
+            'Optional empty-bag climb (confirm next). AL stays 20 — no extra Blessing. '
             'Apex stays. TODAY will not nag you to press this.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),

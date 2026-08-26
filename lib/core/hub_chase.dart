@@ -51,6 +51,20 @@ enum HubChaseKind {
   ashenCrown,
 }
 
+/// Endgame hunts use TODAY + primary ENTER / META → KEY — not a second hub row.
+bool hubChaseOwnsEndgameRow(HubChaseKind kind) {
+  switch (kind) {
+    case HubChaseKind.keystone:
+    case HubChaseKind.gauntletMilestone:
+    case HubChaseKind.riftMilestone:
+    case HubChaseKind.greaterRiftMilestone:
+    case HubChaseKind.ashenCrown:
+      return true;
+    default:
+      return false;
+  }
+}
+
 /// How close the chase is to a payoff - drives TODAY chrome.
 enum HubChaseUrgency {
   /// Keep grinding.
@@ -349,8 +363,8 @@ class HubChase {
       kind: HubChaseKind.ashenCrown,
       title: 'Clear ${AshenCrown.name}',
       detail: tickets == 1
-          ? '1 ticket left this week - spend it for +${AshenCrown.essenceReward}e.'
-          : '$tickets tickets left - clear for +${AshenCrown.essenceReward}e.',
+          ? '1 ticket — first clear pays +${AshenCrown.essenceReward}e. PRACTICE is free after.'
+          : '$tickets tickets — one paid clear/week (+${AshenCrown.essenceReward}e); then PRACTICE is free.',
       progressLabel: '$tickets tix',
       urgency: tickets <= 1 ? HubChaseUrgency.almost : HubChaseUrgency.normal,
     );

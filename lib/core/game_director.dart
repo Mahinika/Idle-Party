@@ -1000,7 +1000,7 @@ class GameDirector extends ChangeNotifier {
           showToast(payoffNotices.join(' · '), life: 3.0);
         }
         // Long enough to read gold / LEVEL UP on a phone before the next pack.
-        _clearSummaryLife = 2.05;
+        _clearSummaryLife = 3.5;
         if (_state.highestDungeonCleared > beforeDungeon) {
           GameAudio.unlock();
           String? nextId;
@@ -1825,10 +1825,22 @@ class GameDirector extends ChangeNotifier {
       );
       return;
     }
-    if (!practice &&
-        AshenCrown.ensureWeek(_state).metaDepth.worldBossTickets <= 0) {
-      showToast('No Ashen Crown tickets this week — try Practice', life: 2.6);
-      return;
+    final week = AshenCrown.ensureWeek(_state);
+    if (!practice) {
+      if (week.metaDepth.worldBossClearedWeek) {
+        showToast(
+          'Already cleared this week — PRACTICE is free',
+          life: 2.8,
+        );
+        return;
+      }
+      if (week.metaDepth.worldBossTickets <= 0) {
+        showToast(
+          'No Ashen Crown tickets this week — PRACTICE is free',
+          life: 2.6,
+        );
+        return;
+      }
     }
     _state = GameLogic.enterAshenCrown(_state, practice: practice);
     notifyListeners();

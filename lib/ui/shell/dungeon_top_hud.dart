@@ -10,6 +10,7 @@ import '../../models/dungeon_mode.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
 import '../kenney_sprite.dart';
+import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../spatial_dungeon_view.dart';
 import 'shell_common.dart';
@@ -52,6 +53,56 @@ class DungeonTopHud extends StatelessWidget {
       state,
       runGpm: director.runGoldPerMinute,
     );
+    final keyBit = state.keystoneRunActive
+        ? ' · KEY +${state.keystoneRunLevel}'
+        : (state.hardmodeLevel > 0 ? ' · KEY +${state.hardmodeLevel}' : '');
+    final placeLine = state.inGauntlet
+        ? 'Gauntlet · F$floor'
+        : state.inRift
+        ? 'Rift R${state.riftTier} · ${state.riftKills}/${state.riftKillTarget}'
+        : state.inGreaterRift
+        ? 'GR${state.grTier} · ${state.grKills}/${state.grKillTarget}'
+        : state.inWorldBoss
+        ? 'Ashen Crown'
+        : '$dungeonName · F$floor$keyBit';
+    void setMode(DungeonMode mode) {
+      final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);
+      if (fighting && state.dungeonMode != mode) {
+        showDialog<bool>(
+          context: context,
+          barrierColor: MenuChrome.scrim,
+          builder: (ctx) => MenuChrome.dialog(
+            title: mode == DungeonMode.farm ? 'Switch to FARM?' : 'Switch to PUSH?',
+            content: Text(
+              mode == DungeonMode.farm
+                  ? 'FARM loops the same floor after clear for more loot.\n\n'
+                      'You are mid-fight — switch anyway?'
+                  : 'PUSH advances toward the boss after each clear.\n\n'
+                      'You are mid-fight — switch anyway?',
+              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            ),
+            actions: [
+              KenneyButton(
+                label: 'CANCEL',
+                style: KenneyButtonStyle.grey,
+                expanded: false,
+                onPressed: () => Navigator.pop(ctx, false),
+              ),
+              KenneyButton(
+                label: 'SWITCH',
+                style: KenneyButtonStyle.brown,
+                expanded: false,
+                onPressed: () => Navigator.pop(ctx, true),
+              ),
+            ],
+          ),
+        ).then((ok) {
+          if (ok == true) director.setDungeonMode(mode);
+        });
+        return;
+      }
+      director.setDungeonMode(mode);
+    }
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -85,6 +136,7 @@ class DungeonTopHud extends StatelessWidget {
                         label: 'GAUNTLET',
                         selected: true,
                         dense: true,
+                        interactive: false,
                         onTap: () {},
                       )
                     else if (state.inRift)
@@ -93,6 +145,7 @@ class DungeonTopHud extends StatelessWidget {
                             'R${state.riftTier} ${state.riftKills}/${state.riftKillTarget}',
                         selected: true,
                         dense: true,
+                        interactive: false,
                         onTap: () {},
                       )
                     else if (state.inGreaterRift)
@@ -101,6 +154,7 @@ class DungeonTopHud extends StatelessWidget {
                             'GR${state.grTier} ${state.grKills}/${state.grKillTarget}',
                         selected: true,
                         dense: true,
+                        interactive: false,
                         onTap: () {},
                       )
                     else ...[
@@ -108,14 +162,16 @@ class DungeonTopHud extends StatelessWidget {
                         label: 'FARM',
                         selected: farm,
                         dense: true,
-                        onTap: () => director.setDungeonMode(DungeonMode.farm),
+                        tip: 'Loop this floor after clear for loot',
+                        onTap: () => setMode(DungeonMode.farm),
                       ),
                       const SizedBox(width: 3),
                       DungeonModeChip(
                         label: 'PUSH',
                         selected: !farm,
                         dense: true,
-                        onTap: () => director.setDungeonMode(DungeonMode.push),
+                        tip: 'Advance floors toward the boss',
+                        onTap: () => setMode(DungeonMode.push),
                       ),
                     ],
                     // Shrink dots / God Hand / gold when CLAIM + ⋯ crowd 360px.
@@ -311,6 +367,7 @@ class DungeonTopHud extends StatelessWidget {
                           DungeonModeChip(
                             label: 'GAUNTLET F$floor',
                             selected: true,
+                            interactive: false,
                             onTap: () {},
                           )
                         else if (state.inRift)
@@ -323,6 +380,7 @@ class DungeonTopHud extends StatelessWidget {
                               tier: state.riftTier,
                             ),
                             selected: true,
+                            interactive: false,
                             onTap: () {},
                           )
                         else if (state.inGreaterRift)
@@ -335,21 +393,22 @@ class DungeonTopHud extends StatelessWidget {
                               tier: state.grTier,
                             ),
                             selected: true,
+                            interactive: false,
                             onTap: () {},
                           )
                         else ...[
                           DungeonModeChip(
                             label: 'FARM',
                             selected: farm,
-                            onTap: () =>
-                                director.setDungeonMode(DungeonMode.farm),
+                            tip: 'Loop this floor after clear for loot',
+                            onTap: () => setMode(DungeonMode.farm),
                           ),
                           const SizedBox(width: 4),
                           DungeonModeChip(
                             label: 'PUSH',
                             selected: !farm,
-                            onTap: () =>
-                                director.setDungeonMode(DungeonMode.push),
+                            tip: 'Advance floors toward the boss',
+                            onTap: () => setMode(DungeonMode.push),
                           ),
                         ],
                         const SizedBox(width: 6),
@@ -426,6 +485,20 @@ class DungeonTopHud extends StatelessWidget {
                     ),
                   ],
                 ),
+          if (compact)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                placeLine,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: GameTheme.pixel(
+                  size: 6,
+                  color: GameTheme.parchmentDim,
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Semantics(

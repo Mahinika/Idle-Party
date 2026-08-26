@@ -58,7 +58,7 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'market',
       title: 'MARKET',
-      body: 'Buy flasks and sell stash junk for gold when the bag gets full.',
+      body: 'Buy flasks in POWER → MARKET. When the bag is full, use BAG → CLEAN BAG / MERGE or SETTINGS auto-sell.',
     ),
     (
       id: 'forge',

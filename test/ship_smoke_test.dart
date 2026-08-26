@@ -108,7 +108,7 @@ void main() {
     );
   });
 
-  test('guides cover World Path endgame zones and LOADOUTS vs armor sets', () {
+  test('guides cover World Path endgame zones and Ashen Crown honesty', () {
     final world = GameGuides.topics.firstWhere((t) => t.id == 'world_path');
     expect(world.body.toLowerCase(), contains('tidehold'));
     expect(world.body.toLowerCase(), contains('ashen'));
@@ -118,11 +118,15 @@ void main() {
     expect(world.body.toLowerCase(), contains('blightfen'));
     expect(world.body.toLowerCase(), contains('brassvault'));
     expect(world.body.toLowerCase(), contains('mothveil'));
-    expect(world.body.toLowerCase(), contains('lifetime gold'));
+    expect(world.body.toLowerCase(), contains('party mean level'));
+    expect(world.body.toLowerCase(), contains('gold does not unlock'));
+    expect(world.body.toLowerCase(), isNot(contains('lifetime gold')));
 
-    final loadouts = GameGuides.topics.firstWhere((t) => t.id == 'loadouts');
-    expect(loadouts.title, 'GEAR PRESETS (hidden)');
-    expect(loadouts.body, contains('LOADOUTS'));
+    expect(GameGuides.topics.any((t) => t.id == 'loadouts'), isFalse);
+
+    final ashen = GameGuides.topics.firstWhere((t) => t.id == 'ashen_crown');
+    expect(ashen.body.toLowerCase(), contains('practice'));
+    expect(ashen.body.toLowerCase(), contains('ticket'));
 
     final armor = GameGuides.topics.where((t) => t.id == 'armor_sets');
     if (armor.isNotEmpty) {

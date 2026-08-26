@@ -29,9 +29,9 @@ class HubPowerupsCard extends StatelessWidget {
     final until = state.metaDepth.adBoostUntilMs;
     final active = AdBoost.isActive(until);
     final left = AdBoost.formatRemaining(until);
-    final detail = active
-        ? '×2 gold · +${AdBoost.attackPercent}% ATK · $left left'
-        : 'Watch ad · ${AdBoost.hoursPerAd}h of ×2 gold and +${AdBoost.attackPercent}% ATK';
+    final status = active
+        ? '×2 · $left'
+        : 'WATCH · ${AdBoost.hoursPerAd}h';
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: WebClickScope(
@@ -39,7 +39,7 @@ class HubPowerupsCard extends StatelessWidget {
         onPressed: onOpen,
         child: Semantics(
           button: true,
-          label: 'POWERUPS. $detail',
+          label: 'POWERUPS. $status',
           onTap: onOpen,
           excludeSemantics: true,
           child: Material(
@@ -50,49 +50,38 @@ class HubPowerupsCard extends StatelessWidget {
               child: Ink(
                 decoration: MenuChrome.hubPanel(selected: active),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minHeight: GameTheme.minTouch,
-                  ),
+                  constraints: const BoxConstraints(minHeight: 36),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
+                      horizontal: 8,
+                      vertical: 4,
                     ),
                     child: Row(
                       children: [
-                        KenneySprite(asset: KenneyAssets.potionBlue, size: 22),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'POWERUPS',
-                                style: GameTheme.body(
-                                  size: 13,
-                                  color: active
-                                      ? GameTheme.torchHot
-                                      : GameTheme.parchment,
-                                ),
-                              ),
-                              Text(
-                                detail,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GameTheme.body(
-                                  size: 12,
-                                  color: GameTheme.parchmentDim,
-                                ),
-                              ),
-                            ],
-                          ),
+                        KenneySprite(
+                          asset: KenneyAssets.potionBlue,
+                          size: 18,
                         ),
+                        const SizedBox(width: 6),
                         Text(
-                          active ? left : 'WATCH',
+                          'POWERUPS',
                           style: GameTheme.body(
                             size: 12,
-                            color: GameTheme.torchHot,
+                            color: active
+                                ? GameTheme.torchHot
+                                : GameTheme.parchment,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          status,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.body(
+                            size: 11,
+                            color: active
+                                ? GameTheme.torchHot
+                                : GameTheme.parchmentDim,
                           ),
                         ),
                       ],

@@ -3,10 +3,10 @@ import 'package:idle_party/core/hero_identity.dart';
 import 'package:idle_party/models/hero_spec.dart';
 
 void main() {
-  test('Shadow remaps to warlock silhouette', () {
+  test('Shadow keeps priest silhouette with void tint', () {
     expect(
       HeroIdentity.spriteClassFor(HeroSpecId.shadow),
-      HeroClassId.warlock,
+      HeroClassId.priest,
     );
     expect(
       HeroIdentity.spriteClassFor(HeroSpecId.discipline),

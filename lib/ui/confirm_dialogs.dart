@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/ashen_crown.dart';
 import '../core/meta_systems.dart';
 import '../core/rift.dart';
 import '../core/greater_rift.dart';
@@ -398,6 +399,63 @@ Future<void> confirmDailyRun(
     );
     if (ok == true && context.mounted) {
       director.enterDaily();
+    }
+  } finally {
+    WebClickBridge.popLayer();
+  }
+}
+
+Future<void> confirmAshenCrown(
+  BuildContext context,
+  GameDirector director, {
+  bool practice = false,
+}) async {
+  if (!AshenCrown.canEnter(director.state)) return;
+  final week = AshenCrown.ensureWeek(director.state);
+  final tickets = week.metaDepth.worldBossTickets;
+  final cleared = week.metaDepth.worldBossClearedWeek;
+  if (!practice && (cleared || tickets <= 0)) {
+    director.enterAshenCrown(practice: false); // toast via director
+    return;
+  }
+  WebClickBridge.pushLayer();
+  try {
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: practice ? 'Practice Ashen Crown?' : 'Ashen Crown?',
+        content: Text(
+          practice
+              ? 'Free practice — no ticket spent, no essence reward.\n\n'
+                  'Wipe or leave returns to hub. Learn the fight safely.'
+              : 'Weekly ticket boss. First clear this week pays '
+                  '+${AshenCrown.essenceReward}e.\n\n'
+                  'Tickets left: $tickets. After the paid clear, use PRACTICE '
+                  '(free) instead of spending more tickets.\n\n'
+                  'Wipe or leave returns to hub.',
+          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        ),
+        actions: [
+          KenneyButton(
+            label: 'CANCEL',
+            style: KenneyButtonStyle.grey,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, false),
+          ),
+          KenneyButton(
+            label: practice ? 'PRACTICE' : 'ENTER',
+            style: practice
+                ? KenneyButtonStyle.brown
+                : KenneyButtonStyle.red,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx, true),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) {
+      director.enterAshenCrown(practice: practice);
     }
   } finally {
     WebClickBridge.popLayer();

@@ -210,12 +210,12 @@ class SanctuaryOverlay extends StatelessWidget {
         ],
         const SizedBox(height: 10),
         for (final track in <String>['gold', 'power', 'vitality', 'xp'])
-          _campTrackCard(state, track),
+          _campTrackCard(context, state, track),
       ],
     );
   }
 
-  Widget _campTrackCard(GameState state, String track) {
+  Widget _campTrackCard(BuildContext context, GameState state, String track) {
     final level = _levelOf(state, track);
     final prestige = _prestigeOf(state, track);
     final nextLevel = level + 1;
@@ -340,7 +340,41 @@ class SanctuaryOverlay extends StatelessWidget {
             KenneyButton(
               label: 'Prestige · keep $keepShort · +${prestigeGain}e',
               style: KenneyButtonStyle.grey,
-              onPressed: () => director.prestigeSanctuaryTrack(track),
+              onPressed: () async {
+                final ok = await showDialog<bool>(
+                  context: context,
+                  barrierColor: MenuChrome.scrim,
+                  builder: (ctx) => MenuChrome.dialog(
+                    title: 'Prestige this track?',
+                    content: Text(
+                      'Resets the CAMP track to Lv1. Keeps $keepShort forever '
+                      'and refunds ${prestigeGain}e.\n\n'
+                      'This is not Ascend — only this sanctuary track.',
+                      style: GameTheme.body(
+                        size: 15,
+                        color: GameTheme.parchment,
+                      ),
+                    ),
+                    actions: [
+                      KenneyButton(
+                        label: 'CANCEL',
+                        style: KenneyButtonStyle.grey,
+                        expanded: false,
+                        onPressed: () => Navigator.pop(ctx, false),
+                      ),
+                      KenneyButton(
+                        label: 'PRESTIGE',
+                        style: KenneyButtonStyle.red,
+                        expanded: false,
+                        onPressed: () => Navigator.pop(ctx, true),
+                      ),
+                    ],
+                  ),
+                );
+                if (ok == true) {
+                  director.prestigeSanctuaryTrack(track);
+                }
+              },
             ),
           ],
         ],
@@ -372,7 +406,6 @@ class _MarketOverlayState extends State<MarketOverlay> {
     final director = widget.director;
     final state = director.state;
     final flaskCost = GameLogic.marketFlaskCost(state);
-    final stash = state.gearStash;
     final refreshLabel = MarketListingsService.formatRefreshRemaining(state);
     final refreshCost = GameLogic.marketListingsPaidRefreshCost(state);
     final listings = _filteredListings(state);
@@ -428,7 +461,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
         const SizedBox(height: 6),
         Text(
           'Empty flask slots first, extras go to BAG.\n'
-          'Full bag: CLEAN BAG (FILTERS) or tap stash below for gold.',
+          'Full bag: BAG → CLEAN BAG / MERGE, or SETTINGS auto-sell.',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -472,67 +505,11 @@ class _MarketOverlayState extends State<MarketOverlay> {
           ],
         ),
         const SizedBox(height: 8),
-        MenuChrome.sectionLabelScoped(
-          'SELL STASH (TAP = GOLD)',
-          scope: MenuScope.run,
+        Text(
+          'Bag cleanup: use BAG → CLEAN BAG / MERGE, or SETTINGS auto-sell '
+          'and auto-disassemble. Tap-sell stash is hidden.',
+          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 6),
-        if (stash.isEmpty)
-          Text(
-            'Bag empty. Clear rooms for gear, then sell extras here for gold.',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-          )
-        else
-          SizedBox(
-            height: 220,
-            child: ListView.builder(
-              itemCount: stash.length,
-              itemBuilder: (context, i) {
-                final item = stash[i];
-                final gold = GameLogic.equipmentGoldValue(item);
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-                      onTap: () => director.sellGearForGold(item.id),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
-                        ),
-                        decoration: MenuChrome.listCard(inset: true),
-                        child: Row(
-                          children: [
-                            KenneySprite(
-                              asset: KenneyAssets.equipmentIconFor(item),
-                              size: 22,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                item.name,
-                                style: GameTheme.body(size: 14),
-                              ),
-                            ),
-                            Text(
-                              '+${gold}g',
-                              style: GameTheme.body(
-                                size: 14,
-                                color: GameTheme.torchHot,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
       ],
     );
   }

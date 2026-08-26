@@ -31,7 +31,7 @@ GameState _enterAshenCrown(GameState state, {required bool practice}) {
   var next = AshenCrown.ensureWeek(state);
   if (!AshenCrown.canEnter(next)) return state;
   if (!practice) {
-    if (next.metaDepth.worldBossTickets <= 0) return state;
+    if (!AshenCrown.ticketRunAllowed(next)) return state;
     next = next.copyWith(
       metaDepth: next.metaDepth.copyWith(
         worldBossTickets: next.metaDepth.worldBossTickets - 1,

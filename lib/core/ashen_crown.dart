@@ -50,4 +50,11 @@ abstract final class AshenCrown {
       BlessingConstellation.ashenCrownPointReward,
     );
   }
+
+  /// Ticket runs only before the weekly essence clear.
+  static bool ticketRunAllowed(GameState state) {
+    final next = ensureWeek(state);
+    return next.metaDepth.worldBossTickets > 0 &&
+        !next.metaDepth.worldBossClearedWeek;
+  }
 }

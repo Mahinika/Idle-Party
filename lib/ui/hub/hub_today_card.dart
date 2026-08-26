@@ -112,52 +112,67 @@ class HubTodayCard extends StatelessWidget {
         : almost
         ? 'ALMOST'
         : null;
+    final showDetail = chase.detail.isNotEmpty;
     // Text strip only — no fill box under ENTER.
     return Semantics(
       label: 'TODAY chase: ${chase.title}. ${chase.detail}',
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            KenneySprite(asset: KenneyAssets.iconStar, size: 14),
-            const SizedBox(width: 6),
-            Text('TODAY', style: GameTheme.body(size: 12, color: accent)),
-            if (chip != null) ...[
-              const SizedBox(width: 6),
-              Text(chip, style: GameTheme.body(size: 12, color: accent)),
-            ],
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                chase.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(size: 13, color: GameTheme.parchment),
-              ),
-            ),
-            if (chase.progressLabel != null) ...[
-              const SizedBox(width: 6),
-              // Flexible so a 360 px phone keeps title + CTA on one line.
-              Flexible(
-                child: Text(
-                  chase.progressLabel!,
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: ready || almost ? accent : GameTheme.mossLit,
+            Row(
+              children: [
+                KenneySprite(asset: KenneyAssets.iconStar, size: 14),
+                const SizedBox(width: 6),
+                Text('TODAY', style: GameTheme.body(size: 12, color: accent)),
+                if (chip != null) ...[
+                  const SizedBox(width: 6),
+                  Text(chip, style: GameTheme.body(size: 12, color: accent)),
+                ],
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    chase.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.body(size: 13, color: GameTheme.parchment),
                   ),
                 ),
-              ),
-            ],
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(width: 6),
-              KenneyButton(
-                label: actionLabel!,
-                style: KenneyButtonStyle.grey,
-                expanded: false,
-                onPressed: onAction,
+                if (chase.progressLabel != null) ...[
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      chase.progressLabel!,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(
+                        size: 12,
+                        color: ready || almost ? accent : GameTheme.mossLit,
+                      ),
+                    ),
+                  ),
+                ],
+                if (actionLabel != null && onAction != null) ...[
+                  const SizedBox(width: 6),
+                  KenneyButton(
+                    label: actionLabel!,
+                    style: KenneyButtonStyle.grey,
+                    expanded: false,
+                    onPressed: onAction,
+                  ),
+                ],
+              ],
+            ),
+            if (showDetail) ...[
+              const SizedBox(height: 2),
+              Text(
+                chase.detail,
+                maxLines: compact ? 1 : 2,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
               ),
             ],
           ],
@@ -177,19 +192,6 @@ class HubUrgentRow extends StatelessWidget {
     required this.onAscend,
     required this.dailyClaimed,
     required this.onDaily,
-    required this.showGauntlet,
-    required this.gauntletBest,
-    required this.onGauntlet,
-    required this.showAshenCrown,
-    required this.ashenCrownTickets,
-    required this.onAshenCrown,
-    this.onAshenCrownPractice,
-    required this.showRift,
-    required this.riftBest,
-    required this.onRift,
-    required this.showGreaterRift,
-    required this.grBest,
-    required this.onGreaterRift,
     required this.weeklyReady,
     required this.weeklyProgress,
     required this.weeklyClaimed,
@@ -209,19 +211,6 @@ class HubUrgentRow extends StatelessWidget {
   final VoidCallback onAscend;
   final bool dailyClaimed;
   final VoidCallback onDaily;
-  final bool showGauntlet;
-  final int gauntletBest;
-  final VoidCallback onGauntlet;
-  final bool showAshenCrown;
-  final int ashenCrownTickets;
-  final VoidCallback onAshenCrown;
-  final VoidCallback? onAshenCrownPractice;
-  final bool showRift;
-  final int riftBest;
-  final VoidCallback onRift;
-  final bool showGreaterRift;
-  final int grBest;
-  final VoidCallback onGreaterRift;
   final bool weeklyReady;
   final int weeklyProgress;
   final bool weeklyClaimed;
@@ -298,59 +287,6 @@ class HubUrgentRow extends StatelessWidget {
                 ),
             ],
           ),
-        if (showGauntlet) ...[
-          const SizedBox(height: 6),
-          KenneyButton(
-            label: gauntletBest > 0
-                ? 'GAUNTLET  ·  best F$gauntletBest'
-                : 'INFINITY GAUNTLET',
-            style: KenneyButtonStyle.red,
-            onPressed: onGauntlet,
-          ),
-        ],
-        if (showAshenCrown) ...[
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Expanded(
-                child: KenneyButton(
-                  label: 'ASHEN CROWN  ·  $ashenCrownTickets tix',
-                  style: KenneyButtonStyle.brown,
-                  onPressed: onAshenCrown,
-                ),
-              ),
-              if (onAshenCrownPractice != null) ...[
-                const SizedBox(width: 6),
-                KenneyButton(
-                  label: 'PRACTICE',
-                  style: KenneyButtonStyle.grey,
-                  expanded: false,
-                  onPressed: onAshenCrownPractice,
-                ),
-              ],
-            ],
-          ),
-        ],
-        if (showRift) ...[
-          const SizedBox(height: 6),
-          KenneyButton(
-            label: riftBest > 0
-                ? 'RIFT  ·  best R$riftBest'
-                : 'RIFT',
-            style: KenneyButtonStyle.brown,
-            onPressed: onRift,
-          ),
-        ],
-        if (showGreaterRift) ...[
-          const SizedBox(height: 6),
-          KenneyButton(
-            label: grBest > 0
-                ? 'GREATER  ·  best GR$grBest'
-                : 'GREATER RIFT',
-            style: KenneyButtonStyle.red,
-            onPressed: onGreaterRift,
-          ),
-        ],
       ],
     );
   }

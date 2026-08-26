@@ -39,6 +39,38 @@ void main() {
     expect(find.text('CLAIM VAULT'), findsOneWidget);
   });
 
+  testWidgets('HubTodayCard shows detail when chase is not READY', (
+    tester,
+  ) async {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      ascensionLevel: 20,
+      highestDungeonCleared: 14,
+      heroes: state.heroes
+          .map((h) => h.copyWith(level: GameLogic.maxHeroLevel))
+          .toList(),
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.urgency, isNot(HubChaseUrgency.ready));
+    expect(chase.detail, isNotEmpty);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: HubTodayCard(chase: chase),
+        ),
+      ),
+    );
+
+    expect(find.textContaining(chase.detail.split(' ').first), findsOneWidget);
+  });
+
+  test('hubChaseOwnsEndgameRow marks endgame hunt kinds', () {
+    expect(hubChaseOwnsEndgameRow(HubChaseKind.gauntletMilestone), isTrue);
+    expect(hubChaseOwnsEndgameRow(HubChaseKind.keystone), isTrue);
+    expect(hubChaseOwnsEndgameRow(HubChaseKind.dailyRun), isFalse);
+  });
+
   testWidgets('HubMetaPulse hides crumbs when chase is READY', (tester) async {
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.ensureWeeklyContract(state, now: now);

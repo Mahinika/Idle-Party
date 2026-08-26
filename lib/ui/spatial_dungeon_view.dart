@@ -314,6 +314,30 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       clipBehavior: Clip.hardEdge,
       child: Column(
         children: [
+          if (!widget.director.awaitingWipeChoice &&
+              (state.isPartyDefeated || (world?.awaitingExit ?? false)))
+            Material(
+              color: state.isPartyDefeated
+                  ? GameTheme.blood.withValues(alpha: 0.85)
+                  : const Color(0xEE0A0907),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Text(
+                  state.isPartyDefeated
+                      ? (state.inGauntlet || state.inAnyRiftMode
+                            ? 'WIPED — End Run returns to hub'
+                            : 'WIPED — use the Retry / Hub panel')
+                      : 'GO — stairs are open',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(
+                    size: 15,
+                    color: state.isPartyDefeated
+                        ? GameTheme.torchHot
+                        : GameTheme.clear,
+                  ),
+                ),
+              ),
+            ),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -333,6 +357,12 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                           widget.director.reviveParty();
                           return;
                         }
+                        final fighting =
+                            world?.enemies.any((e) => e.isAlive) ?? false;
+                        if (fighting) {
+                          widget.director.godHandAtFocus();
+                          return;
+                        }
                         widget.director.godHandAtFocus();
                       },
                       child: Semantics(
@@ -347,6 +377,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                               widget.director.reviveParty();
                               return;
                             }
+                            // Mid-pack: use the fist ring — map taps misfire too easily.
+                            final fighting =
+                                world?.enemies.any((e) => e.isAlive) ?? false;
+                            if (fighting) return;
                             widget.director.godHandAtWorld(
                               camera.camX +
                                   details.localPosition.dx / camera.tileSize,
@@ -574,18 +608,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                         ),
                                       ],
                                     ],
-                                    if (WipeAdvice.godHandHintFor(state) !=
-                                        null) ...[
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        WipeAdvice.godHandHintFor(state)!,
-                                        textAlign: TextAlign.center,
-                                        style: GameTheme.body(
-                                          size: 14,
-                                          color: GameTheme.mossLit,
-                                        ),
-                                      ),
-                                    ],
                                     const SizedBox(height: 14),
                                     if (!state.inGauntlet && !state.inAnyRiftMode)
                                       KenneyButton(
@@ -631,6 +653,18 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                       primary: true,
                                       onPressed: widget.director.hubAfterWipe,
                                     ),
+                                    if (WipeAdvice.godHandHintFor(state) !=
+                                        null) ...[
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'After RETRY: ${WipeAdvice.godHandHintFor(state)!}',
+                                        textAlign: TextAlign.center,
+                                        style: GameTheme.body(
+                                          size: 13,
+                                          color: GameTheme.mossLit,
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -643,29 +677,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
               },
             ),
           ),
-          if (!widget.director.awaitingWipeChoice &&
-              (state.isPartyDefeated || (world?.awaitingExit ?? false)))
-            Container(
-              width: double.infinity,
-              color: state.isPartyDefeated
-                  ? GameTheme.blood.withValues(alpha: 0.55)
-                  : const Color(0xCC0A0907),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text(
-                state.isPartyDefeated
-                    ? (state.inGauntlet || state.inAnyRiftMode
-                          ? 'WIPED — End Run returns to hub'
-                          : 'WIPED — use the Retry / Hub panel')
-                    : 'GO — stairs are open',
-                textAlign: TextAlign.center,
-                style: GameTheme.body(
-                  size: 14,
-                  color: state.isPartyDefeated
-                      ? GameTheme.torchHot
-                      : GameTheme.clear,
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -709,52 +720,63 @@ class DungeonModeChip extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.dense = false,
+    this.tip,
+    this.interactive = true,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
   final bool dense;
+  final String? tip;
+  final bool interactive;
 
   @override
   Widget build(BuildContext context) {
-    final semanticsLabel = '$label dungeon mode';
+    final semanticsLabel = tip == null ? '$label dungeon mode' : '$label. $tip';
+    final action = interactive ? onTap : null;
+    final child = Container(
+      constraints: BoxConstraints(minHeight: GameTheme.minTouch),
+      padding: EdgeInsets.symmetric(horizontal: dense ? 6 : 8),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: selected ? const Color(0xFF3A2810) : const Color(0xFF1A1610),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(
+          color: selected ? GameTheme.torchHot : const Color(0xFF4A4030),
+        ),
+      ),
+      child: Text(
+        label,
+        style: GameTheme.pixel(
+          size: GameTheme.hudPixel,
+          color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
+        ),
+      ),
+    );
+    if (!interactive) {
+      return Semantics(
+        label: semanticsLabel,
+        child: child,
+      );
+    }
     return WebClickScope(
       label: semanticsLabel,
-      onPressed: onTap,
+      onPressed: action,
       child: Semantics(
         button: true,
         selected: selected,
         inMutuallyExclusiveGroup: true,
         label: semanticsLabel,
-        onTap: onTap,
+        onTap: action,
         excludeSemantics: true,
         child: Material(
-          color: selected ? const Color(0xFF3A2810) : const Color(0xFF1A1610),
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(3),
           child: InkWell(
-            onTap: onTap,
+            onTap: action,
             borderRadius: BorderRadius.circular(3),
-            child: Container(
-              constraints: BoxConstraints(minHeight: GameTheme.minTouch),
-              padding: EdgeInsets.symmetric(horizontal: dense ? 6 : 8),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3),
-                border: Border.all(
-                  color: selected
-                      ? GameTheme.torchHot
-                      : const Color(0xFF4A4030),
-                ),
-              ),
-              child: Text(
-                label,
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
-                ),
-              ),
-            ),
+            child: child,
           ),
         ),
       ),
@@ -784,7 +806,7 @@ class GodHandRing extends StatelessWidget {
         : GameTheme.parchmentDim;
     final label = ready
         ? (urgent ? 'God Hand ready — tap for steer + smash' : 'God Hand ready')
-        : 'God Hand cooling down';
+        : 'God Hand ${cooldown.toStringAsFixed(1)}s';
     final action = onTap != null && ready ? onTap : null;
     return WebClickScope(
       label: label,
@@ -817,11 +839,21 @@ class GodHandRing extends StatelessWidget {
                         ready: ready,
                       ),
                       child: Center(
-                        child: KenneySprite(
-                          asset: KenneyAssets.fist,
-                          size: 14,
-                          color: color,
-                        ),
+                        child: ready
+                            ? KenneySprite(
+                                asset: KenneyAssets.fist,
+                                size: 14,
+                                color: color,
+                              )
+                            : Text(
+                                cooldown < 10
+                                    ? cooldown.toStringAsFixed(1)
+                                    : '${cooldown.round()}',
+                                style: GameTheme.pixel(
+                                  size: 6,
+                                  color: color,
+                                ),
+                              ),
                       ),
                     ),
                   ),
