@@ -55,7 +55,7 @@ abstract final class DungeonCatalog {
       bossId: 'king',
       bossName: 'Corrupt King',
       unlockPrice: 20000,
-      blurb: 'A throne bent toward the same light that calls downward.',
+      blurb: 'Corrupt banners line a throne bent toward the same downward light.',
     ),
     DungeonDef(
       number: 3,
@@ -65,7 +65,7 @@ abstract final class DungeonCatalog {
       bossId: 'eyes',
       bossName: 'Beholder',
       unlockPrice: 50000,
-      blurb: 'Eyes open in the dark between kingdoms.',
+      blurb: 'Eyes open between kingdoms — shrine pillars watch the dark.',
     ),
     DungeonDef(
       number: 4,
@@ -82,10 +82,10 @@ abstract final class DungeonCatalog {
       id: 'hell',
       name: "Hell's Gate",
       layout: DungeonLayoutKind.fort,
-      bossId: 'chtulu',
+      bossId: 'cthulhu',
       bossName: 'Cthulhu',
       unlockPrice: 200000,
-      blurb: 'The gate that should never have been named.',
+      blurb: 'Named gate, cult fire, and a hunger that answers below.',
     ),
     DungeonDef(
       number: 6,
@@ -95,7 +95,7 @@ abstract final class DungeonCatalog {
       bossId: 'crystal_warden',
       bossName: 'Crystal Warden',
       unlockPrice: 400000,
-      blurb: 'The Spire remembers every will that climbed it.',
+      blurb: 'The Spire remembers every climb — endless for those who will it.',
     ),
     DungeonDef(
       number: 7,
@@ -111,11 +111,12 @@ abstract final class DungeonCatalog {
       number: 8,
       id: 'ember',
       name: 'Ashen Vault',
-      layout: DungeonLayoutKind.fort,
+      // Hideout warren — distinct chamber footprint from King's Fort.
+      layout: DungeonLayoutKind.hideout,
       bossId: 'cinder_sovereign',
       bossName: 'Cinder Sovereign',
       unlockPrice: 1200000,
-      blurb: 'A vault of cooled fire that still answers to a crown.',
+      blurb: 'Cooled-fire vaults and anvil heat that still answers a crown.',
     ),
     DungeonDef(
       number: 9,
@@ -125,7 +126,7 @@ abstract final class DungeonCatalog {
       bossId: 'grove_wyrd',
       bossName: 'Wyrd Root',
       unlockPrice: 1800000,
-      blurb: 'Root fences drink the dark between Tidehold and the Ashen Vault.',
+      blurb: 'Root fences and canopy pots drink the dark between Tidehold and Ashen.',
     ),
     DungeonDef(
       number: 10,
@@ -141,21 +142,23 @@ abstract final class DungeonCatalog {
       number: 11,
       id: 'rime',
       name: 'Rimeglass Rift',
-      layout: DungeonLayoutKind.cave,
+      // Open arena rift — glass chasm, not a tight cave crawl.
+      layout: DungeonLayoutKind.arena,
       bossId: 'rime_colossus',
       bossName: 'Rime Colossus',
       unlockPrice: 3600000,
-      blurb: 'After the gale: a quiet rift of glass and killing cold.',
+      blurb: 'After the gale: an open rift of glass pillars and killing cold.',
     ),
     DungeonDef(
       number: 12,
       id: 'fen',
       name: 'Blightfen Mire',
-      layout: DungeonLayoutKind.cave,
+      // Open arena bog — traps in the wet, not a narrow cave.
+      layout: DungeonLayoutKind.arena,
       bossId: 'fen_hydra',
       bossName: 'Fen Hydra',
       unlockPrice: 5000000,
-      blurb: 'The ice thaws into a poisoned mire. Something wet still hunts.',
+      blurb: 'Open poisoned bog — wet traps and something many-headed still hunts.',
     ),
     DungeonDef(
       number: 13,
@@ -165,7 +168,7 @@ abstract final class DungeonCatalog {
       bossId: 'brass_mainspring',
       bossName: 'The Mainspring',
       unlockPrice: 7000000,
-      blurb: 'Buried clockwork vaults — something still ticks in the dark.',
+      blurb: 'Clockwork vaults tick behind brass stools and anvils — count the beats.',
     ),
     DungeonDef(
       number: 14,
@@ -176,7 +179,7 @@ abstract final class DungeonCatalog {
       bossName: 'The Pale Monarch',
       unlockPrice: 10000000,
       blurb:
-          'Silk dust hangs where the clockwork ends. Wings beat in the dark.',
+          'Silk fences choke the hollow. Wings beat where the clockwork ends.',
     ),
   ];
 
