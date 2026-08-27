@@ -117,8 +117,8 @@ abstract final class GameGuides {
       title: 'BAG & GEAR',
       body:
           'Loot drops on the floor, then goes to your stash (BAG).\n\n'
-          '• You never have to hunt for upgrades: when PARTY shows a number, '
-          'open it and tap EQUIP — that number is how many items are better.\n'
+          '• Upgrades stay in BAG until you equip them — PARTY badge shows how '
+          'many are better; open BAG and tap AUTO EQUIP (or equip one by one).\n'
           '• BAG: view and equip stash gear. CLEAN BAG sells gold then scraps essence using FILTERS.\n'
           '• Stats: plate wants Strength, leather/mail damage wants Agility, '
           'casters want Intellect and Spell Power. Spirit is mana, not damage. '

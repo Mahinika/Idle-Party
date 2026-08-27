@@ -104,7 +104,6 @@ class OfflineSim {
       }
       final step = _step++;
 
-      final stashLenBefore = _current.gearStash.length;
       final result = SpatialCombat.step(_world, _current, dt: _dt);
       _world = result.world;
       _current = result.state;
@@ -142,11 +141,7 @@ class OfflineSim {
         }
       }
       _abilityCasts += result.abilityCasts;
-      // Live parity: wear clear upgrades mid-floor and sync actor sheets.
-      if (_current.gearStash.length > stashLenBefore) {
-        _current = GameLogic.autoEquipBetterGear(_current);
-        _world = SpatialCombat.syncPartyFromState(_world, _current);
-      }
+      // Live parity: loot stays in BAG until PARTY → AUTO EQUIP.
 
       // Keep AFK sim lean — strip accumulated VFX lists periodically.
       if (step % 40 == 0) {

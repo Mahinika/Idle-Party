@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.68';
+  static const String currentVersion = '1.12.69';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.69',
+      bullets: <String>[
+        'Loot stays in BAG after floor clears — no auto-equip mid-fight or on stairs. PARTY badge still counts upgrades; equip with AUTO EQUIP when you want. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.68',
       bullets: <String>[

@@ -2511,15 +2511,7 @@ class GameLogic {
         ? awarded.highestFloorCleared
         : max(awarded.highestFloorCleared, room.floorNumber);
     awarded = grantBossCraftMats(awarded, clearedBoss: clearedBoss);
-    // Auto-wear clear upgrades so bag loot powers the party every Ascension.
-    final stashBeforeEquip = awarded.gearStash.length;
-    awarded = autoEquipBetterGear(awarded);
-    final equippedOnClear = stashBeforeEquip - awarded.gearStash.length;
-    if (equippedOnClear > 0) {
-      LogicNotices.recordFloorEquipLine(
-        'Equipped $equippedOnClear · ${awarded.gearStash.length} kept in bag',
-      );
-    }
+    // Loot stays in BAG — equip via PARTY → BAG / AUTO EQUIP (not on clear).
 
     // Push + boss floor clear → dungeon cleared, back to hub.
     // Gauntlet / Rift / Greater Rift never exit on boss — endless climb / kill waves.

@@ -210,9 +210,6 @@ class GameDirector extends ChangeNotifier {
   double _autosaveAccum = 0;
   int _lastStashLen = 0;
 
-  /// Loot pickups since last mid-fight auto-equip (debounce thrash).
-  int _lootSinceAutoEquip = 0;
-
   /// Throttle crit haptics so a cleave does not buzz the phone every frame.
   double _feelCritCooldown = 0;
 
@@ -828,32 +825,7 @@ class GameDirector extends ChangeNotifier {
           GameAudio.loot();
           playedLoot = true;
         }
-        // Debounce mid-fight auto-equip: every few pickups, or when bag is
-        // nearly full. Floor clear still auto-equips in GameLogic.
-        _lootSinceAutoEquip++;
-        final shouldEquip =
-            GearService.isBagWarning(_state) || _lootSinceAutoEquip >= 3;
-        if (shouldEquip) {
-          _lootSinceAutoEquip = 0;
-          final stashBeforeEquip = _state.gearStash.length;
-          _state = GameLogic.autoEquipBetterGear(_state);
-          if (_spatial != null &&
-              _state.inDungeon &&
-              before.inDungeon &&
-              before.battleNumber == _state.battleNumber &&
-              before.layoutSeed == _state.layoutSeed) {
-            _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
-          }
-          final equippedN = stashBeforeEquip - _state.gearStash.length;
-          if (equippedN > 0) {
-            showToast(
-              equippedN == 1
-                  ? 'Equipped 1 upgrade'
-                  : 'Equipped $equippedN upgrades',
-              life: 2.2,
-            );
-          }
-        }
+        // Loot stays in BAG — equip via PARTY → AUTO EQUIP (not mid-fight).
       }
       final stashCap = GameLogic.maxGearStashFor(_state);
       var bagFullHandled = false;
@@ -952,7 +924,6 @@ class GameDirector extends ChangeNotifier {
       }
 
       if (result.roomCleared) {
-        _lootSinceAutoEquip = 0;
         final floorNo = _state.currentRoom.floorNumber;
         final started = _floorStartedAt;
         if (started != null) {
