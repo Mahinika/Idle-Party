@@ -8,7 +8,7 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ⏳ review | **1.12.60 (90)** submitted 2026-08-25 (Alpha AAB — prestige Ascend wipe + optional AL20 Reborn; locally upload-signed). Previous live for testers: **1.12.52 (82)** until Google publishes. Alpha countries: all + rest of world. |
+| Closed testing | ⏳ review | **1.12.68 (97)** submitted 2026-08-27 (Alpha AAB — menu consolidation INCOME→CAMP, MARKET buy-only, KEY-first META; locally upload-signed). Previous live for testers: **1.12.60 (90)** until Google publishes. Alpha countries: all + rest of world. |
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
@@ -49,7 +49,7 @@ over Play ops unless the owner asks about Play.
 ## Play Console — closed / internal (ops)
 
 - [x] App exists in Play Console (`com.idleparty.app`) with listing + closed Alpha.
-- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.60 (90)** submitted 2026-08-25 (review). Previous live for testers: **1.12.52 (82)**.
+- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.68 (97)** submitted 2026-08-27 (review). Previous live for testers: **1.12.60 (90)**.
 - [ ] Enable Play App Signing if prompted on new uploads.
 - [ ] Add / retain closed testers toward **12 × 14 days** for production access.
 - [ ] Smoke-test install → hub → short dungeon → leave → relaunch (save persists).
