@@ -38,6 +38,7 @@ Kit unlock lines come from [`AscendRoadmap`](../lib/core/ascend_roadmap.dart) an
 
 ## Rules
 
-- Hub TODAY is the primary chase chrome; other hub buttons are shortcuts to the same goals.  
+- Hub TODAY is the primary chase chrome; other hub buttons are shortcuts to the same goals.
+  When TODAY suggests Ascend / Meet kit / BAG equip / a claim, **ENTER DUNGEON** (or farm ENTER) stays available as a secondary choice — never trap the player on one button.  
 - Offline “Up next” **must** use `ChaseContract.fromState(summary.state)` — same title/urgency as hub.  
 - No new meta loops in this contract — only packaging.

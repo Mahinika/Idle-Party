@@ -373,6 +373,10 @@ class _HubScreenState extends State<HubScreen>
           director,
           practice: true,
         );
+      } else if (endgamePrimary && enterAction != null) {
+        // Gauntlet / Rift / … suggested — ENTER DUNGEON stays optional.
+        secondaryLabel = enterLabel;
+        secondaryAction = enterAction;
       } else {
         secondaryLabel = null;
         secondaryAction = null;
@@ -380,17 +384,9 @@ class _HubScreenState extends State<HubScreen>
     } else if (readyPrimary) {
       primaryLabel = chaseActionLabel;
       primaryAction = onAction;
-      final showSecondaryEnter =
-          enterAction != null &&
-          chase.kind != HubChaseKind.claimDailyVault &&
-          chase.kind != HubChaseKind.claimMissions &&
-          chase.kind != HubChaseKind.meetHero &&
-          chase.kind != HubChaseKind.equipBag &&
-          chase.kind != HubChaseKind.marketUpgrade &&
-          chase.kind != HubChaseKind.dailyRun &&
-          (chase.kind != HubChaseKind.ascend || state.ascensionLevel == 0);
-      secondaryLabel = showSecondaryEnter ? enterLabel : null;
-      secondaryAction = showSecondaryEnter ? enterAction : null;
+      // Never trap on Ascend / Meet kit / BAG / vault — ENTER stays a choice.
+      secondaryLabel = enterAction != null ? enterLabel : null;
+      secondaryAction = enterAction;
     } else if (chase.kind == HubChaseKind.marketUpgrade &&
         onAction != null &&
         chaseActionLabel != null) {

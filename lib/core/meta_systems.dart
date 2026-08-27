@@ -26,7 +26,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.69',
       bullets: <String>[
-        'Loot stays in BAG after floor clears — no auto-equip mid-fight or on stairs. PARTY badge still counts upgrades; equip with AUTO EQUIP when you want. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'Loot stays in BAG after floor clears — no auto-equip mid-fight or on stairs. PARTY badge still counts upgrades; equip with AUTO EQUIP when you want. Hub TODAY can suggest Ascend / Meet / Equip, but ENTER DUNGEON stays available so you are never forced. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
         'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
       ],
     ),
