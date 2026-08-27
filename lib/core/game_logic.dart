@@ -384,6 +384,18 @@ class GameLogic {
         'Greater Rift GR${GreaterRift.clampTier(state.grTier)} ended · +${essence}e',
       ]);
     }
+    // Ticket spent on enter — refund if leave/wipe before a paid clear.
+    if (state.inWorldBoss &&
+        !state.worldBossPractice &&
+        !state.metaDepth.worldBossClearedWeek) {
+      final tickets = (working.metaDepth.worldBossTickets + 1).clamp(
+        0,
+        AshenCrown.ticketsPerWeek,
+      );
+      working = working.copyWith(
+        metaDepth: working.metaDepth.copyWith(worldBossTickets: tickets),
+      );
+    }
     final heroes = [
       for (final h in working.heroes)
         h.copyWith(

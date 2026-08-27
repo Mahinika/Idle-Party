@@ -1948,8 +1948,8 @@ class GameDirector extends ChangeNotifier {
     showToast(
       practice
           ? 'Practice · ${AshenCrown.name}'
-          : '${AshenCrown.name} · ticket spent',
-      life: 2.4,
+          : '${AshenCrown.name} · ticket held (returned if you leave early)',
+      life: 2.6,
     );
   }
 

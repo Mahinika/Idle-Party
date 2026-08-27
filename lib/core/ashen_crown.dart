@@ -9,7 +9,7 @@ abstract final class AshenCrown {
   static const String id = 'ashen_crown';
   static const String name = 'Ashen Crown';
   static const String blurb =
-      'Weekly solo boss. Ticket clears pay essence; practice is free.';
+      'Weekly solo boss. Clear pays essence; wipe/leave returns the ticket; practice is free.';
   static const int ticketsPerWeek = 3;
   static const String dungeonId = 'ember';
   static const int essenceReward = 35;

@@ -445,9 +445,10 @@ Future<void> confirmAshenCrown(
                   'Wipe or leave returns to hub. Learn the fight safely.'
               : 'Weekly ticket boss. First clear this week pays '
                   '+${AshenCrown.essenceReward}e.\n\n'
-                  'Tickets left: $tickets. After the paid clear, use PRACTICE '
+                  'Tickets left: $tickets. Wipe or leave before the clear '
+                  'returns the ticket. After the paid clear, use PRACTICE '
                   '(free) instead of spending more tickets.\n\n'
-                  'Wipe or leave returns to hub.',
+                  'Returns to hub on wipe or leave.',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [

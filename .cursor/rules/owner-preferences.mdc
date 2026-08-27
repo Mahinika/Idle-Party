@@ -31,7 +31,7 @@ unchanged).
 
 - Goal: **Google Play “for real” soon** (not sideload-only forever).
 - Prefer work that unblocks Play when touching store: CI signing secrets, closed-test 12×14, production access — see `docs/PLAY_STORE.md`.
-- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.68 / 97**, 2026-08-27; testers may still be on **1.12.60 / 90** until review publishes). Working ship is **1.12.69**. **Production is not live**. Optional Play Games (META → SETTINGS) is opt-in, not a store blocker.
+- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.68 / 97**, 2026-08-27; testers may still be on **1.12.60 / 90** until review publishes). Working ship is **1.12.70**. **Production is not live**. Optional Play Games (META → SETTINGS) is opt-in, not a store blocker.
 - **Platforms now:** Android (+ existing web playtest tooling OK). **No iOS** and **no shipping web as a product** for now.
 
 ## UI target device (mandatory)

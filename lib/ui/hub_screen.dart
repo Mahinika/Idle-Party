@@ -18,7 +18,6 @@ import 'dungeon_environment.dart';
 import 'feedback_toast.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
-import 'menu_chrome.dart';
 import 'meta_overlays.dart';
 import '../core/menu_router.dart';
 import 'shell/app_bottom_bar.dart';
@@ -401,15 +400,25 @@ class _HubScreenState extends State<HubScreen>
       secondaryAction = null;
     }
     final showMetaKeyLink = GameLogic.showKeystoneJargon(state);
+    final endgameHunt =
+        GameLogic.endgameUnlocked(state) &&
+        (hubChaseOwnsEndgameRow(chase.kind) ||
+            chase.kind == HubChaseKind.keystone);
     final weekMod = state.metaDepth.weeklyModifier;
     final showWeekAffix =
         !short && weekMod.isNotEmpty && GameLogic.showKeystoneJargon(state);
     final powerupsActive =
         AdBoost.isActive(state.metaDepth.adBoostUntilMs);
-    final showPowerups = !short || powerupsActive;
+    // Endgame hunt night: hide idle POWERUPS chrome unless a boost is running.
+    final showPowerups = endgameHunt
+        ? powerupsActive
+        : (!short || powerupsActive);
     final vaultOwnedByChase =
         chase.kind == HubChaseKind.claimDailyVault ||
         chase.kind == HubChaseKind.dailyVaultProgress;
+    final showUrgentRow =
+        chase.urgency != HubChaseUrgency.ready &&
+        !(endgameHunt && !canAscend);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -474,14 +483,18 @@ class _HubScreenState extends State<HubScreen>
             onOpen: () => openPowerupsSheet(context, director),
           ),
         if (showMetaKeyLink) ...[
-          const SizedBox(height: 2),
-          MenuChrome.textLink(
-            label: 'META → KEY',
+          const SizedBox(height: 4),
+          KenneyButton(
+            label: state.hardmodeLevel <= 0
+                ? 'KEY DIAL · off'
+                : 'KEY DIAL · +${state.hardmodeLevel}',
+            tip: 'Open META → KEY for Soft/Hard/Brutal, Rifts, and boards',
+            style: KenneyButtonStyle.grey,
             onPressed: () =>
                 router.open(MenuRoute.meta, meta: MetaTab.key),
           ),
         ],
-        if (chase.urgency != HubChaseUrgency.ready)
+        if (showUrgentRow)
           HubUrgentRow(
             claimable: state.missions.where((m) => m.canClaim).length,
             canAscend: canAscend,

@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.69';
+  static const String currentVersion = '1.12.70';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.70',
+      bullets: <String>[
+        'Endgame feel: hub KEY DIAL button (shows +N); quieter chrome on Spire/KEY nights; KEY habit no longer waits on unpaid Daily; Will/week ALMOST yield to the ladder. Ashen Crown returns the ticket if you wipe or leave before a clear. GREATER Play board copy stays honest until Console ID is set. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.69',
       bullets: <String>[
@@ -115,7 +122,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.56',
       bullets: <String>[
-        'AL20 TODAY: after KEY at dial cap, chase Greater Rift -> Gauntlet -> Rift -> Ashen Crown (ticket week) before Daily - one hunt, not a meta shuffle.',
+        'AL20 TODAY: after KEY at dial cap, chase Gauntlet -> Greater Rift -> Rift -> Ashen Crown (ticket week) before Daily - one hunt, not a meta shuffle. Endgame unlock is party Lv100 (not AL alone).',
         'Endgame fallback is a single Time KEY / push GR line - no multi-stat dump on the hub card.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
@@ -148,7 +155,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.52',
       bullets: <String>[
-        'Greater Rifts at AL20: harder timed kill ladder, no mid-run gear, big clear payouts — ranks on META → KEY · BOARDS (Play Games).',
+        'Greater Rifts at party Lv100: harder timed kill ladder, no mid-run gear, big clear payouts — KEY/Gauntlet on META → KEY · BOARDS (Play Games); GR board when Console ID is set.',
         'Farm Rifts stay loot-friendly and unranked; hub shows both RIFT and GREATER.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
@@ -156,15 +163,15 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.51',
       bullets: <String>[
-        'AL20 endgame: KEYSTONE and Infinity Gauntlet unlock at AL20 — mid-game chases Ascend, zones, Daily, and vault clears.',
-        'New Rifts at AL20: timed kill challenges with escalating tiers, essence/gold payouts, and hub + META → KEY entry.',
+        'Endgame: KEYSTONE and Infinity Gauntlet unlock when the active party is all Lv100 — mid-game chases Ascend, zones, Daily, and vault clears. AL20 is the Ascend cap.',
+        'Rifts at party Lv100: timed kill challenges with escalating tiers, essence/gold payouts, and hub + META → KEY entry.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
     ),
     ChangelogRelease(
       version: '1.12.50',
       bullets: <String>[
-        'Infinity Gauntlet unlocks at AL20 — endgame climb, not mid-progress.',
+        'Infinity Gauntlet unlocks at party Lv100 — endgame climb, not mid-progress. AL20 remains Ascend cap.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
     ),

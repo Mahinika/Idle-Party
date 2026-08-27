@@ -255,7 +255,8 @@ abstract final class GameGuides {
           '• Gold and gear drop during the run; success also pays essence + gold.\n'
           '• Higher tiers: tougher packs and less time; fast clears unlock +2.\n'
           '• Wipe or timeout ends the run with a small consolation.\n'
-          '• Not ranked on Play Games — use Greater Rift for boards.\n'
+          '• Not ranked on Play Games — use Greater Rift for season prestige '
+          '(KEY + Gauntlet boards live; GR board when Console ID is set).\n'
           '• Set preferred tier under META → KEY · RIFT, or tap RIFT on the hub.',
     ),
     GuideTopic(
@@ -266,7 +267,8 @@ abstract final class GameGuides {
           '• Timed kill quota on a tougher ladder (GR1–GR20).\n'
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear.\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
-          '• Season ranks on META → KEY · BOARDS (Play Games).\n'
+          '• Season ranks: Timed KEY + Gauntlet on META → KEY · BOARDS (Play Games). '
+          'Greater Rift board wires when the Console ID is pasted.\n'
           '• Tap GREATER RIFT on the hub or set tier under META → KEY.',
     ),
     GuideTopic(
@@ -391,7 +393,8 @@ abstract final class GameGuides {
           'pays +${AshenCrown.essenceReward}e and a title.\n'
           '• After that clear, further tickets do not pay — use PRACTICE (free, no ticket) '
           'to rehearse the fight.\n'
-          '• Confirm before a ticket run. PRACTICE never spends a ticket.\n'
+          '• Confirm before a ticket run. Wipe or leave before the boss pays '
+          'back the ticket — only a clear spends it. PRACTICE never spends a ticket.\n'
           '• Uses Ashen Vault staging; leave or wipe returns you to the hub.',
     ),
     GuideTopic(

@@ -104,8 +104,8 @@ class HubChase {
   /// Picks the single best "what should I chase now?" target.
   ///
   /// Priority: claimables → Ascend → almost-Ascend → vault / KEY cliffs →
-  /// first hour → KEY habit → daily → vault start → zone → Will → Gauntlet →
-  /// keep clearing.
+  /// first hour → KEY habit → endgame ladder → daily → vault start → zone →
+  /// Will → keep clearing.
   static HubChase forState(GameState state, {DateTime? now}) {
     final md = state.metaDepth;
     final clock = now ?? DateTime.now().toUtc();
@@ -235,13 +235,16 @@ class HubChase {
     if (monthAlmost != null) return monthAlmost;
 
     // Other ALMOST cliffs beat Daily / vault-start grind (see CHASE_CONTRACT.md).
+    // At endgame, skip Will / early week ALMOST so Spire / KEY night stays clear.
     final zoneAlmost = _nextZoneChase(state);
     if (zoneAlmost != null && zoneAlmost.urgency == HubChaseUrgency.almost) {
       return zoneAlmost;
     }
-    final willAlmost = _nextWillChase(state);
-    if (willAlmost != null && willAlmost.urgency == HubChaseUrgency.almost) {
-      return willAlmost;
+    if (!GameLogic.endgameUnlocked(state)) {
+      final willAlmost = _nextWillChase(state);
+      if (willAlmost != null && willAlmost.urgency == HubChaseUrgency.almost) {
+        return willAlmost;
+      }
     }
     final gauntletAlmost = _nextGauntletChase(state);
     if (gauntletAlmost != null &&
@@ -256,8 +259,10 @@ class HubChase {
     if (grAlmost != null && grAlmost.urgency == HubChaseUrgency.almost) {
       return grAlmost;
     }
-    final weekAlmostEarly = _weekGoalChase(state, clock, almostOnly: true);
-    if (weekAlmostEarly != null) return weekAlmostEarly;
+    if (!GameLogic.endgameUnlocked(state)) {
+      final weekAlmostEarly = _weekGoalChase(state, clock, almostOnly: true);
+      if (weekAlmostEarly != null) return weekAlmostEarly;
+    }
 
     // First hour: grow the party in the starter zone. Daily / vault / Will
     // / KEY grind wait until a boss (or first Ascend) so TODAY is not a meta list.
@@ -275,18 +280,17 @@ class HubChase {
     final levelPush = _partyLevelChase(state);
     if (levelPush != null) return levelPush;
 
-    // FEEL 059: unfinished Daily beats KEY habit only — endgame ladder still
-    // outranks Daily so AL20 keeps one clear hunt.
+    // KEY habit at party max — do not wait on unpaid Daily.
     final keyPush = _keystonePushChase(state);
-    if (keyPush != null && MetaSystems.isDailyClaimedToday(state, now: clock)) {
-      return keyPush;
-    }
+    if (keyPush != null) return keyPush;
 
     // At party max level: ladder Gauntlet → GR → Rift → Ashen Crown before
     // Daily/Will so AL20 TODAY is one clear hunt, not a meta shuffle.
     if (GameLogic.endgameUnlocked(state)) {
       final endgameLadder = _endgameLadderChase(state);
       if (endgameLadder != null) return endgameLadder;
+      final weekAlmost = _weekGoalChase(state, clock, almostOnly: true);
+      if (weekAlmost != null) return weekAlmost;
     }
 
     if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {

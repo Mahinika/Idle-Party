@@ -379,6 +379,37 @@ void main() {
     expect(chase.title, contains('KEY +2'));
   });
 
+  test('KEY habit does not wait on unpaid Daily at party max', () {
+    final state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 3,
+        dailyClaimed: false,
+        lastDailyDate: '',
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+              gauntletBestFloor: 100,
+              claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+              riftBestTier: 20,
+              claimedRiftMilestones: const ['r5', 'r10', 'r20'],
+              grBestTier: 20,
+              claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
+              worldBossTickets: 0,
+              worldBossClearedWeek: true,
+            ),
+        achievements: [
+          for (var i = 0; i < 200; i++) 'ach_$i',
+        ],
+        highestDungeonCleared: 14,
+        lifetimeGoldEarned: 50_000_000,
+      ),
+    );
+    expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.keystone);
+    expect(chase.keyLevel, 3);
+  });
+
   test('KEY at AL cap falls through to Daily before party Lv60', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,

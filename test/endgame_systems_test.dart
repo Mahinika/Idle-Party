@@ -58,6 +58,30 @@ void main() {
     expect(state.metaDepth.worldBossTickets, AshenCrown.ticketsPerWeek);
   });
 
+  test('Ashen Crown ticket returns on leave before clear', () {
+    var state = GameLogic.createInitialState();
+    state = state.copyWith(
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+      heroes: [
+        for (final h in state.heroes)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );
+    state = AshenCrown.ensureWeek(state, now: DateTime.utc(2026, 8, 24));
+    expect(state.metaDepth.worldBossTickets, AshenCrown.ticketsPerWeek);
+    state = GameLogic.enterAshenCrown(state, practice: false);
+    expect(state.inWorldBoss, isTrue);
+    expect(state.worldBossPractice, isFalse);
+    expect(state.metaDepth.worldBossTickets, AshenCrown.ticketsPerWeek - 1);
+    state = GameLogic.leaveDungeon(state);
+    expect(state.inWorldBoss, isFalse);
+    expect(state.metaDepth.worldBossTickets, AshenCrown.ticketsPerWeek);
+    expect(state.metaDepth.worldBossClearedWeek, isFalse);
+  });
+
   test('god hand mastery smash milestone', () {
     var state = GameLogic.createInitialState().copyWith(
       metaDepth: const MetaDepthState(godHandSmashCount: 100),

@@ -1235,7 +1235,7 @@ class GreaterRiftHubPanel extends StatelessWidget {
     if (!GameLogic.endgameUnlocked(state)) {
       return Text(
         'GREATER RIFT unlocks at party level ${GameLogic.maxHeroLevel} — '
-        'prestige ladder ranked on BOARDS.',
+        'prestige ladder (Play Games KEY/Gauntlet boards live; GR board optional).',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
       );
@@ -1655,7 +1655,9 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         ),
         const SizedBox(height: 4),
         Text(
-          'Season $month · Timed KEY + Gauntlet + Greater Rift (Play Games)',
+          grBoardReady
+              ? 'Season $month · Timed KEY + Gauntlet + Greater Rift (Play Games)'
+              : 'Season $month · Timed KEY + Gauntlet (Play Games) · GR board pending',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
