@@ -8,7 +8,7 @@ import '../kenney_sprite.dart';
 import '../web_click_bridge.dart';
 
 /// The one nav row. Hub and dungeon show the same pillars in the same order;
-/// the dungeon adds HUB (leave), the hub does not.
+/// the dungeon adds LEAVE (back to hub), the hub does not.
 class AppBottomBar extends StatelessWidget {
   const AppBottomBar({
     super.key,
@@ -36,7 +36,7 @@ class AppBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // FEEL 329: four dungeon pillars (PARTY/POWER/META/HUB) need denser labels.
+    // FEEL 329: four dungeon pillars (PARTY/POWER/META/LEAVE) need denser labels.
     final dense = onHubClose != null;
     final reason = alerts.party.isQuiet
         ? alerts.meta.reason
@@ -104,7 +104,7 @@ class AppBottomBar extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: AppBottomBarItem(
-                  label: 'HUB',
+                  label: 'LEAVE',
                   icon: KenneyAssets.iconDoor,
                   selected: false,
                   urgent: true,

@@ -349,18 +349,18 @@ class DungeonTopHud extends StatelessWidget {
                       )
                     else ...[
                       DungeonModeChip(
-                        label: 'LOOP',
+                        label: 'FARM',
                         selected: farm,
                         dense: true,
-                        tip: 'FARM — loop this floor after clear for loot',
+                        tip: 'LOOP FARM — loop this floor after clear for loot',
                         onTap: () => setMode(DungeonMode.farm),
                       ),
                       const SizedBox(width: 3),
                       DungeonModeChip(
-                        label: 'CLIMB',
+                        label: 'PUSH',
                         selected: !farm,
                         dense: true,
-                        tip: 'PUSH — advance floors toward the boss',
+                        tip: 'CLIMB PUSH — advance floors toward the boss',
                         onTap: () => setMode(DungeonMode.push),
                       ),
                     ],

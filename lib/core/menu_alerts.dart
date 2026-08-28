@@ -68,6 +68,25 @@ class MenuAlerts {
     meta: metaAlert(state),
   );
 
+  /// Dungeon bottom-nav marks — keep fight chrome quiet.
+  ///
+  /// Only bag upgrades (equip now). Forge/CAMP/What's New/KEY wait for hub;
+  /// quest claims already have the top HUD chip.
+  static MenuAlerts forDungeon(GameState state) {
+    final upgrades = bagUpgradeCount(state);
+    if (upgrades <= 0) return none;
+    return MenuAlerts(
+      party: MenuAlert(
+        count: upgrades,
+        reason: upgrades == 1
+            ? '1 better item for the party — tap EQUIP 1'
+            : '$upgrades better items for the party — tap EQUIP $upgrades',
+      ),
+      power: MenuAlert.quiet,
+      meta: MenuAlert.quiet,
+    );
+  }
+
   /// PARTY: new heroes to meet, then bag upgrades, then a full bag.
   static MenuAlert partyAlert(GameState state) {
     final meets = state.metaDepth.pendingHeroReveals.length;

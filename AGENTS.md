@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.70**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.71**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -39,7 +39,7 @@ for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.68 / 97** submitted 2026-08-27; testers may still be on
 **1.12.60 / 90** until review publishes). Working ship is
-**1.12.70**. Production still needs **12 closed testers × 14 days**.
+**1.12.71**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
@@ -132,10 +132,10 @@ main.dart
  └─ Dungeon (inDungeon) → Is2Shell
       ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
       └─ chrome (FARM/PUSH, God Hand, party HUD + flask, target panel)
-         + AppBottomBar PARTY / POWER / META / HUB + MenuSurface
+         + AppBottomBar PARTY / POWER / META / LEAVE + MenuSurface
 
 Shared menus: MenuRouter + MenuAlerts + MenuSurface
-  (same PARTY/POWER/META words in hub and dungeon; dungeon adds HUB = leave)
+  (same PARTY/POWER/META words in hub and dungeon; dungeon adds LEAVE = back to hub)
 ```
 
 **SpatialCombat is the combat authority** for live play and in-dungeon offline

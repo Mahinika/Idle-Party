@@ -17,7 +17,8 @@ abstract final class GameGuides {
           'Blessing, CAMP tracks).\n'
           '• Gold buys supplies and run power. Essence buys lasting power.\n'
           '• Bottom buttons (same in hub and dungeon): PARTY (heroes and gear), '
-          'POWER (upgrades), META (extras and Guides), HUB (home).\n'
+          'POWER (upgrades), META (extras and Guides). In a dungeon the fourth '
+          'button is LEAVE (back to hub).\n'
           '• A number on a button means something waits inside — PARTY 3 means '
           '3 better items for the party. No number means nothing to do there.\n'
           '• Menus stay small at the start; more tabs appear as you unlock them.\n'
@@ -89,10 +90,10 @@ abstract final class GameGuides {
       id: 'farm_push',
       title: 'FARM / PUSH',
       body:
-          'Toggle at the top of the dungeon view.\n\n'
-          '• FARM: after clearing, loop the same floor for more loot/gold.\n'
-          '• PUSH: after clearing, advance to the next floor toward the boss.\n'
-          '• Use Floor −1 / +1 in the ⋯ menu to travel when allowed.',
+          'Toggle at the top of the dungeon view (FARM / PUSH).\n\n'
+          '• FARM (loop): after clearing, stay on the same floor for more loot/gold.\n'
+          '• PUSH (climb): after clearing, advance to the next floor toward the boss.\n'
+          '• Use Floor −1 / +1 in the floor menu to travel when allowed.',
     ),
     GuideTopic(
       id: 'party',

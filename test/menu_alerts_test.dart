@@ -164,4 +164,18 @@ void main() {
     );
     expect(MenuTabs.showKey(endgame), isTrue);
   });
+
+  test('dungeon alerts only flag bag upgrades — not forge/meta noise', () {
+    final base = GameLogic.createInitialState(now: now);
+    final withUpgrade = base.copyWith(gearStash: [bigWeapon('dung_up')]);
+    final dungeon = MenuAlerts.forDungeon(withUpgrade);
+    expect(dungeon.party.count, greaterThan(0));
+    expect(dungeon.power.isQuiet, isTrue);
+    expect(dungeon.meta.isQuiet, isTrue);
+
+    final quiet = MenuAlerts.forDungeon(base);
+    expect(quiet.party.isQuiet, isTrue);
+    expect(quiet.power.isQuiet, isTrue);
+    expect(quiet.meta.isQuiet, isTrue);
+  });
 }

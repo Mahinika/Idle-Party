@@ -67,7 +67,7 @@ Do **not** rely on raw canvas coordinate clicks alone; full-bleed art used to st
 | Title | `SKIP` (boot story) → `CONTINUE` or `NEW GAME` → `START` (confirm `OVERWRITE` if prompted) |
 | Tips | `SKIP ALL TIPS` or `GOT IT` |
 | Hub | `ENTER DUNGEON` |
-| Dungeon | `FARM dungeon mode` / `PUSH dungeon mode`, `God Hand ready`, `Use healing flask`, `PARTY` / `POWER` / `META` / `HUB` |
+| Dungeon | `FARM` / `PUSH` (tip may say LOOP FARM / CLIMB PUSH), `God Hand ready`, `Use healing flask`, `PARTY` / `POWER` / `META` / `LEAVE` |
 
 After each click: wait briefly, new snapshot/screenshot, then decide. Stop after ~4 failed attempts on the same control; report what you saw.
 

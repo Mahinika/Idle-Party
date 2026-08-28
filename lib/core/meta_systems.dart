@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.70';
+  static const String currentVersion = '1.12.71';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.71',
+      bullets: <String>[
+        'Dungeon chrome: party kit stays folded until you tap a hero; bottom nav is LEAVE (not HUB) and only badges bag upgrades mid-fight. Mode chips stay FARM / PUSH (LOOP/CLIMB tips). Hub gold rates fold behind a tap so TODAY sits higher. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.70',
       bullets: <String>[

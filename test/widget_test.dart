@@ -112,7 +112,7 @@ void main() {
     expect(find.text('PARTY'), findsWidgets);
     expect(find.text('POWER'), findsWidgets);
     expect(find.text('META'), findsWidgets);
-    expect(find.text('HUB'), findsOneWidget);
+    expect(find.text('LEAVE'), findsOneWidget);
     expect(find.textContaining('PROT'), findsWidgets);
 
     await tester.tap(find.text('PARTY').last);

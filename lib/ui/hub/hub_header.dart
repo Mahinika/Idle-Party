@@ -151,7 +151,7 @@ class HubPlayUpdateBanner extends StatelessWidget {
   }
 }
 
-class HubHeader extends StatelessWidget {
+class HubHeader extends StatefulWidget {
   const HubHeader({
     super.key,
     required this.ascensionLevel,
@@ -186,7 +186,18 @@ class HubHeader extends StatelessWidget {
   final bool dimIncome;
 
   @override
+  State<HubHeader> createState() => _HubHeaderState();
+}
+
+class _HubHeaderState extends State<HubHeader> {
+  /// Gold-rate breakdown stays folded so TODAY / ENTER stay higher on phone.
+  bool _ratesOpen = false;
+
+  @override
   Widget build(BuildContext context) {
+    final incomeColor = widget.dimIncome
+        ? GameTheme.parchmentDim
+        : GameTheme.mossLit;
     return Column(
       children: [
         Row(
@@ -209,10 +220,10 @@ class HubHeader extends StatelessWidget {
               height: GameTheme.minTouch,
               child: WebClickScope(
                 label: 'Settings',
-                onPressed: onOpenSettings,
+                onPressed: widget.onOpenSettings,
                 child: IconButton(
                   padding: EdgeInsets.zero,
-                  onPressed: onOpenSettings,
+                  onPressed: widget.onOpenSettings,
                   icon: Icon(
                     Icons.settings,
                     size: 20,
@@ -226,7 +237,7 @@ class HubHeader extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '$partyName · Boss F$bossFloor',
+          '${widget.partyName} · Boss F${widget.bossFloor}',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
@@ -239,60 +250,76 @@ class HubHeader extends StatelessWidget {
             HubStatPill(
               icon: KenneyAssets.coinGold,
               caption: 'Gold',
-              label: '$gold',
+              label: '${widget.gold}',
             ),
             HubStatPill(
               icon: KenneyAssets.vialBlue,
               caption: 'Essence',
-              label: '$essence',
+              label: '${widget.essence}',
             ),
             HubStatPill(
               icon: KenneyAssets.iconCrown,
               caption: 'Ascend',
-              label: ascensionLevel >= GameLogic.maxAscensionLevel
-                  ? 'AL $ascensionLevel · MAX · endgame'
-                  : 'AL $ascensionLevel',
+              label: widget.ascensionLevel >= GameLogic.maxAscensionLevel
+                  ? 'AL ${widget.ascensionLevel} · MAX · endgame'
+                  : 'AL ${widget.ascensionLevel}',
             ),
           ],
         ),
         const SizedBox(height: 4),
-        Semantics(
-          label: incomeLine,
-          child: Text(
-            incomeLine,
-            textAlign: TextAlign.center,
-            style: GameTheme.body(
-              size: 13,
-              color: dimIncome ? GameTheme.parchmentDim : GameTheme.mossLit,
+        WebClickScope(
+          label: _ratesOpen ? 'Hide gold rates' : 'Show gold rates',
+          onPressed: () => setState(() => _ratesOpen = !_ratesOpen),
+          child: Semantics(
+            button: true,
+            label: _ratesOpen
+                ? 'Hide gold rates. ${widget.incomeLine}'
+                : 'Show gold rates. ${widget.incomeLine}',
+            onTap: () => setState(() => _ratesOpen = !_ratesOpen),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() => _ratesOpen = !_ratesOpen),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text(
+                  _ratesOpen
+                      ? widget.incomeLine
+                      : '${widget.incomeLine} · tap rates',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(size: 13, color: incomeColor),
+                ),
+              ),
             ),
           ),
         ),
-        Text(
-          multiplierLine,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
-        if (displayTitle.isNotEmpty || collectionScore > 0) ...[
-          const SizedBox(height: 3),
+        if (_ratesOpen) ...[
           Text(
-            displayTitle.isEmpty
-                ? '$willRank · $collectionScore'
-                : '$willRank · $displayTitle',
+            widget.multiplierLine,
             textAlign: TextAlign.center,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
-        ],
-        if (zoneTrophies > 0 && !GameTheme.isPhoneWidth(context)) ...[
-          const SizedBox(height: 2),
-          Text(
-            'Zone trophies $zoneTrophies',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.mossLit),
-          ),
+          if (widget.displayTitle.isNotEmpty || widget.collectionScore > 0) ...[
+            const SizedBox(height: 3),
+            Text(
+              widget.displayTitle.isEmpty
+                  ? '${widget.willRank} · ${widget.collectionScore}'
+                  : '${widget.willRank} · ${widget.displayTitle}',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            ),
+          ],
+          if (widget.zoneTrophies > 0 && !GameTheme.isPhoneWidth(context)) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Zone trophies ${widget.zoneTrophies}',
+              textAlign: TextAlign.center,
+              style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+            ),
+          ],
         ],
       ],
     );

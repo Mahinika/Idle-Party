@@ -178,7 +178,7 @@ class _Is2ShellState extends State<Is2Shell> {
                 ),
               ),
               AppBottomBar(
-                alerts: MenuAlerts.forState(state),
+                alerts: MenuAlerts.forDungeon(state),
                 route: router.route,
                 showReason: true,
                 onParty: () => _openMenuFeel(

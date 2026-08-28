@@ -46,7 +46,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   double _opacity = _fullOpacity;
 
   /// Kit chips only when the player taps a strip (map stays clear by default).
-  bool _kitOpen = true;
+  bool _kitOpen = false;
 
   @override
   void initState() {
