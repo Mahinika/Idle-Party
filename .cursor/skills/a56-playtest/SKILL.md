@@ -64,6 +64,21 @@ Then set in `~/.android/avd/Samsung_A56.avd/config.ini`:
 
 Google does not ship One UI. **Screen size** is what we need.
 
+## Logs (what the agent reads)
+
+Debug builds print `[IP]` lines into `flutter run` / logcat:
+
+- `nav` — GEAR / POWER/Gold|Shop|Forever / QUESTS / KEY / MORE / closed
+- `toast` — what the player just saw
+- `boot` / `continue` / `new_game` / `enter` / `leave` / `wipe` / `ascend`
+- `state` — gold, essence, KEY, forge ATK/DEF/STA, bag, floor (tiny hub gold ticks skipped)
+
+```bash
+adb -s emulator-5554 logcat -d | findstr [IP]
+```
+
+Or just watch the attached `flutter run` terminal. Release / Play builds stay quiet.
+
 ## After code changes
 
 - Copy / menu labels: hot **restart** (`R`) so the owner sees new English.

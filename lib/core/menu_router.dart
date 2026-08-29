@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/loot.dart';
+import 'debug_play_log.dart';
 import 'game_state.dart';
 import 'hub_chase.dart';
 import 'menu_alerts.dart';
@@ -56,13 +57,29 @@ class MenuRouter extends ChangeNotifier {
   EquipmentSlot? get bagSlotFilter => _bagSlotFilter;
   int get bagFiltersScrollNonce => _bagFiltersScrollNonce;
 
+  void _emitNav(String before) {
+    if (before != debugWhere) DebugPlayLog.nav(debugWhere);
+  }
+
   /// BAG → FILTERS: MORE · SETTINGS, scrolled to bag cleanup controls.
   void openBagFilters() {
+    final before = debugWhere;
     _moreSection = MoreSection.settings;
     _route = MenuRoute.more;
     _bagFiltersScrollNonce++;
+    _emitNav(before);
     notifyListeners();
   }
+
+  /// Debug playtest location (Gold/Shop/Forever, not forge/market/camp ids).
+  String get debugWhere => switch (_route) {
+    MenuRoute.none => 'closed',
+    MenuRoute.gear => 'GEAR/${_gearPanel.name}',
+    MenuRoute.power => 'POWER/${_powerSegment.tabLabel}',
+    MenuRoute.quests => 'QUESTS',
+    MenuRoute.key => 'KEY',
+    MenuRoute.more => 'MORE/${_moreSection.name}',
+  };
 
   String get title => switch (_route) {
     MenuRoute.none => '',
@@ -89,6 +106,7 @@ class MenuRouter extends ChangeNotifier {
     MoreSection? more,
     GameState? state,
   }) {
+    final before = debugWhere;
     if (gear != null) _gearPanel = gear;
     if (power != null) _powerSegment = power;
     if (more != null) _moreSection = more;
@@ -96,6 +114,7 @@ class MenuRouter extends ChangeNotifier {
       _bagSlotFilter = null;
     }
     _route = route;
+    _emitNav(before);
     notifyListeners();
   }
 
@@ -118,8 +137,10 @@ class MenuRouter extends ChangeNotifier {
 
   void close() {
     if (_route == MenuRoute.none) return;
+    final before = debugWhere;
     _route = MenuRoute.none;
     _bagSlotFilter = null;
+    _emitNav(before);
     notifyListeners();
   }
 
@@ -140,19 +161,25 @@ class MenuRouter extends ChangeNotifier {
 
   set gearPanel(GearPanel panel) {
     if (_gearPanel == panel) return;
+    final before = debugWhere;
     _gearPanel = panel;
+    _emitNav(before);
     notifyListeners();
   }
 
   set powerSegment(PowerSegment segment) {
     if (_powerSegment == segment) return;
+    final before = debugWhere;
     _powerSegment = segment;
+    _emitNav(before);
     notifyListeners();
   }
 
   set moreSection(MoreSection section) {
     if (_moreSection == section) return;
+    final before = debugWhere;
     _moreSection = section;
+    _emitNav(before);
     notifyListeners();
   }
 

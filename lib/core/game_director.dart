@@ -19,6 +19,7 @@ import '../spatial/spatial_combat.dart';
 import '../ui/game_audio.dart';
 import 'ad_boost.dart';
 import 'ad_rewarded.dart';
+import 'debug_play_log.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'gear_service.dart';
@@ -80,6 +81,7 @@ class SharedPreferencesGameStorage implements GameStorage {
     try {
       return GameLogic.stateFromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (e, st) {
+      DebugPlayLog.event('save', 'load failed (quarantined): $e');
       debugPrint('save load failed (quarantined): $e\n$st');
       await prefs.setString(_corruptSaveKey, raw);
       // If v2 was corrupt, try a still-valid legacy v1 before wiping both.
@@ -93,6 +95,7 @@ class SharedPreferencesGameStorage implements GameStorage {
             jsonDecode(rawV1) as Map<String, dynamic>,
           );
           await prefs.remove(_saveKey);
+          DebugPlayLog.event('save', 'recovered from legacy v1');
           debugPrint('save load recovered from legacy v1 after corrupt v2');
           return recovered;
         } catch (e2, st2) {
@@ -239,6 +242,7 @@ class GameDirector extends ChangeNotifier {
           unawaited(PlayGamesBridge.flushPendingScores());
         })
         .catchError((Object e, StackTrace st) {
+          DebugPlayLog.event('save', 'write failed: $e');
           debugPrint('save failed: $e\n$st');
         });
   }
@@ -344,6 +348,7 @@ class GameDirector extends ChangeNotifier {
       _toast = message;
     }
     _toastLife = life;
+    DebugPlayLog.toast(_toast ?? message);
     _ensureUiTimer();
     notifyListeners();
   }
@@ -567,6 +572,7 @@ class GameDirector extends ChangeNotifier {
         await _persistFlush();
       }
     } catch (e, st) {
+      DebugPlayLog.event('boot', 'failed: $e');
       debugPrint('boot failed: $e\n$st');
       _hasExistingSave = false;
       _state = GameLogic.createInitialState();
@@ -577,6 +583,7 @@ class GameDirector extends ChangeNotifier {
       _isLoading = false;
       _syncHubIdleTimer();
       notifyListeners();
+      DebugPlayLog.event('boot', DebugPlayLog.bootDetail(_state));
       unawaited(refreshPlayUpdateNotice());
       unawaited(AdRewarded.warmup());
     }
@@ -602,12 +609,14 @@ class GameDirector extends ChangeNotifier {
     _ensureUiTimer();
     _syncHubIdleTimer();
     notifyListeners();
+    DebugPlayLog.event('new_game', DebugPlayLog.bootDetail(_state));
     await _persistFlush();
   }
 
   /// Continue from the loaded save into play (no-op if already ready).
   void continueGame() {
     if (!_hasExistingSave) return;
+    DebugPlayLog.event('continue', DebugPlayLog.bootDetail(_state));
     ensureCombatLoop();
     _syncHubIdleTimer();
     notifyListeners();
@@ -879,6 +888,12 @@ class GameDirector extends ChangeNotifier {
           _state = GameLogic.notePartyWipe(
             _state,
             WipeFightSnapshot.fromWorld(spatial),
+          );
+          DebugPlayLog.event(
+            'wipe',
+            'F${_state.currentRoom.floorNumber} · '
+                'streak ${_state.wipeStreakCount} · '
+                '${_state.wipeAdviceLine.isEmpty ? 'quiet' : _state.wipeAdviceLine}',
           );
           _state = SessionTelemetry.append(
             _state,
@@ -1321,6 +1336,11 @@ class GameDirector extends ChangeNotifier {
       _startSpatialLoop();
     }
     _syncHubIdleTimer();
+    DebugPlayLog.event(
+      'enter',
+      '${_state.dungeonId} F${_state.currentRoom.floorNumber} · '
+          'KEY +${_state.hardmodeLevel}',
+    );
     showToast(StoryLore.enterDungeon(dungeonId), life: 2.8);
     notifyListeners();
     unawaited(_persistFlush());
@@ -1337,6 +1357,7 @@ class GameDirector extends ChangeNotifier {
     _freezeRunIncome();
     _state = _state.copyWith(lastUpdated: DateTime.now());
     _maybeLogHubChase();
+    DebugPlayLog.event('leave', DebugPlayLog.bootDetail(_state));
     _syncHubIdleTimer();
     final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {
@@ -3036,6 +3057,10 @@ class GameDirector extends ChangeNotifier {
         );
       }
     }
+    DebugPlayLog.event(
+      'ascend',
+      'AL$fromAl→${_state.ascensionLevel} · e ${_state.essence}',
+    );
     showToast(parts.join(' · '), life: 3.6);
     final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {
@@ -3065,6 +3090,7 @@ class GameDirector extends ChangeNotifier {
     }
     _state = updated;
     GameAudio.unlock();
+    DebugPlayLog.event('reborn', 'AL${_state.ascensionLevel} · e ${_state.essence}');
     showToast(
       StoryLore.rebornToast(
         essence: GameLogic.rebornEssenceReward(),
@@ -3129,6 +3155,8 @@ class GameDirector extends ChangeNotifier {
 
     final before = _state;
     _state = updated;
+    final delta = DebugPlayLog.stateDelta(before, _state);
+    if (delta != null) DebugPlayLog.event('state', delta);
     _syncDevicePrefs();
     _announceAbilityUnlocks(before, _state);
     _announceAchievementUnlocks(before, _state);
