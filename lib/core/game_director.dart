@@ -825,7 +825,6 @@ class GameDirector extends ChangeNotifier {
         if (lootLine != null && lootLine.isNotEmpty) {
           _clearSummary = lootLine;
           _clearSummaryLife = 3.5;
-          showToast(lootLine, life: 2.6);
         } else {
           showToast('Walking to stairs — use fist to steer', life: 2.4);
         }

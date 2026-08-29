@@ -4537,9 +4537,10 @@ abstract final class SpatialCombat {
     final names = <String>[];
     for (final drop in drops) {
       if (!drop.isEquipment) continue;
-      if (names.length >= 3) break;
-      final label = drop.equipment?.name ?? drop.name;
-      if (label.isNotEmpty) names.add(label);
+      if (names.length >= 2) break;
+      final item = drop.equipment;
+      final label = item != null ? item.combatPopLabel : drop.name;
+      if (label.isNotEmpty && !names.contains(label)) names.add(label);
     }
     world.groundLoot.clear();
     final granted = GameLogic.grantLoot(state, drops);
