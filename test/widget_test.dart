@@ -246,4 +246,30 @@ void main() {
     // GEAR is doll + OPEN BAG — not a side-by-side bag pane.
     expect(find.text('OPEN BAG'), findsNothing); // BAG tab is open, not GEAR
   });
+
+  testWidgets('POWER Shop opens listings without a dim crash', (tester) async {
+    final director = GameDirector.preview();
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: false),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.tap(find.text('POWER').last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('Shop'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('Buy flask'), findsWidgets);
+    expect(find.text('ALL'), findsOneWidget);
+  });
 }

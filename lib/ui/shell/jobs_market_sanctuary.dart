@@ -436,6 +436,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
     final listings = _filteredListings(state);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
@@ -534,36 +535,30 @@ class _MarketOverlayState extends State<MarketOverlay> {
         const SizedBox(height: 4),
         _heroFilterRow(state),
         const SizedBox(height: 6),
-        Expanded(
-          child: listings.isEmpty
-              ? Center(
-                  child: Text(
-                    'No listings match this filter.',
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchmentDim,
-                    ),
-                  ),
-                )
-              : ListView(
-                  children: [
-                    for (final listing in listings)
-                      _listingCard(state, director, listing),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Buy gear when drops miss your slot. Listings refresh '
-                      'over time. Fill empty slots here — dungeon loot still '
-                      'scales higher later.',
-                      textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.parchmentDim,
-                      ),
-                    ),
-                  ],
-                ),
-        ),
+        if (listings.isEmpty)
+          Text(
+            'No listings match this filter.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(
+              size: 13,
+              color: GameTheme.parchmentDim,
+            ),
+          )
+        else ...[
+          for (final listing in listings)
+            _listingCard(state, director, listing),
+          const SizedBox(height: 8),
+          Text(
+            'Buy gear when drops miss your slot. Listings refresh '
+            'over time. Fill empty slots here — dungeon loot still '
+            'scales higher later.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(
+              size: 11,
+              color: GameTheme.parchmentDim,
+            ),
+          ),
+        ],
       ],
     );
   }
