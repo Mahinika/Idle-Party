@@ -126,7 +126,7 @@ Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshot
 
 ## Play Console status (2026-08-29)
 
-- Short + full description: en-US only (this file). Refresh listing when pasting 1.12.83 copy (Craft wording).
+- Short + full description: en-US only (this file). Full description mentions POWER → Craft.
 - Phone screenshots (8) + feature graphic from `tool/store_listing/marketing/` (submitted 2026-08-21).
-- Closed Alpha **1.12.83 (112)** — upload when shipping this line (replaces **1.12.78 / 107** in review queue).
+- Closed Alpha **1.12.83 (112)** submitted 2026-08-29 (review). Live testers may still be on **1.12.78 (107)**.
 - GitHub Releases: tag **`v1.12.83`** → `build-apk.yml` APK/AAB.
