@@ -57,7 +57,6 @@ class _HubScreenState extends State<HubScreen>
   bool _offeredWhatsNew = false;
   bool _offeredDiscordThanks = false;
   bool _userPickedZone = false;
-  bool _mapExpanded = false;
   int? _trackedAscension;
   int? _trackedHighestCleared;
 
@@ -555,8 +554,6 @@ class _HubScreenState extends State<HubScreen>
     );
     final short = GameTheme.isShortHeight(context);
     final chase = HubChase.forState(state);
-    final compactMap =
-        GameLogic.plainPlayerChrome(state) && !_mapExpanded;
     final selectedDungeon = DungeonCatalog.byId(_selectedId);
 
     return Stack(
@@ -655,38 +652,27 @@ class _HubScreenState extends State<HubScreen>
                                 ),
                               ],
                               SizedBox(height: short ? 4 : 6),
-                              // World Path: full map, or one-zone card for new players.
+                              // World Path: always the scrollable map (tap a ring to pick).
                               Expanded(
                                 flex: short ? 7 : 1,
-                                child: compactMap
-                                    ? HubCompactZoneCard(
-                                        dungeon: selectedDungeon,
-                                        bossFloor: bossFloor,
-                                        unlocked: unlockedSelected,
-                                        partyLevel:
-                                            GameLogic.partyMeanLevel(state),
-                                        onExpandMap: () => setState(
-                                          () => _mapExpanded = true,
-                                        ),
-                                      )
-                                    : AnimatedBuilder(
-                                        animation: _torch,
-                                        builder: (context, _) => ZonePathMap(
-                                          dungeons: DungeonCatalog.all,
-                                          selectedId: _selectedId,
-                                          partyLevel:
-                                              GameLogic.partyMeanLevel(state),
-                                          highestCleared:
-                                              state.highestDungeonCleared,
-                                          pulse: _torch.value,
-                                          onSelect: (id) => setState(() {
-                                            _userPickedZone = true;
-                                            _selectedId = id;
-                                          }),
-                                        ),
-                                      ),
+                                child: AnimatedBuilder(
+                                  animation: _torch,
+                                  builder: (context, _) => ZonePathMap(
+                                    dungeons: DungeonCatalog.all,
+                                    selectedId: _selectedId,
+                                    partyLevel:
+                                        GameLogic.partyMeanLevel(state),
+                                    highestCleared:
+                                        state.highestDungeonCleared,
+                                    pulse: _torch.value,
+                                    onSelect: (id) => setState(() {
+                                      _userPickedZone = true;
+                                      _selectedId = id;
+                                    }),
+                                  ),
+                                ),
                               ),
-                              if (!short && !compactMap) ...[
+                              if (!short) ...[
                                 const SizedBox(height: 4),
                                 SelectedZoneCaption(
                                   dungeon: selectedDungeon,

@@ -506,19 +506,18 @@ def main() -> int:
         hub2 = buttons(page)
         log(notes, f"hub after menus: {hub2[:24]}")
 
-        # World map / other areas
-        for label in ("Other areas", "Other areas ▸", "WORLD", "MAP"):
+        # World Path is always on the hub — tap a zone marker if present.
+        for label in ("Sandy Caverns", "HERE", "NEXT", "OPEN"):
             if any(label.lower() in b.lower() for b in buttons(page)):
                 exact = next((b for b in buttons(page) if label.lower() in b.lower()), None)
                 if exact and mouse_click(page, exact, 800):
-                    shot(page, "07_other_areas")
+                    shot(page, "07_world_path")
                     scan_jargon(
                         findings,
                         "hub/map",
                         visible_text(page),
                         buttons(page),
                     )
-                    click_any(page, "CLOSE", "BACK", "DONE", wait_ms=500)
                     break
 
         # Enter dungeon

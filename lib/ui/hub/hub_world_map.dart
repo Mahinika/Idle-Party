@@ -4,7 +4,6 @@ import '../../models/dungeon_def.dart';
 import '../custom_assets.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
-import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../web_click_bridge.dart';
 
@@ -438,67 +437,6 @@ class MapZoneMarker extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// First-hour hub: one zone card instead of the full World Path scroll.
-class HubCompactZoneCard extends StatelessWidget {
-  const HubCompactZoneCard({
-    super.key,
-    required this.dungeon,
-    required this.bossFloor,
-    required this.unlocked,
-    required this.partyLevel,
-    required this.onExpandMap,
-  });
-
-  final DungeonDef dungeon;
-  final int bossFloor;
-  final bool unlocked;
-  final int partyLevel;
-  final VoidCallback onExpandMap;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: GameTheme.stoneDeep.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-        border: Border.all(color: GameTheme.border.withValues(alpha: 0.35)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Your area',
-              textAlign: TextAlign.center,
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-            ),
-            const SizedBox(height: 4),
-            SelectedZoneCaption(
-              dungeon: dungeon,
-              unlocked: unlocked,
-              partyLevel: partyLevel,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Boss on floor $bossFloor',
-              textAlign: TextAlign.center,
-              style: GameTheme.body(size: 12, color: GameTheme.mossLit),
-            ),
-            const SizedBox(height: 8),
-            KenneyButton(
-              label: 'Other areas ▸',
-              style: KenneyButtonStyle.grey,
-              onPressed: onExpandMap,
-              tip: 'Locked areas open after you beat a boss or level up',
-            ),
-          ],
         ),
       ),
     );
