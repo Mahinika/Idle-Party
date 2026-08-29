@@ -735,7 +735,7 @@ void main() {
     expect(step.lootPickups, greaterThan(0));
     expect(
       step.world.floaters.any(
-        (f) => f.priority >= 2 && f.text.contains(gear.name.split(' ').first),
+        (f) => f.priority >= 2 && f.text.contains(gear.combatPopLabel),
       ),
       isTrue,
     );

@@ -227,6 +227,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
   ];
 
   late final FlexTabs _tabs;
+  int _infoPane = 0;
 
   @override
   void initState() {
@@ -288,33 +289,8 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
 
   Widget _body(BuildContext context) {
     final d = widget.director;
-    final s = d.state;
     return switch (widget.section) {
-      MoreSection.info => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          KenneyButton(
-            label: MetaSystems.hasUnseenChangelog(s)
-                ? "WHAT'S NEW ★"
-                : "WHAT'S NEW",
-            style: KenneyButtonStyle.grey,
-            onPressed: widget.onOpenWhatsNew,
-          ),
-          const SizedBox(height: 8),
-          Expanded(child: GuidesOverlay(state: s)),
-          if (MenuTabs.showCodex(s)) ...[
-            const Divider(height: 8, color: GameTheme.border),
-            Expanded(
-              flex: 2,
-              child: CodexOverlay(director: d),
-            ),
-            Expanded(
-              flex: 1,
-              child: AchievementsOverlay(director: d),
-            ),
-          ],
-        ],
-      ),
+      MoreSection.info => _infoBody(d),
       MoreSection.settings => SingleChildScrollView(
         child: SettingsOverlay(
           director: d,
@@ -333,6 +309,54 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
         ),
       ),
     };
+  }
+
+  Widget _infoBody(GameDirector d) {
+    final s = d.state;
+    final showCodex = MenuTabs.showCodex(s);
+    final panes = showCodex
+        ? const ['GUIDE', 'CODEX', 'TROPHIES']
+        : const ['GUIDE'];
+    final pane = _infoPane.clamp(0, panes.length - 1);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        KenneyButton(
+          label: MetaSystems.hasUnseenChangelog(s)
+              ? "WHAT'S NEW ★"
+              : "WHAT'S NEW",
+          style: KenneyButtonStyle.grey,
+          onPressed: widget.onOpenWhatsNew,
+        ),
+        if (showCodex) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              for (var i = 0; i < panes.length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                Expanded(
+                  child: KenneyButton(
+                    label: panes[i],
+                    style: pane == i
+                        ? KenneyButtonStyle.brown
+                        : KenneyButtonStyle.grey,
+                    onPressed: () => setState(() => _infoPane = i),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+        const SizedBox(height: 8),
+        Expanded(
+          child: switch (pane) {
+            1 => CodexOverlay(director: d),
+            2 => AchievementsOverlay(director: d),
+            _ => GuidesOverlay(state: s),
+          },
+        ),
+      ],
+    );
   }
 }
 

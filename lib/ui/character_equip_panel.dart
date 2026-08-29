@@ -308,10 +308,26 @@ class CharacterEquipPanel extends StatelessWidget {
                       ],
                     ),
                     alignment: Alignment.center,
-                    child: HeroDollSprite(
-                      hero: hero,
-                      partyIndex: index,
-                      size: dollSize,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        HeroDollSprite(
+                          hero: hero,
+                          partyIndex: index,
+                          size: dollSize,
+                        ),
+                        if (hero.itemIn(EquipmentSlot.weapon) != null)
+                          Positioned(
+                            right: 4,
+                            bottom: 4,
+                            child: KenneySprite(
+                              asset: KenneyAssets.equipmentIconFor(
+                                hero.itemIn(EquipmentSlot.weapon)!,
+                              ),
+                              size: (dollSize * 0.28).clamp(18.0, 28.0),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   if (state.soulboundItem != null) ...[

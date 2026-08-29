@@ -169,11 +169,11 @@ class _ZonePathMapState extends State<ZonePathMap> {
     required bool selected,
     required bool frontier,
   }) {
+    // Grey portrait = locked; moss ring = cleared. Words only for the
+    // node you are on and the next push, so they don't cover the icon below.
     if (selected) return 'HERE';
-    if (cleared) return 'CLEAR';
-    if (frontier && unlocked) return 'NEXT';
-    if (unlocked) return 'OPEN';
-    return 'LOCKED';
+    if (frontier && unlocked && !cleared) return 'NEXT';
+    return '';
   }
 
   @override
@@ -187,7 +187,7 @@ class _ZonePathMapState extends State<ZonePathMap> {
         // Disc stays readable; hit box meets phone minTouch (44).
         final discSize = (mapW * 0.092).clamp(34.0, 40.0);
         final hitSize = math.max(discSize, GameTheme.minTouch);
-        const statusH = 13.0;
+        const statusH = 15.0;
 
         final needsScroll =
             _scrolledTo != widget.selectedId ||
@@ -258,18 +258,25 @@ class _ZonePathMapState extends State<ZonePathMap> {
           // Frontier = lowest uncleared unlocked zone (what to push next).
           final frontier =
               unlocked && !cleared && d.number == widget.highestCleared + 1;
+          final statusWord = _statusWord(
+            unlocked: unlocked,
+            cleared: cleared,
+            selected: selected,
+            frontier: frontier,
+          );
+          final labelH = statusWord.isEmpty ? 0.0 : statusH;
           final cx = anchor.dx * mapW;
           final cy = anchor.dy * mapH;
           final left = (cx - hitSize / 2).clamp(0.0, mapW - hitSize).toDouble();
-          final top = (cy - hitSize / 2)
-              .clamp(0.0, math.max(0.0, mapH - hitSize - statusH))
+          final top = (cy - hitSize / 2 - labelH)
+              .clamp(0.0, math.max(0.0, mapH - hitSize - labelH))
               .toDouble();
           pathChildren.add(
             Positioned(
               left: left,
               top: top,
               width: hitSize,
-              height: hitSize + statusH,
+              height: hitSize + labelH,
               child: MapZoneMarker(
                 def: d,
                 discSize: discSize,
@@ -278,12 +285,7 @@ class _ZonePathMapState extends State<ZonePathMap> {
                 cleared: cleared,
                 selected: selected,
                 pulse: widget.pulse,
-                statusWord: _statusWord(
-                  unlocked: unlocked,
-                  cleared: cleared,
-                  selected: selected,
-                  frontier: frontier,
-                ),
+                statusWord: statusWord,
                 onTap: () => widget.onSelect(d.id),
               ),
             ),
@@ -398,6 +400,13 @@ class MapZoneMarker extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (statusWord.isNotEmpty)
+                Text(
+                  statusWord,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  style: GameTheme.body(size: 11, color: _statusColor),
+                ),
               SizedBox(
                 width: hitSize,
                 height: hitSize,
@@ -428,12 +437,6 @@ class MapZoneMarker extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
-              Text(
-                statusWord,
-                maxLines: 1,
-                overflow: TextOverflow.clip,
-                style: GameTheme.body(size: 11, color: _statusColor),
               ),
             ],
           ),

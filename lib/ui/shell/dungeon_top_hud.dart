@@ -803,41 +803,7 @@ class DungeonTopHud extends StatelessWidget {
                 ),
               ),
             ),
-          if (bagUpgrades >= 5)
-            Padding(
-              padding: const EdgeInsets.only(top: 3),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(
-                    child: Text(
-                      bagUpgrades == 1
-                          ? 'Better gear in bag — open GEAR · EQUIP'
-                          : '$bagUpgrades better items — open GEAR · EQUIP',
-                      textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.torchHot,
-                      ),
-                    ),
-                  ),
-                  if (onOpenParty != null) ...[
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: onOpenParty,
-                      child: Text(
-                        'PARTY',
-                        style: GameTheme.pixel(
-                          size: GameTheme.hudPixel,
-                          color: GameTheme.clear,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            )
-          else if (showSoftcap)
+          if (showSoftcap)
             Padding(
               padding: const EdgeInsets.only(top: 3),
               child: Row(

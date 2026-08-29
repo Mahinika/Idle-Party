@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.82';
+  static const String currentVersion = '1.12.83';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.83',
+      bullets: <String>[
+        'Hub and dungeon chrome: Shop no longer goes dark; TODAY quest claim is one CLAIM QUESTS tap; MORE INFO is Guide / Codex / Trophies so lists don’t overlap.',
+        'Fight loot pops one short word (Mace, Chest) instead of stacked names. Gear waiting is the GEAR badge (and one line). Zoom chip reads NEAR / MID / FAR.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault) — rings only say HERE or NEXT. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.82',
       bullets: <String>[

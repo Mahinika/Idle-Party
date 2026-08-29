@@ -159,4 +159,24 @@ void main() {
     expect(cleaned.gearStash.any((g) => g.id == 'backup_chest'), isFalse);
     expect(cleaned.gold, greaterThan(state.gold));
   });
+
+  test('combat pop label is a short slot word, not the full name', () {
+    const mace = EquipmentItem(
+      id: 'm1',
+      name: 'Guard Plate Morningstar',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.uncommon,
+      weaponType: WeaponType.mace,
+      itemLevel: 17,
+    );
+    expect(mace.combatPopLabel, 'Mace');
+    const chest = EquipmentItem(
+      id: 'c1',
+      name: 'Bulwark Plate Chest',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      itemLevel: 21,
+    );
+    expect(chest.combatPopLabel, 'Chest');
+  });
 }

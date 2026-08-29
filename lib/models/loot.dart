@@ -214,6 +214,51 @@ class EquipmentItem {
     GearEffectId.none => '',
   };
 
+  /// Short in-fight pickup word (avoids stacked full item names).
+  String get combatPopLabel {
+    if (slot == EquipmentSlot.weapon) {
+      return switch (weaponType) {
+        WeaponType.axe => 'Axe',
+        WeaponType.sword => 'Sword',
+        WeaponType.mace => 'Mace',
+        WeaponType.dagger => 'Dagger',
+        WeaponType.fist => 'Fist',
+        WeaponType.staff => 'Staff',
+        WeaponType.polearm => 'Polearm',
+        WeaponType.bow => 'Bow',
+        WeaponType.crossbow => 'Crossbow',
+        WeaponType.gun => 'Gun',
+        WeaponType.thrown => 'Thrown',
+        WeaponType.wand => 'Wand',
+        null => 'Weapon',
+      };
+    }
+    if (slot == EquipmentSlot.offHand) {
+      return switch (offHandKind ?? OffHandKind.shield) {
+        OffHandKind.shield => 'Shield',
+        OffHandKind.frill => 'Tome',
+        OffHandKind.weapon => 'Off-hand',
+      };
+    }
+    if (slot == EquipmentSlot.ranged) return 'Ranged';
+    return switch (slot) {
+      EquipmentSlot.head => 'Head',
+      EquipmentSlot.neck => 'Neck',
+      EquipmentSlot.shoulder => 'Shoulder',
+      EquipmentSlot.chest => 'Chest',
+      EquipmentSlot.waist => 'Belt',
+      EquipmentSlot.legs => 'Legs',
+      EquipmentSlot.boots => 'Boots',
+      EquipmentSlot.wrist => 'Wrist',
+      EquipmentSlot.hands => 'Hands',
+      EquipmentSlot.cloak => 'Cloak',
+      EquipmentSlot.ring || EquipmentSlot.ring2 => 'Ring',
+      EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'Trinket',
+      EquipmentSlot.consumable => 'Flask',
+      _ => 'Gear',
+    };
+  }
+
   String get typeLabel {
     if (slot == EquipmentSlot.offHand) {
       return switch (offHandKind ?? OffHandKind.shield) {

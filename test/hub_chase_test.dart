@@ -80,6 +80,8 @@ void main() {
     expect(state.missions.first.isComplete, isTrue);
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.claimMissions);
+    expect(chase.detail.toLowerCase(), contains('claim quests'));
+    expect(chase.detail.toLowerCase(), isNot(contains('wait under')));
   });
 
   test('Will chase shows next threshold gap', () {
@@ -329,7 +331,7 @@ void main() {
     expect(chase.kind, HubChaseKind.meetHero);
     expect(chase.urgency, HubChaseUrgency.ready);
     expect(chase.title, contains('Combat'));
-    expect(chase.detail.toLowerCase(), contains('party'));
+    expect(chase.detail.toLowerCase(), contains('roster'));
   });
 
   test('endgame skips Meet backlog so TODAY keeps Gauntlet/KEY hunt', () {

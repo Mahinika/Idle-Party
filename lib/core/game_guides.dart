@@ -62,7 +62,7 @@ abstract final class GameGuides {
           'The hub World Path is a painted map from Sandy Caverns through Mothveil Hollow '
           '(Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault, and the rest along the road).\n\n'
           '• Scroll the map and tap a zone portrait on a glowing ring to select it.\n'
-          '• Markers show HERE / OPEN / CLEAR / LOCKED under each portrait.\n'
+          '• The selected zone is HERE; the next unlocked uncleared zone is NEXT. Other rings stay unlabeled so the path stays readable.\n'
           '• Unlock the next zone by clearing the previous boss, or when your '
           'party mean level reaches that zone’s gate (even steps from Lv1 on '
           'Sandy Caverns through Lv100 on Mothveil).\n'
@@ -357,7 +357,7 @@ abstract final class GameGuides {
           '(smaller rungs earlier); top rung repeats.\n'
           '• Claim 3 in a row for a +5e chain bonus.\n'
           '• Hub META badge may show ! when claims are ready.\n'
-          '• TODAY and QUESTS both use CLAIM QUESTS (count when several).\n'
+          '• TODAY CLAIM QUESTS claims ready rewards from the hub.\n'
           '• The dungeon top CLAIM chip claims all ready quests at once '
           '(visible in combat too; long-press opens the list).',
     ),

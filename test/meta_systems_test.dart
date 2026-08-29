@@ -386,4 +386,10 @@ void main() {
       expect(decoded.loadouts, isEmpty);
     });
   });
+
+  test('dungeon zoom chip uses everyday words', () {
+    expect(DungeonZoom.close.hudChipLabel, 'NEAR');
+    expect(DungeonZoom.normal.hudChipLabel, 'MID');
+    expect(DungeonZoom.wide.hudChipLabel, 'FAR');
+  });
 }

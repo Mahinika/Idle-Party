@@ -3918,10 +3918,11 @@ abstract final class SpatialCombat {
             resolved.outcome == LootOutcome.stashed &&
             resolved.essenceGained > 0;
         final goldPickup = resolved?.outcome == LootOutcome.gold;
+        final item = loot.drop.equipment;
         final label = salvaged
             ? 'FULL +${resolved.essenceGained}e'
-            : (loot.drop.isEquipment
-                  ? loot.drop.name
+            : (item != null
+                  ? item.combatPopLabel
                   : (goldPickup || loot.kind == GroundLootKind.gold
                         ? '+${loot.drop.amount}g'
                         : '+essence'));
@@ -3943,21 +3944,31 @@ abstract final class SpatialCombat {
           world.bagFullFloaterCooldown = 2.0;
         }
         if (showFloater) {
-          _spawnFloater(
-            world,
-            x: loot.x,
-            y: loot.y - 0.2,
-            text: _shortFloaterLabel(label),
-            argb: salvaged
-                ? _floaterEssence
-                : (loot.drop.isEquipment
-                      ? _floaterGear
-                      : (goldPickup || loot.kind == GroundLootKind.gold
-                            ? _floaterGold
-                            : _floaterEssence)),
-            life: salvaged || loot.drop.isEquipment ? 1.4 : 1.15,
-            priority: salvaged || loot.drop.isEquipment ? 2 : 1,
-          );
+          var skipGearPop = false;
+          if (item != null && !salvaged) {
+            var gearPops = 0;
+            for (final f in world.floaters) {
+              if (f.argb == _floaterGear) gearPops++;
+            }
+            skipGearPop = gearPops >= 2;
+          }
+          if (!skipGearPop) {
+            _spawnFloater(
+              world,
+              x: loot.x,
+              y: loot.y - 0.2,
+              text: item != null ? label : _shortFloaterLabel(label),
+              argb: salvaged
+                  ? _floaterEssence
+                  : (item != null
+                        ? _floaterGear
+                        : (goldPickup || loot.kind == GroundLootKind.gold
+                              ? _floaterGold
+                              : _floaterEssence)),
+              life: salvaged || item != null ? 1.4 : 1.15,
+              priority: salvaged || item != null ? 2 : 1,
+            );
+          }
         }
       } else {
         lootList[write++] = loot;

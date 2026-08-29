@@ -1122,7 +1122,7 @@ class _DpsMeterState extends State<DpsMeter> {
           border: Border.all(color: const Color(0x665A5040)),
         ),
         child: Text(
-          '— dps',
+          '0 DPS',
           style: GameTheme.pixel(
             size: GameTheme.hudPixel,
             color: GameTheme.parchmentDim,

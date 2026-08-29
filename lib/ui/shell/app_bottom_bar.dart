@@ -117,8 +117,16 @@ class AppBottomBar extends StatelessWidget {
         ),
       ),
     );
-    if (!showReason || reason.isEmpty) return bar;
-    return Column(
+    final inset = MediaQuery.paddingOf(context).bottom;
+    if (!showReason || reason.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: inset),
+        child: bar,
+      );
+    }
+    return Padding(
+      padding: EdgeInsets.only(bottom: inset),
+      child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -134,6 +142,7 @@ class AppBottomBar extends StatelessWidget {
         ),
         bar,
       ],
+      ),
     );
   }
 }

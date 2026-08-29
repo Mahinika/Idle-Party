@@ -288,7 +288,8 @@ class MenuAlerts {
 
   static String meetRosterHint(GameState state) {
     if (state.metaDepth.pendingHeroReveals.isEmpty) return '';
-    return 'New kit — open ROSTER in GEAR';
+    if (!MenuTabs.showRoster(state)) return '';
+    return 'New kit — open GEAR, then ROSTER';
   }
 
   static String gearEquipHint(GameState state, int heroIndex) {

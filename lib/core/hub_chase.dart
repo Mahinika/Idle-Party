@@ -146,7 +146,9 @@ class HubChase {
         title: completeMissions == 1
             ? 'Claim quest reward'
             : 'Claim quest rewards',
-        detail: 'Finished quests wait under QUESTS.',
+        detail: completeMissions == 1
+            ? 'Tap CLAIM QUESTS for gold and essence.'
+            : 'Tap CLAIM QUESTS for $completeMissions ready rewards.',
         progressLabel: '$completeMissions ready',
         urgency: HubChaseUrgency.ready,
       );

@@ -238,7 +238,7 @@ class _CodexOverlayState extends State<CodexOverlay> {
         ),
         const SizedBox(height: 4),
         SizedBox(
-          height: 34,
+          height: GameTheme.minTouch,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: GameLogic.codexRewardTiers.length,
@@ -248,13 +248,13 @@ class _CodexOverlayState extends State<CodexOverlay> {
               final claimed = state.metaDepth.codexClaims.contains(entry.key);
               final pct = GameLogic.codexCompletionPercent(state);
               final ready = pct >= entry.value.pct && !claimed;
-              final locked = pct < entry.value.pct;
+              final label = claimed
+                  ? '${entry.value.pct}%'
+                  : ready
+                  ? '${entry.value.pct}% +${entry.value.reward}e'
+                  : '${entry.value.pct}%';
               return KenneyButton(
-                label: claimed
-                    ? '${entry.value.pct}% done'
-                    : locked
-                    ? 'Need ${entry.value.pct}%'
-                    : '${entry.value.pct}% +${entry.value.reward}e',
+                label: label,
                 expanded: false,
                 style: ready
                     ? KenneyButtonStyle.brown

@@ -35,7 +35,8 @@ void main() {
     expect(chase.kind, HubChaseKind.meetHero);
     expect(chase.detail, contains(HeroIdentity.meetBlurb(HeroSpecId.combat)));
     expect(chase.detail, contains(HeroIdentity.meetHook(HeroSpecId.combat)));
-    expect(chase.detail, contains('PARTY'));
+    expect(chase.detail, contains('GEAR'));
+    expect(chase.detail, contains('ROSTER'));
   });
 
   test('nextMissingKitTeaser includes a Watch hook', () {

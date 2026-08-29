@@ -168,7 +168,34 @@ class HeroPaperDoll {
         _ => const DollLayer(51, 0),
       };
     }
-    // Swords / axes / maces — default melee.
+    // Swords / axes / maces / bows — pick a matching Kenney tile.
+    if (wt == WeaponType.mace) {
+      return switch (tier) {
+        0 => const DollLayer(50, 4),
+        1 => const DollLayer(51, 4),
+        2 => const DollLayer(52, 4),
+        _ => const DollLayer(53, 4),
+      };
+    }
+    if (wt == WeaponType.axe || wt == WeaponType.polearm) {
+      return switch (tier) {
+        0 => const DollLayer(48, 4),
+        1 => const DollLayer(49, 4),
+        2 => const DollLayer(50, 4),
+        _ => const DollLayer(51, 4),
+      };
+    }
+    if (wt == WeaponType.bow ||
+        wt == WeaponType.crossbow ||
+        wt == WeaponType.gun ||
+        wt == WeaponType.thrown) {
+      return switch (tier) {
+        0 => const DollLayer(54, 0),
+        1 => const DollLayer(55, 0),
+        2 => const DollLayer(54, 4),
+        _ => const DollLayer(55, 4),
+      };
+    }
     return switch (tier) {
       0 => const DollLayer(42, 4),
       1 => const DollLayer(44, 4),
