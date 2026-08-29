@@ -419,10 +419,10 @@ class HubChase {
       detail: upgrades == 1
           ? (named != null
               ? '$named is in BAG — open GEAR and tap EQUIP.'
-              : 'Open PARTY and tap EQUIP before you go deeper.')
+              : 'Open GEAR and tap EQUIP before you go deeper.')
           : (named != null
-              ? 'Open PARTY — tap EQUIP ($upgrades waiting; first: $named).'
-              : 'Open PARTY and tap EQUIP — $upgrades upgrades waiting.'),
+              ? 'Open GEAR — tap EQUIP ($upgrades waiting; first: $named).'
+              : 'Open GEAR and tap EQUIP — $upgrades upgrades waiting.'),
       progressLabel: upgrades == 1 ? 'EQUIP 1' : 'EQUIP $upgrades',
       urgency: HubChaseUrgency.ready,
     );
@@ -455,7 +455,7 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.meetHero,
       title: extra > 0 ? 'Meet ${def.name} · +$extra' : 'Meet ${def.name}',
-      detail: '${HeroIdentity.meetDetail(first)} Open PARTY to field them.',
+      detail: '${HeroIdentity.meetDetail(first)} Open GEAR → ROSTER to field them.',
       progressLabel: 'New',
       urgency: HubChaseUrgency.ready,
     );

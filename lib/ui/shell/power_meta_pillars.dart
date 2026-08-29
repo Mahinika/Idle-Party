@@ -110,25 +110,23 @@ class _PowerPillarState extends State<PowerPillar>
           PowerSegment.camp => (
             label: plain ? 'Permanent upgrades' : 'CAMP',
             scope: plain ? 'PERMANENT' : 'ACCOUNT',
-            body: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SanctuaryOverlay(director: d),
-                  if (MenuTabs.showBeast(s)) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      'BEAST',
-                      style: GameTheme.pixel(
-                        size: GameTheme.hudPixel,
-                        color: GameTheme.torchHot,
-                      ),
+            body: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                SanctuaryOverlay(director: d),
+                if (MenuTabs.showBeast(s)) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'BEAST',
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: GameTheme.torchHot,
                     ),
-                    const SizedBox(height: 8),
-                    BeastOverlay(director: d),
-                  ],
+                  ),
+                  const SizedBox(height: 8),
+                  BeastOverlay(director: d),
                 ],
-              ),
+              ],
             ),
           ),
         },
@@ -255,8 +253,8 @@ class KeystoneSheet extends StatelessWidget {
   }
 }
 
-/// MORE list: INFO / Settings / Credits / Debug — no gameplay.
-class MoreList extends StatelessWidget {
+/// MORE list: INFO / Settings / Credits — no gameplay.
+class MoreList extends StatefulWidget {
   const MoreList({
     super.key,
     required this.director,
@@ -275,40 +273,69 @@ class MoreList extends StatelessWidget {
   final int bagFiltersScrollNonce;
 
   @override
+  State<MoreList> createState() => _MoreListState();
+}
+
+class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
+  static const _sections = <MoreSection>[
+    MoreSection.info,
+    MoreSection.settings,
+    MoreSection.credits,
+  ];
+
+  late final FlexTabs _tabs;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = _sections.indexOf(widget.section).clamp(0, 2);
+    _tabs = FlexTabs(
+      vsync: this,
+      length: _sections.length,
+      initialIndex: initial,
+      onChanged: (i) {
+        if (i >= 0 && i < _sections.length) {
+          widget.onSectionChanged(_sections[i]);
+        }
+        setState(() {});
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final s = director.state;
+    final s = widget.director.state;
     final alert = MenuAlerts.moreAlert(s);
-    if (section != MoreSection.info &&
-        section != MoreSection.settings &&
-        section != MoreSection.credits) {
-      // fall through
-    }
+    _tabs.syncToId(_sections, widget.section);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          alignment: WrapAlignment.center,
-          children: [
-            for (final row in <({MoreSection id, String label})>[
-              (id: MoreSection.info, label: 'INFO'),
-              (id: MoreSection.settings, label: 'SETTINGS'),
-              (id: MoreSection.credits, label: 'CREDITS'),
-            ])
-              KenneyButton(
-                label: row.id == MoreSection.info && alert.star
-                    ? '${row.label} ★'
-                    : row.label,
-                style: section == row.id
-                    ? KenneyButtonStyle.brown
-                    : KenneyButtonStyle.grey,
-                expanded: false,
-                onPressed: () => onSectionChanged(row.id),
+        MenuChrome.tabRail(
+          controller: _tabs.controller,
+          onTap: (_) => setState(() {}),
+          tabs: [
+            for (var i = 0; i < _sections.length; i++)
+              MenuChrome.bridgedTab(
+                switch (_sections[i]) {
+                  MoreSection.info => alert.star ? 'INFO ★' : 'INFO',
+                  MoreSection.settings => 'SETTINGS',
+                  MoreSection.credits => 'CREDITS',
+                },
+                onSelect: () {
+                  _tabs.controller.animateTo(i);
+                  widget.onSectionChanged(_sections[i]);
+                  setState(() {});
+                },
               ),
           ],
         ),
-        if (!alert.isQuiet && section == MoreSection.info)
+        if (!alert.isQuiet && widget.section == MoreSection.info)
           MenuChrome.tabBanner(alert.reason),
         const SizedBox(height: 8),
         Expanded(child: _body(context)),
@@ -317,9 +344,9 @@ class MoreList extends StatelessWidget {
   }
 
   Widget _body(BuildContext context) {
-    final d = director;
+    final d = widget.director;
     final s = d.state;
-    return switch (section) {
+    return switch (widget.section) {
       MoreSection.info => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -328,7 +355,7 @@ class MoreList extends StatelessWidget {
                 ? "WHAT'S NEW ★"
                 : "WHAT'S NEW",
             style: KenneyButtonStyle.grey,
-            onPressed: onOpenWhatsNew,
+            onPressed: widget.onOpenWhatsNew,
           ),
           const SizedBox(height: 8),
           Expanded(child: GuidesOverlay(state: s)),
@@ -348,8 +375,8 @@ class MoreList extends StatelessWidget {
       MoreSection.settings => SingleChildScrollView(
         child: SettingsOverlay(
           director: d,
-          onClose: onClose,
-          bagFiltersScrollNonce: bagFiltersScrollNonce,
+          onClose: widget.onClose,
+          bagFiltersScrollNonce: widget.bagFiltersScrollNonce,
         ),
       ),
       MoreSection.credits => SingleChildScrollView(

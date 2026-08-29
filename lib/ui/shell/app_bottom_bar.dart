@@ -39,7 +39,7 @@ class AppBottomBar extends StatelessWidget {
   static String iconFor(MenuRoute r) => switch (r) {
     MenuRoute.gear => KenneyAssets.helmet,
     MenuRoute.power => CustomAssets.iconAxe,
-    MenuRoute.quests => KenneyAssets.book,
+    MenuRoute.quests => CustomAssets.iconTrophy,
     MenuRoute.key => KenneyAssets.chestClosed,
     MenuRoute.more => CustomAssets.iconBook,
     MenuRoute.none => KenneyAssets.book,

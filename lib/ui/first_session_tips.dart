@@ -44,7 +44,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'bag',
       title: 'BAG & GEAR',
       body:
-          'A number on PARTY means better items are waiting. Open PARTY and tap '
+          'A number on GEAR means better items are waiting. Open GEAR and tap '
           'EQUIP — the party wears them. No number means nothing to do.',
     ),
     (
@@ -95,7 +95,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'post_ascend',
       title: 'AFTER ASCEND',
       body:
-          'New kits land in PARTY — TODAY shows Meet … when something unlocked. '
+          'New kits land in GEAR → ROSTER — TODAY shows Meet … when something unlocked. '
           'Spend essence under Forge → KEEP (relics / God Hand) and POWER → CAMP. '
           'Apex stays.',
     ),
