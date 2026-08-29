@@ -1,8 +1,26 @@
 import 'game_logic.dart';
+import 'game_state.dart';
 import 'ashen_crown.dart';
 
 /// In-game guide copy for META → GUIDE.
 abstract final class GameGuides {
+  /// Early topics before the first boss (plain chrome).
+  static const Set<String> firstHourTopicIds = {
+    'basics',
+    'combat',
+    'party',
+    'bag_equip',
+    'world_path',
+  };
+
+  static List<GuideTopic> topicsFor(GameState state) {
+    if (!GameLogic.plainPlayerChrome(state)) return topics;
+    return [
+      for (final t in topics)
+        if (firstHourTopicIds.contains(t.id)) t,
+    ];
+  }
+
   static final topics = <GuideTopic>[
     GuideTopic(
       id: 'basics',
@@ -10,12 +28,12 @@ abstract final class GameGuides {
       body:
           'You have a small party of heroes. They fight on their own.\n\n'
           '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
-          '• Watch them clear rooms. Tap the map (God Hand) when you want to help.\n'
+          '• Watch them clear rooms. Tap the fight when you want to help.\n'
           '• TODAY on the hub always names the next job — start there.\n'
-          '• Three buckets: RUN (wallet gold — dungeon + FORGE), TODAY '
-          '(claims — vault, quests, daily), ACCOUNT (essence, Apex, '
+          '• Three buckets: RUN (wallet gold — dungeon + POWER), TODAY '
+          '(claims — vault, quests, daily), ACCOUNT (permanent power, '
           'Blessing, CAMP tracks).\n'
-          '• Gold buys supplies and run power. Essence buys lasting power.\n'
+          '• Gold buys supplies and run power. Permanent currency buys lasting power.\n'
           '• Bottom buttons (same in hub and dungeon): PARTY (heroes and gear), '
           'POWER (upgrades), META (extras and Guides). In a dungeon the fourth '
           'button is LEAVE (back to hub).\n'
@@ -53,7 +71,7 @@ abstract final class GameGuides {
           '• Locked zones dim on the map; the caption under the map shows '
           'party level progress (have / need).\n'
           "• Goblin's Hideout: stolen-stash chests pay better gold but wake ambush guards.\n"
-          '• Boss floor is shown under your party name (Boss F n).',
+          '• Boss floor is shown under your party name (Boss on F n).',
     ),
     GuideTopic(
       id: 'combat',

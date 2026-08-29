@@ -8,6 +8,7 @@ import 'package:idle_party/main.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/ui/boot_intro_screen.dart';
 import 'package:idle_party/ui/new_game_party_picker.dart';
+import 'package:idle_party/ui/kenney_button.dart';
 import 'package:idle_party/ui/start_menu_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -147,6 +148,7 @@ void main() {
       director.state.heroes.map((h) => h.specId).toSet(),
       HeroSpecs.starterUnlocked.toSet(),
     );
+    await tester.pump(const Duration(milliseconds: 500));
   });
 
   testWidgets('first launch hides Continue and starts with a named party',
@@ -185,7 +187,8 @@ void main() {
     expect(find.text('Overwrite save?'), findsNothing);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(director.state.partyName, 'The Ember Guard');
-    expect(find.textContaining('The Ember Guard · Boss F'), findsOneWidget);
+    expect(find.textContaining('The Ember Guard · Boss on F'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 500));
   });
 
   testWidgets('blocked party name stays on the picker', (tester) async {
@@ -209,5 +212,38 @@ void main() {
     expect(started, isFalse);
     expect(find.byType(NewGamePartyPicker), findsOneWidget);
     expect(find.text('Choose another party name'), findsOneWidget);
+  });
+
+  testWidgets('picking the same starter twice keeps slots and explains why START is off', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: NewGamePartyPicker(
+          initialSpecs: const [],
+          onConfirm: (_, _) {},
+          onBack: () {},
+        ),
+      ),
+    );
+
+    final protInList = find.descendant(
+      of: find.byType(ListView),
+      matching: find.textContaining('PROT'),
+    );
+    await tester.tap(protInList.first);
+    await tester.pump();
+    await tester.tap(protInList.first);
+    await tester.pump();
+
+    expect(find.textContaining('already picked'), findsOneWidget);
+    expect(find.textContaining('Pick 2 more heroes'), findsOneWidget);
+    final startButton = tester.widget<KenneyButton>(
+      find.widgetWithText(KenneyButton, 'START'),
+    );
+    expect(startButton.onPressed, isNull);
   });
 }

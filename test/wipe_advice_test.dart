@@ -19,7 +19,7 @@ void main() {
     elapsedSec: 20,
   );
 
-  test('FORGE tip after two wipes; floor gap on first wipe', () {
+  test('POWER tip after two wipes; floor gap on first wipe', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
       highestFloorCleared: 2,
@@ -43,7 +43,7 @@ void main() {
     expect(state.wipeAdviceLine, '');
     state = GameLogic.notePartyWipe(state, atkLack());
     expect(state.wipeStreakCount, 2);
-    expect(state.wipeAdviceLine, 'Upgrade ATK in FORGE');
+    expect(state.wipeAdviceLine, 'Upgrade ATK in POWER');
   });
 
   test('melted pack points at DEF on first wipe', () {
@@ -57,7 +57,7 @@ void main() {
     );
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.notePartyWipe(state, fight);
-    expect(state.wipeAdviceLine, 'Upgrade DEF in FORGE');
+    expect(state.wipeAdviceLine, 'Upgrade DEF in POWER');
   });
 
   test('almost-cleared chip death points at STA', () {
@@ -72,7 +72,7 @@ void main() {
     final state = GameLogic.createInitialState(now: now);
     expect(
       WipeAdvice.lineFor(state: state, fight: fight),
-      'Upgrade STA in FORGE',
+      'Upgrade STA in POWER',
     );
   });
 
@@ -256,6 +256,11 @@ void main() {
     expect(WipeAdvice.godHandHintFor(state), isNull);
     state = GameLogic.notePartyWipe(state, atkLack());
     state = GameLogic.notePartyWipe(state, atkLack());
+    expect(
+      WipeAdvice.godHandHintFor(state),
+      contains('Tap the fight'),
+    );
+    state = state.copyWith(bossVictories: 1);
     expect(
       WipeAdvice.godHandHintFor(state),
       contains('God Hand'),

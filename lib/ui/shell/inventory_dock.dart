@@ -125,8 +125,8 @@ class _InventoryDockState extends State<InventoryDock>
         final upgrades = MenuAlerts.bagUpgradeCount(state);
         if (upgrades > 0) {
           return upgrades == 1
-              ? '1 better item in bag — tap EQUIP 1'
-              : '$upgrades better items in bag — tap EQUIP $upgrades';
+              ? '1 better item in bag — use EQUIP below'
+              : '$upgrades better items in bag — use EQUIP below';
         }
         return MenuAlerts.bagStatusLine(state);
       case PartyTab.merge:
@@ -262,6 +262,7 @@ class _InventoryDockState extends State<InventoryDock>
             candidate: selected,
             pairingStash: state.gearStash,
             isBest: i == bestIndex,
+            plainEnglish: GameLogic.plainPlayerChrome(state),
             onTap: () => onEquipToHero(i),
           ),
       ],
@@ -829,6 +830,7 @@ class _EquipHeroChip extends StatelessWidget {
     required this.onTap,
     this.pairingStash,
     this.isBest = false,
+    this.plainEnglish = false,
   });
 
   final PartyHero hero;
@@ -836,6 +838,7 @@ class _EquipHeroChip extends StatelessWidget {
   final VoidCallback onTap;
   final List<EquipmentItem>? pairingStash;
   final bool isBest;
+  final bool plainEnglish;
 
   @override
   Widget build(BuildContext context) {
@@ -886,7 +889,7 @@ class _EquipHeroChip extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    hero.roleLabel,
+                    hero.displayRoleLabel(plainEnglish: plainEnglish),
                     style: GameTheme.body(size: 11, color: GameTheme.parchment),
                   ),
                   if (isBest) ...[

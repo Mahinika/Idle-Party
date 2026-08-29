@@ -3,8 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/menu_alerts.dart';
+import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/main.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/ui/first_session_tips.dart';
 import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/app_bottom_bar.dart';
 
@@ -20,17 +22,18 @@ void main() {
 
     await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('IDLE PARTY'), findsOneWidget);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
-    expect(find.textContaining('The Party · Boss F'), findsOneWidget);
+    expect(find.textContaining('The Party · Boss on F'), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp(r'Sandy Caverns')), findsWidgets);
-    expect(find.textContaining('Boss F'), findsWidgets);
+    expect(find.textContaining('Boss on F'), findsWidgets);
     expect(find.textContaining('Boss:'), findsOneWidget);
     expect(find.text('PARTY'), findsOneWidget);
     expect(find.text('POWER'), findsOneWidget);
     expect(find.textContaining('META'), findsOneWidget);
-    expect(find.textContaining('Ascend'), findsWidgets);
+    expect(find.textContaining('Boss 0/1'), findsWidgets);
     // Fresh save: KEY jargon gated — no KEYSTONE strip under ENTER.
     expect(find.textContaining('KEYSTONE'), findsNothing);
   });
@@ -45,6 +48,7 @@ void main() {
 
     await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(GameTheme.isShortHeight(tester.element(find.text('ENTER DUNGEON'))), isTrue);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
@@ -90,9 +94,10 @@ void main() {
 
     await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(GameLogic.showKeystoneJargon(director.state), isTrue);
-    expect(find.text('META → KEY'), findsOneWidget);
+    expect(find.textContaining('KEY DIAL'), findsOneWidget);
     expect(find.textContaining('RIFT'), findsWidgets);
   });
 
@@ -108,12 +113,12 @@ void main() {
     await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.textContaining('PUSH'), findsWidgets);
+    expect(find.textContaining('Next'), findsWidgets);
     expect(find.text('PARTY'), findsWidgets);
     expect(find.text('POWER'), findsWidgets);
     expect(find.text('META'), findsWidgets);
     expect(find.text('LEAVE'), findsOneWidget);
-    expect(find.textContaining('PROT'), findsWidgets);
+    expect(find.textContaining('Shield'), findsWidgets);
 
     await tester.tap(find.text('PARTY').last);
     await tester.pumpAndSettle();
@@ -170,6 +175,11 @@ void main() {
 
   testWidgets('menu badge points at bag upgrades', (WidgetTester tester) async {
     final seeded = GameLogic.createInitialState().copyWith(
+      seenChangelogVersion: MetaSystems.currentVersion,
+      seenTips: [
+        for (final t in FirstSessionTips.tips) t.id,
+        'discord_thanks',
+      ],
       gearStash: const [
         EquipmentItem(
           id: 'badge_up',
@@ -194,6 +204,7 @@ void main() {
       MyApp(director: director, autoStartLoop: false, showIntro: false),
     );
     await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 500));
 
     final upgrades = MenuAlerts.bagUpgradeCount(director.state);
     expect(upgrades, greaterThan(0));
@@ -205,7 +216,7 @@ void main() {
     );
 
     // Hub keeps ambient animations running, so settle by hand.
-    await tester.tap(find.text('PARTY').last);
+    await tester.tap(find.bySemanticsLabel('PARTY $upgrades waiting'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('EQUIP $upgrades'), findsWidgets);

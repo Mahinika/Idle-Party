@@ -1150,7 +1150,51 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
   }
 }
 
-/// META → KEY: Rift tier dial (party max-level endgame).
+/// META → KEY: Infinity Gauntlet enter (party max-level Spire climb).
+class GauntletHubPanel extends StatelessWidget {
+  const GauntletHubPanel({super.key, required this.director});
+  final GameDirector director;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = director.state;
+    if (!GameLogic.endgameUnlocked(state)) {
+      return Text(
+        'INFINITY GAUNTLET unlocks at party level ${GameLogic.maxHeroLevel} — '
+        'endless Crystal Spire climb (boss every 5 floors).',
+        textAlign: TextAlign.center,
+        style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+      );
+    }
+    final best = state.metaDepth.gauntletBestFloor;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'INFINITY GAUNTLET',
+          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          best <= 0
+              ? 'Endless Crystal Spire — boss every 5 floors. Wipe or leave returns to hub.'
+              : 'Best F$best — floors escalate forever; wipe or leave returns to hub.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        KenneyButton(
+          label: 'ENTER GAUNTLET',
+          style: KenneyButtonStyle.red,
+          onPressed: GameLogic.canEnterGauntlet(state)
+              ? () => confirmGauntletRun(context, director)
+              : null,
+        ),
+      ],
+    );
+  }
+}
+
+/// META → KEY: farm Rift tier dial (gold + gear mid-run).
 class RiftHubPanel extends StatelessWidget {
   const RiftHubPanel({super.key, required this.director});
   final GameDirector director;
@@ -1686,7 +1730,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           children: [
             Expanded(
               child: KenneyButton(
-                label: 'VIEW KEY',
+                label: 'KEY BOARD',
                 style: KenneyButtonStyle.grey,
                 onPressed: playGamesBusy || !boardsReady
                     ? null
@@ -1696,7 +1740,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
             const SizedBox(width: 8),
             Expanded(
               child: KenneyButton(
-                label: 'VIEW GAUNTLET',
+                label: 'GAUNTLET BOARD',
                 style: KenneyButtonStyle.grey,
                 onPressed: playGamesBusy || !boardsReady
                     ? null
@@ -1707,7 +1751,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         ),
         const SizedBox(height: 6),
         KenneyButton(
-          label: 'VIEW GR',
+          label: 'GR BOARD',
           style: KenneyButtonStyle.grey,
           onPressed: playGamesBusy || !grBoardReady
               ? null

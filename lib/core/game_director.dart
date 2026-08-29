@@ -25,6 +25,7 @@ import 'gear_service.dart';
 import 'hero_identity.dart';
 import 'gold_income.dart';
 import 'logic_notices.dart';
+import 'menu_alerts.dart';
 import 'meta_systems.dart';
 import 'play_games_bridge.dart';
 import 'rift.dart';
@@ -994,6 +995,18 @@ class GameDirector extends ChangeNotifier {
         final floorEquip = LogicNotices.takeFloorEquipLine();
         if (floorEquip != null) {
           showToast(floorEquip, life: 2.2);
+        }
+        final bagUps = MenuAlerts.bagUpgradeCount(_state);
+        if (bagUps >= 8 &&
+            !_state.inGauntlet &&
+            !_state.inAnyRiftMode &&
+            beforeClear.dungeonMode == DungeonMode.push) {
+          showToast(
+            bagUps == 1
+                ? 'Better gear waiting — open PARTY · EQUIP'
+                : '$bagUps better items waiting — open PARTY · EQUIP',
+            life: 3.2,
+          );
         }
         final payoffNotices = LogicNotices.takeMetaPayoffs();
         if (payoffNotices.isNotEmpty) {

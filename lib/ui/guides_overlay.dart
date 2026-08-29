@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../core/game_guides.dart';
+import '../core/game_state.dart';
 import 'game_theme.dart';
 import 'menu_chrome.dart';
 import 'web_click_bridge.dart';
 
 /// Expandable how-to guide opened from META → GUIDE.
 class GuidesOverlay extends StatefulWidget {
-  const GuidesOverlay({super.key});
+  const GuidesOverlay({super.key, this.state});
+
+  /// When set, first-hour saves only see early topics.
+  final GameState? state;
 
   @override
   State<GuidesOverlay> createState() => _GuidesOverlayState();
@@ -18,7 +22,9 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    final topics = GameGuides.topics;
+    final topics = widget.state == null
+        ? GameGuides.topics
+        : GameGuides.topicsFor(widget.state!);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

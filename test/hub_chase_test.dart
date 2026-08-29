@@ -32,6 +32,7 @@ void main() {
       now: now,
     );
     state = state.copyWith(
+      bossVictories: 1,
       metaDepth: state.metaDepth.copyWith(
         dailyVaultClears: GameLogic.dailyVaultClearTarget,
         dailyVaultClaimed: false,
@@ -47,6 +48,7 @@ void main() {
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.ensureWeeklyContract(state, now: now);
     state = state.copyWith(
+      bossVictories: 1,
       metaDepth: state.metaDepth.copyWith(
         dailyVaultClears: GameLogic.dailyVaultClearTarget,
         dailyVaultClaimed: false,
@@ -63,6 +65,7 @@ void main() {
     var state = GameLogic.createInitialState(now: now);
     final m = state.missions.first;
     state = state.copyWith(
+      bossVictories: 1,
       missions: [
         m.copyWith(progress: m.target),
         ...state.missions.skip(1),
@@ -327,6 +330,36 @@ void main() {
     expect(chase.urgency, HubChaseUrgency.ready);
     expect(chase.title, contains('Combat'));
     expect(chase.detail.toLowerCase(), contains('party'));
+  });
+
+  test('endgame skips Meet backlog so TODAY keeps Gauntlet/KEY hunt', () {
+    final state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+          pendingHeroReveals: const ['combat', 'arms', 'fury'],
+          dailyVaultClaimed: true,
+        ),
+        highestDungeonCleared: 14,
+        lifetimeGoldEarned: 50_000_000,
+      ),
+    );
+    expect(GameLogic.endgameUnlocked(state), isTrue);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, isNot(HubChaseKind.meetHero));
+    expect(
+      chase.kind,
+      anyOf(
+        HubChaseKind.gauntletMilestone,
+        HubChaseKind.keystone,
+        HubChaseKind.greaterRiftMilestone,
+        HubChaseKind.riftMilestone,
+        HubChaseKind.ashenCrown,
+      ),
+    );
   });
 
   test('ack clears pending hero reveals', () {

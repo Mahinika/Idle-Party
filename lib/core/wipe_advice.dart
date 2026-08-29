@@ -62,6 +62,7 @@ abstract final class WipeAdvice {
   static bool isImmediate(String line) =>
       line.startsWith('Equip') ||
       line.contains('too far') ||
+      line == 'Upgrade DEF in POWER' ||
       line == 'Upgrade DEF in FORGE' ||
       line.contains('MARKET has an upgrade') ||
       line.startsWith('MARKET:');
@@ -75,15 +76,15 @@ abstract final class WipeAdvice {
     if (adviceLine.startsWith('Equip')) {
       return 'HUB → PARTY to equip the upgrade';
     }
-    if (adviceLine.contains('FORGE')) {
-      return 'HUB → POWER → FORGE to buy the track';
+    if (adviceLine.contains('POWER') || adviceLine.contains('FORGE')) {
+      return 'HUB → POWER to buy the track';
     }
     return null;
   }
 
-  /// When bag vs FORGE tips appear (streakNeeded = 2 for FORGE).
+  /// When bag vs POWER tips appear (streakNeeded = 2 for POWER tracks).
   static String get timingFootnote =>
-      'Bag tips can show on wipe 1; FORGE tips after 2 on this floor.';
+      'Bag tips can show on wipe 1; POWER tips after 2 on this floor.';
 
   static String _forgeOrMarket(GameState state, String forgeLine) {
     final listing = MarketListingsService.bestAffordableUpgradeListing(state);
@@ -133,7 +134,9 @@ abstract final class WipeAdvice {
         state.inAnyRiftMode) {
       return null;
     }
-    return 'Tap God Hand — steer party + AOE smash';
+    return GameLogic.plainPlayerChrome(state)
+        ? 'Tap the fight — steer party + smash'
+        : 'Tap God Hand — steer party + AOE smash';
   }
 
   /// English line for the dungeon wipe panel, or null if we must stay quiet.
@@ -168,24 +171,24 @@ abstract final class WipeAdvice {
 
     // Melted before the pack moved: incoming damage, not a long DPS check.
     if (fight.elapsedSec <= 6 && leftover >= 0.50) {
-      return _forgeOrMarket(state, 'Upgrade DEF in FORGE');
+      return _forgeOrMarket(state, 'Upgrade DEF in POWER');
     }
 
     final dps = fight.damageDealt / fight.elapsedSec;
     final ttk = fight.waveHp / dps;
     final atkGap = ttk / fight.elapsedSec;
     if (atkGap >= 1.35 && leftover >= 0.35) {
-      return _forgeOrMarket(state, 'Upgrade ATK in FORGE');
+      return _forgeOrMarket(state, 'Upgrade ATK in POWER');
     }
 
     // DPS was enough to nearly finish; they ran out of body.
     if (atkGap <= 0.75 && leftover < 0.40 && fight.partyMaxHp > 0) {
       final overkill = fight.damageTaken / fight.partyMaxHp;
       if (overkill >= 1.20) {
-        return _forgeOrMarket(state, 'Upgrade DEF in FORGE');
+        return _forgeOrMarket(state, 'Upgrade DEF in POWER');
       }
       if (overkill <= 1.08) {
-        return _forgeOrMarket(state, 'Upgrade STA in FORGE');
+        return _forgeOrMarket(state, 'Upgrade STA in POWER');
       }
     }
     return null;

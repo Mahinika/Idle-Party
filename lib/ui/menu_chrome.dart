@@ -432,9 +432,9 @@ abstract final class MenuChrome {
   static Widget scopeChip(String scope) {
     final key = scope.toUpperCase();
     final tone = switch (key) {
-      'RUN' => GameTheme.scopeRun,
+      'RUN' || 'GOLD' => GameTheme.scopeRun,
       'TODAY' => GameTheme.scopeToday,
-      'ACCOUNT' => GameTheme.scopeAccount,
+      'ACCOUNT' || 'PERMANENT' => GameTheme.scopeAccount,
       _ => GameTheme.parchmentDim,
     };
     return chip(label: key, tone: tone);

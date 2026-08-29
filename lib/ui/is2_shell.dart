@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/game_director.dart';
+import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/menu_alerts.dart';
 import '../core/menu_router.dart';
@@ -56,7 +57,11 @@ class _Is2ShellState extends State<Is2Shell> {
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.keyH && widget.onLeaveDungeon != null) {
-      confirmLeaveDungeon(context, widget.onLeaveDungeon!);
+      confirmLeaveDungeon(
+        context,
+        widget.onLeaveDungeon!,
+        state: state,
+      );
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.space) {
@@ -149,13 +154,15 @@ class _Is2ShellState extends State<Is2Shell> {
                       Positioned(
                         left: hudSide,
                         top: GameTheme.clusterGap / 2,
-                        child: DpsMeter(
-                          director: d,
-                          onOpenChanged: (open) {
-                            if (_dpsMeterOpen == open) return;
-                            setState(() => _dpsMeterOpen = open);
-                          },
-                        ),
+                        child: GameLogic.plainPlayerChrome(state)
+                            ? const SizedBox.shrink()
+                            : DpsMeter(
+                                director: d,
+                                onOpenChanged: (open) {
+                                  if (_dpsMeterOpen == open) return;
+                                  setState(() => _dpsMeterOpen = open);
+                                },
+                              ),
                       ),
                       Positioned(
                         right: hudSide,
@@ -192,8 +199,19 @@ class _Is2ShellState extends State<Is2Shell> {
                 ),
                 onHubClose: widget.onLeaveDungeon == null
                     ? null
-                    : () =>
-                          confirmLeaveDungeon(context, widget.onLeaveDungeon!),
+                    : () {
+                        if (state.isPartyDefeated) {
+                          // Wipe panel already has RETURN TO HUB — don't stack
+                          // another STAY/RETURN confirm on top.
+                          widget.director.hubAfterWipe();
+                          return;
+                        }
+                        confirmLeaveDungeon(
+                          context,
+                          widget.onLeaveDungeon!,
+                          state: state,
+                        );
+                      },
               ),
             ],
           ),

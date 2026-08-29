@@ -52,4 +52,26 @@ void main() {
     expect(GameLogic.showKeystoneJargon(endgame), isTrue);
     expect(MenuTabs.showKey(endgame), isTrue);
   });
+
+  test('fresh POWER is Gold upgrades + Buy supplies only', () {
+    final early = GameLogic.createInitialState(now: now);
+    expect(MenuTabs.showCamp(early), isFalse);
+    expect(MenuTabs.showShop(early), isFalse);
+    expect(
+      MenuRouter.visiblePowerTabs(early),
+      equals(const [PowerTab.forge, PowerTab.market]),
+    );
+
+    final afterAscend = early.copyWith(ascensionLevel: 1, essence: 10);
+    expect(MenuTabs.showCamp(afterAscend), isTrue);
+    expect(
+      MenuRouter.visiblePowerTabs(afterAscend),
+      equals(const [
+        PowerTab.forge,
+        PowerTab.market,
+        PowerTab.camp,
+        PowerTab.shop,
+      ]),
+    );
+  });
 }

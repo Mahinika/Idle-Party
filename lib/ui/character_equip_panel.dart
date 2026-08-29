@@ -217,7 +217,7 @@ class CharacterEquipPanel extends StatelessWidget {
                           HeroDollSprite(hero: h, partyIndex: i, size: 26),
                           const SizedBox(width: 6),
                           Text(
-                            '${h.spec.shortLabel} · L${h.level}',
+                            '${h.displayRoleLabel(plainEnglish: GameLogic.plainPlayerChrome(state))} · L${h.level}',
                             style: GameTheme.body(size: 11, color: GameTheme.torchHot),
                           ),
                         ],

@@ -71,12 +71,12 @@ FAIR PLAY
 Install, start a party, and take one more floor.
 ```
 
-### Release notes — Alpha 1.12.53 (en-US, paste into Play Console)
+### Release notes — Alpha 1.12.78 (en-US, paste into Play Console)
 
 ```
-• Hero cap Lv100 — KEY / Gauntlet / Rifts when the whole party is max level.
-• Zones unlock by even party levels (Sandy from Lv1) or prior clear.
-• AL20 remains Ascend cap only.
+• First-hour calm: clearer hub/dungeon words, quieter Too weak, open PARTY · EQUIP when bag upgrades pile up.
+• Wipe tips point at POWER (not FORGE jargon). GUIDE shows early topics until your first boss.
+• Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.
 • Bug fixes and balance polish.
 ```
 
@@ -124,8 +124,9 @@ Hard-won rules:
 
 Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
 
-## Play Console status (2026-08-24)
+## Play Console status (2026-08-28)
 
-- Short + full description: en-US only (this file). Updated 2026-08-24 for Lv100 endgame + level-gated World Path (draft for next Alpha).
+- Short + full description: en-US only (this file). Paste from sections above when the listing drifts.
 - Phone screenshots (8) + feature graphic from `tool/store_listing/marketing/` (submitted 2026-08-21).
-- Closed Alpha **1.12.52 (82)** submitted 2026-08-24 (upload-signed local AAB; GitHub `v1.12.52` AAB was debug-signed — fix CI keystore path before next tag). Working ship **1.12.53**.
+- Closed Alpha **1.12.78 (107)** submitted 2026-08-28 (review). Working ship **1.12.78**.
+- GitHub Releases: tag `v1.12.78` when you want sideload APK/AAB on GitHub (workflow `build-apk.yml`).

@@ -110,21 +110,28 @@ class HubChase {
     final md = state.metaDepth;
     final clock = now ?? DateTime.now().toUtc();
 
-    if (GameLogic.canClaimDailyVault(state)) {
+    // First hour: keep TODAY on grow-the-party — vault/quests wait until a boss.
+    final firstHourQuiet = !GameLogic.showDailyChase(state);
+
+    if (!firstHourQuiet && GameLogic.canClaimDailyVault(state)) {
       final best = md.dailyBestTimedKey;
       final month = GameLogic.isoMonthKey(clock);
       final seasonPending = !md.claimedSeasonRewards.contains(month);
+      final plain = GameLogic.plainPlayerChrome(state);
+      final preview = GameLogic.dailyVaultClaimPreviewEssence(state);
+      final pay = plain ? '+$preview Permanent' : '+${preview}e';
       final seasonBit = seasonPending
-          ? ' · season bonus +${GameLogic.seasonWeeklyBonusEssence}e'
+          ? (plain
+              ? ' · season +${GameLogic.seasonWeeklyBonusEssence} Permanent'
+              : ' · season bonus +${GameLogic.seasonWeeklyBonusEssence}e')
           : '';
       final keyTalk = GameLogic.showKeystoneJargon(state);
-      final preview = GameLogic.dailyVaultClaimPreviewEssence(state);
       return HubChase(
         kind: HubChaseKind.claimDailyVault,
         title: 'Claim daily vault',
         detail: best >= 2 && keyTalk
-            ? 'Vault ready (KEY +$best timed) — claim +${preview}e$seasonBit.'
-            : 'Vault ready — claim +${preview}e$seasonBit.',
+            ? 'Vault ready (KEY +$best timed) — claim $pay$seasonBit.'
+            : 'Vault ready — claim $pay$seasonBit.',
         progressLabel: best >= 2 && keyTalk
             ? 'KEY +$best ready'
             : '${GameLogic.dailyVaultClearTarget}/${GameLogic.dailyVaultClearTarget} ready',
@@ -133,7 +140,7 @@ class HubChase {
     }
 
     final completeMissions = state.missions.where((m) => m.canClaim).length;
-    if (completeMissions > 0) {
+    if (!firstHourQuiet && completeMissions > 0) {
       return HubChase(
         kind: HubChaseKind.claimMissions,
         title: completeMissions == 1
@@ -148,8 +155,12 @@ class HubChase {
     final monthReady = _monthPassChase(state, clock, readyOnly: true);
     if (monthReady != null) return monthReady;
 
-    final meet = _pendingMeetChase(state);
-    if (meet != null) return meet;
+    // Endgame (party Lv100): Meet-kit queue stays on PARTY badge, but TODAY
+    // must chase Gauntlet / KEY / vault — not a +27 "Meet …" backlog.
+    if (!GameLogic.endgameUnlocked(state)) {
+      final meet = _pendingMeetChase(state);
+      if (meet != null) return meet;
+    }
 
     final bagEquip = _equipBagChase(state);
     if (bagEquip != null) return bagEquip;
@@ -403,15 +414,15 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.equipBag,
       title: upgrades == 1
-          ? (itemName != null ? 'Equip $itemName' : 'Equip upgrade in PARTY')
-          : 'Equip upgrades in PARTY',
+          ? 'Better gear waiting'
+          : '$upgrades better items waiting',
       detail: upgrades == 1
           ? (named != null
-              ? '$named is better in BAG — open PARTY and tap EQUIP.'
-              : '1 better item in BAG — tap EQUIP before you farm deeper.')
+              ? '$named is in BAG — open PARTY and tap EQUIP.'
+              : 'Open PARTY and tap EQUIP before you go deeper.')
           : (named != null
-              ? '$upgrades better items in BAG (first: $named) — tap EQUIP.'
-              : '$upgrades better items in BAG — tap EQUIP before you farm deeper.'),
+              ? 'Open PARTY — tap EQUIP ($upgrades waiting; first: $named).'
+              : 'Open PARTY and tap EQUIP — $upgrades upgrades waiting.'),
       progressLabel: upgrades == 1 ? 'EQUIP 1' : 'EQUIP $upgrades',
       urgency: HubChaseUrgency.ready,
     );
@@ -617,7 +628,9 @@ class HubChase {
           : state.ascensionLevel == 0 && GameLogic.canAscend(state)
           ? 'Ascend is ready when you want it — farm more floors or gear first. $teaser'
           : 'Farm gear or push deeper for power. $teaser',
-      progressLabel: 'Ascend ${state.bossVictories}/$bossesNeed',
+      progressLabel: firstHour
+          ? 'Boss ${state.bossVictories}/$bossesNeed'
+          : 'Ascend ${state.bossVictories}/$bossesNeed',
       urgency: urgency,
       zoneId: dungeonId,
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/game_state.dart';
 import '../core/ashen_crown.dart';
 import '../core/meta_systems.dart';
 import '../core/rift.dart';
@@ -181,8 +182,10 @@ Future<void> confirmRebornAtCap(
 
 Future<void> confirmLeaveDungeon(
   BuildContext context,
-  VoidCallback onLeave,
-) async {
+  VoidCallback onLeave, {
+  GameState? state,
+}) async {
+  final plain = state != null && GameLogic.plainPlayerChrome(state);
   WebClickBridge.pushLayer();
   try {
     final ok = await showDialog<bool>(
@@ -191,8 +194,11 @@ Future<void> confirmLeaveDungeon(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Return to hub?',
         content: Text(
-          'Leave to hub now? This floor’s fight progress is lost '
-          '(FARM loop restarts from the hub). Gear and gold already banked stay.',
+          plain
+              ? 'Leave to hub now? This floor’s fight restarts when you come back. '
+                  'Gear and gold you already got stay.'
+              : 'Leave to hub now? This floor’s fight progress is lost '
+                  '(Repeat/FARM restarts from the hub). Gear and gold already banked stay.',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [

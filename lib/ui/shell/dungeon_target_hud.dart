@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
+import '../../core/game_logic.dart';
 import '../../models/enemy.dart';
 import '../../spatial/spatial_combat.dart';
 import '../game_theme.dart';
@@ -167,12 +168,16 @@ class TargetCornerHud extends StatelessWidget {
               ),
                       if (_gateLocked(world))
               Text(
-                'Gate closed — chamber locked',
+                GameLogic.plainPlayerChrome(state)
+                    ? 'Finish this room to go deeper'
+                    : 'Gate closed — chamber locked',
                 style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
               ),
             if (_hasDormantAhead(world))
               Text(
-                'Next chamber dormant',
+                GameLogic.plainPlayerChrome(state)
+                    ? 'More rooms ahead'
+                    : 'Next chamber dormant',
                 style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
               ),
 ],

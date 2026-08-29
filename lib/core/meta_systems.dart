@@ -19,10 +19,67 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.71';
+  static const String currentVersion = '1.12.78';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.78',
+      bullets: <String>[
+        'First-hour calm: Too weak waits for a real stumble; bag upgrades say open PARTY · EQUIP (toast when 8+ pile up on Next). Wipe tips say POWER not FORGE. Spend-% hides until you can afford a buy. GUIDE titled GUIDES with early topics only; hub Boss on F#; leave skips double confirm after wipe.',
+        'Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.77',
+      bullets: <String>[
+        'First hour: TODAY ignores vault/quest claims until the first boss so Grow the party stays primary. Fist reads Tap the fight (not God Hand). POWER tabs drop the duplicate GOLD tag.',
+        'Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.76',
+      bullets: <String>[
+        'First-hour honesty: vault claim says Permanent (matches the hub bar, not +e). POWER gold page hides spend-% noise at 0 gold and drops Ascend jargon until later.',
+        'Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.75',
+      bullets: <String>[
+        'First-hour POWER: only Gold upgrades + Buy supplies (no Permanent / KEEP / APEX until Ascend). Forge gold page uses short copy — tap BEST when unsure.',
+        'Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.74',
+      bullets: <String>[
+        'First hour clearer: Discord wait until the TODAY tip is done; TODAY progress says Boss 0/1 (not Ascend); POWERUPS ads hide until first boss; zone card says Other areas. Dungeon: Too weak → POWER (not FORGE), plain door/room lines, Leave dialog drops FARM jargon.',
+        'Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.73',
+      bullets: <String>[
+        'Endgame hub: TODAY skips Meet-kit backlog when the party is max level so Gauntlet / KEY / GREATER / vault stay the chase. META → KEY adds ENTER GAUNTLET; Play ranks read KEY / GAUNTLET / GR BOARD. Week goal shows Done · best F# when past the target. Dungeon top bar no longer overflows on phone.',
+        'Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.72',
+      bullets: <String>[
+        'First-hour plain English: hub hides AL jargon, shows Income ▸, one compact zone card, OPEN PARTY chase, and quieter bottom badges until TODAY owns the step. PARTY/dungeon roles read Shield / Healer / Damage instead of PROT / DISC / FIRE.',
+        'Dungeon early chrome: Repeat / Next mode chips with after-clear hint; fist reads Tap the fight; DPS meter and zoom/BAL chips stay hidden. POWER shows Gold vs Permanent buckets with plain tab names (Gold upgrades / Buy supplies).',
+        'Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.71',
       bullets: <String>[

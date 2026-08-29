@@ -16,8 +16,12 @@ class DiscordThanksOverlay extends StatelessWidget {
 
   final GameDirector director;
 
-  static bool shouldOffer(GameDirector director) =>
-      !director.state.seenTips.contains(tipId);
+  static bool shouldOffer(GameDirector director) {
+    if (director.state.seenTips.contains(tipId)) return false;
+    // Never cover the first TODAY tip — wait until that tip is dismissed.
+    if (!director.state.seenTips.contains('first_run')) return false;
+    return true;
+  }
 
   static Future<void> show(BuildContext context, GameDirector director) {
     return showDialog<void>(

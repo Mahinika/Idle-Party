@@ -120,6 +120,7 @@ class HubTodayCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 KenneySprite(asset: KenneyAssets.iconStar, size: 14),
                 const SizedBox(width: 6),
@@ -131,34 +132,28 @@ class HubTodayCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    chase.title,
+                    chase.progressLabel != null
+                        ? '${chase.title} · ${chase.progressLabel!}'
+                        : chase.title,
                     maxLines: 2 /* FEEL 068 */,
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.body(size: 13, color: GameTheme.parchment),
                   ),
                 ),
-                if (chase.progressLabel != null) ...[
-                  const SizedBox(width: 6),
+                if (actionLabel != null && onAction != null) ...[
+                  const SizedBox(width: 4),
                   Flexible(
-                    child: Text(
-                      chase.progressLabel!,
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 12,
-                        color: ready || almost ? accent : GameTheme.mossLit,
+                    fit: FlexFit.loose,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: KenneyButton(
+                        label: actionLabel!,
+                        style: KenneyButtonStyle.grey,
+                        expanded: false,
+                        onPressed: onAction,
                       ),
                     ),
-                  ),
-                ],
-                if (actionLabel != null && onAction != null) ...[
-                  const SizedBox(width: 6),
-                  KenneyButton(
-                    label: actionLabel!,
-                    style: KenneyButtonStyle.grey,
-                    expanded: false,
-                    onPressed: onAction,
                   ),
                 ],
               ],

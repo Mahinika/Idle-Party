@@ -168,6 +168,7 @@ class HubHeader extends StatefulWidget {
     required this.multiplierLine,
     this.partyName = 'The Party',
     this.dimIncome = false,
+    this.plainChrome = false,
   });
 
   final int ascensionLevel;
@@ -184,6 +185,7 @@ class HubHeader extends StatefulWidget {
   final String multiplierLine;
   final String partyName;
   final bool dimIncome;
+  final bool plainChrome;
 
   @override
   State<HubHeader> createState() => _HubHeaderState();
@@ -236,11 +238,11 @@ class _HubHeaderState extends State<HubHeader> {
           ],
         ),
         const SizedBox(height: 4),
-        Text(
-          '${widget.partyName} · Boss F${widget.bossFloor}',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-        ),
+          Text(
+            '${widget.partyName} · Boss on F${widget.bossFloor}',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+          ),
         const SizedBox(height: 6),
         Wrap(
           alignment: WrapAlignment.center,
@@ -254,27 +256,28 @@ class _HubHeaderState extends State<HubHeader> {
             ),
             HubStatPill(
               icon: KenneyAssets.vialBlue,
-              caption: 'Essence',
+              caption: widget.plainChrome ? 'Permanent' : 'Essence',
               label: '${widget.essence}',
             ),
-            HubStatPill(
-              icon: KenneyAssets.iconCrown,
-              caption: 'Ascend',
-              label: widget.ascensionLevel >= GameLogic.maxAscensionLevel
-                  ? 'AL ${widget.ascensionLevel} · MAX · endgame'
-                  : 'AL ${widget.ascensionLevel}',
-            ),
+            if (!widget.plainChrome)
+              HubStatPill(
+                icon: KenneyAssets.iconCrown,
+                caption: 'Ascend',
+                label: widget.ascensionLevel >= GameLogic.maxAscensionLevel
+                    ? 'AL ${widget.ascensionLevel} · MAX · endgame'
+                    : 'AL ${widget.ascensionLevel}',
+              ),
           ],
         ),
         const SizedBox(height: 4),
         WebClickScope(
-          label: _ratesOpen ? 'Hide gold rates' : 'Show gold rates',
+          label: _ratesOpen ? 'Hide income details' : 'Show income details',
           onPressed: () => setState(() => _ratesOpen = !_ratesOpen),
           child: Semantics(
             button: true,
             label: _ratesOpen
-                ? 'Hide gold rates. ${widget.incomeLine}'
-                : 'Show gold rates. ${widget.incomeLine}',
+                ? 'Hide income details. ${widget.incomeLine}'
+                : 'Show income details. ${widget.incomeLine}',
             onTap: () => setState(() => _ratesOpen = !_ratesOpen),
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -284,7 +287,7 @@ class _HubHeaderState extends State<HubHeader> {
                 child: Text(
                   _ratesOpen
                       ? widget.incomeLine
-                      : '${widget.incomeLine} · tap rates',
+                      : '${widget.incomeLine} · Income ▸',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(size: 13, color: incomeColor),
                 ),
@@ -345,16 +348,27 @@ class HubStatPill extends StatelessWidget {
       children: [
         KenneySprite(asset: icon, size: 14),
         const SizedBox(width: 4),
-        if (caption != null) ...[
-          Text(
-            caption!,
-            style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+        Flexible(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (caption != null) ...[
+                Text(
+                  caption!,
+                  style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+                ),
+                const SizedBox(width: 3),
+              ],
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(size: 14, color: GameTheme.parchment),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 3),
-        ],
-        Text(
-          label,
-          style: GameTheme.body(size: 14, color: GameTheme.parchment),
         ),
       ],
     );

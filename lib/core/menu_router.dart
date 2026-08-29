@@ -287,7 +287,7 @@ class MenuRouter extends ChangeNotifier {
   static List<PowerTab> visiblePowerTabs(GameState s) => <PowerTab>[
     PowerTab.forge,
     PowerTab.market,
-    PowerTab.camp,
+    if (MenuTabs.showCamp(s)) PowerTab.camp,
     if (MenuTabs.showShop(s)) PowerTab.shop,
   ];
 

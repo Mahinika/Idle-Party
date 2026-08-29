@@ -319,10 +319,16 @@ abstract final class LocalSeasonCatalog {
 
   static String weekProgressLabel(GameState state, LocalSeasonWeek week) {
     if (week.timedKeyTarget > 0) {
-      return 'KEY +${state.metaDepth.weeklyBestTimedKey}/+${week.timedKeyTarget}';
+      final best = state.metaDepth.weeklyBestTimedKey;
+      final need = week.timedKeyTarget;
+      if (best >= need) return 'Done · KEY +$best';
+      return 'KEY +$best/+$need';
     }
     if (week.gauntletFloorTarget > 0) {
-      return 'F${state.metaDepth.gauntletBestFloor} → F${week.gauntletFloorTarget}';
+      final best = state.metaDepth.gauntletBestFloor;
+      final need = week.gauntletFloorTarget;
+      if (best >= need) return 'Done · best F$best';
+      return 'F$best → F$need';
     }
     return week.name;
   }

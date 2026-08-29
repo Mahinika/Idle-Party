@@ -20,6 +20,7 @@ void main() {
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.ensureWeeklyContract(state, now: now);
     state = state.copyWith(
+      bossVictories: 1,
       metaDepth: state.metaDepth.copyWith(
         dailyVaultClears: GameLogic.dailyVaultClearTarget,
         dailyVaultClaimed: false,

@@ -44,6 +44,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
     required GameState state,
     required PartyUpgradeType type,
     required VoidCallback? onPressed,
+    bool plain = false,
   }) {
     final recommended = GameLogic.recommendedForgeUpgrade(state) == type.index;
     final cost = GameLogic.upgradeCostFor(state, type);
@@ -60,16 +61,21 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       PartyUpgradeType.crit =>
         '+${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
     };
-    final speedHint = switch (type) {
-      PartyUpgradeType.attack ||
-      PartyUpgradeType.moveSpeed ||
-      PartyUpgradeType.attackSpeed => ' · faster clears',
-      _ => '',
-    };
-    final softCapHint = switch (type) {
-      PartyUpgradeType.attackSpeed || PartyUpgradeType.crit => ' · cap ~25%',
-      _ => '',
-    };
+    final speedHint = plain
+        ? ''
+        : switch (type) {
+            PartyUpgradeType.attack ||
+            PartyUpgradeType.moveSpeed ||
+            PartyUpgradeType.attackSpeed => ' · faster clears',
+            _ => '',
+          };
+    final softCapHint = plain
+        ? ''
+        : switch (type) {
+            PartyUpgradeType.attackSpeed || PartyUpgradeType.crit =>
+              ' · cap ~25%',
+            _ => '',
+          };
     final name = switch (type) {
       PartyUpgradeType.attack => 'ATK',
       PartyUpgradeType.defense => 'DEF',
@@ -89,13 +95,25 @@ class _ForgeOverlayState extends State<ForgeOverlay>
     }
     // FEEL 126: short BEST label so GOLD rows do not wrap on phone.
     final label = recommended
-        ? 'BEST · $name · $costPart'
+        ? (plain ? 'BEST · $name · $costPart' : 'BEST · $name · $costPart')
         : '$name $bonus$speedHint$softCapHint · $costPart';
     return KenneyButton(label: label, onPressed: onPressed);
   }
 
   @override
   Widget build(BuildContext context) {
+    final plain = GameLogic.plainPlayerChrome(director.state);
+    if (plain) {
+      // First hour: gold buys only — KEEP/APEX wait until Ascend / essence.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: SingleChildScrollView(child: _classicForgeBody(plain: true)),
+          ),
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -122,7 +140,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           child: IndexedStack(
             index: _tabs.index,
             children: [
-              SingleChildScrollView(child: _classicForgeBody()),
+              SingleChildScrollView(child: _classicForgeBody(plain: false)),
               SingleChildScrollView(child: _metaForgeBody()),
               SingleChildScrollView(child: ApexHubPanel(director: director)),
             ],
@@ -152,23 +170,27 @@ class _ForgeOverlayState extends State<ForgeOverlay>
     );
   }
 
-  Widget _classicForgeBody() {
+  Widget _classicForgeBody({required bool plain}) {
     final state = director.state;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Spend wallet gold on ATK / DEF / STA / MOVE / HASTE / CRIT — '
-          'resets when you Ascend. '
-          'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
+          plain
+              ? 'Spend gold to make the whole party stronger. Tap BEST when unsure.'
+              : 'Spend wallet gold on ATK / DEF / STA / MOVE / HASTE / CRIT — '
+                  'resets when you Ascend. '
+                  'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Hub / Run rates → POWER → CAMP.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        if (director.lastFloorClearSec != null)
+        if (!plain) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Hub / Run rates → POWER → CAMP.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ],
+        if (!plain && director.lastFloorClearSec != null)
           Text(
             'Last floor ${director.lastFloorClearSec}s — ATK / HASTE / MOVE '
             'make the next one faster.',
@@ -176,70 +198,101 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           ),
         const SizedBox(height: 4),
         Text(
-          'Bought: ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
-          'STA +${state.vitalityBonus}  '
-          'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%  '
-          'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '
-          'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
+          plain
+              ? 'Bought: ATK +${state.attackBonus} · DEF +${state.defenseBonus} · '
+                  'STA +${state.vitalityBonus}'
+              : 'Bought: ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
+                  'STA +${state.vitalityBonus}  '
+                  'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%  '
+                  'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '
+                  'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
           style: GameTheme.body(size: 13, color: GameTheme.parchment),
         ),
-        Text(
-          'Each hero gets these forge bonuses on top of their own gear.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 8),
-        _sectionTitle(
-          'BONUSES (GOLD)',
-          'One buy is meant to feel similar: +${GameLogic.forgeAttackGain} ATK, '
-              '+${GameLogic.forgeDefenseGain} DEF (armor), '
-              '+${GameLogic.forgeVitalityGain} HP, '
-              '+${GameLogic.forgeHasteGain}% HASTE or CRIT. '
-              'BEST marks the cheapest relative gain. HASTE/CRIT soft-cap after ~25% — more still helps a little. All wipe when you Ascend.',
-          scope: MenuScope.run,
-        ),
-        Text(
-          'Spend amount (wallet gold):',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 4),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final mode in ForgeGoldSpendMode.values)
-              MenuChrome.chip(
-                label: mode.chipLabel,
-                selected: _spendMode == mode,
-                onTap: () => setState(() => _spendMode = mode),
-              ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        KenneyButton(
-          label: GameLogic.canForgeGoldSpendEven(state)
-              ? 'SPEND ALL · EVEN'
-              : 'SPEND ALL · EVEN · Need gold',
-          onPressed: GameLogic.canForgeGoldSpendEven(state)
-              ? () {
-                  director.upgradeSpendAllEvenly();
-                  setState(() {});
-                }
-              : null,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 6),
-          child: Text(
-            'EVEN walks wallet gold one step at a time across ATK → DEF → '
-            'STA → MOVE → HASTE → CRIT (round-robin) until a track cannot '
-            'buy another step. No track is skipped early; cheaper tracks '
-            'usually get more steps.',
+        if (!plain)
+          Text(
+            'Each hero gets these forge bonuses on top of their own gear.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
-        ),
+        const SizedBox(height: 8),
+        if (plain)
+          _sectionTitle(
+            'BUY WITH GOLD',
+            'BEST is the strongest buy right now. These reset later when you start over.',
+            scope: MenuScope.run,
+          )
+        else
+          _sectionTitle(
+            'BONUSES (GOLD)',
+            'One buy is meant to feel similar: +${GameLogic.forgeAttackGain} ATK, '
+                '+${GameLogic.forgeDefenseGain} DEF (armor), '
+                '+${GameLogic.forgeVitalityGain} HP, '
+                '+${GameLogic.forgeHasteGain}% HASTE or CRIT. '
+                'BEST marks the cheapest relative gain. HASTE/CRIT soft-cap after ~25% — more still helps a little. All wipe when you Ascend.',
+            scope: MenuScope.run,
+          ),
+        if (!(plain &&
+            state.gold <
+                GameLogic.upgradeCostFor(
+                  state,
+                  PartyUpgradeType.values[
+                      GameLogic.recommendedForgeUpgrade(state)],
+                ))) ...[
+          Text(
+            'Spend amount (wallet gold):',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final mode in ForgeGoldSpendMode.values)
+                MenuChrome.chip(
+                  label: mode.chipLabel,
+                  selected: _spendMode == mode,
+                  onTap: () => setState(() => _spendMode = mode),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          KenneyButton(
+            label: GameLogic.canForgeGoldSpendEven(state)
+                ? 'SPEND ALL · EVEN'
+                : 'SPEND ALL · EVEN · Need gold',
+            onPressed: GameLogic.canForgeGoldSpendEven(state)
+                ? () {
+                    director.upgradeSpendAllEvenly();
+                    setState(() {});
+                  }
+                : null,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 6),
+            child: Text(
+              plain
+                  ? 'EVEN splits your gold across all tracks until it runs out.'
+                  : 'EVEN walks wallet gold one step at a time across ATK → DEF → '
+                      'STA → MOVE → HASTE → CRIT (round-robin) until a track cannot '
+                      'buy another step. No track is skipped early; cheaper tracks '
+                      'usually get more steps.',
+              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            ),
+          ),
+        ] else ...[
+          const SizedBox(height: 4),
+          Text(
+            state.gold <= 0
+                ? 'Earn gold in the dungeon, then come back here to buy.'
+                : 'Need a bit more gold for the next buy — keep clearing floors.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 6),
+        ],
         for (final type in PartyUpgradeType.values) ...[
           _upgradeButton(
             state: state,
             type: type,
+            plain: plain,
             onPressed: GameLogic.canForgeGoldSpend(state, type, _spendMode)
                 ? () {
                     director.upgradePartyTrack(type, mode: _spendMode);

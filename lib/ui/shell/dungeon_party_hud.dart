@@ -181,6 +181,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final canUseFlask = GameLogic.canUseConsumable(state);
     final compact = GameTheme.isCompactWidth(context);
     final phone = GameTheme.isPhoneWidth(context);
+    final plainEnglish = GameLogic.plainPlayerChrome(state);
     // Thin strip: reclaim map; kit expands in place when tapped.
     final fullWidth = phone ? 168.0 : (compact ? 188.0 : 228.0);
     var partyCritical = false;
@@ -251,7 +252,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                       selected: widget.selectedHeroIndex == i,
                       label:
                           '${state.heroes[i].name} '
-                          '${state.heroes[i].roleLabel} — tap for kit, '
+                          '${state.heroes[i].displayRoleLabel(plainEnglish: plainEnglish)} — tap for kit, '
                           'long-press for gear',
                       onTap: () => _onHeroTap(i),
                       onLongPress: _onLongPressGear,
@@ -265,6 +266,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                           child: _PartyRow(
                             index: i,
                             hero: state.heroes[i],
+                            plainEnglish: plainEnglish,
                             selected: widget.selectedHeroIndex == i,
                             kitOpen: widget.selectedHeroIndex == i && _kitOpen,
                             compact:
@@ -419,6 +421,7 @@ class _PartyRow extends StatelessWidget {
     required this.hero,
     required this.liveHp,
     required this.maxHp,
+    this.plainEnglish = false,
     this.selected = false,
     this.kitOpen = false,
     this.compact = false,
@@ -433,6 +436,7 @@ class _PartyRow extends StatelessWidget {
   final PartyHero hero;
   final int liveHp;
   final int maxHp;
+  final bool plainEnglish;
   final bool selected;
   final bool kitOpen;
   final bool compact;
@@ -550,7 +554,7 @@ class _PartyRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final frac = maxHp <= 0 ? 0.0 : (liveHp / maxHp).clamp(0.0, 1.0);
     // Keep full shortLabel (PROT/COMBAT/…) — only ellipsis if the strip is tiny.
-    final roleShort = hero.roleLabel;
+    final roleShort = hero.displayRoleLabel(plainEnglish: plainEnglish);
     final kitActor = kitSpatial;
     final showKit = kitOpen && kitActor != null && kitActor.isAlive;
     final isRunic = HeroSpecs.def(hero.specId).resource == SpecResource.runic;

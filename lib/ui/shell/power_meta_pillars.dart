@@ -58,12 +58,16 @@ class _PowerPillarState extends State<PowerPillar>
   Widget build(BuildContext context) {
     final d = widget.director;
     final s = d.state;
-    final keepStats =
-        'AL${s.ascensionLevel}${s.ascensionLevel >= GameLogic.maxAscensionLevel ? ' · MAX' : ''} · Bless ×${s.metaDepth.ascendBlessings} · '
-        '${s.essence}e';
-    final runStats =
-        'forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
-        'STA +${s.vitalityBonus}';
+    final plain = GameLogic.plainPlayerChrome(s);
+    final keepStats = plain
+        ? '${s.essence} essence · lasts between runs'
+        : 'AL${s.ascensionLevel}${s.ascensionLevel >= GameLogic.maxAscensionLevel ? ' · MAX' : ''} · Bless ×${s.metaDepth.ascendBlessings} · '
+            '${s.essence}e';
+    final runStats = plain
+        ? '${s.gold} gold · ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
+            'STA +${s.vitalityBonus}'
+        : 'forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
+            'STA +${s.vitalityBonus}';
     // Progressive menu: CAMP and SHOP appear once essence / Ascend exist.
     _visible = MenuRouter.visiblePowerTabs(s);
     final pages = <({
@@ -74,28 +78,28 @@ class _PowerPillarState extends State<PowerPillar>
       for (final tab in _visible)
         switch (tab) {
           PowerTab.forge => (
-            label: 'FORGE',
-            scope: 'RUN',
+            label: plain ? 'Gold upgrades' : 'FORGE',
+            scope: plain ? 'GOLD' : 'RUN',
             body: ForgeOverlay(director: d),
           ),
           PowerTab.camp => (
-            label: 'CAMP',
-            scope: 'ACCOUNT',
+            label: plain ? 'Permanent upgrades' : 'CAMP',
+            scope: plain ? 'PERMANENT' : 'ACCOUNT',
             body: SingleChildScrollView(child: SanctuaryOverlay(director: d)),
           ),
           PowerTab.market => (
-            label: 'MARKET',
-            scope: 'RUN',
+            label: plain ? 'Buy supplies' : 'MARKET',
+            scope: plain ? 'GOLD' : 'RUN',
             body: MarketOverlay(director: d),
           ),
           PowerTab.shop => (
-            label: 'SHOP',
-            scope: 'ACCOUNT',
+            label: plain ? 'Permanent shop' : 'SHOP',
+            scope: plain ? 'PERMANENT' : 'ACCOUNT',
             body: PrestigeShopOverlay(director: d),
           ),
           PowerTab.income => (
-            label: 'CAMP',
-            scope: 'ACCOUNT',
+            label: plain ? 'Permanent upgrades' : 'CAMP',
+            scope: plain ? 'PERMANENT' : 'ACCOUNT',
             body: SingleChildScrollView(child: SanctuaryOverlay(director: d)),
           ),
         },
@@ -110,9 +114,13 @@ class _PowerPillarState extends State<PowerPillar>
           padding: const EdgeInsets.fromLTRB(8, 2, 8, 0),
           child: Column(
             children: [
-              _PowerScopeLine(scope: 'ACCOUNT', text: keepStats),
-              const SizedBox(height: 2),
-              _PowerScopeLine(scope: 'RUN', text: runStats),
+              if (!plain || MenuTabs.showCamp(s))
+                _PowerScopeLine(
+                  scope: plain ? 'PERMANENT' : 'ACCOUNT',
+                  text: keepStats,
+                ),
+              if (!plain || MenuTabs.showCamp(s)) const SizedBox(height: 2),
+              _PowerScopeLine(scope: plain ? 'GOLD' : 'RUN', text: runStats),
             ],
           ),
         ),
@@ -124,7 +132,7 @@ class _PowerPillarState extends State<PowerPillar>
             for (var i = 0; i < pages.length; i++)
               MenuChrome.bridgedTabScoped(
                 pages[i].label,
-                scope: pages[i].scope,
+                scope: plain ? null : pages[i].scope,
                 onSelect: () {
                   _tabs.controller.animateTo(i);
                   widget.onTabChanged(_visible[i]);
@@ -133,7 +141,14 @@ class _PowerPillarState extends State<PowerPillar>
               ),
           ],
         ),
-        if (!MenuTabs.showCamp(s)) ...[
+        if (plain && !MenuTabs.showCamp(s)) ...[
+          const SizedBox(height: 4),
+          Text(
+            'More permanent upgrades unlock later.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          ),
+        ] else if (!MenuTabs.showCamp(s)) ...[
           const SizedBox(height: 4),
           Text(
             'Sanctuary tracks unlock after Ascend or when you earn essence.',
@@ -176,8 +191,8 @@ class _PowerScopeLine extends StatelessWidget {
         Text(
           text,
           style: GameTheme.body(
-            size: scope == 'ACCOUNT' ? 12 : 11,
-            color: scope == 'ACCOUNT'
+            size: scope == 'ACCOUNT' || scope == 'PERMANENT' ? 12 : 11,
+            color: scope == 'ACCOUNT' || scope == 'PERMANENT'
                 ? GameTheme.torchHot
                 : GameTheme.parchmentDim,
           ),
@@ -254,6 +269,8 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
                 children: [
                   ChallengeToggles(director: d),
                   const SizedBox(height: 16),
+                  GauntletHubPanel(director: d),
+                  const SizedBox(height: 16),
                   RiftHubPanel(director: d),
                   const SizedBox(height: 16),
                   GreaterRiftHubPanel(director: d),
@@ -293,6 +310,14 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Text(
+                  'GUIDES',
+                  style: GameTheme.pixel(
+                    size: GameTheme.hudPixel,
+                    color: GameTheme.torchHot,
+                  ),
+                ),
+                const SizedBox(height: 6),
                 KenneyButton(
                   label: MetaSystems.hasUnseenChangelog(s)
                       ? "WHAT'S NEW ★"
@@ -301,7 +326,7 @@ class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
                   onPressed: widget.onOpenWhatsNew,
                 ),
                 const SizedBox(height: 8),
-                const Expanded(child: GuidesOverlay()),
+                Expanded(child: GuidesOverlay(state: s)),
               ],
             ),
           ),

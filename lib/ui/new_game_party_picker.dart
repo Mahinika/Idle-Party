@@ -32,6 +32,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   HeroClassId _filter = HeroSpecs.def(HeroSpecs.starterUnlocked.first).classId;
   int _activeSlot = 0;
   bool _nameError = false;
+  String? _pickHint;
 
   @override
   void initState() {
@@ -64,6 +65,29 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
       _slots.every((s) => s != null) &&
       _slots.map((s) => s!).toSet().length == _slots.length;
 
+  String? get _startBlockReason {
+    final empty = _slots.where((s) => s == null).length;
+    if (empty > 0) {
+      return empty == 1
+          ? 'Pick 1 more hero — each slot needs a different kit'
+          : 'Pick $empty more heroes — each slot needs a different kit';
+    }
+    if (_slots.map((s) => s!).toSet().length != _slots.length) {
+      return 'Each hero must be a different kit';
+    }
+    return null;
+  }
+
+  int? _nextEmptySlot({int? after}) {
+    if (_slots.every((s) => s != null)) return null;
+    final start = after == null ? 0 : (after + 1) % _slots.length;
+    for (var i = 0; i < _slots.length; i++) {
+      final idx = (start + i) % _slots.length;
+      if (_slots[idx] == null) return idx;
+    }
+    return null;
+  }
+
   String? get _softWarn {
     final chosen = [
       for (final s in _slots)
@@ -82,27 +106,37 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
 
   void _pick(HeroSpecId id) {
     if (!HeroSpecs.starterUnlocked.contains(id)) return;
+    final takenIndex = _slots.indexWhere((s) => s == id);
+    if (takenIndex >= 0 && takenIndex != _activeSlot) {
+      final def = HeroSpecs.def(id);
+      setState(() {
+        _pickHint =
+            '${def.shortLabel} is already picked — choose Healer or Fire mage '
+            'for the other slots';
+        _activeSlot = takenIndex;
+      });
+      return;
+    }
     setState(() {
-      for (var i = 0; i < _slots.length; i++) {
-        if (i != _activeSlot && _slots[i] == id) {
-          _slots[i] = null;
-        }
-      }
+      _pickHint = null;
       _slots[_activeSlot] = id;
-      if (_activeSlot < _slots.length - 1) {
-        _activeSlot++;
-      }
+      _activeSlot = _nextEmptySlot(after: _activeSlot) ?? _activeSlot;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final warn = _softWarn;
     final classSpecs = [
       for (final id in HeroSpecs.forClass(_filter))
         if (HeroSpecs.starterUnlocked.contains(id)) id,
       for (final id in HeroSpecs.forClass(_filter))
         if (!HeroSpecs.starterUnlocked.contains(id)) id,
+    ];
+    final warn = _softWarn;
+    final blockReason = _startBlockReason;
+    final starterInClass = [
+      for (final id in classSpecs)
+        if (HeroSpecs.starterUnlocked.contains(id)) id,
     ];
     return Scaffold(
       backgroundColor: GameTheme.ink,
@@ -189,7 +223,14 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   ],
                 ],
               ),
-              if (warn != null) ...[
+              if (_pickHint != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _pickHint!,
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                ),
+              ] else if (warn != null) ...[
                 const SizedBox(height: 8),
                 Text(
                   warn,
@@ -228,6 +269,18 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   child: ListView(
                     padding: const EdgeInsets.all(8),
                     children: [
+                      if (starterInClass.length == 1) ...[
+                        Text(
+                          'Only one ${HeroSpecs.classLabel(_filter)} kit is open at '
+                          'start — pick the other roles from another class tab.',
+                          textAlign: TextAlign.center,
+                          style: GameTheme.body(
+                            size: 12,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       for (final specId in classSpecs)
                         _SpecPickRow(
                           def: HeroSpecs.def(specId),
@@ -249,6 +302,14 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                 ),
               ),
               const SizedBox(height: 12),
+              if (!_ready && blockReason != null) ...[
+                Text(
+                  blockReason,
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                ),
+                const SizedBox(height: 6),
+              ],
               Row(
                 children: [
                   Expanded(

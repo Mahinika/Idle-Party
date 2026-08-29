@@ -29,16 +29,16 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'farm_push',
-      title: 'FARM / PUSH',
+      title: 'Repeat / Next',
       body:
-          'FARM stays on this floor for extra loot. PUSH goes deeper toward the boss.',
+          'Repeat stays on this floor for extra loot. Next goes deeper toward the boss.',
     ),
     (
       id: 'godhand',
-      title: 'GOD HAND',
+      title: 'Tap the fight',
       body:
-          'God Hand: fist button (top bar). Tap it to smash and steer. Wait '
-          'for the ring to refill, then tap again.',
+          'Tap the fist button (top bar) to smash and steer your party. Wait for '
+          'the ring to refill, then tap again. You can also long-press the battlefield.',
     ),
     (
       id: 'bag',
@@ -274,11 +274,26 @@ class FirstSessionTips extends StatelessWidget {
     final id = nextTipId(director.state, inDungeon: director.state.inDungeon);
     if (id == null) return const SizedBox.shrink();
     final tip = tips.firstWhere((t) => t.id == id);
-    final body =
-        tip.id == 'weekly' && GameLogic.showKeystoneJargon(director.state)
-        ? 'Clear 1 floor or time a KEY +2 today, then claim the vault for essence '
-              '(scales with your best timed key). First claim of each month also pays a season bonus.'
-        : tip.body;
+    final title = switch (tip.id) {
+      'farm_push' when !GameLogic.plainPlayerChrome(director.state) =>
+        'FARM / PUSH',
+      'godhand' when !GameLogic.plainPlayerChrome(director.state) =>
+        'GOD HAND',
+      _ => tip.title,
+    };
+    final body = switch (tip.id) {
+      'weekly' when GameLogic.showKeystoneJargon(director.state) =>
+        'Clear 1 floor or time a KEY +2 today, then claim the vault for essence '
+            '(scales with your best timed key). First claim of each month also pays a season bonus.',
+      'farm_push' when GameLogic.plainPlayerChrome(director.state) => tip.body,
+      'farm_push' =>
+        'FARM stays on this floor for extra loot. PUSH goes deeper toward the boss.',
+      'godhand' when GameLogic.plainPlayerChrome(director.state) => tip.body,
+      'godhand' =>
+        'God Hand: fist button (top bar). Tap it to smash and steer. Wait '
+            'for the ring to refill, then tap again.',
+      _ => tip.body,
+    };
 
     return Align(
       alignment: Alignment.bottomCenter,
@@ -299,7 +314,7 @@ class FirstSessionTips extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          tip.title,
+                          title,
                           textAlign: TextAlign.center,
                           style: GameTheme.menuTitle(size: 16),
                         ),

@@ -2135,6 +2135,35 @@ class GameLogic {
   static bool showDailyChase(GameState state) =>
       state.ascensionLevel > 0 || state.bossVictories > 0;
 
+  /// Plain-English chrome before first boss or Ascend — no RPG abbreviations yet.
+  static bool plainPlayerChrome(GameState state) => !showDailyChase(state);
+
+  /// Dungeon mode chip label (Repeat/Next vs FARM/PUSH).
+  static String dungeonModeChipLabel(DungeonMode mode, GameState state) {
+    if (plainPlayerChrome(state)) {
+      return mode == DungeonMode.farm ? 'Repeat' : 'Next';
+    }
+    return mode == DungeonMode.farm ? 'FARM' : 'PUSH';
+  }
+
+  static String dungeonModeChipTip(DungeonMode mode, GameState state) {
+    if (plainPlayerChrome(state)) {
+      return mode == DungeonMode.farm
+          ? 'Stay on this floor after clear for more loot'
+          : 'Advance toward the boss after each clear';
+    }
+    return mode == DungeonMode.farm
+        ? 'LOOP FARM — loop this floor after clear for loot'
+        : 'CLIMB PUSH — advance floors toward the boss';
+  }
+
+  static String dungeonModeAfterClearHint(GameState state, DungeonMode mode) {
+    if (mode == DungeonMode.farm) {
+      return 'After clear: stay on this floor';
+    }
+    return 'After clear: go to next floor';
+  }
+
   /// One-time essence when claiming the first vault of a calendar month.
   static const int seasonWeeklyBonusEssence = 12;
 

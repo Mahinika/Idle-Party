@@ -2,6 +2,7 @@ import '../models/loot.dart';
 import 'gear_service.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'hub_chase.dart';
 import 'market_listings_service.dart';
 import 'meta_systems.dart';
 
@@ -79,12 +80,58 @@ class MenuAlerts {
       party: MenuAlert(
         count: upgrades,
         reason: upgrades == 1
-            ? '1 better item for the party — tap EQUIP 1'
-            : '$upgrades better items for the party — tap EQUIP $upgrades',
+            ? '1 better item for the party — open PARTY · EQUIP'
+            : '$upgrades better items for the party — open PARTY · EQUIP',
       ),
       power: MenuAlert.quiet,
       meta: MenuAlert.quiet,
     );
+  }
+
+  /// Hub bottom nav — quiet badges when TODAY owns the next step.
+  static MenuAlerts forHub(
+    GameState state, {
+    HubChaseKind? chaseKind,
+    HubChaseUrgency urgency = HubChaseUrgency.normal,
+  }) {
+    if (GameLogic.plainPlayerChrome(state)) {
+      final upgrades = bagUpgradeCount(state);
+      if (upgrades <= 0) return none;
+      return MenuAlerts(
+        party: MenuAlert(
+          count: upgrades,
+          reason: upgrades == 1
+              ? '1 better item — open PARTY'
+              : '$upgrades better items — open PARTY',
+        ),
+        power: MenuAlert.quiet,
+        meta: MenuAlert.quiet,
+      );
+    }
+    if (urgency == HubChaseUrgency.ready && chaseKind != null) {
+      return switch (chaseKind) {
+        HubChaseKind.equipBag ||
+        HubChaseKind.meetHero => MenuAlerts(
+          party: partyAlert(state),
+          power: MenuAlert.quiet,
+          meta: MenuAlert.quiet,
+        ),
+        HubChaseKind.marketUpgrade => MenuAlerts(
+          party: MenuAlert.quiet,
+          power: powerAlert(state),
+          meta: MenuAlert.quiet,
+        ),
+        HubChaseKind.claimMissions ||
+        HubChaseKind.claimDailyVault ||
+        HubChaseKind.dailyVaultProgress => MenuAlerts(
+          party: MenuAlert.quiet,
+          power: MenuAlert.quiet,
+          meta: metaAlert(state),
+        ),
+        _ => forState(state),
+      };
+    }
+    return forState(state);
   }
 
   /// PARTY: new heroes to meet, then bag upgrades, then a full bag.
@@ -103,8 +150,8 @@ class MenuAlerts {
       return MenuAlert(
         count: upgrades,
         reason: upgrades == 1
-            ? '1 better item for the party — tap EQUIP 1'
-            : '$upgrades better items for the party — tap EQUIP $upgrades',
+            ? '1 better item for the party — open PARTY · EQUIP'
+            : '$upgrades better items for the party — open PARTY · EQUIP',
       );
     }
     if (isBagFull(state)) {
@@ -249,15 +296,15 @@ class MenuAlerts {
     final forHero = bagUpgradeCountForHero(state, heroIndex);
     if (forHero <= 0) {
       return total == 1
-          ? '1 better item for another hero — tap EQUIP 1'
-          : '$total better items for other heroes — tap EQUIP $total';
+          ? '1 better item for another hero — use EQUIP'
+          : '$total better items for other heroes — use EQUIP';
     }
     if (forHero == total) {
       return forHero == 1
-          ? '1 better item for this hero — tap EQUIP 1'
-          : '$forHero better items for this hero — tap EQUIP $forHero';
+          ? '1 better item for this hero — use EQUIP'
+          : '$forHero better items for this hero — use EQUIP';
     }
-    return '$forHero for this hero · $total party — tap EQUIP $total';
+    return '$forHero for this hero · $total party — use EQUIP';
   }
 }
 

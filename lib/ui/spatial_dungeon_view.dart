@@ -1028,6 +1028,8 @@ class GodHandRing extends StatelessWidget {
     this.maxCooldown = 1.1,
     this.onTap,
     this.urgent = false,
+    this.readyLabel,
+    this.coolingLabel,
   });
   final double cooldown;
 
@@ -1038,6 +1040,10 @@ class GodHandRing extends StatelessWidget {
   /// Brighter ring after repeated wipes on the same floor (nudge, not redesign).
   final bool urgent;
 
+  /// Override ready / cooling semantics (first-hour plain English).
+  final String? readyLabel;
+  final String? coolingLabel;
+
   @override
   Widget build(BuildContext context) {
     final ready = cooldown <= 0;
@@ -1047,8 +1053,11 @@ class GodHandRing extends StatelessWidget {
         ? (urgent ? GameTheme.accentWarn : GameTheme.torchHot)
         : GameTheme.parchmentDim;
     final label = ready
-        ? (urgent ? 'God Hand ready — TAP to steer + smash' : 'God Hand ready')
-        : 'God Hand ${cooldown.toStringAsFixed(1)}s';
+        ? (readyLabel ??
+            (urgent
+                ? 'God Hand ready — TAP to steer + smash'
+                : 'God Hand ready'))
+        : (coolingLabel ?? 'God Hand ${cooldown.toStringAsFixed(1)}s');
     final action = onTap != null && ready ? onTap : null;
     return WebClickScope(
       label: label,

@@ -57,6 +57,7 @@ class _HubScreenState extends State<HubScreen>
   bool _offeredWhatsNew = false;
   bool _offeredDiscordThanks = false;
   bool _userPickedZone = false;
+  bool _mapExpanded = false;
   int? _trackedAscension;
   int? _trackedHighestCleared;
 
@@ -172,7 +173,7 @@ class _HubScreenState extends State<HubScreen>
         return ('CLAIM MONTH', director.claimMonthPass);
       case HubChaseKind.meetHero:
         return (
-          'PARTY',
+          'OPEN PARTY',
           () {
             // Ack when leaving PARTY (menu_surface) so kit fantasy can be read first.
             router.openForHubChase(director.state, HubChaseKind.meetHero);
@@ -180,7 +181,7 @@ class _HubScreenState extends State<HubScreen>
         );
       case HubChaseKind.equipBag:
         return (
-          'PARTY',
+          'OPEN PARTY',
           () => router.openForHubChase(director.state, HubChaseKind.equipBag),
         );
       case HubChaseKind.marketUpgrade:
@@ -410,7 +411,10 @@ class _HubScreenState extends State<HubScreen>
     final powerupsActive =
         AdBoost.isActive(state.metaDepth.adBoostUntilMs);
     // Endgame hunt night: hide idle POWERUPS chrome unless a boost is running.
-    final showPowerups = endgameHunt
+    // First hour: hide ads chrome until the first boss — ENTER stays the focus.
+    final showPowerups = GameLogic.plainPlayerChrome(state)
+        ? powerupsActive
+        : endgameHunt
         ? powerupsActive
         : (!short || powerupsActive);
     final vaultOwnedByChase =
@@ -554,6 +558,10 @@ class _HubScreenState extends State<HubScreen>
       state.highestDungeonCleared,
     );
     final short = GameTheme.isShortHeight(context);
+    final chase = HubChase.forState(state);
+    final compactMap =
+        GameLogic.plainPlayerChrome(state) && !_mapExpanded;
+    final selectedDungeon = DungeonCatalog.byId(_selectedId);
 
     return Stack(
       fit: StackFit.expand,
@@ -614,6 +622,7 @@ class _HubScreenState extends State<HubScreen>
                                   multiplierLine:
                                       GoldIncome.multiplierLine(state),
                                   partyName: state.partyName,
+                                  plainChrome: GameLogic.plainPlayerChrome(state),
                                   dimIncome: hubChaseOwnsEndgameRow(
                                     HubChase.forState(state).kind,
                                   ),
@@ -648,28 +657,41 @@ class _HubScreenState extends State<HubScreen>
                                 ),
                               ],
                               SizedBox(height: short ? 4 : 6),
-                              // World Path: painted campaign map + tappable rings.
+                              // World Path: full map, or one-zone card for new players.
                               Expanded(
                                 flex: short ? 7 : 1,
-                                child: AnimatedBuilder(
-                                  animation: _torch,
-                                  builder: (context, _) => ZonePathMap(
-                                    dungeons: DungeonCatalog.all,
-                                    selectedId: _selectedId,
-                                    partyLevel: GameLogic.partyMeanLevel(state),
-                                    highestCleared: state.highestDungeonCleared,
-                                    pulse: _torch.value,
-                                    onSelect: (id) => setState(() {
-                                      _userPickedZone = true;
-                                      _selectedId = id;
-                                    }),
-                                  ),
-                                ),
+                                child: compactMap
+                                    ? HubCompactZoneCard(
+                                        dungeon: selectedDungeon,
+                                        bossFloor: bossFloor,
+                                        unlocked: unlockedSelected,
+                                        partyLevel:
+                                            GameLogic.partyMeanLevel(state),
+                                        onExpandMap: () => setState(
+                                          () => _mapExpanded = true,
+                                        ),
+                                      )
+                                    : AnimatedBuilder(
+                                        animation: _torch,
+                                        builder: (context, _) => ZonePathMap(
+                                          dungeons: DungeonCatalog.all,
+                                          selectedId: _selectedId,
+                                          partyLevel:
+                                              GameLogic.partyMeanLevel(state),
+                                          highestCleared:
+                                              state.highestDungeonCleared,
+                                          pulse: _torch.value,
+                                          onSelect: (id) => setState(() {
+                                            _userPickedZone = true;
+                                            _selectedId = id;
+                                          }),
+                                        ),
+                                      ),
                               ),
-                              if (!short) ...[
+                              if (!short && !compactMap) ...[
                                 const SizedBox(height: 4),
                                 SelectedZoneCaption(
-                                  dungeon: DungeonCatalog.byId(_selectedId),
+                                  dungeon: selectedDungeon,
                                   unlocked: unlockedSelected,
                                   partyLevel: GameLogic.partyMeanLevel(state),
                                 ),
@@ -702,9 +724,13 @@ class _HubScreenState extends State<HubScreen>
                       ),
                       // Same nav row as the dungeon — same words, same place.
                       AppBottomBar(
-                        alerts: MenuAlerts.forState(state),
+                        alerts: MenuAlerts.forHub(
+                          state,
+                          chaseKind: chase.kind,
+                          urgency: chase.urgency,
+                        ),
                         route: MenuRoute.none,
-                        showReason: true,
+                        showReason: chase.urgency != HubChaseUrgency.ready,
                         onParty: () => router.open(MenuRoute.party),
                         onPower: () => router.open(MenuRoute.power),
                         onMeta: () => router.open(MenuRoute.meta, state: state),

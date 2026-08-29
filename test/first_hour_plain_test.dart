@@ -42,6 +42,8 @@ void main() {
     final contract = ChaseContract.fromState(state, now: now);
     expect(contract.ascendTeaser, isNull);
     expect(contract.detail, chase.detail);
+    expect(chase.progressLabel, 'Boss 0/1');
+    expect(chase.progressLabel, isNot(contains('Ascend')));
   });
 
   test('BASICS / PARTY guides skip WotLK and name the three jobs', () {
@@ -51,6 +53,8 @@ void main() {
     expect(basics.body.toLowerCase(), contains('healer'));
     expect(basics.body.toLowerCase(), contains('damage'));
     expect(basics.body.toLowerCase(), contains('enter dungeon'));
+    expect(basics.body.toLowerCase(), contains('tap the fight'));
+    expect(basics.body.toUpperCase(), isNot(contains('FORGE')));
 
     final party = GameGuides.topics.firstWhere((t) => t.id == 'party');
     expect(party.body.toUpperCase(), isNot(contains('WOTLK')));
@@ -59,11 +63,43 @@ void main() {
     expect(party.body.toLowerCase(), contains('damage'));
   });
 
+  test('first-hour guides hide advanced topics', () {
+    final state = GameLogic.createInitialState(now: now);
+    final early = GameGuides.topicsFor(state);
+    final ids = early.map((t) => t.id).toSet();
+    expect(ids, containsAll(['basics', 'combat', 'party', 'bag_equip']));
+    expect(ids, isNot(contains('god_hand')));
+    expect(ids, isNot(contains('powerups')));
+    expect(ids, isNot(contains('combinator')));
+    expect(ids, isNot(contains('gauntlet')));
+  });
+
   test('first tip points at ENTER DUNGEON, not a menu dictionary', () {
     final tip = FirstSessionTips.tips.first;
     expect(tip.id, 'first_run');
     expect(tip.body.toLowerCase(), contains('enter'));
     expect(tip.body.toLowerCase(), contains('fights'));
     expect(tip.body, isNot(contains('Combat Rogue')));
+  });
+
+  test('plain chrome is on for a fresh save', () {
+    final state = GameLogic.createInitialState(now: now);
+    expect(GameLogic.plainPlayerChrome(state), isTrue);
+    expect(GameLogic.plainPlayerChrome(state.copyWith(bossVictories: 1)), isFalse);
+  });
+
+  test('first-hour vault ready stays off TODAY until a boss', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        dailyVaultClears: GameLogic.dailyVaultClearTarget,
+        dailyVaultClaimed: false,
+      ),
+    );
+    expect(GameLogic.plainPlayerChrome(state), isTrue);
+    expect(GameLogic.canClaimDailyVault(state), isTrue);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.title, contains('Grow the party'));
   });
 }
