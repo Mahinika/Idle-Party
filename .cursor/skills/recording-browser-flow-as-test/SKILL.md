@@ -8,6 +8,9 @@ description: >-
 
 # Record browser flow as test (Idle Party)
 
+Human look at the game is the A56 emulator (`a56-playtest`). This skill is only
+for turning a **web** click path into a Playwright script.
+
 ## Prerequisites
 
 - Web server on `:8080` (see `browser-playtest`)

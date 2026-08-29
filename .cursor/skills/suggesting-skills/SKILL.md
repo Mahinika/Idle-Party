@@ -22,7 +22,8 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | Class / WotLK identity audit | `class-audit` |
 | Analyze / test / verify before PR | `flutter-verify` |
 | Art / sprites / Kenney paths | `assets-legal` |
-| Playtest hub/dungeon in browser | `browser-playtest` or `hub-smoke` |
+| Playtest / “show me the app” | `a56-playtest` (emulator). Web: `browser-playtest` fallback |
+| Hub polish checklist | `hub-smoke` on the A56 emulator |
 | Kit DPS too strong/weak | `grinding-until-pass` + share-fast / gate tests |
 | What’s New vs code / version drift | `screenshotting-changelog` + `changelog_sync_test` |
 | Open PR CI failures | `babysitting-pr` / `parallel-ci-triage` |
@@ -30,7 +31,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | Code review of a diff | `reviewing-code` |
 | Same workflow 3× | `building-skills-from-patterns` |
 | A11y / reduce motion / labels | `accessibility-auditing` |
-| UI change “does it look ok?” | `verifying-in-browser` |
+| UI change “does it look ok?” | `a56-playtest` / `verifying-in-browser` |
 | Play Store / listing / privacy / IARC | `play-store-prep` |
 | `/init` / resync AGENTS + rules | `init` |
 | `/repo auditandcleaning` / full repo audit (no edits) | `repo-audit-and-cleaning` |

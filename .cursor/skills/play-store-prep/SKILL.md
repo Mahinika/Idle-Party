@@ -46,7 +46,8 @@ Helpers: `tool/store_listing/`.
 # 1) Showcase save (AL3 / unlocked World Path — not empty day-one)
 flutter test tool/store_listing/export_showcase_save_test.dart
 
-# 2) Flutter web must already be on :8080
+# 2) Listing shots still use Flutter web on :8080 (Playwright).
+#    Daily playtest is the A56 emulator — see a56-playtest.
 # 3) Capture raw 1080×2340 phone shots
 py -3 tool/store_listing/capture_playwright.py
 

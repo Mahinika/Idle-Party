@@ -33,13 +33,13 @@ Pixel art vibe powered by [Kenney](https://kenney.nl) (CC0) plus custom Idle Par
 ### Android
 Grab the latest APK from [Releases](https://github.com/Mahinika/Idle-Party/releases) and sideload it. No account. No ads in the build.
 
-### From source (web / desktop / device)
+### From source
 
 ```bash
 flutter pub get
-flutter run -d chrome
-# or local web server:
-flutter run -d web-server --web-hostname=localhost --web-port=8080
+flutter emulators --launch Samsung_A56   # A56-sized phone (1080×2340)
+flutter run -d emulator-5554
+# USB phone if plugged in: flutter devices, then flutter run -d <id>
 ```
 
 ---

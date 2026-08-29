@@ -31,9 +31,10 @@ Chat in plain Swedish; after code, say what to test and wait. Full detail:
 `.cursor/rules/owner-preferences.mdc`.
 
 **UI target:** ship for **portrait phones** (~360–430 px). Owner reference:
-**Samsung Galaxy A56** → playtest at **360×780** CSS (DPR 3). Web is playtest
-only — agents must force phone emulation in Cursor browser. No hover-only flows
-for real players — tap / long-press.
+**Samsung Galaxy A56** (1080×2340 → **360×780**). **Live look:** AVD
+`Samsung_A56` + `flutter run` (skill `a56-playtest`). USB phone if plugged in.
+Web is fallback (Playwright / `WebClickBridge`) with forced 360×780 — never
+wide desktop chrome. No hover-only flows for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
@@ -66,7 +67,8 @@ Soft-fail on web / sideload.
 flutter pub get
 flutter analyze          # project target: zero issues on lib/test
 flutter test             # local: full suite; CI excludes tag `sim`
-flutter run -d web-server --web-hostname=localhost --web-port=8080
+flutter emulators --launch Samsung_A56   # wait until booted
+flutter run -d emulator-5554             # live look (skill a56-playtest)
 ```
 
 CI (`ci.yml`): `flutter analyze lib test --no-fatal-infos` then
@@ -92,7 +94,7 @@ flutter test test/ship_smoke_test.dart
 
 Skills under `.cursor/skills/`: domain (`spatial-combat-change`, `add-ability`,
 `new-dungeon`, `zone-art-identity`, `save-migrate`, `class-audit`, `assets-legal`,
-`flutter-verify`, `browser-playtest`, `hub-smoke`, `play-store-prep`, `init`,
+`flutter-verify`, `a56-playtest`, `browser-playtest`, `hub-smoke`, `play-store-prep`, `init`,
 `repo-audit-and-cleaning`) and
 Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 `grinding-until-pass`, `babysitting-pr`, `parallel-ci-triage`,
@@ -207,7 +209,8 @@ Advanced menu tabs (ROSTER, Forever, Essence, KEY, BEAST, CODEX, …) gate via
 Offline return uses `OfflineProgressResult` (wow headline + ≤3 highlights +
 “Up next” = ChaseContract).
 
-Web playtest: `WebClickBridge` + Semantics (`browser-playtest` skill).
+Live look: `a56-playtest` (Samsung A56 emulator). Web fallback:
+`WebClickBridge` + Semantics (`browser-playtest`).
 
 **Hub POWERUPS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded` +
 `ad_config.dart` (live AdMob ids on release Android; sample ids in debug). 1 ad =

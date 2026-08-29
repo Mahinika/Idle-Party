@@ -19,4 +19,5 @@ Before telling the owner a coding task is finished:
    Do not push silently.
 6. **Agent docs** — if architecture / Ascend / world path / distribution / tooling changed, update `AGENTS.md` (or run `/init`) so rules stay honest.
 
-Skip heavy mid-band balance sims unless the task is balance. Skip browser playtest for pure logic unless UI chrome changed.
+Skip heavy mid-band balance sims unless the task is balance. Skip live
+emulator playtest for pure logic unless UI chrome changed (`a56-playtest`).

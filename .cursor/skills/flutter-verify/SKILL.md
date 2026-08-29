@@ -2,7 +2,7 @@
 name: flutter-verify
 description: >-
   Runs Idle Party's Flutter verify loop (pub get, analyze zero issues,
-  tests, optional web run). Use when verifying changes, before a PR,
+  tests, optional A56 emulator look). Use when verifying changes, before a PR,
   after combat/kit/save edits, or when the user says verify, analyze,
   or run tests.
 ---
@@ -19,11 +19,8 @@ flutter analyze
 flutter test
 ```
 
-Optional live check:
-
-```bash
-flutter run -d web-server --web-hostname=localhost --web-port=8080
-```
+Optional live look (UI chrome): follow **a56-playtest** (Samsung A56
+emulator). Do not start a web-server for the owner.
 
 ## Rules
 
@@ -45,5 +42,5 @@ Verify:
 - [ ] flutter analyze (0 issues)
 - [ ] targeted tests (if iterating)
 - [ ] flutter test
-- [ ] optional web run
+- [ ] optional A56 emulator look (UI only)
 ```

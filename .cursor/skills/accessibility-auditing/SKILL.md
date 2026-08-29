@@ -18,7 +18,7 @@ description: >-
 
 ## How
 
-- Browser: snapshot aria tree + screenshots (see `browser-playtest`)
+- Live look: A56 emulator (`a56-playtest`). Agent aria dump: `browser-playtest` fallback.
 - Code: grep new buttons for raw `GestureDetector` without Semantics
 
 ## Report

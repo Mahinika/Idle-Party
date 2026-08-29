@@ -137,7 +137,7 @@ flowchart TB
 
 ## Product constraints (not design limits)
 
-- **Portrait phone only** (~360–430 CSS px). Owner reference: **Samsung A56** → **360×780** in web playtest.
+- **Portrait phone only** (~360–430 CSS px). Owner reference: **Samsung A56** → **360×780**. Live look: A56 emulator (`a56-playtest`).
 - **Tap / long-press** — no hover-only flows for real players.
 - **English** in-game copy.
 

@@ -1,45 +1,36 @@
 ---
 name: verifying-in-browser
 description: >-
-  After UI/hub/dungeon chrome changes, run Flutter web and verify in Cursor's
-  browser via WebClickBridge — don't trust code-only. Use after hub/meta/UI edits.
+  After UI/hub/dungeon chrome, verify on the Samsung A56 emulator
+  (a56-playtest). Browser/WebClickBridge is fallback only. Use after
+  hub/meta/UI edits.
 ---
 
-# Verify in browser (Idle Party)
+# Verify live UI (Idle Party)
 
-Flutter CanvasKit has no real DOM widgets. Prefer **browser-playtest** mechanics (`WebClickBridge` + semantics).
+**Default:** [a56-playtest](../a56-playtest/SKILL.md) — Samsung A56 emulator,
+one `flutter run`, look at the emulator window.
+
+Do **not** start Flutter web for a human look. Do **not** open localhost:808x.
 
 ## Steps
 
-1. **Serve** (if not already):
+1. Follow **a56-playtest** (reuse an attached `flutter run` if it exists).
+2. Hot restart (`R`) after menu/copy changes so labels match the build.
+3. Exercise the changed flow on the emulator (tap, not hover).
+4. Hub polish checklist → **hub-smoke** (same device).
 
-```bash
-flutter run -d web-server --web-hostname=localhost --web-port=8080
-```
+## Fallback (agent clicks only)
 
-2. Open `http://localhost:8080/` in Cursor browser.
-3. **Phone mode (mandatory):** CDP `Emulation.setDeviceMetricsOverride` →
-   **360×780**, `deviceScaleFactor: 3`, `mobile: true` (Samsung A56). Confirm
-   `innerWidth === 360`. See **browser-playtest**.
-4. Wait ~3–4s for load + start-menu unlock.
-5. `browser_lock` → snapshot / screenshot.
-6. Drive with `__idlePartyClick('…')` / button refs (see `browser-playtest`).
-7. Health:
-   - Page renders (not blank forever)
-   - Viewport is phone (360 wide), not desktop
-   - Bridge live: `typeof window.__idlePartyClick === 'function'`
-   - Changed UI reachable (hub / dungeon chrome)
-8. For hub polish checklist → follow **hub-smoke**.
-9. Unlock when done; report verdict + evidence.
+If Android cannot run, or you need `WebClickBridge` / Playwright:
 
-## When
-
-- Hub / MORE / What’s New / weekly / guides
-- Dungeon chrome, tips, overlays
-- Before claiming “UX polish done”
+1. `flutter run -d web-server --web-hostname=localhost --web-port=8080` — **one**
+   port, never a pile of 8082–8088.
+2. Cursor browser + CDP **360×780** (see [browser-playtest](../browser-playtest/SKILL.md)).
+3. Drive with `__idlePartyClick('…')`.
 
 ## Don't
 
 - Raw CDP `Input.*` mouse (blocked in Cursor)
-- Coordinate-only clicks when labels exist
-- Skip unlock after long automation
+- Treat a wide desktop Chrome window as the product
+- Tell the owner “refresh 8088” after code landed on the emulator

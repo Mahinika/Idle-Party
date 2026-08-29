@@ -50,7 +50,7 @@ Each tagged `1.x.y` release should include:
 - [ ] `flutter analyze` clean; `flutter test` green (CI on push).
 - [ ] Kit / combat changes exercised via SpatialCombat path (live + offline share the same step).
 - [ ] Changelog entry for this version; `seenChangelogVersion` will auto-prompt What’s New.
-- [ ] Hub smoke (optional but recommended): `.cursor/skills/hub-smoke` via web playtest.
+- [ ] Hub smoke (optional but recommended): `.cursor/skills/hub-smoke` on the A56 emulator (`a56-playtest`).
 - [ ] If Android: AAB/APK from tag workflow or local `flutter build appbundle` (see [PLAY_STORE.md](PLAY_STORE.md)).
 
 ## Agent tooling

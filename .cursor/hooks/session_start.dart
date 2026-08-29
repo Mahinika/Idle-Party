@@ -11,7 +11,8 @@ void main() {
       'If they paste play notes (hub chase unclear, same-floor wipes, dead menus), '
       'that is the batch. After code: short phone test list, wait; no GitHub/Play before they play. '
       'Prefer git branch main for daily work; release/* only when cutting a tag. '
-      'Do not stage windows/flutter/generated_* unless pubspec plugins changed.';
+      'Do not stage windows/flutter/generated_* unless pubspec plugins changed. '
+      'Live app look is the Samsung_A56 emulator (a56-playtest), not localhost web tabs.';
   stdout.write(
     jsonEncode(<String, dynamic>{
       'env': <String, String>{'IDLE_PARTY_FOCUS': now},

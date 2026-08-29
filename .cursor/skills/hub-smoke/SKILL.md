@@ -9,16 +9,13 @@ description: >-
 # Hub smoke (Idle Party)
 
 Short visual QA after What’s New / daily vault / MORE / guides / God Hand style work.
-Uses the same Flutter web + `WebClickBridge` path as [browser-playtest](../browser-playtest/SKILL.md).
 
-## Setup
+**Default setup:** [a56-playtest](../a56-playtest/SKILL.md) (Samsung A56
+emulator). Skip boot story → CONTINUE / NEW GAME → dismiss tips. Tap through
+the checklist on the emulator.
 
-```bash
-flutter run -d web-server --web-hostname=localhost --web-port=8080
-```
-
-Open `http://localhost:8080/` → set **phone viewport 360×780** (Samsung A56; see
-browser-playtest) → skip boot story (`SKIP`) → `CONTINUE` or `NEW GAME` → dismiss tips (`SKIP ALL TIPS` / `GOT IT`).
+Web + `WebClickBridge` only if Android cannot run — see
+[browser-playtest](../browser-playtest/SKILL.md).
 
 ## Checklist (look → click → think)
 
@@ -36,7 +33,7 @@ browser-playtest) → skip boot story (`SKIP`) → `CONTINUE` or `NEW GAME` → 
 | 8 | Loadouts label | PARTY → `LOADOUTS` (phone tab may say `LOAD`; not “GEAR SETS”) |
 | 9 | Overlay hygiene | Open META/CODEX then ENTER: return to hub must not leave sheet stuck open |
 
-## Bridge helpers
+## Bridge helpers (web fallback only)
 
 ```js
 window.__idlePartyButtons()

@@ -32,14 +32,19 @@ unchanged).
 - Goal: **Google Play “for real” soon** (not sideload-only forever).
 - Prefer work that unblocks Play when touching store: CI signing secrets, closed-test 12×14, production access — see `docs/PLAY_STORE.md`.
 - **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.78 / 107**, 2026-08-28; testers may still be on **1.12.68 / 97** until review publishes). Working ship is **1.12.78**. **Production is not live**. Optional Play Games (META → SETTINGS) is opt-in, not a store blocker.
-- **Platforms now:** Android (+ existing web playtest tooling OK). **No iOS** and **no shipping web as a product** for now.
+- **Platforms now:** Android. **No iOS** and **no shipping web as a product**.
+  Web playtest tooling stays for Playwright / agent clicks only.
 
 ## UI target device (mandatory)
 
 - **Phone-only product.** Design and ship for portrait phones (~360–430 CSS px wide). Do not optimize for desktop/tablet layouts as the real product.
-- **Owner reference phone: Samsung Galaxy A56** (1080×2340 @ DPR 3 → **360×780** CSS). Cursor browser playtest must always emulate this (or equivalent 360-wide portrait) via CDP device metrics — never judge UI at desktop/tablet width.
+- **Owner reference phone: Samsung Galaxy A56** (1080×2340 @ DPR 3 → **360×780**).
+  **Default live look:** AVD `Samsung_A56` + `flutter run` (skill `a56-playtest`).
+  USB A56 if plugged in. Do **not** launch `Pixel_6` for playtest. Do **not**
+  stack Flutter `web-server` tabs (8080/8082–8088) for the owner to “refresh”.
 - Hub, GEAR/BAG, menus, tooltips, touch targets: assume **finger + portrait**. Hover-only UX is playtest-only; phone must work with tap / long-press.
-- Flutter **web** remains a Cursor playtest harness with **forced phone emulation** — never treat wide desktop chrome as the shipping UI.
+- Flutter **web** is a fallback harness (Playwright, `WebClickBridge`) with
+  **forced 360×780** — never treat wide desktop chrome as the shipping UI.
 - **Owner play notes win.** They play **their own AL20 save** on the A56
   (~60+ min/week). Hub “am I doing the right thing?” notes, wipe notes, and
   unused-menu notes *are* the batch. No tester telemetry yet — do not wait on

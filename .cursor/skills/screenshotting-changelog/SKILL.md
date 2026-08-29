@@ -23,7 +23,8 @@ Must hold:
 
 ## Visual capture
 
-1. `flutter run -d web-server --web-hostname=localhost --web-port=8080`
+1. Live look on **Samsung A56 emulator** ([a56-playtest](../a56-playtest/SKILL.md)).
+   Web `:8080` only if the emulator cannot run.
 2. Fresh or returning save so What’s New can appear (`seenChangelogVersion` older than current).
 3. Screenshot:
    - Auto What’s New dialog (if shown)

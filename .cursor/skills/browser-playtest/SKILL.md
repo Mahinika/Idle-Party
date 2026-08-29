@@ -1,12 +1,19 @@
 ---
 name: browser-playtest
 description: >-
-  Playtests Idle Party in Cursor's browser (look → click → think) via Flutter
-  web + WebClickBridge. Use when the user asks to play, playtest, click through
-  the UI, manually verify hub/dungeon/Gauntlet flows, or automate browser QA.
+  Fallback: playtest Idle Party in Cursor's browser via Flutter web +
+  WebClickBridge. Default live look is a56-playtest (Samsung A56 emulator).
+  Use this only for agent clicks, Playwright, or when Android cannot run.
 ---
 
 # Browser playtest (Idle Party)
+
+**Not the default live look.** For the owner (and for judging hub/dungeon
+chrome), follow [a56-playtest](../a56-playtest/SKILL.md) — Samsung A56
+emulator + `flutter run`. Do not stack `web-server` on 8082–8088.
+
+Use this skill when the **agent** must click in Cursor's browser
+(`WebClickBridge`), Playwright scripts, or Android is unavailable.
 
 Flutter CanvasKit has no real DOM widgets. Cursor often cannot send trusted CDP
 `Input.*` mouse events. Idle Party exposes semantics + `WebClickBridge` so the

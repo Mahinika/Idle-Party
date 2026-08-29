@@ -29,11 +29,11 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 | new dungeon / zone looks same | `new-dungeon`, `zone-art-identity`, `assets-legal` |
 | save / ascend / lost progress | `save-migrate` |
 | class fantasy / WotLK | `class-audit` |
-| “does it work?” / verify | `flutter-verify`; UI → `verifying-in-browser` / `hub-smoke` |
+| “does it work?” / verify | `flutter-verify`; UI → `a56-playtest` / `hub-smoke` |
 | balance / too strong / too weak | share-fast then gate; `grinding-until-pass` if many failures |
 | What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
 | PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
-| polish hub / weekly / tips | `hub-smoke`, `browser-playtest` |
+| polish hub / weekly / tips | `hub-smoke` on A56 emulator (`a56-playtest`) |
 | I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — that *is* the batch (owner plays **AL20 save**) |
 | “gör spelet bättre” / vad härnäst (no other target) | AL20 hub chase + dungeon wipe-advice / dead chrome via `docs/CONTENT_CADENCE.md` (not first-hour, not new zone/class, not `/init` or cleanup) |
 | Play Store / listing / privacy / AAB | `play-store-prep` (+ `docs/PLAY_STORE.md`) |
@@ -44,7 +44,10 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 | topplistor / varför bra spel | `docs/TOP_GAMES_RESEARCH.md` as background — don’t derail into more research unless asked |
 
 5. **`suggesting-skills`**: prefer **silently following** the right skill over asking “vill du att jag använder skill X?”. Only mention a skill name if teaching them later helps — default is just do it.
-6. **After UI/meta changes**: verify somehow (tests and/or short browser check) without asking permission. Browser checks **always** use Samsung A56 phone metrics (**360×780**) — see `browser-playtest`.
+6. **After UI/meta changes**: verify somehow (tests and/or short **A56
+   emulator** look) without asking permission. Live look is
+   `a56-playtest` — not a localhost web tab. Web + `browser-playtest`
+   only if Android cannot run.
 7. **After kit number tweaks**: run the fast balance check; if CI gate would fail, keep fixing (`grinding-until-pass`) before declaring done.
 8. **Commits / push / PR / tags:** when analyze/tests are green, **commit
    locally** (see `owner-preferences`). Short test list; **APK only if they

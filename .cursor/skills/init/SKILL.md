@@ -33,6 +33,7 @@ Make `AGENTS.md` and `.cursor/rules/*.mdc` accurate for **today’s** codebase a
    - Meta that survives Ascend vs what resets
    - World path zones (ids/names/count), Gauntlet gates, Weekly/Will/seasons if documented
    - Build/verify commands, MCP server name, skill list
+   - Live look is `a56-playtest` (Samsung A56 emulator), not web-server tabs
    - Owner prefs (language, Play vs sideload, commit/propose behavior) — update only if product reality changed
 
 3. **Edit**
