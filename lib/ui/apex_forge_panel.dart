@@ -202,7 +202,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         const SizedBox(height: 10),
         _materialsSection(state),
         const SizedBox(height: 12),
-        MenuChrome.sectionLabelScoped('TARGET MATERIAL', scope: MenuScope.account),
+        MenuChrome.sectionLabelScoped('TARGET MATERIAL'),
         if (targetDef == null)
           Text(
             'Pick a craft goal below — progress fills toward the mat you need most.',
@@ -259,10 +259,10 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           ),
         ],
         const SizedBox(height: 12),
-        MenuChrome.sectionLabelScoped('PARTY CRAFT GOALS', scope: MenuScope.account),
+        MenuChrome.sectionLabelScoped('PARTY CRAFT GOALS'),
         ..._partyGoalCards(state),
         const SizedBox(height: 12),
-        MenuChrome.sectionLabelScoped('CRAFT STATION', scope: MenuScope.account),
+        MenuChrome.sectionLabelScoped('CRAFT STATION'),
         if (shortages.isNotEmpty) ...[
           Container(
             padding: const EdgeInsets.all(8),
@@ -385,7 +385,6 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         const SizedBox(height: 12),
         MenuChrome.sectionLabelScoped(
           'VAULT (${state.apexVault.length})',
-          scope: MenuScope.account,
         ),
         if (state.apexVault.isNotEmpty) ...[
           KenneyButton(
@@ -474,7 +473,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MenuChrome.sectionLabelScoped('MATERIALS', scope: MenuScope.account),
+        MenuChrome.sectionLabelScoped('MATERIALS'),
         Text(
           'Zone shards · role cores · class catalysts · Slag (Gauntlet/Spire).',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

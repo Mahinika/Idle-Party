@@ -191,7 +191,7 @@ class SanctuaryOverlay extends StatelessWidget {
         CampRatesSection(director: director),
         const SizedBox(height: 10),
         Text(
-          'Permanent ACCOUNT tracks — survive Ascend. Upgrade forever.\n'
+          'Permanent tracks — survive Ascend. Upgrade forever.\n'
           'CAMP Prestige (from Lv12) is not Ascend: it only resets this track '
           'to cheap levels again, keeps a small forever bonus, and refunds essence.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),

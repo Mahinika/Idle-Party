@@ -65,27 +65,16 @@ class _PowerPillarState extends State<PowerPillar>
     final d = widget.director;
     final s = d.state;
     final plain = GameLogic.plainPlayerChrome(s);
-    final keepStats = plain
-        ? '${s.essence} essence · lasts between runs'
-        : 'AL${s.ascensionLevel}${s.ascensionLevel >= GameLogic.maxAscensionLevel ? ' · MAX' : ''} · Bless ×${s.metaDepth.ascendBlessings} · '
-            '${s.essence}e';
-    final runStats = plain
-        ? '${s.gold} gold · ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
-            'STA +${s.vitalityBonus}'
-        : 'forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
-            'STA +${s.vitalityBonus}';
     _visible = MenuRouter.visiblePowerSegments(s);
-    final pages = <({String label, String scope, Widget body})>[
+    final pages = <({String label, Widget body})>[
       for (final seg in _visible)
         switch (seg) {
           PowerSegment.forge => (
             label: plain ? 'Gold upgrades' : 'FORGE',
-            scope: plain ? 'GOLD' : 'RUN',
             body: ForgeOverlay(director: d),
           ),
           PowerSegment.market => (
             label: plain ? 'Buy supplies' : 'MARKET',
-            scope: plain ? 'GOLD' : 'RUN',
             body: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,7 +98,6 @@ class _PowerPillarState extends State<PowerPillar>
           ),
           PowerSegment.camp => (
             label: plain ? 'Permanent upgrades' : 'CAMP',
-            scope: plain ? 'PERMANENT' : 'ACCOUNT',
             body: ListView(
               padding: EdgeInsets.zero,
               children: [
@@ -137,21 +125,6 @@ class _PowerPillarState extends State<PowerPillar>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 2, 8, 0),
-          child: Column(
-            children: [
-              if (!plain || MenuTabs.showCamp(s))
-                _PowerScopeLine(
-                  scope: plain ? 'PERMANENT' : 'ACCOUNT',
-                  text: keepStats,
-                ),
-              if (!plain || MenuTabs.showCamp(s)) const SizedBox(height: 2),
-              _PowerScopeLine(scope: plain ? 'GOLD' : 'RUN', text: runStats),
-            ],
-          ),
-        ),
-        const SizedBox(height: 4),
         MenuChrome.tabRail(
           controller: _tabs.controller,
           onTap: (_) => setState(() {}),
@@ -191,35 +164,6 @@ class _PowerPillarState extends State<PowerPillar>
           ),
         const SizedBox(height: 6),
         Expanded(child: pages[activeIndex].body),
-      ],
-    );
-  }
-}
-
-class _PowerScopeLine extends StatelessWidget {
-  const _PowerScopeLine({required this.scope, required this.text});
-
-  final String scope;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 6,
-      runSpacing: 4,
-      children: [
-        MenuChrome.scopeChip(scope),
-        Text(
-          text,
-          style: GameTheme.body(
-            size: scope == 'ACCOUNT' || scope == 'PERMANENT' ? 12 : 11,
-            color: scope == 'ACCOUNT' || scope == 'PERMANENT'
-                ? GameTheme.torchHot
-                : GameTheme.parchmentDim,
-          ),
-        ),
       ],
     );
   }

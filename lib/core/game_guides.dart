@@ -185,7 +185,7 @@ abstract final class GameGuides {
       id: 'income',
       title: 'CAMP RATES',
       body:
-          'POWER → CAMP (ACCOUNT hub gold).\n\n'
+          'POWER → CAMP (hub gold).\n\n'
           'Your incremental dashboard: Hub gold/min, Run gold/min (from real '
           'loot in the last couple of minutes), gold % multipliers, and Gold Find '
           '— the keep generator on the Gold Find track below.\n\n'
@@ -197,8 +197,7 @@ abstract final class GameGuides {
       id: 'forge',
       title: 'FORGE',
       body:
-          'POWER → FORGE — RUN gold (GOLD tab) vs ACCOUNT essence (KEEP, APEX).\n\n'
-          'Tabs:\n'
+          'POWER → FORGE — gold buys at the top; KEEP and APEX further down.\n\n'
           '• GOLD — spend wallet gold on party ATK/DEF/STA/MOVE/HASTE/CRIT. '
           'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
           'SPEND ALL · EVEN to split gold round-robin across every track. '

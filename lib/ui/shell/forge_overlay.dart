@@ -21,24 +21,10 @@ class ForgeOverlay extends StatefulWidget {
   State<ForgeOverlay> createState() => _ForgeOverlayState();
 }
 
-class _ForgeOverlayState extends State<ForgeOverlay>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
+class _ForgeOverlayState extends State<ForgeOverlay> {
   ForgeGoldSpendMode _spendMode = ForgeGoldSpendMode.one;
 
   GameDirector get director => widget.director;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabs = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
 
   Widget _upgradeButton({
     required GameState state,
@@ -103,64 +89,52 @@ class _ForgeOverlayState extends State<ForgeOverlay>
   @override
   Widget build(BuildContext context) {
     final plain = GameLogic.plainPlayerChrome(director.state);
-    if (plain) {
-      // First hour: gold buys only — KEEP/APEX wait until Ascend / essence.
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: SingleChildScrollView(child: _classicForgeBody(plain: true)),
-          ),
-        ],
-      );
-    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MenuChrome.tabRail(
-          controller: _tabs,
-          onTap: (_) => setState(() {}),
-          tabs: [
-            for (final entry in <(String, int)>[
-              ('GOLD', 0),
-              ('KEEP', 1),
-              ('APEX', 2),
-            ])
-              MenuChrome.bridgedTab(
-                entry.$1,
-                onSelect: () {
-                  _tabs.animateTo(entry.$2);
-                  setState(() {});
-                },
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
         Expanded(
-          child: IndexedStack(
-            index: _tabs.index,
-            children: [
-              SingleChildScrollView(child: _classicForgeBody(plain: false)),
-              SingleChildScrollView(child: _metaForgeBody()),
-              SingleChildScrollView(child: ApexHubPanel(director: director)),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _classicForgeBody(plain: plain),
+                if (!plain) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'KEEP',
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: GameTheme.torchHot,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _metaForgeBody(),
+                  const SizedBox(height: 16),
+                  Text(
+                    'APEX',
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: GameTheme.torchHot,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ApexHubPanel(director: director),
+                ],
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _sectionTitle(
-    String title,
-    String blurb, {
-    MenuScope? scope,
-  }) {
+  Widget _sectionTitle(String title, String blurb) {
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          MenuChrome.sectionLabelScoped(title, scope: scope),
+          MenuChrome.sectionLabelScoped(title),
           Text(
             blurb,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -218,17 +192,15 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           _sectionTitle(
             'BUY WITH GOLD',
             'BEST is the strongest buy right now. These reset later when you start over.',
-            scope: MenuScope.run,
           )
         else
           _sectionTitle(
-            'BONUSES (GOLD)',
+            'GOLD',
             'One buy is meant to feel similar: +${GameLogic.forgeAttackGain} ATK, '
                 '+${GameLogic.forgeDefenseGain} DEF (armor), '
                 '+${GameLogic.forgeVitalityGain} HP, '
                 '+${GameLogic.forgeHasteGain}% HASTE or CRIT. '
                 'BEST marks the cheapest relative gain. HASTE/CRIT soft-cap after ~25% — more still helps a little. All wipe when you Ascend.',
-            scope: MenuScope.run,
           ),
         if (!(plain &&
             state.gold <
@@ -319,7 +291,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
       children: [
         Text(
           'Keep forever — essence spends survive Ascend. '
-          'Gold forge tracks and the bag reset. Run gold lives on the GOLD tab.',
+          'Gold forge tracks and the bag reset. Gold buys are at the top of this page.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),
@@ -371,7 +343,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           _sectionTitle(
             'CONSTELLATION',
             'AL20 perk tree — light nodes with constellation points.',
-            scope: MenuScope.account,
           ),
           Text(
             '${BlessingConstellation.pointsAvailable(state)} pts · '
@@ -398,7 +369,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         _sectionTitle(
           'GOD HAND',
           'Tap in the dungeon to steer + smash. Soft knobs: damage, CD, style.',
-          scope: MenuScope.account,
         ),
         Text(
           'Lv${state.godHandLevel} · smash ${state.godHandSmashDamage()} · '
@@ -473,7 +443,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           _sectionTitle(
             'GOD HAND MASTERY',
             'Milestones from Hand level, CD upgrades, and smash count.',
-            scope: MenuScope.account,
           ),
           for (final m in GodHandMastery.milestones)
             if (GodHandMastery.ready(state, m.$1) ||
@@ -498,7 +467,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           _sectionTitle(
             '5TH SLOT',
             'Extra fighter · survives Ascend. Also on GEAR → ROSTER.',
-            scope: MenuScope.account,
           ),
           KenneyButton(
             label:
@@ -516,7 +484,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
         _sectionTitle(
           'RELICS',
           'Buy once · upgrade tiers · permanent party auras.',
-          scope: MenuScope.account,
         ),
         for (final relicId in GameLogic.relicOrder)
           _relicKeepCard(state, relicId),
@@ -538,7 +505,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           _sectionTitle(
             'HEIRLOOM',
             'Older save. Apex is forever gear now — this still adds party power.',
-            scope: MenuScope.account,
           ),
           Text(
             '${state.soulboundItem!.name}'
@@ -556,7 +522,6 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           _sectionTitle(
             'REBORN (optional)',
             'Empty-bag climb at AL20 — not Ascend. Confirm before pressing.',
-            scope: MenuScope.account,
           ),
           KenneyButton(
             label: 'REBORN',
