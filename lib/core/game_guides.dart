@@ -30,10 +30,9 @@ abstract final class GameGuides {
           '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
           '• Watch them clear rooms. Tap the fight when you want to help.\n'
           '• TODAY on the hub always names the next job — start there.\n'
-          '• Three buckets: RUN (wallet gold — dungeon + POWER), TODAY '
-          '(claims — vault, quests, daily), ACCOUNT (permanent power, '
-          'Blessing, CAMP tracks).\n'
-          '• Gold buys supplies and run power. Permanent currency buys lasting power.\n'
+          '• Three POWER tabs: Gold (this run), Shop (flasks and gear), '
+          'Forever (stays after you start over).\n'
+          '• Gold buys supplies and run power. Essence buys lasting power.\n'
           '• Bottom buttons (same in hub and dungeon): PARTY (heroes and gear), '
           'POWER (upgrades), META (extras and Guides). In a dungeon the fourth '
           'button is LEAVE (back to hub).\n'
@@ -100,7 +99,7 @@ abstract final class GameGuides {
           'Tap the dungeon floor to help: smash enemies and steer the party.\n\n'
           '• First job: smash a pack and pull the party toward your tap.\n'
           '• Cooldown ring is top-right of the dungeon view.\n'
-          '• Forge → KEEP (soft knobs): more damage, shorter CD, BAL / FOCUS / WIDE styles.\n'
+          '• Gold → KEEP (soft knobs): more damage, shorter CD, BAL / FOCUS / WIDE styles.\n'
           '• Styles trade damage vs radius — not a second talent tree.\n'
           '• Upgrades use essence and survive Ascend.',
     ),
@@ -128,7 +127,7 @@ abstract final class GameGuides {
           '(STREAK, SWEEP / FLURRY, BEACON when those windows are up).\n'
           '• The strip shows level and a thin XP bar so growth is visible mid-fight.\n'
           '• Resources: Rage / Mana / Energy / Runic — kits spend these.\n'
-          '• Roster levels and open zones keep on Ascend; bag, gold, and forge reset.\n'
+          '• Roster levels and open zones keep on Ascend; bag, gold, and Gold buys reset.\n'
           '• Flask heals the party when you have a potion.',
     ),
     GuideTopic(
@@ -178,33 +177,33 @@ abstract final class GameGuides {
           '• Check RESULT preview (rarity, iLvl, SCORE jump) and gold cost, then MERGE.\n'
           '• AUTO MERGE: repeatedly merges junk pairs of the same slot '
           '(skips BiS / clear upgrades) while you can afford the cost.\n'
-          '• Combinator Charm in POWER → SHOP lowers MERGE gold (−3g per luck).\n'
+          '• Combinator Charm in POWER → Shop (Essence) lowers MERGE gold (−3g per luck).\n'
           '• Both inputs are consumed.',
     ),
     GuideTopic(
       id: 'income',
-      title: 'CAMP RATES',
+      title: 'GOLD/MIN',
       body:
-          'POWER → CAMP (hub gold).\n\n'
+          'POWER → Forever (hub gold).\n\n'
           'Your incremental dashboard: Hub gold/min, Run gold/min (from real '
           'loot in the last couple of minutes), gold % multipliers, and Gold Find '
           '— the keep generator on the Gold Find track below.\n\n'
           'Hub ticks while you sit at the keep (slower than a dungeon run, but '
-          'overnight still buys forge). Buy one Gold Find level or bulk levels '
+          'overnight still buys Gold). Buy one Gold Find level or bulk levels '
           'when you can afford them.',
     ),
     GuideTopic(
       id: 'forge',
-      title: 'FORGE',
+      title: 'GOLD',
       body:
-          'POWER → FORGE — gold buys at the top; KEEP and APEX further down.\n\n'
+          'POWER → Gold — gold buys at the top; KEEP and APEX further down.\n\n'
           '• GOLD — spend wallet gold on party ATK/DEF/STA/MOVE/HASTE/CRIT. '
           'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
           'SPEND ALL · EVEN to split gold round-robin across every track. '
           'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}). '
           'Harder kills (higher enemy level than the hero) pay more XP; heroes far behind the party catch up faster.\n'
-          'Forge gold tracks reset when you Ascend. '
-          'ATK, HASTE, and MOVE speed up clears — see CAMP for rates. '
+          'Gold tracks reset when you Ascend. '
+          'ATK, HASTE, and MOVE speed up clears — see Forever for rates. '
           'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
           'relative upgrade.\n'
@@ -212,7 +211,7 @@ abstract final class GameGuides {
           'God Hand smash/cooldown/style, optional AL20 REBORN, and the 5th party '
           'slot (AL2 · 80e).\n'
           '• APEX — one Apex station: materials, craft goals, target meter, vault.\n\n'
-          '• Ascend from the Hub when ready (not from Forge). REBORN at AL20 is on KEEP.',
+          '• Ascend from the Hub when ready (not from Gold). REBORN at AL20 is on KEEP.',
     ),
     GuideTopic(
       id: 'classes',
@@ -222,7 +221,7 @@ abstract final class GameGuides {
           'with a short fantasy line plus a Watch… combat hook.\n\n'
           '• AL1: Combat Rogue, Arms, Holy Paladin\n'
           '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot '
-          '(Forge KEEP · 80e)\n'
+          '(Gold KEEP · 80e)\n'
           '• AL3: Prot Paladin, Assassination, Resto Shaman, Frost Mage, Resto Druid\n'
           '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'
           '• AL5: Blood DK, Frost DK, Guardian\n'
@@ -236,21 +235,21 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'sanctuary',
-      title: 'SANCTUARY',
+      title: 'FOREVER',
       body:
-          'POWER → CAMP. Spend essence on permanent tracks.\n\n'
-          '• CAMP unlocks after your first Ascend or when you earn essence.\n'
-          '• Hub gold/min and Gold Find live on POWER → CAMP (rates at top).\n'
+          'POWER → Forever. Spend essence on permanent tracks.\n\n'
+          '• Forever unlocks after your first Ascend or when you earn essence.\n'
+          '• Hub gold/min and Gold Find live on POWER → Forever (rates at top).\n'
           '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
           '• Hub gold/min ticks while you sit at the keep — slower than a dungeon '
-          'run, but overnight still buys forge. Gold Find raises that rate '
-          '(shown on the hub and on CAMP).\n'
+          'run, but overnight still buys Gold. Gold Find raises that rate '
+          '(shown on the hub and on Forever).\n'
           '• Tracks level infinitely — cost scales with level.\n'
           '• Optional prestige from Lv12: reset to Lv0 (upgrades cheap again). '
           'You keep a small forever bonus '
           '(+3% gold / +1 ATK / +12 HP / +2% XP) and get 25+level essence back. '
           'The big level bonus is gone until you buy levels again.\n'
-          '• Owned KEEP relics (ATK / DEF / HP / loot) also list on CAMP.\n'
+          '• Owned KEEP relics (ATK / DEF / HP / loot) also list on Forever.\n'
           '• Survives Ascend (meta progress).\n'
           '• Invest early — sanctuary compounds over many runs.',
     ),
@@ -293,7 +292,7 @@ abstract final class GameGuides {
       id: 'apex',
       title: 'APEX FORGE',
       body:
-          'FORGE → APEX.\n\n'
+          'Gold → APEX.\n\n'
           '• One screen: materials, party craft goals, target meter, craft, vault.\n'
           '• Tap a party goal card to chase that hero\'s next Apex piece.\n'
           '• Target meter: every boss clear builds toward a guaranteed mat (PUSH faster than FARM).\n'
@@ -303,14 +302,14 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'market',
-      title: 'MARKET',
+      title: 'SHOP',
       body:
-          'POWER → MARKET.\n\n'
+          'POWER → Shop.\n\n'
           '• GEAR LISTINGS: browse traveling auctions when drops miss your slot '
           '(filter HEAD / hero, UPGRADE badge when you can afford it). Listings refresh every 6 hours '
           'or pay gold to reroll. Gear bought here is for this run only.\n'
-          '• Hub TODAY can chase MARKET when an affordable listing beats your gear.\n'
-          '• Wipe advice may point at MARKET when listings beat FORGE for the same gap.\n'
+          '• Hub TODAY can chase Shop when an affordable listing beats your gear.\n'
+          '• Wipe advice may point at Shop when listings beat Gold for the same gap.\n'
           '• Buy flasks and bandages with gold.\n'
           '• Clear a full bag with BAG → CLEAN BAG, MERGE, or SETTINGS auto-sell / '
           'auto-disassemble — there is no separate Sell junk button.\n'
@@ -320,7 +319,7 @@ abstract final class GameGuides {
       id: 'pets',
       title: 'BEAST PEN',
       body:
-          'POWER → Camp.\n\n'
+          'POWER → Forever.\n\n'
           '• Hatch and level pets with essence (random species and rarity).\n'
           '• Merge two same-species pets of the same rarity into a higher rarity.\n'
           '• Favorite a species: +1 ATK and a stronger passive while that pet is ACTIVE.\n'
@@ -335,11 +334,11 @@ abstract final class GameGuides {
       id: 'prestige_shop',
       title: 'ESSENCE SHOP',
       body:
-          'POWER → SHOP (AL-gated).\n\n'
+          'POWER → Shop, Essence section (AL-gated).\n\n'
           '• Spend essence on stash slots, cheaper MERGE gold, pet roster, '
           'cheaper market flasks, higher auto-sell/scrap ceilings, more Welcome '
           'Back rows, Dawn Tithe (vault + Daily Run), and more.\n'
-          '• God Hand cooldown upgrades also live on Forge → KEEP — same spend, '
+          '• God Hand cooldown upgrades also live on Gold → KEEP — same spend, '
           'two doors into one upgrade.\n'
           '• Loadout Folio is delisted — LOADOUTS tab is hidden; old slot '
           'purchases still count in the save if you bought them earlier.\n'
@@ -396,7 +395,7 @@ abstract final class GameGuides {
       id: 'constellation',
       title: 'BLESSING CONSTELLATION',
       body:
-          'At AL20, Forge → KEEP opens a small constellation board.\n\n'
+          'At AL20, Gold → KEEP opens a small constellation board.\n\n'
           '• Separate from Ascend Blessing stacks (+ATK/DEF/STA/gold).\n'
           '• Earn points from reaching AL20, Ashen Crown, and Apex Trial.\n'
           '• Spend points on permanent nodes (crit, gold, block, KEY par, …).\n'
@@ -444,7 +443,7 @@ abstract final class GameGuides {
           'Ashen Crown, vault, boards) unlocks when every active hero reaches level '
           '${GameLogic.maxHeroLevel} — not from AL20 alone.\n'
           '• Each Ascend grants a lasting Blessing: +5 ATK · +20 DEF · +60 STA · '
-          '+8% gold (stacks forever). See Forge → KEEP.\n'
+          '+8% gold (stacks forever). See Gold → KEEP.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
           '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
           '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
@@ -453,7 +452,7 @@ abstract final class GameGuides {
           '(starter gear back on). Legacy loadout presets in the save wipe too '
           '(LOADOUTS tab is hidden).\n'
           '• Boss victories toward the next Ascend clear.\n'
-          '• At AL20, Forge → KEEP offers optional REBORN (same bag wipe, AL stays 20, '
+          '• At AL20, Gold → KEEP offers optional REBORN (same bag wipe, AL stays 20, '
           'no extra Blessing). TODAY never nags you to press it.',
     ),
     GuideTopic(

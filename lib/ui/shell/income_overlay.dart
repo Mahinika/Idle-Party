@@ -6,7 +6,7 @@ import '../../core/gold_income.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
 
-/// Hub / Run gold rates — embedded at the top of POWER → CAMP.
+/// Hub / Run gold rates — embedded at the top of POWER → Forever.
 class CampRatesSection extends StatelessWidget {
   const CampRatesSection({super.key, required this.director});
   final GameDirector director;
@@ -48,5 +48,5 @@ class CampRatesSection extends StatelessWidget {
   }
 }
 
-/// @deprecated Use [CampRatesSection] inside POWER → CAMP.
+/// @deprecated Use [CampRatesSection] inside POWER → Forever.
 typedef IncomeOverlay = CampRatesSection;

@@ -236,7 +236,7 @@ void main() {
     expect(MarketListingsService.hasAffordableUpgradeListing(state), isTrue);
     state = GameLogic.notePartyWipe(state, atkLack());
     state = GameLogic.notePartyWipe(state, atkLack());
-    expect(state.wipeAdviceLine, startsWith('MARKET:'));
+    expect(state.wipeAdviceLine, startsWith('SHOP:'));
     expect(state.wipeAdviceLine, contains('g'));
   });
 

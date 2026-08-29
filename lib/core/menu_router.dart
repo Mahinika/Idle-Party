@@ -11,8 +11,17 @@ enum MenuRoute { none, gear, power, quests, key, more }
 /// Local focus inside GEAR (not bottom-nav destinations).
 enum GearPanel { gear, bag, merge, roster }
 
-/// Sticky POWER segments (Forge | Market | Camp). Shop lives in Market; Beast in Camp.
+/// Sticky POWER segments (Gold | Shop | Forever). Essence shop lives in Shop; Beast in Forever.
 enum PowerSegment { forge, market, camp }
+
+/// Player-facing POWER tab names — everyday English, same the whole game.
+extension PowerSegmentLabel on PowerSegment {
+  String get tabLabel => switch (this) {
+    PowerSegment.forge => 'Gold',
+    PowerSegment.market => 'Shop',
+    PowerSegment.camp => 'Forever',
+  };
+}
 
 /// Rows inside MORE (no gameplay destinations).
 enum MoreSection { info, settings, credits }

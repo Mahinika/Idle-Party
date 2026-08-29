@@ -160,7 +160,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
         if (!plain) ...[
           const SizedBox(height: 4),
           Text(
-            'Hub / Run rates → POWER → CAMP.',
+            'Hub / Run rates → POWER → Forever.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         ],

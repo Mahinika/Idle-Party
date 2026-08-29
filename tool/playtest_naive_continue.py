@@ -141,7 +141,7 @@ def main() -> int:
                     shot(page, "03b_after_buy")
                     log(notes, f"bought via: {b}")
                     break
-            click_any(page, "Buy supplies", "Buy supplies · GOLD", wait_ms=800)
+            click_any(page, "Shop", "Buy supplies", wait_ms=800)
             shot(page, "03c_market")
             log(notes, f"market: {buttons(page)[:18]}")
             click_any(page, "CLOSE", wait_ms=600)

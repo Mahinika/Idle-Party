@@ -860,7 +860,7 @@ class DungeonTopHud extends StatelessWidget {
                     GestureDetector(
                       onTap: onOpenForge,
                       child: Text(
-                        plain ? 'POWER' : 'FORGE',
+                        plain ? 'POWER' : 'Gold',
                         style: GameTheme.pixel(
                           size: GameTheme.hudPixel,
                           color: GameTheme.clear,

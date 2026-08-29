@@ -8,7 +8,7 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 ## Priority (high → low)
 
 1. **Claimables (READY)** — daily vault, finished **QUESTS**, Meet new kit, **equip BAG upgrade**
-2. **MARKET ALMOST** — affordable UPGRADE listing on POWER → MARKET (after bag equip)
+2. **Shop ALMOST** — affordable UPGRADE listing on POWER → Shop (after bag equip)
 3. **Ascend READY** — can Ascend now (blocked at AL20 cap). **Exception:** on **AL0** after the first boss, TODAY stays Daily / farming; Ascend shows on the urgent row only (not the sole big button). Confirm copy: party stays; bag, gold, forge, and floors reset.
 4. **ALMOST** — one boss from Ascend, then KEY+1 vault cliff (endgame only), then zone. **At party Lv100:** skip Will / early week ALMOST so Spire/KEY nights stay clear; Gauntlet/Rift/GR ALMOST still apply.
 5. **Fresh prestige re-kit** — after Ascend or optional AL20 Reborn (`metaDepth.freshPrestige` and low gear pressure): TODAY says **Rebuild your bag** / farm floor 1. Skip KEY / Gauntlet / Rift until real drops land. **Reborn is never a TODAY chase.**

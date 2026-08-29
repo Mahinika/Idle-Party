@@ -174,11 +174,11 @@ class MenuAlerts {
         PartyUpgradeType.values[GameLogic.recommendedForgeUpgrade(state)];
     if (state.gold >= GameLogic.upgradeCostFor(state, forgeType) * 3) {
       count++;
-      reasons.add('gold for FORGE');
+      reasons.add('gold for Gold');
     }
     if (state.essence >= GameLogic.sanctuaryCost(cheapestCampLevel(state))) {
       count++;
-      reasons.add('essence for CAMP');
+      reasons.add('essence for Forever');
     }
     final hasFlask = state.heroes.any(
       (h) => h.itemIn(EquipmentSlot.consumable) != null,
@@ -187,11 +187,11 @@ class MenuAlerts {
         !state.challengeNoFlask &&
         state.gold >= GameLogic.marketFlaskCost(state)) {
       count++;
-      reasons.add('gold for a MARKET flask');
+      reasons.add('gold for a Shop flask');
     }
     if (MarketListingsService.hasAffordableUpgradeListing(state)) {
       count++;
-      reasons.add('gold for MARKET upgrade');
+      reasons.add('gold for a Shop upgrade');
     }
     if (count <= 0) return MenuAlert.quiet;
     return MenuAlert(count: count, reason: 'You have ${reasons.join(' · ')}');

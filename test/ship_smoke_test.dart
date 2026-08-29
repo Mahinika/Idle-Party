@@ -186,7 +186,7 @@ void main() {
     expect(AscendRoadmap.unlockAtAl(1), contains('Holy Paladin'));
     expect(AscendRoadmap.unlockAtAl(2), contains('Beast Mastery'));
     expect(AscendRoadmap.unlockAtAl(2), contains('5th party slot'));
-    expect(AscendRoadmap.unlockAtAl(2), contains('Forge'));
+    expect(AscendRoadmap.unlockAtAl(2), contains('Gold'));
     expect(GameLogic.partySlot5EssenceCost, 80);
     expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
     expect(AscendRoadmap.unlockAtAl(20), contains('Ascension cap'));
@@ -208,7 +208,7 @@ void main() {
     expect(classes.body, contains('AL2'));
     expect(classes.body, contains('Beast Mastery'));
     expect(classes.body, contains('Holy Paladin'));
-    expect(classes.body, contains('Forge KEEP'));
+    expect(classes.body, contains('Gold KEEP'));
 
     final forge = GameGuides.topics.firstWhere((t) => t.id == 'forge');
     expect(forge.body, contains('Blessing'));
@@ -223,7 +223,7 @@ void main() {
     expect(ascendGuide.body.toLowerCase(), contains('wallet gold'));
 
     final sanctuary = GameGuides.topics.firstWhere((t) => t.id == 'sanctuary');
-    expect(sanctuary.body, contains('CAMP'));
+    expect(sanctuary.body, contains('Forever'));
     expect(sanctuary.body, contains('+3% gold'));
     expect(sanctuary.body, contains('+1 ATK'));
     expect(sanctuary.body, contains('Lv0'));

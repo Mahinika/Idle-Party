@@ -31,7 +31,7 @@ enum HubChaseKind {
   /// Better gear already in BAG - equip before farming or buying.
   equipBag,
 
-  /// Affordable UPGRADE on POWER → MARKET when drops miss a slot.
+  /// Affordable UPGRADE on POWER → Shop when drops miss a slot.
   marketUpgrade,
   ascend,
   dailyVaultProgress,
@@ -434,7 +434,7 @@ class HubChase {
     final slot = listing.slot.name.toUpperCase().replaceAll('_', '-');
     return HubChase(
       kind: HubChaseKind.marketUpgrade,
-      title: 'Buy MARKET upgrade',
+      title: 'Buy Shop upgrade',
       detail:
           '${listing.item.name} · $slot · ${listing.priceGold}g — listings beat bad drops.',
       progressLabel: 'BUY',

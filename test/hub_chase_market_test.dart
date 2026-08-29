@@ -36,10 +36,10 @@ void main() {
     final chase = HubChase.forState(state);
     expect(chase.kind, HubChaseKind.marketUpgrade);
     expect(chase.urgency, HubChaseUrgency.ready);
-    expect(chase.title.toLowerCase(), contains('market'));
+    expect(chase.title.toLowerCase(), contains('shop'));
     final contract = ChaseContract.fromState(state);
     expect(contract.isClaimable, isTrue);
-    expect(contract.readyActionLabel, 'MARKET');
+    expect(contract.readyActionLabel, 'SHOP');
   });
 
   test('BAG equip beats MARKET in chase priority', () {

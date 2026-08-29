@@ -201,8 +201,8 @@ def explore_menu(page, notes: list[dict] | list[str], findings: list[dict], pill
 
     # Tap a few inner tabs if present
     for tab in (
-        "Gold upgrades",
-        "Buy supplies",
+        "Gold",
+        "Shop",
         "BAG",
         "GEAR",
         "ROSTER",

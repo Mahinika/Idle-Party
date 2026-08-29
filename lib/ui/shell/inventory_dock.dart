@@ -367,7 +367,7 @@ class _InventoryDockState extends State<InventoryDock>
         if (onOpenMarket != null)
           Center(
             child: MenuChrome.chip(
-              label: 'Need gear? → MARKET',
+              label: 'Need gear? → Shop',
               onTap: onOpenMarket,
             ),
           ),
@@ -678,7 +678,7 @@ class _InventoryDockState extends State<InventoryDock>
           ],
           const SizedBox(height: 10),
           Text(
-            'Flask: party HUD · Pets: POWER → Camp · God Hand: POWER → Forge KEEP',
+            'Flask: party HUD · Pets: POWER → Forever · God Hand: POWER → Gold KEEP',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),

@@ -63,7 +63,7 @@ abstract final class AscendRoadmap {
     if (al == 2) {
       final kits = kitUnlockSummary(2);
       return '$kits · 5th party slot '
-          '(Forge · ${GameLogic.partySlot5EssenceCost}e)';
+          '(Gold · ${GameLogic.partySlot5EssenceCost}e)';
     }
     if (al == GameLogic.maxAscensionLevel) {
       final kits = kitUnlockSummary(al);

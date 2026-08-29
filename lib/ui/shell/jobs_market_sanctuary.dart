@@ -192,15 +192,15 @@ class SanctuaryOverlay extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           'Permanent tracks — survive Ascend. Upgrade forever.\n'
-          'CAMP Prestige (from Lv12) is not Ascend: it only resets this track '
-          'to cheap levels again, keeps a small forever bonus, and refunds essence.',
+          'From Lv12 you can reset this track (not Ascend): cheap levels again, '
+          'a small forever bonus, and essence back.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (state.metaDepth.ascendBlessings > 0) ...[
           const SizedBox(height: 6),
           Text(
             'Ascend Blessing ×${state.metaDepth.ascendBlessings} · '
-            'see Forge → KEEP',
+            'see Gold → KEEP',
             style: GameTheme.body(size: 13, color: GameTheme.mossLit),
           ),
         ],
@@ -217,7 +217,7 @@ class SanctuaryOverlay extends StatelessWidget {
             _campTrackCard(context, state, track)
         else
           Text(
-            'War Altar, Life Well, and Lore Font appear here once CAMP unlocks.',
+            'War Altar, Life Well, and Lore Font appear here once Forever unlocks.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
       ],
@@ -298,10 +298,10 @@ class SanctuaryOverlay extends StatelessWidget {
           ),
           Text(
             canPrestige
-                ? 'CAMP Prestige (not Ascend): keeps $keepShort forever, '
+                ? 'Track reset (not Ascend): keeps $keepShort forever, '
                       'refunds ${prestigeGain}e, resets to $afterPrestige. '
                       'Levels start cheap again.'
-                : 'Each CAMP Prestige keeps $keepShort forever · ready at Lv12 '
+                : 'Each track reset keeps $keepShort forever · ready at Lv12 '
                       '(cycle $cycleStep/12) — separate from Ascend',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
@@ -361,18 +361,18 @@ class SanctuaryOverlay extends StatelessWidget {
           if (canPrestige) ...[
             const SizedBox(height: 4),
             KenneyButton(
-              label: 'CAMP Prestige · keep $keepShort · +${prestigeGain}e',
+              label: 'Reset track · keep $keepShort · +${prestigeGain}e',
               style: KenneyButtonStyle.grey,
               onPressed: () async {
                 final ok = await showDialog<bool>(
                   context: context,
                   barrierColor: MenuChrome.scrim,
                   builder: (ctx) => MenuChrome.dialog(
-                    title: 'CAMP Prestige this track?',
+                    title: 'Reset this track?',
                     content: Text(
-                      'Resets this CAMP track to Lv1. Keeps $keepShort forever '
+                      'Resets this Forever track to Lv1. Keeps $keepShort forever '
                       'and refunds ${prestigeGain}e.\n\n'
-                      'This is not Ascend — only this sanctuary track. '
+                      'This is not Ascend — only this track. '
                       'Ascend (hub claim) resets the run bag and raises AL.',
                       style: GameTheme.body(
                         size: 15,
@@ -387,7 +387,7 @@ class SanctuaryOverlay extends StatelessWidget {
                         onPressed: () => Navigator.pop(ctx, false),
                       ),
                       KenneyButton(
-                        label: 'PRESTIGE',
+                        label: 'RESET',
                         style: KenneyButtonStyle.red,
                         expanded: false,
                         onPressed: () => Navigator.pop(ctx, true),

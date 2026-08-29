@@ -55,7 +55,7 @@ void main() {
     ).copyWith(sanctuaryGoldLevel: 4, ascensionLevel: 2);
     final line = GoldIncome.multiplierLine(state);
     expect(line, contains('AL'));
-    expect(line, contains('CAMP'));
+    expect(line, contains('Forever'));
   });
 
   test('legacy metaDepth json defaults hub idle remainders to 0', () {

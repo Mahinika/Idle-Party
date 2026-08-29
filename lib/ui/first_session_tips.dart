@@ -49,25 +49,25 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'sanctuary',
-      title: 'SANCTUARY',
+      title: 'FOREVER',
       body:
-          'POWER → CAMP unlocks after your first Ascend or when you earn essence. '
+          'POWER → Forever unlocks after your first Ascend or when you earn essence. '
           'Spend essence there for idle gold and party power that persists between '
-          'runs. Hub gold/min ticks at the keep overnight (enough to buy forge). '
+          'runs. Hub gold/min ticks at the keep overnight (enough to buy Gold). '
           'Gold Find makes that number go up.',
     ),
     (
       id: 'market',
-      title: 'MARKET',
+      title: 'SHOP',
       body:
-          'Buy flasks in POWER → MARKET. When the bag is full, use BAG → CLEAN BAG / '
+          'Buy flasks in POWER → Shop. When the bag is full, use BAG → CLEAN BAG / '
           'MERGE or SETTINGS auto-sell — there is no Sell junk button.',
     ),
     (
       id: 'forge',
-      title: 'FORGE',
+      title: 'GOLD',
       body:
-          'POWER → FORGE: GOLD for this-run power (×1 / % spend / EVEN split), '
+          'POWER → Gold: gold buys for this-run power (×1 / % spend / EVEN split), '
           'KEEP for relics / God Hand / Blessing, '
           'APEX for forever gear. Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
     ),
@@ -96,7 +96,7 @@ class FirstSessionTips extends StatelessWidget {
       title: 'AFTER ASCEND',
       body:
           'New kits land in GEAR → ROSTER — TODAY shows Meet … when something unlocked. '
-          'Spend essence under Forge → KEEP (relics / God Hand) and POWER → CAMP. '
+          'Spend essence under Gold → KEEP (relics / God Hand) and POWER → Forever. '
           'Apex stays.',
     ),
     (
@@ -153,8 +153,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'prestige',
       title: 'ESSENCE SHOP',
       body:
-          'Essence lasts between Ascends: POWER → CAMP for sanctuary tracks, '
-          'POWER → SHOP for prestige buys, Forge → KEEP for relics and God Hand.',
+          'Essence lasts between Ascends: POWER → Forever for lasting tracks, '
+          'POWER → Shop (Essence) for lasting buys, Gold → KEEP for relics and God Hand.',
     ),
   ];
 

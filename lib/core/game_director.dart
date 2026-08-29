@@ -1557,7 +1557,7 @@ class GameDirector extends ChangeNotifier {
     } else if (_state.attackBonus > beforeAtk ||
         _state.moveSpeedBonus > beforeMove ||
         _state.attackSpeedBonus > beforeHaste) {
-      showToast('Forge gold spent evenly', life: 2.0);
+      showToast('Gold spent evenly', life: 2.0);
     }
   }
 

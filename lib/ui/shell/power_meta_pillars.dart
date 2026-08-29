@@ -15,7 +15,7 @@ import 'jobs_market_sanctuary.dart';
 import 'settings_overlay.dart';
 import 'shell_common.dart';
 
-/// POWER sheet: sticky Forge | Market | Camp (Shop in Market, Beast in Camp).
+/// POWER sheet: sticky Gold | Shop | Forever (Essence in Shop, Beast in Forever).
 class PowerPillar extends StatefulWidget {
   const PowerPillar({
     super.key,
@@ -70,11 +70,11 @@ class _PowerPillarState extends State<PowerPillar>
       for (final seg in _visible)
         switch (seg) {
           PowerSegment.forge => (
-            label: plain ? 'Gold upgrades' : 'FORGE',
+            label: seg.tabLabel,
             body: ForgeOverlay(director: d),
           ),
           PowerSegment.market => (
-            label: plain ? 'Buy supplies' : 'MARKET',
+            label: seg.tabLabel,
             body: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -83,7 +83,7 @@ class _PowerPillarState extends State<PowerPillar>
                   if (MenuTabs.showShop(s)) ...[
                     const SizedBox(height: 16),
                     Text(
-                      plain ? 'Permanent shop' : 'SHOP',
+                      'Essence',
                       style: GameTheme.pixel(
                         size: GameTheme.hudPixel,
                         color: GameTheme.torchHot,
@@ -97,7 +97,7 @@ class _PowerPillarState extends State<PowerPillar>
             ),
           ),
           PowerSegment.camp => (
-            label: plain ? 'Permanent upgrades' : 'CAMP',
+            label: seg.tabLabel,
             body: ListView(
               padding: EdgeInsets.zero,
               children: [
@@ -143,14 +143,14 @@ class _PowerPillarState extends State<PowerPillar>
         if (plain && !MenuTabs.showCamp(s)) ...[
           const SizedBox(height: 4),
           Text(
-            'More permanent upgrades unlock later.',
+            'Forever unlocks later.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
         ] else if (!MenuTabs.showCamp(s)) ...[
           const SizedBox(height: 4),
           Text(
-            'Sanctuary tracks unlock after Ascend or when you earn essence.',
+            'Forever unlocks after Ascend or when you earn essence.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),

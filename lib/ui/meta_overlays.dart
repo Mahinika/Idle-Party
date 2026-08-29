@@ -417,7 +417,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Same buy as POWER → FORGE → KEEP.',
+            'Same buy as POWER → Gold → KEEP.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
@@ -703,7 +703,7 @@ Future<void> showOfflineProgressDialog(
         onOpenParty?.call(HubChaseKind.equipBag);
       };
     case HubChaseKind.marketUpgrade:
-      readyLabel = 'MARKET';
+      readyLabel = 'SHOP';
       readyAction = () {
         director.dismissOfflineSummary();
         Navigator.pop(context);
@@ -2011,7 +2011,7 @@ class PrestigeShopOverlay extends StatelessWidget {
         'Now +${state.torchOfflineGoldPercent}% hub AFK gold (max 80%)',
       'gh_cdr' =>
         'CD ${state.godHandCooldownSeconds.toStringAsFixed(2)}s · '
-            'Lv${md.godHandCdLevel}/8 · same as Forge KEEP',
+            'Lv${md.godHandCdLevel}/8 · same as Gold KEEP',
       'roster_cap' => 'Roster +${md.petRosterCapBonus} (max +10)',
       'loadout_slot' =>
         'Loadouts ${GameLogic.maxLoadoutsFor(state)} '

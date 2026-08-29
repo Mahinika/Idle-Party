@@ -185,7 +185,7 @@ class _HubScreenState extends State<HubScreen>
         );
       case HubChaseKind.marketUpgrade:
         return (
-          'MARKET',
+          'SHOP',
           () => router.open(MenuRoute.power, power: PowerSegment.market),
         );
       case HubChaseKind.ascend:

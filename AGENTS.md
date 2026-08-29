@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.81**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.82**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -136,6 +136,7 @@ main.dart
 
 Shared menus: MenuRouter + MenuAlerts + MenuSurface
   (flat tabs; dungeon LEAVE = hub; MORE/KEY via HUD gear in dungeon)
+  POWER inner tabs: Gold · Shop · Forever (everyday names; Essence in Shop, Beast in Forever)
 ```
 
 **SpatialCombat is the combat authority** for live play and in-dungeon offline
@@ -170,7 +171,7 @@ no mid-run gear, larger clear payout; season PB on Play Games BOARDS.
 Rifts) unlocks when the **active party is all Lv100**, not at AL20 alone.
 **Hero level cap:** `GameLogic.maxHeroLevel` = **100**; combat XP only (no gold
 Train +1 level). Endgame (KEY / Gauntlet / Rifts) when every active hero is
-Lv100. FORGE gold tracks (ATK/DEF/STA/MOVE/HASTE/CRIT) still buyable (wipe on
+Lv100. Gold tracks (ATK/DEF/STA/MOVE/HASTE/CRIT) still buyable (wipe on
 Ascend).
 
 **Zone unlock:** party **mean level** (even steps 1…100 across 15 zones) **or**
@@ -183,7 +184,7 @@ non-kill. Claim via TODAY **CLAIM QUESTS**.
 **Hub TODAY** — selection in `HubChase.forState`; every surface reads the same
 words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up
 next). One chase card — claimables first (vault / jobs / **Meet new kit** /
-**equip BAG** / **MARKET upgrade**), then Ascend / progress. Urgency **READY** /
+**equip BAG** / **Shop upgrade**), then Ascend / progress. Urgency **READY** /
 **ALMOST** (zone/Will/Gauntlet/Ascend-near beat Daily grind; also KEY +1 vault,
 etc.). Local-season **week goal** can surface as a chase. **First hour** (no
 boss, no Ascend): grow the party in the starter zone — skip Daily / KEY /
@@ -199,7 +200,7 @@ plus AL20 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock sprite).
 
 New Game picker: choose **3 unique specs** from the starter pool. Role copy is
 **Shield / Healer / Damage** (easy start = one of each), not three fixed buttons.
-Advanced menu tabs (ROSTER, CAMP, SHOP, KEY, BEAST, CODEX, …) gate via
+Advanced menu tabs (ROSTER, Forever, Essence, KEY, BEAST, CODEX, …) gate via
 `MenuTabs` so day-one chrome stays small. **LOADOUTS** tab is hidden/removed
 (save fields may remain). PARTY badges mean bag upgrades (`MenuAlerts`).
 
@@ -250,9 +251,9 @@ Unlock: prior clear **or** party **mean level** gate (even steps Lv1…Lv100).
   with kill loot when the floor clears (same bank path).
 - After all enemies die, ground loot is vacuumed immediately and the party
   walks to **stairs/exit** → `completeCurrentRoom`.
-- **Wipe advice** (in-dungeon panel only): FORGE tips after **2** wipes on the
+- **Wipe advice** (in-dungeon panel only): Gold tips after **2** wipes on the
   same floor (`WipeAdvice.streakNeeded`); bag / floor-too-far / early DEF /
-  MARKET can fire on wipe 1. Stay quiet if the sim cannot prove a deficit.
+  Shop can fire on wipe 1. Stay quiet if the sim cannot prove a deficit.
 
 ## Combat ratings (1.12.12)
 
@@ -288,7 +289,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Hub TODAY chase | `lib/core/hub_chase.dart` |
 | Hub POWERUPS ads | `lib/core/ad_boost.dart`, `ad_rewarded.dart`, `ad_config.dart` · `lib/ui/hub/hub_powerups.dart` |
 | Hub gold/min (keep AFK) | `lib/core/gold_income.dart` |
-| POWER CAMP rates | `lib/ui/shell/income_overlay.dart` (`CampRatesSection`) |
+| POWER Forever rates | `lib/ui/shell/income_overlay.dart` (`CampRatesSection`) |
 | Apex hub (craft / vault / target meter) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) |
 | Chase contract (hub ↔ AFK) | `lib/core/chase_contract.dart` + `docs/CHASE_CONTRACT.md` |
 | Guides copy | `lib/core/game_guides.dart` |

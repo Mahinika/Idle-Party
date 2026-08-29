@@ -172,7 +172,7 @@ def main() -> int:
             shot(page, "08_power")
             log(notes, f"power: {buttons(page)[:25]}")
             # open first gold-looking tab if any
-            for t in ("GOLD", "FORGE", "Gold upgrades", "Buy supplies", "MARKET", "CAMP"):
+            for t in ("Gold", "Shop", "Forever", "GOLD", "KEEP"):
                 if mouse_click(page, t, 700):
                     shot(page, f"08b_power_{t.replace(' ', '_')}")
                     log(notes, f"power tab {t}: {buttons(page)[:18]}")
