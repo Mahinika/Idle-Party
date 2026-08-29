@@ -458,14 +458,6 @@ abstract final class KitNamedCasts {
           (hero.attack * def.coeff * pomInner).round(),
         );
         if (!reducedVfx) {
-          SpatialCombat._spawnFloater(
-            world,
-            x: mend.x,
-            y: mend.y - 0.4,
-            text: 'PRAYER OF MENDING',
-            argb: 0xFFFFE8A0,
-            life: 0.65,
-          );
           SpatialCombat._spawnSpark(
             world,
             x: mend.x,

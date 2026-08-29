@@ -761,7 +761,10 @@ class DungeonTopHud extends StatelessWidget {
                     ),
                   ],
                 ),
-          if (compact && !state.inGauntlet && !state.inAnyRiftMode)
+          if (compact &&
+              !state.inGauntlet &&
+              !state.inAnyRiftMode &&
+              director.spatial?.awaitingExit == true)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(

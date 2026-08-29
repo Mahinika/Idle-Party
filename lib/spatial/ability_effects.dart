@@ -1758,11 +1758,13 @@ abstract final class AbilityEffectRunner {
     final directCoeff = isHot ? def.coeff * 0.55 : def.coeff;
     _healLowest(world, caster, ally, directCoeff, def.shortLabel);
     if (isHot) {
+      final nextHps = math.max(2.0, caster.attack * 0.14 * caster.kitHealMul);
+      // Stronger (or equal) refresh owns the tick credit on the meter.
+      if (nextHps >= ally.hotHps) {
+        ally.hotCasterId = caster.id;
+      }
       ally.buffTimers['hot'] = 12.0;
-      ally.hotHps = math.max(
-        ally.hotHps,
-        math.max(2.0, caster.attack * 0.14 * caster.kitHealMul),
-      );
+      ally.hotHps = math.max(ally.hotHps, nextHps);
       ally.hotAcc = 0;
     }
     _announce(world, caster, def.shortLabel, tint, reducedVfx);

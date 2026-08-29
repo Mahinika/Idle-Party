@@ -63,7 +63,7 @@ class UiFeedback {
     _offlineSummaryLife = life;
   }
 
-  void presentClear(String text, {double life = 3.5}) {
+  void presentClear(String text, {double life = 2.0}) {
     _clearSummary = text;
     _clearSummaryLife = life;
   }

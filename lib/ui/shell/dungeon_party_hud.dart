@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/party_meter.dart';
 import '../../models/class_ability.dart';
 import '../../models/enemy.dart';
 import '../../models/hero.dart';
@@ -36,10 +37,10 @@ class PartyCornerHud extends StatefulWidget {
 
 class _PartyCornerHudState extends State<PartyCornerHud> {
   static const _idleFade = Duration(seconds: 8);
-  static const _idleFadePhone = Duration(seconds: 5);
+  static const _idleFadePhone = Duration(seconds: 3);
   static const _fullOpacity = 1.0;
   static const _dimOpacity = 0.55;
-  static const _dimOpacityPhone = 0.85;
+  static const _dimOpacityPhone = 0.55;
   static const _hudScale = 1.0;
 
   Timer? _fadeTimer;
@@ -65,9 +66,6 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     if (_opacity < _fullOpacity) {
       setState(() => _opacity = _fullOpacity);
     }
-    final fighting =
-        widget.director.spatial?.enemies.any((e) => e.isAlive) ?? false;
-    if (fighting) return;
     final phone = mounted && GameTheme.isPhoneWidth(context);
     _scheduleFade(phone: phone);
   }
@@ -76,15 +74,10 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     _fadeTimer?.cancel();
     _fadeTimer = Timer(phone ? _idleFadePhone : _idleFade, () {
       if (!mounted) return;
-      final fighting =
-          widget.director.spatial?.enemies.any((e) => e.isAlive) ?? false;
-      if (fighting) {
-        // Stay readable mid-fight; reschedule until the pack is dead.
-        _scheduleFade(phone: phone);
-        return;
-      }
       final world = widget.director.spatial;
       final state = widget.director.state;
+      // Stay bright only while someone is critically low — map stays readable
+      // mid-fight when the party is healthy.
       for (var i = 0; i < state.heroes.length; i++) {
         final s = _spatialFor(world, i);
         final hp = s?.hp ?? state.heroes[i].currentHp;
@@ -211,9 +204,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     }
 
     final flaskCount = _flaskCount(state);
-    final fighting =
-        world?.enemies.any((e) => e.isAlive) ?? false;
-    final keepBright = partyCritical || fighting;
+    final keepBright = partyCritical;
     if (keepBright) {
       _fadeTimer?.cancel();
     } else if (_fadeTimer == null || !_fadeTimer!.isActive) {
@@ -1051,69 +1042,16 @@ class _DpsMeterState extends State<DpsMeter> {
     widget.onOpenChanged?.call(value);
   }
 
-  static String _heroTag(SpatialActor h) {
-    final specId = h.heroSpecId;
-    final raw = specId != null
-        ? HeroSpecs.def(specId).shortLabel
-        : switch (h.heroRole) {
-            HeroRole.warrior => 'WAR',
-            HeroRole.healer => 'HEAL',
-            HeroRole.mage => 'MAGE',
-            HeroRole.rogue => 'ROG',
-            null => '---',
-          };
-    return switch (raw) {
-      'COMBAT' => 'COM',
-      _ => raw.length <= 6 ? raw : raw.substring(0, 6),
-    };
-  }
-
-  static SpecRoleTag? _roleTag(SpatialActor h) {
-    final specId = h.heroSpecId;
-    if (specId == null) return null;
-    return HeroSpecs.def(specId).roleTag;
-  }
-
-  static String _compact(int n) {
-    if (n >= 10000) return '${(n / 1000).round()}k';
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
-    return '$n';
-  }
-
-  static int _perSecond(int total, double elapsed) {
-    final t = elapsed < 0.5 ? 0.5 : elapsed;
-    return (total / t).round();
-  }
-
-  static ({int rate, String unit}) _metric(SpatialActor h, double elapsed) {
-    final tag = _roleTag(h);
-    if (tag == SpecRoleTag.tank) {
-      return (rate: _perSecond(h.damageTaken, elapsed), unit: 'dtps');
-    }
-    if (tag == SpecRoleTag.healer) {
-      return (rate: _perSecond(h.healingDone, elapsed), unit: 'hps');
-    }
-    return (rate: _perSecond(h.damageDealt, elapsed), unit: 'dps');
-  }
-
   @override
   Widget build(BuildContext context) {
     final world = widget.director.spatial;
     if (world == null) return const SizedBox.shrink();
 
-    final elapsed = world.combatElapsed;
-    final rows = <({String tag, String value, double bar, bool highlight})>[];
-    var peak = 0;
-    var peakUnit = 'dps';
-    for (final h in world.heroes) {
-      if (h.isPet) continue;
-      final m = _metric(h, elapsed);
-      if (m.rate > peak) {
-        peak = m.rate;
-        peakUnit = m.unit;
-      }
-    }
-    if (peak == 0) {
+    final snap = PartyMeter.fromHeroes(
+      world.heroes,
+      elapsed: world.combatElapsed,
+    );
+    if (snap.isEmpty) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
         decoration: BoxDecoration(
@@ -1130,20 +1068,6 @@ class _DpsMeterState extends State<DpsMeter> {
         ),
       );
     }
-    final peakForBar = peak.clamp(1, 1 << 30);
-
-    for (final h in world.heroes) {
-      if (h.isPet) continue;
-      final m = _metric(h, elapsed);
-      if (m.rate < 1) continue;
-      rows.add((
-        tag: _heroTag(h),
-        value: '${_compact(m.rate)} ${m.unit}',
-        bar: m.rate / peakForBar,
-        highlight: m.rate == peak,
-      ));
-    }
-    if (rows.isEmpty) return const SizedBox.shrink();
 
     final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
@@ -1153,7 +1077,7 @@ class _DpsMeterState extends State<DpsMeter> {
         border: Border.all(color: const Color(0x665A5040)),
       ),
       child: Text(
-        _open ? 'METER ▴' : '${_compact(peak)} $peakUnit ▾',
+        _open ? 'METER ▴' : '${snap.chipLabel} ▾',
         style: GameTheme.pixel(
           size: GameTheme.hudPixel,
           color: GameTheme.parchment,
@@ -1162,7 +1086,7 @@ class _DpsMeterState extends State<DpsMeter> {
     );
 
     final panel = ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 148),
+      constraints: const BoxConstraints(maxWidth: 156),
       child: Container(
         padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
         decoration: BoxDecoration(
@@ -1183,11 +1107,11 @@ class _DpsMeterState extends State<DpsMeter> {
             ),
             const SizedBox(height: 3),
             Text(
-              'dps damage · hps heal · dtps tank',
+              'Bars match unit. Tank/healer also show damage.',
               style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
             ),
             const SizedBox(height: 3),
-            for (final row in rows) ...[
+            for (final row in snap.rows) ...[
               Row(
                 children: [
                   SizedBox(
@@ -1207,7 +1131,7 @@ class _DpsMeterState extends State<DpsMeter> {
                   ),
                   Expanded(
                     child: Text(
-                      row.value,
+                      row.valueLabel,
                       textAlign: TextAlign.right,
                       maxLines: 1,
                       softWrap: false,

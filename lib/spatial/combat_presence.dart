@@ -11,7 +11,7 @@ abstract final class CombatPresence {
   static const double accelHero = 16.0;
   static const double accelRogue = 26.0;
   static const double accelEnemy = 14.0;
-  static const double barkCooldown = 5.5;
+  static const double barkCooldown = 8.0;
   static const double lowHpFrac = 0.30;
 
   /// Colorblind-safe speech palette (Okabe–Ito when [SpatialCombat.colorblindMode]).
@@ -278,7 +278,7 @@ abstract final class CombatPresence {
     required bool reducedVfx,
     required math.Random rng,
   }) {
-    if (rng.nextDouble() > 0.28) return;
+    if (rng.nextDouble() > 0.12) return;
     final lines = <String>[
       'Gotcha!',
       'There it is!',

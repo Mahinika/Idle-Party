@@ -944,19 +944,24 @@ class GameDirector extends ChangeNotifier {
           clearLine = '$clearLine  · LEVEL UP';
         }
         final matGrants = LogicNotices.takeCraftMats();
+        final floorLoot = LogicNotices.takeFloorLootLine();
+        final floorEquip = LogicNotices.takeFloorEquipLine();
+        // Fold one short loot/equip line into the clear banner so toast + banner
+        // don't stack over the map at the same time.
+        final clearExtra = floorLoot ?? floorEquip;
+        if (clearExtra != null &&
+            (clearLine.length + clearExtra.length) < 64) {
+          clearLine = '$clearLine  · $clearExtra';
+        } else if (floorLoot != null) {
+          showToast(floorLoot, life: 2.0);
+        } else if (floorEquip != null) {
+          showToast(floorEquip, life: 2.0);
+        }
         if (matGrants.isNotEmpty) {
           final labels = [
             for (final id in matGrants) ApexCraft.materialsById[id]?.name ?? id,
           ];
-          showToast('+${labels.join(', ')}', life: 2.4);
-        }
-        final floorLoot = LogicNotices.takeFloorLootLine();
-        if (floorLoot != null) {
-          showToast(floorLoot, life: 2.2);
-        }
-        final floorEquip = LogicNotices.takeFloorEquipLine();
-        if (floorEquip != null) {
-          showToast(floorEquip, life: 2.2);
+          showToast('+${labels.join(', ')}', life: 2.0);
         }
         final bagUps = MenuAlerts.bagUpgradeCount(_state);
         if (bagUps >= 8 &&
@@ -974,7 +979,6 @@ class GameDirector extends ChangeNotifier {
         if (payoffNotices.isNotEmpty) {
           showToast(payoffNotices.join(' · '), life: 3.0);
         }
-        // Long enough to read gold / LEVEL UP on a phone before the next pack.
         uiFeedback.presentClear(clearLine);
         if (_state.highestDungeonCleared > beforeDungeon) {
           GameAudio.unlock();

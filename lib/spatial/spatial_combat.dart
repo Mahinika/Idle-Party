@@ -390,6 +390,8 @@ class SpatialActor {
   /// Ally heal-over-time (Riptide / Renew / Rejuvenation).
   double hotHps = 0;
   double hotAcc = 0;
+  /// Who applied [hotHps] — meter HPS credits this hero on ticks.
+  String? hotCasterId;
 
   /// Cumulative combat stats this floor (heroes only; for party meter).
   int damageDealt = 0;
@@ -871,7 +873,7 @@ abstract final class SpatialCombat {
   static int get _floaterXp => colorblindMode ? 0xFF009E73 : 0xFF9AD0FF;
   static int get _floaterPet => colorblindMode ? 0xFF56B4E9 : 0xFF7CE8FF;
 
-  static const int _maxFloaters = 12;
+  static const int _maxFloaters = 8;
   static const int _maxBursts = 22;
   static const int _maxProjectiles = 36;
   static const int _maxGroundFx = 6;
@@ -888,6 +890,12 @@ abstract final class SpatialCombat {
   }) {
     // Skip empty / whitespace-only.
     if (text.isEmpty) return;
+    // One speech bark at a time — stacked Gotcha/Clean hit wallpaper the map.
+    if (kind == SpatialFloaterKind.speech) {
+      for (final f in world.floaters) {
+        if (f.kind == SpatialFloaterKind.speech) return;
+      }
+    }
     // Combat spam: at most a few routine hit numbers on screen.
     if (priority <= 0) {
       var routine = 0;
@@ -895,6 +903,14 @@ abstract final class SpatialCombat {
         if (f.priority <= 0) routine++;
       }
       if (routine >= 4) return;
+    }
+    // Soft cap for mid-priority gold/XP so clear loot doesn't stack on heroes.
+    if (priority == 1) {
+      var mid = 0;
+      for (final f in world.floaters) {
+        if (f.priority == 1) mid++;
+      }
+      if (mid >= 3) return;
     }
     // One shoutout of the same word nearby (stops stacked OPEN / GO).
     if (priority >= 2) {
@@ -1342,10 +1358,11 @@ abstract final class SpatialCombat {
         if (key == 'hot') {
           a.hotHps = 0;
           a.hotAcc = 0;
+          a.hotCasterId = null;
         }
       },
     );
-    // Ally HoT ticks (Riptide / Renew / Rejuv).
+    // Ally HoT ticks (Riptide / Renew / Rejuv) — credit the caster, not target.
     if (a.team == SpatialTeam.hero &&
         a.hp > 0 &&
         (a.buffTimers['hot'] ?? 0) > 0 &&
@@ -1357,7 +1374,9 @@ abstract final class SpatialCombat {
         final before = a.hp;
         a.hp = math.min(a.effectiveMaxHp, a.hp + tick);
         final gained = a.hp - before;
-        if (gained > 0) a.healingDone += gained;
+        if (gained > 0) {
+          _recordHeroHeal(_heroById(world, a.hotCasterId), gained);
+        }
       }
     }
     CombatPresence.tick(a, dt);
@@ -2419,6 +2438,7 @@ abstract final class SpatialCombat {
     to.bleedAbilityId = from.bleedAbilityId;
     to.hotHps = from.hotHps;
     to.hotAcc = from.hotAcc;
+    to.hotCasterId = from.hotCasterId;
     to.rootTimer = from.rootTimer;
     to.ccRootDrLevel = from.ccRootDrLevel;
     to.castingTimer = from.castingTimer;

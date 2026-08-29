@@ -90,7 +90,7 @@ abstract final class GameGuides {
           'Level and XP sit under HP.\n'
           '• Gold in the top bar ticks up as pickups land.\n'
           '• Target chip is top-right (name + HP).\n'
-          '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.',
+          '• Tap METER (top-left) for party rates: DPS, healer HPS, tank damage taken (bars match unit; tanks/healers also show their damage).',
     ),
     GuideTopic(
       id: 'god_hand',
@@ -486,7 +486,8 @@ abstract final class GameGuides {
           '• Party strip (bottom-left) fades after idle — tap a hero for kit. '
           'Between fights, tap again to fold; mid-fight the kit stays open.\n'
           '• Target chip sits top-right (name + HP).\n'
-          '• Tap METER (top-left) for DPS / healer HPS / tank damage taken.\n'
+          '• Tap METER (top-left) for party rates: DPS, healer HPS, tank damage taken '
+          '(bars match unit; tanks/healers also show their damage).\n'
           '• Settings: text scale (S/M/L/XL), dungeon zoom Close/Normal/Wide, '
           'mute + haptics, keep screen on in dungeon, Full / Lite / Minimal VFX '
           '(Minimal = reduce motion), colorblind floaters, '
