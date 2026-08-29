@@ -157,9 +157,8 @@ class _PowerPillarState extends State<PowerPillar>
           onTap: (_) => setState(() {}),
           tabs: [
             for (var i = 0; i < pages.length; i++)
-              MenuChrome.bridgedTabScoped(
+              MenuChrome.bridgedTab(
                 pages[i].label,
-                scope: plain ? null : pages[i].scope,
                 onSelect: () {
                   _tabs.controller.animateTo(i);
                   widget.onSegmentChanged(_visible[i]);
