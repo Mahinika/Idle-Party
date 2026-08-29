@@ -124,9 +124,9 @@ Hard-won rules:
 
 Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
 
-## Play Console status (2026-08-28)
+## Play Console status (2026-08-29)
 
-- Short + full description: en-US only (this file). Paste from sections above when the listing drifts.
+- Short + full description: en-US only (this file). **Refreshed + submitted for review 2026-08-29** (Lv100 endgame wording + World Path level unlocks).
 - Phone screenshots (8) + feature graphic from `tool/store_listing/marketing/` (submitted 2026-08-21).
 - Closed Alpha **1.12.78 (107)** submitted 2026-08-28 (review). Working ship **1.12.78**.
-- GitHub Releases: tag `v1.12.78` when you want sideload APK/AAB on GitHub (workflow `build-apk.yml`).
+- GitHub Releases: tag **`v1.12.78`** pushed 2026-08-29 → `build-apk.yml` APK/AAB.

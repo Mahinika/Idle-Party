@@ -15,7 +15,7 @@ Package id: **`com.idleparty.app`**
 | Data safety form | ⏳ review | Updated 2026-08-21 for AdMob (device IDs collected+shared, advertising purpose) + Advertising ID declaration Yes. Submitted with Alpha **57**. |
 | IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). Re-answer ads questions if Console asks after this review. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
-| Store listing copy (EN) | ⏳ review | Default locale **en-US only**. Short + full updated 2026-08-24 for AL20 KEY / Gauntlet / Rifts / Greater Rifts. Submitted with Alpha **82**. |
+| Store listing copy (EN) | ⏳ review | Default locale **en-US only**. Short + full refreshed 2026-08-29 from `docs/STORE_LISTING.md` (Lv100 endgame + World Path level gates). Submitted for review. |
 | Screenshots + feature graphic | ⏳ review | **9 phone + feature graphic** submitted 2026-08-21 (1080×1920 + 1024×500). **Re-capture at 360×780 CSS** (Samsung A56) before production — tablet shots stale. |
 
 ## Production gate (12 × 14)
@@ -119,7 +119,7 @@ Suggested Description (en-US):
 - [x] Content rating questionnaire (IARC) completed 2026-08-08 — mild fantasy combat; PEGI 12 / ESRB Everyone 10+ / IARC 7+ (no chat / gambling). **Re-answer the ads questions** before shipping POWERUPS ads to Play.
 - [x] Short + full description (en-US only — no extra listing locales) from `docs/STORE_LISTING.md` (refresh listing when ship copy changes).
 - [x] Phone screenshots + feature graphic refreshed 2026-08-21 (`tool/store_listing/marketing/`, 8×1080×1920 promo cards + 1024×500 banner). Submitted for review with listing graphics. Icon still from owned `app_icon` (refresh 2026-08-16). Tablet shots unchanged.
-- [ ] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*` — next sideload ship: tag **`v1.12.78`** after push (Play Alpha **107** already submitted 2026-08-28).
+- [x] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*` — **`v1.12.78`** tagged + pushed 2026-08-29 (CI `build-apk.yml`); Play Alpha **107** submitted 2026-08-28.
 
 ## Production listing
 
