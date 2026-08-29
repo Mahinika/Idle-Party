@@ -60,7 +60,7 @@ LONG-TERM GOALS
 • Ascend through AL20 — keep essence / Apex / pets / meta upgrades and unlock more kits.
 • Level the party to 100 for endgame: KEYSTONE keys in normal zones, Infinity Gauntlet climb, farm Rifts, and Greater Rifts (prestige timed kills ranked on optional Play Games boards).
 • World Path unlocks by party level (Sandy from Lv1) or by clearing the prior zone.
-• Apex forge: craft forever gear that survives Ascend. MERGE two bag pieces into one stronger item.
+• POWER → Craft: forever Apex gear that survives Ascend. MERGE two bag pieces into one stronger item.
 
 FAIR PLAY
 • Single-player — no idle-party account required.
@@ -71,11 +71,11 @@ FAIR PLAY
 Install, start a party, and take one more floor.
 ```
 
-### Release notes — Alpha 1.12.78 (en-US, paste into Play Console)
+### Release notes — Alpha 1.12.83 (en-US, paste into Play Console)
 
 ```
-• First-hour calm: clearer hub/dungeon words, quieter Too weak, open PARTY · EQUIP when bag upgrades pile up.
-• Wipe tips point at POWER (not FORGE jargon). GUIDE shows early topics until your first boss.
+• POWER tabs: Gold · Shop · Relics · Craft · Essence — denser upgrade lists; Craft is goal-first.
+• Hub/dungeon chrome: Shop sheet stays readable; one CLAIM QUESTS; short fight loot words.
 • Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.
 • Bug fixes and balance polish.
 ```
@@ -126,7 +126,7 @@ Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshot
 
 ## Play Console status (2026-08-29)
 
-- Short + full description: en-US only (this file). **Refreshed + submitted for review 2026-08-29** (Lv100 endgame wording + World Path level unlocks).
+- Short + full description: en-US only (this file). Refresh listing when pasting 1.12.83 copy (Craft wording).
 - Phone screenshots (8) + feature graphic from `tool/store_listing/marketing/` (submitted 2026-08-21).
-- Closed Alpha **1.12.78 (107)** submitted 2026-08-28 (review). Working ship **1.12.78**.
-- GitHub Releases: tag **`v1.12.78`** pushed 2026-08-29 → `build-apk.yml` APK/AAB.
+- Closed Alpha **1.12.83 (112)** — upload when shipping this line (replaces **1.12.78 / 107** in review queue).
+- GitHub Releases: tag **`v1.12.83`** → `build-apk.yml` APK/AAB.

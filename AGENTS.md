@@ -38,9 +38,9 @@ wide desktop chrome. No hover-only flows for real players — tap / long-press.
 
 **Distribution today:** GitHub Releases APK/AAB is the live install path
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (**1.12.78 / 107** submitted 2026-08-28; testers may still be on
-**1.12.68 / 97** until review publishes). Working ship is
-**1.12.78**. Production still needs **12 closed testers × 14 days**.
+closed Alpha (**1.12.83 / 112** shipping 2026-08-29; testers may still be on
+**1.12.78 / 107** until review publishes). Working ship is
+**1.12.83**. Production still needs **12 closed testers × 14 days**.
 Do not treat Play as the primary install channel.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`

@@ -8,7 +8,7 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ⏳ review | **1.12.78 (107)** submitted 2026-08-28 (Alpha AAB — first-hour calm: Too weak / EQUIP / POWER wipe tips / GUIDE gating). Previous live for testers may still be **1.12.68 (97)** or earlier until Google publishes. Alpha countries: all + rest of world. |
+| Closed testing | ⏳ upload | **1.12.83 (112)** Alpha AAB ready (POWER Gold · Shop · Relics · Craft · Essence + hub chrome). Last submitted **1.12.78 (107)** 2026-08-28 — testers may still be on that or earlier until Google publishes. Alpha countries: all + rest of world. |
 | Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
@@ -49,7 +49,7 @@ over Play ops unless the owner asks about Play.
 ## Play Console — closed / internal (ops)
 
 - [x] App exists in Play Console (`com.idleparty.app`) with listing + closed Alpha.
-- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. **1.12.78 (107)** submitted 2026-08-28 (review). Previous live may still be **1.12.68 (97)** until Google publishes.
+- [x] Keep Alpha AAB roughly near GitHub ship line when you care about Play testers. Preparing **1.12.83 (112)** 2026-08-29. Previous live/review may still be **1.12.78 (107)**.
 - [ ] Enable Play App Signing if prompted on new uploads.
 - [ ] Add / retain closed testers toward **12 × 14 days** for production access.
 - [ ] Smoke-test install → hub → short dungeon → leave → relaunch (save persists).
@@ -119,7 +119,7 @@ Suggested Description (en-US):
 - [x] Content rating questionnaire (IARC) completed 2026-08-08 — mild fantasy combat; PEGI 12 / ESRB Everyone 10+ / IARC 7+ (no chat / gambling). **Re-answer the ads questions** before shipping POWERUPS ads to Play.
 - [x] Short + full description (en-US only — no extra listing locales) from `docs/STORE_LISTING.md` (refresh listing when ship copy changes).
 - [x] Phone screenshots + feature graphic refreshed 2026-08-21 (`tool/store_listing/marketing/`, 8×1080×1920 promo cards + 1024×500 banner). Submitted for review with listing graphics. Icon still from owned `app_icon` (refresh 2026-08-16). Tablet shots unchanged.
-- [x] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*` — **`v1.12.78`** tagged + pushed 2026-08-29 (CI `build-apk.yml`); Play Alpha **107** submitted 2026-08-28.
+- [x] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*` — ship line **1.12.83**; tag **`v1.12.83`** + Play Alpha **112** when this release ships (2026-08-29).
 
 ## Production listing
 
