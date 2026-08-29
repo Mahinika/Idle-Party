@@ -130,15 +130,16 @@ Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`.
 ```
 main.dart
  ├─ loading → boot intro → startMenu → optional newGamePicker → play
- ├─ Hub (!inDungeon) → HubScreen + FirstSessionTips + MenuSurface
- └─ Dungeon (inDungeon) → Is2Shell
-      ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
-      └─ chrome (FARM/PUSH, God Hand, party HUD + flask, target panel)
-         + AppBottomBar GEAR / POWER / QUESTS (/ KEY) / MORE · dungeon + LEAVE
+ ├─ PlayShell (one MenuSurface + toast; hub vs dungeon scenes)
+ │   ├─ Hub (!inDungeon) → HubScreen + FirstSessionTips
+ │   └─ Dungeon (inDungeon) → Is2Shell
+ │        ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
+ │        └─ chrome (FARM/PUSH, God Hand, party HUD + flask, target panel)
+ │           + AppBottomBar GEAR / POWER / QUESTS (/ KEY overflow) + LEAVE
 
-Shared menus: MenuRouter + MenuAlerts + MenuSurface
-  (flat tabs; dungeon LEAVE = hub; MORE/KEY via HUD gear in dungeon)
-  POWER inner tabs: Gold · Shop · Forever (everyday names; Essence in Shop, Beast in Forever)
+Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
+ (flat tabs; dungeon LEAVE = hub; MORE/KEY via HUD gear in dungeon)
+ POWER inner tabs: Gold · Shop · Relics · Craft · Essence (prestige buys in Shop; Beast in Essence)
 ```
 
 **SpatialCombat is the combat authority** for live play and in-dungeon offline
@@ -202,7 +203,7 @@ plus AL20 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock sprite).
 
 New Game picker: choose **3 unique specs** from the starter pool. Role copy is
 **Shield / Healer / Damage** (easy start = one of each), not three fixed buttons.
-Advanced menu tabs (ROSTER, Forever, Essence, KEY, BEAST, CODEX, …) gate via
+Advanced menu tabs (ROSTER, Essence, KEY, BEAST, CODEX, …) gate via
 `MenuTabs` so day-one chrome stays small. **LOADOUTS** tab is hidden/removed
 (save fields may remain). PARTY badges mean bag upgrades (`MenuAlerts`).
 
@@ -292,8 +293,8 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Hub TODAY chase | `lib/core/hub_chase.dart` |
 | Hub POWERUPS ads | `lib/core/ad_boost.dart`, `ad_rewarded.dart`, `ad_config.dart` · `lib/ui/hub/hub_powerups.dart` |
 | Hub gold/min (keep AFK) | `lib/core/gold_income.dart` |
-| POWER Forever rates | `lib/ui/shell/income_overlay.dart` (`CampRatesSection`) |
-| Apex hub (craft / vault / target meter) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) |
+| POWER Essence rates | `lib/ui/shell/income_overlay.dart` (`CampRatesSection`) |
+| Apex hub (craft / vault / target meter) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) — POWER → Craft |
 | Chase contract (hub ↔ AFK) | `lib/core/chase_contract.dart` + `docs/CHASE_CONTRACT.md` |
 | Guides copy | `lib/core/game_guides.dart` |
 | Keystone | `lib/core/keystone.dart` |
@@ -302,6 +303,8 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Ascend unlock teasers | `lib/core/ascend_roadmap.dart` |
 | Ascend / lore copy | `lib/core/story_lore.dart` |
 | Dungeon shell | `lib/ui/is2_shell.dart` (~thin; HUD in `lib/ui/shell/*`) |
+| Play shell | `lib/ui/shell/play_shell.dart` (one MenuSurface, pause, toast) |
+| Meta panels | `lib/ui/meta/` (roster, KEY, prestige, Play Games, Welcome Back, …) |
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
 | Wipe advice | `lib/core/wipe_advice.dart` |
 | Kenney helpers | `lib/ui/kenney_assets.dart` |

@@ -223,7 +223,8 @@ void main() {
     expect(ascendGuide.body.toLowerCase(), contains('wallet gold'));
 
     final sanctuary = GameGuides.topics.firstWhere((t) => t.id == 'sanctuary');
-    expect(sanctuary.body, contains('Forever'));
+    expect(sanctuary.body, contains('Essence'));
+    expect(sanctuary.title, 'ESSENCE');
     expect(sanctuary.body, contains('+3% gold'));
     expect(sanctuary.body, contains('+1 ATK'));
     expect(sanctuary.body, contains('Lv0'));

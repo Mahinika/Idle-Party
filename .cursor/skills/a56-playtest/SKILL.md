@@ -68,7 +68,7 @@ Google does not ship One UI. **Screen size** is what we need.
 
 Debug builds print `[IP]` lines into `flutter run` / logcat:
 
-- `nav` — GEAR / POWER/Gold|Shop|Forever / QUESTS / KEY / MORE / closed
+- `nav` — GEAR / POWER/Gold|Shop|Relics|Craft|Essence / QUESTS / KEY / MORE / closed
 - `toast` — what the player just saw
 - `boot` / `continue` / `new_game` / `enter` / `leave` / `wipe` / `ascend`
 - `state` — gold, essence, KEY, forge ATK/DEF/STA, bag, floor (tiny hub gold ticks skipped)

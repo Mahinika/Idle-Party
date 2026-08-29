@@ -4,13 +4,13 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_router.dart';
-import '../../models/loot.dart';
-import '../meta_overlays.dart';
-import '../web_click_bridge.dart';
+import '../../core/nav_intent.dart';
+import '../meta/keystone_sheet.dart';
 import 'inventory_dock.dart';
-import 'jobs_market_sanctuary.dart';
+import 'jobs_overlay.dart';
 import 'overlay_scaffold.dart';
 import 'power_meta_pillars.dart';
+import 'whats_new_overlay.dart';
 
 /// The one menu sheet, shared by hub and dungeon.
 class MenuSurface extends StatefulWidget {
@@ -24,7 +24,6 @@ class MenuSurface extends StatefulWidget {
 }
 
 class _MenuSurfaceState extends State<MenuSurface> {
-  bool _heldBridgeLayer = false;
   MenuRoute _lastRoute = MenuRoute.none;
 
   GameState get state => widget.director.state;
@@ -40,8 +39,6 @@ class _MenuSurfaceState extends State<MenuSurface> {
   @override
   void dispose() {
     router.removeListener(_onRouteChanged);
-    _ensureBridgeLayer(false);
-    widget.director.setUiPaused(false);
     super.dispose();
   }
 
@@ -60,57 +57,18 @@ class _MenuSurfaceState extends State<MenuSurface> {
     if (prev == MenuRoute.gear && route != MenuRoute.gear) {
       widget.director.ackPendingHeroReveals();
     }
-    _ensureBridgeLayer(route != MenuRoute.none);
-    widget.director.setUiPaused(
-      route != MenuRoute.none && widget.director.state.inDungeon,
-    );
-  }
-
-  void _ensureBridgeLayer(bool want) {
-    if (want == _heldBridgeLayer) return;
-    if (want) {
-      WebClickBridge.pushLayer();
-    } else {
-      WebClickBridge.popLayer();
-    }
-    _heldBridgeLayer = want;
   }
 
   void _equipSelectedTo(int heroIndex) {
-    final id = router.selectedItemId;
+    final id = router.session.selectedItemId;
     if (id == null) return;
-    if (!state.gearStash.any((g) => g.id == id)) {
-      widget.director.showToast(
-        'Already worn — use UNEQUIP, or pick a BAG item',
-        life: 2.4,
-      );
-      return;
+    if (widget.director.equipSelectedFromStash(id, heroIndex: heroIndex) ==
+        EquipFromStashResult.equipped) {
+      router.session
+        ..equipHeroIndex = heroIndex
+        ..clearSelection()
+        ..clearBagSlotFilter();
     }
-    final item = GameLogic.findGear(state, id);
-    EquipmentSlot? into;
-    if (item != null && heroIndex >= 0 && heroIndex < state.heroes.length) {
-      into = GameLogic.compareForHero(
-        state.heroes[heroIndex],
-        item,
-        pairingStash: state.gearStash,
-      ).intoSlot;
-    }
-    final beforeIds = state.gearStash.map((g) => g.id).toSet();
-    widget.director.equipFromStash(id, heroIndex: heroIndex, intoSlot: into);
-    final equipped =
-        !widget.director.state.gearStash.any((g) => g.id == id) &&
-        beforeIds.contains(id);
-    if (!equipped) {
-      widget.director.showToast(
-        'Cannot equip on that hero (class / level / slot)',
-        life: 2.6,
-      );
-      return;
-    }
-    router
-      ..equipHeroIndex = heroIndex
-      ..clearSelection()
-      ..clearBagSlotFilter();
   }
 
   void _putInCombinator(String id) {
@@ -118,10 +76,12 @@ class _MenuSurfaceState extends State<MenuSurface> {
       widget.director.showToast('Unequip to bag before merging', life: 2.2);
       return;
     }
-    final ready = router.putInCombinator(id);
+    final ready = router.session.putInCombinator(id);
     if (ready) {
+      router.open(MenuRoute.gear, gear: GearPanel.merge);
       widget.director.showToast('Merge ready — check MERGE', life: 2.2);
-    } else if (router.combineA != null && router.combineB == null) {
+    } else if (router.session.combineA != null &&
+        router.session.combineB == null) {
       widget.director.showToast(
         'Added to merge · pick another same-slot item',
         life: 2.4,
@@ -131,53 +91,53 @@ class _MenuSurfaceState extends State<MenuSurface> {
 
   Widget _inventoryDock() {
     final d = widget.director;
+    final session = router.session;
     return InventoryDock(
       state: state,
       director: d,
-      selectedId: router.selectedItemId,
-      combineA: router.combineA,
-      combineB: router.combineB,
+      selectedId: session.selectedItemId,
+      combineA: session.combineA,
+      combineB: session.combineB,
       panel: router.gearPanel,
       onPanelChanged: (panel) => router.gearPanel = panel,
       flatChrome: true,
-      onSelect: router.selectItem,
+      onSelect: session.selectItem,
       onPutCombine: _putInCombinator,
       onEquip: () {
-        if (router.selectedItemId == null) return;
-        _equipSelectedTo(router.equipHeroIndex);
+        if (session.selectedItemId == null) return;
+        _equipSelectedTo(session.equipHeroIndex);
       },
       onUnequip: (slot) {
-        d.unequipSlot(slot, heroIndex: router.equipHeroIndex);
-        router.clearSelection();
+        d.unequipSlot(slot, heroIndex: session.equipHeroIndex);
+        session.clearSelection();
       },
-      bagSlotFilter: router.bagSlotFilter,
+      bagSlotFilter: session.bagSlotFilter,
       onBrowseBagSlot: router.browseBagSlot,
-      onClearBagSlotFilter: router.clearBagSlotFilter,
-      equipHeroIndex: router.equipHeroIndex,
-      onEquipHeroChanged: (i) => router.equipHeroIndex = i,
+      onClearBagSlotFilter: session.clearBagSlotFilter,
+      equipHeroIndex: session.equipHeroIndex,
+      onEquipHeroChanged: (i) => session.equipHeroIndex = i,
       onEquipToHero: _equipSelectedTo,
       onAutoEquip: () {
         d.autoEquipBetterGear();
-        router.clearSelection();
+        session.clearSelection();
       },
-      onClearCombineA: router.clearCombineA,
-      onClearCombineB: router.clearCombineB,
+      onClearCombineA: session.clearCombineA,
+      onClearCombineB: session.clearCombineB,
       onCombine: () {
-        if (router.combineA == null || router.combineB == null) return;
+        if (session.combineA == null || session.combineB == null) return;
         d.combineGear(
-          primaryId: router.combineA!,
-          secondaryId: router.combineB!,
+          primaryId: session.combineA!,
+          secondaryId: session.combineB!,
         );
-        router.clearCombine();
+        session.clearCombine();
       },
       onCleanBag: d.cleanBagJunk,
       onOpenFilters: router.openBagFilters,
       onAutoMerge: () {
         d.autoMergeJunk();
-        router.dropMissingIds(d.state.gearStash.map((g) => g.id).toSet());
+        session.dropMissingIds(d.state.gearStash.map((g) => g.id).toSet());
       },
-      onOpenMarket: () =>
-          router.open(MenuRoute.power, power: PowerSegment.market),
+      onOpenMarket: () => router.apply(NavIntent.shop),
     );
   }
 
@@ -186,7 +146,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
     final d = widget.director;
     if (router.route == MenuRoute.none) return const SizedBox.shrink();
     final heightFactor = switch (router.route) {
-      MenuRoute.gear => 1.0,
+      MenuRoute.gear || MenuRoute.power => 1.0,
       MenuRoute.quests => 0.84,
       _ => 0.96,
     };
@@ -211,7 +171,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
           onSectionChanged: (sec) => router.moreSection = sec,
           onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
           onClose: router.close,
-          bagFiltersScrollNonce: router.bagFiltersScrollNonce,
+          bagFiltersScrollNonce: router.session.bagFiltersScrollNonce,
         ),
         MenuRoute.none => const SizedBox.shrink(),
       },

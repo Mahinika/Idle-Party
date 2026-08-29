@@ -49,9 +49,9 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'sanctuary',
-      title: 'FOREVER',
+      title: 'ESSENCE',
       body:
-          'POWER → Forever unlocks after your first Ascend or when you earn essence. '
+          'POWER → Essence unlocks after your first Ascend or when you earn essence. '
           'Spend essence there for idle gold and party power that persists between '
           'runs. Hub gold/min ticks at the keep overnight (enough to buy Gold). '
           'Gold Find makes that number go up.',
@@ -68,8 +68,8 @@ class FirstSessionTips extends StatelessWidget {
       title: 'GOLD',
       body:
           'POWER → Gold: gold buys for this-run power (×1 / % spend / EVEN split), '
-          'KEEP for relics / God Hand / Blessing, '
-          'APEX for forever gear. Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
+          'KEEP for God Hand / Blessing, Relics for party auras, '
+          'Craft for lasting gear. Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
     ),
     (
       id: 'pets',
@@ -96,7 +96,7 @@ class FirstSessionTips extends StatelessWidget {
       title: 'AFTER ASCEND',
       body:
           'New kits land in GEAR → ROSTER — TODAY shows Meet … when something unlocked. '
-          'Spend essence under Gold → KEEP (relics / God Hand) and POWER → Forever. '
+          'Spend essence under POWER → Relics, Gold → KEEP (God Hand), and POWER → Essence. '
           'Apex stays.',
     ),
     (
@@ -153,8 +153,9 @@ class FirstSessionTips extends StatelessWidget {
       id: 'prestige',
       title: 'ESSENCE SHOP',
       body:
-          'Essence lasts between Ascends: POWER → Forever for lasting tracks, '
-          'POWER → Shop (Essence) for lasting buys, Gold → KEEP for relics and God Hand.',
+          'Essence lasts between Ascends: POWER → Relics for party auras, '
+          'POWER → Essence for lasting tracks, '
+          'POWER → Shop (Essence) for lasting buys, Gold → KEEP for God Hand.',
     ),
   ];
 

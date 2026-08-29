@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import '../models/loot.dart';
 import 'debug_play_log.dart';
 import 'game_state.dart';
+import 'gear_session.dart';
 import 'hub_chase.dart';
 import 'menu_alerts.dart';
+import 'nav_intent.dart';
 
 /// Top-level menu destinations (flat tab nav). Hub and dungeon share these.
 enum MenuRoute { none, gear, power, quests, key, more }
@@ -12,36 +14,65 @@ enum MenuRoute { none, gear, power, quests, key, more }
 /// Local focus inside GEAR (not bottom-nav destinations).
 enum GearPanel { gear, bag, merge, roster }
 
-/// Sticky POWER segments (Gold | Shop | Forever). Essence shop lives in Shop; Beast in Forever.
-enum PowerSegment { forge, market, camp }
+/// Sticky POWER segments (Gold | Shop | Relics | Craft | Essence).
+enum PowerSegment { forge, market, relics, craft, camp }
 
 /// Player-facing POWER tab names — everyday English, same the whole game.
 extension PowerSegmentLabel on PowerSegment {
   String get tabLabel => switch (this) {
     PowerSegment.forge => 'Gold',
     PowerSegment.market => 'Shop',
-    PowerSegment.camp => 'Forever',
+    PowerSegment.relics => 'Relics',
+    PowerSegment.craft => 'Craft',
+    PowerSegment.camp => 'Essence',
   };
 }
 
 /// Rows inside MORE (no gameplay destinations).
 enum MoreSection { info, settings, credits }
 
+/// Primary destinations plus optional overflow family (dungeon KEY/MORE).
+class DestinationGraph {
+  const DestinationGraph({
+    required this.destinations,
+    this.overflow = const <MenuRoute>[],
+  });
+
+  final List<MenuRoute> destinations;
+  final List<MenuRoute> overflow;
+
+  bool get hasOverflow => overflow.isNotEmpty;
+
+  int get slotCount => destinations.length + (hasOverflow ? 1 : 0);
+
+  bool overflowContains(MenuRoute route) => overflow.contains(route);
+
+  static DestinationGraph hub(GameState s) => DestinationGraph(
+    destinations: MenuRouter.visibleHubTabs(s),
+  );
+
+  static DestinationGraph dungeon(GameState s) => DestinationGraph(
+    destinations: MenuRouter.visibleDungeonTabs(s),
+    overflow: <MenuRoute>[
+      if (MenuTabs.showKey(s)) MenuRoute.key,
+      MenuRoute.more,
+    ],
+  );
+}
+
 /// Owns "which menu is open" for the whole game.
 class MenuRouter extends ChangeNotifier {
+  MenuRouter() {
+    session.addListener(notifyListeners);
+  }
+
+  final GearSession session = GearSession();
+
   MenuRoute _route = MenuRoute.none;
 
   GearPanel _gearPanel = GearPanel.gear;
   PowerSegment _powerSegment = PowerSegment.forge;
   MoreSection _moreSection = MoreSection.info;
-
-  String? _selectedItemId;
-  String? _combineA;
-  String? _combineB;
-  int _equipHeroIndex = 0;
-  int _abilityHeroIndex = 0;
-  EquipmentSlot? _bagSlotFilter;
-  int _bagFiltersScrollNonce = 0;
 
   MenuRoute get route => _route;
   bool get isOpen => _route != MenuRoute.none;
@@ -49,29 +80,31 @@ class MenuRouter extends ChangeNotifier {
   PowerSegment get powerSegment => _powerSegment;
   MoreSection get moreSection => _moreSection;
 
-  String? get selectedItemId => _selectedItemId;
-  String? get combineA => _combineA;
-  String? get combineB => _combineB;
-  int get equipHeroIndex => _equipHeroIndex;
-  int get abilityHeroIndex => _abilityHeroIndex;
-  EquipmentSlot? get bagSlotFilter => _bagSlotFilter;
-  int get bagFiltersScrollNonce => _bagFiltersScrollNonce;
+  @override
+  void dispose() {
+    session.dispose();
+    super.dispose();
+  }
 
   void _emitNav(String before) {
     if (before != debugWhere) DebugPlayLog.nav(debugWhere);
   }
 
-  /// BAG → FILTERS: MORE · SETTINGS, scrolled to bag cleanup controls.
-  void openBagFilters() {
-    final before = debugWhere;
-    _moreSection = MoreSection.settings;
-    _route = MenuRoute.more;
-    _bagFiltersScrollNonce++;
-    _emitNav(before);
-    notifyListeners();
+  /// Apply a typed intent (cross-destination jumps go through here).
+  void apply(NavIntent intent) {
+    if (intent.scrollBagFilters) session.bumpBagFiltersScroll();
+    open(
+      intent.route,
+      gear: intent.gear,
+      power: intent.power,
+      more: intent.more,
+    );
   }
 
-  /// Debug playtest location (Gold/Shop/Forever, not forge/market/camp ids).
+  /// BAG → FILTERS: MORE · SETTINGS, scrolled to bag cleanup controls.
+  void openBagFilters() => apply(NavIntent.bagFilters);
+
+  /// Debug playtest location (Gold/Shop/Relics/Craft/Essence).
   String get debugWhere => switch (_route) {
     MenuRoute.none => 'closed',
     MenuRoute.gear => 'GEAR/${_gearPanel.name}',
@@ -104,14 +137,13 @@ class MenuRouter extends ChangeNotifier {
     GearPanel? gear,
     PowerSegment? power,
     MoreSection? more,
-    GameState? state,
   }) {
     final before = debugWhere;
     if (gear != null) _gearPanel = gear;
     if (power != null) _powerSegment = power;
     if (more != null) _moreSection = more;
     if (route == MenuRoute.gear && _route != MenuRoute.gear) {
-      _bagSlotFilter = null;
+      session.clearBagSlotFilter();
     }
     _route = route;
     _emitNav(before);
@@ -119,12 +151,12 @@ class MenuRouter extends ChangeNotifier {
   }
 
   /// Nav taps: tapping the tab you are already on closes the sheet.
-  void toggle(MenuRoute route, {GameState? state}) {
+  void toggle(MenuRoute route) {
     if (_route == route) {
       close();
       return;
     }
-    open(route, state: state);
+    open(route);
   }
 
   void toggleGear([GearPanel panel = GearPanel.gear]) {
@@ -139,7 +171,7 @@ class MenuRouter extends ChangeNotifier {
     if (_route == MenuRoute.none) return;
     final before = debugWhere;
     _route = MenuRoute.none;
-    _bagSlotFilter = null;
+    session.clearBagSlotFilter();
     _emitNav(before);
     notifyListeners();
   }
@@ -183,107 +215,12 @@ class MenuRouter extends ChangeNotifier {
     notifyListeners();
   }
 
-  void selectItem(String? id) {
-    _selectedItemId = _selectedItemId == id ? null : id;
-    notifyListeners();
-  }
-
-  void clearSelection() {
-    if (_selectedItemId == null) return;
-    _selectedItemId = null;
-    notifyListeners();
-  }
-
-  set equipHeroIndex(int index) {
-    if (_equipHeroIndex == index) return;
-    _equipHeroIndex = index;
-    notifyListeners();
-  }
-
-  set abilityHeroIndex(int index) {
-    if (_abilityHeroIndex == index) return;
-    _abilityHeroIndex = index;
-    notifyListeners();
-  }
-
   void browseBagSlot(EquipmentSlot slot) {
-    _bagSlotFilter = slot;
-    _selectedItemId = null;
     open(
       MenuRoute.gear,
       gear: _gearPanel == GearPanel.gear ? GearPanel.gear : GearPanel.bag,
     );
-    _bagSlotFilter = slot;
-    notifyListeners();
-  }
-
-  void clearBagSlotFilter() {
-    if (_bagSlotFilter == null) return;
-    _bagSlotFilter = null;
-    notifyListeners();
-  }
-
-  /// Load the merge slots. Returns true once both slots are filled.
-  bool putInCombinator(String id) {
-    if (_combineA == id) {
-      _combineA = null;
-      notifyListeners();
-      return false;
-    }
-    if (_combineB == id) {
-      _combineB = null;
-      notifyListeners();
-      return false;
-    }
-    if (_combineA == null) {
-      _combineA = id;
-    } else if (_combineB == null) {
-      _combineB = id;
-    } else {
-      _combineA = _combineB;
-      _combineB = id;
-    }
-    final ready = _combineA != null && _combineB != null;
-    if (ready) {
-      _gearPanel = GearPanel.merge;
-      _route = MenuRoute.gear;
-    }
-    notifyListeners();
-    return ready;
-  }
-
-  void clearCombineA() {
-    _combineA = null;
-    notifyListeners();
-  }
-
-  void clearCombineB() {
-    _combineB = null;
-    notifyListeners();
-  }
-
-  void clearCombine() {
-    _combineA = null;
-    _combineB = null;
-    _selectedItemId = null;
-    notifyListeners();
-  }
-
-  void dropMissingIds(Set<String> liveIds) {
-    var changed = false;
-    if (_selectedItemId != null && !liveIds.contains(_selectedItemId)) {
-      _selectedItemId = null;
-      changed = true;
-    }
-    if (_combineA != null && !liveIds.contains(_combineA)) {
-      _combineA = null;
-      changed = true;
-    }
-    if (_combineB != null && !liveIds.contains(_combineB)) {
-      _combineB = null;
-      changed = true;
-    }
-    if (changed) notifyListeners();
+    session.setBagSlotFilter(slot);
   }
 
   /// Hub bottom destinations (progressive KEY).
@@ -295,7 +232,7 @@ class MenuRouter extends ChangeNotifier {
     MenuRoute.more,
   ];
 
-  /// Dungeon bottom destinations (no MORE/KEY — those use HUD gear).
+  /// Dungeon primary bar destinations (KEY/MORE are overflow).
   static List<MenuRoute> visibleDungeonTabs(GameState s) => const <MenuRoute>[
     MenuRoute.gear,
     MenuRoute.power,
@@ -312,6 +249,8 @@ class MenuRouter extends ChangeNotifier {
   static List<PowerSegment> visiblePowerSegments(GameState s) => <PowerSegment>[
     PowerSegment.forge,
     PowerSegment.market,
+    if (MenuTabs.showRelics(s)) PowerSegment.relics,
+    if (MenuTabs.showCraft(s)) PowerSegment.craft,
     if (MenuTabs.showCamp(s)) PowerSegment.camp,
   ];
 }

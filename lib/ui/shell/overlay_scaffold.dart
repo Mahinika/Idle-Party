@@ -3,6 +3,7 @@ import '../cave_atmosphere.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../web_click_bridge.dart';
 
 class OverlayScrim extends StatelessWidget {
   const OverlayScrim({
@@ -21,35 +22,62 @@ class OverlayScrim extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: Material(
-        color: MenuChrome.scrim,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Tap outside the sheet to dismiss.
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onClose,
-                child: CaveAtmosphere.torchBloom(
-                  intensity: 0.7,
-                  alignment: const Alignment(0, 0.1),
-                  sizeFactor: 0.85,
+      child: _PlaytestBridgeLayer(
+        child: Material(
+          color: MenuChrome.scrim,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Tap outside the sheet to dismiss.
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onClose,
+                  child: CaveAtmosphere.torchBloom(
+                    intensity: 0.7,
+                    alignment: const Alignment(0, 0.1),
+                    sizeFactor: 0.85,
+                  ),
                 ),
               ),
-            ),
-            // Phone product: full-width sheet (never the centered desktop card).
-            _MobileSheet(
-              title: title,
-              onClose: onClose,
-              heightFactor: heightFactor,
-              child: child,
-            ),
-          ],
+              // Phone product: full-width sheet (never the centered desktop card).
+              _MobileSheet(
+                title: title,
+                onClose: onClose,
+                heightFactor: heightFactor,
+                child: child,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+class _PlaytestBridgeLayer extends StatefulWidget {
+  const _PlaytestBridgeLayer({required this.child});
+  final Widget child;
+
+  @override
+  State<_PlaytestBridgeLayer> createState() => _PlaytestBridgeLayerState();
+}
+
+class _PlaytestBridgeLayerState extends State<_PlaytestBridgeLayer> {
+  @override
+  void initState() {
+    super.initState();
+    WebClickBridge.pushLayer();
+  }
+
+  @override
+  void dispose() {
+    WebClickBridge.popLayer();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class _MobileSheet extends StatelessWidget {
@@ -169,5 +197,3 @@ class _OverlayPanel extends StatelessWidget {
     return SafeArea(top: false, child: panel);
   }
 }
-
-/// POWER pillar — forge · sanctuary · market · essence shop.

@@ -72,6 +72,14 @@ abstract final class GearCleanup {
     return !shouldKeepInBag(state, item);
   }
 
+  static int autoSellPreviewCount(GameState state) {
+    var n = 0;
+    for (final item in state.gearStash) {
+      if (shouldAutoSellOnPickup(state, item)) n++;
+    }
+    return n;
+  }
+
   static bool shouldAutoDisassembleOnPickup(
     GameState state,
     EquipmentItem item,

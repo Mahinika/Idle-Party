@@ -674,4 +674,38 @@ abstract final class ApexForge {
     for (final e in h.equipped.entries)
       if (e.value.isApex) e.key: e.value,
   };
+
+  static EquipmentSlot? nextSlotForPair(
+    GameState state,
+    HeroClassId classId,
+    SpecRoleTag role,
+  ) {
+    if (!hasApexWeaponRank1(state, classId, role)) {
+      return EquipmentSlot.weapon;
+    }
+    for (final slot in ApexCraft.craftSlotsFor(classId, role)) {
+      if (slot == EquipmentSlot.weapon) continue;
+      final id = ApexCraft.pieceId(classId: classId, role: role, slot: slot);
+      var found = false;
+      for (final i in state.apexVault) {
+        if (i.id == id) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        for (final hero in state.heroRoster) {
+          for (final i in hero.equipped.values) {
+            if (i.id == id) {
+              found = true;
+              break;
+            }
+          }
+          if (found) break;
+        }
+      }
+      if (!found) return slot;
+    }
+    return EquipmentSlot.weapon;
+  }
 }

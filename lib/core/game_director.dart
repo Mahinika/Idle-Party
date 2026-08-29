@@ -16,7 +16,7 @@ import '../models/meta_depth.dart';
 import '../models/pet.dart';
 import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
-import '../ui/game_audio.dart';
+import 'game_audio.dart';
 import 'ad_boost.dart';
 import 'ad_rewarded.dart';
 import 'debug_play_log.dart';
@@ -37,6 +37,7 @@ import 'play_store_update.dart';
 import 'screen_awake.dart';
 import 'story_lore.dart';
 import 'chase_contract.dart';
+import 'ui_feedback.dart';
 import 'session_telemetry.dart';
 import 'wipe_advice.dart';
 import 'ashen_crown.dart';
@@ -152,6 +153,8 @@ class InMemoryGameStorage implements GameStorage {
   }
 }
 
+enum EquipFromStashResult { equipped, notInStash, cannotEquip }
+
 class GameDirector extends ChangeNotifier {
   GameDirector(
     this._storage, {
@@ -200,14 +203,7 @@ class GameDirector extends ChangeNotifier {
 
   /// Soft-pause spatial sim while inventory / meta menus are open.
   bool _uiPaused = false;
-  String? _toast;
-  double _toastLife = 0;
-  String? _lastToastMessage;
-  DateTime? _lastToastAt;
-  String? _clearSummary;
-  double _clearSummaryLife = 0;
-  OfflineProgressResult? _offlineSummary;
-  double _offlineSummaryLife = 0;
+  final UiFeedback uiFeedback = UiFeedback();
   int? _playUpdateVersionCode;
   bool _mandatoryPlayUpdateRequired = false;
   int _lastHighestDungeon = -1;
@@ -320,87 +316,42 @@ class GameDirector extends ChangeNotifier {
     _uiPaused = paused;
   }
 
-  String? get toast => _toastLife > 0 ? _toast : null;
+  String? get toast => uiFeedback.toast;
 
-  String? get clearSummary => _clearSummaryLife > 0 ? _clearSummary : null;
+  String? get clearSummary => uiFeedback.clearSummary;
 
-  OfflineProgressResult? get offlineSummary =>
-      _offlineSummaryLife > 0 ? _offlineSummary : null;
+  OfflineProgressResult? get offlineSummary => uiFeedback.offlineSummary;
 
   void showToast(String message, {double life = 2.4}) {
-    final now = DateTime.now();
-    // Skip identical toast spam within ~0.8s (clear/loot/upgrade chatter).
-    if (_lastToastMessage == message &&
-        _lastToastAt != null &&
-        now.difference(_lastToastAt!).inMilliseconds < 800) {
-      return;
-    }
-    _lastToastMessage = message;
-    _lastToastAt = now;
-    if (_toast != null &&
-        _toastLife > 0.35 &&
-        _toast != message &&
-        (_toast!.length + message.length) < 72 &&
-        !_isCleanupToast(_toast!) &&
-        !_isCleanupToast(message)) {
-      _toast = '$_toast · $message';
-    } else {
-      _toast = message;
-    }
-    _toastLife = life;
-    DebugPlayLog.toast(_toast ?? message);
+    if (!uiFeedback.showToast(message, life: life)) return;
+    DebugPlayLog.toast(uiFeedback.toast ?? message);
     _ensureUiTimer();
     notifyListeners();
   }
 
-  static bool _isCleanupToast(String m) {
-    final lower = m.toLowerCase();
-    return lower.contains('junk') ||
-        lower.contains('scrap') ||
-        lower.contains('disassemble') ||
-        lower.contains('cleaned') ||
-        lower.contains('sold ') ||
-        lower.contains('ilvl');
-  }
-
   /// Drop the active toast (e.g. when opening a modal that would cover it).
   void clearToast() {
-    if (_toast == null && _toastLife <= 0) return;
-    _toast = null;
-    _toastLife = 0;
+    if (!uiFeedback.toastWasShowing) return;
+    uiFeedback.clearToast();
     notifyListeners();
   }
 
   void dismissOfflineSummary() {
-    _offlineSummary = null;
-    _offlineSummaryLife = 0;
+    uiFeedback.dismissOfflineSummary();
     notifyListeners();
   }
 
   void _ensureUiTimer() {
     if (_uiTimer != null) return;
     _uiTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
-      final had =
-          _toastLife > 0 || _clearSummaryLife > 0 || _offlineSummaryLife > 0;
-      if (!had) return;
+      if (!uiFeedback.hasActiveTimers) return;
       _tickUiTimers(0.2);
       notifyListeners();
     });
   }
 
   void _tickUiTimers(double dt) {
-    if (_toastLife > 0) {
-      _toastLife = (_toastLife - dt).clamp(0, 99);
-      if (_toastLife <= 0) _toast = null;
-    }
-    if (_clearSummaryLife > 0) {
-      _clearSummaryLife = (_clearSummaryLife - dt).clamp(0, 99);
-      if (_clearSummaryLife <= 0) _clearSummary = null;
-    }
-    if (_offlineSummaryLife > 0) {
-      _offlineSummaryLife = (_offlineSummaryLife - dt).clamp(0, 99);
-      if (_offlineSummaryLife <= 0) _offlineSummary = null;
-    }
+    uiFeedback.tick(dt);
     if (_feelCritCooldown > 0) {
       _feelCritCooldown = (_feelCritCooldown - dt).clamp(0, 99);
     }
@@ -537,8 +488,7 @@ class GameDirector extends ChangeNotifier {
         );
         loaded = offline.state;
         if (offline.hasSummary) {
-          _offlineSummary = offline;
-          _offlineSummaryLife = 14;
+          uiFeedback.presentOffline(offline);
           // Hub shows a tappable banner; toast only when loading mid-dungeon.
           if (saved.inDungeon) {
             showToast(offline.headline, life: 5);
@@ -595,8 +545,7 @@ class GameDirector extends ChangeNotifier {
     String? partyName,
   }) async {
     _awaitingWipeChoice = false;
-    _offlineSummary = null;
-    _offlineSummaryLife = 0;
+    uiFeedback.dismissOfflineSummary();
     _spatialTimer?.cancel();
     _spatial = null;
     _state = GameLogic.createInitialState(
@@ -823,8 +772,7 @@ class GameDirector extends ChangeNotifier {
         GameAudio.clear();
         final lootLine = result.vacuumLootLine;
         if (lootLine != null && lootLine.isNotEmpty) {
-          _clearSummary = lootLine;
-          _clearSummaryLife = 3.5;
+          uiFeedback.presentClear(lootLine);
         } else {
           showToast('Walking to stairs — use fist to steer', life: 2.4);
         }
@@ -984,16 +932,16 @@ class GameDirector extends ChangeNotifier {
             break;
           }
         }
-        _clearSummary = goldDelta > 0
+        var clearLine = goldDelta > 0
             ? 'FLOOR $floorNo CLEAR  +${goldDelta}g'
             : 'FLOOR $floorNo CLEAR';
         if (beforeClear.inGauntlet) {
-          _clearSummary = essDelta > 0
+          clearLine = essDelta > 0
               ? 'GAUNTLET F$floorNo  +${goldDelta}g  +${essDelta}e'
               : 'GAUNTLET F$floorNo  +${goldDelta}g';
         }
         if (leveled) {
-          _clearSummary = '$_clearSummary  · LEVEL UP';
+          clearLine = '$clearLine  · LEVEL UP';
         }
         final matGrants = LogicNotices.takeCraftMats();
         if (matGrants.isNotEmpty) {
@@ -1027,7 +975,7 @@ class GameDirector extends ChangeNotifier {
           showToast(payoffNotices.join(' · '), life: 3.0);
         }
         // Long enough to read gold / LEVEL UP on a phone before the next pack.
-        _clearSummaryLife = 3.5;
+        uiFeedback.presentClear(clearLine);
         if (_state.highestDungeonCleared > beforeDungeon) {
           GameAudio.unlock();
           String? nextId;
@@ -1760,6 +1708,40 @@ class GameDirector extends ChangeNotifier {
         intoSlot: intoSlot,
       ),
     );
+  }
+
+  EquipFromStashResult equipSelectedFromStash(
+    String id, {
+    required int heroIndex,
+  }) {
+    if (!_state.gearStash.any((g) => g.id == id)) {
+      showToast(
+        'Already worn — use UNEQUIP, or pick a BAG item',
+        life: 2.4,
+      );
+      return EquipFromStashResult.notInStash;
+    }
+    final item = GameLogic.findGear(_state, id);
+    EquipmentSlot? into;
+    if (item != null && heroIndex >= 0 && heroIndex < _state.heroes.length) {
+      into = GameLogic.compareForHero(
+        _state.heroes[heroIndex],
+        item,
+        pairingStash: _state.gearStash,
+      ).intoSlot;
+    }
+    final beforeIds = _state.gearStash.map((g) => g.id).toSet();
+    equipFromStash(id, heroIndex: heroIndex, intoSlot: into);
+    final equipped =
+        !_state.gearStash.any((g) => g.id == id) && beforeIds.contains(id);
+    if (!equipped) {
+      showToast(
+        'Cannot equip on that hero (class / level / slot)',
+        life: 2.6,
+      );
+      return EquipFromStashResult.cannotEquip;
+    }
+    return EquipFromStashResult.equipped;
   }
 
   void autoEquipBetterGear() {

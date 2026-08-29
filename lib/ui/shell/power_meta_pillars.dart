@@ -7,15 +7,20 @@ import '../../core/meta_systems.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
-import '../meta_overlays.dart';
+import '../meta/achievements_overlay.dart';
+import '../meta/codex_overlay.dart';
+import '../meta/prestige_shop.dart';
 import '../guides_overlay.dart';
 import 'beast_overlay.dart';
+import 'craft_overlay.dart';
 import 'forge_overlay.dart';
-import 'jobs_market_sanctuary.dart';
+import 'market_overlay.dart';
+import 'relics_overlay.dart';
+import 'sanctuary_overlay.dart';
 import 'settings_overlay.dart';
 import 'shell_common.dart';
 
-/// POWER sheet: sticky Gold | Shop | Forever (Essence in Shop, Beast in Forever).
+/// POWER sheet: sticky Gold | Shop | Relics | Craft | Essence.
 class PowerPillar extends StatefulWidget {
   const PowerPillar({
     super.key,
@@ -96,6 +101,14 @@ class _PowerPillarState extends State<PowerPillar>
               ),
             ),
           ),
+          PowerSegment.relics => (
+            label: seg.tabLabel,
+            body: RelicsOverlay(director: d),
+          ),
+          PowerSegment.craft => (
+            label: seg.tabLabel,
+            body: CraftOverlay(director: d),
+          ),
           PowerSegment.camp => (
             label: seg.tabLabel,
             body: ListView(
@@ -143,14 +156,14 @@ class _PowerPillarState extends State<PowerPillar>
         if (plain && !MenuTabs.showCamp(s)) ...[
           const SizedBox(height: 4),
           Text(
-            'Forever unlocks later.',
+            'Essence unlocks later.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
         ] else if (!MenuTabs.showCamp(s)) ...[
           const SizedBox(height: 4),
           Text(
-            'Forever unlocks after Ascend or when you earn essence.',
+            'Essence unlocks after Ascend or when you earn essence.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
@@ -165,33 +178,6 @@ class _PowerPillarState extends State<PowerPillar>
         const SizedBox(height: 6),
         Expanded(child: pages[activeIndex].body),
       ],
-    );
-  }
-}
-
-/// KEYSTONE sheet (hub tab + dungeon HUD Meta entry).
-class KeystoneSheet extends StatelessWidget {
-  const KeystoneSheet({super.key, required this.director});
-  final GameDirector director;
-
-  @override
-  Widget build(BuildContext context) {
-    final d = director;
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ChallengeToggles(director: d),
-          const SizedBox(height: 16),
-          GauntletHubPanel(director: d),
-          const SizedBox(height: 16),
-          RiftHubPanel(director: d),
-          const SizedBox(height: 16),
-          GreaterRiftHubPanel(director: d),
-          const SizedBox(height: 16),
-          PlayGamesBoardsSection(director: d),
-        ],
-      ),
     );
   }
 }

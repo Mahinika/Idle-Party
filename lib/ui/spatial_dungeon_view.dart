@@ -4,8 +4,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
-import '../core/game_logic.dart';
-import '../core/wipe_advice.dart';
 import '../core/hero_identity.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_mode.dart';
@@ -23,10 +21,9 @@ import 'dungeon_environment.dart';
 import 'game_theme.dart';
 import 'hero_paper_doll.dart';
 import 'kenney_assets.dart';
-import 'kenney_button.dart';
 import 'kenney_sprite.dart';
-import 'menu_chrome.dart';
-import 'meta_overlays.dart';
+import 'shell/offline_banner.dart';
+import 'shell/wipe_overlay.dart';
 import 'web_click_bridge.dart';
 
 /// Top-down tile dungeon — painted, not 100+ Image widgets.
@@ -66,7 +63,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   List<ui.Image?> _enemySprites = const [];
   String? _loadedDungeonId;
   bool _sharedLoaded = false;
-  bool _offlineDialogShown = false;
 
   bool get _tilesReady =>
       _floorReady.isNotEmpty &&
@@ -80,17 +76,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   void initState() {
     super.initState();
     _loadImages(widget.director.state.dungeonId);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOffline());
-  }
-
-  Future<void> _maybeShowOffline() async {
-    if (_offlineDialogShown ||
-        !mounted ||
-        widget.director.offlineSummary == null) {
-      return;
-    }
-    _offlineDialogShown = true;
-    await showOfflineProgressDialog(context, widget.director);
   }
 
   @override
@@ -598,240 +583,12 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                           ),
                         ),
                       ),
-                    if (widget.director.offlineSummary != null)
-                      Align(
-                        alignment: const Alignment(0, -0.55),
-                        child: GestureDetector(
-                          onTap: () => showOfflineProgressDialog(
-                            context,
-                            widget.director,
-                          ),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 16),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xEE1A2030),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: GameTheme.mossLit),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  widget.director.offlineSummary!.headline,
-                                  textAlign: TextAlign.center,
-                                  style: GameTheme.pixel(
-                                    size: GameTheme.hudPixel,
-                                    color: GameTheme.mossLit,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Tap for details',
-                                  style: GameTheme.body(
-                                    size: 12,
-                                    color: GameTheme.parchmentDim,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                    DungeonOfflineChrome(director: widget.director),
                     if (widget.director.awaitingWipeChoice)
-                      ColoredBox(
-                        color: MenuChrome.scrim,
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 320),
-                            child: DecoratedBox(
-                              decoration: MenuChrome.hubPanel(),
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  14,
-                                  16,
-                                  14,
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'PARTY WIPED',
-                                      style: GameTheme.pixel(
-                                        size: 12,
-                                        color: GameTheme.bloodLit,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      state.inGauntlet
-                                          ? 'Gauntlet run ends here. PB F${state.metaDepth.gauntletBestFloor}. Return to hub to climb again.'
-                                          : state.inGreaterRift
-                                          ? 'Greater Rift ends here. Best tier ${state.metaDepth.grBestTier}. Return to hub to climb again.'
-                                          : state.inRift
-                                          ? 'Rift run ends here. Best tier ${state.metaDepth.riftBestTier}. Return to hub to try again.'
-                                          : dailyEcho
-                                          ? 'RETRY this floor · HUB ends run'
-                                          : farm
-                                          ? 'RETRY restarts this floor (F${state.currentRoom.floorNumber}). HUB ends the run.'
-                                          : () {
-                                              final safe = state
-                                                  .highestFloorCleared
-                                                  .clamp(1, 999);
-                                              final cur =
-                                                  state.currentRoom.floorNumber;
-                                              if (safe >= cur) {
-                                                return 'RETRY restarts this floor (F$cur, still PUSH). HUB ends the run.';
-                                              }
-                                              return 'RETRY retreats to F$safe (last cleared, still PUSH). HUB ends the run.';
-                                            }(),
-                                      textAlign: TextAlign.center,
-                                      style: GameTheme.body(
-                                        size: 15,
-                                        color: GameTheme.parchmentDim,
-                                      ),
-                                    ),
-                                    if (dailyEcho) ...[
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        'Claim needs a clear',
-                                        textAlign: TextAlign.center,
-                                        style: GameTheme.body(
-                                          size: 12,
-                                          color: GameTheme.parchmentDim,
-                                        ),
-                                      ),
-                                    ],
-                                    if (state.wipeAdviceLine.isNotEmpty) ...[
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        state.wipeAdviceLine,
-                                        textAlign: TextAlign.center,
-                                        style: GameTheme.body(
-                                          size: 15,
-                                          color: GameTheme.torchHot,
-                                        ),
-                                      ),
-                                      if (WipeAdvice.hubHintFor(
-                                            state.wipeAdviceLine,
-                                          ) !=
-                                          null) ...[
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          WipeAdvice.hubHintFor(
-                                            state.wipeAdviceLine,
-                                          )!,
-                                          textAlign: TextAlign.center,
-                                          style: GameTheme.body(
-                                            size: 13,
-                                            color: GameTheme.parchmentDim,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      WipeAdvice.timingFootnote,
-                                      textAlign: TextAlign.center,
-                                      style: GameTheme.body(
-                                        size: 12,
-                                        color: GameTheme.parchmentDim,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 14),
-                                    if (!state.inGauntlet && !state.inAnyRiftMode)
-                                      KenneyButton(
-                                        label: (farm || dailyEcho)
-                                            ? 'RETRY FLOOR'
-                                            : () {
-                                                final safe = state
-                                                    .highestFloorCleared
-                                                    .clamp(1, 999);
-                                                final cur = state
-                                                    .currentRoom
-                                                    .floorNumber;
-                                                return safe < cur
-                                                    ? 'RETRY → F$safe'
-                                                    : 'RETRY FLOOR';
-                                              }(),
-                                        tip: (farm || dailyEcho)
-                                            ? 'Restarts this floor'
-                                            : () {
-                                                final safe = state
-                                                    .highestFloorCleared
-                                                    .clamp(1, 999);
-                                                final cur = state
-                                                    .currentRoom
-                                                    .floorNumber;
-                                                return safe < cur
-                                                    ? 'Retreats to last cleared floor (PUSH)'
-                                                    : 'Restarts this floor (still PUSH)';
-                                              }(),
-                                        primary: true,
-                                        onPressed:
-                                            widget.director.retryAfterWipe,
-                                      ),
-                                    if (!state.inGauntlet &&
-                                        !state.inAnyRiftMode &&
-                                        state.gearStash.length >=
-                                            (GameLogic.maxGearStashFor(
-                                                  state,
-                                                ) -
-                                                2)
-                                                .clamp(
-                                                  1,
-                                                  GameLogic.maxGearStashFor(
-                                                    state,
-                                                  ),
-                                                )) ...[
-                                      const SizedBox(height: 8),
-                                      KenneyButton(
-                                        label: state.gearStash.length >=
-                                                GameLogic.maxGearStashFor(
-                                                  state,
-                                                )
-                                            ? 'CLEAN BAG'
-                                            : 'CLEAN BAG (near full)',
-                                        tip:
-                                            'Sells junk / scraps leftovers so new drops fit',
-                                        style: KenneyButtonStyle.grey,
-                                        onPressed: () {
-                                          widget.director.cleanBagJunk();
-                                        },
-                                      ),
-                                    ],
-                                    if (!state.inGauntlet && !state.inAnyRiftMode)
-                                      const SizedBox(height: 8),
-                                    KenneyButton(
-                                      label: state.inGauntlet || state.inAnyRiftMode
-                                          ? 'END RUN → HUB'
-                                          : 'RETURN TO HUB',
-                                      style: KenneyButtonStyle.grey,
-                                      primary: true,
-                                      onPressed: widget.director.hubAfterWipe,
-                                    ),
-                                    if (WipeAdvice.godHandHintFor(state) !=
-                                        null) ...[
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        'After RETRY: ${WipeAdvice.godHandHintFor(state)!}',
-                                        textAlign: TextAlign.center,
-                                        style: GameTheme.body(
-                                          size: 13,
-                                          color: GameTheme.mossLit,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                      DungeonWipePanel(
+                        director: widget.director,
+                        farm: farm,
+                        dailyEcho: dailyEcho,
                       ),
                   ],
                 );

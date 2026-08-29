@@ -8,7 +8,7 @@ import '../kenney_sprite.dart';
 import '../web_click_bridge.dart';
 
 /// Flat tab bottom bar. Hub: GEAR · POWER · (KEY) · QUESTS · MORE.
-/// Dungeon: GEAR · POWER · QUESTS · LEAVE.
+/// Dungeon: GEAR · POWER · QUESTS · overflow (KEY/MORE) · LEAVE.
 class AppBottomBar extends StatelessWidget {
   const AppBottomBar({
     super.key,
@@ -16,15 +16,17 @@ class AppBottomBar extends StatelessWidget {
     required this.route,
     required this.destinations,
     required this.onSelect,
-    this.onHubClose,
+    this.overflow = const <MenuRoute>[],
+    this.onLeave,
     this.showReason = false,
   });
 
   final MenuAlerts alerts;
   final MenuRoute route;
   final List<MenuRoute> destinations;
+  final List<MenuRoute> overflow;
   final void Function(MenuRoute route) onSelect;
-  final VoidCallback? onHubClose;
+  final VoidCallback? onLeave;
   final bool showReason;
 
   static String labelFor(MenuRoute r) => switch (r) {
@@ -54,16 +56,55 @@ class AppBottomBar extends StatelessWidget {
     MenuRoute.none => MenuAlert.quiet,
   };
 
+  String _reasonLine() {
+    if (route != MenuRoute.none) {
+      final selected = _alertFor(route).reason;
+      if (selected.isNotEmpty) return selected;
+    }
+    for (final dest in destinations) {
+      final r = _alertFor(dest).reason;
+      if (r.isNotEmpty) return r;
+    }
+    for (final dest in overflow) {
+      final r = _alertFor(dest).reason;
+      if (r.isNotEmpty) return r;
+    }
+    return '';
+  }
+
+  MenuRoute _overflowDisplayRoute() {
+    if (overflow.contains(route)) return route;
+    if (overflow.contains(MenuRoute.more)) return MenuRoute.more;
+    return overflow.first;
+  }
+
+  MenuAlert _overflowAlert() {
+    if (overflow.contains(route)) return _alertFor(route);
+    for (final dest in overflow) {
+      final a = _alertFor(dest);
+      if (!a.isQuiet) return a;
+    }
+    return MenuAlert.quiet;
+  }
+
+  void _tapOverflow() {
+    if (overflow.contains(route)) {
+      onSelect(route);
+      return;
+    }
+    onSelect(
+      overflow.contains(MenuRoute.more) ? MenuRoute.more : overflow.first,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final dense = onHubClose != null || destinations.length >= 5;
-    final reason = !alerts.gear.isQuiet
-        ? alerts.gear.reason
-        : !alerts.quests.isQuiet
-            ? alerts.quests.reason
-            : !alerts.more.isQuiet
-                ? alerts.more.reason
-                : alerts.power.reason;
+    final slotCount =
+        destinations.length +
+        (overflow.isEmpty ? 0 : 1) +
+        (onLeave != null ? 1 : 0);
+    final dense = slotCount >= 5;
+    final reason = _reasonLine();
     final bar = Material(
       color: Colors.transparent,
       child: Container(
@@ -101,7 +142,18 @@ class AppBottomBar extends StatelessWidget {
                   onTap: () => onSelect(dest),
                 ),
               ),
-            if (onHubClose != null)
+            if (overflow.isNotEmpty)
+              Expanded(
+                child: AppBottomBarItem(
+                  label: labelFor(_overflowDisplayRoute()),
+                  icon: iconFor(_overflowDisplayRoute()),
+                  badge: _overflowAlert().badge,
+                  selected: overflow.contains(route),
+                  dense: dense,
+                  onTap: _tapOverflow,
+                ),
+              ),
+            if (onLeave != null)
               Expanded(
                 flex: destinations.length >= 4 ? 1 : 2,
                 child: AppBottomBarItem(
@@ -110,7 +162,7 @@ class AppBottomBar extends StatelessWidget {
                   selected: false,
                   urgent: true,
                   dense: dense,
-                  onTap: onHubClose!,
+                  onTap: onLeave!,
                 ),
               ),
           ],
@@ -127,21 +179,21 @@ class AppBottomBar extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: inset),
       child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 3),
-          child: Text(
-            reason,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 3),
+            child: Text(
+              reason,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+            ),
           ),
-        ),
-        bar,
-      ],
+          bar,
+        ],
       ),
     );
   }

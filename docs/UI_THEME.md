@@ -172,6 +172,8 @@ Avoid stacking multiple **brown** full-width buttons on one screen (especially h
 
 Semantics / `WebClickScope`: `KenneyButton` and `MenuChrome` helpers already wire labels for playtest.
 
+**Exclusive compact choices** (spend ×1 / 5% / …): use **`MenuChrome.segmented`** — one row, equal slots. Do not Wrap tappable `chip`s for this; InkWell expands to max width and stacks full-height on phone.
+
 ---
 
 ## Information architecture (not colors)

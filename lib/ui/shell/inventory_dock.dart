@@ -14,7 +14,7 @@ import '../kenney_assets.dart';
 import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
-import '../meta_overlays.dart';
+import '../meta/roster_panel.dart';
 import '../item_tooltip.dart';
 import '../web_click_bridge.dart';
 import 'shell_common.dart';
@@ -678,7 +678,7 @@ class _InventoryDockState extends State<InventoryDock>
           ],
           const SizedBox(height: 10),
           Text(
-            'Flask: party HUD · Pets: POWER → Forever · God Hand: POWER → Gold KEEP',
+            'Flask: party HUD · Pets: POWER → Essence · God Hand: POWER → Gold KEEP · Relics: POWER → Relics',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),

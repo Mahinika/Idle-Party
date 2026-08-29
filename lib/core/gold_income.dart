@@ -95,7 +95,7 @@ abstract final class GoldIncome {
   static List<(String, int)> multiplierParts(GameState state) {
     return <(String, int)>[
       ('AL', state.ascensionGoldBonusPercent),
-      ('Forever', state.sanctuaryGoldBonusPercent),
+      ('Essence', state.sanctuaryGoldBonusPercent),
       ('Blessing', state.ascendBlessingGoldPercent),
       ('gear', state.gearGoldFindPercent),
       ('pet', state.petGoldFindPercent),

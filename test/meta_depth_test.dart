@@ -405,6 +405,41 @@ void main() {
     expect(round.offlineHighlightBonus, 1);
   });
 
+  test('prestige catalog ownedCount and atCap match shop maxes', () {
+    const empty = MetaDepthState();
+    expect(PrestigeShopCatalog.ownedCount(empty, 'stash_slot'), 0);
+    expect(PrestigeShopCatalog.atCap(empty, 'stash_slot'), isFalse);
+    expect(PrestigeShopCatalog.atCap(empty, 'nope'), isFalse);
+
+    const capped = MetaDepthState(
+      stashBonusSlots: 20,
+      combinatorLuck: 5,
+      torchKeepLevel: 10,
+      godHandCdLevel: 8,
+      petRosterCapBonus: 10,
+      loadoutBonusSlots: 2,
+      marketDiscountLevel: 5,
+      filterSpanLevel: 5,
+      offlineHighlightBonus: 3,
+      legacyPoints: 20,
+      dailyEssenceBonusLevel: 5,
+      gauntletGoldBonusLevel: 5,
+    );
+    expect(PrestigeShopCatalog.ownedCount(capped, 'stash_slot'), 10);
+    expect(PrestigeShopCatalog.atCap(capped, 'stash_slot'), isTrue);
+    expect(PrestigeShopCatalog.atCap(capped, 'combine_luck'), isTrue);
+    expect(PrestigeShopCatalog.atCap(capped, 'torch_keep'), isTrue);
+    expect(PrestigeShopCatalog.atCap(capped, 'gh_cdr'), isTrue);
+    expect(PrestigeShopCatalog.atCap(capped, 'roster_cap'), isTrue);
+    expect(PrestigeShopCatalog.atCap(capped, 'loadout_slot'), isTrue);
+    expect(PrestigeShopCatalog.atCap(capped, 'flask_discount'), isTrue);
+    expect(PrestigeShopCatalog.atCap(capped, 'filter_span'), isTrue);
+    expect(PrestigeShopCatalog.atCap(capped, 'offline_ledger'), isTrue);
+    expect(PrestigeShopCatalog.atCap(capped, 'legacy_spark'), isTrue);
+    expect(PrestigeShopCatalog.atCap(capped, 'daily_essence'), isTrue);
+    expect(PrestigeShopCatalog.atCap(capped, 'gauntlet_gold'), isTrue);
+  });
+
   test('Loadout Folio stays off POWER SHOP but save math still works', () {
     expect(
       PrestigeShopCatalog.offered.any((i) => i.id == 'loadout_slot'),

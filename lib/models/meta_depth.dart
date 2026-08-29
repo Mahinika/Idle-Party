@@ -111,6 +111,38 @@ abstract final class PrestigeShopCatalog {
   static List<PrestigeShopItem> get offered =>
       all.where((i) => i.listedInShop).toList(growable: false);
 
+  static int ownedCount(MetaDepthState meta, String id) => switch (id) {
+    'stash_slot' => meta.stashBonusSlots ~/ 2,
+    'combine_luck' => meta.combinatorLuck,
+    'torch_keep' => meta.torchKeepLevel,
+    'gh_cdr' => meta.godHandCdLevel,
+    'roster_cap' => meta.petRosterCapBonus ~/ 2,
+    'loadout_slot' => meta.loadoutBonusSlots,
+    'flask_discount' => meta.marketDiscountLevel,
+    'filter_span' => meta.filterSpanLevel,
+    'offline_ledger' => meta.offlineHighlightBonus,
+    'legacy_spark' => meta.legacyPoints,
+    'daily_essence' => meta.dailyEssenceBonusLevel,
+    'gauntlet_gold' => meta.gauntletGoldBonusLevel,
+    _ => 0,
+  };
+
+  static bool atCap(MetaDepthState meta, String id) => switch (id) {
+    'stash_slot' => meta.stashBonusSlots >= 20,
+    'combine_luck' => meta.combinatorLuck >= 5,
+    'torch_keep' => meta.torchKeepLevel >= 10,
+    'gh_cdr' => meta.godHandCdLevel >= 8,
+    'roster_cap' => meta.petRosterCapBonus >= 10,
+    'loadout_slot' => meta.loadoutBonusSlots >= 2,
+    'flask_discount' => meta.marketDiscountLevel >= 5,
+    'filter_span' => meta.filterSpanLevel >= 5,
+    'offline_ledger' => meta.offlineHighlightBonus >= 3,
+    'legacy_spark' => meta.legacyPoints >= 20,
+    'daily_essence' => meta.dailyEssenceBonusLevel >= 5,
+    'gauntlet_gold' => meta.gauntletGoldBonusLevel >= 5,
+    _ => false,
+  };
+
   static PrestigeShopItem? byId(String id) {
     for (final item in all) {
       if (item.id == id) return item;

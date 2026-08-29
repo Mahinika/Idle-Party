@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 
 import '../core/chase_contract.dart';
+import '../core/chase_dispatcher.dart';
 import '../core/ad_boost.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/gold_income.dart';
 import '../core/hub_chase.dart';
-import '../core/local_season.dart';
 import '../core/keystone.dart';
 import '../core/menu_alerts.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
+import 'chase_bind.dart';
 import 'cave_atmosphere.dart';
 import 'dungeon_environment.dart';
-import 'feedback_toast.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
-import 'meta_overlays.dart';
+import 'meta/offline_welcome.dart';
 import '../core/menu_router.dart';
 import 'shell/app_bottom_bar.dart';
+import 'shell/discord_thanks_overlay.dart';
+import 'shell/whats_new_overlay.dart';
 import 'hub/hub_header.dart';
 import 'hub/hub_powerups.dart';
 import 'hub/hub_today_card.dart';
@@ -126,12 +128,7 @@ class _HubScreenState extends State<HubScreen>
       return;
     }
     _offlineDialogShown = true;
-    await showOfflineProgressDialog(
-      context,
-      director,
-      onOpenParty: (kind) =>
-          router.openForHubChase(director.state, kind),
-    );
+    await showOfflineProgressDialog(context, director);
   }
 
   Future<void> _maybeShowWhatsNew() async {
@@ -157,163 +154,31 @@ class _HubScreenState extends State<HubScreen>
   }
 
   (String?, VoidCallback?) _chaseAction(BuildContext context, HubChase chase) {
-    switch (chase.kind) {
-      case HubChaseKind.claimDailyVault:
-        return ('CLAIM VAULT', director.claimDailyVault);
-      case HubChaseKind.claimMissions:
-        return (
-          'CLAIM QUESTS',
-          () {
-            director.claimAllReadyMissions();
-            router.open(MenuRoute.quests);
-          },
-        );
-      case HubChaseKind.monthGoal:
-        return ('CLAIM MONTH', director.claimMonthPass);
-      case HubChaseKind.meetHero:
-        return (
-          'OPEN GEAR',
-          () {
-            // Ack when leaving GEAR (menu_surface) so kit fantasy can be read first.
-            router.openForHubChase(director.state, HubChaseKind.meetHero);
-          },
-        );
-      case HubChaseKind.equipBag:
-        return (
-          'OPEN GEAR',
-          () => router.openForHubChase(director.state, HubChaseKind.equipBag),
-        );
-      case HubChaseKind.marketUpgrade:
-        return (
-          'SHOP',
-          () => router.open(MenuRoute.power, power: PowerSegment.market),
-        );
-      case HubChaseKind.ascend:
-        return ('ASCEND', () => confirmAscend(context, director));
-      case HubChaseKind.dailyRun:
-        return ('DAILY', () => confirmDailyRun(context, director));
-      case HubChaseKind.keystone:
-        final id = chase.zoneId ?? _selectedId;
-        return (
-          '🔑 ENTER KEY +${chase.keyLevel ?? 1}',
-          () {
-            final key = chase.keyLevel ?? 1;
-            director.setHardmodeLevel(key);
-            if (chase.zoneId != null) {
-              setState(() {
-                _userPickedZone = true;
-                _selectedId = chase.zoneId!;
-              });
-            }
-            final affixes = Keystone.previewAffixes(director.state);
-            final affixBit = affixes.isEmpty
-                ? 'no affixes'
-                : affixes.map(Keystone.label).join(' · ');
-            final par = Keystone.formatTimer(
-              Keystone.parTimeMs(
-                bossFloor: GameLogic.bossFloorFor(director.state),
-                key: key,
-              ),
-            );
-            director.showToast(
-              'KEY +$key · $affixBit · par $par',
-              life: 2.8,
-            );
-            final unlocked = DungeonCatalog.isUnlocked(
-              id,
-              GameLogic.partyMeanLevel(director.state),
-              director.state.highestDungeonCleared,
-            );
-            if (unlocked) widget.onEnterDungeon(id);
-          },
-        );
-      case HubChaseKind.gauntletMilestone:
-        return ('⚔ GAUNTLET', () => confirmGauntletRun(context, director));
-      case HubChaseKind.riftMilestone:
-        return ('◈ RIFT', () => confirmRiftRun(context, director));
-      case HubChaseKind.greaterRiftMilestone:
-        return ('◆ GREATER RIFT', () => confirmGreaterRiftRun(context, director));
-      case HubChaseKind.ashenCrown:
-        return (
-          'ASHEN CROWN',
-          () => confirmAshenCrown(context, director, practice: false),
-        );
-      case HubChaseKind.weekGoal:
-        // FEEL 067: prefer Gauntlet when week target is a floor climb.
-        final weekKey = director.state.metaDepth.weeklyKey.isNotEmpty
-            ? director.state.metaDepth.weeklyKey
-            : GameLogic.isoWeekKey(DateTime.now().toUtc());
-        final week = LocalSeasonCatalog.forWeekKey(weekKey);
-        if (chase.urgency == HubChaseUrgency.ready) {
-          return (
-            'CLAIM WEEK',
-            () {
-              // Week goals settle through GameLogic.syncMetaPayoffs on hub ticks.
-              director.syncMetaPayoffs();
-            },
-          );
-        }
-        if (week.gauntletFloorTarget > 0) {
-          return ('⚔ GAUNTLET', () => confirmGauntletRun(context, director));
-        }
-        return (
-          'ENTER',
-          () {
-            final id = chase.zoneId ?? _selectedId;
-            final unlocked = DungeonCatalog.isUnlocked(
-              id,
-              GameLogic.partyMeanLevel(director.state),
-              director.state.highestDungeonCleared,
-            );
-            if (unlocked) widget.onEnterDungeon(id);
-          },
-        );
-      case HubChaseKind.dailyVaultProgress:
-      case HubChaseKind.clearFloors:
-        final id = chase.zoneId ?? _selectedId;
-        return (
-          'ENTER',
-          () {
-            if (chase.zoneId != null) {
-              setState(() {
-                _userPickedZone = true;
-                _selectedId = chase.zoneId!;
-              });
-            }
-            final unlocked = DungeonCatalog.isUnlocked(
-              id,
-              GameLogic.partyMeanLevel(director.state),
-              director.state.highestDungeonCleared,
-            );
-            if (unlocked) widget.onEnterDungeon(id);
-          },
-        );
-      case HubChaseKind.unlockZone:
-        final lockedId = chase.zoneId;
-        if (lockedId == null) return (null, null);
-        // Farm the recommended (usually prior) zone — PATH alone felt empty.
-        final enterId = GameLogic.recommendedDungeonId(director.state);
-        return (
-          'PATH',
-          () {
-            setState(() {
-              _userPickedZone = true;
-              _selectedId = enterId;
-            });
-            final unlocked = DungeonCatalog.isUnlocked(
-              enterId,
-              GameLogic.partyMeanLevel(director.state),
-              director.state.highestDungeonCleared,
-            );
-            if (unlocked) widget.onEnterDungeon(enterId);
-          },
-        );
-      case HubChaseKind.willRank:
-        return (
-          'INFO',
-          () => router.open(MenuRoute.more, more: MoreSection.info),
-        );
+    final plan = ChaseDispatcher.plan(
+      chase,
+      state: director.state,
+      selectedZoneId: _selectedId,
+    );
+    if (plan.op == ChaseOp.none && plan.label == null) {
+      return (null, null);
     }
+    if (chase.kind == HubChaseKind.unlockZone && chase.zoneId == null) {
+      return (null, null);
+    }
+    return (
+      plan.label,
+      () => runChasePlan(
+        context: context,
+        director: director,
+        router: router,
+        plan: plan,
+        onEnterDungeon: widget.onEnterDungeon,
+        onPickZone: (id) => setState(() {
+          _userPickedZone = true;
+          _selectedId = id;
+        }),
+      ),
+    );
   }
 
   Widget _hubActionColumn(
@@ -631,15 +496,6 @@ class _HubScreenState extends State<HubScreen>
                                   onDismiss: () => showOfflineProgressDialog(
                                     context,
                                     director,
-                                    onOpenParty: (kind) => router.openForHubChase(
-                                      director.state,
-                                      kind,
-                                    ),
-                                    onOpenMarket: () => router.open(
-                                      MenuRoute.power,
-                                      power: PowerSegment.market,
-                                    ),
-                                    onEnterDungeon: widget.onEnterDungeon,
                                   ),
                                 ),
                               ],
@@ -714,9 +570,9 @@ class _HubScreenState extends State<HubScreen>
                           urgency: chase.urgency,
                         ),
                         route: router.route,
-                        destinations: MenuRouter.visibleHubTabs(state),
+                        destinations: DestinationGraph.hub(state).destinations,
                         showReason: chase.urgency != HubChaseUrgency.ready,
-                        onSelect: (dest) => router.toggle(dest, state: state),
+                        onSelect: (dest) => router.toggle(dest),
                       ),
                     ],
                   ),
@@ -725,14 +581,6 @@ class _HubScreenState extends State<HubScreen>
             },
           ),
         ),
-        if (director.toast != null)
-          Positioned.fill(
-            child: FeedbackToast(
-              message: director.toast!,
-              maxLines: 3,
-              alignment: const Alignment(0, -0.55),
-            ),
-          ),
       ],
     );
   }

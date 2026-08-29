@@ -178,7 +178,7 @@ class MenuAlerts {
     }
     if (state.essence >= GameLogic.sanctuaryCost(cheapestCampLevel(state))) {
       count++;
-      reasons.add('essence for Forever');
+      reasons.add('essence for Essence');
     }
     final hasFlask = state.heroes.any(
       (h) => h.itemIn(EquipmentSlot.consumable) != null,
@@ -329,6 +329,9 @@ abstract final class MenuTabs {
 
   static bool showCamp(GameState s) => s.ascensionLevel >= 1 || s.essence > 0;
   static bool showShop(GameState s) => s.ascensionLevel >= 1;
+  /// Relics / Craft tabs — after first-hour plain chrome (same as old KEEP/APEX).
+  static bool showRelics(GameState s) => !GameLogic.plainPlayerChrome(s);
+  static bool showCraft(GameState s) => !GameLogic.plainPlayerChrome(s);
 
   static bool showKey(GameState s) => GameLogic.showKeystoneJargon(s);
   static bool showBeast(GameState s) =>

@@ -9,18 +9,15 @@ import '../core/menu_router.dart';
 import 'confirm_dialogs.dart';
 import 'cave_atmosphere.dart';
 import 'custom_assets.dart';
-import 'feedback_toast.dart';
 import 'game_theme.dart';
 import 'spatial_dungeon_view.dart';
-import 'first_session_tips.dart';
 import 'shell/app_bottom_bar.dart';
 import 'shell/dungeon_party_hud.dart';
 import 'shell/dungeon_target_hud.dart';
 import 'shell/dungeon_top_hud.dart';
-import 'shell/menu_surface.dart';
 
-/// Idle Party dungeon shell: full-bleed stage + corner HUD; menus are the
-/// shared [MenuSurface], so GEAR/POWER/QUESTS look the same as in the hub.
+/// Idle Party dungeon scene: full-bleed stage + corner HUD.
+/// Shared GEAR/POWER/QUESTS sheets are owned by the play shell, not this scene.
 class Is2Shell extends StatefulWidget {
   const Is2Shell({
     super.key,
@@ -181,8 +178,9 @@ class _Is2ShellState extends State<Is2Shell> {
                         bottom: partyBottom,
                         child: PartyCornerHud(
                           director: d,
-                          selectedHeroIndex: router.abilityHeroIndex,
-                          onSelectHero: (i) => router.abilityHeroIndex = i,
+                          selectedHeroIndex: router.session.abilityHeroIndex,
+                          onSelectHero: (i) =>
+                              router.session.abilityHeroIndex = i,
                           onOpenEquip: () => router.toggleGear(GearPanel.gear),
                           onUseConsumable: d.useConsumable,
                         ),
@@ -194,17 +192,14 @@ class _Is2ShellState extends State<Is2Shell> {
               AppBottomBar(
                 alerts: MenuAlerts.forDungeon(state),
                 route: router.route,
-                destinations: MenuRouter.visibleDungeonTabs(state),
+                destinations: DestinationGraph.dungeon(state).destinations,
+                overflow: DestinationGraph.dungeon(state).overflow,
                 showReason: true,
-                onSelect: (dest) => _openMenuFeel(
-                  () => router.toggle(dest, state: state),
-                ),
-                onHubClose: widget.onLeaveDungeon == null
+                onSelect: (dest) => _openMenuFeel(() => router.toggle(dest)),
+                onLeave: widget.onLeaveDungeon == null
                     ? null
                     : () {
                         if (state.isPartyDefeated) {
-                          // Wipe panel already has RETURN TO HUB — don't stack
-                          // another STAY/RETURN confirm on top.
                           widget.director.hubAfterWipe();
                           return;
                         }
@@ -222,17 +217,6 @@ class _Is2ShellState extends State<Is2Shell> {
           const Positioned.fill(
             child: IgnorePointer(
               child: ColoredBox(color: Color(0x6614100C)),
-            ),
-          ),
-        MenuSurface(director: d, router: router),
-        FirstSessionTips(director: d),
-        if (d.toast != null)
-          Positioned.fill(
-            child: FeedbackToast(
-              message: d.toast!,
-              alignment: router.isOpen
-                  ? const Alignment(0, -0.82)
-                  : const Alignment(0, -0.42),
             ),
           ),
       ],

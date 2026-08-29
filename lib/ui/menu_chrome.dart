@@ -331,6 +331,70 @@ abstract final class MenuChrome {
     );
   }
 
+  /// Compact exclusive choices in one row (spend ×1 / 5% / …).
+  ///
+  /// Prefer this over a Wrap of [chip]s — InkWell chips expand to the Wrap's
+  /// max width and stack full-width on phone.
+  static Widget segmented({
+    required List<String> labels,
+    required int selectedIndex,
+    required ValueChanged<int> onSelect,
+  }) {
+    assert(labels.isNotEmpty);
+    return Container(
+      height: GameTheme.minTouch,
+      decoration: BoxDecoration(
+        color: GameTheme.panelInset.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+        border: Border.all(color: GameTheme.border.withValues(alpha: 0.75)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++) ...[
+            if (i > 0)
+              Container(
+                width: 1,
+                color: GameTheme.border.withValues(alpha: 0.45),
+              ),
+            Expanded(
+              child: WebClickScope(
+                label: labels[i],
+                onPressed: () => onSelect(i),
+                child: Semantics(
+                  button: true,
+                  selected: i == selectedIndex,
+                  label: labels[i],
+                  onTap: () => onSelect(i),
+                  excludeSemantics: true,
+                  child: Material(
+                    color: i == selectedIndex
+                        ? GameTheme.torch.withValues(alpha: 0.22)
+                        : Colors.transparent,
+                    child: InkWell(
+                      onTap: () => onSelect(i),
+                      child: Center(
+                        child: Text(
+                          labels[i],
+                          style: GameTheme.pixel(
+                            size: GameTheme.hudPixel,
+                            color: i == selectedIndex
+                                ? GameTheme.torchHot
+                                : GameTheme.parchmentDim,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   /// List / mission / shop row — same well as GEAR inset cards.
   static BoxDecoration listCard({
     bool selected = false,
@@ -393,6 +457,7 @@ abstract final class MenuChrome {
           : Row(mainAxisSize: MainAxisSize.min, children: parts),
     );
     if (onTap == null) return body;
+    // IntrinsicWidth: Material/InkWell otherwise expand to max width inside Wrap.
     return WebClickScope(
       label: value == null ? label : '$label $value',
       onPressed: onTap,
@@ -402,12 +467,14 @@ abstract final class MenuChrome {
         label: value == null ? label : '$label $value',
         onTap: onTap,
         excludeSemantics: true,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            child: body,
+        child: IntrinsicWidth(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              child: body,
+            ),
           ),
         ),
       ),

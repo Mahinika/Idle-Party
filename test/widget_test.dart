@@ -272,4 +272,42 @@ void main() {
     expect(find.textContaining('Buy flask'), findsWidgets);
     expect(find.text('ALL'), findsOneWidget);
   });
+
+  testWidgets('GEAR pauses dungeon combat but not hub', (tester) async {
+    final director = GameDirector.preview();
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: false),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.tap(find.text('GEAR').last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(director.uiPaused, isFalse);
+
+    await tester.tap(find.text('CLOSE'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    director.enterDungeon();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(director.uiPaused, isFalse);
+
+    await tester.tap(find.text('GEAR').last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(director.uiPaused, isTrue);
+
+    await tester.tap(find.text('CLOSE'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(director.uiPaused, isFalse);
+  });
 }

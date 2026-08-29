@@ -30,8 +30,8 @@ abstract final class GameGuides {
           '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
           '• Watch them clear rooms. Tap the fight when you want to help.\n'
           '• TODAY on the hub always names the next job — start there.\n'
-          '• Three POWER tabs: Gold (this run), Shop (flasks and gear), '
-          'Forever (stays after you start over).\n'
+          '• POWER tabs: Gold (this run), Shop (flasks and gear), '
+          'Relics (party auras), Craft (lasting gear), Essence (tracks).\n'
           '• Gold buys supplies and run power. Essence buys lasting power.\n'
           '• Bottom buttons (same in hub and dungeon): PARTY (heroes and gear), '
           'POWER (upgrades), META (extras and Guides). In a dungeon the fourth '
@@ -184,7 +184,7 @@ abstract final class GameGuides {
       id: 'income',
       title: 'GOLD/MIN',
       body:
-          'POWER → Forever (hub gold).\n\n'
+          'POWER → Essence (hub gold).\n\n'
           'Your incremental dashboard: Hub gold/min, Run gold/min (from real '
           'loot in the last couple of minutes), gold % multipliers, and Gold Find '
           '— the keep generator on the Gold Find track below.\n\n'
@@ -196,21 +196,21 @@ abstract final class GameGuides {
       id: 'forge',
       title: 'GOLD',
       body:
-          'POWER → Gold — gold buys at the top; KEEP and APEX further down.\n\n'
+          'POWER → Gold — gold buys at the top; KEEP further down.\n\n'
           '• GOLD — spend wallet gold on party ATK/DEF/STA/MOVE/HASTE/CRIT. '
           'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
           'SPEND ALL · EVEN to split gold round-robin across every track. '
           'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}). '
           'Harder kills (higher enemy level than the hero) pay more XP; heroes far behind the party catch up faster.\n'
           'Gold tracks reset when you Ascend. '
-          'ATK, HASTE, and MOVE speed up clears — see Forever for rates. '
+          'ATK, HASTE, and MOVE speed up clears — see Essence for rates. '
           'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
           'relative upgrade.\n'
-          '• KEEP — essence that survives Ascend: Blessing readout, relics, '
+          '• KEEP — essence that survives Ascend: Blessing readout, '
           'God Hand smash/cooldown/style, optional AL20 REBORN, and the 5th party '
-          'slot (AL2 · 80e).\n'
-          '• APEX — one Apex station: materials, craft goals, target meter, vault.\n\n'
+          'slot (AL2 · 80e). Relics live on POWER → Relics. '
+          'Craft lasting gear on POWER → Craft.\n'
           '• Ascend from the Hub when ready (not from Gold). REBORN at AL20 is on KEEP.',
     ),
     GuideTopic(
@@ -235,21 +235,21 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'sanctuary',
-      title: 'FOREVER',
+      title: 'ESSENCE',
       body:
-          'POWER → Forever. Spend essence on permanent tracks.\n\n'
-          '• Forever unlocks after your first Ascend or when you earn essence.\n'
-          '• Hub gold/min and Gold Find live on POWER → Forever (rates at top).\n'
+          'POWER → Essence. Spend essence on permanent tracks.\n\n'
+          '• Essence unlocks after your first Ascend or when you earn essence.\n'
+          '• Hub gold/min and Gold Find live on POWER → Essence (rates at top).\n'
           '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
           '• Hub gold/min ticks while you sit at the keep — slower than a dungeon '
           'run, but overnight still buys Gold. Gold Find raises that rate '
-          '(shown on the hub and on Forever).\n'
+          '(shown on the hub and on Essence).\n'
           '• Tracks level infinitely — cost scales with level.\n'
           '• Optional prestige from Lv12: reset to Lv0 (upgrades cheap again). '
           'You keep a small forever bonus '
           '(+3% gold / +1 ATK / +12 HP / +2% XP) and get 25+level essence back. '
           'The big level bonus is gone until you buy levels again.\n'
-          '• Owned KEEP relics (ATK / DEF / HP / loot) also list on Forever.\n'
+          '• Owned Relics (ATK / DEF / HP / loot) also list on Essence.\n'
           '• Survives Ascend (meta progress).\n'
           '• Invest early — sanctuary compounds over many runs.',
     ),
@@ -290,15 +290,15 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'apex',
-      title: 'APEX FORGE',
+      title: 'CRAFT',
       body:
-          'Gold → APEX.\n\n'
-          '• One screen: materials, party craft goals, target meter, craft, vault.\n'
-          '• Tap a party goal card to chase that hero\'s next Apex piece.\n'
+          'POWER → Craft.\n\n'
+          '• Tap a party goal first — that sets who and which slot you craft.\n'
+          '• Recipe + CRAFT sit under the goal. Tap a recipe mat to lock the farm target.\n'
+          '• Materials bag and Change goal stay collapsed until you need them.\n'
           '• Target meter: every boss clear builds toward a guaranteed mat (PUSH faster than FARM).\n'
-          '• Tap a recipe mat to lock the target; Auto Equip All equips vault Apex on matching heroes.\n'
           '• Craft weapon R1 first, then armor; upgrade in place to R3.\n'
-          '• Apex gear and materials survive Ascend.',
+          '• Crafted gear and materials survive Ascend.',
     ),
     GuideTopic(
       id: 'market',
@@ -319,7 +319,7 @@ abstract final class GameGuides {
       id: 'pets',
       title: 'BEAST PEN',
       body:
-          'POWER → Forever.\n\n'
+          'POWER → Essence.\n\n'
           '• Hatch and level pets with essence (random species and rarity).\n'
           '• Merge two same-species pets of the same rarity into a higher rarity.\n'
           '• Favorite a species: +1 ATK and a stronger passive while that pet is ACTIVE.\n'

@@ -27,6 +27,8 @@ abstract final class MetaSystems {
       version: '1.12.83',
       bullets: <String>[
         'Hub and dungeon chrome: Shop no longer goes dark; TODAY quest claim is one CLAIM QUESTS tap; MORE INFO is Guide / Codex / Trophies so lists don’t overlap.',
+        'POWER third tab is Essence (was Forever) — lasting sanctuary tracks and Beast. Gold · Shop · Relics · Craft · Essence.',
+        'POWER Gold and Essence use dense upgrade rows. Relics and Craft are their own tabs (was under Gold KEEP / APEX). Craft is goal-first: party goals → recipe → CRAFT; materials bag stays collapsed.',
         'Fight loot pops one short word (Mace, Chest) instead of stacked names. Gear waiting is the GEAR badge (and one line). Zoom chip reads NEAR / MID / FAR.',
         'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault) — rings only say HERE or NEXT. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
       ],

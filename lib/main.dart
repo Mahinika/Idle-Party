@@ -13,18 +13,15 @@ import 'models/dungeon_def.dart';
 import 'models/hero_spec.dart';
 import 'ui/boot_intro_screen.dart';
 import 'ui/custom_assets.dart';
-import 'ui/first_session_tips.dart';
 import 'ui/game_audio.dart';
 import 'ui/game_theme.dart';
-import 'ui/hub_screen.dart';
-import 'ui/is2_shell.dart';
 import 'ui/kenney_button.dart';
 import 'ui/loading_splash.dart';
 import 'ui/menu_chrome.dart';
 import 'ui/new_game_party_picker.dart';
 import 'ui/play_update_required_screen.dart';
 import 'ui/save_import_flow.dart';
-import 'ui/shell/menu_surface.dart';
+import 'ui/shell/play_shell.dart';
 import 'ui/start_menu_screen.dart';
 import 'ui/web_click_bridge.dart';
 
@@ -407,36 +404,10 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
           });
         }
 
-        final Widget body;
-        if (_director.state.inDungeon) {
-          body = Is2Shell(
-            director: _director,
-            router: _router,
-            pulse: 0.5,
-            onLeaveDungeon: _director.leaveDungeon,
-          );
-        } else {
-          body = ListenableBuilder(
-            listenable: _router,
-            builder: (context, _) => Stack(
-              children: [
-                IgnorePointer(
-                  ignoring: _router.isOpen,
-                  child: HubScreen(
-                    director: _director,
-                    router: _router,
-                    onEnterDungeon: (id) {
-                      _router.close();
-                      _director.enterDungeon(dungeonId: id);
-                    },
-                  ),
-                ),
-                if (!_router.isOpen) FirstSessionTips(director: _director),
-                MenuSurface(director: _director, router: _router),
-              ],
-            ),
-          );
-        }
+        final body = PlayShell(
+          director: _director,
+          router: _router,
+        );
 
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(

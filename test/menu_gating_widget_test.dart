@@ -83,17 +83,20 @@ void main() {
 
     final afterAscend = early.copyWith(ascensionLevel: 1, essence: 10);
     expect(MenuTabs.showCamp(afterAscend), isTrue);
+    expect(MenuTabs.showRelics(afterAscend), isTrue);
     expect(
       MenuRouter.visiblePowerSegments(afterAscend),
       equals(const [
         PowerSegment.forge,
         PowerSegment.market,
+        PowerSegment.relics,
+        PowerSegment.craft,
         PowerSegment.camp,
       ]),
     );
   });
 
-  test('dungeon tabs are GEAR POWER QUESTS only', () {
+  test('dungeon tabs are GEAR POWER QUESTS; overflow is KEY/MORE family', () {
     final s = GameLogic.createInitialState(now: now);
     expect(
       MenuRouter.visibleDungeonTabs(s),
@@ -103,5 +106,9 @@ void main() {
         MenuRoute.quests,
       ]),
     );
+    final graph = DestinationGraph.dungeon(s);
+    expect(graph.destinations, MenuRouter.visibleDungeonTabs(s));
+    expect(graph.overflow, contains(MenuRoute.more));
+    expect(graph.hasOverflow, isTrue);
   });
 }

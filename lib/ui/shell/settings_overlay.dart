@@ -12,23 +12,9 @@ import '../../core/meta_systems.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
-import '../meta_overlays.dart';
-
-int _autoSellPreviewCount(GameState state) {
-  var n = 0;
-  for (final item in state.gearStash) {
-    if (!GearCleanup.matchesIlvlRarityFilter(
-      item,
-      maxIlvl: state.autoSellMaxPower,
-      maxRarity: state.autoSellMaxRarity,
-    )) {
-      continue;
-    }
-    if (GearCleanup.shouldKeepInBag(state, item)) continue;
-    n++;
-  }
-  return n;
-}
+import '../meta/play_games_section.dart';
+import '../meta/save_transfer.dart';
+import 'whats_new_overlay.dart';
 
 class SettingsOverlay extends StatefulWidget {
   const SettingsOverlay({
@@ -275,7 +261,7 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           if (state.autoSellMaxPower > 0) ...[
             const SizedBox(height: 4),
             Text(
-              'Sells ~${_autoSellPreviewCount(state)} stash items',
+              'Sells ~${GearCleanup.autoSellPreviewCount(state)} stash items',
               style: GameTheme.body(size: 12, color: GameTheme.mossLit),
             ),
           ],

@@ -33,6 +33,6 @@ void main() {
     router.open(MenuRoute.power, power: PowerSegment.market);
     expect(router.debugWhere, 'POWER/Shop');
     router.powerSegment = PowerSegment.camp;
-    expect(router.debugWhere, 'POWER/Forever');
+    expect(router.debugWhere, 'POWER/Essence');
   });
 }
