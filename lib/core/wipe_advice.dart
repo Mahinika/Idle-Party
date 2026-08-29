@@ -154,7 +154,7 @@ abstract final class WipeAdvice {
     if (state.hardmodeLevel > 0 &&
         state.hardmodeLevel > state.ascensionLevel + 4 &&
         fight.leftover >= 0.35) {
-      return 'KEY +${state.hardmodeLevel} may be high — dial down on META → KEY';
+      return 'KEY +${state.hardmodeLevel} may be high — dial down on KEY';
     }
 
     if (fight.elapsedSec < 0.5 || fight.waveHp < 1 || fight.damageDealt < 1) {

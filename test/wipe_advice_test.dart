@@ -209,16 +209,16 @@ void main() {
     );
   });
 
-  test('PARTY tabs for AL20 veteran include ROSTER not dead loadouts', () {
+  test('GEAR panels for AL20 veteran include ROSTER not dead loadouts', () {
     final veteran = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 20,
       highestDungeonCleared: 14,
     );
     expect(MenuTabs.showMerge(veteran), isTrue);
     expect(MenuTabs.showRoster(veteran), isTrue);
-    final tabs = MenuRouter.visiblePartyTabs(veteran);
-    expect(tabs, contains(PartyTab.roster));
-    expect(tabs, contains(PartyTab.merge));
+    final tabs = MenuRouter.visibleGearPanels(veteran);
+    expect(tabs, contains(GearPanel.roster));
+    expect(tabs, contains(GearPanel.merge));
     expect(tabs.length, 4);
   });
 

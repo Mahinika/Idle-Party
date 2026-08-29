@@ -20,7 +20,7 @@ import 'shell/dungeon_top_hud.dart';
 import 'shell/menu_surface.dart';
 
 /// Idle Party dungeon shell: full-bleed stage + corner HUD; menus are the
-/// shared [MenuSurface], so PARTY/POWER/META look the same as in the hub.
+/// shared [MenuSurface], so GEAR/POWER/QUESTS look the same as in the hub.
 class Is2Shell extends StatefulWidget {
   const Is2Shell({
     super.key,
@@ -53,7 +53,7 @@ class _Is2ShellState extends State<Is2Shell> {
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.keyB) {
-      router.toggleParty(PartyTab.bag);
+      router.toggleGear(GearPanel.bag);
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.keyH && widget.onLeaveDungeon != null) {
@@ -122,11 +122,18 @@ class _Is2ShellState extends State<Is2Shell> {
               DungeonTopHud(
                 state: state,
                 director: d,
-                onOpenSettings: () => router.open(MenuRoute.settings),
-                onOpenContracts: () => router.open(MenuRoute.jobs),
+                onOpenSettings: () => router.open(
+                  MenuRoute.more,
+                  more: MoreSection.settings,
+                ),
+                onOpenMore: () => router.open(MenuRoute.more),
+                onOpenKey: MenuTabs.showKey(state)
+                    ? () => router.open(MenuRoute.key)
+                    : null,
+                onOpenContracts: () => router.open(MenuRoute.quests),
                 onOpenForge: () =>
-                    router.open(MenuRoute.power, power: PowerTab.forge),
-                onOpenParty: () => router.toggleParty(PartyTab.gear),
+                    router.open(MenuRoute.power, power: PowerSegment.forge),
+                onOpenParty: () => router.toggleGear(GearPanel.gear),
               ),
               Expanded(
                 child: Stack(
@@ -176,7 +183,7 @@ class _Is2ShellState extends State<Is2Shell> {
                           director: d,
                           selectedHeroIndex: router.abilityHeroIndex,
                           onSelectHero: (i) => router.abilityHeroIndex = i,
-                          onOpenEquip: () => router.toggleParty(PartyTab.gear),
+                          onOpenEquip: () => router.toggleGear(GearPanel.gear),
                           onUseConsumable: d.useConsumable,
                         ),
                       ),
@@ -187,15 +194,10 @@ class _Is2ShellState extends State<Is2Shell> {
               AppBottomBar(
                 alerts: MenuAlerts.forDungeon(state),
                 route: router.route,
+                destinations: MenuRouter.visibleDungeonTabs(state),
                 showReason: true,
-                onParty: () => _openMenuFeel(
-                  () => router.toggleParty(router.partyTab),
-                ),
-                onPower: () => _openMenuFeel(
-                  () => router.toggle(MenuRoute.power),
-                ),
-                onMeta: () => _openMenuFeel(
-                  () => router.toggle(MenuRoute.meta, state: state),
+                onSelect: (dest) => _openMenuFeel(
+                  () => router.toggle(dest, state: state),
                 ),
                 onHubClose: widget.onLeaveDungeon == null
                     ? null

@@ -27,8 +27,8 @@ class InventoryDock extends StatefulWidget {
     required this.selectedId,
     required this.combineA,
     required this.combineB,
-    required this.tab,
-    required this.onTabChanged,
+    required this.panel,
+    required this.onPanelChanged,
     required this.onSelect,
     required this.onPutCombine,
     required this.onEquip,
@@ -55,8 +55,8 @@ class InventoryDock extends StatefulWidget {
   final String? selectedId;
   final String? combineA;
   final String? combineB;
-  final PartyTab tab;
-  final ValueChanged<PartyTab> onTabChanged;
+  final GearPanel panel;
+  final ValueChanged<GearPanel> onPanelChanged;
   final bool flatChrome;
   final void Function(String id) onSelect;
   final void Function(String id) onPutCombine;
@@ -84,7 +84,7 @@ class InventoryDock extends StatefulWidget {
 class _InventoryDockState extends State<InventoryDock>
     with TickerProviderStateMixin {
   late final FlexTabs _tabs;
-  List<PartyTab> _visible = const [PartyTab.gear, PartyTab.bag];
+  List<GearPanel> _visible = const [GearPanel.gear, GearPanel.bag];
 
   GameState get state => widget.state;
   String? get selectedId => widget.selectedId;
@@ -114,14 +114,14 @@ class _InventoryDockState extends State<InventoryDock>
     return GameLogic.equipTargetsFor(item).contains(filter);
   }
 
-  String _partyTabReason(PartyTab tab) {
+  String _gearPanelReason(GearPanel tab) {
     final meet = MenuAlerts.meetRosterHint(state);
-    if (meet.isNotEmpty && tab != PartyTab.roster) return meet;
+    if (meet.isNotEmpty && tab != GearPanel.roster) return meet;
 
     switch (tab) {
-      case PartyTab.gear:
+      case GearPanel.gear:
         return MenuAlerts.gearEquipHint(state, equipHeroIndex);
-      case PartyTab.bag:
+      case GearPanel.bag:
         final upgrades = MenuAlerts.bagUpgradeCount(state);
         if (upgrades > 0) {
           return upgrades == 1
@@ -129,8 +129,8 @@ class _InventoryDockState extends State<InventoryDock>
               : '$upgrades better items in bag — use EQUIP below';
         }
         return MenuAlerts.bagStatusLine(state);
-      case PartyTab.merge:
-      case PartyTab.roster:
+      case GearPanel.merge:
+      case GearPanel.roster:
         final alert = MenuAlerts.partyAlert(state);
         return alert.isQuiet ? '' : alert.reason;
     }
@@ -143,9 +143,9 @@ class _InventoryDockState extends State<InventoryDock>
     _tabs = FlexTabs(
       vsync: this,
       length: 2,
-      initialIndex: widget.tab == PartyTab.gear ? 0 : 1,
+      initialIndex: widget.panel == GearPanel.gear ? 0 : 1,
       onChanged: (i) {
-        if (i >= 0 && i < _visible.length) widget.onTabChanged(_visible[i]);
+        if (i >= 0 && i < _visible.length) widget.onPanelChanged(_visible[i]);
       },
     );
   }
@@ -230,7 +230,7 @@ class _InventoryDockState extends State<InventoryDock>
         const SizedBox(height: 6),
         KenneyButton(
           label: 'OPEN BAG',
-          onPressed: () => widget.onTabChanged(PartyTab.bag),
+          onPressed: () => widget.onPanelChanged(GearPanel.bag),
           style: KenneyButtonStyle.grey,
         ),
       ],
@@ -672,13 +672,13 @@ class _InventoryDockState extends State<InventoryDock>
             const SizedBox(height: 6),
             KenneyButton(
               label: 'OPEN BAG',
-              onPressed: () => widget.onTabChanged(PartyTab.bag),
+              onPressed: () => widget.onPanelChanged(GearPanel.bag),
               style: KenneyButtonStyle.grey,
             ),
           ],
           const SizedBox(height: 10),
           Text(
-            'Flask: party HUD · Pets: META → Beast · God Hand: POWER → Forge → KEEP',
+            'Flask: party HUD · Pets: POWER → Camp · God Hand: POWER → Forge → KEEP',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
@@ -704,19 +704,19 @@ class _InventoryDockState extends State<InventoryDock>
       (i) => i < state.gearStash.length ? state.gearStash[i] : null,
     );
     // Progressive menu: MERGE / ROSTER appear once they do something.
-    _visible = MenuRouter.visiblePartyTabs(state);
-    final safeTab = _visible.contains(widget.tab) ? widget.tab : _visible.first;
-    if (safeTab != widget.tab) {
+    _visible = MenuRouter.visibleGearPanels(state);
+    final safeTab = _visible.contains(widget.panel) ? widget.panel : _visible.first;
+    if (safeTab != widget.panel) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) widget.onTabChanged(safeTab);
+        if (mounted) widget.onPanelChanged(safeTab);
       });
     }
     final pages = <({String label, Widget body})>[
       for (final tab in _visible)
         switch (tab) {
-          PartyTab.gear => (label: 'GEAR', body: _equipTab()),
-          PartyTab.bag => (label: 'BAG', body: _bagTab(slots, primary)),
-          PartyTab.merge => (
+          GearPanel.gear => (label: 'GEAR', body: _equipTab()),
+          GearPanel.bag => (label: 'BAG', body: _bagTab(slots, primary)),
+          GearPanel.merge => (
             label: 'MERGE',
             body: _toolsTab(
               primary: primary,
@@ -726,7 +726,7 @@ class _InventoryDockState extends State<InventoryDock>
               preview: preview,
             ),
           ),
-          PartyTab.roster => (
+          GearPanel.roster => (
             label: 'ROSTER',
             body: SingleChildScrollView(
               child: TeamCompositionOverlay(director: widget.director),
@@ -746,7 +746,7 @@ class _InventoryDockState extends State<InventoryDock>
                 pages[i].label,
                 onSelect: () {
                   _tabs.controller.animateTo(i);
-                  widget.onTabChanged(_visible[i]);
+                  widget.onPanelChanged(_visible[i]);
                   setState(() {});
                 },
               ),
@@ -754,7 +754,7 @@ class _InventoryDockState extends State<InventoryDock>
         ),
         Builder(
           builder: (context) {
-            final reason = _partyTabReason(safeTab);
+            final reason = _gearPanelReason(safeTab);
             if (reason.isEmpty) return const SizedBox.shrink();
             return Padding(
               padding: const EdgeInsets.only(top: 4),

@@ -81,7 +81,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'contracts',
       title: 'QUESTS',
       body:
-          'META → QUESTS pays gold and essence. '
+          'QUESTS pays gold and essence. '
           'Claim completes; every 3 claims grants a +5e chain bonus.',
     ),
     (
@@ -103,7 +103,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'hardmode',
       title: 'KEYSTONE',
       body:
-          'At party level ${GameLogic.maxHeroLevel}, under META → KEY pick a key level before you enter. Affixes lock in, '
+          'At party level ${GameLogic.maxHeroLevel}, under KEY pick a key level before you enter. Affixes lock in, '
           'a generous timer runs (AFK counts), and beating the boss under par upgrades your key.',
     ),
     (
@@ -135,13 +135,13 @@ class FirstSessionTips extends StatelessWidget {
       id: 'greater_rift',
       title: 'GREATER RIFTS',
       body:
-          'At party level ${GameLogic.maxHeroLevel}, Greater Rifts are the prestige ladder — harder packs, no mid-run gear, and season ranks on META → KEY · BOARDS.',
+          'At party level ${GameLogic.maxHeroLevel}, Greater Rifts are the prestige ladder — harder packs, no mid-run gear, and season ranks on KEY · BOARDS.',
     ),
     (
       id: 'ashen_crown',
       title: 'ASHEN CROWN',
       body:
-          'At party level ${GameLogic.maxHeroLevel}, Ashen Crown is a weekly ticket boss under META → KEY. First ticket clear pays essence; PRACTICE is free after.',
+          'At party level ${GameLogic.maxHeroLevel}, Ashen Crown is a weekly ticket boss under KEY. First ticket clear pays essence; PRACTICE is free after.',
     ),
     (
       id: 'powerups',

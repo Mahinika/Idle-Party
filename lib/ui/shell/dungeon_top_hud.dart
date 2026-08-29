@@ -24,6 +24,8 @@ class DungeonTopHud extends StatelessWidget {
     required this.director,
     required this.onOpenSettings,
     required this.onOpenContracts,
+    this.onOpenMore,
+    this.onOpenKey,
     this.onOpenForge,
     this.onOpenParty,
   });
@@ -32,6 +34,8 @@ class DungeonTopHud extends StatelessWidget {
   final GameDirector director;
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenContracts;
+  final VoidCallback? onOpenMore;
+  final VoidCallback? onOpenKey;
   final VoidCallback? onOpenForge;
   final VoidCallback? onOpenParty;
 
@@ -124,6 +128,26 @@ class DungeonTopHud extends StatelessWidget {
         );
       }
       items.add(const PopupMenuDivider());
+      if (onOpenKey != null) {
+        items.add(
+          PopupMenuItem(
+            value: 'key',
+            child: Text(
+              'KEYSTONE',
+              style: GameTheme.pixel(size: GameTheme.hudPixel),
+            ),
+          ),
+        );
+      }
+      items.add(
+        PopupMenuItem(
+          value: 'more',
+          child: Text(
+            'MORE',
+            style: GameTheme.pixel(size: GameTheme.hudPixel),
+          ),
+        ),
+      );
       items.add(
         PopupMenuItem(
           value: 'settings',
@@ -187,6 +211,10 @@ class DungeonTopHud extends StatelessWidget {
         _requestTravel(context, floor + 1);
       case 'settings':
         onOpenSettings();
+      case 'more':
+        (onOpenMore ?? onOpenSettings)();
+      case 'key':
+        onOpenKey?.call();
       case 'quests':
         onOpenContracts();
     }
@@ -784,8 +812,8 @@ class DungeonTopHud extends StatelessWidget {
                   Flexible(
                     child: Text(
                       bagUpgrades == 1
-                          ? 'Better gear in bag — open PARTY · EQUIP'
-                          : '$bagUpgrades better items — open PARTY · EQUIP',
+                          ? 'Better gear in bag — open GEAR · EQUIP'
+                          : '$bagUpgrades better items — open GEAR · EQUIP',
                       textAlign: TextAlign.center,
                       style: GameTheme.body(
                         size: 11,

@@ -13,9 +13,6 @@ import 'overlay_scaffold.dart';
 import 'power_meta_pillars.dart';
 
 /// The one menu sheet, shared by hub and dungeon.
-///
-/// Whatever [MenuRouter] says is open gets drawn here, so PARTY looks and
-/// behaves the same whether you opened it from the hub or mid-fight.
 class MenuSurface extends StatefulWidget {
   const MenuSurface({super.key, required this.director, required this.router});
 
@@ -53,20 +50,17 @@ class _MenuSurfaceState extends State<MenuSurface> {
     if (mounted) setState(() {});
   }
 
-  /// Side effects that used to live in `Is2Shell._setOverlay`.
   void _applyRoute() {
     final route = router.route;
     final prev = _lastRoute;
     _lastRoute = route;
-    if (route != MenuRoute.none && route != MenuRoute.party) {
+    if (route != MenuRoute.none && route != MenuRoute.gear) {
       widget.director.clearToast();
     }
-    // Ack Meet … after the player leaves PARTY (not on open) so kit fantasy can be read.
-    if (prev == MenuRoute.party && route != MenuRoute.party) {
+    if (prev == MenuRoute.gear && route != MenuRoute.gear) {
       widget.director.ackPendingHeroReveals();
     }
     _ensureBridgeLayer(route != MenuRoute.none);
-    // Combat only runs in a dungeon; the hub has nothing to pause.
     widget.director.setUiPaused(
       route != MenuRoute.none && widget.director.state.inDungeon,
     );
@@ -120,7 +114,6 @@ class _MenuSurfaceState extends State<MenuSurface> {
   }
 
   void _putInCombinator(String id) {
-    // Merge is bag-only — equipped pieces must be unequipped first.
     if (GameLogic.findStashGear(state, id) == null) {
       widget.director.showToast('Unequip to bag before merging', life: 2.2);
       return;
@@ -144,8 +137,8 @@ class _MenuSurfaceState extends State<MenuSurface> {
       selectedId: router.selectedItemId,
       combineA: router.combineA,
       combineB: router.combineB,
-      tab: router.partyTab,
-      onTabChanged: (tab) => router.partyTab = tab,
+      panel: router.gearPanel,
+      onPanelChanged: (panel) => router.gearPanel = panel,
       flatChrome: true,
       onSelect: router.selectItem,
       onPutCombine: _putInCombinator,
@@ -184,7 +177,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
         router.dropMissingIds(d.state.gearStash.map((g) => g.id).toSet());
       },
       onOpenMarket: () =>
-          router.open(MenuRoute.power, power: PowerTab.market),
+          router.open(MenuRoute.power, power: PowerSegment.market),
     );
   }
 
@@ -192,10 +185,9 @@ class _MenuSurfaceState extends State<MenuSurface> {
   Widget build(BuildContext context) {
     final d = widget.director;
     if (router.route == MenuRoute.none) return const SizedBox.shrink();
-    // Phone-first: short menus still need most of the screen (list + claims).
     final heightFactor = switch (router.route) {
-      MenuRoute.party => 1.0,
-      MenuRoute.jobs => 0.84,
+      MenuRoute.gear => 1.0,
+      MenuRoute.quests => 0.84,
       _ => 0.96,
     };
     return OverlayScrim(
@@ -203,22 +195,23 @@ class _MenuSurfaceState extends State<MenuSurface> {
       heightFactor: heightFactor,
       onClose: router.close,
       child: switch (router.route) {
-        MenuRoute.party => _inventoryDock(),
+        MenuRoute.gear => _inventoryDock(),
         MenuRoute.power => PowerPillar(
           director: d,
-          tab: router.powerTab,
-          onTabChanged: (tab) => router.powerTab = tab,
+          segment: router.powerSegment,
+          onSegmentChanged: (seg) => router.powerSegment = seg,
         ),
-        MenuRoute.meta || MenuRoute.settings => MetaPillar(
+        MenuRoute.quests => SingleChildScrollView(
+          child: JobsOverlay(director: d),
+        ),
+        MenuRoute.key => KeystoneSheet(director: d),
+        MenuRoute.more => MoreList(
           director: d,
-          tab: router.metaTab,
-          onTabChanged: (tab) => router.metaTab = tab,
+          section: router.moreSection,
+          onSectionChanged: (sec) => router.moreSection = sec,
           onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
           onClose: router.close,
           bagFiltersScrollNonce: router.bagFiltersScrollNonce,
-        ),
-        MenuRoute.jobs => SingleChildScrollView(
-          child: JobsOverlay(director: d),
         ),
         MenuRoute.none => const SizedBox.shrink(),
       },

@@ -1003,8 +1003,8 @@ class GameDirector extends ChangeNotifier {
             beforeClear.dungeonMode == DungeonMode.push) {
           showToast(
             bagUps == 1
-                ? 'Better gear waiting — open PARTY · EQUIP'
-                : '$bagUps better items waiting — open PARTY · EQUIP',
+                ? 'Better gear waiting — open GEAR · EQUIP'
+                : '$bagUps better items waiting — open GEAR · EQUIP',
             life: 3.2,
           );
         }

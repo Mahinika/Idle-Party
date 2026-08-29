@@ -146,7 +146,7 @@ class HubChase {
         title: completeMissions == 1
             ? 'Claim quest reward'
             : 'Claim quest rewards',
-        detail: 'Finished quests wait under META → QUESTS.',
+        detail: 'Finished quests wait under QUESTS.',
         progressLabel: '$completeMissions ready',
         urgency: HubChaseUrgency.ready,
       );
@@ -418,7 +418,7 @@ class HubChase {
           : '$upgrades better items waiting',
       detail: upgrades == 1
           ? (named != null
-              ? '$named is in BAG — open PARTY and tap EQUIP.'
+              ? '$named is in BAG — open GEAR and tap EQUIP.'
               : 'Open PARTY and tap EQUIP before you go deeper.')
           : (named != null
               ? 'Open PARTY — tap EQUIP ($upgrades waiting; first: $named).'
@@ -732,7 +732,7 @@ class HubChase {
         kind: HubChaseKind.riftMilestone,
         title: almost ? 'Almost Rift R$tier' : 'Rift R$tier',
         detail: best <= 0
-            ? 'Enter a Rift (tier dial on META → KEY) — clear for +${pay}e at R$tier.'
+            ? 'Enter a Rift (tier dial on KEY) — clear for +${pay}e at R$tier.'
             : 'Best R$best — $need tiers to R$tier (+${pay}e).',
         progressLabel: 'R$best → R$tier',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,

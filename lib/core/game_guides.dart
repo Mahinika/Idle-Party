@@ -2,7 +2,7 @@ import 'game_logic.dart';
 import 'game_state.dart';
 import 'ashen_crown.dart';
 
-/// In-game guide copy for META → GUIDE.
+/// In-game guide copy for MORE → INFO.
 abstract final class GameGuides {
   /// Early topics before the first boss (plain chrome).
   static const Set<String> firstHourTopicIds = {
@@ -119,7 +119,7 @@ abstract final class GameGuides {
       body:
           'Your party is three jobs: Shield (soaks hits), Healer (keeps people up), '
           'and Damage (kills enemies).\n\n'
-          '• PARTY → ROSTER to swap who is fighting (4 slots, '
+          '• GEAR → ROSTER to swap who is fighting (4 slots, '
           '5th unlockable later).\n'
           '• New Game: pick 3 starters — Protection (Shield), Discipline (Healer), '
           'Fire (Damage) is the easy mix.\n'
@@ -276,7 +276,7 @@ abstract final class GameGuides {
           '• Wipe or timeout ends the run with a small consolation.\n'
           '• Not ranked on Play Games — use Greater Rift for season prestige '
           '(KEY + Gauntlet boards live; GR board when Console ID is set).\n'
-          '• Set preferred tier under META → KEY · RIFT, or tap RIFT on the hub.',
+          '• Set preferred tier under KEY · RIFT, or tap RIFT on the hub.',
     ),
     GuideTopic(
       id: 'greater_rift',
@@ -286,9 +286,9 @@ abstract final class GameGuides {
           '• Timed kill quota on a tougher ladder (GR1–GR20).\n'
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear.\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
-          '• Season ranks: Timed KEY + Gauntlet on META → KEY · BOARDS (Play Games). '
+          '• Season ranks: Timed KEY + Gauntlet on KEY · BOARDS (Play Games). '
           'Greater Rift board wires when the Console ID is pasted.\n'
-          '• Tap GREATER RIFT on the hub or set tier under META → KEY.',
+          '• Tap GREATER RIFT on the hub or set tier under KEY.',
     ),
     GuideTopic(
       id: 'apex',
@@ -321,7 +321,7 @@ abstract final class GameGuides {
       id: 'pets',
       title: 'BEAST PEN',
       body:
-          'META → BEAST.\n\n'
+          'POWER → Camp.\n\n'
           '• Hatch and level pets with essence (random species and rarity).\n'
           '• Merge two same-species pets of the same rarity into a higher rarity.\n'
           '• Favorite a species: +1 ATK and a stronger passive while that pet is ACTIVE.\n'
@@ -351,7 +351,7 @@ abstract final class GameGuides {
       id: 'jobs',
       title: 'QUESTS',
       body:
-          'META → QUESTS.\n\n'
+          'QUESTS.\n\n'
           '• Three slots: Daily (UTC kill goal), Bounty (kill ladder), Side '
           '(bosses, elites, floors, or gold).\n'
           '• Daily returns next UTC day after you claim.\n'
@@ -359,7 +359,7 @@ abstract final class GameGuides {
           '(smaller rungs earlier); top rung repeats.\n'
           '• Claim 3 in a row for a +5e chain bonus.\n'
           '• Hub META badge may show ! when claims are ready.\n'
-          '• TODAY and META → QUESTS both use CLAIM QUESTS (count when several).\n'
+          '• TODAY and QUESTS both use CLAIM QUESTS (count when several).\n'
           '• The dungeon top CLAIM chip claims all ready quests at once '
           '(visible in combat too; long-press opens the list).',
     ),
@@ -372,7 +372,7 @@ abstract final class GameGuides {
           'Daily and vault-start wait until you have beaten a boss (or Ascended).\n'
           '• Fill today’s vault with 1 dungeon clear, then claim essence.\n'
           '• At party Lv${GameLogic.maxHeroLevel}: KEYSTONE unlocks — time a KEY +2 (or higher) for a bigger '
-          'vault claim (META → KEY). TODAY may chase KEY / Gauntlet / Rift.\n'
+          'vault claim (KEY). TODAY may chase KEY / Gauntlet / Rift.\n'
           '• Hub TODAY and offline Up next share one chase (claim → READY → '
           'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
           '• Welcome-back shows one wow line, a few highlights, then Up next.\n'
@@ -407,7 +407,7 @@ abstract final class GameGuides {
       id: 'ashen_crown',
       title: 'ASHEN CROWN',
       body:
-          'Weekly ticket boss (party Lv${GameLogic.maxHeroLevel}). Hub TODAY or META → KEY.\n\n'
+          'Weekly ticket boss (party Lv${GameLogic.maxHeroLevel}). Hub TODAY or KEY.\n\n'
           '• ${AshenCrown.ticketsPerWeek} tickets each ISO week. The first ticket clear '
           'pays +${AshenCrown.essenceReward}e and a title.\n'
           '• After that clear, further tickets do not pay — use PRACTICE (free, no ticket) '
@@ -420,7 +420,7 @@ abstract final class GameGuides {
       id: 'hardmode',
       title: 'KEYSTONE RUNS',
       body:
-          'Mythic+-style keys from the hub KEY panel (META → KEY — first tab when '
+          'Mythic+-style keys from the hub KEY panel (KEY — first tab when '
           'party is Lv${GameLogic.maxHeroLevel}) — unlocks at '
           'party level ${GameLogic.maxHeroLevel}.\n\n'
           '• Endgame only: set key before you enter a normal zone dungeon.\n'
@@ -476,7 +476,7 @@ abstract final class GameGuides {
       id: 'codex',
       title: 'CODEX & ACHIEVEMENTS',
       body:
-          'META → CODEX (codex + trophies).\n\n'
+          'MORE → INFO (codex + trophies).\n\n'
           '• Codex records monsters and items you have seen.\n'
           '• Achievements track milestones and grant rewards.\n'
           '• Discovery happens automatically as you play.',
@@ -493,7 +493,7 @@ abstract final class GameGuides {
           'mute + haptics, keep screen on in dungeon, Full / Lite / Minimal VFX '
           '(Minimal = reduce motion), colorblind floaters, '
           'bag auto-sell / auto-disassemble.\n'
-          '• META → GUIDE brings you back here anytime.\n'
+          '• MORE → INFO brings you back here anytime.\n'
           '• Escape / back closes overlays.',
     ),
   ];

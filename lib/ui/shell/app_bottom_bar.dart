@@ -7,40 +7,63 @@ import '../kenney_assets.dart';
 import '../kenney_sprite.dart';
 import '../web_click_bridge.dart';
 
-/// The one nav row. Hub and dungeon show the same pillars in the same order;
-/// the dungeon adds LEAVE (back to hub), the hub does not.
+/// Flat tab bottom bar. Hub: GEAR · POWER · (KEY) · QUESTS · MORE.
+/// Dungeon: GEAR · POWER · QUESTS · LEAVE.
 class AppBottomBar extends StatelessWidget {
   const AppBottomBar({
     super.key,
     required this.alerts,
     required this.route,
-    required this.onParty,
-    required this.onPower,
-    required this.onMeta,
+    required this.destinations,
+    required this.onSelect,
     this.onHubClose,
     this.showReason = false,
   });
 
-  /// Shared "something waits here" marks (see [MenuAlerts]).
   final MenuAlerts alerts;
   final MenuRoute route;
-  final VoidCallback onParty;
-  final VoidCallback onPower;
-  final VoidCallback onMeta;
-
-  /// Dungeon only: leaving back to the hub.
+  final List<MenuRoute> destinations;
+  final void Function(MenuRoute route) onSelect;
   final VoidCallback? onHubClose;
-
-  /// Hub: one plain line saying what is waiting behind a marked button.
   final bool showReason;
+
+  static String labelFor(MenuRoute r) => switch (r) {
+    MenuRoute.gear => 'GEAR',
+    MenuRoute.power => 'POWER',
+    MenuRoute.quests => 'QUESTS',
+    MenuRoute.key => 'KEY',
+    MenuRoute.more => 'MORE',
+    MenuRoute.none => '',
+  };
+
+  static String iconFor(MenuRoute r) => switch (r) {
+    MenuRoute.gear => KenneyAssets.helmet,
+    MenuRoute.power => CustomAssets.iconAxe,
+    MenuRoute.quests => KenneyAssets.book,
+    MenuRoute.key => KenneyAssets.chestClosed,
+    MenuRoute.more => CustomAssets.iconBook,
+    MenuRoute.none => KenneyAssets.book,
+  };
+
+  MenuAlert _alertFor(MenuRoute r) => switch (r) {
+    MenuRoute.gear => alerts.gear,
+    MenuRoute.power => alerts.power,
+    MenuRoute.quests => alerts.quests,
+    MenuRoute.key => alerts.key,
+    MenuRoute.more => alerts.more,
+    MenuRoute.none => MenuAlert.quiet,
+  };
 
   @override
   Widget build(BuildContext context) {
-    // FEEL 329: four dungeon pillars (PARTY/POWER/META/LEAVE) need denser labels.
-    final dense = onHubClose != null;
-    final reason = alerts.party.isQuiet
-        ? alerts.meta.reason
-        : alerts.party.reason;
+    final dense = onHubClose != null || destinations.length >= 5;
+    final reason = !alerts.gear.isQuiet
+        ? alerts.gear.reason
+        : !alerts.quests.isQuiet
+            ? alerts.quests.reason
+            : !alerts.more.isQuiet
+                ? alerts.more.reason
+                : alerts.power.reason;
     final bar = Material(
       color: Colors.transparent,
       child: Container(
@@ -67,42 +90,20 @@ class AppBottomBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Expanded(
-              child: AppBottomBarItem(
-                label: 'PARTY',
-                icon: KenneyAssets.helmet,
-                badge: alerts.party.badge,
-                selected: route == MenuRoute.party,
-                dense: dense,
-                onTap: onParty,
+            for (final dest in destinations)
+              Expanded(
+                child: AppBottomBarItem(
+                  label: labelFor(dest),
+                  icon: iconFor(dest),
+                  badge: _alertFor(dest).badge,
+                  selected: route == dest,
+                  dense: dense,
+                  onTap: () => onSelect(dest),
+                ),
               ),
-            ),
-            Expanded(
-              child: AppBottomBarItem(
-                label: 'POWER',
-                icon: CustomAssets.iconAxe,
-                badge: alerts.power.badge,
-                selected: route == MenuRoute.power,
-                dense: dense,
-                onTap: onPower,
-              ),
-            ),
-            Expanded(
-              child: AppBottomBarItem(
-                label: 'META',
-                icon: KenneyAssets.book,
-                badge: alerts.meta.badge,
-                selected:
-                    route == MenuRoute.meta ||
-                    route == MenuRoute.settings ||
-                    route == MenuRoute.jobs,
-                dense: dense,
-                onTap: onMeta,
-              ),
-            ),
             if (onHubClose != null)
               Expanded(
-                flex: 2,
+                flex: destinations.length >= 4 ? 1 : 2,
                 child: AppBottomBarItem(
                   label: 'LEAVE',
                   icon: KenneyAssets.iconDoor,
@@ -153,11 +154,7 @@ class AppBottomBarItem extends StatelessWidget {
   final String icon;
   final bool selected;
   final bool urgent;
-
-  /// Small count / star drawn on the icon when something waits inside.
   final String badge;
-
-  /// Tighter icon/label when four dungeon pillars share ~360px.
   final bool dense;
   final VoidCallback onTap;
 

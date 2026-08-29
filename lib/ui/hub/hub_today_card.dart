@@ -33,7 +33,7 @@ class HubMetaPulse extends StatelessWidget {
         chaseKind != HubChaseKind.dailyVaultProgress &&
         chaseKind != HubChaseKind.claimDailyVault) {
       bits.add(
-        state.hardmodeLevel <= 0 ? 'KEY off · META → KEY' : 'KEY +${state.hardmodeLevel}',
+        state.hardmodeLevel <= 0 ? 'KEY off · open KEY' : 'KEY +${state.hardmodeLevel}',
       );
     }
 

@@ -497,7 +497,7 @@ class _ForgeOverlayState extends State<ForgeOverlay>
           const SizedBox(height: 8),
           _sectionTitle(
             '5TH SLOT',
-            'Extra fighter · survives Ascend. Also on PARTY → ROSTER.',
+            'Extra fighter · survives Ascend. Also on GEAR → ROSTER.',
             scope: MenuScope.account,
           ),
           KenneyButton(

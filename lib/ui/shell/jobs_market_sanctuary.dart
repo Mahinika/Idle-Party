@@ -439,7 +439,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Buy gear · sell & clean in PARTY → BAG',
+          'Buy gear · sell & clean in GEAR → BAG',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),

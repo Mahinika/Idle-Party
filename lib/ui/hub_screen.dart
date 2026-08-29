@@ -166,28 +166,28 @@ class _HubScreenState extends State<HubScreen>
           'CLAIM QUESTS',
           () {
             director.claimAllReadyMissions();
-            router.open(MenuRoute.meta, meta: MetaTab.jobs);
+            router.open(MenuRoute.quests);
           },
         );
       case HubChaseKind.monthGoal:
         return ('CLAIM MONTH', director.claimMonthPass);
       case HubChaseKind.meetHero:
         return (
-          'OPEN PARTY',
+          'OPEN GEAR',
           () {
-            // Ack when leaving PARTY (menu_surface) so kit fantasy can be read first.
+            // Ack when leaving GEAR (menu_surface) so kit fantasy can be read first.
             router.openForHubChase(director.state, HubChaseKind.meetHero);
           },
         );
       case HubChaseKind.equipBag:
         return (
-          'OPEN PARTY',
+          'OPEN GEAR',
           () => router.openForHubChase(director.state, HubChaseKind.equipBag),
         );
       case HubChaseKind.marketUpgrade:
         return (
           'MARKET',
-          () => router.open(MenuRoute.power, power: PowerTab.market),
+          () => router.open(MenuRoute.power, power: PowerSegment.market),
         );
       case HubChaseKind.ascend:
         return ('ASCEND', () => confirmAscend(context, director));
@@ -311,11 +311,8 @@ class _HubScreenState extends State<HubScreen>
         );
       case HubChaseKind.willRank:
         return (
-          MenuTabs.showCodex(state) ? 'CODEX' : 'META',
-          () => router.open(
-            MenuRoute.meta,
-            meta: MenuTabs.showCodex(state) ? MetaTab.codex : null,
-          ),
+          'INFO',
+          () => router.open(MenuRoute.more, more: MoreSection.info),
         );
     }
   }
@@ -492,10 +489,9 @@ class _HubScreenState extends State<HubScreen>
             label: state.hardmodeLevel <= 0
                 ? 'KEY DIAL · off'
                 : 'KEY DIAL · +${state.hardmodeLevel}',
-            tip: 'Open META → KEY for Soft/Hard/Brutal, Rifts, and boards',
+            tip: 'Open KEY for Soft/Hard/Brutal, Rifts, and boards',
             style: KenneyButtonStyle.grey,
-            onPressed: () =>
-                router.open(MenuRoute.meta, meta: MetaTab.key),
+            onPressed: () => router.open(MenuRoute.key),
           ),
         ],
         if (showUrgentRow)
@@ -616,8 +612,10 @@ class _HubScreenState extends State<HubScreen>
                                   zoneTrophies:
                                       state.metaDepth.zoneTrophies.length,
                                   torch: 0.55 + (_torch.value * 0.45),
-                                  onOpenSettings: () =>
-                                      router.open(MenuRoute.settings),
+                                  onOpenSettings: () => router.open(
+                                    MenuRoute.more,
+                                    more: MoreSection.settings,
+                                  ),
                                   incomeLine: GoldIncome.hubRateLine(state),
                                   multiplierLine:
                                       GoldIncome.multiplierLine(state),
@@ -642,7 +640,7 @@ class _HubScreenState extends State<HubScreen>
                                     ),
                                     onOpenMarket: () => router.open(
                                       MenuRoute.power,
-                                      power: PowerTab.market,
+                                      power: PowerSegment.market,
                                     ),
                                     onEnterDungeon: widget.onEnterDungeon,
                                   ),
@@ -729,11 +727,10 @@ class _HubScreenState extends State<HubScreen>
                           chaseKind: chase.kind,
                           urgency: chase.urgency,
                         ),
-                        route: MenuRoute.none,
+                        route: router.route,
+                        destinations: MenuRouter.visibleHubTabs(state),
                         showReason: chase.urgency != HubChaseUrgency.ready,
-                        onParty: () => router.open(MenuRoute.party),
-                        onPower: () => router.open(MenuRoute.power),
-                        onMeta: () => router.open(MenuRoute.meta, state: state),
+                        onSelect: (dest) => router.toggle(dest, state: state),
                       ),
                     ],
                   ),

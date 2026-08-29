@@ -6,7 +6,7 @@ import 'package:idle_party/core/menu_router.dart';
 void main() {
   final now = DateTime.utc(2026, 8, 22);
 
-  test('AL20 veteran sees GEAR BAG MERGE ROSTER only', () {
+  test('AL20 veteran sees GEAR BAG MERGE ROSTER panels', () {
     final veteran = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 20,
       highestDungeonCleared: 14,
@@ -14,12 +14,12 @@ void main() {
     expect(MenuTabs.showMerge(veteran), isTrue);
     expect(MenuTabs.showRoster(veteran), isTrue);
     expect(
-      MenuRouter.visiblePartyTabs(veteran),
+      MenuRouter.visibleGearPanels(veteran),
       equals(const [
-        PartyTab.gear,
-        PartyTab.bag,
-        PartyTab.merge,
-        PartyTab.roster,
+        GearPanel.gear,
+        GearPanel.bag,
+        GearPanel.merge,
+        GearPanel.roster,
       ]),
     );
   });
@@ -51,26 +51,56 @@ void main() {
     );
     expect(GameLogic.showKeystoneJargon(endgame), isTrue);
     expect(MenuTabs.showKey(endgame), isTrue);
+    expect(
+      MenuRouter.visibleHubTabs(endgame),
+      equals(const [
+        MenuRoute.gear,
+        MenuRoute.power,
+        MenuRoute.key,
+        MenuRoute.quests,
+        MenuRoute.more,
+      ]),
+    );
   });
 
-  test('fresh POWER is Gold upgrades + Buy supplies only', () {
+  test('fresh POWER segments are Forge + Market only', () {
     final early = GameLogic.createInitialState(now: now);
     expect(MenuTabs.showCamp(early), isFalse);
     expect(MenuTabs.showShop(early), isFalse);
     expect(
-      MenuRouter.visiblePowerTabs(early),
-      equals(const [PowerTab.forge, PowerTab.market]),
+      MenuRouter.visiblePowerSegments(early),
+      equals(const [PowerSegment.forge, PowerSegment.market]),
+    );
+    expect(
+      MenuRouter.visibleHubTabs(early),
+      equals(const [
+        MenuRoute.gear,
+        MenuRoute.power,
+        MenuRoute.quests,
+        MenuRoute.more,
+      ]),
     );
 
     final afterAscend = early.copyWith(ascensionLevel: 1, essence: 10);
     expect(MenuTabs.showCamp(afterAscend), isTrue);
     expect(
-      MenuRouter.visiblePowerTabs(afterAscend),
+      MenuRouter.visiblePowerSegments(afterAscend),
       equals(const [
-        PowerTab.forge,
-        PowerTab.market,
-        PowerTab.camp,
-        PowerTab.shop,
+        PowerSegment.forge,
+        PowerSegment.market,
+        PowerSegment.camp,
+      ]),
+    );
+  });
+
+  test('dungeon tabs are GEAR POWER QUESTS only', () {
+    final s = GameLogic.createInitialState(now: now);
+    expect(
+      MenuRouter.visibleDungeonTabs(s),
+      equals(const [
+        MenuRoute.gear,
+        MenuRoute.power,
+        MenuRoute.quests,
       ]),
     );
   });

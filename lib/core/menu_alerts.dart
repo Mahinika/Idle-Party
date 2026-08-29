@@ -6,22 +6,15 @@ import 'hub_chase.dart';
 import 'market_listings_service.dart';
 import 'meta_systems.dart';
 
-/// Which bottom-nav pillar an alert belongs to.
-enum MenuPillar { party, power, meta }
+/// Which bottom-nav destination an alert belongs to.
+enum MenuPillar { gear, power, quests, key, more }
 
 /// One "something is waiting here" mark for a menu button.
-///
-/// Counts beat stars: `PARTY 3` is more useful than a dot. [reason] is the
-/// plain English line shown inside the menu so a new player knows what to do.
 class MenuAlert {
   const MenuAlert({this.count = 0, this.star = false, this.reason = ''});
 
-  /// Number of things the player can act on right now (0 = quiet).
   final int count;
-
-  /// Something new to read rather than to count (What's New).
   final bool star;
-
   final String reason;
 
   static const MenuAlert quiet = MenuAlert();
@@ -33,58 +26,63 @@ class MenuAlert {
       : count > 0
       ? '$count'
       : '';
-
 }
 
 /// Menu attention marks — one source for hub buttons and the bottom nav.
-///
-/// Same idea as [ChaseContract] for TODAY: selection lives here, every surface
-/// reads the same words instead of inventing its own badge rules.
 class MenuAlerts {
   const MenuAlerts({
-    required this.party,
+    required this.gear,
     required this.power,
-    required this.meta,
+    required this.quests,
+    required this.key,
+    required this.more,
   });
 
-  final MenuAlert party;
+  final MenuAlert gear;
   final MenuAlert power;
-  final MenuAlert meta;
+  final MenuAlert quests;
+  final MenuAlert key;
+  final MenuAlert more;
 
   MenuAlert of(MenuPillar pillar) => switch (pillar) {
-    MenuPillar.party => party,
+    MenuPillar.gear => gear,
     MenuPillar.power => power,
-    MenuPillar.meta => meta,
+    MenuPillar.quests => quests,
+    MenuPillar.key => key,
+    MenuPillar.more => more,
   };
 
   static const MenuAlerts none = MenuAlerts(
-    party: MenuAlert.quiet,
+    gear: MenuAlert.quiet,
     power: MenuAlert.quiet,
-    meta: MenuAlert.quiet,
+    quests: MenuAlert.quiet,
+    key: MenuAlert.quiet,
+    more: MenuAlert.quiet,
   );
 
   static MenuAlerts forState(GameState state) => MenuAlerts(
-    party: partyAlert(state),
+    gear: gearAlert(state),
     power: powerAlert(state),
-    meta: metaAlert(state),
+    quests: questsAlert(state),
+    key: keyAlert(state),
+    more: moreAlert(state),
   );
 
   /// Dungeon bottom-nav marks — keep fight chrome quiet.
-  ///
-  /// Only bag upgrades (equip now). Forge/CAMP/What's New/KEY wait for hub;
-  /// quest claims already have the top HUD chip.
   static MenuAlerts forDungeon(GameState state) {
     final upgrades = bagUpgradeCount(state);
     if (upgrades <= 0) return none;
     return MenuAlerts(
-      party: MenuAlert(
+      gear: MenuAlert(
         count: upgrades,
         reason: upgrades == 1
-            ? '1 better item for the party — open PARTY · EQUIP'
-            : '$upgrades better items for the party — open PARTY · EQUIP',
+            ? '1 better item for the party — open GEAR · EQUIP'
+            : '$upgrades better items for the party — open GEAR · EQUIP',
       ),
       power: MenuAlert.quiet,
-      meta: MenuAlert.quiet,
+      quests: MenuAlert.quiet,
+      key: MenuAlert.quiet,
+      more: MenuAlert.quiet,
     );
   }
 
@@ -98,35 +96,42 @@ class MenuAlerts {
       final upgrades = bagUpgradeCount(state);
       if (upgrades <= 0) return none;
       return MenuAlerts(
-        party: MenuAlert(
+        gear: MenuAlert(
           count: upgrades,
           reason: upgrades == 1
-              ? '1 better item — open PARTY'
-              : '$upgrades better items — open PARTY',
+              ? '1 better item — open GEAR'
+              : '$upgrades better items — open GEAR',
         ),
         power: MenuAlert.quiet,
-        meta: MenuAlert.quiet,
+        quests: MenuAlert.quiet,
+        key: MenuAlert.quiet,
+        more: MenuAlert.quiet,
       );
     }
     if (urgency == HubChaseUrgency.ready && chaseKind != null) {
       return switch (chaseKind) {
-        HubChaseKind.equipBag ||
-        HubChaseKind.meetHero => MenuAlerts(
-          party: partyAlert(state),
+        HubChaseKind.equipBag || HubChaseKind.meetHero => MenuAlerts(
+          gear: gearAlert(state),
           power: MenuAlert.quiet,
-          meta: MenuAlert.quiet,
+          quests: MenuAlert.quiet,
+          key: MenuAlert.quiet,
+          more: MenuAlert.quiet,
         ),
         HubChaseKind.marketUpgrade => MenuAlerts(
-          party: MenuAlert.quiet,
+          gear: MenuAlert.quiet,
           power: powerAlert(state),
-          meta: MenuAlert.quiet,
+          quests: MenuAlert.quiet,
+          key: MenuAlert.quiet,
+          more: MenuAlert.quiet,
         ),
         HubChaseKind.claimMissions ||
         HubChaseKind.claimDailyVault ||
         HubChaseKind.dailyVaultProgress => MenuAlerts(
-          party: MenuAlert.quiet,
+          gear: MenuAlert.quiet,
           power: MenuAlert.quiet,
-          meta: metaAlert(state),
+          quests: questsAlert(state),
+          key: MenuAlert.quiet,
+          more: MenuAlert.quiet,
         ),
         _ => forState(state),
       };
@@ -134,8 +139,7 @@ class MenuAlerts {
     return forState(state);
   }
 
-  /// PARTY: new heroes to meet, then bag upgrades, then a full bag.
-  static MenuAlert partyAlert(GameState state) {
+  static MenuAlert gearAlert(GameState state) {
     final meets = state.metaDepth.pendingHeroReveals.length;
     if (meets > 0) {
       return MenuAlert(
@@ -150,23 +154,19 @@ class MenuAlerts {
       return MenuAlert(
         count: upgrades,
         reason: upgrades == 1
-            ? '1 better item for the party — open PARTY · EQUIP'
-            : '$upgrades better items for the party — open PARTY · EQUIP',
+            ? '1 better item for the party — open GEAR · EQUIP'
+            : '$upgrades better items for the party — open GEAR · EQUIP',
       );
     }
     if (isBagFull(state)) {
-      return MenuAlert(
-        star: true,
-        reason: bagStatusLine(state),
-      );
+      return MenuAlert(star: true, reason: bagStatusLine(state));
     }
     return MenuAlert.quiet;
   }
 
-  /// POWER: gold or essence that is clearly piling up unspent.
-  ///
-  /// Gold is always trickling in, so the mark needs real surplus (3 steps'
-  /// worth) — a badge that never turns off teaches players to ignore badges.
+  /// Backward-compatible alias used by inventory hints.
+  static MenuAlert partyAlert(GameState state) => gearAlert(state);
+
   static MenuAlert powerAlert(GameState state) {
     var count = 0;
     final reasons = <String>[];
@@ -197,14 +197,7 @@ class MenuAlerts {
     return MenuAlert(count: count, reason: 'You have ${reasons.join(' · ')}');
   }
 
-  /// META: What's New first, then claims waiting, then KEY dial nudge at endgame.
-  static MenuAlert metaAlert(GameState state) {
-    if (MetaSystems.hasUnseenChangelog(state)) {
-      return const MenuAlert(
-        star: true,
-        reason: "What's New is unread — GUIDE tab",
-      );
-    }
+  static MenuAlert questsAlert(GameState state) {
     var count = 0;
     final reasons = <String>[];
     final jobs = state.missions.where((m) => m.canClaim).length;
@@ -216,22 +209,43 @@ class MenuAlerts {
       count++;
       reasons.add('daily vault ready');
     }
-    if (count > 0) {
-      return MenuAlert(count: count, reason: 'Claim: ${reasons.join(' · ')}');
+    if (count <= 0) return MenuAlert.quiet;
+    return MenuAlert(count: count, reason: 'Claim: ${reasons.join(' · ')}');
+  }
+
+  static MenuAlert keyAlert(GameState state) {
+    if (!GameLogic.endgameUnlocked(state) || !MenuTabs.showKey(state)) {
+      return MenuAlert.quiet;
     }
-    if (GameLogic.endgameUnlocked(state) && MenuTabs.showKey(state)) {
-      final cap = state.ascensionLevel.clamp(0, GameLogic.maxAscensionLevel);
-      if (state.hardmodeLevel < cap) {
-        return MenuAlert(
-          count: 1,
-          reason: 'KEY +${state.hardmodeLevel + 1} — first META tab',
-        );
-      }
+    final cap = state.ascensionLevel.clamp(0, GameLogic.maxAscensionLevel);
+    if (state.hardmodeLevel < cap) {
+      return MenuAlert(
+        count: 1,
+        reason: 'KEY +${state.hardmodeLevel + 1} ready',
+      );
     }
     return MenuAlert.quiet;
   }
 
-  /// Cheapest next Sanctuary track level (gold / power / stamina / lore).
+  static MenuAlert moreAlert(GameState state) {
+    if (MetaSystems.hasUnseenChangelog(state)) {
+      return const MenuAlert(
+        star: true,
+        reason: "What's New is unread — MORE · INFO",
+      );
+    }
+    return MenuAlert.quiet;
+  }
+
+  /// Legacy META-style alert for surfaces that still ask "meta".
+  static MenuAlert metaAlert(GameState state) {
+    final more = moreAlert(state);
+    if (!more.isQuiet) return more;
+    final quests = questsAlert(state);
+    if (!quests.isQuiet) return quests;
+    return keyAlert(state);
+  }
+
   static int cheapestCampLevel(GameState state) {
     var lowest = state.sanctuaryGoldLevel;
     for (final level in <int>[
@@ -247,16 +261,11 @@ class MenuAlerts {
   static bool isBagFull(GameState state) =>
       state.gearStash.length >= GameLogic.maxGearStashFor(state);
 
-  /// How many bag items Auto Equip would actually put on someone.
-  ///
-  /// The plan itself is memoized in [GameLogic.planBiSAssignments], so the
-  /// badge can ask on every chrome repaint (~10 Hz in a live dungeon).
   static int bagUpgradeCount(GameState state) {
     if (state.gearStash.isEmpty) return 0;
     return GameLogic.planBiSAssignments(state).length;
   }
 
-  /// Subset of [bagUpgradeCount] that would land on [heroIndex].
   static int bagUpgradeCountForHero(GameState state, int heroIndex) {
     if (state.gearStash.isEmpty) return 0;
     if (heroIndex < 0 || heroIndex >= state.heroes.length) return 0;
@@ -267,7 +276,6 @@ class MenuAlerts {
     return n;
   }
 
-  /// Full-bag line when nothing is an Auto Equip upgrade (shared across PARTY UI).
   static String bagStatusLine(GameState state) {
     if (bagUpgradeCount(state) > 0) return '';
     if (GearService.isBagJammed(state) && !isBagFull(state)) {
@@ -278,13 +286,11 @@ class MenuAlerts {
     return 'Bag full — backups kept; CLEAN BAG or MERGE';
   }
 
-  /// Pending kit unlock — nudge toward ROSTER, not GEAR doll.
   static String meetRosterHint(GameState state) {
     if (state.metaDepth.pendingHeroReveals.isEmpty) return '';
-    return 'New kit — open ROSTER tab';
+    return 'New kit — open ROSTER in GEAR';
   }
 
-  /// GEAR-tab line: don't imply every upgrade is for the doll you are staring at.
   static String gearEquipHint(GameState state, int heroIndex) {
     final meet = meetRosterHint(state);
     if (meet.isNotEmpty) return meet;
@@ -308,27 +314,21 @@ class MenuAlerts {
   }
 }
 
-/// Progressive menus: hide advanced tabs until they can do something.
-///
-/// A brand new player sees PARTY · GEAR/BAG, POWER · FORGE/MARKET,
-/// META · QUESTS/GUIDE/SETTINGS. Tabs appear as the systems behind them unlock.
+/// Progressive menus: hide advanced panels until they can do something.
 abstract final class MenuTabs {
   static bool _clearedAFloor(GameState s) =>
       s.highestFloorCleared >= 1 ||
       s.metaDepth.lifetimeFloorClears >= 1 ||
       s.ascensionLevel >= 1;
 
-  // PARTY
   static bool showMerge(GameState s) =>
       s.ascensionLevel >= 1 || s.highestDungeonCleared >= 0;
   static bool showRoster(GameState s) =>
       s.ascensionLevel >= 1 || s.metaDepth.pendingHeroReveals.isNotEmpty;
 
-  // POWER
   static bool showCamp(GameState s) => s.ascensionLevel >= 1 || s.essence > 0;
   static bool showShop(GameState s) => s.ascensionLevel >= 1;
 
-  // META
   static bool showKey(GameState s) => GameLogic.showKeystoneJargon(s);
   static bool showBeast(GameState s) =>
       s.ascensionLevel >= 1 ||

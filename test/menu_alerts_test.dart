@@ -18,17 +18,17 @@ void main() {
         itemLevel: 90,
       );
 
-  test('fresh save keeps PARTY quiet and META starred by What’s New', () {
+  test('fresh save keeps GEAR quiet and MORE quiet when changelog seen', () {
     final state = GameLogic.createInitialState(now: now);
     final alerts = MenuAlerts.forState(state);
-    expect(alerts.party.isQuiet, isTrue);
-    expect(alerts.party.badge, isEmpty);
+    expect(alerts.gear.isQuiet, isTrue);
+    expect(alerts.gear.badge, isEmpty);
     // New games are marked as having seen the current changelog.
     expect(MetaSystems.hasUnseenChangelog(state), isFalse);
-    expect(alerts.meta.isQuiet, isTrue);
+    expect(alerts.more.isQuiet, isTrue);
   });
 
-  test('bag upgrades count on PARTY and name the EQUIP action', () {
+  test('bag upgrades count on GEAR and name the EQUIP action', () {
     final base = GameLogic.createInitialState(now: now);
     final state = base.copyWith(gearStash: [bigWeapon('up_1')]);
     final alert = MenuAlerts.partyAlert(state);
@@ -165,17 +165,18 @@ void main() {
     expect(MenuTabs.showKey(endgame), isTrue);
   });
 
-  test('dungeon alerts only flag bag upgrades — not forge/meta noise', () {
+  test('dungeon alerts only flag bag upgrades — not forge/quests noise', () {
     final base = GameLogic.createInitialState(now: now);
     final withUpgrade = base.copyWith(gearStash: [bigWeapon('dung_up')]);
     final dungeon = MenuAlerts.forDungeon(withUpgrade);
-    expect(dungeon.party.count, greaterThan(0));
+    expect(dungeon.gear.count, greaterThan(0));
     expect(dungeon.power.isQuiet, isTrue);
-    expect(dungeon.meta.isQuiet, isTrue);
+    expect(dungeon.quests.isQuiet, isTrue);
+    expect(dungeon.more.isQuiet, isTrue);
 
     final quiet = MenuAlerts.forDungeon(base);
-    expect(quiet.party.isQuiet, isTrue);
+    expect(quiet.gear.isQuiet, isTrue);
     expect(quiet.power.isQuiet, isTrue);
-    expect(quiet.meta.isQuiet, isTrue);
+    expect(quiet.quests.isQuiet, isTrue);
   });
 }

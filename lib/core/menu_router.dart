@@ -1,34 +1,29 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/loot.dart';
-import 'game_logic.dart';
 import 'game_state.dart';
 import 'hub_chase.dart';
 import 'menu_alerts.dart';
-/// Which menu sheet is open. Hub and dungeon share these — the same route
-/// means the same words and the same content in both places.
-enum MenuRoute { none, party, power, meta, settings, jobs }
 
-/// Tabs inside PARTY. Identified by name, never by index: a tab that unlocks
-/// later (MERGE, ROSTER) used to shift what a saved index meant.
-enum PartyTab { gear, bag, merge, roster }
+/// Top-level menu destinations (flat tab nav). Hub and dungeon share these.
+enum MenuRoute { none, gear, power, quests, key, more }
 
-enum PowerTab { income, forge, camp, market, shop }
+/// Local focus inside GEAR (not bottom-nav destinations).
+enum GearPanel { gear, bag, merge, roster }
 
-enum MetaTab { key, jobs, beast, codex, guide, settings }
+/// Sticky POWER segments (Forge | Market | Camp). Shop lives in Market; Beast in Camp.
+enum PowerSegment { forge, market, camp }
+
+/// Rows inside MORE (no gameplay destinations).
+enum MoreSection { info, settings, credits }
 
 /// Owns "which menu is open" for the whole game.
-///
-/// Before this, the hub kept the answer in `main.dart` and the dungeon kept a
-/// second copy in the shell, so walking into a dungeon threw away the tab and
-/// the item you had selected.
 class MenuRouter extends ChangeNotifier {
   MenuRoute _route = MenuRoute.none;
 
-  /// PARTY opens on the paper doll — "what am I wearing" before "what did I loot".
-  PartyTab _partyTab = PartyTab.gear;
-  PowerTab _powerTab = PowerTab.forge;
-  MetaTab _metaTab = MetaTab.jobs;
+  GearPanel _gearPanel = GearPanel.gear;
+  PowerSegment _powerSegment = PowerSegment.forge;
+  MoreSection _moreSection = MoreSection.info;
 
   String? _selectedItemId;
   String? _combineA;
@@ -40,9 +35,9 @@ class MenuRouter extends ChangeNotifier {
 
   MenuRoute get route => _route;
   bool get isOpen => _route != MenuRoute.none;
-  PartyTab get partyTab => _partyTab;
-  PowerTab get powerTab => _powerTab;
-  MetaTab get metaTab => _metaTab;
+  GearPanel get gearPanel => _gearPanel;
+  PowerSegment get powerSegment => _powerSegment;
+  MoreSection get moreSection => _moreSection;
 
   String? get selectedItemId => _selectedItemId;
   String? get combineA => _combineA;
@@ -52,59 +47,43 @@ class MenuRouter extends ChangeNotifier {
   EquipmentSlot? get bagSlotFilter => _bagSlotFilter;
   int get bagFiltersScrollNonce => _bagFiltersScrollNonce;
 
-  /// BAG → FILTERS: META settings tab, scrolled to bag cleanup controls.
+  /// BAG → FILTERS: MORE · SETTINGS, scrolled to bag cleanup controls.
   void openBagFilters() {
-    _metaTab = MetaTab.settings;
-    _route = MenuRoute.meta;
+    _moreSection = MoreSection.settings;
+    _route = MenuRoute.more;
     _bagFiltersScrollNonce++;
     notifyListeners();
   }
 
-  /// Title shown on the sheet.
   String get title => switch (_route) {
     MenuRoute.none => '',
-    MenuRoute.party => switch (_partyTab) {
-      PartyTab.gear => 'GEAR',
-      PartyTab.bag => 'BAG',
-      PartyTab.merge => 'MERGE',
-      PartyTab.roster => 'ROSTER',
+    MenuRoute.gear => switch (_gearPanel) {
+      GearPanel.gear => 'GEAR',
+      GearPanel.bag => 'BAG',
+      GearPanel.merge => 'MERGE',
+      GearPanel.roster => 'ROSTER',
     },
     MenuRoute.power => 'POWER',
-    MenuRoute.meta => 'META',
-    MenuRoute.settings => 'SETTINGS',
-    MenuRoute.jobs => 'QUESTS',
+    MenuRoute.quests => 'QUESTS',
+    MenuRoute.key => 'KEYSTONE',
+    MenuRoute.more => switch (_moreSection) {
+      MoreSection.info => 'INFO',
+      MoreSection.settings => 'SETTINGS',
+      MoreSection.credits => 'CREDITS',
+    },
   };
-
-  static PowerTab resolvePowerTab(PowerTab tab) =>
-      tab == PowerTab.income ? PowerTab.camp : tab;
 
   void open(
     MenuRoute route, {
-    PartyTab? party,
-    PowerTab? power,
-    MetaTab? meta,
+    GearPanel? gear,
+    PowerSegment? power,
+    MoreSection? more,
     GameState? state,
   }) {
-    if (route == MenuRoute.settings) {
-      _metaTab = MetaTab.settings;
-      _route = MenuRoute.meta;
-      notifyListeners();
-      return;
-    }
-    if (party != null) _partyTab = party;
-    if (power != null) _powerTab = resolvePowerTab(power);
-    if (meta != null) {
-      _metaTab = meta;
-    } else if (route == MenuRoute.meta &&
-        _route != MenuRoute.meta &&
-        state != null &&
-        GameLogic.endgameUnlocked(state) &&
-        MenuTabs.showKey(state)) {
-      _metaTab = MetaTab.key;
-    }
-    // A fresh open from the nav shows the whole bag; slot browse sets its own
-    // filter right after opening.
-    if (route == MenuRoute.party && _route != MenuRoute.party) {
+    if (gear != null) _gearPanel = gear;
+    if (power != null) _powerSegment = power;
+    if (more != null) _moreSection = more;
+    if (route == MenuRoute.gear && _route != MenuRoute.gear) {
       _bagSlotFilter = null;
     }
     _route = route;
@@ -112,20 +91,20 @@ class MenuRouter extends ChangeNotifier {
   }
 
   /// Nav taps: tapping the tab you are already on closes the sheet.
-  void toggleParty(PartyTab tab) {
-    if (_route == MenuRoute.party && _partyTab == tab) {
-      close();
-      return;
-    }
-    open(MenuRoute.party, party: tab);
-  }
-
   void toggle(MenuRoute route, {GameState? state}) {
     if (_route == route) {
       close();
       return;
     }
     open(route, state: state);
+  }
+
+  void toggleGear([GearPanel panel = GearPanel.gear]) {
+    if (_route == MenuRoute.gear && _gearPanel == panel) {
+      close();
+      return;
+    }
+    open(MenuRoute.gear, gear: panel);
   }
 
   void close() {
@@ -135,41 +114,39 @@ class MenuRouter extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Hub chase / offline “open PARTY” with the right tab pre-selected.
+  /// Hub chase / offline “open GEAR” with the right panel pre-selected.
   void openForHubChase(GameState state, HubChaseKind kind) {
     switch (kind) {
       case HubChaseKind.meetHero:
         open(
-          MenuRoute.party,
-          party: MenuTabs.showRoster(state) ? PartyTab.roster : PartyTab.gear,
+          MenuRoute.gear,
+          gear: MenuTabs.showRoster(state) ? GearPanel.roster : GearPanel.gear,
         );
       case HubChaseKind.equipBag:
-        open(MenuRoute.party, party: PartyTab.bag);
+        open(MenuRoute.gear, gear: GearPanel.bag);
       default:
-        open(MenuRoute.party);
+        open(MenuRoute.gear);
     }
   }
 
-  set partyTab(PartyTab tab) {
-    if (_partyTab == tab) return;
-    _partyTab = tab;
+  set gearPanel(GearPanel panel) {
+    if (_gearPanel == panel) return;
+    _gearPanel = panel;
     notifyListeners();
   }
 
-  set powerTab(PowerTab tab) {
-    final resolved = resolvePowerTab(tab);
-    if (_powerTab == resolved) return;
-    _powerTab = resolved;
+  set powerSegment(PowerSegment segment) {
+    if (_powerSegment == segment) return;
+    _powerSegment = segment;
     notifyListeners();
   }
 
-  set metaTab(MetaTab tab) {
-    if (_metaTab == tab) return;
-    _metaTab = tab;
+  set moreSection(MoreSection section) {
+    if (_moreSection == section) return;
+    _moreSection = section;
     notifyListeners();
   }
 
-  /// Tap an item in the bag / paper doll (tapping it again deselects).
   void selectItem(String? id) {
     _selectedItemId = _selectedItemId == id ? null : id;
     notifyListeners();
@@ -193,14 +170,12 @@ class MenuRouter extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// BAG shows only gear that can fill this paper-doll slot.
   void browseBagSlot(EquipmentSlot slot) {
     _bagSlotFilter = slot;
     _selectedItemId = null;
-    // Keep GEAR when the sheet already shows an inline bag; jump to BAG else.
     open(
-      MenuRoute.party,
-      party: _partyTab == PartyTab.gear ? PartyTab.gear : PartyTab.bag,
+      MenuRoute.gear,
+      gear: _gearPanel == GearPanel.gear ? GearPanel.gear : GearPanel.bag,
     );
     _bagSlotFilter = slot;
     notifyListeners();
@@ -234,8 +209,8 @@ class MenuRouter extends ChangeNotifier {
     }
     final ready = _combineA != null && _combineB != null;
     if (ready) {
-      _partyTab = PartyTab.merge;
-      _route = MenuRoute.party;
+      _gearPanel = GearPanel.merge;
+      _route = MenuRoute.gear;
     }
     notifyListeners();
     return ready;
@@ -258,7 +233,6 @@ class MenuRouter extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Drop ids that no longer exist in the bag (after sell / merge / auto).
   void dropMissingIds(Set<String> liveIds) {
     var changed = false;
     if (_selectedItemId != null && !liveIds.contains(_selectedItemId)) {
@@ -276,27 +250,32 @@ class MenuRouter extends ChangeNotifier {
     if (changed) notifyListeners();
   }
 
-  /// Progressive menus: a tab only exists once it can do something.
-  static List<PartyTab> visiblePartyTabs(GameState s) => <PartyTab>[
-    PartyTab.gear,
-    PartyTab.bag,
-    if (MenuTabs.showMerge(s)) PartyTab.merge,
-    if (MenuTabs.showRoster(s)) PartyTab.roster,
+  /// Hub bottom destinations (progressive KEY).
+  static List<MenuRoute> visibleHubTabs(GameState s) => <MenuRoute>[
+    MenuRoute.gear,
+    MenuRoute.power,
+    if (MenuTabs.showKey(s)) MenuRoute.key,
+    MenuRoute.quests,
+    MenuRoute.more,
   ];
 
-  static List<PowerTab> visiblePowerTabs(GameState s) => <PowerTab>[
-    PowerTab.forge,
-    PowerTab.market,
-    if (MenuTabs.showCamp(s)) PowerTab.camp,
-    if (MenuTabs.showShop(s)) PowerTab.shop,
+  /// Dungeon bottom destinations (no MORE/KEY — those use HUD gear).
+  static List<MenuRoute> visibleDungeonTabs(GameState s) => const <MenuRoute>[
+    MenuRoute.gear,
+    MenuRoute.power,
+    MenuRoute.quests,
   ];
 
-  static List<MetaTab> visibleMetaTabs(GameState s) => <MetaTab>[
-    if (MenuTabs.showKey(s)) MetaTab.key,
-    MetaTab.jobs,
-    if (MenuTabs.showBeast(s)) MetaTab.beast,
-    if (MenuTabs.showCodex(s)) MetaTab.codex,
-    MetaTab.guide,
-    MetaTab.settings,
+  static List<GearPanel> visibleGearPanels(GameState s) => <GearPanel>[
+    GearPanel.gear,
+    GearPanel.bag,
+    if (MenuTabs.showMerge(s)) GearPanel.merge,
+    if (MenuTabs.showRoster(s)) GearPanel.roster,
+  ];
+
+  static List<PowerSegment> visiblePowerSegments(GameState s) => <PowerSegment>[
+    PowerSegment.forge,
+    PowerSegment.market,
+    if (MenuTabs.showCamp(s)) PowerSegment.camp,
   ];
 }

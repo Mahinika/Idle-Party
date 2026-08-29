@@ -15,16 +15,17 @@ import 'jobs_market_sanctuary.dart';
 import 'settings_overlay.dart';
 import 'shell_common.dart';
 
+/// POWER sheet: sticky Forge | Market | Camp (Shop in Market, Beast in Camp).
 class PowerPillar extends StatefulWidget {
   const PowerPillar({
     super.key,
     required this.director,
-    required this.tab,
-    required this.onTabChanged,
+    required this.segment,
+    required this.onSegmentChanged,
   });
   final GameDirector director;
-  final PowerTab tab;
-  final ValueChanged<PowerTab> onTabChanged;
+  final PowerSegment segment;
+  final ValueChanged<PowerSegment> onSegmentChanged;
 
   @override
   State<PowerPillar> createState() => _PowerPillarState();
@@ -33,7 +34,10 @@ class PowerPillar extends StatefulWidget {
 class _PowerPillarState extends State<PowerPillar>
     with TickerProviderStateMixin {
   late final FlexTabs _tabs;
-  List<PowerTab> _visible = const [PowerTab.forge, PowerTab.market];
+  List<PowerSegment> _visible = const [
+    PowerSegment.forge,
+    PowerSegment.market,
+  ];
 
   @override
   void initState() {
@@ -42,7 +46,9 @@ class _PowerPillarState extends State<PowerPillar>
       vsync: this,
       length: 2,
       onChanged: (i) {
-        if (i >= 0 && i < _visible.length) widget.onTabChanged(_visible[i]);
+        if (i >= 0 && i < _visible.length) {
+          widget.onSegmentChanged(_visible[i]);
+        }
         setState(() {});
       },
     );
@@ -68,43 +74,66 @@ class _PowerPillarState extends State<PowerPillar>
             'STA +${s.vitalityBonus}'
         : 'forge ATK +${s.attackBonus} · DEF +${s.defenseBonus} · '
             'STA +${s.vitalityBonus}';
-    // Progressive menu: CAMP and SHOP appear once essence / Ascend exist.
-    _visible = MenuRouter.visiblePowerTabs(s);
-    final pages = <({
-      String label,
-      String scope,
-      Widget body,
-    })>[
-      for (final tab in _visible)
-        switch (tab) {
-          PowerTab.forge => (
+    _visible = MenuRouter.visiblePowerSegments(s);
+    final pages = <({String label, String scope, Widget body})>[
+      for (final seg in _visible)
+        switch (seg) {
+          PowerSegment.forge => (
             label: plain ? 'Gold upgrades' : 'FORGE',
             scope: plain ? 'GOLD' : 'RUN',
             body: ForgeOverlay(director: d),
           ),
-          PowerTab.camp => (
-            label: plain ? 'Permanent upgrades' : 'CAMP',
-            scope: plain ? 'PERMANENT' : 'ACCOUNT',
-            body: SingleChildScrollView(child: SanctuaryOverlay(director: d)),
-          ),
-          PowerTab.market => (
+          PowerSegment.market => (
             label: plain ? 'Buy supplies' : 'MARKET',
             scope: plain ? 'GOLD' : 'RUN',
-            body: MarketOverlay(director: d),
+            body: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  MarketOverlay(director: d),
+                  if (MenuTabs.showShop(s)) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      plain ? 'Permanent shop' : 'SHOP',
+                      style: GameTheme.pixel(
+                        size: GameTheme.hudPixel,
+                        color: GameTheme.torchHot,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    PrestigeShopOverlay(director: d),
+                  ],
+                ],
+              ),
+            ),
           ),
-          PowerTab.shop => (
-            label: plain ? 'Permanent shop' : 'SHOP',
-            scope: plain ? 'PERMANENT' : 'ACCOUNT',
-            body: PrestigeShopOverlay(director: d),
-          ),
-          PowerTab.income => (
+          PowerSegment.camp => (
             label: plain ? 'Permanent upgrades' : 'CAMP',
             scope: plain ? 'PERMANENT' : 'ACCOUNT',
-            body: SingleChildScrollView(child: SanctuaryOverlay(director: d)),
+            body: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SanctuaryOverlay(director: d),
+                  if (MenuTabs.showBeast(s)) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'BEAST',
+                      style: GameTheme.pixel(
+                        size: GameTheme.hudPixel,
+                        color: GameTheme.torchHot,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    BeastOverlay(director: d),
+                  ],
+                ],
+              ),
+            ),
           ),
         },
     ];
-    _tabs.syncToId(_visible, widget.tab);
+    _tabs.syncToId(_visible, widget.segment);
     final alert = MenuAlerts.powerAlert(s);
     final activeIndex = _tabs.index.clamp(0, pages.length - 1);
     return Column(
@@ -135,7 +164,7 @@ class _PowerPillarState extends State<PowerPillar>
                 scope: plain ? null : pages[i].scope,
                 onSelect: () {
                   _tabs.controller.animateTo(i);
-                  widget.onTabChanged(_visible[i]);
+                  widget.onSegmentChanged(_visible[i]);
                   setState(() {});
                 },
               ),
@@ -164,10 +193,7 @@ class _PowerPillarState extends State<PowerPillar>
             style: GameTheme.body(size: 12, color: GameTheme.torchHot),
           ),
         const SizedBox(height: 6),
-        Expanded(
-          // Forge fills height and scrolls once (nested scroll hid MOVE/HASTE/CRIT).
-          child: pages[activeIndex].body,
-        ),
+        Expanded(child: pages[activeIndex].body),
       ],
     );
   }
@@ -202,175 +228,142 @@ class _PowerScopeLine extends StatelessWidget {
   }
 }
 
-/// META pillar — keystone · quests · beast · collection · help · settings.
-class MetaPillar extends StatefulWidget {
-  const MetaPillar({
+/// KEYSTONE sheet (hub tab + dungeon HUD Meta entry).
+class KeystoneSheet extends StatelessWidget {
+  const KeystoneSheet({super.key, required this.director});
+  final GameDirector director;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = director;
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ChallengeToggles(director: d),
+          const SizedBox(height: 16),
+          GauntletHubPanel(director: d),
+          const SizedBox(height: 16),
+          RiftHubPanel(director: d),
+          const SizedBox(height: 16),
+          GreaterRiftHubPanel(director: d),
+          const SizedBox(height: 16),
+          PlayGamesBoardsSection(director: d),
+        ],
+      ),
+    );
+  }
+}
+
+/// MORE list: INFO / Settings / Credits / Debug — no gameplay.
+class MoreList extends StatelessWidget {
+  const MoreList({
     super.key,
     required this.director,
-    required this.tab,
-    required this.onTabChanged,
+    required this.section,
+    required this.onSectionChanged,
     required this.onOpenWhatsNew,
     required this.onClose,
     this.bagFiltersScrollNonce = 0,
   });
+
   final GameDirector director;
-  final MetaTab tab;
-  final ValueChanged<MetaTab> onTabChanged;
+  final MoreSection section;
+  final ValueChanged<MoreSection> onSectionChanged;
   final VoidCallback onOpenWhatsNew;
   final VoidCallback onClose;
   final int bagFiltersScrollNonce;
 
   @override
-  State<MetaPillar> createState() => _MetaPillarState();
-}
-
-class _MetaPillarState extends State<MetaPillar> with TickerProviderStateMixin {
-  late final FlexTabs _tabs;
-  List<MetaTab> _visible = const [
-    MetaTab.jobs,
-    MetaTab.guide,
-    MetaTab.settings,
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _tabs = FlexTabs(
-      vsync: this,
-      length: 3,
-      onChanged: (i) {
-        if (i >= 0 && i < _visible.length) widget.onTabChanged(_visible[i]);
-        setState(() {});
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final d = widget.director;
-    final s = d.state;
-    final alert = MenuAlerts.metaAlert(s);
-    // Progressive menu: KEY / BEAST / CODEX appear once they mean something.
-    _visible = MenuRouter.visibleMetaTabs(s);
-    final pages = <({String label, Widget body})>[
-      for (final tab in _visible)
-        switch (tab) {
-          MetaTab.key => (
-            label: 'KEYSTONE',
-            body: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ChallengeToggles(director: d),
-                  const SizedBox(height: 16),
-                  GauntletHubPanel(director: d),
-                  const SizedBox(height: 16),
-                  RiftHubPanel(director: d),
-                  const SizedBox(height: 16),
-                  GreaterRiftHubPanel(director: d),
-                  const SizedBox(height: 16),
-                  PlayGamesBoardsSection(director: d),
-                ],
-              ),
-            ),
-          ),
-          MetaTab.jobs => (
-            label: 'QUESTS',
-            body: SingleChildScrollView(child: JobsOverlay(director: d)),
-          ),
-          MetaTab.beast => (
-            label: 'BEAST',
-            body: SingleChildScrollView(child: BeastOverlay(director: d)),
-          ),
-          MetaTab.codex => (
-            label: 'CODEX',
-            body: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: CodexOverlay(director: d),
-                ),
-                const Divider(height: 8, color: GameTheme.border),
-                Expanded(
-                  flex: 2,
-                  child: AchievementsOverlay(director: d),
-                ),
-              ],
-            ),
-          ),
-          MetaTab.guide => (
-            label: 'GUIDE',
-            body: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'GUIDES',
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
-                    color: GameTheme.torchHot,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                KenneyButton(
-                  label: MetaSystems.hasUnseenChangelog(s)
-                      ? "WHAT'S NEW ★"
-                      : "WHAT'S NEW",
-                  style: KenneyButtonStyle.grey,
-                  onPressed: widget.onOpenWhatsNew,
-                ),
-                const SizedBox(height: 8),
-                Expanded(child: GuidesOverlay(state: s)),
-              ],
-            ),
-          ),
-          MetaTab.settings => (
-            label: 'SETTINGS',
-            body: SingleChildScrollView(
-              child: SettingsOverlay(
-                director: d,
-                onClose: widget.onClose,
-                bagFiltersScrollNonce: widget.bagFiltersScrollNonce,
-              ),
-            ),
-          ),
-        },
-    ];
-    _tabs.syncToId(_visible, widget.tab);
-    final activeTab = _visible[_tabs.index.clamp(0, _visible.length - 1)];
-    final tabBanner = switch (activeTab) {
-      MetaTab.jobs when !alert.isQuiet && !alert.star => alert.reason,
-      MetaTab.guide when alert.star => alert.reason,
-      _ => null,
-    };
+    final s = director.state;
+    final alert = MenuAlerts.moreAlert(s);
+    if (section != MoreSection.info &&
+        section != MoreSection.settings &&
+        section != MoreSection.credits) {
+      // fall through
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MenuChrome.tabRail(
-          controller: _tabs.controller,
-          onTap: (_) => setState(() {}),
-          tabs: [
-            for (var i = 0; i < pages.length; i++)
-              MenuChrome.bridgedTab(
-                pages[i].label,
-                onSelect: () {
-                  _tabs.controller.animateTo(i);
-                  widget.onTabChanged(_visible[i]);
-                  setState(() {});
-                },
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          alignment: WrapAlignment.center,
+          children: [
+            for (final row in <({MoreSection id, String label})>[
+              (id: MoreSection.info, label: 'INFO'),
+              (id: MoreSection.settings, label: 'SETTINGS'),
+              (id: MoreSection.credits, label: 'CREDITS'),
+            ])
+              KenneyButton(
+                label: row.id == MoreSection.info && alert.star
+                    ? '${row.label} ★'
+                    : row.label,
+                style: section == row.id
+                    ? KenneyButtonStyle.brown
+                    : KenneyButtonStyle.grey,
+                expanded: false,
+                onPressed: () => onSectionChanged(row.id),
               ),
           ],
         ),
-        if (tabBanner != null) MenuChrome.tabBanner(tabBanner),
+        if (!alert.isQuiet && section == MoreSection.info)
+          MenuChrome.tabBanner(alert.reason),
         const SizedBox(height: 8),
-        Expanded(child: pages[_tabs.index.clamp(0, pages.length - 1)].body),
+        Expanded(child: _body(context)),
       ],
     );
   }
+
+  Widget _body(BuildContext context) {
+    final d = director;
+    final s = d.state;
+    return switch (section) {
+      MoreSection.info => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          KenneyButton(
+            label: MetaSystems.hasUnseenChangelog(s)
+                ? "WHAT'S NEW ★"
+                : "WHAT'S NEW",
+            style: KenneyButtonStyle.grey,
+            onPressed: onOpenWhatsNew,
+          ),
+          const SizedBox(height: 8),
+          Expanded(child: GuidesOverlay(state: s)),
+          if (MenuTabs.showCodex(s)) ...[
+            const Divider(height: 8, color: GameTheme.border),
+            Expanded(
+              flex: 2,
+              child: CodexOverlay(director: d),
+            ),
+            Expanded(
+              flex: 1,
+              child: AchievementsOverlay(director: d),
+            ),
+          ],
+        ],
+      ),
+      MoreSection.settings => SingleChildScrollView(
+        child: SettingsOverlay(
+          director: d,
+          onClose: onClose,
+          bagFiltersScrollNonce: bagFiltersScrollNonce,
+        ),
+      ),
+      MoreSection.credits => SingleChildScrollView(
+        padding: const EdgeInsets.all(8),
+        child: Text(
+          'Idle Party\n\n'
+          'World art: Kenney (CC0)\n'
+          'Custom sprites: Idle Party\n\n'
+          'Made for portrait phones.',
+          style: GameTheme.body(size: 14, color: GameTheme.parchment),
+        ),
+      ),
+    };
+  }
 }
+
+

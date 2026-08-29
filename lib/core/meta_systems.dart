@@ -19,14 +19,22 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.78';
+  static const String currentVersion = '1.12.79';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
+      version: '1.12.79',
+      bullets: <String>[
+        'Flat menus: bottom tabs are GEAR · POWER · QUESTS · MORE (KEY appears when jargon unlocks). POWER uses Forge | Market | Camp segments (Shop in Market, Beast in Camp). MORE is INFO / Settings / Credits only. Dungeon bar is GEAR · POWER · QUESTS · LEAVE; MORE and KEY open from the floor HUD gear.',
+        'Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+      ],
+    ),
+    ChangelogRelease(
       version: '1.12.78',
       bullets: <String>[
-        'First-hour calm: Too weak waits for a real stumble; bag upgrades say open PARTY · EQUIP (toast when 8+ pile up on Next). Wipe tips say POWER not FORGE. Spend-% hides until you can afford a buy. GUIDE titled GUIDES with early topics only; hub Boss on F#; leave skips double confirm after wipe.',
+        'First-hour calm: Too weak waits for a real stumble; bag upgrades say open GEAR · EQUIP (toast when 8+ pile up on Next). Wipe tips say POWER not FORGE. Spend-% hides until you can afford a buy. GUIDE titled GUIDES with early topics only; hub Boss on F#; leave skips double confirm after wipe.',
         'Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
         'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
       ],

@@ -55,7 +55,7 @@ flowchart TB
   MC --> Actions
 
   subgraph Families["Visual families — pick one per surface"]
-    MS["Menu sheet<br/>PARTY · POWER · META"]
+    MS["Menu sheet<br/>GEAR · POWER · QUESTS · KEY · MORE"]
     HUB["Hub<br/>world path · TODAY stack"]
     HUD["Combat HUD<br/>FARM/PUSH · party · God Hand"]
     BR["Brand<br/>boot · new game · What's New"]

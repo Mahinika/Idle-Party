@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.78**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.79**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -132,10 +132,10 @@ main.dart
  └─ Dungeon (inDungeon) → Is2Shell
       ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
       └─ chrome (FARM/PUSH, God Hand, party HUD + flask, target panel)
-         + AppBottomBar PARTY / POWER / META / LEAVE + MenuSurface
+         + AppBottomBar GEAR / POWER / QUESTS (/ KEY) / MORE · dungeon + LEAVE
 
 Shared menus: MenuRouter + MenuAlerts + MenuSurface
-  (same PARTY/POWER/META words in hub and dungeon; dungeon adds LEAVE = back to hub)
+  (flat tabs; dungeon LEAVE = hub; MORE/KEY via HUD gear in dungeon)
 ```
 
 **SpatialCombat is the combat authority** for live play and in-dungeon offline

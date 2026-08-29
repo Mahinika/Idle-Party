@@ -30,9 +30,9 @@ void main() {
     expect(find.bySemanticsLabel(RegExp(r'Sandy Caverns')), findsWidgets);
     expect(find.textContaining('Boss on F'), findsWidgets);
     expect(find.textContaining('Boss:'), findsOneWidget);
-    expect(find.text('PARTY'), findsOneWidget);
+    expect(find.text('GEAR'), findsOneWidget);
     expect(find.text('POWER'), findsOneWidget);
-    expect(find.textContaining('META'), findsOneWidget);
+    expect(find.text('MORE'), findsOneWidget);
     expect(find.textContaining('Boss 0/1'), findsWidgets);
     // Fresh save: KEY jargon gated — no KEYSTONE strip under ENTER.
     expect(find.textContaining('KEYSTONE'), findsNothing);
@@ -53,9 +53,9 @@ void main() {
     expect(GameTheme.isShortHeight(tester.element(find.text('ENTER DUNGEON'))), isTrue);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(find.textContaining('KEYSTONE'), findsNothing);
-    expect(find.text('PARTY'), findsOneWidget);
+    expect(find.text('GEAR'), findsOneWidget);
     expect(find.text('POWER'), findsOneWidget);
-    expect(find.textContaining('META'), findsOneWidget);
+    expect(find.text('MORE'), findsOneWidget);
     expect(find.textContaining('Bosses'), findsNothing);
   });
 
@@ -102,7 +102,7 @@ void main() {
   });
 
   testWidgets('entering dungeon shows mobile shell chrome', (WidgetTester tester) async {
-    // Cleared a zone: advanced PARTY tabs (MERGE) are unlocked.
+    // Cleared a zone: advanced GEAR panels (MERGE) are unlocked.
     final director = GameDirector.preview(
       initialState:
           GameLogic.createInitialState().copyWith(highestDungeonCleared: 0),
@@ -114,13 +114,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.textContaining('Next'), findsWidgets);
-    expect(find.text('PARTY'), findsWidgets);
+    expect(find.text('GEAR'), findsWidgets);
     expect(find.text('POWER'), findsWidgets);
-    expect(find.text('META'), findsWidgets);
+    expect(find.text('QUESTS'), findsWidgets);
     expect(find.text('LEAVE'), findsOneWidget);
     expect(find.textContaining('Shield'), findsWidgets);
 
-    await tester.tap(find.text('PARTY').last);
+    await tester.tap(find.text('GEAR').last);
     await tester.pumpAndSettle();
     expect(find.textContaining('GEAR'), findsWidgets);
     expect(find.textContaining('DMG'), findsWidgets);
@@ -129,7 +129,7 @@ void main() {
     await tester.tap(find.text('CLOSE'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('PARTY').last);
+    await tester.tap(find.text('GEAR').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('BAG'));
     await tester.pumpAndSettle();
@@ -154,16 +154,16 @@ void main() {
     await tester.pumpWidget(MyApp(director: director, autoStartLoop: false, showIntro: false));
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(GameTheme.isCompactWidth(tester.element(find.text('PARTY').last)), isTrue);
+    expect(GameTheme.isCompactWidth(tester.element(find.text('GEAR').last)), isTrue);
 
-    await tester.tap(find.text('PARTY').last);
+    await tester.tap(find.text('GEAR').last);
     await tester.pumpAndSettle();
     expect(find.textContaining('GEAR'), findsWidgets);
 
     await tester.tap(find.text('CLOSE'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('PARTY').last);
+    await tester.tap(find.text('GEAR').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('BAG'));
     await tester.pumpAndSettle();
@@ -208,7 +208,7 @@ void main() {
 
     final upgrades = MenuAlerts.bagUpgradeCount(director.state);
     expect(upgrades, greaterThan(0));
-    final partyButton = find.widgetWithText(AppBottomBarItem, 'PARTY');
+    final partyButton = find.widgetWithText(AppBottomBarItem, 'GEAR');
     expect(partyButton, findsOneWidget);
     expect(
       find.descendant(of: partyButton, matching: find.text('$upgrades')),
@@ -216,7 +216,7 @@ void main() {
     );
 
     // Hub keeps ambient animations running, so settle by hand.
-    await tester.tap(find.bySemanticsLabel('PARTY $upgrades waiting'));
+    await tester.tap(find.bySemanticsLabel('GEAR $upgrades waiting'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('EQUIP $upgrades'), findsWidgets);
@@ -236,9 +236,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     // Phone-only product: menus stay on the phone chrome even in a wide window.
-    expect(GameTheme.isPhoneWidth(tester.element(find.text('PARTY').last)), isTrue);
+    expect(GameTheme.isPhoneWidth(tester.element(find.text('GEAR').last)), isTrue);
 
-    await tester.tap(find.text('PARTY').last);
+    await tester.tap(find.text('GEAR').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('BAG'));
     await tester.pumpAndSettle();
