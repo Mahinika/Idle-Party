@@ -8,9 +8,9 @@ alwaysApply: true
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
-Last preference sync: **2026-08-22** (work loop: AL20 save, large independent
-batches, owner plays their AL20 save; APK only when they ask; short “what to
-test” then wait. Play Alpha fact still **1.12.78 / 107**; no IAP. Other product locks
+Last preference sync: **2026-08-30** (work loop unchanged: AL20 save, large
+batches, short test list then wait, APK only when asked. Play Alpha fact synced
+to **1.12.83 / 112**; wipe tips say POWER not FORGE. No IAP. Other product locks
 unchanged).
 
 ## Near-term focus
@@ -31,7 +31,7 @@ unchanged).
 
 - Goal: **Google Play “for real” soon** (not sideload-only forever).
 - Prefer work that unblocks Play when touching store: CI signing secrets, closed-test 12×14, production access — see `docs/PLAY_STORE.md`.
-- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.78 / 107**, 2026-08-28; testers may still be on **1.12.68 / 97** until review publishes). Working ship is **1.12.78**. **Production is not live**. Optional Play Games (META → SETTINGS) is opt-in, not a store blocker.
+- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.83 / 112**, 2026-08-29; testers may still be on **1.12.78 / 107** until review publishes). Working ship is **1.12.83**. **Production is not live**. Optional Play Games (**KEY** boards; **MORE → SETTINGS** sign-in) is opt-in, not a store blocker.
 - **Platforms now:** Android. **No iOS** and **no shipping web as a product**.
   Web playtest tooling stays for Playwright / agent clicks only.
 
@@ -87,9 +87,9 @@ unchanged).
   obvious on that save. Progression / power still matters; first-hour stays
   calm for new players but is not the default polish target.
 - Keep hub/UI **readable and low-panic** (not sweaty esports chrome).
-- After **2 wipes on the same floor**, dungeon may suggest a FORGE fix **only
+- After **2 wipes on the same floor**, dungeon may suggest a **POWER** fix **only
   if the sim knows the deficit** (e.g. ATK vs DEF vs wrong zone). Bag /
-  floor-too-far / early DEF / MARKET may fire on wipe 1. No guessed tips.
+  floor-too-far / early DEF / Shop can fire on wipe 1. No guessed tips.
   Show it **in the dungeon**, not after they are already back in hub.
 - **Dead chrome the owner tried and does not use — hide or remove, don’t
   polish:** BAG **Scrap**, **Sell junk**, GEAR **Sell**, **Loadouts**. Keep

@@ -51,7 +51,7 @@ enum HubChaseKind {
   ashenCrown,
 }
 
-/// Endgame hunts use TODAY + primary ENTER / META → KEY — not a second hub row.
+/// Endgame hunts use TODAY + primary ENTER / KEY — not a second hub row.
 bool hubChaseOwnsEndgameRow(HubChaseKind kind) {
   switch (kind) {
     case HubChaseKind.keystone:

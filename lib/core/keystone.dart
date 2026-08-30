@@ -181,7 +181,7 @@ abstract final class Keystone {
     _ => affix,
   };
 
-  /// Soft / Hard / Brutal — for KEY affix risk chips in META → KEY.
+  /// Soft / Hard / Brutal — for KEY affix risk chips in the KEY tab.
   static String riskTier(String affix) {
     final b = blurb(affix).toLowerCase();
     if (affix == 'fortune' ||

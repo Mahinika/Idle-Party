@@ -9,7 +9,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 
-/// META → KEY: farm Rift tier dial (gold + gear mid-run).
+/// KEY tab: farm Rift tier dial (gold + gear mid-run).
 class RiftHubPanel extends StatelessWidget {
   const RiftHubPanel({super.key, required this.director});
   final GameDirector director;

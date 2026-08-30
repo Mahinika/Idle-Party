@@ -107,7 +107,7 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
   });
 }
 
-/// META → KEY: seasonal Timed KEY + Gauntlet boards (Google hosts).
+/// KEY tab: seasonal Timed KEY + Gauntlet boards (Google hosts).
 class PlayGamesBoardsSection extends StatefulWidget {
   const PlayGamesBoardsSection({super.key, required this.director});
   final GameDirector director;
@@ -236,7 +236,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
   }
 }
 
-/// META → SETTINGS: Play Games sign-in + cloud backup (boards live under KEY).
+/// MORE → SETTINGS: Play Games sign-in + cloud backup (boards live under KEY).
 class PlayGamesSection extends StatefulWidget {
   const PlayGamesSection({super.key, required this.director});
   final GameDirector director;
@@ -268,7 +268,7 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
         ),
         const SizedBox(height: 4),
         Text(
-          'Season $month · cloud backup. Boards: META → KEY.',
+          'Season $month · cloud backup. Boards: KEY.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         if (lastBackup != null) ...[

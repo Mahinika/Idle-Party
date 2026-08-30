@@ -507,7 +507,7 @@ abstract final class MenuChrome {
     return chip(label: key, tone: tone);
   }
 
-  /// Low-emphasis navigation (hub shortcuts, “see META → KEY”).
+  /// Low-emphasis navigation (hub shortcuts, “see KEY”).
   static Widget textLink({
     required String label,
     VoidCallback? onPressed,

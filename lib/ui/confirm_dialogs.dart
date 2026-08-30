@@ -354,7 +354,7 @@ Future<void> confirmGreaterRiftRun(
         content: Text(
           'Party level ${GameLogic.maxHeroLevel} prestige ladder — harder than farm Rifts.\n\n'
           'Kill $kills enemies before $par. Gold OK mid-run; no gear drops. '
-          'Clear pays +${essence}e · +${gold}g and ranks on META → KEY · BOARDS.\n\n'
+          'Clear pays +${essence}e · +${gold}g and ranks on KEY · BOARDS.\n\n'
           'Fast clears unlock +2. Best clear: GR$best',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),

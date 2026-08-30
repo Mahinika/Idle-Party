@@ -9,7 +9,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 
-/// META → KEY: Greater Rift tier dial (party max-level prestige + boards).
+/// KEY tab: Greater Rift tier dial (party max-level prestige + boards).
 class GreaterRiftHubPanel extends StatelessWidget {
   const GreaterRiftHubPanel({super.key, required this.director});
   final GameDirector director;

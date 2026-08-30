@@ -48,9 +48,9 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 **Play update notice** (Android, Play-installed only): **mandatory cold-start gate** when Play has a newer versionCode (no play until updated); hub banner + SETTINGS **GET UPDATE** with LATER for optional nudge. Sideload / web stay quiet. Listing opens with `hl=en`.
 
 **Optional Play Games** (Android): seasonal Timed KEY + Gauntlet boards under
-**META → KEY**; sign-in + cloud save under **META → SETTINGS**. Opt-in;
-clipboard export/import still works. IDs in `lib/core/play_leaderboard_ids.dart`.
-Soft-fail on web / sideload.
+**KEY** (bottom tab when jargon unlocks); sign-in + cloud save under
+**MORE → SETTINGS**. Opt-in; clipboard export/import still works. IDs in
+`lib/core/play_leaderboard_ids.dart`. Soft-fail on web / sideload.
 
 ## Legal / IP policy (mandatory)
 
@@ -135,11 +135,13 @@ main.dart
  │   └─ Dungeon (inDungeon) → Is2Shell
  │        ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
  │        └─ chrome (FARM/PUSH, God Hand, party HUD + flask, target panel)
- │           + AppBottomBar GEAR / POWER / QUESTS (/ KEY overflow) + LEAVE
+ │           + AppBottomBar GEAR / POWER / QUESTS + LEAVE
+ │             (hub also KEY when jargon unlocks + MORE; dungeon: KEY/MORE via HUD gear)
 
 Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
  (flat tabs; dungeon LEAVE = hub; MORE/KEY via HUD gear in dungeon)
- POWER inner tabs: Gold · Shop · Relics · Craft · Essence (prestige buys in Shop; Beast in Essence)
+ POWER inner tabs: Gold · Shop · Relics · Craft · Essence
+ (prestige buys in Shop; Beast in Essence; Blessing / God Hand / REBORN under Gold → KEEP)
 ```
 
 **SpatialCombat is the combat authority** for live play and in-dungeon offline
@@ -159,15 +161,19 @@ Spire climb from Hub; **boss every 5 floors**; wipe/leave → hub;
 `metaDepth.gauntletBestFloor` survives Ascend.
 
 **KEYSTONE** (same party-max-level gate): Mythic+-style keys on
-normal zone runs — dial under META → KEY. Before party max level there is no KEY habit.
+normal zone runs — dial under hub **KEY**. Before party max level there is no KEY habit or KEY tab.
 
 **Rifts** (same gate): farm timed kill-quota from hub /
-META → KEY — gold and gear mid-run; not Play-ranked.
+**KEY** — gold and gear mid-run; not Play-ranked.
 `metaDepth.riftBestTier` survives Ascend.
 
 **Greater Rifts** (same gate): harder timed ladder,
 no mid-run gear, larger clear payout; season PB on Play Games BOARDS.
 `metaDepth.grBestTier` / `seasonBestGrTier` survive Ascend.
+
+**Ashen Crown** (same gate): weekly ticket solo boss (ember art); wipe/leave
+returns the ticket; PRACTICE free after the paid clear. Tickets /
+`worldBoss*` fields in `metaDepth`; see `lib/core/ashen_crown.dart`.
 
 **Ascension cap:** `GameLogic.maxAscensionLevel` = **AL20** — Ascend stops here
 (Blessing / kit roadmap). **Endgame content** (KEY +20, Gauntlet, Rifts, Greater
@@ -180,26 +186,28 @@ Ascend).
 **Zone unlock:** party **mean level** (even steps 1…100 across 15 zones) **or**
 prior zone clear. Zone 0 (Sandy) from Lv1. Lifetime gold no longer unlocks zones.
 
-**QUESTS** (META tab; was JOBS/contracts): 3-slot board — **Daily** (UTC kill
+**QUESTS** (bottom tab; was JOBS/contracts): 3-slot board — **Daily** (UTC kill
 quest), **Bounty** ladder (100/500/1000 at endgame), **Side** rotating
 non-kill. Claim via TODAY **CLAIM QUESTS**.
 
 **Hub TODAY** — selection in `HubChase.forState`; every surface reads the same
 words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up
-next). One chase card — claimables first (vault / jobs / **Meet new kit** /
+next). One chase card — claimables first (vault / quests / **Meet new kit** /
 **equip BAG** / **Shop upgrade**), then Ascend / progress. Urgency **READY** /
 **ALMOST** (zone/Will/Gauntlet/Ascend-near beat Daily grind; also KEY +1 vault,
 etc.). Local-season **week goal** can surface as a chase. **First hour** (no
-boss, no Ascend): grow the party in the starter zone — skip Daily / KEY /
+boss, no Ascend): grow the party in the starter zone — skip Daily /
 vault-start / kit teasers until after the first boss
-(`GameLogic.showDailyChase`). After that, TODAY may chase the next KEY
-(`ENTER KEY +N`) as a habit. META → KEY tab, week-affix line, and KEYSTONE tips
-wait until AL≥2 or King's Fort cleared (`GameLogic.showKeystoneJargon`). New
-unlocks queue `metaDepth.pendingHeroReveals` until PARTY opens. Ascend
-confirm/toast + chase detail use **`AscendRoadmap`**
-(`lib/core/ascend_roadmap.dart`) for next AL unlocks — kit ladder AL1–6 (e.g.
-Combat Rogue / Arms / Holy Paladin, BM/Holy/Arcane + 5th slot, DKs, Aff/Demo)
-plus AL20 Gauntlet. Spec look: `HeroIdentity` (tint + Shadow→warlock sprite).
+(`GameLogic.showDailyChase`). **KEY habit** (`ENTER KEY +N`), KEY tab,
+week-affix jargon, and KEYSTONE tips wait until the **active party is all
+Lv100** (`GameLogic.showKeystoneJargon` → `endgameUnlocked`). At endgame,
+TODAY prefers KEY then Gauntlet → Greater Rift → Rift → Ashen Crown before
+Daily grind; Meet-kit backlog stays on PARTY badge. New unlocks queue
+`metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast + chase
+detail use **`AscendRoadmap`** (`lib/core/ascend_roadmap.dart`) for next AL
+unlocks — kit ladder AL1–6 (e.g. Combat Rogue / Arms / Holy Paladin,
+BM/Holy/Arcane + 5th slot, DKs, Aff/Demo) plus AL20 party-level gate copy.
+Spec look: `HeroIdentity` (tint + Shadow→warlock sprite).
 
 New Game picker: choose **3 unique specs** from the starter pool. Role copy is
 **Shield / Healer / Damage** (easy start = one of each), not three fixed buttons.
@@ -255,8 +263,8 @@ Unlock: prior clear **or** party **mean level** gate (even steps Lv1…Lv100).
   with kill loot when the floor clears (same bank path).
 - After all enemies die, ground loot is vacuumed immediately and the party
   walks to **stairs/exit** → `completeCurrentRoom`.
-- **Wipe advice** (in-dungeon panel only): Gold tips after **2** wipes on the
-  same floor (`WipeAdvice.streakNeeded`); bag / floor-too-far / early DEF /
+- **Wipe advice** (in-dungeon panel only): POWER track tips after **2** wipes on
+  the same floor (`WipeAdvice.streakNeeded`); bag / floor-too-far / early DEF /
   Shop can fire on wipe 1. Stay quiet if the sim cannot prove a deficit.
 
 ## Combat ratings (1.12.12)
@@ -298,6 +306,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Chase contract (hub ↔ AFK) | `lib/core/chase_contract.dart` + `docs/CHASE_CONTRACT.md` |
 | Guides copy | `lib/core/game_guides.dart` |
 | Keystone | `lib/core/keystone.dart` |
+| Ashen Crown | `lib/core/ashen_crown.dart` |
 | Local season weeks | `lib/core/local_season.dart` |
 | Play Games | `lib/core/play_games_bridge.dart`, `play_leaderboard_ids.dart` |
 | Ascend unlock teasers | `lib/core/ascend_roadmap.dart` |
@@ -348,9 +357,10 @@ tracks, normal gear/stash/market/loadouts, or `highestFloorCleared`.
 
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
 each Ascend adds **+5 ATK · +20 DEF · +60 STA · +8% gold** on top of AL flats
-(`+1 ATK` / `+4 DEF` / `+12 STA` / `+10% gold` per AL). Shown in Forge → KEEP
-and Sanctuary. Constants: `GameLogic.ascendBlessing*`. Player-facing label is
-**STA / Stamina** (same as gear); internal fields may still say vitality.
+(`+1 ATK` / `+4 DEF` / `+12 STA` / `+10% gold` per AL). Shown in
+**POWER → Gold → KEEP** and Sanctuary. Constants: `GameLogic.ascendBlessing*`.
+Player-facing label is **STA / Stamina** (same as gear); internal fields may
+still say vitality.
 
 **Ascend prestige:** raises AL, stacks Blessing, unlocks kits, pays essence,
 and **resets the run bag** (gold, forge tracks, worn/stash drops, market,
@@ -359,30 +369,31 @@ loadouts, floors → starter gear). **Keeps** hero levels/XP, open zones
 soulbound, settings. Sets `metaDepth.freshPrestige` so TODAY farms gear instead
 of KEY until real drops land. **Clears** `bossVictories`, wipe streak/advice,
 active dungeon / KEY / rift via leave-dungeon; mission board rebuilt.
-**AL20 REBORN** (Forge → KEEP, optional): same bag wipe, AL and Blessing
-unchanged, essence + 1 constellation point. Never a TODAY chase.
+**AL20 REBORN** (**POWER → Gold → KEEP**, optional): same bag wipe, AL and
+Blessing unchanged, essence + 1 constellation point. Never a TODAY chase.
 
 Dungeon unlock uses **party mean level** (and prior clears), not lifetime gold.
 
 ### Keystone (Mythic+-style)
 
-Hub **KEY** (META tab, after jargon unlock) sets preferred key (`hardmodeLevel`
-0–20, AL-gated). On enter, affixes lock + idle-friendly par timer starts (AFK
-counts). Boss clear under par → TIMED (upgrade key, vault score); overtime →
-depleted. Loot iLvl bonus is `key * 2` (`Keystone.lootItemLevelBonus`) so higher
-keys are a visible gear jump. Combat **gold** scales with the same curve as threat
-(`Keystone.goldMul` — e.g. KEY +10 ≈ gold ×5.5) so harder keys are not a gold/hour
-tax. After the first hour, hub TODAY chases the next KEY until the AL cap; Daily /
-Will / Gauntlet surface when the preferred key is at cap (ALMOST cliffs stay above).
-**Daily vault** (UTC): 1 clear **or** timed KEY+2; claim once per day (scales with
-best timed key). Affixes still rotate weekly. See `lib/core/keystone.dart`.
+Hub **KEY** (bottom tab after party max level / jargon unlock) sets preferred
+key (`hardmodeLevel` 0–20, AL-gated). On enter, affixes lock + idle-friendly par
+timer starts (AFK counts). Boss clear under par → TIMED (upgrade key, vault
+score); overtime → depleted. Loot iLvl bonus is `key * 2`
+(`Keystone.lootItemLevelBonus`) so higher keys are a visible gear jump. Combat
+**gold** scales with the same curve as threat (`Keystone.goldMul` — e.g. KEY +10
+≈ gold ×5.5) so harder keys are not a gold/hour tax. At party max level, hub
+TODAY chases the next KEY until the AL key cap; then Gauntlet / GR / Rift /
+Ashen Crown / Daily / Will (ALMOST cliffs stay above). **Daily vault** (UTC):
+1 clear **or** timed KEY+2; claim once per day (scales with best timed key).
+Affixes still rotate weekly. See `lib/core/keystone.dart`.
 
 ## God Hand
 
 Tap steers the party briefly and deals AOE; has cooldown. Damage upgrades with essence.
-Styles under Forge → KEEP: **BAL** / **FOCUS** (+dmg −radius) / **WIDE** (+radius −dmg).
-Optional CD upgrades: `metaDepth.godHandCdLevel`. Soft knobs — do not redesign
-direction without asking.
+Styles under **POWER → Gold → KEEP**: **BAL** / **FOCUS** (+dmg −radius) /
+**WIDE** (+radius −dmg). Optional CD upgrades: `metaDepth.godHandCdLevel`. Soft
+knobs — do not redesign direction without asking.
 
 ## Balance policy
 

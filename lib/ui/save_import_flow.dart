@@ -6,7 +6,7 @@ import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
 
-/// Clipboard save import shared by title RESTORE SAVE and META → SETTINGS.
+/// Clipboard save import shared by title RESTORE SAVE and MORE → SETTINGS.
 abstract final class SaveImportFlow {
   static Future<bool> fromClipboard({
     required BuildContext context,

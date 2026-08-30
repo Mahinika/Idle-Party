@@ -7,7 +7,7 @@ import '../confirm_dialogs.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 
-/// META → KEY: Infinity Gauntlet enter (party max-level Spire climb).
+/// KEY tab: Infinity Gauntlet enter (party max-level Spire climb).
 class GauntletHubPanel extends StatelessWidget {
   const GauntletHubPanel({super.key, required this.director});
   final GameDirector director;

@@ -27,8 +27,8 @@ Web + `WebClickBridge` only if Android cannot run — see
 | 2c | Daily CTA | When TODAY is Daily, only TODAY’s **DAILY** button (no duplicate **DAILY RUN**) |
 | 3 | Daily vault claim | Vault filled (1 clear or timed KEY +2): `CLAIM VAULT`; toast says **Daily vault claimed** |
 | 4 | MORE badge | Unseen changelog → `META · NEW` (phone: `META ★`); claimable jobs → `META · !` (phone: `META !`) |
-| 5 | What’s New | Open META → GUIDE → WHAT'S NEW; bullets match `MetaSystems.currentVersion` |
-| 6 | Guides | META → GUIDE → topics labeled `Guide · …`; WORLD PATH mentions Tidehold/Ashen/Grove |
+| 5 | What’s New | Open MORE → INFO → WHAT'S NEW; bullets match `MetaSystems.currentVersion` |
+| 6 | Guides | MORE → INFO → topics labeled `Guide · …`; WORLD PATH mentions Tidehold/Ashen/Grove |
 | 7 | God Hand tip | Enter dungeon once; tip mentions BAL/FOCUS/WIDE or POWER → Forge |
 | 8 | Loadouts label | PARTY → `LOADOUTS` (phone tab may say `LOAD`; not “GEAR SETS”) |
 | 9 | Overlay hygiene | Open META/CODEX then ENTER: return to hub must not leave sheet stuck open |

@@ -166,7 +166,7 @@ Avoid stacking multiple **brown** full-width buttons on one screen (especially h
 |-------|------|-----|
 | **Primary** | One main job on this screen (ENTER, CLAIM, BUY) | `KenneyButtonStyle.brown`, `primary: true` for hero CTAs |
 | **Secondary** | Valid alternate (skip for now, cancel, ENTER when claim is READY) | `KenneyButtonStyle.grey` |
-| **Tertiary / nav** | Open another menu (“META → KEY”), inline | `MenuChrome.textLink` or `KenneyButtonStyle.ghost` |
+| **Tertiary / nav** | Open another menu (“KEY”), inline | `MenuChrome.textLink` or `KenneyButtonStyle.ghost` |
 | **Text link** | Low emphasis, inline | `MenuChrome.textLink` |
 | **Destructive** | Ascend, merge commit, wipe confirm | `KenneyButtonStyle.red` |
 
@@ -213,7 +213,7 @@ Phone height is the real limit, not the theme. Use these **before** dropping inf
 1. **`SingleChildScrollView`** on dense tabs (CAMP, SETTINGS).
 2. **Split `Expanded` flex** (e.g. CODEX milestones scroll horizontally; list gets remaining height).
 3. **`tabRail` scrollable** — long tab names (SETTINGS) are fine.
-4. **Collapse / link out** — hub KEY detail lives in META → KEY, not a second full panel on hub.
+4. **Collapse / link out** — hub KEY detail lives in the KEY tab, not a second full panel on hub.
 5. **Horizontal `ListView`** for chip/button rows that used to `Wrap` and overflow.
 
 Overflow stripes = layout bug, not “theme says no.”
