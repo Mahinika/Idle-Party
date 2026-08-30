@@ -64,8 +64,9 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 ## Character visuals (dungeon)
 
 Layered Canvas heroes: `lib/visual/` + `docs/CHARACTER_VISUALS.md`.
-Dungeon uses class PNG body + anchored gear overlays (`visualSetId`); full
-Kenney paper-doll is the no-sprite fallback. Never a Class×Weapon sheet.
+Dungeon prefers Phase 3 owned bodies (`assets/custom/char/`) + gear overlays;
+class PNG / Kenney paper-doll are fallbacks. Never a Class×Weapon sheet.
+Enemies are a separate art pass.
 
 ## Build & Test
 

@@ -77,6 +77,7 @@ flutter:
     - assets/custom/portraits/
     - assets/custom/enemies/
     - assets/custom/heroes/
+    - assets/custom/char/
     - assets/custom/ui/
     - assets/custom/ui/backdrops/
     - assets/custom/dungeon/sandy/tiles/

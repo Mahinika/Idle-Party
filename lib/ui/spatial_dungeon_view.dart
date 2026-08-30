@@ -15,7 +15,9 @@ import '../models/loot.dart';
 import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
 import '../spatial/tile_map.dart';
+import '../visual/body_family.dart';
 import '../visual/character_visual_painter.dart';
+import '../visual/hero_anim_controller.dart';
 import '../visual/hero_anim_state.dart';
 import 'custom_assets.dart';
 import 'decoded_image_cache.dart';
@@ -56,6 +58,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   ui.Image? _hero3;
   final Map<HeroClassId, ui.Image?> _heroesByClass = {};
   final Map<HeroSpecId, ui.Image?> _heroesBySpec = {};
+  final Map<String, ui.Image> _bodyByPath = <String, ui.Image>{};
   ui.Image? _charAtlas;
   ui.Image? _chest;
   ui.Image? _coin;
@@ -224,6 +227,19 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         ..[HeroSpecId.feral] = shared[i++]
         ..[HeroSpecId.guardian] = shared[i++];
       _sharedLoaded = true;
+
+      // Phase 3 denser owned bodies (family × anim).
+      final bodyPaths = BodyFamilyCatalog.allAssetPaths;
+      final bodies = await Future.wait(
+        bodyPaths.map((a) => load(a, targetWidth: 128)),
+      );
+      if (!mounted) return;
+      _bodyByPath
+        ..clear()
+        ..addEntries([
+          for (var bi = 0; bi < bodyPaths.length; bi++)
+            MapEntry(bodyPaths[bi], bodies[bi]),
+        ]);
     }
 
     // Only this zone's enemies — the catalog holds 24 sprites but a zone can
@@ -532,6 +548,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                       ],
                                       heroesByClass: _heroesByClass,
                                       heroesBySpec: _heroesBySpec,
+                                      bodyByPath: _bodyByPath,
                                       enemies: _enemySprites,
                                       chest: _chest!,
                                       coin: _coin!,
@@ -986,6 +1003,7 @@ class _TileRoomPainter extends CustomPainter {
     required this.heroes,
     required this.heroesByClass,
     required this.heroesBySpec,
+    required this.bodyByPath,
     required this.enemies,
     required this.chest,
     required this.coin,
@@ -1015,6 +1033,7 @@ class _TileRoomPainter extends CustomPainter {
   final List<ui.Image?> heroes;
   final Map<HeroClassId, ui.Image?> heroesByClass;
   final Map<HeroSpecId, ui.Image?> heroesBySpec;
+  final Map<String, ui.Image> bodyByPath;
   final List<ui.Image?> enemies;
   final ui.Image chest;
   final ui.Image coin;
@@ -1796,12 +1815,20 @@ class _TileRoomPainter extends CustomPainter {
         );
         final walkPhase =
             ((hero.x + hero.y).abs() * 2.5 + visualFrame * 0.08) % 1.0;
-        // Hybrid: class PNG for identity + anchored gear overlays.
-        ui.Image? bodyImg = heroesBySpec[partyHero.specId] ??
-            heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
+        final anim = HeroAnimController.snapshot(
+          signals,
+          walkPhase: walkPhase,
+        );
+        // Phase 3 denser owned body → class PNG → Kenney role fallback.
+        final bodyPath = BodyFamilyCatalog.assetFor(partyHero, anim.kind);
+        ui.Image? bodyImg = bodyByPath[bodyPath];
         Color? tint;
-        final argb = HeroIdentity.tintArgb(partyHero.specId);
-        if (argb != null) tint = Color(argb);
+        if (bodyImg == null) {
+          bodyImg = heroesBySpec[partyHero.specId] ??
+              heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
+          final argb = HeroIdentity.tintArgb(partyHero.specId);
+          if (argb != null) tint = Color(argb);
+        }
         bodyImg ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
         if (bodyImg != null) {
           drawSprite(
@@ -1824,6 +1851,7 @@ class _TileRoomPainter extends CustomPainter {
             alpha: paintAlpha,
             walkPhase: walkPhase,
             cacheId: hero.id,
+            poseOverride: anim,
           );
         } else {
           CharacterVisualPainter.paint(
@@ -1838,6 +1866,7 @@ class _TileRoomPainter extends CustomPainter {
             alpha: paintAlpha,
             walkPhase: walkPhase,
             cacheId: hero.id,
+            poseOverride: anim,
           );
         }
       } else {
@@ -2732,7 +2761,8 @@ class _TileRoomPainter extends CustomPainter {
         !identical(floorVariants, oldDelegate.floorVariants) ||
         !identical(enemies, oldDelegate.enemies) ||
         !identical(heroesByClass, oldDelegate.heroesByClass) ||
-        !identical(heroesBySpec, oldDelegate.heroesBySpec);
+        !identical(heroesBySpec, oldDelegate.heroesBySpec) ||
+        !identical(bodyByPath, oldDelegate.bodyByPath);
   }
 }
 
