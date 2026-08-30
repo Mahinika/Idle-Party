@@ -129,7 +129,7 @@ Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`.
 
 ```
 main.dart
- ├─ loading → boot intro → startMenu → optional newGamePicker → play
+ ├─ loading → boot intro (optional first-launch cinematic, else 3 beats) → startMenu → optional newGamePicker → play
  ├─ PlayShell (one MenuSurface + toast; hub vs dungeon scenes)
  │   ├─ Hub (!inDungeon) → HubScreen + FirstSessionTips
  │   └─ Dungeon (inDungeon) → Is2Shell

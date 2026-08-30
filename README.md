@@ -5,12 +5,30 @@
 Idle Party is a cozy-but-crunchy **idle RPG**: a hero party crawls spatial dungeon floors, clears chambers, farms loot, and grows stronger between runs. Tap in for God Hand moments, or let the corridor combat cook offline.
 
 <p align="center">
-  <img src="tool/art_backups/app_icon.png" alt="Idle Party app icon" width="160" />
+  <img src="tool/art_backups/app_icon.png" alt="Idle Party app icon — pixel torch and party crest" width="160" />
 </p>
 
 **[Download Android APK (latest)](https://github.com/Mahinika/Idle-Party/releases/latest)** · **[All releases](https://github.com/Mahinika/Idle-Party/releases)**
 
 Primary Android distribution is **GitHub Releases (sideload)**; Play Store is optional (see [docs/PLAY_STORE.md](docs/PLAY_STORE.md)).
+
+---
+
+## Look & feel
+
+Painted pixel dungeons, torchlight, dark charcoal and gold. [Kenney](https://kenney.nl) world art (CC0) plus owned Idle Party identity sprites. Not a fake progress bar — the party walks the floor.
+
+<p align="center">
+  <img src="assets/custom/ui/intro_scene.png" alt="Pixel-art party at a torch-lit cave mouth" width="220" />
+  <img src="assets/custom/ui/hub_scene.png" alt="Painted hub keep and gate plaza in torchlight" width="220" />
+  <img src="assets/custom/ui/backdrops/sandy.png" alt="Sandy cavern dungeon — pixel stone, warm torch light" width="220" />
+</p>
+
+<p align="center">
+  <img src="assets/custom/heroes/knight.png" alt="Shield hero pixel sprite" height="64" />
+  <img src="assets/custom/heroes/healer.png" alt="Healer hero pixel sprite" height="64" />
+  <img src="assets/custom/heroes/wizard.png" alt="Damage caster pixel sprite" height="64" />
+</p>
 
 ---
 
@@ -23,24 +41,6 @@ Primary Android distribution is **GitHub Releases (sideload)**; Play Store is op
 - **Gear that feels good** — equip, auto-equip, sell junk, merge in the combinator, save loadouts.
 - **Meta that survives Ascend** — sanctuary, relics, pets, prestige shop, contracts, weekly modifiers, achievements, codex.
 - **Offline progress that respects the dungeon** — come back to gold, floors, and a clear summary.
-
-Pixel art vibe powered by [Kenney](https://kenney.nl) (CC0) plus custom Idle Party identity art. Game systems and code are original.
-
----
-
-## Quick start
-
-### Android
-Grab the latest APK from [Releases](https://github.com/Mahinika/Idle-Party/releases) and sideload it. No account. No ads in the build.
-
-### From source
-
-```bash
-flutter pub get
-flutter emulators --launch Samsung_A56   # A56-sized phone (1080×2340)
-flutter run -d emulator-5554
-# USB phone if plugged in: flutter devices, then flutter run -d <id>
-```
 
 ---
 
@@ -57,11 +57,28 @@ World Path is **15 zones** from Sandy Caverns through Mothveil Hollow
 (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on
 the road) — each with its own look, packs, and bosses.
 
-**Ship:** [latest GitHub Release](https://github.com/Mahinika/Idle-Party/releases/latest) (1.12.28 — What’s New is also in-game).
+**Ship:** [latest GitHub Release](https://github.com/Mahinika/Idle-Party/releases/latest) (What’s New is also in-game).
+
+Player cinematic brief (boot trailer): [docs/TRAILER.md](docs/TRAILER.md)
 
 ---
 
-## Build notes (devs)
+## For developers
+
+### Android (play)
+
+Grab the latest APK from [Releases](https://github.com/Mahinika/Idle-Party/releases) and sideload it. No account. Optional hub **POWERUPS** (rewarded ad) for a timed boost — never mid-fight.
+
+### From source
+
+```bash
+flutter pub get
+flutter emulators --launch Samsung_A56   # A56-sized phone (1080×2340)
+flutter run -d emulator-5554
+# USB phone if plugged in: flutter devices, then flutter run -d <id>
+```
+
+### Build notes
 
 ```bash
 flutter build apk --release

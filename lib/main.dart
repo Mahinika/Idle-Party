@@ -361,6 +361,14 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
       return Scaffold(
         body: BootIntroScreen(
           key: const ValueKey('boot-intro'),
+          playCinematic:
+              CustomAssets.introVideoBundled &&
+              !_director.state.seenTips.contains(
+                BootIntroScreen.cinematicTipId,
+              ),
+          muted: GameAudio.muted,
+          onCinematicConsumed: () =>
+              _director.dismissTip(BootIntroScreen.cinematicTipId),
           onFinished: () {
             if (!mounted) return;
             setState(() => _phase = _AppPhase.startMenu);

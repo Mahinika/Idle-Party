@@ -234,6 +234,11 @@ abstract final class CustomAssets {
   /// Full-bleed cold-start scene (party facing into the cave).
   static const String introScene = '$_root/ui/intro_scene.png';
 
+  /// Optional RepoClip boot cinematic. Flip [introVideoBundled] when the MP4
+  /// is in pubspec; until then the painted 3-beat intro plays.
+  static const String introVideo = 'assets/video/boot_intro.mp4';
+  static const bool introVideoBundled = false;
+
   /// Hub keep / gate plaza behind translucent chrome.
   static const String hubScene = '$_root/ui/hub_scene.png';
 

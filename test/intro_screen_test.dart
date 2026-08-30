@@ -7,6 +7,7 @@ import 'package:idle_party/core/story_lore.dart';
 import 'package:idle_party/main.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/ui/boot_intro_screen.dart';
+import 'package:idle_party/ui/custom_assets.dart';
 import 'package:idle_party/ui/new_game_party_picker.dart';
 import 'package:idle_party/ui/kenney_button.dart';
 import 'package:idle_party/ui/start_menu_screen.dart';
@@ -59,6 +60,26 @@ void main() {
     await tester.pump(const Duration(milliseconds: 950));
     expect(find.byType(StartMenuScreen), findsOneWidget);
     expect(find.byType(BootIntroScreen), findsNothing);
+  });
+
+  testWidgets('boot intro stays on painted beats while cinematic is unbundled',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final director = GameDirector.preview();
+
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: true),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(CustomAssets.introVideoBundled, isFalse);
+    expect(find.byType(BootIntroScreen), findsOneWidget);
+    expect(find.text(StoryLore.introBeats.first.body), findsOneWidget);
+    expect(director.state.seenTips, isNot(contains(BootIntroScreen.cinematicTipId)));
   });
 
   testWidgets('start menu shows Continue and New Game', (tester) async {
