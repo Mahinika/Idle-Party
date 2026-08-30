@@ -22,8 +22,9 @@ from mcp.server.fastmcp import FastMCP
 mcp = FastMCP(
     "idle-party",
     instructions=(
-        "Idle Party project tools: fast DPS share sims, changelog honesty, "
-        "Flutter analyze/test, zone art identity, and hub playtest checklists."
+        "Idle Party project tools: verify (analyze/ship_smoke/balance_gate), "
+        "DPS share sims, changelog honesty, kit/AoE audits, save peek, "
+        "zone art identity, chase contract docs, and hub playtest checklists."
     ),
     # INFO logs "Processing request of type PingRequest" to stderr.
     log_level="ERROR",
@@ -69,6 +70,27 @@ def _run(
 
 def _flutter() -> str:
     return os.environ.get("FLUTTER_BIN", "flutter")
+
+
+def _python() -> str:
+    venv = Path(__file__).resolve().parent / ".venv" / "Scripts" / "python.exe"
+    if venv.exists():
+        return str(venv)
+    return os.environ.get("PYTHON_BIN", "python")
+
+
+def _truncate(out: str, limit: int = 12000) -> str:
+    if len(out) <= limit:
+        return out
+    return out[: limit // 2] + "\n...\n" + out[-(limit // 2) :]
+
+
+def _run_flutter_test(path: str, *, timeout: int = 300) -> str:
+    code, out = _run(
+        [_flutter(), "test", path, "--reporter", "expanded"],
+        timeout=timeout,
+    )
+    return f"exit={code}\n{_truncate(out)}"
 
 
 # structured_output=False: avoid outputSchema. Cursor agent lease sometimes
@@ -208,9 +230,7 @@ def flutter_test(filter: str = "") -> str:
         else:
             args.extend(["--name", f])
     code, out = _run(args, timeout=900)
-    if len(out) > 12000:
-        out = out[:6000] + "\n...\n" + out[-6000:]
-    return f"exit={code}\n{out}"
+    return f"exit={code}\n{_truncate(out)}"
 
 
 @mcp.tool(structured_output=False)
@@ -321,6 +341,202 @@ window.__idlePartyClick('GUIDES')
 window.__idlePartyClick('ENTER DUNGEON')
 window.__idlePartySetSpeed(10)
 """.strip()
+
+
+@mcp.tool(structured_output=False)
+def ship_smoke() -> str:
+    """Fast honesty: world path / unlock / guides / chase surfaces."""
+    return _run_flutter_test("test/ship_smoke_test.dart", timeout=240)
+
+
+@mcp.tool(structured_output=False)
+def balance_gate() -> str:
+    """CI live-light DPS share gate (fails on HIGH outside +/-20% band)."""
+    return _run_flutter_test("test/class_balance_gate_test.dart", timeout=420)
+
+
+@mcp.tool(structured_output=False)
+def chase_tests() -> str:
+    """HubChase priority tests (TODAY / claimables / endgame ladder)."""
+    return _run_flutter_test("test/hub_chase_test.dart", timeout=240)
+
+
+@mcp.tool(structured_output=False)
+def verify(include_changelog: bool = True, include_balance_gate: bool = False) -> str:
+    """Batch verify: flutter analyze + ship_smoke (+ optional changelog / balance_gate)."""
+    parts: list[str] = []
+    code_a, out_a = _run([_flutter(), "analyze", "lib", "test"], timeout=300)
+    parts.append(f"## flutter_analyze exit={code_a}\n{_truncate(out_a, 6000)}")
+    if code_a != 0:
+        return "\n\n".join(parts) + "\n\nSTOPPED: analyze failed"
+
+    smoke = ship_smoke()
+    parts.append(f"## ship_smoke\n{smoke}")
+    if not smoke.startswith("exit=0"):
+        return "\n\n".join(parts) + "\n\nSTOPPED: ship_smoke failed"
+
+    if include_changelog:
+        clog = changelog_check()
+        parts.append(f"## changelog_check\n{clog}")
+        if not clog.startswith("exit=0"):
+            return "\n\n".join(parts) + "\n\nSTOPPED: changelog_check failed"
+
+    if include_balance_gate:
+        gate = balance_gate()
+        parts.append(f"## balance_gate\n{gate}")
+        if not gate.startswith("exit=0"):
+            return "\n\n".join(parts) + "\n\nSTOPPED: balance_gate failed"
+
+    parts.append("## summary\nOK")
+    return "\n\n".join(parts)
+
+
+@mcp.tool(structured_output=False)
+def kit_audit() -> str:
+    """Kit spell coverage board (thin kits, missing fantasy crumbs, tiers)."""
+    script = _root() / "tool" / "audit_kit_spell_coverage.py"
+    if not script.exists():
+        return f"missing {script}"
+    code, out = _run([_python(), str(script)], timeout=60)
+    return f"exit={code}\n{_truncate(out)}"
+
+
+@mcp.tool(structured_output=False)
+def aoe_audit() -> str:
+    """AoE / cleave coverage per HeroSpecId."""
+    script = _root() / "tool" / "audit_aoe_coverage.py"
+    if not script.exists():
+        return f"missing {script}"
+    code, out = _run([_python(), str(script)], timeout=60)
+    return f"exit={code}\n{_truncate(out)}"
+
+
+@mcp.tool(structured_output=False)
+def version_info() -> str:
+    """pubspec versionName/build vs MetaSystems.currentVersion (quick sync peek)."""
+    root = _root()
+    pub = (root / "pubspec.yaml").read_text(encoding="utf-8")
+    meta = (root / "lib" / "core" / "meta_systems.dart").read_text(encoding="utf-8")
+    pv = re.search(r"^version:\s*([^\s#]+)", pub, re.M)
+    mv = re.search(
+        r"static\s+const\s+String\s+currentVersion\s*=\s*'([^']+)'",
+        meta,
+    )
+    pubspec_v = pv.group(1).strip() if pv else "missing"
+    meta_v = mv.group(1).strip() if mv else "missing"
+    name = pubspec_v.split("+", 1)[0]
+    ok = name == meta_v
+    return (
+        f"pubspec: {pubspec_v}\n"
+        f"MetaSystems.currentVersion: {meta_v}\n"
+        f"sync: {'OK' if ok else 'MISMATCH — run changelog_check'}"
+    )
+
+
+@mcp.tool(structured_output=False)
+def chase_contract_doc() -> str:
+    """Return docs/CHASE_CONTRACT.md (TODAY priority source of truth)."""
+    path = _root() / "docs" / "CHASE_CONTRACT.md"
+    if not path.exists():
+        return "missing docs/CHASE_CONTRACT.md"
+    return path.read_text(encoding="utf-8")
+
+
+@mcp.tool(structured_output=False)
+def save_peek(path: str = "") -> str:
+    """Summarize a save JSON for hub/AL20 debugging (levels, zones, KEY, vault).
+
+    Empty path defaults to tool/store_listing/showcase_save.json.
+    Accepts absolute paths or paths relative to the repo root.
+    """
+    import json
+
+    root = _root()
+    raw = path.strip()
+    if not raw:
+        candidate = root / "tool" / "store_listing" / "showcase_save.json"
+    else:
+        candidate = Path(raw)
+        if not candidate.is_absolute():
+            candidate = root / raw
+    if not candidate.exists():
+        return f"missing save: {candidate}"
+
+    try:
+        data = json.loads(candidate.read_text(encoding="utf-8"))
+    except Exception as e:
+        return f"parse fail: {e}"
+
+    if not isinstance(data, dict):
+        return "save root is not an object"
+
+    md = data.get("metaDepth") if isinstance(data.get("metaDepth"), dict) else {}
+    heroes = data.get("heroes") if isinstance(data.get("heroes"), list) else []
+    levels: list[int] = []
+    specs: list[str] = []
+    for h in heroes:
+        if not isinstance(h, dict):
+            continue
+        try:
+            levels.append(int(h.get("level", 0)))
+        except (TypeError, ValueError):
+            levels.append(0)
+        hid = str(h.get("id") or h.get("specId") or "?")
+        specs.append(hid)
+
+    mean = round(sum(levels) / len(levels), 1) if levels else 0
+    all_max = bool(levels) and all(lv >= 100 for lv in levels)
+
+    missions = data.get("missions") if isinstance(data.get("missions"), list) else []
+    claimable = 0
+    for m in missions:
+        if not isinstance(m, dict):
+            continue
+        try:
+            if int(m.get("progress", 0)) >= int(m.get("target", 1)):
+                claimable += 1
+        except (TypeError, ValueError):
+            pass
+
+    stash = data.get("gearStash") if isinstance(data.get("gearStash"), list) else []
+    lines = [
+        f"file: {candidate}",
+        f"AL: {data.get('ascensionLevel')}",
+        f"gold: {data.get('gold')}  essence: {data.get('essence')}",
+        f"inDungeon: {data.get('inDungeon')}  dungeonId: {data.get('dungeonId')}  "
+        f"floorHighest: {data.get('highestFloorCleared')}",
+        f"zones cleared idx: {data.get('highestDungeonCleared')}",
+        f"KEY dial: {data.get('hardmodeLevel')}  "
+        f"best timed key (meta): {md.get('dailyBestTimedKey')}  "
+        f"highestHardmodeCleared: {md.get('highestHardmodeCleared')}",
+        f"vault: clears={md.get('dailyVaultClears')} claimed={md.get('dailyVaultClaimed')} "
+        f"date={md.get('dailyVaultDate')}",
+        f"gauntletBest: {md.get('gauntletBestFloor', 0)}  "
+        f"riftBest: {md.get('riftBestTier', 0)}  grBest: {md.get('grBestTier', 0)}",
+        f"ascendBlessings: {md.get('ascendBlessings', 0)}  "
+        f"freshPrestige: {md.get('freshPrestige', False)}",
+        f"party n={len(levels)} levels={levels} mean={mean} endgameUnlocked~={all_max}",
+        f"specs: {', '.join(specs) or '(none)'}",
+        f"bag stash: {len(stash)}  claimable quests~: {claimable}",
+        f"godHandLevel: {data.get('godHandLevel')}  "
+        f"bossVictories: {data.get('bossVictories')}",
+    ]
+    return "\n".join(lines)
+
+
+@mcp.tool(structured_output=False)
+def skill_read(name: str = "flutter-verify") -> str:
+    """Read a .cursor/skills/<name>/SKILL.md (e.g. a56-playtest, hub-smoke)."""
+    key = name.strip().strip("/\\")
+    if not key or ".." in key or "/" in key or "\\" in key:
+        return "pass a skill folder name like flutter-verify or a56-playtest"
+    path = _root() / ".cursor" / "skills" / key / "SKILL.md"
+    if not path.exists():
+        skills = _root() / ".cursor" / "skills"
+        names = sorted(p.name for p in skills.iterdir() if p.is_dir()) if skills.exists() else []
+        return f"missing {path}\navailable: {', '.join(names)}"
+    text = path.read_text(encoding="utf-8")
+    return _truncate(text, 14000)
 
 
 if __name__ == "__main__":

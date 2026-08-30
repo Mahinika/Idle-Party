@@ -122,8 +122,8 @@ Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`.
 - Ship bar: `.cursor/rules/definition-of-done.mdc`.
 - Fast honesty: `flutter test test/ship_smoke_test.dart`.
 - MCP: `.cursor/mcp.json` → **`idle-party`** (`tool/mcp_idle_party/`; Cursor UI
-  may show `user-idle-party`) — balance_share, changelog_check, flutter_analyze/test,
-  zone_identity, hub smoke helpers.
+  may show `user-idle-party`) — `verify`, ship_smoke, balance_share/gate,
+  changelog_check, kit/aoe_audit, save_peek, zone_identity, hub smoke helpers.
 
 ## Architecture
 
