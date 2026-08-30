@@ -191,9 +191,17 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) return;
-    if (_phase != _AppPhase.playUpdateRequired) return;
-    unawaited(_recheckMandatoryPlayUpdate());
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        GameAudio.onAppPaused();
+      case AppLifecycleState.resumed:
+        GameAudio.onAppResumed();
+        if (_phase != _AppPhase.playUpdateRequired) return;
+        unawaited(_recheckMandatoryPlayUpdate());
+    }
   }
 
   Future<void> _bootstrap() async {
@@ -201,7 +209,20 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
     unawaited(DropTables.load());
     // Defer combat loop until after start menu so dungeon ticks cannot steal focus.
     await _director.boot(deferCombatLoop: widget.showIntro);
-    GameAudio.muted = _director.state.soundMuted;
+    await GameAudio.init();
+    GameAudio.hapticsEnabled = _director.state.hapticsEnabled;
+    GameAudio.applyVolumes(
+      sfx: _director.state.sfxVolume,
+      ambience: _director.state.ambienceVolume,
+    );
+    GameAudio.setMuted(_director.state.soundMuted);
+    if (!_director.state.soundMuted) {
+      unawaited(
+        GameAudio.setAmbience(
+          _director.state.inDungeon ? AmbienceKind.dungeon : AmbienceKind.hub,
+        ),
+      );
+    }
     if (kIsWeb) {
       WebClickBridge.bindSpeedControls(
         getSpeed: () => _director.debugTimeScale,

@@ -29,12 +29,14 @@ description: >-
 ## Layout
 
 ```
-assets/kenney/   # tiny_dungeon, icons, ui_*, runes, extras, roguelike_char
-assets/custom/   # heroes, enemies, pets, icons, portraits, ui/, ui/backdrops/
+assets/kenney/   # tiny_dungeon, icons, ui_*, runes, extras, roguelike_char, audio/sfx
+assets/custom/   # heroes, enemies, pets, icons, portraits, ui/, ui/backdrops/, audio/ambience
 assets/data/     # JSON (e.g. item_affixes)
 ```
 
 Existing folders are listed in `pubspec.yaml`. New **top-level** asset folders need a pubspec entry.
+
+Audio: SFX under `assets/kenney/audio/sfx/` (Kenney CC0 — see ATTRIBUTION.md). Ambience under `assets/custom/audio/ambience/` (owned). Paths only via `AudioAssets` in `lib/core/audio_assets.dart` — never raw `assets/...` in call sites. Never copy audio from other commercial games.
 
 ## Add a sprite
 

@@ -1827,6 +1827,44 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(_state.copyWith(soundMuted: muted));
   }
 
+  void setSfxVolume(double value) {
+    _applyUpgrade(_state.copyWith(sfxVolume: value.clamp(0.0, 1.0)));
+  }
+
+  void cycleSfxVolume() {
+    const steps = <double>[0.0, 0.35, 0.7, 1.0];
+    final cur = _state.sfxVolume;
+    var best = 0;
+    var bestDist = 999.0;
+    for (var i = 0; i < steps.length; i++) {
+      final d = (steps[i] - cur).abs();
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    setSfxVolume(steps[(best + 1) % steps.length]);
+  }
+
+  void setAmbienceVolume(double value) {
+    _applyUpgrade(_state.copyWith(ambienceVolume: value.clamp(0.0, 1.0)));
+  }
+
+  void cycleAmbienceVolume() {
+    const steps = <double>[0.0, 0.15, 0.25, 0.45];
+    final cur = _state.ambienceVolume;
+    var best = 0;
+    var bestDist = 999.0;
+    for (var i = 0; i < steps.length; i++) {
+      final d = (steps[i] - cur).abs();
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    setAmbienceVolume(steps[(best + 1) % steps.length]);
+  }
+
   void setHapticsEnabled(bool enabled) {
     _applyUpgrade(_state.copyWith(hapticsEnabled: enabled));
   }
@@ -1912,6 +1950,8 @@ class GameDirector extends ChangeNotifier {
         hapticsEnabled: true,
         keepScreenAwake: true,
         soundMuted: false,
+        sfxVolume: 0.7,
+        ambienceVolume: 0.25,
       ),
     );
   }
@@ -3162,12 +3202,23 @@ class GameDirector extends ChangeNotifier {
   }
 
   void _syncDevicePrefs() {
-    GameAudio.muted = _state.soundMuted;
     GameAudio.hapticsEnabled = _state.hapticsEnabled;
+    GameAudio.applyVolumes(
+      sfx: _state.sfxVolume,
+      ambience: _state.ambienceVolume,
+    );
+    GameAudio.setMuted(_state.soundMuted);
     SpatialCombat.colorblindMode = _state.colorblindMode;
     unawaited(
       ScreenAwake.setEnabled(_state.keepScreenAwake && _state.inDungeon),
     );
+    if (!_state.soundMuted) {
+      unawaited(
+        GameAudio.setAmbience(
+          _state.inDungeon ? AmbienceKind.dungeon : AmbienceKind.hub,
+        ),
+      );
+    }
   }
 
   void _announceAbilityUnlocks(GameState before, GameState after) {

@@ -491,7 +491,7 @@ abstract final class GameGuides {
           '• Tap METER (top-left) for party rates: DPS, healer HPS, tank damage taken '
           '(bars match unit; tanks/healers also show their damage).\n'
           '• Settings: text scale (S/M/L/XL), dungeon zoom Close/Normal/Wide, '
-          'mute + haptics, keep screen on in dungeon, Full / Lite / Minimal VFX '
+          'mute + SFX/Ambience volume + haptics, keep screen on in dungeon, Full / Lite / Minimal VFX '
           '(Minimal = reduce motion), colorblind floaters, '
           'bag auto-sell / auto-disassemble.\n'
           '• MORE → INFO brings you back here anytime.\n'

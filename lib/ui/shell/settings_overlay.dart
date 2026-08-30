@@ -106,6 +106,13 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
     director.resetDisplayDefaults();
   }
 
+  static String _volumeLabel(double v) {
+    if (v <= 0.01) return 'Off';
+    if (v < 0.4) return 'Low';
+    if (v < 0.85) return 'Med';
+    return 'High';
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -191,6 +198,18 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             onChanged: director.setSoundMuted,
           ),
           const SizedBox(height: 8),
+          _SettingsCycle(
+            label: 'SFX ${_volumeLabel(state.sfxVolume)}',
+            hint: 'Combat and UI volume',
+            onCycle: director.cycleSfxVolume,
+          ),
+          const SizedBox(height: 8),
+          _SettingsCycle(
+            label: 'Ambience ${_volumeLabel(state.ambienceVolume)}',
+            hint: 'Soft hub / dungeon loop',
+            onCycle: director.cycleAmbienceVolume,
+          ),
+          const SizedBox(height: 8),
           _SettingsToggle(
             label: 'Haptics (vibration)',
             value: state.hapticsEnabled,
@@ -213,7 +232,7 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           const SizedBox(height: 8),
           KenneyButton(
             label: 'RESET DISPLAY DEFAULTS',
-            tip: 'Text 100% · Zoom Normal · Full VFX · sound & haptics on',
+            tip: 'Text 100% · Zoom Normal · Full VFX · SFX Med · sound on',
             style: KenneyButtonStyle.grey,
             onPressed: _resetDisplayDefaults,
           ),

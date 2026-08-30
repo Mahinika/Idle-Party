@@ -97,6 +97,8 @@ class GameState {
     this.godHandLevel = 0,
     this.layoutSeed = 0,
     this.soundMuted = false,
+    this.sfxVolume = 0.7,
+    this.ambienceVolume = 0.25,
     this.vfxQuality = VfxQuality.full,
     this.autoSellMaxPower = 48,
     this.autoSellMaxRarity = 1,
@@ -288,6 +290,12 @@ class GameState {
 
   /// Settings — survive Ascend.
   final bool soundMuted;
+
+  /// SFX master gain 0..1 (default 0.7). Survives Ascend.
+  final double sfxVolume;
+
+  /// Hub/dungeon ambience gain 0..1 (default 0.25). Survives Ascend.
+  final double ambienceVolume;
 
   /// Combat VFX detail (full / lite / minimal).
   final VfxQuality vfxQuality;
@@ -1001,6 +1009,8 @@ class GameState {
     int? godHandLevel,
     int? layoutSeed,
     bool? soundMuted,
+    double? sfxVolume,
+    double? ambienceVolume,
     VfxQuality? vfxQuality,
     bool? reducedVfx,
     int? autoSellMaxPower,
@@ -1126,6 +1136,8 @@ class GameState {
       godHandLevel: godHandLevel ?? this.godHandLevel,
       layoutSeed: layoutSeed ?? this.layoutSeed,
       soundMuted: soundMuted ?? this.soundMuted,
+      sfxVolume: sfxVolume ?? this.sfxVolume,
+      ambienceVolume: ambienceVolume ?? this.ambienceVolume,
       vfxQuality:
           vfxQuality ??
           (reducedVfx == null
@@ -1283,6 +1295,8 @@ class GameState {
     'godHandLevel': godHandLevel,
     'layoutSeed': layoutSeed,
     'soundMuted': soundMuted,
+    'sfxVolume': sfxVolume,
+    'ambienceVolume': ambienceVolume,
     'vfxQuality': vfxQuality.name,
     'reducedVfx': reducedVfx,
     'autoSellMaxPower': autoSellMaxPower,
@@ -1527,6 +1541,12 @@ class GameState {
       godHandLevel: _jsonInt(json['godHandLevel']),
       layoutSeed: _jsonInt(json['layoutSeed']),
       soundMuted: (json['soundMuted'] as bool?) ?? false,
+      sfxVolume: ((json['sfxVolume'] as num?)?.toDouble() ?? 0.7).clamp(
+        0.0,
+        1.0,
+      ),
+      ambienceVolume: ((json['ambienceVolume'] as num?)?.toDouble() ?? 0.25)
+          .clamp(0.0, 1.0),
       vfxQuality: VfxQuality.fromJson(
         json['vfxQuality'],
         legacyReduced: json['reducedVfx'] as bool?,

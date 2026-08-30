@@ -32,6 +32,8 @@ void main() {
       autoDisassembleMaxIlvl: 18,
       autoDisassembleMaxRarity: 1,
       soundMuted: true,
+      sfxVolume: 0.35,
+      ambienceVolume: 0.15,
       reducedVfx: true,
       rogueUnlocked: true,
       offlineSecondsRecovered: 90,
@@ -66,6 +68,8 @@ void main() {
     expect(decoded.autoDisassembleMaxIlvl, 18);
     expect(decoded.autoDisassembleMaxRarity, 1);
     expect(decoded.soundMuted, isTrue);
+    expect(decoded.sfxVolume, closeTo(0.35, 0.001));
+    expect(decoded.ambienceVolume, closeTo(0.15, 0.001));
     expect(decoded.reducedVfx, isTrue);
     expect(decoded.vfxQuality.name, 'lite');
     expect(decoded.rogueUnlocked, isTrue);

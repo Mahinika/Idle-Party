@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.83';
+  static const String currentVersion = '1.12.84';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.84',
+      bullets: <String>[
+        'Sound: real combat/UI SFX (Kenney CC0) plus soft hub/dungeon ambience. MORE → SETTINGS has Mute, SFX, and Ambience volume. Hit spam is rate-limited so long farms stay listenable.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.83',
       bullets: <String>[
