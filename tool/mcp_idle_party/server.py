@@ -1,13 +1,21 @@
 """Idle Party MCP — balance, Flutter verify, changelog, zone identity, playtest help.
 
-Stdio server for Cursor. Logging must go to stderr only.
+Stdio server for Cursor. Keep stderr quiet (Cursor treats stderr as errors and
+can stall tool discovery when the stream is noisy).
 """
 
 import os
 import re
 import subprocess
 import sys
+import warnings
 from pathlib import Path
+
+# Pydantic/FastMCP emit IncompleteFieldDefinitionWarning on import; Cursor
+# marks any stderr line as [error] and tool leases can stay at toolCount=0.
+warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
+warnings.filterwarnings("ignore", message=".*incomplete definition.*")
+os.environ.setdefault("PYTHONWARNINGS", "ignore")
 
 from mcp.server.fastmcp import FastMCP
 
@@ -17,6 +25,8 @@ mcp = FastMCP(
         "Idle Party project tools: fast DPS share sims, changelog honesty, "
         "Flutter analyze/test, zone art identity, and hub playtest checklists."
     ),
+    # INFO logs "Processing request of type PingRequest" to stderr.
+    log_level="ERROR",
 )
 
 
@@ -61,7 +71,11 @@ def _flutter() -> str:
     return os.environ.get("FLUTTER_BIN", "flutter")
 
 
-@mcp.tool()
+# structured_output=False: avoid outputSchema. Cursor agent lease sometimes
+# keeps toolCount=0 when FastMCP advertises structured result schemas.
+
+
+@mcp.tool(structured_output=False)
 def balance_share(
     focus: str = "",
     trials: int = 2,
@@ -81,13 +95,6 @@ def balance_share(
         "--reporter",
         "expanded",
     ]
-    # Prefer direct Dart entry for custom focus/trials via a tiny runner file,
-    # but the checked-in test hardcodes focus. Call sim via flutter test with
-    # a one-off define is awkward — instead shell out through dart run of a
-    # helper that imports the tool when possible.
-    # Practical path: write args into an env file and use flutter test that
-    # reads IDLE_PARTY_BALANCE_ARGS — keep it simple: invoke the tool harness
-    # through `flutter test` with a generated temp test when focus differs.
 
     focus = focus.strip()
     if not focus and trials == 2 and mode == "live":
@@ -100,10 +107,8 @@ def balance_share(
             )
         return f"exit={code}\n{out}{extra}"
 
-    # Custom focus/trials: generate a throwaway test under tool/out and run it.
     out_dir = _root() / "tool" / "out"
     out_dir.mkdir(parents=True, exist_ok=True)
-    focus_arg = f", '--focus={focus}'" if focus else ""
     gen = out_dir / "_mcp_balance_share_test.dart"
     gen.write_text(
         f"""
@@ -115,7 +120,7 @@ void main() {{
     final report = runClassBalanceSim(const [
       '--share-only',
       '--trials={trials}',
-      '--mode={mode}'{focus_arg},
+      '--mode={mode}',
     ]);
     expect(report, contains('share-only: true'));
   }}, timeout: const Timeout(Duration(minutes: 8)));
@@ -124,8 +129,6 @@ void main() {{
         + "\n",
         encoding="utf-8",
     )
-    # Flutter test path must be under test/ or use relative import carefully.
-    # Put under test/ with mcp_ prefix instead.
     test_path = _root() / "test" / "_mcp_balance_share_test.dart"
     focus_literal = focus.replace("'", "")
     test_path.write_text(
@@ -167,7 +170,7 @@ void main() {{
             gen.unlink()
 
 
-@mcp.tool()
+@mcp.tool(structured_output=False)
 def read_balance_share() -> str:
     """Read the last tool/out/class_balance_share.json if present."""
     path = _root() / "tool" / "out" / "class_balance_share.json"
@@ -176,9 +179,9 @@ def read_balance_share() -> str:
     return path.read_text(encoding="utf-8")
 
 
-@mcp.tool()
+@mcp.tool(structured_output=False)
 def changelog_check() -> str:
-    """Verify pubspec ↔ MetaSystems.currentVersion ↔ What’s New zone tokens."""
+    """Verify pubspec, MetaSystems.currentVersion, and What's New zone tokens."""
     code, out = _run(
         [_flutter(), "test", "test/changelog_sync_test.dart", "--reporter", "expanded"],
         timeout=180,
@@ -186,14 +189,14 @@ def changelog_check() -> str:
     return f"exit={code}\n{out}"
 
 
-@mcp.tool()
+@mcp.tool(structured_output=False)
 def flutter_analyze() -> str:
     """Run flutter analyze on lib/ and test/ (hold to zero issues)."""
     code, out = _run([_flutter(), "analyze", "lib", "test"], timeout=300)
     return f"exit={code}\n{out}"
 
 
-@mcp.tool()
+@mcp.tool(structured_output=False)
 def flutter_test(filter: str = "") -> str:
     """Run flutter test. Optional filter is a path under test/ or a name substring."""
     args = [_flutter(), "test", "--reporter", "compact"]
@@ -205,13 +208,12 @@ def flutter_test(filter: str = "") -> str:
         else:
             args.extend(["--name", f])
     code, out = _run(args, timeout=900)
-    # Truncate huge compact streams
     if len(out) > 12000:
-        out = out[:6000] + "\n…\n" + out[-6000:]
+        out = out[:6000] + "\n...\n" + out[-6000:]
     return f"exit={code}\n{out}"
 
 
-@mcp.tool()
+@mcp.tool(structured_output=False)
 def zone_identity(dungeon_id: str = "", neighbor_id: str = "") -> str:
     """Check zone art identity signals vs a neighbor (remap / wash / boss).
 
@@ -260,7 +262,6 @@ def zone_identity(dungeon_id: str = "", neighbor_id: str = "") -> str:
         elif ba and bb:
             lines.append("  OK: backdrops differ")
 
-        # Boss sprites live on ZoneArt enemies.boss (ZoneArt migration).
         def _boss_asset(zid: str) -> str | None:
             m = re.search(
                 rf"'{zid}'\s*:\s*ZoneArtDef\((.*?)enemies:\s*ZoneEnemyArt\((.*?)\)",
@@ -289,7 +290,7 @@ def zone_identity(dungeon_id: str = "", neighbor_id: str = "") -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
+@mcp.tool(structured_output=False)
 def hub_smoke_checklist() -> str:
     """Return the hub polish smoke checklist and WebClickBridge helpers."""
     skill = _root() / ".cursor" / "skills" / "hub-smoke" / "SKILL.md"
@@ -305,7 +306,7 @@ def hub_smoke_checklist() -> str:
     )
 
 
-@mcp.tool()
+@mcp.tool(structured_output=False)
 def playtest_bridge_snippet() -> str:
     """JS snippets to drive Idle Party Flutter web via WebClickBridge."""
     return """

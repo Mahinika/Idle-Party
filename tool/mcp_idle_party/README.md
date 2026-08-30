@@ -14,9 +14,13 @@ Pinned to `mcp==1.12.4` (FastMCP API). `.venv` is gitignored.
 
 ## Cursor
 
-Project config: `.cursor/mcp.json` → server `idle-party`.
+- Open **Idle-Party** as the folder: `.cursor/mcp.json` uses `${workspaceFolder}\tool\...`
+- Open parent **idle party** folder: parent `.cursor/mcp.json` points at `Idle-Party\tool\...`
+- User absolute fallback: `~/.cursor/mcp.json` (direct `.venv\Scripts\python.exe -u server.py`)
 
-After pull: restart Cursor (or reload MCP) so tools appear. Approve the server when prompted.
+After pull / MCP change: **Cursor Settings → MCP → idle-party → Refresh** (or reload window). Approve when prompted.
+
+Tools advertise **unstructured** string results (`structured_output=False`) and keep stderr quiet so Cursor’s tool lease does not stick at `toolCount: 0`.
 
 ## Tools
 

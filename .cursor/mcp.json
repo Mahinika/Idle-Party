@@ -5,7 +5,8 @@
       "command": "cmd",
       "args": ["/c", "${workspaceFolder}\\tool\\mcp_idle_party\\run.cmd"],
       "env": {
-        "IDLE_PARTY_ROOT": "${workspaceFolder}"
+        "IDLE_PARTY_ROOT": "${workspaceFolder}",
+        "PYTHONWARNINGS": "ignore"
       }
     }
   }
