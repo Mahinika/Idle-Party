@@ -78,4 +78,34 @@ void main() {
     // Helmet replaces hair.
     expect(layers.any((l) => l.col >= 28 && l.col <= 31), isTrue);
   });
+
+  test('chest and hands expand paper-doll coverage', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    var warrior = state.heroes.firstWhere((h) => h.gearAffinity == HeroRole.warrior);
+    warrior = warrior.copyWith(
+      equipped: {
+        EquipmentSlot.chest: GameLogic.createEquipment(
+          slot: EquipmentSlot.chest,
+          rarity: LootRarity.rare,
+          battleNumber: 8,
+          bias: HeroRole.warrior,
+        ),
+        EquipmentSlot.hands: GameLogic.createEquipment(
+          slot: EquipmentSlot.hands,
+          rarity: LootRarity.uncommon,
+          battleNumber: 8,
+          bias: HeroRole.warrior,
+        ),
+        EquipmentSlot.legs: GameLogic.createEquipment(
+          slot: EquipmentSlot.legs,
+          rarity: LootRarity.common,
+          battleNumber: 8,
+          bias: HeroRole.warrior,
+        ),
+      },
+    );
+    expect(HeroPaperDoll.torsoFor(warrior), isNotNull);
+    expect(HeroPaperDoll.glovesFor(warrior), isNotNull);
+    expect(HeroPaperDoll.pantsFor(warrior), isNotNull);
+  });
 }

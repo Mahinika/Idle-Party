@@ -61,6 +61,12 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
   or translate decompiled sources.
 - If a third-party binary appears locally, delete it and ensure `.gitignore` covers it.
 
+## Character visuals (dungeon)
+
+Layered Canvas heroes: `lib/visual/` + `docs/CHARACTER_VISUALS.md`.
+Dungeon prefers paper-doll / layered gear over full-class PNGs. New items get a
+`visualSetId` (or derive from slot/type/rarity) — never a Class×Weapon sheet.
+
 ## Build & Test
 
 ```bash

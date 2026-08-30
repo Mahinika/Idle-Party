@@ -103,6 +103,7 @@ class EquipmentItem {
     this.handed,
     this.offHandKind,
     this.iconId,
+    this.visualSetId,
     this.affixPrefixId,
     this.affixSuffixId,
     this.setId,
@@ -156,6 +157,10 @@ class EquipmentItem {
 
   /// Optional Kenney icon key override.
   final String? iconId;
+
+  /// Optional layered visual set id (e.g. `sword_t1`, `helm_plate`).
+  /// When null, [EquipmentVisualResolver] derives from slot/type/rarity.
+  final String? visualSetId;
 
   /// Data-driven affix ids from `item_affixes.json` (null = none).
   final String? affixPrefixId;
@@ -362,6 +367,7 @@ class EquipmentItem {
     if (handed != null) 'handed': handed!.name,
     if (offHandKind != null) 'offHandKind': offHandKind!.name,
     if (iconId != null) 'iconId': iconId,
+    if (visualSetId != null) 'visualSetId': visualSetId,
     if (affixPrefixId != null) 'affixPrefixId': affixPrefixId,
     if (affixSuffixId != null) 'affixSuffixId': affixSuffixId,
     if (setId != null) 'setId': setId,
@@ -463,6 +469,7 @@ class EquipmentItem {
       handed: handedRaw == null ? null : WeaponHanded.values.byName(handedRaw),
       offHandKind: offKind,
       iconId: json['iconId'] as String?,
+      visualSetId: json['visualSetId'] as String?,
       affixPrefixId: json['affixPrefixId'] as String?,
       affixSuffixId: json['affixSuffixId'] as String?,
       setId: json['setId'] as String?,
@@ -504,6 +511,8 @@ class EquipmentItem {
     WeaponHanded? handed,
     OffHandKind? offHandKind,
     String? iconId,
+    String? visualSetId,
+    bool clearVisualSetId = false,
     String? affixPrefixId,
     String? affixSuffixId,
     String? setId,
@@ -545,6 +554,9 @@ class EquipmentItem {
       handed: handed ?? this.handed,
       offHandKind: offHandKind ?? this.offHandKind,
       iconId: iconId ?? this.iconId,
+      visualSetId: clearVisualSetId
+          ? null
+          : (visualSetId ?? this.visualSetId),
       affixPrefixId: affixPrefixId ?? this.affixPrefixId,
       affixSuffixId: affixSuffixId ?? this.affixSuffixId,
       setId: clearSetId ? null : (setId ?? this.setId),

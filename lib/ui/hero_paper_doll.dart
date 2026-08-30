@@ -59,12 +59,13 @@ class HeroPaperDoll {
 
   static int _rarityTier(LootRarity? rarity) => rarity?.index ?? 0;
 
-  /// Pants / legs — boots slot.
+  /// Pants / legs — legs slot preferred, else boots.
   static DollLayer? pantsFor(PartyHero hero) {
-    final boots = hero.itemIn(EquipmentSlot.boots);
-    if (boots == null) return null;
+    final item =
+        hero.itemIn(EquipmentSlot.legs) ?? hero.itemIn(EquipmentSlot.boots);
+    if (item == null) return null;
     // cols 3–4 pants overlays; row picks color/tier.
-    final row = switch (_rarityTier(boots.rarity)) {
+    final row = switch (_rarityTier(item.rarity)) {
       0 => 1, // dark
       1 => 2, // brown
       2 => 3, // light
@@ -73,11 +74,12 @@ class HeroPaperDoll {
     return DollLayer(3, row);
   }
 
-  /// Torso / cloak slot. Also draws light cloth for cloak.
+  /// Torso — chest preferred, else cloak.
   static DollLayer? torsoFor(PartyHero hero) {
-    final cloak = hero.itemIn(EquipmentSlot.cloak);
-    if (cloak == null) return null;
-    final tier = _rarityTier(cloak.rarity);
+    final item =
+        hero.itemIn(EquipmentSlot.chest) ?? hero.itemIn(EquipmentSlot.cloak);
+    if (item == null) return null;
+    final tier = _rarityTier(item.rarity);
     // Armor columns 6–17: pick role palette × rarity.
     return switch (hero.gearAffinity) {
       HeroRole.warrior => DollLayer(
@@ -88,6 +90,15 @@ class HeroPaperDoll {
       HeroRole.mage => DollLayer(9, tier >= 2 ? 4 : 2),
       HeroRole.rogue => DollLayer(12, tier >= 2 ? 3 : 1),
     };
+  }
+
+  /// Gloves / hands (Kenney torso-adjacent tint on col 6).
+  static DollLayer? glovesFor(PartyHero hero) {
+    final hands =
+        hero.itemIn(EquipmentSlot.hands) ?? hero.itemIn(EquipmentSlot.wrist);
+    if (hands == null) return null;
+    final tier = _rarityTier(hands.rarity);
+    return DollLayer(6, tier.clamp(0, 4));
   }
 
   /// Optional cape when cloak is uncommon+.
@@ -143,7 +154,9 @@ class HeroPaperDoll {
   }
 
   static DollLayer? weaponFor(PartyHero hero) {
-    final weapon = hero.itemIn(EquipmentSlot.weapon);
+    final weapon =
+        hero.itemIn(EquipmentSlot.weapon) ??
+        hero.itemIn(EquipmentSlot.ranged);
     if (weapon == null) return null;
     final tier = _rarityTier(weapon.rarity);
     final wt = weapon.weaponType;
@@ -204,7 +217,7 @@ class HeroPaperDoll {
     };
   }
 
-  /// Back-to-front layers for [hero].
+  /// Back-to-front layers for [hero] (legacy flat stack; prefer visual pose).
   ///
   /// [walkFrame] 0/1 picks body/pants pose column.
   static List<DollLayer> layersFor(
@@ -227,6 +240,9 @@ class HeroPaperDoll {
     final torso = torsoFor(hero);
     if (torso != null) layers.add(torso);
 
+    final gloves = glovesFor(hero);
+    if (gloves != null) layers.add(gloves);
+
     final head = headFor(hero);
     if (head == null) {
       layers.add(hairFor(hero));
@@ -243,6 +259,7 @@ class HeroPaperDoll {
     return layers;
   }
 
+  /// Legacy paint path — dungeon uses [CharacterVisualPainter] instead.
   static void paint(
     Canvas canvas,
     ui.Image atlas,

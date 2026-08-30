@@ -10,6 +10,7 @@ import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
+import '../visual/equipment_visual_resolver.dart';
 import 'keystone.dart';
 
 /// Affix definition loaded from `item_affixes.json`.
@@ -1156,7 +1157,7 @@ class EquipmentFactory {
             slot: resolvedSlot,
           );
 
-    return EquipmentItem(
+    final item = EquipmentItem(
       id: '${resolvedSlot.name}_${rarity.name}_${battleNumber}_${random.nextInt(100000)}',
       name: name,
       slot: resolvedSlot,
@@ -1186,6 +1187,9 @@ class EquipmentFactory {
       affixPrefixId: prefix?.id,
       affixSuffixId: suffix?.id,
       setId: setId,
+    );
+    return item.copyWith(
+      visualSetId: EquipmentVisualResolver.resolveId(item),
     );
   }
 }

@@ -251,6 +251,12 @@ class SpatialActor {
   /// Brief visual punch when the actor attacks (seconds remaining).
   double attackFlash = 0;
 
+  /// Brief cast VFX timer (seconds remaining) for cast anim.
+  double castFlash = 0;
+
+  /// Brief hit flinch timer (seconds remaining).
+  double hitFlash = 0;
+
   /// World aim of the last attack (for lunge / facing during [attackFlash]).
   double attackAimX = 0;
   double attackAimY = 0;
@@ -1505,6 +1511,7 @@ abstract final class SpatialCombat {
     _recordHeroTaken(hero, held);
     hero.spiritRegenPaused = 5.0;
     if (dealt > 0) {
+      hero.hitFlash = math.max(hero.hitFlash, 0.14);
       _triggerPrayerOfMending(world, hero);
     }
     if (_actorIsTank(hero) || _actorResource(hero) == SpecResource.rage) {
@@ -1769,6 +1776,12 @@ abstract final class SpatialCombat {
     void tickFlash(SpatialActor a) {
       if (a.attackFlash > 0) {
         a.attackFlash = (a.attackFlash - dt).clamp(0, 1);
+      }
+      if (a.castFlash > 0) {
+        a.castFlash = (a.castFlash - dt).clamp(0, 1);
+      }
+      if (a.hitFlash > 0) {
+        a.hitFlash = (a.hitFlash - dt).clamp(0, 1);
       }
     }
 
@@ -2368,6 +2381,8 @@ abstract final class SpatialCombat {
 
   static void _copyHeroRuntime(SpatialActor from, SpatialActor to) {
     to.attackFlash = from.attackFlash;
+    to.castFlash = from.castFlash;
+    to.hitFlash = from.hitFlash;
     to.attackAimX = from.attackAimX;
     to.attackAimY = from.attackAimY;
     to.faceAimX = from.faceAimX;

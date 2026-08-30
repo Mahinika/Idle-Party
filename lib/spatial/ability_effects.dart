@@ -1042,6 +1042,7 @@ abstract final class AbilityEffectRunner {
     if (delay > 0) {
       hero.castingTimer = math.max(hero.castingTimer, delay);
       hero.pendingCastDef = def.id.name;
+      hero.castFlash = math.max(hero.castFlash, math.min(0.35, delay));
     }
     var raw = math.max(
       2,
