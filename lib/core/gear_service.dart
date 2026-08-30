@@ -204,6 +204,23 @@ abstract final class GearService {
   static GameState autoEquipBetterGear(GameState state) =>
       GearBiSPlanner.autoEquipBetterGear(state);
 
+  static ({GameState state, int equipped}) autoEquipBetterGearResult(
+    GameState state,
+  ) => GearBiSPlanner.autoEquipBetterGearResult(state);
+
+  static bool autoEquipWouldWear(
+    GameState state,
+    String itemId, {
+    int? heroIndex,
+  }) => GearBiSPlanner.autoEquipWouldWear(
+    state,
+    itemId,
+    heroIndex: heroIndex,
+  );
+
+  static bool isBestPlannedStashItem(GameState state, String itemId) =>
+      GearBiSPlanner.isBestPlannedStashItem(state, itemId);
+
   static String formatDelta(int value) {
     if (value > 0) return '+$value';
     if (value < 0) return '$value';

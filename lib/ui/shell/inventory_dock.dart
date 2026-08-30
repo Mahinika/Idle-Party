@@ -239,19 +239,11 @@ class _InventoryDockState extends State<InventoryDock>
 
 
   Widget _equipHeroChipsFor(EquipmentItem selected) {
-    var bestIndex = -1;
-    var bestDelta = 0;
-    for (var i = 0; i < state.heroes.length; i++) {
-      final cmp = GameLogic.compareForHero(
-        state.heroes[i],
-        selected,
-        pairingStash: state.gearStash,
-      );
-      if (cmp.isUpgrade && cmp.powerDelta > bestDelta) {
-        bestDelta = cmp.powerDelta;
-        bestIndex = i;
-      }
-    }
+    final plannedHero = [
+      for (var i = 0; i < state.heroes.length; i++)
+        if (GameLogic.autoEquipWouldWear(state, selected.id, heroIndex: i)) i,
+    ];
+    final bestIndex = plannedHero.isEmpty ? -1 : plannedHero.first;
     return Wrap(
       spacing: 4,
       runSpacing: 4,
@@ -262,6 +254,7 @@ class _InventoryDockState extends State<InventoryDock>
             candidate: selected,
             pairingStash: state.gearStash,
             isBest: i == bestIndex,
+            plannedUpgrade: i == bestIndex,
             plainEnglish: GameLogic.plainPlayerChrome(state),
             onTap: () => onEquipToHero(i),
           ),
@@ -830,6 +823,7 @@ class _EquipHeroChip extends StatelessWidget {
     required this.onTap,
     this.pairingStash,
     this.isBest = false,
+    this.plannedUpgrade = false,
     this.plainEnglish = false,
   });
 
@@ -838,6 +832,7 @@ class _EquipHeroChip extends StatelessWidget {
   final VoidCallback onTap;
   final List<EquipmentItem>? pairingStash;
   final bool isBest;
+  final bool plannedUpgrade;
   final bool plainEnglish;
 
   @override
@@ -870,14 +865,14 @@ class _EquipHeroChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: cannotUse
                 ? GameTheme.equipChipBlocked
-                : (cmp.isUpgrade
+                : (plannedUpgrade
                       ? GameTheme.equipChipUpgrade
                       : GameTheme.equipChipNeutral),
             borderRadius: BorderRadius.circular(3),
             border: Border.all(
               color: isBest
                   ? GameTheme.torchHot
-                  : (cmp.isUpgrade ? GameTheme.clear : GameTheme.borderLit),
+                  : (plannedUpgrade ? GameTheme.clear : GameTheme.borderLit),
               width: isBest ? 2 : 1,
             ),
           ),
@@ -920,7 +915,7 @@ class _EquipHeroChip extends StatelessWidget {
                   'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
                   style: GameTheme.body(size: 11, color: deltaColor),
                 ),
-                if (cmp.isUpgrade)
+                if (plannedUpgrade)
                   Text(
                     'UPGRADE',
                     style: GameTheme.body(size: 10, color: GameTheme.clear),
@@ -990,6 +985,7 @@ class _BagSlot extends StatelessWidget {
         ? GameTheme.rarityCommon
         : rarityBorderColor(item!.rarity);
     final isBest = item != null && isBestStashItem(state, item!);
+    final isUpgrade = item != null && isUpgradeForAny(state, item!);
     final a11yLabel = item == null
         ? 'Empty bag slot'
         : '${item!.name}, item level ${item!.effectiveItemLevel}';
@@ -1086,6 +1082,28 @@ class _BagSlot extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (isUpgrade && !isBest)
+                        Positioned(
+                          top: 2,
+                          right: 2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xEE1E4030),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'UP',
+                              style: GameTheme.body(
+                                size: 10,
+                                color: GameTheme.clear,
+                              ),
+                            ),
+                          ),
+                        ),
                       if (isBest)
                         Positioned(
                           top: 2,
@@ -1147,6 +1165,7 @@ class _BagSlot extends StatelessWidget {
         item: item!,
         hero: hero,
         pairingStash: state.gearStash,
+        gameState: state,
         child: slot,
       ),
     );

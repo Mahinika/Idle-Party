@@ -100,7 +100,7 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 ## Player-facing copy
 
 - iLvl is the readable power size.
-- Green **UPGRADE** means Auto Equip would swap.
+- Green **UPGRADE** / bag **BEST** / **EQUIP N** means Auto Equip would wear that piece.
 - Guides / What’s New should stay honest to this contract.
 
 ## Code ownership (Factory vs Service vs Pipeline)

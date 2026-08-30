@@ -1749,12 +1749,13 @@ class GameDirector extends ChangeNotifier {
   }
 
   void autoEquipBetterGear() {
-    final beforeLen = _state.gearStash.length;
-    _applyUpgrade(GameLogic.autoEquipBetterGear(_state));
-    final equipped = beforeLen - _state.gearStash.length;
-    if (equipped > 0) {
+    final result = GameLogic.autoEquipBetterGearResult(_state);
+    _applyUpgrade(result.state);
+    if (result.equipped > 0) {
       showToast(
-        equipped == 1 ? 'Equipped 1 upgrade' : 'Equipped $equipped upgrades',
+        result.equipped == 1
+            ? 'Equipped 1 upgrade'
+            : 'Equipped ${result.equipped} upgrades',
         life: 1.8,
       );
     } else {

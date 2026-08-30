@@ -263,7 +263,48 @@ abstract final class GearBiSPlanner {
     return plan;
   }
 
-  static GameState autoEquipBetterGear(GameState state) {
+  /// True when AUTO EQUIP would wear [itemId] (party-wide, or on one hero).
+  static bool autoEquipWouldWear(
+    GameState state,
+    String itemId, {
+    int? heroIndex,
+  }) {
+    for (final step in planBiSAssignments(state)) {
+      if (step.itemId != itemId) continue;
+      if (heroIndex == null) return true;
+      return step.heroIndex == heroIndex;
+    }
+    return false;
+  }
+
+  static bool isBestPlannedStashItem(GameState state, String itemId) {
+    final plan = planBiSAssignments(state);
+    if (plan.isEmpty) return false;
+    var bestDelta = plan.first.delta;
+    for (final step in plan) {
+      if (step.delta > bestDelta) bestDelta = step.delta;
+    }
+    return plan.any((step) => step.itemId == itemId && step.delta >= bestDelta);
+  }
+
+  static int countNewlyWornFromStash(GameState before, GameState after) {
+    final fromBag = <String>{for (final item in before.gearStash) item.id};
+    if (fromBag.isEmpty) return 0;
+    var n = 0;
+    for (final hero in after.heroes) {
+      for (final item in hero.equipped.values) {
+        if (fromBag.contains(item.id)) n++;
+      }
+    }
+    return n;
+  }
+
+  static GameState autoEquipBetterGear(GameState state) =>
+      autoEquipBetterGearResult(state).state;
+
+  static ({GameState state, int equipped}) autoEquipBetterGearResult(
+    GameState state,
+  ) {
     var next = state;
     for (var pass = 0; pass < 8; pass++) {
       final sigBefore = gearPlanSignature(next);
@@ -272,7 +313,11 @@ abstract final class GearBiSPlanner {
         break;
       }
     }
-    return next.copyWith(lastUpdated: DateTime.now());
+    next = next.copyWith(lastUpdated: DateTime.now());
+    return (
+      state: next,
+      equipped: countNewlyWornFromStash(state, next),
+    );
   }
 
   static GameState autoEquipPass(GameState state) {

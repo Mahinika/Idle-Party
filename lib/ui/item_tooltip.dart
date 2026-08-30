@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
+import '../core/game_state.dart';
 import '../models/equip_stat_weights.dart';
 import '../models/gear_set.dart';
 import '../models/hero.dart';
@@ -34,6 +35,7 @@ class ItemTooltipCard extends StatelessWidget {
     required this.item,
     this.hero,
     this.pairingStash,
+    this.gameState,
     this.compact = false,
   });
 
@@ -42,6 +44,7 @@ class ItemTooltipCard extends StatelessWidget {
 
   /// Bag gear used so 1H vs worn 2H can credit a shield/tome.
   final List<EquipmentItem>? pairingStash;
+  final GameState? gameState;
   final bool compact;
 
   static const _green = GameTheme.tooltipStatUp;
@@ -63,6 +66,7 @@ class ItemTooltipCard extends StatelessWidget {
     var intoSlot = item.slot;
     var powerDelta = 0;
     var isUpgrade = false;
+    var statsUpgrade = false;
     var comparing = false;
     var alreadyEquipped = false;
     if (hero != null) {
@@ -73,7 +77,8 @@ class ItemTooltipCard extends StatelessWidget {
       );
       intoSlot = cmp.intoSlot;
       powerDelta = cmp.powerDelta;
-      isUpgrade = cmp.isUpgrade;
+      statsUpgrade = cmp.isUpgrade;
+      isUpgrade = statsUpgrade;
       worn = hero!.itemIn(intoSlot);
       if (worn?.id == item.id) {
         alreadyEquipped = true;
@@ -81,6 +86,23 @@ class ItemTooltipCard extends StatelessWidget {
         comparing = false;
       } else {
         comparing = true;
+        final gs = gameState;
+        if (gs != null) {
+          var heroIndex = -1;
+          for (var i = 0; i < gs.heroes.length; i++) {
+            if (identical(gs.heroes[i], hero) || gs.heroes[i].id == hero!.id) {
+              heroIndex = i;
+              break;
+            }
+          }
+          isUpgrade =
+              heroIndex >= 0 &&
+              GameLogic.autoEquipWouldWear(
+                gs,
+                item.id,
+                heroIndex: heroIndex,
+              );
+        }
       }
     }
 
@@ -315,9 +337,11 @@ class ItemTooltipCard extends StatelessWidget {
                       isUpgrade
                           ? 'UPGRADE  Score ${GameLogic.formatDelta(powerDelta)}'
                           : (powerDelta > 0
-                                ? (worn == null
-                                      ? 'SCORE +$powerDelta · too weak to fill'
-                                      : 'SCORE +$powerDelta · not enough to swap')
+                                ? (statsUpgrade
+                                      ? 'SCORE +$powerDelta · AUTO EQUIP keeps another'
+                                      : (worn == null
+                                            ? 'SCORE +$powerDelta · too weak to fill'
+                                            : 'SCORE +$powerDelta · not enough to swap'))
                                 : (powerDelta < 0
                                       ? 'WEAKER  Score ${GameLogic.formatDelta(powerDelta)}'
                                       : 'SAME SCORE')),
@@ -555,6 +579,7 @@ class ItemTooltipAnchor extends StatefulWidget {
     required this.child,
     this.hero,
     this.pairingStash,
+    this.gameState,
     this.enabled = true,
   });
 
@@ -565,6 +590,7 @@ class ItemTooltipAnchor extends StatefulWidget {
   final Widget child;
   final PartyHero? hero;
   final List<EquipmentItem>? pairingStash;
+  final GameState? gameState;
   final bool enabled;
 
   @override
@@ -653,6 +679,7 @@ class _ItemTooltipAnchorState extends State<ItemTooltipAnchor> {
           item: widget.item,
           hero: widget.hero,
           pairingStash: widget.pairingStash,
+          gameState: widget.gameState,
           compact: phone || _phoneSheet,
         );
 

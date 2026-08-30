@@ -36,44 +36,11 @@ String formatCount(int n) {
 
 bool isSoulboundItem(EquipmentItem item) => item.id.startsWith('soulbound_');
 
-bool isUpgradeForAny(GameState state, EquipmentItem item) {
-  for (final hero in state.heroes) {
-    if (GameLogic.compareForHero(
-      hero,
-      item,
-      pairingStash: state.gearStash,
-    ).isUpgrade) {
-      return true;
-    }
-  }
-  return false;
-}
+bool isUpgradeForAny(GameState state, EquipmentItem item) =>
+    GameLogic.autoEquipWouldWear(state, item.id);
 
-bool isBestStashItem(GameState state, EquipmentItem item) {
-  if (!isUpgradeForAny(state, item)) return false;
-  var bestDelta = 0;
-  for (final stashItem in state.gearStash) {
-    for (final hero in state.heroes) {
-      final cmp = GameLogic.compareForHero(
-        hero,
-        stashItem,
-        pairingStash: state.gearStash,
-      );
-      if (cmp.isUpgrade && cmp.powerDelta > bestDelta) {
-        bestDelta = cmp.powerDelta;
-      }
-    }
-  }
-  for (final hero in state.heroes) {
-    final cmp = GameLogic.compareForHero(
-      hero,
-      item,
-      pairingStash: state.gearStash,
-    );
-    if (cmp.isUpgrade && cmp.powerDelta >= bestDelta) return true;
-  }
-  return false;
-}
+bool isBestStashItem(GameState state, EquipmentItem item) =>
+    GameLogic.isBestPlannedStashItem(state, item.id);
 
 /// Tab controller whose length can grow as menus unlock (progressive tabs).
 ///

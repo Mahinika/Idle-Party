@@ -168,6 +168,8 @@ class CharacterEquipPanel extends StatelessWidget {
             stashPiece,
             pairingStash: state.gearStash,
           );
+    final autoWear = stashPiece != null &&
+        GameLogic.autoEquipWouldWear(state, stashPiece.id, heroIndex: heroIndex);
 
     Widget slotFor(EquipmentSlot slot, {double? size}) {
       final item = hero.itemIn(slot);
@@ -176,6 +178,7 @@ class CharacterEquipPanel extends StatelessWidget {
         item: item,
         hero: hero,
         pairingStash: state.gearStash,
+        gameState: state,
         selected: item?.id == selectedItemId,
         size: size ?? slotSize,
         labeled: true,
@@ -480,10 +483,10 @@ class CharacterEquipPanel extends StatelessWidget {
                         '  A${GameLogic.formatDelta(compare.atkDelta)}'
                         '  D${GameLogic.formatDelta(compare.defDelta)}'
                         '  V${GameLogic.formatDelta(compare.vitDelta)}'
-                        '${compare.isUpgrade ? '  UPGRADE' : ''}',
+                        '${autoWear ? '  UPGRADE' : ''}',
                     style: GameTheme.body(
                       size: 12,
-                      color: compare.isUpgrade
+                      color: autoWear
                           ? GameTheme.clear
                           : (compare.powerDelta < 0
                                 ? GameTheme.bloodLit
@@ -668,6 +671,7 @@ class PaperDollSlot extends StatelessWidget {
     required this.size,
     this.hero,
     this.pairingStash,
+    this.gameState,
     this.labeled = false,
     this.onTap,
     this.onUnequip,
@@ -677,6 +681,7 @@ class PaperDollSlot extends StatelessWidget {
   final EquipmentItem? item;
   final PartyHero? hero;
   final List<EquipmentItem>? pairingStash;
+  final GameState? gameState;
   final bool selected;
   final double size;
   final bool labeled;
@@ -818,6 +823,7 @@ class PaperDollSlot extends StatelessWidget {
       item: item!,
       hero: hero,
       pairingStash: pairingStash,
+      gameState: gameState,
       child: body,
     );
   }

@@ -1089,6 +1089,137 @@ void main() {
     expect(state.gearStash.map((e) => e.id), contains(side.id));
   });
 
+  test('auto equip result counts worn swaps, not bag size', () {
+    final worn = GameLogic.createEquipment(
+      slot: EquipmentSlot.cloak,
+      rarity: LootRarity.uncommon,
+      battleNumber: 4,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'worn_cloak_swap',
+      strengthBonus: 2,
+      staminaBonus: 2,
+      armorBonus: 2,
+      itemLevel: 12,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      clearAffinity: true,
+    );
+    final upgrade = GameLogic.createEquipment(
+      slot: EquipmentSlot.cloak,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.warrior,
+    ).copyWith(
+      id: 'bag_cloak_swap',
+      strengthBonus: 14,
+      staminaBonus: 12,
+      armorBonus: 16,
+      itemLevel: 28,
+      effectId: GearEffectId.none,
+      effectValue: 0,
+      clearAffinity: true,
+    );
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final heroes = [
+      for (var i = 0; i < state.heroes.length; i++)
+        if (i == 0)
+          state.heroes[i].copyWith(
+            equipped: {
+              for (final e in state.heroes[i].equipped.entries)
+                if (e.key != EquipmentSlot.cloak) e.key: e.value,
+              EquipmentSlot.cloak: worn,
+            },
+          )
+        else
+          state.heroes[i].copyWith(
+            equipped: {
+              ...state.heroes[i].equipped,
+              EquipmentSlot.cloak: worn.copyWith(id: 'lock_cloak_swap_$i'),
+            },
+          ),
+    ];
+    state = state.copyWith(heroes: heroes, gearStash: <EquipmentItem>[upgrade]);
+    expect(GameLogic.autoEquipWouldWear(state, upgrade.id), isTrue);
+    expect(GameLogic.autoEquipWouldWear(state, upgrade.id, heroIndex: 0), isTrue);
+
+    final beforeLen = state.gearStash.length;
+    final result = GameLogic.autoEquipBetterGearResult(state);
+    expect(result.equipped, 1);
+    expect(result.state.gearStash.length, beforeLen);
+    expect(
+      result.state.heroes[0].itemIn(EquipmentSlot.cloak)?.id,
+      upgrade.id,
+    );
+  });
+
+  test('auto equip would-wear ignores leftover bag crumbs', () {
+    EquipmentItem cloak({
+      required String id,
+      required int armor,
+      required int sta,
+    }) {
+      return GameLogic.createEquipment(
+        slot: EquipmentSlot.cloak,
+        rarity: LootRarity.rare,
+        battleNumber: 6,
+      ).copyWith(
+        id: id,
+        armorBonus: armor,
+        staminaBonus: sta,
+        strengthBonus: 4,
+        defenseBonus: armor,
+        vitalityBonus: sta,
+        effectId: GearEffectId.none,
+        effectValue: 0,
+        clearAffinity: true,
+      );
+    }
+
+    final worn = cloak(id: 'worn_weak_cloak', armor: 4, sta: 3);
+    final prize = cloak(id: 'plan_cloak', armor: 22, sta: 18);
+    final crumb = cloak(id: 'crumb_cloak', armor: 10, sta: 8);
+
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final w = state.heroes.indexWhere((h) => h.gearAffinity == HeroRole.warrior);
+    final heroes = [
+      for (var i = 0; i < state.heroes.length; i++)
+        if (i == w)
+          state.heroes[i].copyWith(
+            equipped: {
+              for (final e in state.heroes[i].equipped.entries)
+                if (e.key != EquipmentSlot.cloak) e.key: e.value,
+              EquipmentSlot.cloak: worn,
+            },
+          )
+        else
+          state.heroes[i].copyWith(
+            equipped: {
+              ...state.heroes[i].equipped,
+              EquipmentSlot.cloak: cloak(
+                id: 'lock_crumb_$i',
+                armor: 40,
+                sta: 40,
+              ),
+            },
+          ),
+    ];
+    state = state.copyWith(
+      heroes: heroes,
+      gearStash: <EquipmentItem>[prize, crumb],
+    );
+
+    expect(
+      GameLogic.compareForHero(state.heroes[w], crumb).isUpgrade,
+      isTrue,
+    );
+    expect(GameLogic.autoEquipWouldWear(state, prize.id), isTrue);
+    expect(GameLogic.autoEquipWouldWear(state, crumb.id), isFalse);
+    expect(GameLogic.isBestPlannedStashItem(state, prize.id), isTrue);
+    expect(GameLogic.isBestPlannedStashItem(state, crumb.id), isFalse);
+  });
+
   test('auto sell junk sells non-upgrades within iLvl and rarity filters', () {
     final weak = GameLogic.createEquipment(
       slot: EquipmentSlot.cloak,

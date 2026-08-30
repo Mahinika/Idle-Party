@@ -3322,6 +3322,19 @@ class GameLogic {
       GearService.gearPlanSignature(state);
   static GameState autoEquipBetterGear(GameState state) =>
       GearService.autoEquipBetterGear(state);
+
+  static ({GameState state, int equipped}) autoEquipBetterGearResult(
+    GameState state,
+  ) => GearService.autoEquipBetterGearResult(state);
+
+  static bool autoEquipWouldWear(
+    GameState state,
+    String itemId, {
+    int? heroIndex,
+  }) => GearService.autoEquipWouldWear(state, itemId, heroIndex: heroIndex);
+
+  static bool isBestPlannedStashItem(GameState state, String itemId) =>
+      GearService.isBestPlannedStashItem(state, itemId);
   static String formatDelta(int value) => GearService.formatDelta(value);
   static bool canCombine(EquipmentItem primary, EquipmentItem secondary) =>
       GearService.canCombine(primary, secondary);
