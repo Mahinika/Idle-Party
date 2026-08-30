@@ -367,7 +367,7 @@ class _SlotCard extends StatelessWidget {
                 KenneySprite(
                   asset: def == null
                       ? CustomAssets.heroKnight
-                      : CustomAssets.heroForClass(def.classId),
+                      : CustomAssets.heroForSpec(def.id),
                   size: 40,
                 ),
                 const SizedBox(height: 4),
@@ -430,7 +430,7 @@ class _SpecPickRow extends StatelessWidget {
                 child: Row(
                   children: [
                     KenneySprite(
-                      asset: CustomAssets.heroForClass(def.classId),
+                      asset: CustomAssets.heroForSpec(def.id),
                       size: 36,
                     ),
                     const SizedBox(width: 10),

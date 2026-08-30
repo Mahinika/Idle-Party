@@ -1,4 +1,5 @@
 import '../models/hero_spec.dart';
+import '../ui/custom_assets.dart';
 
 /// Spec fantasy identity — sprite remap + tint + unlock copy.
 ///
@@ -14,7 +15,9 @@ abstract final class HeroIdentity {
   }
 
   /// Soft recolor so specs in the same class don't look identical.
+  /// Specs with unique sprites skip tint so paint reads clean.
   static int? tintArgb(HeroSpecId specId) {
+    if (CustomAssets.hasUniqueHeroSprite(specId)) return null;
     return switch (specId) {
       // Warrior
       HeroSpecId.arms => 0xFFE8E0D0,
@@ -35,7 +38,6 @@ abstract final class HeroIdentity {
       // Priest
       HeroSpecId.discipline => 0xFFFFF8E0,
       HeroSpecId.holyPriest => 0xFFFFE8A0,
-      HeroSpecId.shadow => 0xFFC090E8,
       // DK
       HeroSpecId.blood => 0xFFFF9090,
       HeroSpecId.frostDk => 0xFFA0D8FF,
@@ -52,11 +54,11 @@ abstract final class HeroIdentity {
       HeroSpecId.affliction => 0xFFC080E0,
       HeroSpecId.demonology => 0xFFE08060,
       HeroSpecId.destruction => 0xFFFF8060,
-      // Druid
+      // Druid (feral/guardian use unique sprites — tint skipped above)
       HeroSpecId.balance => 0xFFE0C060,
-      HeroSpecId.feral => 0xFFE09060,
-      HeroSpecId.guardian => 0xFFB0A080,
       HeroSpecId.restorationDruid => 0xFF90E090,
+      // Unique-sprite specs listed for exhaustiveness; early return above.
+      HeroSpecId.shadow || HeroSpecId.feral || HeroSpecId.guardian => null,
     };
   }
 

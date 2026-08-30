@@ -53,6 +53,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   ui.Image? _hero2;
   ui.Image? _hero3;
   final Map<HeroClassId, ui.Image?> _heroesByClass = {};
+  final Map<HeroSpecId, ui.Image?> _heroesBySpec = {};
   ui.Image? _charAtlas;
   ui.Image? _chest;
   ui.Image? _coin;
@@ -146,7 +147,11 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         KenneyAssets.iconBow,
       }.toList();
 
-      final petPaths = CustomAssets.petPortraitPaths;
+      final petPaths = [
+        ...CustomAssets.petPortraitPaths,
+        ...CustomAssets.combatPetPortraitPaths,
+      ];
+      final uniqueHeroPaths = CustomAssets.uniqueHeroSpecPaths;
 
       final shared = await Future.wait([
         load(KenneyAssets.stairs, targetWidth: 64),
@@ -171,6 +176,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         load(KenneyAssets.vialBlue, targetWidth: 48),
         ...lootPaths.map((a) => load(a, targetWidth: 64)),
         ...petPaths.map((a) => load(a, targetWidth: 96)),
+        ...uniqueHeroPaths.map((a) => load(a, targetWidth: 128)),
       ]);
       if (!mounted) return;
 
@@ -210,6 +216,11 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         ..addEntries([
           for (final path in petPaths) MapEntry(path, shared[i++]),
         ]);
+      _heroesBySpec
+        ..clear()
+        ..[HeroSpecId.shadow] = shared[i++]
+        ..[HeroSpecId.feral] = shared[i++]
+        ..[HeroSpecId.guardian] = shared[i++];
       _sharedLoaded = true;
     }
 
@@ -518,6 +529,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                         _hero3,
                                       ],
                                       heroesByClass: _heroesByClass,
+                                      heroesBySpec: _heroesBySpec,
                                       enemies: _enemySprites,
                                       chest: _chest!,
                                       coin: _coin!,
@@ -971,6 +983,7 @@ class _TileRoomPainter extends CustomPainter {
     required this.charAtlas,
     required this.heroes,
     required this.heroesByClass,
+    required this.heroesBySpec,
     required this.enemies,
     required this.chest,
     required this.coin,
@@ -999,6 +1012,7 @@ class _TileRoomPainter extends CustomPainter {
   final ui.Image charAtlas;
   final List<ui.Image?> heroes;
   final Map<HeroClassId, ui.Image?> heroesByClass;
+  final Map<HeroSpecId, ui.Image?> heroesBySpec;
   final List<ui.Image?> enemies;
   final ui.Image chest;
   final ui.Image coin;
@@ -1769,7 +1783,8 @@ class _TileRoomPainter extends CustomPainter {
       ui.Image? img;
       Color? tint;
       if (partyHero != null) {
-        img = heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
+        img = heroesBySpec[partyHero.specId] ??
+            heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
         final argb = HeroIdentity.tintArgb(partyHero.specId);
         if (argb != null) tint = Color(argb);
       }

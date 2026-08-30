@@ -53,6 +53,10 @@ py tool/generate_dungeon_art.py
 
 Tide-only (legacy alias): `py tool/generate_tide_dungeon_art.py`
 
+**Handcrafted Tide + elites + specs:** `py tool/craft_asset_batch.py`
+(rewrites Tide tiles/props/hub, late-zone elite/brute PNGs, Shadow/Feral/Guardian
+heroes, and combat-pet art under the same `assets/custom/` paths).
+
 ### Tiles (`assets/custom/dungeon/tide/tiles/`)
 
 | File | Role |

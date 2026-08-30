@@ -152,6 +152,19 @@ abstract final class KenneyAssets {
   static String get enemyEmberMite => CustomAssets.enemyEmberMite;
   static String get enemyBossGrove => CustomAssets.enemyBossGrove;
   static String get enemyGroveMite => CustomAssets.enemyGroveMite;
+  static String get enemyTideBrute => CustomAssets.enemyTideBrute;
+  static String get enemyEmberElite => CustomAssets.enemyEmberElite;
+  static String get enemyEmberBrute => CustomAssets.enemyEmberBrute;
+  static String get enemyStormWraith => CustomAssets.enemyStormWraith;
+  static String get enemyStormBrute => CustomAssets.enemyStormBrute;
+  static String get enemyRimeWraith => CustomAssets.enemyRimeWraith;
+  static String get enemyRimeBrute => CustomAssets.enemyRimeBrute;
+  static String get enemyFenElite => CustomAssets.enemyFenElite;
+  static String get enemyFenBrute => CustomAssets.enemyFenBrute;
+  static String get enemyBrassElite => CustomAssets.enemyBrassElite;
+  static String get enemyBrassBrute => CustomAssets.enemyBrassBrute;
+  static String get enemyVeilElite => CustomAssets.enemyVeilElite;
+  static String get enemyVeilBrute => CustomAssets.enemyVeilBrute;
 
   // —— Gear / consumables (custom identity icons; Tiny Dungeon tiles kept as fallback) ——
   static String get shieldRound => CustomAssets.iconShieldRound;
@@ -258,7 +271,7 @@ abstract final class KenneyAssets {
   };
 
   static String heroSpriteForSpec(HeroSpecId specId) =>
-      CustomAssets.heroForClass(HeroIdentity.spriteClassFor(specId));
+      CustomAssets.heroForSpec(specId);
 
   static Color? heroTintForSpec(HeroSpecId specId) {
     final argb = HeroIdentity.tintArgb(specId);
@@ -394,6 +407,20 @@ abstract final class KenneyAssets {
     enemyEmberMite,
     enemyBossGrove,
     enemyGroveMite,
+    // Append only — late-zone unique elites/brutes.
+    enemyTideBrute,
+    enemyEmberElite,
+    enemyEmberBrute,
+    enemyStormWraith,
+    enemyStormBrute,
+    enemyRimeWraith,
+    enemyRimeBrute,
+    enemyFenElite,
+    enemyFenBrute,
+    enemyBrassElite,
+    enemyBrassBrute,
+    enemyVeilElite,
+    enemyVeilBrute,
   ];
 
   static int enemySpriteCatalogIndex(String asset) {

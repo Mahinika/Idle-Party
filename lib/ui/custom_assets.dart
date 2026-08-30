@@ -22,6 +22,17 @@ abstract final class CustomAssets {
   static const String petVaultBeetle = '$_root/pets/vault_beetle.png';
   static const String petMireToad = '$_root/pets/mire_toad.png';
 
+  // —— Combat-only pets (class / temp summons; not collectables) ——
+  static const String petCombatWaterElemental =
+      '$_root/pets/combat_water_elemental.png';
+  static const String petCombatGhoul = '$_root/pets/combat_ghoul.png';
+  static const String petCombatFelguard = '$_root/pets/combat_felguard.png';
+  static const String petCombatHunterBeast =
+      '$_root/pets/combat_hunter_beast.png';
+  static const String petCombatTotem = '$_root/pets/combat_totem.png';
+  static const String petCombatSpiritWolf =
+      '$_root/pets/combat_spirit_wolf.png';
+
   /// Every collectable pet has its own art — a companion that is just a
   /// recolored dungeon enemy never reads as *yours*.
   static String petForTemplateId(String templateId) => switch (templateId) {
@@ -91,35 +102,45 @@ abstract final class CustomAssets {
   static String petForCombatActorId(String petId, [String? displayName]) {
     final key = '${petId}_${displayName ?? ''}'.toLowerCase();
     if (key.contains('water') || key.contains('elemental')) {
-      return petSparkPup;
+      return petCombatWaterElemental;
     }
     if (key.contains('wolf') ||
         key.contains('spirit') ||
         key.contains('feral')) {
-      return petWardenCub;
+      return petCombatSpiritWolf;
     }
     if (key.contains('ghoul') ||
         key.contains('army') ||
         key.contains('dead') ||
         key.contains('skel')) {
-      return petSpiritMoth;
+      return petCombatGhoul;
     }
     if (key.contains('demon') ||
         key.contains('imp') ||
         key.contains('fel') ||
         key.contains('felguard')) {
-      return petCoinImp;
+      return petCombatFelguard;
     }
     if (key.contains('beast') ||
         key.contains('pet') ||
         key.contains('hunter')) {
-      return petCaveBat;
+      return petCombatHunterBeast;
     }
     if (key.contains('totem') || key.contains('element')) {
-      return petShrineOwl;
+      return petCombatTotem;
     }
-    return petEmberPup;
+    return petCombatHunterBeast;
   }
+
+  /// Paths used by combat pet actors (preload with collectables).
+  static List<String> get combatPetPortraitPaths => const [
+    petCombatWaterElemental,
+    petCombatGhoul,
+    petCombatFelguard,
+    petCombatHunterBeast,
+    petCombatTotem,
+    petCombatSpiritWolf,
+  ];
 
   // —— Armor / jewelry slot icons ——
   static const String iconHelm = '$_root/icons/helm.png';
@@ -284,6 +305,9 @@ abstract final class CustomAssets {
   static const String heroShaman = '$_root/heroes/shaman.png';
   static const String heroWarlock = '$_root/heroes/warlock.png';
   static const String heroDruid = '$_root/heroes/druid.png';
+  static const String heroShadow = '$_root/heroes/shadow.png';
+  static const String heroFeral = '$_root/heroes/feral.png';
+  static const String heroGuardian = '$_root/heroes/guardian.png';
 
   static String heroForClass(HeroClassId classId) => switch (classId) {
     HeroClassId.warrior => heroKnight,
@@ -297,6 +321,25 @@ abstract final class CustomAssets {
     HeroClassId.warlock => heroWarlock,
     HeroClassId.druid => heroDruid,
   };
+
+  /// Spec-unique bodies when present; else class body ([HeroIdentity] tint).
+  static String heroForSpec(HeroSpecId specId) => switch (specId) {
+    HeroSpecId.shadow => heroShadow,
+    HeroSpecId.feral => heroFeral,
+    HeroSpecId.guardian => heroGuardian,
+    _ => heroForClass(HeroSpecs.def(specId).classId),
+  };
+
+  static bool hasUniqueHeroSprite(HeroSpecId specId) => switch (specId) {
+    HeroSpecId.shadow || HeroSpecId.feral || HeroSpecId.guardian => true,
+    _ => false,
+  };
+
+  static List<String> get uniqueHeroSpecPaths => const [
+    heroShadow,
+    heroFeral,
+    heroGuardian,
+  ];
 
   // —— Combat enemies / bosses ——
   static const String enemySlime = '$_root/enemies/slime.png';
@@ -341,6 +384,21 @@ abstract final class CustomAssets {
   static const String enemyEmberMite = '$_root/enemies/ember_mite.png';
   static const String enemyBossGrove = '$_root/enemies/boss_grove.png';
   static const String enemyGroveMite = '$_root/enemies/grove_mite.png';
+
+  // —— Late-zone unique elites / brutes (break shared golem/wraith) ——
+  static const String enemyTideBrute = '$_root/enemies/tide_brute.png';
+  static const String enemyEmberElite = '$_root/enemies/ember_elite.png';
+  static const String enemyEmberBrute = '$_root/enemies/ember_brute.png';
+  static const String enemyStormWraith = '$_root/enemies/storm_wraith.png';
+  static const String enemyStormBrute = '$_root/enemies/storm_brute.png';
+  static const String enemyRimeWraith = '$_root/enemies/rime_wraith.png';
+  static const String enemyRimeBrute = '$_root/enemies/rime_brute.png';
+  static const String enemyFenElite = '$_root/enemies/fen_elite.png';
+  static const String enemyFenBrute = '$_root/enemies/fen_brute.png';
+  static const String enemyBrassElite = '$_root/enemies/brass_elite.png';
+  static const String enemyBrassBrute = '$_root/enemies/brass_brute.png';
+  static const String enemyVeilElite = '$_root/enemies/veil_elite.png';
+  static const String enemyVeilBrute = '$_root/enemies/veil_brute.png';
 
   // —— Custom dungeon interiors (docs/DUNGEON_ART.md) ——
   static const String _dungeonRoot = '$_root/dungeon';

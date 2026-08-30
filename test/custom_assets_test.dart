@@ -68,6 +68,22 @@ void main() {
       CustomAssets.heroShaman,
       CustomAssets.heroWarlock,
       CustomAssets.heroDruid,
+      CustomAssets.heroShadow,
+      CustomAssets.heroFeral,
+      CustomAssets.heroGuardian,
+      CustomAssets.enemyTideBrute,
+      CustomAssets.enemyEmberElite,
+      CustomAssets.enemyStormWraith,
+      CustomAssets.enemyRimeBrute,
+      CustomAssets.enemyFenElite,
+      CustomAssets.enemyBrassElite,
+      CustomAssets.enemyVeilBrute,
+      CustomAssets.petCombatWaterElemental,
+      CustomAssets.petCombatGhoul,
+      CustomAssets.petCombatFelguard,
+      CustomAssets.petCombatHunterBeast,
+      CustomAssets.petCombatTotem,
+      CustomAssets.petCombatSpiritWolf,
     };
 
     for (final path in paths) {
@@ -122,11 +138,11 @@ void main() {
     );
     expect(
       CustomAssets.petForCombatActorId('temppet_water_h1_0', 'Water Elemental'),
-      CustomAssets.petSparkPup,
+      CustomAssets.petCombatWaterElemental,
     );
     expect(
       CustomAssets.petForCombatActorId('classpet_h1', 'Felguard'),
-      CustomAssets.petCoinImp,
+      CustomAssets.petCombatFelguard,
     );
     expect(
       CustomAssets.petForInstanceId('classpet_hero1'),
