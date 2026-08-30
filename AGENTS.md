@@ -64,8 +64,8 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 ## Character visuals (dungeon)
 
 Layered Canvas heroes: `lib/visual/` + `docs/CHARACTER_VISUALS.md`.
-Dungeon prefers paper-doll / layered gear over full-class PNGs. New items get a
-`visualSetId` (or derive from slot/type/rarity) — never a Class×Weapon sheet.
+Dungeon uses class PNG body + anchored gear overlays (`visualSetId`); full
+Kenney paper-doll is the no-sprite fallback. Never a Class×Weapon sheet.
 
 ## Build & Test
 

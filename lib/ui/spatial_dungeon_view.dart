@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
+import '../core/hero_identity.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
@@ -1781,7 +1782,6 @@ class _TileRoomPainter extends CustomPainter {
           0.95 * (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
       final alpha = hero.isAlive ? 1.0 : 0.25;
       final paintAlpha = hero.vanishTimer > 0 ? 0.35 : alpha;
-      // Layered gear is primary in dungeon (custom class PNGs are hub/debug).
       if (partyHero != null) {
         final moving = hero.vx.abs() > 0.05 || hero.vy.abs() > 0.05;
         final signals = HeroAnimSignals(
@@ -1796,19 +1796,50 @@ class _TileRoomPainter extends CustomPainter {
         );
         final walkPhase =
             ((hero.x + hero.y).abs() * 2.5 + visualFrame * 0.08) % 1.0;
-        CharacterVisualPainter.paint(
-          canvas,
-          charAtlas,
-          c,
-          tile * scale,
-          hero: partyHero,
-          signals: signals,
-          flipX: flipX,
-          partyIndex: idx,
-          alpha: paintAlpha,
-          walkPhase: walkPhase,
-          cacheId: hero.id,
-        );
+        // Hybrid: class PNG for identity + anchored gear overlays.
+        ui.Image? bodyImg = heroesBySpec[partyHero.specId] ??
+            heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
+        Color? tint;
+        final argb = HeroIdentity.tintArgb(partyHero.specId);
+        if (argb != null) tint = Color(argb);
+        bodyImg ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
+        if (bodyImg != null) {
+          drawSprite(
+            bodyImg,
+            c,
+            scale,
+            alpha: paintAlpha,
+            tint: tint,
+            flipX: flipX,
+          );
+          CharacterVisualPainter.paintGearOverlays(
+            canvas,
+            charAtlas,
+            c,
+            tile * scale,
+            hero: partyHero,
+            signals: signals,
+            flipX: flipX,
+            partyIndex: idx,
+            alpha: paintAlpha,
+            walkPhase: walkPhase,
+            cacheId: hero.id,
+          );
+        } else {
+          CharacterVisualPainter.paint(
+            canvas,
+            charAtlas,
+            c,
+            tile * scale * 1.35,
+            hero: partyHero,
+            signals: signals,
+            flipX: flipX,
+            partyIndex: idx,
+            alpha: paintAlpha,
+            walkPhase: walkPhase,
+            cacheId: hero.id,
+          );
+        }
       } else {
         ui.Image? img = heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
         if (img != null) {

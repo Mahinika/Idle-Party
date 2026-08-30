@@ -5,6 +5,7 @@ import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/visual/anchor_table.dart';
 import 'package:idle_party/visual/character_layer.dart';
+import 'package:idle_party/visual/character_visual_painter.dart';
 import 'package:idle_party/visual/character_visual_pose.dart';
 import 'package:idle_party/visual/hero_anim_state.dart';
 
@@ -231,6 +232,21 @@ void main() {
       windup.indexOf(CharacterLayerId.mainHand) <
           windup.indexOf(CharacterLayerId.head),
       isTrue,
+    );
+  });
+
+  test('gear overlay set excludes body layers', () {
+    expect(
+      CharacterVisualPainter.kGearOverlayLayers.contains(CharacterLayerId.body),
+      isFalse,
+    );
+    expect(
+      CharacterVisualPainter.kGearOverlayLayers,
+      containsAll([
+        CharacterLayerId.head,
+        CharacterLayerId.mainHand,
+        CharacterLayerId.offHand,
+      ]),
     );
   });
 }

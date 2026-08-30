@@ -1,16 +1,21 @@
 # Character visuals (layered dungeon heroes)
 
-Idle Party dungeon heroes use a **Canvas layered** system (`lib/visual/`), not
-one PNG per class×weapon. Custom class portraits remain available for hub /
-non-dungeon UI; the spatial dungeon always prefers layered gear.
+Idle Party dungeon heroes use a **hybrid Canvas** path (`lib/visual/`):
+
+1. **Class PNG body** for identity (same sprites as GEAR / hub).
+2. **Anchored gear overlays** (helm / weapon / shield / cape tiles) from
+   `visualSetId` so equipment still reads in combat.
+3. **Full Kenney paper-doll** only if no class sprite is available.
+
+Not one PNG per class×weapon. New denser body art swaps in later as Phase 3.
 
 ## Pipeline
 
 ```text
-PartyHero.equipped  →  EquipmentVisualResolver  →  layer stack
+PartyHero.equipped  →  EquipmentVisualResolver  →  gear overlay layers
 SpatialActor signals →  HeroAnimController / snapshot →  anim + frame
-AnchorTables         →  mainHand / offHand offsets + attack swing
-CharacterVisualPainter → SpatialDungeonView Canvas
+AnchorTables         →  mainHand / offHand / head offsets + attack swing
+Class PNG body + CharacterVisualPainter.paintGearOverlays → Canvas
 ```
 
 ## Key types
