@@ -1,10 +1,13 @@
 # Character visuals (layered dungeon heroes)
 
-Idle Party dungeon heroes use a **Phase 3 denser body** path when available:
+Idle Party heroes use a **Phase 3 denser body** path when available:
 
 1. **Owned body** from `assets/custom/char/<family>/` (gear affinity → family).
 2. **Anchored gear overlays** (helm / weapon / shield) from `visualSetId`.
 3. Fallback: class PNG → full Kenney paper-doll.
+
+Used in **dungeon** (`spatial_dungeon_view`) and **GEAR / party HUD**
+(`HeroDollSprite`).
 
 Not one PNG per class×weapon.
 
@@ -56,6 +59,7 @@ Pose layers cached per hero id until equip/anim/flip changes.
 ## Manual A56 checks
 
 - Denser bodies show for warrior/healer/mage/rogue affinities.
-- Equip helm/weapon/shield — overlays update live.
+- Kenney gear overlays stay off for denser bodies (baked silhouette); class-PNG
+  hybrid still gets helm/weapon/shield overlays.
 - Flip when the party faces left.
 - Enemies still use prior art.

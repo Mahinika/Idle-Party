@@ -19,6 +19,7 @@ import '../visual/body_family.dart';
 import '../visual/character_visual_painter.dart';
 import '../visual/hero_anim_controller.dart';
 import '../visual/hero_anim_state.dart';
+import '../visual/anchor_table.dart';
 import 'custom_assets.dart';
 import 'decoded_image_cache.dart';
 import 'dungeon_environment.dart';
@@ -226,20 +227,37 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         ..[HeroSpecId.shadow] = shared[i++]
         ..[HeroSpecId.feral] = shared[i++]
         ..[HeroSpecId.guardian] = shared[i++];
-      _sharedLoaded = true;
 
-      // Phase 3 denser owned bodies (family × anim).
+      // Phase 3 denser owned bodies (family × anim) — soft-fail per path.
       final bodyPaths = BodyFamilyCatalog.allAssetPaths;
-      final bodies = await Future.wait(
-        bodyPaths.map((a) => load(a, targetWidth: 128)),
-      );
+      final bodyEntries = <MapEntry<String, ui.Image>>[];
+      for (final path in bodyPaths) {
+        try {
+          bodyEntries.add(MapEntry(path, await load(path, targetWidth: 128)));
+        } catch (_) {
+          // Missing catalog art falls back to class PNG at paint time.
+        }
+      }
       if (!mounted) return;
       _bodyByPath
         ..clear()
-        ..addEntries([
-          for (var bi = 0; bi < bodyPaths.length; bi++)
-            MapEntry(bodyPaths[bi], bodies[bi]),
-        ]);
+        ..addEntries(bodyEntries);
+      _sharedLoaded = true;
+    } else if (_bodyByPath.isEmpty) {
+      // Retry denser bodies if the first shared load ran before assets landed.
+      final bodyPaths = BodyFamilyCatalog.allAssetPaths;
+      final bodyEntries = <MapEntry<String, ui.Image>>[];
+      for (final path in bodyPaths) {
+        try {
+          bodyEntries.add(MapEntry(path, await load(path, targetWidth: 128)));
+        } catch (_) {}
+      }
+      if (!mounted) return;
+      if (bodyEntries.isNotEmpty) {
+        _bodyByPath
+          ..clear()
+          ..addEntries(bodyEntries);
+      }
     }
 
     // Only this zone's enemies — the catalog holds 24 sprites but a zone can
@@ -1797,8 +1815,6 @@ class _TileRoomPainter extends CustomPainter {
         }
       }
       final flipX = (aimX - hero.x) < -0.15;
-      final scale =
-          0.95 * (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
       final alpha = hero.isAlive ? 1.0 : 0.25;
       final paintAlpha = hero.vanishTimer > 0 ? 0.35 : alpha;
       if (partyHero != null) {
@@ -1822,6 +1838,7 @@ class _TileRoomPainter extends CustomPainter {
         // Phase 3 denser owned body → class PNG → Kenney role fallback.
         final bodyPath = BodyFamilyCatalog.assetFor(partyHero, anim.kind);
         ui.Image? bodyImg = bodyByPath[bodyPath];
+        final usingOwnedBody = bodyImg != null;
         Color? tint;
         if (bodyImg == null) {
           bodyImg = heroesBySpec[partyHero.specId] ??
@@ -1830,6 +1847,9 @@ class _TileRoomPainter extends CustomPainter {
           if (argb != null) tint = Color(argb);
         }
         bodyImg ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
+        // Owned denser bodies read better slightly larger than Kenney tiles.
+        final scale = (usingOwnedBody ? 1.45 : 0.95) *
+            (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
         if (bodyImg != null) {
           drawSprite(
             bodyImg,
@@ -1852,6 +1872,9 @@ class _TileRoomPainter extends CustomPainter {
             walkPhase: walkPhase,
             cacheId: hero.id,
             poseOverride: anim,
+            anchorProfile: usingOwnedBody
+                ? BodyAnchorProfile.owned
+                : BodyAnchorProfile.kenney,
           );
         } else {
           CharacterVisualPainter.paint(
@@ -1872,6 +1895,10 @@ class _TileRoomPainter extends CustomPainter {
       } else {
         ui.Image? img = heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
         if (img != null) {
+          final scale = 0.95 *
+              (1 +
+                  flash *
+                      (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
           drawSprite(img, c, scale, alpha: paintAlpha, flipX: flipX);
         }
       }

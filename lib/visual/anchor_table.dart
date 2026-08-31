@@ -5,6 +5,15 @@ import 'hero_anim_state.dart';
 /// Attachment points for equipment overlays.
 enum AnchorId { head, body, mainHand, offHand, back, feet }
 
+/// Which body silhouette the anchors were tuned for.
+enum BodyAnchorProfile {
+  /// Kenney 16×16 paper-doll proportions.
+  kenney,
+
+  /// Owned denser 128×128 bodies (`assets/custom/char/`).
+  owned,
+}
+
 /// Pixel offset + rotation relative to character center (normalized −0.5..0.5
 /// of sprite size for x/y; [rotation] in radians).
 class AnchorPose {
@@ -27,7 +36,33 @@ class AnchorPose {
   );
 }
 
-/// Per-frame anchors for Kenney body family (v1).
+/// Relative Kenney-tile size when drawn on a body sprite.
+class GearOverlayScales {
+  const GearOverlayScales({
+    required this.head,
+    required this.hand,
+    required this.cape,
+  });
+
+  final double head;
+  final double hand;
+  final double cape;
+
+  static const kenney = GearOverlayScales(
+    head: 0.42,
+    hand: 0.55,
+    cape: 0.85,
+  );
+
+  /// Tighter tiles so denser bodies stay readable (GEAR + dungeon).
+  static const owned = GearOverlayScales(
+    head: 0.24,
+    hand: 0.30,
+    cape: 0.50,
+  );
+}
+
+/// Per-frame anchors for layered heroes.
 ///
 /// Coordinates are fractions of the destination sprite size (center origin).
 abstract final class AnchorTables {
@@ -36,8 +71,12 @@ abstract final class AnchorTables {
     required int frame,
     required AnchorId id,
     bool flipX = false,
+    BodyAnchorProfile profile = BodyAnchorProfile.kenney,
   }) {
-    final pose = _kenneyV1(anim, frame, id);
+    final pose = switch (profile) {
+      BodyAnchorProfile.kenney => _kenneyV1(anim, frame, id),
+      BodyAnchorProfile.owned => _ownedV1(anim, frame, id),
+    };
     return flipX ? pose.flipped() : pose;
   }
 
@@ -64,9 +103,32 @@ abstract final class AnchorTables {
     };
   }
 
+  /// Tuned for front-facing denser idle/walk/attack frames.
+  static AnchorPose _ownedV1(HeroAnimKind anim, int frame, AnchorId id) {
+    final attackLean = anim == HeroAnimKind.attack && frame == 1;
+    final castLean = anim == HeroAnimKind.cast && frame == 1;
+    return switch (id) {
+      AnchorId.head => const AnchorPose(x: 0, y: -0.36),
+      AnchorId.body => const AnchorPose(x: 0, y: 0),
+      AnchorId.back => const AnchorPose(x: 0, y: -0.08),
+      AnchorId.feet => const AnchorPose(x: 0, y: 0.40),
+      AnchorId.mainHand => AnchorPose(
+        x: attackLean ? 0.34 : (castLean ? 0.26 : 0.32),
+        y: attackLean ? 0.02 : (castLean ? -0.08 : 0.14),
+        rotation: attackLean
+            ? -0.70
+            : (castLean ? -0.25 : (anim == HeroAnimKind.walk ? 0.12 : -0.15)),
+      ),
+      AnchorId.offHand => AnchorPose(
+        x: attackLean ? -0.30 : -0.32,
+        y: attackLean ? 0.06 : 0.12,
+        rotation: attackLean ? 0.20 : 0.05,
+      ),
+    };
+  }
+
   /// Swing rotation boost for attack progress 0–1.
   static double attackSwingRotation(double progress) {
-    // Raise → peak → return.
     if (progress < 0.35) {
       return -0.4 - progress * 1.2;
     }

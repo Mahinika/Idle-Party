@@ -96,16 +96,28 @@ abstract final class BodyFamilyCatalog {
           id: BodyFamily.healer,
           folder: 'healer',
           idleAsset: BodyFamilyDef._path(BodyFamily.healer, 'body_idle.png'),
+          walkAsset: BodyFamilyDef._path(BodyFamily.healer, 'body_walk.png'),
+          attackAsset: BodyFamilyDef._path(
+            BodyFamily.healer,
+            'body_attack.png',
+          ),
         ),
         BodyFamily.mage: BodyFamilyDef(
           id: BodyFamily.mage,
           folder: 'mage',
           idleAsset: BodyFamilyDef._path(BodyFamily.mage, 'body_idle.png'),
+          walkAsset: BodyFamilyDef._path(BodyFamily.mage, 'body_walk.png'),
+          attackAsset: BodyFamilyDef._path(BodyFamily.mage, 'body_attack.png'),
         ),
         BodyFamily.rogue: BodyFamilyDef(
           id: BodyFamily.rogue,
           folder: 'rogue',
           idleAsset: BodyFamilyDef._path(BodyFamily.rogue, 'body_idle.png'),
+          walkAsset: BodyFamilyDef._path(BodyFamily.rogue, 'body_walk.png'),
+          attackAsset: BodyFamilyDef._path(
+            BodyFamily.rogue,
+            'body_attack.png',
+          ),
         ),
       });
 }

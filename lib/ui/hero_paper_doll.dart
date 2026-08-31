@@ -148,7 +148,7 @@ class HeroPaperDoll {
     return switch (tier) {
       0 => const DollLayer(33, 1), // wood
       1 => const DollLayer(37, 1), // metal
-      2 => const DollLayer(37, 5), // patterned
+      2 => const DollLayer(37, 1), // metal (readable on denser bodies)
       _ => const DollLayer(39, 7), // fancy
     };
   }

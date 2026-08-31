@@ -249,4 +249,33 @@ void main() {
       ]),
     );
   });
+
+  test('owned denser overlays skip Kenney gear tiles', () {
+    expect(CharacterVisualPainter.kOwnedGearOverlayLayers, isEmpty);
+  });
+
+  test('owned denser anchors sit lower on hands than kenney', () {
+    final kenney = AnchorTables.lookup(
+      anim: HeroAnimKind.idle,
+      frame: 0,
+      id: AnchorId.mainHand,
+      profile: BodyAnchorProfile.kenney,
+    );
+    final owned = AnchorTables.lookup(
+      anim: HeroAnimKind.idle,
+      frame: 0,
+      id: AnchorId.mainHand,
+      profile: BodyAnchorProfile.owned,
+    );
+    expect(owned.y, greaterThan(kenney.y));
+    expect(
+      AnchorTables.lookup(
+        anim: HeroAnimKind.idle,
+        frame: 0,
+        id: AnchorId.head,
+        profile: BodyAnchorProfile.owned,
+      ).y,
+      lessThan(-0.3),
+    );
+  });
 }

@@ -1,9 +1,13 @@
 from PIL import Image
 from pathlib import Path
+from collections import deque
 
 root = Path(r"d:\Projects\Personal\idle party\Idle-Party\assets\custom\char")
-for p in root.rglob("*.png"):
-    im = Image.open(p).convert("RGBA")
+
+
+def clear_corner_bg(im: Image.Image) -> Image.Image:
+    """Make near-white and flood-filled near-black corner backgrounds transparent."""
+    im = im.convert("RGBA")
     px = im.load()
     w, h = im.size
     for y in range(h):
@@ -11,6 +15,33 @@ for p in root.rglob("*.png"):
             r, g, b, a = px[x, y]
             if r > 228 and g > 228 and b > 228:
                 px[x, y] = (0, 0, 0, 0)
+
+    bg = [[False] * w for _ in range(h)]
+    q: deque[tuple[int, int]] = deque()
+    seeds = [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1), (w // 2, 0), (0, h // 2)]
+    for x, y in seeds:
+        r, g, b, a = px[x, y]
+        if a < 10 or (r < 30 and g < 30 and b < 30):
+            bg[y][x] = True
+            q.append((x, y))
+    while q:
+        x, y = q.popleft()
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h and not bg[ny][nx]:
+                r, g, b, a = px[nx, ny]
+                if a < 10 or (r < 28 and g < 28 and b < 28):
+                    bg[ny][nx] = True
+                    q.append((nx, ny))
+    for y in range(h):
+        for x in range(w):
+            if bg[y][x]:
+                px[x, y] = (0, 0, 0, 0)
+    return im
+
+
+for p in root.rglob("*.png"):
+    im = clear_corner_bg(Image.open(p))
     bbox = im.getbbox()
     if bbox:
         im = im.crop(bbox)

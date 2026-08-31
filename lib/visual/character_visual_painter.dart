@@ -13,13 +13,18 @@ import 'hero_anim_state.dart';
 
 /// Canvas painter for modular layered heroes (dungeon path).
 abstract final class CharacterVisualPainter {
-  /// Layers drawn on top of a class PNG body (gear that must read in combat).
+  /// Layers drawn on top of a class PNG / Kenney body (gear that must read).
   static const Set<CharacterLayerId> kGearOverlayLayers = {
     CharacterLayerId.cape,
     CharacterLayerId.head,
     CharacterLayerId.offHand,
     CharacterLayerId.mainHand,
   };
+
+  /// Owned denser bodies already paint hair/hood/armor — Kenney helm/cape/hand
+  /// tiles read as floating icons on the denser silhouette. No Kenney overlays
+  /// until matching owned weapon art exists.
+  static const Set<CharacterLayerId> kOwnedGearOverlayLayers = {};
 
   /// Full Kenney paper-doll stack (fallback when no class sprite).
   static void paint(
@@ -48,7 +53,7 @@ abstract final class CharacterVisualPainter {
     paintPose(canvas, atlas, center, size, pose: pose, alpha: alpha);
   }
 
-  /// Anchored gear only — for hybrid (class PNG body + equipment).
+  /// Anchored gear only — for hybrid (class PNG / owned body + equipment).
   static void paintGearOverlays(
     Canvas canvas,
     ui.Image atlas,
@@ -62,6 +67,8 @@ abstract final class CharacterVisualPainter {
     double walkPhase = 0,
     HeroAnimPose? poseOverride,
     String? cacheId,
+    BodyAnchorProfile anchorProfile = BodyAnchorProfile.kenney,
+    GearOverlayScales? overlayScales,
   }) {
     final pose = _poseFor(
       hero: hero,
@@ -72,6 +79,7 @@ abstract final class CharacterVisualPainter {
       poseOverride: poseOverride,
       cacheId: cacheId,
     );
+    final owned = anchorProfile == BodyAnchorProfile.owned;
     paintPose(
       canvas,
       atlas,
@@ -79,8 +87,12 @@ abstract final class CharacterVisualPainter {
       size,
       pose: pose,
       alpha: alpha,
-      onlyLayers: kGearOverlayLayers,
+      onlyLayers:
+          owned ? kOwnedGearOverlayLayers : kGearOverlayLayers,
       preferAnchored: true,
+      anchorProfile: anchorProfile,
+      overlayScales: overlayScales ??
+          (owned ? GearOverlayScales.owned : GearOverlayScales.kenney),
     );
   }
 
@@ -114,6 +126,8 @@ abstract final class CharacterVisualPainter {
     double alpha = 1,
     Set<CharacterLayerId>? onlyLayers,
     bool preferAnchored = false,
+    BodyAnchorProfile anchorProfile = BodyAnchorProfile.kenney,
+    GearOverlayScales overlayScales = GearOverlayScales.kenney,
   }) {
     final paint = Paint()
       ..filterQuality = FilterQuality.none
@@ -162,6 +176,7 @@ abstract final class CharacterVisualPainter {
           frame: pose.anim.frame,
           id: anchorId,
           flipX: false,
+          profile: anchorProfile,
         ).scaled(size);
         var rot = ap.rotation;
         if (anchorId == AnchorId.mainHand) {
@@ -170,9 +185,9 @@ abstract final class CharacterVisualPainter {
         final ax = center.dx + ap.x;
         final ay = center.dy + ap.y;
         final overlay = switch (layer.id) {
-          CharacterLayerId.head => size * 0.42,
-          CharacterLayerId.cape => size * 0.85,
-          _ => size * 0.55,
+          CharacterLayerId.head => size * overlayScales.head,
+          CharacterLayerId.cape => size * overlayScales.cape,
+          _ => size * overlayScales.hand,
         };
         canvas.save();
         canvas.translate(ax, ay);

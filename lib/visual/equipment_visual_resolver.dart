@@ -137,6 +137,8 @@ abstract final class EquipmentVisualResolver {
           'shield_t$t': EquipmentVisualDef(
             id: 'shield_t$t',
             layer: CharacterLayerId.offHand,
+            // Prefer readable round/kite shields — avoid patterned tiles that
+            // read as checker noise when scaled onto denser bodies.
             atlasCol: switch (t) {
               0 => 33,
               1 => 37,
@@ -146,7 +148,7 @@ abstract final class EquipmentVisualResolver {
             atlasRow: switch (t) {
               0 => 1,
               1 => 1,
-              2 => 5,
+              2 => 1,
               _ => 7,
             },
             useAnchor: true,

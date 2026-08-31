@@ -22,7 +22,7 @@ void main() {
     );
   });
 
-  test('missing clips fall back to idle', () {
+  test('all families expose walk and attack clips', () {
     final mage = PartyHero.starting(
       name: 'M',
       specId: HeroSpecId.arcane,
@@ -31,7 +31,19 @@ void main() {
     expect(BodyFamilyCatalog.familyFor(mage), BodyFamily.mage);
     expect(
       BodyFamilyCatalog.assetFor(mage, HeroAnimKind.walk),
-      'assets/custom/char/mage/body_idle.png',
+      'assets/custom/char/mage/body_walk.png',
+    );
+    expect(
+      BodyFamilyCatalog.assetFor(mage, HeroAnimKind.attack),
+      'assets/custom/char/mage/body_attack.png',
+    );
+    expect(
+      BodyFamilyCatalog.assetFor(mage, HeroAnimKind.cast),
+      'assets/custom/char/mage/body_attack.png',
+    );
+    expect(
+      BodyFamilyCatalog.assetFor(mage, HeroAnimKind.hit),
+      'assets/custom/char/mage/body_walk.png',
     );
   });
 
@@ -39,6 +51,9 @@ void main() {
     final paths = BodyFamilyCatalog.allAssetPaths;
     expect(paths, contains('assets/custom/char/warrior/body_idle.png'));
     expect(paths, contains('assets/custom/char/rogue/body_idle.png'));
+    expect(paths, contains('assets/custom/char/healer/body_walk.png'));
+    expect(paths, contains('assets/custom/char/mage/body_attack.png'));
     expect(paths.toSet().length, paths.length);
+    expect(paths.length, 12);
   });
 }
