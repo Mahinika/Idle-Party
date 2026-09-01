@@ -3,19 +3,17 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../models/hero.dart';
-import '../visual/anchor_table.dart';
 import '../visual/body_family.dart';
-import '../visual/character_visual_painter.dart';
 import '../visual/hero_anim_state.dart';
 import 'decoded_image_cache.dart';
-import 'hero_paper_doll.dart';
 import 'kenney_assets.dart';
 import 'kenney_sprite.dart';
 
-/// GEAR / HUD hero preview: denser owned body + anchored gear overlays.
+/// GEAR / party HUD preview: owned denser body (`assets/custom/char/`).
 ///
-/// Falls back to class PNG (+ overlays when atlas is ready), then plain
-/// [KenneySprite] if decode fails.
+/// Gear slots around the doll show what is equipped — the body is the class
+/// silhouette only (no Kenney overlay junk). Dungeon combat uses the same
+/// families with walk/attack clips in [SpatialDungeonView].
 class HeroDollSprite extends StatefulWidget {
   const HeroDollSprite({
     super.key,
@@ -29,7 +27,7 @@ class HeroDollSprite extends StatefulWidget {
   final int partyIndex;
   final double size;
 
-  /// Reserved for future walk-frame previews (dungeon HUD idle for now).
+  /// Reserved for future walk-frame previews (idle in GEAR for now).
   final int walkFrame;
 
   @override
@@ -38,8 +36,6 @@ class HeroDollSprite extends StatefulWidget {
 
 class _HeroDollSpriteState extends State<HeroDollSprite> {
   ui.Image? _body;
-  ui.Image? _fallback;
-  ui.Image? _atlas;
   String? _fallbackPath;
   int _loadGen = 0;
 
@@ -72,67 +68,40 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
     final gen = ++_loadGen;
     final bodyPath =
         BodyFamilyCatalog.assetFor(widget.hero, HeroAnimKind.idle);
-    final fallbackPath = KenneyAssets.heroSpriteForSpec(widget.hero.specId);
+    _fallbackPath = KenneyAssets.heroSpriteForSpec(widget.hero.specId);
     final decodeW = (widget.size * 3).ceil().clamp(64, 256);
 
     ui.Image? body;
-    ui.Image? fallback;
-    ui.Image? atlas;
     try {
       body = await DecodedImageCache.load(bodyPath, targetWidth: decodeW);
     } catch (_) {}
-    try {
-      fallback =
-          await DecodedImageCache.load(fallbackPath, targetWidth: decodeW);
-    } catch (_) {}
-    try {
-      atlas = await DecodedImageCache.load(RoguelikeCharAtlas.assetPath);
-    } catch (_) {}
 
     if (!mounted || gen != _loadGen) return;
-    setState(() {
-      _body = body;
-      _fallback = fallback;
-      _atlas = atlas;
-      _fallbackPath = fallbackPath;
-    });
+    setState(() => _body = body);
   }
 
   @override
   Widget build(BuildContext context) {
     final alive = widget.hero.currentHp > 0;
     final body = _body;
-    final atlas = _atlas;
-    final fallback = _fallback;
 
     Widget child;
-    if (body != null || (fallback != null && atlas != null)) {
+    if (body != null) {
       child = CustomPaint(
         size: Size.square(widget.size),
-        painter: _HeroDollPainter(
-          body: body,
-          fallback: body == null ? fallback : null,
-          atlas: atlas,
-          hero: widget.hero,
-          partyIndex: widget.partyIndex,
-          tint: body == null
-              ? KenneyAssets.heroTintForSpec(widget.hero.specId)
-              : null,
-        ),
+        painter: _OwnedBodyPainter(body: body),
       );
     } else {
-      // Still loading or decode failed — plain class PNG.
-      final asset = _fallbackPath ??
-          KenneyAssets.heroSpriteForSpec(widget.hero.specId);
+      final asset =
+          _fallbackPath ?? KenneyAssets.heroSpriteForSpec(widget.hero.specId);
       final tint = KenneyAssets.heroTintForSpec(widget.hero.specId);
-      Widget sprite = KenneySprite(asset: asset, size: widget.size);
+      child = KenneySprite(asset: asset, size: widget.size);
       if (tint != null) {
-        sprite = ColorFiltered(
+        child = ColorFiltered(
           colorFilter: ColorFilter.mode(tint, BlendMode.modulate),
-          child: sprite,
+          child: child,
         );
       }
-      child = sprite;
     }
 
     return SizedBox(
@@ -143,74 +112,26 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
   }
 }
 
-class _HeroDollPainter extends CustomPainter {
-  _HeroDollPainter({
-    required this.body,
-    required this.fallback,
-    required this.atlas,
-    required this.hero,
-    required this.partyIndex,
-    required this.tint,
-  });
+class _OwnedBodyPainter extends CustomPainter {
+  const _OwnedBodyPainter({required this.body});
 
-  final ui.Image? body;
-  final ui.Image? fallback;
-  final ui.Image? atlas;
-  final PartyHero hero;
-  final int partyIndex;
-  final Color? tint;
+  final ui.Image body;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final drawSize = size.shortestSide;
-    final img = body ?? fallback;
-    if (img != null) {
-      final paint = Paint()
+    canvas.drawImageRect(
+      body,
+      Rect.fromLTWH(0, 0, body.width.toDouble(), body.height.toDouble()),
+      Rect.fromCenter(center: center, width: drawSize, height: drawSize),
+      Paint()
         ..filterQuality = FilterQuality.none
-        ..isAntiAlias = false;
-      if (tint != null) {
-        paint.colorFilter = ColorFilter.mode(tint!, BlendMode.modulate);
-      }
-      final dst = Rect.fromCenter(
-        center: center,
-        width: drawSize,
-        height: drawSize,
-      );
-      canvas.drawImageRect(
-        img,
-        Rect.fromLTWH(0, 0, img.width.toDouble(), img.height.toDouble()),
-        dst,
-        paint,
-      );
-    }
-
-    final a = atlas;
-    if (a != null) {
-      CharacterVisualPainter.paintGearOverlays(
-        canvas,
-        a,
-        center,
-        drawSize,
-        hero: hero,
-        signals: const HeroAnimSignals(),
-        partyIndex: partyIndex,
-        cacheId: 'gear_preview_${hero.id}',
-        anchorProfile: BodyAnchorProfile.owned,
-      );
-    } else if (img == null) {
-      // Absolute last resort: full Kenney doll if somehow nothing loaded.
-    }
+        ..isAntiAlias = false,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _HeroDollPainter oldDelegate) {
-    return !identical(body, oldDelegate.body) ||
-        !identical(fallback, oldDelegate.fallback) ||
-        !identical(atlas, oldDelegate.atlas) ||
-        hero.id != oldDelegate.hero.id ||
-        tint != oldDelegate.tint ||
-        partyIndex != oldDelegate.partyIndex ||
-        hero.equipped.length != oldDelegate.hero.equipped.length;
-  }
+  bool shouldRepaint(covariant _OwnedBodyPainter oldDelegate) =>
+      !identical(body, oldDelegate.body);
 }
