@@ -1,4 +1,5 @@
 import 'body_family.dart';
+import 'equipment_model_catalog.dart';
 import 'hero_anim_state.dart';
 
 /// Owned 128×128 paper-doll overlay paths (`assets/custom/char/`).
@@ -11,6 +12,7 @@ abstract final class OwnedGearAssets {
   static const List<String> kAnims = ['idle', 'walk', 'attack'];
 
   /// Family-aligned armor silhouettes we ship (rarity tints in paint).
+  /// Tier silhouettes stay for old saves; named models come from the catalog.
   static const List<String> kFamilySetIds = [
     'helm_t0',
     'helm_t2',
@@ -45,6 +47,9 @@ abstract final class OwnedGearAssets {
     'shield',
     'frill',
   };
+
+  static bool isCatalogTierId(String visualSetId) =>
+      RegExp(r'^(.+)_t\d+$').hasMatch(visualSetId);
 
   static String familyGear(BodyFamily family, String setId, String anim) =>
       '$root/${family.name}/gear/${setId}_$anim.png';
@@ -95,18 +100,17 @@ abstract final class OwnedGearAssets {
     // Shoulders / belt fold into chest+legs art — no extra owned PNG.
     if (stem == 'shoulder' || stem == 'waist') return null;
     final a = animFile(anim);
+    // Named variants use the full visualSetId as filename stem.
+    // Classic *_tN ids still silhouette-map to shipped t0/t2 art.
+    final fileStem =
+        isCatalogTierId(visualSetId) ? silhouetteId(visualSetId) : visualSetId;
     if (isSharedSet(visualSetId)) {
-      // Named variants (sword_thunderfury) use the full visualSetId as
-      // the filename stem; classic ids (sword_t0) use silhouetteId.
-      final catalogForm = RegExp(r'^(.+)_t\d+$').hasMatch(visualSetId);
-      final fileStem = catalogForm ? silhouetteId(visualSetId) : visualSetId;
       return sharedGear(fileStem, a);
     }
-    // Family armor: always normalise to silhouette tier.
-    return familyGear(family, silhouetteId(visualSetId), a);
+    return familyGear(family, fileStem, a);
   }
 
-  /// Precache list (idle/walk/attack × shipped silhouettes).
+  /// Precache list (idle/walk/attack × tier silhouettes + named variants).
   static List<String> get allAssetPaths {
     final out = <String>{};
     for (final family in BodyFamily.values) {
@@ -115,8 +119,18 @@ abstract final class OwnedGearAssets {
           out.add(familyGear(family, id, anim));
         }
       }
+      for (final id in EquipmentModelCatalog.allFamilyVariantIds) {
+        for (final anim in kAnims) {
+          out.add(familyGear(family, id, anim));
+        }
+      }
     }
     for (final id in kSharedSetIds) {
+      for (final anim in kAnims) {
+        out.add(sharedGear(id, anim));
+      }
+    }
+    for (final id in EquipmentModelCatalog.allSharedVariantIds) {
       for (final anim in kAnims) {
         out.add(sharedGear(id, anim));
       }

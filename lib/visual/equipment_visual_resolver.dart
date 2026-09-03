@@ -100,9 +100,12 @@ abstract final class EquipmentVisualResolver {
       defFor(resolveId(item));
 
   /// Gold/white wash so t1–t3 share t0/t2 art (WoW display-id style).
-  static Color? rarityTint(String visualSetId) {
+  ///
+  /// Named model variants (`sword_emberfang`) have no `_tN` suffix — pass
+  /// [rarityTier] from [EquipmentItem.rarity.index] so rare gear still glows.
+  static Color? rarityTint(String visualSetId, {int? rarityTier}) {
     final m = RegExp(r'_t(\d)$').firstMatch(visualSetId);
-    final t = int.tryParse(m?.group(1) ?? '') ?? 0;
+    final t = int.tryParse(m?.group(1) ?? '') ?? rarityTier ?? 0;
     return switch (t) {
       0 => null,
       1 => const Color(0xFFFFF6E8),

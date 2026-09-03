@@ -10,6 +10,7 @@ import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
+import '../visual/equipment_model_catalog.dart';
 import '../visual/equipment_visual_resolver.dart';
 import 'keystone.dart';
 
@@ -1189,11 +1190,17 @@ class EquipmentFactory {
       setId: setId,
     );
     // Preserve a data-driven visualSetId override (e.g. named weapon models
-    // like "sword_thunderfury"). Only derive from slot/weaponType when the
-    // item has no explicit id yet.
-    final resolvedId = (item.visualSetId?.isNotEmpty == true)
-        ? item.visualSetId!
-        : EquipmentVisualResolver.resolveId(item);
-    return item.copyWith(visualSetId: resolvedId);
+    // like "sword_thunderfury"). Otherwise derive base id then pick a
+    // catalog model variant so loot of the same type can look different.
+    if (item.visualSetId?.isNotEmpty == true) {
+      return item.copyWith(visualSetId: item.visualSetId);
+    }
+    final baseId = EquipmentVisualResolver.resolveId(item);
+    final modelId = EquipmentModelCatalog.pickVariant(
+      baseId,
+      random,
+      rarityTier: rarity.index,
+    );
+    return item.copyWith(visualSetId: modelId);
   }
 }

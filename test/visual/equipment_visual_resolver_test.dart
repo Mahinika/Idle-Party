@@ -1,15 +1,19 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/visual/body_family.dart';
 import 'package:idle_party/visual/character_layer.dart';
+import 'package:idle_party/visual/equipment_model_catalog.dart';
 import 'package:idle_party/visual/equipment_visual_resolver.dart';
 import 'package:idle_party/visual/hero_anim_state.dart';
 import 'package:idle_party/visual/owned_gear_assets.dart';
 
 void main() {
-  test('factory stamps visualSetId', () {
+  test('factory stamps visualSetId from model catalog', () {
     final sword = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
       rarity: LootRarity.rare,
@@ -17,10 +21,63 @@ void main() {
       bias: HeroRole.warrior,
     );
     expect(sword.visualSetId, isNotNull);
-    expect(
-      EquipmentVisualResolver.catalog.containsKey(sword.visualSetId),
-      isTrue,
+    final id = sword.visualSetId!;
+    final base = EquipmentModelCatalog.baseToken(id);
+    expect(EquipmentModelCatalog.variantsFor(base), contains(id));
+    expect(EquipmentVisualResolver.defFor(id), isNotNull);
+  });
+
+  test('factory pickVariant can differ across rolls', () {
+    final prev = EquipmentFactory.random;
+    EquipmentFactory.random = Random(42);
+    final a = GameLogic.createEquipment(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.epic,
+      battleNumber: 20,
+      bias: HeroRole.warrior,
+    ).copyWith(weaponType: WeaponType.sword);
+    // Force fresh pick by clearing and re-running through factory path:
+    // createEquipment already stamped a variant; collect a pool of rolls.
+    final ids = <String>{};
+    for (var i = 0; i < 40; i++) {
+      ids.add(
+        GameLogic.createEquipment(
+          slot: EquipmentSlot.weapon,
+          rarity: LootRarity.epic,
+          battleNumber: 20 + i,
+          bias: HeroRole.warrior,
+        ).copyWith(weaponType: WeaponType.sword).visualSetId!,
+      );
+    }
+    EquipmentFactory.random = prev;
+    expect(ids.length, greaterThan(1), reason: 'epic loot should vary models');
+    expect(a.visualSetId, isNotNull);
+  });
+
+  test('model catalog has 12 variants per weapon and armor base', () {
+    for (final base in [
+      ...EquipmentModelCatalog.sharedBases,
+      ...EquipmentModelCatalog.familyBases,
+    ]) {
+      final list = EquipmentModelCatalog.variantsFor(base);
+      expect(list.length, greaterThanOrEqualTo(12), reason: base);
+      expect(list.first, '${base}_t0');
+    }
+  });
+
+  test('named family armor path uses full visualSetId', () {
+    final path = OwnedGearAssets.pathFor(
+      visualSetId: 'helm_spiked',
+      family: BodyFamily.warrior,
+      anim: HeroAnimKind.idle,
     );
+    expect(path, 'assets/custom/char/warrior/gear/helm_spiked_idle.png');
+  });
+
+  test('helm_spiked resolves head layer via base-token', () {
+    final def = EquipmentVisualResolver.defFor('helm_spiked');
+    expect(def, isNotNull);
+    expect(def!.layer, CharacterLayerId.head);
   });
 
   test('hunter bow and mage staff resolve weapon families', () {
@@ -199,15 +256,16 @@ void main() {
       expect(EquipmentVisualResolver.resolveId(item), startsWith('sword_'));
     });
 
-    test('createEquipment stamps a catalog-valid visualSetId by default', () {
+    test('createEquipment stamps a model-catalog visualSetId by default', () {
       final item = GameLogic.createEquipment(
         slot: EquipmentSlot.weapon,
         rarity: LootRarity.rare,
         battleNumber: 5,
         bias: HeroRole.warrior,
       );
-      // Default stamp stays a catalog id (not a variant)
-      expect(EquipmentVisualResolver.catalog.containsKey(item.visualSetId), isTrue);
+      final id = item.visualSetId!;
+      final base = EquipmentModelCatalog.baseToken(id);
+      expect(EquipmentModelCatalog.variantsFor(base), contains(id));
     });
   });
 

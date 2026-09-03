@@ -1,10 +1,14 @@
+import 'dart:ui' show Color;
+
 import '../models/hero.dart';
 import '../models/loot.dart';
 import '../ui/hero_paper_doll.dart';
 import 'anchor_table.dart';
+import 'body_family.dart';
 import 'character_layer.dart';
 import 'equipment_visual_resolver.dart';
 import 'hero_anim_state.dart';
+import 'owned_gear_assets.dart';
 
 /// One atlas cell (or body column) in the layered stack.
 class ResolvedLayer {
@@ -15,6 +19,8 @@ class ResolvedLayer {
     this.anchored = false,
     this.anchorId,
     this.iconKey,
+    this.ownedAsset,
+    this.tint,
   });
 
   final CharacterLayerId id;
@@ -25,6 +31,12 @@ class ResolvedLayer {
   final bool anchored;
   final AnchorId? anchorId;
   final String? iconKey;
+
+  /// Owned 128×128 overlay (`assets/custom/char/...`). Kenney cells ignore this.
+  final String? ownedAsset;
+
+  /// Optional rarity wash for owned overlays.
+  final Color? tint;
 }
 
 /// Fully resolved visual pose for one hero this frame.
@@ -56,11 +68,32 @@ class CharacterVisualPose {
   }
 
   /// Build pose from party hero + animation + facing.
+  ///
+  /// [owned] uses 128×128 overlay paths (GEAR + dungeon). Kenney atlas
+  /// cells stay on the fallback paper-doll path (`owned: false`).
   factory CharacterVisualPose.resolve({
     required PartyHero hero,
     required HeroAnimPose anim,
     bool flipX = false,
     int partyIndex = 0,
+    bool owned = false,
+  }) {
+    if (owned) {
+      return _resolveOwned(hero: hero, anim: anim, flipX: flipX);
+    }
+    return _resolveKenney(
+      hero: hero,
+      anim: anim,
+      flipX: flipX,
+      partyIndex: partyIndex,
+    );
+  }
+
+  static CharacterVisualPose _resolveKenney({
+    required PartyHero hero,
+    required HeroAnimPose anim,
+    required bool flipX,
+    required int partyIndex,
   }) {
     final bodyCol = anim.frame.clamp(0, 1);
     final skin = HeroPaperDoll.skinRowFor(hero, partyIndex);
@@ -156,6 +189,74 @@ class CharacterVisualPose {
     );
   }
 
+  static CharacterVisualPose _resolveOwned({
+    required PartyHero hero,
+    required HeroAnimPose anim,
+    required bool flipX,
+  }) {
+    final family = BodyFamilyCatalog.familyFor(hero);
+    final layers = <ResolvedLayer>[
+      const ResolvedLayer(id: CharacterLayerId.body, col: 0, row: 0),
+    ];
+    final seen = <CharacterLayerId>{CharacterLayerId.body};
+
+    void addItem(EquipmentItem? item, {CharacterLayerId? layer}) {
+      if (item == null) return;
+      final def = EquipmentVisualResolver.defForItem(item);
+      if (def == null) return;
+      final visId = EquipmentVisualResolver.resolveId(item);
+      final path = OwnedGearAssets.pathFor(
+        visualSetId: visId,
+        family: family,
+        anim: anim.kind,
+      );
+      if (path == null) return;
+      final id = layer ?? def.layer;
+      if (!seen.add(id)) return;
+      layers.add(
+        ResolvedLayer(
+          id: id,
+          col: 0,
+          row: 0,
+          ownedAsset: path,
+          tint: EquipmentVisualResolver.rarityTint(
+            visId,
+            rarityTier: item.rarity.index,
+          ),
+        ),
+      );
+    }
+
+    addItem(hero.itemIn(EquipmentSlot.cloak), layer: CharacterLayerId.cape);
+    addItem(
+      hero.itemIn(EquipmentSlot.legs) ?? hero.itemIn(EquipmentSlot.boots),
+      layer: CharacterLayerId.legs,
+    );
+    addItem(hero.itemIn(EquipmentSlot.chest), layer: CharacterLayerId.torso);
+    addItem(
+      hero.itemIn(EquipmentSlot.hands) ?? hero.itemIn(EquipmentSlot.wrist),
+      layer: CharacterLayerId.gloves,
+    );
+    addItem(hero.itemIn(EquipmentSlot.head), layer: CharacterLayerId.head);
+
+    final main =
+        hero.itemIn(EquipmentSlot.weapon) ?? hero.itemIn(EquipmentSlot.ranged);
+    final hideOff = main?.handed == WeaponHanded.twoHand;
+    if (!hideOff) {
+      addItem(hero.itemIn(EquipmentSlot.offHand));
+    }
+    addItem(main, layer: CharacterLayerId.mainHand);
+
+    final order = layerOrderFor(anim.kind, frame: anim.frame, flipX: flipX);
+    return CharacterVisualPose(
+      layers: layers,
+      anim: anim,
+      flipX: flipX,
+      layerOrder: order,
+      equipHash: equipHashOf(hero),
+    );
+  }
+
   static void _addHandLayer(
     List<ResolvedLayer> layers,
     EquipmentItem? item, {
@@ -219,10 +320,11 @@ abstract final class CharacterVisualPoseCache {
     required HeroAnimPose anim,
     bool flipX = false,
     int partyIndex = 0,
+    bool owned = false,
   }) {
     final equipHash = CharacterVisualPose.equipHashOf(hero);
     final key =
-        '$equipHash|${anim.kind.name}|${anim.frame}|$flipX|$partyIndex';
+        '$equipHash|${anim.kind.name}|${anim.frame}|$flipX|$partyIndex|$owned';
     final existing = _byHero[heroId];
     if (existing != null && existing.key == key) {
       return existing.pose;
@@ -232,6 +334,7 @@ abstract final class CharacterVisualPoseCache {
       anim: anim,
       flipX: flipX,
       partyIndex: partyIndex,
+      owned: owned,
     );
     _byHero[heroId] = _CachedPose(key, pose);
     return pose;
