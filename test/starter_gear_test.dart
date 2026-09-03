@@ -11,9 +11,15 @@ void main() {
   test('every class starter fills all equipment slots', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     for (final hero in state.heroes) {
+      final expected = EquipmentSlot.values.toSet();
+      if (ClassProficiency.weaponBlocksOffHand(
+        hero.itemIn(EquipmentSlot.weapon),
+      )) {
+        expected.remove(EquipmentSlot.offHand);
+      }
       expect(
         hero.equipped.keys.toSet(),
-        EquipmentSlot.values.toSet(),
+        expected,
         reason: '${hero.gearAffinity} missing slots',
       );
       for (final item in hero.equipped.values) {
