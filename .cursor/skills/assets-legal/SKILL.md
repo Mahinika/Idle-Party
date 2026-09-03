@@ -63,3 +63,5 @@ Image.asset(KenneyAssets.iconSword); // missing FilterQuality.none
 ```
 
 Do not copy the hardcoded atlas path in `hero_paper_doll.dart` for new assets.
+
+Owned denser heroes (undertunic + 128 overlays): [character-paper-doll](../character-paper-doll/SKILL.md).

@@ -51,11 +51,14 @@ class BodyFamilyDef {
 
 /// Resolves [PartyHero] → owned denser body family + asset paths.
 abstract final class BodyFamilyCatalog {
-  static BodyFamily familyFor(PartyHero hero) => switch (hero.gearAffinity) {
-    HeroRole.warrior => BodyFamily.warrior,
-    HeroRole.healer => BodyFamily.healer,
-    HeroRole.mage => BodyFamily.mage,
-    HeroRole.rogue => BodyFamily.rogue,
+  static BodyFamily familyFor(PartyHero hero) =>
+      familyForAffinity(hero.gearAffinity.name);
+
+  static BodyFamily familyForAffinity(String? affinity) => switch (affinity) {
+    'healer' => BodyFamily.healer,
+    'mage' => BodyFamily.mage,
+    'rogue' => BodyFamily.rogue,
+    _ => BodyFamily.warrior,
   };
 
   static BodyFamilyDef defFor(BodyFamily family) => catalog[family]!;

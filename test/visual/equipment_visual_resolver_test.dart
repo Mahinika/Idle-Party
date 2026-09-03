@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/loot.dart';
@@ -27,54 +26,48 @@ void main() {
     expect(EquipmentVisualResolver.defFor(id), isNotNull);
   });
 
-  test('factory pickVariant can differ across rolls', () {
-    final prev = EquipmentFactory.random;
-    EquipmentFactory.random = Random(42);
-    final a = GameLogic.createEquipment(
-      slot: EquipmentSlot.weapon,
-      rarity: LootRarity.epic,
-      battleNumber: 20,
-      bias: HeroRole.warrior,
-    ).copyWith(weaponType: WeaponType.sword);
-    // Force fresh pick by clearing and re-running through factory path:
-    // createEquipment already stamped a variant; collect a pool of rolls.
+  test('factory pickVariant can differ across rolls for swords', () {
     final ids = <String>{};
     for (var i = 0; i < 40; i++) {
       ids.add(
-        GameLogic.createEquipment(
-          slot: EquipmentSlot.weapon,
-          rarity: LootRarity.epic,
-          battleNumber: 20 + i,
-          bias: HeroRole.warrior,
-        ).copyWith(weaponType: WeaponType.sword).visualSetId!,
+        EquipmentModelCatalog.pickVariant(
+          'sword_t0',
+          Random(i),
+          rarityTier: 3,
+        ),
       );
     }
-    EquipmentFactory.random = prev;
-    expect(ids.length, greaterThan(1), reason: 'epic loot should vary models');
-    expect(a.visualSetId, isNotNull);
+    expect(ids.length, greaterThan(1), reason: 'authored sword pool should vary');
+    expect(ids, contains('sword_t0'));
   });
 
-  test('model catalog has 12 variants per weapon and armor base', () {
-    for (final base in [
-      ...EquipmentModelCatalog.sharedBases,
-      ...EquipmentModelCatalog.familyBases,
-    ]) {
-      final list = EquipmentModelCatalog.variantsFor(base);
-      expect(list.length, greaterThanOrEqualTo(12), reason: base);
-      expect(list.first, '${base}_t0');
+  test('model catalog is short: tiers + authored weapons', () {
+    expect(EquipmentModelCatalog.variantsFor('sword'), [
+      'sword_t0',
+      'sword_thunderfury',
+      'sword_warglaive',
+    ]);
+    expect(EquipmentModelCatalog.variantsFor('staff'), ['staff_t0']);
+    expect(EquipmentModelCatalog.variantsFor('helm'), ['helm_t0', 'helm_t2']);
+    expect(EquipmentModelCatalog.variantsFor('hands'), ['hands_t0']);
+    for (final base in EquipmentModelCatalog.familyBases) {
+      expect(
+        EquipmentModelCatalog.pickVariant('${base}_t0', Random(1)),
+        '${base}_t0',
+      );
     }
   });
 
-  test('named family armor path uses full visualSetId', () {
+  test('family armor path uses extract tier id', () {
     final path = OwnedGearAssets.pathFor(
-      visualSetId: 'helm_spiked',
+      visualSetId: 'helm_t0',
       family: BodyFamily.warrior,
       anim: HeroAnimKind.idle,
     );
-    expect(path, 'assets/custom/char/warrior/gear/helm_spiked_idle.png');
+    expect(path, 'assets/custom/char/warrior/gear/helm_t0_idle.png');
   });
 
-  test('helm_spiked resolves head layer via base-token', () {
+  test('legacy named id still resolves head layer via base-token', () {
     final def = EquipmentVisualResolver.defFor('helm_spiked');
     expect(def, isNotNull);
     expect(def!.layer, CharacterLayerId.head);
@@ -100,6 +93,34 @@ void main() {
       bias: HeroRole.mage,
     ).copyWith(weaponType: WeaponType.staff, clearVisualSetId: true);
     expect(EquipmentVisualResolver.resolveId(staff), startsWith('staff_'));
+  });
+
+  test('mage loot is always a two-hand staff', () {
+    for (var i = 0; i < 20; i++) {
+      final item = GameLogic.createEquipment(
+        slot: EquipmentSlot.weapon,
+        rarity: LootRarity.rare,
+        battleNumber: 5 + i,
+        bias: HeroRole.mage,
+      );
+      expect(item.weaponType, WeaponType.staff);
+      expect(item.handed, WeaponHanded.twoHand);
+      expect(item.visualSetId, startsWith('staff_'));
+    }
+  });
+
+  test('thrown resolves to dagger art, not a bow', () {
+    final item = GameLogic.createEquipment(
+      slot: EquipmentSlot.ranged,
+      rarity: LootRarity.common,
+      battleNumber: 1,
+      bias: HeroRole.warrior,
+    ).copyWith(weaponType: WeaponType.thrown, visualSetId: 'bow_longshot');
+    expect(EquipmentVisualResolver.resolveId(item), 'dagger_t0');
+    expect(
+      OwnedGearAssets.iconPathFor(item),
+      'assets/custom/char/gear/dagger_t0_icon.png',
+    );
   });
 
   test('explicit visualSetId wins over derive', () {
@@ -212,14 +233,59 @@ void main() {
       expect(path, 'assets/custom/char/gear/sword_t0_idle.png');
     });
 
-    test('staff_frostfire is shared set and returns variant path', () {
-      expect(OwnedGearAssets.isSharedSet('staff_frostfire'), isTrue);
+    test('iconPathFor maps legacy named shield to shield_t0 crop', () {
+      final item = EquipmentItem(
+        id: 'sh',
+        name: 'Test Shield',
+        slot: EquipmentSlot.offHand,
+        rarity: LootRarity.common,
+        itemLevel: 5,
+        offHandKind: OffHandKind.shield,
+        visualSetId: 'shield_stormwall',
+      );
+      expect(
+        OwnedGearAssets.iconPathFor(item),
+        'assets/custom/char/gear/shield_t0_icon.png',
+      );
+    });
+
+    test('iconPathFor uses cropped helm overlay for family armor', () {
+      final helm = EquipmentItem(
+        id: 'h',
+        name: 'Helm',
+        slot: EquipmentSlot.head,
+        rarity: LootRarity.common,
+        itemLevel: 5,
+        visualSetId: 'helm_t0',
+        affinity: 'warrior',
+      );
+      expect(
+        OwnedGearAssets.iconPathFor(helm),
+        'assets/custom/char/warrior/gear/helm_t0_icon.png',
+      );
+    });
+
+    test('iconPathFor skips hands overlays', () {
+      final gloves = EquipmentItem(
+        id: 'g',
+        name: 'Gloves',
+        slot: EquipmentSlot.hands,
+        rarity: LootRarity.common,
+        itemLevel: 5,
+        visualSetId: 'hands_gauntlets',
+        affinity: 'warrior',
+      );
+      expect(OwnedGearAssets.iconPathFor(gloves), isNull);
+    });
+
+    test('staff_t0 is shared set and returns path', () {
+      expect(OwnedGearAssets.isSharedSet('staff_t0'), isTrue);
       final path = OwnedGearAssets.pathFor(
-        visualSetId: 'staff_frostfire',
+        visualSetId: 'staff_t0',
         family: BodyFamily.mage,
         anim: HeroAnimKind.attack,
       );
-      expect(path, 'assets/custom/char/gear/staff_frostfire_attack.png');
+      expect(path, 'assets/custom/char/gear/staff_t0_attack.png');
     });
 
     test('helm_t0 family path unchanged (no regression)', () {
@@ -233,26 +299,39 @@ void main() {
   });
 
   group('equipment_factory preserves visualSetId override', () {
-    test('factory does not overwrite pre-set visualSetId', () {
+    test('authored sword id is kept when weapon stem matches', () {
       final item = GameLogic.createEquipment(
         slot: EquipmentSlot.weapon,
         rarity: LootRarity.rare,
         battleNumber: 5,
         bias: HeroRole.warrior,
-      ).copyWith(visualSetId: 'sword_thunderfury');
-      // resolveId should preserve the override
+      ).copyWith(
+        weaponType: WeaponType.sword,
+        visualSetId: 'sword_thunderfury',
+      );
       expect(EquipmentVisualResolver.resolveId(item), 'sword_thunderfury');
     });
 
+    test('mismatched stem is coerced to weapon art', () {
+      final item = GameLogic.createEquipment(
+        slot: EquipmentSlot.weapon,
+        rarity: LootRarity.rare,
+        battleNumber: 5,
+        bias: HeroRole.warrior,
+      ).copyWith(
+        weaponType: WeaponType.mace,
+        visualSetId: 'sword_thunderfury',
+      );
+      expect(EquipmentVisualResolver.resolveId(item), 'mace_t0');
+    });
+
     test('factory derives visualSetId when none is set', () {
-      // Create a weapon with explicit weaponType=sword and cleared visualSetId.
       final item = GameLogic.createEquipment(
         slot: EquipmentSlot.weapon,
         rarity: LootRarity.common,
         battleNumber: 1,
         bias: HeroRole.warrior,
       ).copyWith(weaponType: WeaponType.sword, clearVisualSetId: true);
-      // resolveId from slot+weaponType should give sword_t*
       expect(EquipmentVisualResolver.resolveId(item), startsWith('sword_'));
     });
 

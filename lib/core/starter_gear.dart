@@ -6,6 +6,7 @@ import '../models/loot.dart';
 import '../models/proficiency.dart';
 import '../visual/equipment_model_catalog.dart';
 import '../visual/equipment_visual_resolver.dart';
+import '../visual/owned_gear_assets.dart';
 import 'game_state.dart';
 
 /// The gear a hero starts with, and the rules for topping empty slots back up.
@@ -91,20 +92,26 @@ abstract final class StarterGear {
       out.remove(EquipmentSlot.ranged);
     }
 
-    // Stamp a stable model variant so starters aren't all identical *_t0.
+    // Stamp stable model variants on weapons/shields only — armor stays on
+    // silhouette tiers so starter dolls don't pick noisy named overlays.
     for (final e in out.entries.toList()) {
       final item = e.value;
       if (item.visualSetId != null && item.visualSetId!.isNotEmpty) continue;
       final base = EquipmentVisualResolver.resolveId(item);
       if (base == 'none') continue;
-      final rng = Random(item.id.hashCode ^ e.key.index);
-      out[e.key] = item.copyWith(
-        visualSetId: EquipmentModelCatalog.pickVariant(
+      final stem = EquipmentModelCatalog.baseToken(base);
+      final String modelId;
+      if (EquipmentModelCatalog.sharedBases.contains(stem)) {
+        final rng = Random(item.id.hashCode ^ e.key.index);
+        modelId = EquipmentModelCatalog.pickVariant(
           base,
           rng,
           rarityTier: item.rarity.index,
-        ),
-      );
+        );
+      } else {
+        modelId = OwnedGearAssets.silhouetteId(base);
+      }
+      out[e.key] = item.copyWith(visualSetId: modelId);
     }
 
     return out;

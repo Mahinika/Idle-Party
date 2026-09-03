@@ -7,10 +7,10 @@ import '../models/hero.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
 import 'custom_assets.dart';
+import 'equipment_icon.dart';
 import 'game_theme.dart';
 import 'hero_doll_sprite.dart';
 import 'item_tooltip.dart';
-import 'kenney_assets.dart';
 import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
 
@@ -98,12 +98,15 @@ class CharacterEquipPanel extends StatelessWidget {
   };
 
   /// Paper-doll label for an empty or filled off-hand (shield / tome / weapon).
-  static String offHandLabel(OffHandKind? kind) => switch (kind) {
-    OffHandKind.shield => 'SHIELD',
-    OffHandKind.frill => 'TOME',
-    OffHandKind.weapon => 'OFFHAND',
-    null => 'OFFHAND',
-  };
+  static String offHandLabel(OffHandKind? kind, {bool lockedByTwoHand = false}) {
+    if (lockedByTwoHand) return '2H';
+    return switch (kind) {
+      OffHandKind.shield => 'SHIELD',
+      OffHandKind.frill => 'TOME',
+      OffHandKind.weapon => 'OFFHAND',
+      null => 'OFFHAND',
+    };
+  }
 
   static String? emptyIconFor(EquipmentSlot slot, {OffHandKind? offHandKind}) =>
       switch (slot) {
@@ -338,14 +341,33 @@ class CharacterEquipPanel extends StatelessWidget {
                       slotFor(EquipmentSlot.offHand, size: weaponSize),
                     ],
                   ),
-                  if (ClassProficiency.canUseShield(hero.spec)) ...[
-                    const SizedBox(height: 2),
-                    Builder(
-                      builder: (_) {
-                        final hasShield =
-                            hero.itemIn(EquipmentSlot.offHand)?.offHandKind ==
-                            OffHandKind.shield;
-                        return Text(
+                  Builder(
+                    builder: (_) {
+                      final blocked = ClassProficiency.weaponBlocksOffHand(
+                        hero.itemIn(EquipmentSlot.weapon),
+                      );
+                      if (blocked) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            'Two-hand weapon — off-hand locked',
+                            textAlign: TextAlign.center,
+                            style: GameTheme.body(
+                              size: 11,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        );
+                      }
+                      if (!ClassProficiency.canUseShield(hero.spec)) {
+                        return const SizedBox.shrink();
+                      }
+                      final hasShield =
+                          hero.itemIn(EquipmentSlot.offHand)?.offHandKind ==
+                          OffHandKind.shield;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
                           hasShield
                               ? 'Off-hand: shield equipped'
                               : 'Off-hand: Warrior / Paladin / Shaman need a shield',
@@ -356,10 +378,10 @@ class CharacterEquipPanel extends StatelessWidget {
                                 ? GameTheme.parchmentDim
                                 : GameTheme.torchHot,
                           ),
-                        );
-                      },
-                    ),
-                  ],
+                        ),
+                      );
+                    },
+                  ),
                   SizedBox(height: slotGap),
                   Wrap(
                     alignment: WrapAlignment.center,
@@ -674,7 +696,14 @@ class PaperDollSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final border = item == null
+    final blockedOh = slot == EquipmentSlot.offHand &&
+        hero != null &&
+        ClassProficiency.weaponBlocksOffHand(
+          hero!.itemIn(EquipmentSlot.weapon),
+        );
+    final border = blockedOh
+        ? GameTheme.border.withValues(alpha: 0.45)
+        : item == null
         ? GameTheme.border
         : itemRarityBorder(item!.rarity);
     final ohKind = item?.offHandKind ??
@@ -686,120 +715,130 @@ class PaperDollSlot extends StatelessWidget {
       offHandKind: slot == EquipmentSlot.offHand ? ohKind : null,
     );
     final short = slot == EquipmentSlot.offHand
-        ? CharacterEquipPanel.offHandLabel(ohKind)
+        ? CharacterEquipPanel.offHandLabel(
+            ohKind,
+            lockedByTwoHand: blockedOh,
+          )
         : (CharacterEquipPanel.slotLabels[slot] ?? slot.name);
-    final a11y = item == null
+    final a11y = blockedOh
+        ? 'Off-hand locked — two-hand weapon equipped'
+        : item == null
         ? 'Empty $short — browse bag'
         : '${item!.name} ${item!.effectiveItemLevel}';
 
     final hit = size < GameTheme.minTouch ? GameTheme.minTouch : size;
+    Widget slotFace;
+    if (item != null) {
+      slotFace = Stack(
+        fit: StackFit.expand,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(4),
+              child: EquipmentIcon(
+              item: item!,
+              size: size - 8,
+              hero: hero,
+            ),
+          ),
+          if (item!.effectiveItemLevel > 0)
+            Positioned(
+              right: 2,
+              bottom: 1,
+              child: Text(
+                '${item!.effectiveItemLevel}',
+                style: GameTheme.body(size: 9, color: GameTheme.parchment),
+              ),
+            ),
+        ],
+      );
+    } else if (labeled || blockedOh) {
+      slotFace = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (emptyIcon != null)
+            Opacity(
+              opacity: blockedOh ? 0.2 : 0.22,
+              child: KenneySprite(asset: emptyIcon, size: size * 0.38),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Text(
+              short,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+            ),
+          ),
+        ],
+      );
+    } else if (emptyIcon != null) {
+      slotFace = Opacity(
+        opacity: 0.28,
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: KenneySprite(asset: emptyIcon, size: size - 12),
+        ),
+      );
+    } else {
+      slotFace = Center(
+        child: Text(
+          short.length <= 4 ? short : short.substring(0, 3),
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+        ),
+      );
+    }
+
     final body = Semantics(
-      button: onTap != null || onUnequip != null,
+      button: !blockedOh && (onTap != null || onUnequip != null),
       label: a11y,
-      onTap: onTap,
+      onTap: blockedOh ? null : onTap,
       excludeSemantics: true,
       child: SizedBox(
         width: hit,
         height: hit,
         child: InkWell(
-          onTap: onTap,
+          onTap: blockedOh ? null : onTap,
           child: Center(
-            child: Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                color: GameTheme.panelInset,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: selected ? GameTheme.torchHot : border,
-                  width: selected ? 2 : 1.4,
+            child: Opacity(
+              opacity: blockedOh ? 0.45 : 1,
+              child: Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  color: GameTheme.panelInset,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: selected && !blockedOh
+                        ? GameTheme.torchHot
+                        : border,
+                    width: selected && !blockedOh ? 2 : 1.4,
+                  ),
+                  boxShadow: selected && !blockedOh
+                      ? [
+                          BoxShadow(
+                            color: GameTheme.torch.withValues(alpha: 0.28),
+                            blurRadius: 8,
+                          ),
+                        ]
+                      : null,
                 ),
-                boxShadow: selected
-                    ? [
-                        BoxShadow(
-                          color: GameTheme.torch.withValues(alpha: 0.28),
-                          blurRadius: 8,
-                        ),
-                      ]
-                    : null,
+                clipBehavior: Clip.hardEdge,
+                child: slotFace,
               ),
-              clipBehavior: Clip.hardEdge,
-              child: item != null
-                  ? Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: KenneySprite(
-                            asset: KenneyAssets.equipmentIconFor(item!),
-                            size: size - 8,
-                          ),
-                        ),
-                        if (item!.effectiveItemLevel > 0)
-                          Positioned(
-                            right: 2,
-                            bottom: 1,
-                            child: Text(
-                              '${item!.effectiveItemLevel}',
-                              style: GameTheme.body(
-                                size: 9,
-                                color: GameTheme.parchment,
-                              ),
-                            ),
-                          ),
-                      ],
-                    )
-                  : labeled
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (emptyIcon != null)
-                          Opacity(
-                            opacity: 0.22,
-                            child: KenneySprite(
-                              asset: emptyIcon,
-                              size: size * 0.38,
-                            ),
-                          ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: Text(
-                            short,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GameTheme.body(
-                              size: 10,
-                              color: GameTheme.parchmentDim,
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : emptyIcon != null
-                  ? Opacity(
-                      opacity: 0.28,
-                      child: Padding(
-                        padding: const EdgeInsets.all(6),
-                        child: KenneySprite(asset: emptyIcon, size: size - 12),
-                      ),
-                    )
-                  : Center(
-                      child: Text(
-                        short.length <= 4 ? short : short.substring(0, 3),
-                        textAlign: TextAlign.center,
-                        style: GameTheme.body(
-                          size: 10,
-                          color: GameTheme.parchmentDim,
-                        ),
-                      ),
-                    ),
             ),
           ),
         ),
       ),
     );
 
+    if (blockedOh) {
+      return Tooltip(
+        message: 'Off-hand locked — two-hand weapon equipped',
+        child: body,
+      );
+    }
     if (item == null) {
       return Tooltip(message: 'Empty $short — tap to browse bag', child: body);
     }

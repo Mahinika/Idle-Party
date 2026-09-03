@@ -9,6 +9,7 @@ import '../../core/market_listings_service.dart';
 import '../../models/hero.dart';
 import '../../models/loot.dart';
 import '../../models/market_listing.dart';
+import '../equipment_icon.dart';
 import '../game_theme.dart';
 import '../kenney_assets.dart';
 import '../kenney_button.dart';
@@ -303,10 +304,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          KenneySprite(
-            asset: KenneyAssets.equipmentIconFor(item),
-            size: 28,
-          ),
+          EquipmentIcon(item: item, size: 28),
           const SizedBox(width: 8),
           Expanded(
             child: Column(

@@ -62,12 +62,7 @@ void main() {
     expect(mageStaff.affinity, 'mage');
     expect(tankShield.affinity, 'warrior');
     expect(tankShield.offHandKind, OffHandKind.shield);
-    expect(
-      mageStaff.weaponType == WeaponType.staff ||
-          mageStaff.weaponType == WeaponType.sword ||
-          mageStaff.weaponType == WeaponType.dagger,
-      isTrue,
-    );
+    expect(mageStaff.weaponType, WeaponType.staff);
     expect(
       mageStaff.intellectBonus + mageStaff.spellPowerBonus,
       greaterThan(0),

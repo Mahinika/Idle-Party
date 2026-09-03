@@ -9,6 +9,7 @@ import 'anchor_table.dart';
 import 'character_layer.dart';
 import 'character_visual_pose.dart';
 import 'hero_anim_controller.dart';
+import 'owned_gear_assets.dart';
 import 'hero_anim_state.dart';
 
 /// Canvas painter for modular layered heroes (dungeon path).
@@ -21,10 +22,16 @@ abstract final class CharacterVisualPainter {
     CharacterLayerId.mainHand,
   };
 
-  /// Owned denser bodies already paint hair/hood/armor — Kenney helm/cape/hand
-  /// tiles read as floating icons on the denser silhouette. No Kenney overlays
-  /// until matching owned weapon art exists.
-  static const Set<CharacterLayerId> kOwnedGearOverlayLayers = {};
+  /// Owned 128×128 overlays drawn on denser bodies (not Kenney atlas cells).
+  static const Set<CharacterLayerId> kOwnedGearOverlayLayers = {
+    CharacterLayerId.cape,
+    CharacterLayerId.legs,
+    CharacterLayerId.torso,
+    CharacterLayerId.gloves,
+    CharacterLayerId.head,
+    CharacterLayerId.offHand,
+    CharacterLayerId.mainHand,
+  };
 
   /// Full Kenney paper-doll stack (fallback when no class sprite).
   static void paint(
@@ -53,7 +60,69 @@ abstract final class CharacterVisualPainter {
     paintPose(canvas, atlas, center, size, pose: pose, alpha: alpha);
   }
 
-  /// Anchored gear only — for hybrid (class PNG / owned body + equipment).
+  /// Denser owned body + matching 128×128 gear overlays (GEAR and dungeon).
+  static void paintOwnedHero(
+    Canvas canvas,
+    Offset center,
+    double size, {
+    required ui.Image body,
+    required Map<String, ui.Image> images,
+    required CharacterVisualPose pose,
+    double alpha = 1,
+  }) {
+    final basePaint = Paint()
+      ..filterQuality = FilterQuality.none
+      ..isAntiAlias = false
+      ..color = Color.fromRGBO(255, 255, 255, alpha);
+    final dst = Rect.fromCenter(center: center, width: size, height: size);
+
+    ui.Image? overlayImage(String? path) {
+      if (path == null) return null;
+      return images[path] ?? images[OwnedGearAssets.idleFallback(path)];
+    }
+
+    if (pose.flipX) {
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.scale(-1, 1);
+      canvas.translate(-center.dx, -center.dy);
+    }
+
+    for (final layer in pose.orderedLayers()) {
+      if (layer.id == CharacterLayerId.body) {
+        canvas.drawImageRect(
+          body,
+          Rect.fromLTWH(0, 0, body.width.toDouble(), body.height.toDouble()),
+          dst,
+          basePaint,
+        );
+        continue;
+      }
+      if (!kOwnedGearOverlayLayers.contains(layer.id)) continue;
+      final img = overlayImage(layer.ownedAsset);
+      if (img == null) continue;
+      final p = Paint()
+        ..filterQuality = FilterQuality.none
+        ..isAntiAlias = false
+        ..color = Color.fromRGBO(255, 255, 255, alpha);
+      final tint = layer.tint;
+      if (tint != null) {
+        p.colorFilter = ColorFilter.mode(tint, BlendMode.modulate);
+      }
+      canvas.drawImageRect(
+        img,
+        Rect.fromLTWH(0, 0, img.width.toDouble(), img.height.toDouble()),
+        dst,
+        p,
+      );
+    }
+
+    if (pose.flipX) {
+      canvas.restore();
+    }
+  }
+
+  /// Anchored gear only — for hybrid (class PNG / Kenney body + equipment).
   static void paintGearOverlays(
     Canvas canvas,
     ui.Image atlas,

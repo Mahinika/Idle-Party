@@ -64,9 +64,10 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 ## Character visuals (dungeon)
 
 Layered Canvas heroes: `lib/visual/` + `docs/CHARACTER_VISUALS.md`.
-Dungeon prefers Phase 3 owned bodies (`assets/custom/char/`) + gear overlays;
-class PNG / Kenney paper-doll are fallbacks. Never a Class×Weapon sheet.
-Enemies are a separate art pass.
+Dungeon, GEAR, and party HUD share `paintOwnedHero` (undertunic body +
+equipped 128×128 overlays, including common gear). Kenney 16×16 tiles are
+fallback only — never pasted on denser bodies. Items share looks via
+`visualSetId`. Enemies are a separate art pass.
 
 ## Build & Test
 
@@ -101,7 +102,7 @@ flutter test test/ship_smoke_test.dart
 
 Skills under `.cursor/skills/`: domain (`spatial-combat-change`, `add-ability`,
 `new-dungeon`, `zone-art-identity`, `save-migrate`, `class-audit`, `assets-legal`,
-`flutter-verify`, `a56-playtest`, `browser-playtest`, `hub-smoke`, `play-store-prep`, `init`,
+`character-paper-doll`, `flutter-verify`, `a56-playtest`, `browser-playtest`, `hub-smoke`, `play-store-prep`, `init`,
 `repo-audit-and-cleaning`) and
 Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 `grinding-until-pass`, `babysitting-pr`, `parallel-ci-triage`,

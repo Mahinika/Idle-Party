@@ -1,3 +1,4 @@
+import '../models/loot.dart';
 import 'body_family.dart';
 import 'equipment_model_catalog.dart';
 import 'hero_anim_state.dart';
@@ -90,6 +91,21 @@ abstract final class OwnedGearAssets {
     return _sharedStems.contains(base);
   }
 
+  /// PNG stem on disk: extract tiers, authored weapons, or `{base}_t0` for
+  /// legacy generated names (old saves may still hold `shield_stormwall`).
+  static String shippedFileStem(String visualSetId) {
+    if (isCatalogTierId(visualSetId)) return silhouetteId(visualSetId);
+    if (EquipmentModelCatalog.authoredSharedIds.contains(visualSetId)) {
+      return visualSetId;
+    }
+    final base = EquipmentModelCatalog.baseToken(visualSetId);
+    if (_sharedStems.contains(base) ||
+        EquipmentModelCatalog.familyBases.contains(base)) {
+      return '${base}_t0';
+    }
+    return visualSetId;
+  }
+
   static String? pathFor({
     required String visualSetId,
     required BodyFamily family,
@@ -100,26 +116,18 @@ abstract final class OwnedGearAssets {
     // Shoulders / belt fold into chest+legs art — no extra owned PNG.
     if (stem == 'shoulder' || stem == 'waist') return null;
     final a = animFile(anim);
-    // Named variants use the full visualSetId as filename stem.
-    // Classic *_tN ids still silhouette-map to shipped t0/t2 art.
-    final fileStem =
-        isCatalogTierId(visualSetId) ? silhouetteId(visualSetId) : visualSetId;
+    final fileStem = shippedFileStem(visualSetId);
     if (isSharedSet(visualSetId)) {
       return sharedGear(fileStem, a);
     }
     return familyGear(family, fileStem, a);
   }
 
-  /// Precache list (idle/walk/attack × tier silhouettes + named variants).
+  /// Precache list (idle/walk/attack × extract tiers + authored weapons only).
   static List<String> get allAssetPaths {
     final out = <String>{};
     for (final family in BodyFamily.values) {
       for (final id in kFamilySetIds) {
-        for (final anim in kAnims) {
-          out.add(familyGear(family, id, anim));
-        }
-      }
-      for (final id in EquipmentModelCatalog.allFamilyVariantIds) {
         for (final anim in kAnims) {
           out.add(familyGear(family, id, anim));
         }
@@ -130,7 +138,7 @@ abstract final class OwnedGearAssets {
         out.add(sharedGear(id, anim));
       }
     }
-    for (final id in EquipmentModelCatalog.allSharedVariantIds) {
+    for (final id in EquipmentModelCatalog.authoredSharedIds) {
       for (final anim in kAnims) {
         out.add(sharedGear(id, anim));
       }
@@ -141,4 +149,41 @@ abstract final class OwnedGearAssets {
   /// If [path] is missing, try the idle clip of the same set.
   static String idleFallback(String path) =>
       path.replaceFirst(RegExp(r'_(walk|attack)\.png$'), '_idle.png');
+
+  /// Tight 64×64 crop (`*_icon.png`) of the same overlay the doll uses.
+  /// Hands / jewelry / flask / folded slots stay Kenney.
+  static String? iconPathFor(EquipmentItem item, {BodyFamily? family}) {
+    var id = item.visualSetId;
+    if (id == null || id.isEmpty || id == 'none') {
+      final stem = EquipmentModelCatalog.weaponArtStem(item.weaponType);
+      if (stem == null) return null;
+      if (item.slot != EquipmentSlot.weapon &&
+          item.slot != EquipmentSlot.ranged &&
+          !(item.slot == EquipmentSlot.offHand &&
+              item.offHandKind == OffHandKind.weapon)) {
+        return null;
+      }
+      id = '${stem}_t0';
+    } else {
+      final expected = EquipmentModelCatalog.weaponArtStem(item.weaponType);
+      if (expected != null &&
+          (item.slot == EquipmentSlot.weapon ||
+              item.slot == EquipmentSlot.ranged ||
+              (item.slot == EquipmentSlot.offHand &&
+                  item.offHandKind == OffHandKind.weapon)) &&
+          EquipmentModelCatalog.baseToken(id) != expected) {
+        id = '${expected}_t0';
+      }
+    }
+    final stem = EquipmentModelCatalog.baseToken(id);
+    if (stem == 'hands' || stem == 'shoulder' || stem == 'waist') return null;
+    final fam = family ?? BodyFamilyCatalog.familyForAffinity(item.affinity);
+    final idle = pathFor(
+      visualSetId: id,
+      family: fam,
+      anim: HeroAnimKind.idle,
+    );
+    if (idle == null) return null;
+    return idle.replaceFirst('_idle.png', '_icon.png');
+  }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/loot.dart';
 import 'body_family.dart';
 import 'character_layer.dart';
+import 'equipment_model_catalog.dart';
 import 'hero_anim_state.dart';
 import 'owned_gear_assets.dart';
 
@@ -39,9 +40,16 @@ class EquipmentVisualDef {
 /// Resolves [EquipmentItem] → visual set id and catalog def.
 abstract final class EquipmentVisualResolver {
   /// Derive a stable visual set id without requiring per-drop art.
+  ///
+  /// Stamped [EquipmentItem.visualSetId] wins when its art stem matches the
+  /// item type. Stale loot (e.g. thrown stamped as `bow_*`) remaps so save
+  /// and paint stay honest.
   static String resolveId(EquipmentItem item) {
-    if (item.visualSetId != null && item.visualSetId!.isNotEmpty) {
-      return item.visualSetId!;
+    final vis = item.visualSetId;
+    if (vis != null && vis.isNotEmpty) {
+      final fixed = _coerceStem(item, vis);
+      if (fixed != null) return fixed;
+      return vis;
     }
     final tier = item.rarity.index.clamp(0, 3);
     return switch (item.slot) {
@@ -59,18 +67,32 @@ abstract final class EquipmentVisualResolver {
     };
   }
 
+  /// When [vis] stem disagrees with item type, return a corrected id.
+  static String? _coerceStem(EquipmentItem item, String vis) {
+    final token = EquipmentModelCatalog.baseToken(vis);
+    if (item.slot == EquipmentSlot.weapon ||
+        item.slot == EquipmentSlot.ranged ||
+        (item.slot == EquipmentSlot.offHand &&
+            item.offHandKind == OffHandKind.weapon)) {
+      final expected = EquipmentModelCatalog.weaponArtStem(item.weaponType);
+      if (expected != null && token != expected) {
+        return '${expected}_t0';
+      }
+      return null;
+    }
+    if (item.slot == EquipmentSlot.offHand) {
+      if (item.offHandKind == OffHandKind.shield && token != 'shield') {
+        return 'shield_t0';
+      }
+      if (item.offHandKind == OffHandKind.frill && token != 'frill') {
+        return 'frill_t0';
+      }
+    }
+    return null;
+  }
+
   static String _weaponId(WeaponType? wt, int tier) {
-    final base = switch (wt) {
-      WeaponType.staff || WeaponType.wand => 'staff',
-      WeaponType.dagger || WeaponType.fist => 'dagger',
-      WeaponType.mace => 'mace',
-      WeaponType.axe || WeaponType.polearm => 'axe',
-      WeaponType.bow ||
-      WeaponType.crossbow ||
-      WeaponType.gun ||
-      WeaponType.thrown => 'bow',
-      _ => 'sword',
-    };
+    final base = EquipmentModelCatalog.weaponArtStem(wt) ?? 'sword';
     return '${base}_t$tier';
   }
 

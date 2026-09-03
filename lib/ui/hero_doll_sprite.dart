@@ -4,16 +4,14 @@ import 'package:flutter/material.dart';
 
 import '../models/hero.dart';
 import '../visual/body_family.dart';
+import '../visual/character_visual_painter.dart';
+import '../visual/character_visual_pose.dart';
 import '../visual/hero_anim_state.dart';
 import 'decoded_image_cache.dart';
 import 'kenney_assets.dart';
 import 'kenney_sprite.dart';
 
-/// GEAR / party HUD preview: owned denser body (`assets/custom/char/`).
-///
-/// Gear slots around the doll show what is equipped — the body is the class
-/// silhouette only (no Kenney overlay junk). Dungeon combat uses the same
-/// families with walk/attack clips in [SpatialDungeonView].
+/// GEAR / party HUD: owned body + same 128×128 gear overlays as dungeon.
 class HeroDollSprite extends StatefulWidget {
   const HeroDollSprite({
     super.key,
@@ -36,6 +34,7 @@ class HeroDollSprite extends StatefulWidget {
 
 class _HeroDollSpriteState extends State<HeroDollSprite> {
   ui.Image? _body;
+  Map<String, ui.Image> _overlays = const {};
   String? _fallbackPath;
   int _loadGen = 0;
 
@@ -72,12 +71,47 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
     final decodeW = (widget.size * 3).ceil().clamp(64, 256);
 
     ui.Image? body;
+    final overlays = <String, ui.Image>{};
     try {
       body = await DecodedImageCache.load(bodyPath, targetWidth: decodeW);
+      final pose = CharacterVisualPose.resolve(
+        hero: widget.hero,
+        anim: const HeroAnimPose(kind: HeroAnimKind.idle, frame: 0),
+        partyIndex: widget.partyIndex,
+        owned: true,
+      );
+      final paths = <String>{
+        for (final layer in pose.layers)
+          if (layer.ownedAsset != null) layer.ownedAsset!,
+      };
+      for (final path in paths) {
+        try {
+          overlays[path] = await DecodedImageCache.load(
+            path,
+            targetWidth: decodeW,
+          );
+        } catch (_) {
+          final idle = path.replaceFirst(
+            RegExp(r'_(walk|attack)\.png$'),
+            '_idle.png',
+          );
+          if (idle != path) {
+            try {
+              overlays[idle] = await DecodedImageCache.load(
+                idle,
+                targetWidth: decodeW,
+              );
+            } catch (_) {}
+          }
+        }
+      }
     } catch (_) {}
 
     if (!mounted || gen != _loadGen) return;
-    setState(() => _body = body);
+    setState(() {
+      _body = body;
+      _overlays = overlays;
+    });
   }
 
   @override
@@ -89,7 +123,12 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
     if (body != null) {
       child = CustomPaint(
         size: Size.square(widget.size),
-        painter: _OwnedBodyPainter(body: body),
+        painter: _OwnedDollPainter(
+          body: body,
+          overlays: _overlays,
+          hero: widget.hero,
+          partyIndex: widget.partyIndex,
+        ),
       );
     } else {
       final asset =
@@ -112,26 +151,42 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
   }
 }
 
-class _OwnedBodyPainter extends CustomPainter {
-  const _OwnedBodyPainter({required this.body});
+class _OwnedDollPainter extends CustomPainter {
+  const _OwnedDollPainter({
+    required this.body,
+    required this.overlays,
+    required this.hero,
+    required this.partyIndex,
+  });
 
   final ui.Image body;
+  final Map<String, ui.Image> overlays;
+  final PartyHero hero;
+  final int partyIndex;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final drawSize = size.shortestSide;
-    canvas.drawImageRect(
-      body,
-      Rect.fromLTWH(0, 0, body.width.toDouble(), body.height.toDouble()),
-      Rect.fromCenter(center: center, width: drawSize, height: drawSize),
-      Paint()
-        ..filterQuality = FilterQuality.none
-        ..isAntiAlias = false,
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: const HeroAnimPose(kind: HeroAnimKind.idle, frame: 0),
+      partyIndex: partyIndex,
+      owned: true,
+    );
+    CharacterVisualPainter.paintOwnedHero(
+      canvas,
+      Offset(size.width / 2, size.height / 2),
+      size.shortestSide,
+      body: body,
+      images: overlays,
+      pose: pose,
     );
   }
 
   @override
-  bool shouldRepaint(covariant _OwnedBodyPainter oldDelegate) =>
-      !identical(body, oldDelegate.body);
+  bool shouldRepaint(covariant _OwnedDollPainter oldDelegate) =>
+      !identical(body, oldDelegate.body) ||
+      !identical(overlays, oldDelegate.overlays) ||
+      hero.id != oldDelegate.hero.id ||
+      hero.equipped != oldDelegate.hero.equipped ||
+      partyIndex != oldDelegate.partyIndex;
 }

@@ -83,7 +83,15 @@ Or just watch the attached `flutter run` terminal. Release / Play builds stay qu
 
 - Copy / menu labels: hot **restart** (`R`) so the owner sees new English.
 - Small widget tweaks: hot **reload** (`r`) is enough.
-- Then a short phone test list (Swedish). Wait. No APK unless they asked.
+- **New / deleted PNGs or asset paths:** full `flutter run` (or
+  `--purge-persistent-cache`). Hot reload will **not** ship new art.
+- **Never ask the owner to look** until this session shows the app is
+  live (e.g. `Syncing files to device` / `Flutter run key commands` /
+  `[IP]` boot line). If `flutter run` already exited or “Lost
+  connection”, relaunch first — an idle emulator with an old APK is not
+  “the new build”.
+- Then a short phone test list (Swedish). Wait. No sideload APK unless
+  they asked.
 
 ## Related
 

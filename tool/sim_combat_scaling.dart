@@ -515,7 +515,7 @@ void _simOffline({
   required DungeonMode mode,
   required int floor,
 }) {
-  print('$label');
+  print(label);
   int? prevGold;
   for (final minutes in [5, 30, 60, 480]) {
     var s = GameLogic.enterDungeon(state, dungeonId: dungeonId);

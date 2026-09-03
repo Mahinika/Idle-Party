@@ -78,9 +78,14 @@ flutter:
     - assets/custom/enemies/
     - assets/custom/heroes/
     - assets/custom/char/warrior/
+    - assets/custom/char/warrior/gear/
     - assets/custom/char/healer/
+    - assets/custom/char/healer/gear/
     - assets/custom/char/mage/
+    - assets/custom/char/mage/gear/
     - assets/custom/char/rogue/
+    - assets/custom/char/rogue/gear/
+    - assets/custom/char/gear/
     - assets/custom/ui/
     - assets/custom/ui/backdrops/
     - assets/custom/dungeon/sandy/tiles/

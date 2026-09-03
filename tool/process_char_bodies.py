@@ -41,6 +41,8 @@ def clear_corner_bg(im: Image.Image) -> Image.Image:
 
 
 for p in root.rglob("*.png"):
+    if any(part in ("_src", "gear") for part in p.parts):
+        continue
     im = clear_corner_bg(Image.open(p))
     bbox = im.getbbox()
     if bbox:

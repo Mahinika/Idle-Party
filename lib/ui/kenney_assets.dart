@@ -7,6 +7,8 @@ import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/zone_art.dart';
 import '../spatial/tile_map.dart';
+import '../visual/body_family.dart';
+import '../visual/owned_gear_assets.dart';
 import 'custom_assets.dart';
 
 /// Central Kenney Tiny Dungeon + UI asset catalog.
@@ -840,7 +842,14 @@ abstract final class KenneyAssets {
     LootRarity.legendary => chestClosed,
   };
 
-  static String equipmentIconFor(EquipmentItem item) {
+  static String equipmentIconFor(EquipmentItem item, {BodyFamily? family}) {
+    final owned = OwnedGearAssets.iconPathFor(item, family: family);
+    if (owned != null) return owned;
+    return kenneyEquipmentIconFor(item);
+  }
+
+  /// Kenney / custom 16×16 fallback (no paper-doll overlay).
+  static String kenneyEquipmentIconFor(EquipmentItem item) {
     if (item.iconId != null) {
       switch (item.iconId) {
         case 'bow':

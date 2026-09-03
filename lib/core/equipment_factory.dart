@@ -12,6 +12,7 @@ import '../models/loot.dart';
 import '../models/proficiency.dart';
 import '../visual/equipment_model_catalog.dart';
 import '../visual/equipment_visual_resolver.dart';
+import '../visual/owned_gear_assets.dart';
 import 'keystone.dart';
 
 /// Affix definition loaded from `item_affixes.json`.
@@ -317,10 +318,8 @@ class EquipmentFactory {
         return (WeaponType.dagger, WeaponHanded.oneHand);
       }(),
       HeroRole.mage => () {
-        final roll = random.nextDouble();
-        // Staff-first fantasy on the doll — sword reads as warrior gear.
-        if (roll < 0.78) return (WeaponType.staff, WeaponHanded.twoHand);
-        return (WeaponType.dagger, WeaponHanded.oneHand);
+        // Mage fantasy on the doll is a staff — never dagger/sword silhouettes.
+        return (WeaponType.staff, WeaponHanded.twoHand);
       }(),
     };
   }
@@ -356,9 +355,8 @@ class EquipmentFactory {
           ? _pick1hAxeSwordMace(roll)
           : _pick2hAxeSwordMacePole(roll),
       HeroClassId.shaman => _pickShaman1h(roll),
-      HeroClassId.mage || HeroClassId.warlock => roll < 0.78
-          ? (WeaponType.staff, WeaponHanded.twoHand)
-          : (WeaponType.dagger, WeaponHanded.oneHand),
+      HeroClassId.mage || HeroClassId.warlock =>
+          (WeaponType.staff, WeaponHanded.twoHand),
       HeroClassId.druid =>
         spec.id == HeroSpecId.feral || spec.id == HeroSpecId.guardian
             ? (WeaponType.polearm, WeaponHanded.twoHand)
@@ -1185,18 +1183,20 @@ class EquipmentFactory {
       affixSuffixId: suffix?.id,
       setId: setId,
     );
-    // Preserve a data-driven visualSetId override (e.g. named weapon models
-    // like "sword_thunderfury"). Otherwise derive base id then pick a
-    // catalog model variant so loot of the same type can look different.
+    // Preserve a data-driven visualSetId override (e.g. authored sword models).
+    // Shared weapons pick from the short catalog; armor stays on t0/t2 extract.
     if (item.visualSetId?.isNotEmpty == true) {
       return item.copyWith(visualSetId: item.visualSetId);
     }
     final baseId = EquipmentVisualResolver.resolveId(item);
-    final modelId = EquipmentModelCatalog.pickVariant(
-      baseId,
-      random,
-      rarityTier: rarity.index,
-    );
+    final stem = EquipmentModelCatalog.baseToken(baseId);
+    final modelId = EquipmentModelCatalog.sharedBases.contains(stem)
+        ? EquipmentModelCatalog.pickVariant(
+            baseId,
+            random,
+            rarityTier: rarity.index,
+          )
+        : OwnedGearAssets.silhouetteId(baseId);
     return item.copyWith(visualSetId: modelId);
   }
 }

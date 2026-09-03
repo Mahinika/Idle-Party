@@ -531,4 +531,11 @@ abstract final class CustomAssets {
     if (!usesCustomDungeonArt(dungeonId)) return null;
     return dungeonHubIcon(dungeonId);
   }
+
+  /// Owned denser paper-doll overlays (`assets/custom/char/…/gear/`).
+  static String ownedFamilyGear(String family, String setId, String anim) =>
+      '$_root/char/$family/gear/${setId}_$anim.png';
+
+  static String ownedSharedGear(String setId, String anim) =>
+      '$_root/char/gear/${setId}_$anim.png';
 }

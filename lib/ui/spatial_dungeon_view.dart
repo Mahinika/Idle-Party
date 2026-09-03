@@ -17,9 +17,10 @@ import '../spatial/spatial_combat.dart';
 import '../spatial/tile_map.dart';
 import '../visual/body_family.dart';
 import '../visual/character_visual_painter.dart';
+import '../visual/character_visual_pose.dart';
 import '../visual/hero_anim_controller.dart';
+import '../visual/owned_gear_assets.dart';
 import '../visual/hero_anim_state.dart';
-import '../visual/anchor_table.dart';
 import 'custom_assets.dart';
 import 'decoded_image_cache.dart';
 import 'dungeon_environment.dart';
@@ -228,8 +229,11 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         ..[HeroSpecId.feral] = shared[i++]
         ..[HeroSpecId.guardian] = shared[i++];
 
-      // Phase 3 denser owned bodies (family × anim) — soft-fail per path.
-      final bodyPaths = BodyFamilyCatalog.allAssetPaths;
+      // Phase 3 denser owned bodies + paper-doll overlays — soft-fail per path.
+      final bodyPaths = [
+        ...BodyFamilyCatalog.allAssetPaths,
+        ...OwnedGearAssets.allAssetPaths,
+      ];
       final bodyEntries = <MapEntry<String, ui.Image>>[];
       for (final path in bodyPaths) {
         try {
@@ -245,7 +249,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       _sharedLoaded = true;
     } else if (_bodyByPath.isEmpty) {
       // Retry denser bodies if the first shared load ran before assets landed.
-      final bodyPaths = BodyFamilyCatalog.allAssetPaths;
+      final bodyPaths = [
+        ...BodyFamilyCatalog.allAssetPaths,
+        ...OwnedGearAssets.allAssetPaths,
+      ];
       final bodyEntries = <MapEntry<String, ui.Image>>[];
       for (final path in bodyPaths) {
         try {
@@ -1848,34 +1855,51 @@ class _TileRoomPainter extends CustomPainter {
         }
         bodyImg ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
         // Owned denser bodies read better slightly larger than Kenney tiles.
-        final scale = (usingOwnedBody ? 1.45 : 0.95) *
+        final scale = (usingOwnedBody ? 1.72 : 0.95) *
             (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
         if (bodyImg != null) {
-          drawSprite(
-            bodyImg,
-            c,
-            scale,
-            alpha: paintAlpha,
-            tint: tint,
-            flipX: flipX,
-          );
-          CharacterVisualPainter.paintGearOverlays(
-            canvas,
-            charAtlas,
-            c,
-            tile * scale,
-            hero: partyHero,
-            signals: signals,
-            flipX: flipX,
-            partyIndex: idx,
-            alpha: paintAlpha,
-            walkPhase: walkPhase,
-            cacheId: hero.id,
-            poseOverride: anim,
-            anchorProfile: usingOwnedBody
-                ? BodyAnchorProfile.owned
-                : BodyAnchorProfile.kenney,
-          );
+          if (usingOwnedBody) {
+            final ownedPose = CharacterVisualPoseCache.resolve(
+              heroId: hero.id,
+              hero: partyHero,
+              anim: anim,
+              flipX: flipX,
+              partyIndex: idx,
+              owned: true,
+            );
+            CharacterVisualPainter.paintOwnedHero(
+              canvas,
+              c,
+              tile * scale,
+              body: bodyImg,
+              images: bodyByPath,
+              pose: ownedPose,
+              alpha: paintAlpha,
+            );
+          } else {
+            drawSprite(
+              bodyImg,
+              c,
+              scale,
+              alpha: paintAlpha,
+              tint: tint,
+              flipX: flipX,
+            );
+            CharacterVisualPainter.paintGearOverlays(
+              canvas,
+              charAtlas,
+              c,
+              tile * scale,
+              hero: partyHero,
+              signals: signals,
+              flipX: flipX,
+              partyIndex: idx,
+              alpha: paintAlpha,
+              walkPhase: walkPhase,
+              cacheId: hero.id,
+              poseOverride: anim,
+            );
+          }
         } else {
           CharacterVisualPainter.paint(
             canvas,

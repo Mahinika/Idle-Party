@@ -27,6 +27,7 @@ The human **vibe-codes**: they describe goals in everyday language. They do **no
 | combat feels wrong / abilities / AFK | `spatial-combat-change`, maybe `systematic-debugging` |
 | new spell / kit broken | `add-ability` |
 | new dungeon / zone looks same | `new-dungeon`, `zone-art-identity`, `assets-legal` |
+| dockan / gear syns inte / hjälm / undertunic | `character-paper-doll` + `assets-legal` |
 | save / ascend / lost progress | `save-migrate` |
 | class fantasy / WotLK | `class-audit` |
 | “does it work?” / verify | `flutter-verify`; UI → `a56-playtest` / `hub-smoke` |

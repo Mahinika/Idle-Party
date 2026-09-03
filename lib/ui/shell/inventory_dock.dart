@@ -9,10 +9,9 @@ import '../../models/hero.dart';
 import '../../models/loot.dart';
 import '../../models/proficiency.dart';
 import '../character_equip_panel.dart';
+import '../equipment_icon.dart';
 import '../game_theme.dart';
-import '../kenney_assets.dart';
 import '../kenney_button.dart';
-import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
 import '../meta/roster_panel.dart';
 import '../item_tooltip.dart';
@@ -1050,9 +1049,10 @@ class _BagSlot extends StatelessWidget {
                       Center(
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 10),
-                          child: KenneySprite(
-                            asset: KenneyAssets.equipmentIconFor(item!),
+                          child: EquipmentIcon(
+                            item: item!,
                             size: 26,
+                            hero: hero,
                           ),
                         ),
                       ),
@@ -1208,10 +1208,7 @@ class _CombineSlot extends StatelessWidget {
               ),
             ),
             if (item != null) ...[
-              KenneySprite(
-                asset: KenneyAssets.equipmentIconFor(item!),
-                size: 24,
-              ),
+              EquipmentIcon(item: item!, size: 24),
               const SizedBox(width: 6),
               Expanded(
                 child: Column(

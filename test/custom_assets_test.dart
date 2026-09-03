@@ -84,6 +84,8 @@ void main() {
       CustomAssets.petCombatHunterBeast,
       CustomAssets.petCombatTotem,
       CustomAssets.petCombatSpiritWolf,
+      CustomAssets.ownedFamilyGear('warrior', 'helm_t0', 'idle'),
+      CustomAssets.ownedSharedGear('sword_t0', 'idle'),
     };
 
     for (final path in paths) {

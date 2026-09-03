@@ -1,9 +1,14 @@
 import 'dart:math';
 
+import '../models/loot.dart';
+
 /// Named visual models per base item type (WoW-style display ids).
 ///
 /// Base token = first segment of [visualSetId] (`sword_thunderfury` → `sword`).
 /// Catalog ids (`sword_t0`) stay as the default / common silhouette.
+///
+/// Armor: only family `*_t0` / `*_t2` extracts (rarity tint for variety).
+/// Weapons: `*_t0` plus a few authored models — no ImageDraw mass variants.
 abstract final class EquipmentModelCatalog {
   /// Shared weapons / off-hands under `assets/custom/char/gear/`.
   static const List<String> sharedBases = [
@@ -26,189 +31,38 @@ abstract final class EquipmentModelCatalog {
     'hands',
   ];
 
+  /// Authored weapon models kept in the loot pool (plus each base `*_t0`).
+  static const Set<String> authoredSharedIds = {
+    'sword_thunderfury',
+    'sword_warglaive',
+  };
+
   static const Map<String, List<String>> variants = {
-    'sword': [
-      'sword_t0',
-      'sword_thunderfury',
-      'sword_warglaive',
-      'sword_emberfang',
-      'sword_crystalblade',
-      'sword_boneedge',
-      'sword_runebane',
-      'sword_ashcleaver',
-      'sword_frostbite',
-      'sword_nightreaver',
-      'sword_sunflare',
-      'sword_voidspike',
-    ],
-    'staff': [
-      'staff_t0',
-      'staff_frostfire',
-      'staff_oakroot',
-      'staff_arcspire',
-      'staff_shadowcrook',
-      'staff_emberwand',
-      'staff_tidebranch',
-      'staff_crystalrod',
-      'staff_bonespine',
-      'staff_sunshaft',
-      'staff_voidpillar',
-      'staff_stormreed',
-    ],
-    'dagger': [
-      'dagger_t0',
-      'dagger_shadowfang',
-      'dagger_venomtip',
-      'dagger_quicksteel',
-      'dagger_bonepin',
-      'dagger_emberknife',
-      'dagger_frostneedle',
-      'dagger_crystalspike',
-      'dagger_nightshiv',
-      'dagger_sunblade',
-      'dagger_voidrazor',
-      'dagger_tideedge',
-    ],
-    'mace': [
-      'mace_t0',
-      'mace_ironmaul',
-      'mace_skullcrush',
-      'mace_emberhammer',
-      'mace_frostgavel',
-      'mace_crystalhead',
-      'mace_boneclub',
-      'mace_sunmace',
-      'mace_voidmallet',
-      'mace_tidecrusher',
-      'mace_runebreaker',
-      'mace_stormflail',
-    ],
-    'axe': [
-      'axe_t0',
-      'axe_warcleave',
-      'axe_bloodbite',
-      'axe_emberhatchet',
-      'axe_frostchop',
-      'axe_crystaledge',
-      'axe_bonesaw',
-      'axe_sunaxe',
-      'axe_voidhook',
-      'axe_tidebite',
-      'axe_runesplitter',
-      'axe_stormcleaver',
-    ],
-    'bow': [
-      'bow_t0',
-      'bow_longshot',
-      'bow_shadowstring',
-      'bow_emberarc',
-      'bow_frostlimb',
-      'bow_crystalbow',
-      'bow_bonebow',
-      'bow_sunarc',
-      'bow_voidstring',
-      'bow_tidebow',
-      'bow_runebow',
-      'bow_stormshaft',
-    ],
-    'shield': [
-      'shield_t0',
-      'shield_stormwall',
-      'shield_ironbulwark',
-      'shield_emberguard',
-      'shield_frostplate',
-      'shield_crystalward',
-      'shield_boneguard',
-      'shield_sunshield',
-      'shield_voidaegis',
-      'shield_tidewall',
-      'shield_runeguard',
-      'shield_towerkite',
-    ],
-    'frill': [
-      'frill_t0',
-      'frill_tome',
-      'frill_orb',
-      'frill_idol',
-      'frill_embercharm',
-      'frill_frostsigil',
-      'frill_crystalbauble',
-      'frill_bonerelic',
-      'frill_suncharm',
-      'frill_voidtotem',
-      'frill_tidecharm',
-      'frill_runestone',
-    ],
-    'helm': [
-      'helm_t0',
-      'helm_spiked',
-      'helm_visor',
-      'helm_horns',
-      'helm_cowl',
-      'helm_crown',
-      'helm_mask',
-      'helm_plume',
-      'helm_winged',
-      'helm_banded',
-      'helm_crest',
-      'helm_hooded',
-    ],
-    'chest': [
-      'chest_t0',
-      'chest_plated',
-      'chest_studded',
-      'chest_robe',
-      'chest_scale',
-      'chest_chain',
-      'chest_vest',
-      'chest_tabard',
-      'chest_lamellar',
-      'chest_cuirass',
-      'chest_mantle',
-      'chest_brigandine',
-    ],
-    'legs': [
-      'legs_t0',
-      'legs_plated',
-      'legs_padded',
-      'legs_skirt',
-      'legs_scale',
-      'legs_chain',
-      'legs_wraps',
-      'legs_greaves',
-      'legs_tassets',
-      'legs_hose',
-      'legs_kilt',
-      'legs_cuisses',
-    ],
-    'cloak': [
-      'cloak_t0',
-      'cloak_cape',
-      'cloak_mantle',
-      'cloak_shawl',
-      'cloak_winged',
-      'cloak_ragged',
-      'cloak_fur',
-      'cloak_silk',
-      'cloak_tabard',
-      'cloak_hooded',
-      'cloak_banner',
-      'cloak_veil',
-    ],
-    'hands': [
-      'hands_t0',
-      'hands_gauntlets',
-      'hands_gloves',
-      'hands_wraps',
-      'hands_bracers',
-      'hands_claws',
-      'hands_mitts',
-      'hands_studded',
-      'hands_scale',
-      'hands_chain',
-      'hands_silk',
-      'hands_bone',
-    ],
+    'sword': ['sword_t0', 'sword_thunderfury', 'sword_warglaive'],
+    'staff': ['staff_t0'],
+    'dagger': ['dagger_t0'],
+    'mace': ['mace_t0'],
+    'axe': ['axe_t0'],
+    'bow': ['bow_t0'],
+    'shield': ['shield_t0'],
+    'frill': ['frill_t0'],
+    'helm': ['helm_t0', 'helm_t2'],
+    'chest': ['chest_t0', 'chest_t2'],
+    'legs': ['legs_t0', 'legs_t2'],
+    'cloak': ['cloak_t0', 'cloak_t2'],
+    'hands': ['hands_t0'],
+  };
+
+  /// Art stem for a weapon type (loot + paint must agree).
+  static String? weaponArtStem(WeaponType? wt) => switch (wt) {
+    WeaponType.staff || WeaponType.wand => 'staff',
+    WeaponType.dagger || WeaponType.fist => 'dagger',
+    WeaponType.mace => 'mace',
+    WeaponType.axe || WeaponType.polearm => 'axe',
+    WeaponType.bow || WeaponType.crossbow || WeaponType.gun => 'bow',
+    WeaponType.thrown => 'dagger',
+    WeaponType.sword => 'sword',
+    null => null,
   };
 
   static String baseToken(String visualSetId) {
@@ -222,22 +76,32 @@ abstract final class EquipmentModelCatalog {
     return variants[base] ?? const <String>[];
   }
 
+  /// Whether [base] is family armor (extract tiers only — no named loot models).
+  static bool isFamilyBase(String baseOrId) =>
+      familyBases.contains(baseToken(baseOrId));
+
   /// Pick a model for loot. [resolvedBaseId] is e.g. `sword_t2` / `helm_t0`.
   ///
-  /// Always draws from the full variant pool so same-type gear looks different
-  /// even early. Rare+ leans slightly toward later (flashier) entries.
+  /// Armor always stays on the resolved tier silhouette. Shared weapons pick
+  /// from the short authored pool (`*_t0` + thunderfury / warglaive).
   static String pickVariant(
     String resolvedBaseId,
     Random rng, {
     int rarityTier = 0,
   }) {
+    final base = baseToken(resolvedBaseId);
+    if (isFamilyBase(base)) {
+      return resolvedBaseId;
+    }
     final list = variantsFor(resolvedBaseId);
     if (list.isEmpty) return resolvedBaseId;
     if (list.length == 1) return list.first;
 
-    if (rarityTier >= 2 && rng.nextDouble() < 0.4) {
-      final start = list.length ~/ 3;
-      return list[start + rng.nextInt(list.length - start)];
+    if (rarityTier >= 2 && rng.nextDouble() < 0.45) {
+      final authored = list.where((id) => id != '${base}_t0').toList();
+      if (authored.isNotEmpty) {
+        return authored[rng.nextInt(authored.length)];
+      }
     }
     return list[rng.nextInt(list.length)];
   }
@@ -248,6 +112,7 @@ abstract final class EquipmentModelCatalog {
     }
   }
 
+  /// Precache / catalog: only extract tiers, not legacy generated names.
   static Iterable<String> get allFamilyVariantIds sync* {
     for (final base in familyBases) {
       yield* variants[base] ?? const <String>[];
