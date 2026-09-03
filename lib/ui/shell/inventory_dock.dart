@@ -217,7 +217,7 @@ class _InventoryDockState extends State<InventoryDock>
       );
     }
 
-    // Phone product only: doll + actions; bag lives on its own PARTY tab.
+    // Phone product only: doll + actions; bag lives on its own GEAR → BAG tab.
     // (A side-by-side / stacked bag pane used to appear in wide browsers and
     // looked nothing like the APK the player installs.)
     return Column(

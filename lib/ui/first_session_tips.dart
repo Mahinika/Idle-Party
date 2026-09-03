@@ -67,9 +67,9 @@ class FirstSessionTips extends StatelessWidget {
       id: 'forge',
       title: 'GOLD',
       body:
-          'POWER → Gold: gold buys for this-run power (×1 / % spend / EVEN split), '
-          'KEEP for God Hand / Blessing, Relics for party auras, '
-          'Craft for lasting gear. Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
+          'POWER → Gold: gold buys this-run power (×1 / % spend / EVEN split) '
+          'and KEEP for God Hand / Blessing. Relics, Craft, and Essence are '
+          'their own POWER tabs. Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
     ),
     (
       id: 'pets',
@@ -115,9 +115,9 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'apex',
-      title: 'APEX FORGE',
+      title: 'APEX',
       body:
-          'Apex slag from Gauntlet/Crystal crafts class Apex gear in Forge. Ranks persist through Ascend.',
+          'Apex slag from Gauntlet/Crystal crafts class Apex gear in POWER → Craft. Ranks persist through Ascend.',
     ),
     (
       id: 'gauntlet',

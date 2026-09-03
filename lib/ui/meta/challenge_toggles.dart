@@ -71,10 +71,10 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
 
     final headerLabel = _expanded
         ? (activeBits.isEmpty
-              ? '▾ KEYSTONE off'
+              ? '▾ KEYSTONE +0'
               : '▾ KEYSTONE ${activeBits.join(' · ')}')
         : (activeBits.isEmpty
-              ? '▸ KEYSTONE off'
+              ? '▸ KEYSTONE +0'
               : '▸ KEYSTONE ${activeBits.join(' · ')}');
 
     return Column(

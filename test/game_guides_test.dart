@@ -11,6 +11,14 @@ void main() {
     for (final t in topics) {
       expect(t.title, isNotEmpty);
       expect(t.body.length, greaterThan(40));
+      expect(
+        t.body.toUpperCase(),
+        isNot(contains('LOADOUTS')),
+        reason: '${t.id} should not teach the hidden LOADOUTS tab',
+      );
     }
+    final basics = topics.firstWhere((t) => t.id == 'basics');
+    expect(basics.body, contains('GEAR (heroes and gear)'));
+    expect(basics.body.toUpperCase(), isNot(contains('META (')));
   });
 }

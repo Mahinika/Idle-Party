@@ -257,7 +257,8 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Junk sold for coins when bag is near full or you CLEAN BAG.',
+            'Junk sold for coins when bag is near full or you CLEAN BAG. '
+            '${state.autoSellMaxPower <= 0 ? 'Off = never auto-sells.' : 'Sells iLvl 1–${state.autoSellMaxPower} at or below the rarity cap.'}',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
@@ -291,7 +292,8 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Leftovers broken for essence after sell pass — not the same as sell.',
+            'Leftovers broken for essence after sell pass — not the same as sell. '
+            '${state.autoDisassembleMaxIlvl <= 0 ? 'Off = never auto-scraps.' : 'Scraps iLvl 1–${state.autoDisassembleMaxIlvl} at or below the rarity cap.'}',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
@@ -314,7 +316,8 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           const SizedBox(height: 8),
           Text(
             'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity), then scrap '
-            'leftovers that match disassemble filters. Market tap = gold.',
+            'leftovers that match scrap filters. Shop buys flasks and listings — '
+            'it does not tap-sell stash.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 16),

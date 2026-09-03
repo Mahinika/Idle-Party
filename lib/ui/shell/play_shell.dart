@@ -9,8 +9,6 @@ import '../is2_shell.dart';
 import 'menu_surface.dart';
 import 'play_nav.dart';
 
-export 'play_nav.dart';
-
 /// Single play-phase owner: hub or dungeon scene, one [MenuSurface], toast.
 class PlayShell extends StatefulWidget {
   const PlayShell({

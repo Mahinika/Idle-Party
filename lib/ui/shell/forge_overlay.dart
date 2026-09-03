@@ -247,6 +247,14 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                     '+${state.ascendBlessingGoldPercent}% gold',
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
+        if (GameLogic.canAscend(state))
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Ascend is the hub ASCEND button (TODAY READY) — not a buy here.',
+              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            ),
+          ),
         Builder(
           builder: (_) {
             if (GameLogic.isMaxAscension(state)) {

@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.84';
+  static const String currentVersion = '1.12.85';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.85',
+      bullets: <String>[
+        'Menus say GEAR not PARTY, Craft not Forge, and Shop never tap-sells. Guides dropped LOADOUTS ghosts. Wipe and Welcome Back point at the live tabs.',
+        'KEY +0 is a dial, not a bug. Gauntlet HUD says there is no FARM loop. KEY tab splits Keystone / Gauntlet / Rift farm / Greater prestige.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.84',
       bullets: <String>[

@@ -369,6 +369,7 @@ class DungeonTopHud extends StatelessWidget {
                                 selected: true,
                                 dense: true,
                                 interactive: false,
+                                tip: 'No FARM loop — wipe or leave returns to hub. Boss every 5 floors.',
                                 onTap: () {},
                               )
                             else if (state.inRift)
@@ -383,6 +384,7 @@ class DungeonTopHud extends StatelessWidget {
                                 selected: true,
                                 dense: true,
                                 interactive: false,
+                                tip: 'Timed kill farm — gold and gear drop mid-run.',
                                 onTap: () {},
                               )
                             else if (state.inGreaterRift)
@@ -397,6 +399,7 @@ class DungeonTopHud extends StatelessWidget {
                                 selected: true,
                                 dense: true,
                                 interactive: false,
+                                tip: 'No mid-run gear — prestige ladder only.',
                                 onTap: () {},
                               )
                             else ...[
@@ -842,7 +845,7 @@ class DungeonTopHud extends StatelessWidget {
                     GestureDetector(
                       onTap: onOpenParty,
                       child: Text(
-                        'PARTY',
+                        'GEAR',
                         style: GameTheme.pixel(
                           size: GameTheme.hudPixel,
                           color: GameTheme.clear,

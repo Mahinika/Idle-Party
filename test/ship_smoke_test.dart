@@ -139,7 +139,7 @@ void main() {
 
     final armor = GameGuides.topics.where((t) => t.id == 'armor_sets');
     if (armor.isNotEmpty) {
-      expect(armor.first.body.toLowerCase(), contains('loadouts'));
+      expect(armor.first.body.toLowerCase(), isNot(contains('loadouts')));
     }
 
     final market = GameGuides.topics.firstWhere((t) => t.id == 'market');

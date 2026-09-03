@@ -546,8 +546,8 @@ class CharacterEquipPanel extends StatelessWidget {
                 state.effectiveHeroAttackSpeed(hero).toStringAsFixed(2),
               ),
               ('LS', '${hero.gearLifestealPercent}%'),
-              ('iLvl', '${_avgItemLevel(hero)}'),
-              ('min', '${_minItemLevel(hero)}'),
+              ('iLvl avg', '${_avgItemLevel(hero)}'),
+              ('iLvl min', '${_minItemLevel(hero)}'),
             ])
               MenuChrome.chip(
                 label: entry.$1,

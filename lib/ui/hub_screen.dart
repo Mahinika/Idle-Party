@@ -351,7 +351,7 @@ class _HubScreenState extends State<HubScreen>
           const SizedBox(height: 4),
           KenneyButton(
             label: state.hardmodeLevel <= 0
-                ? 'KEY DIAL · off'
+                ? 'KEY DIAL · +0'
                 : 'KEY DIAL · +${state.hardmodeLevel}',
             tip: 'Open KEY for Soft/Hard/Brutal, Rifts, and boards',
             style: KenneyButtonStyle.grey,

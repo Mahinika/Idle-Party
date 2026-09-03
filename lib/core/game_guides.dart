@@ -33,10 +33,11 @@ abstract final class GameGuides {
           '• POWER tabs: Gold (this run), Shop (flasks and gear), '
           'Relics (party auras), Craft (lasting gear), Essence (tracks).\n'
           '• Gold buys supplies and run power. Essence buys lasting power.\n'
-          '• Bottom buttons (same in hub and dungeon): PARTY (heroes and gear), '
-          'POWER (upgrades), META (extras and Guides). In a dungeon the fourth '
-          'button is LEAVE (back to hub).\n'
-          '• A number on a button means something waits inside — PARTY 3 means '
+          '• Bottom buttons (same in hub and dungeon): GEAR (heroes and gear), '
+          'POWER (upgrades), QUESTS, MORE (Guides and Settings). KEY appears '
+          'when the party is max level. In a dungeon the fourth button is LEAVE '
+          '(back to hub).\n'
+          '• A number on a button means something waits inside — GEAR 3 means '
           '3 better items for the party. No number means nothing to do there.\n'
           '• Menus stay small at the start; more tabs appear as you unlock them.\n'
           '• You do not need to have played another RPG. Names like PROT / DISC / FIRE '
@@ -135,7 +136,7 @@ abstract final class GameGuides {
       title: 'BAG & GEAR',
       body:
           'Loot drops on the floor, then goes to your stash (BAG).\n\n'
-          '• Upgrades stay in BAG until you equip them — PARTY badge shows how '
+          '• Upgrades stay in BAG until you equip them — GEAR badge shows how '
           'many are better; open BAG and tap AUTO EQUIP (or equip one by one).\n'
           '• BAG: view and equip stash gear. CLEAN BAG sells gold then scraps essence using FILTERS.\n'
           '• Stats: plate wants Strength, leather/mail damage wants Agility, '
@@ -233,7 +234,7 @@ abstract final class GameGuides {
           'Greater Rifts, and Ashen Crown unlock when every active hero is max level '
           '— AL20 alone is not enough.\n\n'
           'Some kits also unlock from zone clears or the Prestige Shop — see each '
-          'spec’s unlock hint in PARTY.',
+          'spec’s unlock hint in GEAR → ROSTER.',
     ),
     GuideTopic(
       id: 'sanctuary',
@@ -342,8 +343,6 @@ abstract final class GameGuides {
           'Back rows, Dawn Tithe (vault + Daily Run), and more.\n'
           '• God Hand cooldown upgrades also live on Gold → KEEP — same spend, '
           'two doors into one upgrade.\n'
-          '• Loadout Folio is delisted — LOADOUTS tab is hidden; old slot '
-          'purchases still count in the save if you bought them earlier.\n'
           '• Purchases survive Ascend.\n'
           '• Unlock higher offerings as Ascension Level rises.',
     ),
@@ -358,7 +357,7 @@ abstract final class GameGuides {
           '• Bounty ladder climbs 100 → 500 → 1000 at endgame '
           '(smaller rungs earlier); top rung repeats.\n'
           '• Claim 3 in a row for a +5e chain bonus.\n'
-          '• Hub META badge may show ! when claims are ready.\n'
+          '• Hub QUESTS badge may show ! when claims are ready.\n'
           '• TODAY CLAIM QUESTS claims ready rewards from the hub.\n'
           '• The dungeon top CLAIM chip claims all ready quests at once '
           '(visible in combat too; long-press opens the list).',
@@ -390,8 +389,7 @@ abstract final class GameGuides {
           'Rare+ armor from a zone can form a dungeon set (head / shoulder / chest / legs).\n\n'
           '• 2pc: flat stamina (or spirit on cloth).\n'
           '• 4pc: more stats + role fantasy + a chance for a tagged set proc on autos.\n'
-          '• Set names follow the zone (Tidehold, Ashen, Spire, …).\n'
-          '• Not the same as old gear presets (LOADOUTS tab is hidden).',
+          '• Set names follow the zone (Tidehold, Ashen, Spire, …).',
     ),
     GuideTopic(
       id: 'constellation',
@@ -451,8 +449,7 @@ abstract final class GameGuides {
           '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
           'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
           '• Reset: wallet gold, forge tracks, bag and worn drops, market, floor height '
-          '(starter gear back on). Legacy loadout presets in the save wipe too '
-          '(LOADOUTS tab is hidden).\n'
+          '(starter gear back on).\n'
           '• Boss victories toward the next Ascend clear.\n'
           '• At AL20, Gold → KEEP offers optional REBORN (same bag wipe, AL stays 20, '
           'no extra Blessing). TODAY never nags you to press it.',

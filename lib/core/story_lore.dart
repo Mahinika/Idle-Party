@@ -128,7 +128,7 @@ abstract final class StoryLore {
         'Keep: hero levels/XP, open zones, essence, relics, pets, sanctuary, '
         'God Hand, Apex, meta unlocks.\n'
         'Reset: wallet gold, forge tracks, bag and worn drops, market, '
-        'loadouts, floor height (starter gear back on).\n'
+        'floor height (starter gear back on).\n'
         'God Hand Lv$godHandLevel kept';
   }
 
@@ -158,7 +158,7 @@ abstract final class StoryLore {
         'Keep: hero levels/XP, open zones, essence spends, relics, pets, '
         'sanctuary, God Hand Lv$godHandLevel, Apex.\n'
         'Reset: wallet gold, forge tracks, bag and worn drops, market, '
-        'loadouts, floor height.';
+        'floor height.';
   }
 
   static String rebornToast({required int essence}) {

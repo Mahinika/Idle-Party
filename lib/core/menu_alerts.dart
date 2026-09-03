@@ -6,9 +6,6 @@ import 'hub_chase.dart';
 import 'market_listings_service.dart';
 import 'meta_systems.dart';
 
-/// Which bottom-nav destination an alert belongs to.
-enum MenuPillar { gear, power, quests, key, more }
-
 /// One "something is waiting here" mark for a menu button.
 class MenuAlert {
   const MenuAlert({this.count = 0, this.star = false, this.reason = ''});
@@ -43,14 +40,6 @@ class MenuAlerts {
   final MenuAlert quests;
   final MenuAlert key;
   final MenuAlert more;
-
-  MenuAlert of(MenuPillar pillar) => switch (pillar) {
-    MenuPillar.gear => gear,
-    MenuPillar.power => power,
-    MenuPillar.quests => quests,
-    MenuPillar.key => key,
-    MenuPillar.more => more,
-  };
 
   static const MenuAlerts none = MenuAlerts(
     gear: MenuAlert.quiet,

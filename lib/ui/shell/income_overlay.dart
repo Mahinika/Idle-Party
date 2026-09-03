@@ -47,6 +47,3 @@ class CampRatesSection extends StatelessWidget {
     );
   }
 }
-
-/// @deprecated Use [CampRatesSection] inside POWER → Essence.
-typedef IncomeOverlay = CampRatesSection;

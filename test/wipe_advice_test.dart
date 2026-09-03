@@ -205,7 +205,7 @@ void main() {
     );
     expect(
       WipeAdvice.lineFor(state: state, fight: atkLack()),
-      contains('PARTY'),
+      contains('GEAR'),
     );
   });
 
@@ -246,7 +246,7 @@ void main() {
       contains('HUB'),
     );
     expect(
-      WipeAdvice.hubHintFor('Equip the better item in PARTY'),
+      WipeAdvice.hubHintFor('Equip the better item in GEAR'),
       contains('HUB'),
     );
   });

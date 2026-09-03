@@ -78,7 +78,7 @@ abstract final class WipeAdvice {
       return 'HUB → POWER → Shop for the listing';
     }
     if (adviceLine.startsWith('Equip')) {
-      return 'HUB → PARTY to equip the upgrade';
+      return 'HUB → GEAR to equip the upgrade';
     }
     if (adviceLine.contains('POWER') || adviceLine.contains('FORGE')) {
       return 'HUB → POWER to buy the track';
@@ -116,8 +116,8 @@ abstract final class WipeAdvice {
     final plan = GameLogic.planBiSAssignments(state);
     if (plan.isEmpty) {
       return upgrades == 1
-          ? 'Equip the better item in PARTY'
-          : 'Equip better gear in PARTY';
+          ? 'Equip the better item in GEAR'
+          : 'Equip better gear in GEAR';
     }
     final first = plan.first;
     final heroName =
@@ -126,9 +126,9 @@ abstract final class WipeAdvice {
             : 'a hero';
     final slotName = _slotLabel(first.slot);
     if (upgrades == 1) {
-      return 'Equip better $slotName on $heroName (PARTY)';
+      return 'Equip better $slotName on $heroName (GEAR)';
     }
-    return 'Equip better gear on $heroName +${upgrades - 1} more (PARTY)';
+    return 'Equip better gear on $heroName +${upgrades - 1} more (GEAR)';
   }
 
   /// Nudge God Hand after repeated wipes on the same floor (commit path — no redesign).

@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 
 import '../models/hero.dart';
@@ -257,36 +255,5 @@ class HeroPaperDoll {
     if (weapon != null) layers.add(weapon);
 
     return layers;
-  }
-
-  /// Legacy paint path — dungeon uses [CharacterVisualPainter] instead.
-  static void paint(
-    Canvas canvas,
-    ui.Image atlas,
-    Offset center,
-    double size, {
-    required PartyHero hero,
-    int partyIndex = 0,
-    int walkFrame = 0,
-    double alpha = 1,
-  }) {
-    final layers = layersFor(
-      hero,
-      partyIndex: partyIndex,
-      walkFrame: walkFrame,
-    );
-    final dst = Rect.fromCenter(center: center, width: size, height: size);
-    final paint = Paint()
-      ..filterQuality = FilterQuality.none
-      ..isAntiAlias = false
-      ..color = Color.fromRGBO(255, 255, 255, alpha);
-    for (final layer in layers) {
-      canvas.drawImageRect(
-        atlas,
-        RoguelikeCharAtlas.src(layer.col, layer.row),
-        dst,
-        paint,
-      );
-    }
   }
 }

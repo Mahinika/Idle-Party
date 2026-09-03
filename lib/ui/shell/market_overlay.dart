@@ -50,7 +50,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Buy gear · sell & clean in GEAR → BAG',
+          'Buy gear · clean junk in GEAR → BAG',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
@@ -111,7 +111,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
         const SizedBox(height: 8),
         Text(
           'Bag cleanup: use BAG → CLEAN BAG / MERGE, or SETTINGS auto-sell '
-          'and auto-disassemble. Tap-sell stash is hidden.',
+          'and auto-scrap. There is no tap-sell in Shop.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 10),

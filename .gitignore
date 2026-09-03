@@ -115,3 +115,30 @@ IdleSword*
 # Play Store listing captures (regenerate with compose_shots.py)
 /tool/store_listing/raw/
 /tool/store_listing/out/
+
+# One-off emulator dumps / gear audits (keep MCP, playtest scripts, art pipeline)
+/tool/_*.py
+/tool/_*.png
+/tool/audit_*.png
+/tool/playtest_*.png
+/tool/play2_*.png
+/tool/play4_*.png
+/tool/emu_*.png
+/tool/verify_*.png
+/tool/confirm_*.png
+/tool/check_*.png
+/tool/equip_check_*.png
+/tool/debug_*.png
+/tool/look_*.png
+/tool/preview_*.png
+/tool/screen*.png
+/tool/ui_*.xml
+/tool/*_gen.png
+/tool/*_crop.png
+/tool/*_thumb.png
+/tool/dungeon_heroes*.png
+/tool/gear_doll*.png
+/tool/dump_ui_labels.py
+/tool/parse_ui_dump.py
+/tool/parse_ui_dump_local.py
+

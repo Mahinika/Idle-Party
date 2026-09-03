@@ -9,11 +9,11 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
 | Closed testing | ⏳ review | **1.12.83 (112)** submitted 2026-08-29 (Alpha AAB — POWER Gold · Shop · Relics · Craft · Essence + hub chrome). Live for testers may still be **1.12.78 (107)** until Google publishes. Alpha countries: all + rest of world. |
-| Production | ❌ | Needs **12 closed testers × 14 days** (background ops — recruit/remind; not a feature blocker); not live |
+| Production | ❌ | **12×14 unlocks ~2026-09-04** (owner: testers complete tomorrow). Still not live — wait for owner play of **1.12.85** + A56 phone screenshots before production AAB. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
 | Data safety form | ⏳ review | Updated 2026-08-21 for AdMob (device IDs collected+shared, advertising purpose) + Advertising ID declaration Yes. Submitted with Alpha **57**. |
-| IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). Re-answer ads questions if Console asks after this review. |
+| IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). **Before production:** re-answer ads questions (hub POWERUPS rewarded ads). |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN) | ⏳ review | Default locale **en-US only**. Short + full refreshed 2026-08-29 from `docs/STORE_LISTING.md` (Lv100 endgame + World Path level gates). Submitted for review. |
 | Screenshots + feature graphic | ⏳ review | **9 phone + feature graphic** submitted 2026-08-21 (1080×1920 + 1024×500). **Re-capture at 360×780 CSS** (Samsung A56) before production — tablet shots stale. |
@@ -22,10 +22,10 @@ Package id: **`com.idleparty.app`**
 
 Track closed testers who **install from Play** and stay opted in:
 
-- [ ] **12** unique testers enrolled on closed track
-- [ ] **14 consecutive days** with at least one tester active (Console dashboard)
-- [ ] Owner played **1.12.37+** on A56 before uploading production AAB
-- [ ] Phone screenshots match hub TODAY + dungeon (not desktop/tablet)
+- [x] **12** unique testers enrolled on closed track
+- [ ] **14 consecutive days** with at least one tester active — owner: completes ~2026-09-04
+- [ ] Owner played **1.12.85+** on A56 before uploading production AAB
+- [ ] Phone screenshots match hub TODAY + dungeon (not desktop/tablet) — recapture at 360×780 CSS
 - [ ] IARC ads questionnaire re-done if Console prompts after AdMob Alpha
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.

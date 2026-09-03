@@ -37,7 +37,7 @@ Future<void> showOfflineProgressDialog(
   );
   var readyLabel = plan.label ?? contract.readyActionLabel ?? '';
   if (plan.op == ChaseOp.navMeetHero || plan.op == ChaseOp.navEquipBag) {
-    readyLabel = 'PARTY';
+    readyLabel = 'GEAR';
   }
   if (plan.op == ChaseOp.enterKey) {
     readyLabel = 'ENTER KEY +${plan.keyLevel ?? 1}';

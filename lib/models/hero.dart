@@ -58,13 +58,6 @@ class PartyHero {
   static String _stableIdFor(HeroSpecId specId, String name) =>
       '${specId.name}_${name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_')}';
 
-  static HeroRole roleForName(String name) => switch (name) {
-    'Aegis' => HeroRole.warrior,
-    'Vale' => HeroRole.healer,
-    'Ember' => HeroRole.mage,
-    _ => HeroRole.rogue,
-  };
-
   static HeroSpecId specForName(String name) => switch (name) {
     'Aegis' => HeroSpecId.protection,
     'Vale' => HeroSpecId.discipline,
@@ -72,10 +65,6 @@ class PartyHero {
     'Shade' => HeroSpecId.combat,
     _ => HeroSpecId.combat,
   };
-
-  /// Locked starting primary sheets from the Classic stats plan.
-  static Stats startingStatsFor(HeroRole role) =>
-      HeroSpecs.def(HeroSpecs.fromGearAffinity(role)).startingStats;
 
   static Stats startingStatsForSpec(HeroSpecId specId) =>
       HeroSpecs.def(specId).startingStats;

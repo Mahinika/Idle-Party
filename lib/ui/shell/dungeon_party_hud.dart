@@ -877,6 +877,13 @@ class _PartyRow extends StatelessWidget {
         AbilityId.handOfReckoning ||
         AbilityId.darkCommand ||
         AbilityId.growl => 0,
+        AbilityId.armsExecute || AbilityId.furyExecute => 0,
+        AbilityId.bloodthirst ||
+        AbilityId.whirlwind ||
+        AbilityId.ragingBlow => 0,
+        AbilityId.powerWordShield ||
+        AbilityId.penance ||
+        AbilityId.painSuppression => 1,
         AbilityId.shieldWall || AbilityId.lastStand => partyHealthy ? 6 : 2,
         _ => 4,
       };
