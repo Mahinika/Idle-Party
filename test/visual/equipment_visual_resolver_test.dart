@@ -124,7 +124,7 @@ void main() {
       rarity: LootRarity.common,
       battleNumber: 1,
       bias: HeroRole.warrior,
-    );
+    ).copyWith(visualSetId: 'helm_t0');
     final path = EquipmentVisualResolver.ownedAssetForItem(
       helm,
       family: BodyFamily.warrior,

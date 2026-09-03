@@ -304,19 +304,19 @@ void main() {
           rarity: LootRarity.common,
           battleNumber: 2,
           bias: HeroRole.warrior,
-        ),
+        ).copyWith(visualSetId: 'chest_t0'),
         EquipmentSlot.head: GameLogic.createEquipment(
           slot: EquipmentSlot.head,
           rarity: LootRarity.common,
           battleNumber: 2,
           bias: HeroRole.warrior,
-        ),
+        ).copyWith(visualSetId: 'helm_t0'),
         EquipmentSlot.weapon: GameLogic.createEquipment(
           slot: EquipmentSlot.weapon,
           rarity: LootRarity.common,
           battleNumber: 2,
           bias: HeroRole.warrior,
-        ),
+        ).copyWith(visualSetId: 'sword_t0'),
       },
     );
     final pose = CharacterVisualPose.resolve(
@@ -351,7 +351,7 @@ void main() {
           rarity: LootRarity.common,
           battleNumber: 2,
           bias: HeroRole.warrior,
-        ),
+        ).copyWith(visualSetId: 'cloak_t0'),
       },
     );
     final pose = CharacterVisualPose.resolve(

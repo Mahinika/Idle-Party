@@ -1,7 +1,11 @@
+import 'dart:math';
+
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
+import '../visual/equipment_model_catalog.dart';
+import '../visual/equipment_visual_resolver.dart';
 import 'game_state.dart';
 
 /// The gear a hero starts with, and the rules for topping empty slots back up.
@@ -85,6 +89,22 @@ abstract final class StarterGear {
       out[EquipmentSlot.ranged] = loadout.ranged!;
     } else {
       out.remove(EquipmentSlot.ranged);
+    }
+
+    // Stamp a stable model variant so starters aren't all identical *_t0.
+    for (final e in out.entries.toList()) {
+      final item = e.value;
+      if (item.visualSetId != null && item.visualSetId!.isNotEmpty) continue;
+      final base = EquipmentVisualResolver.resolveId(item);
+      if (base == 'none') continue;
+      final rng = Random(item.id.hashCode ^ e.key.index);
+      out[e.key] = item.copyWith(
+        visualSetId: EquipmentModelCatalog.pickVariant(
+          base,
+          rng,
+          rarityTier: item.rarity.index,
+        ),
+      );
     }
 
     return out;
@@ -238,11 +258,6 @@ abstract final class StarterGear {
       type: WeaponType.dagger,
       handed: WeaponHanded.oneHand,
     );
-    final oneSword = mh(
-      noun: '1H Sword',
-      type: WeaponType.sword,
-      handed: WeaponHanded.oneHand,
-    );
     final twoMace = mh(
       noun: '2H Mace',
       type: WeaponType.mace,
@@ -318,8 +333,8 @@ abstract final class StarterGear {
       HeroSpecId.affliction ||
       HeroSpecId.demonology ||
       HeroSpecId.destruction => (
-        weapon: oneSword,
-        offHand: tome(),
+        weapon: staff,
+        offHand: null,
         ranged: wand(),
       ),
       HeroSpecId.balance || HeroSpecId.restorationDruid => (
@@ -491,10 +506,10 @@ abstract final class StarterGear {
       ),
       HeroRole.mage => piece(
         id: 'start_mag_wpn',
-        name: '$prefix 1H Sword',
+        name: '$prefix Staff',
         slot: EquipmentSlot.weapon,
-        weaponType: WeaponType.sword,
-        handed: WeaponHanded.oneHand,
+        weaponType: WeaponType.staff,
+        handed: WeaponHanded.twoHand,
         intel: 2,
         spi: 1,
         sp: 1,

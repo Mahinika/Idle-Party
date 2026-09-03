@@ -224,8 +224,8 @@ abstract final class EquipmentModelCatalog {
 
   /// Pick a model for loot. [resolvedBaseId] is e.g. `sword_t2` / `helm_t0`.
   ///
-  /// Lower rarity prefers early catalog entries (`*_t0` + simple names);
-  /// rare+ draws from the full pool with a lean toward later entries.
+  /// Always draws from the full variant pool so same-type gear looks different
+  /// even early. Rare+ leans slightly toward later (flashier) entries.
   static String pickVariant(
     String resolvedBaseId,
     Random rng, {
@@ -235,15 +235,8 @@ abstract final class EquipmentModelCatalog {
     if (list.isEmpty) return resolvedBaseId;
     if (list.length == 1) return list.first;
 
-    if (rarityTier <= 0) {
-      if (rng.nextDouble() < 0.55) return list.first;
-      return list[rng.nextInt(list.length.clamp(1, 4))];
-    }
-    if (rarityTier == 1) {
-      return list[rng.nextInt(list.length.clamp(1, 6))];
-    }
-    if (rng.nextDouble() < 0.35) {
-      final start = list.length ~/ 2;
+    if (rarityTier >= 2 && rng.nextDouble() < 0.4) {
+      final start = list.length ~/ 3;
       return list[start + rng.nextInt(list.length - start)];
     }
     return list[rng.nextInt(list.length)];

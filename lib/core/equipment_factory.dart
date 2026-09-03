@@ -318,10 +318,8 @@ class EquipmentFactory {
       }(),
       HeroRole.mage => () {
         final roll = random.nextDouble();
-        if (roll < 0.55) return (WeaponType.staff, WeaponHanded.twoHand);
-        if (roll < 0.85) {
-          return (WeaponType.sword, WeaponHanded.oneHand);
-        }
+        // Staff-first fantasy on the doll — sword reads as warrior gear.
+        if (roll < 0.78) return (WeaponType.staff, WeaponHanded.twoHand);
         return (WeaponType.dagger, WeaponHanded.oneHand);
       }(),
     };
@@ -358,10 +356,8 @@ class EquipmentFactory {
           ? _pick1hAxeSwordMace(roll)
           : _pick2hAxeSwordMacePole(roll),
       HeroClassId.shaman => _pickShaman1h(roll),
-      HeroClassId.mage || HeroClassId.warlock => roll < 0.55
+      HeroClassId.mage || HeroClassId.warlock => roll < 0.78
           ? (WeaponType.staff, WeaponHanded.twoHand)
-          : roll < 0.85
-          ? (WeaponType.sword, WeaponHanded.oneHand)
           : (WeaponType.dagger, WeaponHanded.oneHand),
       HeroClassId.druid =>
         spec.id == HeroSpecId.feral || spec.id == HeroSpecId.guardian
