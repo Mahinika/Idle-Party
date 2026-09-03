@@ -1188,8 +1188,12 @@ class EquipmentFactory {
       affixSuffixId: suffix?.id,
       setId: setId,
     );
-    return item.copyWith(
-      visualSetId: EquipmentVisualResolver.resolveId(item),
-    );
+    // Preserve a data-driven visualSetId override (e.g. named weapon models
+    // like "sword_thunderfury"). Only derive from slot/weaponType when the
+    // item has no explicit id yet.
+    final resolvedId = (item.visualSetId?.isNotEmpty == true)
+        ? item.visualSetId!
+        : EquipmentVisualResolver.resolveId(item);
+    return item.copyWith(visualSetId: resolvedId);
   }
 }

@@ -1,0 +1,130 @@
+import 'body_family.dart';
+import 'hero_anim_state.dart';
+
+/// Owned 128×128 paper-doll overlay paths (`assets/custom/char/`).
+///
+/// Family armor lives under `<family>/gear/`. Weapons and shields are shared
+/// under `char/gear/` so every body holds the same sword.
+abstract final class OwnedGearAssets {
+  static const String root = 'assets/custom/char';
+
+  static const List<String> kAnims = ['idle', 'walk', 'attack'];
+
+  /// Family-aligned armor silhouettes we ship (rarity tints in paint).
+  static const List<String> kFamilySetIds = [
+    'helm_t0',
+    'helm_t2',
+    'chest_t0',
+    'chest_t2',
+    'legs_t0',
+    'legs_t2',
+    'cloak_t0',
+    'cloak_t2',
+    'hands_t0',
+  ];
+
+  /// Shared hand items (one art + rarity tint).
+  static const List<String> kSharedSetIds = [
+    'sword_t0',
+    'staff_t0',
+    'dagger_t0',
+    'mace_t0',
+    'axe_t0',
+    'bow_t0',
+    'shield_t0',
+    'frill_t0',
+  ];
+
+  static const Set<String> _sharedStems = {
+    'sword',
+    'staff',
+    'dagger',
+    'mace',
+    'axe',
+    'bow',
+    'shield',
+    'frill',
+  };
+
+  static String familyGear(BodyFamily family, String setId, String anim) =>
+      '$root/${family.name}/gear/${setId}_$anim.png';
+
+  static String sharedGear(String setId, String anim) =>
+      '$root/gear/${setId}_$anim.png';
+
+  static String animFile(HeroAnimKind kind) => switch (kind) {
+    HeroAnimKind.walk || HeroAnimKind.hit => 'walk',
+    HeroAnimKind.attack || HeroAnimKind.cast => 'attack',
+    _ => 'idle',
+  };
+
+  /// Map any catalog id onto a shipped PNG id (t0/t2 silhouettes).
+  static String silhouetteId(String visualSetId) {
+    final m = RegExp(r'^(.+)_t(\d+)$').firstMatch(visualSetId);
+    if (m == null) return visualSetId;
+    final stem = m.group(1)!;
+    final t = int.parse(m.group(2)!);
+    if (stem == 'chest' || stem == 'legs' || stem == 'helm' || stem == 'cloak') {
+      return t >= 2 ? '${stem}_t2' : '${stem}_t0';
+    }
+    return '${stem}_t0';
+  }
+
+  /// Whether [visualSetId] belongs to the shared (non-family) weapon/shield
+  /// set. Works for both catalog ids (`sword_t0`) and named variants
+  /// (`sword_thunderfury`) by extracting the base token before `_`.
+  static bool isSharedSet(String visualSetId) {
+    // Classic catalog form: sword_t0, staff_t2, etc.
+    final catalogMatch = RegExp(r'^(.+)_t\d+$').firstMatch(visualSetId);
+    if (catalogMatch != null) {
+      return _sharedStems.contains(catalogMatch.group(1));
+    }
+    // Named variant form: sword_thunderfury, staff_frostfire, etc.
+    // The base token is everything before the first underscore.
+    final base = visualSetId.split('_').first;
+    return _sharedStems.contains(base);
+  }
+
+  static String? pathFor({
+    required String visualSetId,
+    required BodyFamily family,
+    required HeroAnimKind anim,
+  }) {
+    if (visualSetId.isEmpty || visualSetId == 'none') return null;
+    final stem = visualSetId.split('_').first;
+    // Shoulders / belt fold into chest+legs art — no extra owned PNG.
+    if (stem == 'shoulder' || stem == 'waist') return null;
+    final a = animFile(anim);
+    if (isSharedSet(visualSetId)) {
+      // Named variants (sword_thunderfury) use the full visualSetId as
+      // the filename stem; classic ids (sword_t0) use silhouetteId.
+      final catalogForm = RegExp(r'^(.+)_t\d+$').hasMatch(visualSetId);
+      final fileStem = catalogForm ? silhouetteId(visualSetId) : visualSetId;
+      return sharedGear(fileStem, a);
+    }
+    // Family armor: always normalise to silhouette tier.
+    return familyGear(family, silhouetteId(visualSetId), a);
+  }
+
+  /// Precache list (idle/walk/attack × shipped silhouettes).
+  static List<String> get allAssetPaths {
+    final out = <String>{};
+    for (final family in BodyFamily.values) {
+      for (final id in kFamilySetIds) {
+        for (final anim in kAnims) {
+          out.add(familyGear(family, id, anim));
+        }
+      }
+    }
+    for (final id in kSharedSetIds) {
+      for (final anim in kAnims) {
+        out.add(sharedGear(id, anim));
+      }
+    }
+    return out.toList(growable: false);
+  }
+
+  /// If [path] is missing, try the idle clip of the same set.
+  static String idleFallback(String path) =>
+      path.replaceFirst(RegExp(r'_(walk|attack)\.png$'), '_idle.png');
+}

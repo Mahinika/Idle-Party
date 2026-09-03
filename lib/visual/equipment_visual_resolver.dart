@@ -1,5 +1,10 @@
+import 'package:flutter/material.dart';
+
 import '../models/loot.dart';
+import 'body_family.dart';
 import 'character_layer.dart';
+import 'hero_anim_state.dart';
+import 'owned_gear_assets.dart';
 
 /// Catalog entry: which layer a visual set paints on + Kenney atlas cell
 /// and/or optional icon overlay path key.
@@ -77,11 +82,44 @@ abstract final class EquipmentVisualResolver {
     return 'shield_t$tier';
   }
 
-  static EquipmentVisualDef? defFor(String visualSetId) =>
-      catalog[visualSetId];
+  /// Returns the catalog entry for [visualSetId].
+  ///
+  /// If [visualSetId] is not in the catalog (e.g. a named variant like
+  /// `sword_thunderfury`), falls back to the base-token entry
+  /// (`sword_t0`) so the layer and anchor rules are inherited
+  /// automatically — only the PNG will differ.
+  static EquipmentVisualDef? defFor(String visualSetId) {
+    if (catalog.containsKey(visualSetId)) return catalog[visualSetId];
+    // Variant model: derive layer/anchor from base weapon/item type.
+    // e.g. "sword_thunderfury" → base "sword" → catalog["sword_t0"]
+    final base = visualSetId.split('_').first;
+    return catalog['${base}_t0'];
+  }
 
   static EquipmentVisualDef? defForItem(EquipmentItem item) =>
       defFor(resolveId(item));
+
+  /// Gold/white wash so t1–t3 share t0/t2 art (WoW display-id style).
+  static Color? rarityTint(String visualSetId) {
+    final m = RegExp(r'_t(\d)$').firstMatch(visualSetId);
+    final t = int.tryParse(m?.group(1) ?? '') ?? 0;
+    return switch (t) {
+      0 => null,
+      1 => const Color(0xFFFFF6E8),
+      2 => const Color(0xFFFFE082),
+      _ => const Color(0xFFFFD54F),
+    };
+  }
+
+  static String? ownedAssetForItem(
+    EquipmentItem item, {
+    required BodyFamily family,
+    required HeroAnimKind anim,
+  }) => OwnedGearAssets.pathFor(
+    visualSetId: resolveId(item),
+    family: family,
+    anim: anim,
+  );
 
   /// Built-in catalog (Dart v1). New items point at these ids.
   static final Map<String, EquipmentVisualDef> catalog =
@@ -101,7 +139,7 @@ abstract final class EquipmentVisualResolver {
           ),
           'cloak_t$t': EquipmentVisualDef(
             id: 'cloak_t$t',
-            layer: CharacterLayerId.torso,
+            layer: CharacterLayerId.cape,
             atlasCol: t >= 2 ? 10 : 6,
             atlasRow: t >= 2 ? 5 : t.clamp(0, 4),
           ),
