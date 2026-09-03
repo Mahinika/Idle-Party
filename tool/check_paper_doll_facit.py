@@ -64,9 +64,11 @@ def main() -> int:
             ok_helm = helm_w >= 40  # hat/hood must extract
         else:
             # Warrior/rogue: empty until authored (no invent stamp).
+            # Authored must be head-sized, not a full-canvas icon (~108px tall).
             auth = ROOT / family / "gear" / "_authored" / "helm_t0_idle.png"
+            helm_h = (hb[3] - hb[1]) if hb else 0
             if auth.exists():
-                ok_helm = helm_w >= 20
+                ok_helm = helm_w >= 20 and helm_h <= 72
             else:
                 ok_helm = helm_w <= 8
         status = "ok" if ratio <= MAX_HARD_DIFF and ok_helm else "FAIL"

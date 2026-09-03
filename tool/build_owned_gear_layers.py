@@ -4,7 +4,9 @@ Rules (see .cursor/skills/character-paper-doll/SKILL.md):
 - Never copy _src onto live body_*.png.
 - Never invent helm/cape/chest with ImageDraw shapes.
 - Extract armor pixels from _src; mage/healer hat from _src.
-- Warrior/rogue helm = hair mask stamped with metal sampled from same _src.
+- Undertunic follows the _src silhouette (recolor metal → cloth). No capsules.
+- Warrior/rogue helm = transparent until _authored exists; oversized authored
+  icons are registered onto the head, not stamped as a full-canvas overlay.
 - Authored overrides under gear/_authored/ win.
 - Weapons may use shared overlays; prefer _authored when present.
 """
@@ -12,6 +14,7 @@ from __future__ import annotations
 
 import math
 import shutil
+from collections import deque
 from pathlib import Path
 
 from PIL import Image, ImageEnhance
@@ -60,7 +63,141 @@ def load128(path: Path) -> Image.Image:
     im = Image.open(path).convert("RGBA")
     if im.size != (128, 128):
         im = im.resize((128, 128), Image.Resampling.NEAREST)
-    return strip_ink_black(im)
+    return despeckle_alpha(knock_out_backdrop(strip_ink_black(im)))
+
+
+def knock_out_backdrop(im: Image.Image) -> Image.Image:
+    """Turn opaque-black canvas + JPEG dirt into alpha.
+
+    Keep dark outline pixels that already touch real art (eyes, hair, plate).
+    """
+    out = im.copy()
+    px = out.load()
+    w, h = out.size
+
+    def touches_art(x: int, y: int) -> bool:
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if dx == 0 and dy == 0:
+                    continue
+                nx, ny = x + dx, y + dy
+                if not (0 <= nx < w and 0 <= ny < h):
+                    continue
+                nr, ng, nb, na = px[nx, ny]
+                if na > 40 and lum((nr, ng, nb)) >= 0.14:
+                    return True
+        return False
+
+    def is_bg(x: int, y: int) -> bool:
+        r, g, b, a = px[x, y]
+        if a < 10:
+            return True
+        l = lum((r, g, b))
+        sat = max(r, g, b) - min(r, g, b)
+        if l < 0.08 and sat < 18 and not touches_art(x, y):
+            return True
+        return False
+
+    seen = [[False] * w for _ in range(h)]
+    q: deque[tuple[int, int]] = deque()
+    for x in range(w):
+        q.append((x, 0))
+        q.append((x, h - 1))
+    for y in range(h):
+        q.append((0, y))
+        q.append((w - 1, y))
+    while q:
+        x, y = q.popleft()
+        if not (0 <= x < w and 0 <= y < h) or seen[y][x]:
+            continue
+        seen[y][x] = True
+        if not is_bg(x, y):
+            continue
+        px[x, y] = (0, 0, 0, 0)
+        q.extend(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
+    return peel_dark_fringe(out)
+
+
+def peel_dark_fringe(im: Image.Image, rounds: int = 2) -> Image.Image:
+    """Nibble 1–2px of near-black halo that sits against empty canvas."""
+    out = im.copy()
+    for _ in range(rounds):
+        src = out.copy()
+        sp = src.load()
+        px = out.load()
+        for y in range(128):
+            for x in range(128):
+                r, g, b, a = sp[x, y]
+                if a < 10 or lum((r, g, b)) >= 0.12:
+                    continue
+                empty = False
+                for dy in (-1, 0, 1):
+                    for dx in (-1, 0, 1):
+                        if dx == 0 and dy == 0:
+                            continue
+                        nx, ny = x + dx, y + dy
+                        if not (0 <= nx < 128 and 0 <= ny < 128):
+                            empty = True
+                            break
+                        if sp[nx, ny][3] < 10:
+                            empty = True
+                            break
+                    if empty:
+                        break
+                if empty:
+                    px[x, y] = (0, 0, 0, 0)
+    return out
+
+
+def despeckle_alpha(im: Image.Image) -> Image.Image:
+    """Drop isolated dirt pixels left by JPEG ringing."""
+    src = im.copy()
+    sp = src.load()
+    out = im.copy()
+    px = out.load()
+    for y in range(1, 127):
+        for x in range(1, 127):
+            if sp[x, y][3] < 20:
+                continue
+            n = 0
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    if dx == 0 and dy == 0:
+                        continue
+                    if sp[x + dx, y + dy][3] > 20:
+                        n += 1
+            if n <= 1:
+                px[x, y] = (0, 0, 0, 0)
+    return soften_jpeg_specks(out)
+
+
+def soften_jpeg_specks(im: Image.Image) -> Image.Image:
+    """Lift isolated dark crumbs on light cloth (not pupils)."""
+    src = im.copy()
+    sp = src.load()
+    out = im.copy()
+    px = out.load()
+    for y in range(1, 127):
+        for x in range(1, 127):
+            r, g, b, a = sp[x, y]
+            if a < 40:
+                continue
+            if lum((r, g, b)) >= 0.22:
+                continue
+            bright: list[tuple[int, int, int]] = []
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    if dx == 0 and dy == 0:
+                        continue
+                    nr, ng, nb, na = sp[x + dx, y + dy]
+                    if na > 40 and lum((nr, ng, nb)) > 0.45:
+                        bright.append((nr, ng, nb))
+            if len(bright) < 6:
+                continue
+            bright.sort(key=lum)
+            nr, ng, nb = bright[len(bright) // 2]
+            px[x, y] = (nr, ng, nb, a)
+    return out
 
 
 def strip_ink_black(im: Image.Image) -> Image.Image:
@@ -148,6 +285,9 @@ def sample_face(
                 samples.append(rgb)
     if not samples:
         return (210, 170, 140)
+    bright = [s for s in samples if lum(s) > 0.55]
+    if bright:
+        samples = bright
     samples.sort()
     return samples[len(samples) // 2]
 
@@ -160,7 +300,8 @@ def is_skin(rgb: tuple[int, int, int], face: tuple[int, int, int]) -> bool:
         return False
     if r + 8 < g or r < b:
         return False
-    if r > 210 and g > 190 and b > 150:
+    # Skip near-white cloth; keep light peach (warm red–blue gap).
+    if r > 210 and g > 190 and b > 150 and (r - b) < 45:
         return False
     if r > 160 and g > 120 and b < 100 and r > b + 40:
         return False
@@ -171,23 +312,31 @@ def is_skin(rgb: tuple[int, int, int], face: tuple[int, int, int]) -> bool:
 
 def is_gold_pixel(rgb: tuple[int, int, int]) -> bool:
     r, g, b = rgb
-    # Bright armor trim only — warm jaw/cheek browns are not gold.
-    if r < 180 or g < 140 or b >= 140:
+    # Bright armor trim only — peach cheeks (high blue, small g-b) are not gold.
+    if r < 180 or g < 140 or b >= 120:
         return False
-    if (g - b) < 78:
+    if (g - b) < 88:
         return False
     if (r - g) > 70:
         return False
-    return r > b + 40
+    return r > b + 50
 
 
 def is_hat_or_hood(family: str, rgb: tuple[int, int, int]) -> bool:
     r, g, b = rgb
     if family == "mage":
-        return b > r + 12 and b > 70
+        # Warm face is not a hat. Indigo/blue folds + gold brim are.
+        if r > 150 and g > 90 and b > 50 and r > b:
+            return False
+        if is_gold_pixel(rgb):
+            return True
+        return b > 40 and b >= r - 12
     if family == "healer":
-        return (r > 185 and g > 175 and b > 140) or (
-            r > 175 and g > 130 and b < 100 and r > b + 40
+        # Neutral white hood — peach cheeks have a larger red–blue gap.
+        if r > 200 and g > 195 and b > 180 and (r - b) < 40:
+            return True
+        return is_gold_pixel(rgb) or (
+            r > 190 and g > 140 and b < 110 and r > b + 50
         )
     return False
 
@@ -225,77 +374,18 @@ def alpha_count(im: Image.Image) -> int:
     return sum(1 for y in range(128) for x in range(128) if px[x, y][3] > 40)
 
 
-def shade_cloth(
-    cloth: tuple[int, int, int], x: float, y: float, cx: float, y0: float, y1: float
+def recolor_to_cloth(
+    rgb: tuple[int, int, int], cloth: tuple[int, int, int], a: int
 ) -> tuple[int, int, int, int]:
-    t = (y - y0) / max(1.0, y1 - y0)
-    dx = abs(x - cx) / 36.0
-    s = max(0.55, min(1.18, 1.06 - t * 0.22 - dx * 0.14))
+    """Keep gold-master shading; swap armor chroma for undertunic cloth."""
+    l = lum(rgb)
+    s = max(0.42, min(1.22, 0.38 + l * 1.15))
     return (
         min(255, int(cloth[0] * s)),
         min(255, int(cloth[1] * s)),
         min(255, int(cloth[2] * s)),
-        255,
+        a,
     )
-
-
-def erode(mask: list[list[bool]], n: int) -> list[list[bool]]:
-    out = [row[:] for row in mask]
-    for _ in range(n):
-        nxt = [row[:] for row in out]
-        for y in range(1, 127):
-            for x in range(1, 127):
-                if not out[y][x]:
-                    continue
-                if not (
-                    out[y - 1][x]
-                    and out[y + 1][x]
-                    and out[y][x - 1]
-                    and out[y][x + 1]
-                ):
-                    nxt[y][x] = False
-        out = nxt
-    return out
-
-
-def dilate(mask: list[list[bool]], n: int) -> list[list[bool]]:
-    out = [row[:] for row in mask]
-    for _ in range(n):
-        nxt = [row[:] for row in out]
-        for y in range(1, 127):
-            for x in range(1, 127):
-                if out[y][x]:
-                    continue
-                if (
-                    out[y - 1][x]
-                    or out[y + 1][x]
-                    or out[y][x - 1]
-                    or out[y][x + 1]
-                ):
-                    nxt[y][x] = True
-        out = nxt
-    return out
-
-
-def slim_spans(mask: list[list[bool]], ratio: float) -> list[list[bool]]:
-    out = [[False] * 128 for _ in range(128)]
-    for y in range(128):
-        x = 0
-        while x < 128:
-            while x < 128 and not mask[y][x]:
-                x += 1
-            if x >= 128:
-                break
-            start = x
-            while x < 128 and mask[y][x]:
-                x += 1
-            end = x - 1
-            width = end - start + 1
-            keep = max(7, int(width * ratio))
-            inset = max(0, (width - keep) // 2)
-            for xx in range(start + inset, end - inset + 1):
-                out[y][xx] = True
-    return out
 
 
 def face_region(
@@ -326,85 +416,14 @@ def face_region(
     )
 
 
-def body_occupancy(
+def _chin_y(
     src: Image.Image,
-    family: str,
-    box: tuple[int, int, int, int],
-) -> list[list[bool]]:
-    """Solid undertunic silhouette (capsule torso + arms + legs).
-
-    Do not derive cloth from eroded armor panels — that makes brown shreds.
-    """
-    x0, y0, x1, y1 = box
-    bh = max(1, y1 - y0)
-    bw = max(1, x1 - x0)
-    cx = (x0 + x1) / 2.0
-    face = sample_face(src, box, family)
-    fx, fy, face_half = face_region(src, face, box)
-    chin = int(fy + face_half * 0.95)
-    mid_y = y0 + int(bh * 0.62)
-    foot_y = y1 - 6
-    # Widths in px — warrior a bit broader.
-    torso_r = bw * (0.22 if family == "warrior" else 0.20)
-    hip_r = bw * 0.18
-    arm_r = max(5.0, bw * 0.09)
-    leg_r = max(6.0, bw * 0.11)
-    arm_top = chin + int(bh * 0.06)
-    arm_bot = mid_y + 4
-    split = [[False] * 128 for _ in range(128)]
-    for y in range(chin, min(128, foot_y + 1)):
-        t = (y - chin) / max(1.0, foot_y - chin)
-        if y < mid_y:
-            # Torso capsule (slightly tapers)
-            tw = torso_r * (1.05 - t * 0.25)
-            for x in range(128):
-                if abs(x - cx) <= tw:
-                    split[y][x] = True
-            # Arms
-            if arm_top <= y <= arm_bot:
-                at = (y - arm_top) / max(1.0, arm_bot - arm_top)
-                reach = bw * (0.34 + 0.06 * at)
-                for side in (-1.0, 1.0):
-                    ax = cx + side * reach
-                    for x in range(128):
-                        if abs(x - ax) <= arm_r:
-                            split[y][x] = True
-        else:
-            # Two legs — leave crotch gap
-            gap = max(2.0, bw * 0.04)
-            lw = leg_r * (1.0 - (y - mid_y) / max(1.0, foot_y - mid_y) * 0.15)
-            for side in (-1.0, 1.0):
-                lx = cx + side * (hip_r * 0.55 + gap)
-                for x in range(128):
-                    if abs(x - lx) <= lw:
-                        split[y][x] = True
-    return split
-
-
-def paint_undertunic(
-    src: Image.Image,
-    family: str,
     face: tuple[int, int, int],
-    box: tuple[int, int, int, int],
-) -> Image.Image:
-    """Cloth occupancy + clean face/hair/hands from _src — never armor luminance."""
+    fx: float,
+    fy: float,
+    face_half: float,
+) -> float:
     px = src.load()
-    x0, y0, x1, y1 = box
-    bh = max(1, y1 - y0)
-    fx, fy, face_half = face_region(src, face, box)
-    head_max = int(fy + face_half * 1.05)
-    mid_y = y0 + int(bh * 0.62)
-    foot_y = y1 - 14
-    cx = (x0 + x1) / 2.0
-    tunic, pants = TUNIC[family]
-    mask = body_occupancy(src, family, box)
-    out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-    op = out.load()
-
-    # Head first: stamp from gold master. Warm skin must NOT go through
-    # is_gold_pixel — peach cheeks match that helper and used to vanish.
-    # Chin: last mostly-skin row, then keep jaw shade (often <30% skin / gold-adjacent).
-    chin_y = fy + face_half * 0.55
     last_skin_row = int(fy)
     for y in range(int(fy), min(128, int(fy + face_half * 1.55))):
         skin_n = 0
@@ -422,57 +441,67 @@ def paint_undertunic(
                 skin_n += 1
         if tot >= 4 and skin_n / tot >= 0.30:
             last_skin_row = y
-            chin_y = float(y)
         elif tot >= 4 and skin_n == 0 and gold_n == 0 and y > fy + face_half * 0.35:
             break
-    # Jaw shade + lip sit 1–2 rows under the last cheek row (was cut off → tan gap).
-    chin_y = float(last_skin_row + 2)
-    hair_top = max(0, int(fy - face_half * 2.45))
-    head_x0 = max(0, int(fx - face_half * 2.15))
-    head_x1 = min(128, int(fx + face_half * 2.15))
-    rx = max(11.0, face_half * 1.28)
-    ry = max(12.0, face_half * 1.22)
-    for y in range(hair_top, min(128, int(chin_y) + 3)):
-        for x in range(head_x0, head_x1):
+    return float(last_skin_row + 2)
+
+
+def paint_undertunic(
+    src: Image.Image,
+    family: str,
+    face: tuple[int, int, int],
+    box: tuple[int, int, int, int],
+) -> Image.Image:
+    """Keep the gold-master silhouette: face/hair/hands + cloth-recolored armor."""
+    px = src.load()
+    x0, y0, x1, y1 = box
+    bh = max(1, y1 - y0)
+    fx, fy, face_half = face_region(src, face, box)
+    chin_y = _chin_y(src, face, fx, fy, face_half)
+    head_max = int(chin_y)
+    mid_y = y0 + int(bh * 0.62)
+    tunic, pants = TUNIC[family]
+    out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    op = out.load()
+    rx = max(11.0, face_half * 1.35)
+    ry = max(12.0, face_half * 1.28)
+
+    for y in range(128):
+        for x in range(128):
             r, g, b, a = px[x, y]
-            if a < 40:
+            if a < 16:
                 continue
             rgb = (r, g, b)
-            if is_hat_or_hood(family, rgb):
-                continue
-            in_oval = ((x - fx) / rx) ** 2 + ((y - fy) / ry) ** 2 <= 1.0
-            # Face oval: always stamp from _src (jaw browns ≠ armor gold).
-            if in_oval and y <= chin_y:
+            if is_skin(rgb, face):
                 op[x, y] = (r, g, b, a)
                 continue
-            if y > chin_y:
-                if is_skin(rgb, face):
-                    op[x, y] = (r, g, b, a)
+            # Hat/hood only in the head band — mage robe / healer vestments stay.
+            if y <= head_max + 6 and is_hat_or_hood(family, rgb):
                 continue
-            # Hair beside the oval — skip plate/gold pauldrons only.
-            if is_metal_or_trim(rgb) or is_gold_pixel(rgb):
-                continue
-            if is_hair_color(family, rgb) or lum(rgb) < 0.42:
+            # Mage/healer: anything above the eyes that isn't skin/hair is hat.
+            if family in ("mage", "healer") and y < fy - 1:
+                if not is_hair_color(family, rgb):
+                    continue
+            if y <= head_max + 4 and is_hair_color(family, rgb):
                 op[x, y] = (r, g, b, a)
-
-    # Fill holes inside the face oval from _src.
-    for y in range(max(0, int(fy - ry)), min(128, int(chin_y) + 1)):
-        for x in range(max(0, int(fx - rx)), min(128, int(fx + rx) + 1)):
-            if ((x - fx) / rx) ** 2 + ((y - fy) / ry) ** 2 > 1.0:
                 continue
-            if op[x, y][3] > 40:
+            if family == "rogue" and is_rogue_cloak(rgb):
                 continue
-            r, g, b, a = px[x, y]
-            if a < 40 or is_hat_or_hood(family, (r, g, b)):
+            in_head = ((x - fx) / rx) ** 2 + ((y - fy) / ry) ** 2 <= 1.0
+            if in_head and y <= chin_y + 2 and not is_metal_or_trim(rgb):
+                op[x, y] = (r, g, b, a)
                 continue
-            op[x, y] = (r, g, b, a)
+            cloth = tunic if y < mid_y else pants
+            op[x, y] = recolor_to_cloth(rgb, cloth, a)
 
     if family in ("mage", "healer"):
         from PIL import ImageDraw
 
         has_hair = False
         for y in range(max(0, int(fy - face_half * 2)), int(fy)):
-            for x in range(max(0, int(fx - face_half * 1.5)), min(128, int(fx + face_half * 1.5))):
+            for x in range(
+                max(0, int(fx - face_half * 1.5)), min(128, int(fx + face_half * 1.5))
+            ):
                 if op[x, y][3] > 40 and is_hair_color(family, op[x, y][:3]):
                     has_hair = True
                     break
@@ -485,73 +514,7 @@ def paint_undertunic(
                 [fx - hx, fy - face_half * 1.45, fx + hx, fy - face_half * 0.15],
                 fill=(*HAIR[family], 255),
             )
-
-    # Cloth under the jaw. Narrow neck column so unequipped body isn't head-floating;
-    # leave shoulder collar zone for chest gorget.
-    cloth_y0 = int(chin_y) + 1
-    collar_until = int(chin_y) + 10
-    # Neck skin / cloth bridge from jaw
-    for y in range(int(chin_y), min(128, collar_until + 1)):
-        for x in range(max(0, int(fx - face_half * 0.9)), min(128, int(fx + face_half * 0.9))):
-            if op[x, y][3] > 40:
-                continue
-            r, g, b, a = px[x, y]
-            if a > 40 and is_skin((r, g, b), face):
-                op[x, y] = (r, g, b, a)
-            elif abs(x - fx) < face_half * 0.72:
-                op[x, y] = shade_cloth(tunic, x, y, cx, chin_y, mid_y)
-
-    for y in range(cloth_y0, min(128, y1 + 1)):
-        cloth = tunic if y < mid_y else pants
-        y_a, y_b = (cloth_y0, mid_y) if y < mid_y else (mid_y, foot_y)
-        for x in range(128):
-            if not mask[y][x]:
-                continue
-            if op[x, y][3] > 40:
-                continue  # keep copied face/neck
-            if ((x - fx) / max(1.0, face_half * 1.28)) ** 2 + (
-                (y - fy) / max(1.0, face_half * 1.22)
-            ) ** 2 <= 1.0 and y <= chin_y:
-                continue
-            # Wide collar zone: only keep arm cloth, not a tan slab under the chin.
-            if y <= collar_until and abs(x - fx) < face_half * 1.55:
-                if abs(x - fx) < face_half * 0.85:
-                    continue
-            op[x, y] = shade_cloth(cloth, x, y, cx, y_a, y_b)
-
-    shoe = tuple(max(0, c - 28) for c in pants)
-    for y in range(max(0, foot_y), min(128, y1 + 1)):
-        for x in range(128):
-            if not mask[y][x]:
-                continue
-            r, g, b, a = px[x, y]
-            if a > 20 and is_skin((r, g, b), face):
-                op[x, y] = (r, g, b, a)
-            elif op[x, y][3] < 40:
-                op[x, y] = (*shoe, 255)
-
-    # Skin hands from dressed pose.
-    for y in range(head_max + 4, min(128, y1)):
-        for x in range(x0, x1):
-            r, g, b, a = px[x, y]
-            if a > 80 and is_skin((r, g, b), face):
-                op[x, y] = (r, g, b, a)
-
-    # Outline below the neck only — never black scratches on the face.
-    outline = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-    ox = outline.load()
-    for y in range(max(1, head_max), 127):
-        for x in range(1, 127):
-            if op[x, y][3] < 40:
-                continue
-            if (
-                op[x - 1, y][3] < 40
-                or op[x + 1, y][3] < 40
-                or op[x, y - 1][3] < 40
-                or op[x, y + 1][3] < 40
-            ):
-                ox[x, y] = (24, 20, 18, 210)
-    return Image.alpha_composite(out, outline)
+    return out
 
 
 def goldify(im: Image.Image) -> Image.Image:
@@ -711,6 +674,49 @@ def make_helm(
     return Image.new("RGBA", (128, 128), (0, 0, 0, 0))
 
 
+def register_helm_to_head(
+    helm: Image.Image,
+    src: Image.Image,
+    face: tuple[int, int, int],
+    box: tuple[int, int, int, int],
+) -> Image.Image:
+    """Authored helm icons that fill the canvas get scaled onto the head."""
+    bb = helm.getbbox()
+    if bb is None:
+        return helm
+    hx0, hy0, hx1, hy1 = bb
+    hh = hy1 - hy0
+    hw = hx1 - hx0
+    x0, y0, x1, y1 = box
+    bh = max(1, y1 - y0)
+    fx, fy, face_half = face_region(src, face, box)
+    already_head = hh <= int(bh * 0.55) and hy1 <= int(fy + face_half * 2.8)
+    if already_head:
+        punch_face_visor(helm, src, face, box)
+        return helm
+    target_h = int(max(30, min(58, face_half * 3.4)))
+    scale = target_h / max(1, hh)
+    new_w = max(12, int(hw * scale))
+    new_h = max(12, int(hh * scale))
+    crop = helm.crop((hx0, hy0, hx1, hy1)).resize(
+        (new_w, new_h), Image.Resampling.NEAREST
+    )
+    out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    px = int(round(fx - new_w / 2.0))
+    py = int(round(fy - face_half * 2.2))
+    px = max(0, min(128 - new_w, px))
+    py = max(0, min(128 - new_h, py))
+    out.paste(crop, (px, py), crop)
+    punch_face_visor(out, src, face, box)
+    op = out.load()
+    for y in range(py, min(128, py + new_h)):
+        for x in range(max(0, px), min(128, px + new_w)):
+            r, g, b, a = op[x, y]
+            if a > 20 and lum((r, g, b)) < 0.06:
+                op[x, y] = (0, 0, 0, 0)
+    return out
+
+
 def hand_points(src: Image.Image, face: tuple[int, int, int], box: tuple[int, int, int, int]):
     px = src.load()
     x0, y0, x1, y1 = box
@@ -802,6 +808,8 @@ def process_family(family: str) -> dict:
 
         def save_set(set_id: str, im: Image.Image) -> None:
             final = maybe_authored(family, set_id, anim, im)
+            if set_id.startswith("helm_"):
+                final = register_helm_to_head(final, src, face, box)
             final.save(gear / f"{set_id}_{anim}.png")
 
         save_set("chest_t0", chest)

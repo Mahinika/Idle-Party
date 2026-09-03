@@ -68,7 +68,9 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
     final bodyPath =
         BodyFamilyCatalog.assetFor(widget.hero, HeroAnimKind.idle);
     _fallbackPath = KenneyAssets.heroSpriteForSpec(widget.hero.specId);
-    final decodeW = (widget.size * 3).ceil().clamp(64, 256);
+    // Owned bodies/overlays are 128×128. Upscaling to 256 then painting with
+    // FilterQuality.none made GEAR dolls softer than the dungeon.
+    const decodeW = 128;
 
     ui.Image? body;
     final overlays = <String, ui.Image>{};
