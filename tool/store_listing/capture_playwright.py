@@ -113,30 +113,52 @@ def main() -> None:
         shot(page, "01_hub.png")
         shot(page, "05_zone.png")
 
-        # GEAR paper-doll
-        click_role(page, "PARTY", 900)
-        click_role(page, "GEAR", 700)
-        print("party buttons", buttons(page))
+        # GEAR paper-doll (bottom tab may still be GEAR)
+        if not click_role(page, "GEAR", 900):
+            click_role(page, "PARTY", 900)
+        print("gear buttons", buttons(page))
         shot(page, "03_gear.png")
         click_role(page, "CLOSE", 600)
 
-        # POWER → INCOME (default) then FORGE → KEEP via tap coords
-        # (Material TabBar labels are not WebClickBridge buttons).
+        # POWER → Gold (default) — KEEP under Gold for Blessing chrome
         click_role(page, "POWER", 900)
         print("power buttons", buttons(page))
-        shot(page, "06_power.png")  # INCOME rates
+        shot(page, "06_power.png")
 
-        click_role(page, "FORGE", 800)
-        click_role(page, "KEEP", 800)
+        if not tap_text(page, "Gold", 700):
+            tap_text(page, "GOLD", 700)
+        if not click_role(page, "KEEP", 800):
+            tap_text(page, "KEEP", 800)
         print("forge buttons", buttons(page))
         shot(page, "04_meta.png")
         click_role(page, "CLOSE", 600)
 
-        # Combat
+        # Combat — endgame chase may own the primary CTA
         page.wait_for_timeout(500)
         print("pre-dungeon", buttons(page))
-        if not click_role(page, "ENTER DUNGEON", 2000):
-            click_role(page, "ENTER", 2000)
+        entered = False
+        for label in (
+            "ENTER DUNGEON",
+            "ENTER",
+            "ENTER KEY",
+            "GAUNTLET",
+            "⚔ GAUNTLET",
+        ):
+            # Partial match via bridge list
+            if any(label in b for b in buttons(page)) or label in (
+                "ENTER DUNGEON",
+                "ENTER",
+            ):
+                if click_role(page, label, 2000):
+                    entered = True
+                    break
+        if not entered:
+            # Fallback: first button containing ENTER
+            for b in buttons(page):
+                if "ENTER" in b.upper():
+                    if click_role(page, b, 2000):
+                        entered = True
+                        break
         page.evaluate(
             """() => {
               if (typeof window.__idlePartySetSpeed === 'function') {

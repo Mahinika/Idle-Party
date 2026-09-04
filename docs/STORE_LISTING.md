@@ -71,13 +71,12 @@ FAIR PLAY
 Install, start a party, and take one more floor.
 ```
 
-### Release notes — Alpha 1.12.83 (en-US, paste into Play Console)
+### Release notes — Alpha 1.12.87 (en-US, paste into Play Console)
 
 ```
-• POWER tabs: Gold · Shop · Relics · Craft · Essence — denser upgrade lists; Craft is goal-first.
-• Hub/dungeon chrome: Shop sheet stays readable; one CLAIM QUESTS; short fight loot words.
-• Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.
-• Bug fixes and balance polish.
+• TODAY buttons match KEY/month/week hunts (ENTER KEY, not bare ENTER DUNGEON).
+• Wipe panel can OPEN POWER / BAG / Shop when the tip names that fix.
+• GEAR and dungeon dolls match (undertunic + helms). Prestige Ascend still Rebuild your bag.
 ```
 
 ### Screenshot caption plan (Play phone carousel, 2026-08-21)
