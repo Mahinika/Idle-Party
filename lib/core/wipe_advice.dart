@@ -4,6 +4,8 @@ import 'game_logic.dart';
 import 'game_state.dart';
 import 'market_listings_service.dart';
 import 'menu_alerts.dart';
+import 'menu_router.dart';
+import 'nav_intent.dart';
 
 /// Fight numbers from SpatialCombat at the wipe frame.
 class WipeFightSnapshot {
@@ -78,11 +80,38 @@ abstract final class WipeAdvice {
       return 'HUB → POWER → Shop for the listing';
     }
     if (adviceLine.startsWith('Equip')) {
-      return 'HUB → GEAR to equip the upgrade';
+      return 'HUB → BAG to equip the upgrade';
     }
     if (adviceLine.contains('POWER') || adviceLine.contains('FORGE')) {
       return 'HUB → POWER to buy the track';
     }
+    return null;
+  }
+
+  /// Menu to open after RETURN when the tip names a hub fix.
+  static NavIntent? hubNavFor(String adviceLine) {
+    if (adviceLine.isEmpty) return null;
+    if (adviceLine.contains('MARKET') ||
+        adviceLine.contains('SHOP') ||
+        adviceLine.contains('Shop')) {
+      return NavIntent.shop;
+    }
+    if (adviceLine.startsWith('Equip')) {
+      return const NavIntent(route: MenuRoute.gear, gear: GearPanel.bag);
+    }
+    if (adviceLine.contains('POWER') || adviceLine.contains('FORGE')) {
+      return const NavIntent(route: MenuRoute.power, power: PowerSegment.forge);
+    }
+    return null;
+  }
+
+  /// Short wipe-panel CTA when [hubNavFor] has a destination.
+  static String? hubCtaLabelFor(String adviceLine) {
+    final nav = hubNavFor(adviceLine);
+    if (nav == null) return null;
+    if (nav.power == PowerSegment.market) return 'OPEN SHOP';
+    if (nav.gear == GearPanel.bag) return 'OPEN BAG';
+    if (nav.route == MenuRoute.power) return 'OPEN POWER';
     return null;
   }
 
@@ -116,8 +145,8 @@ abstract final class WipeAdvice {
     final plan = GameLogic.planBiSAssignments(state);
     if (plan.isEmpty) {
       return upgrades == 1
-          ? 'Equip the better item in GEAR'
-          : 'Equip better gear in GEAR';
+          ? 'Equip the better item in BAG'
+          : 'Equip better gear in BAG';
     }
     final first = plan.first;
     final heroName =
@@ -126,9 +155,9 @@ abstract final class WipeAdvice {
             : 'a hero';
     final slotName = _slotLabel(first.slot);
     if (upgrades == 1) {
-      return 'Equip better $slotName on $heroName (GEAR)';
+      return 'Equip better $slotName on $heroName (BAG)';
     }
-    return 'Equip better gear on $heroName +${upgrades - 1} more (GEAR)';
+    return 'Equip better gear on $heroName +${upgrades - 1} more (BAG)';
   }
 
   /// Nudge God Hand after repeated wipes on the same floor (commit path — no redesign).

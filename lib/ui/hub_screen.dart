@@ -208,15 +208,26 @@ class _HubScreenState extends State<HubScreen>
     final endgamePrimary =
         onAction != null &&
         chaseActionLabel != null &&
-        hubChaseOwnsEndgameRow(chase.kind);
+        (hubChaseOwnsEndgameRow(chase.kind) ||
+            (chaseActionLabel.contains('GAUNTLET')) ||
+            (chaseActionLabel.contains('GREATER RIFT')) ||
+            chaseActionLabel == '◈ RIFT');
     final readyPrimary =
         ready &&
         onAction != null &&
         chaseActionLabel != null &&
         !foldEnter;
-    final enterLabel = chase.kind == HubChaseKind.keystone
-        ? '🔑 ENTER KEY +${chase.keyLevel ?? state.hardmodeLevel}'
-        : (chase.kind == HubChaseKind.dailyRun ? 'DAILY RUN' : 'ENTER DUNGEON');
+    final keyFromChase = chase.keyLevel ??
+        (foldEnter && (chaseActionLabel?.contains('ENTER KEY') ?? false)
+            ? _keyLevelFromLabel(chaseActionLabel!)
+            : null);
+    final enterLabel = keyFromChase != null
+        ? '🔑 ENTER KEY +$keyFromChase'
+        : (chase.kind == HubChaseKind.keystone
+            ? '🔑 ENTER KEY +${chase.keyLevel ?? state.hardmodeLevel}'
+            : (chase.kind == HubChaseKind.dailyRun
+                ? 'DAILY RUN'
+                : 'ENTER DUNGEON'));
     final enterAction =
         unlockedSelected ? () => widget.onEnterDungeon(_selectedId) : null;
     final String primaryLabel;
@@ -224,7 +235,13 @@ class _HubScreenState extends State<HubScreen>
     final String? secondaryLabel;
     final VoidCallback? secondaryAction;
     if (foldEnter || endgamePrimary) {
-      primaryLabel = foldEnter ? enterLabel : chaseActionLabel!;
+      // Prefer chase CTA when it already names KEY / hunt — don't swap to
+      // bare ENTER DUNGEON (vault halfway / month KEY cliff).
+      primaryLabel = foldEnter
+          ? ((chaseActionLabel?.contains('ENTER KEY') ?? false)
+              ? chaseActionLabel!
+              : enterLabel)
+          : chaseActionLabel!;
       primaryAction = onAction;
       if (chase.kind == HubChaseKind.ashenCrown &&
           GameLogic.endgameUnlocked(state)) {
@@ -584,6 +601,12 @@ class _HubScreenState extends State<HubScreen>
       ],
     );
   }
+}
+
+int? _keyLevelFromLabel(String label) {
+  final match = RegExp(r'ENTER KEY \+(\d+)').firstMatch(label);
+  if (match == null) return null;
+  return int.tryParse(match.group(1)!);
 }
 
 /// Always-visible KEY / vault / week crumbs under TODAY (phone hub).

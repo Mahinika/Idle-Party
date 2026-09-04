@@ -205,7 +205,7 @@ void main() {
     );
     expect(
       WipeAdvice.lineFor(state: state, fight: atkLack()),
-      contains('GEAR'),
+      contains('BAG'),
     );
   });
 
@@ -246,8 +246,20 @@ void main() {
       contains('HUB'),
     );
     expect(
-      WipeAdvice.hubHintFor('Equip the better item in GEAR'),
-      contains('HUB'),
+      WipeAdvice.hubHintFor('Equip the better item in BAG'),
+      contains('BAG'),
+    );
+    expect(
+      WipeAdvice.hubCtaLabelFor('Upgrade ATK in POWER'),
+      'OPEN POWER',
+    );
+    expect(
+      WipeAdvice.hubNavFor('Upgrade ATK in POWER')?.power,
+      PowerSegment.forge,
+    );
+    expect(
+      WipeAdvice.hubCtaLabelFor('Equip the better item in BAG'),
+      'OPEN BAG',
     );
   });
 

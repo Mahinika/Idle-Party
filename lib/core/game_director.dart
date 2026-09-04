@@ -43,6 +43,7 @@ import 'wipe_advice.dart';
 import 'ashen_crown.dart';
 import 'blessing_constellation.dart';
 import 'god_hand_mastery.dart';
+import 'nav_intent.dart';
 import '../models/dungeon_def.dart';
 
 abstract class GameStorage {
@@ -1134,7 +1135,7 @@ class GameDirector extends ChangeNotifier {
     _handleWipe();
   }
 
-  void hubAfterWipe() {
+  void hubAfterWipe({NavIntent? openMenu}) {
     if (!_awaitingWipeChoice) return;
     _awaitingWipeChoice = false;
     _state = GameLogic.exitToHubHealed(_state);
@@ -1144,6 +1145,7 @@ class GameDirector extends ChangeNotifier {
     _freezeRunIncome();
     _state = _state.copyWith(lastUpdated: DateTime.now());
     _syncHubIdleTimer();
+    _pendingHubNav = openMenu;
     final payoffs = LogicNotices.takeMetaPayoffs();
     showToast(
       payoffs.isNotEmpty ? payoffs.join(' · ') : 'Returned to hub',
@@ -3152,8 +3154,16 @@ class GameDirector extends ChangeNotifier {
   }
 
   bool _pendingStartMenu = false;
+  NavIntent? _pendingHubNav;
 
   bool get pendingStartMenu => _pendingStartMenu;
+
+  /// Consume a one-shot menu open after wipe → hub (POWER / BAG / Shop).
+  NavIntent? takePendingHubNav() {
+    final nav = _pendingHubNav;
+    _pendingHubNav = null;
+    return nav;
+  }
 
   void clearPendingStartMenu() {
     _pendingStartMenu = false;

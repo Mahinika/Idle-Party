@@ -45,7 +45,7 @@ class ChaseContract {
     HubChaseKind.monthGoal => 'CLAIM MONTH',
     HubChaseKind.weekGoal => 'CLAIM WEEK',
     HubChaseKind.meetHero => 'GEAR',
-    HubChaseKind.equipBag => 'GEAR',
+    HubChaseKind.equipBag => 'BAG',
     HubChaseKind.marketUpgrade => 'SHOP',
     HubChaseKind.ascend => 'ASCEND',
     HubChaseKind.dailyRun => 'DAILY',

@@ -64,11 +64,14 @@ abstract final class ChaseDispatcher {
           op: ChaseOp.claimMissions,
         );
       case HubChaseKind.monthGoal:
-        return const ChasePlan(label: 'CLAIM MONTH', op: ChaseOp.claimMonth);
+        if (chase.urgency == HubChaseUrgency.ready) {
+          return const ChasePlan(label: 'CLAIM MONTH', op: ChaseOp.claimMonth);
+        }
+        return _monthAlmostPlan(state, chase, selectedZoneId);
       case HubChaseKind.meetHero:
         return const ChasePlan(label: 'OPEN GEAR', op: ChaseOp.navMeetHero);
       case HubChaseKind.equipBag:
-        return const ChasePlan(label: 'OPEN GEAR', op: ChaseOp.navEquipBag);
+        return const ChasePlan(label: 'OPEN BAG', op: ChaseOp.navEquipBag);
       case HubChaseKind.marketUpgrade:
         return const ChasePlan(label: 'SHOP', op: ChaseOp.navMarket);
       case HubChaseKind.ascend:
@@ -76,25 +79,11 @@ abstract final class ChaseDispatcher {
       case HubChaseKind.dailyRun:
         return const ChasePlan(label: 'DAILY', op: ChaseOp.confirmDaily);
       case HubChaseKind.keystone:
-        final key = chase.keyLevel ?? 1;
-        final id = chase.zoneId ?? selectedZoneId;
-        final affixes = Keystone.previewAffixes(state);
-        final affixBit = affixes.isEmpty
-            ? 'no affixes'
-            : affixes.map(Keystone.label).join(' · ');
-        final par = Keystone.formatTimer(
-          Keystone.parTimeMs(
-            bossFloor: GameLogic.bossFloorFor(state),
-            key: key,
-          ),
-        );
-        return ChasePlan(
-          label: '🔑 ENTER KEY +$key',
-          op: ChaseOp.enterKey,
-          zoneId: id,
-          keyLevel: key,
+        return _enterKeyPlan(
+          state,
+          key: chase.keyLevel ?? 1,
+          zoneId: chase.zoneId ?? selectedZoneId,
           pickZone: chase.zoneId != null,
-          toast: 'KEY +$key · $affixBit · par $par',
         );
       case HubChaseKind.gauntletMilestone:
         return const ChasePlan(
@@ -127,12 +116,36 @@ abstract final class ChaseDispatcher {
             op: ChaseOp.confirmGauntlet,
           );
         }
+        if (week.timedKeyTarget > 0) {
+          return _enterKeyPlan(
+            state,
+            key: week.timedKeyTarget,
+            zoneId: chase.zoneId ?? selectedZoneId,
+            pickZone: chase.zoneId != null,
+          );
+        }
         return ChasePlan(
           label: 'ENTER',
           op: ChaseOp.enter,
           zoneId: chase.zoneId ?? selectedZoneId,
         );
       case HubChaseKind.dailyVaultProgress:
+        final vaultKey = chase.keyLevel ??
+            (state.metaDepth.dailyBestTimedKey == 1 ? 2 : null);
+        if (vaultKey != null && GameLogic.showKeystoneJargon(state)) {
+          return _enterKeyPlan(
+            state,
+            key: vaultKey,
+            zoneId: chase.zoneId ?? selectedZoneId,
+            pickZone: chase.zoneId != null,
+          );
+        }
+        return ChasePlan(
+          label: 'ENTER',
+          op: ChaseOp.enter,
+          zoneId: chase.zoneId ?? selectedZoneId,
+          pickZone: chase.zoneId != null,
+        );
       case HubChaseKind.clearFloors:
         return ChasePlan(
           label: 'ENTER',
@@ -149,8 +162,64 @@ abstract final class ChaseDispatcher {
           pickZone: true,
         );
       case HubChaseKind.willRank:
-        return const ChasePlan(label: 'INFO', op: ChaseOp.navMoreInfo);
+        return const ChasePlan(label: 'GUIDE', op: ChaseOp.navMoreInfo);
     }
+  }
+
+  static ChasePlan _enterKeyPlan(
+    GameState state, {
+    required int key,
+    required String? zoneId,
+    required bool pickZone,
+  }) {
+    final affixes = Keystone.previewAffixes(state);
+    final affixBit = affixes.isEmpty
+        ? 'no affixes'
+        : affixes.map(Keystone.label).join(' · ');
+    final par = Keystone.formatTimer(
+      Keystone.parTimeMs(
+        bossFloor: GameLogic.bossFloorFor(state),
+        key: key,
+      ),
+    );
+    return ChasePlan(
+      label: '🔑 ENTER KEY +$key',
+      op: ChaseOp.enterKey,
+      zoneId: zoneId,
+      keyLevel: key,
+      pickZone: pickZone,
+      toast: 'KEY +$key · $affixBit · par $par',
+    );
+  }
+
+  static ChasePlan _monthAlmostPlan(
+    GameState state,
+    HubChase chase,
+    String? selectedZoneId,
+  ) {
+    final monthKey = state.metaDepth.monthPassKey.isNotEmpty
+        ? state.metaDepth.monthPassKey
+        : GameLogic.isoMonthKey(DateTime.now().toUtc());
+    final month = LocalSeasonCatalog.forMonthKey(monthKey);
+    if (month.grTierTarget > 0) {
+      return const ChasePlan(
+        label: '◆ GREATER RIFT',
+        op: ChaseOp.confirmGreaterRift,
+      );
+    }
+    if (month.timedKeyTarget > 0) {
+      return _enterKeyPlan(
+        state,
+        key: month.timedKeyTarget,
+        zoneId: chase.zoneId ?? selectedZoneId,
+        pickZone: chase.zoneId != null,
+      );
+    }
+    return ChasePlan(
+      label: 'ENTER',
+      op: ChaseOp.enter,
+      zoneId: chase.zoneId ?? selectedZoneId,
+    );
   }
 
   static NavIntent? navIntent(ChasePlan plan, GameState state) {

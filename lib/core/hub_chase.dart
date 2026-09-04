@@ -241,6 +241,7 @@ class HubChase {
             'Timed KEY +1 already counts. Time KEY +2 to fill and claim the vault.',
         progressLabel: 'KEY +1',
         urgency: HubChaseUrgency.almost,
+        keyLevel: 2,
       );
     }
 
@@ -420,11 +421,11 @@ class HubChase {
           : '$upgrades better items waiting',
       detail: upgrades == 1
           ? (named != null
-              ? '$named is in BAG — open GEAR and tap EQUIP.'
-              : 'Open GEAR and tap EQUIP before you go deeper.')
+              ? '$named is in BAG — open BAG and tap EQUIP.'
+              : 'Open BAG and tap EQUIP before you go deeper.')
           : (named != null
-              ? 'Open GEAR — tap EQUIP ($upgrades waiting; first: $named).'
-              : 'Open GEAR and tap EQUIP — $upgrades upgrades waiting.'),
+              ? 'Open BAG — tap EQUIP ($upgrades waiting; first: $named).'
+              : 'Open BAG and tap EQUIP — $upgrades upgrades waiting.'),
       progressLabel: upgrades == 1 ? 'EQUIP 1' : 'EQUIP $upgrades',
       urgency: HubChaseUrgency.ready,
     );

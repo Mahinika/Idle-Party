@@ -48,7 +48,11 @@ class _PlayShellState extends State<PlayShell> {
 
   void _onDirector() {
     final now = director.state.inDungeon;
-    if (_inDungeon && !now) router.close();
+    if (_inDungeon && !now) {
+      router.close();
+      final nav = director.takePendingHubNav();
+      if (nav != null) router.apply(nav);
+    }
     _inDungeon = now;
     _syncPause();
     if (mounted) setState(() {});

@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.86';
+  static const String currentVersion = '1.12.87';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.87',
+      bullets: <String>[
+        'TODAY buttons match the hunt: vault halfway / week / month KEY cliffs open ENTER KEY (not bare ENTER DUNGEON). Month ALMOST claims only when READY.',
+        'Wipe panel can OPEN POWER / BAG / Shop when the tip names that fix. Equip-bag chase says BAG.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.86',
       bullets: <String>[

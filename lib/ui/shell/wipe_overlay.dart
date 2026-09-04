@@ -168,14 +168,43 @@ class DungeonWipePanel extends StatelessWidget {
                   ],
                   if (!state.inGauntlet && !state.inAnyRiftMode)
                     const SizedBox(height: 8),
-                  KenneyButton(
-                    label: state.inGauntlet || state.inAnyRiftMode
-                        ? 'END RUN → HUB'
-                        : 'RETURN TO HUB',
-                    style: KenneyButtonStyle.grey,
-                    primary: true,
-                    onPressed: director.hubAfterWipe,
-                  ),
+                  () {
+                    final fixLabel =
+                        WipeAdvice.hubCtaLabelFor(state.wipeAdviceLine);
+                    final fixNav =
+                        WipeAdvice.hubNavFor(state.wipeAdviceLine);
+                    if (fixLabel == null || fixNav == null) {
+                      return KenneyButton(
+                        label: state.inGauntlet || state.inAnyRiftMode
+                            ? 'END RUN → HUB'
+                            : 'RETURN TO HUB',
+                        style: KenneyButtonStyle.grey,
+                        primary: true,
+                        onPressed: director.hubAfterWipe,
+                      );
+                    }
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        KenneyButton(
+                          label: fixLabel,
+                          tip: WipeAdvice.hubHintFor(state.wipeAdviceLine),
+                          style: KenneyButtonStyle.grey,
+                          onPressed: () =>
+                              director.hubAfterWipe(openMenu: fixNav),
+                        ),
+                        const SizedBox(height: 8),
+                        KenneyButton(
+                          label: state.inGauntlet || state.inAnyRiftMode
+                              ? 'END RUN → HUB'
+                              : 'RETURN TO HUB',
+                          style: KenneyButtonStyle.grey,
+                          primary: true,
+                          onPressed: director.hubAfterWipe,
+                        ),
+                      ],
+                    );
+                  }(),
                   if (WipeAdvice.godHandHintFor(state) != null) ...[
                     const SizedBox(height: 10),
                     Text(
