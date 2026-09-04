@@ -38,7 +38,7 @@ Painted pixel dungeons, torchlight, dark charcoal and gold. [Kenney](https://ken
 - **A full party with class kits** — 10 classes and **31 specs**. Pick your starters on New Game; unlock more via Ascend and clears. Abilities, buffs, and a live DPS share meter.
 - **Farm or Push** — milk a floor for loot, or shove deeper until the wipe. Your call.
 - **God Hand** — tap the map to steer and smash. Upgrade it with essence.
-- **Gear that feels good** — equip, auto-equip, sell junk, merge in the combinator, save loadouts.
+- **Gear that feels good** — equip, auto-equip, merge in the combinator (BAG Scrap / Sell junk / Loadouts chrome is hidden).
 - **Meta that survives Ascend** — sanctuary, relics, pets, prestige shop, contracts, weekly modifiers, achievements, codex.
 - **Offline progress that respects the dungeon** — come back to gold, floors, and a clear summary.
 

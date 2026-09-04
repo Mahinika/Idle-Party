@@ -1009,10 +1009,16 @@ class GameDirector extends ChangeNotifier {
           _freezeRunIncome();
           showToast(
             beforeClear.dungeonMode == DungeonMode.push && wasBoss
-                ? 'Zone clear — hub'
+                ? 'ZONE DONE — ${DungeonCatalog.byId(beforeClear.dungeonId).name} · back to hub'
                 : StoryLore.dungeonCleared(beforeClear.dungeonId),
-            life: 3.2,
+            life: 3.6,
           );
+          if (beforeClear.dungeonMode == DungeonMode.push && wasBoss) {
+            uiFeedback.presentClear(
+              'ZONE DONE · ${DungeonCatalog.byId(beforeClear.dungeonId).name}',
+              life: 2.8,
+            );
+          }
         }
         _bumpCombatFrame();
         notifyListeners();
@@ -1686,7 +1692,9 @@ class GameDirector extends ChangeNotifier {
   void travelToFloor(int floorNumber) {
     if (_state.inGauntlet || _state.inAnyRiftMode) {
       showToast(
-        _state.inGauntlet ? 'Gauntlet — no floor jump' : 'Rift — no floor jump',
+        _state.inGauntlet
+            ? 'Gauntlet — no floor jump (endless climb; wipe/leave → hub)'
+            : 'Rift — no floor jump (timer run; leave → hub)',
         life: 2.0,
       );
       return;

@@ -290,7 +290,8 @@ class _MarketOverlayState extends State<MarketOverlay> {
     MarketListing listing,
   ) {
     final item = listing.item;
-    final upgradeHero = _upgradeHeroName(state, listing);
+    final String? upgradeHero = _upgradeHeroName(state, listing);
+    final wornCompare = _wornCompareLine(state, listing);
     final armorLine = item.armorType != null
         ? ' · ${item.armorType!.name}'
         : '';
@@ -336,7 +337,9 @@ class _MarketOverlayState extends State<MarketOverlay> {
                     ),
                     child: Text(
                       canBuy
-                          ? 'UPGRADE · $upgradeHero'
+                          ? (wornCompare != null
+                              ? 'UPGRADE · $upgradeHero · $wornCompare'
+                              : 'UPGRADE · $upgradeHero')
                           : 'UPGRADE · $upgradeHero (need gold)',
                       style: GameTheme.body(size: 11, color: GameTheme.mossLit),
                     ),
@@ -397,6 +400,46 @@ class _MarketOverlayState extends State<MarketOverlay> {
       if (cmp.isUpgrade) return hero.name;
     }
     return null;
+  }
+
+  /// Worn vs listing delta for UPGRADE badge (score + iLvl).
+  String? _wornCompareLine(GameState state, MarketListing listing) {
+    PartyHero? hero;
+    if (listing.targetHeroIndex >= 0 &&
+        listing.targetHeroIndex < state.heroes.length) {
+      hero = state.heroes[listing.targetHeroIndex];
+    } else {
+      for (final h in state.heroes) {
+        final cmp = GearScorer.compareForHeroSlot(
+          h,
+          listing.item,
+          listing.slot,
+          pairingStash: state.gearStash,
+        );
+        if (cmp.isUpgrade) {
+          hero = h;
+          break;
+        }
+      }
+    }
+    if (hero == null) return null;
+    final cmp = GearScorer.compareForHeroSlot(
+      hero,
+      listing.item,
+      listing.slot,
+      pairingStash: state.gearStash,
+    );
+    if (!cmp.isUpgrade) return null;
+    final worn = hero.itemIn(listing.slot);
+    final wornIlvl = worn?.effectiveItemLevel;
+    final bits = <String>[];
+    if (cmp.powerDelta > 0) bits.add('+${cmp.powerDelta} score');
+    if (wornIlvl != null) {
+      bits.add('iLvl $wornIlvl→${listing.item.effectiveItemLevel}');
+    } else {
+      bits.add('empty→iLvl ${listing.item.effectiveItemLevel}');
+    }
+    return bits.join(' · ');
   }
 
   String _gapFillLine(GameState state, MarketListing listing) {

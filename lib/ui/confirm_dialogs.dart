@@ -8,6 +8,7 @@ import '../core/meta_systems.dart';
 import '../core/rift.dart';
 import '../core/greater_rift.dart';
 import '../core/story_lore.dart';
+import '../models/dungeon_mode.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
@@ -197,8 +198,11 @@ Future<void> confirmLeaveDungeon(
           plain
               ? 'Leave to hub now? This floor’s fight restarts when you come back. '
                   'Gear and gold you already got stay.'
+              : state != null && state.dungeonMode == DungeonMode.farm
+              ? 'Leave to hub now? FARM loop on this floor stops — you restart '
+                  'from hub (not the same floor mid-loop). Gear and gold already banked stay.'
               : 'Leave to hub now? This floor’s fight progress is lost '
-                  '(Repeat/FARM restarts from the hub). Gear and gold already banked stay.',
+                  '(PUSH climb resets from hub). Gear and gold already banked stay.',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [

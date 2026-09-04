@@ -211,6 +211,16 @@ abstract final class LocalSeasonCatalog {
       mirrorSeedSalt: 8,
     ),
     LocalSeasonMonth(
+      id: 'brass_month',
+      name: 'Brass Month',
+      monthKey: '2026-09',
+      titleReward: 'Brass Season',
+      timedKeyTarget: 10,
+      essenceReward: 26,
+      mirrorZoneId: 'brass',
+      mirrorSeedSalt: 12,
+    ),
+    LocalSeasonMonth(
       id: 'ember_month',
       name: 'Ember Month',
       titleReward: 'Ember Season',
@@ -388,7 +398,7 @@ abstract final class LocalSeasonCatalog {
     if (weekKey.isEmpty) return 0;
     final mk = state.metaDepth.monthPassKey.isNotEmpty
         ? state.metaDepth.monthPassKey
-        : '2026-08';
+        : '2026-09';
     final month = forMonthKey(mk);
     if (month.mirrorZoneId == null) return weekKey.hashCode;
     return weekKey.hashCode ^

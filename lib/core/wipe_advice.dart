@@ -184,6 +184,18 @@ abstract final class WipeAdvice {
       return 'Bag nearly full — equip upgrades or CLEAN BAG';
     }
 
+    if (state.inGauntlet && fight.leftover >= 0.35) {
+      return 'Spire climb is steep — leave and retry from hub (lower floors)';
+    }
+    if (state.inGreaterRift && fight.leftover >= 0.35) {
+      final tier = state.grTier > 0 ? state.grTier : state.metaDepth.grBestTier;
+      return 'GR$tier may be high — dial down Greater Rift on KEY';
+    }
+    if (state.inRift && fight.leftover >= 0.35) {
+      final tier = state.riftTier > 0 ? state.riftTier : state.metaDepth.riftBestTier;
+      return 'Rift R$tier may be high — dial down on KEY';
+    }
+
     if (state.hardmodeLevel > 0 &&
         state.hardmodeLevel > state.ascensionLevel + 4 &&
         fight.leftover >= 0.35) {

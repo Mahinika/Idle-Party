@@ -110,16 +110,16 @@ class DungeonWipePanel extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ],
-                  const SizedBox(height: 8),
-                  Text(
-                    WipeAdvice.timingFootnote,
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.parchmentDim,
+                    const SizedBox(height: 8),
+                    Text(
+                      WipeAdvice.timingFootnote,
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(
+                        size: 12,
+                        color: GameTheme.parchmentDim,
+                      ),
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 14),
                   if (!state.inGauntlet && !state.inAnyRiftMode)
                     KenneyButton(

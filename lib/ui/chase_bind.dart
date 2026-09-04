@@ -37,6 +37,8 @@ void runChasePlan({
       router.apply(NavIntent.shop);
     case ChaseOp.navMoreInfo:
       router.open(MenuRoute.more, more: MoreSection.info);
+    case ChaseOp.navKey:
+      router.open(MenuRoute.key);
     case ChaseOp.enter:
     case ChaseOp.enterKey:
       final id = plan.zoneId;

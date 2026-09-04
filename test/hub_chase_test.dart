@@ -591,10 +591,56 @@ void main() {
     );
     expect(state.collectionScore, greaterThanOrEqualTo(320));
     final chase = HubChase.forState(state, now: now);
-    // After F100 + GR/Rift/Ashen quiet, Spire stays a PB hunt (not ladder klar).
+    // Vault + Daily + KEY dial settled → soft session rest (Spire optional).
+    expect(chase.kind, HubChaseKind.doneForToday);
+    expect(chase.title, contains('Done for today'));
+    expect(chase.detail.toLowerCase(), contains('boards'));
+  });
+
+  test('Push Gauntlet PB when Daily still open', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: false,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+          dailyVaultClaimed: true,
+          grBestTier: GreaterRift.maxTier,
+          claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
+          gauntletBestFloor: 100,
+          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          riftBestTier: Rift.maxTier,
+          claimedRiftMilestones: const ['r5', 'r10', 'r20'],
+          worldBossTickets: 0,
+          worldBossClearedWeek: true,
+        ),
+        achievements: [
+          for (var i = 0; i < 400; i++) 'ach_$i',
+        ],
+        highestDungeonCleared: 14,
+        lifetimeGoldEarned: 50_000_000,
+      ),
+    );
+    state = AshenCrown.ensureWeek(state, now: now);
+    final weekKey = state.metaDepth.weeklyKey.isNotEmpty
+        ? state.metaDepth.weeklyKey
+        : GameLogic.isoWeekKey(now);
+    final week = LocalSeasonCatalog.forWeekKey(weekKey);
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        weeklyKey: weekKey,
+        worldBossTickets: 0,
+        worldBossClearedWeek: true,
+        claimedWeekGoals: <String>{
+          ...state.metaDepth.claimedWeekGoals,
+          week.claimIdForWeek(weekKey),
+        }.toList(),
+      ),
+    );
+    final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.gauntletMilestone);
     expect(chase.title, contains('Push Gauntlet PB'));
-    expect(chase.detail.toLowerCase(), isNot(contains('blessing')));
   });
 
   test('KEY chase detail names affixes and par', () {

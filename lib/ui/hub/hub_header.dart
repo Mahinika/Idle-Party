@@ -169,6 +169,8 @@ class HubHeader extends StatefulWidget {
     this.partyName = 'The Party',
     this.dimIncome = false,
     this.plainChrome = false,
+    this.huntHint,
+    this.blessingStacks = 0,
   });
 
   final int ascensionLevel;
@@ -186,6 +188,12 @@ class HubHeader extends StatefulWidget {
   final String partyName;
   final bool dimIncome;
   final bool plainChrome;
+
+  /// Short tonight-hunt tag (TODAY title) for AL-max pill.
+  final String? huntHint;
+
+  /// Ascend Blessing stacks for KEEP one-liner.
+  final int blessingStacks;
 
   @override
   State<HubHeader> createState() => _HubHeaderState();
@@ -263,9 +271,22 @@ class _HubHeaderState extends State<HubHeader> {
               HubStatPill(
                 icon: KenneyAssets.iconCrown,
                 caption: 'Ascend',
-                label: widget.ascensionLevel >= GameLogic.maxAscensionLevel
-                    ? 'AL ${widget.ascensionLevel} · MAX · endgame'
-                    : 'AL ${widget.ascensionLevel}',
+                label: () {
+                  if (widget.ascensionLevel < GameLogic.maxAscensionLevel) {
+                    final bless = widget.blessingStacks > 0
+                        ? ' · Blessing ×${widget.blessingStacks}'
+                        : '';
+                    return 'AL ${widget.ascensionLevel}$bless';
+                  }
+                  final hunt = widget.huntHint;
+                  final huntBit = (hunt != null && hunt.isNotEmpty)
+                      ? hunt
+                      : 'endgame';
+                  final bless = widget.blessingStacks > 0
+                      ? ' · B×${widget.blessingStacks}'
+                      : '';
+                  return 'AL ${widget.ascensionLevel} · MAX · $huntBit$bless';
+                }(),
               ),
           ],
         ),

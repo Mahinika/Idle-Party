@@ -53,13 +53,21 @@ class TargetCornerHud extends StatelessWidget {
             nearest = e;
           }
         }
-        // Living Bomb highlights trash — don't steal the boss frame.
+        // Living Bomb highlights trash — never steal the boss frame.
         if (boss != null) {
           focus = boss;
         } else if (bomb != null) {
           focus = bomb;
         } else {
           focus = nearest;
+        }
+      } else if (focus.livingBombTimer > 0) {
+        // Pinned bomb still yields to a living boss.
+        for (final e in world.enemies) {
+          if (e.hp > 0 && !e.dormant && e.role == EnemyRole.boss) {
+            focus = e;
+            break;
+          }
         }
       }
     }

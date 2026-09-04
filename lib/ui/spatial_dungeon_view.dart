@@ -838,7 +838,7 @@ class GodHandRing extends StatelessWidget {
   const GodHandRing({
     super.key,
     required this.cooldown,
-    this.maxCooldown = 1.1,
+    required this.maxCooldown,
     this.onTap,
     this.urgent = false,
     this.readyLabel,

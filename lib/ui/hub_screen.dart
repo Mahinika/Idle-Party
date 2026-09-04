@@ -135,6 +135,13 @@ class _HubScreenState extends State<HubScreen>
     if (_offeredWhatsNew || !mounted) return;
     if (director.state.inDungeon) return;
     if (!MetaSystems.hasUnseenChangelog(director.state)) return;
+    // Don't cover READY claimables — let TODAY breathe first.
+    final chase = HubChase.forState(director.state);
+    if (chase.urgency == HubChaseUrgency.ready) return;
+    await Future<void>.delayed(const Duration(milliseconds: 1400));
+    if (!mounted || _offeredWhatsNew) return;
+    if (director.state.inDungeon) return;
+    if (!MetaSystems.hasUnseenChangelog(director.state)) return;
     _offeredWhatsNew = true;
     await WhatsNewOverlay.show(context, director);
   }
@@ -179,6 +186,21 @@ class _HubScreenState extends State<HubScreen>
         }),
       ),
     );
+  }
+
+  /// Short AL-pill hunt tag from TODAY title (phone width).
+  String _shortHuntHint(HubChase chase) {
+    final t = chase.title;
+    if (t.startsWith('Time KEY') || t.startsWith('Run KEY')) return 'KEY';
+    if (t.contains('Gauntlet') || t.contains('Spire') || t.contains('PB')) {
+      return 'Spire';
+    }
+    if (t.contains('Greater Rift') || t.startsWith('GR')) return 'GR';
+    if (t.contains('Rift')) return 'Rift';
+    if (t.contains('Ashen')) return 'Ashen';
+    if (t.contains('Done for today')) return 'rest';
+    if (t.length <= 14) return t;
+    return t.split(' ').take(2).join(' ');
   }
 
   Widget _hubActionColumn(
@@ -480,7 +502,9 @@ class _HubScreenState extends State<HubScreen>
                             children: [
                               AnimatedBuilder(
                                 animation: _torch,
-                                builder: (context, _) => HubHeader(
+                                builder: (context, _) {
+                                  final chaseNow = HubChase.forState(state);
+                                  return HubHeader(
                                   ascensionLevel: state.ascensionLevel,
                                   bossFloor: bossFloor,
                                   gold: state.gold,
@@ -501,9 +525,13 @@ class _HubScreenState extends State<HubScreen>
                                   partyName: state.partyName,
                                   plainChrome: GameLogic.plainPlayerChrome(state),
                                   dimIncome: hubChaseOwnsEndgameRow(
-                                    HubChase.forState(state).kind,
+                                    chaseNow.kind,
                                   ),
-                                ),
+                                  huntHint: _shortHuntHint(chaseNow),
+                                  blessingStacks:
+                                      state.metaDepth.ascendBlessings,
+                                );
+                                },
                               ),
                               if (director.offlineSummary != null) ...[
                                 SizedBox(height: short ? 4 : 8),

@@ -29,7 +29,10 @@ class HubPowerupsCard extends StatelessWidget {
     final until = state.metaDepth.adBoostUntilMs;
     final active = AdBoost.isActive(until);
     final left = AdBoost.formatRemaining(until);
-    final status = active
+    final capped = AdBoost.atStackCap(until);
+    final status = capped
+        ? 'CAP FULL · later'
+        : active
         ? '×2 · +${AdBoost.attackPercent}% ATK · $left'
         : 'WATCH · ${AdBoost.hoursPerAd}h · ×2 gold · +${AdBoost.attackPercent}% ATK';
     return Padding(

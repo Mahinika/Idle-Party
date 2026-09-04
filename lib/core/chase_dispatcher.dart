@@ -19,6 +19,7 @@ enum ChaseOp {
   navEquipBag,
   navMarket,
   navMoreInfo,
+  navKey,
   enter,
   enterKey,
   confirmAscend,
@@ -162,7 +163,9 @@ abstract final class ChaseDispatcher {
           pickZone: true,
         );
       case HubChaseKind.willRank:
-        return const ChasePlan(label: 'GUIDE', op: ChaseOp.navMoreInfo);
+        return const ChasePlan(label: 'CODEX', op: ChaseOp.navMoreInfo);
+      case HubChaseKind.doneForToday:
+        return const ChasePlan(label: 'KEY · BOARDS', op: ChaseOp.navKey);
     }
   }
 
@@ -238,6 +241,8 @@ abstract final class ChaseDispatcher {
           route: MenuRoute.more,
           more: MoreSection.info,
         );
+      case ChaseOp.navKey:
+        return const NavIntent(route: MenuRoute.key);
       default:
         return null;
     }

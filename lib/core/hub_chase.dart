@@ -50,6 +50,9 @@ enum HubChaseKind {
 
   /// Ticket Ashen Crown clear (endgame).
   ashenCrown,
+
+  /// Vault + Daily + KEY dial settled — soft session rest (Spire optional).
+  doneForToday,
 }
 
 /// Endgame hunts use TODAY + primary ENTER / KEY — not a second hub row.
@@ -61,6 +64,8 @@ bool hubChaseOwnsEndgameRow(HubChaseKind kind) {
     case HubChaseKind.greaterRiftMilestone:
     case HubChaseKind.ashenCrown:
       return true;
+    case HubChaseKind.doneForToday:
+      return false;
     default:
       return false;
   }
@@ -311,15 +316,19 @@ class HubChase {
     final keyPush = _keystonePushChase(state);
     if (keyPush != null) return keyPush;
 
+    // Week ALMOST can own the night at endgame (season habit before Spire).
+    if (GameLogic.endgameUnlocked(state)) {
+      final weekAlmostEarly = _weekGoalChase(state, clock, almostOnly: true);
+      if (weekAlmostEarly != null) return weekAlmostEarly;
+    }
+
     // At party max level: ladder Gauntlet → GR → Rift → Ashen Crown before
     // Daily/Will so AL20 TODAY is one clear hunt, not a meta shuffle.
     if (GameLogic.endgameUnlocked(state)) {
-      final endgameLadder = _endgameLadderChase(state);
+      final endgameLadder = _endgameLadderChase(state, clock);
       if (endgameLadder != null) return endgameLadder;
       final monthAlmost = _monthPassChase(state, clock, almostOnly: true);
       if (monthAlmost != null) return monthAlmost;
-      final weekAlmost = _weekGoalChase(state, clock, almostOnly: true);
-      if (weekAlmost != null) return weekAlmost;
     }
 
     if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
@@ -382,7 +391,7 @@ class HubChase {
   }
 
   /// One clear endgame hunt (not a stats dump). KEY habit already handled.
-  static HubChase? _endgameLadderChase(GameState state) {
+  static HubChase? _endgameLadderChase(GameState state, DateTime clock) {
     // Spire fans: Gauntlet before Greater Rift (FEEL 060 / 240).
     final gauntlet = _nextGauntletChase(state);
     if (gauntlet != null) return gauntlet;
@@ -392,8 +401,28 @@ class HubChase {
     if (rift != null) return rift;
     final crown = _ashenCrownChase(state);
     if (crown != null) return crown;
-    // F100 milestones done and ladder quiet — keep Spire nights as PB push.
-    return _gauntletPbChase(state);
+    // F100 milestones done — PB push, or soft "Done for today" when loop settled.
+    return _sessionRestOrPbChase(state, clock);
+  }
+
+  static HubChase? _sessionRestOrPbChase(GameState state, DateTime clock) {
+    final pb = _gauntletPbChase(state);
+    if (pb == null) return null;
+    final cap = Keystone.maxForState(state);
+    final keySettled = cap <= 0 || state.hardmodeLevel >= cap;
+    final vaultOk = state.metaDepth.dailyVaultClaimed;
+    final dailyOk = MetaSystems.isDailyClaimedToday(state, now: clock);
+    if (vaultOk && dailyOk && keySettled) {
+      return HubChase(
+        kind: HubChaseKind.doneForToday,
+        title: 'Done for today',
+        detail:
+            'Vault, Daily, and KEY dial are settled. ${pb.detail} '
+            'Optional: KEY · BOARDS for ranks.',
+        progressLabel: pb.progressLabel,
+      );
+    }
+    return pb;
   }
 
   static HubChase? _ashenCrownChase(GameState state) {
@@ -828,8 +857,8 @@ class HubChase {
         kind: HubChaseKind.greaterRiftMilestone,
         title: almost ? 'Almost Greater Rift GR$tier' : 'Greater Rift GR$tier',
         detail: best <= 0
-            ? 'No mid-run gear — prestige ladder (+${pay}e at GR$tier).'
-            : 'Best GR$best — $need tiers to GR$tier (+${pay}e). No mid-run gear.',
+            ? 'No mid-run gear — prestige ladder (+${pay}e at GR$tier). KEY loot jumps by key×2 iLvl.'
+            : 'Best GR$best — $need tiers to GR$tier (+${pay}e). No mid-run gear (unlike KEY).',
         progressLabel: 'GR$best → GR$tier',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
