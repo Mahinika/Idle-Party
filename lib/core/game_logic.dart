@@ -2141,9 +2141,9 @@ class GameLogic {
   /// Dungeon mode chip label (Repeat/Next vs FARM/PUSH).
   static String dungeonModeChipLabel(DungeonMode mode, GameState state) {
     if (plainPlayerChrome(state)) {
-      return mode == DungeonMode.farm ? 'Repeat' : 'Next';
+      return mode == DungeonMode.farm ? '↻ Repeat' : '▲ Next';
     }
-    return mode == DungeonMode.farm ? 'FARM' : 'PUSH';
+    return mode == DungeonMode.farm ? '↻ FARM' : '▲ PUSH';
   }
 
   static String dungeonModeChipTip(DungeonMode mode, GameState state) {

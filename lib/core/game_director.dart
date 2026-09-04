@@ -947,14 +947,13 @@ class GameDirector extends ChangeNotifier {
         final matGrants = LogicNotices.takeCraftMats();
         final floorLoot = LogicNotices.takeFloorLootLine();
         final floorEquip = LogicNotices.takeFloorEquipLine();
-        // Fold one short loot/equip line into the clear banner so toast + banner
-        // don't stack over the map at the same time.
+        // Prefer a short loot name list on the clear banner (not gold-only).
         final clearExtra = floorLoot ?? floorEquip;
         if (clearExtra != null &&
-            (clearLine.length + clearExtra.length) < 64) {
+            (clearLine.length + clearExtra.length) < 72) {
           clearLine = '$clearLine  · $clearExtra';
         } else if (floorLoot != null) {
-          showToast(floorLoot, life: 2.0);
+          showToast(floorLoot, life: 2.4);
         } else if (floorEquip != null) {
           showToast(floorEquip, life: 2.0);
         }

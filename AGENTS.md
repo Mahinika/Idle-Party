@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.87**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.88**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -40,7 +40,7 @@ wide desktop chrome. No hover-only flows for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.83 / 112** submitted 2026-08-29; testers may still be on
 **1.12.78 / 107** until review publishes). Working ship is
-**1.12.87**. Production **12×14** unlocks ~2026-09-04; still wait for owner play
+**1.12.88**. Production **12×14** unlocks ~2026-09-04; still wait for owner play
 before a production AAB.
 Do not treat Play as the primary install channel.
 

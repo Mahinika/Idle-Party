@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.87';
+  static const String currentVersion = '1.12.88';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.88',
+      bullets: <String>[
+        'TODAY: KEY detail shows affixes + par; Shop / Month ALMOST no longer steal KEY or Spire nights. Gauntlet keeps a PB push after F100. Rebuild bag shows kit-pressure progress. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'Dungeon: FARM/PUSH use loop/climb marks; mid-floor jump asks first (KEY timer note). Ability long-press opens the tip on phone. Floor clear lists loot names, not only gold.',
+        'KEY tab uses Keystone / Spire / Rift / GR / Boards sections. Instant melts can still tip DEF. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.87',
       bullets: <String>[

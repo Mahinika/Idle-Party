@@ -9,14 +9,14 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
 | Closed testing | ⏳ review | **1.12.87 (116)** submitted 2026-09-04 (Alpha AAB — TODAY KEY CTA honesty + wipe OPEN POWER/BAG/Shop). Pre-checks then Google review. Previous live for testers: **1.12.83 (112)**. Alpha countries: all + rest of world. |
-| Production | ⏳ access review | **Production-access application submitted 2026-09-04 ~16:54** (Console: reviewing; usually ≤7 days). Track still locked until Google grants access. Then upload AAB after IARC ads + phone screenshots attached. |
+| Production | ⏳ access review | **Production-access application submitted 2026-09-04 ~16:54** (Console: reviewing; usually ≤7 days). Track still locked until Google grants access. Then upload AAB after IARC ads (phone screens already attached). |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
 | Data safety form | ⏳ review | Updated 2026-08-21 for AdMob (device IDs collected+shared, advertising purpose) + Advertising ID declaration Yes. Submitted with Alpha **57**. |
-| IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). **Before production:** re-answer ads questions (hub POWERUPS rewarded ads). |
+| IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). **Before production:** re-answer ads (hub POWERUPS). Direct `app-content` URL may bounce to app-list — open **Policy → App content → Content ratings** from the Idle Party app. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN) | ✅ | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md` (Lv100 endgame + World Path level gates). |
-| Screenshots + feature graphic | ⏳ attach | Fresh **6× 1080×1920** composed 2026-09-04 in `tool/store_listing/out/` (hub/combat/gear/meta/zone/power @ 360×780 capture). Uploaded into Console asset library; **phone slot still needs attach + Save** (picker UI). Feature graphic + icon already live. |
+| Screenshots + feature graphic | ✅ phone | **Phone screenshots attached** on main listing (2026-09-04 check: 8 phone slots, Save idle = already live). Composed set also in `tool/store_listing/out/` (6×1080×1920). Feature graphic + icon live. |
 
 ## Production gate (12 × 14)
 
@@ -25,9 +25,9 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] **12** unique testers enrolled on closed track
 - [x] **14 consecutive days** with at least one tester active — production-access **application submitted 2026-09-04** (Google reviewing)
 - [x] Owner played **1.12.87+** on A56 (owner OK 2026-09-04)
-- [ ] Phone screenshots attached on listing (files ready in `tool/store_listing/out/`) — then Save + submit
+- [x] Phone screenshots attached on listing (verified 2026-09-04 — slots filled, Save idle)
 - [ ] IARC ads questionnaire re-done if Console prompts after AdMob / before production AAB
-- [ ] Production access granted by Google → upload production AAB **116 (1.12.87)** or newer
+- [ ] Production access granted by Google → upload production AAB **117 (1.12.88)** or newer
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
 

@@ -15,6 +15,7 @@ class LootGrantResult {
     this.gearAutoSold = 0,
     this.gearAutoDisassembled = 0,
     this.overflowEssence = 0,
+    this.itemLabels = const <String>[],
   });
 
   final int goldGained;
@@ -24,15 +25,24 @@ class LootGrantResult {
   final int gearAutoDisassembled;
   final int overflowEssence;
 
+  /// Short combat labels for gear that landed in BAG (clear toast).
+  final List<String> itemLabels;
+
   bool get isEmpty =>
       goldGained == 0 &&
       essenceGained == 0 &&
       gearStashed == 0 &&
       gearAutoSold == 0 &&
       gearAutoDisassembled == 0 &&
-      overflowEssence == 0;
+      overflowEssence == 0 &&
+      itemLabels.isEmpty;
 
   LootGrantResult merge(LootGrantResult other) {
+    final labels = <String>[...itemLabels];
+    for (final name in other.itemLabels) {
+      if (labels.length >= 4) break;
+      if (name.isNotEmpty && !labels.contains(name)) labels.add(name);
+    }
     return LootGrantResult(
       goldGained: goldGained + other.goldGained,
       essenceGained: essenceGained + other.essenceGained,
@@ -40,13 +50,18 @@ class LootGrantResult {
       gearAutoSold: gearAutoSold + other.gearAutoSold,
       gearAutoDisassembled: gearAutoDisassembled + other.gearAutoDisassembled,
       overflowEssence: overflowEssence + other.overflowEssence,
+      itemLabels: labels,
     );
   }
 
   /// Short player-facing line for floor-clear toasts.
   String summaryLine() {
     final bits = <String>[];
-    if (gearStashed > 0) bits.add('$gearStashed gear');
+    if (itemLabels.isNotEmpty) {
+      bits.add(itemLabels.take(3).join(', '));
+    } else if (gearStashed > 0) {
+      bits.add('$gearStashed gear');
+    }
     if (gearAutoSold > 0) bits.add('$gearAutoSold sold');
     if (gearAutoDisassembled > 0) bits.add('$gearAutoDisassembled scrapped');
     if (goldGained > 0) bits.add('+$goldGained g');
@@ -120,11 +135,15 @@ abstract final class LootResolver {
 
       final stashed = GearStash.stashEquipmentDetailed(next, item);
       next = stashed.state;
+      final label = item.combatPopLabel.isNotEmpty
+          ? item.combatPopLabel
+          : item.name;
       receipt = receipt.merge(
         LootGrantResult(
           gearStashed: 1,
           overflowEssence: stashed.overflowEssence,
           essenceGained: stashed.overflowEssence,
+          itemLabels: label.isNotEmpty ? <String>[label] : const <String>[],
         ),
       );
       resolved.add(

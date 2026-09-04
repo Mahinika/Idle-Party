@@ -60,6 +60,22 @@ void main() {
     expect(state.wipeAdviceLine, 'Upgrade DEF in POWER');
   });
 
+  test('instant melt still tips DEF when damageDealt is zero', () {
+    const fight = WipeFightSnapshot(
+      waveHp: 9000,
+      remainingHp: 8500,
+      damageDealt: 0,
+      damageTaken: 500,
+      partyMaxHp: 400,
+      elapsedSec: 0.3,
+    );
+    final state = GameLogic.createInitialState(now: now);
+    expect(
+      WipeAdvice.lineFor(state: state, fight: fight),
+      'Upgrade DEF in POWER',
+    );
+  });
+
   test('almost-cleared chip death points at STA', () {
     const fight = WipeFightSnapshot(
       waveHp: 1000,

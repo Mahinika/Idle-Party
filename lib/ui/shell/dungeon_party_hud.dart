@@ -13,7 +13,9 @@ import '../../spatial/spatial_combat.dart';
 import '../game_theme.dart';
 import '../hero_doll_sprite.dart';
 import '../kenney_assets.dart';
+import '../kenney_button.dart';
 import '../kenney_sprite.dart';
+import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 
 class PartyCornerHud extends StatefulWidget {
@@ -1003,21 +1005,31 @@ class _InlineAbilityChip extends StatelessWidget {
         ),
       ),
     );
+    final tip = gated
+        ? '${ability.tooltipMessage} — equip a shield'
+        : ability.tooltipMessage;
     return Tooltip(
-      message: ability.tooltipMessage,
+      message: tip,
       waitDuration: const Duration(milliseconds: 350),
       child: GestureDetector(
         onLongPress: () {
-          final messenger = ScaffoldMessenger.maybeOf(context);
-          messenger?.hideCurrentSnackBar();
-          messenger?.showSnackBar(
-            SnackBar(
-              duration: const Duration(seconds: 3),
+          showDialog<void>(
+            context: context,
+            barrierColor: MenuChrome.scrim,
+            builder: (ctx) => MenuChrome.dialog(
+              title: ability.name,
               content: Text(
-                gated
-                    ? '${ability.tooltipMessage} - equip a shield'
-                    : ability.tooltipMessage,
+                tip,
+                style: GameTheme.body(size: 15, color: GameTheme.parchment),
               ),
+              actions: [
+                KenneyButton(
+                  label: 'OK',
+                  style: KenneyButtonStyle.brown,
+                  expanded: false,
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
             ),
           );
         },

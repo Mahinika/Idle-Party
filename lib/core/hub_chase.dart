@@ -4,6 +4,7 @@ import '../models/dungeon_def.dart';
 import '../models/hero_spec.dart';
 import '../models/meta_depth.dart';
 import 'ascend_roadmap.dart';
+import 'encounter_factory.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'hero_identity.dart';
@@ -167,8 +168,11 @@ class HubChase {
     final bagEquip = _equipBagChase(state);
     if (bagEquip != null) return bagEquip;
 
-    final market = _marketUpgradeChase(state);
-    if (market != null) return market;
+    // Shop READY: before KEY nights only. At party max, KEY/Spire habit wins.
+    if (!GameLogic.endgameUnlocked(state)) {
+      final market = _marketUpgradeChase(state);
+      if (market != null) return market;
+    }
 
     if (GameLogic.canAscend(state)) {
       // AL0 first Ascend is optional — keep TODAY on Daily / farming; Ascend
@@ -217,13 +221,19 @@ class HubChase {
     if (GameLogic.isFreshPrestigeGear(state)) {
       final zoneId = GameLogic.recommendedDungeonId(state);
       final zoneName = DungeonCatalog.byId(zoneId).name;
+      final pressure = EncounterFactory.partyGearPressure(state);
+      final exitAt = EncounterFactory.freshPrestigeGearMax;
+      final span = (exitAt - 1.0).clamp(0.01, 2.0);
+      final pct = (((pressure - 1.0) / span) * 100).clamp(0, 99).round();
       return HubChase(
         kind: HubChaseKind.clearFloors,
         title: 'Rebuild your bag',
         detail:
             'Zones stay open. Farm early floors in $zoneName to re-kit — '
-            'bag, gold, and forge wiped (floor height back to starter).',
-        progressLabel: 'Re-kit',
+            'bag, gold, and forge wiped (floor height back to starter). '
+            'Kit pressure ${pressure.toStringAsFixed(2)} / '
+            '${exitAt.toStringAsFixed(2)} ends rebuild.',
+        progressLabel: '$pct% kit',
         zoneId: zoneId,
       );
     }
@@ -245,8 +255,11 @@ class HubChase {
       );
     }
 
-    final monthAlmost = _monthPassChase(state, clock, almostOnly: true);
-    if (monthAlmost != null) return monthAlmost;
+    // Month ALMOST before KEY only pre-endgame; at Lv100 KEY/Spire nights win.
+    if (!GameLogic.endgameUnlocked(state)) {
+      final monthAlmost = _monthPassChase(state, clock, almostOnly: true);
+      if (monthAlmost != null) return monthAlmost;
+    }
 
     // Other ALMOST cliffs beat Daily / vault-start grind (see CHASE_CONTRACT.md).
     // At endgame, skip Will / early week ALMOST so Spire / KEY night stays clear.
@@ -303,6 +316,8 @@ class HubChase {
     if (GameLogic.endgameUnlocked(state)) {
       final endgameLadder = _endgameLadderChase(state);
       if (endgameLadder != null) return endgameLadder;
+      final monthAlmost = _monthPassChase(state, clock, almostOnly: true);
+      if (monthAlmost != null) return monthAlmost;
       final weekAlmost = _weekGoalChase(state, clock, almostOnly: true);
       if (weekAlmost != null) return weekAlmost;
     }
@@ -331,9 +346,12 @@ class HubChase {
       );
     }
 
-    // Progress grind: zone / Will / leftover endgame / week.
+    // Progress grind: zone / Shop (endgame) / Will / leftover endgame / week.
     final zone = _nextZoneChase(state);
     if (zone != null) return zone;
+
+    final marketLate = _marketUpgradeChase(state);
+    if (marketLate != null) return marketLate;
 
     final will = _nextWillChase(state);
     if (will != null) return will;
@@ -374,7 +392,8 @@ class HubChase {
     if (rift != null) return rift;
     final crown = _ashenCrownChase(state);
     if (crown != null) return crown;
-    return null;
+    // F100 milestones done and ladder quiet — keep Spire nights as PB push.
+    return _gauntletPbChase(state);
   }
 
   static HubChase? _ashenCrownChase(GameState state) {
@@ -553,19 +572,38 @@ class HubChase {
     if (pref >= cap) return null;
     final target = pref <= 0 ? 1 : pref;
     final firstKey = pref <= 0;
+    final base = firstKey
+        ? 'ENTER sets KEY +1 (even if dial shows off). Example: KEY +5 ≈ '
+            '+${Keystone.lootItemLevelBonus(5)} iLvl and ${Keystone.goldMulLabel(5)} gold.'
+        : 'Time KEY +$target for +${Keystone.lootItemLevelBonus(target)} iLvl '
+            '(e.g. KEY +5 ≈ +${Keystone.lootItemLevelBonus(5)} iLvl), more gold, '
+            'and the next key unlock.';
     return HubChase(
       kind: HubChaseKind.keystone,
       title: firstKey ? 'Run KEY +1' : 'Time KEY +$target',
-      detail: firstKey
-          ? 'ENTER sets KEY +1 (even if dial shows off). Example: KEY +5 ≈ '
-              '+${Keystone.lootItemLevelBonus(5)} iLvl and ${Keystone.goldMulLabel(5)} gold.'
-          : 'Time KEY +$target for +${Keystone.lootItemLevelBonus(target)} iLvl '
-              '(e.g. KEY +5 ≈ +${Keystone.lootItemLevelBonus(5)} iLvl), more gold, '
-              'and the next key unlock.',
+      detail: _keyAffixDetail(state, target, base: base),
       progressLabel: 'KEY +$target',
       keyLevel: target,
       zoneId: GameLogic.recommendedDungeonId(state),
     );
+  }
+
+  static String _keyAffixDetail(
+    GameState state,
+    int key, {
+    required String base,
+  }) {
+    final affixes = Keystone.previewAffixes(state);
+    final affixBit = affixes.isEmpty
+        ? 'no affixes'
+        : affixes.map(Keystone.label).join(' · ');
+    final par = Keystone.formatTimer(
+      Keystone.parTimeMs(
+        bossFloor: GameLogic.bossFloorFor(state),
+        key: key,
+      ),
+    );
+    return '$base Affixes: $affixBit · par $par.';
   }
 
   /// Level the party toward [GameLogic.maxHeroLevel] near Ascension cap.
@@ -718,6 +756,24 @@ class HubChase {
       );
     }
     return null;
+  }
+
+  /// After F100 milestones and the rest of the endgame ladder go quiet.
+  static HubChase? _gauntletPbChase(GameState state) {
+    if (!GameLogic.endgameUnlocked(state)) return null;
+    final best = state.metaDepth.gauntletBestFloor;
+    final last = GauntletMilestones.floors.last;
+    if (best < last) return null;
+    final nextBoss = ((best ~/ 5) + 1) * 5;
+    return HubChase(
+      kind: HubChaseKind.gauntletMilestone,
+      title: 'Push Gauntlet PB',
+      detail:
+          'Best F$best — climb past your PB (next boss F$nextBoss). '
+          'Boss every 5 floors; wipe or leave returns to hub.',
+      progressLabel: 'PB F$best',
+      urgency: HubChaseUrgency.normal,
+    );
   }
 
   static HubChase? _nextRiftChase(GameState state) {

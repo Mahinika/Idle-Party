@@ -221,6 +221,7 @@ void main() {
     expect(chase.title, contains('Rebuild your bag'));
     expect(chase.kind, isNot(HubChaseKind.keystone));
     expect(chase.title.toUpperCase(), isNot(contains('REBORN')));
+    expect(chase.progressLabel, contains('% kit'));
   });
 
   test('AL20 KEY chase stays when bag is not a fresh prestige wipe', () {
@@ -590,10 +591,49 @@ void main() {
     );
     expect(state.collectionScore, greaterThanOrEqualTo(320));
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.keystone);
-    expect(chase.title, startsWith('Time KEY'));
-    expect(chase.detail.toLowerCase(), isNot(contains('gauntlet')));
+    // After F100 + GR/Rift/Ashen quiet, Spire stays a PB hunt (not ladder klar).
+    expect(chase.kind, HubChaseKind.gauntletMilestone);
+    expect(chase.title, contains('Push Gauntlet PB'));
     expect(chase.detail.toLowerCase(), isNot(contains('blessing')));
+  });
+
+  test('KEY chase detail names affixes and par', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 5,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+              ascendBlessings: 20,
+            ),
+      ),
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.keystone);
+    expect(chase.detail, contains('Affixes:'));
+    expect(chase.detail.toLowerCase(), contains('par'));
+  });
+
+  test('Rebuild bag chase shows kit-pressure progress', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 5,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+              freshPrestige: true,
+              ascendBlessings: 20,
+            ),
+      ),
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.title, contains('Rebuild your bag'));
+    expect(chase.progressLabel, contains('% kit'));
+    expect(chase.detail.toLowerCase(), contains('kit pressure'));
   });
 }
 

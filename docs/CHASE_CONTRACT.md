@@ -8,15 +8,15 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 ## Priority (high → low)
 
 1. **Claimables (READY)** — daily vault, finished **QUESTS**, Meet new kit, **equip BAG upgrade**
-2. **Shop ALMOST** — affordable UPGRADE listing on POWER → Shop (after bag equip)
+2. **Shop ALMOST** — affordable UPGRADE on POWER → Shop (after bag equip). **Pre-endgame only** before KEY nights; at party Lv100 Shop waits until after KEY habit / endgame ladder / zone.
 3. **Ascend READY** — can Ascend now (blocked at AL20 cap). **Exception:** on **AL0** after the first boss, TODAY stays Daily / farming; Ascend shows on the urgent row only (not the sole big button). Confirm copy: party stays; bag, gold, forge, and floors reset.
-4. **ALMOST** — one boss from Ascend, then KEY+1 vault cliff (endgame only), then zone. **At party Lv100:** skip Will / early week ALMOST so Spire/KEY nights stay clear; Gauntlet/Rift/GR ALMOST still apply.
-5. **Fresh prestige re-kit** — after Ascend or optional AL20 Reborn (`metaDepth.freshPrestige` and low gear pressure): TODAY says **Rebuild your bag** / farm floor 1. Skip KEY / Gauntlet / Rift until real drops land. **Reborn is never a TODAY chase.**
+4. **ALMOST** — one boss from Ascend, then KEY+1 vault cliff (endgame only), then zone. **Month ALMOST** and Will / early week ALMOST: pre–Lv100 only before KEY. **At party Lv100:** Month ALMOST sits **after** the endgame ladder so Spire/KEY nights stay clear; Gauntlet/Rift/GR ALMOST still apply.
+5. **Fresh prestige re-kit** — after Ascend or optional AL20 Reborn (`metaDepth.freshPrestige` and low gear pressure): TODAY says **Rebuild your bag** with kit-pressure progress / farm floor 1. Skip KEY / Gauntlet / Rift until real drops land. **Reborn is never a TODAY chase.**
 6. **Level the party** — before endgame unlock, chase active party toward **Lv100** when that is the gate
 7. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Skip Daily / KEY / vault-start / Will grind so TODAY is not a meta list. Skip kit teasers until after the first boss.
-8. **KEY habit (endgame only)** — chase the next KEY until preferred key is at the dial cap. Does **not** wait on unpaid Daily.
-9. **Endgame ladder (party Lv100)** — after KEY at cap: Gauntlet → Greater Rift → Rift → Ashen Crown (ticket week). Then week ALMOST if any. One hunt — not Daily/Will shuffle.
-10. **Progress grind** — daily run, vault start, Will, leftover endgame (pre–Lv100), week goal, then **one** endgame fallback (time KEY at dial / push GR — never a stats dump)
+8. **KEY habit (endgame only)** — chase the next KEY until preferred key is at the dial cap (TODAY detail includes affixes + par). Does **not** wait on unpaid Daily.
+9. **Endgame ladder (party Lv100)** — after KEY at cap: Gauntlet (including **PB push after F100**) → Greater Rift → Rift → Ashen Crown (ticket week). Then Month / week ALMOST if any. One hunt — not Daily/Will shuffle.
+10. **Progress grind** — daily run, vault start, Will, leftover endgame (pre–Lv100), Shop (endgame), week goal, then **one** endgame fallback (time KEY at dial / push GR — never a stats dump)
 
 ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats Daily and KEY. Zone unlock is TODAY only when party level is **ALMOST** (or prior clear opens the path). Never invent a second priority list in UI.
 

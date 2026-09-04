@@ -162,20 +162,34 @@ class DungeonTopHud extends StatelessWidget {
   }
 
     void _requestTravel(BuildContext context, int target) {
-    final fighting =
-        director.spatial?.enemies.any((e) => e.isAlive) ?? false;
-    if (!fighting) {
+    final world = director.spatial;
+    final alive = world?.enemies.any((e) => e.isAlive) ?? false;
+    // Mid-chamber: living pack, damaged/killed enemies, loot on ground, or timer.
+    final midFloor = world != null &&
+        (alive ||
+            world.combatElapsed > 1.0 ||
+            world.groundLoot.isNotEmpty ||
+            world.enemies.any((e) => e.hp < e.maxHp));
+    if (!midFloor) {
       director.travelToFloor(target);
       return;
     }
+    final keyNote = state.hardmodeLevel > 0
+        ? '\n\nKEY timer keeps running — a jump can burn the par.'
+        : '';
     showDialog<bool>(
       context: context,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) => MenuChrome.dialog(
-        title: 'Leave this fight?',
+        title: 'Leave this floor?',
         content: Text(
-          'Enemies are still alive on this floor.\n\n'
-          'Jump to F$target anyway? Progress on this chamber is lost.',
+          alive
+              ? 'Enemies are still alive on this floor.\n\n'
+                  'Jump to F$target anyway? Progress on this chamber is lost.'
+                  '$keyNote'
+              : 'This floor is mid-run (progress or loot still out).\n\n'
+                  'Jump to F$target anyway? Chamber progress is lost.'
+                  '$keyNote',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [

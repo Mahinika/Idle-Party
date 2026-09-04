@@ -190,6 +190,15 @@ abstract final class WipeAdvice {
       return 'KEY +${state.hardmodeLevel} may be high — dial down on KEY';
     }
 
+    // Instant / early melt: prove DEF when the pack crushed the party fast.
+    if (fight.waveHp >= 1 &&
+        fight.leftover >= 0.50 &&
+        fight.elapsedSec <= 6 &&
+        fight.partyMaxHp > 0 &&
+        fight.damageTaken >= fight.partyMaxHp * 0.5) {
+      return _forgeOrMarket(state, 'Upgrade DEF in POWER');
+    }
+
     if (fight.elapsedSec < 0.5 || fight.waveHp < 1 || fight.damageDealt < 1) {
       return null;
     }
@@ -200,11 +209,6 @@ abstract final class WipeAdvice {
         floor > state.highestFloorCleared + 2 &&
         leftover >= 0.45) {
       return 'This floor is too far — retry a lower floor';
-    }
-
-    // Melted before the pack moved: incoming damage, not a long DPS check.
-    if (fight.elapsedSec <= 6 && leftover >= 0.50) {
-      return _forgeOrMarket(state, 'Upgrade DEF in POWER');
     }
 
     final dps = fight.damageDealt / fight.elapsedSec;
