@@ -1371,7 +1371,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.32,
+      coeff: 1.95,
     ),
     ClassAbilityDef(
       id: AbilityId.overpower,
@@ -1385,7 +1385,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.15,
+      coeff: 1.42,
     ),
     ClassAbilityDef(
       id: AbilityId.rend,
@@ -1455,7 +1455,7 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 2.25,
+      coeff: 3.1,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -1688,6 +1688,7 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 1.7,
+      castDelaySeconds: 1.8,
     ),
     ClassAbilityDef(
       id: AbilityId.beaconOfLight,
@@ -1942,7 +1943,7 @@ class ClassKits {
       resourceCost: 12,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.32,
+      coeff: 1.65,
     ),
     ClassAbilityDef(
       id: AbilityId.judgment,
@@ -1956,7 +1957,7 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.40,
+      coeff: 1.58,
     ),
     ClassAbilityDef(
       id: AbilityId.divineStorm,
@@ -1970,7 +1971,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.95,
+      coeff: 1.12,
 
       aoeShape: AbilityAoeShape.ground,
     ),
@@ -1986,7 +1987,7 @@ class ClassKits {
       resourceCost: 12,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.5,
+      coeff: 1.75,
 
       gate: AbilityGate(executeHpFrac: 0.25),
     ),
@@ -2018,7 +2019,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 2.05,
+      coeff: 2.55,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0C0),
     ),
@@ -3059,6 +3060,7 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
       coeff: 1.75,
+      castDelaySeconds: 1.5,
       boltStyle: SpellBoltStyle.shadow,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.shadow,
@@ -3262,7 +3264,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.55,
+      coeff: 1.78,
     ),
     ClassAbilityDef(
       id: AbilityId.frostStrike,
@@ -3276,7 +3278,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.40,
+      coeff: 1.62,
     ),
     ClassAbilityDef(
       id: AbilityId.howlingBlast,
@@ -3290,7 +3292,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.88,
+      coeff: 1.05,
 
       aoeShape: AbilityAoeShape.rain,
       gate: AbilityGate(maintainDot: true),
@@ -3900,6 +3902,7 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.2,
+      castDelaySeconds: 1.4,
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneMissiles,
@@ -4024,6 +4027,7 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.15,
+      castDelaySeconds: 1.5,
     ),
     ClassAbilityDef(
       id: AbilityId.iceLance,
@@ -4338,7 +4342,8 @@ class ClassKits {
       resourceCost: 14,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.05,
+      coeff: 0.95,
+      castDelaySeconds: 1.5,
     ),
     ClassAbilityDef(
       id: AbilityId.handOfGuldan,
@@ -4572,7 +4577,8 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 1.64,
+      coeff: 1.58,
+      castDelaySeconds: 2.0,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF5020),
     ),
@@ -4616,6 +4622,7 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.15,
+      castDelaySeconds: 1.4,
       boltStyle: SpellBoltStyle.nature,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.nature,

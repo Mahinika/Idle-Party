@@ -111,13 +111,20 @@ class DungeonWipePanel extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 8),
-                    Text(
-                      WipeAdvice.timingFootnote,
-                      textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 12,
-                        color: GameTheme.parchmentDim,
-                      ),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        MenuChrome.chip(
+                          label: 'Bag · wipe 1',
+                          tone: GameTheme.parchmentDim,
+                        ),
+                        MenuChrome.chip(
+                          label: 'POWER · wipe 2',
+                          tone: GameTheme.parchmentDim,
+                        ),
+                      ],
                     ),
                   ],
                   const SizedBox(height: 14),
@@ -189,7 +196,8 @@ class DungeonWipePanel extends StatelessWidget {
                         KenneyButton(
                           label: fixLabel,
                           tip: WipeAdvice.hubHintFor(state.wipeAdviceLine),
-                          style: KenneyButtonStyle.grey,
+                          style: KenneyButtonStyle.brown,
+                          primary: true,
                           onPressed: () =>
                               director.hubAfterWipe(openMenu: fixNav),
                         ),
@@ -199,7 +207,6 @@ class DungeonWipePanel extends StatelessWidget {
                               ? 'END RUN → HUB'
                               : 'RETURN TO HUB',
                           style: KenneyButtonStyle.grey,
-                          primary: true,
                           onPressed: director.hubAfterWipe,
                         ),
                       ],

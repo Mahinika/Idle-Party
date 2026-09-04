@@ -21,6 +21,15 @@ abstract final class GodHandMastery {
     };
   }
 
+  /// Progress crumb for KEEP list (always visible).
+  static String progressLabel(GameState state, String id) => switch (id) {
+        'gh_dmg_5' => 'Hand ${state.godHandLevel}/5',
+        'gh_cd_4' => 'CD ${state.metaDepth.godHandCdLevel}/4',
+        'gh_smash_100' =>
+          'Smash ${state.metaDepth.godHandSmashCount}/$smashMilestone',
+        _ => '',
+      };
+
   static GameState claim(GameState state, String id) {
     if (!ready(state, id)) return state;
     final titles = List<String>.from(state.metaDepth.titles);

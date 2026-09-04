@@ -105,6 +105,41 @@ class SpecMastery {
     };
   }
 
+  /// Short player-facing mastery name (GEAR / party HUD).
+  static String playerLabel(SpecMasteryKind kind) => switch (kind) {
+        SpecMasteryKind.strikesOfOpportunity => 'Strikes',
+        SpecMasteryKind.unshackledFury => 'Fury',
+        SpecMasteryKind.criticalBlock => 'Crit Block',
+        SpecMasteryKind.illuminatedHealing => 'Illuminate',
+        SpecMasteryKind.divineBulwark => 'Bulwark',
+        SpecMasteryKind.handOfLight => 'Hand of Light',
+        SpecMasteryKind.masterOfBeasts => 'Beasts',
+        SpecMasteryKind.wildQuiver => 'Quiver',
+        SpecMasteryKind.hunterVsWild => 'vs Wild',
+        SpecMasteryKind.masterPoisoner => 'Poison',
+        SpecMasteryKind.mainGauche => 'Main Gauche',
+        SpecMasteryKind.executioner => 'Executioner',
+        SpecMasteryKind.shieldDiscipline => 'Shield Disc',
+        SpecMasteryKind.echoOfLight => 'Echo',
+        SpecMasteryKind.empoweredShadow => 'Shadow',
+        SpecMasteryKind.bloodShield => 'Blood Shield',
+        SpecMasteryKind.frozenPower => 'Frozen',
+        SpecMasteryKind.dreadblade => 'Dreadblade',
+        SpecMasteryKind.elementalOverload => 'Overload',
+        SpecMasteryKind.enhancedElements => 'Elements',
+        SpecMasteryKind.deepHealing => 'Deep Heal',
+        SpecMasteryKind.manaAdept => 'Mana Adept',
+        SpecMasteryKind.ignite => 'Ignite',
+        SpecMasteryKind.frostburn => 'Frostburn',
+        SpecMasteryKind.potentAfflictions => 'Affliction',
+        SpecMasteryKind.masterDemonologist => 'Demonology',
+        SpecMasteryKind.flashburn => 'Flashburn',
+        SpecMasteryKind.eclipse => 'Eclipse',
+        SpecMasteryKind.razorClaws => 'Claws',
+        SpecMasteryKind.savageDefense => 'Savage',
+        SpecMasteryKind.harmony => 'Harmony',
+      };
+
   /// Rating → mastery points (Cata-like curve, idle-tuned).
   static double masteryPointsFrom(int rating, int level) {
     if (rating <= 0) return 0;

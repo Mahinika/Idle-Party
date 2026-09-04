@@ -976,10 +976,29 @@ class GameDirector extends ChangeNotifier {
           );
         }
         final payoffNotices = LogicNotices.takeMetaPayoffs();
-        if (payoffNotices.isNotEmpty) {
-          showToast(payoffNotices.join(' · '), life: 3.0);
+        // KEY TIMED / depleted owns the clear banner (bigger than FLOOR CLEAR).
+        final keyBanner = payoffNotices.cast<String?>().firstWhere(
+          (n) =>
+              n != null &&
+              (n.contains('TIMED') || n.toLowerCase().contains('depleted')),
+          orElse: () => null,
+        );
+        if (keyBanner != null) {
+          final timed = keyBanner.contains('TIMED');
+          uiFeedback.presentClear(
+            timed ? '★ $keyBanner' : keyBanner,
+            life: timed ? 4.0 : 3.6,
+          );
+          final rest = payoffNotices.where((n) => n != keyBanner).toList();
+          if (rest.isNotEmpty) {
+            showToast(rest.join(' · '), life: 3.0);
+          }
+        } else {
+          if (payoffNotices.isNotEmpty) {
+            showToast(payoffNotices.join(' · '), life: 3.0);
+          }
+          uiFeedback.presentClear(clearLine);
         }
-        uiFeedback.presentClear(clearLine);
         if (_state.highestDungeonCleared > beforeDungeon) {
           GameAudio.unlock();
           String? nextId;

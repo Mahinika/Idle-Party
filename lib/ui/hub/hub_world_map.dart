@@ -13,11 +13,15 @@ class SelectedZoneCaption extends StatelessWidget {
     required this.dungeon,
     required this.unlocked,
     required this.partyLevel,
+    this.keyLevel = 0,
+    this.keyAffixLine,
   });
 
   final DungeonDef dungeon;
   final bool unlocked;
   final int partyLevel;
+  final int keyLevel;
+  final String? keyAffixLine;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +35,17 @@ class SelectedZoneCaption extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
-          if (dungeon.blurb.isNotEmpty)
+          if (keyLevel > 0)
+            Text(
+              keyAffixLine != null && keyAffixLine!.isNotEmpty
+                  ? 'KEY +$keyLevel · $keyAffixLine'
+                  : 'KEY +$keyLevel',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            )
+          else if (dungeon.blurb.isNotEmpty)
             Text(
               dungeon.blurb,
               textAlign: TextAlign.center,

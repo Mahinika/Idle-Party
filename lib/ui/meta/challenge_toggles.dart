@@ -417,6 +417,16 @@ class _KeyAffixChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Icon(
+            switch (risk) {
+              'Soft' => Icons.spa_outlined,
+              'Brutal' => Icons.local_fire_department_outlined,
+              _ => Icons.bolt_outlined,
+            },
+            size: 12,
+            color: _riskColor,
+          ),
+          const SizedBox(width: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(

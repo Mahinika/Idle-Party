@@ -376,33 +376,31 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
             ],
           ],
         ),
-        if (GodHandMastery.milestones.any(
-          (m) =>
-              GodHandMastery.ready(state, m.$1) ||
-              state.metaDepth.claimedGodHandMastery.contains(m.$1),
-        )) ...[
-          const SizedBox(height: 8),
-          _sectionTitle(
-            'GOD HAND MASTERY',
-            'Milestones from Hand level, CD upgrades, and smash count.',
+        const SizedBox(height: 8),
+        _sectionTitle(
+          'GOD HAND MASTERY',
+          'Milestones from Hand level, CD upgrades, and smash count.',
+        ),
+        for (final m in GodHandMastery.milestones)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: KenneyButton(
+              label: () {
+                final claimed =
+                    state.metaDepth.claimedGodHandMastery.contains(m.$1);
+                final progress = GodHandMastery.progressLabel(state, m.$1);
+                if (claimed) return 'DONE · ${m.$2} · $progress';
+                if (GodHandMastery.ready(state, m.$1)) {
+                  return 'CLAIM · ${m.$2} · $progress';
+                }
+                return '${m.$2} · $progress';
+              }(),
+              style: KenneyButtonStyle.grey,
+              onPressed: GodHandMastery.ready(state, m.$1)
+                  ? () => director.claimGodHandMastery(m.$1)
+                  : null,
+            ),
           ),
-          for (final m in GodHandMastery.milestones)
-            if (GodHandMastery.ready(state, m.$1) ||
-                state.metaDepth.claimedGodHandMastery.contains(m.$1))
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: KenneyButton(
-                  label: state.metaDepth.claimedGodHandMastery.contains(m.$1)
-                      ? 'DONE · ${m.$2}'
-                      : 'CLAIM · ${m.$2}',
-                  style: KenneyButtonStyle.grey,
-                  onPressed:
-                      state.metaDepth.claimedGodHandMastery.contains(m.$1)
-                      ? null
-                      : () => director.claimGodHandMastery(m.$1),
-                ),
-              ),
-        ],
         if (state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
             !state.metaDepth.partySlot5Unlocked) ...[
           const SizedBox(height: 8),

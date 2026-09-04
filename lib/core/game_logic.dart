@@ -3792,6 +3792,15 @@ class OfflineProgressResult {
 
   /// Dialog lead — single feeling sentence (not a stat list).
   String get welcomeLead {
+    final core = _welcomeLeadCore;
+    // Dungeon catch-up always uses SpatialCombat afkAssist (softer than live).
+    if (foughtWhileAway) {
+      return '$core Catch-up used AFK assist — softer than live.';
+    }
+    return core;
+  }
+
+  String get _welcomeLeadCore {
     if (bossDelta > 0) {
       if (state.ascensionLevel >= GameLogic.maxAscensionLevel) {
         return bossDelta == 1

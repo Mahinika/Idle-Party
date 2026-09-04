@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../models/combat_ratings.dart';
 import '../models/gear_set.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
+import '../models/spec_mastery.dart';
 import 'custom_assets.dart';
 import 'equipment_icon.dart';
 import 'game_theme.dart';
@@ -531,24 +533,7 @@ class CharacterEquipPanel extends StatelessWidget {
           runSpacing: 6,
           alignment: WrapAlignment.center,
           children: [
-            for (final entry in [
-              ('STR', '${ratings.strength}'),
-              ('AGI', '${ratings.agility}'),
-              ('STA', '${ratings.stamina}'),
-              ('INT', '${ratings.intellect}'),
-              ('SPI', '${ratings.spirit}'),
-              ('DMG', '$atk'),
-              ('DEF', '$def'),
-              ('HP', '$maxHp'),
-              ('CRIT', '${state.effectiveHeroCrit(hero)}%'),
-              (
-                'HASTE',
-                state.effectiveHeroAttackSpeed(hero).toStringAsFixed(2),
-              ),
-              ('LS', '${hero.gearLifestealPercent}%'),
-              ('iLvl avg', '${_avgItemLevel(hero)}'),
-              ('iLvl min', '${_minItemLevel(hero)}'),
-            ])
+            for (final entry in _heroStatChips(state, hero, ratings, atk, def, maxHp))
               MenuChrome.chip(
                 label: entry.$1,
                 value: entry.$2,
@@ -560,6 +545,35 @@ class CharacterEquipPanel extends StatelessWidget {
         const SizedBox(height: 8),
       ],
     );
+  }
+
+  List<(String, String)> _heroStatChips(
+    GameState state,
+    PartyHero hero,
+    CombatRatings ratings,
+    int atk,
+    int def,
+    int maxHp,
+  ) {
+    final kind = SpecMastery.kindFor(hero.specId);
+    final masteryLabel =
+        kind == null ? 'MASTERY' : SpecMastery.playerLabel(kind);
+    return [
+      ('STR', '${ratings.strength}'),
+      ('AGI', '${ratings.agility}'),
+      ('STA', '${ratings.stamina}'),
+      ('INT', '${ratings.intellect}'),
+      ('SPI', '${ratings.spirit}'),
+      ('DMG', '$atk'),
+      ('DEF', '$def'),
+      ('HP', '$maxHp'),
+      ('CRIT', '${state.effectiveHeroCrit(hero)}%'),
+      ('HASTE', state.effectiveHeroAttackSpeed(hero).toStringAsFixed(2)),
+      (masteryLabel, '${ratings.masteryPoints.round()}'),
+      ('LS', '${hero.gearLifestealPercent}%'),
+      ('iLvl avg', '${_avgItemLevel(hero)}'),
+      ('iLvl min', '${_minItemLevel(hero)}'),
+    ];
   }
 
   EquipmentItem? _findAnywhere(String id) {

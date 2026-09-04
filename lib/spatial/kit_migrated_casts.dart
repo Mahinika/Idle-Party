@@ -719,6 +719,7 @@ abstract final class KitNamedCasts {
 
       case AbilityCustomId.fireball:
         if (focus == null || focus.hp <= 0) return false;
+        AbilityEffectRunner.applyCastDelay(hero, def);
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.attackFlash = 0.18;
         var ball = math.max(
@@ -764,6 +765,7 @@ abstract final class KitNamedCasts {
 
       case AbilityCustomId.pyroblast:
         if (focus == null || focus.hp <= 0) return false;
+        AbilityEffectRunner.applyCastDelay(hero, def);
         // Hot Streak makes it free; the cooldown still starts so it can't chain.
         SpatialCombat._startAbilityCd(world, hero, def.id, def.cooldown);
         hero.hotStreakReady = false;

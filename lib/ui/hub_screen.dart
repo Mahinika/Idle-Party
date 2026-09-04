@@ -85,8 +85,19 @@ class _HubScreenState extends State<HubScreen>
     return null;
   }
 
+  /// Zone the night's chase wants on the map (KEY), else null.
+  String? _chaseMapZoneId() {
+    final chase = HubChase.forState(state);
+    if (chase.kind == HubChaseKind.keystone && chase.zoneId != null) {
+      return chase.zoneId;
+    }
+    return null;
+  }
+
   void _syncSelection({required bool force}) {
-    final preferred = GameLogic.recommendedDungeonId(state);
+    final chaseZone = _chaseMapZoneId();
+    final preferred =
+        chaseZone ?? GameLogic.recommendedDungeonId(state);
     if (force) {
       _userPickedZone = false;
       _selectedId = preferred;
@@ -94,6 +105,15 @@ class _HubScreenState extends State<HubScreen>
     }
     if (_userPickedZone) {
       // FEEL 078: keep CLEAR selection — no silent jump to NEXT.
+      return;
+    }
+    // KEY night: HERE follows chase zone, not frontier recommended.
+    if (chaseZone != null) {
+      if (_selectedId != chaseZone) _selectedId = chaseZone;
+      return;
+    }
+    // Spire / GR / Rift nights: leave HERE alone (no auto-jump).
+    if (hubChaseOwnsEndgameRow(HubChase.forState(state).kind)) {
       return;
     }
     if (_selectedId != preferred) {
@@ -444,10 +464,8 @@ class _HubScreenState extends State<HubScreen>
       _trackedHighestCleared = state.highestDungeonCleared;
       // After Ascend / new clear, prefer NEXT (or deepest unlocked).
       _syncSelection(force: ascended || !_userPickedZone);
-    } else if (!_userPickedZone &&
-        _selectedId != GameLogic.recommendedDungeonId(state)) {
-      // Keep detail panel aligned with glowing NEXT / recommended node.
-      _selectedId = GameLogic.recommendedDungeonId(state);
+    } else if (!_userPickedZone) {
+      _syncSelection(force: false);
     }
     final canAscend = GameLogic.canAscend(state);
     final bossFloor = GameLogic.bossFloorFor(state);
@@ -579,6 +597,13 @@ class _HubScreenState extends State<HubScreen>
                                   dungeon: selectedDungeon,
                                   unlocked: unlockedSelected,
                                   partyLevel: GameLogic.partyMeanLevel(state),
+                                  keyLevel: state.hardmodeLevel,
+                                  keyAffixLine: state.hardmodeLevel > 0
+                                      ? Keystone.previewAffixes(state)
+                                          .take(2)
+                                          .map(Keystone.label)
+                                          .join(' · ')
+                                      : null,
                                 ),
                               ],
                               if (short)

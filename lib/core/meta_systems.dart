@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.89';
+  static const String currentVersion = '1.12.90';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.90',
+      bullets: <String>[
+        'KEY nights keep map HERE on the hunt zone; caption shows KEY +N · affixes. Header hides gold/min on endgame nights (Tonight · hunt). First Spire chase names boss-every-5 / wipe→hub. TODAY still owns Gauntlet / GREATER / KEY hunts.',
+        'Wipe dial tips open KEY as primary CTA; Bag · wipe 1 / POWER · wipe 2 chips. KEY TIMED vs depleted owns the clear banner. Welcome Back notes AFK assist when the party fought. Mastery chip on GEAR + party HUD; Arms Execute + Ret Seal stay on kit chips.',
+        'Hollow Grove uses canopy arenas (not cave crawl) with grove-only silhouettes. Cast wind-up on more signature spells. KEEP lists God Hand mastery progress. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.89',
       bullets: <String>[

@@ -74,6 +74,10 @@ abstract final class WipeAdvice {
   /// Short nudge under the wipe advice when the fix lives in hub menus.
   static String? hubHintFor(String adviceLine) {
     if (adviceLine.isEmpty) return null;
+    if (adviceLine.contains('dial down') ||
+        adviceLine.contains('may be high')) {
+      return 'HUB → KEY to lower the dial';
+    }
     if (adviceLine.contains('MARKET') ||
         adviceLine.contains('SHOP') ||
         adviceLine.contains('Shop')) {
@@ -91,6 +95,10 @@ abstract final class WipeAdvice {
   /// Menu to open after RETURN when the tip names a hub fix.
   static NavIntent? hubNavFor(String adviceLine) {
     if (adviceLine.isEmpty) return null;
+    if (adviceLine.contains('dial down') ||
+        adviceLine.contains('may be high')) {
+      return const NavIntent(route: MenuRoute.key);
+    }
     if (adviceLine.contains('MARKET') ||
         adviceLine.contains('SHOP') ||
         adviceLine.contains('Shop')) {
@@ -109,6 +117,7 @@ abstract final class WipeAdvice {
   static String? hubCtaLabelFor(String adviceLine) {
     final nav = hubNavFor(adviceLine);
     if (nav == null) return null;
+    if (nav.route == MenuRoute.key) return 'OPEN KEY';
     if (nav.power == PowerSegment.market) return 'OPEN SHOP';
     if (nav.gear == GearPanel.bag) return 'OPEN BAG';
     if (nav.route == MenuRoute.power) return 'OPEN POWER';
@@ -116,8 +125,7 @@ abstract final class WipeAdvice {
   }
 
   /// When bag vs POWER tips appear (streakNeeded = 2 for POWER tracks).
-  static String get timingFootnote =>
-      'Bag tips can show on wipe 1; POWER tips after 2 on this floor.';
+  static String get timingFootnote => 'Bag · wipe 1  ·  POWER · wipe 2';
 
   static String _forgeOrMarket(GameState state, String forgeLine) {
     final listing = MarketListingsService.bestAffordableUpgradeListing(state);

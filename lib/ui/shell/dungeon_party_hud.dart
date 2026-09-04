@@ -9,6 +9,7 @@ import '../../models/enemy.dart';
 import '../../models/hero.dart';
 import '../../models/hero_spec.dart';
 import '../../models/loot.dart';
+import '../../models/spec_mastery.dart';
 import '../../spatial/spatial_combat.dart';
 import '../game_theme.dart';
 import '../hero_doll_sprite.dart';
@@ -116,11 +117,9 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
 
   void _onHeroTap(int i) {
     _bump();
-    final fighting =
-        widget.director.spatial?.enemies.any((e) => e.isAlive) ?? false;
     if (widget.selectedHeroIndex == i && _kitOpen) {
-      // Keep kit open mid-fight so a second tap doesn't hide CD chips.
-      if (fighting) return;
+      // Stay open in dungeon — second tap must not hide CD chips mid-pull.
+      if (widget.director.state.inDungeon) return;
       setState(() => _kitOpen = false);
       return;
     }
@@ -618,7 +617,18 @@ class _PartyRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '$roleShort L${hero.level}',
+                      () {
+                        final kind = SpecMastery.kindFor(hero.specId);
+                        if (kind == null || !showKit) {
+                          return '$roleShort L${hero.level}';
+                        }
+                        final pts = SpecMastery.masteryPointsFrom(
+                          hero.gearMasteryBonus,
+                          hero.level,
+                        ).round();
+                        return '$roleShort L${hero.level} · '
+                            '${SpecMastery.playerLabel(kind)} $pts';
+                      }(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GameTheme.pixel(
@@ -880,6 +890,7 @@ class _PartyRow extends StatelessWidget {
         AbilityId.darkCommand ||
         AbilityId.growl => 0,
         AbilityId.armsExecute || AbilityId.furyExecute => 0,
+        AbilityId.sealOfCommand => 0,
         AbilityId.bloodthirst ||
         AbilityId.whirlwind ||
         AbilityId.ragingBlow => 0,

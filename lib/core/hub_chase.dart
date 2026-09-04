@@ -773,13 +773,16 @@ class HubChase {
       final pay = GauntletMilestones.essenceForFloor(floor);
       return HubChase(
         kind: HubChaseKind.gauntletMilestone,
-        title: almost
-            ? 'Almost Gauntlet floor $floor'
-            : 'Gauntlet floor $floor',
+        title: best <= 0
+            ? 'First Gauntlet Spire'
+            : (almost
+                ? 'Almost Gauntlet floor $floor'
+                : 'Gauntlet floor $floor'),
         detail: best <= 0
-            ? 'Enter Infinity Gauntlet — boss every 5 floors; wipe or leave '
+            ? 'Infinity Gauntlet — boss every 5 floors; wipe or leave '
                 'returns to hub. Climb for +${pay}e.'
-            : 'Best F$best — $need floors to F$floor (+${pay}e).',
+            : 'Best F$best — $need floors to F$floor (+${pay}e). '
+                'Boss every 5; wipe → hub.',
         progressLabel: 'F$best → F$floor',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );

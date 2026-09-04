@@ -291,32 +291,46 @@ class _HubHeaderState extends State<HubHeader> {
           ],
         ),
         const SizedBox(height: 4),
-        WebClickScope(
-          label: _ratesOpen ? 'Hide income details' : 'Show income details',
-          onPressed: () => setState(() => _ratesOpen = !_ratesOpen),
-          child: Semantics(
-            button: true,
-            label: _ratesOpen
-                ? 'Hide income details. ${widget.incomeLine}'
-                : 'Show income details. ${widget.incomeLine}',
-            onTap: () => setState(() => _ratesOpen = !_ratesOpen),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
+        if (widget.dimIncome) ...[
+          Text(
+            () {
+              final hunt = widget.huntHint;
+              if (hunt != null && hunt.isNotEmpty) {
+                return 'Tonight · $hunt';
+              }
+              return 'Tonight · endgame hunt';
+            }(),
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+          ),
+        ] else ...[
+          WebClickScope(
+            label: _ratesOpen ? 'Hide income details' : 'Show income details',
+            onPressed: () => setState(() => _ratesOpen = !_ratesOpen),
+            child: Semantics(
+              button: true,
+              label: _ratesOpen
+                  ? 'Hide income details. ${widget.incomeLine}'
+                  : 'Show income details. ${widget.incomeLine}',
               onTap: () => setState(() => _ratesOpen = !_ratesOpen),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Text(
-                  _ratesOpen
-                      ? widget.incomeLine
-                      : '${widget.incomeLine} · Income ▸',
-                  textAlign: TextAlign.center,
-                  style: GameTheme.body(size: 13, color: incomeColor),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() => _ratesOpen = !_ratesOpen),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text(
+                    _ratesOpen
+                        ? widget.incomeLine
+                        : '${widget.incomeLine} · Income ▸',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(size: 13, color: incomeColor),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        if (_ratesOpen) ...[
+        ],
+        if (!widget.dimIncome && _ratesOpen) ...[
           Text(
             widget.multiplierLine,
             textAlign: TextAlign.center,

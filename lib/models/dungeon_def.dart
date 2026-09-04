@@ -126,12 +126,12 @@ abstract final class DungeonCatalog {
       number: 9,
       id: 'grove',
       name: 'Hollow Grove',
-      layout: DungeonLayoutKind.cave,
+      layout: DungeonLayoutKind.arena,
       bossId: 'grove_wyrd',
       bossName: 'Wyrd Root',
       unlockPrice: 1800000,
       blurb:
-          'Root fences and grove-slime — Wyrd Root drinks between Tidehold and Ashen.',
+          'Root fences and canopy clearings — Wyrd Root drinks between Tidehold and Ashen.',
     ),
     DungeonDef(
       number: 10,

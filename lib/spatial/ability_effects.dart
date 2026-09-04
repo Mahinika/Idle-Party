@@ -46,6 +46,15 @@ abstract final class AbilityEffectRunner {
     return def.castDelaySeconds / haste;
   }
 
+  /// Apply cast lockout for named casts that bypass [_castDamage].
+  static void applyCastDelay(SpatialActor hero, ClassAbilityDef def) {
+    final delay = _castDelaySeconds(hero, def);
+    if (delay <= 0) return;
+    hero.castingTimer = math.max(hero.castingTimer, delay);
+    hero.pendingCastDef = def.id.name;
+    hero.castFlash = math.max(hero.castFlash, math.min(0.35, delay));
+  }
+
   /// Returns ability cast count this tick (also increments
   /// [SpatialWorld.pendingAbilityCasts] via [_startAbilityCd]).
   static int tick(
@@ -1749,6 +1758,7 @@ abstract final class AbilityEffectRunner {
     ClassAbilityDef def, {
     required bool reducedVfx,
   }) {
+    applyCastDelay(caster, def);
     final style = SpatialCombat.boltStyleForAbility(caster, def: def);
     final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
     final isHot =
