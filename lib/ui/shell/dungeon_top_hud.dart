@@ -529,7 +529,7 @@ class DungeonTopHud extends StatelessWidget {
                       label: 'HOLD — skip walk, finish floor now',
                       child: GameButton(
                         label: 'HOLD',
-                        tip: 'Skip the stairs walk — clear this floor now',
+                        tip: 'Skip the stairs walk and finish this floor now',
                         style: GameButtonStyle.brown,
                         dense: true,
                         expanded: false,

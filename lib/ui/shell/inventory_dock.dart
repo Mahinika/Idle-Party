@@ -232,31 +232,36 @@ class _InventoryDockState extends State<InventoryDock>
           ],
         );
       }
-      final primary = upgrades > 0
-          ? _autoEquipButton(dense: true, expanded: true)
-          : GameButton(
-              label: 'OPEN BAG',
-              onPressed: () => widget.onPanelChanged(GearPanel.bag),
-              style: GameButtonStyle.grey,
-              primary: false,
-              dense: true,
-              expanded: true,
-            );
-      return Row(
-        children: [
-          Expanded(flex: 3, child: primary),
-          const SizedBox(width: 6),
-          Expanded(
-            flex: 2,
-            child: GameButton(
-              label: upgrades > 0 ? 'OPEN BAG' : 'BAG',
-              onPressed: () => widget.onPanelChanged(GearPanel.bag),
-              style: GameButtonStyle.grey,
-              dense: true,
-              expanded: true,
+      // Upgrades: EQUIP N + OPEN BAG. Empty upgrade list: one OPEN BAG only
+      // (avoid twin OPEN BAG / BAG that both do the same thing).
+      if (upgrades > 0) {
+        return Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: _autoEquipButton(dense: true, expanded: true),
             ),
-          ),
-        ],
+            const SizedBox(width: 6),
+            Expanded(
+              flex: 2,
+              child: GameButton(
+                label: 'OPEN BAG',
+                onPressed: () => widget.onPanelChanged(GearPanel.bag),
+                style: GameButtonStyle.grey,
+                dense: true,
+                expanded: true,
+              ),
+            ),
+          ],
+        );
+      }
+      return GameButton(
+        label: 'OPEN BAG',
+        onPressed: () => widget.onPanelChanged(GearPanel.bag),
+        style: GameButtonStyle.grey,
+        primary: false,
+        dense: true,
+        expanded: true,
       );
     }
 

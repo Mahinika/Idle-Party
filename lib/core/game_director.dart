@@ -1204,11 +1204,13 @@ class GameDirector extends ChangeNotifier {
   /// True while the player paused auto-walk to stairs after a clear.
   bool get exitHoldActive => (_spatial?.exitHoldSec ?? 0) > 0;
 
-  /// Pause exit-seek for ~8s so the party can stay on the floor.
+  /// Skip the stairs walk — bump the soft-lock timer so the floor finishes
+  /// on the next combat tick (matches HOLD tip / What’s New).
   void startExitHold() {
     final spatial = _spatial;
     if (spatial == null || !spatial.awaitingExit) return;
-    spatial.exitHoldSec = 8.0;
+    spatial.exitHoldSec = 0;
+    spatial.exitWaitTimer = 99;
     showToast('HOLD — finishing floor', life: 1.8);
     notifyListeners();
   }

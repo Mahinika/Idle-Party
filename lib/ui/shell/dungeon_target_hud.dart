@@ -75,8 +75,11 @@ class TargetCornerHud extends StatelessWidget {
 
     final enemy = focus;
     final awaitingExit = world?.awaitingExit == true;
-    // After clear, don't keep a dead fight frame — CLEAR owns the corner.
-    if (awaitingExit && !state.isPartyDefeated) {
+    final clearBannerUp = director.clearSummary != null;
+    // After clear, don't keep a dead fight frame — CLEAR owns the corner
+    // while walking / HOLD, and while the CLEAR banner is still up.
+    if ((awaitingExit || (clearBannerUp && world?.allEnemiesDead == true)) &&
+        !state.isPartyDefeated) {
       return ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 188.0),
         child: Container(
