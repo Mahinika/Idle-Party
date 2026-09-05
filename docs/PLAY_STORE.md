@@ -8,7 +8,7 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ⏳ submit | Working ship **1.12.96+125** — Alpha AAB upload this pass (SHOP Coming later + POWER wipe tips + production polish backlog). Previous Alpha note **1.12.87 (116)** / live may lag until review. Alpha countries: all + rest of world. |
+| Closed testing | ⏳ review | **1.12.96 (125)** Alpha AAB submitted 2026-09-05 (SHOP Coming later + POWER wipe tips + production polish backlog). Pre-checks then Google review. Previous live for testers: **1.12.87 (116)**. Alpha countries: all + rest of world. |
 | Production | ⏳ access review | **Production-access application submitted 2026-09-04 ~16:54**. Track still locked until Google grants access. Upload production AAB **1.12.96+125** (or newer) after IARC ads + access. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
