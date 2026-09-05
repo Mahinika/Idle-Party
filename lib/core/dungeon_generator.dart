@@ -18,9 +18,7 @@ class DungeonGenerator {
     int layoutSeed = 0,
     int? bossEvery,
   }) {
-    final random = Random(
-      floorNumber * 7919 + dungeonId.hashCode + layoutSeed,
-    );
+    final random = Random(floorNumber * 7919 + dungeonId.hashCode + layoutSeed);
     final bossFloor = bossFloorFor(ascensionLevel);
     final isBoss = bossEvery != null && bossEvery > 0
         ? floorNumber > 0 && floorNumber % bossEvery == 0
@@ -34,10 +32,10 @@ class DungeonGenerator {
     final type = isBoss
         ? RoomType.boss
         : (isTreasure
-            ? RoomType.treasure
-            : ((eliteRoll || guaranteedElite)
-                ? RoomType.elite
-                : RoomType.normal));
+              ? RoomType.treasure
+              : ((eliteRoll || guaranteedElite)
+                    ? RoomType.elite
+                    : RoomType.normal));
 
     final baseLevel = (floorNumber - 1) * 2 + 1;
     final enemyLevel = baseLevel + random.nextInt(3);
@@ -75,15 +73,22 @@ class DungeonGenerator {
     final earlyCut = floor <= 3 ? 1 : 0;
     return switch (type) {
       RoomType.boss => 6 + random.nextInt(2),
-      RoomType.elite =>
-        max(4, 6 + random.nextInt(2) + (floor ~/ 4).clamp(0, 2) - earlyCut),
+      RoomType.elite => max(
+        4,
+        6 + random.nextInt(2) + (floor ~/ 4).clamp(0, 2) - earlyCut,
+      ),
       RoomType.treasure => 0,
-      RoomType.normal =>
-        max(3, 5 + (floor ~/ 3).clamp(0, 4) + random.nextInt(2) - earlyCut),
+      RoomType.normal => max(
+        3,
+        5 + (floor ~/ 3).clamp(0, 4) + random.nextInt(2) - earlyCut,
+      ),
     };
   }
 
-  static String zoneNameForFloor(int floorNumber, {String dungeonId = 'sandy'}) {
+  static String zoneNameForFloor(
+    int floorNumber, {
+    String dungeonId = 'sandy',
+  }) {
     return DungeonCatalog.byId(dungeonId).name;
   }
 

@@ -1,4 +1,5 @@
 import 'dungeon_def.dart';
+import 'hero.dart';
 import 'loot.dart';
 
 /// Lightweight dungeon armor sets (2pc / 4pc). Original Idle Party names only.
@@ -36,6 +37,14 @@ abstract final class GearSets {
       'dead' => 'Necropolis',
       'hell' => 'Infernal',
       'crystal' => 'Spire',
+      'tide' => 'Tidehold',
+      'ember' => 'Ashen',
+      'grove' => 'Hollow',
+      'storm' => 'Stormwake',
+      'rime' => 'Rimeglass',
+      'fen' => 'Blightfen',
+      'brass' => 'Brassvault',
+      'veil' => 'Mothveil',
       _ => dungeonId,
     };
     final armor = switch (armorRaw) {
@@ -49,7 +58,10 @@ abstract final class GearSets {
   }
 
   /// Pieces of [setId] currently worn (set slots only).
-  static int wornCount(Map<EquipmentSlot, EquipmentItem> equipped, String setId) {
+  static int wornCount(
+    Map<EquipmentSlot, EquipmentItem> equipped,
+    String setId,
+  ) {
     var n = 0;
     for (final slot in setSlots) {
       final item = equipped[slot];
@@ -115,22 +127,95 @@ abstract final class GearSets {
     return 2;
   }
 
-  /// Equip-score bonus for completing / progressing a set with [candidate].
+  /// Mild 4pc role fantasy on top of stamina/crit/spirit/SP set bonuses.
+  static int setRoleArmorBonus(
+    Map<EquipmentSlot, EquipmentItem> equipped,
+    HeroRole role,
+  ) {
+    if (role != HeroRole.warrior) return 0;
+    final id = primarySetId(equipped);
+    if (id == null || wornCount(equipped, id) < 4) return 0;
+    return 4;
+  }
+
+  static int setRoleHasteBonus(
+    Map<EquipmentSlot, EquipmentItem> equipped,
+    HeroRole role,
+  ) {
+    if (role != HeroRole.rogue) return 0;
+    final id = primarySetId(equipped);
+    if (id == null || wornCount(equipped, id) < 4) return 0;
+    return 2;
+  }
+
+  static int setRoleSpiritBonus(
+    Map<EquipmentSlot, EquipmentItem> equipped,
+    HeroRole role,
+  ) {
+    if (role != HeroRole.healer) return 0;
+    final id = primarySetId(equipped);
+    if (id == null || wornCount(equipped, id) < 4) return 0;
+    return 2;
+  }
+
+  static int setRoleSpellPowerBonus(
+    Map<EquipmentSlot, EquipmentItem> equipped,
+    HeroRole role,
+  ) {
+    if (role != HeroRole.mage) return 0;
+    final id = primarySetId(equipped);
+    if (id == null || wornCount(equipped, id) < 4) return 0;
+    return 2;
+  }
+
+  /// 4pc on-hit combat proc (chance + damage mul + floater tag).
+  static ({double chance, double damageMul, String tag, int argb})?
+  fourPieceProc(Map<EquipmentSlot, EquipmentItem> equipped) {
+    final id = primarySetId(equipped);
+    if (id == null || wornCount(equipped, id) < 4) return null;
+    final zone = id.split('_').first;
+    final (tag, argb) = switch (zone) {
+      'sandy' => ('CAVERN', 0xFFE0A050),
+      'goblin' => ('HIDEOUT', 0xFF60C070),
+      'king' => ('FORT', 0xFF70A0E0),
+      'underworld' => ('UNDER', 0xFFA070E0),
+      'dead' => ('NECRO', 0xFF70A090),
+      'hell' => ('INFERNO', 0xFFE05040),
+      'crystal' => ('SPIRE', 0xFF80D0FF),
+      'tide' => ('TIDE', 0xFF40C0B0),
+      'ember' => ('ASHEN', 0xFFE09040),
+      'grove' => ('GROVE', 0xFF68B048),
+      'storm' => ('GALE', 0xFFE8E040),
+      'rime' => ('RIME', 0xFF70E8F0),
+      'fen' => ('FEN', 0xFFB8D030),
+      'brass' => ('BRASS', 0xFFC8A030),
+      'veil' => ('VEIL', 0xFFE0B8D0),
+      _ => ('SET', 0xFFFFD070),
+    };
+    return (chance: 0.10, damageMul: 1.35, tag: tag, argb: argb);
+  }
+
+  /// Short UI blurb for the dominant worn set.
+  static String? setBonusBlurb(Map<EquipmentSlot, EquipmentItem> equipped) {
+    final id = primarySetId(equipped);
+    if (id == null) return null;
+    final n = wornCount(equipped, id);
+    if (n < 2) return null;
+    final name = displayName(id);
+    if (n >= 4) {
+      return '$name 4pc · +stats · 10% set proc on auto';
+    }
+    return '$name 2pc · +stats';
+  }
+
+  /// Legacy hook — upgrade path no longer adds flat set points (GEAR_BUDGET).
+  /// Set power comes from real 2pc/4pc combat bonuses only.
+  static const int maxEquipScoreBonus = 0;
+
   static int equipScoreBonus({
     required Map<EquipmentSlot, EquipmentItem> equipped,
     required EquipmentItem candidate,
   }) {
-    final setId = candidate.setId;
-    if (setId == null || setId.isEmpty) return 0;
-    if (!setSlots.contains(candidate.slot)) return 0;
-    final without = Map<EquipmentSlot, EquipmentItem>.from(equipped)
-      ..remove(candidate.slot);
-    final before = wornCount(without, setId);
-    final after = before + 1;
-    var bonus = 18; // any set piece
-    if (after >= 2 && before < 2) bonus += 36;
-    if (after >= 4 && before < 4) bonus += 55;
-    if (after >= 2) bonus += after * 10;
-    return bonus;
+    return 0;
   }
 }

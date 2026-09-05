@@ -1,0 +1,301 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/market_listings_service.dart';
+import 'package:idle_party/core/wipe_advice.dart';
+import 'package:idle_party/core/menu_alerts.dart';
+import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/models/dungeon_mode.dart';
+import 'package:idle_party/models/loot.dart';
+
+void main() {
+  final now = DateTime.utc(2026, 8, 21);
+
+  WipeFightSnapshot atkLack() => const WipeFightSnapshot(
+    waveHp: 10000,
+    remainingHp: 7000,
+    damageDealt: 3000,
+    damageTaken: 400,
+    partyMaxHp: 400,
+    elapsedSec: 20,
+  );
+
+  test('POWER tip after two wipes; floor gap on first wipe', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      highestFloorCleared: 2,
+      currentRoom: state.currentRoom.copyWith(floorNumber: 6),
+    );
+    const farFight = WipeFightSnapshot(
+      waveHp: 5000,
+      remainingHp: 3000,
+      damageDealt: 800,
+      damageTaken: 400,
+      partyMaxHp: 400,
+      elapsedSec: 12,
+    );
+    state = GameLogic.notePartyWipe(state, farFight);
+    expect(state.wipeStreakCount, 1);
+    expect(state.wipeAdviceLine, 'This floor is too far — retry a lower floor');
+
+    state = GameLogic.createInitialState(now: now);
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(state.wipeStreakCount, 1);
+    expect(state.wipeAdviceLine, '');
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(state.wipeStreakCount, 2);
+    expect(state.wipeAdviceLine, 'Upgrade ATK in POWER');
+  });
+
+  test('melted pack points at DEF on first wipe', () {
+    const fight = WipeFightSnapshot(
+      waveHp: 8000,
+      remainingHp: 6000,
+      damageDealt: 400,
+      damageTaken: 900,
+      partyMaxHp: 400,
+      elapsedSec: 4,
+    );
+    var state = GameLogic.createInitialState(now: now);
+    state = GameLogic.notePartyWipe(state, fight);
+    expect(state.wipeAdviceLine, 'Upgrade DEF in POWER');
+  });
+
+  test('instant melt still tips DEF when damageDealt is zero', () {
+    const fight = WipeFightSnapshot(
+      waveHp: 9000,
+      remainingHp: 8500,
+      damageDealt: 0,
+      damageTaken: 500,
+      partyMaxHp: 400,
+      elapsedSec: 0.3,
+    );
+    final state = GameLogic.createInitialState(now: now);
+    expect(
+      WipeAdvice.lineFor(state: state, fight: fight),
+      'Upgrade DEF in POWER',
+    );
+  });
+
+  test('almost-cleared chip death points at STA', () {
+    const fight = WipeFightSnapshot(
+      waveHp: 1000,
+      remainingHp: 180,
+      damageDealt: 2000,
+      damageTaken: 400,
+      partyMaxHp: 400,
+      elapsedSec: 20,
+    );
+    final state = GameLogic.createInitialState(now: now);
+    expect(
+      WipeAdvice.lineFor(state: state, fight: fight),
+      'Upgrade STA in POWER',
+    );
+  });
+
+  test('push three floors past clear with leftover HP names a retreat', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      highestFloorCleared: 2,
+      currentRoom: state.currentRoom.copyWith(floorNumber: 6),
+    );
+    const fight = WipeFightSnapshot(
+      waveHp: 5000,
+      remainingHp: 3000,
+      damageDealt: 800,
+      damageTaken: 400,
+      partyMaxHp: 400,
+      elapsedSec: 12,
+    );
+    expect(
+      WipeAdvice.lineFor(state: state, fight: fight),
+      'This floor is too far — retry a lower floor',
+    );
+  });
+
+  test('too little fight data stays quiet', () {
+    final state = GameLogic.createInitialState(now: now);
+    const fight = WipeFightSnapshot(
+      waveHp: 5000,
+      remainingHp: 5000,
+      damageDealt: 10,
+      damageTaken: 10,
+      partyMaxHp: 400,
+      elapsedSec: 0.4,
+    );
+    expect(WipeAdvice.lineFor(state: state, fight: fight), isNull);
+  });
+
+  test('ambiguous ttk vs ttd stays quiet', () {
+    final state = GameLogic.createInitialState(now: now);
+    const fight = WipeFightSnapshot(
+      waveHp: 1000,
+      remainingHp: 400,
+      damageDealt: 900,
+      damageTaken: 450,
+      partyMaxHp: 400,
+      elapsedSec: 15,
+    );
+    expect(WipeAdvice.lineFor(state: state, fight: fight), isNull);
+  });
+
+  test('a different floor restarts the streak', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(highestFloorCleared: 8);
+    state = GameLogic.notePartyWipe(state, atkLack());
+    state = GameLogic.notePartyWipe(state, atkLack());
+    state = state.copyWith(
+      currentRoom: state.currentRoom.copyWith(floorNumber: 3),
+    );
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(state.wipeStreakCount, 1);
+    expect(state.wipeAdviceLine, '');
+  });
+
+  test('floor clear wipes the streak', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = GameLogic.notePartyWipe(state, atkLack());
+    state = GameLogic.notePartyWipe(state, atkLack());
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(state.wipeAdviceLine, isNotEmpty);
+    state = GameLogic.clearWipeStreak(state);
+    expect(state.wipeStreakCount, 0);
+    expect(state.wipeAdviceLine, '');
+  });
+
+  test('clearing a lower floor after push retreat keeps the wall streak', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      highestFloorCleared: 4,
+      currentRoom: state.currentRoom.copyWith(floorNumber: 5),
+      dungeonMode: DungeonMode.push,
+    );
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(state.wipeStreakKey, 'sandy:5');
+    expect(state.wipeStreakCount, 1);
+
+    // Simulate clearing F4 after retreat — meta progress uses pre-clear floor.
+    final beforeClear = state.copyWith(
+      currentRoom: state.currentRoom.copyWith(floorNumber: 4),
+    );
+    final afterClear = beforeClear.copyWith(
+      highestFloorCleared: 4,
+      wipeStreakKey: beforeClear.wipeStreakKey,
+      wipeStreakCount: beforeClear.wipeStreakCount,
+    );
+    // Same rule as _applyMetaProgress: only clear when streak key matches.
+    final kept = beforeClear.wipeStreakKey.isEmpty ||
+            beforeClear.wipeStreakKey == GameLogic.wipeFloorKey(beforeClear)
+        ? GameLogic.clearWipeStreak(afterClear)
+        : afterClear;
+    expect(kept.wipeStreakKey, 'sandy:5');
+    expect(kept.wipeStreakCount, 1);
+
+    kept.copyWith(
+      currentRoom: kept.currentRoom.copyWith(floorNumber: 5),
+    );
+    var again = GameLogic.notePartyWipe(
+      kept.copyWith(currentRoom: kept.currentRoom.copyWith(floorNumber: 5)),
+      atkLack(),
+    );
+    expect(again.wipeStreakCount, 2);
+  });
+
+  test('bag upgrades beat forge tips', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      gearStash: [
+        EquipmentItem(
+          id: 'up_atk',
+          name: 'Test Blade',
+          slot: EquipmentSlot.weapon,
+          rarity: LootRarity.epic,
+          attackBonus: 40,
+          strengthBonus: 30,
+          itemLevel: 90,
+        ),
+      ],
+    );
+    expect(
+      WipeAdvice.lineFor(state: state, fight: atkLack()),
+      contains('Equip better'),
+    );
+    expect(
+      WipeAdvice.lineFor(state: state, fight: atkLack()),
+      contains('BAG'),
+    );
+  });
+
+  test('GEAR panels for AL20 veteran include ROSTER not dead loadouts', () {
+    final veteran = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 20,
+      highestDungeonCleared: 14,
+    );
+    expect(MenuTabs.showMerge(veteran), isTrue);
+    expect(MenuTabs.showRoster(veteran), isTrue);
+    final tabs = MenuRouter.visibleGearPanels(veteran);
+    expect(tabs, contains(GearPanel.roster));
+    expect(tabs, contains(GearPanel.merge));
+    expect(tabs.length, 4);
+  });
+
+  test('forge gap prefers MARKET when listing is affordable', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = GameLogic.enterDungeon(state, dungeonId: 'brass');
+    state = GameLogic.ensureMarketListings(
+      state.copyWith(
+        ascensionLevel: 20,
+        gold: 500_000,
+        hardmodeLevel: 12,
+      ),
+      nowMs: 1_750_000_000_000,
+    );
+    expect(MarketListingsService.hasAffordableUpgradeListing(state), isTrue);
+    state = GameLogic.notePartyWipe(state, atkLack());
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(state.wipeAdviceLine, startsWith('GOLD:'));
+    expect(state.wipeAdviceLine, contains('g'));
+  });
+
+  test('hub hint nudges HUB for gear fixes', () {
+    expect(
+      WipeAdvice.hubHintFor('POWER → MARKET has an upgrade'),
+      contains('HUB'),
+    );
+    expect(
+      WipeAdvice.hubHintFor('Equip the better item in BAG'),
+      contains('BAG'),
+    );
+    expect(
+      WipeAdvice.hubCtaLabelFor('Upgrade ATK in GOLD'),
+      'OPEN POWER',
+    );
+    expect(
+      WipeAdvice.hubNavFor('Upgrade ATK in GOLD')?.route,
+      MenuRoute.gold,
+    );
+    expect(
+      WipeAdvice.hubCtaLabelFor('Upgrade ATK in POWER'),
+      'OPEN POWER',
+    );
+    expect(
+      WipeAdvice.hubCtaLabelFor('Equip the better item in BAG'),
+      'OPEN BAG',
+    );
+  });
+
+  test('God Hand hint after two wipes on same floor', () {
+    var state = GameLogic.createInitialState(now: now);
+    expect(WipeAdvice.godHandHintFor(state), isNull);
+    state = GameLogic.notePartyWipe(state, atkLack());
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(
+      WipeAdvice.godHandHintFor(state),
+      contains('Tap the fight'),
+    );
+    state = state.copyWith(bossVictories: 1);
+    expect(
+      WipeAdvice.godHandHintFor(state),
+      contains('God Hand'),
+    );
+  });
+}

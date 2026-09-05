@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'kenney_assets.dart';
+import '../assets/kenney_assets.dart';
 
 enum KenneyBarColor { green, yellow, red }
 
@@ -106,83 +106,6 @@ class KenneyProgressBar extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Rounded progress bar using the ui_adventure progress_* assets.
-// Uses the _border image as background frame and the fill image clipped
-// to [value].
-// ─────────────────────────────────────────────────────────────────────────────
-
-class RpgProgressBar extends StatelessWidget {
-  const RpgProgressBar({
-    super.key,
-    required this.value,
-    this.height = 18,
-    this.color = KenneyBarColor.green,
-  });
-
-  final double value;
-  final double height;
-  final KenneyBarColor color;
-
-  String get _borderAsset => switch (color) {
-    KenneyBarColor.green => KenneyAssets.progressGreenBorder,
-    // No yellow rounded fill in the pack — use white border + yellow tint in paint.
-    KenneyBarColor.yellow => KenneyAssets.progressBlueBorder,
-    KenneyBarColor.red => KenneyAssets.progressRedBorder,
-  };
-
-  String get _fillAsset => switch (color) {
-    KenneyBarColor.green => KenneyAssets.progressGreen,
-    KenneyBarColor.yellow => KenneyAssets.progressWhite,
-    KenneyBarColor.red => KenneyAssets.progressRed,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final clamped = value.clamp(0.0, 1.0);
-    return SizedBox(
-      height: height,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            _borderAsset,
-            fit: BoxFit.fill,
-            filterQuality: FilterQuality.none,
-            isAntiAlias: false,
-          ),
-          if (clamped > 0.01)
-            ClipRect(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                widthFactor: clamped,
-                child: color == KenneyBarColor.yellow
-                    ? ColorFiltered(
-                        colorFilter: const ColorFilter.mode(
-                          Color(0xFFFFD54A),
-                          BlendMode.modulate,
-                        ),
-                        child: Image.asset(
-                          _fillAsset,
-                          fit: BoxFit.fill,
-                          filterQuality: FilterQuality.none,
-                          isAntiAlias: false,
-                        ),
-                      )
-                    : Image.asset(
-                        _fillAsset,
-                        fit: BoxFit.fill,
-                        filterQuality: FilterQuality.none,
-                        isAntiAlias: false,
-                      ),
-              ),
-            ),
         ],
       ),
     );

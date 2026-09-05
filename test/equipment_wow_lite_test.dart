@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/apex_craft.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/gear_set.dart';
@@ -113,6 +114,14 @@ void main() {
     );
     expect(GearSets.setStaminaBonus(full.equipped), 6);
     expect(GearSets.setCritBonus(full.equipped), 2);
+    expect(GearSets.setRoleArmorBonus(full.equipped, HeroRole.warrior), 4);
+    expect(GearSets.setRoleHasteBonus(full.equipped, HeroRole.rogue), 2);
+    expect(GearSets.setRoleHasteBonus(full.equipped, HeroRole.warrior), 0);
+    final proc = GearSets.fourPieceProc(full.equipped);
+    expect(proc, isNotNull);
+    expect(proc!.tag, 'CAVERN');
+    expect(proc.chance, greaterThan(0));
+    expect(GearSets.setBonusBlurb(full.equipped), contains('4pc'));
   });
 
   test('soulbound primaries feed meta attack', () {
@@ -147,7 +156,7 @@ void main() {
     expect(b.powerScore - a.powerScore, 30);
   });
 
-  test('specEquipScore prefers set completion', () {
+  test('specEquipScore ignores set completion flats (combat set only)', () {
     final hero = PartyHero.starting(
       name: 'Aegis',
       specId: HeroSpecId.protection,
@@ -201,8 +210,9 @@ void main() {
     );
     expect(
       GameLogic.specEquipScore(hero, setChest),
-      greaterThan(GameLogic.specEquipScore(hero, plainChest)),
+      GameLogic.specEquipScore(hero, plainChest),
     );
+    expect(GearSets.equipScoreBonus(equipped: hero.equipped, candidate: setChest), 0);
   });
 
   test('rollLoot can return multiple drops for spatial spawn', () {
@@ -307,6 +317,119 @@ void main() {
     expect(merged.name.toLowerCase(), contains('bear'));
   });
 
+  test('merge does not inherit setId from fuel-only secondary', () {
+    final primary = EquipmentItem(
+      id: 'p_noset',
+      name: 'Plain Chest',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      armorType: ArmorType.plate,
+      strengthBonus: 4,
+      staminaBonus: 6,
+      armorBonus: 8,
+      itemLevel: 20,
+    );
+    final secondary = EquipmentItem(
+      id: 's_set',
+      name: 'Set Fuel',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.uncommon,
+      armorType: ArmorType.plate,
+      strengthBonus: 2,
+      staminaBonus: 2,
+      itemLevel: 12,
+      setId: 'sandy_plate',
+    );
+    final merged = GameLogic.mergeEquipment(primary, secondary);
+    expect(merged.setId, isNull);
+  });
+
+  test('merge keeps the stronger on-item effect', () {
+    final primary = EquipmentItem(
+      id: 'p_fx',
+      name: 'Weak Charm',
+      slot: EquipmentSlot.trinket,
+      rarity: LootRarity.uncommon,
+      effectId: GearEffectId.lifesteal,
+      effectValue: 3,
+      itemLevel: 10,
+    );
+    final secondary = EquipmentItem(
+      id: 's_fx',
+      name: 'Strong Charm',
+      slot: EquipmentSlot.trinket,
+      rarity: LootRarity.rare,
+      effectId: GearEffectId.goldFind,
+      effectValue: 12,
+      itemLevel: 14,
+    );
+    final merged = GameLogic.mergeEquipment(primary, secondary);
+    expect(merged.effectId, GearEffectId.goldFind);
+    expect(merged.effectValue, 12);
+  });
+
+  test('higher-ilvl non-set beats set completion score nudge', () {
+    final hero = PartyHero.starting(
+      name: 'Aegis',
+      specId: HeroSpecId.protection,
+      level: 20,
+    ).copyWith(
+      equipped: {
+        EquipmentSlot.head: EquipmentItem(
+          id: 'h',
+          name: 'Helm',
+          slot: EquipmentSlot.head,
+          rarity: LootRarity.rare,
+          armorType: ArmorType.mail,
+          setId: 'sandy_mail',
+          staminaBonus: 5,
+          armorBonus: 8,
+          itemLevel: 20,
+        ),
+        EquipmentSlot.shoulder: EquipmentItem(
+          id: 's',
+          name: 'Shoulders',
+          slot: EquipmentSlot.shoulder,
+          rarity: LootRarity.rare,
+          armorType: ArmorType.mail,
+          setId: 'sandy_mail',
+          staminaBonus: 5,
+          armorBonus: 8,
+          itemLevel: 20,
+        ),
+      },
+    );
+    final setChest = EquipmentItem(
+      id: 'c_set',
+      name: 'Set Chest',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      armorType: ArmorType.mail,
+      setId: 'sandy_mail',
+      staminaBonus: 6,
+      armorBonus: 10,
+      strengthBonus: 4,
+      itemLevel: 20,
+      affinity: 'warrior',
+    );
+    final betterPlain = EquipmentItem(
+      id: 'c_better',
+      name: 'Better Plain',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      armorType: ArmorType.mail,
+      staminaBonus: 14,
+      armorBonus: 22,
+      strengthBonus: 12,
+      itemLevel: 36,
+      affinity: 'warrior',
+    );
+    expect(
+      GameLogic.specEquipScore(hero, betterPlain),
+      greaterThan(GameLogic.specEquipScore(hero, setChest)),
+    );
+  });
+
   test('gold value does not triple-count ilvl', () {
     final item = EquipmentItem(
       id: 'g',
@@ -322,11 +445,370 @@ void main() {
     expect(gold, lessThan(40 + item.powerScore + 80));
   });
 
+  test('itemLevelFor matrix: zone, AL, rarity, soft-cap', () {
+    final sandyCommon = EquipmentFactory.itemLevelFor(
+      battleNumber: 1,
+      rarity: LootRarity.common,
+      dungeonId: 'sandy',
+    );
+    expect(sandyCommon, 5);
+
+    final sandyF10Rare = EquipmentFactory.itemLevelFor(
+      battleNumber: 10,
+      rarity: LootRarity.rare,
+      dungeonId: 'sandy',
+    );
+    expect(sandyF10Rare, 31);
+
+    final crystal = EquipmentFactory.itemLevelFor(
+      battleNumber: 10,
+      rarity: LootRarity.rare,
+      dungeonId: 'crystal',
+      ascensionLevel: 0,
+    );
+    expect(crystal, greaterThan(sandyF10Rare));
+    expect(crystal, 55);
+
+    final withAl = EquipmentFactory.itemLevelFor(
+      battleNumber: 10,
+      rarity: LootRarity.rare,
+      dungeonId: 'crystal',
+      ascensionLevel: 10,
+    );
+    expect(withAl, greaterThan(crystal));
+
+    final withHm = EquipmentFactory.itemLevelFor(
+      battleNumber: 10,
+      rarity: LootRarity.rare,
+      dungeonId: 'sandy',
+      hardmodeLevel: 10,
+    );
+    expect(withHm, sandyF10Rare + 20);
+    expect(withHm, 51);
+
+    // Endless Spire soft-cap: raw would be huge, capped growth after 100.
+    final deep = EquipmentFactory.itemLevelFor(
+      battleNumber: 80,
+      rarity: LootRarity.common,
+      dungeonId: 'crystal',
+      ascensionLevel: 20,
+    );
+    final raw = 80 * 2 + 0 + 3 + 6 * 4 + 20 * 2; // 163
+    expect(deep, lessThan(raw));
+    expect(deep, lessThanOrEqualTo(150));
+  });
+
+  test('budget grows continuously within a rarity band', () {
+    EquipmentFactory.random = Random(3);
+    final early = EquipmentFactory.create(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 1,
+      bias: HeroRole.warrior,
+      dungeonId: 'sandy',
+    );
+    EquipmentFactory.random = Random(3);
+    final late = EquipmentFactory.create(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.warrior,
+      dungeonId: 'sandy',
+    );
+    expect(late.effectiveItemLevel, greaterThan(early.effectiveItemLevel));
+    final earlyPower =
+        early.strengthBonus + early.staminaBonus + early.armorBonus;
+    final latePower = late.strengthBonus + late.staminaBonus + late.armorBonus;
+    expect(latePower, greaterThan(earlyPower));
+  });
+
+  test('hardmode bumps same-tier budget', () {
+    EquipmentFactory.random = Random(9);
+    final base = EquipmentFactory.create(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 12,
+      bias: HeroRole.warrior,
+      dungeonId: 'sandy',
+      hardmodeLevel: 0,
+    );
+    EquipmentFactory.random = Random(9);
+    final hm = EquipmentFactory.create(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 12,
+      bias: HeroRole.warrior,
+      dungeonId: 'sandy',
+      hardmodeLevel: 10,
+    );
+    final basePower = base.strengthBonus + base.staminaBonus + base.armorBonus;
+    final hmPower = hm.strengthBonus + hm.staminaBonus + hm.armorBonus;
+    expect(hmPower, greaterThanOrEqualTo(basePower));
+    expect(hm.effectiveItemLevel, greaterThanOrEqualTo(base.effectiveItemLevel));
+  });
+
+  test('soulbound scales ilvl and primaries on Ascend AL', () {
+    final bound = EquipmentItem(
+      id: 'soulbound_sword',
+      name: 'Soulbound Sword',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      strengthBonus: 4,
+      staminaBonus: 2,
+      critChanceBonus: 2,
+      attackSpeedBonus: 3,
+      mp5Bonus: 1,
+      itemLevel: 20,
+    );
+    final scaled = GameLogic.scaleSoulboundForAl(bound, 10);
+    expect(scaled.effectiveItemLevel, greaterThanOrEqualTo(50));
+    expect(scaled.strengthBonus, greaterThanOrEqualTo(bound.strengthBonus));
+    expect(scaled.critChanceBonus, greaterThan(bound.critChanceBonus));
+    expect(scaled.attackSpeedBonus, greaterThan(bound.attackSpeedBonus));
+    expect(scaled.mp5Bonus, greaterThanOrEqualTo(bound.mp5Bonus));
+  });
+
+  test('soulbound folds legacy Vit/Def then keeps them after Ascend scale', () {
+    final legacy = EquipmentItem(
+      id: 'old_bound',
+      name: 'Old Bound',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      vitalityBonus: 10,
+      defenseBonus: 8,
+      itemLevel: 24,
+    );
+    final scaled = GameLogic.scaleSoulboundForAl(legacy, 8);
+    expect(scaled.vitalityBonus, 0);
+    expect(scaled.defenseBonus, 0);
+    expect(scaled.resolvedStamina, greaterThanOrEqualTo(10));
+    expect(scaled.resolvedArmor, greaterThanOrEqualTo(8));
+  });
+
+  test('soulbound target ilvl uses soft-cap like drops', () {
+    final bound = EquipmentItem(
+      id: 'deep_bound',
+      name: 'Deep Bound',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.epic,
+      strengthBonus: 20,
+      staminaBonus: 10,
+      itemLevel: 90,
+    );
+    final scaled = GameLogic.scaleSoulboundForAl(bound, 40);
+    final raw = max(90, 20 + 40 * 3);
+    expect(scaled.effectiveItemLevel, EquipmentFactory.softCapItemLevel(raw));
+    expect(scaled.effectiveItemLevel, lessThan(raw));
+  });
+
+  test('auto-sell cap scales with dungeon clears and AL', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 5));
+    expect(GameLogic.maxAutoSellIlvlCap(state), 60);
+    state = state.copyWith(highestDungeonCleared: 6, ascensionLevel: 10);
+    expect(GameLogic.maxAutoSellIlvlCap(state), 232);
+  });
+
   test('affix load parses structured prefixes and suffixes', () async {
     await EquipmentFactory.loadAffixes();
     expect(EquipmentFactory.affixPrefixDefs, isNotEmpty);
     expect(EquipmentFactory.affixSuffixDefs, isNotEmpty);
     expect(EquipmentFactory.affixPrefixDefs.first.id, isNotEmpty);
     expect(EquipmentFactory.affixNameById('savage'), isNotNull);
+  });
+
+  test('primary budget tracks displayed item level (soft-cap honest)', () {
+    final lowIlvl = EquipmentFactory.budgetForItemLevel(
+      itemLevel: 40,
+      rarity: LootRarity.rare,
+      slot: EquipmentSlot.chest,
+    );
+    final highIlvl = EquipmentFactory.budgetForItemLevel(
+      itemLevel: 80,
+      rarity: LootRarity.rare,
+      slot: EquipmentSlot.chest,
+    );
+    expect(highIlvl, greaterThan(lowIlvl));
+    expect(highIlvl / lowIlvl, closeTo(2.0, 0.15));
+
+    final soft = EquipmentFactory.itemLevelFor(
+      battleNumber: 80,
+      rarity: LootRarity.common,
+      dungeonId: 'crystal',
+      ascensionLevel: 20,
+    );
+    const raw = 80 * 2 + 0 + 3 + 6 * 4 + 20 * 2;
+    expect(soft, lessThan(raw));
+    final softBudget = EquipmentFactory.budgetForItemLevel(
+      itemLevel: soft,
+      rarity: LootRarity.common,
+      slot: EquipmentSlot.chest,
+    );
+    final rawBudget = EquipmentFactory.budgetForItemLevel(
+      itemLevel: raw,
+      rarity: LootRarity.common,
+      slot: EquipmentSlot.chest,
+    );
+    expect(softBudget, lessThan(rawBudget));
+  });
+
+  test('same displayed ilvl → drop budget equals budgetForItemLevel', () {
+    final a = EquipmentFactory.budgetForDrop(
+      rarity: LootRarity.rare,
+      battleNumber: 10,
+      slot: EquipmentSlot.chest,
+      dungeonId: 'sandy',
+      ascensionLevel: 0,
+    );
+    final ilvlA = EquipmentFactory.itemLevelFor(
+      battleNumber: 10,
+      rarity: LootRarity.rare,
+      dungeonId: 'sandy',
+    );
+    final fromIlvl = EquipmentFactory.budgetForItemLevel(
+      itemLevel: ilvlA,
+      rarity: LootRarity.rare,
+      slot: EquipmentSlot.chest,
+    );
+    expect(a, fromIlvl);
+  });
+
+  test('created piece primary sum stays near ilvl budget band', () {
+    EquipmentFactory.random = Random(21);
+    final piece = EquipmentFactory.create(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 12,
+      bias: HeroRole.warrior,
+      preferredArmor: ArmorType.plate,
+      dungeonId: 'sandy',
+    );
+    final budget = EquipmentFactory.budgetForItemLevel(
+      itemLevel: piece.effectiveItemLevel,
+      rarity: piece.rarity,
+      slot: piece.slot,
+    );
+    final primaries = piece.strengthBonus +
+        piece.agilityBonus +
+        piece.staminaBonus +
+        piece.intellectBonus +
+        piece.spiritBonus +
+        piece.spellPowerBonus +
+        piece.armorBonus;
+    expect(primaries, lessThanOrEqualTo((budget * 1.45).round()));
+    expect(primaries, greaterThanOrEqualTo((budget * 0.55).round()));
+  });
+
+  test('secondaries grow with item level for same rarity', () {
+    EquipmentFactory.random = Random(5);
+    final low = EquipmentFactory.create(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      battleNumber: 2,
+      bias: HeroRole.rogue,
+      dungeonId: 'sandy',
+    );
+    EquipmentFactory.random = Random(5);
+    final high = EquipmentFactory.create(
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      battleNumber: 40,
+      bias: HeroRole.rogue,
+      dungeonId: 'sandy',
+      ascensionLevel: 5,
+    );
+    expect(high.effectiveItemLevel, greaterThan(low.effectiveItemLevel + 20));
+    final lowSec =
+        low.critChanceBonus +
+        low.attackSpeedBonus +
+        low.mp5Bonus +
+        low.masteryBonus;
+    final highSec =
+        high.critChanceBonus +
+        high.attackSpeedBonus +
+        high.mp5Bonus +
+        high.masteryBonus;
+    expect(highSec, greaterThan(lowSec));
+  });
+
+  test('new drops keep lean primary + at most two secondaries', () {
+    final slots = [
+      for (final s in EquipmentSlot.values)
+        if (s != EquipmentSlot.consumable) s,
+    ];
+    for (var seed = 0; seed < 40; seed++) {
+      EquipmentFactory.random = Random(seed);
+      final piece = EquipmentFactory.create(
+        slot: slots[seed % slots.length],
+        rarity: LootRarity.values[1 + seed % 4],
+        battleNumber: 8 + seed,
+        bias: HeroRole.values[seed % 4],
+        dungeonId: 'sandy',
+      );
+      final primaryKinds = [
+        if (piece.strengthBonus > 0) 1,
+        if (piece.agilityBonus > 0) 1,
+        if (piece.intellectBonus > 0) 1,
+        if (piece.spiritBonus > 0) 1,
+        if (piece.spellPowerBonus > 0) 1,
+      ].length;
+      // Power primaries stay focused (Sta/Armor separate).
+      expect(
+        primaryKinds,
+        lessThanOrEqualTo(3),
+        reason: 'seed $seed ${piece.name}',
+      );
+      final secLines = [
+        if (piece.critChanceBonus > 0) 1,
+        if (piece.attackSpeedBonus > 0) 1,
+        if (piece.mp5Bonus > 0) 1,
+        if (piece.moveSpeedBonus > 0) 1,
+      ].length;
+      expect(secLines, lessThanOrEqualTo(2), reason: 'seed $seed ${piece.name}');
+      expect(piece.moveSpeedBonus, 0, reason: 'no Move spam seed $seed');
+    }
+  });
+
+  test('Apex budget follows legendary ilvl curve', () {
+    final apex = ApexCraft.buildItem(
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.meleeDps,
+      slot: EquipmentSlot.weapon,
+      rank: 1,
+      ascensionLevel: 5,
+    );
+    final expected = EquipmentFactory.budgetForItemLevel(
+      itemLevel: apex.effectiveItemLevel,
+      rarity: LootRarity.legendary,
+      slot: apex.slot,
+      handed: apex.handed,
+    );
+    final primaries = apex.strengthBonus +
+        apex.agilityBonus +
+        apex.staminaBonus +
+        apex.attackBonus;
+    // Rank mul ~1.06 — stay near drop budget, not 1.6× stacked.
+    expect(primaries, greaterThan((expected * 0.7).round()));
+    expect(primaries, lessThanOrEqualTo((expected * 1.25).round()));
+  });
+
+  test('Apex tank armor is carved from budget (not stacked)', () {
+    final chest = ApexCraft.buildItem(
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.chest,
+      rank: 1,
+      ascensionLevel: 3,
+    );
+    final budget = EquipmentFactory.budgetForItemLevel(
+      itemLevel: chest.effectiveItemLevel,
+      rarity: LootRarity.legendary,
+      slot: chest.slot,
+    );
+    final sum = chest.strengthBonus +
+        chest.staminaBonus +
+        chest.armorBonus +
+        chest.agilityBonus;
+    expect(sum, lessThanOrEqualTo((budget * 1.25).round()));
+    expect(chest.armorBonus, greaterThan(0));
   });
 }

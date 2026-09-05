@@ -18,6 +18,11 @@ migrate_working_dir/
 *.iws
 .idea/
 
+# Obsidian vault UI (local). Not used for project docs — leave ignored if present.
+.obsidian/
+
+
+
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
@@ -36,6 +41,12 @@ migrate_working_dir/
 # Local simulation reports
 /tool/out/
 
+# Local art sources for tool/extend_world_path_*.py.
+# These live outside assets/ so Flutter does not bundle them into the app.
+/tool/art_backups/*
+# The launcher/store icon source stays tracked (README + Play listing use it).
+!/tool/art_backups/app_icon.png
+
 # Symbolication related
 app.*.symbols
 
@@ -49,6 +60,7 @@ app.*.map.json
 
 # Release signing (never commit secrets)
 /android/key.properties
+/android/admob.properties
 *.jks
 *.keystore
 
@@ -80,4 +92,53 @@ IdleSword*
 /Readme.html
 /Visit Kenney*
 /assets.json
-.cursor/
+# Keep kenney-preview / local Cursor junk out of git; ship project skills + rules + hooks.
+.cursor/*
+!.cursor/hooks.json
+!.cursor/hooks/
+!.cursor/hooks/**
+.cursor/hooks/.verify-dirty
+!.cursor/skills/
+!.cursor/skills/**/
+!.cursor/rules/
+!.cursor/rules/**/
+!.cursor/commands/
+!.cursor/commands/**/
+!.cursor/mcp.json
+
+# Local MCP venv
+/tool/mcp_idle_party/.venv/
+
+# Local Play AAB CORS helper (often has a machine-specific path)
+/tool/_serve_aab_cors.py
+
+# Play Store listing captures (regenerate with compose_shots.py)
+/tool/store_listing/raw/
+/tool/store_listing/out/
+
+# One-off emulator dumps / gear audits (keep MCP, playtest scripts, art pipeline)
+/tool/_*.py
+/tool/_*.png
+/tool/audit_*.png
+/tool/playtest_*.png
+/tool/play2_*.png
+/tool/play4_*.png
+/tool/emu_*.png
+/tool/verify_*.png
+/tool/confirm_*.png
+/tool/check_*.png
+/tool/equip_check_*.png
+/tool/debug_*.png
+/tool/look_*.png
+/tool/preview_*.png
+/tool/screen*.png
+/tool/ui_*.xml
+/tool/*_gen.png
+/tool/*_crop.png
+/tool/*_thumb.png
+/tool/dungeon_heroes*.png
+/tool/gear_doll*.png
+/tool/dump_ui_labels.py
+/tool/parse_ui_dump.py
+/tool/parse_ui_dump_local.py
+

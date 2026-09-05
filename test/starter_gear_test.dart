@@ -11,9 +11,15 @@ void main() {
   test('every class starter fills all equipment slots', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
     for (final hero in state.heroes) {
+      final expected = EquipmentSlot.values.toSet();
+      if (ClassProficiency.weaponBlocksOffHand(
+        hero.itemIn(EquipmentSlot.weapon),
+      )) {
+        expected.remove(EquipmentSlot.offHand);
+      }
       expect(
         hero.equipped.keys.toSet(),
-        EquipmentSlot.values.toSet(),
+        expected,
         reason: '${hero.gearAffinity} missing slots',
       );
       for (final item in hero.equipped.values) {
@@ -101,6 +107,31 @@ void main() {
       EquipmentSlot.values.toSet(),
     );
     expect(state.heroes.first.itemIn(EquipmentSlot.weapon)?.id, keptId);
+  });
+
+  test('fillMissingStarterGear skips OH under Apex 2H', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final hero = state.heroes.first;
+    final apex2h = EquipmentItem(
+      id: 'apex_2h',
+      name: 'Apex Greatsword',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.legendary,
+      weaponType: WeaponType.sword,
+      handed: WeaponHanded.twoHand,
+      strengthBonus: 20,
+      isApex: true,
+      itemLevel: 80,
+    );
+    state = state.copyWith(
+      heroes: [
+        hero.copyWith(equipped: {EquipmentSlot.weapon: apex2h}),
+        ...state.heroes.skip(1),
+      ],
+    );
+    state = GameLogic.fillMissingStarterGear(state);
+    expect(state.heroes.first.itemIn(EquipmentSlot.offHand), isNull);
+    expect(state.heroes.first.itemIn(EquipmentSlot.weapon)?.id, 'apex_2h');
   });
 
   test('factory rolls equippable gear for every slot and class', () {

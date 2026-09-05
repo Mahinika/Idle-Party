@@ -1,0 +1,16 @@
+---
+description: When the user types /repo auditandcleaning (or close variants), run the repo audit skill — analysis only, no code changes.
+alwaysApply: true
+---
+
+# /repo auditandcleaning → repository audit
+
+If the user message is exactly **`/repo auditandcleaning`**, **`/repo-auditandcleaning`**,
+**`/repo audit and cleaning`**, or clearly means that slash command, **immediately**
+follow `.cursor/skills/repo-audit-and-cleaning/SKILL.md` (read `PROMPT.md` verbatim).
+
+This is an **analysis-only** audit. Do **not** modify the repository unless the
+user explicitly asks for cleanup in a later message.
+
+Do not ask which skill to use. Do not treat vague “gör spelet bättre / cleanup”
+as this command — only run it when they invoke the slash (or clearly name it).

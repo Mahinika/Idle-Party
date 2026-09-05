@@ -62,7 +62,8 @@ abstract final class CaveAtmosphere {
     return IgnorePointer(
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final side = constraints.biggest.shortestSide * sizeFactor * intensity;
+          final side =
+              constraints.biggest.shortestSide * sizeFactor * intensity;
           return Align(
             alignment: alignment,
             child: Container(

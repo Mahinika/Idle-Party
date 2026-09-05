@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,23 +6,30 @@ import 'package:flutter/semantics.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/equipment_factory.dart';
+import 'core/gear/drop_tables.dart';
 import 'core/game_director.dart';
+import 'core/immersive_ui.dart';
+import 'core/menu_router.dart';
+import 'models/dungeon_def.dart';
 import 'models/hero_spec.dart';
-import 'ui/custom_assets.dart';
-import 'ui/first_session_tips.dart';
+import 'ui/boot_intro_screen.dart';
+import 'assets/custom_assets.dart';
 import 'ui/game_audio.dart';
 import 'ui/game_theme.dart';
-import 'ui/hub_screen.dart';
-import 'ui/is2_shell.dart';
 import 'ui/kenney_button.dart';
-import 'ui/kenney_sprite.dart';
+import 'ui/loading_splash.dart';
 import 'ui/menu_chrome.dart';
 import 'ui/new_game_party_picker.dart';
+import 'ui/play_update_required_screen.dart';
+import 'ui/save_import_flow.dart';
+import 'ui/shell/play_shell.dart';
 import 'ui/start_menu_screen.dart';
 import 'ui/web_click_bridge.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Fire-and-forget before first frame — phone product is edge-to-edge game UI.
+  unawaited(lockImmersiveUi());
   runApp(const MyApp());
   // Expose the semantics DOM overlay on web so browser automation / a11y
   // tools can click buttons (CanvasKit has no real DOM widgets otherwise).
@@ -51,14 +58,29 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late final GameDirector _director;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Stable for the app lifetime — never recreate on MaterialApp rebuilds.
     _director = widget.director ?? GameDirector.persistent();
+    unawaited(lockImmersiveUi());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(lockImmersiveUi());
+    }
   }
 
   @override
@@ -82,6 +104,51 @@ class _MyAppState extends State<MyApp> {
         ),
         scaffoldBackgroundColor: GameTheme.ink,
       ),
+      builder: (context, child) {
+        final content = child ?? const SizedBox.shrink();
+        if (!kIsWeb) return content;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // Samsung Galaxy A56: 1080×2340 @ DPR 3 → 360×780 CSS.
+            // Always letterbox to that phone frame so web playtest matches the
+            // APK — never stretch to a tall/wide Cursor browser panel.
+            const phoneW = 360.0;
+            const phoneH = 780.0;
+            // Approx status bar + gesture home indicator (logical / CSS px).
+            const padTop = 28.0;
+            const padBottom = 20.0;
+            final mq = MediaQuery.of(context);
+            return ColoredBox(
+              color: const Color(0xFF05070A),
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: SizedBox(
+                    width: phoneW,
+                    height: phoneH,
+                    child: MediaQuery(
+                      data: mq.copyWith(
+                        size: const Size(phoneW, phoneH),
+                        padding: const EdgeInsets.only(
+                          top: padTop,
+                          bottom: padBottom,
+                        ),
+                        viewPadding: const EdgeInsets.only(
+                          top: padTop,
+                          bottom: padBottom,
+                        ),
+                        viewInsets: EdgeInsets.zero,
+                        devicePixelRatio: 3,
+                      ),
+                      child: content,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
       home: GameHomePage(
         key: const ValueKey('game-home'),
         director: _director,
@@ -92,7 +159,14 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-enum _AppPhase { loading, startMenu, newGamePicker, play }
+enum _AppPhase {
+  loading,
+  playUpdateRequired,
+  bootIntro,
+  startMenu,
+  newGamePicker,
+  play,
+}
 
 class GameHomePage extends StatefulWidget {
   const GameHomePage({
@@ -110,22 +184,68 @@ class GameHomePage extends StatefulWidget {
   State<GameHomePage> createState() => _GameHomePageState();
 }
 
-class _GameHomePageState extends State<GameHomePage> {
+class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver {
   GameDirector get _director => widget.director;
-  Is2Overlay? _hubOverlay;
+
+  /// One owner of "which menu is open", shared by hub and dungeon.
+  final MenuRouter _router = MenuRouter();
   _AppPhase _phase = _AppPhase.loading;
+  bool _playUpdateTapBusy = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _bootstrap();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _router.dispose();
+    _director.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        GameAudio.onAppPaused();
+        _director.setAppPaused(true);
+      case AppLifecycleState.inactive:
+        // Control-center / notification shade — mute audio only; keep sim
+        // so a brief swipe does not stutter combat.
+        GameAudio.onAppPaused();
+      case AppLifecycleState.resumed:
+        GameAudio.onAppResumed();
+        _director.setAppPaused(false);
+        if (_phase != _AppPhase.playUpdateRequired) return;
+        unawaited(_recheckMandatoryPlayUpdate());
+    }
   }
 
   Future<void> _bootstrap() async {
     unawaited(EquipmentFactory.loadAffixes());
+    unawaited(DropTables.load());
     // Defer combat loop until after start menu so dungeon ticks cannot steal focus.
     await _director.boot(deferCombatLoop: widget.showIntro);
-    GameAudio.muted = _director.state.soundMuted;
+    await GameAudio.init();
+    GameAudio.hapticsEnabled = _director.state.hapticsEnabled;
+    GameAudio.applyVolumes(
+      sfx: _director.state.sfxVolume,
+      ambience: _director.state.ambienceVolume,
+    );
+    GameAudio.setMuted(_director.state.soundMuted);
+    if (!_director.state.soundMuted) {
+      unawaited(
+        GameAudio.setAmbience(
+          _director.state.inDungeon ? AmbienceKind.dungeon : AmbienceKind.hub,
+        ),
+      );
+    }
     if (kIsWeb) {
       WebClickBridge.bindSpeedControls(
         getSpeed: () => _director.debugTimeScale,
@@ -133,11 +253,68 @@ class _GameHomePageState extends State<GameHomePage> {
       );
     }
     if (!mounted) return;
+
+    final blocked = await _director.checkMandatoryPlayUpdate();
+    if (!mounted) return;
+    if (blocked) {
+      setState(() => _phase = _AppPhase.playUpdateRequired);
+      return;
+    }
+
+    _enterAfterBootChecks();
+    unawaited(_precacheScenes());
+  }
+
+  void _enterAfterBootChecks() {
     setState(() {
-      _phase = widget.showIntro ? _AppPhase.startMenu : _AppPhase.play;
+      _phase = widget.showIntro ? _AppPhase.bootIntro : _AppPhase.play;
     });
     if (_phase == _AppPhase.play) {
       _director.ensureCombatLoop();
+    }
+  }
+
+  Future<void> _recheckMandatoryPlayUpdate() async {
+    final blocked = await _director.checkMandatoryPlayUpdate();
+    if (!mounted) return;
+    if (blocked) {
+      setState(() {
+        _phase = _AppPhase.playUpdateRequired;
+        _playUpdateTapBusy = false;
+      });
+      return;
+    }
+    _enterAfterBootChecks();
+  }
+
+  Future<void> _startMandatoryPlayUpdate() async {
+    if (_playUpdateTapBusy) return;
+    setState(() => _playUpdateTapBusy = true);
+    await _director.startMandatoryPlayUpdate();
+    if (!mounted) return;
+    setState(() => _playUpdateTapBusy = false);
+    await _recheckMandatoryPlayUpdate();
+  }
+
+  /// Warms the two painted scenes the player hits first, while the intro or
+  /// start menu is still on screen. Decode sizes must match
+  /// [CaveAtmosphere.fullBleedScene] or the warm-up lands in a different
+  /// cache entry and buys nothing.
+  Future<void> _precacheScenes() async {
+    for (final asset in <String>[
+      CustomAssets.hubScene,
+      CustomAssets.dungeonBackdropFor(_director.state.dungeonId),
+    ]) {
+      if (!mounted) return;
+      await precacheImage(
+        ResizeImage(
+          AssetImage(asset),
+          width: 960,
+          height: 960,
+          allowUpscaling: false,
+        ),
+        context,
+      );
     }
   }
 
@@ -153,40 +330,55 @@ class _GameHomePageState extends State<GameHomePage> {
     setState(() => _phase = _AppPhase.newGamePicker);
   }
 
-  Future<void> _confirmNewGame(List<HeroSpecId> specs) async {
+  Future<void> _restoreSave() async {
+    if (_phase != _AppPhase.startMenu) return;
+    final ok = await SaveImportFlow.fromClipboard(
+      context: context,
+      director: _director,
+    );
+    if (!ok || !mounted) return;
+    _continueGame();
+  }
+
+  Future<void> _confirmNewGame(List<HeroSpecId> specs, String partyName) async {
     if (_director.hasExistingSave) {
-      final ok = await showDialog<bool>(
-        context: context,
-        barrierColor: MenuChrome.scrim,
-        builder: (ctx) => MenuChrome.dialog(
-          title: 'Overwrite save?',
-          content: Text(
-            'Starting a new game erases your current progress.',
-            style: GameTheme.body(size: 15, color: GameTheme.parchment),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(
-                'CANCEL',
-                style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+      WebClickBridge.pushLayer();
+      bool? ok;
+      try {
+        ok = await showDialog<bool>(
+          context: context,
+          barrierColor: MenuChrome.scrim,
+          builder: (ctx) => MenuChrome.dialog(
+            title: 'Overwrite save?',
+            content: Text(
+              'Starting a new game erases your current progress.',
+              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            ),
+            actions: [
+              GameButton(
+                label: 'CANCEL',
+                style: GameButtonStyle.grey,
+                expanded: false,
+                onPressed: () => Navigator.pop(ctx, false),
               ),
-            ),
-            KenneyButton(
-              label: 'OVERWRITE',
-              expanded: false,
-              style: KenneyButtonStyle.red,
-              onPressed: () => Navigator.pop(ctx, true),
-            ),
-          ],
-        ),
-      );
+              GameButton(
+                label: 'OVERWRITE',
+                expanded: false,
+                style: GameButtonStyle.red,
+                onPressed: () => Navigator.pop(ctx, true),
+              ),
+            ],
+          ),
+        );
+      } finally {
+        WebClickBridge.popLayer();
+      }
       if (ok != true || !mounted) {
         setState(() => _phase = _AppPhase.startMenu);
         return;
       }
     }
-    await _director.startNewGame(specs);
+    await _director.startNewGame(specs, partyName: partyName);
     if (!mounted) return;
     _director.clearPendingStartMenu();
     setState(() => _phase = _AppPhase.play);
@@ -194,40 +386,37 @@ class _GameHomePageState extends State<GameHomePage> {
   }
 
   @override
-  void dispose() {
-    _director.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     // Intro is outside the director AnimatedBuilder so toast/combat notifies
     // cannot rebuild or accidentally dismiss the title card.
     if (_phase == _AppPhase.loading) {
+      return const LoadingSplash();
+    }
+
+    if (_phase == _AppPhase.playUpdateRequired) {
+      return PlayUpdateRequiredScreen(
+        key: const ValueKey('play-update-required'),
+        updating: _playUpdateTapBusy,
+        onUpdate: () => unawaited(_startMandatoryPlayUpdate()),
+      );
+    }
+
+    if (_phase == _AppPhase.bootIntro) {
       return Scaffold(
-        backgroundColor: GameTheme.ink,
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            ColoredBox(color: GameTheme.ink),
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  KenneySprite(asset: CustomAssets.introLogo, size: 96),
-                  const SizedBox(height: 18),
-                  SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: GameTheme.torch.withValues(alpha: 0.85),
-                    ),
-                  ),
-                ],
+        body: BootIntroScreen(
+          key: const ValueKey('boot-intro'),
+          playCinematic:
+              CustomAssets.introVideoBundled &&
+              !_director.state.seenTips.contains(
+                BootIntroScreen.cinematicTipId,
               ),
-            ),
-          ],
+          muted: GameAudio.muted,
+          onCinematicConsumed: () =>
+              _director.dismissTip(BootIntroScreen.cinematicTipId),
+          onFinished: () {
+            if (!mounted) return;
+            setState(() => _phase = _AppPhase.startMenu);
+          },
         ),
       );
     }
@@ -237,8 +426,12 @@ class _GameHomePageState extends State<GameHomePage> {
         body: StartMenuScreen(
           key: const ValueKey('start-menu'),
           canContinue: _director.hasExistingSave,
+          saveSummary: _director.hasExistingSave
+              ? '${_director.state.partyName} · ${DungeonCatalog.byId(_director.state.dungeonId).name}'
+              : null,
           onContinue: _continueGame,
           onNewGame: _openNewGamePicker,
+          onRestore: _restoreSave,
         ),
       );
     }
@@ -263,84 +456,10 @@ class _GameHomePageState extends State<GameHomePage> {
           });
         }
 
-        final Widget body;
-        if (_director.state.inDungeon) {
-          body = Is2Shell(
-            director: _director,
-            pulse: 0.5,
-            onLeaveDungeon: _director.leaveDungeon,
-          );
-        } else {
-          body = Stack(
-            children: [
-              IgnorePointer(
-                ignoring: _hubOverlay != null,
-                child: HubScreen(
-                  director: _director,
-                  onEnterDungeon: (id) =>
-                      _director.enterDungeon(dungeonId: id),
-                  onOpenInventory: () => setState(
-                    () => _hubOverlay = Is2Overlay.inventory,
-                  ),
-                  onOpenForge: () => setState(
-                    () => _hubOverlay = Is2Overlay.forge,
-                  ),
-                  onOpenJobs: () => setState(
-                    () => _hubOverlay = Is2Overlay.jobs,
-                  ),
-                  onOpenSanctuary: () => setState(
-                    () => _hubOverlay = Is2Overlay.sanctuary,
-                  ),
-                  onOpenMarket: () => setState(
-                    () => _hubOverlay = Is2Overlay.market,
-                  ),
-                  onOpenBeast: () => setState(
-                    () => _hubOverlay = Is2Overlay.beast,
-                  ),
-                  onOpenSettings: () => setState(
-                    () => _hubOverlay = Is2Overlay.settings,
-                  ),
-                  onOpenAchievements: () => setState(
-                    () => _hubOverlay = Is2Overlay.achievements,
-                  ),
-                  onOpenCodex: () => setState(
-                    () => _hubOverlay = Is2Overlay.codex,
-                  ),
-                  onOpenLoadouts: () => setState(
-                    () => _hubOverlay = Is2Overlay.loadouts,
-                  ),
-                  onOpenTeam: () => setState(
-                    () => _hubOverlay = Is2Overlay.teamComposition,
-                  ),
-                  onOpenGuides: () => setState(
-                    () => _hubOverlay = Is2Overlay.guides,
-                  ),
-                  onOpenPrestigeShop: () => setState(
-                    () => _hubOverlay = Is2Overlay.prestigeShop,
-                  ),
-                ),
-              ),
-              if (_hubOverlay == null)
-                FirstSessionTips(director: _director),
-              if (_hubOverlay != null)
-                Positioned.fill(
-                  child: Material(
-                    color: const Color(0xF20A0806),
-                    child: Is2Shell(
-                      key: const ValueKey('hub-meta-shell'),
-                      director: _director,
-                      pulse: 0.5,
-                      hubMode: true,
-                      initialOverlay: _hubOverlay!,
-                      onLeaveDungeon: () => setState(
-                        () => _hubOverlay = null,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          );
-        }
+        final body = PlayShell(
+          director: _director,
+          router: _router,
+        );
 
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(

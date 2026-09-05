@@ -34,13 +34,13 @@ class GearLoadout {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'name': name,
-        'heroSlotItemIds': heroSlotItemIds
-            .map((m) => Map<String, dynamic>.from(m))
-            .toList(),
-        'heroIds': heroIds,
-      };
+    'id': id,
+    'name': name,
+    'heroSlotItemIds': heroSlotItemIds
+        .map((m) => Map<String, dynamic>.from(m))
+        .toList(),
+    'heroIds': heroIds,
+  };
 
   factory GearLoadout.fromJson(Map<String, dynamic> json) {
     final raw = json['heroSlotItemIds'] as List<dynamic>? ?? const [];

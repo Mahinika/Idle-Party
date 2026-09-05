@@ -1,0 +1,18 @@
+{
+  "source": "lib/core/game_logic.dart",
+  "class": "GameLogic",
+  "bucket": "Missions",
+  "target_class": "MissionBoard",
+  "out": "lib/core/mission_board.dart",
+  "members": [
+    "createMissionBoard",
+    "createMissionBoardFor",
+    "missionDepthScore",
+    "createMission",
+    "rollReplacementMission",
+    "applyMissionProgress",
+    "claimMission"
+  ],
+  "no_delegate": [],
+  "header": "import 'dart:math';\n\nimport '../models/dungeon_def.dart';\nimport '../models/mission.dart';\nimport 'game_logic.dart';\nimport 'game_state.dart';\nimport 'meta_systems.dart';\n\n/// The mission board: what it offers, how progress lands, what a claim pays.\n///\n/// Rebuilt on Ascend for the new level, so offers scale with how deep the\n/// player actually is rather than with wallet gold.\nabstract final class MissionBoard {"
+}

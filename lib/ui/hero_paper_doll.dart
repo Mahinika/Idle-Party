@@ -1,11 +1,7 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 
 import '../models/hero.dart';
 import '../models/loot.dart';
-import 'decoded_image_cache.dart';
-import 'hero_doll_sprite.dart';
 
 /// Kenney Roguelike Characters atlas (16×16 tiles, 1px margin).
 class RoguelikeCharAtlas {
@@ -18,11 +14,11 @@ class RoguelikeCharAtlas {
   static const int stride = 17;
 
   static Rect src(int col, int row) => Rect.fromLTWH(
-        col * stride.toDouble(),
-        row * stride.toDouble(),
-        tileSize.toDouble(),
-        tileSize.toDouble(),
-      );
+    col * stride.toDouble(),
+    row * stride.toDouble(),
+    tileSize.toDouble(),
+    tileSize.toDouble(),
+  );
 }
 
 /// One layer cell in the paper-doll stack (back → front).
@@ -61,12 +57,13 @@ class HeroPaperDoll {
 
   static int _rarityTier(LootRarity? rarity) => rarity?.index ?? 0;
 
-  /// Pants / legs — boots slot.
+  /// Pants / legs — legs slot preferred, else boots.
   static DollLayer? pantsFor(PartyHero hero) {
-    final boots = hero.itemIn(EquipmentSlot.boots);
-    if (boots == null) return null;
+    final item =
+        hero.itemIn(EquipmentSlot.legs) ?? hero.itemIn(EquipmentSlot.boots);
+    if (item == null) return null;
     // cols 3–4 pants overlays; row picks color/tier.
-    final row = switch (_rarityTier(boots.rarity)) {
+    final row = switch (_rarityTier(item.rarity)) {
       0 => 1, // dark
       1 => 2, // brown
       2 => 3, // light
@@ -75,21 +72,31 @@ class HeroPaperDoll {
     return DollLayer(3, row);
   }
 
-  /// Torso / cloak slot. Also draws light cloth for cloak.
+  /// Torso — chest preferred, else cloak.
   static DollLayer? torsoFor(PartyHero hero) {
-    final cloak = hero.itemIn(EquipmentSlot.cloak);
-    if (cloak == null) return null;
-    final tier = _rarityTier(cloak.rarity);
+    final item =
+        hero.itemIn(EquipmentSlot.chest) ?? hero.itemIn(EquipmentSlot.cloak);
+    if (item == null) return null;
+    final tier = _rarityTier(item.rarity);
     // Armor columns 6–17: pick role palette × rarity.
     return switch (hero.gearAffinity) {
       HeroRole.warrior => DollLayer(
-          tier >= 2 ? 10 : 6,
-          tier >= 2 ? 5 : tier.clamp(0, 4).toInt(),
-        ),
+        tier >= 2 ? 10 : 6,
+        tier >= 2 ? 5 : tier.clamp(0, 4).toInt(),
+      ),
       HeroRole.healer => DollLayer(7, tier >= 2 ? 5 : tier.clamp(0, 4).toInt()),
       HeroRole.mage => DollLayer(9, tier >= 2 ? 4 : 2),
       HeroRole.rogue => DollLayer(12, tier >= 2 ? 3 : 1),
     };
+  }
+
+  /// Gloves / hands (Kenney torso-adjacent tint on col 6).
+  static DollLayer? glovesFor(PartyHero hero) {
+    final hands =
+        hero.itemIn(EquipmentSlot.hands) ?? hero.itemIn(EquipmentSlot.wrist);
+    if (hands == null) return null;
+    final tier = _rarityTier(hands.rarity);
+    return DollLayer(6, tier.clamp(0, 4));
   }
 
   /// Optional cape when cloak is uncommon+.
@@ -139,13 +146,15 @@ class HeroPaperDoll {
     return switch (tier) {
       0 => const DollLayer(33, 1), // wood
       1 => const DollLayer(37, 1), // metal
-      2 => const DollLayer(37, 5), // patterned
+      2 => const DollLayer(37, 1), // metal (readable on denser bodies)
       _ => const DollLayer(39, 7), // fancy
     };
   }
 
   static DollLayer? weaponFor(PartyHero hero) {
-    final weapon = hero.itemIn(EquipmentSlot.weapon);
+    final weapon =
+        hero.itemIn(EquipmentSlot.weapon) ??
+        hero.itemIn(EquipmentSlot.ranged);
     if (weapon == null) return null;
     final tier = _rarityTier(weapon.rarity);
     final wt = weapon.weaponType;
@@ -170,7 +179,34 @@ class HeroPaperDoll {
         _ => const DollLayer(51, 0),
       };
     }
-    // Swords / axes / maces — default melee.
+    // Swords / axes / maces / bows — pick a matching Kenney tile.
+    if (wt == WeaponType.mace) {
+      return switch (tier) {
+        0 => const DollLayer(50, 4),
+        1 => const DollLayer(51, 4),
+        2 => const DollLayer(52, 4),
+        _ => const DollLayer(53, 4),
+      };
+    }
+    if (wt == WeaponType.axe || wt == WeaponType.polearm) {
+      return switch (tier) {
+        0 => const DollLayer(48, 4),
+        1 => const DollLayer(49, 4),
+        2 => const DollLayer(50, 4),
+        _ => const DollLayer(51, 4),
+      };
+    }
+    if (wt == WeaponType.bow ||
+        wt == WeaponType.crossbow ||
+        wt == WeaponType.gun ||
+        wt == WeaponType.thrown) {
+      return switch (tier) {
+        0 => const DollLayer(54, 0),
+        1 => const DollLayer(55, 0),
+        2 => const DollLayer(54, 4),
+        _ => const DollLayer(55, 4),
+      };
+    }
     return switch (tier) {
       0 => const DollLayer(42, 4),
       1 => const DollLayer(44, 4),
@@ -179,7 +215,7 @@ class HeroPaperDoll {
     };
   }
 
-  /// Back-to-front layers for [hero].
+  /// Back-to-front layers for [hero] (legacy flat stack; prefer visual pose).
   ///
   /// [walkFrame] 0/1 picks body/pants pose column.
   static List<DollLayer> layersFor(
@@ -189,9 +225,7 @@ class HeroPaperDoll {
   }) {
     final bodyCol = walkFrame.clamp(0, 1);
     final skin = skinRowFor(hero, partyIndex);
-    final layers = <DollLayer>[
-      DollLayer(bodyCol, skin),
-    ];
+    final layers = <DollLayer>[DollLayer(bodyCol, skin)];
 
     final cape = capeFor(hero);
     if (cape != null) layers.add(cape);
@@ -203,6 +237,9 @@ class HeroPaperDoll {
 
     final torso = torsoFor(hero);
     if (torso != null) layers.add(torso);
+
+    final gloves = glovesFor(hero);
+    if (gloves != null) layers.add(gloves);
 
     final head = headFor(hero);
     if (head == null) {
@@ -219,115 +256,4 @@ class HeroPaperDoll {
 
     return layers;
   }
-
-  static void paint(
-    Canvas canvas,
-    ui.Image atlas,
-    Offset center,
-    double size, {
-    required PartyHero hero,
-    int partyIndex = 0,
-    int walkFrame = 0,
-    double alpha = 1,
-  }) {
-    final layers = layersFor(
-      hero,
-      partyIndex: partyIndex,
-      walkFrame: walkFrame,
-    );
-    final dst = Rect.fromCenter(center: center, width: size, height: size);
-    final paint = Paint()
-      ..filterQuality = FilterQuality.none
-      ..isAntiAlias = false
-      ..color = Color.fromRGBO(255, 255, 255, alpha);
-    for (final layer in layers) {
-      canvas.drawImageRect(
-        atlas,
-        RoguelikeCharAtlas.src(layer.col, layer.row),
-        dst,
-        paint,
-      );
-    }
-  }
-}
-
-/// Equip-panel paper doll: layered Roguelike tiles from worn gear.
-///
-/// Falls back to the custom class sprite while the atlas loads.
-class HeroPaperDollView extends StatelessWidget {
-  const HeroPaperDollView({
-    super.key,
-    required this.hero,
-    this.partyIndex = 0,
-    this.size = 64,
-    this.walkFrame = 0,
-  });
-
-  final PartyHero hero;
-  final int partyIndex;
-  final double size;
-  final int walkFrame;
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<ui.Image>(
-      future: DecodedImageCache.load(
-        RoguelikeCharAtlas.assetPath,
-        targetWidth: 512,
-      ),
-      builder: (context, snap) {
-        if (!snap.hasData) {
-          return HeroDollSprite(
-            hero: hero,
-            partyIndex: partyIndex,
-            size: size,
-            walkFrame: walkFrame,
-          );
-        }
-        return CustomPaint(
-          size: Size(size, size),
-          painter: _HeroPaperDollPainter(
-            atlas: snap.data!,
-            hero: hero,
-            partyIndex: partyIndex,
-            walkFrame: walkFrame,
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _HeroPaperDollPainter extends CustomPainter {
-  const _HeroPaperDollPainter({
-    required this.atlas,
-    required this.hero,
-    required this.partyIndex,
-    required this.walkFrame,
-  });
-
-  final ui.Image atlas;
-  final PartyHero hero;
-  final int partyIndex;
-  final int walkFrame;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    HeroPaperDoll.paint(
-      canvas,
-      atlas,
-      Offset(size.width / 2, size.height / 2),
-      size.shortestSide,
-      hero: hero,
-      partyIndex: partyIndex,
-      walkFrame: walkFrame,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _HeroPaperDollPainter old) =>
-      old.atlas != atlas ||
-      old.hero != hero ||
-      old.partyIndex != partyIndex ||
-      old.walkFrame != walkFrame;
 }

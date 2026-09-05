@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/game_state.dart';
 import '../core/story_lore.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
@@ -13,95 +14,259 @@ class FirstSessionTips extends StatelessWidget {
 
   final GameDirector director;
 
-  static const _tips = <({String id, String title, String body})>[
+  static final tips = <({String id, String title, String body})>[
+    (
+      id: 'first_run',
+      title: 'TODAY',
+      body:
+          'This line is your next job. Tap ENTER DUNGEON. Your party fights on '
+          'its own — watch them, pick up loot, get stronger, beat the first boss.',
+    ),
     (
       id: 'lore_descent',
       title: StoryLore.loreTipTitle,
       body: StoryLore.loreTipBody,
     ),
     (
-      id: 'godhand',
-      title: 'GOD HAND',
+      id: 'farm_push',
+      title: 'Repeat / Next',
       body:
-          'Your distant will. Tap the dungeon to smash foes. Cooldown is the ring top-right.',
+          'Repeat stays on this floor for extra loot. Next goes deeper toward the boss.',
     ),
     (
-      id: 'farm_push',
-      title: 'FARM / PUSH',
-      body: 'FARM loops this floor for loot. PUSH advances when you clear.',
+      id: 'godhand',
+      title: 'Tap the fight',
+      body:
+          'Tap the fist button (top bar) to smash and steer your party. Wait for '
+          'the ring to refill, then tap again. You can also long-press the battlefield.',
     ),
     (
       id: 'bag',
       title: 'BAG & GEAR',
-      body: 'Open BAG or GEAR to equip upgrades. Long-press a hero for gear.',
+      body:
+          'A number on GEAR means better items are waiting. Open GEAR and tap '
+          'EQUIP — the party wears them. No number means nothing to do.',
     ),
     (
       id: 'sanctuary',
-      title: 'SANCTUARY',
+      title: 'ESSENCE',
       body:
-          'Spend essence here for idle gold and party power that persists between runs.',
+          'ESSENCE unlocks after your first Ascend or when you earn essence. '
+          'Spend essence there for idle gold and party power that persists between '
+          'runs. Hub gold/min ticks at the keep overnight (enough to buy Gold). '
+          'Gold Find makes that number go up.',
     ),
     (
       id: 'market',
-      title: 'MARKET',
-      body: 'Buy flasks and sell stash junk for gold when the bag gets full.',
+      title: 'GOLD MARKET',
+      body:
+          'Buy flasks under GOLD → MARKET. When the bag is full, use BAG → CLEAN BAG / '
+          'MERGE or SETTINGS auto-sell — there is no Sell junk button.',
     ),
     (
       id: 'forge',
-      title: 'FORGE',
-      body: 'Train the party and buy relics. Power here stacks with gear.',
+      title: 'GOLD',
+      body:
+          'GOLD tab: TRACKS buys this-run power (×1 / % spend / EVEN split); '
+          'MARKET buys flasks and listings. '
+          'God Hand and Blessing live on ESSENCE → KEEP. Relics live under '
+          'ESSENCE → RELICS. Craft is a row inside MORE. Hero '
+          'levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
     ),
     (
       id: 'pets',
       title: 'BEAST PEN',
-      body: 'Hatch pets with essence. Loot Sprite boosts gold find; others add ATK.',
+      body:
+          'Hatch pets with essence. Loot Sprite boosts gold find; others add ATK.',
+    ),
+    (
+      id: 'contracts',
+      title: 'QUESTS',
+      body:
+          'QUESTS (MORE) pays gold and essence. '
+          'Claim completes; every 3 claims grants a +5e chain bonus.',
     ),
     (
       id: 'ascend',
       title: 'ASCEND',
       body:
-          'When Ascend unlocks, prestige for essence. Gear resets — Farm early floors to re-kit before Pushing deep zones.',
+          'When Ascend unlocks, prestige for essence. Gear, gold, and forge '
+          'reset — farm early floors in an unlocked zone to re-kit. Apex stays.',
     ),
     (
       id: 'post_ascend',
       title: 'AFTER ASCEND',
       body:
-          'Gold & forge tracks wiped. Farm Sandy for gold → Forge GOLD upgrades → Market flasks. '
-          'Spend essence under Forge → META (relics / God Hand). Apex mats survive.',
+          'New kits land in GEAR → ROSTER — TODAY shows Meet … when something unlocked. '
+          'Spend essence under ESSENCE (TRACKS + KEEP for God Hand). '
+          'Relics are ESSENCE → RELICS. '
+          'Apex stays.',
+    ),
+    (
+      id: 'hardmode',
+      title: 'KEYSTONE',
+      body:
+          'At party level ${GameLogic.maxHeroLevel}, under KEY pick a key level before you enter. Affixes lock in, '
+          'a generous timer runs (AFK counts), and beating the boss under par upgrades your key.',
+    ),
+    (
+      id: 'weekly',
+      title: 'DAILY VAULT',
+      body:
+          'Clear 1 dungeon floor today, then claim the vault for essence. '
+          'First claim of each month also pays a season bonus.',
+    ),
+    (
+      id: 'apex',
+      title: 'APEX',
+      body:
+          'Apex slag from Gauntlet/Crystal crafts class Apex gear in MORE → CRAFT. Ranks persist through Ascend.',
+    ),
+    (
+      id: 'gauntlet',
+      title: 'INFINITY GAUNTLET',
+      body:
+          'At party level ${GameLogic.maxHeroLevel}, Infinity Gauntlet is an endless Crystal Spire climb from the hub. Best floor survives Ascend.',
+    ),
+    (
+      id: 'rift',
+      title: 'RIFTS',
+      body:
+          'At party level ${GameLogic.maxHeroLevel}, farm Rifts are timed kill challenges from the hub. Gold and gear drop during the run. Clear the quota before the timer for essence and the next tier.',
+    ),
+    (
+      id: 'greater_rift',
+      title: 'GREATER RIFTS',
+      body:
+          'At party level ${GameLogic.maxHeroLevel}, Greater Rifts are the prestige ladder — harder packs, no mid-run gear, and season ranks on KEY · BOARDS.',
+    ),
+    (
+      id: 'ashen_crown',
+      title: 'ASHEN CROWN',
+      body:
+          'At party level ${GameLogic.maxHeroLevel}, Ashen Crown is a weekly ticket boss under KEY. First ticket clear pays essence; PRACTICE is free after.',
+    ),
+    (
+      id: 'powerups',
+      title: 'POWERUPS',
+      body:
+          'Hub POWERUPS: watch an optional ad for 3 hours of ×2 gold and +25% ATK. Stack time up to 24h. Ads never interrupt combat.',
+    ),
+    (
+      id: 'prestige',
+      title: 'ESSENCE KEEP',
+      body:
+          'Essence lasts between Ascends: ESSENCE → TRACKS for Gold Find and power, '
+          'ESSENCE → KEEP for God Hand and permanent buys, '
+          'ESSENCE → RELICS for party auras, ESSENCE → PETS for pets. '
+          'Bottom-tab SHOP is the real-money store (cheap boosts; buy soon).',
     ),
   ];
 
-  String? _nextTipId() {
-    final seen = director.state.seenTips;
-    final inDungeon = director.state.inDungeon;
-    for (final tip in _tips) {
+  /// True after the player has actually run a floor (or already Ascended).
+  static bool leftPorch(GameState s) =>
+      s.highestFloorCleared >= 1 ||
+      s.metaDepth.lifetimeFloorClears >= 1 ||
+      s.ascensionLevel >= 1;
+
+  static String? nextTipId(GameState s, {required bool inDungeon}) {
+    final seen = s.seenTips;
+    final porch = leftPorch(s);
+    for (final tip in tips) {
       if (seen.contains(tip.id)) continue;
-      if (tip.id == 'ascend' && !GameLogic.canAscend(director.state)) {
+      // Live combat: only God Hand + FARM/PUSH tips — avoid tip spam mid-fight.
+      if (inDungeon && tip.id != 'godhand' && tip.id != 'farm_push') {
+        continue;
+      }
+      if (tip.id == 'first_run' && inDungeon) {
+        continue;
+      }
+      if (tip.id == 'lore_descent' && !porch) {
+        continue;
+      }
+      if (tip.id == 'ascend' && !GameLogic.canAscend(s)) {
         continue;
       }
       if (tip.id == 'post_ascend' &&
-          (director.state.ascensionLevel < 1 || inDungeon)) {
+          (s.ascensionLevel < 1 ||
+              inDungeon ||
+              // Rebuild chase owns the re-kit copy — avoid doubling AFTER ASCEND.
+              GameLogic.isFreshPrestigeGear(s))) {
         continue;
       }
       if ((tip.id == 'godhand' || tip.id == 'farm_push') && !inDungeon) {
         continue;
       }
-      if (tip.id == 'bag' &&
-          !inDungeon &&
-          director.state.gearStash.isEmpty &&
-          director.state.gold < 10) {
+      if (tip.id == 'bag' && !inDungeon && s.gearStash.isEmpty && s.gold < 10) {
         continue;
       }
       if ((tip.id == 'sanctuary' ||
               tip.id == 'market' ||
               tip.id == 'forge' ||
-              tip.id == 'pets') &&
-          inDungeon) {
+              tip.id == 'pets' ||
+              tip.id == 'contracts' ||
+              tip.id == 'hardmode' ||
+              tip.id == 'weekly' ||
+              tip.id == 'apex' ||
+              tip.id == 'gauntlet' ||
+              tip.id == 'ashen_crown' ||
+              tip.id == 'powerups' ||
+              tip.id == 'prestige') &&
+          (inDungeon || !porch)) {
         continue;
       }
-      if (tip.id == 'pets' &&
-          director.state.ownedPets.isEmpty &&
-          director.state.essence < 3) {
+      if (tip.id == 'pets' && s.ownedPets.isEmpty && s.essence < 3) {
+        continue;
+      }
+      if (tip.id == 'contracts' &&
+          s.missions.isEmpty &&
+          s.highestFloorCleared < 1 &&
+          s.metaDepth.lifetimeFloorClears < 1) {
+        continue;
+      }
+      // KEYSTONE tip waits for party-max-level endgame unlock.
+      if (tip.id == 'hardmode' &&
+          (!GameLogic.showKeystoneJargon(s) ||
+              s.effectiveMaxHardmode <= 0)) {
+        continue;
+      }
+      if (tip.id == 'weekly' &&
+          s.highestFloorCleared < 1 &&
+          s.metaDepth.lifetimeFloorClears < 1 &&
+          s.ascensionLevel < 1) {
+        continue;
+      }
+      if (tip.id == 'apex' &&
+          s.ascensionLevel < 1 &&
+          s.craftMaterials.isEmpty &&
+          s.apexVault.isEmpty) {
+        continue;
+      }
+      if (tip.id == 'gauntlet' &&
+          !GameLogic.endgameUnlocked(s) &&
+          !GameLogic.canEnterGauntlet(s)) {
+        continue;
+      }
+      if (tip.id == 'rift' &&
+          !GameLogic.endgameUnlocked(s) &&
+          !GameLogic.canEnterRift(s)) {
+        continue;
+      }
+      if (tip.id == 'greater_rift' &&
+          !GameLogic.endgameUnlocked(s) &&
+          !GameLogic.canEnterGreaterRift(s)) {
+        continue;
+      }
+      if (tip.id == 'ashen_crown' && !GameLogic.endgameUnlocked(s)) {
+        continue;
+      }
+      if (tip.id == 'powerups' && !porch) {
+        continue;
+      }
+      if (tip.id == 'prestige' &&
+          s.ascensionLevel < 1 &&
+          s.essence < 1 &&
+          s.unlockedRelics.isEmpty) {
         continue;
       }
       return tip.id;
@@ -111,9 +276,29 @@ class FirstSessionTips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final id = _nextTipId();
+    final id = nextTipId(director.state, inDungeon: director.state.inDungeon);
     if (id == null) return const SizedBox.shrink();
-    final tip = _tips.firstWhere((t) => t.id == id);
+    final tip = tips.firstWhere((t) => t.id == id);
+    final title = switch (tip.id) {
+      'farm_push' when !GameLogic.plainPlayerChrome(director.state) =>
+        'FARM / PUSH',
+      'godhand' when !GameLogic.plainPlayerChrome(director.state) =>
+        'GOD HAND',
+      _ => tip.title,
+    };
+    final body = switch (tip.id) {
+      'weekly' when GameLogic.showKeystoneJargon(director.state) =>
+        'Clear 1 floor or time a KEY +2 today, then claim the vault for essence '
+            '(scales with your best timed key). First claim of each month also pays a season bonus.',
+      'farm_push' when GameLogic.plainPlayerChrome(director.state) => tip.body,
+      'farm_push' =>
+        'FARM stays on this floor for extra loot. PUSH goes deeper toward the boss.',
+      'godhand' when GameLogic.plainPlayerChrome(director.state) => tip.body,
+      'godhand' =>
+        'God Hand: fist button (top bar). Tap it to smash and steer. Wait '
+            'for the ring to refill, then tap again.',
+      _ => tip.body,
+    };
 
     return Align(
       alignment: Alignment.bottomCenter,
@@ -122,7 +307,7 @@ class FirstSessionTips extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 72),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final maxH = MediaQuery.sizeOf(context).height * 0.42;
+              final maxH = MediaQuery.sizeOf(context).height * 0.55;
               return ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxH),
                 child: DecoratedBox(
@@ -134,16 +319,13 @@ class FirstSessionTips extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          tip.title,
+                          title,
                           textAlign: TextAlign.center,
-                          style: GameTheme.pixel(
-                            size: GameTheme.hudPixelComfort,
-                            color: GameTheme.torchHot,
-                          ),
+                          style: GameTheme.menuTitle(size: 16),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          tip.body,
+                          body,
                           textAlign: TextAlign.center,
                           style: GameTheme.body(
                             size: 14,
@@ -151,18 +333,17 @@ class FirstSessionTips extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        KenneyButton(
+                        GameButton(
                           label: 'GOT IT',
                           onPressed: () => director.dismissTip(tip.id),
                           primary: true,
                         ),
                         const SizedBox(height: 6),
-                        KenneyButton(
+                        GameButton(
                           label: 'SKIP ALL TIPS',
-                          onPressed: () => director.dismissAllTips(
-                            _tips.map((t) => t.id),
-                          ),
-                          style: KenneyButtonStyle.grey,
+                          onPressed: () =>
+                              director.dismissAllTips(tips.map((t) => t.id)),
+                          style: GameButtonStyle.brown,
                         ),
                       ],
                     ),

@@ -1,36 +1,40 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
-import '../core/game_logic.dart';
+import '../core/hero_identity.dart';
+import '../core/meta_systems.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
 import '../spatial/tile_map.dart';
-import 'custom_assets.dart';
+import '../visual/body_family.dart';
+import '../visual/character_visual_painter.dart';
+import '../visual/character_visual_pose.dart';
+import '../visual/hero_anim_controller.dart';
+import '../visual/owned_gear_assets.dart';
+import '../visual/hero_anim_state.dart';
+import '../assets/custom_assets.dart';
 import 'decoded_image_cache.dart';
 import 'dungeon_environment.dart';
-import 'game_audio.dart';
 import 'game_theme.dart';
 import 'hero_paper_doll.dart';
-import 'kenney_assets.dart';
-import 'kenney_button.dart';
-import 'menu_chrome.dart';
-import 'meta_overlays.dart';
+import '../assets/kenney_assets.dart';
+import 'kenney_sprite.dart';
+import 'shell/offline_banner.dart';
+import 'shell/wipe_overlay.dart';
 import 'web_click_bridge.dart';
 
 /// Top-down tile dungeon — painted, not 100+ Image widgets.
 class SpatialDungeonView extends StatefulWidget {
-  const SpatialDungeonView({
-    super.key,
-    required this.director,
-  });
+  const SpatialDungeonView({super.key, required this.director});
 
   final GameDirector director;
 
@@ -45,12 +49,18 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   ui.Image? _stairsBoss;
   ui.Image? _doorClosed;
   ui.Image? _doorOpen;
+  ui.Image? _zoneStairs;
+  ui.Image? _zoneStairsBoss;
+  ui.Image? _zoneDoorClosed;
+  ui.Image? _zoneDoorOpen;
   Map<MapPropKind, ui.Image?> _propImages = const {};
   ui.Image? _hero0;
   ui.Image? _hero1;
   ui.Image? _hero2;
   ui.Image? _hero3;
   final Map<HeroClassId, ui.Image?> _heroesByClass = {};
+  final Map<HeroSpecId, ui.Image?> _heroesBySpec = {};
+  final Map<String, ui.Image> _bodyByPath = <String, ui.Image>{};
   ui.Image? _charAtlas;
   ui.Image? _chest;
   ui.Image? _coin;
@@ -61,29 +71,19 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   List<ui.Image?> _enemySprites = const [];
   String? _loadedDungeonId;
   bool _sharedLoaded = false;
-  bool _offlineDialogShown = false;
 
   bool get _tilesReady =>
       _floorReady.isNotEmpty &&
       _wallReady.isNotEmpty &&
-      _stairs != null &&
-      _stairsBoss != null &&
-      _doorClosed != null &&
-      _doorOpen != null;
+      (_zoneStairs ?? _stairs) != null &&
+      (_zoneStairsBoss ?? _stairsBoss) != null &&
+      (_zoneDoorClosed ?? _doorClosed) != null &&
+      (_zoneDoorOpen ?? _doorOpen) != null;
 
   @override
   void initState() {
     super.initState();
     _loadImages(widget.director.state.dungeonId);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowOffline());
-  }
-
-  Future<void> _maybeShowOffline() async {
-    if (_offlineDialogShown || !mounted || widget.director.offlineSummary == null) {
-      return;
-    }
-    _offlineDialogShown = true;
-    await showOfflineProgressDialog(context, widget.director);
   }
 
   @override
@@ -100,17 +100,16 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       String asset, {
       int? targetWidth,
       int? targetHeight,
-    }) =>
-        DecodedImageCache.load(
-          asset,
-          targetWidth: targetWidth,
-          targetHeight: targetHeight,
-        );
+    }) => DecodedImageCache.load(
+      asset,
+      targetWidth: targetWidth,
+      targetHeight: targetHeight,
+    );
 
     final floorPaths = KenneyAssets.floorVariantsForDungeon(dungeonId);
     final wallPaths = KenneyAssets.wallVariantsForDungeon(dungeonId);
-    final propKinds = KenneyAssets.propPoolForDungeon(dungeonId).toSet();
-    final enemyAssets = KenneyAssets.enemySpriteCatalog;
+    final propKinds = KenneyAssets.propPoolForDungeon(dungeonId).toSet()
+      ..add(MapPropKind.chest);
 
     // Shared combat icons — decode once, keep across dungeon switches.
     if (!_sharedLoaded) {
@@ -155,7 +154,11 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         KenneyAssets.iconBow,
       }.toList();
 
-      final petPaths = CustomAssets.petPortraitPaths;
+      final petPaths = [
+        ...CustomAssets.petPortraitPaths,
+        ...CustomAssets.combatPetPortraitPaths,
+      ];
+      final uniqueHeroPaths = CustomAssets.uniqueHeroSpecPaths;
 
       final shared = await Future.wait([
         load(KenneyAssets.stairs, targetWidth: 64),
@@ -172,14 +175,15 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         load(CustomAssets.heroShaman, targetWidth: 128),
         load(CustomAssets.heroWarlock, targetWidth: 128),
         load(CustomAssets.heroDruid, targetWidth: 128),
-        load(RoguelikeCharAtlas.assetPath, targetWidth: 512),
-        ...enemyAssets.map((a) => load(a, targetWidth: 128)),
+        // Keep native size — paper-doll src rects assume full atlas pixels.
+        load(RoguelikeCharAtlas.assetPath),
         load(KenneyAssets.chestClosed, targetWidth: 64),
         load(KenneyAssets.coinGold, targetWidth: 48),
         load(KenneyAssets.sword, targetWidth: 48),
         load(KenneyAssets.vialBlue, targetWidth: 48),
         ...lootPaths.map((a) => load(a, targetWidth: 64)),
         ...petPaths.map((a) => load(a, targetWidth: 96)),
+        ...uniqueHeroPaths.map((a) => load(a, targetWidth: 128)),
       ]);
       if (!mounted) return;
 
@@ -205,8 +209,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         ..[HeroClassId.warlock] = shared[i++]
         ..[HeroClassId.druid] = shared[i++];
       _charAtlas = shared[i++];
-      _enemySprites = shared.sublist(i, i + enemyAssets.length);
-      i += enemyAssets.length;
       _chest = shared[i++];
       _coin = shared[i++];
       _sword = shared[i++];
@@ -221,15 +223,76 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         ..addEntries([
           for (final path in petPaths) MapEntry(path, shared[i++]),
         ]);
+      _heroesBySpec
+        ..clear()
+        ..[HeroSpecId.shadow] = shared[i++]
+        ..[HeroSpecId.feral] = shared[i++]
+        ..[HeroSpecId.guardian] = shared[i++];
+
+      // Phase 3 denser owned bodies + paper-doll overlays — soft-fail per path.
+      final bodyPaths = [
+        ...BodyFamilyCatalog.allAssetPaths,
+        ...OwnedGearAssets.allAssetPaths,
+      ];
+      final bodyEntries = <MapEntry<String, ui.Image>>[];
+      for (final path in bodyPaths) {
+        try {
+          bodyEntries.add(MapEntry(path, await load(path, targetWidth: 128)));
+        } catch (_) {
+          // Missing catalog art falls back to class PNG at paint time.
+        }
+      }
+      if (!mounted) return;
+      _bodyByPath
+        ..clear()
+        ..addEntries(bodyEntries);
       _sharedLoaded = true;
+    } else if (_bodyByPath.isEmpty) {
+      // Retry denser bodies if the first shared load ran before assets landed.
+      final bodyPaths = [
+        ...BodyFamilyCatalog.allAssetPaths,
+        ...OwnedGearAssets.allAssetPaths,
+      ];
+      final bodyEntries = <MapEntry<String, ui.Image>>[];
+      for (final path in bodyPaths) {
+        try {
+          bodyEntries.add(MapEntry(path, await load(path, targetWidth: 128)));
+        } catch (_) {}
+      }
+      if (!mounted) return;
+      if (bodyEntries.isNotEmpty) {
+        _bodyByPath
+          ..clear()
+          ..addEntries(bodyEntries);
+      }
     }
+
+    // Only this zone's enemies — the catalog holds 24 sprites but a zone can
+    // spawn at most a handful. Indices stay catalog-aligned because the
+    // painter looks sprites up by `EnemyUnit.assetIndex`.
+    final catalog = KenneyAssets.enemySpriteCatalog;
+    final zoneEnemyAssets = KenneyAssets.enemySpritesForDungeon(dungeonId);
+    final customDungeon = CustomAssets.usesCustomDungeonArt(dungeonId);
+    final structuralPaths = customDungeon
+        ? <String>[
+            KenneyAssets.exitSpriteFor(boss: false, dungeonId: dungeonId),
+            KenneyAssets.exitSpriteFor(boss: true, dungeonId: dungeonId),
+            KenneyAssets.gateSprite(open: false, dungeonId: dungeonId),
+            KenneyAssets.gateSprite(open: true, dungeonId: dungeonId),
+          ]
+        : const <String>[];
 
     final zone = await Future.wait([
       ...floorPaths.map((a) => load(a, targetWidth: 64)),
       ...wallPaths.map((a) => load(a, targetWidth: 64)),
       ...propKinds.map(
-        (k) => load(KenneyAssets.propAsset(k), targetWidth: 64),
+        (k) => load(
+          KenneyAssets.propAsset(k, dungeonId: dungeonId),
+          targetWidth: 64,
+        ),
       ),
+      ...zoneEnemyAssets.map((a) => load(a, targetWidth: 128)),
+      ...structuralPaths.map((a) => load(a, targetWidth: 64)),
     ]);
     if (!mounted) return;
 
@@ -243,12 +306,31 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     for (final kind in propKindList) {
       propImages[kind] = zone[zi++];
     }
+    final enemySprites = List<ui.Image?>.filled(catalog.length, null);
+    for (final asset in zoneEnemyAssets) {
+      enemySprites[KenneyAssets.enemySpriteCatalogIndex(asset)] = zone[zi++];
+    }
+    ui.Image? zoneStairs;
+    ui.Image? zoneStairsBoss;
+    ui.Image? zoneDoorClosed;
+    ui.Image? zoneDoorOpen;
+    if (customDungeon) {
+      zoneStairs = zone[zi++];
+      zoneStairsBoss = zone[zi++];
+      zoneDoorClosed = zone[zi++];
+      zoneDoorOpen = zone[zi++];
+    }
 
     setState(() {
       _loadedDungeonId = dungeonId;
       _floorReady = floorVariants;
       _wallReady = wallVariants;
       _propImages = propImages;
+      _enemySprites = enemySprites;
+      _zoneStairs = zoneStairs;
+      _zoneStairsBoss = zoneStairsBoss;
+      _zoneDoorClosed = zoneDoorClosed;
+      _zoneDoorOpen = zoneDoorOpen;
     });
   }
 
@@ -258,92 +340,169 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     final world = widget.director.spatial;
     final room = state.currentRoom;
     final farm = state.dungeonMode == DungeonMode.farm;
+    final dailyEcho = MetaSystems.isActiveDailyRun(state);
 
-    final frameColor = room.type == RoomType.boss
-        ? GameTheme.borderLit
-        : GameTheme.mossLit;
-
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: frameColor.withValues(alpha: 0.85), width: 2),
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: Column(
+    return ClipRect(
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Expanded(
-            child: LayoutBuilder(
+          LayoutBuilder(
               builder: (context, constraints) {
-                final camera = _TileCamera.forWorld(world, constraints);
+                final camera = _TileCamera.forWorld(
+                  world,
+                  constraints,
+                  targetCols: state.dungeonZoom.targetCols,
+                );
                 return Stack(
                   fit: StackFit.expand,
                   children: [
-                    Semantics(
-                      button: true,
-                      label: 'Dungeon map — tap to use God Hand',
-                      child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTapDown: (details) {
+                    WebClickScope(
+                      label: 'Dungeon map',
+                      onPressed: () {
                         if (widget.director.awaitingWipeChoice) return;
                         if (state.isPartyDefeated) {
                           widget.director.reviveParty();
                           return;
                         }
-                        GameAudio.hit();
-                        widget.director.godHandAtWorld(
-                          camera.camX +
-                              details.localPosition.dx / camera.tileSize,
-                          camera.camY +
-                              details.localPosition.dy / camera.tileSize,
+                        // Mid-fight: pin nearest to party. Idle/clear: fist only.
+                        final fighting =
+                            world?.enemies.any((e) => e.isAlive) ?? false;
+                        if (!fighting || world == null) return;
+                        final alive =
+                            world.heroes.where((h) => h.hp > 0).toList();
+                        if (alive.isEmpty) return;
+                        var cx = 0.0;
+                        var cy = 0.0;
+                        for (final h in alive) {
+                          cx += h.x;
+                          cy += h.y;
+                        }
+                        widget.director.setHudFocusAtWorld(
+                          cx / alive.length,
+                          cy / alive.length,
                         );
                       },
-                      child: world == null ||
-                              !_tilesReady ||
-                              _enemySprites.isEmpty ||
-                              _sword == null ||
-                              _vial == null ||
-                              _charAtlas == null
-                          ? const ColoredBox(color: GameTheme.stone)
-                          : RepaintBoundary(
-                              child: CustomPaint(
-                              size: Size(
-                                constraints.maxWidth,
-                                constraints.maxHeight,
-                              ),
-                              painter: _TileRoomPainter(
-                                world: world,
-                                party: state.heroes,
-                                floorVariants: _floorReady,
-                                wallVariants: _wallReady,
-                                stairs: _stairs!,
-                                stairsBoss: _stairsBoss!,
-                                doorClosed: _doorClosed!,
-                                doorOpen: _doorOpen!,
-                                propImages: _propImages,
-                                roomType: room.type,
-                                dungeonId: state.dungeonId,
-                                layoutSeed: world.map.layoutSeed,
-                                clearedChambers: world.clearedChambers,
-                                charAtlas: _charAtlas!,
-                                heroes: <ui.Image?>[
-                                  _hero0,
-                                  _hero1,
-                                  _hero2,
-                                  _hero3,
-                                ],
-                                heroesByClass: _heroesByClass,
-                                enemies: _enemySprites,
-                                chest: _chest!,
-                                coin: _coin!,
-                                sword: _sword!,
-                                vial: _vial!,
-                                lootByPath: _lootByPath,
-                                petsByPath: _petsByPath,
-                                camera: camera,
-                                reducedVfx: state.reducedVfx,
-                                visualFrame: widget.director.visualFrame,
-                              ),
-                            ),
-                            ),
+                      child: Semantics(
+                        button: true,
+                        label:
+                            'Dungeon map — tap to pin target while fighting; '
+                            'long-press for God Hand; fist button also works',
+                        onTap: () {
+                          if (widget.director.awaitingWipeChoice) return;
+                          if (state.isPartyDefeated) {
+                            widget.director.reviveParty();
+                            return;
+                          }
+                          final fighting =
+                              world?.enemies.any((e) => e.isAlive) ?? false;
+                          if (!fighting || world == null) return;
+                          final alive =
+                              world.heroes.where((h) => h.hp > 0).toList();
+                          if (alive.isEmpty) return;
+                          var cx = 0.0;
+                          var cy = 0.0;
+                          for (final h in alive) {
+                            cx += h.x;
+                            cy += h.y;
+                          }
+                          widget.director.setHudFocusAtWorld(
+                            cx / alive.length,
+                            cy / alive.length,
+                          );
+                        },
+                        onLongPress: widget.director.godHandAtFocus,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTapDown: (details) {
+                            if (widget.director.awaitingWipeChoice) return;
+                            if (state.isPartyDefeated) {
+                              widget.director.reviveParty();
+                              return;
+                            }
+                            final tileX = camera.camX +
+                                details.localPosition.dx / camera.tileSize;
+                            final tileY = camera.camY +
+                                details.localPosition.dy / camera.tileSize;
+                            // Mid-pack: pin target HUD — fist / long-press for GH.
+                            final fighting =
+                                world?.enemies.any((e) => e.isAlive) ?? false;
+                            if (fighting) {
+                              widget.director.setHudFocusAtWorld(tileX, tileY);
+                            }
+                            // Idle / clear: map tap does not fire God Hand.
+                          },
+                          onLongPressStart: (details) {
+                            if (widget.director.awaitingWipeChoice) return;
+                            if (state.isPartyDefeated) return;
+                            final tileX = camera.camX +
+                                details.localPosition.dx / camera.tileSize;
+                            final tileY = camera.camY +
+                                details.localPosition.dy / camera.tileSize;
+                            widget.director.godHandAtWorld(tileX, tileY);
+                          },
+                          child:
+                              world == null ||
+                                  !_tilesReady ||
+                                  _enemySprites.isEmpty ||
+                                  _sword == null ||
+                                  _vial == null ||
+                                  _charAtlas == null
+                              ? ColoredBox(
+                                  color: GameTheme.stone,
+                                  child: Center(
+                                    child: Text(
+                                      'Loading floor…',
+                                      style: GameTheme.body(
+                                        size: 15,
+                                        color: GameTheme.parchmentDim,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : RepaintBoundary(
+                                  child: CustomPaint(
+                                    size: Size(
+                                      constraints.maxWidth,
+                                      constraints.maxHeight,
+                                    ),
+                                    painter: _TileRoomPainter(
+                                      world: world,
+                                      party: state.heroes,
+                                      floorVariants: _floorReady,
+                                      wallVariants: _wallReady,
+                                      stairs: _zoneStairs ?? _stairs!,
+                                      stairsBoss: _zoneStairsBoss ?? _stairsBoss!,
+                                      doorClosed: _zoneDoorClosed ?? _doorClosed!,
+                                      doorOpen: _zoneDoorOpen ?? _doorOpen!,
+                                      propImages: _propImages,
+                                      roomType: room.type,
+                                      dungeonId: state.dungeonId,
+                                      layoutSeed: world.map.layoutSeed,
+                                      clearedChambers: world.clearedChambers,
+                                      charAtlas: _charAtlas!,
+                                      heroes: <ui.Image?>[
+                                        _hero0,
+                                        _hero1,
+                                        _hero2,
+                                        _hero3,
+                                      ],
+                                      heroesByClass: _heroesByClass,
+                                      heroesBySpec: _heroesBySpec,
+                                      bodyByPath: _bodyByPath,
+                                      enemies: _enemySprites,
+                                      chest: _chest!,
+                                      coin: _coin!,
+                                      sword: _sword!,
+                                      vial: _vial!,
+                                      lootByPath: _lootByPath,
+                                      petsByPath: _petsByPath,
+                                      camera: camera,
+                                      vfxQuality: state.vfxQuality,
+                                      visualFrame: widget.director.visualFrame,
+                                    ),
+                                  ),
+                                ),
+                        ),
                       ),
                     ),
                     if (world != null && world.bossBannerTimer > 0)
@@ -362,7 +521,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                           child: Text(
                             'BOSS — ${world.bossBannerName}',
                             style: GameTheme.pixel(
-                              size: 8,
+                              size: GameTheme.hudPixelComfort,
                               color: GameTheme.torchHot,
                             ),
                           ),
@@ -370,7 +529,12 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                       ),
                     if (widget.director.clearSummary != null)
                       Align(
-                        alignment: const Alignment(0, -0.35),
+                        alignment: Alignment(
+                          0,
+                          (world != null && world.bossBannerTimer > 0)
+                              ? 0.08
+                              : -0.35,
+                        ),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -384,196 +548,43 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                           child: Text(
                             widget.director.clearSummary!,
                             style: GameTheme.pixel(
-                              size: GameTheme.hudPixel,
+                              size: GameTheme.hudPixelComfort,
                               color: GameTheme.clear,
                             ),
                           ),
                         ),
                       ),
-                    if (widget.director.offlineSummary != null)
-                      Align(
-                        alignment: const Alignment(0, -0.55),
-                        child: GestureDetector(
-                          onTap: () => showOfflineProgressDialog(
-                            context,
-                            widget.director,
-                          ),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 16),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xEE1A2030),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: GameTheme.mossLit),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  widget.director.offlineSummary!.headline,
-                                  textAlign: TextAlign.center,
-                                  style: GameTheme.pixel(
-                                    size: GameTheme.hudPixel,
-                                    color: GameTheme.mossLit,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Tap for details',
-                                  style: GameTheme.body(
-                                    size: 12,
-                                    color: GameTheme.parchmentDim,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    if (widget.director.toast != null)
-                      Align(
-                        // Keep clear of bottom party HUD on phones.
-                        alignment: const Alignment(0, -0.42),
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 12),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xF214110C),
-                            borderRadius: BorderRadius.circular(3),
-                            border: Border.all(color: GameTheme.borderLit),
-                          ),
-                          child: Text(
-                            widget.director.toast!,
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: GameTheme.body(size: 15),
-                          ),
-                        ),
-                      ),
+                    DungeonOfflineChrome(director: widget.director),
                     if (widget.director.awaitingWipeChoice)
-                      ColoredBox(
-                        color: MenuChrome.scrim,
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 320),
-                            child: DecoratedBox(
-                              decoration: MenuChrome.panel(),
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'PARTY WIPED',
-                                      style: GameTheme.pixel(
-                                        size: 12,
-                                        color: GameTheme.bloodLit,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      state.inGauntlet
-                                          ? 'Gauntlet run ends here. Best floor is saved. Return to hub to climb again.'
-                                          : farm
-                                          ? 'RETRY restarts this floor (F${state.currentRoom.floorNumber}). HUB ends the run.'
-                                          : () {
-                                              final safe = state
-                                                  .highestFloorCleared
-                                                  .clamp(1, 999);
-                                              final cur =
-                                                  state.currentRoom.floorNumber;
-                                              if (safe >= cur) {
-                                                return 'RETRY restarts this floor (F$cur, still PUSH). HUB ends the run.';
-                                              }
-                                              return 'RETRY retreats to F$safe (last cleared, still PUSH). HUB ends the run.';
-                                            }(),
-                                      textAlign: TextAlign.center,
-                                      style: GameTheme.body(
-                                        size: 15,
-                                        color: GameTheme.parchmentDim,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 14),
-                                    if (!state.inGauntlet)
-                                      KenneyButton(
-                                        label: farm
-                                            ? 'RETRY FLOOR'
-                                            : () {
-                                                final safe = state
-                                                    .highestFloorCleared
-                                                    .clamp(1, 999);
-                                                final cur =
-                                                    state.currentRoom.floorNumber;
-                                                return safe < cur
-                                                    ? 'RETRY → F$safe'
-                                                    : 'RETRY FLOOR';
-                                              }(),
-                                        primary: true,
-                                        onPressed: widget.director.retryAfterWipe,
-                                      ),
-                                    if (!state.inGauntlet &&
-                                        state.gearStash.length >=
-                                            GameLogic.maxGearStashFor(
-                                              state,
-                                            )) ...[
-                                      const SizedBox(height: 8),
-                                      KenneyButton(
-                                        label: 'SELL JUNK',
-                                        style: KenneyButtonStyle.grey,
-                                        onPressed: () {
-                                          widget.director.autoSellJunk();
-                                        },
-                                      ),
-                                    ],
-                                    if (!state.inGauntlet)
-                                      const SizedBox(height: 8),
-                                    KenneyButton(
-                                      label: state.inGauntlet
-                                          ? 'END RUN → HUB'
-                                          : 'RETURN TO HUB',
-                                      style: KenneyButtonStyle.grey,
-                                      primary: true,
-                                      onPressed: widget.director.hubAfterWipe,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                      DungeonWipePanel(
+                        director: widget.director,
+                        farm: farm,
+                        dailyEcho: dailyEcho,
                       ),
                   ],
                 );
               },
             ),
-          ),
-          if (!widget.director.awaitingWipeChoice &&
-              (state.isPartyDefeated || (world?.awaitingExit ?? false)))
-            Container(
-              width: double.infinity,
-              color: state.isPartyDefeated
-                  ? GameTheme.blood.withValues(alpha: 0.55)
-                  : const Color(0xCC0A0907),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text(
-                state.isPartyDefeated
-                    ? (state.inGauntlet
+
+          if (!widget.director.awaitingWipeChoice && state.isPartyDefeated)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Material(
+                color: GameTheme.blood.withValues(alpha: 0.85),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  child: Text(
+                    state.inGauntlet || state.inAnyRiftMode
                         ? 'WIPED — End Run returns to hub'
-                        : 'WIPED — use the Retry / Hub panel')
-                    : 'STAIRS OPEN — party advances when someone reaches exit',
-                textAlign: TextAlign.center,
-                style: GameTheme.body(
-                  size: 13,
-                  color: state.isPartyDefeated
-                      ? GameTheme.torchHot
-                      : GameTheme.parchmentDim,
+                        : 'WIPED — use the Retry / Hub panel',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 15,
+                      color: GameTheme.torchHot,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -590,25 +601,101 @@ class ChamberDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = math.max(1, world.map.chambers.length);
-    return Row(
+    final cleared = world.clearedChambers.length;
+    final active = world.activeChamber + 1;
+    final dots = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var i = 0; i < total; i++)
-          Container(
-            width: 7,
-            height: 7,
-            margin: const EdgeInsets.only(right: 3),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: world.clearedChambers.contains(i)
-                  ? GameTheme.clear
-                  : (i == world.activeChamber
-                        ? GameTheme.torchHot
-                        : const Color(0xFF4A4030)),
-              border: Border.all(color: GameTheme.border),
+          Padding(
+            padding: const EdgeInsets.only(right: 3),
+            child: _ChamberDot(
+              cleared: world.clearedChambers.contains(i),
+              active: i == world.activeChamber,
             ),
           ),
       ],
+    );
+    return GestureDetector(
+      onTap: () {
+        final messenger = ScaffoldMessenger.maybeOf(context);
+        messenger?.hideCurrentSnackBar();
+        messenger?.showSnackBar(
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text(
+              'Chambers $active/$total · cleared $cleared · '
+              'square=done · diamond=here · circle=ahead',
+            ),
+          ),
+        );
+      },
+      child: Tooltip(
+        message: 'Tap: chamber overview · square done · diamond here · circle ahead',
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            dots,
+            if (total > 1) ...[
+              const SizedBox(width: 4),
+              Text(
+                '$active/$total',
+                style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shape + color so colorblind play can tell cleared / active / ahead.
+class _ChamberDot extends StatelessWidget {
+  const _ChamberDot({required this.cleared, required this.active});
+
+  final bool cleared;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = cleared
+        ? GameTheme.clear
+        : (active ? GameTheme.torchHot : const Color(0xFF4A4030));
+    if (cleared) {
+      // Square = done.
+      return Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(
+          color: color,
+          border: Border.all(color: GameTheme.border),
+        ),
+      );
+    }
+    if (active) {
+      // Diamond = here.
+      return Transform.rotate(
+        angle: math.pi / 4,
+        child: Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: color,
+            border: Border.all(color: GameTheme.border),
+          ),
+        ),
+      );
+    }
+    // Circle = ahead.
+    return Container(
+      width: 7,
+      height: 7,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        border: Border.all(color: GameTheme.border),
+      ),
     );
   }
 }
@@ -619,53 +706,80 @@ class DungeonModeChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.onLongPress,
     this.dense = false,
+    this.tip,
+    this.interactive = true,
+    this.maxLabelWidth,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final bool dense;
+  final String? tip;
+  final bool interactive;
+  /// When set, long labels ellipsis instead of stretching the top HUD.
+  final double? maxLabelWidth;
 
   @override
   Widget build(BuildContext context) {
-    final semanticsLabel = '$label dungeon mode';
+    final semanticsLabel = tip == null ? '$label dungeon mode' : '$label. $tip';
+    final action = interactive ? onTap : null;
+    final child = Container(
+      constraints: BoxConstraints(
+        minHeight: dense ? 30 : GameTheme.minTouch,
+      ),
+      padding: EdgeInsets.symmetric(horizontal: dense ? 7 : 8, vertical: dense ? 4 : 0),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: selected ? const Color(0xFF3A2810) : const Color(0xFF1A1610),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(
+          color: selected ? GameTheme.torchHot : const Color(0xFF4A4030),
+        ),
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: maxLabelWidth ?? double.infinity,
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.pixel(
+            size: GameTheme.hudPixel,
+            color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
+          ),
+        ),
+      ),
+    );
+    if (!interactive) {
+      return Semantics(
+        label: semanticsLabel,
+        child: child,
+      );
+    }
     return WebClickScope(
       label: semanticsLabel,
-      onPressed: onTap,
+      onPressed: action,
       child: Semantics(
         button: true,
         selected: selected,
         inMutuallyExclusiveGroup: true,
         label: semanticsLabel,
-        onTap: onTap,
+        onTap: action,
+        onLongPress: onLongPress,
         excludeSemantics: true,
         child: Material(
-          color: selected ? const Color(0xFF3A2810) : const Color(0xFF1A1610),
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(3),
           child: InkWell(
-            onTap: onTap,
+            onTap: action,
+            onLongPress: onLongPress,
             borderRadius: BorderRadius.circular(3),
-            child: Container(
-              constraints: BoxConstraints(
-                minHeight: dense ? 36 : GameTheme.minTouch,
-              ),
-              padding: EdgeInsets.symmetric(horizontal: dense ? 6 : 8),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3),
-                border: Border.all(
-                  color: selected ? GameTheme.torchHot : const Color(0xFF4A4030),
-                ),
-              ),
-              child: Text(
-                label,
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
-                ),
-              ),
-            ),
+            child: child,
           ),
         ),
       ),
@@ -677,56 +791,111 @@ class GodHandRing extends StatelessWidget {
   const GodHandRing({
     super.key,
     required this.cooldown,
+    required this.maxCooldown,
     this.onTap,
+    this.urgent = false,
+    this.readyLabel,
+    this.coolingLabel,
+    this.dense = false,
   });
   final double cooldown;
+
+  /// Full CD length (matches [GameState.godHandCooldownSeconds]).
+  final double maxCooldown;
   final VoidCallback? onTap;
+
+  /// Brighter ring after repeated wipes on the same floor (nudge, not redesign).
+  final bool urgent;
+
+  /// Override ready / cooling semantics (first-hour plain English).
+  final String? readyLabel;
+  final String? coolingLabel;
+
+  /// Phone top HUD: slightly smaller so FARM + gold + floor fit without overflow.
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
     final ready = cooldown <= 0;
-    final t = ready ? 1.0 : (1.0 - (cooldown / 1.1).clamp(0.0, 1.0));
-    final color = ready ? GameTheme.torchHot : GameTheme.parchmentDim;
-    final label = ready ? 'God Hand ready' : 'God Hand cooling down';
+    final cdMax = maxCooldown > 0.05 ? maxCooldown : 1.1;
+    final t = ready ? 1.0 : (1.0 - (cooldown / cdMax).clamp(0.0, 1.0));
+    final color = ready
+        ? (urgent ? GameTheme.accentWarn : GameTheme.torchHot)
+        : GameTheme.parchmentDim;
+    final label = ready
+        ? (readyLabel ??
+            (urgent
+                ? 'God Hand ready — TAP to steer + smash'
+                : 'God Hand ready'))
+        : (coolingLabel ?? 'God Hand ${cooldown.toStringAsFixed(1)}s');
     final action = onTap != null && ready ? onTap : null;
+    final box = dense ? 30.0 : GameTheme.minTouch;
+    final ring = dense ? 22.0 : 28.0;
+    final fist = dense ? 14.0 : 18.0;
     return WebClickScope(
       label: label,
       onPressed: action,
       child: Material(
-      color: Colors.transparent,
-      child: Tooltip(
-        message: label,
-        excludeFromSemantics: true,
-        child: InkWell(
-          onTap: action,
-          borderRadius: BorderRadius.circular(14),
-          child: Semantics(
-            button: true,
-            enabled: action != null,
-            label: label,
+        color: Colors.transparent,
+        child: Tooltip(
+          message: label,
+          excludeFromSemantics: true,
+          child: InkWell(
             onTap: action,
-            excludeSemantics: true,
-            child: SizedBox(
-              width: GameTheme.minTouch,
-              height: GameTheme.minTouch,
-              child: Center(
-                child: SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CustomPaint(
-                    painter: _GodHandRingPainter(
-                      progress: t,
-                      color: color,
-                      ready: ready,
-                    ),
-                    child: Center(
-                      child: Text(
-                        'GH',
-                        style: GameTheme.pixel(
-                          size: GameTheme.hudPixel,
-                          color: color,
+            borderRadius: BorderRadius.circular(14),
+            child: Semantics(
+              button: true,
+              enabled: action != null,
+              label: label,
+              onTap: action,
+              excludeSemantics: true,
+              child: SizedBox(
+                width: box,
+                height: box,
+                child: Center(
+                  child: SizedBox(
+                    width: ring,
+                    height: ring,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        CustomPaint(
+                          painter: _GodHandRingPainter(
+                            progress: t,
+                            color: color,
+                            ready: ready,
+                          ),
+                          child: Center(
+                            child: ready
+                                ? KenneySprite(
+                                    asset: KenneyAssets.fist,
+                                    size: fist,
+                                    color: color,
+                                  )
+                                : Text(
+                                    cooldown < 10
+                                        ? cooldown.toStringAsFixed(1)
+                                        : '${cooldown.round()}',
+                                    style: GameTheme.pixel(
+                                      size: dense ? GameTheme.hudPixel : 6,
+                                      color: color,
+                                    ),
+                                  ),
+                          ),
                         ),
-                      ),
+                        if (urgent && ready)
+                          Positioned(
+                            right: -6,
+                            top: -4,
+                            child: Text(
+                              '!',
+                              style: GameTheme.pixel(
+                                size: 8,
+                                color: GameTheme.accentWarn,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -734,7 +903,6 @@ class GodHandRing extends StatelessWidget {
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -819,6 +987,8 @@ class _TileRoomPainter extends CustomPainter {
     required this.charAtlas,
     required this.heroes,
     required this.heroesByClass,
+    required this.heroesBySpec,
+    required this.bodyByPath,
     required this.enemies,
     required this.chest,
     required this.coin,
@@ -827,7 +997,7 @@ class _TileRoomPainter extends CustomPainter {
     required this.lootByPath,
     required this.petsByPath,
     required this.camera,
-    this.reducedVfx = false,
+    this.vfxQuality = VfxQuality.full,
     required this.visualFrame,
   });
 
@@ -847,6 +1017,8 @@ class _TileRoomPainter extends CustomPainter {
   final ui.Image charAtlas;
   final List<ui.Image?> heroes;
   final Map<HeroClassId, ui.Image?> heroesByClass;
+  final Map<HeroSpecId, ui.Image?> heroesBySpec;
+  final Map<String, ui.Image> bodyByPath;
   final List<ui.Image?> enemies;
   final ui.Image chest;
   final ui.Image coin;
@@ -855,8 +1027,16 @@ class _TileRoomPainter extends CustomPainter {
   final Map<String, ui.Image> lootByPath;
   final Map<String, ui.Image> petsByPath;
   final _TileCamera camera;
-  final bool reducedVfx;
+  final VfxQuality vfxQuality;
   final int visualFrame;
+
+  bool get reducedVfx => vfxQuality.reduced;
+  bool get showAuras => vfxQuality.showActorAuras;
+  bool get showGuide => vfxQuality.showGuideAndPulse;
+  bool get showBursts => vfxQuality.showBurstsAndFloaters;
+  bool get showGround => vfxQuality.showGroundFx;
+  bool get showTrails => vfxQuality.showProjectileTrails;
+  bool get showLootPulse => vfxQuality.showLootPulse;
 
   Size? _vignetteSize;
   Paint? _vignettePaint;
@@ -910,16 +1090,21 @@ class _TileRoomPainter extends CustomPainter {
           // Void fill + thin wall caps toward carved space (no solid brick mass).
           if (DungeonEnvironment.wallTouchesCarved(world.map, x, y) &&
               wallVariants.isNotEmpty) {
-            final img = wallVariants[
-                _hashPick(x, y, layoutSeed + 17, wallVariants.length)];
+            final img =
+                wallVariants[_hashPick(
+                  x,
+                  y,
+                  layoutSeed + 17,
+                  wallVariants.length,
+                )];
             _drawWallCaps(canvas, x, y, dst, tile, img);
           }
           continue;
         }
 
         // All carved tiles share one floor base.
-        final floorImg = floorVariants[
-            _hashPick(x, y, layoutSeed, floorVariants.length)];
+        final floorImg =
+            floorVariants[_hashPick(x, y, layoutSeed, floorVariants.length)];
         _drawImage(canvas, floorImg, dst);
         // Mute Kenney tile chroma so painted backdrop + zone wash dominate.
         _fillPaint.color = floorBlend;
@@ -942,8 +1127,11 @@ class _TileRoomPainter extends CustomPainter {
           // Only the center cell of a 3-wide gate strip draws a door sprite.
           if (_isGateDoorCenter(x, y)) {
             final door = gateOpen ? doorOpen : doorClosed;
-            final eastWest =
-                DungeonEnvironment.gateRunsEastWest(world.map, x, y);
+            final eastWest = DungeonEnvironment.gateRunsEastWest(
+              world.map,
+              x,
+              y,
+            );
             _drawOrientedDoor(canvas, door, dst, rotate: eastWest);
             if (!gateOpen) {
               _fillPaint.color = const Color(0x44000000);
@@ -957,6 +1145,40 @@ class _TileRoomPainter extends CustomPainter {
         } else if (kind == TileKind.exit) {
           final exitImg = roomType == RoomType.boss ? stairsBoss : stairs;
           _drawImage(canvas, exitImg, dst);
+          if (world.awaitingExit) {
+            if (showGuide) {
+              final pulse = 0.75 + 0.25 * math.sin(visualFrame * 0.18);
+              canvas.drawCircle(
+                dst.center,
+                tile * 0.55 * pulse,
+                Paint()
+                  ..color = const Color(0x6670E0A0)
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = math.max(2, tile * 0.08),
+              );
+              canvas.drawCircle(
+                dst.center,
+                tile * 0.32 * pulse,
+                Paint()..color = const Color(0x3380FFB0),
+              );
+            }
+            // GO stays visible even on Minimal VFX — stairs must stay obvious.
+            final go = TextPainter(
+              text: TextSpan(
+                text: 'GO',
+                style: GameTheme.pixelCached(
+                  size: math.max(GameTheme.hudPixelComfort, tile * 0.42),
+                  color: const Color(0xEE80FFB0),
+                ),
+              ),
+              textDirection: TextDirection.ltr,
+            )..layout();
+            go.paint(
+              canvas,
+              Offset(dst.center.dx - go.width / 2, dst.top - go.height - 2),
+            );
+            go.dispose();
+          }
         } else if (kind == TileKind.spawn) {
           _fillPaint.color = const Color(0x14C88840);
           canvas.drawRect(dst, _fillPaint);
@@ -995,6 +1217,24 @@ class _TileRoomPainter extends CustomPainter {
       );
     }
 
+    // Lasting ground discs under actors (Consecration / Bladestorm / etc.).
+    // Lite keeps these; Minimal (reduce motion) hides them.
+    if (showGround) {
+      for (final g in world.groundFx) {
+        if (!_inView(g.x, g.y, pad: g.radius)) continue;
+        final frac = (g.life / g.maxLife).clamp(0.0, 1.0);
+        final c = Offset(originX + g.x * tile, originY + g.y * tile);
+        final r = tile * g.radius;
+        final color = Color(g.argb);
+        canvas.drawCircle(
+          c,
+          r,
+          Paint()..color = color.withValues(alpha: 0.18 * frac),
+        );
+        _paintGroundKind(canvas, c, r, color, frac, tile, g.kind, g.life);
+      }
+    }
+
     Offset center(double tx, double ty) =>
         Offset(originX + tx * tile, originY + ty * tile);
 
@@ -1003,23 +1243,53 @@ class _TileRoomPainter extends CustomPainter {
       Offset c,
       double scale, {
       double alpha = 1,
+      Color? tint,
+      bool flipX = false,
     }) {
       final s = tile * scale;
       final dst = Rect.fromCenter(center: c, width: s, height: s);
-      _drawImage(canvas, image, dst, alpha: alpha);
+      if (flipX) {
+        canvas.save();
+        canvas.translate(c.dx, c.dy);
+        canvas.scale(-1, 1);
+        canvas.translate(-c.dx, -c.dy);
+        _drawImage(canvas, image, dst, alpha: alpha, tint: tint);
+        canvas.restore();
+      } else {
+        _drawImage(canvas, image, dst, alpha: alpha, tint: tint);
+      }
     }
 
     for (final prop in world.map.props) {
       if (!_inView(prop.x + 0.5, prop.y + 0.5, pad: 0.75)) continue;
       final img = propImages[prop.kind];
       if (img == null) continue;
-      drawSprite(img, center(prop.x + 0.5, prop.y + 0.5), 0.55);
+      final c = center(prop.x + 0.5, prop.y + 0.5);
+      // Soft ground shadow so clutter reads against flat floor tiles.
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: c.translate(0, tile * 0.18),
+          width: tile * 0.55,
+          height: tile * 0.22,
+        ),
+        Paint()..color = const Color(0x66000000),
+      );
+      drawSprite(img, c, 0.80);
     }
 
     void drawBar(Offset c, int hp, int maxHp, double width) {
       final frac = maxHp <= 0 ? 0.0 : (hp / maxHp).clamp(0.0, 1.0);
       final top = c.dy - tile * 0.55;
       final left = c.dx - width / 2;
+      final cb = SpatialCombat.colorblindMode;
+      final Color fill;
+      if (hp <= 0) {
+        fill = cb ? const Color(0xFFD55E00) : const Color(0xFFE05050);
+      } else if (frac <= 0.35) {
+        fill = cb ? const Color(0xFFE69F00) : const Color(0xFFE87850);
+      } else {
+        fill = cb ? const Color(0xFF009E73) : const Color(0xFFE05050);
+      }
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(left, top, width, 4),
@@ -1032,7 +1302,7 @@ class _TileRoomPainter extends CustomPainter {
           Rect.fromLTWH(left, top, width * frac, 4),
           const Radius.circular(1),
         ),
-        Paint()..color = const Color(0xFFE05050),
+        Paint()..color = fill,
       );
     }
 
@@ -1040,7 +1310,8 @@ class _TileRoomPainter extends CustomPainter {
       if (!_inView(loot.x, loot.y)) continue;
       final bob = math.sin(loot.age * 9) * 0.12;
       final path = KenneyAssets.lootDropIconFor(loot.drop);
-      final img = lootByPath[path] ??
+      final img =
+          lootByPath[path] ??
           switch (loot.kind) {
             GroundLootKind.gold => coin,
             GroundLootKind.essence => vial,
@@ -1055,16 +1326,35 @@ class _TileRoomPainter extends CustomPainter {
         LootRarity.epic => const Color(0xBBFFE08A),
         LootRarity.legendary => const Color(0xDDFF8C40),
       };
-      final pulse = reducedVfx
-          ? 1.0
-          : 0.85 + 0.15 * math.sin(loot.age * 6);
+      final pulse = showLootPulse ? 0.85 + 0.15 * math.sin(loot.age * 6) : 1.0;
       _fillPaint.color = glow;
       canvas.drawCircle(
         c,
         tile * (0.32 + loot.drop.rarity.index * 0.04) * pulse,
         _fillPaint,
       );
-      if (!reducedVfx && loot.drop.rarity.index >= LootRarity.rare.index) {
+      if (showLootPulse && loot.age > 0.28) {
+        SpatialActor? magnet;
+        var best = 4.6;
+        for (final h in world.heroes) {
+          if (h.hp <= 0) continue;
+          final dx = h.x - loot.x;
+          final dy = h.y - loot.y;
+          final d = math.sqrt(dx * dx + dy * dy);
+          if (d < best && d > 0.55) {
+            best = d;
+            magnet = h;
+          }
+        }
+        if (magnet != null) {
+          final hc = center(magnet.x, magnet.y);
+          _strokePaint
+            ..color = glow.withValues(alpha: 0.45)
+            ..strokeWidth = math.max(1.2, tile * 0.055);
+          canvas.drawLine(c, hc, _strokePaint);
+        }
+      }
+      if (showLootPulse && loot.drop.rarity.index >= LootRarity.rare.index) {
         _strokePaint
           ..color = glow.withValues(alpha: 0.35)
           ..strokeWidth = 2;
@@ -1073,7 +1363,10 @@ class _TileRoomPainter extends CustomPainter {
       drawSprite(img, c, loot.kind == GroundLootKind.chest ? 0.55 : 0.48);
     }
 
-    if (world.pulseTimer > 0 && world.pulseX != null && world.pulseY != null) {
+    if (showGuide &&
+        world.pulseTimer > 0 &&
+        world.pulseX != null &&
+        world.pulseY != null) {
       final progress = (1 - world.pulseTimer / 0.35).clamp(0.0, 1.0);
       canvas.drawCircle(
         center(world.pulseX!, world.pulseY!),
@@ -1082,6 +1375,34 @@ class _TileRoomPainter extends CustomPainter {
           ..color = const Color(0xDFFFF0A0)
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(2, tile * 0.1),
+      );
+    }
+
+    // God Hand aim marker + radius while guiding the party.
+    if (showGuide &&
+        world.guideTimer > 0 &&
+        world.guideX != null &&
+        world.guideY != null) {
+      final gc = center(world.guideX!, world.guideY!);
+      final pulse = 0.85 + 0.15 * math.sin(world.guideTimer * 10);
+      final r = tile * world.godHandRadius * pulse;
+      canvas.drawCircle(
+        gc,
+        r,
+        Paint()
+          ..color = const Color(0x55FFE080)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(1.5, tile * 0.06),
+      );
+      canvas.drawCircle(
+        gc,
+        tile * 0.22 * pulse,
+        Paint()..color = const Color(0xAAFFF0A0),
+      );
+      canvas.drawCircle(
+        gc,
+        tile * 0.1,
+        Paint()..color = const Color(0xFFFFF8D0),
       );
     }
 
@@ -1101,9 +1422,10 @@ class _TileRoomPainter extends CustomPainter {
         SpellBoltStyle.nature => const Color(0xFF70D070),
         SpellBoltStyle.lightning => const Color(0xFFB8F0FF),
         SpellBoltStyle.arrow => const Color(0xFFD8C070),
-        SpellBoltStyle.weapon => p.team == SpatialTeam.hero
-            ? (p.isCrit ? const Color(0xFFFFF0C0) : const Color(0xFFFFE08A))
-            : const Color(0xFFFF6A4A),
+        SpellBoltStyle.weapon =>
+          p.team == SpatialTeam.hero
+              ? (p.isCrit ? const Color(0xFFFFF0C0) : const Color(0xFFFFE08A))
+              : const Color(0xFFFF6A4A),
       };
       final zoneTint = DungeonEnvironment.projectileTint(dungeonId);
       final color = Color.lerp(baseColor, zoneTint, 0.28)!;
@@ -1113,12 +1435,57 @@ class _TileRoomPainter extends CustomPainter {
       canvas.translate(c.dx, c.dy);
       canvas.rotate(angle);
 
-      void drawOrb({required double core, Color? glow}) {
-        canvas.drawCircle(
-          Offset(-len * 0.15, 0),
-          thick * 1.5,
-          Paint()..color = (glow ?? color).withValues(alpha: 0.22),
+      void drawTrailBolt() {
+        if (!showTrails) {
+          // Lite/Minimal: short bright slash nub — readable on phone.
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(
+                -len * 0.35,
+                -thick * 0.55,
+                len * 0.75,
+                thick * 1.1,
+              ),
+              Radius.circular(thick * 0.45),
+            ),
+            Paint()..color = color,
+          );
+          canvas.drawCircle(
+            Offset(len * 0.35, 0),
+            thick * 0.65,
+            Paint()..color = Colors.white.withValues(alpha: 0.9),
+          );
+          return;
+        }
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(-len * 0.85, -thick * 1.05, len * 1.15, thick * 2.1),
+            Radius.circular(thick),
+          ),
+          Paint()..color = color.withValues(alpha: 0.32),
         );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(-len * 0.55, -thick * 0.55, len, thick * 1.1),
+            Radius.circular(thick * 0.5),
+          ),
+          Paint()..color = color,
+        );
+        canvas.drawCircle(
+          Offset(len * 0.45, 0),
+          thick * 0.85,
+          Paint()..color = Colors.white.withValues(alpha: 0.9),
+        );
+      }
+
+      void drawOrb({required double core, Color? glow}) {
+        if (showTrails) {
+          canvas.drawCircle(
+            Offset(-len * 0.15, 0),
+            thick * 1.5,
+            Paint()..color = (glow ?? color).withValues(alpha: 0.22),
+          );
+        }
         canvas.drawCircle(Offset.zero, thick * core, Paint()..color = color);
         canvas.drawCircle(
           Offset.zero,
@@ -1127,33 +1494,38 @@ class _TileRoomPainter extends CustomPainter {
         );
       }
 
-      void drawTrailBolt() {
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromLTWH(-len * 0.85, -thick * 0.9, len * 1.1, thick * 1.8),
-            Radius.circular(thick),
-          ),
-          Paint()..color = color.withValues(alpha: 0.28),
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromLTWH(-len * 0.55, -thick * 0.45, len, thick * 0.9),
-            Radius.circular(thick * 0.5),
-          ),
-          Paint()..color = color,
-        );
-        canvas.drawCircle(
-          Offset(len * 0.45, 0),
-          thick * 0.7,
-          Paint()..color = Colors.white.withValues(alpha: 0.85),
-        );
-      }
-
       switch (p.style) {
         case SpellBoltStyle.fire:
+          // Fireball: orb + trailing flame wedge.
           drawOrb(core: p.label == 'PYRO' ? 1.35 : 1.05);
+          final flame = Path()
+            ..moveTo(-len * 0.85, 0)
+            ..lineTo(-len * 0.15, -thick * 1.15)
+            ..lineTo(-len * 0.05, 0)
+            ..lineTo(-len * 0.15, thick * 1.15)
+            ..close();
+          canvas.drawPath(
+            flame,
+            Paint()..color = const Color(0xCCFF5010),
+          );
         case SpellBoltStyle.holy:
           drawOrb(core: 1.1, glow: const Color(0xFFFFF8D0));
+          canvas.drawLine(
+            Offset(0, -thick * 1.4),
+            Offset(0, thick * 1.4),
+            Paint()
+              ..color = Colors.white.withValues(alpha: 0.9)
+              ..strokeWidth = math.max(1.4, thick * 0.35)
+              ..strokeCap = StrokeCap.round,
+          );
+          canvas.drawLine(
+            Offset(-thick * 1.05, 0),
+            Offset(thick * 1.05, 0),
+            Paint()
+              ..color = Colors.white.withValues(alpha: 0.9)
+              ..strokeWidth = math.max(1.4, thick * 0.35)
+              ..strokeCap = StrokeCap.round,
+          );
         case SpellBoltStyle.frost:
           // Icy shard / frostbolt orb
           canvas.drawCircle(
@@ -1190,6 +1562,17 @@ class _TileRoomPainter extends CustomPainter {
             Paint()..color = const Color(0x66201040),
           );
           drawOrb(core: 1.05, glow: const Color(0xFF602090));
+          // Eye slits so Death Coil / Shadow Bolt read as shadow, not purple fire.
+          canvas.drawCircle(
+            Offset(-thick * 0.25, -thick * 0.2),
+            thick * 0.18,
+            Paint()..color = const Color(0xFFFFE080),
+          );
+          canvas.drawCircle(
+            Offset(thick * 0.28, -thick * 0.2),
+            thick * 0.18,
+            Paint()..color = const Color(0xFFFFE080),
+          );
         case SpellBoltStyle.nature:
           drawOrb(core: 1.05, glow: const Color(0xFFA0E080));
           // Leaf tip
@@ -1233,7 +1616,12 @@ class _TileRoomPainter extends CustomPainter {
           // Shaft
           canvas.drawRRect(
             RRect.fromRectAndRadius(
-              Rect.fromLTWH(-len * 0.65, -thick * 0.28, len * 1.05, thick * 0.56),
+              Rect.fromLTWH(
+                -len * 0.65,
+                -thick * 0.28,
+                len * 1.05,
+                thick * 0.56,
+              ),
               Radius.circular(thick * 0.2),
             ),
             Paint()..color = const Color(0xFF8A6230),
@@ -1273,14 +1661,9 @@ class _TileRoomPainter extends CustomPainter {
       if (img == null) continue;
       final flash = enemy.attackFlash;
       final c = center(enemy.x, enemy.y);
-      final scale = (enemy.role == EnemyRole.boss ? 1.05 : 0.9) *
-          (1 + flash * 0.18);
-      drawSprite(
-        img,
-        c,
-        scale,
-        alpha: enemy.isAlive ? 1 : 0.2,
-      );
+      final scale =
+          (enemy.role == EnemyRole.boss ? 1.05 : 0.9) * (1 + flash * 0.18);
+      drawSprite(img, c, scale, alpha: enemy.isAlive ? 1 : 0.2);
       if (flash > 0.02) {
         canvas.drawCircle(
           c,
@@ -1290,8 +1673,7 @@ class _TileRoomPainter extends CustomPainter {
       }
       if (enemy.isAlive) {
         if (enemy.livingBombTimer > 0) {
-          final pulse =
-              0.85 + 0.15 * math.sin(enemy.livingBombTimer * 10);
+          final pulse = 0.85 + 0.15 * math.sin(enemy.livingBombTimer * 10);
           canvas.drawCircle(
             c,
             tile * 0.5 * pulse,
@@ -1341,6 +1723,22 @@ class _TileRoomPainter extends CustomPainter {
             );
           }
         }
+        if (showAuras && enemy.enrageTimer > 0) {
+          final pulse = 0.9 + 0.1 * math.sin(enemy.enrageTimer * 12);
+          canvas.drawCircle(
+            c,
+            tile * 0.52 * pulse,
+            Paint()
+              ..color = const Color(0xAAFF3030)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(2, tile * 0.08),
+          );
+          canvas.drawCircle(
+            c,
+            tile * 0.28,
+            Paint()..color = const Color(0x44FF5020),
+          );
+        }
         drawBar(c, enemy.hp, enemy.maxHp, tile * 0.85);
       }
     }
@@ -1352,11 +1750,17 @@ class _TileRoomPainter extends CustomPainter {
       final partyHero = party.isEmpty ? null : party[idx];
       final flash = hero.attackFlash;
       var c = center(hero.x, hero.y);
+      // Prefer smoothed face aim; fall back to attack punch aim.
+      final aimX = (hero.faceAimX != 0 || hero.faceAimY != 0)
+          ? hero.faceAimX
+          : hero.attackAimX;
+      final aimY = (hero.faceAimX != 0 || hero.faceAimY != 0)
+          ? hero.faceAimY
+          : hero.attackAimY;
       // Melee lunge toward the target while attacking (warrior especially).
-      if (flash > 0.02 &&
-          (hero.attackAimX != 0 || hero.attackAimY != 0)) {
-        final adx = hero.attackAimX - hero.x;
-        final ady = hero.attackAimY - hero.y;
+      if (flash > 0.02 && (aimX != 0 || aimY != 0)) {
+        final adx = aimX - hero.x;
+        final ady = aimY - hero.y;
         final alen = math.sqrt(adx * adx + ady * ady);
         if (alen > 0.05) {
           final punch = hero.heroRole == HeroRole.warrior ? 0.38 : 0.22;
@@ -1365,42 +1769,125 @@ class _TileRoomPainter extends CustomPainter {
             c.dy + (ady / alen) * tile * punch * flash,
           );
         }
+      } else if (aimX != 0 || aimY != 0) {
+        // Tiny lean toward facing so idle kits don't look glued forward.
+        final adx = aimX - hero.x;
+        final ady = aimY - hero.y;
+        final alen = math.sqrt(adx * adx + ady * ady);
+        if (alen > 0.08) {
+          c = Offset(
+            c.dx + (adx / alen) * tile * 0.06,
+            c.dy + (ady / alen) * tile * 0.04,
+          );
+        }
       }
-      final scale = 0.95 *
-          (1 +
-              flash *
-                  (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
+      final flipX = (aimX - hero.x) < -0.15;
       final alpha = hero.isAlive ? 1.0 : 0.25;
-      // Prefer class sprite from active party hero when available.
-      ui.Image? img;
+      final paintAlpha = hero.vanishTimer > 0 ? 0.35 : alpha;
       if (partyHero != null) {
-        img = heroesByClass[partyHero.spec.classId];
-      }
-      img ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
-      if (img != null) {
-        drawSprite(
-          img,
-          c,
-          scale,
-          alpha: hero.vanishTimer > 0 ? 0.35 : alpha,
+        final moving = hero.vx.abs() > 0.05 || hero.vy.abs() > 0.05;
+        final signals = HeroAnimSignals(
+          moving: moving,
+          attacking: flash > 0.02,
+          casting: hero.castFlash > 0.02 || hero.castingTimer > 0.05,
+          hit: hero.hitFlash > 0.02,
+          dead: !hero.isAlive,
+          attackFlash: flash,
+          castFlash: hero.castFlash,
+          hitFlash: hero.hitFlash,
         );
-      } else if (partyHero != null) {
-        final walk = flash > 0.05
-            ? 1
-            : ((hero.x + hero.y) * 3).floor().abs() % 2;
-        HeroPaperDoll.paint(
-          canvas,
-          charAtlas,
-          c,
-          tile * scale,
-          hero: partyHero,
-          partyIndex: idx,
-          walkFrame: walk,
-          alpha: hero.vanishTimer > 0 ? 0.35 : alpha,
+        final walkPhase =
+            ((hero.x + hero.y).abs() * 2.5 + visualFrame * 0.08) % 1.0;
+        final anim = HeroAnimController.snapshot(
+          signals,
+          walkPhase: walkPhase,
         );
+        // Phase 3 denser owned body → class PNG → Kenney role fallback.
+        final bodyPath = BodyFamilyCatalog.assetFor(partyHero, anim.kind);
+        ui.Image? bodyImg = bodyByPath[bodyPath];
+        final usingOwnedBody = bodyImg != null;
+        Color? tint;
+        if (bodyImg == null) {
+          bodyImg = heroesBySpec[partyHero.specId] ??
+              heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
+          final argb = HeroIdentity.tintArgb(partyHero.specId);
+          if (argb != null) tint = Color(argb);
+        }
+        bodyImg ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
+        // Owned denser bodies read better slightly larger than Kenney tiles.
+        final scale = (usingOwnedBody ? 1.72 : 0.95) *
+            (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
+        if (bodyImg != null) {
+          if (usingOwnedBody) {
+            final ownedPose = CharacterVisualPoseCache.resolve(
+              heroId: hero.id,
+              hero: partyHero,
+              anim: anim,
+              flipX: flipX,
+              partyIndex: idx,
+              owned: true,
+            );
+            CharacterVisualPainter.paintOwnedHero(
+              canvas,
+              c,
+              tile * scale,
+              body: bodyImg,
+              images: bodyByPath,
+              pose: ownedPose,
+              alpha: paintAlpha,
+            );
+          } else {
+            drawSprite(
+              bodyImg,
+              c,
+              scale,
+              alpha: paintAlpha,
+              tint: tint,
+              flipX: flipX,
+            );
+            CharacterVisualPainter.paintGearOverlays(
+              canvas,
+              charAtlas,
+              c,
+              tile * scale,
+              hero: partyHero,
+              signals: signals,
+              flipX: flipX,
+              partyIndex: idx,
+              alpha: paintAlpha,
+              walkPhase: walkPhase,
+              cacheId: hero.id,
+              poseOverride: anim,
+            );
+          }
+        } else {
+          CharacterVisualPainter.paint(
+            canvas,
+            charAtlas,
+            c,
+            tile * scale * 1.35,
+            hero: partyHero,
+            signals: signals,
+            flipX: flipX,
+            partyIndex: idx,
+            alpha: paintAlpha,
+            walkPhase: walkPhase,
+            cacheId: hero.id,
+            poseOverride: anim,
+          );
+        }
+      } else {
+        ui.Image? img = heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
+        if (img != null) {
+          final scale = 0.95 *
+              (1 +
+                  flash *
+                      (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
+          drawSprite(img, c, scale, alpha: paintAlpha, flipX: flipX);
+        }
       }
       // WoW-style persistent auras
-      if (hero.iceBlockTimer > 0) {
+      if (showAuras && hero.iceBlockTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.62,
@@ -1416,16 +1903,12 @@ class _TileRoomPainter extends CustomPainter {
         );
       }
       // Power Word: Shield — physical bubble around the target (WoW-style).
-      if (hero.absorbShield > 0) {
+      if (showAuras && hero.absorbShield > 0) {
         final pulse =
             0.92 + 0.08 * math.sin(hero.x * 3 + hero.absorbShield * 0.2);
         final br = tile * 0.72 * pulse;
         // Soft filled dome
-        canvas.drawCircle(
-          c,
-          br,
-          Paint()..color = const Color(0x5548A0E8),
-        );
+        canvas.drawCircle(c, br, Paint()..color = const Color(0x5548A0E8));
         canvas.drawCircle(
           c,
           br * 0.82,
@@ -1442,7 +1925,10 @@ class _TileRoomPainter extends CustomPainter {
         );
         // Specular highlight (top-left) like a glass bubble
         canvas.drawArc(
-          Rect.fromCircle(center: c.translate(-br * 0.15, -br * 0.2), radius: br * 0.55),
+          Rect.fromCircle(
+            center: c.translate(-br * 0.15, -br * 0.2),
+            radius: br * 0.55,
+          ),
           -2.4,
           1.2,
           false,
@@ -1453,7 +1939,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeCap = StrokeCap.round,
         );
       }
-      if (hero.combustionTimer > 0) {
+      if (showAuras && hero.combustionTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.5,
@@ -1463,7 +1949,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(2, tile * 0.07),
         );
       }
-      if (hero.painSuppressionTimer > 0) {
+      if (showAuras && hero.painSuppressionTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.52,
@@ -1473,7 +1959,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(1.5, tile * 0.06),
         );
       }
-      if (hero.fortitudeTimer > 0) {
+      if (showAuras && hero.fortitudeTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.44,
@@ -1483,7 +1969,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(1.2, tile * 0.05),
         );
       }
-      if (hero.bladeFlurryTimer > 0) {
+      if (showAuras && hero.bladeFlurryTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.7,
@@ -1493,7 +1979,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(1.5, tile * 0.05),
         );
       }
-      if (hero.killingSpreeTimer > 0) {
+      if (showAuras && hero.killingSpreeTimer > 0) {
         final pulse = 0.9 + 0.1 * math.sin(hero.killingSpreeTimer * 14);
         canvas.drawCircle(
           c,
@@ -1504,7 +1990,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(2, tile * 0.08),
         );
       }
-      if (hero.powerInfusionTimer > 0) {
+      if (showAuras && hero.powerInfusionTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.58,
@@ -1519,7 +2005,7 @@ class _TileRoomPainter extends CustomPainter {
           Paint()..color = const Color(0x44E0A0FF),
         );
       }
-      if (hero.pomCharges > 0) {
+      if (showAuras && hero.pomCharges > 0) {
         for (var i = 0; i < hero.pomCharges.clamp(0, 5); i++) {
           final a = hero.x + i * 1.25 + hero.pomCharges;
           canvas.drawCircle(
@@ -1532,7 +2018,9 @@ class _TileRoomPainter extends CustomPainter {
           );
         }
       }
-      if (hero.innerFireActive && hero.heroRole == HeroRole.healer) {
+      if (showAuras &&
+          hero.innerFireActive &&
+          hero.heroRole == HeroRole.healer) {
         canvas.drawCircle(
           c,
           tile * 0.38,
@@ -1542,7 +2030,7 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(1.2, tile * 0.05),
         );
       }
-      if (hero.sliceAndDiceTimer > 0) {
+      if (showAuras && hero.sliceAndDiceTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.46,
@@ -1552,14 +2040,14 @@ class _TileRoomPainter extends CustomPainter {
             ..strokeWidth = math.max(1.4, tile * 0.05),
         );
       }
-      if (hero.sprintTimer > 0) {
+      if (showAuras && hero.sprintTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.4,
           Paint()..color = const Color(0x44FFFFA0),
         );
       }
-      if (hero.shieldWallTimer > 0) {
+      if (showAuras && hero.shieldWallTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.55,
@@ -1568,7 +2056,7 @@ class _TileRoomPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = math.max(2, tile * 0.08),
         );
-      } else if (hero.shieldBlockTimer > 0) {
+      } else if (showAuras && hero.shieldBlockTimer > 0) {
         canvas.drawCircle(
           c,
           tile * 0.48,
@@ -1577,6 +2065,46 @@ class _TileRoomPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = math.max(1.5, tile * 0.06),
         );
+      }
+      if (showAuras && hero.lastStandTimer > 0) {
+        canvas.drawCircle(
+          c,
+          tile * 0.6,
+          Paint()
+            ..color = const Color(0x88FFA040)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(2, tile * 0.08),
+        );
+      }
+      // Generic kit buffTimers (shield / buff) when no dedicated aura fired.
+      if (showAuras) {
+        final shieldT = hero.buffTimers['shield'] ?? 0;
+        final buffT = hero.buffTimers['buff'] ?? 0;
+        if (shieldT > 0 &&
+            hero.shieldBlockTimer <= 0 &&
+            hero.shieldWallTimer <= 0 &&
+            hero.absorbShield <= 0) {
+          canvas.drawCircle(
+            c,
+            tile * 0.5,
+            Paint()
+              ..color = const Color(0x7790C0FF)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(1.5, tile * 0.06),
+          );
+        }
+        if (buffT > 0 &&
+            hero.combustionTimer <= 0 &&
+            hero.powerInfusionTimer <= 0) {
+          canvas.drawCircle(
+            c,
+            tile * 0.46,
+            Paint()
+              ..color = const Color(0x66E0A060)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(1.4, tile * 0.05),
+          );
+        }
       }
       if (flash > 0.02) {
         canvas.drawCircle(
@@ -1596,24 +2124,40 @@ class _TileRoomPainter extends CustomPainter {
     for (final pet in world.pets) {
       final flash = pet.attackFlash;
       final c = center(pet.x, pet.y);
-      final petKey = pet.id.startsWith('pet_') ? pet.id.substring(4) : pet.id;
-      final petPath = CustomAssets.petForInstanceId(petKey);
+      final isClass = pet.id.startsWith('classpet_');
+      final isTemp = pet.id.startsWith('temppet_');
+      final petPath = isClass || isTemp
+          ? CustomAssets.petForCombatActorId(pet.id, pet.name)
+          : CustomAssets.petForInstanceId(
+              pet.id.startsWith('pet_') ? pet.id.substring(4) : pet.id,
+            );
       final petImg = petsByPath[petPath];
-      drawSprite(
-        petImg ?? coin,
+      final ringArgb = isTemp
+          ? 0xAA90D8FF
+          : isClass
+          ? 0xAA50E0A8
+          : 0xAAFFE08A;
+      canvas.drawCircle(
         c,
-        0.52 * (1 + flash * 0.22),
+        tile * 0.4,
+        Paint()
+          ..color = Color(ringArgb)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(1.4, tile * 0.055),
       );
+      final scale =
+          (isClass ? 0.78 : isTemp ? 0.72 : 0.68) * (1 + flash * 0.22);
+      drawSprite(petImg ?? coin, c, scale);
       if (flash > 0.02) {
         canvas.drawCircle(
           c,
-          tile * 0.28 * flash,
+          tile * 0.32 * flash,
           Paint()..color = const Color(0x66FFE8A0),
         );
       }
     }
 
-    if (!reducedVfx) {
+    if (showBursts) {
       for (final burst in world.bursts) {
         final kind = burst.slash ? SpatialBurstKind.slash : burst.kind;
         if (kind == SpatialBurstKind.slash && burst.angle != null) {
@@ -1682,12 +2226,7 @@ class _TileRoomPainter extends CustomPainter {
           final start = burst.angle! - sweep * 0.5;
           final path = Path()
             ..moveTo(c.dx, c.dy)
-            ..arcTo(
-              Rect.fromCircle(center: c, radius: r),
-              start,
-              sweep,
-              false,
-            )
+            ..arcTo(Rect.fromCircle(center: c, radius: r), start, sweep, false)
             ..close();
           canvas.drawPath(
             path,
@@ -1722,10 +2261,17 @@ class _TileRoomPainter extends CustomPainter {
                 c.dy + math.sin(a) * r * 1.3,
               ),
               r * 0.25,
-              Paint()
-                ..color = Color(burst.argb).withValues(alpha: alpha * 0.7),
+              Paint()..color = Color(burst.argb).withValues(alpha: alpha * 0.7),
             );
           }
+        } else if (kind == SpatialBurstKind.beam ||
+            kind == SpatialBurstKind.rain ||
+            kind == SpatialBurstKind.shards ||
+            kind == SpatialBurstKind.flame ||
+            kind == SpatialBurstKind.cross ||
+            kind == SpatialBurstKind.poison ||
+            kind == SpatialBurstKind.skull) {
+          _paintSpellBurst(canvas, burst, tile, center);
         } else {
           final maxLife = 0.45;
           final alpha = (burst.life / maxLife).clamp(0.0, 1.0);
@@ -1734,40 +2280,367 @@ class _TileRoomPainter extends CustomPainter {
           canvas.drawCircle(
             c,
             r,
-            Paint()
-              ..color = Color(burst.argb).withValues(alpha: alpha * 0.55),
+            Paint()..color = Color(burst.argb).withValues(alpha: alpha * 0.55),
           );
           canvas.drawCircle(
             c,
             r * 0.55,
-            Paint()
-              ..color = Color(burst.argb).withValues(alpha: alpha * 0.85),
+            Paint()..color = Color(burst.argb).withValues(alpha: alpha * 0.85),
           );
         }
       }
     }
 
-    if (!reducedVfx) {
+    if (showBursts) {
       final floaters = world.floaters;
-      final start = floaters.length > 8 ? floaters.length - 8 : 0;
       final tp = TextPainter(textDirection: TextDirection.ltr);
-      final maxW = tile * 3.6;
-      for (var i = start; i < floaters.length; i++) {
+      final maxW = tile * 4.4;
+      for (var i = 0; i < floaters.length; i++) {
         final floater = floaters[i];
         if (!_inView(floater.x, floater.y, pad: 0.5)) continue;
-        final alpha = (floater.life / 0.7).clamp(0.0, 1.0);
+        final speech = floater.kind == SpatialFloaterKind.speech;
+        final fadeFor = speech
+            ? 1.35
+            : (floater.priority >= 1 ? 1.15 : 0.7);
+        final alpha = (floater.life / fadeFor).clamp(0.0, 1.0);
+        final size = tile *
+            (speech ? 0.28 : 0.32) *
+            SpatialCombat.floaterReadScale(floater.priority);
         tp.text = TextSpan(
           text: floater.text,
           style: GameTheme.pixelCached(
-            size: math.max(8, tile * 0.32),
+            size: math.max(GameTheme.hudPixel, size),
             color: Color(floater.argb).withValues(alpha: alpha),
           ),
         );
         tp.layout(maxWidth: maxW);
         final c = center(floater.x, floater.y);
+        if (speech) {
+          final padX = tile * 0.12;
+          final padY = tile * 0.06;
+          final bubble = RRect.fromRectAndRadius(
+            Rect.fromLTWH(
+              c.dx - tp.width / 2 - padX,
+              c.dy - tp.height / 2 - padY,
+              tp.width + padX * 2,
+              tp.height + padY * 2,
+            ),
+            Radius.circular(tile * 0.12),
+          );
+          canvas.drawRRect(
+            bubble,
+            Paint()..color = const Color(0xCC1A1420).withValues(alpha: alpha),
+          );
+          canvas.drawRRect(
+            bubble,
+            Paint()
+              ..color = Color(floater.argb).withValues(alpha: alpha * 0.55)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(1.0, tile * 0.03),
+          );
+        }
         tp.paint(canvas, Offset(c.dx - tp.width / 2, c.dy - tp.height / 2));
       }
       tp.dispose();
+    }
+  }
+
+  void _paintGroundKind(
+    Canvas canvas,
+    Offset c,
+    double r,
+    Color color,
+    double frac,
+    double tile,
+    SpatialGroundFxKind kind,
+    double life,
+  ) {
+    final stroke = Paint()
+      ..color = color.withValues(alpha: 0.6 * frac)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(1.5, tile * 0.06);
+    canvas.drawCircle(c, r, stroke);
+    switch (kind) {
+      case SpatialGroundFxKind.disc:
+        return;
+      case SpatialGroundFxKind.holy:
+        // Consecration: spokes + inner ring.
+        for (var i = 0; i < 8; i++) {
+          final a = i * math.pi / 4;
+          canvas.drawLine(
+            Offset(c.dx + math.cos(a) * r * 0.2, c.dy + math.sin(a) * r * 0.2),
+            Offset(c.dx + math.cos(a) * r * 0.92, c.dy + math.sin(a) * r * 0.92),
+            Paint()
+              ..color = const Color(0xAAFFF6C0).withValues(alpha: 0.55 * frac)
+              ..strokeWidth = math.max(1.2, tile * 0.045)
+              ..strokeCap = StrokeCap.round,
+          );
+        }
+        canvas.drawCircle(
+          c,
+          r * 0.38,
+          Paint()
+            ..color = const Color(0x66FFF0A0).withValues(alpha: 0.45 * frac)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(1.4, tile * 0.05),
+        );
+      case SpatialGroundFxKind.frost:
+        for (var i = 0; i < 6; i++) {
+          final a = i * math.pi / 3 + life * 0.4;
+          final p = Path()
+            ..moveTo(c.dx + math.cos(a) * r * 0.25, c.dy + math.sin(a) * r * 0.25)
+            ..lineTo(
+              c.dx + math.cos(a) * r * 0.88,
+              c.dy + math.sin(a) * r * 0.88,
+            )
+            ..lineTo(
+              c.dx + math.cos(a + 0.22) * r * 0.55,
+              c.dy + math.sin(a + 0.22) * r * 0.55,
+            )
+            ..close();
+          canvas.drawPath(
+            p,
+            Paint()..color = const Color(0x88C8F0FF).withValues(alpha: 0.45 * frac),
+          );
+        }
+      case SpatialGroundFxKind.fire:
+        for (var i = 0; i < 4; i++) {
+          final a = i * 1.7 + life;
+          canvas.drawOval(
+            Rect.fromCenter(
+              center: Offset(
+                c.dx + math.cos(a) * r * 0.35,
+                c.dy + math.sin(a) * r * 0.28,
+              ),
+              width: r * 0.55,
+              height: r * 0.38,
+            ),
+            Paint()..color = const Color(0x66FF5018).withValues(alpha: 0.4 * frac),
+          );
+        }
+      case SpatialGroundFxKind.rain:
+        for (var i = 0; i < 8; i++) {
+          final a = i * math.pi / 4;
+          final ox = math.cos(a) * r * 0.55;
+          final oy = math.sin(a) * r * 0.55;
+          final drop = ((life * 3 + i * 0.4) % 1.0);
+          canvas.drawLine(
+            Offset(c.dx + ox, c.dy + oy - r * 0.22 * drop),
+            Offset(c.dx + ox, c.dy + oy + r * 0.12),
+            Paint()
+              ..color = color.withValues(alpha: 0.7 * frac)
+              ..strokeWidth = math.max(1.2, tile * 0.04)
+              ..strokeCap = StrokeCap.round,
+          );
+        }
+      case SpatialGroundFxKind.shadow:
+        canvas.drawCircle(
+          c,
+          r * 0.55,
+          Paint()..color = const Color(0x55201040).withValues(alpha: 0.5 * frac),
+        );
+        canvas.drawArc(
+          Rect.fromCircle(center: c, radius: r * 0.72),
+          life,
+          2.2,
+          false,
+          Paint()
+            ..color = const Color(0xAA9050D0).withValues(alpha: 0.55 * frac)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(2, tile * 0.07)
+            ..strokeCap = StrokeCap.round,
+        );
+      case SpatialGroundFxKind.nature:
+        for (var i = 0; i < 5; i++) {
+          final a = i * 1.26 + 0.3;
+          canvas.drawOval(
+            Rect.fromCenter(
+              center: Offset(
+                c.dx + math.cos(a) * r * 0.55,
+                c.dy + math.sin(a) * r * 0.55,
+              ),
+              width: r * 0.28,
+              height: r * 0.16,
+            ),
+            Paint()..color = const Color(0x8878E060).withValues(alpha: 0.5 * frac),
+          );
+        }
+      case SpatialGroundFxKind.steel:
+        for (var i = 0; i < 3; i++) {
+          final a = life * 6 + i * 2.1;
+          canvas.drawArc(
+            Rect.fromCircle(center: c, radius: r * (0.45 + i * 0.18)),
+            a,
+            1.4,
+            false,
+            Paint()
+              ..color = const Color(0xCCFFE08A).withValues(alpha: 0.55 * frac)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(2, tile * 0.08)
+              ..strokeCap = StrokeCap.round,
+          );
+        }
+    }
+  }
+
+  void _paintSpellBurst(
+    Canvas canvas,
+    SpatialBurst burst,
+    double tile,
+    Offset Function(double, double) center,
+  ) {
+    final alpha = (burst.life / 0.45).clamp(0.0, 1.0);
+    final c = center(burst.x, burst.y);
+    final r = tile * burst.radius * (0.7 + (1 - alpha) * 0.35);
+    final color = Color(burst.argb);
+    switch (burst.kind) {
+      case SpatialBurstKind.beam:
+        final end = burst.x2 != null && burst.y2 != null
+            ? center(burst.x2!, burst.y2!)
+            : Offset(c.dx, c.dy - r * 2.2);
+        final glow = Paint()
+          ..color = color.withValues(alpha: alpha * 0.45)
+          ..strokeWidth = math.max(4, tile * 0.16)
+          ..strokeCap = StrokeCap.round;
+        final core = Paint()
+          ..color = Colors.white.withValues(alpha: alpha * 0.95)
+          ..strokeWidth = math.max(1.6, tile * 0.055)
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(c, end, glow);
+        // Zigzag so lightning isn't a boring line.
+        final dx = end.dx - c.dx;
+        final dy = end.dy - c.dy;
+        final zig = Path()..moveTo(c.dx, c.dy);
+        for (var i = 1; i <= 3; i++) {
+          final t = i / 4;
+          final side = (i.isOdd ? 1.0 : -1.0) * r * 0.35;
+          final nx = -dy / (math.sqrt(dx * dx + dy * dy) + 0.001);
+          final ny = dx / (math.sqrt(dx * dx + dy * dy) + 0.001);
+          zig.lineTo(c.dx + dx * t + nx * side, c.dy + dy * t + ny * side);
+        }
+        zig.lineTo(end.dx, end.dy);
+        canvas.drawPath(zig, core);
+        canvas.drawCircle(end, r * 0.35, Paint()..color = Colors.white.withValues(alpha: alpha));
+      case SpatialBurstKind.rain:
+        for (var i = 0; i < 7; i++) {
+          final a = i * 0.9;
+          final ox = math.cos(a) * r * 0.7;
+          final oy = math.sin(a) * r * 0.45;
+          final fall = (1 - alpha) * r * 0.5;
+          canvas.drawLine(
+            Offset(c.dx + ox, c.dy + oy - r * 0.8 + fall),
+            Offset(c.dx + ox, c.dy + oy - r * 0.15 + fall),
+            Paint()
+              ..color = color.withValues(alpha: alpha * 0.85)
+              ..strokeWidth = math.max(1.4, tile * 0.05)
+              ..strokeCap = StrokeCap.round,
+          );
+        }
+      case SpatialBurstKind.shards:
+        for (var i = 0; i < 6; i++) {
+          final a = i * math.pi / 3 + burst.life * 2;
+          final p = Path()
+            ..moveTo(c.dx + math.cos(a) * r * 1.15, c.dy + math.sin(a) * r * 1.15)
+            ..lineTo(
+              c.dx + math.cos(a + 0.35) * r * 0.25,
+              c.dy + math.sin(a + 0.35) * r * 0.25,
+            )
+            ..lineTo(
+              c.dx + math.cos(a - 0.35) * r * 0.25,
+              c.dy + math.sin(a - 0.35) * r * 0.25,
+            )
+            ..close();
+          canvas.drawPath(p, Paint()..color = color.withValues(alpha: alpha * 0.9));
+        }
+        canvas.drawCircle(
+          c,
+          r * 0.28,
+          Paint()..color = Colors.white.withValues(alpha: alpha * 0.8),
+        );
+      case SpatialBurstKind.flame:
+        for (var i = 0; i < 5; i++) {
+          final a = i * 1.256 + (1 - alpha);
+          final p = Path()
+            ..moveTo(c.dx, c.dy)
+            ..quadraticBezierTo(
+              c.dx + math.cos(a + 0.4) * r * 0.5,
+              c.dy + math.sin(a + 0.4) * r * 0.5,
+              c.dx + math.cos(a) * r * 1.15,
+              c.dy + math.sin(a) * r * 1.15,
+            )
+            ..quadraticBezierTo(
+              c.dx + math.cos(a - 0.4) * r * 0.5,
+              c.dy + math.sin(a - 0.4) * r * 0.5,
+              c.dx,
+              c.dy,
+            );
+          canvas.drawPath(p, Paint()..color = color.withValues(alpha: alpha * 0.7));
+        }
+        canvas.drawCircle(
+          c,
+          r * 0.32,
+          Paint()..color = const Color(0xFFFFF0A0).withValues(alpha: alpha),
+        );
+      case SpatialBurstKind.cross:
+        final arm = r * 1.05;
+        final holy = Paint()
+          ..color = color.withValues(alpha: alpha * 0.9)
+          ..strokeWidth = math.max(2.2, tile * 0.09)
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(Offset(c.dx, c.dy - arm), Offset(c.dx, c.dy + arm), holy);
+        canvas.drawLine(
+          Offset(c.dx - arm * 0.7, c.dy - arm * 0.15),
+          Offset(c.dx + arm * 0.7, c.dy - arm * 0.15),
+          holy,
+        );
+        canvas.drawCircle(
+          c,
+          r * 0.28,
+          Paint()..color = Colors.white.withValues(alpha: alpha * 0.85),
+        );
+      case SpatialBurstKind.poison:
+        for (var i = 0; i < 4; i++) {
+          final a = i * 1.57 + 0.4;
+          canvas.drawOval(
+            Rect.fromCenter(
+              center: Offset(
+                c.dx + math.cos(a) * r * 0.65,
+                c.dy + math.sin(a) * r * 0.65 + r * 0.15 * (1 - alpha),
+              ),
+              width: r * 0.38,
+              height: r * 0.55,
+            ),
+            Paint()..color = color.withValues(alpha: alpha * 0.75),
+          );
+        }
+        canvas.drawCircle(c, r * 0.28, Paint()..color = const Color(0xAAE8FFC0).withValues(alpha: alpha));
+      case SpatialBurstKind.skull:
+        canvas.drawOval(
+          Rect.fromCenter(center: c, width: r * 1.5, height: r * 1.7),
+          Paint()..color = color.withValues(alpha: alpha * 0.75),
+        );
+        canvas.drawCircle(
+          Offset(c.dx - r * 0.28, c.dy - r * 0.12),
+          r * 0.18,
+          Paint()..color = const Color(0xFFFFE080).withValues(alpha: alpha),
+        );
+        canvas.drawCircle(
+          Offset(c.dx + r * 0.28, c.dy - r * 0.12),
+          r * 0.18,
+          Paint()..color = const Color(0xFFFFE080).withValues(alpha: alpha),
+        );
+        canvas.drawArc(
+          Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.28), width: r * 0.7, height: r * 0.4),
+          0.2,
+          math.pi - 0.4,
+          false,
+          Paint()
+            ..color = const Color(0xAA201028).withValues(alpha: alpha)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(1.5, tile * 0.05),
+        );
+      default:
+        canvas.drawCircle(c, r, Paint()..color = color.withValues(alpha: alpha * 0.6));
     }
   }
 
@@ -1858,15 +2731,15 @@ class _TileRoomPainter extends CustomPainter {
     Rect src,
     Rect dst, {
     double alpha = 1,
+    Color? tint,
   }) {
-    canvas.drawImageRect(
-      image,
-      src,
-      dst,
-      Paint()
-        ..filterQuality = FilterQuality.none
-        ..color = Color.fromRGBO(255, 255, 255, alpha),
-    );
+    final paint = Paint()
+      ..filterQuality = FilterQuality.none
+      ..color = Color.fromRGBO(255, 255, 255, alpha);
+    if (tint != null) {
+      paint.colorFilter = ColorFilter.mode(tint, BlendMode.modulate);
+    }
+    canvas.drawImageRect(image, src, dst, paint);
   }
 
   void _drawImage(
@@ -1874,6 +2747,7 @@ class _TileRoomPainter extends CustomPainter {
     ui.Image image,
     Rect dst, {
     double alpha = 1,
+    Color? tint,
   }) {
     _drawImageSrc(
       canvas,
@@ -1881,6 +2755,7 @@ class _TileRoomPainter extends CustomPainter {
       Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
       dst,
       alpha: alpha,
+      tint: tint,
     );
   }
 
@@ -1889,12 +2764,16 @@ class _TileRoomPainter extends CustomPainter {
     return visualFrame != oldDelegate.visualFrame ||
         dungeonId != oldDelegate.dungeonId ||
         reducedVfx != oldDelegate.reducedVfx ||
+        vfxQuality != oldDelegate.vfxQuality ||
         camera.camX != oldDelegate.camera.camX ||
         camera.camY != oldDelegate.camera.camY ||
         camera.tileSize != oldDelegate.camera.tileSize ||
         !identical(world, oldDelegate.world) ||
         !identical(floorVariants, oldDelegate.floorVariants) ||
-        !identical(enemies, oldDelegate.enemies);
+        !identical(enemies, oldDelegate.enemies) ||
+        !identical(heroesByClass, oldDelegate.heroesByClass) ||
+        !identical(heroesBySpec, oldDelegate.heroesBySpec) ||
+        !identical(bodyByPath, oldDelegate.bodyByPath);
   }
 }
 
@@ -1915,8 +2794,9 @@ class _TileCamera {
 
   factory _TileCamera.forWorld(
     SpatialWorld? world,
-    BoxConstraints constraints,
-  ) {
+    BoxConstraints constraints, {
+    double targetCols = 20,
+  }) {
     if (world == null) {
       return const _TileCamera(
         camX: 0,
@@ -1926,26 +2806,22 @@ class _TileCamera {
         visibleRows: 1,
       );
     }
-    // Show more of the floor so combat doesn't feel claustrophobic.
-    // ~20 tiles wide on phones; a bit more on tablets/desktop.
-    final targetCols = constraints.maxWidth < 700 ? 20.0 : 24.0;
-    final visibleCols = math.min(targetCols, world.cols.toDouble());
-    final tileSize = constraints.maxWidth / visibleCols;
+    // Phone product: zoom setting picks how many tiles fit across the stage.
+    final cols = math.min(targetCols, world.cols.toDouble());
+    final tileSize = constraints.maxWidth / cols;
     final visibleRows = constraints.maxHeight / tileSize;
     final leader =
         world.leader ?? (world.heroes.isNotEmpty ? world.heroes.first : null);
     final centerX = leader?.x ?? world.cols / 2;
     final centerY = leader?.y ?? world.rows / 2;
-    final maxCamX = math.max(0.0, world.cols - visibleCols);
+    final maxCamX = math.max(0.0, world.cols - cols);
     final maxCamY = math.max(0.0, world.rows - visibleRows);
     return _TileCamera(
-      camX: (centerX - visibleCols / 2).clamp(0.0, maxCamX).toDouble(),
+      camX: (centerX - cols / 2).clamp(0.0, maxCamX).toDouble(),
       camY: (centerY - visibleRows / 2).clamp(0.0, maxCamY).toDouble(),
       tileSize: tileSize,
-      visibleCols: visibleCols,
+      visibleCols: cols,
       visibleRows: visibleRows,
     );
   }
 }
-
-

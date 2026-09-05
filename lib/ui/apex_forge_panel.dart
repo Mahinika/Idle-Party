@@ -1,120 +1,30 @@
 import 'package:flutter/material.dart';
 
+import '../core/apex_forge.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
+import '../core/game_state.dart';
 import '../models/apex_craft.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import 'character_equip_panel.dart';
+import 'game_icon.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
 
-/// Materials Bag browser (boss-only craft mats).
-class ApexMaterialsPanel extends StatelessWidget {
-  const ApexMaterialsPanel({super.key, required this.director});
+/// Materials + craft + vault in one station (POWER → Craft).
+/// Goal-first: party goals → recipe + CRAFT → farm meter → collapsed bag/pickers.
+class ApexHubPanel extends StatefulWidget {
+  const ApexHubPanel({super.key, required this.director});
 
   final GameDirector director;
 
   @override
-  Widget build(BuildContext context) {
-    final state = director.state;
-    final owned = ApexCraft.materials
-        .where((m) => (state.craftMaterials[m.id] ?? 0) > 0)
-        .toList();
-    final missing = ApexCraft.materials
-        .where((m) => (state.craftMaterials[m.id] ?? 0) <= 0)
-        .toList();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Boss mats for Apex gear (not gold / not essence).\n'
-          'Survives Ascend. Never stored in the gear bag.',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Farm tip: each dungeon boss drops its zone shard. '
-          'Cores / catalysts drop from any boss (party bias). '
-          'Apex Slag from Gauntlet / Crystal Spire.',
-          style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-        ),
-        const SizedBox(height: 10),
-        if (owned.isEmpty)
-          Text(
-            'No materials yet — clear dungeon bosses in PUSH.',
-            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-          )
-        else ...[
-          Text('OWNED', style: GameTheme.pixel(size: 7)),
-          const SizedBox(height: 4),
-          for (final m in owned) _matRow(m, state.craftMaterials[m.id] ?? 0),
-        ],
-        if (missing.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          Text('NOT FOUND YET', style: GameTheme.pixel(size: 7)),
-          const SizedBox(height: 4),
-          for (final m in missing) _matRow(m, 0),
-        ],
-      ],
-    );
-  }
-
-  Widget _matRow(CraftMatDef m, int count) {
-    final owned = count > 0;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.all(8),
-      decoration: MenuChrome.cardBox(),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  m.name,
-                  style: GameTheme.pixel(
-                    size: 7,
-                    color: owned ? GameTheme.parchment : GameTheme.parchmentDim,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  m.bossSources,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: GameTheme.parchmentDim,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            owned ? '×$count' : '×0',
-            style: GameTheme.pixel(
-              size: 8,
-              color: owned ? GameTheme.torchHot : GameTheme.parchmentDim,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  State<ApexHubPanel> createState() => _ApexHubPanelState();
 }
 
-/// Apex craft / upgrade / vault UI.
-class ApexCraftPanel extends StatefulWidget {
-  const ApexCraftPanel({super.key, required this.director});
-
-  final GameDirector director;
-
-  @override
-  State<ApexCraftPanel> createState() => _ApexCraftPanelState();
-}
-
-class _ApexCraftPanelState extends State<ApexCraftPanel> {
+class _ApexHubPanelState extends State<ApexHubPanel> {
   HeroClassId _apexClass = HeroClassId.warrior;
   SpecRoleTag _apexRole = SpecRoleTag.tank;
   EquipmentSlot _apexSlot = EquipmentSlot.weapon;
@@ -124,6 +34,32 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
   @override
   void initState() {
     super.initState();
+    _loadCraftGoalFromState();
+  }
+
+  void _loadCraftGoalFromState() {
+    final goal = ApexForge.craftGoalFromState(director.state);
+    if (goal != null) {
+      _apexClass = goal.classId;
+      _apexRole = goal.role;
+      _apexSlot = goal.slot;
+      return;
+    }
+    _defaultFromParty();
+  }
+
+  void _defaultFromParty() {
+    final heroes = director.state.heroes;
+    if (heroes.isEmpty) return;
+    final h = heroes.first;
+    _apexClass = h.spec.classId;
+    _apexRole = h.spec.roleTag;
+    _apexSlot = ApexForge.nextSlotForPair(
+          director.state,
+          _apexClass,
+          _apexRole,
+        ) ??
+        EquipmentSlot.weapon;
     _syncApexRole();
   }
 
@@ -133,11 +69,33 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
     if (!roles.contains(_apexRole)) {
       _apexRole = roles.first;
     }
+    final slots = ApexCraft.craftSlotsFor(_apexClass, _apexRole);
+    if (!slots.contains(_apexSlot)) {
+      _apexSlot = slots.first;
+    }
   }
+
+  void _setCraftGoal(HeroClassId classId, SpecRoleTag role, EquipmentSlot slot) {
+    setState(() {
+      _apexClass = classId;
+      _apexRole = role;
+      _apexSlot = slot;
+      _syncApexRole();
+    });
+    director.setApexCraftGoal(classId: classId, role: role, slot: slot);
+  }
+
+  static String _matIcon(CraftMatFamily family) => switch (family) {
+    CraftMatFamily.shard => UiIcon.ring,
+    CraftMatFamily.core => UiIcon.shieldRound,
+    CraftMatFamily.catalyst => UiIcon.flaskBlue,
+    CraftMatFamily.slag => UiIcon.gold,
+  };
 
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    final md = state.metaDepth;
     final roles = ApexCraft.validRolesFor(_apexClass).toList();
     final recipe = ApexCraft.recipe(
       classId: _apexClass,
@@ -150,166 +108,100 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
       role: _apexRole,
       slot: _apexSlot,
     );
-    dynamic existing;
+    EquipmentItem? existingItem;
     for (final i in state.apexVault) {
       if (i.id == pieceId) {
-        existing = i;
+        existingItem = i;
         break;
       }
     }
-    if (existing == null) {
+    if (existingItem == null) {
       for (final h in state.heroRoster) {
         for (final i in h.equipped.values) {
           if (i.id == pieceId) {
-            existing = i;
+            existingItem = i;
             break;
           }
         }
-        if (existing != null) break;
+        if (existingItem != null) break;
       }
     }
-    final existingItem = existing as EquipmentItem?;
     final canCraft = GameLogic.canCraftApex(
       state,
       classId: _apexClass,
       role: _apexRole,
       slot: _apexSlot,
     );
-    final canUpgrade = existingItem != null &&
+    final canUpgrade =
+        existingItem != null &&
         GameLogic.canUpgradeApex(state, existingItem.id);
-    final weaponGate = _apexSlot != EquipmentSlot.weapon &&
+    final weaponGate =
+        _apexSlot != EquipmentSlot.weapon &&
         !GameLogic.hasApexWeaponRank1(state, _apexClass, _apexRole);
-    final missing = recipe.costs.entries
-        .where((e) => (state.craftMaterials[e.key] ?? 0) < e.value)
-        .toList();
-    // Prefer the scarcest / most behind mat as the next farm target.
-    missing.sort((a, b) {
-      final aHave = state.craftMaterials[a.key] ?? 0;
-      final bHave = state.craftMaterials[b.key] ?? 0;
-      final aNeed = a.value - aHave;
-      final bNeed = b.value - bHave;
-      return bNeed.compareTo(aNeed);
-    });
-    final nextFarm = missing.isEmpty
-        ? null
-        : ApexCraft.materialsById[missing.first.key];
+    final shortages = GameLogic.apexSortedMatShortages(
+      state,
+      classId: _apexClass,
+      role: _apexRole,
+      slot: _apexSlot,
+    );
+    final targetMatId = GameLogic.resolveApexTargetMatId(state);
+    final targetDef = targetMatId != null
+        ? ApexCraft.materialsById[targetMatId]
+        : null;
+    final targetProgress = md.apexTargetProgress;
+    final targetRequired = ApexCraft.targetMeterRequired;
+    final bossesLeft = GameLogic.apexBossesUntilTargetGrant(state);
+    final manualTarget = md.apexTargetMatId.isNotEmpty;
+    final goalLabel =
+        '${HeroSpecs.classLabel(_apexClass)} · '
+        '${_slotLabel(_apexSlot, _apexClass, _apexRole)} · '
+        '${existingItem == null ? 'R1' : 'R${existingItem.apexRank}'}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Craft Apex BiS from boss mats (MATERIALS tab) — not gold.\n'
-          'Weapon R1 unlocks armor. Upgrade in place to R3. Survives Ascend.',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-        ),
-        if (nextFarm != null) ...[
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: MenuChrome.cardBox(selected: true),
-            child: Text(
-              'Next farm: ${nextFarm.name}\n→ ${nextFarm.bossSources}',
-              style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-            ),
-          ),
-        ],
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final c in HeroClassId.values)
-              ChoiceChip(
-                label: Text(
-                  HeroSpecs.classLabel(c),
-                  style: GameTheme.body(size: 12),
-                ),
-                selected: _apexClass == c,
-                onSelected: (_) => setState(() {
-                  _apexClass = c;
-                  _syncApexRole();
-                }),
-              ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final r in roles)
-              ChoiceChip(
-                label: Text(r.name, style: GameTheme.body(size: 12)),
-                selected: _apexRole == r,
-                onSelected: (_) => setState(() => _apexRole = r),
-              ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final s in ApexCraft.craftSlots)
-              ChoiceChip(
-                label: Text(s.name, style: GameTheme.body(size: 12)),
-                selected: _apexSlot == s,
-                onSelected: (_) => setState(() => _apexSlot = s),
-              ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Text('RECIPE R1', style: GameTheme.pixel(size: 7)),
-        const SizedBox(height: 4),
-        for (final e in recipe.costs.entries)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  '${ApexCraft.materialsById[e.key]?.name ?? e.key}  '
-                  '${state.craftMaterials[e.key] ?? 0}/${e.value}',
-                  style: GameTheme.body(
-                    size: 13,
-                    color: (state.craftMaterials[e.key] ?? 0) >= e.value
-                        ? GameTheme.clear
-                        : GameTheme.bloodLit,
-                  ),
-                ),
-                if ((state.craftMaterials[e.key] ?? 0) < e.value)
-                  Text(
-                    '  → ${ApexCraft.materialsById[e.key]?.bossSources ?? 'boss drop'}',
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        if (missing.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text(
-            'Need ${missing.length} more mat type${missing.length == 1 ? '' : 's'}. '
-            'Clear the listed bosses in PUSH (Farm still ticks pity slowly).',
-            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-          ),
-        ],
-        const SizedBox(height: 4),
-        Text(
-          'Sources: ${recipe.bossSources.join(' · ')}',
+          'Boss mats · weapon R1 first · survives Ascend. Tap a party goal.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
-        if (weaponGate) ...[
-          const SizedBox(height: 6),
+        const SizedBox(height: 8),
+        MenuChrome.sectionLabelScoped('PARTY GOALS'),
+        ..._partyGoalCards(state),
+        const SizedBox(height: 10),
+        MenuChrome.sectionLabelScoped('NOW CRAFTING'),
+        Text(
+          goalLabel,
+          style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+        ),
+        if (shortages.isNotEmpty) ...[
+          const SizedBox(height: 4),
           Text(
-            'Craft weapon R1 first for this class/role.',
-            style: GameTheme.body(size: 13, color: GameTheme.bloodLit),
+            'Next farm: ${ApexCraft.materialsById[shortages.first.key]?.name ?? shortages.first.key}'
+            ' → ${ApexCraft.materialsById[shortages.first.key]?.bossSources ?? 'boss drop'}',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         ],
-        const SizedBox(height: 8),
-        KenneyButton(
+        const SizedBox(height: 6),
+        for (final e in recipe.costs.entries)
+          _matProgressRow(
+            state,
+            e.key,
+            e.value,
+            selected: e.key == targetMatId,
+            onTap: () {
+              director.setApexTargetMat(e.key);
+              setState(() {});
+            },
+          ),
+        if (weaponGate) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Craft weapon R1 first for this class/role.',
+            style: GameTheme.body(size: 12, color: GameTheme.bloodLit),
+          ),
+        ],
+        const SizedBox(height: 6),
+        GameButton(
           label: existingItem == null
               ? 'CRAFT R1'
               : 'OWNED R${existingItem.apexRank}',
@@ -325,47 +217,465 @@ class _ApexCraftPanelState extends State<ApexCraftPanel> {
               : null,
         ),
         if (existingItem != null) ...[
-          const SizedBox(height: 6),
-          KenneyButton(
+          const SizedBox(height: 4),
+          GameButton(
             label: existingItem.apexRank >= ApexCraft.maxRank
                 ? 'MAX RANK'
                 : 'UPGRADE → R${existingItem.apexRank + 1}',
+            style: GameButtonStyle.grey,
             onPressed: canUpgrade
                 ? () {
-                    director.upgradeApex(existingItem.id);
+                    director.upgradeApex(existingItem!.id);
                     setState(() {});
                   }
                 : null,
           ),
-          if (state.apexVault.any((i) => i.id == existingItem.id)) ...[
-            const SizedBox(height: 6),
-            KenneyButton(
-              label: 'EQUIP FROM VAULT',
-              onPressed: () {
-                director.equipFromApexVault(existingItem.id);
-                setState(() {});
-              },
-            ),
-          ],
         ],
-        const SizedBox(height: 12),
-        Text(
-          'VAULT (${state.apexVault.length})',
-          style: GameTheme.pixel(size: 7),
-        ),
-        const SizedBox(height: 4),
-        if (state.apexVault.isEmpty)
+        const SizedBox(height: 10),
+        MenuChrome.sectionLabelScoped('FARM TARGET'),
+        if (targetDef == null)
           Text(
-            'Empty — craft to fill.',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            'Tap a recipe mat above to lock a farm target.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           )
         else
-          for (final item in state.apexVault)
-            Text(
-              '${item.name}  R${item.apexRank}',
-              style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: MenuChrome.cardBox(selected: true),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  manualTarget
+                      ? 'Locked: ${targetDef.name}'
+                      : 'Chasing: ${targetDef.name}',
+                  style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+                ),
+                Text(
+                  targetDef.bossSources,
+                  style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                ),
+                const SizedBox(height: 4),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+                  child: LinearProgressIndicator(
+                    value: targetRequired > 0
+                        ? (targetProgress / targetRequired).clamp(0.0, 1.0)
+                        : 0,
+                    minHeight: 6,
+                    backgroundColor: GameTheme.panelInset,
+                    color: GameTheme.mossLit,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$targetProgress / $targetRequired · '
+                  '${bossesLeft <= 0 ? 'READY on next boss' : '~$bossesLeft boss${bossesLeft == 1 ? '' : 'es'}'}',
+                  style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+                ),
+                if (manualTarget) ...[
+                  const SizedBox(height: 4),
+                  GameButton(
+                    label: 'Use auto target',
+                    style: GameButtonStyle.grey,
+                    onPressed: () {
+                      director.clearApexTargetMatOverride();
+                      setState(() {});
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+        const SizedBox(height: 8),
+        _materialsBag(state),
+        const SizedBox(height: 4),
+        _changeGoalSection(roles),
+        const SizedBox(height: 10),
+        MenuChrome.sectionLabelScoped(
+          'VAULT (${state.apexVault.length})',
+        ),
+        if (state.apexVault.isNotEmpty) ...[
+          GameButton(
+            label: 'AUTO EQUIP ALL',
+            style: GameButtonStyle.grey,
+            onPressed: () {
+              director.autoEquipAllApex();
+              setState(() {});
+            },
+          ),
+          const SizedBox(height: 6),
+          for (final item in state.apexVault) _vaultCard(state, item),
+        ] else
+          Text(
+            'Empty — craft to fill. Auto-equip runs after craft when a hero matches.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        if (GameLogic.endgameUnlocked(state)) ...[
+          const SizedBox(height: 12),
+          Builder(
+            builder: (_) {
+              final month = GameLogic.isoMonthKey(DateTime.now().toUtc());
+              final clearedThisMonth =
+                  state.metaDepth.apexTrialMonthKey == month &&
+                  state.metaDepth.apexTrialCleared;
+              return GameButton(
+                label: clearedThisMonth
+                    ? 'CRAFT TRIAL · cleared this month'
+                    : 'START CRAFT TRIAL (craft gear only)',
+                style: GameButtonStyle.grey,
+                onPressed: clearedThisMonth || state.inDungeon
+                    ? null
+                    : director.startApexTrial,
+              );
+            },
+          ),
+        ],
+      ],
+    );
+  }
+
+  List<Widget> _partyGoalCards(GameState state) {
+    final cards = <Widget>[];
+    for (var i = 0; i < state.heroes.length; i++) {
+      final h = state.heroes[i];
+      final classId = h.spec.classId;
+      final role = h.spec.roleTag;
+      if (!ApexCraft.isValidPair(classId, role)) continue;
+      final slot = ApexForge.nextSlotForPair(state, classId, role) ??
+          EquipmentSlot.weapon;
+      final shortages = GameLogic.apexSortedMatShortages(
+        state,
+        classId: classId,
+        role: role,
+        slot: slot,
+      );
+      final have = shortages.isEmpty;
+      final selected =
+          _apexClass == classId && _apexRole == role && _apexSlot == slot;
+      cards.add(
+        Container(
+          margin: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: MenuChrome.listCard(selected: selected),
+          child: InkWell(
+            onTap: () => _setCraftGoal(classId, role, slot),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${h.roleLabel} · ${_slotLabel(slot, classId, role)}',
+                        style: GameTheme.body(
+                          size: 14,
+                          color:
+                              selected ? GameTheme.torchHot : GameTheme.parchment,
+                        ),
+                      ),
+                      Text(
+                        have
+                            ? 'Ready to craft'
+                            : '${shortages.length} mat type${shortages.length == 1 ? '' : 's'} short',
+                        style: GameTheme.body(
+                          size: 12,
+                          color: have
+                              ? GameTheme.mossLit
+                              : GameTheme.parchmentDim,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (selected)
+                  Text(
+                    'NOW',
+                    style: GameTheme.pixel(
+                      size: 9,
+                      color: GameTheme.torchHot,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    if (cards.isEmpty) {
+      return [
+        Text(
+          'No active heroes for craft goals.',
+          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        ),
+      ];
+    }
+    return cards;
+  }
+
+  Widget _materialsBag(GameState state) {
+    final owned = ApexCraft.materials
+        .where((m) => (state.craftMaterials[m.id] ?? 0) > 0)
+        .toList();
+    final top = owned.isEmpty
+        ? null
+        : owned.reduce(
+            (a, b) => (state.craftMaterials[a.id] ?? 0) >=
+                    (state.craftMaterials[b.id] ?? 0)
+                ? a
+                : b,
+          );
+    final subtitle = owned.isEmpty
+        ? 'Empty — clear bosses in PUSH'
+        : '${owned.length} type${owned.length == 1 ? '' : 's'}'
+            '${top == null ? '' : ' · ${top.name} ×${state.craftMaterials[top.id] ?? 0}'}';
+
+    return MenuChrome.fold(
+      title: 'MATERIALS (${owned.length})',
+      subtitle: subtitle,
+      children: [
+        if (owned.isEmpty)
+          Text(
+            'No materials yet — clear bosses in PUSH.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          )
+        else
+          for (final m in owned)
+            Container(
+              margin: const EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: MenuChrome.cardBox(),
+              child: Row(
+                children: [
+                  GameIcon.asset(_matIcon(m.family), size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      m.name,
+                      style: GameTheme.body(
+                        size: 13,
+                        color: GameTheme.parchment,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '×${state.craftMaterials[m.id] ?? 0}',
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.torchHot,
+                    ),
+                  ),
+                ],
+              ),
             ),
       ],
     );
+  }
+
+  Widget _changeGoalSection(List<SpecRoleTag> roles) {
+    return MenuChrome.fold(
+      title: 'CHANGE GOAL',
+      subtitle:
+          '${HeroSpecs.classLabel(_apexClass)} · ${_roleLabel(_apexRole)} · '
+          '${_slotLabel(_apexSlot, _apexClass, _apexRole)}',
+      children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final c in HeroClassId.values)
+                  MenuChrome.chip(
+                    label: HeroSpecs.classLabel(c),
+                    selected: _apexClass == c,
+                    onTap: () {
+                      _setCraftGoal(
+                        c,
+                        ApexCraft.validRolesFor(c).first,
+                        EquipmentSlot.weapon,
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final r in roles)
+                  MenuChrome.chip(
+                    label: _roleLabel(r),
+                    selected: _apexRole == r,
+                    onTap: () {
+                      final slots = ApexCraft.craftSlotsFor(_apexClass, r);
+                      final slot = slots.contains(_apexSlot)
+                          ? _apexSlot
+                          : EquipmentSlot.weapon;
+                      _setCraftGoal(_apexClass, r, slot);
+                    },
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final s in ApexCraft.craftSlotsFor(_apexClass, _apexRole))
+                  MenuChrome.chip(
+                    label: _slotLabel(s, _apexClass, _apexRole),
+                    selected: _apexSlot == s,
+                    onTap: () => _setCraftGoal(_apexClass, _apexRole, s),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _matProgressRow(
+    GameState state,
+    String matId,
+    int need, {
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final have = state.craftMaterials[matId] ?? 0;
+    final def = ApexCraft.materialsById[matId];
+    final family = def?.family ?? CraftMatFamily.shard;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: MenuChrome.listCard(selected: selected),
+          child: Row(
+            children: [
+              GameIcon.asset(_matIcon(family), size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${def?.name ?? matId}  $have/$need',
+                      style: GameTheme.body(
+                        size: 13,
+                        color:
+                            have >= need ? GameTheme.clear : GameTheme.bloodLit,
+                      ),
+                    ),
+                    if (have < need)
+                      Text(
+                        def?.bossSources ?? 'boss drop',
+                        style: GameTheme.body(
+                          size: 11,
+                          color: GameTheme.parchmentDim,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _vaultCard(GameState state, EquipmentItem item) {
+    final inVault = state.apexVault.any((g) => g.id == item.id);
+    String? wornBy;
+    for (final h in state.heroes) {
+      for (final e in h.equipped.entries) {
+        if (e.value.id == item.id) {
+          wornBy = h.roleLabel;
+          break;
+        }
+      }
+      if (wornBy != null) break;
+    }
+    final status = wornBy != null
+        ? 'Equipped · $wornBy'
+        : (inVault ? 'In vault' : 'Equipped');
+    final canUpgrade = GameLogic.canUpgradeApex(state, item.id);
+    final bestHero = GameLogic.apexBestHeroIndexForItem(state, item);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.all(8),
+      decoration: MenuChrome.cardBox(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            '${item.name}  R${item.apexRank}',
+            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+          ),
+          Text(
+            status,
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          if (inVault) ...[
+            const SizedBox(height: 4),
+            GameButton(
+              label: bestHero != null
+                  ? 'Equip on ${state.heroes[bestHero].roleLabel}'
+                  : 'Equip best hero',
+              onPressed: bestHero != null
+                  ? () {
+                      director.equipFromApexVault(
+                        item.id,
+                        heroIndex: bestHero,
+                      );
+                      setState(() {});
+                    }
+                  : null,
+            ),
+            if (canUpgrade) ...[
+              const SizedBox(height: 4),
+              GameButton(
+                label: 'Upgrade → R${item.apexRank + 1}',
+                style: GameButtonStyle.grey,
+                onPressed: () {
+                  director.upgradeApex(item.id);
+                  setState(() {});
+                },
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  static String _roleLabel(SpecRoleTag r) => switch (r) {
+    SpecRoleTag.tank => 'Tank',
+    SpecRoleTag.healer => 'Healer',
+    SpecRoleTag.meleeDps => 'Melee DPS',
+    SpecRoleTag.rangedDps => 'Ranged DPS',
+    SpecRoleTag.caster => 'Caster',
+  };
+
+  String _slotLabel(EquipmentSlot s, HeroClassId classId, SpecRoleTag role) {
+    if (s == EquipmentSlot.offHand) {
+      return switch (ApexCraft.apexOffHandKind(classId, role)) {
+        OffHandKind.shield => 'SHIELD',
+        OffHandKind.frill => 'TOME',
+        OffHandKind.weapon => 'OFFHAND',
+        null => 'OFFHAND',
+      };
+    }
+    return CharacterEquipPanel.slotLabels[s] ?? s.name;
   }
 }

@@ -1,3 +1,6 @@
+@Tags(['sim'])
+library;
+
 import 'package:flutter_test/flutter_test.dart';
 
 import '../tool/sim_class_balance.dart';
@@ -8,8 +11,10 @@ void main() {
     final report = runClassBalanceSim(const [
       '--trials=12',
       '--band=mid',
+      '--mode=live',
     ]);
     expect(report, contains('mid'));
+    expect(report, contains('mode: live'));
     expect(report, contains('DPS'));
   }, timeout: const Timeout(Duration(minutes: 60)));
 }

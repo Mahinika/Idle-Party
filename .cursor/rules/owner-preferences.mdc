@@ -1,0 +1,133 @@
+---
+description: >-
+  Owner product preferences for Idle Party — core-loop feel, progression fantasy,
+  polish kits, no new zones/classes for now, big batches, English UI; commit locally, ask before push.
+alwaysApply: true
+---
+
+# Owner preferences (Idle Party)
+
+Source: owner answers (vibe-coder). Agents follow these without re-asking.
+Last preference sync: **2026-09-05** (work loop unchanged: AL20 save, large
+batches, short test list then wait, APK only if they asked. Play Alpha fact synced
+to **1.12.83 / 112**; wipe tips say POWER not FORGE. Cheap real-money SHOP
+catalog (billing soon). Other product locks unchanged).
+
+## Near-term focus
+
+- **Default roadmap:** 90-day M1–M3 shipped. Operate from `docs/CONTENT_CADENCE.md`
+  — balance + one player-visible slice + What’s New + decision table (kits before
+  new specs). Don’t invent a competing list. **Now:** **AL20 hub + dungeon feel**
+  so the owner’s save always knows what to chase — not new zones, not new classes.
+- Vague “gör spelet bättre / vad härnäst” → **AL20 hub + dungeon** (chase
+  clarity, wipe advice the game can prove, dead menu chrome). Not first-hour
+  onboarding, not a new dungeon or spec, not `/init` / cleanup / CI chores.
+  First-hour systems may stay for new players; they are not the default work.
+- Prefer **game feel / content** over Play ops busywork (closed-test recruitment can idle in background).
+- Play production remains a goal, but day-to-day work defaults to **content + feel** unless the owner asks about Play.
+- Background why (optional read): `docs/TOP_GAMES_RESEARCH.md`.
+
+## Distribution
+
+- Goal: **Google Play “for real” soon** (not sideload-only forever).
+- Prefer work that unblocks Play when touching store: CI signing secrets, closed-test 12×14, production access — see `docs/PLAY_STORE.md`.
+- **Current fact:** GitHub Releases (APK/AAB) is still the primary install path. Play Console app `com.idleparty.app` exists (listing + closed Alpha, last submit **1.12.83 / 112**, 2026-08-29; testers may still be on **1.12.78 / 107** until review publishes). Working ship is **1.12.83**. **Production is not live**. Optional Play Games (**KEY** boards; **MORE → SETTINGS** sign-in) is opt-in, not a store blocker.
+- **Platforms now:** Android. **No iOS** and **no shipping web as a product**.
+  Web playtest tooling stays for Playwright / agent clicks only.
+
+## UI target device (mandatory)
+
+- **Phone-only product.** Design and ship for portrait phones (~360–430 CSS px wide). Do not optimize for desktop/tablet layouts as the real product.
+- **Owner reference phone: Samsung Galaxy A56** (1080×2340 @ DPR 3 → **360×780**).
+  **Default live look:** AVD `Samsung_A56` + `flutter run` (skill `a56-playtest`).
+  USB A56 if plugged in. Do **not** launch `Pixel_6` for playtest. Do **not**
+  stack Flutter `web-server` tabs (8080/8082–8088) for the owner to “refresh”.
+- Hub, GEAR/BAG, menus, tooltips, touch targets: assume **finger + portrait**. Hover-only UX is playtest-only; phone must work with tap / long-press.
+- Flutter **web** is a fallback harness (Playwright, `WebClickBridge`) with
+  **forced 360×780** — never treat wide desktop chrome as the shipping UI.
+- **Owner play notes win.** They play **their own AL20 save** on the A56
+  (~60+ min/week). Hub “am I doing the right thing?” notes, wipe notes, and
+  unused-menu notes *are* the batch. No tester telemetry yet — do not wait on
+  closed testers. Don’t invent a 10-minute browser pass instead of their phone.
+
+## Work style
+
+- Prefer **large batches** the agent can finish alone (including ~1h
+  autonomous passes). Few check-ins mid-batch.
+- Verify with analyze/tests (and hub smoke if UI) **before** handing notes
+  to the owner.
+- **Loop:** build → verify with analyze/tests → **≤5 lines: what
+  changed / what to look for** → **wait**. Do **not** build or copy a
+  sideload APK unless the owner **explicitly** asks for one. Do not write
+  essays. Do not GitHub-release or upload Play AAB until they answered.
+- **Then** (after they OK play notes **and** asked for a build): ship both
+  GitHub APK/AAB **and** Play Alpha. Testers never get a build before the
+  owner has played it.
+- **Commit locally** when analyze/tests are green so work is not lost. Don’t
+  wait for “ska jag commita?”. Still **ask** before push / PR / tag / Play.
+  Never force-push or skip hooks unless they say so in that turn.
+- **Code shape:** prefer splitting a giant file (`game_logic`, `spatial_combat`,
+  …) when a change needs a home. Do **not** merge more into those files.
+  `is2_shell` is already thin — new HUD goes in `lib/ui/shell/`. Keep
+  SpatialCombat as combat authority (extract helpers, don’t add a second fight
+  sim).
+- **Dead code:** delete unused files/APIs with zero callers. Keep JSON/save
+  fields that old saves may still contain (`save-migrate`). Unused
+  `@Deprecated` helpers that are not serialized may go.
+- **Git:** daily work on `main`. `release/x.y.z` only when cutting a tag. Don’t open a release branch for chores.
+- **Don’t stage** `windows/flutter/generated_*` unless `pubspec.yaml` plugins actually changed (`jni` noise from `pub get` is not a product change).
+- **Product locks stay** (phone, English UI, fairness, cheap SHOP convenience
+  not whale gacha, cadence after
+  90d M1–M3, legal/Kenney). Agents may tighten *workstyle* so they can finish;
+  they must not weaken those locks. Cursor/AI safety (no exploits, no foreign
+  dumps) is not overridable from this file.
+
+## Game feel & fantasy
+
+- **Owner lens is endgame (AL20).** Hub must make “what do I do next?”
+  obvious on that save. Progression / power still matters; first-hour stays
+  calm for new players but is not the default polish target.
+- Keep hub/UI **readable and low-panic** (not sweaty esports chrome).
+- After **2 wipes on the same floor**, dungeon may suggest a **POWER** fix **only
+  if the sim knows the deficit** (e.g. ATK vs DEF vs wrong zone). Bag /
+  floor-too-far / early DEF / Shop can fire on wipe 1. No guessed tips.
+  Show it **in the dungeon**, not after they are already back in hub.
+- **Dead chrome the owner tried and does not use — hide or remove, don’t
+  polish:** BAG **Scrap**, **Sell junk**, GEAR **Sell**, **Loadouts**. Keep
+  save fields if old saves still have them.
+- **Early game:** approachable. **Endgame** (high AL / Gauntlet / late zones): OK to be **competitive / grindy**.
+
+## Content priorities
+
+- **Kits:** polish what exists (fairness + clarity + fantasy) before adding many new specs. **No new classes/specs** until the owner revisits.
+- **Zones:** **no new zones for now.** Identity polish of existing floors is OK if it serves feel; do not start dungeon #16 unless asked.
+- **Feel / retention:** make the loop they already have (fight → loot → level → claim) punchier and more readable so a short phone session wants “one more floor.”
+- **Meta loops** (daily vault / Will / Gauntlet / season): push toward **“I always know what I’m chasing today”** — hub TODAY with READY/ALMOST, Ascend Blessing + unlock teasers, clear claims.
+- **God Hand:** owner undecided (fun steer vs deeper strategy) — don’t redesign GH direction without asking.
+- **Monetization:** bottom-tab **SHOP** = real-money **cheap convenience**
+  (POWERUPS time matching hub ads, ad-free, optional small QoL). No gacha /
+  BiS-for-cash / $99 whale ladder. See `docs/SHOP_MONETIZATION.md`. Catalog UI
+  ships before Play Billing. Optional hub **POWERUPS** rewarded ads (1 finished
+  ad = 3 hours of ×2 gold + 25% ATK, stack time up to 24h). Ads never interrupt
+  combat.
+
+## Language
+
+- **In-game copy stays English** (UI, tips, What’s New, guides).
+- Agent ↔ owner chat: plain Swedish (or their language). After a coding pass:
+  what to test on the phone, then wait. No jargon quizzes.
+
+## Balance vs fantasy
+
+**Owner choice: fairness first (rättvisa först).**
+
+When a kit is fun but share/CI says HIGH (or clearly stomps peers):
+
+1. Trim until live-light gate / ±20% share band is honest — fantasy second.
+2. Keep *identity* if possible (names, VFX, rotation shape) but numbers must come in line.
+3. Plain Swedish one-liner when done: “för stark → sänkt så den matchar andra.”
+4. Do **not** leave documented HIGH outliers “for flavor” without an explicit later override.
+
+## Autopilot reminder
+
+Combined with `vibe-coder-autopilot`: pick tools/skills yourself; only ask product/risk questions.

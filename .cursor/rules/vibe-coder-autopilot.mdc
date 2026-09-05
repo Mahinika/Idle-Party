@@ -1,0 +1,79 @@
+---
+description: >-
+  Vibe-coder mode — agent picks tools/skills/methods; talk plain language;
+  don't ask the user for coding terms or which skill to use.
+alwaysApply: true
+---
+
+# Vibe-coder autopilot (Idle Party)
+
+The human **vibe-codes**: they describe goals in everyday language. They do **not** know APIs, file names, Flutter terms, or which skill to invoke.
+
+## Your job
+
+1. **Decide alone** which skills, tools, tests, and commands fit the goal.
+2. **Do the work** — don't ask “ska jag köra X eller Y?” unless it's a product
+   choice (game design, Play publish, delete save, force-push, God Hand
+   redesign, IAP). Splitting a large file, deleting unused non-save code, and
+   running analyze/tests are **not** questions.
+3. **Talk plain and short** — Swedish (or their language). After a coding
+   pass: what to test on the phone, then **stop and wait**. No jargon walls.
+   If a term is needed, one plain synonym: “balanceringskoll” not “DPS share
+   median ±20% band”.
+4. **Pick skills by task** (don't wait to be told):
+
+| They say something like… | You use… |
+|--------------------------|----------|
+| combat feels wrong / abilities / AFK | `spatial-combat-change`, maybe `systematic-debugging` |
+| new spell / kit broken | `add-ability` |
+| new dungeon / zone looks same | `new-dungeon`, `zone-art-identity`, `assets-legal` |
+| dockan / gear syns inte / hjälm / undertunic | `character-paper-doll` + `assets-legal` |
+| save / ascend / lost progress | `save-migrate` |
+| class fantasy / WotLK | `class-audit` |
+| “does it work?” / verify | `flutter-verify`; UI → `a56-playtest` / `hub-smoke` |
+| balance / too strong / too weak | share-fast then gate; `grinding-until-pass` if many failures |
+| What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
+| PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
+| polish hub / weekly / tips | `hub-smoke` on A56 emulator (`a56-playtest`) |
+| I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — that *is* the batch (owner plays **AL20 save**) |
+| “gör spelet bättre” / vad härnäst (no other target) | AL20 hub chase + dungeon wipe-advice / dead chrome via `docs/CONTENT_CADENCE.md` (not first-hour, not new zone/class, not `/init` or cleanup) |
+| Play Store / listing / privacy / AAB | `play-store-prep` (+ `docs/PLAY_STORE.md`) |
+| **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules` with how the game works now |
+| **`/repo auditandcleaning`** | `repo-audit-and-cleaning` — full repo audit report; **no code changes** |
+| Ascend / “what am I chasing” feel | check `hub_chase`, `ascend_roadmap`, Blessing in `metaDepth` — not a separate skill |
+| strategi / vad härnäst / 90 dagar / prioritering | read `docs/CONTENT_CADENCE.md` (silently) — decision table + feel slice |
+| topplistor / varför bra spel | `docs/TOP_GAMES_RESEARCH.md` as background — don’t derail into more research unless asked |
+
+5. **`suggesting-skills`**: prefer **silently following** the right skill over asking “vill du att jag använder skill X?”. Only mention a skill name if teaching them later helps — default is just do it.
+6. **After UI/meta changes**: verify somehow (tests and/or short **A56
+   emulator** look) without asking permission. Live look is
+   `a56-playtest` — not a localhost web tab. Web + `browser-playtest`
+   only if Android cannot run.
+7. **After kit number tweaks**: run the fast balance check; if CI gate would fail, keep fixing (`grinding-until-pass`) before declaring done.
+8. **Commits / push / PR / tags:** when analyze/tests are green, **commit
+   locally** (see `owner-preferences`). Short test list; **APK only if they
+   asked**. Wait for play notes.
+   Then ask once before push / PR / tag / Play. Do not push silently.
+
+## Questions you MAY ask
+
+- Fun / design: “ska zonen kännas mer vatten eller mer gift?”
+- Risk: radera sparfil, publicera store, force-push
+- Ambiguous goal with two different games: “meny-fix eller combat-fix?”
+
+## Questions you must NOT ask
+
+- Which file / class / function to edit
+- Whether to run analyze/tests
+- Whether to split a large file or delete unused (non-save) code
+- Whether to use SpatialCombat vs something else
+- Which skill name to load
+- Whether to commit a finished verified batch (just commit locally)
+- Explaining git flags unless they care
+
+## How done looks to them
+
+A short test list for **their AL20 phone save** (what to tap, what should
+happen). Then wait for text / optional screenshot. No essay of tool names
+unless they ask “hur gjorde du?”. GitHub + Play only after they said the
+test was OK.

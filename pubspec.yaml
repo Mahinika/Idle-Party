@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.8.0+10
+version: 1.12.96+125
 
 environment:
   sdk: ^3.11.0
@@ -36,6 +36,12 @@ dependencies:
   cupertino_icons: ^1.0.8
   google_fonts: ^6.3.0
   shared_preferences: ^2.3.3
+  games_services: ^5.3.0
+  url_launcher: ^6.3.1
+  in_app_update: ^5.0.0
+  google_mobile_ads: ^6.0.0
+  video_player: ^2.10.0
+  flutter_soloud: ^4.1.7
 
 dev_dependencies:
   flutter_test:
@@ -61,19 +67,72 @@ flutter:
 
   assets:
     - assets/kenney/tiny_dungeon/
-    - assets/kenney/extras/
     - assets/kenney/ui_adventure/
     - assets/kenney/ui_bars/
-    - assets/kenney/icons/
-    - assets/kenney/runes/
     - assets/kenney/roguelike_char/
+    - assets/kenney/audio/sfx/
+    - assets/custom/audio/ambience/
     - assets/custom/pets/
     - assets/custom/icons/
     - assets/custom/portraits/
     - assets/custom/enemies/
     - assets/custom/heroes/
+    - assets/custom/char/warrior/
+    - assets/custom/char/warrior/gear/
+    - assets/custom/char/healer/
+    - assets/custom/char/healer/gear/
+    - assets/custom/char/mage/
+    - assets/custom/char/mage/gear/
+    - assets/custom/char/rogue/
+    - assets/custom/char/rogue/gear/
+    - assets/custom/char/gear/
     - assets/custom/ui/
     - assets/custom/ui/backdrops/
+    - assets/custom/dungeon/sandy/tiles/
+    - assets/custom/dungeon/sandy/props/
+    - assets/custom/dungeon/sandy/hub_icon.png
+    - assets/custom/dungeon/goblin/tiles/
+    - assets/custom/dungeon/goblin/props/
+    - assets/custom/dungeon/goblin/hub_icon.png
+    - assets/custom/dungeon/king/tiles/
+    - assets/custom/dungeon/king/props/
+    - assets/custom/dungeon/king/hub_icon.png
+    - assets/custom/dungeon/underworld/tiles/
+    - assets/custom/dungeon/underworld/props/
+    - assets/custom/dungeon/underworld/hub_icon.png
+    - assets/custom/dungeon/dead/tiles/
+    - assets/custom/dungeon/dead/props/
+    - assets/custom/dungeon/dead/hub_icon.png
+    - assets/custom/dungeon/hell/tiles/
+    - assets/custom/dungeon/hell/props/
+    - assets/custom/dungeon/hell/hub_icon.png
+    - assets/custom/dungeon/crystal/tiles/
+    - assets/custom/dungeon/crystal/props/
+    - assets/custom/dungeon/crystal/hub_icon.png
+    - assets/custom/dungeon/tide/tiles/
+    - assets/custom/dungeon/tide/props/
+    - assets/custom/dungeon/tide/hub_icon.png
+    - assets/custom/dungeon/ember/tiles/
+    - assets/custom/dungeon/ember/props/
+    - assets/custom/dungeon/ember/hub_icon.png
+    - assets/custom/dungeon/grove/tiles/
+    - assets/custom/dungeon/grove/props/
+    - assets/custom/dungeon/grove/hub_icon.png
+    - assets/custom/dungeon/storm/tiles/
+    - assets/custom/dungeon/storm/props/
+    - assets/custom/dungeon/storm/hub_icon.png
+    - assets/custom/dungeon/rime/tiles/
+    - assets/custom/dungeon/rime/props/
+    - assets/custom/dungeon/rime/hub_icon.png
+    - assets/custom/dungeon/fen/tiles/
+    - assets/custom/dungeon/fen/props/
+    - assets/custom/dungeon/fen/hub_icon.png
+    - assets/custom/dungeon/brass/tiles/
+    - assets/custom/dungeon/brass/props/
+    - assets/custom/dungeon/brass/hub_icon.png
+    - assets/custom/dungeon/veil/tiles/
+    - assets/custom/dungeon/veil/props/
+    - assets/custom/dungeon/veil/hub_icon.png
     - assets/data/
 
   # An image asset can refer to one or more resolution-specific "variants", see

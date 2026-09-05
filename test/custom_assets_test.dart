@@ -3,8 +3,9 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/pet.dart';
-import 'package:idle_party/ui/custom_assets.dart';
-import 'package:idle_party/ui/kenney_assets.dart';
+import 'package:idle_party/spatial/tile_map.dart';
+import 'package:idle_party/assets/custom_assets.dart';
+import 'package:idle_party/assets/kenney_assets.dart';
 
 void main() {
   test('custom identity assets exist on disk', () {
@@ -67,11 +68,49 @@ void main() {
       CustomAssets.heroShaman,
       CustomAssets.heroWarlock,
       CustomAssets.heroDruid,
+      CustomAssets.heroShadow,
+      CustomAssets.heroFeral,
+      CustomAssets.heroGuardian,
+      CustomAssets.enemyTideBrute,
+      CustomAssets.enemyEmberElite,
+      CustomAssets.enemyStormWraith,
+      CustomAssets.enemyRimeBrute,
+      CustomAssets.enemyFenElite,
+      CustomAssets.enemyBrassElite,
+      CustomAssets.enemyVeilBrute,
+      CustomAssets.petCombatWaterElemental,
+      CustomAssets.petCombatGhoul,
+      CustomAssets.petCombatFelguard,
+      CustomAssets.petCombatHunterBeast,
+      CustomAssets.petCombatTotem,
+      CustomAssets.petCombatSpiritWolf,
+      'assets/custom/char/warrior/gear/helm_t0_idle.png',
+      'assets/custom/char/gear/sword_t0_idle.png',
     };
 
     for (final path in paths) {
       expect(File(path).existsSync(), isTrue, reason: 'missing $path');
     }
+  });
+
+  test('custom dungeon interior assets exist on disk', () {
+    for (final path in CustomAssets.customDungeonAssetPaths) {
+      expect(File(path).existsSync(), isTrue, reason: 'missing $path');
+    }
+    expect(CustomAssets.usesCustomDungeonArt('tide'), isTrue);
+    expect(CustomAssets.usesCustomDungeonArt('sandy'), isTrue);
+    expect(
+      CustomAssets.dungeonPropPath('tide', MapPropKind.water),
+      CustomAssets.tidePropWater,
+    );
+    expect(
+      KenneyAssets.propAsset(MapPropKind.water, dungeonId: 'tide'),
+      CustomAssets.tidePropWater,
+    );
+    expect(
+      KenneyAssets.propAsset(MapPropKind.water, dungeonId: 'sandy'),
+      isNot(CustomAssets.tidePropWater),
+    );
   });
 
   test('equipment and portraits resolve to custom assets', () {
@@ -94,13 +133,22 @@ void main() {
       CustomAssets.petForInstanceId('ember_pup_42'),
       CustomAssets.petEmberPup,
     );
-    expect(
-      CustomAssets.petForInstanceId('ash_fox_9'),
-      CustomAssets.enemySpider,
-    );
+    expect(CustomAssets.petForInstanceId('ash_fox_9'), CustomAssets.petAshFox);
     expect(
       CustomAssets.petForTemplateId('gold_grub'),
-      CustomAssets.enemyRat,
+      CustomAssets.petGoldGrub,
+    );
+    expect(
+      CustomAssets.petForCombatActorId('temppet_water_h1_0', 'Water Elemental'),
+      CustomAssets.petCombatWaterElemental,
+    );
+    expect(
+      CustomAssets.petForCombatActorId('classpet_h1', 'Felguard'),
+      CustomAssets.petCombatFelguard,
+    );
+    expect(
+      CustomAssets.petForInstanceId('classpet_hero1'),
+      isNot(CustomAssets.petEgg),
     );
   });
 

@@ -40,11 +40,44 @@ jobs:
             echo "No upload keystore secrets; Flutter will use debug signing."
             exit 0
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          # storeFile in KEY_PROPERTIES is typically ../upload-keystore.jks
+          # (relative to android/app/) → android/upload-keystore.jks
+          echo "$KEYSTORE_BASE64" | base64 -d > android/upload-keystore.jks
           printf '%s\n' "$KEY_PROPERTIES" > android/key.properties
+          test -f android/upload-keystore.jks
+          test -f android/key.properties
+
+      - name: Write AdMob ids (optional)
+        env:
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+        run: |
+          if [ -z "$ADMOB_APP_ID" ]; then
+            echo "No ADMOB_APP_ID secret; Android manifest keeps Google sample App ID (test ads)."
+            exit 0
+          fi
+          printf 'admobAppId=%s\n' "$ADMOB_APP_ID" > android/admob.properties
 
       - name: Build release APK
-        run: flutter build apk --release
+        env:
+          ADMOB_REWARDED_UNIT_ID: ${{ secrets.ADMOB_REWARDED_UNIT_ID }}
+        run: |
+          if [ -n "$ADMOB_REWARDED_UNIT_ID" ]; then
+            flutter build apk --release \
+              --dart-define=ADMOB_REWARDED_UNIT_ID="$ADMOB_REWARDED_UNIT_ID"
+          else
+            flutter build apk --release
+          fi
+
+      - name: Build release App Bundle
+        env:
+          ADMOB_REWARDED_UNIT_ID: ${{ secrets.ADMOB_REWARDED_UNIT_ID }}
+        run: |
+          if [ -n "$ADMOB_REWARDED_UNIT_ID" ]; then
+            flutter build appbundle --release \
+              --dart-define=ADMOB_REWARDED_UNIT_ID="$ADMOB_REWARDED_UNIT_ID"
+          else
+            flutter build appbundle --release
+          fi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -52,11 +85,21 @@ jobs:
           name: idle-party-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Attach APK to GitHub Release
+      - name: Upload AAB artifact
+        if: hashFiles('build/app/outputs/bundle/release/app-release.aab') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: idle-party-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+
+      - name: Attach APK and AAB to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+          fail_on_unmatched_files: false
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,28 @@
+{
+  "comment": "Equipment visualSetId catalog mirror (Dart EquipmentModelCatalog / resolver is authoritative). Includes extract tiers + authored shared models.",
+  "sets": [
+    "helm_t0", "helm_t1", "helm_t2", "helm_t3",
+    "chest_t0", "chest_t1", "chest_t2", "chest_t3",
+    "cloak_t0", "cloak_t1", "cloak_t2", "cloak_t3",
+    "legs_t0", "legs_t1", "legs_t2", "legs_t3",
+    "hands_t0", "hands_t1", "hands_t2", "hands_t3",
+    "shoulder_t0", "shoulder_t1", "shoulder_t2", "shoulder_t3",
+    "waist_t0", "waist_t1", "waist_t2", "waist_t3",
+    "shield_t0", "shield_t1", "shield_t2", "shield_t3",
+    "frill_t0", "frill_t1", "frill_t2", "frill_t3",
+    "sword_t0", "sword_t1", "sword_t2", "sword_t3",
+    "staff_t0", "staff_t1", "staff_t2", "staff_t3",
+    "dagger_t0", "dagger_t1", "dagger_t2", "dagger_t3",
+    "mace_t0", "mace_t1", "mace_t2", "mace_t3",
+    "axe_t0", "axe_t1", "axe_t2", "axe_t3",
+    "bow_t0", "bow_t1", "bow_t2", "bow_t3",
+    "sword_thunderfury", "sword_warglaive", "sword_runebound",
+    "staff_frostfire", "staff_nethercore",
+    "bow_eagle", "bow_windpierce",
+    "axe_goreblade", "axe_bloodhowl",
+    "mace_lightbringer", "mace_dawnbreak",
+    "dagger_shadowfang", "dagger_nightbite",
+    "shield_aegis", "shield_ironwall",
+    "frill_prism", "frill_soulcodex"
+  ]
+}

@@ -90,6 +90,7 @@ class EquipmentItem {
     this.defenseBonus = 0,
     this.vitalityBonus = 0,
     this.critChanceBonus = 0,
+    this.masteryBonus = 0,
     this.attackSpeedBonus = 0,
     this.moveSpeedBonus = 0,
     this.pattern = ProjectilePattern.single,
@@ -102,6 +103,7 @@ class EquipmentItem {
     this.handed,
     this.offHandKind,
     this.iconId,
+    this.visualSetId,
     this.affixPrefixId,
     this.affixSuffixId,
     this.setId,
@@ -135,6 +137,7 @@ class EquipmentItem {
   final int vitalityBonus;
 
   final int critChanceBonus;
+  final int masteryBonus;
   final int attackSpeedBonus;
   final int moveSpeedBonus;
 
@@ -154,6 +157,10 @@ class EquipmentItem {
 
   /// Optional Kenney icon key override.
   final String? iconId;
+
+  /// Optional layered visual set id (e.g. `sword_t1`, `helm_plate`).
+  /// When null, [EquipmentVisualResolver] derives from slot/type/rarity.
+  final String? visualSetId;
 
   /// Data-driven affix ids from `item_affixes.json` (null = none).
   final String? affixPrefixId;
@@ -189,6 +196,7 @@ class EquipmentItem {
       (attackBonus * 3) +
       mp5Bonus +
       critChanceBonus +
+      masteryBonus +
       attackSpeedBonus +
       moveSpeedBonus +
       effectValue;
@@ -203,13 +211,58 @@ class EquipmentItem {
   int get powerScore => statPowerScore + effectiveItemLevel;
 
   String get effectLabel => switch (effectId) {
-        GearEffectId.lifesteal => 'Lifesteal $effectValue%',
-        GearEffectId.pierce => 'Pierce',
-        GearEffectId.goldFind => 'Gold Find $effectValue%',
-        GearEffectId.crit => 'Crit +$effectValue%',
-        GearEffectId.haste => 'Haste +$effectValue%',
-        GearEffectId.none => '',
+    GearEffectId.lifesteal => 'Lifesteal $effectValue%',
+    GearEffectId.pierce => 'Pierce',
+    GearEffectId.goldFind => 'Gold Find $effectValue%',
+    GearEffectId.crit => 'Crit +$effectValue%',
+    GearEffectId.haste => 'Haste +$effectValue%',
+    GearEffectId.none => '',
+  };
+
+  /// Short in-fight pickup word (avoids stacked full item names).
+  String get combatPopLabel {
+    if (slot == EquipmentSlot.weapon) {
+      return switch (weaponType) {
+        WeaponType.axe => 'Axe',
+        WeaponType.sword => 'Sword',
+        WeaponType.mace => 'Mace',
+        WeaponType.dagger => 'Dagger',
+        WeaponType.fist => 'Fist',
+        WeaponType.staff => 'Staff',
+        WeaponType.polearm => 'Polearm',
+        WeaponType.bow => 'Bow',
+        WeaponType.crossbow => 'Crossbow',
+        WeaponType.gun => 'Gun',
+        WeaponType.thrown => 'Thrown',
+        WeaponType.wand => 'Wand',
+        null => 'Weapon',
       };
+    }
+    if (slot == EquipmentSlot.offHand) {
+      return switch (offHandKind ?? OffHandKind.shield) {
+        OffHandKind.shield => 'Shield',
+        OffHandKind.frill => 'Tome',
+        OffHandKind.weapon => 'Off-hand',
+      };
+    }
+    if (slot == EquipmentSlot.ranged) return 'Ranged';
+    return switch (slot) {
+      EquipmentSlot.head => 'Head',
+      EquipmentSlot.neck => 'Neck',
+      EquipmentSlot.shoulder => 'Shoulder',
+      EquipmentSlot.chest => 'Chest',
+      EquipmentSlot.waist => 'Belt',
+      EquipmentSlot.legs => 'Legs',
+      EquipmentSlot.boots => 'Boots',
+      EquipmentSlot.wrist => 'Wrist',
+      EquipmentSlot.hands => 'Hands',
+      EquipmentSlot.cloak => 'Cloak',
+      EquipmentSlot.ring || EquipmentSlot.ring2 => 'Ring',
+      EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'Trinket',
+      EquipmentSlot.consumable => 'Flask',
+      _ => 'Gear',
+    };
+  }
 
   String get typeLabel {
     if (slot == EquipmentSlot.offHand) {
@@ -239,9 +292,10 @@ class EquipmentItem {
     if (spiritBonus != 0) parts.add('+$spiritBonus Spi');
     if (spellPowerBonus != 0) parts.add('+$spellPowerBonus SP');
     if (resolvedArmor != 0) parts.add('+$resolvedArmor Armor');
-    if (attackBonus != 0) parts.add('+$attackBonus AP');
+    if (attackBonus != 0) parts.add('+$attackBonus ATK');
     if (mp5Bonus != 0) parts.add('+$mp5Bonus Mp5');
     if (critChanceBonus != 0) parts.add('+$critChanceBonus% CRIT');
+    if (masteryBonus != 0) parts.add('+$masteryBonus Mastery');
     if (attackSpeedBonus != 0) parts.add('+$attackSpeedBonus% ASPD');
     if (moveSpeedBonus != 0) parts.add('+$moveSpeedBonus% MOVE');
     if (effectLabel.isNotEmpty) parts.add(effectLabel);
@@ -266,6 +320,14 @@ class EquipmentItem {
       'dead' => 'Necropolis',
       'hell' => 'Infernal',
       'crystal' => 'Spire',
+      'tide' => 'Tidehold',
+      'ember' => 'Ashen',
+      'grove' => 'Hollow',
+      'storm' => 'Stormwake',
+      'rime' => 'Rimeglass',
+      'fen' => 'Blightfen',
+      'brass' => 'Brassvault',
+      'veil' => 'Mothveil',
       _ => parts.first,
     };
     final armor = parts.sublist(1).join(' ');
@@ -276,42 +338,44 @@ class EquipmentItem {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'name': name,
-        'slot': slot.name,
-        'rarity': rarity.name,
-        'strengthBonus': strengthBonus,
-        'agilityBonus': agilityBonus,
-        'staminaBonus': staminaBonus,
-        'intellectBonus': intellectBonus,
-        'spiritBonus': spiritBonus,
-        'spellPowerBonus': spellPowerBonus,
-        'armorBonus': armorBonus,
-        'mp5Bonus': mp5Bonus,
-        'attackBonus': attackBonus,
-        'defenseBonus': defenseBonus,
-        'vitalityBonus': vitalityBonus,
-        'critChanceBonus': critChanceBonus,
-        'attackSpeedBonus': attackSpeedBonus,
-        'moveSpeedBonus': moveSpeedBonus,
-        'pattern': pattern.name,
-        'effectId': effectId.name,
-        'effectValue': effectValue,
-        if (affinity != null) 'affinity': affinity,
-        'itemLevel': effectiveItemLevel,
-        if (armorType != null) 'armorType': armorType!.name,
-        if (weaponType != null) 'weaponType': weaponType!.name,
-        if (handed != null) 'handed': handed!.name,
-        if (offHandKind != null) 'offHandKind': offHandKind!.name,
-        if (iconId != null) 'iconId': iconId,
-        if (affixPrefixId != null) 'affixPrefixId': affixPrefixId,
-        if (affixSuffixId != null) 'affixSuffixId': affixSuffixId,
-        if (setId != null) 'setId': setId,
-        if (isApex) 'isApex': true,
-        if (apexClassId != null) 'apexClassId': apexClassId,
-        if (apexRoleTag != null) 'apexRoleTag': apexRoleTag,
-        if (apexRank != 0) 'apexRank': apexRank,
-      };
+    'id': id,
+    'name': name,
+    'slot': slot.name,
+    'rarity': rarity.name,
+    'strengthBonus': strengthBonus,
+    'agilityBonus': agilityBonus,
+    'staminaBonus': staminaBonus,
+    'intellectBonus': intellectBonus,
+    'spiritBonus': spiritBonus,
+    'spellPowerBonus': spellPowerBonus,
+    'armorBonus': armorBonus,
+    'mp5Bonus': mp5Bonus,
+    'attackBonus': attackBonus,
+    'defenseBonus': defenseBonus,
+    'vitalityBonus': vitalityBonus,
+    'critChanceBonus': critChanceBonus,
+    'masteryBonus': masteryBonus,
+    'attackSpeedBonus': attackSpeedBonus,
+    'moveSpeedBonus': moveSpeedBonus,
+    'pattern': pattern.name,
+    'effectId': effectId.name,
+    'effectValue': effectValue,
+    if (affinity != null) 'affinity': affinity,
+    'itemLevel': effectiveItemLevel,
+    if (armorType != null) 'armorType': armorType!.name,
+    if (weaponType != null) 'weaponType': weaponType!.name,
+    if (handed != null) 'handed': handed!.name,
+    if (offHandKind != null) 'offHandKind': offHandKind!.name,
+    if (iconId != null) 'iconId': iconId,
+    if (visualSetId != null) 'visualSetId': visualSetId,
+    if (affixPrefixId != null) 'affixPrefixId': affixPrefixId,
+    if (affixSuffixId != null) 'affixSuffixId': affixSuffixId,
+    if (setId != null) 'setId': setId,
+    if (isApex) 'isApex': true,
+    if (apexClassId != null) 'apexClassId': apexClassId,
+    if (apexRoleTag != null) 'apexRoleTag': apexRoleTag,
+    if (apexRank != 0) 'apexRank': apexRank,
+  };
 
   factory EquipmentItem.fromJson(Map<String, dynamic> json) {
     int asInt(dynamic v, [int fallback = 0]) {
@@ -341,7 +405,8 @@ class EquipmentItem {
     final vitality = asInt(json['vitalityBonus']);
 
     // Legacy-only piece: fold old flats into new fields.
-    final hasPrimaries = json.containsKey('strengthBonus') ||
+    final hasPrimaries =
+        json.containsKey('strengthBonus') ||
         json.containsKey('agilityBonus') ||
         json.containsKey('staminaBonus') ||
         json.containsKey('intellectBonus');
@@ -385,6 +450,7 @@ class EquipmentItem {
       defenseBonus: defense,
       vitalityBonus: vitality,
       critChanceBonus: asInt(json['critChanceBonus']),
+      masteryBonus: asInt(json['masteryBonus']),
       attackSpeedBonus: asInt(json['attackSpeedBonus']),
       moveSpeedBonus: asInt(json['moveSpeedBonus']),
       pattern: patternRaw == null
@@ -397,11 +463,13 @@ class EquipmentItem {
       affinity: json['affinity'] as String?,
       itemLevel: asInt(json['itemLevel']),
       armorType: armorRaw == null ? null : ArmorType.values.byName(armorRaw),
-      weaponType:
-          weaponRaw == null ? null : WeaponType.values.byName(weaponRaw),
+      weaponType: weaponRaw == null
+          ? null
+          : WeaponType.values.byName(weaponRaw),
       handed: handedRaw == null ? null : WeaponHanded.values.byName(handedRaw),
       offHandKind: offKind,
       iconId: json['iconId'] as String?,
+      visualSetId: json['visualSetId'] as String?,
       affixPrefixId: json['affixPrefixId'] as String?,
       affixSuffixId: json['affixSuffixId'] as String?,
       setId: json['setId'] as String?,
@@ -429,6 +497,7 @@ class EquipmentItem {
     int? defenseBonus,
     int? vitalityBonus,
     int? critChanceBonus,
+    int? masteryBonus,
     int? attackSpeedBonus,
     int? moveSpeedBonus,
     ProjectilePattern? pattern,
@@ -442,6 +511,8 @@ class EquipmentItem {
     WeaponHanded? handed,
     OffHandKind? offHandKind,
     String? iconId,
+    String? visualSetId,
+    bool clearVisualSetId = false,
     String? affixPrefixId,
     String? affixSuffixId,
     String? setId,
@@ -470,6 +541,7 @@ class EquipmentItem {
       defenseBonus: defenseBonus ?? this.defenseBonus,
       vitalityBonus: vitalityBonus ?? this.vitalityBonus,
       critChanceBonus: critChanceBonus ?? this.critChanceBonus,
+      masteryBonus: masteryBonus ?? this.masteryBonus,
       attackSpeedBonus: attackSpeedBonus ?? this.attackSpeedBonus,
       moveSpeedBonus: moveSpeedBonus ?? this.moveSpeedBonus,
       pattern: pattern ?? this.pattern,
@@ -482,14 +554,15 @@ class EquipmentItem {
       handed: handed ?? this.handed,
       offHandKind: offHandKind ?? this.offHandKind,
       iconId: iconId ?? this.iconId,
+      visualSetId: clearVisualSetId
+          ? null
+          : (visualSetId ?? this.visualSetId),
       affixPrefixId: affixPrefixId ?? this.affixPrefixId,
       affixSuffixId: affixSuffixId ?? this.affixSuffixId,
       setId: clearSetId ? null : (setId ?? this.setId),
       isApex: isApex ?? this.isApex,
-      apexClassId:
-          clearApexClassId ? null : (apexClassId ?? this.apexClassId),
-      apexRoleTag:
-          clearApexRoleTag ? null : (apexRoleTag ?? this.apexRoleTag),
+      apexClassId: clearApexClassId ? null : (apexClassId ?? this.apexClassId),
+      apexRoleTag: clearApexRoleTag ? null : (apexRoleTag ?? this.apexRoleTag),
       apexRank: apexRank ?? this.apexRank,
     );
   }
@@ -515,13 +588,13 @@ class LootDrop {
   bool get isEquipment => equipment != null;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'name': name,
-        'amount': amount,
-        'rarity': rarity.name,
-        if (equipment != null) 'equipment': equipment!.toJson(),
-        'outcome': outcome.name,
-        'essenceGained': essenceGained,
-      };
+    'name': name,
+    'amount': amount,
+    'rarity': rarity.name,
+    if (equipment != null) 'equipment': equipment!.toJson(),
+    'outcome': outcome.name,
+    'essenceGained': essenceGained,
+  };
 
   factory LootDrop.fromJson(Map<String, dynamic> json) {
     int asInt(dynamic v, [int fallback = 0]) {

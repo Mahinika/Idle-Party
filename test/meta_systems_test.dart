@@ -5,6 +5,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_def.dart';
+import 'package:idle_party/models/dungeon_zoom.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/pet.dart';
@@ -45,6 +46,39 @@ void main() {
       expect(result.dungeonId, MetaSystems.dailyDungeonId(now));
       expect(result.dailyClaimed, isFalse);
       expect(result.lastDailyDate, MetaSystems.dailyDateKey(now));
+      expect(MetaSystems.isActiveDailyRun(result, now: now), isTrue);
+    });
+
+    test('daily floor clear claims reward and returns to hub', () {
+      final now = DateTime.utc(2026, 8, 9, 12);
+      var state = GameLogic.createInitialState(now: now);
+      state = GameLogic.enterDaily(state, now: now);
+      expect(state.inDungeon, isTrue);
+      expect(MetaSystems.isActiveDailyRun(state, now: now), isTrue);
+
+      // Simulate a cleared wave: no living foes, then complete room.
+      state = state.copyWith(enemies: const []);
+      final cleared = GameLogic.completeCurrentRoom(state, goldGain: 0);
+      expect(cleared.dailyClaimed, isTrue);
+      expect(cleared.inDungeon, isFalse);
+      expect(MetaSystems.isActiveDailyRun(cleared, now: now), isFalse);
+    });
+
+    test('daily wipe restart keeps seed so claim still works', () {
+      final now = DateTime.utc(2026, 8, 9, 12);
+      var state = GameLogic.enterDaily(
+        GameLogic.createInitialState(now: now),
+        now: now,
+      );
+      final seed = state.layoutSeed;
+      state = GameLogic.restartFloor(state);
+      expect(state.layoutSeed, seed);
+      expect(MetaSystems.isActiveDailyRun(state, now: now), isTrue);
+
+      state = state.copyWith(enemies: const []);
+      final cleared = GameLogic.completeCurrentRoom(state, goldGain: 0);
+      expect(cleared.dailyClaimed, isTrue);
+      expect(cleared.inDungeon, isFalse);
     });
   });
 
@@ -188,11 +222,95 @@ void main() {
     });
   });
 
-  group('7th dungeon', () {
-    test('Crystal Spire is registered in the dungeon catalog', () {
+  group('tide and ember dungeons', () {
+    test('Sunken Tidehold and Ashen Vault are registered after Crystal Spire', () {
       final crystal = DungeonCatalog.byId('crystal');
-      expect(crystal.bossName, 'Crystal Warden');
-      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(7));
+      final tide = DungeonCatalog.byId('tide');
+      final ember = DungeonCatalog.byId('ember');
+      final grove = DungeonCatalog.byId('grove');
+      final storm = DungeonCatalog.byId('storm');
+      final rime = DungeonCatalog.byId('rime');
+      expect(crystal.number, 6);
+      expect(tide.number, 7);
+      expect(tide.bossName, 'Tide Leviathan');
+      expect(ember.number, 8);
+      expect(ember.bossName, 'Cinder Sovereign');
+      expect(grove.number, 9);
+      expect(grove.bossName, 'Wyrd Root');
+      expect(storm.number, 10);
+      expect(storm.bossName, 'Storm Tyrant');
+      expect(rime.number, 11);
+      expect(rime.bossName, 'Rime Colossus');
+      final fen = DungeonCatalog.byId('fen');
+      expect(fen.number, 12);
+      expect(fen.bossName, 'Fen Hydra');
+      final brass = DungeonCatalog.byId('brass');
+      expect(brass.number, 13);
+      expect(brass.bossName, 'The Mainspring');
+      final veil = DungeonCatalog.byId('veil');
+      expect(veil.number, 14);
+      expect(veil.bossName, 'The Pale Monarch');
+      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(15));
+      expect(
+        DungeonCatalog.isUnlocked('tide', 0, 6),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('ember', 0, 7),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('ember', 0, 6),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('grove', 0, 8),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('grove', 0, 7),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('storm', 0, 9),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('storm', 0, 8),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('rime', 0, 10),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('rime', 0, 9),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('fen', 0, 11),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('fen', 0, 10),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('brass', 0, 12),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('brass', 0, 11),
+        isFalse,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('veil', 0, 13),
+        isTrue,
+      );
+      expect(
+        DungeonCatalog.isUnlocked('veil', 0, 12),
+        isFalse,
+      );
     });
   });
 
@@ -207,6 +325,9 @@ void main() {
         challengeNoFlask: true,
         colorblindMode: true,
         uiTextScale: 1.15,
+        dungeonZoom: DungeonZoom.wide,
+        hapticsEnabled: false,
+        keepScreenAwake: false,
         lastDailyDate: '2026-07-27',
         dailyClaimed: true,
         seenChangelogVersion: '1.0.0',
@@ -221,6 +342,9 @@ void main() {
       expect(round.challengeNoFlask, isTrue);
       expect(round.colorblindMode, isTrue);
       expect(round.uiTextScale, closeTo(1.15, 0.001));
+      expect(round.dungeonZoom, DungeonZoom.wide);
+      expect(round.hapticsEnabled, isFalse);
+      expect(round.keepScreenAwake, isFalse);
       expect(round.lastDailyDate, '2026-07-27');
       expect(round.dailyClaimed, isTrue);
       expect(round.seenChangelogVersion, '1.0.0');
@@ -237,6 +361,9 @@ void main() {
         ..remove('challengeNoFlask')
         ..remove('colorblindMode')
         ..remove('uiTextScale')
+        ..remove('dungeonZoom')
+        ..remove('hapticsEnabled')
+        ..remove('keepScreenAwake')
         ..remove('lastDailyDate')
         ..remove('dailyClaimed')
         ..remove('seenChangelogVersion')
@@ -250,10 +377,19 @@ void main() {
       expect(decoded.challengeNoFlask, isFalse);
       expect(decoded.colorblindMode, isFalse);
       expect(decoded.uiTextScale, 1.0);
+      expect(decoded.dungeonZoom, DungeonZoom.normal);
+      expect(decoded.hapticsEnabled, isTrue);
+      expect(decoded.keepScreenAwake, isTrue);
       expect(decoded.lastDailyDate, isNull);
       expect(decoded.dailyClaimed, isFalse);
       expect(decoded.seenChangelogVersion, '');
       expect(decoded.loadouts, isEmpty);
     });
+  });
+
+  test('dungeon zoom chip uses everyday words', () {
+    expect(DungeonZoom.close.hudChipLabel, 'NEAR');
+    expect(DungeonZoom.normal.hudChipLabel, 'MID');
+    expect(DungeonZoom.wide.hudChipLabel, 'FAR');
   });
 }

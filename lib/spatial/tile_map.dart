@@ -2,7 +2,10 @@ import 'dart:math';
 
 import '../models/dungeon_def.dart';
 import '../models/dungeon_room.dart';
-import '../ui/kenney_assets.dart';
+import '../assets/kenney_assets.dart';
+import 'floor_blueprint.dart';
+import 'placement_plan.dart';
+import 'zone_layout_kit.dart';
 
 enum TileKind { wall, floor, spawn, exit, gate }
 
@@ -23,14 +26,25 @@ enum MapPropKind {
   water,
   lava,
   anvil,
+
+  /// Stacked crates / shelf clutter.
+  shelf,
+
+  /// Iron bars / railing accent.
+  fence,
+
+  /// Tall stone/metal pillar accent.
+  pillar,
+
+  /// Floor debris / rubble pile.
+  rubble,
+
+  /// Interactive-looking room chest (also a GroundLoot socket).
+  chest,
 }
 
 class MapProp {
-  const MapProp({
-    required this.x,
-    required this.y,
-    required this.kind,
-  });
+  const MapProp({required this.x, required this.y, required this.kind});
 
   final int x;
   final int y;
@@ -92,6 +106,7 @@ class TileMap {
     this.gates = const <GateInfo>[],
     this.enemyChamberIndices = const <int>[],
     this.props = const <MapProp>[],
+    this.lootChestPoints = const <(int, int)>[],
     this.layoutSeed = 0,
   });
 
@@ -110,6 +125,9 @@ class TileMap {
 
   /// Decorative props (non-blocking).
   final List<MapProp> props;
+
+  /// Room-reward chest sockets (world pickups spawned in SpatialCombat.build).
+  final List<(int x, int y)> lootChestPoints;
 
   /// Seed used for floor/wall hash + prop scatter.
   final int layoutSeed;
@@ -144,8 +162,7 @@ class TileMap {
     double x,
     double y, {
     Set<int> openGateIds = const <int>{},
-  }) =>
-      isWalkable(x.floor(), y.floor(), openGateIds: openGateIds);
+  }) => isWalkable(x.floor(), y.floor(), openGateIds: openGateIds);
 
   /// Walkable cells suitable for combat spawns (floor/spawn, not exit/gate).
   bool isSpawnable(int x, int y) {
@@ -266,6 +283,7 @@ abstract final class RoomLayouts {
         rng: rng,
         dungeonId: dungeonId,
         layoutSeed: seed,
+        room: room,
       );
     }
     if (room.type == RoomType.boss) {
@@ -274,6 +292,7 @@ abstract final class RoomLayouts {
         dungeonId: dungeonId,
         layoutSeed: seed,
         enemyCount: enemyCount,
+        room: room,
       );
     }
 
@@ -283,6 +302,7 @@ abstract final class RoomLayouts {
         dungeonId: dungeonId,
         layoutSeed: seed,
         enemyCount: enemyCount,
+        room: room,
       );
     }
 
@@ -303,6 +323,73 @@ abstract final class RoomLayouts {
       enemyCount: enemyCount,
       dungeonId: dungeonId,
       layoutSeed: seed,
+      room: room,
+    );
+  }
+
+  /// Apply FloorBlueprint + PlacementPlan (fallback to legacy scatter).
+  static TileMap _composeMap({
+    required int cols,
+    required int rows,
+    required List<TileKind> tiles,
+    required List<(int x, int y)> spawnPoints,
+    required (int x, int y) exitPoint,
+    required List<(int x, int y)> enemySpawns,
+    required List<int> enemyChamberIndices,
+    required List<Chamber> chambers,
+    required List<GateInfo> gates,
+    required List<(int x, int y)> roomCenters,
+    required String dungeonId,
+    required int layoutSeed,
+    required Random rng,
+    required DungeonRoom room,
+  }) {
+    final blueprint = FloorBlueprint.forRoom(
+      room,
+      dungeonId: dungeonId,
+      layoutSeed: layoutSeed,
+    );
+    final kit = ZoneLayoutKit.forId(dungeonId);
+    final plan = PlacementPlan.build(
+      cols: cols,
+      rows: rows,
+      tiles: tiles,
+      spawnPoints: spawnPoints,
+      exitPoint: exitPoint,
+      enemySpawns: enemySpawns,
+      chambers: chambers,
+      blueprint: blueprint,
+      kit: kit,
+      rng: rng,
+    );
+    final props = plan.props.isNotEmpty
+        ? plan.props
+        : _scatterProps(
+            cols: cols,
+            rows: rows,
+            tiles: tiles,
+            spawnPoints: spawnPoints,
+            exitPoint: exitPoint,
+            enemySpawns: enemySpawns,
+            chambers: chambers,
+            dungeonId: dungeonId,
+            layoutSeed: layoutSeed,
+            rng: rng,
+          );
+    return TileMap(
+      cols: cols,
+      rows: rows,
+      tiles: tiles,
+      spawnPoints: spawnPoints,
+      exitPoint: exitPoint,
+      enemySpawns: enemySpawns,
+      roomCenters: roomCenters,
+      chambers: chambers,
+      gates: gates,
+      enemyChamberIndices: enemyChamberIndices,
+      props: props,
+      lootChestPoints: plan.lootChestPoints,
+      layoutSeed: layoutSeed,
     );
   }
 
@@ -310,6 +397,7 @@ abstract final class RoomLayouts {
     Random rng, {
     required String dungeonId,
     required int layoutSeed,
+    required DungeonRoom room,
     int enemyCount = 6,
   }) {
     const cols = 25;
@@ -340,13 +428,7 @@ abstract final class RoomLayouts {
     set(cols - 3, rows ~/ 2, TileKind.exit);
     _carveExitPlaza(tiles, cols, rows, cols - 3, rows ~/ 2);
 
-    final chamber = Chamber(
-      index: 0,
-      x: 2,
-      y: 2,
-      w: cols - 4,
-      h: rows - 4,
-    );
+    final chamber = Chamber(index: 0, x: 2, y: 2, w: cols - 4, h: rows - 4);
 
     final spawnPoints = _partySpawnCluster(
       tiles: tiles,
@@ -413,28 +495,21 @@ abstract final class RoomLayouts {
 
     final chambersIdx = List<int>.filled(enemySpawns.length, 0);
 
-    return TileMap(
+    return _composeMap(
       cols: cols,
       rows: rows,
       tiles: tiles,
       spawnPoints: spawnPoints,
       exitPoint: exitPoint,
       enemySpawns: enemySpawns,
-      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
-      chambers: <Chamber>[chamber],
       enemyChamberIndices: chambersIdx,
-      props: _scatterProps(
-        cols: cols,
-        rows: rows,
-        tiles: tiles,
-        spawnPoints: spawnPoints,
-        exitPoint: exitPoint,
-        enemySpawns: enemySpawns,
-        dungeonId: dungeonId,
-        layoutSeed: layoutSeed,
-        rng: rng,
-      ),
+      chambers: <Chamber>[chamber],
+      gates: const <GateInfo>[],
+      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
+      dungeonId: dungeonId,
       layoutSeed: layoutSeed,
+      rng: rng,
+      room: room,
     );
   }
 
@@ -444,6 +519,7 @@ abstract final class RoomLayouts {
     Random rng, {
     required String dungeonId,
     required int layoutSeed,
+    required DungeonRoom room,
     int enemyCount = 8,
   }) {
     const cols = 23;
@@ -482,13 +558,7 @@ abstract final class RoomLayouts {
     set(exitX, exitY, TileKind.exit);
     _carveExitPlaza(tiles, cols, rows, exitX, exitY);
 
-    final chamber = Chamber(
-      index: 0,
-      x: 2,
-      y: 2,
-      w: cols - 4,
-      h: rows - 4,
-    );
+    final chamber = Chamber(index: 0, x: 2, y: 2, w: cols - 4, h: rows - 4);
     final spawnPoints = _partySpawnCluster(
       tiles: tiles,
       cols: cols,
@@ -555,28 +625,21 @@ abstract final class RoomLayouts {
     }
 
     final chambersIdx = List<int>.filled(enemySpawns.length, 0);
-    return TileMap(
+    return _composeMap(
       cols: cols,
       rows: rows,
       tiles: tiles,
       spawnPoints: spawnPoints,
       exitPoint: exitPoint,
       enemySpawns: enemySpawns,
-      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
-      chambers: <Chamber>[chamber],
       enemyChamberIndices: chambersIdx,
-      props: _scatterProps(
-        cols: cols,
-        rows: rows,
-        tiles: tiles,
-        spawnPoints: spawnPoints,
-        exitPoint: exitPoint,
-        enemySpawns: enemySpawns,
-        dungeonId: dungeonId,
-        layoutSeed: layoutSeed,
-        rng: rng,
-      ),
+      chambers: <Chamber>[chamber],
+      gates: const <GateInfo>[],
+      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
+      dungeonId: dungeonId,
       layoutSeed: layoutSeed,
+      rng: rng,
+      room: room,
     );
   }
 
@@ -587,6 +650,7 @@ abstract final class RoomLayouts {
     required Random rng,
     required String dungeonId,
     required int layoutSeed,
+    required DungeonRoom room,
   }) {
     final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
     void set(int x, int y, TileKind k) {
@@ -594,6 +658,7 @@ abstract final class RoomLayouts {
         tiles[y * cols + x] = k;
       }
     }
+
     for (var y = 2; y < rows - 2; y++) {
       for (var x = 2; x < cols - 2; x++) {
         set(x, y, TileKind.floor);
@@ -615,28 +680,21 @@ abstract final class RoomLayouts {
     );
     final exitPoint = (cols - 3, rows ~/ 2);
 
-    return TileMap(
+    return _composeMap(
       cols: cols,
       rows: rows,
       tiles: tiles,
       spawnPoints: spawnPoints,
       exitPoint: exitPoint,
       enemySpawns: spawns,
-      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
-      chambers: <Chamber>[chamber],
       enemyChamberIndices: List<int>.filled(spawns.length, 0),
-      props: _scatterProps(
-        cols: cols,
-        rows: rows,
-        tiles: tiles,
-        spawnPoints: spawnPoints,
-        exitPoint: exitPoint,
-        enemySpawns: spawns,
-        dungeonId: dungeonId,
-        layoutSeed: layoutSeed,
-        rng: rng,
-      ),
+      chambers: <Chamber>[chamber],
+      gates: const <GateInfo>[],
+      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
+      dungeonId: dungeonId,
       layoutSeed: layoutSeed,
+      rng: rng,
+      room: room,
     );
   }
 
@@ -649,6 +707,7 @@ abstract final class RoomLayouts {
     required int enemyCount,
     required String dungeonId,
     required int layoutSeed,
+    required DungeonRoom room,
   }) {
     final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
     void set(int x, int y, TileKind k) {
@@ -705,14 +764,7 @@ abstract final class RoomLayouts {
         if (tiles[ti] == TileKind.wall) continue;
         final id = gateList.length;
         set(gx, gy, TileKind.gate);
-        gateList.add(
-          GateInfo(
-            id: id,
-            x: gx,
-            y: gy,
-            opensAfterChamber: i,
-          ),
-        );
+        gateList.add(GateInfo(id: id, x: gx, y: gy, opensAfterChamber: i));
       }
     }
 
@@ -732,8 +784,7 @@ abstract final class RoomLayouts {
     }
     gateList.removeWhere(
       (g) =>
-          (g.x, g.y) == (start.cx, start.cy) ||
-          (g.x, g.y) == (end.cx, end.cy),
+          (g.x, g.y) == (start.cx, start.cy) || (g.x, g.y) == (end.cx, end.cy),
     );
 
     final spawnPoints = _partySpawnCluster(
@@ -762,15 +813,12 @@ abstract final class RoomLayouts {
     final seenSpawns = <String>{};
     final combatRooms = rooms.length == 1
         ? <(int, _Rect)>[(0, rooms.first)]
-        : [
-            for (var i = 1; i < rooms.length; i++) (i, rooms[i]),
-          ];
+        : [for (var i = 1; i < rooms.length; i++) (i, rooms[i])];
 
     final partyPad = <String>{
       for (final p in spawnPoints) '${p.$1},${p.$2}',
       for (var dy = -1; dy <= 1; dy++)
-        for (var dx = -1; dx <= 1; dx++)
-          '${start.cx + dx},${start.cy + dy}',
+        for (var dx = -1; dx <= 1; dx++) '${start.cx + dx},${start.cy + dy}',
     };
 
     bool tileSpawnable(int x, int y) {
@@ -861,29 +909,21 @@ abstract final class RoomLayouts {
     final finalEnemySpawns = enemySpawns.take(enemyCount).toList();
     final finalChambers = enemyChambers.take(finalEnemySpawns.length).toList();
 
-    return TileMap(
+    return _composeMap(
       cols: cols,
       rows: rows,
       tiles: tiles,
       spawnPoints: spawnPoints,
       exitPoint: exitPoint,
       enemySpawns: finalEnemySpawns,
-      roomCenters: rooms.map((r) => (r.cx, r.cy)).toList(),
+      enemyChamberIndices: finalChambers,
       chambers: chambers,
       gates: gateList,
-      enemyChamberIndices: finalChambers,
-      props: _scatterProps(
-        cols: cols,
-        rows: rows,
-        tiles: tiles,
-        spawnPoints: spawnPoints,
-        exitPoint: exitPoint,
-        enemySpawns: finalEnemySpawns,
-        dungeonId: dungeonId,
-        layoutSeed: layoutSeed,
-        rng: rng,
-      ),
+      roomCenters: rooms.map((r) => (r.cx, r.cy)).toList(),
+      dungeonId: dungeonId,
       layoutSeed: layoutSeed,
+      rng: rng,
+      room: room,
     );
   }
 
@@ -894,6 +934,7 @@ abstract final class RoomLayouts {
     required List<(int x, int y)> spawnPoints,
     required (int x, int y) exitPoint,
     required List<(int x, int y)> enemySpawns,
+    required List<Chamber> chambers,
     required String dungeonId,
     required int layoutSeed,
     required Random rng,
@@ -912,32 +953,97 @@ abstract final class RoomLayouts {
       block(p.$1, p.$2);
     }
 
-    final floorCells = <(int, int)>[];
+    bool touchesWall(int x, int y) {
+      const dirs = <(int, int)>[(0, 1), (0, -1), (1, 0), (-1, 0)];
+      for (final d in dirs) {
+        final nx = x + d.$1;
+        final ny = y + d.$2;
+        if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) return true;
+        if (tiles[ny * cols + nx] == TileKind.wall) return true;
+      }
+      return false;
+    }
+
+    bool inChamber(Chamber c, int x, int y) =>
+        x >= c.x && x < c.x + c.w && y >= c.y && y < c.y + c.h;
+
+    final edgeCells = <(int, int)>[];
+    final openCells = <(int, int)>[];
     for (var y = 0; y < rows; y++) {
       for (var x = 0; x < cols; x++) {
         if (tiles[y * cols + x] != TileKind.floor) continue;
         if (blocked.contains('$x,$y')) continue;
-        floorCells.add((x, y));
+        final cell = (x, y);
+        if (touchesWall(x, y)) {
+          edgeCells.add(cell);
+        } else {
+          openCells.add(cell);
+        }
       }
     }
 
-    final target = (floorCells.length * 0.028).floor().clamp(3, 18);
+    final floorCount = edgeCells.length + openCells.length;
+    // Dense enough to read in a zoomed-out camera (~12% of floor).
+    final target = (floorCount * 0.12).floor().clamp(16, 80);
     final props = <MapProp>[];
     final used = <String>{};
 
-    for (var i = 0; i < target && floorCells.isNotEmpty; i++) {
-      final idx = rng.nextInt(floorCells.length);
-      final cell = floorCells.removeAt(idx);
+    (int, int)? takeFrom(List<(int, int)> cells) {
+      if (cells.isEmpty) return null;
+      final idx = rng.nextInt(cells.length);
+      return cells.removeAt(idx);
+    }
+
+    void placeAt((int, int) cell) {
       final key = '${cell.$1},${cell.$2}';
-      if (used.contains(key)) continue;
+      if (used.contains(key)) return;
       used.add(key);
       props.add(
-        MapProp(
-          x: cell.$1,
-          y: cell.$2,
-          kind: pool[rng.nextInt(pool.length)],
-        ),
+        MapProp(x: cell.$1, y: cell.$2, kind: pool[rng.nextInt(pool.length)]),
       );
+    }
+
+    for (var i = 0; i < target; i++) {
+      // Prefer wall-adjacent clutter so open fight space stays readable.
+      final preferEdge = rng.nextDouble() < 0.75;
+      var cell = preferEdge ? takeFrom(edgeCells) : takeFrom(openCells);
+      cell ??= takeFrom(edgeCells) ?? takeFrom(openCells);
+      if (cell == null) break;
+      placeAt(cell);
+    }
+
+    // Guarantee each chamber has local clutter (corridors alone look empty).
+    const perChamberMin = 6;
+    for (final chamber in chambers) {
+      var count = 0;
+      for (final p in props) {
+        if (inChamber(chamber, p.x, p.y)) count++;
+      }
+      if (count >= perChamberMin) continue;
+
+      final localEdge = <(int, int)>[];
+      final localOpen = <(int, int)>[];
+      for (var y = chamber.y; y < chamber.y + chamber.h; y++) {
+        for (var x = chamber.x; x < chamber.x + chamber.w; x++) {
+          if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
+          if (tiles[y * cols + x] != TileKind.floor) continue;
+          if (blocked.contains('$x,$y') || used.contains('$x,$y')) continue;
+          final cell = (x, y);
+          if (touchesWall(x, y)) {
+            localEdge.add(cell);
+          } else {
+            localOpen.add(cell);
+          }
+        }
+      }
+      while (count < perChamberMin) {
+        final preferEdge = rng.nextDouble() < 0.8;
+        var cell = preferEdge ? takeFrom(localEdge) : takeFrom(localOpen);
+        cell ??= takeFrom(localEdge) ?? takeFrom(localOpen);
+        if (cell == null) break;
+        placeAt(cell);
+        count++;
+      }
     }
 
     return props;

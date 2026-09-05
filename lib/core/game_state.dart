@@ -3,14 +3,32 @@ import 'dart:math';
 import '../models/combat_ratings.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
+import '../models/dungeon_zoom.dart';
 import '../models/enemy.dart';
 import '../models/gear_loadout.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
+import '../models/market_listing.dart';
 import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
+import '../models/vfx_quality.dart';
+import 'ad_boost.dart';
+import 'blessing_constellation.dart';
+import 'keystone.dart';
+import 'party_name_filter.dart';
+
+/// UI text scale clamps (SETTINGS slider + MediaQuery compose).
+const double kUiTextScaleMin = 0.80;
+const double kUiTextScaleMax = 1.45;
+
+String _readPartyName(dynamic raw) {
+  if (raw is! String || raw.trim().isEmpty) {
+    return PartyNameFilter.defaultName;
+  }
+  return PartyNameFilter.sanitize(raw) ?? PartyNameFilter.defaultName;
+}
 
 int _jsonInt(dynamic value, [int fallback = 0]) {
   if (value == null) return fallback;
@@ -32,6 +50,7 @@ class GameState {
   const GameState({
     required this.heroRoster,
     required this.activeHeroIds,
+    this.partyName = 'The Party',
     required this.enemies,
     required this.gold,
     this.lifetimeGoldEarned = 0,
@@ -53,8 +72,11 @@ class GameState {
     this.equipped = const <EquipmentSlot, EquipmentItem>{},
     this.missions = const <Mission>[],
     this.gearStash = const <EquipmentItem>[],
+    this.marketListings = const <MarketListing>[],
+    this.marketListingsRefreshMs = 0,
     this.dungeonMode = DungeonMode.push,
     this.highestFloorCleared = 0,
+    this.lastFloorClearSec = 0,
     this.highestDungeonCleared = -1,
     this.activePet,
     this.ownedPets = const <Pet>[],
@@ -64,6 +86,8 @@ class GameState {
     this.metaDepth = MetaDepthState.empty,
     this.inDungeon = false,
     this.inGauntlet = false,
+    this.inRift = false,
+    this.inGreaterRift = false,
     this.dungeonId = 'sandy',
     this.soulboundFragments = 0,
     this.soulboundItem,
@@ -73,8 +97,13 @@ class GameState {
     this.godHandLevel = 0,
     this.layoutSeed = 0,
     this.soundMuted = false,
-    this.reducedVfx = false,
-    this.autoSellMaxPower = 24,
+    this.sfxVolume = 0.7,
+    this.ambienceVolume = 0.25,
+    this.vfxQuality = VfxQuality.full,
+    this.autoSellMaxPower = 48,
+    this.autoSellMaxRarity = 1,
+    this.autoDisassembleMaxIlvl = 48,
+    this.autoDisassembleMaxRarity = 2,
     this.rogueUnlocked = false,
     this.seenTips = const <String>[],
     this.loadouts = const <GearLoadout>[],
@@ -82,13 +111,43 @@ class GameState {
     this.codexEnemies = const <String>[],
     this.codexItems = const <String>[],
     this.challengeBossRush = false,
+    this.challengeTiny = false,
+    this.inWorldBoss = false,
+    this.worldBossPractice = false,
+    this.apexTrialActive = false,
     this.challengeNoFlask = false,
     this.hardmodeLevel = 0,
+    this.keystoneRunActive = false,
+    this.keystoneRunLevel = 0,
+    this.keystoneTimerMs = 0,
+    this.keystoneParMs = 0,
+    this.keystoneRunAffixes = const <String>[],
+    this.keystoneOutcome = '',
+    this.riftTier = 0,
+    this.riftTimerMs = 0,
+    this.riftParMs = 0,
+    this.riftKillTarget = 0,
+    this.riftKills = 0,
+    this.riftOutcome = '',
+    this.grTier = 0,
+    this.grTimerMs = 0,
+    this.grParMs = 0,
+    this.grKillTarget = 0,
+    this.grKills = 0,
+    this.grOutcome = '',
     this.colorblindMode = false,
     this.uiTextScale = 1.0,
+    this.dungeonZoom = DungeonZoom.normal,
+    this.hapticsEnabled = true,
+    this.keepScreenAwake = true,
     this.lastDailyDate,
     this.dailyClaimed = false,
     this.seenChangelogVersion = '',
+    this.wipeStreakKey = '',
+    this.wipeStreakCount = 0,
+    this.wipeAdviceLine = '',
+    this.sessionTelemetryOptIn = false,
+    this.sessionTelemetryLog = const <String>[],
   });
 
   /// All unlocked heroes (bench + active).
@@ -97,17 +156,26 @@ class GameState {
   /// Ordered ids of the active party (subset of [heroRoster]).
   final List<String> activeHeroIds;
 
-  /// Active party resolved from [activeHeroIds]. Falls back to full roster
-  /// when the active list is empty.
+  /// Player-chosen party name. Survives Ascend. Old saves default to The Party.
+  final String partyName;
+
+  /// Active party from [activeHeroIds] (full PARTY list — never Tiny-trimmed).
   List<PartyHero> get heroes {
     if (activeHeroIds.isEmpty) return heroRoster;
-    final byId = <String, PartyHero>{
-      for (final h in heroRoster) h.id: h,
-    };
+    final byId = <String, PartyHero>{for (final h in heroRoster) h.id: h};
     return [
       for (final id in activeHeroIds)
         if (byId[id] != null) byId[id]!,
     ];
+  }
+
+  /// Party that actually fights. Tiny challenge caps at 3 **in combat only**.
+  List<PartyHero> get combatHeroes {
+    final active = heroes;
+    if (challengeTiny && inDungeon && active.length > 3) {
+      return active.take(3).toList(growable: false);
+    }
+    return active;
   }
 
   final List<EnemyUnit> enemies;
@@ -124,13 +192,13 @@ class GameState {
   final int defenseBonus;
   final int vitalityBonus;
 
-  /// Forge move-speed points (≈% before soft-cap). Cleared on Ascend.
+  /// Forge move-speed points (≈% before soft-cap). Reset on Ascend.
   final int moveSpeedBonus;
 
-  /// Forge attack-speed points (≈% before soft-cap). Cleared on Ascend.
+  /// Forge attack-speed points (≈% before soft-cap). Reset on Ascend.
   final int attackSpeedBonus;
 
-  /// Forge crit-chance points (≈% before soft-cap). Cleared on Ascend.
+  /// Forge crit-chance points (≈% before soft-cap). Reset on Ascend.
   final int critBonus;
 
   final List<LootDrop> recentLoot;
@@ -141,21 +209,31 @@ class GameState {
   /// Persistent meta-progress. Survives Ascend; hard reset clears it.
   final int ascensionLevel;
 
-  /// Legacy party loadout field (pre per-hero gear). Kept for save migration only.
-  /// Prefer [PartyHero.equipped]. Cleared after migrate / Ascend.
+  /// Legacy single-hero equip map (pre per-hero gear). Kept for save migration only.
+  /// Prefer [PartyHero.equipped] and [GearLoadout] presets. Cleared after migrate.
   final Map<EquipmentSlot, EquipmentItem> equipped;
 
-  /// Up to 3 active contracts. Refreshed on Ascend; claimed slots roll anew.
+  /// Up to 3 active quests (Daily / Bounty / Side). Daily refreshes UTC;
+  /// claimed Daily stays until next day; Bounty advances rung; Side rolls anew.
   final List<Mission> missions;
 
-  /// Inventory / Combinator stash. Cleared on Ascend / hard reset.
+  /// Inventory / Combinator stash. Reset on Ascend (Apex pieces move to the vault).
   final List<EquipmentItem> gearStash;
+
+  /// Traveling gear listings on POWER → MARKET. Reset on Ascend.
+  final List<MarketListing> marketListings;
+
+  /// UTC ms when [marketListings] last rolled (6h free refresh).
+  final int marketListingsRefreshMs;
 
   /// Farm loops the floor; Push advances after clear.
   final DungeonMode dungeonMode;
 
   /// Highest floor whose wave was cleared this run (0 = none yet).
   final int highestFloorCleared;
+
+  /// Last cleared floor duration in seconds (forge tip). 0 = none yet.
+  final int lastFloorClearSec;
 
   /// Highest dungeon catalog index cleared (meta — survives Ascend). -1 = none.
   final int highestDungeonCleared;
@@ -177,16 +255,22 @@ class GameState {
   /// Hub vs dungeon: combat loop only runs while in dungeon.
   final bool inDungeon;
 
-  /// Infinity Gauntlet run (AL10+ endless climb). Cleared when leaving hub.
+  /// Infinity Gauntlet run (party-max-level endless climb). Cleared when leaving hub.
   final bool inGauntlet;
+
+  /// Timed farm Rift run (party-max-level kill quota). Cleared when leaving hub.
+  final bool inRift;
+
+  /// Timed Greater Rift run (party-max-level prestige ladder). Cleared when leaving hub.
+  final bool inGreaterRift;
 
   /// Named dungeon id (e.g. sandy).
   final String dungeonId;
 
-  /// Soulbound prestige currency (survives Ascend).
+  /// Legacy heirloom fragments. No longer granted; kept so old saves load.
   final int soulboundFragments;
 
-  /// Optional permanent soulbound gear piece (survives Ascend).
+  /// Legacy heirloom piece from retired soulbind. Still applies party meta.
   final EquipmentItem? soulboundItem;
 
   /// Apex crafting Materials Bag (survives Ascend). Never mixed with gear stash.
@@ -206,12 +290,31 @@ class GameState {
 
   /// Settings — survive Ascend.
   final bool soundMuted;
-  final bool reducedVfx;
 
-  /// Auto-sell *drops on pickup* when itemLevel ≤ this (0 = off).
-  /// Bag AUTO SELL button ignores this and sells all non-upgrades.
-  /// Auto-sell pickup threshold as **item level** (legacy field name).
+  /// SFX master gain 0..1 (default 0.7). Survives Ascend.
+  final double sfxVolume;
+
+  /// Hub/dungeon ambience gain 0..1 (default 0.25). Survives Ascend.
+  final double ambienceVolume;
+
+  /// Combat VFX detail (full / lite / minimal).
+  final VfxQuality vfxQuality;
+
+  /// True when VFX is lite or minimal (spawn gates skip bursts/floaters).
+  bool get reducedVfx => vfxQuality.reduced;
+
+  /// Auto-sell *drops on pickup* / bag cleanup when itemLevel ≤ this (0 = off).
+  /// Legacy field name — treat as auto-sell max item level. Pays **gold**.
   final int autoSellMaxPower;
+
+  /// Max [LootRarity.index] inclusive for auto-sell gold (0=common … 4=legendary).
+  final int autoSellMaxRarity;
+
+  /// Auto-disassemble junk to **essence** when itemLevel ≤ this (0 = off).
+  final int autoDisassembleMaxIlvl;
+
+  /// Max [LootRarity.index] inclusive for auto-disassemble.
+  final int autoDisassembleMaxRarity;
 
   /// Fourth hero (Rogue) unlocked after first Ascend.
   final bool rogueUnlocked;
@@ -219,7 +322,7 @@ class GameState {
   /// Dismissed first-run tip ids (survives Ascend).
   final List<String> seenTips;
 
-  /// Up to 3 saved gear presets (survives Ascend).
+  /// Up to 3 saved gear presets (LOADOUTS UI hidden; cleared on Ascend).
   final List<GearLoadout> loadouts;
 
   /// Unlocked local achievement ids (survives Ascend / hard reset persists
@@ -235,18 +338,90 @@ class GameState {
   /// Challenge toggle: packs skew to elite/boss-heavy mixes. Chosen before
   /// entering a dungeon; survives Ascend as a standing preference.
   final bool challengeBossRush;
+  final bool challengeTiny;
+  /// Ashen Crown ticket run (save JSON: `inWorldBoss`).
+  final bool inWorldBoss;
+  /// Free practice run for Ashen Crown (save JSON: `worldBossPractice`).
+  final bool worldBossPractice;
+  final bool apexTrialActive;
 
   /// Challenge toggle: flasks are disabled entirely.
   final bool challengeNoFlask;
 
-  /// Hardmode key 0–10. Scales enemy power and loot (legendary chance best at 10).
+  /// Preferred keystone level 0–20 (0 = normal dungeon). Locked into a run on enter.
   final int hardmodeLevel;
+
+  /// True while inside a keystone dungeon run (not Gauntlet / Daily).
+  final bool keystoneRunActive;
+
+  /// Locked key level for the active run.
+  final int keystoneRunLevel;
+
+  /// Elapsed run timer (ms); live ticks + offline catch-up.
+  final int keystoneTimerMs;
+
+  /// Par time (ms) for a timed clear; idle-friendly.
+  final int keystoneParMs;
+
+  /// Affixes locked at run start.
+  final List<String> keystoneRunAffixes;
+
+  /// '' | `timed` | `depleted` after boss resolution this run.
+  final String keystoneOutcome;
+
+  /// Active farm Rift tier (0 when not in a rift).
+  final int riftTier;
+
+  /// Elapsed farm Rift timer (ms).
+  final int riftTimerMs;
+
+  /// Par time for the active farm Rift.
+  final int riftParMs;
+
+  /// Kill quota for the active farm Rift.
+  final int riftKillTarget;
+
+  /// Kills banked this farm Rift run.
+  final int riftKills;
+
+  /// '' | `timed` | `depleted` after farm Rift resolution.
+  final String riftOutcome;
+
+  /// Active Greater Rift tier (0 when not in a GR).
+  final int grTier;
+
+  /// Elapsed Greater Rift timer (ms).
+  final int grTimerMs;
+
+  /// Par time for the active Greater Rift.
+  final int grParMs;
+
+  /// Kill quota for the active Greater Rift.
+  final int grKillTarget;
+
+  /// Kills banked this Greater Rift run.
+  final int grKills;
+
+  /// '' | `timed` | `depleted` after Greater Rift resolution.
+  final String grOutcome;
+
+  /// True if either farm Rift or Greater Rift is active.
+  bool get inAnyRiftMode => inRift || inGreaterRift;
 
   /// Accessibility: colorblind-friendly combat floater palette.
   final bool colorblindMode;
 
   /// Accessibility: UI text scale multiplier.
   final double uiTextScale;
+
+  /// Dungeon camera framing (close / normal / wide).
+  final DungeonZoom dungeonZoom;
+
+  /// Phone vibration on combat / UI cues (independent of mute).
+  final bool hapticsEnabled;
+
+  /// Keep the screen on while in a dungeon (Android).
+  final bool keepScreenAwake;
 
   /// Last UTC calendar date (`yyyy-mm-dd`) the Daily Run was entered.
   final String? lastDailyDate;
@@ -256,6 +431,21 @@ class GameState {
 
   /// Highest changelog version the player has seen in Settings → What's New.
   final String seenChangelogVersion;
+
+  /// Last floor that stacked live wipes (`dungeonId:floor` or `…:g` in Gauntlet).
+  final String wipeStreakKey;
+
+  /// Consecutive live wipes on [wipeStreakKey]. Resets on a floor clear.
+  final int wipeStreakCount;
+
+  /// Dungeon wipe-panel line after stacked wipes; empty if the sim is unsure.
+  final String wipeAdviceLine;
+
+  /// Opt-in local session log (SETTINGS). Never uploaded by Idle Party.
+  final bool sessionTelemetryOptIn;
+
+  /// Rolling session events (`ISO|kind|detail`), capped in [SessionTelemetry].
+  final List<String> sessionTelemetryLog;
 
   /// Global room counter derived from the authoritative room position.
   int get battleNumber => currentRoom.globalBattleNumber;
@@ -287,21 +477,44 @@ class GameState {
 
   int get relicAttackBonus => 4 * relicTierOf('war_banner');
 
-  int get relicDefenseBonus => 2 * relicTierOf('iron_ward');
+  int get relicDefenseBonus => 16 * relicTierOf('iron_ward');
 
-  int get relicVitalityBonus => 10 * relicTierOf('phoenix_ember');
+  int get relicVitalityBonus => 48 * relicTierOf('phoenix_ember');
+
+  /// Flat God Hand damage from the God Hand Focus relic.
+  int get relicGodHandDamageBonus => 3 * relicTierOf('god_hand_focus');
+
+  /// Loot-find percent from Chamber Luck relic.
+  int get relicLootFindPercent => 5 * relicTierOf('chamber_luck');
+
+  /// Flat incoming damage mitigate from Iron Will relic.
+  int get relicMitigateFlat => 8 * relicTierOf('iron_will');
 
   /// Flat attack from Ascension Level (+1 ATK per AL).
   int get ascensionAttackBonus => ascensionLevel;
 
-  /// Flat defense from Ascension Level (+1 DEF every 2 AL).
-  int get ascensionDefenseBonus => ascensionLevel ~/ 2;
+  /// Flat defense from Ascension Level (+4 DEF per AL).
+  int get ascensionDefenseBonus => ascensionLevel * 4;
 
-  /// Flat vitality from Ascension Level (+2 HP per AL).
-  int get ascensionVitalityBonus => ascensionLevel * 2;
+  /// Flat vitality from Ascension Level (+12 HP per AL).
+  int get ascensionVitalityBonus => ascensionLevel * 12;
 
   /// Extra gold percent from Ascension Level (+10% per AL).
   int get ascensionGoldBonusPercent => ascensionLevel * 10;
+
+  /// Raw stacked gold-find before the economy soft cap.
+  int get totalGoldFindPercent =>
+      ascensionGoldBonusPercent +
+      sanctuaryGoldBonusPercent +
+      ascendBlessingGoldPercent +
+      gearGoldFindPercent +
+      petGoldFindPercent +
+      BlessingConstellation.goldFindPercent(this);
+
+  /// Combat + hub gold grants — soft-cap stacked find so AL20 KEY runs stay
+  /// rich without printing infinite wallet gold.
+  int get effectiveGoldFindPercent =>
+      softForgePercent(totalGoldFindPercent, softAt: 220).round();
 
   /// Sanctuary gold find (+5% per level soft-capped, +3% per prestige).
   int get sanctuaryGoldBonusPercent =>
@@ -312,9 +525,10 @@ class GameState {
       softForgePercent(sanctuaryPowerLevel, softAt: 40).round() +
       metaDepth.sanctuaryPowerPrestige;
 
+  /// Life Well: +12 HP per level (matches War Altar +1 ATK), +12 HP per prestige.
   int get sanctuaryVitalityBonus =>
-      softForgePercent(sanctuaryVitalityLevel * 2, softAt: 80).round() +
-      metaDepth.sanctuaryVitalityPrestige;
+      softForgePercent(sanctuaryVitalityLevel * 12, softAt: 480).round() +
+      metaDepth.sanctuaryVitalityPrestige * 12;
 
   int get sanctuaryXpBonusPercent =>
       softForgePercent(metaDepth.sanctuaryXpLevel * 4, softAt: 80).round() +
@@ -323,7 +537,8 @@ class GameState {
   int get petAttackBonus {
     final pet = activePet;
     if (pet == null) return 0;
-    final fav = metaDepth.favoritePetSpecies.isNotEmpty &&
+    final fav =
+        metaDepth.favoritePetSpecies.isNotEmpty &&
         pet.resolvedSpecies == metaDepth.favoritePetSpecies;
     return pet.totalAttackBonus + (fav ? 1 : 0);
   }
@@ -349,8 +564,11 @@ class GameState {
   /// Loot-find pets grant drop-rate help via [Pet.passiveValue].
   int get petLootFindPercent {
     final pet = activePet;
-    if (pet == null || pet.passive != PetPassive.lootFind) return 0;
-    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
+    if (pet == null || pet.passive != PetPassive.lootFind) {
+      return relicLootFindPercent;
+    }
+    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId)) +
+        relicLootFindPercent;
   }
 
   /// XP-find pets grant percent XP via [Pet.passiveValue].
@@ -363,8 +581,10 @@ class GameState {
   /// Mitigate pets grant flat damage reduction via [Pet.passiveValue].
   int get petMitigateFlat {
     final pet = activePet;
-    if (pet == null || pet.passive != PetPassive.mitigate) return 0;
-    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
+    final relic = relicMitigateFlat;
+    if (pet == null || pet.passive != PetPassive.mitigate) return relic;
+    return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId)) +
+        relic;
   }
 
   /// Heal-boost pets grant heal potency via [Pet.passiveValue].
@@ -374,14 +594,17 @@ class GameState {
     return _favoritePassiveBoost(pet.passiveValue(dungeonId: dungeonId));
   }
 
-  /// Soulbound primaries → flat ATK (melee AP path or caster Int+SP/2).
+  /// Soulbound primaries → flat ATK (same conversion as worn gear / Auto Equip).
   int get soulboundAttackBonus {
     final item = soulboundItem;
     if (item == null) return 0;
-    final meleeAp = 2 * item.strengthBonus + item.agilityBonus;
-    final meleeAtk = (meleeAp / CombatRatings.kAp).round();
-    final casterAtk = item.intellectBonus + (item.spellPowerBonus ~/ 2);
-    return item.attackBonus + max(meleeAtk, casterAtk);
+    return CombatRatings.itemAttackContribution(
+      strength: item.strengthBonus,
+      agility: item.agilityBonus,
+      intellect: item.intellectBonus,
+      spellPower: item.spellPowerBonus,
+      flatAttack: item.attackBonus,
+    );
   }
 
   int get soulboundDefenseBonus {
@@ -396,9 +619,24 @@ class GameState {
     return item.resolvedStamina * 10;
   }
 
-  int get soulboundRefineBonus => metaDepth.soulboundRefine;
+  int get soulboundRefineAttackBonus => metaDepth.soulboundRefine;
+
+  int get soulboundRefineDefenseBonus =>
+      metaDepth.soulboundRefine * 4;
 
   int get legacyAttackBonus => metaDepth.legacyPoints;
+
+  /// Ascend Blessing pack — keep in sync with [GameLogic.ascendBlessingAtk].
+  int get ascendBlessingAttackBonus => metaDepth.ascendBlessings * 5;
+
+  /// Ascend Blessing pack — keep in sync with [GameLogic.ascendBlessingDef].
+  int get ascendBlessingDefenseBonus => metaDepth.ascendBlessings * 20;
+
+  /// Ascend Blessing pack — keep in sync with [GameLogic.ascendBlessingVit].
+  int get ascendBlessingVitalityBonus => metaDepth.ascendBlessings * 60;
+
+  /// Ascend Blessing pack — keep in sync with [GameLogic.ascendBlessingGoldPct].
+  int get ascendBlessingGoldPercent => metaDepth.ascendBlessings * 8;
 
   int get torchOfflineGoldPercent => metaDepth.torchKeepLevel * 8;
 
@@ -411,7 +649,7 @@ class GameState {
   /// Heirloom AL bonus applied to VIT when soulbound armor is set.
   int get heirloomVitalityBonus {
     if (soulboundItem == null || !metaDepth.soulboundIsArmor) return 0;
-    return metaDepth.heirloomAlBonus;
+    return metaDepth.heirloomAlBonus * 12;
   }
 
   /// Collection score for Will ranks.
@@ -432,26 +670,20 @@ class GameState {
     return '';
   }
 
-  /// AL-gated hardmode cap (0–10).
-  int get effectiveMaxHardmode => min(10, 3 + ascensionLevel ~/ 2);
+  /// KEY dial cap once the active party is at max hero level (0 before).
+  int get effectiveMaxHardmode => Keystone.maxForState(this);
 
   /// Sum of all heroes' gear attack (UI / power checks).
-  int get equipmentAttackBonus => heroes.fold<int>(
-        0,
-        (s, h) => s + h.gearAttackBonus,
-      ) +
+  int get equipmentAttackBonus =>
+      heroes.fold<int>(0, (s, h) => s + h.gearAttackBonus) +
       soulboundAttackBonus;
 
-  int get equipmentDefenseBonus => heroes.fold<int>(
-        0,
-        (s, h) => s + h.gearDefenseBonus,
-      ) +
+  int get equipmentDefenseBonus =>
+      heroes.fold<int>(0, (s, h) => s + h.gearDefenseBonus) +
       soulboundDefenseBonus;
 
-  int get equipmentVitalityBonus => heroes.fold<int>(
-        0,
-        (s, h) => s + h.gearVitalityBonus,
-      ) +
+  int get equipmentVitalityBonus =>
+      heroes.fold<int>(0, (s, h) => s + h.gearVitalityBonus) +
       soulboundVitalityBonus;
 
   int get gearGoldFindPercent {
@@ -484,16 +716,18 @@ class GameState {
       sanctuaryAttackBonus +
       petAttackBonus +
       soulboundAttackBonus +
-      soulboundRefineBonus +
+      soulboundRefineAttackBonus +
       legacyAttackBonus +
-      heirloomAttackBonus;
+      heirloomAttackBonus +
+      ascendBlessingAttackBonus;
 
   int get metaDefenseBonus =>
       defenseBonus +
       relicDefenseBonus +
       ascensionDefenseBonus +
       soulboundDefenseBonus +
-      soulboundRefineBonus;
+      soulboundRefineDefenseBonus +
+      ascendBlessingDefenseBonus;
 
   int get metaVitalityBonus =>
       vitalityBonus +
@@ -501,15 +735,17 @@ class GameState {
       ascensionVitalityBonus +
       sanctuaryVitalityBonus +
       soulboundVitalityBonus +
-      heirloomVitalityBonus;
+      heirloomVitalityBonus +
+      ascendBlessingVitalityBonus;
 
-  int get totalAttackBonus => metaAttackBonus +
-      heroes.fold<int>(0, (s, h) => s + h.gearAttackBonus);
+  int get totalAttackBonus =>
+      metaAttackBonus + heroes.fold<int>(0, (s, h) => s + h.gearAttackBonus);
 
-  int get totalDefenseBonus => metaDefenseBonus +
-      heroes.fold<int>(0, (s, h) => s + h.gearDefenseBonus);
+  int get totalDefenseBonus =>
+      metaDefenseBonus + heroes.fold<int>(0, (s, h) => s + h.gearDefenseBonus);
 
-  int get totalVitalityBonus => metaVitalityBonus +
+  int get totalVitalityBonus =>
+      metaVitalityBonus +
       heroes.fold<int>(0, (s, h) => s + h.gearVitalityBonus);
 
   int get totalAttack => heroes
@@ -530,8 +766,8 @@ class GameState {
   bool get isPartyDefeated => aliveHeroes == 0;
 
   bool get hasLivingCaster => heroes.any(
-        (hero) => hero.isAlive && hero.spec.roleTag == SpecRoleTag.caster,
-      );
+    (hero) => hero.isAlive && hero.spec.roleTag == SpecRoleTag.caster,
+  );
 
   bool get hasLivingHealer =>
       heroes.any((hero) => hero.isAlive && hero.spec.isHealer);
@@ -560,9 +796,10 @@ class GameState {
   }
 
   /// Tank guard DEF — only true tanks (not Arms/Fury/Ret DPS).
+  /// Scales with level so plate stays ahead of leather DPS on the ARMOR sheet.
   int tankGuardBonusFor(PartyHero hero) {
     if (!hero.spec.isTank || !hero.isAlive) return 0;
-    return 2 + (hero.level ~/ 5);
+    return 1 + hero.level;
   }
 
   /// Healer mend amount per tick (scales lightly with healer level).
@@ -589,26 +826,52 @@ class GameState {
   }
 
   CombatRatings ratingsFor(PartyHero hero) {
-    return CombatRatings.fromHeroSheet(
+    // Apex Trial: non-Apex gear contributes 0 (bag untouched).
+    final apexOnly = apexTrialActive;
+    int fold(int Function(EquipmentItem i) read) {
+      var s = 0;
+      for (final i in hero.equipped.values) {
+        if (apexOnly && !i.isApex) continue;
+        s += read(i);
+      }
+      return s;
+    }
+
+    final sheet = CombatRatings.fromHeroSheet(
       hero: hero,
-      gearStrength: hero.gearStrengthBonus,
-      gearAgility: hero.gearAgilityBonus,
-      gearStamina: hero.gearStaminaBonus,
-      gearIntellect: hero.gearIntellectBonus,
-      gearSpirit: hero.gearSpiritBonus,
-      gearSpellPower: hero.gearSpellPowerBonus,
-      gearArmor: hero.gearArmorBonus,
-      gearCrit: hero.gearCritChance,
-      gearFlatAttack: hero.gearAttackBonus,
+      gearStrength: apexOnly ? fold((i) => i.strengthBonus) : hero.gearStrengthBonus,
+      gearAgility: apexOnly ? fold((i) => i.agilityBonus) : hero.gearAgilityBonus,
+      gearStamina: apexOnly ? fold((i) => i.staminaBonus) : hero.gearStaminaBonus,
+      gearIntellect:
+          apexOnly ? fold((i) => i.intellectBonus) : hero.gearIntellectBonus,
+      gearSpirit: apexOnly ? fold((i) => i.spiritBonus) : hero.gearSpiritBonus,
+      gearSpellPower:
+          apexOnly ? fold((i) => i.spellPowerBonus) : hero.gearSpellPowerBonus,
+      gearMasteryRating:
+          apexOnly ? fold((i) => i.masteryBonus) : hero.gearMasteryBonus,
+      gearArmor: apexOnly ? fold((i) => i.resolvedArmor) : hero.gearArmorBonus,
+      gearCrit: apexOnly ? fold((i) => i.critChanceBonus) : hero.gearCritChance,
+      gearFlatAttack:
+          apexOnly ? fold((i) => i.attackBonus) : hero.gearAttackBonus,
       metaAttack: metaAttackBonus,
-      metaDefense: metaDefenseBonus,
-      metaVitality: metaVitalityBonus,
+      metaDefense: metaDefenseBonus + BlessingConstellation.defAdd(this),
+      metaVitality: metaVitalityBonus + BlessingConstellation.staAdd(this),
       guardBonus: tankGuardBonusFor(hero),
       auraBonus: casterAuraBonusFor(hero),
     );
+    var atkPct = AdBoost.isActive(metaDepth.adBoostUntilMs)
+        ? AdBoost.attackPercent
+        : 0;
+    atkPct += ((BlessingConstellation.atkMul(this) - 1.0) * 100).round();
+    return sheet.withAttackPercent(atkPct);
   }
 
   int effectiveHeroAttack(PartyHero hero) => ratingsFor(hero).effectiveAttack;
+
+  int effectiveHeroPhysicalAttack(PartyHero hero) =>
+      ratingsFor(hero).physicalAttack;
+
+  int effectiveHeroSpellPower(PartyHero hero) => ratingsFor(hero).spellPower;
 
   int effectiveHeroDefense(PartyHero hero) => ratingsFor(hero).defense;
 
@@ -616,7 +879,10 @@ class GameState {
 
   int effectiveHeroCrit(PartyHero hero) {
     final forge = softForgePercent(critBonus, softAt: 25).round();
-    return (ratingsFor(hero).critChance + forge).clamp(0, 75);
+    return (ratingsFor(hero).critChance +
+            forge +
+            BlessingConstellation.critAdd(this).round())
+        .clamp(0, 75);
   }
 
   int effectiveHeroSpirit(PartyHero hero) => ratingsFor(hero).spirit;
@@ -638,8 +904,7 @@ class GameState {
       HeroRole.healer => 1.43,
       HeroRole.warrior => 1.35,
     };
-    final pct =
-        hero.gearAttackSpeedBonus + softForgePercent(attackSpeedBonus);
+    final pct = hero.gearAttackSpeedBonus + softForgePercent(attackSpeedBonus);
     return base * (1 + pct / 100);
   }
 
@@ -654,16 +919,50 @@ class GameState {
     return base * (1 + pct / 100);
   }
 
-  /// God Hand AOE radius in tiles.
+  /// God Hand AOE radius in tiles (before style).
   double get godHandRadius => 1.8 + (godHandLevel * 0.15);
 
-  /// God Hand base damage before AL/ATK scaling.
+  /// God Hand base damage before AL/ATK/relic/style.
   int get godHandBaseDamage => 8 + godHandLevel * 3;
+
+  /// Smash damage after AL / party ATK / relic / style — same as SpatialCombat.
+  int godHandSmashDamage({int? baseDamage}) {
+    var damage =
+        (baseDamage ?? godHandBaseDamage) +
+        ascensionLevel +
+        (totalAttack ~/ 8) +
+        relicGodHandDamageBonus;
+    switch (metaDepth.godHandStyle) {
+      case 1:
+        return (damage * 1.22).round();
+      case 2:
+        return (damage * 0.88).round();
+      default:
+        return damage;
+    }
+  }
+
+  /// Blast radius after BAL / FOCUS / WIDE — same as SpatialCombat.
+  double get godHandSmashRadius {
+    switch (metaDepth.godHandStyle) {
+      case 1:
+        return godHandRadius * 0.82;
+      case 2:
+        return godHandRadius * 1.22;
+      default:
+        return godHandRadius;
+    }
+  }
+
+  /// Cooldown after damage + CD levels — same as SpatialCombat.
+  double get godHandCooldownSeconds =>
+      max(0.45, 1.1 - godHandLevel * 0.05 - metaDepth.godHandCdLevel * 0.06);
 
   GameState copyWith({
     List<PartyHero>? heroes,
     List<PartyHero>? heroRoster,
     List<String>? activeHeroIds,
+    String? partyName,
     List<EnemyUnit>? enemies,
     int? gold,
     int? lifetimeGoldEarned,
@@ -685,8 +984,11 @@ class GameState {
     Map<EquipmentSlot, EquipmentItem>? equipped,
     List<Mission>? missions,
     List<EquipmentItem>? gearStash,
+    List<MarketListing>? marketListings,
+    int? marketListingsRefreshMs,
     DungeonMode? dungeonMode,
     int? highestFloorCleared,
+    int? lastFloorClearSec,
     int? highestDungeonCleared,
     Pet? activePet,
     List<Pet>? ownedPets,
@@ -696,6 +998,8 @@ class GameState {
     MetaDepthState? metaDepth,
     bool? inDungeon,
     bool? inGauntlet,
+    bool? inRift,
+    bool? inGreaterRift,
     String? dungeonId,
     int? soulboundFragments,
     EquipmentItem? soulboundItem,
@@ -705,8 +1009,14 @@ class GameState {
     int? godHandLevel,
     int? layoutSeed,
     bool? soundMuted,
+    double? sfxVolume,
+    double? ambienceVolume,
+    VfxQuality? vfxQuality,
     bool? reducedVfx,
     int? autoSellMaxPower,
+    int? autoSellMaxRarity,
+    int? autoDisassembleMaxIlvl,
+    int? autoDisassembleMaxRarity,
     bool? rogueUnlocked,
     List<String>? seenTips,
     List<GearLoadout>? loadouts,
@@ -714,13 +1024,43 @@ class GameState {
     List<String>? codexEnemies,
     List<String>? codexItems,
     bool? challengeBossRush,
+    bool? challengeTiny,
+    bool? inWorldBoss,
+    bool? worldBossPractice,
+    bool? apexTrialActive,
     bool? challengeNoFlask,
     int? hardmodeLevel,
+    bool? keystoneRunActive,
+    int? keystoneRunLevel,
+    int? keystoneTimerMs,
+    int? keystoneParMs,
+    List<String>? keystoneRunAffixes,
+    String? keystoneOutcome,
+    int? riftTier,
+    int? riftTimerMs,
+    int? riftParMs,
+    int? riftKillTarget,
+    int? riftKills,
+    String? riftOutcome,
+    int? grTier,
+    int? grTimerMs,
+    int? grParMs,
+    int? grKillTarget,
+    int? grKills,
+    String? grOutcome,
     bool? colorblindMode,
     double? uiTextScale,
+    DungeonZoom? dungeonZoom,
+    bool? hapticsEnabled,
+    bool? keepScreenAwake,
     String? lastDailyDate,
     bool? dailyClaimed,
     String? seenChangelogVersion,
+    String? wipeStreakKey,
+    int? wipeStreakCount,
+    String? wipeAdviceLine,
+    bool? sessionTelemetryOptIn,
+    List<String>? sessionTelemetryLog,
     bool clearEquipped = false,
     bool clearActivePet = false,
     bool clearSoulboundItem = false,
@@ -728,12 +1068,20 @@ class GameState {
     var nextRoster = heroRoster ?? this.heroRoster;
     var nextActive = activeHeroIds ?? this.activeHeroIds;
     if (heroes != null) {
+      assert(
+        heroRoster != null ||
+            activeHeroIds != null ||
+            _sameParty(this.activeHeroIds, heroes),
+        'copyWith(heroes:) updates hero data for the party that is already '
+        'active. Use withActiveParty() to change who is in the party.',
+      );
       nextRoster = _mergeHeroesIntoRoster(nextRoster, heroes);
       nextActive = [for (final h in heroes) h.id];
     }
     return GameState(
       heroRoster: nextRoster,
       activeHeroIds: nextActive,
+      partyName: partyName ?? this.partyName,
       enemies: enemies ?? this.enemies,
       gold: gold ?? this.gold,
       lifetimeGoldEarned: lifetimeGoldEarned ?? this.lifetimeGoldEarned,
@@ -758,8 +1106,12 @@ class GameState {
           : (equipped ?? this.equipped),
       missions: missions ?? this.missions,
       gearStash: gearStash ?? this.gearStash,
+      marketListings: marketListings ?? this.marketListings,
+      marketListingsRefreshMs:
+          marketListingsRefreshMs ?? this.marketListingsRefreshMs,
       dungeonMode: dungeonMode ?? this.dungeonMode,
       highestFloorCleared: highestFloorCleared ?? this.highestFloorCleared,
+      lastFloorClearSec: lastFloorClearSec ?? this.lastFloorClearSec,
       highestDungeonCleared:
           highestDungeonCleared ?? this.highestDungeonCleared,
       activePet: clearActivePet ? null : (activePet ?? this.activePet),
@@ -771,6 +1123,8 @@ class GameState {
       metaDepth: metaDepth ?? this.metaDepth,
       inDungeon: inDungeon ?? this.inDungeon,
       inGauntlet: inGauntlet ?? this.inGauntlet,
+      inRift: inRift ?? this.inRift,
+      inGreaterRift: inGreaterRift ?? this.inGreaterRift,
       dungeonId: dungeonId ?? this.dungeonId,
       soulboundFragments: soulboundFragments ?? this.soulboundFragments,
       soulboundItem: clearSoulboundItem
@@ -782,8 +1136,19 @@ class GameState {
       godHandLevel: godHandLevel ?? this.godHandLevel,
       layoutSeed: layoutSeed ?? this.layoutSeed,
       soundMuted: soundMuted ?? this.soundMuted,
-      reducedVfx: reducedVfx ?? this.reducedVfx,
+      sfxVolume: sfxVolume ?? this.sfxVolume,
+      ambienceVolume: ambienceVolume ?? this.ambienceVolume,
+      vfxQuality:
+          vfxQuality ??
+          (reducedVfx == null
+              ? this.vfxQuality
+              : (reducedVfx ? VfxQuality.lite : VfxQuality.full)),
       autoSellMaxPower: autoSellMaxPower ?? this.autoSellMaxPower,
+      autoSellMaxRarity: autoSellMaxRarity ?? this.autoSellMaxRarity,
+      autoDisassembleMaxIlvl:
+          autoDisassembleMaxIlvl ?? this.autoDisassembleMaxIlvl,
+      autoDisassembleMaxRarity:
+          autoDisassembleMaxRarity ?? this.autoDisassembleMaxRarity,
       rogueUnlocked: rogueUnlocked ?? this.rogueUnlocked,
       seenTips: seenTips ?? this.seenTips,
       loadouts: loadouts ?? this.loadouts,
@@ -791,14 +1156,63 @@ class GameState {
       codexEnemies: codexEnemies ?? this.codexEnemies,
       codexItems: codexItems ?? this.codexItems,
       challengeBossRush: challengeBossRush ?? this.challengeBossRush,
+      challengeTiny: challengeTiny ?? this.challengeTiny,
+      inWorldBoss: inWorldBoss ?? this.inWorldBoss,
+      worldBossPractice: worldBossPractice ?? this.worldBossPractice,
+      apexTrialActive: apexTrialActive ?? this.apexTrialActive,
       challengeNoFlask: challengeNoFlask ?? this.challengeNoFlask,
       hardmodeLevel: hardmodeLevel ?? this.hardmodeLevel,
+      keystoneRunActive: keystoneRunActive ?? this.keystoneRunActive,
+      keystoneRunLevel: keystoneRunLevel ?? this.keystoneRunLevel,
+      keystoneTimerMs: keystoneTimerMs ?? this.keystoneTimerMs,
+      keystoneParMs: keystoneParMs ?? this.keystoneParMs,
+      keystoneRunAffixes: keystoneRunAffixes ?? this.keystoneRunAffixes,
+      keystoneOutcome: keystoneOutcome ?? this.keystoneOutcome,
+      riftTier: riftTier ?? this.riftTier,
+      riftTimerMs: riftTimerMs ?? this.riftTimerMs,
+      riftParMs: riftParMs ?? this.riftParMs,
+      riftKillTarget: riftKillTarget ?? this.riftKillTarget,
+      riftKills: riftKills ?? this.riftKills,
+      riftOutcome: riftOutcome ?? this.riftOutcome,
+      grTier: grTier ?? this.grTier,
+      grTimerMs: grTimerMs ?? this.grTimerMs,
+      grParMs: grParMs ?? this.grParMs,
+      grKillTarget: grKillTarget ?? this.grKillTarget,
+      grKills: grKills ?? this.grKills,
+      grOutcome: grOutcome ?? this.grOutcome,
       colorblindMode: colorblindMode ?? this.colorblindMode,
       uiTextScale: uiTextScale ?? this.uiTextScale,
+      dungeonZoom: dungeonZoom ?? this.dungeonZoom,
+      hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
+      keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
       lastDailyDate: lastDailyDate ?? this.lastDailyDate,
       dailyClaimed: dailyClaimed ?? this.dailyClaimed,
       seenChangelogVersion: seenChangelogVersion ?? this.seenChangelogVersion,
+      wipeStreakKey: wipeStreakKey ?? this.wipeStreakKey,
+      wipeStreakCount: wipeStreakCount ?? this.wipeStreakCount,
+      wipeAdviceLine: wipeAdviceLine ?? this.wipeAdviceLine,
+      sessionTelemetryOptIn:
+          sessionTelemetryOptIn ?? this.sessionTelemetryOptIn,
+      sessionTelemetryLog: sessionTelemetryLog ?? this.sessionTelemetryLog,
     );
+  }
+
+  /// Swaps *who* fights: roster keeps everyone, [party] becomes the active five.
+  ///
+  /// Separate from `copyWith(heroes:)` on purpose — that one means "same party,
+  /// new numbers" and used to reorder the party by accident when a caller
+  /// passed a different list.
+  GameState withActiveParty(List<PartyHero> party) => copyWith(
+    heroRoster: _mergeHeroesIntoRoster(heroRoster, party),
+    activeHeroIds: [for (final h in party) h.id],
+  );
+
+  static bool _sameParty(List<String> activeIds, List<PartyHero> heroes) {
+    if (activeIds.length != heroes.length) return false;
+    for (var i = 0; i < heroes.length; i++) {
+      if (activeIds[i] != heroes[i].id) return false;
+    }
+    return true;
   }
 
   /// Merges [updates] into [roster] by hero id (order preserved; new ids append).
@@ -806,9 +1220,7 @@ class GameState {
     List<PartyHero> roster,
     List<PartyHero> updates,
   ) {
-    final byId = <String, PartyHero>{
-      for (final h in roster) h.id: h,
-    };
+    final byId = <String, PartyHero>{for (final h in roster) h.id: h};
     for (final h in updates) {
       byId[h.id] = h;
     }
@@ -824,10 +1236,15 @@ class GameState {
     return merged;
   }
 
+  /// Save format written by [toJson]. Readers branch on it in
+  /// `GameLogic.saveVersionOf`; bump it when a field changes meaning.
+  static const int saveVersion = 4;
+
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'version': 4,
+    'version': saveVersion,
     'heroRoster': heroRoster.map((hero) => hero.toJson()).toList(),
     'activeHeroIds': activeHeroIds,
+    'partyName': partyName,
     'heroes': heroes.map((hero) => hero.toJson()).toList(),
     'enemies': enemies.map((enemy) => enemy.toJson()).toList(),
     'gold': gold,
@@ -853,8 +1270,11 @@ class GameState {
     ),
     'missions': missions.map((mission) => mission.toJson()).toList(),
     'gearStash': gearStash.map((item) => item.toJson()).toList(),
+    'marketListings': marketListings.map((l) => l.toJson()).toList(),
+    'marketListingsRefreshMs': marketListingsRefreshMs,
     'dungeonMode': dungeonMode.name,
     'highestFloorCleared': highestFloorCleared,
+    'lastFloorClearSec': lastFloorClearSec,
     'highestDungeonCleared': highestDungeonCleared,
     if (activePet != null) 'activePet': activePet!.toJson(),
     'ownedPets': ownedPets.map((pet) => pet.toJson()).toList(),
@@ -864,6 +1284,8 @@ class GameState {
     'metaDepth': metaDepth.toJson(),
     'inDungeon': inDungeon,
     'inGauntlet': inGauntlet,
+    'inRift': inRift,
+    'inGreaterRift': inGreaterRift,
     'dungeonId': dungeonId,
     'soulboundFragments': soulboundFragments,
     if (soulboundItem != null) 'soulboundItem': soulboundItem!.toJson(),
@@ -873,8 +1295,14 @@ class GameState {
     'godHandLevel': godHandLevel,
     'layoutSeed': layoutSeed,
     'soundMuted': soundMuted,
+    'sfxVolume': sfxVolume,
+    'ambienceVolume': ambienceVolume,
+    'vfxQuality': vfxQuality.name,
     'reducedVfx': reducedVfx,
     'autoSellMaxPower': autoSellMaxPower,
+    'autoSellMaxRarity': autoSellMaxRarity,
+    'autoDisassembleMaxIlvl': autoDisassembleMaxIlvl,
+    'autoDisassembleMaxRarity': autoDisassembleMaxRarity,
     'rogueUnlocked': rogueUnlocked,
     'seenTips': seenTips,
     'loadouts': loadouts.map((l) => l.toJson()).toList(),
@@ -882,13 +1310,43 @@ class GameState {
     'codexEnemies': codexEnemies,
     'codexItems': codexItems,
     'challengeBossRush': challengeBossRush,
+    'challengeTiny': challengeTiny,
+    'inWorldBoss': inWorldBoss,
+    'worldBossPractice': worldBossPractice,
+    'apexTrialActive': apexTrialActive,
     'challengeNoFlask': challengeNoFlask,
     'hardmodeLevel': hardmodeLevel,
+    'keystoneRunActive': keystoneRunActive,
+    'keystoneRunLevel': keystoneRunLevel,
+    'keystoneTimerMs': keystoneTimerMs,
+    'keystoneParMs': keystoneParMs,
+    'keystoneRunAffixes': keystoneRunAffixes,
+    'keystoneOutcome': keystoneOutcome,
+    'riftTier': riftTier,
+    'riftTimerMs': riftTimerMs,
+    'riftParMs': riftParMs,
+    'riftKillTarget': riftKillTarget,
+    'riftKills': riftKills,
+    'riftOutcome': riftOutcome,
+    'grTier': grTier,
+    'grTimerMs': grTimerMs,
+    'grParMs': grParMs,
+    'grKillTarget': grKillTarget,
+    'grKills': grKills,
+    'grOutcome': grOutcome,
     'colorblindMode': colorblindMode,
     'uiTextScale': uiTextScale,
+    'dungeonZoom': dungeonZoom.name,
+    'hapticsEnabled': hapticsEnabled,
+    'keepScreenAwake': keepScreenAwake,
     if (lastDailyDate != null) 'lastDailyDate': lastDailyDate,
     'dailyClaimed': dailyClaimed,
     'seenChangelogVersion': seenChangelogVersion,
+    'wipeStreakKey': wipeStreakKey,
+    'wipeStreakCount': wipeStreakCount,
+    'wipeAdviceLine': wipeAdviceLine,
+    'sessionTelemetryOptIn': sessionTelemetryOptIn,
+    'sessionTelemetryLog': sessionTelemetryLog,
   };
 
   /// Parses a v2-v4 save. Legacy fields are migrated.
@@ -897,6 +1355,7 @@ class GameState {
     final unlockedRelicsJson = json['unlockedRelics'] as List<dynamic>?;
     final missionsJson = json['missions'] as List<dynamic>?;
     final stashJson = json['gearStash'] as List<dynamic>?;
+    final marketJson = json['marketListings'] as List<dynamic>?;
     final petsJson = json['ownedPets'] as List<dynamic>?;
     final activePetJson = json['activePet'] as Map<String, dynamic>?;
     final modeRaw = json['dungeonMode'] as String?;
@@ -905,14 +1364,15 @@ class GameState {
     final ownedPetsRaw = petsJson == null
         ? <Pet>[]
         : petsJson.cast<Map<String, dynamic>>().map(Pet.fromJson).toList();
-    final activePetRaw =
-        activePetJson == null ? null : Pet.fromJson(activePetJson);
+    final activePetRaw = activePetJson == null
+        ? null
+        : Pet.fromJson(activePetJson);
     // Keep active pet in roster (and drop orphan active if roster empty).
     final syncedOwnedPets = activePetRaw == null
         ? ownedPetsRaw
         : ownedPetsRaw.any((p) => p.id == activePetRaw.id)
-            ? ownedPetsRaw
-            : [...ownedPetsRaw, activePetRaw];
+        ? ownedPetsRaw
+        : [...ownedPetsRaw, activePetRaw];
     final syncedActivePet = activePetRaw == null
         ? null
         : () {
@@ -943,7 +1403,8 @@ class GameState {
       }
     }
 
-    var heroes = (json['heroes'] as List<dynamic>?)
+    var heroes =
+        (json['heroes'] as List<dynamic>?)
             ?.cast<Map<String, dynamic>>()
             .map(PartyHero.fromJson)
             .toList() ??
@@ -952,9 +1413,9 @@ class GameState {
     var heroRoster = rosterJson == null
         ? List<PartyHero>.from(heroes)
         : rosterJson
-            .cast<Map<String, dynamic>>()
-            .map(PartyHero.fromJson)
-            .toList();
+              .cast<Map<String, dynamic>>()
+              .map(PartyHero.fromJson)
+              .toList();
     // Migrate legacy party loadout onto first hero without per-hero gear.
     final anyHeroGear = heroRoster.any((h) => h.equipped.isNotEmpty);
     var legacyEquipped = equipped;
@@ -969,7 +1430,8 @@ class GameState {
     }
 
     final activeRaw = json['activeHeroIds'] as List<dynamic>?;
-    var activeHeroIds = activeRaw?.map((e) => e.toString()).toList() ??
+    var activeHeroIds =
+        activeRaw?.map((e) => e.toString()).toList() ??
         [for (final h in heroRoster) h.id];
     // Old saves only had `heroes` — treat that list as both roster and active.
     if (rosterJson == null && heroes.isNotEmpty) {
@@ -993,6 +1455,7 @@ class GameState {
     return GameState(
       heroRoster: heroRoster,
       activeHeroIds: activeHeroIds,
+      partyName: _readPartyName(json['partyName']),
       enemies: (json['enemies'] as List<dynamic>)
           .cast<Map<String, dynamic>>()
           .map(EnemyUnit.fromJson)
@@ -1039,10 +1502,18 @@ class GameState {
                 .cast<Map<String, dynamic>>()
                 .map(EquipmentItem.fromJson)
                 .toList(),
+      marketListings: marketJson == null
+          ? const <MarketListing>[]
+          : marketJson
+                .cast<Map<String, dynamic>>()
+                .map(MarketListing.fromJson)
+                .toList(),
+      marketListingsRefreshMs: _jsonInt(json['marketListingsRefreshMs']),
       dungeonMode: modeRaw == null
           ? DungeonMode.push
           : DungeonMode.values.byName(modeRaw),
       highestFloorCleared: _jsonInt(json['highestFloorCleared']),
+      lastFloorClearSec: _jsonInt(json['lastFloorClearSec']),
       highestDungeonCleared: _jsonInt(json['highestDungeonCleared'], -1),
       activePet: syncedActivePet,
       ownedPets: syncedOwnedPets,
@@ -1052,6 +1523,8 @@ class GameState {
       metaDepth: metaDepth,
       inDungeon: (json['inDungeon'] as bool?) ?? false,
       inGauntlet: (json['inGauntlet'] as bool?) ?? false,
+      inRift: (json['inRift'] as bool?) ?? false,
+      inGreaterRift: (json['inGreaterRift'] as bool?) ?? false,
       dungeonId: (json['dungeonId'] as String?) ?? 'sandy',
       soulboundFragments: _jsonInt(json['soulboundFragments']),
       soulboundItem: soulboundJson == null
@@ -1059,7 +1532,8 @@ class GameState {
           : EquipmentItem.fromJson(soulboundJson),
       craftMaterials: _jsonStringIntMap(json['craftMaterials']),
       craftPity: _jsonStringIntMap(json['craftPity']),
-      apexVault: (json['apexVault'] as List<dynamic>?)
+      apexVault:
+          (json['apexVault'] as List<dynamic>?)
               ?.cast<Map<String, dynamic>>()
               .map(EquipmentItem.fromJson)
               .toList() ??
@@ -1067,37 +1541,100 @@ class GameState {
       godHandLevel: _jsonInt(json['godHandLevel']),
       layoutSeed: _jsonInt(json['layoutSeed']),
       soundMuted: (json['soundMuted'] as bool?) ?? false,
-      reducedVfx: (json['reducedVfx'] as bool?) ?? false,
-      autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 24),
+      sfxVolume: ((json['sfxVolume'] as num?)?.toDouble() ?? 0.7).clamp(
+        0.0,
+        1.0,
+      ),
+      ambienceVolume: ((json['ambienceVolume'] as num?)?.toDouble() ?? 0.25)
+          .clamp(0.0, 1.0),
+      vfxQuality: VfxQuality.fromJson(
+        json['vfxQuality'],
+        legacyReduced: json['reducedVfx'] as bool?,
+      ),
+      autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 48),
+      autoSellMaxRarity: _jsonInt(json['autoSellMaxRarity'], 1).clamp(0, 4),
+      autoDisassembleMaxIlvl: _jsonInt(json['autoDisassembleMaxIlvl'], 48),
+      autoDisassembleMaxRarity: _jsonInt(
+        json['autoDisassembleMaxRarity'],
+        2,
+      ).clamp(0, 4),
       rogueUnlocked: rogueUnlocked,
-      seenTips: (json['seenTips'] as List<dynamic>?)
+      seenTips:
+          (json['seenTips'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const <String>[],
-      loadouts: (json['loadouts'] as List<dynamic>?)
+      loadouts:
+          (json['loadouts'] as List<dynamic>?)
               ?.map((e) => GearLoadout.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <GearLoadout>[],
-      achievements: (json['achievements'] as List<dynamic>?)
+      achievements:
+          (json['achievements'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const <String>[],
-      codexEnemies: (json['codexEnemies'] as List<dynamic>?)
+      codexEnemies:
+          (json['codexEnemies'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const <String>[],
-      codexItems: (json['codexItems'] as List<dynamic>?)
+      codexItems:
+          (json['codexItems'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const <String>[],
       challengeBossRush: (json['challengeBossRush'] as bool?) ?? false,
+      challengeTiny: (json['challengeTiny'] as bool?) ?? false,
+      inWorldBoss: (json['inWorldBoss'] as bool?) ?? false,
+      worldBossPractice: (json['worldBossPractice'] as bool?) ?? false,
+      apexTrialActive: (json['apexTrialActive'] as bool?) ?? false,
       challengeNoFlask: (json['challengeNoFlask'] as bool?) ?? false,
-      hardmodeLevel: ((json['hardmodeLevel'] as num?)?.toInt() ?? 0).clamp(0, 10),
+      hardmodeLevel: ((json['hardmodeLevel'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        20,
+      ),
+      keystoneRunActive: (json['keystoneRunActive'] as bool?) ?? false,
+      keystoneRunLevel: ((json['keystoneRunLevel'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
+      keystoneTimerMs: max(0, (json['keystoneTimerMs'] as num?)?.toInt() ?? 0),
+      keystoneParMs: max(0, (json['keystoneParMs'] as num?)?.toInt() ?? 0),
+      keystoneRunAffixes:
+          (json['keystoneRunAffixes'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const <String>[],
+      keystoneOutcome: (json['keystoneOutcome'] as String?) ?? '',
+      riftTier: max(0, (json['riftTier'] as num?)?.toInt() ?? 0),
+      riftTimerMs: max(0, (json['riftTimerMs'] as num?)?.toInt() ?? 0),
+      riftParMs: max(0, (json['riftParMs'] as num?)?.toInt() ?? 0),
+      riftKillTarget: max(0, (json['riftKillTarget'] as num?)?.toInt() ?? 0),
+      riftKills: max(0, (json['riftKills'] as num?)?.toInt() ?? 0),
+      riftOutcome: (json['riftOutcome'] as String?) ?? '',
+      grTier: max(0, (json['grTier'] as num?)?.toInt() ?? 0),
+      grTimerMs: max(0, (json['grTimerMs'] as num?)?.toInt() ?? 0),
+      grParMs: max(0, (json['grParMs'] as num?)?.toInt() ?? 0),
+      grKillTarget: max(0, (json['grKillTarget'] as num?)?.toInt() ?? 0),
+      grKills: max(0, (json['grKills'] as num?)?.toInt() ?? 0),
+      grOutcome: (json['grOutcome'] as String?) ?? '',
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
-      uiTextScale: (json['uiTextScale'] as num?)?.toDouble() ?? 1.0,
+      uiTextScale: ((json['uiTextScale'] as num?)?.toDouble() ?? 1.0).clamp(
+        kUiTextScaleMin,
+        kUiTextScaleMax,
+      ),
+      dungeonZoom: DungeonZoom.fromJson(json['dungeonZoom']),
+      hapticsEnabled: (json['hapticsEnabled'] as bool?) ?? true,
+      keepScreenAwake: (json['keepScreenAwake'] as bool?) ?? true,
       lastDailyDate: json['lastDailyDate'] as String?,
       dailyClaimed: (json['dailyClaimed'] as bool?) ?? false,
       seenChangelogVersion: (json['seenChangelogVersion'] as String?) ?? '',
+      wipeStreakKey: (json['wipeStreakKey'] as String?) ?? '',
+      wipeStreakCount: _jsonInt(json['wipeStreakCount']),
+      wipeAdviceLine: (json['wipeAdviceLine'] as String?) ?? '',
+      sessionTelemetryOptIn: (json['sessionTelemetryOptIn'] as bool?) ?? false,
+      sessionTelemetryLog:
+          (json['sessionTelemetryLog'] as List<dynamic>?)?.cast<String>() ??
+          const <String>[],
     );
   }
 }

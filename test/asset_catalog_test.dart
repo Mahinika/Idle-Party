@@ -4,8 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/hero_spec.dart';
-import 'package:idle_party/ui/custom_assets.dart';
-import 'package:idle_party/ui/kenney_assets.dart';
+import 'package:idle_party/models/zone_art.dart';
+import 'package:idle_party/assets/custom_assets.dart';
+import 'package:idle_party/assets/kenney_assets.dart';
 
 void main() {
   bool exists(String assetPath) => File(assetPath).existsSync();
@@ -68,6 +69,8 @@ void main() {
       CustomAssets.iconStar,
       CustomAssets.iconHeart,
       CustomAssets.iconSkull,
+      CustomAssets.iconSettings,
+      CustomAssets.iconKey,
       CustomAssets.portraitSandy,
       CustomAssets.portraitGoblin,
       CustomAssets.portraitKing,
@@ -78,6 +81,7 @@ void main() {
       CustomAssets.introLogo,
       CustomAssets.introScene,
       CustomAssets.hubScene,
+      CustomAssets.worldPathMap,
       CustomAssets.dungeonBackdrop,
       CustomAssets.backdropSandy,
       CustomAssets.backdropGoblin,
@@ -110,6 +114,10 @@ void main() {
       CustomAssets.enemyCrystalBoss,
       CustomAssets.enemyCrystalWraith,
       CustomAssets.enemyCrystalMite,
+      CustomAssets.enemyBossStorm,
+      CustomAssets.enemyStormMite,
+      CustomAssets.enemyBossVeil,
+      CustomAssets.enemyVeilMite,
     };
     for (final path in paths) {
       expect(exists(path), isTrue, reason: path);
@@ -120,6 +128,36 @@ void main() {
     for (final classId in HeroClassId.values) {
       final path = CustomAssets.heroForClass(classId);
       expect(exists(path), isTrue, reason: '$classId → $path');
+    }
+  });
+
+  test('unique late-zone elites are not shared golem/wraith', () {
+    final late = ['tide', 'ember', 'storm', 'rime', 'fen', 'brass', 'veil'];
+    for (final id in late) {
+      final e = ZoneArt.byId(id).enemies;
+      expect(e.elite, isNot(CustomAssets.enemyGolem), reason: '$id elite');
+      expect(e.forArchetype(EnemyArchetype.brute), isNot(CustomAssets.enemyGolem),
+          reason: '$id brute');
+      expect(e.forArchetype(EnemyArchetype.tank), isNot(CustomAssets.enemyGolem),
+          reason: '$id tank');
+      if (id == 'storm' || id == 'rime') {
+        expect(e.elite, isNot(CustomAssets.enemyCrystalWraith),
+            reason: '$id elite not crystal wraith');
+      }
+      expect(exists(e.elite), isTrue);
+      expect(exists(e.forArchetype(EnemyArchetype.brute)), isTrue);
+    }
+  });
+
+  test('Shadow Feral Guardian have unique hero sprites', () {
+    expect(CustomAssets.heroForSpec(HeroSpecId.shadow), CustomAssets.heroShadow);
+    expect(CustomAssets.heroForSpec(HeroSpecId.feral), CustomAssets.heroFeral);
+    expect(
+      CustomAssets.heroForSpec(HeroSpecId.guardian),
+      CustomAssets.heroGuardian,
+    );
+    for (final path in CustomAssets.uniqueHeroSpecPaths) {
+      expect(exists(path), isTrue, reason: path);
     }
   });
 
@@ -138,7 +176,7 @@ void main() {
     }
   });
 
-  test('enemySpriteCatalog files exist and Kenney extras/icons/runes exist', () {
+  test('enemySpriteCatalog and identity icon files exist', () {
     for (final path in KenneyAssets.enemySpriteCatalog) {
       expect(exists(path), isTrue, reason: path);
     }

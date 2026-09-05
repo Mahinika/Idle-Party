@@ -16,6 +16,7 @@ class Mission {
     required this.goldReward,
     required this.essenceReward,
     this.tier = 0,
+    this.claimed = false,
   });
 
   final String id;
@@ -29,7 +30,13 @@ class Mission {
   /// 0 normal · 1 hard · 2 brutal (affects targets + rewards).
   final int tier;
 
+  /// True after claim when the slot should not pay out again (Daily).
+  final bool claimed;
+
   bool get isComplete => progress >= target;
+
+  /// Ready to claim on the board (complete and not already claimed).
+  bool get canClaim => isComplete && !claimed;
 
   double get progressFraction =>
       target <= 0 ? 1 : (progress / target).clamp(0.0, 1.0);
@@ -43,6 +50,7 @@ class Mission {
     int? goldReward,
     int? essenceReward,
     int? tier,
+    bool? claimed,
   }) {
     return Mission(
       id: id ?? this.id,
@@ -53,6 +61,7 @@ class Mission {
       goldReward: goldReward ?? this.goldReward,
       essenceReward: essenceReward ?? this.essenceReward,
       tier: tier ?? this.tier,
+      claimed: claimed ?? this.claimed,
     );
   }
 
@@ -65,6 +74,7 @@ class Mission {
     'goldReward': goldReward,
     'essenceReward': essenceReward,
     'tier': tier,
+    'claimed': claimed,
   };
 
   factory Mission.fromJson(Map<String, dynamic> json) {
@@ -90,6 +100,7 @@ class Mission {
       goldReward: asInt(json['goldReward']),
       essenceReward: asInt(json['essenceReward']),
       tier: asInt(json['tier']).clamp(0, 2),
+      claimed: json['claimed'] as bool? ?? false,
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/models/hero.dart';
+import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 
 void main() {
@@ -47,6 +48,57 @@ void main() {
       ClassKits.hudAbilitiesAt(HeroRole.rogue, 15).map((d) => d.id),
       contains(AbilityId.killingSpree),
     );
+  });
+
+  test('signature dumps and panic buttons are ready on a typical floor', () {
+    for (final def in ClassKits.all) {
+      if (def.tier != AbilityCastTier.signature &&
+          def.tier != AbilityCastTier.emergency) {
+        continue;
+      }
+      expect(
+        def.unlockLevel,
+        lessThanOrEqualTo(12),
+        reason: '${def.specId} ${def.name} still waits until ${def.unlockLevel}',
+      );
+    }
+    expect(
+      ClassKits.hudAbilitiesAtSpec(HeroSpecId.retribution, 12).map((d) => d.id),
+      containsAll([AbilityId.templarsVerdict, AbilityId.divineShield]),
+    );
+    expect(
+      ClassKits.defFor(AbilityId.beastWithin)!.selfBuffKind,
+      AbilitySelfBuffKind.amp,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.trueshot)!.selfBuffKind,
+      AbilitySelfBuffKind.amp,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.zealotry)!.selfBuffKind,
+      AbilitySelfBuffKind.amp,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.pillarOfFrost)!.selfBuffKind,
+      AbilitySelfBuffKind.amp,
+    );
+    expect(
+      ClassKits.defFor(AbilityId.metamorphosis)!.selfBuffKind,
+      AbilitySelfBuffKind.amp,
+    );
+  });
+
+  test('signature dumps flash the HUD chip on the first beat of cooldown', () {
+    final dump = ClassKits.defFor(AbilityId.templarsVerdict)!;
+    expect(dump.tier, AbilityCastTier.signature);
+    expect(dump.justFiredHud(dump.cooldown), isTrue);
+    expect(dump.justFiredHud(dump.cooldown - 0.1), isTrue);
+    expect(dump.justFiredHud(dump.cooldown * 0.4), isFalse);
+    expect(dump.justFiredHud(0), isFalse);
+    final filler = ClassKits.all.firstWhere(
+      (d) => d.tier == AbilityCastTier.filler && d.cooldown > 1,
+    );
+    expect(filler.justFiredHud(filler.cooldown), isFalse);
   });
 
   test('Inner Fire arms on Disc Priest once combat ticks', () {
@@ -214,6 +266,33 @@ void main() {
       warrior.rage = 100;
     }
     expect(charged, isTrue);
+  });
+
+  test('Charge refuses targets beyond max range', () {
+    final state = _partyAtLevel(15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final warrior =
+        world.heroes.firstWhere((h) => h.heroRole == HeroRole.warrior);
+    // Farther than chargeMaxRange (8) — must not teleport across the map.
+    warrior
+      ..rage = 100
+      ..x = target.x - 14.0
+      ..y = target.y;
+    _padAbilityCds(warrior, except: AbilityId.charge);
+
+    for (var i = 0; i < 8; i++) {
+      // Pin far so we only test out-of-range refuse (not walk-into-range Charge).
+      warrior
+        ..x = target.x - 14.0
+        ..y = target.y
+        ..rage = 100;
+      _padAbilityCds(warrior, except: AbilityId.charge);
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+    }
+    expect(target.rootTimer, lessThan(0.1));
+    // Pin each step; allow small walk jitter without counting as Charge.
+    expect(warrior.x, closeTo(target.x - 14.0, 1.0));
   });
 
   test('Commanding Shout buffs living party heroes', () {

@@ -1,70 +1,136 @@
-/// In-game guide copy for More → Guides.
+import 'game_logic.dart';
+import 'game_state.dart';
+import 'ashen_crown.dart';
+
+/// In-game guide copy for MORE → INFO.
 abstract final class GameGuides {
-  static const topics = <GuideTopic>[
+  /// Early topics before the first boss (plain chrome).
+  static const Set<String> firstHourTopicIds = {
+    'basics',
+    'combat',
+    'party',
+    'bag_equip',
+    'world_path',
+  };
+
+  static List<GuideTopic> topicsFor(GameState state) {
+    if (!GameLogic.plainPlayerChrome(state)) return topics;
+    return [
+      for (final t in topics)
+        if (firstHourTopicIds.contains(t.id)) t,
+    ];
+  }
+
+  static final topics = <GuideTopic>[
     GuideTopic(
       id: 'basics',
       title: 'BASICS',
       body:
-          'Idle Party is an idle RPG: your party fights in dungeons while you watch and steer.\n\n'
-          '• Hub: pick a zone on the World Path, manage gear and meta upgrades.\n'
-          '• Dungeon: combat runs automatically. Tap the map to use God Hand.\n'
-          '• Gold buys unlocks and market goods. Essence powers permanent meta.\n'
-          '• Open MORE for Forge, Sanctuary, Pets, Guides, and more.',
+          'You have a small party of heroes. They fight on their own.\n\n'
+          '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
+          '• Watch them clear rooms. Tap the fight when you want to help.\n'
+          '• TODAY on the hub always names the next job — start there.\n'
+          '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (tracks + '
+          'market), SHOP (real-money convenience store), ESSENCE (tracks / '
+          'essence / prestige / relics / pets), MORE. QUESTS and Craft live as rows '
+          'inside MORE. When the party is max level, KEY joins the hub bar as a '
+          'sixth tab after MORE — SHOP stays. In a dungeon the sixth slot is '
+          'LEAVE instead of KEY.\n'
+          '• Gold buys supplies and run power. Essence buys lasting power.\n'
+          '• In a dungeon the bar is GEAR · GOLD · SHOP · ESSENCE · MORE · LEAVE '
+          '(back to hub). Set KEY from the hub before you enter.\n'
+          '• A number on a button means something waits inside — GEAR 3 means '
+          '3 better items for the party. No number means nothing to do there.\n'
+          '• Menus stay small at the start; more tabs appear as you unlock them.\n'
+          '• You do not need to have played another RPG. Names like PROT / DISC / FIRE '
+          'are just the three starter jobs: Shield, Healer, Damage.',
+    ),
+    GuideTopic(
+      id: 'powerups',
+      title: 'POWERUPS',
+      body:
+          'Hub POWERUPS is optional. Watch a short ad for 3 hours of double gold '
+          'and +25% attack.\n\n'
+          '• One finished ad = 3 hours. Watch again to add another 3 hours.\n'
+          '• Time stacks up to 24 hours. The gold and attack bonuses do not stack '
+          'higher — only the timer does.\n'
+          '• Double gold applies to hub AFK gold and combat gold.\n'
+          '• Ads never pop up in a fight. You choose when to watch.\n'
+          '• Remaining time survives Ascend.',
     ),
     GuideTopic(
       id: 'world_path',
       title: 'WORLD PATH',
       body:
-          'The hub map lists every dungeon from Sand Caverns to Crystal Spire.\n\n'
-          '• Tap an unlocked zone to enter.\n'
-          '• Unlock the next zone by clearing the previous boss, or by earning enough lifetime gold.\n'
-          '• Locked zones show lifetime gold progress (have / need) on the hub.\n'
-          '• Lifetime gold (not wallet gold) counts for gold unlocks.\n'
-          '• Boss floor is shown on each node (Boss F n).',
+          'The hub World Path is a painted map from Sandy Caverns through Mothveil Hollow '
+          '(Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault, and the rest along the road).\n\n'
+          '• Scroll the map and tap a zone portrait on a glowing ring to select it.\n'
+          '• The selected zone is HERE; the next unlocked uncleared zone is NEXT. Other rings stay unlabeled so the path stays readable.\n'
+          '• Unlock the next zone by clearing the previous boss, or when your '
+          'party mean level reaches that zone’s gate (even steps from Lv1 on '
+          'Sandy Caverns through Lv100 on Mothveil).\n'
+          '• Zones unlock by party mean level or prior clear — gold does not unlock them.\n'
+          '• Locked zones dim on the map; the caption under the map shows '
+          'party level progress (have / need).\n'
+          "• Goblin's Hideout: stolen-stash chests pay better gold but wake ambush guards.\n"
+          '• Boss floor is shown under your party name (Boss on F n).',
     ),
     GuideTopic(
       id: 'combat',
       title: 'COMBAT',
       body:
           'Each floor is one combat wave on a multi-chamber map.\n\n'
-          '• Clear a chamber to open gates into the next.\n'
-          '• Pick up ground loot (or wait for auto-timeout), then walk to the stairs.\n'
+          '• Clear a chamber to open gates into the next — OPEN pops on the door.\n'
+          '• When the pack is dead, ground loot banks instantly and the party '
+          'heads to the stairs — GO marks the exit.\n'
+          '• Elite and treasure floors often hide a room chest — grabbed with '
+          'the floor clear.\n'
           '• Boss floors use a special arena.\n'
-          '• Party HP bars are bottom-left. Target info is bottom-right.\n'
-          '• Party meter (top-left) shows DPS, heals/sec (H), and tank taken/sec (T).',
+          '• Settings VFX: Full = all effects; Lite = no floaters/bursts (discs & auras stay); '
+          'Minimal = reduce motion.\n'
+          '• Party HP strip is bottom-left — tap a hero to open their kit. '
+          'Between fights, tap the same hero again to fold. Mid-fight the kit stays open. '
+          'Level and XP sit under HP.\n'
+          '• Gold in the top bar ticks up as pickups land.\n'
+          '• Target chip is top-right (name + HP).\n'
+          '• Tap METER (top-left) for party rates: DPS, healer HPS, tank damage taken (bars match unit; tanks/healers also show their damage).',
     ),
     GuideTopic(
       id: 'god_hand',
       title: 'GOD HAND',
       body:
-          'You are the distant will. Tap the dungeon floor to strike.\n\n'
-          '• Deals area damage and briefly steers the party toward the tap.\n'
+          'Tap the dungeon floor to help: smash enemies and steer the party.\n\n'
+          '• First job: smash a pack and pull the party toward your tap.\n'
           '• Cooldown ring is top-right of the dungeon view.\n'
-          '• Upgrade God Hand damage with essence (meta).\n'
-          '• Upgrade God Hand CD (Forge / Prestige) to shorten the cooldown.',
+          '• ESSENCE → KEEP (soft knobs): more damage, shorter CD, BAL / FOCUS / WIDE styles.\n'
+          '• Styles trade damage vs radius — not a second talent tree.\n'
+          '• Upgrades use essence and survive Ascend.',
     ),
     GuideTopic(
       id: 'farm_push',
       title: 'FARM / PUSH',
       body:
-          'Toggle at the top of the dungeon view.\n\n'
-          '• FARM: after clearing, loop the same floor for more loot/gold.\n'
-          '• PUSH: after clearing, advance to the next floor toward the boss.\n'
-          '• Use Floor −1 / +1 in the ⋯ menu to travel when allowed.',
+          'Toggle at the top of the dungeon view (FARM / PUSH).\n\n'
+          '• FARM (loop): after clearing, stay on the same floor for more loot/gold.\n'
+          '• PUSH (climb): after clearing, advance to the next floor toward the boss.\n'
+          '• Use Floor −1 / +1 in the floor menu to travel when allowed.',
     ),
     GuideTopic(
       id: 'party',
       title: 'PARTY',
       body:
-          'Unlock WotLK-style specs and build your own party.\n\n'
-          '• MORE → PARTY to set active heroes from your roster (4 slots, '
-          '5th unlockable with essence at AL 2+).\n'
-          '• New Game: pick 3 from the starter specs (Protection, Disc, Fire).\n'
-          '• Combat Rogue unlocks after first Ascend; more kits via clears.\n'
-          '• More specs unlock via Ascend level and dungeon clears.\n'
-          '• Tap a hero in the HUD for abilities; chips show cooldowns.\n'
+          'Your party is three jobs: Shield (soaks hits), Healer (keeps people up), '
+          'and Damage (kills enemies).\n\n'
+          '• GEAR → ROSTER to swap who is fighting (4 slots, '
+          '5th unlockable later).\n'
+          '• New Game: pick 3 starters — Protection (Shield), Discipline (Healer), '
+          'Fire (Damage) is the easy mix.\n'
+          '• More hero types unlock as you grow — you do not need another game.\n'
+          '• Tap a hero in the HUD for abilities; chips show cooldowns '
+          '(STREAK, SWEEP / FLURRY, BEACON when those windows are up).\n'
+          '• The strip shows level and a thin XP bar so growth is visible mid-fight.\n'
           '• Resources: Rage / Mana / Energy / Runic — kits spend these.\n'
-          '• Roster levels persist on Ascend; run gear still resets.\n'
+          '• Roster levels and open zones keep on Ascend; bag, gold, and Gold buys reset.\n'
           '• Flask heals the party when you have a potion.',
     ),
     GuideTopic(
@@ -72,157 +138,328 @@ abstract final class GameGuides {
       title: 'BAG & GEAR',
       body:
           'Loot drops on the floor, then goes to your stash (BAG).\n\n'
-          '• BAG: view, sell, or equip stash gear.\n'
-          '• GEAR: manage each hero’s slots (bottom nav or dock tab).\n'
-          '• Auto-Equip picks clear upgrades.\n'
-          '• Auto-sell (Settings) can trash weak drops on pickup.\n'
-          '• Compare stats before equipping — iLevel and rarity matter.',
+          '• Upgrades stay in BAG until you equip them — GEAR badge shows how '
+          'many are better; open BAG and tap AUTO EQUIP (or equip one by one).\n'
+          '• BAG: view and equip stash gear. CLEAN BAG sells gold then scraps essence using FILTERS.\n'
+          '• Stats: plate wants Strength, leather/mail damage wants Agility, '
+          'casters want Intellect and Spell Power. Spirit is mana, not damage. '
+          'Secondaries are Crit / Haste / Mp5 — new drops keep ≤2 (no Move). '
+          'Healers roll Mp5 then Crit (Haste last — heals do not haste). '
+          'Near 75% crit, Auto Equip stops chasing more Crit.\n'
+          '• Armor type is a hard gate: Warrior / Paladin / DK wear plate; '
+          'Hunter starts leather then mail at 40; Shaman mail; Rogue leather; '
+          'Druid leather (cloth OK); Priest / Mage / Warlock cloth. '
+          'Auto Equip never puts the wrong material on a hero.\n'
+          '• Weapons are a hard gate too: Paladin no daggers, Priest no swords, '
+          'Hunter no maces. Dual-wield is Rogue / Fury / Enhancement / Frost DK / '
+          'Survival. Shields are Warrior / Paladin / Shaman. Paladin / DK / Shaman / '
+          'Druid have no ranged slot (empty is fine). Drops skip slots nobody '
+          'in the party can wear, so a tank still sees shields.\n'
+          '• CHARM (trinket) drops always come with an on-item effect '
+          '(lifesteal, crit, gold find, …).\n'
+          '• GEAR: paper-doll per hero — UNEQUIP worn pieces, AUTO EQUIP from bag.\n'
+          '• Tap an empty GEAR slot to open BAG filtered to that slot.\n'
+          '• Auto-Equip follows budget stats. Green UPGRADE / EQUIP N is '
+          'exactly what AUTO EQUIP wears (not a maybe-better crumb). '
+          'Will not swap to clearly lower iLvl without a real power jump; '
+          '1H+off-hand can beat a lonely 2H.\n'
+          '• Armor sets (2pc/4pc) give combat bonuses — not fake BiS score.\n'
+          '• Settings / Bag FILTERS: auto-sell weak drops for gold, '
+          'auto-disassemble for essence (iLvl + rarity filters).\n'
+          '• CLEAN BAG (BAG button): sells/scraps everything at or below your '
+          'filters — keeps Apex and soulbound only.\n'
+          '• Near-full bag: light auto-clean while looting (still protects upgrades).\n'
+          '• Compare shows Score (BiS) — swapped pieces return to the bag.',
     ),
     GuideTopic(
       id: 'combinator',
       title: 'COMBINATOR',
       body:
           'Merge two same-slot gear pieces into one stronger item.\n\n'
-          '• In BAG: select an item → ADD TO MERGE (or long-press).\n'
-          '• Add a second item of the same slot; TOOLS opens when ready.\n'
-          '• Check RESULT preview and gold cost, then MERGE.\n'
+          '• In BAG: select an item → ADD TO MERGE.\n'
+          '• Long-press any item for the full tip card.\n'
+          '• Add a second item of the same slot; MERGE opens when ready.\n'
+          '• Check RESULT preview (rarity, iLvl, SCORE jump) and gold cost, then MERGE.\n'
           '• AUTO MERGE: repeatedly merges junk pairs of the same slot '
           '(skips BiS / clear upgrades) while you can afford the cost.\n'
-          '• Both inputs are consumed. Soulbind is separate (3 fragments).',
+          '• Combinator Charm in ESSENCE → KEEP (permanent buys) lowers MERGE gold (−3g per luck).\n'
+          '• Both inputs are consumed.',
+    ),
+    GuideTopic(
+      id: 'income',
+      title: 'GOLD/MIN',
+      body:
+          'ESSENCE tab (hub gold).\n\n'
+          'Your incremental dashboard: Hub gold/min, Run gold/min (from real '
+          'loot in the last couple of minutes), gold % multipliers, and Gold Find '
+          '— the keep generator on the Gold Find track below.\n\n'
+          'Hub ticks while you sit at the keep (slower than a dungeon run, but '
+          'overnight still buys Gold). Buy one Gold Find level or bulk levels '
+          'when you can afford them.',
     ),
     GuideTopic(
       id: 'forge',
-      title: 'FORGE',
+      title: 'GOLD',
       body:
-          'MORE → FORGE.\n\n'
-          '• Train party power with gold / run resources.\n'
-          '• Buy relics that permanently boost combat or economy.\n'
-          '• Upgrade relic tiers and respec if you change builds.\n'
-          '• Refine soulbound gear; upgrade God Hand power and cooldown.\n'
-          '• Ascend from the Hub when ready (not from Forge).',
+          'GOLD tab — spend wallet gold on run power and the market.\n\n'
+          '• TRACKS: party ATK/DEF/STA/MOVE/HASTE/CRIT. '
+          'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
+          'SPEND ALL · EVEN to split gold round-robin across every track. '
+          'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}). '
+          'Harder kills (higher enemy level than the hero) pay more XP; heroes far behind the party catch up faster.\n'
+          'Gold tracks reset when you Ascend. '
+          'ATK, HASTE, and MOVE speed up clears — see Essence for rates. '
+          'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
+          'HASTE and CRIT are the same percent step. BEST marks the cheapest '
+          'relative upgrade.\n'
+          '• MARKET: flasks, bandages, traveling gear listings.\n'
+          '• Essence keeps (Blessing, God Hand, 5th slot) live on ESSENCE → KEEP.\n'
+          '• Ascend from the Hub when ready (not from Gold).',
+    ),
+    GuideTopic(
+      id: 'classes',
+      title: 'CLASS UNLOCKS',
+      body:
+          'Ascend grows your roster — TODAY and Ascend teasers name the next kits '
+          'with a short fantasy line plus a Watch… combat hook.\n\n'
+          '• AL1: Combat Rogue, Arms, Holy Paladin\n'
+          '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot '
+          '(ESSENCE KEEP · 80e)\n'
+          '• AL3: Prot Paladin, Assassination, Resto Shaman, Frost Mage, Resto Druid\n'
+          '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'
+          '• AL5: Blood DK, Frost DK, Guardian\n'
+          '• AL6: Affliction, Demonology\n\n'
+          'Endgame (not Ascend):\n'
+          '• Party Lv${GameLogic.maxHeroLevel}: KEYSTONE, Infinity Gauntlet, Rifts, '
+          'Greater Rifts, and Ashen Crown unlock when every active hero is max level '
+          '— AL20 alone is not enough.\n\n'
+          'Some kits also unlock from zone clears or the Prestige Shop — see each '
+          'spec’s unlock hint in GEAR → ROSTER.',
     ),
     GuideTopic(
       id: 'sanctuary',
-      title: 'SANCTUARY',
+      title: 'ESSENCE',
       body:
-          'MORE → SANCTUARY. Spend essence on permanent tracks.\n\n'
-          '• Gold Find, War Altar, Life Well, and Lore Font (XP).\n'
-          '• Tracks level infinitely — cost scales with level.\n'
-          '• Optional prestige from level 12+: reset for essence + lasting bonus.\n'
-          '• Survives Ascend (meta progress).\n'
-          '• Invest early — sanctuary compounds over many runs.',
+          'ESSENCE tab. Four places: TRACKS, KEEP, RELICS, PETS.\n\n'
+          '• TRACKS: Gold Find, War Altar, Life Well, Lore Font — spend essence '
+          'on lasting rates/power. Optional reset from Lv12 keeps a small forever bonus.\n'
+          '• KEEP: God Hand damage/CD/style, Ascend Blessing readout, permanent QoL buys '
+          '(AL-gated), constellation at AL20, optional REBORN. '
+          'Not the bottom-tab SHOP (real-money convenience).\n'
+          '• RELICS: party auras (ATK / DEF / STA / loot).\n'
+          '• PETS: hatch and level pets when unlocked.\n'
+          '• Everything here survives Ascend.\n'
+          '• Invest early — tracks compound over many runs.',
     ),
     GuideTopic(
       id: 'gauntlet',
       title: 'INFINITY GAUNTLET',
       body:
-          'Unlocks at Ascension Level 10 (Spireborn).\n\n'
+          'Unlocks when every active hero reaches level ${GameLogic.maxHeroLevel} (endgame).\n\n'
           '• Endless Crystal Spire climb — each floor gets harder.\n'
           '• Gold and essence scale with floor; boss every 5 floors.\n'
           '• Wipe or leave returns to hub; best floor is saved.\n'
           '• Does not count toward Ascend boss requirements.',
     ),
     GuideTopic(
-      id: 'apex',
-      title: 'APEX FORGE',
+      id: 'rift',
+      title: 'RIFTS',
       body:
-          'FORGE → MATERIALS / APEX.\n\n'
-          '• Craft the strongest class/role gear from boss-only materials.\n'
-          '• Materials live in a separate bag (not gear stash) and survive Ascend.\n'
-          '• Farm bosses on each dungeon — trash packs never drop mats.\n'
-          '• Craft weapon R1 first, then armor; upgrade pieces in place to R3.\n'
-          '• Apex gear stays equipped through Ascend.',
+          'Farm mode at party level ${GameLogic.maxHeroLevel}.\n\n'
+          '• Timed kill challenges — clear the kill quota before the par timer.\n'
+          '• Gold and gear drop during the run; success also pays essence + gold.\n'
+          '• Higher tiers: tougher packs and less time; fast clears unlock +2.\n'
+          '• Wipe or timeout ends the run with a small consolation.\n'
+          '• Not ranked on Play Games — use Greater Rift for season prestige '
+          '(KEY + Gauntlet boards live; GR board when Console ID is set).\n'
+          '• Set preferred tier under KEY · RIFT, or tap RIFT on the hub.',
+    ),
+    GuideTopic(
+      id: 'greater_rift',
+      title: 'GREATER RIFTS',
+      body:
+          'Prestige mode at party level ${GameLogic.maxHeroLevel} — harder than farm Rifts.\n\n'
+          '• Timed kill quota on a tougher ladder (GR1–GR20).\n'
+          '• Mid-run: gold OK, no gear drops — big essence + gold on clear.\n'
+          '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
+          '• Season ranks: Timed KEY + Gauntlet on KEY · BOARDS (Play Games). '
+          'Greater Rift board wires when the Console ID is pasted.\n'
+          '• Tap GREATER RIFT on the hub or set tier under KEY.',
+    ),
+    GuideTopic(
+      id: 'apex',
+      title: 'CRAFT',
+      body:
+          'MORE → CRAFT.\n\n'
+          '• Tap a party goal first — that sets who and which slot you craft.\n'
+          '• Recipe + CRAFT sit under the goal. Tap a recipe mat to lock the farm target.\n'
+          '• Materials bag and Change goal stay collapsed until you need them.\n'
+          '• Target meter: every boss clear builds toward a guaranteed mat (PUSH faster than FARM).\n'
+          '• Craft weapon R1 first, then armor; upgrade in place to R3.\n'
+          '• Crafted gear and materials survive Ascend.',
     ),
     GuideTopic(
       id: 'market',
-      title: 'MARKET',
+      title: 'GOLD MARKET',
       body:
-          'MORE → MARKET.\n\n'
-          '• Buy flasks and consumables with gold.\n'
-          '• Sell stash junk when the bag is full.\n'
-          '• Keep at least one flask for tough floors and bosses.',
+          'GOLD → MARKET.\n\n'
+          '• GEAR: opens on Upgrades. Tap a row to buy. Switch to All gear if you want '
+          'the full stock. Free refresh every 6 hours, or pay gold to reroll.\n'
+          '• Hub TODAY can chase Market when an affordable listing beats your gear.\n'
+          '• Wipe advice may point at GOLD when listings beat forge tracks for the same gap.\n'
+          '• Buy flasks and bandages with gold.\n'
+          '• Clear a full bag with BAG → CLEAN BAG, MERGE, or SETTINGS auto-sell / '
+          'auto-disassemble — there is no separate Sell junk button.\n'
+          '• Keep at least one flask for tough floors and bosses.\n'
+          '• Bottom-tab SHOP is the real-money store (cheap boosts / ad-free) — not this market.',
     ),
     GuideTopic(
       id: 'pets',
       title: 'BEAST PEN',
       body:
-          'MORE → BEAST PEN.\n\n'
-          '• Hatch and level pets with essence.\n'
-          '• Merge two same-species pets into a higher rarity.\n'
-          '• Favorite a species, bond for power, buy portrait frames.\n'
-          '• Active pet follows in combat and chips damage.\n'
+          'ESSENCE → PETS.\n\n'
+          '• Hatch and level pets with essence (random species and rarity).\n'
+          '• Merge two same-species pets of the same rarity into a higher rarity.\n'
+          '• Favorite a species: +1 ATK and a stronger passive while that pet is ACTIVE.\n'
+          '• Bond for +1 ATK every 5 ranks (max 25). Frames are looks only.\n'
+          '• Active pet follows in combat and chips damage (cyan hits, ally ring).\n'
+          '• Beast Mastery / Demonology / Unholy also bring a class companion '
+          '(Hunter Pet / Felguard / Ghoul). Enhancement wolves and Frost Water '
+          'Elemental are timed summons.\n'
           '• Pets are meta — they survive Ascend.',
     ),
     GuideTopic(
       id: 'prestige_shop',
-      title: 'ESSENCE SHOP',
+      title: 'KEEP BUYS',
       body:
-          'MORE → ESSENCE SHOP (AL-gated).\n\n'
-          '• Spend essence on permanent stash slots, pet roster, GH CD, and more.\n'
+          'ESSENCE → KEEP · Permanent buys (AL-gated).\n\n'
+          '• Spend essence on stash slots, cheaper MERGE gold, pet roster, '
+          'cheaper market flasks, higher auto-sell / auto-disassemble ceilings, more Welcome '
+          'Back rows, Dawn Tithe (vault + Daily Run), and more.\n'
+          '• God Hand cooldown upgrades live only under God Hand on KEEP (one door).\n'
           '• Purchases survive Ascend.\n'
-          '• Unlock higher offerings as Ascension Level rises.',
+          '• Unlock higher offerings as Ascension Level rises.\n'
+          '• Bottom-tab SHOP is real-money store (cheap boosts / ad-free) — not these essence buys.',
     ),
     GuideTopic(
       id: 'jobs',
-      title: 'CONTRACTS',
+      title: 'QUESTS',
       body:
-          'MORE → CONTRACTS.\n\n'
-          '• Goals rotate: kills, elites, floors, bosses, gold.\n'
-          '• Hard / Brutal variants pay more and take longer.\n'
-          '• Targets scale with Ascension, zones cleared, and hardmode.\n'
-          '• Claiming rolls a new contract (usually a different type).\n'
+          'QUESTS.\n\n'
+          '• Three slots: Daily (UTC kill goal), Bounty (kill ladder), Side '
+          '(bosses, elites, floors, or gold).\n'
+          '• Daily returns next UTC day after you claim.\n'
+          '• Bounty ladder climbs 100 → 500 → 1000 at endgame '
+          '(smaller rungs earlier); top rung repeats.\n'
           '• Claim 3 in a row for a +5e chain bonus.\n'
-          '• The MORE menu may show CONTRACTS (n) when claims are ready.\n'
-          '• The top CLAIM chip claims all ready contracts at once '
+          '• MORE · QUESTS (or the badge on MORE) when claims are ready.\n'
+          '• TODAY CLAIM QUESTS claims ready rewards from the hub.\n'
+          '• The dungeon top CLAIM chip claims all ready quests at once '
           '(visible in combat too; long-press opens the list).',
     ),
     GuideTopic(
       id: 'weekly',
-      title: 'WEEKLY',
+      title: 'DAILY VAULT',
       body:
-          'Each ISO week rolls a dungeon modifier (glass / swarm / elite).\n\n'
-          '• Clear 3 floors under that week’s modifier to fill progress.\n'
-          '• Claim the weekly essence reward once progress hits 3/3.\n'
-          '• Progress resets when the week key rolls over.',
+          'Keystone affixes still rotate each ISO week, but the vault is daily.\n\n'
+          '• Early on: TODAY tells you to grow the party in the starter zone. '
+          'Daily and vault-start wait until you have beaten a boss (or Ascended).\n'
+          '• Fill today’s vault with 1 dungeon clear, then claim essence.\n'
+          '• At party Lv${GameLogic.maxHeroLevel}: KEYSTONE unlocks — time a KEY +2 (or higher) for a bigger '
+          'vault claim (KEY). TODAY may chase KEY / Gauntlet / Rift.\n'
+          '• Hub TODAY and offline Up next share one chase (claim → READY → '
+          'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
+          '• Welcome-back shows one wow line, a few highlights, then Up next.\n'
+          '• TODAY flashes READY / ALMOST when a claim or Ascend is close.\n'
+          '• First vault claim of each calendar month also pays a season bonus.\n'
+          '• Each ISO week has a named local season beat (KEY +2 or Gauntlet floor) '
+          '— TODAY / META may chase it after party Lv${GameLogic.maxHeroLevel} for KEY weeks; claim pays essence + title.\n'
+          '• Progress resets at UTC midnight.\n'
+          '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
     ),
     GuideTopic(
-      id: 'loadouts',
-      title: 'GEAR SETS',
+      id: 'armor_sets',
+      title: 'ARMOR SETS',
       body:
-          'MORE → GEAR SETS.\n\n'
-          '• Save up to 3 named gear presets (by hero id).\n'
-          '• Apply a set to swap equipped gear quickly.\n'
-          '• Handy when switching Farm vs Push or Hardmode setups.\n'
-          '• Party lineup is separate — use MORE → PARTY.',
+          'Rare+ armor from a zone can form a dungeon set (head / shoulder / chest / legs).\n\n'
+          '• 2pc: flat stamina (or spirit on cloth).\n'
+          '• 4pc: more stats + role fantasy + a chance for a tagged set proc on autos.\n'
+          '• Set names follow the zone (Tidehold, Ashen, Spire, …).',
+    ),
+    GuideTopic(
+      id: 'constellation',
+      title: 'BLESSING CONSTELLATION',
+      body:
+          'At AL20, ESSENCE → KEEP opens a small constellation board.\n\n'
+          '• Separate from Ascend Blessing stacks (+ATK/DEF/STA/gold).\n'
+          '• Earn points from reaching AL20, Ashen Crown, and Apex Trial.\n'
+          '• Spend points on permanent nodes (crit, gold, block, KEY par, …).\n'
+          '• Points and lit nodes survive Ascend / REBORN.',
+    ),
+    GuideTopic(
+      id: 'ashen_crown',
+      title: 'ASHEN CROWN',
+      body:
+          'Weekly ticket boss (party Lv${GameLogic.maxHeroLevel}). Hub TODAY or KEY.\n\n'
+          '• ${AshenCrown.ticketsPerWeek} tickets each ISO week. The first ticket clear '
+          'pays +${AshenCrown.essenceReward}e and a title.\n'
+          '• After that clear, further tickets do not pay — use PRACTICE (free, no ticket) '
+          'to rehearse the fight.\n'
+          '• Confirm before a ticket run. Wipe or leave before the boss pays '
+          'back the ticket — only a clear spends it. PRACTICE never spends a ticket.\n'
+          '• Uses Ashen Vault staging; leave or wipe returns you to the hub.',
     ),
     GuideTopic(
       id: 'hardmode',
-      title: 'HARDMODE & CHALLENGES',
+      title: 'KEYSTONE RUNS',
       body:
-          'Set before entering a dungeon (hub challenge panel).\n\n'
-          '• Hardmode is AL-gated: max HM = min(10, 3 + AL÷2).\n'
-          '• Hardmode +1…+10: huge enemy HP, damage, and pack size.\n'
-          '• At HM+10: about 1000% (10×) HP, ATK, and enemy count.\n'
-          '• Boss Rush / No Flask: harder clears, extra essence.\n'
-          '• Hardmode also pays more gold — high risk, high reward.',
+          'Mythic+-style keys from the hub KEY panel (KEY — first tab when '
+          'party is Lv${GameLogic.maxHeroLevel}) — unlocks at '
+          'party level ${GameLogic.maxHeroLevel}.\n\n'
+          '• Endgame only: set key before you enter a normal zone dungeon.\n'
+          '• Key level caps at +20 once the party is max level.\n'
+          '• Affixes lock on enter (weekly + Fortified/Tyrannical at +4, more at higher keys).\n'
+          '• Idle-friendly timer: AFK time counts; beat the boss under par to TIMED upgrade.\n'
+          '• Overtime = depleted (clear still counts, no key upgrade).\n'
+          '• Daily vault: 1 clear or timed KEY +2 — claim once per day.\n'
+          '• Optional Boss Rush / No Flask / Tiny add extra challenge + essence.\n'
+          '• Higher keys drop higher iLvl gear (KEY +10 is +20 iLvl) and pay '
+          'gold in line with the harder packs — not a gold tax.\n'
+          '• At party Lv${GameLogic.maxHeroLevel}, hub TODAY may chase KEY until your preferred key is at the cap.\n'
+          '• Ashen Crown tickets and PRACTICE live under the same endgame KEY home.',
     ),
     GuideTopic(
       id: 'ascend',
       title: 'ASCEND',
       body:
-          'Prestige when Ascend unlocks in the hub.\n\n'
-          '• Resets run gear, stash, and floor progress.\n'
-          '• Keeps: essence, relics, sanctuary, pets, soulbound, God Hand, '
-          'highest dungeon cleared, lifetime gold, unlocked specs, '
-          'roster levels/XP, and 5th party slot.\n'
-          '• Grants essence and raises Ascension Level (AL).\n'
-          '• AL makes later runs tougher but richer in meta power.',
+          'Claim Ascend in the hub when ready (AL1–AL20) — same party, empty bag, '
+          'stronger Blessing.\n\n'
+          '• AL20 is the Ascension cap. Endgame (KEY +20, Gauntlet, Rifts, Greater Rifts, '
+          'Ashen Crown, vault, boards) unlocks when every active hero reaches level '
+          '${GameLogic.maxHeroLevel} — not from AL20 alone.\n'
+          '• Each Ascend grants a lasting Blessing: +5 ATK · +20 DEF · +60 STA · '
+          '+8% gold (stacks forever). See ESSENCE → KEEP.\n'
+          '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
+          '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
+          '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
+          'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
+          '• Reset: wallet gold, forge tracks, bag and worn drops, market, floor height '
+          '(starter gear back on).\n'
+          '• Boss victories toward the next Ascend clear.\n'
+          '• At AL20, ESSENCE → KEEP offers optional REBORN (same bag wipe, AL stays 20, '
+          'no extra Blessing). TODAY never nags you to press it.',
     ),
     GuideTopic(
       id: 'daily',
       title: 'DAILY RUN',
       body:
           'A daily echo dungeon appears on the hub when available.\n\n'
+          '• Early (before first boss): TODAY focuses on growing the party — Daily '
+          'may wait.\n'
+          '• After the first hour, TODAY may chase Ascend, zones, vault, Daily, or '
+          '(at party Lv${GameLogic.maxHeroLevel}) KEY / Gauntlet / Rifts — one hunt at a time.\n'
+          '• When KEY is below dial cap, KEY often wins TODAY; Daily is still free '
+          'essence from the hub or Urgent row.\n'
           '• Clear the required floor(s) for a flat essence reward.\n'
           '• May let you visit a locked zone for the day.\n'
           '• Claim once per day — good free essence.',
@@ -231,7 +468,7 @@ abstract final class GameGuides {
       id: 'codex',
       title: 'CODEX & ACHIEVEMENTS',
       body:
-          'MORE → CODEX / ACHIEVEMENTS.\n\n'
+          'MORE → INFO (codex + trophies).\n\n'
           '• Codex records monsters and items you have seen.\n'
           '• Achievements track milestones and grant rewards.\n'
           '• Discovery happens automatically as you play.',
@@ -240,21 +477,23 @@ abstract final class GameGuides {
       id: 'ui',
       title: 'UI TIPS',
       body:
-          '• Party frame (bottom-left) shrinks on phones and fades after idle — tap to wake.\n'
-          '• Party meter appears once heroes fight, heal, or take hits.\n'
-          '• Settings: text scale, reduced VFX, colorblind floaters, auto-sell.\n'
-          '• MORE → GUIDES brings you back here anytime.\n'
+          '• Party strip (bottom-left) fades after idle — tap a hero for kit. '
+          'Between fights, tap again to fold; mid-fight the kit stays open.\n'
+          '• Target chip sits top-right (name + HP).\n'
+          '• Tap METER (top-left) for party rates: DPS, healer HPS, tank damage taken '
+          '(bars match unit; tanks/healers also show their damage).\n'
+          '• Settings: text scale (S/M/L/XL), dungeon zoom Close/Normal/Wide, '
+          'mute + SFX/Ambience volume + haptics, keep screen on in dungeon, Full / Lite / Minimal VFX '
+          '(Minimal = reduce motion), colorblind floaters, '
+          'bag auto-sell / auto-disassemble.\n'
+          '• MORE → INFO brings you back here anytime.\n'
           '• Escape / back closes overlays.',
     ),
   ];
 }
 
 class GuideTopic {
-  const GuideTopic({
-    required this.id,
-    required this.title,
-    required this.body,
-  });
+  const GuideTopic({required this.id, required this.title, required this.body});
 
   final String id;
   final String title;

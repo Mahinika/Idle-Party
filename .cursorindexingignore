@@ -1,0 +1,12 @@
+﻿# Indexing only — Agent can still @-mention or open these files.
+# Keeps big / rarely needed text out of automatic codebase context.
+# (build/, tool/out/, *.png already covered by .gitignore + Cursor defaults.)
+
+docs/FEEL_AUDIT_500.md
+docs/TOP_GAMES_RESEARCH.md
+docs/audits/
+
+# Tracked Flutter Windows plugin glue — not product logic
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugin_registrant.h
+windows/flutter/generated_plugins.cmake

@@ -1,0 +1,24 @@
+{
+  "source": "lib/core/game_logic.dart",
+  "class": "GameLogic",
+  "bucket": "Encounter budget",
+  "target_class": "EncounterFactory",
+  "out": "lib/core/encounter_factory.dart",
+  "members": [
+    "roomCombatBudget",
+    "appliedGearPressure",
+    "partyGearPressure",
+    "xpPoolForLevel",
+    "xpForEnemy",
+    "awardPartyXp",
+    "awardEnemyKillXp",
+    "createEnemyGroup",
+    "_pickArchetype",
+    "_archetypeBudgetWeight",
+    "_archetypeStatSkew",
+    "_enemyNameFor",
+    "_zoneArchetypeName"
+  ],
+  "no_delegate": [],
+  "header": "import 'dart:math';\n\nimport '../models/dungeon_def.dart';\nimport '../models/dungeon_room.dart';\nimport '../models/enemy.dart';\nimport '../models/hero.dart';\nimport '../models/stats.dart';\nimport 'dungeon_generator.dart';\nimport 'game_logic.dart';\nimport 'game_state.dart';\nimport 'keystone.dart';\n\n/// How hard a room is, who stands in it, and what killing it is worth.\n///\n/// One combat wave per floor: the budget decides total enemy attack/HP/gold,\n/// then the roster spends that budget on archetypes with zone-flavoured names.\n/// [SpatialCombat] stays the authority on the fight itself.\nabstract final class EncounterFactory {"
+}

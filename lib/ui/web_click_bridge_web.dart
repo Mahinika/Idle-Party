@@ -66,6 +66,9 @@ const _domHookSource = r'''
   }
 
   document.addEventListener('click', function (e) {
+    // Real mouse/touch — let Flutter semantics + InkWell handle it. The hook is
+    // for automation (untrusted / synthetic clicks) that CanvasKit often drops.
+    if (e.isTrusted) return;
     var btn = buttonFromEvent(e);
     if (!btn) return;
     if (btn.getAttribute('aria-disabled') === 'true') return;

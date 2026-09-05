@@ -1,0 +1,29 @@
+{
+  "source": "lib/core/game_logic.dart",
+  "class": "GameLogic",
+  "bucket": "Loot pipeline",
+  "target_class": "LootPipeline",
+  "out": "lib/core/loot_pipeline.dart",
+  "members": [
+    "goldPouchBaseGold",
+    "isWalletGoldDrop",
+    "rollKillLoot",
+    "rollRoomChestLoot",
+    "rollFloorClearLoot",
+    "rollLoot",
+    "finalizeLootDrops",
+    "_lootTargetHero",
+    "createEquipment",
+    "itemLevelFor",
+    "maxAutoSellIlvlCap",
+    "scaleSoulboundForAl",
+    "equipmentNameFor",
+    "lootEssenceValue",
+    "equipmentEssenceValue",
+    "equipmentGoldValue",
+    "_rarityForBattle",
+    "treasureGoldBudget"
+  ],
+  "no_delegate": ["finalizeLootDrops", "equipmentNameFor"],
+  "header": "import 'dart:math';\n\nimport '../models/dungeon_def.dart';\nimport '../models/dungeon_room.dart';\nimport '../models/hero.dart';\nimport '../models/hero_spec.dart';\nimport '../models/loot.dart';\nimport '../models/proficiency.dart';\nimport '../models/stats.dart';\nimport 'equipment_factory.dart';\nimport 'game_logic.dart';\nimport 'game_state.dart';\nimport 'keystone.dart';\n\n/// What a kill, a chest or a cleared floor is worth, and the item it rolls.\n///\n/// Everything here answers one question — *what dropped* — and hands the\n/// result to [GearService] to decide where it goes. Kept separate from the\n/// bag so drop rates can be read (and balanced) without scrolling past\n/// equip rules.\nabstract final class LootPipeline {"
+}

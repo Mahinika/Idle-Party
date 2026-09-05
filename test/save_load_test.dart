@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
@@ -7,6 +8,7 @@ import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/hero.dart';
+import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/pet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,11 +28,19 @@ void main() {
       ascensionLevel: 1,
       godHandLevel: 2,
       autoSellMaxPower: 30,
+      autoSellMaxRarity: 2,
+      autoDisassembleMaxIlvl: 18,
+      autoDisassembleMaxRarity: 1,
       soundMuted: true,
+      sfxVolume: 0.35,
+      ambienceVolume: 0.15,
       reducedVfx: true,
       rogueUnlocked: true,
       offlineSecondsRecovered: 90,
       layoutSeed: 4242,
+      wipeStreakKey: 'sandy:3',
+      wipeStreakCount: 3,
+      wipeAdviceLine: 'Upgrade ATK in FORGE',
     );
     state = GameLogic.ensureRogueHero(state);
 
@@ -54,14 +64,23 @@ void main() {
     expect(decoded.ascensionLevel, 1);
     expect(decoded.godHandLevel, 2);
     expect(decoded.autoSellMaxPower, 30);
+    expect(decoded.autoSellMaxRarity, 2);
+    expect(decoded.autoDisassembleMaxIlvl, 18);
+    expect(decoded.autoDisassembleMaxRarity, 1);
     expect(decoded.soundMuted, isTrue);
+    expect(decoded.sfxVolume, closeTo(0.35, 0.001));
+    expect(decoded.ambienceVolume, closeTo(0.15, 0.001));
     expect(decoded.reducedVfx, isTrue);
+    expect(decoded.vfxQuality.name, 'lite');
     expect(decoded.rogueUnlocked, isTrue);
     expect(decoded.offlineSecondsRecovered, 90);
     expect(decoded.layoutSeed, 4242);
     expect(decoded.dungeonId, 'sandy');
     expect(decoded.dungeonMode, DungeonMode.farm);
     expect(decoded.inDungeon, isTrue);
+    expect(decoded.wipeStreakKey, 'sandy:3');
+    expect(decoded.wipeStreakCount, 3);
+    expect(decoded.wipeAdviceLine, 'Upgrade ATK in FORGE');
     expect(decoded.heroes.length, state.heroes.length);
     // Load may run syncSpecUnlocks and bump lastUpdated.
     expect(
@@ -184,5 +203,110 @@ void main() {
     expect(await storage.load(), isNull);
     expect(await storage.hasSave(), isFalse);
     expect(prefs.getString('idle_party_save_v2_corrupt'), '{not-json');
+  });
+
+  test('corrupt v2 recovers from valid legacy v1', () async {
+    final v1 = await File(
+      'test/fixtures/save_v1.json',
+    ).readAsString();
+    SharedPreferences.setMockInitialValues({
+      'idle_party_save_v2': '{not-json',
+      'idle_party_save_v1': v1,
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final storage = SharedPreferencesGameStorage(preferences: prefs);
+
+    final loaded = await storage.load();
+    expect(loaded, isNotNull);
+    expect(loaded!.gold, 1450);
+    expect(prefs.getString('idle_party_save_v2'), isNull);
+    expect(prefs.getString('idle_party_save_v1'), isNotNull);
+    expect(prefs.getString('idle_party_save_v2_corrupt'), '{not-json');
+  });
+
+  test('legacy save without wipe streak fields stays quiet', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 8, 21));
+    final json = Map<String, dynamic>.from(state.toJson());
+    json.remove('wipeStreakKey');
+    json.remove('wipeStreakCount');
+    json.remove('wipeAdviceLine');
+    final loaded = GameLogic.stateFromJson(json);
+    expect(loaded.wipeStreakKey, '');
+    expect(loaded.wipeStreakCount, 0);
+    expect(loaded.wipeAdviceLine, '');
+  });
+
+  test('title screen does not persist until New Game', () async {
+    final storage = InMemoryGameStorage();
+    final director = GameDirector(storage, enableSpatialLoop: false);
+    await director.boot();
+    expect(director.hasExistingSave, isFalse);
+    await director.debugTryPersist();
+    expect(await storage.load(), isNull);
+
+    await director.startNewGame(
+      HeroSpecs.starterUnlocked,
+      partyName: 'Cave Company',
+    );
+    expect(director.hasExistingSave, isTrue);
+    expect(director.state.partyName, 'Cave Company');
+    expect(await storage.load(), isNotNull);
+    expect((await storage.load())!.partyName, 'Cave Company');
+    director.dispose();
+  });
+
+  test('partyName round-trips, defaults on legacy, and survives Ascend', () {
+    final named = GameLogic.createInitialState(
+      now: DateTime(2026, 8, 22),
+      partyName: 'The Ember Guard',
+    );
+    expect(named.partyName, 'The Ember Guard');
+    expect(GameLogic.stateFromJson(named.toJson()).partyName, 'The Ember Guard');
+
+    final json = Map<String, dynamic>.from(
+      GameLogic.createInitialState(now: DateTime(2026, 8, 22)).toJson(),
+    );
+    json.remove('partyName');
+    expect(GameLogic.stateFromJson(json).partyName, 'The Party');
+
+    json['partyName'] = 'sh1t';
+    expect(GameLogic.stateFromJson(json).partyName, 'The Party');
+
+    final ready = named.copyWith(bossVictories: 1);
+    final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 23));
+    expect(ascended.partyName, 'The Ember Guard');
+    expect(ascended.ascensionLevel, 1);
+  });
+
+  test('clipboard import marks the save real and writes storage', () async {
+    final storage = InMemoryGameStorage();
+    final director = GameDirector(storage, enableSpatialLoop: false);
+    await director.boot();
+    final raw = GameLogic.exportSaveJson(
+      GameLogic.createInitialState(now: DateTime(2026, 8, 21)).copyWith(gold: 999),
+    );
+    expect(director.importSaveJson(raw), isTrue);
+    expect(director.hasExistingSave, isTrue);
+    await director.debugTryPersist();
+    expect((await storage.load())?.gold, 999);
+    director.dispose();
+  });
+
+  test('director will not sell hidden Loadout Folio', () async {
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 8, 21))
+        .copyWith(essence: 500, ascensionLevel: 10);
+    final storage = InMemoryGameStorage(seeded);
+    final director = GameDirector(
+      storage,
+      initialState: seeded,
+      enableSpatialLoop: false,
+    );
+    await director.boot();
+    final essence = director.state.essence;
+    final slots = director.state.metaDepth.loadoutBonusSlots;
+    director.buyPrestigeShopItem('loadout_slot');
+    expect(director.state.essence, essence);
+    expect(director.state.metaDepth.loadoutBonusSlots, slots);
+    director.dispose();
   });
 }

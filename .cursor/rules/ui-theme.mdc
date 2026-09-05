@@ -1,0 +1,22 @@
+---
+description: Idle Party UI — tokens and patterns (not a layout straitjacket).
+globs: lib/ui/**/*.dart
+alwaysApply: false
+---
+
+# UI theme
+
+When editing menus, overlays, sheets, or dialogs under `lib/ui/`:
+
+1. Read **`docs/UI_THEME.md`**. Prefer import **`lib/ui/theme.dart`**.
+2. **Phone-first / portrait only** (~360–430 px); tap / long-press, not hover-only.
+3. Use **`GameTheme`** + **`MenuChrome`** colors/radii — **no `Color(0x…)` outside `game_theme.dart`** (combat VFX excepted). Enforced by `test/ui_theme_test.dart`.
+4. **Pick the visual family:** menu sheet (≈ GEAR) vs hub vs combat HUD vs brand vs tooltip — do not force GEAR chrome onto hub or dungeon.
+5. **Action hierarchy:** one brown primary per view when possible; grey secondary; `textLink` / ghost for nav; red for destructive. Actions → **`GameButton`** (`KenneyButton` is the same widget).
+6. **Icons:** **`GameIcon` / `UiIcon` / `UiGlyph`** — never Material `Icons`, `ChoiceChip`, or emoji in chrome. Chase CTAs are plain English (`ENTER KEY`, not `🔑`). Dungeon party/target wells use `MenuChrome.hudWell`.
+7. **IA copy:** RUN / TODAY / ACCOUNT — `scopeChip`, `sectionLabelScoped`, `tabBanner` for tab-owned status.
+8. **Layout:** scroll, split flex, horizontal lists when content overflows — overflow stripes are bugs.
+9. Dialog cancel → `MenuChrome.dialogCancel`; +/- → `stepperButton`.
+10. Press Start (`GameTheme.pixel`) for combat HUD and tiny tags only — menu body uses `body`.
+
+English in-game copy. New shared helpers → `MenuChrome`, `GameButton`, or `GameIcon` + one line in `docs/UI_THEME.md`.

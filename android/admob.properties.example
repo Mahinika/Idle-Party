@@ -1,0 +1,4 @@
+# Optional local override (gitignored). Live Idle Party defaults are already
+# in lib/core/ad_config.dart and android/app/build.gradle.kts.
+admobAppId=ca-app-pub-4980376195917009~4491640230
+admobRewardedUnitId=ca-app-pub-4980376195917009/5225353586

@@ -19,6 +19,25 @@ enum HeroClassId {
 /// Party role tags — use these for tank/healer/DPS identity (not [HeroRole]).
 enum SpecRoleTag { tank, healer, meleeDps, rangedDps, caster }
 
+/// Plain English job words for players who never played an RPG.
+extension SpecRoleTagPlain on SpecRoleTag {
+  String get plainLabel => switch (this) {
+    SpecRoleTag.tank => 'Shield',
+    SpecRoleTag.healer => 'Healer',
+    SpecRoleTag.meleeDps => 'Damage',
+    SpecRoleTag.rangedDps => 'Damage',
+    SpecRoleTag.caster => 'Damage',
+  };
+
+  String get plainJob => switch (this) {
+    SpecRoleTag.tank => 'soaks hits so others can fight',
+    SpecRoleTag.healer => 'keeps the party alive',
+    SpecRoleTag.meleeDps => 'fights up close',
+    SpecRoleTag.rangedDps => 'fights from range',
+    SpecRoleTag.caster => 'casts spells',
+  };
+}
+
 /// Resource type for HUD / regen.
 enum SpecResource { rage, mana, energy, runic }
 
@@ -91,6 +110,7 @@ class HeroSpecDef {
   final String shortLabel;
   final SpecRoleTag roleTag;
   final SpecResource resource;
+
   /// Gear/ratings affinity bucket — not tank/healer/DPS. Prefer [roleTag].
   final HeroRole gearAffinity;
   final Set<ArmorType> armorTypes;
@@ -103,13 +123,18 @@ class HeroSpecDef {
 
   bool get isTank => roleTag == SpecRoleTag.tank;
   bool get isHealer => roleTag == SpecRoleTag.healer;
+
+  /// New-game / roster line: "Shield — soaks hits so others can fight".
+  String get plainRoleLine => '${roleTag.plainLabel} — ${roleTag.plainJob}';
 }
 
 /// Catalog + helpers for [HeroSpecId].
 abstract final class HeroSpecs {
-  static const _plate = {ArmorType.cloth, ArmorType.leather, ArmorType.mail, ArmorType.plate};
-  static const _mail = {ArmorType.cloth, ArmorType.leather, ArmorType.mail};
-  static const _leather = {ArmorType.cloth, ArmorType.leather};
+  static const _plate = {ArmorType.plate};
+  static const _mail = {ArmorType.mail};
+  static const _hunter = {ArmorType.leather, ArmorType.mail};
+  static const _rogue = {ArmorType.leather};
+  static const _druid = {ArmorType.cloth, ArmorType.leather};
   static const _cloth = {ArmorType.cloth};
 
   static const Stats _tankStats = Stats(
@@ -171,11 +196,11 @@ abstract final class HeroSpecs {
 
   /// Maps save-era HeroRole / affinity names onto a default starter spec.
   static HeroSpecId fromGearAffinity(HeroRole affinity) => switch (affinity) {
-        HeroRole.warrior => HeroSpecId.protection,
-        HeroRole.healer => HeroSpecId.discipline,
-        HeroRole.mage => HeroSpecId.fire,
-        HeroRole.rogue => HeroSpecId.combat,
-      };
+    HeroRole.warrior => HeroSpecId.protection,
+    HeroRole.healer => HeroSpecId.discipline,
+    HeroRole.mage => HeroSpecId.fire,
+    HeroRole.rogue => HeroSpecId.combat,
+  };
 
   static HeroSpecId fromGearAffinityName(String? raw) {
     final parsed = tryParse(raw);
@@ -190,9 +215,9 @@ abstract final class HeroSpecs {
   }
 
   static List<HeroSpecId> forClass(HeroClassId classId) => [
-        for (final d in all)
-          if (d.classId == classId) d.id,
-      ];
+    for (final d in all)
+      if (d.classId == classId) d.id,
+  ];
 
   /// Specs unlocked on a brand-new save.
   static const List<HeroSpecId> starterUnlocked = <HeroSpecId>[
@@ -220,7 +245,7 @@ abstract final class HeroSpecs {
       attackRange: 1.75,
       startingStats: _meleeStats,
       defaultName: 'Cleaver',
-      unlockHint: 'Clear Goblin Den or Ascend once',
+      unlockHint: 'Clear Goblin\'s Hideout or Ascend once',
     ),
     HeroSpecDef(
       id: HeroSpecId.fury,
@@ -236,7 +261,7 @@ abstract final class HeroSpecs {
       attackRange: 1.7,
       startingStats: _meleeStats,
       defaultName: 'Rager',
-      unlockHint: 'AL 2 or clear Sandy Crypt',
+      unlockHint: 'AL 2 or clear Sandy Caverns',
     ),
     HeroSpecDef(
       id: HeroSpecId.protection,
@@ -268,13 +293,13 @@ abstract final class HeroSpecs {
       attackRange: 3.8,
       startingStats: _healStats,
       defaultName: 'Dawn',
-      unlockHint: 'Spend 25e in Prestige Shop',
+      unlockHint: 'AL 1 or 25e in Prestige Shop',
     ),
     HeroSpecDef(
       id: HeroSpecId.protPaladin,
       classId: HeroClassId.paladin,
       name: 'Protection Paladin',
-      shortLabel: 'PPROT',
+      shortLabel: 'PPal',
       roleTag: SpecRoleTag.tank,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.warrior,
@@ -300,7 +325,7 @@ abstract final class HeroSpecs {
       attackRange: 1.8,
       startingStats: _meleeStats,
       defaultName: 'Judicar',
-      unlockHint: 'Clear King\'s Tomb',
+      unlockHint: 'Clear King\'s Fort',
     ),
     // —— Hunter ——
     HeroSpecDef(
@@ -311,7 +336,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.rangedDps,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _mail,
+      armorTypes: _hunter,
       ranged: true,
       preferredRange: 4.2,
       attackRange: 5.2,
@@ -327,7 +352,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.rangedDps,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _mail,
+      armorTypes: _hunter,
       ranged: true,
       preferredRange: 4.5,
       attackRange: 5.5,
@@ -343,7 +368,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.rangedDps,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _mail,
+      armorTypes: _hunter,
       ranged: true,
       preferredRange: 3.6,
       attackRange: 4.5,
@@ -360,7 +385,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _leather,
+      armorTypes: _rogue,
       ranged: false,
       preferredRange: 1.2,
       attackRange: 1.8,
@@ -372,11 +397,11 @@ abstract final class HeroSpecs {
       id: HeroSpecId.combat,
       classId: HeroClassId.rogue,
       name: 'Combat Rogue',
-      shortLabel: 'COMBAT',
+      shortLabel: 'COM',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _leather,
+      armorTypes: _rogue,
       ranged: false,
       preferredRange: 1.25,
       attackRange: 1.85,
@@ -392,13 +417,13 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _leather,
+      armorTypes: _rogue,
       ranged: false,
       preferredRange: 1.2,
       attackRange: 1.8,
       startingStats: _agiMelee,
       defaultName: 'Shadeveil',
-      unlockHint: 'Clear Dead Marsh',
+      unlockHint: 'Clear City of Dead',
     ),
     // —— Priest ——
     HeroSpecDef(
@@ -420,7 +445,7 @@ abstract final class HeroSpecs {
       id: HeroSpecId.holyPriest,
       classId: HeroClassId.priest,
       name: 'Holy Priest',
-      shortLabel: 'HPR',
+      shortLabel: 'HolyP',
       roleTag: SpecRoleTag.healer,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.healer,
@@ -436,7 +461,7 @@ abstract final class HeroSpecs {
       id: HeroSpecId.shadow,
       classId: HeroClassId.priest,
       name: 'Shadow Priest',
-      shortLabel: 'SPRI',
+      shortLabel: 'Shdw',
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.mage,
@@ -446,7 +471,7 @@ abstract final class HeroSpecs {
       attackRange: 5.0,
       startingStats: _casterStats,
       defaultName: 'Umbral',
-      unlockHint: 'Clear Hell Maw',
+      unlockHint: 'Clear Hell\'s Gate',
     ),
     // —— Death Knight ——
     HeroSpecDef(
@@ -469,7 +494,7 @@ abstract final class HeroSpecs {
       id: HeroSpecId.frostDk,
       classId: HeroClassId.deathKnight,
       name: 'Frost DK',
-      shortLabel: 'FDK',
+      shortLabel: 'Frost',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.runic,
       gearAffinity: HeroRole.warrior,
@@ -485,7 +510,7 @@ abstract final class HeroSpecs {
       id: HeroSpecId.unholy,
       classId: HeroClassId.deathKnight,
       name: 'Unholy DK',
-      shortLabel: 'UH',
+      shortLabel: 'Unhly',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.runic,
       gearAffinity: HeroRole.warrior,
@@ -534,7 +559,7 @@ abstract final class HeroSpecs {
       id: HeroSpecId.restorationShaman,
       classId: HeroClassId.shaman,
       name: 'Resto Shaman',
-      shortLabel: 'RSHA',
+      shortLabel: 'Resto',
       roleTag: SpecRoleTag.healer,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.healer,
@@ -641,7 +666,7 @@ abstract final class HeroSpecs {
       attackRange: 5.2,
       startingStats: _casterStats,
       defaultName: 'Ash',
-      unlockHint: 'Clear Hell Maw',
+      unlockHint: 'Clear Hell\'s Gate',
     ),
     // —— Druid ——
     HeroSpecDef(
@@ -652,7 +677,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.caster,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.mage,
-      armorTypes: _leather,
+      armorTypes: _druid,
       ranged: true,
       preferredRange: 4.0,
       attackRange: 5.0,
@@ -668,7 +693,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
       gearAffinity: HeroRole.rogue,
-      armorTypes: _leather,
+      armorTypes: _druid,
       ranged: false,
       preferredRange: 1.2,
       attackRange: 1.8,
@@ -684,7 +709,7 @@ abstract final class HeroSpecs {
       roleTag: SpecRoleTag.tank,
       resource: SpecResource.rage,
       gearAffinity: HeroRole.warrior,
-      armorTypes: _leather,
+      armorTypes: _druid,
       ranged: false,
       preferredRange: 1.15,
       attackRange: 1.7,
@@ -696,11 +721,11 @@ abstract final class HeroSpecs {
       id: HeroSpecId.restorationDruid,
       classId: HeroClassId.druid,
       name: 'Resto Druid',
-      shortLabel: 'RDRU',
+      shortLabel: 'Tree',
       roleTag: SpecRoleTag.healer,
       resource: SpecResource.mana,
       gearAffinity: HeroRole.healer,
-      armorTypes: _leather,
+      armorTypes: _druid,
       ranged: true,
       preferredRange: 3.2,
       attackRange: 4.0,
@@ -711,15 +736,15 @@ abstract final class HeroSpecs {
   ];
 
   static String classLabel(HeroClassId id) => switch (id) {
-        HeroClassId.warrior => 'Warrior',
-        HeroClassId.paladin => 'Paladin',
-        HeroClassId.hunter => 'Hunter',
-        HeroClassId.rogue => 'Rogue',
-        HeroClassId.priest => 'Priest',
-        HeroClassId.deathKnight => 'Death Knight',
-        HeroClassId.shaman => 'Shaman',
-        HeroClassId.mage => 'Mage',
-        HeroClassId.warlock => 'Warlock',
-        HeroClassId.druid => 'Druid',
-      };
+    HeroClassId.warrior => 'Warrior',
+    HeroClassId.paladin => 'Paladin',
+    HeroClassId.hunter => 'Hunter',
+    HeroClassId.rogue => 'Rogue',
+    HeroClassId.priest => 'Priest',
+    HeroClassId.deathKnight => 'Death Knight',
+    HeroClassId.shaman => 'Shaman',
+    HeroClassId.mage => 'Mage',
+    HeroClassId.warlock => 'Warlock',
+    HeroClassId.druid => 'Druid',
+  };
 }

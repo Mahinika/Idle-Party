@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/enemy.dart';
-import 'package:idle_party/ui/kenney_assets.dart';
+import 'package:idle_party/assets/kenney_assets.dart';
 
 void main() {
   test('Tiny Dungeon tile files exist for catalog getters', () {
@@ -30,9 +30,20 @@ void main() {
       ...KenneyAssets.enemySpriteCatalog,
       for (final role in EnemyRole.values)
         KenneyAssets.enemySpriteForRole(role, dungeonId: 'sandy'),
-      KenneyAssets.enemySpriteForCodexName('Goblin Scout'),
+      KenneyAssets.enemySpriteForCodexName('Goblin Scrapper'),
+      KenneyAssets.enemySpriteForCodexName('Goblin Slinger'),
+      KenneyAssets.enemySpriteForCodexName('Stash Guard'),
       KenneyAssets.enemySpriteForCodexName('Crystal Warden'),
     };
+
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Goblin Slinger'),
+      KenneyAssets.enemyBat,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Stash Guard'),
+      KenneyAssets.enemyGoblinMite,
+    );
 
     for (final path in paths) {
       final file = File(path);
@@ -71,6 +82,22 @@ void main() {
     expect(
       KenneyAssets.enemySpriteForCodexName('Ice Caster'),
       KenneyAssets.enemyCrystalWraith,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Storm Tyrant'),
+      KenneyAssets.enemyStormBoss,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Gale Mite'),
+      KenneyAssets.enemyStormMite,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('The Pale Monarch'),
+      KenneyAssets.enemyVeilBoss,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Dust Moth'),
+      KenneyAssets.enemyVeilMite,
     );
   });
 
