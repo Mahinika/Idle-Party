@@ -790,9 +790,10 @@ class GameDirector extends ChangeNotifier {
         GameAudio.clear();
         final lootLine = result.vacuumLootLine;
         if (lootLine != null && lootLine.isNotEmpty) {
-          uiFeedback.presentClear(lootLine);
+          // Clear banner owns the moment — no second "walk to stairs" toast.
+          uiFeedback.presentClear('$lootLine · walk / HOLD stairs');
         } else {
-          showToast('Walking to stairs — use fist to steer', life: 2.4);
+          uiFeedback.presentClear('CLEAR · walk to stairs or HOLD');
         }
       }
       if (result.state.gearStash.length > _lastStashLen) {
@@ -1208,7 +1209,7 @@ class GameDirector extends ChangeNotifier {
     final spatial = _spatial;
     if (spatial == null || !spatial.awaitingExit) return;
     spatial.exitHoldSec = 8.0;
-    showToast('Holding — walk resumes soon', life: 2.4);
+    showToast('HOLD — finishing floor', life: 1.8);
     notifyListeners();
   }
 

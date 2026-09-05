@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
+import '../../core/hub_chase.dart';
+import '../game_theme.dart';
 import '../menu_chrome.dart';
 import 'challenge_toggles.dart';
 import 'gauntlet_hub_panel.dart';
@@ -27,7 +29,17 @@ class _KeystoneSheetState extends State<KeystoneSheet>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 5, vsync: this);
+    final chase = HubChase.forState(widget.director.state);
+    final initial = switch (chase.kind) {
+      HubChaseKind.gauntletMilestone => 1,
+      HubChaseKind.riftMilestone => 2,
+      HubChaseKind.greaterRiftMilestone => 3,
+      HubChaseKind.doneForToday => 4,
+      HubChaseKind.ashenCrown => 0,
+      HubChaseKind.keystone => 0,
+      _ => 0,
+    };
+    _tabs = TabController(length: 5, vsync: this, initialIndex: initial);
   }
 
   @override
@@ -39,9 +51,29 @@ class _KeystoneSheetState extends State<KeystoneSheet>
   @override
   Widget build(BuildContext context) {
     final d = widget.director;
+    final chase = HubChase.forState(d.state);
+    final huntHint = switch (chase.kind) {
+      HubChaseKind.keystone =>
+        'TODAY · KEY +${chase.keyLevel ?? d.state.hardmodeLevel}',
+      HubChaseKind.gauntletMilestone => 'TODAY · Spire / Gauntlet',
+      HubChaseKind.riftMilestone => 'TODAY · Rift',
+      HubChaseKind.greaterRiftMilestone => 'TODAY · Greater Rift',
+      HubChaseKind.doneForToday => 'TODAY · soft rest · BOARDS',
+      HubChaseKind.ashenCrown => 'TODAY · Ashen Crown (enter from hub)',
+      _ => '',
+    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (huntHint.isNotEmpty) ...[
+          Text(
+            huntHint,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+          ),
+          const SizedBox(height: 6),
+        ],
         MenuChrome.tabRail(
           controller: _tabs,
           tabs: [

@@ -163,7 +163,9 @@ class _InventoryDockState extends State<InventoryDock>
       label: upgrades > 0 ? 'EQUIP $upgrades' : 'AUTO EQUIP',
       tip: upgrades > 0
           ? 'One tap: equip all $upgrades upgrades now'
-          : 'No upgrades waiting — scans bag when new gear drops',
+          : (state.gearStash.isEmpty
+              ? 'Bag empty — farm for drops'
+              : 'No BiS upgrades in bag — CLEAN BAG or MERGE junk'),
       onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
       primary: upgrades > 0 && !dense,
       dense: dense,

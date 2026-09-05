@@ -153,7 +153,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
     // lives only inside the Expanded scene stack).
     return OverlayScrim(
       title: router.title,
-      subtitle: router.jobHint,
+      subtitle: router.jobHintFor(state),
       heightFactor: 1,
       onClose: router.close,
       child: switch (router.route) {

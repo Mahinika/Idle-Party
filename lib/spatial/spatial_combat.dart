@@ -3137,24 +3137,23 @@ abstract final class SpatialCombat {
           hero,
           snapped.$1,
           snapped.$2,
-          hero.moveSpeed * 1.35,
+          hero.moveSpeed * 1.65,
           world,
           dt: dt,
-          holdDistance: guiding ? 0.35 : 0.22,
+          holdDistance: guiding ? 0.35 : 0.18,
           separateFrom: livingHeroes,
-          separationRadius: 0.5,
-          separationWeight: 0.35,
+          separationRadius: 0.45,
+          separationWeight: 0.28,
         );
-        if (_distPoint(hero.x, hero.y, exitX, exitY) < 1.35) {
+        if (_distPoint(hero.x, hero.y, exitX, exitY) < 1.55) {
           anyOnStairs = true;
         }
       }
 
-      // Failsafe: if pathing totally fails, warp stragglers after a few seconds
-      // once someone is already on the stairs ? then clear.
-      if (anyOnStairs && world.exitWaitTimer > 2.5) {
+      // Failsafe: warp stragglers once someone is on stairs (or after a short wait).
+      if (anyOnStairs && world.exitWaitTimer > 1.4) {
         for (final hero in livingHeroes) {
-          if (_distPoint(hero.x, hero.y, exitX, exitY) > 3.4) {
+          if (_distPoint(hero.x, hero.y, exitX, exitY) > 3.0) {
             final pad = _snapToWalkable(
               world.map,
               world.openGateIds,
@@ -3168,9 +3167,9 @@ abstract final class SpatialCombat {
       }
 
       final living = livingHeroes.length;
-      // Live play soft-locks feel bad if pathing jams; keep AFK snappy.
+      // Live soft-locks feel bad if pathing jams; keep AFK snappy.
       final forceClear =
-          living > 0 && world.exitWaitTimer > (world.afkAssist ? 2.8 : 5.0);
+          living > 0 && world.exitWaitTimer > (world.afkAssist ? 2.2 : 3.2);
       if (living > 0 && (anyOnStairs || forceClear)) {
         if (forceClear && !anyOnStairs) {
           for (final hero in livingHeroes) {

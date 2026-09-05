@@ -524,14 +524,16 @@ class DungeonTopHud extends StatelessWidget {
                     ),
                   ),
                   if (!(director.exitHoldActive))
-                    GestureDetector(
-                      onTap: director.startExitHold,
-                      child: Text(
-                        'HOLD',
-                        style: GameTheme.pixel(
-                          size: GameTheme.hudPixel,
-                          color: GameTheme.clear,
-                        ),
+                    Semantics(
+                      button: true,
+                      label: 'HOLD — skip walk, finish floor now',
+                      child: GameButton(
+                        label: 'HOLD',
+                        tip: 'Skip the stairs walk — clear this floor now',
+                        style: GameButtonStyle.brown,
+                        dense: true,
+                        expanded: false,
+                        onPressed: director.startExitHold,
                       ),
                     ),
                 ],

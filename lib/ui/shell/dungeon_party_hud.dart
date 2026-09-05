@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/hero_identity.dart';
 import '../../core/party_meter.dart';
 import '../../models/class_ability.dart';
 import '../../models/enemy.dart';
@@ -847,13 +848,16 @@ class _PartyRow extends StatelessWidget {
                     ],
                     if (showKit) ...[
                       const SizedBox(height: 2),
-                      Text(
-                        hero.passiveLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.body(
-                          size: 10,
-                          color: GameTheme.mossLit,
+                      Semantics(
+                        label: 'Kit ${HeroIdentity.fantasyLine(hero.specId)}',
+                        child: Text(
+                          HeroIdentity.fantasyLine(hero.specId),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.body(
+                            size: 10,
+                            color: GameTheme.mossLit,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 2),

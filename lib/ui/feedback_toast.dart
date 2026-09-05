@@ -53,12 +53,15 @@ class FeedbackToast extends StatelessWidget {
                 ),
               ],
             ),
-            child: Text(
-              message,
-              textAlign: TextAlign.center,
-              maxLines: maxLines,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 16),
+            // ExcludeSemantics: otherwise TalkBack / UI dump hears the toast twice.
+            child: ExcludeSemantics(
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                maxLines: maxLines,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.body(size: 16),
+              ),
             ),
           ),
         ),

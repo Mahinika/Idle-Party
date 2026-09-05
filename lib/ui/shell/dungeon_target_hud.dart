@@ -75,8 +75,44 @@ class TargetCornerHud extends StatelessWidget {
 
     final enemy = focus;
     final awaitingExit = world?.awaitingExit == true;
+    // After clear, don't keep a dead fight frame — CLEAR owns the corner.
+    if (awaitingExit && !state.isPartyDefeated) {
+      return ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 188.0),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(6, 2, 6, 3),
+          decoration: MenuChrome.hudWell(
+            borderColor: GameTheme.clear.withValues(alpha: 0.7),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'CLEAR',
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.pixel(
+                  size: GameTheme.hudPixel,
+                  color: GameTheme.clear,
+                ),
+              ),
+              Text(
+                _stairsHint(world),
+                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+              ),
+              Text(
+                'HOLD skips the walk',
+                style: GameTheme.body(size: 10, color: GameTheme.mossLit),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     // Hide empty chrome — reclaim map until a foe / wipe / clear matters.
-    if (enemy == null && !state.isPartyDefeated && !awaitingExit) {
+    if (enemy == null && !state.isPartyDefeated) {
       return const SizedBox.shrink();
     }
 

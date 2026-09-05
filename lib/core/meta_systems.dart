@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.98';
+  static const String currentVersion = '1.12.99';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.99',
+      bullets: <String>[
+        'Clear floor polish: one CLEAR banner (no double stairs toast), faster walk to stairs, brown HOLD to skip the walk, target corner says CLEAR instead of a leftover elite.',
+        'Hub/KEY: Discord welcome stays quiet at endgame / READY chase; TODAY has TalkBack label; KEY sheet opens on today’s hunt tab; BAG sheet says real upgrade count.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.98',
       bullets: <String>[

@@ -112,6 +112,8 @@ class HubTodayCard extends StatelessWidget {
     // Text strip only — no fill box under ENTER.
     return Semantics(
       label: 'TODAY chase: ${chase.title}. ${chase.detail}',
+      button: chase.urgency == HubChaseUrgency.ready ||
+          chase.urgency == HubChaseUrgency.almost,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
         child: Column(
@@ -123,7 +125,15 @@ class HubTodayCard extends StatelessWidget {
               children: [
                 GameIcon.asset(UiIcon.star, size: 14),
                 const SizedBox(width: 6),
-                Text('TODAY', style: GameTheme.body(size: 12, color: accent)),
+                // Explicit TODAY token for TalkBack / playtest dumps.
+                Semantics(
+                  label: 'TODAY',
+                  excludeSemantics: true,
+                  child: Text(
+                    'TODAY',
+                    style: GameTheme.body(size: 12, color: accent),
+                  ),
+                ),
                 if (chip != null) ...[
                   const SizedBox(width: 6),
                   Text(chip, style: GameTheme.body(size: 12, color: accent)),

@@ -198,6 +198,22 @@ class MenuRouter extends ChangeNotifier {
     },
   };
 
+  /// Live bag counts so the sheet does not say "waiting" when BiS is empty.
+  String jobHintFor(GameState state) {
+    if (_route == MenuRoute.gear && _gearPanel == GearPanel.bag) {
+      final n = MenuAlerts.bagUpgradeCount(state);
+      if (n <= 0) {
+        return state.gearStash.isEmpty
+            ? 'Bag empty — farm for drops'
+            : 'No BiS upgrades — CLEAN BAG or MERGE junk';
+      }
+      return n == 1
+          ? '1 upgrade waiting — tap EQUIP 1'
+          : '$n upgrades waiting — tap EQUIP $n';
+    }
+    return jobHint;
+  }
+
   void open(
     MenuRoute route, {
     GearPanel? gear,

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/community_links.dart';
 import '../../core/game_director.dart';
+import '../../core/game_logic.dart';
+import '../../core/hub_chase.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -20,36 +22,51 @@ class DiscordThanksOverlay extends StatelessWidget {
     if (director.state.seenTips.contains(tipId)) return false;
     // Never cover the first TODAY tip — wait until that tip is dismissed.
     if (!director.state.seenTips.contains('first_run')) return false;
+    // Endgame / READY chase owns the hub — Discord stays under MORE · SETTINGS.
+    if (GameLogic.endgameUnlocked(director.state)) return false;
+    final chase = HubChase.forState(director.state);
+    if (chase.urgency == HubChaseUrgency.ready) return false;
     return true;
   }
 
   static Future<void> show(BuildContext context, GameDirector director) {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) {
         final size = MediaQuery.sizeOf(ctx);
         final maxW = math.min(380.0, size.width - 32);
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 24,
-          ),
-          child: DecoratedBox(
-            decoration: MenuChrome.panel(),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: maxW,
-                child: DiscordThanksOverlay(director: director),
+        return PopScope(
+          canPop: true,
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop) director.dismissTip(tipId);
+          },
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 24,
+            ),
+            child: DecoratedBox(
+              decoration: MenuChrome.panel(),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  width: maxW,
+                  child: DiscordThanksOverlay(director: director),
+                ),
               ),
             ),
           ),
         );
       },
-    );
+    ).then((_) {
+      // Outside tap / back — still mark seen so it does not re-trap.
+      if (!director.state.seenTips.contains(tipId)) {
+        director.dismissTip(tipId);
+      }
+    });
   }
 
   void _dismiss(BuildContext context) {

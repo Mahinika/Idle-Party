@@ -220,27 +220,31 @@ Future<void> confirmLeaveDungeon(
   try {
     final ok = await showDialog<bool>(
       context: context,
+      barrierDismissible: true,
       barrierColor: MenuChrome.scrim,
-      builder: (ctx) => MenuChrome.dialog(
-        title: 'Return to hub?',
-        content: Text(
-          body,
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+      builder: (ctx) => PopScope(
+        canPop: true,
+        child: MenuChrome.dialog(
+          title: 'Return to hub?',
+          content: Text(
+            body,
+            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          ),
+          actions: [
+            GameButton(
+              label: 'STAY',
+              style: GameButtonStyle.grey,
+              expanded: false,
+              onPressed: () => Navigator.pop(ctx, false),
+            ),
+            GameButton(
+              label: 'RETURN',
+              style: GameButtonStyle.brown,
+              expanded: false,
+              onPressed: () => Navigator.pop(ctx, true),
+            ),
+          ],
         ),
-        actions: [
-          GameButton(
-            label: 'STAY',
-            style: GameButtonStyle.grey,
-            expanded: false,
-            onPressed: () => Navigator.pop(ctx, false),
-          ),
-          GameButton(
-            label: 'RETURN',
-            style: GameButtonStyle.brown,
-            expanded: false,
-            onPressed: () => Navigator.pop(ctx, true),
-          ),
-        ],
       ),
     );
     if (ok == true && context.mounted) {
