@@ -10,10 +10,9 @@ import '../../models/hero.dart';
 import '../../models/loot.dart';
 import '../../models/market_listing.dart';
 import '../equipment_icon.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
-import '../kenney_assets.dart';
 import '../kenney_button.dart';
-import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
 import 'shell_common.dart';
 
@@ -50,34 +49,27 @@ class _MarketOverlayState extends State<MarketOverlay> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Buy gear · clean junk in GEAR → BAG',
+          'Flasks · listings · gold',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 13, color: GameTheme.mossLit),
         ),
         const SizedBox(height: 6),
         Text(
-          'Gold ${formatCount(state.gold)} · Essence ${formatCount(state.essence)}',
+          'Gold ${formatCount(state.gold)}',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         MenuChrome.sectionLabelScoped('SUPPLIES', scope: MenuScope.run),
-        const SizedBox(height: 4),
-        Text(
-          'Empty flask slots first, extras go to BAG.\n'
-          'Full bag: BAG → CLEAN BAG / MERGE, or SETTINGS auto-sell.',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
         const SizedBox(height: 6),
-        KenneyButton(
+        GameButton(
           label: state.gold >= flaskCost
               ? 'Buy flask · ${flaskCost}g'
               : 'Buy flask · Need ${flaskCost}g',
           onPressed: state.gold >= flaskCost ? director.buyMarketFlask : null,
         ),
         const SizedBox(height: 4),
-        KenneyButton(
+        GameButton(
           label: state.gold >= flaskCost * 3
               ? 'Buy 3 flasks · ${flaskCost * 3}g'
               : 'Buy 3 flasks · Need ${flaskCost * 3}g',
@@ -86,7 +78,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
               : null,
         ),
         const SizedBox(height: 4),
-        KenneyButton(
+        GameButton(
           label: state.gold >= GameLogic.marketBandageCost(state)
               ? 'Buy bandage · ${GameLogic.marketBandageCost(state)}g'
               : 'Buy bandage · Need ${GameLogic.marketBandageCost(state)}g',
@@ -97,22 +89,15 @@ class _MarketOverlayState extends State<MarketOverlay> {
         const SizedBox(height: 4),
         Row(
           children: [
-            KenneySprite(asset: KenneyAssets.potionRed, size: 20),
+            GameIcon.asset(UiIcon.flask, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Flask: whole party (~30% HP). Bandage: lowest hero (~40% HP).\n'
-                '${_marketHealCount(state)}',
+                'Flask ~30% party · Bandage ~40% lowest · ${_marketHealCount(state)}',
                 style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Bag cleanup: use BAG → CLEAN BAG / MERGE, or SETTINGS auto-sell '
-          'and auto-scrap. There is no tap-sell in Shop.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 10),
         const Divider(height: 1, color: GameTheme.border),
@@ -127,13 +112,13 @@ class _MarketOverlayState extends State<MarketOverlay> {
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
-        KenneyButton(
+        GameButton(
           label: msReady
               ? 'LISTINGS FRESH'
               : (state.gold >= refreshCost
                     ? 'REFRESH NOW · ${formatCount(refreshCost)}g'
                     : 'REFRESH · Need ${formatCount(refreshCost)}g'),
-          style: KenneyButtonStyle.grey,
+          style: GameButtonStyle.grey,
           onPressed: msReady
               ? null
               : (state.gold >= refreshCost
@@ -159,9 +144,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
             _listingCard(state, director, listing),
           const SizedBox(height: 8),
           Text(
-            'Buy gear when drops miss your slot. Listings refresh '
-            'over time. Fill empty slots here — dungeon loot still '
-            'scales higher later.',
+            'Fill empty slots here — dungeon loot still scales higher later.',
             textAlign: TextAlign.center,
             style: GameTheme.body(
               size: 11,
@@ -229,13 +212,10 @@ class _MarketOverlayState extends State<MarketOverlay> {
           for (final (label, slot) in filters)
             Padding(
               padding: const EdgeInsets.only(right: 6),
-              child: ChoiceChip(
-                label: Text(label, style: GameTheme.body(size: 11)),
+              child: MenuChrome.chip(
+                label: label,
                 selected: _slotFilter == slot,
-                onSelected: (_) => setState(() => _slotFilter = slot),
-                selectedColor: GameTheme.torchHot.withValues(alpha: 0.35),
-                backgroundColor: GameTheme.panelInset,
-                side: BorderSide(color: GameTheme.border.withValues(alpha: 0.8)),
+                onTap: () => setState(() => _slotFilter = slot),
               ),
             ),
         ],
@@ -363,9 +343,9 @@ class _MarketOverlayState extends State<MarketOverlay> {
                 style: GameTheme.body(size: 13, color: GameTheme.torchHot),
               ),
               const SizedBox(height: 4),
-              KenneyButton(
+              GameButton(
                 label: 'BUY',
-                style: KenneyButtonStyle.brown,
+                style: GameButtonStyle.brown,
                 expanded: false,
                 onPressed: canBuy
                     ? () => director.buyMarketListing(listing.id)

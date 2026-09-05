@@ -22,29 +22,22 @@ class PrestigeShopOverlay extends StatelessWidget {
       children: [
         if (state.ascensionLevel < 3) ...[
           Text(
-            'Browse freely — buying unlocks at Ascension Level 3+.',
+            'Buying unlocks at AL3+.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 14, color: GameTheme.torchHot),
           ),
           const SizedBox(height: 8),
         ],
         Text(
-          'Essence shop — permanent upgrades that survive Ascend.',
+          'Permanent upgrades · ${state.essence}e · AL${state.ascensionLevel}',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 4),
-        Text(
-          '${state.essence} essence · AL${state.ascensionLevel}',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-        ),
         const SizedBox(height: 10),
-        Expanded(
-          child: ListView.separated(
-            itemCount: PrestigeShopCatalog.offered.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 8),
-            itemBuilder: (context, i) {
+        for (var i = 0; i < PrestigeShopCatalog.offered.length; i++) ...[
+          if (i > 0) const SizedBox(height: 8),
+          Builder(
+            builder: (context) {
               final item = PrestigeShopCatalog.offered[i];
               final locked = state.ascensionLevel < item.minAl;
               final ownedCount = PrestigeShopCatalog.ownedCount(
@@ -109,7 +102,7 @@ class PrestigeShopOverlay extends StatelessWidget {
                             ),
                           ),
                         ),
-                        KenneyButton(
+                        GameButton(
                           label: locked
                               ? 'AL${item.minAl}+'
                               : atCap
@@ -127,7 +120,7 @@ class PrestigeShopOverlay extends StatelessWidget {
               );
             },
           ),
-        ),
+        ],
       ],
     );
   }
@@ -142,7 +135,7 @@ class PrestigeShopOverlay extends StatelessWidget {
         'Now +${state.torchOfflineGoldPercent}% hub AFK gold (max 80%)',
       'gh_cdr' =>
         'CD ${state.godHandCooldownSeconds.toStringAsFixed(2)}s · '
-            'Lv${md.godHandCdLevel}/8 · same as Gold KEEP',
+            'Lv${md.godHandCdLevel}/8 · same as ESSENCE KEEP',
       'roster_cap' => 'Roster +${md.petRosterCapBonus} (max +10)',
       'loadout_slot' =>
         'Loadouts ${GameLogic.maxLoadoutsFor(state)} '

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 
 import '../models/loot.dart';
 import 'debug_play_log.dart';
@@ -9,29 +9,45 @@ import 'menu_alerts.dart';
 import 'nav_intent.dart';
 
 /// Top-level menu destinations (flat tab nav). Hub and dungeon share these.
-enum MenuRoute { none, gear, power, quests, key, more }
+enum MenuRoute { none, gear, gold, shop, essence, key, more }
 
 /// Local focus inside GEAR (not bottom-nav destinations).
 enum GearPanel { gear, bag, merge, roster }
 
-/// Sticky POWER segments (Gold | Shop | Relics | Craft | Essence).
-enum PowerSegment { forge, market, relics, craft, camp }
+/// Local focus inside GOLD — forge tracks vs gold market.
+enum GoldPanel { tracks, market }
 
-/// Player-facing POWER tab names — everyday English, same the whole game.
-extension PowerSegmentLabel on PowerSegment {
-  String get tabLabel => switch (this) {
-    PowerSegment.forge => 'Gold',
-    PowerSegment.market => 'Shop',
-    PowerSegment.relics => 'Relics',
-    PowerSegment.craft => 'Craft',
-    PowerSegment.camp => 'Essence',
-  };
+/// Local focus inside ESSENCE — lasting essence sinks.
+enum EssencePanel { tracks, shop, relics, pets }
+
+/// Rows inside MORE (settings, meta overlays, info).
+enum MoreSection {
+  info,
+  settings,
+  credits,
+  shop,
+  relics,
+  craft,
+  quests,
 }
 
-/// Rows inside MORE (no gameplay destinations).
-enum MoreSection { info, settings, credits }
+/// Player-facing MORE meta row names.
+extension MoreSectionLabel on MoreSection {
+  String get rowLabel => switch (this) {
+    MoreSection.info => 'INFO',
+    MoreSection.settings => 'SETTINGS',
+    MoreSection.credits => 'CREDITS',
+    MoreSection.shop => 'SHOP',
+    MoreSection.relics => 'RELICS',
+    MoreSection.craft => 'CRAFT',
+    MoreSection.quests => 'QUESTS',
+  };
 
-/// Primary destinations plus optional overflow family (dungeon KEY/MORE).
+  bool get isMetaOverlay =>
+      this == MoreSection.craft || this == MoreSection.quests;
+}
+
+/// Primary destinations for the shared bottom bar (hub or dungeon).
 class DestinationGraph {
   const DestinationGraph({
     required this.destinations,
@@ -39,6 +55,8 @@ class DestinationGraph {
   });
 
   final List<MenuRoute> destinations;
+
+  /// Unused — kept so older call sites compile; dungeon no longer collapses tabs.
   final List<MenuRoute> overflow;
 
   bool get hasOverflow => overflow.isNotEmpty;
@@ -53,10 +71,6 @@ class DestinationGraph {
 
   static DestinationGraph dungeon(GameState s) => DestinationGraph(
     destinations: MenuRouter.visibleDungeonTabs(s),
-    overflow: <MenuRoute>[
-      if (MenuTabs.showKey(s)) MenuRoute.key,
-      MenuRoute.more,
-    ],
   );
 }
 
@@ -71,13 +85,15 @@ class MenuRouter extends ChangeNotifier {
   MenuRoute _route = MenuRoute.none;
 
   GearPanel _gearPanel = GearPanel.gear;
-  PowerSegment _powerSegment = PowerSegment.forge;
+  GoldPanel _goldPanel = GoldPanel.tracks;
+  EssencePanel _essencePanel = EssencePanel.tracks;
   MoreSection _moreSection = MoreSection.info;
 
   MenuRoute get route => _route;
   bool get isOpen => _route != MenuRoute.none;
   GearPanel get gearPanel => _gearPanel;
-  PowerSegment get powerSegment => _powerSegment;
+  GoldPanel get goldPanel => _goldPanel;
+  EssencePanel get essencePanel => _essencePanel;
   MoreSection get moreSection => _moreSection;
 
   @override
@@ -96,20 +112,22 @@ class MenuRouter extends ChangeNotifier {
     open(
       intent.route,
       gear: intent.gear,
-      power: intent.power,
+      gold: intent.goldPanel,
+      essence: intent.essencePanel,
       more: intent.more,
     );
   }
 
-  /// BAG → FILTERS: MORE · SETTINGS, scrolled to bag cleanup controls.
+  /// BAG -> FILTERS: MORE · SETTINGS, scrolled to bag cleanup controls.
   void openBagFilters() => apply(NavIntent.bagFilters);
 
-  /// Debug playtest location (Gold/Shop/Relics/Craft/Essence).
+  /// Debug playtest location.
   String get debugWhere => switch (_route) {
     MenuRoute.none => 'closed',
     MenuRoute.gear => 'GEAR/${_gearPanel.name}',
-    MenuRoute.power => 'POWER/${_powerSegment.tabLabel}',
-    MenuRoute.quests => 'QUESTS',
+    MenuRoute.gold => 'GOLD/${_goldPanel.name}',
+    MenuRoute.shop => 'SHOP',
+    MenuRoute.essence => 'ESSENCE/${_essencePanel.name}',
     MenuRoute.key => 'KEY',
     MenuRoute.more => 'MORE/${_moreSection.name}',
   };
@@ -122,28 +140,99 @@ class MenuRouter extends ChangeNotifier {
       GearPanel.merge => 'MERGE',
       GearPanel.roster => 'ROSTER',
     },
-    MenuRoute.power => 'POWER',
-    MenuRoute.quests => 'QUESTS',
+    MenuRoute.gold => switch (_goldPanel) {
+      GoldPanel.tracks => 'GOLD',
+      GoldPanel.market => 'MARKET',
+    },
+    MenuRoute.shop => 'SHOP',
+    MenuRoute.essence => switch (_essencePanel) {
+      EssencePanel.tracks => 'ESSENCE',
+      EssencePanel.shop => 'ESSENCE SHOP',
+      EssencePanel.relics => 'RELICS',
+      EssencePanel.pets => 'BEAST',
+    },
     MenuRoute.key => 'KEYSTONE',
     MenuRoute.more => switch (_moreSection) {
       MoreSection.info => 'INFO',
       MoreSection.settings => 'SETTINGS',
       MoreSection.credits => 'CREDITS',
+      MoreSection.shop => 'SHOP',
+      MoreSection.relics => 'RELICS',
+      MoreSection.craft => 'CRAFT',
+      MoreSection.quests => 'QUESTS',
+    },
+  };
+
+  /// One-line job under the sheet title — same words hub and dungeon.
+  String get jobHint => switch (_route) {
+    MenuRoute.none => '',
+    MenuRoute.gear => switch (_gearPanel) {
+      GearPanel.gear => 'Equip the party',
+      GearPanel.bag => 'Loot waiting to equip',
+      GearPanel.merge => 'Combine same-slot junk',
+      GearPanel.roster => 'Meet and swap kits',
+    },
+    MenuRoute.gold => switch (_goldPanel) {
+      GoldPanel.tracks => 'Run power bought with gold',
+      GoldPanel.market => 'Flasks · bandages · gear listings',
+    },
+    MenuRoute.shop => 'Real-money store — coming soon',
+    MenuRoute.essence => switch (_essencePanel) {
+      EssencePanel.tracks => 'Lasting tracks between Ascends',
+      EssencePanel.shop => 'Permanent essence upgrades',
+      EssencePanel.relics => 'Party auras that keep on Ascend',
+      EssencePanel.pets => 'Hatch and level pets',
+    },
+    MenuRoute.key => 'Dial key · Gauntlet · Rifts',
+    MenuRoute.more => switch (_moreSection) {
+      MoreSection.info => 'Guides · codex · What\'s New',
+      MoreSection.settings => 'Sound · zoom · save',
+      MoreSection.credits => 'Art credits',
+      MoreSection.shop => 'Real-money store — coming soon',
+      MoreSection.relics => 'Party auras that keep on Ascend',
+      MoreSection.craft => 'Apex gear from slag',
+      MoreSection.quests => 'Daily · Bounty · Side',
     },
   };
 
   void open(
     MenuRoute route, {
     GearPanel? gear,
-    PowerSegment? power,
+    GoldPanel? gold,
+    EssencePanel? essence,
     MoreSection? more,
   }) {
     final before = debugWhere;
     if (gear != null) _gearPanel = gear;
-    if (power != null) _powerSegment = power;
+    if (gold != null) _goldPanel = gold;
+    if (essence != null) _essencePanel = essence;
     if (more != null) _moreSection = more;
     if (route == MenuRoute.gear && _route != MenuRoute.gear) {
       session.clearBagSlotFilter();
+    }
+    // Legacy MORE · SHOP / RELICS -> real bottom tabs.
+    if (route == MenuRoute.more &&
+        (_moreSection == MoreSection.shop ||
+            _moreSection == MoreSection.relics)) {
+      if (_moreSection == MoreSection.shop) {
+        _route = MenuRoute.shop;
+        _moreSection = MoreSection.info;
+      } else {
+        _route = MenuRoute.essence;
+        _essencePanel = EssencePanel.relics;
+        _moreSection = MoreSection.info;
+      }
+      _emitNav(before);
+      notifyListeners();
+      return;
+    }
+    if (route == MenuRoute.gold && gold == null && _route != MenuRoute.gold) {
+      _goldPanel = GoldPanel.tracks;
+    }
+    if (route == MenuRoute.essence &&
+        essence == null &&
+        _route != MenuRoute.essence) {
+      _essencePanel = EssencePanel.tracks;
     }
     _route = route;
     _emitNav(before);
@@ -176,7 +265,7 @@ class MenuRouter extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Hub chase / offline “open GEAR” with the right panel pre-selected.
+  /// Hub chase / offline "open GEAR" with the right panel pre-selected.
   void openForHubChase(GameState state, HubChaseKind kind) {
     switch (kind) {
       case HubChaseKind.meetHero:
@@ -199,16 +288,33 @@ class MenuRouter extends ChangeNotifier {
     notifyListeners();
   }
 
-  set powerSegment(PowerSegment segment) {
-    if (_powerSegment == segment) return;
+  set goldPanel(GoldPanel panel) {
+    if (_goldPanel == panel) return;
     final before = debugWhere;
-    _powerSegment = segment;
+    _goldPanel = panel;
+    _emitNav(before);
+    notifyListeners();
+  }
+
+  set essencePanel(EssencePanel panel) {
+    if (_essencePanel == panel) return;
+    final before = debugWhere;
+    _essencePanel = panel;
     _emitNav(before);
     notifyListeners();
   }
 
   set moreSection(MoreSection section) {
     if (_moreSection == section) return;
+    // Redirect legacy rows to currency tabs.
+    if (section == MoreSection.shop) {
+      open(MenuRoute.shop);
+      return;
+    }
+    if (section == MoreSection.relics) {
+      open(MenuRoute.essence, essence: EssencePanel.relics);
+      return;
+    }
     final before = debugWhere;
     _moreSection = section;
     _emitNav(before);
@@ -223,20 +329,25 @@ class MenuRouter extends ChangeNotifier {
     session.setBagSlotFilter(slot);
   }
 
-  /// Hub bottom destinations (progressive KEY).
+  /// Hub bottom destinations (TT2-style). First five match dungeon; KEY is a
+  /// sixth hub-only slot after MORE when jargon unlocks (dungeon uses LEAVE).
   static List<MenuRoute> visibleHubTabs(GameState s) => <MenuRoute>[
     MenuRoute.gear,
-    MenuRoute.power,
-    if (MenuTabs.showKey(s)) MenuRoute.key,
-    MenuRoute.quests,
+    MenuRoute.gold,
+    MenuRoute.shop,
+    MenuRoute.essence,
     MenuRoute.more,
+    if (MenuTabs.showKey(s)) MenuRoute.key,
   ];
 
-  /// Dungeon primary bar destinations (KEY/MORE are overflow).
+  /// Dungeon bar destinations (+ LEAVE in [AppBottomBar] = six slots).
+  /// Same five as hub; KEY stays hub / top-HUD mid-fight.
   static List<MenuRoute> visibleDungeonTabs(GameState s) => const <MenuRoute>[
     MenuRoute.gear,
-    MenuRoute.power,
-    MenuRoute.quests,
+    MenuRoute.gold,
+    MenuRoute.shop,
+    MenuRoute.essence,
+    MenuRoute.more,
   ];
 
   static List<GearPanel> visibleGearPanels(GameState s) => <GearPanel>[
@@ -246,11 +357,21 @@ class MenuRouter extends ChangeNotifier {
     if (MenuTabs.showRoster(s)) GearPanel.roster,
   ];
 
-  static List<PowerSegment> visiblePowerSegments(GameState s) => <PowerSegment>[
-    PowerSegment.forge,
-    PowerSegment.market,
-    if (MenuTabs.showRelics(s)) PowerSegment.relics,
-    if (MenuTabs.showCraft(s)) PowerSegment.craft,
-    if (MenuTabs.showCamp(s)) PowerSegment.camp,
+  static List<GoldPanel> visibleGoldPanels(GameState s) => const <GoldPanel>[
+    GoldPanel.tracks,
+    GoldPanel.market,
+  ];
+
+  static List<EssencePanel> visibleEssencePanels(GameState s) => <EssencePanel>[
+    EssencePanel.tracks,
+    if (MenuTabs.showShop(s)) EssencePanel.shop,
+    if (MenuTabs.showRelics(s)) EssencePanel.relics,
+    if (MenuTabs.showBeast(s)) EssencePanel.pets,
+  ];
+
+  /// Meta rows inside MORE (QUESTS / Craft). Relics live under ESSENCE.
+  static List<MoreSection> visibleMoreMetaRows(GameState s) => <MoreSection>[
+    MoreSection.quests,
+    if (MenuTabs.showCraft(s)) MoreSection.craft,
   ];
 }

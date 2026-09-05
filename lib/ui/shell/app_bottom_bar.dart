@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
-import '../custom_assets.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
-import '../kenney_assets.dart';
-import '../kenney_sprite.dart';
 import '../web_click_bridge.dart';
 
-/// Flat tab bottom bar. Hub: GEAR · POWER · (KEY) · QUESTS · MORE.
-/// Dungeon: GEAR · POWER · QUESTS · overflow (KEY/MORE) · LEAVE.
+/// TT2-style flat tab bar: equal color blocks with icon + label.
+/// Hub: GEAR · GOLD · SHOP · ESSENCE · MORE · (KEY). Dungeon: same five + LEAVE.
 class AppBottomBar extends StatelessWidget {
   const AppBottomBar({
     super.key,
@@ -31,136 +29,104 @@ class AppBottomBar extends StatelessWidget {
 
   static String labelFor(MenuRoute r) => switch (r) {
     MenuRoute.gear => 'GEAR',
-    MenuRoute.power => 'POWER',
-    MenuRoute.quests => 'QUESTS',
+    MenuRoute.gold => 'GOLD',
+    MenuRoute.shop => 'SHOP',
+    MenuRoute.essence => 'ESSENCE',
     MenuRoute.key => 'KEY',
     MenuRoute.more => 'MORE',
     MenuRoute.none => '',
   };
 
-  static String iconFor(MenuRoute r) => switch (r) {
-    MenuRoute.gear => KenneyAssets.helmet,
-    MenuRoute.power => CustomAssets.iconAxe,
-    MenuRoute.quests => CustomAssets.iconTrophy,
-    MenuRoute.key => KenneyAssets.chestClosed,
-    MenuRoute.more => CustomAssets.iconBook,
-    MenuRoute.none => KenneyAssets.book,
+  static Color slotColorFor(MenuRoute r) => switch (r) {
+    MenuRoute.gear => GameTheme.navGear,
+    MenuRoute.gold => GameTheme.navGold,
+    MenuRoute.shop => GameTheme.navShop,
+    MenuRoute.essence => GameTheme.navEssence,
+    MenuRoute.key => GameTheme.navKey,
+    MenuRoute.more => GameTheme.navMore,
+    MenuRoute.none => GameTheme.navMore,
+  };
+
+  static Widget iconFor(MenuRoute r, {double size = 18}) => switch (r) {
+    MenuRoute.gear => GameIcon.asset(UiIcon.gear, size: size),
+    MenuRoute.gold => GameIcon.asset(UiIcon.gold, size: size),
+    MenuRoute.shop => GameIcon.asset(UiIcon.star, size: size),
+    MenuRoute.essence => GameIcon.asset(UiIcon.essence, size: size),
+    MenuRoute.key => GameIcon.asset(UiIcon.key, size: size),
+    MenuRoute.more => GameIcon.asset(UiIcon.more, size: size),
+    MenuRoute.none => GameIcon.asset(UiIcon.more, size: size),
   };
 
   MenuAlert _alertFor(MenuRoute r) => switch (r) {
     MenuRoute.gear => alerts.gear,
-    MenuRoute.power => alerts.power,
-    MenuRoute.quests => alerts.quests,
+    MenuRoute.gold => alerts.gold,
+    MenuRoute.shop => alerts.shop,
+    MenuRoute.essence => alerts.essence,
     MenuRoute.key => alerts.key,
     MenuRoute.more => alerts.more,
     MenuRoute.none => MenuAlert.quiet,
   };
 
   String _reasonLine() {
-    if (route != MenuRoute.none) {
-      final selected = _alertFor(route).reason;
-      if (selected.isNotEmpty) return selected;
-    }
+    // Already inside a menu: skip that tab's "open X" nudge — the sheet owns
+    // status copy. Prefer another destination's alert, else stay quiet so the
+    // bar does not stack a second banner under GEAR / GOLD / …
     for (final dest in destinations) {
-      final r = _alertFor(dest).reason;
-      if (r.isNotEmpty) return r;
-    }
-    for (final dest in overflow) {
+      if (dest == route) continue;
       final r = _alertFor(dest).reason;
       if (r.isNotEmpty) return r;
     }
     return '';
   }
 
-  MenuRoute _overflowDisplayRoute() {
-    if (overflow.contains(route)) return route;
-    if (overflow.contains(MenuRoute.more)) return MenuRoute.more;
-    return overflow.first;
-  }
-
-  MenuAlert _overflowAlert() {
-    if (overflow.contains(route)) return _alertFor(route);
-    for (final dest in overflow) {
-      final a = _alertFor(dest);
-      if (!a.isQuiet) return a;
-    }
-    return MenuAlert.quiet;
-  }
-
-  void _tapOverflow() {
-    if (overflow.contains(route)) {
-      onSelect(route);
-      return;
-    }
-    onSelect(
-      overflow.contains(MenuRoute.more) ? MenuRoute.more : overflow.first,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final slotCount =
-        destinations.length +
-        (overflow.isEmpty ? 0 : 1) +
-        (onLeave != null ? 1 : 0);
-    final dense = slotCount >= 5;
+    final slotCount = destinations.length + (onLeave != null ? 1 : 0);
+    final dense = slotCount >= 6;
     final reason = _reasonLine();
     final bar = Material(
       color: Colors.transparent,
       child: Container(
-        height: GameTheme.bottomNavHeight,
+        height: dense
+            ? GameTheme.bottomNavHeight
+            : GameTheme.bottomNavHeight + 4,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              GameTheme.stone.withValues(alpha: 0.96),
-              GameTheme.ink.withValues(alpha: 0.98),
-            ],
-          ),
+          color: GameTheme.ink,
           border: Border(
-            top: BorderSide(color: GameTheme.borderLit.withValues(alpha: 0.35)),
+            top: BorderSide(color: GameTheme.borderLit.withValues(alpha: 0.5)),
           ),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x88000000),
-              blurRadius: 16,
-              offset: Offset(0, -4),
+              color: GameTheme.shadowMid,
+              blurRadius: 12,
+              offset: Offset(0, -3),
             ),
           ],
         ),
+        padding: EdgeInsets.fromLTRB(2, dense ? 1 : 2, 2, dense ? 1 : 2),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (final dest in destinations)
               Expanded(
                 child: AppBottomBarItem(
                   label: labelFor(dest),
-                  icon: iconFor(dest),
+                  icon: iconFor(dest, size: dense ? 16 : 18),
                   badge: _alertFor(dest).badge,
                   selected: route == dest,
+                  fill: slotColorFor(dest),
                   dense: dense,
                   onTap: () => onSelect(dest),
                 ),
               ),
-            if (overflow.isNotEmpty)
-              Expanded(
-                child: AppBottomBarItem(
-                  label: labelFor(_overflowDisplayRoute()),
-                  icon: iconFor(_overflowDisplayRoute()),
-                  badge: _overflowAlert().badge,
-                  selected: overflow.contains(route),
-                  dense: dense,
-                  onTap: _tapOverflow,
-                ),
-              ),
             if (onLeave != null)
               Expanded(
-                flex: destinations.length >= 4 ? 1 : 2,
                 child: AppBottomBarItem(
                   label: 'LEAVE',
-                  icon: KenneyAssets.iconDoor,
+                  icon: GameIcon.asset(UiIcon.leave, size: dense ? 16 : 18),
                   selected: false,
                   urgent: true,
+                  fill: GameTheme.navLeave,
                   dense: dense,
                   onTap: onLeave!,
                 ),
@@ -183,7 +149,7 @@ class AppBottomBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 3),
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 3),
             child: Text(
               reason,
               textAlign: TextAlign.center,
@@ -206,27 +172,28 @@ class AppBottomBarItem extends StatelessWidget {
     required this.icon,
     required this.selected,
     required this.onTap,
+    required this.fill,
     this.urgent = false,
     this.badge = '',
     this.dense = false,
   });
 
   final String label;
-  final String icon;
+  final Widget icon;
   final bool selected;
   final bool urgent;
   final String badge;
   final bool dense;
+  final Color fill;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = urgent
+    final labelColor = urgent
         ? GameTheme.accentWarn
-        : (selected ? GameTheme.torchHot : GameTheme.parchmentDim);
+        : (selected ? GameTheme.torchHot : GameTheme.parchment);
     final semanticsLabel = badge.isEmpty ? label : '$label $badge waiting';
-    final iconSize = dense ? 16.0 : 18.0;
-    final labelSize = dense ? 11.0 : 12.0;
+    final labelSize = dense ? 10.0 : 11.0;
     return WebClickScope(
       label: label,
       onPressed: onTap,
@@ -236,47 +203,66 @@ class AppBottomBarItem extends StatelessWidget {
         label: semanticsLabel,
         onTap: onTap,
         excludeSemantics: true,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-            height: GameTheme.minTouch + 8,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: dense ? 6 : 10,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 1),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 140),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? Color.lerp(fill, GameTheme.torch, 0.12)
+                      : fill,
+                  borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                  border: Border.all(
                     color: selected
-                        ? GameTheme.torch.withValues(alpha: 0.14)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                        ? GameTheme.torchHot
+                        : GameTheme.border.withValues(alpha: 0.45),
+                    width: selected ? 2 : 1,
                   ),
-                  child: badge.isEmpty
-                      ? KenneySprite(asset: icon, size: iconSize)
-                      : Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            KenneySprite(asset: icon, size: iconSize),
-                            Positioned(
-                              right: -7,
-                              top: -6,
-                              child: NavBadge(text: badge),
+                  boxShadow: selected
+                      ? [
+                          BoxShadow(
+                            color: GameTheme.torch.withValues(alpha: 0.4),
+                            blurRadius: 10,
+                            spreadRadius: 0,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          icon,
+                          SizedBox(height: dense ? 2 : 3),
+                          Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.body(
+                              size: labelSize,
+                              color: labelColor,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (badge.isNotEmpty)
+                      Positioned(
+                        right: 2,
+                        top: 2,
+                        child: NavBadge(text: badge),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: labelSize, color: color),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -293,18 +279,20 @@ class NavBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 15),
+      constraints: const BoxConstraints(minWidth: 16, minHeight: 14),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
       decoration: BoxDecoration(
-        color: GameTheme.torchHot,
+        color: GameTheme.bloodLit,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: GameTheme.ink, width: 1),
       ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: GameTheme.body(size: 10, color: GameTheme.ink),
-      ),
+      child: text == MenuAlert.starMark
+          ? GameIcon.asset(UiIcon.star, size: 9, color: GameTheme.parchment)
+          : Text(
+              text,
+              textAlign: TextAlign.center,
+              style: GameTheme.body(size: 10, color: GameTheme.parchment),
+            ),
     );
   }
 }

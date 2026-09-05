@@ -24,7 +24,7 @@ void runChasePlan({
       director.claimDailyVault();
     case ChaseOp.claimMissions:
       director.claimAllReadyMissions();
-      if (openMenus) router.open(MenuRoute.quests);
+      if (openMenus) router.apply(NavIntent.quests);
     case ChaseOp.claimMonth:
       director.claimMonthPass();
     case ChaseOp.syncWeek:
@@ -34,7 +34,7 @@ void runChasePlan({
     case ChaseOp.navEquipBag:
       router.openForHubChase(director.state, HubChaseKind.equipBag);
     case ChaseOp.navMarket:
-      router.apply(NavIntent.shop);
+      router.apply(NavIntent.market);
     case ChaseOp.navMoreInfo:
       router.open(MenuRoute.more, more: MoreSection.info);
     case ChaseOp.navKey:

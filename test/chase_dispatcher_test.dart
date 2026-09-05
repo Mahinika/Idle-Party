@@ -60,7 +60,7 @@ void main() {
     expect(ChaseDispatcher.navIntent(bag, state)?.gear, GearPanel.bag);
   });
 
-  test('market upgrade maps to POWER shop', () {
+  test('market upgrade maps to GOLD → MARKET', () {
     final state = GameLogic.createInitialState(now: now);
     final plan = ChaseDispatcher.plan(
       const HubChase(
@@ -71,7 +71,8 @@ void main() {
       state: state,
     );
     expect(plan.op, ChaseOp.navMarket);
-    expect(ChaseDispatcher.navIntent(plan, state)?.power, PowerSegment.market);
+    expect(ChaseDispatcher.navIntent(plan, state)?.route, MenuRoute.gold);
+    expect(ChaseDispatcher.navIntent(plan, state)?.goldPanel, GoldPanel.market);
   });
 
   test('vault halfway KEY +2 plans enterKey not bare ENTER', () {

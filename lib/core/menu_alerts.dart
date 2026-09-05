@@ -16,10 +16,13 @@ class MenuAlert {
 
   static const MenuAlert quiet = MenuAlert();
 
+  /// Compact “new” mark for nav badges — UI paints [UiIcon.star], not this glyph.
+  static const String starMark = '★';
+
   bool get isQuiet => count <= 0 && !star;
 
   String get badge => star
-      ? '★'
+      ? starMark
       : count > 0
       ? '$count'
       : '';
@@ -29,30 +32,34 @@ class MenuAlert {
 class MenuAlerts {
   const MenuAlerts({
     required this.gear,
-    required this.power,
-    required this.quests,
+    required this.gold,
+    required this.shop,
+    required this.essence,
     required this.key,
     required this.more,
   });
 
   final MenuAlert gear;
-  final MenuAlert power;
-  final MenuAlert quests;
+  final MenuAlert gold;
+  final MenuAlert shop;
+  final MenuAlert essence;
   final MenuAlert key;
   final MenuAlert more;
 
   static const MenuAlerts none = MenuAlerts(
     gear: MenuAlert.quiet,
-    power: MenuAlert.quiet,
-    quests: MenuAlert.quiet,
+    gold: MenuAlert.quiet,
+    shop: MenuAlert.quiet,
+    essence: MenuAlert.quiet,
     key: MenuAlert.quiet,
     more: MenuAlert.quiet,
   );
 
   static MenuAlerts forState(GameState state) => MenuAlerts(
     gear: gearAlert(state),
-    power: powerAlert(state),
-    quests: questsAlert(state),
+    gold: goldAlert(state),
+    shop: MenuAlert.quiet,
+    essence: essenceAlert(state),
     key: keyAlert(state),
     more: moreAlert(state),
   );
@@ -68,8 +75,9 @@ class MenuAlerts {
             ? '1 better item for the party — open GEAR · EQUIP'
             : '$upgrades better items for the party — open GEAR · EQUIP',
       ),
-      power: MenuAlert.quiet,
-      quests: MenuAlert.quiet,
+      gold: MenuAlert.quiet,
+      shop: MenuAlert.quiet,
+      essence: MenuAlert.quiet,
       key: MenuAlert.quiet,
       more: MenuAlert.quiet,
     );
@@ -91,8 +99,9 @@ class MenuAlerts {
               ? '1 better item — open GEAR'
               : '$upgrades better items — open GEAR',
         ),
-        power: MenuAlert.quiet,
-        quests: MenuAlert.quiet,
+        gold: MenuAlert.quiet,
+        shop: MenuAlert.quiet,
+        essence: MenuAlert.quiet,
         key: MenuAlert.quiet,
         more: MenuAlert.quiet,
       );
@@ -101,15 +110,17 @@ class MenuAlerts {
       return switch (chaseKind) {
         HubChaseKind.equipBag || HubChaseKind.meetHero => MenuAlerts(
           gear: gearAlert(state),
-          power: MenuAlert.quiet,
-          quests: MenuAlert.quiet,
+          gold: MenuAlert.quiet,
+          shop: MenuAlert.quiet,
+          essence: MenuAlert.quiet,
           key: MenuAlert.quiet,
           more: MenuAlert.quiet,
         ),
         HubChaseKind.marketUpgrade => MenuAlerts(
           gear: MenuAlert.quiet,
-          power: powerAlert(state),
-          quests: MenuAlert.quiet,
+          gold: marketAlert(state),
+          shop: MenuAlert.quiet,
+          essence: MenuAlert.quiet,
           key: MenuAlert.quiet,
           more: MenuAlert.quiet,
         ),
@@ -117,10 +128,11 @@ class MenuAlerts {
         HubChaseKind.claimDailyVault ||
         HubChaseKind.dailyVaultProgress => MenuAlerts(
           gear: MenuAlert.quiet,
-          power: MenuAlert.quiet,
-          quests: questsAlert(state),
+          gold: MenuAlert.quiet,
+          shop: MenuAlert.quiet,
+          essence: MenuAlert.quiet,
           key: MenuAlert.quiet,
-          more: MenuAlert.quiet,
+          more: moreAlert(state),
         ),
         _ => forState(state),
       };
@@ -156,19 +168,31 @@ class MenuAlerts {
   /// Backward-compatible alias used by inventory hints.
   static MenuAlert partyAlert(GameState state) => gearAlert(state);
 
-  static MenuAlert powerAlert(GameState state) {
-    var count = 0;
-    final reasons = <String>[];
+  static MenuAlert goldAlert(GameState state) {
+    final forge = forgeAlert(state);
+    final market = marketAlert(state);
+    if (forge.isQuiet && market.isQuiet) return MenuAlert.quiet;
+    if (!forge.isQuiet && market.isQuiet) return forge;
+    if (forge.isQuiet && !market.isQuiet) return market;
+    return MenuAlert(
+      count: forge.count + market.count,
+      reason: '${forge.reason} · ${market.reason}',
+    );
+  }
+
+  static MenuAlert forgeAlert(GameState state) {
     final forgeType =
         PartyUpgradeType.values[GameLogic.recommendedForgeUpgrade(state)];
     if (state.gold >= GameLogic.upgradeCostFor(state, forgeType) * 3) {
-      count++;
-      reasons.add('gold for Gold');
+      return const MenuAlert(count: 1, reason: 'gold for run tracks');
     }
-    if (state.essence >= GameLogic.sanctuaryCost(cheapestCampLevel(state))) {
-      count++;
-      reasons.add('essence for Essence');
-    }
+    return MenuAlert.quiet;
+  }
+
+  /// Flasks / listings under GOLD → MARKET.
+  static MenuAlert marketAlert(GameState state) {
+    var count = 0;
+    final reasons = <String>[];
     final hasFlask = state.heroes.any(
       (h) => h.itemIn(EquipmentSlot.consumable) != null,
     );
@@ -176,15 +200,29 @@ class MenuAlerts {
         !state.challengeNoFlask &&
         state.gold >= GameLogic.marketFlaskCost(state)) {
       count++;
-      reasons.add('gold for a Shop flask');
+      reasons.add('gold for a flask');
     }
     if (MarketListingsService.hasAffordableUpgradeListing(state)) {
       count++;
-      reasons.add('gold for a Shop upgrade');
+      reasons.add('gold for an upgrade');
     }
     if (count <= 0) return MenuAlert.quiet;
-    return MenuAlert(count: count, reason: 'You have ${reasons.join(' · ')}');
+    return MenuAlert(count: count, reason: 'Market: ${reasons.join(' · ')}');
   }
+
+  /// Legacy alias — market lives under GOLD now.
+  static MenuAlert shopAlert(GameState state) => marketAlert(state);
+
+  static MenuAlert essenceAlert(GameState state) {
+    if (!MenuTabs.showCamp(state)) return MenuAlert.quiet;
+    if (state.essence >= GameLogic.sanctuaryCost(cheapestCampLevel(state))) {
+      return const MenuAlert(count: 1, reason: 'essence for tracks');
+    }
+    return MenuAlert.quiet;
+  }
+
+  /// Combined gold alerts (legacy surfaces).
+  static MenuAlert powerAlert(GameState state) => goldAlert(state);
 
   static MenuAlert questsAlert(GameState state) {
     var count = 0;
@@ -217,10 +255,24 @@ class MenuAlerts {
   }
 
   static MenuAlert moreAlert(GameState state) {
+    final quests = questsAlert(state);
     if (MetaSystems.hasUnseenChangelog(state)) {
+      if (!quests.isQuiet) {
+        return MenuAlert(
+          star: true,
+          count: quests.count,
+          reason: "${quests.reason} · What's New unread — MORE",
+        );
+      }
       return const MenuAlert(
         star: true,
         reason: "What's New is unread — MORE · INFO",
+      );
+    }
+    if (!quests.isQuiet) {
+      return MenuAlert(
+        count: quests.count,
+        reason: '${quests.reason} — MORE · QUESTS',
       );
     }
     return MenuAlert.quiet;

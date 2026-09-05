@@ -15,14 +15,15 @@ void main() {
     expect(FirstSessionTips.tips.first.body.toLowerCase(), contains('enter'));
   });
 
-  test('GOLD and APEX tips name live POWER tabs', () {
+  test('GOLD and APEX tips name live GOLD / MORE paths', () {
     final gold = FirstSessionTips.tips.firstWhere((t) => t.id == 'forge');
-    expect(gold.body, contains('POWER → Gold'));
-    expect(gold.body, contains('their own POWER tabs'));
+    expect(gold.body, contains('GOLD tab'));
+    expect(gold.body, contains('row inside MORE'));
+    expect(gold.body, contains('ESSENCE → RELICS'));
     expect(gold.body.toLowerCase(), isNot(contains('relics for party')));
     final apex = FirstSessionTips.tips.firstWhere((t) => t.id == 'apex');
     expect(apex.title, 'APEX');
-    expect(apex.body, contains('POWER → Craft'));
+    expect(apex.body, contains('MORE → CRAFT'));
     expect(apex.body.toLowerCase(), isNot(contains('in forge')));
   });
 

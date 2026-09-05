@@ -31,7 +31,8 @@ void main() {
     expect(find.textContaining('Boss on F'), findsWidgets);
     expect(find.textContaining('Boss:'), findsOneWidget);
     expect(find.text('GEAR'), findsOneWidget);
-    expect(find.text('POWER'), findsOneWidget);
+    expect(find.text('GOLD'), findsOneWidget);
+    expect(find.text('SHOP'), findsOneWidget);
     expect(find.text('MORE'), findsOneWidget);
     expect(find.textContaining('Boss 0/1'), findsWidgets);
     // Fresh save: KEY jargon gated — no KEYSTONE strip under ENTER.
@@ -54,7 +55,8 @@ void main() {
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(find.textContaining('KEYSTONE'), findsNothing);
     expect(find.text('GEAR'), findsOneWidget);
-    expect(find.text('POWER'), findsOneWidget);
+    expect(find.text('GOLD'), findsOneWidget);
+    expect(find.text('SHOP'), findsOneWidget);
     expect(find.text('MORE'), findsOneWidget);
     expect(find.textContaining('Bosses'), findsNothing);
   });
@@ -115,16 +117,22 @@ void main() {
 
     expect(find.textContaining('Next'), findsWidgets);
     expect(find.text('GEAR'), findsWidgets);
-    expect(find.text('POWER'), findsWidgets);
-    expect(find.text('QUESTS'), findsWidgets);
+    expect(find.text('GOLD'), findsWidgets);
+    expect(find.text('ESSENCE'), findsWidgets);
     expect(find.text('LEAVE'), findsOneWidget);
     expect(find.textContaining('Shield'), findsWidgets);
 
     await tester.tap(find.text('GEAR').last);
     await tester.pumpAndSettle();
     expect(find.textContaining('GEAR'), findsWidgets);
-    expect(find.textContaining('DMG'), findsWidgets);
+    expect(find.text('HERO STATS'), findsOneWidget);
     expect(find.textContaining('iLvl'), findsWidgets);
+    // Compact GEAR folds detailed chips under the doll — scroll then expand.
+    await tester.ensureVisible(find.text('SHOW'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('SHOW'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('DMG'), findsWidgets);
 
     await tester.tap(find.text('CLOSE'));
     await tester.pumpAndSettle();
@@ -139,6 +147,32 @@ void main() {
     await tester.tap(find.text('MERGE'));
     await tester.pumpAndSettle();
     expect(find.textContaining('COMBINATOR'), findsOneWidget);
+  });
+
+  testWidgets('system back closes open menu instead of leaving play', (
+    WidgetTester tester,
+  ) async {
+    final director = GameDirector.preview(
+      initialState:
+          GameLogic.createInitialState().copyWith(highestDungeonCleared: 0),
+    );
+    await director.boot();
+    director.enterDungeon();
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: false),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.text('GEAR').last);
+    await tester.pumpAndSettle();
+    expect(find.text('CLOSE'), findsOneWidget);
+
+    final handled = await tester.binding.handlePopRoute();
+    expect(handled, isTrue);
+    await tester.pumpAndSettle();
+    expect(find.text('CLOSE'), findsNothing);
+    expect(find.text('LEAVE'), findsOneWidget);
   });
 
   testWidgets('compact phone viewport keeps bottom nav usable', (WidgetTester tester) async {
@@ -247,7 +281,7 @@ void main() {
     expect(find.text('OPEN BAG'), findsNothing); // BAG tab is open, not GEAR
   });
 
-  testWidgets('POWER Shop opens listings without a dim crash', (tester) async {
+  testWidgets('GOLD → MARKET opens listings without a dim crash', (tester) async {
     final director = GameDirector.preview();
     tester.view.physicalSize = const Size(360, 780);
     tester.view.devicePixelRatio = 1.0;
@@ -260,17 +294,35 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 500));
 
-    await tester.tap(find.text('POWER').last);
+    await tester.tap(find.text('GOLD').last);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(tester.takeException(), isNull);
-
-    await tester.tap(find.text('Shop'));
+    await tester.tap(find.text('MARKET'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.takeException(), isNull);
     expect(find.textContaining('Buy flask'), findsWidgets);
     expect(find.text('ALL'), findsOneWidget);
+  });
+
+  testWidgets('SHOP shows store coming soon', (tester) async {
+    final director = GameDirector.preview();
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: false),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.tap(find.text('SHOP').last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('Coming soon'), findsWidgets);
   });
 
   testWidgets('GEAR pauses dungeon combat but not hub', (tester) async {

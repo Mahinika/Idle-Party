@@ -1,188 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
-import '../../core/game_logic.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
-import '../../core/meta_systems.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../meta/achievements_overlay.dart';
 import '../meta/codex_overlay.dart';
-import '../meta/prestige_shop.dart';
 import '../guides_overlay.dart';
-import 'beast_overlay.dart';
 import 'craft_overlay.dart';
-import 'forge_overlay.dart';
-import 'market_overlay.dart';
-import 'relics_overlay.dart';
-import 'sanctuary_overlay.dart';
+import 'jobs_overlay.dart';
 import 'settings_overlay.dart';
 import 'shell_common.dart';
 
-/// POWER sheet: sticky Gold | Shop | Relics | Craft | Essence.
-class PowerPillar extends StatefulWidget {
-  const PowerPillar({
-    super.key,
-    required this.director,
-    required this.segment,
-    required this.onSegmentChanged,
-  });
-  final GameDirector director;
-  final PowerSegment segment;
-  final ValueChanged<PowerSegment> onSegmentChanged;
-
-  @override
-  State<PowerPillar> createState() => _PowerPillarState();
-}
-
-class _PowerPillarState extends State<PowerPillar>
-    with TickerProviderStateMixin {
-  late final FlexTabs _tabs;
-  List<PowerSegment> _visible = const [
-    PowerSegment.forge,
-    PowerSegment.market,
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _tabs = FlexTabs(
-      vsync: this,
-      length: 2,
-      onChanged: (i) {
-        if (i >= 0 && i < _visible.length) {
-          widget.onSegmentChanged(_visible[i]);
-        }
-        setState(() {});
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final d = widget.director;
-    final s = d.state;
-    final plain = GameLogic.plainPlayerChrome(s);
-    _visible = MenuRouter.visiblePowerSegments(s);
-    final pages = <({String label, Widget body})>[
-      for (final seg in _visible)
-        switch (seg) {
-          PowerSegment.forge => (
-            label: seg.tabLabel,
-            body: ForgeOverlay(director: d),
-          ),
-          PowerSegment.market => (
-            label: seg.tabLabel,
-            body: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  MarketOverlay(director: d),
-                  if (MenuTabs.showShop(s)) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      'Essence',
-                      style: GameTheme.pixel(
-                        size: GameTheme.hudPixel,
-                        color: GameTheme.torchHot,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    PrestigeShopOverlay(director: d),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          PowerSegment.relics => (
-            label: seg.tabLabel,
-            body: RelicsOverlay(director: d),
-          ),
-          PowerSegment.craft => (
-            label: seg.tabLabel,
-            body: CraftOverlay(director: d),
-          ),
-          PowerSegment.camp => (
-            label: seg.tabLabel,
-            body: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                SanctuaryOverlay(director: d),
-                if (MenuTabs.showBeast(s)) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    'BEAST',
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
-                      color: GameTheme.torchHot,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  BeastOverlay(director: d),
-                ],
-              ],
-            ),
-          ),
-        },
-    ];
-    _tabs.syncToId(_visible, widget.segment);
-    final alert = MenuAlerts.powerAlert(s);
-    final activeIndex = _tabs.index.clamp(0, pages.length - 1);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        MenuChrome.tabRail(
-          controller: _tabs.controller,
-          onTap: (_) => setState(() {}),
-          tabs: [
-            for (var i = 0; i < pages.length; i++)
-              MenuChrome.bridgedTab(
-                pages[i].label,
-                onSelect: () {
-                  _tabs.controller.animateTo(i);
-                  widget.onSegmentChanged(_visible[i]);
-                  setState(() {});
-                },
-              ),
-          ],
-        ),
-        if (plain && !MenuTabs.showCamp(s)) ...[
-          const SizedBox(height: 4),
-          Text(
-            'Essence unlocks later.',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-          ),
-        ] else if (!MenuTabs.showCamp(s)) ...[
-          const SizedBox(height: 4),
-          Text(
-            'Essence unlocks after Ascend or when you earn essence.',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-          ),
-        ],
-        const SizedBox(height: 4),
-        if (!alert.isQuiet)
-          Text(
-            alert.reason,
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-          ),
-        const SizedBox(height: 6),
-        Expanded(child: pages[activeIndex].body),
-      ],
-    );
-  }
-}
-
-/// MORE list: INFO / Settings / Credits — no gameplay.
+/// MORE list: INFO / Settings / Credits plus meta rows (QUESTS / Craft).
 class MoreList extends StatefulWidget {
   const MoreList({
     super.key,
@@ -206,7 +37,7 @@ class MoreList extends StatefulWidget {
 }
 
 class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
-  static const _sections = <MoreSection>[
+  static const _chromeSections = <MoreSection>[
     MoreSection.info,
     MoreSection.settings,
     MoreSection.credits,
@@ -218,14 +49,17 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    final initial = _sections.indexOf(widget.section).clamp(0, 2);
+    final chrome = widget.section.isMetaOverlay
+        ? MoreSection.info
+        : widget.section;
+    final initial = _chromeSections.indexOf(chrome).clamp(0, 2);
     _tabs = FlexTabs(
       vsync: this,
-      length: _sections.length,
+      length: _chromeSections.length,
       initialIndex: initial,
       onChanged: (i) {
-        if (i >= 0 && i < _sections.length) {
-          widget.onSectionChanged(_sections[i]);
+        if (i >= 0 && i < _chromeSections.length) {
+          widget.onSectionChanged(_chromeSections[i]);
         }
         setState(() {});
       },
@@ -242,29 +76,55 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final s = widget.director.state;
     final alert = MenuAlerts.moreAlert(s);
-    _tabs.syncToId(_sections, widget.section);
+    final onMeta = widget.section.isMetaOverlay;
+    if (!onMeta) {
+      _tabs.syncToId(_chromeSections, widget.section);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MenuChrome.tabRail(
-          controller: _tabs.controller,
-          onTap: (_) => setState(() {}),
-          tabs: [
-            for (var i = 0; i < _sections.length; i++)
-              MenuChrome.bridgedTab(
-                switch (_sections[i]) {
-                  MoreSection.info => alert.star ? 'INFO ★' : 'INFO',
-                  MoreSection.settings => 'SETTINGS',
-                  MoreSection.credits => 'CREDITS',
-                },
-                onSelect: () {
-                  _tabs.controller.animateTo(i);
-                  widget.onSectionChanged(_sections[i]);
-                  setState(() {});
-                },
+        if (onMeta)
+          Row(
+            children: [
+              Expanded(
+                child: GameButton(
+                  label: 'BACK',
+                  style: GameButtonStyle.grey,
+                  onPressed: () =>
+                      widget.onSectionChanged(MoreSection.info),
+                ),
               ),
-          ],
-        ),
+              const SizedBox(width: 8),
+              Text(
+                widget.section.rowLabel,
+                style: GameTheme.pixel(
+                  size: GameTheme.hudPixel,
+                  color: GameTheme.torchHot,
+                ),
+              ),
+            ],
+          )
+        else
+          MenuChrome.tabRail(
+            controller: _tabs.controller,
+            onTap: (_) => setState(() {}),
+            tabs: [
+              for (var i = 0; i < _chromeSections.length; i++)
+                MenuChrome.bridgedTab(
+                  switch (_chromeSections[i]) {
+                    MoreSection.info => 'INFO',
+                    MoreSection.settings => 'SETTINGS',
+                    MoreSection.credits => 'CREDITS',
+                    _ => _chromeSections[i].rowLabel,
+                  },
+                  onSelect: () {
+                    _tabs.controller.animateTo(i);
+                    widget.onSectionChanged(_chromeSections[i]);
+                    setState(() {});
+                  },
+                ),
+            ],
+          ),
         if (!alert.isQuiet && widget.section == MoreSection.info)
           MenuChrome.tabBanner(alert.reason),
         const SizedBox(height: 8),
@@ -294,11 +154,18 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
           style: GameTheme.body(size: 14, color: GameTheme.parchment),
         ),
       ),
+      // Legacy — MenuRouter redirects shop/relics to bottom tabs.
+      MoreSection.shop || MoreSection.relics => const SizedBox.shrink(),
+      MoreSection.craft => CraftOverlay(director: d),
+      MoreSection.quests => SingleChildScrollView(
+        child: JobsOverlay(director: d),
+      ),
     };
   }
 
   Widget _infoBody(GameDirector d) {
     final s = d.state;
+    final metaRows = MenuRouter.visibleMoreMetaRows(s);
     final showCodex = MenuTabs.showCodex(s);
     final panes = showCodex
         ? const ['GUIDE', 'CODEX', 'TROPHIES']
@@ -307,11 +174,20 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        KenneyButton(
-          label: MetaSystems.hasUnseenChangelog(s)
-              ? "WHAT'S NEW ★"
-              : "WHAT'S NEW",
-          style: KenneyButtonStyle.grey,
+        if (metaRows.isNotEmpty) ...[
+          for (final row in metaRows) ...[
+            GameButton(
+              label: row.rowLabel,
+              style: GameButtonStyle.brown,
+              onPressed: () => widget.onSectionChanged(row),
+            ),
+            const SizedBox(height: 6),
+          ],
+          const SizedBox(height: 4),
+        ],
+        GameButton(
+          label: "WHAT'S NEW",
+          style: GameButtonStyle.grey,
           onPressed: widget.onOpenWhatsNew,
         ),
         if (showCodex) ...[
@@ -321,11 +197,11 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
               for (var i = 0; i < panes.length; i++) ...[
                 if (i > 0) const SizedBox(width: 6),
                 Expanded(
-                  child: KenneyButton(
+                  child: GameButton(
                     label: panes[i],
                     style: pane == i
-                        ? KenneyButtonStyle.brown
-                        : KenneyButtonStyle.grey,
+                        ? GameButtonStyle.brown
+                        : GameButtonStyle.grey,
                     onPressed: () => setState(() => _infoPane = i),
                   ),
                 ),
@@ -345,5 +221,3 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
     );
   }
 }
-
-

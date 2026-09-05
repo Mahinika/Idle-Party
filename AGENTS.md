@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.90**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.95**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -40,7 +40,7 @@ wide desktop chrome. No hover-only flows for real players — tap / long-press.
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
 closed Alpha (**1.12.83 / 112** submitted 2026-08-29; testers may still be on
 **1.12.78 / 107** until review publishes). Working ship is
-**1.12.90**. Production **12×14** unlocks ~2026-09-04; still wait for owner play
+**1.12.95**. Production **12×14** unlocks ~2026-09-04; still wait for owner play
 before a production AAB.
 Do not treat Play as the primary install channel.
 
@@ -144,13 +144,16 @@ main.dart
  │   └─ Dungeon (inDungeon) → Is2Shell
  │        ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
  │        └─ chrome (FARM/PUSH, God Hand, party HUD + flask, target panel)
- │           + AppBottomBar GEAR / POWER / QUESTS + LEAVE
- │             (hub also KEY when jargon unlocks + MORE; dungeon: KEY/MORE via HUD gear)
+ │           + AppBottomBar GEAR / GOLD / SHOP / ESSENCE / MORE
+ │             (hub endgame: + KEY as 6th after MORE; dungeon: + LEAVE = six slots)
 
 Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
- (flat tabs; dungeon LEAVE = hub; MORE/KEY via HUD gear in dungeon)
- POWER inner tabs: Gold · Shop · Relics · Craft · Essence
- (prestige buys in Shop; Beast in Essence; Blessing / God Hand / REBORN under Gold → KEEP)
+  (flat tabs; one shared bar always visible under sheets; dungeon LEAVE = hub)
+  GOLD = forge tracks + market (flasks/listings) · SHOP = real-money store
+  (coming soon) · ESSENCE = sanctuary tracks + KEEP + prestige shop + relics + pets
+  MORE rows = QUESTS / Craft
+  (Blessing / God Hand / REBORN under ESSENCE → TRACKS / KEEP)
+  Hub POWERUPS rewarded ads stay on the hub (not under SHOP)
 ```
 
 **SpatialCombat is the combat authority** for live play and in-dungeon offline
@@ -172,11 +175,11 @@ Spire climb from Hub; **boss every 5 floors**; wipe/leave → hub;
 **KEYSTONE** (same party-max-level gate): Mythic+-style keys on
 normal zone runs — dial under hub **KEY**. Before party max level there is no KEY habit or KEY tab.
 
-**Rifts** (same gate): farm timed kill-quota from hub /
-**KEY** — gold and gear mid-run; not Play-ranked.
+**Rifts** (same gate): farm timed kill-quota in **Stormwake Hollow** from hub /
+**KEY** — gold and gear mid-run; not Play-ranked; not Spire climb.
 `metaDepth.riftBestTier` survives Ascend.
 
-**Greater Rifts** (same gate): harder timed ladder,
+**Greater Rifts** (same gate): harder timed ladder in **Mothveil Hollow**,
 no mid-run gear, larger clear payout; season PB on Play Games BOARDS.
 `metaDepth.grBestTier` / `seasonBestGrTier` survive Ascend.
 
@@ -195,9 +198,9 @@ Ascend).
 **Zone unlock:** party **mean level** (even steps 1…100 across 15 zones) **or**
 prior zone clear. Zone 0 (Sandy) from Lv1. Lifetime gold no longer unlocks zones.
 
-**QUESTS** (bottom tab; was JOBS/contracts): 3-slot board — **Daily** (UTC kill
+**QUESTS** (MORE row; was bottom-tab JOBS/contracts): 3-slot board — **Daily** (UTC kill
 quest), **Bounty** ladder (100/500/1000 at endgame), **Side** rotating
-non-kill. Claim via TODAY **CLAIM QUESTS**.
+non-kill. Claim via TODAY **CLAIM QUESTS** or MORE · QUESTS.
 
 **Hub TODAY** — selection in `HubChase.forState`; every surface reads the same
 words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up
@@ -220,8 +223,9 @@ Spec look: `HeroIdentity` (tint + Shadow→warlock sprite).
 
 New Game picker: choose **3 unique specs** from the starter pool. Role copy is
 **Shield / Healer / Damage** (easy start = one of each), not three fixed buttons.
-Advanced menu tabs (ROSTER, Essence, KEY, BEAST, CODEX, …) gate via
-`MenuTabs` so day-one chrome stays small. **LOADOUTS** tab is hidden/removed
+Advanced menu tabs (ROSTER, KEY, BEAST, CODEX, …) gate via
+`MenuTabs` so day-one chrome stays small. ESSENCE is a bottom tab; tracks
+unlock after Ascend / first essence. **LOADOUTS** tab is hidden/removed
 (save fields may remain). PARTY badges mean bag upgrades (`MenuAlerts`).
 
 Offline return uses `OfflineProgressResult` (wow headline + ≤3 highlights +
@@ -325,10 +329,10 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Meta panels | `lib/ui/meta/` (roster, KEY, prestige, Play Games, Welcome Back, …) |
 | Stage view | `lib/ui/spatial_dungeon_view.dart` |
 | Wipe advice | `lib/core/wipe_advice.dart` |
-| Kenney helpers | `lib/ui/kenney_assets.dart` |
-| Custom art helpers | `lib/ui/custom_assets.dart` |
+| Kenney helpers | `lib/assets/kenney_assets.dart` |
+| Custom art helpers | `lib/assets/custom_assets.dart` |
 | Gear budget contract | `docs/GEAR_BUDGET.md` |
-| UI theme guide | `docs/UI_THEME.md` — tokens, families, action hierarchy, layout escape hatches (`MenuChrome` / `GameTheme`) |
+| UI theme | `lib/ui/theme.dart` + `docs/UI_THEME.md` — `GameTheme` tokens, `MenuChrome`, `GameButton`, `GameIcon` |
 
 ## Conventions
 
@@ -367,7 +371,7 @@ tracks, normal gear/stash/market/loadouts, or `highestFloorCleared`.
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
 each Ascend adds **+5 ATK · +20 DEF · +60 STA · +8% gold** on top of AL flats
 (`+1 ATK` / `+4 DEF` / `+12 STA` / `+10% gold` per AL). Shown in
-**POWER → Gold → KEEP** and Sanctuary. Constants: `GameLogic.ascendBlessing*`.
+**ESSENCE → KEEP** and Sanctuary. Constants: `GameLogic.ascendBlessing*`.
 Player-facing label is **STA / Stamina** (same as gear); internal fields may
 still say vitality.
 
@@ -378,7 +382,7 @@ loadouts, floors → starter gear). **Keeps** hero levels/XP, open zones
 soulbound, settings. Sets `metaDepth.freshPrestige` so TODAY farms gear instead
 of KEY until real drops land. **Clears** `bossVictories`, wipe streak/advice,
 active dungeon / KEY / rift via leave-dungeon; mission board rebuilt.
-**AL20 REBORN** (**POWER → Gold → KEEP**, optional): same bag wipe, AL and
+**AL20 REBORN** (**ESSENCE → KEEP**, optional): same bag wipe, AL and
 Blessing unchanged, essence + 1 constellation point. Never a TODAY chase.
 
 Dungeon unlock uses **party mean level** (and prior clears), not lifetime gold.
@@ -400,7 +404,7 @@ Affixes still rotate weekly. See `lib/core/keystone.dart`.
 ## God Hand
 
 Tap steers the party briefly and deals AOE; has cooldown. Damage upgrades with essence.
-Styles under **POWER → Gold → KEEP**: **BAL** / **FOCUS** (+dmg −radius) /
+Styles under **ESSENCE → KEEP**: **BAL** / **FOCUS** (+dmg −radius) /
 **WIDE** (+radius −dmg). Optional CD upgrades: `metaDepth.godHandCdLevel`. Soft
 knobs — do not redesign direction without asking.
 

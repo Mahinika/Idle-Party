@@ -5,14 +5,17 @@ import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_router.dart';
 import '../../core/nav_intent.dart';
-import '../meta/keystone_sheet.dart';
+import '../game_theme.dart';
+import 'essence_dock.dart';
+import 'gold_dock.dart';
 import 'inventory_dock.dart';
-import 'jobs_overlay.dart';
 import 'overlay_scaffold.dart';
 import 'power_meta_pillars.dart';
+import '../meta/keystone_sheet.dart';
 import 'whats_new_overlay.dart';
 
 /// The one menu sheet, shared by hub and dungeon.
+/// All routes fill the stack above the shared [AppBottomBar] (full height).
 class MenuSurface extends StatefulWidget {
   const MenuSurface({super.key, required this.director, required this.router});
 
@@ -137,7 +140,37 @@ class _MenuSurfaceState extends State<MenuSurface> {
         d.autoMergeJunk();
         session.dropMissingIds(d.state.gearStash.map((g) => g.id).toSet());
       },
-      onOpenMarket: () => router.apply(NavIntent.shop),
+      onOpenMarket: () => router.apply(NavIntent.market),
+    );
+  }
+
+  Widget _shopComingSoon() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Store',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 18, color: GameTheme.torchHot),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Coming soon',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 16, color: GameTheme.parchment),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Gold buys live under GOLD.\n'
+            'Essence buys live under ESSENCE.\n'
+            'Optional hub POWERUPS ads stay on the hub.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+        ],
+      ),
     );
   }
 
@@ -145,24 +178,26 @@ class _MenuSurfaceState extends State<MenuSurface> {
   Widget build(BuildContext context) {
     final d = widget.director;
     if (router.route == MenuRoute.none) return const SizedBox.shrink();
-    final heightFactor = switch (router.route) {
-      MenuRoute.gear || MenuRoute.power => 1.0,
-      MenuRoute.quests => 0.84,
-      _ => 0.96,
-    };
+    // Full height above the shared bottom bar — same for every tab so GOLD /
+    // SHOP / ESSENCE / KEY / MORE match GEAR (never cover the bar; OverlayScrim
+    // lives only inside the Expanded scene stack).
     return OverlayScrim(
       title: router.title,
-      heightFactor: heightFactor,
+      subtitle: router.jobHint,
+      heightFactor: 1,
       onClose: router.close,
       child: switch (router.route) {
         MenuRoute.gear => _inventoryDock(),
-        MenuRoute.power => PowerPillar(
+        MenuRoute.gold => GoldDock(
           director: d,
-          segment: router.powerSegment,
-          onSegmentChanged: (seg) => router.powerSegment = seg,
+          panel: router.goldPanel,
+          onPanelChanged: (panel) => router.goldPanel = panel,
         ),
-        MenuRoute.quests => SingleChildScrollView(
-          child: JobsOverlay(director: d),
+        MenuRoute.shop => _shopComingSoon(),
+        MenuRoute.essence => EssenceDock(
+          director: d,
+          panel: router.essencePanel,
+          onPanelChanged: (panel) => router.essencePanel = panel,
         ),
         MenuRoute.key => KeystoneSheet(director: d),
         MenuRoute.more => MoreList(
@@ -178,3 +213,4 @@ class _MenuSurfaceState extends State<MenuSurface> {
     );
   }
 }
+

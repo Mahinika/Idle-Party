@@ -43,7 +43,7 @@ void main() {
     expect(state.wipeAdviceLine, '');
     state = GameLogic.notePartyWipe(state, atkLack());
     expect(state.wipeStreakCount, 2);
-    expect(state.wipeAdviceLine, 'Upgrade ATK in POWER');
+    expect(state.wipeAdviceLine, 'Upgrade ATK in GOLD');
   });
 
   test('melted pack points at DEF on first wipe', () {
@@ -57,7 +57,7 @@ void main() {
     );
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.notePartyWipe(state, fight);
-    expect(state.wipeAdviceLine, 'Upgrade DEF in POWER');
+    expect(state.wipeAdviceLine, 'Upgrade DEF in GOLD');
   });
 
   test('instant melt still tips DEF when damageDealt is zero', () {
@@ -72,7 +72,7 @@ void main() {
     final state = GameLogic.createInitialState(now: now);
     expect(
       WipeAdvice.lineFor(state: state, fight: fight),
-      'Upgrade DEF in POWER',
+      'Upgrade DEF in GOLD',
     );
   });
 
@@ -88,7 +88,7 @@ void main() {
     final state = GameLogic.createInitialState(now: now);
     expect(
       WipeAdvice.lineFor(state: state, fight: fight),
-      'Upgrade STA in POWER',
+      'Upgrade STA in GOLD',
     );
   });
 
@@ -252,7 +252,7 @@ void main() {
     expect(MarketListingsService.hasAffordableUpgradeListing(state), isTrue);
     state = GameLogic.notePartyWipe(state, atkLack());
     state = GameLogic.notePartyWipe(state, atkLack());
-    expect(state.wipeAdviceLine, startsWith('SHOP:'));
+    expect(state.wipeAdviceLine, startsWith('GOLD:'));
     expect(state.wipeAdviceLine, contains('g'));
   });
 
@@ -266,12 +266,16 @@ void main() {
       contains('BAG'),
     );
     expect(
-      WipeAdvice.hubCtaLabelFor('Upgrade ATK in POWER'),
-      'OPEN POWER',
+      WipeAdvice.hubCtaLabelFor('Upgrade ATK in GOLD'),
+      'OPEN GOLD',
     );
     expect(
-      WipeAdvice.hubNavFor('Upgrade ATK in POWER')?.power,
-      PowerSegment.forge,
+      WipeAdvice.hubNavFor('Upgrade ATK in GOLD')?.route,
+      MenuRoute.gold,
+    );
+    expect(
+      WipeAdvice.hubCtaLabelFor('Upgrade ATK in POWER'),
+      'OPEN GOLD',
     );
     expect(
       WipeAdvice.hubCtaLabelFor('Equip the better item in BAG'),

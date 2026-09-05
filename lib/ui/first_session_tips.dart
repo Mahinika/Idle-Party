@@ -51,25 +51,27 @@ class FirstSessionTips extends StatelessWidget {
       id: 'sanctuary',
       title: 'ESSENCE',
       body:
-          'POWER → Essence unlocks after your first Ascend or when you earn essence. '
+          'ESSENCE unlocks after your first Ascend or when you earn essence. '
           'Spend essence there for idle gold and party power that persists between '
           'runs. Hub gold/min ticks at the keep overnight (enough to buy Gold). '
           'Gold Find makes that number go up.',
     ),
     (
       id: 'market',
-      title: 'SHOP',
+      title: 'GOLD MARKET',
       body:
-          'Buy flasks in POWER → Shop. When the bag is full, use BAG → CLEAN BAG / '
+          'Buy flasks under GOLD → MARKET. When the bag is full, use BAG → CLEAN BAG / '
           'MERGE or SETTINGS auto-sell — there is no Sell junk button.',
     ),
     (
       id: 'forge',
       title: 'GOLD',
       body:
-          'POWER → Gold: gold buys this-run power (×1 / % spend / EVEN split) '
-          'and KEEP for God Hand / Blessing. Relics, Craft, and Essence are '
-          'their own POWER tabs. Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
+          'GOLD tab: TRACKS buys this-run power (×1 / % spend / EVEN split); '
+          'MARKET buys flasks and listings. '
+          'God Hand and Blessing live on ESSENCE → TRACKS (KEEP). Relics live under '
+          'ESSENCE → RELICS. Craft is a row inside MORE. Hero '
+          'levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
     ),
     (
       id: 'pets',
@@ -81,7 +83,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'contracts',
       title: 'QUESTS',
       body:
-          'QUESTS pays gold and essence. '
+          'QUESTS (MORE) pays gold and essence. '
           'Claim completes; every 3 claims grants a +5e chain bonus.',
     ),
     (
@@ -96,7 +98,8 @@ class FirstSessionTips extends StatelessWidget {
       title: 'AFTER ASCEND',
       body:
           'New kits land in GEAR → ROSTER — TODAY shows Meet … when something unlocked. '
-          'Spend essence under POWER → Relics, Gold → KEEP (God Hand), and POWER → Essence. '
+          'Spend essence under ESSENCE (TRACKS + KEEP for God Hand). '
+          'Relics are ESSENCE → RELICS. '
           'Apex stays.',
     ),
     (
@@ -117,7 +120,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'apex',
       title: 'APEX',
       body:
-          'Apex slag from Gauntlet/Crystal crafts class Apex gear in POWER → Craft. Ranks persist through Ascend.',
+          'Apex slag from Gauntlet/Crystal crafts class Apex gear in MORE → CRAFT. Ranks persist through Ascend.',
     ),
     (
       id: 'gauntlet',
@@ -153,9 +156,10 @@ class FirstSessionTips extends StatelessWidget {
       id: 'prestige',
       title: 'ESSENCE SHOP',
       body:
-          'Essence lasts between Ascends: POWER → Relics for party auras, '
-          'POWER → Essence for lasting tracks, '
-          'POWER → Shop (Essence) for lasting buys, Gold → KEEP for God Hand.',
+          'Essence lasts between Ascends: ESSENCE → RELICS for party auras, '
+          'ESSENCE → TRACKS for lasting tracks, '
+          'ESSENCE → SHOP for lasting buys, KEEP for God Hand. '
+          'Bottom-tab SHOP is the real-money store (coming soon).',
     ),
   ];
 
@@ -329,17 +333,17 @@ class FirstSessionTips extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        KenneyButton(
+                        GameButton(
                           label: 'GOT IT',
                           onPressed: () => director.dismissTip(tip.id),
                           primary: true,
                         ),
                         const SizedBox(height: 6),
-                        KenneyButton(
+                        GameButton(
                           label: 'SKIP ALL TIPS',
                           onPressed: () =>
                               director.dismissAllTips(tips.map((t) => t.id)),
-                          style: KenneyButtonStyle.brown,
+                          style: GameButtonStyle.brown,
                         ),
                       ],
                     ),

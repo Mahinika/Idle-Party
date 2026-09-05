@@ -19,10 +19,54 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.90';
+  static const String currentVersion = '1.12.95';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.95',
+      bullets: <String>[
+        'Menus follow currency: GOLD = forge tracks + market (flasks/listings); ESSENCE = tracks, essence shop, relics, pets; SHOP = real-money store (coming soon). POWERUPS ads stay on the hub.',
+        'Relics moved off MORE into ESSENCE. Wipe / TODAY market tips open GOLD → MARKET.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.94',
+      bullets: <String>[
+        'Bottom bar now puts ESSENCE upgrades up front: GEAR · GOLD · SHOP · ESSENCE · MORE (KEY is a sixth hub tab after MORE at party max level). Same five tabs in dungeon; LEAVE is the sixth slot there. QUESTS moved into MORE so lasting tracks are one tap away.',
+        'Claim ready quests from TODAY or MORE · QUESTS (dungeon CLAIM chip unchanged). Relics and Craft stay as MORE rows.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.93',
+      bullets: <String>[
+        'Bottom bar is TT2-style color blocks: GEAR · GOLD · SHOP · QUESTS · MORE (KEY joins as a sixth hub tab at party max level — SHOP stays). Dungeon always shows six slots with LEAVE; no overflow collapse. Each open sheet has a one-line job hint under the title.',
+        'Relics / Craft / Essence stay as MORE rows. Badges sit on the tab corner; a tip line above the bar names what waits. Set KEY from the hub before a run; dungeon top menu still opens KEYSTONE mid-floor.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.92',
+      bullets: <String>[
+        'Bottom bar is one shared row for hub and dungeon (always visible under sheets). Tabs: GEAR · GOLD · SHOP · QUESTS · MORE. When the party is max level, KEY replaces SHOP on the hub bar (SHOP moves into MORE).',
+        'POWER is gone as a tab: GOLD is run tracks, SHOP is flasks/listings, Relics/Craft/Essence open as MORE rows. Wipe tips say OPEN GOLD / OPEN SHOP.',
+        'Dungeon HUD is thinner: status line (zone · floor · KEY timer) plus FARM/PUSH and God Hand. Zoom stays in SETTINGS. Party strip is narrower and dims more.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.91',
+      bullets: <String>[
+        'Endgame modes look different: Gauntlet stays Crystal Spire climb; Farm Rift runs Stormwake (loot mid-run); Greater Rift runs Mothveil ranked (no mid-run gear). KEY copy / HUD say CLIMB · FARM · RANK.',
+        'Dungeon HUD keeps a steady size mid-run (no shrink when timers tick); zoom NEAR/MID/FAR is long-press only so God Hand taps do not change scale.',
+        'Gear dolls: thicker mage/rogue capes (attack cape moves); rare chest/cloak/hands thicker+gold; boots BAG uses foot icons; shield_aegis / frill_prism; gloves t2; authored cape masters stay read-only.',
+        'Android Back closes open menus (GEAR/POWER/…) instead of leaving play. Leaving the app mid-dungeon freezes combat and flushes a save.',
+        'Menus share one pixel icon set — settings cog and KEY are gold PNG like GEAR/POWER. Settings toggles/sliders and Apex folds use MenuChrome (no Material Switch/ExpansionTile). TODAY buttons say ENTER KEY / GAUNTLET / RIFT without emoji.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.90',
       bullets: <String>[
@@ -51,7 +95,7 @@ abstract final class MetaSystems {
       version: '1.12.87',
       bullets: <String>[
         'TODAY buttons match the hunt: vault halfway / week / month KEY cliffs open ENTER KEY (not bare ENTER DUNGEON). Month ALMOST claims only when READY.',
-        'Wipe panel can OPEN POWER / BAG / Shop when the tip names that fix. Equip-bag chase says BAG.',
+        'Wipe panel can OPEN GOLD / BAG / Shop when the tip names that fix. Equip-bag chase says BAG.',
         'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
       ],
     ),

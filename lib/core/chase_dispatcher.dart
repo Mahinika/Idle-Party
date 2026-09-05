@@ -74,7 +74,7 @@ abstract final class ChaseDispatcher {
       case HubChaseKind.equipBag:
         return const ChasePlan(label: 'OPEN BAG', op: ChaseOp.navEquipBag);
       case HubChaseKind.marketUpgrade:
-        return const ChasePlan(label: 'SHOP', op: ChaseOp.navMarket);
+        return const ChasePlan(label: 'GOLD', op: ChaseOp.navMarket);
       case HubChaseKind.ascend:
         return const ChasePlan(label: 'ASCEND', op: ChaseOp.confirmAscend);
       case HubChaseKind.dailyRun:
@@ -88,14 +88,14 @@ abstract final class ChaseDispatcher {
         );
       case HubChaseKind.gauntletMilestone:
         return const ChasePlan(
-          label: '⚔ GAUNTLET',
+          label: 'GAUNTLET',
           op: ChaseOp.confirmGauntlet,
         );
       case HubChaseKind.riftMilestone:
-        return const ChasePlan(label: '◈ RIFT', op: ChaseOp.confirmRift);
+        return const ChasePlan(label: 'RIFT', op: ChaseOp.confirmRift);
       case HubChaseKind.greaterRiftMilestone:
         return const ChasePlan(
-          label: '◆ GREATER RIFT',
+          label: 'GREATER RIFT',
           op: ChaseOp.confirmGreaterRift,
         );
       case HubChaseKind.ashenCrown:
@@ -113,7 +113,7 @@ abstract final class ChaseDispatcher {
         }
         if (week.gauntletFloorTarget > 0) {
           return const ChasePlan(
-            label: '⚔ GAUNTLET',
+            label: 'GAUNTLET',
             op: ChaseOp.confirmGauntlet,
           );
         }
@@ -186,7 +186,7 @@ abstract final class ChaseDispatcher {
       ),
     );
     return ChasePlan(
-      label: '🔑 ENTER KEY +$key',
+      label: 'ENTER KEY +$key',
       op: ChaseOp.enterKey,
       zoneId: zoneId,
       keyLevel: key,
@@ -206,7 +206,7 @@ abstract final class ChaseDispatcher {
     final month = LocalSeasonCatalog.forMonthKey(monthKey);
     if (month.grTierTarget > 0) {
       return const ChasePlan(
-        label: '◆ GREATER RIFT',
+        label: 'GREATER RIFT',
         op: ChaseOp.confirmGreaterRift,
       );
     }
@@ -235,7 +235,7 @@ abstract final class ChaseDispatcher {
       case ChaseOp.navEquipBag:
         return const NavIntent(route: MenuRoute.gear, gear: GearPanel.bag);
       case ChaseOp.navMarket:
-        return NavIntent.shop;
+        return NavIntent.market;
       case ChaseOp.navMoreInfo:
         return const NavIntent(
           route: MenuRoute.more,

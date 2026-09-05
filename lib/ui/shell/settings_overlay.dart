@@ -8,7 +8,6 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/gear/gear_cleanup.dart';
-import '../../core/meta_systems.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -88,9 +87,9 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             label: 'CANCEL',
             onPressed: () => Navigator.pop(ctx, false),
           ),
-          KenneyButton(
+          GameButton(
             label: 'RESET',
-            style: KenneyButtonStyle.red,
+            style: GameButtonStyle.red,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),
@@ -132,18 +131,16 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (final preset in _textPresets)
-                ChoiceChip(
-                  label: Text(preset.$1, style: GameTheme.body(size: 12)),
-                  selected: (state.uiTextScale - preset.$2).abs() < 0.02,
-                  onSelected: (_) => director.setUiTextScale(preset.$2),
-                ),
-            ],
-          ),
+          () {
+            final scaleIdx = _textPresets.indexWhere(
+              (p) => (state.uiTextScale - p.$2).abs() < 0.02,
+            );
+            return MenuChrome.segmented(
+              labels: [for (final preset in _textPresets) preset.$1],
+              selectedIndex: scaleIdx < 0 ? 1 : scaleIdx,
+              onSelect: (i) => director.setUiTextScale(_textPresets[i].$2),
+            );
+          }(),
           const SizedBox(height: 6),
           Semantics(
             slider: true,
@@ -152,7 +149,7 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             child: Row(
               children: [
                 Expanded(
-                  child: _CaveSlider(
+                  child: MenuChrome.slider(
                     value: state.uiTextScale.clamp(
                       kUiTextScaleMin,
                       kUiTextScaleMax,
@@ -230,10 +227,10 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             onChanged: director.setColorblindMode,
           ),
           const SizedBox(height: 8),
-          KenneyButton(
+          GameButton(
             label: 'RESET DISPLAY DEFAULTS',
             tip: 'Text 100% · Zoom Normal · Full VFX · SFX Med · sound on',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             onPressed: _resetDisplayDefaults,
           ),
           const SizedBox(height: 16),
@@ -316,8 +313,8 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           const SizedBox(height: 8),
           Text(
             'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity), then scrap '
-            'leftovers that match scrap filters. Shop buys flasks and listings — '
-            'it does not tap-sell stash.',
+            'leftovers that match scrap filters. GOLD → MARKET buys flasks '
+            'and listings — it does not tap-sell stash.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 16),
@@ -340,9 +337,9 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           ),
           if (state.sessionTelemetryOptIn) ...[
             const SizedBox(height: 8),
-            KenneyButton(
+            GameButton(
               label: 'COPY LOG',
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
               onPressed: () async {
                 await Clipboard.setData(
                   ClipboardData(text: director.sessionTelemetryExport()),
@@ -351,9 +348,9 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
               },
             ),
             const SizedBox(height: 6),
-            KenneyButton(
+            GameButton(
               label: 'CLEAR LOG',
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
               onPressed: director.clearSessionTelemetry,
             ),
           ],
@@ -363,10 +360,10 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             const SizedBox(height: 16),
             MenuChrome.sectionLabelScoped('ADS', scope: MenuScope.account),
             const SizedBox(height: 6),
-            KenneyButton(
+            GameButton(
               label: 'AD PRIVACY',
               tip: 'Change or withdraw ad consent (EU / EEA)',
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
               onPressed: () => AdRewarded.showPrivacyOptions(),
             ),
           ],
@@ -374,10 +371,10 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           const SizedBox(height: 16),
           MenuChrome.sectionLabelScoped('COMMUNITY', scope: MenuScope.account),
           const SizedBox(height: 6),
-          KenneyButton(
+          GameButton(
             label: 'JOIN DISCORD',
             tip: 'Opens Discord so you can join the Idle Party server',
-            style: KenneyButtonStyle.brown,
+            style: GameButtonStyle.brown,
             onPressed: () async {
               final ok = await CommunityLinks.openDiscord();
               if (!ok && mounted) {
@@ -387,40 +384,38 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           ),
           if (director.showPlayUpdateNotice) ...[
             const SizedBox(height: 8),
-            KenneyButton(
+            GameButton(
               label: 'GET UPDATE',
               tip: 'A newer Idle Party is ready on Google Play',
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
               onPressed: director.openPlayUpdate,
             ),
           ],
           const SizedBox(height: 8),
-          KenneyButton(
-            label: MetaSystems.hasUnseenChangelog(state)
-                ? "WHAT'S NEW ★"
-                : "WHAT'S NEW",
-            style: KenneyButtonStyle.grey,
+          GameButton(
+            label: "WHAT'S NEW",
+            style: GameButtonStyle.grey,
             onPressed: () => WhatsNewOverlay.show(context, director),
           ),
           if (kDebugMode) ...[
             const SizedBox(height: 8),
-            KenneyButton(
+            GameButton(
               label: 'DEV: FAKE PLAY UPDATE',
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
               onPressed: director.debugForcePlayUpdateNotice,
             ),
             const SizedBox(height: 8),
-            KenneyButton(
+            GameButton(
               label: director.debugTimeScale >= 9.5
                   ? 'DEV: SPEED 10x (tap → 1x)'
                   : 'DEV: SPEED 1x (tap → 10x)',
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
               onPressed: director.cycleDebugTimeScale,
             ),
             const SizedBox(height: 8),
-            KenneyButton(
+            GameButton(
               label: 'DEV: ENTER GAUNTLET (Lv${GameLogic.maxHeroLevel})',
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
               onPressed: state.inDungeon
                   ? null
                   : () {
@@ -437,9 +432,9 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 8),
-          KenneyButton(
+          GameButton(
             label: 'RESET GAME',
-            style: KenneyButtonStyle.red,
+            style: GameButtonStyle.red,
             onPressed: _confirmReset,
           ),
         ],
@@ -471,7 +466,7 @@ class _IlvlFilterRow extends StatelessWidget {
           onPressed: value > 0 ? () => onChanged(value - 1) : null,
         ),
         Expanded(
-          child: _CaveSlider(
+          child: MenuChrome.slider(
             value: value.toDouble().clamp(0, max.toDouble()),
             min: 0,
             max: max.toDouble(),
@@ -564,7 +559,7 @@ class _SettingsToggle extends StatelessWidget {
       onTap: () => onChanged(!value),
       child: InkWell(
         onTap: () => onChanged(!value),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
         child: Container(
           constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -572,7 +567,7 @@ class _SettingsToggle extends StatelessWidget {
           child: Row(
             children: [
               Expanded(child: Text(label, style: GameTheme.body(size: 16))),
-              ExcludeSemantics(child: _CaveSwitch(value: value)),
+              ExcludeSemantics(child: MenuChrome.toggleMark(value: value)),
             ],
           ),
         ),
@@ -600,7 +595,7 @@ class _SettingsCycle extends StatelessWidget {
       onTap: onCycle,
       child: InkWell(
         onTap: onCycle,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
         child: Container(
           constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -631,121 +626,6 @@ class _SettingsCycle extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _CaveSwitch extends StatelessWidget {
-  const _CaveSwitch({required this.value});
-  final bool value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      toggled: value,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        width: 44,
-        height: 24,
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: value
-              ? GameTheme.mossLit.withValues(alpha: 0.55)
-              : GameTheme.stone.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: value ? GameTheme.torchHot : GameTheme.border,
-            width: value ? 1.5 : 1,
-          ),
-        ),
-        alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-        child: Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: value ? GameTheme.torchHot : GameTheme.parchmentDim,
-            borderRadius: BorderRadius.circular(3),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CaveSlider extends StatelessWidget {
-  const _CaveSlider({
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.divisions,
-    required this.onChanged,
-  });
-
-  final double value;
-  final double min;
-  final double max;
-  final int divisions;
-  final ValueChanged<double> onChanged;
-
-  void _setFromLocal(double localX, double width) {
-    if (width <= 0) return;
-    final t = (localX / width).clamp(0.0, 1.0);
-    final raw = min + t * (max - min);
-    final step = (max - min) / divisions;
-    final snapped = (raw / step).round() * step;
-    onChanged(snapped.clamp(min, max));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final t = ((value - min) / (max - min)).clamp(0.0, 1.0);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final w = constraints.maxWidth;
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: (d) => _setFromLocal(d.localPosition.dx, w),
-          onHorizontalDragUpdate: (d) => _setFromLocal(d.localPosition.dx, w),
-          child: SizedBox(
-            height: 28,
-            child: Stack(
-              alignment: Alignment.centerLeft,
-              children: [
-                Container(
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: GameTheme.stone.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(3),
-                    border: Border.all(color: GameTheme.border),
-                  ),
-                ),
-                FractionallySizedBox(
-                  widthFactor: t,
-                  child: Container(
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: GameTheme.torch.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: (w - 16) * t,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: GameTheme.torchHot,
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(color: GameTheme.borderLit),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
