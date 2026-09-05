@@ -98,9 +98,13 @@ void main() {
       MenuRouter.visibleEssencePanels(afterAscend),
       containsAll([
         EssencePanel.tracks,
-        EssencePanel.shop,
+        EssencePanel.keep,
         EssencePanel.relics,
       ]),
+    );
+    expect(
+      MenuRouter.visibleEssencePanels(afterAscend),
+      isNot(contains(EssencePanel.shop)),
     );
   });
 
@@ -152,7 +156,8 @@ void main() {
     router.open(MenuRoute.more, more: MoreSection.quests);
     expect(router.jobHint.toLowerCase(), contains('daily'));
     router.open(MenuRoute.shop);
-    expect(router.jobHint.toLowerCase(), contains('coming soon'));
+    expect(router.jobHint.toLowerCase(), contains('real-money'));
+    expect(router.jobHint.toLowerCase(), contains('buy soon'));
     router.open(MenuRoute.gold, gold: GoldPanel.market);
     expect(router.jobHint.toLowerCase(), contains('flask'));
     router.open(MenuRoute.essence, essence: EssencePanel.relics);

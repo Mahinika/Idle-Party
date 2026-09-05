@@ -11,10 +11,13 @@ class OverlayScrim extends StatelessWidget {
     required this.title,
     required this.onClose,
     required this.child,
+    this.subtitle = '',
     this.heightFactor = 0.85,
   });
 
   final String title;
+  /// One-line job hint under the title (TT2-style: one tab = one job).
+  final String subtitle;
   final VoidCallback onClose;
   final Widget child;
   final double heightFactor;
@@ -43,6 +46,7 @@ class OverlayScrim extends StatelessWidget {
               // Phone product: full-width sheet (never the centered desktop card).
               _MobileSheet(
                 title: title,
+                subtitle: subtitle,
                 onClose: onClose,
                 heightFactor: heightFactor,
                 child: child,
@@ -85,42 +89,43 @@ class _MobileSheet extends StatelessWidget {
     required this.title,
     required this.onClose,
     required this.child,
+    this.subtitle = '',
     this.heightFactor = 0.85,
   });
 
   final String title;
+  final String subtitle;
   final VoidCallback onClose;
   final Widget child;
   final double heightFactor;
 
   @override
   Widget build(BuildContext context) {
+    final fullHeight = heightFactor >= 0.99;
     // Absorb taps so scrim-dismiss behind the sheet does not fire.
     final sheet = GestureDetector(
       onTap: () {},
       behavior: HitTestBehavior.opaque,
       child: _OverlayPanel(
         title: title,
+        subtitle: subtitle,
         onClose: onClose,
         margin: EdgeInsets.zero,
-        borderRadius: MenuChrome.sheetRadius,
-        // Full-height GEAR: skip drag handle — reclaim vertical space.
-        showHandle: heightFactor < 0.99,
+        // Full-height tabs: square top so hub never peeks in the corners.
+        borderRadius: fullHeight ? BorderRadius.zero : MenuChrome.sheetRadius,
+        // Full height: skip drag handle — reclaim vertical space.
+        showHandle: !fullHeight,
         child: child,
       ),
     );
 
-    if (heightFactor >= 0.99) {
-      // Phone GEAR: flush to the top of the view — no dead strip from
-      // SafeArea / browser safe-area-inset. Keep a bottom home-bar pad only.
-      final bottom = MediaQuery.viewPaddingOf(context).bottom;
+    if (fullHeight) {
+      // Fill the Expanded stack above [AppBottomBar] — bar already owns the
+      // home-indicator inset, so do not shrink the sheet with viewPadding.
       return MediaQuery.removePadding(
         context: context,
         removeTop: true,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: bottom),
-          child: SizedBox.expand(child: sheet),
-        ),
+        child: SizedBox.expand(child: sheet),
       );
     }
 
@@ -142,12 +147,14 @@ class _OverlayPanel extends StatelessWidget {
     required this.title,
     required this.onClose,
     required this.child,
+    this.subtitle = '',
     this.margin = const EdgeInsets.all(16),
     this.borderRadius,
     this.showHandle,
   });
 
   final String title;
+  final String subtitle;
   final VoidCallback onClose;
   final Widget child;
   final EdgeInsets margin;
@@ -166,19 +173,37 @@ class _OverlayPanel extends StatelessWidget {
         children: [
           if (handle) MenuChrome.sheetHandle(),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (title.isNotEmpty)
                 Expanded(
-                  child: Text(title, style: GameTheme.menuTitle(size: 18)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: GameTheme.menuTitle(size: 18)),
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.body(
+                            size: 12,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 )
               else
                 const Spacer(),
-              KenneyButton(
+              GameButton(
                 label: 'CLOSE',
                 onPressed: onClose,
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 expanded: false,
-                primary: true,
+                dense: true,
               ),
             ],
           ),

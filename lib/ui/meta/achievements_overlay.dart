@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
 import '../../models/achievement_def.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
-import '../kenney_assets.dart';
 import '../kenney_button.dart';
-import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
 
 /// Local achievements list — unlocked ids come from `GameState.achievements`.
@@ -55,14 +54,12 @@ class AchievementsOverlay extends StatelessWidget {
             alignment: WrapAlignment.center,
             children: [
               for (final title in state.metaDepth.titles)
-                KenneyButton(
-                  label: state.metaDepth.activeTitle == title
-                      ? '★ $title'
-                      : title,
+                GameButton(
+                  label: title,
                   expanded: false,
                   style: state.metaDepth.activeTitle == title
-                      ? KenneyButtonStyle.brown
-                      : KenneyButtonStyle.grey,
+                      ? GameButtonStyle.brown
+                      : GameButtonStyle.grey,
                   onPressed: () => director.setActiveTitle(title),
                 ),
             ],
@@ -102,10 +99,8 @@ class AchievementsOverlay extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            KenneySprite(
-                              asset: done
-                                  ? KenneyAssets.iconTrophy
-                                  : KenneyAssets.iconSkull,
+                            GameIcon.asset(
+                              done ? UiIcon.trophy : UiIcon.skull,
                               size: 22,
                             ),
                             const SizedBox(width: 10),

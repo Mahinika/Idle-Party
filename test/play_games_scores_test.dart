@@ -126,6 +126,19 @@ void main() {
       expect(PlayLeaderboardIds.gauntletId('2026-08'), isNot(contains('YYYY')));
     });
 
+    test('2026-09 reuses Aug KEY/Gauntlet; GR soft-fails', () {
+      expect(PlayLeaderboardIds.hasBoards('2026-09'), isTrue);
+      expect(
+        PlayLeaderboardIds.timedKeyId('2026-09'),
+        PlayLeaderboardIds.timedKeyId('2026-08'),
+      );
+      expect(
+        PlayLeaderboardIds.gauntletId('2026-09'),
+        PlayLeaderboardIds.gauntletId('2026-08'),
+      );
+      expect(PlayLeaderboardIds.hasGreaterRiftBoard('2026-09'), isFalse);
+    });
+
     test('legacy save defaults Play Games fields', () {
       final md = MetaDepthState.fromJson(<String, dynamic>{
         'gauntletBestFloor': 3,

@@ -47,7 +47,7 @@ class FeedbackToast extends StatelessWidget {
                   blurRadius: 16,
                 ),
                 const BoxShadow(
-                  color: Color(0x88000000),
+                  color: GameTheme.shadowMid,
                   blurRadius: 18,
                   offset: Offset(0, 8),
                 ),

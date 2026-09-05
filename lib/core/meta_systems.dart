@@ -26,7 +26,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.95',
       bullets: <String>[
-        'Menus follow currency: GOLD = forge tracks + market (flasks/listings); ESSENCE = tracks, essence shop, relics, pets; SHOP = real-money store (coming soon). POWERUPS ads stay on the hub.',
+        'Menus follow currency: GOLD = forge tracks + market (flasks/listings); ESSENCE = tracks, essence shop, relics, pets; SHOP = real-money convenience (boosts / ad-free — billing soon). POWERUPS ads stay on the hub.',
         'Relics moved off MORE into ESSENCE. Wipe / TODAY market tips open GOLD → MARKET.',
         'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
       ],

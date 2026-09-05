@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/game_logic.dart';
-import '../custom_assets.dart';
+import '../../assets/custom_assets.dart';
 import '../cave_atmosphere.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
-import '../kenney_assets.dart';
 import '../kenney_button.dart';
-import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 
@@ -124,9 +123,9 @@ class HubPlayUpdateBanner extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: KenneyButton(
+                  child: GameButton(
                     label: 'LATER',
-                    style: KenneyButtonStyle.grey,
+                    style: GameButtonStyle.grey,
                     expanded: true,
                     onPressed: onLater,
                     tip: 'Hide until a newer Play build',
@@ -134,9 +133,9 @@ class HubPlayUpdateBanner extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: KenneyButton(
+                  child: GameButton(
                     label: 'GET UPDATE',
-                    style: KenneyButtonStyle.brown,
+                    style: GameButtonStyle.brown,
                     expanded: true,
                     onPressed: onUpdate,
                     tip: 'Open Google Play',
@@ -161,7 +160,6 @@ class HubHeader extends StatefulWidget {
     required this.willRank,
     required this.collectionScore,
     required this.displayTitle,
-    required this.zoneTrophies,
     required this.torch,
     required this.onOpenSettings,
     required this.incomeLine,
@@ -180,7 +178,6 @@ class HubHeader extends StatefulWidget {
   final String willRank;
   final int collectionScore;
   final String displayTitle;
-  final int zoneTrophies;
   final double torch;
   final VoidCallback onOpenSettings;
   final String incomeLine;
@@ -225,23 +222,11 @@ class _HubHeaderState extends State<HubHeader> {
                 ),
               ),
             ),
-            SizedBox(
-              width: GameTheme.minTouch,
-              height: GameTheme.minTouch,
-              child: WebClickScope(
-                label: 'Settings',
-                onPressed: widget.onOpenSettings,
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: widget.onOpenSettings,
-                  icon: Icon(
-                    Icons.settings,
-                    size: 20,
-                    color: GameTheme.parchment,
-                  ),
-                  tooltip: 'Settings',
-                ),
-              ),
+            GameIconButton(
+              label: 'Settings',
+              asset: UiIcon.settings,
+              size: 18,
+              onPressed: widget.onOpenSettings,
             ),
           ],
         ),
@@ -258,18 +243,18 @@ class _HubHeaderState extends State<HubHeader> {
           runSpacing: 4,
           children: [
             HubStatPill(
-              icon: KenneyAssets.coinGold,
+              icon: UiIcon.gold,
               caption: 'Gold',
               label: '${widget.gold}',
             ),
             HubStatPill(
-              icon: KenneyAssets.vialBlue,
+              icon: UiIcon.essence,
               caption: widget.plainChrome ? 'Permanent' : 'Essence',
               label: '${widget.essence}',
             ),
             if (!widget.plainChrome)
               HubStatPill(
-                icon: KenneyAssets.iconCrown,
+                icon: UiIcon.ascend,
                 caption: 'Ascend',
                 label: () {
                   if (widget.ascensionLevel < GameLogic.maxAscensionLevel) {
@@ -350,14 +335,6 @@ class _HubHeaderState extends State<HubHeader> {
               style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
             ),
           ],
-          if (widget.zoneTrophies > 0 && !GameTheme.isPhoneWidth(context)) ...[
-            const SizedBox(height: 2),
-            Text(
-              'Zone trophies ${widget.zoneTrophies}',
-              textAlign: TextAlign.center,
-              style: GameTheme.body(size: 12, color: GameTheme.mossLit),
-            ),
-          ],
         ],
       ],
     );
@@ -381,7 +358,7 @@ class HubStatPill extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        KenneySprite(asset: icon, size: 14),
+        GameIcon.asset(icon, size: 14),
         const SizedBox(width: 4),
         Flexible(
           child: Row(

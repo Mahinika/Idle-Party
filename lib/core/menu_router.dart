@@ -18,7 +18,7 @@ enum GearPanel { gear, bag, merge, roster }
 enum GoldPanel { tracks, market }
 
 /// Local focus inside ESSENCE — lasting essence sinks.
-enum EssencePanel { tracks, shop, relics, pets }
+enum EssencePanel { tracks, keep, shop, relics, pets }
 
 /// Rows inside MORE (settings, meta overlays, info).
 enum MoreSection {
@@ -147,9 +147,11 @@ class MenuRouter extends ChangeNotifier {
     MenuRoute.shop => 'SHOP',
     MenuRoute.essence => switch (_essencePanel) {
       EssencePanel.tracks => 'ESSENCE',
-      EssencePanel.shop => 'ESSENCE SHOP',
+      EssencePanel.keep => 'KEEP',
+      // Legacy nav: prestige buys live on KEEP now.
+      EssencePanel.shop => 'KEEP',
       EssencePanel.relics => 'RELICS',
-      EssencePanel.pets => 'BEAST',
+      EssencePanel.pets => 'PETS',
     },
     MenuRoute.key => 'KEYSTONE',
     MenuRoute.more => switch (_moreSection) {
@@ -174,12 +176,13 @@ class MenuRouter extends ChangeNotifier {
     },
     MenuRoute.gold => switch (_goldPanel) {
       GoldPanel.tracks => 'Run power bought with gold',
-      GoldPanel.market => 'Flasks · bandages · gear listings',
+      GoldPanel.market => 'Flasks · bandages · buy upgrades',
     },
-    MenuRoute.shop => 'Real-money store — coming soon',
+    MenuRoute.shop => 'Real-money · cheap boosts · buy soon',
     MenuRoute.essence => switch (_essencePanel) {
-      EssencePanel.tracks => 'Lasting tracks between Ascends',
-      EssencePanel.shop => 'Permanent essence upgrades',
+      EssencePanel.tracks => 'Spend essence on lasting tracks',
+      EssencePanel.keep => 'God Hand · Blessing · permanent buys',
+      EssencePanel.shop => 'God Hand · Blessing · permanent buys',
       EssencePanel.relics => 'Party auras that keep on Ascend',
       EssencePanel.pets => 'Hatch and level pets',
     },
@@ -188,7 +191,7 @@ class MenuRouter extends ChangeNotifier {
       MoreSection.info => 'Guides · codex · What\'s New',
       MoreSection.settings => 'Sound · zoom · save',
       MoreSection.credits => 'Art credits',
-      MoreSection.shop => 'Real-money store — coming soon',
+      MoreSection.shop => 'Real-money · cheap boosts · buy soon',
       MoreSection.relics => 'Party auras that keep on Ascend',
       MoreSection.craft => 'Apex gear from slag',
       MoreSection.quests => 'Daily · Bounty · Side',
@@ -206,6 +209,10 @@ class MenuRouter extends ChangeNotifier {
     if (gear != null) _gearPanel = gear;
     if (gold != null) _goldPanel = gold;
     if (essence != null) _essencePanel = essence;
+    // Prestige buys moved onto KEEP — legacy shop panel remaps.
+    if (_essencePanel == EssencePanel.shop) {
+      _essencePanel = EssencePanel.keep;
+    }
     if (more != null) _moreSection = more;
     if (route == MenuRoute.gear && _route != MenuRoute.gear) {
       session.clearBagSlotFilter();
@@ -364,7 +371,7 @@ class MenuRouter extends ChangeNotifier {
 
   static List<EssencePanel> visibleEssencePanels(GameState s) => <EssencePanel>[
     EssencePanel.tracks,
-    if (MenuTabs.showShop(s)) EssencePanel.shop,
+    if (MenuTabs.showKeep(s)) EssencePanel.keep,
     if (MenuTabs.showRelics(s)) EssencePanel.relics,
     if (MenuTabs.showBeast(s)) EssencePanel.pets,
   ];

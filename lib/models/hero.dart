@@ -83,10 +83,6 @@ class PartyHero {
   /// Gear/ratings affinity bucket — not tank/healer/DPS. Prefer [spec.roleTag].
   HeroRole get gearAffinity => spec.gearAffinity;
 
-  /// Deprecated alias for [gearAffinity]. Do not use for tank checks.
-  @Deprecated('Use gearAffinity, or spec.roleTag / isTank / isHealer')
-  HeroRole get role => gearAffinity;
-
   ({int str, int agi, int sta, int intel, int spi}) get grownPrimaries =>
       CombatRatings.grownPrimaries(
         base: stats,
@@ -261,18 +257,14 @@ class PartyHero {
     Map<EquipmentSlot, EquipmentItem>? equipped,
     int? xp,
     bool clearEquipped = false,
-    @Deprecated('Use specId') HeroRole? role,
   }) {
-    final nextSpec =
-        specId ??
-        (role != null ? HeroSpecs.fromGearAffinity(role) : this.specId);
     return PartyHero(
       id: id ?? this.id,
       name: name ?? this.name,
       level: level ?? this.level,
       currentHp: currentHp ?? this.currentHp,
       stats: stats ?? this.stats,
-      specId: nextSpec,
+      specId: specId ?? this.specId,
       equipped: clearEquipped
           ? const <EquipmentSlot, EquipmentItem>{}
           : (equipped ?? this.equipped),

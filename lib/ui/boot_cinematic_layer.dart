@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import 'cave_atmosphere.dart';
-import 'custom_assets.dart';
+import '../assets/custom_assets.dart';
 import 'kenney_button.dart';
 
 /// Full-bleed skippable boot video. Falls back via [onDecodeFailed].
@@ -119,9 +119,9 @@ class _BootCinematicLayerState extends State<BootCinematicLayer> {
             child: Column(
               children: [
                 const Spacer(),
-                KenneyButton(
+                GameButton(
                   label: 'SKIP',
-                  style: KenneyButtonStyle.grey,
+                  style: GameButtonStyle.grey,
                   onPressed: _inputUnlocked ? _finish : null,
                 ),
               ],

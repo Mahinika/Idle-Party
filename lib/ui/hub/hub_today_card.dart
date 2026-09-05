@@ -3,10 +3,9 @@ import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/hub_chase.dart';
 import '../../core/local_season.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
-import '../kenney_assets.dart';
 import '../kenney_button.dart';
-import '../kenney_sprite.dart';
 
 class HubMetaPulse extends StatelessWidget {
   const HubMetaPulse({
@@ -122,7 +121,7 @@ class HubTodayCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                KenneySprite(asset: KenneyAssets.iconStar, size: 14),
+                GameIcon.asset(UiIcon.star, size: 14),
                 const SizedBox(width: 6),
                 Text('TODAY', style: GameTheme.body(size: 12, color: accent)),
                 if (chip != null) ...[
@@ -147,9 +146,9 @@ class HubTodayCard extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerRight,
-                      child: KenneyButton(
+                      child: GameButton(
                         label: actionLabel!,
-                        style: KenneyButtonStyle.grey,
+                        style: GameButtonStyle.grey,
                         expanded: false,
                         onPressed: onAction,
                       ),
@@ -232,19 +231,19 @@ class HubUrgentRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (showAscend) ...[
-          KenneyButton(
+          GameButton(
             label: ascendLabel!,
-            style: KenneyButtonStyle.red,
+            style: GameButtonStyle.red,
             primary: true,
             onPressed: onAscend,
           ),
           const SizedBox(height: 4),
         ],
         if (showVault) ...[
-          KenneyButton(
+          GameButton(
             label:
                 'CLAIM VAULT  +${vaultClaimEssence}e',
-            style: KenneyButtonStyle.brown,
+            style: GameButtonStyle.brown,
             primary: true,
             onPressed: onClaimDailyVault,
           ),
@@ -262,13 +261,13 @@ class HubUrgentRow extends StatelessWidget {
             children: [
               if (showMissions) ...[
                 Expanded(
-                  child: KenneyButton(
+                  child: GameButton(
                     label: claimable == 1
                         ? 'CLAIM QUESTS'
                         : 'CLAIM QUESTS ($claimable)',
                     style: showVault
-                        ? KenneyButtonStyle.grey
-                        : KenneyButtonStyle.brown,
+                        ? GameButtonStyle.grey
+                        : GameButtonStyle.brown,
                     onPressed: onContracts,
                   ),
                 ),
@@ -276,9 +275,9 @@ class HubUrgentRow extends StatelessWidget {
               ],
               if (showDaily)
                 Expanded(
-                  child: KenneyButton(
+                  child: GameButton(
                     label: dailyClaimed ? 'DAILY · done' : 'DAILY RUN',
-                    style: KenneyButtonStyle.grey,
+                    style: GameButtonStyle.grey,
                     onPressed: dailyClaimed ? null : onDaily,
                   ),
                 ),

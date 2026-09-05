@@ -67,11 +67,13 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
 - Base = family undertunic (cloth + hair + face, never naked). Mage base has **no** wizard hat
 - Equipped cape / legs / chest / gloves / helm / off-hand / main-hand all paint, **including common**
 - Mage/healer helm = **extracted** hat/hood from `_src`
-- Warrior/rogue: `_src` has **no helm** → transparent overlay until
-  `gear/_authored/helm_t0_*.png` exists. Do **not** invent a metal stamp/ellipse
-- Cape = extracted pixels only (rogue cape from `_src`). Empty extract → transparent
-  or authored — not a drawn trapezoid
-- 2H hides off-hand. Legs win over boots. Shoulders/waist fold into chest+legs (`pathFor` null)
+- Warrior/rogue: `_src` has **no helm** → use `gear/_authored/helm_t0_*.png`
+  when present (already shipped). Do **not** invent a metal stamp/ellipse
+- Cape = extracted pixels only (rogue/mage cape from `_src` / authored). Empty
+  extract → transparent or authored — not a drawn trapezoid. Live thicken for
+  readability must **not** overwrite `_authored` masters
+- 2H hides off-hand. Legs win over boots (BAG boots icon = foot-band crop).
+  Shoulders/waist fold into chest+legs (`pathFor` null)
 - Own PNG per idle/walk/attack. Missing clip → idle fallback, never Kenney on owned
 
 ## Authored overrides

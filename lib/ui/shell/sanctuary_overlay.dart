@@ -6,7 +6,6 @@ import '../../core/gold_income.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/game_state.dart';
 import '../game_theme.dart';
-import '../kenney_bar.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import 'income_overlay.dart';
@@ -43,7 +42,6 @@ class SanctuaryOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
-    final relicLine = GameLogic.relicKeepSummary(state);
     final campOpen = MenuTabs.showCamp(state);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -51,26 +49,9 @@ class SanctuaryOverlay extends StatelessWidget {
         CampRatesSection(director: director),
         const SizedBox(height: 8),
         Text(
-          'Tracks survive Ascend · reset from Lv12',
+          '${state.essence}e · survive Ascend · reset at Lv12+',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
-        if (state.metaDepth.ascendBlessings > 0) ...[
-          const SizedBox(height: 4),
-          Text(
-            'Ascend Blessing ×${state.metaDepth.ascendBlessings} · '
-            'see Gold → KEEP',
-            style: GameTheme.body(size: 12, color: GameTheme.mossLit),
-          ),
-        ],
-        if (relicLine != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            relicLine,
-            style: GameTheme.body(size: 12, color: GameTheme.mossLit),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
         const SizedBox(height: 8),
         if (campOpen)
           for (final track in <String>['gold', 'power', 'vitality', 'xp'])
@@ -80,6 +61,7 @@ class SanctuaryOverlay extends StatelessWidget {
             'War Altar, Life Well, and Lore Font appear here once Essence unlocks.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -87,20 +69,13 @@ class SanctuaryOverlay extends StatelessWidget {
   Widget _campTrackCard(BuildContext context, GameState state, String track) {
     final level = _levelOf(state, track);
     final prestige = _prestigeOf(state, track);
-    final nextLevel = level + 1;
     final cost = GameLogic.sanctuaryCost(level);
     final keepShort = GameLogic.sanctuaryPrestigeKeepShort(track);
-    final nextBonus = GameLogic.sanctuaryBonusLabel(
-      track,
-      nextLevel,
-      prestige: prestige,
-    );
     final currentBonus = GameLogic.sanctuaryBonusLabel(
       track,
       level,
       prestige: prestige,
     );
-    final cycleStep = level <= 0 ? 0 : ((level - 1) % 12 + 1);
     final canPrestige = level >= 12;
     final prestigeGain = GameLogic.sanctuaryPrestigeEssenceGain(level);
     final canAfford = state.essence >= cost;
@@ -109,63 +84,52 @@ class SanctuaryOverlay extends StatelessWidget {
     String? detail;
     if (track == 'gold') {
       final hubDelta = GoldIncome.nextGoldFindDeltaPerMinute(state);
-      detail = 'Next $nextBonus · Hub +${hubDelta}g/min';
-    } else {
-      detail = 'Next $nextBonus';
+      detail = 'Next +${hubDelta}g/min hub';
     }
 
-    final barColor = track == 'vitality'
-        ? KenneyBarColor.red
-        : track == 'power'
-            ? KenneyBarColor.yellow
-            : KenneyBarColor.green;
-
-    String? bulkLabel;
-    if (bulk > 1) {
+    // Prefer bulk as the one primary when affordable; single buy otherwise.
+    final useBulk = bulk > 1;
+    late final Widget trailing;
+    if (useBulk) {
+      final bulkCost = GameLogic.sanctuaryBulkCost(state, track, bulk);
       final target = level + bulk;
-      if (track == 'gold') {
-        final hubNow = GoldIncome.hubGoldPerMinute(state);
-        final hubAfter = GoldIncome.hubGoldPerMinuteAtGoldLevel(state, target);
-        bulkLabel = 'Buy $bulk · +${hubAfter - hubNow} g/min';
-      } else {
-        bulkLabel = 'Buy $bulk · Lv$target';
-      }
+      final label = track == 'gold'
+          ? () {
+              final hubNow = GoldIncome.hubGoldPerMinute(state);
+              final hubAfter =
+                  GoldIncome.hubGoldPerMinuteAtGoldLevel(state, target);
+              return '+${hubAfter - hubNow}g/min · ${bulkCost}e';
+            }()
+          : 'Buy $bulk · ${bulkCost}e';
+      trailing = GameButton(
+        label: label,
+        expanded: false,
+        dense: true,
+        onPressed: () => director.upgradeSanctuaryBulk(track),
+      );
+    } else {
+      trailing = GameButton(
+        label: '${cost}e',
+        expanded: false,
+        dense: true,
+        onPressed: canAfford ? () => director.upgradeSanctuary(track) : null,
+      );
     }
 
     return PowerUpgradeRow(
       accent: _trackAccent(track),
       title: GameLogic.sanctuaryNames[track] ?? track,
       subtitle: 'Lv$level · $currentBonus'
-          '${prestige > 0 ? ' · P$prestige' : ''}'
-          ' · $cycleStep/12',
+          '${prestige > 0 ? ' · P$prestige' : ''}',
       detail: detail,
-      selected: canPrestige || (track == 'gold' && canAfford),
-      trailing: KenneyButton(
-        label: '${cost}e',
-        expanded: false,
-        onPressed: canAfford ? () => director.upgradeSanctuary(track) : null,
-      ),
-      below: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          KenneyProgressBar(
-            value: (cycleStep / 12.0).clamp(0.0, 1.0),
-            height: 8,
-            color: barColor,
-          ),
-          if (bulkLabel != null) ...[
-            const SizedBox(height: 4),
-            KenneyButton(
-              label: bulkLabel,
-              style: KenneyButtonStyle.grey,
-              onPressed: () => director.upgradeSanctuaryBulk(track),
-            ),
-          ],
-          if (canPrestige) ...[
-            const SizedBox(height: 4),
-            KenneyButton(
+      selected: canPrestige,
+      dense: true,
+      trailing: trailing,
+      below: canPrestige
+          ? GameButton(
               label: 'Reset · keep $keepShort · +${prestigeGain}e',
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
+              dense: true,
               onPressed: () async {
                 final ok = await showDialog<bool>(
                   context: context,
@@ -173,25 +137,24 @@ class SanctuaryOverlay extends StatelessWidget {
                   builder: (ctx) => MenuChrome.dialog(
                     title: 'Reset this track?',
                     content: Text(
-                      'Resets this Essence track to Lv1. Keeps $keepShort forever '
+                      'Resets this track to Lv1. Keeps $keepShort forever '
                       'and refunds ${prestigeGain}e.\n\n'
-                      'This is not Ascend — only this track. '
-                      'Ascend (hub claim) resets the run bag and raises AL.',
+                      'Not Ascend — only this track.',
                       style: GameTheme.body(
                         size: 15,
                         color: GameTheme.parchment,
                       ),
                     ),
                     actions: [
-                      KenneyButton(
+                      GameButton(
                         label: 'CANCEL',
-                        style: KenneyButtonStyle.grey,
+                        style: GameButtonStyle.grey,
                         expanded: false,
                         onPressed: () => Navigator.pop(ctx, false),
                       ),
-                      KenneyButton(
+                      GameButton(
                         label: 'RESET',
-                        style: KenneyButtonStyle.red,
+                        style: GameButtonStyle.red,
                         expanded: false,
                         onPressed: () => Navigator.pop(ctx, true),
                       ),
@@ -202,10 +165,8 @@ class SanctuaryOverlay extends StatelessWidget {
                   director.prestigeSanctuaryTrack(track);
                 }
               },
-            ),
-          ],
-        ],
-      ),
+            )
+          : null,
     );
   }
 }

@@ -24,7 +24,7 @@ class NavIntent {
     scrollBagFilters: true,
   );
 
-  /// Real-money store tab (coming soon).
+  /// Real-money store tab (catalog live; billing soon).
   static const NavIntent shop = NavIntent(route: MenuRoute.shop);
 
   static const NavIntent gold = NavIntent(route: MenuRoute.gold);
@@ -37,10 +37,16 @@ class NavIntent {
 
   static const NavIntent essence = NavIntent(route: MenuRoute.essence);
 
-  /// Prestige essence shop — under ESSENCE.
+  /// KEEP (Blessing / God Hand / REBORN) — under ESSENCE.
+  static const NavIntent essenceKeep = NavIntent(
+    route: MenuRoute.essence,
+    essencePanel: EssencePanel.keep,
+  );
+
+  /// Permanent essence buys — under ESSENCE → KEEP (prestige section).
   static const NavIntent essenceShop = NavIntent(
     route: MenuRoute.essence,
-    essencePanel: EssencePanel.shop,
+    essencePanel: EssencePanel.keep,
   );
 
   static const NavIntent relics = NavIntent(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
-import '../game_theme.dart';
 import '../menu_chrome.dart';
 import 'challenge_toggles.dart';
 import 'gauntlet_hub_panel.dart';
@@ -43,14 +42,8 @@ class _KeystoneSheetState extends State<KeystoneSheet>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TabBar(
+        MenuChrome.tabRail(
           controller: _tabs,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          labelColor: GameTheme.torchHot,
-          unselectedLabelColor: GameTheme.parchmentDim,
-          indicatorColor: GameTheme.torchHot,
-          labelStyle: GameTheme.pixel(size: GameTheme.hudPixel),
           tabs: [
             MenuChrome.bridgedTabScoped(
               'KEY',

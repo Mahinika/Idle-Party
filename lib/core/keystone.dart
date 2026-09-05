@@ -204,7 +204,7 @@ abstract final class Keystone {
     final totalSec = max(0, ms) ~/ 1000;
     final m = totalSec ~/ 60;
     final s = totalSec % 60;
-    return '$m:${s.toString().padLeft(2, '0')}';
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
   /// Essence for claiming daily vault (scales with today's best timed key).

@@ -23,11 +23,15 @@ flowchart TB
   Guide --> Constraints
 
   subgraph Tokens["Code — tokens & widgets"]
+    ENTRY["lib/ui/theme.dart (start here)"]
     GT["GameTheme.dart<br/>colors · radii · touch · type scale"]
     MC["MenuChrome.dart<br/>panel · tabs · chips · helpers"]
-    KB["KenneyButton.dart<br/>brown · grey · ghost · red"]
+    GB["GameButton.dart<br/>brown · grey · ghost · red"]
+    GI["GameIcon.dart<br/>UiIcon sprites · UiGlyph marks"]
+    ENTRY --> GT
     GT --> MC
-    MC --> KB
+    MC --> GB
+    GT --> GI
   end
 
   Guide --> Tokens
@@ -51,11 +55,11 @@ flowchart TB
     P1 -.-> PD
   end
 
-  KB --> Actions
+  GB --> Actions
   MC --> Actions
 
   subgraph Families["Visual families — pick one per surface"]
-    MS["Menu sheet<br/>GEAR · POWER · QUESTS · KEY · MORE"]
+    MS["Menu sheet<br/>GEAR · GOLD · SHOP · ESSENCE · MORE · KEY"]
     HUB["Hub<br/>world path · TODAY stack"]
     HUD["Combat HUD<br/>FARM/PUSH · party · God Hand"]
     BR["Brand<br/>boot · new game · What's New"]
@@ -71,7 +75,7 @@ flowchart TB
 
   MS --> MenuShell
   MC --> MenuShell
-  KB --> MenuShell
+  GB --> MenuShell
 
   subgraph Layout["Layout escape hatches (when content overflows)"]
     SC["SingleChildScrollView"]
@@ -103,7 +107,7 @@ flowchart TB
   GC --> IA
   CC --> HUB
   WCB --> MC
-  WCB --> KB
+  WCB --> GB
 
   MS --> INV
   MS --> PWR
@@ -120,7 +124,7 @@ flowchart TB
   Guide --> Anti
 ```
 
-**How to read it:** `UI_THEME.md` sets rules and patterns; **`GameTheme` → `MenuChrome` → `KenneyButton`** is the implementation stack. **RUN / TODAY / ACCOUNT** is information architecture (section labels, guides, chips) — orthogonal to colors. **Visual family** chooses which token subset applies; hub and dungeon intentionally skip full GEAR sheet chrome.
+**How to read it:** `UI_THEME.md` sets rules and patterns; **`lib/ui/theme.dart`** is the import. **`GameTheme` → `MenuChrome` → `GameButton` / `GameIcon`** is the implementation stack. **RUN / TODAY / ACCOUNT** is information architecture (section labels, guides, chips) — orthogonal to colors. **Visual family** chooses which token subset applies; hub and dungeon intentionally skip full GEAR sheet chrome.
 
 ---
 
@@ -128,9 +132,12 @@ flowchart TB
 
 | Piece | File |
 |-------|------|
+| Import this | [`lib/ui/theme.dart`](../lib/ui/theme.dart) |
 | Colors, radii, touch, type scale | [`lib/ui/game_theme.dart`](../lib/ui/game_theme.dart) |
 | Panels, tabs, chips, helpers | [`lib/ui/menu_chrome.dart`](../lib/ui/menu_chrome.dart) |
-| Actions | [`lib/ui/kenney_button.dart`](../lib/ui/kenney_button.dart) |
+| Actions | [`lib/ui/game_button.dart`](../lib/ui/game_button.dart) (`KenneyButton` is the same widget) |
+| Chrome icons | [`lib/ui/game_icon.dart`](../lib/ui/game_icon.dart) — `UiIcon` sprites + `UiGlyph` marks |
+| Honesty test | [`test/ui_theme_test.dart`](../test/ui_theme_test.dart) |
 | Menu sheet reference layout | [`lib/ui/character_equip_panel.dart`](../lib/ui/character_equip_panel.dart), [`lib/ui/shell/inventory_dock.dart`](../lib/ui/shell/inventory_dock.dart) |
 
 ---
@@ -164,13 +171,14 @@ Avoid stacking multiple **brown** full-width buttons on one screen (especially h
 
 | Level | When | API |
 |-------|------|-----|
-| **Primary** | One main job on this screen (ENTER, CLAIM, BUY) | `KenneyButtonStyle.brown`, `primary: true` for hero CTAs |
-| **Secondary** | Valid alternate (skip for now, cancel, ENTER when claim is READY) | `KenneyButtonStyle.grey` |
-| **Tertiary / nav** | Open another menu (“KEY”), inline | `MenuChrome.textLink` or `KenneyButtonStyle.ghost` |
+| **Primary** | One main job on this screen (ENTER, CLAIM, BUY) | `GameButtonStyle.brown`, `primary: true` for hero CTAs |
+| **Secondary** | Valid alternate (skip for now, cancel, ENTER when claim is READY) | `GameButtonStyle.grey` |
+| **Tertiary / nav** | Open another menu (“KEY”), inline | `MenuChrome.textLink` or `GameButtonStyle.ghost` |
+| **Dense** | Cramped sheets (GEAR actions, CLOSE) | `dense: true` — tighter pad, still `minTouch` |
 | **Text link** | Low emphasis, inline | `MenuChrome.textLink` |
-| **Destructive** | Ascend, merge commit, wipe confirm | `KenneyButtonStyle.red` |
+| **Destructive** | Ascend, merge commit, wipe confirm | `GameButtonStyle.red` |
 
-Semantics / `WebClickScope`: `KenneyButton` and `MenuChrome` helpers already wire labels for playtest.
+Semantics / `WebClickScope`: `GameButton` and `MenuChrome` helpers already wire labels for playtest.
 
 **Exclusive compact choices** (spend ×1 / 5% / …): use **`MenuChrome.segmented`** — one row, equal slots. Do not Wrap tappable `chip`s for this; InkWell expands to max width and stacks full-height on phone.
 
@@ -196,13 +204,14 @@ Helpers: `MenuChrome.scopeChip`, `sectionLabelScoped(title, scope: MenuScope.run
 
 ## Tokens (quick)
 
-**Surfaces:** `MenuChrome.panel`, `scrim`, `cardBox`, `listCard`, `hubPanel` (hub banners), `sheetRadius`  
-**Radii:** `GameTheme.radiusSm` (8) / `radiusMd` (12) / `radiusLg` (18)  
+**Surfaces:** `MenuChrome.panel`, `scrim`, `cardBox`, `listCard`, `hubPanel` (hub banners), `hudWell` (party / target HUD), `sheetRadius`  
+**Radii:** `GameTheme.radiusSm` (8) / `radiusMd` (12) / `radiusLg` (18) / `radiusHud` (4)  
 **Type:** `menuTitle` (Cinzel) · `body` (VT323) · `sectionLabel` / `sectionLabelScoped` · `button` · `pixel` (HUD/tags only)  
-**Color:** `parchment` / `parchmentDim` · `torch` / `torchHot` · `mossLit` · `scopeRun/Today/Account` · `rarity*` · `tooltip*` (item tips)  
+**Color:** `parchment` / `parchmentDim` · `torch` / `torchHot` · `mossLit` · `scopeRun/Today/Account` · `rarity*` · `tooltip*` (item tips) · `buttonBrown*` / `buttonGrey*` / `buttonRed*` · `hudWell*` / `hudFlask*`  
+**Icons:** `GameIcon.asset(UiIcon.settings)` / `UiIcon.key` (PNG) or `GameIcon.glyph` for add/close/arrows — never Material `Icons` or emoji in chrome. TODAY buttons are plain English (`ENTER KEY`, `GAUNTLET`, `RIFT`).  
 **Touch:** `minTouch` 44 · `primaryTouch` 48  
 
-Prefer tokens over hex literals. Hub uses `hubPanel`, not full `cardBox` sheet chrome.
+**Tokens:** also `MenuChrome.toggleMark`, `slider`, `fold` for settings / Apex / What’s New.
 
 ---
 
@@ -245,8 +254,9 @@ Do **not** force GEAR sheet chrome onto:
 
 ## Anti-patterns (actual harm)
 
-- Raw hex borders/colors that bypass `GameTheme` / `MenuChrome`
-- Material `TextButton` in forge-style confirm dialogs (use `MenuChrome.dialog` + `KenneyButton`)
+- Raw hex borders/colors that bypass `GameTheme` (combat VFX excepted)
+- Material `Icons` or emoji (`🔑` `⚔` `★`) in chrome or chase labels — use `GameIcon` / `UiIcon` / plain text
+- Material `ChoiceChip` / `ExpansionTile` / `TextButton` — use `MenuChrome.segmented` / `chip` / `fold` / `GameButton`
 - Press Start for menu **titles** or long body paragraphs
 - **Three+ brown full-width CTAs** on one hub view
 - Global alert banners on every tab when only one tab owns the message
@@ -256,4 +266,4 @@ Do **not** force GEAR sheet chrome onto:
 
 ## Agents
 
-When adding shared chrome, put helpers on **`MenuChrome`** (or `KenneyButton` styles) and add **one line** here. Extend the theme; don’t fork colors in a single screen.
+When adding shared chrome, put helpers on **`MenuChrome`**, **`GameButton`**, or **`GameIcon`**, and add **one line** here. Extend the theme; don’t fork colors or Material icons in a single screen.

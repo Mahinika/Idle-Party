@@ -4,7 +4,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../game_theme.dart';
-import '../kenney_assets.dart';
+import '../../assets/kenney_assets.dart';
 import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
@@ -17,23 +17,19 @@ class RelicsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
-    return ListView(
-      padding: EdgeInsets.zero,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${state.essence} essence · survives Ascend',
+          '${state.essence}e · party auras · survive Ascend',
           style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-        ),
-        Text(
-          'Buy once · upgrade tiers · permanent party auras.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         for (final relicId in GameLogic.relicOrder)
           _RelicCard(director: director, relicId: relicId),
-        KenneyButton(
+        GameButton(
           label: 'RESPEC · no refund · ${GameLogic.respecRelicsCost(state)}e',
-          style: KenneyButtonStyle.red,
+          style: GameButtonStyle.red,
           onPressed:
               (state.unlockedRelics.isNotEmpty ||
                       state.metaDepth.relicTiers.isNotEmpty) &&
@@ -106,7 +102,7 @@ class _RelicCard extends StatelessWidget {
           ),
           if (!owned) ...[
             const SizedBox(height: 6),
-            KenneyButton(
+            GameButton(
               label: '$name  ${cost}e',
               onPressed: state.essence < cost
                   ? null
@@ -114,11 +110,11 @@ class _RelicCard extends StatelessWidget {
             ),
           ] else if (tier < 3) ...[
             const SizedBox(height: 6),
-            KenneyButton(
+            GameButton(
               label: nextPayout.isEmpty
                   ? 'UPGRADE TIER  T$nextTier  ${tierCost}e'
                   : 'T$nextTier · $nextPayout · ${tierCost}e',
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
               onPressed: state.essence >= tierCost
                   ? () => director.upgradeRelicTier(relicId)
                   : null,
@@ -144,8 +140,8 @@ class _RelicCard extends StatelessWidget {
         ? 'Permanent +${state.relicDefenseBonus} team defense (T$tier).'
         : 'Permanent +${GameLogic.relicDefensePerTier} team defense per tier.',
     GameLogic.phoenixEmberRelic => owned
-        ? 'Permanent +${state.relicVitalityBonus} max HP per hero (T$tier).'
-        : 'Permanent +${GameLogic.relicVitalityPerTier} max HP per hero per tier.',
+        ? 'Permanent +${state.relicVitalityBonus} STA per hero (T$tier).'
+        : 'Permanent +${GameLogic.relicVitalityPerTier} STA per hero per tier.',
     GameLogic.godHandFocusRelic => owned
         ? '+${state.relicGodHandDamageBonus} God Hand damage (T$tier).'
         : '+3 God Hand damage per tier.',

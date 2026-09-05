@@ -1,0 +1,15 @@
+﻿# Hard-block secrets from Agent / Tab / @-mentions.
+# (Also gitignored — this is defense in depth.)
+# Do NOT ignore assets/*.png here: agents must still Read sprites for doll QA.
+# PNGs are already skipped from indexing by Cursor's default ignore list.
+
+android/key.properties
+android/admob.properties
+*.jks
+*.keystore
+*.pem
+*.p12
+.env
+.env.*
+**/credentials.json
+**/secrets.json

@@ -17,7 +17,7 @@ Preferences (do not re-ask): **content/feel over Play busywork**, owner plays
 the sim knows the deficit), early calm for new players / **endgame grindy OK**,
 **polish kits** before many new specs, **no new zones or classes for now**,
 **hide unused chrome** (BAG Scrap, Sell junk, GEAR Sell, Loadouts) rather than
-polish it, **no IAP for now**, optional hub **POWERUPS** rewarded ads
+polish it, **cheap real-money SHOP** (boosts / ad-free; billing soon), optional hub **POWERUPS** rewarded ads
 (1 ad = 3 hours, stackable), **Android phone-only** (portrait; no
 iOS/web product), **large independent batches**, English in-game copy,
 fairness-first balance. After a batch: **short test list**; **APK only when
@@ -149,10 +149,10 @@ main.dart
 
 Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
   (flat tabs; one shared bar always visible under sheets; dungeon LEAVE = hub)
-  GOLD = forge tracks + market (flasks/listings) · SHOP = real-money store
-  (coming soon) · ESSENCE = sanctuary tracks + KEEP + prestige shop + relics + pets
+  GOLD = forge tracks + market (flasks/listings) · SHOP = real-money convenience
+  (boosts / ad-free; billing soon) · ESSENCE = TRACKS + KEEP (God Hand / buys) + relics + pets
   MORE rows = QUESTS / Craft
-  (Blessing / God Hand / REBORN under ESSENCE → TRACKS / KEEP)
+  (Blessing / God Hand / REBORN under ESSENCE → KEEP)
   Hub POWERUPS rewarded ads stay on the hub (not under SHOP)
 ```
 
@@ -313,6 +313,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Hub | `lib/ui/hub_screen.dart` |
 | Hub TODAY chase | `lib/core/hub_chase.dart` |
 | Hub POWERUPS ads | `lib/core/ad_boost.dart`, `ad_rewarded.dart`, `ad_config.dart` · `lib/ui/hub/hub_powerups.dart` |
+| Real-money SHOP catalog | `lib/core/shop_catalog.dart` · `lib/ui/shell/shop_dock.dart` · `docs/SHOP_MONETIZATION.md` |
 | Hub gold/min (keep AFK) | `lib/core/gold_income.dart` |
 | POWER Essence rates | `lib/ui/shell/income_overlay.dart` (`CampRatesSection`) |
 | Apex hub (craft / vault / target meter) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) — POWER → Craft |

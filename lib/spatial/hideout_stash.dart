@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import '../models/enemy.dart';
 import '../models/loot.dart';
-import '../ui/kenney_assets.dart';
+import '../assets/kenney_assets.dart';
 import 'tile_map.dart';
 
 /// One Hideout stash ambush spawn (built into [SpatialActor] by SpatialCombat).

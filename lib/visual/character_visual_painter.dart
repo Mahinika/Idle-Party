@@ -10,6 +10,7 @@ import 'character_layer.dart';
 import 'character_visual_pose.dart';
 import 'hero_anim_controller.dart';
 import 'owned_gear_assets.dart';
+import 'owned_gear_grips.dart';
 import 'hero_anim_state.dart';
 
 /// Canvas painter for modular layered heroes (dungeon path).
@@ -99,7 +100,8 @@ abstract final class CharacterVisualPainter {
         continue;
       }
       if (!kOwnedGearOverlayLayers.contains(layer.id)) continue;
-      final img = overlayImage(layer.ownedAsset);
+      final asset = layer.ownedAsset;
+      final img = overlayImage(asset);
       if (img == null) continue;
       final p = Paint()
         ..filterQuality = FilterQuality.none
@@ -109,12 +111,54 @@ abstract final class CharacterVisualPainter {
       if (tint != null) {
         p.colorFilter = ColorFilter.mode(tint, BlendMode.modulate);
       }
-      canvas.drawImageRect(
-        img,
-        Rect.fromLTWH(0, 0, img.width.toDouble(), img.height.toDouble()),
-        dst,
-        p,
+      final src = Rect.fromLTWH(
+        0,
+        0,
+        img.width.toDouble(),
+        img.height.toDouble(),
       );
+
+      // Weapons / shields: shift full 128 canvas so grip UV sits on hand
+      // anchor (armor layers stay unshifted same-origin blit).
+      if (layer.anchored &&
+          layer.anchorId != null &&
+          asset != null &&
+          (layer.id == CharacterLayerId.mainHand ||
+              layer.id == CharacterLayerId.offHand)) {
+        final ap = AnchorTables.lookup(
+          anim: pose.anim.kind,
+          frame: pose.anim.frame,
+          id: layer.anchorId!,
+          flipX: false,
+          profile: BodyAnchorProfile.owned,
+        ).scaled(size);
+        var rot = ap.rotation;
+        if (layer.anchorId == AnchorId.mainHand) {
+          rot += pose.mainHandExtraRotation;
+        }
+        final ax = center.dx + ap.x;
+        final ay = center.dy + ap.y;
+        final grip = OwnedGearGrips.forAsset(
+          asset,
+          offHand: layer.anchorId == AnchorId.offHand,
+        );
+        final gripOnFull = Offset(
+          dst.left + grip.dx * size,
+          dst.top + grip.dy * size,
+        );
+        final shifted = dst.shift(
+          Offset(ax - gripOnFull.dx, ay - gripOnFull.dy),
+        );
+        canvas.save();
+        canvas.translate(ax, ay);
+        canvas.rotate(rot);
+        canvas.translate(-ax, -ay);
+        canvas.drawImageRect(img, src, shifted, p);
+        canvas.restore();
+        continue;
+      }
+
+      canvas.drawImageRect(img, src, dst, p);
     }
 
     if (pose.flipX) {

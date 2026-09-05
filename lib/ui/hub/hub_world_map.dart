@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../models/dungeon_def.dart';
-import '../custom_assets.dart';
+import '../../assets/custom_assets.dart';
 import '../game_theme.dart';
-import '../kenney_assets.dart';
+import '../../assets/kenney_assets.dart';
 import '../kenney_sprite.dart';
 import '../web_click_bridge.dart';
 
@@ -250,7 +250,7 @@ class _ZonePathMapState extends State<ZonePathMap> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withValues(alpha: 0.3),
+                      GameTheme.ink.withValues(alpha: 0.3),
                     ],
                   ),
                 ),

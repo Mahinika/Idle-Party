@@ -15,8 +15,26 @@ with the same pose (`CharacterVisualPose.resolve(..., owned: true)`).
 
 Not one PNG per class×weapon. Items share looks via `visualSetId` (e.g.
 `sword_t1` → `sword_t0` art + rarity tint). Armor uses family extract
-`*_t0` / `*_t2` only. Weapons use `*_t0` plus a few authored models
-(`sword_thunderfury`, `sword_warglaive`).
+`*_t0` / `*_t2`, plus **material variants** when `armorType` differs from the
+family’s native look:
+
+| Body family | Native look | Extra material PNGs |
+|-------------|-------------|---------------------|
+| warrior | plate (`chest_t0`) | — |
+| rogue | leather | **mail** (`chest_mail_t0`, …) |
+| mage | cloth | — |
+| healer | cloth | **plate** (`chest_plate_t0`, …) |
+
+Derived by `tool/derive_armor_material_variants.py` (recolor/thicken existing
+alpha — no new geometry). Weapons use `*_t0` plus authored models
+(`sword_thunderfury`, `sword_warglaive`, `sword_runebound`, `staff_frostfire`,
+`staff_nethercore`, `bow_eagle`, `bow_windpierce`, `axe_goreblade`,
+`axe_bloodhowl`, `mace_lightbringer`, `mace_dawnbreak`, `dagger_shadowfang`,
+`dagger_nightbite`, `shield_aegis`, `shield_ironwall`, `frill_prism`,
+`frill_soulcodex`).
+
+Doll look = body family undertunic + overlay stem from `visualSetId` +
+optional material suffix from equipped `armorType`.
 
 ## Three art modes (mandatory)
 
@@ -24,7 +42,9 @@ Not one PNG per class×weapon. Items share looks via `visualSetId` (e.g.
 |------|--------|----------|
 | Body extract | `_src` → `build_owned_gear_layers.py` | undertunic, helm/chest/legs/cloak/hands |
 | Authored weapon | `char/gear/_authored/` | shared weapons / shields / frills |
-| Kenney / custom icons | `KenneyAssets` / `CustomAssets` | jewelry, flask, empty slots, sparse hands |
+| Kenney / custom icons | `KenneyAssets` / `CustomAssets` | jewelry, flask, empty shoulder/waist slots |
+
+Boots fold into legs on the doll; BAG uses a foot-band `boots_t*_icon.png` crop.
 
 Do **not** invent armor or mass weapon variants with `ImageDraw` /
 `generate_item_model_variants` mutate. That script only syncs authored
@@ -39,7 +59,8 @@ by `tool/make_gear_slot_icons.py` at the end of `build_owned_gear_layers.py`.
 PartyHero.gearAffinity → BodyFamilyCatalog → body_<anim>.png
 PartyHero.equipped     → visualSetId → OwnedGearAssets path + rarity tint
 SpatialActor signals   → HeroAnimController → anim + frame
-Canvas: paintOwnedHero (body + 128 overlays, same dest rect)
+Canvas: paintOwnedHero (body + armor same dest rect; hand items
+grip-aligned to owned anchors via `OwnedGearGrips`)
 ```
 
 ## Key types
@@ -52,7 +73,8 @@ Canvas: paintOwnedHero (body + 128 overlays, same dest rect)
 | `lib/visual/hero_anim_controller.dart` | SM + `snapshot()` for paint |
 | `lib/visual/character_layer.dart` | Layer ids + draw order |
 | `lib/visual/equipment_visual_resolver.dart` | `visualSetId` → Kenney cell + owned path |
-| `lib/visual/anchor_table.dart` | Per-frame hand anchors (Kenney fallback) |
+| `lib/visual/anchor_table.dart` | Per-frame hand anchors (Kenney + owned) |
+| `lib/visual/owned_gear_grips.dart` | Grip UVs for owned weapons/shields |
 | `lib/visual/character_visual_pose.dart` | Resolved layers for a frame |
 | `lib/visual/character_visual_painter.dart` | `paintOwnedHero` / Kenney fallback |
 | `lib/ui/hero_paper_doll.dart` | Kenney body/hair/armor cell picks |
@@ -62,8 +84,14 @@ Facing is **L/R flipX only**. Enemies unchanged in Phase 3.
 
 ## What paints on the body
 
-- Cape, legs, torso, gloves, helm, off-hand, main-hand — **all equipped
-  rarities**, including common/t0.
+- Cape, legs, torso, gloves, helm — full 128 same-origin blit (incl. common).
+- Owned cape paints **after** body/armor (front wrap). Kenney keeps cape behind.
+- Off-hand / main-hand — same 128 PNGs grip-aligned to owned hand
+  anchors (`OwnedGearGrips`). Bake art to the socket with
+  `py tool/bake_owned_hand_grips.py`, then `py tool/gen_owned_gear_grips.py`.
+  Audit: `py tool/audit_anchors.py`.
+- BAG/GEAR icons use `EquipmentVisualResolver.ownedIconPathFor` (same
+  `resolveId` as the doll) so missing `visualSetId` still matches overlays.
 - Empty slot = undertunic showing through. No ghost t0.
 - Helm covers hair (hair lives in the body; no extra hair layer on owned).
 - Neck, rings, trinkets, flask: slots only.

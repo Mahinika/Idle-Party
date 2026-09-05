@@ -104,28 +104,17 @@ class WhatsNewOverlay extends StatelessWidget {
             children: [
               for (final release in focus) releaseBlock(release),
               if (!unseen && older.isNotEmpty)
-                Theme(
-                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                  child: ExpansionTile(
-                    tilePadding: EdgeInsets.zero,
-                    childrenPadding: EdgeInsets.zero,
-                    title: Text(
-                      'Older versions',
-                      style: GameTheme.body(
-                        size: 14,
-                        color: GameTheme.parchmentDim,
-                      ),
-                    ),
-                    children: [
-                      for (final release in older) releaseBlock(release),
-                    ],
-                  ),
+                MenuChrome.fold(
+                  title: 'Older versions',
+                  children: [
+                    for (final release in older) releaseBlock(release),
+                  ],
                 ),
             ],
           ),
         ),
         const SizedBox(height: 8),
-        KenneyButton(
+        GameButton(
           label: 'GOT IT',
           onPressed: () {
             director.markChangelogSeen();

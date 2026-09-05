@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/enemy.dart';
-import 'package:idle_party/ui/kenney_assets.dart';
+import 'package:idle_party/assets/kenney_assets.dart';
 
 void main() {
   test('Tiny Dungeon tile files exist for catalog getters', () {

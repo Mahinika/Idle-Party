@@ -5,6 +5,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'ad_config.dart';
 import 'ad_rewarded.dart';
+import 'immersive_ui.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart' as test_env;
 
@@ -42,6 +43,7 @@ Future<void> showPrivacyOptions() async {
     if (!done.isCompleted) done.complete();
   });
   await done.future.timeout(const Duration(seconds: 30), onTimeout: () {});
+  unawaited(lockImmersiveUi());
 }
 
 /// Show a rewarded ad and wait until it is dismissed.
@@ -106,6 +108,7 @@ Future<AdWatchResult> showRewarded() async {
       },
     );
   } finally {
+    unawaited(lockImmersiveUi());
     unawaited(_preload());
   }
 }
@@ -147,6 +150,7 @@ Future<void> _requestConsent() async {
     },
   );
   await done.future.timeout(const Duration(seconds: 10), onTimeout: () {});
+  unawaited(lockImmersiveUi());
 }
 
 Future<void> _preload() async {

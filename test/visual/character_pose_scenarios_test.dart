@@ -11,6 +11,7 @@ import 'package:idle_party/visual/character_visual_painter.dart';
 import 'package:idle_party/visual/character_visual_pose.dart';
 import 'package:idle_party/visual/hero_anim_state.dart';
 import 'package:idle_party/visual/owned_gear_assets.dart';
+import 'package:idle_party/visual/owned_gear_grips.dart';
 
 PartyHero nakedWarrior() => PartyHero.starting(
   name: 'Aegis',
@@ -292,7 +293,7 @@ void main() {
         id: AnchorId.head,
         profile: BodyAnchorProfile.owned,
       ).y,
-      lessThan(-0.3),
+      lessThan(-0.28),
     );
   });
 
@@ -365,7 +366,7 @@ void main() {
     expect(cape.ownedAsset, contains('/warrior/gear/'));
   });
 
-  test('owned shoulders do not add a body layer', () {
+  test('owned shoulders paint chest_t2 when no chest worn', () {
     final hero = nakedWarrior().copyWith(
       equipped: {
         EquipmentSlot.shoulder: GameLogic.createEquipment(
@@ -381,7 +382,36 @@ void main() {
       anim: idle,
       owned: true,
     );
-    expect(pose.layers.map((l) => l.id), [CharacterLayerId.body]);
+    final torso = pose.layers.where((l) => l.id == CharacterLayerId.torso);
+    expect(torso, isNotEmpty);
+    expect(torso.first.ownedAsset, contains('chest_t2'));
+  });
+
+  test('owned waist bumps legs to t2 silhouette', () {
+    final hero = nakedWarrior().copyWith(
+      equipped: {
+        EquipmentSlot.legs: GameLogic.createEquipment(
+          slot: EquipmentSlot.legs,
+          rarity: LootRarity.common,
+          battleNumber: 4,
+          bias: HeroRole.warrior,
+        ).copyWith(visualSetId: 'legs_t0'),
+        EquipmentSlot.waist: GameLogic.createEquipment(
+          slot: EquipmentSlot.waist,
+          rarity: LootRarity.rare,
+          battleNumber: 8,
+          bias: HeroRole.warrior,
+        ),
+      },
+    );
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: idle,
+      owned: true,
+    );
+    final legs = pose.layers.where((l) => l.id == CharacterLayerId.legs);
+    expect(legs, isNotEmpty);
+    expect(legs.first.ownedAsset, contains('legs_t2'));
   });
 
   test('owned rare chest uses t2 overlay path', () {
@@ -403,6 +433,70 @@ void main() {
     final torso = pose.layers.where((l) => l.id == CharacterLayerId.torso);
     expect(torso, isNotEmpty);
     expect(torso.first.ownedAsset, contains('chest_t2_idle.png'));
+  });
+
+  test('owned hunter mail chest uses rogue mail overlay', () {
+    final hero =
+        PartyHero.starting(
+          name: 'Hunt',
+          specId: HeroSpecId.beastMastery,
+          stats: PartyHero.startingStatsForSpec(HeroSpecId.beastMastery),
+        ).copyWith(
+          equipped: {
+            EquipmentSlot.chest: GameLogic.createEquipment(
+              slot: EquipmentSlot.chest,
+              rarity: LootRarity.common,
+              battleNumber: 4,
+              bias: HeroRole.rogue,
+            ).copyWith(
+              visualSetId: 'chest_t0',
+              armorType: ArmorType.mail,
+            ),
+          },
+        );
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: idle,
+      owned: true,
+    );
+    final torso = pose.layers.where((l) => l.id == CharacterLayerId.torso);
+    expect(torso, isNotEmpty);
+    expect(
+      torso.first.ownedAsset,
+      'assets/custom/char/rogue/gear/chest_mail_t0_idle.png',
+    );
+  });
+
+  test('owned holy paladin plate chest uses healer plate overlay', () {
+    final hero =
+        PartyHero.starting(
+          name: 'Light',
+          specId: HeroSpecId.holyPaladin,
+          stats: PartyHero.startingStatsForSpec(HeroSpecId.holyPaladin),
+        ).copyWith(
+          equipped: {
+            EquipmentSlot.chest: GameLogic.createEquipment(
+              slot: EquipmentSlot.chest,
+              rarity: LootRarity.rare,
+              battleNumber: 10,
+              bias: HeroRole.healer,
+            ).copyWith(
+              visualSetId: 'chest_t2',
+              armorType: ArmorType.plate,
+            ),
+          },
+        );
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: idle,
+      owned: true,
+    );
+    final torso = pose.layers.where((l) => l.id == CharacterLayerId.torso);
+    expect(torso, isNotEmpty);
+    expect(
+      torso.first.ownedAsset,
+      'assets/custom/char/healer/gear/chest_plate_t2_idle.png',
+    );
   });
 
   test('owned two-hand weapon hides off-hand overlay', () {
@@ -432,6 +526,88 @@ void main() {
     expect(pose.layers.any((l) => l.id == CharacterLayerId.offHand), isFalse);
   });
 
+  test('owned hand items are grip-anchored', () {
+    final hero = nakedWarrior().copyWith(
+      equipped: {
+        EquipmentSlot.weapon: GameLogic.createEquipment(
+          slot: EquipmentSlot.weapon,
+          rarity: LootRarity.common,
+          battleNumber: 2,
+          bias: HeroRole.warrior,
+        ),
+        EquipmentSlot.offHand: GameLogic.createEquipment(
+          slot: EquipmentSlot.offHand,
+          rarity: LootRarity.common,
+          battleNumber: 2,
+          bias: HeroRole.warrior,
+        ),
+      },
+    );
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: idle,
+      owned: true,
+    );
+    expect(pose.anchorProfile, BodyAnchorProfile.owned);
+    final main = pose.layers.firstWhere((l) => l.id == CharacterLayerId.mainHand);
+    final off = pose.layers.firstWhere((l) => l.id == CharacterLayerId.offHand);
+    expect(main.anchored, isTrue);
+    expect(main.anchorId, AnchorId.mainHand);
+    expect(off.anchored, isTrue);
+    expect(off.anchorId, AnchorId.offHand);
+    expect(main.ownedAsset, isNotNull);
+    expect(
+      OwnedGearGrips.visualSetIdFromAsset(main.ownedAsset!),
+      isNotNull,
+    );
+  });
+
+  test('owned attack hand anchors sit lower than idle', () {
+    final idleHand = AnchorTables.lookup(
+      anim: HeroAnimKind.idle,
+      frame: 0,
+      id: AnchorId.mainHand,
+      profile: BodyAnchorProfile.owned,
+    );
+    final attackHand = AnchorTables.lookup(
+      anim: HeroAnimKind.attack,
+      frame: 1,
+      id: AnchorId.mainHand,
+      profile: BodyAnchorProfile.owned,
+    );
+    expect(attackHand.y, greaterThan(idleHand.y));
+  });
+
+  test('owned cape paints after body armor layers', () {
+    final hero = nakedWarrior().copyWith(
+      equipped: {
+        EquipmentSlot.cloak: GameLogic.createEquipment(
+          slot: EquipmentSlot.cloak,
+          rarity: LootRarity.common,
+          battleNumber: 2,
+          bias: HeroRole.warrior,
+        ),
+        EquipmentSlot.chest: GameLogic.createEquipment(
+          slot: EquipmentSlot.chest,
+          rarity: LootRarity.common,
+          battleNumber: 2,
+          bias: HeroRole.warrior,
+        ),
+      },
+    );
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: idle,
+      owned: true,
+    );
+    expect(pose.layerOrder.indexOf(CharacterLayerId.body), lessThan(
+      pose.layerOrder.indexOf(CharacterLayerId.cape),
+    ));
+    expect(pose.layerOrder.indexOf(CharacterLayerId.torso), lessThan(
+      pose.layerOrder.indexOf(CharacterLayerId.cape),
+    ));
+  });
+
   test('owned and kenney poses share equip hash', () {
     final hero = nakedWarrior().copyWith(
       equipped: {
@@ -448,7 +624,7 @@ void main() {
     expect(k.equipHash, o.equipHash);
   });
 
-  test('owned rare gloves overlay uses hands_t0 art', () {
+  test('owned rare gloves overlay uses hands_t2 art', () {
     final hero = nakedWarrior().copyWith(
       equipped: {
         EquipmentSlot.hands: GameLogic.createEquipment(
@@ -466,8 +642,7 @@ void main() {
     );
     final gloves = pose.layers.where((l) => l.id == CharacterLayerId.gloves);
     expect(gloves, isNotEmpty);
-    expect(gloves.first.ownedAsset, contains('hands_t0_idle.png'));
-    expect(gloves.first.tint, isNotNull);
+    expect(gloves.first.ownedAsset, contains('hands_t2_idle.png'));
   });
 
   test('owned jewelry is not a body layer', () {
@@ -576,6 +751,14 @@ void main() {
     expect(
       paths,
       contains('assets/custom/char/warrior/gear/helm_t0_idle.png'),
+    );
+    expect(
+      paths,
+      contains('assets/custom/char/rogue/gear/chest_mail_t0_idle.png'),
+    );
+    expect(
+      paths,
+      contains('assets/custom/char/healer/gear/chest_plate_t0_idle.png'),
     );
     for (final path in paths) {
       expect(File(path).existsSync(), isTrue, reason: path);

@@ -69,7 +69,7 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'GOLD tab: TRACKS buys this-run power (×1 / % spend / EVEN split); '
           'MARKET buys flasks and listings. '
-          'God Hand and Blessing live on ESSENCE → TRACKS (KEEP). Relics live under '
+          'God Hand and Blessing live on ESSENCE → KEEP. Relics live under '
           'ESSENCE → RELICS. Craft is a row inside MORE. Hero '
           'levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
     ),
@@ -154,12 +154,12 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'prestige',
-      title: 'ESSENCE SHOP',
+      title: 'ESSENCE KEEP',
       body:
-          'Essence lasts between Ascends: ESSENCE → RELICS for party auras, '
-          'ESSENCE → TRACKS for lasting tracks, '
-          'ESSENCE → SHOP for lasting buys, KEEP for God Hand. '
-          'Bottom-tab SHOP is the real-money store (coming soon).',
+          'Essence lasts between Ascends: ESSENCE → TRACKS for Gold Find and power, '
+          'ESSENCE → KEEP for God Hand and permanent buys, '
+          'ESSENCE → RELICS for party auras, ESSENCE → PETS for pets. '
+          'Bottom-tab SHOP is the real-money store (cheap boosts; buy soon).',
     ),
   ];
 

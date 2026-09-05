@@ -4,6 +4,7 @@ import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/meta_systems.dart';
+import 'package:idle_party/core/shop_catalog.dart';
 import 'package:idle_party/main.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/ui/first_session_tips.dart';
@@ -305,7 +306,7 @@ void main() {
     expect(find.text('ALL'), findsOneWidget);
   });
 
-  testWidgets('SHOP shows store coming soon', (tester) async {
+  testWidgets('SHOP shows real-money catalog', (tester) async {
     final director = GameDirector.preview();
     tester.view.physicalSize = const Size(360, 780);
     tester.view.devicePixelRatio = 1.0;
@@ -322,7 +323,22 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.takeException(), isNull);
-    expect(find.textContaining('Coming soon'), findsWidgets);
+    expect(find.textContaining('Real money'), findsWidgets);
+    expect(find.text('Starter boost'), findsOneWidget);
+    expect(find.text('\$0.99'), findsOneWidget);
+    expect(find.text('\$1.49'), findsOneWidget);
+    expect(find.text('BUY SOON'), findsWidgets);
+    expect(ShopCatalog.offered.map((e) => e.priceLabel).toList(), [
+      '\$0.99',
+      '\$1.49',
+      '\$1.99',
+      '\$2.99',
+      '\$4.99',
+    ]);
+    expect(
+      ShopCatalog.offered.map((e) => e.name).toList(),
+      contains('Ad-free welcome'),
+    );
   });
 
   testWidgets('GEAR pauses dungeon combat but not hub', (tester) async {

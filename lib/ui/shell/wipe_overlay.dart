@@ -51,11 +51,11 @@ class DungeonWipePanel extends StatelessWidget {
                   const SizedBox(height: 10),
                   Text(
                     state.inGauntlet
-                        ? 'Gauntlet run ends here. PB F${state.metaDepth.gauntletBestFloor}. Return to hub to climb again.'
+                        ? 'Gauntlet climb ends. PB F${state.metaDepth.gauntletBestFloor}. Hub → climb Crystal Spire again.'
                         : state.inGreaterRift
-                        ? 'Greater Rift ends here. Best tier ${state.metaDepth.grBestTier}. Return to hub to climb again.'
+                        ? 'Ranked GR ends. Best GR${state.metaDepth.grBestTier}. Hub → retry Mothveil (no mid-run gear).'
                         : state.inRift
-                        ? 'Rift run ends here. Best tier ${state.metaDepth.riftBestTier}. Return to hub to try again.'
+                        ? 'Farm Rift ends. Best R${state.metaDepth.riftBestTier}. Hub → farm Stormwake again (loot mid-run).'
                         : dailyEcho
                         ? 'RETRY this floor · HUB ends run'
                         : farm
@@ -129,7 +129,7 @@ class DungeonWipePanel extends StatelessWidget {
                   ],
                   const SizedBox(height: 14),
                   if (!state.inGauntlet && !state.inAnyRiftMode)
-                    KenneyButton(
+                    GameButton(
                       label: (farm || dailyEcho)
                           ? 'RETRY FLOOR'
                           : () {
@@ -161,7 +161,7 @@ class DungeonWipePanel extends StatelessWidget {
                       !state.inAnyRiftMode &&
                       bagNearlyFull(state)) ...[
                     const SizedBox(height: 8),
-                    KenneyButton(
+                    GameButton(
                       label:
                           state.gearStash.length >=
                               GameLogic.maxGearStashFor(state)
@@ -169,7 +169,7 @@ class DungeonWipePanel extends StatelessWidget {
                           : 'CLEAN BAG (near full)',
                       tip:
                           'Sells junk / scraps leftovers so new drops fit',
-                      style: KenneyButtonStyle.grey,
+                      style: GameButtonStyle.grey,
                       onPressed: director.cleanBagJunk,
                     ),
                   ],
@@ -181,11 +181,11 @@ class DungeonWipePanel extends StatelessWidget {
                     final fixNav =
                         WipeAdvice.hubNavFor(state.wipeAdviceLine);
                     if (fixLabel == null || fixNav == null) {
-                      return KenneyButton(
+                      return GameButton(
                         label: state.inGauntlet || state.inAnyRiftMode
                             ? 'END RUN → HUB'
                             : 'RETURN TO HUB',
-                        style: KenneyButtonStyle.grey,
+                        style: GameButtonStyle.grey,
                         primary: true,
                         onPressed: director.hubAfterWipe,
                       );
@@ -193,20 +193,20 @@ class DungeonWipePanel extends StatelessWidget {
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        KenneyButton(
+                        GameButton(
                           label: fixLabel,
                           tip: WipeAdvice.hubHintFor(state.wipeAdviceLine),
-                          style: KenneyButtonStyle.brown,
+                          style: GameButtonStyle.brown,
                           primary: true,
                           onPressed: () =>
                               director.hubAfterWipe(openMenu: fixNav),
                         ),
                         const SizedBox(height: 8),
-                        KenneyButton(
+                        GameButton(
                           label: state.inGauntlet || state.inAnyRiftMode
                               ? 'END RUN → HUB'
                               : 'RETURN TO HUB',
-                          style: KenneyButtonStyle.grey,
+                          style: GameButtonStyle.grey,
                           onPressed: director.hubAfterWipe,
                         ),
                       ],

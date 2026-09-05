@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/meta_systems.dart';
 import '../core/story_lore.dart';
 import 'cave_atmosphere.dart';
-import 'custom_assets.dart';
+import '../assets/custom_assets.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
@@ -183,25 +183,25 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 if (widget.canContinue) ...[
-                                  KenneyButton(
+                                  GameButton(
                                     label: 'CONTINUE',
-                                    style: KenneyButtonStyle.brown,
+                                    style: GameButtonStyle.brown,
                                     onPressed: _inputUnlocked
                                         ? () => _choose(widget.onContinue)
                                         : null,
                                   ),
                                   const SizedBox(height: 8),
-                                  KenneyButton(
+                                  GameButton(
                                     label: 'NEW GAME',
-                                    style: KenneyButtonStyle.grey,
+                                    style: GameButtonStyle.grey,
                                     onPressed: _inputUnlocked
                                         ? () => _choose(widget.onNewGame)
                                         : null,
                                   ),
                                 ] else
-                                  KenneyButton(
+                                  GameButton(
                                     label: 'NEW GAME',
-                                    style: KenneyButtonStyle.brown,
+                                    style: GameButtonStyle.brown,
                                     onPressed: _inputUnlocked
                                         ? () => _choose(widget.onNewGame)
                                         : null,

@@ -18,6 +18,13 @@ abstract final class PlayLeaderboardIds {
           gauntlet: 'CgkIhuXGvNocEAIQAQ',
           greaterRift: '',
         ),
+        // Reuse Aug KEY/Gauntlet until Console creates distinct Sep boards.
+        // Greater Rift stays empty (soft-fail) until a Sep GR board ID exists.
+        '2026-09': (
+          timedKey: 'CgkIhuXGvNocEAIQAA',
+          gauntlet: 'CgkIhuXGvNocEAIQAQ',
+          greaterRift: '',
+        ),
       };
 
   static String timedKeyId(String monthKey) =>

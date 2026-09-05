@@ -8,7 +8,7 @@ import '../visual/character_visual_painter.dart';
 import '../visual/character_visual_pose.dart';
 import '../visual/hero_anim_state.dart';
 import 'decoded_image_cache.dart';
-import 'kenney_assets.dart';
+import '../assets/kenney_assets.dart';
 import 'kenney_sprite.dart';
 
 /// GEAR / party HUD: owned body + same 128×128 gear overlays as dungeon.

@@ -370,6 +370,8 @@ abstract final class MenuTabs {
 
   static bool showCamp(GameState s) => s.ascensionLevel >= 1 || s.essence > 0;
   static bool showShop(GameState s) => s.ascensionLevel >= 1;
+  /// Blessing / God Hand / REBORN — after first-hour plain chrome.
+  static bool showKeep(GameState s) => !GameLogic.plainPlayerChrome(s);
   /// Relics / Craft tabs — after first-hour plain chrome (same as old KEEP/APEX).
   static bool showRelics(GameState s) => !GameLogic.plainPlayerChrome(s);
   static bool showCraft(GameState s) => !GameLogic.plainPlayerChrome(s);

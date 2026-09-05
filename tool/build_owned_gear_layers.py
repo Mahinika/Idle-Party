@@ -66,6 +66,14 @@ def load128(path: Path) -> Image.Image:
     return despeckle_alpha(knock_out_backdrop(strip_ink_black(im)))
 
 
+def load_authored(path: Path) -> Image.Image:
+    """Authored overlays win as painted — do not strip ink / despeckle."""
+    im = Image.open(path).convert("RGBA")
+    if im.size != (128, 128):
+        im = im.resize((128, 128), Image.Resampling.NEAREST)
+    return im
+
+
 def knock_out_backdrop(im: Image.Image) -> Image.Image:
     """Turn opaque-black canvas + JPEG dirt into alpha.
 
@@ -259,7 +267,7 @@ def maybe_authored(family: str | None, set_id: str, anim: str, fallback: Image.I
     p = authored_path(family, set_id, anim)
     if p is None:
         return fallback
-    return load128(p)
+    return load_authored(p)
 
 
 def sample_face(
@@ -365,8 +373,31 @@ def is_hair_color(family: str, rgb: tuple[int, int, int]) -> bool:
 
 
 def is_rogue_cloak(rgb: tuple[int, int, int]) -> bool:
+    """Green/olive cape cloth on rogue gold masters (wide band)."""
     r, g, b = rgb
-    return g > r + 6 and g > b and 25 < g < 120 and r < 90
+    # Broader than before — catch muted olive + darker cape folds.
+    return g >= r and g > b - 4 and 18 < g < 140 and r < 105 and b < 100
+
+
+def thicken_cloak(cloak: Image.Image, passes: int = 2) -> Image.Image:
+    """Grow existing cape pixels (no new silhouette invented)."""
+    if cloak.getbbox() is None:
+        return cloak
+    out = cloak.copy()
+    for _ in range(passes):
+        src = out.copy()
+        sp, op = src.load(), out.load()
+        for y in range(1, 127):
+            for x in range(1, 127):
+                if sp[x, y][3] > 40:
+                    continue
+                # Copy nearest opaque cape neighbor.
+                for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, 1)):
+                    r, g, b, a = sp[x + dx, y + dy]
+                    if a > 80:
+                        op[x, y] = (r, g, b, min(255, a - 20))
+                        break
+    return out
 
 
 def alpha_count(im: Image.Image) -> int:
@@ -534,6 +565,39 @@ def goldify(im: Image.Image) -> Image.Image:
     return ImageEnhance.Contrast(out).enhance(1.08)
 
 
+def rarefy_cloak(cloak: Image.Image) -> Image.Image:
+    """Rare cape: gold tint + one thicken pass so t2 reads thicker than t0."""
+    if cloak.getbbox() is None:
+        return cloak
+    return goldify(thicken_cloak(cloak, passes=1))
+
+
+def rarefy_armor(im: Image.Image) -> Image.Image:
+    """Rare chest/legs: gold tint + light grow so t2 silhouette beats t0."""
+    if im.getbbox() is None:
+        return im
+    return goldify(thicken_cloak(im, passes=1))
+
+
+def thicken_cape_to_target(
+    cloak: Image.Image, target: int, max_passes: int = 6
+) -> Image.Image:
+    """Grow existing cape pixels until opaque count reaches target (or cap)."""
+    out = cloak
+    for _ in range(max_passes):
+        if alpha_count(out) >= target:
+            break
+        out = thicken_cloak(out, passes=1)
+    return out
+
+
+def shift_layer(im: Image.Image, dx: int, dy: int) -> Image.Image:
+    """Translate overlay on the 128 canvas (transparent fill)."""
+    out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    out.paste(im, (dx, dy), im)
+    return out
+
+
 def sample_armor_colors(
     src: Image.Image,
     face: tuple[int, int, int],
@@ -626,7 +690,7 @@ def extract_bands(
                 continue
             dx = abs(x - cx)
             if family == "rogue" and is_rogue_cloak(rgb) and (
-                dx > bw * 0.28 or (y > mid_y - 10 and dx > bw * 0.20)
+                dx > bw * 0.18 or (y > mid_y - 14 and dx > bw * 0.12)
             ):
                 kp[x, y] = (r, g, b, a)
                 continue
@@ -802,33 +866,76 @@ def process_family(family: str) -> dict:
         body.save(ROOT / family / f"body_{anim}.png")
 
         chest, legs, cloak, hat, hands = extract_bands(src, face, box, family)
-        # Cape: extract only — never draw a trapezoid.
-        if alpha_count(cloak) < 40:
+        if alpha_count(cloak) < 20:
             cloak = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
 
-        def save_set(set_id: str, im: Image.Image) -> None:
+        # Resolve cape. Rogue/mage: thicken for LIVE only to a stable target.
+        # Never write thickened output into _authored (authored stays hand input).
+        if family in ("rogue", "mage"):
+            if family == "rogue":
+                target = 3300 if anim == "idle" else (2400 if anim == "walk" else 1900)
+            else:
+                target = 3200 if anim == "idle" else (2600 if anim == "walk" else 2300)
+            extract_ok = alpha_count(cloak) >= 20
+            base = cloak if extract_ok else Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+            auth_p = authored_path(family, "cloak_t0", anim)
+            if auth_p is not None:
+                authored = load_authored(auth_p)
+                ac = alpha_count(authored)
+                if ac >= 20:
+                    # Prefer authored. Only fall back to extract when authored ran away.
+                    if ac > target + 800 and extract_ok:
+                        base = cloak
+                    else:
+                        base = authored
+            if alpha_count(base) >= 20:
+                cloak0 = (
+                    thicken_cape_to_target(base, target=target, max_passes=6)
+                    if alpha_count(base) < target
+                    else base.copy()
+                )
+            else:
+                cloak0 = base
+            # Mage attack extract is empty — authored often matches walk. Sway
+            # live attack so the cape moves with the cast/swing pose.
+            if family == "mage" and anim == "attack" and alpha_count(cloak0) >= 20:
+                cloak0 = shift_layer(cloak0, -3, 2)
+        else:
+            cloak0 = maybe_authored(family, "cloak_t0", anim, cloak)
+
+        def save_set(set_id: str, im: Image.Image) -> Image.Image:
             final = maybe_authored(family, set_id, anim, im)
             if set_id.startswith("helm_"):
                 final = register_helm_to_head(final, src, face, box)
             final.save(gear / f"{set_id}_{anim}.png")
+            return final
 
-        save_set("chest_t0", chest)
-        save_set("chest_t2", goldify(chest))
-        save_set("legs_t0", legs)
-        save_set("legs_t2", goldify(legs))
-        save_set("cloak_t0", cloak)
-        save_set("cloak_t2", goldify(cloak) if cloak.getbbox() else cloak)
+        # t2 must rarefy the *resolved* t0 (authored wins), not the raw extract.
+        chest0 = save_set("chest_t0", chest)
+        save_set("chest_t2", rarefy_armor(chest0))
+        legs0 = save_set("legs_t0", legs)
+        save_set("legs_t2", rarefy_armor(legs0))
+        # Cape t0 already resolved/thickened above — write live only.
+        cloak0.save(gear / f"cloak_t0_{anim}.png")
+        cloak2 = rarefy_cloak(cloak0) if cloak0.getbbox() else cloak0
+        auth_t2 = authored_path(family, "cloak_t2", anim)
+        if auth_t2 is not None:
+            loaded_t2 = load_authored(auth_t2)
+            if alpha_count(loaded_t2) > alpha_count(cloak2) + 80:
+                cloak2 = loaded_t2
+        cloak2.save(gear / f"cloak_t2_{anim}.png")
         save_set("helm_t0", make_helm(family, False, hat, src, face, box))
         save_set("helm_t2", make_helm(family, True, hat, src, face, box))
-        save_set("hands_t0", hands)
+        hands0 = save_set("hands_t0", hands)
+        save_set("hands_t2", rarefy_armor(hands0) if hands0.getbbox() else hands0)
 
-        out[anim] = (box, face, src, body, chest, legs, cloak, hands, hat)
+        out[anim] = (box, face, src, body, chest0, legs0, cloak0, hands0, hat)
         print(
             "ok",
             family,
             anim,
             "cloak_px",
-            alpha_count(cloak),
+            alpha_count(cloak0),
             "hat_px",
             alpha_count(hat),
         )

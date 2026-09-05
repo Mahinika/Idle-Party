@@ -2,10 +2,10 @@ import 'dart:math';
 
 /// Farm Rift — timed kill challenge with mid-run gold and gear (party max level).
 ///
-/// Kill [killTarget] enemies before [parTimeMs] expires. Success unlocks the
-/// next tier (+2 if finished with ≥25% time remaining). Not ranked on Play
-/// Games (see [GreaterRift] for prestige boards). SpatialCombat stays the
-/// fight authority — this module is rules + payout only.
+/// Runs in **Stormwake Hollow** (not Crystal Spire). Kill [killTarget] enemies
+/// before [parTimeMs] expires. Success unlocks the next tier (+2 if finished
+/// with ≥25% time remaining). Not ranked on Play Games (see [GreaterRift]).
+/// SpatialCombat stays the fight authority — this module is rules + payout only.
 abstract final class Rift {
   static const int maxTier = 20;
   static const int minTier = 1;
@@ -13,8 +13,8 @@ abstract final class Rift {
   /// Same endgame gate as KEY / Gauntlet.
   static const int minAscension = 20;
 
-  /// Zone art for rift chambers.
-  static const String dungeonId = 'crystal';
+  /// Zone art — Stormwake (not Crystal Spire; that is Infinity Gauntlet).
+  static const String dungeonId = 'storm';
 
   static int clampTier(int tier) => tier.clamp(minTier, maxTier);
 
@@ -62,8 +62,17 @@ abstract final class Rift {
     final totalSec = max(0, (ms / 1000).floor());
     final m = totalSec ~/ 60;
     final s = totalSec % 60;
-    return '$m:${s.toString().padLeft(2, '0')}';
+    // Fixed width so dungeon HUD chips do not reflow/scale as minutes tick.
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
+
+  /// Short in-dungeon chip (no timer — timer lives on the place line).
+  static String hudChipLabel({
+    required int kills,
+    required int target,
+    required int tier,
+  }) =>
+      'FARM R$tier · $kills/$target';
 
   static String progressLabel({
     required int kills,
@@ -72,7 +81,7 @@ abstract final class Rift {
     required int parMs,
     required int tier,
   }) =>
-      'R$tier · $kills/$target · ${formatTimer(timerMs)}/${formatTimer(parMs)}';
+      'FARM R$tier · $kills/$target · ${formatTimer(timerMs)}/${formatTimer(parMs)}';
 }
 
 /// One-time essence at Rift tier milestones.

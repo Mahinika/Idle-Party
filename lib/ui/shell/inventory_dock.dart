@@ -10,6 +10,7 @@ import '../../models/loot.dart';
 import '../../models/proficiency.dart';
 import '../character_equip_panel.dart';
 import '../equipment_icon.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -156,16 +157,18 @@ class _InventoryDockState extends State<InventoryDock>
   }
 
   /// One-tap "wear the better stuff" — says how many so the bag is not a chore.
-  Widget _autoEquipButton() {
+  Widget _autoEquipButton({bool dense = false, bool expanded = true}) {
     final upgrades = MenuAlerts.bagUpgradeCount(state);
-    return KenneyButton(
+    return GameButton(
       label: upgrades > 0 ? 'EQUIP $upgrades' : 'AUTO EQUIP',
       tip: upgrades > 0
           ? 'One tap: equip all $upgrades upgrades now'
           : 'No upgrades waiting — scans bag when new gear drops',
       onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
-      primary: upgrades > 0,
-      style: upgrades > 0 ? KenneyButtonStyle.brown : KenneyButtonStyle.grey,
+      primary: upgrades > 0 && !dense,
+      dense: dense,
+      expanded: expanded,
+      style: upgrades > 0 ? GameButtonStyle.brown : GameButtonStyle.grey,
     );
   }
 
@@ -184,21 +187,35 @@ class _InventoryDockState extends State<InventoryDock>
 
     Widget actions() {
       final upgrades = MenuAlerts.bagUpgradeCount(state);
-      if (upgrades > 0) {
-        return _autoEquipButton();
-      }
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      final primary = upgrades > 0
+          ? _autoEquipButton(dense: true, expanded: true)
+          : GameButton(
+              label: worn != null ? 'UNEQUIP' : 'EQUIP',
+              onPressed: worn != null
+                  ? () => onUnequip(worn.slot)
+                  : (inStash ? onEquip : null),
+              style: worn != null
+                  ? GameButtonStyle.grey
+                  : GameButtonStyle.brown,
+              primary: false,
+              dense: true,
+              expanded: true,
+            );
+      // One row: primary action + BAG shortcut — stacked full-width buttons
+      // made the phone sheet feel cramped under the doll.
+      return Row(
         children: [
-          KenneyButton(
-            label: worn != null ? 'UNEQUIP' : 'EQUIP',
-            onPressed: worn != null
-                ? () => onUnequip(worn.slot)
-                : (inStash ? onEquip : null),
-            style: worn != null
-                ? KenneyButtonStyle.grey
-                : KenneyButtonStyle.brown,
-            primary: inStash,
+          Expanded(flex: 3, child: primary),
+          const SizedBox(width: 6),
+          Expanded(
+            flex: 2,
+            child: GameButton(
+              label: 'OPEN BAG',
+              onPressed: () => widget.onPanelChanged(GearPanel.bag),
+              style: GameButtonStyle.grey,
+              dense: true,
+              expanded: true,
+            ),
           ),
         ],
       );
@@ -224,14 +241,8 @@ class _InventoryDockState extends State<InventoryDock>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(child: SingleChildScrollView(child: sheet())),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         actions(),
-        const SizedBox(height: 6),
-        KenneyButton(
-          label: 'OPEN BAG',
-          onPressed: () => widget.onPanelChanged(GearPanel.bag),
-          style: KenneyButtonStyle.grey,
-        ),
       ],
     );
   }
@@ -378,16 +389,14 @@ class _InventoryDockState extends State<InventoryDock>
                 )
               : LayoutBuilder(
                   builder: (context, gridConstraints) {
-                    final phone =
-                        GameTheme.isPhoneWidth(context) ||
-                        gridConstraints.maxWidth <= 430;
                     return GridView.builder(
                       itemCount: filteredSlots.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: phone ? 3 : 4,
-                        mainAxisSpacing: phone ? 8 : 6,
-                        crossAxisSpacing: phone ? 8 : 6,
-                        mainAxisExtent: phone ? 72 : 60,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        mainAxisExtent: 72,
                       ),
                       itemBuilder: (context, index) {
                         final item = filteredSlots[index];
@@ -421,23 +430,23 @@ class _InventoryDockState extends State<InventoryDock>
                 ),
         ),
         const SizedBox(height: 4),
-        KenneyButton(
+        GameButton(
           label: 'CLEAN BAG',
           tip: 'Merge junk pairs → sell gold → scrap essence (BiS kept)',
           onPressed: state.gearStash.isEmpty ? null : onCleanBag,
-          style: KenneyButtonStyle.grey,
+          style: GameButtonStyle.grey,
         ),
         const SizedBox(height: 4),
-        KenneyButton(
+        GameButton(
           label: 'AUTO-SELL FILTERS',
           tip: 'When bag is near full: sell gold vs scrap essence rules',
           onPressed: onOpenFilters,
-          style: KenneyButtonStyle.grey,
+          style: GameButtonStyle.grey,
         ),
         const SizedBox(height: 4),
         _autoEquipButton(),
         const SizedBox(height: 4),
-        KenneyButton(
+        GameButton(
           label: selectedId == null ? 'AUTO MERGE' : 'ADD TO MERGE',
           tip: selectedId == null
               ? 'Merge junk pairs — skips BiS and bag upgrades'
@@ -447,7 +456,7 @@ class _InventoryDockState extends State<InventoryDock>
                     ? null
                     : () => onPutCombine(selectedId!))
               : (state.gearStash.length < 2 ? null : onAutoMerge),
-          style: KenneyButtonStyle.grey,
+          style: GameButtonStyle.grey,
         ),
         if (selectedId != null) ...[
           const SizedBox(height: 4),
@@ -640,19 +649,19 @@ class _InventoryDockState extends State<InventoryDock>
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 8),
-          KenneyButton(
+          GameButton(
             label: goldOk
                 ? 'MERGE  $cost g'
                 : (canCombine ? 'MERGE  $cost g' : 'MERGE'),
             onPressed: goldOk ? onCombine : null,
-            style: KenneyButtonStyle.red,
+            style: GameButtonStyle.red,
             primary: true,
           ),
           const SizedBox(height: 6),
-          KenneyButton(
+          GameButton(
             label: 'AUTO MERGE',
             onPressed: state.gearStash.length < 2 ? null : onAutoMerge,
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
           ),
           const SizedBox(height: 4),
           Text(
@@ -662,15 +671,15 @@ class _InventoryDockState extends State<InventoryDock>
           ),
           if (primary == null || secondary == null) ...[
             const SizedBox(height: 6),
-            KenneyButton(
+            GameButton(
               label: 'OPEN BAG',
               onPressed: () => widget.onPanelChanged(GearPanel.bag),
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
             ),
           ],
           const SizedBox(height: 10),
           Text(
-            'Flask: party HUD · Pets: POWER → Essence · God Hand: POWER → Gold KEEP · Relics: POWER → Relics',
+            'Flask: party HUD · Pets: POWER → Essence · God Hand: ESSENCE → KEEP · Relics: POWER → Relics',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
@@ -800,7 +809,7 @@ class _InventoryDockState extends State<InventoryDock>
             offset: const Offset(0, -4),
           ),
           const BoxShadow(
-            color: Color(0x88000000),
+            color: GameTheme.shadowMid,
             blurRadius: 16,
             offset: Offset(0, -6),
           ),
@@ -1031,8 +1040,8 @@ class _BagSlot extends StatelessWidget {
             clipBehavior: Clip.hardEdge,
             child: item == null
                 ? Center(
-                    child: Icon(
-                      Icons.add,
+                    child: GameIcon.glyph(
+                      UiGlyph.add,
                       size: 14,
                       color: GameTheme.border.withValues(alpha: 0.55),
                     ),
@@ -1092,7 +1101,7 @@ class _BagSlot extends StatelessWidget {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xEE1E4030),
+                              color: GameTheme.mossChip,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -1114,7 +1123,7 @@ class _BagSlot extends StatelessWidget {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xEE1E4030),
+                              color: GameTheme.mossChip,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -1232,9 +1241,10 @@ class _CombineSlot extends StatelessWidget {
                   ],
                 ),
               ),
-              Text(
-                '✕',
-                style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+              GameIcon.glyph(
+                UiGlyph.close,
+                size: 12,
+                color: GameTheme.parchmentDim,
               ),
             ] else
               Expanded(

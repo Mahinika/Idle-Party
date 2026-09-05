@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -46,10 +47,45 @@ void main() {
       'sword_t0',
       'sword_thunderfury',
       'sword_warglaive',
+      'sword_runebound',
     ]);
-    expect(EquipmentModelCatalog.variantsFor('staff'), ['staff_t0']);
+    expect(EquipmentModelCatalog.variantsFor('staff'), [
+      'staff_t0',
+      'staff_frostfire',
+      'staff_nethercore',
+    ]);
+    expect(EquipmentModelCatalog.variantsFor('bow'), [
+      'bow_t0',
+      'bow_eagle',
+      'bow_windpierce',
+    ]);
+    expect(EquipmentModelCatalog.variantsFor('axe'), [
+      'axe_t0',
+      'axe_goreblade',
+      'axe_bloodhowl',
+    ]);
+    expect(EquipmentModelCatalog.variantsFor('mace'), [
+      'mace_t0',
+      'mace_lightbringer',
+      'mace_dawnbreak',
+    ]);
+    expect(EquipmentModelCatalog.variantsFor('dagger'), [
+      'dagger_t0',
+      'dagger_shadowfang',
+      'dagger_nightbite',
+    ]);
+    expect(EquipmentModelCatalog.variantsFor('shield'), [
+      'shield_t0',
+      'shield_aegis',
+      'shield_ironwall',
+    ]);
+    expect(EquipmentModelCatalog.variantsFor('frill'), [
+      'frill_t0',
+      'frill_prism',
+      'frill_soulcodex',
+    ]);
     expect(EquipmentModelCatalog.variantsFor('helm'), ['helm_t0', 'helm_t2']);
-    expect(EquipmentModelCatalog.variantsFor('hands'), ['hands_t0']);
+    expect(EquipmentModelCatalog.variantsFor('hands'), ['hands_t0', 'hands_t2']);
     for (final base in EquipmentModelCatalog.familyBases) {
       expect(
         EquipmentModelCatalog.pickVariant('${base}_t0', Random(1)),
@@ -65,6 +101,125 @@ void main() {
       anim: HeroAnimKind.idle,
     );
     expect(path, 'assets/custom/char/warrior/gear/helm_t0_idle.png');
+  });
+
+  test('rogue mail armor uses derived mail overlays', () {
+    final path = OwnedGearAssets.pathFor(
+      visualSetId: 'chest_t0',
+      family: BodyFamily.rogue,
+      anim: HeroAnimKind.idle,
+      armorType: ArmorType.mail,
+    );
+    expect(path, 'assets/custom/char/rogue/gear/chest_mail_t0_idle.png');
+    final leather = OwnedGearAssets.pathFor(
+      visualSetId: 'chest_t0',
+      family: BodyFamily.rogue,
+      anim: HeroAnimKind.idle,
+      armorType: ArmorType.leather,
+    );
+    expect(leather, 'assets/custom/char/rogue/gear/chest_t0_idle.png');
+  });
+
+  test('healer plate armor uses derived plate overlays', () {
+    final path = OwnedGearAssets.pathFor(
+      visualSetId: 'chest_t2',
+      family: BodyFamily.healer,
+      anim: HeroAnimKind.idle,
+      armorType: ArmorType.plate,
+    );
+    expect(path, 'assets/custom/char/healer/gear/chest_plate_t2_idle.png');
+    final cloth = OwnedGearAssets.pathFor(
+      visualSetId: 'chest_t2',
+      family: BodyFamily.healer,
+      anim: HeroAnimKind.idle,
+      armorType: ArmorType.cloth,
+    );
+    expect(cloth, 'assets/custom/char/healer/gear/chest_t2_idle.png');
+  });
+
+  test('ownedAssetForItem passes armorType into mail/plate stems', () {
+    final mailChest = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.common,
+      battleNumber: 1,
+      bias: HeroRole.rogue,
+    ).copyWith(
+      visualSetId: 'chest_t0',
+      armorType: ArmorType.mail,
+      affinity: 'rogue',
+    );
+    expect(
+      EquipmentVisualResolver.ownedAssetForItem(
+        mailChest,
+        family: BodyFamily.rogue,
+        anim: HeroAnimKind.idle,
+      ),
+      'assets/custom/char/rogue/gear/chest_mail_t0_idle.png',
+    );
+    final plateHelm = GameLogic.createEquipment(
+      slot: EquipmentSlot.head,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.healer,
+    ).copyWith(
+      visualSetId: 'helm_t2',
+      armorType: ArmorType.plate,
+      affinity: 'healer',
+    );
+    expect(
+      EquipmentVisualResolver.ownedAssetForItem(
+        plateHelm,
+        family: BodyFamily.healer,
+        anim: HeroAnimKind.idle,
+      ),
+      'assets/custom/char/healer/gear/helm_plate_t2_idle.png',
+    );
+  });
+
+  test('ownedIconPathFor matches doll resolve when visualSetId is missing', () {
+    final shield = GameLogic.createEquipment(
+      slot: EquipmentSlot.offHand,
+      rarity: LootRarity.uncommon,
+      battleNumber: 4,
+      bias: HeroRole.warrior,
+    ).copyWith(clearVisualSetId: true, offHandKind: OffHandKind.shield);
+    expect(
+      EquipmentVisualResolver.ownedIconPathFor(
+        shield,
+        family: BodyFamily.warrior,
+      ),
+      'assets/custom/char/gear/shield_t0_icon.png',
+    );
+    final helm = GameLogic.createEquipment(
+      slot: EquipmentSlot.head,
+      rarity: LootRarity.common,
+      battleNumber: 2,
+      bias: HeroRole.rogue,
+    ).copyWith(clearVisualSetId: true);
+    expect(
+      EquipmentVisualResolver.ownedIconPathFor(
+        helm,
+        family: BodyFamily.rogue,
+      ),
+      'assets/custom/char/rogue/gear/helm_t0_icon.png',
+    );
+  });
+
+  test('mail boots icon uses material foot-band crop', () {
+    final boots = GameLogic.createEquipment(
+      slot: EquipmentSlot.boots,
+      rarity: LootRarity.common,
+      battleNumber: 1,
+      bias: HeroRole.rogue,
+    ).copyWith(
+      visualSetId: 'legs_t0',
+      armorType: ArmorType.mail,
+      affinity: 'rogue',
+    );
+    expect(
+      OwnedGearAssets.iconPathFor(boots, family: BodyFamily.rogue),
+      'assets/custom/char/rogue/gear/boots_mail_t0_icon.png',
+    );
   });
 
   test('legacy named id still resolves head layer via base-token', () {
@@ -265,17 +420,20 @@ void main() {
       );
     });
 
-    test('iconPathFor skips hands overlays', () {
+    test('iconPathFor uses hands overlay crop when present', () {
       final gloves = EquipmentItem(
         id: 'g',
         name: 'Gloves',
         slot: EquipmentSlot.hands,
         rarity: LootRarity.common,
         itemLevel: 5,
-        visualSetId: 'hands_gauntlets',
+        visualSetId: 'hands_t0',
         affinity: 'warrior',
       );
-      expect(OwnedGearAssets.iconPathFor(gloves), isNull);
+      expect(
+        OwnedGearAssets.iconPathFor(gloves),
+        'assets/custom/char/warrior/gear/hands_t0_icon.png',
+      );
     });
 
     test('staff_t0 is shared set and returns path', () {
@@ -379,5 +537,17 @@ void main() {
       ),
       isNull,
     );
+  });
+
+  test('boots BAG icon uses foot-band crop not full legs', () {
+    final boots = GameLogic.createEquipment(
+      slot: EquipmentSlot.boots,
+      rarity: LootRarity.common,
+      battleNumber: 3,
+      bias: HeroRole.warrior,
+    ).copyWith(visualSetId: 'legs_t0');
+    final path = OwnedGearAssets.iconPathFor(boots, family: BodyFamily.warrior);
+    expect(path, 'assets/custom/char/warrior/gear/boots_t0_icon.png');
+    expect(File(path!).existsSync(), isTrue);
   });
 }

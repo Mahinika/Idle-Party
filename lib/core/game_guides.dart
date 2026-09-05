@@ -31,8 +31,8 @@ abstract final class GameGuides {
           '• Watch them clear rooms. Tap the fight when you want to help.\n'
           '• TODAY on the hub always names the next job — start there.\n'
           '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (tracks + '
-          'market), SHOP (real-money store — coming soon), ESSENCE (tracks / '
-          'essence shop / relics / pets), MORE. QUESTS and Craft live as rows '
+          'market), SHOP (real-money convenience store), ESSENCE (tracks / '
+          'essence / prestige / relics / pets), MORE. QUESTS and Craft live as rows '
           'inside MORE. When the party is max level, KEY joins the hub bar as a '
           'sixth tab after MORE — SHOP stays. In a dungeon the sixth slot is '
           'LEAVE instead of KEY.\n'
@@ -182,7 +182,7 @@ abstract final class GameGuides {
           '• Check RESULT preview (rarity, iLvl, SCORE jump) and gold cost, then MERGE.\n'
           '• AUTO MERGE: repeatedly merges junk pairs of the same slot '
           '(skips BiS / clear upgrades) while you can afford the cost.\n'
-          '• Combinator Charm in ESSENCE → SHOP lowers MERGE gold (−3g per luck).\n'
+          '• Combinator Charm in ESSENCE → KEEP (permanent buys) lowers MERGE gold (−3g per luck).\n'
           '• Both inputs are consumed.',
     ),
     GuideTopic(
@@ -213,7 +213,7 @@ abstract final class GameGuides {
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
           'relative upgrade.\n'
           '• MARKET: flasks, bandages, traveling gear listings.\n'
-          '• Essence keeps (Blessing, God Hand, 5th slot) live on ESSENCE → TRACKS (KEEP).\n'
+          '• Essence keeps (Blessing, God Hand, 5th slot) live on ESSENCE → KEEP.\n'
           '• Ascend from the Hub when ready (not from Gold).',
     ),
     GuideTopic(
@@ -240,24 +240,16 @@ abstract final class GameGuides {
       id: 'sanctuary',
       title: 'ESSENCE',
       body:
-          'ESSENCE tab. Spend essence on permanent tracks, shop, relics, and pets.\n\n'
-          '• Essence unlocks after your first Ascend or when you earn essence.\n'
-          '• TRACKS: hub gold/min, Gold Find, War Altar, Life Well, Lore Font, and KEEP.\n'
-          '• Hub gold/min ticks while you sit at the keep — slower than a dungeon '
-          'run, but overnight still buys Gold. Gold Find raises that rate '
-          '(shown on the hub and on Essence).\n'
-          '• Tracks level infinitely — cost scales with level.\n'
-          '• Optional prestige from Lv12: reset to Lv0 (upgrades cheap again). '
-          'You keep a small forever bonus '
-          '(+3% gold / +1 ATK / +12 HP / +2% XP) and get 25+level essence back. '
-          'The big level bonus is gone until you buy levels again.\n'
-          '• KEEP (on TRACKS): Ascend Blessing readout, God Hand damage/CD/style, '
-          'optional AL20 REBORN, and the 5th party slot (AL2 · 80e).\n'
-          '• SHOP: permanent essence deals (AL-gated).\n'
-          '• RELICS: party auras (ATK / DEF / HP / loot).\n'
-          '• PETS: Beast Pen when unlocked.\n'
-          '• Survives Ascend (meta progress).\n'
-          '• Invest early — sanctuary compounds over many runs.',
+          'ESSENCE tab. Four places: TRACKS, KEEP, RELICS, PETS.\n\n'
+          '• TRACKS: Gold Find, War Altar, Life Well, Lore Font — spend essence '
+          'on lasting rates/power. Optional reset from Lv12 keeps a small forever bonus.\n'
+          '• KEEP: God Hand damage/CD/style, Ascend Blessing readout, permanent QoL buys '
+          '(AL-gated), constellation at AL20, optional REBORN. '
+          'Not the bottom-tab SHOP (real-money convenience).\n'
+          '• RELICS: party auras (ATK / DEF / STA / loot).\n'
+          '• PETS: hatch and level pets when unlocked.\n'
+          '• Everything here survives Ascend.\n'
+          '• Invest early — tracks compound over many runs.',
     ),
     GuideTopic(
       id: 'gauntlet',
@@ -311,16 +303,15 @@ abstract final class GameGuides {
       title: 'GOLD MARKET',
       body:
           'GOLD → MARKET.\n\n'
-          '• GEAR LISTINGS: browse traveling auctions when drops miss your slot '
-          '(filter HEAD / hero, UPGRADE badge when you can afford it). Listings refresh every 6 hours '
-          'or pay gold to reroll. Gear bought here is for this run only.\n'
+          '• GEAR: opens on Upgrades. Tap a row to buy. Switch to All gear if you want '
+          'the full stock. Free refresh every 6 hours, or pay gold to reroll.\n'
           '• Hub TODAY can chase Market when an affordable listing beats your gear.\n'
           '• Wipe advice may point at GOLD when listings beat forge tracks for the same gap.\n'
           '• Buy flasks and bandages with gold.\n'
           '• Clear a full bag with BAG → CLEAN BAG, MERGE, or SETTINGS auto-sell / '
           'auto-disassemble — there is no separate Sell junk button.\n'
           '• Keep at least one flask for tough floors and bosses.\n'
-          '• Bottom-tab SHOP is the real-money store (coming soon) — not this market.',
+          '• Bottom-tab SHOP is the real-money store (cheap boosts / ad-free) — not this market.',
     ),
     GuideTopic(
       id: 'pets',
@@ -339,17 +330,16 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'prestige_shop',
-      title: 'ESSENCE SHOP',
+      title: 'KEEP BUYS',
       body:
-          'ESSENCE → SHOP (AL-gated).\n\n'
+          'ESSENCE → KEEP · Permanent buys (AL-gated).\n\n'
           '• Spend essence on stash slots, cheaper MERGE gold, pet roster, '
-          'cheaper market flasks, higher auto-sell/scrap ceilings, more Welcome '
+          'cheaper market flasks, higher auto-sell / auto-disassemble ceilings, more Welcome '
           'Back rows, Dawn Tithe (vault + Daily Run), and more.\n'
-          '• God Hand cooldown upgrades also live on ESSENCE → TRACKS (KEEP) — same spend, '
-          'two doors into one upgrade.\n'
+          '• God Hand cooldown upgrades live only under God Hand on KEEP (one door).\n'
           '• Purchases survive Ascend.\n'
           '• Unlock higher offerings as Ascension Level rises.\n'
-          '• Bottom-tab SHOP is real-money store (coming soon) — not this essence shop.',
+          '• Bottom-tab SHOP is real-money store (cheap boosts / ad-free) — not these essence buys.',
     ),
     GuideTopic(
       id: 'jobs',

@@ -6,10 +6,9 @@ import '../../core/ad_boost.dart';
 import '../../core/ad_rewarded.dart';
 import '../../core/game_director.dart';
 import '../../core/game_state.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
-import '../kenney_assets.dart';
 import '../kenney_button.dart';
-import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 
@@ -61,10 +60,7 @@ class HubPowerupsCard extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        KenneySprite(
-                          asset: KenneyAssets.potionBlue,
-                          size: 18,
-                        ),
+                        GameIcon.asset(UiIcon.flaskBlue, size: 18),
                         const SizedBox(width: 6),
                         Text(
                           'POWERUPS',
@@ -185,11 +181,11 @@ Future<void> openPowerupsSheet(
                         const SizedBox(height: 8),
                       ],
                       if (realAds)
-                        KenneyButton(
+                        GameButton(
                           label: capped
                               ? 'FULL · WAIT FOR BURN'
                               : 'WATCH AD · +${AdBoost.hoursPerAd} HOURS',
-                          style: KenneyButtonStyle.brown,
+                          style: GameButtonStyle.brown,
                           primary: true,
                           onPressed: capped
                               ? null
@@ -208,11 +204,11 @@ Future<void> openPowerupsSheet(
                           ),
                         ),
                         const SizedBox(height: 8),
-                        KenneyButton(
+                        GameButton(
                           label: capped
                               ? 'FULL · WAIT FOR BURN'
                               : 'PREVIEW +${AdBoost.hoursPerAd} HOURS',
-                          style: KenneyButtonStyle.brown,
+                          style: GameButtonStyle.brown,
                           primary: true,
                           onPressed: capped
                               ? null
@@ -220,9 +216,9 @@ Future<void> openPowerupsSheet(
                         ),
                       ],
                       const SizedBox(height: 8),
-                      KenneyButton(
+                      GameButton(
                         label: 'CLOSE',
-                        style: KenneyButtonStyle.grey,
+                        style: GameButtonStyle.grey,
                         onPressed: () => Navigator.of(ctx).pop(),
                       ),
                     ],

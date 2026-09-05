@@ -9,7 +9,6 @@ import '../core/game_state.dart';
 import '../core/gold_income.dart';
 import '../core/hub_chase.dart';
 import '../core/keystone.dart';
-import '../core/menu_alerts.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_def.dart';
 import 'confirm_dialogs.dart';
@@ -20,7 +19,6 @@ import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'meta/offline_welcome.dart';
 import '../core/menu_router.dart';
-import 'shell/app_bottom_bar.dart';
 import 'shell/discord_thanks_overlay.dart';
 import 'shell/whats_new_overlay.dart';
 import 'hub/hub_header.dart';
@@ -65,25 +63,6 @@ class _HubScreenState extends State<HubScreen>
   GameDirector get director => widget.director;
   MenuRouter get router => widget.router;
   GameState get state => director.state;
-
-  /// Unlocked uncleared frontier zone (World Path NEXT), if any.
-  // Kept for map / tests; selection no longer auto-snaps CLEAR → NEXT (FEEL 078).
-  // ignore: unused_element
-  static String? frontierDungeonId(GameState state) {
-    final highest = state.highestDungeonCleared;
-    for (final d in DungeonCatalog.all) {
-      final unlocked = DungeonCatalog.isUnlocked(
-        d.id,
-        GameLogic.partyMeanLevel(state),
-        highest,
-      );
-      final cleared = highest >= d.number;
-      if (unlocked && !cleared && d.number == highest + 1) {
-        return d.id;
-      }
-    }
-    return null;
-  }
 
   /// Zone the night's chase wants on the map (KEY), else null.
   String? _chaseMapZoneId() {
@@ -253,7 +232,7 @@ class _HubScreenState extends State<HubScreen>
         (hubChaseOwnsEndgameRow(chase.kind) ||
             (chaseActionLabel.contains('GAUNTLET')) ||
             (chaseActionLabel.contains('GREATER RIFT')) ||
-            chaseActionLabel == '◈ RIFT');
+            chaseActionLabel == 'RIFT');
     final readyPrimary =
         ready &&
         onAction != null &&
@@ -264,9 +243,9 @@ class _HubScreenState extends State<HubScreen>
             ? _keyLevelFromLabel(chaseActionLabel!)
             : null);
     final enterLabel = keyFromChase != null
-        ? '🔑 ENTER KEY +$keyFromChase'
+        ? 'ENTER KEY +$keyFromChase'
         : (chase.kind == HubChaseKind.keystone
-            ? '🔑 ENTER KEY +${chase.keyLevel ?? state.hardmodeLevel}'
+            ? 'ENTER KEY +${chase.keyLevel ?? state.hardmodeLevel}'
             : (chase.kind == HubChaseKind.dailyRun
                 ? 'DAILY RUN'
                 : 'ENTER DUNGEON'));
@@ -377,27 +356,27 @@ class _HubScreenState extends State<HubScreen>
             scale: 1.0 + (_torch.value * 0.012),
             child: child,
           ),
-          child: KenneyButton(
+          child: GameButton(
             label: primaryLabel,
             tip: chase.kind == HubChaseKind.keystone
                 ? 'Starts your preferred KEY on this zone'
                 : readyPrimary
                 ? 'TODAY — do this first'
                 : 'Enter the selected dungeon',
-            style: KenneyButtonStyle.brown,
+            style: GameButtonStyle.brown,
             primary: true,
             onPressed: primaryAction,
           ),
         ),
         if (secondaryLabel != null && secondaryAction != null) ...[
           const SizedBox(height: 4),
-          KenneyButton(
+          GameButton(
             label: secondaryLabel,
             tip: secondaryLabel.startsWith('ENTER') ||
                     secondaryLabel == 'DAILY RUN'
                 ? 'Farm the selected zone'
                 : 'Also available',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             onPressed: secondaryAction,
           ),
         ],
@@ -408,12 +387,12 @@ class _HubScreenState extends State<HubScreen>
           ),
         if (showMetaKeyLink) ...[
           const SizedBox(height: 4),
-          KenneyButton(
+          GameButton(
             label: state.hardmodeLevel <= 0
                 ? 'KEY DIAL · +0'
                 : 'KEY DIAL · +${state.hardmodeLevel}',
             tip: 'Open KEY for Soft/Hard/Brutal, Rifts, and boards',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             onPressed: () => router.open(MenuRoute.key),
           ),
         ],
@@ -475,7 +454,6 @@ class _HubScreenState extends State<HubScreen>
       state.highestDungeonCleared,
     );
     final short = GameTheme.isShortHeight(context);
-    final chase = HubChase.forState(state);
     final selectedDungeon = DungeonCatalog.byId(_selectedId);
 
     return Stack(
@@ -509,12 +487,7 @@ class _HubScreenState extends State<HubScreen>
                     children: [
                       Expanded(
                         child: Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            GameTheme.isPhoneWidth(context) ? 12 : 16,
-                            GameTheme.isPhoneWidth(context) ? 8 : 10,
-                            GameTheme.isPhoneWidth(context) ? 12 : 16,
-                            GameTheme.isPhoneWidth(context) ? 4 : 6,
-                          ),
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
@@ -530,8 +503,6 @@ class _HubScreenState extends State<HubScreen>
                                   willRank: state.willRankTitle,
                                   collectionScore: state.collectionScore,
                                   displayTitle: state.displayTitle,
-                                  zoneTrophies:
-                                      state.metaDepth.zoneTrophies.length,
                                   torch: 0.55 + (_torch.value * 0.45),
                                   onOpenSettings: () => router.open(
                                     MenuRoute.more,
@@ -631,18 +602,6 @@ class _HubScreenState extends State<HubScreen>
                             ],
                           ),
                         ),
-                      ),
-                      // Same nav row as the dungeon — same words, same place.
-                      AppBottomBar(
-                        alerts: MenuAlerts.forHub(
-                          state,
-                          chaseKind: chase.kind,
-                          urgency: chase.urgency,
-                        ),
-                        route: router.route,
-                        destinations: DestinationGraph.hub(state).destinations,
-                        showReason: chase.urgency != HubChaseUrgency.ready,
-                        onSelect: (dest) => router.toggle(dest),
                       ),
                     ],
                   ),

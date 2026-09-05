@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'custom_assets.dart';
+import '../assets/custom_assets.dart';
 import 'game_theme.dart';
 import 'kenney_sprite.dart';
 

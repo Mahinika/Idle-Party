@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/pet.dart';
 import 'package:idle_party/spatial/tile_map.dart';
-import 'package:idle_party/ui/custom_assets.dart';
-import 'package:idle_party/ui/kenney_assets.dart';
+import 'package:idle_party/assets/custom_assets.dart';
+import 'package:idle_party/assets/kenney_assets.dart';
 
 void main() {
   test('custom identity assets exist on disk', () {
@@ -84,8 +84,8 @@ void main() {
       CustomAssets.petCombatHunterBeast,
       CustomAssets.petCombatTotem,
       CustomAssets.petCombatSpiritWolf,
-      CustomAssets.ownedFamilyGear('warrior', 'helm_t0', 'idle'),
-      CustomAssets.ownedSharedGear('sword_t0', 'idle'),
+      'assets/custom/char/warrior/gear/helm_t0_idle.png',
+      'assets/custom/char/gear/sword_t0_idle.png',
     };
 
     for (final path in paths) {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/meta_systems.dart';
 import 'cave_atmosphere.dart';
-import 'custom_assets.dart';
+import '../assets/custom_assets.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
@@ -64,9 +64,9 @@ class PlayUpdateRequiredScreen extends StatelessWidget {
                     ),
                   ),
                   const Spacer(flex: 3),
-                  KenneyButton(
+                  GameButton(
                     label: updating ? 'OPENING…' : 'UPDATE',
-                    style: KenneyButtonStyle.brown,
+                    style: GameButtonStyle.brown,
                     primary: true,
                     onPressed: updating ? null : onUpdate,
                     tip: 'Update from Google Play',

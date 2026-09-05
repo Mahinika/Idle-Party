@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Shared Idle Party visual tokens — dark forge surfaces, crisp hierarchy.
+/// Shared Idle Party visual tokens. **Color literals live here** — other UI
+/// files should use these names (combat VFX may still paint raw hex).
 abstract final class GameTheme {
   // —— Surfaces (cooler charcoal with warm torch accents) ——————————————
   static const Color ink = Color(0xFF06080C);
@@ -75,6 +76,49 @@ abstract final class GameTheme {
   /// Dark ink for light Kenney button faces.
   static const Color onLight = Color(0xFF121820);
 
+  /// Drop shadows — use these instead of one-off `Color(0x88…)`.
+  static const Color shadow = Color(0x99000000);
+  static const Color shadowMid = Color(0x88000000);
+  static const Color shadowSoft = Color(0x66000000);
+  static const Color shadowFaint = Color(0x44000000);
+
+  /// Menu sheet surfaces (alpha baked so overlays stay `const`).
+  static const Color scrim = Color(0xE006080C);
+  static const Color card = Color(0xB8121820);
+  static const Color cardRaised = Color(0xCC1A2430);
+  static const Color sheet = Color(0xF0121820);
+  static const Color tooltipSheet = Color(0xF0140C08);
+
+  /// GameButton faces.
+  static const Color buttonBrownTop = Color(0xFF6B4E2E);
+  static const Color buttonBrownBottom = Color(0xFF3E2A18);
+  static const Color buttonGreyTop = Color(0xFF2A3340);
+  static const Color buttonGreyBottom = Color(0xFF171E28);
+  static const Color buttonRedTop = Color(0xFF9A4030);
+  static const Color buttonRedBottom = Color(0xFF5A2018);
+  static const Color buttonDisabledTop = Color(0xFF151A22);
+  static const Color buttonDisabledBottom = Color(0xFF0E1218);
+  static const Color buttonDisabledText = Color(0xFF5A6270);
+  static const Color buttonDisabledBorder = buttonGreyTop;
+
+  /// GEAR doll wash + bag UP/BEST chip.
+  static const Color dollGlow = Color(0x5540A090);
+  static const Color mossChip = Color(0xEE1E4030);
+
+  /// Dungeon stage dim when a menu or DPS meter sits on top.
+  static const Color hudDimSoft = Color(0x4414100C);
+  static const Color hudDim = Color(0x6614100C);
+
+  /// Combat HUD wells (party strip, target chip, DPS meter).
+  static const Color hudWell = Color(0xCC14110C);
+  static const Color hudWellBorder = Color(0x665A5040);
+  static const Color hudFlaskUrgent = Color(0xEE4A2010);
+  static const Color hudFlaskIdle = Color(0xDD2A1810);
+  static const Color hudRowSelected = Color(0x331C1812);
+
+  /// Tight HUD corners (not menu [radiusSm]).
+  static const double radiusHud = 4;
+
   /// Cross-platform comfort floor (Apple HIG / WCAG 2.5.5 AAA).
   static const double minTouch = 44;
 
@@ -87,8 +131,18 @@ abstract final class GameTheme {
   /// Gap between interactive clusters (Material ≥8dp).
   static const double clusterGap = 8;
 
-  /// Bottom nav chrome height (minTouch + label padding + finger comfort).
-  static const double bottomNavHeight = minTouch + 18;
+  /// Bottom nav chrome height (minTouch + tight label pad).
+  /// Dense so GEAR / dungeon keep room above the bar.
+  static const double bottomNavHeight = minTouch + 8;
+
+  // —— Bottom nav slot fills (TT2-style color blocks) ————————————————
+  static const Color navGear = Color(0xFF7A342C);
+  static const Color navGold = Color(0xFF7A5528);
+  static const Color navShop = Color(0xFF2E5578);
+  static const Color navEssence = Color(0xFF3A4A62);
+  static const Color navKey = Color(0xFF6A4420);
+  static const Color navMore = Color(0xFF334050);
+  static const Color navLeave = Color(0xFF8A3830);
 
   /// Clearance above bottom nav for floating combat HUD.
   static const double hudAboveNav = clusterGap + 6;
@@ -120,12 +174,14 @@ abstract final class GameTheme {
     return MediaQuery.sizeOf(context).height < 720;
   }
 
-  /// Bottom inset for [Positioned] combat HUD inside the stage stack
-  /// (above the bottom nav, with Material-friendly gap).
+  /// Bottom inset for [Positioned] combat HUD inside the dungeon stage.
+  /// Nav floats over the map in dungeon — reserve bar + home-indicator height.
   static double combatHudBottom(BuildContext context) {
     final scale = MediaQuery.textScalerOf(context).scale(1.0);
-    // Stage [Expanded] already sits above the nav; only need cluster gap.
-    return hudAboveNav + (scale > 1.05 ? 4.0 : 0.0);
+    final gap = hudAboveNav + (scale > 1.05 ? 4.0 : 0.0);
+    final inset = MediaQuery.paddingOf(context).bottom;
+    // Tip line above tabs (~14) + tab row + OS inset.
+    return gap + bottomNavHeight + inset + 14;
   }
 
   /// Side inset for corner HUD.
@@ -169,7 +225,7 @@ abstract final class GameTheme {
         color: color,
         height: height,
         shadows: const [
-          Shadow(color: Color(0x99000000), offset: Offset(1, 1), blurRadius: 0),
+          Shadow(color: shadow, offset: Offset(1, 1), blurRadius: 0),
         ],
       ),
     );

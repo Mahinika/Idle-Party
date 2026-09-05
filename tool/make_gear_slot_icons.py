@@ -10,9 +10,10 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(r"d:\Projects\Personal\idle party\Idle-Party\assets\custom\char")
-MIN_OPAQUE = 80
+MIN_OPAQUE = 40
 ICON = 64
-SKIP_STEMS = {"hands"}  # gloves are tiny wrist pixels — Kenney reads better
+# Hands are sparse wrist pixels — still crop when enough opaque remains.
+HANDS_MIN_OPAQUE = 24
 
 
 def opaque_count(im: Image.Image) -> int:
@@ -20,12 +21,12 @@ def opaque_count(im: Image.Image) -> int:
     return sum(1 for p in a.getdata() if p > 24)
 
 
-def make_icon(im: Image.Image) -> Image.Image | None:
+def make_icon(im: Image.Image, *, min_opaque: int = MIN_OPAQUE) -> Image.Image | None:
     bbox = im.getbbox()
     if bbox is None:
         return None
     crop = im.crop(bbox)
-    if opaque_count(crop) < MIN_OPAQUE:
+    if opaque_count(crop) < min_opaque:
         return None
     w, h = crop.size
     side = max(w, h) + 6
@@ -34,26 +35,42 @@ def make_icon(im: Image.Image) -> Image.Image | None:
     return canvas.resize((ICON, ICON), Image.Resampling.NEAREST)
 
 
-def stem_ok(name: str) -> bool:
-    if not name.endswith("_idle.png"):
-        return False
-    base = name[: -len("_idle.png")]
-    token = base.split("_")[0]
-    return token not in SKIP_STEMS
-
-
 def convert_folder(folder: Path) -> int:
     n = 0
     if not folder.is_dir():
         return 0
     for src in folder.glob("*_idle.png"):
-        if not stem_ok(src.name):
-            continue
         if "_authored" in src.parts:
             continue
+        base = src.name[: -len("_idle.png")]
+        token = base.split("_")[0]
+        min_op = HANDS_MIN_OPAQUE if token == "hands" else MIN_OPAQUE
         im = Image.open(src).convert("RGBA")
-        icon = make_icon(im)
+        icon = make_icon(im, min_opaque=min_op)
         dest = src.with_name(src.name.replace("_idle.png", "_icon.png"))
+        if icon is None:
+            if dest.exists():
+                dest.unlink()
+            continue
+        icon.save(dest)
+        n += 1
+    # Boots BAG icons: lower band of legs (body still folds boots → legs).
+    n += write_boots_icons(folder)
+    return n
+
+
+def write_boots_icons(folder: Path) -> int:
+    n = 0
+    for tier in ("t0", "t2"):
+        legs = folder / f"legs_{tier}_idle.png"
+        if not legs.exists():
+            continue
+        im = Image.open(legs).convert("RGBA")
+        # Keep the foot/shin band so BAG reads as boots, not full pants.
+        boots = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+        boots.paste(im.crop((0, 72, 128, 128)), (0, 72))
+        icon = make_icon(boots, min_opaque=HANDS_MIN_OPAQUE)
+        dest = folder / f"boots_{tier}_icon.png"
         if icon is None:
             if dest.exists():
                 dest.unlink()

@@ -34,9 +34,9 @@ abstract final class SaveImportFlow {
             label: 'CANCEL',
             onPressed: () => Navigator.pop(ctx, false),
           ),
-          KenneyButton(
+          GameButton(
             label: 'IMPORT',
-            style: KenneyButtonStyle.red,
+            style: GameButtonStyle.red,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),

@@ -47,6 +47,7 @@ class CharacterVisualPose {
     required this.flipX,
     required this.layerOrder,
     this.equipHash = '',
+    this.anchorProfile = BodyAnchorProfile.kenney,
   });
 
   final List<ResolvedLayer> layers;
@@ -54,12 +55,14 @@ class CharacterVisualPose {
   final bool flipX;
   final List<CharacterLayerId> layerOrder;
   final String equipHash;
+  final BodyAnchorProfile anchorProfile;
 
   AnchorPose anchor(AnchorId id) => AnchorTables.lookup(
     anim: anim.kind,
     frame: anim.frame,
     id: id,
     flipX: flipX,
+    profile: anchorProfile,
   );
 
   double get mainHandExtraRotation {
@@ -186,6 +189,7 @@ class CharacterVisualPose {
       flipX: flipX,
       layerOrder: order,
       equipHash: equipHashOf(hero),
+      anchorProfile: BodyAnchorProfile.kenney,
     );
   }
 
@@ -209,16 +213,25 @@ class CharacterVisualPose {
         visualSetId: visId,
         family: family,
         anim: anim.kind,
+        armorType: item.armorType,
       );
       if (path == null) return;
       final id = layer ?? def.layer;
       if (!seen.add(id)) return;
+      // Hand items: grip → owned hand anchors (armor stays full-body blit).
+      final AnchorId? handAnchor = switch (id) {
+        CharacterLayerId.mainHand => AnchorId.mainHand,
+        CharacterLayerId.offHand => AnchorId.offHand,
+        _ => null,
+      };
       layers.add(
         ResolvedLayer(
           id: id,
           col: 0,
           row: 0,
           ownedAsset: path,
+          anchored: handAnchor != null,
+          anchorId: handAnchor,
           tint: EquipmentVisualResolver.rarityTint(
             visId,
             rarityTier: item.rarity.index,
@@ -228,11 +241,26 @@ class CharacterVisualPose {
     }
 
     addItem(hero.itemIn(EquipmentSlot.cloak), layer: CharacterLayerId.cape);
-    addItem(
-      hero.itemIn(EquipmentSlot.legs) ?? hero.itemIn(EquipmentSlot.boots),
+    _addFoldedArmor(
+      layers: layers,
+      seen: seen,
+      family: family,
+      anim: anim.kind,
+      primary: hero.itemIn(EquipmentSlot.legs) ?? hero.itemIn(EquipmentSlot.boots),
+      booster: hero.itemIn(EquipmentSlot.waist),
       layer: CharacterLayerId.legs,
+      t2Id: 'legs_t2',
     );
-    addItem(hero.itemIn(EquipmentSlot.chest), layer: CharacterLayerId.torso);
+    _addFoldedArmor(
+      layers: layers,
+      seen: seen,
+      family: family,
+      anim: anim.kind,
+      primary: hero.itemIn(EquipmentSlot.chest),
+      booster: hero.itemIn(EquipmentSlot.shoulder),
+      layer: CharacterLayerId.torso,
+      t2Id: 'chest_t2',
+    );
     addItem(
       hero.itemIn(EquipmentSlot.hands) ?? hero.itemIn(EquipmentSlot.wrist),
       layer: CharacterLayerId.gloves,
@@ -247,13 +275,73 @@ class CharacterVisualPose {
     }
     addItem(main, layer: CharacterLayerId.mainHand);
 
-    final order = layerOrderFor(anim.kind, frame: anim.frame, flipX: flipX);
+    final order = layerOrderFor(
+      anim.kind,
+      frame: anim.frame,
+      flipX: flipX,
+      owned: true,
+    );
     return CharacterVisualPose(
       layers: layers,
       anim: anim,
       flipX: flipX,
       layerOrder: order,
       equipHash: equipHashOf(hero),
+      anchorProfile: BodyAnchorProfile.owned,
+    );
+  }
+
+  /// Shoulder → chest silhouette, waist → legs. No dedicated PNGs — boost to
+  /// t2 when a booster is worn, or paint t2 alone when only the booster is on.
+  static void _addFoldedArmor({
+    required List<ResolvedLayer> layers,
+    required Set<CharacterLayerId> seen,
+    required BodyFamily family,
+    required HeroAnimKind anim,
+    required EquipmentItem? primary,
+    required EquipmentItem? booster,
+    required CharacterLayerId layer,
+    required String t2Id,
+  }) {
+    if (primary == null && booster == null) return;
+    if (!seen.add(layer)) return;
+
+    String visId;
+    EquipmentItem tintFrom;
+    ArmorType? armorType;
+    if (primary != null) {
+      tintFrom = primary;
+      armorType = primary.armorType ?? booster?.armorType;
+      visId = EquipmentVisualResolver.resolveId(primary);
+      if (booster != null) {
+        visId = t2Id;
+      }
+    } else {
+      tintFrom = booster!;
+      armorType = booster.armorType;
+      visId = t2Id;
+    }
+    final path = OwnedGearAssets.pathFor(
+      visualSetId: visId,
+      family: family,
+      anim: anim,
+      armorType: armorType,
+    );
+    if (path == null) {
+      seen.remove(layer);
+      return;
+    }
+    layers.add(
+      ResolvedLayer(
+        id: layer,
+        col: 0,
+        row: 0,
+        ownedAsset: path,
+        tint: EquipmentVisualResolver.rarityTint(
+          visId,
+          rarityTier: tintFrom.rarity.index,
+        ),
+      ),
     );
   }
 

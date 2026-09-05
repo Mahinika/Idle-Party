@@ -4,7 +4,7 @@ import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../models/dungeon_def.dart';
 import '../../models/pet.dart';
-import '../custom_assets.dart';
+import '../../assets/custom_assets.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../kenney_sprite.dart';
@@ -141,9 +141,9 @@ class _BeastOverlayState extends State<BeastOverlay> {
           ),
           const SizedBox(height: 6),
           if (canMerge)
-            KenneyButton(
+            GameButton(
               label: 'CONFIRM MERGE',
-              style: KenneyButtonStyle.red,
+              style: GameButtonStyle.red,
               onPressed:
                   _mergeA != null &&
                       _mergeB != null &&
@@ -222,11 +222,11 @@ class _BeastOverlayState extends State<BeastOverlay> {
                     Row(
                       children: [
                         Expanded(
-                          child: KenneyButton(
+                          child: GameButton(
                             label: state.activePet?.id == pet.id
                                 ? 'ACTIVE'
                                 : 'SET ACTIVE',
-                            style: KenneyButtonStyle.grey,
+                            style: GameButtonStyle.grey,
                             onPressed: state.activePet?.id == pet.id
                                 ? null
                                 : () => director.setActivePet(pet.id),
@@ -234,7 +234,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                         ),
                         const SizedBox(width: 6),
                         Expanded(
-                          child: KenneyButton(
+                          child: GameButton(
                             label: pet.level >= GameLogic.maxPetLevel
                                 ? 'LEVEL MAX'
                                 : 'LEVEL ${GameLogic.petLevelUpCost(pet)}e · +1 ATK',
@@ -252,23 +252,29 @@ class _BeastOverlayState extends State<BeastOverlay> {
                     Row(
                       children: [
                         Expanded(
-                          child: KenneyButton(
+                          child: GameButton(
                             label: pet.id == _mergeA || pet.id == _mergeB
-                                ? 'MERGE ✓'
+                                ? 'MERGING'
                                 : 'MERGE',
-                            style: KenneyButtonStyle.grey,
+                            style: pet.id == _mergeA || pet.id == _mergeB
+                                ? GameButtonStyle.brown
+                                : GameButtonStyle.grey,
                             onPressed: () => _toggleMerge(pet.id),
                           ),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
-                          child: KenneyButton(
+                          child: GameButton(
                             label:
                                 state.metaDepth.favoritePetSpecies ==
                                     pet.resolvedSpecies
-                                ? 'FAV ✓'
+                                ? 'FAVORITED'
                                 : 'FAVORITE',
-                            style: KenneyButtonStyle.grey,
+                            style:
+                                state.metaDepth.favoritePetSpecies ==
+                                    pet.resolvedSpecies
+                                ? GameButtonStyle.brown
+                                : GameButtonStyle.grey,
                             onPressed: () => director.setFavoritePetSpecies(
                               pet.resolvedSpecies,
                             ),
@@ -280,12 +286,12 @@ class _BeastOverlayState extends State<BeastOverlay> {
                     Row(
                       children: [
                         Expanded(
-                          child: KenneyButton(
+                          child: GameButton(
                             label: pet.bondLevel >= GameLogic.maxPetBondLevel
                                 ? 'BOND MAX'
                                 : 'BOND ${GameLogic.bondPetCost(pet.bondLevel)}e'
                                       '${(pet.bondLevel + 1) ~/ 5 > pet.bondLevel ~/ 5 ? ' · +1 ATK' : ''}',
-                            style: KenneyButtonStyle.grey,
+                            style: GameButtonStyle.grey,
                             onPressed:
                                 pet.bondLevel < GameLogic.maxPetBondLevel &&
                                     state.essence >=
@@ -300,11 +306,11 @@ class _BeastOverlayState extends State<BeastOverlay> {
                             builder: (context) {
                               final next = _nextFrame(pet.frame);
                               final cost = GameLogic.petFrameCost(next);
-                              return KenneyButton(
+                              return GameButton(
                                 label: pet.frame == PetFrame.crystal
                                     ? 'FRAME MAX'
                                     : 'FRAME ${next.name} ${cost}e · looks',
-                                style: KenneyButtonStyle.grey,
+                                style: GameButtonStyle.grey,
                                 onPressed:
                                     pet.frame == PetFrame.crystal ||
                                         state.essence < cost
@@ -327,7 +333,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
             const KenneySprite(asset: CustomAssets.petEgg, size: 32),
             const SizedBox(width: 8),
             Expanded(
-              child: KenneyButton(
+              child: GameButton(
                 label: state.ownedPets.length >= cap
                     ? 'ROSTER FULL'
                     : 'HATCH ${GameLogic.hatchPetCost(state)}e',

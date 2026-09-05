@@ -50,9 +50,9 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
             label: 'KEEP DEVICE',
             onPressed: () => Navigator.pop(ctx, false),
           ),
-          KenneyButton(
+          GameButton(
             label: 'USE CLOUD',
-            style: KenneyButtonStyle.brown,
+            style: GameButtonStyle.brown,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),
@@ -88,9 +88,9 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
               label: 'CANCEL',
               onPressed: () => Navigator.pop(ctx, false),
             ),
-            KenneyButton(
+            GameButton(
               label: 'RESTORE',
-              style: KenneyButtonStyle.red,
+              style: GameButtonStyle.red,
               expanded: false,
               onPressed: () => Navigator.pop(ctx, true),
             ),
@@ -176,9 +176,9 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         ),
         if (!signedIn) ...[
           const SizedBox(height: 8),
-          KenneyButton(
+          GameButton(
             label: 'SIGN IN TO RANK',
-            style: KenneyButtonStyle.brown,
+            style: GameButtonStyle.brown,
             onPressed: playGamesBusy ? null : signInPlayGamesFlow,
           ),
         ],
@@ -186,9 +186,9 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         Row(
           children: [
             Expanded(
-              child: KenneyButton(
+              child: GameButton(
                 label: 'KEY BOARD',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 onPressed: playGamesBusy || !boardsReady
                     ? null
                     : () => runPlayGames(director.showPlayTimedLeaderboard),
@@ -196,9 +196,9 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: KenneyButton(
+              child: GameButton(
                 label: 'GAUNTLET BOARD',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 onPressed: playGamesBusy || !boardsReady
                     ? null
                     : () => runPlayGames(director.showPlayGauntletLeaderboard),
@@ -207,9 +207,9 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           ],
         ),
         const SizedBox(height: 6),
-        KenneyButton(
+        GameButton(
           label: 'GR BOARD',
-          style: KenneyButtonStyle.grey,
+          style: GameButtonStyle.grey,
           onPressed: playGamesBusy || !grBoardReady
               ? null
               : () => runPlayGames(director.showPlayGreaterRiftLeaderboard),
@@ -279,18 +279,18 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
           ),
         ],
         const SizedBox(height: 8),
-        KenneyButton(
+        GameButton(
           label: signedIn ? 'SIGNED IN' : 'SIGN IN WITH PLAY GAMES',
-          style: KenneyButtonStyle.brown,
+          style: GameButtonStyle.brown,
           onPressed: playGamesBusy || signedIn ? null : signInPlayGamesFlow,
         ),
         const SizedBox(height: 6),
         Row(
           children: [
             Expanded(
-              child: KenneyButton(
+              child: GameButton(
                 label: 'BACKUP NOW',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 onPressed: playGamesBusy
                     ? null
                     : () => runPlayGames(() async {
@@ -300,9 +300,9 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: KenneyButton(
+              child: GameButton(
                 label: 'RESTORE',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 onPressed: playGamesBusy ? null : restorePlayGamesFlow,
               ),
             ),

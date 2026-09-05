@@ -191,6 +191,8 @@ abstract final class CustomAssets {
   static const String iconStar = '$_root/icons/star.png';
   static const String iconHeart = '$_root/icons/heart.png';
   static const String iconSkull = '$_root/icons/skull.png';
+  static const String iconSettings = '$_root/icons/settings.png';
+  static const String iconKey = '$_root/icons/key.png';
 
   // —— Hub dungeon portraits ——
   static const String portraitSandy = '$_root/portraits/sandy.png';
@@ -531,11 +533,4 @@ abstract final class CustomAssets {
     if (!usesCustomDungeonArt(dungeonId)) return null;
     return dungeonHubIcon(dungeonId);
   }
-
-  /// Owned denser paper-doll overlays (`assets/custom/char/…/gear/`).
-  static String ownedFamilyGear(String family, String setId, String anim) =>
-      '$_root/char/$family/gear/${setId}_$anim.png';
-
-  static String ownedSharedGear(String setId, String anim) =>
-      '$_root/char/gear/${setId}_$anim.png';
 }

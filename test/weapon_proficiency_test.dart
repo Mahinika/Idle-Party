@@ -103,6 +103,9 @@ void main() {
     expect(can(HeroSpecId.beastMastery, rng(WeaponType.bow)), isTrue);
     expect(can(HeroSpecId.beastMastery, rng(WeaponType.thrown)), isFalse);
     expect(can(HeroSpecId.fire, rng(WeaponType.wand)), isTrue);
+    expect(can(HeroSpecId.fire, mh(WeaponType.sword)), isFalse);
+    expect(can(HeroSpecId.arcane, mh(WeaponType.staff)), isTrue);
+    expect(can(HeroSpecId.affliction, mh(WeaponType.sword)), isFalse);
     expect(StarterGear.forSpec(HeroSpecId.holyPaladin).containsKey(EquipmentSlot.ranged), isFalse);
     expect(StarterGear.forSpec(HeroSpecId.blood).containsKey(EquipmentSlot.ranged), isFalse);
     expect(StarterGear.forSpec(HeroSpecId.restorationShaman).containsKey(EquipmentSlot.ranged), isFalse);

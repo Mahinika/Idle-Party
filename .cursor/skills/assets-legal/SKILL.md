@@ -20,8 +20,8 @@ description: >-
 
 | Helper | File |
 |--------|------|
-| `KenneyAssets` | `lib/ui/kenney_assets.dart` |
-| `CustomAssets` | `lib/ui/custom_assets.dart` |
+| `KenneyAssets` | `lib/assets/kenney_assets.dart` |
+| `CustomAssets` | `lib/assets/custom_assets.dart` |
 | `KenneySprite` | `lib/ui/kenney_sprite.dart` (sets `FilterQuality.none`) |
 
 **UI must not hardcode** `'assets/...'` strings. Prefer `KenneySprite(asset: …)`.

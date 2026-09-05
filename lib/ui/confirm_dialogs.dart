@@ -71,16 +71,16 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
               ),
             ),
             actions: [
-              KenneyButton(
+              GameButton(
                 label: 'CANCEL',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 expanded: false,
                 onPressed: () =>
                     Navigator.of(ctx, rootNavigator: true).pop(false),
               ),
-              KenneyButton(
+              GameButton(
                 label: 'CONFIRM ASCEND',
-                style: KenneyButtonStyle.red,
+                style: GameButtonStyle.red,
                 expanded: false,
                 onPressed: () =>
                     Navigator.of(ctx, rootNavigator: true).pop(true),
@@ -151,16 +151,16 @@ Future<void> confirmRebornAtCap(
               ),
             ),
             actions: [
-              KenneyButton(
+              GameButton(
                 label: 'CANCEL',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 expanded: false,
                 onPressed: () =>
                     Navigator.of(ctx, rootNavigator: true).pop(false),
               ),
-              KenneyButton(
+              GameButton(
                 label: 'CONFIRM REBORN',
-                style: KenneyButtonStyle.red,
+                style: GameButtonStyle.red,
                 expanded: false,
                 onPressed: () =>
                     Navigator.of(ctx, rootNavigator: true).pop(true),
@@ -206,15 +206,15 @@ Future<void> confirmLeaveDungeon(
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
-          KenneyButton(
+          GameButton(
             label: 'STAY',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, false),
           ),
-          KenneyButton(
+          GameButton(
             label: 'RETURN',
-            style: KenneyButtonStyle.brown,
+            style: GameButtonStyle.brown,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),
@@ -244,22 +244,22 @@ Future<void> confirmGauntletRun(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Infinity Gauntlet?',
         content: Text(
-          'Party level ${GameLogic.maxHeroLevel} endgame climb in the Crystal Spire.\n\n'
-          'Floors escalate forever — harder packs, bigger gold & essence. '
-          'Boss every 5 floors. Wipe or leave returns to hub.\n\n'
+          'Endless Crystal Spire climb — not a timed kill Rift.\n\n'
+          'Floors escalate forever. Boss every 5 floors. '
+          'Wipe or leave returns to hub.\n\n'
           'Best clear: F$best',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
-          KenneyButton(
+          GameButton(
             label: 'CANCEL',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, false),
           ),
-          KenneyButton(
+          GameButton(
             label: 'ENTER',
-            style: KenneyButtonStyle.red,
+            style: GameButtonStyle.red,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),
@@ -297,26 +297,25 @@ Future<void> confirmRiftRun(
       context: context,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) => MenuChrome.dialog(
-        title: 'Rift R$tier?',
+        title: 'Farm Rift R$tier?',
         content: Text(
-          'Party level ${GameLogic.maxHeroLevel} timed kill challenge.\n\n'
-          'Kill $kills enemies before $par. Gold and gear drop during the run. '
-          'Success pays +${essence}e · +${gold}g and unlocks higher tiers '
-          '(faster clears unlock +2).\n\n'
-          'Farm mode — not ranked on Play Games. Wipe or timeout ends the run. '
-          'Best clear: R$best',
+          'Stormwake Hollow timed kill farm — not Gauntlet floors.\n\n'
+          'Kill $kills before $par. Gold and gear drop during the run. '
+          'Success pays +${essence}e · +${gold}g '
+          '(faster clears unlock +2 tiers).\n\n'
+          'Not ranked on Play Games. Best clear: R$best',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
-          KenneyButton(
+          GameButton(
             label: 'CANCEL',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, false),
           ),
-          KenneyButton(
-            label: 'ENTER R$tier',
-            style: KenneyButtonStyle.red,
+          GameButton(
+            label: 'ENTER FARM R$tier',
+            style: GameButtonStyle.brown,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),
@@ -356,22 +355,22 @@ Future<void> confirmGreaterRiftRun(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Greater Rift GR$tier?',
         content: Text(
-          'Party level ${GameLogic.maxHeroLevel} prestige ladder — harder than farm Rifts.\n\n'
-          'Kill $kills enemies before $par. Gold OK mid-run; no gear drops. '
+          'Mothveil ranked kill ladder — not Gauntlet floors, not farm Rift loot.\n\n'
+          'Kill $kills before $par. Gold OK mid-run; no gear drops. '
           'Clear pays +${essence}e · +${gold}g and ranks on KEY · BOARDS.\n\n'
-          'Fast clears unlock +2. Best clear: GR$best',
+          'Harder packs than Farm Rift. Best clear: GR$best',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
-          KenneyButton(
+          GameButton(
             label: 'CANCEL',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, false),
           ),
-          KenneyButton(
-            label: 'ENTER GR$tier',
-            style: KenneyButtonStyle.red,
+          GameButton(
+            label: 'ENTER RANK GR$tier',
+            style: GameButtonStyle.red,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),
@@ -406,15 +405,15 @@ Future<void> confirmDailyRun(
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
-          KenneyButton(
+          GameButton(
             label: 'CANCEL',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, false),
           ),
-          KenneyButton(
+          GameButton(
             label: 'START',
-            style: KenneyButtonStyle.brown,
+            style: GameButtonStyle.brown,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),
@@ -462,17 +461,17 @@ Future<void> confirmAshenCrown(
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
-          KenneyButton(
+          GameButton(
             label: 'CANCEL',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, false),
           ),
-          KenneyButton(
+          GameButton(
             label: practice ? 'PRACTICE' : 'ENTER',
             style: practice
-                ? KenneyButtonStyle.brown
-                : KenneyButtonStyle.red,
+                ? GameButtonStyle.brown
+                : GameButtonStyle.red,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),

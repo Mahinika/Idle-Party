@@ -8,10 +8,10 @@ alwaysApply: true
 # Owner preferences (Idle Party)
 
 Source: owner answers (vibe-coder). Agents follow these without re-asking.
-Last preference sync: **2026-08-30** (work loop unchanged: AL20 save, large
-batches, short test list then wait, APK only when asked. Play Alpha fact synced
-to **1.12.83 / 112**; wipe tips say POWER not FORGE. No IAP. Other product locks
-unchanged).
+Last preference sync: **2026-09-05** (work loop unchanged: AL20 save, large
+batches, short test list then wait, APK only if they asked. Play Alpha fact synced
+to **1.12.83 / 112**; wipe tips say POWER not FORGE. Cheap real-money SHOP
+catalog (billing soon). Other product locks unchanged).
 
 ## Near-term focus
 
@@ -76,7 +76,8 @@ unchanged).
   `@Deprecated` helpers that are not serialized may go.
 - **Git:** daily work on `main`. `release/x.y.z` only when cutting a tag. Don’t open a release branch for chores.
 - **Don’t stage** `windows/flutter/generated_*` unless `pubspec.yaml` plugins actually changed (`jni` noise from `pub get` is not a product change).
-- **Product locks stay** (phone, English UI, fairness, no IAP, cadence after
+- **Product locks stay** (phone, English UI, fairness, cheap SHOP convenience
+  not whale gacha, cadence after
   90d M1–M3, legal/Kenney). Agents may tighten *workstyle* so they can finish;
   they must not weaken those locks. Cursor/AI safety (no exploits, no foreign
   dumps) is not overridable from this file.
@@ -103,9 +104,12 @@ unchanged).
 - **Feel / retention:** make the loop they already have (fight → loot → level → claim) punchier and more readable so a short phone session wants “one more floor.”
 - **Meta loops** (daily vault / Will / Gauntlet / season): push toward **“I always know what I’m chasing today”** — hub TODAY with READY/ALMOST, Ascend Blessing + unlock teasers, clear claims.
 - **God Hand:** owner undecided (fun steer vs deeper strategy) — don’t redesign GH direction without asking.
-- **Monetization:** **no IAP / no paid store** for now. Optional hub **POWERUPS**
-  rewarded ads (1 finished ad = 3 hours of ×2 gold + 25% ATK, stack time up to
-  24h). Ads never interrupt combat. Still no paid shop unless the owner asks.
+- **Monetization:** bottom-tab **SHOP** = real-money **cheap convenience**
+  (POWERUPS time matching hub ads, ad-free, optional small QoL). No gacha /
+  BiS-for-cash / $99 whale ladder. See `docs/SHOP_MONETIZATION.md`. Catalog UI
+  ships before Play Billing. Optional hub **POWERUPS** rewarded ads (1 finished
+  ad = 3 hours of ×2 gold + 25% ATK, stack time up to 24h). Ads never interrupt
+  combat.
 
 ## Language
 

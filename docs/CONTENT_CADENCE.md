@@ -38,7 +38,7 @@ Each tagged `1.x.y` release should include:
 
 ## Non-goals (unless owner asks)
 
-- IAP / paid shop (optional hub **POWERUPS** rewarded ads are OK)
+- Play Billing wiring (catalog + SHOP UI exist; see `docs/SHOP_MONETIZATION.md`)
 - iOS or web-as-product
 - SpatialCombat rewrite
 - God Hand philosophy redesign

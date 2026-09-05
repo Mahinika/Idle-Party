@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
@@ -28,20 +27,22 @@ class GauntletHubPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'INFINITY GAUNTLET',
+          'INFINITY GAUNTLET · CLIMB',
           style: GameTheme.body(size: 13, color: GameTheme.torchHot),
         ),
         const SizedBox(height: 4),
         Text(
           best <= 0
-              ? 'Endless Crystal Spire — boss every 5 floors. Wipe or leave returns to hub.'
-              : 'Best F$best — floors escalate forever; wipe or leave returns to hub.',
+              ? 'Endless Crystal Spire floors — not a timed kill quota. '
+                  'Boss every 5. Wipe or leave → hub. Best floor is your PB.'
+              : 'Crystal Spire climb · best F$best. Floors escalate forever — '
+                  'boss every 5. Not a Rift timer.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
-        KenneyButton(
+        GameButton(
           label: 'ENTER GAUNTLET',
-          style: KenneyButtonStyle.red,
+          style: GameButtonStyle.red,
           onPressed: GameLogic.canEnterGauntlet(state)
               ? () => confirmGauntletRun(context, director)
               : null,

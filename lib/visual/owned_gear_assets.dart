@@ -24,6 +24,35 @@ abstract final class OwnedGearAssets {
     'cloak_t0',
     'cloak_t2',
     'hands_t0',
+    'hands_t2',
+  ];
+
+  /// Rogue mail overlays (derived from leather extracts).
+  static const List<String> kRogueMailSetIds = [
+    'helm_mail_t0',
+    'helm_mail_t2',
+    'chest_mail_t0',
+    'chest_mail_t2',
+    'legs_mail_t0',
+    'legs_mail_t2',
+    'cloak_mail_t0',
+    'cloak_mail_t2',
+    'hands_mail_t0',
+    'hands_mail_t2',
+  ];
+
+  /// Healer plate overlays (derived from cloth extracts — Holy Pala etc.).
+  static const List<String> kHealerPlateSetIds = [
+    'helm_plate_t0',
+    'helm_plate_t2',
+    'chest_plate_t0',
+    'chest_plate_t2',
+    'legs_plate_t0',
+    'legs_plate_t2',
+    'cloak_plate_t0',
+    'cloak_plate_t2',
+    'hands_plate_t0',
+    'hands_plate_t2',
   ];
 
   /// Shared hand items (one art + rarity tint).
@@ -66,14 +95,56 @@ abstract final class OwnedGearAssets {
 
   /// Map any catalog id onto a shipped PNG id (t0/t2 silhouettes).
   static String silhouetteId(String visualSetId) {
+    // Material forms: chest_mail_t0 / helm_plate_t2
+    final mat = RegExp(
+      r'^(helm|chest|legs|cloak|hands)_(mail|plate)_t(\d+)$',
+    ).firstMatch(visualSetId);
+    if (mat != null) {
+      final slot = mat.group(1)!;
+      final material = mat.group(2)!;
+      final t = int.parse(mat.group(3)!);
+      return t >= 2 ? '${slot}_${material}_t2' : '${slot}_${material}_t0';
+    }
     final m = RegExp(r'^(.+)_t(\d+)$').firstMatch(visualSetId);
     if (m == null) return visualSetId;
     final stem = m.group(1)!;
     final t = int.parse(m.group(2)!);
-    if (stem == 'chest' || stem == 'legs' || stem == 'helm' || stem == 'cloak') {
+    if (stem == 'chest' ||
+        stem == 'legs' ||
+        stem == 'helm' ||
+        stem == 'cloak' ||
+        stem == 'hands') {
       return t >= 2 ? '${stem}_t2' : '${stem}_t0';
     }
     return '${stem}_t0';
+  }
+
+  /// Non-native material folder stem for [family] + [armorType], else null.
+  ///
+  /// Native looks keep unprefixed `chest_t0` files (zero churn). Cross-material
+  /// (rogue mail, healer plate) uses derived `*_mail_*` / `*_plate_*` PNGs.
+  static String? materialSuffix(BodyFamily family, ArmorType? armorType) {
+    if (armorType == null) return null;
+    return switch (family) {
+      BodyFamily.rogue when armorType == ArmorType.mail => 'mail',
+      BodyFamily.healer when armorType == ArmorType.plate => 'plate',
+      _ => null,
+    };
+  }
+
+  /// Apply material suffix to a native silhouette id (`chest_t0` → `chest_mail_t0`).
+  static String materialFileStem(
+    String silhouetteId, {
+    required BodyFamily family,
+    ArmorType? armorType,
+  }) {
+    final suffix = materialSuffix(family, armorType);
+    if (suffix == null) return silhouetteId;
+    final m = RegExp(
+      r'^(helm|chest|legs|cloak|hands)_t([02])$',
+    ).firstMatch(silhouetteId);
+    if (m == null) return silhouetteId;
+    return '${m.group(1)!}_${suffix}_t${m.group(2)!}';
   }
 
   /// Whether [visualSetId] belongs to the shared (non-family) weapon/shield
@@ -110,20 +181,26 @@ abstract final class OwnedGearAssets {
     required String visualSetId,
     required BodyFamily family,
     required HeroAnimKind anim,
+    ArmorType? armorType,
   }) {
     if (visualSetId.isEmpty || visualSetId == 'none') return null;
     final stem = visualSetId.split('_').first;
     // Shoulders / belt fold into chest+legs art — no extra owned PNG.
     if (stem == 'shoulder' || stem == 'waist') return null;
     final a = animFile(anim);
-    final fileStem = shippedFileStem(visualSetId);
+    var fileStem = shippedFileStem(visualSetId);
     if (isSharedSet(visualSetId)) {
       return sharedGear(fileStem, a);
     }
+    fileStem = materialFileStem(
+      fileStem,
+      family: family,
+      armorType: armorType,
+    );
     return familyGear(family, fileStem, a);
   }
 
-  /// Precache list (idle/walk/attack × extract tiers + authored weapons only).
+  /// Precache list: overlays + BAG `*_icon` crops (boots icons included).
   static List<String> get allAssetPaths {
     final out = <String>{};
     for (final family in BodyFamily.values) {
@@ -131,17 +208,46 @@ abstract final class OwnedGearAssets {
         for (final anim in kAnims) {
           out.add(familyGear(family, id, anim));
         }
+        out.add(familyGear(family, id, 'idle').replaceFirst('_idle.png', '_icon.png'));
       }
+      out.add('$root/${family.name}/gear/boots_t0_icon.png');
+      out.add('$root/${family.name}/gear/boots_t2_icon.png');
     }
+    for (final id in kRogueMailSetIds) {
+      for (final anim in kAnims) {
+        out.add(familyGear(BodyFamily.rogue, id, anim));
+      }
+      out.add(
+        familyGear(BodyFamily.rogue, id, 'idle').replaceFirst('_idle.png', '_icon.png'),
+      );
+    }
+    out.add('$root/rogue/gear/boots_mail_t0_icon.png');
+    out.add('$root/rogue/gear/boots_mail_t2_icon.png');
+    for (final id in kHealerPlateSetIds) {
+      for (final anim in kAnims) {
+        out.add(familyGear(BodyFamily.healer, id, anim));
+      }
+      out.add(
+        familyGear(
+          BodyFamily.healer,
+          id,
+          'idle',
+        ).replaceFirst('_idle.png', '_icon.png'),
+      );
+    }
+    out.add('$root/healer/gear/boots_plate_t0_icon.png');
+    out.add('$root/healer/gear/boots_plate_t2_icon.png');
     for (final id in kSharedSetIds) {
       for (final anim in kAnims) {
         out.add(sharedGear(id, anim));
       }
+      out.add(sharedGear(id, 'idle').replaceFirst('_idle.png', '_icon.png'));
     }
     for (final id in EquipmentModelCatalog.authoredSharedIds) {
       for (final anim in kAnims) {
         out.add(sharedGear(id, anim));
       }
+      out.add(sharedGear(id, 'idle').replaceFirst('_idle.png', '_icon.png'));
     }
     return out.toList(growable: false);
   }
@@ -151,8 +257,28 @@ abstract final class OwnedGearAssets {
       path.replaceFirst(RegExp(r'_(walk|attack)\.png$'), '_idle.png');
 
   /// Tight 64×64 crop (`*_icon.png`) of the same overlay the doll uses.
-  /// Hands / jewelry / flask / folded slots stay Kenney.
+  /// Jewelry / flask / shoulder / waist stay Kenney. Boots use a foot-band crop.
+  ///
+  /// Prefer [EquipmentVisualResolver.ownedIconPathFor] from UI — it stamps
+  /// missing [visualSetId] the same way the doll does.
   static String? iconPathFor(EquipmentItem item, {BodyFamily? family}) {
+    final fam = family ?? BodyFamilyCatalog.familyForAffinity(item.affinity);
+    if (item.slot == EquipmentSlot.boots) {
+      final id = item.visualSetId;
+      final tier = () {
+        if (id == null || id.isEmpty) return 0;
+        final m = RegExp(r'_t(\d+)$').firstMatch(id);
+        if (m != null) return int.parse(m.group(1)!);
+        if (id.startsWith('legs_t')) {
+          return int.tryParse(id.substring('legs_t'.length)) ?? 0;
+        }
+        return 0;
+      }();
+      final bootTier = tier >= 2 ? 2 : 0;
+      final mat = materialSuffix(fam, item.armorType);
+      final mid = mat == null ? '' : '${mat}_';
+      return '$root/${fam.name}/gear/boots_${mid}t${bootTier}_icon.png';
+    }
     var id = item.visualSetId;
     if (id == null || id.isEmpty || id == 'none') {
       final stem = EquipmentModelCatalog.weaponArtStem(item.weaponType);
@@ -176,12 +302,12 @@ abstract final class OwnedGearAssets {
       }
     }
     final stem = EquipmentModelCatalog.baseToken(id);
-    if (stem == 'hands' || stem == 'shoulder' || stem == 'waist') return null;
-    final fam = family ?? BodyFamilyCatalog.familyForAffinity(item.affinity);
+    if (stem == 'shoulder' || stem == 'waist') return null;
     final idle = pathFor(
       visualSetId: id,
       family: fam,
       anim: HeroAnimKind.idle,
+      armorType: item.armorType,
     );
     if (idle == null) return null;
     return idle.replaceFirst('_idle.png', '_icon.png');

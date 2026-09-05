@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../game_theme.dart';
-import '../kenney_assets.dart';
+import '../../assets/kenney_assets.dart';
 import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
@@ -31,21 +31,21 @@ class _CodexOverlayState extends State<CodexOverlay> {
         Row(
           children: [
             Expanded(
-              child: KenneyButton(
+              child: GameButton(
                 label: 'MONSTERS (${state.codexEnemies.length})',
                 style: _showEnemies
-                    ? KenneyButtonStyle.brown
-                    : KenneyButtonStyle.grey,
+                    ? GameButtonStyle.brown
+                    : GameButtonStyle.grey,
                 onPressed: () => setState(() => _showEnemies = true),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: KenneyButton(
+              child: GameButton(
                 label: 'ITEMS (${state.codexItems.length})',
                 style: !_showEnemies
-                    ? KenneyButtonStyle.brown
-                    : KenneyButtonStyle.grey,
+                    ? GameButtonStyle.brown
+                    : GameButtonStyle.grey,
                 onPressed: () => setState(() => _showEnemies = false),
               ),
             ),
@@ -76,12 +76,12 @@ class _CodexOverlayState extends State<CodexOverlay> {
                   : ready
                   ? '${entry.value.pct}% +${entry.value.reward}e'
                   : '${entry.value.pct}%';
-              return KenneyButton(
+              return GameButton(
                 label: label,
                 expanded: false,
                 style: ready
-                    ? KenneyButtonStyle.brown
-                    : KenneyButtonStyle.grey,
+                    ? GameButtonStyle.brown
+                    : GameButtonStyle.grey,
                 onPressed: ready
                     ? () => widget.director.claimCodexReward(entry.key)
                     : null,

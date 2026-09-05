@@ -891,8 +891,8 @@ void main() {
     );
 
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
-    final prot = state.heroes.firstWhere((h) => h.role == HeroRole.warrior);
-    final fire = state.heroes.firstWhere((h) => h.role == HeroRole.mage);
+    final prot = state.heroes.firstWhere((h) => h.gearAffinity == HeroRole.warrior);
+    final fire = state.heroes.firstWhere((h) => h.gearAffinity == HeroRole.mage);
     // Budget honesty: shield is a tank piece; Int/SP staff is a caster piece.
     expect(
       GameLogic.specEquipScore(prot, tankShield),
@@ -915,7 +915,7 @@ void main() {
 
     // Fire-only empty party takes the Int/SP staff.
     state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
-    final mage = state.heroes.firstWhere((h) => h.role == HeroRole.mage);
+    final mage = state.heroes.firstWhere((h) => h.gearAffinity == HeroRole.mage);
     state = state
         .withActiveParty([mage.copyWith(level: 20, clearEquipped: true)])
         .copyWith(gearStash: <EquipmentItem>[mageStaff]);

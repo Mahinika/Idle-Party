@@ -2,14 +2,15 @@ import 'dart:math';
 
 /// Greater Rift — prestige timed kill ladder (party max level; Play Games ranked).
 ///
-/// Harder packs than farm [Rift], thinner mid-run loot (gold OK, no gear),
-/// bigger clear payout. Higher GR tier always ranks above lower; same tier
-/// prefers faster clear.
+/// Runs in **Mothveil Hollow** (not Crystal Spire / not Stormwake farm). Harder
+/// packs than farm [Rift], thinner mid-run loot (gold OK, no gear), bigger clear
+/// payout. Higher GR tier always ranks above lower; same tier prefers faster clear.
 abstract final class GreaterRift {
   static const int maxTier = 20;
   static const int minTier = 1;
   static const int minAscension = 20;
-  static const String dungeonId = 'crystal';
+  /// Zone art — Mothveil (prestige; not Crystal Spire Gauntlet / Stormwake farm).
+  static const String dungeonId = 'veil';
 
   static int clampTier(int tier) => tier.clamp(minTier, maxTier);
 
@@ -55,8 +56,16 @@ abstract final class GreaterRift {
     final totalSec = max(0, (ms / 1000).floor());
     final m = totalSec ~/ 60;
     final s = totalSec % 60;
-    return '$m:${s.toString().padLeft(2, '0')}';
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
+
+  /// Short in-dungeon chip (no timer — timer lives on the place line).
+  static String hudChipLabel({
+    required int kills,
+    required int target,
+    required int tier,
+  }) =>
+      'RANK GR$tier · $kills/$target';
 
   static String progressLabel({
     required int kills,
@@ -65,7 +74,7 @@ abstract final class GreaterRift {
     required int parMs,
     required int tier,
   }) =>
-      'GR$tier · $kills/$target · ${formatTimer(timerMs)}/${formatTimer(parMs)}';
+      'RANK GR$tier · $kills/$target · ${formatTimer(timerMs)}/${formatTimer(parMs)}';
 }
 
 /// One-time essence at Greater Rift tier milestones.

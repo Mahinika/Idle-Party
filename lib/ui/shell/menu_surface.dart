@@ -5,12 +5,12 @@ import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_router.dart';
 import '../../core/nav_intent.dart';
-import '../game_theme.dart';
 import 'essence_dock.dart';
 import 'gold_dock.dart';
 import 'inventory_dock.dart';
 import 'overlay_scaffold.dart';
 import 'power_meta_pillars.dart';
+import 'shop_dock.dart';
 import '../meta/keystone_sheet.dart';
 import 'whats_new_overlay.dart';
 
@@ -144,36 +144,6 @@ class _MenuSurfaceState extends State<MenuSurface> {
     );
   }
 
-  Widget _shopComingSoon() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Store',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 18, color: GameTheme.torchHot),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Coming soon',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 16, color: GameTheme.parchment),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Gold buys live under GOLD.\n'
-            'Essence buys live under ESSENCE.\n'
-            'Optional hub POWERUPS ads stay on the hub.',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final d = widget.director;
@@ -193,7 +163,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
           panel: router.goldPanel,
           onPanelChanged: (panel) => router.goldPanel = panel,
         ),
-        MenuRoute.shop => _shopComingSoon(),
+        MenuRoute.shop => const ShopDock(),
         MenuRoute.essence => EssenceDock(
           director: d,
           panel: router.essencePanel,

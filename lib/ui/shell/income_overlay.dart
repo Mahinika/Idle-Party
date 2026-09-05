@@ -4,9 +4,8 @@ import '../../core/game_director.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/gold_income.dart';
 import '../game_theme.dart';
-import '../menu_chrome.dart';
 
-/// Hub / Run gold rates — embedded at the top of POWER → Essence.
+/// Compact Hub / Run rates at the top of ESSENCE → TRACKS.
 class CampRatesSection extends StatelessWidget {
   const CampRatesSection({super.key, required this.director});
   final GameDirector director;
@@ -15,31 +14,27 @@ class CampRatesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = director.state;
     final run = director.runGoldPerMinute;
+    final hub = GoldIncome.hubGoldPerMinute(state);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MenuChrome.sectionLabelScoped('RATES', scope: MenuScope.account),
-        Text(
-          GoldIncome.hubRateLine(state),
-          style: GameTheme.body(size: 15, color: GameTheme.mossLit),
-        ),
         Text(
           run > 0
-              ? 'Run ${GoldIncome.perMinuteLabel(run)}'
-              : 'Run — fight in a dungeon to see combat gold/min',
-          style: GameTheme.body(size: 13, color: GameTheme.parchment),
+              ? 'Hub ${GoldIncome.perMinuteLabel(hub)} · Run ${GoldIncome.perMinuteLabel(run)}'
+              : 'Hub ${GoldIncome.perMinuteLabel(hub)} · Run — enter a dungeon',
+          style: GameTheme.body(size: 14, color: GameTheme.mossLit),
         ),
-        const SizedBox(height: 4),
         Text(
           GoldIncome.multiplierLine(state),
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         if (!MenuTabs.showCamp(state)) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
-            'Gold Find and sanctuary tracks unlock after Ascend or when you '
-            'earn essence.',
+            'Tracks unlock after Ascend or when you earn essence.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         ],

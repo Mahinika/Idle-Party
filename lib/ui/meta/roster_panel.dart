@@ -91,10 +91,10 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
         ],
         if (!state.metaDepth.partySlot5Unlocked) ...[
           const SizedBox(height: 8),
-          KenneyButton(
+          GameButton(
             label:
                 'UNLOCK 5TH SLOT  ${GameLogic.partySlot5EssenceCost}e  AL${GameLogic.partySlot5MinAscension}+',
-            style: KenneyButtonStyle.brown,
+            style: GameButtonStyle.brown,
             onPressed:
                 state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
                     state.essence >= GameLogic.partySlot5EssenceCost
@@ -105,7 +105,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Same buy as POWER → Gold → KEEP.',
+            'Same buy as ESSENCE → KEEP.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
@@ -192,9 +192,9 @@ class _ActiveSlotChip extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: KenneyButton(
+          child: GameButton(
             label: label,
-            style: selected ? KenneyButtonStyle.brown : KenneyButtonStyle.grey,
+            style: selected ? GameButtonStyle.brown : GameButtonStyle.grey,
             onPressed: onTap,
           ),
         ),
@@ -202,9 +202,9 @@ class _ActiveSlotChip extends StatelessWidget {
           const SizedBox(width: 6),
           SizedBox(
             width: 52,
-            child: KenneyButton(
+            child: GameButton(
               label: 'X',
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
               expanded: false,
               onPressed: onClear,
             ),
@@ -257,17 +257,17 @@ class _RosterSpecRow extends StatelessWidget {
             ),
           ),
           if (!unlocked)
-            KenneyButton(
+            GameButton(
               label: 'UNLOCK',
               expanded: false,
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
               onPressed: disabled ? null : onUnlock,
             )
           else if (!inActive && onRoster)
-            KenneyButton(
+            GameButton(
               label: 'ADD',
               expanded: false,
-              style: KenneyButtonStyle.brown,
+              style: GameButtonStyle.brown,
               onPressed: disabled ? null : onAdd,
             ),
         ],

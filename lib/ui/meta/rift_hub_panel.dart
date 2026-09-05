@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
@@ -19,7 +18,8 @@ class RiftHubPanel extends StatelessWidget {
     final state = director.state;
     if (!GameLogic.endgameUnlocked(state)) {
       return Text(
-        'RIFT unlocks at party level ${GameLogic.maxHeroLevel} — timed kill challenges with escalating tiers.',
+        'FARM RIFT unlocks at party level ${GameLogic.maxHeroLevel} — '
+        'timed kill quota in Stormwake (loot mid-run; not Spire climb).',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
       );
@@ -35,12 +35,13 @@ class RiftHubPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'RIFT',
+          'FARM RIFT · STORMWAKE',
           style: GameTheme.body(size: 13, color: GameTheme.torchHot),
         ),
         const SizedBox(height: 4),
         Text(
-          'Farm Rift — gold and gear mid-run. Best R$best · kill $kills before $par · '
+          'Timed kill farm — not Gauntlet floors. Gold + gear mid-run. '
+          'Best R$best · kill $kills before $par · '
           '+${Rift.successEssence(pref)}e / +${Rift.successGold(pref)}g',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -71,9 +72,9 @@ class RiftHubPanel extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        KenneyButton(
-          label: 'ENTER RIFT R$pref',
-          style: KenneyButtonStyle.brown,
+        GameButton(
+          label: 'ENTER FARM R$pref',
+          style: GameButtonStyle.brown,
           onPressed: GameLogic.canEnterRift(state)
               ? () => confirmRiftRun(context, director)
               : null,

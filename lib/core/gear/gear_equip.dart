@@ -2,7 +2,9 @@ import 'dart:math';
 
 import '../../models/hero.dart';
 import '../../models/loot.dart';
+import '../../models/market_listing.dart';
 import '../../models/proficiency.dart';
+import '../../visual/equipment_visual_resolver.dart';
 import '../game_state.dart';
 import 'gear_stash.dart';
 
@@ -36,6 +38,44 @@ abstract final class GearEquip {
     return state.copyWith(
       heroRoster: rebuilt,
       gearStash: stash,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// Stamp missing [EquipmentItem.visualSetId] so BAG icons match the doll.
+  static GameState stampMissingVisualSetIds(GameState state) {
+    var changed = false;
+
+    EquipmentItem stamp(EquipmentItem item) {
+      final next = EquipmentVisualResolver.stampMissingVisualSetId(item);
+      if (next.visualSetId != item.visualSetId) changed = true;
+      return next;
+    }
+
+    final roster = <PartyHero>[];
+    for (final hero in state.heroRoster) {
+      final eq = <EquipmentSlot, EquipmentItem>{};
+      for (final e in hero.equipped.entries) {
+        eq[e.key] = stamp(e.value);
+      }
+      roster.add(hero.copyWith(equipped: eq));
+    }
+    final stash = state.gearStash.map(stamp).toList();
+    final market = [
+      for (final l in state.marketListings)
+        MarketListing(
+          id: l.id,
+          item: stamp(l.item),
+          priceGold: l.priceGold,
+          targetHeroIndex: l.targetHeroIndex,
+          slot: l.slot,
+        ),
+    ];
+    if (!changed) return state;
+    return state.copyWith(
+      heroRoster: roster,
+      gearStash: stash,
+      marketListings: market,
       lastUpdated: DateTime.now(),
     );
   }

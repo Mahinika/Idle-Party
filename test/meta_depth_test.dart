@@ -452,4 +452,12 @@ void main() {
     state = GameLogic.buyPrestigeShopItem(state, 'loadout_slot');
     expect(state.metaDepth.loadoutBonusSlots, 1);
   });
+
+  test('God Hand Cadence stays off KEEP buys — CD lives on God Hand only', () {
+    expect(
+      PrestigeShopCatalog.offered.any((i) => i.id == 'gh_cdr'),
+      isFalse,
+    );
+    expect(PrestigeShopCatalog.byId('gh_cdr')?.listedInShop, isFalse);
+  });
 }

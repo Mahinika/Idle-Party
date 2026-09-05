@@ -45,7 +45,7 @@ class _DungeonOfflineChromeState extends State<DungeonOfflineChrome> {
           margin: const EdgeInsets.symmetric(horizontal: 16),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xEE1A2030),
+            color: GameTheme.panel.withValues(alpha: 0.93),
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: GameTheme.mossLit),
           ),

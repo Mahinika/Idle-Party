@@ -35,17 +35,17 @@ class SaveTransferSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: KenneyButton(
+              child: GameButton(
                 label: 'EXPORT',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 onPressed: () => _export(context),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: KenneyButton(
+              child: GameButton(
                 label: 'IMPORT',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 onPressed: () => _import(context),
               ),
             ),

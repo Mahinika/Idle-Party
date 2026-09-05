@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/story_lore.dart';
 import 'boot_cinematic_layer.dart';
 import 'cave_atmosphere.dart';
-import 'custom_assets.dart';
+import '../assets/custom_assets.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
@@ -231,9 +231,9 @@ class _BootIntroScreenState extends State<BootIntroScreen>
                           ),
                         ),
                       const SizedBox(height: 10),
-                      KenneyButton(
+                      GameButton(
                         label: 'SKIP',
-                        style: KenneyButtonStyle.grey,
+                        style: GameButtonStyle.grey,
                         onPressed: _inputUnlocked ? _finish : null,
                       ),
                     ],

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'game_button.dart';
+import 'game_icon.dart';
 import 'game_theme.dart';
-import 'kenney_button.dart';
-import 'kenney_sprite.dart';
 import 'web_click_bridge.dart';
 
 /// RUN / TODAY / ACCOUNT scope for section headers and chips.
@@ -11,11 +11,12 @@ enum MenuScope { run, today, account }
 /// Shared menu chrome — tokens + reusable widgets.
 ///
 /// Visual guide: `docs/UI_THEME.md` (menu sheets ≈ GEAR; hub/HUD are separate families).
+/// Colors live on [GameTheme]; this class is widgets + decorations.
 abstract final class MenuChrome {
-  static const Color scrim = Color(0xE006080C);
-  static const Color card = Color(0xB8121820);
-  static const Color cardRaised = Color(0xCC1A2430);
-  static const Color sheet = Color(0xF0121820);
+  static const Color scrim = GameTheme.scrim;
+  static const Color card = GameTheme.card;
+  static const Color cardRaised = GameTheme.cardRaised;
+  static const Color sheet = GameTheme.sheet;
 
   static BorderRadius get panelRadius =>
       BorderRadius.circular(GameTheme.radiusMd);
@@ -50,7 +51,7 @@ abstract final class MenuChrome {
           offset: const Offset(0, 0),
         ),
         const BoxShadow(
-          color: Color(0x99000000),
+          color: GameTheme.shadow,
           blurRadius: 28,
           offset: Offset(0, 14),
         ),
@@ -88,11 +89,20 @@ abstract final class MenuChrome {
             ]
           : const [
               BoxShadow(
-                color: Color(0x44000000),
+                color: GameTheme.shadowFaint,
                 blurRadius: 8,
                 offset: Offset(0, 3),
               ),
             ],
+    );
+  }
+
+  /// Combat HUD chip well (party strip, target, DPS meter).
+  static BoxDecoration hudWell({Color? borderColor}) {
+    return BoxDecoration(
+      color: GameTheme.hudWell,
+      borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+      border: Border.all(color: borderColor ?? GameTheme.hudWellBorder),
     );
   }
 
@@ -225,14 +235,14 @@ abstract final class MenuChrome {
     );
   }
 
-  /// Dialog secondary action — ghost Kenney face, not Material [TextButton].
+  /// Dialog secondary action — ghost GameButton, not Material [TextButton].
   static Widget dialogCancel({
     required String label,
     required VoidCallback onPressed,
   }) {
-    return KenneyButton(
+    return GameButton(
       label: label,
-      style: KenneyButtonStyle.ghost,
+      style: GameButtonStyle.ghost,
       expanded: false,
       onPressed: onPressed,
     );
@@ -290,11 +300,9 @@ abstract final class MenuChrome {
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final phone = GameTheme.isPhoneWidth(context);
-        // Always scroll on the shipping phone chrome so labels stay readable
-        // (wide browsers used to crush five tabs into one row).
+        // Always scroll on the shipping phone chrome so labels stay readable.
         final scroll = scrollable ?? true;
-        final labelSize = phone ? 13.0 : 16.0;
+        const labelSize = 13.0;
         return Material(
           color: Colors.transparent,
           child: Container(
@@ -311,7 +319,7 @@ abstract final class MenuChrome {
               isScrollable: scroll,
               tabAlignment: scroll ? TabAlignment.start : TabAlignment.fill,
               labelPadding: EdgeInsets.symmetric(
-                horizontal: scroll ? (phone ? 10 : 14) : (phone ? 2 : 4),
+                horizontal: scroll ? 10 : 2,
               ),
               labelStyle: GameTheme.body(size: labelSize),
               unselectedLabelStyle: GameTheme.body(size: labelSize),
@@ -339,10 +347,11 @@ abstract final class MenuChrome {
     required List<String> labels,
     required int selectedIndex,
     required ValueChanged<int> onSelect,
+    bool dense = false,
   }) {
     assert(labels.isNotEmpty);
     return Container(
-      height: GameTheme.minTouch,
+      height: dense ? 36 : GameTheme.minTouch,
       decoration: BoxDecoration(
         color: GameTheme.panelInset.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(GameTheme.radiusSm),
@@ -432,7 +441,7 @@ abstract final class MenuChrome {
     );
     final parts = <Widget>[
       if (icon != null) ...[
-        KenneySprite(asset: icon, size: 14),
+        GameIcon.asset(icon, size: 14),
         SizedBox(width: stacked ? 0 : 4, height: stacked ? 3 : 0),
       ],
       Text(label, style: labelStyle),
@@ -594,6 +603,224 @@ abstract final class MenuChrome {
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       actions: actions,
+    );
+  }
+
+  /// Square pixel toggle thumb (settings rows) — not Material Switch.
+  static Widget toggleMark({required bool value}) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 140),
+      width: 44,
+      height: 24,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: value
+            ? GameTheme.mossLit.withValues(alpha: 0.55)
+            : GameTheme.stone.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+        border: Border.all(
+          color: value ? GameTheme.torchHot : GameTheme.border,
+          width: value ? 1.5 : 1,
+        ),
+      ),
+      alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        width: 16,
+        height: 16,
+        decoration: BoxDecoration(
+          color: value ? GameTheme.torchHot : GameTheme.parchmentDim,
+          borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+        ),
+      ),
+    );
+  }
+
+  /// Discrete horizontal slider (text scale / bag filters).
+  static Widget slider({
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    required ValueChanged<double> onChanged,
+  }) {
+    return _MenuSlider(
+      value: value,
+      min: min,
+      max: max,
+      divisions: divisions,
+      onChanged: onChanged,
+    );
+  }
+
+  /// Expand/collapse block — replaces Material ExpansionTile in menus.
+  static Widget fold({
+    required String title,
+    String? subtitle,
+    required List<Widget> children,
+    bool initiallyExpanded = false,
+  }) {
+    return _MenuFold(
+      title: title,
+      subtitle: subtitle,
+      initiallyExpanded: initiallyExpanded,
+      children: children,
+    );
+  }
+}
+
+class _MenuSlider extends StatelessWidget {
+  const _MenuSlider({
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.divisions,
+    required this.onChanged,
+  });
+
+  final double value;
+  final double min;
+  final double max;
+  final int divisions;
+  final ValueChanged<double> onChanged;
+
+  void _setFromLocal(double localX, double width) {
+    if (width <= 0) return;
+    final t = (localX / width).clamp(0.0, 1.0);
+    final raw = min + t * (max - min);
+    final step = (max - min) / divisions;
+    final snapped = (raw / step).round() * step;
+    onChanged(snapped.clamp(min, max));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = ((value - min) / (max - min)).clamp(0.0, 1.0);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (d) => _setFromLocal(d.localPosition.dx, w),
+          onHorizontalDragUpdate: (d) => _setFromLocal(d.localPosition.dx, w),
+          child: SizedBox(
+            height: 28,
+            child: Stack(
+              alignment: Alignment.centerLeft,
+              children: [
+                Container(
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: GameTheme.stone.withValues(alpha: 0.95),
+                    borderRadius:
+                        BorderRadius.circular(GameTheme.radiusHud),
+                    border: Border.all(color: GameTheme.border),
+                  ),
+                ),
+                FractionallySizedBox(
+                  widthFactor: t,
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: GameTheme.torch.withValues(alpha: 0.85),
+                      borderRadius:
+                          BorderRadius.circular(GameTheme.radiusHud),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: (w - 16) * t,
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: GameTheme.torchHot,
+                      borderRadius:
+                          BorderRadius.circular(GameTheme.radiusHud),
+                      border: Border.all(color: GameTheme.borderLit),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MenuFold extends StatefulWidget {
+  const _MenuFold({
+    required this.title,
+    required this.children,
+    this.subtitle,
+    this.initiallyExpanded = false,
+  });
+
+  final String title;
+  final String? subtitle;
+  final List<Widget> children;
+  final bool initiallyExpanded;
+
+  @override
+  State<_MenuFold> createState() => _MenuFoldState();
+}
+
+class _MenuFoldState extends State<_MenuFold> {
+  late bool _open = widget.initiallyExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => setState(() => _open = !_open),
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: GameTheme.body(
+                            size: 13,
+                            color: GameTheme.torchHot,
+                          ),
+                        ),
+                        if (widget.subtitle != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            widget.subtitle!,
+                            style: GameTheme.body(
+                              size: 11,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Text(
+                    _open ? 'HIDE' : 'SHOW',
+                    style: GameTheme.body(
+                      size: 12,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (_open) ...widget.children,
+      ],
     );
   }
 }

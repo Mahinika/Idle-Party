@@ -6,18 +6,18 @@ import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/menu_alerts.dart';
 import '../core/menu_router.dart';
+import '../core/nav_intent.dart';
 import 'confirm_dialogs.dart';
 import 'cave_atmosphere.dart';
-import 'custom_assets.dart';
+import '../assets/custom_assets.dart';
 import 'game_theme.dart';
 import 'spatial_dungeon_view.dart';
-import 'shell/app_bottom_bar.dart';
 import 'shell/dungeon_party_hud.dart';
 import 'shell/dungeon_target_hud.dart';
 import 'shell/dungeon_top_hud.dart';
 
 /// Idle Party dungeon scene: full-bleed stage + corner HUD.
-/// Shared GEAR/POWER/QUESTS sheets are owned by the play shell, not this scene.
+/// Shared menu sheets + bottom bar are owned by [PlayShell], not this scene.
 class Is2Shell extends StatefulWidget {
   const Is2Shell({
     super.key,
@@ -83,26 +83,9 @@ class _Is2ShellState extends State<Is2Shell> {
     );
   }
 
-  void _openMenuFeel(VoidCallback open) {
-    final wasOpen = router.isOpen;
-    open();
-    if (!wasOpen &&
-        router.isOpen &&
-        state.inDungeon &&
-        !state.isPartyDefeated) {
-      widget.director.showToast(
-        'Fight paused in menu — close to resume',
-        life: 1.6,
-      );
-    }
-  }
-
   Widget _buildBody(GameDirector d) {
     final hudSide = GameTheme.edgeGap;
-    final hudBottom = GameTheme.hudAboveNav;
-    final awaitingExit = d.spatial?.awaitingExit == true;
-    // Raise party strip while walking to stairs so GO / exit stays visible.
-    final partyBottom = awaitingExit ? hudBottom + 52 : hudBottom;
+    final partyBottom = GameTheme.combatHudBottom(context);
 
     return Stack(
       fit: StackFit.expand,
@@ -113,7 +96,19 @@ class _Is2ShellState extends State<Is2Shell> {
           ),
         ),
         const RepaintBoundary(child: _DungeonScrimBloom()),
+        // Map fills the whole scene under the floating chrome so more floor
+        // stays visible under FARM / PUSH (camera gets the extra height).
+        Positioned.fill(
+          child: SafeArea(
+            bottom: false,
+            child: ListenableBuilder(
+              listenable: d.combatFrame,
+              builder: (context, _) => SpatialDungeonView(director: d),
+            ),
+          ),
+        ),
         SafeArea(
+          bottom: false,
           child: Column(
             children: [
               DungeonTopHud(
@@ -127,37 +122,26 @@ class _Is2ShellState extends State<Is2Shell> {
                 onOpenKey: MenuTabs.showKey(state)
                     ? () => router.open(MenuRoute.key)
                     : null,
-                onOpenContracts: () => router.open(MenuRoute.quests),
-                onOpenForge: () =>
-                    router.open(MenuRoute.power, power: PowerSegment.forge),
+                onOpenContracts: () => router.apply(NavIntent.quests),
+                onOpenForge: () => router.open(MenuRoute.gold),
                 onOpenParty: () => router.toggleGear(GearPanel.gear),
               ),
               Expanded(
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // The map redraws every combat frame (~60 Hz)…
-                    ListenableBuilder(
-                      listenable: d.combatFrame,
-                      builder: (context, _) => SpatialDungeonView(director: d),
-                    ),
-                    // …the HUD numbers follow the director's ~10 Hz beat.
-                    // Reading every hero and every enemy 60 times a second only
-                    // bought digits nobody can read that fast.
                     if (!d.awaitingWipeChoice) ...[
-                      // Light map dim while the DPS meter panel is open.
                       if (_dpsMeterOpen)
                         Positioned.fill(
                           child: IgnorePointer(
                             child: ColoredBox(
-                              color: const Color(0x4414100C),
+                              color: GameTheme.hudDimSoft,
                             ),
                           ),
                         ),
-                      // Calm map-first HUD: meter (tap), target chip, party strip.
                       Positioned(
                         left: hudSide,
-                        top: GameTheme.clusterGap / 2,
+                        top: 2,
                         child: GameLogic.plainPlayerChrome(state)
                             ? const SizedBox.shrink()
                             : DpsMeter(
@@ -170,7 +154,7 @@ class _Is2ShellState extends State<Is2Shell> {
                       ),
                       Positioned(
                         right: hudSide,
-                        top: GameTheme.clusterGap / 2,
+                        top: 2,
                         child: TargetCornerHud(director: d),
                       ),
                       Positioned(
@@ -182,33 +166,19 @@ class _Is2ShellState extends State<Is2Shell> {
                           onSelectHero: (i) =>
                               router.session.abilityHeroIndex = i,
                           onOpenEquip: () => router.toggleGear(GearPanel.gear),
-                          onUseConsumable: d.useConsumable,
+                        ),
+                      ),
+                      Positioned(
+                        right: hudSide,
+                        bottom: partyBottom,
+                        child: DungeonFlaskButton(
+                          director: d,
+                          onTap: d.useConsumable,
                         ),
                       ),
                     ],
                   ],
                 ),
-              ),
-              AppBottomBar(
-                alerts: MenuAlerts.forDungeon(state),
-                route: router.route,
-                destinations: DestinationGraph.dungeon(state).destinations,
-                overflow: DestinationGraph.dungeon(state).overflow,
-                showReason: true,
-                onSelect: (dest) => _openMenuFeel(() => router.toggle(dest)),
-                onLeave: widget.onLeaveDungeon == null
-                    ? null
-                    : () {
-                        if (state.isPartyDefeated) {
-                          widget.director.hubAfterWipe();
-                          return;
-                        }
-                        confirmLeaveDungeon(
-                          context,
-                          widget.onLeaveDungeon!,
-                          state: state,
-                        );
-                      },
               ),
             ],
           ),
@@ -216,7 +186,7 @@ class _Is2ShellState extends State<Is2Shell> {
         if (router.isOpen)
           const Positioned.fill(
             child: IgnorePointer(
-              child: ColoredBox(color: Color(0x6614100C)),
+              child: ColoredBox(color: GameTheme.hudDim),
             ),
           ),
       ],

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
@@ -20,7 +19,7 @@ class GreaterRiftHubPanel extends StatelessWidget {
     if (!GameLogic.endgameUnlocked(state)) {
       return Text(
         'GREATER RIFT unlocks at party level ${GameLogic.maxHeroLevel} — '
-        'prestige ladder (Play Games KEY/Gauntlet boards live; GR board optional).',
+        'ranked Mothveil kill ladder (no mid-run gear; not Spire climb).',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
       );
@@ -36,14 +35,15 @@ class GreaterRiftHubPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'GREATER RIFT',
+          'GREATER RIFT · RANKED',
           style: GameTheme.body(size: 13, color: GameTheme.torchHot),
         ),
         const SizedBox(height: 4),
         Text(
+          'Mothveil prestige timer — harder packs, no mid-run gear, board score. '
+          'Not Gauntlet floors · not farm Rift loot. '
           'Best GR$best · kill $kills before $par · '
-          '+${GreaterRift.successEssence(pref)}e / +${GreaterRift.successGold(pref)}g · '
-          'no mid-run gear',
+          '+${GreaterRift.successEssence(pref)}e / +${GreaterRift.successGold(pref)}g',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
@@ -73,9 +73,9 @@ class GreaterRiftHubPanel extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        KenneyButton(
-          label: 'ENTER GR$pref',
-          style: KenneyButtonStyle.red,
+        GameButton(
+          label: 'ENTER RANK GR$pref',
+          style: GameButtonStyle.red,
           onPressed: GameLogic.canEnterGreaterRift(state)
               ? () => confirmGreaterRiftRun(context, director)
               : null,

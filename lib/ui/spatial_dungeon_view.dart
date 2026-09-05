@@ -21,12 +21,12 @@ import '../visual/character_visual_pose.dart';
 import '../visual/hero_anim_controller.dart';
 import '../visual/owned_gear_assets.dart';
 import '../visual/hero_anim_state.dart';
-import 'custom_assets.dart';
+import '../assets/custom_assets.dart';
 import 'decoded_image_cache.dart';
 import 'dungeon_environment.dart';
 import 'game_theme.dart';
 import 'hero_paper_doll.dart';
-import 'kenney_assets.dart';
+import '../assets/kenney_assets.dart';
 import 'kenney_sprite.dart';
 import 'shell/offline_banner.dart';
 import 'shell/wipe_overlay.dart';
@@ -342,96 +342,11 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     final farm = state.dungeonMode == DungeonMode.farm;
     final dailyEcho = MetaSystems.isActiveDailyRun(state);
 
-    final frameColor = room.type == RoomType.boss
-        ? GameTheme.borderLit
-        : GameTheme.mossLit;
-
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: frameColor.withValues(alpha: 0.85), width: 2),
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: Column(
+    return ClipRect(
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          if (!widget.director.awaitingWipeChoice &&
-              (state.isPartyDefeated || (world?.awaitingExit ?? false)))
-            Material(
-              color: state.isPartyDefeated
-                  ? GameTheme.blood.withValues(alpha: 0.85)
-                  : const Color(0xEE0A0907),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                child: state.isPartyDefeated
-                    ? Text(
-                        state.inGauntlet || state.inAnyRiftMode
-                            ? 'WIPED — End Run returns to hub'
-                            : 'WIPED — use the Retry / Hub panel',
-                        textAlign: TextAlign.center,
-                        style: GameTheme.body(
-                          size: 15,
-                          color: GameTheme.torchHot,
-                        ),
-                      )
-                    : Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              widget.director.exitHoldActive
-                                  ? 'HOLD — walk resumes soon'
-                                  : 'GO — stairs are open',
-                              textAlign: TextAlign.center,
-                              style: GameTheme.body(
-                                size: 15,
-                                color: GameTheme.clear,
-                              ),
-                            ),
-                          ),
-                          if (!widget.director.exitHoldActive)
-                            WebClickScope(
-                              label: 'Hold at stairs',
-                              onPressed: widget.director.startExitHold,
-                              child: Semantics(
-                                button: true,
-                                label: 'Hold — pause walk to stairs for 8 seconds',
-                                onTap: widget.director.startExitHold,
-                                excludeSemantics: true,
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: widget.director.startExitHold,
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0x332A4030),
-                                        borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(
-                                          color: GameTheme.clear.withValues(
-                                            alpha: 0.65,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'HOLD',
-                                        style: GameTheme.pixel(
-                                          size: GameTheme.hudPixel,
-                                          color: GameTheme.clear,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-              ),
-            ),
-          Expanded(
-            child: LayoutBuilder(
+          LayoutBuilder(
               builder: (context, constraints) {
                 final camera = _TileCamera.forWorld(
                   world,
@@ -650,7 +565,29 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                 );
               },
             ),
-          ),
+
+          if (!widget.director.awaitingWipeChoice && state.isPartyDefeated)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Material(
+                color: GameTheme.blood.withValues(alpha: 0.85),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  child: Text(
+                    state.inGauntlet || state.inAnyRiftMode
+                        ? 'WIPED — End Run returns to hub'
+                        : 'WIPED — use the Retry / Hub panel',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 15,
+                      color: GameTheme.torchHot,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -769,25 +706,32 @@ class DungeonModeChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.onLongPress,
     this.dense = false,
     this.tip,
     this.interactive = true,
+    this.maxLabelWidth,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final bool dense;
   final String? tip;
   final bool interactive;
+  /// When set, long labels ellipsis instead of stretching the top HUD.
+  final double? maxLabelWidth;
 
   @override
   Widget build(BuildContext context) {
     final semanticsLabel = tip == null ? '$label dungeon mode' : '$label. $tip';
     final action = interactive ? onTap : null;
     final child = Container(
-      constraints: BoxConstraints(minHeight: GameTheme.minTouch),
-      padding: EdgeInsets.symmetric(horizontal: dense ? 6 : 8),
+      constraints: BoxConstraints(
+        minHeight: dense ? 30 : GameTheme.minTouch,
+      ),
+      padding: EdgeInsets.symmetric(horizontal: dense ? 7 : 8, vertical: dense ? 4 : 0),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: selected ? const Color(0xFF3A2810) : const Color(0xFF1A1610),
@@ -796,11 +740,18 @@ class DungeonModeChip extends StatelessWidget {
           color: selected ? GameTheme.torchHot : const Color(0xFF4A4030),
         ),
       ),
-      child: Text(
-        label,
-        style: GameTheme.pixel(
-          size: GameTheme.hudPixel,
-          color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: maxLabelWidth ?? double.infinity,
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.pixel(
+            size: GameTheme.hudPixel,
+            color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
+          ),
         ),
       ),
     );
@@ -819,12 +770,14 @@ class DungeonModeChip extends StatelessWidget {
         inMutuallyExclusiveGroup: true,
         label: semanticsLabel,
         onTap: action,
+        onLongPress: onLongPress,
         excludeSemantics: true,
         child: Material(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(3),
           child: InkWell(
             onTap: action,
+            onLongPress: onLongPress,
             borderRadius: BorderRadius.circular(3),
             child: child,
           ),
@@ -843,6 +796,7 @@ class GodHandRing extends StatelessWidget {
     this.urgent = false,
     this.readyLabel,
     this.coolingLabel,
+    this.dense = false,
   });
   final double cooldown;
 
@@ -856,6 +810,9 @@ class GodHandRing extends StatelessWidget {
   /// Override ready / cooling semantics (first-hour plain English).
   final String? readyLabel;
   final String? coolingLabel;
+
+  /// Phone top HUD: slightly smaller so FARM + gold + floor fit without overflow.
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -872,6 +829,9 @@ class GodHandRing extends StatelessWidget {
                 : 'God Hand ready'))
         : (coolingLabel ?? 'God Hand ${cooldown.toStringAsFixed(1)}s');
     final action = onTap != null && ready ? onTap : null;
+    final box = dense ? 30.0 : GameTheme.minTouch;
+    final ring = dense ? 22.0 : 28.0;
+    final fist = dense ? 14.0 : 18.0;
     return WebClickScope(
       label: label,
       onPressed: action,
@@ -890,12 +850,12 @@ class GodHandRing extends StatelessWidget {
               onTap: action,
               excludeSemantics: true,
               child: SizedBox(
-                width: GameTheme.minTouch,
-                height: GameTheme.minTouch,
+                width: box,
+                height: box,
                 child: Center(
                   child: SizedBox(
-                    width: 28,
-                    height: 28,
+                    width: ring,
+                    height: ring,
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
@@ -909,7 +869,7 @@ class GodHandRing extends StatelessWidget {
                             child: ready
                                 ? KenneySprite(
                                     asset: KenneyAssets.fist,
-                                    size: 18,
+                                    size: fist,
                                     color: color,
                                   )
                                 : Text(
@@ -917,7 +877,7 @@ class GodHandRing extends StatelessWidget {
                                         ? cooldown.toStringAsFixed(1)
                                         : '${cooldown.round()}',
                                     style: GameTheme.pixel(
-                                      size: 6,
+                                      size: dense ? GameTheme.hudPixel : 6,
                                       color: color,
                                     ),
                                   ),

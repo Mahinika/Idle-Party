@@ -170,13 +170,15 @@ void main() {
     final withUpgrade = base.copyWith(gearStash: [bigWeapon('dung_up')]);
     final dungeon = MenuAlerts.forDungeon(withUpgrade);
     expect(dungeon.gear.count, greaterThan(0));
-    expect(dungeon.power.isQuiet, isTrue);
-    expect(dungeon.quests.isQuiet, isTrue);
+    expect(dungeon.gold.isQuiet, isTrue);
+    expect(dungeon.shop.isQuiet, isTrue);
+    expect(dungeon.essence.isQuiet, isTrue);
     expect(dungeon.more.isQuiet, isTrue);
 
     final quiet = MenuAlerts.forDungeon(base);
     expect(quiet.gear.isQuiet, isTrue);
-    expect(quiet.power.isQuiet, isTrue);
-    expect(quiet.quests.isQuiet, isTrue);
+    expect(quiet.gold.isQuiet, isTrue);
+    expect(quiet.shop.isQuiet, isTrue);
+    expect(quiet.essence.isQuiet, isTrue);
   });
 }

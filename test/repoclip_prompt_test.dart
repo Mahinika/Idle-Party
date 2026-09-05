@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/story_lore.dart';
-import 'package:idle_party/ui/custom_assets.dart';
+import 'package:idle_party/assets/custom_assets.dart';
 
 void main() {
   test('RepoClip prompt stays under 500 chars and matches intro beats', () {

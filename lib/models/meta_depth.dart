@@ -15,7 +15,7 @@ class PrestigeShopItem {
   final int cost;
   final int minAl;
 
-  /// False = keep save math / old purchases, hide from POWER → SHOP.
+  /// False = keep save math / old purchases, hide from ESSENCE → PRESTIGE.
   final bool listedInShop;
 }
 
@@ -45,9 +45,10 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'gh_cdr',
       name: 'God Hand Cadence',
-      description: 'Same cooldown as POWER → Gold → KEEP. One CD level (max 8).',
+      description: 'Same cooldown as ESSENCE → KEEP. One CD level (max 8).',
       cost: 45,
       minAl: 5,
+      listedInShop: false,
     ),
     PrestigeShopItem(
       id: 'roster_cap',
@@ -74,7 +75,7 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'filter_span',
       name: 'Junk Magnifier',
-      description: '+8 auto-sell/scrap iLvl ceiling in Settings (max +40).',
+      description: '+8 auto-sell / auto-disassemble iLvl ceiling in Settings (max +40).',
       cost: 45,
       minAl: 6,
     ),

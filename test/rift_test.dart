@@ -16,6 +16,25 @@ void main() {
     expect(Rift.failEssence(8), 2);
   });
 
+  test('timers pad minutes so dungeon HUD width stays stable', () {
+    expect(Rift.formatTimer(5_000), '00:05');
+    expect(Rift.formatTimer(65_000), '01:05');
+    expect(
+      Rift.hudChipLabel(kills: 3, target: 50, tier: 5),
+      'FARM R5 · 3/50',
+    );
+    expect(
+      Rift.progressLabel(
+        kills: 3,
+        target: 50,
+        timerMs: 5_000,
+        parMs: 300_000,
+        tier: 5,
+      ),
+      contains('00:05/05:00'),
+    );
+  });
+
   test('fast clear unlocks +2 tiers', () {
     expect(
       Rift.unlockTierAfterSuccess(
@@ -52,6 +71,8 @@ void main() {
     expect(run.riftKillTarget, Rift.killTarget(1));
     expect(run.riftParMs, Rift.parTimeMs(1));
     expect(run.dungeonId, Rift.dungeonId);
+    expect(run.dungeonId, 'storm');
+    expect(run.dungeonId, isNot('crystal'));
   });
 
   test('KEY dial blocked before party Lv60 and clamped on load', () {

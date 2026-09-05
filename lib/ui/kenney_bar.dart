@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'kenney_assets.dart';
+import '../assets/kenney_assets.dart';
 
 enum KenneyBarColor { green, yellow, red }
 

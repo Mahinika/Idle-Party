@@ -30,6 +30,9 @@ void main() {
     expect(run.inRift, isFalse);
     expect(run.grTier, 1);
     expect(run.grKillTarget, GreaterRift.killTarget(1));
+    expect(run.dungeonId, GreaterRift.dungeonId);
+    expect(run.dungeonId, 'veil');
+    expect(run.dungeonId, isNot(Rift.dungeonId));
   });
 
   test('Greater Rift success updates season PB and best tier', () {

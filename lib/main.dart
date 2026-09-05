@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,11 +8,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'core/equipment_factory.dart';
 import 'core/gear/drop_tables.dart';
 import 'core/game_director.dart';
+import 'core/immersive_ui.dart';
 import 'core/menu_router.dart';
 import 'models/dungeon_def.dart';
 import 'models/hero_spec.dart';
 import 'ui/boot_intro_screen.dart';
-import 'ui/custom_assets.dart';
+import 'assets/custom_assets.dart';
 import 'ui/game_audio.dart';
 import 'ui/game_theme.dart';
 import 'ui/kenney_button.dart';
@@ -27,6 +28,8 @@ import 'ui/web_click_bridge.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Fire-and-forget before first frame — phone product is edge-to-edge game UI.
+  unawaited(lockImmersiveUi());
   runApp(const MyApp());
   // Expose the semantics DOM overlay on web so browser automation / a11y
   // tools can click buttons (CanvasKit has no real DOM widgets otherwise).
@@ -55,14 +58,29 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late final GameDirector _director;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Stable for the app lifetime — never recreate on MaterialApp rebuilds.
     _director = widget.director ?? GameDirector.persistent();
+    unawaited(lockImmersiveUi());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(lockImmersiveUi());
+    }
   }
 
   @override
@@ -193,12 +211,17 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
       case AppLifecycleState.hidden:
       case AppLifecycleState.detached:
         GameAudio.onAppPaused();
+        _director.setAppPaused(true);
+      case AppLifecycleState.inactive:
+        // Control-center / notification shade — mute audio only; keep sim
+        // so a brief swipe does not stutter combat.
+        GameAudio.onAppPaused();
       case AppLifecycleState.resumed:
         GameAudio.onAppResumed();
+        _director.setAppPaused(false);
         if (_phase != _AppPhase.playUpdateRequired) return;
         unawaited(_recheckMandatoryPlayUpdate());
     }
@@ -332,16 +355,16 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
               style: GameTheme.body(size: 15, color: GameTheme.parchment),
             ),
             actions: [
-              KenneyButton(
+              GameButton(
                 label: 'CANCEL',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 expanded: false,
                 onPressed: () => Navigator.pop(ctx, false),
               ),
-              KenneyButton(
+              GameButton(
                 label: 'OVERWRITE',
                 expanded: false,
-                style: KenneyButtonStyle.red,
+                style: GameButtonStyle.red,
                 onPressed: () => Navigator.pop(ctx, true),
               ),
             ],

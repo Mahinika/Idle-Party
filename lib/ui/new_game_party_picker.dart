@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/game_logic.dart';
 import '../core/party_name_filter.dart';
 import '../models/hero_spec.dart';
-import 'custom_assets.dart';
+import '../assets/custom_assets.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
@@ -250,12 +250,12 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                     })
                       Padding(
                         padding: const EdgeInsets.only(right: 6),
-                        child: KenneyButton(
+                        child: GameButton(
                           label: HeroSpecs.classLabel(classId).toUpperCase(),
                           expanded: false,
                           style: _filter == classId
-                              ? KenneyButtonStyle.brown
-                              : KenneyButtonStyle.grey,
+                              ? GameButtonStyle.brown
+                              : GameButtonStyle.grey,
                           onPressed: () => setState(() => _filter = classId),
                         ),
                       ),
@@ -313,17 +313,17 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               Row(
                 children: [
                   Expanded(
-                    child: KenneyButton(
+                    child: GameButton(
                       label: 'BACK',
-                      style: KenneyButtonStyle.grey,
+                      style: GameButtonStyle.grey,
                       onPressed: widget.onBack,
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: KenneyButton(
+                    child: GameButton(
                       label: 'START',
-                      style: KenneyButtonStyle.brown,
+                      style: GameButtonStyle.brown,
                       onPressed: _ready ? _tryStart : null,
                     ),
                   ),

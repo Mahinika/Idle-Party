@@ -8,8 +8,9 @@ import '../models/hero.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
 import '../models/spec_mastery.dart';
-import 'custom_assets.dart';
+import '../assets/custom_assets.dart';
 import 'equipment_icon.dart';
+import 'game_icon.dart';
 import 'game_theme.dart';
 import 'hero_doll_sprite.dart';
 import 'item_tooltip.dart';
@@ -199,7 +200,7 @@ class CharacterEquipPanel extends StatelessWidget {
       children: [
         if (showHeroStrip) ...[
           SizedBox(
-            height: GameTheme.minTouch,
+            height: compact ? 40 : GameTheme.minTouch,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: heroes.length,
@@ -210,23 +211,30 @@ class CharacterEquipPanel extends StatelessWidget {
                 return InkWell(
                   onTap: () => onSelectHero(i),
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minHeight: GameTheme.minTouch,
+                    constraints: BoxConstraints(
+                      minHeight: compact ? 40 : GameTheme.minTouch,
                     ),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: compact ? 8 : 10,
+                        vertical: compact ? 4 : 6,
                       ),
                       alignment: Alignment.center,
                       decoration: MenuChrome.cardBox(selected: active),
                       child: Row(
                         children: [
-                          HeroDollSprite(hero: h, partyIndex: i, size: 26),
+                          HeroDollSprite(
+                            hero: h,
+                            partyIndex: i,
+                            size: compact ? 22 : 26,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             '${h.displayRoleLabel(plainEnglish: GameLogic.plainPlayerChrome(state))} · L${h.level}',
-                            style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+                            style: GameTheme.body(
+                              size: compact ? 10 : 11,
+                              color: GameTheme.torchHot,
+                            ),
                           ),
                         ],
                       ),
@@ -236,16 +244,22 @@ class CharacterEquipPanel extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: compact ? 4 : 8),
         ],
         Row(
           children: [
-            _HeroArrow(
-              icon: Icons.chevron_left_rounded,
+            GameIconButton(
+              glyph: UiGlyph.prev,
               label: 'Previous hero',
-              enabled: heroes.length > 1,
-              onTap: () =>
-                  onSelectHero((index - 1 + heroes.length) % heroes.length),
+              size: 16,
+              color: GameTheme.torchHot,
+              width: GameTheme.minTouch,
+              height: GameTheme.minTouch,
+              onPressed: heroes.length > 1
+                  ? () => onSelectHero(
+                      (index - 1 + heroes.length) % heroes.length,
+                    )
+                  : null,
             ),
             Expanded(
               child: Column(
@@ -270,15 +284,20 @@ class CharacterEquipPanel extends StatelessWidget {
                 ],
               ),
             ),
-            _HeroArrow(
-              icon: Icons.chevron_right_rounded,
+            GameIconButton(
+              glyph: UiGlyph.next,
               label: 'Next hero',
-              enabled: heroes.length > 1,
-              onTap: () => onSelectHero((index + 1) % heroes.length),
+              size: 16,
+              color: GameTheme.torchHot,
+              width: GameTheme.minTouch,
+              height: GameTheme.minTouch,
+              onPressed: heroes.length > 1
+                  ? () => onSelectHero((index + 1) % heroes.length)
+                  : null,
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -298,7 +317,7 @@ class CharacterEquipPanel extends StatelessWidget {
                         center: Alignment(0, 0.55),
                         radius: 0.85,
                         colors: [
-                          Color(0x5540A090),
+                          GameTheme.dollGlow,
                           GameTheme.dollBackdropTop,
                           GameTheme.dollBackdropBottom,
                         ],
@@ -404,7 +423,7 @@ class CharacterEquipPanel extends StatelessWidget {
                     'FLASK · Dungeon heal',
                     textAlign: TextAlign.center,
                     style: GameTheme.body(
-                      size: 11,
+                      size: compact ? 10 : 11,
                       color: GameTheme.parchmentDim,
                     ),
                   ),
@@ -418,22 +437,20 @@ class CharacterEquipPanel extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: MenuChrome.chip(
                 label: 'ATK',
                 value: '$atk',
-                stacked: true,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Expanded(
               child: MenuChrome.chip(
                 label: 'DEF',
                 value: '$def',
-                stacked: true,
               ),
             ),
           ],
@@ -513,7 +530,7 @@ class CharacterEquipPanel extends StatelessWidget {
             ),
           ),
         ],
-        if (onEmptySlotTap != null) ...[
+        if (onEmptySlotTap != null && !compact) ...[
           const SizedBox(height: 8),
           Text(
             'Tip: tap an empty gear slot to filter BAG to that slot.',
@@ -521,28 +538,56 @@ class CharacterEquipPanel extends StatelessWidget {
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         ],
-        const SizedBox(height: 10),
-        Text(
-          'HERO STATS',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          alignment: WrapAlignment.center,
-          children: [
-            for (final entry in _heroStatChips(state, hero, ratings, atk, def, maxHp))
-              MenuChrome.chip(
-                label: entry.$1,
-                value: entry.$2,
-                stacked: true,
-                minWidth: 72,
+        SizedBox(height: compact ? 6 : 10),
+        if (compact)
+          MenuChrome.fold(
+            title: 'HERO STATS',
+            subtitle: 'STR ${ratings.strength} · STA ${ratings.stamina}',
+            initiallyExpanded: false,
+            children: [
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final entry
+                      in _heroStatChips(state, hero, ratings, atk, def, maxHp))
+                    MenuChrome.chip(
+                      label: entry.$1,
+                      value: entry.$2,
+                      stacked: true,
+                      minWidth: 72,
+                    ),
+                ],
               ),
-          ],
-        ),
-        const SizedBox(height: 8),
+              const SizedBox(height: 4),
+            ],
+          )
+        else ...[
+          Text(
+            'HERO STATS',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            alignment: WrapAlignment.center,
+            children: [
+              for (final entry
+                  in _heroStatChips(state, hero, ratings, atk, def, maxHp))
+                MenuChrome.chip(
+                  label: entry.$1,
+                  value: entry.$2,
+                  stacked: true,
+                  minWidth: 72,
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
       ],
     );
   }
@@ -640,44 +685,6 @@ class _SlotColumn extends StatelessWidget {
           if (i != slots.length - 1) SizedBox(height: slotGap),
         ],
       ],
-    );
-  }
-}
-
-class _HeroArrow extends StatelessWidget {
-  const _HeroArrow({
-    required this.icon,
-    required this.label,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: label,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-        child: SizedBox(
-          width: 40,
-          height: 48,
-          child: Icon(
-            icon,
-            size: 28,
-            color: enabled
-                ? GameTheme.torchHot
-                : GameTheme.parchmentDim.withValues(alpha: 0.35),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -18,6 +18,7 @@ class PowerUpgradeRow extends StatelessWidget {
     this.detail,
     this.below,
     this.selected = false,
+    this.dense = false,
   });
 
   final Color accent;
@@ -29,11 +30,21 @@ class PowerUpgradeRow extends StatelessWidget {
   final Widget? below;
   final bool selected;
 
+  /// Tighter pad for phone GOLD / ESSENCE lists.
+  final bool dense;
+
   @override
   Widget build(BuildContext context) {
+    final titleSize = dense ? 14.0 : 15.0;
+    final subSize = dense ? 12.0 : 13.0;
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+      margin: EdgeInsets.only(bottom: dense ? 3 : 6),
+      padding: EdgeInsets.fromLTRB(
+        dense ? 8 : 10,
+        dense ? 5 : 8,
+        dense ? 6 : 8,
+        dense ? 5 : 8,
+      ),
       decoration: MenuChrome.listCard(selected: selected, borderColor: accent),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -42,9 +53,9 @@ class PowerUpgradeRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsets.only(right: 10),
+                width: dense ? 7 : 8,
+                height: dense ? 7 : 8,
+                margin: EdgeInsets.only(right: dense ? 8 : 10),
                 decoration: BoxDecoration(
                   color: accent,
                   shape: BoxShape.circle,
@@ -58,9 +69,9 @@ class PowerUpgradeRow extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            title,
-                            style: GameTheme.pixel(
-                              size: GameTheme.hudPixel,
+                            dense ? '$title $subtitle' : title,
+                            style: GameTheme.body(
+                              size: titleSize,
                               color: GameTheme.parchment,
                             ),
                             maxLines: 1,
@@ -68,11 +79,11 @@ class PowerUpgradeRow extends StatelessWidget {
                           ),
                         ),
                         if (tag != null) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
+                              horizontal: 5,
+                              vertical: 1,
                             ),
                             decoration: BoxDecoration(
                               color: GameTheme.panelInset,
@@ -86,7 +97,7 @@ class PowerUpgradeRow extends StatelessWidget {
                             child: Text(
                               tag!,
                               style: GameTheme.pixel(
-                                size: 9,
+                                size: 8,
                                 color: GameTheme.torchHot,
                               ),
                             ),
@@ -94,21 +105,23 @@ class PowerUpgradeRow extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: GameTheme.body(
-                        size: 13,
-                        color: GameTheme.parchmentDim,
+                    if (!dense) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: GameTheme.body(
+                          size: subSize,
+                          color: GameTheme.parchmentDim,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    ],
                     if (detail != null)
                       Text(
                         detail!,
                         style: GameTheme.body(
-                          size: 12,
+                          size: dense ? 11 : 12,
                           color: GameTheme.mossLit,
                         ),
                         maxLines: 1,
@@ -117,7 +130,7 @@ class PowerUpgradeRow extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               trailing,
             ],
           ),

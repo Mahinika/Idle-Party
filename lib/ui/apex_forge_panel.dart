@@ -8,10 +8,9 @@ import '../models/apex_craft.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import 'character_equip_panel.dart';
+import 'game_icon.dart';
 import 'game_theme.dart';
-import 'kenney_assets.dart';
 import 'kenney_button.dart';
-import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
 
 /// Materials + craft + vault in one station (POWER → Craft).
@@ -87,10 +86,10 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
   }
 
   static String _matIcon(CraftMatFamily family) => switch (family) {
-    CraftMatFamily.shard => KenneyAssets.ring,
-    CraftMatFamily.core => KenneyAssets.shieldRound,
-    CraftMatFamily.catalyst => KenneyAssets.potionBlue,
-    CraftMatFamily.slag => KenneyAssets.coinGold,
+    CraftMatFamily.shard => UiIcon.ring,
+    CraftMatFamily.core => UiIcon.shieldRound,
+    CraftMatFamily.catalyst => UiIcon.flaskBlue,
+    CraftMatFamily.slag => UiIcon.gold,
   };
 
   @override
@@ -202,7 +201,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           ),
         ],
         const SizedBox(height: 6),
-        KenneyButton(
+        GameButton(
           label: existingItem == null
               ? 'CRAFT R1'
               : 'OWNED R${existingItem.apexRank}',
@@ -219,11 +218,11 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         ),
         if (existingItem != null) ...[
           const SizedBox(height: 4),
-          KenneyButton(
+          GameButton(
             label: existingItem.apexRank >= ApexCraft.maxRank
                 ? 'MAX RANK'
                 : 'UPGRADE → R${existingItem.apexRank + 1}',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             onPressed: canUpgrade
                 ? () {
                     director.upgradeApex(existingItem!.id);
@@ -258,7 +257,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                 ),
                 const SizedBox(height: 4),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(GameTheme.radiusHud),
                   child: LinearProgressIndicator(
                     value: targetRequired > 0
                         ? (targetProgress / targetRequired).clamp(0.0, 1.0)
@@ -276,9 +275,9 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                 ),
                 if (manualTarget) ...[
                   const SizedBox(height: 4),
-                  KenneyButton(
+                  GameButton(
                     label: 'Use auto target',
-                    style: KenneyButtonStyle.grey,
+                    style: GameButtonStyle.grey,
                     onPressed: () {
                       director.clearApexTargetMatOverride();
                       setState(() {});
@@ -297,9 +296,9 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           'VAULT (${state.apexVault.length})',
         ),
         if (state.apexVault.isNotEmpty) ...[
-          KenneyButton(
+          GameButton(
             label: 'AUTO EQUIP ALL',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             onPressed: () {
               director.autoEquipAllApex();
               setState(() {});
@@ -320,11 +319,11 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
               final clearedThisMonth =
                   state.metaDepth.apexTrialMonthKey == month &&
                   state.metaDepth.apexTrialCleared;
-              return KenneyButton(
+              return GameButton(
                 label: clearedThisMonth
                     ? 'CRAFT TRIAL · cleared this month'
                     : 'START CRAFT TRIAL (craft gear only)',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 onPressed: clearedThisMonth || state.inDungeon
                     ? null
                     : director.startApexTrial,
@@ -431,79 +430,55 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         : '${owned.length} type${owned.length == 1 ? '' : 's'}'
             '${top == null ? '' : ' · ${top.name} ×${state.craftMaterials[top.id] ?? 0}'}';
 
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        tilePadding: EdgeInsets.zero,
-        childrenPadding: const EdgeInsets.only(bottom: 4),
-        title: Text(
-          'MATERIALS (${owned.length})',
-          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
-        iconColor: GameTheme.parchmentDim,
-        collapsedIconColor: GameTheme.parchmentDim,
-        children: [
-          if (owned.isEmpty)
-            Text(
-              'No materials yet — clear bosses in PUSH.',
-              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-            )
-          else
-            for (final m in owned)
-              Container(
-                margin: const EdgeInsets.only(bottom: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                decoration: MenuChrome.cardBox(),
-                child: Row(
-                  children: [
-                    KenneySprite(asset: _matIcon(m.family), size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        m.name,
-                        style: GameTheme.body(
-                          size: 13,
-                          color: GameTheme.parchment,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '×${state.craftMaterials[m.id] ?? 0}',
+    return MenuChrome.fold(
+      title: 'MATERIALS (${owned.length})',
+      subtitle: subtitle,
+      children: [
+        if (owned.isEmpty)
+          Text(
+            'No materials yet — clear bosses in PUSH.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          )
+        else
+          for (final m in owned)
+            Container(
+              margin: const EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: MenuChrome.cardBox(),
+              child: Row(
+                children: [
+                  GameIcon.asset(_matIcon(m.family), size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      m.name,
                       style: GameTheme.body(
                         size: 13,
-                        color: GameTheme.torchHot,
+                        color: GameTheme.parchment,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  Text(
+                    '×${state.craftMaterials[m.id] ?? 0}',
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.torchHot,
+                    ),
+                  ),
+                ],
               ),
-        ],
-      ),
+            ),
+      ],
     );
   }
 
   Widget _changeGoalSection(List<SpecRoleTag> roles) {
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        tilePadding: EdgeInsets.zero,
-        childrenPadding: const EdgeInsets.only(bottom: 4),
-        title: Text(
-          'CHANGE GOAL',
-          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-        ),
-        subtitle: Text(
+    return MenuChrome.fold(
+      title: 'CHANGE GOAL',
+      subtitle:
           '${HeroSpecs.classLabel(_apexClass)} · ${_roleLabel(_apexRole)} · '
           '${_slotLabel(_apexSlot, _apexClass, _apexRole)}',
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
-        iconColor: GameTheme.parchmentDim,
-        collapsedIconColor: GameTheme.parchmentDim,
-        children: [
+      children: [
           Align(
             alignment: Alignment.centerLeft,
             child: Wrap(
@@ -511,23 +486,16 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
               runSpacing: 6,
               children: [
                 for (final c in HeroClassId.values)
-                  IntrinsicWidth(
-                    child: ChoiceChip(
-                      label: Text(
-                        HeroSpecs.classLabel(c),
-                        style: GameTheme.body(size: 11),
-                      ),
-                      selected: _apexClass == c,
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      onSelected: (_) {
-                        _setCraftGoal(
-                          c,
-                          ApexCraft.validRolesFor(c).first,
-                          EquipmentSlot.weapon,
-                        );
-                      },
-                    ),
+                  MenuChrome.chip(
+                    label: HeroSpecs.classLabel(c),
+                    selected: _apexClass == c,
+                    onTap: () {
+                      _setCraftGoal(
+                        c,
+                        ApexCraft.validRolesFor(c).first,
+                        EquipmentSlot.weapon,
+                      );
+                    },
                   ),
               ],
             ),
@@ -540,23 +508,16 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
               runSpacing: 6,
               children: [
                 for (final r in roles)
-                  IntrinsicWidth(
-                    child: ChoiceChip(
-                      label: Text(
-                        _roleLabel(r),
-                        style: GameTheme.body(size: 11),
-                      ),
-                      selected: _apexRole == r,
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      onSelected: (_) {
-                        final slots = ApexCraft.craftSlotsFor(_apexClass, r);
-                        final slot = slots.contains(_apexSlot)
-                            ? _apexSlot
-                            : EquipmentSlot.weapon;
-                        _setCraftGoal(_apexClass, r, slot);
-                      },
-                    ),
+                  MenuChrome.chip(
+                    label: _roleLabel(r),
+                    selected: _apexRole == r,
+                    onTap: () {
+                      final slots = ApexCraft.craftSlotsFor(_apexClass, r);
+                      final slot = slots.contains(_apexSlot)
+                          ? _apexSlot
+                          : EquipmentSlot.weapon;
+                      _setCraftGoal(_apexClass, r, slot);
+                    },
                   ),
               ],
             ),
@@ -569,24 +530,15 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
               runSpacing: 6,
               children: [
                 for (final s in ApexCraft.craftSlotsFor(_apexClass, _apexRole))
-                  IntrinsicWidth(
-                    child: ChoiceChip(
-                      label: Text(
-                        _slotLabel(s, _apexClass, _apexRole),
-                        style: GameTheme.body(size: 11),
-                      ),
-                      selected: _apexSlot == s,
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      onSelected: (_) =>
-                          _setCraftGoal(_apexClass, _apexRole, s),
-                    ),
+                  MenuChrome.chip(
+                    label: _slotLabel(s, _apexClass, _apexRole),
+                    selected: _apexSlot == s,
+                    onTap: () => _setCraftGoal(_apexClass, _apexRole, s),
                   ),
               ],
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -609,7 +561,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           decoration: MenuChrome.listCard(selected: selected),
           child: Row(
             children: [
-              KenneySprite(asset: _matIcon(family), size: 16),
+              GameIcon.asset(_matIcon(family), size: 16),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -676,7 +628,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           ),
           if (inVault) ...[
             const SizedBox(height: 4),
-            KenneyButton(
+            GameButton(
               label: bestHero != null
                   ? 'Equip on ${state.heroes[bestHero].roleLabel}'
                   : 'Equip best hero',
@@ -692,9 +644,9 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
             ),
             if (canUpgrade) ...[
               const SizedBox(height: 4),
-              KenneyButton(
+              GameButton(
                 label: 'Upgrade → R${item.apexRank + 1}',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 onPressed: () {
                   director.upgradeApex(item.id);
                   setState(() {});

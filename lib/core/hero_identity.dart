@@ -1,5 +1,5 @@
 import '../models/hero_spec.dart';
-import '../ui/custom_assets.dart';
+import '../assets/custom_assets.dart';
 
 /// Spec fantasy identity — sprite remap + tint + unlock copy.
 ///

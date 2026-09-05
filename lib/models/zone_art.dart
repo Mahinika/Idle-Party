@@ -1,8 +1,8 @@
 import 'dart:ui' show Color;
 
 import '../spatial/tile_map.dart' show MapPropKind;
-import '../ui/custom_assets.dart';
-import '../ui/kenney_assets.dart';
+import '../assets/custom_assets.dart';
+import '../assets/kenney_assets.dart';
 import 'dungeon_def.dart';
 import 'enemy.dart';
 

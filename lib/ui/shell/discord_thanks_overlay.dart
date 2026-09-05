@@ -90,16 +90,16 @@ class DiscordThanksOverlay extends StatelessWidget {
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 14),
-        KenneyButton(
+        GameButton(
           label: 'JOIN DISCORD',
           tip: 'Opens Discord so you can join the Idle Party server',
-          style: KenneyButtonStyle.brown,
+          style: GameButtonStyle.brown,
           onPressed: () => _joinDiscord(context),
         ),
         const SizedBox(height: 8),
-        KenneyButton(
+        GameButton(
           label: 'MAYBE LATER',
-          style: KenneyButtonStyle.grey,
+          style: GameButtonStyle.grey,
           onPressed: () => _dismiss(context),
         ),
       ],

@@ -137,7 +137,7 @@ class ItemTooltipCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(10, 8, 10, 9),
           decoration: BoxDecoration(
-            color: const Color(0xF0140C08),
+            color: GameTheme.tooltipSheet,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
               color: itemRarityBorder(item.rarity).withValues(alpha: 0.85),
@@ -145,7 +145,7 @@ class ItemTooltipCard extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.55),
+                color: GameTheme.ink.withValues(alpha: 0.55),
                 blurRadius: 14,
                 offset: const Offset(0, 4),
               ),
@@ -691,7 +691,7 @@ class _ItemTooltipAnchorState extends State<ItemTooltipAnchor> {
                   behavior: HitTestBehavior.opaque,
                   onTap: _hideNow,
                   child: ColoredBox(
-                    color: Colors.black.withValues(alpha: 0.45),
+                    color: GameTheme.ink.withValues(alpha: 0.45),
                   ),
                 ),
               ),

@@ -204,6 +204,9 @@ class GameDirector extends ChangeNotifier {
 
   /// Soft-pause spatial sim while inventory / meta menus are open.
   bool _uiPaused = false;
+
+  /// Hard pause while the app is backgrounded (separate from menu [uiPaused]).
+  bool _appPaused = false;
   final UiFeedback uiFeedback = UiFeedback();
   int? _playUpdateVersionCode;
   bool _mandatoryPlayUpdateRequired = false;
@@ -299,6 +302,7 @@ class GameDirector extends ChangeNotifier {
 
   bool get awaitingWipeChoice => _awaitingWipeChoice;
   bool get uiPaused => _uiPaused;
+  bool get appPaused => _appPaused;
 
   /// Combat gold/min from the last ~2 minutes of credited dungeon gold.
   int get runGoldPerMinute => _runGoldPerMinute;
@@ -316,6 +320,18 @@ class GameDirector extends ChangeNotifier {
     if (_uiPaused == paused) return;
     _uiPaused = paused;
   }
+
+  /// Freeze dungeon combat while the app is backgrounded; flush save on pause.
+  void setAppPaused(bool paused) {
+    if (_appPaused == paused) return;
+    _appPaused = paused;
+    if (paused) {
+      unawaited(_persistFlush());
+    }
+  }
+
+  /// Await the latest save write (lifecycle / tests).
+  Future<void> flushSave() => _persistFlush();
 
   String? get toast => uiFeedback.toast;
 
@@ -620,6 +636,10 @@ class GameDirector extends ChangeNotifier {
     if (_uiPaused) {
       return;
     }
+    // Hard pause while the app is backgrounded.
+    if (_appPaused) {
+      return;
+    }
 
     // Room changed externally (travel / ascend / restart)
     if (_battleToken != _state.battleNumber) {
@@ -632,6 +652,7 @@ class GameDirector extends ChangeNotifier {
     for (var step = 0; step < steps; step++) {
       if (_awaitingWipeChoice ||
           _uiPaused ||
+          _appPaused ||
           !_state.inDungeon ||
           _spatial == null) {
         break;
@@ -736,17 +757,15 @@ class GameDirector extends ChangeNotifier {
       if (step == 0 &&
           GameLogic.canUseConsumable(_state) &&
           !_state.isPartyDefeated) {
-        final living = [
-          for (final h in _state.heroes)
-            if (h.currentHp > 0) h,
-        ];
-        if (living.isNotEmpty) {
-          var ratioSum = 0.0;
-          for (final h in living) {
-            final maxHp = _state.effectiveHeroMaxHp(h);
-            ratioSum += maxHp > 0 ? h.currentHp / maxHp : 0;
-          }
-          if (ratioSum / living.length < 0.35) {
+        var livingCount = 0;
+        var ratioSum = 0.0;
+        for (final h in _state.heroes) {
+          if (h.currentHp <= 0) continue;
+          livingCount++;
+          final maxHp = _state.effectiveHeroMaxHp(h);
+          ratioSum += maxHp > 0 ? h.currentHp / maxHp : 0;
+        }
+        if (livingCount > 0 && ratioSum / livingCount < 0.35) {
             final drank = GameLogic.useConsumable(_state);
             if (!identical(drank, _state)) {
               _state = drank;
@@ -757,7 +776,6 @@ class GameDirector extends ChangeNotifier {
               );
               GameAudio.flask();
             }
-          }
         }
       }
 
@@ -986,7 +1004,7 @@ class GameDirector extends ChangeNotifier {
         if (keyBanner != null) {
           final timed = keyBanner.contains('TIMED');
           uiFeedback.presentClear(
-            timed ? '★ $keyBanner' : keyBanner,
+            keyBanner,
             life: timed ? 4.0 : 3.6,
           );
           final rest = payoffNotices.where((n) => n != keyBanner).toList();
@@ -2176,7 +2194,7 @@ class GameDirector extends ChangeNotifier {
     }
     _syncHubIdleTimer();
     showToast(
-      'Infinity Gauntlet · best F${_state.metaDepth.gauntletBestFloor}',
+      'Gauntlet climb · Crystal Spire · best F${_state.metaDepth.gauntletBestFloor}',
       life: 3.0,
     );
     notifyListeners();
@@ -2205,8 +2223,8 @@ class GameDirector extends ChangeNotifier {
     }
     _syncHubIdleTimer();
     showToast(
-      'Rift R${_state.riftTier} · ${_state.riftKillTarget} kills · '
-      '${Rift.formatTimer(_state.riftParMs)}',
+      'Farm Rift R${_state.riftTier} · Stormwake · '
+      '${_state.riftKillTarget} kills · ${Rift.formatTimer(_state.riftParMs)}',
       life: 3.0,
     );
     notifyListeners();
@@ -2241,8 +2259,8 @@ class GameDirector extends ChangeNotifier {
     }
     _syncHubIdleTimer();
     showToast(
-      'Greater Rift GR${_state.grTier} · ${_state.grKillTarget} kills · '
-      '${GreaterRift.formatTimer(_state.grParMs)}',
+      'Ranked GR${_state.grTier} · Mothveil · no mid-run gear · '
+      '${_state.grKillTarget} kills · ${GreaterRift.formatTimer(_state.grParMs)}',
       life: 3.0,
     );
     notifyListeners();

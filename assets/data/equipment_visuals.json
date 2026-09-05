@@ -1,5 +1,5 @@
 {
-  "comment": "Equipment visualSetId catalog mirror (Dart catalog in equipment_visual_resolver.dart is authoritative for v1). New items should point at one of these ids.",
+  "comment": "Equipment visualSetId catalog mirror (Dart EquipmentModelCatalog / resolver is authoritative). Includes extract tiers + authored shared models.",
   "sets": [
     "helm_t0", "helm_t1", "helm_t2", "helm_t3",
     "chest_t0", "chest_t1", "chest_t2", "chest_t3",
@@ -15,6 +15,14 @@
     "dagger_t0", "dagger_t1", "dagger_t2", "dagger_t3",
     "mace_t0", "mace_t1", "mace_t2", "mace_t3",
     "axe_t0", "axe_t1", "axe_t2", "axe_t3",
-    "bow_t0", "bow_t1", "bow_t2", "bow_t3"
+    "bow_t0", "bow_t1", "bow_t2", "bow_t3",
+    "sword_thunderfury", "sword_warglaive", "sword_runebound",
+    "staff_frostfire", "staff_nethercore",
+    "bow_eagle", "bow_windpierce",
+    "axe_goreblade", "axe_bloodhowl",
+    "mace_lightbringer", "mace_dawnbreak",
+    "dagger_shadowfang", "dagger_nightbite",
+    "shield_aegis", "shield_ironwall",
+    "frill_prism", "frill_soulcodex"
   ]
 }

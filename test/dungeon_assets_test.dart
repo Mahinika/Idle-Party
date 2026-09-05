@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:idle_party/ui/custom_assets.dart';
+import 'package:idle_party/assets/custom_assets.dart';
 
 /// Custom dungeon PNGs must ship in the asset bundle — not only on disk.
 void main() {

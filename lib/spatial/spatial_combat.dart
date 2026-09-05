@@ -14,7 +14,7 @@ import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/spec_mastery.dart';
 import '../models/spell_bolt_style.dart';
-import '../ui/kenney_assets.dart';
+import '../assets/kenney_assets.dart';
 import 'combat_avoidance.dart';
 import 'hideout_stash.dart';
 import 'tile_map.dart';
@@ -869,6 +869,12 @@ abstract final class SpatialCombat {
   /// Accessibility: swaps combat floaters to an Okabe-Ito colorblind-safe
   /// palette (avoids relying on red/green hue alone to distinguish types).
   static bool colorblindMode = false;
+
+  /// Reused per step — avoid fresh spreads/lists on the hot path.
+  static final List<SpatialActor> _scratchAllies = <SpatialActor>[];
+  static final List<SpatialActor> _scratchLivingHeroes = <SpatialActor>[];
+  static final List<SpatialProjectile> _scratchProjectiles =
+      <SpatialProjectile>[];
 
   static int get _floaterDamage => colorblindMode ? 0xFFD55E00 : 0xFFFF6A4A;
   static int get _floaterCrit => colorblindMode ? 0xFFF0E442 : 0xFFFFC14A;
@@ -3063,10 +3069,10 @@ abstract final class SpatialCombat {
       ];
       var slot = 0;
       var anyOnStairs = false;
-      final livingHeroes = <SpatialActor>[
-        for (final h in world.heroes)
-          if (h.isAlive) h,
-      ];
+      final livingHeroes = _scratchLivingHeroes..clear();
+      for (final h in world.heroes) {
+        if (h.isAlive) livingHeroes.add(h);
+      }
       for (final hero in livingHeroes) {
         late final double tx;
         late final double ty;
@@ -4037,7 +4043,7 @@ abstract final class SpatialCombat {
       _CombatPathing.binActor(h, cols);
     }
 
-    final remaining = <SpatialProjectile>[];
+    final remaining = _scratchProjectiles..clear();
     for (final p in world.projectiles) {
       if (p.delay > 0) {
         p.delay -= dt;
@@ -4224,6 +4230,10 @@ abstract final class SpatialCombat {
       p.petLifeTimer -= dt;
       return p.petLifeTimer <= 0;
     });
+    final allies = _scratchAllies
+      ..clear()
+      ..addAll(world.heroes)
+      ..addAll(world.pets);
     for (final pet in world.pets) {
       if (petLeader == null) break;
       final leashOwner = _heroById(world, pet.petOwnerId) ?? petLeader;
@@ -4239,7 +4249,7 @@ abstract final class SpatialCombat {
           world,
           dt: dt,
           holdDistance: 0.35,
-          separateFrom: <SpatialActor>[...world.heroes, ...world.pets],
+          separateFrom: allies,
         );
         continue;
       }
@@ -4253,7 +4263,7 @@ abstract final class SpatialCombat {
           world,
           dt: dt,
           holdDistance: pet.attackRange * 0.7,
-          separateFrom: <SpatialActor>[...world.heroes, ...world.pets],
+          separateFrom: allies,
         );
       }
       pet.fireCooldown -= dt;

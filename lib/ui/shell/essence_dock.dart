@@ -3,13 +3,13 @@
 import '../../core/game_director.dart';
 import '../../core/menu_router.dart';
 import '../menu_chrome.dart';
-import '../meta/prestige_shop.dart';
 import 'beast_overlay.dart';
+import 'essence_keep_panel.dart';
 import 'relics_overlay.dart';
 import 'sanctuary_overlay.dart';
 import 'shell_common.dart';
 
-/// ESSENCE sheet: tracks/KEEP, prestige shop, relics, pets.
+/// ESSENCE sheet: tracks, KEEP (incl. permanent buys), relics, pets.
 class EssenceDock extends StatefulWidget {
   const EssenceDock({
     super.key,
@@ -74,10 +74,16 @@ class _EssenceDockState extends State<EssenceDock>
               child: SanctuaryOverlay(director: widget.director),
             ),
           ),
-          EssencePanel.shop => (
-            label: 'SHOP',
+          EssencePanel.keep => (
+            label: 'KEEP',
             body: SingleChildScrollView(
-              child: PrestigeShopOverlay(director: widget.director),
+              child: EssenceKeepPanel(director: widget.director),
+            ),
+          ),
+          EssencePanel.shop => (
+            label: 'KEEP',
+            body: SingleChildScrollView(
+              child: EssenceKeepPanel(director: widget.director),
             ),
           ),
           EssencePanel.relics => (
@@ -123,4 +129,3 @@ class _EssenceDockState extends State<EssenceDock>
     );
   }
 }
-

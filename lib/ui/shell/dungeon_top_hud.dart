@@ -2,20 +2,15 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
-import '../../core/gold_income.dart';
 import '../../core/keystone.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/rift.dart';
 import '../../core/greater_rift.dart';
 import '../../models/dungeon_mode.dart';
-import '../../models/dungeon_zoom.dart';
 import '../game_theme.dart';
-import '../kenney_assets.dart';
-import '../kenney_sprite.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../spatial_dungeon_view.dart';
-import 'shell_common.dart';
 
 class DungeonTopHud extends StatelessWidget {
   const DungeonTopHud({
@@ -38,13 +33,6 @@ class DungeonTopHud extends StatelessWidget {
   final VoidCallback? onOpenKey;
   final VoidCallback? onOpenForge;
   final VoidCallback? onOpenParty;
-
-  static String _godHandStyleLabel(int style) => switch (style.clamp(0, 2)) {
-        0 => 'BAL',
-        1 => 'FOCUS',
-        2 => 'WIDE',
-        _ => 'BAL',
-      };
 
   List<PopupMenuEntry<String>> _floorMenuItems({
     required int floor,
@@ -193,15 +181,15 @@ class DungeonTopHud extends StatelessWidget {
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
-          KenneyButton(
+          GameButton(
             label: 'CANCEL',
-            style: KenneyButtonStyle.grey,
+            style: GameButtonStyle.grey,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, false),
           ),
-          KenneyButton(
+          GameButton(
             label: 'JUMP',
-            style: KenneyButtonStyle.brown,
+            style: GameButtonStyle.brown,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),
@@ -246,28 +234,19 @@ class DungeonTopHud extends StatelessWidget {
     final floor = state.currentRoom.floorNumber;
     final world = director.spatial;
     final farm = state.dungeonMode == DungeonMode.farm;
-    final compact = GameTheme.isCompactWidth(context);
     final plain = GameLogic.plainPlayerChrome(state);
-    // CLAIM stays visible mid-fight so quests aren't buried in MORE.
     final showClaimChip = claimable > 0;
     final softcap = GameLogic.levelsUntilSoftcap(state);
-    // Starter L1 on F1 is always "behind" floor+2 — don't panic until a wipe
-    // or a real gap (about 4+ levels). Prefer bag-equip when upgrades pile up.
     final bagUpgrades = MenuAlerts.bagUpgradeCount(state);
     final showSoftcap = softcap > 0 &&
         !state.inGauntlet &&
         bagUpgrades < 5 &&
         (state.wipeStreakCount >= 1 || softcap >= 4);
-    final rates = GoldIncome.ratesLine(
-      state,
-      runGpm: director.runGoldPerMinute,
-    );
     final keyBit = state.keystoneRunActive
         ? ' · KEY +${state.keystoneRunLevel}'
         : (state.hardmodeLevel > 0 ? ' · KEY +${state.hardmodeLevel}' : '');
     final keyTimerBit = state.keystoneRunActive
-        ? ' · ${Keystone.formatTimer(state.keystoneTimerMs)}/'
-            '${Keystone.formatTimer(state.keystoneParMs)}'
+        ? ' · ${Keystone.formatTimer(state.keystoneTimerMs)}'
         : '';
     final zoneShort = () {
       final parts = dungeonName.split(RegExp(r"[\s']+"));
@@ -275,8 +254,15 @@ class DungeonTopHud extends StatelessWidget {
           parts.firstWhere((p) => p.isNotEmpty, orElse: () => dungeonName);
       return word.length > 10 ? word.substring(0, 10) : word;
     }();
-    final placeLine = state.inGauntlet
-        ? 'Gauntlet · F$floor'
+    final awaitingExit = director.spatial?.awaitingExit == true;
+    final placeLine = state.isPartyDefeated
+        ? (state.inGauntlet || state.inAnyRiftMode
+            ? 'WIPED · End → hub'
+            : 'WIPED · Retry / Hub')
+        : awaitingExit
+        ? '$zoneShort · F$floor · GO stairs'
+        : state.inGauntlet
+        ? 'CLIMB · F$floor'
         : state.inRift
         ? Rift.progressLabel(
             kills: state.riftKills,
@@ -321,15 +307,15 @@ class DungeonTopHud extends StatelessWidget {
               style: GameTheme.body(size: 15, color: GameTheme.parchment),
             ),
             actions: [
-              KenneyButton(
+              GameButton(
                 label: 'CANCEL',
-                style: KenneyButtonStyle.grey,
+                style: GameButtonStyle.grey,
                 expanded: false,
                 onPressed: () => Navigator.pop(ctx, false),
               ),
-              KenneyButton(
+              GameButton(
                 label: 'SWITCH',
-                style: KenneyButtonStyle.brown,
+                style: GameButtonStyle.brown,
                 expanded: false,
                 onPressed: () => Navigator.pop(ctx, true),
               ),
@@ -343,489 +329,205 @@ class DungeonTopHud extends StatelessWidget {
       director.setDungeonMode(mode);
     }
 
+    Widget modeRow() {
+      if (state.inGauntlet) {
+        return DungeonModeChip(
+          label: 'GAUNTLET',
+          selected: true,
+          dense: true,
+          interactive: false,
+          tip:
+              'Crystal Spire climb — boss every 5 floors. Wipe or leave → hub.',
+          onTap: () {},
+        );
+      }
+      if (state.inRift) {
+        return DungeonModeChip(
+          label: Rift.hudChipLabel(
+            kills: state.riftKills,
+            target: state.riftKillTarget,
+            tier: state.riftTier,
+          ),
+          selected: true,
+          dense: true,
+          interactive: false,
+          maxLabelWidth: 140,
+          tip: 'Stormwake farm timer — gold and gear mid-run.',
+          onTap: () {},
+        );
+      }
+      if (state.inGreaterRift) {
+        return DungeonModeChip(
+          label: GreaterRift.hudChipLabel(
+            kills: state.grKills,
+            target: state.grKillTarget,
+            tier: state.grTier,
+          ),
+          selected: true,
+          dense: true,
+          interactive: false,
+          maxLabelWidth: 140,
+          tip: 'Mothveil ranked timer — no mid-run gear.',
+          onTap: () {},
+        );
+      }
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DungeonModeChip(
+            label: GameLogic.dungeonModeChipLabel(DungeonMode.farm, state),
+            selected: farm,
+            dense: true,
+            tip: GameLogic.dungeonModeChipTip(DungeonMode.farm, state),
+            onTap: () => setMode(DungeonMode.farm),
+          ),
+          const SizedBox(width: 4),
+          DungeonModeChip(
+            label: GameLogic.dungeonModeChipLabel(DungeonMode.push, state),
+            selected: !farm,
+            dense: true,
+            tip: GameLogic.dungeonModeChipTip(DungeonMode.push, state),
+            onTap: () => setMode(DungeonMode.push),
+          ),
+        ],
+      );
+    }
+
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        compact ? 8 : 10,
-        compact ? 4 : 6,
-        4,
-        compact ? 4 : 6,
-      ),
+      padding: const EdgeInsets.fromLTRB(6, 2, 2, 2),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            GameTheme.ink.withValues(alpha: 0.82),
-            GameTheme.stoneDeep.withValues(alpha: 0.55),
+            GameTheme.ink.withValues(alpha: 0.78),
+            GameTheme.stoneDeep.withValues(alpha: 0.28),
           ],
         ),
         border: Border(
-          bottom: BorderSide(color: GameTheme.border.withValues(alpha: 0.4)),
+          bottom: BorderSide(color: GameTheme.border.withValues(alpha: 0.3)),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          compact
-              ? Row(
-                  children: [
-                    Expanded(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (state.inGauntlet)
-                              DungeonModeChip(
-                                label: 'GAUNTLET',
-                                selected: true,
-                                dense: true,
-                                interactive: false,
-                                tip: 'No FARM loop — wipe or leave returns to hub. Boss every 5 floors.',
-                                onTap: () {},
-                              )
-                            else if (state.inRift)
-                              DungeonModeChip(
-                                label: Rift.progressLabel(
-                                  kills: state.riftKills,
-                                  target: state.riftKillTarget,
-                                  timerMs: state.riftTimerMs,
-                                  parMs: state.riftParMs,
-                                  tier: state.riftTier,
-                                ),
-                                selected: true,
-                                dense: true,
-                                interactive: false,
-                                tip: 'Timed kill farm — gold and gear drop mid-run.',
-                                onTap: () {},
-                              )
-                            else if (state.inGreaterRift)
-                              DungeonModeChip(
-                                label: GreaterRift.progressLabel(
-                                  kills: state.grKills,
-                                  target: state.grKillTarget,
-                                  timerMs: state.grTimerMs,
-                                  parMs: state.grParMs,
-                                  tier: state.grTier,
-                                ),
-                                selected: true,
-                                dense: true,
-                                interactive: false,
-                                tip: 'No mid-run gear — prestige ladder only.',
-                                onTap: () {},
-                              )
-                            else ...[
-                              DungeonModeChip(
-                                label: GameLogic.dungeonModeChipLabel(
-                                  DungeonMode.farm,
-                                  state,
-                                ),
-                                selected: farm,
-                                dense: true,
-                                tip: GameLogic.dungeonModeChipTip(
-                                  DungeonMode.farm,
-                                  state,
-                                ),
-                                onTap: () => setMode(DungeonMode.farm),
-                              ),
-                              const SizedBox(width: 3),
-                              DungeonModeChip(
-                                label: GameLogic.dungeonModeChipLabel(
-                                  DungeonMode.push,
-                                  state,
-                                ),
-                                selected: !farm,
-                                dense: true,
-                                tip: GameLogic.dungeonModeChipTip(
-                                  DungeonMode.push,
-                                  state,
-                                ),
-                                onTap: () => setMode(DungeonMode.push),
-                              ),
-                            ],
-                            // Keep God Hand ≥ minTouch; only gold/essence may shrink.
-                            if (world != null) ...[
-                              const SizedBox(width: 4),
-                              ChamberDots(world: world),
-                              if (!plain) ...[
-                                const SizedBox(width: 4),
-                                DungeonModeChip(
-                                  label: state.dungeonZoom.hudChipLabel,
-                                  selected:
-                                      state.dungeonZoom != DungeonZoom.normal,
-                                  dense: true,
-                                  tip: state.dungeonZoom.settingsHint,
-                                  onTap: () {
-                                    director.cycleDungeonZoom();
-                                    director.showToast(
-                                      director.state.dungeonZoom.settingsLabel,
-                                      life: 1.4,
-                                    );
-                                  },
-                                ),
-                              ],
-                              if (!plain) ...[
-                                const SizedBox(width: 4),
-                                Text(
-                                  _godHandStyleLabel(
-                                    state.metaDepth.godHandStyle,
-                                  ),
-                                  style: GameTheme.pixel(
-                                    size: 6,
-                                    color: GameTheme.parchmentDim,
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(width: 2),
-                              Semantics(
-                                button: true,
-                                label: plain
-                                    ? 'Tap the fight — steer your party smash'
-                                    : 'God Hand — tap to smash and steer',
-                                child: GodHandRing(
-                                  cooldown: world.godHandCooldown,
-                                  maxCooldown: state.godHandCooldownSeconds,
-                                  urgent: state.wipeStreakCount >= 2,
-                                  readyLabel: plain
-                                      ? 'Tap the fight — steer your party smash'
-                                      : null,
-                                  coolingLabel: plain
-                                      ? 'Tap the fight cooling ${world.godHandCooldown.toStringAsFixed(1)}s'
-                                      : null,
-                                  onTap: () => director.godHandAtFocus(),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (state.keystoneRunActive ||
-                              state.inGauntlet ||
-                              state.inAnyRiftMode) ...[
-                            const SizedBox(width: 4),
-                            Semantics(
-                              label: 'Essence ${state.essence}',
-                              child: MenuChrome.chip(
-                                icon: KenneyAssets.vialBlue,
-                                label: formatCount(state.essence),
-                              ),
-                            ),
-                          ],
-                          const SizedBox(width: 4),
-                          Semantics(
-                            label: 'Gold ${state.gold}',
-                            child: MenuChrome.chip(
-                              icon: KenneyAssets.coinGold,
-                              label: formatCount(state.gold),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (showClaimChip) ...[
-                      const SizedBox(width: 2),
-                      MissionClaimChip(
-                        count: claimable,
-                        dense: true,
-                        onTap: _claimAllReadyMissions,
-                        onLongPress: onOpenContracts,
-                      ),
-                      const SizedBox(width: 2),
-                    ],
-                    SizedBox(
-                      width: GameTheme.minTouch,
-                      height: GameTheme.minTouch,
-                      child: Semantics(
-                        button: true,
-                        label: 'Floor menu',
-                        excludeSemantics: true,
-                        child: PopupMenuButton<String>(
-                          tooltip: 'Floor',
-                          padding: EdgeInsets.zero,
-                          color: GameTheme.stoneDeep,
-                          onSelected: (value) =>
-                              _onFloorMenu(context, value, floor),
-                          itemBuilder: (context) =>
-                              _floorMenuItems(floor: floor, includeExtras: true),
-                          child: Center(
-                            child: Text(
-                              'F$floor',
-                              style: GameTheme.pixel(
-                                size: GameTheme.hudPixel,
-                                color: GameTheme.torchHot,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            '$dungeonName  F$floor'
-                            '${state.keystoneRunActive ? '  KEY+${state.keystoneRunLevel}' : ''}'
-                            '${state.keystoneRunActive ? '  ${Keystone.formatTimer(state.keystoneTimerMs)}/${Keystone.formatTimer(state.keystoneParMs)}' : ''}'
-                            '${state.keystoneOutcome == 'timed'
-                                ? '  TIMED'
-                                : state.keystoneOutcome == 'depleted'
-                                ? '  DEPLETED'
-                                : ''}',
-                            overflow: TextOverflow.ellipsis,
-                            style: GameTheme.pixel(size: GameTheme.hudPixel),
-                          ),
-                        ),
-                        if (showClaimChip) ...[
-                          const SizedBox(width: 4),
-                          MissionClaimChip(
-                            count: claimable,
-                            onTap: _claimAllReadyMissions,
-                            onLongPress: onOpenContracts,
-                          ),
-                        ],
-                        const SizedBox(width: 4),
-                        MenuChrome.chip(
-                          icon: KenneyAssets.coinGold,
-                          label: formatCount(state.gold),
-                        ),
-                        const SizedBox(width: 4),
-                        MenuChrome.chip(
-                          icon: KenneyAssets.vialBlue,
-                          label: formatCount(state.essence),
-                        ),
-                        SizedBox(
-                          width: GameTheme.minTouch,
-                          height: GameTheme.minTouch,
-                          child: IconButton(
-                            padding: EdgeInsets.zero,
-                            onPressed: onOpenSettings,
-                            icon: KenneySprite(
-                              asset: KenneyAssets.iconDoor,
-                              size: 18,
-                            ),
-                            tooltip: 'Settings',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (state.inGauntlet)
-                                  DungeonModeChip(
-                                    label: 'GAUNTLET F$floor',
-                                    selected: true,
-                                    interactive: false,
-                                    onTap: () {},
-                                  )
-                                else if (state.inRift)
-                                  DungeonModeChip(
-                                    label: Rift.progressLabel(
-                                      kills: state.riftKills,
-                                      target: state.riftKillTarget,
-                                      timerMs: state.riftTimerMs,
-                                      parMs: state.riftParMs,
-                                      tier: state.riftTier,
-                                    ),
-                                    selected: true,
-                                    interactive: false,
-                                    onTap: () {},
-                                  )
-                                else if (state.inGreaterRift)
-                                  DungeonModeChip(
-                                    label: GreaterRift.progressLabel(
-                                      kills: state.grKills,
-                                      target: state.grKillTarget,
-                                      timerMs: state.grTimerMs,
-                                      parMs: state.grParMs,
-                                      tier: state.grTier,
-                                    ),
-                                    selected: true,
-                                    interactive: false,
-                                    onTap: () {},
-                                  )
-                                else ...[
-                                  DungeonModeChip(
-                                    label: GameLogic.dungeonModeChipLabel(
-                                      DungeonMode.farm,
-                                      state,
-                                    ),
-                                    selected: farm,
-                                    tip: GameLogic.dungeonModeChipTip(
-                                      DungeonMode.farm,
-                                      state,
-                                    ),
-                                    onTap: () => setMode(DungeonMode.farm),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  DungeonModeChip(
-                                    label: GameLogic.dungeonModeChipLabel(
-                                      DungeonMode.push,
-                                      state,
-                                    ),
-                                    selected: !farm,
-                                    tip: GameLogic.dungeonModeChipTip(
-                                      DungeonMode.push,
-                                      state,
-                                    ),
-                                    onTap: () => setMode(DungeonMode.push),
-                                  ),
-                                ],
-                                const SizedBox(width: 6),
-                                if (world != null) ...[
-                                  ChamberDots(world: world),
-                                  const SizedBox(width: 6),
-                                  DungeonModeChip(
-                                    label: state.dungeonZoom.hudChipLabel,
-                                    selected:
-                                        state.dungeonZoom != DungeonZoom.normal,
-                                    dense: true,
-                                    tip: state.dungeonZoom.settingsHint,
-                                    onTap: () {
-                                      director.cycleDungeonZoom();
-                                      director.showToast(
-                                        director
-                                            .state.dungeonZoom.settingsLabel,
-                                        life: 1.4,
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    _godHandStyleLabel(
-                                      state.metaDepth.godHandStyle,
-                                    ),
-                                    style: GameTheme.pixel(
-                                      size: GameTheme.hudPixel,
-                                      color: GameTheme.parchmentDim,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Semantics(
-                                    button: true,
-                                    label: plain
-                                        ? 'Tap the fight — steer your party smash'
-                                        : 'God Hand — tap to smash and steer',
-                                    child: GodHandRing(
-                                      cooldown: world.godHandCooldown,
-                                      maxCooldown: state.godHandCooldownSeconds,
-                                      urgent: state.wipeStreakCount >= 2,
-                                      readyLabel: plain
-                                          ? 'Tap the fight — steer your party smash'
-                                          : null,
-                                      coolingLabel: plain
-                                          ? 'Tap the fight cooling ${world.godHandCooldown.toStringAsFixed(1)}s'
-                                          : null,
-                                      onTap: () => director.godHandAtFocus(),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: GameTheme.minTouch,
-                          height: GameTheme.minTouch,
-                          child: Semantics(
-                            button: true,
-                            label: 'Floor menu',
-                            excludeSemantics: true,
-                            child: PopupMenuButton<String>(
-                              tooltip: 'Floor',
-                              padding: EdgeInsets.zero,
-                              color: GameTheme.stoneDeep,
-                              onSelected: (value) =>
-                                  _onFloorMenu(context, value, floor),
-                              itemBuilder: (context) => _floorMenuItems(
-                                floor: floor,
-                                includeExtras: false,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Floor',
-                                  style: GameTheme.pixel(
-                                    size: GameTheme.hudPixel,
-                                    color: GameTheme.torchHot,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-          if (compact &&
-              !state.inGauntlet &&
-              !state.inAnyRiftMode &&
-              director.spatial?.awaitingExit == true)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                GameLogic.dungeonModeAfterClearHint(state, state.dungeonMode),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: GameTheme.body(
-                  size: 10,
-                  color: GameTheme.parchmentDim,
-                ),
-              ),
-            ),
-          if (compact)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                placeLine,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: GameTheme.pixel(
-                  size: 6,
-                  color: GameTheme.parchmentDim,
-                ),
-              ),
-            ),
-          if (!compact)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Semantics(
-                label: rates,
+          // One strip — do not Flexible-expand FARM/PUSH (that stretched them).
+          Row(
+            children: [
+              Expanded(
                 child: Text(
-                  rates,
+                  placeLine,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+                  style: GameTheme.body(
+                    size: 11,
+                    color: awaitingExit || state.isPartyDefeated
+                        ? GameTheme.clear
+                        : GameTheme.parchment,
+                  ),
                 ),
+              ),
+              modeRow(),
+              if (world != null) ...[
+                const SizedBox(width: 4),
+                Semantics(
+                  button: true,
+                  label: plain
+                      ? 'Tap the fight — steer your party smash'
+                      : 'God Hand — tap to smash and steer',
+                  child: GodHandRing(
+                    cooldown: world.godHandCooldown,
+                    maxCooldown: state.godHandCooldownSeconds,
+                    urgent: state.wipeStreakCount >= 2,
+                    dense: true,
+                    readyLabel: plain
+                        ? 'Tap the fight — steer your party smash'
+                        : null,
+                    coolingLabel: plain
+                        ? 'Tap the fight cooling ${world.godHandCooldown.toStringAsFixed(1)}s'
+                        : null,
+                    onTap: () => director.godHandAtFocus(),
+                  ),
+                ),
+              ],
+              if (showClaimChip) ...[
+                const SizedBox(width: 2),
+                MissionClaimChip(
+                  count: claimable,
+                  dense: true,
+                  onTap: _claimAllReadyMissions,
+                  onLongPress: onOpenContracts,
+                ),
+              ],
+              SizedBox(
+                width: 32,
+                height: 30,
+                child: Semantics(
+                  button: true,
+                  label: 'Floor menu',
+                  excludeSemantics: true,
+                  child: PopupMenuButton<String>(
+                    tooltip: 'Floor',
+                    padding: EdgeInsets.zero,
+                    color: GameTheme.stoneDeep,
+                    onSelected: (value) =>
+                        _onFloorMenu(context, value, floor),
+                    itemBuilder: (context) =>
+                        _floorMenuItems(floor: floor, includeExtras: true),
+                    child: Center(
+                      child: Text(
+                        'F$floor',
+                        style: GameTheme.pixel(
+                          size: GameTheme.hudPixel,
+                          color: GameTheme.torchHot,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (!state.inGauntlet &&
+              !state.inAnyRiftMode &&
+              awaitingExit &&
+              !state.isPartyDefeated)
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      GameLogic.dungeonModeAfterClearHint(
+                        state,
+                        state.dungeonMode,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(
+                        size: 10,
+                        color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                  ),
+                  if (!(director.exitHoldActive))
+                    GestureDetector(
+                      onTap: director.startExitHold,
+                      child: Text(
+                        'HOLD',
+                        style: GameTheme.pixel(
+                          size: GameTheme.hudPixel,
+                          color: GameTheme.clear,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           if (showSoftcap)
             Padding(
-              padding: const EdgeInsets.only(top: 3),
+              padding: const EdgeInsets.only(top: 1),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -836,7 +538,7 @@ class DungeonTopHud extends StatelessWidget {
                           : 'Underleveled · ~$softcap lvl or gear',
                       textAlign: TextAlign.center,
                       style: GameTheme.body(
-                        size: 11,
+                        size: 10,
                         color: GameTheme.torchHot,
                       ),
                     ),
@@ -846,7 +548,7 @@ class DungeonTopHud extends StatelessWidget {
                     GestureDetector(
                       onTap: onOpenForge,
                       child: Text(
-                        plain ? 'POWER' : 'Gold',
+                        'GOLD',
                         style: GameTheme.pixel(
                           size: GameTheme.hudPixel,
                           color: GameTheme.clear,
@@ -874,6 +576,7 @@ class DungeonTopHud extends StatelessWidget {
       ),
     );
   }
+
 }
 
 class MissionClaimChip extends StatelessWidget {
@@ -902,11 +605,13 @@ class MissionClaimChip extends StatelessWidget {
           onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(3),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+            constraints: BoxConstraints(
+              minHeight: dense ? 28 : GameTheme.minTouch,
+            ),
             child: Container(
               padding: EdgeInsets.symmetric(
                 horizontal: dense ? 6 : 8,
-                vertical: dense ? 4 : 6,
+                vertical: dense ? 3 : 6,
               ),
               alignment: Alignment.center,
               decoration: BoxDecoration(

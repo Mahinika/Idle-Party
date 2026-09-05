@@ -7,7 +7,7 @@ import 'package:idle_party/core/story_lore.dart';
 import 'package:idle_party/main.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/ui/boot_intro_screen.dart';
-import 'package:idle_party/ui/custom_assets.dart';
+import 'package:idle_party/assets/custom_assets.dart';
 import 'package:idle_party/ui/new_game_party_picker.dart';
 import 'package:idle_party/ui/kenney_button.dart';
 import 'package:idle_party/ui/start_menu_screen.dart';
@@ -262,8 +262,8 @@ void main() {
 
     expect(find.textContaining('already picked'), findsOneWidget);
     expect(find.textContaining('Pick 2 more heroes'), findsOneWidget);
-    final startButton = tester.widget<KenneyButton>(
-      find.widgetWithText(KenneyButton, 'START'),
+    final startButton = tester.widget<GameButton>(
+      find.widgetWithText(GameButton, 'START'),
     );
     expect(startButton.onPressed, isNull);
   });

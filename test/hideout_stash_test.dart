@@ -10,8 +10,8 @@ import 'package:idle_party/models/zone_art.dart';
 import 'package:idle_party/spatial/hideout_stash.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/spatial/tile_map.dart';
-import 'package:idle_party/ui/custom_assets.dart';
-import 'package:idle_party/ui/kenney_assets.dart';
+import 'package:idle_party/assets/custom_assets.dart';
+import 'package:idle_party/assets/kenney_assets.dart';
 
 void main() {
   test('goblin mid-pack sprites differ from king', () {

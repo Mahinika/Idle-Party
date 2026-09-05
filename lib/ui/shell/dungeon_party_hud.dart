@@ -11,11 +11,10 @@ import '../../models/hero_spec.dart';
 import '../../models/loot.dart';
 import '../../models/spec_mastery.dart';
 import '../../spatial/spatial_combat.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../hero_doll_sprite.dart';
-import '../kenney_assets.dart';
 import '../kenney_button.dart';
-import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 
@@ -26,13 +25,11 @@ class PartyCornerHud extends StatefulWidget {
     required this.selectedHeroIndex,
     required this.onSelectHero,
     required this.onOpenEquip,
-    required this.onUseConsumable,
   });
   final GameDirector director;
   final int selectedHeroIndex;
   final ValueChanged<int> onSelectHero;
   final VoidCallback onOpenEquip;
-  final VoidCallback onUseConsumable;
 
   @override
   State<PartyCornerHud> createState() => _PartyCornerHudState();
@@ -42,9 +39,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   static const _idleFade = Duration(seconds: 8);
   static const _idleFadePhone = Duration(seconds: 3);
   static const _fullOpacity = 1.0;
-  static const _dimOpacity = 0.55;
-  static const _dimOpacityPhone = 0.55;
-  static const _hudScale = 1.0;
+  static const _dimOpacity = 0.42;
+  static const _dimOpacityPhone = 0.32;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;
@@ -69,7 +65,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     if (_opacity < _fullOpacity) {
       setState(() => _opacity = _fullOpacity);
     }
-    final phone = mounted && GameTheme.isPhoneWidth(context);
+    final phone = mounted;
     _scheduleFade(phone: phone);
   }
 
@@ -103,23 +99,9 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     return null;
   }
 
-  static int _flaskCount(GameState state) {
-    var n = 0;
-    for (final h in state.heroes) {
-      final c = h.itemIn(EquipmentSlot.consumable);
-      if (c != null && c.iconId == 'flask') n++;
-    }
-    for (final g in state.gearStash) {
-      if (g.slot == EquipmentSlot.consumable && g.iconId == 'flask') n++;
-    }
-    return n;
-  }
-
   void _onHeroTap(int i) {
     _bump();
     if (widget.selectedHeroIndex == i && _kitOpen) {
-      // Stay open in dungeon — second tap must not hide CD chips mid-pull.
-      if (widget.director.state.inDungeon) return;
       setState(() => _kitOpen = false);
       return;
     }
@@ -137,30 +119,22 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     }
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: GameTheme.stoneDeep,
-        title: Text(
-          'Open gear?',
-          style: GameTheme.pixel(size: 12, color: GameTheme.torchHot),
-        ),
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Open gear?',
         content: Text(
           'You are mid-fight. Open GEAR anyway?',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
-          TextButton(
+          MenuChrome.dialogCancel(
+            label: 'CANCEL',
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'CANCEL',
-              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-            ),
           ),
-          TextButton(
+          GameButton(
+            label: 'OPEN GEAR',
+            expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              'OPEN GEAR',
-              style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-            ),
           ),
         ],
       ),
@@ -172,12 +146,11 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   Widget build(BuildContext context) {
     final state = widget.director.state;
     final world = widget.director.spatial;
-    final canUseFlask = GameLogic.canUseConsumable(state);
-    final compact = GameTheme.isCompactWidth(context);
-    final phone = GameTheme.isPhoneWidth(context);
     final plainEnglish = GameLogic.plainPlayerChrome(state);
-    // Thin strip: reclaim map; kit expands in place when tapped.
-    final fullWidth = phone ? 168.0 : (compact ? 188.0 : 228.0);
+    // Thin strip: reclaim map; kit opens beside the strip (not expanding rows).
+    const fullWidth = 118.0;
+    const rowHeight = 26.0;
+    final heroCount = state.heroes.length;
     var partyCritical = false;
     final bossFight =
         world != null &&
@@ -204,82 +177,88 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
       }
     }
 
-    final flaskCount = _flaskCount(state);
     final keepBright = partyCritical;
     if (keepBright) {
       _fadeTimer?.cancel();
     } else if (_fadeTimer == null || !_fadeTimer!.isActive) {
-      _scheduleFade(phone: phone);
+      _scheduleFade(phone: true);
     }
 
-    final panel = ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: fullWidth),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final selected = widget.selectedHeroIndex;
+    final kitHero = (selected >= 0 && selected < state.heroes.length)
+        ? state.heroes[selected]
+        : null;
+    final kitActor = (selected >= 0) ? _spatialFor(world, selected) : null;
+    final showSideKit = _kitOpen &&
+        kitHero != null &&
+        kitActor != null &&
+        kitActor.isAlive;
+
+    final panel = SizedBox(
+      width: fullWidth,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
           Container(
+            width: fullWidth,
             decoration: BoxDecoration(
-              color: const Color(0xCC14110C),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: const Color(0x665A5040)),
+              color: GameTheme.hudWell.withValues(alpha: 0.82),
+              borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+              border: Border.all(color: GameTheme.hudWellBorder),
             ),
-            padding: EdgeInsets.fromLTRB(
-              phone ? 3 : 4,
-              phone ? 3 : 4,
-              phone ? 3 : 4,
-              phone ? 3 : 4,
-            ),
+            padding: const EdgeInsets.fromLTRB(2, 2, 2, 2),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (var i = 0; i < state.heroes.length; i++) ...[
-                  if (i > 0) SizedBox(height: phone ? 1.0 : 2.0),
-                  WebClickScope(
-                    label: state.heroes[i].name,
-                    onPressed: () => _onHeroTap(i),
-                    child: Semantics(
-                      button: true,
-                      selected: widget.selectedHeroIndex == i,
-                      label:
-                          '${state.heroes[i].name} '
-                          '${state.heroes[i].displayRoleLabel(plainEnglish: plainEnglish)} — tap for kit, '
-                          'long-press for gear',
-                      onTap: () => _onHeroTap(i),
-                      onLongPress: _onLongPressGear,
-                      excludeSemantics: true,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
+                for (var i = 0; i < heroCount; i++) ...[
+                  if (i > 0) const SizedBox(height: 1.0),
+                  SizedBox(
+                    height: rowHeight,
+                    child: ClipRect(
+                      child: WebClickScope(
+                        label: state.heroes[i].name,
+                        onPressed: () => _onHeroTap(i),
+                        child: Semantics(
+                          button: true,
+                          selected: widget.selectedHeroIndex == i,
+                          label:
+                              '${state.heroes[i].name} '
+                              '${state.heroes[i].displayRoleLabel(plainEnglish: plainEnglish)} — tap for kit, '
+                              'long-press for gear',
                           onTap: () => _onHeroTap(i),
                           onLongPress: _onLongPressGear,
-                          borderRadius: BorderRadius.circular(3),
-                          child: _PartyRow(
-                            index: i,
-                            hero: state.heroes[i],
-                            plainEnglish: plainEnglish,
-                            selected: widget.selectedHeroIndex == i,
-                            kitOpen: widget.selectedHeroIndex == i && _kitOpen,
-                            compact:
-                                phone || compact || state.heroes.length >= 4,
-                            phone: phone,
-                            inCombat: world?.enemies.any((e) => e.isAlive) ??
-                                false,
-                            liveHp: () {
-                              final s = _spatialFor(world, i);
-                              return s?.hp ?? state.heroes[i].currentHp;
-                            }(),
-                            maxHp: () {
-                              final s = _spatialFor(world, i);
-                              return s?.effectiveMaxHp ??
-                                  state.effectiveHeroMaxHp(state.heroes[i]);
-                            }(),
-                            spatial: _spatialFor(world, i),
-                            kitSpatial: (widget.selectedHeroIndex == i && _kitOpen)
-                                ? _spatialFor(world, i)
-                                : null,
-                            world: world,
+                          excludeSemantics: true,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => _onHeroTap(i),
+                              onLongPress: _onLongPressGear,
+                              borderRadius: BorderRadius.circular(3),
+                              child: _PartyRow(
+                                index: i,
+                                hero: state.heroes[i],
+                                plainEnglish: plainEnglish,
+                                selected: widget.selectedHeroIndex == i,
+                                kitOpen: false,
+                                compact: true,
+                                phone: true,
+                                stripOnly: true,
+                                inCombat: world?.enemies.any((e) => e.isAlive) ??
+                                    false,
+                                liveHp: () {
+                                  final s = _spatialFor(world, i);
+                                  return s?.hp ?? state.heroes[i].currentHp;
+                                }(),
+                                maxHp: () {
+                                  final s = _spatialFor(world, i);
+                                  return s?.effectiveMaxHp ??
+                                      state.effectiveHeroMaxHp(state.heroes[i]);
+                                }(),
+                                spatial: _spatialFor(world, i),
+                                world: world,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -289,18 +268,17 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
               ],
             ),
           ),
-          if (canUseFlask) ...[
-            SizedBox(height: phone ? 5 : 4),
-            _FlaskQuickSlot(
-              urgent: partyCritical,
-              phone: phone,
-              count: flaskCount,
-              onTap: () {
-                _bump();
-                widget.onUseConsumable();
-              },
+          if (showSideKit)
+            Positioned(
+              left: fullWidth + 4,
+              bottom: 0,
+              child: _KitSidePanel(
+                hero: kitHero,
+                plainEnglish: plainEnglish,
+                spatial: kitActor,
+                world: world,
+              ),
             ),
-          ],
         ],
       ),
     );
@@ -316,36 +294,79 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
             setState(() => _opacity = _fullOpacity);
           }
           if (!keepBright) {
-            _scheduleFade(phone: phone);
+            _scheduleFade(phone: true);
           }
         },
-        child: SizedBox(
-          width: fullWidth * _hudScale,
-          child: FittedBox(
-            fit: BoxFit.fitWidth,
-            alignment: Alignment.bottomLeft,
-            child: SizedBox(width: fullWidth, child: panel),
-          ),
-        ),
+        child: panel,
       ),
     );
   }
 }
 
-class _FlaskQuickSlot extends StatelessWidget {
-  const _FlaskQuickSlot({
+/// Healing flask — sits bottom-right in the dungeon (away from the party strip).
+class DungeonFlaskButton extends StatelessWidget {
+  const DungeonFlaskButton({
+    super.key,
+    required this.director,
     required this.onTap,
-    this.urgent = false,
-    this.phone = false,
-    this.count = 0,
   });
+
+  final GameDirector director;
   final VoidCallback onTap;
-  final bool urgent;
-  final bool phone;
-  final int count;
+
+  static int flaskCount(GameState state) {
+    var n = 0;
+    for (final h in state.heroes) {
+      final c = h.itemIn(EquipmentSlot.consumable);
+      if (c != null && c.iconId == 'flask') n++;
+    }
+    for (final g in state.gearStash) {
+      if (g.slot == EquipmentSlot.consumable && g.iconId == 'flask') n++;
+    }
+    return n;
+  }
+
+  static bool partyCritical(GameDirector director) {
+    final state = director.state;
+    final world = director.spatial;
+    final bossFight =
+        world != null &&
+        world.enemies.any(
+          (e) => e.hp > 0 && !e.dormant && e.role == EnemyRole.boss,
+        );
+    for (var i = 0; i < state.heroes.length; i++) {
+      final hero = state.heroes[i];
+      SpatialActor? s;
+      if (world != null) {
+        for (final a in world.heroes) {
+          if (!a.isPet && a.assetIndex == i) {
+            s = a;
+            break;
+          }
+        }
+      }
+      final hp = s?.hp ?? hero.currentHp;
+      final maxHp = s?.effectiveMaxHp ?? state.effectiveHeroMaxHp(hero);
+      if (maxHp <= 0) continue;
+      if (hp <= 0) {
+        if (bossFight ||
+            (world?.enemies.any((e) => e.hp > 0 && !e.dormant) ?? false)) {
+          return true;
+        }
+      }
+      if (hp > 0 && hp / maxHp <= 0.35) return true;
+    }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = director.state;
+    if (!GameLogic.canUseConsumable(state)) {
+      return const SizedBox.shrink();
+    }
+    final urgent = partyCritical(director);
+    final count = flaskCount(state);
     final borderColor = urgent
         ? GameTheme.torchHot
         : GameTheme.bloodLit.withValues(alpha: 0.8);
@@ -366,32 +387,23 @@ class _FlaskQuickSlot extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(4),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 280),
-              constraints: BoxConstraints(
-                minHeight: phone ? GameTheme.minTouch : 0,
-              ),
-              padding: EdgeInsets.symmetric(
-                horizontal: phone ? 10 : 8,
-                vertical: phone ? 8 : 5,
-              ),
+            child: Container(
+              height: 36,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: urgent
-                    ? const Color(0xEE4A2010)
-                    : const Color(0xDD2A1810),
+                    ? GameTheme.hudFlaskUrgent
+                    : GameTheme.hudFlaskIdle,
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: borderColor, width: urgent ? 2 : 1),
+                border: Border.all(color: borderColor, width: 1),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  KenneySprite(
-                    asset: KenneyAssets.potionRed,
-                    size: phone ? 18 : 16,
-                  ),
+                  GameIcon.asset(UiIcon.flask, size: 16),
                   const SizedBox(width: 5),
                   Text(
-                    '${urgent ? 'FLASK!' : 'FLASK'}$countBit',
+                    'FLASK$countBit',
                     style: GameTheme.pixel(
                       size: GameTheme.hudPixel,
                       color: urgent ? GameTheme.torchHot : GameTheme.parchment,
@@ -401,6 +413,110 @@ class _FlaskQuickSlot extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ability chips sit beside the party strip so row heights stay fixed.
+class _KitSidePanel extends StatelessWidget {
+  const _KitSidePanel({
+    required this.hero,
+    required this.spatial,
+    required this.plainEnglish,
+    this.world,
+  });
+
+  final PartyHero hero;
+  final SpatialActor spatial;
+  final bool plainEnglish;
+  final SpatialWorld? world;
+
+  @override
+  Widget build(BuildContext context) {
+    final roleShort = hero.displayRoleLabel(plainEnglish: plainEnglish);
+    final isRunic = HeroSpecs.def(hero.specId).resource == SpecResource.runic;
+    final resource = spatial.rage.clamp(0.0, 100.0).toDouble();
+    final off = hero.itemIn(EquipmentSlot.offHand);
+    final hasShield = off?.offHandKind == OffHandKind.shield;
+    final abilities = ClassKits.hudAbilitiesAtSpec(hero.specId, hero.level);
+    final visible = abilities.length <= 4
+        ? abilities
+        : abilities.take(4).toList(growable: false);
+    final maxHp = spatial.effectiveMaxHp;
+    final frac = maxHp <= 0 ? 0.0 : (spatial.hp / maxHp).clamp(0.0, 1.0);
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 148),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
+        decoration: MenuChrome.hudWell(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              '$roleShort L${hero.level}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.pixel(
+                size: GameTheme.hudPixel,
+                color: GameTheme.torchHot,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    ClassKits.resourceLabelForSpec(hero.specId),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.body(
+                      size: 10,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(1),
+                    child: LinearProgressIndicator(
+                      value: isRunic ? frac : resource / 100,
+                      minHeight: 3,
+                      backgroundColor: GameTheme.hudHpFill,
+                      color: Color(
+                        ClassKits.resourceColorForSpec(hero.specId),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (visible.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 3,
+                runSpacing: 3,
+                children: [
+                  for (final ability in visible)
+                    _InlineAbilityChip(
+                      ability: ability,
+                      cdLeft: spatial.abilityCd[ability.id.name] ?? 0,
+                      rage: resource,
+                      hasShield: hasShield,
+                      activeBuff: false,
+                      focusHpFrac: 1,
+                      bombUp: false,
+                      isRunic: isRunic,
+                      isHealer: hero.gearAffinity == HeroRole.healer,
+                    ),
+                ],
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -418,9 +534,9 @@ class _PartyRow extends StatelessWidget {
     this.kitOpen = false,
     this.compact = false,
     this.phone = false,
+    this.stripOnly = false,
     this.inCombat = false,
     this.spatial,
-    this.kitSpatial,
     this.world,
   });
 
@@ -433,9 +549,10 @@ class _PartyRow extends StatelessWidget {
   final bool kitOpen;
   final bool compact;
   final bool phone;
+  /// Phone dungeon strip: fixed height, no kit / XP / companion lines.
+  final bool stripOnly;
   final bool inCombat;
   final SpatialActor? spatial;
-  final SpatialActor? kitSpatial;
   final SpatialWorld? world;
 
   static const int _runicPipCount = 6;
@@ -547,11 +664,14 @@ class _PartyRow extends StatelessWidget {
     final frac = maxHp <= 0 ? 0.0 : (liveHp / maxHp).clamp(0.0, 1.0);
     // Keep full shortLabel (PROT/COMBAT/…) — only ellipsis if the strip is tiny.
     final roleShort = hero.displayRoleLabel(plainEnglish: plainEnglish);
-    final kitActor = kitSpatial;
-    final showKit = kitOpen && kitActor != null && kitActor.isAlive;
+    final kitActor = spatial;
+    final showKit =
+        !stripOnly && kitOpen && kitActor != null && kitActor.isAlive;
     final isRunic = HeroSpecs.def(hero.specId).resource == SpecResource.runic;
     final resource = showKit ? kitActor.rage.clamp(0.0, 100.0).toDouble() : 0.0;
-    final companionLine = _companionLine(spatial, world, hero.specId);
+    final companionLine = stripOnly
+        ? null
+        : _companionLine(spatial, world, hero.specId);
     final off = hero.itemIn(EquipmentSlot.offHand);
     final hasShield = off?.offHandKind == OffHandKind.shield;
     final abilities = showKit
@@ -581,6 +701,60 @@ class _PartyRow extends StatelessWidget {
       return cb ? GameTheme.hudCastOk : GameTheme.clear;
     }();
 
+    if (stripOnly) {
+      return Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        decoration: BoxDecoration(
+          color: selected ? GameTheme.hudRowSelected : Colors.transparent,
+          borderRadius: BorderRadius.circular(3),
+          border: Border.all(
+            color: selected
+                ? GameTheme.torch.withValues(alpha: 0.85)
+                : Colors.transparent,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            HeroDollSprite(
+              hero: hero,
+              partyIndex: index,
+              size: 11,
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$roleShort L${hero.level}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: GameTheme.parchment,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(1),
+                    child: LinearProgressIndicator(
+                      value: frac,
+                      minHeight: 2.5,
+                      backgroundColor: GameTheme.hudHpFill,
+                      color: hpColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     // Default: thin strip. Kit only when tapped open.
     return Container(
       // Finger-sized on phones even though the strip paints thin.
@@ -591,7 +765,7 @@ class _PartyRow extends StatelessWidget {
         vertical: showKit ? (phone ? 4 : 5) : (phone ? 2 : 3),
       ),
       decoration: BoxDecoration(
-        color: selected ? const Color(0x331C1812) : Colors.transparent,
+        color: selected ? GameTheme.hudRowSelected : Colors.transparent,
         borderRadius: BorderRadius.circular(3),
         border: Border.all(
           color: selected
@@ -1034,9 +1208,9 @@ class _InlineAbilityChip extends StatelessWidget {
                 style: GameTheme.body(size: 15, color: GameTheme.parchment),
               ),
               actions: [
-                KenneyButton(
+                GameButton(
                   label: 'OK',
-                  style: KenneyButtonStyle.brown,
+                  style: GameButtonStyle.brown,
                   expanded: false,
                   onPressed: () => Navigator.pop(ctx),
                 ),
@@ -1084,11 +1258,7 @@ class _DpsMeterState extends State<DpsMeter> {
     if (snap.isEmpty) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
-        decoration: BoxDecoration(
-          color: const Color(0xCC14110C),
-          borderRadius: BorderRadius.circular(3),
-          border: Border.all(color: const Color(0x665A5040)),
-        ),
+        decoration: MenuChrome.hudWell(),
         child: Text(
           '0 DPS',
           style: GameTheme.pixel(
@@ -1101,11 +1271,7 @@ class _DpsMeterState extends State<DpsMeter> {
 
     final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xCC14110C),
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: const Color(0x665A5040)),
-      ),
+      decoration: MenuChrome.hudWell(),
       child: Text(
         _open ? 'METER ▴' : '${snap.chipLabel} ▾',
         style: GameTheme.pixel(
@@ -1119,11 +1285,7 @@ class _DpsMeterState extends State<DpsMeter> {
       constraints: const BoxConstraints(maxWidth: 156),
       child: Container(
         padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
-        decoration: BoxDecoration(
-          color: const Color(0xCC14110C),
-          borderRadius: BorderRadius.circular(3),
-          border: Border.all(color: const Color(0x665A5040)),
-        ),
+        decoration: MenuChrome.hudWell(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,

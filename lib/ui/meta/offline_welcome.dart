@@ -153,14 +153,14 @@ Future<void> showOfflineProgressDialog(
       ),
       actions: [
         if (showChaseCta) ...[
-          KenneyButton(
+          GameButton(
             label: readyLabel,
             expanded: false,
-            style: KenneyButtonStyle.brown,
+            style: GameButtonStyle.brown,
             onPressed: readyAction,
           ),
         ],
-        KenneyButton(
+        GameButton(
           label: 'NICE',
           expanded: false,
           onPressed: () {

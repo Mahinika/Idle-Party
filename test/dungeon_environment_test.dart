@@ -7,7 +7,7 @@ import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/spatial/tile_map.dart';
 import 'package:idle_party/spatial/zone_layout_kit.dart';
 import 'package:idle_party/ui/dungeon_environment.dart';
-import 'package:idle_party/ui/kenney_assets.dart';
+import 'package:idle_party/assets/kenney_assets.dart';
 
 void main() {
   test('every dungeon has distinct ambient + atmosphere', () {

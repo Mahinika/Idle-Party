@@ -82,7 +82,6 @@ class ClassProficiency {
         _ => false,
       },
       HeroRole.mage => switch (type) {
-        WeaponType.sword => handed == WeaponHanded.oneHand,
         WeaponType.dagger || WeaponType.staff => true,
         _ => false,
       },
@@ -163,7 +162,6 @@ class ClassProficiency {
         _ => false,
       },
       HeroClassId.mage || HeroClassId.warlock => switch (type) {
-        WeaponType.sword => handed == WeaponHanded.oneHand,
         WeaponType.dagger || WeaponType.staff => true,
         _ => false,
       },

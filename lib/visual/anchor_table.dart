@@ -54,7 +54,8 @@ class GearOverlayScales {
     cape: 0.85,
   );
 
-  /// Tighter tiles so denser bodies stay readable (GEAR + dungeon).
+  /// Tighter Kenney-tile scales for denser bodies on the fallback atlas path.
+  /// Owned heroes use full 128 overlays + [OwnedGearGrips] instead.
   static const owned = GearOverlayScales(
     head: 0.24,
     hand: 0.30,
@@ -108,21 +109,24 @@ abstract final class AnchorTables {
     final attackLean = anim == HeroAnimKind.attack && frame == 1;
     final castLean = anim == HeroAnimKind.cast && frame == 1;
     return switch (id) {
-      AnchorId.head => const AnchorPose(x: 0, y: -0.36),
+      AnchorId.head => const AnchorPose(x: 0, y: -0.30),
       AnchorId.body => const AnchorPose(x: 0, y: 0),
       AnchorId.back => const AnchorPose(x: 0, y: -0.08),
       AnchorId.feet => const AnchorPose(x: 0, y: 0.40),
+      // Art is already angled in the PNG — idle/walk keep rotation ~0;
+      // attack/cast add lean + swing on top. Attack UVs match measured
+      // body hand centroids across warrior/rogue/mage/healer.
       AnchorId.mainHand => AnchorPose(
-        x: attackLean ? 0.34 : (castLean ? 0.26 : 0.32),
-        y: attackLean ? 0.02 : (castLean ? -0.08 : 0.14),
+        x: attackLean ? 0.25 : (castLean ? 0.24 : 0.28),
+        y: attackLean ? 0.20 : (castLean ? 0.06 : 0.14),
         rotation: attackLean
-            ? -0.70
-            : (castLean ? -0.25 : (anim == HeroAnimKind.walk ? 0.12 : -0.15)),
+            ? -0.40
+            : (castLean ? -0.15 : (anim == HeroAnimKind.walk ? 0.06 : 0)),
       ),
       AnchorId.offHand => AnchorPose(
-        x: attackLean ? -0.30 : -0.32,
-        y: attackLean ? 0.06 : 0.12,
-        rotation: attackLean ? 0.20 : 0.05,
+        x: attackLean ? -0.24 : (castLean ? -0.26 : -0.28),
+        y: attackLean ? 0.21 : (castLean ? 0.12 : 0.14),
+        rotation: attackLean ? 0.10 : 0,
       ),
     };
   }

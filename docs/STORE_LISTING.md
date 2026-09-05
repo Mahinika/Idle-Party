@@ -6,7 +6,7 @@
 
 Sources: Play Console Help (preview assets), ASO / CRO guides 2025–2026
 (ASOMobile, AppDrift, InspiringApps), plus Idle Party prefs (phone-only,
-fairness, no IAP).
+fairness, cheap convenience SHOP).
 
 | Rank | Asset | Why it moves installs |
 |------|--------|------------------------|
@@ -24,7 +24,8 @@ fairness, no IAP).
 3. **Captions short** (≤ ~8 words) if used; never cover critical HUD.
 4. **Phone portrait** 9:16, ≥1080 px wide (Play featuring bar).
 5. **Copy matches ship** — 15 zones, 31 specs, KEYSTONE (not invented systems).
-   Do **not** promise “no ads / no paid store forever” — monetization may come later.
+   Do **not** promise “no ads forever” — rewarded POWERUPS and a cheap SHOP
+   catalog exist; billing may land later (`docs/SHOP_MONETIZATION.md`).
 6. **English only on the store page** — default locale **en-US**. Do not add
    translated Play listings (sv-SE or otherwise). Screenshot captions stay English.
 

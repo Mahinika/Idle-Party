@@ -6,6 +6,7 @@ import '../../core/game_logic.dart';
 import '../../core/chase_contract.dart';
 import '../../core/keystone.dart';
 import '../../core/local_season.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -296,7 +297,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 ),
                 if (vaultReady) ...[
                   const SizedBox(height: 6),
-                  KenneyButton(
+                  GameButton(
                     label: 'CLAIM VAULT  +${vaultE}e',
                     onPressed: director.claimDailyVault,
                   ),
@@ -417,11 +418,11 @@ class _KeyAffixChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
+          GameIcon.asset(
             switch (risk) {
-              'Soft' => Icons.spa_outlined,
-              'Brutal' => Icons.local_fire_department_outlined,
-              _ => Icons.bolt_outlined,
+              'Soft' => UiIcon.heart,
+              'Brutal' => UiIcon.skull,
+              _ => UiIcon.star,
             },
             size: 12,
             color: _riskColor,

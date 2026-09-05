@@ -144,7 +144,47 @@ abstract final class EquipmentVisualResolver {
     visualSetId: resolveId(item),
     family: family,
     anim: anim,
+    armorType: item.armorType,
   );
+
+  /// BAG/GEAR slot icon: same [resolveId] as the doll, then `*_icon.png`.
+  static String? ownedIconPathFor(
+    EquipmentItem item, {
+    BodyFamily? family,
+  }) {
+    final fam = family ?? BodyFamilyCatalog.familyForAffinity(item.affinity);
+    if (item.slot == EquipmentSlot.boots) {
+      final id = resolveId(item);
+      final m = RegExp(r'_t(\d+)$').firstMatch(id);
+      final tier = m != null ? int.parse(m.group(1)!) : 0;
+      final bootTier = tier >= 2 ? 2 : 0;
+      final mat = OwnedGearAssets.materialSuffix(fam, item.armorType);
+      final mid = mat == null ? '' : '${mat}_';
+      return '${OwnedGearAssets.root}/${fam.name}/gear/boots_${mid}t${bootTier}_icon.png';
+    }
+    final id = resolveId(item);
+    if (id == 'none') return null;
+    final stem = EquipmentModelCatalog.baseToken(id);
+    if (stem == 'shoulder' || stem == 'waist') return null;
+    final idle = OwnedGearAssets.pathFor(
+      visualSetId: id,
+      family: fam,
+      anim: HeroAnimKind.idle,
+      armorType: item.armorType,
+    );
+    if (idle == null) return null;
+    return idle.replaceFirst('_idle.png', '_icon.png');
+  }
+
+  /// Persist doll/icon resolve id when a save piece still has a null stamp.
+  static EquipmentItem stampMissingVisualSetId(EquipmentItem item) {
+    if (item.visualSetId != null && item.visualSetId!.isNotEmpty) {
+      return item;
+    }
+    final id = resolveId(item);
+    if (id == 'none') return item;
+    return item.copyWith(visualSetId: id);
+  }
 
   /// Built-in catalog (Dart v1). New items point at these ids.
   static final Map<String, EquipmentVisualDef> catalog =
@@ -222,6 +262,8 @@ abstract final class EquipmentVisualResolver {
             layer: CharacterLayerId.offHand,
             atlasCol: 42,
             atlasRow: 0,
+            useAnchor: true,
+            anchor: 'offHand',
           ),
           'sword_t$t': EquipmentVisualDef(
             id: 'sword_t$t',

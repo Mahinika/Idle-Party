@@ -81,7 +81,7 @@ class GameLogic {
   static const Map<String, String> relicDescriptions = <String, String>{
     warBannerRelic: 'Permanent +4 team attack aura.',
     ironWardRelic: 'Permanent +16 team defense aura.',
-    phoenixEmberRelic: 'Permanent +48 max HP for every hero.',
+    phoenixEmberRelic: 'Permanent +48 STA for every hero.',
     godHandFocusRelic: '+3 God Hand damage per tier.',
     chamberLuckRelic: '+5% loot find per tier.',
     ironWillRelic: '+8 flat damage mitigate per tier.',
@@ -99,7 +99,7 @@ class GameLogic {
   static String relicPerTierPayout(String relicId) => switch (relicId) {
     warBannerRelic => '+$relicAttackPerTier ATK',
     ironWardRelic => '+$relicDefensePerTier DEF',
-    phoenixEmberRelic => '+$relicVitalityPerTier HP',
+    phoenixEmberRelic => '+$relicVitalityPerTier STA',
     godHandFocusRelic => '+3 God Hand',
     chamberLuckRelic => '+5% loot',
     ironWillRelic => '+$relicMitigatePerTier mitigate',
@@ -110,7 +110,7 @@ class GameLogic {
       switch (relicId) {
         warBannerRelic => '+${state.relicAttackBonus} ATK',
         ironWardRelic => '+${state.relicDefenseBonus} DEF',
-        phoenixEmberRelic => '+${state.relicVitalityBonus} HP',
+        phoenixEmberRelic => '+${state.relicVitalityBonus} STA',
         godHandFocusRelic => '+${state.relicGodHandDamageBonus} God Hand',
         chamberLuckRelic => '+${state.relicLootFindPercent}% loot',
         ironWillRelic => '+${state.relicMitigateFlat} mitigate',
@@ -122,7 +122,7 @@ class GameLogic {
     final bits = <String>[
       if (state.relicAttackBonus > 0) '+${state.relicAttackBonus} ATK',
       if (state.relicDefenseBonus > 0) '+${state.relicDefenseBonus} DEF',
-      if (state.relicVitalityBonus > 0) '+${state.relicVitalityBonus} HP',
+      if (state.relicVitalityBonus > 0) '+${state.relicVitalityBonus} STA',
       if (state.relicGodHandDamageBonus > 0)
         '+${state.relicGodHandDamageBonus} God Hand',
       if (state.relicLootFindPercent > 0)
@@ -447,10 +447,6 @@ class GameLogic {
   /// Hero level hard cap — XP stops here; endgame unlocks when the
   /// active party is fully capped.
   static const int maxHeroLevel = 100;
-
-  /// Legacy aliases (older copy / tests). Prefer [endgameUnlocked].
-  static const int gauntletMinAscension = maxAscensionLevel;
-  static const int keystoneMinAscension = maxAscensionLevel;
 
   static bool isMaxAscension(GameState state) =>
       state.ascensionLevel >= maxAscensionLevel;
@@ -1069,6 +1065,24 @@ class GameLogic {
       count++;
     }
     return count;
+  }
+
+  /// Total essence for [levels] consecutive upgrades from the track's current level.
+  static int sanctuaryBulkCost(GameState state, String track, int levels) {
+    var level = switch (track) {
+      'gold' => state.sanctuaryGoldLevel,
+      'power' => state.sanctuaryPowerLevel,
+      'vitality' => state.sanctuaryVitalityLevel,
+      'xp' => state.metaDepth.sanctuaryXpLevel,
+      _ => -1,
+    };
+    if (level < 0 || levels <= 0) return 0;
+    var total = 0;
+    for (var i = 0; i < levels; i++) {
+      total += sanctuaryCost(level);
+      level++;
+    }
+    return total;
   }
 
   /// Buy up to [maxLevels] sanctuary levels on one track while essence lasts.
@@ -2951,7 +2965,9 @@ class GameLogic {
     return MetaSystems.evaluateAchievements(
       syncSpecUnlocks(
         ensureRogueHero(
-          GearService.clampStashToCap(unequipIllegalGear(next)),
+          GearService.stampMissingVisualSetIds(
+            GearService.clampStashToCap(unequipIllegalGear(next)),
+          ),
         ),
       ),
     );

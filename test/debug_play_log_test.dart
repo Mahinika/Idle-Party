@@ -27,12 +27,14 @@ void main() {
     );
   });
 
-  test('menu debugWhere uses everyday POWER tab names', () {
+  test('menu debugWhere uses GOLD / SHOP / MORE names', () {
     final router = MenuRouter();
     expect(router.debugWhere, 'closed');
-    router.open(MenuRoute.power, power: PowerSegment.market);
-    expect(router.debugWhere, 'POWER/Shop');
-    router.powerSegment = PowerSegment.camp;
-    expect(router.debugWhere, 'POWER/Essence');
+    router.open(MenuRoute.shop);
+    expect(router.debugWhere, 'SHOP');
+    router.open(MenuRoute.essence);
+    expect(router.debugWhere, 'ESSENCE');
+    router.open(MenuRoute.gold);
+    expect(router.debugWhere, 'GOLD');
   });
 }

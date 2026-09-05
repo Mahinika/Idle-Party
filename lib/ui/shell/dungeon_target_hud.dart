@@ -4,6 +4,7 @@ import '../../core/game_logic.dart';
 import '../../models/enemy.dart';
 import '../../spatial/spatial_combat.dart';
 import '../game_theme.dart';
+import '../menu_chrome.dart';
 
 class TargetCornerHud extends StatelessWidget {
   const TargetCornerHud({super.key, required this.director});
@@ -96,42 +97,29 @@ class TargetCornerHud extends StatelessWidget {
     final hpFrac = enemy == null || enemy.maxHp <= 0
         ? 0.0
         : (enemy.hp / enemy.maxHp).clamp(0.0, 1.0);
-    final phone = GameTheme.isPhoneWidth(context);
     final titleColor = role == 'BOSS'
         ? GameTheme.bloodLit
         : (role == 'ELITE' ? GameTheme.torch : GameTheme.parchment);
 
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: phone ? 200.0 : 180.0),
+      constraints: const BoxConstraints(maxWidth: 188.0),
       child: Container(
-        padding: EdgeInsets.fromLTRB(6, phone ? 3 : 4, 6, phone ? 4 : 5),
-        decoration: BoxDecoration(
-          color: const Color(0xCC14110C),
-          borderRadius: BorderRadius.circular(3),
-          border: Border.all(
-            color: role == 'BOSS'
-                ? GameTheme.bloodLit.withValues(alpha: 0.7)
-                : (role == 'ELITE'
-                      ? GameTheme.torch.withValues(alpha: 0.55)
-                      : const Color(0x665A5040)),
-          ),
+        padding: const EdgeInsets.fromLTRB(6, 2, 6, 3),
+        decoration: MenuChrome.hudWell(
+          borderColor: role == 'BOSS'
+              ? GameTheme.bloodLit.withValues(alpha: 0.7)
+              : (role == 'ELITE'
+                    ? GameTheme.torch.withValues(alpha: 0.55)
+                    : GameTheme.hudWellBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (role.isNotEmpty)
-              Text(
-                role,
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: titleColor,
-                ),
-              ),
             Text(
-              label,
-              maxLines: 2,
-              softWrap: true,
+              role.isEmpty ? label : '$role · $label',
+              maxLines: 1,
+              softWrap: false,
               overflow: TextOverflow.ellipsis,
               style: GameTheme.pixel(
                 size: GameTheme.hudPixel,
@@ -147,7 +135,7 @@ class TargetCornerHud extends StatelessWidget {
                       borderRadius: BorderRadius.circular(1),
                       child: LinearProgressIndicator(
                         value: hpFrac,
-                        minHeight: phone ? 3 : 4,
+                        minHeight: 3,
                         backgroundColor: GameTheme.equipChipBlocked,
                         color: hpFrac > 0.35
                             ? GameTheme.bloodLit

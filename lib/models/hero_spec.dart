@@ -397,7 +397,7 @@ abstract final class HeroSpecs {
       id: HeroSpecId.combat,
       classId: HeroClassId.rogue,
       name: 'Combat Rogue',
-      shortLabel: 'COMBAT',
+      shortLabel: 'COM',
       roleTag: SpecRoleTag.meleeDps,
       resource: SpecResource.energy,
       gearAffinity: HeroRole.rogue,

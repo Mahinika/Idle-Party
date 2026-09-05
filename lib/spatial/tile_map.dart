@@ -2,7 +2,7 @@ import 'dart:math';
 
 import '../models/dungeon_def.dart';
 import '../models/dungeon_room.dart';
-import '../ui/kenney_assets.dart';
+import '../assets/kenney_assets.dart';
 import 'floor_blueprint.dart';
 import 'placement_plan.dart';
 import 'zone_layout_kit.dart';

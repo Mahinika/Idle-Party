@@ -1,5 +1,5 @@
 import '../models/zone_art.dart';
-import '../ui/kenney_assets.dart';
+import '../assets/kenney_assets.dart';
 import 'tile_map.dart';
 
 /// Per-zone layout grammar knobs (docs/FLOOR_BLUEPRINT.md).

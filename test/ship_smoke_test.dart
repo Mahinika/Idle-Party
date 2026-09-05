@@ -208,14 +208,12 @@ void main() {
     expect(classes.body, contains('AL2'));
     expect(classes.body, contains('Beast Mastery'));
     expect(classes.body, contains('Holy Paladin'));
-    expect(classes.body, contains('Gold KEEP'));
+    expect(classes.body, contains('ESSENCE KEEP'));
 
     final forge = GameGuides.topics.firstWhere((t) => t.id == 'forge');
-    expect(forge.body, contains('Blessing'));
-    expect(forge.body, contains('5th party'));
-    expect(forge.body, contains('KEEP'));
-    expect(forge.body.toUpperCase(), contains('REBORN'));
+    expect(forge.body, contains('ESSENCE'));
     expect(forge.body.toLowerCase(), contains('reset when you ascend'));
+    expect(forge.body.toUpperCase(), isNot(contains('REBORN')));
 
     final ascendGuide = GameGuides.topics.firstWhere((t) => t.id == 'ascend');
     expect(ascendGuide.body.toLowerCase(), contains('empty bag'));
@@ -223,16 +221,21 @@ void main() {
     expect(ascendGuide.body.toLowerCase(), contains('wallet gold'));
 
     final sanctuary = GameGuides.topics.firstWhere((t) => t.id == 'sanctuary');
-    expect(sanctuary.body, contains('Essence'));
+    expect(sanctuary.body.toLowerCase(), contains('essence'));
     expect(sanctuary.title, 'ESSENCE');
-    expect(sanctuary.body, contains('+3% gold'));
-    expect(sanctuary.body, contains('+1 ATK'));
-    expect(sanctuary.body, contains('Lv0'));
+    expect(sanctuary.body, contains('TRACKS'));
+    expect(sanctuary.body, contains('KEEP'));
+    expect(sanctuary.body, contains('God Hand'));
+    expect(sanctuary.body.toUpperCase(), contains('REBORN'));
+    expect(sanctuary.body, isNot(contains('PRESTIGE')));
 
     final shop = GameGuides.topics.firstWhere((t) => t.id == 'prestige_shop');
+    expect(shop.title, 'KEEP BUYS');
     expect(shop.body, contains('KEEP'));
     expect(shop.body.toLowerCase(), contains('vault'));
     expect(shop.body.toLowerCase(), contains('merge gold'));
+    expect(shop.body.toLowerCase(), contains('bottom-tab shop'));
+    expect(shop.body.toLowerCase(), contains('one door'));
 
     final pets = GameGuides.topics.firstWhere((t) => t.id == 'pets');
     expect(pets.body.toLowerCase(), contains('same rarity'));

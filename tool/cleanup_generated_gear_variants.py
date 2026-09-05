@@ -1,6 +1,6 @@
 """Delete generated named gear variants that are no longer in the catalog.
 
-Keeps: *_t0_*, *_t2_*, authored sword_thunderfury / sword_warglaive, and
+Keeps: *_t0_*, *_t2_*, EquipmentModelCatalog.authoredSharedIds, and
 *_icon.png for those. Removes ImageDraw mass-variant PNGs.
 """
 from __future__ import annotations
@@ -9,7 +9,26 @@ import re
 from pathlib import Path
 
 ROOT = Path(r"d:\Projects\Personal\idle party\Idle-Party\assets\custom\char")
-KEEP_NAMED = {"sword_thunderfury", "sword_warglaive"}
+# Keep in sync with lib/visual/equipment_model_catalog.dart authoredSharedIds.
+KEEP_NAMED = {
+    "sword_thunderfury",
+    "sword_warglaive",
+    "sword_runebound",
+    "staff_frostfire",
+    "staff_nethercore",
+    "bow_eagle",
+    "bow_windpierce",
+    "axe_goreblade",
+    "axe_bloodhowl",
+    "mace_lightbringer",
+    "mace_dawnbreak",
+    "dagger_shadowfang",
+    "dagger_nightbite",
+    "shield_aegis",
+    "shield_ironwall",
+    "frill_prism",
+    "frill_soulcodex",
+}
 TIER_RE = re.compile(r"^(.+)_t[02]_(idle|walk|attack|icon)\.png$")
 NAMED_RE = re.compile(r"^(.+)_(idle|walk|attack|icon)\.png$")
 

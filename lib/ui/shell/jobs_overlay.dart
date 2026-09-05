@@ -31,12 +31,12 @@ class JobsOverlay extends StatelessWidget {
         ),
         if (claimable > 0) ...[
           const SizedBox(height: 8),
-          KenneyButton(
+          GameButton(
             label: claimable == 1
                 ? 'CLAIM QUESTS'
                 : 'CLAIM QUESTS ($claimable)',
             onPressed: () => director.claimAllReadyMissions(),
-            style: KenneyButtonStyle.brown,
+            style: GameButtonStyle.brown,
             primary: true,
           ),
         ],
@@ -130,7 +130,7 @@ class JobsOverlay extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           if (!hideClaim && (mission.canClaim || mission.claimed))
-            KenneyButton(
+            GameButton(
               label: mission.claimed
                   ? 'CLAIMED'
                   : (director.state.metaDepth.jobChainCount == 2
@@ -139,7 +139,7 @@ class JobsOverlay extends StatelessWidget {
               onPressed: mission.canClaim
                   ? () => director.claimMission(mission.id)
                   : null,
-              style: KenneyButtonStyle.grey,
+              style: GameButtonStyle.grey,
               expanded: false,
             ),
         ],
