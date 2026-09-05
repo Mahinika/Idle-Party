@@ -302,8 +302,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.takeException(), isNull);
-    expect(find.textContaining('Buy flask'), findsWidgets);
-    expect(find.text('ALL'), findsOneWidget);
+    expect(find.textContaining('Flask'), findsWidgets);
+    expect(find.textContaining('Upgrades'), findsWidgets);
   });
 
   testWidgets('SHOP shows real-money catalog', (tester) async {
@@ -327,7 +327,7 @@ void main() {
     expect(find.text('Starter boost'), findsOneWidget);
     expect(find.text('\$0.99'), findsOneWidget);
     expect(find.text('\$1.49'), findsOneWidget);
-    expect(find.text('BUY SOON'), findsWidgets);
+    expect(find.text('COMING LATER'), findsWidgets);
     expect(ShopCatalog.offered.map((e) => e.priceLabel).toList(), [
       '\$0.99',
       '\$1.49',

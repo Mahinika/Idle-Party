@@ -33,8 +33,8 @@ void main() {
     router.open(MenuRoute.shop);
     expect(router.debugWhere, 'SHOP');
     router.open(MenuRoute.essence);
-    expect(router.debugWhere, 'ESSENCE');
+    expect(router.debugWhere, 'ESSENCE/tracks');
     router.open(MenuRoute.gold);
-    expect(router.debugWhere, 'GOLD');
+    expect(router.debugWhere, 'GOLD/tracks');
   });
 }

@@ -968,8 +968,18 @@ void main() {
     );
     state = GameLogic.autoEquipBetterGear(state);
 
+    // Prot must not take a mage staff on an empty weapon slot.
     expect(state.heroes[0].itemIn(EquipmentSlot.weapon), isNull);
-    expect(state.gearStash.map((e) => e.id), contains(junkStaff.id));
+    final junkOnProt = state.heroes[0].equipped.values.any(
+      (e) => e.id == junkStaff.id,
+    );
+    expect(junkOnProt, isFalse);
+    // Affinity-matching heroes may claim it; otherwise it stays in the bag.
+    final stillInStash = state.gearStash.any((e) => e.id == junkStaff.id);
+    final onAffinityHero = state.heroes
+        .skip(1)
+        .any((h) => h.equipped.values.any((e) => e.id == junkStaff.id));
+    expect(stillInStash || onAffinityHero, isTrue);
   });
 
   test('auto equip skips low-ilvl affinity crumbs on empty slots', () {

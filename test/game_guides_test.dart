@@ -18,7 +18,10 @@ void main() {
       );
     }
     final basics = topics.firstWhere((t) => t.id == 'basics');
-    expect(basics.body, contains('GEAR (heroes and gear)'));
+    expect(basics.body, contains('GEAR'));
+    expect(basics.body, contains('GOLD'));
+    expect(basics.body, contains('SHOP'));
+    expect(basics.body, contains('ESSENCE'));
     expect(basics.body.toUpperCase(), isNot(contains('META (')));
   });
 }
