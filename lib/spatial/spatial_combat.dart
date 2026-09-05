@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../core/audio_assets.dart';
 import '../core/blessing_constellation.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
@@ -706,6 +707,7 @@ class SpatialWorld {
     this.pendingFeelKills = 0,
     this.pendingFeelPickups = 0,
     this.pendingFeelStairs = 0,
+    Set<String>? pendingFeelHits,
     this.pendingVacuumLootLine,
     this.godHandRadius = 1.8,
     this.bagFullFloaterCooldown = 0,
@@ -716,7 +718,8 @@ class SpatialWorld {
        clearedChambers = clearedChambers ?? <int>{},
        floaters = floaters ?? <SpatialFloater>[],
        bursts = bursts ?? <SpatialBurst>[],
-       groundFx = groundFx ?? <SpatialGroundFx>[];
+       groundFx = groundFx ?? <SpatialGroundFx>[],
+       pendingFeelHits = pendingFeelHits ?? <String>{};
 
   final TileMap map;
   final List<SpatialActor> heroes;
@@ -781,6 +784,9 @@ class SpatialWorld {
   /// Stairs just opened this step (GO juice).
   int pendingFeelStairs;
 
+  /// Distinct combat-hit SFX ids this step (weapon / spell; rate-limited in audio).
+  final Set<String> pendingFeelHits;
+
   /// Short vacuum pickup line (≤3 item names + gold) for stairs-open toast.
   String? pendingVacuumLootLine;
 
@@ -834,6 +840,7 @@ class SpatialStepResult {
     this.lootPickups = 0,
     this.stairsOpened = false,
     this.vacuumLootLine,
+    this.feelHits = const <String>{},
   });
 
   final SpatialWorld world;
@@ -848,6 +855,9 @@ class SpatialStepResult {
 
   /// Crits landed this result — live juice only (offline ignores).
   final int critHits;
+
+  /// Combat hit SFX ids (blade / bow / spell_*) for this step.
+  final Set<String> feelHits;
 
   /// Party members who gained a level this result.
   final int heroLevelUps;
@@ -2377,6 +2387,7 @@ abstract final class SpatialCombat {
       pendingFeelKills: world.pendingFeelKills,
       pendingFeelPickups: world.pendingFeelPickups,
       pendingFeelStairs: world.pendingFeelStairs,
+      pendingFeelHits: Set<String>.from(world.pendingFeelHits),
       pendingVacuumLootLine: world.pendingVacuumLootLine,
       floaters: world.floaters,
       bursts: world.bursts,
@@ -2962,6 +2973,8 @@ abstract final class SpatialCombat {
     world.pendingFeelPickups = 0;
     final stairs = world.pendingFeelStairs;
     world.pendingFeelStairs = 0;
+    final feelHits = Set<String>.from(world.pendingFeelHits);
+    world.pendingFeelHits.clear();
     final vacuumLine = world.pendingVacuumLootLine;
     world.pendingVacuumLootLine = null;
     return SpatialStepResult(
@@ -2977,6 +2990,7 @@ abstract final class SpatialCombat {
       lootPickups: pickups,
       stairsOpened: stairs > 0,
       vacuumLootLine: vacuumLine,
+      feelHits: feelHits,
     );
   }
 
@@ -2994,6 +3008,32 @@ abstract final class SpatialCombat {
 
   static void _noteFeelPickup(SpatialWorld world) {
     world.pendingFeelPickups++;
+  }
+
+  /// Queue one combat-hit SFX id for this step (deduped; audio rate-limits).
+  static void _noteFeelHit(SpatialWorld world, String sfxId) {
+    if (sfxId.isEmpty) return;
+    world.pendingFeelHits.add(sfxId);
+  }
+
+  /// Resolve weapon / spell SFX for a hero hit.
+  static String _combatHitSfxFor({
+    required SpatialActor hero,
+    GameState? state,
+    SpellBoltStyle? style,
+  }) {
+    WeaponType? weaponType;
+    if (state != null &&
+        hero.assetIndex >= 0 &&
+        hero.assetIndex < state.heroes.length) {
+      weaponType =
+          state.heroes[hero.assetIndex].itemIn(EquipmentSlot.weapon)?.weaponType;
+    }
+    return AudioAssets.combatHitId(
+      weaponType: weaponType,
+      style: style,
+      ranged: hero.ranged,
+    );
   }
 
   /// Phone combat text: loot / level-up / gold read larger than damage ticks.
@@ -3728,6 +3768,19 @@ abstract final class SpatialCombat {
           );
           target.hp = math.max(0, target.hp - dealt);
           _recordHeroDamage(hero, dealt);
+          if (dealt > 0) {
+            final hitStyle = abilityTag != null
+                ? boltStyleForAbility(hero, label: abilityTag)
+                : null;
+            _noteFeelHit(
+              world,
+              _combatHitSfxFor(
+                hero: hero,
+                state: nextState,
+                style: hitStyle,
+              ),
+            );
+          }
           if (isCrit && dealt > 0) {
             _noteFeelCrit(world);
             CombatPresence.onCrit(
@@ -4108,6 +4161,14 @@ abstract final class SpatialCombat {
                 // melee direct hits so casters/hunters aren't passive-only.
                 if (dealt > 0) {
                   _grantCombatResource(caster, dealt: dealt);
+                  _noteFeelHit(
+                    world,
+                    _combatHitSfxFor(
+                      hero: caster,
+                      state: nextState,
+                      style: p.style,
+                    ),
+                  );
                 }
               }
             }

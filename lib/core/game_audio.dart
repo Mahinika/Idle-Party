@@ -20,6 +20,9 @@ abstract final class GameAudio {
   /// Ambience gain 0..1 (default 0.25).
   static double ambienceVolume = 0.25;
 
+  /// Per combat-feel clip floor so haste farms stay listenable.
+  static const combatFeelMinGap = Duration(seconds: 3);
+
   static bool _ready = false;
   static bool _initFailed = false;
   static final Map<String, AudioSource> _sfx = <String, AudioSource>{};
@@ -28,8 +31,8 @@ abstract final class GameAudio {
   static SoundHandle? _ambienceHandle;
   static AmbienceKind _ambience = AmbienceKind.none;
   static bool _ambiencePaused = false;
-  static DateTime _lastHitAt = DateTime.fromMillisecondsSinceEpoch(0);
-  static const _hitMinGap = Duration(milliseconds: 90);
+  static final Map<String, DateTime> _lastPlayAt = <String, DateTime>{};
+  static final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(0);
 
   /// Test hook: counts play attempts that passed mute/rate-limit gates.
   @visibleForTesting
@@ -38,7 +41,7 @@ abstract final class GameAudio {
   @visibleForTesting
   static void debugReset() {
     debugPlayCount = 0;
-    _lastHitAt = DateTime.fromMillisecondsSinceEpoch(0);
+    _lastPlayAt.clear();
   }
 
   static bool get isReady => _ready;
@@ -95,13 +98,17 @@ abstract final class GameAudio {
 
   static void play(String id) {
     if (muted) return;
-    if (id == 'hit') {
+    if (AudioAssets.combatFeelIds.contains(id)) {
       final now = DateTime.now();
-      if (now.difference(_lastHitAt) < _hitMinGap) {
-        _hapticFor(id);
+      final last = _lastPlayAt[id] ?? _epoch;
+      if (now.difference(last) < combatFeelMinGap) {
+        // Keep light haptic for blocked combat hits so the phone still ticks.
+        if (id.startsWith('hit') || id.startsWith('spell_')) {
+          _hapticFor('hit');
+        }
         return;
       }
-      _lastHitAt = now;
+      _lastPlayAt[id] = now;
     }
 
     debugPlayCount++;
@@ -222,6 +229,19 @@ abstract final class GameAudio {
   static void _hapticFor(String id) {
     switch (id) {
       case 'hit':
+      case 'hit_blade':
+      case 'hit_axe':
+      case 'hit_blunt':
+      case 'hit_dagger':
+      case 'hit_fist':
+      case 'hit_bow':
+      case 'spell_fire':
+      case 'spell_frost':
+      case 'spell_holy':
+      case 'spell_shadow':
+      case 'spell_arcane':
+      case 'spell_nature':
+      case 'spell_lightning':
         _haptic(HapticFeedback.selectionClick);
       case 'kill':
       case 'crit':
@@ -245,7 +265,7 @@ abstract final class GameAudio {
     pulse();
   }
 
-  static void hit() => play('hit');
+  static void hit() => play('hit_blade');
   static void kill() => play('kill');
   static void crit() => play('crit');
   static void loot() => play('loot');

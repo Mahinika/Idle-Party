@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/audio_assets.dart';
 import 'package:idle_party/core/game_audio.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/models/spell_bolt_style.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -26,14 +28,61 @@ void main() {
     expect(GameAudio.debugPlayCount, 1);
   });
 
-  test('hit SFX is rate-limited', () {
+  test('combat feel SFX is rate-limited per id (~3s)', () {
     GameAudio.debugReset();
     GameAudio.muted = false;
     for (var i = 0; i < 20; i++) {
-      GameAudio.hit();
+      GameAudio.play('hit_blade');
     }
-    expect(GameAudio.debugPlayCount, lessThan(20));
-    expect(GameAudio.debugPlayCount, greaterThanOrEqualTo(1));
+    expect(GameAudio.debugPlayCount, 1);
+
+    GameAudio.play('spell_fire');
+    expect(GameAudio.debugPlayCount, 2);
+
+    for (var i = 0; i < 10; i++) {
+      GameAudio.play('spell_fire');
+    }
+    expect(GameAudio.debugPlayCount, 2);
+  });
+
+  test('ui SFX is not combat-feel rate-limited', () {
+    GameAudio.debugReset();
+    GameAudio.muted = false;
+    for (var i = 0; i < 5; i++) {
+      GameAudio.ui();
+    }
+    expect(GameAudio.debugPlayCount, 5);
+  });
+
+  test('combatHitId maps weapons and spell schools', () {
+    expect(
+      AudioAssets.combatHitId(weaponType: WeaponType.sword),
+      'hit_blade',
+    );
+    expect(AudioAssets.combatHitId(weaponType: WeaponType.axe), 'hit_axe');
+    expect(AudioAssets.combatHitId(weaponType: WeaponType.mace), 'hit_blunt');
+    expect(
+      AudioAssets.combatHitId(weaponType: WeaponType.dagger),
+      'hit_dagger',
+    );
+    expect(AudioAssets.combatHitId(weaponType: WeaponType.fist), 'hit_fist');
+    expect(AudioAssets.combatHitId(weaponType: WeaponType.bow), 'hit_bow');
+    expect(
+      AudioAssets.combatHitId(style: SpellBoltStyle.fire),
+      'spell_fire',
+    );
+    expect(
+      AudioAssets.combatHitId(style: SpellBoltStyle.frost),
+      'spell_frost',
+    );
+    expect(
+      AudioAssets.combatHitId(style: SpellBoltStyle.lightning),
+      'spell_lightning',
+    );
+    expect(
+      AudioAssets.combatHitId(style: SpellBoltStyle.arrow),
+      'hit_bow',
+    );
   });
 
   test('sfx and ambience volumes round-trip in save JSON', () {

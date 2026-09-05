@@ -1166,6 +1166,15 @@ abstract final class AbilityEffectRunner {
     SpatialCombat._recordHeroDamage(hero, dealt);
     SpatialCombat._applyTankSoftThreat(hero, enemy);
     SpatialCombat._spawnSlash(world, from: hero, to: enemy, isCrit: false);
+    if (dealt > 0) {
+      SpatialCombat._noteFeelHit(
+        world,
+        SpatialCombat._combatHitSfxFor(
+          hero: hero,
+          style: style,
+        ),
+      );
+    }
     if (!reducedVfx) {
       SpellVfx.spawnImpact(
         world,
@@ -1471,6 +1480,12 @@ abstract final class AbilityEffectRunner {
         e.hp = math.max(0, e.hp - dealt);
         SpatialCombat._recordHeroDamage(hero, dealt);
         SpatialCombat._applyTankSoftThreat(hero, e);
+        if (dealt > 0) {
+          SpatialCombat._noteFeelHit(
+            world,
+            SpatialCombat._combatHitSfxFor(hero: hero, style: style),
+          );
+        }
         _applyBleedIfNeeded(world, hero, e, def, raw);
         if (!reducedVfx) {
           SpellVfx.spawnImpact(
@@ -1681,6 +1696,12 @@ abstract final class AbilityEffectRunner {
       e.hp = math.max(0, e.hp - dealt);
       SpatialCombat._recordHeroDamage(hero, dealt);
       SpatialCombat._applyTankSoftThreat(hero, e);
+      if (dealt > 0) {
+        SpatialCombat._noteFeelHit(
+          world,
+          SpatialCombat._combatHitSfxFor(hero: hero, style: style),
+        );
+      }
       _applyBleedIfNeeded(world, hero, e, def, raw);
       hitCount++;
       if (!reducedVfx) {

@@ -647,7 +647,6 @@ class GameDirector extends ChangeNotifier {
     }
 
     final steps = _debugTimeScale.round().clamp(1, 20);
-    var playedHit = false;
     var playedLoot = false;
     for (var step = 0; step < steps; step++) {
       if (_awaitingWipeChoice ||
@@ -750,7 +749,6 @@ class GameDirector extends ChangeNotifier {
       if (result.kills > 0 && _feelKillCooldown <= 0) {
         GameAudio.kill();
         _feelKillCooldown = 0.22;
-        playedHit = true;
       }
 
       // Live auto-flask (same threshold as AFK): avg living HP < 35%.
@@ -779,9 +777,10 @@ class GameDirector extends ChangeNotifier {
         }
       }
 
-      if (result.goldFromKills > 0 && !playedHit) {
-        GameAudio.hit();
-        playedHit = true;
+      if (result.feelHits.isNotEmpty) {
+        for (final id in result.feelHits) {
+          GameAudio.play(id);
+        }
       }
       if (result.lootPickups > 0 && !playedLoot) {
         GameAudio.loot();

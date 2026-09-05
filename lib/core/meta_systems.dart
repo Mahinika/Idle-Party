@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.96';
+  static const String currentVersion = '1.12.97';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.97',
+      bullets: <String>[
+        'Combat SFX: weapon hits (blade / axe / blunt / dagger / fist / bow) and spell schools (fire / frost / holy / shadow / arcane / nature / lightning). Each combat clip waits ~3s before it can play again — no more haste sword spam.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.96',
       bullets: <String>[
@@ -125,7 +132,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.84',
       bullets: <String>[
-        'Sound: real combat/UI SFX (Kenney CC0) plus soft hub/dungeon ambience. MORE → SETTINGS has Mute, SFX, and Ambience volume. Hit spam is rate-limited so long farms stay listenable.',
+        'Sound: real combat/UI SFX (Kenney CC0) plus soft hub/dungeon ambience. MORE → SETTINGS has Mute, SFX, and Ambience volume. Each combat clip (weapon / spell / crit / kill) waits ~3s before it can play again.',
         'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN. TODAY still owns Gauntlet / GREATER / KEY hunts.',
       ],
     ),
