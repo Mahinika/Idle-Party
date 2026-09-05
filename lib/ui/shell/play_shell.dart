@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
 import '../../core/hub_chase.dart';
+import '../../core/keystone.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
 import '../confirm_dialogs.dart';
@@ -116,6 +117,11 @@ class _PlayShellState extends State<PlayShell> {
             context,
             _leaveDungeon,
             state: state,
+            floorCleared: director.spatial?.awaitingExit == true,
+            keystoneActive: state.keystoneRunActive,
+            keyTimer: state.keystoneRunActive
+                ? Keystone.formatTimer(state.keystoneTimerMs)
+                : null,
           );
         },
       );

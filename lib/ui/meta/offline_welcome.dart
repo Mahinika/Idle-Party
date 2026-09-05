@@ -48,10 +48,6 @@ Future<void> showOfflineProgressDialog(
     readyAction = () {
       director.dismissOfflineSummary();
       Navigator.pop(context);
-      if (plan.op == ChaseOp.confirmAshen) {
-        director.enterAshenCrown();
-        return;
-      }
       if (nav != null) {
         runChasePlan(
           context: context,
@@ -77,7 +73,7 @@ Future<void> showOfflineProgressDialog(
   final showChaseCta = readyAction != null &&
       (chase.urgency == HubChaseUrgency.ready ||
           chase.urgency == HubChaseUrgency.almost ||
-          chase.kind == HubChaseKind.keystone ||
+          hubChaseOwnsEndgameRow(chase.kind) ||
           chase.kind == HubChaseKind.unlockZone ||
           chase.kind == HubChaseKind.clearFloors ||
           chase.kind == HubChaseKind.dailyVaultProgress ||

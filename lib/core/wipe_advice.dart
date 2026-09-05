@@ -65,8 +65,6 @@ abstract final class WipeAdvice {
       line.startsWith('Equip') ||
       line.contains('too far') ||
       line == 'Upgrade DEF in POWER' ||
-      line == 'Upgrade DEF in GOLD' ||
-      line == 'Upgrade DEF in FORGE' ||
       line.contains('MARKET has an upgrade') ||
       line.contains('Shop has an upgrade') ||
       line.startsWith('MARKET:') ||
@@ -90,9 +88,9 @@ abstract final class WipeAdvice {
       return 'HUB → BAG to equip the upgrade';
     }
     if (adviceLine.contains('POWER') ||
-        adviceLine.contains('GOLD') ||
-        adviceLine.contains('FORGE')) {
-      return 'HUB → GOLD to buy the track';
+        adviceLine.contains(' in GOLD') ||
+        adviceLine.contains(' in FORGE')) {
+      return 'HUB → GOLD to buy the POWER track';
     }
     return null;
   }
@@ -114,8 +112,8 @@ abstract final class WipeAdvice {
       return const NavIntent(route: MenuRoute.gear, gear: GearPanel.bag);
     }
     if (adviceLine.contains('POWER') ||
-        adviceLine.contains('GOLD') ||
-        adviceLine.contains('FORGE')) {
+        adviceLine.contains(' in GOLD') ||
+        adviceLine.contains(' in FORGE')) {
       return NavIntent.gold;
     }
     return null;
@@ -220,9 +218,19 @@ abstract final class WipeAdvice {
     }
 
     // Instant / early melt: prove DEF when the pack crushed the party fast.
+    // Wide enough that sub-2s melts still tip (not silent panel).
     if (fight.waveHp >= 1 &&
-        fight.leftover >= 0.50 &&
-        fight.elapsedSec <= 6 &&
+        fight.leftover >= 0.40 &&
+        fight.elapsedSec <= 8 &&
+        fight.partyMaxHp > 0 &&
+        fight.damageTaken >= fight.partyMaxHp * 0.4) {
+      return _forgeOrMarket(state, 'Upgrade DEF in POWER');
+    }
+
+    // Sub-half-second wipe with almost-full pack + real HP loss = melt.
+    if (fight.elapsedSec < 0.5 &&
+        fight.waveHp >= 1 &&
+        fight.leftover >= 0.85 &&
         fight.partyMaxHp > 0 &&
         fight.damageTaken >= fight.partyMaxHp * 0.5) {
       return _forgeOrMarket(state, 'Upgrade DEF in POWER');

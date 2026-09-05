@@ -131,9 +131,13 @@ class HubTodayCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    chase.progressLabel != null
-                        ? '${chase.title} · ${chase.progressLabel!}'
-                        : chase.title,
+                    // READY chip already marks payoff — drop progress echo
+                    // like "N ready" / "EQUIP 1" that doubles chrome.
+                    ready && chase.progressLabel != null
+                        ? chase.title
+                        : (chase.progressLabel != null
+                            ? '${chase.title} · ${chase.progressLabel!}'
+                            : chase.title),
                     maxLines: 2 /* FEEL 068 */,
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.body(size: 13, color: GameTheme.parchment),

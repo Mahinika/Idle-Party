@@ -125,8 +125,8 @@ class _InventoryDockState extends State<InventoryDock>
         final upgrades = MenuAlerts.bagUpgradeCount(state);
         if (upgrades > 0) {
           return upgrades == 1
-              ? '1 better item in bag — use EQUIP below'
-              : '$upgrades better items in bag — use EQUIP below';
+              ? '1 better item in bag — tap EQUIP 1'
+              : '$upgrades better items in bag — tap EQUIP $upgrades';
         }
         return MenuAlerts.bagStatusLine(state);
       case GearPanel.merge:
@@ -187,22 +187,59 @@ class _InventoryDockState extends State<InventoryDock>
 
     Widget actions() {
       final upgrades = MenuAlerts.bagUpgradeCount(state);
+      final singleLabel = worn != null ? 'UNEQUIP' : 'EQUIP';
+      final singleAction = worn != null
+          ? () => onUnequip(worn.slot)
+          : (inStash ? onEquip : null);
+      // Selected item keeps its own EQUIP/UNEQUIP; bulk upgrades stay secondary.
+      if (selectedId != null && (worn != null || inStash)) {
+        return Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: GameButton(
+                label: singleLabel,
+                onPressed: singleAction,
+                style: worn != null
+                    ? GameButtonStyle.grey
+                    : GameButtonStyle.brown,
+                primary: worn == null,
+                dense: true,
+                expanded: true,
+              ),
+            ),
+            if (upgrades > 0) ...[
+              const SizedBox(width: 6),
+              Expanded(
+                flex: 2,
+                child: _autoEquipButton(dense: true, expanded: true),
+              ),
+            ] else ...[
+              const SizedBox(width: 6),
+              Expanded(
+                flex: 2,
+                child: GameButton(
+                  label: 'OPEN BAG',
+                  onPressed: () => widget.onPanelChanged(GearPanel.bag),
+                  style: GameButtonStyle.grey,
+                  dense: true,
+                  expanded: true,
+                ),
+              ),
+            ],
+          ],
+        );
+      }
       final primary = upgrades > 0
           ? _autoEquipButton(dense: true, expanded: true)
           : GameButton(
-              label: worn != null ? 'UNEQUIP' : 'EQUIP',
-              onPressed: worn != null
-                  ? () => onUnequip(worn.slot)
-                  : (inStash ? onEquip : null),
-              style: worn != null
-                  ? GameButtonStyle.grey
-                  : GameButtonStyle.brown,
+              label: 'OPEN BAG',
+              onPressed: () => widget.onPanelChanged(GearPanel.bag),
+              style: GameButtonStyle.grey,
               primary: false,
               dense: true,
               expanded: true,
             );
-      // One row: primary action + BAG shortcut — stacked full-width buttons
-      // made the phone sheet feel cramped under the doll.
       return Row(
         children: [
           Expanded(flex: 3, child: primary),
@@ -210,7 +247,7 @@ class _InventoryDockState extends State<InventoryDock>
           Expanded(
             flex: 2,
             child: GameButton(
-              label: 'OPEN BAG',
+              label: upgrades > 0 ? 'OPEN BAG' : 'BAG',
               onPressed: () => widget.onPanelChanged(GearPanel.bag),
               style: GameButtonStyle.grey,
               dense: true,

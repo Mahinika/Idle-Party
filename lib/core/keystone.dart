@@ -122,8 +122,14 @@ abstract final class Keystone {
   /// Preview affixes for hub UI (preference dial, not an active run).
   static List<String> previewAffixes(GameState state) {
     final key = state.hardmodeLevel.clamp(0, maxForState(state));
+    return previewAffixesForKey(state, key);
+  }
+
+  /// Affix preview for a chase KEY level (may differ from dial).
+  static List<String> previewAffixesForKey(GameState state, int key) {
+    final capped = key.clamp(0, maxForState(state));
     return affixesFor(
-      key: key,
+      key: capped,
       weeklyModifier: state.metaDepth.weeklyModifier,
       weeklyKey: state.metaDepth.weeklyKey,
       personalBossRush: state.challengeBossRush,

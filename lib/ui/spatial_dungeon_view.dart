@@ -829,9 +829,9 @@ class GodHandRing extends StatelessWidget {
                 : 'God Hand ready'))
         : (coolingLabel ?? 'God Hand ${cooldown.toStringAsFixed(1)}s');
     final action = onTap != null && ready ? onTap : null;
-    final box = dense ? 30.0 : GameTheme.minTouch;
-    final ring = dense ? 22.0 : 28.0;
-    final fist = dense ? 14.0 : 18.0;
+    final box = dense ? 40.0 : GameTheme.minTouch;
+    final ring = dense ? 26.0 : 28.0;
+    final fist = dense ? 16.0 : 18.0;
     return WebClickScope(
       label: label,
       onPressed: action,

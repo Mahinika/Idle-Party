@@ -44,16 +44,22 @@ class ChaseContract {
     HubChaseKind.claimMissions => 'CLAIM QUESTS',
     HubChaseKind.monthGoal => 'CLAIM MONTH',
     HubChaseKind.weekGoal => 'CLAIM WEEK',
-    HubChaseKind.meetHero => 'GEAR',
-    HubChaseKind.equipBag => 'BAG',
-    HubChaseKind.marketUpgrade => 'GOLD',
+    HubChaseKind.meetHero => 'OPEN GEAR',
+    HubChaseKind.equipBag =>
+      progressLabel != null && progressLabel!.startsWith('EQUIP')
+          ? progressLabel
+          : 'EQUIP',
+    HubChaseKind.marketUpgrade => 'OPEN GOLD',
     HubChaseKind.ascend => 'ASCEND',
     HubChaseKind.dailyRun => 'DAILY',
-    HubChaseKind.keystone => 'ENTER',
+    HubChaseKind.keystone => chase.keyLevel != null
+        ? 'ENTER KEY +${chase.keyLevel}'
+        : 'ENTER KEY',
     HubChaseKind.gauntletMilestone => 'GAUNTLET',
     HubChaseKind.riftMilestone => 'RIFT',
     HubChaseKind.greaterRiftMilestone => 'GREATER RIFT',
     HubChaseKind.ashenCrown => 'ASHEN CROWN',
+    HubChaseKind.doneForToday => 'KEY · BOARDS',
     HubChaseKind.unlockZone => zoneId != null ? 'PATH' : null,
     _ => null,
   };

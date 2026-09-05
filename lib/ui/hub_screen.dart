@@ -187,19 +187,34 @@ class _HubScreenState extends State<HubScreen>
     );
   }
 
-  /// Short AL-pill hunt tag from TODAY title (phone width).
+  /// Short AL-pill hunt tag from TODAY kind (phone width).
   String _shortHuntHint(HubChase chase) {
-    final t = chase.title;
-    if (t.startsWith('Time KEY') || t.startsWith('Run KEY')) return 'KEY';
-    if (t.contains('Gauntlet') || t.contains('Spire') || t.contains('PB')) {
-      return 'Spire';
+    switch (chase.kind) {
+      case HubChaseKind.keystone:
+        final k = chase.keyLevel ?? state.hardmodeLevel;
+        return k > 0 ? 'KEY +$k' : 'KEY';
+      case HubChaseKind.gauntletMilestone:
+        return 'Spire';
+      case HubChaseKind.greaterRiftMilestone:
+        return 'GR';
+      case HubChaseKind.riftMilestone:
+        return 'Rift';
+      case HubChaseKind.ashenCrown:
+        return 'Ashen';
+      case HubChaseKind.doneForToday:
+        return 'rest';
+      case HubChaseKind.claimDailyVault:
+      case HubChaseKind.claimMissions:
+      case HubChaseKind.equipBag:
+      case HubChaseKind.marketUpgrade:
+      case HubChaseKind.meetHero:
+      case HubChaseKind.ascend:
+        return 'claim';
+      default:
+        final t = chase.title;
+        if (t.length <= 14) return t;
+        return t.split(' ').take(2).join(' ');
     }
-    if (t.contains('Greater Rift') || t.startsWith('GR')) return 'GR';
-    if (t.contains('Rift')) return 'Rift';
-    if (t.contains('Ashen')) return 'Ashen';
-    if (t.contains('Done for today')) return 'rest';
-    if (t.length <= 14) return t;
-    return t.split(' ').take(2).join(' ');
   }
 
   Widget _hubActionColumn(
@@ -223,21 +238,24 @@ class _HubScreenState extends State<HubScreen>
     // One primary CTA on phone: fold TODAY ENTER into the big button.
     final foldEnter =
         onAction != null &&
-        (chaseActionLabel == 'ENTER' ||
+        (chase.kind == HubChaseKind.keystone ||
+            chase.kind == HubChaseKind.dailyRun ||
+            chaseActionLabel == 'ENTER' ||
             chaseActionLabel == 'DAILY' ||
             (chaseActionLabel?.contains('ENTER KEY') ?? false));
     final endgamePrimary =
         onAction != null &&
         chaseActionLabel != null &&
         (hubChaseOwnsEndgameRow(chase.kind) ||
-            (chaseActionLabel.contains('GAUNTLET')) ||
-            (chaseActionLabel.contains('GREATER RIFT')) ||
-            chaseActionLabel == 'RIFT');
+            chase.kind == HubChaseKind.doneForToday);
+    final softRestPrimary =
+        chase.kind == HubChaseKind.doneForToday && onAction != null;
     final readyPrimary =
         ready &&
         onAction != null &&
         chaseActionLabel != null &&
-        !foldEnter;
+        !foldEnter &&
+        !softRestPrimary;
     final keyFromChase = chase.keyLevel ??
         (foldEnter && (chaseActionLabel?.contains('ENTER KEY') ?? false)
             ? _keyLevelFromLabel(chaseActionLabel!)
@@ -255,7 +273,12 @@ class _HubScreenState extends State<HubScreen>
     final VoidCallback? primaryAction;
     final String? secondaryLabel;
     final VoidCallback? secondaryAction;
-    if (foldEnter || endgamePrimary) {
+    if (softRestPrimary) {
+      primaryLabel = chaseActionLabel ?? 'KEY · BOARDS';
+      primaryAction = onAction;
+      secondaryLabel = enterAction != null ? 'ENTER DUNGEON' : null;
+      secondaryAction = enterAction;
+    } else if (foldEnter || endgamePrimary) {
       // Prefer chase CTA when it already names KEY / hunt — don't swap to
       // bare ENTER DUNGEON (vault halfway / month KEY cliff).
       primaryLabel = foldEnter

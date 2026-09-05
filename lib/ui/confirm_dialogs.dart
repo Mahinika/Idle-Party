@@ -185,8 +185,37 @@ Future<void> confirmLeaveDungeon(
   BuildContext context,
   VoidCallback onLeave, {
   GameState? state,
+  bool floorCleared = false,
+  bool keystoneActive = false,
+  String? keyTimer,
 }) async {
   final plain = state != null && GameLogic.plainPlayerChrome(state);
+  final String body;
+  if (plain) {
+    body = floorCleared
+        ? 'Leave to hub now? This floor is already clear — banked gear and gold stay.'
+        : 'Leave to hub now? This floor’s fight restarts when you come back. '
+            'Gear and gold you already got stay.';
+  } else if (floorCleared) {
+    body =
+        'Leave to hub now? Floor is clear (stairs ready) — you keep banked gear and gold. '
+        'Coming back starts a fresh floor from hub.';
+  } else if (keystoneActive) {
+    final timerBit = (keyTimer != null && keyTimer.isNotEmpty)
+        ? ' Timer $keyTimer.'
+        : '';
+    body =
+        'Leave to hub now? KEY run ends — timer stops.$timerBit '
+        'Gear and gold already banked stay.';
+  } else if (state != null && state.dungeonMode == DungeonMode.farm) {
+    body =
+        'Leave to hub now? FARM loop on this floor stops — you restart '
+        'from hub (not the same floor mid-loop). Gear and gold already banked stay.';
+  } else {
+    body =
+        'Leave to hub now? This floor’s fight progress is lost '
+        '(PUSH climb resets from hub). Gear and gold already banked stay.';
+  }
   WebClickBridge.pushLayer();
   try {
     final ok = await showDialog<bool>(
@@ -195,14 +224,7 @@ Future<void> confirmLeaveDungeon(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Return to hub?',
         content: Text(
-          plain
-              ? 'Leave to hub now? This floor’s fight restarts when you come back. '
-                  'Gear and gold you already got stay.'
-              : state != null && state.dungeonMode == DungeonMode.farm
-              ? 'Leave to hub now? FARM loop on this floor stops — you restart '
-                  'from hub (not the same floor mid-loop). Gear and gold already banked stay.'
-              : 'Leave to hub now? This floor’s fight progress is lost '
-                  '(PUSH climb resets from hub). Gear and gold already banked stay.',
+          body,
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [

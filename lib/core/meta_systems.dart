@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.97';
+  static const String currentVersion = '1.12.98';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.98',
+      bullets: <String>[
+        'AL20 hub polish: Done for today opens KEY · BOARDS as the big button; KEY chase shows +iLvl · affixes · par for the chase key; AL pill names the hunt; READY claimables drop double READY chrome.',
+        'Dungeon feel: KEY timer stays visible; bigger God Hand; wipe tips cover fast melts (POWER); LEAVE copy knows clear vs KEY; clear loot banner lasts longer; kit tap shows identity line; market UPGRADE badge before buy.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.97',
       bullets: <String>[

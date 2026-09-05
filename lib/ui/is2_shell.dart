@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/keystone.dart';
 import '../core/menu_alerts.dart';
 import '../core/menu_router.dart';
 import '../core/nav_intent.dart';
@@ -58,6 +59,11 @@ class _Is2ShellState extends State<Is2Shell> {
         context,
         widget.onLeaveDungeon!,
         state: state,
+        floorCleared: widget.director.spatial?.awaitingExit == true,
+        keystoneActive: state.keystoneRunActive,
+        keyTimer: state.keystoneRunActive
+            ? Keystone.formatTimer(state.keystoneTimerMs)
+            : null,
       );
       return KeyEventResult.handled;
     }

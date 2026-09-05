@@ -221,7 +221,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
           decoration: MenuChrome.listCard(
-            selected: isUpgrade && canBuy,
+            selected: isUpgrade,
             borderColor: rarityBorderColor(item.rarity).withValues(alpha: 0.85),
           ),
           child: Row(
@@ -232,16 +232,32 @@ class _MarketOverlayState extends State<MarketOverlay> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      item.name,
-                      style: GameTheme.body(
-                        size: 13,
-                        color: canBuy
-                            ? GameTheme.parchment
-                            : GameTheme.parchmentDim,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        if (isUpgrade) ...[
+                          Text(
+                            'UPGRADE',
+                            style: GameTheme.pixel(
+                              size: 6,
+                              color: GameTheme.mossLit,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Expanded(
+                          child: Text(
+                            item.name,
+                            style: GameTheme.body(
+                              size: 13,
+                              color: canBuy
+                                  ? GameTheme.parchment
+                                  : GameTheme.parchmentDim,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                     Text(
                       subtitle,

@@ -847,6 +847,16 @@ class _PartyRow extends StatelessWidget {
                     ],
                     if (showKit) ...[
                       const SizedBox(height: 2),
+                      Text(
+                        hero.passiveLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.body(
+                          size: 10,
+                          color: GameTheme.mossLit,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
                       Row(
                         children: [
                           Flexible(

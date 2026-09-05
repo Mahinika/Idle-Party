@@ -245,9 +245,10 @@ class DungeonTopHud extends StatelessWidget {
     final keyBit = state.keystoneRunActive
         ? ' · KEY +${state.keystoneRunLevel}'
         : (state.hardmodeLevel > 0 ? ' · KEY +${state.hardmodeLevel}' : '');
-    final keyTimerBit = state.keystoneRunActive
-        ? ' · ${Keystone.formatTimer(state.keystoneTimerMs)}'
-        : '';
+    // Timer is its own chip — never ellipsis behind zone/KEY in placeLine.
+    final keyTimerLabel = state.keystoneRunActive
+        ? Keystone.formatTimer(state.keystoneTimerMs)
+        : null;
     final zoneShort = () {
       final parts = dungeonName.split(RegExp(r"[\s']+"));
       final word =
@@ -281,7 +282,7 @@ class DungeonTopHud extends StatelessWidget {
           )
         : state.inWorldBoss
         ? 'Ashen Crown'
-        : '$zoneShort · F$floor$keyBit$keyTimerBit';
+        : '$zoneShort · F$floor$keyBit';
     void setMode(DungeonMode mode) {
       final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);
       if (fighting && state.dungeonMode != mode) {
@@ -428,6 +429,17 @@ class DungeonTopHud extends StatelessWidget {
                   ),
                 ),
               ),
+              if (keyTimerLabel != null) ...[
+                const SizedBox(width: 4),
+                Text(
+                  keyTimerLabel,
+                  maxLines: 1,
+                  style: GameTheme.pixel(
+                    size: GameTheme.hudPixel,
+                    color: GameTheme.torchHot,
+                  ),
+                ),
+              ],
               modeRow(),
               if (world != null) ...[
                 const SizedBox(width: 4),

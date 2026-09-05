@@ -153,6 +153,15 @@ class TargetCornerHud extends StatelessWidget {
                   ),
                 ],
               ),
+              if (enemy.livingBombTimer > 0)
+                Text(
+                  'BOMB · ${enemy.livingBombTimer.toStringAsFixed(1)}s',
+                  maxLines: 1,
+                  style: GameTheme.pixel(
+                    size: 6,
+                    color: GameTheme.torchHot,
+                  ),
+                ),
             ] else
               Text(
                 state.isPartyDefeated

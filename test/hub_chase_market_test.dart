@@ -39,7 +39,7 @@ void main() {
     expect(chase.title.toLowerCase(), contains('market'));
     final contract = ChaseContract.fromState(state);
     expect(contract.isClaimable, isTrue);
-    expect(contract.readyActionLabel, 'GOLD');
+    expect(contract.readyActionLabel, 'OPEN GOLD');
   });
 
   test('BAG equip beats MARKET in chase priority', () {

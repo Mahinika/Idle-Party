@@ -56,6 +56,7 @@ enum HubChaseKind {
 }
 
 /// Endgame hunts use TODAY + primary ENTER / KEY — not a second hub row.
+/// Soft rest (`doneForToday`) mutes idle POWERUPS the same way.
 bool hubChaseOwnsEndgameRow(HubChaseKind kind) {
   switch (kind) {
     case HubChaseKind.keystone:
@@ -63,9 +64,8 @@ bool hubChaseOwnsEndgameRow(HubChaseKind kind) {
     case HubChaseKind.riftMilestone:
     case HubChaseKind.greaterRiftMilestone:
     case HubChaseKind.ashenCrown:
-      return true;
     case HubChaseKind.doneForToday:
-      return false;
+      return true;
     default:
       return false;
   }
@@ -417,9 +417,9 @@ class HubChase {
         kind: HubChaseKind.doneForToday,
         title: 'Done for today',
         detail:
-            'Vault, Daily, and KEY dial are settled — this is a soft rest. '
-            '${pb.detail} Optional: KEY · BOARDS for ranks.',
-        progressLabel: pb.progressLabel,
+            'Vault, Daily, and KEY dial settled — soft rest. '
+            'Optional: KEY · BOARDS (Spire PB ${pb.progressLabel ?? 'open'}).',
+        progressLabel: 'BOARDS',
       );
     }
     return pb;
@@ -469,11 +469,11 @@ class HubChase {
           : '$upgrades better items waiting',
       detail: upgrades == 1
           ? (named != null
-              ? '$named is in BAG — open BAG and tap EQUIP.'
-              : 'Open BAG and tap EQUIP before you go deeper.')
+              ? '$named is in BAG — open BAG and tap EQUIP 1.'
+              : 'Open BAG and tap EQUIP 1 before you go deeper.')
           : (named != null
-              ? 'Open BAG — tap EQUIP ($upgrades waiting; first: $named).'
-              : 'Open BAG and tap EQUIP — $upgrades upgrades waiting.'),
+              ? 'Open BAG — tap EQUIP $upgrades (first: $named).'
+              : 'Open BAG and tap EQUIP $upgrades — upgrades waiting.'),
       progressLabel: upgrades == 1 ? 'EQUIP 1' : 'EQUIP $upgrades',
       urgency: HubChaseUrgency.ready,
     );
@@ -601,28 +601,24 @@ class HubChase {
     if (pref >= cap) return null;
     final target = pref <= 0 ? 1 : pref;
     final firstKey = pref <= 0;
-    final base = firstKey
-        ? 'ENTER sets KEY +1 (even if dial shows off). Example: KEY +5 ≈ '
-            '+${Keystone.lootItemLevelBonus(5)} iLvl and ${Keystone.goldMulLabel(5)} gold.'
-        : 'Time KEY +$target for +${Keystone.lootItemLevelBonus(target)} iLvl '
-            '(e.g. KEY +5 ≈ +${Keystone.lootItemLevelBonus(5)} iLvl), more gold, '
-            'and the next key unlock.';
     return HubChase(
       kind: HubChaseKind.keystone,
       title: firstKey ? 'Run KEY +1' : 'Time KEY +$target',
-      detail: _keyAffixDetail(state, target, base: base),
+      detail: _keyPhoneDetail(state, target, firstKey: firstKey),
       progressLabel: 'KEY +$target',
       keyLevel: target,
       zoneId: GameLogic.recommendedDungeonId(state),
     );
   }
 
-  static String _keyAffixDetail(
+  /// Compact phone line: KEY +N · +iLvl · affixes · par.
+  static String _keyPhoneDetail(
     GameState state,
     int key, {
-    required String base,
+    bool firstKey = false,
   }) {
-    final affixes = Keystone.previewAffixes(state);
+    final ilvl = Keystone.lootItemLevelBonus(key);
+    final affixes = Keystone.previewAffixesForKey(state, key);
     final affixBit = affixes.isEmpty
         ? 'no affixes'
         : affixes.map(Keystone.label).join(' · ');
@@ -632,7 +628,10 @@ class HubChase {
         key: key,
       ),
     );
-    return '$base Affixes: $affixBit · par $par.';
+    final lead = firstKey
+        ? 'ENTER sets KEY +1 · +$ilvl iLvl'
+        : 'KEY +$key · +$ilvl iLvl';
+    return '$lead · $affixBit · par $par';
   }
 
   /// Level the party toward [GameLogic.maxHeroLevel] near Ascension cap.
@@ -715,8 +714,7 @@ class HubChase {
         kind: HubChaseKind.keystone,
         title: 'Time KEY +$pref',
         detail:
-            'Ladder clear — fall back to timing KEY +$pref for vault score '
-            'and a personal best.',
+            'Ladder quiet — ${_keyPhoneDetail(state, pref)}. Vault score / PB.',
         progressLabel: 'KEY +$pref',
         keyLevel: pref,
         zoneId: GameLogic.recommendedDungeonId(state),

@@ -658,7 +658,7 @@ void main() {
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.keystone);
-    expect(chase.detail, contains('Affixes:'));
+    expect(chase.detail, contains('iLvl'));
     expect(chase.detail.toLowerCase(), contains('par'));
   });
 
