@@ -248,6 +248,10 @@ class TargetCornerHud extends StatelessWidget {
 
   static bool _gateLocked(SpatialWorld? world) {
     if (world == null || world.awaitingExit) return false;
+    // Already fighting in an open chamber — don't nag about deeper gates.
+    final fightingHere =
+        world.enemies.any((e) => e.hp > 0 && !e.dormant);
+    if (fightingHere) return false;
     for (final g in world.map.gates) {
       if (!world.openGateIds.contains(g.id)) return true;
     }
@@ -255,7 +259,10 @@ class TargetCornerHud extends StatelessWidget {
   }
 
   static bool _hasDormantAhead(SpatialWorld? world) {
-    if (world == null) return false;
+    if (world == null || world.awaitingExit) return false;
+    final fightingHere =
+        world.enemies.any((e) => e.hp > 0 && !e.dormant);
+    if (fightingHere) return false;
     return world.enemies.any((e) => e.hp > 0 && e.dormant);
   }
 }

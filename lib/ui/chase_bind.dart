@@ -17,14 +17,32 @@ void runChasePlan({
   void Function(String id)? onPickZone,
   bool openMenus = true,
 }) {
+  // Hub TODAY / enter must not fight an open MORE/CRAFT sheet.
+  switch (plan.op) {
+    case ChaseOp.claimVault:
+    case ChaseOp.claimMissions:
+    case ChaseOp.claimMonth:
+    case ChaseOp.enter:
+    case ChaseOp.enterKey:
+    case ChaseOp.confirmAscend:
+    case ChaseOp.confirmDaily:
+    case ChaseOp.confirmGauntlet:
+    case ChaseOp.confirmRift:
+    case ChaseOp.confirmGreaterRift:
+    case ChaseOp.confirmAshen:
+    case ChaseOp.confirmAshenPractice:
+      if (router.isOpen) router.close();
+    default:
+      break;
+  }
   switch (plan.op) {
     case ChaseOp.none:
       return;
     case ChaseOp.claimVault:
       director.claimDailyVault();
     case ChaseOp.claimMissions:
+      // One-tap TODAY claim — do not bounce into MORE · QUESTS.
       director.claimAllReadyMissions();
-      if (openMenus) router.apply(NavIntent.quests);
     case ChaseOp.claimMonth:
       director.claimMonthPass();
     case ChaseOp.syncWeek:

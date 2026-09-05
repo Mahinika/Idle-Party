@@ -55,6 +55,7 @@ class _Is2ShellState extends State<Is2Shell> {
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.keyH && widget.onLeaveDungeon != null) {
+      if (router.isOpen) router.close();
       confirmLeaveDungeon(
         context,
         widget.onLeaveDungeon!,

@@ -24,9 +24,10 @@ class UiFeedback {
   /// Returns false when identical-spam is dropped (no listener notify needed).
   bool showToast(String message, {double life = 2.4}) {
     final now = DateTime.now();
+    // GEAR / GOLD can fire pause toast twice in one frame — keep ~1.5s window.
     if (_lastToastMessage == message &&
         _lastToastAt != null &&
-        now.difference(_lastToastAt!).inMilliseconds < 800) {
+        now.difference(_lastToastAt!).inMilliseconds < 1500) {
       return false;
     }
     _lastToastMessage = message;

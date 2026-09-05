@@ -5,6 +5,7 @@ import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../models/apex_craft.dart';
+import '../models/dungeon_def.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import 'character_equip_panel.dart';
@@ -92,6 +93,26 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     CraftMatFamily.slag => UiIcon.gold,
   };
 
+  /// Honest farm line — don't point at Gauntlet before party max level.
+  static String _farmSources(GameState state, String matId) {
+    final def = ApexCraft.materialsById[matId];
+    if (def == null) return 'boss drop';
+    if (matId != 'apex_slag') return def.bossSources;
+    final crystalOpen = DungeonCatalog.isUnlocked(
+      'crystal',
+      GameLogic.partyMeanLevel(state),
+      state.highestDungeonCleared,
+    );
+    if (GameLogic.endgameUnlocked(state)) {
+      return 'Gauntlet bosses · Crystal Spire boss';
+    }
+    if (crystalOpen) {
+      return 'Crystal Spire boss · Gauntlet after party '
+          'Lv${GameLogic.maxHeroLevel}';
+    }
+    return 'Unlock Crystal Spire for slag · Gauntlet later';
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
@@ -177,7 +198,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           const SizedBox(height: 4),
           Text(
             'Next farm: ${ApexCraft.materialsById[shortages.first.key]?.name ?? shortages.first.key}'
-            ' → ${ApexCraft.materialsById[shortages.first.key]?.bossSources ?? 'boss drop'}',
+            ' → ${_farmSources(state, shortages.first.key)}',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         ],
@@ -252,7 +273,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                   style: GameTheme.body(size: 13, color: GameTheme.torchHot),
                 ),
                 Text(
-                  targetDef.bossSources,
+                  _farmSources(state, targetDef.id),
                   style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
                 ),
                 const SizedBox(height: 4),
@@ -577,7 +598,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                     ),
                     if (have < need)
                       Text(
-                        def?.bossSources ?? 'boss drop',
+                        _farmSources(state, matId),
                         style: GameTheme.body(
                           size: 11,
                           color: GameTheme.parchmentDim,

@@ -71,6 +71,9 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   List<ui.Image?> _enemySprites = const [];
   String? _loadedDungeonId;
   bool _sharedLoaded = false;
+  /// Zone floor/enemy decode finished (partial OK — never block forever).
+  bool _zoneArtReady = false;
+  int _loadGen = 0;
 
   bool get _tilesReady =>
       _floorReady.isNotEmpty &&
@@ -79,6 +82,13 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       (_zoneStairsBoss ?? _stairsBoss) != null &&
       (_zoneDoorClosed ?? _doorClosed) != null &&
       (_zoneDoorOpen ?? _doorOpen) != null;
+
+  bool get _canPaintFloor =>
+      _zoneArtReady &&
+      _tilesReady &&
+      _sword != null &&
+      _vial != null &&
+      _charAtlas != null;
 
   @override
   void initState() {
@@ -96,6 +106,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   }
 
   Future<void> _loadImages(String dungeonId) async {
+    final gen = ++_loadGen;
+    if (_loadedDungeonId != dungeonId) {
+      _zoneArtReady = false;
+    }
     Future<ui.Image> load(
       String asset, {
       int? targetWidth,
@@ -105,6 +119,22 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       targetWidth: targetWidth,
       targetHeight: targetHeight,
     );
+
+    Future<ui.Image?> loadSoft(
+      String asset, {
+      int? targetWidth,
+      int? targetHeight,
+    }) async {
+      try {
+        return await load(
+          asset,
+          targetWidth: targetWidth,
+          targetHeight: targetHeight,
+        );
+      } catch (_) {
+        return null;
+      }
+    }
 
     final floorPaths = KenneyAssets.floorVariantsForDungeon(dungeonId);
     final wallPaths = KenneyAssets.wallVariantsForDungeon(dungeonId);
@@ -185,7 +215,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         ...petPaths.map((a) => load(a, targetWidth: 96)),
         ...uniqueHeroPaths.map((a) => load(a, targetWidth: 128)),
       ]);
-      if (!mounted) return;
+      if (!mounted || gen != _loadGen) return;
 
       var i = 0;
       _stairs = shared[i++];
@@ -242,11 +272,13 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
           // Missing catalog art falls back to class PNG at paint time.
         }
       }
-      if (!mounted) return;
+      if (!mounted || gen != _loadGen) return;
       _bodyByPath
         ..clear()
         ..addEntries(bodyEntries);
       _sharedLoaded = true;
+      // Shared icons alone are not enough to paint, but keep UI responsive.
+      if (mounted) setState(() {});
     } else if (_bodyByPath.isEmpty) {
       // Retry denser bodies if the first shared load ran before assets landed.
       final bodyPaths = [
@@ -259,7 +291,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
           bodyEntries.add(MapEntry(path, await load(path, targetWidth: 128)));
         } catch (_) {}
       }
-      if (!mounted) return;
+      if (!mounted || gen != _loadGen) return;
       if (bodyEntries.isNotEmpty) {
         _bodyByPath
           ..clear()
@@ -282,55 +314,85 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
           ]
         : const <String>[];
 
-    final zone = await Future.wait([
-      ...floorPaths.map((a) => load(a, targetWidth: 64)),
-      ...wallPaths.map((a) => load(a, targetWidth: 64)),
-      ...propKinds.map(
-        (k) => load(
-          KenneyAssets.propAsset(k, dungeonId: dungeonId),
-          targetWidth: 64,
-        ),
-      ),
-      ...zoneEnemyAssets.map((a) => load(a, targetWidth: 128)),
-      ...structuralPaths.map((a) => load(a, targetWidth: 64)),
-    ]);
-    if (!mounted) return;
+    final floorVariants = <ui.Image>[];
+    for (final a in floorPaths) {
+      final img = await loadSoft(a, targetWidth: 64);
+      if (img != null) floorVariants.add(img);
+    }
+    final wallVariants = <ui.Image>[];
+    for (final a in wallPaths) {
+      final img = await loadSoft(a, targetWidth: 64);
+      if (img != null) wallVariants.add(img);
+    }
+    if (!mounted || gen != _loadGen) return;
 
-    var zi = 0;
-    final floorVariants = zone.sublist(zi, zi + floorPaths.length);
-    zi += floorPaths.length;
-    final wallVariants = zone.sublist(zi, zi + wallPaths.length);
-    zi += wallPaths.length;
-    final propKindList = propKinds.toList();
-    final propImages = <MapPropKind, ui.Image>{};
-    for (final kind in propKindList) {
-      propImages[kind] = zone[zi++];
-    }
-    final enemySprites = List<ui.Image?>.filled(catalog.length, null);
-    for (final asset in zoneEnemyAssets) {
-      enemySprites[KenneyAssets.enemySpriteCatalogIndex(asset)] = zone[zi++];
-    }
-    ui.Image? zoneStairs;
-    ui.Image? zoneStairsBoss;
-    ui.Image? zoneDoorClosed;
-    ui.Image? zoneDoorOpen;
-    if (customDungeon) {
-      zoneStairs = zone[zi++];
-      zoneStairsBoss = zone[zi++];
-      zoneDoorClosed = zone[zi++];
-      zoneDoorOpen = zone[zi++];
-    }
-
+    // Paint tiles ASAP — props/enemies must never soft-lock the floor view.
+    final canPaint =
+        floorVariants.isNotEmpty &&
+        wallVariants.isNotEmpty &&
+        _stairs != null &&
+        _stairsBoss != null &&
+        _doorClosed != null &&
+        _doorOpen != null &&
+        _sword != null &&
+        _vial != null &&
+        _charAtlas != null;
     setState(() {
       _loadedDungeonId = dungeonId;
       _floorReady = floorVariants;
       _wallReady = wallVariants;
+      _zoneArtReady = canPaint;
+    });
+
+    ui.Image? zoneStairs;
+    ui.Image? zoneStairsBoss;
+    ui.Image? zoneDoorClosed;
+    ui.Image? zoneDoorOpen;
+    if (customDungeon && structuralPaths.length == 4) {
+      zoneStairs = await loadSoft(structuralPaths[0], targetWidth: 64);
+      zoneStairsBoss = await loadSoft(structuralPaths[1], targetWidth: 64);
+      zoneDoorClosed = await loadSoft(structuralPaths[2], targetWidth: 64);
+      zoneDoorOpen = await loadSoft(structuralPaths[3], targetWidth: 64);
+    }
+    if (!mounted || gen != _loadGen) return;
+    if (zoneStairs != null ||
+        zoneStairsBoss != null ||
+        zoneDoorClosed != null ||
+        zoneDoorOpen != null) {
+      setState(() {
+        _zoneStairs = zoneStairs;
+        _zoneStairsBoss = zoneStairsBoss;
+        _zoneDoorClosed = zoneDoorClosed;
+        _zoneDoorOpen = zoneDoorOpen;
+      });
+    }
+
+    final propKindList = propKinds.toList();
+    final propImages = <MapPropKind, ui.Image?>{};
+    for (final kind in propKindList) {
+      propImages[kind] = await loadSoft(
+        KenneyAssets.propAsset(kind, dungeonId: dungeonId),
+        targetWidth: 64,
+      );
+    }
+
+    final enemySprites = List<ui.Image?>.filled(catalog.length, null);
+    for (final asset in zoneEnemyAssets) {
+      enemySprites[KenneyAssets.enemySpriteCatalogIndex(asset)] =
+          await loadSoft(asset, targetWidth: 128);
+    }
+    if (!mounted || gen != _loadGen) return;
+
+    setState(() {
       _propImages = propImages;
       _enemySprites = enemySprites;
-      _zoneStairs = zoneStairs;
-      _zoneStairsBoss = zoneStairsBoss;
-      _zoneDoorClosed = zoneDoorClosed;
-      _zoneDoorOpen = zoneDoorOpen;
+      // Keep painting even if every enemy soft-failed.
+      if (!_zoneArtReady &&
+          _floorReady.isNotEmpty &&
+          _wallReady.isNotEmpty &&
+          _stairs != null) {
+        _zoneArtReady = true;
+      }
     });
   }
 
@@ -441,12 +503,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                             widget.director.godHandAtWorld(tileX, tileY);
                           },
                           child:
-                              world == null ||
-                                  !_tilesReady ||
-                                  _enemySprites.isEmpty ||
-                                  _sword == null ||
-                                  _vial == null ||
-                                  _charAtlas == null
+                              world == null || !_canPaintFloor
                               ? ColoredBox(
                                   color: GameTheme.stone,
                                   child: Center(

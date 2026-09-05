@@ -107,12 +107,33 @@ class _PlayShellState extends State<PlayShell> {
         route: router.route,
         destinations: graph.destinations,
         showReason: true,
-        onSelect: (dest) => _openMenuFeel(() => router.toggle(dest)),
+        onSelect: (dest) => _openMenuFeel(() {
+          if (dest == MenuRoute.more) {
+            final chase = HubChase.forState(state);
+            // Claimables win — don't reopen last CRAFT farm session.
+            if (chase.kind == HubChaseKind.claimMissions ||
+                chase.kind == HubChaseKind.claimDailyVault) {
+              if (router.route == MenuRoute.more) {
+                router.close();
+              } else {
+                router.open(
+                  MenuRoute.more,
+                  more: chase.kind == HubChaseKind.claimMissions
+                      ? MoreSection.quests
+                      : MoreSection.info,
+                );
+              }
+              return;
+            }
+          }
+          router.toggle(dest);
+        }),
         onLeave: () {
           if (state.isPartyDefeated) {
             director.hubAfterWipe();
             return;
           }
+          if (router.isOpen) router.close();
           confirmLeaveDungeon(
             context,
             _leaveDungeon,
@@ -137,7 +158,26 @@ class _PlayShellState extends State<PlayShell> {
       destinations: DestinationGraph.hub(state).destinations,
       // Reason line self-hides when empty; READY chase quiets non-chase alerts.
       showReason: true,
-      onSelect: router.toggle,
+      onSelect: (dest) {
+        if (dest == MenuRoute.more) {
+          // Claimables win — don't reopen last CRAFT farm session.
+          if (chase.kind == HubChaseKind.claimMissions ||
+              chase.kind == HubChaseKind.claimDailyVault) {
+            if (router.route == MenuRoute.more) {
+              router.close();
+            } else {
+              router.open(
+                MenuRoute.more,
+                more: chase.kind == HubChaseKind.claimMissions
+                    ? MoreSection.quests
+                    : MoreSection.info,
+              );
+            }
+            return;
+          }
+        }
+        router.toggle(dest);
+      },
     );
   }
 
