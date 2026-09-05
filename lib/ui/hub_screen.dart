@@ -311,7 +311,9 @@ class _HubScreenState extends State<HubScreen>
         AdBoost.isActive(state.metaDepth.adBoostUntilMs);
     // Endgame hunt night: hide idle POWERUPS chrome unless a boost is running.
     // First hour: hide ads chrome until the first boss — ENTER stays the focus.
-    final showPowerups = GameLogic.plainPlayerChrome(state)
+    final showPowerups = state.metaDepth.adFree
+        ? powerupsActive
+        : GameLogic.plainPlayerChrome(state)
         ? powerupsActive
         : endgameHunt
         ? powerupsActive

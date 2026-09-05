@@ -1,6 +1,6 @@
-/// Real-money SHOP catalog (UI + docs). Play Billing not wired yet.
+/// Real-money SHOP catalog (UI + docs). Buttons say COMING LATER until Billing.
 ///
-/// Keep in sync with [docs/SHOP_MONETIZATION.md].
+/// Keep in sync with [docs/SHOP_MONETIZATION.md]. Grant path: [ShopBilling].
 library;
 
 import 'ad_boost.dart';

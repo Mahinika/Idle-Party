@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.95';
+  static const String currentVersion = '1.12.96';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.96',
+      bullets: <String>[
+        'SHOP buttons say Coming later (Play Billing not live yet) — prices are the planned catalog only. Wipe tips say POWER for ATK/DEF/STA; OPEN POWER opens GOLD tracks.',
+        'Play production polish backlog + billing fields on the save (ad-free / starter / bag slots) ready for the post-launch Billing wave. Endgame TODAY can say Fallback · Push Gauntlet PB when the ladder is quiet.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.95',
       bullets: <String>[

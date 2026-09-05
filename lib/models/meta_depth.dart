@@ -296,6 +296,9 @@ class MetaDepthState {
     this.apexTargetMatId = '',
     this.apexTargetProgress = 0,
     this.adBoostUntilMs = 0,
+    this.adFree = false,
+    this.shopStarterClaimed = false,
+    this.shopBagBonusSlots = 0,
     this.monthPassKey = '',
     this.monthlyBestTimedKey = 0,
     this.monthlyBestGrTier = 0,
@@ -510,6 +513,14 @@ class MetaDepthState {
   /// UTC millis when optional POWERUPS (ad boost) ends. 0 = none. Survives Ascend.
   final int adBoostUntilMs;
 
+  /// Permanent SHOP ad-free purchase. Survives Ascend. Billing grants later.
+  final bool adFree;
+
+  /// One-time starter_boost_6h claimed. Survives Ascend.
+  final bool shopStarterClaimed;
+
+  /// Extra bag slots from SHOP supporter_qol (survives Ascend).
+  final int shopBagBonusSlots;
 
   /// UTC month key for month pass progress (yyyy-mm).
   final String monthPassKey;
@@ -633,6 +644,9 @@ class MetaDepthState {
     String? apexTargetMatId,
     int? apexTargetProgress,
     int? adBoostUntilMs,
+    bool? adFree,
+    bool? shopStarterClaimed,
+    int? shopBagBonusSlots,
     String? monthPassKey,
     int? monthlyBestTimedKey,
     int? monthlyBestGrTier,
@@ -755,6 +769,9 @@ class MetaDepthState {
       apexTargetMatId: apexTargetMatId ?? this.apexTargetMatId,
       apexTargetProgress: apexTargetProgress ?? this.apexTargetProgress,
       adBoostUntilMs: adBoostUntilMs ?? this.adBoostUntilMs,
+      adFree: adFree ?? this.adFree,
+      shopStarterClaimed: shopStarterClaimed ?? this.shopStarterClaimed,
+      shopBagBonusSlots: shopBagBonusSlots ?? this.shopBagBonusSlots,
       monthPassKey: monthPassKey ?? this.monthPassKey,
       monthlyBestTimedKey: monthlyBestTimedKey ?? this.monthlyBestTimedKey,
       monthlyBestGrTier: monthlyBestGrTier ?? this.monthlyBestGrTier,
@@ -872,6 +889,9 @@ class MetaDepthState {
     'apexTargetMatId': apexTargetMatId,
     'apexTargetProgress': apexTargetProgress,
     'adBoostUntilMs': adBoostUntilMs,
+    'adFree': adFree,
+    'shopStarterClaimed': shopStarterClaimed,
+    'shopBagBonusSlots': shopBagBonusSlots,
     'monthPassKey': monthPassKey,
     'monthlyBestTimedKey': monthlyBestTimedKey,
     'monthlyBestGrTier': monthlyBestGrTier,
@@ -1033,6 +1053,10 @@ class MetaDepthState {
       apexTargetMatId: (json['apexTargetMatId'] as String?) ?? '',
       apexTargetProgress: (json['apexTargetProgress'] as num?)?.toInt() ?? 0,
       adBoostUntilMs: (json['adBoostUntilMs'] as num?)?.toInt() ?? 0,
+      adFree: (json['adFree'] as bool?) ?? false,
+      shopStarterClaimed: (json['shopStarterClaimed'] as bool?) ?? false,
+      shopBagBonusSlots:
+          ((json['shopBagBonusSlots'] as num?)?.toInt() ?? 0).clamp(0, 20),
       monthPassKey: (json['monthPassKey'] as String?) ?? '',
       monthlyBestTimedKey:
           ((json['monthlyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),

@@ -417,8 +417,8 @@ class HubChase {
         kind: HubChaseKind.doneForToday,
         title: 'Done for today',
         detail:
-            'Vault, Daily, and KEY dial are settled. ${pb.detail} '
-            'Optional: KEY · BOARDS for ranks.',
+            'Vault, Daily, and KEY dial are settled — this is a soft rest. '
+            '${pb.detail} Optional: KEY · BOARDS for ranks.',
         progressLabel: pb.progressLabel,
       );
     }
@@ -799,10 +799,10 @@ class HubChase {
     final nextBoss = ((best ~/ 5) + 1) * 5;
     return HubChase(
       kind: HubChaseKind.gauntletMilestone,
-      title: 'Push Gauntlet PB',
+      title: 'Fallback · Push Gauntlet PB',
       detail:
-          'Best F$best — climb past your PB (next boss F$nextBoss). '
-          'Boss every 5 floors; wipe or leave returns to hub.',
+          'Endgame ladder quiet — optional climb past PB F$best '
+          '(next boss F$nextBoss). Boss every 5; wipe or leave → hub.',
       progressLabel: 'PB F$best',
       urgency: HubChaseUrgency.normal,
     );

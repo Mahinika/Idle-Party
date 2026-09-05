@@ -8,8 +8,8 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ⏳ review | **1.12.87 (116)** submitted 2026-09-04 (Alpha AAB — TODAY KEY CTA honesty + wipe OPEN POWER/BAG/Shop). Pre-checks then Google review. Previous live for testers: **1.12.83 (112)**. Alpha countries: all + rest of world. |
-| Production | ⏳ access review | **Production-access application submitted 2026-09-04 ~16:54** (Console: reviewing; usually ≤7 days). Track still locked until Google grants access. Then upload AAB after IARC ads (phone screens already attached). |
+| Closed testing | ⏳ submit | Working ship **1.12.96+125** — Alpha AAB upload this pass (SHOP Coming later + POWER wipe tips + production polish backlog). Previous Alpha note **1.12.87 (116)** / live may lag until review. Alpha countries: all + rest of world. |
+| Production | ⏳ access review | **Production-access application submitted 2026-09-04 ~16:54**. Track still locked until Google grants access. Upload production AAB **1.12.96+125** (or newer) after IARC ads + access. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
 | Data safety form | ⏳ review | Updated 2026-08-21 for AdMob (device IDs collected+shared, advertising purpose) + Advertising ID declaration Yes. Submitted with Alpha **57**. |
@@ -27,7 +27,18 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Owner played **1.12.87+** on A56 (owner OK 2026-09-04)
 - [x] Phone screenshots attached on listing (verified 2026-09-04 — slots filled, Save idle)
 - [ ] IARC ads questionnaire re-done if Console prompts after AdMob / before production AAB
-- [ ] Production access granted by Google → upload production AAB **117 (1.12.88)** or newer
+- [ ] Production access granted by Google → upload production AAB **1.12.96+125** or newer
+- [ ] Owner play OK on the production candidate build (A56 save) before upload
+- [ ] After production live: AdMob store-link Idle Party
+
+### Production AAB upload checklist (agent + owner)
+
+1. Confirm IARC ads re-answered and production track unlocked.
+2. `flutter build appbundle --release` with upload keystore (or tag `v*` after CI signing verified).
+3. Upload via play-store-prep CORS recipe → Production track (not Alpha).
+4. Release notes from `docs/STORE_LISTING.md` (COMING LATER / POWER wipe honesty).
+5. Update this Operator status table (submitted vs live).
+6. **Do not** upload until the owner played the build and said yes.
 
 Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row changes.
 

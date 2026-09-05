@@ -72,13 +72,20 @@ FAIR PLAY
 Install, start a party, and take one more floor.
 ```
 
-### Release notes — Alpha 1.12.87 (en-US, paste into Play Console)
+### Release notes — Alpha / Production ship line (en-US)
+
+Working ship: **1.12.96+** (`pubspec.yaml`). Paste a fresh note when uploading.
 
 ```
-• TODAY buttons match KEY/month/week hunts (ENTER KEY, not bare ENTER DUNGEON).
-• Wipe panel can OPEN POWER / BAG / Shop when the tip names that fix.
-• GEAR and dungeon dolls match (undertunic + helms). Prestige Ascend still Rebuild your bag.
+• SHOP shows Coming later (Play Billing not live) — no fake buy buttons.
+• Wipe panel tips say POWER for ATK/DEF/STA; OPEN POWER opens GOLD tracks.
+• Endgame TODAY can say Fallback · Push Gauntlet PB when the ladder is quiet.
 ```
+
+### Full description honesty (SHOP)
+
+Full description must **not** claim you can buy boosts with real money until Billing is live.
+Current full description correctly lists optional POWERUPS ads only — keep it that way until SHOP buys work.
 
 ### Screenshot caption plan (Play phone carousel, 2026-08-21)
 

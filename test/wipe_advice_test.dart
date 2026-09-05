@@ -43,7 +43,7 @@ void main() {
     expect(state.wipeAdviceLine, '');
     state = GameLogic.notePartyWipe(state, atkLack());
     expect(state.wipeStreakCount, 2);
-    expect(state.wipeAdviceLine, 'Upgrade ATK in GOLD');
+    expect(state.wipeAdviceLine, 'Upgrade ATK in POWER');
   });
 
   test('melted pack points at DEF on first wipe', () {
@@ -57,7 +57,7 @@ void main() {
     );
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.notePartyWipe(state, fight);
-    expect(state.wipeAdviceLine, 'Upgrade DEF in GOLD');
+    expect(state.wipeAdviceLine, 'Upgrade DEF in POWER');
   });
 
   test('instant melt still tips DEF when damageDealt is zero', () {
@@ -72,7 +72,7 @@ void main() {
     final state = GameLogic.createInitialState(now: now);
     expect(
       WipeAdvice.lineFor(state: state, fight: fight),
-      'Upgrade DEF in GOLD',
+      'Upgrade DEF in POWER',
     );
   });
 
@@ -88,7 +88,7 @@ void main() {
     final state = GameLogic.createInitialState(now: now);
     expect(
       WipeAdvice.lineFor(state: state, fight: fight),
-      'Upgrade STA in GOLD',
+      'Upgrade STA in POWER',
     );
   });
 
@@ -267,7 +267,7 @@ void main() {
     );
     expect(
       WipeAdvice.hubCtaLabelFor('Upgrade ATK in GOLD'),
-      'OPEN GOLD',
+      'OPEN POWER',
     );
     expect(
       WipeAdvice.hubNavFor('Upgrade ATK in GOLD')?.route,
@@ -275,7 +275,7 @@ void main() {
     );
     expect(
       WipeAdvice.hubCtaLabelFor('Upgrade ATK in POWER'),
-      'OPEN GOLD',
+      'OPEN POWER',
     );
     expect(
       WipeAdvice.hubCtaLabelFor('Equip the better item in BAG'),

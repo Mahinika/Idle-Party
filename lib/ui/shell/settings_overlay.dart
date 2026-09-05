@@ -226,6 +226,11 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             value: state.colorblindMode,
             onChanged: director.setColorblindMode,
           ),
+          Text(
+            'Changes combat damage floaters and bark colors only — not map art. '
+            'Chamber dots already use shape (square / diamond / circle).',
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          ),
           const SizedBox(height: 8),
           GameButton(
             label: 'RESET DISPLAY DEFAULTS',
@@ -244,7 +249,8 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           const SizedBox(height: 4),
           Text(
             'Near-full bag auto-rules (also BAG → AUTO-SELL FILTERS). '
-            'Sell = gold. Scrap/disassemble = essence. BiS / upgrades are never cleaned.',
+            'Auto-sell = gold · auto-scrap = essence. There is no Sell junk / Scrap button. '
+            'BiS / upgrades are never cleaned.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 10),

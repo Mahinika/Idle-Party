@@ -57,14 +57,14 @@ class WipeFightSnapshot {
 
 /// Player-facing wipe hint. Returns null when the sim cannot prove a deficit.
 abstract final class WipeAdvice {
-  /// FORGE tips wait for two wipes on the same floor (was three).
+  /// POWER track tips wait for two wipes on the same floor (was three).
   static const int streakNeeded = 2;
 
   /// High-confidence tips safe on the first wipe (bag, floor gap, early melt).
   static bool isImmediate(String line) =>
       line.startsWith('Equip') ||
       line.contains('too far') ||
-      line == 'Upgrade DEF in GOLD' ||
+      line == 'Upgrade DEF in POWER' ||
       line == 'Upgrade DEF in GOLD' ||
       line == 'Upgrade DEF in FORGE' ||
       line.contains('MARKET has an upgrade') ||
@@ -89,8 +89,8 @@ abstract final class WipeAdvice {
     if (adviceLine.startsWith('Equip')) {
       return 'HUB → BAG to equip the upgrade';
     }
-    if (adviceLine.contains('GOLD') ||
-        adviceLine.contains('POWER') ||
+    if (adviceLine.contains('POWER') ||
+        adviceLine.contains('GOLD') ||
         adviceLine.contains('FORGE')) {
       return 'HUB → GOLD to buy the track';
     }
@@ -113,8 +113,8 @@ abstract final class WipeAdvice {
     if (adviceLine.startsWith('Equip')) {
       return const NavIntent(route: MenuRoute.gear, gear: GearPanel.bag);
     }
-    if (adviceLine.contains('GOLD') ||
-        adviceLine.contains('POWER') ||
+    if (adviceLine.contains('POWER') ||
+        adviceLine.contains('GOLD') ||
         adviceLine.contains('FORGE')) {
       return NavIntent.gold;
     }
@@ -129,12 +129,12 @@ abstract final class WipeAdvice {
     if (nav.goldPanel == GoldPanel.market) return 'OPEN GOLD';
     if (nav.route == MenuRoute.shop) return 'OPEN SHOP';
     if (nav.gear == GearPanel.bag) return 'OPEN BAG';
-    if (nav.route == MenuRoute.gold) return 'OPEN GOLD';
+    if (nav.route == MenuRoute.gold) return 'OPEN POWER';
     return null;
   }
 
-  /// When bag vs GOLD tips appear (streakNeeded = 2 for GOLD tracks).
-  static String get timingFootnote => 'Bag · wipe 1  ·  GOLD · wipe 2';
+  /// When bag vs POWER tips appear (streakNeeded = 2 for POWER tracks).
+  static String get timingFootnote => 'Bag · wipe 1  ·  POWER · wipe 2';
 
   static String _forgeOrMarket(GameState state, String forgeLine) {
     final listing = MarketListingsService.bestAffordableUpgradeListing(state);
@@ -225,7 +225,7 @@ abstract final class WipeAdvice {
         fight.elapsedSec <= 6 &&
         fight.partyMaxHp > 0 &&
         fight.damageTaken >= fight.partyMaxHp * 0.5) {
-      return _forgeOrMarket(state, 'Upgrade DEF in GOLD');
+      return _forgeOrMarket(state, 'Upgrade DEF in POWER');
     }
 
     if (fight.elapsedSec < 0.5 || fight.waveHp < 1 || fight.damageDealt < 1) {
@@ -244,17 +244,17 @@ abstract final class WipeAdvice {
     final ttk = fight.waveHp / dps;
     final atkGap = ttk / fight.elapsedSec;
     if (atkGap >= 1.35 && leftover >= 0.35) {
-      return _forgeOrMarket(state, 'Upgrade ATK in GOLD');
+      return _forgeOrMarket(state, 'Upgrade ATK in POWER');
     }
 
     // DPS was enough to nearly finish; they ran out of body.
     if (atkGap <= 0.75 && leftover < 0.40 && fight.partyMaxHp > 0) {
       final overkill = fight.damageTaken / fight.partyMaxHp;
       if (overkill >= 1.20) {
-        return _forgeOrMarket(state, 'Upgrade DEF in GOLD');
+        return _forgeOrMarket(state, 'Upgrade DEF in POWER');
       }
       if (overkill <= 1.08) {
-        return _forgeOrMarket(state, 'Upgrade STA in GOLD');
+        return _forgeOrMarket(state, 'Upgrade STA in POWER');
       }
     }
     return null;

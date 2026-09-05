@@ -6,7 +6,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 
-/// Bottom-tab SHOP: real-money catalog (Buy soon — billing not wired).
+/// Bottom-tab SHOP: real-money catalog (Coming later — billing not wired).
 class ShopDock extends StatelessWidget {
   const ShopDock({super.key});
 
@@ -24,7 +24,7 @@ class ShopDock extends StatelessWidget {
         Text(
           'Same POWERUPS as hub ads (×2 gold · +${AdBoost.attackPercent}% ATK). '
           'Gold buys live under GOLD · essence under ESSENCE.\n'
-          'Purchases open soon — prices shown for feedback.',
+          'Play Billing is not live yet — prices are the planned catalog only.',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -90,7 +90,7 @@ class _ShopRow extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: GameButton(
-              label: 'BUY SOON',
+              label: 'COMING LATER',
               expanded: false,
               dense: true,
               onPressed: null,

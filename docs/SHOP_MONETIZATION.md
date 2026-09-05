@@ -1,7 +1,9 @@
 # SHOP monetization (real-money store)
 
-**Status:** Catalog + UI shell shipped; **Play Billing not wired yet** (Buy buttons show
-*BUY SOON*). Source of truth for offered SKUs: `lib/core/shop_catalog.dart`.
+**Status:** Catalog + UI shell shipped; buttons say **COMING LATER**. Grant math lives in
+`lib/core/shop_billing.dart` (`ShopBilling.applyPurchase`) + `metaDepth.adFree` /
+`shopStarterClaimed` / `shopBagBonusSlots`. **`in_app_purchase` not in pubspec yet** —
+flip `ShopBilling.billingReady` when Console SKUs + package wire.
 
 ## Why other games charge high prices
 
@@ -54,12 +56,21 @@ Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as a
 | GOLD | Gold | Forge tracks + market |
 | ESSENCE → KEEP | Essence | AL-gated permanent prestige buys |
 
-## Later (not this pass)
+## Billing wave checklist (post-production)
 
-- Google Play Billing product IDs + purchase / restore
-- Persist `adFree` / one-time starter claimed on `metaDepth`
-- Apply boost hours / bag slots on successful purchase
-- Privacy / Play Console IAP declarations
+1. Create Play Console IAP products matching `ShopCatalog` ids (consumable boosts + non-consumable `ad_free` / `supporter_qol`).
+2. Add `in_app_purchase` to `pubspec.yaml`; wire buy / restore → `ShopBilling.applyPurchase`.
+3. Set `ShopBilling.billingReady = true`; change SHOP buttons from COMING LATER to BUY.
+4. Update Data safety + Privacy for IAP; listing full description may mention cheap SHOP.
+5. Sandbox purchase smoke on a Play-installed build (not sideload).
+
+## Persist fields (already on metaDepth)
+
+| Field | Meaning |
+|-------|---------|
+| `adFree` | Hide POWERUPS ads permanently |
+| `shopStarterClaimed` | One-time starter pack used |
+| `shopBagBonusSlots` | Extra bag slots from supporter QoL |
 
 See also: [CONTENT_CADENCE.md](CONTENT_CADENCE.md), owner preferences (cheap
 convenience store OK; fairness first).

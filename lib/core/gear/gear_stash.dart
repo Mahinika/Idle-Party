@@ -7,7 +7,9 @@ abstract final class GearStash {
   static const int maxGearStash = 50;
 
   static int maxGearStashFor(GameState state) =>
-      maxGearStash + state.metaDepth.stashBonusSlots;
+      maxGearStash +
+      state.metaDepth.stashBonusSlots +
+      state.metaDepth.shopBagBonusSlots;
 
   /// When the bag counts as "filling up" — the badge and the hint use this.
   static const double bagWarnFraction = 0.85;
