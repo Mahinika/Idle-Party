@@ -259,7 +259,7 @@ class _HubHeaderState extends State<HubHeader> {
                 label: () {
                   if (widget.ascensionLevel < GameLogic.maxAscensionLevel) {
                     final bless = widget.blessingStacks > 0
-                        ? ' · Blessing ×${widget.blessingStacks}'
+                        ? ' · Asc B ×${widget.blessingStacks}'
                         : '';
                     return 'AL ${widget.ascensionLevel}$bless';
                   }
@@ -268,7 +268,7 @@ class _HubHeaderState extends State<HubHeader> {
                       ? hunt
                       : 'endgame';
                   final bless = widget.blessingStacks > 0
-                      ? ' · B×${widget.blessingStacks}'
+                      ? ' · Asc B×${widget.blessingStacks}'
                       : '';
                   return 'AL ${widget.ascensionLevel} · MAX · $huntBit$bless';
                 }(),

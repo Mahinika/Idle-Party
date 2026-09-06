@@ -41,7 +41,7 @@ class HubMetaPulse extends StatelessWidget {
       final clears = state.metaDepth.dailyVaultClears;
       final target = GameLogic.dailyVaultClearTarget;
       if (!GameLogic.canClaimDailyVault(state)) {
-        bits.add('Vault $clears/$target');
+        bits.add('Daily Vault $clears/$target');
       }
     }
 
@@ -264,7 +264,7 @@ class HubUrgentRow extends StatelessWidget {
           const SizedBox(height: 4),
         ] else if (showVaultProgress) ...[
           Text(
-            'Daily vault · $weeklyProgress/${GameLogic.dailyVaultClearTarget}',
+            'Daily Vault · $weeklyProgress/${GameLogic.dailyVaultClearTarget}',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),

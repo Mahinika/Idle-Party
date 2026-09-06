@@ -69,7 +69,7 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'GOLD tab: TRACKS buys this-run power (×1 / % spend / EVEN split); '
           'MARKET buys flasks and listings. '
-          'God Hand and Blessing live on ESSENCE → KEEP. Relics live under '
+          'God Hand and Ascend Blessing live on ESSENCE → KEEP. Relics live under '
           'ESSENCE → RELICS. Craft is a row inside MORE. Hero '
           'levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
     ),

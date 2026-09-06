@@ -167,7 +167,7 @@ abstract final class GameGuides {
           '• Settings / Bag FILTERS: auto-sell weak drops for gold, '
           'auto-disassemble for essence (iLvl + rarity filters).\n'
           '• CLEAN BAG (BAG button): sells/scraps everything at or below your '
-          'filters — keeps Apex and soulbound only.\n'
+          'filters — keeps Apex and legacy heirloom only.\n'
           '• Near-full bag: light auto-clean while looting (still protects upgrades).\n'
           '• Compare shows Score (BiS) — swapped pieces return to the bag.',
     ),
@@ -213,7 +213,7 @@ abstract final class GameGuides {
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
           'relative upgrade.\n'
           '• MARKET: flasks, bandages, traveling gear listings.\n'
-          '• Essence keeps (Blessing, God Hand, 5th slot) live on ESSENCE → KEEP.\n'
+          '• Essence keeps (Ascend Blessing, God Hand, Star Nodes, 5th slot) live on ESSENCE → KEEP.\n'
           '• Ascend from the Hub when ready (not from Gold).',
     ),
     GuideTopic(
@@ -243,7 +243,7 @@ abstract final class GameGuides {
           'ESSENCE tab. Four places: TRACKS, KEEP, RELICS, PETS.\n\n'
           '• TRACKS: Gold Find, War Altar, Life Well, Lore Font — spend essence '
           'on lasting rates/power. Optional reset from Lv12 keeps a small forever bonus.\n'
-          '• KEEP: God Hand damage/CD/style, Ascend Blessing readout, permanent QoL buys '
+          '• KEEP: God Hand damage/CD/style, Ascend Blessing readout, Star Nodes, permanent QoL buys '
           '(AL-gated), constellation at AL20, optional REBORN. '
           'Not the bottom-tab SHOP (real-money convenience).\n'
           '• RELICS: party auras (ATK / DEF / STA / loot).\n'
@@ -361,10 +361,14 @@ abstract final class GameGuides {
       id: 'weekly',
       title: 'DAILY VAULT',
       body:
+          'Three different dailies:\n'
+          '• Daily Vault — fill with 1 clear (or timed KEY +2), then CLAIM VAULT.\n'
+          '• Daily Run — one free seeded floor for +25e (hub DAILY RUN).\n'
+          '• Quests — Daily / Bounty / Side board; CLAIM QUESTS when ready.\n\n'
           'Keystone affixes still rotate each ISO week, but the vault is daily.\n\n'
           '• Early on: TODAY tells you to grow the party in the starter zone. '
-          'Daily and vault-start wait until you have beaten a boss (or Ascended).\n'
-          '• Fill today’s vault with 1 dungeon clear, then claim essence.\n'
+          'Daily Run and vault-start wait until you have beaten a boss (or Ascended).\n'
+          '• Fill today’s Daily Vault with 1 dungeon clear, then claim essence.\n'
           '• At party Lv${GameLogic.maxHeroLevel}: KEYSTONE unlocks — time a KEY +2 (or higher) for a bigger '
           'vault claim (KEY). TODAY may chase KEY / Gauntlet / Rift.\n'
           '• Hub TODAY and offline Up next share one chase (claim → READY → '
@@ -388,10 +392,10 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'constellation',
-      title: 'BLESSING CONSTELLATION',
+      title: 'STAR NODES',
       body:
-          'At AL20, ESSENCE → KEEP opens a small constellation board.\n\n'
-          '• Separate from Ascend Blessing stacks (+ATK/DEF/STA/gold).\n'
+          'At AL20, ESSENCE → KEEP opens Star Nodes (spend points).\n\n'
+          '• Not the same as Ascend Blessing stacks (+ATK/DEF/STA/gold each Ascend).\n'
           '• Earn points from reaching AL20, Ashen Crown, and Apex Trial.\n'
           '• Spend points on permanent nodes (crit, gold, block, KEY par, …).\n'
           '• Points and lit nodes survive Ascend / REBORN.',
@@ -433,12 +437,12 @@ abstract final class GameGuides {
       title: 'ASCEND',
       body:
           'Claim Ascend in the hub when ready (AL1–AL20) — same party, empty bag, '
-          'stronger Blessing.\n\n'
+          'stronger Ascend Blessing.\n\n'
           '• AL20 is the Ascension cap. Endgame (KEY +20, Gauntlet, Rifts, Greater Rifts, '
           'Ashen Crown, vault, boards) unlocks when every active hero reaches level '
           '${GameLogic.maxHeroLevel} — not from AL20 alone.\n'
-          '• Each Ascend grants a lasting Blessing: +5 ATK · +20 DEF · +60 STA · '
-          '+8% gold (stacks forever). See ESSENCE → KEEP.\n'
+          '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '
+          '+8% gold (stacks forever). See ESSENCE → KEEP. Separate from Star Nodes.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
           '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
           '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
@@ -447,22 +451,22 @@ abstract final class GameGuides {
           '(starter gear back on).\n'
           '• Boss victories toward the next Ascend clear.\n'
           '• At AL20, ESSENCE → KEEP offers optional REBORN (same bag wipe, AL stays 20, '
-          'no extra Blessing). TODAY never nags you to press it.',
+          'no extra Ascend Blessing). TODAY never nags you to press it.',
     ),
     GuideTopic(
       id: 'daily',
       title: 'DAILY RUN',
       body:
-          'A daily echo dungeon appears on the hub when available.\n\n'
-          '• Early (before first boss): TODAY focuses on growing the party — Daily '
+          'A free one-floor Daily Run on the hub — separate from Daily Vault and Quests.\n\n'
+          '• Early (before first boss): TODAY focuses on growing the party — Daily Run '
           'may wait.\n'
-          '• After the first hour, TODAY may chase Ascend, zones, vault, Daily, or '
+          '• After the first hour, TODAY may chase Ascend, zones, Daily Vault, Daily Run, or '
           '(at party Lv${GameLogic.maxHeroLevel}) KEY / Gauntlet / Rifts — one hunt at a time.\n'
-          '• When KEY is below dial cap, KEY often wins TODAY; Daily is still free '
+          '• When KEY is below dial cap, KEY often wins TODAY; Daily Run is still free '
           'essence from the hub or Urgent row.\n'
-          '• Clear the required floor(s) for a flat essence reward.\n'
+          '• Clear the floor for +25e, then return to hub.\n'
           '• May let you visit a locked zone for the day.\n'
-          '• Claim once per day — good free essence.',
+          '• Claim once per UTC day — not the same as CLAIM VAULT.',
     ),
     GuideTopic(
       id: 'codex',

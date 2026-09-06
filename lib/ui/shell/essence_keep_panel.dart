@@ -47,8 +47,8 @@ class EssenceKeepPanel extends StatelessWidget {
         ),
         Text(
           state.metaDepth.ascendBlessings <= 0
-              ? 'Blessing: none yet (each Ascend stacks power + gold)'
-              : 'Blessing ×${state.metaDepth.ascendBlessings}: '
+              ? 'Ascend Blessing: none yet (each Ascend stacks power + gold)'
+              : 'Ascend Blessing ×${state.metaDepth.ascendBlessings}: '
                     '+${state.ascendBlessingAttackBonus} ATK · '
                     '+${state.ascendBlessingDefenseBonus} DEF · '
                     '+${state.ascendBlessingVitalityBonus} STA · '
@@ -144,8 +144,9 @@ class EssenceKeepPanel extends StatelessWidget {
         ],
 
         if (BlessingConstellation.unlocked(state)) ...[
-          _label('CONSTELLATION'),
+          _label('STAR NODES'),
           Text(
+            'Spend points · not the same as Ascend Blessing stacks\n'
             '${BlessingConstellation.pointsAvailable(state)} pts · '
             '${state.metaDepth.constellationNodes.length}/${BlessingConstellation.maxLit} lit',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -176,7 +177,11 @@ class EssenceKeepPanel extends StatelessWidget {
         ],
 
         if (state.soulboundItem != null) ...[
-          _label('HEIRLOOM'),
+          _label('HEIRLOOM (legacy)'),
+          Text(
+            'Old-save keep piece · new keep-gear is Apex under Craft',
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          ),
           Text(
             '${state.soulboundItem!.name}'
             '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine}' : ''}',

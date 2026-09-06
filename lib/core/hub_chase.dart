@@ -134,10 +134,12 @@ class HubChase {
       final keyTalk = GameLogic.showKeystoneJargon(state);
       return HubChase(
         kind: HubChaseKind.claimDailyVault,
-        title: 'Claim daily vault',
+        title: 'Claim Daily Vault',
         detail: best >= 2 && keyTalk
-            ? 'Vault ready (KEY +$best timed) — claim $pay$seasonBit.'
-            : 'Vault ready — claim $pay$seasonBit.',
+            ? 'Daily Vault ready (KEY +$best timed) — claim $pay$seasonBit. '
+                'Not Daily Run or Quests.'
+            : 'Daily Vault ready — claim $pay$seasonBit. '
+                'Not Daily Run or Quests.',
         progressLabel: best >= 2 && keyTalk
             ? 'KEY +$best ready'
             : '${GameLogic.dailyVaultClearTarget}/${GameLogic.dailyVaultClearTarget} ready',
@@ -196,7 +198,7 @@ class HubChase {
           kind: HubChaseKind.ascend,
           title: 'Ascend for lasting power',
           detail:
-              '+${reward}e · Blessing +${GameLogic.ascendBlessingAtk} ATK/'
+              '+${reward}e · Ascend Blessing +${GameLogic.ascendBlessingAtk} ATK/'
               '+${GameLogic.ascendBlessingDef} DEF/'
               '+${GameLogic.ascendBlessingVit} STA/'
               '+${GameLogic.ascendBlessingGoldPct}% gold · bag, gold, forge, '
@@ -251,9 +253,10 @@ class HubChase {
         md.dailyBestTimedKey == 1) {
       return const HubChase(
         kind: HubChaseKind.dailyVaultProgress,
-        title: 'Vault halfway — KEY +2',
+        title: 'Daily Vault halfway — KEY +2',
         detail:
-            'Timed KEY +1 already counts. Time KEY +2 to fill and claim the vault.',
+            'Timed KEY +1 already counts. Time KEY +2 to fill and claim '
+            'Daily Vault (not Daily Run).',
         progressLabel: 'KEY +1',
         urgency: HubChaseUrgency.almost,
         keyLevel: 2,
@@ -334,8 +337,10 @@ class HubChase {
     if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
       return const HubChase(
         kind: HubChaseKind.dailyRun,
-        title: "Run today's Daily",
-        detail: 'A short echo dungeon — clear it for bonus essence.',
+        title: 'Clear Daily Run',
+        detail:
+            'One free seeded floor for +25e — separate from Daily Vault '
+            'and Quests.',
         progressLabel: 'Available',
       );
     }
@@ -346,11 +351,13 @@ class HubChase {
       final keyTalk = GameLogic.showKeystoneJargon(state);
       return HubChase(
         kind: HubChaseKind.dailyVaultProgress,
-        title: 'Start daily vault',
+        title: 'Start Daily Vault',
         detail: keyTalk
-            ? 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for the vault, '
-                'or time KEY +2 under par for a bigger claim.'
-            : 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for vault essence.',
+            ? 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for '
+                'Daily Vault essence, or time KEY +2 under par for a bigger '
+                'claim. Separate from Daily Run.'
+            : 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for '
+                'Daily Vault essence. Separate from Daily Run.',
         progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
       );
     }

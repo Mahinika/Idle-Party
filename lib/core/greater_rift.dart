@@ -1,10 +1,13 @@
 import 'dart:math';
 
+import 'timed_ladder.dart';
+
 /// Greater Rift — prestige timed kill ladder (party max level; Play Games ranked).
 ///
 /// Runs in **Mothveil Hollow** (not Crystal Spire / not Stormwake farm). Harder
 /// packs than farm [Rift], thinner mid-run loot (gold OK, no gear), bigger clear
 /// payout. Higher GR tier always ranks above lower; same tier prefers faster clear.
+/// Shares timer/unlock helpers with [Rift] via [TimedLadder] — modes stay separate.
 abstract final class GreaterRift {
   static const int maxTier = 20;
   static const int minTier = 1;
@@ -45,19 +48,15 @@ abstract final class GreaterRift {
     required int clearedTier,
     required int timerMs,
     required int parMs,
-  }) {
-    final remaining = (parMs - timerMs).clamp(0, parMs);
-    final fast = parMs > 0 && remaining >= (parMs * 0.25).round();
-    final bump = fast ? 2 : 1;
-    return clampTier(clearedTier + bump);
-  }
+  }) =>
+      TimedLadder.unlockTiersAfterSuccess(
+        clearedTier: clearedTier,
+        timerMs: timerMs,
+        parMs: parMs,
+        clampTier: clampTier,
+      );
 
-  static String formatTimer(int ms) {
-    final totalSec = max(0, (ms / 1000).floor());
-    final m = totalSec ~/ 60;
-    final s = totalSec % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
+  static String formatTimer(int ms) => TimedLadder.formatTimer(ms);
 
   /// Short in-dungeon chip (no timer — timer lives on the place line).
   static String hudChipLabel({

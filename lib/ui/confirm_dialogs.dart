@@ -426,8 +426,8 @@ Future<void> confirmDailyRun(
         title: 'Daily Run?',
         content: Text(
           '${StoryLore.dailyRun(dungeonId)}\n\n'
-          'Starts a free seeded floor. Clear it for essence, then return to hub. '
-          'Wipe: retry the floor or leave from MORE.',
+          'One free seeded floor for +25e — separate from Daily Vault and Quests. '
+          'Clear it, then return to hub. Wipe: retry the floor or leave from MORE.',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [

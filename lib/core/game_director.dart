@@ -2120,7 +2120,7 @@ class GameDirector extends ChangeNotifier {
     final before = _state.metaDepth.constellationNodes.length;
     _applyUpgrade(BlessingConstellation.lightNode(_state, id));
     if (_state.metaDepth.constellationNodes.length > before) {
-      showToast('Constellation lit', life: 2.0);
+      showToast('Star Node lit', life: 2.0);
     }
   }
 
@@ -3037,7 +3037,7 @@ class GameDirector extends ChangeNotifier {
       final notices = LogicNotices.takeMetaPayoffs();
       final gained = _state.essence - before;
       final extra = notices.isEmpty ? '' : ' · ${notices.join(' · ')}';
-      showToast('Daily vault claimed · +${gained}e$extra', life: 2.8);
+      showToast('Daily Vault claimed · +${gained}e$extra', life: 2.8);
     }
   }
 

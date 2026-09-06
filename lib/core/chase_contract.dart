@@ -51,7 +51,7 @@ class ChaseContract {
           : 'EQUIP',
     HubChaseKind.marketUpgrade => 'OPEN GOLD',
     HubChaseKind.ascend => 'ASCEND',
-    HubChaseKind.dailyRun => 'DAILY',
+    HubChaseKind.dailyRun => 'DAILY RUN',
     HubChaseKind.keystone => chase.keyLevel != null
         ? 'ENTER KEY +${chase.keyLevel}'
         : 'ENTER KEY',

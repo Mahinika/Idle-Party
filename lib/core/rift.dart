@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'timed_ladder.dart';
+
 /// Farm Rift — timed kill challenge with mid-run gold and gear (party max level).
 ///
 /// Runs in **Stormwake Hollow** (not Crystal Spire). Kill [killTarget] enemies
@@ -51,20 +53,15 @@ abstract final class Rift {
     required int clearedTier,
     required int timerMs,
     required int parMs,
-  }) {
-    final remaining = (parMs - timerMs).clamp(0, parMs);
-    final fast = parMs > 0 && remaining >= (parMs * 0.25).round();
-    final bump = fast ? 2 : 1;
-    return clampTier(clearedTier + bump);
-  }
+  }) =>
+      TimedLadder.unlockTiersAfterSuccess(
+        clearedTier: clearedTier,
+        timerMs: timerMs,
+        parMs: parMs,
+        clampTier: clampTier,
+      );
 
-  static String formatTimer(int ms) {
-    final totalSec = max(0, (ms / 1000).floor());
-    final m = totalSec ~/ 60;
-    final s = totalSec % 60;
-    // Fixed width so dungeon HUD chips do not reflow/scale as minutes tick.
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
+  static String formatTimer(int ms) => TimedLadder.formatTimer(ms);
 
   /// Short in-dungeon chip (no timer — timer lives on the place line).
   static String hudChipLabel({

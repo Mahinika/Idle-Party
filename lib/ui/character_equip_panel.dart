@@ -344,7 +344,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   if (state.soulboundItem != null) ...[
                     SizedBox(height: slotGap),
                     Text(
-                      'Heirloom ${state.soulboundItem!.name}'
+                      'Heirloom (legacy) ${state.soulboundItem!.name}'
                       '${state.metaDepth.soulboundRefine > 0 ? ' · r${state.metaDepth.soulboundRefine}' : ''}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
