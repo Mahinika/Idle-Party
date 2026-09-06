@@ -187,7 +187,8 @@ class _PlayShellState extends State<PlayShell> {
     final tipsAndMenus = <Widget>[
       if (!router.isOpen || inDungeon) FirstSessionTips(director: director),
       MenuSurface(director: director, router: router),
-      if (director.toast != null)
+      if (director.toast != null &&
+          !(inDungeon && director.clearSummary != null))
         Positioned.fill(
           child: FeedbackToast(
             message: director.toast!,

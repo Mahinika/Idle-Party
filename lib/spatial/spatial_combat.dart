@@ -3945,15 +3945,7 @@ abstract final class SpatialCombat {
           radius: 0.7,
           life: 0.4,
         );
-        _spawnFloater(
-          world,
-          x: ex,
-          y: ey - 0.55,
-          text: 'GO',
-          argb: _floaterHeal,
-          life: 1.55,
-          priority: 2,
-        );
+        // No "GO" floater — CLEAR corner + HOLD already say what's next.
       }
     }
     return nextState;

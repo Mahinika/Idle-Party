@@ -67,7 +67,15 @@ class UiFeedback {
   void presentClear(String text, {double life = 3.2}) {
     _clearSummary = text;
     _clearSummaryLife = life;
+    // One celebration surface — drop a toast that would stack on top.
+    if (_toast != null && _toastLife > 0) {
+      _toast = null;
+      _toastLife = 0;
+    }
   }
+
+  /// True while the center clear banner is up (UI should hide toast).
+  bool get clearBannerActive => _clearSummaryLife > 0 && _clearSummary != null;
 
   void tick(double dt) {
     if (_toastLife > 0) {

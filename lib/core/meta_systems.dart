@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.100';
+  static const String currentVersion = '1.12.101';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.101',
+      bullets: <String>[
+        'Floor clear popups: one payoff banner when the floor finishes (F1 CLEAR · gold/loot) — no double congrats on last kill, no GO floater, HOLD stays quiet.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.100',
       bullets: <String>[

@@ -105,10 +105,6 @@ class TargetCornerHud extends StatelessWidget {
                 _stairsHint(world),
                 style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
               ),
-              Text(
-                'HOLD skips the walk',
-                style: GameTheme.body(size: 10, color: GameTheme.mossLit),
-              ),
             ],
           ),
         ),

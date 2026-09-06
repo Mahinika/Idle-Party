@@ -788,13 +788,7 @@ class GameDirector extends ChangeNotifier {
       }
       if (result.stairsOpened) {
         GameAudio.clear();
-        final lootLine = result.vacuumLootLine;
-        if (lootLine != null && lootLine.isNotEmpty) {
-          // Clear banner owns the moment — no second "walk to stairs" toast.
-          uiFeedback.presentClear('$lootLine · walk / HOLD stairs');
-        } else {
-          uiFeedback.presentClear('CLEAR · walk to stairs or HOLD');
-        }
+        // Corner CLEAR + HOLD own the walk — no second center “congrats” yet.
       }
       if (result.state.gearStash.length > _lastStashLen) {
         if (!playedLoot) {
@@ -931,70 +925,54 @@ class GameDirector extends ChangeNotifier {
           lastFloorClearSec: _lastFloorClearSec ?? _state.lastFloorClearSec,
         );
         _noteLifetimeGold(beforeClear, _state);
-        _announceAbilityUnlocks(beforeClear, _state);
-        _announceAchievementUnlocks(beforeClear, _state);
-        if (wasBoss) {
-          GameAudio.boss();
-        } else {
-          GameAudio.clear();
-        }
-        _state = MetaSystems.evaluateAchievements(_state);
-        final goldDelta = _state.gold - beforeClear.gold;
-        final essDelta = _state.essence - beforeClear.essence;
-        var leveled = false;
+        // Level / achievement toasts wait — one clear banner owns the beat.
+        final leveledHeroes = <int>[];
         for (var i = 0; i < _state.heroes.length; i++) {
           final oldLevel = i < beforeClear.heroes.length
               ? beforeClear.heroes[i].level
               : 0;
-          if (_state.heroes[i].level > oldLevel) {
-            leveled = true;
-            break;
-          }
+          if (_state.heroes[i].level > oldLevel) leveledHeroes.add(i);
         }
+        final leveled = leveledHeroes.isNotEmpty;
+        if (wasBoss) {
+          GameAudio.boss();
+        }
+        // Clear sting already played when stairs opened.
+        _state = MetaSystems.evaluateAchievements(_state);
+        final goldDelta = _state.gold - beforeClear.gold;
+        final essDelta = _state.essence - beforeClear.essence;
         var clearLine = goldDelta > 0
-            ? 'FLOOR $floorNo CLEAR  +${goldDelta}g'
-            : 'FLOOR $floorNo CLEAR';
+            ? 'F$floorNo CLEAR · +${goldDelta}g'
+            : 'F$floorNo CLEAR';
         if (beforeClear.inGauntlet) {
           clearLine = essDelta > 0
-              ? 'GAUNTLET F$floorNo  +${goldDelta}g  +${essDelta}e'
-              : 'GAUNTLET F$floorNo  +${goldDelta}g';
+              ? 'Spire F$floorNo · +${goldDelta}g · +${essDelta}e'
+              : 'Spire F$floorNo · +${goldDelta}g';
         }
         if (leveled) {
-          clearLine = '$clearLine  · LEVEL UP';
+          clearLine = '$clearLine · LEVEL UP';
+          GameAudio.levelUp();
         }
         final matGrants = LogicNotices.takeCraftMats();
         final floorLoot = LogicNotices.takeFloorLootLine();
         final floorEquip = LogicNotices.takeFloorEquipLine();
-        // Prefer a short loot name list on the clear banner (not gold-only).
         final clearExtra = floorLoot ?? floorEquip;
         if (clearExtra != null &&
-            (clearLine.length + clearExtra.length) < 72) {
-          clearLine = '$clearLine  · $clearExtra';
-        } else if (floorLoot != null) {
-          showToast(floorLoot, life: 2.4);
-        } else if (floorEquip != null) {
-          showToast(floorEquip, life: 2.0);
+            (clearLine.length + clearExtra.length) < 70) {
+          clearLine = '$clearLine · $clearExtra';
         }
         if (matGrants.isNotEmpty) {
           final labels = [
             for (final id in matGrants) ApexCraft.materialsById[id]?.name ?? id,
           ];
-          showToast('+${labels.join(', ')}', life: 2.0);
+          final matBit = '+${labels.take(2).join(', ')}';
+          if ((clearLine.length + matBit.length) < 70) {
+            clearLine = '$clearLine · $matBit';
+          }
         }
         final bagUps = MenuAlerts.bagUpgradeCount(_state);
-        if (bagUps >= 8 &&
-            !_state.inGauntlet &&
-            !_state.inAnyRiftMode &&
-            beforeClear.dungeonMode == DungeonMode.push) {
-          showToast(
-            bagUps == 1
-                ? 'Better gear waiting — open GEAR · EQUIP'
-                : '$bagUps better items waiting — open GEAR · EQUIP',
-            life: 3.2,
-          );
-        }
         final payoffNotices = LogicNotices.takeMetaPayoffs();
-        // KEY TIMED / depleted owns the clear banner (bigger than FLOOR CLEAR).
+        // KEY TIMED / depleted owns the clear banner (bigger than F CLEAR).
         final keyBanner = payoffNotices.cast<String?>().firstWhere(
           (n) =>
               n != null &&
@@ -1009,13 +987,52 @@ class GameDirector extends ChangeNotifier {
           );
           final rest = payoffNotices.where((n) => n != keyBanner).toList();
           if (rest.isNotEmpty) {
-            showToast(rest.join(' · '), life: 3.0);
+            // After banner — toast only if something KEY-adjacent remains.
+            showToast(rest.join(' · '), life: 2.6);
           }
         } else {
+          uiFeedback.presentClear(clearLine, life: 2.8);
+          // Rare extras only — never restate F CLEAR / gold / loot.
           if (payoffNotices.isNotEmpty) {
-            showToast(payoffNotices.join(' · '), life: 3.0);
+            showToast(payoffNotices.join(' · '), life: 2.6);
           }
-          uiFeedback.presentClear(clearLine);
+        }
+        // Ability unlocks (not bare LEVEL UP) — one line if any.
+        if (leveled) {
+          final bits = <String>[];
+          for (final i in leveledHeroes) {
+            final hero = _state.heroes[i];
+            final oldLevel = beforeClear.heroes[i].level;
+            final unlocked = ClassKits.unlockedAtSpec(
+              hero.specId,
+              hero.level,
+            ).where(
+              (d) => d.unlockLevel > oldLevel && d.unlockLevel <= hero.level,
+            );
+            for (final ability in unlocked) {
+              bits.add('${hero.name}: ${ability.shortLabel}');
+            }
+          }
+          if (bits.isNotEmpty) {
+            showToast(
+              bits.length == 1
+                  ? '${bits.first}!'
+                  : '${bits.take(2).join(' · ')}!',
+              life: 2.2,
+            );
+          }
+        }
+        _announceAchievementUnlocks(beforeClear, _state);
+        if (bagUps >= 8 &&
+            !_state.inGauntlet &&
+            !_state.inAnyRiftMode &&
+            beforeClear.dungeonMode == DungeonMode.push) {
+          showToast(
+            bagUps == 1
+                ? 'Better gear waiting — open GEAR · EQUIP'
+                : '$bagUps better items waiting — open GEAR · EQUIP',
+            life: 2.8,
+          );
         }
         if (_state.highestDungeonCleared > beforeDungeon) {
           GameAudio.unlock();
@@ -1030,12 +1047,12 @@ class GameDirector extends ChangeNotifier {
             nextId != null
                 ? StoryLore.unlockedNextZone(nextId)
                 : StoryLore.dungeonCleared(beforeClear.dungeonId),
-            life: 3.2,
+            life: 3.0,
           );
           _lastHighestDungeon = _state.highestDungeonCleared;
         } else if (_state.highestDungeonCleared > _lastHighestDungeon) {
           _lastHighestDungeon = _state.highestDungeonCleared;
-          showToast(StoryLore.dungeonCleared(beforeClear.dungeonId), life: 3.2);
+          showToast(StoryLore.dungeonCleared(beforeClear.dungeonId), life: 3.0);
         }
         if (_state.inDungeon) {
           _rebuildSpatial();
@@ -1044,16 +1061,15 @@ class GameDirector extends ChangeNotifier {
           _spatialTimer?.cancel();
           _spatial = null;
           _freezeRunIncome();
-          showToast(
-            beforeClear.dungeonMode == DungeonMode.push && wasBoss
-                ? 'ZONE DONE — ${DungeonCatalog.byId(beforeClear.dungeonId).name} · back to hub'
-                : StoryLore.dungeonCleared(beforeClear.dungeonId),
-            life: 3.6,
-          );
           if (beforeClear.dungeonMode == DungeonMode.push && wasBoss) {
             uiFeedback.presentClear(
               'ZONE DONE · ${DungeonCatalog.byId(beforeClear.dungeonId).name}',
               life: 2.8,
+            );
+          } else {
+            showToast(
+              StoryLore.dungeonCleared(beforeClear.dungeonId),
+              life: 3.2,
             );
           }
         }
@@ -1211,7 +1227,6 @@ class GameDirector extends ChangeNotifier {
     if (spatial == null || !spatial.awaitingExit) return;
     spatial.exitHoldSec = 0;
     spatial.exitWaitTimer = 99;
-    showToast('HOLD — finishing floor', life: 1.8);
     notifyListeners();
   }
 
