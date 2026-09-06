@@ -6,6 +6,7 @@ import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/wallet_strip.dart';
 import '../web_click_bridge.dart';
 
 class HubSceneBackdrop extends StatelessWidget {
@@ -209,14 +210,27 @@ class _HubHeaderState extends State<HubHeader> {
       children: [
         Row(
           children: [
-            const Spacer(),
+            Flexible(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: WalletStrip(
+                    gold: widget.gold,
+                    essence: widget.essence,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
             Expanded(
-              flex: 6,
+              flex: 5,
               child: Text(
                 'IDLE PARTY',
                 textAlign: TextAlign.center,
                 style: GameTheme.pixel(
-                  size: 20,
+                  size: 18,
                   color: GameTheme.torch, // FEEL 274,
                   height: 1.25,
                 ),
@@ -236,45 +250,31 @@ class _HubHeaderState extends State<HubHeader> {
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
           ),
-        const SizedBox(height: 6),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 12,
-          runSpacing: 4,
-          children: [
-            HubStatPill(
-              icon: UiIcon.gold,
-              caption: 'Gold',
-              label: '${widget.gold}',
-            ),
-            HubStatPill(
-              icon: UiIcon.essence,
-              caption: widget.plainChrome ? 'Permanent' : 'Essence',
-              label: '${widget.essence}',
-            ),
-            if (!widget.plainChrome)
-              HubStatPill(
-                icon: UiIcon.ascend,
-                caption: 'Ascend',
-                label: () {
-                  if (widget.ascensionLevel < GameLogic.maxAscensionLevel) {
-                    final bless = widget.blessingStacks > 0
-                        ? ' · Asc B ×${widget.blessingStacks}'
-                        : '';
-                    return 'AL ${widget.ascensionLevel}$bless';
-                  }
-                  final hunt = widget.huntHint;
-                  final huntBit = (hunt != null && hunt.isNotEmpty)
-                      ? hunt
-                      : 'endgame';
+        if (!widget.plainChrome) ...[
+          const SizedBox(height: 6),
+          Center(
+            child: HubStatPill(
+              icon: UiIcon.ascend,
+              caption: 'Ascend',
+              label: () {
+                if (widget.ascensionLevel < GameLogic.maxAscensionLevel) {
                   final bless = widget.blessingStacks > 0
-                      ? ' · Asc B×${widget.blessingStacks}'
+                      ? ' · Asc B ×${widget.blessingStacks}'
                       : '';
-                  return 'AL ${widget.ascensionLevel} · MAX · $huntBit$bless';
-                }(),
-              ),
-          ],
-        ),
+                  return 'AL ${widget.ascensionLevel}$bless';
+                }
+                final hunt = widget.huntHint;
+                final huntBit = (hunt != null && hunt.isNotEmpty)
+                    ? hunt
+                    : 'endgame';
+                final bless = widget.blessingStacks > 0
+                    ? ' · Asc B×${widget.blessingStacks}'
+                    : '';
+                return 'AL ${widget.ascensionLevel} · MAX · $huntBit$bless';
+              }(),
+            ),
+          ),
+        ],
         const SizedBox(height: 4),
         if (widget.dimIncome) ...[
           Text(

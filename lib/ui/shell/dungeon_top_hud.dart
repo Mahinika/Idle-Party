@@ -11,6 +11,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../spatial_dungeon_view.dart';
+import 'wallet_strip.dart';
 
 class DungeonTopHud extends StatelessWidget {
   const DungeonTopHud({
@@ -500,6 +501,17 @@ class DungeonTopHud extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: WalletStrip(
+                gold: state.gold,
+                essence: state.essence,
+                dense: true,
+              ),
+            ),
           ),
           if (!state.inGauntlet &&
               !state.inAnyRiftMode &&

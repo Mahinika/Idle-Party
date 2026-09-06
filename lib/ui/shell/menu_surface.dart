@@ -155,6 +155,8 @@ class _MenuSurfaceState extends State<MenuSurface> {
       title: router.title,
       subtitle: router.jobHintFor(state),
       heightFactor: 1,
+      gold: state.gold,
+      essence: state.essence,
       onClose: router.close,
       child: switch (router.route) {
         MenuRoute.gear => _inventoryDock(),

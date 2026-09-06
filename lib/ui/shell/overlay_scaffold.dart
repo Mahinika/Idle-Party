@@ -4,6 +4,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
+import 'wallet_strip.dart';
 
 class OverlayScrim extends StatelessWidget {
   const OverlayScrim({
@@ -13,6 +14,8 @@ class OverlayScrim extends StatelessWidget {
     required this.child,
     this.subtitle = '',
     this.heightFactor = 0.85,
+    this.gold,
+    this.essence,
   });
 
   final String title;
@@ -21,6 +24,8 @@ class OverlayScrim extends StatelessWidget {
   final VoidCallback onClose;
   final Widget child;
   final double heightFactor;
+  final int? gold;
+  final int? essence;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +54,8 @@ class OverlayScrim extends StatelessWidget {
                 subtitle: subtitle,
                 onClose: onClose,
                 heightFactor: heightFactor,
+                gold: gold,
+                essence: essence,
                 child: child,
               ),
             ],
@@ -91,6 +98,8 @@ class _MobileSheet extends StatelessWidget {
     required this.child,
     this.subtitle = '',
     this.heightFactor = 0.85,
+    this.gold,
+    this.essence,
   });
 
   final String title;
@@ -98,6 +107,8 @@ class _MobileSheet extends StatelessWidget {
   final VoidCallback onClose;
   final Widget child;
   final double heightFactor;
+  final int? gold;
+  final int? essence;
 
   @override
   Widget build(BuildContext context) {
@@ -115,6 +126,8 @@ class _MobileSheet extends StatelessWidget {
         borderRadius: fullHeight ? BorderRadius.zero : MenuChrome.sheetRadius,
         // Full height: skip drag handle — reclaim vertical space.
         showHandle: !fullHeight,
+        gold: gold,
+        essence: essence,
         child: child,
       ),
     );
@@ -151,6 +164,8 @@ class _OverlayPanel extends StatelessWidget {
     this.margin = const EdgeInsets.all(16),
     this.borderRadius,
     this.showHandle,
+    this.gold,
+    this.essence,
   });
 
   final String title;
@@ -160,10 +175,13 @@ class _OverlayPanel extends StatelessWidget {
   final EdgeInsets margin;
   final BorderRadius? borderRadius;
   final bool? showHandle;
+  final int? gold;
+  final int? essence;
 
   @override
   Widget build(BuildContext context) {
     final handle = showHandle ?? borderRadius != null;
+    final showWallet = gold != null && essence != null;
     final panel = Container(
       margin: margin,
       padding: EdgeInsets.fromLTRB(12, handle ? 6 : 6, 12, 8),
@@ -198,6 +216,18 @@ class _OverlayPanel extends StatelessWidget {
                 )
               else
                 const Spacer(),
+              if (showWallet) ...[
+                const SizedBox(width: 6),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: WalletStrip(
+                    gold: gold!,
+                    essence: essence!,
+                    dense: true,
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
               GameButton(
                 label: 'CLOSE',
                 onPressed: onClose,
