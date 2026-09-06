@@ -584,33 +584,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                           ),
                         ),
                       ),
-                    if (widget.director.clearSummary != null)
-                      Align(
-                        alignment: Alignment(
-                          0,
-                          (world != null && world.bossBannerTimer > 0)
-                              ? 0.08
-                              : -0.35,
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xEE1A2410),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: GameTheme.clear),
-                          ),
-                          child: Text(
-                            widget.director.clearSummary!,
-                            style: GameTheme.pixel(
-                              size: GameTheme.hudPixelComfort,
-                              color: GameTheme.clear,
-                            ),
-                          ),
-                        ),
-                      ),
+                    // Floor celebrate notice paints via PlayShell FeedbackToast
+                    // (one ephemeral slot — tip / celebrate / danger).
                     DungeonOfflineChrome(director: widget.director),
                     if (widget.director.awaitingWipeChoice)
                       DungeonWipePanel(

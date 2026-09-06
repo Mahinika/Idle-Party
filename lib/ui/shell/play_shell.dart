@@ -184,20 +184,21 @@ class _PlayShellState extends State<PlayShell> {
   @override
   Widget build(BuildContext context) {
     final inDungeon = director.state.inDungeon;
+    final noticeAlign = inDungeon
+        ? (router.isOpen
+              ? const Alignment(0, -0.82)
+              : Alignment(0, director.celebrating ? -0.35 : -0.42))
+        : const Alignment(0, -0.55);
     final tipsAndMenus = <Widget>[
       if (!router.isOpen || inDungeon) FirstSessionTips(director: director),
       MenuSurface(director: director, router: router),
-      if (director.toast != null &&
-          !(inDungeon && director.clearSummary != null))
+      if (director.toast != null)
         Positioned.fill(
           child: FeedbackToast(
             message: director.toast!,
+            kind: director.noticeKind,
             maxLines: inDungeon ? 2 : 3,
-            alignment: inDungeon
-                ? (router.isOpen
-                      ? const Alignment(0, -0.82)
-                      : const Alignment(0, -0.42))
-                : const Alignment(0, -0.55),
+            alignment: noticeAlign,
           ),
         ),
     ];

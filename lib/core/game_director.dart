@@ -335,15 +335,29 @@ class GameDirector extends ChangeNotifier {
 
   String? get toast => uiFeedback.toast;
 
+  NoticeKind get noticeKind => uiFeedback.noticeKind;
+
+  bool get celebrating => uiFeedback.celebrating;
+
+  /// Celebrate notice text (same slot as [toast] when kind is celebrate).
   String? get clearSummary => uiFeedback.clearSummary;
 
   OfflineProgressResult? get offlineSummary => uiFeedback.offlineSummary;
 
-  void showToast(String message, {double life = 2.4}) {
-    if (!uiFeedback.showToast(message, life: life)) return;
+  void showToast(
+    String message, {
+    double life = 2.4,
+    NoticeKind kind = NoticeKind.tip,
+  }) {
+    if (!uiFeedback.showToast(message, life: life, kind: kind)) return;
     DebugPlayLog.toast(uiFeedback.toast ?? message);
     _ensureUiTimer();
     notifyListeners();
+  }
+
+  /// Floor / KEY / zone payoff — same slot as [showToast], celebrate style.
+  void presentClear(String text, {double life = 2.8}) {
+    showToast(text, life: life, kind: NoticeKind.celebrate);
   }
 
   /// Drop the active toast (e.g. when opening a modal that would cover it).
@@ -868,21 +882,25 @@ class GameDirector extends ChangeNotifier {
           showToast(
             'WIPED — Gauntlet ends on F$floor (best floor saved)',
             life: 4,
+            kind: NoticeKind.danger,
           );
         } else if (_state.inRift) {
           showToast(
             'WIPED — Rift R${_state.riftTier} ends',
             life: 4,
+            kind: NoticeKind.danger,
           );
         } else if (_state.inGreaterRift) {
           showToast(
             'WIPED — Greater Rift GR${_state.grTier} ends',
             life: 4,
+            kind: NoticeKind.danger,
           );
         } else if (MetaSystems.isActiveDailyRun(_state)) {
           showToast(
             'WIPED — Daily echo · RETRY or HUB',
             life: 3.2,
+            kind: NoticeKind.danger,
           );
         } else {
           final pushFail =
@@ -893,6 +911,7 @@ class GameDirector extends ChangeNotifier {
                 ? 'WIPED — Retry retreats to cleared floor (still PUSH), or Hub'
                 : 'WIPED — Retry restarts the floor',
             life: 4,
+            kind: NoticeKind.danger,
           );
         }
         notifyListeners();
@@ -981,7 +1000,7 @@ class GameDirector extends ChangeNotifier {
         );
         if (keyBanner != null) {
           final timed = keyBanner.contains('TIMED');
-          uiFeedback.presentClear(
+          presentClear(
             keyBanner,
             life: timed ? 4.0 : 3.6,
           );
@@ -991,7 +1010,7 @@ class GameDirector extends ChangeNotifier {
             showToast(rest.join(' · '), life: 2.6);
           }
         } else {
-          uiFeedback.presentClear(clearLine, life: 2.8);
+          presentClear(clearLine, life: 2.8);
           // Rare extras only — never restate F CLEAR / gold / loot.
           if (payoffNotices.isNotEmpty) {
             showToast(payoffNotices.join(' · '), life: 2.6);
@@ -1062,7 +1081,7 @@ class GameDirector extends ChangeNotifier {
           _spatial = null;
           _freezeRunIncome();
           if (beforeClear.dungeonMode == DungeonMode.push && wasBoss) {
-            uiFeedback.presentClear(
+            presentClear(
               'ZONE DONE · ${DungeonCatalog.byId(beforeClear.dungeonId).name}',
               life: 2.8,
             );
