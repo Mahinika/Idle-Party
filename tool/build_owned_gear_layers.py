@@ -19,8 +19,9 @@ from pathlib import Path
 
 from PIL import Image, ImageEnhance
 
-ROOT = Path(r"d:\Projects\Personal\idle party\Idle-Party\assets\custom\char")
-TOOL = Path(r"d:\Projects\Personal\idle party\Idle-Party\tool")
+REPO = Path(__file__).resolve().parents[1]
+ROOT = REPO / "assets" / "custom" / "char"
+TOOL = REPO / "tool"
 FAMILIES = ("warrior", "healer", "mage", "rogue")
 ANIMS = ("idle", "walk", "attack")
 
@@ -781,39 +782,12 @@ def register_helm_to_head(
     return out
 
 
-def hand_points(src: Image.Image, face: tuple[int, int, int], box: tuple[int, int, int, int]):
-    px = src.load()
-    x0, y0, x1, y1 = box
-    mid = y0 + int((y1 - y0) * 0.50)
-    left, right = [], []
-    cx = (x0 + x1) / 2
-    for y in range(mid, min(128, y1)):
-        for x in range(x0, x1):
-            r, g, b, a = px[x, y]
-            if a > 80 and is_skin((r, g, b), face):
-                (left if x < cx else right).append((x, y))
-
-    def avg(pts, fallback):
-        if not pts:
-            return fallback
-        return int(sum(p[0] for p in pts) / len(pts)), int(
-            sum(p[1] for p in pts) / len(pts)
-        )
-
-    return avg(left, (int(cx - 22), int(y1 - 16))), avg(
-        right, (int(cx + 22), int(y1 - 16))
-    )
-
-
-def ensure_shared_weapons(shared: Path, off: tuple[int, int], main: tuple[int, int], anim: str) -> None:
+def ensure_shared_weapons(shared: Path, anim: str) -> None:
     """Keep existing shared weapon PNGs unless _authored replaces them.
 
-    Does not invent new ImageDraw weapons each run when files already exist.
-    First-time bootstrap still needs files for catalog tests — copy from any
-    idle authored set or leave existing.
+    Missing files copy from authored idle, then from another anim — never
+    invent ImageDraw swords so the catalog cannot silently ship placeholders.
     """
-    from PIL import ImageDraw
-
     names = (
         "sword_t0",
         "staff_t0",
@@ -832,25 +806,18 @@ def ensure_shared_weapons(shared: Path, off: tuple[int, int], main: tuple[int, i
             continue
         if dest.exists():
             continue
-        # Bootstrap only: thick placeholder so catalog paths exist.
-        # Skill: replace with authored art — not a finished look.
-        x, y = main
-        sx, sy = off
-        im = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-        d = ImageDraw.Draw(im)
-        if name.startswith("sword"):
-            d.polygon(
-                [(x - 8, y + 10), (x + 2, y + 14), (x + 26, y - 40), (x + 14, y - 46)],
-                fill=(198, 206, 218, 255),
-            )
-        elif name.startswith("shield"):
-            d.ellipse([sx - 28, sy - 32, sx + 24, sy + 26], fill=(48, 56, 70, 255))
-            d.ellipse([sx - 20, sy - 24, sx + 16, sy + 18], fill=(54, 108, 168, 255))
-        elif name.startswith("staff"):
-            d.line([(x - 2, y + 18), (x + 14, y - 46)], fill=(132, 86, 46, 255), width=9)
-        else:
-            d.line([(x, y + 10), (x + 14, y - 28)], fill=(180, 180, 190, 255), width=8)
-        im.save(dest)
+        idle_auth = authored_path(None, name, "idle")
+        if idle_auth is not None:
+            shutil.copyfile(idle_auth, dest)
+            continue
+        idle_live = shared / f"{name}_idle.png"
+        if anim != "idle" and idle_live.exists():
+            shutil.copyfile(idle_live, dest)
+            continue
+        raise SystemExit(
+            f"missing shared weapon {dest.relative_to(REPO)} — "
+            "drop authored art under char/gear/_authored/, do not invent"
+        )
 
 
 def process_family(family: str) -> dict:
@@ -974,9 +941,7 @@ def main() -> None:
     for family in FAMILIES:
         built[family] = process_family(family)
     for anim in ANIMS:
-        box, face, src, *_ = built["warrior"][anim]
-        off, main = hand_points(src, face, box)
-        ensure_shared_weapons(shared, off, main, anim)
+        ensure_shared_weapons(shared, anim)
     for family in FAMILIES:
         write_armor_preview(family, built[family])
     # Slot icons = bbox crop of idle overlays (same art as the doll).

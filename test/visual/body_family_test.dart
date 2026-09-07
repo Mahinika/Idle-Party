@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
@@ -47,7 +49,7 @@ void main() {
     );
   });
 
-  test('catalog lists unique asset paths', () {
+  test('catalog lists unique asset paths that exist on disk', () {
     final paths = BodyFamilyCatalog.allAssetPaths;
     expect(paths, contains('assets/custom/char/warrior/body_idle.png'));
     expect(paths, contains('assets/custom/char/rogue/body_idle.png'));
@@ -55,5 +57,8 @@ void main() {
     expect(paths, contains('assets/custom/char/mage/body_attack.png'));
     expect(paths.toSet().length, paths.length);
     expect(paths.length, 12);
+    for (final path in paths) {
+      expect(File(path).existsSync(), isTrue, reason: path);
+    }
   });
 }

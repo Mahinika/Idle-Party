@@ -9,6 +9,7 @@ import 'package:idle_party/visual/anchor_table.dart';
 import 'package:idle_party/visual/character_layer.dart';
 import 'package:idle_party/visual/character_visual_painter.dart';
 import 'package:idle_party/visual/character_visual_pose.dart';
+import 'package:idle_party/visual/equipment_model_catalog.dart';
 import 'package:idle_party/visual/hero_anim_state.dart';
 import 'package:idle_party/visual/owned_gear_assets.dart';
 import 'package:idle_party/visual/owned_gear_grips.dart';
@@ -762,6 +763,20 @@ void main() {
     );
     for (final path in paths) {
       expect(File(path).existsSync(), isTrue, reason: path);
+    }
+  });
+
+  test('owned grips cover every shared visual set', () {
+    final ids = <String>{
+      ...OwnedGearAssets.kSharedSetIds,
+      ...EquipmentModelCatalog.authoredSharedIds,
+    };
+    for (final id in ids) {
+      expect(
+        OwnedGearGrips.byVisualSetId.containsKey(id),
+        isTrue,
+        reason: id,
+      );
     }
   });
 }

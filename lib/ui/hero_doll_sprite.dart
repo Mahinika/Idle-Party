@@ -58,7 +58,13 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
   static bool _sameEquipKeys(PartyHero a, PartyHero b) {
     if (a.equipped.length != b.equipped.length) return false;
     for (final e in a.equipped.entries) {
-      if (b.equipped[e.key]?.id != e.value.id) return false;
+      final other = b.equipped[e.key];
+      if (other == null) return false;
+      if (other.id != e.value.id ||
+          other.visualSetId != e.value.visualSetId ||
+          other.armorType != e.value.armorType) {
+        return false;
+      }
     }
     return true;
   }

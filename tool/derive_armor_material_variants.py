@@ -15,8 +15,9 @@ from pathlib import Path
 
 from PIL import Image, ImageEnhance
 
-ROOT = Path(r"d:\Projects\Personal\idle party\Idle-Party\assets\custom\char")
-TOOL = Path(__file__).resolve().parent
+REPO = Path(__file__).resolve().parents[1]
+ROOT = REPO / "assets" / "custom" / "char"
+TOOL = REPO / "tool"
 ANIMS = ("idle", "walk", "attack")
 SLOTS = ("helm", "chest", "legs", "cloak", "hands")
 TIERS = ("t0", "t2")

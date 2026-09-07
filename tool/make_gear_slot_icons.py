@@ -9,7 +9,7 @@ from pathlib import Path
 
 from PIL import Image
 
-ROOT = Path(r"d:\Projects\Personal\idle party\Idle-Party\assets\custom\char")
+ROOT = Path(__file__).resolve().parents[1] / "assets" / "custom" / "char"
 MIN_OPAQUE = 40
 ICON = 64
 # Hands are sparse wrist pixels — still crop when enough opaque remains.

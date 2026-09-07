@@ -46,7 +46,8 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
    for body + armor + hat/hood. No `ImageDraw` helms or capes.
 3. Inspect `tool/preview_doll_<family>.png` (armor stack). Must read as the same
    character as `_src`, not a grey mushroom head.
-4. Run `py tool/check_paper_doll_facit.py` — fail if armor stack drifts from `_src`.
+4. Run `py tool/check_paper_doll_facit.py` — composites **live** body+overlays
+   vs `_src` (no gitignored preview required). Fail if idle armor stack drifts.
 5. Only then full `flutter run` on A56 (PNG bytes need a rebuild, not hot reload).
 6. Dart tests prove paths/layers; **facit gate proves looks**.
 
@@ -95,7 +96,8 @@ flutter test test/visual/character_pose_scenarios_test.dart \
 
 Common chest must add a torso layer (`chest_t0_*.png`). Empty chest = body only.
 Jewelry = no body layer. Every `OwnedGearAssets.allAssetPaths` file exists.
-Facit gate must pass for all four families × idle.
+Facit gate must pass for all four families × idle. Walk/attack diffs print as
+info (dungeon extract still drifts; not a CI fail yet).
 
 ## A56 (both surfaces) — only after preview + facit OK
 

@@ -102,7 +102,13 @@ abstract final class CharacterVisualPainter {
       if (!kOwnedGearOverlayLayers.contains(layer.id)) continue;
       final asset = layer.ownedAsset;
       final img = overlayImage(asset);
-      if (img == null) continue;
+      if (img == null) {
+        assert(() {
+          debugPrint('paper-doll missing overlay: $asset');
+          return true;
+        }());
+        continue;
+      }
       final p = Paint()
         ..filterQuality = FilterQuality.none
         ..isAntiAlias = false

@@ -117,7 +117,9 @@ Walk/attack overlays fall back to `_idle.png` if a clip is missing.
    `py tool/build_owned_gear_layers.py` — **extracts** undertunic + overlays from
    `_src`; never copies dressed `_src` onto body; never invents helm/cape with
    `ImageDraw`. Optional overrides: `gear/_authored/`.
-2. Check `tool/preview_doll_<family>.png`, then `py tool/check_paper_doll_facit.py`.
+2. Check `tool/preview_doll_<family>.png` (written by the facit script from **live**
+   body+overlays), then `py tool/check_paper_doll_facit.py`. Facit does not
+   depend on a previously generated preview file.
 3. Register paths in `BodyFamilyCatalog`.
 4. Do **not** paste Kenney tiles on denser bodies.
 5. `py tool/process_char_bodies.py` skips `gear/` and `_src/`.
