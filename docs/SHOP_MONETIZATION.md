@@ -5,6 +5,8 @@
 `shopStarterClaimed` / `shopBagBonusSlots`. **`in_app_purchase` not in pubspec yet** —
 flip `ShopBilling.billingReady` when Console SKUs + package wire.
 
+**POWERUPS path:** Ad Tickets → buff shop — see [AD_POWERUPS_DESIGN.md](AD_POWERUPS_DESIGN.md).
+
 ## Why other games charge high prices
 
 Studios that chase top-grossing charts often run a **whale ladder**:
@@ -22,15 +24,15 @@ expensive power packs.
 
 ## Idle Party principles
 
-1. **Same power as F2P can already get** — paid POWERUPS time matches hub ads
-   (`×2` gold + `+25%` ATK). Buyers skip watching; they do not unlock a stronger
-   combat class.
+1. **Same power as F2P can already get** — paid Full Boost time matches POWERUPS
+   ticket buffs (`×2` gold + `+25%` ATK). Buyers skip watching; they do not unlock
+   a stronger combat class.
 2. **Cheap ladder** — v1 ceiling **`$4.99`**. No `$49`/`$99` whale packs.
    Larger packs beat smaller ones on $/hour.
 3. **No gacha / loot boxes** for real money.
 4. **No BiS gear, kit unlocks, or zone skips** for cash.
 5. **Clear IA:** GOLD = gold buys · ESSENCE = essence buys · SHOP = real money ·
-   hub POWERUPS = optional ads for the same boost.
+   hub POWERUPS = optional ads → Ad Tickets → same buffs.
 
 **Dev take-home:** Play Billing ~**15%** under $1M/yr (EEA/US/UK: 10% service +
 5% billing). A `$0.99` sale ≈ `$0.84` net — still far above one rewarded ad.
@@ -39,20 +41,20 @@ expensive power packs.
 
 | SKU id | Price | Offer | Notes |
 |--------|-------|-------|--------|
-| `starter_boost_6h` | $0.99 | +6h POWERUPS | One-time starter (~$0.17/h) |
-| `boost_12h` | $1.49 | +12h POWERUPS | Repeatable; ~$0.12/h |
-| `ad_free` | $1.99 | Ad-free + +6h once | Permanent hide POWERUPS ads |
-| `day_boost_24h` | $2.99 | +24h POWERUPS | Best boost $/h (~$0.12/h) |
+| `starter_boost_6h` | $0.99 | +6h Full Boost | One-time starter (~$0.17/h) |
+| `boost_12h` | $1.49 | +12h Full Boost | Repeatable; ~$0.12/h |
+| `ad_free` | $1.99 | Ad-free + +2 tickets once | Hide WATCH; daily CLAIM TICKET (UTC) |
+| `day_boost_24h` | $2.99 | +24h Full Boost | Best boost $/h (~$0.12/h) |
 | `supporter_qol` | $4.99 | +4 bag slots + 12h + thank-you | Ceiling; **no extra combat class** |
 
-Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as ads.
+Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as tickets.
 
 ## Relation to existing systems
 
 | Surface | Currency | Role |
 |---------|----------|------|
-| Hub POWERUPS | Ad (or playtest grant) | Free path to the same boost |
-| Bottom SHOP | Real money | Convenience / ad-free / small QoL |
+| Hub POWERUPS | Ad Ticket (from ad / playtest / ad-free daily) | Free path to the same buffs |
+| Bottom SHOP | Real money | Full Boost hours / ad-free / small QoL |
 | GOLD | Gold | Forge tracks + market |
 | ESSENCE → KEEP | Essence | AL-gated permanent prestige buys |
 
@@ -68,9 +70,14 @@ Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as a
 
 | Field | Meaning |
 |-------|---------|
+| `adTickets` | Banked Ad Tickets |
+| `adAtkUntilMs` / `adGoldUntilMs` | Sharp Edge / Gold Rush timers |
+| `adOfflineMulPending` | Away Bonus ready |
 | `adFree` | Hide POWERUPS ads permanently |
+| `adFreeDailyClaimUtc` | Last UTC day of ad-free daily ticket |
 | `shopStarterClaimed` | One-time starter pack used |
 | `shopBagBonusSlots` | Extra bag slots from supporter QoL |
 
-See also: [CONTENT_CADENCE.md](CONTENT_CADENCE.md), owner preferences (cheap
-convenience store OK; fairness first).
+See also: [AD_POWERUPS_DESIGN.md](AD_POWERUPS_DESIGN.md),
+[CONTENT_CADENCE.md](CONTENT_CADENCE.md), owner preferences (cheap convenience
+store OK; fairness first).

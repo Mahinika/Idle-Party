@@ -33,7 +33,7 @@ abstract final class OfflineProgress {
     }
     return _offlineResultFrom(
       before: state,
-      progressed: sim.state,
+      progressed: applyAwayBonus(state, sim.state),
       seconds: seconds,
       roomsCleared: sim.roomsCleared,
     );
@@ -72,11 +72,14 @@ abstract final class OfflineProgress {
     }
     return _offlineResultFrom(
       before: state,
-      progressed: progressed,
+      progressed: applyAwayBonus(state, progressed),
       seconds: seconds,
       roomsCleared: roomsCleared,
     );
   }
+
+  static GameState applyAwayBonus(GameState before, GameState progressed) =>
+      GameLogic.applyAwayBonusToOfflineGold(before, progressed);
 
   static OfflineProgressResult _offlineResultFrom({
     required GameState before,

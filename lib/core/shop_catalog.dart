@@ -6,10 +6,10 @@ library;
 import 'ad_boost.dart';
 
 enum ShopOfferKind {
-  /// Timed POWERUPS (same ×2 gold / +ATK as hub ads).
+  /// Timed Full Boost (same ×2 gold / +ATK as POWERUPS ticket spend).
   boostHours,
 
-  /// Permanent: skip rewarded POWERUPS ads (may include welcome boost hours).
+  /// Permanent: skip rewarded POWERUPS ads (may include welcome tickets / boost).
   adFree,
 
   /// Small QoL + thank-you (+ optional boost); no extra combat power.
@@ -36,7 +36,7 @@ class ShopCatalogItem {
   final String priceLabel;
   final ShopOfferKind kind;
 
-  /// Hours of POWERUPS granted (boost packs, or bonus on ad-free / supporter).
+  /// Hours of Full Boost granted (both ATK + gold timers).
   final int boostHours;
 
   /// One-time purchase.
@@ -54,8 +54,8 @@ abstract final class ShopCatalog {
       id: 'starter_boost_6h',
       name: 'Starter boost',
       description:
-          '+6 hours POWERUPS (×2 gold · +${AdBoost.attackPercent}% ATK). '
-          'Same boost as watching ads — once per save.',
+          '+6 hours Full Boost (×2 gold · +${AdBoost.attackPercent}% ATK). '
+          'Same as POWERUPS tickets — once per save.',
       priceLabel: '\$0.99',
       kind: ShopOfferKind.boostHours,
       boostHours: 6,
@@ -65,8 +65,8 @@ abstract final class ShopCatalog {
       id: 'boost_12h',
       name: '12-hour boost',
       description:
-          '+12 hours POWERUPS (×2 gold · +${AdBoost.attackPercent}% ATK). '
-          'Stacks up to 24 hours, same as ads.',
+          '+12 hours Full Boost (×2 gold · +${AdBoost.attackPercent}% ATK). '
+          'Stacks up to 24 hours, same as tickets.',
       priceLabel: '\$1.49',
       kind: ShopOfferKind.boostHours,
       boostHours: 12,
@@ -75,19 +75,19 @@ abstract final class ShopCatalog {
       id: 'ad_free',
       name: 'Ad-free welcome',
       description:
-          'Permanent — hide hub POWERUPS ads, plus +6 hours boost once. '
-          'More boost time still for sale here.',
+          'Permanent — hide POWERUPS ads, +2 Ad Tickets once, and a free '
+          'ticket claim once per UTC day. More boost time still for sale here.',
       priceLabel: '\$1.99',
       kind: ShopOfferKind.adFree,
-      boostHours: 6,
+      boostHours: 0,
       oneTime: true,
     ),
     ShopCatalogItem(
       id: 'day_boost_24h',
       name: 'Day pack',
       description:
-          '+24 hours POWERUPS (fills the stack from empty). '
-          'Best boost value per hour — same ×2 gold · +${AdBoost.attackPercent}% ATK as ads.',
+          '+24 hours Full Boost (fills the stack from empty). '
+          'Best boost value per hour — same ×2 gold · +${AdBoost.attackPercent}% ATK as tickets.',
       priceLabel: '\$2.99',
       kind: ShopOfferKind.boostHours,
       boostHours: 24,
@@ -96,8 +96,8 @@ abstract final class ShopCatalog {
       id: 'supporter_qol',
       name: 'Supporter pack',
       description:
-          '+4 bag slots, +12 hours POWERUPS, and a thank-you. '
-          'No extra combat power beyond the same boost ads give.',
+          '+4 bag slots, +12 hours Full Boost, and a thank-you. '
+          'No extra combat power beyond the same boost tickets give.',
       priceLabel: '\$4.99',
       kind: ShopOfferKind.supporterQol,
       bagSlots: 4,

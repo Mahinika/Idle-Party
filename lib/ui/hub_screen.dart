@@ -330,17 +330,6 @@ class _HubScreenState extends State<HubScreen>
     final weekMod = state.metaDepth.weeklyModifier;
     final showWeekAffix =
         !short && weekMod.isNotEmpty && GameLogic.showKeystoneJargon(state);
-    final powerupsActive =
-        AdBoost.isActive(state.metaDepth.adBoostUntilMs);
-    // Endgame hunt night: hide idle POWERUPS chrome unless a boost is running.
-    // First hour: hide ads chrome until the first boss — ENTER stays the focus.
-    final showPowerups = state.metaDepth.adFree
-        ? powerupsActive
-        : GameLogic.plainPlayerChrome(state)
-        ? powerupsActive
-        : endgameHunt
-        ? powerupsActive
-        : (!short || powerupsActive);
     final vaultOwnedByChase =
         chase.kind == HubChaseKind.claimDailyVault ||
         chase.kind == HubChaseKind.dailyVaultProgress;
@@ -405,11 +394,6 @@ class _HubScreenState extends State<HubScreen>
             onPressed: secondaryAction,
           ),
         ],
-        if (showPowerups)
-          HubPowerupsCard(
-            state: state,
-            onOpen: () => openPowerupsSheet(context, director),
-          ),
         if (showMetaKeyLink) ...[
           const SizedBox(height: 4),
           GameButton(
@@ -455,6 +439,26 @@ class _HubScreenState extends State<HubScreen>
           ),
       ],
     );
+  }
+
+  bool _showPowerupsFab({required bool short}) {
+    final chase = HubChase.forState(state);
+    final endgameHunt =
+        GameLogic.endgameUnlocked(state) &&
+        (hubChaseOwnsEndgameRow(chase.kind) ||
+            chase.kind == HubChaseKind.keystone);
+    final powerupsActive = AdBoost.anyBuffActive(state.metaDepth);
+    final hasTickets = state.metaDepth.adTickets > 0;
+    if (state.metaDepth.adFree) {
+      return powerupsActive ||
+          hasTickets ||
+          AdBoost.canClaimAdFreeDaily(state.metaDepth);
+    }
+    if (GameLogic.plainPlayerChrome(state)) {
+      return powerupsActive || hasTickets;
+    }
+    if (endgameHunt) return powerupsActive || hasTickets;
+    return !short || powerupsActive || hasTickets;
   }
 
   @override
@@ -630,6 +634,15 @@ class _HubScreenState extends State<HubScreen>
                       ),
                     ],
                   ),
+                  if (_showPowerupsFab(short: short))
+                    Positioned(
+                      right: 10,
+                      bottom: 8,
+                      child: HubPowerupsFab(
+                        state: state,
+                        onOpen: () => openPowerupsSheet(context, director),
+                      ),
+                    ),
                 ],
               );
             },

@@ -14,12 +14,12 @@ abstract final class EconomyService {
     }
     final percent = state.effectiveGoldFindPercent;
     if (percent <= 0) {
-      return AdBoost.isActive(state.metaDepth.adBoostUntilMs)
+      return AdBoost.goldActive(state.metaDepth)
           ? baseGold * 2
           : baseGold;
     }
     final found = baseGold + (baseGold * percent) ~/ 100;
-    if (!AdBoost.isActive(state.metaDepth.adBoostUntilMs)) return found;
+    if (!AdBoost.goldActive(state.metaDepth)) return found;
     return found * 2;
   }
 }

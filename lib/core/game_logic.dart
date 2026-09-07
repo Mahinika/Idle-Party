@@ -1319,22 +1319,136 @@ class GameLogic {
   /// Gold-find percent granted per Ascend Blessing stack.
   static const int ascendBlessingGoldPct = 8;
 
+  /// Optional POWERUPS: +[AdBoost.ticketsPerAd] Ad Ticket(s) from a finished ad.
+  static GameState grantAdTicket(GameState state, {int count = AdBoost.ticketsPerAd}) {
+    if (count <= 0) return state;
+    final next = (state.metaDepth.adTickets + count).clamp(0, 9999);
+    if (next == state.metaDepth.adTickets) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(adTickets: next),
+    );
+  }
+
+  /// Ad-free: claim +1 ticket once per UTC day without watching.
+  static GameState claimAdFreeDailyTicket(
+    GameState state, {
+    DateTime? now,
+  }) {
+    final clock = now ?? DateTime.now().toUtc();
+    if (!AdBoost.canClaimAdFreeDaily(state.metaDepth, now: clock)) {
+      return state;
+    }
+    final day = AdBoost.utcDayKey(clock);
+    final withTicket = grantAdTicket(state);
+    return withTicket.copyWith(
+      metaDepth: withTicket.metaDepth.copyWith(adFreeDailyClaimUtc: day),
+    );
+  }
+
+  /// Spend tickets on a POWERUPS catalog row.
+  static GameState spendAdBuff(
+    GameState state,
+    AdBuffId id, {
+    int? nowMs,
+  }) {
+    final offer = AdBuffCatalog.byId(id);
+    final md = state.metaDepth;
+    if (md.adTickets < offer.ticketCost) return state;
+    final now = nowMs ?? AdBoost.nowMs();
+    var tickets = md.adTickets - offer.ticketCost;
+    var atk = md.adAtkUntilMs;
+    var gold = md.adGoldUntilMs;
+    var offlinePending = md.adOfflineMulPending;
+    var offlineExp = md.adOfflineMulExpiresMs;
+    switch (id) {
+      case AdBuffId.atk:
+        if (AdBoost.atStackCap(atk, nowMs: now)) return state;
+        atk = AdBoost.extendUntil(atk, offer.durationMs, nowMs: now);
+      case AdBuffId.gold:
+        if (AdBoost.atStackCap(gold, nowMs: now)) return state;
+        gold = AdBoost.extendUntil(gold, offer.durationMs, nowMs: now);
+      case AdBuffId.bundle:
+        if (AdBoost.atStackCap(atk, nowMs: now) &&
+            AdBoost.atStackCap(gold, nowMs: now)) {
+          return state;
+        }
+        atk = AdBoost.extendUntil(atk, offer.durationMs, nowMs: now);
+        gold = AdBoost.extendUntil(gold, offer.durationMs, nowMs: now);
+      case AdBuffId.offline:
+        offlinePending = true;
+        offlineExp = now + offer.durationMs;
+    }
+    final legacy = atk > gold ? atk : gold;
+    return state.copyWith(
+      metaDepth: md.copyWith(
+        adTickets: tickets,
+        adAtkUntilMs: atk,
+        adGoldUntilMs: gold,
+        adOfflineMulPending: offlinePending,
+        adOfflineMulExpiresMs: offlineExp,
+        adBoostUntilMs: legacy,
+      ),
+    );
+  }
+
+  /// Extend Full Boost (both ATK + gold timers) by [hours]. Used by SHOP.
+  static MetaDepthState grantFullBoostHours(
+    MetaDepthState md,
+    int hours, {
+    int? nowMs,
+  }) {
+    if (hours <= 0) return md;
+    final now = nowMs ?? AdBoost.nowMs();
+    final add = hours * AdBoost.hourMs;
+    final atk = AdBoost.extendUntil(md.adAtkUntilMs, add, nowMs: now);
+    final gold = AdBoost.extendUntil(md.adGoldUntilMs, add, nowMs: now);
+    final legacy = atk > gold ? atk : gold;
+    return md.copyWith(
+      adAtkUntilMs: atk,
+      adGoldUntilMs: gold,
+      adBoostUntilMs: legacy,
+    );
+  }
+
+  /// Playtest / legacy: +[AdBoost.hoursPerAd] hours Full Boost (no ticket cost).
+  static GameState grantAdBoostHour(GameState state, {int? nowMs}) {
+    final before = state.metaDepth;
+    final md = grantFullBoostHours(
+      before,
+      AdBoost.hoursPerAd,
+      nowMs: nowMs,
+    );
+    if (md.adAtkUntilMs == before.adAtkUntilMs &&
+        md.adGoldUntilMs == before.adGoldUntilMs) {
+      return state;
+    }
+    return state.copyWith(metaDepth: md);
+  }
+
+  /// After offline gold credit: consume Away Bonus to double the gold gained.
+  static GameState applyAwayBonusToOfflineGold(
+    GameState before,
+    GameState after, {
+    int? nowMs,
+  }) {
+    if (!AdBoost.awayBonusReady(before.metaDepth, nowMs: nowMs)) {
+      return after;
+    }
+    final gained = after.gold - before.gold;
+    if (gained <= 0) return after;
+    return after.copyWith(
+      gold: after.gold + gained,
+      lifetimeGoldEarned: after.lifetimeGoldEarned + gained,
+      metaDepth: after.metaDepth.copyWith(
+        adOfflineMulPending: false,
+        adOfflineMulExpiresMs: 0,
+      ),
+    );
+  }
+
   /// Applies Ascension + Sanctuary + Blessing + gear + pet gold bonuses.
   static int applyGoldGain(GameState state, int baseGold) =>
       EconomyService.applyGoldGain(state, baseGold);
-
-  /// Optional POWERUPS: +[AdBoost.hoursPerAd] hours of double gold and +25% ATK.
-  /// Stacks duration only (effects do not multiply).
-  static GameState grantAdBoostHour(GameState state, {int? nowMs}) {
-    final until = AdBoost.addHour(
-      state.metaDepth.adBoostUntilMs,
-      nowMs: nowMs,
-    );
-    if (until == state.metaDepth.adBoostUntilMs) return state;
-    return state.copyWith(
-      metaDepth: state.metaDepth.copyWith(adBoostUntilMs: until),
-    );
-  }
 
   /// Credit kill / God Hand gold immediately (survives wipe; matches floaters).
   /// Includes Gauntlet floor mul + [applyGoldGain] bonuses.

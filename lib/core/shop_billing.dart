@@ -1,7 +1,6 @@
 import 'dart:math';
 
-import '../models/meta_depth.dart';
-import 'ad_boost.dart';
+import 'game_logic.dart';
 import 'game_state.dart';
 import 'shop_catalog.dart';
 
@@ -24,37 +23,40 @@ abstract final class ShopBilling {
     switch (item.kind) {
       case ShopOfferKind.boostHours:
         if (item.oneTime && md.shopStarterClaimed) return state;
-        md = _grantBoostHours(md, item.boostHours, clock);
+        md = GameLogic.grantFullBoostHours(
+          md,
+          item.boostHours,
+          nowMs: clock.millisecondsSinceEpoch,
+        );
         if (item.oneTime) {
           md = md.copyWith(shopStarterClaimed: true);
         }
       case ShopOfferKind.adFree:
         md = md.copyWith(adFree: true);
+        // Welcome: +2 Ad Tickets (same power path as watching).
+        md = md.copyWith(
+          adTickets: min(9999, md.adTickets + 2),
+        );
         if (item.boostHours > 0) {
-          md = _grantBoostHours(md, item.boostHours, clock);
+          md = GameLogic.grantFullBoostHours(
+            md,
+            item.boostHours,
+            nowMs: clock.millisecondsSinceEpoch,
+          );
         }
       case ShopOfferKind.supporterQol:
         md = md.copyWith(
           shopBagBonusSlots: md.shopBagBonusSlots + item.bagSlots,
         );
         if (item.boostHours > 0) {
-          md = _grantBoostHours(md, item.boostHours, clock);
+          md = GameLogic.grantFullBoostHours(
+            md,
+            item.boostHours,
+            nowMs: clock.millisecondsSinceEpoch,
+          );
         }
     }
     return state.copyWith(metaDepth: md);
-  }
-
-  static MetaDepthState _grantBoostHours(
-    MetaDepthState md,
-    int hours,
-    DateTime clock,
-  ) {
-    if (hours <= 0) return md;
-    final now = clock.millisecondsSinceEpoch;
-    final base = md.adBoostUntilMs > now ? md.adBoostUntilMs : now;
-    final capped = now + AdBoost.maxStackMs;
-    final until = min(base + hours * AdBoost.hourMs, capped);
-    return md.copyWith(adBoostUntilMs: until);
   }
 
   /// SKUs that should appear as owned / disabled after restore.

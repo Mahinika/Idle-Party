@@ -27,7 +27,7 @@ abstract final class GoldIncome {
     final found = percent <= 0
         ? torched
         : torched + (torched * percent) ~/ 100;
-    if (!AdBoost.isActive(state.metaDepth.adBoostUntilMs)) return found;
+    if (!AdBoost.goldActive(state.metaDepth)) return found;
     return found * 2;
   }
 
@@ -107,8 +107,10 @@ abstract final class GoldIncome {
     final bits = [
       for (final p in multiplierParts(state)) '${p.$1} +${p.$2}%',
     ];
-    if (AdBoost.isActive(state.metaDepth.adBoostUntilMs)) {
+    if (AdBoost.goldActive(state.metaDepth)) {
       bits.add('Ad ×2 gold');
+    }
+    if (AdBoost.atkActive(state.metaDepth)) {
       bits.add('Ad +${AdBoost.attackPercent}% ATK');
     }
     if (bits.isEmpty) return 'Gold +0%';

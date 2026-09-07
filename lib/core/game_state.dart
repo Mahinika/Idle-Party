@@ -859,7 +859,7 @@ class GameState {
       guardBonus: tankGuardBonusFor(hero),
       auraBonus: casterAuraBonusFor(hero),
     );
-    var atkPct = AdBoost.isActive(metaDepth.adBoostUntilMs)
+    var atkPct = AdBoost.atkActive(metaDepth)
         ? AdBoost.attackPercent
         : 0;
     atkPct += ((BlessingConstellation.atkMul(this) - 1.0) * 100).round();

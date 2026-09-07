@@ -3058,38 +3058,55 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  /// Playtest / web: grant one POWERUPS ad reward without an ad.
+  /// Playtest / web: grant one Ad Ticket without an ad.
   void grantPowerupHour({int? nowMs}) {
-    final before = AdBoost.remainingMs(
-      _state.metaDepth.adBoostUntilMs,
-      nowMs: nowMs,
-    );
-    _applyUpgrade(GameLogic.grantAdBoostHour(_state, nowMs: nowMs));
-    final after = AdBoost.remainingMs(
-      _state.metaDepth.adBoostUntilMs,
-      nowMs: nowMs,
-    );
+    final before = _state.metaDepth.adTickets;
+    _applyUpgrade(GameLogic.grantAdTicket(_state));
+    final after = _state.metaDepth.adTickets;
     if (after > before) {
       GameAudio.unlock();
-      final left = AdBoost.formatRemaining(
-        _state.metaDepth.adBoostUntilMs,
-        nowMs: nowMs,
-      );
       showToast(
-        'Powerups +${AdBoost.hoursPerAd} hours · $left left',
+        'Ad Ticket +${AdBoost.ticketsPerAd} · $after total',
         life: 2.4,
       );
     } else {
-      showToast('Powerups already stacked to 24 hours', life: 2.0);
+      showToast('Could not add Ad Ticket', life: 2.0);
     }
   }
 
-  /// Android: show a rewarded ad, then stack +[AdBoost.hoursPerAd] hours.
-  Future<void> watchPowerupAd() async {
-    if (AdBoost.atStackCap(_state.metaDepth.adBoostUntilMs)) {
-      showToast('Powerups already stacked to 24 hours', life: 2.0);
+  /// Spend tickets on a POWERUPS buff.
+  void spendPowerupBuff(AdBuffId id, {int? nowMs}) {
+    final offer = AdBuffCatalog.byId(id);
+    final before = _state.metaDepth.adTickets;
+    if (before < offer.ticketCost) {
+      showToast('Need ${offer.ticketCost} Ad Ticket(s)', life: 2.0);
       return;
     }
+    final next = GameLogic.spendAdBuff(_state, id, nowMs: nowMs);
+    if (identical(next, _state) || next.metaDepth.adTickets == before) {
+      showToast('Boost already stacked to 24 hours', life: 2.0);
+      return;
+    }
+    _applyUpgrade(next);
+    GameAudio.unlock();
+    showToast('${offer.label} · ready', life: 2.2);
+  }
+
+  /// Ad-free daily: +1 ticket without watching.
+  void claimAdFreeDailyTicket({DateTime? now}) {
+    final before = _state.metaDepth.adTickets;
+    final next = GameLogic.claimAdFreeDailyTicket(_state, now: now);
+    if (next.metaDepth.adTickets <= before) {
+      showToast('Daily ticket already claimed today', life: 2.0);
+      return;
+    }
+    _applyUpgrade(next);
+    GameAudio.unlock();
+    showToast('Daily Ad Ticket claimed', life: 2.2);
+  }
+
+  /// Android: show a rewarded ad, then +[AdBoost.ticketsPerAd] Ad Ticket.
+  Future<void> watchPowerupAd() async {
     if (!AdRewarded.realAdsAvailable) {
       showToast('Ads play on the Android app', life: 2.2);
       return;
@@ -3101,7 +3118,7 @@ class GameDirector extends ChangeNotifier {
         grantPowerupHour();
       case AdWatchResult.skipped:
         showToast(
-          'Watch the whole ad to get ${AdBoost.hoursPerAd} hours',
+          'Watch the whole ad to get ${AdBoost.ticketsPerAd} Ad Ticket',
           life: 2.2,
         );
       case AdWatchResult.failed:

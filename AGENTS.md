@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.104**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.105**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -236,10 +236,12 @@ Live look: `a56-playtest` (Samsung A56 emulator). Web fallback:
 
 **Hub POWERUPS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded` +
 `ad_config.dart` (live AdMob ids on release Android; sample ids in debug). 1 ad =
-3 hours of ×2 gold and +25% ATK; duration stacks (max 24h) in
-`metaDepth.adBoostUntilMs` (survives Ascend). Web playtest grants the same
-**3 hours**. Ads never interrupt combat. SETTINGS **AD PRIVACY** withdraws AdMob
-GDPR consent.
+**1 Ad Ticket**; spend tickets on Sharp Edge (+25% ATK 60m), Gold Rush (×2 gold
+60m), Full Boost (both 3h), or Away Bonus (next offline gold ×2). Timers stack
+per buff (max 24h) on `metaDepth.adAtkUntilMs` / `adGoldUntilMs`; tickets on
+`adTickets` (survives Ascend). Hub FAB opens the sheet. Web playtest grants a
+ticket. Ads never interrupt combat. SETTINGS **AD PRIVACY** withdraws AdMob
+GDPR consent. See `docs/AD_POWERUPS_DESIGN.md`.
 
 ## World path (15 zones)
 
@@ -362,7 +364,8 @@ full `metaDepth` (Gauntlet best, Will / Gauntlet claims, daily vault / weekly
 affix season, **prestige shop** purchases — Apothecary Writ / Junk Magnifier /
 Away Ledger / …; Loadout Folio is delisted but old slot-count purchases stay),
 unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY), party slot
-5, ascend streak/titles/trophies, **`ascendBlessings`**, **`adBoostUntilMs`**,
+5, ascend streak/titles/trophies, **`ascendBlessings`**, **`adTickets`** /
+**`adAtkUntilMs`** / **`adGoldUntilMs`**,
 Play Games opt-in + season PBs, **`sessionTelemetryOptIn`** / log, …),
 **hero levels/XP**, craft mats/pity, keystone **dial** (`hardmodeLevel`,
 clamped) + challenge toggles, FARM/PUSH (`dungeonMode`), daily vault UI

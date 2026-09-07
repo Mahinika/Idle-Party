@@ -251,8 +251,8 @@ void main() {
 
     final powerups = GameGuides.topics.firstWhere((t) => t.id == 'powerups');
     expect(powerups.title, 'POWERUPS');
-    expect(powerups.body.toLowerCase(), contains('ad'));
-    expect(powerups.body.toLowerCase(), contains('3 hours'));
+    expect(powerups.body.toLowerCase(), contains('ad ticket'));
+    expect(powerups.body.toLowerCase(), contains('full boost'));
     expect(powerups.body.toLowerCase(), contains('24 hours'));
   });
 

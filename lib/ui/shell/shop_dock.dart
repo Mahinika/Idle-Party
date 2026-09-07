@@ -22,8 +22,8 @@ class ShopDock extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Same POWERUPS as hub ads (×2 gold · +${AdBoost.attackPercent}% ATK). '
-          'Gold buys live under GOLD · essence under ESSENCE.\n'
+          'Same Full Boost as POWERUPS tickets (×2 gold · +${AdBoost.attackPercent}% ATK). '
+          'Watch ads for Ad Tickets on the hub · gold buys under GOLD · essence under ESSENCE.\n'
           'Play Billing is not live yet — prices are the planned catalog only.',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

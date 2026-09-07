@@ -296,6 +296,12 @@ class MetaDepthState {
     this.apexTargetMatId = '',
     this.apexTargetProgress = 0,
     this.adBoostUntilMs = 0,
+    this.adTickets = 0,
+    this.adAtkUntilMs = 0,
+    this.adGoldUntilMs = 0,
+    this.adOfflineMulPending = false,
+    this.adOfflineMulExpiresMs = 0,
+    this.adFreeDailyClaimUtc = '',
     this.adFree = false,
     this.shopStarterClaimed = false,
     this.shopBagBonusSlots = 0,
@@ -510,8 +516,27 @@ class MetaDepthState {
   /// Boss-clear progress toward guaranteed target mat (resets on grant).
   final int apexTargetProgress;
 
-  /// UTC millis when optional POWERUPS (ad boost) ends. 0 = none. Survives Ascend.
+  /// Legacy bundled boost end (pre–Ad Ticket). Migrated into [adAtkUntilMs] /
+  /// [adGoldUntilMs] on load; kept for old JSON readers. Survives Ascend.
   final int adBoostUntilMs;
+
+  /// Ad Tickets banked from rewarded ads / SHOP. Survives Ascend.
+  final int adTickets;
+
+  /// Sharp Edge (+ATK%) end millis. Survives Ascend.
+  final int adAtkUntilMs;
+
+  /// Gold Rush (×2 gold) end millis. Survives Ascend.
+  final int adGoldUntilMs;
+
+  /// Away Bonus: next offline gold claim ×2. Survives Ascend.
+  final bool adOfflineMulPending;
+
+  /// Away Bonus expiry if unclaimed (0 = no expiry while pending).
+  final int adOfflineMulExpiresMs;
+
+  /// UTC day key (yyyy-mm-dd) of last ad-free daily ticket claim.
+  final String adFreeDailyClaimUtc;
 
   /// Permanent SHOP ad-free purchase. Survives Ascend. Billing grants later.
   final bool adFree;
@@ -644,6 +669,12 @@ class MetaDepthState {
     String? apexTargetMatId,
     int? apexTargetProgress,
     int? adBoostUntilMs,
+    int? adTickets,
+    int? adAtkUntilMs,
+    int? adGoldUntilMs,
+    bool? adOfflineMulPending,
+    int? adOfflineMulExpiresMs,
+    String? adFreeDailyClaimUtc,
     bool? adFree,
     bool? shopStarterClaimed,
     int? shopBagBonusSlots,
@@ -769,6 +800,13 @@ class MetaDepthState {
       apexTargetMatId: apexTargetMatId ?? this.apexTargetMatId,
       apexTargetProgress: apexTargetProgress ?? this.apexTargetProgress,
       adBoostUntilMs: adBoostUntilMs ?? this.adBoostUntilMs,
+      adTickets: adTickets ?? this.adTickets,
+      adAtkUntilMs: adAtkUntilMs ?? this.adAtkUntilMs,
+      adGoldUntilMs: adGoldUntilMs ?? this.adGoldUntilMs,
+      adOfflineMulPending: adOfflineMulPending ?? this.adOfflineMulPending,
+      adOfflineMulExpiresMs:
+          adOfflineMulExpiresMs ?? this.adOfflineMulExpiresMs,
+      adFreeDailyClaimUtc: adFreeDailyClaimUtc ?? this.adFreeDailyClaimUtc,
       adFree: adFree ?? this.adFree,
       shopStarterClaimed: shopStarterClaimed ?? this.shopStarterClaimed,
       shopBagBonusSlots: shopBagBonusSlots ?? this.shopBagBonusSlots,
@@ -889,6 +927,12 @@ class MetaDepthState {
     'apexTargetMatId': apexTargetMatId,
     'apexTargetProgress': apexTargetProgress,
     'adBoostUntilMs': adBoostUntilMs,
+    'adTickets': adTickets,
+    'adAtkUntilMs': adAtkUntilMs,
+    'adGoldUntilMs': adGoldUntilMs,
+    'adOfflineMulPending': adOfflineMulPending,
+    'adOfflineMulExpiresMs': adOfflineMulExpiresMs,
+    'adFreeDailyClaimUtc': adFreeDailyClaimUtc,
     'adFree': adFree,
     'shopStarterClaimed': shopStarterClaimed,
     'shopBagBonusSlots': shopBagBonusSlots,
@@ -923,6 +967,7 @@ class MetaDepthState {
         tiers['${e.key}'] = (e.value as num?)?.toInt() ?? 0;
       }
     }
+    final adMig = _migrateLegacyAdBoost(json);
     return MetaDepthState(
       sanctuaryXpLevel: (json['sanctuaryXpLevel'] as num?)?.toInt() ?? 0,
       sanctuaryGoldPrestige:
@@ -1052,7 +1097,14 @@ class MetaDepthState {
       apexCraftSlot: (json['apexCraftSlot'] as String?) ?? '',
       apexTargetMatId: (json['apexTargetMatId'] as String?) ?? '',
       apexTargetProgress: (json['apexTargetProgress'] as num?)?.toInt() ?? 0,
-      adBoostUntilMs: (json['adBoostUntilMs'] as num?)?.toInt() ?? 0,
+      adBoostUntilMs: adMig.legacy,
+      adTickets: ((json['adTickets'] as num?)?.toInt() ?? 0).clamp(0, 9999),
+      adAtkUntilMs: adMig.atk,
+      adGoldUntilMs: adMig.gold,
+      adOfflineMulPending: (json['adOfflineMulPending'] as bool?) ?? false,
+      adOfflineMulExpiresMs:
+          (json['adOfflineMulExpiresMs'] as num?)?.toInt() ?? 0,
+      adFreeDailyClaimUtc: (json['adFreeDailyClaimUtc'] as String?) ?? '',
       adFree: (json['adFree'] as bool?) ?? false,
       shopStarterClaimed: (json['shopStarterClaimed'] as bool?) ?? false,
       shopBagBonusSlots:
@@ -1096,5 +1148,22 @@ class MetaDepthState {
       rosterExhibition: (json['rosterExhibition'] as bool?) ?? false,
       freshPrestige: (json['freshPrestige'] as bool?) ?? false,
     );
+  }
+
+  /// Old saves only had [adBoostUntilMs] (bundled ×2 gold + ATK). Copy into
+  /// split timers when the new fields are absent / zero.
+  static ({int atk, int gold, int legacy}) _migrateLegacyAdBoost(
+    Map<String, dynamic> json,
+  ) {
+    final legacy = (json['adBoostUntilMs'] as num?)?.toInt() ?? 0;
+    var atk = (json['adAtkUntilMs'] as num?)?.toInt() ?? 0;
+    var gold = (json['adGoldUntilMs'] as num?)?.toInt() ?? 0;
+    final hasSplitKeys =
+        json.containsKey('adAtkUntilMs') || json.containsKey('adGoldUntilMs');
+    if (!hasSplitKeys && legacy > 0 && atk == 0 && gold == 0) {
+      atk = legacy;
+      gold = legacy;
+    }
+    return (atk: atk, gold: gold, legacy: legacy);
   }
 }

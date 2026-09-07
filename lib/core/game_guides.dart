@@ -49,14 +49,15 @@ abstract final class GameGuides {
       id: 'powerups',
       title: 'POWERUPS',
       body:
-          'Hub POWERUPS is optional. Watch a short ad for 3 hours of double gold '
-          'and +25% attack.\n\n'
-          '• One finished ad = 3 hours. Watch again to add another 3 hours.\n'
-          '• Time stacks up to 24 hours. The gold and attack bonuses do not stack '
-          'higher — only the timer does.\n'
-          '• Double gold applies to hub AFK gold and combat gold.\n'
+          'Hub POWERUPS is optional. Watch a short ad for 1 Ad Ticket, then spend '
+          'tickets on timed boosts.\n\n'
+          '• Sharp Edge: +25% attack for 60 minutes (1 ticket).\n'
+          '• Gold Rush: ×2 gold for 60 minutes (1 ticket).\n'
+          '• Full Boost: both for 3 hours (2 tickets).\n'
+          '• Away Bonus: next Welcome Back gold ×2 (1 ticket).\n'
+          '• Time stacks up to 24 hours per boost. Magnitudes do not stack higher.\n'
           '• Ads never pop up in a fight. You choose when to watch.\n'
-          '• Remaining time survives Ascend.',
+          '• Tickets and remaining time survive Ascend.',
     ),
     GuideTopic(
       id: 'world_path',
