@@ -328,8 +328,15 @@ class _HubScreenState extends State<HubScreen>
         (hubChaseOwnsEndgameRow(chase.kind) ||
             chase.kind == HubChaseKind.keystone);
     final weekMod = state.metaDepth.weeklyModifier;
+    final keyAffixLabels = state.hardmodeLevel > 0
+        ? Keystone.previewAffixes(state).map(Keystone.label).toSet()
+        : const <String>{};
     final showWeekAffix =
-        !short && weekMod.isNotEmpty && GameLogic.showKeystoneJargon(state);
+        !short &&
+        weekMod.isNotEmpty &&
+        GameLogic.showKeystoneJargon(state) &&
+        // Don't repeat the same affix under KEY +N and as Week · …
+        !keyAffixLabels.contains(Keystone.label(weekMod));
     final vaultOwnedByChase =
         chase.kind == HubChaseKind.claimDailyVault ||
         chase.kind == HubChaseKind.dailyVaultProgress;
@@ -633,8 +640,9 @@ class _HubScreenState extends State<HubScreen>
                   ),
                   if (_showPowerupsFab(short: short))
                     Positioned(
+                      // Above KEY DIAL / action column — not nested on the dial.
                       right: 10,
-                      bottom: 8,
+                      bottom: short ? 118 : 148,
                       child: HubPowerupsFab(
                         state: state,
                         onOpen: () => openPowerupsSheet(context, director),

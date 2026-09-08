@@ -136,10 +136,8 @@ class HubChase {
         kind: HubChaseKind.claimDailyVault,
         title: 'Claim Daily Vault',
         detail: best >= 2 && keyTalk
-            ? 'Daily Vault ready (KEY +$best timed) — claim $pay$seasonBit. '
-                'Not Daily Run or Quests.'
-            : 'Daily Vault ready — claim $pay$seasonBit. '
-                'Not Daily Run or Quests.',
+            ? 'Claim $pay$seasonBit (KEY +$best timed today).'
+            : 'Claim $pay$seasonBit.',
         progressLabel: best >= 2 && keyTalk
             ? 'KEY +$best ready'
             : '${GameLogic.dailyVaultClearTarget}/${GameLogic.dailyVaultClearTarget} ready',

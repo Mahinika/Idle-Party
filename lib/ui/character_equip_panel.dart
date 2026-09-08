@@ -420,7 +420,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'FLASK · Dungeon heal',
+                    'Ranged · Trinkets · Flask',
                     textAlign: TextAlign.center,
                     style: GameTheme.body(
                       size: compact ? 10 : 11,

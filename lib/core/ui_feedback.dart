@@ -119,9 +119,12 @@ class UiFeedback {
 
   bool _setNotice(String message, {required double life, required NoticeKind kind}) {
     final now = DateTime.now();
+    // Celebrate (CLEAR) needs a longer window — floor clear can fire twice
+    // in the same beat from stairs + room-complete.
+    final windowMs = kind == NoticeKind.celebrate ? 3500 : 1500;
     if (_lastMessage == message &&
         _lastAt != null &&
-        now.difference(_lastAt!).inMilliseconds < 1500) {
+        now.difference(_lastAt!).inMilliseconds < windowMs) {
       return false;
     }
     _lastMessage = message;
@@ -168,6 +171,9 @@ class UiFeedback {
         lower.contains('disassemble') ||
         lower.contains('cleaned') ||
         lower.contains('sold ') ||
-        lower.contains('ilvl');
+        lower.contains('ilvl') ||
+        lower.contains('bag unstuck') ||
+        lower.contains('bag full') ||
+        lower.contains('bag cleared');
   }
 }

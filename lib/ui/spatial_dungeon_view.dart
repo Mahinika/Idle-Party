@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -107,9 +108,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
 
   Future<void> _loadImages(String dungeonId) async {
     final gen = ++_loadGen;
-    if (_loadedDungeonId != dungeonId) {
-      _zoneArtReady = false;
-    }
+    // Keep painting prior tiles while a zone switch loads — never blank mid-fight.
     Future<ui.Image> load(
       String asset, {
       int? targetWidth,
@@ -141,56 +140,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     final propKinds = KenneyAssets.propPoolForDungeon(dungeonId).toSet()
       ..add(MapPropKind.chest);
 
-    // Shared combat icons — decode once, keep across dungeon switches.
+    // Shared combat icons — critical paint set first so resume never sticks
+    // on "Loading floor…" while hundreds of paper-doll PNGs decode.
     if (!_sharedLoaded) {
-      final lootPaths = <String>{
-        KenneyAssets.chestClosed,
-        KenneyAssets.coinGold,
-        KenneyAssets.sword,
-        KenneyAssets.swordAlt,
-        KenneyAssets.axe,
-        KenneyAssets.dagger,
-        KenneyAssets.hammer,
-        KenneyAssets.staff,
-        KenneyAssets.staffBlue,
-        KenneyAssets.spear,
-        KenneyAssets.bow,
-        KenneyAssets.crossbow,
-        KenneyAssets.gun,
-        KenneyAssets.wand,
-        KenneyAssets.fist,
-        KenneyAssets.thrown,
-        KenneyAssets.shield,
-        KenneyAssets.shieldRound,
-        KenneyAssets.book,
-        KenneyAssets.helmet,
-        KenneyAssets.chestArmor,
-        KenneyAssets.cloak,
-        KenneyAssets.boots,
-        KenneyAssets.gloves,
-        KenneyAssets.shoulders,
-        KenneyAssets.belt,
-        CustomAssets.iconRing,
-        CustomAssets.iconNeck,
-        CustomAssets.iconWrist,
-        CustomAssets.iconLegs,
-        CustomAssets.iconTrinket,
-        CustomAssets.iconTome,
-        KenneyAssets.ring,
-        KenneyAssets.potionRed,
-        KenneyAssets.potionGreen,
-        KenneyAssets.potionBlue,
-        KenneyAssets.vialBlue,
-        KenneyAssets.iconBow,
-      }.toList();
-
-      final petPaths = [
-        ...CustomAssets.petPortraitPaths,
-        ...CustomAssets.combatPetPortraitPaths,
-      ];
-      final uniqueHeroPaths = CustomAssets.uniqueHeroSpecPaths;
-
-      final shared = await Future.wait([
+      final critical = await Future.wait([
         load(KenneyAssets.stairs, targetWidth: 64),
         load(KenneyAssets.stairsBoss, targetWidth: 64),
         load(KenneyAssets.doorClosed, targetWidth: 64),
@@ -205,115 +158,45 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         load(CustomAssets.heroShaman, targetWidth: 128),
         load(CustomAssets.heroWarlock, targetWidth: 128),
         load(CustomAssets.heroDruid, targetWidth: 128),
-        // Keep native size — paper-doll src rects assume full atlas pixels.
         load(RoguelikeCharAtlas.assetPath),
         load(KenneyAssets.chestClosed, targetWidth: 64),
         load(KenneyAssets.coinGold, targetWidth: 48),
         load(KenneyAssets.sword, targetWidth: 48),
         load(KenneyAssets.vialBlue, targetWidth: 48),
-        ...lootPaths.map((a) => load(a, targetWidth: 64)),
-        ...petPaths.map((a) => load(a, targetWidth: 96)),
-        ...uniqueHeroPaths.map((a) => load(a, targetWidth: 128)),
       ]);
       if (!mounted || gen != _loadGen) return;
 
       var i = 0;
-      _stairs = shared[i++];
-      _stairsBoss = shared[i++];
-      _doorClosed = shared[i++];
-      _doorOpen = shared[i++];
-      _hero0 = shared[i++];
-      _hero1 = shared[i++];
-      _hero2 = shared[i++];
-      _hero3 = shared[i++];
+      _stairs = critical[i++];
+      _stairsBoss = critical[i++];
+      _doorClosed = critical[i++];
+      _doorOpen = critical[i++];
+      _hero0 = critical[i++];
+      _hero1 = critical[i++];
+      _hero2 = critical[i++];
+      _hero3 = critical[i++];
       _heroesByClass
         ..clear()
         ..[HeroClassId.warrior] = _hero0
         ..[HeroClassId.priest] = _hero1
         ..[HeroClassId.mage] = _hero2
         ..[HeroClassId.rogue] = _hero3
-        ..[HeroClassId.paladin] = shared[i++]
-        ..[HeroClassId.hunter] = shared[i++]
-        ..[HeroClassId.deathKnight] = shared[i++]
-        ..[HeroClassId.shaman] = shared[i++]
-        ..[HeroClassId.warlock] = shared[i++]
-        ..[HeroClassId.druid] = shared[i++];
-      _charAtlas = shared[i++];
-      _chest = shared[i++];
-      _coin = shared[i++];
-      _sword = shared[i++];
-      _vial = shared[i++];
-      _lootByPath
-        ..clear()
-        ..addEntries([
-          for (final path in lootPaths) MapEntry(path, shared[i++]),
-        ]);
-      _petsByPath
-        ..clear()
-        ..addEntries([
-          for (final path in petPaths) MapEntry(path, shared[i++]),
-        ]);
-      _heroesBySpec
-        ..clear()
-        ..[HeroSpecId.shadow] = shared[i++]
-        ..[HeroSpecId.feral] = shared[i++]
-        ..[HeroSpecId.guardian] = shared[i++];
-
-      // Phase 3 denser owned bodies + paper-doll overlays — soft-fail per path.
-      final bodyPaths = [
-        ...BodyFamilyCatalog.allAssetPaths,
-        ...OwnedGearAssets.allAssetPaths,
-      ];
-      final bodyEntries = <MapEntry<String, ui.Image>>[];
-      for (final path in bodyPaths) {
-        try {
-          bodyEntries.add(MapEntry(path, await load(path, targetWidth: 128)));
-        } catch (_) {
-          // Missing catalog art falls back to class PNG at paint time.
-        }
-      }
-      if (!mounted || gen != _loadGen) return;
-      _bodyByPath
-        ..clear()
-        ..addEntries(bodyEntries);
+        ..[HeroClassId.paladin] = critical[i++]
+        ..[HeroClassId.hunter] = critical[i++]
+        ..[HeroClassId.deathKnight] = critical[i++]
+        ..[HeroClassId.shaman] = critical[i++]
+        ..[HeroClassId.warlock] = critical[i++]
+        ..[HeroClassId.druid] = critical[i++];
+      _charAtlas = critical[i++];
+      _chest = critical[i++];
+      _coin = critical[i++];
+      _sword = critical[i++];
+      _vial = critical[i++];
       _sharedLoaded = true;
-      // Shared icons alone are not enough to paint, but keep UI responsive.
       if (mounted) setState(() {});
-    } else if (_bodyByPath.isEmpty) {
-      // Retry denser bodies if the first shared load ran before assets landed.
-      final bodyPaths = [
-        ...BodyFamilyCatalog.allAssetPaths,
-        ...OwnedGearAssets.allAssetPaths,
-      ];
-      final bodyEntries = <MapEntry<String, ui.Image>>[];
-      for (final path in bodyPaths) {
-        try {
-          bodyEntries.add(MapEntry(path, await load(path, targetWidth: 128)));
-        } catch (_) {}
-      }
-      if (!mounted || gen != _loadGen) return;
-      if (bodyEntries.isNotEmpty) {
-        _bodyByPath
-          ..clear()
-          ..addEntries(bodyEntries);
-      }
     }
 
-    // Only this zone's enemies — the catalog holds 24 sprites but a zone can
-    // spawn at most a handful. Indices stay catalog-aligned because the
-    // painter looks sprites up by `EnemyUnit.assetIndex`.
-    final catalog = KenneyAssets.enemySpriteCatalog;
-    final zoneEnemyAssets = KenneyAssets.enemySpritesForDungeon(dungeonId);
-    final customDungeon = CustomAssets.usesCustomDungeonArt(dungeonId);
-    final structuralPaths = customDungeon
-        ? <String>[
-            KenneyAssets.exitSpriteFor(boss: false, dungeonId: dungeonId),
-            KenneyAssets.exitSpriteFor(boss: true, dungeonId: dungeonId),
-            KenneyAssets.gateSprite(open: false, dungeonId: dungeonId),
-            KenneyAssets.gateSprite(open: true, dungeonId: dungeonId),
-          ]
-        : const <String>[];
-
+    // Zone floors/walls ASAP — paint before deferred loot/body catalogs.
     final floorVariants = <ui.Image>[];
     for (final a in floorPaths) {
       final img = await loadSoft(a, targetWidth: 64);
@@ -326,7 +209,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     }
     if (!mounted || gen != _loadGen) return;
 
-    // Paint tiles ASAP — props/enemies must never soft-lock the floor view.
     final canPaint =
         floorVariants.isNotEmpty &&
         wallVariants.isNotEmpty &&
@@ -343,6 +225,23 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       _wallReady = wallVariants;
       _zoneArtReady = canPaint;
     });
+
+    // Deferred shared catalog (loot icons, pets, paper-doll overlays).
+    if (_lootByPath.isEmpty || _bodyByPath.isEmpty) {
+      unawaited(_loadDeferredSharedArt(gen, load: load, loadSoft: loadSoft));
+    }
+
+    final catalog = KenneyAssets.enemySpriteCatalog;
+    final zoneEnemyAssets = KenneyAssets.enemySpritesForDungeon(dungeonId);
+    final customDungeon = CustomAssets.usesCustomDungeonArt(dungeonId);
+    final structuralPaths = customDungeon
+        ? <String>[
+            KenneyAssets.exitSpriteFor(boss: false, dungeonId: dungeonId),
+            KenneyAssets.exitSpriteFor(boss: true, dungeonId: dungeonId),
+            KenneyAssets.gateSprite(open: false, dungeonId: dungeonId),
+            KenneyAssets.gateSprite(open: true, dungeonId: dungeonId),
+          ]
+        : const <String>[];
 
     ui.Image? zoneStairs;
     ui.Image? zoneStairsBoss;
@@ -386,7 +285,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     setState(() {
       _propImages = propImages;
       _enemySprites = enemySprites;
-      // Keep painting even if every enemy soft-failed.
       if (!_zoneArtReady &&
           _floorReady.isNotEmpty &&
           _wallReady.isNotEmpty &&
@@ -394,6 +292,111 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         _zoneArtReady = true;
       }
     });
+  }
+
+  Future<void> _loadDeferredSharedArt(
+    int gen, {
+    required Future<ui.Image> Function(
+      String asset, {
+      int? targetWidth,
+      int? targetHeight,
+    }) load,
+    required Future<ui.Image?> Function(
+      String asset, {
+      int? targetWidth,
+      int? targetHeight,
+    }) loadSoft,
+  }) async {
+    final lootPaths = <String>{
+      KenneyAssets.chestClosed,
+      KenneyAssets.coinGold,
+      KenneyAssets.sword,
+      KenneyAssets.swordAlt,
+      KenneyAssets.axe,
+      KenneyAssets.dagger,
+      KenneyAssets.hammer,
+      KenneyAssets.staff,
+      KenneyAssets.staffBlue,
+      KenneyAssets.spear,
+      KenneyAssets.bow,
+      KenneyAssets.crossbow,
+      KenneyAssets.gun,
+      KenneyAssets.wand,
+      KenneyAssets.fist,
+      KenneyAssets.thrown,
+      KenneyAssets.shield,
+      KenneyAssets.shieldRound,
+      KenneyAssets.book,
+      KenneyAssets.helmet,
+      KenneyAssets.chestArmor,
+      KenneyAssets.cloak,
+      KenneyAssets.boots,
+      KenneyAssets.gloves,
+      KenneyAssets.shoulders,
+      KenneyAssets.belt,
+      CustomAssets.iconRing,
+      CustomAssets.iconNeck,
+      CustomAssets.iconWrist,
+      CustomAssets.iconLegs,
+      CustomAssets.iconTrinket,
+      CustomAssets.iconTome,
+      KenneyAssets.ring,
+      KenneyAssets.potionRed,
+      KenneyAssets.potionGreen,
+      KenneyAssets.potionBlue,
+      KenneyAssets.vialBlue,
+      KenneyAssets.iconBow,
+    }.toList();
+
+    final petPaths = [
+      ...CustomAssets.petPortraitPaths,
+      ...CustomAssets.combatPetPortraitPaths,
+    ];
+    final uniqueHeroPaths = CustomAssets.uniqueHeroSpecPaths;
+
+    final shared = await Future.wait([
+      ...lootPaths.map((a) => load(a, targetWidth: 64)),
+      ...petPaths.map((a) => load(a, targetWidth: 96)),
+      ...uniqueHeroPaths.map((a) => load(a, targetWidth: 128)),
+    ]);
+    if (!mounted || gen != _loadGen) return;
+
+    var i = 0;
+    _lootByPath
+      ..clear()
+      ..addEntries([
+        for (final path in lootPaths) MapEntry(path, shared[i++]),
+      ]);
+    _petsByPath
+      ..clear()
+      ..addEntries([
+        for (final path in petPaths) MapEntry(path, shared[i++]),
+      ]);
+    _heroesBySpec
+      ..clear()
+      ..[HeroSpecId.shadow] = shared[i++]
+      ..[HeroSpecId.feral] = shared[i++]
+      ..[HeroSpecId.guardian] = shared[i++];
+
+    final bodyPaths = [
+      ...BodyFamilyCatalog.allAssetPaths,
+      ...OwnedGearAssets.allAssetPaths,
+    ];
+    final bodyEntries = <MapEntry<String, ui.Image>>[];
+    for (final path in bodyPaths) {
+      final img = await loadSoft(path, targetWidth: 128);
+      if (img != null) bodyEntries.add(MapEntry(path, img));
+    }
+    if (!mounted || gen != _loadGen) return;
+    if (bodyEntries.isNotEmpty) {
+      setState(() {
+        _bodyByPath
+          ..clear()
+          ..addEntries(bodyEntries);
+      });
+    } else if (mounted) {
+      setState(() {});
+    }
   }
 
   @override

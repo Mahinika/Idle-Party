@@ -26,7 +26,6 @@ import 'gear_service.dart';
 import 'hero_identity.dart';
 import 'gold_income.dart';
 import 'logic_notices.dart';
-import 'menu_alerts.dart';
 import 'meta_systems.dart';
 import 'play_games_bridge.dart';
 import 'rift.dart';
@@ -213,6 +212,8 @@ class GameDirector extends ChangeNotifier {
   int _lastHighestDungeon = -1;
   double _autosaveAccum = 0;
   int _lastStashLen = 0;
+  /// Throttle bag auto-clean toasts during dense loot (ms since epoch).
+  int _lastBagToastMs = 0;
 
   /// Throttle crit haptics so a cleave does not buzz the phone every frame.
   double _feelCritCooldown = 0;
@@ -358,6 +359,14 @@ class GameDirector extends ChangeNotifier {
   /// Floor / KEY / zone payoff — same slot as [showToast], celebrate style.
   void presentClear(String text, {double life = 2.8}) {
     showToast(text, life: life, kind: NoticeKind.celebrate);
+  }
+
+  /// Bag auto-clean during combat — at most one toast every ~8s.
+  void _toastBagCleanup(String message, {double life = 1.8}) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _lastBagToastMs < 8000) return;
+    _lastBagToastMs = now;
+    showToast(message, life: life);
   }
 
   /// Drop the active toast (e.g. when opening a modal that would cover it).
@@ -825,14 +834,12 @@ class GameDirector extends ChangeNotifier {
         );
         LogicNotices.takeBagCleanup();
         final cleared = beforeClean - _state.gearStash.length;
-        if (cleared > 0) {
-          showToast(
-            'Bag cleared $cleared junk — keep farming',
-            life: 2.4,
-          );
-        } else {
-          showToast('Bag full — oldest loot → essence', life: 2.2);
-        }
+        _toastBagCleanup(
+          cleared > 0
+              ? 'Bag cleared $cleared junk — keep farming'
+              : 'Bag full — oldest loot → essence',
+          life: cleared > 0 ? 2.4 : 2.2,
+        );
       }
       final cleanup = LogicNotices.takeBagCleanup();
       if (!cleanup.isEmpty && !bagFullHandled) {
@@ -842,7 +849,7 @@ class GameDirector extends ChangeNotifier {
           if (cleanup.scrapped > 0)
             'scrap ${cleanup.scrapped} (+${cleanup.essenceGained}e)',
         ];
-        showToast('Bag unstuck · ${bits.join(' · ')}', life: 1.8);
+        _toastBagCleanup('Bag unstuck · ${bits.join(' · ')}', life: 1.8);
       }
       _lastStashLen = _state.gearStash.length;
 
@@ -857,6 +864,9 @@ class GameDirector extends ChangeNotifier {
         _spatialTimer?.cancel();
         _spatialTimer = null;
         GameAudio.wipe();
+        // Panel owns the wipe copy — drop CLEAR/bag toast so it does not
+        // draw on top of PARTY WIPED.
+        clearToast();
         final spatial = _spatial;
         if (spatial != null) {
           _state = GameLogic.notePartyWipe(
@@ -877,43 +887,7 @@ class GameDirector extends ChangeNotifier {
                 '${_state.wipeAdviceLine.isEmpty ? 'quiet' : _state.wipeAdviceLine}',
           );
         }
-        final floor = _state.currentRoom.floorNumber;
-        if (_state.inGauntlet) {
-          showToast(
-            'WIPED — Gauntlet ends on F$floor (best floor saved)',
-            life: 4,
-            kind: NoticeKind.danger,
-          );
-        } else if (_state.inRift) {
-          showToast(
-            'WIPED — Rift R${_state.riftTier} ends',
-            life: 4,
-            kind: NoticeKind.danger,
-          );
-        } else if (_state.inGreaterRift) {
-          showToast(
-            'WIPED — Greater Rift GR${_state.grTier} ends',
-            life: 4,
-            kind: NoticeKind.danger,
-          );
-        } else if (MetaSystems.isActiveDailyRun(_state)) {
-          showToast(
-            'WIPED — Daily echo · RETRY or HUB',
-            life: 3.2,
-            kind: NoticeKind.danger,
-          );
-        } else {
-          final pushFail =
-              _state.dungeonMode == DungeonMode.push &&
-              floor > _state.highestFloorCleared;
-          showToast(
-            pushFail
-                ? 'WIPED — Retry retreats to cleared floor (still PUSH), or Hub'
-                : 'WIPED — Retry restarts the floor',
-            life: 4,
-            kind: NoticeKind.danger,
-          );
-        }
+        // No WIPED toast — DungeonWipePanel + top HUD already say it.
         notifyListeners();
         return;
       }
@@ -989,7 +963,6 @@ class GameDirector extends ChangeNotifier {
             clearLine = '$clearLine · $matBit';
           }
         }
-        final bagUps = MenuAlerts.bagUpgradeCount(_state);
         final payoffNotices = LogicNotices.takeMetaPayoffs();
         // KEY TIMED / depleted owns the clear banner (bigger than F CLEAR).
         final keyBanner = payoffNotices.cast<String?>().firstWhere(
@@ -1042,17 +1015,7 @@ class GameDirector extends ChangeNotifier {
           }
         }
         _announceAchievementUnlocks(beforeClear, _state);
-        if (bagUps >= 8 &&
-            !_state.inGauntlet &&
-            !_state.inAnyRiftMode &&
-            beforeClear.dungeonMode == DungeonMode.push) {
-          showToast(
-            bagUps == 1
-                ? 'Better gear waiting — open GEAR · EQUIP'
-                : '$bagUps better items waiting — open GEAR · EQUIP',
-            life: 2.8,
-          );
-        }
+        // GEAR badge already shows upgrade count — no CLEAR-time toast spam.
         if (_state.highestDungeonCleared > beforeDungeon) {
           GameAudio.unlock();
           String? nextId;

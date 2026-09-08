@@ -64,16 +64,14 @@ class MenuAlerts {
     more: moreAlert(state),
   );
 
-  /// Dungeon bottom-nav marks — keep fight chrome quiet.
+  /// Dungeon bottom-nav marks — badge only, no reason ticker (wipe/GEAR own copy).
   static MenuAlerts forDungeon(GameState state) {
     final upgrades = bagUpgradeCount(state);
     if (upgrades <= 0) return none;
     return MenuAlerts(
       gear: MenuAlert(
         count: upgrades,
-        reason: upgrades == 1
-            ? '1 better item for the party — open GEAR · EQUIP'
-            : '$upgrades better items for the party — open GEAR · EQUIP',
+        reason: '',
       ),
       gold: MenuAlert.quiet,
       shop: MenuAlert.quiet,
@@ -132,7 +130,11 @@ class MenuAlerts {
           shop: MenuAlert.quiet,
           essence: MenuAlert.quiet,
           key: MenuAlert.quiet,
-          more: moreAlert(state),
+          more: moreAlert(
+            state,
+            omitVault: chaseKind == HubChaseKind.claimDailyVault ||
+                chaseKind == HubChaseKind.dailyVaultProgress,
+          ),
         ),
         _ => forState(state),
       };
@@ -224,7 +226,10 @@ class MenuAlerts {
   /// Combined gold alerts (legacy surfaces).
   static MenuAlert powerAlert(GameState state) => goldAlert(state);
 
-  static MenuAlert questsAlert(GameState state) {
+  static MenuAlert questsAlert(
+    GameState state, {
+    bool omitVault = false,
+  }) {
     var count = 0;
     final reasons = <String>[];
     final jobs = state.missions.where((m) => m.canClaim).length;
@@ -232,7 +237,7 @@ class MenuAlerts {
       count += jobs;
       reasons.add(jobs == 1 ? '1 quest done' : '$jobs quests done');
     }
-    if (GameLogic.canClaimDailyVault(state)) {
+    if (!omitVault && GameLogic.canClaimDailyVault(state)) {
       count++;
       reasons.add('daily vault ready');
     }
@@ -254,8 +259,11 @@ class MenuAlerts {
     return MenuAlert.quiet;
   }
 
-  static MenuAlert moreAlert(GameState state) {
-    final quests = questsAlert(state);
+  static MenuAlert moreAlert(
+    GameState state, {
+    bool omitVault = false,
+  }) {
+    final quests = questsAlert(state, omitVault: omitVault);
     if (MetaSystems.hasUnseenChangelog(state)) {
       if (!quests.isQuiet) {
         return MenuAlert(
