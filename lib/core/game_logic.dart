@@ -45,6 +45,7 @@ import 'party_power.dart';
 part 'game_logic_ascend.dart';
 part 'game_logic_endgame.dart';
 part 'game_logic_ladders.dart';
+part 'game_logic_meta_season.dart';
 
 class GameLogic {
   /// Injectable randomness for enemy targeting (seed in tests).
@@ -1773,113 +1774,26 @@ class GameLogic {
   }
 
   /// ISO week key (`yyyy-Www`) for weekly contract / local season rotation.
-  static String isoWeekKey(DateTime utc) {
-    final d = DateTime.utc(utc.year, utc.month, utc.day);
-    final thursday = d.add(Duration(days: 4 - d.weekday));
-    final yearStart = DateTime.utc(thursday.year, 1, 1);
-    final week = (thursday.difference(yearStart).inDays ~/ 7) + 1;
-    return '${thursday.year}-W${week.toString().padLeft(2, '0')}';
-  }
+  static String isoWeekKey(DateTime utc) => _isoWeekKey(utc);
 
   /// Calendar-month season key (`yyyy-MM`) for local offline seasons.
-  static String isoMonthKey(DateTime utc) {
-    final y = utc.year.toString().padLeft(4, '0');
-    final m = utc.month.toString().padLeft(2, '0');
-    return '$y-$m';
-  }
+  static String isoMonthKey(DateTime utc) => _isoMonthKey(utc);
 
   /// Reset Play Games seasonal PBs when the calendar month rolls.
-  static GameState ensureLeaderboardSeason(GameState state, {DateTime? now}) {
-    final month = isoMonthKey((now ?? DateTime.now()).toUtc());
-    final md = state.metaDepth;
-    if (md.leaderboardSeasonKey == month) return state;
-    return state.copyWith(
-      metaDepth: md.copyWith(
-        leaderboardSeasonKey: month,
-        seasonBestTimedKey: 0,
-        seasonBestTimedClearMs: 0,
-        seasonBestGauntletFloor: 0,
-        seasonBestGrTier: 0,
-        seasonBestGrClearMs: 0,
-      ),
-    );
-  }
+  static GameState ensureLeaderboardSeason(GameState state, {DateTime? now}) =>
+      _ensureLeaderboardSeason(state, now: now);
 
   /// Display season label (ISO week + month), e.g. `2026-W32 · 2026-08`.
-  static String seasonLabel(DateTime utc) =>
-      '${isoWeekKey(utc)} · ${isoMonthKey(utc)}';
+  static String seasonLabel(DateTime utc) => _seasonLabel(utc);
 
-  static GameState ensureWeeklyContract(GameState state, {DateTime? now}) {
-    final t = (now ?? DateTime.now()).toUtc();
-    final key = isoWeekKey(t);
-    final season = seasonLabel(t);
-    var next = ensureLeaderboardSeason(state, now: t);
-    if (next.metaDepth.weeklyKey != key || next.metaDepth.seasonKey != season) {
-      final sameWeek = next.metaDepth.weeklyKey == key;
-      final monthKey = isoMonthKey(t);
-      final sameMonth = next.metaDepth.monthPassKey == monthKey;
-      final mod = LocalSeasonCatalog.resolveAffix(
-        weekKey: key,
-        currentModifier: sameWeek ? next.metaDepth.weeklyModifier : '',
-      );
-      next = next.copyWith(
-        metaDepth: next.metaDepth.copyWith(
-          weeklyKey: key,
-          // Legacy weekly vault fields — kept for saves; vault is daily now.
-          weeklyProgress: sameWeek ? next.metaDepth.weeklyProgress : 0,
-          weeklyClaimed: sameWeek ? next.metaDepth.weeklyClaimed : false,
-          weeklyModifier: sameWeek ? next.metaDepth.weeklyModifier : mod,
-          weeklyBestTimedKey: sameWeek ? next.metaDepth.weeklyBestTimedKey : 0,
-          monthPassKey: monthKey,
-          monthlyBestTimedKey:
-              sameMonth ? next.metaDepth.monthlyBestTimedKey : 0,
-          monthlyBestGrTier:
-              sameMonth ? next.metaDepth.monthlyBestGrTier : 0,
-          apexTrialMonthKey:
-              sameMonth ? next.metaDepth.apexTrialMonthKey : monthKey,
-          apexTrialCleared:
-              sameMonth ? next.metaDepth.apexTrialCleared : false,
-          seasonKey: season,
-        ),
-      );
-    }
-    next = AshenCrown.ensureWeek(next, now: t);
-    next = BlessingConstellation.ensure(next);
-    return ensureDailyVault(next, now: t);
-  }
+  static GameState ensureWeeklyContract(GameState state, {DateTime? now}) =>
+      _ensureWeeklyContract(state, now: now);
 
   /// Resets daily vault progress when the UTC calendar day rolls.
   /// First touch on legacy saves (empty [dailyVaultDate]) migrates weekly
   /// vault progress into today's daily fields instead of wiping it.
-  static GameState ensureDailyVault(GameState state, {DateTime? now}) {
-    final t = (now ?? DateTime.now()).toUtc();
-    final day = MetaSystems.dailyDateKey(t);
-    final md = state.metaDepth;
-    if (md.dailyVaultDate == day) return state;
-    if (md.dailyVaultDate.isEmpty &&
-        (md.weeklyProgress > 0 ||
-            md.weeklyClaimed ||
-            md.weeklyBestTimedKey > 0)) {
-      return state.copyWith(
-        metaDepth: md.copyWith(
-          dailyVaultDate: day,
-          dailyVaultClears: md.weeklyClaimed
-              ? dailyVaultClearTarget
-              : min(dailyVaultClearTarget, md.weeklyProgress),
-          dailyBestTimedKey: md.weeklyBestTimedKey,
-          dailyVaultClaimed: md.weeklyClaimed,
-        ),
-      );
-    }
-    return state.copyWith(
-      metaDepth: md.copyWith(
-        dailyVaultDate: day,
-        dailyVaultClears: 0,
-        dailyBestTimedKey: 0,
-        dailyVaultClaimed: false,
-      ),
-    );
-  }
+  static GameState ensureDailyVault(GameState state, {DateTime? now}) =>
+      _ensureDailyVault(state, now: now);
 
   static const int dailyVaultClearTarget = 1;
 
@@ -1888,20 +1802,12 @@ class GameLogic {
 
   /// Daily vault claim payout (timed-key table + Dawn Tithe).
   static int dailyVaultClaimEssence(GameState state) =>
-      Keystone.dailyVaultEssence(state.metaDepth.dailyBestTimedKey) +
-      state.metaDepth.dailyEssenceBonusLevel * dawnTitheEssencePerLevel;
+      _dailyVaultClaimEssence(state);
 
   /// Essence shown on CLAIM VAULT — same as [claimDailyVault], including
   /// the first-of-month season bonus when it is still unclaimed.
-  static int dailyVaultClaimPreviewEssence(GameState state, {DateTime? now}) {
-    var gain = dailyVaultClaimEssence(state);
-    final month = isoMonthKey((now ?? DateTime.now()).toUtc());
-    if (month.isNotEmpty &&
-        !state.metaDepth.claimedSeasonRewards.contains(month)) {
-      gain += seasonWeeklyBonusEssence;
-    }
-    return gain;
-  }
+  static int dailyVaultClaimPreviewEssence(GameState state, {DateTime? now}) =>
+      _dailyVaultClaimPreviewEssence(state, now: now);
 
   /// Endgame players see KEY / weekly affix jargon; earlier stays vault-simple.
   ///
@@ -1919,78 +1825,24 @@ class GameLogic {
   static bool plainPlayerChrome(GameState state) => !showDailyChase(state);
 
   /// Dungeon mode chip label (Repeat/Next vs FARM/PUSH).
-  static String dungeonModeChipLabel(DungeonMode mode, GameState state) {
-    if (plainPlayerChrome(state)) {
-      return mode == DungeonMode.farm ? '↻ Repeat' : '▲ Next';
-    }
-    return mode == DungeonMode.farm ? '↻ FARM' : '▲ PUSH';
-  }
+  static String dungeonModeChipLabel(DungeonMode mode, GameState state) =>
+      _dungeonModeChipLabel(mode, state);
 
-  static String dungeonModeChipTip(DungeonMode mode, GameState state) {
-    if (plainPlayerChrome(state)) {
-      return mode == DungeonMode.farm
-          ? 'Stay on this floor after clear for more loot'
-          : 'Advance toward the boss after each clear';
-    }
-    return mode == DungeonMode.farm
-        ? 'LOOP FARM — loop this floor after clear for loot'
-        : 'CLIMB PUSH — advance floors toward the boss';
-  }
+  static String dungeonModeChipTip(DungeonMode mode, GameState state) =>
+      _dungeonModeChipTip(mode, state);
 
-  static String dungeonModeAfterClearHint(GameState state, DungeonMode mode) {
-    if (mode == DungeonMode.farm) {
-      return 'After clear: stay on this floor';
-    }
-    return 'After clear: go to next floor';
-  }
+  static String dungeonModeAfterClearHint(GameState state, DungeonMode mode) =>
+      _dungeonModeAfterClearHint(state, mode);
 
   /// One-time essence when claiming the first vault of a calendar month.
   static const int seasonWeeklyBonusEssence = 12;
 
   /// Claim when 1 push clear **or** a timed KEY ≥2 today.
-  static bool canClaimDailyVault(GameState state) {
-    final md = state.metaDepth;
-    if (md.dailyVaultClaimed) return false;
-    return md.dailyVaultClears >= dailyVaultClearTarget ||
-        md.dailyBestTimedKey >= 2;
-  }
+  static bool canClaimDailyVault(GameState state) =>
+      _canClaimDailyVault(state);
 
-  static GameState claimDailyVault(GameState state, {DateTime? now}) {
-    var next = ensureWeeklyContract(state, now: now);
-    final md = next.metaDepth;
-    if (md.dailyVaultClaimed) return next;
-    if (md.dailyVaultClears < dailyVaultClearTarget &&
-        md.dailyBestTimedKey < 2) {
-      return next;
-    }
-    var essenceGain = dailyVaultClaimEssence(next);
-    final seasonClaims = List<String>.from(md.claimedSeasonRewards);
-    final month = isoMonthKey((now ?? DateTime.now()).toUtc());
-    final notices = <String>[];
-    final titles = List<String>.from(md.titles);
-    if (month.isNotEmpty && !seasonClaims.contains(month)) {
-      seasonClaims.add(month);
-      essenceGain += seasonWeeklyBonusEssence;
-      notices.add('Season $month · +${seasonWeeklyBonusEssence}e');
-      final season = LocalSeasonCatalog.forMonthKey(month);
-      final title = season.titleReward;
-      if (title != null && title.isNotEmpty && !titles.contains(title)) {
-        titles.add(title);
-        notices.add('Title unlocked · $title');
-      }
-    }
-    LogicNotices.setMetaPayoffs(notices);
-    next = next.copyWith(
-      essence: next.essence + essenceGain,
-      metaDepth: md.copyWith(
-        dailyVaultClaimed: true,
-        claimedSeasonRewards: seasonClaims,
-        titles: titles,
-      ),
-      lastUpdated: DateTime.now(),
-    );
-    return MetaSystems.evaluateAchievements(next);
-  }
+  static GameState claimDailyVault(GameState state, {DateTime? now}) =>
+      _claimDailyVault(state, now: now);
 
   /// God Hand style: 0 balanced, 1 focus, 2 wide.
   static GameState setGodHandStyle(GameState state, int style) {
@@ -2003,109 +1855,7 @@ class GameLogic {
   }
 
   /// Claim Will-rank + Gauntlet milestone essence when thresholds are met.
-  static GameState syncMetaPayoffs(GameState state) {
-    var next = state;
-    var essenceGain = 0;
-    final notices = <String>[];
-    final willClaims = List<String>.from(next.metaDepth.claimedWillRanks);
-    final score = next.collectionScore;
-    for (final threshold in WillRanks.claimableThresholds) {
-      final id = '$threshold';
-      if (score >= threshold && !willClaims.contains(id)) {
-        willClaims.add(id);
-        final gain = WillRanks.essenceForThreshold(threshold);
-        essenceGain += gain;
-        notices.add('Will · ${WillRanks.titleForScore(threshold)} +${gain}e');
-      }
-    }
-    final gauntletClaims = List<String>.from(
-      next.metaDepth.claimedGauntletMilestones,
-    );
-    final titles = List<String>.from(next.metaDepth.titles);
-    final best = next.metaDepth.gauntletBestFloor;
-    for (final floor in GauntletMilestones.floors) {
-      final id = GauntletMilestones.claimId(floor);
-      if (best >= floor && !gauntletClaims.contains(id)) {
-        gauntletClaims.add(id);
-        final gain = GauntletMilestones.essenceForFloor(floor);
-        essenceGain += gain;
-        notices.add('Gauntlet F$floor · +${gain}e');
-        final title = LocalSeasonCatalog.gauntletTitles[floor];
-        if (title != null && !titles.contains(title)) {
-          titles.add(title);
-          notices.add('Title unlocked · $title');
-        }
-      }
-    }
-
-    final riftClaims = List<String>.from(next.metaDepth.claimedRiftMilestones);
-    final riftBest = next.metaDepth.riftBestTier;
-    for (final tier in RiftMilestones.tiers) {
-      final id = RiftMilestones.claimId(tier);
-      if (riftBest >= tier && !riftClaims.contains(id)) {
-        riftClaims.add(id);
-        final gain = RiftMilestones.essenceForTier(tier);
-        essenceGain += gain;
-        notices.add('Rift R$tier · +${gain}e');
-      }
-    }
-
-    final grClaims = List<String>.from(next.metaDepth.claimedGrMilestones);
-    final grBest = next.metaDepth.grBestTier;
-    for (final tier in GreaterRiftMilestones.tiers) {
-      final id = GreaterRiftMilestones.claimId(tier);
-      if (grBest >= tier && !grClaims.contains(id)) {
-        grClaims.add(id);
-        final gain = GreaterRiftMilestones.essenceForTier(tier);
-        essenceGain += gain;
-        notices.add('Greater Rift GR$tier · +${gain}e');
-      }
-    }
-
-    // Local week goals (timed KEY / Gauntlet floor).
-    final weekClaims = List<String>.from(next.metaDepth.claimedWeekGoals);
-    final weekKey = next.metaDepth.weeklyKey;
-    if (weekKey.isNotEmpty) {
-      final week = LocalSeasonCatalog.forWeekKey(weekKey);
-      final claimId = week.claimIdForWeek(weekKey);
-      if (LocalSeasonCatalog.weekGoalReady(next, week) &&
-          !weekClaims.contains(claimId)) {
-        weekClaims.add(claimId);
-        essenceGain += week.essenceReward;
-        notices.add('${week.name} · +${week.essenceReward}e');
-        final title = week.titleReward;
-        if (title != null && title.isNotEmpty && !titles.contains(title)) {
-          titles.add(title);
-          notices.add('Title unlocked · $title');
-        }
-      }
-    }
-
-    if (essenceGain == 0 &&
-        willClaims.length == next.metaDepth.claimedWillRanks.length &&
-        gauntletClaims.length ==
-            next.metaDepth.claimedGauntletMilestones.length &&
-        riftClaims.length == next.metaDepth.claimedRiftMilestones.length &&
-        grClaims.length == next.metaDepth.claimedGrMilestones.length &&
-        weekClaims.length == next.metaDepth.claimedWeekGoals.length &&
-        titles.length == next.metaDepth.titles.length) {
-      LogicNotices.setMetaPayoffs(const []);
-      return MetaSystems.evaluateAchievements(next);
-    }
-    LogicNotices.setMetaPayoffs(notices);
-    next = next.copyWith(
-      essence: next.essence + essenceGain,
-      metaDepth: next.metaDepth.copyWith(
-        claimedWillRanks: willClaims,
-        claimedGauntletMilestones: gauntletClaims,
-        claimedRiftMilestones: riftClaims,
-        claimedGrMilestones: grClaims,
-        claimedWeekGoals: weekClaims,
-        titles: titles,
-      ),
-    );
-    return MetaSystems.evaluateAchievements(next);
-  }
+  static GameState syncMetaPayoffs(GameState state) => _syncMetaPayoffs(state);
 
   /// Soft expected codex size for percentage milestone claims (soft goal).
   static const int expectedCodexEntries = 120;
@@ -2632,67 +2382,11 @@ class GameLogic {
     return next;
   }
 
-  static GameState _claimDailyIfEligible(
-    GameState state, {
-    GameState? dailyProbe,
-  }) {
-    if (state.dailyClaimed) return state;
-    final probe = dailyProbe ?? state;
-    // Match the day the Daily was started (probe.lastDailyDate), not wall
-    // clock — tests inject frozen dates and midnight crossover mid-run.
-    final day = MetaSystems.parseDailyDateKey(probe.lastDailyDate);
-    if (day == null) return state;
-    if (probe.dungeonId != MetaSystems.dailyDungeonId(day)) return state;
-    if (probe.layoutSeed != MetaSystems.dailySeed(day)) return state;
-    final dailyEssenceReward =
-        25 + state.metaDepth.dailyEssenceBonusLevel * dawnTitheEssencePerLevel;
-    return state.copyWith(
-      dailyClaimed: true,
-      essence: state.essence + dailyEssenceReward,
-    );
-  }
-
   /// Enters the free, seeded Daily Run — a single floor echo in whichever
   /// dungeon today's UTC date rotates to. Ignores normal unlock gating.
   /// Clearing the floor claims today's reward once and returns to hub.
-  static GameState enterDaily(GameState state, {DateTime? now}) {
-    final t = now ?? DateTime.now().toUtc();
-    if (MetaSystems.isDailyClaimedToday(state, now: t)) {
-      return state;
-    }
-    final dateKey = MetaSystems.dailyDateKey(t);
-    final seed = MetaSystems.dailySeed(t);
-    final dungeonId = MetaSystems.dailyDungeonId(t);
-    final isNewDay = state.lastDailyDate != dateKey;
-    final floor = DungeonGenerator.generateFloor(
-      1,
-      ascensionLevel: state.ascensionLevel,
-      dungeonId: dungeonId,
-      layoutSeed: seed,
-    );
-    final room = floor.first;
-    final cleared = _clearKeystoneRun(state);
-    return cleared.copyWith(
-      inDungeon: true,
-      inGauntlet: false,
-      dungeonId: dungeonId,
-      dungeonMode: DungeonMode.push,
-      highestFloorCleared: 0,
-      currentRoom: room,
-      dungeonFloor: floor,
-      enemies: createEnemyGroup(room, dungeonId: dungeonId, fromState: cleared),
-      layoutSeed: seed,
-      lastDailyDate: dateKey,
-      dailyClaimed: isNewDay ? false : state.dailyClaimed,
-      heroes: cleared.heroes
-          .map(
-            (hero) =>
-                hero.copyWith(currentHp: cleared.effectiveHeroMaxHp(hero)),
-          )
-          .toList(),
-      lastUpdated: DateTime.now(),
-    );
-  }
+  static GameState enterDaily(GameState state, {DateTime? now}) =>
+      _enterDaily(state, now: now);
 
   /// Parses a save of any version, migrating legacy v1 saves
   /// (single `enemy` + stored `battleNumber`) to the room-based v2 model.
