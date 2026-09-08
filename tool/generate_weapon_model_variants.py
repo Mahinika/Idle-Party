@@ -1,9 +1,9 @@
 """Generate owned 128x128 weapon model variant overlays.
 
 Creates per-item model variant PNGs for the visualSetId pipeline:
-- sword_thunderfury_{idle,walk,attack}.png
-- sword_warglaive_{idle,walk,attack}.png
+- sword_thunderfury_idle.png (and peers)
 
+Live overlays are idle-only; walk/attack use body clips + grip anchors.
 Files are written to both:
 - assets/custom/char/gear/
 - assets/custom/char/gear/_authored/
@@ -15,8 +15,10 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-ROOT = Path(r"d:\Projects\Personal\idle party\Idle-Party\assets\custom\char\gear")
+REPO = Path(__file__).resolve().parents[1]
+ROOT = REPO / "assets" / "custom" / "char" / "gear"
 AUTH = ROOT / "_authored"
+OVERLAY_ANIMS = ("idle",)
 
 
 def new_canvas() -> Image.Image:
@@ -43,12 +45,8 @@ def rotate_grip(im: Image.Image, degrees: float, grip: tuple[int, int] = (88, 96
 
 
 def pose_frames(idle: Image.Image) -> dict[str, Image.Image]:
-    """Distinct clips — not 1px copies of idle."""
-    return {
-        "idle": idle,
-        "walk": shift(rotate_grip(idle, -6), 0, 1),
-        "attack": shift(rotate_grip(idle, -20), 2, -3),
-    }
+    """Idle master only — dungeon motion uses body clips + grip anchors."""
+    return {"idle": idle}
 
 
 def stroke(draw: ImageDraw.ImageDraw, points, color, width: int = 1) -> None:
@@ -323,7 +321,7 @@ def write_set(set_id: str, idle: Image.Image, *, force: bool) -> None:
     idle_auth = AUTH / f"{set_id}_idle.png"
     if idle_auth.exists() and not force:
         # Sync authored → live only; never clobber hand-tuned masters.
-        for anim in ("idle", "walk", "attack"):
+        for anim in OVERLAY_ANIMS:
             src = AUTH / f"{set_id}_{anim}.png"
             if src.exists():
                 (ROOT / src.name).write_bytes(src.read_bytes())
@@ -375,19 +373,11 @@ def main() -> None:
     ]
     for set_id, fn in models:
         write_set(set_id, fn(), force=force)
-    # Sanity: walk/attack must differ from idle when files exist.
     for set_id, _ in models:
         idle_p = ROOT / f"{set_id}_idle.png"
-        walk_p = ROOT / f"{set_id}_walk.png"
-        atk_p = ROOT / f"{set_id}_attack.png"
-        if not (idle_p.exists() and walk_p.exists() and atk_p.exists()):
-            continue
-        idle = Image.open(idle_p)
-        walk = Image.open(walk_p)
-        atk = Image.open(atk_p)
-        assert list(idle.getdata()) != list(walk.getdata()), set_id
-        assert list(idle.getdata()) != list(atk.getdata()), set_id
-        print(f"ok poses {set_id} idle={opaque(idle)} walk={opaque(walk)} atk={opaque(atk)}")
+        if not idle_p.exists():
+            raise SystemExit(f"missing {idle_p}")
+        print(f"ok idle {set_id} opaque={opaque(Image.open(idle_p))}")
     print("done: weapon model variants generated")
 
 

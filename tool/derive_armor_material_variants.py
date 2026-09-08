@@ -18,7 +18,7 @@ from PIL import Image, ImageEnhance
 REPO = Path(__file__).resolve().parents[1]
 ROOT = REPO / "assets" / "custom" / "char"
 TOOL = REPO / "tool"
-ANIMS = ("idle", "walk", "attack")
+OVERLAY_ANIMS = ("idle",)  # walk/attack paint idle overlays on poser bodies
 SLOTS = ("helm", "chest", "legs", "cloak", "hands")
 TIERS = ("t0", "t2")
 
@@ -108,7 +108,7 @@ def derive_family(
     n = 0
     for slot in SLOTS:
         for tier in TIERS:
-            for anim in ANIMS:
+            for anim in OVERLAY_ANIMS:
                 src = gear / f"{slot}_{tier}_{anim}.png"
                 if not src.exists():
                     raise SystemExit(f"missing source {src}")

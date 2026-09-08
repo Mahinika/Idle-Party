@@ -9,9 +9,10 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageChops
 
-ROOT = Path(r"d:\Projects\Personal\idle party\Idle-Party\assets\custom\char\rogue\gear")
+REPO = Path(__file__).resolve().parents[1]
+ROOT = REPO / "assets" / "custom" / "char" / "rogue" / "gear"
 AUTH = ROOT / "_authored"
-ANIMS = ("idle", "walk", "attack")
+ANIMS = ("idle",)  # live overlays idle-only
 
 
 def goldify_strong(im: Image.Image) -> Image.Image:

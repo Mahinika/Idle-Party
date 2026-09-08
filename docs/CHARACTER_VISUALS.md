@@ -6,8 +6,10 @@ Idle Party heroes use a **paper-doll** path when an owned body is available:
    (skin + hair + simple cloth — never naked). Empty jewelry slots never
    draw on the body (same as WoW rings/neck).
 2. **Every equipped gear slot** is a 128×128 overlay on the same dest-rect
-   (cape, legs, chest, gloves, helm, off-hand, main-hand). Common/t0 is
-   visible — it is not baked into the body. Not Kenney 16×16 tiles.
+   (cape, legs, chest, gloves, helm, off-hand, main-hand). Overlays always
+   use the **idle** PNG (`*_idle.png`); walk/attack only change the undertunic
+   body clip (`body_walk` / `body_attack`). Common/t0 is visible — it is not
+   baked into the body. Not Kenney 16×16 tiles.
 3. Fallback: class PNG → Kenney paper-doll (Kenney overlays only there).
 
 **GEAR, party HUD, and dungeon** all use `CharacterVisualPainter.paintOwnedHero`
@@ -40,7 +42,7 @@ optional material suffix from equipped `armorType`.
 
 | Mode | Source | Used for |
 |------|--------|----------|
-| Body extract | `_src` → `build_owned_gear_layers.py` | undertunic, helm/chest/legs/cloak/hands |
+| Body extract | `_src` → `build_owned_gear_layers.py` | undertunic per anim; armor extract **idle only** |
 | Authored weapon | `char/gear/_authored/` | shared weapons / shields / frills |
 | Kenney / custom icons | `KenneyAssets` / `CustomAssets` | jewelry, flask, empty shoulder/waist slots |
 
@@ -56,8 +58,8 @@ by `tool/make_gear_slot_icons.py` at the end of `build_owned_gear_layers.py`.
 ## Pipeline
 
 ```text
-PartyHero.gearAffinity → BodyFamilyCatalog → body_<anim>.png
-PartyHero.equipped     → visualSetId → OwnedGearAssets path + rarity tint
+PartyHero.gearAffinity → BodyFamilyCatalog → body_<anim>.png (idle/walk/attack)
+PartyHero.equipped     → visualSetId → OwnedGearAssets idle overlay + rarity tint
 SpatialActor signals   → HeroAnimController → anim + frame
 Canvas: paintOwnedHero (body + armor same dest rect; hand items
 grip-aligned to owned anchors via `OwnedGearGrips`)

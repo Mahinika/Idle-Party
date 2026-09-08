@@ -7,10 +7,15 @@ import 'hero_anim_state.dart';
 ///
 /// Family armor lives under `<family>/gear/`. Weapons and shields are shared
 /// under `char/gear/` so every body holds the same sword.
+///
+/// **Model:** undertunic bodies have idle/walk/attack clips
+/// ([BodyFamilyCatalog]). Equipped overlays always resolve to `*_idle.png`
+/// — dungeon walk/attack poses the body only; grip anchors swing weapons.
 abstract final class OwnedGearAssets {
   static const String root = 'assets/custom/char';
 
-  static const List<String> kAnims = ['idle', 'walk', 'attack'];
+  /// Shipped overlay clips (idle only). Body clips live on [BodyFamilyCatalog].
+  static const List<String> kOverlayAnims = ['idle'];
 
   /// Family-aligned armor silhouettes we ship (rarity tints in paint).
   /// Tier silhouettes stay for old saves; named models come from the catalog.
@@ -86,12 +91,6 @@ abstract final class OwnedGearAssets {
 
   static String sharedGear(String setId, String anim) =>
       '$root/gear/${setId}_$anim.png';
-
-  static String animFile(HeroAnimKind kind) => switch (kind) {
-    HeroAnimKind.walk || HeroAnimKind.hit => 'walk',
-    HeroAnimKind.attack || HeroAnimKind.cast => 'attack',
-    _ => 'idle',
-  };
 
   /// Map any catalog id onto a shipped PNG id (t0/t2 silhouettes).
   static String silhouetteId(String visualSetId) {
@@ -177,6 +176,8 @@ abstract final class OwnedGearAssets {
     return visualSetId;
   }
 
+  /// Overlay path for [visualSetId]. Always `*_idle.png` — [anim] is kept for
+  /// call-site symmetry with body clips but does not change the PNG stem.
   static String? pathFor({
     required String visualSetId,
     required BodyFamily family,
@@ -187,36 +188,36 @@ abstract final class OwnedGearAssets {
     final stem = visualSetId.split('_').first;
     // Shoulders / belt fold into chest+legs art — no extra owned PNG.
     if (stem == 'shoulder' || stem == 'waist') return null;
-    final a = animFile(anim);
+    // Ignore [anim]: walk/attack only change BodyFamilyCatalog body clips.
+    const overlayAnim = 'idle';
     var fileStem = shippedFileStem(visualSetId);
     if (isSharedSet(visualSetId)) {
-      return sharedGear(fileStem, a);
+      return sharedGear(fileStem, overlayAnim);
     }
     fileStem = materialFileStem(
       fileStem,
       family: family,
       armorType: armorType,
     );
-    return familyGear(family, fileStem, a);
+    return familyGear(family, fileStem, overlayAnim);
   }
 
-  /// Precache list: overlays + BAG `*_icon` crops (boots icons included).
+  /// Precache list: idle overlays + BAG `*_icon` crops (boots icons included).
+  ///
+  /// Bodies precache via [BodyFamilyCatalog.allAssetPaths]. Walk/attack use
+  /// the same idle gear overlays on poser body clips.
   static List<String> get allAssetPaths {
     final out = <String>{};
     for (final family in BodyFamily.values) {
       for (final id in kFamilySetIds) {
-        for (final anim in kAnims) {
-          out.add(familyGear(family, id, anim));
-        }
+        out.add(familyGear(family, id, 'idle'));
         out.add(familyGear(family, id, 'idle').replaceFirst('_idle.png', '_icon.png'));
       }
       out.add('$root/${family.name}/gear/boots_t0_icon.png');
       out.add('$root/${family.name}/gear/boots_t2_icon.png');
     }
     for (final id in kRogueMailSetIds) {
-      for (final anim in kAnims) {
-        out.add(familyGear(BodyFamily.rogue, id, anim));
-      }
+      out.add(familyGear(BodyFamily.rogue, id, 'idle'));
       out.add(
         familyGear(BodyFamily.rogue, id, 'idle').replaceFirst('_idle.png', '_icon.png'),
       );
@@ -224,9 +225,7 @@ abstract final class OwnedGearAssets {
     out.add('$root/rogue/gear/boots_mail_t0_icon.png');
     out.add('$root/rogue/gear/boots_mail_t2_icon.png');
     for (final id in kHealerPlateSetIds) {
-      for (final anim in kAnims) {
-        out.add(familyGear(BodyFamily.healer, id, anim));
-      }
+      out.add(familyGear(BodyFamily.healer, id, 'idle'));
       out.add(
         familyGear(
           BodyFamily.healer,
@@ -238,15 +237,11 @@ abstract final class OwnedGearAssets {
     out.add('$root/healer/gear/boots_plate_t0_icon.png');
     out.add('$root/healer/gear/boots_plate_t2_icon.png');
     for (final id in kSharedSetIds) {
-      for (final anim in kAnims) {
-        out.add(sharedGear(id, anim));
-      }
+      out.add(sharedGear(id, 'idle'));
       out.add(sharedGear(id, 'idle').replaceFirst('_idle.png', '_icon.png'));
     }
     for (final id in EquipmentModelCatalog.authoredSharedIds) {
-      for (final anim in kAnims) {
-        out.add(sharedGear(id, anim));
-      }
+      out.add(sharedGear(id, 'idle'));
       out.add(sharedGear(id, 'idle').replaceFirst('_idle.png', '_icon.png'));
     }
     return out.toList(growable: false);

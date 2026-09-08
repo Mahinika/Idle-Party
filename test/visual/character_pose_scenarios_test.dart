@@ -6,6 +6,7 @@ import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/visual/anchor_table.dart';
+import 'package:idle_party/visual/body_family.dart';
 import 'package:idle_party/visual/character_layer.dart';
 import 'package:idle_party/visual/character_visual_painter.dart';
 import 'package:idle_party/visual/character_visual_pose.dart';
@@ -716,7 +717,7 @@ void main() {
     );
   });
 
-  test('owned walk pose uses walk overlay files, not Kenney cells', () {
+  test('owned walk pose uses idle overlays on walk body clip', () {
     final hero = nakedWarrior().copyWith(
       equipped: {
         EquipmentSlot.head: GameLogic.createEquipment(
@@ -733,6 +734,10 @@ void main() {
         ),
       },
     );
+    expect(
+      BodyFamilyCatalog.assetFor(hero, HeroAnimKind.walk),
+      'assets/custom/char/warrior/body_walk.png',
+    );
     final pose = CharacterVisualPose.resolve(
       hero: hero,
       anim: const HeroAnimPose(kind: HeroAnimKind.walk, frame: 0),
@@ -741,7 +746,7 @@ void main() {
     for (final layer in pose.layers.where((l) => l.id != CharacterLayerId.body)) {
       expect(layer.ownedAsset, isNotNull);
       expect(layer.ownedAsset, isNot(contains('kenney')));
-      expect(layer.ownedAsset, contains('_walk.png'));
+      expect(layer.ownedAsset, contains('_idle.png'));
     }
   });
 

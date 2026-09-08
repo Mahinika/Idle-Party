@@ -14,8 +14,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(r"d:\Projects\Personal\idle party\Idle-Party\assets\custom\char")
-TOOL = Path(__file__).resolve().parent
+REPO = Path(__file__).resolve().parents[1]
+ROOT = REPO / "assets" / "custom" / "char"
+TOOL = REPO / "tool"
 # Keep in sync with lib/visual/equipment_model_catalog.dart authoredSharedIds.
 PRESERVE_AUTHORED = {
     "sword_thunderfury",
@@ -36,7 +37,7 @@ PRESERVE_AUTHORED = {
     "frill_prism",
     "frill_soulcodex",
 }
-ANIMS = ("idle", "walk", "attack")
+ANIMS = ("idle",)  # live overlays are idle-only; walk/attack use body clips
 
 
 def sync_authored() -> int:

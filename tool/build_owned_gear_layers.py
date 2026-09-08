@@ -820,11 +820,77 @@ def ensure_shared_weapons(shared: Path, anim: str) -> None:
         )
 
 
+def save_idle_armor_overlays(
+    family: str,
+    anim: str,
+    src: Image.Image,
+    box: tuple[int, int, int, int],
+    face: tuple[int, int, int],
+    gear: Path,
+) -> tuple:
+    """Extract armor from gold master — idle only (walk/attack use these layers)."""
+    chest, legs, cloak, hat, hands = extract_bands(src, face, box, family)
+    if alpha_count(cloak) < 20:
+        cloak = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+
+    # Resolve cape. Rogue/mage: thicken for LIVE only to a stable target.
+    # Never write thickened output into _authored (authored stays hand input).
+    if family in ("rogue", "mage"):
+        target = 3300 if family == "rogue" else 3200
+        extract_ok = alpha_count(cloak) >= 20
+        base = cloak if extract_ok else Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+        auth_p = authored_path(family, "cloak_t0", anim)
+        if auth_p is not None:
+            authored = load_authored(auth_p)
+            ac = alpha_count(authored)
+            if ac >= 20:
+                if ac > target + 800 and extract_ok:
+                    base = cloak
+                else:
+                    base = authored
+        if alpha_count(base) >= 20:
+            cloak0 = (
+                thicken_cape_to_target(base, target=target, max_passes=6)
+                if alpha_count(base) < target
+                else base.copy()
+            )
+        else:
+            cloak0 = base
+    else:
+        cloak0 = maybe_authored(family, "cloak_t0", anim, cloak)
+
+    def save_set(set_id: str, im: Image.Image) -> Image.Image:
+        final = maybe_authored(family, set_id, anim, im)
+        if set_id.startswith("helm_"):
+            final = register_helm_to_head(final, src, face, box)
+        final.save(gear / f"{set_id}_{anim}.png")
+        return final
+
+    chest0 = save_set("chest_t0", chest)
+    save_set("chest_t2", rarefy_armor(chest0))
+    legs0 = save_set("legs_t0", legs)
+    save_set("legs_t2", rarefy_armor(legs0))
+    cloak0.save(gear / f"cloak_t0_{anim}.png")
+    cloak2 = rarefy_cloak(cloak0) if cloak0.getbbox() else cloak0
+    auth_t2 = authored_path(family, "cloak_t2", anim)
+    if auth_t2 is not None:
+        loaded_t2 = load_authored(auth_t2)
+        if alpha_count(loaded_t2) > alpha_count(cloak2) + 80:
+            cloak2 = loaded_t2
+    cloak2.save(gear / f"cloak_t2_{anim}.png")
+    save_set("helm_t0", make_helm(family, False, hat, src, face, box))
+    save_set("helm_t2", make_helm(family, True, hat, src, face, box))
+    hands0 = save_set("hands_t0", hands)
+    save_set("hands_t2", rarefy_armor(hands0) if hands0.getbbox() else hands0)
+    return chest0, legs0, cloak0, hands0, hat
+
+
 def process_family(family: str) -> dict:
     out = {}
     gear = ROOT / family / "gear"
     gear.mkdir(parents=True, exist_ok=True)
     (gear / "_authored").mkdir(parents=True, exist_ok=True)
+    idle_armor = None
     for anim in ANIMS:
         src = load128(ensure_src(family, anim))
         box = bbox(src)
@@ -832,80 +898,26 @@ def process_family(family: str) -> dict:
         body = paint_undertunic(src, family, face, box)
         body.save(ROOT / family / f"body_{anim}.png")
 
-        chest, legs, cloak, hat, hands = extract_bands(src, face, box, family)
-        if alpha_count(cloak) < 20:
-            cloak = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-
-        # Resolve cape. Rogue/mage: thicken for LIVE only to a stable target.
-        # Never write thickened output into _authored (authored stays hand input).
-        if family in ("rogue", "mage"):
-            if family == "rogue":
-                target = 3300 if anim == "idle" else (2400 if anim == "walk" else 1900)
-            else:
-                target = 3200 if anim == "idle" else (2600 if anim == "walk" else 2300)
-            extract_ok = alpha_count(cloak) >= 20
-            base = cloak if extract_ok else Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-            auth_p = authored_path(family, "cloak_t0", anim)
-            if auth_p is not None:
-                authored = load_authored(auth_p)
-                ac = alpha_count(authored)
-                if ac >= 20:
-                    # Prefer authored. Only fall back to extract when authored ran away.
-                    if ac > target + 800 and extract_ok:
-                        base = cloak
-                    else:
-                        base = authored
-            if alpha_count(base) >= 20:
-                cloak0 = (
-                    thicken_cape_to_target(base, target=target, max_passes=6)
-                    if alpha_count(base) < target
-                    else base.copy()
-                )
-            else:
-                cloak0 = base
-            # Mage attack extract is empty — authored often matches walk. Sway
-            # live attack so the cape moves with the cast/swing pose.
-            if family == "mage" and anim == "attack" and alpha_count(cloak0) >= 20:
-                cloak0 = shift_layer(cloak0, -3, 2)
+        if anim == "idle":
+            chest0, legs0, cloak0, hands0, hat = save_idle_armor_overlays(
+                family, anim, src, box, face, gear
+            )
+            idle_armor = (chest0, legs0, cloak0, hands0, hat)
+            out[anim] = (box, face, src, body, chest0, legs0, cloak0, hands0, hat)
+            print(
+                "ok",
+                family,
+                anim,
+                "cloak_px",
+                alpha_count(cloak0),
+                "hat_px",
+                alpha_count(hat),
+            )
         else:
-            cloak0 = maybe_authored(family, "cloak_t0", anim, cloak)
-
-        def save_set(set_id: str, im: Image.Image) -> Image.Image:
-            final = maybe_authored(family, set_id, anim, im)
-            if set_id.startswith("helm_"):
-                final = register_helm_to_head(final, src, face, box)
-            final.save(gear / f"{set_id}_{anim}.png")
-            return final
-
-        # t2 must rarefy the *resolved* t0 (authored wins), not the raw extract.
-        chest0 = save_set("chest_t0", chest)
-        save_set("chest_t2", rarefy_armor(chest0))
-        legs0 = save_set("legs_t0", legs)
-        save_set("legs_t2", rarefy_armor(legs0))
-        # Cape t0 already resolved/thickened above — write live only.
-        cloak0.save(gear / f"cloak_t0_{anim}.png")
-        cloak2 = rarefy_cloak(cloak0) if cloak0.getbbox() else cloak0
-        auth_t2 = authored_path(family, "cloak_t2", anim)
-        if auth_t2 is not None:
-            loaded_t2 = load_authored(auth_t2)
-            if alpha_count(loaded_t2) > alpha_count(cloak2) + 80:
-                cloak2 = loaded_t2
-        cloak2.save(gear / f"cloak_t2_{anim}.png")
-        save_set("helm_t0", make_helm(family, False, hat, src, face, box))
-        save_set("helm_t2", make_helm(family, True, hat, src, face, box))
-        hands0 = save_set("hands_t0", hands)
-        save_set("hands_t2", rarefy_armor(hands0) if hands0.getbbox() else hands0)
-
-        out[anim] = (box, face, src, body, chest0, legs0, cloak0, hands0, hat)
-        print(
-            "ok",
-            family,
-            anim,
-            "cloak_px",
-            alpha_count(cloak0),
-            "hat_px",
-            alpha_count(hat),
-        )
+            assert idle_armor is not None
+            chest0, legs0, cloak0, hands0, hat = idle_armor
+            out[anim] = (box, face, src, body, chest0, legs0, cloak0, hands0, hat)
+            print("ok", family, anim, "body_only overlays=idle")
     return out
 
 
@@ -940,7 +952,7 @@ def main() -> None:
     built = {}
     for family in FAMILIES:
         built[family] = process_family(family)
-    for anim in ANIMS:
+    for anim in ("idle",):
         ensure_shared_weapons(shared, anim)
     for family in FAMILIES:
         write_armor_preview(family, built[family])

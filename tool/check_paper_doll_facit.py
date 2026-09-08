@@ -15,11 +15,12 @@ REPO = Path(__file__).resolve().parents[1]
 CHAR = REPO / "assets" / "custom" / "char"
 TOOL = REPO / "tool"
 FAMILIES = ("warrior", "healer", "mage", "rogue")
-ANIMS = ("idle", "walk", "attack")
 
-# Idle only is the ship gate. Walk/attack still print diffs (extract drift).
-# Tuned so invent ellipses fail; current idle extracts pass (mage ~0.30).
+# Idle facit gate vs dressed _src. Walk/attack dungeon uses idle overlays on
+# poser body clips — not a separate armor extract per anim.
 MAX_HARD_DIFF_IDLE = 0.38
+BODY_ANIMS = ("idle", "walk", "attack")
+OVERLAY_ANIM = "idle"
 
 
 def hard_diff_ratio(src: Image.Image, prev: Image.Image) -> float:
@@ -51,24 +52,20 @@ def must_exist_128(path: Path) -> str | None:
     return None
 
 
-def armor_stack(family: str, anim: str) -> Image.Image:
-    """Cape-behind stack vs gold master (same as write_armor_preview).
-
-    Dart paints owned cape in front for dungeon readability; facit compares
-    to dressed _src, where the cape is part of the silhouette.
-    """
+def armor_stack(family: str, body_anim: str = "idle") -> Image.Image:
+    """Idle overlays on [body_anim] undertunic (facit idle uses body_idle)."""
     gear = CHAR / family / "gear"
-    body = Image.open(CHAR / family / f"body_{anim}.png").convert("RGBA")
+    body = Image.open(CHAR / family / f"body_{body_anim}.png").convert("RGBA")
     layers = [
-        Image.open(gear / f"cloak_t0_{anim}.png").convert("RGBA"),
+        Image.open(gear / f"cloak_t0_{OVERLAY_ANIM}.png").convert("RGBA"),
         body,
-        Image.open(gear / f"legs_t0_{anim}.png").convert("RGBA"),
-        Image.open(gear / f"chest_t0_{anim}.png").convert("RGBA"),
-        Image.open(gear / f"hands_t0_{anim}.png").convert("RGBA"),
+        Image.open(gear / f"legs_t0_{OVERLAY_ANIM}.png").convert("RGBA"),
+        Image.open(gear / f"chest_t0_{OVERLAY_ANIM}.png").convert("RGBA"),
+        Image.open(gear / f"hands_t0_{OVERLAY_ANIM}.png").convert("RGBA"),
     ]
-    auth_helm = gear / "_authored" / f"helm_t0_{anim}.png"
+    auth_helm = gear / "_authored" / f"helm_t0_{OVERLAY_ANIM}.png"
     if family in ("mage", "healer") or not auth_helm.exists():
-        layers.append(Image.open(gear / f"helm_t0_{anim}.png").convert("RGBA"))
+        layers.append(Image.open(gear / f"helm_t0_{OVERLAY_ANIM}.png").convert("RGBA"))
     out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
     for layer in layers:
         out = Image.alpha_composite(out, layer)
@@ -92,13 +89,15 @@ def check_files() -> list[str]:
     errors: list[str] = []
     armor = ("cloak_t0", "legs_t0", "chest_t0", "hands_t0", "helm_t0")
     for family in FAMILIES:
-        for anim in ANIMS:
+        for anim in BODY_ANIMS:
             errors.append(must_exist_128(CHAR / family / f"body_{anim}.png"))
             errors.append(must_exist_128(CHAR / family / "_src" / f"body_{anim}.png"))
-            for stem in armor:
-                errors.append(
-                    must_exist_128(CHAR / family / "gear" / f"{stem}_{anim}.png")
+        for stem in armor:
+            errors.append(
+                must_exist_128(
+                    CHAR / family / "gear" / f"{stem}_{OVERLAY_ANIM}.png"
                 )
+            )
     shared = (
         "sword_t0",
         "staff_t0",
@@ -110,8 +109,7 @@ def check_files() -> list[str]:
         "frill_t0",
     )
     for stem in shared:
-        for anim in ANIMS:
-            errors.append(must_exist_128(CHAR / "gear" / f"{stem}_{anim}.png"))
+        errors.append(must_exist_128(CHAR / "gear" / f"{stem}_{OVERLAY_ANIM}.png"))
     return [e for e in errors if e]
 
 
@@ -147,21 +145,6 @@ def main() -> int:
         )
         if status == "FAIL":
             failed += 1
-
-    print("WALK/ATTACK (info, not gated: dungeon extract still drifts)")
-    for family in FAMILIES:
-        for anim in ("walk", "attack"):
-            src_path = CHAR / family / "_src" / f"body_{anim}.png"
-            if not src_path.exists():
-                print("info", family, anim, "missing _src")
-                continue
-            try:
-                stack = armor_stack(family, anim)
-            except FileNotFoundError as exc:
-                print("info", family, anim, "stack", exc)
-                continue
-            ratio = hard_diff_ratio(Image.open(src_path), stack)
-            print("info", family, anim, f"diff={ratio:.3f}")
 
     if failed:
         print(f"{failed} facit check(s) failed")

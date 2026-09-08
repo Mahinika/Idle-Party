@@ -11,12 +11,13 @@ Path: `assets/custom/char/<family>/body_<anim>.png`
 
 - **128×128** RGBA, transparent bg, front-facing. Body is an **undertunic**
   (skin + hair + simple cloth). Equipped gear is overlays — including common.
-- Overlays: `<family>/gear/<setId>_<anim>.png` and shared `char/gear/` weapons.
-  Full 128 canvas, never bbox-cropped.
+- **Body** clips: `body_idle` / `body_walk` / `body_attack`.
+- **Overlays** (armor + weapons): idle only (`<setId>_idle.png`). Walk/attack
+  in dungeon reuse those idle layers on the poser body.
 - Catalog: `lib/visual/body_family.dart` + `lib/visual/owned_gear_assets.dart`
 - Enemies are **not** in this pass.
 
-Rebuild from dressed `_src/` gold master (extract only — no invented helms).
+Rebuild from dressed `_src/` gold master (armor extract from **idle** only).
 Do not run `process_char_bodies` on gear — it crops:
 
 ```bash

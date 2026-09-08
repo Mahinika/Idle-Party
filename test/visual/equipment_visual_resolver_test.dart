@@ -436,14 +436,14 @@ void main() {
       );
     });
 
-    test('staff_t0 is shared set and returns path', () {
+    test('staff_t0 is shared set and returns idle overlay even on attack', () {
       expect(OwnedGearAssets.isSharedSet('staff_t0'), isTrue);
       final path = OwnedGearAssets.pathFor(
         visualSetId: 'staff_t0',
         family: BodyFamily.mage,
         anim: HeroAnimKind.attack,
       );
-      expect(path, 'assets/custom/char/gear/staff_t0_attack.png');
+      expect(path, 'assets/custom/char/gear/staff_t0_idle.png');
     });
 
     test('helm_t0 family path unchanged (no regression)', () {

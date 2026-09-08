@@ -42,8 +42,8 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
 ## Workflow (mandatory order)
 
 1. Drop / update dressed `_src/body_*.png` (owned art, same 128 origin).
-2. Run `py tool/build_owned_gear_layers.py` — **extract / stamp from `_src` only**
-   for body + armor + hat/hood. No `ImageDraw` helms or capes.
+2. Run `py tool/build_owned_gear_layers.py` — **extract armor from `_src/body_idle`
+   only**; walk/attack rebuild undertunic bodies only. No `ImageDraw` helms or capes.
 3. Inspect `tool/preview_doll_<family>.png` (armor stack). Must read as the same
    character as `_src`, not a grey mushroom head.
 4. Run `py tool/check_paper_doll_facit.py` — composites **live** body+overlays
@@ -75,7 +75,12 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
   readability must **not** overwrite `_authored` masters
 - 2H hides off-hand. Legs win over boots (BAG boots icon = foot-band crop).
   Shoulders/waist fold into chest+legs (`pathFor` null)
-- Own PNG per idle/walk/attack. Missing clip → idle fallback, never Kenney on owned
+- Own **body** PNG per idle/walk/attack. **Armor/weapon overlays** ship
+  **idle-only** live PNGs (`OwnedGearAssets.pathFor` → `*_idle.png`). Do not
+  regenerate live `*_walk` / `*_attack` overlays. Missing body clip → idle
+  fallback, never Kenney on owned
+- Leftover walk/attack under `gear/_authored/` may exist as art archive — not
+  shipped live overlays
 
 ## Authored overrides
 
@@ -96,11 +101,11 @@ flutter test test/visual/character_pose_scenarios_test.dart \
 
 Common chest must add a torso layer (`chest_t0_*.png`). Empty chest = body only.
 Jewelry = no body layer. Every `OwnedGearAssets.allAssetPaths` file exists.
-Facit gate must pass for all four families × idle. Walk/attack diffs print as
-info (dungeon extract still drifts; not a CI fail yet).
+Facit gate must pass for all four families (idle stack vs `_src/body_idle`).
+Dungeon walk/attack = poser body + same idle overlays as GEAR.
 
 ## A56 (both surfaces) — only after preview + facit OK
 
 - Unequipped chest = undertunic. Equip common chest → silhouette changes
 - Helm covers hair; mage hat only when a helm is equipped
-- Dungeon heroes match the GEAR doll (same overlays). Party HUD may look clumpy
+- Dungeon walk/attack heroes match GEAR gear (idle overlays on poser body)

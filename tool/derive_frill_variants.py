@@ -64,19 +64,12 @@ def crop_icon(im: Image.Image, size: int = 64) -> Image.Image:
 
 
 def write_set(stem: str, idle: Image.Image) -> None:
-    # Mild pose variants without inventing geometry
-    walk = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-    walk.paste(idle, (0, 1), idle)
-    attack = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-    attack.paste(idle, (1, -1), idle)
     icon = crop_icon(idle)
     for folder in (GEAR, AUTH):
         folder.mkdir(parents=True, exist_ok=True)
         idle.save(folder / f"{stem}_idle.png")
-        walk.save(folder / f"{stem}_walk.png")
-        attack.save(folder / f"{stem}_attack.png")
     icon.save(GEAR / f"{stem}_icon.png")
-    print(f"wrote {stem} overlays + icon")
+    print(f"wrote {stem} idle overlay + icon")
 
 
 def main() -> None:
