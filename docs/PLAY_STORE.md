@@ -8,8 +8,8 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ⏳ review | **1.12.96 (125)** Alpha AAB submitted 2026-09-05 (SHOP Coming later + POWER wipe tips + production polish backlog). Pre-checks then Google review. Previous live for testers: **1.12.87 (116)**. Alpha countries: all + rest of world. |
-| Production | ⏳ access review | **Production-access application submitted 2026-09-04 ~16:54**. Track still locked until Google grants access. Upload production AAB **1.12.96+125** (or newer) after IARC ads + access. |
+| Closed testing | ⏳ review | **1.12.106 (135)** Alpha AAB submitted 2026-09-08 (dungeon resume / wipe panel / hub chrome quiet). Pre-checks then Google review. Previous live for testers: **1.12.96 (125)**. Alpha countries: all + rest of world. |
+| Production | ⏳ access review | **Production-access application submitted 2026-09-04 ~16:54**. Track still locked until Google grants access. Upload production AAB **1.12.106+135** (or newer) after IARC ads + access. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
 | Data safety form | ⏳ review | Updated 2026-08-21 for AdMob (device IDs collected+shared, advertising purpose) + Advertising ID declaration Yes. Submitted with Alpha **57**. |
@@ -27,7 +27,7 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Owner played **1.12.87+** on A56 (owner OK 2026-09-04)
 - [x] Phone screenshots attached on listing (verified 2026-09-04 — slots filled, Save idle)
 - [ ] IARC ads questionnaire re-done if Console prompts after AdMob / before production AAB
-- [ ] Production access granted by Google → upload production AAB **1.12.96+125** or newer
+- [ ] Production access granted by Google → upload production AAB **1.12.106+135** or newer
 - [ ] Owner play OK on the production candidate build (A56 save) before upload
 - [ ] After production live: AdMob store-link Idle Party
 
