@@ -74,12 +74,12 @@ Install, start a party, and take one more floor.
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.96+** (`pubspec.yaml`). Paste a fresh note when uploading.
+Working ship: **1.12.106+** (`pubspec.yaml`). Paste a fresh note when uploading.
 
 ```
-• SHOP shows Coming later (Play Billing not live) — no fake buy buttons.
-• Wipe panel tips say POWER for ATK/DEF/STA; OPEN POWER opens GOLD tracks.
-• Endgame TODAY can say Fallback · Push Gauntlet PB when the ladder is quiet.
+• Dungeon resume paints the floor fast (no stuck Loading floor…). Wipe panel is one clear sheet.
+• Hub QUIETS vault/KEY/WATCH duplicate chrome; GEAR row says Ranged · Trinkets · Flask.
+• SHOP still Coming later (Play Billing not live). Optional hub POWERUPS ads → Ad Tickets.
 ```
 
 ### Full description honesty (SHOP)

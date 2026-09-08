@@ -6,7 +6,7 @@ Idle Party is a single-player idle RPG. This document describes how the app hand
 
 - **No Idle Party account.** You do not create a username/password with us.
 - **Optional Google Play Games.** You may sign in with Play Games for seasonal leaderboards and cloud save. This is opt-in and not required to play.
-- **Optional rewarded ads.** On the Android app you may choose to watch a short ad (hub **POWERUPS**) for a timed gold and attack boost. Ads do not play unless you start them. Ad serving uses Google AdMob.
+- **Optional rewarded ads.** On the Android app you may choose to watch a short ad (hub **POWERUPS**) for an **Ad Ticket**. You spend tickets on timed boosts (Sharp Edge, Gold Rush, Full Boost, Away Bonus). Ads do not play unless you start them. Ad serving uses Google AdMob.
 - **No analytics servers.** The app does not send gameplay or device data to Idle Party (or third-party analytics) backends.
 - **Local save by default.** Progress is stored on your device (e.g. SharedPreferences / platform equivalent).
 
@@ -41,7 +41,7 @@ On **Android**, if you tap hub **POWERUPS** and watch an ad, Google AdMob may lo
 Hub **POWERUPS** is opt-in:
 
 - You choose when to watch. Combat is never interrupted by an ad.
-- One finished ad grants 3 hours of double gold and +25% attack. Further ads add more time (capped).
+- One finished ad grants **1 Ad Ticket**. Spend tickets on Sharp Edge (+25% ATK 60m), Gold Rush (×2 gold 60m), Full Boost (both for 3h), or Away Bonus (next offline gold ×2). Timers stack per buff up to 24h.
 - Google AdMob serves the ad. Idle Party does not run its own ad server.
 - In the EU/EEA, a Google consent form (UMP) may appear before ads can be requested.
 - You can change or withdraw that consent later in **SETTINGS → AD PRIVACY** (Android).

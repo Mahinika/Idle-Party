@@ -11,12 +11,14 @@ Package id: **`com.idleparty.app`**
 | Closed testing | ⏳ review | **1.12.106 (135)** Alpha AAB submitted 2026-09-08 (dungeon resume / wipe panel / hub chrome quiet). Pre-checks then Google review. Previous live for testers: **1.12.96 (125)**. Alpha countries: all + rest of world. |
 | Production | ⏳ access review | **Production-access application submitted 2026-09-04 ~16:54**. Track still locked until Google grants access. Upload production AAB **1.12.106+135** (or newer) after IARC ads + access. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
-| Privacy URL opens in browser | ✅ | Console: `docs/PRIVACY.md` on GitHub (`main` preferred after merge; still OK on feature branch until then). |
-| Data safety form | ⏳ review | Updated 2026-08-21 for AdMob (device IDs collected+shared, advertising purpose) + Advertising ID declaration Yes. Submitted with Alpha **57**. |
-| IARC / content rating | ⏳ ads | Questionnaire said **no ads** (2026-08-08). **Before production:** re-answer ads (hub POWERUPS). Agent cannot open content-ratings (Console redirects to app-list) — owner: Idle Party → **Policy → App content → Content ratings**. |
+| Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
+| Data safety form | ⏳ review | Updated 2026-09-08: delete-account / delete-data URLs → `main` PRIVACY; AdMob device IDs shared; Play Games user IDs / files / other actions; OAuth; encryption in transit. Submitted with Alpha **135** + listing/ads bundle. |
+| IARC / content rating | ⏳ ads | Old questionnaire (2026-08-08) said **no ads**. **Still open:** finish new IARC survey (App content → Content ratings → new questionnaire) and answer ads **Yes** for POWERUPS. Agent started a draft; violence (fantasy creatures) filled — remaining sections + ads need owner finish. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
-| Store listing copy (EN) | ✅ | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md` (Lv100 endgame + World Path level gates). |
+| Store listing copy (EN) | ✅ | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md`. **2026-09-08:** fixed Apex line to **POWER → Craft** (was “Apex forge”). Submitted with policy bundle. |
 | Screenshots + feature graphic | ✅ phone | **Phone screenshots attached** on main listing (2026-09-04 check: 8 phone slots, Save idle = already live). Composed set also in `tool/store_listing/out/` (6×1080×1920). Feature graphic + icon live. |
+| Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
+| Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
 
 ## Production gate (12 × 14)
 
