@@ -161,7 +161,6 @@ class HubHeader extends StatefulWidget {
     required this.willRank,
     required this.collectionScore,
     required this.displayTitle,
-    required this.torch,
     required this.onOpenSettings,
     required this.incomeLine,
     required this.multiplierLine,
@@ -179,7 +178,6 @@ class HubHeader extends StatefulWidget {
   final String willRank;
   final int collectionScore;
   final String displayTitle;
-  final double torch;
   final VoidCallback onOpenSettings;
   final String incomeLine;
   final String multiplierLine;

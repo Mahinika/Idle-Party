@@ -484,6 +484,7 @@ class _HubScreenState extends State<HubScreen>
     );
     final short = GameTheme.isShortHeight(context);
     final selectedDungeon = DungeonCatalog.byId(_selectedId);
+    final chase = HubChase.forState(state);
 
     return Stack(
       fit: StackFit.expand,
@@ -520,36 +521,32 @@ class _HubScreenState extends State<HubScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              AnimatedBuilder(
-                                animation: _torch,
-                                builder: (context, _) {
-                                  final chaseNow = HubChase.forState(state);
-                                  return HubHeader(
-                                  ascensionLevel: state.ascensionLevel,
-                                  bossFloor: bossFloor,
-                                  gold: state.gold,
-                                  essence: state.essence,
-                                  willRank: state.willRankTitle,
-                                  collectionScore: state.collectionScore,
-                                  displayTitle: state.displayTitle,
-                                  torch: 0.55 + (_torch.value * 0.45),
-                                  onOpenSettings: () => router.open(
-                                    MenuRoute.more,
-                                    more: MoreSection.settings,
-                                  ),
-                                  incomeLine: GoldIncome.hubRateLine(state),
-                                  multiplierLine:
-                                      GoldIncome.multiplierLine(state),
-                                  partyName: state.partyName,
-                                  plainChrome: GameLogic.plainPlayerChrome(state),
-                                  dimIncome: hubChaseOwnsEndgameRow(
-                                    chaseNow.kind,
-                                  ),
-                                  huntHint: _shortHuntHint(chaseNow),
-                                  blessingStacks:
-                                      state.metaDepth.ascendBlessings,
-                                );
-                                },
+                              // Torch bloom animates alone above — header must
+                              // not rebuild 60×/s (wallet + HubChase.forState).
+                              HubHeader(
+                                ascensionLevel: state.ascensionLevel,
+                                bossFloor: bossFloor,
+                                gold: state.gold,
+                                essence: state.essence,
+                                willRank: state.willRankTitle,
+                                collectionScore: state.collectionScore,
+                                displayTitle: state.displayTitle,
+                                onOpenSettings: () => router.open(
+                                  MenuRoute.more,
+                                  more: MoreSection.settings,
+                                ),
+                                incomeLine: GoldIncome.hubRateLine(state),
+                                multiplierLine:
+                                    GoldIncome.multiplierLine(state),
+                                partyName: state.partyName,
+                                plainChrome:
+                                    GameLogic.plainPlayerChrome(state),
+                                dimIncome: hubChaseOwnsEndgameRow(
+                                  chase.kind,
+                                ),
+                                huntHint: _shortHuntHint(chase),
+                                blessingStacks:
+                                    state.metaDepth.ascendBlessings,
                               ),
                               if (director.offlineSummary != null) ...[
                                 SizedBox(height: short ? 4 : 8),

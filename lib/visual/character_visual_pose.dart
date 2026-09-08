@@ -184,7 +184,7 @@ class CharacterVisualPose {
     final order = layerOrderFor(anim.kind, frame: anim.frame, flipX: flipX);
 
     return CharacterVisualPose(
-      layers: layers,
+      layers: _sortedLayers(layers, order),
       anim: anim,
       flipX: flipX,
       layerOrder: order,
@@ -282,7 +282,7 @@ class CharacterVisualPose {
       owned: true,
     );
     return CharacterVisualPose(
-      layers: layers,
+      layers: _sortedLayers(layers, order),
       anim: anim,
       flipX: flipX,
       layerOrder: order,
@@ -385,10 +385,15 @@ class CharacterVisualPose {
     return buf.toString();
   }
 
-  /// Layers sorted by draw order.
-  List<ResolvedLayer> orderedLayers() {
+  /// Layers already sorted by [layerOrder] at resolve time.
+  List<ResolvedLayer> orderedLayers() => layers;
+
+  static List<ResolvedLayer> _sortedLayers(
+    List<ResolvedLayer> layers,
+    List<CharacterLayerId> order,
+  ) {
     final rank = <CharacterLayerId, int>{
-      for (var i = 0; i < layerOrder.length; i++) layerOrder[i]: i,
+      for (var i = 0; i < order.length; i++) order[i]: i,
     };
     final sorted = List<ResolvedLayer>.from(layers);
     sorted.sort(

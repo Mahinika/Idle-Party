@@ -105,13 +105,12 @@ class _Is2ShellState extends State<Is2Shell> {
         const RepaintBoundary(child: _DungeonScrimBloom()),
         // Map fills the whole scene under the floating chrome so more floor
         // stays visible under FARM / PUSH (camera gets the extra height).
+        // SpatialDungeonView listens to combatFrame only around the map paint —
+        // not the whole dungeon chrome tree (~60 Hz).
         Positioned.fill(
           child: SafeArea(
             bottom: false,
-            child: ListenableBuilder(
-              listenable: d.combatFrame,
-              builder: (context, _) => SpatialDungeonView(director: d),
-            ),
+            child: SpatialDungeonView(director: d),
           ),
         ),
         SafeArea(
