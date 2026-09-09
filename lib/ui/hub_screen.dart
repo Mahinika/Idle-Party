@@ -295,8 +295,11 @@ class _HubScreenState extends State<HubScreen>
           director,
           practice: true,
         );
-      } else if (endgamePrimary && enterAction != null) {
-        // Gauntlet / Rift / … suggested — ENTER DUNGEON stays optional.
+      } else if (endgamePrimary &&
+          enterAction != null &&
+          enterLabel != primaryLabel) {
+        // Gauntlet / Rift / … — keep a normal ENTER under the hunt CTA.
+        // Skip when foldEnter already made primary ENTER KEY (same label twice).
         secondaryLabel = enterLabel;
         secondaryAction = enterAction;
       } else {
