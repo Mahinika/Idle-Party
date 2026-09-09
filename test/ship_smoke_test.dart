@@ -192,7 +192,7 @@ void main() {
     expect(AscendRoadmap.unlockAtAl(1), contains('Holy Paladin'));
     expect(AscendRoadmap.unlockAtAl(2), contains('Beast Mastery'));
     expect(AscendRoadmap.unlockAtAl(2), contains('5th party slot'));
-    expect(AscendRoadmap.unlockAtAl(2), contains('Gold'));
+    expect(AscendRoadmap.unlockAtAl(2), contains('ESSENCE'));
     expect(GameLogic.partySlot5EssenceCost, 80);
     expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
     expect(AscendRoadmap.unlockAtAl(20), contains('Ascension cap'));
