@@ -1368,14 +1368,6 @@ class GameLogic {
     );
   }
 
-  static int partyTrainingCostFor(GameState state) {
-    final totalLevels = state.heroes.fold<int>(
-      0,
-      (sum, hero) => sum + hero.level,
-    );
-    return 16 + (totalLevels * 3) + (state.bossVictories * 6);
-  }
-
   static int forgeTrackTier(GameState state, PartyUpgradeType type) {
     return switch (type) {
       PartyUpgradeType.attack => state.attackBonus ~/ forgeAttackGain,
@@ -1526,8 +1518,6 @@ class GameLogic {
   }
 
   /// Gold Train (+1 Lv party-wide) is retired — levels come from combat XP only.
-  static GameState trainParty(GameState state) => state;
-
   static GameState upgradeAttack(GameState state) =>
       _applyUpgrade(state, type: PartyUpgradeType.attack);
 
@@ -2490,8 +2480,6 @@ class GameLogic {
     }
   }
 
-  // —— Gear loadouts (save/apply up to 3 named presets) ——————————
-
   static GameState _migrateV1(Map<String, dynamic> json) {
     final battleNumber = (json['battleNumber'] as int?) ?? 1;
     final floorNumber = max(1, battleNumber);
@@ -2874,23 +2862,6 @@ class GameLogic {
   }) => GearService.autoDisassembleJunk(state, unstickBag: unstickBag);
   static String rarityFilterLabel(int rarityIndex) =>
       GearService.rarityFilterLabel(rarityIndex);
-  static GameState sellGearForGold(GameState state, String itemId) =>
-      GearService.sellGearForGold(state, itemId);
-  static const int maxLoadouts = GearService.baseMaxLoadouts;
-  static int maxLoadoutsFor(GameState state) =>
-      GearService.maxLoadoutsFor(state);
-  static GameState saveLoadout(
-    GameState state, {
-    required String id,
-    required String name,
-  }) => GearService.saveLoadout(state, id: id, name: name);
-  static GameState deleteLoadout(GameState state, String id) =>
-      GearService.deleteLoadout(state, id);
-  static ({GameState state, int skipped}) applyLoadout(
-    GameState state,
-    String id,
-  ) => GearService.applyLoadout(state, id);
-
   // —— Offline progress: moved to offline_progress.dart ——
   static Future<OfflineProgressResult> applyOfflineProgressAsync(
     GameState state,

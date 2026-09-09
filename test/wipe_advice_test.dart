@@ -258,7 +258,7 @@ void main() {
 
   test('hub hint nudges HUB for gear fixes', () {
     expect(
-      WipeAdvice.hubHintFor('POWER → MARKET has an upgrade'),
+      WipeAdvice.hubHintFor('HUB → GOLD → MARKET has an upgrade'),
       contains('HUB'),
     );
     expect(

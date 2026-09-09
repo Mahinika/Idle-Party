@@ -376,11 +376,8 @@ void main() {
         .copyWith(essence: 2000, ascensionLevel: 10);
     final flaskBefore = GameLogic.marketFlaskCost(state);
     final capBefore = GameLogic.maxAutoSellIlvlCap(state);
-    expect(GameLogic.maxLoadoutsFor(state), 3);
-
     state = GameLogic.buyPrestigeShopItem(state, 'loadout_slot');
     expect(state.metaDepth.loadoutBonusSlots, 1);
-    expect(GameLogic.maxLoadoutsFor(state), 4);
 
     state = GameLogic.buyPrestigeShopItem(state, 'flask_discount');
     expect(state.metaDepth.marketDiscountLevel, 1);

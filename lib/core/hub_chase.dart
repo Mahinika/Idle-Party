@@ -32,7 +32,7 @@ enum HubChaseKind {
   /// Better gear already in BAG - equip before farming or buying.
   equipBag,
 
-  /// Affordable UPGRADE on POWER → Shop when drops miss a slot.
+  /// Affordable UPGRADE on GOLD → MARKET when drops miss a slot.
   marketUpgrade,
   ascend,
   dailyVaultProgress,

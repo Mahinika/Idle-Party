@@ -154,8 +154,6 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
           style: GameTheme.body(size: 14, color: GameTheme.parchment),
         ),
       ),
-      // Legacy — MenuRouter redirects shop/relics to bottom tabs.
-      MoreSection.shop || MoreSection.relics => const SizedBox.shrink(),
       MoreSection.craft => CraftOverlay(director: d),
       MoreSection.quests => SingleChildScrollView(
         child: JobsOverlay(director: d),

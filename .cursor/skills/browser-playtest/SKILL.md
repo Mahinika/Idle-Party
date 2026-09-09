@@ -109,7 +109,7 @@ After boot, set `window.__idlePartySetSpeed(10)` so combat runs ~10 sim steps pe
 
 ## Hub polish smoke
 
-After hub / What’s New / weekly / guides changes, follow **hub-smoke** (`.cursor/skills/hub-smoke/SKILL.md`) — short checklist for MORE badge, weekly n/3, LOADOUTS, and God Hand tip.
+After hub / What’s New / weekly / guides changes, follow **hub-smoke** (`.cursor/skills/hub-smoke/SKILL.md`) — short checklist for MORE badge, weekly n/3, GEAR tabs, and God Hand tip.
 
 ## Pitfalls
 

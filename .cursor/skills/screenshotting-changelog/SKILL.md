@@ -30,7 +30,7 @@ Must hold:
    - Auto What’s New dialog (if shown)
    - Hub with `MORE · NEW`
    - Guides / World Path if zones changed
-4. Optional: compare base branch vs feature branch (stash/checkout) for hub weekly row / LOADOUTS label.
+4. Optional: compare base branch vs feature branch (stash/checkout) for hub weekly row / GEAR tab labels.
 
 ## PR body snippet
 

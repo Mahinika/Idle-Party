@@ -1,9 +1,7 @@
 import 'dart:math';
 
-import '../../models/gear_loadout.dart';
 import '../../models/hero.dart';
 import '../../models/loot.dart';
-import '../../models/proficiency.dart';
 import '../game_logic.dart';
 import '../game_state.dart';
 import '../logic_notices.dart';
@@ -13,7 +11,7 @@ import 'gear_equip.dart';
 import 'gear_scorer.dart';
 import 'gear_stash.dart';
 
-/// Bag cleanup, merge/sell/disassemble, and loadout presets.
+/// Bag cleanup, merge/sell/disassemble.
 abstract final class GearCleanup {
   static GameState unstickBagIfNeeded(GameState state) {
     if (!GearStash.isBagJammed(state)) return state;
@@ -482,16 +480,6 @@ abstract final class GearCleanup {
     );
   }
 
-  static GameState sellGearForGold(GameState state, String itemId) {
-    final inStash = state.gearStash.any((g) => g.id == itemId);
-    if (!inStash) return state;
-    final item = GearStash.findGear(state, itemId);
-    if (item == null) return state;
-    final value = LootPipeline.equipmentGoldValue(item);
-    final next = GearStash.removeGear(state, itemId);
-    return next.copyWith(gold: next.gold + value, lastUpdated: DateTime.now());
-  }
-
   static ({GameState state, int merges}) autoMergeJunk(
     GameState state, {
     int maxMerges = 40,
@@ -644,193 +632,4 @@ abstract final class GearCleanup {
     };
   }
 
-  static const int baseMaxLoadouts = 3;
-  static const int maxLoadoutBonus = 2;
-
-  static const int maxLoadouts = baseMaxLoadouts;
-
-  static int maxLoadoutsFor(GameState state) =>
-      (baseMaxLoadouts + state.metaDepth.loadoutBonusSlots)
-          .clamp(baseMaxLoadouts, baseMaxLoadouts + maxLoadoutBonus);
-
-  static GameState saveLoadout(
-    GameState state, {
-    required String id,
-    required String name,
-  }) {
-    final heroIds = <String>[for (final hero in state.heroes) hero.id];
-    final heroSlots = <Map<String, String>>[
-      for (final hero in state.heroes)
-        <String, String>{
-          for (final entry in hero.equipped.entries)
-            entry.key.name: entry.value.id,
-        },
-    ];
-    final loadout = GearLoadout(
-      id: id,
-      name: name,
-      heroSlotItemIds: heroSlots,
-      heroIds: heroIds,
-    );
-    final next = List<GearLoadout>.from(state.loadouts);
-    final existingIndex = next.indexWhere((l) => l.id == id);
-    final cap = maxLoadoutsFor(state);
-    if (existingIndex >= 0) {
-      next[existingIndex] = loadout;
-    } else {
-      if (next.length >= cap) {
-        next.removeAt(0);
-      }
-      next.add(loadout);
-    }
-    return state.copyWith(loadouts: next, lastUpdated: DateTime.now());
-  }
-
-  static GameState deleteLoadout(GameState state, String id) {
-    if (!state.loadouts.any((l) => l.id == id)) return state;
-    return state.copyWith(
-      loadouts: state.loadouts.where((l) => l.id != id).toList(),
-      lastUpdated: DateTime.now(),
-    );
-  }
-
-  static (EquipmentItem?, GameState) extractItemById(
-    GameState state,
-    String itemId,
-  ) {
-    for (var i = 0; i < state.heroRoster.length; i++) {
-      final hero = state.heroRoster[i];
-      for (final entry in hero.equipped.entries) {
-        if (entry.value.id == itemId) {
-          final nextGear = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped)
-            ..remove(entry.key);
-          final roster = [...state.heroRoster];
-          roster[i] = hero.copyWith(equipped: nextGear);
-          return (entry.value, state.copyWith(heroRoster: roster));
-        }
-      }
-    }
-    for (final item in state.gearStash) {
-      if (item.id == itemId) {
-        return (
-          item,
-          state.copyWith(
-            gearStash: state.gearStash.where((g) => g.id != itemId).toList(),
-          ),
-        );
-      }
-    }
-    for (final item in state.apexVault) {
-      if (item.id == itemId) {
-        return (
-          item,
-          state.copyWith(
-            apexVault: state.apexVault.where((g) => g.id != itemId).toList(),
-          ),
-        );
-      }
-    }
-    return (null, state);
-  }
-
-  static ({GameState state, int skipped}) applyLoadout(
-    GameState state,
-    String id,
-  ) {
-    GearLoadout? loadout;
-    for (final l in state.loadouts) {
-      if (l.id == id) {
-        loadout = l;
-        break;
-      }
-    }
-    if (loadout == null) return (state: state, skipped: 0);
-
-    var next = state;
-    var skipped = 0;
-    final useIds =
-        loadout.heroIds.isNotEmpty &&
-        loadout.heroIds.length == loadout.heroSlotItemIds.length;
-
-    for (
-      var slotIndex = 0;
-      slotIndex < loadout.heroSlotItemIds.length;
-      slotIndex++
-    ) {
-      late int rosterIndex;
-      if (useIds) {
-        final heroId = loadout.heroIds[slotIndex];
-        final idx = next.heroRoster.indexWhere((h) => h.id == heroId);
-        if (idx < 0) continue;
-        rosterIndex = idx;
-      } else {
-        if (slotIndex >= next.heroes.length) break;
-        final activeId = next.heroes[slotIndex].id;
-        final idx = next.heroRoster.indexWhere((h) => h.id == activeId);
-        if (idx < 0) continue;
-        rosterIndex = idx;
-      }
-
-      for (final entry in loadout.heroSlotItemIds[slotIndex].entries) {
-        final slot = EquipmentSlotX.parse(entry.key);
-        final itemId = entry.value;
-        final target = next.heroRoster[rosterIndex];
-        if (target.itemIn(slot)?.id == itemId) {
-          continue;
-        }
-        final extracted = extractItemById(next, itemId);
-        final item = extracted.$1;
-        next = extracted.$2;
-        final resolved = useIds
-            ? next.heroRoster.indexWhere(
-                (h) => h.id == loadout!.heroIds[slotIndex],
-              )
-            : next.heroRoster.indexWhere(
-                (h) => h.id == next.heroes[slotIndex].id,
-              );
-        if (resolved < 0) continue;
-        rosterIndex = resolved;
-        if (item == null) {
-          skipped++;
-          continue;
-        }
-
-        final hero = next.heroRoster[rosterIndex];
-        if (!ClassProficiency.canEquip(
-          role: hero.gearAffinity,
-          level: hero.level,
-          item: item,
-          specId: hero.specId,
-        )) {
-          next = GearStash.stashEquipment(next, item);
-          skipped++;
-          continue;
-        }
-        final current = hero.itemIn(slot);
-        if (current != null) {
-          next = GearStash.stashEquipment(next, current);
-        }
-        final nextGear = Map<EquipmentSlot, EquipmentItem>.from(
-          next.heroRoster[rosterIndex].equipped,
-        )..[slot] = item;
-        final roster = [...next.heroRoster];
-        roster[rosterIndex] = next.heroRoster[rosterIndex].copyWith(
-          equipped: nextGear,
-        );
-        next = next.copyWith(heroRoster: roster);
-      }
-    }
-
-    next = next.copyWith(
-      heroes: next.heroes
-          .map(
-            (hero) => hero.copyWith(
-              currentHp: min(next.effectiveHeroMaxHp(hero), hero.currentHp),
-            ),
-          )
-          .toList(),
-      lastUpdated: DateTime.now(),
-    );
-    return (state: next, skipped: skipped);
-  }
 }

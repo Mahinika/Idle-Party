@@ -39,7 +39,7 @@ page.get_by_role("button", name="ENTER DUNGEON").click()
 ## Idle Party notes
 
 - Title: `NEW GAME` / `CONTINUE`; tips: `SKIP ALL TIPS` / `GOT IT`
-- After hub polish: also record MORE → GUIDES / LOADOUTS (see `hub-smoke`)
+- After hub polish: also record MORE → INFO → GUIDES (see `hub-smoke`)
 - God Hand needs map tap / ready control — document coordinates only if label missing
 
 ## When not to use

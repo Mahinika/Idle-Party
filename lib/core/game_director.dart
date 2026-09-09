@@ -2569,15 +2569,6 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.unequipSlot(_state, slot, heroIndex: heroIndex));
   }
 
-  void sellGearForGold(String itemId) {
-    final before = _state.gold;
-    _applyUpgrade(GameLogic.sellGearForGold(_state, itemId));
-    if (_state.gold > before) {
-      GameAudio.loot();
-      showToast('+${_state.gold - before}g', life: 1.6);
-    }
-  }
-
   void buyMarketFlask() {
     final cost = GameLogic.marketFlaskCost(_state);
     if (_state.gold < cost) {

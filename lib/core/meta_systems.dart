@@ -640,14 +640,14 @@ abstract final class MetaSystems {
       version: '1.12.35',
       bullets: <String>[
         'SETTINGS: text presets S/M/L/XL (wider slider), dungeon zoom Close / Normal / Wide, haptics on/off, keep screen on in dungeon, and RESET DISPLAY DEFAULTS — phone comfort without changing OS resolution.',
-        'POWER → FORGE → GOLD still has ×1 / 5% / 25% / 50% / 100% spend and SPEND ALL · EVEN.',
+        'GOLD forge tracks still have ×1 / 5% / 25% / 50% / 100% spend and SPEND ALL · EVEN.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
     ChangelogRelease(
       version: '1.12.34',
       bullets: <String>[
-        'POWER → FORGE → GOLD: pick ×1 / 5% / 25% / 50% / 100% of wallet gold when buying ATK / DEF / STA / MOVE / HASTE / CRIT, or SPEND ALL · EVEN to split gold round-robin across every track.',
+        'GOLD forge tracks: pick ×1 / 5% / 25% / 50% / 100% of wallet gold when buying ATK / DEF / STA / MOVE / HASTE / CRIT, or SPEND ALL · EVEN to split gold round-robin across every track.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
@@ -728,7 +728,7 @@ abstract final class MetaSystems {
     ChangelogRelease(
       version: '1.12.22',
       bullets: <String>[
-        'POWER → SHOP: Loadout Folio, Apothecary Writ, Junk Magnifier, and Away Ledger — permanent QoL that survives Ascend (extra loadouts, cheaper flasks, higher auto-sell/scrap caps, more Welcome Back rows). (superseded — Loadout Folio delisted; LOADOUTS hidden)',
+        'ESSENCE → KEEP prestige buys: Apothecary Writ, Junk Magnifier, and Away Ledger — permanent QoL that survives Ascend. (Loadout Folio delisted; LOADOUTS presets removed.)',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
@@ -829,7 +829,7 @@ abstract final class MetaSystems {
       version: '1.12.11',
       bullets: <String>[
         'Lighter install and snappier hub: less art baggage, and the map only redraws what moved.',
-        'One bottom bar in hub and dungeon — PARTY / POWER / META keep the same tab when you enter or leave a floor.',
+        'One bottom bar in hub and dungeon — GEAR · GOLD · SHOP · ESSENCE · MORE keep the same tab when you enter or leave a floor.',
         'Every zone has its own boss and trash look (plus pets stop borrowing enemy sprites).',
         'Long AFK returns without freezing the phone; bag cleanup and craft mat toasts stay honest.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
@@ -841,7 +841,7 @@ abstract final class MetaSystems {
         'First hour talks plain English: intro, New Game (Shield / Healer / Damage), and TODAY skip kit names until you beat a boss. No other RPG required.',
         'Guides BASICS / PARTY and first tips explain the loop: party fights on its own, tap ENTER DUNGEON, tap the map to help.',
         'Menus tell you when to look: PARTY / POWER / META show a number when gear, gold or claims are waiting, and PARTY has a one-tap EQUIP 3.',
-        'Calmer menus early — MERGE, LOADOUTS, ROSTER, CAMP, SHOP, KEY, BEAST and CODEX tabs appear when they unlock instead of on day one.',
+        'Calmer menus early — MERGE, ROSTER, ESSENCE TRACKS, KEY, PETS, and CODEX appear when they unlock instead of on day one. (Named gear loadout presets were removed — use BAG + CLEAN BAG.)',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
     ),
@@ -1107,7 +1107,7 @@ abstract final class MetaSystems {
         'New zones: Sunken Tidehold and Ashen Vault (World Path gates 8–9).',
         'Meta: Will/Gauntlet milestone essence, God Hand BAL/FOCUS/WIDE, Iron Will & Chamber Luck relics.',
         'Weekly fortune/iron mods, monthly season bonus on first weekly claim, dungeon armor 4pc combat procs.',
-        'Hub weekly progress, What’s New + mid-meta tips, guides for Tide/Ember & loadouts vs armor sets.',
+        'Hub weekly progress, What’s New + mid-meta tips, guides for Tide/Ember & armor sets (gear preset loadouts removed).',
         'A11y: toast dedupe, Minimal VFX = reduce motion, save backup hint in Settings.',
       ],
     ),
@@ -1119,7 +1119,7 @@ abstract final class MetaSystems {
         'Loot Sprite pet: gold find + loot find passives that scale with level.',
         'Achievements and ascend milestones grant essence rewards.',
         'Challenge clears: +2e per active toggle; Daily Run clear awards +25e.',
-        'Auto Equip / Sell Junk report what they did via toasts.',
+        'Auto Equip reports what it did via toasts. (Sell junk button removed — use CLEAN BAG + auto-sell filters.)',
       ],
     ),
     ChangelogRelease(
@@ -1144,7 +1144,7 @@ abstract final class MetaSystems {
       version: '1.8.x',
       bullets: <String>[
         'In-dungeon offline catch-up runs SpatialCombat (AFK assist + reduced VFX).',
-        'Named gear loadouts, Boss Rush / No-Flask, Daily Run, Ascend milestones.',
+        'Boss Rush / No-Flask, Daily Run, Ascend milestones. (Named gear loadout presets removed later.)',
         'Crystal Spire joins the world path; offline progress summary on hub return.',
         'Achievements, monster/item codex, export/import save, a11y text scale & colorblind.',
         'Keyboard shortcuts: Space (God Hand), Esc (close), B (bag), H (hub).',

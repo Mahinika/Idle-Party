@@ -80,12 +80,6 @@ class _EssenceDockState extends State<EssenceDock>
               child: EssenceKeepPanel(director: widget.director),
             ),
           ),
-          EssencePanel.shop => (
-            label: 'KEEP',
-            body: SingleChildScrollView(
-              child: EssenceKeepPanel(director: widget.director),
-            ),
-          ),
           EssencePanel.relics => (
             label: 'RELICS',
             body: SingleChildScrollView(

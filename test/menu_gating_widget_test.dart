@@ -62,7 +62,6 @@ void main() {
         MenuRoute.key,
       ]),
     );
-    expect(MenuRouter.visibleMoreMetaRows(endgame), isNot(contains(MoreSection.shop)));
   });
 
   test('fresh hub tabs are GEAR GOLD SHOP ESSENCE MORE; meta rows unlock later', () {
@@ -102,13 +101,9 @@ void main() {
         EssencePanel.relics,
       ]),
     );
-    expect(
-      MenuRouter.visibleEssencePanels(afterAscend),
-      isNot(contains(EssencePanel.shop)),
-    );
   });
 
-  test('dungeon tabs are GEAR GOLD SHOP ESSENCE MORE; no overflow collapse', () {
+  test('dungeon tabs are GEAR GOLD SHOP ESSENCE MORE', () {
     final s = GameLogic.createInitialState(now: now);
     expect(
       MenuRouter.visibleDungeonTabs(s),
@@ -122,7 +117,6 @@ void main() {
     );
     final graph = DestinationGraph.dungeon(s);
     expect(graph.destinations, MenuRouter.visibleDungeonTabs(s));
-    expect(graph.hasOverflow, isFalse);
   });
 
   test('hub and dungeon share the same first five tabs; KEY / LEAVE is sixth', () {
@@ -156,8 +150,8 @@ void main() {
     router.open(MenuRoute.more, more: MoreSection.quests);
     expect(router.jobHint.toLowerCase(), contains('daily'));
     router.open(MenuRoute.shop);
-    expect(router.jobHint.toLowerCase(), contains('real-money'));
-    expect(router.jobHint.toLowerCase(), contains('buy soon'));
+    expect(router.jobHint.toLowerCase(), contains('boost'));
+    expect(router.jobHint.toLowerCase(), contains('ad-free'));
     router.open(MenuRoute.gold, gold: GoldPanel.market);
     expect(router.jobHint.toLowerCase(), contains('flask'));
     router.open(MenuRoute.essence, essence: EssencePanel.relics);

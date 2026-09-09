@@ -270,9 +270,6 @@ abstract final class GearService {
   static GameState sellGear(GameState state, String itemId) =>
       GearCleanup.sellGear(state, itemId);
 
-  static GameState sellGearForGold(GameState state, String itemId) =>
-      GearCleanup.sellGearForGold(state, itemId);
-
   static ({GameState state, List<LootDrop> resolved}) applyLootDrops(
     GameState state,
     List<LootDrop> drops,
@@ -340,26 +337,4 @@ abstract final class GearService {
 
   static String rarityFilterLabel(int rarityIndex) =>
       GearCleanup.rarityFilterLabel(rarityIndex);
-
-  // --- Loadouts ---
-  static const int baseMaxLoadouts = GearCleanup.baseMaxLoadouts;
-  static const int maxLoadoutBonus = GearCleanup.maxLoadoutBonus;
-  static const int maxLoadouts = GearCleanup.maxLoadouts;
-
-  static int maxLoadoutsFor(GameState state) =>
-      GearCleanup.maxLoadoutsFor(state);
-
-  static GameState saveLoadout(
-    GameState state, {
-    required String id,
-    required String name,
-  }) => GearCleanup.saveLoadout(state, id: id, name: name);
-
-  static GameState deleteLoadout(GameState state, String id) =>
-      GearCleanup.deleteLoadout(state, id);
-
-  static ({GameState state, int skipped}) applyLoadout(
-    GameState state,
-    String id,
-  ) => GearCleanup.applyLoadout(state, id);
 }

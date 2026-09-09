@@ -14,7 +14,6 @@ class AppBottomBar extends StatelessWidget {
     required this.route,
     required this.destinations,
     required this.onSelect,
-    this.overflow = const <MenuRoute>[],
     this.onLeave,
     this.showReason = false,
   });
@@ -22,7 +21,6 @@ class AppBottomBar extends StatelessWidget {
   final MenuAlerts alerts;
   final MenuRoute route;
   final List<MenuRoute> destinations;
-  final List<MenuRoute> overflow;
   final void Function(MenuRoute route) onSelect;
   final VoidCallback? onLeave;
   final bool showReason;

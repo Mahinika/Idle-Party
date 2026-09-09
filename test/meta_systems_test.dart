@@ -6,8 +6,7 @@ import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_zoom.dart';
-import 'package:idle_party/models/hero.dart';
-import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/models/gear_loadout.dart';
 import 'package:idle_party/models/pet.dart';
 void main() {
   group('Daily run seeding', () {
@@ -79,41 +78,6 @@ void main() {
       final cleared = GameLogic.completeCurrentRoom(state, goldGain: 0);
       expect(cleared.dailyClaimed, isTrue);
       expect(cleared.inDungeon, isFalse);
-    });
-  });
-
-  group('Gear loadouts', () {
-    test('save/apply loadout round-trips equipped gear', () {
-      var state = GameLogic.createInitialState(now: DateTime(2026, 7, 25));
-      final weapon = GameLogic.createEquipment(
-        slot: EquipmentSlot.weapon,
-        rarity: LootRarity.rare,
-        battleNumber: 5,
-        bias: HeroRole.warrior,
-      );
-      final heroes = [
-        state.heroes.first.copyWith(equipped: {EquipmentSlot.weapon: weapon}),
-        ...state.heroes.skip(1),
-      ];
-      state = state.copyWith(heroes: heroes);
-
-      state = GameLogic.saveLoadout(state, id: '1', name: 'Starter Set');
-      expect(state.loadouts, hasLength(1));
-      expect(state.loadouts.first.name, 'Starter Set');
-
-      // Unequip, then re-apply the saved loadout and confirm the weapon
-      // returns to the same hero's weapon slot.
-      final unequippedHero = state.heroes.first.copyWith(equipped: const {});
-      state = state.copyWith(
-        heroes: [unequippedHero, ...state.heroes.skip(1)],
-        gearStash: [...state.gearStash, weapon],
-      );
-
-      state = GameLogic.applyLoadout(state, '1').state;
-      expect(state.heroes.first.equipped[EquipmentSlot.weapon]?.id, weapon.id);
-
-      state = GameLogic.deleteLoadout(state, '1');
-      expect(state.loadouts, isEmpty);
     });
   });
 
@@ -332,7 +296,15 @@ void main() {
         dailyClaimed: true,
         seenChangelogVersion: '1.0.0',
       );
-      state = GameLogic.saveLoadout(state, id: '1', name: 'Loadout A');
+      state = state.copyWith(
+        loadouts: [
+          GearLoadout(
+            id: '1',
+            name: 'Loadout A',
+            heroSlotItemIds: const [],
+          ),
+        ],
+      );
 
       final round = GameLogic.stateFromJson(state.toJson());
       expect(round.achievements, contains('first_floor'));

@@ -10,6 +10,7 @@ import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
+import 'package:idle_party/models/gear_loadout.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
@@ -229,18 +230,6 @@ void main() {
         .where((g) => g.slot == EquipmentSlot.consumable)
         .length;
     expect(flasks, 3);
-  });
-
-  test('trainParty is a no-op (levels come from combat XP)', () {
-    final seeded = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
-    final initial = seeded.copyWith(
-      gold: GameLogic.partyTrainingCostFor(seeded),
-    );
-
-    final trained = GameLogic.trainParty(initial);
-
-    expect(trained.gold, initial.gold);
-    expect(trained.heroes.first.level, initial.heroes.first.level);
   });
 
   test('loot rolls after battle victories', () {
@@ -679,7 +668,15 @@ void main() {
           .map((h) => h.copyWith(level: 12, xp: 40))
           .toList(),
     );
-    ready = GameLogic.saveLoadout(ready, id: 'bis', name: 'BIS');
+    ready = ready.copyWith(
+      loadouts: [
+        GearLoadout(
+          id: 'bis',
+          name: 'BIS',
+          heroSlotItemIds: const [],
+        ),
+      ],
+    );
     expect(ready.loadouts, hasLength(1));
     final stashItem = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
