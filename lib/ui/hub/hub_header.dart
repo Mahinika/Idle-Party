@@ -212,29 +212,25 @@ class _HubHeaderState extends State<HubHeader> {
       children: [
         Row(
           children: [
-            Flexible(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: WalletStrip(
-                    gold: widget.gold,
-                    essence: widget.essence,
-                  ),
-                ),
-              ),
+            // Keep gold/essence readable — never FittedBox-crush them for the
+            // title. IDLE PARTY can scale down instead if the row is tight.
+            WalletStrip(
+              gold: widget.gold,
+              essence: widget.essence,
             ),
             const SizedBox(width: 6),
             Expanded(
-              flex: 5,
-              child: Text(
-                'IDLE PARTY',
-                textAlign: TextAlign.center,
-                style: GameTheme.pixel(
-                  size: 18,
-                  color: GameTheme.torch, // FEEL 274,
-                  height: 1.25,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'IDLE PARTY',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  style: GameTheme.pixel(
+                    size: 18,
+                    color: GameTheme.torch, // FEEL 274,
+                    height: 1.25,
+                  ),
                 ),
               ),
             ),
