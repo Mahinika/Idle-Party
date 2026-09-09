@@ -1,0 +1,36 @@
+---
+description: >-
+  Dated Idle Party product locks — do not weaken without owner yes.
+  Soft content locks may lift when the owner clearly asks to broaden.
+alwaysApply: true
+---
+
+# Product locks (Idle Party)
+
+**Confirmed:** 2026-09-09. Soft locks lift when the owner clearly asks
+(e.g. “ny zon OK”, “gör om God Hand”). Hard locks do not.
+
+## Hard (never weaken from this file)
+
+| Lock | Meaning |
+|------|---------|
+| Legal / IP | Kenney CC0 + owned `assets/custom/` only; no foreign dumps/sprites/code |
+| Phone product | Portrait Android; no iOS / web-as-product |
+| English UI | In-game copy English; chat with owner in their language |
+| Fairness first | Live-light DPS gate / ±20% share — trim HIGH kits |
+| SpatialCombat | One fight sim; extract helpers, don’t add a second |
+| Cheap SHOP | Convenience boosts / ad-free / small QoL — no gacha / BiS-for-cash |
+| Play primary | Install via Play; do not point players at GitHub Releases |
+| Cursor safety | No exploits / foreign dumps — not overridable here |
+
+## Soft (default off until owner revisits)
+
+| Lock | Meaning |
+|------|---------|
+| No new zones | Polish existing 15; no dungeon #16 unless asked |
+| No new classes/specs | Polish kits first |
+| God Hand direction | No philosophy redesign without asking |
+| Default work slice | AL20 hub chase + proven wipe advice + hide dead chrome |
+
+**Escape:** if the owner names a broader goal this turn, follow that — do not
+force AL20-hub polish over an explicit request.

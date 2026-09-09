@@ -22,7 +22,7 @@ Make `AGENTS.md` and `.cursor/rules/*.mdc` accurate for **today’s** codebase a
 1. **Snapshot truth (read, don’t guess)**
    - `pubspec.yaml` version ↔ `MetaSystems.currentVersion` / What’s New
    - `AGENTS.md` (architecture, meta, combat authority, build/test, MCP/skills)
-   - `.cursor/rules/` (`vibe-coder-autopilot`, `owner-preferences`, `definition-of-done`, others)
+   - `.cursor/rules/` (`product-locks`, `vibe-coder-autopilot`, `owner-preferences`, `definition-of-done`, others)
    - Key systems: `GameDirector`, `GameLogic`, `SpatialCombat`, hub/dungeon UI, `DungeonCatalog`, `metaDepth`, Ascend keep/reset
    - Docs that claim “current”: `docs/PLAY_STORE.md`, `docs/CONTENT_CADENCE.md`
      (only if AGENTS/rules point at stale claims)
@@ -40,6 +40,7 @@ Make `AGENTS.md` and `.cursor/rules/*.mdc` accurate for **today’s** codebase a
    - Update **`AGENTS.md`** so architecture + conventions + tooling match code
    - Update **`.cursor/rules/*.mdc`** only where they contradict current behavior or owner prefs
    - Keep rules **short and actionable**; don’t dump audits into rules
+   - Prefer one source per concern (`product-locks` vs workstyle vs skill map) — no preference essays in `AGENTS.md`
    - Do **not** invent new systems; do **not** expand scope into feature work unless drift blocks accurate docs
 
 4. **Report (plain Swedish)**

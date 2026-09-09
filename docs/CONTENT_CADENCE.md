@@ -30,11 +30,12 @@ Each tagged `1.x.y` release should include:
 
 | Om ni tvekar mellan … | Välj |
 |------------------------|------|
-| Ny spec vs polisha kit | Polisha kit |
-| Ny zon vs mer hub-chrome | AL20 hub + dungeon feel först (inga nya zoner). Hub-chrome om chase ljuger. |
+| Ny spec vs polisha kit | Polisha kit (soft lock — lyfts om ägaren ber om ny spec) |
+| Ny zon vs mer hub-chrome | AL20 hub + dungeon feel först. Hub-chrome om chase ljuger. Ny zon bara om ägaren ber. |
 | Cool affinity-nudge vs budget | Budget |
 | Skippa test “för att CI flakar” | Fixa kontraktet — gutta inte |
 | Stor rewrite vs small ship | Small ship + synlig What’s New |
+| Vagt “gör bättre” vs explicit bredare mål | Följ det ägaren namngav; annars default AL20-slice |
 
 ## Non-goals (unless owner asks)
 

@@ -4,45 +4,33 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.108**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.113**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
-The owner describes goals in plain language and does not pick tools/skills.
-Agents **must** choose methods, skills, and verify steps themselves — see
-`.cursor/rules/vibe-coder-autopilot.mdc` and `.cursor/rules/owner-preferences.mdc`.
+Owner describes goals in plain language; agents pick skills/tools/verify alone.
+**Rules (don’t duplicate here):**
+- `.cursor/rules/product-locks.mdc` — hard + soft locks (dated)
+- `.cursor/rules/owner-preferences.mdc` — work loop, ask table, default slice
+- `.cursor/rules/vibe-coder-autopilot.mdc` — skill map + plain Swedish handoff
+- `.cursor/rules/definition-of-done.mdc` — analyze / tests / commit locally
 
-Preferences (do not re-ask): **content/feel over Play busywork**, owner plays
-**AL20 on their own save** (hub chase clarity; in-dungeon wipe advice only when
-the sim knows the deficit), early calm for new players / **endgame grindy OK**,
-**polish kits** before many new specs, **no new zones or classes for now**,
-**hide unused chrome** (BAG Scrap, Sell junk, GEAR Sell, Loadouts) rather than
-polish it, **cheap real-money SHOP** (boosts / ad-free; billing soon), optional hub **POWERUPS** rewarded ads
-(1 ad = 3 hours, stackable), **Android phone-only** (portrait; no
-iOS/web product), **large independent batches**, English in-game copy,
-fairness-first balance. After a batch: **short test list**; **APK only when
-they ask**; wait for owner notes; **then** GitHub APK **and** Play AAB. Testers do not
-get a build before the owner. Commit locally when tests are green; ask before
-push / PR / tag / Play.
-Near-term execution order:
-`docs/CONTENT_CADENCE.md` after 90d M1–M3 shipped. **Default next work:**
-**AL20 hub + dungeon feel** unless the owner names something else.
-Chat in plain Swedish; after code, say what to test and wait. Full detail:
-`.cursor/rules/owner-preferences.mdc`.
+Cadence: `docs/CONTENT_CADENCE.md`. **Default work** when vague: AL20 hub chase
++ proven wipe advice + hide dead chrome — unless the owner names something
+broader. Chat Swedish; short test list → wait. Commit locally when green; ask
+before push / PR / tag / Play.
 
-**UI target:** ship for **portrait phones** (~360–430 px). Owner reference:
-**Samsung Galaxy A56** (1080×2340 → **360×780**). **Live look:** AVD
-`Samsung_A56` + `flutter run` (skill `a56-playtest`). USB phone if plugged in.
-Web is fallback (Playwright / `WebClickBridge`) with forced 360×780 — never
-wide desktop chrome. No hover-only flows for real players — tap / long-press.
+**UI target:** portrait phones (~360–430 px). Reference **Samsung A56**
+(1080×2340 → **360×780**). Live look: AVD `Samsung_A56` + `flutter run`
+(`a56-playtest`). Web = Playwright / `WebClickBridge` fallback only (forced
+360×780). Tap / long-press — no hover-only player flows.
 
-**Distribution today:** GitHub Releases APK/AAB is the live install path
-(`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Play Console has listing +
-closed Alpha (**1.12.83 / 112** submitted 2026-08-29; testers may still be on
-**1.12.78 / 107** until review publishes). Working ship is
-**1.12.96**. Production **12×14** unlocks ~2026-09-04; still wait for owner play
-before a production AAB.
-Do not treat Play as the primary install channel.
+**Distribution today:** **Google Play is the primary install path**
+(`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Store listing:
+`https://play.google.com/store/apps/details?id=com.idleparty.app` (production
+live **1.12.110 / 139**, 2026-09-09). Closed opt-in remains for early builds.
+Do **not** link players to GitHub Releases (repo may be private). Working ship
+in-repo may be ahead of Play — wait for owner play before uploading a new AAB.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
@@ -68,7 +56,14 @@ Layered Canvas heroes: `lib/visual/` + `docs/CHARACTER_VISUALS.md`.
 Dungeon, GEAR, and party HUD share `paintOwnedHero` (undertunic body +
 equipped 128×128 overlays, including common gear). Kenney 16×16 tiles are
 fallback only — never pasted on denser bodies. Items share looks via
-`visualSetId`. Enemies are a separate art pass.
+`visualSetId`. Four bodies serve 31 specs, so each spec washes its own color
+onto the **undertunic** (`HeroIdentity.ownedBodyTintArgb`); gear keeps rarity
+tints. One body clip per anim — walk bob, weapon swing and hit recoil come from
+`CharacterVisualPainter.ownedStepOffset`, not new PNGs. Hand items grip
+opaque pixels (`OwnedGearGrips`, generated). Looks gate:
+`py tool/check_paper_doll_facit.py` (idle facit + t2/material + grips +
+`tool/paper_doll_lock.json` art hashes; `--relock` after deliberate art
+changes). Enemies are a separate art pass.
 
 ## Build & Test
 
@@ -150,7 +145,7 @@ main.dart
 Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
   (flat tabs; one shared bar always visible under sheets; dungeon LEAVE = hub)
   GOLD = forge tracks + market (flasks/listings) · SHOP = real-money convenience
-  (boosts / ad-free; billing soon) · ESSENCE = TRACKS + KEEP (God Hand / buys) + relics + pets
+  (boosts / ad-free; Play Billing on Play installs) · ESSENCE = TRACKS + KEEP (God Hand / buys) + relics + pets
   MORE rows = QUESTS / Craft
   (Blessing / God Hand / REBORN under ESSENCE → KEEP)
   Hub POWERUPS rewarded ads stay on the hub (not under SHOP)
