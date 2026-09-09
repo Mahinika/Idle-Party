@@ -4,6 +4,21 @@ enum MissionType {
   earnGold,
   clearFloors,
   defeatElites,
+
+  /// Timed KEY boss clears (endgame Contract / Week).
+  timedKeys,
+
+  /// Infinity Gauntlet floor clears.
+  gauntletFloors,
+
+  /// Farm Rift timed clears.
+  clearRifts,
+
+  /// Greater Rift timed clears.
+  clearGreaterRifts,
+
+  /// Ashen Crown weekly ticket clear.
+  ashenCrown,
 }
 
 class Mission {
@@ -30,7 +45,7 @@ class Mission {
   /// 0 normal · 1 hard · 2 brutal (affects targets + rewards).
   final int tier;
 
-  /// True after claim when the slot should not pay out again (Daily).
+  /// True after claim when the slot should not pay out again (Daily / Week).
   final bool claimed;
 
   bool get isComplete => progress >= target;

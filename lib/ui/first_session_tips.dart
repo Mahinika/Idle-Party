@@ -83,7 +83,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'contracts',
       title: 'QUESTS',
       body:
-          'QUESTS (MORE) is the kill board — not Daily Vault or Daily Run. '
+          'QUESTS (MORE) has five slots: Daily, Bounty, Side, Week, Contract. '
           'Claim completes; every 3 claims grants a +5e chain bonus.',
     ),
     (

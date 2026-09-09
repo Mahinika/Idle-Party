@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
@@ -14,7 +13,9 @@ class JobsOverlay extends StatelessWidget {
   static String _slotBadge(int index) => switch (index) {
     0 => 'DAILY · easy',
     1 => 'BOUNTY · climb',
-    _ => 'SIDE · variety',
+    2 => 'SIDE · variety',
+    3 => 'WEEK · weekly',
+    _ => 'CONTRACT · big',
   };
 
   @override
@@ -26,6 +27,7 @@ class JobsOverlay extends StatelessWidget {
       children: [
         Text(
           'QUESTS — clear goals while you dungeon. Claim for gold + essence.\n'
+          'Five slots: Daily · Bounty · Side · Week · Contract.\n'
           'Chain ${state.metaDepth.jobChainCount}/3 · the 3rd claim in a row pays +5e extra.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
@@ -109,7 +111,10 @@ class JobsOverlay extends StatelessWidget {
                 ),
                 Text(
                   '+${mission.goldReward}g +${mission.essenceReward}e',
-                  style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+                  style: GameTheme.body(
+                    size: 13,
+                    color: GameTheme.parchmentDim,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 ClipRRect(
@@ -134,8 +139,8 @@ class JobsOverlay extends StatelessWidget {
               label: mission.claimed
                   ? 'CLAIMED'
                   : (director.state.metaDepth.jobChainCount == 2
-                      ? 'CLAIM · chain +5e'
-                      : 'CLAIM'),
+                        ? 'CLAIM · chain +5e'
+                        : 'CLAIM'),
               onPressed: mission.canClaim
                   ? () => director.claimMission(mission.id)
                   : null,

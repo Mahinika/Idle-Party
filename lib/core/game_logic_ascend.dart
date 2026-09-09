@@ -99,6 +99,7 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
     unlockedSpecs: unlockedSpecs,
     ascendBlessings: state.metaDepth.ascendBlessings + 1,
     dailyQuestDate: MetaSystems.dailyDateKey(clock),
+    questWeekKey: GameLogic.isoWeekKey(clock),
     freshPrestige: true,
   );
 
@@ -191,6 +192,7 @@ GameState _rebornAtCapGameState(GameState state, {DateTime? now}) {
     lifetimeAscends: base.metaDepth.lifetimeAscends + 1,
     freshPrestige: true,
     dailyQuestDate: MetaSystems.dailyDateKey(clock),
+    questWeekKey: GameLogic.isoWeekKey(clock),
     noWipeAscendReady: true,
   );
 

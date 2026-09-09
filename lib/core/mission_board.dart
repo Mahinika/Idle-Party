@@ -5,11 +5,14 @@ import 'game_logic.dart';
 import 'game_state.dart';
 import 'meta_systems.dart';
 
-/// Fixed board roles: Daily (0) · Bounty (1) · Side (2).
+/// Fixed board roles: Daily (0) · Bounty (1) · Side (2) · Week (3) · Contract (4).
 abstract final class MissionBoard {
   static const int dailySlot = 0;
   static const int bountySlot = 1;
   static const int sideSlot = 2;
+  static const int weekSlot = 3;
+  static const int contractSlot = 4;
+  static const int boardSize = 5;
 
   /// Endgame ladder continues past 1000 (rungs 0…5).
   static const List<int> bountyTargetsEndgame = <int>[
@@ -32,7 +35,18 @@ abstract final class MissionBoard {
     MissionType.defeatElites,
   ];
 
-  /// Builds the 3-slot QUESTS board (Daily / Bounty / Side).
+  static const List<MissionType> endgameContractTypes = <MissionType>[
+    MissionType.timedKeys,
+    MissionType.gauntletFloors,
+    MissionType.clearRifts,
+    MissionType.clearGreaterRifts,
+    MissionType.ashenCrown,
+  ];
+
+  static bool isEndgameType(MissionType type) =>
+      endgameContractTypes.contains(type);
+
+  /// Builds the 5-slot QUESTS board.
   static List<Mission> createMissionBoard({
     required int ascensionLevel,
     int highestDungeonCleared = 0,
@@ -69,6 +83,22 @@ abstract final class MissionBoard {
         hardmodeLevel: hardmodeLevel,
         random: rng,
       ),
+      createWeekMission(
+        ascensionLevel: ascensionLevel,
+        highestDungeonCleared: highestDungeonCleared,
+        highestFloorCleared: highestFloorCleared,
+        hardmodeLevel: hardmodeLevel,
+        endgame: endgame,
+        random: rng,
+      ),
+      createContractMission(
+        ascensionLevel: ascensionLevel,
+        highestDungeonCleared: highestDungeonCleared,
+        highestFloorCleared: highestFloorCleared,
+        hardmodeLevel: hardmodeLevel,
+        endgame: endgame,
+        random: rng,
+      ),
     ];
   }
 
@@ -87,9 +117,9 @@ abstract final class MissionBoard {
     );
   }
 
-  /// True when the board is the legacy random 3-type layout (pre-QUESTS).
+  /// True when the board is legacy (pre-5-slot) or wrong slot grammar.
   static bool needsQuestBoardRebuild(List<Mission> missions) {
-    if (missions.length != 3) return true;
+    if (missions.length != boardSize) return true;
     if (missions.any(
       (m) =>
           m.id == 'defeat_enemies' ||
@@ -100,10 +130,12 @@ abstract final class MissionBoard {
     }
     return missions[dailySlot].type != MissionType.defeatEnemies ||
         missions[bountySlot].type != MissionType.defeatEnemies ||
-        missions[sideSlot].type == MissionType.defeatEnemies;
+        missions[sideSlot].type == MissionType.defeatEnemies ||
+        !missions[weekSlot].title.startsWith('Week:') ||
+        !missions[contractSlot].title.startsWith('Contract:');
   }
 
-  /// Depth score used to scale Side contract targets with account progress.
+  /// Depth score used to scale Side / Week / Contract targets.
   static int missionDepthScore({
     required int ascensionLevel,
     int highestDungeonCleared = 0,
@@ -117,7 +149,6 @@ abstract final class MissionBoard {
         hardmodeLevel;
   }
 
-  /// Daily kill target: endgame 100; early lower round numbers.
   static int dailyKillTarget({
     required int ascensionLevel,
     required bool endgame,
@@ -220,6 +251,70 @@ abstract final class MissionBoard {
       hardmodeLevel: hardmodeLevel,
       random: rng,
       slot: sideSlot,
+      titlePrefix: '',
+    );
+  }
+
+  /// Heavier weekly goal — claim once per ISO week.
+  static Mission createWeekMission({
+    required int ascensionLevel,
+    int highestDungeonCleared = 0,
+    int highestFloorCleared = 1,
+    int hardmodeLevel = 0,
+    bool endgame = false,
+    MissionType? avoid,
+    Random? random,
+  }) {
+    final rng = random ?? GameLogic.random;
+    final pool = <MissionType>[
+      ...sideTypes,
+      if (endgame) ...endgameContractTypes,
+    ];
+    if (avoid != null && pool.length > 1) pool.remove(avoid);
+    final type = pool[rng.nextInt(pool.length)];
+    return createMission(
+      type: type,
+      ascensionLevel: ascensionLevel,
+      highestDungeonCleared: highestDungeonCleared,
+      highestFloorCleared: highestFloorCleared,
+      hardmodeLevel: hardmodeLevel,
+      random: rng,
+      slot: weekSlot,
+      titlePrefix: 'Week: ',
+      targetScale: 1.75,
+      rewardScale: 1.55,
+      forceTier: 1,
+    );
+  }
+
+  /// Big Contract — endgame KEY/Gauntlet/Rift/Ashen when unlocked.
+  static Mission createContractMission({
+    required int ascensionLevel,
+    int highestDungeonCleared = 0,
+    int highestFloorCleared = 1,
+    int hardmodeLevel = 0,
+    bool endgame = false,
+    MissionType? avoid,
+    Random? random,
+  }) {
+    final rng = random ?? GameLogic.random;
+    final pool = endgame
+        ? List<MissionType>.from(endgameContractTypes)
+        : List<MissionType>.from(sideTypes);
+    if (avoid != null && pool.length > 1) pool.remove(avoid);
+    final type = pool[rng.nextInt(pool.length)];
+    return createMission(
+      type: type,
+      ascensionLevel: ascensionLevel,
+      highestDungeonCleared: highestDungeonCleared,
+      highestFloorCleared: highestFloorCleared,
+      hardmodeLevel: hardmodeLevel,
+      random: rng,
+      slot: contractSlot,
+      titlePrefix: 'Contract: ',
+      targetScale: endgame ? 1.0 : 1.35,
+      rewardScale: endgame ? 1.7 : 1.4,
+      forceTier: endgame ? 0 : 1,
     );
   }
 
@@ -231,6 +326,10 @@ abstract final class MissionBoard {
     int hardmodeLevel = 0,
     Random? random,
     int slot = 0,
+    String titlePrefix = '',
+    double targetScale = 1.0,
+    double rewardScale = 1.0,
+    int? forceTier,
   }) {
     final rng = random ?? GameLogic.random;
     final depth = missionDepthScore(
@@ -244,24 +343,32 @@ abstract final class MissionBoard {
     final roll = rng.nextInt(100);
     final hardBias = min(25, depth * 2);
     final brutalBias = min(15, depth);
-    final tier = roll < (50 - hardBias)
-        ? 0
-        : (roll < (85 - brutalBias) ? 1 : 2);
-    final targetMul = switch (tier) {
-      1 => 1.55,
-      2 => 2.25,
-      _ => 1.0,
-    };
-    final rewardMul = switch (tier) {
-      1 => 1.45,
-      2 => 2.1,
-      _ => 1.0,
-    };
-    final prefix = switch (tier) {
+    final tier =
+        forceTier ??
+        (roll < (50 - hardBias) ? 0 : (roll < (85 - brutalBias) ? 1 : 2));
+    final targetMul =
+        switch (tier) {
+          1 => 1.55,
+          2 => 2.25,
+          _ => 1.0,
+        } *
+        targetScale;
+    final rewardMul =
+        switch (tier) {
+          1 => 1.45,
+          2 => 2.1,
+          _ => 1.0,
+        } *
+        rewardScale;
+    final difficultyPrefix = switch (tier) {
       1 => 'Hard: ',
       2 => 'Brutal: ',
       _ => '',
     };
+    // Week/Contract already carry a role prefix; nest Hard inside it.
+    final prefix = titlePrefix.isEmpty
+        ? difficultyPrefix
+        : '$titlePrefix${difficultyPrefix.isEmpty ? '' : difficultyPrefix}';
 
     int scaleTarget(int base) => max(1, (base * targetMul).round());
     int scaleGold(int base) => max(1, (base * rewardMul).round());
@@ -320,10 +427,60 @@ abstract final class MissionBoard {
         essenceReward: scaleEssence(4 + depth ~/ 2),
         tier: tier,
       ),
+      MissionType.timedKeys => Mission(
+        id: id,
+        type: type,
+        title: '${prefix}Time KEY clears',
+        target: scaleTarget(max(1, 1 + depth ~/ 8)),
+        progress: 0,
+        goldReward: scaleGold(55 + depth * 18),
+        essenceReward: scaleEssence(6 + depth),
+        tier: tier,
+      ),
+      MissionType.gauntletFloors => Mission(
+        id: id,
+        type: type,
+        title: '${prefix}Climb Gauntlet',
+        target: scaleTarget(max(5, 8 + depth ~/ 2)),
+        progress: 0,
+        goldReward: scaleGold(50 + depth * 16),
+        essenceReward: scaleEssence(5 + depth),
+        tier: tier,
+      ),
+      MissionType.clearRifts => Mission(
+        id: id,
+        type: type,
+        title: '${prefix}Clear Farm Rifts',
+        target: scaleTarget(max(1, 1 + depth ~/ 10)),
+        progress: 0,
+        goldReward: scaleGold(48 + depth * 15),
+        essenceReward: scaleEssence(5 + depth),
+        tier: tier,
+      ),
+      MissionType.clearGreaterRifts => Mission(
+        id: id,
+        type: type,
+        title: '${prefix}Clear Ranked GR',
+        target: scaleTarget(1),
+        progress: 0,
+        goldReward: scaleGold(70 + depth * 20),
+        essenceReward: scaleEssence(8 + depth),
+        tier: max(tier, 1),
+      ),
+      MissionType.ashenCrown => Mission(
+        id: id,
+        type: type,
+        title: '${prefix}Beat Ashen Crown',
+        target: 1,
+        progress: 0,
+        goldReward: scaleGold(80 + depth * 22),
+        essenceReward: scaleEssence(10 + depth),
+        tier: max(tier, 1),
+      ),
     };
   }
 
-  /// Picks a replacement Side quest (never defeatEnemies).
+  /// Picks a replacement for Side / Contract (or rebuilds Daily / Bounty / Week).
   static Mission rollReplacementMission(
     GameState state, {
     MissionType? avoid,
@@ -331,13 +488,14 @@ abstract final class MissionBoard {
     Random? random,
   }) {
     final rng = random ?? GameLogic.random;
+    final endgame = GameLogic.endgameUnlocked(state);
     if (slot == dailySlot) {
       return createDailyMission(
         ascensionLevel: state.ascensionLevel,
         highestDungeonCleared: state.highestDungeonCleared,
         highestFloorCleared: state.highestFloorCleared,
         hardmodeLevel: state.hardmodeLevel,
-        endgame: GameLogic.endgameUnlocked(state),
+        endgame: endgame,
         random: rng,
       );
     }
@@ -348,20 +506,43 @@ abstract final class MissionBoard {
         highestFloorCleared: state.highestFloorCleared,
         hardmodeLevel: state.hardmodeLevel,
         bountyRung: state.metaDepth.bountyRung,
-        endgame: GameLogic.endgameUnlocked(state),
+        endgame: endgame,
+        random: rng,
+      );
+    }
+    if (slot == weekSlot) {
+      return createWeekMission(
+        ascensionLevel: state.ascensionLevel,
+        highestDungeonCleared: state.highestDungeonCleared,
+        highestFloorCleared: state.highestFloorCleared,
+        hardmodeLevel: state.hardmodeLevel,
+        endgame: endgame,
+        avoid: avoid,
+        random: rng,
+      );
+    }
+    if (slot == contractSlot) {
+      return createContractMission(
+        ascensionLevel: state.ascensionLevel,
+        highestDungeonCleared: state.highestDungeonCleared,
+        highestFloorCleared: state.highestFloorCleared,
+        hardmodeLevel: state.hardmodeLevel,
+        endgame: endgame,
+        avoid: avoid,
         random: rng,
       );
     }
     final occupied = state.missions
-        .where((m) => m.type != MissionType.defeatEnemies)
+        .where((m) => sideTypes.contains(m.type))
         .map((m) => m.type)
         .toSet();
     if (avoid != null) occupied.remove(avoid);
     final pool = List<MissionType>.from(sideTypes);
     if (avoid != null && pool.length > 1) pool.remove(avoid);
     final fresh = pool.where((t) => !occupied.contains(t)).toList();
-    final type = (fresh.isNotEmpty ? fresh : pool)[
-        rng.nextInt((fresh.isNotEmpty ? fresh : pool).length)];
+    final type = (fresh.isNotEmpty
+        ? fresh
+        : pool)[rng.nextInt((fresh.isNotEmpty ? fresh : pool).length)];
     return createMission(
       type: type,
       ascensionLevel: state.ascensionLevel,
@@ -373,28 +554,48 @@ abstract final class MissionBoard {
     );
   }
 
-  /// Refresh Daily when the UTC calendar day rolls.
+  /// Refresh Daily / Week when UTC day or ISO week rolls.
   static GameState ensureDailyQuest(GameState state, {DateTime? now}) {
-    final day = MetaSystems.dailyDateKey((now ?? DateTime.now()).toUtc());
-    if (state.missions.length != 3) {
+    final clock = (now ?? DateTime.now()).toUtc();
+    final day = MetaSystems.dailyDateKey(clock);
+    final week = GameLogic.isoWeekKey(clock);
+    if (state.missions.length != boardSize ||
+        needsQuestBoardRebuild(state.missions)) {
       return state.copyWith(
         missions: createMissionBoardFor(state),
-        metaDepth: state.metaDepth.copyWith(dailyQuestDate: day),
+        metaDepth: state.metaDepth.copyWith(
+          dailyQuestDate: day,
+          questWeekKey: week,
+        ),
       );
     }
-    if (state.metaDepth.dailyQuestDate == day) return state;
-    final missions = List<Mission>.from(state.missions);
-    missions[dailySlot] = createDailyMission(
-      ascensionLevel: state.ascensionLevel,
-      highestDungeonCleared: state.highestDungeonCleared,
-      highestFloorCleared: state.highestFloorCleared,
-      hardmodeLevel: state.hardmodeLevel,
-      endgame: GameLogic.endgameUnlocked(state),
-    );
-    return state.copyWith(
-      missions: missions,
-      metaDepth: state.metaDepth.copyWith(dailyQuestDate: day),
-    );
+    var missions = List<Mission>.from(state.missions);
+    var md = state.metaDepth;
+    var changed = false;
+    if (md.dailyQuestDate != day) {
+      missions[dailySlot] = createDailyMission(
+        ascensionLevel: state.ascensionLevel,
+        highestDungeonCleared: state.highestDungeonCleared,
+        highestFloorCleared: state.highestFloorCleared,
+        hardmodeLevel: state.hardmodeLevel,
+        endgame: GameLogic.endgameUnlocked(state),
+      );
+      md = md.copyWith(dailyQuestDate: day);
+      changed = true;
+    }
+    if (md.questWeekKey != week) {
+      missions[weekSlot] = createWeekMission(
+        ascensionLevel: state.ascensionLevel,
+        highestDungeonCleared: state.highestDungeonCleared,
+        highestFloorCleared: state.highestFloorCleared,
+        hardmodeLevel: state.hardmodeLevel,
+        endgame: GameLogic.endgameUnlocked(state),
+      );
+      md = md.copyWith(questWeekKey: week);
+      changed = true;
+    }
+    if (!changed) return state;
+    return state.copyWith(missions: missions, metaDepth: md);
   }
 
   static GameState applyMissionProgress(
@@ -404,6 +605,11 @@ abstract final class MissionBoard {
     int goldEarned = 0,
     int floorsCleared = 0,
     int elitesDefeated = 0,
+    int timedKeys = 0,
+    int gauntletFloors = 0,
+    int riftClears = 0,
+    int greaterRiftClears = 0,
+    int ashenClears = 0,
   }) {
     state = ensureDailyQuest(state);
     if (state.missions.isEmpty) {
@@ -413,7 +619,12 @@ abstract final class MissionBoard {
         bossesCleared <= 0 &&
         goldEarned <= 0 &&
         floorsCleared <= 0 &&
-        elitesDefeated <= 0) {
+        elitesDefeated <= 0 &&
+        timedKeys <= 0 &&
+        gauntletFloors <= 0 &&
+        riftClears <= 0 &&
+        greaterRiftClears <= 0 &&
+        ashenClears <= 0) {
       return state;
     }
 
@@ -427,6 +638,11 @@ abstract final class MissionBoard {
         MissionType.earnGold => goldEarned,
         MissionType.clearFloors => floorsCleared,
         MissionType.defeatElites => elitesDefeated,
+        MissionType.timedKeys => timedKeys,
+        MissionType.gauntletFloors => gauntletFloors,
+        MissionType.clearRifts => riftClears,
+        MissionType.clearGreaterRifts => greaterRiftClears,
+        MissionType.ashenCrown => ashenClears,
       };
       if (add <= 0) {
         return mission;
@@ -439,10 +655,16 @@ abstract final class MissionBoard {
     return state.copyWith(missions: updated);
   }
 
-  /// Claims a completed quest. Daily stays until next UTC day; Bounty advances
-  /// rung; Side rolls a fresh non-kill quest. Chain streak unchanged.
-  static GameState claimMission(GameState state, String missionId) {
-    state = ensureDailyQuest(state);
+  /// Claims a completed quest.
+  /// Daily / Week stay claimed until calendar rolls; Bounty advances rung;
+  /// Side / Contract roll fresh goals.
+  static GameState claimMission(
+    GameState state,
+    String missionId, {
+    DateTime? now,
+  }) {
+    final clock = (now ?? DateTime.now()).toUtc();
+    state = ensureDailyQuest(state, now: clock);
     final index = state.missions.indexWhere(
       (mission) => mission.id == missionId,
     );
@@ -457,10 +679,14 @@ abstract final class MissionBoard {
     final missions = List<Mission>.from(state.missions);
     var nextRung = state.metaDepth.bountyRung;
     var nextDailyDate = state.metaDepth.dailyQuestDate;
+    var nextWeekKey = state.metaDepth.questWeekKey;
 
     if (index == dailySlot) {
       missions[index] = mission.copyWith(claimed: true);
-      nextDailyDate = MetaSystems.dailyDateKey(DateTime.now().toUtc());
+      nextDailyDate = MetaSystems.dailyDateKey(clock);
+    } else if (index == weekSlot) {
+      missions[index] = mission.copyWith(claimed: true);
+      nextWeekKey = GameLogic.isoWeekKey(clock);
     } else if (index == bountySlot) {
       final endgame = GameLogic.endgameUnlocked(state);
       final maxRung = bountyRungMax(endgame: endgame);
@@ -484,7 +710,7 @@ abstract final class MissionBoard {
       missions[index] = rollReplacementMission(
         state,
         avoid: mission.type,
-        slot: sideSlot,
+        slot: index,
       );
     }
 
@@ -504,8 +730,9 @@ abstract final class MissionBoard {
         jobChainCount: nextChain,
         bountyRung: nextRung,
         dailyQuestDate: nextDailyDate,
+        questWeekKey: nextWeekKey,
       ),
-      lastUpdated: DateTime.now(),
+      lastUpdated: clock,
     );
   }
 }

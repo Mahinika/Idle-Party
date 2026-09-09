@@ -75,7 +75,8 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'filter_span',
       name: 'Junk Magnifier',
-      description: '+8 auto-sell / auto-disassemble iLvl ceiling in Settings (max +40).',
+      description:
+          '+8 auto-sell / auto-disassemble iLvl ceiling in Settings (max +40).',
       cost: 45,
       minAl: 6,
     ),
@@ -240,6 +241,7 @@ class MetaDepthState {
     this.zoneTrophies = const <String>[],
     this.jobChainCount = 0,
     this.dailyQuestDate = '',
+    this.questWeekKey = '',
     this.bountyRung = 0,
     this.lifetimeFloorClears = 0,
     this.lifetimeBossKills = 0,
@@ -376,7 +378,10 @@ class MetaDepthState {
   /// UTC date key (`yyyy-mm-dd`) for today's Daily quest slot.
   final String dailyQuestDate;
 
-  /// Bounty ladder rung (0..2). Survives Ascend; claim advances.
+  /// ISO week key for the QUESTS Week slot (`yyyy-Www`). Survives Ascend.
+  final String questWeekKey;
+
+  /// Bounty ladder rung (0..5 endgame). Survives Ascend; claim advances.
   final int bountyRung;
 
   final int lifetimeFloorClears;
@@ -613,6 +618,7 @@ class MetaDepthState {
     List<String>? zoneTrophies,
     int? jobChainCount,
     String? dailyQuestDate,
+    String? questWeekKey,
     int? bountyRung,
     int? lifetimeFloorClears,
     int? lifetimeBossKills,
@@ -734,6 +740,7 @@ class MetaDepthState {
       zoneTrophies: zoneTrophies ?? this.zoneTrophies,
       jobChainCount: jobChainCount ?? this.jobChainCount,
       dailyQuestDate: dailyQuestDate ?? this.dailyQuestDate,
+      questWeekKey: questWeekKey ?? this.questWeekKey,
       bountyRung: bountyRung ?? this.bountyRung,
       lifetimeFloorClears: lifetimeFloorClears ?? this.lifetimeFloorClears,
       lifetimeBossKills: lifetimeBossKills ?? this.lifetimeBossKills,
@@ -871,6 +878,7 @@ class MetaDepthState {
     'zoneTrophies': zoneTrophies,
     'jobChainCount': jobChainCount,
     'dailyQuestDate': dailyQuestDate,
+    'questWeekKey': questWeekKey,
     'bountyRung': bountyRung,
     'lifetimeFloorClears': lifetimeFloorClears,
     'lifetimeBossKills': lifetimeBossKills,
@@ -1009,6 +1017,7 @@ class MetaDepthState {
           (json['zoneTrophies'] as List<dynamic>?)?.cast<String>() ?? const [],
       jobChainCount: (json['jobChainCount'] as num?)?.toInt() ?? 0,
       dailyQuestDate: (json['dailyQuestDate'] as String?) ?? '',
+      questWeekKey: (json['questWeekKey'] as String?) ?? '',
       bountyRung: ((json['bountyRung'] as num?)?.toInt() ?? 0).clamp(0, 5),
       lifetimeFloorClears: (json['lifetimeFloorClears'] as num?)?.toInt() ?? 0,
       lifetimeBossKills: (json['lifetimeBossKills'] as num?)?.toInt() ?? 0,
@@ -1030,8 +1039,10 @@ class MetaDepthState {
           (json['claimedRiftMilestones'] as List<dynamic>?)?.cast<String>() ??
           const [],
       grBestTier: ((json['grBestTier'] as num?)?.toInt() ?? 0).clamp(0, 20),
-      grPreferredTier: ((json['grPreferredTier'] as num?)?.toInt() ?? 1)
-          .clamp(1, 20),
+      grPreferredTier: ((json['grPreferredTier'] as num?)?.toInt() ?? 1).clamp(
+        1,
+        20,
+      ),
       lifetimeGrClears: (json['lifetimeGrClears'] as num?)?.toInt() ?? 0,
       claimedGrMilestones:
           (json['claimedGrMilestones'] as List<dynamic>?)?.cast<String>() ??
@@ -1065,8 +1076,10 @@ class MetaDepthState {
           .clamp(0, 2),
       marketDiscountLevel: ((json['marketDiscountLevel'] as num?)?.toInt() ?? 0)
           .clamp(0, 5),
-      filterSpanLevel: ((json['filterSpanLevel'] as num?)?.toInt() ?? 0)
-          .clamp(0, 5),
+      filterSpanLevel: ((json['filterSpanLevel'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        5,
+      ),
       offlineHighlightBonus:
           ((json['offlineHighlightBonus'] as num?)?.toInt() ?? 0).clamp(0, 3),
       seasonKey: (json['seasonKey'] as String?) ?? '',
@@ -1107,38 +1120,44 @@ class MetaDepthState {
       adFreeDailyClaimUtc: (json['adFreeDailyClaimUtc'] as String?) ?? '',
       adFree: (json['adFree'] as bool?) ?? false,
       shopStarterClaimed: (json['shopStarterClaimed'] as bool?) ?? false,
-      shopBagBonusSlots:
-          ((json['shopBagBonusSlots'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      shopBagBonusSlots: ((json['shopBagBonusSlots'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
       monthPassKey: (json['monthPassKey'] as String?) ?? '',
-      monthlyBestTimedKey:
-          ((json['monthlyBestTimedKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
-      monthlyBestGrTier:
-          ((json['monthlyBestGrTier'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      monthlyBestTimedKey: ((json['monthlyBestTimedKey'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
+      monthlyBestGrTier: ((json['monthlyBestGrTier'] as num?)?.toInt() ?? 0)
+          .clamp(0, 20),
       claimedMonthGoals:
           (json['claimedMonthGoals'] as List<dynamic>?)?.cast<String>() ??
           const [],
       challengeBestBossRushKey:
-          ((json['challengeBestBossRushKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+          ((json['challengeBestBossRushKey'] as num?)?.toInt() ?? 0).clamp(
+            0,
+            20,
+          ),
       challengeBestNoFlaskKey:
-          ((json['challengeBestNoFlaskKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+          ((json['challengeBestNoFlaskKey'] as num?)?.toInt() ?? 0).clamp(
+            0,
+            20,
+          ),
       challengeBestTinyKey:
           ((json['challengeBestTinyKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
       worldBossWeekKey: (json['worldBossWeekKey'] as String?) ?? '',
-      worldBossTickets:
-          ((json['worldBossTickets'] as num?)?.toInt() ?? 3).clamp(0, 3),
+      worldBossTickets: ((json['worldBossTickets'] as num?)?.toInt() ?? 3)
+          .clamp(0, 3),
       worldBossClearedWeek: (json['worldBossClearedWeek'] as bool?) ?? false,
       constellationNodes:
           (json['constellationNodes'] as List<dynamic>?)?.cast<String>() ??
           const [],
       constellationPointsEarned:
           (json['constellationPointsEarned'] as num?)?.toInt() ??
-              (json['constellationPointsSpent'] as num?)?.toInt() ??
-              0,
+          (json['constellationPointsSpent'] as num?)?.toInt() ??
+          0,
       constellationPointsSpent:
           (json['constellationPointsSpent'] as num?)?.toInt() ?? 0,
       constellationStarterGranted:
           (json['constellationStarterGranted'] as bool?) ??
-              (json['constellationPointsEarned'] != null),
+          (json['constellationPointsEarned'] != null),
       apexTrialMonthKey: (json['apexTrialMonthKey'] as String?) ?? '',
       apexTrialCleared: (json['apexTrialCleared'] as bool?) ?? false,
       godHandSmashCount: (json['godHandSmashCount'] as num?)?.toInt() ?? 0,

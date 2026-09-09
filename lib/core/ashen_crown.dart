@@ -45,9 +45,12 @@ abstract final class AshenCrown {
         titles: titles,
       ),
     );
-    return BlessingConstellation.grantPoints(
-      rewarded,
-      BlessingConstellation.ashenCrownPointReward,
+    return GameLogic.applyMissionProgress(
+      BlessingConstellation.grantPoints(
+        rewarded,
+        BlessingConstellation.ashenCrownPointReward,
+      ),
+      ashenClears: 1,
     );
   }
 

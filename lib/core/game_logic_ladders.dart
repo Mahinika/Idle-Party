@@ -211,7 +211,9 @@ GameState _resolveRiftSuccess(GameState state) {
     'Rift R$tier timed · +${essence}e · +${gold}g'
         '${unlock > tier + 1 ? ' · unlock R$unlock' : ''}',
   ]);
-  return GameLogic.exitToHubHealed(next);
+  return GameLogic.exitToHubHealed(
+    GameLogic.applyMissionProgress(next, riftClears: 1),
+  );
 }
 
 GameState _resolveRiftFail(GameState state) {
@@ -390,7 +392,9 @@ GameState _resolveGreaterRiftSuccess(GameState state) {
     'Greater Rift GR$tier timed · +${essence}e · +${gold}g'
         '${unlock > tier + 1 ? ' · unlock GR$unlock' : ''}',
   ]);
-  return GameLogic.exitToHubHealed(next);
+  return GameLogic.exitToHubHealed(
+    GameLogic.applyMissionProgress(next, greaterRiftClears: 1),
+  );
 }
 
 GameState _resolveGreaterRiftFail(GameState state) {

@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.114**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.115**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -193,9 +193,10 @@ Ascend).
 **Zone unlock:** party **mean level** (even steps 1…100 across 15 zones) **or**
 prior zone clear. Zone 0 (Sandy) from Lv1. Lifetime gold no longer unlocks zones.
 
-**QUESTS** (MORE row; was bottom-tab JOBS/contracts): 3-slot board — **Daily** (UTC kill
-quest), **Bounty** ladder (100/500/1000 at endgame), **Side** rotating
-non-kill. Claim via TODAY **CLAIM QUESTS** or MORE · QUESTS.
+**QUESTS** (MORE row; was bottom-tab JOBS/contracts): **5-slot** board —
+**Daily** (UTC kill), **Bounty** (ladder; endgame 100…25k), **Side** (non-kill),
+**Week** (ISO-week goal), **Contract** (big goal; endgame KEY / Gauntlet /
+Rift / Ranked GR / Ashen). Claim via TODAY **CLAIM QUESTS** or MORE · QUESTS.
 
 **Hub TODAY** — selection in `HubChase.forState`; every surface reads the same
 words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up

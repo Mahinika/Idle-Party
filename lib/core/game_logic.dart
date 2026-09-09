@@ -2209,6 +2209,12 @@ class GameLogic {
       goldEarned: goldAwarded,
       floorsCleared: 1,
       elitesDefeated: elitesDefeated,
+      gauntletFloors: gauntlet ? 1 : 0,
+      timedKeys: (state.keystoneRunActive &&
+              state.keystoneOutcome.isEmpty &&
+              progressed.keystoneOutcome == 'timed')
+          ? 1
+          : 0,
     );
   }
 
@@ -2391,6 +2397,7 @@ class GameLogic {
             missions: createMissionBoardFor(loaded),
             metaDepth: loaded.metaDepth.copyWith(
               dailyQuestDate: MetaSystems.dailyDateKey(DateTime.now().toUtc()),
+              questWeekKey: isoWeekKey(DateTime.now().toUtc()),
             ),
           );
     next = MissionBoard.ensureDailyQuest(next);
@@ -2973,6 +2980,11 @@ class GameLogic {
     int goldEarned = 0,
     int floorsCleared = 0,
     int elitesDefeated = 0,
+    int timedKeys = 0,
+    int gauntletFloors = 0,
+    int riftClears = 0,
+    int greaterRiftClears = 0,
+    int ashenClears = 0,
   }) => MissionBoard.applyMissionProgress(
     state,
     enemiesDefeated: enemiesDefeated,
@@ -2980,9 +2992,17 @@ class GameLogic {
     goldEarned: goldEarned,
     floorsCleared: floorsCleared,
     elitesDefeated: elitesDefeated,
+    timedKeys: timedKeys,
+    gauntletFloors: gauntletFloors,
+    riftClears: riftClears,
+    greaterRiftClears: greaterRiftClears,
+    ashenClears: ashenClears,
   );
-  static GameState claimMission(GameState state, String missionId) =>
-      MissionBoard.claimMission(state, missionId);
+  static GameState claimMission(
+    GameState state,
+    String missionId, {
+    DateTime? now,
+  }) => MissionBoard.claimMission(state, missionId, now: now);
 
   // —— Encounter budget: moved to encounter_factory.dart ——
   static ({int attack, int hp, int gold}) roomCombatBudget(
