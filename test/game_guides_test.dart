@@ -7,7 +7,12 @@ void main() {
     expect(topics.length, greaterThanOrEqualTo(12));
     final ids = topics.map((t) => t.id).toSet();
     expect(ids.length, topics.length);
-    expect(ids, containsAll(['basics', 'god_hand', 'ascend', 'hardmode']));
+    expect(ids, containsAll(['basics', 'god_hand', 'ascend', 'hardmode', 'gates']));
+    final gates = topics.firstWhere((t) => t.id == 'gates');
+    expect(gates.body, contains('AL20'));
+    expect(gates.body, contains('Daily Vault'));
+    expect(gates.body, contains('Daily Run'));
+    expect(gates.body.toLowerCase(), contains('not the same'));
     for (final t in topics) {
       expect(t.title, isNotEmpty);
       expect(t.body.length, greaterThan(40));

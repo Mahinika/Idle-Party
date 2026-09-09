@@ -137,6 +137,12 @@ void main() {
     expect(ascend.body, contains('${GameLogic.maxHeroLevel}'));
     expect(ascend.body.toLowerCase(), contains('not from al20 alone'));
 
+    final gates = GameGuides.topics.firstWhere((t) => t.id == 'gates');
+    expect(gates.body, contains('${GameLogic.maxHeroLevel}'));
+    expect(gates.body.toLowerCase(), contains('daily vault'));
+    expect(gates.body.toLowerCase(), contains('daily run'));
+    expect(gates.body.toLowerCase(), contains('quests daily'));
+
     final armor = GameGuides.topics.where((t) => t.id == 'armor_sets');
     if (armor.isNotEmpty) {
       expect(armor.first.body.toLowerCase(), isNot(contains('loadouts')));
@@ -201,7 +207,7 @@ void main() {
     expect(rift.body.toLowerCase(), contains('farm'));
 
     final gr = GameGuides.topics.firstWhere((t) => t.id == 'greater_rift');
-    expect(gr.title.toUpperCase(), contains('GREATER'));
+    expect(gr.title.toUpperCase(), contains('RANKED'));
     expect(gr.body.toUpperCase(), contains('BOARDS'));
 
     final classes = GameGuides.topics.firstWhere((t) => t.id == 'classes');

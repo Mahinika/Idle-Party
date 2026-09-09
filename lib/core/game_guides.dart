@@ -218,6 +218,31 @@ abstract final class GameGuides {
           '• Ascend from the Hub when ready (not from Gold).',
     ),
     GuideTopic(
+      id: 'gates',
+      title: 'AL20 VS ENDGAME',
+      body:
+          'Two different gates — do not mix them up.\n\n'
+          '• AL20 (Ascension cap): raise AL with Ascend, stack Ascend Blessing, '
+          'unlock kits, spend Star Nodes, optional REBORN. Wipes your run bag '
+          '(gold, forge, normal gear).\n'
+          '• Party Lv${GameLogic.maxHeroLevel} (endgame): every active hero at max level '
+          'unlocks KEY, Infinity Gauntlet, Ranked Greater Rifts, Farm Rifts, '
+          'and Ashen Crown. AL20 alone is not enough.\n'
+          '• At AL20 with heroes below ${GameLogic.maxHeroLevel}, TODAY may say '
+          '"Level the party" — that is the bridge into endgame.\n\n'
+          'Three different "dailies" (not the same button):\n'
+          '• Daily Vault — UTC day; 1 clear or timed KEY +2, then CLAIM VAULT.\n'
+          '• Daily Run — one free seeded floor for +25e.\n'
+          '• Quests Daily — MORE · QUESTS kill board; CLAIM QUESTS when ready.\n\n'
+          'Four season clocks (all optional — TODAY picks one hunt):\n'
+          '• UTC midnight — vault + Daily Run reset.\n'
+          '• ISO week — KEY affix rotation + local week goal.\n'
+          '• Calendar month — first vault claim season bonus.\n'
+          '• Play Games month — ranked KEY / Gauntlet / GR boards (opt-in).\n\n'
+          'Endgame ladder on TODAY (party Lv${GameLogic.maxHeroLevel}): '
+          'KEY habit → Gauntlet → Ranked GR → Farm Rift → Ashen Crown.',
+    ),
+    GuideTopic(
       id: 'classes',
       title: 'CLASS UNLOCKS',
       body:
@@ -264,28 +289,29 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'rift',
-      title: 'RIFTS',
+      title: 'FARM RIFT',
       body:
-          'Farm mode at party level ${GameLogic.maxHeroLevel}.\n\n'
+          'Farm mode at party level ${GameLogic.maxHeroLevel} — not Ranked GR.\n\n'
           '• Timed kill challenges — clear the kill quota before the par timer.\n'
           '• Gold and gear drop during the run; success also pays essence + gold.\n'
           '• Higher tiers: tougher packs and less time; fast clears unlock +2.\n'
           '• Wipe or timeout ends the run with a small consolation.\n'
-          '• Not ranked on Play Games — use Greater Rift for season prestige '
-          '(KEY + Gauntlet boards live; GR board when Console ID is set).\n'
-          '• Set preferred tier under KEY · RIFT, or tap RIFT on the hub.',
+          '• Not ranked on Play Games — clear Ranked GR first; TODAY chases '
+          'Farm Rift after GR milestones quiet.\n'
+          '• Set tier under KEY · FARM RIFT (Stormwake), or follow TODAY.',
     ),
     GuideTopic(
       id: 'greater_rift',
-      title: 'GREATER RIFTS',
+      title: 'RANKED GR',
       body:
-          'Prestige mode at party level ${GameLogic.maxHeroLevel} — harder than farm Rifts.\n\n'
+          'Ranked Greater Rift at party level ${GameLogic.maxHeroLevel} — '
+          'Mothveil timer, harder than Farm Rift.\n\n'
           '• Timed kill quota on a tougher ladder (GR1–GR20).\n'
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear.\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet on KEY · BOARDS (Play Games). '
           'Greater Rift board wires when the Console ID is pasted.\n'
-          '• Tap GREATER RIFT on the hub or set tier under KEY.',
+          '• TODAY chases Ranked GR before Farm Rift. Set tier under KEY · GREATER RIFT.',
     ),
     GuideTopic(
       id: 'apex',
@@ -382,7 +408,9 @@ abstract final class GameGuides {
           '• TODAY flashes READY / ALMOST when a claim or Ascend is close.\n'
           '• First vault claim of each calendar month also pays a season bonus.\n'
           '• Each ISO week has a named local season beat (KEY +2 or Gauntlet floor) '
-          '— TODAY / META may chase it after party Lv${GameLogic.maxHeroLevel} for KEY weeks; claim pays essence + title.\n'
+          '— TODAY may chase it after party Lv${GameLogic.maxHeroLevel}; claim pays essence + title.\n'
+          '• See AL20 VS ENDGAME for all four season clocks (UTC day / ISO week / '
+          'calendar month / Play month).\n'
           '• Progress resets at UTC midnight.\n'
           '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
     ),

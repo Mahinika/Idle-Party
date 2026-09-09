@@ -46,6 +46,11 @@ class EssenceKeepPanel extends StatelessWidget {
           style: GameTheme.body(size: 15, color: GameTheme.torchHot),
         ),
         Text(
+          'Forever shelf: God Hand · Ascend Blessing · permanent buys. '
+          'Tracks / Relics / Pets live on other ESSENCE tabs.',
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
+        Text(
           state.metaDepth.ascendBlessings <= 0
               ? 'Ascend Blessing: none yet (each Ascend stacks power + gold)'
               : 'Ascend Blessing ×${state.metaDepth.ascendBlessings}: '

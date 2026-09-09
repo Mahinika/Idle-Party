@@ -481,7 +481,46 @@ void main() {
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.riftMilestone);
-    expect(chase.title, contains('Rift'));
+    expect(chase.title, contains('Farm Rift'));
+  });
+
+  test('Farm Rift waits until Ranked GR has a clear', () {
+    final state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+          dailyVaultClaimed: true,
+          gauntletBestFloor: 100,
+          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          grBestTier: 0,
+          riftBestTier: 0,
+        ),
+        highestDungeonCleared: 14,
+      ),
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, isNot(HubChaseKind.riftMilestone));
+    expect(chase.kind, HubChaseKind.greaterRiftMilestone);
+  });
+
+  test('AL20 sub-max party chase names both gates', () {
+    final base = GameLogic.createInitialState(now: now);
+    final state = base.copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel,
+      bossVictories: 99,
+      lastDailyDate: MetaSystems.dailyDateKey(now),
+      dailyClaimed: true,
+      metaDepth: base.metaDepth.copyWith(dailyVaultClaimed: true),
+      heroRoster: [
+        for (final h in base.heroRoster) h.copyWith(level: 88, xp: 0),
+      ],
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.title, contains('${GameLogic.maxHeroLevel}'));
+    expect(chase.detail, contains('AL20'));
   });
 
   test('AL20 party-max prefers endgame ladder over Daily', () {

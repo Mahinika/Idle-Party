@@ -301,7 +301,7 @@ class HubUrgentRow extends StatelessWidget {
               if (showDaily)
                 Expanded(
                   child: GameButton(
-                    label: dailyClaimed ? 'DAILY · done' : 'DAILY RUN',
+                    label: dailyClaimed ? 'DAILY RUN · done' : 'DAILY RUN',
                     style: GameButtonStyle.grey,
                     onPressed: dailyClaimed ? null : onDaily,
                   ),

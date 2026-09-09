@@ -656,10 +656,16 @@ class HubChase {
       title: almost
           ? 'Almost party Lv${GameLogic.maxHeroLevel}'
           : 'Level the party to ${GameLogic.maxHeroLevel}',
-      detail: almost
-          ? 'Lowest hero Lv$minLv — a few more levels unlock KEY, Gauntlet, and Rifts.'
-          : 'Heroes Lv$minLv–$maxLv. Combat XP to ${GameLogic.maxHeroLevel} unlocks '
-              'KEY, Gauntlet, and Rifts.',
+      detail: GameLogic.isMaxAscension(state)
+          ? (almost
+              ? 'AL20 done — lowest Lv$minLv. Endgame (KEY, Gauntlet, Ranked GR) '
+                  'needs every hero at ${GameLogic.maxHeroLevel}.'
+              : 'AL20 done — heroes Lv$minLv–$maxLv. Combat XP to '
+                  '${GameLogic.maxHeroLevel} unlocks KEY and the endgame ladder.')
+          : (almost
+              ? 'Lowest hero Lv$minLv — a few more levels unlock KEY, Gauntlet, and Rifts.'
+              : 'Heroes Lv$minLv–$maxLv. Combat XP to ${GameLogic.maxHeroLevel} unlocks '
+                  'KEY, Gauntlet, and Rifts.'),
       progressLabel: minLv == maxLv
           ? 'Lv$minLv/${GameLogic.maxHeroLevel}'
           : 'Lv$minLv–$maxLv/${GameLogic.maxHeroLevel}',
@@ -811,8 +817,19 @@ class HubChase {
     );
   }
 
+  /// Farm Rift waits until Ranked GR has a clear or GR milestones are done.
+  static bool _farmRiftChaseReady(GameState state) {
+    if (state.metaDepth.grBestTier >= 1) return true;
+    for (final tier in GreaterRiftMilestones.tiers) {
+      final id = GreaterRiftMilestones.claimId(tier);
+      if (!state.metaDepth.claimedGrMilestones.contains(id)) return false;
+    }
+    return true;
+  }
+
   static HubChase? _nextRiftChase(GameState state) {
     if (!GameLogic.endgameUnlocked(state)) return null;
+    if (!_farmRiftChaseReady(state)) return null;
     final best = state.metaDepth.riftBestTier;
     final claimed = state.metaDepth.claimedRiftMilestones;
     for (final tier in RiftMilestones.tiers) {
@@ -824,7 +841,7 @@ class HubChase {
       final pay = RiftMilestones.essenceForTier(tier);
       return HubChase(
         kind: HubChaseKind.riftMilestone,
-        title: almost ? 'Almost Rift R$tier' : 'Rift R$tier',
+        title: almost ? 'Almost Farm Rift R$tier' : 'Farm Rift R$tier',
         detail: best <= 0
             ? 'Farm Rift in Stormwake (KEY dial) — timed kills + loot mid-run; +${pay}e at R$tier.'
             : 'Best R$best — $need farm tiers to R$tier (+${pay}e). Not Spire climb.',

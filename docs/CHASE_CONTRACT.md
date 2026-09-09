@@ -23,6 +23,14 @@ ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats
 
 **Endgame unlock:** active party all at [`GameLogic.maxHeroLevel`](../lib/core/game_logic.dart) (**100**) via `endgameUnlocked` — not AL20 alone. AL20 remains the Ascend cap. KEY, Infinity Gauntlet, Rifts, Greater Rifts, and Ashen Crown share the hub once unlocked. At AL20 + party max, TODAY prefers the endgame ladder before Daily, then one actionable fallback (not a multi-line stats dump).
 
+**AL20 vs party Lv100:** Ascend / Blessing / Star Nodes / REBORN are AL gates. KEY, Gauntlet, Ranked GR, Farm Rift, and Ashen Crown are party-Lv100 gates. At AL20 with heroes below 100, `_partyLevelChase` owns TODAY until every active hero hits 100.
+
+**Daily ordlista (three systems):** Daily Vault (UTC claim) · Daily Run (+25e floor) · Quests Daily (MORE board). Never collapse them into one “daily” button.
+
+**Rift consolidation:** TODAY chases **Ranked GR** before **Farm Rift** (`_farmRiftChaseReady` — GR1 clear or GR milestones done). Both stay on KEY; Farm Rift is not deleted.
+
+**Season clocks:** UTC day (vault/run) · ISO week (KEY affix + week goal) · calendar month (vault bonus) · Play month (boards). Hub meta pulse may show KEY + vault + week crumbs; one hunt still wins on TODAY.
+
 **Zones:** unlock by party mean level (even steps Lv1…Lv100) or by clearing the previous zone.
 
 ## Urgency chrome
