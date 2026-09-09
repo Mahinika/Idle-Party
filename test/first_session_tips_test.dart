@@ -46,6 +46,49 @@ void main() {
     );
   });
 
+  test('AL20 sub-max shows endgame gate tip before KEY jargon', () {
+    final base = GameLogic.createInitialState(now: now);
+    final state = base.copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel,
+      bossVictories: 99,
+      highestFloorCleared: 50,
+      seenTips: [
+        for (final t in FirstSessionTips.tips)
+          if (t.id != 'al20_endgame') t.id,
+      ],
+      heroRoster: [
+        for (final h in base.heroRoster) h.copyWith(level: 88, xp: 0),
+      ],
+    );
+    expect(GameLogic.isMaxAscension(state), isTrue);
+    expect(GameLogic.endgameUnlocked(state), isFalse);
+    expect(
+      FirstSessionTips.nextTipId(state, inDungeon: false),
+      'al20_endgame',
+    );
+  });
+
+  test('three dailies tip waits for showDailyChase', () {
+    final early = GameLogic.createInitialState(now: now).copyWith(
+      seenTips: [
+        for (final t in FirstSessionTips.tips)
+          if (t.id != 'three_dailies') t.id,
+      ],
+    );
+    expect(GameLogic.showDailyChase(early), isFalse);
+    expect(FirstSessionTips.nextTipId(early, inDungeon: false), isNull);
+
+    final afterBoss = early.copyWith(
+      bossVictories: 1,
+      highestFloorCleared: 1,
+    );
+    expect(GameLogic.showDailyChase(afterBoss), isTrue);
+    expect(
+      FirstSessionTips.nextTipId(afterBoss, inDungeon: false),
+      'three_dailies',
+    );
+  });
+
   test('after a floor, hub can show lore then power tips', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       highestFloorCleared: 1,

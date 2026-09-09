@@ -218,6 +218,20 @@ abstract final class GameGuides {
           '• Ascend from the Hub when ready (not from Gold).',
     ),
     GuideTopic(
+      id: 'power_shelves',
+      title: 'POWER SHELVES',
+      body:
+          'ATK / DEF / STA come from three shelves — do not stack them up wrong.\n\n'
+          '• GOLD tracks — run-only power bought with wallet gold. Wipes on Ascend. '
+          'Wipe advice points here (or GOLD → MARKET listings) when the sim proves a gap.\n'
+          '• Ascend Blessing — stacks each Ascend (+ATK/DEF/STA/gold forever). '
+          'Readout on ESSENCE → KEEP. Not Star Nodes.\n'
+          '• ESSENCE tracks + relics + pets — forever power bought with essence. '
+          'TRACKS / RELICS / PETS tabs; sanctuary reset-for-essence is optional.\n\n'
+          'Gear, Apex, AL flats, and Star Nodes add sheet power on top. '
+          'After Ascend, rebuild GOLD tracks first — Blessing and essence shelves stay.',
+    ),
+    GuideTopic(
       id: 'gates',
       title: 'AL20 VS ENDGAME',
       body:

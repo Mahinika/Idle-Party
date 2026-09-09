@@ -29,7 +29,9 @@ ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats
 
 **Rift consolidation:** TODAY chases **Ranked GR** before **Farm Rift** (`_farmRiftChaseReady` — GR1 clear or GR milestones done). Both stay on KEY; Farm Rift is not deleted.
 
-**Season clocks:** UTC day (vault/run) · ISO week (KEY affix + week goal) · calendar month (vault bonus) · Play month (boards). Hub meta pulse may show KEY + vault + week crumbs; one hunt still wins on TODAY.
+**Season clocks:** UTC day (vault/run) · ISO week (KEY affix + week goal) · calendar month (vault bonus) · Play month (boards). Hub meta pulse crumbs: `KEY +N`, `Vault n/target · not Daily Run`, `Week · …` / `Week goal READY` — one hunt still wins on TODAY.
+
+**Power shelves:** GOLD tracks (run, wipe on Ascend) · Ascend Blessing (forever) · ESSENCE tracks/relics/pets (forever). Guide: MORE → INFO → POWER SHELVES.
 
 **Zones:** unlock by party mean level (even steps Lv1…Lv100) or by clearing the previous zone.
 

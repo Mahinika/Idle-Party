@@ -142,7 +142,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
             md.seasonBestGrTier,
             md.seasonBestGrClearMs,
           )
-        : 'No Greater Rift yet';
+        : 'No Ranked GR yet';
     final boardsReady = PlayLeaderboardIds.hasBoards(month);
     final grBoardReady = PlayLeaderboardIds.hasGreaterRiftBoard(month);
     final signedIn = PlayGamesBridge.isSignedInCached || md.playGamesOptIn;
@@ -157,8 +157,8 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         const SizedBox(height: 4),
         Text(
           grBoardReady
-              ? 'Season $month · Timed KEY + Gauntlet + Greater Rift (Play Games)'
-              : 'Season $month · Timed KEY + Gauntlet (Play Games) · GR board pending',
+              ? 'Season $month · Timed KEY + Gauntlet + Ranked GR (Play Games)'
+              : 'Season $month · Timed KEY + Gauntlet (Play Games) · Ranked GR board pending',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
@@ -227,7 +227,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         if (!grBoardReady) ...[
           const SizedBox(height: 4),
           Text(
-            'Greater Rift board ID empty — create in Play Console, then paste.',
+            'Ranked GR board ID empty — create in Play Console, then paste.',
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
         ],

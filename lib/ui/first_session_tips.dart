@@ -83,7 +83,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'contracts',
       title: 'QUESTS',
       body:
-          'QUESTS (MORE) pays gold and essence. '
+          'QUESTS (MORE) is the kill board — not Daily Vault or Daily Run. '
           'Claim completes; every 3 claims grants a +5e chain bonus.',
     ),
     (
@@ -103,6 +103,25 @@ class FirstSessionTips extends StatelessWidget {
           'Apex stays.',
     ),
     (
+      id: 'al20_endgame',
+      title: 'AL20 VS ENDGAME',
+      body:
+          'Ascension cap (AL20) is not endgame. KEY, Gauntlet, Ranked GR, and Farm Rift '
+          'unlock when every active hero hits Lv${GameLogic.maxHeroLevel}. '
+          'TODAY will say Level the party until then. '
+          'MORE → INFO → AL20 VS ENDGAME explains the split.',
+    ),
+    (
+      id: 'three_dailies',
+      title: 'THREE DAILIES',
+      body:
+          'Three different systems — not one button:\n'
+          '• Daily Vault — fill 1/1, then CLAIM VAULT for essence.\n'
+          '• Daily Run — one free floor for +25e.\n'
+          '• Quests Daily — MORE · QUESTS board; CLAIM QUESTS when ready.\n'
+          'TODAY picks one hunt at a time.',
+    ),
+    (
       id: 'hardmode',
       title: 'KEYSTONE',
       body:
@@ -113,8 +132,9 @@ class FirstSessionTips extends StatelessWidget {
       id: 'weekly',
       title: 'DAILY VAULT',
       body:
-          'Clear 1 dungeon floor today, then claim the vault for essence. '
-          'First claim of each month also pays a season bonus.',
+          'Daily Vault (not Daily Run): clear 1 floor today, then CLAIM VAULT for essence. '
+          'First claim of each month also pays a season bonus. '
+          'Quests and Daily Run are separate — see THREE DAILIES tip.',
     ),
     (
       id: 'apex',
@@ -130,15 +150,17 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'rift',
-      title: 'RIFTS',
+      title: 'FARM RIFT',
       body:
-          'At party level ${GameLogic.maxHeroLevel}, farm Rifts are timed kill challenges from the hub. Gold and gear drop during the run. Clear the quota before the timer for essence and the next tier.',
+          'At party Lv${GameLogic.maxHeroLevel}, Farm Rift is Stormwake loot farming — '
+          'gold + gear mid-run. TODAY chases it after Ranked GR. Not Spire climb.',
     ),
     (
       id: 'greater_rift',
-      title: 'GREATER RIFTS',
+      title: 'RANKED GR',
       body:
-          'At party level ${GameLogic.maxHeroLevel}, Greater Rifts are the prestige ladder — harder packs, no mid-run gear, and season ranks on KEY · BOARDS.',
+          'At party Lv${GameLogic.maxHeroLevel}, Ranked GR is the Mothveil prestige timer — '
+          'harder packs, no mid-run gear, season ranks on KEY · BOARDS. TODAY chases GR before Farm Rift.',
     ),
     (
       id: 'ashen_crown',
@@ -207,6 +229,8 @@ class FirstSessionTips extends StatelessWidget {
               tip.id == 'contracts' ||
               tip.id == 'hardmode' ||
               tip.id == 'weekly' ||
+              tip.id == 'three_dailies' ||
+              tip.id == 'al20_endgame' ||
               tip.id == 'apex' ||
               tip.id == 'gauntlet' ||
               tip.id == 'ashen_crown' ||
@@ -214,6 +238,21 @@ class FirstSessionTips extends StatelessWidget {
               tip.id == 'prestige') &&
           (inDungeon || !porch)) {
         continue;
+      }
+      if (tip.id == 'three_dailies' && !GameLogic.showDailyChase(s)) {
+        continue;
+      }
+      if (tip.id == 'al20_endgame') {
+        if (!GameLogic.isMaxAscension(s) || GameLogic.endgameUnlocked(s)) {
+          continue;
+        }
+        final heroes = s.heroes;
+        if (heroes.isEmpty) continue;
+        final minLv = heroes.fold<int>(
+          heroes.first.level,
+          (m, h) => h.level < m ? h.level : m,
+        );
+        if (minLv < GameLogic.maxHeroLevel - 15) continue;
       }
       if (tip.id == 'pets' && s.ownedPets.isEmpty && s.essence < 3) {
         continue;

@@ -7,7 +7,18 @@ void main() {
     expect(topics.length, greaterThanOrEqualTo(12));
     final ids = topics.map((t) => t.id).toSet();
     expect(ids.length, topics.length);
-    expect(ids, containsAll(['basics', 'god_hand', 'ascend', 'hardmode', 'gates']));
+    expect(ids, containsAll([
+      'basics',
+      'god_hand',
+      'ascend',
+      'hardmode',
+      'gates',
+      'power_shelves',
+    ]));
+    final shelves = topics.firstWhere((t) => t.id == 'power_shelves');
+    expect(shelves.body.toLowerCase(), contains('gold tracks'));
+    expect(shelves.body.toLowerCase(), contains('ascend blessing'));
+    expect(shelves.body.toLowerCase(), contains('wipes on ascend'));
     final gates = topics.firstWhere((t) => t.id == 'gates');
     expect(gates.body, contains('AL20'));
     expect(gates.body, contains('Daily Vault'));

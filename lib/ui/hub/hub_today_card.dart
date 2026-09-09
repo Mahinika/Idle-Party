@@ -41,7 +41,7 @@ class HubMetaPulse extends StatelessWidget {
       final clears = state.metaDepth.dailyVaultClears;
       final target = GameLogic.dailyVaultClearTarget;
       if (!GameLogic.canClaimDailyVault(state)) {
-        bits.add('Daily Vault $clears/$target');
+        bits.add('Vault $clears/$target · not Daily Run');
       }
     }
 
@@ -53,9 +53,11 @@ class HubMetaPulse extends StatelessWidget {
       final week = LocalSeasonCatalog.forWeekKey(weekKey);
       if (week.hasGoal) {
         if (LocalSeasonCatalog.weekGoalReady(state, week)) {
-          bits.add('Week READY · auto');
+          bits.add('Week goal READY');
         } else if (!LocalSeasonCatalog.weekGoalClaimed(state, week)) {
-          bits.add(LocalSeasonCatalog.weekProgressLabel(state, week));
+          bits.add(
+            'Week · ${LocalSeasonCatalog.weekProgressLabel(state, week)}',
+          );
         }
       }
     }
