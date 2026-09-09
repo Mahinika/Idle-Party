@@ -333,6 +333,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Custom art helpers | `lib/assets/custom_assets.dart` |
 | Gear budget contract | `docs/GEAR_BUDGET.md` |
 | UI theme | `lib/ui/theme.dart` + `docs/UI_THEME.md` — `GameTheme` tokens, `MenuChrome`, `GameButton`, `GameIcon` |
+| Game UX / flat nav | `.cursor/rules/game-ux-director.mdc` — placement map + self-stop (pairs with `ui-theme.mdc`) |
 
 ## Conventions
 

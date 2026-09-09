@@ -1,6 +1,12 @@
 # Idle Party UI theme
 
-**Purpose:** shared **tokens and patterns** so menus feel like one game — not a straitjacket on layout, copy, or UX. When clarity needs a new row, scroll, or hub-specific chrome, **ship it** using tokens below. IA (what the player chases) is separate from visuals.
+**Purpose:** shared **tokens and patterns** so menus feel like one game — not a straitjacket on layout, copy, or UX. When clarity needs a new row, scroll, or hub-specific chrome, **ship it** using tokens below.
+
+**IA + flat nav + feature placement** (Game UX Director): see
+[`.cursor/rules/game-ux-director.mdc`](../.cursor/rules/game-ux-director.mdc).
+Bottom destinations are **GEAR · GOLD · SHOP · ESSENCE · MORE · KEY** via
+`MenuRouter` — not a free-form submenu tree. RUN / TODAY / ACCOUNT below are
+**copy scopes**, not bottom tabs.
 
 ---
 
@@ -156,7 +162,7 @@ Everything else (hub density, Gauntlet label, chase-driven CTAs, collapsible sec
 
 | Family | Where | Goal |
 |--------|--------|------|
-| **Menu sheet** | PARTY / POWER / META overlays | GEAR-adjacent panel: `MenuChrome.panel`, `tabRail`, `cardBox` |
+| **Menu sheet** | GEAR / GOLD / SHOP / ESSENCE / MORE / KEY overlays | GEAR-adjacent panel: `MenuChrome.panel`, `tabRail`, `cardBox` |
 | **Hub** | World path, TODAY, enter stack | Painted scene + torch accents; **not** a full inventory sheet |
 | **Combat HUD** | Dungeon FARM/PUSH, party bars, God Hand | Pixel HUD (`GameTheme.pixel`) |
 | **Brand** | Boot, new game, What’s New hero | Cinzel + scene art; rules are looser |

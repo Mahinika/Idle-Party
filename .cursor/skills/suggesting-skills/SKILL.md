@@ -32,6 +32,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | Code review of a diff | `reviewing-code` |
 | Same workflow 3× | `building-skills-from-patterns` |
 | A11y / reduce motion / labels | `accessibility-auditing` |
+| New menu / where does X live / UI consistency | always-on `game-ux-director` rule + `ui-theme` / `docs/UI_THEME.md` |
 | UI change “does it look ok?” | `a56-playtest` / `verifying-in-browser` |
 | Play Store / listing / privacy / IARC | `play-store-prep` |
 | `/init` / resync AGENTS + rules | `init` |

@@ -36,6 +36,7 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 | What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
 | PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
 | polish hub / weekly / tips | `hub-smoke` on A56 (`a56-playtest`) |
+| ny meny / panel / var ska X ligga / UI-röd tråd | `game-ux-director` rule + `ui-theme` / `docs/UI_THEME.md` |
 | I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — that *is* the batch |
 | “gör spelet bättre” / vad härnäst (no other target) | Default slice in `owner-preferences` + `docs/CONTENT_CADENCE.md` — unless they name something broader (`product-locks` escape) |
 | Play Store / listing / privacy / AAB | `play-store-prep` (+ `docs/PLAY_STORE.md`) |

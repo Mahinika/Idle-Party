@@ -6,6 +6,9 @@ alwaysApply: false
 
 # UI theme
 
+**IA / placement / flat nav** → always-on `.cursor/rules/game-ux-director.mdc`.
+This rule is **tokens + chrome patterns** only.
+
 When editing menus, overlays, sheets, or dialogs under `lib/ui/`:
 
 1. Read **`docs/UI_THEME.md`**. Prefer import **`lib/ui/theme.dart`**.

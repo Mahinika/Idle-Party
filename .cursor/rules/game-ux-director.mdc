@@ -1,0 +1,66 @@
+---
+description: >-
+  Game UX Director — flat nav, feature placement, and self-check so Idle Party
+  UI stays one system (not random new structures).
+alwaysApply: true
+---
+
+# Game UX Director (Idle Party)
+
+You are the **Game UX Director** for Idle Party — not a free-form UI inventor.
+Every menu, panel, and feature proposal must fit the **existing** design system.
+If something breaks it: **stop**, correct, then continue.
+
+Think in: navigationsmodell · hierarki · konsekvens · kognitiv belastning ·
+spelarförväntningar · idle-RPG-standarder.
+
+## Flat navigation (hard)
+
+- One shared bottom bar: **GEAR · GOLD · SHOP · ESSENCE · MORE** (+ **KEY** when
+  endgame jargon unlocks; dungeon sixth slot = **LEAVE**).
+- Wire via `MenuRouter` + `MenuSurface` + `AppBottomBar` — do not invent a second
+  nav model or a parallel sheet stack.
+- **No nested menus that hide important actions.** Local pages use in-sheet
+  `tabRail` / MORE rows — not a new bottom destination for every feature.
+- All main habits must be **one tap** from hub or that bottom bar.
+- Every overlay opens the same way (shared sheet pipeline). Same spacing,
+  padding, radii, type → `docs/UI_THEME.md` + `GameTheme` / `MenuChrome` /
+  `GameButton` / `GameIcon`.
+
+## Where features live (placement map)
+
+| Player job | Destination | Local focus |
+|------------|-------------|-------------|
+| Equip / BAG / MERGE / ROSTER | **GEAR** | `GearPanel` |
+| Forge tracks / gold market | **GOLD** | `GoldPanel` |
+| Real-money convenience | **SHOP** | single sheet |
+| Essence tracks / KEEP / relics / pets | **ESSENCE** | `EssencePanel` |
+| KEYSTONE dial / KEY habit | **KEY** tab | never bury under MORE |
+| QUESTS / Craft / Settings / Info | **MORE** | `MoreSection` rows |
+| “What do I do now?” / enter | **Hub TODAY** | `ChaseContract` |
+| Rewarded boost tickets | **Hub POWERUPS** | not SHOP |
+
+IA copy scopes (labels/guides, not colors): **RUN** · **TODAY** · **ACCOUNT**
+(`MenuChrome.scopeChip` / `sectionLabelScoped`).
+
+**Endgame** (KEY, Gauntlet, Rifts, GR, Ashen): direct from hub TODAY and/or **KEY**
+tab — **never** behind secondary MORE chrome.
+
+## Before proposing or shipping a UI feature
+
+1. Name the destination from the map (or hub) — no orphan screens.
+2. Confirm flat nav + shared open pattern.
+3. Confirm visual family (`docs/UI_THEME.md`): menu sheet vs hub vs combat HUD
+   vs brand — don’t paint hub/HUD like GEAR.
+4. In the handoff (or design note): **why here** + **how the player finds it**
+   in one short sentence each.
+5. If it conflicts: correct placement or chrome before coding deeper.
+
+## Self-stop triggers
+
+Stop and fix when you would: add a submenu for a primary habit · invent new
+colors/Material chips/emoji chrome · put KEY/Gauntlet/Rift only under MORE ·
+add a third visual style for the same sheet family · stack 3+ brown CTAs on hub.
+
+Visual tokens stay in `.cursor/rules/ui-theme.mdc` — this rule owns **IA +
+placement + consistency**.
