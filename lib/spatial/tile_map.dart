@@ -1,4 +1,4 @@
-﻿import 'dart:math';
+import 'dart:math';
 
 import '../models/dungeon_def.dart';
 import '../models/dungeon_room.dart';
@@ -279,17 +279,6 @@ abstract final class RoomLayouts {
     final rng = Random(seed);
     final enemyCount = max(room.enemyCount, enemyCountOverride ?? 0);
 
-    if (room.type == RoomType.treasure) {
-      return _singleChamber(
-        cols: 17,
-        rows: 13,
-        treasure: true,
-        rng: rng,
-        dungeonId: dungeonId,
-        layoutSeed: seed,
-        room: room,
-      );
-    }
     if (room.type == RoomType.boss) {
       return _bossArena(
         rng,
@@ -302,6 +291,7 @@ abstract final class RoomLayouts {
 
     // Arena catalog zones used to be one open pit (samey late-path floors).
     // They now share beat-tagged multi-chamber grammar with cave/hideout/fort.
+    // Treasure floors use the same winding grammar (hall + side vault).
     final roomCount = switch (def.layout) {
       DungeonLayoutKind.cave => 6 + rng.nextInt(3),
       DungeonLayoutKind.hideout => 5 + rng.nextInt(3),
@@ -311,11 +301,11 @@ abstract final class RoomLayouts {
 
     return _multiRoomFloor(
       cols: def.layout == DungeonLayoutKind.hideout
-          ? 36
-          : (def.layout == DungeonLayoutKind.arena ? 40 : 42),
+          ? 48
+          : (def.layout == DungeonLayoutKind.arena ? 52 : 54),
       rows: def.layout == DungeonLayoutKind.fort
-          ? 30
-          : (def.layout == DungeonLayoutKind.arena ? 26 : 28),
+          ? 40
+          : (def.layout == DungeonLayoutKind.arena ? 36 : 38),
       fallbackRoomCount: roomCount,
       rng: rng,
       fortStyle: def.layout == DungeonLayoutKind.fort,
@@ -344,7 +334,8 @@ abstract final class RoomLayouts {
     required DungeonRoom room,
     FloorBlueprint? blueprint,
   }) {
-    final story = blueprint ??
+    final story =
+        blueprint ??
         FloorBlueprint.forRoom(
           room,
           dungeonId: dungeonId,
@@ -401,8 +392,8 @@ abstract final class RoomLayouts {
     required DungeonRoom room,
     int enemyCount = 6,
   }) {
-    const cols = 25;
-    const rows = 19;
+    const cols = 34;
+    const rows = 26;
     final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
     void set(int x, int y, TileKind k) {
       if (x >= 0 && y >= 0 && x < cols && y < rows) {
@@ -415,13 +406,24 @@ abstract final class RoomLayouts {
         set(x, y, TileKind.floor);
       }
     }
+    // North / south bays so the arena isn't a flat rectangle.
+    for (var y = 2; y <= 5; y++) {
+      for (var x = cols ~/ 2 - 5; x <= cols ~/ 2 + 5; x++) {
+        set(x, y, TileKind.floor);
+      }
+    }
+    for (var y = rows - 6; y < rows - 2; y++) {
+      for (var x = cols ~/ 2 - 5; x <= cols ~/ 2 + 5; x++) {
+        set(x, y, TileKind.floor);
+      }
+    }
     for (final p in <(int, int)>[
-      (6, 6),
-      (6, 12),
-      (18, 6),
-      (18, 12),
-      (12, 5),
-      (12, 13),
+      (8, 7),
+      (8, 18),
+      (25, 7),
+      (25, 18),
+      (17, 6),
+      (17, 19),
     ]) {
       set(p.$1, p.$2, TileKind.wall);
     }
@@ -514,61 +516,6 @@ abstract final class RoomLayouts {
     );
   }
 
-  static TileMap _singleChamber({
-    required int cols,
-    required int rows,
-    required bool treasure,
-    required Random rng,
-    required String dungeonId,
-    required int layoutSeed,
-    required DungeonRoom room,
-  }) {
-    final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
-    void set(int x, int y, TileKind k) {
-      if (x >= 0 && y >= 0 && x < cols && y < rows) {
-        tiles[y * cols + x] = k;
-      }
-    }
-
-    for (var y = 2; y < rows - 2; y++) {
-      for (var x = 2; x < cols - 2; x++) {
-        set(x, y, TileKind.floor);
-      }
-    }
-    set(2, rows ~/ 2, TileKind.spawn);
-    set(cols - 3, rows ~/ 2, TileKind.exit);
-    _carveExitPlaza(tiles, cols, rows, cols - 3, rows ~/ 2);
-    final chamber = Chamber(index: 0, x: 2, y: 2, w: cols - 4, h: rows - 4);
-    final spawns = treasure
-        ? const <(int, int)>[]
-        : <(int, int)>[(cols ~/ 2, rows ~/ 2)];
-    final spawnPoints = _partySpawnCluster(
-      tiles: tiles,
-      cols: cols,
-      rows: rows,
-      anchorX: 2,
-      anchorY: rows ~/ 2,
-    );
-    final exitPoint = (cols - 3, rows ~/ 2);
-
-    return _composeMap(
-      cols: cols,
-      rows: rows,
-      tiles: tiles,
-      spawnPoints: spawnPoints,
-      exitPoint: exitPoint,
-      enemySpawns: spawns,
-      enemyChamberIndices: List<int>.filled(spawns.length, 0),
-      chambers: <Chamber>[chamber],
-      gates: const <GateInfo>[],
-      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
-      dungeonId: dungeonId,
-      layoutSeed: layoutSeed,
-      rng: rng,
-      room: room,
-    );
-  }
-
   static TileMap _multiRoomFloor({
     required int cols,
     required int rows,
@@ -598,51 +545,84 @@ abstract final class RoomLayouts {
 
     final rooms = <_Rect>[];
     final roomBeats = <FloorBeatKind?>[];
-    final pad = fortStyle ? 2 : 1;
+    final sideFlags = <bool>[];
+    final parentOf = <int?>[];
+    final pad = fortStyle ? 3 : 2;
+
+    bool inBounds(_Rect r) =>
+        r.x >= 1 && r.y >= 1 && r.x + r.w <= cols - 2 && r.y + r.h <= rows - 2;
 
     (int, int) sizeFor(FloorBeatKind kind) {
       switch (kind) {
         case FloorBeatKind.approach:
-          return (7 + rng.nextInt(3), 5 + rng.nextInt(3)); // wide staging
+          return (11 + rng.nextInt(4), 8 + rng.nextInt(3)); // hall, not closet
         case FloorBeatKind.choke:
-          // Tall narrow killbox or short wide choke.
+          // Still the tightest room — but a fight can stand in it.
           if (rng.nextBool()) {
-            return (4 + rng.nextInt(2), 6 + rng.nextInt(2));
+            return (6 + rng.nextInt(2), 9 + rng.nextInt(3));
           }
-          return (6 + rng.nextInt(2), 4 + rng.nextInt(2));
+          return (9 + rng.nextInt(3), 6 + rng.nextInt(2));
         case FloorBeatKind.elite:
-          return (5 + rng.nextInt(2), 5 + rng.nextInt(2));
+          return (9 + rng.nextInt(3), 8 + rng.nextInt(3));
         case FloorBeatKind.treasure:
-          return (4 + rng.nextInt(2), 4 + rng.nextInt(2)); // alcove
+          return (7 + rng.nextInt(2), 6 + rng.nextInt(2)); // side vault
         case FloorBeatKind.boss:
-          return (8 + rng.nextInt(2), 7 + rng.nextInt(2));
+          return (12 + rng.nextInt(3), 10 + rng.nextInt(3));
         case FloorBeatKind.exitHold:
-          return (5 + rng.nextInt(2), 5 + rng.nextInt(2));
+          return (8 + rng.nextInt(3), 8 + rng.nextInt(2));
       }
     }
 
-    bool tryAdd(_Rect cand, FloorBeatKind? beat) {
+    bool tryPlaceRoom(
+      _Rect cand,
+      FloorBeatKind beat, {
+      bool side = false,
+      int? parent,
+    }) {
+      if (!inBounds(cand)) return false;
       if (rooms.any((r) => r.overlaps(cand, pad: pad))) return false;
       rooms.add(cand);
       roomBeats.add(beat);
+      sideFlags.add(side);
+      parentOf.add(parent);
       return true;
     }
 
-    // Beat-driven carve: one chamber per story beat (exit stamps on last).
+    bool isSideBeat(FloorBeatKind kind) => kind == FloorBeatKind.treasure;
+
+    // Beat-driven carve: main path zigzags east; treasure is a side vault.
     if (storyBeats.length >= 2) {
-      final band = max(4, (cols - 4) ~/ storyBeats.length);
-      for (var i = 0; i < storyBeats.length; i++) {
-        final beat = storyBeats[i];
+      final mainBeats = [
+        for (final b in storyBeats)
+          if (!isSideBeat(b.kind)) b,
+      ];
+      final sideBeats = [
+        for (final b in storyBeats)
+          if (isSideBeat(b.kind)) b,
+      ];
+      final spine = mainBeats.isEmpty ? storyBeats : mainBeats;
+
+      for (var i = 0; i < spine.length; i++) {
+        final beat = spine[i];
         final size = sizeFor(beat.kind);
         final w = size.$1;
         final h = size.$2;
-        final preferX = 1 + i * band;
+        final t = spine.length == 1 ? 0.0 : i / (spine.length - 1);
+        final minX = 2;
+        final maxX = max(minX, cols - w - 3);
+        final preferX = (minX + t * (maxX - minX)).round();
+        final north = i.isEven;
+        final yLo = north ? 2 : max(2, rows ~/ 2);
+        final yHi = north
+            ? max(3, rows ~/ 2 - h - 1)
+            : max(yLo + 1, rows - h - 3);
         var placed = false;
-        for (var attempt = 0; attempt < 48; attempt++) {
-          final jitter = rng.nextInt(max(1, band));
-          final x = (preferX + jitter - band ~/ 5).clamp(1, cols - w - 2);
-          final y = 1 + rng.nextInt(max(1, rows - h - 2));
-          if (tryAdd(_Rect(x, y, w, h), beat.kind)) {
+        for (var attempt = 0; attempt < 64; attempt++) {
+          final jx = rng.nextInt(5) - 2;
+          final x = (preferX + jx).clamp(1, cols - w - 2);
+          final ySpan = max(1, yHi - yLo);
+          final y = (yLo + rng.nextInt(ySpan)).clamp(1, rows - h - 2);
+          if (tryPlaceRoom(_Rect(x, y, w, h), beat.kind)) {
             placed = true;
             break;
           }
@@ -651,7 +631,7 @@ abstract final class RoomLayouts {
           for (var attempt = 0; attempt < 80; attempt++) {
             final x = 1 + rng.nextInt(max(1, cols - w - 2));
             final y = 1 + rng.nextInt(max(1, rows - h - 2));
-            if (tryAdd(_Rect(x, y, w, h), beat.kind)) {
+            if (tryPlaceRoom(_Rect(x, y, w, h), beat.kind)) {
               placed = true;
               break;
             }
@@ -659,36 +639,97 @@ abstract final class RoomLayouts {
         }
         if (!placed) break;
       }
+
+      if (rooms.isNotEmpty) {
+        var parentIdx = 0;
+        for (var i = 0; i < rooms.length; i++) {
+          if (!sideFlags[i]) parentIdx = i;
+        }
+        final parent = rooms[parentIdx];
+        for (final beat in sideBeats) {
+          final size = sizeFor(beat.kind);
+          final w = size.$1;
+          final h = size.$2;
+          final cx = parent.x + (parent.w - w) ~/ 2;
+          final candidates = <_Rect>[
+            _Rect(cx, parent.y - h - pad - 1, w, h),
+            _Rect(cx, parent.y + parent.h + pad + 1, w, h),
+            _Rect(parent.x - w - pad - 1, parent.y + (parent.h - h) ~/ 2, w, h),
+            _Rect(
+              parent.x + rng.nextInt(max(1, parent.w)),
+              parent.y - h - pad - 1,
+              w,
+              h,
+            ),
+            _Rect(
+              parent.x + rng.nextInt(max(1, parent.w)),
+              parent.y + parent.h + pad + 1,
+              w,
+              h,
+            ),
+          ];
+          var placed = false;
+          for (final cand in candidates) {
+            if (tryPlaceRoom(cand, beat.kind, side: true, parent: parentIdx)) {
+              placed = true;
+              break;
+            }
+          }
+          if (!placed) {
+            for (var attempt = 0; attempt < 80; attempt++) {
+              final x = 1 + rng.nextInt(max(1, cols - w - 2));
+              final y = 1 + rng.nextInt(max(1, rows - h - 2));
+              if (tryPlaceRoom(
+                _Rect(x, y, w, h),
+                beat.kind,
+                side: true,
+                parent: parentIdx,
+              )) {
+                break;
+              }
+            }
+          }
+        }
+      }
     }
 
     // Legacy scatter if beat carve failed to get a path.
     if (rooms.length < 2) {
       rooms.clear();
       roomBeats.clear();
+      sideFlags.clear();
+      parentOf.clear();
       var attempts = 0;
       while (rooms.length < fallbackRoomCount && attempts < 160) {
         attempts++;
-        final w = fortStyle ? 5 + rng.nextInt(4) : 5 + rng.nextInt(4);
-        final h = fortStyle ? 5 + rng.nextInt(3) : 4 + rng.nextInt(4);
+        final w = 8 + rng.nextInt(5);
+        final h = 7 + rng.nextInt(4);
         final x = 1 + rng.nextInt(max(1, cols - w - 2));
         final y = 1 + rng.nextInt(max(1, rows - h - 2));
         final cand = _Rect(x, y, w, h);
+        if (!inBounds(cand)) continue;
         if (rooms.any((r) => r.overlaps(cand, pad: pad))) continue;
         rooms.add(cand);
-        // Map leftover rooms onto story beats when possible.
         final bi = rooms.length - 1;
-        roomBeats.add(
-          bi < storyBeats.length ? storyBeats[bi].kind : FloorBeatKind.approach,
-        );
+        final beat = bi < storyBeats.length
+            ? storyBeats[bi].kind
+            : FloorBeatKind.approach;
+        roomBeats.add(beat);
+        sideFlags.add(isSideBeat(beat));
+        parentOf.add(null);
       }
     }
     if (rooms.isEmpty) {
-      rooms.add(_Rect(2, 2, 6, 5));
-      rooms.add(_Rect(cols - 9, rows - 8, 6, 5));
+      rooms.add(_Rect(2, 2, 10, 8));
+      rooms.add(_Rect(cols - 14, rows - 12, 10, 8));
       roomBeats.addAll([FloorBeatKind.approach, FloorBeatKind.choke]);
+      sideFlags.addAll([false, false]);
+      parentOf.addAll([null, null]);
     }
     while (roomBeats.length < rooms.length) {
       roomBeats.add(FloorBeatKind.approach);
+      sideFlags.add(false);
+      parentOf.add(null);
     }
 
     for (final r in rooms) {
@@ -700,18 +741,24 @@ abstract final class RoomLayouts {
     }
 
     final gateList = <GateInfo>[];
-    for (var i = 0; i < rooms.length - 1; i++) {
-      final nextBeat = roomBeats[i + 1];
+    void connect(int from, int to) {
+      final nextBeat = roomBeats[to];
+      final fromBeat = roomBeats[from];
       final narrow =
           nextBeat == FloorBeatKind.choke ||
           (kit.preferChoke && nextBeat != FloorBeatKind.approach);
+      final broad =
+          !narrow &&
+          (fromBeat == FloorBeatKind.approach ||
+              nextBeat == FloorBeatKind.approach);
       final gateTiles = _carveCorridorWithGate(
         set,
-        rooms[i].cx,
-        rooms[i].cy,
-        rooms[i + 1].cx,
-        rooms[i + 1].cy,
+        rooms[from].cx,
+        rooms[from].cy,
+        rooms[to].cx,
+        rooms[to].cy,
         narrow: narrow,
+        broad: broad,
       );
       for (final gatePos in gateTiles) {
         final gx = gatePos.$1;
@@ -723,12 +770,27 @@ abstract final class RoomLayouts {
         if (tiles[ti] == TileKind.wall) continue;
         final id = gateList.length;
         set(gx, gy, TileKind.gate);
-        gateList.add(GateInfo(id: id, x: gx, y: gy, opensAfterChamber: i));
+        gateList.add(GateInfo(id: id, x: gx, y: gy, opensAfterChamber: from));
+      }
+    }
+
+    var prevMain = -1;
+    for (var i = 0; i < rooms.length; i++) {
+      if (sideFlags[i]) {
+        final parent = parentOf[i] ?? (prevMain >= 0 ? prevMain : 0);
+        connect(parent, i);
+      } else {
+        if (prevMain >= 0) connect(prevMain, i);
+        prevMain = i;
       }
     }
 
     final start = rooms.first;
-    final end = rooms.last;
+    var endIdx = 0;
+    for (var i = 0; i < rooms.length; i++) {
+      if (!sideFlags[i]) endIdx = i;
+    }
+    final end = rooms[endIdx];
     set(start.cx, start.cy, TileKind.spawn);
     set(end.cx, end.cy, TileKind.exit);
     _carveExitPlaza(tiles, cols, rows, end.cx, end.cy);
@@ -840,7 +902,7 @@ abstract final class RoomLayouts {
         if (want > 0) budgetByChamber[i] = want;
       }
     }
-    if (budgetByChamber.isEmpty && combatRooms.isNotEmpty) {
+    if (budgetByChamber.isEmpty && combatRooms.isNotEmpty && enemyCount > 0) {
       // Fallback even split when beat/chamber counts diverged.
       final first = combatRooms.first;
       final firstPack = (enemyCount * 0.55).ceil().clamp(1, enemyCount);
@@ -1084,7 +1146,7 @@ abstract final class RoomLayouts {
     return points;
   }
 
-  /// Widen the stairs area so a 4-hero party can stand near the exit.
+  /// Widen the stairs area so a party can stand near the exit.
   static void _carveExitPlaza(
     List<TileKind> tiles,
     int cols,
@@ -1092,8 +1154,8 @@ abstract final class RoomLayouts {
     int ex,
     int ey,
   ) {
-    for (var dy = -1; dy <= 1; dy++) {
-      for (var dx = -1; dx <= 1; dx++) {
+    for (var dy = -2; dy <= 2; dy++) {
+      for (var dx = -2; dx <= 2; dx++) {
         final x = ex + dx;
         final y = ey + dy;
         if (x < 1 || y < 1 || x >= cols - 1 || y >= rows - 1) continue;
@@ -1106,7 +1168,9 @@ abstract final class RoomLayouts {
     tiles[ey * cols + ex] = TileKind.exit;
   }
 
-  /// Carve a 3-wide L-corridor; return gate tiles at the midpoint choke.
+  /// Carve an L-corridor; return gate tiles at the midpoint choke.
+  ///
+  /// Narrow = 1-tile choke. Default = 3-wide hall. Broad = 5-wide approach.
   static List<(int, int)> _carveCorridorWithGate(
     void Function(int, int, TileKind) set,
     int x0,
@@ -1114,6 +1178,7 @@ abstract final class RoomLayouts {
     int x1,
     int y1, {
     bool narrow = false,
+    bool broad = false,
   }) {
     void carveWide(int x, int y, {required bool horizontal}) {
       set(x, y, TileKind.floor);
@@ -1121,9 +1186,17 @@ abstract final class RoomLayouts {
       if (horizontal) {
         set(x, y - 1, TileKind.floor);
         set(x, y + 1, TileKind.floor);
+        if (broad) {
+          set(x, y - 2, TileKind.floor);
+          set(x, y + 2, TileKind.floor);
+        }
       } else {
         set(x - 1, y, TileKind.floor);
         set(x + 1, y, TileKind.floor);
+        if (broad) {
+          set(x - 2, y, TileKind.floor);
+          set(x + 2, y, TileKind.floor);
+        }
       }
     }
 
@@ -1134,6 +1207,14 @@ abstract final class RoomLayouts {
       carveWide(x, y, horizontal: true);
       path.add((x, y));
       x += x1 > x ? 1 : -1;
+    }
+    // Landing at the L-turn so corners aren't a pipe.
+    if (x0 != x1 && y0 != y1 && !narrow) {
+      for (var dy = -1; dy <= 1; dy++) {
+        for (var dx = -1; dx <= 1; dx++) {
+          set(x1 + dx, y0 + dy, TileKind.floor);
+        }
+      }
     }
     while (y != y1) {
       carveWide(x, y, horizontal: false);
@@ -1154,7 +1235,25 @@ abstract final class RoomLayouts {
     final prev = path[midIndex - 1];
     final horizontal = prev.$2 == my;
     if (horizontal) {
+      if (broad) {
+        return <(int, int)>[
+          (mx, my - 2),
+          (mx, my - 1),
+          (mx, my),
+          (mx, my + 1),
+          (mx, my + 2),
+        ];
+      }
       return <(int, int)>[(mx, my - 1), (mx, my), (mx, my + 1)];
+    }
+    if (broad) {
+      return <(int, int)>[
+        (mx - 2, my),
+        (mx - 1, my),
+        (mx, my),
+        (mx + 1, my),
+        (mx + 2, my),
+      ];
     }
     return <(int, int)>[(mx - 1, my), (mx, my), (mx + 1, my)];
   }

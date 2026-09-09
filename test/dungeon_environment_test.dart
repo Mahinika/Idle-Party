@@ -48,7 +48,7 @@ void main() {
         dungeonId: def.id,
       );
       expect(map.props.length, greaterThanOrEqualTo(16));
-      expect(map.props.length, lessThanOrEqualTo(100));
+      expect(map.props.length, lessThanOrEqualTo(140));
       // Most clutter hugs walls so mid-room fight space stays clear.
       var edge = 0;
       for (final p in map.props) {

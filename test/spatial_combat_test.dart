@@ -260,7 +260,7 @@ void main() {
       room: room,
       dungeonId: 'sandy',
     );
-    expect(map.chambers.length, greaterThanOrEqualTo(3));
+    expect(map.chambers.length, greaterThanOrEqualTo(2));
     expect(map.gates, isNotEmpty);
     final gate = map.gates.first;
     expect(map.isWalkable(gate.x, gate.y), isFalse);
@@ -310,7 +310,7 @@ void main() {
     final hero = world.heroes.firstWhere((h) => h.isAlive);
     final target = later.first;
     var reached = false;
-    for (var i = 0; i < 900; i++) {
+    for (var i = 0; i < 1400; i++) {
       final step = SpatialCombat.step(world, state, dt: 0.05);
       world = step.world;
       state = step.state;

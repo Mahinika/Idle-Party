@@ -59,7 +59,10 @@ void main() {
     expect(goblin.preferChoke, isTrue);
     expect(goblin.preferTreasureAlcove, isTrue);
     expect(goblin.treasureAlcoveChance, greaterThan(0.2));
-    expect(goblin.normalRoomChestChance, greaterThan(sandy.normalRoomChestChance));
+    expect(
+      goblin.normalRoomChestChance,
+      greaterThan(sandy.normalRoomChestChance),
+    );
     expect(goblin.landmarkPerChamber, greaterThanOrEqualTo(2));
   });
 
@@ -204,9 +207,88 @@ void main() {
     final chokeMin = choke
         .map((c) => c.w < c.h ? c.w : c.h)
         .reduce((a, b) => a < b ? a : b);
-    // Choke killboxes use 4–5 on the short axis; approach staging uses 5–7+.
+    // Choke is still the tight room; approach is a hall (short axis 8+).
     expect(chokeMin, lessThanOrEqualTo(approachMin));
-    expect(chokeMin, lessThanOrEqualTo(5));
+    expect(chokeMin, lessThanOrEqualTo(7));
+  });
+
+  test('combat floors use a large canvas', () {
+    for (final id in <String>['sandy', 'goblin', 'king', 'dead', 'crystal']) {
+      final map = RoomLayouts.forFloor(
+        floorNumber: 3,
+        room: DungeonRoom(
+          floorNumber: 3,
+          roomIndex: 0,
+          type: RoomType.normal,
+          enemyLevel: 6,
+          enemyCount: 8,
+        ),
+        dungeonId: id,
+        layoutSeed: 4,
+      );
+      expect(map.cols, greaterThanOrEqualTo(48), reason: id);
+      expect(map.rows, greaterThanOrEqualTo(36), reason: id);
+    }
+  });
+
+  test('treasure alcove sits off the stairs', () {
+    TileMap? map;
+    for (var seed = 0; seed < 160; seed++) {
+      final candidate = RoomLayouts.forFloor(
+        floorNumber: 4,
+        room: DungeonRoom(
+          floorNumber: 4,
+          roomIndex: 0,
+          type: RoomType.normal,
+          enemyLevel: 8,
+          enemyCount: 8,
+        ),
+        dungeonId: 'rime',
+        layoutSeed: seed,
+      );
+      if (!candidate.chambers.any(
+        (c) => c.beatKind == FloorBeatKind.treasure,
+      )) {
+        continue;
+      }
+      map = candidate;
+      break;
+    }
+    expect(map, isNotNull, reason: 'expected rime floor with treasure alcove');
+    final treasure = map!.chambers.firstWhere(
+      (c) => c.beatKind == FloorBeatKind.treasure,
+    );
+    expect(
+      treasure.containsTile(map.exitPoint.$1, map.exitPoint.$2),
+      isFalse,
+      reason: 'stairs stay on the main path, not in the vault',
+    );
+  });
+
+  test('multi-chamber floors snake instead of a straight hall', () {
+    var spreadHits = 0;
+    var samples = 0;
+    for (var seed = 0; seed < 40; seed++) {
+      final map = RoomLayouts.forFloor(
+        floorNumber: 3,
+        room: DungeonRoom(
+          floorNumber: 3,
+          roomIndex: 0,
+          type: RoomType.normal,
+          enemyLevel: 6,
+          enemyCount: 8,
+        ),
+        dungeonId: 'sandy',
+        layoutSeed: seed,
+      );
+      if (map.chambers.length < 2) continue;
+      samples++;
+      final ys = map.chambers.map((c) => c.cy).toList();
+      final spread = ys.reduce(max) - ys.reduce(min);
+      if (spread >= 6) spreadHits++;
+    }
+    expect(samples, greaterThan(10));
+    expect(spreadHits, greaterThan(samples ~/ 2));
   });
 
   test('rime treasure alcove holds the room chest', () {
@@ -225,7 +307,9 @@ void main() {
         layoutSeed: seed,
       );
       if (candidate.lootChestPoints.isEmpty) continue;
-      if (!candidate.chambers.any((c) => c.beatKind == FloorBeatKind.treasure)) {
+      if (!candidate.chambers.any(
+        (c) => c.beatKind == FloorBeatKind.treasure,
+      )) {
         continue;
       }
       map = candidate;
@@ -252,7 +336,16 @@ void main() {
       cols: 3,
       rows: 3,
       tiles: tiles,
-      spawnPoints: const [(0, 0), (0, 1), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1), (2, 2)],
+      spawnPoints: const [
+        (0, 0),
+        (0, 1),
+        (0, 2),
+        (1, 0),
+        (1, 2),
+        (2, 0),
+        (2, 1),
+        (2, 2),
+      ],
       exitPoint: (1, 1),
       enemySpawns: const [],
       chambers: const [Chamber(index: 0, x: 0, y: 0, w: 3, h: 3)],
@@ -272,7 +365,9 @@ void main() {
     );
     // All cells blocked by spawn/exit → no chest socket or violation.
     expect(
-      plan.lootChestPoints.isEmpty || plan.violations.isNotEmpty || plan.isValid,
+      plan.lootChestPoints.isEmpty ||
+          plan.violations.isNotEmpty ||
+          plan.isValid,
       isTrue,
     );
   });
