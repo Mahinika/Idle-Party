@@ -9,13 +9,13 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ✅ live | **1.12.106 (135)** available for Alpha testers on Play (full rollout, published **2026-09-08**). Older AABs 125/116/… inactive. |
-| Production | ✅ live | **1.12.110 (139)** on Play Store **2026-09-09** (`play.google.com/store/apps/details?id=com.idleparty.app`, Updated Sep 9, 2026). Full rollout published. |
+| Production | ✅ review | **1.12.117 (146)** submitted for review **2026-09-09** (full rollout). Live until publish: **1.12.110 (139)**. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Updated 2026-09-08: delete-account / delete-data URLs → `main` PRIVACY; AdMob device IDs shared; Play Games user IDs / files / other actions; OAuth; encryption in transit. Submitted with Alpha **135** + listing/ads bundle. |
 | IARC / content rating | ⏳ review | New questionnaire submitted 2026-09-08: fantasy creature violence (often close-up, pixel, no blood), digital goods (SHOP) yes / no loot-boxes / no player trading, no fear/sex/gambling/language/drugs. Ads are **not** in this IARC form — covered by Ads declaration **Yes**. Ratings preview: ESRB 10+ fantasy violence, USK 12, PEGI 3 + IAP. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
-| Store listing copy (EN) | ✅ | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md`. **2026-09-08:** fixed Apex line to **POWER → Craft** (was “Apex forge”). Submitted with policy bundle. |
+| Store listing copy (EN) | ✅ updated | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md`. **2026-09-09:** full description refreshed (TODAY primary CTA + QUESTS five slots). Saved on default listing; may ride next review with Production **146**. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ✅ phone | **Phone screenshots attached** on main listing (2026-09-04 check: 8 phone slots, Save idle = already live). Composed set also in `tool/store_listing/out/` (6×1080×1920). Feature graphic + icon live. |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
@@ -31,10 +31,10 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Phone screenshots attached on listing (verified 2026-09-04 — slots filled, Save idle)
 - [x] IARC new questionnaire submitted 2026-09-08 (fantasy combat + digital goods; ads via Ads declaration)
 - [x] Production access granted by Google (seen on dashboard 2026-09-09)
-- [x] Signed Production candidate AAB built: **1.12.110+139** (`app-release.aab`)
-- [x] Owner asked upload Production (2026-09-09)
-- [x] Uploaded + submitted for review: Production **139 (1.12.110)** full rollout + countries
-- [x] Google review / publish complete → store listing live (**2026-09-09**)
+- [x] Signed Production candidate AAB built: **1.12.117+146** (`app-release.aab`)
+- [x] Owner asked upload Production (2026-09-09 evening)
+- [x] Uploaded + submitted for review: Production **146 (1.12.117)** full rollout
+- [ ] Google review / publish complete → store listing shows Updated + new version
 - [x] After production live: AdMob store-link Idle Party (**2026-09-09** — Play linked; AdMob app review 2–3 days)
 
 ### Production upload paste (en-US release notes)
@@ -42,10 +42,9 @@ Track closed testers who **install from Play** and stay opted in:
 From `docs/STORE_LISTING.md` — use when Console asks for release notes:
 
 ```
-• Dungeon feel: rooms have jobs (choke / treasure), multi-chamber late zones, camera shake on crits/kills/God Hand, clearer OPEN doors.
-• Combat look: hit flash, cast rings, bigger bosses; Lite VFX still shows crits / big heals / BLOCK.
-• Hub POWERUPS ads → Ad Tickets; SHOP catalog Coming later (Play Billing not live yet).
-• World Path Sandy → Mothveil; TODAY owns KEY / Gauntlet / GREATER hunts.
+• Hub TODAY: the chase owns the big button (Gauntlet / GREATER / KEY / claims) — not a plain ENTER with the hunt buried.
+• QUESTS: five slots — Daily, Bounty, Side, Week, and Contract (endgame KEY / Gauntlet / Rift / Ashen).
+• World Path Sandy → Mothveil; AFK catch-up still uses the same combat. Optional hub POWERUPS ads → Ad Tickets.
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys
@@ -68,7 +67,7 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
 **Primary distribution: Google Play.**  
 Store: `https://play.google.com/store/apps/details?id=com.idleparty.app`
-(production **1.12.110 / 139**). Closed opt-in for early builds. Do **not**
+(production **1.12.117 / 146** in review; live until then **1.12.110 / 139**). Closed opt-in for early builds. Do **not**
 point players at GitHub Releases (repo may be private). Day-to-day: prefer
 content/feel over Play ops unless the owner asks about Play. Ship path for
 players = Play AAB after owner play OK — not public GitHub APK links.

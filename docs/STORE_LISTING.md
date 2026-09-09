@@ -55,7 +55,8 @@ WHAT YOU DO
 • Enter the World Path: 15 zones from Sandy Caverns through Mothveil Hollow — each with its own owned dungeon art (floors, walls, props).
 • Fight on multi-chamber floors with loot, room chests, and bosses. Companions follow and hit.
 • Leave the dungeon when you want — AFK catch-up keeps the party moving.
-• Hub TODAY shows one clear chase (READY / ALMOST) so you always know the next beat.
+• Hub TODAY shows one clear chase (READY / ALMOST) and drives the main button so you always know the next beat.
+• MORE → QUESTS: Daily, Bounty, Side, Week, and endgame Contract goals.
 
 LONG-TERM GOALS
 • Ascend through AL20 — keep essence / Apex / pets / meta upgrades and unlock more kits.
@@ -74,13 +75,12 @@ Install, start a party, and take one more floor.
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.110+139** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
+Working ship: **1.12.117+146** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
 
 ```
-• Dungeon feel: rooms have jobs (choke / treasure), multi-chamber late zones, camera shake on crits/kills/God Hand, clearer OPEN doors.
-• Combat look: hit flash, cast rings, bigger bosses; Lite VFX still shows crits / big heals / BLOCK.
-• Hub POWERUPS ads → Ad Tickets; SHOP sells the same Full Boost / ad-free cheap packs on Play installs.
-• World Path Sandy → Mothveil; TODAY owns KEY / Gauntlet / GREATER hunts.
+• Hub TODAY: the chase owns the big button (Gauntlet / GREATER / KEY / claims) — not a plain ENTER with the hunt buried.
+• QUESTS: five slots — Daily, Bounty, Side, Week, and Contract (endgame KEY / Gauntlet / Rift / Ashen).
+• World Path Sandy → Mothveil; AFK catch-up still uses the same combat. Optional hub POWERUPS ads → Ad Tickets.
 ```
 
 ### Full description honesty (SHOP)
