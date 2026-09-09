@@ -20,6 +20,9 @@ abstract final class GameAudio {
   /// Ambience gain 0..1 (default 0.25).
   static double ambienceVolume = 0.25;
 
+  /// Background music gain 0..1 (default 0.4).
+  static double musicVolume = 0.4;
+
   /// Per combat-feel clip floor so haste farms stay listenable.
   static const combatFeelMinGap = Duration(seconds: 3);
 
@@ -28,9 +31,12 @@ abstract final class GameAudio {
   static final Map<String, AudioSource> _sfx = <String, AudioSource>{};
   static AudioSource? _hubAmb;
   static AudioSource? _dungeonAmb;
+  static AudioSource? _hubMusic;
+  static AudioSource? _dungeonMusic;
   static SoundHandle? _ambienceHandle;
+  static SoundHandle? _musicHandle;
   static AmbienceKind _ambience = AmbienceKind.none;
-  static bool _ambiencePaused = false;
+  static bool _backgroundPaused = false;
   static final Map<String, DateTime> _lastPlayAt = <String, DateTime>{};
   static final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(0);
 
@@ -60,6 +66,8 @@ abstract final class GameAudio {
       _sfx['loot_b'] = await soloud.loadAsset(AudioAssets.lootB);
       _hubAmb = await soloud.loadAsset(AudioAssets.hubAmbience);
       _dungeonAmb = await soloud.loadAsset(AudioAssets.dungeonAmbience);
+      _hubMusic = await soloud.loadAsset(AudioAssets.hubMusic);
+      _dungeonMusic = await soloud.loadAsset(AudioAssets.dungeonMusic);
       _ready = true;
     } catch (e, st) {
       _initFailed = true;
@@ -76,14 +84,20 @@ abstract final class GameAudio {
     _sfx.clear();
     _hubAmb = null;
     _dungeonAmb = null;
+    _hubMusic = null;
+    _dungeonMusic = null;
     _ready = false;
   }
 
-  static void applyVolumes({double? sfx, double? ambience}) {
+  static void applyVolumes({double? sfx, double? ambience, double? music}) {
     if (sfx != null) sfxVolume = sfx.clamp(0.0, 1.0);
     if (ambience != null) {
       ambienceVolume = ambience.clamp(0.0, 1.0);
       _refreshAmbienceVolume();
+    }
+    if (music != null) {
+      musicVolume = music.clamp(0.0, 1.0);
+      _refreshMusicVolume();
     }
   }
 
@@ -91,7 +105,7 @@ abstract final class GameAudio {
     muted = value;
     if (muted) {
       stopAmbience();
-    } else if (!_ambiencePaused) {
+    } else if (!_backgroundPaused) {
       unawaited(setAmbience(_ambience, forceRestart: true));
     }
   }
@@ -132,7 +146,7 @@ abstract final class GameAudio {
         }
       }
       if (id == 'wipe' || id == 'boss' || id == 'clear') {
-        _duckAmbienceBriefly();
+        _duckBackgroundBriefly();
       }
     } catch (_) {}
   }
@@ -141,59 +155,84 @@ abstract final class GameAudio {
     AmbienceKind kind, {
     bool forceRestart = false,
   }) async {
-    if (!forceRestart && kind == _ambience && _ambienceHandle != null) {
+    if (!forceRestart &&
+        kind == _ambience &&
+        _ambienceHandle != null &&
+        _musicHandle != null) {
       return;
     }
     _ambience = kind;
-    if (!_ready || muted || _ambiencePaused) {
+    if (!_ready || muted || _backgroundPaused) {
       stopAmbience();
       return;
     }
     stopAmbience();
-    final source = switch (kind) {
+    final ambSource = switch (kind) {
       AmbienceKind.hub => _hubAmb,
       AmbienceKind.dungeon => _dungeonAmb,
       AmbienceKind.none => null,
     };
-    if (source == null) return;
+    final musicSource = switch (kind) {
+      AmbienceKind.hub => _hubMusic,
+      AmbienceKind.dungeon => _dungeonMusic,
+      AmbienceKind.none => null,
+    };
     try {
-      _ambienceHandle = SoLoud.instance.play(
-        source,
-        volume: _effectiveAmbienceVolume(),
-        looping: true,
-      );
+      final soloud = SoLoud.instance;
+      if (ambSource != null) {
+        _ambienceHandle = soloud.play(
+          ambSource,
+          volume: _effectiveAmbienceVolume(),
+          looping: true,
+        );
+      }
+      if (musicSource != null && musicVolume > 0.01) {
+        _musicHandle = soloud.play(
+          musicSource,
+          volume: _effectiveMusicVolume(),
+          looping: true,
+        );
+      }
     } catch (_) {
       _ambienceHandle = null;
+      _musicHandle = null;
     }
   }
 
   static void stopAmbience() {
-    final h = _ambienceHandle;
+    final amb = _ambienceHandle;
+    final mus = _musicHandle;
     _ambienceHandle = null;
-    if (h == null || !_ready) return;
+    _musicHandle = null;
+    if (!_ready) return;
     try {
-      SoLoud.instance.stop(h);
+      final soloud = SoLoud.instance;
+      if (amb != null) soloud.stop(amb);
+      if (mus != null) soloud.stop(mus);
     } catch (_) {}
   }
 
-  /// App lifecycle: pause ambience when backgrounded.
+  /// App lifecycle: pause ambience + music when backgrounded.
   static void onAppPaused() {
-    _ambiencePaused = true;
-    _pauseAmbienceInternal();
+    _backgroundPaused = true;
+    _pauseBackgroundInternal();
   }
 
   static void onAppResumed() {
-    _ambiencePaused = false;
+    _backgroundPaused = false;
     if (!muted) {
       unawaited(setAmbience(_ambience, forceRestart: true));
     }
   }
 
-  static void _pauseAmbienceInternal() {
-    final h = _ambienceHandle;
-    if (h == null || !_ready) return;
+  static void _pauseBackgroundInternal() {
+    if (!_ready) return;
     try {
-      SoLoud.instance.setPause(h, true);
+      final soloud = SoLoud.instance;
+      final amb = _ambienceHandle;
+      if (amb != null) soloud.setPause(amb, true);
+      final mus = _musicHandle;
+      if (mus != null) soloud.setPause(mus, true);
     } catch (_) {
       stopAmbience();
     }
@@ -207,20 +246,53 @@ abstract final class GameAudio {
     } catch (_) {}
   }
 
+  static void _refreshMusicVolume() {
+    final h = _musicHandle;
+    if (h == null || !_ready) return;
+    try {
+      SoLoud.instance.setVolume(h, _effectiveMusicVolume());
+    } catch (_) {}
+    if (musicVolume <= 0.01 && h != null) {
+      // Volume cycled to Off — stop the music layer only.
+      try {
+        SoLoud.instance.stop(h);
+      } catch (_) {}
+      _musicHandle = null;
+    } else if (h == null &&
+        musicVolume > 0.01 &&
+        _ambience != AmbienceKind.none &&
+        !muted &&
+        !_backgroundPaused) {
+      unawaited(setAmbience(_ambience, forceRestart: true));
+    }
+  }
+
   static double _effectiveAmbienceVolume() =>
       muted ? 0.0 : ambienceVolume.clamp(0.0, 1.0);
 
-  static void _duckAmbienceBriefly() {
-    final h = _ambienceHandle;
-    if (h == null || !_ready || muted) return;
+  static double _effectiveMusicVolume() =>
+      muted ? 0.0 : musicVolume.clamp(0.0, 1.0);
+
+  static void _duckBackgroundBriefly() {
+    final amb = _ambienceHandle;
+    final mus = _musicHandle;
+    if (!_ready || muted) return;
+    if (amb == null && mus == null) return;
     try {
       final soloud = SoLoud.instance;
-      final base = _effectiveAmbienceVolume();
-      soloud.setVolume(h, base * 0.35);
+      final ambBase = _effectiveAmbienceVolume();
+      final musBase = _effectiveMusicVolume();
+      if (amb != null) soloud.setVolume(amb, ambBase * 0.35);
+      if (mus != null) soloud.setVolume(mus, musBase * 0.35);
       Future<void>.delayed(const Duration(milliseconds: 700), () {
-        if (_ambienceHandle != h || muted) return;
+        if (muted) return;
         try {
-          soloud.setVolume(h, _effectiveAmbienceVolume());
+          if (amb != null && _ambienceHandle == amb) {
+            soloud.setVolume(amb, _effectiveAmbienceVolume());
+          }
+          if (mus != null && _musicHandle == mus) {
+            soloud.setVolume(mus, _effectiveMusicVolume());
+          }
         } catch (_) {}
       });
     } catch (_) {}

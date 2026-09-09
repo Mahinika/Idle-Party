@@ -237,6 +237,7 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
     GameAudio.applyVolumes(
       sfx: _director.state.sfxVolume,
       ambience: _director.state.ambienceVolume,
+      music: _director.state.musicVolume,
     );
     GameAudio.setMuted(_director.state.soundMuted);
     if (!_director.state.soundMuted) {

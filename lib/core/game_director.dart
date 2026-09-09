@@ -220,6 +220,10 @@ class GameDirector extends ChangeNotifier {
 
   /// Throttle kill pops so a pack wipe is one thump, not five.
   double _feelKillCooldown = 0;
+
+  /// Screen punch 0..1 (presentation only; decays each combat tick).
+  double combatShake = 0;
+
   static const double _autosaveIntervalSec = 25;
 
   /// Serializes SharedPreferences writes so overlapping unawaited saves cannot
@@ -398,6 +402,16 @@ class GameDirector extends ChangeNotifier {
     if (_feelKillCooldown > 0) {
       _feelKillCooldown = (_feelKillCooldown - dt).clamp(0, 99);
     }
+    if (combatShake > 0) {
+      combatShake = (combatShake - dt * 5.5).clamp(0.0, 1.0);
+    }
+  }
+
+  /// Light camera punch — skipped on Minimal VFX (reduce motion).
+  void pulseCombatShake(double amount) {
+    if (_state.vfxQuality == VfxQuality.minimal) return;
+    final next = amount.clamp(0.0, 1.0);
+    if (next > combatShake) combatShake = next;
   }
 
   void _syncHubIdleTimer() {
@@ -768,10 +782,12 @@ class GameDirector extends ChangeNotifier {
       if (result.critHits > 0 && _feelCritCooldown <= 0) {
         GameAudio.crit();
         _feelCritCooldown = 0.16;
+        pulseCombatShake(0.45);
       }
       if (result.kills > 0 && _feelKillCooldown <= 0) {
         GameAudio.kill();
         _feelKillCooldown = 0.22;
+        pulseCombatShake(0.28);
       }
 
       // Live auto-flask (same threshold as AFK): avg living HP < 35%.
@@ -1294,6 +1310,7 @@ class GameDirector extends ChangeNotifier {
     }
     _noteLifetimeGold(before, _state);
     GameAudio.crit();
+    pulseCombatShake(0.72);
     _announceAbilityUnlocks(before, _state);
     _announceAchievementUnlocks(before, _state);
     if (result.kills > 0) {
@@ -1910,6 +1927,25 @@ class GameDirector extends ChangeNotifier {
     setAmbienceVolume(steps[(best + 1) % steps.length]);
   }
 
+  void setMusicVolume(double value) {
+    _applyUpgrade(_state.copyWith(musicVolume: value.clamp(0.0, 1.0)));
+  }
+
+  void cycleMusicVolume() {
+    const steps = <double>[0.0, 0.2, 0.4, 0.65];
+    final cur = _state.musicVolume;
+    var best = 0;
+    var bestDist = 999.0;
+    for (var i = 0; i < steps.length; i++) {
+      final d = (steps[i] - cur).abs();
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    setMusicVolume(steps[(best + 1) % steps.length]);
+  }
+
   void setHapticsEnabled(bool enabled) {
     _applyUpgrade(_state.copyWith(hapticsEnabled: enabled));
   }
@@ -1997,6 +2033,7 @@ class GameDirector extends ChangeNotifier {
         soundMuted: false,
         sfxVolume: 0.7,
         ambienceVolume: 0.25,
+        musicVolume: 0.4,
       ),
     );
   }
@@ -3276,6 +3313,7 @@ class GameDirector extends ChangeNotifier {
     GameAudio.applyVolumes(
       sfx: _state.sfxVolume,
       ambience: _state.ambienceVolume,
+      music: _state.musicVolume,
     );
     GameAudio.setMuted(_state.soundMuted);
     SpatialCombat.colorblindMode = _state.colorblindMode;

@@ -1,4 +1,4 @@
-import 'dart:math';
+﻿import 'dart:math';
 
 import '../models/dungeon_def.dart';
 import '../models/dungeon_room.dart';
@@ -59,6 +59,7 @@ class Chamber {
     required this.y,
     required this.w,
     required this.h,
+    this.beatKind,
   });
 
   final int index;
@@ -66,6 +67,9 @@ class Chamber {
   final int y;
   final int w;
   final int h;
+
+  /// Floor story beat for this chamber (null on legacy / special arenas).
+  final FloorBeatKind? beatKind;
 
   int get cx => x + w ~/ 2;
   int get cy => y + h ~/ 2;
@@ -296,28 +300,23 @@ abstract final class RoomLayouts {
       );
     }
 
-    if (def.layout == DungeonLayoutKind.arena) {
-      return _combatArena(
-        rng,
-        dungeonId: dungeonId,
-        layoutSeed: seed,
-        enemyCount: enemyCount,
-        room: room,
-      );
-    }
-
+    // Arena catalog zones used to be one open pit (samey late-path floors).
+    // They now share beat-tagged multi-chamber grammar with cave/hideout/fort.
     final roomCount = switch (def.layout) {
       DungeonLayoutKind.cave => 6 + rng.nextInt(3),
       DungeonLayoutKind.hideout => 5 + rng.nextInt(3),
       DungeonLayoutKind.fort => 6 + rng.nextInt(3),
-      // Arena handled above; keep a safe multi-room fallback.
-      DungeonLayoutKind.arena => 5 + rng.nextInt(2),
+      DungeonLayoutKind.arena => 4 + rng.nextInt(2),
     };
 
     return _multiRoomFloor(
-      cols: def.layout == DungeonLayoutKind.hideout ? 36 : 42,
-      rows: def.layout == DungeonLayoutKind.fort ? 30 : 28,
-      roomCount: roomCount,
+      cols: def.layout == DungeonLayoutKind.hideout
+          ? 36
+          : (def.layout == DungeonLayoutKind.arena ? 40 : 42),
+      rows: def.layout == DungeonLayoutKind.fort
+          ? 30
+          : (def.layout == DungeonLayoutKind.arena ? 26 : 28),
+      fallbackRoomCount: roomCount,
       rng: rng,
       fortStyle: def.layout == DungeonLayoutKind.fort,
       enemyCount: enemyCount,
@@ -343,12 +342,14 @@ abstract final class RoomLayouts {
     required int layoutSeed,
     required Random rng,
     required DungeonRoom room,
+    FloorBlueprint? blueprint,
   }) {
-    final blueprint = FloorBlueprint.forRoom(
-      room,
-      dungeonId: dungeonId,
-      layoutSeed: layoutSeed,
-    );
+    final story = blueprint ??
+        FloorBlueprint.forRoom(
+          room,
+          dungeonId: dungeonId,
+          layoutSeed: layoutSeed,
+        );
     final kit = ZoneLayoutKit.forId(dungeonId);
     final plan = PlacementPlan.build(
       cols: cols,
@@ -358,7 +359,7 @@ abstract final class RoomLayouts {
       exitPoint: exitPoint,
       enemySpawns: enemySpawns,
       chambers: chambers,
-      blueprint: blueprint,
+      blueprint: story,
       kit: kit,
       rng: rng,
     );
@@ -513,136 +514,6 @@ abstract final class RoomLayouts {
     );
   }
 
-  /// Crystal Spire-style arena: spawn south, exit north, enemies mid-floor.
-  /// Avoids the old roomCount=1 bug where spawn and exit shared one cell.
-  static TileMap _combatArena(
-    Random rng, {
-    required String dungeonId,
-    required int layoutSeed,
-    required DungeonRoom room,
-    int enemyCount = 8,
-  }) {
-    const cols = 23;
-    const rows = 29;
-    final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
-    void set(int x, int y, TileKind k) {
-      if (x >= 0 && y >= 0 && x < cols && y < rows) {
-        tiles[y * cols + x] = k;
-      }
-    }
-
-    for (var y = 2; y < rows - 2; y++) {
-      for (var x = 2; x < cols - 2; x++) {
-        set(x, y, TileKind.floor);
-      }
-    }
-    // Crystal pillars — leave a clear vertical lane for the climb.
-    for (final p in <(int, int)>[
-      (6, 8),
-      (16, 8),
-      (5, 14),
-      (17, 14),
-      (6, 20),
-      (16, 20),
-      (11, 11),
-      (11, 17),
-    ]) {
-      set(p.$1, p.$2, TileKind.wall);
-    }
-
-    const spawnX = cols ~/ 2;
-    const spawnY = rows - 4;
-    const exitX = cols ~/ 2;
-    const exitY = 3;
-    set(spawnX, spawnY, TileKind.spawn);
-    set(exitX, exitY, TileKind.exit);
-    _carveExitPlaza(tiles, cols, rows, exitX, exitY);
-
-    final chamber = Chamber(index: 0, x: 2, y: 2, w: cols - 4, h: rows - 4);
-    final spawnPoints = _partySpawnCluster(
-      tiles: tiles,
-      cols: cols,
-      rows: rows,
-      anchorX: spawnX,
-      anchorY: spawnY,
-    );
-    const exitPoint = (exitX, exitY);
-    final reserved = <String>{
-      for (final p in spawnPoints) '${p.$1},${p.$2}',
-      '$exitX,$exitY',
-      // Keep a small pad clear around party start.
-      for (var dy = -2; dy <= 2; dy++)
-        for (var dx = -2; dx <= 2; dx++) '${spawnX + dx},${spawnY + dy}',
-    };
-
-    bool spawnable(int x, int y) {
-      if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
-      if (reserved.contains('$x,$y')) return false;
-      return tiles[y * cols + x] == TileKind.floor;
-    }
-
-    final preferred = <(int, int)>[
-      (cols ~/ 2, rows ~/ 2),
-      (cols ~/ 2 - 3, rows ~/ 2 - 2),
-      (cols ~/ 2 + 3, rows ~/ 2 + 2),
-      (cols ~/ 2 - 2, rows ~/ 2 + 3),
-      (cols ~/ 2 + 2, rows ~/ 2 - 3),
-      (cols ~/ 2 + 4, rows ~/ 2),
-      (cols ~/ 2 - 4, rows ~/ 2),
-      (7, 12),
-      (15, 12),
-      (7, 18),
-      (15, 18),
-      (cols ~/ 2, 10),
-      (cols ~/ 2, 16),
-    ];
-    final enemySpawns = <(int, int)>[];
-    final seen = <String>{};
-    void tryAdd(int x, int y) {
-      if (!spawnable(x, y)) return;
-      final key = '$x,$y';
-      if (!seen.add(key)) return;
-      enemySpawns.add((x, y));
-    }
-
-    for (final p in preferred) {
-      if (enemySpawns.length >= enemyCount) break;
-      tryAdd(p.$1, p.$2);
-    }
-    for (var r = 1; enemySpawns.length < enemyCount && r < 12; r++) {
-      for (var a = 0; a < 16 && enemySpawns.length < enemyCount; a++) {
-        final ang = a * pi / 8;
-        tryAdd(
-          (cols / 2 + cos(ang) * r * 1.3).round(),
-          (rows / 2 + sin(ang) * r * 1.5).round(),
-        );
-      }
-    }
-    for (var y = 5; y < rows - 6 && enemySpawns.length < enemyCount; y++) {
-      for (var x = 3; x < cols - 3 && enemySpawns.length < enemyCount; x++) {
-        tryAdd(x, y);
-      }
-    }
-
-    final chambersIdx = List<int>.filled(enemySpawns.length, 0);
-    return _composeMap(
-      cols: cols,
-      rows: rows,
-      tiles: tiles,
-      spawnPoints: spawnPoints,
-      exitPoint: exitPoint,
-      enemySpawns: enemySpawns,
-      enemyChamberIndices: chambersIdx,
-      chambers: <Chamber>[chamber],
-      gates: const <GateInfo>[],
-      roomCenters: <(int, int)>[(cols ~/ 2, rows ~/ 2)],
-      dungeonId: dungeonId,
-      layoutSeed: layoutSeed,
-      rng: rng,
-      room: room,
-    );
-  }
-
   static TileMap _singleChamber({
     required int cols,
     required int rows,
@@ -701,7 +572,7 @@ abstract final class RoomLayouts {
   static TileMap _multiRoomFloor({
     required int cols,
     required int rows,
-    required int roomCount,
+    required int fallbackRoomCount,
     required Random rng,
     required bool fortStyle,
     required int enemyCount,
@@ -709,6 +580,13 @@ abstract final class RoomLayouts {
     required int layoutSeed,
     required DungeonRoom room,
   }) {
+    final blueprint = FloorBlueprint.forRoom(
+      room,
+      dungeonId: dungeonId,
+      layoutSeed: layoutSeed,
+    );
+    final kit = ZoneLayoutKit.forId(dungeonId);
+    final storyBeats = blueprint.storyChambers;
     final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
     void set(int x, int y, TileKind k) {
       if (x < 0 || y < 0 || x >= cols || y >= rows) return;
@@ -719,22 +597,98 @@ abstract final class RoomLayouts {
     }
 
     final rooms = <_Rect>[];
-    var attempts = 0;
-    while (rooms.length < roomCount && attempts < 160) {
-      attempts++;
-      final w = fortStyle ? 5 + rng.nextInt(4) : 5 + rng.nextInt(4);
-      final h = fortStyle ? 5 + rng.nextInt(3) : 4 + rng.nextInt(4);
-      final x = 1 + rng.nextInt(max(1, cols - w - 2));
-      final y = 1 + rng.nextInt(max(1, rows - h - 2));
-      final cand = _Rect(x, y, w, h);
-      if (rooms.any((r) => r.overlaps(cand, pad: fortStyle ? 2 : 1))) {
-        continue;
+    final roomBeats = <FloorBeatKind?>[];
+    final pad = fortStyle ? 2 : 1;
+
+    (int, int) sizeFor(FloorBeatKind kind) {
+      switch (kind) {
+        case FloorBeatKind.approach:
+          return (7 + rng.nextInt(3), 5 + rng.nextInt(3)); // wide staging
+        case FloorBeatKind.choke:
+          // Tall narrow killbox or short wide choke.
+          if (rng.nextBool()) {
+            return (4 + rng.nextInt(2), 6 + rng.nextInt(2));
+          }
+          return (6 + rng.nextInt(2), 4 + rng.nextInt(2));
+        case FloorBeatKind.elite:
+          return (5 + rng.nextInt(2), 5 + rng.nextInt(2));
+        case FloorBeatKind.treasure:
+          return (4 + rng.nextInt(2), 4 + rng.nextInt(2)); // alcove
+        case FloorBeatKind.boss:
+          return (8 + rng.nextInt(2), 7 + rng.nextInt(2));
+        case FloorBeatKind.exitHold:
+          return (5 + rng.nextInt(2), 5 + rng.nextInt(2));
       }
+    }
+
+    bool tryAdd(_Rect cand, FloorBeatKind? beat) {
+      if (rooms.any((r) => r.overlaps(cand, pad: pad))) return false;
       rooms.add(cand);
+      roomBeats.add(beat);
+      return true;
+    }
+
+    // Beat-driven carve: one chamber per story beat (exit stamps on last).
+    if (storyBeats.length >= 2) {
+      final band = max(4, (cols - 4) ~/ storyBeats.length);
+      for (var i = 0; i < storyBeats.length; i++) {
+        final beat = storyBeats[i];
+        final size = sizeFor(beat.kind);
+        final w = size.$1;
+        final h = size.$2;
+        final preferX = 1 + i * band;
+        var placed = false;
+        for (var attempt = 0; attempt < 48; attempt++) {
+          final jitter = rng.nextInt(max(1, band));
+          final x = (preferX + jitter - band ~/ 5).clamp(1, cols - w - 2);
+          final y = 1 + rng.nextInt(max(1, rows - h - 2));
+          if (tryAdd(_Rect(x, y, w, h), beat.kind)) {
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) {
+          for (var attempt = 0; attempt < 80; attempt++) {
+            final x = 1 + rng.nextInt(max(1, cols - w - 2));
+            final y = 1 + rng.nextInt(max(1, rows - h - 2));
+            if (tryAdd(_Rect(x, y, w, h), beat.kind)) {
+              placed = true;
+              break;
+            }
+          }
+        }
+        if (!placed) break;
+      }
+    }
+
+    // Legacy scatter if beat carve failed to get a path.
+    if (rooms.length < 2) {
+      rooms.clear();
+      roomBeats.clear();
+      var attempts = 0;
+      while (rooms.length < fallbackRoomCount && attempts < 160) {
+        attempts++;
+        final w = fortStyle ? 5 + rng.nextInt(4) : 5 + rng.nextInt(4);
+        final h = fortStyle ? 5 + rng.nextInt(3) : 4 + rng.nextInt(4);
+        final x = 1 + rng.nextInt(max(1, cols - w - 2));
+        final y = 1 + rng.nextInt(max(1, rows - h - 2));
+        final cand = _Rect(x, y, w, h);
+        if (rooms.any((r) => r.overlaps(cand, pad: pad))) continue;
+        rooms.add(cand);
+        // Map leftover rooms onto story beats when possible.
+        final bi = rooms.length - 1;
+        roomBeats.add(
+          bi < storyBeats.length ? storyBeats[bi].kind : FloorBeatKind.approach,
+        );
+      }
     }
     if (rooms.isEmpty) {
       rooms.add(_Rect(2, 2, 6, 5));
       rooms.add(_Rect(cols - 9, rows - 8, 6, 5));
+      roomBeats.addAll([FloorBeatKind.approach, FloorBeatKind.choke]);
+    }
+    while (roomBeats.length < rooms.length) {
+      roomBeats.add(FloorBeatKind.approach);
     }
 
     for (final r in rooms) {
@@ -747,12 +701,17 @@ abstract final class RoomLayouts {
 
     final gateList = <GateInfo>[];
     for (var i = 0; i < rooms.length - 1; i++) {
+      final nextBeat = roomBeats[i + 1];
+      final narrow =
+          nextBeat == FloorBeatKind.choke ||
+          (kit.preferChoke && nextBeat != FloorBeatKind.approach);
       final gateTiles = _carveCorridorWithGate(
         set,
         rooms[i].cx,
         rooms[i].cy,
         rooms[i + 1].cx,
         rooms[i + 1].cy,
+        narrow: narrow,
       );
       for (final gatePos in gateTiles) {
         final gx = gatePos.$1;
@@ -803,11 +762,12 @@ abstract final class RoomLayouts {
           y: rooms[i].y,
           w: rooms[i].w,
           h: rooms[i].h,
+          beatKind: roomBeats[i],
         ),
     ];
 
     // Enemies in chambers after the first (chamber 0 = spawn staging).
-    // Only place on walkable floor — HM packs can request dozens of spawns.
+    // Budgets come from matching story beats when lengths align.
     final enemySpawns = <(int, int)>[];
     final enemyChambers = <int>[];
     final seenSpawns = <String>{};
@@ -873,22 +833,47 @@ abstract final class RoomLayouts {
       }
     }
 
-    if (combatRooms.isNotEmpty) {
+    final budgetByChamber = <int, int>{};
+    if (rooms.length == storyBeats.length) {
+      for (var i = 0; i < storyBeats.length; i++) {
+        final want = storyBeats[i].enemyBudget;
+        if (want > 0) budgetByChamber[i] = want;
+      }
+    }
+    if (budgetByChamber.isEmpty && combatRooms.isNotEmpty) {
+      // Fallback even split when beat/chamber counts diverged.
       final first = combatRooms.first;
       final firstPack = (enemyCount * 0.55).ceil().clamp(1, enemyCount);
-      fillRoom(first.$2, first.$1, firstPack);
-      for (final entry in combatRooms.skip(1)) {
-        if (enemySpawns.length >= enemyCount) break;
-        final remaining = enemyCount - enemySpawns.length;
-        final share = max(1, remaining ~/ max(1, combatRooms.length - 1));
-        fillRoom(entry.$2, entry.$1, share);
+      budgetByChamber[first.$1] = firstPack;
+      var left = enemyCount - firstPack;
+      final rest = combatRooms.skip(1).toList();
+      for (var i = 0; i < rest.length; i++) {
+        if (left <= 0) break;
+        final share = i == rest.length - 1
+            ? left
+            : max(1, left ~/ (rest.length - i));
+        budgetByChamber[rest[i].$1] = share;
+        left -= share;
       }
     }
 
-    // Leftover: round-robin walkable cells in combat rooms.
+    for (final entry in combatRooms) {
+      final want = budgetByChamber[entry.$1] ?? 0;
+      // Treasure alcoves stay quiet unless budget was assigned.
+      if (roomBeats[entry.$1] == FloorBeatKind.treasure && want <= 0) {
+        continue;
+      }
+      fillRoom(entry.$2, entry.$1, want);
+    }
+
+    // Leftover: round-robin walkable cells in combat rooms (skip empty treasure).
     if (enemySpawns.length < enemyCount) {
       final pool = <(int x, int y, int ci)>[];
       for (final entry in combatRooms) {
+        if (roomBeats[entry.$1] == FloorBeatKind.treasure &&
+            (budgetByChamber[entry.$1] ?? 0) <= 0) {
+          continue;
+        }
         final r = entry.$2;
         for (var y = r.y + 1; y < r.y + r.h - 1; y++) {
           for (var x = r.x + 1; x < r.x + r.w - 1; x++) {
@@ -924,6 +909,7 @@ abstract final class RoomLayouts {
       layoutSeed: layoutSeed,
       rng: rng,
       room: room,
+      blueprint: blueprint,
     );
   }
 
@@ -1126,10 +1112,12 @@ abstract final class RoomLayouts {
     int x0,
     int y0,
     int x1,
-    int y1,
-  ) {
+    int y1, {
+    bool narrow = false,
+  }) {
     void carveWide(int x, int y, {required bool horizontal}) {
       set(x, y, TileKind.floor);
+      if (narrow) return;
       if (horizontal) {
         set(x, y - 1, TileKind.floor);
         set(x, y + 1, TileKind.floor);
@@ -1159,6 +1147,9 @@ abstract final class RoomLayouts {
     final mid = path[path.length ~/ 2];
     final mx = mid.$1;
     final my = mid.$2;
+    if (narrow) {
+      return <(int, int)>[(mx, my)];
+    }
     final midIndex = path.length ~/ 2;
     final prev = path[midIndex - 1];
     final horizontal = prev.$2 == my;

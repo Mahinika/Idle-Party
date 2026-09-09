@@ -131,9 +131,24 @@ class PlacementPlan {
         (blueprint.legacyType == RoomType.normal &&
             rng.nextDouble() < kit.normalRoomChestChance);
     if (wantChest) {
-      final targetChamber = chambers.isEmpty
-          ? null
-          : chambers[chambers.length > 1 ? chambers.length - 1 : 0];
+      Chamber? targetChamber;
+      final preferredIdx = blueprint.preferredChestChamberIndex;
+      if (preferredIdx != null &&
+          preferredIdx >= 0 &&
+          preferredIdx < chambers.length) {
+        targetChamber = chambers[preferredIdx];
+      } else {
+        for (final c in chambers) {
+          if (c.beatKind == FloorBeatKind.treasure ||
+              c.beatKind == FloorBeatKind.elite) {
+            targetChamber = c;
+            break;
+          }
+        }
+        targetChamber ??= chambers.isEmpty
+            ? null
+            : chambers[chambers.length > 1 ? chambers.length - 1 : 0];
+      }
       final candidates = <(int, int)>[];
       for (final cell in edgeCells) {
         if (targetChamber != null &&
@@ -191,7 +206,10 @@ class PlacementPlan {
         if (used.contains('${cell.$1},${cell.$2}')) continue;
         if (inChamber(chamber, cell.$1, cell.$2)) localEdge.add(cell);
       }
-      final want = kit.landmarkPerChamber.clamp(0, 3);
+      var want = kit.landmarkPerChamber.clamp(0, 3);
+      if (chamber.beatKind == FloorBeatKind.treasure) {
+        want = (want + 1).clamp(1, 4);
+      }
       for (var i = 0; i < want; i++) {
         final cell = takeCell(localEdge);
         if (cell == null) break;

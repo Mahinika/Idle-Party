@@ -74,12 +74,13 @@ Install, start a party, and take one more floor.
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.106+** (`pubspec.yaml`). Paste a fresh note when uploading.
+Working ship: **1.12.110+139** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
 
 ```
-• Dungeon resume paints the floor fast (no stuck Loading floor…). Wipe panel is one clear sheet.
-• Hub QUIETS vault/KEY/WATCH duplicate chrome; GEAR row says Ranged · Trinkets · Flask.
-• SHOP still Coming later (Play Billing not live). Optional hub POWERUPS ads → Ad Tickets.
+• Dungeon feel: rooms have jobs (choke / treasure), multi-chamber late zones, camera shake on crits/kills/God Hand, clearer OPEN doors.
+• Combat look: hit flash, cast rings, bigger bosses; Lite VFX still shows crits / big heals / BLOCK.
+• Hub POWERUPS ads → Ad Tickets; SHOP catalog Coming later (Play Billing not live yet).
+• World Path Sandy → Mothveil; TODAY owns KEY / Gauntlet / GREATER hunts.
 ```
 
 ### Full description honesty (SHOP)

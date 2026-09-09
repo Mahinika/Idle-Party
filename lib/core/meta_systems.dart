@@ -19,10 +19,38 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.106';
+  static const String currentVersion = '1.12.110';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.110',
+      bullets: <String>[
+        'Floor feel: rooms have jobs now — choke = tight killbox + narrow door, treasure = quiet alcove with the chest. Late zones (Crystal, Storm, Rime, Fen…) are multi-chamber again instead of one open pit.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.109',
+      bullets: <String>[
+        'Dungeon feel: camera shakes on crits, kills, and God Hand. God Hand smash is louder (style-colored rings). Cleared chamber doors flash OPEN → with a gold rim so the next room is obvious.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.108',
+      bullets: <String>[
+        'Dungeon combat look: enemies flash when hit, casters show a cast ring, bosses are bigger with a wind-up telegraph. Frost DK / Unholy / Elemental / Enhancement spells read clearer. Lite VFX still shows crits, big heals, and BLOCK.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.107',
+      bullets: <String>[
+        'Background music in hub and dungeon — soft loops that sit under ambience and combat SFX. MORE → SETTINGS has Music volume (Off / Low / Med / High) separate from Ambience.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.106',
       bullets: <String>[

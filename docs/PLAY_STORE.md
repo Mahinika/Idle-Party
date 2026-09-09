@@ -8,12 +8,12 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
-| Closed testing | ⏳ review | **1.12.106 (135)** Alpha AAB submitted 2026-09-08 (dungeon resume / wipe panel / hub chrome quiet). Pre-checks then Google review. Previous live for testers: **1.12.96 (125)**. Alpha countries: all + rest of world. |
-| Production | ⏳ access review | **Production-access application submitted 2026-09-04 ~16:54**. Track still locked until Google grants access. Upload production AAB **1.12.106+135** (or newer) after IARC ads + access. |
+| Closed testing | ✅ live | **1.12.106 (135)** available for Alpha testers on Play (full rollout, published **2026-09-08**). Older AABs 125/116/… inactive. |
+| Production | ⏳ Google review | **1.12.110 (139)** Production full rollout submitted **2026-09-09** (publishing overview: Ändringarna granskas). Countries added (176+rest of world). AD_ID Console warning acknowledged (permission **is** in AAB). Not live until Google publishes. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Updated 2026-09-08: delete-account / delete-data URLs → `main` PRIVACY; AdMob device IDs shared; Play Games user IDs / files / other actions; OAuth; encryption in transit. Submitted with Alpha **135** + listing/ads bundle. |
-| IARC / content rating | ⏳ ads | Old questionnaire (2026-08-08) said **no ads**. **Still open:** finish new IARC survey (App content → Content ratings → new questionnaire) and answer ads **Yes** for POWERUPS. Agent started a draft; violence (fantasy creatures) filled — remaining sections + ads need owner finish. |
+| IARC / content rating | ⏳ review | New questionnaire submitted 2026-09-08: fantasy creature violence (often close-up, pixel, no blood), digital goods (SHOP) yes / no loot-boxes / no player trading, no fear/sex/gambling/language/drugs. Ads are **not** in this IARC form — covered by Ads declaration **Yes**. Ratings preview: ESRB 10+ fantasy violence, USK 12, PEGI 3 + IAP. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN) | ✅ | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md`. **2026-09-08:** fixed Apex line to **POWER → Craft** (was “Apex forge”). Submitted with policy bundle. |
 | Screenshots + feature graphic | ✅ phone | **Phone screenshots attached** on main listing (2026-09-04 check: 8 phone slots, Save idle = already live). Composed set also in `tool/store_listing/out/` (6×1080×1920). Feature graphic + icon live. |
@@ -28,14 +28,29 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] **14 consecutive days** with at least one tester active — production-access **application submitted 2026-09-04** (Google reviewing)
 - [x] Owner played **1.12.87+** on A56 (owner OK 2026-09-04)
 - [x] Phone screenshots attached on listing (verified 2026-09-04 — slots filled, Save idle)
-- [ ] IARC ads questionnaire re-done if Console prompts after AdMob / before production AAB
-- [ ] Production access granted by Google → upload production AAB **1.12.106+135** or newer
-- [ ] Owner play OK on the production candidate build (A56 save) before upload
+- [x] IARC new questionnaire submitted 2026-09-08 (fantasy combat + digital goods; ads via Ads declaration)
+- [x] Production access granted by Google (seen on dashboard 2026-09-09)
+- [x] Signed Production candidate AAB built: **1.12.110+139** (`app-release.aab`)
+- [x] Owner asked upload Production (2026-09-09)
+- [x] Uploaded + submitted for review: Production **139 (1.12.110)** full rollout + countries
+- [ ] Google review / publish complete → store listing live
 - [ ] After production live: AdMob store-link Idle Party
+
+### Production upload paste (en-US release notes)
+
+From `docs/STORE_LISTING.md` — use when Console asks for release notes:
+
+```
+• Dungeon feel: rooms have jobs (choke / treasure), multi-chamber late zones, camera shake on crits/kills/God Hand, clearer OPEN doors.
+• Combat look: hit flash, cast rings, bigger bosses; Lite VFX still shows crits / big heals / BLOCK.
+• Hub POWERUPS ads → Ad Tickets; SHOP catalog Coming later (Play Billing not live yet).
+• World Path Sandy → Mothveil; TODAY owns KEY / Gauntlet / GREATER hunts.
+```
+
 
 ### Production AAB upload checklist (agent + owner)
 
-1. Confirm IARC ads re-answered and production track unlocked.
+1. Confirm production track unlocked (IARC + ads declarations already submitted).
 2. `flutter build appbundle --release` with upload keystore (or tag `v*` after CI signing verified).
 3. Upload via play-store-prep CORS recipe → Production track (not Alpha).
 4. Release notes from `docs/STORE_LISTING.md` (COMING LATER / POWER wipe honesty).
@@ -74,7 +89,7 @@ over Play ops unless the owner asks about Play.
   Prefer `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md`  
   after this branch merges (branch blob still works until then).
 - [x] Data safety form (2026-08-16): **optional Play Games** (User IDs / gameplay Other actions / Saved Games files); collected not shared; encrypted in transit; OAuth; delete account + data URLs point at [PRIVACY.md](PRIVACY.md). **No Idle Party analytics servers**; clipboard export/import is optional and user-initiated.
-- [x] **Rewarded ads (1.12.27):** AdMob live IDs in app. Data safety + Advertising ID declaration updated 2026-08-21 and submitted with Alpha **57**. Privacy copy in [PRIVACY.md](PRIVACY.md). IARC ads questions still ⏳ if Console prompts.
+- [x] **Rewarded ads (1.12.27):** AdMob live IDs in app. Data safety + Advertising ID declaration updated 2026-08-21 and submitted with Alpha **57**. Privacy copy in [PRIVACY.md](PRIVACY.md). Ads declaration **Yes** + IARC re-survey 2026-09-08.
 
 ### Rewarded ads / AdMob (how money actually arrives)
 
@@ -101,7 +116,7 @@ Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not
 1. **Store-link** Idle Party in AdMob → App settings → Add store listing when Play is public (closed Alpha **cannot** link). That is the last setup step and what clears **Requires review**.
 2. After link + review: smoke POWERUPS on a Play-installed build; confirm Apps → Idle Party shows requests/impressions. Prefer a tester account; avoid click-farming your own live ads.
 3. **app-ads.txt (2026-08-22):** file is live at `https://mahinika.github.io/app-ads.txt` (repo `Mahinika/Mahinika.github.io`). Play store contact **Website** must be `https://mahinika.github.io` (not the GitHub repo URL — AdMob crawls the domain root). Wait up to 24h for AdMob crawl; then open AdMob → Apps → Idle Party → app-ads.txt and refresh status.
-4. IARC ads questions if Console asks after review.
+4. (Done 2026-09-08) IARC re-survey + Ads declaration Yes — no separate IARC ads question in the new form.
 5. Optional later: US-state privacy message (not required for EU-first ship).
 
 **Code fix (2026-08-22):** rewarded show used to finish when the ad *opened*, dispose the ad, and skip the hour. It now waits until the ad is dismissed and only then grants POWERUPS. Duration: **1 ad = 3 hours** (stacks to 24h).
@@ -130,7 +145,7 @@ Suggested Description (en-US):
 
 ## Content rating / store listing notes
 
-- [x] Content rating questionnaire (IARC) completed 2026-08-08 — mild fantasy combat; PEGI 12 / ESRB Everyone 10+ / IARC 7+ (no chat / gambling). **Re-answer the ads questions** before shipping POWERUPS ads to Play.
+- [x] Content rating questionnaire (IARC): original 2026-08-08; **re-survey submitted 2026-09-08** — fantasy creature violence (often close-up, pixel, no blood), SHOP digital goods, no loot-boxes/trading/chat. Ads via Ads declaration (not in new IARC form). Preview: ESRB 10+ / USK 12 / PEGI 3 + IAP.
 - [x] Short + full description (en-US only — no extra listing locales) from `docs/STORE_LISTING.md` (refresh listing when ship copy changes).
 - [x] Phone screenshots + feature graphic refreshed 2026-08-21 (`tool/store_listing/marketing/`, 8×1080×1920 promo cards + 1024×500 banner). Submitted for review with listing graphics. Icon still from owned `app_icon` (refresh 2026-08-16). Tablet shots unchanged.
 - [x] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*` — **`v1.12.83`** tagged + pushed 2026-08-29 (CI `build-apk.yml`); Play Alpha **112** submitted 2026-08-29.

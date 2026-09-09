@@ -26,3 +26,6 @@ Spell school chirps (`spell_fire.wav`, …) live under
 
 Ambience loops live under `assets/custom/audio/ambience/` (Idle Party
 procedural pads), not Kenney.
+
+Background music loops live under `assets/custom/audio/music/` (Idle Party
+procedural hub/dungeon tracks), not Kenney.

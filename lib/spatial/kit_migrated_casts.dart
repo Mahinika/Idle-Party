@@ -857,7 +857,7 @@ abstract final class KitNamedCasts {
             );
           }
           final wasAlive = e.hp > 0;
-          e.hp = math.max(0, e.hp - hit);
+          SpatialCombat._hurtEnemy(e, hit);
           SpatialCombat._recordHeroDamage(hero, hit);
           hero.x = e.x;
           hero.y = e.y;

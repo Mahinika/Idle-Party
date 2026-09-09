@@ -31,6 +31,27 @@ class FloorBlueprint {
           beats.any((b) => b.kind == FloorBeatKind.elite)) ||
       legacyType == RoomType.treasure;
 
+  /// Beats that become carved chambers (exit sits on the last one).
+  List<FloorBeat> get storyChambers => [
+        for (final b in beats)
+          if (b.kind != FloorBeatKind.exitHold) b,
+      ];
+
+  /// Sum of per-beat enemy budgets (should match [DungeonRoom.enemyCount]).
+  int get combatEnemyBudget =>
+      beats.fold<int>(0, (sum, b) => sum + b.enemyBudget);
+
+  /// Preferred chamber index for room-chest sockets (treasure → elite → last).
+  int? get preferredChestChamberIndex {
+    final story = storyChambers;
+    if (story.isEmpty) return null;
+    final treasure = story.indexWhere((b) => b.kind == FloorBeatKind.treasure);
+    if (treasure >= 0) return treasure;
+    final elite = story.indexWhere((b) => b.kind == FloorBeatKind.elite);
+    if (elite >= 0) return elite;
+    return story.length - 1;
+  }
+
   /// Seeded blueprint for a combat floor.
   static FloorBlueprint forRoom(
     DungeonRoom room, {
@@ -79,10 +100,9 @@ class FloorBlueprint {
             kit.preferTreasureAlcove &&
             rng.nextDouble() < kit.treasureAlcoveChance;
         if (preferTreasure && budget >= 4) {
-          final fight = max(1, (budget * 0.7).round());
-          beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: fight));
+          // Full fight budget on the choke; treasure is a quiet alcove after.
+          beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget));
           beats.add(const FloorBeat(FloorBeatKind.treasure));
-          // leftover budget conceptually on choke; placement uses total enemies
         } else if (kit.preferChoke || rng.nextDouble() < 0.65) {
           final a = max(1, budget ~/ 2);
           beats.add(FloorBeat(FloorBeatKind.approach, enemyBudget: a));

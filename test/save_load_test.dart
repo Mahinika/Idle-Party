@@ -34,6 +34,7 @@ void main() {
       soundMuted: true,
       sfxVolume: 0.35,
       ambienceVolume: 0.15,
+      musicVolume: 0.65,
       reducedVfx: true,
       rogueUnlocked: true,
       offlineSecondsRecovered: 90,
@@ -70,6 +71,7 @@ void main() {
     expect(decoded.soundMuted, isTrue);
     expect(decoded.sfxVolume, closeTo(0.35, 0.001));
     expect(decoded.ambienceVolume, closeTo(0.15, 0.001));
+    expect(decoded.musicVolume, closeTo(0.65, 0.001));
     expect(decoded.reducedVfx, isTrue);
     expect(decoded.vfxQuality.name, 'lite');
     expect(decoded.rogueUnlocked, isTrue);

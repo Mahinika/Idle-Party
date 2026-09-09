@@ -196,17 +196,20 @@ void main() {
 
   test('VfxQuality Lite keeps discs/auras; Minimal strips motion layers', () {
     expect(VfxQuality.full.showBurstsAndFloaters, isTrue);
+    expect(VfxQuality.full.showPriorityFloaters, isTrue);
     expect(VfxQuality.full.showGroundFx, isTrue);
     expect(VfxQuality.full.showActorAuras, isTrue);
     expect(VfxQuality.full.showProjectileTrails, isTrue);
 
     expect(VfxQuality.lite.showBurstsAndFloaters, isFalse);
+    expect(VfxQuality.lite.showPriorityFloaters, isTrue);
     expect(VfxQuality.lite.showGroundFx, isTrue);
     expect(VfxQuality.lite.showActorAuras, isTrue);
     expect(VfxQuality.lite.showProjectileTrails, isFalse);
     expect(VfxQuality.lite.reduced, isTrue);
 
     expect(VfxQuality.minimal.showBurstsAndFloaters, isFalse);
+    expect(VfxQuality.minimal.showPriorityFloaters, isFalse);
     expect(VfxQuality.minimal.showGroundFx, isFalse);
     expect(VfxQuality.minimal.showActorAuras, isFalse);
     expect(VfxQuality.minimal.showGuideAndPulse, isFalse);

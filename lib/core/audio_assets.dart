@@ -6,10 +6,12 @@ import '../models/spell_bolt_style.dart';
 /// SFX: Kenney RPG Audio (CC0) under [sfxRoot], plus owned spell chirps under
 /// [customSfxRoot].
 /// Ambience: Idle Party procedural pads under [ambienceRoot].
+/// Music: Idle Party procedural loops under [musicRoot].
 abstract final class AudioAssets {
   static const sfxRoot = 'assets/kenney/audio/sfx';
   static const customSfxRoot = 'assets/custom/audio/sfx';
   static const ambienceRoot = 'assets/custom/audio/ambience';
+  static const musicRoot = 'assets/custom/audio/music';
 
   static const ui = '$sfxRoot/ui.ogg';
   static const hit = '$sfxRoot/hit.ogg';
@@ -40,6 +42,9 @@ abstract final class AudioAssets {
 
   static const hubAmbience = '$ambienceRoot/hub.wav';
   static const dungeonAmbience = '$ambienceRoot/dungeon.wav';
+
+  static const hubMusic = '$musicRoot/hub.wav';
+  static const dungeonMusic = '$musicRoot/dungeon.wav';
 
   /// Every SFX id used by [GameAudio.play] → asset path.
   static const Map<String, String> sfxById = <String, String>{
@@ -169,5 +174,7 @@ abstract final class AudioAssets {
     spellLightning,
     hubAmbience,
     dungeonAmbience,
+    hubMusic,
+    dungeonMusic,
   ];
 }

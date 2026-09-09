@@ -18,16 +18,31 @@ class HubPowerupsFab extends StatelessWidget {
     super.key,
     required this.state,
     required this.onOpen,
+    this.compact = false,
   });
 
   final GameState state;
   final VoidCallback onOpen;
+
+  /// Header icon — star only, no chip under action buttons.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final md = state.metaDepth;
     final status = AdBoost.fabStatus(md);
     final lit = AdBoost.anyBuffActive(md) || md.adTickets > 0;
+    final labelColor =
+        lit ? GameTheme.torchHot : GameTheme.parchmentDim;
+    if (compact) {
+      return GameIconButton(
+        label: 'POWERUPS. $status',
+        asset: UiIcon.star,
+        size: 18,
+        color: labelColor,
+        onPressed: onOpen,
+      );
+    }
     return WebClickScope(
       label: 'POWERUPS',
       onPressed: onOpen,
@@ -40,26 +55,31 @@ class HubPowerupsFab extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onOpen,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
             child: Ink(
               decoration: MenuChrome.hubPanel(selected: lit),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                constraints: const BoxConstraints(
+                  minWidth: GameTheme.minTouch,
+                  minHeight: GameTheme.minTouch,
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: Row(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      GameIcon.asset(UiIcon.flaskBlue, size: 18),
-                      const SizedBox(width: 6),
+                      GameIcon.asset(
+                        UiIcon.star,
+                        size: 18,
+                        color: labelColor,
+                      ),
+                      const SizedBox(height: 2),
                       Text(
                         status,
-                        style: GameTheme.body(
-                          size: 11,
-                          color: lit
-                              ? GameTheme.torchHot
-                              : GameTheme.parchmentDim,
-                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.body(size: 10, color: labelColor),
                       ),
                     ],
                   ),

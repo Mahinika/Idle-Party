@@ -148,6 +148,101 @@ void main() {
     expect(map.props.any((p) => p.kind == MapPropKind.chest), isTrue);
   });
 
+  test('combat enemy budgets sum to room enemyCount', () {
+    final room = DungeonRoom(
+      floorNumber: 4,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 7,
+      enemyCount: 8,
+    );
+    final bp = FloorBlueprint.forRoom(room, dungeonId: 'fen', layoutSeed: 3);
+    expect(bp.combatEnemyBudget, room.enemyCount);
+    expect(bp.storyChambers, isNotEmpty);
+    expect(bp.storyChambers.first.kind, FloorBeatKind.approach);
+  });
+
+  test('choke chambers are tighter than approach chambers', () {
+    // Sweep seeds until we get a normal floor with both approach + choke tagged.
+    TileMap? map;
+    for (var seed = 0; seed < 80; seed++) {
+      final candidate = RoomLayouts.forFloor(
+        floorNumber: 3,
+        room: DungeonRoom(
+          floorNumber: 3,
+          roomIndex: 0,
+          type: RoomType.normal,
+          enemyLevel: 6,
+          enemyCount: 8,
+        ),
+        dungeonId: 'fen',
+        layoutSeed: seed,
+      );
+      final hasApproach = candidate.chambers.any(
+        (c) => c.beatKind == FloorBeatKind.approach,
+      );
+      final hasChoke = candidate.chambers.any(
+        (c) => c.beatKind == FloorBeatKind.choke,
+      );
+      if (hasApproach && hasChoke) {
+        map = candidate;
+        break;
+      }
+    }
+    expect(map, isNotNull, reason: 'expected fen floor with approach+choke');
+    final approach = map!.chambers
+        .where((c) => c.beatKind == FloorBeatKind.approach)
+        .toList();
+    final choke = map.chambers
+        .where((c) => c.beatKind == FloorBeatKind.choke)
+        .toList();
+    expect(approach, isNotEmpty);
+    expect(choke, isNotEmpty);
+    final approachMin = approach
+        .map((c) => c.w < c.h ? c.w : c.h)
+        .reduce((a, b) => a < b ? a : b);
+    final chokeMin = choke
+        .map((c) => c.w < c.h ? c.w : c.h)
+        .reduce((a, b) => a < b ? a : b);
+    // Choke killboxes use 4–5 on the short axis; approach staging uses 5–7+.
+    expect(chokeMin, lessThanOrEqualTo(approachMin));
+    expect(chokeMin, lessThanOrEqualTo(5));
+  });
+
+  test('rime treasure alcove holds the room chest', () {
+    TileMap? map;
+    for (var seed = 0; seed < 160; seed++) {
+      final candidate = RoomLayouts.forFloor(
+        floorNumber: 4,
+        room: DungeonRoom(
+          floorNumber: 4,
+          roomIndex: 0,
+          type: RoomType.normal,
+          enemyLevel: 8,
+          enemyCount: 8,
+        ),
+        dungeonId: 'rime',
+        layoutSeed: seed,
+      );
+      if (candidate.lootChestPoints.isEmpty) continue;
+      if (!candidate.chambers.any((c) => c.beatKind == FloorBeatKind.treasure)) {
+        continue;
+      }
+      map = candidate;
+      break;
+    }
+    expect(map, isNotNull, reason: 'expected rime floor with treasure alcove');
+    final treasure = map!.chambers.firstWhere(
+      (c) => c.beatKind == FloorBeatKind.treasure,
+    );
+    final chest = map.lootChestPoints.first;
+    expect(
+      treasure.containsTile(chest.$1, chest.$2),
+      isTrue,
+      reason: 'chest should sit in the treasure alcove',
+    );
+  });
+
   test('PlacementPlan marks chest_on_exit when forced', () {
     final tiles = List<TileKind>.filled(9, TileKind.floor);
     // Tiny map: only exit cell is edge-ish — force conflict by placing chest

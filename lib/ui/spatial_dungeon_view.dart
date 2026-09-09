@@ -425,6 +425,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                         world,
                         constraints,
                         targetCols: widget.director.state.dungeonZoom.targetCols,
+                        shake: widget.director.combatShake,
+                        visualFrame: widget.director.visualFrame,
                       );
                       return Stack(
                         fit: StackFit.expand,
@@ -1104,6 +1106,7 @@ class _TileRoomPainter extends CustomPainter {
   bool get showAuras => vfxQuality.showActorAuras;
   bool get showGuide => vfxQuality.showGuideAndPulse;
   bool get showBursts => vfxQuality.showBurstsAndFloaters;
+  bool get showPriorityFloaters => vfxQuality.showPriorityFloaters;
   bool get showGround => vfxQuality.showGroundFx;
   bool get showTrails => vfxQuality.showProjectileTrails;
   bool get showLootPulse => vfxQuality.showLootPulse;
@@ -1195,7 +1198,7 @@ class _TileRoomPainter extends CustomPainter {
 
         if (kind == TileKind.gate) {
           // Only the center cell of a 3-wide gate strip draws a door sprite.
-          if (_isGateDoorCenter(x, y)) {
+            if (_isGateDoorCenter(x, y)) {
             final door = gateOpen ? doorOpen : doorClosed;
             final eastWest = DungeonEnvironment.gateRunsEastWest(
               world.map,
@@ -1206,6 +1209,15 @@ class _TileRoomPainter extends CustomPainter {
             if (!gateOpen) {
               _fillPaint.color = const Color(0x44000000);
               canvas.drawRect(dst, _fillPaint);
+            } else {
+              // Open door always reads as progress (even Minimal VFX).
+              canvas.drawRect(
+                dst.deflate(tile * 0.08),
+                Paint()
+                  ..color = const Color(0x88FFE08A)
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = math.max(1.5, tile * 0.06),
+              );
             }
           } else if (!gateOpen) {
             // Side cells: sealed stubs, not extra door panels.
@@ -1437,14 +1449,29 @@ class _TileRoomPainter extends CustomPainter {
         world.pulseTimer > 0 &&
         world.pulseX != null &&
         world.pulseY != null) {
-      final progress = (1 - world.pulseTimer / 0.35).clamp(0.0, 1.0);
+      final progress = (1 - world.pulseTimer / 0.55).clamp(0.0, 1.0);
+      final pc = center(world.pulseX!, world.pulseY!);
+      final outer = tile * (0.55 + progress * 2.8);
       canvas.drawCircle(
-        center(world.pulseX!, world.pulseY!),
-        tile * (0.4 + progress * 2.4),
+        pc,
+        outer,
         Paint()
-          ..color = const Color(0xDFFFF0A0)
+          ..color = Color.fromRGBO(255, 230, 120, 0.85 * (1 - progress * 0.5))
           ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(2, tile * 0.1),
+          ..strokeWidth = math.max(2.5, tile * 0.12),
+      );
+      canvas.drawCircle(
+        pc,
+        outer * 0.55,
+        Paint()
+          ..color = Color.fromRGBO(255, 248, 200, 0.55 * (1 - progress))
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(1.8, tile * 0.08),
+      );
+      canvas.drawCircle(
+        pc,
+        tile * 0.35 * (1 - progress * 0.4),
+        Paint()..color = Color.fromRGBO(255, 240, 180, 0.4 * (1 - progress)),
       );
     }
 
@@ -1730,15 +1757,59 @@ class _TileRoomPainter extends CustomPainter {
           : enemies[enemy.assetIndex.clamp(0, enemies.length - 1)];
       if (img == null) continue;
       final flash = enemy.attackFlash;
+      final hit = enemy.hitFlash;
+      final isBoss = enemy.role == EnemyRole.boss;
       final c = center(enemy.x, enemy.y);
       final scale =
-          (enemy.role == EnemyRole.boss ? 1.05 : 0.9) * (1 + flash * 0.18);
+          (isBoss ? 1.22 : 0.9) *
+          (1 + flash * 0.18 + hit * 0.12);
+      if (isBoss && enemy.isAlive) {
+        canvas.drawCircle(
+          c,
+          tile * 0.58,
+          Paint()
+            ..color = const Color(0x55000000)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+        );
+        canvas.drawCircle(
+          c,
+          tile * 0.48,
+          Paint()
+            ..color = const Color(0x88C04030)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(1.8, tile * 0.07),
+        );
+      }
       drawSprite(img, c, scale, alpha: enemy.isAlive ? 1 : 0.2);
+      if (hit > 0.02 && enemy.isAlive) {
+        canvas.drawCircle(
+          c,
+          tile * (isBoss ? 0.42 : 0.34) * (0.55 + hit),
+          Paint()..color = Color.fromRGBO(255, 220, 200, 0.55 * hit.clamp(0, 1)),
+        );
+      }
       if (flash > 0.02) {
         canvas.drawCircle(
           c,
           tile * 0.35 * flash,
           Paint()..color = const Color(0x66FFE8A0),
+        );
+      }
+      // Boss wind-up telegraph when about to swing.
+      if (isBoss &&
+          enemy.isAlive &&
+          showAuras &&
+          enemy.fireCooldown > 0 &&
+          enemy.fireCooldown < 0.45 &&
+          enemy.attackCooldown > 0) {
+        final wind = (1.0 - (enemy.fireCooldown / 0.45)).clamp(0.0, 1.0);
+        canvas.drawCircle(
+          c,
+          tile * (0.55 + wind * 0.25),
+          Paint()
+            ..color = Color.fromRGBO(255, 60, 40, 0.25 + wind * 0.45)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(2.0, tile * 0.09),
         );
       }
       if (enemy.isAlive) {
@@ -2186,6 +2257,36 @@ class _TileRoomPainter extends CustomPainter {
                 : const Color(0x77FFF0C0),
         );
       }
+      if (hero.isAlive &&
+          showGuide &&
+          hero.castingTimer > 0.02 &&
+          hero.castingDuration > 0.05) {
+        final progress =
+            (1.0 - (hero.castingTimer / hero.castingDuration)).clamp(0.0, 1.0);
+        final ringR = tile * 0.52;
+        final rect = Rect.fromCircle(center: c, radius: ringR);
+        canvas.drawArc(
+          rect,
+          -math.pi / 2,
+          math.pi * 2,
+          false,
+          Paint()
+            ..color = const Color(0x55FFFFFF)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(1.5, tile * 0.06),
+        );
+        canvas.drawArc(
+          rect,
+          -math.pi / 2,
+          math.pi * 2 * progress,
+          false,
+          Paint()
+            ..color = const Color(0xEEFFE08A)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(2.2, tile * 0.09)
+            ..strokeCap = StrokeCap.round,
+        );
+      }
       if (hero.isAlive) {
         drawBar(c, hero.hp, hero.effectiveMaxHp, tile * 0.8);
       }
@@ -2361,12 +2462,13 @@ class _TileRoomPainter extends CustomPainter {
       }
     }
 
-    if (showBursts) {
+    if (showBursts || showPriorityFloaters) {
       final floaters = world.floaters;
       final tp = TextPainter(textDirection: TextDirection.ltr);
       final maxW = tile * 4.4;
       for (var i = 0; i < floaters.length; i++) {
         final floater = floaters[i];
+        if (!showBursts && floater.priority < 2) continue;
         if (!_inView(floater.x, floater.y, pad: 0.5)) continue;
         final speech = floater.kind == SpatialFloaterKind.speech;
         final fadeFor = speech
@@ -2866,6 +2968,8 @@ class _TileCamera {
     SpatialWorld? world,
     BoxConstraints constraints, {
     double targetCols = 20,
+    double shake = 0,
+    int visualFrame = 0,
   }) {
     if (world == null) {
       return const _TileCamera(
@@ -2886,9 +2990,20 @@ class _TileCamera {
     final centerY = leader?.y ?? world.rows / 2;
     final maxCamX = math.max(0.0, world.cols - cols);
     final maxCamY = math.max(0.0, world.rows - visibleRows);
+    var camX = (centerX - cols / 2).clamp(0.0, maxCamX).toDouble();
+    var camY = (centerY - visibleRows / 2).clamp(0.0, maxCamY).toDouble();
+    if (shake > 0.02) {
+      final amp = shake * 0.38; // tiles
+      camX = (camX + math.sin(visualFrame * 1.7) * amp)
+          .clamp(0.0, maxCamX)
+          .toDouble();
+      camY = (camY + math.cos(visualFrame * 2.3) * amp * 0.85)
+          .clamp(0.0, maxCamY)
+          .toDouble();
+    }
     return _TileCamera(
-      camX: (centerX - cols / 2).clamp(0.0, maxCamX).toDouble(),
-      camY: (centerY - visibleRows / 2).clamp(0.0, maxCamY).toDouble(),
+      camX: camX,
+      camY: camY,
       tileSize: tileSize,
       visibleCols: cols,
       visibleRows: visibleRows,

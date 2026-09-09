@@ -207,6 +207,12 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             onCycle: director.cycleAmbienceVolume,
           ),
           const SizedBox(height: 8),
+          _SettingsCycle(
+            label: 'Music ${_volumeLabel(state.musicVolume)}',
+            hint: 'Hub / dungeon background track',
+            onCycle: director.cycleMusicVolume,
+          ),
+          const SizedBox(height: 8),
           _SettingsToggle(
             label: 'Haptics (vibration)',
             value: state.hapticsEnabled,

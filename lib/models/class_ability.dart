@@ -3151,6 +3151,14 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFC05060,
+        groundDisc: true,
+        groundArgb: 0x77A03040,
+        groundLife: 2.8,
+      ),
 
       aoeShape: AbilityAoeShape.ground,
       gate: AbilityGate(maintainDot: true),
@@ -3265,6 +3273,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.78,
+      boltStyle: SpellBoltStyle.frost,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.frost,
+        castArgb: 0xFFA0E8FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.frostStrike,
@@ -3279,6 +3292,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.62,
+      boltStyle: SpellBoltStyle.frost,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.frost,
+        castArgb: 0xFF80D0FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.howlingBlast,
@@ -3293,6 +3311,14 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 1.05,
+      boltStyle: SpellBoltStyle.frost,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.frost,
+        castArgb: 0xFFB8F0FF,
+        groundDisc: true,
+        groundArgb: 0x6690D8FF,
+        groundLife: 2.2,
+      ),
 
       aoeShape: AbilityAoeShape.rain,
       gate: AbilityGate(maintainDot: true),
@@ -3404,6 +3430,12 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.04,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFB070E0,
+      ),
+      castDelaySeconds: 0.35,
     ),
     ClassAbilityDef(
       id: AbilityId.bloodBoilUnholy,
@@ -3418,6 +3450,14 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.70,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFF9060A8,
+        groundDisc: true,
+        groundArgb: 0x66804090,
+        groundLife: 2.8,
+      ),
 
       aoeShape: AbilityAoeShape.ground,
       gate: AbilityGate(maintainDot: true),
@@ -3554,6 +3594,12 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.55,
+      boltStyle: SpellBoltStyle.fire,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.fire,
+        castArgb: 0xFFFF6020,
+      ),
+      castDelaySeconds: 0.45,
     ),
     ClassAbilityDef(
       id: AbilityId.chainLightning,
@@ -3568,6 +3614,11 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 1.05,
+      boltStyle: SpellBoltStyle.lightning,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.lightning,
+        castArgb: 0xFFB8F0FF,
+      ),
 
       aoeShape: AbilityAoeShape.chain,
     ),
@@ -3661,6 +3712,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.35,
+      boltStyle: SpellBoltStyle.lightning,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.lightning,
+        castArgb: 0xFF90E8FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.lavaLash,
@@ -3675,6 +3731,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.25,
+      boltStyle: SpellBoltStyle.fire,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.fire,
+        castArgb: 0xFFFF7040,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.fireNova,
@@ -3689,6 +3750,14 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.75,
+      boltStyle: SpellBoltStyle.fire,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.fire,
+        castArgb: 0xFFFF8040,
+        groundDisc: true,
+        groundArgb: 0x88FF6030,
+        groundLife: 2.0,
+      ),
 
       aoeShape: AbilityAoeShape.ground,
     ),

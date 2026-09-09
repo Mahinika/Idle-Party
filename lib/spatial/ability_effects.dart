@@ -50,6 +50,9 @@ abstract final class AbilityEffectRunner {
   static void applyCastDelay(SpatialActor hero, ClassAbilityDef def) {
     final delay = _castDelaySeconds(hero, def);
     if (delay <= 0) return;
+    if (delay >= hero.castingTimer) {
+      hero.castingDuration = delay;
+    }
     hero.castingTimer = math.max(hero.castingTimer, delay);
     hero.pendingCastDef = def.id.name;
     hero.castFlash = math.max(hero.castFlash, math.min(0.35, delay));
@@ -1049,6 +1052,9 @@ abstract final class AbilityEffectRunner {
   }) {
     final delay = _castDelaySeconds(hero, def);
     if (delay > 0) {
+      if (delay >= hero.castingTimer) {
+        hero.castingDuration = delay;
+      }
       hero.castingTimer = math.max(hero.castingTimer, delay);
       hero.pendingCastDef = def.id.name;
       hero.castFlash = math.max(hero.castFlash, math.min(0.35, delay));
@@ -1162,7 +1168,7 @@ abstract final class AbilityEffectRunner {
       attackerAttack: hero.attack,
     );
     final wasAlive = enemy.hp > 0;
-    enemy.hp = math.max(0, enemy.hp - dealt);
+    SpatialCombat._hurtEnemy(enemy, dealt);
     SpatialCombat._recordHeroDamage(hero, dealt);
     SpatialCombat._applyTankSoftThreat(hero, enemy);
     SpatialCombat._spawnSlash(world, from: hero, to: enemy, isCrit: false);
@@ -1477,7 +1483,7 @@ abstract final class AbilityEffectRunner {
           defense: e.effectiveDefense,
           attackerAttack: hero.attack,
         );
-        e.hp = math.max(0, e.hp - dealt);
+        SpatialCombat._hurtEnemy(e, dealt);
         SpatialCombat._recordHeroDamage(hero, dealt);
         SpatialCombat._applyTankSoftThreat(hero, e);
         if (dealt > 0) {
@@ -1693,7 +1699,7 @@ abstract final class AbilityEffectRunner {
         defense: e.effectiveDefense,
         attackerAttack: hero.attack,
       );
-      e.hp = math.max(0, e.hp - dealt);
+      SpatialCombat._hurtEnemy(e, dealt);
       SpatialCombat._recordHeroDamage(hero, dealt);
       SpatialCombat._applyTankSoftThreat(hero, e);
       if (dealt > 0) {

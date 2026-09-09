@@ -85,12 +85,18 @@ void main() {
     );
   });
 
-  test('sfx and ambience volumes round-trip in save JSON', () {
+  test('sfx, ambience, and music volumes round-trip in save JSON', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 8, 30))
-        .copyWith(sfxVolume: 0.35, ambienceVolume: 0.15, soundMuted: false);
+        .copyWith(
+          sfxVolume: 0.35,
+          ambienceVolume: 0.15,
+          musicVolume: 0.65,
+          soundMuted: false,
+        );
     final decoded = GameLogic.stateFromJson(state.toJson());
     expect(decoded.sfxVolume, closeTo(0.35, 0.001));
     expect(decoded.ambienceVolume, closeTo(0.15, 0.001));
+    expect(decoded.musicVolume, closeTo(0.65, 0.001));
     expect(decoded.soundMuted, isFalse);
   });
 }

@@ -15,6 +15,7 @@ import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/spec_mastery.dart';
 import '../models/spell_bolt_style.dart';
+import '../models/vfx_quality.dart';
 import '../assets/kenney_assets.dart';
 import 'combat_avoidance.dart';
 import 'hideout_stash.dart';
@@ -244,6 +245,9 @@ class SpatialActor {
 
   /// Cast-bar lockout for signature spells.
   double castingTimer = 0;
+
+  /// Initial cast length (seconds) while [castingTimer] counts down — for UI ring.
+  double castingDuration = 0;
   String? pendingCastDef;
 
   /// Waiting for chamber unlock (gated rooms).
@@ -1314,7 +1318,10 @@ abstract final class SpatialCombat {
     }
     if (a.castingTimer > 0) {
       a.castingTimer = math.max(0, a.castingTimer - dt);
-      if (a.castingTimer <= 0) a.pendingCastDef = null;
+      if (a.castingTimer <= 0) {
+        a.pendingCastDef = null;
+        a.castingDuration = 0;
+      }
     }
     if (a.spiritRegenPaused > 0) {
       a.spiritRegenPaused = math.max(0, a.spiritRegenPaused - dt);
@@ -1533,7 +1540,7 @@ abstract final class SpatialCombat {
     if (_actorIsTank(hero) || _actorResource(hero) == SpecResource.rage) {
       _gainRage(hero, 2.5 + dealt * 0.35);
     }
-    if (blocked && !reducedVfx) {
+    if (blocked) {
       _spawnFloater(
         world,
         x: hero.x,
@@ -1541,6 +1548,7 @@ abstract final class SpatialCombat {
         text: 'BLOCK',
         argb: 0xFF9AD0FF,
         life: 0.4,
+        priority: 2,
       );
     }
     if (dealt > 0) {
@@ -1572,16 +1580,19 @@ abstract final class SpatialCombat {
     lowest.hp = math.min(lowest.effectiveMaxHp, lowest.hp + heal);
     final gained = lowest.hp - before;
     _recordHeroHeal(healer, gained);
-    if (gained > 0 && !reducedVfx && gained >= 8) {
-      _spawnFloater(
-        world,
-        x: lowest.x,
-        y: lowest.y - 0.4,
-        text: '+$gained',
-        argb: _floaterHeal,
-        life: 0.4,
-        priority: 1,
-      );
+    if (gained > 0 && gained >= 8) {
+      final pri = gained >= 35 ? 2 : 1;
+      if (!reducedVfx || pri >= 2) {
+        _spawnFloater(
+          world,
+          x: lowest.x,
+          y: lowest.y - 0.4,
+          text: '+$gained',
+          argb: _floaterHeal,
+          life: 0.4,
+          priority: pri,
+        );
+      }
     }
   }
 
@@ -2474,6 +2485,7 @@ abstract final class SpatialCombat {
     to.rootTimer = from.rootTimer;
     to.ccRootDrLevel = from.ccRootDrLevel;
     to.castingTimer = from.castingTimer;
+    to.castingDuration = from.castingDuration;
     to.pendingCastDef = from.pendingCastDef;
     to.spiritRegenPaused = from.spiritRegenPaused;
     to.physicalAttack = from.physicalAttack;
@@ -2931,6 +2943,24 @@ abstract final class SpatialCombat {
     hero.damageDealt += dealt;
   }
 
+  /// Apply damage to an enemy and flash the sprite so hits read on phone.
+  static int _hurtEnemy(SpatialActor enemy, int dealt, {bool soft = false}) {
+    if (dealt <= 0 || enemy.team != SpatialTeam.enemy) return 0;
+    enemy.hp = math.max(0, enemy.hp - dealt);
+    final life = soft
+        ? 0.07
+        : (enemy.role == EnemyRole.boss ? 0.16 : 0.11);
+    enemy.hitFlash = math.max(enemy.hitFlash, life);
+    return dealt;
+  }
+
+  /// Spawn floater when Full VFX, or priority (crit/heal/block) on Lite.
+  static bool _allowFloater(VfxQuality quality, {required int priority}) {
+    if (quality == VfxQuality.full) return true;
+    if (quality == VfxQuality.minimal) return false;
+    return priority >= 2 && quality.showPriorityFloaters;
+  }
+
   static void _recordHeroHeal(SpatialActor? healer, int gained) {
     if (healer == null ||
         gained <= 0 ||
@@ -3327,7 +3357,7 @@ abstract final class SpatialCombat {
             );
           }
           final wasAlive = enemy.hp > 0;
-          enemy.hp = math.max(0, enemy.hp - tickDmg);
+          _hurtEnemy(enemy, tickDmg, soft: true);
           if (caster != null) _recordHeroDamage(caster, tickDmg);
           if (!reducedVfx) {
             _spawnFloater(
@@ -3358,7 +3388,7 @@ abstract final class SpatialCombat {
               defense: e.effectiveDefense,
               attackerAttack: caster?.attack ?? boom,
             );
-            e.hp = math.max(0, e.hp - dealt);
+            _hurtEnemy(e, dealt);
             if (caster != null) _recordHeroDamage(caster, dealt);
             if (!reducedVfx) {
               _spawnFloater(
@@ -3411,7 +3441,7 @@ abstract final class SpatialCombat {
             );
           }
           final wasAlive = enemy.hp > 0;
-          enemy.hp = math.max(0, enemy.hp - tickDmg);
+          _hurtEnemy(enemy, tickDmg, soft: true);
           if (caster != null) _recordHeroDamage(caster, tickDmg);
           if (!reducedVfx) {
             _spawnFloater(
@@ -3765,7 +3795,7 @@ abstract final class SpatialCombat {
             defense: target.effectiveDefense,
             attackerAttack: hero.attack,
           );
-          target.hp = math.max(0, target.hp - dealt);
+          _hurtEnemy(target, dealt);
           _recordHeroDamage(hero, dealt);
           if (dealt > 0) {
             final hitStyle = abilityTag != null
@@ -3817,7 +3847,7 @@ abstract final class SpatialCombat {
                 _ => 0.30,
               };
               final cleave = math.max(1, (dealt * frac).round());
-              e.hp = math.max(0, e.hp - cleave);
+              _hurtEnemy(e, cleave, soft: true);
               _recordHeroDamage(hero, cleave);
               // No per-cleave number — pack swings already shout on the main hit.
             }
@@ -3836,6 +3866,12 @@ abstract final class SpatialCombat {
               to: target,
               isCrit: isCrit || abilityTag != null,
             );
+          }
+          if (_allowFloater(
+                nextState.vfxQuality,
+                priority: isCrit ? 2 : (abilityTag != null ? 1 : 0),
+              ) ||
+              !reducedVfx) {
             _spawnHitFloater(
               world,
               x: target.x + (rng.nextDouble() - 0.5) * 0.25,
@@ -4144,7 +4180,7 @@ abstract final class SpatialCombat {
                 defense: v.effectiveDefense,
                 attackerAttack: caster?.attack ?? hitDmg,
               );
-              v.hp = math.max(0, v.hp - dealt);
+              _hurtEnemy(v, dealt);
               if (caster != null) {
                 _recordHeroDamage(caster, dealt);
                 _applyTankSoftThreat(caster, v);
@@ -4175,7 +4211,12 @@ abstract final class SpatialCombat {
                 );
               }
             }
-            if (dealt > 0 && !reducedVfx) {
+            if (dealt > 0 &&
+                (_allowFloater(
+                      nextState.vfxQuality,
+                      priority: p.isCrit ? 2 : (p.labelArgb != null ? 1 : 0),
+                    ) ||
+                    !reducedVfx)) {
               _spawnHitFloater(
                 world,
                 x: v.x + (rng.nextDouble() - 0.5) * 0.25,
@@ -4327,7 +4368,7 @@ abstract final class SpatialCombat {
           defense: target.effectiveDefense,
           attackerAttack: pet.attack,
         );
-        target.hp = math.max(0, target.hp - petHit);
+        _hurtEnemy(target, petHit);
         pet.attackFlash = 0.14;
         final owner =
             _heroById(world, pet.petOwnerId) ??
@@ -4375,27 +4416,49 @@ abstract final class SpatialCombat {
     world.godHandCooldown = state.godHandCooldownSeconds;
     world.pulseX = tileX;
     world.pulseY = tileY;
-    world.pulseTimer = 0.35;
+    world.pulseTimer = 0.55;
     final damage = state.godHandSmashDamage(baseDamage: baseDamage);
     final radius = state.godHandSmashRadius;
     world.godHandRadius = radius;
     final reduced = state.reducedVfx;
-    if (!reduced) {
+    final styleArgb = switch (state.metaDepth.godHandStyle) {
+      1 => 0xFFFF9040, // FOCUS — hot orange
+      2 => 0xFF90D8FF, // WIDE — cool blue
+      _ => 0xFFFFE080, // BAL — gold
+    };
+    // Smash must read even on Lite — Minimal keeps motion quiet.
+    if (state.vfxQuality != VfxQuality.minimal) {
       _spawnRing(
         world,
         x: tileX,
         y: tileY,
-        argb: 0xFFFFE080,
-        radius: radius * 0.55,
-        life: 0.42,
+        argb: styleArgb,
+        radius: radius * 0.95,
+        life: 0.55,
+      );
+      _spawnRing(
+        world,
+        x: tileX,
+        y: tileY,
+        argb: 0x88FFFFFF,
+        radius: radius * 0.45,
+        life: 0.32,
       );
       _spawnBurst(
         world,
         x: tileX,
         y: tileY,
-        argb: 0xAAFFF0A0,
-        radius: radius * 0.35,
-        life: 0.28,
+        argb: styleArgb,
+        radius: radius * 0.5,
+        life: 0.35,
+        kind: SpatialBurstKind.ring,
+      );
+      _spawnSpark(
+        world,
+        x: tileX,
+        y: tileY,
+        argb: 0xFFFFF8D0,
+        radius: 0.7,
       );
     }
     var gold = 0;
@@ -4405,15 +4468,16 @@ abstract final class SpatialCombat {
       if (enemy.hp <= 0 || enemy.dormant) continue;
       if (_distPoint(tileX, tileY, enemy.x, enemy.y) <= radius) {
         final wasAlive = enemy.hp > 0;
-        enemy.hp = math.max(0, enemy.hp - damage);
-        if (!reduced) {
+        _hurtEnemy(enemy, damage);
+        if (state.vfxQuality != VfxQuality.minimal) {
           _spawnFloater(
             world,
             x: enemy.x,
             y: enemy.y - 0.35,
             text: '$damage',
-            argb: _floaterDamage,
+            argb: styleArgb,
             life: 0.75,
+            priority: 2,
           );
         }
         if (wasAlive && enemy.hp <= 0) {
@@ -4520,38 +4584,43 @@ abstract final class SpatialCombat {
       if (!world.clearedChambers.contains(gate.opensAfterChamber)) continue;
       final wasOpen = world.openGateIds.contains(gate.id);
       world.openGateIds.add(gate.id);
-      if (!wasOpen && !reducedVfx) {
+      if (!wasOpen) {
         // One shout per door strip — multi-tile gates used to spam OPEN×3.
         var alreadyShouted = false;
         for (final f in world.floaters) {
-          if (f.text == 'OPEN' && f.priority >= 2) {
+          if (f.text.startsWith('OPEN') && f.priority >= 2) {
             alreadyShouted = true;
             break;
           }
         }
-        _spawnRing(
-          world,
-          x: gate.x + 0.5,
-          y: gate.y + 0.5,
-          argb: 0xFFFFD070,
-          radius: 1.0,
-          life: 0.4,
-        );
-        if (!alreadyShouted) {
-          _spawnSpark(
+        if (!reducedVfx) {
+          _spawnRing(
             world,
             x: gate.x + 0.5,
             y: gate.y + 0.5,
-            argb: 0xFFFFF0A0,
-            radius: 0.55,
+            argb: 0xFFFFD070,
+            radius: 1.35,
+            life: 0.55,
           );
+        }
+        if (!alreadyShouted) {
+          if (!reducedVfx) {
+            _spawnSpark(
+              world,
+              x: gate.x + 0.5,
+              y: gate.y + 0.5,
+              argb: 0xFFFFF0A0,
+              radius: 0.55,
+            );
+          }
+          // Priority floater — still paints on Lite VFX.
           _spawnFloater(
             world,
             x: gate.x + 0.5,
             y: gate.y - 0.45,
-            text: 'OPEN',
+            text: 'OPEN →',
             argb: _floaterGold,
-            life: 0.7,
+            life: 0.95,
             priority: 2,
           );
         }

@@ -99,6 +99,7 @@ class GameState {
     this.soundMuted = false,
     this.sfxVolume = 0.7,
     this.ambienceVolume = 0.25,
+    this.musicVolume = 0.4,
     this.vfxQuality = VfxQuality.full,
     this.autoSellMaxPower = 48,
     this.autoSellMaxRarity = 1,
@@ -296,6 +297,9 @@ class GameState {
 
   /// Hub/dungeon ambience gain 0..1 (default 0.25). Survives Ascend.
   final double ambienceVolume;
+
+  /// Hub/dungeon background music gain 0..1 (default 0.4). Survives Ascend.
+  final double musicVolume;
 
   /// Combat VFX detail (full / lite / minimal).
   final VfxQuality vfxQuality;
@@ -1011,6 +1015,7 @@ class GameState {
     bool? soundMuted,
     double? sfxVolume,
     double? ambienceVolume,
+    double? musicVolume,
     VfxQuality? vfxQuality,
     bool? reducedVfx,
     int? autoSellMaxPower,
@@ -1138,6 +1143,7 @@ class GameState {
       soundMuted: soundMuted ?? this.soundMuted,
       sfxVolume: sfxVolume ?? this.sfxVolume,
       ambienceVolume: ambienceVolume ?? this.ambienceVolume,
+      musicVolume: musicVolume ?? this.musicVolume,
       vfxQuality:
           vfxQuality ??
           (reducedVfx == null
@@ -1297,6 +1303,7 @@ class GameState {
     'soundMuted': soundMuted,
     'sfxVolume': sfxVolume,
     'ambienceVolume': ambienceVolume,
+    'musicVolume': musicVolume,
     'vfxQuality': vfxQuality.name,
     'reducedVfx': reducedVfx,
     'autoSellMaxPower': autoSellMaxPower,
@@ -1547,6 +1554,10 @@ class GameState {
       ),
       ambienceVolume: ((json['ambienceVolume'] as num?)?.toDouble() ?? 0.25)
           .clamp(0.0, 1.0),
+      musicVolume: ((json['musicVolume'] as num?)?.toDouble() ?? 0.4).clamp(
+        0.0,
+        1.0,
+      ),
       vfxQuality: VfxQuality.fromJson(
         json['vfxQuality'],
         legacyReduced: json['reducedVfx'] as bool?,

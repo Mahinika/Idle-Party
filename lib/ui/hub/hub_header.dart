@@ -169,6 +169,7 @@ class HubHeader extends StatefulWidget {
     this.plainChrome = false,
     this.huntHint,
     this.blessingStacks = 0,
+    this.powerupsFab,
   });
 
   final int ascensionLevel;
@@ -190,6 +191,9 @@ class HubHeader extends StatefulWidget {
 
   /// Ascend Blessing stacks for KEEP one-liner.
   final int blessingStacks;
+
+  /// Optional hub POWERUPS control (header slot — not on main CTAs).
+  final Widget? powerupsFab;
 
   @override
   State<HubHeader> createState() => _HubHeaderState();
@@ -234,6 +238,10 @@ class _HubHeaderState extends State<HubHeader> {
                 ),
               ),
             ),
+            if (widget.powerupsFab != null) ...[
+              const SizedBox(width: 2),
+              widget.powerupsFab!,
+            ],
             GameIconButton(
               label: 'Settings',
               asset: UiIcon.settings,

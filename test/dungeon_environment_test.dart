@@ -107,7 +107,7 @@ void main() {
     expect(DungeonEnvironment.gateRunsEastWest(map, 3, 2), isTrue);
   });
 
-  test('Crystal Spire arena keeps spawn, exit, and enemies apart', () {
+  test('Crystal Spire keeps spawn, exit, and enemies apart', () {
     final map = RoomLayouts.forFloor(
       floorNumber: 2,
       room: const DungeonRoom(
@@ -120,11 +120,11 @@ void main() {
       dungeonId: 'crystal',
     );
     expect(map.spawnPoints, isNotEmpty);
+    expect(map.chambers.length, greaterThanOrEqualTo(2));
     expect(
       map.spawnPoints.first,
       isNot((map.exitPoint.$1, map.exitPoint.$2)),
     );
-    expect(map.exitPoint.$2, lessThan(map.spawnPoints.first.$2));
     final spawnPad = {
       for (final p in map.spawnPoints) '${p.$1},${p.$2}',
     };

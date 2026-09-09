@@ -450,22 +450,40 @@ class _HubScreenState extends State<HubScreen>
 
   bool _showPowerupsFab({required bool short}) {
     final chase = HubChase.forState(state);
+    final md = state.metaDepth;
+    final powerupsActive = AdBoost.anyBuffActive(md);
+    final hasTickets = md.adTickets > 0;
+
+    if (powerupsActive || hasTickets) return true;
+
+    if (md.adFree) {
+      return AdBoost.canClaimAdFreeDaily(md);
+    }
+
+    // Don't float WATCH over a READY TODAY claim (vault, quests, kit, …).
+    if (chase.urgency == HubChaseUrgency.ready) return false;
+    switch (chase.kind) {
+      case HubChaseKind.claimDailyVault:
+      case HubChaseKind.claimMissions:
+      case HubChaseKind.meetHero:
+      case HubChaseKind.equipBag:
+      case HubChaseKind.marketUpgrade:
+      case HubChaseKind.ascend:
+        return false;
+      default:
+        break;
+    }
+
     final endgameHunt =
         GameLogic.endgameUnlocked(state) &&
         (hubChaseOwnsEndgameRow(chase.kind) ||
             chase.kind == HubChaseKind.keystone);
-    final powerupsActive = AdBoost.anyBuffActive(state.metaDepth);
-    final hasTickets = state.metaDepth.adTickets > 0;
-    if (state.metaDepth.adFree) {
-      return powerupsActive ||
-          hasTickets ||
-          AdBoost.canClaimAdFreeDaily(state.metaDepth);
+    if (endgameHunt || GameLogic.plainPlayerChrome(state)) {
+      return false;
     }
-    if (GameLogic.plainPlayerChrome(state)) {
-      return powerupsActive || hasTickets;
-    }
-    if (endgameHunt) return powerupsActive || hasTickets;
-    return !short || powerupsActive || hasTickets;
+
+    // Mid-game discoverability on taller hub layouts only.
+    return !short;
   }
 
   @override
@@ -554,6 +572,16 @@ class _HubScreenState extends State<HubScreen>
                                 huntHint: _shortHuntHint(chase),
                                 blessingStacks:
                                     state.metaDepth.ascendBlessings,
+                                powerupsFab: _showPowerupsFab(short: short)
+                                    ? HubPowerupsFab(
+                                        state: state,
+                                        compact: true,
+                                        onOpen: () => openPowerupsSheet(
+                                          context,
+                                          director,
+                                        ),
+                                      )
+                                    : null,
                               ),
                               if (director.offlineSummary != null) ...[
                                 SizedBox(height: short ? 4 : 8),
@@ -638,16 +666,6 @@ class _HubScreenState extends State<HubScreen>
                       ),
                     ],
                   ),
-                  if (_showPowerupsFab(short: short))
-                    Positioned(
-                      // Above KEY DIAL / action column — not nested on the dial.
-                      right: 10,
-                      bottom: short ? 118 : 148,
-                      child: HubPowerupsFab(
-                        state: state,
-                        onOpen: () => openPowerupsSheet(context, director),
-                      ),
-                    ),
                 ],
               );
             },

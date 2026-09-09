@@ -3,7 +3,7 @@ enum VfxQuality {
   /// Full bursts, floaters, auras, trails.
   full,
 
-  /// Skip bursts/floaters; keep projectiles + actor auras + ground discs.
+  /// Skip routine floaters/bursts; keep discs, auras, and priority crit/heal text.
   lite,
 
   /// Minimal: no bursts/floaters/auras/ground discs; simple projectiles only.
@@ -12,6 +12,9 @@ enum VfxQuality {
   bool get reduced => this != VfxQuality.full;
 
   bool get showBurstsAndFloaters => this == VfxQuality.full;
+
+  /// Crit / big heal / BLOCK numbers — readable on Lite, off on Minimal.
+  bool get showPriorityFloaters => this != VfxQuality.minimal;
 
   bool get showActorAuras => this != VfxQuality.minimal;
 
@@ -33,7 +36,7 @@ enum VfxQuality {
 
   String get settingsHint => switch (this) {
     VfxQuality.full => 'All combat effects',
-    VfxQuality.lite => 'No floaters/bursts — discs & auras stay',
+    VfxQuality.lite => 'Crits & heals stay — routine floaters/bursts off',
     VfxQuality.minimal => 'Reduce motion — auras & discs off too',
   };
 
