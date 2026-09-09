@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/hero_identity.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
@@ -769,6 +771,173 @@ void main() {
     for (final path in paths) {
       expect(File(path).existsSync(), isTrue, reason: path);
     }
+  });
+
+  test('owned doll carries a spec wash; Kenney fallback does not', () {
+    final owned = CharacterVisualPose.resolve(
+      hero: nakedWarrior(),
+      anim: idle,
+      owned: true,
+    );
+    expect(owned.bodyTint, isNotNull);
+    expect(
+      owned.bodyTint,
+      const Color(0xFFB0C8F0),
+      reason: 'protection blue from HeroIdentity',
+    );
+
+    // Every spec must read as itself — the doll has only four bodies.
+    final tints = <int>{};
+    for (final specId in HeroSpecId.values) {
+      tints.add(HeroIdentity.ownedBodyTintArgb(specId));
+    }
+    expect(tints.length, greaterThan(20));
+    expect(tints, isNot(contains(0xFFFFFFFF)));
+
+    expect(
+      CharacterVisualPose.resolve(hero: nakedWarrior(), anim: idle).bodyTint,
+      isNull,
+    );
+  });
+
+  test('step offset fakes motion the single body clip cannot show', () {
+    CharacterVisualPose posed(HeroAnimKind kind, double progress) =>
+        CharacterVisualPose.resolve(
+          hero: nakedWarrior(),
+          anim: HeroAnimPose(kind: kind, frame: 0, progress: progress),
+          owned: true,
+        );
+
+    // Idle stands still.
+    expect(
+      CharacterVisualPainter.ownedStepOffset(posed(HeroAnimKind.idle, 0), 64),
+      Offset.zero,
+    );
+    // Walk bobs up mid-step, feet-down at the ends.
+    final mid = CharacterVisualPainter.ownedStepOffset(
+      posed(HeroAnimKind.walk, 0.25),
+      64,
+    );
+    expect(mid.dy, lessThan(0));
+    expect(
+      CharacterVisualPainter.ownedStepOffset(posed(HeroAnimKind.walk, 0), 64).dy,
+      closeTo(0, 0.001),
+    );
+    // Hit recoils backward and fades out.
+    final hitStart = CharacterVisualPainter.ownedStepOffset(
+      posed(HeroAnimKind.hit, 0),
+      64,
+    );
+    final hitEnd = CharacterVisualPainter.ownedStepOffset(
+      posed(HeroAnimKind.hit, 1),
+      64,
+    );
+    expect(hitStart.dx, lessThan(0));
+    expect(hitEnd, Offset.zero);
+  });
+
+  test('walk swings the held weapon so steps read as motion', () {
+    CharacterVisualPose posed(HeroAnimKind kind, double progress) =>
+        CharacterVisualPose.resolve(
+          hero: nakedWarrior(),
+          anim: HeroAnimPose(kind: kind, frame: 0, progress: progress),
+          owned: true,
+        );
+    expect(posed(HeroAnimKind.idle, 0.5).mainHandExtraRotation, 0);
+    expect(
+      posed(HeroAnimKind.walk, 0.25).mainHandExtraRotation,
+      greaterThan(0),
+    );
+    expect(posed(HeroAnimKind.walk, 0.75).mainHandExtraRotation, lessThan(0));
+  });
+
+  test('pose cache tracks material, rarity and live clip progress', () {
+    EquipmentItem chest({
+      required ArmorType armor,
+      required LootRarity rarity,
+    }) => GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: rarity,
+      battleNumber: 4,
+      bias: HeroRole.rogue,
+    ).copyWith(armorType: armor, visualSetId: 'chest_t0');
+
+    final rogue = PartyHero.starting(
+      name: 'Sly',
+      specId: HeroSpecId.combat,
+      stats: PartyHero.startingStatsForSpec(HeroSpecId.combat),
+    );
+    final leather = rogue.copyWith(
+      equipped: {
+        EquipmentSlot.chest: chest(
+          armor: ArmorType.leather,
+          rarity: LootRarity.common,
+        ),
+      },
+    );
+    final mail = rogue.copyWith(
+      equipped: {
+        EquipmentSlot.chest: chest(
+          armor: ArmorType.mail,
+          rarity: LootRarity.common,
+        ),
+      },
+    );
+    final rare = rogue.copyWith(
+      equipped: {
+        EquipmentSlot.chest: chest(
+          armor: ArmorType.leather,
+          rarity: LootRarity.rare,
+        ),
+      },
+    );
+    expect(
+      CharacterVisualPose.equipHashOf(leather),
+      isNot(CharacterVisualPose.equipHashOf(mail)),
+      reason: 'mail picks a different overlay PNG',
+    );
+    expect(
+      CharacterVisualPose.equipHashOf(leather),
+      isNot(CharacterVisualPose.equipHashOf(rare)),
+      reason: 'rarity changes the overlay tint',
+    );
+
+    // Same key, fresher progress → same layers, live bob.
+    final first = CharacterVisualPoseCache.resolve(
+      heroId: rogue.id,
+      hero: leather,
+      anim: const HeroAnimPose(
+        kind: HeroAnimKind.walk,
+        frame: 0,
+        progress: 0.1,
+      ),
+      owned: true,
+    );
+    final second = CharacterVisualPoseCache.resolve(
+      heroId: rogue.id,
+      hero: leather,
+      anim: const HeroAnimPose(
+        kind: HeroAnimKind.walk,
+        frame: 0,
+        progress: 0.4,
+      ),
+      owned: true,
+    );
+    expect(second.anim.progress, 0.4);
+    expect(identical(first.layers, second.layers), isTrue);
+    CharacterVisualPoseCache.clear();
+  });
+
+  test('dungeon precache skips BAG icon crops', () {
+    final doll = OwnedGearAssets.dollOverlayPaths;
+    expect(doll, isNotEmpty);
+    expect(doll.every((p) => p.endsWith('_idle.png')), isTrue);
+    expect(
+      doll.length,
+      lessThan(OwnedGearAssets.allAssetPaths.length),
+      reason: 'icons are GEAR/BAG only',
+    );
+    expect(doll, contains('assets/custom/char/gear/sword_t0_idle.png'));
   });
 
   test('owned grips cover every shared visual set', () {

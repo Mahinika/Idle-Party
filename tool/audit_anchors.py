@@ -32,7 +32,23 @@ def to_uv(nx: float, ny: float) -> tuple[float, float]:
     return (0.5 + nx, 0.5 + ny)
 
 
+def shipped_grips() -> dict[str, tuple[float, float]]:
+    """Read the grips the game actually uses (generated Dart is the truth)."""
+    import re
+
+    text = (ROOT / "lib" / "visual" / "owned_gear_grips.dart").read_text(
+        encoding="utf-8"
+    )
+    return {
+        m.group(1): (float(m.group(2)), float(m.group(3)))
+        for m in re.finditer(
+            r"'([a-z0-9_]+)':\s*Offset\(([0-9.]+),\s*([0-9.]+)\)", text
+        )
+    }
+
+
 def grip_uv(im: Image.Image, *, off_hand: bool) -> tuple[float, float] | None:
+    """Legacy geometric guess — kept only to show drift vs shipped grips."""
     bbox = im.getbbox()
     if bbox is None:
         return None
@@ -155,35 +171,53 @@ def main() -> None:
                     )
 
     print()
-    print("=== GRIP AUDIT (shift to land on owned idle hand) ===")
+    # The painter shifts each hand item so its grip lands on the hand anchor,
+    # so a large shift is by design. Only two things are real problems: a grip
+    # sitting on transparent pixels, or art that shifts mostly off canvas.
+    print("=== GRIP AUDIT (shipped grips from owned_gear_grips.dart) ===")
     grip_findings: list[tuple[str, float, float, str]] = []
+    overhang: list[tuple[str, float]] = []
+    shipped = shipped_grips()
     for path in sorted(GEAR.glob("*_idle.png")):
         stem = path.name.removesuffix("_idle.png")
+        grip = shipped.get(stem)
         im = Image.open(path).convert("RGBA")
+        if grip is None:
+            print(f"{stem:28s} NO GRIP ENTRY — falls back to a guess")
+            grip_findings.append((stem, 0.0, 0.0, "NO_GRIP_ENTRY"))
+            continue
         off = stem.startswith(("shield_", "frill_"))
         want = OWNED_IDLE["offHand"] if off else OWNED_IDLE["mainHand"]
-        target_uv = to_uv(*want)
-        grip = grip_uv(im, off_hand=off)
-        if not grip:
-            continue
-        land_x, land_y = grip[0] - 0.5, grip[1] - 0.5
-        sx, sy = want[0] - land_x, want[1] - land_y
-        mag = math.hypot(sx, sy)
-        dhand = math.hypot(grip[0] - target_uv[0], grip[1] - target_uv[1])
+        px = im.load()
+        gx, gy = int(grip[0] * 128), int(grip[1] * 128)
+        on_art = any(
+            px[min(127, max(0, gx + dx)), min(127, max(0, gy + dy))][3] >= 40
+            for dx in range(-4, 5)
+            for dy in range(-4, 5)
+        )
+        # How much of the art survives the shift onto the hand anchor.
+        sx = int((to_uv(*want)[0] - grip[0]) * 128)
+        sy = int((to_uv(*want)[1] - grip[1]) * 128)
+        bb = im.getbbox() or (0, 0, 0, 0)
+        w, h = bb[2] - bb[0], bb[3] - bb[1]
+        vis_w = max(0, min(128, bb[2] + sx) - max(0, bb[0] + sx))
+        vis_h = max(0, min(128, bb[3] + sy) - max(0, bb[1] + sy))
+        kept = (vis_w * vis_h) / max(1, w * h)
         flags: list[str] = []
-        if mag > 0.12:
-            flags.append("BIG_SHIFT")
-        elif mag > 0.05:
-            flags.append("shift")
-        if dhand > 0.18:
-            flags.append("FAR_FROM_HAND_SOCKET")
+        if not on_art:
+            flags.append("GRIP_ON_EMPTY_PIXELS")
         flag = " ".join(flags)
         print(
             f"{stem:28s} grip=({grip[0]:.3f},{grip[1]:.3f}) "
-            f"shift=({sx:+.3f},{sy:+.3f}) |s|={mag:.3f} artD={dhand:.3f} {flag}"
+            f"onArt={'y' if on_art else 'N'} inBox={kept:.2f} {flag}"
         )
         if flags:
-            grip_findings.append((stem, mag, dhand, flag))
+            grip_findings.append((stem, kept, 0.0, flag))
+        elif kept < 0.7:
+            # Not a bug: the painter does not clip to the 128 box, so a long
+            # weapon legitimately reaches past the hero square. Worth an eye
+            # on GEAR tiles, where an ancestor may clip.
+            overhang.append((stem, kept))
 
     print()
     print("=== CODE WIRING (static checklist) ===")
@@ -210,9 +244,8 @@ def main() -> None:
         stem = path.name.removesuffix("_idle.png")
         off = stem.startswith(("shield_", "frill_"))
         want = OWNED_IDLE["offHand"] if off else OWNED_IDLE["mainHand"]
-        want_uv = to_uv(*want)
         weap = Image.open(path).convert("RGBA")
-        grip = grip_uv(weap, off_hand=off)
+        grip = shipped.get(stem) or grip_uv(weap, off_hand=off)
         canvas = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
         canvas.alpha_composite(warrior)
         if grip:
@@ -268,8 +301,12 @@ def main() -> None:
         print(" BODY:", f)
     for f in anim_findings:
         print(" ANIM:", f)
-    for stem, mag, dhand, flag in sorted(grip_findings, key=lambda t: -t[1]):
-        print(f" GRIP: {stem:28s} |shift|={mag:.3f} artD={dhand:.3f} {flag}")
+    for stem, kept, _unused, flag in sorted(grip_findings, key=lambda t: t[1]):
+        print(f" GRIP: {stem:28s} inBox={kept:.2f} {flag}")
+    if overhang:
+        print(" notes (long art reaches past the hero box — not a bug):")
+        for stem, kept in sorted(overhang, key=lambda t: t[1]):
+            print(f"   {stem:28s} inBox={kept:.2f}")
     print(f"wrote {board_path.relative_to(ROOT)}")
     print(f"wrote {strip_path.relative_to(ROOT)}")
 

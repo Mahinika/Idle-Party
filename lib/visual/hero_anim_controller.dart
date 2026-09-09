@@ -1,86 +1,13 @@
 import 'hero_anim_state.dart';
 
-/// Pure-Dart animation state machine for dungeon heroes.
+/// Pure-Dart animation resolver for dungeon heroes.
 ///
 /// Priority: death > hit > attack|cast > walk > idle.
 /// Victory is optional and only wins when nothing higher is active.
-class HeroAnimController {
-  HeroAnimKind _kind = HeroAnimKind.idle;
-  double _clipElapsed = 0;
-  bool _locked = false;
-
-  HeroAnimKind get kind => _kind;
-  bool get locked => _locked;
-
-  /// Advance [dt] seconds using [signals]; returns the painter pose.
-  HeroAnimPose tick(double dt, HeroAnimSignals signals) {
-    if (_locked && _kind == HeroAnimKind.death) {
-      return HeroAnimPose(
-        kind: HeroAnimKind.death,
-        frame: _frameFor(HeroAnimKind.death, 1),
-        locked: true,
-        progress: 1,
-      );
-    }
-
-    final next = _resolveKind(signals);
-    if (next != _kind) {
-      _kind = next;
-      _clipElapsed = 0;
-      if (next == HeroAnimKind.death) _locked = true;
-    } else {
-      _clipElapsed += dt;
-    }
-
-    final duration = _clipDuration(_kind);
-    final progress = duration <= 0
-        ? 0.0
-        : (_clipElapsed / duration).clamp(0.0, 1.0);
-    final frame = _frameFor(_kind, progress);
-
-    // One-shots fall back when their flash expires.
-    if (!_locked &&
-        (_kind == HeroAnimKind.attack ||
-            _kind == HeroAnimKind.cast ||
-            _kind == HeroAnimKind.hit) &&
-        progress >= 1) {
-      _kind = signals.moving ? HeroAnimKind.walk : HeroAnimKind.idle;
-      _clipElapsed = 0;
-      return tick(0, signals);
-    }
-
-    return HeroAnimPose(
-      kind: _kind,
-      frame: frame,
-      locked: _locked,
-      progress: progress,
-    );
-  }
-
-  HeroAnimKind _resolveKind(HeroAnimSignals signals) {
-    if (signals.dead || _locked) return HeroAnimKind.death;
-    if (signals.hit || signals.hitFlash > 0.02) return HeroAnimKind.hit;
-    if (signals.attacking || signals.attackFlash > 0.02) {
-      return HeroAnimKind.attack;
-    }
-    if (signals.casting || signals.castFlash > 0.02) {
-      return HeroAnimKind.cast;
-    }
-    if (signals.victory) return HeroAnimKind.victory;
-    if (signals.moving) return HeroAnimKind.walk;
-    return HeroAnimKind.idle;
-  }
-
-  static double _clipDuration(HeroAnimKind kind) => switch (kind) {
-    HeroAnimKind.idle => 0.8,
-    HeroAnimKind.walk => 0.35,
-    HeroAnimKind.attack => 0.22,
-    HeroAnimKind.cast => 0.35,
-    HeroAnimKind.hit => 0.18,
-    HeroAnimKind.death => 0.4,
-    HeroAnimKind.victory => 0.6,
-  };
-
+///
+/// Stateless by design — the dungeon repaints from combat flash timers, so
+/// there is no per-hero clip clock to keep.
+abstract final class HeroAnimController {
   /// Kenney body columns: 0 = idle/stand, 1 = walk/attack lean.
   static int _frameFor(HeroAnimKind kind, double progress) => switch (kind) {
     HeroAnimKind.idle => 0,
@@ -92,13 +19,7 @@ class HeroAnimController {
     HeroAnimKind.victory => progress < 0.5 ? 0 : 1,
   };
 
-  void reset() {
-    _kind = HeroAnimKind.idle;
-    _clipElapsed = 0;
-    _locked = false;
-  }
-
-  /// Stateless pose for painters (no persistent controller needed).
+  /// Pose for painters, straight from this frame's combat signals.
   ///
   /// Uses flash timers for one-shot progress; [walkPhase] 0–1 picks walk frame.
   static HeroAnimPose snapshot(

@@ -37,7 +37,8 @@ class BodyFamilyDef {
       HeroAnimKind.walk => walkAsset,
       HeroAnimKind.attack => attackAsset,
       HeroAnimKind.cast => castAsset ?? attackAsset,
-      HeroAnimKind.hit => hitAsset ?? walkAsset,
+      // No hit clip: stay on idle. The walk stride read as a phantom step.
+      HeroAnimKind.hit => hitAsset ?? idleAsset,
       HeroAnimKind.death => deathAsset ?? idleAsset,
       HeroAnimKind.victory => idleAsset,
       HeroAnimKind.idle => idleAsset,

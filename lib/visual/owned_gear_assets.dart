@@ -202,7 +202,16 @@ abstract final class OwnedGearAssets {
     return familyGear(family, fileStem, overlayAnim);
   }
 
-  /// Precache list: idle overlays + BAG `*_icon` crops (boots icons included).
+  /// Overlays the doll actually paints (no BAG `*_icon` crops).
+  ///
+  /// The dungeon precaches this — [allAssetPaths] would also decode ~97 icon
+  /// textures that only GEAR/BAG ever draw.
+  static List<String> get dollOverlayPaths => [
+    for (final path in allAssetPaths)
+      if (path.endsWith('_idle.png')) path,
+  ];
+
+  /// Every owned overlay + BAG `*_icon` crop (boots icons included).
   ///
   /// Bodies precache via [BodyFamilyCatalog.allAssetPaths]. Walk/attack use
   /// the same idle gear overlays on poser body clips.

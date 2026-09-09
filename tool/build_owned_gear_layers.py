@@ -31,13 +31,6 @@ TUNIC = {
     "mage": ((98, 88, 168), (72, 62, 128)),
     "rogue": ((62, 78, 56), (44, 54, 42)),
 }
-HAIR = {
-    "warrior": (92, 62, 38),
-    "healer": (210, 176, 88),
-    "mage": (48, 48, 58),
-    "rogue": (36, 28, 24),
-}
-
 
 def dist(a: tuple[int, int, int], b: tuple[int, int, int]) -> float:
     return math.sqrt(sum((x - y) ** 2 for x, y in zip(a, b)))
@@ -527,8 +520,6 @@ def paint_undertunic(
             op[x, y] = recolor_to_cloth(rgb, cloth, a)
 
     if family in ("mage", "healer"):
-        from PIL import ImageDraw
-
         has_hair = False
         for y in range(max(0, int(fy - face_half * 2)), int(fy)):
             for x in range(
@@ -540,11 +531,12 @@ def paint_undertunic(
             if has_hair:
                 break
         if not has_hair:
-            d = ImageDraw.Draw(out)
-            hx = face_half * 1.12
-            d.ellipse(
-                [fx - hx, fy - face_half * 1.45, fx + hx, fy - face_half * 0.15],
-                fill=(*HAIR[family], 255),
+            # Header rule: never invent shapes. A drawn hair ellipse is exactly
+            # the placeholder look this pipeline banned — leave it bald and say so.
+            print(
+                f"WARN {family}: no hair pixels in _src head region — body stays "
+                f"bald. Add hair to _src/body_idle.png or "
+                f"gear/_authored/, do not draw it here."
             )
     return out
 

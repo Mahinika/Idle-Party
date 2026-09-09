@@ -315,7 +315,8 @@ def frill_soulcodex_idle() -> Image.Image:
     return im
 
 
-def write_set(set_id: str, idle: Image.Image, *, force: bool) -> None:
+def write_set(set_id: str, idle: Image.Image, *, force: bool) -> bool:
+    """Sync one set. Returns False when it refused to draw over art."""
     ROOT.mkdir(parents=True, exist_ok=True)
     AUTH.mkdir(parents=True, exist_ok=True)
     idle_auth = AUTH / f"{set_id}_idle.png"
@@ -326,12 +327,22 @@ def write_set(set_id: str, idle: Image.Image, *, force: bool) -> None:
             if src.exists():
                 (ROOT / src.name).write_bytes(src.read_bytes())
                 print(f"sync {src.name}")
-        return
+        return True
+    if not force:
+        # A missing master must not silently become a drawn stub that later
+        # looks hand-authored. Drop real art, or pass --force on purpose.
+        print(
+            f"REFUSED {set_id}: no _authored master. Add "
+            f"assets/custom/char/gear/_authored/{set_id}_idle.png "
+            f"or re-run with --force."
+        )
+        return False
     for anim, frame in pose_frames(idle).items():
         name = f"{set_id}_{anim}.png"
         frame.save(ROOT / name)
         frame.save(AUTH / name)
         print(f"wrote {name}")
+    return True
 
 
 def opaque(im: Image.Image) -> int:
@@ -371,14 +382,20 @@ def main() -> None:
         # frill_prism / frill_soulcodex: use tool/derive_frill_variants.py
         # (recolor of frill_t0) — never ImageDraw stubs.
     ]
-    for set_id, fn in models:
-        write_set(set_id, fn(), force=force)
+    refused = [
+        set_id for set_id, fn in models if not write_set(set_id, fn(), force=force)
+    ]
     for set_id, _ in models:
         idle_p = ROOT / f"{set_id}_idle.png"
         if not idle_p.exists():
             raise SystemExit(f"missing {idle_p}")
         print(f"ok idle {set_id} opaque={opaque(Image.open(idle_p))}")
-    print("done: weapon model variants generated")
+    if refused:
+        raise SystemExit(
+            f"{len(refused)} set(s) had no authored master: {', '.join(refused)}"
+        )
+    print("done: weapon model variants synced")
+    print("remember: py tool/check_paper_doll_facit.py --relock if art changed")
 
 
 if __name__ == "__main__":

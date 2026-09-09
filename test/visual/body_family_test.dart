@@ -43,9 +43,11 @@ void main() {
       BodyFamilyCatalog.assetFor(mage, HeroAnimKind.cast),
       'assets/custom/char/mage/body_attack.png',
     );
+    // No hit clip: idle + painter recoil. The walk stride read as a phantom
+    // step every time a hero took damage.
     expect(
       BodyFamilyCatalog.assetFor(mage, HeroAnimKind.hit),
-      'assets/custom/char/mage/body_walk.png',
+      'assets/custom/char/mage/body_idle.png',
     );
   });
 

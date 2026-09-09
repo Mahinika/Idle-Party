@@ -3,9 +3,21 @@
 Composites the shipped body + overlays (not a gitignored preview PNG), so
 CI and a clean checkout actually check looks. See
 .cursor/skills/character-paper-doll/SKILL.md.
+
+Also gates the parts the looks facit cannot judge:
+- t2 / rogue-mail / healer-plate overlays exist, are 128x128, and differ from
+  their t0 peer without losing the silhouette;
+- every shared weapon / shield has pixels under its declared grip point;
+- `tool/paper_doll_lock.json` pins a hash per shipped PNG, so a re-run of any
+  generator that quietly reshapes art fails instead of shipping.
+
+Run with `--relock` after a deliberate art change.
 """
 from __future__ import annotations
 
+import hashlib
+import json
+import re
 import sys
 from pathlib import Path
 
@@ -14,6 +26,8 @@ from PIL import Image
 REPO = Path(__file__).resolve().parents[1]
 CHAR = REPO / "assets" / "custom" / "char"
 TOOL = REPO / "tool"
+LOCK = TOOL / "paper_doll_lock.json"
+GRIPS_DART = REPO / "lib" / "visual" / "owned_gear_grips.dart"
 FAMILIES = ("warrior", "healer", "mage", "rogue")
 
 # Idle facit gate vs dressed _src. Walk/attack dungeon uses idle overlays on
@@ -113,9 +127,167 @@ def check_files() -> list[str]:
     return [e for e in errors if e]
 
 
+MATERIAL_BY_FAMILY = {"rogue": "mail", "healer": "plate"}
+ARMOR_STEMS = ("helm", "chest", "legs", "cloak", "hands")
+
+
+def shipped_pngs() -> list[Path]:
+    """Every PNG pubspec bundles (registered dirs are non-recursive)."""
+    dirs = [CHAR / fam for fam in FAMILIES]
+    dirs += [CHAR / fam / "gear" for fam in FAMILIES]
+    dirs.append(CHAR / "gear")
+    out: list[Path] = []
+    for d in dirs:
+        if not d.exists():
+            continue
+        out += [p for p in sorted(d.iterdir()) if p.is_file() and p.suffix == ".png"]
+    return out
+
+
+def alpha_ratio(im: Image.Image) -> float:
+    px = im.convert("RGBA").load()
+    opaque = 0
+    for y in range(im.height):
+        for x in range(im.width):
+            if px[x, y][3] >= 40:
+                opaque += 1
+    return opaque / float(im.width * im.height)
+
+
+def silhouette_diff(a: Image.Image, b: Image.Image) -> float:
+    """Share of pixels where exactly one of the two images is opaque."""
+    pa = a.convert("RGBA").load()
+    pb = b.convert("RGBA").load()
+    union = 0
+    only = 0
+    for y in range(128):
+        for x in range(128):
+            oa = pa[x, y][3] >= 40
+            ob = pb[x, y][3] >= 40
+            if not (oa or ob):
+                continue
+            union += 1
+            if oa != ob:
+                only += 1
+    return only / max(1, union)
+
+
+def check_tiers_and_materials() -> list[str]:
+    """t2 and material variants must exist and read as their own armor."""
+    errors: list[str] = []
+    for family in FAMILIES:
+        gear = CHAR / family / "gear"
+        variants = [""]
+        material = MATERIAL_BY_FAMILY.get(family)
+        if material:
+            variants.append(f"_{material}")
+        for var in variants:
+            for stem in ARMOR_STEMS:
+                t0 = gear / f"{stem}{var}_t0_idle.png"
+                t2 = gear / f"{stem}{var}_t2_idle.png"
+                for path in (t0, t2):
+                    err = must_exist_128(path)
+                    if err:
+                        errors.append(err)
+                if errors and (not t0.exists() or not t2.exists()):
+                    continue
+                im0 = Image.open(t0)
+                im2 = Image.open(t2)
+                if alpha_ratio(im2) < 0.002 and alpha_ratio(im0) >= 0.002:
+                    errors.append(
+                        f"empty t2 {t2.relative_to(REPO)} (t0 has pixels)"
+                    )
+                    continue
+                if var and alpha_ratio(im0) < 0.002:
+                    errors.append(f"empty material {t0.relative_to(REPO)}")
+                    continue
+                shift = silhouette_diff(im0, im2)
+                if shift > 0.55:
+                    errors.append(
+                        f"t2 silhouette drifted {shift:.2f} "
+                        f"{t2.relative_to(REPO)} (want <= 0.55)"
+                    )
+    return errors
+
+
+def parse_grips() -> dict[str, tuple[float, float]]:
+    text = GRIPS_DART.read_text(encoding="utf-8")
+    out: dict[str, tuple[float, float]] = {}
+    for m in re.finditer(
+        r"'([a-z0-9_]+)':\s*Offset\(([0-9.]+),\s*([0-9.]+)\)", text
+    ):
+        out[m.group(1)] = (float(m.group(2)), float(m.group(3)))
+    return out
+
+
+def check_hand_items() -> list[str]:
+    """Each weapon/shield needs pixels where the code grabs it."""
+    errors: list[str] = []
+    grips = parse_grips()
+    if not grips:
+        return ["no grips parsed from owned_gear_grips.dart"]
+    for set_id, (gx, gy) in sorted(grips.items()):
+        path = CHAR / "gear" / f"{set_id}_idle.png"
+        err = must_exist_128(path)
+        if err:
+            errors.append(err)
+            continue
+        im = Image.open(path).convert("RGBA")
+        px = im.load()
+        cx, cy = int(gx * 128), int(gy * 128)
+        near = 0
+        for y in range(max(0, cy - 6), min(128, cy + 7)):
+            for x in range(max(0, cx - 6), min(128, cx + 7)):
+                if px[x, y][3] >= 40:
+                    near += 1
+        if near == 0:
+            errors.append(
+                f"grip ({gx:.3f},{gy:.3f}) hits empty pixels in "
+                f"{path.relative_to(REPO)}"
+            )
+    return errors
+
+
+def check_lock(relock: bool) -> list[str]:
+    """Pin art bytes so a stray generator run cannot ship silently."""
+    current = {
+        str(p.relative_to(REPO)).replace("\\", "/"): hashlib.sha256(
+            p.read_bytes()
+        ).hexdigest()
+        for p in shipped_pngs()
+    }
+    if relock or not LOCK.exists():
+        LOCK.write_text(
+            json.dumps(current, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        print(f"{'relocked' if relock else 'wrote'} {LOCK.relative_to(REPO)} "
+              f"({len(current)} files)")
+        return []
+    locked = json.loads(LOCK.read_text(encoding="utf-8"))
+    errors: list[str] = []
+    for name, digest in sorted(locked.items()):
+        if name not in current:
+            errors.append(f"art removed: {name}")
+        elif current[name] != digest:
+            errors.append(f"art changed without --relock: {name}")
+    for name in sorted(set(current) - set(locked)):
+        errors.append(f"art added without --relock: {name}")
+    return errors
+
+
 def main() -> int:
+    relock = "--relock" in sys.argv
     failed = 0
     for msg in check_files():
+        print("FAIL", msg)
+        failed += 1
+    for msg in check_tiers_and_materials():
+        print("FAIL", msg)
+        failed += 1
+    for msg in check_hand_items():
+        print("FAIL", msg)
+        failed += 1
+    for msg in check_lock(relock):
         print("FAIL", msg)
         failed += 1
 

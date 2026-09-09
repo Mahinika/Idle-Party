@@ -378,15 +378,18 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       ..[HeroSpecId.feral] = shared[i++]
       ..[HeroSpecId.guardian] = shared[i++];
 
+    // Doll overlays only — BAG `*_icon` crops are never painted in a dungeon.
     final bodyPaths = [
       ...BodyFamilyCatalog.allAssetPaths,
-      ...OwnedGearAssets.allAssetPaths,
+      ...OwnedGearAssets.dollOverlayPaths,
     ];
-    final bodyEntries = <MapEntry<String, ui.Image>>[];
-    for (final path in bodyPaths) {
-      final img = await loadSoft(path, targetWidth: 128);
-      if (img != null) bodyEntries.add(MapEntry(path, img));
-    }
+    final bodyImages = await Future.wait(
+      bodyPaths.map((path) => loadSoft(path, targetWidth: 128)),
+    );
+    final bodyEntries = <MapEntry<String, ui.Image>>[
+      for (var i = 0; i < bodyPaths.length; i++)
+        if (bodyImages[i] != null) MapEntry(bodyPaths[i], bodyImages[i]!),
+    ];
     if (!mounted || gen != _loadGen) return;
     if (bodyEntries.isNotEmpty) {
       setState(() {

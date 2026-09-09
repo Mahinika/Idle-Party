@@ -48,8 +48,14 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
    character as `_src`, not a grey mushroom head.
 4. Run `py tool/check_paper_doll_facit.py` — composites **live** body+overlays
    vs `_src` (no gitignored preview required). Fail if idle armor stack drifts.
-5. Only then full `flutter run` on A56 (PNG bytes need a rebuild, not hot reload).
-6. Dart tests prove paths/layers; **facit gate proves looks**.
+   It also gates t2 / mail / plate variants, checks every grip lands on opaque
+   pixels, and compares every shipped PNG against `tool/paper_doll_lock.json`.
+   After a **deliberate** art change: `--relock`, then commit the lock file.
+5. Hand art moved? `py tool/gen_owned_gear_grips.py`, then
+   `py tool/audit_anchors.py` (findings must be empty; "reaches past the hero
+   box" notes are fine — the painter does not clip).
+6. Only then full `flutter run` on A56 (PNG bytes need a rebuild, not hot reload).
+7. Dart tests prove paths/layers; **facit gate proves looks**.
 
 ## Never
 
@@ -79,6 +85,15 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
   **idle-only** live PNGs (`OwnedGearAssets.pathFor` → `*_idle.png`). Do not
   regenerate live `*_walk` / `*_attack` overlays. Missing body clip → idle
   fallback, never Kenney on owned
+- `hit` uses the **idle** body + painter recoil — not the walk stride
+- Motion for the single clips lives in `ownedStepOffset` /
+  `mainHandExtraRotation`, not in new PNGs
+- Every spec gets a body wash (`HeroIdentity.ownedBodyTintArgb`) on the
+  **undertunic only**; gear overlays keep rarity tints
+- Grips must sit on **opaque** pixels (handle centroid; bows mid-shape).
+  Never hand-edit `owned_gear_grips.dart` — regenerate it
+- Dungeon precache uses `dollOverlayPaths`, not `allAssetPaths` (icons are
+  GEAR/BAG only)
 - Leftover walk/attack under `gear/_authored/` may exist as art archive — not
   shipped live overlays
 
@@ -93,10 +108,10 @@ Optional hand pixels (win over extract):
 
 ```bash
 py tool/build_owned_gear_layers.py
-py tool/check_paper_doll_facit.py
-flutter test test/visual/character_pose_scenarios_test.dart \
-  test/visual/equipment_visual_resolver_test.dart \
-  test/visual/body_family_test.dart
+py tool/gen_owned_gear_grips.py   # only when hand art moved
+py tool/check_paper_doll_facit.py # add --relock after deliberate art changes
+py tool/audit_anchors.py
+flutter test test/visual
 ```
 
 Common chest must add a torso layer (`chest_t0_*.png`). Empty chest = body only.
