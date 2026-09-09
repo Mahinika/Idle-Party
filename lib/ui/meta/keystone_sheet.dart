@@ -77,29 +77,24 @@ class _KeystoneSheetState extends State<KeystoneSheet>
         MenuChrome.tabRail(
           controller: _tabs,
           tabs: [
-            MenuChrome.bridgedTabScoped(
+            MenuChrome.bridgedTab(
               'KEY',
-              scope: 'run',
               onSelect: () => _tabs.animateTo(0),
             ),
-            MenuChrome.bridgedTabScoped(
+            MenuChrome.bridgedTab(
               'SPIRE',
-              scope: 'run',
               onSelect: () => _tabs.animateTo(1),
             ),
-            MenuChrome.bridgedTabScoped(
+            MenuChrome.bridgedTab(
               'RIFT',
-              scope: 'run',
               onSelect: () => _tabs.animateTo(2),
             ),
-            MenuChrome.bridgedTabScoped(
+            MenuChrome.bridgedTab(
               'GR',
-              scope: 'run',
               onSelect: () => _tabs.animateTo(3),
             ),
-            MenuChrome.bridgedTabScoped(
+            MenuChrome.bridgedTab(
               'BOARDS',
-              scope: 'account',
               onSelect: () => _tabs.animateTo(4),
             ),
           ],
@@ -117,7 +112,7 @@ class _KeystoneSheetState extends State<KeystoneSheet>
                       'KEYSTONE',
                       scope: MenuScope.run,
                     ),
-                    ChallengeToggles(director: d),
+                    ChallengeToggles(director: d, lockExpanded: true),
                   ],
                 ),
               ),

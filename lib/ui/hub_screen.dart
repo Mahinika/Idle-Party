@@ -612,13 +612,18 @@ class _HubScreenState extends State<HubScreen>
                                   dungeon: selectedDungeon,
                                   unlocked: unlockedSelected,
                                   partyLevel: GameLogic.partyMeanLevel(state),
-                                  keyLevel: state.hardmodeLevel,
-                                  keyAffixLine: state.hardmodeLevel > 0
-                                      ? Keystone.previewAffixes(state)
-                                          .take(2)
-                                          .map(Keystone.label)
-                                          .join(' · ')
-                                      : null,
+                                  // KEY chase detail already lists affixes · par.
+                                  keyLevel: chase.kind == HubChaseKind.keystone
+                                      ? 0
+                                      : state.hardmodeLevel,
+                                  keyAffixLine:
+                                      chase.kind == HubChaseKind.keystone ||
+                                              state.hardmodeLevel <= 0
+                                          ? null
+                                          : Keystone.previewAffixes(state)
+                                              .take(2)
+                                              .map(Keystone.label)
+                                              .join(' · '),
                                 ),
                               ],
                               if (short)

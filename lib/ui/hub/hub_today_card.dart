@@ -141,13 +141,7 @@ class HubTodayCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    // READY chip already marks payoff — drop progress echo
-                    // like "N ready" / "EQUIP 1" that doubles chrome.
-                    ready && chase.progressLabel != null
-                        ? chase.title
-                        : (chase.progressLabel != null
-                            ? '${chase.title} · ${chase.progressLabel!}'
-                            : chase.title),
+                    _todayHeadline(chase, ready: ready),
                     maxLines: 2 /* FEEL 068 */,
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.body(size: 13, color: GameTheme.parchment),
@@ -185,6 +179,23 @@ class HubTodayCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// TODAY title line — skip progress when it only echoes KEY +N already in title.
+String _todayHeadline(HubChase chase, {required bool ready}) {
+  final prog = chase.progressLabel;
+  // READY chip already marks payoff — drop "N ready" / "EQUIP 1" echo.
+  if (ready && prog != null) return chase.title;
+  if (prog == null || prog.isEmpty) return chase.title;
+  if (chase.title.contains(prog)) return chase.title;
+  final keyInTitle = RegExp(r'KEY \+\d+').firstMatch(chase.title);
+  final keyInProg = RegExp(r'KEY \+\d+').firstMatch(prog);
+  if (keyInTitle != null &&
+      keyInProg != null &&
+      keyInTitle.group(0) == keyInProg.group(0)) {
+    return chase.title;
+  }
+  return '${chase.title} · $prog';
 }
 
 class HubUrgentRow extends StatelessWidget {

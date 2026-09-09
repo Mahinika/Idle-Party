@@ -18,9 +18,13 @@ class ChallengeToggles extends StatefulWidget {
     super.key,
     required this.director,
     this.collapsed = false,
+    this.lockExpanded = false,
   });
   final GameDirector director;
   final bool collapsed;
+
+  /// KEY sheet: keep dial visible — accidental collapse looked like an empty tab.
+  final bool lockExpanded;
 
   @override
   State<ChallengeToggles> createState() => _ChallengeTogglesState();
@@ -32,6 +36,10 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
   @override
   void initState() {
     super.initState();
+    if (widget.lockExpanded) {
+      _expanded = true;
+      return;
+    }
     final keyOn = widget.director.state.hardmodeLevel > 0 ||
         GameLogic.endgameUnlocked(widget.director.state) ||
         widget.director.state.challengeBossRush ||
@@ -83,19 +91,25 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
       children: [
         WebClickScope(
           label: headerLabel,
-          onPressed: () => setState(() => _expanded = !_expanded),
+          onPressed: widget.lockExpanded
+              ? null
+              : () => setState(() => _expanded = !_expanded),
           child: Semantics(
-            button: true,
+            button: !widget.lockExpanded,
             label: headerLabel,
             excludeSemantics: true,
             child: InkWell(
-              onTap: () => setState(() => _expanded = !_expanded),
+              onTap: widget.lockExpanded
+                  ? null
+                  : () => setState(() => _expanded = !_expanded),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
                     Text(
-                      _expanded ? '▾ KEYSTONE' : '▸ KEYSTONE',
+                      widget.lockExpanded
+                          ? 'KEYSTONE'
+                          : (_expanded ? '▾ KEYSTONE' : '▸ KEYSTONE'),
                       style: GameTheme.body(size: 12, color: GameTheme.torchHot),
                     ),
                     const SizedBox(width: 8),
@@ -116,7 +130,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             ),
           ),
         ),
-        if (_expanded) ...[
+        if (_expanded || widget.lockExpanded) ...[
           const SizedBox(height: 4),
           _HardmodeStepper(
             level: state.hardmodeLevel,

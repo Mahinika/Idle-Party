@@ -112,7 +112,7 @@ class AppBottomBar extends StatelessWidget {
                 child: AppBottomBarItem(
                   label: labelFor(dest),
                   icon: iconFor(dest, size: dense ? 16 : 18),
-                  badge: _alertFor(dest).badge,
+                  badge: route == dest ? '' : _alertFor(dest).badge,
                   selected: route == dest,
                   fill: slotColorFor(dest),
                   dense: dense,

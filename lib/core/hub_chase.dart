@@ -635,7 +635,7 @@ class HubChase {
     );
     final lead = firstKey
         ? 'ENTER sets KEY +1 · +$ilvl iLvl'
-        : 'KEY +$key · +$ilvl iLvl';
+        : '+$ilvl iLvl';
     return '$lead · $affixBit · par $par';
   }
 

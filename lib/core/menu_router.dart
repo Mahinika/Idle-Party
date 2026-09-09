@@ -178,7 +178,7 @@ class MenuRouter extends ChangeNotifier {
       GoldPanel.tracks => 'Run power bought with gold',
       GoldPanel.market => 'Flasks · bandages · buy upgrades',
     },
-    MenuRoute.shop => 'Real-money · cheap boosts · buy soon',
+    MenuRoute.shop => 'Boosts · ad-free',
     MenuRoute.essence => switch (_essencePanel) {
       EssencePanel.tracks => 'Spend essence on lasting tracks',
       EssencePanel.keep => 'God Hand · Blessing · permanent buys',
@@ -191,9 +191,9 @@ class MenuRouter extends ChangeNotifier {
       MoreSection.info => 'Guides · codex · What\'s New',
       MoreSection.settings => 'Sound · zoom · save',
       MoreSection.credits => 'Art credits',
-      MoreSection.shop => 'Real-money · cheap boosts · buy soon',
+      MoreSection.shop => 'Boosts · ad-free',
       MoreSection.relics => 'Party auras that keep on Ascend',
-      MoreSection.craft => 'Apex gear from slag',
+      MoreSection.craft => 'Any zone shard · Apex that keeps',
       MoreSection.quests => 'Daily · Bounty · Side',
     },
   };
