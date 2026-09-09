@@ -3187,6 +3187,59 @@ void main() {
     expect(state.missions[4].isComplete, isTrue);
   });
 
+  test('Week and Contract never share the same goal type', () {
+    for (var seed = 0; seed < 40; seed++) {
+      final board = GameLogic.createMissionBoard(
+        ascensionLevel: 20,
+        endgame: true,
+        random: Random(seed),
+      );
+      expect(
+        board[3].type,
+        isNot(board[4].type),
+        reason: 'seed $seed week=${board[3].type} contract=${board[4].type}',
+      );
+      expect(board[3].title, startsWith('Week: '));
+      expect(board[4].title, startsWith('Contract: '));
+      expect(board[3].title.contains('Hard:'), isFalse);
+      expect(board[4].title.contains('Hard:'), isFalse);
+    }
+  });
+
+  test('ensureDailyQuest re-rolls duplicate Week/Contract types', () {
+    final day = DateTime.utc(2026, 8, 24);
+    final board = GameLogic.createMissionBoard(
+      ascensionLevel: 20,
+      endgame: true,
+      random: Random(2),
+    );
+    final twin = MissionBoard.createMission(
+      type: MissionType.gauntletFloors,
+      ascensionLevel: 20,
+      slot: MissionBoard.weekSlot,
+      titlePrefix: 'Week: ',
+      random: Random(1),
+    );
+    final dupContract = MissionBoard.createMission(
+      type: MissionType.gauntletFloors,
+      ascensionLevel: 20,
+      slot: MissionBoard.contractSlot,
+      titlePrefix: 'Contract: ',
+      random: Random(2),
+    );
+    var state = GameLogic.createInitialState(now: day).copyWith(
+      missions: [board[0], board[1], board[2], twin, dupContract],
+      metaDepth: MetaDepthState(
+        dailyQuestDate: MetaSystems.dailyDateKey(day),
+        questWeekKey: GameLogic.isoWeekKey(day),
+      ),
+    );
+    expect(state.missions[3].type, state.missions[4].type);
+    state = GameLogic.ensureDailyQuest(state, now: day);
+    expect(state.missions[3].type, isNot(state.missions[4].type));
+    expect(state.missions[3].type, MissionType.gauntletFloors);
+  });
+
   test('farm mode loops the same floor after clear', () {
     final floor = DungeonGenerator.generateFloor(2);
     final room = floor.first;

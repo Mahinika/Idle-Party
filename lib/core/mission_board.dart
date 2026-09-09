@@ -58,6 +58,31 @@ abstract final class MissionBoard {
   }) {
     final rng = random ?? GameLogic.random;
     final rung = bountyRung.clamp(0, bountyRungMax(endgame: endgame));
+    final side = createSideMission(
+      ascensionLevel: ascensionLevel,
+      highestDungeonCleared: highestDungeonCleared,
+      highestFloorCleared: highestFloorCleared,
+      hardmodeLevel: hardmodeLevel,
+      random: rng,
+    );
+    final week = createWeekMission(
+      ascensionLevel: ascensionLevel,
+      highestDungeonCleared: highestDungeonCleared,
+      highestFloorCleared: highestFloorCleared,
+      hardmodeLevel: hardmodeLevel,
+      endgame: endgame,
+      avoidTypes: <MissionType>[side.type],
+      random: rng,
+    );
+    final contract = createContractMission(
+      ascensionLevel: ascensionLevel,
+      highestDungeonCleared: highestDungeonCleared,
+      highestFloorCleared: highestFloorCleared,
+      hardmodeLevel: hardmodeLevel,
+      endgame: endgame,
+      avoidTypes: <MissionType>[week.type, side.type],
+      random: rng,
+    );
     return [
       createDailyMission(
         ascensionLevel: ascensionLevel,
@@ -76,29 +101,9 @@ abstract final class MissionBoard {
         endgame: endgame,
         random: rng,
       ),
-      createSideMission(
-        ascensionLevel: ascensionLevel,
-        highestDungeonCleared: highestDungeonCleared,
-        highestFloorCleared: highestFloorCleared,
-        hardmodeLevel: hardmodeLevel,
-        random: rng,
-      ),
-      createWeekMission(
-        ascensionLevel: ascensionLevel,
-        highestDungeonCleared: highestDungeonCleared,
-        highestFloorCleared: highestFloorCleared,
-        hardmodeLevel: hardmodeLevel,
-        endgame: endgame,
-        random: rng,
-      ),
-      createContractMission(
-        ascensionLevel: ascensionLevel,
-        highestDungeonCleared: highestDungeonCleared,
-        highestFloorCleared: highestFloorCleared,
-        hardmodeLevel: hardmodeLevel,
-        endgame: endgame,
-        random: rng,
-      ),
+      side,
+      week,
+      contract,
     ];
   }
 
@@ -263,6 +268,7 @@ abstract final class MissionBoard {
     int hardmodeLevel = 0,
     bool endgame = false,
     MissionType? avoid,
+    Iterable<MissionType> avoidTypes = const <MissionType>[],
     Random? random,
   }) {
     final rng = random ?? GameLogic.random;
@@ -270,8 +276,14 @@ abstract final class MissionBoard {
       ...sideTypes,
       if (endgame) ...endgameContractTypes,
     ];
-    if (avoid != null && pool.length > 1) pool.remove(avoid);
-    final type = pool[rng.nextInt(pool.length)];
+    final type = _pickType(
+      pool,
+      rng,
+      avoid: <MissionType>[
+        ?avoid,
+        ...avoidTypes,
+      ],
+    );
     return createMission(
       type: type,
       ascensionLevel: ascensionLevel,
@@ -295,14 +307,21 @@ abstract final class MissionBoard {
     int hardmodeLevel = 0,
     bool endgame = false,
     MissionType? avoid,
+    Iterable<MissionType> avoidTypes = const <MissionType>[],
     Random? random,
   }) {
     final rng = random ?? GameLogic.random;
     final pool = endgame
         ? List<MissionType>.from(endgameContractTypes)
         : List<MissionType>.from(sideTypes);
-    if (avoid != null && pool.length > 1) pool.remove(avoid);
-    final type = pool[rng.nextInt(pool.length)];
+    final type = _pickType(
+      pool,
+      rng,
+      avoid: <MissionType>[
+        ?avoid,
+        ...avoidTypes,
+      ],
+    );
     return createMission(
       type: type,
       ascensionLevel: ascensionLevel,
@@ -316,6 +335,18 @@ abstract final class MissionBoard {
       rewardScale: endgame ? 1.7 : 1.4,
       forceTier: endgame ? 0 : 1,
     );
+  }
+
+  static MissionType _pickType(
+    List<MissionType> pool,
+    Random rng, {
+    Iterable<MissionType> avoid = const <MissionType>[],
+  }) {
+    if (pool.isEmpty) return MissionType.clearFloors;
+    final blocked = avoid.toSet();
+    final fresh = pool.where((t) => !blocked.contains(t)).toList();
+    final use = fresh.isNotEmpty ? fresh : pool;
+    return use[rng.nextInt(use.length)];
   }
 
   static Mission createMission({
@@ -365,10 +396,8 @@ abstract final class MissionBoard {
       2 => 'Brutal: ',
       _ => '',
     };
-    // Week/Contract already carry a role prefix; nest Hard inside it.
-    final prefix = titlePrefix.isEmpty
-        ? difficultyPrefix
-        : '$titlePrefix${difficultyPrefix.isEmpty ? '' : difficultyPrefix}';
+    // Week/Contract already say the role; Hard/Brutal is border color only.
+    final prefix = titlePrefix.isEmpty ? difficultyPrefix : titlePrefix;
 
     int scaleTarget(int base) => max(1, (base * targetMul).round());
     int scaleGold(int base) => max(1, (base * rewardMul).round());
@@ -511,6 +540,9 @@ abstract final class MissionBoard {
       );
     }
     if (slot == weekSlot) {
+      final contractType = state.missions.length > contractSlot
+          ? state.missions[contractSlot].type
+          : null;
       return createWeekMission(
         ascensionLevel: state.ascensionLevel,
         highestDungeonCleared: state.highestDungeonCleared,
@@ -518,10 +550,16 @@ abstract final class MissionBoard {
         hardmodeLevel: state.hardmodeLevel,
         endgame: endgame,
         avoid: avoid,
+        avoidTypes: <MissionType>[
+          ?contractType,
+        ],
         random: rng,
       );
     }
     if (slot == contractSlot) {
+      final weekType = state.missions.length > weekSlot
+          ? state.missions[weekSlot].type
+          : null;
       return createContractMission(
         ascensionLevel: state.ascensionLevel,
         highestDungeonCleared: state.highestDungeonCleared,
@@ -529,6 +567,9 @@ abstract final class MissionBoard {
         hardmodeLevel: state.hardmodeLevel,
         endgame: endgame,
         avoid: avoid,
+        avoidTypes: <MissionType>[
+          ?weekType,
+        ],
         random: rng,
       );
     }
@@ -590,8 +631,24 @@ abstract final class MissionBoard {
         highestFloorCleared: state.highestFloorCleared,
         hardmodeLevel: state.hardmodeLevel,
         endgame: GameLogic.endgameUnlocked(state),
+        avoidTypes: <MissionType>[missions[contractSlot].type],
       );
       md = md.copyWith(questWeekKey: week);
+      changed = true;
+    }
+    // Soft-fix live boards that rolled the same Week + Contract goal.
+    if (missions[weekSlot].type == missions[contractSlot].type) {
+      missions[contractSlot] = createContractMission(
+        ascensionLevel: state.ascensionLevel,
+        highestDungeonCleared: state.highestDungeonCleared,
+        highestFloorCleared: state.highestFloorCleared,
+        hardmodeLevel: state.hardmodeLevel,
+        endgame: GameLogic.endgameUnlocked(state),
+        avoidTypes: <MissionType>[
+          missions[weekSlot].type,
+          missions[sideSlot].type,
+        ],
+      );
       changed = true;
     }
     if (!changed) return state;
