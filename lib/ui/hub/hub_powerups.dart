@@ -109,6 +109,7 @@ Future<void> openPowerupsSheet(
       backgroundColor: Colors.transparent,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) {
+        final maxH = MediaQuery.sizeOf(ctx).height * 0.88;
         return ListenableBuilder(
           listenable: director,
           builder: (ctx, _) {
@@ -120,140 +121,163 @@ Future<void> openPowerupsSheet(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.viewInsetsOf(ctx).bottom,
               ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: MenuChrome.sheet,
-                  borderRadius: MenuChrome.sheetRadius,
-                  border: Border.all(
-                    color: GameTheme.borderLit.withValues(alpha: 0.45),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: maxH,
+                    maxWidth: MediaQuery.sizeOf(ctx).width,
                   ),
-                ),
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: SafeArea(
-                  top: false,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        MenuChrome.sheetHandle(),
-                        Text('POWERUPS', style: GameTheme.menuTitle(size: 18)),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Watch a short ad for 1 Ad Ticket. Spend tickets on '
-                          'timed boosts. Optional — fights never pause for an ad.',
-                          style: GameTheme.body(
-                            size: 15,
-                            color: GameTheme.parchment,
-                          ),
+                  child: Material(
+                    color: MenuChrome.sheet,
+                    borderRadius: MenuChrome.sheetRadius,
+                    clipBehavior: Clip.antiAlias,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: MenuChrome.sheetRadius,
+                        border: Border.all(
+                          color: GameTheme.borderLit.withValues(alpha: 0.45),
                         ),
-                        const SizedBox(height: 8),
-                        MenuChrome.statRow(
-                          label: 'Ad Tickets',
-                          value: '${md.adTickets}',
-                        ),
-                        if (AdBoost.atkActive(md))
-                          MenuChrome.statRow(
-                            label: 'Sharp Edge',
-                            value: AdBoost.formatRemaining(md.adAtkUntilMs),
-                          ),
-                        if (AdBoost.goldActive(md))
-                          MenuChrome.statRow(
-                            label: 'Gold Rush',
-                            value: AdBoost.formatRemaining(md.adGoldUntilMs),
-                          ),
-                        if (AdBoost.awayBonusReady(md))
-                          MenuChrome.statRow(
-                            label: 'Away Bonus',
-                            value: 'Ready',
-                          ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'EARN',
-                          style: GameTheme.body(
-                            size: 12,
-                            color: GameTheme.parchmentDim,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        if (adFree) ...[
-                          if (canDaily)
-                            GameButton(
-                              label: 'CLAIM DAILY TICKET',
-                              style: GameButtonStyle.brown,
-                              primary: true,
-                              onPressed: () =>
-                                  director.claimAdFreeDailyTicket(),
-                            )
-                          else
-                            Text(
-                              'Daily ticket already claimed (UTC day).',
-                              style: GameTheme.body(
-                                size: 13,
-                                color: GameTheme.parchmentDim,
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              MenuChrome.sheetHandle(),
+                              Text(
+                                'POWERUPS',
+                                style: GameTheme.menuTitle(size: 18),
                               ),
-                            ),
-                        ] else if (realAds)
-                          GameButton(
-                            label: 'WATCH AD · +1 TICKET',
-                            style: GameButtonStyle.brown,
-                            primary: true,
-                            onPressed: () {
-                              unawaited(director.watchPowerupAd());
-                            },
-                          )
-                        else ...[
-                          Text(
-                            'Ads play on the Android app. This playtest can '
-                            'preview a ticket.',
-                            style: GameTheme.body(
-                              size: 13,
-                              color: GameTheme.parchmentDim,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          GameButton(
-                            label: 'PREVIEW +1 TICKET',
-                            style: GameButtonStyle.brown,
-                            primary: true,
-                            onPressed: () => director.grantPowerupHour(),
-                          ),
-                        ],
-                        const SizedBox(height: 14),
-                        Text(
-                          'SPEND',
-                          style: GameTheme.body(
-                            size: 12,
-                            color: GameTheme.parchmentDim,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        if (md.adTickets <= 0)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Text(
-                              'WATCH an ad to earn a ticket.',
-                              style: GameTheme.body(
-                                size: 13,
-                                color: GameTheme.parchmentDim,
+                              const SizedBox(height: 8),
+                              Text(
+                                'Watch a short ad for 1 Ad Ticket. Spend '
+                                'tickets on timed boosts. Optional — fights '
+                                'never pause for an ad.',
+                                style: GameTheme.body(
+                                  size: 15,
+                                  color: GameTheme.parchment,
+                                ),
                               ),
-                            ),
+                              const SizedBox(height: 8),
+                              MenuChrome.statRow(
+                                label: 'Ad Tickets',
+                                value: '${md.adTickets}',
+                              ),
+                              if (AdBoost.atkActive(md))
+                                MenuChrome.statRow(
+                                  label: 'Sharp Edge',
+                                  value: AdBoost.formatRemaining(
+                                    md.adAtkUntilMs,
+                                  ),
+                                ),
+                              if (AdBoost.goldActive(md))
+                                MenuChrome.statRow(
+                                  label: 'Gold Rush',
+                                  value: AdBoost.formatRemaining(
+                                    md.adGoldUntilMs,
+                                  ),
+                                ),
+                              if (AdBoost.awayBonusReady(md))
+                                MenuChrome.statRow(
+                                  label: 'Away Bonus',
+                                  value: 'Ready',
+                                ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'EARN',
+                                style: GameTheme.body(
+                                  size: 12,
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              if (adFree) ...[
+                                if (canDaily)
+                                  GameButton(
+                                    label: 'CLAIM DAILY TICKET',
+                                    style: GameButtonStyle.brown,
+                                    primary: true,
+                                    onPressed: () =>
+                                        director.claimAdFreeDailyTicket(),
+                                  )
+                                else
+                                  Text(
+                                    'Daily ticket already claimed (UTC day).',
+                                    style: GameTheme.body(
+                                      size: 13,
+                                      color: GameTheme.parchmentDim,
+                                    ),
+                                  ),
+                              ] else if (realAds)
+                                GameButton(
+                                  label: 'WATCH AD · +1 TICKET',
+                                  style: GameButtonStyle.brown,
+                                  primary: true,
+                                  onPressed: () {
+                                    unawaited(director.watchPowerupAd());
+                                  },
+                                )
+                              else ...[
+                                Text(
+                                  'Ads play on the Android app. This playtest '
+                                  'can preview a ticket.',
+                                  style: GameTheme.body(
+                                    size: 13,
+                                    color: GameTheme.parchmentDim,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                GameButton(
+                                  label: 'PREVIEW +1 TICKET',
+                                  style: GameButtonStyle.brown,
+                                  primary: true,
+                                  onPressed: () =>
+                                      director.grantPowerupHour(),
+                                ),
+                              ],
+                              const SizedBox(height: 14),
+                              Text(
+                                'SPEND',
+                                style: GameTheme.body(
+                                  size: 12,
+                                  color: GameTheme.parchmentDim,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              if (md.adTickets <= 0)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Text(
+                                    'WATCH an ad to earn a ticket.',
+                                    style: GameTheme.body(
+                                      size: 13,
+                                      color: GameTheme.parchmentDim,
+                                    ),
+                                  ),
+                                ),
+                              for (final offer in AdBuffCatalog.offered) ...[
+                                _BuffRow(
+                                  offer: offer,
+                                  tickets: md.adTickets,
+                                  onUse: () =>
+                                      director.spendPowerupBuff(offer.id),
+                                ),
+                                const SizedBox(height: 6),
+                              ],
+                              const SizedBox(height: 4),
+                              GameButton(
+                                label: 'CLOSE',
+                                style: GameButtonStyle.grey,
+                                onPressed: () => Navigator.of(ctx).pop(),
+                              ),
+                            ],
                           ),
-                        for (final offer in AdBuffCatalog.offered) ...[
-                          _BuffRow(
-                            offer: offer,
-                            tickets: md.adTickets,
-                            onUse: () => director.spendPowerupBuff(offer.id),
-                          ),
-                          const SizedBox(height: 6),
-                        ],
-                        const SizedBox(height: 4),
-                        GameButton(
-                          label: 'CLOSE',
-                          style: GameButtonStyle.grey,
-                          onPressed: () => Navigator.of(ctx).pop(),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -318,6 +342,8 @@ class _BuffRow extends StatelessWidget {
                 : 'NEED ${offer.ticketCost}',
             style: GameButtonStyle.brown,
             primary: can,
+            expanded: false,
+            dense: true,
             onPressed: can ? onUse : null,
           ),
         ],

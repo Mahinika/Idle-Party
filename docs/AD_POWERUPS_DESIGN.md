@@ -68,12 +68,14 @@ flowchart LR
   1. **Earn** — WATCH AD · +1 Ticket (playtest: PREVIEW +1).
   2. **Spend** — catalog rows (below).
 
-Visibility gates (keep today’s intent):
+Visibility gates:
 
-- First hour / endgame hunt night: hide FAB unless a buff is active **or**
+- First hour (plain chrome): hide FAB unless a buff is active **or**
   tickets > 0 (so banked tickets stay reachable).
+- Otherwise always show on hub (phone, READY claims, endgame KEY hunts) —
+  compact star next to Settings.
 - `adFree`: hide WATCH; keep Spend + claim-without-video if we grant a free
-  daily tap (see IAP).
+  daily tap (see IAP). Hide FAB when nothing to claim and no tickets/buff.
 
 ## Economy numbers (v1)
 

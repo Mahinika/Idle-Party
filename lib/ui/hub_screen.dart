@@ -448,8 +448,7 @@ class _HubScreenState extends State<HubScreen>
     );
   }
 
-  bool _showPowerupsFab({required bool short}) {
-    final chase = HubChase.forState(state);
+  bool _showPowerupsFab() {
     final md = state.metaDepth;
     final powerupsActive = AdBoost.anyBuffActive(md);
     final hasTickets = md.adTickets > 0;
@@ -460,30 +459,11 @@ class _HubScreenState extends State<HubScreen>
       return AdBoost.canClaimAdFreeDaily(md);
     }
 
-    // Don't float WATCH over a READY TODAY claim (vault, quests, kit, …).
-    if (chase.urgency == HubChaseUrgency.ready) return false;
-    switch (chase.kind) {
-      case HubChaseKind.claimDailyVault:
-      case HubChaseKind.claimMissions:
-      case HubChaseKind.meetHero:
-      case HubChaseKind.equipBag:
-      case HubChaseKind.marketUpgrade:
-      case HubChaseKind.ascend:
-        return false;
-      default:
-        break;
-    }
+    // First hour: keep hub calm until the first boss.
+    if (GameLogic.plainPlayerChrome(state)) return false;
 
-    final endgameHunt =
-        GameLogic.endgameUnlocked(state) &&
-        (hubChaseOwnsEndgameRow(chase.kind) ||
-            chase.kind == HubChaseKind.keystone);
-    if (endgameHunt || GameLogic.plainPlayerChrome(state)) {
-      return false;
-    }
-
-    // Mid-game discoverability on taller hub layouts only.
-    return !short;
+    // Always reachable on hub after first boss (phone + READY claims included).
+    return true;
   }
 
   @override
@@ -572,7 +552,7 @@ class _HubScreenState extends State<HubScreen>
                                 huntHint: _shortHuntHint(chase),
                                 blessingStacks:
                                     state.metaDepth.ascendBlessings,
-                                powerupsFab: _showPowerupsFab(short: short)
+                                powerupsFab: _showPowerupsFab()
                                     ? HubPowerupsFab(
                                         state: state,
                                         compact: true,
