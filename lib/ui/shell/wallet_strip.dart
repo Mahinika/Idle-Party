@@ -22,9 +22,11 @@ class WalletStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gap = dense ? 4.0 : 6.0;
-    final iconSize = dense ? 13.0 : 15.0;
-    final textSize = dense ? 13.0 : 15.0;
+    // Match bottom-tab / button weight — thin body next to IDLE PARTY reads
+    // as "pyttelite" on phone even when the logical size is fine.
+    final gap = dense ? 6.0 : 8.0;
+    final iconSize = dense ? 20.0 : 24.0;
+    final textSize = dense ? 18.0 : 22.0;
     return Semantics(
       container: true,
       label: 'Gold ${formatCount(gold)}, Essence ${formatCount(essence)}',
@@ -75,19 +77,18 @@ class _WalletChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: dense ? 6 : 8,
-        vertical: dense ? 3 : 5,
+        horizontal: dense ? 8 : 10,
+        vertical: dense ? 5 : 6,
       ),
       decoration: MenuChrome.cardBox(inset: true),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           GameIcon.asset(icon, size: iconSize),
-          SizedBox(width: dense ? 3 : 4),
-          // Body (not Press Start) so "0.6M" stays phone-readable.
+          SizedBox(width: dense ? 5 : 6),
           Text(
             label,
-            style: GameTheme.body(size: textSize, color: tone),
+            style: GameTheme.button(size: textSize, color: tone),
           ),
         ],
       ),

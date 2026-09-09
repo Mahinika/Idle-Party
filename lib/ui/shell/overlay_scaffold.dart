@@ -218,13 +218,10 @@ class _OverlayPanel extends StatelessWidget {
                 const Spacer(),
               if (showWallet) ...[
                 const SizedBox(width: 6),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: WalletStrip(
-                    gold: gold!,
-                    essence: essence!,
-                    dense: true,
-                  ),
+                // Natural size — never FittedBox-crush gold for the sheet title.
+                WalletStrip(
+                  gold: gold!,
+                  essence: essence!,
                 ),
                 const SizedBox(width: 6),
               ],
