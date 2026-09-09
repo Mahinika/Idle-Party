@@ -79,14 +79,15 @@ Working ship: **1.12.110+139** (`pubspec.yaml`). Paste into Play **Release notes
 ```
 • Dungeon feel: rooms have jobs (choke / treasure), multi-chamber late zones, camera shake on crits/kills/God Hand, clearer OPEN doors.
 • Combat look: hit flash, cast rings, bigger bosses; Lite VFX still shows crits / big heals / BLOCK.
-• Hub POWERUPS ads → Ad Tickets; SHOP catalog Coming later (Play Billing not live yet).
+• Hub POWERUPS ads → Ad Tickets; SHOP sells the same Full Boost / ad-free cheap packs on Play installs.
 • World Path Sandy → Mothveil; TODAY owns KEY / Gauntlet / GREATER hunts.
 ```
 
 ### Full description honesty (SHOP)
 
-Full description must **not** claim you can buy boosts with real money until Billing is live.
-Current full description correctly lists optional POWERUPS ads only — keep it that way until SHOP buys work.
+Full description may mention optional cheap SHOP convenience (boosts / ad-free) once
+Play Console products are active. Do **not** imply whale packs, gacha, or BiS-for-cash.
+POWERUPS ads remain the free path to the same boost power.
 
 ### Screenshot caption plan (Play phone carousel, 2026-08-21)
 
@@ -132,9 +133,9 @@ Hard-won rules:
 
 Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
 
-## Play Console status (2026-08-29)
+## Play Console status (2026-09-09)
 
 - Short + full description: en-US only (this file). Full description mentions POWER → Craft.
-- Phone screenshots (8) + feature graphic from `tool/store_listing/marketing/` (submitted 2026-08-21).
-- Closed Alpha **1.12.83 (112)** submitted 2026-08-29 (review). Live testers may still be on **1.12.78 (107)**.
-- GitHub Releases: tag **`v1.12.83`** → `build-apk.yml` APK/AAB.
+- Phone screenshots (8) + feature graphic from `tool/store_listing/marketing/`.
+- **Production live:** **1.12.110 (139)** on Google Play (2026-09-09). Primary player install path.
+- Closed Alpha remains for early builds. Do not advertise GitHub Releases to players.

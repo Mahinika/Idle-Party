@@ -44,9 +44,14 @@ abstract final class GameAudio {
   @visibleForTesting
   static int debugPlayCount = 0;
 
+  /// Test hook: how many times ambience/music were actually (re)started.
+  @visibleForTesting
+  static int debugBackgroundStartCount = 0;
+
   @visibleForTesting
   static void debugReset() {
     debugPlayCount = 0;
+    debugBackgroundStartCount = 0;
     _lastPlayAt.clear();
   }
 
@@ -102,6 +107,7 @@ abstract final class GameAudio {
   }
 
   static void setMuted(bool value) {
+    if (muted == value) return;
     muted = value;
     if (muted) {
       stopAmbience();
@@ -155,10 +161,14 @@ abstract final class GameAudio {
     AmbienceKind kind, {
     bool forceRestart = false,
   }) async {
+    // Music may be intentionally off (volume 0 → no handle). That must not
+    // force a restart of the ambience loop on every UI state sync.
+    final musicOk =
+        _musicHandle != null || musicVolume <= 0.01 || kind == AmbienceKind.none;
     if (!forceRestart &&
         kind == _ambience &&
         _ambienceHandle != null &&
-        _musicHandle != null) {
+        musicOk) {
       return;
     }
     _ambience = kind;
@@ -167,6 +177,7 @@ abstract final class GameAudio {
       return;
     }
     stopAmbience();
+    debugBackgroundStartCount++;
     final ambSource = switch (kind) {
       AmbienceKind.hub => _hubAmb,
       AmbienceKind.dungeon => _dungeonAmb,

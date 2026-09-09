@@ -34,16 +34,27 @@ abstract final class ApexForge {
   static int craftMatCount(GameState state, String matId) =>
       state.craftMaterials[matId] ?? 0;
 
+  static int _haveForCost(GameState state, String matId) {
+    if (matId == ApexCraft.shardAnyId) {
+      return ApexCraft.ownedShardCount(state.craftMaterials);
+    }
+    return craftMatCount(state, matId);
+  }
+
   static bool canAffordCraftCosts(GameState state, Map<String, int> costs) {
     for (final e in costs.entries) {
-      if (craftMatCount(state, e.key) < e.value) return false;
+      if (_haveForCost(state, e.key) < e.value) return false;
     }
     return true;
   }
 
   static GameState _spendCraftMats(GameState state, Map<String, int> costs) {
-    final next = Map<String, int>.from(state.craftMaterials);
+    var next = Map<String, int>.from(state.craftMaterials);
     for (final e in costs.entries) {
+      if (e.key == ApexCraft.shardAnyId) {
+        next = ApexCraft.spendZoneShards(next, e.value);
+        continue;
+      }
       final left = (next[e.key] ?? 0) - e.value;
       if (left <= 0) {
         next.remove(e.key);
@@ -167,9 +178,9 @@ abstract final class ApexForge {
     // Apex slag — gauntlet / crystal only
     if (state.inGauntlet || state.dungeonId == 'crystal') {
       rollFamily(
-        pityKey: 'pity_apex_slag',
+        pityKey: 'pity_${ApexCraft.slagId}',
         pBase: ApexCraft.slagPBase,
-        matId: 'apex_slag',
+        matId: ApexCraft.slagId,
         weightMul: state.inGauntlet ? 1.25 : 1.0,
       );
     }
@@ -190,6 +201,15 @@ abstract final class ApexForge {
     return next.copyWith(craftPity: pity, lastUpdated: DateTime.now());
   }
 
+  /// Zone-shard recipe pool grants a real named shard (current dungeon when
+  /// possible) — [ApexCraft.shardAnyId] is never stored in the bag.
+  static String _grantIdForTarget(GameState state, String targetId) {
+    if (targetId != ApexCraft.shardAnyId) return targetId;
+    final dungeonShard = ApexCraft.shardIdForDungeon(state.dungeonId);
+    if (ApexCraft.isZoneShardId(dungeonShard)) return dungeonShard;
+    return ApexCraft.shardIdForDungeon('sandy');
+  }
+
   static GameState _tickTargetMeter(GameState state, {required bool farm}) {
     final targetId = resolveTargetMatId(state);
     if (targetId == null || targetId.isEmpty) return state;
@@ -197,8 +217,9 @@ abstract final class ApexForge {
     var progress = state.metaDepth.apexTargetProgress + tick;
     var next = state;
     if (progress >= ApexCraft.targetMeterRequired) {
-      next = _addCraftMat(next, targetId);
-      LogicNotices.addCraftMat(targetId);
+      final grantId = _grantIdForTarget(next, targetId);
+      next = _addCraftMat(next, grantId);
+      LogicNotices.addCraftMat(grantId);
       progress = 0;
     }
     return next.copyWith(
@@ -270,23 +291,34 @@ abstract final class ApexForge {
     );
   }
 
-  /// Missing mats for a craft goal, largest shortage first.
+  /// Missing mats for a craft/upgrade goal, largest shortage first.
+  ///
+  /// Pass [fromRank] > 0 with [rank] = next rank to price an upgrade delta.
   static List<MapEntry<String, int>> sortedMatShortages(
     GameState state, {
     required HeroClassId classId,
     required SpecRoleTag role,
     required EquipmentSlot slot,
     int rank = 1,
+    int fromRank = 0,
   }) {
-    final costs = ApexCraft.absoluteCost(
-      classId: classId,
-      role: role,
-      slot: slot,
-      rank: rank,
-    );
+    final costs = fromRank > 0 && rank > fromRank
+        ? ApexCraft.upgradeDeltaCost(
+            classId: classId,
+            role: role,
+            slot: slot,
+            fromRank: fromRank,
+            toRank: rank,
+          )
+        : ApexCraft.absoluteCost(
+            classId: classId,
+            role: role,
+            slot: slot,
+            rank: rank,
+          );
     final missing = <MapEntry<String, int>>[];
     for (final e in costs.entries) {
-      final have = state.craftMaterials[e.key] ?? 0;
+      final have = _haveForCost(state, e.key);
       final need = e.value - have;
       if (need > 0) missing.add(MapEntry(e.key, need));
     }
@@ -300,11 +332,26 @@ abstract final class ApexForge {
     if (manual.isNotEmpty) return manual;
     final goal = craftGoalFromState(state);
     if (goal == null) return null;
+    final pieceId = ApexCraft.pieceId(
+      classId: goal.classId,
+      role: goal.role,
+      slot: goal.slot,
+    );
+    final owned = _findApexItem(state, pieceId);
+    final fromRank = owned?.apexRank ?? 0;
+    final toRank = owned == null
+        ? 1
+        : (owned.apexRank < ApexCraft.maxRank
+              ? owned.apexRank + 1
+              : owned.apexRank);
+    if (owned != null && owned.apexRank >= ApexCraft.maxRank) return null;
     final shortages = sortedMatShortages(
       state,
       classId: goal.classId,
       role: goal.role,
       slot: goal.slot,
+      rank: toRank,
+      fromRank: fromRank,
     );
     return shortages.isEmpty ? null : shortages.first.key;
   }

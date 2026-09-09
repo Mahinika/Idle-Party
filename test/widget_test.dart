@@ -327,11 +327,12 @@ void main() {
     expect(find.text('Starter boost'), findsOneWidget);
     expect(find.text('\$0.99'), findsOneWidget);
     expect(find.text('\$1.49'), findsOneWidget);
-    expect(find.text('COMING LATER'), findsWidgets);
+    expect(find.text('BUY'), findsWidgets);
+    expect(find.text('RESTORE PURCHASES'), findsOneWidget);
     expect(ShopCatalog.offered.map((e) => e.priceLabel).toList(), [
       '\$0.99',
       '\$1.49',
-      '\$1.99',
+      '\$2.99',
       '\$2.99',
       '\$4.99',
     ]);

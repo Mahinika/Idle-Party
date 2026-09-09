@@ -10,8 +10,9 @@ description: >-
 
 # Play Store prep (Idle Party)
 
-**Fact today:** GitHub Releases (APK/AAB on tag `v*`) is the live install path.
-Play Console closed Alpha exists; production is not live. Source of truth:
+**Fact today:** **Google Play is the primary install path** (production live).
+Do not link players to GitHub Releases (repo may be private). Closed Alpha
+remains for early builds. Source of truth:
 [`docs/PLAY_STORE.md`](../../../docs/PLAY_STORE.md).
 
 ## When to run this skill

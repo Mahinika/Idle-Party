@@ -97,7 +97,10 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
   static String _farmSources(GameState state, String matId) {
     final def = ApexCraft.materialsById[matId];
     if (def == null) return 'boss drop';
-    if (matId != 'apex_slag') return def.bossSources;
+    if (matId == ApexCraft.shardAnyId) {
+      return 'Any dungeon boss · meter grants the zone you clear';
+    }
+    if (matId != ApexCraft.slagId) return def.bossSources;
     final crystalOpen = DungeonCatalog.isUnlocked(
       'crystal',
       GameLogic.partyMeanLevel(state),
@@ -113,17 +116,18 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     return 'Unlock Crystal Spire for slag · Gauntlet later';
   }
 
+  static int _haveForMat(GameState state, String matId) {
+    if (matId == ApexCraft.shardAnyId) {
+      return ApexCraft.ownedShardCount(state.craftMaterials);
+    }
+    return state.craftMaterials[matId] ?? 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
     final md = state.metaDepth;
     final roles = ApexCraft.validRolesFor(_apexClass).toList();
-    final recipe = ApexCraft.recipe(
-      classId: _apexClass,
-      role: _apexRole,
-      slot: _apexSlot,
-      rank: 1,
-    );
     final pieceId = ApexCraft.pieceId(
       classId: _apexClass,
       role: _apexRole,
@@ -147,6 +151,27 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         if (existingItem != null) break;
       }
     }
+    final ownedRank = existingItem?.apexRank ?? 0;
+    final pricingRank = existingItem == null
+        ? 1
+        : (ownedRank < ApexCraft.maxRank ? ownedRank + 1 : ownedRank);
+    final fromRank = existingItem == null ? 0 : ownedRank;
+    final recipeCosts = existingItem == null
+        ? ApexCraft.absoluteCost(
+            classId: _apexClass,
+            role: _apexRole,
+            slot: _apexSlot,
+            rank: 1,
+          )
+        : ownedRank >= ApexCraft.maxRank
+        ? const <String, int>{}
+        : ApexCraft.upgradeDeltaCost(
+            classId: _apexClass,
+            role: _apexRole,
+            slot: _apexSlot,
+            fromRank: ownedRank,
+            toRank: pricingRank,
+          );
     final canCraft = GameLogic.canCraftApex(
       state,
       classId: _apexClass,
@@ -164,6 +189,8 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
       classId: _apexClass,
       role: _apexRole,
       slot: _apexSlot,
+      rank: existingItem == null ? 1 : pricingRank,
+      fromRank: fromRank,
     );
     final targetMatId = GameLogic.resolveApexTargetMatId(state);
     final targetDef = targetMatId != null
@@ -176,13 +203,14 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     final goalLabel =
         '${HeroSpecs.classLabel(_apexClass)} · '
         '${_slotLabel(_apexSlot, _apexClass, _apexRole)} · '
-        '${existingItem == null ? 'R1' : 'R${existingItem.apexRank}'}';
+        '${existingItem == null ? 'R1' : 'R$ownedRank'}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Boss mats · weapon R1 first · survives Ascend. Tap a party goal.',
+          'Any zone shard counts · weapon R1 first · survives Ascend. '
+          'Tap a party goal.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
@@ -194,6 +222,13 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           goalLabel,
           style: GameTheme.body(size: 14, color: GameTheme.torchHot),
         ),
+        if (existingItem != null && ownedRank < ApexCraft.maxRank) ...[
+          const SizedBox(height: 2),
+          Text(
+            'Upgrade cost → R$pricingRank',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ],
         if (shortages.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text(
@@ -203,7 +238,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           ),
         ],
         const SizedBox(height: 6),
-        for (final e in recipe.costs.entries)
+        for (final e in recipeCosts.entries)
           _matProgressRow(
             state,
             e.key,
@@ -225,7 +260,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         GameButton(
           label: existingItem == null
               ? 'CRAFT R1'
-              : 'OWNED R${existingItem.apexRank}',
+              : 'OWNED R$ownedRank',
           onPressed: canCraft
               ? () {
                   director.craftApex(
@@ -240,9 +275,9 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         if (existingItem != null) ...[
           const SizedBox(height: 4),
           GameButton(
-            label: existingItem.apexRank >= ApexCraft.maxRank
+            label: ownedRank >= ApexCraft.maxRank
                 ? 'MAX RANK'
-                : 'UPGRADE → R${existingItem.apexRank + 1}',
+                : 'UPGRADE → R$pricingRank',
             style: GameButtonStyle.grey,
             onPressed: canUpgrade
                 ? () {
@@ -436,7 +471,11 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
 
   Widget _materialsBag(GameState state) {
     final owned = ApexCraft.materials
-        .where((m) => (state.craftMaterials[m.id] ?? 0) > 0)
+        .where(
+          (m) =>
+              m.id != ApexCraft.shardAnyId &&
+              (state.craftMaterials[m.id] ?? 0) > 0,
+        )
         .toList();
     final top = owned.isEmpty
         ? null
@@ -570,9 +609,12 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    final have = state.craftMaterials[matId] ?? 0;
+    final have = _haveForMat(state, matId);
     final def = ApexCraft.materialsById[matId];
     final family = def?.family ?? CraftMatFamily.shard;
+    final label = matId == ApexCraft.shardAnyId
+        ? 'Zone Shards (any)'
+        : (def?.name ?? matId);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: InkWell(
@@ -589,7 +631,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${def?.name ?? matId}  $have/$need',
+                      '$label  $have/$need',
                       style: GameTheme.body(
                         size: 13,
                         color:

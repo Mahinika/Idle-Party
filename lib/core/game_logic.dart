@@ -3154,12 +3154,14 @@ class GameLogic {
     required SpecRoleTag role,
     required EquipmentSlot slot,
     int rank = 1,
+    int fromRank = 0,
   }) => ApexForge.sortedMatShortages(
     state,
     classId: classId,
     role: role,
     slot: slot,
     rank: rank,
+    fromRank: fromRank,
   );
   static Map<EquipmentSlot, EquipmentItem> keepApexOnly(PartyHero h) =>
       ApexForge.keepApexOnly(h);

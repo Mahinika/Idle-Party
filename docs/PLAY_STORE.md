@@ -6,16 +6,17 @@ Package id: **`com.idleparty.app`**
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Primary installs | ✅ GitHub Releases | Tag `v*` → APK/AAB via `build-apk.yml` |
-| Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha |
+| Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
+| Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ✅ live | **1.12.106 (135)** available for Alpha testers on Play (full rollout, published **2026-09-08**). Older AABs 125/116/… inactive. |
-| Production | ⏳ Google review | **1.12.110 (139)** Production full rollout submitted **2026-09-09** (publishing overview: Ändringarna granskas). Countries added (176+rest of world). AD_ID Console warning acknowledged (permission **is** in AAB). Not live until Google publishes. |
+| Production | ✅ live | **1.12.110 (139)** on Play Store **2026-09-09** (`play.google.com/store/apps/details?id=com.idleparty.app`, Updated Sep 9, 2026). Full rollout published. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Updated 2026-09-08: delete-account / delete-data URLs → `main` PRIVACY; AdMob device IDs shared; Play Games user IDs / files / other actions; OAuth; encryption in transit. Submitted with Alpha **135** + listing/ads bundle. |
 | IARC / content rating | ⏳ review | New questionnaire submitted 2026-09-08: fantasy creature violence (often close-up, pixel, no blood), digital goods (SHOP) yes / no loot-boxes / no player trading, no fear/sex/gambling/language/drugs. Ads are **not** in this IARC form — covered by Ads declaration **Yes**. Ratings preview: ESRB 10+ fantasy violence, USK 12, PEGI 3 + IAP. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN) | ✅ | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md`. **2026-09-08:** fixed Apex line to **POWER → Craft** (was “Apex forge”). Submitted with policy bundle. |
+| Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ✅ phone | **Phone screenshots attached** on main listing (2026-09-04 check: 8 phone slots, Save idle = already live). Composed set also in `tool/store_listing/out/` (6×1080×1920). Feature graphic + icon live. |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
@@ -33,8 +34,8 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Signed Production candidate AAB built: **1.12.110+139** (`app-release.aab`)
 - [x] Owner asked upload Production (2026-09-09)
 - [x] Uploaded + submitted for review: Production **139 (1.12.110)** full rollout + countries
-- [ ] Google review / publish complete → store listing live
-- [ ] After production live: AdMob store-link Idle Party
+- [x] Google review / publish complete → store listing live (**2026-09-09**)
+- [x] After production live: AdMob store-link Idle Party (**2026-09-09** — Play linked; AdMob app review 2–3 days)
 
 ### Production upload paste (en-US release notes)
 
@@ -47,6 +48,8 @@ From `docs/STORE_LISTING.md` — use when Console asks for release notes:
 • World Path Sandy → Mothveil; TODAY owns KEY / Gauntlet / GREATER hunts.
 ```
 
+Update release notes when shipping a build that includes Play Billing SHOP buys
+(see `docs/SHOP_MONETIZATION.md`).
 
 ### Production AAB upload checklist (agent + owner)
 
@@ -61,12 +64,14 @@ Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row cha
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
-## Current decision (2026-08)
+## Current decision (2026-09-09)
 
-**Primary distribution: GitHub Releases (sideload).**  
-Tag pushes `v*` publish signed APK + AAB via `.github/workflows/build-apk.yml`. Play
-Console closed Alpha exists; **production is not live**. Day-to-day: prefer content/feel
-over Play ops unless the owner asks about Play.
+**Primary distribution: Google Play.**  
+Store: `https://play.google.com/store/apps/details?id=com.idleparty.app`
+(production **1.12.110 / 139**). Closed opt-in for early builds. Do **not**
+point players at GitHub Releases (repo may be private). Day-to-day: prefer
+content/feel over Play ops unless the owner asks about Play. Ship path for
+players = Play AAB after owner play OK — not public GitHub APK links.
 
 ## Signing
 
@@ -105,8 +110,8 @@ Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not
 | GDPR message | ✅ 1 active (Europeiska förordningar) |
 | App ID | ✅ `ca-app-pub-4980376195917009~4491640230` |
 | Rewarded unit | ✅ **POWERUPS hour** `…/5225353586` (matches code) |
-| Store link | ❌ empty — home setup **3/4**; needs Play store listing |
-| App approval | ⏳ **Requires review** until store-linked + Google reviews |
+| Store link | ✅ Play linked **2026-09-09** (`com.idleparty.app`) |
+| App approval | ⏳ AdMob reviewing (usually 2–3 days after store link) |
 | app-ads.txt | ✅ Hosted at `https://mahinika.github.io/app-ads.txt`; Play Website set to `https://mahinika.github.io` (2026-08-22). AdMob crawl may take up to 24h |
 | Revenue today | ~0.54 SEK estimated (ads can fill a little even while in review) |
 | Identity payout verify | Later — only when earnings hit Google’s threshold |
@@ -153,11 +158,14 @@ Suggested Description (en-US):
 ## Production listing
 
 - [ ] Promote internal → closed/open testing → production when ready.
-- [ ] Or keep **sideload-only** (GitHub Releases) indefinitely — this is an explicit, valid ship path for Idle Party.
+- [x] **Google Play is primary** (production live 2026-09-09). Do not advertise GitHub Releases to players.
 
-## CI reminder (GitHub Releases)
+## CI reminder (optional signed artifacts)
 
-Tag push `v*` runs `.github/workflows/build-apk.yml`: release APK + AAB attached to the GitHub Release when `KEYSTORE_BASE64` + `KEY_PROPERTIES` secrets are set. Daily work stays on `main`; only cut `v*` when you want a public sideload build. Do not open a `release/*` branch for chores.
+Tag push `v*` may still run `.github/workflows/build-apk.yml` for signed APK +
+AAB when secrets are set — useful for Play upload / private backups. That is
+**not** the player install path. Do not advertise GitHub Releases in Discord,
+README, or store-facing copy. Daily work stays on `main`.
 
 ## Agent: upload AAB from Cursor
 

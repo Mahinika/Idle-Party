@@ -1,47 +1,92 @@
 import 'package:flutter/material.dart';
 
 import '../../core/ad_boost.dart';
+import '../../core/game_director.dart';
+import '../../core/shop_billing.dart';
 import '../../core/shop_catalog.dart';
+import '../../core/shop_store.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 
-/// Bottom-tab SHOP: real-money catalog (Coming later — billing not wired).
+/// Bottom-tab SHOP: real-money catalog via Play Billing.
 class ShopDock extends StatelessWidget {
-  const ShopDock({super.key});
+  const ShopDock({super.key, required this.director});
+
+  final GameDirector director;
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
-      children: [
-        Text(
-          'Real money · cheap convenience',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 15, color: GameTheme.torchHot),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Same Full Boost as POWERUPS tickets (×2 gold · +${AdBoost.attackPercent}% ATK). '
-          'Watch ads for Ad Tickets on the hub · gold buys under GOLD · essence under ESSENCE.\n'
-          'Play Billing is not live yet — prices are the planned catalog only.',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 12),
-        for (var i = 0; i < ShopCatalog.offered.length; i++) ...[
-          if (i > 0) const SizedBox(height: 8),
-          _ShopRow(item: ShopCatalog.offered[i]),
-        ],
-      ],
+    return AnimatedBuilder(
+      animation: director,
+      builder: (context, _) {
+        final state = director.state;
+        final storeOk = ShopBilling.billingReady && ShopStore.storeAvailable;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                children: [
+                  Text(
+                    'Real money · cheap convenience',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(size: 15, color: GameTheme.torchHot),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Same Full Boost as POWERUPS tickets '
+                    '(×2 gold · +${AdBoost.attackPercent}% ATK). '
+                    'Watch ads for Ad Tickets on the hub · gold under GOLD · '
+                    'essence under ESSENCE.\n'
+                    '${storeOk ? 'Prices come from Google Play when available.' : 'Buys need a Play Store install of Idle Party (not sideload).'}',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                  ),
+                  const SizedBox(height: 12),
+                  for (var i = 0; i < ShopCatalog.offered.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 8),
+                    _ShopRow(
+                      item: ShopCatalog.offered[i],
+                      owned: ShopBilling.isOwned(state, ShopCatalog.offered[i]),
+                      priceLabel:
+                          ShopStore.storePriceLabel(ShopCatalog.offered[i].id) ??
+                          ShopCatalog.offered[i].priceLabel,
+                      onBuy: () =>
+                          director.buyShopItem(ShopCatalog.offered[i].id),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+              child: GameButton(
+                label: 'RESTORE PURCHASES',
+                style: GameButtonStyle.grey,
+                onPressed: director.restoreShopPurchases,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 class _ShopRow extends StatelessWidget {
-  const _ShopRow({required this.item});
+  const _ShopRow({
+    required this.item,
+    required this.owned,
+    required this.priceLabel,
+    required this.onBuy,
+  });
 
   final ShopCatalogItem item;
+  final bool owned;
+  final String priceLabel;
+  final VoidCallback onBuy;
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +116,7 @@ class _ShopRow extends StatelessWidget {
                 ),
               ),
               Text(
-                item.priceLabel,
+                priceLabel,
                 style: GameTheme.body(size: 14, color: GameTheme.parchment),
               ),
             ],
@@ -90,10 +135,10 @@ class _ShopRow extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: GameButton(
-              label: 'COMING LATER',
+              label: owned ? 'OWNED' : 'BUY',
               expanded: false,
               dense: true,
-              onPressed: null,
+              onPressed: owned ? null : onBuy,
             ),
           ),
         ],

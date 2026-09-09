@@ -159,7 +159,7 @@ class FirstSessionTips extends StatelessWidget {
           'Essence lasts between Ascends: ESSENCE → TRACKS for Gold Find and power, '
           'ESSENCE → KEEP for God Hand and permanent buys, '
           'ESSENCE → RELICS for party auras, ESSENCE → PETS for pets. '
-          'Bottom-tab SHOP is the real-money store (cheap boosts; buy soon).',
+          'Bottom-tab SHOP is the real-money store (cheap boosts / ad-free on Play).',
     ),
   ];
 

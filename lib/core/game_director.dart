@@ -34,6 +34,9 @@ import 'play_games_scores.dart';
 import 'play_leaderboard_ids.dart';
 import 'play_store_update.dart';
 import 'screen_awake.dart';
+import 'shop_billing.dart';
+import 'shop_catalog.dart';
+import 'shop_store.dart';
 import 'story_lore.dart';
 import 'chase_contract.dart';
 import 'ui_feedback.dart';
@@ -590,6 +593,7 @@ class GameDirector extends ChangeNotifier {
       DebugPlayLog.event('boot', DebugPlayLog.bootDetail(_state));
       unawaited(refreshPlayUpdateNotice());
       unawaited(AdRewarded.warmup());
+      unawaited(_warmupShopStore());
     }
   }
 
@@ -3074,6 +3078,64 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
+  Future<void> _warmupShopStore() async {
+    if (!ShopBilling.billingReady) return;
+    await ShopStore.warmup(
+      onGranted: _onShopPurchaseGranted,
+      onMessage: (msg) => showToast(msg, life: 2.4),
+    );
+    notifyListeners();
+  }
+
+  void _onShopPurchaseGranted(String productId) {
+    final item = ShopCatalog.byId[productId];
+    if (item == null) return;
+    final beforeOwned = ShopBilling.isOwned(_state, item);
+    final next = ShopBilling.applyPurchase(_state, item);
+    if (identical(next, _state) && beforeOwned) {
+      // Restore of already-owned non-consumable — quiet ack.
+      showToast('${item.name} restored', life: 2.2);
+      return;
+    }
+    if (identical(next, _state)) return;
+    _applyUpgrade(next);
+    GameAudio.unlock();
+    showToast('Purchased ${item.name}', life: 2.6);
+  }
+
+  Future<void> buyShopItem(String productId) async {
+    if (!ShopBilling.billingReady) {
+      showToast('Shop buys coming later.', life: 2.2);
+      return;
+    }
+    final item = ShopCatalog.byId[productId];
+    if (item == null) return;
+    if (ShopBilling.isOwned(_state, item)) {
+      showToast('Already owned', life: 2.0);
+      return;
+    }
+    final err = await ShopStore.buy(productId);
+    if (err != null) {
+      showToast(err, life: 2.6);
+      return;
+    }
+    // Success arrives via purchaseStream → _onShopPurchaseGranted.
+  }
+
+  Future<void> restoreShopPurchases() async {
+    if (!ShopBilling.billingReady) {
+      showToast('Shop buys coming later.', life: 2.2);
+      return;
+    }
+    showToast('Restoring purchases…', life: 1.8);
+    final err = await ShopStore.restore();
+    if (err != null) {
+      showToast(err, life: 2.6);
+      return;
+    }
+    notifyListeners();
+  }
+
   /// Spend tickets on a POWERUPS buff.
   void spendPowerupBuff(AdBuffId id, {int? nowMs}) {
     final offer = AdBuffCatalog.byId(id);
@@ -3320,6 +3382,8 @@ class GameDirector extends ChangeNotifier {
     unawaited(
       ScreenAwake.setEnabled(_state.keepScreenAwake && _state.inDungeon),
     );
+    // Only switch loops on hub ↔ dungeon (or unmute). Re-calling every
+    // `_applyUpgrade` used to restart music on each button press.
     if (!_state.soundMuted) {
       unawaited(
         GameAudio.setAmbience(
@@ -3376,6 +3440,7 @@ class GameDirector extends ChangeNotifier {
     _hubIdleTimer?.cancel();
     combatFrame.dispose();
     PlayGamesBridge.cancelPendingUpload();
+    unawaited(ShopStore.dispose());
     super.dispose();
   }
 }

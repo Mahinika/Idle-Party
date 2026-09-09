@@ -30,11 +30,21 @@ The app may let you **copy a save to the clipboard** or **paste a save from the 
 
 ## Network
 
-Aside from normal OS / store behavior (install, updates) and optional Play Games calls when you opt in, Idle Party does not require an Idle Party account or Idle Party cloud service.
+Aside from normal OS / store behavior (install, updates), optional Play Billing
+when you buy from SHOP, and optional Play Games calls when you opt in, Idle Party
+does not require an Idle Party account or Idle Party cloud service.
 
 On **Google Play installs** (Android), the app may ask Google Play whether a newer Idle Party is available and show an in-app notice. That check goes to Google, not to an Idle Party server. Sideloaded APKs skip it.
 
 On **Android**, if you tap hub **POWERUPS** and watch an ad, Google AdMob may load an ad over the network. That can include an advertising ID and a consent prompt (EU/EEA). Skipping POWERUPS means those ad calls are not started by you. Web playtest builds do not show real ads.
+
+## Optional real-money SHOP (Android / Google Play)
+
+Bottom-tab **SHOP** may offer cheap convenience packs (timed Full Boost, ad-free,
+small QoL). Purchases go through **Google Play Billing**. Google processes the
+payment; Idle Party does not run its own payment server. Purchase ownership for
+one-time packs is stored in your local save (and optional Play Games cloud save
+if you opt in). Sideloaded APKs cannot complete Play Billing buys.
 
 ## Optional rewarded ads (Android)
 
@@ -65,3 +75,8 @@ The game is intended as a general-audience idle RPG. It does not collect persona
 ## Changes
 
 If privacy practices change, this document will be updated and Play Data safety answers should be revised to match.
+
+## Contact
+
+Questions about this privacy policy or Idle Party data practices:
+**cognifoxstudio@gmail.com** (Cognifox Studio).

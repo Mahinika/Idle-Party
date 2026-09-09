@@ -8,9 +8,11 @@ Idle Party is a cozy-but-crunchy **idle RPG**: a hero party crawls spatial dunge
   <img src="tool/art_backups/app_icon.png" alt="Idle Party app icon — pixel torch and party crest" width="160" />
 </p>
 
-**[Download Android APK (latest)](https://github.com/Mahinika/Idle-Party/releases/latest)** · **[All releases](https://github.com/Mahinika/Idle-Party/releases)**
+**[Get it on Google Play](https://play.google.com/store/apps/details?id=com.idleparty.app)**
 
-Primary Android distribution is **GitHub Releases (sideload)**; Play Store is optional (see [docs/PLAY_STORE.md](docs/PLAY_STORE.md)).
+Primary Android distribution is **Google Play**. Closed test opt-in:
+[play.google.com/apps/testing/com.idleparty.app](https://play.google.com/apps/testing/com.idleparty.app).
+See [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
 
 ---
 
@@ -57,7 +59,7 @@ World Path is **15 zones** from Sandy Caverns through Mothveil Hollow
 (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on
 the road) — each with its own look, packs, and bosses.
 
-**Ship:** [latest GitHub Release](https://github.com/Mahinika/Idle-Party/releases/latest) (What’s New is also in-game).
+**Ship:** [Google Play](https://play.google.com/store/apps/details?id=com.idleparty.app) (What’s New is also in-game).
 
 Player cinematic brief (boot trailer): [docs/TRAILER.md](docs/TRAILER.md)
 
@@ -67,7 +69,8 @@ Player cinematic brief (boot trailer): [docs/TRAILER.md](docs/TRAILER.md)
 
 ### Android (play)
 
-Grab the latest APK from [Releases](https://github.com/Mahinika/Idle-Party/releases) and sideload it. No account. Optional hub **POWERUPS** (rewarded ad) for a timed boost — never mid-fight.
+Install from [Google Play](https://play.google.com/store/apps/details?id=com.idleparty.app).
+Optional hub **POWERUPS** (rewarded ad) for a timed boost — never mid-fight.
 
 ### From source
 

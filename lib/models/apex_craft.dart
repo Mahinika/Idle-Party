@@ -1,5 +1,4 @@
 import '../core/equipment_factory.dart';
-import 'dungeon_def.dart';
 import 'equip_stat_weights.dart';
 import 'hero.dart';
 import 'hero_spec.dart';
@@ -46,7 +45,18 @@ abstract final class ApexCraft {
     EquipmentSlot.cloak,
   ];
 
+  /// Recipe unit: any named zone shard in the bag pays this cost.
+  static const String shardAnyId = 'shard_any';
+
+  static const String slagId = 'apex_slag';
+
   static const List<CraftMatDef> materials = <CraftMatDef>[
+    CraftMatDef(
+      id: shardAnyId,
+      name: 'Zone Shard',
+      family: CraftMatFamily.shard,
+      bossSources: 'Any dungeon boss',
+    ),
     CraftMatDef(
       id: 'shard_sandy',
       name: 'Sandy Shard',
@@ -75,7 +85,7 @@ abstract final class ApexCraft {
       id: 'shard_dead',
       name: 'Necropolis Shard',
       family: CraftMatFamily.shard,
-      bossSources: 'Dead City boss',
+      bossSources: 'City of Dead boss',
     ),
     CraftMatDef(
       id: 'shard_hell',
@@ -228,7 +238,7 @@ abstract final class ApexCraft {
       bossSources: 'Any boss (Druid in party)',
     ),
     CraftMatDef(
-      id: 'apex_slag',
+      id: slagId,
       name: 'Apex Slag',
       family: CraftMatFamily.slag,
       bossSources: 'Gauntlet bosses · Crystal Spire boss',
@@ -240,6 +250,42 @@ abstract final class ApexCraft {
   };
 
   static String shardIdForDungeon(String dungeonId) => 'shard_$dungeonId';
+
+  static bool isZoneShardId(String matId) {
+    if (matId == shardAnyId) return false;
+    return materialsById[matId]?.family == CraftMatFamily.shard;
+  }
+
+  static int ownedShardCount(Map<String, int> bag) {
+    var n = 0;
+    for (final e in bag.entries) {
+      if (isZoneShardId(e.key)) n += e.value;
+    }
+    return n;
+  }
+
+  /// Prefer the fattest piles so leftover named shards stay readable.
+  static Map<String, int> spendZoneShards(Map<String, int> bag, int qty) {
+    if (qty <= 0) return bag;
+    final next = Map<String, int>.from(bag);
+    final piles = next.entries
+        .where((e) => isZoneShardId(e.key) && e.value > 0)
+        .toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    var left = qty;
+    for (final e in piles) {
+      if (left <= 0) break;
+      final take = e.value < left ? e.value : left;
+      final remain = e.value - take;
+      if (remain <= 0) {
+        next.remove(e.key);
+      } else {
+        next[e.key] = remain;
+      }
+      left -= take;
+    }
+    return next;
+  }
 
   static String coreIdForRole(SpecRoleTag role) => switch (role) {
     SpecRoleTag.tank => 'core_tank',
@@ -324,39 +370,42 @@ abstract final class ApexCraft {
     _ => 1.0,
   };
 
-  static int rankCostMult(int rank) => switch (rank) {
-    1 => 1,
-    2 => 2,
-    3 => 4,
-    _ => 1,
-  };
+  static bool _heavySlot(EquipmentSlot slot) => slotCostMult(slot) >= 1.3;
 
   /// Absolute mat cost to reach [rank] from nothing (for R1 craft).
+  ///
+  /// Zone shards are a pool ([shardAnyId]) — Mothveil/KEY/Rift shards pay
+  /// the same as Sandy. Each rank adds a short, same-shaped tax so upgrades
+  /// do not invent a new shopping list of early-zone mats.
   static Map<String, int> absoluteCost({
     required HeroClassId classId,
     required SpecRoleTag role,
     required EquipmentSlot slot,
     required int rank,
   }) {
-    final mult = (slotCostMult(slot) * rankCostMult(rank)).ceil();
-    final shardsNeeded = max(1, (2 * mult) ~/ 2);
-    final dungeonIds = DungeonCatalog.all.map((d) => d.id).toList();
-    final costs = <String, int>{};
-    // Spread shards across early → late zones by rank/slot weight.
-    for (var i = 0; i < shardsNeeded && i < dungeonIds.length; i++) {
-      final id = shardIdForDungeon(dungeonIds[i]);
-      costs[id] = (costs[id] ?? 0) + 1 + (mult ~/ 3);
-    }
-    if (shardsNeeded > dungeonIds.length) {
-      final crystal = shardIdForDungeon('crystal');
-      costs[crystal] =
-          (costs[crystal] ?? 0) + (shardsNeeded - dungeonIds.length);
-    }
-    costs[coreIdForRole(role)] = max(1, mult);
-    costs[catalystIdForClass(classId)] = max(1, (mult + 1) ~/ 2);
-    if (rank >= 2 || slot == EquipmentSlot.weapon) {
-      // R1 weapons: 1 slag (was heavier); upgrades stay steeper.
-      costs['apex_slag'] = rank == 1 ? 1 : max(1, mult ~/ (rank == 2 ? 2 : 1));
+    final r = rank.clamp(1, maxRank);
+    final heavy = _heavySlot(slot);
+    final shards = switch (r) {
+      1 => heavy ? 2 : 1,
+      2 => heavy ? 4 : 2,
+      _ => heavy ? 6 : 4,
+    };
+    final cores = switch (r) {
+      1 => heavy ? 2 : 1,
+      2 => heavy ? 3 : 2,
+      _ => heavy ? 4 : 3,
+    };
+    final costs = <String, int>{
+      shardAnyId: shards,
+      coreIdForRole(role): cores,
+      catalystIdForClass(classId): r,
+    };
+    if (r >= 2 || slot == EquipmentSlot.weapon) {
+      costs[slagId] = switch (r) {
+        1 => 1,
+        2 => slot == EquipmentSlot.weapon ? 2 : 1,
+        _ => slot == EquipmentSlot.weapon ? 3 : 2,
+      };
     }
     return costs;
   }

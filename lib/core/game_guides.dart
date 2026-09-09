@@ -294,9 +294,12 @@ abstract final class GameGuides {
           'MORE → CRAFT.\n\n'
           '• Tap a party goal first — that sets who and which slot you craft.\n'
           '• Recipe + CRAFT sit under the goal. Tap a recipe mat to lock the farm target.\n'
+          '• Zone Shards are a pool: any dungeon boss shard pays the recipe '
+          '(KEY / Rift / late zones count).\n'
           '• Materials bag and Change goal stay collapsed until you need them.\n'
-          '• Target meter: every boss clear builds toward a guaranteed mat (PUSH faster than FARM).\n'
-          '• Craft weapon R1 first, then armor; upgrade in place to R3.\n'
+          '• Target meter: every boss clear builds toward a guaranteed mat '
+          '(PUSH faster than FARM). Farm any zone — the meter grants what you need.\n'
+          '• Craft weapon R1 first, then armor; upgrade rows show the real R2/R3 cost.\n'
           '• Crafted gear and materials survive Ascend.',
     ),
     GuideTopic(
@@ -312,7 +315,8 @@ abstract final class GameGuides {
           '• Clear a full bag with BAG → CLEAN BAG, MERGE, or SETTINGS auto-sell / '
           'auto-disassemble — there is no separate Sell junk button.\n'
           '• Keep at least one flask for tough floors and bosses.\n'
-          '• Bottom-tab SHOP is the real-money store (cheap boosts / ad-free) — not this market.',
+          '• Bottom-tab SHOP is the real-money store (cheap boosts / ad-free on '
+          'Play installs) — not this market.',
     ),
     GuideTopic(
       id: 'pets',

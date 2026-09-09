@@ -1,9 +1,10 @@
 # SHOP monetization (real-money store)
 
-**Status:** Catalog + UI shell shipped; buttons say **COMING LATER**. Grant math lives in
-`lib/core/shop_billing.dart` (`ShopBilling.applyPurchase`) + `metaDepth.adFree` /
-`shopStarterClaimed` / `shopBagBonusSlots`. **`in_app_purchase` not in pubspec yet** —
-flip `ShopBilling.billingReady` when Console SKUs + package wire.
+**Status:** Catalog + UI + Play Billing client shipped (`in_app_purchase`).
+Grant math: `lib/core/shop_billing.dart` (`ShopBilling.applyPurchase`) +
+`metaDepth.adFree` / `shopStarterClaimed` / `shopBagBonusSlots`.
+**Still required in Play Console:** create the five product IDs below and
+activate them, then smoke on a **Play-installed** build (license testers OK).
 
 **POWERUPS path:** Ad Tickets → buff shop — see [AD_POWERUPS_DESIGN.md](AD_POWERUPS_DESIGN.md).
 
@@ -39,13 +40,13 @@ expensive power packs.
 
 ## v1 catalog (USD Play tiers)
 
-| SKU id | Price | Offer | Notes |
-|--------|-------|-------|--------|
-| `starter_boost_6h` | $0.99 | +6h Full Boost | One-time starter (~$0.17/h) |
-| `boost_12h` | $1.49 | +12h Full Boost | Repeatable; ~$0.12/h |
-| `ad_free` | $1.99 | Ad-free + +2 tickets once | Hide WATCH; daily CLAIM TICKET (UTC) |
-| `day_boost_24h` | $2.99 | +24h Full Boost | Best boost $/h (~$0.12/h) |
-| `supporter_qol` | $4.99 | +4 bag slots + 12h + thank-you | Ceiling; **no extra combat class** |
+| SKU id | Play type | Price | Offer | Notes |
+|--------|-----------|-------|--------|-------|
+| `starter_boost_6h` | Non-consumable | $0.99 | +6h Full Boost | One-time starter (~$0.17/h) |
+| `boost_12h` | Consumable | $1.49 | +12h Full Boost | Repeatable; ~$0.12/h |
+| `ad_free` | Non-consumable | $2.99 | Ad-free + +2 tickets once | Hide WATCH; daily CLAIM TICKET (UTC). Priced at/above a day boost so forever is not the cheap impulse next to timed packs. |
+| `day_boost_24h` | Consumable | $2.99 | +24h Full Boost | Best boost $/h (~$0.12/h) |
+| `supporter_qol` | Non-consumable | $4.99 | +4 bag slots + 12h + thank-you | Ceiling; **no extra combat class** |
 
 Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as tickets.
 
@@ -58,13 +59,21 @@ Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as t
 | GOLD | Gold | Forge tracks + market |
 | ESSENCE → KEEP | Essence | AL-gated permanent prestige buys |
 
-## Billing wave checklist (post-production)
+## Play Console checklist (owner)
 
-1. Create Play Console IAP products matching `ShopCatalog` ids (consumable boosts + non-consumable `ad_free` / `supporter_qol`).
-2. Add `in_app_purchase` to `pubspec.yaml`; wire buy / restore → `ShopBilling.applyPurchase`.
-3. Set `ShopBilling.billingReady = true`; change SHOP buttons from COMING LATER to BUY.
-4. Update Data safety + Privacy for IAP; listing full description may mention cheap SHOP.
-5. Sandbox purchase smoke on a Play-installed build (not sideload).
+0. **Merchant / säljarkonto** — Engångsprodukter is locked until Google Payments
+   merchant account exists (`Generera intäkter` → **Skapa ett säljarkonto**).
+   Needs tax + payout details; an agent cannot finish that step.
+1. Monetize → In-app products → create each SKU id above (exact string).
+2. Consumables: `boost_12h`, `day_boost_24h`. Non-consumables: the other three.
+3. Activate / publish products (draft SKUs do not appear in `queryProductDetails`).
+4. Add license testers (Settings → License testing) for sandbox buys.
+5. Smoke on a **Play-installed** build — sideload / `flutter run` debug often
+   cannot finish a real purchase even when the sheet opens.
+6. Data safety / Privacy already mention IAP — keep Console form honest.
+
+App code path: `ShopStore` → `ShopBilling.applyPurchase` → toast + save.
+SHOP UI: **BUY** / **OWNED** + **RESTORE PURCHASES**.
 
 ## Persist fields (already on metaDepth)
 

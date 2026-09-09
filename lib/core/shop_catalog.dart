@@ -1,4 +1,4 @@
-/// Real-money SHOP catalog (UI + docs). Buttons say COMING LATER until Billing.
+/// Real-money SHOP catalog (UI + Play Billing product ids).
 ///
 /// Keep in sync with [docs/SHOP_MONETIZATION.md]. Grant path: [ShopBilling].
 library;
@@ -28,22 +28,26 @@ class ShopCatalogItem {
     this.bagSlots = 0,
   });
 
+  /// Play Console product id — must match Console exactly.
   final String id;
   final String name;
   final String description;
 
-  /// Display price (USD Play tier), e.g. `$0.99`.
+  /// Fallback price label when the store has not returned localized price yet.
   final String priceLabel;
   final ShopOfferKind kind;
 
   /// Hours of Full Boost granted (both ATK + gold timers).
   final int boostHours;
 
-  /// One-time purchase.
+  /// One-time purchase (non-consumable in Play Billing).
   final bool oneTime;
 
   /// Extra bag slots when [kind] is [ShopOfferKind.supporterQol].
   final int bagSlots;
+
+  /// Repeatable boost packs — `buyConsumable`. Everything else is non-consumable.
+  bool get isConsumable => kind == ShopOfferKind.boostHours && !oneTime;
 }
 
 /// Cheap convenience ladder — no whale packs, no gacha.
@@ -77,7 +81,7 @@ abstract final class ShopCatalog {
       description:
           'Permanent — hide POWERUPS ads, +2 Ad Tickets once, and a free '
           'ticket claim once per UTC day. More boost time still for sale here.',
-      priceLabel: '\$1.99',
+      priceLabel: '\$2.99',
       kind: ShopOfferKind.adFree,
       boostHours: 0,
       oneTime: true,
@@ -105,4 +109,10 @@ abstract final class ShopCatalog {
       oneTime: true,
     ),
   ];
+
+  static final Map<String, ShopCatalogItem> byId = {
+    for (final item in offered) item.id: item,
+  };
+
+  static Set<String> get productIds => byId.keys.toSet();
 }

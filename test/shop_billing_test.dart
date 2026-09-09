@@ -30,7 +30,7 @@ void main() {
     expect(state.metaDepth.adAtkUntilMs, until);
   });
 
-  test('supporter_qol adds bag slots', () {
+  test('supporter_qol adds bag slots once (restore-safe)', () {
     var state = GameLogic.createInitialState(now: now);
     final before = GearStash.maxGearStashFor(state);
     final item =
@@ -38,6 +38,28 @@ void main() {
     state = ShopBilling.applyPurchase(state, item, now: now);
     expect(state.metaDepth.shopBagBonusSlots, item.bagSlots);
     expect(GearStash.maxGearStashFor(state), before + item.bagSlots);
+    final after = ShopBilling.applyPurchase(state, item, now: now);
+    expect(after.metaDepth.shopBagBonusSlots, item.bagSlots);
+  });
+
+  test('ad_free restore does not re-grant tickets', () {
+    var state = GameLogic.createInitialState(now: now);
+    final item = ShopCatalog.offered.firstWhere((e) => e.id == 'ad_free');
+    state = ShopBilling.applyPurchase(state, item, now: now);
+    expect(state.metaDepth.adTickets, 2);
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(adTickets: 5),
+    );
+    state = ShopBilling.applyPurchase(state, item, now: now);
+    expect(state.metaDepth.adTickets, 5);
+  });
+
+  test('consumable boost packs are marked consumable', () {
+    expect(ShopCatalog.byId['boost_12h']!.isConsumable, isTrue);
+    expect(ShopCatalog.byId['day_boost_24h']!.isConsumable, isTrue);
+    expect(ShopCatalog.byId['starter_boost_6h']!.isConsumable, isFalse);
+    expect(ShopCatalog.byId['ad_free']!.isConsumable, isFalse);
+    expect(ShopBilling.billingReady, isTrue);
   });
 
   test('boost hours respect 24h cap on both timers', () {

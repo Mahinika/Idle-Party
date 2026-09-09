@@ -326,7 +326,7 @@ void main() {
     }
   });
 
-  test('weapon R1 is cheaper slag and lighter slot mult', () {
+  test('weapon R1 is cheaper slag and any-zone shard pool', () {
     expect(ApexCraft.slotCostMult(EquipmentSlot.weapon), 2.0);
     final r1 = ApexCraft.absoluteCost(
       classId: HeroClassId.warrior,
@@ -334,7 +334,55 @@ void main() {
       slot: EquipmentSlot.weapon,
       rank: 1,
     );
-    expect(r1['apex_slag'], 1);
+    expect(r1[ApexCraft.slagId], 1);
+    expect(r1[ApexCraft.shardAnyId], 2);
+    expect(r1.containsKey('shard_sandy'), isFalse);
+  });
+
+  test('late zone shards pay any-shard recipe costs', () {
+    var state = GameLogic.createInitialState();
+    state = state.copyWith(
+      craftMaterials: {
+        'shard_veil': 2,
+        'core_tank': 2,
+        'catalyst_warrior': 1,
+        ApexCraft.slagId: 1,
+      },
+    );
+    expect(
+      GameLogic.canCraftApex(
+        state,
+        classId: HeroClassId.warrior,
+        role: SpecRoleTag.tank,
+        slot: EquipmentSlot.weapon,
+      ),
+      isTrue,
+    );
+    state = GameLogic.craftApex(
+      state,
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.weapon,
+    );
+    expect(state.craftMaterials['shard_veil'], isNull);
+    expect(
+      state.heroes.any((h) => h.itemIn(EquipmentSlot.weapon)?.isApex == true),
+      isTrue,
+    );
+  });
+
+  test('upgrade delta stays short and same-shaped', () {
+    final delta = ApexCraft.upgradeDeltaCost(
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.weapon,
+      fromRank: 1,
+      toRank: 2,
+    );
+    expect(delta[ApexCraft.shardAnyId], 2);
+    expect(delta['core_tank'], 1);
+    expect(delta['catalyst_warrior'], 1);
+    expect(delta[ApexCraft.slagId], 1);
   });
 
   test('target meter grants mat and resets on push boss clear', () {

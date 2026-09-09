@@ -19,10 +19,34 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.110';
+  static const String currentVersion = '1.12.113';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.113',
+      bullets: <String>[
+        'SHOP buys are live on Play installs: cheap Full Boost packs, ad-free, and a small supporter pack — same boost power as POWERUPS tickets. RESTORE PURCHASES brings back one-time packs after reinstall.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.112',
+      bullets: <String>[
+        'CRAFT upgrades are easier to finish: any zone shard pays the recipe (KEY / Rift / late floors count), R2/R3 costs are shorter, and the craft screen shows the real upgrade bill — not the R1 price.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.12.111',
+      bullets: <String>[
+        'Heroes read as their spec: each spec now washes its own color onto the doll in the dungeon, GEAR and the party bar — a Frost DK no longer looks like a Warrior in the same plate.',
+        'Movement feel: heroes bob per step and swing the held weapon while walking, and getting hit is a short recoil instead of a phantom step. Weapons and shields now sit in the hand — ten of them were anchored to empty air, so swords, staves, bows, maces and axes hung beside the fist.',
+        'Dungeons open faster: floor art no longer decodes ~97 bag icons that are never drawn in a fight.',
+        'Music no longer restarts from the top when you tap hub/menu buttons — it keeps looping.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.110',
       bullets: <String>[

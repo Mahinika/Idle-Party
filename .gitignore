@@ -119,6 +119,9 @@ IdleSword*
 # One-off emulator dumps / gear audits (keep MCP, playtest scripts, art pipeline)
 /tool/_*.py
 /tool/_*.png
+/tool/ip_*.png
+/tool/crop_*.png
+/tool/ui[0-9]*.xml
 /tool/audit_*.png
 /tool/playtest_*.png
 /tool/play2_*.png

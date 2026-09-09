@@ -7,11 +7,10 @@ import 'shop_catalog.dart';
 /// Apply a successful SHOP purchase to [state].
 ///
 /// Play Billing wiring calls this after Google acknowledges a buy / restore.
-/// Until Billing ships, SHOP UI stays **COMING LATER** and never invokes this
-/// from the player path.
 abstract final class ShopBilling {
-  /// Flip when `in_app_purchase` + Console SKUs are live.
-  static const billingReady = false;
+  /// Billing package + SHOP BUY path are live. Sideload / missing Console SKUs
+  /// still soft-fail with a toast — Play-installed builds are the real path.
+  static const billingReady = true;
 
   static GameState applyPurchase(
     GameState state,
@@ -32,9 +31,10 @@ abstract final class ShopBilling {
           md = md.copyWith(shopStarterClaimed: true);
         }
       case ShopOfferKind.adFree:
-        md = md.copyWith(adFree: true);
-        // Welcome: +2 Ad Tickets (same power path as watching).
+        // Restore must not re-grant welcome tickets.
+        if (md.adFree) return state;
         md = md.copyWith(
+          adFree: true,
           adTickets: min(9999, md.adTickets + 2),
         );
         if (item.boostHours > 0) {
@@ -45,9 +45,9 @@ abstract final class ShopBilling {
           );
         }
       case ShopOfferKind.supporterQol:
-        md = md.copyWith(
-          shopBagBonusSlots: md.shopBagBonusSlots + item.bagSlots,
-        );
+        // Restore must not stack bag slots again.
+        if (md.shopBagBonusSlots > 0) return state;
+        md = md.copyWith(shopBagBonusSlots: item.bagSlots);
         if (item.boostHours > 0) {
           md = GameLogic.grantFullBoostHours(
             md,

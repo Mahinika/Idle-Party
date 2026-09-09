@@ -85,6 +85,24 @@ void main() {
     );
   });
 
+  test('setMuted does not restart background when mute flag is unchanged', () {
+    GameAudio.debugReset();
+    GameAudio.muted = false;
+    // Same value as current — must not force-restart (was restarting music
+    // on every UI button via _syncDevicePrefs → setMuted(false)).
+    GameAudio.setMuted(false);
+    expect(GameAudio.muted, isFalse);
+    expect(GameAudio.debugBackgroundStartCount, 0);
+
+    GameAudio.setMuted(true);
+    expect(GameAudio.muted, isTrue);
+    // Stop path only — no start while muted / engine may be offline in tests.
+    expect(GameAudio.debugBackgroundStartCount, 0);
+
+    GameAudio.setMuted(true);
+    expect(GameAudio.debugBackgroundStartCount, 0);
+  });
+
   test('sfx, ambience, and music volumes round-trip in save JSON', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 8, 30))
         .copyWith(
