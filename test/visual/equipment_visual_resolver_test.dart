@@ -48,41 +48,49 @@ void main() {
       'sword_thunderfury',
       'sword_warglaive',
       'sword_runebound',
+      'sword_emberfang',
     ]);
     expect(EquipmentModelCatalog.variantsFor('staff'), [
       'staff_t0',
       'staff_frostfire',
       'staff_nethercore',
+      'staff_voidspire',
     ]);
     expect(EquipmentModelCatalog.variantsFor('bow'), [
       'bow_t0',
       'bow_eagle',
       'bow_windpierce',
+      'bow_ashflight',
     ]);
     expect(EquipmentModelCatalog.variantsFor('axe'), [
       'axe_t0',
       'axe_goreblade',
       'axe_bloodhowl',
+      'axe_stormcleave',
     ]);
     expect(EquipmentModelCatalog.variantsFor('mace'), [
       'mace_t0',
       'mace_lightbringer',
       'mace_dawnbreak',
+      'mace_soulhammer',
     ]);
     expect(EquipmentModelCatalog.variantsFor('dagger'), [
       'dagger_t0',
       'dagger_shadowfang',
       'dagger_nightbite',
+      'dagger_venomkiss',
     ]);
     expect(EquipmentModelCatalog.variantsFor('shield'), [
       'shield_t0',
       'shield_aegis',
       'shield_ironwall',
+      'shield_frostwall',
     ]);
     expect(EquipmentModelCatalog.variantsFor('frill'), [
       'frill_t0',
       'frill_prism',
       'frill_soulcodex',
+      'frill_embercodex',
     ]);
     expect(EquipmentModelCatalog.variantsFor('helm'), ['helm_t0', 'helm_t2']);
     expect(EquipmentModelCatalog.variantsFor('hands'), ['hands_t0', 'hands_t2']);

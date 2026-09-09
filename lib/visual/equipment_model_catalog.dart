@@ -38,20 +38,28 @@ abstract final class EquipmentModelCatalog {
     'sword_thunderfury',
     'sword_warglaive',
     'sword_runebound',
+    'sword_emberfang',
     'staff_frostfire',
     'staff_nethercore',
+    'staff_voidspire',
     'bow_eagle',
     'bow_windpierce',
+    'bow_ashflight',
     'axe_goreblade',
     'axe_bloodhowl',
+    'axe_stormcleave',
     'mace_lightbringer',
     'mace_dawnbreak',
+    'mace_soulhammer',
     'dagger_shadowfang',
     'dagger_nightbite',
+    'dagger_venomkiss',
     'shield_aegis',
     'shield_ironwall',
+    'shield_frostwall',
     'frill_prism',
     'frill_soulcodex',
+    'frill_embercodex',
   };
 
   static const Map<String, List<String>> variants = {
@@ -60,14 +68,50 @@ abstract final class EquipmentModelCatalog {
       'sword_thunderfury',
       'sword_warglaive',
       'sword_runebound',
+      'sword_emberfang',
     ],
-    'staff': ['staff_t0', 'staff_frostfire', 'staff_nethercore'],
-    'dagger': ['dagger_t0', 'dagger_shadowfang', 'dagger_nightbite'],
-    'mace': ['mace_t0', 'mace_lightbringer', 'mace_dawnbreak'],
-    'axe': ['axe_t0', 'axe_goreblade', 'axe_bloodhowl'],
-    'bow': ['bow_t0', 'bow_eagle', 'bow_windpierce'],
-    'shield': ['shield_t0', 'shield_aegis', 'shield_ironwall'],
-    'frill': ['frill_t0', 'frill_prism', 'frill_soulcodex'],
+    'staff': [
+      'staff_t0',
+      'staff_frostfire',
+      'staff_nethercore',
+      'staff_voidspire',
+    ],
+    'dagger': [
+      'dagger_t0',
+      'dagger_shadowfang',
+      'dagger_nightbite',
+      'dagger_venomkiss',
+    ],
+    'mace': [
+      'mace_t0',
+      'mace_lightbringer',
+      'mace_dawnbreak',
+      'mace_soulhammer',
+    ],
+    'axe': [
+      'axe_t0',
+      'axe_goreblade',
+      'axe_bloodhowl',
+      'axe_stormcleave',
+    ],
+    'bow': [
+      'bow_t0',
+      'bow_eagle',
+      'bow_windpierce',
+      'bow_ashflight',
+    ],
+    'shield': [
+      'shield_t0',
+      'shield_aegis',
+      'shield_ironwall',
+      'shield_frostwall',
+    ],
+    'frill': [
+      'frill_t0',
+      'frill_prism',
+      'frill_soulcodex',
+      'frill_embercodex',
+    ],
     'helm': ['helm_t0', 'helm_t2'],
     'chest': ['chest_t0', 'chest_t2'],
     'legs': ['legs_t0', 'legs_t2'],
@@ -123,12 +167,12 @@ abstract final class EquipmentModelCatalog {
 
     // Uncommon+ lean toward authored models so BAG/doll identity pops.
     final chance = rarityTier >= 3
-        ? 0.65
+        ? 0.78
         : rarityTier >= 2
-        ? 0.50
+        ? 0.62
         : rarityTier >= 1
-        ? 0.28
-        : 0.08;
+        ? 0.42
+        : 0.18;
     if (rng.nextDouble() < chance) {
       final authored = list.where((id) => id != '${base}_t0').toList();
       if (authored.isNotEmpty) {

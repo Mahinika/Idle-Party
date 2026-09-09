@@ -1,5 +1,7 @@
+import 'dart:math' as math;
 import 'dart:ui' show Color;
 
+import '../core/hero_identity.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
 import '../ui/hero_paper_doll.dart';
@@ -48,6 +50,7 @@ class CharacterVisualPose {
     required this.layerOrder,
     this.equipHash = '',
     this.anchorProfile = BodyAnchorProfile.kenney,
+    this.bodyTint,
   });
 
   final List<ResolvedLayer> layers;
@@ -56,6 +59,21 @@ class CharacterVisualPose {
   final List<CharacterLayerId> layerOrder;
   final String equipHash;
   final BodyAnchorProfile anchorProfile;
+
+  /// Spec wash for the owned body layer (gear overlays keep rarity tints).
+  final Color? bodyTint;
+
+  /// Same layers, fresher clip progress — bob and weapon swing read live even
+  /// though the cache only keys on kind/frame.
+  CharacterVisualPose withAnim(HeroAnimPose next) => CharacterVisualPose(
+    layers: layers,
+    anim: next,
+    flipX: flipX,
+    layerOrder: layerOrder,
+    equipHash: equipHash,
+    anchorProfile: anchorProfile,
+    bodyTint: bodyTint,
+  );
 
   AnchorPose anchor(AnchorId id) => AnchorTables.lookup(
     anim: anim.kind,
@@ -66,8 +84,14 @@ class CharacterVisualPose {
   );
 
   double get mainHandExtraRotation {
-    if (anim.kind != HeroAnimKind.attack) return 0;
-    return AnchorTables.attackSwingRotation(anim.progress);
+    if (anim.kind == HeroAnimKind.attack) {
+      return AnchorTables.attackSwingRotation(anim.progress);
+    }
+    // Walk has one body clip — swing the held weapon so steps read as motion.
+    if (anim.kind == HeroAnimKind.walk) {
+      return math.sin(anim.progress * math.pi * 2) * 0.22;
+    }
+    return 0;
   }
 
   /// Build pose from party hero + animation + facing.
@@ -288,6 +312,7 @@ class CharacterVisualPose {
       layerOrder: order,
       equipHash: equipHashOf(hero),
       anchorProfile: BodyAnchorProfile.owned,
+      bodyTint: Color(HeroIdentity.ownedBodyTintArgb(hero.specId)),
     );
   }
 
@@ -374,12 +399,18 @@ class CharacterVisualPose {
     );
   }
 
+  /// Cache key for a hero's doll. Material and rarity must be in here — they
+  /// pick the overlay PNG (mail/plate) and its tint without changing the id.
   static String equipHashOf(PartyHero hero) {
     final buf = StringBuffer();
     for (final e in hero.equipped.entries) {
       buf.write(e.key.name);
       buf.write(':');
       buf.write(EquipmentVisualResolver.resolveId(e.value));
+      buf.write('/');
+      buf.write(e.value.armorType?.name ?? '-');
+      buf.write('/');
+      buf.write(e.value.rarity.index);
       buf.write(';');
     }
     return buf.toString();
@@ -417,10 +448,13 @@ abstract final class CharacterVisualPoseCache {
   }) {
     final equipHash = CharacterVisualPose.equipHashOf(hero);
     final key =
-        '$equipHash|${anim.kind.name}|${anim.frame}|$flipX|$partyIndex|$owned';
+        '$equipHash|${hero.specId.name}|${anim.kind.name}|${anim.frame}'
+        '|$flipX|$partyIndex|$owned';
     final existing = _byHero[heroId];
     if (existing != null && existing.key == key) {
-      return existing.pose;
+      return existing.pose.anim.progress == anim.progress
+          ? existing.pose
+          : existing.pose.withAnim(anim);
     }
     final pose = CharacterVisualPose.resolve(
       hero: hero,

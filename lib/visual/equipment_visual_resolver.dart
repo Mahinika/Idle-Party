@@ -130,9 +130,9 @@ abstract final class EquipmentVisualResolver {
     final t = int.tryParse(m?.group(1) ?? '') ?? rarityTier ?? 0;
     return switch (t) {
       0 => null,
-      1 => const Color(0xFFFFF6E8),
-      2 => const Color(0xFFFFE082),
-      _ => const Color(0xFFFFD54F),
+      1 => const Color(0xFFFFF0D8),
+      2 => const Color(0xFFFFD060),
+      _ => const Color(0xFFFFC040),
     };
   }
 

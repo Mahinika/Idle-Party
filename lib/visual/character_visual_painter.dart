@@ -89,6 +89,20 @@ abstract final class CharacterVisualPainter {
       canvas.translate(-center.dx, -center.dy);
     }
 
+    // One body clip per anim — a step bob / flinch recoil carries the motion.
+    // Applied inside the flip so "backward" follows facing.
+    final step = ownedStepOffset(pose, size);
+    if (step != Offset.zero) {
+      canvas.save();
+      canvas.translate(step.dx, step.dy);
+    }
+
+    // Spec wash on the undertunic only — gear overlays keep rarity tints.
+    final bodyTint = pose.bodyTint;
+    if (bodyTint != null && bodyTint != const Color(0xFFFFFFFF)) {
+      basePaint.colorFilter = ColorFilter.mode(bodyTint, BlendMode.modulate);
+    }
+
     for (final layer in pose.orderedLayers()) {
       if (layer.id == CharacterLayerId.body) {
         canvas.drawImageRect(
@@ -167,9 +181,28 @@ abstract final class CharacterVisualPainter {
       canvas.drawImageRect(img, src, dst, p);
     }
 
+    if (step != Offset.zero) {
+      canvas.restore();
+    }
     if (pose.flipX) {
       canvas.restore();
     }
+  }
+
+  /// Whole-doll offset that fakes motion the single body clip cannot show.
+  ///
+  /// Walk = step bob, hit = short recoil away from facing, cast = slow float.
+  static Offset ownedStepOffset(CharacterVisualPose pose, double size) {
+    final p = pose.anim.progress.clamp(0.0, 1.0);
+    return switch (pose.anim.kind) {
+      HeroAnimKind.walk => Offset(
+        0,
+        -(math.sin(p * math.pi * 2).abs()) * size * 0.048,
+      ),
+      HeroAnimKind.hit => Offset(-size * 0.055 * (1 - p), size * 0.014 * (1 - p)),
+      HeroAnimKind.cast => Offset(0, -size * 0.022 * math.sin(p * math.pi)),
+      _ => Offset.zero,
+    };
   }
 
   /// Anchored gear only — for hybrid (class PNG / Kenney body + equipment).

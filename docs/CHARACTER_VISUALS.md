@@ -15,6 +15,11 @@ Idle Party heroes use a **paper-doll** path when an owned body is available:
 **GEAR, party HUD, and dungeon** all use `CharacterVisualPainter.paintOwnedHero`
 with the same pose (`CharacterVisualPose.resolve(..., owned: true)`).
 
+**Spec identity:** four bodies serve 31 specs, so the pose carries a `bodyTint`
+from `HeroIdentity.ownedBodyTintArgb` — a modulate wash on the **undertunic
+only**, so gear keeps its rarity tint. Every spec has a color (unlike
+`tintArgb`, which skips specs with unique class sprites).
+
 Not one PNG per class×weapon. Items share looks via `visualSetId` (e.g.
 `sword_t1` → `sword_t0` art + rarity tint). Armor uses family extract
 `*_t0` / `*_t2`, plus **material variants** when `armorType` differs from the
@@ -28,12 +33,9 @@ family’s native look:
 | healer | cloth | **plate** (`chest_plate_t0`, …) |
 
 Derived by `tool/derive_armor_material_variants.py` (recolor/thicken existing
-alpha — no new geometry). Weapons use `*_t0` plus authored models
-(`sword_thunderfury`, `sword_warglaive`, `sword_runebound`, `staff_frostfire`,
-`staff_nethercore`, `bow_eagle`, `bow_windpierce`, `axe_goreblade`,
-`axe_bloodhowl`, `mace_lightbringer`, `mace_dawnbreak`, `dagger_shadowfang`,
-`dagger_nightbite`, `shield_aegis`, `shield_ironwall`, `frill_prism`,
-`frill_soulcodex`).
+alpha — no new geometry). Weapons: `*_t0` plus named models
+(`sword_thunderfury`, `sword_emberfang`, `staff_voidspire`, …) — hue variants
+from `tool/derive_weapon_hue_variants.py`.
 
 Doll look = body family undertunic + overlay stem from `visualSetId` +
 optional material suffix from equipped `armorType`.
@@ -92,6 +94,11 @@ Facing is **L/R flipX only**. Enemies unchanged in Phase 3.
   anchors (`OwnedGearGrips`). Bake art to the socket with
   `py tool/bake_owned_hand_grips.py`, then `py tool/gen_owned_gear_grips.py`.
   Audit: `py tool/audit_anchors.py`.
+  Grips are **opaque-pixel** points: handle centroid for melee/staves, shape
+  mid-height for bows, shape centroid for shields/frills. A bbox center is
+  empty air on diagonal art — that hung ten weapons beside the fist.
+  A large shift onto the hand anchor is normal; the painter does not clip to
+  the 128 box, so long weapons reach past the hero square.
 - BAG/GEAR icons use `EquipmentVisualResolver.ownedIconPathFor` (same
   `resolveId` as the doll) so missing `visualSetId` still matches overlays.
 - Empty slot = undertunic showing through. No ghost t0.
@@ -105,6 +112,24 @@ Facing is **L/R flipX only**. Enemies unchanged in Phase 3.
 `death > hit > attack|cast > walk > idle` (victory optional).
 
 Walk/attack overlays fall back to `_idle.png` if a clip is missing.
+
+`HeroAnimController` is **stateless** (`snapshot` only) — the dungeon repaints
+from combat flash timers, so there is no per-hero clip clock.
+
+**One body clip per anim**, so motion comes from the painter
+(`CharacterVisualPainter.ownedStepOffset`, applied to the whole stack inside the
+flip so "backward" follows facing):
+
+| Clip | Body PNG | Painter motion |
+|------|----------|----------------|
+| walk | `body_walk` | step bob + weapon swing (`mainHandExtraRotation`) |
+| attack | `body_attack` | swing rotation + view lean |
+| cast | `body_attack` | slow float |
+| hit | **`body_idle`** | short recoil away from facing |
+| death | `body_idle` | none (0.35 opacity) |
+
+`hit` must not fall back to `body_walk` — the stride read as a phantom step
+every time a hero took damage.
 
 ## Adding a new item
 
@@ -128,13 +153,28 @@ Walk/attack overlays fall back to `_idle.png` if a clip is missing.
 
 Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
 
+## Facit gate (`py tool/check_paper_doll_facit.py`)
+
+1. Idle stack vs dressed `_src` per family (hard-diff ≤ 0.38) + helm width.
+2. t2 and material variants exist, hold pixels, and keep the t0 silhouette.
+3. Every `OwnedGearGrips` entry lands on opaque pixels.
+4. `tool/paper_doll_lock.json` pins a hash per shipped PNG — any generator run
+   that reshapes art fails here. After a **deliberate** art change, re-run with
+   `--relock` and commit the lock.
+
 ## Performance
 
-Pose layers cached per hero id until equip/anim/flip/owned flag changes.
-Dungeon precaches body + overlay paths (soft-fail if a PNG is absent).
+Pose layers cached per hero id until equip/**material**/**rarity**/spec/anim/
+flip/owned changes; clip progress is refreshed on cache hits (`withAnim`) so
+the step bob stays live. Dungeon precaches bodies +
+`OwnedGearAssets.dollOverlayPaths` in parallel (soft-fail if a PNG is absent) —
+**not** `allAssetPaths`, whose `*_icon` crops only GEAR/BAG draw.
 
 ## Manual A56 checks
 
+- Two specs of the same class read as different colors (Frost DK vs Blood).
+- Walking heroes bob and swing the weapon; a hit is a recoil, not a step.
+- Weapons and shields sit **in the hand**, not beside it.
 - Unequipped doll = undertunic (no plate / no wizard hat).
 - Equip common chest → silhouette changes on GEAR **and** dungeon.
 - Helm covers hair; mage hat is the helm overlay, not the base.

@@ -62,6 +62,49 @@ abstract final class HeroIdentity {
     };
   }
 
+  /// Spec wash for the owned paper-doll body (dungeon / GEAR / party HUD).
+  ///
+  /// The doll has one body per family, so *every* spec needs a color here —
+  /// unlike [tintArgb], which skips specs that own a unique class sprite.
+  /// Tuned for phone readability: stronger hue separation within each family.
+  static int ownedBodyTintArgb(HeroSpecId specId) => switch (specId) {
+    // Warrior body
+    HeroSpecId.arms => 0xFFF0E8D0,
+    HeroSpecId.fury => 0xFFFF9860,
+    HeroSpecId.protection => 0xFFB0C8F0,
+    HeroSpecId.retribution => 0xFFFFD060,
+    HeroSpecId.blood => 0xFFFF7070,
+    HeroSpecId.frostDk => 0xFF80D0FF,
+    HeroSpecId.unholy => 0xFF70E090,
+    HeroSpecId.enhancement => 0xFFFFA050,
+    // Rogue / leather-mail body
+    HeroSpecId.assassination => 0xFFFF70C0,
+    HeroSpecId.combat => 0xFFFFC070,
+    HeroSpecId.subtlety => 0xFFB070FF,
+    HeroSpecId.beastMastery => 0xFF90E060,
+    HeroSpecId.marksmanship => 0xFF60D8A0,
+    HeroSpecId.survival => 0xFFE0A050,
+    HeroSpecId.feral => 0xFFE09050,
+    HeroSpecId.guardian => 0xFFC07840,
+    // Mage / cloth casters
+    HeroSpecId.arcane => 0xFFD080FF,
+    HeroSpecId.fire => 0xFFFF8040,
+    HeroSpecId.frostMage => 0xFF70E8FF,
+    HeroSpecId.affliction => 0xFFC060F0,
+    HeroSpecId.demonology => 0xFFFF7050,
+    HeroSpecId.destruction => 0xFFFF6040,
+    HeroSpecId.shadow => 0xFFB070E8,
+    HeroSpecId.balance => 0xFFF0C040,
+    // Healer body
+    HeroSpecId.holyPaladin => 0xFFFFF0A0,
+    HeroSpecId.protPaladin => 0xFFB0C8FF,
+    HeroSpecId.discipline => 0xFFFFF8E8,
+    HeroSpecId.holyPriest => 0xFFFFE090,
+    HeroSpecId.elemental => 0xFF70C8FF,
+    HeroSpecId.restorationShaman => 0xFF60F0C0,
+    HeroSpecId.restorationDruid => 0xFF70F070,
+  };
+
   /// One-line fantasy for unlock toast / Meet card (GEAR/SYSTEMS meetBlurb).
   static String meetBlurb(HeroSpecId specId) => fantasyLine(specId);
 
