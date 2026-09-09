@@ -236,7 +236,7 @@ void main() {
     expect(sanctuary.body, isNot(contains('PRESTIGE')));
 
     final shop = GameGuides.topics.firstWhere((t) => t.id == 'prestige_shop');
-    expect(shop.title, 'KEEP BUYS');
+    expect(shop.title, 'PERMANENT BUYS');
     expect(shop.body, contains('KEEP'));
     expect(shop.body.toLowerCase(), contains('vault'));
     expect(shop.body.toLowerCase(), contains('merge gold'));

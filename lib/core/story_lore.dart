@@ -120,14 +120,14 @@ abstract final class StoryLore {
         ? '\nUnlock: Combat Rogue (Shade) joins the roster.'
         : (thisUnlock != null ? '\n$thisUnlock' : '');
     final ahead = AscendRoadmap.nextGoalLine(nextAl);
-    return 'Your party stays. Bag, gold, forge, and floors reset. Apex stays.\n\n'
+    return 'Your party stays. Bag, wallet gold, GOLD tracks, and floors reset. Apex stays.\n\n'
         '$rewardLine\n'
         '$alPower\n'
         '$blessLine$unlockLine\n'
         '$ahead\n\n'
         'Keep: hero levels/XP, open zones, essence, relics, pets, sanctuary, '
         'God Hand, Apex, meta unlocks.\n'
-        'Reset: wallet gold, forge tracks, bag and worn drops, market, '
+        'Reset: wallet gold, GOLD tracks, bag and worn drops, market, '
         'floor height (starter gear back on).\n'
         'God Hand Lv$godHandLevel kept';
   }
@@ -150,14 +150,14 @@ abstract final class StoryLore {
     required int godHandLevel,
     required int blessings,
   }) {
-    return 'Your party stays. Bag, gold, forge, and floors reset. Apex stays.\n\n'
+    return 'Your party stays. Bag, wallet gold, GOLD tracks, and floors reset. Apex stays.\n\n'
         'AL stays ${GameLogic.maxAscensionLevel}. No extra Blessing '
         '(still ×$blessings).\n'
         '+${rewardEssence}e · +1 constellation point.\n\n'
         'TODAY will say Rebuild your bag until you loot real gear again.\n\n'
         'Keep: hero levels/XP, open zones, essence spends, relics, pets, '
         'sanctuary, God Hand Lv$godHandLevel, Apex.\n'
-        'Reset: wallet gold, forge tracks, bag and worn drops, market, '
+        'Reset: wallet gold, GOLD tracks, bag and worn drops, market, '
         'floor height.';
   }
 

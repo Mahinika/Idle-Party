@@ -80,11 +80,11 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
 
     final headerLabel = _expanded
         ? (activeBits.isEmpty
-              ? '▾ KEYSTONE +0'
-              : '▾ KEYSTONE ${activeBits.join(' · ')}')
+              ? '▾ KEY +0'
+              : '▾ KEY ${activeBits.join(' · ')}')
         : (activeBits.isEmpty
-              ? '▸ KEYSTONE +0'
-              : '▸ KEYSTONE ${activeBits.join(' · ')}');
+              ? '▸ KEY +0'
+              : '▸ KEY ${activeBits.join(' · ')}');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -108,8 +108,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                   children: [
                     Text(
                       widget.lockExpanded
-                          ? 'KEYSTONE'
-                          : (_expanded ? '▾ KEYSTONE' : '▸ KEYSTONE'),
+                          ? 'KEY'
+                          : (_expanded ? '▾ KEY' : '▸ KEY'),
                       style: GameTheme.body(size: 12, color: GameTheme.torchHot),
                     ),
                     const SizedBox(width: 8),
@@ -332,7 +332,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           const SizedBox(height: 2),
           Text(
             !GameLogic.endgameUnlocked(state)
-                ? 'KEYSTONE unlocks at party level ${GameLogic.maxHeroLevel} with Gauntlet and Rift.'
+                ? 'KEY unlocks at party level ${GameLogic.maxHeroLevel} with Gauntlet and Ranked GR.'
                 : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
@@ -361,7 +361,7 @@ class _HardmodeStepper extends StatelessWidget {
       child: Row(
         children: [
           MenuChrome.stepperButton(
-            label: 'KEYSTONE -',
+            label: 'KEY -',
             sign: '-',
             onPressed: level > 0 ? () => onChanged(level - 1) : null,
             size: 36,
@@ -370,7 +370,7 @@ class _HardmodeStepper extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  level <= 0 ? 'KEYSTONE  OFF' : 'KEYSTONE  +$level',
+                  level <= 0 ? 'KEY  OFF' : 'KEY  +$level',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(
                     size: 12,
@@ -392,7 +392,7 @@ class _HardmodeStepper extends StatelessWidget {
             ),
           ),
           MenuChrome.stepperButton(
-            label: 'KEYSTONE +',
+            label: 'KEY +',
             sign: '+',
             onPressed: level < maxLevel ? () => onChanged(level + 1) : null,
             size: 36,

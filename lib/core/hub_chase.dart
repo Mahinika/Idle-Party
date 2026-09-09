@@ -199,7 +199,7 @@ class HubChase {
               '+${reward}e · Ascend Blessing +${GameLogic.ascendBlessingAtk} ATK/'
               '+${GameLogic.ascendBlessingDef} DEF/'
               '+${GameLogic.ascendBlessingVit} STA/'
-              '+${GameLogic.ascendBlessingGoldPct}% gold · bag, gold, forge, '
+              '+${GameLogic.ascendBlessingGoldPct}% gold · bag, wallet gold, GOLD tracks, '
               'and floors reset$unlockBit',
           progressLabel: '+${reward}e',
           urgency: HubChaseUrgency.ready,
@@ -235,7 +235,7 @@ class HubChase {
         title: 'Rebuild your bag',
         detail:
             'Zones stay open. Farm early floors in $zoneName to re-kit — '
-            'bag, gold, and forge wiped (floor height back to starter). '
+            'bag, wallet gold, and GOLD tracks wiped (floor height back to starter). '
             'Kit pressure ${pressure.toStringAsFixed(2)} / '
             '${exitAt.toStringAsFixed(2)} ends rebuild.',
         progressLabel: '$pct% kit',
@@ -879,9 +879,9 @@ class HubChase {
       final pay = GreaterRiftMilestones.essenceForTier(tier);
       return HubChase(
         kind: HubChaseKind.greaterRiftMilestone,
-        title: almost ? 'Almost Greater Rift GR$tier' : 'Greater Rift GR$tier',
+        title: almost ? 'Almost Ranked GR$tier' : 'Ranked GR$tier',
         detail: best <= 0
-            ? 'Mothveil ranked timer — no mid-run gear (+${pay}e at GR$tier). Not Spire climb.'
+            ? 'Mothveil Ranked GR — no mid-run gear (+${pay}e at GR$tier). Not Spire climb.'
             : 'Best GR$best — $need ranks to GR$tier (+${pay}e). No mid-run gear.',
         progressLabel: 'GR$best → GR$tier',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,

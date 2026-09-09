@@ -293,7 +293,7 @@ abstract final class HeroSpecs {
       attackRange: 3.8,
       startingStats: _healStats,
       defaultName: 'Dawn',
-      unlockHint: 'AL 1 or 25e in Prestige Shop',
+      unlockHint: 'AL 1 or 25e in ESSENCE → KEEP',
     ),
     HeroSpecDef(
       id: HeroSpecId.protPaladin,

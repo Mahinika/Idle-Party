@@ -379,7 +379,7 @@ Future<void> confirmGreaterRiftRun(
       context: context,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) => MenuChrome.dialog(
-        title: 'Greater Rift GR$tier?',
+        title: 'Ranked GR$tier?',
         content: Text(
           'Mothveil ranked kill ladder — not Gauntlet floors, not farm Rift loot.\n\n'
           'Kill $kills before $par. Gold OK mid-run; no gear drops. '

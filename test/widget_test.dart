@@ -147,7 +147,7 @@ void main() {
 
     await tester.tap(find.text('MERGE'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('COMBINATOR'), findsOneWidget);
+    expect(find.textContaining('MERGE'), findsOneWidget);
   });
 
   testWidgets('system back closes open menu instead of leaving play', (

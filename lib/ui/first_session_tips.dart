@@ -75,7 +75,7 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'pets',
-      title: 'BEAST PEN',
+      title: 'PETS',
       body:
           'Hatch pets with essence. Loot Sprite boosts gold find; others add ATK.',
     ),
@@ -90,8 +90,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'ascend',
       title: 'ASCEND',
       body:
-          'When Ascend unlocks, prestige for essence. Gear, gold, and forge '
-          'reset — farm early floors in an unlocked zone to re-kit. Apex stays.',
+          'When Ascend unlocks, claim it for essence and Ascend Blessing. '
+          'Bag, wallet gold, and GOLD tracks reset — farm early floors in an unlocked zone to re-kit. Apex stays.',
     ),
     (
       id: 'post_ascend',
@@ -123,7 +123,7 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'hardmode',
-      title: 'KEYSTONE',
+      title: 'KEY',
       body:
           'At party level ${GameLogic.maxHeroLevel}, under KEY pick a key level before you enter. Affixes lock in, '
           'a generous timer runs (AFK counts), and beating the boss under par upgrades your key.',

@@ -117,7 +117,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
           Center(child: KenneySprite(asset: CustomAssets.petEgg, size: 56)),
           const SizedBox(height: 10),
           Text(
-            'No beasts yet',
+            'No pets yet',
             textAlign: TextAlign.center,
             style: GameTheme.menuTitle(size: 16, color: GameTheme.torchHot),
           ),

@@ -194,11 +194,11 @@ class _HubScreenState extends State<HubScreen>
         final k = chase.keyLevel ?? state.hardmodeLevel;
         return k > 0 ? 'KEY +$k' : 'KEY';
       case HubChaseKind.gauntletMilestone:
-        return 'Spire';
+        return 'Gauntlet';
       case HubChaseKind.greaterRiftMilestone:
-        return 'GR';
+        return 'Ranked';
       case HubChaseKind.riftMilestone:
-        return 'Rift';
+        return 'Farm';
       case HubChaseKind.ashenCrown:
         return 'Ashen';
       case HubChaseKind.doneForToday:

@@ -32,7 +32,7 @@ abstract final class GameGuides {
           '• TODAY on the hub always names the next job — start there.\n'
           '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (tracks + '
           'market), SHOP (real-money convenience store), ESSENCE (tracks / '
-          'essence / prestige / relics / pets), MORE. QUESTS and Craft live as rows '
+          'essence / KEEP / relics / pets), MORE. QUESTS and Craft live as rows '
           'inside MORE. When the party is max level, KEY joins the hub bar as a '
           'sixth tab after MORE — SHOP stays. In a dungeon the sixth slot is '
           'LEAVE instead of KEY.\n'
@@ -118,7 +118,7 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'party',
-      title: 'PARTY',
+      title: 'PARTY & ROSTER',
       body:
           'Your party is three jobs: Shield (soaks hits), Healer (keeps people up), '
           'and Damage (kills enemies).\n\n'
@@ -174,7 +174,7 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'combinator',
-      title: 'COMBINATOR',
+      title: 'MERGE',
       body:
           'Merge two same-slot gear pieces into one stronger item.\n\n'
           '• In BAG: select an item → ADD TO MERGE.\n'
@@ -188,9 +188,9 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'income',
-      title: 'GOLD/MIN',
+      title: 'HUB GOLD RATE',
       body:
-          'ESSENCE tab (hub gold).\n\n'
+          'ESSENCE → TRACKS (hub gold overnight).\n\n'
           'Your incremental dashboard: Hub gold/min, Run gold/min (from real '
           'loot in the last couple of minutes), gold % multipliers, and Gold Find '
           '— the keep generator on the Gold Find track below.\n\n'
@@ -238,9 +238,9 @@ abstract final class GameGuides {
           'Two different gates — do not mix them up.\n\n'
           '• AL20 (Ascension cap): raise AL with Ascend, stack Ascend Blessing, '
           'unlock kits, spend Star Nodes, optional REBORN. Wipes your run bag '
-          '(gold, forge, normal gear).\n'
+          '(gold, GOLD tracks, normal gear).\n'
           '• Party Lv${GameLogic.maxHeroLevel} (endgame): every active hero at max level '
-          'unlocks KEY, Infinity Gauntlet, Ranked Greater Rifts, Farm Rifts, '
+          'unlocks KEY, Infinity Gauntlet, Ranked GR, Farm Rifts, '
           'and Ashen Crown. AL20 alone is not enough.\n'
           '• At AL20 with heroes below ${GameLogic.maxHeroLevel}, TODAY may say '
           '"Level the party" — that is the bridge into endgame.\n\n'
@@ -270,10 +270,10 @@ abstract final class GameGuides {
           '• AL5: Blood DK, Frost DK, Guardian\n'
           '• AL6: Affliction, Demonology\n\n'
           'Endgame (not Ascend):\n'
-          '• Party Lv${GameLogic.maxHeroLevel}: KEYSTONE, Infinity Gauntlet, Rifts, '
-          'Greater Rifts, and Ashen Crown unlock when every active hero is max level '
+          '• Party Lv${GameLogic.maxHeroLevel}: KEY, Infinity Gauntlet, Farm Rifts, '
+          'Ranked GR, and Ashen Crown unlock when every active hero is max level '
           '— AL20 alone is not enough.\n\n'
-          'Some kits also unlock from zone clears or the Prestige Shop — see each '
+          'Some kits also unlock from zone clears or ESSENCE → KEEP permanent buys — see each '
           'spec’s unlock hint in GEAR → ROSTER.',
     ),
     GuideTopic(
@@ -312,20 +312,20 @@ abstract final class GameGuides {
           '• Wipe or timeout ends the run with a small consolation.\n'
           '• Not ranked on Play Games — clear Ranked GR first; TODAY chases '
           'Farm Rift after GR milestones quiet.\n'
-          '• Set tier under KEY · FARM RIFT (Stormwake), or follow TODAY.',
+          '• Set tier under KEY · FARM (Stormwake), or follow TODAY.',
     ),
     GuideTopic(
       id: 'greater_rift',
       title: 'RANKED GR',
       body:
-          'Ranked Greater Rift at party level ${GameLogic.maxHeroLevel} — '
+          'Ranked GR at party level ${GameLogic.maxHeroLevel} — '
           'Mothveil timer, harder than Farm Rift.\n\n'
           '• Timed kill quota on a tougher ladder (GR1–GR20).\n'
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear.\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet on KEY · BOARDS (Play Games). '
-          'Greater Rift board wires when the Console ID is pasted.\n'
-          '• TODAY chases Ranked GR before Farm Rift. Set tier under KEY · GREATER RIFT.',
+          'Ranked GR board wires when the Console ID is pasted.\n'
+          '• TODAY chases Ranked GR before Farm Rift. Set tier under KEY · RANKED.',
     ),
     GuideTopic(
       id: 'apex',
@@ -350,7 +350,7 @@ abstract final class GameGuides {
           '• GEAR: opens on Upgrades. Tap a row to buy. Switch to All gear if you want '
           'the full stock. Free refresh every 6 hours, or pay gold to reroll.\n'
           '• Hub TODAY can chase Market when an affordable listing beats your gear.\n'
-          '• Wipe advice may point at GOLD when listings beat forge tracks for the same gap.\n'
+          '• Wipe advice may point at GOLD when listings beat GOLD tracks for the same gap.\n'
           '• Buy flasks and bandages with gold.\n'
           '• Clear a full bag with BAG → CLEAN BAG, MERGE, or SETTINGS auto-sell / '
           'auto-disassemble — there is no separate Sell junk button.\n'
@@ -360,7 +360,7 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'pets',
-      title: 'BEAST PEN',
+      title: 'PETS',
       body:
           'ESSENCE → PETS.\n\n'
           '• Hatch and level pets with essence (random species and rarity).\n'
@@ -375,7 +375,7 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'prestige_shop',
-      title: 'KEEP BUYS',
+      title: 'PERMANENT BUYS',
       body:
           'ESSENCE → KEEP · Permanent buys (AL-gated).\n\n'
           '• Spend essence on stash slots, cheaper MERGE gold, pet roster, '
@@ -414,8 +414,8 @@ abstract final class GameGuides {
           '• Early on: TODAY tells you to grow the party in the starter zone. '
           'Daily Run and vault-start wait until you have beaten a boss (or Ascended).\n'
           '• Fill today’s Daily Vault with 1 dungeon clear, then claim essence.\n'
-          '• At party Lv${GameLogic.maxHeroLevel}: KEYSTONE unlocks — time a KEY +2 (or higher) for a bigger '
-          'vault claim (KEY). TODAY may chase KEY / Gauntlet / Rift.\n'
+          '• At party Lv${GameLogic.maxHeroLevel}: KEY unlocks — time a KEY +2 (or higher) for a bigger '
+          'vault claim. TODAY may chase KEY / Gauntlet / Ranked GR / Farm Rift.\n'
           '• Hub TODAY and offline Up next share one chase (claim → READY → '
           'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
           '• Welcome-back shows one wow line, a few highlights, then Up next.\n'
@@ -462,10 +462,10 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'hardmode',
-      title: 'KEYSTONE RUNS',
+      title: 'KEY RUNS',
       body:
-          'Mythic+-style keys from the hub KEY panel (KEY — first tab when '
-          'party is Lv${GameLogic.maxHeroLevel}) — unlocks at '
+          'Mythic+-style keys from the hub KEY tab '
+          '(party Lv${GameLogic.maxHeroLevel}) — unlocks at '
           'party level ${GameLogic.maxHeroLevel}.\n\n'
           '• Endgame only: set key before you enter a normal zone dungeon.\n'
           '• Key level caps at +20 once the party is max level.\n'
@@ -485,7 +485,7 @@ abstract final class GameGuides {
       body:
           'Claim Ascend in the hub when ready (AL1–AL20) — same party, empty bag, '
           'stronger Ascend Blessing.\n\n'
-          '• AL20 is the Ascension cap. Endgame (KEY +20, Gauntlet, Rifts, Greater Rifts, '
+          '• AL20 is the Ascension cap. Endgame (KEY +20, Gauntlet, Farm Rifts, Ranked GR, '
           'Ashen Crown, vault, boards) unlocks when every active hero reaches level '
           '${GameLogic.maxHeroLevel} — not from AL20 alone.\n'
           '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '
@@ -494,7 +494,7 @@ abstract final class GameGuides {
           '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
           '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
           'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
-          '• Reset: wallet gold, forge tracks, bag and worn drops, market, floor height '
+          '• Reset: wallet gold, GOLD tracks, bag and worn drops, market, floor height '
           '(starter gear back on).\n'
           '• Boss victories toward the next Ascend clear.\n'
           '• At AL20, ESSENCE → KEEP offers optional REBORN (same bag wipe, AL stays 20, '

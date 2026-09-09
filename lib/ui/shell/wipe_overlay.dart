@@ -126,7 +126,7 @@ class DungeonWipePanel extends StatelessWidget {
                             tone: GameTheme.parchmentDim,
                           ),
                           MenuChrome.chip(
-                            label: 'POWER · wipe 2',
+                            label: 'GOLD · wipe 2',
                             tone: GameTheme.parchmentDim,
                           ),
                         ],

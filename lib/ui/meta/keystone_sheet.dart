@@ -55,7 +55,7 @@ class _KeystoneSheetState extends State<KeystoneSheet>
     final huntHint = switch (chase.kind) {
       HubChaseKind.keystone =>
         'TODAY · KEY +${chase.keyLevel ?? d.state.hardmodeLevel}',
-      HubChaseKind.gauntletMilestone => 'TODAY · Spire / Gauntlet',
+      HubChaseKind.gauntletMilestone => 'TODAY · Gauntlet',
       HubChaseKind.riftMilestone => 'TODAY · Farm Rift',
       HubChaseKind.greaterRiftMilestone => 'TODAY · Ranked GR',
       HubChaseKind.doneForToday => 'TODAY · soft rest · BOARDS',
@@ -74,7 +74,7 @@ class _KeystoneSheetState extends State<KeystoneSheet>
           ),
           const SizedBox(height: 4),
           Text(
-            'Endgame ladder: KEY → Spire → Ranked GR → Farm Rift → Crown. '
+            'Endgame ladder: KEY → Gauntlet → Ranked GR → Farm Rift → Crown. '
             'Vault / Daily Run / Quests are separate dailies on the hub.',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -90,15 +90,15 @@ class _KeystoneSheetState extends State<KeystoneSheet>
               onSelect: () => _tabs.animateTo(0),
             ),
             MenuChrome.bridgedTab(
-              'SPIRE',
+              'GAUNTLET',
               onSelect: () => _tabs.animateTo(1),
             ),
             MenuChrome.bridgedTab(
-              'RIFT',
+              'FARM',
               onSelect: () => _tabs.animateTo(2),
             ),
             MenuChrome.bridgedTab(
-              'GR',
+              'RANKED',
               onSelect: () => _tabs.animateTo(3),
             ),
             MenuChrome.bridgedTab(
@@ -117,7 +117,7 @@ class _KeystoneSheetState extends State<KeystoneSheet>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     MenuChrome.sectionLabelScoped(
-                      'KEYSTONE',
+                      'KEY',
                       scope: MenuScope.run,
                     ),
                     ChallengeToggles(director: d, lockExpanded: true),
@@ -141,7 +141,7 @@ class _KeystoneSheetState extends State<KeystoneSheet>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     MenuChrome.sectionLabelScoped(
-                      'RIFT · farm',
+                      'FARM RIFT',
                       scope: MenuScope.run,
                     ),
                     RiftHubPanel(director: d),
@@ -153,7 +153,7 @@ class _KeystoneSheetState extends State<KeystoneSheet>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     MenuChrome.sectionLabelScoped(
-                      'GREATER RIFT · prestige',
+                      'RANKED GR',
                       scope: MenuScope.run,
                     ),
                     GreaterRiftHubPanel(director: d),

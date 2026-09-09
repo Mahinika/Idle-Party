@@ -122,7 +122,7 @@ class DungeonTopHud extends StatelessWidget {
           PopupMenuItem(
             value: 'key',
             child: Text(
-              'KEYSTONE',
+              'KEY',
               style: GameTheme.pixel(size: GameTheme.hudPixel),
             ),
           ),

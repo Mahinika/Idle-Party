@@ -588,7 +588,7 @@ class _InventoryDockState extends State<InventoryDock>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          MenuChrome.sectionLabelScoped('COMBINATOR', scope: MenuScope.run),
+          MenuChrome.sectionLabelScoped('MERGE', scope: MenuScope.run),
           const SizedBox(height: 4),
           Text(
             'Sacrifice two bag items of the same slot for one upgraded result. Equipped gear is never used.'

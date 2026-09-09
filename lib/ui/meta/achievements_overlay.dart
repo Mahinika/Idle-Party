@@ -15,7 +15,7 @@ class AchievementsOverlay extends StatelessWidget {
 
   static String _categoryLabel(AchievementCategory c) => switch (c) {
     AchievementCategory.combat => 'COMBAT',
-    AchievementCategory.meta => 'META',
+    AchievementCategory.meta => 'ACCOUNT',
     AchievementCategory.explorer => 'EXPLORER',
     AchievementCategory.collector => 'COLLECTOR',
   };

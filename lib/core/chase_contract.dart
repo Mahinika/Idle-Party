@@ -56,8 +56,8 @@ class ChaseContract {
         ? 'ENTER KEY +${chase.keyLevel}'
         : 'ENTER KEY',
     HubChaseKind.gauntletMilestone => 'GAUNTLET',
-    HubChaseKind.riftMilestone => 'RIFT',
-    HubChaseKind.greaterRiftMilestone => 'GREATER RIFT',
+    HubChaseKind.riftMilestone => 'FARM RIFT',
+    HubChaseKind.greaterRiftMilestone => 'RANKED GR',
     HubChaseKind.ashenCrown => 'ASHEN CROWN',
     HubChaseKind.doneForToday => 'KEY · BOARDS',
     HubChaseKind.unlockZone => zoneId != null ? 'PATH' : null,
