@@ -116,6 +116,11 @@ abstract final class GameTheme {
   static const Color hudFlaskIdle = Color(0xDD2A1810);
   static const Color hudRowSelected = Color(0x331C1812);
 
+  /// Feedback toast fills (celebrate / danger gradient ends).
+  static const Color toastCelebrateTop = Color(0xEE1A2410);
+  static const Color toastCelebrateBottom = Color(0xEE142018);
+  static const Color toastDangerBottom = Color(0xEE3A1810);
+
   /// Tight HUD corners (not menu [radiusSm]).
   static const double radiusHud = 4;
 

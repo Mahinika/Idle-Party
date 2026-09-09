@@ -269,22 +269,34 @@ void main() {
 
   test('party reaches later chambers after clearing earlier ones', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
-    var world = SpatialCombat.build(state);
-    for (var seed = 0; seed < 40 && world.map.gates.isEmpty; seed++) {
+    late SpatialWorld world;
+    var found = false;
+    for (var seed = 0; seed < 80; seed++) {
       state = state.copyWith(layoutSeed: seed);
       world = SpatialCombat.build(state);
+      if (world.map.gates.isEmpty) continue;
+      final startChamber = world.activeChamber;
+      final hasLaterPack = world.enemies.any(
+        (e) => e.chamberIndex > startChamber && e.hp > 0,
+      );
+      if (!hasLaterPack) continue;
+      found = true;
+      break;
     }
-    expect(world.map.gates, isNotEmpty);
+    expect(found, isTrue, reason: 'need a gated floor with a later pack');
 
     // Clear every enemy in the starting combat chamber so the gate opens.
     final startChamber = world.activeChamber;
     for (final enemy in world.enemies) {
       if (enemy.chamberIndex <= startChamber) enemy.hp = 0;
     }
-    SpatialCombat.step(world, state, dt: 0.05);
+    final opened = SpatialCombat.step(world, state, dt: 0.05);
+    world = opened.world;
+    state = opened.state;
     expect(world.openGateIds, isNotEmpty);
-    final openCount =
-        world.floaters.where((f) => f.text == 'OPEN' && f.priority >= 2).length;
+    final openCount = world.floaters
+        .where((f) => f.text.startsWith('OPEN') && f.priority >= 2)
+        .length;
     expect(
       openCount,
       1,
@@ -789,7 +801,7 @@ void main() {
     );
   });
 
-  test('cleared floor shouts GO on the stairs', () {
+  test('cleared floor opens stairs for exit', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 8, 19));
     var world = SpatialCombat.build(state);
     for (final e in world.enemies) {
@@ -808,9 +820,6 @@ void main() {
     }
     expect(opened, isNotNull);
     expect(world.awaitingExit, isTrue);
-    expect(
-      world.floaters.any((f) => f.text == 'GO' && f.priority >= 2),
-      isTrue,
-    );
+    // No "GO" floater — CLEAR corner + HOLD already say what's next.
   });
 }

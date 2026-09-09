@@ -25,14 +25,14 @@ class FeedbackToast extends StatelessWidget {
     final (Color fillTop, Color fillBot, Color border, Color text) =
         switch (kind) {
           NoticeKind.celebrate => (
-            const Color(0xEE1A2410),
-            const Color(0xEE142018),
+            GameTheme.toastCelebrateTop,
+            GameTheme.toastCelebrateBottom,
             GameTheme.clear,
             GameTheme.clear,
           ),
           NoticeKind.danger => (
             GameTheme.blood.withValues(alpha: 0.92),
-            const Color(0xEE3A1810),
+            GameTheme.toastDangerBottom,
             GameTheme.torchHot,
             GameTheme.torchHot,
           ),
