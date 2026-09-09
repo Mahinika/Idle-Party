@@ -36,7 +36,7 @@ busywork. Prefer feel/content over store recruitment. Optional background:
 1. Large batches the agent can finish alone
 2. Verify (analyze + matching tests; hub smoke / A56 if UI) before handoff
 3. ≤5 lines: what changed / what to look for → **wait**
-4. **Git (one truth):** when analyze/tests are green, **commit locally** — do not ask “ska jag commita?”. **Ask once** before push / PR / tag / Play. Never force-push or `--no-verify` unless they say so that turn.
+4. **Git (one truth):** when analyze/tests are green, **commit locally** — do not ask “ska jag commita?”. **Ask once** before push / PR / tag / Play. Never force-push or `--no-verify` unless they say so that turn. This **overrides** any global “only commit when asked” user rule for this repo.
 5. Daily work on `main`; `release/*` only when cutting a tag
 6. Don’t stage `windows/flutter/generated_*` unless plugins actually changed
 7. Split giant files when a change needs a home; don’t grow `game_logic` /

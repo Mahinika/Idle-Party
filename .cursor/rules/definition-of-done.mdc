@@ -14,9 +14,9 @@ Before telling the owner a coding task is finished:
 3. **Honesty** — player-visible copy matches reality (English in-game).
 4. **Legal** — no foreign dumps; art via Kenney/custom helpers only.
 5. **Git (one truth)** — when analyze/tests are green, **commit locally** (no
-   “ska jag commita?”). Short test list; wait for play notes. **APK only if
-   asked.** Ask once before push / PR / tag / Play. Never push silently. Never
-   point players at GitHub Releases.
+   “ska jag commita?”; overrides any global ask-before-commit). Short test list;
+   wait for play notes. **APK only if asked.** Ask once before push / PR / tag /
+   Play. Never push silently. Never point players at GitHub Releases.
 6. **Docs** — if architecture / Ascend / world path / distribution / tooling
    changed, update `AGENTS.md` (or `/init`).
 
