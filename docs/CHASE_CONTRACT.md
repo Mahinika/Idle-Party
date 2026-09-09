@@ -33,6 +33,8 @@ ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats
 
 **Power shelves:** GOLD tracks (run, wipe on Ascend) · Ascend Blessing (forever) · ESSENCE tracks/relics/pets (forever). Guide: MORE → INFO → POWER SHELVES.
 
+**Wipe advice:** proven deficits say `Upgrade ATK/DEF/STA in GOLD` or `GOLD: listing` — CTA `OPEN GOLD`, not legacy POWER naming.
+
 **Zones:** unlock by party mean level (even steps Lv1…Lv100) or by clearing the previous zone.
 
 ## Urgency chrome

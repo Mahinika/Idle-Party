@@ -56,8 +56,8 @@ class _KeystoneSheetState extends State<KeystoneSheet>
       HubChaseKind.keystone =>
         'TODAY · KEY +${chase.keyLevel ?? d.state.hardmodeLevel}',
       HubChaseKind.gauntletMilestone => 'TODAY · Spire / Gauntlet',
-      HubChaseKind.riftMilestone => 'TODAY · Rift',
-      HubChaseKind.greaterRiftMilestone => 'TODAY · Greater Rift',
+      HubChaseKind.riftMilestone => 'TODAY · Farm Rift',
+      HubChaseKind.greaterRiftMilestone => 'TODAY · Ranked GR',
       HubChaseKind.doneForToday => 'TODAY · soft rest · BOARDS',
       HubChaseKind.ashenCrown => 'TODAY · Ashen Crown (enter from hub)',
       _ => '',
@@ -71,6 +71,14 @@ class _KeystoneSheetState extends State<KeystoneSheet>
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Endgame ladder: KEY → Spire → Ranked GR → Farm Rift → Crown. '
+            'Vault / Daily Run / Quests are separate dailies on the hub.',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
         ],

@@ -156,6 +156,13 @@ class EssenceKeepPanel extends StatelessWidget {
             '${state.metaDepth.constellationNodes.length}/${BlessingConstellation.maxLit} lit',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
+          if (BlessingConstellation.pointsAvailable(state) > 0 &&
+              state.metaDepth.constellationNodes.length <
+                  BlessingConstellation.maxLit)
+            Text(
+              'Unspent Star points — optional forever nodes (not on TODAY).',
+              style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+            ),
           for (final n in BlessingConstellation.nodes)
             if (!BlessingConstellation.isLit(state, n.$1))
               Padding(

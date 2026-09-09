@@ -57,14 +57,14 @@ class WipeFightSnapshot {
 
 /// Player-facing wipe hint. Returns null when the sim cannot prove a deficit.
 abstract final class WipeAdvice {
-  /// POWER track tips wait for two wipes on the same floor (was three).
+  /// GOLD track tips wait for two wipes on the same floor (was three).
   static const int streakNeeded = 2;
 
   /// High-confidence tips safe on the first wipe (bag, floor gap, early melt).
   static bool isImmediate(String line) =>
       line.startsWith('Equip') ||
       line.contains('too far') ||
-      line == 'Upgrade DEF in POWER' ||
+      line == 'Upgrade DEF in GOLD' ||
       line.contains('MARKET has an upgrade') ||
       line.contains('Shop has an upgrade') ||
       line.startsWith('MARKET:') ||
@@ -87,10 +87,12 @@ abstract final class WipeAdvice {
     if (adviceLine.startsWith('Equip')) {
       return 'HUB → BAG to equip the upgrade';
     }
-    if (adviceLine.contains('POWER') ||
-        adviceLine.contains(' in GOLD') ||
-        adviceLine.contains(' in FORGE')) {
-      return 'HUB → GOLD to buy the POWER track';
+    if (adviceLine.contains(' in GOLD') ||
+        adviceLine.contains(' in FORGE') ||
+        adviceLine.contains('Upgrade ATK') ||
+        adviceLine.contains('Upgrade DEF') ||
+        adviceLine.contains('Upgrade STA')) {
+      return 'HUB → GOLD tracks for run power';
     }
     return null;
   }
@@ -111,9 +113,11 @@ abstract final class WipeAdvice {
     if (adviceLine.startsWith('Equip')) {
       return const NavIntent(route: MenuRoute.gear, gear: GearPanel.bag);
     }
-    if (adviceLine.contains('POWER') ||
-        adviceLine.contains(' in GOLD') ||
-        adviceLine.contains(' in FORGE')) {
+    if (adviceLine.contains(' in GOLD') ||
+        adviceLine.contains(' in FORGE') ||
+        adviceLine.contains('Upgrade ATK') ||
+        adviceLine.contains('Upgrade DEF') ||
+        adviceLine.contains('Upgrade STA')) {
       return NavIntent.gold;
     }
     return null;
@@ -127,12 +131,12 @@ abstract final class WipeAdvice {
     if (nav.goldPanel == GoldPanel.market) return 'OPEN GOLD';
     if (nav.route == MenuRoute.shop) return 'OPEN SHOP';
     if (nav.gear == GearPanel.bag) return 'OPEN BAG';
-    if (nav.route == MenuRoute.gold) return 'OPEN POWER';
+    if (nav.route == MenuRoute.gold) return 'OPEN GOLD';
     return null;
   }
 
-  /// When bag vs POWER tips appear (streakNeeded = 2 for POWER tracks).
-  static String get timingFootnote => 'Bag · wipe 1  ·  POWER · wipe 2';
+  /// When bag vs GOLD tips appear (streakNeeded = 2 for forge tracks).
+  static String get timingFootnote => 'Bag · wipe 1  ·  GOLD · wipe 2';
 
   static String _forgeOrMarket(GameState state, String forgeLine) {
     final listing = MarketListingsService.bestAffordableUpgradeListing(state);
@@ -208,7 +212,7 @@ abstract final class WipeAdvice {
     }
     if (state.inRift && fight.leftover >= 0.35) {
       final tier = state.riftTier > 0 ? state.riftTier : state.metaDepth.riftBestTier;
-      return 'Rift R$tier may be high — dial down on KEY';
+      return 'Farm Rift R$tier may be high — dial down on KEY';
     }
 
     if (state.hardmodeLevel > 0 &&
@@ -224,7 +228,7 @@ abstract final class WipeAdvice {
         fight.elapsedSec <= 8 &&
         fight.partyMaxHp > 0 &&
         fight.damageTaken >= fight.partyMaxHp * 0.4) {
-      return _forgeOrMarket(state, 'Upgrade DEF in POWER');
+      return _forgeOrMarket(state, 'Upgrade DEF in GOLD');
     }
 
     // Sub-half-second wipe with almost-full pack + real HP loss = melt.
@@ -233,7 +237,7 @@ abstract final class WipeAdvice {
         fight.leftover >= 0.85 &&
         fight.partyMaxHp > 0 &&
         fight.damageTaken >= fight.partyMaxHp * 0.5) {
-      return _forgeOrMarket(state, 'Upgrade DEF in POWER');
+      return _forgeOrMarket(state, 'Upgrade DEF in GOLD');
     }
 
     if (fight.elapsedSec < 0.5 || fight.waveHp < 1 || fight.damageDealt < 1) {
@@ -252,17 +256,17 @@ abstract final class WipeAdvice {
     final ttk = fight.waveHp / dps;
     final atkGap = ttk / fight.elapsedSec;
     if (atkGap >= 1.35 && leftover >= 0.35) {
-      return _forgeOrMarket(state, 'Upgrade ATK in POWER');
+      return _forgeOrMarket(state, 'Upgrade ATK in GOLD');
     }
 
     // DPS was enough to nearly finish; they ran out of body.
     if (atkGap <= 0.75 && leftover < 0.40 && fight.partyMaxHp > 0) {
       final overkill = fight.damageTaken / fight.partyMaxHp;
       if (overkill >= 1.20) {
-        return _forgeOrMarket(state, 'Upgrade DEF in POWER');
+        return _forgeOrMarket(state, 'Upgrade DEF in GOLD');
       }
       if (overkill <= 1.08) {
-        return _forgeOrMarket(state, 'Upgrade STA in POWER');
+        return _forgeOrMarket(state, 'Upgrade STA in GOLD');
       }
     }
     return null;
