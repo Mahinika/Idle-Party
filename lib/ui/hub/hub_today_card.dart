@@ -111,6 +111,8 @@ class HubTodayCard extends StatelessWidget {
         ? 'ALMOST'
         : null;
     final showDetail = !hideDetail && chase.detail.isNotEmpty;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final titleMaxLines = textScale > 1.2 ? 1 : 2;
     // Text strip only — no fill box under ENTER.
     return Semantics(
       label: 'TODAY chase: ${chase.title}. ${chase.detail}',
@@ -144,9 +146,12 @@ class HubTodayCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     _todayHeadline(chase, ready: ready),
-                    maxLines: 2 /* FEEL 068 */,
+                    maxLines: titleMaxLines,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(size: 13, color: GameTheme.parchment),
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.parchment,
+                    ),
                   ),
                 ),
                 if (actionLabel != null && onAction != null) ...[
@@ -183,11 +188,10 @@ class HubTodayCard extends StatelessWidget {
   }
 }
 
-/// TODAY title line — skip progress when it only echoes KEY +N already in title.
+/// TODAY title line — skip progress when READY chip already marks payoff.
 String _todayHeadline(HubChase chase, {required bool ready}) {
   final prog = chase.progressLabel;
-  // READY chip already marks payoff — drop "N ready" / "EQUIP 1" echo.
-  if (ready && prog != null) return chase.title;
+  if (ready) return chase.title;
   if (prog == null || prog.isEmpty) return chase.title;
   if (chase.title.contains(prog)) return chase.title;
   final keyInTitle = RegExp(r'KEY \+\d+').firstMatch(chase.title);
@@ -197,6 +201,9 @@ String _todayHeadline(HubChase chase, {required bool ready}) {
       keyInTitle.group(0) == keyInProg.group(0)) {
     return chase.title;
   }
+  // Never echo urgency words next to an ALMOST chip either.
+  final lower = prog.toLowerCase();
+  if (lower == 'ready' || lower.endsWith(' ready')) return chase.title;
   return '${chase.title} · $prog';
 }
 

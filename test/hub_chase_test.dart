@@ -41,7 +41,8 @@ void main() {
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.claimDailyVault);
-    expect(chase.progressLabel, contains('ready'));
+    expect(chase.urgency, HubChaseUrgency.ready);
+    expect(chase.progressLabel, isNull);
   });
 
   test('season bonus surfaces on claimable vault', () {

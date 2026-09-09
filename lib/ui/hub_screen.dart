@@ -8,6 +8,7 @@ import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/gold_income.dart';
 import '../core/hub_chase.dart';
+import '../core/hub_primary_cta.dart';
 import '../core/keystone.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_def.dart';
@@ -235,97 +236,38 @@ class _HubScreenState extends State<HubScreen>
     final (actionLabel, onAction) = _chaseAction(context, chase);
     final chaseActionLabel = actionLabel;
     final ready = chase.urgency == HubChaseUrgency.ready;
-    // One primary CTA on phone: fold TODAY ENTER into the big button.
-    final foldEnter =
-        onAction != null &&
-        (chase.kind == HubChaseKind.keystone ||
-            chase.kind == HubChaseKind.dailyRun ||
-            chaseActionLabel == 'ENTER' ||
-            chaseActionLabel == 'DAILY' ||
-            (chaseActionLabel?.contains('ENTER KEY') ?? false));
-    final endgamePrimary =
-        onAction != null &&
-        chaseActionLabel != null &&
-        (hubChaseOwnsEndgameRow(chase.kind) ||
-            chase.kind == HubChaseKind.doneForToday);
-    final softRestPrimary =
-        chase.kind == HubChaseKind.doneForToday && onAction != null;
-    final readyPrimary =
-        ready &&
-        onAction != null &&
-        chaseActionLabel != null &&
-        !foldEnter &&
-        !softRestPrimary;
-    final keyFromChase = chase.keyLevel ??
-        (foldEnter && (chaseActionLabel?.contains('ENTER KEY') ?? false)
-            ? _keyLevelFromLabel(chaseActionLabel!)
-            : null);
-    final enterLabel = keyFromChase != null
-        ? 'ENTER KEY +$keyFromChase'
-        : (chase.kind == HubChaseKind.keystone
-            ? 'ENTER KEY +${chase.keyLevel ?? state.hardmodeLevel}'
-            : (chase.kind == HubChaseKind.dailyRun
-                ? 'DAILY RUN'
-                : 'ENTER DUNGEON'));
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: chaseActionLabel,
+      hasChaseAction: onAction != null && chaseActionLabel != null,
+      unlockedSelected: unlockedSelected,
+      hardmodeLevel: state.hardmodeLevel,
+      showKeystoneJargon: GameLogic.showKeystoneJargon(state),
+      endgameUnlocked: GameLogic.endgameUnlocked(state),
+    );
     final enterAction =
         unlockedSelected ? () => widget.onEnterDungeon(_selectedId) : null;
-    final String primaryLabel;
+    final primaryLabel = cta.primaryLabel;
     final VoidCallback? primaryAction;
-    final String? secondaryLabel;
-    final VoidCallback? secondaryAction;
-    if (softRestPrimary) {
-      primaryLabel = chaseActionLabel ?? 'KEY · BOARDS';
+    if (onAction != null && cta.hideInlineChaseAction) {
       primaryAction = onAction;
-      secondaryLabel = enterAction != null ? 'ENTER DUNGEON' : null;
-      secondaryAction = enterAction;
-    } else if (foldEnter || endgamePrimary) {
-      // Prefer chase CTA when it already names KEY / hunt — don't swap to
-      // bare ENTER DUNGEON (vault halfway / month KEY cliff).
-      primaryLabel = foldEnter
-          ? ((chaseActionLabel?.contains('ENTER KEY') ?? false)
-              ? chaseActionLabel!
-              : enterLabel)
-          : chaseActionLabel!;
-      primaryAction = onAction;
-      if (chase.kind == HubChaseKind.ashenCrown &&
-          GameLogic.endgameUnlocked(state)) {
-        secondaryLabel = 'PRACTICE';
-        secondaryAction = () => confirmAshenCrown(
-          context,
-          director,
-          practice: true,
-        );
-      } else if (endgamePrimary &&
-          enterAction != null &&
-          enterLabel != primaryLabel) {
-        // Gauntlet / Rift / … — keep a normal ENTER under the hunt CTA.
-        // Skip when foldEnter already made primary ENTER KEY (same label twice).
-        secondaryLabel = enterLabel;
-        secondaryAction = enterAction;
-      } else {
-        secondaryLabel = null;
-        secondaryAction = null;
-      }
-    } else if (readyPrimary) {
-      primaryLabel = chaseActionLabel;
-      primaryAction = onAction;
-      // Never trap on Ascend / Meet kit / BAG / vault — ENTER stays a choice.
-      secondaryLabel = enterAction != null ? enterLabel : null;
-      secondaryAction = enterAction;
-    } else if (chase.kind == HubChaseKind.marketUpgrade &&
-        onAction != null &&
-        chaseActionLabel != null) {
-      primaryLabel = chaseActionLabel;
-      primaryAction = onAction;
-      secondaryLabel = enterAction != null ? enterLabel : null;
-      secondaryAction = enterAction;
     } else {
-      primaryLabel = enterLabel;
       primaryAction = enterAction;
-      secondaryLabel = null;
-      secondaryAction = null;
     }
-    final showMetaKeyLink = GameLogic.showKeystoneJargon(state);
+    final String? secondaryLabel = cta.secondaryLabel;
+    final VoidCallback? secondaryAction;
+    if (secondaryLabel == null) {
+      secondaryAction = null;
+    } else if (cta.ashenPracticeSecondary) {
+      secondaryAction = () => confirmAshenCrown(
+            context,
+            director,
+            practice: true,
+          );
+    } else {
+      secondaryAction = enterAction;
+    }
+    final showMetaKeyLink = cta.showKeyDial;
     final endgameHunt =
         GameLogic.endgameUnlocked(state) &&
         (hubChaseOwnsEndgameRow(chase.kind) ||
@@ -364,8 +306,8 @@ class _HubScreenState extends State<HubScreen>
           chase: chase,
           compact: true,
           hideDetail: short,
-          actionLabel: foldEnter || readyPrimary ? null : chaseActionLabel,
-          onAction: foldEnter || readyPrimary ? null : onAction,
+          actionLabel: cta.hideInlineChaseAction ? null : chaseActionLabel,
+          onAction: cta.hideInlineChaseAction ? null : onAction,
         ),
         if (!short)
           HubMetaPulse(
@@ -384,7 +326,7 @@ class _HubScreenState extends State<HubScreen>
             label: primaryLabel,
             tip: chase.kind == HubChaseKind.keystone
                 ? 'Starts your preferred KEY on this zone'
-                : readyPrimary
+                : (ready || cta.hideInlineChaseAction)
                 ? 'TODAY — do this first'
                 : 'Enter the selected dungeon',
             style: GameButtonStyle.brown,
@@ -663,12 +605,3 @@ class _HubScreenState extends State<HubScreen>
     );
   }
 }
-
-int? _keyLevelFromLabel(String label) {
-  final match = RegExp(r'ENTER KEY \+(\d+)').firstMatch(label);
-  if (match == null) return null;
-  return int.tryParse(match.group(1)!);
-}
-
-/// Always-visible KEY / vault / week crumbs under TODAY (phone hub).
-/// Skips bits that duplicate the active chase so the strip stays quiet.

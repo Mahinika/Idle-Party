@@ -138,9 +138,8 @@ class HubChase {
         detail: best >= 2 && keyTalk
             ? 'Claim $pay$seasonBit (KEY +$best timed today).'
             : 'Claim $pay$seasonBit.',
-        progressLabel: best >= 2 && keyTalk
-            ? 'KEY +$best ready'
-            : '${GameLogic.dailyVaultClearTarget}/${GameLogic.dailyVaultClearTarget} ready',
+        // READY chip owns urgency — no "N ready" progress echo.
+        progressLabel: null,
         urgency: HubChaseUrgency.ready,
       );
     }
@@ -154,8 +153,8 @@ class HubChase {
             : 'Claim quest rewards',
         detail: completeMissions == 1
             ? 'Tap CLAIM QUESTS for gold and essence.'
-            : 'Tap CLAIM QUESTS for $completeMissions ready rewards.',
-        progressLabel: '$completeMissions ready',
+            : 'Tap CLAIM QUESTS for gold and essence ($completeMissions).',
+        progressLabel: null,
         urgency: HubChaseUrgency.ready,
       );
     }

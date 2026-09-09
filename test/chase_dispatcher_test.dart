@@ -170,7 +170,7 @@ void main() {
       state: state,
     );
     expect(plan.op, ChaseOp.confirmGreaterRift);
-    expect(plan.label, contains('GREATER RIFT'));
+    expect(plan.label, contains('RANKED GR'));
   });
 
   test('week ALMOST timed KEY maps to enterKey', () {

@@ -92,10 +92,10 @@ abstract final class ChaseDispatcher {
           op: ChaseOp.confirmGauntlet,
         );
       case HubChaseKind.riftMilestone:
-        return const ChasePlan(label: 'RIFT', op: ChaseOp.confirmRift);
+        return const ChasePlan(label: 'FARM RIFT', op: ChaseOp.confirmRift);
       case HubChaseKind.greaterRiftMilestone:
         return const ChasePlan(
-          label: 'GREATER RIFT',
+          label: 'RANKED GR',
           op: ChaseOp.confirmGreaterRift,
         );
       case HubChaseKind.ashenCrown:
@@ -206,7 +206,7 @@ abstract final class ChaseDispatcher {
     final month = LocalSeasonCatalog.forMonthKey(monthKey);
     if (month.grTierTarget > 0) {
       return const ChasePlan(
-        label: 'GREATER RIFT',
+        label: 'RANKED GR',
         op: ChaseOp.confirmGreaterRift,
       );
     }
