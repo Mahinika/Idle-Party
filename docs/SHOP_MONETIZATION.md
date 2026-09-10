@@ -3,10 +3,10 @@
 **Status:** Catalog + UI + Play Billing client shipped (`in_app_purchase`).
 Grant math: `lib/core/shop_billing.dart` (`ShopBilling.applyPurchase`) +
 `metaDepth.adFree` / `shopStarterClaimed` / `shopBagBonusSlots`.
-**Play Console (2026-09-10):** all five SKUs exist as **draft** one-time
-products (exact ids below). **Not active yet** — Console still shows a
-payment-profile problem; activate after merchant/tax/payout is fixed, then
-smoke on a **Play-installed** build (license testers OK).
+**Play Console (2026-09-10):** all five SKUs **activated** (one active purchase
+option each). Smoke on a **Play-installed** build (license testers OK). Draft
+SKUs do not appear in `queryProductDetails` — that was why SHOP said
+“not in Play Console yet”.
 
 **POWERUPS path:** Ad Tickets → buff shop — see [AD_POWERUPS_DESIGN.md](AD_POWERUPS_DESIGN.md).
 
@@ -63,13 +63,9 @@ Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as t
 
 ## Play Console checklist (owner)
 
-0. **Merchant / betalningsprofil** — banner *Det finns ett problem med
-   betalningsprofilen* blocks activate. Fix via **Öppna betalningsinställningarna**
-   (tax + payout). An agent cannot finish that step.
-1. ~~Create each SKU id~~ — done 2026-09-10 as **Utkast** (purchase type
-   **Köp**; app still treats `boost_12h` / `day_boost_24h` as consumable).
-2. **Activate** each draft (or its purchase option) after payments are OK —
-   draft SKUs do not appear in `queryProductDetails`.
+0. Merchant / betalningsprofil — keep payout/tax healthy so Activate stays allowed.
+1. ~~Create each SKU id~~ — done 2026-09-10 (purchase type **Köp**).
+2. ~~Activate~~ — done 2026-09-10 (all five show **1** active purchase option).
 3. Add license testers (Settings → License testing) for sandbox buys.
 4. Smoke on a **Play-installed** build — sideload / `flutter run` debug often
    cannot finish a real purchase even when the sheet opens.
