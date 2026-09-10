@@ -17,6 +17,7 @@ import '../spatial/spatial_combat.dart';
 import 'game_audio.dart';
 import 'ad_boost.dart';
 import 'ad_rewarded.dart';
+import 'app_analytics.dart';
 import 'debug_play_log.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
@@ -809,6 +810,13 @@ class GameDirector extends ChangeNotifier {
                 'streak${_state.wipeStreakCount}|'
                 '${_state.wipeAdviceLine.isEmpty ? 'quiet' : _state.wipeAdviceLine}',
           );
+          unawaited(
+            AppAnalytics.partyWipe(
+              dungeonId: _state.dungeonId,
+              floor: _state.currentRoom.floorNumber,
+              streak: _state.wipeStreakCount,
+            ),
+          );
         }
         // No WIPED toast — DungeonWipePanel + top HUD already say it.
         notifyListeners();
@@ -1260,6 +1268,13 @@ class GameDirector extends ChangeNotifier {
           'KEY +${_state.hardmodeLevel}',
     );
     showToast(StoryLore.enterDungeon(dungeonId), life: 2.8);
+    unawaited(
+      AppAnalytics.enterDungeon(
+        dungeonId: dungeonId,
+        keyLevel: _state.hardmodeLevel,
+        floor: _state.currentRoom.floorNumber,
+      ),
+    );
     notifyListeners();
     unawaited(_persistFlush());
   }
@@ -1268,6 +1283,8 @@ class GameDirector extends ChangeNotifier {
     hudFocusEnemyId = null;
     if (_isLoading) return;
     _awaitingWipeChoice = false;
+    final leaveDungeonId = _state.dungeonId;
+    final leaveFloor = _state.currentRoom.floorNumber;
     _state = GameLogic.ensureWeeklyContract(GameLogic.leaveDungeon(_state));
     _spatialTimer?.cancel();
     _spatialTimer = null;
@@ -1276,6 +1293,12 @@ class GameDirector extends ChangeNotifier {
     _state = _state.copyWith(lastUpdated: DateTime.now());
     _maybeLogHubChase();
     DebugPlayLog.event('leave', DebugPlayLog.bootDetail(_state));
+    unawaited(
+      AppAnalytics.leaveDungeon(
+        dungeonId: leaveDungeonId,
+        floor: leaveFloor,
+      ),
+    );
     _syncHubIdleTimer();
     final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {
@@ -3110,6 +3133,12 @@ class GameDirector extends ChangeNotifier {
       updated.ascensionLevel,
     );
     _state = updated;
+    unawaited(
+      AppAnalytics.ascend(
+        fromAl: fromAl,
+        toAl: _state.ascensionLevel,
+      ),
+    );
     GameAudio.unlock();
     final parts = <String>[
       StoryLore.ascendToast(

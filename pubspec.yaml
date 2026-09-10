@@ -43,6 +43,8 @@ dependencies:
   in_app_purchase: ^3.2.3
   video_player: ^2.10.0
   flutter_soloud: ^4.1.7
+  firebase_core: ^4.14.0
+  firebase_analytics: ^12.5.0
 
 dev_dependencies:
   flutter_test:

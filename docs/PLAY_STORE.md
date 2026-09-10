@@ -94,8 +94,23 @@ players = Play AAB after owner play OK — not public GitHub APK links.
 - [x] Privacy policy URL in Play Console (2026-08-16):  
   Prefer `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md`  
   after this branch merges (branch blob still works until then).
-- [x] Data safety form (2026-08-16): **optional Play Games** (User IDs / gameplay Other actions / Saved Games files); collected not shared; encrypted in transit; OAuth; delete account + data URLs point at [PRIVACY.md](PRIVACY.md). **No Idle Party analytics servers**; clipboard export/import is optional and user-initiated.
+- [x] Data safety form (2026-08-16): **optional Play Games** (User IDs / gameplay Other actions / Saved Games files); collected not shared; encrypted in transit; OAuth; delete account + data URLs point at [PRIVACY.md](PRIVACY.md). Clipboard export/import is optional and user-initiated.
+- [ ] **Firebase Analytics (2026-09-10 code):** update Play Data safety to declare **App activity / Analytics** via Google Firebase (collected, not shared for Idle Party’s own use; encrypted in transit; see [PRIVACY.md](PRIVACY.md)). Do this before the next Play upload that ships analytics.
 - [x] **Rewarded ads (1.12.27):** AdMob live IDs in app. Data safety + Advertising ID declaration updated 2026-08-21 and submitted with Alpha **57**. Privacy copy in [PRIVACY.md](PRIVACY.md). Ads declaration **Yes** + IARC re-survey 2026-09-08.
+
+### Firebase Analytics setup (owner)
+
+Phone product only (`com.idleparty.app`). Config file is in-repo:
+
+`android/app/google-services.json` (project `idle-party-4a2e9`)
+
+Soft events: enter/leave dungeon, Ascend, party wipe. UMP consent gates
+collection (SETTINGS → AD PRIVACY). Rebuild Android after pull.
+
+**If you ever re-download the JSON:** Project settings → Your apps → Idle Party
+→ **google-services.json** → save over `android/app/google-services.json`.
+
+DebugView (optional): `adb shell setprop debug.firebase.analytics.app com.idleparty.app` then `flutter run` on a device/emulator.
 
 ### Rewarded ads / AdMob (how money actually arrives)
 

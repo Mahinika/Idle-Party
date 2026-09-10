@@ -41,6 +41,11 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 **MORE → SETTINGS**. Opt-in; clipboard export/import still works. IDs in
 `lib/core/play_leaderboard_ids.dart`. Soft-fail on web / sideload.
 
+**Optional Firebase Analytics** (Android): soft events via `AppAnalytics`
+(`lib/core/app_analytics.dart`) when `android/app/google-services.json` is
+present. UMP consent gates collection (same AD PRIVACY path as AdMob). See
+`docs/PRIVACY.md` + setup steps in `docs/PLAY_STORE.md`.
+
 ## Legal / IP policy (mandatory)
 
 - **Do not** add, keep, or commit APKs, IPA/AAB, SWF, DEX, or dumps from other commercial games.

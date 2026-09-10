@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "900067828121",
+    "project_id": "idle-party-4a2e9",
+    "storage_bucket": "idle-party-4a2e9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:900067828121:android:57d355582db5f20290b308",
+        "android_client_info": {
+          "package_name": "com.idleparty.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFhPFQuYK7ILChvowjnJl1_iFVmtEljGw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

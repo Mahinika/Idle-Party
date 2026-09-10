@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'core/app_analytics.dart';
 import 'core/equipment_factory.dart';
 import 'core/gear/drop_tables.dart';
 import 'core/game_director.dart';
@@ -30,6 +31,8 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   // Fire-and-forget before first frame — phone product is edge-to-edge game UI.
   unawaited(lockImmersiveUi());
+  // Android + google-services.json only; no-op elsewhere / missing config.
+  unawaited(AppAnalytics.init());
   runApp(const MyApp());
   // Expose the semantics DOM overlay on web so browser automation / a11y
   // tools can click buttons (CanvasKit has no real DOM widgets otherwise).
