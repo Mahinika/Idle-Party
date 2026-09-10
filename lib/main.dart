@@ -232,7 +232,30 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
     unawaited(DropTables.load());
     // Defer combat loop until after start menu so dungeon ticks cannot steal focus.
     await _director.boot(deferCombatLoop: widget.showIntro);
+    if (!mounted) return;
+
+    final blocked = await _director.checkMandatoryPlayUpdate();
+    if (!mounted) return;
+    if (blocked) {
+      setState(() => _phase = _AppPhase.playUpdateRequired);
+      // Still warm audio in the background behind the update gate.
+      unawaited(_initAudioAfterFirstPaint());
+      return;
+    }
+
+    // Paint hub/dungeon before SoLoud — AAudio open was ~250+ skipped frames.
+    _enterAfterBootChecks();
+    unawaited(_precacheScenes());
+    unawaited(_initAudioAfterFirstPaint());
+  }
+
+  Future<void> _initAudioAfterFirstPaint() async {
+    // Let the first Flutter frame complete before touching the audio engine.
+    await Future<void>.delayed(Duration.zero);
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
     await GameAudio.init();
+    unawaited(GameAudio.warmRemainingAssets());
     GameAudio.hapticsEnabled = _director.state.hapticsEnabled;
     GameAudio.applyVolumes(
       sfx: _director.state.sfxVolume,
@@ -253,17 +276,6 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
         setSpeed: _director.setDebugTimeScale,
       );
     }
-    if (!mounted) return;
-
-    final blocked = await _director.checkMandatoryPlayUpdate();
-    if (!mounted) return;
-    if (blocked) {
-      setState(() => _phase = _AppPhase.playUpdateRequired);
-      return;
-    }
-
-    _enterAfterBootChecks();
-    unawaited(_precacheScenes());
   }
 
   void _enterAfterBootChecks() {

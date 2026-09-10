@@ -564,7 +564,12 @@ class GameDirector extends ChangeNotifier {
       if (_state.inDungeon) {
         _rebuildSpatial();
         if (enableSpatialLoop && !deferCombatLoop) {
-          _startSpatialLoop();
+          // First dungeon paint before 60 Hz sim — cold mid-dungeon resume.
+          scheduleMicrotask(() {
+            if (_state.inDungeon && enableSpatialLoop) {
+              _startSpatialLoop();
+            }
+          });
         }
         if (!deferCombatLoop) {
           showToast('Floor combat restarted (positions reset)', life: 3.2);
@@ -592,8 +597,13 @@ class GameDirector extends ChangeNotifier {
       notifyListeners();
       DebugPlayLog.event('boot', DebugPlayLog.bootDetail(_state));
       unawaited(refreshPlayUpdateNotice());
-      unawaited(AdRewarded.warmup());
-      unawaited(_warmupShopStore());
+      // Ads / billing after first hub frames — Binder + Play Services hitch cold start.
+      unawaited(
+        Future<void>.delayed(const Duration(seconds: 2), () async {
+          await AdRewarded.warmup();
+          await _warmupShopStore();
+        }),
+      );
     }
   }
 

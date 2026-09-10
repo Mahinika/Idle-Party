@@ -114,10 +114,20 @@ abstract final class GameAudio {
     _lastLootAt = null;
     _lastUnlockAt = null;
     _lastUiAt = null;
+    _sfxReady = false;
+    _warmFuture = null;
   }
 
   static bool get isReady => _ready;
 
+  /// True once SFX banks + dungeon bed are loaded (may lag [isReady]).
+  static bool get sfxReady => _sfxReady;
+
+  static bool _sfxReady = false;
+  static Future<void>? _warmFuture;
+
+  /// Boots SoLoud + hub ambience/music only — keeps cold start off the main
+  /// hitch. Call [warmRemainingAssets] (unawaited) right after.
   static Future<void> init() async {
     if (_ready || _initFailed) return;
     try {
@@ -125,20 +135,51 @@ abstract final class GameAudio {
       if (!soloud.isInitialized) {
         await soloud.init();
       }
-      for (final bank in AudioVariationCatalog.banks.values) {
-        for (final v in bank.variations) {
-          if (_sourcesByPath.containsKey(v.path)) continue;
-          _sourcesByPath[v.path] = await soloud.loadAsset(v.path);
-        }
-      }
       _hubAmb = await soloud.loadAsset(AudioAssets.hubAmbience);
-      _dungeonAmb = await soloud.loadAsset(AudioAssets.dungeonAmbience);
       _hubMusic = await soloud.loadAsset(AudioAssets.hubMusic);
-      _dungeonMusic = await soloud.loadAsset(AudioAssets.dungeonMusic);
       _ready = true;
     } catch (e, st) {
       _initFailed = true;
       debugPrint('GameAudio.init failed: $e\n$st');
+    }
+  }
+
+  /// Loads SFX banks + dungeon bed off the critical path. Yields between
+  /// assets so the first hub frame can paint.
+  static Future<void> warmRemainingAssets() {
+    return _warmFuture ??= _warmRemainingAssets();
+  }
+
+  static Future<void> _warmRemainingAssets() async {
+    if (!_ready || _initFailed) return;
+    try {
+      final soloud = SoLoud.instance;
+      for (final bank in AudioVariationCatalog.banks.values) {
+        for (final v in bank.variations) {
+          if (_sourcesByPath.containsKey(v.path)) continue;
+          _sourcesByPath[v.path] = await soloud.loadAsset(v.path);
+          await Future<void>.delayed(Duration.zero);
+        }
+      }
+      _dungeonAmb ??= await soloud.loadAsset(AudioAssets.dungeonAmbience);
+      _dungeonMusic ??= await soloud.loadAsset(AudioAssets.dungeonMusic);
+      _sfxReady = true;
+    } catch (e, st) {
+      debugPrint('GameAudio.warmRemainingAssets failed: $e\n$st');
+    }
+  }
+
+  /// Ensures dungeon bed is present before [setAmbience] (hub bed is in [init]).
+  static Future<void> _ensureBedFor(AmbienceKind kind) async {
+    if (!_ready || _initFailed) return;
+    if (kind != AmbienceKind.dungeon) return;
+    if (_dungeonAmb != null && _dungeonMusic != null) return;
+    try {
+      final soloud = SoLoud.instance;
+      _dungeonAmb ??= await soloud.loadAsset(AudioAssets.dungeonAmbience);
+      _dungeonMusic ??= await soloud.loadAsset(AudioAssets.dungeonMusic);
+    } catch (e, st) {
+      debugPrint('GameAudio dungeon bed load failed: $e\n$st');
     }
   }
 
@@ -154,6 +195,8 @@ abstract final class GameAudio {
     _hubMusic = null;
     _dungeonMusic = null;
     _ready = false;
+    _sfxReady = false;
+    _warmFuture = null;
   }
 
   static void applyVolumes({double? sfx, double? ambience, double? music}) {
@@ -364,6 +407,7 @@ abstract final class GameAudio {
       stopAmbience();
       return;
     }
+    await _ensureBedFor(kind);
     stopAmbience();
     debugBackgroundStartCount++;
     final ambSource = switch (kind) {

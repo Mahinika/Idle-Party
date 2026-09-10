@@ -125,6 +125,11 @@ void main() {
     expect(GameAudio.debugPlayCount, 1);
   });
 
+  test('SFX warm flag starts false until remaining assets load', () {
+    GameAudio.debugReset();
+    expect(GameAudio.sfxReady, isFalse);
+  });
+
   test('combat feel SFX is rate-limited per id', () {
     GameAudio.debugReset();
     GameAudio.muted = false;
