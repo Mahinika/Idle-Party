@@ -80,15 +80,16 @@ class ZonePathMap extends StatefulWidget {
     required this.selectedId,
     required this.partyLevel,
     required this.highestCleared,
-    required this.pulse,
     required this.onSelect,
+    this.pulse,
   });
 
   final List<DungeonDef> dungeons;
   final String selectedId;
   final int partyLevel;
   final int highestCleared;
-  final double pulse;
+  /// HERE-ring torch only — not a full-map rebuild every tick.
+  final Animation<double>? pulse;
   final ValueChanged<String> onSelect;
 
   /// Marker centers on painted gold rings (zone 0…14 top→bottom).
@@ -298,7 +299,7 @@ class _ZonePathMapState extends State<ZonePathMap> {
                 unlocked: unlocked,
                 cleared: cleared,
                 selected: selected,
-                pulse: widget.pulse,
+                pulse: selected ? widget.pulse : null,
                 statusWord: statusWord,
                 onTap: () => widget.onSelect(d.id),
               ),
@@ -331,9 +332,9 @@ class MapZoneMarker extends StatelessWidget {
     required this.unlocked,
     required this.cleared,
     required this.selected,
-    required this.pulse,
     required this.statusWord,
     required this.onTap,
+    this.pulse,
   });
 
   final DungeonDef def;
@@ -342,7 +343,7 @@ class MapZoneMarker extends StatelessWidget {
   final bool unlocked;
   final bool cleared;
   final bool selected;
-  final double pulse;
+  final Animation<double>? pulse;
   final String statusWord;
   final VoidCallback onTap;
 
@@ -353,15 +354,17 @@ class MapZoneMarker extends StatelessWidget {
     return GameTheme.parchmentDim;
   }
 
+  Color _ringColor(double pulseValue) {
+    if (selected) {
+      return Color.lerp(GameTheme.torch, GameTheme.torchHot, pulseValue)!;
+    }
+    if (cleared) return GameTheme.mossLit.withValues(alpha: 0.55);
+    if (unlocked) return GameTheme.torch.withValues(alpha: 0.35);
+    return Colors.transparent;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final ring = selected
-        ? Color.lerp(GameTheme.torch, GameTheme.torchHot, pulse)!
-        : (cleared
-              ? GameTheme.mossLit.withValues(alpha: 0.55)
-              : (unlocked
-                    ? GameTheme.torch.withValues(alpha: 0.35)
-                    : Colors.transparent));
     final semanticsLabel =
         '${def.name}, $statusWord${selected ? ', selected' : ''}';
     final iconSize = discSize * 0.82;
@@ -398,6 +401,17 @@ class MapZoneMarker extends StatelessWidget {
       );
     }
 
+    final disc = selected && pulse != null
+        ? AnimatedBuilder(
+            animation: pulse!,
+            builder: (context, child) {
+              final p = pulse!.value;
+              return _discShell(pulseValue: p, child: child!);
+            },
+            child: ClipOval(child: portrait),
+          )
+        : _discShell(pulseValue: 0, child: ClipOval(child: portrait));
+
     return WebClickScope(
       label: semanticsLabel,
       onPressed: onTap,
@@ -424,37 +438,37 @@ class MapZoneMarker extends StatelessWidget {
               SizedBox(
                 width: hitSize,
                 height: hitSize,
-                child: Center(
-                  child: SizedBox(
-                    width: discSize,
-                    height: discSize,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: GameTheme.hudMapCaption.withValues(alpha: 0.75),
-                        border: Border.all(
-                          color: ring,
-                          width: selected ? 2.5 : 1.2,
-                        ),
-                        boxShadow: selected
-                            ? [
-                                BoxShadow(
-                                  color: GameTheme.torch.withValues(
-                                    alpha: 0.45,
-                                  ),
-                                  blurRadius: 10 + pulse * 3,
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Center(child: ClipOval(child: portrait)),
-                    ),
-                  ),
-                ),
+                child: Center(child: disc),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _discShell({required double pulseValue, required Widget child}) {
+    return SizedBox(
+      width: discSize,
+      height: discSize,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: GameTheme.hudMapCaption.withValues(alpha: 0.75),
+          border: Border.all(
+            color: _ringColor(pulseValue),
+            width: selected ? 2.5 : 1.2,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: GameTheme.torch.withValues(alpha: 0.45),
+                    blurRadius: 10 + pulseValue * 3,
+                  ),
+                ]
+              : null,
+        ),
+        child: Center(child: child),
       ),
     );
   }

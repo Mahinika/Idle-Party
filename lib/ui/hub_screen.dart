@@ -12,6 +12,7 @@ import '../core/hub_primary_cta.dart';
 import '../core/keystone.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_def.dart';
+import '../models/vfx_quality.dart';
 import 'confirm_dialogs.dart';
 import 'chase_bind.dart';
 import 'cave_atmosphere.dart';
@@ -111,7 +112,17 @@ class _HubScreenState extends State<HubScreen>
     _torch = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1600),
-    )..repeat(reverse: true);
+    );
+    // First hub paint stays static — torch starts after two frames so the
+    // world map / TODAY card are not fighting animation ticks on cold start.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (director.state.vfxQuality == VfxQuality.minimal) return;
+        _torch.repeat(reverse: true);
+      });
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       director.ensureMarketListings();
       await _maybeShowOffline();
@@ -535,19 +546,18 @@ class _HubScreenState extends State<HubScreen>
                                 ),
                               ],
                               SizedBox(height: short ? 4 : 6),
-                              // World Path: always the scrollable map (tap a ring to pick).
+                              // World Path: static map; only HERE-ring listens to torch.
                               Expanded(
                                 flex: short ? 7 : 1,
-                                child: AnimatedBuilder(
-                                  animation: _torch,
-                                  builder: (context, _) => ZonePathMap(
+                                child: RepaintBoundary(
+                                  child: ZonePathMap(
                                     dungeons: DungeonCatalog.all,
                                     selectedId: _selectedId,
                                     partyLevel:
                                         GameLogic.partyMeanLevel(state),
                                     highestCleared:
                                         state.highestDungeonCleared,
-                                    pulse: _torch.value,
+                                    pulse: _torch,
                                     onSelect: (id) => setState(() {
                                       _userPickedZone = true;
                                       _selectedId = id;
