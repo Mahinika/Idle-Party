@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/game_guides.dart';
+import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import 'game_theme.dart';
 import 'menu_chrome.dart';
@@ -32,6 +33,15 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
           'How systems work and how to use them. Tap a topic to expand.',
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
+        if (widget.state != null &&
+            !GameLogic.plainPlayerChrome(widget.state!)) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Dailies: Vault · Daily Run · Quests — three different buttons '
+            '(see THREE DAILIES).',
+            style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+          ),
+        ],
         const SizedBox(height: 10),
         Expanded(
           child: ListView.separated(

@@ -46,6 +46,20 @@ abstract final class GameGuides {
           'are just the three starter jobs: Shield, Healer, Damage.',
     ),
     GuideTopic(
+      id: 'dailies',
+      title: 'THREE DAILIES',
+      body:
+          'Three different systems — not the same button:\n\n'
+          '• Daily Vault — UTC day on TODAY. Fill with 1 dungeon clear '
+          '(or timed KEY +2), then CLAIM VAULT for essence.\n'
+          '• Daily Run — one free seeded floor from the hub (DAILY RUN) for +25e. '
+          'Separate from the vault.\n'
+          '• Quests — MORE · QUESTS board (Daily / Bounty / Side / Week / Contract). '
+          'CLAIM QUESTS on TODAY when rewards are ready.\n\n'
+          'TODAY always picks one hunt. Vault reset and Daily Run reset at UTC midnight. '
+          'Before your first boss, TODAY stays on Grow the party — these three wait.',
+    ),
+    GuideTopic(
       id: 'powerups',
       title: 'POWERUPS',
       body:

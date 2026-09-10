@@ -9,12 +9,19 @@ void main() {
     expect(ids.length, topics.length);
     expect(ids, containsAll([
       'basics',
+      'dailies',
       'god_hand',
       'ascend',
       'hardmode',
       'gates',
       'power_shelves',
     ]));
+    final dailies = topics.firstWhere((t) => t.id == 'dailies');
+    expect(dailies.title, 'THREE DAILIES');
+    expect(dailies.body, contains('Daily Vault'));
+    expect(dailies.body, contains('Daily Run'));
+    expect(dailies.body, contains('Quests'));
+    expect(dailies.body.toLowerCase(), contains('not the same'));
     final shelves = topics.firstWhere((t) => t.id == 'power_shelves');
     expect(shelves.body.toLowerCase(), contains('gold tracks'));
     expect(shelves.body.toLowerCase(), contains('ascend blessing'));

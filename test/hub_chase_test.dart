@@ -721,6 +721,78 @@ void main() {
     expect(chase.progressLabel, contains('% kit'));
     expect(chase.detail.toLowerCase(), contains('kit pressure'));
   });
+
+  group('session 2–5 chase matrix', () {
+    test('S2 after first boss: Daily Run before Ascend button', () {
+      final state = GameLogic.createInitialState(now: now).copyWith(
+        bossVictories: 1,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+            ),
+      );
+      expect(GameLogic.showDailyChase(state), isTrue);
+      final chase = HubChase.forState(state, now: now);
+      expect(chase.kind, HubChaseKind.dailyRun);
+    });
+
+    test('S3 Daily done, vault empty: fill Daily Vault', () {
+      final state = GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: 1,
+        bossVictories: 0,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClears: 0,
+              dailyVaultClaimed: false,
+            ),
+      );
+      final chase = HubChase.forState(state, now: now);
+      expect(chase.kind, HubChaseKind.dailyVaultProgress);
+      expect(chase.detail.toLowerCase(), contains('vault'));
+      expect(chase.detail.toLowerCase(), contains('daily run'));
+    });
+
+    test('S4 vault + Daily claimed mid AL: push or Will claim', () {
+      final state = GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: 1,
+        bossVictories: 0,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+            ),
+        achievements: [
+          for (var i = 0; i < 160; i++) 'ach_$i',
+        ],
+      );
+      final chase = HubChase.forState(state, now: now);
+      // Will may claim first if collection is mid-threshold; otherwise push floors.
+      expect(
+        chase.kind == HubChaseKind.clearFloors ||
+            chase.kind == HubChaseKind.willRank,
+        isTrue,
+        reason: 'got ${chase.kind}',
+      );
+      if (chase.kind == HubChaseKind.clearFloors) {
+        expect(chase.title.toLowerCase(), contains('push'));
+      }
+    });
+
+    test('S5 almost Ascend still beats open Daily Run', () {
+      final state = GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: 1,
+        bossVictories: 1,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+            ),
+      );
+      expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+      final chase = HubChase.forState(state, now: now);
+      expect(chase.kind, HubChaseKind.clearFloors);
+      expect(chase.urgency, HubChaseUrgency.almost);
+      expect(chase.title, contains('Almost Ascend'));
+    });
+  });
 }
 
 GameState _withPartyMaxLevel(GameState state) => state.copyWith(
