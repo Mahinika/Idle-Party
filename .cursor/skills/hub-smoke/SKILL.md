@@ -1,9 +1,10 @@
 ---
 name: hub-smoke
 description: >-
-  Hub polish smoke playtest for Idle Party (daily vault, TODAY chase,
-  What’s New, guides, God Hand tip). Use after hub/meta/UX polish or before
-  tagging a release that touches hub chrome.
+  Hub polish smoke playtest for Idle Party (daily vault, TODAY chase, What's New,
+  guides, God Hand tip). Use after hub/meta/UX polish, before tagging a release,
+  or when the owner says "polish hub" / "kolla hubben". Do not use for
+  in-dungeon combat feel (spatial-combat-change).
 ---
 
 # Hub smoke (Idle Party)
@@ -17,6 +18,12 @@ the checklist on the emulator.
 Web + `WebClickBridge` only if Android cannot run — see
 [browser-playtest](../browser-playtest/SKILL.md).
 
+## Fast honesty (before emulator)
+
+```bash
+flutter test test/ship_smoke_test.dart test/changelog_sync_test.dart
+```
+
 ## Checklist (look → click → think)
 
 | # | Check | How |
@@ -26,7 +33,7 @@ Web + `WebClickBridge` only if Android cannot run — see
 | 2b | Week affix | Line above TODAY: `Week · …` when `weeklyModifier` is set |
 | 2c | Daily CTA | When TODAY is Daily, only TODAY’s **DAILY** button (no duplicate **DAILY RUN**) |
 | 3 | Daily vault claim | Vault filled (1 clear or timed KEY +2): `CLAIM VAULT`; toast says **Daily vault claimed** |
-| 4 | MORE badge | Unseen changelog → `META · NEW` (phone: `META ★`); claimable jobs → `META · !` (phone: `META !`) |
+| 4 | MORE badge | Unseen changelog → `★` on **MORE** (`MenuAlerts.more.star`); claimable quests → count badge on **MORE** |
 | 5 | What’s New | Open MORE → INFO → WHAT'S NEW; bullets match `MetaSystems.currentVersion` |
 | 6 | Guides | MORE → INFO → topics labeled `Guide · …`; WORLD PATH mentions Tidehold/Ashen/Grove |
 | 7 | God Hand tip | Enter dungeon once; tip mentions BAL/FOCUS/WIDE or ESSENCE → KEEP |
@@ -40,7 +47,6 @@ window.__idlePartyButtons()
 window.__idlePartyClick('GEAR')
 window.__idlePartyClick('GOLD')
 window.__idlePartyClick('MORE')
-window.__idlePartyClick('MORE · NEW')
 window.__idlePartyClick('ENTER DUNGEON')
 ```
 

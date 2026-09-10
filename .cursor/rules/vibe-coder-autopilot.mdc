@@ -35,7 +35,12 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 | balance / too strong / too weak | share-fast then gate; `grinding-until-pass` if many failures |
 | What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
 | PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
+| review this diff / before merge | `reviewing-code` |
 | polish hub / weekly / tips | `hub-smoke` on A56 (`a56-playtest`) |
+| does it look ok? / UI verify | `a56-playtest` / `verifying-in-browser` |
+| a11y / labels / reduce motion | `accessibility-auditing` |
+| record web flow as test | `recording-browser-flow-as-test` |
+| same workflow 3× | `building-skills-from-patterns` |
 | ny meny / panel / var ska X ligga / UI-röd tråd | `game-ux-director` rule + `ui-theme` / `docs/UI_THEME.md` |
 | I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — that *is* the batch |
 | “gör spelet bättre” / vad härnäst (no other target) | Default slice in `owner-preferences` + `docs/CONTENT_CADENCE.md` — unless they name something broader (`product-locks` escape) |

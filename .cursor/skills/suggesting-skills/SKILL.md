@@ -1,8 +1,8 @@
 ---
 name: suggesting-skills
 description: >-
-  Map tasks to Idle Party skills. Under vibe-coder mode: follow the right skill
-  silently — do not ask the user which skill to use.
+  Maps tasks to Idle Party skills. Under vibe-coder mode: follow the matching
+  skill silently — do not ask the user which skill to use.
 ---
 
 # Suggesting skills (Idle Party)
@@ -10,6 +10,8 @@ description: >-
 **Default for this repo:** the human vibe-codes. **Load and follow** the matching skill yourself. Do **not** ask “vill du använda skill X?”.
 
 Only *mention* a skill name if they explicitly ask how you work, or when creating a new skill via `building-skills-from-patterns`.
+
+**Keep this table in sync with** `.cursor/rules/vibe-coder-autopilot.mdc`.
 
 ## Idle Party skill map
 
@@ -32,6 +34,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | Code review of a diff | `reviewing-code` |
 | Same workflow 3× | `building-skills-from-patterns` |
 | A11y / reduce motion / labels | `accessibility-auditing` |
+| Record web flow as Playwright test | `recording-browser-flow-as-test` |
 | New menu / where does X live / UI consistency | always-on `game-ux-director` rule + `ui-theme` / `docs/UI_THEME.md` |
 | UI change “does it look ok?” | `a56-playtest` / `verifying-in-browser` |
 | Play Store / listing / privacy / IARC | `play-store-prep` |

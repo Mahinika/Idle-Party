@@ -1,8 +1,10 @@
 ---
 name: screenshotting-changelog
 description: >-
-  Visual / copy honesty for What’s New: screenshot hub MORE · NEW flow and
-  confirm MetaSystems bullets match shipped features before a release PR.
+  Visual and copy honesty for What's New: screenshot MORE flow and confirm
+  MetaSystems bullets match shipped features. Use before a release PR, version
+  bump, or when release notes feel wrong. Do not use for pure logic-only changes
+  without a version bump (still run changelog_sync_test if version changed).
 ---
 
 # Screenshot changelog (Idle Party)
@@ -28,7 +30,7 @@ Must hold:
 2. Fresh or returning save so What’s New can appear (`seenChangelogVersion` older than current).
 3. Screenshot:
    - Auto What’s New dialog (if shown)
-   - Hub with `MORE · NEW`
+   - Hub with `★` on **MORE** badge
    - Guides / World Path if zones changed
 4. Optional: compare base branch vs feature branch (stash/checkout) for hub weekly row / GEAR tab labels.
 

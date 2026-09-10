@@ -1,9 +1,10 @@
 ---
 name: verifying-in-browser
 description: >-
-  After UI/hub/dungeon chrome, verify on the Samsung A56 emulator
-  (a56-playtest). Browser/WebClickBridge is fallback only. Use after
-  hub/meta/UI edits.
+  Routes UI verification to the Samsung A56 emulator (a56-playtest). Browser
+  and WebClickBridge are fallback only for agent clicks. Use after hub/meta/UI
+  edits or when the owner asks "does it look ok?". Do not use as the default
+  human look — that is a56-playtest, not localhost.
 ---
 
 # Verify live UI (Idle Party)

@@ -1,9 +1,10 @@
 ---
 name: recording-browser-flow-as-test
 description: >-
-  Record an Idle Party hub/dungeon flow in Cursor's browser, then emit or update
-  a Playwright script using stable labels / WebClickBridge
-  (`tool/playtest_al3.py`, `tool/playwright_newgame_test.py`).
+  Records an Idle Party hub/dungeon flow in Cursor's browser and emits or updates
+  a Playwright script using WebClickBridge labels. Use when turning a web click
+  path into `tool/playtest_*.py`. Do not use for owner live look (a56-playtest)
+  or pure combat balance (share-fast sims).
 ---
 
 # Record browser flow as test (Idle Party)
@@ -46,3 +47,4 @@ page.get_by_role("button", name="ENTER DUNGEON").click()
 
 - Pure combat balance (use share-fast sims instead)
 - Flows needing real Play Store / device install
+- Owner visual QA (use a56-playtest)

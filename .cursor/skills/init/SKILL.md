@@ -46,12 +46,12 @@ Make `AGENTS.md` and `.cursor/rules/*.mdc` accurate for **today’s** codebase a
 4. **Report (plain Swedish)**
    - 3–8 bullets: what was wrong / what you fixed
    - Note anything still uncertain (needs playtest) without blocking the doc sync
-   - Propose commit if changes are ship-shaped (`owner-preferences`)
+   - **Commit locally when green** (`owner-preferences`); ask before push
 
 ## Out of scope for /init
 
 - Large refactors, balance retunes, new content
-- Committing/pushing unless the user already said yes this turn
+- Pushing unless the user already said yes this turn (local commit when green is OK)
 - Rewriting or treating `docs/audits/` snapshots as current kit truth (archive
   only; re-run `class-audit` for live verdicts)
 

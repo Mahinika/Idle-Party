@@ -57,8 +57,8 @@ essence + 1 constellation point. Optional; not a TODAY chase.
 
 ## Tests
 
-- `test/save_load_test.dart`
-- `test/meta_systems_test.dart` (legacy saves without meta fields)
-- `test/meta_depth_test.dart`
+```bash
+flutter test test/save_load_test.dart test/meta_systems_test.dart test/meta_depth_test.dart
+```
 
 Use `GameDirector.preview()` for in-memory tests.

@@ -1,8 +1,10 @@
 ---
 name: reviewing-code
 description: >-
-  Review Idle Party diffs for correctness against AGENTS.md — SpatialCombat
+  Reviews Idle Party diffs for correctness against AGENTS.md — SpatialCombat
   authority, immutable state, assets-legal, Ascend/save defaults, balance honesty.
+  Use when reviewing a PR/diff, before merge, or when the owner asks for a code
+  review. Do not use for automated CI babysitting (babysitting-pr).
 ---
 
 # Code review (Idle Party)

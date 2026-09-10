@@ -1,9 +1,10 @@
 ---
 name: browser-playtest
 description: >-
-  Fallback: playtest Idle Party in Cursor's browser via Flutter web +
-  WebClickBridge. Default live look is a56-playtest (Samsung A56 emulator).
-  Use this only for agent clicks, Playwright, or when Android cannot run.
+  Fallback playtest via Flutter web and WebClickBridge for agent clicks,
+  Playwright, or when Android cannot run. Use when the agent must drive the UI
+  in Cursor's browser. Do not use for the owner's live look (a56-playtest) or
+  human UI judgment (verifying-in-browser).
 ---
 
 # Browser playtest (Idle Party)
@@ -74,7 +75,7 @@ Do **not** rely on raw canvas coordinate clicks alone; full-bleed art used to st
 | Title | `SKIP` (boot story) → `CONTINUE` or `NEW GAME` → `START` (confirm `OVERWRITE` if prompted) |
 | Tips | `SKIP ALL TIPS` or `GOT IT` |
 | Hub | `ENTER DUNGEON` |
-| Dungeon | `FARM` / `PUSH` (tip may say LOOP FARM / CLIMB PUSH), `God Hand ready`, `Use healing flask`, `PARTY` / `POWER` / `META` / `LEAVE` |
+| Dungeon | `FARM` / `PUSH` (tip may say LOOP FARM / CLIMB PUSH), `God Hand ready`, `Use healing flask`, `GEAR` / `GOLD` / `ESSENCE` / `MORE` / `LEAVE` |
 
 After each click: wait briefly, new snapshot/screenshot, then decide. Stop after ~4 failed attempts on the same control; report what you saw.
 

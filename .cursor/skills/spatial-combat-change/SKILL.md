@@ -2,8 +2,10 @@
 name: spatial-combat-change
 description: >-
   Guides combat, chamber, gate, AI, and offline changes where SpatialCombat
-  is the single authority. Use when editing spatial_combat, ability_effects,
-  tile maps, rooms, dormant enemies, threatScale, AFK catch-up, or floor clear.
+  is the single authority. Use when combat feels wrong, AFK catch-up diverges,
+  chambers/gates misbehave, or editing spatial_combat / ability_effects /
+  tile maps. Do not use for a single broken cast (add-ability) or DPS-only
+  trim (grinding-until-pass).
 ---
 
 # Spatial combat changes (Idle Party)
@@ -20,6 +22,7 @@ Do **not** add a second combat simulator for offline.
 ## Floor / chamber model
 
 - One combat wave per floor; boss on `5 + ascensionLevel` (`DungeonCatalog.bossFloor`)
+- Generation: **FloorBlueprint** (`floor_blueprint.dart`) → **PlacementPlan** (`placement_plan.dart`) → **ZoneLayoutKit** (`zone_layout_kit.dart`) → `RoomLayouts` / `SpatialCombat.build`
 - Multi-chamber maps + corridor gates: `lib/spatial/tile_map.dart` (`RoomLayouts`, `TileKind.gate`)
 - Later chambers start **dormant**; wake when prior chambers clear (`_updateChambers`)
 - Soft-unlock if only dormant packs remain or path blocked — preserve these safeties
@@ -46,7 +49,7 @@ Do **not** add a second combat simulator for offline.
 |--------|-------|
 | Kits / cast AI | `ability_effects.dart`, `spatial_combat.dart` |
 | Movement / focus / threat | `spatial_combat.dart` |
-| Chambers / gates | `tile_map.dart`, `spatial_combat.dart` |
+| Chambers / gates / blueprint | `floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart`, `tile_map.dart`, `spatial_combat.dart` |
 | Offline catch-up | `game_logic.dart` (call sites only) |
 | Live loop / rebuild | `game_director.dart` |
 | Presentation only | `spatial_dungeon_view.dart` |
@@ -60,10 +63,15 @@ Do **not** add a second combat simulator for offline.
 
 ## Verify
 
+```bash
+flutter analyze lib test --no-fatal-infos
+flutter test test/class_kits_combat_test.dart test/kit_passives_test.dart
+```
+
 ```
 Spatial change:
 - [ ] Single authority preserved (no offline fork)
 - [ ] Chamber/gate wake still safe
 - [ ] Tests via preview + SpatialCombat.build/step
-- [ ] flutter analyze + relevant combat tests
+- [ ] flutter analyze + combat tests green
 ```

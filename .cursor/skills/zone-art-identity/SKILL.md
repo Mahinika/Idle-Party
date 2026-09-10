@@ -2,8 +2,9 @@
 name: zone-art-identity
 description: >-
   Checklist so Idle Party dungeon zones read as distinct (not crystal/hell
-  reskins). Use when adding a dungeon, remapping Kenney sprites, or polishing
-  Tide/Ember-style zone identity without new commercial art.
+  reskins). Use when remapping Kenney sprites, polishing Tide/Ember-style zone
+  identity, or when the owner says a zone "looks the same". Do not use for
+  full dungeon catalog wiring (new-dungeon).
 ---
 
 # Zone art identity (Idle Party)
@@ -18,8 +19,8 @@ For each new `dungeonId`, verify against the closest old zone (e.g. tide ≠ cry
 
 | Layer | File | Pass when |
 |-------|------|-----------|
-| Portrait | `lib/ui/custom_assets.dart` | Not the same const as the neighbor |
-| Backdrop | `lib/ui/custom_assets.dart` | Not the same const as the neighbor |
+| Portrait | `lib/assets/custom_assets.dart` | Not the same const as the neighbor |
+| Backdrop | `lib/assets/custom_assets.dart` | Not the same const as the neighbor |
 | Boss sprite | `KenneyAssets.enemySpriteForRole(boss)` | Distinct family (crab/golem/… not twin of neighbor) |
 | Codex name map | `enemySpriteForCodexName` | Boss name → **same** asset as combat boss role |
 | Trash/elite | `enemySpriteFor` archetypes | Mix differs (swarm/brute/ranged) |
@@ -46,6 +47,12 @@ Zone identity:
 2. Wire getters on `CustomAssets` (no raw `assets/...` in UI)
 3. `FilterQuality.none` via `KenneySprite`
 4. Keep Kenney remaps for trash until custom enemies exist
+
+## Verify
+
+```bash
+flutter test test/asset_catalog_test.dart test/dungeon_environment_test.dart
+```
 
 ## Related
 

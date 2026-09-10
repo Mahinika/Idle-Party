@@ -1,8 +1,10 @@
 ---
 name: systematic-debugging
 description: >-
-  Methodical Idle Party debugging — reproduce, isolate (SpatialCombat vs UI vs
+  Methodical Idle Party debugging: reproduce, isolate (SpatialCombat vs UI vs
   save), hypothesize, verify with GameDirector.preview / flutter test / playtest.
+  Use when stuck on a bug, live vs offline diverge, or symptoms span layers. Do
+  not use for a known missing cast (add-ability) or CI-only red (babysitting-pr).
 ---
 
 # Systematic debugging (Idle Party)

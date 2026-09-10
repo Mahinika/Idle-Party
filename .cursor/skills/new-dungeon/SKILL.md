@@ -1,9 +1,11 @@
 ---
 name: new-dungeon
 description: >-
-  Adds a new Idle Party dungeon (DungeonCatalog, layouts, enemies,
-  portraits/backdrops, unlock via lifetime gold, lore, achievements).
-  Use when creating or extending a dungeon zone, boss, or unlock gate.
+  Adds or extends an Idle Party dungeon zone (DungeonCatalog, FloorBlueprint,
+  enemies, portraits, party-mean-level unlock, lore). Use when creating a new
+  zone, boss, or unlock gate, or when the owner says "ny zon" / "new dungeon".
+  Do not use for art-only reskins (zone-art-identity) or zone #16 without
+  explicit owner ask (product-locks soft lock).
 ---
 
 # New dungeon (Idle Party)
@@ -12,20 +14,24 @@ description: >-
 
 ```dart
 highestDungeonCleared >= def.number - 1
-  || lifetimeGoldEarned >= def.unlockPrice
+  || partyLevel >= DungeonCatalog.unlockHeroLevel(def)
 ```
 
-Wallet gold does **not** unlock dungeons. Entry: `GameLogic.enterDungeon`.
+Party **mean level** gates even steps Lv1…100 across 15 zones. Wallet gold and
+`lifetimeGoldEarned` do **not** unlock dungeons (`DungeonCatalog.isUnlocked`).
+Entry: `GameLogic.enterDungeon`.
+
+**Soft lock:** no dungeon #16 unless the owner explicitly asks (`product-locks`).
 
 ## Source of truth
 
 | Layer | Path |
 |-------|------|
 | Catalog | `lib/models/dungeon_def.dart` (`DungeonCatalog.all`) |
-| Floor gen | `lib/core/dungeon_generator.dart` |
-| Layouts | `lib/spatial/tile_map.dart` (`RoomLayouts.forFloor`) |
-| Portraits/backdrops | `lib/ui/custom_assets.dart` |
-| Enemy sprites / floors | `lib/ui/kenney_assets.dart` |
+| Floor gen | `lib/spatial/floor_blueprint.dart` → `placement_plan.dart` → `zone_layout_kit.dart` |
+| Layouts / chambers | `lib/spatial/tile_map.dart` (`RoomLayouts.forFloor`) |
+| Portraits/backdrops | `lib/assets/custom_assets.dart` |
+| Enemy sprites / floors | `lib/assets/kenney_assets.dart` |
 | Ambient | `lib/ui/dungeon_environment.dart` |
 | Names/pools | `GameLogic._zoneArchetypeName` / enemy creators |
 | Lore | `lib/core/story_lore.dart` |
@@ -38,15 +44,16 @@ Layouts: `cave` / `hideout` / `fort` / `arena`. Boss floor = `5 + AL`.
 
 ```
 New dungeon:
-- [ ] 1. Append DungeonDef (sequential number, unique id, unlockPrice, layout, boss, blurb)
+- [ ] 1. Append DungeonDef (sequential number, unique id, layout, boss, blurb)
 - [ ] 2. PNGs under assets/custom/portraits/, ui/backdrops/, enemies/ (owned art)
 - [ ] 3. Wire CustomAssets + KenneyAssets enemy/floor maps
-- [ ] 4. dungeon_environment ambient/wash
-- [ ] 5. _zoneArchetypeName (+ boss via catalog)
-- [ ] 6. StoryLore enter/clear lines
-- [ ] 7. clear_<id> achievement if needed
-- [ ] 8. Confirm hub unlock UI
-- [ ] 9. Tests: asset_catalog, custom_assets, dungeon_environment, story_lore, meta_systems
+- [ ] 4. FloorBlueprint / PlacementPlan / ZoneLayoutKit beats
+- [ ] 5. dungeon_environment ambient/wash
+- [ ] 6. _zoneArchetypeName (+ boss via catalog)
+- [ ] 7. StoryLore enter/clear lines
+- [ ] 8. clear_<id> achievement if needed
+- [ ] 9. Confirm hub unlock UI (mean level + prior clear)
+- [ ] 10. Tests: asset_catalog, custom_assets, dungeon_environment, story_lore, meta_systems
 ```
 
 Follow **assets-legal** for all art (helpers only, no commercial dumps).
@@ -55,3 +62,9 @@ Follow **zone-art-identity** so the zone does not read as a crystal/hell reskin.
 ## Boss / clear
 
 Push boss clear bumps `highestDungeonCleared` to `def.number` in room-advance paths. Keep catalog `number` sequential so unlock chaining stays correct.
+
+## Verify
+
+```bash
+flutter test test/asset_catalog_test.dart test/custom_assets_test.dart test/dungeon_environment_test.dart test/story_lore_test.dart test/meta_systems_test.dart
+```

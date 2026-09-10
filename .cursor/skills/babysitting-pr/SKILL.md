@@ -1,8 +1,10 @@
 ---
 name: babysitting-pr
 description: >-
-  Keep an Idle Party PR merge-ready: watch CI, fix flutter analyze/test/balance
-  gate failures, address clear review comments, resolve conflicts (no force-push).
+  Keeps an Idle Party PR merge-ready: watch CI, fix analyze/test/balance gate
+  failures, address clear review comments, resolve conflicts (no force-push).
+  Use when a PR is open, CI is red, or the owner says "fix the PR". Do not use
+  for multi-job CI splits (parallel-ci-triage) or local-only verify (flutter-verify).
 ---
 
 # Babysitting a PR (Idle Party)
@@ -27,7 +29,7 @@ gh run view <RUN_ID> --log-failed
 
 | Failure | Local command |
 |---------|----------------|
-| Analyze | `flutter analyze` |
+| Analyze | `flutter analyze lib test --no-fatal-infos` |
 | Unit tests | `flutter test` (or the failing file) |
 | Balance HIGH | `flutter test test/class_balance_gate_test.dart` + share-fast iterate |
 | Changelog sync | `flutter test test/changelog_sync_test.dart` |
