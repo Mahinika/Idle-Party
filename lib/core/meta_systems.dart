@@ -28,35 +28,35 @@ abstract final class MetaSystems {
       bullets: <String>[
         'VFX audit fixes: Lite spawns ground discs and buff aura rings again; nature heals read green not poison; Chaos Bolt flame burst; Vendetta red shadow tint; enemy specials get themed rings (HEX, CLEAVE, PULSE).',
         'Kit VFX: explicit cast tints on thin kits — Fireball, Frostbolt, Mortal Strike, Aimed Shot, Crusader Strike, Healing Wave, Mind Flay, Arcane Blast, and more.',
-        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.122',
       bullets: <String>[
         'Sound cleanup: spells no longer layer a meaty material chirp under the school clip; unused generic hit bank removed; Kenney reference audio no longer ships in the APK.',
-        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.121',
       bullets: <String>[
         'Combat audio: variation banks — six spell clips per school plus weighted pitch/volume pick; weapon hits keep five variants with the same mixer. Crits bias toward heavier clips.',
-        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.120',
       bullets: <String>[
         'Spell SFX: each school is a short 5-layer chirp (fire / frost / holy / shadow / arcane / nature / lightning) plus new demon and poison hits for Demo and toxin kits. Physical stays on weapon hit + swish layers.',
-        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.119',
       bullets: <String>[
         'Sound: free CC0 hub music (Heavenly Loop), warmer soft SFX + ambience pads — no paid pack needed. Dungeon music and unlock chime stay as owned loops.',
-        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
