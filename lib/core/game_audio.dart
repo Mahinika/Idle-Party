@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 import 'audio_assets.dart';
+import 'audio_variation_bank.dart';
 import 'combat_feel.dart';
 
 enum AmbienceKind { none, hub, dungeon }
@@ -40,8 +41,8 @@ abstract final class GameAudio {
 
   static bool _ready = false;
   static bool _initFailed = false;
-  static final Map<String, List<AudioSource>> _sfxVariants =
-      <String, List<AudioSource>>{};
+  static final Map<String, AudioSource> _sourcesByPath =
+      <String, AudioSource>{};
   static AudioSource? _hubAmb;
   static AudioSource? _dungeonAmb;
   static AudioSource? _hubMusic;
@@ -125,12 +126,11 @@ abstract final class GameAudio {
       if (!soloud.isInitialized) {
         await soloud.init();
       }
-      for (final entry in AudioAssets.sfxVariants.entries) {
-        final loaded = <AudioSource>[];
-        for (final path in entry.value) {
-          loaded.add(await soloud.loadAsset(path));
+      for (final bank in AudioVariationCatalog.banks.values) {
+        for (final v in bank.variations) {
+          if (_sourcesByPath.containsKey(v.path)) continue;
+          _sourcesByPath[v.path] = await soloud.loadAsset(v.path);
         }
-        _sfxVariants[entry.key] = loaded;
       }
       _hubAmb = await soloud.loadAsset(AudioAssets.hubAmbience);
       _dungeonAmb = await soloud.loadAsset(AudioAssets.dungeonAmbience);
@@ -149,7 +149,7 @@ abstract final class GameAudio {
       stopAmbience();
       SoLoud.instance.deinit();
     } catch (_) {}
-    _sfxVariants.clear();
+    _sourcesByPath.clear();
     _hubAmb = null;
     _dungeonAmb = null;
     _hubMusic = null;
@@ -207,7 +207,7 @@ abstract final class GameAudio {
 
     debugPlayCount++;
     _hapticFor(id);
-    _playLayer(id, volumeMul: 1.0, pan: 0.0, speed: 1.0);
+    _playLayer(id, volumeMul: 1.0, pan: 0.0, speedMul: 1.0);
     if (id == 'wipe' || id == 'boss' || id == 'clear') {
       _duckBackgroundBriefly();
     }
@@ -232,7 +232,7 @@ abstract final class GameAudio {
     final pan = hit.panBias.clamp(-0.55, 0.55);
     final volMul = (0.75 + _rng.nextDouble() * 0.25) * distGain;
     final heavyMul = hit.heavy ? 1.12 : 1.0;
-    final pitch = _pitchFor(id) * (hit.heavy ? 0.94 : 1.0);
+    final speedMul = hit.heavy ? 0.94 : 1.0;
     final isSpell = id.startsWith('spell_');
 
     if (hit.withSwish && !isSpell) {
@@ -240,7 +240,8 @@ abstract final class GameAudio {
         CombatFeel.swishIdFor(id),
         volumeMul: volMul * 0.85,
         pan: pan,
-        speed: pitch,
+        speedMul: speedMul,
+        heavy: hit.heavy,
       );
     }
 
@@ -253,13 +254,15 @@ abstract final class GameAudio {
         id,
         volumeMul: volMul * heavyMul,
         pan: pan,
-        speed: pitch,
+        speedMul: speedMul,
+        heavy: hit.heavy,
       );
       _playLayer(
         CombatFeel.materialSfxId(hit.material),
         volumeMul: volMul * 0.7,
         pan: pan * 0.8,
-        speed: pitch,
+        speedMul: speedMul,
+        heavy: false,
       );
     }
 
@@ -274,23 +277,30 @@ abstract final class GameAudio {
     String id, {
     required double volumeMul,
     required double pan,
-    required double speed,
+    required double speedMul,
+    bool heavy = false,
   }) {
     if (!_ready) return;
-    final variants = _sfxVariants[id];
-    if (variants == null || variants.isEmpty) return;
+    final bank = AudioVariationCatalog.banks[id];
+    if (bank == null || bank.isEmpty) return;
     try {
-      final source = variants[_rng.nextInt(variants.length)];
+      final variation = bank.pick(_rng, heavy: heavy);
+      final source = _sourcesByPath[variation.path];
+      if (source == null) return;
+      final pitch =
+          (variation.rollPitch(_rng) * speedMul).clamp(0.85, 1.15);
+      final layerVol =
+          (variation.rollVolume(_rng) * volumeMul).clamp(0.0, 1.5);
       final gain = _idGain[id] ?? 1.0;
       final soloud = SoLoud.instance;
       final handle = soloud.play(
         source,
-        volume: (sfxVolume * gain * volumeMul).clamp(0.0, 1.0),
+        volume: (sfxVolume * gain * layerVol).clamp(0.0, 1.0),
         pan: pan.clamp(-1.0, 1.0),
-        paused: speed != 1.0,
+        paused: pitch != 1.0,
       );
-      if (speed != 1.0) {
-        soloud.setRelativePlaySpeed(handle, speed.clamp(0.85, 1.15));
+      if (pitch != 1.0) {
+        soloud.setRelativePlaySpeed(handle, pitch);
         soloud.setPause(handle, false);
       }
     } catch (_) {}
@@ -331,17 +341,6 @@ abstract final class GameAudio {
     if (AudioAssets.bowFeelIds.contains(id)) return _CombatFamily.bow;
     if (AudioAssets.spellFeelIds.contains(id)) return _CombatFamily.spell;
     return _CombatFamily.melee;
-  }
-
-  static double _pitchFor(String id) {
-    final family = _familyFor(id);
-    final spread = switch (family) {
-      _CombatFamily.bow => 0.08,
-      _CombatFamily.spell => 0.06,
-      _CombatFamily.melee => 0.05,
-      _CombatFamily.priority => 0.04,
-    };
-    return (1.0 + (_rng.nextDouble() * 2 - 1) * spread).clamp(0.88, 1.12);
   }
 
   static Future<void> setAmbience(

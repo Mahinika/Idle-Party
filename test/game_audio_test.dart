@@ -1,7 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:math';
+
 import 'package:idle_party/core/audio_assets.dart';
+import 'package:idle_party/core/audio_variation_bank.dart';
 import 'package:idle_party/core/combat_feel.dart';
 import 'package:idle_party/core/game_audio.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -31,6 +34,43 @@ void main() {
       final variants = AudioAssets.sfxVariants[id]!;
       expect(variants, hasLength(5), reason: id);
     }
+  });
+
+  test('spell families ship six mix variants', () {
+    for (final id in AudioAssets.spellFeelIds) {
+      final variants = AudioAssets.sfxVariants[id]!;
+      expect(variants, hasLength(6), reason: id);
+    }
+  });
+
+  test('variation catalog covers every sfx play id', () {
+    for (final id in AudioAssets.sfxVariants.keys) {
+      expect(AudioVariationCatalog.banks.containsKey(id), isTrue, reason: id);
+      expect(
+        AudioVariationCatalog.banks[id]!.variations,
+        isNotEmpty,
+        reason: id,
+      );
+    }
+  });
+
+  test('AudioVariationBank pick respects heavy bias', () {
+    final bank = AudioVariationBank([
+      AudioVariation(id: 'a', path: 'p/a.wav', weight: 1.0),
+      AudioVariation(id: 'b', path: 'p/b.wav', weight: 1.0),
+      AudioVariation(id: 'c', path: 'p/c.wav', weight: 1.0),
+      AudioVariation(id: 'd', path: 'p/d.wav', weight: 1.0),
+      AudioVariation(id: 'e', path: 'p/e.wav', weight: 1.0),
+      AudioVariation(id: 'f', path: 'p/f.wav', weight: 1.0),
+    ]);
+    final rng = Random(42);
+    var heavyLast = 0;
+    var normalLast = 0;
+    for (var i = 0; i < 200; i++) {
+      if (bank.pick(rng, heavy: true).id == 'f') heavyLast++;
+      if (bank.pick(Random(i), heavy: false).id == 'f') normalLast++;
+    }
+    expect(heavyLast, greaterThan(normalLast));
   });
 
   test('swish and material layer assets exist', () {

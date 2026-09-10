@@ -12,7 +12,7 @@
 | File | Source | License |
 |------|--------|---------|
 | `sfx/unlock.wav` | Owned ElevenLabs one-shot | Owned |
-| other `sfx/*.wav` | Idle Party procedural (`tool/generate_soft_sfx.py`, `tool/generate_combat_spell_sfx.py`); hit families use `_a`…`_e` plus `swish_*` / `mat_*` layers; spell schools use 5-layer chirps (incl. demon / poison) | Owned |
+| other `sfx/*.wav` | Idle Party procedural (`tool/generate_soft_sfx.py`, `tool/generate_combat_spell_sfx.py`); hits `_a`…`_e`, spells `_a`…`_f`, swish/material layers; mix via `AudioVariationCatalog` | Owned |
 
 ## Ambience
 

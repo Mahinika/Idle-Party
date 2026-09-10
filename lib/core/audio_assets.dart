@@ -5,7 +5,8 @@ import '../models/spell_bolt_style.dart';
 ///
 /// SFX: Idle Party soft procedural one-shots under [customSfxRoot] (see
 /// `tool/generate_soft_sfx.py` + `tool/generate_combat_spell_sfx.py`).
-/// Hit families ship 5 variants (`_a`…`_e`) plus swish/material layers.
+/// Hit families ship 5 variants (`_a`…`_e`); spells ship 6 (`_a`…`_f`).
+/// Swish/material layers stay separate. Mix picks via [AudioVariationCatalog].
 /// Kenney RPG Audio (CC0) remains under [sfxRoot] as reference only.
 abstract final class AudioAssets {
   static const sfxRoot = 'assets/kenney/audio/sfx';
@@ -24,16 +25,6 @@ abstract final class AudioAssets {
   static const boss = '$customSfxRoot/boss.wav';
   static const wipe = '$customSfxRoot/wipe.wav';
 
-  static const spellFire = '$customSfxRoot/spell_fire.wav';
-  static const spellFrost = '$customSfxRoot/spell_frost.wav';
-  static const spellHoly = '$customSfxRoot/spell_holy.wav';
-  static const spellShadow = '$customSfxRoot/spell_shadow.wav';
-  static const spellArcane = '$customSfxRoot/spell_arcane.wav';
-  static const spellNature = '$customSfxRoot/spell_nature.wav';
-  static const spellLightning = '$customSfxRoot/spell_lightning.wav';
-  static const spellDemon = '$customSfxRoot/spell_demon.wav';
-  static const spellPoison = '$customSfxRoot/spell_poison.wav';
-
   static const matFlesh = '$customSfxRoot/mat_flesh.wav';
   static const matBone = '$customSfxRoot/mat_bone.wav';
   static const matWet = '$customSfxRoot/mat_wet.wav';
@@ -51,6 +42,11 @@ abstract final class AudioAssets {
 
   static List<String> _triple(String stem) => <String>[
     for (final letter in <String>['a', 'b', 'c'])
+      '$customSfxRoot/${stem}_$letter.wav',
+  ];
+
+  static List<String> _six(String stem) => <String>[
+    for (final letter in <String>['a', 'b', 'c', 'd', 'e', 'f'])
       '$customSfxRoot/${stem}_$letter.wav',
   ];
 
@@ -79,15 +75,15 @@ abstract final class AudioAssets {
     'unlock': <String>[unlock],
     'boss': <String>[boss],
     'wipe': <String>[wipe],
-    'spell_fire': <String>[spellFire],
-    'spell_frost': <String>[spellFrost],
-    'spell_holy': <String>[spellHoly],
-    'spell_shadow': <String>[spellShadow],
-    'spell_arcane': <String>[spellArcane],
-    'spell_nature': <String>[spellNature],
-    'spell_lightning': <String>[spellLightning],
-    'spell_demon': <String>[spellDemon],
-    'spell_poison': <String>[spellPoison],
+    'spell_fire': _six('spell_fire'),
+    'spell_frost': _six('spell_frost'),
+    'spell_holy': _six('spell_holy'),
+    'spell_shadow': _six('spell_shadow'),
+    'spell_arcane': _six('spell_arcane'),
+    'spell_nature': _six('spell_nature'),
+    'spell_lightning': _six('spell_lightning'),
+    'spell_demon': _six('spell_demon'),
+    'spell_poison': _six('spell_poison'),
   };
 
   /// First variant path per id (compat / single-source lookups).

@@ -396,19 +396,28 @@ def poison_layers():
 
 
 def main() -> None:
+    """Six mix variants per school (`_a`…`_f`) for AudioVariationCatalog."""
     schools = [
-        ("spell_shadow.wav", 0.42, shadow_layers(), 101),
-        ("spell_fire.wav", 0.40, fire_layers(), 202),
-        ("spell_frost.wav", 0.44, frost_layers(), 303),
-        ("spell_nature.wav", 0.40, nature_layers(), 404),
-        ("spell_arcane.wav", 0.38, arcane_layers(), 505),
-        ("spell_holy.wav", 0.46, holy_layers(), 606),
-        ("spell_lightning.wav", 0.42, lightning_layers(), 707),
-        ("spell_demon.wav", 0.44, demon_layers(), 808),
-        ("spell_poison.wav", 0.42, poison_layers(), 909),
+        ("spell_shadow", 0.42, shadow_layers(), 101),
+        ("spell_fire", 0.40, fire_layers(), 202),
+        ("spell_frost", 0.44, frost_layers(), 303),
+        ("spell_nature", 0.40, nature_layers(), 404),
+        ("spell_arcane", 0.38, arcane_layers(), 505),
+        ("spell_holy", 0.46, holy_layers(), 606),
+        ("spell_lightning", 0.42, lightning_layers(), 707),
+        ("spell_demon", 0.44, demon_layers(), 808),
+        ("spell_poison", 0.42, poison_layers(), 909),
     ]
-    for name, seconds, layers, seed in schools:
-        write_buf(name, render(seconds, layers, seed), vol=0.40)
+    letters = "abcdef"
+    for stem, seconds, layers, base_seed in schools:
+        for i, letter in enumerate(letters):
+            # Seed offset → different transient / whoosh / impact profile.
+            seed = base_seed + i * 17 + hash(stem) % 31
+            write_buf(
+                f"{stem}_{letter}.wav",
+                render(seconds, layers, seed),
+                vol=0.38 + i * 0.008,
+            )
 
 
 if __name__ == "__main__":
