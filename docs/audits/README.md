@@ -7,6 +7,7 @@ Point-in-time snapshots — not live kit / store truth. Current game:
 
 | Date | Report | Scope |
 |------|--------|-------|
+| 2026-09-10 | [2026-09-10-dungeon-floor-generation.md](2026-09-10-dungeon-floor-generation.md) | Dungeon floor pipeline — Generator → Blueprint → RoomLayouts → Placement → SpatialCombat |
 | 2026-09-10 | [2026-09-10-all-classes.md](2026-09-10-all-classes.md) | All 10 classes / 31 specs — fantasy matrix, wiring smoke, share board, ranked backlog |
 | 2026-09-10 | [2026-09-10-druid.md](2026-09-10-druid.md) | Druid class audit (Balance / Feral / Guardian / Resto) — form identity P0 |
 | 2026-09-10 | [2026-09-10-privacy-docs.md](2026-09-10-privacy-docs.md) | PRIVACY / PLAY_STORE / listing honesty vs Firebase + AdMob |
