@@ -52,7 +52,8 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
    character as `_src`, not a grey mushroom head.
 4. Run `py tool/check_paper_doll_facit.py` — composites **live** body+overlays
    vs `_src` (no gitignored preview required). Fail if idle armor stack drifts.
-   It also gates t2 / mail / plate variants, checks every grip lands on opaque
+   It also gates t2 / mail / plate / leather variants (silhouette vs native +
+   squint), mail/plate helm face cutouts, checks every grip lands on opaque
    pixels, and compares every shipped PNG against `tool/paper_doll_lock.json`.
    After a **deliberate** art change: `--relock`, then commit the lock file.
 5. Hand art moved? `py tool/gen_owned_gear_grips.py`, then
@@ -109,7 +110,13 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
 Optional hand pixels (win over extract):
 
 - `assets/custom/char/<family>/gear/_authored/<setId>_<anim>.png`
+- `assets/custom/char/<family>/gear/_authored/<slot>_<material>_<tier>_<anim>.png`
+  (cross-material masters — mail helm first)
 - `assets/custom/char/gear/_authored/<setId>_<anim>.png` (shared weapons)
+
+**Material matrix** (native → no suffix): warrior plate · rogue leather · mage/healer
+cloth. Non-native needs PNG + `OwnedGearAssets.materialSuffix` in the same
+commit. Silent native fallback for an allowed cross-material type is a bug.
 
 ## Tests
 

@@ -32,8 +32,8 @@ abstract final class OwnedGearAssets {
     'hands_t2',
   ];
 
-  /// Rogue mail overlays (derived from leather extracts).
-  static const List<String> kRogueMailSetIds = [
+  /// Mail overlay stems (rogue / mage / healer mail wearers).
+  static const List<String> kMailArmorSetIds = [
     'helm_mail_t0',
     'helm_mail_t2',
     'chest_mail_t0',
@@ -46,8 +46,8 @@ abstract final class OwnedGearAssets {
     'hands_mail_t2',
   ];
 
-  /// Healer plate overlays (derived from cloth extracts — Holy Pala etc.).
-  static const List<String> kHealerPlateSetIds = [
+  /// Plate overlay stems (healer holy).
+  static const List<String> kPlateArmorSetIds = [
     'helm_plate_t0',
     'helm_plate_t2',
     'chest_plate_t0',
@@ -59,6 +59,37 @@ abstract final class OwnedGearAssets {
     'hands_plate_t0',
     'hands_plate_t2',
   ];
+
+  /// Leather overlay stems (druid on non-rogue bodies).
+  static const List<String> kLeatherArmorSetIds = [
+    'helm_leather_t0',
+    'helm_leather_t2',
+    'chest_leather_t0',
+    'chest_leather_t2',
+    'legs_leather_t0',
+    'legs_leather_t2',
+    'cloak_leather_t0',
+    'cloak_leather_t2',
+    'hands_leather_t0',
+    'hands_leather_t2',
+  ];
+
+  /// Rogue mail overlays (hunter / enhancement shaman).
+  static const List<String> kRogueMailSetIds = kMailArmorSetIds;
+
+  /// Healer plate overlays (Holy Paladin).
+  static const List<String> kHealerPlateSetIds = kPlateArmorSetIds;
+
+  /// Mage mail overlays (Elemental Shaman).
+  static const List<String> kMageMailSetIds = kMailArmorSetIds;
+
+  /// Healer mail overlays (Resto Shaman).
+  static const List<String> kHealerMailSetIds = kMailArmorSetIds;
+
+  /// Druid leather on non-rogue bodies.
+  static const List<String> kMageLeatherSetIds = kLeatherArmorSetIds;
+  static const List<String> kWarriorLeatherSetIds = kLeatherArmorSetIds;
+  static const List<String> kHealerLeatherSetIds = kLeatherArmorSetIds;
 
   /// Shared hand items (one art + rarity tint).
   static const List<String> kSharedSetIds = [
@@ -124,10 +155,17 @@ abstract final class OwnedGearAssets {
   /// (rogue mail, healer plate) uses derived `*_mail_*` / `*_plate_*` PNGs.
   static String? materialSuffix(BodyFamily family, ArmorType? armorType) {
     if (armorType == null) return null;
-    return switch (family) {
-      BodyFamily.rogue when armorType == ArmorType.mail => 'mail',
-      BodyFamily.healer when armorType == ArmorType.plate => 'plate',
-      _ => null,
+    final native = switch (family) {
+      BodyFamily.warrior => ArmorType.plate,
+      BodyFamily.rogue => ArmorType.leather,
+      BodyFamily.mage || BodyFamily.healer => ArmorType.cloth,
+    };
+    if (armorType == native) return null;
+    return switch (armorType) {
+      ArmorType.mail => 'mail',
+      ArmorType.plate => 'plate',
+      ArmorType.leather => 'leather',
+      ArmorType.cloth => null,
     };
   }
 
@@ -225,26 +263,24 @@ abstract final class OwnedGearAssets {
       out.add('$root/${family.name}/gear/boots_t0_icon.png');
       out.add('$root/${family.name}/gear/boots_t2_icon.png');
     }
-    for (final id in kRogueMailSetIds) {
-      out.add(familyGear(BodyFamily.rogue, id, 'idle'));
-      out.add(
-        familyGear(BodyFamily.rogue, id, 'idle').replaceFirst('_idle.png', '_icon.png'),
-      );
+    void addMaterialSet(BodyFamily family, List<String> ids, String bootMat) {
+      for (final id in ids) {
+        out.add(familyGear(family, id, 'idle'));
+        out.add(
+          familyGear(family, id, 'idle').replaceFirst('_idle.png', '_icon.png'),
+        );
+      }
+      out.add('$root/${family.name}/gear/boots_${bootMat}_t0_icon.png');
+      out.add('$root/${family.name}/gear/boots_${bootMat}_t2_icon.png');
     }
-    out.add('$root/rogue/gear/boots_mail_t0_icon.png');
-    out.add('$root/rogue/gear/boots_mail_t2_icon.png');
-    for (final id in kHealerPlateSetIds) {
-      out.add(familyGear(BodyFamily.healer, id, 'idle'));
-      out.add(
-        familyGear(
-          BodyFamily.healer,
-          id,
-          'idle',
-        ).replaceFirst('_idle.png', '_icon.png'),
-      );
-    }
-    out.add('$root/healer/gear/boots_plate_t0_icon.png');
-    out.add('$root/healer/gear/boots_plate_t2_icon.png');
+
+    addMaterialSet(BodyFamily.rogue, kRogueMailSetIds, 'mail');
+    addMaterialSet(BodyFamily.healer, kHealerPlateSetIds, 'plate');
+    addMaterialSet(BodyFamily.mage, kMageMailSetIds, 'mail');
+    addMaterialSet(BodyFamily.healer, kHealerMailSetIds, 'mail');
+    addMaterialSet(BodyFamily.mage, kMageLeatherSetIds, 'leather');
+    addMaterialSet(BodyFamily.warrior, kWarriorLeatherSetIds, 'leather');
+    addMaterialSet(BodyFamily.healer, kHealerLeatherSetIds, 'leather');
     for (final id in kSharedSetIds) {
       out.add(sharedGear(id, 'idle'));
       out.add(sharedGear(id, 'idle').replaceFirst('_idle.png', '_icon.png'));

@@ -129,16 +129,17 @@ def tinted_body_preview(family: str, anim: str = "idle") -> Image.Image:
     return Image.alpha_composite(Image.alpha_composite(outlined, body), tinted)
 
 
-def high_gear_preview(family: str) -> Image.Image:
+def high_gear_preview(family: str, material: str = "") -> Image.Image:
     """Representative equipped t2 stack in the same order as Flutter."""
     gear = CHAR / family / "gear"
+    suffix = f"_{material}" if material else ""
     layers = [
         tinted_body_preview(family),
-        Image.open(gear / "legs_t2_idle.png").convert("RGBA"),
-        Image.open(gear / "chest_t2_idle.png").convert("RGBA"),
-        Image.open(gear / "hands_t2_idle.png").convert("RGBA"),
-        Image.open(gear / "helm_t2_idle.png").convert("RGBA"),
-        Image.open(gear / "cloak_t2_idle.png").convert("RGBA"),
+        Image.open(gear / f"legs{suffix}_t2_idle.png").convert("RGBA"),
+        Image.open(gear / f"chest{suffix}_t2_idle.png").convert("RGBA"),
+        Image.open(gear / f"hands{suffix}_t2_idle.png").convert("RGBA"),
+        Image.open(gear / f"helm{suffix}_t2_idle.png").convert("RGBA"),
+        Image.open(gear / f"cloak{suffix}_t2_idle.png").convert("RGBA"),
     ]
     out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
     for layer in layers:
@@ -247,8 +248,22 @@ def check_body_tint_masks() -> list[str]:
     return errors
 
 
-MATERIAL_BY_FAMILY = {"rogue": "mail", "healer": "plate"}
+# Non-native materials per family (must match derive_armor_material_variants.py).
+NATIVE_MATERIAL = {
+    "warrior": "plate",
+    "rogue": "leather",
+    "mage": "cloth",
+    "healer": "cloth",
+}
+MATERIAL_BY_FAMILY: dict[str, tuple[str, ...]] = {
+    "warrior": ("leather",),
+    "rogue": ("mail",),
+    "mage": ("mail", "leather"),
+    "healer": ("plate", "mail", "leather"),
+}
 ARMOR_STEMS = ("helm", "chest", "legs", "cloak", "hands")
+MIN_MATERIAL_SIL_DIFF = 0.12  # native vs cross-material opaque mask
+MIN_SQUINT_SIL_DIFF = 0.08  # ~48 px thumbnail still reads different
 
 
 def shipped_pngs() -> list[Path]:
@@ -276,12 +291,17 @@ def alpha_ratio(im: Image.Image) -> float:
 
 def silhouette_diff(a: Image.Image, b: Image.Image) -> float:
     """Share of pixels where exactly one of the two images is opaque."""
+    if a.size != b.size:
+        side = max(a.width, a.height, b.width, b.height)
+        a = a.resize((side, side), Image.Resampling.NEAREST)
+        b = b.resize((side, side), Image.Resampling.NEAREST)
     pa = a.convert("RGBA").load()
     pb = b.convert("RGBA").load()
+    w, h = a.size
     union = 0
     only = 0
-    for y in range(128):
-        for x in range(128):
+    for y in range(h):
+        for x in range(w):
             oa = pa[x, y][3] >= 40
             ob = pb[x, y][3] >= 40
             if not (oa or ob):
@@ -309,16 +329,38 @@ def palette_diff(a: Image.Image, b: Image.Image) -> float:
     return delta / max(1, compared * 255 * 3)
 
 
+def squint_silhouette_diff(a: Image.Image, b: Image.Image, size: int = 48) -> float:
+    """Downscale opaque masks — material must still differ at phone icon scale."""
+    ma = a.convert("RGBA").resize((size, size), Image.Resampling.NEAREST)
+    mb = b.convert("RGBA").resize((size, size), Image.Resampling.NEAREST)
+    return silhouette_diff(ma, mb)
+
+
+def face_cutout_ok(helm: Image.Image, family: str) -> bool:
+    """Mail/plate helms must leave a face window (not a solid stamp)."""
+    px = helm.convert("RGBA").load()
+    bb = helm.getbbox()
+    if bb is None:
+        return True
+    hx0, hy0, hx1, hy1 = bb
+    cx = (hx0 + hx1) // 2
+    cy = hy0 + int((hy1 - hy0) * 0.55)
+    clear = 0
+    for y in range(max(0, cy - 10), min(128, cy + 14)):
+        for x in range(max(0, cx - 14), min(128, cx + 14)):
+            if px[x, y][3] < 40:
+                clear += 1
+    return clear >= 24
+
+
 def check_tiers_and_materials() -> list[str]:
     """t2 and material variants must exist and read as their own armor."""
     errors: list[str] = []
     for family in FAMILIES:
         gear = CHAR / family / "gear"
-        variants = [""]
-        material = MATERIAL_BY_FAMILY.get(family)
-        if material:
-            variants.append(f"_{material}")
-        for var in variants:
+        materials = ("",) + MATERIAL_BY_FAMILY.get(family, ())
+        for material in materials:
+            var = f"_{material}" if material else ""
             for stem in ARMOR_STEMS:
                 t0 = gear / f"{stem}{var}_t0_idle.png"
                 t2 = gear / f"{stem}{var}_t2_idle.png"
@@ -326,7 +368,7 @@ def check_tiers_and_materials() -> list[str]:
                     err = must_exist_128(path)
                     if err:
                         errors.append(err)
-                if errors and (not t0.exists() or not t2.exists()):
+                if not t0.exists() or not t2.exists():
                     continue
                 im0 = Image.open(t0)
                 im2 = Image.open(t2)
@@ -335,7 +377,7 @@ def check_tiers_and_materials() -> list[str]:
                         f"empty t2 {t2.relative_to(REPO)} (t0 has pixels)"
                     )
                     continue
-                if var and alpha_ratio(im0) < 0.002:
+                if material and alpha_ratio(im0) < 0.002:
                     errors.append(f"empty material {t0.relative_to(REPO)}")
                     continue
                 shift = silhouette_diff(im0, im2)
@@ -350,6 +392,30 @@ def check_tiers_and_materials() -> list[str]:
                         f"t2 palette drifted {palette:.2f} "
                         f"{t2.relative_to(REPO)} (want <= 0.16)"
                     )
+                if material:
+                    native = gear / f"{stem}_t0_idle.png"
+                    if native.exists():
+                        nat = Image.open(native)
+                        sil = silhouette_diff(nat, im0)
+                        if sil < MIN_MATERIAL_SIL_DIFF:
+                            errors.append(
+                                f"material silhouette matches native {sil:.2f} "
+                                f"{t0.relative_to(REPO)} (want >= "
+                                f"{MIN_MATERIAL_SIL_DIFF})"
+                            )
+                        squint = squint_silhouette_diff(nat, im0)
+                        if squint < MIN_SQUINT_SIL_DIFF:
+                            errors.append(
+                                f"material squint matches native {squint:.2f} "
+                                f"{t0.relative_to(REPO)} (want >= "
+                                f"{MIN_SQUINT_SIL_DIFF})"
+                            )
+                    if stem == "helm" and material in ("mail", "plate"):
+                        if not face_cutout_ok(im0, family):
+                            errors.append(
+                                f"helm face cutout missing "
+                                f"{t0.relative_to(REPO)}"
+                            )
     return errors
 
 
@@ -458,6 +524,10 @@ def main() -> int:
         high_gear_preview(family).save(
             TOOL / f"preview_doll_{family}_high.png"
         )
+        for mat in MATERIAL_BY_FAMILY.get(family, ()):
+            high_gear_preview(family, mat).save(
+                TOOL / f"preview_doll_{family}_{mat}_high.png"
+            )
         src = Image.open(src_path)
         ratio = hard_diff_ratio(src, stack)
         ok_helm, helm_w = helm_ok(family)

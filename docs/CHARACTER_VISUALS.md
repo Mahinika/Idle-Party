@@ -27,17 +27,37 @@ Not one PNG per class×weapon. Items share looks via `visualSetId` (e.g.
 legacy `sword_t1` → shipped `sword_t0`; named models keep authored colors).
 Armor uses family extract `*_t0` plus palette-preserving derived `*_t2`
 silhouettes, and **material variants** when `armorType` differs from the
-family’s native look:
+family’s native look.
 
-| Body family | Native look | Extra material PNGs |
-|-------------|-------------|---------------------|
-| warrior | plate (`chest_t0`) | — |
-| rogue | leather | **mail** (`chest_mail_t0`, …) |
-| mage | cloth | — |
-| healer | cloth | **plate** (`chest_plate_t0`, …) |
+**Look axes (no extra loot fields):**
 
-Derived by `tool/derive_armor_material_variants.py` (recolor/thicken existing
-alpha — no new geometry). Weapons: `*_t0` plus named models
+| Axis | Resolves to |
+|------|-------------|
+| `BodyFamily` | undertunic + native armor folder |
+| `armorType` | material suffix when ≠ native (`*_mail_*`, `*_plate_*`, `*_leather_*`) |
+| `visualSetId` | tier / named weapon stem (`chest_t0`, `sword_thunderfury`, …) |
+
+Icon and doll share the same resolved stem (`EquipmentVisualResolver`).
+
+| Body family | Native look | Cross-material PNGs (suffix) |
+|-------------|-------------|------------------------------|
+| warrior | plate (`chest_t0`) | **leather** (guardian druid) |
+| rogue | leather | **mail** (hunter 40+, enhancement) |
+| mage | cloth | **mail** (elemental), **leather** (druid) |
+| healer | cloth | **plate** (holy), **mail** (resto), **leather** (druid) |
+
+**Material shape language:** cloth = soft drape · leather = tight seams · mail =
+coif/visor steel · plate = hard mass + trim. A hue-only recolor of the native
+silhouette is a bug — facit requires opaque-mask diff vs native and at ~48 px.
+
+Authored-first: `gear/_authored/{slot}_{material}_{tier}_idle.png` wins.
+Mail helms remap warrior plate coif onto each family head (face punch). Body
+slots remap donor family silhouettes, then material ramp. Fallback recolor only
+when no donor exists.
+
+Derived by `tool/derive_armor_material_variants.py`. **Rarity = UI chrome**
+(GEAR borders / text tint) — unique looks are authored PNGs, not orange doll
+washes. Weapons: `*_t0` plus named models
 (`sword_thunderfury`, `sword_emberfang`, `staff_voidspire`, …) — hue variants
 from `tool/derive_weapon_hue_variants.py`.
 
@@ -166,7 +186,9 @@ Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
 
 1. Idle stack vs dressed `_src` per family (hard-diff ≤ 0.38) + helm width.
 2. t2 and material variants exist, hold pixels, and keep the t0 silhouette.
-3. Every body tint mask stays inside the body and outside face/hair.
+3. Cross-material overlays differ from native in opaque mask (and at ~48 px
+   squint). Mail/plate helms keep a face cutout.
+4. Every body tint mask stays inside the body and outside face/hair.
 4. Every `OwnedGearGrips` entry lands on opaque pixels.
 5. `tool/paper_doll_lock.json` pins a hash per shipped PNG — any generator run
    that reshapes art fails here. After a **deliberate** art change, re-run with

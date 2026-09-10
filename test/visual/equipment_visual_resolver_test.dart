@@ -146,6 +146,52 @@ void main() {
     expect(cloth, 'assets/custom/char/healer/gear/chest_t2_idle.png');
   });
 
+  test('mage mail and healer mail use cross-material overlays', () {
+    expect(
+      OwnedGearAssets.pathFor(
+        visualSetId: 'helm_t0',
+        family: BodyFamily.mage,
+        anim: HeroAnimKind.idle,
+        armorType: ArmorType.mail,
+      ),
+      'assets/custom/char/mage/gear/helm_mail_t0_idle.png',
+    );
+    expect(
+      OwnedGearAssets.pathFor(
+        visualSetId: 'chest_t0',
+        family: BodyFamily.healer,
+        anim: HeroAnimKind.idle,
+        armorType: ArmorType.mail,
+      ),
+      'assets/custom/char/healer/gear/chest_mail_t0_idle.png',
+    );
+  });
+
+  test('druid leather on non-rogue bodies uses leather suffix', () {
+    expect(
+      OwnedGearAssets.materialSuffix(BodyFamily.warrior, ArmorType.leather),
+      'leather',
+    );
+    expect(
+      OwnedGearAssets.pathFor(
+        visualSetId: 'chest_t0',
+        family: BodyFamily.warrior,
+        anim: HeroAnimKind.idle,
+        armorType: ArmorType.leather,
+      ),
+      'assets/custom/char/warrior/gear/chest_leather_t0_idle.png',
+    );
+    expect(
+      OwnedGearAssets.pathFor(
+        visualSetId: 'chest_t0',
+        family: BodyFamily.warrior,
+        anim: HeroAnimKind.idle,
+        armorType: ArmorType.plate,
+      ),
+      'assets/custom/char/warrior/gear/chest_t0_idle.png',
+    );
+  });
+
   test('ownedAssetForItem passes armorType into mail/plate stems', () {
     final mailChest = GameLogic.createEquipment(
       slot: EquipmentSlot.chest,
