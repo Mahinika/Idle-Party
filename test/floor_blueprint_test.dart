@@ -59,11 +59,86 @@ void main() {
     expect(goblin.preferChoke, isTrue);
     expect(goblin.preferTreasureAlcove, isTrue);
     expect(goblin.treasureAlcoveChance, greaterThan(0.2));
+    expect(goblin.hubChamberChance, greaterThan(0.3));
+    expect(goblin.decoyAlcoveChance, greaterThan(0.15));
     expect(
       goblin.normalRoomChestChance,
       greaterThan(sandy.normalRoomChestChance),
     );
     expect(goblin.landmarkPerChamber, greaterThanOrEqualTo(2));
+  });
+
+  test('hub spine can branch side elite alcoves', () {
+    TileMap? map;
+    for (var seed = 0; seed < 120; seed++) {
+      final candidate = RoomLayouts.forFloor(
+        floorNumber: 4,
+        room: DungeonRoom(
+          floorNumber: 4,
+          roomIndex: 0,
+          type: RoomType.normal,
+          enemyLevel: 8,
+          enemyCount: 8,
+        ),
+        dungeonId: 'goblin',
+        layoutSeed: seed,
+      );
+      final hasHub = candidate.chambers.any(
+        (c) => c.beatKind == FloorBeatKind.hub,
+      );
+      if (!hasHub) continue;
+      final sideElite = candidate.chambers.any(
+        (c) => c.beatKind == FloorBeatKind.elite && c.index != 0,
+      );
+      if (sideElite) {
+        map = candidate;
+        break;
+      }
+    }
+    expect(map, isNotNull, reason: 'expected goblin hub with side elite');
+    expect(map!.chambers.first.beatKind, FloorBeatKind.hub);
+  });
+
+  test('decoy alcoves stay empty and never hold the room chest', () {
+    TileMap? map;
+    for (var seed = 0; seed < 200; seed++) {
+      final candidate = RoomLayouts.forFloor(
+        floorNumber: 5,
+        room: DungeonRoom(
+          floorNumber: 5,
+          roomIndex: 0,
+          type: RoomType.normal,
+          enemyLevel: 9,
+          enemyCount: 8,
+        ),
+        dungeonId: 'goblin',
+        layoutSeed: seed,
+      );
+      final decoys = candidate.chambers
+          .where((c) => c.beatKind == FloorBeatKind.decoy)
+          .toList();
+      if (decoys.isEmpty) continue;
+      map = candidate;
+      for (final decoy in decoys) {
+        final enemiesHere = candidate.enemySpawns.where(
+          (e) => decoy.containsTile(e.$1, e.$2),
+        );
+        expect(enemiesHere, isEmpty, reason: 'decoy seed $seed');
+      }
+      if (candidate.lootChestPoints.isNotEmpty) {
+        for (final chest in candidate.lootChestPoints) {
+          for (final decoy in decoys) {
+            expect(
+              decoy.containsTile(chest.$1, chest.$2),
+              isFalse,
+              reason: 'chest not in decoy seed $seed',
+            );
+          }
+        }
+      }
+      break;
+    }
+    expect(map, isNotNull, reason: 'expected goblin floor with decoy alcove');
   });
 
   test('rime kit prefers treasure alcoves vs fen choke', () {
@@ -162,7 +237,10 @@ void main() {
     final bp = FloorBlueprint.forRoom(room, dungeonId: 'fen', layoutSeed: 3);
     expect(bp.combatEnemyBudget, room.enemyCount);
     expect(bp.storyChambers, isNotEmpty);
-    expect(bp.storyChambers.first.kind, FloorBeatKind.approach);
+    expect(
+      bp.storyChambers.first.kind,
+      anyOf(FloorBeatKind.approach, FloorBeatKind.hub),
+    );
   });
 
   test('choke chambers are tighter than approach chambers', () {

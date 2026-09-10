@@ -16,6 +16,11 @@ class ZoneLayoutKit {
     this.customDungeonArt = false,
     this.clutterDensity = 0.12,
     this.clutterPerChamberMin = 6,
+    this.hubChamberChance = 0.0,
+    this.eliteAlcoveChance = 0.0,
+    this.decoyAlcoveChance = 0.0,
+    this.corridorWindingChance = 0.5,
+    this.verticalSpreadBoost = 2,
   });
 
   final String dungeonId;
@@ -29,6 +34,11 @@ class ZoneLayoutKit {
   final bool customDungeonArt;
   final double clutterDensity;
   final int clutterPerChamberMin;
+  final double hubChamberChance;
+  final double eliteAlcoveChance;
+  final double decoyAlcoveChance;
+  final double corridorWindingChance;
+  final int verticalSpreadBoost;
 
   /// Edge clutter falls back to the Kenney prop pool for this zone.
   List<MapPropKind> get edgeClutter =>
@@ -48,6 +58,11 @@ class ZoneLayoutKit {
       customDungeonArt: art.customDungeonArt,
       clutterDensity: art.clutterDensity,
       clutterPerChamberMin: art.clutterPerChamberMin,
+      hubChamberChance: art.hubChamberChance,
+      eliteAlcoveChance: art.eliteAlcoveChance,
+      decoyAlcoveChance: art.decoyAlcoveChance,
+      corridorWindingChance: art.corridorWindingChance,
+      verticalSpreadBoost: art.verticalSpreadBoost,
     );
   }
 }

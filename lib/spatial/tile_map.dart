@@ -556,6 +556,8 @@ abstract final class RoomLayouts {
       switch (kind) {
         case FloorBeatKind.approach:
           return (11 + rng.nextInt(4), 8 + rng.nextInt(3)); // hall, not closet
+        case FloorBeatKind.hub:
+          return (14 + rng.nextInt(3), 10 + rng.nextInt(2));
         case FloorBeatKind.choke:
           // Still the tightest room — but a fight can stand in it.
           if (rng.nextBool()) {
@@ -566,6 +568,8 @@ abstract final class RoomLayouts {
           return (9 + rng.nextInt(3), 8 + rng.nextInt(3));
         case FloorBeatKind.treasure:
           return (7 + rng.nextInt(2), 6 + rng.nextInt(2)); // side vault
+        case FloorBeatKind.decoy:
+          return (6 + rng.nextInt(2), 5 + rng.nextInt(2));
         case FloorBeatKind.boss:
           return (12 + rng.nextInt(3), 10 + rng.nextInt(3));
         case FloorBeatKind.exitHold:
@@ -588,18 +592,10 @@ abstract final class RoomLayouts {
       return true;
     }
 
-    bool isSideBeat(FloorBeatKind kind) => kind == FloorBeatKind.treasure;
-
-    // Beat-driven carve: main path zigzags east; treasure is a side vault.
+    // Beat-driven carve: main path zigzags east; side alcoves branch off hub/last main.
     if (storyBeats.length >= 2) {
-      final mainBeats = [
-        for (final b in storyBeats)
-          if (!isSideBeat(b.kind)) b,
-      ];
-      final sideBeats = [
-        for (final b in storyBeats)
-          if (isSideBeat(b.kind)) b,
-      ];
+      final mainBeats = [for (final b in storyBeats) if (!b.isSide) b];
+      final sideBeats = [for (final b in storyBeats) if (b.isSide) b];
       final spine = mainBeats.isEmpty ? storyBeats : mainBeats;
 
       for (var i = 0; i < spine.length; i++) {
@@ -612,10 +608,12 @@ abstract final class RoomLayouts {
         final maxX = max(minX, cols - w - 3);
         final preferX = (minX + t * (maxX - minX)).round();
         final north = i.isEven;
-        final yLo = north ? 2 : max(2, rows ~/ 2);
+        final spread = kit.verticalSpreadBoost;
+        final midRow = rows ~/ 2;
+        final yLo = north ? 2 : max(2, midRow - spread);
         final yHi = north
-            ? max(3, rows ~/ 2 - h - 1)
-            : max(yLo + 1, rows - h - 3);
+            ? max(3, midRow - h - 1 - spread ~/ 2)
+            : max(yLo + 1, rows - h - 3 - spread ~/ 2);
         var placed = false;
         for (var attempt = 0; attempt < 64; attempt++) {
           final jx = rng.nextInt(5) - 2;
@@ -645,8 +643,11 @@ abstract final class RoomLayouts {
         for (var i = 0; i < rooms.length; i++) {
           if (!sideFlags[i]) parentIdx = i;
         }
-        final parent = rooms[parentIdx];
         for (final beat in sideBeats) {
+          final sideParentIdx = beat.attach == FloorBeatAttach.sideHub
+              ? 0
+              : parentIdx;
+          final parent = rooms[sideParentIdx.clamp(0, rooms.length - 1)];
           final size = sizeFor(beat.kind);
           final w = size.$1;
           final h = size.$2;
@@ -670,7 +671,12 @@ abstract final class RoomLayouts {
           ];
           var placed = false;
           for (final cand in candidates) {
-            if (tryPlaceRoom(cand, beat.kind, side: true, parent: parentIdx)) {
+            if (tryPlaceRoom(
+              cand,
+              beat.kind,
+              side: true,
+              parent: sideParentIdx,
+            )) {
               placed = true;
               break;
             }
@@ -683,7 +689,7 @@ abstract final class RoomLayouts {
                 _Rect(x, y, w, h),
                 beat.kind,
                 side: true,
-                parent: parentIdx,
+                parent: sideParentIdx,
               )) {
                 break;
               }
@@ -715,7 +721,7 @@ abstract final class RoomLayouts {
             ? storyBeats[bi].kind
             : FloorBeatKind.approach;
         roomBeats.add(beat);
-        sideFlags.add(isSideBeat(beat));
+        sideFlags.add(bi < storyBeats.length && storyBeats[bi].isSide);
         parentOf.add(null);
       }
     }
@@ -759,6 +765,9 @@ abstract final class RoomLayouts {
         rooms[to].cy,
         narrow: narrow,
         broad: broad,
+        horizontalFirst: rng.nextBool(),
+        winding: rng.nextDouble() < kit.corridorWindingChance,
+        rng: rng,
       );
       for (final gatePos in gateTiles) {
         final gx = gatePos.$1;
@@ -921,18 +930,23 @@ abstract final class RoomLayouts {
 
     for (final entry in combatRooms) {
       final want = budgetByChamber[entry.$1] ?? 0;
-      // Treasure alcoves stay quiet unless budget was assigned.
-      if (roomBeats[entry.$1] == FloorBeatKind.treasure && want <= 0) {
+      // Treasure/decoy alcoves stay quiet unless budget was assigned.
+      final beatKind = roomBeats[entry.$1];
+      if ((beatKind == FloorBeatKind.treasure ||
+              beatKind == FloorBeatKind.decoy) &&
+          want <= 0) {
         continue;
       }
       fillRoom(entry.$2, entry.$1, want);
     }
 
-    // Leftover: round-robin walkable cells in combat rooms (skip empty treasure).
+    // Leftover: round-robin walkable cells in combat rooms (skip empty treasure/decoy).
     if (enemySpawns.length < enemyCount) {
       final pool = <(int x, int y, int ci)>[];
       for (final entry in combatRooms) {
-        if (roomBeats[entry.$1] == FloorBeatKind.treasure &&
+        final beatKind = roomBeats[entry.$1];
+        if ((beatKind == FloorBeatKind.treasure ||
+                beatKind == FloorBeatKind.decoy) &&
             (budgetByChamber[entry.$1] ?? 0) <= 0) {
           continue;
         }
@@ -1179,6 +1193,9 @@ abstract final class RoomLayouts {
     int y1, {
     bool narrow = false,
     bool broad = false,
+    bool horizontalFirst = true,
+    bool winding = false,
+    Random? rng,
   }) {
     void carveWide(int x, int y, {required bool horizontal}) {
       set(x, y, TileKind.floor);
@@ -1200,29 +1217,99 @@ abstract final class RoomLayouts {
       }
     }
 
-    final path = <(int, int)>[];
-    var x = x0;
-    var y = y0;
-    while (x != x1) {
-      carveWide(x, y, horizontal: true);
-      path.add((x, y));
-      x += x1 > x ? 1 : -1;
-    }
-    // Landing at the L-turn so corners aren't a pipe.
-    if (x0 != x1 && y0 != y1 && !narrow) {
-      for (var dy = -1; dy <= 1; dy++) {
-        for (var dx = -1; dx <= 1; dx++) {
-          set(x1 + dx, y0 + dy, TileKind.floor);
+    void carveSegment({
+      required bool horizontal,
+      required int fromX,
+      required int fromY,
+      required int toX,
+      required int toY,
+      required List<(int, int)> path,
+    }) {
+      var x = fromX;
+      var y = fromY;
+      if (horizontal) {
+        while (x != toX) {
+          carveWide(x, y, horizontal: true);
+          path.add((x, y));
+          x += toX > x ? 1 : -1;
+        }
+      } else {
+        while (y != toY) {
+          carveWide(x, y, horizontal: false);
+          path.add((x, y));
+          y += toY > y ? 1 : -1;
         }
       }
     }
-    while (y != y1) {
-      carveWide(x, y, horizontal: false);
-      path.add((x, y));
-      y += y1 > y ? 1 : -1;
+
+    final path = <(int, int)>[];
+    if (horizontalFirst) {
+      carveSegment(
+        horizontal: true,
+        fromX: x0,
+        fromY: y0,
+        toX: x1,
+        toY: y0,
+        path: path,
+      );
+      if (x0 != x1 && y0 != y1 && !narrow) {
+        for (var dy = -1; dy <= 1; dy++) {
+          for (var dx = -1; dx <= 1; dx++) {
+            set(x1 + dx, y0 + dy, TileKind.floor);
+          }
+        }
+      }
+      carveSegment(
+        horizontal: false,
+        fromX: x1,
+        fromY: y0,
+        toX: x1,
+        toY: y1,
+        path: path,
+      );
+    } else {
+      carveSegment(
+        horizontal: false,
+        fromX: x0,
+        fromY: y0,
+        toX: x0,
+        toY: y1,
+        path: path,
+      );
+      if (x0 != x1 && y0 != y1 && !narrow) {
+        for (var dy = -1; dy <= 1; dy++) {
+          for (var dx = -1; dx <= 1; dx++) {
+            set(x0 + dx, y1 + dy, TileKind.floor);
+          }
+        }
+      }
+      carveSegment(
+        horizontal: true,
+        fromX: x0,
+        fromY: y1,
+        toX: x1,
+        toY: y1,
+        path: path,
+      );
     }
     carveWide(x1, y1, horizontal: x0 != x1 && y0 == y1);
     path.add((x1, y1));
+
+    if (winding && rng != null && path.length >= 5 && !narrow) {
+      final detourAt = path.length ~/ 3;
+      final base = path[detourAt];
+      final steps = 1 + rng.nextInt(2);
+      final dir = rng.nextBool() ? 1 : -1;
+      if (rng.nextBool()) {
+        for (var s = 1; s <= steps; s++) {
+          carveWide(base.$1, base.$2 + dir * s, horizontal: false);
+        }
+      } else {
+        for (var s = 1; s <= steps; s++) {
+          carveWide(base.$1 + dir * s, base.$2, horizontal: true);
+        }
+      }
+    }
     if (path.length < 3) return const <(int, int)>[];
 
     final mid = path[path.length ~/ 2];

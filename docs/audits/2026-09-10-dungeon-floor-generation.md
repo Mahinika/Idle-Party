@@ -265,3 +265,16 @@ Farm loop keeps same floor number; push advances. Ascend resets bag but **not** 
 3. **Optional:** add explicit spawn→exit BFS test for random seeds (harder soft-lock guarantee).
 
 **Out of scope:** new zone #16, BSP procgen, God Hand redesign, boss floor formula change.
+
+---
+
+## Follow-up shipped — 1.12.136 (Batch A + hub)
+
+| Item | Status |
+|------|--------|
+| Hub chamber (`FloorBeatKind.hub`) + side elite/treasure off hub | **wired** — `floor_blueprint.dart`, `tile_map.dart` |
+| Decoy dead-end alcove (0 enemies, clutter only) | **wired** — blueprint + placement skip chest |
+| Winding / alternate L-corridor carve | **wired** — `corridorWindingChance` per zone |
+| Vertical spread boost | **wired** — `verticalSpreadBoost` in kit |
+| Zone grammar knobs | **wired** — `zone_art.dart` → `ZoneLayoutKit` |
+| Tests | **wired** — `floor_blueprint_test.dart` hub/decoy/chest |

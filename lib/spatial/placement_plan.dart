@@ -139,15 +139,21 @@ class PlacementPlan {
         targetChamber = chambers[preferredIdx];
       } else {
         for (final c in chambers) {
+          if (c.beatKind == FloorBeatKind.decoy) continue;
           if (c.beatKind == FloorBeatKind.treasure ||
               c.beatKind == FloorBeatKind.elite) {
             targetChamber = c;
             break;
           }
         }
-        targetChamber ??= chambers.isEmpty
-            ? null
-            : chambers[chambers.length > 1 ? chambers.length - 1 : 0];
+        if (targetChamber == null && chambers.isNotEmpty) {
+          for (final c in chambers.reversed) {
+            if (c.beatKind != FloorBeatKind.decoy) {
+              targetChamber = c;
+              break;
+            }
+          }
+        }
       }
       final candidates = <(int, int)>[];
       for (final cell in edgeCells) {
@@ -207,8 +213,15 @@ class PlacementPlan {
         if (inChamber(chamber, cell.$1, cell.$2)) localEdge.add(cell);
       }
       var want = kit.landmarkPerChamber.clamp(0, 3);
-      if (chamber.beatKind == FloorBeatKind.treasure) {
-        want = (want + 1).clamp(1, 4);
+      switch (chamber.beatKind) {
+        case FloorBeatKind.treasure:
+          want = (want + 2).clamp(2, 4);
+        case FloorBeatKind.hub:
+          want = (want + 1).clamp(2, 4);
+        case FloorBeatKind.decoy:
+          want = (want + 1).clamp(1, 3);
+        default:
+          break;
       }
       for (var i = 0; i < want; i++) {
         final cell = takeCell(localEdge);

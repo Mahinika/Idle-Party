@@ -4,13 +4,32 @@ import '../models/dungeon_room.dart';
 import 'zone_layout_kit.dart';
 
 /// One story beat on a floor (plan: docs/FLOOR_BLUEPRINT.md).
-enum FloorBeatKind { approach, choke, elite, treasure, boss, exitHold }
+enum FloorBeatKind {
+  approach,
+  hub,
+  choke,
+  elite,
+  treasure,
+  decoy,
+  boss,
+  exitHold,
+}
+
+/// Main spine vs side alcove off hub or last main chamber.
+enum FloorBeatAttach { main, sideHub, sideMain }
 
 class FloorBeat {
-  const FloorBeat(this.kind, {this.enemyBudget = 0});
+  const FloorBeat(
+    this.kind, {
+    this.enemyBudget = 0,
+    this.attach = FloorBeatAttach.main,
+  });
 
   final FloorBeatKind kind;
   final int enemyBudget;
+  final FloorBeatAttach attach;
+
+  bool get isSide => attach != FloorBeatAttach.main;
 }
 
 /// Deterministic floor story derived from room + seed (not serialized).
@@ -95,21 +114,7 @@ class FloorBlueprint {
         }
         beats.add(const FloorBeat(FloorBeatKind.exitHold));
       case RoomType.normal:
-        beats.add(FloorBeat(FloorBeatKind.approach, enemyBudget: 0));
-        final preferTreasure =
-            kit.preferTreasureAlcove &&
-            rng.nextDouble() < kit.treasureAlcoveChance;
-        if (preferTreasure && budget >= 4) {
-          // Full fight budget on the choke; treasure is a quiet alcove after.
-          beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget));
-          beats.add(const FloorBeat(FloorBeatKind.treasure));
-        } else if (kit.preferChoke || rng.nextDouble() < 0.65) {
-          final a = max(1, budget ~/ 2);
-          beats.add(FloorBeat(FloorBeatKind.approach, enemyBudget: a));
-          beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget - a));
-        } else {
-          beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget));
-        }
+        _buildNormalBeats(beats, budget, kit, rng);
         beats.add(const FloorBeat(FloorBeatKind.exitHold));
     }
 
@@ -118,5 +123,136 @@ class FloorBlueprint {
       beats: List<FloorBeat>.unmodifiable(beats),
       dungeonId: dungeonId,
     );
+  }
+
+  static void _buildNormalBeats(
+    List<FloorBeat> beats,
+    int budget,
+    ZoneLayoutKit kit,
+    Random rng,
+  ) {
+    final useHub =
+        budget >= 4 &&
+        kit.hubChamberChance > 0 &&
+        rng.nextDouble() < kit.hubChamberChance;
+
+    if (useHub) {
+      beats.add(const FloorBeat(FloorBeatKind.hub));
+      _addHubSpineAndSides(beats, budget, kit, rng);
+    } else {
+      beats.add(const FloorBeat(FloorBeatKind.approach));
+      _addClassicNormalSpine(beats, budget, kit, rng);
+      _maybeAddSideMainAlcove(beats, budget, kit, rng);
+    }
+
+    if (kit.decoyAlcoveChance > 0 && rng.nextDouble() < kit.decoyAlcoveChance) {
+      beats.add(
+        FloorBeat(
+          FloorBeatKind.decoy,
+          attach: useHub
+              ? FloorBeatAttach.sideHub
+              : FloorBeatAttach.sideMain,
+        ),
+      );
+    }
+  }
+
+  static void _addHubSpineAndSides(
+    List<FloorBeat> beats,
+    int budget,
+    ZoneLayoutKit kit,
+    Random rng,
+  ) {
+    var remaining = budget;
+
+    if (kit.eliteAlcoveChance > 0 && rng.nextDouble() < kit.eliteAlcoveChance) {
+      final eliteBudget = max(1, min(3, budget ~/ 4));
+      beats.add(
+        FloorBeat(
+          FloorBeatKind.elite,
+          enemyBudget: eliteBudget,
+          attach: FloorBeatAttach.sideHub,
+        ),
+      );
+      remaining -= eliteBudget;
+    }
+
+    if (kit.preferTreasureAlcove &&
+        rng.nextDouble() < kit.treasureAlcoveChance) {
+      beats.add(
+        const FloorBeat(
+          FloorBeatKind.treasure,
+          attach: FloorBeatAttach.sideHub,
+        ),
+      );
+    }
+
+    if (remaining <= 0) remaining = budget;
+
+    if (kit.preferChoke || rng.nextDouble() < 0.68) {
+      final a = max(1, remaining ~/ 2);
+      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: a));
+      beats.add(FloorBeat(FloorBeatKind.approach, enemyBudget: remaining - a));
+    } else {
+      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: remaining));
+    }
+  }
+
+  static void _addClassicNormalSpine(
+    List<FloorBeat> beats,
+    int budget,
+    ZoneLayoutKit kit,
+    Random rng,
+  ) {
+    final preferTreasure =
+        kit.preferTreasureAlcove && rng.nextDouble() < kit.treasureAlcoveChance;
+    if (preferTreasure && budget >= 4) {
+      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget));
+      beats.add(
+        const FloorBeat(
+          FloorBeatKind.treasure,
+          attach: FloorBeatAttach.sideMain,
+        ),
+      );
+    } else if (kit.preferChoke || rng.nextDouble() < 0.65) {
+      final a = max(1, budget ~/ 2);
+      beats.add(FloorBeat(FloorBeatKind.approach, enemyBudget: a));
+      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget - a));
+    } else {
+      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget));
+    }
+  }
+
+  static void _maybeAddSideMainAlcove(
+    List<FloorBeat> beats,
+    int budget,
+    ZoneLayoutKit kit,
+    Random rng,
+  ) {
+    if (budget < 5) return;
+    if (kit.eliteAlcoveChance <= 0 || rng.nextDouble() >= kit.eliteAlcoveChance) {
+      return;
+    }
+    final eliteBudget = max(1, min(2, budget ~/ 5));
+    beats.add(
+      FloorBeat(
+        FloorBeatKind.elite,
+        enemyBudget: eliteBudget,
+        attach: FloorBeatAttach.sideMain,
+      ),
+    );
+    // Trim last main combat beat so total budget stays honest.
+    for (var i = beats.length - 1; i >= 0; i--) {
+      final b = beats[i];
+      if (b.attach != FloorBeatAttach.main || b.enemyBudget <= eliteBudget) {
+        continue;
+      }
+      beats[i] = FloorBeat(
+        b.kind,
+        enemyBudget: b.enemyBudget - eliteBudget,
+        attach: b.attach,
+      );
+      break;
+    }
   }
 }
