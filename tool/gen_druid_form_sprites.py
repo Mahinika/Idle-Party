@@ -72,46 +72,64 @@ def _eyes(
 
 
 def gen_moonkin() -> Image.Image:
-    """Bipedal owlkin — gold/brown feathers, glowing amber eyes."""
+    """Bipedal owlkin — round owl head, wing cape, pale belly, amber eyes."""
     img = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
 
     gold = (196, 148, 56, 255)
-    gold_lt = (224, 180, 88, 255)
-    brown = (120, 78, 40, 255)
-    brown_dk = (78, 48, 24, 255)
-    eye = (255, 220, 64, 255)
+    gold_lt = (236, 200, 110, 255)
+    cream = (248, 230, 180, 255)
+    brown = (110, 72, 36, 255)
+    brown_dk = (70, 44, 20, 255)
+    eye = (255, 230, 80, 255)
+    pupil = (40, 24, 8, 255)
 
-    cx, cy = 48.0, 50.0
+    cx, cy = 48.0, 52.0
 
-    # Legs
-    _stamp_blob(d, cx - 10, cy + 28, 7.5, brown, seed=11)
-    _stamp_blob(d, cx + 10, cy + 28, 7.5, brown, seed=12)
-    # Feet
-    _stamp_blob(d, cx - 12, cy + 36, 5.0, brown_dk, seed=13)
-    _stamp_blob(d, cx + 12, cy + 36, 5.0, brown_dk, seed=14)
+    # Bird legs (thin) + talons
+    _stamp_blob(d, cx - 8, cy + 26, 5.5, brown, seed=11)
+    _stamp_blob(d, cx + 8, cy + 26, 5.5, brown, seed=12)
+    _stamp_blob(d, cx - 11, cy + 34, 4.2, brown_dk, seed=13)
+    _stamp_blob(d, cx + 11, cy + 34, 4.2, brown_dk, seed=14)
+    _stamp_blob(d, cx - 14, cy + 36, 2.8, brown_dk, seed=15)
+    _stamp_blob(d, cx + 14, cy + 36, 2.8, brown_dk, seed=16)
 
-    # Body / belly
-    _stamp_blob(d, cx, cy + 8, 18.0, gold, seed=20)
-    _stamp_blob(d, cx, cy + 10, 11.0, gold_lt, seed=21)
+    # Torso (taller owl, not bear-round)
+    _stamp_blob(d, cx, cy + 6, 15.0, gold, seed=20)
+    _stamp_blob(d, cx, cy + 8, 9.5, cream, seed=21)
 
-    # Wing tufts
-    _stamp_blob(d, cx - 22, cy + 4, 11.0, brown, seed=30)
-    _stamp_blob(d, cx + 22, cy + 4, 11.0, brown, seed=31)
-    _stamp_blob(d, cx - 26, cy + 12, 7.0, brown_dk, seed=32)
-    _stamp_blob(d, cx + 26, cy + 12, 7.0, brown_dk, seed=33)
+    # Wide wing cape (reads as feathers, not arms-on-hips bear)
+    _stamp_blob(d, cx - 24, cy + 2, 12.5, brown, seed=30)
+    _stamp_blob(d, cx + 24, cy + 2, 12.5, brown, seed=31)
+    _stamp_blob(d, cx - 28, cy + 14, 8.0, brown_dk, seed=32)
+    _stamp_blob(d, cx + 28, cy + 14, 8.0, brown_dk, seed=33)
+    _stamp_blob(d, cx - 18, cy - 2, 7.0, gold, seed=34)
+    _stamp_blob(d, cx + 18, cy - 2, 7.0, gold, seed=35)
 
-    # Head
-    _stamp_blob(d, cx, cy - 16, 14.5, gold, seed=40)
-    # Ear tufts / horns
-    _stamp_blob(d, cx - 11, cy - 28, 5.5, brown, seed=41)
-    _stamp_blob(d, cx + 11, cy - 28, 5.5, brown, seed=42)
-    # Beak
-    _stamp_blob(d, cx, cy - 10, 4.0, brown_dk, seed=43)
+    # Round owl head (larger than torso)
+    _stamp_blob(d, cx, cy - 18, 16.5, gold, seed=40)
+    _stamp_blob(d, cx, cy - 16, 10.0, gold_lt, seed=41)
+    # Ear tufts
+    _stamp_blob(d, cx - 12, cy - 32, 4.5, brown, seed=42)
+    _stamp_blob(d, cx + 12, cy - 32, 4.5, brown, seed=43)
+    # Beak (diamond / triangle feel)
+    d.polygon(
+        [
+            (cx, cy - 6),
+            (cx - 4.5, cy - 12),
+            (cx + 4.5, cy - 12),
+        ],
+        fill=brown_dk,
+    )
 
-    _eyes(d, cx, cy - 18, color=eye, spacing=9.0, size=2.8)
+    _eyes(d, cx, cy - 20, color=eye, spacing=11.0, size=3.4)
+    # Pupils
+    for dx in (-5.5, 5.5):
+        d.ellipse(
+            (cx + dx - 1.2, cy - 20 - 1.2, cx + dx + 1.2, cy - 20 + 1.2),
+            fill=pupil,
+        )
     return img
-
 
 def gen_tree() -> Image.Image:
     """Tree of Life — green trunk/foliage humanoid, glowing green eyes."""
