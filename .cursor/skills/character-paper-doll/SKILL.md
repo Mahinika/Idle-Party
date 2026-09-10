@@ -58,11 +58,11 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
    squint), mail/plate helm face cutouts, checks every grip lands on opaque
    pixels, and compares every shipped PNG against `tool/paper_doll_lock.json`.
    After a **deliberate** art change: `--relock`, then commit the lock file.
-5. Hand art moved? `py tool/gen_owned_gear_grips.py`, then
+6. Hand art moved? `py tool/gen_owned_gear_grips.py`, then
    `py tool/audit_anchors.py` (findings must be empty; "reaches past the hero
    box" notes are fine — the painter does not clip).
-6. Only then full `flutter run` on A56 (PNG bytes need a rebuild, not hot reload).
-7. Dart tests prove paths/layers; **facit gate proves looks**.
+7. Only then full `flutter run` on A56 (PNG bytes need a rebuild, not hot reload).
+8. Dart tests prove paths/layers; **facit gate proves looks**.
 
 ## Never
 
