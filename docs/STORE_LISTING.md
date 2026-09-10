@@ -1,6 +1,6 @@
 # Idle Party — store listing (research + copy)
 
-**Updated:** 2026-08-22 · Target: Google Play (en-US) · Honesty first.
+**Updated:** 2026-09-10 · Target: Google Play (en-US) · Honesty first.
 
 ## Research: what makes people tap Install
 
@@ -79,12 +79,12 @@ Start your party and take one more floor.
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.117+146** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
+Working ship: **1.12.133+163** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
 
 ```
-• TODAY now puts your next useful goal directly on the main button.
-• QUESTS now includes Daily, Bounty, Side, Weekly, and long-term goals.
-• Explore 15 World Path zones with smoother AFK dungeon progress.
+• SETTINGS now splits into Sound, Display, Bag, and Account tabs.
+• Loading splash cycles dungeon stills; clearer leather and mail helms.
+• Fairness and kit HUD polish; wipe tip only when POWER can prove a deficit.
 ```
 
 ### Full description honesty (SHOP)

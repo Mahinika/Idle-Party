@@ -8,8 +8,8 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
-| Closed testing | ✅ live | **1.12.106 (135)** available for Alpha testers on Play (full rollout, published **2026-09-08**). Older AABs 125/116/… inactive. |
-| Production | ✅ live | **1.12.117 (146)** published **2026-09-10** (100% rollout). |
+| Closed testing | ⏳ review | **1.12.133 (163)** submitted **2026-09-10** (full rollout; replaces live **135 / 1.12.106** when Google publishes). |
+| Production | ⏳ review | **1.12.133 (163)** submitted **2026-09-10** (full rollout; live until then **146 / 1.12.117**). |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ✅ review | Ads / Play Games / Advertising ID + **Firebase Analytics** (App interactions, Diagnostics, Device IDs) submitted **2026-09-10** — under Google review (`Ändringarna granskas`). Matches [PRIVACY.md](PRIVACY.md). |
@@ -31,9 +31,9 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Phone screenshots attached on listing (verified 2026-09-04 — slots filled, Save idle)
 - [x] IARC new questionnaire submitted 2026-09-08 (fantasy combat + digital goods; ads via Ads declaration)
 - [x] Production access granted by Google (seen on dashboard 2026-09-09)
-- [x] Signed Production candidate AAB built: **1.12.117+146** (`app-release.aab`)
-- [x] Owner asked upload Production (2026-09-09 evening)
-- [x] Uploaded + submitted for review: Production **146 (1.12.117)** full rollout
+- [x] Signed Production candidate AAB built: **1.12.133+163** (`app-release.aab`)
+- [x] Owner asked upload Production (2026-09-10)
+- [x] Uploaded + submitted for review: Production **163 (1.12.133)** + Alpha **163** full rollout
 - [ ] Google review / publish complete → store listing shows Updated + new version
 - [x] After production live: AdMob store-link Idle Party (**2026-09-09** — Play linked; AdMob app review 2–3 days)
 
@@ -42,9 +42,9 @@ Track closed testers who **install from Play** and stay opted in:
 From `docs/STORE_LISTING.md` — use when Console asks for release notes:
 
 ```
-• TODAY now puts your next useful goal directly on the main button.
-• QUESTS now includes Daily, Bounty, Side, Weekly, and long-term goals.
-• Explore 15 World Path zones with smoother AFK dungeon progress.
+• SETTINGS now splits into Sound, Display, Bag, and Account tabs.
+• Loading splash cycles dungeon stills; clearer leather and mail helms.
+• Fairness and kit HUD polish; wipe tip only when POWER can prove a deficit.
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys
@@ -69,7 +69,7 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
 **Primary distribution: Google Play.**  
 Store: `https://play.google.com/store/apps/details?id=com.idleparty.app`
-(production **1.12.117 / 146** in review; live until then **1.12.110 / 139**). Closed opt-in for early builds. Do **not**
+(production **1.12.133 / 163** in review; live until then **1.12.117 / 146**). Closed opt-in for early builds. Do **not**
 point players at GitHub Releases (repo may be private). Day-to-day: prefer
 content/feel over Play ops unless the owner asks about Play. Ship path for
 players = Play AAB after owner play OK — not public GitHub APK links.
