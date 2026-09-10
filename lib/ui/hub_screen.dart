@@ -211,6 +211,13 @@ class _HubScreenState extends State<HubScreen>
       case HubChaseKind.meetHero:
       case HubChaseKind.ascend:
         return 'claim';
+      case HubChaseKind.clearFloors:
+        final t = chase.title.toLowerCase();
+        if (t.contains('level the party') || t.contains('almost party')) {
+          return 'to Lv${GameLogic.maxHeroLevel}';
+        }
+        if (t.length <= 14) return chase.title;
+        return chase.title.split(' ').take(2).join(' ');
       default:
         final t = chase.title;
         if (t.length <= 14) return t;

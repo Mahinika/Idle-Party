@@ -195,6 +195,20 @@ class HubHeader extends StatefulWidget {
   /// Optional hub POWERUPS control (header slot — not on main CTAs).
   final Widget? powerupsFab;
 
+  /// Short AL-cap pill: tease the tonight hunt — never "MAX" (not game over).
+  static String alCapPillLabel({
+    required int ascensionLevel,
+    String? huntHint,
+    int blessingStacks = 0,
+  }) {
+    final hunt = (huntHint != null && huntHint.isNotEmpty)
+        ? huntHint
+        : 'next hunt';
+    final bless =
+        blessingStacks > 0 ? ' · Asc B×$blessingStacks' : '';
+    return 'AL $ascensionLevel · $hunt$bless';
+  }
+
   @override
   State<HubHeader> createState() => _HubHeaderState();
 }
@@ -265,14 +279,11 @@ class _HubHeaderState extends State<HubHeader> {
                       : '';
                   return 'AL ${widget.ascensionLevel}$bless';
                 }
-                final hunt = widget.huntHint;
-                final huntBit = (hunt != null && hunt.isNotEmpty)
-                    ? hunt
-                    : 'endgame';
-                final bless = widget.blessingStacks > 0
-                    ? ' · Asc B×${widget.blessingStacks}'
-                    : '';
-                return 'AL ${widget.ascensionLevel} · MAX · $huntBit$bless';
+                return HubHeader.alCapPillLabel(
+                  ascensionLevel: widget.ascensionLevel,
+                  huntHint: widget.huntHint,
+                  blessingStacks: widget.blessingStacks,
+                );
               }(),
             ),
           ),

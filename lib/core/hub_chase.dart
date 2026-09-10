@@ -657,9 +657,9 @@ class HubChase {
           : 'Level the party to ${GameLogic.maxHeroLevel}',
       detail: GameLogic.isMaxAscension(state)
           ? (almost
-              ? 'AL20 done — lowest Lv$minLv. Endgame (KEY, Gauntlet, Ranked GR) '
-                  'needs every hero at ${GameLogic.maxHeroLevel}.'
-              : 'AL20 done — heroes Lv$minLv–$maxLv. Combat XP to '
+              ? 'AL20 — lowest Lv$minLv. KEY, Gauntlet, and Ranked GR unlock when '
+                  'every hero hits ${GameLogic.maxHeroLevel}.'
+              : 'AL20 — heroes Lv$minLv–$maxLv. Combat XP to '
                   '${GameLogic.maxHeroLevel} unlocks KEY and the endgame ladder.')
           : (almost
               ? 'Lowest hero Lv$minLv — a few more levels unlock KEY, Gauntlet, and Rifts.'
