@@ -90,8 +90,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
                 child: GameButton(
                   label: 'BACK',
                   style: GameButtonStyle.grey,
-                  onPressed: () =>
-                      widget.onSectionChanged(MoreSection.info),
+                  onPressed: () => widget.onSectionChanged(MoreSection.info),
                 ),
               ),
               const SizedBox(width: 8),
@@ -137,12 +136,10 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
     final d = widget.director;
     return switch (widget.section) {
       MoreSection.info => _infoBody(d),
-      MoreSection.settings => SingleChildScrollView(
-        child: SettingsOverlay(
-          director: d,
-          onClose: widget.onClose,
-          bagFiltersScrollNonce: widget.bagFiltersScrollNonce,
-        ),
+      MoreSection.settings => SettingsOverlay(
+        director: d,
+        onClose: widget.onClose,
+        bagFiltersScrollNonce: widget.bagFiltersScrollNonce,
       ),
       MoreSection.credits => SingleChildScrollView(
         padding: const EdgeInsets.all(8),

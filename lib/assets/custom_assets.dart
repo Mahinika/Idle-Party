@@ -244,6 +244,16 @@ abstract final class CustomAssets {
   /// Hub keep / gate plaza behind translucent chrome.
   static const String hubScene = '$_root/ui/hub_scene.png';
 
+  /// Full-bleed stills cycled on [LoadingSplash] during cold boot.
+  static const List<String> splashStills = [
+    introScene,
+    hubScene,
+    backdropSandy,
+    backdropCrystal,
+    backdropEmber,
+    backdropTide,
+  ];
+
   /// Scrollable World Path campaign map (portrait).
   static const String worldPathMap = '$_root/ui/world_path_map.png';
 

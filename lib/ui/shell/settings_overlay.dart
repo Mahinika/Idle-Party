@@ -30,10 +30,13 @@ class SettingsOverlay extends StatefulWidget {
   State<SettingsOverlay> createState() => _SettingsOverlayState();
 }
 
-class _SettingsOverlayState extends State<SettingsOverlay> {
+enum _SettingsPage { sound, display, bag, account }
+
+class _SettingsOverlayState extends State<SettingsOverlay>
+    with SingleTickerProviderStateMixin {
   GameDirector get director => widget.director;
   GameState get state => director.state;
-  final GlobalKey _bagCleanupKey = GlobalKey();
+  late final TabController _tabs;
   int _seenBagFiltersScrollNonce = 0;
 
   static const List<(String, double)> _textPresets = <(String, double)>[
@@ -46,7 +49,13 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
   @override
   void initState() {
     super.initState();
+    _tabs = TabController(length: _SettingsPage.values.length, vsync: this)
+      ..addListener(_onTabChanged);
     _maybeScrollToBagFilters();
+  }
+
+  void _onTabChanged() {
+    if (!_tabs.indexIsChanging && mounted) setState(() {});
   }
 
   @override
@@ -61,15 +70,17 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
     if (widget.bagFiltersScrollNonce <= _seenBagFiltersScrollNonce) return;
     _seenBagFiltersScrollNonce = widget.bagFiltersScrollNonce;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final target = _bagCleanupKey.currentContext;
-      if (target == null) return;
-      Scrollable.ensureVisible(
-        target,
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeOutCubic,
-        alignment: 0.05,
-      );
+      if (!mounted) return;
+      _tabs.animateTo(_SettingsPage.bag.index);
     });
+  }
+
+  @override
+  void dispose() {
+    _tabs
+      ..removeListener(_onTabChanged)
+      ..dispose();
+    super.dispose();
   }
 
   Future<void> _confirmReset() async {
@@ -107,360 +118,427 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MenuChrome.tabRail(
+          controller: _tabs,
+          scrollable: false,
+          onTap: (_) => setState(() {}),
+          tabs: const [
+            Tab(text: 'SOUND'),
+            Tab(text: 'DISPLAY'),
+            Tab(text: 'BAG'),
+            Tab(text: 'ACCOUNT'),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: TabBarView(
+            controller: _tabs,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _scrollPage(_SettingsPage.sound, _soundPage()),
+              _scrollPage(_SettingsPage.display, _displayPage()),
+              _scrollPage(_SettingsPage.bag, _bagPage()),
+              _scrollPage(_SettingsPage.account, _accountPage(context)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _scrollPage(_SettingsPage page, Widget child) {
     return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Phone preferences — sound, text size, dungeon zoom, and comfort. '
-            'OS display size still applies on top.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 12),
-          MenuChrome.sectionLabel('SOUND'),
-          const SizedBox(height: 4),
-          Text(
-            'Mute turns everything off. Music is the hub / dungeon track; '
-            'ambience is the soft bed underneath; SFX is combat and UI.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 8),
-          _SettingsToggle(
-            label: 'Mute all sound',
-            value: state.soundMuted,
-            onChanged: director.setSoundMuted,
-          ),
-          const SizedBox(height: 10),
-          Opacity(
-            opacity: state.soundMuted ? 0.45 : 1,
-            child: IgnorePointer(
-              ignoring: state.soundMuted,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _VolumeSlider(
-                    label: 'Music',
-                    value: state.musicVolume,
-                    onChanged: director.setMusicVolume,
-                  ),
-                  const SizedBox(height: 8),
-                  _VolumeSlider(
-                    label: 'Ambience',
-                    value: state.ambienceVolume,
-                    onChanged: director.setAmbienceVolume,
-                  ),
-                  const SizedBox(height: 8),
-                  _VolumeSlider(
-                    label: 'SFX',
-                    value: state.sfxVolume,
-                    onChanged: director.setSfxVolume,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          _SettingsToggle(
-            label: 'Haptics (vibration)',
-            value: state.hapticsEnabled,
-            onChanged: director.setHapticsEnabled,
-          ),
-          const SizedBox(height: 12),
-          MenuChrome.sectionLabel('DISPLAY'),
-          const SizedBox(height: 6),
-          Text(
-            'UI text scale',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 6),
-          () {
-            final scaleIdx = _textPresets.indexWhere(
-              (p) => (state.uiTextScale - p.$2).abs() < 0.02,
-            );
-            return MenuChrome.segmented(
-              labels: [for (final preset in _textPresets) preset.$1],
-              selectedIndex: scaleIdx < 0 ? 1 : scaleIdx,
-              onSelect: (i) => director.setUiTextScale(_textPresets[i].$2),
-            );
-          }(),
-          const SizedBox(height: 6),
-          Semantics(
-            slider: true,
-            label: 'UI text scale',
-            value: '${(state.uiTextScale * 100).round()} percent',
-            child: Row(
+      key: PageStorageKey<String>('settings-${page.name}'),
+      padding: const EdgeInsets.fromLTRB(2, 0, 2, 16),
+      child: child,
+    );
+  }
+
+  Widget _soundPage() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Music, ambience, combat sound, and vibration.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        MenuChrome.sectionLabel('SOUND'),
+        const SizedBox(height: 4),
+        Text(
+          'Mute turns everything off. Music is the hub / dungeon track; '
+          'ambience is the soft bed underneath; SFX is combat and UI.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
+          label: 'Mute all sound',
+          value: state.soundMuted,
+          onChanged: director.setSoundMuted,
+        ),
+        const SizedBox(height: 10),
+        Opacity(
+          opacity: state.soundMuted ? 0.45 : 1,
+          child: IgnorePointer(
+            ignoring: state.soundMuted,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: MenuChrome.slider(
-                    value: state.uiTextScale.clamp(
-                      kUiTextScaleMin,
-                      kUiTextScaleMax,
-                    ),
-                    min: kUiTextScaleMin,
-                    max: kUiTextScaleMax,
-                    divisions: 13,
-                    onChanged: director.setUiTextScale,
-                  ),
+                _VolumeSlider(
+                  label: 'Music',
+                  value: state.musicVolume,
+                  onChanged: director.setMusicVolume,
                 ),
-                SizedBox(
-                  width: 46,
-                  child: Text(
-                    '${(state.uiTextScale * 100).round()}%',
-                    textAlign: TextAlign.right,
-                    style: GameTheme.body(
-                      size: 15,
-                      color: GameTheme.parchmentDim,
-                    ),
-                  ),
+                const SizedBox(height: 8),
+                _VolumeSlider(
+                  label: 'Ambience',
+                  value: state.ambienceVolume,
+                  onChanged: director.setAmbienceVolume,
+                ),
+                const SizedBox(height: 8),
+                _VolumeSlider(
+                  label: 'SFX',
+                  value: state.sfxVolume,
+                  onChanged: director.setSfxVolume,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 10),
-          _SettingsCycle(
-            label: state.dungeonZoom.settingsLabel,
-            hint: state.dungeonZoom.settingsHint,
-            onCycle: director.cycleDungeonZoom,
+        ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
+          label: 'Haptics (vibration)',
+          value: state.hapticsEnabled,
+          onChanged: director.setHapticsEnabled,
+        ),
+      ],
+    );
+  }
+
+  Widget _displayPage() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Text, dungeon framing, and combat readability. OS display size '
+          'still applies on top.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        MenuChrome.sectionLabel('DISPLAY'),
+        const SizedBox(height: 6),
+        Text(
+          'UI text scale',
+          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        () {
+          final scaleIdx = _textPresets.indexWhere(
+            (p) => (state.uiTextScale - p.$2).abs() < 0.02,
+          );
+          return MenuChrome.segmented(
+            labels: [for (final preset in _textPresets) preset.$1],
+            selectedIndex: scaleIdx < 0 ? 1 : scaleIdx,
+            onSelect: (i) => director.setUiTextScale(_textPresets[i].$2),
+          );
+        }(),
+        const SizedBox(height: 6),
+        Semantics(
+          slider: true,
+          label: 'UI text scale',
+          value: '${(state.uiTextScale * 100).round()} percent',
+          child: Row(
+            children: [
+              Expanded(
+                child: MenuChrome.slider(
+                  value: state.uiTextScale.clamp(
+                    kUiTextScaleMin,
+                    kUiTextScaleMax,
+                  ),
+                  min: kUiTextScaleMin,
+                  max: kUiTextScaleMax,
+                  divisions: 13,
+                  onChanged: director.setUiTextScale,
+                ),
+              ),
+              SizedBox(
+                width: 46,
+                child: Text(
+                  '${(state.uiTextScale * 100).round()}%',
+                  textAlign: TextAlign.right,
+                  style: GameTheme.body(
+                    size: 15,
+                    color: GameTheme.parchmentDim,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          _SettingsToggle(
-            label: 'Keep screen on in dungeon',
-            value: state.keepScreenAwake,
-            onChanged: director.setKeepScreenAwake,
-          ),
-          const SizedBox(height: 12),
-          MenuChrome.sectionLabel('COMBAT LOOK'),
-          const SizedBox(height: 6),
-          _SettingsCycle(
-            label: state.vfxQuality.settingsLabel,
-            hint: state.vfxQuality.settingsHint,
-            onCycle: director.cycleVfxQuality,
-          ),
-          const SizedBox(height: 8),
-          _SettingsToggle(
-            label: 'Colorblind-friendly combat numbers',
-            value: state.colorblindMode,
-            onChanged: director.setColorblindMode,
-          ),
-          Text(
-            'Changes combat damage floaters and bark colors only — not map art. '
-            'Chamber dots already use shape (square / diamond / circle).',
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 8),
-          GameButton(
-            label: 'RESET DISPLAY DEFAULTS',
-            tip: 'Text 100% · Zoom Normal · Full VFX · Music Low · sound on',
-            style: GameButtonStyle.grey,
-            onPressed: _resetDisplayDefaults,
-          ),
-          const SizedBox(height: 16),
-          KeyedSubtree(
-            key: _bagCleanupKey,
-            child: MenuChrome.sectionLabelScoped(
-              'BAG CLEANUP',
-              scope: MenuScope.account,
-            ),
-          ),
+        ),
+        const SizedBox(height: 10),
+        _SettingsCycle(
+          label: state.dungeonZoom.settingsLabel,
+          hint: state.dungeonZoom.settingsHint,
+          onCycle: director.cycleDungeonZoom,
+        ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
+          label: 'Keep screen on in dungeon',
+          value: state.keepScreenAwake,
+          onChanged: director.setKeepScreenAwake,
+        ),
+        const SizedBox(height: 12),
+        MenuChrome.sectionLabel('COMBAT LOOK'),
+        const SizedBox(height: 6),
+        _SettingsCycle(
+          label: state.vfxQuality.settingsLabel,
+          hint: state.vfxQuality.settingsHint,
+          onCycle: director.cycleVfxQuality,
+        ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
+          label: 'Colorblind-friendly combat numbers',
+          value: state.colorblindMode,
+          onChanged: director.setColorblindMode,
+        ),
+        Text(
+          'Changes combat damage floaters and bark colors only — not map art. '
+          'Chamber dots already use shape (square / diamond / circle).',
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        GameButton(
+          label: 'RESET DISPLAY DEFAULTS',
+          tip: 'Text 100% · Zoom Normal · Full VFX · Music Low · sound on',
+          style: GameButtonStyle.grey,
+          onPressed: _resetDisplayDefaults,
+        ),
+      ],
+    );
+  }
+
+  Widget _bagPage() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Automatic cleanup when the run bag gets crowded.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        MenuChrome.sectionLabelScoped('BAG CLEANUP', scope: MenuScope.account),
+        const SizedBox(height: 4),
+        Text(
+          'Near-full bag auto-rules (also BAG → AUTO-SELL FILTERS). '
+          'Auto-sell = gold · auto-scrap = essence. There is no Sell junk / Scrap button. '
+          'BiS / upgrades are never cleaned.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 10),
+        MenuChrome.sectionLabelScoped(
+          'AUTO-SELL · gold',
+          scope: MenuScope.account,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Junk sold for coins when bag is near full or you CLEAN BAG. '
+          '${state.autoSellMaxPower <= 0 ? 'Off = never auto-sells.' : 'Sells iLvl 1–${state.autoSellMaxPower} at or below the rarity cap.'}',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Max iLvl to sell',
+          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+        ),
+        _IlvlFilterRow(
+          value: state.autoSellMaxPower,
+          max: GameLogic.maxAutoSellIlvlCap(state),
+          onChanged: director.setAutoSellMaxPower,
+          offLabel: 'Off',
+        ),
+        const SizedBox(height: 6),
+        _RarityFilterRow(
+          value: state.autoSellMaxRarity,
+          onChanged: director.setAutoSellMaxRarity,
+          enabled: state.autoSellMaxPower > 0,
+        ),
+        if (state.autoSellMaxPower > 0) ...[
           const SizedBox(height: 4),
           Text(
-            'Near-full bag auto-rules (also BAG → AUTO-SELL FILTERS). '
-            'Auto-sell = gold · auto-scrap = essence. There is no Sell junk / Scrap button. '
-            'BiS / upgrades are never cleaned.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 10),
-          MenuChrome.sectionLabelScoped(
-            'AUTO-SELL · gold',
-            scope: MenuScope.account,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Junk sold for coins when bag is near full or you CLEAN BAG. '
-            '${state.autoSellMaxPower <= 0 ? 'Off = never auto-sells.' : 'Sells iLvl 1–${state.autoSellMaxPower} at or below the rarity cap.'}',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Max iLvl to sell',
-            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-          ),
-          _IlvlFilterRow(
-            value: state.autoSellMaxPower,
-            max: GameLogic.maxAutoSellIlvlCap(state),
-            onChanged: director.setAutoSellMaxPower,
-            offLabel: 'Off',
-          ),
-          const SizedBox(height: 6),
-          _RarityFilterRow(
-            value: state.autoSellMaxRarity,
-            onChanged: director.setAutoSellMaxRarity,
-            enabled: state.autoSellMaxPower > 0,
-          ),
-          if (state.autoSellMaxPower > 0) ...[
-            const SizedBox(height: 4),
-            Text(
-              'Sells ~${GearCleanup.autoSellPreviewCount(state)} stash items',
-              style: GameTheme.body(size: 12, color: GameTheme.mossLit),
-            ),
-          ],
-          const SizedBox(height: 12),
-          MenuChrome.sectionLabelScoped(
-            'AUTO-SCRAP · essence',
-            scope: MenuScope.account,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Leftovers broken for essence after sell pass — not the same as sell. '
-            '${state.autoDisassembleMaxIlvl <= 0 ? 'Off = never auto-scraps.' : 'Scraps iLvl 1–${state.autoDisassembleMaxIlvl} at or below the rarity cap.'}',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Max iLvl to scrap',
-            style: GameTheme.body(size: 13, color: GameTheme.mossLit),
-          ),
-          _IlvlFilterRow(
-            value: state.autoDisassembleMaxIlvl,
-            max: GameLogic.maxAutoSellIlvlCap(state),
-            onChanged: director.setAutoDisassembleMaxIlvl,
-            offLabel: 'Off',
-          ),
-          const SizedBox(height: 6),
-          _RarityFilterRow(
-            value: state.autoDisassembleMaxRarity,
-            onChanged: director.setAutoDisassembleMaxRarity,
-            enabled: state.autoDisassembleMaxIlvl > 0,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity), then scrap '
-            'leftovers that match scrap filters. GOLD → MARKET buys flasks '
-            'and listings — it does not tap-sell stash.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 16),
-          const SizedBox(height: 16),
-          MenuChrome.sectionLabelScoped(
-            'PLAY NOTES (local)',
-            scope: MenuScope.account,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Optional session log on this device only — chase, wipes, God Hand. '
-            'Never uploaded. Copy to clipboard for your own notes.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 8),
-          _SettingsToggle(
-            label: 'Session log',
-            value: state.sessionTelemetryOptIn,
-            onChanged: director.setSessionTelemetryOptIn,
-          ),
-          if (state.sessionTelemetryOptIn) ...[
-            const SizedBox(height: 8),
-            GameButton(
-              label: 'COPY LOG',
-              style: GameButtonStyle.grey,
-              onPressed: () async {
-                await Clipboard.setData(
-                  ClipboardData(text: director.sessionTelemetryExport()),
-                );
-                director.showToast('Session log copied', life: 1.8);
-              },
-            ),
-            const SizedBox(height: 6),
-            GameButton(
-              label: 'CLEAR LOG',
-              style: GameButtonStyle.grey,
-              onPressed: director.clearSessionTelemetry,
-            ),
-          ],
-          const SizedBox(height: 16),
-          PlayGamesSection(director: director),
-          if (AdRewarded.realAdsAvailable) ...[
-            const SizedBox(height: 16),
-            MenuChrome.sectionLabelScoped('ADS', scope: MenuScope.account),
-            const SizedBox(height: 6),
-            GameButton(
-              label: 'AD PRIVACY',
-              tip: 'Change or withdraw ad consent (EU / EEA)',
-              style: GameButtonStyle.grey,
-              onPressed: () => AdRewarded.showPrivacyOptions(),
-            ),
-          ],
-          SaveTransferSection(director: director),
-          const SizedBox(height: 16),
-          MenuChrome.sectionLabelScoped('COMMUNITY', scope: MenuScope.account),
-          const SizedBox(height: 6),
-          GameButton(
-            label: 'JOIN DISCORD',
-            tip: 'Opens Discord so you can join the Idle Party server',
-            style: GameButtonStyle.brown,
-            onPressed: () async {
-              final ok = await CommunityLinks.openDiscord();
-              if (!ok && mounted) {
-                director.showToast('Could not open Discord link', life: 2.2);
-              }
-            },
-          ),
-          if (director.showPlayUpdateNotice) ...[
-            const SizedBox(height: 8),
-            GameButton(
-              label: 'GET UPDATE',
-              tip: 'A newer Idle Party is ready on Google Play',
-              style: GameButtonStyle.grey,
-              onPressed: director.openPlayUpdate,
-            ),
-          ],
-          const SizedBox(height: 8),
-          GameButton(
-            label: "WHAT'S NEW",
-            style: GameButtonStyle.grey,
-            onPressed: () => WhatsNewOverlay.show(context, director),
-          ),
-          if (kDebugMode) ...[
-            const SizedBox(height: 8),
-            GameButton(
-              label: 'DEV: FAKE PLAY UPDATE',
-              style: GameButtonStyle.grey,
-              onPressed: director.debugForcePlayUpdateNotice,
-            ),
-            const SizedBox(height: 8),
-            GameButton(
-              label: director.debugTimeScale >= 9.5
-                  ? 'DEV: SPEED 10x (tap → 1x)'
-                  : 'DEV: SPEED 1x (tap → 10x)',
-              style: GameButtonStyle.grey,
-              onPressed: director.cycleDebugTimeScale,
-            ),
-            const SizedBox(height: 8),
-            GameButton(
-              label: 'DEV: ENTER GAUNTLET (Lv${GameLogic.maxHeroLevel})',
-              style: GameButtonStyle.grey,
-              onPressed: state.inDungeon
-                  ? null
-                  : () {
-                      widget.onClose();
-                      director.devEnterGauntlet();
-                    },
-            ),
-          ],
-          const SizedBox(height: 24),
-          MenuChrome.sectionLabelScoped('DANGER', scope: MenuScope.account),
-          const SizedBox(height: 6),
-          Text(
-            'Deletes this save on device — separate from Play Games cloud.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 8),
-          GameButton(
-            label: 'RESET GAME',
-            style: GameButtonStyle.red,
-            onPressed: _confirmReset,
+            'Sells ~${GearCleanup.autoSellPreviewCount(state)} stash items',
+            style: GameTheme.body(size: 12, color: GameTheme.mossLit),
           ),
         ],
-      ),
+        const SizedBox(height: 12),
+        MenuChrome.sectionLabelScoped(
+          'AUTO-SCRAP · essence',
+          scope: MenuScope.account,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Leftovers broken for essence after sell pass — not the same as sell. '
+          '${state.autoDisassembleMaxIlvl <= 0 ? 'Off = never auto-scraps.' : 'Scraps iLvl 1–${state.autoDisassembleMaxIlvl} at or below the rarity cap.'}',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Max iLvl to scrap',
+          style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+        ),
+        _IlvlFilterRow(
+          value: state.autoDisassembleMaxIlvl,
+          max: GameLogic.maxAutoSellIlvlCap(state),
+          onChanged: director.setAutoDisassembleMaxIlvl,
+          offLabel: 'Off',
+        ),
+        const SizedBox(height: 6),
+        _RarityFilterRow(
+          value: state.autoDisassembleMaxRarity,
+          onChanged: director.setAutoDisassembleMaxRarity,
+          enabled: state.autoDisassembleMaxIlvl > 0,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity), then scrap '
+          'leftovers that match scrap filters. GOLD → MARKET buys flasks '
+          'and listings — it does not tap-sell stash.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+      ],
+    );
+  }
+
+  Widget _accountPage(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Save, Play Games, privacy, community, updates, and device data.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        MenuChrome.sectionLabelScoped(
+          'PLAY NOTES (local)',
+          scope: MenuScope.account,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Optional session log on this device only — chase, wipes, God Hand. '
+          'Never uploaded. Copy to clipboard for your own notes.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
+          label: 'Session log',
+          value: state.sessionTelemetryOptIn,
+          onChanged: director.setSessionTelemetryOptIn,
+        ),
+        if (state.sessionTelemetryOptIn) ...[
+          const SizedBox(height: 8),
+          GameButton(
+            label: 'COPY LOG',
+            style: GameButtonStyle.grey,
+            onPressed: () async {
+              await Clipboard.setData(
+                ClipboardData(text: director.sessionTelemetryExport()),
+              );
+              director.showToast('Session log copied', life: 1.8);
+            },
+          ),
+          const SizedBox(height: 6),
+          GameButton(
+            label: 'CLEAR LOG',
+            style: GameButtonStyle.grey,
+            onPressed: director.clearSessionTelemetry,
+          ),
+        ],
+        const SizedBox(height: 16),
+        PlayGamesSection(director: director),
+        if (AdRewarded.realAdsAvailable) ...[
+          const SizedBox(height: 16),
+          MenuChrome.sectionLabelScoped('ADS', scope: MenuScope.account),
+          const SizedBox(height: 6),
+          GameButton(
+            label: 'AD PRIVACY',
+            tip: 'Change or withdraw ad consent (EU / EEA)',
+            style: GameButtonStyle.grey,
+            onPressed: () => AdRewarded.showPrivacyOptions(),
+          ),
+        ],
+        SaveTransferSection(director: director),
+        const SizedBox(height: 16),
+        MenuChrome.sectionLabelScoped('COMMUNITY', scope: MenuScope.account),
+        const SizedBox(height: 6),
+        GameButton(
+          label: 'JOIN DISCORD',
+          tip: 'Opens Discord so you can join the Idle Party server',
+          style: GameButtonStyle.brown,
+          onPressed: () async {
+            final ok = await CommunityLinks.openDiscord();
+            if (!ok && mounted) {
+              director.showToast('Could not open Discord link', life: 2.2);
+            }
+          },
+        ),
+        if (director.showPlayUpdateNotice) ...[
+          const SizedBox(height: 8),
+          GameButton(
+            label: 'GET UPDATE',
+            tip: 'A newer Idle Party is ready on Google Play',
+            style: GameButtonStyle.grey,
+            onPressed: director.openPlayUpdate,
+          ),
+        ],
+        const SizedBox(height: 8),
+        GameButton(
+          label: "WHAT'S NEW",
+          style: GameButtonStyle.grey,
+          onPressed: () => WhatsNewOverlay.show(context, director),
+        ),
+        if (kDebugMode) ...[
+          const SizedBox(height: 8),
+          GameButton(
+            label: 'DEV: FAKE PLAY UPDATE',
+            style: GameButtonStyle.grey,
+            onPressed: director.debugForcePlayUpdateNotice,
+          ),
+          const SizedBox(height: 8),
+          GameButton(
+            label: director.debugTimeScale >= 9.5
+                ? 'DEV: SPEED 10x (tap → 1x)'
+                : 'DEV: SPEED 1x (tap → 10x)',
+            style: GameButtonStyle.grey,
+            onPressed: director.cycleDebugTimeScale,
+          ),
+          const SizedBox(height: 8),
+          GameButton(
+            label: 'DEV: ENTER GAUNTLET (Lv${GameLogic.maxHeroLevel})',
+            style: GameButtonStyle.grey,
+            onPressed: state.inDungeon
+                ? null
+                : () {
+                    widget.onClose();
+                    director.devEnterGauntlet();
+                  },
+          ),
+        ],
+        const SizedBox(height: 24),
+        MenuChrome.sectionLabelScoped('DANGER', scope: MenuScope.account),
+        const SizedBox(height: 6),
+        Text(
+          'Deletes this save on device — separate from Play Games cloud.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        GameButton(
+          label: 'RESET GAME',
+          style: GameButtonStyle.red,
+          onPressed: _confirmReset,
+        ),
+      ],
     );
   }
 }
@@ -489,9 +567,7 @@ class _VolumeSlider extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(label, style: GameTheme.body(size: 14)),
-              ),
+              Expanded(child: Text(label, style: GameTheme.body(size: 14))),
               Text(
                 valueLabel,
                 style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
