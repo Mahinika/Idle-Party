@@ -48,7 +48,9 @@ From `docs/STORE_LISTING.md` — use when Console asks for release notes:
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys
-(see `docs/SHOP_MONETIZATION.md`).
+(see `docs/SHOP_MONETIZATION.md`). **IAP SKUs (2026-09-10):** all five product
+ids exist in Console as **draft**; activate after fixing the payment-profile
+banner (`Öppna betalningsinställningarna`).
 
 ### Production AAB upload checklist (agent + owner)
 
