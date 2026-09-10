@@ -4704,7 +4704,7 @@ class ClassKits {
       resourceCost: 14,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.08,
+      coeff: 1.00,
     ),
     ClassAbilityDef(
       id: AbilityId.conflagrate,
@@ -4718,7 +4718,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.25,
+      coeff: 1.16,
     ),
     ClassAbilityDef(
       id: AbilityId.immolateDestro,
@@ -4732,7 +4732,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 0.85,
+      coeff: 0.80,
 
       gate: AbilityGate(maintainDot: true),
     ),
@@ -4748,7 +4748,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.70,
+      coeff: 0.62,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.fire,
@@ -4813,7 +4813,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 1.58,
+      coeff: 1.45,
       castDelaySeconds: 2.0,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.fire, castArgb: 0xFFFF5020),

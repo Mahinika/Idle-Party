@@ -549,23 +549,23 @@ abstract final class AbilityEffectRunner {
 
       // —— melee DPS (target ~1.22–1.34; Arms leans on Sweeping, not raw mul) ——
       case AbilityId.armsStance:
-        hero.kitOutMul *= 1.26;
+        hero.kitOutMul *= 1.34;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
-        hero.kitOutMul *= 1.30;
+        hero.kitOutMul *= 1.38;
         hero.kitHasteMul *= 1.12;
         hero.kitInMul *= 1.06;
       case AbilityId.sealOfCommand:
-        hero.kitOutMul *= 1.40;
+        hero.kitOutMul *= 1.48;
       case AbilityId.improvedPoisons:
         // Assass led the board — slight lean so lows can rise without HIGH.
         hero.kitOutMul *= 1.28;
       case AbilityId.masterOfSubtlety:
         // Opener fantasy: damage + slight haste for ambush windows.
-        hero.kitOutMul *= 1.32;
+        hero.kitOutMul *= 1.36;
         hero.kitHasteMul *= 1.08;
       case AbilityId.frostPresence:
-        hero.kitOutMul *= 1.40;
+        hero.kitOutMul *= 1.48;
         hero.kitInMul *= 0.97;
       case AbilityId.unholyPresence:
         // Fairness: ghoul + diseases carry identity; presence is a lean, not a stomp.
@@ -609,7 +609,8 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 1.02;
         hero.kitHasteMul *= 1.06;
       case AbilityId.cataclysm:
-        hero.kitOutMul *= 1.12;
+        // Fairness: Chaos Bolt + Rain pack share was HIGH on live-light gate.
+        hero.kitOutMul *= 1.06;
       case AbilityId.moonkinForm:
         hero.kitOutMul *= 1.16;
         hero.kitInMul *= 0.92;
@@ -628,7 +629,7 @@ abstract final class AbilityEffectRunner {
         hero.kitInMul *= 0.94;
       case AbilityId.sinisterStrike:
         // Combo build rides white swings; 2 AP/Agi already lifts the sheet.
-        hero.kitOutMul *= 0.92;
+        hero.kitOutMul *= 1.00;
       case AbilityId.arcaneIntellect:
         // Personal spell power; party-wide Int is the GameState caster aura.
         hero.kitOutMul *= 1.24;

@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.123';
+  static const String currentVersion = '1.12.124';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.124',
+      bullets: <String>[
+        'Fairness pass: Destruction Chaos Bolt / Rain / fillers trimmed so live DPS share stays in band.',
+        'Melee lean: Arms / Fury / Combat / Frost DK / Ret get a small kitOut bump so plate and rogue kits feel closer to casters.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.123',
       bullets: <String>[
