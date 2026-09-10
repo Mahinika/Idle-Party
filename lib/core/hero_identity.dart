@@ -68,11 +68,11 @@ abstract final class HeroIdentity {
   /// unlike [tintArgb], which skips specs that own a unique class sprite.
   /// Tuned for phone readability: stronger hue separation within each family.
   static int ownedBodyTintArgb(HeroSpecId specId) => switch (specId) {
-    // Warrior body
-    HeroSpecId.arms => 0xFFF0E8D0,
-    HeroSpecId.fury => 0xFFFF9860,
-    HeroSpecId.protection => 0xFFB0C8F0,
-    HeroSpecId.retribution => 0xFFFFD060,
+    // Warrior body — stronger hue split at phone scale
+    HeroSpecId.arms => 0xFFF5F0E0,
+    HeroSpecId.fury => 0xFFFF7030,
+    HeroSpecId.protection => 0xFF90B8F0,
+    HeroSpecId.retribution => 0xFFFFC040,
     HeroSpecId.blood => 0xFFFF7070,
     HeroSpecId.frostDk => 0xFF80D0FF,
     HeroSpecId.unholy => 0xFF70E090,
@@ -96,8 +96,8 @@ abstract final class HeroIdentity {
     HeroSpecId.shadow => 0xFFB070E8,
     HeroSpecId.balance => 0xFFF0C040,
     // Healer body
-    HeroSpecId.holyPaladin => 0xFFFFF0A0,
-    HeroSpecId.protPaladin => 0xFFB0C8FF,
+    HeroSpecId.holyPaladin => 0xFFFFF080,
+    HeroSpecId.protPaladin => 0xFF88B0FF,
     HeroSpecId.discipline => 0xFFFFF8E8,
     HeroSpecId.holyPriest => 0xFFFFE090,
     HeroSpecId.elemental => 0xFF70C8FF,

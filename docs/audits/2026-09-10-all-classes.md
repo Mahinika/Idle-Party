@@ -158,6 +158,19 @@ Identity and honesty first; number trims when you name a balance pass.
 
 **Done since Druid-only audit:** items 1 + Eclipse + combo + Guardian Swipe copy (1.12.134).
 
+## Follow-up shipped — 1.12.135
+
+| # | Item | Status |
+|---|------|--------|
+| 2 | Subtlety Shadow Dance → vanish + haste | done |
+| 3 | Combat Rogue share lift | done (passive + Evis/Spree coeffs) |
+| 4 | Demonology trim | done (felguard scale + demonicKnowledge) |
+| 5 | Fury / Ret / Frost DK bump | done (Fury/Ret passives + Ret coeffs; Frost presence) |
+| 6 | Warrior / Paladin tint split | done (`ownedBodyTintArgb`) |
+| 12 | `barkskinResto` honesty comment | done (save key unchanged) |
+
+**Still owner/A56 or art:** #1 Druid form verify · #7 companion scale · #8 wolf VFX · #9 Force of Nature · #14 form walk clips.
+
 ---
 
 ## Warrior

@@ -57,6 +57,7 @@ double _classCompanionAtkScale(HeroSpecId spec) {
   return switch (spec) {
     HeroSpecId.beastMastery => 0.51,
     HeroSpecId.unholy => 0.40,
+    HeroSpecId.demonology => 0.30,
     _ => 0.36,
   };
 }

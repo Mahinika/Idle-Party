@@ -820,6 +820,27 @@ abstract final class KitNamedCasts {
         );
         return true;
 
+      case AbilityCustomId.shadowDance:
+        AbilityEffectRunner._spendAndCd(world, hero, def);
+        hero.vanishTimer = math.max(hero.vanishTimer, 3.5);
+        hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 6.0);
+        for (final e in world.enemies) {
+          if (e.forcedTargetId == hero.id) {
+            e.forcedTargetId = null;
+            e.forcedTargetTimer = 0;
+          }
+        }
+        SpatialCombat._announceCast(
+          world,
+          hero,
+          text: 'SHADOW DANCE',
+          argb: 0xFFC090E8,
+          reducedVfx: reducedVfx,
+          burstArgb: 0x88A070E0,
+          burstRadius: 0.85,
+        );
+        return true;
+
       case AbilityCustomId.killingSpree:
         AbilityEffectRunner._spendAndCd(world, hero, def);
         hero.killingSpreeTimer = 3.0;

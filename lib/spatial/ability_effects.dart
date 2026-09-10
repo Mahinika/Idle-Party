@@ -558,11 +558,11 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 2.02;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
-        hero.kitOutMul *= 1.58;
+        hero.kitOutMul *= 1.70;
         hero.kitHasteMul *= 1.12;
         hero.kitInMul *= 1.06;
       case AbilityId.sealOfCommand:
-        hero.kitOutMul *= 1.68;
+        hero.kitOutMul *= 2.05;
       case AbilityId.improvedPoisons:
         // Assass led the board — slight lean so lows can rise without HIGH.
         hero.kitOutMul *= 1.28;
@@ -571,7 +571,7 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 1.46;
         hero.kitHasteMul *= 1.08;
       case AbilityId.frostPresence:
-        hero.kitOutMul *= 1.98;
+        hero.kitOutMul *= 2.10;
         hero.kitInMul *= 0.97;
       case AbilityId.unholyPresence:
         // Fairness: ghoul + diseases carry identity; presence is a lean, not a stomp.
@@ -611,8 +611,8 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 1.14;
         hero.kitHealMul *= 1.08;
       case AbilityId.demonicKnowledge:
-        // Pet-family identity: personal power + haste; pet AA/empower carries share.
-        hero.kitOutMul *= 1.02;
+        // Pet-family identity: felguard carries share; personal passive stays lean.
+        hero.kitOutMul *= 0.96;
         hero.kitHasteMul *= 1.06;
       case AbilityId.cataclysm:
         // Fairness: Chaos Bolt + Rain pack share was HIGH on live-light gate.
@@ -634,8 +634,8 @@ abstract final class AbilityEffectRunner {
         hero.kitHealMul *= 1.36;
         hero.kitInMul *= 0.94;
       case AbilityId.sinisterStrike:
-        // Combo build rides white swings; 2 AP/Agi already lifts the sheet.
-        hero.kitOutMul *= 1.00;
+        // Combo build rides white swings; lift for live-light share band.
+        hero.kitOutMul *= 1.30;
       case AbilityId.arcaneIntellect:
         // Personal spell power; party-wide Int is the GameState caster aura.
         hero.kitOutMul *= 1.24;

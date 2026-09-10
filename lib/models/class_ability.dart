@@ -67,6 +67,7 @@ enum AbilityCustomId {
   fireball,
   pyroblast,
   vanish,
+  shadowDance,
   killingSpree,
   sprint,
   bladeFlurry,
@@ -1263,7 +1264,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.05,
+      coeff: 1.18,
 
       fireMode: AbilityFireMode.swingRider,
       showInHud: true,
@@ -1350,7 +1351,7 @@ class ClassKits {
       resourceCost: 0,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
-      coeff: 0.62,
+      coeff: 0.76,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -1992,7 +1993,7 @@ class ClassKits {
       resourceCost: 12,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.65,
+      coeff: 1.78,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.holy,
@@ -2086,7 +2087,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 2.55,
+      coeff: 2.85,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0C0),
     ),
@@ -2804,7 +2805,7 @@ class ClassKits {
       specId: HeroSpecId.subtlety,
       name: 'Shadow Dance',
       shortLabel: 'SDance',
-      description: 'Signature stealth window.',
+      description: 'Vanish into shadow — haste openers.',
       unlockLevel: 11,
       cooldown: 40,
       resourceCost: 15,
@@ -2820,7 +2821,7 @@ class ClassKits {
         groundRadius: 2.2,
       ),
 
-      selfBuffKind: AbilitySelfBuffKind.haste,
+      customId: AbilityCustomId.shadowDance,
     ),
     ClassAbilityDef(
       id: AbilityId.fanOfKnivesSub,
@@ -5424,6 +5425,7 @@ class ClassKits {
         groundRadius: 3.2,
       ),
     ),
+    // AbilityId.barkskinResto — legacy save key; player-facing name is Nature's Swiftness.
     ClassAbilityDef(
       id: AbilityId.barkskinResto,
       gearAffinity: HeroRole.healer,

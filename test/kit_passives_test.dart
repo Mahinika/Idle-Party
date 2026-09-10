@@ -75,8 +75,8 @@ void main() {
     var world = SpatialCombat.build(state);
     world = SpatialCombat.step(world, state, dt: 0.1).world;
     final rogue = world.heroes.firstWhere((h) => !h.isPet);
-    // Sinister Strike passive is identity crumb (1.0); sheet power is 2 AP/Agi.
-    expect(rogue.kitOutMul, closeTo(1.0, 0.001));
+    // Sinister Strike passive — mild share lift; combo + 2 AP/Agi carry identity.
+    expect(rogue.kitOutMul, closeTo(1.30, 0.001));
   });
 
   test('Moonkin Form thickens hide; Barkskin is ready at 11', () {
