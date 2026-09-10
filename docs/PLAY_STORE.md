@@ -42,9 +42,9 @@ Track closed testers who **install from Play** and stay opted in:
 From `docs/STORE_LISTING.md` — use when Console asks for release notes:
 
 ```
-• Hub TODAY: the chase owns the big button (Gauntlet / GREATER / KEY / claims) — not a plain ENTER with the hunt buried.
-• QUESTS: five slots — Daily, Bounty, Side, Week, and Contract (endgame KEY / Gauntlet / Rift / Ashen).
-• World Path Sandy → Mothveil; AFK catch-up still uses the same combat. Optional hub POWERUPS ads → Ad Tickets.
+• TODAY now puts your next useful goal directly on the main button.
+• QUESTS now includes Daily, Bounty, Side, Weekly, and long-term goals.
+• Explore 15 World Path zones with smoother AFK dungeon progress.
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys
