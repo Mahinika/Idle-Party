@@ -5,10 +5,8 @@ import '../models/spell_bolt_style.dart';
 ///
 /// SFX: Idle Party soft procedural one-shots under [customSfxRoot] (see
 /// `tool/generate_soft_sfx.py` + `tool/generate_combat_spell_sfx.py`).
-/// Hit families ship 3 variants (`_a/_b/_c`) for combat mix.
+/// Hit families ship 5 variants (`_a`…`_e`) plus swish/material layers.
 /// Kenney RPG Audio (CC0) remains under [sfxRoot] as reference only.
-/// Ambience: Idle Party procedural pads under [ambienceRoot].
-/// Music: owned / CC0 loops under [musicRoot].
 abstract final class AudioAssets {
   static const sfxRoot = 'assets/kenney/audio/sfx';
   static const customSfxRoot = 'assets/custom/audio/sfx';
@@ -16,27 +14,6 @@ abstract final class AudioAssets {
   static const musicRoot = 'assets/custom/audio/music';
 
   static const ui = '$customSfxRoot/ui.wav';
-  static const hitA = '$customSfxRoot/hit_a.wav';
-  static const hitB = '$customSfxRoot/hit_b.wav';
-  static const hitC = '$customSfxRoot/hit_c.wav';
-  static const hitBladeA = '$customSfxRoot/hit_blade_a.wav';
-  static const hitBladeB = '$customSfxRoot/hit_blade_b.wav';
-  static const hitBladeC = '$customSfxRoot/hit_blade_c.wav';
-  static const hitAxeA = '$customSfxRoot/hit_axe_a.wav';
-  static const hitAxeB = '$customSfxRoot/hit_axe_b.wav';
-  static const hitAxeC = '$customSfxRoot/hit_axe_c.wav';
-  static const hitBluntA = '$customSfxRoot/hit_blunt_a.wav';
-  static const hitBluntB = '$customSfxRoot/hit_blunt_b.wav';
-  static const hitBluntC = '$customSfxRoot/hit_blunt_c.wav';
-  static const hitDaggerA = '$customSfxRoot/hit_dagger_a.wav';
-  static const hitDaggerB = '$customSfxRoot/hit_dagger_b.wav';
-  static const hitDaggerC = '$customSfxRoot/hit_dagger_c.wav';
-  static const hitFistA = '$customSfxRoot/hit_fist_a.wav';
-  static const hitFistB = '$customSfxRoot/hit_fist_b.wav';
-  static const hitFistC = '$customSfxRoot/hit_fist_c.wav';
-  static const hitBowA = '$customSfxRoot/hit_bow_a.wav';
-  static const hitBowB = '$customSfxRoot/hit_bow_b.wav';
-  static const hitBowC = '$customSfxRoot/hit_bow_c.wav';
   static const crit = '$customSfxRoot/crit.wav';
   static const kill = '$customSfxRoot/kill.wav';
   static const loot = '$customSfxRoot/loot.wav';
@@ -55,22 +32,42 @@ abstract final class AudioAssets {
   static const spellNature = '$customSfxRoot/spell_nature.wav';
   static const spellLightning = '$customSfxRoot/spell_lightning.wav';
 
+  static const matFlesh = '$customSfxRoot/mat_flesh.wav';
+  static const matBone = '$customSfxRoot/mat_bone.wav';
+  static const matWet = '$customSfxRoot/mat_wet.wav';
+  static const matStone = '$customSfxRoot/mat_stone.wav';
+
   static const hubAmbience = '$ambienceRoot/hub.wav';
   static const dungeonAmbience = '$ambienceRoot/dungeon.wav';
-
   static const hubMusic = '$musicRoot/hub.ogg';
   static const dungeonMusic = '$musicRoot/dungeon.mp3';
 
+  static List<String> _hitVariants(String stem) => <String>[
+    for (final letter in <String>['a', 'b', 'c', 'd', 'e'])
+      '$customSfxRoot/${stem}_$letter.wav',
+  ];
+
+  static List<String> _triple(String stem) => <String>[
+    for (final letter in <String>['a', 'b', 'c'])
+      '$customSfxRoot/${stem}_$letter.wav',
+  ];
+
   /// Play id → one or more variant paths (combat picks random).
-  static const Map<String, List<String>> sfxVariants = <String, List<String>>{
+  static final Map<String, List<String>> sfxVariants = <String, List<String>>{
     'ui': <String>[ui],
-    'hit': <String>[hitA, hitB, hitC],
-    'hit_blade': <String>[hitBladeA, hitBladeB, hitBladeC],
-    'hit_axe': <String>[hitAxeA, hitAxeB, hitAxeC],
-    'hit_blunt': <String>[hitBluntA, hitBluntB, hitBluntC],
-    'hit_dagger': <String>[hitDaggerA, hitDaggerB, hitDaggerC],
-    'hit_fist': <String>[hitFistA, hitFistB, hitFistC],
-    'hit_bow': <String>[hitBowA, hitBowB, hitBowC],
+    'hit': _hitVariants('hit'),
+    'hit_blade': _hitVariants('hit_blade'),
+    'hit_axe': _hitVariants('hit_axe'),
+    'hit_blunt': _hitVariants('hit_blunt'),
+    'hit_dagger': _hitVariants('hit_dagger'),
+    'hit_fist': _hitVariants('hit_fist'),
+    'hit_bow': _hitVariants('hit_bow'),
+    'swish_melee': _triple('swish_melee'),
+    'swish_bow': _triple('swish_bow'),
+    'mat_flesh': <String>[matFlesh],
+    'mat_bone': <String>[matBone],
+    'mat_wet': <String>[matWet],
+    'mat_stone': <String>[matStone],
     'crit': <String>[crit],
     'kill': <String>[kill],
     'loot': <String>[loot],

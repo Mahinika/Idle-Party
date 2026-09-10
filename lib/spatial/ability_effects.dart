@@ -1179,6 +1179,7 @@ abstract final class AbilityEffectRunner {
           hero: hero,
           style: style,
         ),
+        target: enemy,
       );
     }
     if (!reducedVfx) {
@@ -1490,6 +1491,7 @@ abstract final class AbilityEffectRunner {
           SpatialCombat._noteFeelHit(
             world,
             SpatialCombat._combatHitSfxFor(hero: hero, style: style),
+            target: e,
           );
         }
         _applyBleedIfNeeded(world, hero, e, def, raw);
@@ -1706,6 +1708,7 @@ abstract final class AbilityEffectRunner {
         SpatialCombat._noteFeelHit(
           world,
           SpatialCombat._combatHitSfxFor(hero: hero, style: style),
+          target: e,
         );
       }
       _applyBleedIfNeeded(world, hero, e, def, raw);

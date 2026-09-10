@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import '../core/audio_assets.dart';
 import '../core/blessing_constellation.dart';
+import '../core/combat_feel.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/keystone.dart';
@@ -711,7 +712,7 @@ class SpatialWorld {
     this.pendingFeelKills = 0,
     this.pendingFeelPickups = 0,
     this.pendingFeelStairs = 0,
-    Set<String>? pendingFeelHits,
+    List<CombatFeelHit>? pendingFeelHits,
     this.pendingVacuumLootLine,
     this.godHandRadius = 1.8,
     this.bagFullFloaterCooldown = 0,
@@ -723,7 +724,7 @@ class SpatialWorld {
        floaters = floaters ?? <SpatialFloater>[],
        bursts = bursts ?? <SpatialBurst>[],
        groundFx = groundFx ?? <SpatialGroundFx>[],
-       pendingFeelHits = pendingFeelHits ?? <String>{};
+       pendingFeelHits = pendingFeelHits ?? <CombatFeelHit>[];
 
   final TileMap map;
   final List<SpatialActor> heroes;
@@ -788,8 +789,8 @@ class SpatialWorld {
   /// Stairs just opened this step (GO juice).
   int pendingFeelStairs;
 
-  /// Distinct combat-hit SFX ids this step (weapon / spell; rate-limited in audio).
-  final Set<String> pendingFeelHits;
+  /// Combat-hit feel events this step (weapon / spell; rate-limited in audio).
+  final List<CombatFeelHit> pendingFeelHits;
 
   /// Short vacuum pickup line (≤3 item names + gold) for stairs-open toast.
   String? pendingVacuumLootLine;
@@ -844,7 +845,7 @@ class SpatialStepResult {
     this.lootPickups = 0,
     this.stairsOpened = false,
     this.vacuumLootLine,
-    this.feelHits = const <String>{},
+    this.feelHits = const <CombatFeelHit>[],
   });
 
   final SpatialWorld world;
@@ -860,8 +861,8 @@ class SpatialStepResult {
   /// Crits landed this result — live juice only (offline ignores).
   final int critHits;
 
-  /// Combat hit SFX ids (blade / bow / spell_*) for this step.
-  final Set<String> feelHits;
+  /// Combat hit feel events (blade / bow / spell_*) for this step.
+  final List<CombatFeelHit> feelHits;
 
   /// Party members who gained a level this result.
   final int heroLevelUps;
@@ -2398,7 +2399,7 @@ abstract final class SpatialCombat {
       pendingFeelKills: world.pendingFeelKills,
       pendingFeelPickups: world.pendingFeelPickups,
       pendingFeelStairs: world.pendingFeelStairs,
-      pendingFeelHits: Set<String>.from(world.pendingFeelHits),
+      pendingFeelHits: List<CombatFeelHit>.from(world.pendingFeelHits),
       pendingVacuumLootLine: world.pendingVacuumLootLine,
       floaters: world.floaters,
       bursts: world.bursts,
@@ -3003,7 +3004,7 @@ abstract final class SpatialCombat {
     world.pendingFeelPickups = 0;
     final stairs = world.pendingFeelStairs;
     world.pendingFeelStairs = 0;
-    final feelHits = Set<String>.from(world.pendingFeelHits);
+    final feelHits = List<CombatFeelHit>.from(world.pendingFeelHits);
     world.pendingFeelHits.clear();
     final vacuumLine = world.pendingVacuumLootLine;
     world.pendingVacuumLootLine = null;
@@ -3040,10 +3041,45 @@ abstract final class SpatialCombat {
     world.pendingFeelPickups++;
   }
 
-  /// Queue one combat-hit SFX id for this step (deduped; audio rate-limits).
-  static void _noteFeelHit(SpatialWorld world, String sfxId) {
+  /// Queue one combat-hit feel event for this step (audio mixer rate-limits).
+  static void _noteFeelHit(
+    SpatialWorld world,
+    String sfxId, {
+    required SpatialActor target,
+    bool heavy = false,
+  }) {
     if (sfxId.isEmpty) return;
-    world.pendingFeelHits.add(sfxId);
+    var cx = 0.0;
+    var cy = 0.0;
+    var n = 0;
+    for (final h in world.heroes) {
+      if (!h.isAlive) continue;
+      cx += h.x;
+      cy += h.y;
+      n++;
+    }
+    if (n > 0) {
+      cx /= n;
+      cy /= n;
+    } else {
+      cx = target.x;
+      cy = target.y;
+    }
+    final dx = target.x - cx;
+    final dy = target.y - cy;
+    final dist = math.sqrt(dx * dx + dy * dy);
+    final panBias = (dx / 6.0).clamp(-1.0, 1.0);
+    final isSpell = sfxId.startsWith('spell_');
+    world.pendingFeelHits.add(
+      CombatFeelHit(
+        impactId: sfxId,
+        distance: dist,
+        panBias: panBias,
+        material: CombatFeel.materialFor(target.archetype),
+        heavy: heavy,
+        withSwish: !isSpell,
+      ),
+    );
   }
 
   /// Resolve weapon / spell SFX for a hero hit.
@@ -3808,6 +3844,8 @@ abstract final class SpatialCombat {
                 state: nextState,
                 style: hitStyle,
               ),
+              target: target,
+              heavy: isCrit && dealt > 0,
             );
           }
           if (isCrit && dealt > 0) {
@@ -4195,6 +4233,8 @@ abstract final class SpatialCombat {
                       state: nextState,
                       style: p.style,
                     ),
+                    target: v,
+                    heavy: p.isCrit,
                   );
                 }
               }

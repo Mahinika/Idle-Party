@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 import 'audio_assets.dart';
+import 'combat_feel.dart';
 
 enum AmbienceKind { none, hub, dungeon }
 
@@ -27,9 +28,9 @@ abstract final class GameAudio {
   static double musicVolume = 0.22;
 
   /// Per play-id floor so the same weapon does not hammer.
-  static const combatFeelMinGap = Duration(milliseconds: 900);
+  static const combatFeelMinGap = Duration(milliseconds: 750);
 
-  /// Sliding window for total combat feel voices.
+  /// Sliding window for total combat feel *events* (not layers).
   static const combatWindow = Duration(milliseconds: 200);
   static const combatWindowMax = 2;
 
@@ -85,6 +86,12 @@ abstract final class GameAudio {
     'spell_arcane': 0.86,
     'spell_nature': 0.86,
     'spell_lightning': 0.88,
+    'swish_melee': 0.55,
+    'swish_bow': 0.50,
+    'mat_flesh': 0.45,
+    'mat_bone': 0.42,
+    'mat_wet': 0.40,
+    'mat_stone': 0.48,
   };
 
   /// Test hook: counts play attempts that passed mute/rate-limit gates.
@@ -189,40 +196,100 @@ abstract final class GameAudio {
     }
 
     if (AudioAssets.combatFeelIds.contains(id)) {
-      if (!_admitCombatFeel(id, now)) {
-        if (id.startsWith('hit') || id.startsWith('spell_')) {
-          _hapticFor('hit');
-        }
+      if (id.startsWith('hit') || id.startsWith('spell_')) {
+        playCombatHit(CombatFeelHit(impactId: id));
         return;
       }
+      if (!_admitCombatFeel(id, now)) return;
+    }
+
+    debugPlayCount++;
+    _hapticFor(id);
+    _playLayer(id, volumeMul: 1.0, pan: 0.0, speed: 1.0);
+    if (id == 'wipe' || id == 'boss' || id == 'clear') {
+      _duckBackgroundBriefly();
+    }
+  }
+
+  /// Layered combat hit: optional swish → impact → soft material chirp.
+  static void playCombatHit(CombatFeelHit hit) {
+    if (muted) return;
+    final now = DateTime.now();
+    final id = hit.impactId;
+    if (!_admitCombatFeel(id, now)) {
+      if (id.startsWith('hit') || id.startsWith('spell_')) {
+        _hapticFor('hit');
+      }
+      return;
     }
 
     debugPlayCount++;
     _hapticFor(id);
 
+    final distGain = CombatFeel.distanceGain(hit.distance);
+    final pan = hit.panBias.clamp(-0.55, 0.55);
+    final volMul = (0.75 + _rng.nextDouble() * 0.25) * distGain;
+    final heavyMul = hit.heavy ? 1.12 : 1.0;
+    final pitch = _pitchFor(id) * (hit.heavy ? 0.94 : 1.0);
+    final isSpell = id.startsWith('spell_');
+
+    if (hit.withSwish && !isSpell) {
+      _playLayer(
+        CombatFeel.swishIdFor(id),
+        volumeMul: volMul * 0.85,
+        pan: pan,
+        speed: pitch,
+      );
+    }
+
+    final impactDelay = hit.withSwish && !isSpell
+        ? const Duration(milliseconds: 55)
+        : Duration.zero;
+    void playImpactAndMat() {
+      if (muted) return;
+      _playLayer(
+        id,
+        volumeMul: volMul * heavyMul,
+        pan: pan,
+        speed: pitch,
+      );
+      _playLayer(
+        CombatFeel.materialSfxId(hit.material),
+        volumeMul: volMul * 0.7,
+        pan: pan * 0.8,
+        speed: pitch,
+      );
+    }
+
+    if (impactDelay == Duration.zero) {
+      playImpactAndMat();
+    } else {
+      Future<void>.delayed(impactDelay, playImpactAndMat);
+    }
+  }
+
+  static void _playLayer(
+    String id, {
+    required double volumeMul,
+    required double pan,
+    required double speed,
+  }) {
     if (!_ready) return;
     final variants = _sfxVariants[id];
     if (variants == null || variants.isEmpty) return;
-    final source = variants[_rng.nextInt(variants.length)];
     try {
+      final source = variants[_rng.nextInt(variants.length)];
       final gain = _idGain[id] ?? 1.0;
-      final combat = AudioAssets.combatFeelIds.contains(id);
-      final volJitter = combat ? (0.75 + _rng.nextDouble() * 0.25) : 1.0;
-      final pan = combat ? (_rng.nextDouble() * 0.5 - 0.25) : 0.0;
-      final speed = combat ? _pitchFor(id) : 1.0;
       final soloud = SoLoud.instance;
       final handle = soloud.play(
         source,
-        volume: sfxVolume * gain * volJitter,
-        pan: pan,
+        volume: (sfxVolume * gain * volumeMul).clamp(0.0, 1.0),
+        pan: pan.clamp(-1.0, 1.0),
         paused: speed != 1.0,
       );
       if (speed != 1.0) {
-        soloud.setRelativePlaySpeed(handle, speed);
+        soloud.setRelativePlaySpeed(handle, speed.clamp(0.85, 1.15));
         soloud.setPause(handle, false);
-      }
-      if (id == 'wipe' || id == 'boss' || id == 'clear') {
-        _duckBackgroundBriefly();
       }
     } catch (_) {}
   }

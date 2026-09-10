@@ -73,13 +73,15 @@ def write_hit_family(
     release: float,
     bow: bool = False,
 ) -> None:
-    """Three slight material variants so combat mix can randomize."""
+    """Five slight material variants so combat mix can randomize."""
     specs = (
-        (0.92, 0.90, 0),
-        (1.00, 1.00, 1),
-        (1.08, 1.10, 2),
+        (0.88, 0.85, 0),
+        (0.94, 0.95, 1),
+        (1.00, 1.00, 2),
+        (1.06, 1.08, 3),
+        (1.12, 1.15, 4),
     )
-    for letter, (bright, noise_mul, seed_off) in zip("abc", specs):
+    for letter, (bright, noise_mul, seed_off) in zip("abcde", specs):
         random.seed(11 + seed_off + hash(stem) % 97)
         if bow:
 
@@ -104,6 +106,32 @@ def write_hit_family(
                 vol=vol,
                 attack=attack,
                 release=release,
+            )
+
+
+def write_swish_family(stem: str, base: float, bow: bool = False) -> None:
+    specs = ((0.92, 0), (1.0, 1), (1.08, 2))
+    for letter, (bright, seed_off) in zip("abc", specs):
+        random.seed(40 + seed_off + hash(stem) % 50)
+        if bow:
+            write(
+                f"{stem}_{letter}.wav",
+                0.09,
+                lambda t, b=bright: soft_noise(t, 0.12, 22)
+                + tone(280 * b + t * 400, t, 0.22) * math.exp(-t * 18),
+                vol=0.22,
+                attack=120,
+                release=22,
+            )
+        else:
+            write(
+                f"{stem}_{letter}.wav",
+                0.08,
+                lambda t, b=bright: soft_noise(t, 0.1, 28)
+                + tone(190 * b + t * 520, t, 0.28) * math.exp(-t * 20),
+                vol=0.20,
+                attack=140,
+                release=24,
             )
 
 
@@ -217,7 +245,45 @@ def main() -> None:
     write_hit_family("hit_fist", 100, 0.04, 0.10, 0.28, 100, 16)
     write_hit_family("hit_bow", 160, 0.035, 0.15, 0.28, 70, 12, bow=True)
 
-    # Remove legacy single-hit files if present (variants replace them).
+    write_swish_family("swish_melee", 200)
+    write_swish_family("swish_bow", 280, bow=True)
+
+    # Soft material chirps layered under impacts.
+    write(
+        "mat_flesh.wav",
+        0.07,
+        lambda t: tone(90, t, 0.4) * math.exp(-t * 18) + soft_noise(t, 0.06, 30),
+        vol=0.22,
+        attack=100,
+        release=20,
+    )
+    write(
+        "mat_bone.wav",
+        0.06,
+        lambda t: tone(620, t, 0.35) * math.exp(-t * 28)
+        + tone(1240, t, 0.12) * math.exp(-t * 40),
+        vol=0.20,
+        attack=150,
+        release=28,
+    )
+    write(
+        "mat_wet.wav",
+        0.08,
+        lambda t: soft_noise(t, 0.2, 14) + tone(140, t, 0.18) * math.exp(-t * 12),
+        vol=0.20,
+        attack=80,
+        release=16,
+    )
+    write(
+        "mat_stone.wav",
+        0.07,
+        lambda t: tone(55, t, 0.45) * math.exp(-t * 14) + soft_noise(t, 0.05, 25),
+        vol=0.24,
+        attack=90,
+        release=18,
+    )
+
+    # Remove legacy single-hit / 3-variant files if present.
     for legacy in (
         "hit.wav",
         "hit_blade.wav",

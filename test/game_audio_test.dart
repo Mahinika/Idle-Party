@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/audio_assets.dart';
+import 'package:idle_party/core/combat_feel.dart';
 import 'package:idle_party/core/game_audio.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/spell_bolt_style.dart';
 
@@ -16,7 +18,7 @@ void main() {
     }
   });
 
-  test('hit families ship three mix variants', () {
+  test('hit families ship five mix variants', () {
     for (final id in <String>[
       'hit',
       'hit_blade',
@@ -27,8 +29,42 @@ void main() {
       'hit_bow',
     ]) {
       final variants = AudioAssets.sfxVariants[id]!;
-      expect(variants, hasLength(3), reason: id);
+      expect(variants, hasLength(5), reason: id);
     }
+  });
+
+  test('swish and material layer assets exist', () {
+    for (final id in <String>[
+      'swish_melee',
+      'swish_bow',
+      'mat_flesh',
+      'mat_bone',
+      'mat_wet',
+      'mat_stone',
+    ]) {
+      expect(AudioAssets.sfxVariants.containsKey(id), isTrue, reason: id);
+    }
+  });
+
+  test('CombatFeel distance gain falls off with range', () {
+    expect(CombatFeel.distanceGain(0), closeTo(1.0, 0.01));
+    expect(CombatFeel.distanceGain(8), lessThan(0.6));
+    expect(CombatFeel.distanceGain(40), closeTo(0.28, 0.01));
+  });
+
+  test('CombatFeel maps archetypes to materials', () {
+    expect(
+      CombatFeel.materialFor(EnemyArchetype.swarm),
+      CombatHitMaterial.wet,
+    );
+    expect(
+      CombatFeel.materialFor(EnemyArchetype.glass),
+      CombatHitMaterial.bone,
+    );
+    expect(
+      CombatFeel.materialFor(EnemyArchetype.tank),
+      CombatHitMaterial.stone,
+    );
   });
 
   test('mute blocks GameAudio play counting', () {

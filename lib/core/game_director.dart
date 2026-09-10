@@ -821,8 +821,8 @@ class GameDirector extends ChangeNotifier {
       }
 
       if (result.feelHits.isNotEmpty) {
-        for (final id in result.feelHits) {
-          GameAudio.play(id);
+        for (final hit in result.feelHits) {
+          GameAudio.playCombatHit(hit);
         }
       }
       if (result.lootPickups > 0 && !playedLoot) {
