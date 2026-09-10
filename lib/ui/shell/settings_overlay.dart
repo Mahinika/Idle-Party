@@ -105,13 +105,6 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
     director.resetDisplayDefaults();
   }
 
-  static String _volumeLabel(double v) {
-    if (v <= 0.01) return 'Off';
-    if (v < 0.4) return 'Low';
-    if (v < 0.85) return 'Med';
-    return 'High';
-  }
-
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -119,9 +112,58 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Phone preferences — text size, dungeon zoom, sound, and comfort. '
+            'Phone preferences — sound, text size, dungeon zoom, and comfort. '
             'OS display size still applies on top.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 12),
+          MenuChrome.sectionLabel('SOUND'),
+          const SizedBox(height: 4),
+          Text(
+            'Mute turns everything off. Music is the hub / dungeon track; '
+            'ambience is the soft bed underneath; SFX is combat and UI.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 8),
+          _SettingsToggle(
+            label: 'Mute all sound',
+            value: state.soundMuted,
+            onChanged: director.setSoundMuted,
+          ),
+          const SizedBox(height: 10),
+          Opacity(
+            opacity: state.soundMuted ? 0.45 : 1,
+            child: IgnorePointer(
+              ignoring: state.soundMuted,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _VolumeSlider(
+                    label: 'Music',
+                    value: state.musicVolume,
+                    onChanged: director.setMusicVolume,
+                  ),
+                  const SizedBox(height: 8),
+                  _VolumeSlider(
+                    label: 'Ambience',
+                    value: state.ambienceVolume,
+                    onChanged: director.setAmbienceVolume,
+                  ),
+                  const SizedBox(height: 8),
+                  _VolumeSlider(
+                    label: 'SFX',
+                    value: state.sfxVolume,
+                    onChanged: director.setSfxVolume,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _SettingsToggle(
+            label: 'Haptics (vibration)',
+            value: state.hapticsEnabled,
+            onChanged: director.setHapticsEnabled,
           ),
           const SizedBox(height: 12),
           MenuChrome.sectionLabel('DISPLAY'),
@@ -187,38 +229,6 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             onChanged: director.setKeepScreenAwake,
           ),
           const SizedBox(height: 12),
-          MenuChrome.sectionLabel('SOUND & FEEL'),
-          const SizedBox(height: 6),
-          _SettingsToggle(
-            label: 'Mute sound',
-            value: state.soundMuted,
-            onChanged: director.setSoundMuted,
-          ),
-          const SizedBox(height: 8),
-          _SettingsCycle(
-            label: 'SFX ${_volumeLabel(state.sfxVolume)}',
-            hint: 'Combat and UI volume',
-            onCycle: director.cycleSfxVolume,
-          ),
-          const SizedBox(height: 8),
-          _SettingsCycle(
-            label: 'Ambience ${_volumeLabel(state.ambienceVolume)}',
-            hint: 'Soft hub / dungeon loop',
-            onCycle: director.cycleAmbienceVolume,
-          ),
-          const SizedBox(height: 8),
-          _SettingsCycle(
-            label: 'Music ${_volumeLabel(state.musicVolume)}',
-            hint: 'Hub / dungeon background track',
-            onCycle: director.cycleMusicVolume,
-          ),
-          const SizedBox(height: 8),
-          _SettingsToggle(
-            label: 'Haptics (vibration)',
-            value: state.hapticsEnabled,
-            onChanged: director.setHapticsEnabled,
-          ),
-          const SizedBox(height: 12),
           MenuChrome.sectionLabel('COMBAT LOOK'),
           const SizedBox(height: 6),
           _SettingsCycle(
@@ -240,7 +250,7 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
           const SizedBox(height: 8),
           GameButton(
             label: 'RESET DISPLAY DEFAULTS',
-            tip: 'Text 100% · Zoom Normal · Full VFX · SFX Med · sound on',
+            tip: 'Text 100% · Zoom Normal · Full VFX · Music Low · sound on',
             style: GameButtonStyle.grey,
             onPressed: _resetDisplayDefaults,
           ),
@@ -448,6 +458,53 @@ class _SettingsOverlayState extends State<SettingsOverlay> {
             label: 'RESET GAME',
             style: GameButtonStyle.red,
             onPressed: _confirmReset,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VolumeSlider extends StatelessWidget {
+  const _VolumeSlider({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final double value;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = (value.clamp(0.0, 1.0) * 100).round();
+    final valueLabel = pct <= 0 ? 'Off' : '$pct%';
+    return Semantics(
+      slider: true,
+      label: '$label volume',
+      value: valueLabel,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(label, style: GameTheme.body(size: 14)),
+              ),
+              Text(
+                valueLabel,
+                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          MenuChrome.slider(
+            value: value.clamp(0.0, 1.0),
+            min: 0,
+            max: 1,
+            divisions: 20,
+            onChanged: onChanged,
           ),
         ],
       ),
