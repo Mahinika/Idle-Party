@@ -14,12 +14,26 @@ Do **not** paste tooltips, coefficients, talent point spreads, glyph IDs, or BiS
 
 One short paragraph: kit health vs WotLK identity, plus the single biggest gap.
 
+## Class fantasy contract
+
+Fill this before ability-by-ability work. If one class is in scope, include
+every shipped spec so sibling identities cannot collapse into one body/kit.
+
+| Spec | Role | Reference era / divergence | Canonical body/form/stance/companion | State | Required surfaces | Distinguishable at 360×780? |
+|------|------|----------------------------|--------------------------------------|-------|-------------------|-----------------------------|
+| | | WotLK / later split / original | | persistent / conditional / temporary / none | dungeon · HUD · roster/GEAR · VFX | yes / no |
+
 ## Audit DoD
 
+- [ ] Class fantasy contract covers every in-scope (or every class) spec
+- [ ] Reference-era differences are explicit; no false WotLK taxonomy claims
 - [ ] Wowhead links filled (or N/A + reason)
 - [ ] Strengths / weaknesses vs Idle Party
 - [ ] Rotation buckets mapped (ST / AoE / maintain / CD / defensive / utility / proc)
 - [ ] Every in-scope ability has effect path (`runner` / `spatial` / `missing` / `passive`)
+- [ ] Body/form/stance state matches rules on dungeon, HUD, roster/GEAR, and VFX
+- [ ] Persistent form has its real silhouette; a passive chip alone does not pass
+- [ ] Form animations, gear policy, death/revive, and floor transitions checked
 - [ ] Range / positioning + combat AI checked
 - [ ] Threat (tank) / heal triage (healer) checked or N/A
 - [ ] Gear / armor fantasy + auto-equip bias checked
@@ -32,7 +46,7 @@ One short paragraph: kit health vs WotLK identity, plus the single biggest gap.
 - [ ] All **P0** listed
 - [ ] If `full`: live meter + cast notes
 - [ ] Tunings are Idle Party field changes (not Wowhead numbers)
-- [ ] Pet/guardian section filled or marked N/A
+- [ ] Companion section filled or marked N/A
 - [ ] Composition fit (1 tank / 1 heal / 2 DPS) checked or N/A
 - [ ] Difficulty contexts: FARM / PUSH / challenges checked or N/A
 - [ ] Save / migrate / old-save kit OK or N/A
@@ -50,7 +64,13 @@ Copy once per `HeroSpecId`.
 **Verdict:** ship | tune | WIP  
 **Depth:** quick | full  
 **Wowhead role page family:** tank | healer | melee-dps | ranged-dps | caster-dps  
-**Has pet/guardian?** no | yes (which)
+**Reference era / divergence:** WotLK | later split | original hybrid — notes
+
+**Canonical combat body/form/stance:** humanoid | cat | bear | Moonkin | tree | other
+
+**State:** persistent | conditional | temporary | none
+
+**Has companion?** no | yes (which)
 
 #### Wowhead sources (read, don’t scrape)
 
@@ -80,6 +100,26 @@ Patch note on guide (e.g. 3.4.x): ____
 **Player pitch (one line):**  
 > ____  
 (How you'd describe this spec in UI / PARTY / store — must match live feel.)
+
+#### 1b. Body / form / stance contract *(required)*
+
+An always-on form must change the actor silhouette; a passive multiplier or
+HUD chip alone is not visual implementation.
+
+| Check | Expected | Observed | Status |
+|-------|----------|----------|--------|
+| Canonical silhouette | class fantasy contract | | ok / wrong / missing |
+| Runtime state | persistent / conditional / temporary | | ok / never / stuck |
+| Dungeon actor | correct body at combat scale | | ok / humanoid / generic |
+| PARTY HUD | same spec immediately identifiable | | ok / muddy |
+| Roster / GEAR | portrait/doll honestly identifies spec | | ok / wrong |
+| Form animations | idle / move / attack-cast / hit / defeat | | ok / static / wrong |
+| Enter / exit | timing, death/revive, floor transition | | ok / broken / N/A |
+| Gear policy | form-specific visible gear or intentionally hidden | | explicit / accidental |
+| Offline / reduced VFX | state remains correct and readable | | ok / breaks |
+| Save / old save | correct default state after load | | ok / broken / N/A |
+
+**Persistent-form verdict:** pass | **P0 identity gap**
 
 #### 2. Rotation shape *(maps Wowhead “Rotation & Abilities”)*
 
@@ -155,14 +195,14 @@ Idle combat is **always sustained auto** — no opener weaving. Judge whether th
 | **Save / migrate** | old save loads kit; unlocks/abilities not wiped wrongly | ok / broken / N/A |
 | **Perf** | burst/bolt spam OK vs ~60 FPS; no hitch on signature | ok / heavy / N/A |
 
-#### 7. Pet / guardian *(fill or N/A)*
+#### 7. Companion *(fill or N/A)*
 
 | Check | Notes | Status |
 |-------|-------|--------|
-| Pet exists in combat | BM / Demo / etc. | ok / missing / N/A |
-| Pet AI / leash | stays useful, not stuck | ok / bad / N/A |
-| Pet VFX / sprite | licensed asset | ok / missing / N/A |
-| Pet in meter / HUD | if intended | ok / silent / N/A |
+| Companion exists in combat | BM / Demo / etc.; not Guardian Druid by name alone | ok / missing / N/A |
+| Companion AI / leash | stays useful, not stuck | ok / bad / N/A |
+| Companion VFX / sprite | legal asset | ok / missing / N/A |
+| Companion in meter / HUD | if intended | ok / silent / N/A |
 
 #### 8. Live read *(required: full)*
 
@@ -183,7 +223,10 @@ Legal: sprites only via `KenneyAssets` / owned `assets/custom/` — no third-par
 
 | Surface | Path / check | Status | Notes |
 |---------|--------------|--------|-------|
+| Canonical silhouette / form | `HeroIdentity` + painter + actor state | ok / wrong / missing | passive chip alone fails |
 | Hero body / class sprite | `KenneyAssets` / `CustomAssets` / paper doll | ok / wrong / missing | matches class fantasy? |
+| Form animation family | idle / move / attack-cast / hit / defeat | ok / static / wrong | |
+| Gear in form | form-specific or intentionally hidden | ok / accidental | no stretched humanoid overlays |
 | Spec distinguishable in party | 4 heroes readable at phone scale | ok / muddy | |
 | Ability HUD chips | labels / icons in `_PartyCornerHud` | ok / wrong / generic | |
 | Auto-attack bolt style | `SpellBoltStyle` for spec | ok / generic / missing | |
