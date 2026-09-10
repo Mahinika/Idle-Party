@@ -28,10 +28,10 @@ OUT = ROOT / "tool" / "store_listing" / "out"
 SHOTS = [
     ("01_hub.png", "Always know today’s chase", 0.28),
     ("02_combat.png", "Your party keeps fighting", 0.42),
-    ("03_gear.png", "Grow stronger every floor", 0.08),
+    ("03_gear.png", "Build and equip your party", 0.08),
     ("04_meta.png", "Keep power when you Ascend", 0.08),
-    ("05_zone.png", "15 zones · World Path", 0.32),
-    ("06_power.png", "See your gold per minute", 0.08),
+    ("05_zone.png", "Explore the World Path", 0.32),
+    ("06_power.png", "Upgrade every run", 0.08),
 ]
 
 W, H = 1080, 1920

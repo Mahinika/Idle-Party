@@ -40,37 +40,40 @@ fairness, cheap convenience SHOP).
 ### Short description (80 chars max)
 
 ```
-Grow a party, farm AFK, chase KEYSTONE, Gauntlet, and Greater Rifts.
+Build a fantasy party, fight while away, and return to real progress.
 ```
 
-(67 characters)
+(69 characters)
 
 ### Full description
 
 ```
-Idle Party is a single-player idle RPG for phones: grow a fantasy party, clear painted dungeons, and come back to real progress.
+Build a fantasy party that keeps fighting while you are away. Return to loot, progress, and one clear goal for what to do next.
 
-WHAT YOU DO
-• Build a party of classic kits (tanks, healers, DPS) — 10 classes and 31 specs.
-• Enter the World Path: 15 zones from Sandy Caverns through Mothveil Hollow — each with its own owned dungeon art (floors, walls, props).
-• Fight on multi-chamber floors with loot, room chests, and bosses. Companions follow and hit.
-• Leave the dungeon when you want — AFK catch-up keeps the party moving.
-• Hub TODAY shows one clear chase (READY / ALMOST) and drives the main button so you always know the next beat.
-• MORE → QUESTS: Daily, Bounty, Side, Week, and endgame Contract goals.
+BUILD YOUR PARTY
+• Choose classic fantasy roles: tanks, healers, melee fighters, ranged heroes, and spellcasters.
+• Discover 10 classes and 31 distinct hero specs.
+• Equip, merge, and craft gear to make the whole party stronger.
+• Battle through 15 dungeon zones filled with room chests, enemies, and bosses.
 
-LONG-TERM GOALS
-• Ascend through AL20 — keep essence / Apex / pets / meta upgrades and unlock more kits.
-• Level the party to 100 for endgame: KEYSTONE keys in normal zones, Infinity Gauntlet climb, farm Rifts, and Greater Rifts (prestige timed kills ranked on optional Play Games boards).
-• World Path unlocks by party level (Sandy from Lv1) or by clearing the prior zone.
-• POWER → Craft: forever Apex gear that survives Ascend. MERGE two bag pieces into one stronger item.
+IDLE PROGRESS, REAL COMBAT
+• Watch your heroes move, fight, heal, and use their own abilities.
+• Come back to AFK progress powered by the same dungeon combat.
+• Leave a dungeon whenever you want and continue when you are ready.
+• TODAY puts your next useful goal directly on the main button.
+
+KEEP GROWING
+• Ascend to unlock more heroes and permanent upgrades.
+• Reach level 100 to open challenging endgame modes: KEYSTONE, Infinity Gauntlet, Rifts, and Greater Rifts.
+• Take on daily, weekly, and long-term quests.
+• Optional Google Play Games adds cloud save and seasonal leaderboards.
 
 FAIR PLAY
-• Single-player — no idle-party account required.
-• Optional Google Play Games for seasonal boards and cloud save (you can stay offline).
-• Optional rewarded ads on the hub (POWERUPS) for a timed boost — never mid-fight.
-• Built for portrait phones.
+• Single-player — no Idle Party account required.
+• Optional rewarded ads grant timed boosts and never interrupt a fight.
+• Designed for portrait phones.
 
-Install, start a party, and take one more floor.
+Start your party and take one more floor.
 ```
 
 ### Release notes — Alpha / Production ship line (en-US)
@@ -78,9 +81,9 @@ Install, start a party, and take one more floor.
 Working ship: **1.12.117+146** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
 
 ```
-• Hub TODAY: the chase owns the big button (Gauntlet / GREATER / KEY / claims) — not a plain ENTER with the hunt buried.
-• QUESTS: five slots — Daily, Bounty, Side, Week, and Contract (endgame KEY / Gauntlet / Rift / Ashen).
-• World Path Sandy → Mothveil; AFK catch-up still uses the same combat. Optional hub POWERUPS ads → Ad Tickets.
+• TODAY now puts your next useful goal directly on the main button.
+• QUESTS now includes Daily, Bounty, Side, Weekly, and long-term goals.
+• Explore 15 World Path zones with smoother AFK dungeon progress.
 ```
 
 ### Full description honesty (SHOP)
@@ -89,24 +92,27 @@ Full description may mention optional cheap SHOP convenience (boosts / ad-free) 
 Play Console products are active. Do **not** imply whale packs, gacha, or BiS-for-cash.
 POWERUPS ads remain the free path to the same boost power.
 
-### Screenshot caption plan (Play phone carousel, 2026-08-21)
+### Screenshot plan (Play phone carousel, 2026-09-10)
 
-Promo cards in `tool/store_listing/marketing/` (English, 1080×1920). Play max is **8** phone shots; #10 is extra on disk.
+Lead with the promise, then prove it with real in-game UI. Promo cards live in
+`tool/store_listing/marketing/`; current UI captures live in
+`tool/store_listing/out/`. All are English, 1080×1920. Play max is **8** phone
+shots.
 
-| # | File | Caption |
+| # | Source | Caption |
 |---|--------|---------|
-| Feature | `01_feature_graphic_1024x500.png` | IDLE PARTY · Grow a party. Farm AFK. |
-| 1 | `02_todays_chase_1080x1920.png` | Always know today's chase |
-| 2 | `03_party_fights_1080x1920.png` | Your party keeps fighting |
-| 3 | `04_grow_stronger_1080x1920.png` | Grow stronger every floor |
-| 4 | `05_build_party_1080x1920.png` | 10 classes. 31 kits. |
-| 5 | `06_world_path_1080x1920.png` | 15 zones. One World Path. |
-| 6 | `07_afk_progress_1080x1920.png` | Progress while you're away |
-| 7 | `08_keystone_1080x1920.png` | KEYSTONE. Beat the clock. |
-| 8 | `09_ascend_1080x1920.png` | Ascend. Keep your power. |
-| extra | `10_one_more_floor_1080x1920.png` | Take one more floor. |
+| Feature | `marketing/01_feature_graphic_1024x500.png` | IDLE PARTY · Grow a party. Farm AFK. |
+| 1 | `marketing/02_todays_chase_1080x1920.png` | Always know today's chase |
+| 2 | `out/02_02_combat.png` | Your party keeps fighting |
+| 3 | `out/03_03_gear.png` | Build and equip your party |
+| 4 | `marketing/05_build_party_1080x1920.png` | 10 classes. 31 specs. |
+| 5 | `out/05_05_zone.png` | Explore the World Path |
+| 6 | `marketing/07_afk_progress_1080x1920.png` | Progress while you're away |
+| 7 | `marketing/08_keystone_1080x1920.png` | KEYSTONE. Beat the clock. |
+| 8 | `marketing/09_ascend_1080x1920.png` | Ascend. Keep your power. |
 
-These are branded explainer cards (owned pixel look), not live HUD captures. Swap back to `tool/store_listing/out/` Playwright shots if Google flags them as not representing the app.
+The three UI shots are current game captures with a small caption band. The
+other five are branded explainers using owned Idle Party art.
 
 ### Feature graphic note
 
@@ -133,9 +139,12 @@ Hard-won rules:
 
 Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
 
-## Play Console status (2026-09-09)
+## Play Console status (2026-09-10)
 
-- Short + full description: en-US only (this file). Full description mentions POWER → Craft.
-- Phone screenshots (8) + feature graphic from `tool/store_listing/marketing/`.
-- **Production live:** **1.12.110 (139)** on Google Play (2026-09-09). Primary player install path.
+- Short + full description: en-US only (this file). Clearer pitch + feature sections.
+- Phone screenshots (8): mixed branded cards + real combat/gear/zone UI from
+  `tool/store_listing/upload/`.
+- Developer name: **Cognifox Studio** (was Stuido) pending Google approval.
+- **Listing changes submitted for review** 2026-09-10 (short + full + phone shots).
+- **Production live until publish:** **1.12.110 (139)**; Production **1.12.117 (146)** also in review.
 - Closed Alpha remains for early builds. Do not advertise GitHub Releases to players.

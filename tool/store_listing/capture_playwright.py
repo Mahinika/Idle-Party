@@ -39,6 +39,22 @@ def click_role(page, name: str, wait_ms: int = 900) -> bool:
     return True
 
 
+def dismiss_optional_overlays(page) -> None:
+    """Keep one-time prompts out of store screenshots."""
+    for _ in range(3):
+        dismissed = False
+        for label in ("MAYBE LATER", "GOT IT", "SKIP ALL TIPS", "SKIP"):
+            loc = page.get_by_role("button", name=label, exact=True)
+            if loc.count() and loc.first.is_visible():
+                loc.first.click()
+                page.wait_for_timeout(500)
+                print("dismissed", label)
+                dismissed = True
+                break
+        if not dismissed:
+            return
+
+
 def shot(page, name: str) -> None:
     RAW.mkdir(parents=True, exist_ok=True)
     path = RAW / name
@@ -107,6 +123,7 @@ def main() -> None:
         click_role(page, "CONTINUE", 1400)
         click_role(page, "SKIP ALL TIPS", 600)
         click_role(page, "GOT IT", 400)
+        dismiss_optional_overlays(page)
         page.wait_for_timeout(800)
         print("hub buttons", buttons(page))
 
@@ -120,16 +137,17 @@ def main() -> None:
         shot(page, "03_gear.png")
         click_role(page, "CLOSE", 600)
 
-        # POWER → Gold (default) — KEEP under Gold for Blessing chrome
-        click_role(page, "POWER", 900)
-        print("power buttons", buttons(page))
+        # GOLD shows the run's upgrade tracks.
+        click_role(page, "GOLD", 900)
+        print("gold buttons", buttons(page))
         shot(page, "06_power.png")
+        click_role(page, "CLOSE", 600)
 
-        if not tap_text(page, "Gold", 700):
-            tap_text(page, "GOLD", 700)
+        # Permanent Ascend power lives under ESSENCE → KEEP.
+        click_role(page, "ESSENCE", 900)
         if not click_role(page, "KEEP", 800):
             tap_text(page, "KEEP", 800)
-        print("forge buttons", buttons(page))
+        print("keep buttons", buttons(page))
         shot(page, "04_meta.png")
         click_role(page, "CLOSE", 600)
 
