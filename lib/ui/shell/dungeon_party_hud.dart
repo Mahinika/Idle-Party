@@ -18,6 +18,7 @@ import '../hero_doll_sprite.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
+import 'kit_hud_chips.dart';
 
 class PartyCornerHud extends StatefulWidget {
   const PartyCornerHud({
@@ -442,11 +443,17 @@ class _KitSidePanel extends StatelessWidget {
     final off = hero.itemIn(EquipmentSlot.offHand);
     final hasShield = off?.offHandKind == OffHandKind.shield;
     final abilities = ClassKits.hudAbilitiesAtSpec(hero.specId, hero.level);
-    final visible = abilities.length <= 4
-        ? abilities
-        : abilities.take(4).toList(growable: false);
     final maxHp = spatial.effectiveMaxHp;
     final frac = maxHp <= 0 ? 0.0 : (spatial.hp / maxHp).clamp(0.0, 1.0);
+    final visible = KitHudChips.prioritize(
+      abilities,
+      spatial: spatial,
+      resource: resource,
+      hasShield: hasShield,
+      maxChips: 4,
+      world: world,
+      heroHpFrac: frac,
+    );
 
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 148),
@@ -508,7 +515,7 @@ class _KitSidePanel extends StatelessWidget {
                       cdLeft: spatial.abilityCd[ability.id.name] ?? 0,
                       rage: resource,
                       hasShield: hasShield,
-                      activeBuff: false,
+                      activeBuff: KitHudChips.buffActive(ability, spatial),
                       focusHpFrac: 1,
                       bombUp: false,
                       isRunic: isRunic,
@@ -619,46 +626,8 @@ class _PartyRow extends StatelessWidget {
     }
   }
 
-  bool _abilityBuffActive(ClassAbilityDef ability, SpatialActor s) {
-    return switch (ability.id) {
-      AbilityId.shieldBlock => s.shieldBlockTimer > 0,
-      AbilityId.shieldWall => s.shieldWallTimer > 0,
-      AbilityId.lastStand => s.lastStandTimer > 0,
-      AbilityId.shieldSlam => s.queuedShieldSlam,
-      AbilityId.shockwave => s.shockwaveFlash > 0,
-      AbilityId.powerWordShield => s.absorbShield > 0,
-      AbilityId.prayerOfMending => s.pomCharges > 0,
-      AbilityId.painSuppression => s.painSuppressionTimer > 0,
-      AbilityId.powerInfusion => s.powerInfusionTimer > 0,
-      AbilityId.innerFire => s.innerFireActive,
-      AbilityId.combustion => s.combustionTimer > 0,
-      AbilityId.furyRecklessness => s.combustionTimer > 0,
-      AbilityId.vendetta ||
-      AbilityId.coldBlood ||
-      AbilityId.arcanePower => s.combustionTimer > 0,
-      AbilityId.pyroblast => s.hotStreakReady,
-      AbilityId.iceBlock ||
-      AbilityId.arcaneIceBlock ||
-      AbilityId.frostMageIceBlock => s.iceBlockTimer > 0,
-      AbilityId.livingBomb => s.livingBombArmed > 0,
-      AbilityId.sliceAndDice => s.sliceAndDiceTimer > 0,
-      AbilityId.bladeFlurry => s.bladeFlurryTimer > 0,
-      AbilityId.sweepingStrikes => s.bladeFlurryTimer > 0,
-      AbilityId.holyShield => s.shieldBlockTimer > 0,
-      AbilityId.beaconOfLight => s.beaconTimer > 0,
-      AbilityId.divineFavor => (s.buffTimers['favor'] ?? 0) > 0,
-      AbilityId.sprint => s.sprintTimer > 0,
-      AbilityId.vanish => s.vanishTimer > 0,
-      AbilityId.killingSpree => s.killingSpreeTimer > 0,
-      _ =>
-        ability.effect == AbilityEffectKind.selfBuff &&
-            ((s.buffTimers['buff'] ?? 0) > 0 ||
-                (s.buffTimers['shield'] ?? 0) > 0 ||
-                s.powerInfusionTimer > 0 ||
-                s.shieldBlockTimer > 0 ||
-                s.combustionTimer > 0),
-    };
-  }
+  bool _abilityBuffActive(ClassAbilityDef ability, SpatialActor s) =>
+      KitHudChips.buffActive(ability, s);
 
   @override
   Widget build(BuildContext context) {
@@ -680,7 +649,7 @@ class _PartyRow extends StatelessWidget {
         : const <ClassAbilityDef>[];
     final maxChips = phone ? 4 : (compact ? 3 : 4);
     final visibleAbilities = showKit
-        ? _prioritizeHudAbilities(
+        ? KitHudChips.prioritize(
             abilities,
             spatial: kitActor,
             resource: resource,
@@ -1027,82 +996,6 @@ class _PartyRow extends StatelessWidget {
   bool _focusBombUp(SpatialActor spatial, SpatialWorld? world) {
     final focus = _focusEnemy(spatial, world);
     return focus != null && focus.livingBombTimer >= 2;
-  }
-
-  /// Prefer active / ready chips so a 4-hero HUD stays readable.
-  List<ClassAbilityDef> _prioritizeHudAbilities(
-    List<ClassAbilityDef> abilities, {
-    required SpatialActor spatial,
-    required double resource,
-    required bool hasShield,
-    required int maxChips,
-    SpatialWorld? world,
-    double heroHpFrac = 1.0,
-  }) {
-    if (abilities.length <= maxChips) return abilities;
-
-    final focusHp = _focusHpFrac(spatial, world);
-    final bombUp = _focusBombUp(spatial, world);
-    final partyHealthy = heroHpFrac > 0.45;
-    final defOrder = <AbilityId, int>{
-      for (var i = 0; i < ClassKits.all.length; i++) ClassKits.all[i].id: i,
-    };
-
-    int rank(ClassAbilityDef a) {
-      if (_abilityBuffActive(a, spatial)) return 0;
-      final gated = a.requiresShield && !hasShield;
-      final cd = spatial.abilityCd[a.id.name] ?? 0;
-      final noRage = resource + 0.001 < a.resourceCost;
-      final execFrac = a.gate.executeHpFrac;
-      final execWaiting = execFrac != null && focusHp > execFrac;
-      final bombWaiting = a.gate.livingBombRefresh && bombUp;
-      final demoteWall = partyHealthy &&
-          (a.id == AbilityId.shieldWall || a.id == AbilityId.lastStand);
-      if (!gated && cd <= 0.05 && !noRage && !execWaiting && !bombWaiting) {
-        return demoteWall ? 2 : 1;
-      }
-      if (cd > 0.05) return demoteWall ? 3 : 2;
-      return demoteWall ? 4 : 3;
-    }
-
-    int fantasyBias(ClassAbilityDef a) {
-      // Lower = prefer. Fantasy signatures beat fillers / long CD walls.
-      return switch (a.id) {
-        AbilityId.pyroblast => 0,
-        AbilityId.combustion => 2,
-        AbilityId.aimedShot || AbilityId.chimeraShot => 0,
-        AbilityId.steadyShot => 3,
-        AbilityId.charge ||
-        AbilityId.taunt ||
-        AbilityId.handOfReckoning ||
-        AbilityId.darkCommand ||
-        AbilityId.growl => 0,
-        AbilityId.armsExecute || AbilityId.furyExecute => 0,
-        AbilityId.sealOfCommand => 0,
-        AbilityId.bloodthirst ||
-        AbilityId.whirlwind ||
-        AbilityId.ragingBlow => 0,
-        AbilityId.powerWordShield ||
-        AbilityId.penance ||
-        AbilityId.painSuppression => 1,
-        AbilityId.shieldWall || AbilityId.lastStand => partyHealthy ? 6 : 2,
-        _ => 4,
-      };
-    }
-
-    final ranked = [...abilities]
-      ..sort((a, b) {
-        final byRank = rank(a).compareTo(rank(b));
-        if (byRank != 0) return byRank;
-        final byFantasy = fantasyBias(a).compareTo(fantasyBias(b));
-        if (byFantasy != 0) return byFantasy;
-        final byUnlock = a.unlockLevel.compareTo(b.unlockLevel);
-        if (byUnlock != 0) return byUnlock;
-        final byDmg = b.coeff.compareTo(a.coeff);
-        if (byDmg != 0) return byDmg;
-        return (defOrder[a.id] ?? 0).compareTo(defOrder[b.id] ?? 0);
-      });
-    return ranked.take(maxChips).toList();
   }
 }
 
