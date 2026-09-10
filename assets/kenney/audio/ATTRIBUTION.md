@@ -9,7 +9,7 @@ License: Creative Commons Zero (CC0) — see `License.txt`.
 **Gameplay SFX** now use Idle Party soft procedural one-shots under
 `assets/custom/audio/sfx/` (see `tool/generate_soft_sfx.py` and
 `tool/generate_combat_spell_sfx.py`). Kenney clips remain in-repo as CC0
-reference; they are not loaded at runtime.
+reference; they are **not** listed in `pubspec.yaml` and not loaded at runtime.
 
 Kenney → Idle Party id mapping (historical):
 

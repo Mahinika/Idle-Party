@@ -23,7 +23,6 @@ void main() {
 
   test('hit families ship five mix variants', () {
     for (final id in <String>[
-      'hit',
       'hit_blade',
       'hit_axe',
       'hit_blunt',
@@ -34,6 +33,13 @@ void main() {
       final variants = AudioAssets.sfxVariants[id]!;
       expect(variants, hasLength(5), reason: id);
     }
+    expect(AudioAssets.sfxVariants.containsKey('hit'), isFalse);
+  });
+
+  test('spells skip material layer policy in CombatFeel wiring', () {
+    // Physical uses swish; spells do not — GameAudio also skips mat_* on spells.
+    expect(CombatFeel.swishIdFor('hit_blade'), 'swish_melee');
+    expect(CombatFeel.swishIdFor('spell_fire'), 'swish_bow');
   });
 
   test('spell families ship six mix variants', () {

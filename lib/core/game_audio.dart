@@ -73,7 +73,6 @@ abstract final class GameAudio {
     'flask': 0.82,
     'crit': 0.88,
     'kill': 0.85,
-    'hit': 0.90,
     'hit_blade': 0.88,
     'hit_axe': 0.90,
     'hit_blunt': 0.90,
@@ -220,7 +219,7 @@ abstract final class GameAudio {
     final id = hit.impactId;
     if (!_admitCombatFeel(id, now)) {
       if (id.startsWith('hit') || id.startsWith('spell_')) {
-        _hapticFor('hit');
+        _hapticFor('hit_blade');
       }
       return;
     }
@@ -257,13 +256,16 @@ abstract final class GameAudio {
         speedMul: speedMul,
         heavy: hit.heavy,
       );
-      _playLayer(
-        CombatFeel.materialSfxId(hit.material),
-        volumeMul: volMul * 0.7,
-        pan: pan * 0.8,
-        speedMul: speedMul,
-        heavy: false,
-      );
+      // Material chirps are physical-only — spells keep school identity.
+      if (!isSpell) {
+        _playLayer(
+          CombatFeel.materialSfxId(hit.material),
+          volumeMul: volMul * 0.7,
+          pan: pan * 0.8,
+          speedMul: speedMul,
+          heavy: false,
+        );
+      }
     }
 
     if (impactDelay == Duration.zero) {
@@ -497,7 +499,6 @@ abstract final class GameAudio {
 
   static void _hapticFor(String id) {
     switch (id) {
-      case 'hit':
       case 'hit_blade':
       case 'hit_axe':
       case 'hit_blunt':

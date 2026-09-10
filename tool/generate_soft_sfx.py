@@ -1,7 +1,7 @@
 """Generate soft Idle Party SFX (owned procedural one-shots).
 
 Muted idle-RPG tones — warm, short, no arcade fanfare.
-Hit families get 3 variants (_a/_b/_c) for combat mix variety.
+Hit families get 5 variants (_a…_e); swish get 3 (_a…_c).
 Spell school chirps stay in generate_combat_spell_sfx.py.
 unlock.wav is an owned ElevenLabs clip — skipped here.
 """
@@ -237,7 +237,6 @@ def main() -> None:
         release=6,
     )
 
-    write_hit_family("hit", 130, 0.045, 0.11, 0.32, 100, 16)
     write_hit_family("hit_blade", 210, 0.035, 0.10, 0.30, 110, 18)
     write_hit_family("hit_axe", 88, 0.055, 0.12, 0.32, 90, 14)
     write_hit_family("hit_blunt", 68, 0.05, 0.13, 0.32, 85, 13)
@@ -283,7 +282,7 @@ def main() -> None:
         release=18,
     )
 
-    # Remove legacy single-hit / 3-variant files if present.
+    # Remove legacy single-hit / generic hit_*_letter (unused play id).
     for legacy in (
         "hit.wav",
         "hit_blade.wav",
@@ -292,6 +291,11 @@ def main() -> None:
         "hit_dagger.wav",
         "hit_fist.wav",
         "hit_bow.wav",
+        "hit_a.wav",
+        "hit_b.wav",
+        "hit_c.wav",
+        "hit_d.wav",
+        "hit_e.wav",
     ):
         p = OUT / legacy
         if p.exists():

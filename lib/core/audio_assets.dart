@@ -53,7 +53,6 @@ abstract final class AudioAssets {
   /// Play id → one or more variant paths (combat picks random).
   static final Map<String, List<String>> sfxVariants = <String, List<String>>{
     'ui': <String>[ui],
-    'hit': _hitVariants('hit'),
     'hit_blade': _hitVariants('hit_blade'),
     'hit_axe': _hitVariants('hit_axe'),
     'hit_blunt': _hitVariants('hit_blunt'),
@@ -93,7 +92,6 @@ abstract final class AudioAssets {
 
   /// Combat feel ids that share combat-mix gates (weapon + spell + crit/kill).
   static const Set<String> combatFeelIds = <String>{
-    'hit',
     'hit_blade',
     'hit_axe',
     'hit_blunt',
@@ -114,7 +112,6 @@ abstract final class AudioAssets {
   };
 
   static const Set<String> meleeFeelIds = <String>{
-    'hit',
     'hit_blade',
     'hit_axe',
     'hit_blunt',
