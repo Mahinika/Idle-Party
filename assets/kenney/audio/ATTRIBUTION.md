@@ -6,7 +6,12 @@ renamed to Idle Party event ids (`hit.ogg`, `ui.ogg`, `hit_blade.ogg`, …).
 Original pack: https://kenney.nl/assets/rpg-audio  
 License: Creative Commons Zero (CC0) — see `License.txt`.
 
-Combat weapon hits map Kenney clips as:
+**Gameplay SFX** now use Idle Party soft procedural one-shots under
+`assets/custom/audio/sfx/` (see `tool/generate_soft_sfx.py` and
+`tool/generate_combat_spell_sfx.py`). Kenney clips remain in-repo as CC0
+reference; they are not loaded at runtime.
+
+Kenney → Idle Party id mapping (historical):
 
 | Idle Party id | Kenney source |
 |---------------|---------------|
@@ -19,10 +24,6 @@ Combat weapon hits map Kenney clips as:
 | crit | knifeSlice2 |
 | kill | chop |
 | (UI / loot / doors) | metalClick, handleCoins*, doorOpen*, … |
-
-Spell school chirps (`spell_fire.wav`, …) live under
-`assets/custom/audio/sfx/` — Idle Party procedural one-shots (see
-`tool/generate_combat_spell_sfx.py`), not Kenney.
 
 Ambience loops live under `assets/custom/audio/ambience/` (Idle Party
 procedural pads), not Kenney.

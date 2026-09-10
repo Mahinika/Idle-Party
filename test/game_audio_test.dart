@@ -36,22 +36,50 @@ void main() {
     }
     expect(GameAudio.debugPlayCount, 1);
 
+    GameAudio.debugReset();
     GameAudio.play('spell_fire');
-    expect(GameAudio.debugPlayCount, 2);
+    expect(GameAudio.debugPlayCount, 1);
 
     for (var i = 0; i < 10; i++) {
       GameAudio.play('spell_fire');
     }
-    expect(GameAudio.debugPlayCount, 2);
+    expect(GameAudio.debugPlayCount, 1);
   });
 
-  test('ui SFX is not combat-feel rate-limited', () {
+  test('global combat bus blocks overlapping feel clips', () {
+    GameAudio.debugReset();
+    GameAudio.muted = false;
+    GameAudio.play('hit_blade');
+    expect(GameAudio.debugPlayCount, 1);
+    GameAudio.play('spell_fire');
+    expect(GameAudio.debugPlayCount, 1);
+    GameAudio.play('crit');
+    expect(GameAudio.debugPlayCount, 1);
+  });
+
+  test('loot SFX is rate-limited (~1.2s)', () {
+    GameAudio.debugReset();
+    GameAudio.muted = false;
+    GameAudio.loot();
+    GameAudio.loot();
+    expect(GameAudio.debugPlayCount, 1);
+  });
+
+  test('unlock SFX is rate-limited (~2s)', () {
+    GameAudio.debugReset();
+    GameAudio.muted = false;
+    GameAudio.unlock();
+    GameAudio.unlock();
+    expect(GameAudio.debugPlayCount, 1);
+  });
+
+  test('ui SFX is debounced (~80ms) but not combat-limited', () {
     GameAudio.debugReset();
     GameAudio.muted = false;
     for (var i = 0; i < 5; i++) {
       GameAudio.ui();
     }
-    expect(GameAudio.debugPlayCount, 5);
+    expect(GameAudio.debugPlayCount, 1);
   });
 
   test('combatHitId maps weapons and spell schools', () {
@@ -116,5 +144,12 @@ void main() {
     expect(decoded.ambienceVolume, closeTo(0.15, 0.001));
     expect(decoded.musicVolume, closeTo(0.65, 0.001));
     expect(decoded.soundMuted, isFalse);
+  });
+
+  test('new save defaults use softer audio mix', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 10));
+    expect(state.sfxVolume, closeTo(0.45, 0.001));
+    expect(state.ambienceVolume, closeTo(0.20, 0.001));
+    expect(state.musicVolume, closeTo(0.22, 0.001));
   });
 }

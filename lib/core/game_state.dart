@@ -97,9 +97,9 @@ class GameState {
     this.godHandLevel = 0,
     this.layoutSeed = 0,
     this.soundMuted = false,
-    this.sfxVolume = 0.7,
-    this.ambienceVolume = 0.25,
-    this.musicVolume = 0.4,
+    this.sfxVolume = 0.45,
+    this.ambienceVolume = 0.20,
+    this.musicVolume = 0.22,
     this.vfxQuality = VfxQuality.full,
     this.autoSellMaxPower = 48,
     this.autoSellMaxRarity = 1,
@@ -292,13 +292,13 @@ class GameState {
   /// Settings — survive Ascend.
   final bool soundMuted;
 
-  /// SFX master gain 0..1 (default 0.7). Survives Ascend.
+  /// SFX master gain 0..1 (default 0.45). Survives Ascend.
   final double sfxVolume;
 
-  /// Hub/dungeon ambience gain 0..1 (default 0.25). Survives Ascend.
+  /// Hub/dungeon ambience gain 0..1 (default 0.20). Survives Ascend.
   final double ambienceVolume;
 
-  /// Hub/dungeon background music gain 0..1 (default 0.4). Survives Ascend.
+  /// Hub/dungeon background music gain 0..1 (default 0.22). Survives Ascend.
   final double musicVolume;
 
   /// Combat VFX detail (full / lite / minimal).
@@ -1548,13 +1548,13 @@ class GameState {
       godHandLevel: _jsonInt(json['godHandLevel']),
       layoutSeed: _jsonInt(json['layoutSeed']),
       soundMuted: (json['soundMuted'] as bool?) ?? false,
-      sfxVolume: ((json['sfxVolume'] as num?)?.toDouble() ?? 0.7).clamp(
+      sfxVolume: ((json['sfxVolume'] as num?)?.toDouble() ?? 0.45).clamp(
         0.0,
         1.0,
       ),
-      ambienceVolume: ((json['ambienceVolume'] as num?)?.toDouble() ?? 0.25)
+      ambienceVolume: ((json['ambienceVolume'] as num?)?.toDouble() ?? 0.20)
           .clamp(0.0, 1.0),
-      musicVolume: ((json['musicVolume'] as num?)?.toDouble() ?? 0.4).clamp(
+      musicVolume: ((json['musicVolume'] as num?)?.toDouble() ?? 0.22).clamp(
         0.0,
         1.0,
       ),

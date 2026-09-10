@@ -3,8 +3,9 @@ import '../models/spell_bolt_style.dart';
 
 /// Asset paths for Idle Party audio (core-safe — no ui/ imports).
 ///
-/// SFX: Kenney RPG Audio (CC0) under [sfxRoot], plus owned spell chirps under
-/// [customSfxRoot].
+/// SFX: Idle Party soft procedural one-shots under [customSfxRoot] (see
+/// `tool/generate_soft_sfx.py` + `tool/generate_combat_spell_sfx.py`).
+/// Kenney RPG Audio (CC0) remains under [sfxRoot] as reference only.
 /// Ambience: Idle Party procedural pads under [ambienceRoot].
 /// Music: Idle Party procedural loops under [musicRoot].
 abstract final class AudioAssets {
@@ -13,24 +14,23 @@ abstract final class AudioAssets {
   static const ambienceRoot = 'assets/custom/audio/ambience';
   static const musicRoot = 'assets/custom/audio/music';
 
-  static const ui = '$sfxRoot/ui.ogg';
-  static const hit = '$sfxRoot/hit.ogg';
-  static const hitBlade = '$sfxRoot/hit_blade.ogg';
-  static const hitAxe = '$sfxRoot/hit_axe.ogg';
-  static const hitBlunt = '$sfxRoot/hit_blunt.ogg';
-  static const hitDagger = '$sfxRoot/hit_dagger.ogg';
-  static const hitFist = '$sfxRoot/hit_fist.ogg';
-  static const hitBow = '$sfxRoot/hit_bow.ogg';
-  static const crit = '$sfxRoot/crit.ogg';
-  static const kill = '$sfxRoot/kill.ogg';
-  static const loot = '$sfxRoot/loot.ogg';
-  static const lootB = '$sfxRoot/loot_b.ogg';
-  static const flask = '$sfxRoot/flask.ogg';
-  static const level = '$sfxRoot/level.ogg';
-  static const clear = '$sfxRoot/clear.ogg';
-  static const unlock = '$sfxRoot/unlock.ogg';
-  static const boss = '$sfxRoot/boss.ogg';
-  static const wipe = '$sfxRoot/wipe.ogg';
+  static const ui = '$customSfxRoot/ui.wav';
+  static const hit = '$customSfxRoot/hit.wav';
+  static const hitBlade = '$customSfxRoot/hit_blade.wav';
+  static const hitAxe = '$customSfxRoot/hit_axe.wav';
+  static const hitBlunt = '$customSfxRoot/hit_blunt.wav';
+  static const hitDagger = '$customSfxRoot/hit_dagger.wav';
+  static const hitFist = '$customSfxRoot/hit_fist.wav';
+  static const hitBow = '$customSfxRoot/hit_bow.wav';
+  static const crit = '$customSfxRoot/crit.wav';
+  static const kill = '$customSfxRoot/kill.wav';
+  static const loot = '$customSfxRoot/loot.wav';
+  static const flask = '$customSfxRoot/flask.wav';
+  static const level = '$customSfxRoot/level.wav';
+  static const clear = '$customSfxRoot/clear.wav';
+  static const unlock = '$customSfxRoot/unlock.wav';
+  static const boss = '$customSfxRoot/boss.wav';
+  static const wipe = '$customSfxRoot/wipe.wav';
 
   static const spellFire = '$customSfxRoot/spell_fire.wav';
   static const spellFrost = '$customSfxRoot/spell_frost.wav';
@@ -158,7 +158,6 @@ abstract final class AudioAssets {
     crit,
     kill,
     loot,
-    lootB,
     flask,
     level,
     clear,

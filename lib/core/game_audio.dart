@@ -14,17 +14,24 @@ abstract final class GameAudio {
   static bool muted = false;
   static bool hapticsEnabled = true;
 
-  /// Master SFX gain 0..1 (default 0.7).
-  static double sfxVolume = 0.7;
+  /// Master SFX gain 0..1 (default 0.45).
+  static double sfxVolume = 0.45;
 
-  /// Ambience gain 0..1 (default 0.25).
-  static double ambienceVolume = 0.25;
+  /// Ambience gain 0..1 (default 0.20).
+  static double ambienceVolume = 0.20;
 
-  /// Background music gain 0..1 (default 0.4).
-  static double musicVolume = 0.4;
+  /// Background music gain 0..1 (default 0.22).
+  static double musicVolume = 0.22;
 
   /// Per combat-feel clip floor so haste farms stay listenable.
   static const combatFeelMinGap = Duration(seconds: 3);
+
+  /// Global combat bus — only one feel clip at a time across all ids.
+  static const combatFeelGlobalGap = Duration(milliseconds: 450);
+
+  static const lootMinGap = Duration(milliseconds: 1200);
+  static const unlockMinGap = Duration(seconds: 2);
+  static const uiMinGap = Duration(milliseconds: 80);
 
   static bool _ready = false;
   static bool _initFailed = false;
@@ -38,7 +45,39 @@ abstract final class GameAudio {
   static AmbienceKind _ambience = AmbienceKind.none;
   static bool _backgroundPaused = false;
   static final Map<String, DateTime> _lastPlayAt = <String, DateTime>{};
+  static DateTime? _lastCombatFeelAt;
+  static DateTime? _lastLootAt;
+  static DateTime? _lastUnlockAt;
+  static DateTime? _lastUiAt;
   static final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// Per-id gain multiplier on top of [sfxVolume].
+  static const Map<String, double> _idGain = <String, double>{
+    'ui': 0.75,
+    'loot': 0.80,
+    'unlock': 0.72,
+    'level': 0.78,
+    'clear': 0.70,
+    'boss': 0.75,
+    'wipe': 0.78,
+    'flask': 0.82,
+    'crit': 0.88,
+    'kill': 0.85,
+    'hit': 0.90,
+    'hit_blade': 0.88,
+    'hit_axe': 0.90,
+    'hit_blunt': 0.90,
+    'hit_dagger': 0.85,
+    'hit_fist': 0.86,
+    'hit_bow': 0.84,
+    'spell_fire': 0.86,
+    'spell_frost': 0.86,
+    'spell_holy': 0.84,
+    'spell_shadow': 0.86,
+    'spell_arcane': 0.86,
+    'spell_nature': 0.86,
+    'spell_lightning': 0.88,
+  };
 
   /// Test hook: counts play attempts that passed mute/rate-limit gates.
   @visibleForTesting
@@ -53,6 +92,10 @@ abstract final class GameAudio {
     debugPlayCount = 0;
     debugBackgroundStartCount = 0;
     _lastPlayAt.clear();
+    _lastCombatFeelAt = null;
+    _lastLootAt = null;
+    _lastUnlockAt = null;
+    _lastUiAt = null;
   }
 
   static bool get isReady => _ready;
@@ -67,8 +110,6 @@ abstract final class GameAudio {
       for (final entry in AudioAssets.sfxById.entries) {
         _sfx[entry.key] = await soloud.loadAsset(entry.value);
       }
-      // Extra loot layer (second coin tick).
-      _sfx['loot_b'] = await soloud.loadAsset(AudioAssets.lootB);
       _hubAmb = await soloud.loadAsset(AudioAssets.hubAmbience);
       _dungeonAmb = await soloud.loadAsset(AudioAssets.dungeonAmbience);
       _hubMusic = await soloud.loadAsset(AudioAssets.hubMusic);
@@ -118,17 +159,39 @@ abstract final class GameAudio {
 
   static void play(String id) {
     if (muted) return;
+    final now = DateTime.now();
+
+    if (id == 'ui') {
+      final last = _lastUiAt ?? _epoch;
+      if (now.difference(last) < uiMinGap) return;
+      _lastUiAt = now;
+    } else if (id == 'loot') {
+      final last = _lastLootAt ?? _epoch;
+      if (now.difference(last) < lootMinGap) return;
+      _lastLootAt = now;
+    } else if (id == 'unlock') {
+      final last = _lastUnlockAt ?? _epoch;
+      if (now.difference(last) < unlockMinGap) return;
+      _lastUnlockAt = now;
+    }
+
     if (AudioAssets.combatFeelIds.contains(id)) {
-      final now = DateTime.now();
+      final lastGlobal = _lastCombatFeelAt ?? _epoch;
+      if (now.difference(lastGlobal) < combatFeelGlobalGap) {
+        if (id.startsWith('hit') || id.startsWith('spell_')) {
+          _hapticFor('hit');
+        }
+        return;
+      }
       final last = _lastPlayAt[id] ?? _epoch;
       if (now.difference(last) < combatFeelMinGap) {
-        // Keep light haptic for blocked combat hits so the phone still ticks.
         if (id.startsWith('hit') || id.startsWith('spell_')) {
           _hapticFor('hit');
         }
         return;
       }
       _lastPlayAt[id] = now;
+      _lastCombatFeelAt = now;
     }
 
     debugPlayCount++;
@@ -138,19 +201,9 @@ abstract final class GameAudio {
     final source = _sfx[id];
     if (source == null) return;
     try {
+      final gain = _idGain[id] ?? 1.0;
       final soloud = SoLoud.instance;
-      soloud.play(source, volume: sfxVolume);
-      if (id == 'loot') {
-        final b = _sfx['loot_b'];
-        if (b != null) {
-          Future<void>.delayed(const Duration(milliseconds: 40), () {
-            if (muted || !_ready) return;
-            try {
-              soloud.play(b, volume: sfxVolume * 0.85);
-            } catch (_) {}
-          });
-        }
-      }
+      soloud.play(source, volume: sfxVolume * gain);
       if (id == 'wipe' || id == 'boss' || id == 'clear') {
         _duckBackgroundBriefly();
       }

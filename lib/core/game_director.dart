@@ -1388,7 +1388,7 @@ class GameDirector extends ChangeNotifier {
     final before = _state.godHandLevel;
     _applyUpgrade(GameLogic.upgradeGodHand(_state));
     if (_state.godHandLevel > before) {
-      GameAudio.unlock();
+      GameAudio.ui();
       showToast(
         'God Hand Lv${_state.godHandLevel} · smash ${_state.godHandSmashDamage()}',
         life: 2.4,
@@ -1429,7 +1429,7 @@ class GameDirector extends ChangeNotifier {
         slot: slot,
       ),
     );
-    GameAudio.unlock();
+    GameAudio.ui();
     final equippedOnHero = _state.heroes.any(
       (h) => h.equipped.values.any((g) => g.id == pieceId),
     );
@@ -1451,7 +1451,7 @@ class GameDirector extends ChangeNotifier {
     final before = GameLogic.canUpgradeApex(_state, itemId);
     _applyUpgrade(GameLogic.upgradeApex(_state, itemId));
     if (before) {
-      GameAudio.unlock();
+      GameAudio.ui();
       showToast('Apex upgraded', life: 2.0);
     }
   }
@@ -1492,7 +1492,7 @@ class GameDirector extends ChangeNotifier {
     final result = GameLogic.autoEquipAllApexVault(_state);
     _applyUpgrade(result.state);
     if (result.equipped > 0) {
-      GameAudio.unlock();
+      GameAudio.ui();
       final skip = result.skipped > 0 ? ' · ${result.skipped} skipped' : '';
       showToast(
         'Equipped ${result.equipped} Apex$skip',
@@ -2035,9 +2035,9 @@ class GameDirector extends ChangeNotifier {
         hapticsEnabled: true,
         keepScreenAwake: true,
         soundMuted: false,
-        sfxVolume: 0.7,
-        ambienceVolume: 0.25,
-        musicVolume: 0.4,
+        sfxVolume: 0.45,
+        ambienceVolume: 0.20,
+        musicVolume: 0.22,
       ),
     );
   }
@@ -2764,7 +2764,7 @@ class GameDirector extends ChangeNotifier {
     final before = _state.essence;
     _applyUpgrade(GameLogic.buyPetFrame(_state, petId, frame));
     if (_state.essence < before) {
-      GameAudio.unlock();
+      GameAudio.ui();
       showToast('Frame · ${frame.name}', life: 1.8);
     }
   }
@@ -2787,7 +2787,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.bondPet(_state, petId));
     for (final pet in _state.ownedPets) {
       if (pet.id == petId && pet.bondLevel > beforeBond) {
-        GameAudio.unlock();
+        GameAudio.ui();
         showToast('${name ?? pet.name} bond Lv${pet.bondLevel}', life: 2.0);
         break;
       }
@@ -2807,7 +2807,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.levelUpPet(_state, petId));
     for (final pet in _state.ownedPets) {
       if (pet.id == petId && pet.level > beforeLevel) {
-        GameAudio.unlock();
+        GameAudio.ui();
         showToast('${name ?? pet.name} · Lv${pet.level}!', life: 2.2);
         break;
       }
@@ -2859,7 +2859,7 @@ class GameDirector extends ChangeNotifier {
         after,
         prestige: prestige,
       );
-      GameAudio.unlock();
+      GameAudio.ui();
       if (track == 'gold') {
         final rate = GoldIncome.hubGoldPerMinute(_state);
         final prev = GoldIncome.hubGoldPerMinuteAtGoldLevel(
@@ -2912,7 +2912,7 @@ class GameDirector extends ChangeNotifier {
     };
     if (after > beforeLevel) {
       final name = GameLogic.sanctuaryNames[track] ?? track;
-      GameAudio.unlock();
+      GameAudio.ui();
       if (track == 'gold') {
         final rate = GoldIncome.hubGoldPerMinute(_state);
         showToast(
@@ -2931,7 +2931,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.prestigeSanctuaryTrack(_state, track));
     if (_state.essence > beforeEssence) {
       final name = GameLogic.sanctuaryNames[track] ?? track;
-      GameAudio.unlock();
+      GameAudio.ui();
       showToast(
         '$name prestiged · keep ${GameLogic.sanctuaryPrestigeKeepShort(track)} · '
         '+${_state.essence - beforeEssence}e',
@@ -2946,7 +2946,7 @@ class GameDirector extends ChangeNotifier {
     final after = _state.metaDepth.relicTierOf(relicId);
     if (after > before) {
       final name = GameLogic.relicNames[relicId] ?? relicId;
-      GameAudio.unlock();
+      GameAudio.ui();
       final pay = GameLogic.relicOwnedPayout(_state, relicId);
       showToast(
         pay.isEmpty ? '$name · Tier $after' : '$name · T$after · $pay',
@@ -2968,7 +2968,7 @@ class GameDirector extends ChangeNotifier {
     final before = _state.metaDepth.godHandCdLevel;
     _applyUpgrade(GameLogic.upgradeGodHandCd(_state));
     if (_state.metaDepth.godHandCdLevel > before) {
-      GameAudio.unlock();
+      GameAudio.ui();
       showToast('God Hand CD Lv${_state.metaDepth.godHandCdLevel}', life: 2.2);
     }
   }
@@ -3019,7 +3019,7 @@ class GameDirector extends ChangeNotifier {
           break;
         }
       }
-      GameAudio.unlock();
+      GameAudio.ui();
       showToast('Bought $name', life: 2.2);
     }
   }
@@ -3043,7 +3043,7 @@ class GameDirector extends ChangeNotifier {
     final notices = LogicNotices.takeMetaPayoffs();
     final gained = _state.essence - before;
     if (gained > 0 || notices.isNotEmpty) {
-      GameAudio.unlock();
+      GameAudio.ui();
       final body = notices.isNotEmpty
           ? notices.join(' · ')
           : 'Meta rewards · +${gained}e';
@@ -3059,7 +3059,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.grantAdTicket(_state));
     final after = _state.metaDepth.adTickets;
     if (after > before) {
-      GameAudio.unlock();
+      GameAudio.ui();
       showToast(
         'Ad Ticket +${AdBoost.ticketsPerAd} · $after total',
         life: 2.4,
@@ -3090,7 +3090,7 @@ class GameDirector extends ChangeNotifier {
     }
     if (identical(next, _state)) return;
     _applyUpgrade(next);
-    GameAudio.unlock();
+    GameAudio.ui();
     showToast('Purchased ${item.name}', life: 2.6);
   }
 
@@ -3141,7 +3141,7 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     _applyUpgrade(next);
-    GameAudio.unlock();
+    GameAudio.ui();
     showToast('${offer.label} · ready', life: 2.2);
   }
 
@@ -3154,7 +3154,7 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     _applyUpgrade(next);
-    GameAudio.unlock();
+    GameAudio.ui();
     showToast('Daily Ad Ticket claimed', life: 2.2);
   }
 
@@ -3185,7 +3185,7 @@ class GameDirector extends ChangeNotifier {
     final before = _state.essence;
     _applyUpgrade(GameLogic.claimCodexReward(_state, tierId));
     if (_state.essence > before) {
-      GameAudio.unlock();
+      GameAudio.ui();
       showToast('Codex reward · +${_state.essence - before}e', life: 2.2);
     }
   }
