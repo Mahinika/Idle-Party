@@ -547,25 +547,25 @@ abstract final class AbilityEffectRunner {
         // HoT healer amp — match / slightly lead peer healer passives.
         hero.kitHealMul *= 1.34;
 
-      // —— melee DPS (target ~1.22–1.34; Arms leans on Sweeping, not raw mul) ——
+      // —— melee DPS (soft LOW lift 1.12.126; stay under HIGH ~63%) ——
       case AbilityId.armsStance:
-        hero.kitOutMul *= 1.34;
+        hero.kitOutMul *= 2.02;
         hero.kitInMul *= 1.04;
       case AbilityId.berserkerStance:
-        hero.kitOutMul *= 1.38;
+        hero.kitOutMul *= 1.58;
         hero.kitHasteMul *= 1.12;
         hero.kitInMul *= 1.06;
       case AbilityId.sealOfCommand:
-        hero.kitOutMul *= 1.48;
+        hero.kitOutMul *= 1.68;
       case AbilityId.improvedPoisons:
         // Assass led the board — slight lean so lows can rise without HIGH.
         hero.kitOutMul *= 1.28;
       case AbilityId.masterOfSubtlety:
         // Opener fantasy: damage + slight haste for ambush windows.
-        hero.kitOutMul *= 1.36;
+        hero.kitOutMul *= 1.46;
         hero.kitHasteMul *= 1.08;
       case AbilityId.frostPresence:
-        hero.kitOutMul *= 1.48;
+        hero.kitOutMul *= 1.98;
         hero.kitInMul *= 0.97;
       case AbilityId.unholyPresence:
         // Fairness: ghoul + diseases carry identity; presence is a lean, not a stomp.
@@ -1093,7 +1093,7 @@ abstract final class AbilityEffectRunner {
     }
     // Frost DK finisher pops rooted packs (Hungering Cold → shatter).
     if (def.id == AbilityId.frostStrike && enemy.rootTimer > 0) {
-      raw = math.max(2, (raw * 1.4).round());
+      raw = math.max(2, (raw * 1.55).round());
     }
     // Assassination: build combo on Mut/Garrote; Envenom spends.
     if (hero.heroSpecId == HeroSpecId.assassination) {

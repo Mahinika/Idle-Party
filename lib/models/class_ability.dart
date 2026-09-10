@@ -1387,11 +1387,11 @@ class ClassKits {
       shortLabel: 'Mortal',
       description: 'Heavy single-target strike.',
       unlockLevel: 3,
-      cooldown: 3.4,
+      cooldown: 3.0,
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.95,
+      coeff: 2.35,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -1410,7 +1410,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.42,
+      coeff: 1.58,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -1439,13 +1439,13 @@ class ClassKits {
       shortLabel: 'Sweep',
       description: 'Your strikes cleave nearby foes for a few seconds.',
       unlockLevel: 9,
-      cooldown: 20,
+      cooldown: 18,
       resourceCost: 20,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.filler,
 
       selfBuffKind: AbilitySelfBuffKind.cleave,
-      selfBuffDuration: 5,
+      selfBuffDuration: 7,
       gate: AbilityGate(packMin: 2),
     ),
     ClassAbilityDef(
@@ -1460,7 +1460,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
-      coeff: 0.62,
+      coeff: 0.74,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -1485,7 +1485,7 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 3.1,
+      coeff: 3.45,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -3391,7 +3391,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.78,
+      coeff: 2.10,
       boltStyle: SpellBoltStyle.frost,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.frost,
@@ -3410,7 +3410,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.62,
+      coeff: 1.90,
       boltStyle: SpellBoltStyle.frost,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.frost,
@@ -3429,7 +3429,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 1.05,
+      coeff: 1.25,
       boltStyle: SpellBoltStyle.frost,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.frost,

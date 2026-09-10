@@ -3915,7 +3915,7 @@ abstract final class SpatialCombat {
               // Dense packs: Arms Sweeping was 40% AA → blender; Combat stays lower.
               final frac = switch (hero.heroSpecId) {
                 HeroSpecId.combat => 0.14,
-                HeroSpecId.arms => 0.20,
+                HeroSpecId.arms => 0.28,
                 _ => 0.30,
               };
               final cleave = math.max(1, (dealt * frac).round());
