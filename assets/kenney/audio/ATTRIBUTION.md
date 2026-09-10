@@ -28,5 +28,6 @@ Kenney → Idle Party id mapping (historical):
 Ambience loops live under `assets/custom/audio/ambience/` (Idle Party
 procedural pads), not Kenney.
 
-Background music loops live under `assets/custom/audio/music/` (Idle Party
-procedural hub/dungeon tracks), not Kenney.
+Background music loops live under `assets/custom/audio/music/` —
+hub is Idle Party procedural (`hub.wav`); dungeon is owned ElevenLabs
+(`dungeon.mp3`). Not Kenney.

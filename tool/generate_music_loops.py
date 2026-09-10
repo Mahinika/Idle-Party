@@ -99,18 +99,7 @@ def main() -> None:
         beat_div=2,
         vol=0.48,
     )
-    # 42s @ 72 BPM = 50.4 beats; use beat_div=5 for integer steps (210 steps).
-    write_loop(
-        OUT / "dungeon.wav",
-        seconds=42.0,
-        bpm=72.0,
-        root_midi=50.0,  # D3 — darker dungeon
-        pattern=[0, 3, 5, 3, 1, -1, 4, 3, 1, 0, -1, 2, 4, 5, 3, 1, 0, -1, -1],
-        beat_div=2,
-        pad_noise=0.012,
-        vol=0.52,
-        octave=-0.5,
-    )
+    # dungeon.mp3: owned ElevenLabs loop — do not overwrite with procedural.
     print("done:", sorted(p.name for p in OUT.iterdir()))
 
 
