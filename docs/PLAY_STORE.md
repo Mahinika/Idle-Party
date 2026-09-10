@@ -127,7 +127,8 @@ Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not
 | App ID | ✅ `ca-app-pub-4980376195917009~4491640230` |
 | Rewarded unit | ✅ **POWERUPS hour** `…/5225353586` (matches code) |
 | Store link | ✅ Play linked **2026-09-09** (`com.idleparty.app`) |
-| App approval | ⏳ AdMob reviewing (usually 2–3 days after store link) |
+| App approval | ✅ Klart / annonsvisning aktiverad (2026-09-10 AdMob Apps) |
+| Firebase link | ✅ AdMob ↔ Firebase project `idle-party-4a2e9` (2026-09-10); user metrics may take up to 48h |
 | app-ads.txt | ✅ Hosted at `https://mahinika.github.io/app-ads.txt`; Play Website set to `https://mahinika.github.io` (2026-08-22). AdMob crawl may take up to 24h |
 | Revenue today | ~0.54 SEK estimated (ads can fill a little even while in review) |
 | Identity payout verify | Later — only when earnings hit Google’s threshold |
