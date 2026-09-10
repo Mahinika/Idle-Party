@@ -27,7 +27,7 @@ abstract final class SpellVfx {
         SpellBoltStyle.frost => SpatialBurstKind.shards,
         SpellBoltStyle.holy => SpatialBurstKind.cross,
         SpellBoltStyle.lightning => SpatialBurstKind.beam,
-        SpellBoltStyle.nature => SpatialBurstKind.poison,
+        SpellBoltStyle.nature => SpatialBurstKind.spark,
         SpellBoltStyle.poison => SpatialBurstKind.poison,
         SpellBoltStyle.shadow => SpatialBurstKind.skull,
         SpellBoltStyle.demon => SpatialBurstKind.skull,
@@ -183,18 +183,13 @@ abstract final class SpellVfx {
     AbilityId.holyPriestNova ||
     AbilityId.flashOfLight ||
     AbilityId.holyLight => SpatialBurstKind.cross,
-    AbilityId.envenom ||
-    AbilityId.garrote ||
-    AbilityId.wrath ||
-    AbilityId.rejuvenation ||
-    AbilityId.healingWave ||
-    AbilityId.riptide => SpatialBurstKind.poison,
+    AbilityId.envenom || AbilityId.garrote => SpatialBurstKind.poison,
     AbilityId.shadowBolt ||
     AbilityId.mindBlast ||
     AbilityId.deathCoil ||
     AbilityId.shadowfury ||
-    AbilityId.handOfGuldan ||
-    AbilityId.chaosBolt => SpatialBurstKind.skull,
+    AbilityId.handOfGuldan => SpatialBurstKind.skull,
+    AbilityId.chaosBolt || AbilityId.chaosBoltDemo => SpatialBurstKind.flame,
     AbilityId.bladestorm ||
     AbilityId.whirlwind ||
     AbilityId.bladeFlurry ||

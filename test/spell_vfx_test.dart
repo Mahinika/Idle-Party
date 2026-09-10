@@ -1,5 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/class_ability.dart';
+import 'package:idle_party/models/enemy.dart';
+import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/vfx_quality.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
@@ -194,6 +199,86 @@ void main() {
     }
   });
 
+  test('Lite VFX spawns ground discs without routine burst FX', () {
+    final state = GameLogic.createInitialState(
+      now: DateTime(2026, 9, 10),
+    ).copyWith(vfxQuality: VfxQuality.lite);
+    expect(state.spawnPersistentVfx, isTrue);
+    expect(state.reducedVfx, isTrue);
+
+    var world = SpatialCombat.build(
+      GameLogic.enterDungeon(state, dungeonId: 'sandy'),
+    );
+    world = SpatialCombat.step(world, state, dt: 0.01).world;
+    expect(world.spawnPersistentVfx, isTrue);
+
+    final target = world.enemies.first
+      ..dormant = false
+      ..hp = 800
+      ..moveSpeed = 0;
+    final packMate = SpatialActor(
+      id: 'pack2',
+      name: 'Mob',
+      team: SpatialTeam.enemy,
+      x: target.x + 0.8,
+      y: target.y,
+      hp: 800,
+      maxHp: 800,
+      attack: 1,
+      defense: 0,
+      moveSpeed: 0,
+      attackRange: 1,
+      attackCooldown: 9,
+      role: EnemyRole.normal,
+    );
+    world.enemies
+      ..clear()
+      ..addAll([target, packMate]);
+
+    final paladin = SpatialActor(
+      id: 'pala',
+      name: 'Pala',
+      team: SpatialTeam.hero,
+      x: target.x - 1.0,
+      y: target.y,
+      hp: 200,
+      maxHp: 200,
+      attack: 40,
+      defense: 5,
+      moveSpeed: 0,
+      attackRange: 2,
+      attackCooldown: 9,
+      fireCooldown: 9,
+      heroRole: HeroRole.warrior,
+      heroSpecId: HeroSpecId.protPaladin,
+      heroLevel: 15,
+      assetIndex: 0,
+    );
+    world.heroes
+      ..clear()
+      ..add(paladin);
+    paladin.rage = 100;
+    for (final def in ClassKits.all) {
+      if (def.id == AbilityId.consecration || def.cooldown <= 0) continue;
+      paladin.abilityCd[def.id.name] = 99;
+    }
+    world.spawnPersistentVfx = true;
+    world.reducedVfx = true;
+
+    AbilityEffectRunner.tick(
+      world,
+      paladin,
+      state,
+      dt: 0.1,
+      rng: math.Random(3),
+      reducedVfx: true,
+      hasShield: false,
+    );
+
+    expect(world.groundFx, isNotEmpty, reason: 'Lite should spawn holy disc');
+    expect(world.bursts, isEmpty, reason: 'Lite skips routine cast bursts');
+  });
+
   test('VfxQuality Lite keeps discs/auras; Minimal strips motion layers', () {
     expect(VfxQuality.full.showBurstsAndFloaters, isTrue);
     expect(VfxQuality.full.showPriorityFloaters, isTrue);
@@ -292,6 +377,27 @@ void main() {
         id: AbilityId.bladestorm,
       ),
       SpatialGroundFxKind.steel,
+    );
+    expect(
+      SpellVfx.burstKindFor(
+        style: SpellBoltStyle.nature,
+        id: AbilityId.rejuvenation,
+      ),
+      SpatialBurstKind.spark,
+    );
+    expect(
+      SpellVfx.burstKindFor(
+        style: SpellBoltStyle.fire,
+        id: AbilityId.chaosBolt,
+      ),
+      SpatialBurstKind.flame,
+    );
+    expect(
+      SpatialCombat.boltStyleForAbility(
+        _hero(HeroSpecId.assassination),
+        def: ClassKits.defFor(AbilityId.vendetta),
+      ),
+      SpellBoltStyle.shadow,
     );
   });
 }

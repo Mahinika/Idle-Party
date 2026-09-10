@@ -711,6 +711,11 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.55,
+      boltStyle: SpellBoltStyle.lightning,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.lightning,
+        castArgb: 0xFFA0E8FF,
+      ),
 
       customId: AbilityCustomId.thunderClap,
       aoeShape: AbilityAoeShape.ground,
@@ -729,6 +734,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.55,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFFE08A,
+      ),
 
       customId: AbilityCustomId.devastate,
       gate: AbilityGate(
@@ -1064,6 +1074,11 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 0.95,
       castDelaySeconds: 1.8,
+      boltStyle: SpellBoltStyle.fire,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.fire,
+        castArgb: 0xFFFF6030,
+      ),
 
       customId: AbilityCustomId.fireball,
       gate: AbilityGate(
@@ -1085,6 +1100,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.65,
+      boltStyle: SpellBoltStyle.fire,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.fire,
+        castArgb: 0xFFFF5020,
+      ),
 
       customId: AbilityCustomId.livingBomb,
       fireMode: AbilityFireMode.dotTick,
@@ -1372,6 +1392,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.95,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFFC070,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.overpower,
@@ -1386,6 +1411,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.42,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFFE08A,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.rend,
@@ -1505,6 +1535,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.3,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFF6060,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.whirlwind,
@@ -1519,6 +1554,14 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+      boltStyle: SpellBoltStyle.weapon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.weapon,
+        castArgb: 0xFFFFE08A,
+        groundDisc: true,
+        groundLife: 2.5,
+        groundArgb: 0x88FFE08A,
+      ),
 
       aoeShape: AbilityAoeShape.ground,
     ),
@@ -1646,6 +1689,11 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 1.3,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFE080,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.flashOfLight,
@@ -1944,6 +1992,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.65,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFE080,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.judgment,
@@ -1958,6 +2011,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.58,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFE080,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.divineStorm,
@@ -1972,6 +2030,14 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 1.12,
+      boltStyle: SpellBoltStyle.holy,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.holy,
+        castArgb: 0xFFFFE080,
+        groundDisc: true,
+        groundLife: 3.2,
+        groundArgb: 0x88FFE080,
+      ),
 
       aoeShape: AbilityAoeShape.ground,
     ),
@@ -2077,6 +2143,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.48,
+      boltStyle: SpellBoltStyle.arrow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arrow,
+        castArgb: 0xFFE8C060,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.multiShot,
@@ -2091,6 +2162,11 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.74,
+      boltStyle: SpellBoltStyle.arrow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arrow,
+        castArgb: 0xFFE8D080,
+      ),
 
       aoeShape: AbilityAoeShape.fan,
     ),
@@ -2183,6 +2259,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.05,
+      boltStyle: SpellBoltStyle.arrow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arrow,
+        castArgb: 0xFFE8D080,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.aimedShot,
@@ -2197,6 +2278,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.72,
+      boltStyle: SpellBoltStyle.arrow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arrow,
+        castArgb: 0xFFE8D080,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.chimeraShot,
@@ -2211,6 +2297,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.35,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF70D070,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.volley,
@@ -2225,6 +2316,14 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+      boltStyle: SpellBoltStyle.arrow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arrow,
+        castArgb: 0xFFE8D080,
+        groundDisc: true,
+        groundLife: 2.8,
+        groundArgb: 0x66E8D080,
+      ),
 
       aoeShape: AbilityAoeShape.rain,
     ),
@@ -2587,10 +2686,10 @@ class ClassKits {
       resourceCost: 15,
       effect: AbilityEffectKind.selfBuff,
       tier: AbilityCastTier.signature,
-      boltStyle: SpellBoltStyle.nature,
+      boltStyle: SpellBoltStyle.shadow,
       vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.nature,
-        castArgb: 0xFF70D070,
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFFF4040,
       ),
 
       selfBuffKind: AbilitySelfBuffKind.amp,
@@ -2970,6 +3069,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.05,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFB060E0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.vampiricTouch,
@@ -2984,6 +3088,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.15,
+      boltStyle: SpellBoltStyle.shadow,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.shadow,
+        castArgb: 0xFFB060E0,
+      ),
 
       gate: AbilityGate(maintainDot: true),
     ),
@@ -3859,6 +3968,11 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 1.15,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF60E0A0,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.healingWave,
@@ -3874,6 +3988,11 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.55,
       castDelaySeconds: 1.6,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF70D070,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.chainHeal,
@@ -3888,6 +4007,11 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 1.35,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF70D070,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.earthShield,
@@ -3982,6 +4106,11 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.2,
       castDelaySeconds: 1.4,
+      boltStyle: SpellBoltStyle.arcane,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arcane,
+        castArgb: 0xFFC070FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneMissiles,
@@ -3996,6 +4125,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.3,
+      boltStyle: SpellBoltStyle.arcane,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arcane,
+        castArgb: 0xFFC070FF,
+      ),
 
       gate: AbilityGate(arcaneChargesMin: 2),
     ),
@@ -4012,6 +4146,14 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.7,
+      boltStyle: SpellBoltStyle.arcane,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.arcane,
+        castArgb: 0xFFC070FF,
+        groundDisc: true,
+        groundLife: 1.6,
+        groundArgb: 0x88C070FF,
+      ),
 
       aoeShape: AbilityAoeShape.ground,
     ),
@@ -4107,6 +4249,11 @@ class ClassKits {
       tier: AbilityCastTier.filler,
       coeff: 1.15,
       castDelaySeconds: 1.5,
+      boltStyle: SpellBoltStyle.frost,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.frost,
+        castArgb: 0xFF80D0FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.iceLance,
@@ -4121,6 +4268,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.25,
+      boltStyle: SpellBoltStyle.frost,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.frost,
+        castArgb: 0xFF90E8FF,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.coneOfCold,
@@ -5155,6 +5307,11 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 1.15,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF70D070,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.regrowth,
@@ -5169,6 +5326,11 @@ class ClassKits {
       effect: AbilityEffectKind.heal,
       tier: AbilityCastTier.filler,
       coeff: 1.35,
+      boltStyle: SpellBoltStyle.nature,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.nature,
+        castArgb: 0xFF60E080,
+      ),
     ),
     ClassAbilityDef(
       id: AbilityId.wildGrowth,

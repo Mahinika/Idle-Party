@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.122';
+  static const String currentVersion = '1.12.123';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.123',
+      bullets: <String>[
+        'VFX audit fixes: Lite spawns ground discs and buff aura rings again; nature heals read green not poison; Chaos Bolt flame burst; Vendetta red shadow tint; enemy specials get themed rings (HEX, CLEAVE, PULSE).',
+        'Kit VFX: explicit cast tints on thin kits — Fireball, Frostbolt, Mortal Strike, Aimed Shot, Crusader Strike, Healing Wave, Mind Flay, Arcane Blast, and more.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.122',
       bullets: <String>[

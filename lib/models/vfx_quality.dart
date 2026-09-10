@@ -21,6 +21,9 @@ enum VfxQuality {
   /// Consecration / Bladestorm / trap discs — persistent, low motion.
   bool get showGroundFx => this != VfxQuality.minimal;
 
+  /// Spawn ground discs + buff aura rings (Full + Lite; not Minimal).
+  bool get spawnPersistentFx => this != VfxQuality.minimal;
+
   bool get showGuideAndPulse => this != VfxQuality.minimal;
 
   bool get showProjectileTrails => this == VfxQuality.full;
@@ -36,7 +39,8 @@ enum VfxQuality {
 
   String get settingsHint => switch (this) {
     VfxQuality.full => 'All combat effects',
-    VfxQuality.lite => 'Crits & heals stay — routine floaters/bursts off',
+    VfxQuality.lite =>
+        'Ground discs & auras stay — routine floaters/bursts off',
     VfxQuality.minimal => 'Reduce motion — auras & discs off too',
   };
 

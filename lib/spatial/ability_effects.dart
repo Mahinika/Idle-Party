@@ -754,7 +754,7 @@ abstract final class AbilityEffectRunner {
           hero.beaconTimer = 18;
           _spendAndCd(world, hero, def);
           _announce(world, hero, def.shortLabel, 0xFFFFF0A8, reducedVfx);
-          if (!reducedVfx) {
+          if (world.spawnPersistentVfx) {
             SpatialCombat._spawnRing(
               world,
               x: mark.x,
@@ -769,7 +769,7 @@ abstract final class AbilityEffectRunner {
         _spendAndCd(world, hero, def);
         _selfBuff(hero, def);
         _announce(world, hero, def.shortLabel, 0xFF90E0FF, reducedVfx);
-        if (!reducedVfx) {
+        if (world.spawnPersistentVfx) {
           SpatialCombat._spawnRing(
             world,
             x: hero.x,
@@ -1677,6 +1677,8 @@ abstract final class AbilityEffectRunner {
           radius: radius * 0.7,
         );
       }
+    }
+    if (world.spawnPersistentVfx) {
       final vfx = def.vfx;
       final discLife =
           vfx?.groundLife ?? SpatialCombat.groundDiscLifeFor(def.id);
@@ -2022,6 +2024,8 @@ abstract final class AbilityEffectRunner {
         radius: 1.4,
         life: 0.4,
       );
+    }
+    if (world.spawnPersistentVfx) {
       final discLife = SpatialCombat.groundDiscLifeFor(def.id);
       if (discLife != null || def.vfx?.groundDisc == true) {
         SpatialCombat._spawnGroundFx(

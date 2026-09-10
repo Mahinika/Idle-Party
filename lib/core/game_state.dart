@@ -307,6 +307,9 @@ class GameState {
   /// True when VFX is lite or minimal (spawn gates skip bursts/floaters).
   bool get reducedVfx => vfxQuality.reduced;
 
+  /// Ground discs + buff aura rings (Full + Lite).
+  bool get spawnPersistentVfx => vfxQuality.spawnPersistentFx;
+
   /// Auto-sell *drops on pickup* / bag cleanup when itemLevel ≤ this (0 = off).
   /// Legacy field name — treat as auto-sell max item level. Pays **gold**.
   final int autoSellMaxPower;

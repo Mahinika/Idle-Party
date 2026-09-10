@@ -739,6 +739,12 @@ class SpatialWorld {
 
   /// When true, enemy outgoing damage is softened (offline AFK sim).
   final bool afkAssist;
+
+  /// Mirrors [GameState.reducedVfx] for the current step (Full vs Lite/Minimal).
+  bool reducedVfx = false;
+
+  /// Mirrors [GameState.spawnPersistentVfx] — discs + aura rings on Full/Lite.
+  bool spawnPersistentVfx = true;
   bool treasureOpen;
   double treasureTimer;
   bool awaitingExit;
@@ -3149,6 +3155,8 @@ abstract final class SpatialCombat {
     world.bagFullFloaterCooldown = math.max(0, world.bagFullFloaterCooldown - dt);
     world.pulseTimer = math.max(0, world.pulseTimer - dt);
     world.guideTimer = math.max(0, world.guideTimer - dt);
+    world.reducedVfx = state.reducedVfx;
+    world.spawnPersistentVfx = state.spawnPersistentVfx;
     _updateChambers(world, reducedVfx: state.reducedVfx, softLock: false);
 
     final inFight =
@@ -5270,7 +5278,7 @@ abstract final class SpatialCombat {
         enemy.hp < enemy.effectiveMaxHp * 0.4 &&
         enemy.enrageTimer <= 0) {
       enemy.enrageTimer = 5.0;
-      if (!reducedVfx) {
+      if (!reducedVfx || world.spawnPersistentVfx) {
         _spawnFloater(
           world,
           x: enemy.x,
@@ -5278,7 +5286,18 @@ abstract final class SpatialCombat {
           text: 'ENRAGE',
           argb: 0xFFFF4040,
           life: 0.9,
+          priority: 2,
         );
+        if (world.spawnPersistentVfx) {
+          _spawnRing(
+            world,
+            x: enemy.x,
+            y: enemy.y,
+            argb: 0xAAFF4040,
+            radius: 1.1,
+            life: 0.55,
+          );
+        }
       }
     }
 
@@ -5299,7 +5318,7 @@ abstract final class SpatialCombat {
         final heal = math.max(8, (enemy.attack * 1.4 * healMul).round());
         lowest.hp = math.min(lowest.effectiveMaxHp, lowest.hp + heal);
         enemy.specialCd = world.afkAssist ? 6.0 : 5.0;
-        if (!reducedVfx) {
+        if (!reducedVfx || world.spawnPersistentVfx) {
           _spawnFloater(
             world,
             x: lowest.x,
@@ -5307,7 +5326,19 @@ abstract final class SpatialCombat {
             text: '+$heal',
             argb: _floaterHeal,
             life: 0.7,
+            priority: reducedVfx ? 2 : 0,
           );
+          if (world.spawnPersistentVfx) {
+            _spawnBurst(
+              world,
+              x: lowest.x,
+              y: lowest.y,
+              argb: 0xFF60E080,
+              radius: 0.65,
+              kind: SpatialBurstKind.cross,
+              life: 0.35,
+            );
+          }
         }
       }
     } else if (enemy.archetype == EnemyArchetype.ranged) {
@@ -5315,7 +5346,7 @@ abstract final class SpatialCombat {
         focus.attackSlowTimer = math.max(focus.attackSlowTimer, 2.2);
         focus.demoShoutTimer = math.max(focus.demoShoutTimer, 2.0);
         enemy.specialCd = 6.0;
-        if (!reducedVfx) {
+        if (!reducedVfx || world.spawnPersistentVfx) {
           _spawnFloater(
             world,
             x: focus.x,
@@ -5323,7 +5354,27 @@ abstract final class SpatialCombat {
             text: 'HEX',
             argb: 0xFFB060FF,
             life: 0.75,
+            priority: reducedVfx ? 2 : 0,
           );
+          if (world.spawnPersistentVfx) {
+            _spawnRing(
+              world,
+              x: focus.x,
+              y: focus.y,
+              argb: 0x88B060FF,
+              radius: 0.85,
+              life: 0.45,
+            );
+            _spawnBurst(
+              world,
+              x: focus.x,
+              y: focus.y,
+              argb: 0xFFB060E0,
+              radius: 0.5,
+              kind: SpatialBurstKind.skull,
+              life: 0.32,
+            );
+          }
         }
       }
     } else if (enemy.archetype == EnemyArchetype.brute &&
@@ -5346,7 +5397,7 @@ abstract final class SpatialCombat {
       }
       if (hit) {
         enemy.specialCd = world.afkAssist ? 7.0 : 6.5;
-        if (!reducedVfx) {
+        if (!reducedVfx || world.spawnPersistentVfx) {
           _spawnFloater(
             world,
             x: enemy.x,
@@ -5354,7 +5405,20 @@ abstract final class SpatialCombat {
             text: 'CLEAVE',
             argb: 0xFFFF8040,
             life: 0.7,
+            priority: reducedVfx ? 2 : 0,
           );
+          if (world.spawnPersistentVfx) {
+            _spawnBurst(
+              world,
+              x: enemy.x,
+              y: enemy.y,
+              argb: 0xFFFF8040,
+              radius: 1.2,
+              kind: SpatialBurstKind.slash,
+              angle: 0,
+              life: 0.38,
+            );
+          }
         }
       }
     } else if (enemy.archetype == EnemyArchetype.tank &&
@@ -5363,7 +5427,7 @@ abstract final class SpatialCombat {
       enemy.bonusMaxHp = math.max(20, (enemy.maxHp * 0.15).round());
       enemy.hp = math.min(enemy.effectiveMaxHp, enemy.hp + enemy.bonusMaxHp);
       enemy.specialCd = 8.0;
-      if (!reducedVfx) {
+      if (!reducedVfx || world.spawnPersistentVfx) {
         _spawnFloater(
           world,
           x: enemy.x,
@@ -5371,7 +5435,18 @@ abstract final class SpatialCombat {
           text: 'FORTIFY',
           argb: 0xFF80C0FF,
           life: 0.7,
+          priority: reducedVfx ? 2 : 0,
         );
+        if (world.spawnPersistentVfx) {
+          _spawnRing(
+            world,
+            x: enemy.x,
+            y: enemy.y,
+            argb: 0xAA80C0FF,
+            radius: 1.0,
+            life: 0.5,
+          );
+        }
       }
     }
 
@@ -5395,14 +5470,28 @@ abstract final class SpatialCombat {
       }
       if (hit) {
         enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
-        if (!reducedVfx) {
-          _spawnBurst(
-            world,
-            x: enemy.x,
-            y: enemy.y,
-            argb: 0xAAFF3030,
-            radius: 1.4,
-          );
+        if (!reducedVfx || world.spawnPersistentVfx) {
+          if (!reducedVfx) {
+            _spawnBurst(
+              world,
+              x: enemy.x,
+              y: enemy.y,
+              argb: 0xAAFF3030,
+              radius: 1.4,
+              kind: SpatialBurstKind.ring,
+              life: 0.45,
+            );
+          }
+          if (world.spawnPersistentVfx) {
+            _spawnRing(
+              world,
+              x: enemy.x,
+              y: enemy.y,
+              argb: 0xCCFF4040,
+              radius: 1.55,
+              life: 0.55,
+            );
+          }
           _spawnFloater(
             world,
             x: enemy.x,
@@ -5410,6 +5499,7 @@ abstract final class SpatialCombat {
             text: 'PULSE',
             argb: 0xFFFF5050,
             life: 0.85,
+            priority: 2,
           );
         }
       }
