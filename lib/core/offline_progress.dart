@@ -36,6 +36,7 @@ abstract final class OfflineProgress {
       progressed: applyAwayBonus(state, sim.state),
       seconds: seconds,
       roomsCleared: sim.roomsCleared,
+      wasInDungeon: true,
     );
   }
 
@@ -55,6 +56,7 @@ abstract final class OfflineProgress {
         roomsCleared: 0,
         highestFloorDelta: 0,
         bossDelta: 0,
+        wasInDungeon: state.inDungeon,
       );
     }
 
@@ -75,6 +77,7 @@ abstract final class OfflineProgress {
       progressed: applyAwayBonus(state, progressed),
       seconds: seconds,
       roomsCleared: roomsCleared,
+      wasInDungeon: state.inDungeon,
     );
   }
 
@@ -86,6 +89,7 @@ abstract final class OfflineProgress {
     required GameState progressed,
     required int seconds,
     required int roomsCleared,
+    required bool wasInDungeon,
   }) {
     final next = progressed.copyWith(
       offlineSecondsRecovered: progressed.offlineSecondsRecovered + seconds,
@@ -104,6 +108,7 @@ abstract final class OfflineProgress {
         0,
         999,
       ),
+      wasInDungeon: wasInDungeon,
     );
   }
 

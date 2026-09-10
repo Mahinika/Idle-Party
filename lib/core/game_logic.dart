@@ -3205,6 +3205,7 @@ class OfflineProgressResult {
     required this.bossDelta,
     this.levelsGained = 0,
     this.gearFinds = 0,
+    this.wasInDungeon = false,
   });
 
   static const int maxHighlightRows = 3;
@@ -3219,11 +3220,21 @@ class OfflineProgressResult {
   final int levelsGained;
   final int gearFinds;
 
+  /// True when AFK started mid-dungeon (SpatialCombat catch-up), not hub.
+  final bool wasInDungeon;
+
   bool get foughtWhileAway =>
-      roomsCleared > 0 ||
-      highestFloorDelta > 0 ||
-      bossDelta > 0 ||
-      levelsGained > 0;
+      wasInDungeon &&
+      (roomsCleared > 0 ||
+          highestFloorDelta > 0 ||
+          bossDelta > 0 ||
+          levelsGained > 0 ||
+          gearFinds > 0);
+
+  /// One honest line: hub sanctuary vs dungeon fight — not mixed up.
+  String get afkWhereLine => wasInDungeon
+      ? 'Left mid-dungeon · party kept fighting (AFK assist)'
+      : 'Rested at the hub · sanctuary gold only · no combat';
 
   /// Banner + Welcome Back share this gate.
   /// Gold / clears show even under 20s; other rewards need ≥20s away.
@@ -3248,22 +3259,23 @@ class OfflineProgressResult {
   /// Compact hub banner — wow + away time (no number dump).
   String get headline {
     final away = formatOfflineDuration(secondsApplied);
-    if (!hasSummary) return 'Away $away';
+    if (!hasSummary) {
+      return wasInDungeon ? 'Dungeon held · Away $away' : 'Away $away';
+    }
     if (bossDelta > 0) {
       return bossDelta == 1
           ? 'Boss fell · Away $away'
           : 'Bosses fell · Away $away';
     }
     if (levelsGained > 0) return 'Party grew · Away $away';
-    if (foughtWhileAway) return 'Party fought · Away $away';
+    if (wasInDungeon) return 'Party fought · Away $away';
     return 'Sanctuary earned · Away $away';
   }
 
   /// Dialog lead — single feeling sentence (not a stat list).
   String get welcomeLead {
     final core = _welcomeLeadCore;
-    // Dungeon catch-up always uses SpatialCombat afkAssist (softer than live).
-    if (foughtWhileAway) {
+    if (wasInDungeon && (foughtWhileAway || goldGained > 0 || gearFinds > 0)) {
       return '$core Catch-up used AFK assist — softer than live.';
     }
     return core;
@@ -3296,6 +3308,17 @@ class OfflineProgressResult {
             ? 'Your party cleared a room while you were away.'
             : 'Your party cleared $roomsCleared rooms while you were away.';
       }
+      if (gearFinds > 0) {
+        return gearFinds == 1
+            ? 'Your party found new gear in the dungeon while you were away.'
+            : 'Your party found gear in the dungeon while you were away.';
+      }
+    }
+    if (wasInDungeon) {
+      if (goldGained > 0 || essenceGained > 0) {
+        return 'Your party kept fighting the dungeon while you were away.';
+      }
+      return 'Your party held the dungeon floor while you were away.';
     }
     if (gearFinds > 0) {
       return gearFinds == 1
@@ -3330,7 +3353,11 @@ class OfflineProgressResult {
       ranked.add((5, 'Essence earned', '+$essenceGained'));
     }
     if (goldGained > 0) {
-      ranked.add((6, 'Gold earned', '+${goldGained}g'));
+      ranked.add((
+        6,
+        wasInDungeon ? 'Combat gold' : 'Sanctuary gold',
+        '+${goldGained}g',
+      ));
     }
     ranked.sort((a, b) => a.$1.compareTo(b.$1));
     final take = maxHighlightRows +

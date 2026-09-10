@@ -98,6 +98,11 @@ Future<void> showOfflineProgressDialog(
                 'Away for ${OfflineProgressResult.formatOfflineDuration(summary.secondsApplied)}',
                 style: GameTheme.body(size: 16, color: GameTheme.parchment),
               ),
+              const SizedBox(height: 4),
+              Text(
+                summary.afkWhereLine,
+                style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+              ),
               const SizedBox(height: 6),
               Text(
                 summary.welcomeLead,
