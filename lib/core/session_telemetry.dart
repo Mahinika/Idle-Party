@@ -1,7 +1,7 @@
 import 'game_state.dart';
 import 'meta_systems.dart' show MetaSystems;
 
-/// Local, opt-in session notes — no network, no analytics servers.
+/// Local, opt-in session notes — clipboard only; never uploaded (not Firebase).
 abstract final class SessionTelemetry {
   static const int maxEvents = 80;
 

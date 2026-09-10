@@ -2,17 +2,21 @@
 
 Idle Party is a single-player idle RPG. This document describes how the app handles data and is suitable for Google Play Data safety disclosures.
 
+**Last updated:** 2026-09-10.
+
 ## Summary
 
-- **No Idle Party account.** You do not create a username/password with us.
+- **No Idle Party account.** You do not create a username or password with us.
 - **Optional Google Play Games.** You may sign in with Play Games for seasonal leaderboards and cloud save. This is opt-in and not required to play.
 - **Optional rewarded ads.** On the Android app you may choose to watch a short ad (hub **POWERUPS**) for an **Ad Ticket**. You spend tickets on timed boosts (Sharp Edge, Gold Rush, Full Boost, Away Bonus). Ads do not play unless you start them. Ad serving uses Google AdMob.
-- **Optional analytics (Firebase).** On Android Play builds the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, entering/leaving a dungeon, Ascend, party wipe). This helps Cognifox Studio understand what works. Collection follows the same Google UMP consent prompt used for ads in the EU/EEA. Web playtest and builds without Firebase config do not send analytics.
+- **Analytics (Firebase).** On Android builds that include Firebase configuration, the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, entering/leaving a dungeon, Ascend, party wipe). This helps Cognifox Studio understand what works. In the **EU/EEA**, collection follows the Google UMP consent prompt (same path as ads; **SETTINGS → AD PRIVACY**). Outside regions where that form is required, Google may allow collection without a separate prompt. Web playtest and builds without Firebase config do not send analytics.
 - **Local save by default.** Progress is stored on your device (e.g. SharedPreferences / platform equivalent).
 
 ## Data the app stores locally
 
 Typical save data may include party progress, gear, gold/meta currency, settings, and related gameplay state. That stays on the device unless you choose to move it.
+
+**Optional local session notes:** in **MORE → SETTINGS** you may turn on a short on-device session log and copy it to the clipboard. That log is **not** uploaded to Idle Party or Firebase; it stays on your device until you clear app storage or uninstall.
 
 ## Optional Play Games (leaderboards + cloud save)
 
@@ -31,21 +35,22 @@ The app may let you **copy a save to the clipboard** or **paste a save from the 
 ## Network
 
 Aside from normal OS / store behavior (install, updates), optional Play Billing
-when you buy from SHOP, optional Play Games calls when you opt in, and optional
-Firebase Analytics on Android (see below), Idle Party does not require an Idle
-Party account or Idle Party cloud service.
+when you buy from SHOP, optional Play Games calls when you opt in, optional
+Firebase Analytics on Android (see below), and optional AdMob when you use
+POWERUPS, Idle Party does not require an Idle Party account or Idle Party
+cloud service.
 
 On **Google Play installs** (Android), the app may ask Google Play whether a newer Idle Party is available and show an in-app notice. That check goes to Google, not to an Idle Party server. Sideloaded APKs skip it.
 
 On **Android**, if you tap hub **POWERUPS** and watch an ad, Google AdMob may load an ad over the network. That can include an advertising ID and a consent prompt (EU/EEA). Skipping POWERUPS means those ad calls are not started by you. Web playtest builds do not show real ads.
 
-## Optional analytics (Firebase Analytics)
+## Analytics (Firebase Analytics)
 
-On **Android** builds that include Firebase configuration:
+On **Android** builds that include Firebase configuration (`google-services.json`):
 
 - Google **Firebase Analytics** may receive **anonymous** app events (device/app identifiers under Google’s policies; not an Idle Party login).
-- Typical events: session start, enter/leave dungeon, Ascend, party wipe. Events do **not** include your save file, chat, or clipboard backups.
-- In the **EU/EEA**, the same Google consent form (UMP) used for ads also gates analytics collection. You can change or withdraw that consent later in **SETTINGS → AD PRIVACY**.
+- The SDK may initialize when the app starts (not only when you open POWERUPS). Typical events: session start, enter/leave dungeon, Ascend, party wipe. Events do **not** include your save file or clipboard backups.
+- In the **EU/EEA**, the Google consent form (UMP) also gates analytics collection. You can change or withdraw that consent later in **SETTINGS → AD PRIVACY**.
 - Analytics is not sent from web playtest builds, Flutter tests, or Android builds that lack Firebase config.
 
 Idle Party does not run its own analytics server; Google hosts Firebase.
@@ -65,8 +70,9 @@ Hub **POWERUPS** is opt-in:
 - You choose when to watch. Combat is never interrupted by an ad.
 - One finished ad grants **1 Ad Ticket**. Spend tickets on Sharp Edge (+25% ATK 60m), Gold Rush (×2 gold 60m), Full Boost (both for 3h), or Away Bonus (next offline gold ×2). Timers stack per buff up to 24h.
 - Google AdMob serves the ad. Idle Party does not run its own ad server.
-- In the EU/EEA, a Google consent form (UMP) may appear before ads can be requested.
+- In the **EU/EEA**, a Google consent form (UMP) may appear before ads can be requested (and the same consent path gates Firebase Analytics).
 - You can change or withdraw that consent later in **SETTINGS → AD PRIVACY** (Android).
+- AdMob may be **linked** to the same Firebase / Google Analytics project so Cognifox Studio can see aggregated ad performance and (when enabled) impression-level revenue alongside analytics. That sharing stays inside Google’s products under their policies.
 
 ## Delete your data / sign-out
 
@@ -84,7 +90,7 @@ Local save on the device is removed when you clear the app’s storage or uninst
 
 ## Children
 
-The game is intended as a general-audience idle RPG. It does not collect personal information for profiles. Optional Play Games, optional rewarded ads (AdMob), and optional Firebase Analytics may process identifiers under Google’s policies when those features run. The game is not directed at children.
+The game is intended as a general-audience idle RPG. It does not collect personal information for profiles. Optional Play Games, optional rewarded ads (AdMob), and Firebase Analytics may process identifiers under Google’s policies when those features run. The game is not directed at children.
 
 ## Changes
 

@@ -12,7 +12,7 @@ Package id: **`com.idleparty.app`**
 | Production | ✅ review | **1.12.117 (146)** submitted for review **2026-09-09** (full rollout). Live until publish: **1.12.110 (139)**. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
-| Data safety form | ⏳ review | Updated 2026-09-08: delete-account / delete-data URLs → `main` PRIVACY; AdMob device IDs shared; Play Games user IDs / files / other actions; OAuth; encryption in transit. Submitted with Alpha **135** + listing/ads bundle. |
+| Data safety form | ⏳ owner | Ads / Play Games / Advertising ID submitted earlier. **Still need:** declare **Firebase Analytics / App activity** to match [PRIVACY.md](PRIVACY.md) before the next AAB that ships analytics (see Privacy section below). |
 | IARC / content rating | ⏳ review | New questionnaire submitted 2026-09-08: fantasy creature violence (often close-up, pixel, no blood), digital goods (SHOP) yes / no loot-boxes / no player trading, no fear/sex/gambling/language/drugs. Ads are **not** in this IARC form — covered by Ads declaration **Yes**. Ratings preview: ESRB 10+ fantasy violence, USK 12, PEGI 3 + IAP. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN) | ✅ review | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md`. **2026-09-10:** clearer short/full + mixed phone screenshots submitted for review. Developer name **Cognifox Studio** also pending Google approval (was Stuido). |
@@ -94,9 +94,10 @@ players = Play AAB after owner play OK — not public GitHub APK links.
 - [x] Privacy policy URL in Play Console (2026-08-16):  
   Prefer `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md`  
   after this branch merges (branch blob still works until then).
-- [x] Data safety form (2026-08-16): **optional Play Games** (User IDs / gameplay Other actions / Saved Games files); collected not shared; encrypted in transit; OAuth; delete account + data URLs point at [PRIVACY.md](PRIVACY.md). Clipboard export/import is optional and user-initiated.
-- [ ] **Firebase Analytics (2026-09-10 code):** update Play Data safety to declare **App activity / Analytics** via Google Firebase (collected, not shared for Idle Party’s own use; encrypted in transit; see [PRIVACY.md](PRIVACY.md)). Do this before the next Play upload that ships analytics.
+- [x] Data safety form (baseline 2026-08-16 / ads 2026-08-21): **optional Play Games** (User IDs / gameplay Other actions / Saved Games files); **AdMob** + Advertising ID; collected/shared answers as submitted; OAuth; delete account + data URLs → [PRIVACY.md](PRIVACY.md). Clipboard export/import is optional and user-initiated.
+- [ ] **Firebase Analytics (code live 2026-09-10):** update Play Data safety to declare **App activity / Analytics** via Google Firebase (and related device/app IDs under Google’s policies). Match [PRIVACY.md](PRIVACY.md). Do this **before** the next Play upload that ships analytics to players.
 - [x] **Rewarded ads (1.12.27):** AdMob live IDs in app. Data safety + Advertising ID declaration updated 2026-08-21 and submitted with Alpha **57**. Privacy copy in [PRIVACY.md](PRIVACY.md). Ads declaration **Yes** + IARC re-survey 2026-09-08.
+- [x] **AdMob ↔ Firebase link (2026-09-10):** Idle Party AdMob app linked to Firebase project `idle-party-4a2e9`. User metrics in AdMob may take up to ~48h.
 
 ### Firebase Analytics setup (owner)
 
@@ -116,9 +117,9 @@ DebugView (optional): `adb shell setprop debug.firebase.analytics.app com.idlepa
 
 Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not through Idle Party servers.
 
-**Wired (2026-08-21):** Idle Party is in AdMob (not store-linked yet). App ID and rewarded unit **POWERUPS hour** live in `lib/core/ad_config.dart`. Release Android builds use them; debug `flutter run` still uses Google sample ads so you do not click your own ads.
+**Wired:** Idle Party is in AdMob with Play store listing linked (**2026-09-09**). App ID and rewarded unit **POWERUPS hour** live in `lib/core/ad_config.dart`. Release Android builds use them; debug `flutter run` still uses Google sample ads so you do not click your own ads. AdMob ↔ Firebase linked **2026-09-10**.
 
-**AdMob check (2026-08-22):**
+**AdMob check:**
 
 | Item | Status |
 |------|--------|
@@ -129,17 +130,15 @@ Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not
 | Store link | ✅ Play linked **2026-09-09** (`com.idleparty.app`) |
 | App approval | ✅ Klart / annonsvisning aktiverad (2026-09-10 AdMob Apps) |
 | Firebase link | ✅ AdMob ↔ Firebase project `idle-party-4a2e9` (2026-09-10); user metrics may take up to 48h |
-| app-ads.txt | ✅ Hosted at `https://mahinika.github.io/app-ads.txt`; Play Website set to `https://mahinika.github.io` (2026-08-22). AdMob crawl may take up to 24h |
-| Revenue today | ~0.54 SEK estimated (ads can fill a little even while in review) |
+| app-ads.txt | ✅ Hosted at `https://mahinika.github.io/app-ads.txt`; Play Website set to `https://mahinika.github.io` |
+| Payment profile | ⏳ AdMob may show a payment-problem banner until AdSense payout settings are fixed |
 | Identity payout verify | Later — only when earnings hit Google’s threshold |
 
 **Still later (AdMob checklist):**
 
-1. **Store-link** Idle Party in AdMob → App settings → Add store listing when Play is public (closed Alpha **cannot** link). That is the last setup step and what clears **Requires review**.
-2. After link + review: smoke POWERUPS on a Play-installed build; confirm Apps → Idle Party shows requests/impressions. Prefer a tester account; avoid click-farming your own live ads.
-3. **app-ads.txt (2026-08-22):** file is live at `https://mahinika.github.io/app-ads.txt` (repo `Mahinika/Mahinika.github.io`). Play store contact **Website** must be `https://mahinika.github.io` (not the GitHub repo URL — AdMob crawls the domain root). Wait up to 24h for AdMob crawl; then open AdMob → Apps → Idle Party → app-ads.txt and refresh status.
-4. (Done 2026-09-08) IARC re-survey + Ads declaration Yes — no separate IARC ads question in the new form.
-5. Optional later: US-state privacy message (not required for EU-first ship).
+1. Smoke POWERUPS on a Play-installed build; confirm Apps → Idle Party shows requests/impressions. Prefer a tester account; avoid click-farming your own live ads.
+2. Fix AdMob / AdSense **payment profile** banner if still red.
+3. Optional later: US-state privacy message (not required for EU-first ship).
 
 **Code fix (2026-08-22):** rewarded show used to finish when the ad *opened*, dispose the ad, and skip the hour. It now waits until the ad is dismissed and only then grants POWERUPS. Duration: **1 ad = 3 hours** (stacks to 24h).
 

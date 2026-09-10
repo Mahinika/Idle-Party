@@ -71,6 +71,7 @@ KEEP GROWING
 FAIR PLAY
 • Single-player — no Idle Party account required.
 • Optional rewarded ads grant timed boosts and never interrupt a fight.
+• Privacy policy covers optional Play Games, ads, and analytics.
 • Designed for portrait phones.
 
 Start your party and take one more floor.
