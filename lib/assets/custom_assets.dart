@@ -325,6 +325,8 @@ abstract final class CustomAssets {
   static const String heroShadow = '$_root/heroes/shadow.png';
   static const String heroFeral = '$_root/heroes/feral.png';
   static const String heroGuardian = '$_root/heroes/guardian.png';
+  static const String heroMoonkin = '$_root/heroes/moonkin.png';
+  static const String heroTree = '$_root/heroes/tree.png';
 
   static String heroForClass(HeroClassId classId) => switch (classId) {
     HeroClassId.warrior => heroKnight,
@@ -339,23 +341,36 @@ abstract final class CustomAssets {
     HeroClassId.druid => heroDruid,
   };
 
+  /// Specs with authored unique PNGs (order matches [uniqueHeroSpecPaths]).
+  static const List<HeroSpecId> uniqueHeroSpecs = [
+    HeroSpecId.shadow,
+    HeroSpecId.feral,
+    HeroSpecId.guardian,
+    HeroSpecId.balance,
+    HeroSpecId.restorationDruid,
+  ];
+
   /// Spec-unique bodies when present; else class body ([HeroIdentity] tint).
   static String heroForSpec(HeroSpecId specId) => switch (specId) {
     HeroSpecId.shadow => heroShadow,
     HeroSpecId.feral => heroFeral,
     HeroSpecId.guardian => heroGuardian,
+    HeroSpecId.balance => heroMoonkin,
+    HeroSpecId.restorationDruid => heroTree,
     _ => heroForClass(HeroSpecs.def(specId).classId),
   };
 
   static bool hasUniqueHeroSprite(HeroSpecId specId) => switch (specId) {
-    HeroSpecId.shadow || HeroSpecId.feral || HeroSpecId.guardian => true,
+    HeroSpecId.shadow ||
+    HeroSpecId.feral ||
+    HeroSpecId.guardian ||
+    HeroSpecId.balance ||
+    HeroSpecId.restorationDruid => true,
     _ => false,
   };
 
-  static List<String> get uniqueHeroSpecPaths => const [
-    heroShadow,
-    heroFeral,
-    heroGuardian,
+  static List<String> get uniqueHeroSpecPaths => [
+    for (final id in uniqueHeroSpecs) heroForSpec(id),
   ];
 
   // —— Combat enemies / bosses ——

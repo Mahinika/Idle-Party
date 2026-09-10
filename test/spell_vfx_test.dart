@@ -47,6 +47,7 @@ void main() {
       (AbilityId.chainLightning, HeroSpecId.elemental, SpellBoltStyle.lightning),
       (AbilityId.lavaBurst, HeroSpecId.elemental, SpellBoltStyle.fire),
       (AbilityId.hurricane, HeroSpecId.balance, SpellBoltStyle.nature),
+      (AbilityId.insectSwarm, HeroSpecId.balance, SpellBoltStyle.nature),
       (AbilityId.multiShot, HeroSpecId.beastMastery, SpellBoltStyle.arrow),
       (AbilityId.consecration, HeroSpecId.protPaladin, SpellBoltStyle.holy),
     ];

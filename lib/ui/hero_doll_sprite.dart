@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../assets/custom_assets.dart';
 import '../models/hero.dart';
 import '../visual/body_family.dart';
 import '../visual/character_visual_painter.dart';
@@ -12,6 +13,9 @@ import '../assets/kenney_assets.dart';
 import 'kenney_sprite.dart';
 
 /// GEAR / party HUD: owned body + same 128×128 gear overlays as dungeon.
+///
+/// Specs with [CustomAssets.hasUniqueHeroSprite] (Druid forms, Shadow) draw
+/// the form PNG only — no undertunic or gear overlays.
 class HeroDollSprite extends StatefulWidget {
   const HeroDollSprite({
     super.key,
@@ -36,6 +40,7 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
   ui.Image? _body;
   Map<String, ui.Image> _overlays = const {};
   String? _fallbackPath;
+  String? _formPath;
   int _loadGen = 0;
 
   @override
@@ -71,6 +76,23 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
 
   Future<void> _reload() async {
     final gen = ++_loadGen;
+    final useForm = CustomAssets.hasUniqueHeroSprite(widget.hero.specId);
+    if (useForm) {
+      final formPath = CustomAssets.heroForSpec(widget.hero.specId);
+      ui.Image? form;
+      try {
+        form = await DecodedImageCache.load(formPath, targetWidth: 96);
+      } catch (_) {}
+      if (!mounted || gen != _loadGen) return;
+      setState(() {
+        _formPath = formPath;
+        _body = form;
+        _overlays = const {};
+        _fallbackPath = null;
+      });
+      return;
+    }
+
     final bodyPath =
         BodyFamilyCatalog.assetFor(widget.hero, HeroAnimKind.idle);
     _fallbackPath = KenneyAssets.heroSpriteForSpec(widget.hero.specId);
@@ -118,6 +140,7 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
 
     if (!mounted || gen != _loadGen) return;
     setState(() {
+      _formPath = null;
       _body = body;
       _overlays = overlays;
     });
@@ -127,9 +150,20 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
   Widget build(BuildContext context) {
     final alive = widget.hero.currentHp > 0;
     final body = _body;
+    final formPath = _formPath;
 
     Widget child;
-    if (body != null) {
+    if (formPath != null) {
+      // Unique form PNG — prefer decoded image; KenneySprite as soft fallback.
+      if (body != null) {
+        child = CustomPaint(
+          size: Size.square(widget.size),
+          painter: _FormDollPainter(image: body),
+        );
+      } else {
+        child = KenneySprite(asset: formPath, size: widget.size);
+      }
+    } else if (body != null) {
       child = CustomPaint(
         size: Size.square(widget.size),
         painter: _OwnedDollPainter(
@@ -158,6 +192,35 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
       child: Opacity(opacity: alive ? 1 : 0.35, child: child),
     );
   }
+}
+
+class _FormDollPainter extends CustomPainter {
+  const _FormDollPainter({required this.image});
+
+  final ui.Image image;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final dst = Rect.fromLTWH(0, 0, size.width, size.height);
+    final src = Rect.fromLTWH(
+      0,
+      0,
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
+    canvas.drawImageRect(
+      image,
+      src,
+      dst,
+      Paint()
+        ..filterQuality = FilterQuality.none
+        ..isAntiAlias = false,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _FormDollPainter oldDelegate) =>
+      !identical(image, oldDelegate.image);
 }
 
 class _OwnedDollPainter extends CustomPainter {

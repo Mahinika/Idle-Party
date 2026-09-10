@@ -149,12 +149,25 @@ void main() {
     }
   });
 
-  test('Shadow Feral Guardian have unique hero sprites', () {
+  test('Shadow Feral Guardian Balance Resto have unique hero sprites', () {
     expect(CustomAssets.heroForSpec(HeroSpecId.shadow), CustomAssets.heroShadow);
     expect(CustomAssets.heroForSpec(HeroSpecId.feral), CustomAssets.heroFeral);
     expect(
       CustomAssets.heroForSpec(HeroSpecId.guardian),
       CustomAssets.heroGuardian,
+    );
+    expect(
+      CustomAssets.heroForSpec(HeroSpecId.balance),
+      CustomAssets.heroMoonkin,
+    );
+    expect(
+      CustomAssets.heroForSpec(HeroSpecId.restorationDruid),
+      CustomAssets.heroTree,
+    );
+    expect(CustomAssets.hasUniqueHeroSprite(HeroSpecId.balance), isTrue);
+    expect(
+      CustomAssets.hasUniqueHeroSprite(HeroSpecId.restorationDruid),
+      isTrue,
     );
     for (final path in CustomAssets.uniqueHeroSpecPaths) {
       expect(exists(path), isTrue, reason: path);

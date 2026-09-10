@@ -374,9 +374,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       ]);
     _heroesBySpec
       ..clear()
-      ..[HeroSpecId.shadow] = shared[i++]
-      ..[HeroSpecId.feral] = shared[i++]
-      ..[HeroSpecId.guardian] = shared[i++];
+      ..addEntries([
+        for (final spec in CustomAssets.uniqueHeroSpecs)
+          MapEntry(spec, shared[i++]),
+      ]);
 
     // Doll overlays only — BAG `*_icon` crops are never painted in a dungeon.
     final bodyPaths = [
@@ -1972,22 +1973,38 @@ class _TileRoomPainter extends CustomPainter {
           signals,
           walkPhase: walkPhase,
         );
-        // Phase 3 denser owned body → class PNG → Kenney role fallback.
+        // Unique form PNG (Druid forms / Shadow) → owned paper-doll → class PNG.
+        final useFormSprite =
+            CustomAssets.hasUniqueHeroSprite(partyHero.specId);
+        final formImg =
+            useFormSprite ? heroesBySpec[partyHero.specId] : null;
         final bodyPath = BodyFamilyCatalog.assetFor(partyHero, anim.kind);
-        ui.Image? bodyImg = bodyByPath[bodyPath];
+        ui.Image? bodyImg =
+            useFormSprite ? null : bodyByPath[bodyPath];
         final usingOwnedBody = bodyImg != null;
         Color? tint;
-        if (bodyImg == null) {
+        if (bodyImg == null && formImg == null) {
           bodyImg = heroesBySpec[partyHero.specId] ??
               heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
           final argb = HeroIdentity.tintArgb(partyHero.specId);
           if (argb != null) tint = Color(argb);
         }
         bodyImg ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
-        // Owned denser bodies read better slightly larger than Kenney tiles.
-        final scale = (usingOwnedBody ? 1.72 : 0.95) *
+        // Form sprites are 96px; owned denser bodies read larger than Kenney.
+        final scale = (formImg != null
+                ? 1.42
+                : (usingOwnedBody ? 1.72 : 0.95)) *
             (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
-        if (bodyImg != null) {
+        if (formImg != null) {
+          // Persistent form bodies — no gear overlays (silhouette is the kit).
+          drawSprite(
+            formImg,
+            c,
+            scale,
+            alpha: paintAlpha,
+            flipX: flipX,
+          );
+        } else if (bodyImg != null) {
           if (usingOwnedBody) {
             final ownedPose = CharacterVisualPoseCache.resolve(
               heroId: hero.id,

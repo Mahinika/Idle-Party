@@ -14,8 +14,17 @@ Idle Party heroes use a **paper-doll** path when an owned body is available:
    baked into the body. Not Kenney 16×16 tiles.
 3. Fallback: class PNG → Kenney paper-doll (Kenney overlays only there).
 
+**Exception — unique form sprites:** when
+`CustomAssets.hasUniqueHeroSprite(specId)` is true (Shadow; Druid Balance
+moonkin, Feral cat, Guardian bear, Restoration tree), dungeon / GEAR / party
+HUD draw the owned 96×96 form PNG from `assets/custom/heroes/` instead of the
+paper-doll stack. **No gear overlays** on form bodies — the silhouette is the
+kit identity. Generated via `tool/gen_druid_form_sprites.py` for moonkin/tree;
+feral/guardian/shadow are authored.
+
 **GEAR, party HUD, and dungeon** all use `CharacterVisualPainter.paintOwnedHero`
-with the same pose (`CharacterVisualPose.resolve(..., owned: true)`).
+with the same pose (`CharacterVisualPose.resolve(..., owned: true)`) when on
+the paper-doll path (not form sprites).
 
 **Spec identity:** four bodies serve 31 specs, so the pose carries a `bodyTint`
 from `HeroIdentity.ownedBodyTintArgb` — a modulate wash through the

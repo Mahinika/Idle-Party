@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/hero_identity.dart';
 import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
@@ -320,6 +321,132 @@ void main() {
     }
     expect(shouted, isTrue);
   });
+
+  test('Balance Insect Swarm maintains a nature DoT', () {
+    final state = _soloSpecParty(HeroSpecId.balance, level: 12);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final owl = world.heroes.firstWhere((h) => !h.isPet);
+    owl
+      ..rage = 100
+      ..x = target.x - 3
+      ..y = target.y;
+    _padAbilityCds(owl, except: AbilityId.insectSwarm);
+
+    var dotted = false;
+    for (var i = 0; i < 60; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (target.bleedTimer > 0 &&
+          target.bleedAbilityId == AbilityId.insectSwarm.name) {
+        dotted = true;
+        break;
+      }
+      owl.rage = 100;
+    }
+    expect(dotted, isTrue);
+  });
+
+  test('Balance Wrath / Starfire arm Eclipse windows', () {
+    final state = _soloSpecParty(HeroSpecId.balance, level: 12);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final owl = world.heroes.firstWhere((h) => !h.isPet);
+    owl
+      ..rage = 100
+      ..x = target.x - 3
+      ..y = target.y
+      ..moveSpeed = 0;
+    target.moveSpeed = 0;
+    _padAbilityCds(owl, except: AbilityId.wrath);
+    owl.abilityCd[AbilityId.wrath.name] = 0;
+
+    var solar = false;
+    for (var i = 0; i < 40; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((owl.buffTimers['eclipse_nature'] ?? 0) > 0) {
+        solar = true;
+        break;
+      }
+      owl.rage = 100;
+    }
+    expect(solar, isTrue, reason: 'Wrath should arm Solar Eclipse');
+
+    owl.buffTimers.remove('eclipse_nature');
+    _padAbilityCds(owl, except: AbilityId.starfire);
+    owl.abilityCd[AbilityId.starfire.name] = 0;
+    owl.castingTimer = 0;
+    owl.pendingCastDef = null;
+    var lunar = false;
+    for (var i = 0; i < 40; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((owl.buffTimers['eclipse_arcane'] ?? 0) > 0) {
+        lunar = true;
+        expect(owl.buffTimers['eclipse_nature'] ?? 0, 0);
+        break;
+      }
+      owl.rage = 100;
+    }
+    expect(lunar, isTrue, reason: 'Starfire should arm Lunar Eclipse');
+  });
+
+  test('Feral Shred builds combo; Bite spends and scales', () {
+    final state = _soloSpecParty(HeroSpecId.feral, level: 12);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final cat = world.heroes.firstWhere((h) => !h.isPet);
+    cat
+      ..rage = 100
+      ..comboPoints = 0
+      ..x = target.x - 1.2
+      ..y = target.y
+      ..moveSpeed = 0;
+    target.moveSpeed = 0;
+    _padAbilityCds(cat, except: AbilityId.shred);
+    cat.abilityCd[AbilityId.shred.name] = 0;
+
+    for (var i = 0; i < 80; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (cat.comboPoints >= 1) break;
+      cat.rage = 100;
+    }
+    expect(cat.comboPoints, greaterThanOrEqualTo(1));
+
+    cat.comboPoints = 3;
+    _padAbilityCds(cat, except: AbilityId.ferociousBite);
+    cat.abilityCd[AbilityId.ferociousBite.name] = 0;
+    final beforeCombo = cat.comboPoints;
+    var bit = false;
+    for (var i = 0; i < 60; i++) {
+      final cdBefore = cat.abilityCd[AbilityId.ferociousBite.name] ?? 0;
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      final cdAfter = cat.abilityCd[AbilityId.ferociousBite.name] ?? 0;
+      if (cdBefore <= 0 && cdAfter > 0) {
+        bit = true;
+        break;
+      }
+      cat.rage = 100;
+      cat.comboPoints = beforeCombo;
+    }
+    expect(bit, isTrue, reason: 'Ferocious Bite should enter cooldown');
+    expect(cat.comboPoints, 0, reason: 'Bite spends all combo points');
+  });
+
+  test('Guardian fantasy copy says Swipe not Thrash', () {
+    expect(HeroIdentity.fantasyLine(HeroSpecId.guardian), contains('swipe'));
+    expect(HeroIdentity.meetHook(HeroSpecId.guardian), contains('Swipe'));
+    expect(HeroIdentity.meetHook(HeroSpecId.guardian), isNot(contains('Thrash')));
+  });
+}
+
+GameState _soloSpecParty(HeroSpecId specId, {required int level}) {
+  var state = GameLogic.createInitialState(now: DateTime(2026, 8, 1));
+  state = GameLogic.enterDungeon(state, dungeonId: 'sandy');
+  final base = state.heroes.first;
+  var hero = base.copyWith(specId: specId);
+  while (hero.level < level) {
+    hero = hero.levelUp();
+  }
+  return state.withActiveParty([hero]);
 }
 
 GameState _partyAtLevel(int level, {bool unlockRogue = false}) {

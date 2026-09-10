@@ -54,7 +54,7 @@ abstract final class HeroIdentity {
       HeroSpecId.affliction => 0xFFC080E0,
       HeroSpecId.demonology => 0xFFE08060,
       HeroSpecId.destruction => 0xFFFF8060,
-      // Druid (feral/guardian use unique sprites — tint skipped above)
+      // Druid (feral/guardian/balance/resto use unique form sprites — tint skipped)
       HeroSpecId.balance => 0xFFE0C060,
       HeroSpecId.restorationDruid => 0xFF90E090,
       // Unique-sprite specs listed for exhaustiveness; early return above.
@@ -140,7 +140,7 @@ abstract final class HeroIdentity {
       HeroSpecId.destruction => 'Chaos bolts — big nukes.',
       HeroSpecId.balance => 'Moonfire and stars.',
       HeroSpecId.feral => 'Bleeds and bites.',
-      HeroSpecId.guardian => 'Bear form — thrash the pack.',
+      HeroSpecId.guardian => 'Bear form — swipe the pack.',
       HeroSpecId.restorationDruid => 'HoTs that keep ticking.',
     };
   }
@@ -177,7 +177,7 @@ abstract final class HeroIdentity {
       HeroSpecId.destruction => 'Watch Chaos Bolt nukes.',
       HeroSpecId.balance => 'Watch Moonfire / Starfall.',
       HeroSpecId.feral => 'Watch bleeds build into bites.',
-      HeroSpecId.guardian => 'Watch Thrash / bear threat.',
+      HeroSpecId.guardian => 'Watch Swipe / bear threat.',
       HeroSpecId.restorationDruid => 'Watch Rejuvenation HoTs tick.',
     };
   }

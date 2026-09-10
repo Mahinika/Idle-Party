@@ -2817,6 +2817,7 @@ abstract final class SpatialCombat {
       AbilityId.starfire ||
       AbilityId.wrath ||
       AbilityId.moonfire ||
+      AbilityId.insectSwarm ||
       AbilityId.typhoon ||
       AbilityId.riptide ||
       AbilityId.healingWave ||

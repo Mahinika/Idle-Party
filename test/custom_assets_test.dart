@@ -71,6 +71,8 @@ void main() {
       CustomAssets.heroShadow,
       CustomAssets.heroFeral,
       CustomAssets.heroGuardian,
+      CustomAssets.heroMoonkin,
+      CustomAssets.heroTree,
       CustomAssets.enemyTideBrute,
       CustomAssets.enemyEmberElite,
       CustomAssets.enemyStormWraith,

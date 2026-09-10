@@ -456,6 +456,12 @@ abstract final class AbilityEffectRunner {
           final bEnv = b.id == AbilityId.envenom;
           if (aEnv != bEnv) return aEnv ? -1 : 1;
         }
+        // Feral: Ferocious Bite when combo is ready.
+        if (hero.heroSpecId == HeroSpecId.feral && hero.comboPoints >= 3) {
+          final aBite = a.id == AbilityId.ferociousBite;
+          final bBite = b.id == AbilityId.ferociousBite;
+          if (aBite != bBite) return aBite ? -1 : 1;
+        }
         // Prefer AoE in packs, ST otherwise.
         final aAoe = a.effect == AbilityEffectKind.aoe;
         final bAoe = b.effect == AbilityEffectKind.aoe;
@@ -1107,6 +1113,16 @@ abstract final class AbilityEffectRunner {
         raw = math.max(2, (raw * (1.05 + pts * 0.22)).round());
       }
     }
+    // Feral: Shred / Rake build; Ferocious Bite spends like Envenom.
+    if (hero.heroSpecId == HeroSpecId.feral) {
+      if (def.id == AbilityId.shred || def.id == AbilityId.rake) {
+        hero.comboPoints = math.min(5, hero.comboPoints + 1);
+      } else if (def.id == AbilityId.ferociousBite) {
+        final pts = hero.comboPoints;
+        hero.comboPoints = 0;
+        raw = math.max(2, (raw * (1.05 + pts * 0.22)).round());
+      }
+    }
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
     final pet = _petEmpoweredAbility(def) ? _ownedCombatPet(world, hero) : null;
     if (pet != null) {
@@ -1222,6 +1238,11 @@ abstract final class AbilityEffectRunner {
     math.Random rng, {
     required bool reducedVfx,
   }) {
+    // Feral Swipe builds a combo point (same pool as Shred / Rake).
+    if (hero.heroSpecId == HeroSpecId.feral &&
+        def.id == AbilityId.feralSwipe) {
+      hero.comboPoints = math.min(5, hero.comboPoints + 1);
+    }
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
     _announce(
       world,
@@ -2070,6 +2091,32 @@ abstract final class AbilityEffectRunner {
     if (def.id == AbilityId.vampiricTouch) {
       SpatialCombat._gainRage(hero, 12);
     }
+    // Balance Eclipse cycle: Wrath → Solar (nature amp); Starfire → Lunar (arcane amp).
+    if (hero.heroSpecId == HeroSpecId.balance) {
+      if (def.id == AbilityId.wrath) {
+        hero.buffTimers['eclipse_nature'] = 7.0;
+        hero.buffTimers.remove('eclipse_arcane');
+        SpatialCombat._spawnFloater(
+          world,
+          x: hero.x,
+          y: hero.y - 0.55,
+          text: 'Solar',
+          argb: 0xFFE0C040,
+          life: 0.5,
+        );
+      } else if (def.id == AbilityId.starfire) {
+        hero.buffTimers['eclipse_arcane'] = 7.0;
+        hero.buffTimers.remove('eclipse_nature');
+        SpatialCombat._spawnFloater(
+          world,
+          x: hero.x,
+          y: hero.y - 0.55,
+          text: 'Lunar',
+          argb: 0xFFA0C0FF,
+          life: 0.5,
+        );
+      }
+    }
   }
 
   static void _applyBleedIfNeeded(
@@ -2091,6 +2138,7 @@ abstract final class AbilityEffectRunner {
       AbilityId.unstableAffliction ||
       AbilityId.curseOfAgony ||
       AbilityId.moonfire ||
+      AbilityId.insectSwarm ||
       AbilityId.immolateDemo ||
       AbilityId.immolateDestro ||
       AbilityId.flameShock ||
@@ -2110,6 +2158,7 @@ abstract final class AbilityEffectRunner {
       AbilityId.rake || AbilityId.garrote => 8.0,
       AbilityId.serpentSting ||
       AbilityId.moonfire ||
+      AbilityId.insectSwarm ||
       AbilityId.lacerate => 10.0,
       AbilityId.corruption ||
       AbilityId.unstableAffliction ||
@@ -2143,6 +2192,7 @@ abstract final class AbilityEffectRunner {
       AbilityId.immolateDestro ||
       AbilityId.flameShock => 0.15,
       AbilityId.moonfire => 0.11,
+      AbilityId.insectSwarm => 0.13,
       AbilityId.bloodBoil || AbilityId.bloodBoilUnholy => 0.11,
       AbilityId.howlingBlast => 0.12,
       AbilityId.scourgeStrike || AbilityId.heartStrike => 0.10,
