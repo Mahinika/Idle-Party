@@ -23,6 +23,15 @@ from pathlib import Path
 
 from PIL import Image
 
+from build_owned_gear_layers import (
+    _chin_y,
+    bbox as art_bbox,
+    face_region,
+    is_skin,
+    load128,
+    sample_face,
+)
+
 REPO = Path(__file__).resolve().parents[1]
 CHAR = REPO / "assets" / "custom" / "char"
 TOOL = REPO / "tool"
@@ -35,6 +44,12 @@ FAMILIES = ("warrior", "healer", "mage", "rogue")
 MAX_HARD_DIFF_IDLE = 0.38
 BODY_ANIMS = ("idle", "walk", "attack")
 OVERLAY_ANIM = "idle"
+PREVIEW_TINT = {
+    "warrior": (176, 200, 240),  # Protection
+    "healer": (112, 200, 255),   # Elemental
+    "mage": (208, 128, 255),     # Arcane
+    "rogue": (144, 224, 96),     # Beast Mastery
+}
 
 
 def hard_diff_ratio(src: Image.Image, prev: Image.Image) -> float:
@@ -66,10 +81,16 @@ def must_exist_128(path: Path) -> str | None:
     return None
 
 
-def armor_stack(family: str, body_anim: str = "idle") -> Image.Image:
+def armor_stack(
+    family: str,
+    body_anim: str = "idle",
+    body_override: Image.Image | None = None,
+) -> Image.Image:
     """Idle overlays on [body_anim] undertunic (facit idle uses body_idle)."""
     gear = CHAR / family / "gear"
-    body = Image.open(CHAR / family / f"body_{body_anim}.png").convert("RGBA")
+    body = body_override or Image.open(
+        CHAR / family / f"body_{body_anim}.png"
+    ).convert("RGBA")
     layers = [
         Image.open(gear / f"cloak_t0_{OVERLAY_ANIM}.png").convert("RGBA"),
         body,
@@ -80,6 +101,45 @@ def armor_stack(family: str, body_anim: str = "idle") -> Image.Image:
     auth_helm = gear / "_authored" / f"helm_t0_{OVERLAY_ANIM}.png"
     if family in ("mage", "healer") or not auth_helm.exists():
         layers.append(Image.open(gear / f"helm_t0_{OVERLAY_ANIM}.png").convert("RGBA"))
+    out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    for layer in layers:
+        out = Image.alpha_composite(out, layer)
+    return out
+
+
+def tinted_body_preview(family: str, anim: str = "idle") -> Image.Image:
+    """Mirror Flutter's modulate filter on the cloth-only identity mask."""
+    body = Image.open(CHAR / family / f"body_{anim}.png").convert("RGBA")
+    mask = Image.open(CHAR / family / f"body_tint_{anim}.png").convert("RGBA")
+    tr, tg, tb = PREVIEW_TINT[family]
+    tinted = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    rim = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    mp, tp, rp = mask.load(), tinted.load(), rim.load()
+    for y in range(128):
+        for x in range(128):
+            r, g, b, a = mp[x, y]
+            if a:
+                tp[x, y] = (r * tr // 255, g * tg // 255, b * tb // 255, a)
+                rp[x, y] = (tr, tg, tb, int(a * 0.72))
+    outlined = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2)):
+        shifted = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+        shifted.paste(rim, (dx, dy), rim)
+        outlined = Image.alpha_composite(outlined, shifted)
+    return Image.alpha_composite(Image.alpha_composite(outlined, body), tinted)
+
+
+def high_gear_preview(family: str) -> Image.Image:
+    """Representative equipped t2 stack in the same order as Flutter."""
+    gear = CHAR / family / "gear"
+    layers = [
+        tinted_body_preview(family),
+        Image.open(gear / "legs_t2_idle.png").convert("RGBA"),
+        Image.open(gear / "chest_t2_idle.png").convert("RGBA"),
+        Image.open(gear / "hands_t2_idle.png").convert("RGBA"),
+        Image.open(gear / "helm_t2_idle.png").convert("RGBA"),
+        Image.open(gear / "cloak_t2_idle.png").convert("RGBA"),
+    ]
     out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
     for layer in layers:
         out = Image.alpha_composite(out, layer)
@@ -105,6 +165,9 @@ def check_files() -> list[str]:
     for family in FAMILIES:
         for anim in BODY_ANIMS:
             errors.append(must_exist_128(CHAR / family / f"body_{anim}.png"))
+            errors.append(
+                must_exist_128(CHAR / family / f"body_tint_{anim}.png")
+            )
             errors.append(must_exist_128(CHAR / family / "_src" / f"body_{anim}.png"))
         for stem in armor:
             errors.append(
@@ -125,6 +188,63 @@ def check_files() -> list[str]:
     for stem in shared:
         errors.append(must_exist_128(CHAR / "gear" / f"{stem}_{OVERLAY_ANIM}.png"))
     return [e for e in errors if e]
+
+
+def check_body_tint_masks() -> list[str]:
+    """Spec color may cover undertunic cloth, never face/hair or empty pixels."""
+    errors: list[str] = []
+    for family in FAMILIES:
+        for anim in BODY_ANIMS:
+            mask_path = CHAR / family / f"body_tint_{anim}.png"
+            body_path = CHAR / family / f"body_{anim}.png"
+            src_path = CHAR / family / "_src" / f"body_{anim}.png"
+            if not (mask_path.exists() and body_path.exists() and src_path.exists()):
+                continue
+            mask = Image.open(mask_path).convert("RGBA")
+            body = Image.open(body_path).convert("RGBA")
+            src = load128(src_path)
+            box = art_bbox(src)
+            face = sample_face(src, box, family)
+            fx, fy, face_half = face_region(src, face, box)
+            chin_y = _chin_y(src, face, fx, fy, face_half)
+            mp, bp, sp = mask.load(), body.load(), src.load()
+            painted = 0
+            outside_body = 0
+            skin_overlap = 0
+            head_overlap = 0
+            for y in range(128):
+                for x in range(128):
+                    if mp[x, y][3] < 40:
+                        continue
+                    painted += 1
+                    if bp[x, y][3] < 40:
+                        outside_body += 1
+                    r, g, b, a = sp[x, y]
+                    if a >= 40 and is_skin((r, g, b), face):
+                        skin_overlap += 1
+                    if y <= chin_y + 8 and abs(x - fx) <= face_half * 2.4:
+                        head_overlap += 1
+            if painted < 400:
+                errors.append(
+                    f"body tint mask too sparse ({painted}px) "
+                    f"{mask_path.relative_to(REPO)}"
+                )
+            if outside_body:
+                errors.append(
+                    f"body tint mask leaves body ({outside_body}px) "
+                    f"{mask_path.relative_to(REPO)}"
+                )
+            if skin_overlap:
+                errors.append(
+                    f"body tint mask recolors skin ({skin_overlap}px) "
+                    f"{mask_path.relative_to(REPO)}"
+                )
+            if head_overlap:
+                errors.append(
+                    f"body tint mask enters head/hair ({head_overlap}px) "
+                    f"{mask_path.relative_to(REPO)}"
+                )
+    return errors
 
 
 MATERIAL_BY_FAMILY = {"rogue": "mail", "healer": "plate"}
@@ -172,6 +292,23 @@ def silhouette_diff(a: Image.Image, b: Image.Image) -> float:
     return only / max(1, union)
 
 
+def palette_diff(a: Image.Image, b: Image.Image) -> float:
+    """Mean normalized RGB drift where both tier silhouettes have pixels."""
+    pa = a.convert("RGBA").load()
+    pb = b.convert("RGBA").load()
+    compared = 0
+    delta = 0
+    for y in range(128):
+        for x in range(128):
+            ar, ag, ab, aa = pa[x, y]
+            br, bg, bb, ba = pb[x, y]
+            if aa < 40 or ba < 40:
+                continue
+            compared += 1
+            delta += abs(ar - br) + abs(ag - bg) + abs(ab - bb)
+    return delta / max(1, compared * 255 * 3)
+
+
 def check_tiers_and_materials() -> list[str]:
     """t2 and material variants must exist and read as their own armor."""
     errors: list[str] = []
@@ -206,6 +343,12 @@ def check_tiers_and_materials() -> list[str]:
                     errors.append(
                         f"t2 silhouette drifted {shift:.2f} "
                         f"{t2.relative_to(REPO)} (want <= 0.55)"
+                    )
+                palette = palette_diff(im0, im2)
+                if palette > 0.16:
+                    errors.append(
+                        f"t2 palette drifted {palette:.2f} "
+                        f"{t2.relative_to(REPO)} (want <= 0.16)"
                     )
     return errors
 
@@ -281,6 +424,9 @@ def main() -> int:
     for msg in check_files():
         print("FAIL", msg)
         failed += 1
+    for msg in check_body_tint_masks():
+        print("FAIL", msg)
+        failed += 1
     for msg in check_tiers_and_materials():
         print("FAIL", msg)
         failed += 1
@@ -304,6 +450,14 @@ def main() -> int:
             continue
         TOOL.mkdir(parents=True, exist_ok=True)
         stack.save(TOOL / f"preview_doll_{family}.png")
+        armor_stack(
+            family,
+            "idle",
+            body_override=tinted_body_preview(family),
+        ).save(TOOL / f"preview_doll_{family}_identity.png")
+        high_gear_preview(family).save(
+            TOOL / f"preview_doll_{family}_high.png"
+        )
         src = Image.open(src_path)
         ratio = hard_diff_ratio(src, stack)
         ok_helm, helm_w = helm_ok(family)

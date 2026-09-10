@@ -41,16 +41,27 @@ class EquipmentVisualDef {
 abstract final class EquipmentVisualResolver {
   /// Derive a stable visual set id without requiring per-drop art.
   ///
-  /// Stamped [EquipmentItem.visualSetId] wins when its art stem matches the
-  /// item type. Stale loot (e.g. thrown stamped as `bow_*`) remaps so save
-  /// and paint stay honest.
+  /// A stamped [EquipmentItem.visualSetId] wins only when its art stem matches
+  /// the item's slot/type. Stale loot (e.g. a chest stamped as `helm_*`, or a
+  /// thrown weapon stamped as `bow_*`) remaps so save, BAG and doll agree.
   static String resolveId(EquipmentItem item) {
+    final derived = _derivedId(item);
     final vis = item.visualSetId;
     if (vis != null && vis.isNotEmpty) {
-      final fixed = _coerceStem(item, vis);
-      if (fixed != null) return fixed;
-      return vis;
+      if (derived == 'none') return derived;
+      final actualStem = EquipmentModelCatalog.baseToken(vis);
+      final expectedStem = EquipmentModelCatalog.baseToken(derived);
+      if (actualStem == expectedStem) return vis;
+      // A mismatched named hand model cannot be trusted; every shared family
+      // has a guaranteed t0 asset. Armor can keep its derived t0/t2 silhouette.
+      if (EquipmentModelCatalog.sharedBases.contains(expectedStem)) {
+        return '${expectedStem}_t0';
+      }
     }
+    return derived;
+  }
+
+  static String _derivedId(EquipmentItem item) {
     final tier = item.rarity.index.clamp(0, 3);
     return switch (item.slot) {
       EquipmentSlot.weapon || EquipmentSlot.ranged =>
@@ -65,30 +76,6 @@ abstract final class EquipmentVisualResolver {
       EquipmentSlot.waist => 'waist_t$tier',
       _ => 'none',
     };
-  }
-
-  /// When [vis] stem disagrees with item type, return a corrected id.
-  static String? _coerceStem(EquipmentItem item, String vis) {
-    final token = EquipmentModelCatalog.baseToken(vis);
-    if (item.slot == EquipmentSlot.weapon ||
-        item.slot == EquipmentSlot.ranged ||
-        (item.slot == EquipmentSlot.offHand &&
-            item.offHandKind == OffHandKind.weapon)) {
-      final expected = EquipmentModelCatalog.weaponArtStem(item.weaponType);
-      if (expected != null && token != expected) {
-        return '${expected}_t0';
-      }
-      return null;
-    }
-    if (item.slot == EquipmentSlot.offHand) {
-      if (item.offHandKind == OffHandKind.shield && token != 'shield') {
-        return 'shield_t0';
-      }
-      if (item.offHandKind == OffHandKind.frill && token != 'frill') {
-        return 'frill_t0';
-      }
-    }
-    return null;
   }
 
   static String _weaponId(WeaponType? wt, int tier) {
@@ -114,25 +101,28 @@ abstract final class EquipmentVisualResolver {
     if (catalog.containsKey(visualSetId)) return catalog[visualSetId];
     // Variant model: derive layer/anchor from base weapon/item type.
     // e.g. "sword_thunderfury" → base "sword" → catalog["sword_t0"]
-    final base = visualSetId.split('_').first;
+    final base = EquipmentModelCatalog.baseToken(visualSetId);
     return catalog['${base}_t0'];
   }
 
   static EquipmentVisualDef? defForItem(EquipmentItem item) =>
       defFor(resolveId(item));
 
-  /// Gold/white wash so t1–t3 share t0/t2 art (WoW display-id style).
+  /// Very soft wash for generic t1/t3+ ids.
   ///
-  /// Named model variants (`sword_emberfang`) have no `_tN` suffix — pass
-  /// [rarityTier] from [EquipmentItem.rarity.index] so rare gear still glows.
+  /// t2 armor is already derived with its own palette, and named weapon models
+  /// carry authored colors. Recoloring either here made every late-game doll
+  /// orange, including carefully authored item details.
   static Color? rarityTint(String visualSetId, {int? rarityTier}) {
-    final m = RegExp(r'_t(\d)$').firstMatch(visualSetId);
-    final t = int.tryParse(m?.group(1) ?? '') ?? rarityTier ?? 0;
+    final m = RegExp(r'_t(\d+)$').firstMatch(visualSetId);
+    if (m == null) return null;
+    final t = rarityTier ?? int.parse(m.group(1)!);
     return switch (t) {
       0 => null,
-      1 => const Color(0xFFFFF0D8),
-      2 => const Color(0xFFFFD060),
-      _ => const Color(0xFFFFC040),
+      1 => const Color(0xFFF5FAFF),
+      2 => null,
+      3 => const Color(0xFFFFF5E8),
+      _ => const Color(0xFFFFEED8),
     };
   }
 
@@ -176,15 +166,24 @@ abstract final class EquipmentVisualResolver {
     return idle.replaceFirst('_idle.png', '_icon.png');
   }
 
-  /// Persist doll/icon resolve id when a save piece still has a null stamp.
-  static EquipmentItem stampMissingVisualSetId(EquipmentItem item) {
-    if (item.visualSetId != null && item.visualSetId!.isNotEmpty) {
-      return item;
-    }
+  /// Persist the same validated id used by BAG and the doll.
+  ///
+  /// This fills missing ids, repairs stale cross-slot ids from old saves and
+  /// clears impossible ids from jewelry/consumables.
+  static EquipmentItem normalizeVisualSetId(EquipmentItem item) {
     final id = resolveId(item);
-    if (id == 'none') return item;
+    if (id == 'none') {
+      return item.visualSetId == null
+          ? item
+          : item.copyWith(clearVisualSetId: true);
+    }
+    if (item.visualSetId == id) return item;
     return item.copyWith(visualSetId: id);
   }
+
+  /// Backwards-compatible name for callers outside the save migration.
+  static EquipmentItem stampMissingVisualSetId(EquipmentItem item) =>
+      normalizeVisualSetId(item);
 
   /// Built-in catalog (Dart v1). New items point at these ids.
   static final Map<String, EquipmentVisualDef> catalog =

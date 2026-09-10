@@ -2427,7 +2427,7 @@ class GameLogic {
     return MetaSystems.evaluateAchievements(
       syncSpecUnlocks(
         ensureRogueHero(
-          GearService.stampMissingVisualSetIds(
+          GearService.normalizeVisualSetIds(
             GearService.clampStashToCap(unequipIllegalGear(next)),
           ),
         ),

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui' show Color;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -225,7 +226,10 @@ void main() {
       affinity: 'rogue',
     );
     expect(
-      OwnedGearAssets.iconPathFor(boots, family: BodyFamily.rogue),
+      EquipmentVisualResolver.ownedIconPathFor(
+        boots,
+        family: BodyFamily.rogue,
+      ),
       'assets/custom/char/rogue/gear/boots_mail_t0_icon.png',
     );
   });
@@ -281,7 +285,7 @@ void main() {
     ).copyWith(weaponType: WeaponType.thrown, visualSetId: 'bow_longshot');
     expect(EquipmentVisualResolver.resolveId(item), 'dagger_t0');
     expect(
-      OwnedGearAssets.iconPathFor(item),
+      EquipmentVisualResolver.ownedIconPathFor(item),
       'assets/custom/char/gear/dagger_t0_icon.png',
     );
   });
@@ -294,6 +298,59 @@ void main() {
       bias: HeroRole.warrior,
     ).copyWith(visualSetId: 'helm_t3');
     expect(EquipmentVisualResolver.resolveId(item), 'helm_t3');
+  });
+
+  test('stale cross-slot armor id is repaired before painting', () {
+    final item = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 8,
+      bias: HeroRole.warrior,
+    ).copyWith(visualSetId: 'helm_spiked');
+    expect(EquipmentVisualResolver.resolveId(item), 'chest_t2');
+    expect(
+      EquipmentVisualResolver.normalizeVisualSetId(item).visualSetId,
+      'chest_t2',
+    );
+  });
+
+  test('non-visual slots cannot inherit a weapon visual from an old save', () {
+    final ring = GameLogic.createEquipment(
+      slot: EquipmentSlot.ring,
+      rarity: LootRarity.epic,
+      battleNumber: 12,
+      bias: HeroRole.rogue,
+    ).copyWith(visualSetId: 'sword_thunderfury');
+    expect(EquipmentVisualResolver.resolveId(ring), 'none');
+    expect(
+      EquipmentVisualResolver.normalizeVisualSetId(ring).visualSetId,
+      isNull,
+    );
+    expect(EquipmentVisualResolver.ownedIconPathFor(ring), isNull);
+  });
+
+  test('runtime tint preserves authored palettes and only softly marks tiers', () {
+    expect(
+      EquipmentVisualResolver.rarityTint(
+        'sword_emberfang',
+        rarityTier: LootRarity.legendary.index,
+      ),
+      isNull,
+    );
+    expect(
+      EquipmentVisualResolver.rarityTint(
+        'chest_t2',
+        rarityTier: LootRarity.rare.index,
+      ),
+      isNull,
+    );
+    expect(
+      EquipmentVisualResolver.rarityTint(
+        'chest_t0',
+        rarityTier: LootRarity.legendary.index,
+      ),
+      const Color(0xFFFFEED8),
+    );
   });
 
   test('catalog covers sword/shield tiers', () {
@@ -407,7 +464,7 @@ void main() {
         visualSetId: 'shield_stormwall',
       );
       expect(
-        OwnedGearAssets.iconPathFor(item),
+        EquipmentVisualResolver.ownedIconPathFor(item),
         'assets/custom/char/gear/shield_t0_icon.png',
       );
     });
@@ -423,7 +480,7 @@ void main() {
         affinity: 'warrior',
       );
       expect(
-        OwnedGearAssets.iconPathFor(helm),
+        EquipmentVisualResolver.ownedIconPathFor(helm),
         'assets/custom/char/warrior/gear/helm_t0_icon.png',
       );
     });
@@ -439,7 +496,7 @@ void main() {
         affinity: 'warrior',
       );
       expect(
-        OwnedGearAssets.iconPathFor(gloves),
+        EquipmentVisualResolver.ownedIconPathFor(gloves),
         'assets/custom/char/warrior/gear/hands_t0_icon.png',
       );
     });
@@ -554,7 +611,10 @@ void main() {
       battleNumber: 3,
       bias: HeroRole.warrior,
     ).copyWith(visualSetId: 'legs_t0');
-    final path = OwnedGearAssets.iconPathFor(boots, family: BodyFamily.warrior);
+    final path = EquipmentVisualResolver.ownedIconPathFor(
+      boots,
+      family: BodyFamily.warrior,
+    );
     expect(path, 'assets/custom/char/warrior/gear/boots_t0_icon.png');
     expect(File(path!).existsSync(), isTrue);
   });

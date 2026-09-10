@@ -57,8 +57,9 @@ Dungeon, GEAR, and party HUD share `paintOwnedHero` (undertunic body +
 equipped 128×128 overlays, including common gear). Kenney 16×16 tiles are
 fallback only — never pasted on denser bodies. Items share looks via
 `visualSetId`. Four bodies serve 31 specs, so each spec washes its own color
-onto the **undertunic** (`HeroIdentity.ownedBodyTintArgb`); gear keeps rarity
-tints. One body clip per anim — walk bob, weapon swing and hit recoil come from
+through generated **cloth-only** `body_tint_<anim>` masks
+(`HeroIdentity.ownedBodyTintArgb`); skin/hair and authored gear keep their
+palette. One body clip per anim — walk bob, weapon swing and hit recoil come from
 `CharacterVisualPainter.ownedStepOffset`, not new PNGs. Hand items grip
 opaque pixels (`OwnedGearGrips`, generated). Looks gate:
 `py tool/check_paper_doll_facit.py` (idle facit + t2/material + grips +

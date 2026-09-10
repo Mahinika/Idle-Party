@@ -745,6 +745,7 @@ void main() {
       anim: const HeroAnimPose(kind: HeroAnimKind.walk, frame: 0),
       owned: true,
     );
+    expect(pose.bodyTintAsset, 'assets/custom/char/warrior/body_tint_walk.png');
     for (final layer in pose.layers.where((l) => l.id != CharacterLayerId.body)) {
       expect(layer.ownedAsset, isNotNull);
       expect(layer.ownedAsset, isNot(contains('kenney')));
@@ -785,6 +786,11 @@ void main() {
       const Color(0xFFB0C8F0),
       reason: 'protection blue from HeroIdentity',
     );
+    expect(
+      owned.bodyTintAsset,
+      'assets/custom/char/warrior/body_tint_idle.png',
+      reason: 'spec color must use the cloth-only mask, not the whole body',
+    );
 
     // Every spec must read as itself — the doll has only four bodies.
     final tints = <int>{};
@@ -796,6 +802,11 @@ void main() {
 
     expect(
       CharacterVisualPose.resolve(hero: nakedWarrior(), anim: idle).bodyTint,
+      isNull,
+    );
+    expect(
+      CharacterVisualPose.resolve(hero: nakedWarrior(), anim: idle)
+          .bodyTintAsset,
       isNull,
     );
   });

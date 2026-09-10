@@ -57,8 +57,11 @@ abstract final class GearService {
   static GameState unequipIllegalGear(GameState state) =>
       GearEquip.unequipIllegalGear(state);
 
+  static GameState normalizeVisualSetIds(GameState state) =>
+      GearEquip.normalizeVisualSetIds(state);
+
   static GameState stampMissingVisualSetIds(GameState state) =>
-      GearEquip.stampMissingVisualSetIds(state);
+      normalizeVisualSetIds(state);
 
   static List<EquipmentSlot> equipTargetsFor(EquipmentItem item) =>
       GearEquip.equipTargetsFor(item);

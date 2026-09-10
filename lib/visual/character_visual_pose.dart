@@ -51,6 +51,7 @@ class CharacterVisualPose {
     this.equipHash = '',
     this.anchorProfile = BodyAnchorProfile.kenney,
     this.bodyTint,
+    this.bodyTintAsset,
   });
 
   final List<ResolvedLayer> layers;
@@ -63,6 +64,9 @@ class CharacterVisualPose {
   /// Spec wash for the owned body layer (gear overlays keep rarity tints).
   final Color? bodyTint;
 
+  /// Cloth-only grayscale mask; keeps spec color off skin, hair and face ink.
+  final String? bodyTintAsset;
+
   /// Same layers, fresher clip progress — bob and weapon swing read live even
   /// though the cache only keys on kind/frame.
   CharacterVisualPose withAnim(HeroAnimPose next) => CharacterVisualPose(
@@ -73,6 +77,7 @@ class CharacterVisualPose {
     equipHash: equipHash,
     anchorProfile: anchorProfile,
     bodyTint: bodyTint,
+    bodyTintAsset: bodyTintAsset,
   );
 
   AnchorPose anchor(AnchorId id) => AnchorTables.lookup(
@@ -313,6 +318,7 @@ class CharacterVisualPose {
       equipHash: equipHashOf(hero),
       anchorProfile: BodyAnchorProfile.owned,
       bodyTint: Color(HeroIdentity.ownedBodyTintArgb(hero.specId)),
+      bodyTintAsset: BodyFamilyCatalog.tintMaskAssetFor(hero, anim.kind),
     );
   }
 

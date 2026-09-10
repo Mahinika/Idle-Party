@@ -5,6 +5,7 @@ GEAR/BAG slots need a bbox crop so icons match the doll without muddy zoom.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from PIL import Image
@@ -18,7 +19,12 @@ HANDS_MIN_OPAQUE = 24
 
 def opaque_count(im: Image.Image) -> int:
     a = im.split()[-1]
-    return sum(1 for p in a.getdata() if p > 24)
+    pixels = (
+        a.get_flattened_data()
+        if hasattr(a, "get_flattened_data")
+        else a.getdata()
+    )
+    return sum(1 for p in pixels if p > 24)
 
 
 def make_icon(im: Image.Image, *, min_opaque: int = MIN_OPAQUE) -> Image.Image | None:
@@ -35,7 +41,7 @@ def make_icon(im: Image.Image, *, min_opaque: int = MIN_OPAQUE) -> Image.Image |
     return canvas.resize((ICON, ICON), Image.Resampling.NEAREST)
 
 
-def convert_folder(folder: Path) -> int:
+def convert_folder(folder: Path, *, t2_only: bool = False) -> int:
     n = 0
     if not folder.is_dir():
         return 0
@@ -43,6 +49,8 @@ def convert_folder(folder: Path) -> int:
         if "_authored" in src.parts:
             continue
         base = src.name[: -len("_idle.png")]
+        if t2_only and not base.endswith("_t2"):
+            continue
         token = base.split("_")[0]
         min_op = HANDS_MIN_OPAQUE if token == "hands" else MIN_OPAQUE
         im = Image.open(src).convert("RGBA")
@@ -55,13 +63,13 @@ def convert_folder(folder: Path) -> int:
         icon.save(dest)
         n += 1
     # Boots BAG icons: lower band of legs (body still folds boots → legs).
-    n += write_boots_icons(folder)
+    n += write_boots_icons(folder, t2_only=t2_only)
     return n
 
 
-def write_boots_icons(folder: Path) -> int:
+def write_boots_icons(folder: Path, *, t2_only: bool = False) -> int:
     n = 0
-    for tier in ("t0", "t2"):
+    for tier in (("t2",) if t2_only else ("t0", "t2")):
         legs = folder / f"legs_{tier}_idle.png"
         if not legs.exists():
             continue
@@ -81,9 +89,10 @@ def write_boots_icons(folder: Path) -> int:
 
 
 def main() -> None:
-    n = convert_folder(ROOT / "gear")
+    t2_only = "--t2-only" in sys.argv
+    n = convert_folder(ROOT / "gear", t2_only=t2_only)
     for family in ("warrior", "healer", "mage", "rogue"):
-        n += convert_folder(ROOT / family / "gear")
+        n += convert_folder(ROOT / family / "gear", t2_only=t2_only)
     print(f"wrote {n} slot icons")
 
 

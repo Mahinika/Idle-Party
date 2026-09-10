@@ -8,7 +8,7 @@ import '../models/loot.dart';
 import '../models/zone_art.dart';
 import '../spatial/tile_map.dart';
 import '../visual/body_family.dart';
-import '../visual/owned_gear_assets.dart';
+import '../visual/equipment_visual_resolver.dart';
 import 'custom_assets.dart';
 
 /// Central Kenney Tiny Dungeon + UI asset catalog.
@@ -843,7 +843,10 @@ abstract final class KenneyAssets {
   };
 
   static String equipmentIconFor(EquipmentItem item, {BodyFamily? family}) {
-    final owned = OwnedGearAssets.iconPathFor(item, family: family);
+    final owned = EquipmentVisualResolver.ownedIconPathFor(
+      item,
+      family: family,
+    );
     if (owned != null) return owned;
     return kenneyEquipmentIconFor(item);
   }

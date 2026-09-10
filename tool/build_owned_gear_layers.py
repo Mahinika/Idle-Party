@@ -7,13 +7,17 @@ Rules (see .cursor/skills/character-paper-doll/SKILL.md):
 - Undertunic follows the _src silhouette (recolor metal → cloth). No capsules.
 - Warrior/rogue helm = transparent until _authored exists; oversized authored
   icons are registered onto the head, not stamped as a full-canvas overlay.
-- Authored overrides under gear/_authored/ win.
+- Authored t0 overrides under gear/_authored/ win; live armor t2 is always
+  derived from approved t0 so a stale t2 master cannot replace the silhouette
+  or wash the whole doll orange.
 - Weapons may use shared overlays; prefer _authored when present.
 """
 from __future__ import annotations
 
 import math
 import shutil
+import subprocess
+import sys
 from collections import deque
 from pathlib import Path
 
@@ -476,8 +480,8 @@ def paint_undertunic(
     family: str,
     face: tuple[int, int, int],
     box: tuple[int, int, int, int],
-) -> Image.Image:
-    """Keep the gold-master silhouette: face/hair/hands + cloth-recolored armor."""
+) -> tuple[Image.Image, Image.Image]:
+    """Build neutral body plus a cloth-only grayscale identity tint mask."""
     px = src.load()
     x0, y0, x1, y1 = box
     bh = max(1, y1 - y0)
@@ -487,7 +491,9 @@ def paint_undertunic(
     mid_y = y0 + int(bh * 0.62)
     tunic, pants = TUNIC[family]
     out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    tint_mask = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
     op = out.load()
+    mp = tint_mask.load()
     rx = max(11.0, face_half * 1.35)
     ry = max(12.0, face_half * 1.28)
 
@@ -518,6 +524,14 @@ def paint_undertunic(
                 continue
             cloth = tunic if y < mid_y else pants
             op[x, y] = recolor_to_cloth(rgb, cloth, a)
+            # Runtime spec color replaces this grayscale cloth only. Skin,
+            # hair and facial ink never enter the mask.
+            protects_head = (
+                y <= chin_y + 8 and abs(x - fx) <= face_half * 2.4
+            )
+            if not protects_head:
+                shade = max(88, min(255, int(88 + lum(rgb) * 220)))
+                mp[x, y] = (shade, shade, shade, a)
 
     if family in ("mage", "healer"):
         has_hair = False
@@ -538,38 +552,21 @@ def paint_undertunic(
                 f"bald. Add hair to _src/body_idle.png or "
                 f"gear/_authored/, do not draw it here."
             )
-    return out
-
-
-def goldify(im: Image.Image) -> Image.Image:
-    out = im.copy()
-    px = out.load()
-    for y in range(128):
-        for x in range(128):
-            r, g, b, a = px[x, y]
-            if a < 12:
-                continue
-            px[x, y] = (
-                min(255, int(r * 0.72 + 70)),
-                min(255, int(g * 0.62 + 45)),
-                min(255, int(b * 0.40 + 12)),
-                a,
-            )
-    return ImageEnhance.Contrast(out).enhance(1.08)
+    return out, tint_mask
 
 
 def rarefy_cloak(cloak: Image.Image) -> Image.Image:
-    """Rare cape: gold tint + one thicken pass so t2 reads thicker than t0."""
+    """Rare cape: preserve its palette; one grow pass makes t2 read thicker."""
     if cloak.getbbox() is None:
         return cloak
-    return goldify(thicken_cloak(cloak, passes=1))
+    return ImageEnhance.Contrast(thicken_cloak(cloak, passes=1)).enhance(1.06)
 
 
 def rarefy_armor(im: Image.Image) -> Image.Image:
-    """Rare chest/legs: gold tint + light grow so t2 silhouette beats t0."""
+    """Rare armor: preserve item colors; lightly grow/clarify the silhouette."""
     if im.getbbox() is None:
         return im
-    return goldify(thicken_cloak(im, passes=1))
+    return ImageEnhance.Contrast(thicken_cloak(im, passes=1)).enhance(1.06)
 
 
 def thicken_cape_to_target(
@@ -716,7 +713,6 @@ def punch_face_visor(
 
 def make_helm(
     family: str,
-    fancy: bool,
     hat: Image.Image,
     src: Image.Image,
     face: tuple[int, int, int],
@@ -724,7 +720,7 @@ def make_helm(
 ) -> Image.Image:
     """Helm from gold master only. No invent stamp for warrior/rogue."""
     if family in ("mage", "healer") and hat.getbbox():
-        out = goldify(hat) if fancy else hat.copy()
+        out = hat.copy()
         punch_face_visor(out, src, face, box)
         return out
     # Warrior/rogue _src has no helm — leave transparent until _authored exists.
@@ -859,21 +855,18 @@ def save_idle_armor_overlays(
         return final
 
     chest0 = save_set("chest_t0", chest)
-    save_set("chest_t2", rarefy_armor(chest0))
+    rarefy_armor(chest0).save(gear / f"chest_t2_{anim}.png")
     legs0 = save_set("legs_t0", legs)
-    save_set("legs_t2", rarefy_armor(legs0))
+    rarefy_armor(legs0).save(gear / f"legs_t2_{anim}.png")
     cloak0.save(gear / f"cloak_t0_{anim}.png")
     cloak2 = rarefy_cloak(cloak0) if cloak0.getbbox() else cloak0
-    auth_t2 = authored_path(family, "cloak_t2", anim)
-    if auth_t2 is not None:
-        loaded_t2 = load_authored(auth_t2)
-        if alpha_count(loaded_t2) > alpha_count(cloak2) + 80:
-            cloak2 = loaded_t2
     cloak2.save(gear / f"cloak_t2_{anim}.png")
-    save_set("helm_t0", make_helm(family, False, hat, src, face, box))
-    save_set("helm_t2", make_helm(family, True, hat, src, face, box))
+    helm0 = save_set("helm_t0", make_helm(family, hat, src, face, box))
+    rarefy_armor(helm0).save(gear / f"helm_t2_{anim}.png")
     hands0 = save_set("hands_t0", hands)
-    save_set("hands_t2", rarefy_armor(hands0) if hands0.getbbox() else hands0)
+    (rarefy_armor(hands0) if hands0.getbbox() else hands0).save(
+        gear / f"hands_t2_{anim}.png"
+    )
     return chest0, legs0, cloak0, hands0, hat
 
 
@@ -887,8 +880,9 @@ def process_family(family: str) -> dict:
         src = load128(ensure_src(family, anim))
         box = bbox(src)
         face = sample_face(src, box, family)
-        body = paint_undertunic(src, family, face, box)
+        body, tint_mask = paint_undertunic(src, family, face, box)
         body.save(ROOT / family / f"body_{anim}.png")
+        tint_mask.save(ROOT / family / f"body_tint_{anim}.png")
 
         if anim == "idle":
             chest0, legs0, cloak0, hands0, hat = save_idle_armor_overlays(
@@ -911,6 +905,37 @@ def process_family(family: str) -> dict:
             out[anim] = (box, face, src, body, chest0, legs0, cloak0, hands0, hat)
             print("ok", family, anim, "body_only overlays=idle")
     return out
+
+
+def write_tint_masks_only() -> None:
+    """Refresh identity masks without rewriting approved body/gear PNGs."""
+    for family in FAMILIES:
+        for anim in ANIMS:
+            src = load128(ensure_src(family, anim))
+            box = bbox(src)
+            face = sample_face(src, box, family)
+            _body, tint_mask = paint_undertunic(src, family, face, box)
+            tint_mask.save(ROOT / family / f"body_tint_{anim}.png")
+            print("ok", family, anim, "tint_mask_px", alpha_count(tint_mask))
+    print("done — tint masks only; run check_paper_doll_facit.py")
+
+
+def write_t2_only() -> None:
+    """Rebuild approved t2 silhouettes from live t0 without touching sources."""
+    for family in FAMILIES:
+        gear = ROOT / family / "gear"
+        for stem in ("helm", "chest", "legs", "cloak", "hands"):
+            src = gear / f"{stem}_t0_idle.png"
+            if not src.exists():
+                raise FileNotFoundError(src)
+            base = Image.open(src).convert("RGBA")
+            out = rarefy_cloak(base) if stem == "cloak" else rarefy_armor(base)
+            out.save(gear / f"{stem}_t2_idle.png")
+            print("ok", family, f"{stem}_t2", "palette=t0")
+    subprocess.check_call(
+        [sys.executable, str(TOOL / "derive_armor_material_variants.py"), "--t2-only"],
+    )
+    print("done — t2 tiers only; inspect high previews then relock")
 
 
 def write_armor_preview(family: str, frames: dict) -> None:
@@ -938,6 +963,12 @@ def write_armor_preview(family: str, frames: dict) -> None:
 
 
 def main() -> None:
+    if "--tint-masks-only" in sys.argv:
+        write_tint_masks_only()
+        return
+    if "--t2-only" in sys.argv:
+        write_t2_only()
+        return
     shared = ROOT / "gear"
     shared.mkdir(parents=True, exist_ok=True)
     (shared / "_authored").mkdir(parents=True, exist_ok=True)
@@ -948,12 +979,10 @@ def main() -> None:
         ensure_shared_weapons(shared, anim)
     for family in FAMILIES:
         write_armor_preview(family, built[family])
-    # Slot icons = bbox crop of idle overlays (same art as the doll).
-    import subprocess
-    import sys
-
+    # Material variants + slot icons are part of one repeatable build. Leaving
+    # them as a second manual command let native and cross-material t2 drift.
     subprocess.check_call(
-        [sys.executable, str(TOOL / "make_gear_slot_icons.py")],
+        [sys.executable, str(TOOL / "derive_armor_material_variants.py")],
     )
     print("done — inspect tool/preview_doll_*.png then run check_paper_doll_facit.py")
 

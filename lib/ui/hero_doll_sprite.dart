@@ -89,6 +89,7 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
         owned: true,
       );
       final paths = <String>{
+        if (pose.bodyTintAsset != null) pose.bodyTintAsset!,
         for (final layer in pose.layers)
           if (layer.ownedAsset != null) layer.ownedAsset!,
       };

@@ -103,11 +103,12 @@ def derive_family(
     family: str,
     material: str,
     convert,
+    tiers: tuple[str, ...] = TIERS,
 ) -> int:
     gear = ROOT / family / "gear"
     n = 0
     for slot in SLOTS:
-        for tier in TIERS:
+        for tier in tiers:
             for anim in OVERLAY_ANIMS:
                 src = gear / f"{slot}_{tier}_{anim}.png"
                 if not src.exists():
@@ -127,11 +128,15 @@ def derive_family(
 
 
 def main() -> None:
+    tiers = ("t2",) if "--t2-only" in sys.argv else TIERS
     n = 0
-    n += derive_family("rogue", "mail", to_mail)
-    n += derive_family("healer", "plate", to_plate)
+    n += derive_family("rogue", "mail", to_mail, tiers)
+    n += derive_family("healer", "plate", to_plate, tiers)
     print(f"wrote {n} material frames/icons")
-    subprocess.check_call([sys.executable, str(TOOL / "make_gear_slot_icons.py")])
+    icon_args = [sys.executable, str(TOOL / "make_gear_slot_icons.py")]
+    if "--t2-only" in sys.argv:
+        icon_args.append("--t2-only")
+    subprocess.check_call(icon_args)
 
 
 if __name__ == "__main__":

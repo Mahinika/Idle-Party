@@ -158,8 +158,9 @@ class EquipmentItem {
   /// Optional Kenney icon key override.
   final String? iconId;
 
-  /// Optional layered visual set id (e.g. `sword_t1`, `helm_plate`).
-  /// When null, [EquipmentVisualResolver] derives from slot/type/rarity.
+  /// Optional layered visual set id (e.g. `sword_t0`, `sword_emberfang`,
+  /// `helm_t2`). When null or stale, the visual resolver derives/normalizes it
+  /// from slot, weapon/off-hand type and rarity.
   final String? visualSetId;
 
   /// Data-driven affix ids from `item_affixes.json` (null = none).

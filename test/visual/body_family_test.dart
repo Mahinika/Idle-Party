@@ -57,8 +57,10 @@ void main() {
     expect(paths, contains('assets/custom/char/rogue/body_idle.png'));
     expect(paths, contains('assets/custom/char/healer/body_walk.png'));
     expect(paths, contains('assets/custom/char/mage/body_attack.png'));
+    expect(paths, contains('assets/custom/char/warrior/body_tint_idle.png'));
+    expect(paths, contains('assets/custom/char/rogue/body_tint_attack.png'));
     expect(paths.toSet().length, paths.length);
-    expect(paths.length, 12);
+    expect(paths.length, 24);
     for (final path in paths) {
       expect(File(path).existsSync(), isTrue, reason: path);
     }

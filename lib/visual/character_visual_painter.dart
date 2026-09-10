@@ -97,20 +97,75 @@ abstract final class CharacterVisualPainter {
       canvas.translate(step.dx, step.dy);
     }
 
-    // Spec wash on the undertunic only — gear overlays keep rarity tints.
-    final bodyTint = pose.bodyTint;
-    if (bodyTint != null && bodyTint != const Color(0xFFFFFFFF)) {
-      basePaint.colorFilter = ColorFilter.mode(bodyTint, BlendMode.modulate);
-    }
-
     for (final layer in pose.orderedLayers()) {
       if (layer.id == CharacterLayerId.body) {
+        final bodyTint = pose.bodyTint;
+        final tintAsset = pose.bodyTintAsset;
+        final tintMask = tintAsset == null ? null : images[tintAsset];
+        if (bodyTint != null &&
+            bodyTint != const Color(0xFFFFFFFF) &&
+            tintMask != null) {
+          final maskSrc = Rect.fromLTWH(
+            0,
+            0,
+            tintMask.width.toDouble(),
+            tintMask.height.toDouble(),
+          );
+          // A one-pixel cloth rim keeps specs readable even when armor covers
+          // most of the undertunic, without recoloring the equipped item art.
+          final rim = math.max(1.0, size / 96);
+          final rimPaint = Paint()
+            ..filterQuality = FilterQuality.none
+            ..isAntiAlias = false
+            ..color = Color.fromRGBO(255, 255, 255, alpha * 0.72)
+            ..colorFilter = ColorFilter.mode(bodyTint, BlendMode.srcIn);
+          for (final offset in [
+            Offset(-rim, 0),
+            Offset(rim, 0),
+            Offset(0, -rim),
+            Offset(0, rim),
+          ]) {
+            canvas.drawImageRect(
+              tintMask,
+              maskSrc,
+              dst.shift(offset),
+              rimPaint,
+            );
+          }
+        }
         canvas.drawImageRect(
           body,
           Rect.fromLTWH(0, 0, body.width.toDouble(), body.height.toDouble()),
           dst,
           basePaint,
         );
+        // The prior whole-body filter also recolored faces and hair. Draw the
+        // generated cloth mask instead, before all equipped layers.
+        if (bodyTint != null &&
+            bodyTint != const Color(0xFFFFFFFF) &&
+            tintMask != null) {
+          final tintPaint = Paint()
+            ..filterQuality = FilterQuality.none
+            ..isAntiAlias = false
+            ..color = Color.fromRGBO(255, 255, 255, alpha)
+            ..colorFilter = ColorFilter.mode(bodyTint, BlendMode.modulate);
+          canvas.drawImageRect(
+            tintMask,
+            Rect.fromLTWH(
+              0,
+              0,
+              tintMask.width.toDouble(),
+              tintMask.height.toDouble(),
+            ),
+            dst,
+            tintPaint,
+          );
+        } else if (bodyTint != null && tintAsset != null && tintMask == null) {
+          assert(() {
+            debugPrint('paper-doll missing body tint mask: $tintAsset');
+            return true;
+          }());
+        }
         continue;
       }
       if (!kOwnedGearOverlayLayers.contains(layer.id)) continue;

@@ -43,7 +43,11 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
 
 1. Drop / update dressed `_src/body_*.png` (owned art, same 128 origin).
 2. Run `py tool/build_owned_gear_layers.py` — **extract armor from `_src/body_idle`
-   only**; walk/attack rebuild undertunic bodies only. No `ImageDraw` helms or capes.
+   only**; walk/attack rebuild undertunic bodies plus cloth-only
+   `body_tint_<anim>` masks. No `ImageDraw` helms or capes. Use
+   `--tint-masks-only` when approved body/gear art must stay byte-identical.
+   Live t2 armor is palette-preserving derivation from approved t0; use
+   `--t2-only` to refresh it without rebuilding bases.
 3. Inspect `tool/preview_doll_<family>.png` (armor stack). Must read as the same
    character as `_src`, not a grey mushroom head.
 4. Run `py tool/check_paper_doll_facit.py` — composites **live** body+overlays
@@ -89,7 +93,10 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
 - Motion for the single clips lives in `ownedStepOffset` /
   `mainHandExtraRotation`, not in new PNGs
 - Every spec gets a body wash (`HeroIdentity.ownedBodyTintArgb`) on the
-  **undertunic only**; gear overlays keep rarity tints
+  generated **cloth-only mask**; never filter the whole body (skin/hair/face
+  ink stay original). Gear overlays keep their authored palette.
+- Armor t2 may thicken/clarify t0 alpha but must keep its palette. Never apply
+  a global gold/orange transform; `_authored/*_t2` is archive, not a live win.
 - Grips must sit on **opaque** pixels (handle centroid; bows mid-shape).
   Never hand-edit `owned_gear_grips.dart` — regenerate it
 - Dungeon precache uses `dollOverlayPaths`, not `allAssetPaths` (icons are

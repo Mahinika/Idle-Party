@@ -46,6 +46,13 @@ class BodyFamilyDef {
     return path ?? idleAsset;
   }
 
+  /// Cloth-only mask used for spec color. Skin, hair and facial ink stay out.
+  String tintMaskAssetFor(HeroAnimKind kind) =>
+      tintMaskForBodyAsset(assetFor(kind));
+
+  static String tintMaskForBodyAsset(String bodyAsset) =>
+      bodyAsset.replaceFirst('/body_', '/body_tint_');
+
   static String _path(BodyFamily id, String file) =>
       'assets/custom/char/${id.name}/$file';
 }
@@ -70,16 +77,25 @@ abstract final class BodyFamilyCatalog {
   static String assetFor(PartyHero hero, HeroAnimKind kind) =>
       defForHero(hero).assetFor(kind);
 
+  static String tintMaskAssetFor(PartyHero hero, HeroAnimKind kind) =>
+      defForHero(hero).tintMaskAssetFor(kind);
+
   /// All PNG paths that dungeon loaders should precache.
   static List<String> get allAssetPaths {
     final out = <String>{};
+    void addClip(String? path) {
+      if (path == null) return;
+      out.add(path);
+      out.add(BodyFamilyDef.tintMaskForBodyAsset(path));
+    }
+
     for (final def in catalog.values) {
-      out.add(def.idleAsset);
-      if (def.walkAsset != null) out.add(def.walkAsset!);
-      if (def.attackAsset != null) out.add(def.attackAsset!);
-      if (def.castAsset != null) out.add(def.castAsset!);
-      if (def.hitAsset != null) out.add(def.hitAsset!);
-      if (def.deathAsset != null) out.add(def.deathAsset!);
+      addClip(def.idleAsset);
+      addClip(def.walkAsset);
+      addClip(def.attackAsset);
+      addClip(def.castAsset);
+      addClip(def.hitAsset);
+      addClip(def.deathAsset);
     }
     return out.toList(growable: false);
   }

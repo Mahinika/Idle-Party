@@ -5,6 +5,8 @@ Idle Party heroes use a **paper-doll** path when an owned body is available:
 1. **Undertunic base** from `assets/custom/char/<family>/body_<anim>.png`
    (skin + hair + simple cloth — never naked). Empty jewelry slots never
    draw on the body (same as WoW rings/neck).
+   Spec color uses `body_tint_<anim>.png`, a generated **cloth-only** grayscale
+   mask. Never color-filter the whole body: that recolors faces, hair and ink.
 2. **Every equipped gear slot** is a 128×128 overlay on the same dest-rect
    (cape, legs, chest, gloves, helm, off-hand, main-hand). Overlays always
    use the **idle** PNG (`*_idle.png`); walk/attack only change the undertunic
@@ -16,13 +18,15 @@ Idle Party heroes use a **paper-doll** path when an owned body is available:
 with the same pose (`CharacterVisualPose.resolve(..., owned: true)`).
 
 **Spec identity:** four bodies serve 31 specs, so the pose carries a `bodyTint`
-from `HeroIdentity.ownedBodyTintArgb` — a modulate wash on the **undertunic
-only**, so gear keeps its rarity tint. Every spec has a color (unlike
+from `HeroIdentity.ownedBodyTintArgb` — a modulate wash through the
+**cloth-only mask** plus a thin cloth rim, so skin/hair and gear keep their
+palette. Every spec has a color (unlike
 `tintArgb`, which skips specs with unique class sprites).
 
 Not one PNG per class×weapon. Items share looks via `visualSetId` (e.g.
-`sword_t1` → `sword_t0` art + rarity tint). Armor uses family extract
-`*_t0` / `*_t2`, plus **material variants** when `armorType` differs from the
+legacy `sword_t1` → shipped `sword_t0`; named models keep authored colors).
+Armor uses family extract `*_t0` plus palette-preserving derived `*_t2`
+silhouettes, and **material variants** when `armorType` differs from the
 family’s native look:
 
 | Body family | Native look | Extra material PNGs |
@@ -40,11 +44,12 @@ from `tool/derive_weapon_hue_variants.py`.
 Doll look = body family undertunic + overlay stem from `visualSetId` +
 optional material suffix from equipped `armorType`.
 
-## Three art modes (mandatory)
+## Art modes (mandatory)
 
 | Mode | Source | Used for |
 |------|--------|----------|
 | Body extract | `_src` → `build_owned_gear_layers.py` | undertunic per anim; armor extract **idle only** |
+| Armor tier | approved live `t0` → palette-preserving `t2` | rare silhouette; never global gold/orange wash |
 | Authored weapon | `char/gear/_authored/` | shared weapons / shields / frills |
 | Kenney / custom icons | `KenneyAssets` / `CustomAssets` | jewelry, flask, empty shoulder/waist slots |
 
@@ -60,8 +65,8 @@ by `tool/make_gear_slot_icons.py` at the end of `build_owned_gear_layers.py`.
 ## Pipeline
 
 ```text
-PartyHero.gearAffinity → BodyFamilyCatalog → body_<anim>.png (idle/walk/attack)
-PartyHero.equipped     → visualSetId → OwnedGearAssets idle overlay + rarity tint
+PartyHero.gearAffinity → BodyFamilyCatalog → body_<anim>.png + cloth tint mask
+PartyHero.equipped     → normalized visualSetId → OwnedGearAssets idle overlay
 SpatialActor signals   → HeroAnimController → anim + frame
 Canvas: paintOwnedHero (body + armor same dest rect; hand items
 grip-aligned to owned anchors via `OwnedGearGrips`)
@@ -142,8 +147,12 @@ every time a hero took damage.
 
 1. Drop dressed `_src/body_<anim>.png` (gold master) then run
    `py tool/build_owned_gear_layers.py` — **extracts** undertunic + overlays from
-   `_src`; never copies dressed `_src` onto body; never invents helm/cape with
-   `ImageDraw`. Optional overrides: `gear/_authored/`.
+   `_src`, and regenerates the cloth-only identity masks; never copies dressed
+   `_src` onto body; never invents helm/cape with `ImageDraw`. Optional
+   overrides: `gear/_authored/`. When only the mask contract changes, use
+   `--tint-masks-only` so approved body/gear PNGs are not rewritten.
+   When only armor tier derivation changes, use `--t2-only`; t2 is rebuilt from
+   live t0 and old `_authored/*_t2` files remain archive inputs, not live wins.
 2. Check `tool/preview_doll_<family>.png` (written by the facit script from **live**
    body+overlays), then `py tool/check_paper_doll_facit.py`. Facit does not
    depend on a previously generated preview file.
@@ -157,8 +166,9 @@ Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
 
 1. Idle stack vs dressed `_src` per family (hard-diff ≤ 0.38) + helm width.
 2. t2 and material variants exist, hold pixels, and keep the t0 silhouette.
-3. Every `OwnedGearGrips` entry lands on opaque pixels.
-4. `tool/paper_doll_lock.json` pins a hash per shipped PNG — any generator run
+3. Every body tint mask stays inside the body and outside face/hair.
+4. Every `OwnedGearGrips` entry lands on opaque pixels.
+5. `tool/paper_doll_lock.json` pins a hash per shipped PNG — any generator run
    that reshapes art fails here. After a **deliberate** art change, re-run with
    `--relock` and commit the lock.
 
@@ -166,7 +176,7 @@ Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
 
 Pose layers cached per hero id until equip/**material**/**rarity**/spec/anim/
 flip/owned changes; clip progress is refreshed on cache hits (`withAnim`) so
-the step bob stays live. Dungeon precaches bodies +
+the step bob stays live. Dungeon precaches bodies + cloth tint masks +
 `OwnedGearAssets.dollOverlayPaths` in parallel (soft-fail if a PNG is absent) —
 **not** `allAssetPaths`, whose `*_icon` crops only GEAR/BAG draw.
 

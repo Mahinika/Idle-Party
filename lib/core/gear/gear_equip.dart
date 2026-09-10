@@ -42,12 +42,12 @@ abstract final class GearEquip {
     );
   }
 
-  /// Stamp missing [EquipmentItem.visualSetId] so BAG icons match the doll.
-  static GameState stampMissingVisualSetIds(GameState state) {
+  /// Normalize item visuals so saved ids, BAG icons and the doll agree.
+  static GameState normalizeVisualSetIds(GameState state) {
     var changed = false;
 
     EquipmentItem stamp(EquipmentItem item) {
-      final next = EquipmentVisualResolver.stampMissingVisualSetId(item);
+      final next = EquipmentVisualResolver.normalizeVisualSetId(item);
       if (next.visualSetId != item.visualSetId) changed = true;
       return next;
     }
@@ -79,6 +79,9 @@ abstract final class GearEquip {
       lastUpdated: DateTime.now(),
     );
   }
+
+  static GameState stampMissingVisualSetIds(GameState state) =>
+      normalizeVisualSetIds(state);
 
   /// Slots a stash piece may fill (rings/trinkets share dual slots).
   static List<EquipmentSlot> equipTargetsFor(EquipmentItem item) {

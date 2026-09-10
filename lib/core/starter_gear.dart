@@ -102,7 +102,7 @@ abstract final class StarterGear {
       final stem = EquipmentModelCatalog.baseToken(base);
       final String modelId;
       if (EquipmentModelCatalog.sharedBases.contains(stem)) {
-        final rng = Random(item.id.hashCode ^ e.key.index);
+        final rng = Random(_stableSeed('${item.id}:${e.key.name}'));
         modelId = EquipmentModelCatalog.pickVariant(
           base,
           rng,
@@ -115,6 +115,17 @@ abstract final class StarterGear {
     }
 
     return out;
+  }
+
+  /// Dart does not promise that [String.hashCode] stays stable between
+  /// runtimes. Starter model choices must not reshuffle after an app update.
+  static int _stableSeed(String value) {
+    var hash = 0x811C9DC5;
+    for (final unit in value.codeUnits) {
+      hash ^= unit;
+      hash = (hash * 0x01000193) & 0x7FFFFFFF;
+    }
+    return hash;
   }
 
   static ({
