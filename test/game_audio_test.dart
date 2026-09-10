@@ -158,6 +158,14 @@ void main() {
       'spell_lightning',
     );
     expect(
+      AudioAssets.combatHitId(style: SpellBoltStyle.demon),
+      'spell_demon',
+    );
+    expect(
+      AudioAssets.combatHitId(style: SpellBoltStyle.poison),
+      'spell_poison',
+    );
+    expect(
       AudioAssets.combatHitId(style: SpellBoltStyle.arrow),
       'hit_bow',
     );

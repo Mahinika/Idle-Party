@@ -1460,8 +1460,10 @@ abstract final class AbilityEffectRunner {
           style == SpellBoltStyle.frost ||
           style == SpellBoltStyle.fire ||
           style == SpellBoltStyle.shadow ||
+          style == SpellBoltStyle.demon ||
           style == SpellBoltStyle.arcane ||
-          style == SpellBoltStyle.nature;
+          style == SpellBoltStyle.nature ||
+          style == SpellBoltStyle.poison;
       if (fly) {
         SpatialCombat._addProjectile(
           world,

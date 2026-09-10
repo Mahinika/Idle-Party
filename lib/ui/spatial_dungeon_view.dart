@@ -1519,7 +1519,9 @@ class _TileRoomPainter extends CustomPainter {
         SpellBoltStyle.frost => const Color(0xFF90D8FF),
         SpellBoltStyle.arcane => const Color(0xFFC070FF),
         SpellBoltStyle.shadow => const Color(0xFFB060E0),
+        SpellBoltStyle.demon => const Color(0xFF70FF40),
         SpellBoltStyle.nature => const Color(0xFF70D070),
+        SpellBoltStyle.poison => const Color(0xFF90D040),
         SpellBoltStyle.lightning => const Color(0xFFB8F0FF),
         SpellBoltStyle.arrow => const Color(0xFFD8C070),
         SpellBoltStyle.weapon =>
@@ -1673,6 +1675,18 @@ class _TileRoomPainter extends CustomPainter {
             thick * 0.18,
             Paint()..color = const Color(0xFFFFE080),
           );
+        case SpellBoltStyle.demon:
+          canvas.drawCircle(
+            Offset(-len * 0.2, 0),
+            thick * 1.6,
+            Paint()..color = const Color(0x66402010),
+          );
+          drawOrb(core: 1.1, glow: const Color(0xFF40C020));
+          canvas.drawCircle(
+            Offset.zero,
+            thick * 0.35,
+            Paint()..color = const Color(0xFFFFE080),
+          );
         case SpellBoltStyle.nature:
           drawOrb(core: 1.05, glow: const Color(0xFFA0E080));
           // Leaf tip
@@ -1683,6 +1697,18 @@ class _TileRoomPainter extends CustomPainter {
               height: thick * 0.7,
             ),
             Paint()..color = const Color(0xFFB8F090),
+          );
+        case SpellBoltStyle.poison:
+          drawOrb(core: 1.0, glow: const Color(0xFFA0E040));
+          canvas.drawCircle(
+            Offset(len * 0.25, thick * 0.35),
+            thick * 0.35,
+            Paint()..color = const Color(0xAA70B020),
+          );
+          canvas.drawCircle(
+            Offset(len * 0.4, -thick * 0.25),
+            thick * 0.28,
+            Paint()..color = const Color(0xAA90D040),
           );
         case SpellBoltStyle.lightning:
           // Zigzag bolt

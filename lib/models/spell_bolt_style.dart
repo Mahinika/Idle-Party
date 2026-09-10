@@ -26,4 +26,10 @@ enum SpellBoltStyle {
 
   /// Shaman lightning bolt.
   lightning,
+
+  /// Fel / demonology (growl + corruption, not pure shadow).
+  demon,
+
+  /// Rogue / hunter toxins (wet hiss, not nature leaf).
+  poison,
 }

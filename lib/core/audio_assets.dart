@@ -31,6 +31,8 @@ abstract final class AudioAssets {
   static const spellArcane = '$customSfxRoot/spell_arcane.wav';
   static const spellNature = '$customSfxRoot/spell_nature.wav';
   static const spellLightning = '$customSfxRoot/spell_lightning.wav';
+  static const spellDemon = '$customSfxRoot/spell_demon.wav';
+  static const spellPoison = '$customSfxRoot/spell_poison.wav';
 
   static const matFlesh = '$customSfxRoot/mat_flesh.wav';
   static const matBone = '$customSfxRoot/mat_bone.wav';
@@ -84,6 +86,8 @@ abstract final class AudioAssets {
     'spell_arcane': <String>[spellArcane],
     'spell_nature': <String>[spellNature],
     'spell_lightning': <String>[spellLightning],
+    'spell_demon': <String>[spellDemon],
+    'spell_poison': <String>[spellPoison],
   };
 
   /// First variant path per id (compat / single-source lookups).
@@ -107,6 +111,8 @@ abstract final class AudioAssets {
     'spell_arcane',
     'spell_nature',
     'spell_lightning',
+    'spell_demon',
+    'spell_poison',
     'crit',
     'kill',
   };
@@ -130,6 +136,8 @@ abstract final class AudioAssets {
     'spell_arcane',
     'spell_nature',
     'spell_lightning',
+    'spell_demon',
+    'spell_poison',
   };
 
   static const Set<String> priorityFeelIds = <String>{'crit', 'kill'};
@@ -157,6 +165,10 @@ abstract final class AudioAssets {
           return 'spell_nature';
         case SpellBoltStyle.lightning:
           return 'spell_lightning';
+        case SpellBoltStyle.demon:
+          return 'spell_demon';
+        case SpellBoltStyle.poison:
+          return 'spell_poison';
         case SpellBoltStyle.arrow:
           return 'hit_bow';
         case SpellBoltStyle.weapon:

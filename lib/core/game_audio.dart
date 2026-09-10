@@ -86,6 +86,8 @@ abstract final class GameAudio {
     'spell_arcane': 0.86,
     'spell_nature': 0.86,
     'spell_lightning': 0.88,
+    'spell_demon': 0.88,
+    'spell_poison': 0.84,
     'swish_melee': 0.55,
     'swish_bow': 0.50,
     'mat_flesh': 0.45,
@@ -510,6 +512,8 @@ abstract final class GameAudio {
       case 'spell_arcane':
       case 'spell_nature':
       case 'spell_lightning':
+      case 'spell_demon':
+      case 'spell_poison':
         _haptic(HapticFeedback.selectionClick);
       case 'kill':
       case 'crit':

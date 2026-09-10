@@ -141,7 +141,7 @@ void main() {
       (AbilityId.crusaderStrike, HeroSpecId.retribution, SpellBoltStyle.holy),
       (AbilityId.aimedShot, HeroSpecId.marksmanship, SpellBoltStyle.arrow),
       (AbilityId.volley, HeroSpecId.marksmanship, SpellBoltStyle.arrow),
-      (AbilityId.envenom, HeroSpecId.assassination, SpellBoltStyle.nature),
+      (AbilityId.envenom, HeroSpecId.assassination, SpellBoltStyle.poison),
       (AbilityId.mindBlast, HeroSpecId.shadow, SpellBoltStyle.shadow),
       (AbilityId.heartStrike, HeroSpecId.blood, SpellBoltStyle.weapon),
       (AbilityId.deathCoil, HeroSpecId.unholy, SpellBoltStyle.shadow),
@@ -152,8 +152,8 @@ void main() {
       (AbilityId.starfire, HeroSpecId.balance, SpellBoltStyle.arcane),
       (AbilityId.rejuvenation, HeroSpecId.restorationDruid, SpellBoltStyle.nature),
       (AbilityId.holyShock, HeroSpecId.holyPaladin, SpellBoltStyle.holy),
-      (AbilityId.garrote, HeroSpecId.assassination, SpellBoltStyle.nature),
-      (AbilityId.handOfGuldan, HeroSpecId.demonology, SpellBoltStyle.shadow),
+      (AbilityId.garrote, HeroSpecId.assassination, SpellBoltStyle.poison),
+      (AbilityId.handOfGuldan, HeroSpecId.demonology, SpellBoltStyle.demon),
     ];
 
     for (final (id, spec, want) in cases) {

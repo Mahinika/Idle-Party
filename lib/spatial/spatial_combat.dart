@@ -2531,7 +2531,10 @@ abstract final class SpatialCombat {
     final def = HeroSpecs.def(id);
     return switch (def.classId) {
       HeroClassId.hunter => SpellBoltStyle.arrow,
-      HeroClassId.warlock => SpellBoltStyle.shadow,
+      HeroClassId.warlock => switch (id) {
+        HeroSpecId.demonology => SpellBoltStyle.demon,
+        _ => SpellBoltStyle.shadow,
+      },
       HeroClassId.mage => switch (id) {
         HeroSpecId.frostMage => SpellBoltStyle.frost,
         HeroSpecId.arcane => SpellBoltStyle.arcane,
@@ -2619,10 +2622,30 @@ abstract final class SpatialCombat {
       'afflict',
       'umbral',
       'mind',
-      'guldan',
       'shadowfury',
     ])) {
       return SpellBoltStyle.shadow;
+    }
+    if (_keyHasAny(key, const [
+      'fel',
+      'demon',
+      'metamorph',
+      'guldan',
+      'doomguard',
+      'felguard',
+    ])) {
+      return SpellBoltStyle.demon;
+    }
+    if (_keyHasAny(key, const [
+      'poison',
+      'venom',
+      'envenom',
+      'garrote',
+      'rupture',
+      'serpent sting',
+      'deadly poison',
+    ])) {
+      return SpellBoltStyle.poison;
     }
     if (_keyHasAny(key, const [
           'holy',
@@ -2782,7 +2805,7 @@ abstract final class SpatialCombat {
       AbilityId.beaconOfLight ||
       AbilityId.layOnHands => SpellBoltStyle.holy,
 
-      // —— Nature (resto sham / balance / resto druid / poisons) ——
+      // —— Nature (resto sham / balance / resto druid) ——
       AbilityId.hurricane ||
       AbilityId.starfall ||
       AbilityId.starfire ||
@@ -2801,9 +2824,12 @@ abstract final class SpatialCombat {
       AbilityId.wildGrowth ||
       AbilityId.lifebloom ||
       AbilityId.nourish ||
-      AbilityId.tranquility ||
+      AbilityId.tranquility => SpellBoltStyle.nature,
+
+      // —— Poison (rogue toxins / hunter sting) ——
       AbilityId.envenom ||
-      AbilityId.garrote => SpellBoltStyle.nature,
+      AbilityId.garrote ||
+      AbilityId.serpentSting => SpellBoltStyle.poison,
 
       // —— Arcane ——
       AbilityId.arcaneBlast ||
@@ -2824,9 +2850,10 @@ abstract final class SpatialCombat {
       AbilityId.chimeraShot ||
       AbilityId.volley ||
       AbilityId.killCommand ||
-      AbilityId.serpentSting ||
       AbilityId.blackArrow ||
       AbilityId.bestialWrath => SpellBoltStyle.arrow,
+
+      AbilityId.handOfGuldan => SpellBoltStyle.demon,
 
       // —— Shadow ——
       AbilityId.shadowBolt ||
@@ -2840,7 +2867,6 @@ abstract final class SpatialCombat {
       AbilityId.mindSear ||
       AbilityId.devouringPlague ||
       AbilityId.shadowWordPain ||
-      AbilityId.handOfGuldan ||
       AbilityId.shadowfury ||
       AbilityId.seedOfCorruption ||
       AbilityId.fanOfKnivesSub ||
@@ -4296,7 +4322,9 @@ abstract final class SpatialCombat {
                 SpellBoltStyle.frost => 0xFF80D0FF,
                 SpellBoltStyle.arcane => 0xFFC070FF,
                 SpellBoltStyle.shadow => 0xFFB060E0,
+                SpellBoltStyle.demon => 0xFF70FF40,
                 SpellBoltStyle.nature => 0xFF70D070,
+                SpellBoltStyle.poison => 0xFF90D040,
                 SpellBoltStyle.lightning => 0xFFA0E8FF,
                 SpellBoltStyle.arrow => 0xFFE8D080,
                 SpellBoltStyle.weapon =>
@@ -5503,7 +5531,9 @@ abstract final class SpatialCombat {
       SpellBoltStyle.frost => 7.0,
       SpellBoltStyle.arcane => 8.0,
       SpellBoltStyle.shadow => 6.8,
+      SpellBoltStyle.demon => 6.4,
       SpellBoltStyle.nature => 7.2,
+      SpellBoltStyle.poison => 6.9,
       SpellBoltStyle.lightning => 9.0,
       SpellBoltStyle.arrow => 11.0,
       SpellBoltStyle.weapon => 7.5,
@@ -5515,7 +5545,9 @@ abstract final class SpatialCombat {
       SpellBoltStyle.arcane => 0.16,
       SpellBoltStyle.frost => 0.18,
       SpellBoltStyle.shadow => 0.16,
+      SpellBoltStyle.demon => 0.17,
       SpellBoltStyle.nature => 0.17,
+      SpellBoltStyle.poison => 0.16,
       SpellBoltStyle.lightning => 0.13,
       SpellBoltStyle.arrow => 0.1,
       _ => 0.12,
@@ -5612,7 +5644,9 @@ abstract final class SpatialCombat {
       SpellBoltStyle.frost => 7.0,
       SpellBoltStyle.arcane => 8.0,
       SpellBoltStyle.shadow => 6.8,
+      SpellBoltStyle.demon => 6.4,
       SpellBoltStyle.nature => 7.2,
+      SpellBoltStyle.poison => 6.9,
       SpellBoltStyle.lightning => 10.5,
       SpellBoltStyle.arrow => 11.0,
       SpellBoltStyle.weapon => 7.5,
@@ -5650,7 +5684,9 @@ abstract final class SpatialCombat {
     SpellBoltStyle.frost => 0xFF80D0FF,
     SpellBoltStyle.arcane => 0xFFC070FF,
     SpellBoltStyle.shadow => 0xFFB060E0,
+    SpellBoltStyle.demon => 0xFF70FF40,
     SpellBoltStyle.nature => 0xFF70D070,
+    SpellBoltStyle.poison => 0xFF90D040,
     SpellBoltStyle.lightning => 0xFFA0E8FF,
     SpellBoltStyle.arrow => 0xFFE8D080,
     SpellBoltStyle.weapon => 0xFFFFE08A,

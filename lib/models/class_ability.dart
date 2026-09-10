@@ -2320,9 +2320,9 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.85,
-      boltStyle: SpellBoltStyle.nature,
+      boltStyle: SpellBoltStyle.poison,
       vfx: AbilityVfxSpec(
-        boltStyle: SpellBoltStyle.nature,
+        boltStyle: SpellBoltStyle.poison,
         castArgb: 0xFF70D050,
       ),
 
@@ -2490,6 +2490,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 1.55,
+      boltStyle: SpellBoltStyle.poison,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.poison,
+        castArgb: 0xFF90D040,
+      ),
 
       gate: AbilityGate(comboMin: 3),
     ),
@@ -2506,6 +2511,11 @@ class ClassKits {
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
       coeff: 0.9,
+      boltStyle: SpellBoltStyle.poison,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.poison,
+        castArgb: 0xFF70B020,
+      ),
 
       gate: AbilityGate(maintainDot: true),
     ),
@@ -4427,6 +4437,11 @@ class ClassKits {
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
       coeff: 0.78,
+      boltStyle: SpellBoltStyle.demon,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.demon,
+        castArgb: 0xFF70FF40,
+      ),
 
       aoeShape: AbilityAoeShape.ground,
     ),
