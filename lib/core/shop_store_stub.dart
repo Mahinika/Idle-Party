@@ -14,4 +14,6 @@ Future<String?> buy(String productId) async =>
 Future<String?> restore() async =>
     'Play Billing needs a Play Store install.';
 
+Future<void> refreshProducts() async {}
+
 Future<void> disposeStore() async {}

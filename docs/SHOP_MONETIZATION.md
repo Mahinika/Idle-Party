@@ -66,10 +66,14 @@ Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as t
 0. Merchant / betalningsprofil — keep payout/tax healthy so Activate stays allowed.
 1. ~~Create each SKU id~~ — done 2026-09-10 (purchase type **Köp**).
 2. ~~Activate~~ — done 2026-09-10 (all five show **1** active purchase option).
-3. Add license testers (Settings → License testing) for sandbox buys.
+3. Add license testers (Settings → License testing) for the Google account
+   on the phone — especially the developer account used for testing.
 4. Smoke on a **Play-installed** build — sideload / `flutter run` debug often
    cannot finish a real purchase even when the sheet opens.
-5. Data safety / Privacy already mention IAP — keep Console form honest.
+5. After activating SKUs, Play catalog can take **hours** to propagate. Clear
+   Play Store app cache, fully close Idle Party, reopen SHOP. Ready when prices
+   show local currency (e.g. SEK) instead of catalog `$0.99`.
+6. Data safety / Privacy already mention IAP — keep Console form honest.
 
 App code path: `ShopStore` → `ShopBilling.applyPurchase` → toast + save.
 SHOP UI: **BUY** / **OWNED** + **RESTORE PURCHASES**.

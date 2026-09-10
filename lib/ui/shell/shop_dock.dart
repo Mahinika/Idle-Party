@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/ad_boost.dart';
@@ -10,18 +12,36 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 
 /// Bottom-tab SHOP: real-money catalog via Play Billing.
-class ShopDock extends StatelessWidget {
+class ShopDock extends StatefulWidget {
   const ShopDock({super.key, required this.director});
 
   final GameDirector director;
 
   @override
+  State<ShopDock> createState() => _ShopDockState();
+}
+
+class _ShopDockState extends State<ShopDock> {
+  @override
+  void initState() {
+    super.initState();
+    // Newly activated Console SKUs can take hours; refresh every open.
+    unawaited(_refresh());
+  }
+
+  Future<void> _refresh() async {
+    await ShopStore.refreshProducts();
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: director,
+      animation: widget.director,
       builder: (context, _) {
-        final state = director.state;
+        final state = widget.director.state;
         final storeOk = ShopBilling.billingReady && ShopStore.storeAvailable;
+        final catalogOk = ShopStore.productsReady;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -40,7 +60,7 @@ class ShopDock extends StatelessWidget {
                     '(×2 gold · +${AdBoost.attackPercent}% ATK). '
                     'Watch ads for Ad Tickets on the hub · gold under GOLD · '
                     'essence under ESSENCE.\n'
-                    '${storeOk ? 'Prices come from Google Play when available.' : 'Buys need a Play Store install of Idle Party (not sideload).'}',
+                    '${!storeOk ? 'Buys need a Play Store install of Idle Party (not sideload).' : catalogOk ? 'Prices come from Google Play.' : 'Waiting for Play catalog (can take a few hours after SKUs go live)…'}',
                     textAlign: TextAlign.center,
                     style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
                   ),
@@ -53,8 +73,11 @@ class ShopDock extends StatelessWidget {
                       priceLabel:
                           ShopStore.storePriceLabel(ShopCatalog.offered[i].id) ??
                           ShopCatalog.offered[i].priceLabel,
-                      onBuy: () =>
-                          director.buyShopItem(ShopCatalog.offered[i].id),
+                      onBuy: () => widget.director
+                          .buyShopItem(ShopCatalog.offered[i].id)
+                          .then((_) {
+                        if (mounted) setState(() {});
+                      }),
                     ),
                   ],
                 ],
@@ -65,7 +88,7 @@ class ShopDock extends StatelessWidget {
               child: GameButton(
                 label: 'RESTORE PURCHASES',
                 style: GameButtonStyle.grey,
-                onPressed: director.restoreShopPurchases,
+                onPressed: widget.director.restoreShopPurchases,
               ),
             ),
           ],

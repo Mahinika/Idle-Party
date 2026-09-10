@@ -54,30 +54,45 @@ Future<void> warmup({
 
 Future<void> _queryProducts() async {
   if (!_androidStore) return;
-  final response = await InAppPurchase.instance.queryProductDetails(
-    ShopCatalog.productIds,
-  );
-  _products
-    ..clear()
-    ..addEntries(
-      response.productDetails.map((p) => MapEntry(p.id, p)),
+  try {
+    final response = await InAppPurchase.instance.queryProductDetails(
+      ShopCatalog.productIds,
     );
-  productsReady = _products.isNotEmpty;
-  if (response.notFoundIDs.isNotEmpty) {
-    debugPrint('ShopStore missing Console SKUs: ${response.notFoundIDs}');
+    _products
+      ..clear()
+      ..addEntries(
+        response.productDetails.map((p) => MapEntry(p.id, p)),
+      );
+    productsReady = _products.isNotEmpty;
+    if (response.notFoundIDs.isNotEmpty) {
+      debugPrint('ShopStore missing Console SKUs: ${response.notFoundIDs}');
+    }
+    if (response.error != null) {
+      debugPrint('ShopStore query error: ${response.error}');
+    }
+  } catch (e, st) {
+    debugPrint('ShopStore queryProductDetails failed: $e\n$st');
+    productsReady = _products.isNotEmpty;
   }
+}
+
+/// Re-fetch Play catalog (call when SHOP opens).
+Future<void> refreshProducts() async {
+  if (!_androidStore || !storeAvailable) return;
+  await _queryProducts();
 }
 
 Future<String?> buy(String productId) async {
   if (!_platformOk || !storeAvailable) {
     return 'Play Billing needs a Play Store install.';
   }
-  if (_products.isEmpty) {
-    await _queryProducts();
-  }
+  // Always re-query — newly activated Console SKUs can take hours to appear.
+  await _queryProducts();
   final details = _products[productId];
   if (details == null) {
-    return 'This pack is not in Play Console yet.';
+    return 'Play has not listed this pack yet. '
+        'Activated SKUs can take a few hours — clear Play Store cache, '
+        'fully close the app, and try again.';
   }
   final item = ShopCatalog.byId[productId];
   if (item == null) return 'Unknown pack.';

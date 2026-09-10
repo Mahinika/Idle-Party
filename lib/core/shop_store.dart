@@ -22,6 +22,9 @@ abstract final class ShopStore {
   /// Start a buy sheet. Returns an error toast, or null if the sheet opened.
   static Future<String?> buy(String productId) => impl.buy(productId);
 
+  /// Re-fetch Play product details (SHOP open / after Console activation).
+  static Future<void> refreshProducts() => impl.refreshProducts();
+
   /// Restore non-consumables (ad-free / supporter / starter).
   static Future<String?> restore() => impl.restore();
 

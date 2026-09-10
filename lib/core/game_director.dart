@@ -3032,8 +3032,9 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     final err = await ShopStore.buy(productId);
+    notifyListeners();
     if (err != null) {
-      showToast(err, life: 2.6);
+      showToast(err, life: 3.2);
       return;
     }
     // Success arrives via purchaseStream → _onShopPurchaseGranted.
