@@ -61,14 +61,7 @@ def main() -> None:
         vol=0.32,
     )
 
-    write(
-        "unlock.wav",
-        0.28,
-        lambda t: tone(440, t, 0.35)
-        + tone(554, t, 0.28) * max(0.0, min(1.0, t * 8))
-        + tone(660, t, 0.22) * max(0.0, min(1.0, (t - 0.06) * 10)),
-        vol=0.34,
-    )
+    # unlock.wav: ElevenLabs owned clip — do not overwrite with procedural.
 
     write(
         "level.wav",
