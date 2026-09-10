@@ -138,6 +138,51 @@ void main() {
     expect(WipeAdvice.lineFor(state: state, fight: fight), isNull);
   });
 
+  test('streak 1 stays quiet without proven tip; streak 2+ soft generic', () {
+    const fight = WipeFightSnapshot(
+      waveHp: 1000,
+      remainingHp: 400,
+      damageDealt: 900,
+      damageTaken: 450,
+      partyMaxHp: 400,
+      elapsedSec: 15,
+    );
+    var state = GameLogic.createInitialState(now: now);
+    state = GameLogic.notePartyWipe(state, fight);
+    expect(state.wipeStreakCount, 1);
+    expect(state.wipeAdviceLine, '');
+    expect(
+      WipeAdvice.lineFor(state: state, fight: fight, wipeStreak: 1),
+      isNull,
+    );
+
+    state = GameLogic.notePartyWipe(state, fight);
+    expect(state.wipeStreakCount, 2);
+    expect(state.wipeAdviceLine, WipeAdvice.softGenericTip);
+    expect(
+      WipeAdvice.lineFor(state: state, fight: fight, wipeStreak: 2),
+      WipeAdvice.softGenericTip,
+    );
+
+    state = GameLogic.notePartyWipe(state, fight);
+    expect(state.wipeStreakCount, 3);
+    expect(state.wipeAdviceLine, WipeAdvice.softGenericTip);
+  });
+
+  test('proven tip still wins over soft generic at streak 2+', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(state.wipeAdviceLine, '');
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(state.wipeStreakCount, 2);
+    expect(state.wipeAdviceLine, 'Upgrade ATK in GOLD');
+    expect(state.wipeAdviceLine, isNot(WipeAdvice.softGenericTip));
+  });
+
+  test('soft generic is not immediate on wipe 1', () {
+    expect(WipeAdvice.isImmediate(WipeAdvice.softGenericTip), isFalse);
+  });
+
   test('a different floor restarts the streak', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(highestFloorCleared: 8);

@@ -1945,12 +1945,17 @@ class GameLogic {
   }
 
   /// Live wipe only. Stacks the same floor; writes [GameState.wipeAdviceLine]
-  /// from fight numbers after [WipeAdvice.streakNeeded] wipes.
+  /// from fight numbers after [WipeAdvice.streakNeeded] wipes (proven tips),
+  /// or [WipeAdvice.softGenericTip] when still silent at that streak.
   static GameState notePartyWipe(GameState state, WipeFightSnapshot fight) {
     final key = wipeFloorKey(state);
     final count = state.wipeStreakKey == key ? state.wipeStreakCount + 1 : 1;
     var line = '';
-    final advice = WipeAdvice.lineFor(state: state, fight: fight);
+    final advice = WipeAdvice.lineFor(
+      state: state,
+      fight: fight,
+      wipeStreak: count,
+    );
     if (advice != null &&
         (WipeAdvice.isImmediate(advice) || count >= WipeAdvice.streakNeeded)) {
       line = advice;

@@ -417,6 +417,14 @@ class HubChase {
     final vaultOk = state.metaDepth.dailyVaultClaimed;
     final dailyOk = MetaSystems.isDailyClaimedToday(state, now: clock);
     if (vaultOk && dailyOk && keySettled) {
+      // Week ALMOST / READY beat soft rest — hardcore still has a season chase.
+      // Normal (non-cliff) week goals stay below doneForToday.
+      final weekAlmost = _weekGoalChase(state, clock, almostOnly: true);
+      if (weekAlmost != null) return weekAlmost;
+      final weekAny = _weekGoalChase(state, clock, almostOnly: false);
+      if (weekAny != null && weekAny.urgency == HubChaseUrgency.ready) {
+        return weekAny;
+      }
       return HubChase(
         kind: HubChaseKind.doneForToday,
         title: 'Done for today',

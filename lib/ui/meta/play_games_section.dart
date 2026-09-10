@@ -128,6 +128,47 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
     final month = md.leaderboardSeasonKey.isNotEmpty
         ? md.leaderboardSeasonKey
         : GameLogic.isoMonthKey(DateTime.now().toUtc());
+    final boardsReady = PlayLeaderboardIds.boardsAvailable(
+      month,
+      playGamesSupported: PlayGamesBridge.isSupported,
+    );
+    // Opt-in alone is not enough — need a real signed-in session so we do
+    // not paint KEY/GR openers that soft-fail into empty Play UI.
+    final signedInLive = PlayGamesBridge.isSignedInCached;
+    final showLiveBoards = boardsReady && signedInLive;
+
+    // Sideload / AVD / missing IDs / signed out: honesty only — no dead
+    // KEY/GR board buttons that look like an empty live leaderboard.
+    if (!showLiveBoards) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Season $month',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            PlayLeaderboardIds.boardsNeedPlayMessage,
+            style: GameTheme.body(size: 13, color: GameTheme.parchment),
+          ),
+          if (boardsReady && !signedInLive) ...[
+            const SizedBox(height: 8),
+            GameButton(
+              label: 'SIGN IN TO RANK',
+              style: GameButtonStyle.brown,
+              onPressed: playGamesBusy ? null : signInPlayGamesFlow,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Cloud save stays under SETTINGS.',
+              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            ),
+          ],
+        ],
+      );
+    }
+
     final timedLabel = md.seasonBestTimedKey > 0
         ? PlayGamesScores.formatTimedLabel(
             md.seasonBestTimedKey,
@@ -137,28 +178,21 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
     final gauntletLabel = md.seasonBestGauntletFloor > 0
         ? 'Gauntlet F${md.seasonBestGauntletFloor}'
         : 'No Gauntlet floor yet';
+    final grBoardReady = PlayLeaderboardIds.hasGreaterRiftBoard(month);
     final grLabel = md.seasonBestGrTier > 0
         ? PlayGamesScores.formatGreaterRiftLabel(
             md.seasonBestGrTier,
             md.seasonBestGrClearMs,
           )
         : 'No Ranked GR yet';
-    final boardsReady = PlayLeaderboardIds.hasBoards(month);
-    final grBoardReady = PlayLeaderboardIds.hasGreaterRiftBoard(month);
-    final signedIn = PlayGamesBridge.isSignedInCached || md.playGamesOptIn;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'BOARDS',
-          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-        ),
-        const SizedBox(height: 4),
-        Text(
           grBoardReady
-              ? 'Season $month · Timed KEY + Gauntlet + Ranked GR (Play Games)'
-              : 'Season $month · Timed KEY + Gauntlet (Play Games) · Ranked GR board pending',
+              ? 'Season $month · Timed KEY + Gauntlet + Ranked GR'
+              : 'Season $month · Timed KEY + Gauntlet',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
@@ -170,18 +204,11 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           gauntletLabel,
           style: GameTheme.body(size: 13, color: GameTheme.parchment),
         ),
-        Text(
-          grLabel,
-          style: GameTheme.body(size: 13, color: GameTheme.parchment),
-        ),
-        if (!signedIn) ...[
-          const SizedBox(height: 8),
-          GameButton(
-            label: 'SIGN IN TO RANK',
-            style: GameButtonStyle.brown,
-            onPressed: playGamesBusy ? null : signInPlayGamesFlow,
+        if (grBoardReady)
+          Text(
+            grLabel,
+            style: GameTheme.body(size: 13, color: GameTheme.parchment),
           ),
-        ],
         const SizedBox(height: 6),
         Row(
           children: [
@@ -189,7 +216,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
               child: GameButton(
                 label: 'KEY BOARD',
                 style: GameButtonStyle.grey,
-                onPressed: playGamesBusy || !boardsReady
+                onPressed: playGamesBusy
                     ? null
                     : () => runPlayGames(director.showPlayTimedLeaderboard),
               ),
@@ -199,38 +226,28 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
               child: GameButton(
                 label: 'GAUNTLET BOARD',
                 style: GameButtonStyle.grey,
-                onPressed: playGamesBusy || !boardsReady
+                onPressed: playGamesBusy
                     ? null
                     : () => runPlayGames(director.showPlayGauntletLeaderboard),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        GameButton(
-          label: 'GR BOARD',
-          style: GameButtonStyle.grey,
-          onPressed: playGamesBusy || !grBoardReady
-              ? null
-              : () => runPlayGames(director.showPlayGreaterRiftLeaderboard),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          boardsReady
-              ? signedIn
-                    ? 'New season PBs submit while signed in. Cloud save: SETTINGS.'
-                    : 'Sign in to submit ranks. Cloud save stays under SETTINGS.'
-              : 'Leaderboard IDs not set yet — add them in Play Console, then '
-                    'paste into play_leaderboard_ids.dart.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        if (!grBoardReady) ...[
-          const SizedBox(height: 4),
-          Text(
-            'Ranked GR board ID empty — create in Play Console, then paste.',
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        if (grBoardReady) ...[
+          const SizedBox(height: 6),
+          GameButton(
+            label: 'GR BOARD',
+            style: GameButtonStyle.grey,
+            onPressed: playGamesBusy
+                ? null
+                : () => runPlayGames(director.showPlayGreaterRiftLeaderboard),
           ),
         ],
+        const SizedBox(height: 6),
+        Text(
+          'New season PBs submit while signed in. Cloud save: SETTINGS.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
       ],
     );
   }

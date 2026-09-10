@@ -139,6 +139,37 @@ void main() {
       expect(PlayLeaderboardIds.hasGreaterRiftBoard('2026-09'), isFalse);
     });
 
+    test('boardsAvailable needs Play support + live IDs', () {
+      expect(
+        PlayLeaderboardIds.boardsAvailable(
+          '2026-09',
+          playGamesSupported: true,
+        ),
+        isTrue,
+      );
+      expect(
+        PlayLeaderboardIds.boardsAvailable(
+          '2026-09',
+          playGamesSupported: false,
+        ),
+        isFalse,
+      );
+      expect(
+        PlayLeaderboardIds.boardsAvailable(
+          '2099-01',
+          playGamesSupported: true,
+        ),
+        isFalse,
+      );
+      expect(PlayLeaderboardIds.isLiveBoardId(''), isFalse);
+      expect(PlayLeaderboardIds.isLiveBoardId('CgkIXXXX'), isFalse);
+      expect(PlayLeaderboardIds.isLiveBoardId('CgkIhuXGvNocEAIQAA'), isTrue);
+      expect(
+        PlayLeaderboardIds.boardsNeedPlayMessage,
+        'Boards need a Play install + sign-in',
+      );
+    });
+
     test('legacy save defaults Play Games fields', () {
       final md = MetaDepthState.fromJson(<String, dynamic>{
         'gauntletBestFloor': 3,

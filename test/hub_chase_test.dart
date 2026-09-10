@@ -589,38 +589,14 @@ void main() {
   });
 
   test('endgame fallback is one KEY action not a stats dump', () {
-    var state = _withPartyMaxLevel(
-      GameLogic.createInitialState(now: now).copyWith(
-        ascensionLevel: GameLogic.maxAscensionLevel,
-        hardmodeLevel: GameLogic.maxAscensionLevel,
-        lastDailyDate: MetaSystems.dailyDateKey(now),
-        dailyClaimed: true,
-        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-          dailyVaultClaimed: true,
-          grBestTier: GreaterRift.maxTier,
-          claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
-          gauntletBestFloor: 100,
-          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
-          riftBestTier: Rift.maxTier,
-          claimedRiftMilestones: const ['r5', 'r10', 'r20'],
-          worldBossTickets: 0,
-          worldBossClearedWeek: true,
-        ),
-        achievements: [
-          for (var i = 0; i < 400; i++) 'ach_$i',
-        ],
-        highestDungeonCleared: 14,
-        lifetimeGoldEarned: 50_000_000,
-      ),
-    );
+    var state = _settledEndgameLadderState(now: now);
     state = AshenCrown.ensureWeek(state, now: now);
-    final weekKey = state.metaDepth.weeklyKey.isNotEmpty
-        ? state.metaDepth.weeklyKey
-        : GameLogic.isoWeekKey(now);
+    const weekKey = '2026-W36'; // Veil Tempo · KEY +2
     final week = LocalSeasonCatalog.forWeekKey(weekKey);
     state = state.copyWith(
       metaDepth: state.metaDepth.copyWith(
         weeklyKey: weekKey,
+        weeklyBestTimedKey: 0,
         worldBossTickets: 0,
         worldBossClearedWeek: true,
         claimedWeekGoals: <String>{
@@ -631,10 +607,52 @@ void main() {
     );
     expect(state.collectionScore, greaterThanOrEqualTo(320));
     final chase = HubChase.forState(state, now: now);
-    // Vault + Daily + KEY dial settled → soft session rest (Spire optional).
+    // Vault + Daily + KEY dial settled + week not cliff → soft session rest.
     expect(chase.kind, HubChaseKind.doneForToday);
     expect(chase.title, contains('Done for today'));
     expect(chase.detail.toLowerCase(), contains('boards'));
+  });
+
+  test('week ALMOST beats doneForToday soft rest', () {
+    var state = _settledEndgameLadderState(now: now);
+    state = AshenCrown.ensureWeek(state, now: now);
+    const weekKey = '2026-W36'; // Veil Tempo · KEY +2
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        weeklyKey: weekKey,
+        weeklyBestTimedKey: 1, // one KEY short of week goal → ALMOST
+        worldBossTickets: 0,
+        worldBossClearedWeek: true,
+        claimedWeekGoals: const <String>[],
+      ),
+    );
+    final week = LocalSeasonCatalog.forWeekKey(weekKey);
+    expect(LocalSeasonCatalog.weekGoalAlmost(state, week), isTrue);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.weekGoal);
+    expect(chase.urgency, HubChaseUrgency.almost);
+    expect(chase.kind, isNot(HubChaseKind.doneForToday));
+  });
+
+  test('week READY beats doneForToday soft rest', () {
+    var state = _settledEndgameLadderState(now: now);
+    state = AshenCrown.ensureWeek(state, now: now);
+    const weekKey = '2026-W36'; // Veil Tempo · KEY +2
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        weeklyKey: weekKey,
+        weeklyBestTimedKey: 2, // week goal met, not claimed → READY
+        worldBossTickets: 0,
+        worldBossClearedWeek: true,
+        claimedWeekGoals: const <String>[],
+      ),
+    );
+    final week = LocalSeasonCatalog.forWeekKey(weekKey);
+    expect(LocalSeasonCatalog.weekGoalReady(state, week), isTrue);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.weekGoal);
+    expect(chase.urgency, HubChaseUrgency.ready);
+    expect(chase.kind, isNot(HubChaseKind.doneForToday));
   });
 
   test('Push Gauntlet PB when Daily still open', () {
@@ -800,4 +818,31 @@ GameState _withPartyMaxLevel(GameState state) => state.copyWith(
         for (final h in state.heroRoster)
           h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
       ],
+    );
+
+/// Ladder quiet: Vault/Daily/KEY settled candidates (week cliffs set by caller).
+GameState _settledEndgameLadderState({required DateTime now}) =>
+    _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+          dailyVaultClaimed: true,
+          grBestTier: GreaterRift.maxTier,
+          claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
+          gauntletBestFloor: 100,
+          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          riftBestTier: Rift.maxTier,
+          claimedRiftMilestones: const ['r5', 'r10', 'r20'],
+          worldBossTickets: 0,
+          worldBossClearedWeek: true,
+        ),
+        achievements: [
+          for (var i = 0; i < 400; i++) 'ach_$i',
+        ],
+        highestDungeonCleared: 14,
+        lifetimeGoldEarned: 50_000_000,
+      ),
     );

@@ -27,6 +27,10 @@ abstract final class PlayLeaderboardIds {
         ),
       };
 
+  /// Player-facing honesty when boards cannot open a real Play leaderboard.
+  static const String boardsNeedPlayMessage =
+      'Boards need a Play install + sign-in';
+
   static String timedKeyId(String monthKey) =>
       byMonth[monthKey]?.timedKey ?? '';
 
@@ -36,17 +40,30 @@ abstract final class PlayLeaderboardIds {
   static String greaterRiftId(String monthKey) =>
       byMonth[monthKey]?.greaterRift ?? '';
 
+  /// True when [id] is a real Console board id (not empty / placeholder).
+  static bool isLiveBoardId(String id) {
+    if (id.isEmpty) return false;
+    if (id.contains('XXXX') || id.contains('YYYY')) return false;
+    return true;
+  }
+
   static bool hasBoards(String monthKey) {
     final row = byMonth[monthKey];
     if (row == null) return false;
-    return row.timedKey.isNotEmpty &&
-        !row.timedKey.contains('XXXX') &&
-        row.gauntlet.isNotEmpty &&
-        !row.gauntlet.contains('YYYY');
+    return isLiveBoardId(row.timedKey) && isLiveBoardId(row.gauntlet);
   }
 
-  static bool hasGreaterRiftBoard(String monthKey) {
-    final id = greaterRiftId(monthKey);
-    return id.isNotEmpty && !id.contains('XXXX');
-  }
+  static bool hasGreaterRiftBoard(String monthKey) =>
+      isLiveBoardId(greaterRiftId(monthKey));
+
+  /// Live KEY / Gauntlet board chrome is meaningful only when Play Games can
+  /// run and Console IDs are wired for [monthKey].
+  ///
+  /// Sideload / web / missing IDs → false (UI should show honesty, not dead
+  /// board buttons). Sign-in is a separate gate for opening boards.
+  static bool boardsAvailable(
+    String monthKey, {
+    required bool playGamesSupported,
+  }) =>
+      playGamesSupported && hasBoards(monthKey);
 }
