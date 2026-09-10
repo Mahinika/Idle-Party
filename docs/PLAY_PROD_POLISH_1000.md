@@ -172,7 +172,7 @@ Production ships when **Fas 0 + Fas 1 + Top 40** are green — not when all 1000
 | 010 | A | Open | P0 | CONSOLE | Confirm target audience / age groups | `docs/PLAY_STORE.md` |  |
 | 011 | A | Open | P0 | CONSOLE | Declare Data safety delete-account URL | `docs/PLAY_STORE.md` |  |
 | 012 | A | Open | P0 | CONSOLE | Confirm no account required | `docs/PLAY_STORE.md` |  |
-| 013 | A | Open | P1 | PRIVACY | Data safety must add Firebase Analytics / App activity before next AAB (docs audited 2026-09-10). | `docs/PRIVACY.md` / `docs/audits/2026-09-10-privacy-docs.md` | YES |
+| 013 | A | Done | P1 | PRIVACY | Data safety Firebase Analytics / App activity submitted for review 2026-09-10. | `docs/PRIVACY.md` / `docs/PLAY_STORE.md` | YES |
 | 014 | A | Open | P1 | PRIVACY | Privacy URL prefers blob/main/docs/PRIVACY.md after merge. | `docs/PRIVACY.md` |  |
 | 015 | A | Open | P1 | LISTING | Short description must not promise forever-free / no-ads / live IAP buys. | `docs/STORE_LISTING.md` |  |
 | 016 | A | Open | P1 | LISTING | Full description mentions optional POWERUPS ads honestly. | `docs/STORE_LISTING.md` |  |
@@ -184,7 +184,7 @@ Production ships when **Fas 0 + Fas 1 + Top 40** are green — not when all 1000
 | 022 | A | Open | P1 | UPDATE | Play update mandatory gate works on Play-installed builds only. | `lib/core/play_update.dart` |  |
 | 023 | A | Open | P1 | CONSOLE | Confirm local save default | `docs/PLAY_STORE.md` |  |
 | 024 | A | Open | P1 | CONSOLE | Confirm clipboard export optional | `docs/PLAY_STORE.md` |  |
-| 025 | A | Done | P1 | CONSOLE | No Idle Party analytics *servers*; Firebase Analytics via Google (PRIVACY 2026-09-10). Play Data safety form still needs Analytics declaration before next ship. | `docs/PRIVACY.md` / `docs/audits/2026-09-10-privacy-docs.md` | YES |
+| 025 | A | Done | P1 | CONSOLE | No Idle Party analytics *servers*; Firebase Analytics via Google; Data safety Analytics declaration submitted 2026-09-10. | `docs/PRIVACY.md` / `docs/PLAY_STORE.md` | YES |
 | 026 | A | Open | P1 | CONSOLE | Store contact website = mahinika.github.io for app-ads.txt | `docs/PLAY_STORE.md` |  |
 | 027 | A | Open | P1 | CONSOLE | Package id com.idleparty.app everywhere | `docs/PLAY_STORE.md` |  |
 | 028 | A | Open | P1 | CONSOLE | ApplicationId matches Play Console | `docs/PLAY_STORE.md` |  |

@@ -23,7 +23,7 @@ item that still claimed “no analytics servers.”
 
 | ID | Severity | Finding | Action |
 |----|----------|---------|--------|
-| D1 | **P0** | Play **Data safety** not yet updated for Firebase Analytics / App activity (marked open in PLAY_STORE). Live PRIVACY already describes it — Console form lags. | Owner Console before next AAB that ships analytics |
+| D1 | **P0** | Play **Data safety** Firebase Analytics / App activity — **submitted for review 2026-09-10** (was lagging PRIVACY). | Google review in Publishing overview |
 | D2 | P1 | PRIVACY said analytics was “optional” but did not say Android **may init on cold start** (UMP then), or that **outside EEA** Google may allow collection without a form. | PRIVACY clarified |
 | D3 | P1 | AdMob↔Firebase link + impression-level revenue not mentioned in PRIVACY (ad metrics may flow into Analytics). | PRIVACY clarified |
 | D4 | P2 | Local SETTINGS session notes undocumented (local-only; easy to confuse with Firebase). | PRIVACY clarified |
@@ -37,13 +37,13 @@ item that still claimed “no analytics servers.”
 
 - [x] Privacy URL points at `docs/PRIVACY.md` on `main`
 - [x] PRIVACY lists: no Idle Party account · Play Games · POWERUPS/AdMob · Firebase Analytics · SHOP Billing · Play update check · clipboard
-- [ ] **Play Data safety** declares Firebase Analytics / App activity (owner)
+- [x] **Play Data safety** declares Firebase Analytics / App activity (submitted 2026-09-10)
 - [x] Ads declaration Yes (POWERUPS)
 - [x] Advertising ID declared
 - [x] No “no ads forever” / no Idle Party analytics *server* claim that contradicts Firebase
 
 ## Follow-ups (not done this pass)
 
-1. Owner: update Play Data safety for Analytics (D1).
+1. ~~Owner: update Play Data safety for Analytics (D1).~~ Done 2026-09-10 — under Google review.
 2. Optional: fix AdMob payment-profile banner.
 3. Optional: mention SHOP in STORE_LISTING full description when IAP products are active.
