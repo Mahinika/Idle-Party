@@ -55,9 +55,10 @@ Mail helms remap warrior plate coif onto each family head (face punch). Body
 slots remap donor family silhouettes, then material ramp. Fallback recolor only
 when no donor exists.
 
-Derived by `tool/derive_armor_material_variants.py`. Rogue native leather helm
-(authored, no hat in `_src`) also refreshes via `tool/refresh_native_gear.py`.
-Body slots stay `_src` extracts until gold masters are repainted. **Rarity = UI chrome**
+Derived by `tool/derive_armor_material_variants.py`. Rogue native gear (leather
+body + helm) upgrades via `tool/upgrade_native_body_src.py` + `refresh_native_gear.py`
+— rebakes `_src/body_idle.png` then re-extracts. Mage/healer hats live in `_src`;
+their native body pass needs a hat-aware bake (TODO). **Rarity = UI chrome**
 (GEAR borders / text tint) — unique looks are authored PNGs, not orange doll
 washes. Weapons: `*_t0` plus named models
 (`sword_thunderfury`, `sword_emberfang`, `staff_voidspire`, …) — hue variants

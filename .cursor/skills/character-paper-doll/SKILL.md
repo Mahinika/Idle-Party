@@ -50,8 +50,9 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
    `--t2-only` to refresh it without rebuilding bases.
 3. Inspect `tool/preview_doll_<family>.png` (armor stack). Must read as the same
    character as `_src`, not a grey mushroom head.
-4. Rogue native leather helm only: `py tool/refresh_native_gear.py` (body slots
-   must stay `_src` extracts for facit). Cross-material: `derive_armor_material_variants.py`.
+4. Rogue native leather (body + helm): `py tool/upgrade_native_body_src.py` then
+   `py tool/refresh_native_gear.py`. Cross-material: `derive_armor_material_variants.py`.
+   Mage/healer native body still uses `_src` hat extract until a hat-aware bake exists.
 5. Run `py tool/check_paper_doll_facit.py` — composites **live** body+overlays
    vs `_src` (no gitignored preview required). Fail if idle armor stack drifts.
    It also gates t2 / mail / plate / leather variants (silhouette vs native +
