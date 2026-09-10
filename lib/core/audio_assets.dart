@@ -43,7 +43,7 @@ abstract final class AudioAssets {
   static const hubAmbience = '$ambienceRoot/hub.wav';
   static const dungeonAmbience = '$ambienceRoot/dungeon.wav';
 
-  static const hubMusic = '$musicRoot/hub.wav';
+  static const hubMusic = '$musicRoot/hub.ogg';
   static const dungeonMusic = '$musicRoot/dungeon.mp3';
 
   /// Every SFX id used by [GameAudio.play] → asset path.

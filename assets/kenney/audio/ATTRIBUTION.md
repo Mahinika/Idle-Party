@@ -25,9 +25,9 @@ Kenney → Idle Party id mapping (historical):
 | kill | chop |
 | (UI / loot / doors) | metalClick, handleCoins*, doorOpen*, … |
 
-Ambience loops live under `assets/custom/audio/ambience/` (Idle Party
-procedural pads), not Kenney.
+## Music / ambience (Idle Party owned + CC0)
 
-Background music loops live under `assets/custom/audio/music/` —
-hub is Idle Party procedural (`hub.wav`); dungeon is owned ElevenLabs
-(`dungeon.mp3`). Not Kenney.
+- Hub music: `assets/custom/audio/music/hub.ogg` — Heavenly Loop by isaiah658 (CC0, OpenGameArt)
+- Dungeon music: `assets/custom/audio/music/dungeon.mp3` — owned ElevenLabs
+- Ambience: `assets/custom/audio/ambience/` — Idle Party procedural pads
+- Soft SFX: `assets/custom/audio/sfx/` — see `assets/custom/audio/ATTRIBUTION.md`
