@@ -16,6 +16,21 @@ void main() {
     }
   });
 
+  test('hit families ship three mix variants', () {
+    for (final id in <String>[
+      'hit',
+      'hit_blade',
+      'hit_axe',
+      'hit_blunt',
+      'hit_dagger',
+      'hit_fist',
+      'hit_bow',
+    ]) {
+      final variants = AudioAssets.sfxVariants[id]!;
+      expect(variants, hasLength(3), reason: id);
+    }
+  });
+
   test('mute blocks GameAudio play counting', () {
     GameAudio.debugReset();
     GameAudio.muted = true;
@@ -28,7 +43,7 @@ void main() {
     expect(GameAudio.debugPlayCount, 1);
   });
 
-  test('combat feel SFX is rate-limited per id (~3s)', () {
+  test('combat feel SFX is rate-limited per id', () {
     GameAudio.debugReset();
     GameAudio.muted = false;
     for (var i = 0; i < 20; i++) {
@@ -46,14 +61,13 @@ void main() {
     expect(GameAudio.debugPlayCount, 1);
   });
 
-  test('global combat bus blocks overlapping feel clips', () {
+  test('combat window caps overlapping feel clips', () {
     GameAudio.debugReset();
     GameAudio.muted = false;
     GameAudio.play('hit_blade');
     expect(GameAudio.debugPlayCount, 1);
-    GameAudio.play('spell_fire');
-    expect(GameAudio.debugPlayCount, 1);
-    GameAudio.play('crit');
+    // Same family gap blocks a second melee immediately.
+    GameAudio.play('hit_axe');
     expect(GameAudio.debugPlayCount, 1);
   });
 

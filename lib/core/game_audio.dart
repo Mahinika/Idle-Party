@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,8 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 import 'audio_assets.dart';
 
 enum AmbienceKind { none, hub, dungeon }
+
+enum _CombatFamily { melee, bow, spell, priority }
 
 /// Platform SFX/haptics + SoLoud backend. Director's audio port — lives in
 /// core so [GameDirector] does not import ui/.
@@ -23,11 +26,12 @@ abstract final class GameAudio {
   /// Background music gain 0..1 (default 0.22).
   static double musicVolume = 0.22;
 
-  /// Per combat-feel clip floor so haste farms stay listenable.
-  static const combatFeelMinGap = Duration(seconds: 3);
+  /// Per play-id floor so the same weapon does not hammer.
+  static const combatFeelMinGap = Duration(milliseconds: 900);
 
-  /// Global combat bus — only one feel clip at a time across all ids.
-  static const combatFeelGlobalGap = Duration(milliseconds: 450);
+  /// Sliding window for total combat feel voices.
+  static const combatWindow = Duration(milliseconds: 200);
+  static const combatWindowMax = 2;
 
   static const lootMinGap = Duration(milliseconds: 1200);
   static const unlockMinGap = Duration(seconds: 2);
@@ -35,7 +39,8 @@ abstract final class GameAudio {
 
   static bool _ready = false;
   static bool _initFailed = false;
-  static final Map<String, AudioSource> _sfx = <String, AudioSource>{};
+  static final Map<String, List<AudioSource>> _sfxVariants =
+      <String, List<AudioSource>>{};
   static AudioSource? _hubAmb;
   static AudioSource? _dungeonAmb;
   static AudioSource? _hubMusic;
@@ -45,11 +50,14 @@ abstract final class GameAudio {
   static AmbienceKind _ambience = AmbienceKind.none;
   static bool _backgroundPaused = false;
   static final Map<String, DateTime> _lastPlayAt = <String, DateTime>{};
-  static DateTime? _lastCombatFeelAt;
+  static final Map<_CombatFamily, DateTime> _lastFamilyAt =
+      <_CombatFamily, DateTime>{};
+  static final List<DateTime> _combatWindowAt = <DateTime>[];
   static DateTime? _lastLootAt;
   static DateTime? _lastUnlockAt;
   static DateTime? _lastUiAt;
   static final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(0);
+  static final math.Random _rng = math.Random();
 
   /// Per-id gain multiplier on top of [sfxVolume].
   static const Map<String, double> _idGain = <String, double>{
@@ -92,7 +100,8 @@ abstract final class GameAudio {
     debugPlayCount = 0;
     debugBackgroundStartCount = 0;
     _lastPlayAt.clear();
-    _lastCombatFeelAt = null;
+    _lastFamilyAt.clear();
+    _combatWindowAt.clear();
     _lastLootAt = null;
     _lastUnlockAt = null;
     _lastUiAt = null;
@@ -107,8 +116,12 @@ abstract final class GameAudio {
       if (!soloud.isInitialized) {
         await soloud.init();
       }
-      for (final entry in AudioAssets.sfxById.entries) {
-        _sfx[entry.key] = await soloud.loadAsset(entry.value);
+      for (final entry in AudioAssets.sfxVariants.entries) {
+        final loaded = <AudioSource>[];
+        for (final path in entry.value) {
+          loaded.add(await soloud.loadAsset(path));
+        }
+        _sfxVariants[entry.key] = loaded;
       }
       _hubAmb = await soloud.loadAsset(AudioAssets.hubAmbience);
       _dungeonAmb = await soloud.loadAsset(AudioAssets.dungeonAmbience);
@@ -127,7 +140,7 @@ abstract final class GameAudio {
       stopAmbience();
       SoLoud.instance.deinit();
     } catch (_) {}
-    _sfx.clear();
+    _sfxVariants.clear();
     _hubAmb = null;
     _dungeonAmb = null;
     _hubMusic = null;
@@ -176,38 +189,90 @@ abstract final class GameAudio {
     }
 
     if (AudioAssets.combatFeelIds.contains(id)) {
-      final lastGlobal = _lastCombatFeelAt ?? _epoch;
-      if (now.difference(lastGlobal) < combatFeelGlobalGap) {
+      if (!_admitCombatFeel(id, now)) {
         if (id.startsWith('hit') || id.startsWith('spell_')) {
           _hapticFor('hit');
         }
         return;
       }
-      final last = _lastPlayAt[id] ?? _epoch;
-      if (now.difference(last) < combatFeelMinGap) {
-        if (id.startsWith('hit') || id.startsWith('spell_')) {
-          _hapticFor('hit');
-        }
-        return;
-      }
-      _lastPlayAt[id] = now;
-      _lastCombatFeelAt = now;
     }
 
     debugPlayCount++;
     _hapticFor(id);
 
     if (!_ready) return;
-    final source = _sfx[id];
-    if (source == null) return;
+    final variants = _sfxVariants[id];
+    if (variants == null || variants.isEmpty) return;
+    final source = variants[_rng.nextInt(variants.length)];
     try {
       final gain = _idGain[id] ?? 1.0;
+      final combat = AudioAssets.combatFeelIds.contains(id);
+      final volJitter = combat ? (0.75 + _rng.nextDouble() * 0.25) : 1.0;
+      final pan = combat ? (_rng.nextDouble() * 0.5 - 0.25) : 0.0;
+      final speed = combat ? _pitchFor(id) : 1.0;
       final soloud = SoLoud.instance;
-      soloud.play(source, volume: sfxVolume * gain);
+      final handle = soloud.play(
+        source,
+        volume: sfxVolume * gain * volJitter,
+        pan: pan,
+        paused: speed != 1.0,
+      );
+      if (speed != 1.0) {
+        soloud.setRelativePlaySpeed(handle, speed);
+        soloud.setPause(handle, false);
+      }
       if (id == 'wipe' || id == 'boss' || id == 'clear') {
         _duckBackgroundBriefly();
       }
     } catch (_) {}
+  }
+
+  static bool _admitCombatFeel(String id, DateTime now) {
+    final family = _familyFor(id);
+    final familyGap = switch (family) {
+      _CombatFamily.melee => const Duration(milliseconds: 140),
+      _CombatFamily.bow => const Duration(milliseconds: 160),
+      _CombatFamily.spell => const Duration(milliseconds: 150),
+      _CombatFamily.priority => const Duration(milliseconds: 280),
+    };
+    final lastFamily = _lastFamilyAt[family] ?? _epoch;
+    if (now.difference(lastFamily) < familyGap) return false;
+
+    final lastId = _lastPlayAt[id] ?? _epoch;
+    if (now.difference(lastId) < combatFeelMinGap) return false;
+
+    _combatWindowAt.removeWhere(
+      (t) => now.difference(t) >= combatWindow,
+    );
+    final priority = AudioAssets.priorityFeelIds.contains(id);
+    if (!priority && _combatWindowAt.length >= combatWindowMax) {
+      return false;
+    }
+
+    _lastPlayAt[id] = now;
+    _lastFamilyAt[family] = now;
+    _combatWindowAt.add(now);
+    return true;
+  }
+
+  static _CombatFamily _familyFor(String id) {
+    if (AudioAssets.priorityFeelIds.contains(id)) {
+      return _CombatFamily.priority;
+    }
+    if (AudioAssets.bowFeelIds.contains(id)) return _CombatFamily.bow;
+    if (AudioAssets.spellFeelIds.contains(id)) return _CombatFamily.spell;
+    return _CombatFamily.melee;
+  }
+
+  static double _pitchFor(String id) {
+    final family = _familyFor(id);
+    final spread = switch (family) {
+      _CombatFamily.bow => 0.08,
+      _CombatFamily.spell => 0.06,
+      _CombatFamily.melee => 0.05,
+      _CombatFamily.priority => 0.04,
+    };
+    return (1.0 + (_rng.nextDouble() * 2 - 1) * spread).clamp(0.88, 1.12);
   }
 
   static Future<void> setAmbience(

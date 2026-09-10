@@ -1,6 +1,7 @@
 """Generate soft Idle Party SFX (owned procedural one-shots).
 
 Muted idle-RPG tones — warm, short, no arcade fanfare.
+Hit families get 3 variants (_a/_b/_c) for combat mix variety.
 Spell school chirps stay in generate_combat_spell_sfx.py.
 unlock.wav is an owned ElevenLabs clip — skipped here.
 """
@@ -52,14 +53,58 @@ def soft_noise(t: float, amount: float, decay: float = 18.0) -> float:
     return (random.random() * 2 - 1) * amount * max(0.0, 1.0 - t * decay)
 
 
-def hit_thud(base: float, noise: float = 0.045) -> callable:
+def hit_thud(base: float, noise: float = 0.045, bright: float = 1.0) -> callable:
     def fn(t: float) -> float:
-        body = tone(base, t, 0.5) * math.exp(-t * 14)
+        body = tone(base * bright, t, 0.5) * math.exp(-t * 14)
         body += tone(base * 0.5, t, 0.28) * math.exp(-t * 10)
-        body += tone(base * 2.0, t, 0.12) * math.exp(-t * 22)
+        body += tone(base * 2.0 * bright, t, 0.12) * math.exp(-t * 22)
         return body + soft_noise(t, noise, 28)
 
     return fn
+
+
+def write_hit_family(
+    stem: str,
+    base: float,
+    noise: float,
+    seconds: float,
+    vol: float,
+    attack: float,
+    release: float,
+    bow: bool = False,
+) -> None:
+    """Three slight material variants so combat mix can randomize."""
+    specs = (
+        (0.92, 0.90, 0),
+        (1.00, 1.00, 1),
+        (1.08, 1.10, 2),
+    )
+    for letter, (bright, noise_mul, seed_off) in zip("abc", specs):
+        random.seed(11 + seed_off + hash(stem) % 97)
+        if bow:
+
+            def make_bow(b=bright, n=noise * noise_mul):
+                return lambda t: tone((160 + t * 70) * b, t, 0.34) * math.exp(
+                    -t * 7
+                ) + soft_noise(t, n, 16)
+
+            write(
+                f"{stem}_{letter}.wav",
+                seconds,
+                make_bow(),
+                vol=vol,
+                attack=attack,
+                release=release,
+            )
+        else:
+            write(
+                f"{stem}_{letter}.wav",
+                seconds,
+                hit_thud(base, noise * noise_mul, bright=bright),
+                vol=vol,
+                attack=attack,
+                release=release,
+            )
 
 
 def main() -> None:
@@ -164,21 +209,28 @@ def main() -> None:
         release=6,
     )
 
-    write("hit.wav", 0.11, hit_thud(130), vol=0.32, attack=100, release=16)
-    write("hit_blade.wav", 0.10, hit_thud(210, 0.035), vol=0.30, attack=110, release=18)
-    write("hit_axe.wav", 0.12, hit_thud(88, 0.055), vol=0.32, attack=90, release=14)
-    write("hit_blunt.wav", 0.13, hit_thud(68, 0.05), vol=0.32, attack=85, release=13)
-    write("hit_dagger.wav", 0.09, hit_thud(260, 0.03), vol=0.26, attack=120, release=20)
-    write("hit_fist.wav", 0.10, hit_thud(100, 0.04), vol=0.28, attack=100, release=16)
-    write(
+    write_hit_family("hit", 130, 0.045, 0.11, 0.32, 100, 16)
+    write_hit_family("hit_blade", 210, 0.035, 0.10, 0.30, 110, 18)
+    write_hit_family("hit_axe", 88, 0.055, 0.12, 0.32, 90, 14)
+    write_hit_family("hit_blunt", 68, 0.05, 0.13, 0.32, 85, 13)
+    write_hit_family("hit_dagger", 260, 0.03, 0.09, 0.26, 120, 20)
+    write_hit_family("hit_fist", 100, 0.04, 0.10, 0.28, 100, 16)
+    write_hit_family("hit_bow", 160, 0.035, 0.15, 0.28, 70, 12, bow=True)
+
+    # Remove legacy single-hit files if present (variants replace them).
+    for legacy in (
+        "hit.wav",
+        "hit_blade.wav",
+        "hit_axe.wav",
+        "hit_blunt.wav",
+        "hit_dagger.wav",
+        "hit_fist.wav",
         "hit_bow.wav",
-        0.15,
-        lambda t: tone(160 + t * 70, t, 0.34) * math.exp(-t * 7)
-        + soft_noise(t, 0.035, 16),
-        vol=0.28,
-        attack=70,
-        release=12,
-    )
+    ):
+        p = OUT / legacy
+        if p.exists():
+            p.unlink()
+            print("removed", p.relative_to(ROOT))
 
 
 if __name__ == "__main__":

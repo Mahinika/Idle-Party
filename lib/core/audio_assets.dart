@@ -5,9 +5,10 @@ import '../models/spell_bolt_style.dart';
 ///
 /// SFX: Idle Party soft procedural one-shots under [customSfxRoot] (see
 /// `tool/generate_soft_sfx.py` + `tool/generate_combat_spell_sfx.py`).
+/// Hit families ship 3 variants (`_a/_b/_c`) for combat mix.
 /// Kenney RPG Audio (CC0) remains under [sfxRoot] as reference only.
 /// Ambience: Idle Party procedural pads under [ambienceRoot].
-/// Music: Idle Party procedural loops under [musicRoot].
+/// Music: owned / CC0 loops under [musicRoot].
 abstract final class AudioAssets {
   static const sfxRoot = 'assets/kenney/audio/sfx';
   static const customSfxRoot = 'assets/custom/audio/sfx';
@@ -15,13 +16,27 @@ abstract final class AudioAssets {
   static const musicRoot = 'assets/custom/audio/music';
 
   static const ui = '$customSfxRoot/ui.wav';
-  static const hit = '$customSfxRoot/hit.wav';
-  static const hitBlade = '$customSfxRoot/hit_blade.wav';
-  static const hitAxe = '$customSfxRoot/hit_axe.wav';
-  static const hitBlunt = '$customSfxRoot/hit_blunt.wav';
-  static const hitDagger = '$customSfxRoot/hit_dagger.wav';
-  static const hitFist = '$customSfxRoot/hit_fist.wav';
-  static const hitBow = '$customSfxRoot/hit_bow.wav';
+  static const hitA = '$customSfxRoot/hit_a.wav';
+  static const hitB = '$customSfxRoot/hit_b.wav';
+  static const hitC = '$customSfxRoot/hit_c.wav';
+  static const hitBladeA = '$customSfxRoot/hit_blade_a.wav';
+  static const hitBladeB = '$customSfxRoot/hit_blade_b.wav';
+  static const hitBladeC = '$customSfxRoot/hit_blade_c.wav';
+  static const hitAxeA = '$customSfxRoot/hit_axe_a.wav';
+  static const hitAxeB = '$customSfxRoot/hit_axe_b.wav';
+  static const hitAxeC = '$customSfxRoot/hit_axe_c.wav';
+  static const hitBluntA = '$customSfxRoot/hit_blunt_a.wav';
+  static const hitBluntB = '$customSfxRoot/hit_blunt_b.wav';
+  static const hitBluntC = '$customSfxRoot/hit_blunt_c.wav';
+  static const hitDaggerA = '$customSfxRoot/hit_dagger_a.wav';
+  static const hitDaggerB = '$customSfxRoot/hit_dagger_b.wav';
+  static const hitDaggerC = '$customSfxRoot/hit_dagger_c.wav';
+  static const hitFistA = '$customSfxRoot/hit_fist_a.wav';
+  static const hitFistB = '$customSfxRoot/hit_fist_b.wav';
+  static const hitFistC = '$customSfxRoot/hit_fist_c.wav';
+  static const hitBowA = '$customSfxRoot/hit_bow_a.wav';
+  static const hitBowB = '$customSfxRoot/hit_bow_b.wav';
+  static const hitBowC = '$customSfxRoot/hit_bow_c.wav';
   static const crit = '$customSfxRoot/crit.wav';
   static const kill = '$customSfxRoot/kill.wav';
   static const loot = '$customSfxRoot/loot.wav';
@@ -46,35 +61,40 @@ abstract final class AudioAssets {
   static const hubMusic = '$musicRoot/hub.ogg';
   static const dungeonMusic = '$musicRoot/dungeon.mp3';
 
-  /// Every SFX id used by [GameAudio.play] → asset path.
-  static const Map<String, String> sfxById = <String, String>{
-    'ui': ui,
-    'hit': hit,
-    'hit_blade': hitBlade,
-    'hit_axe': hitAxe,
-    'hit_blunt': hitBlunt,
-    'hit_dagger': hitDagger,
-    'hit_fist': hitFist,
-    'hit_bow': hitBow,
-    'crit': crit,
-    'kill': kill,
-    'loot': loot,
-    'flask': flask,
-    'level': level,
-    'clear': clear,
-    'unlock': unlock,
-    'boss': boss,
-    'wipe': wipe,
-    'spell_fire': spellFire,
-    'spell_frost': spellFrost,
-    'spell_holy': spellHoly,
-    'spell_shadow': spellShadow,
-    'spell_arcane': spellArcane,
-    'spell_nature': spellNature,
-    'spell_lightning': spellLightning,
+  /// Play id → one or more variant paths (combat picks random).
+  static const Map<String, List<String>> sfxVariants = <String, List<String>>{
+    'ui': <String>[ui],
+    'hit': <String>[hitA, hitB, hitC],
+    'hit_blade': <String>[hitBladeA, hitBladeB, hitBladeC],
+    'hit_axe': <String>[hitAxeA, hitAxeB, hitAxeC],
+    'hit_blunt': <String>[hitBluntA, hitBluntB, hitBluntC],
+    'hit_dagger': <String>[hitDaggerA, hitDaggerB, hitDaggerC],
+    'hit_fist': <String>[hitFistA, hitFistB, hitFistC],
+    'hit_bow': <String>[hitBowA, hitBowB, hitBowC],
+    'crit': <String>[crit],
+    'kill': <String>[kill],
+    'loot': <String>[loot],
+    'flask': <String>[flask],
+    'level': <String>[level],
+    'clear': <String>[clear],
+    'unlock': <String>[unlock],
+    'boss': <String>[boss],
+    'wipe': <String>[wipe],
+    'spell_fire': <String>[spellFire],
+    'spell_frost': <String>[spellFrost],
+    'spell_holy': <String>[spellHoly],
+    'spell_shadow': <String>[spellShadow],
+    'spell_arcane': <String>[spellArcane],
+    'spell_nature': <String>[spellNature],
+    'spell_lightning': <String>[spellLightning],
   };
 
-  /// Combat feel ids that share a long per-clip cooldown (weapon + spell).
+  /// First variant path per id (compat / single-source lookups).
+  static final Map<String, String> sfxById = <String, String>{
+    for (final e in sfxVariants.entries) e.key: e.value.first,
+  };
+
+  /// Combat feel ids that share combat-mix gates (weapon + spell + crit/kill).
   static const Set<String> combatFeelIds = <String>{
     'hit',
     'hit_blade',
@@ -93,6 +113,29 @@ abstract final class AudioAssets {
     'crit',
     'kill',
   };
+
+  static const Set<String> meleeFeelIds = <String>{
+    'hit',
+    'hit_blade',
+    'hit_axe',
+    'hit_blunt',
+    'hit_dagger',
+    'hit_fist',
+  };
+
+  static const Set<String> bowFeelIds = <String>{'hit_bow'};
+
+  static const Set<String> spellFeelIds = <String>{
+    'spell_fire',
+    'spell_frost',
+    'spell_holy',
+    'spell_shadow',
+    'spell_arcane',
+    'spell_nature',
+    'spell_lightning',
+  };
+
+  static const Set<String> priorityFeelIds = <String>{'crit', 'kill'};
 
   /// Map equipped weapon + optional bolt style → play id.
   static String combatHitId({
@@ -146,31 +189,8 @@ abstract final class AudioAssets {
     };
   }
 
-  static const List<String> allCatalogPaths = <String>[
-    ui,
-    hit,
-    hitBlade,
-    hitAxe,
-    hitBlunt,
-    hitDagger,
-    hitFist,
-    hitBow,
-    crit,
-    kill,
-    loot,
-    flask,
-    level,
-    clear,
-    unlock,
-    boss,
-    wipe,
-    spellFire,
-    spellFrost,
-    spellHoly,
-    spellShadow,
-    spellArcane,
-    spellNature,
-    spellLightning,
+  static final List<String> allCatalogPaths = <String>[
+    for (final variants in sfxVariants.values) ...variants,
     hubAmbience,
     dungeonAmbience,
     hubMusic,
