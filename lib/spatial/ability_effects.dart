@@ -1176,6 +1176,17 @@ abstract final class AbilityEffectRunner {
           );
         }
       }
+      _tryElementalOverload(
+        world,
+        hero,
+        enemy,
+        def,
+        rng,
+        raw: raw,
+        style: style,
+        useBolt: true,
+        reducedVfx: reducedVfx,
+      );
       return;
     }
 
@@ -1218,6 +1229,17 @@ abstract final class AbilityEffectRunner {
       life: 0.45,
       priority: 0,
     );
+    _tryElementalOverload(
+      world,
+      hero,
+      enemy,
+      def,
+      rng,
+      raw: raw,
+      style: style,
+      useBolt: false,
+      reducedVfx: reducedVfx,
+    );
     if (wasAlive && enemy.hp <= 0) {
       final killed = SpatialCombat._onEnemyKilled(
         world,
@@ -1228,6 +1250,90 @@ abstract final class AbilityEffectRunner {
       _goldOut += killed.gold;
       _stateOut = killed.state;
     }
+  }
+
+  static bool _elementalOverloadEligible(ClassAbilityDef def) {
+    return def.id == AbilityId.lightningBolt ||
+        def.id == AbilityId.lavaBurst ||
+        def.id == AbilityId.earthShock;
+  }
+
+  /// Cata Elemental Overload: free echo nuke at reduced coeff (no mana/CD).
+  static void _tryElementalOverload(
+    SpatialWorld world,
+    SpatialActor hero,
+    SpatialActor enemy,
+    ClassAbilityDef def,
+    math.Random rng, {
+    required int raw,
+    required SpellBoltStyle style,
+    required bool useBolt,
+    required bool reducedVfx,
+  }) {
+    if (hero.heroSpecId != HeroSpecId.elemental) return;
+    if (!_elementalOverloadEligible(def)) return;
+    if (enemy.hp <= 0 || enemy.dormant) return;
+    final chance = SpecMastery.elementalOverloadProcChance(_masteryView(hero));
+    if (chance <= 0 || rng.nextDouble() >= chance) return;
+
+    final echo = math.max(
+      1,
+      (raw * SpecMastery.elementalOverloadDamageFrac).round(),
+    );
+    const overloadArgb = 0xFF90E8FF;
+    _announce(world, hero, 'OVERLOAD', overloadArgb, reducedVfx);
+
+    if (useBolt) {
+      SpatialCombat._addProjectile(
+        world,
+        SpatialCombat._spellBolt(
+          from: hero,
+          to: enemy,
+          damage: echo,
+          style: style,
+          label: 'OVERLOAD',
+          labelArgb: overloadArgb,
+          delay: 0.18,
+        ),
+      );
+      if (!reducedVfx) {
+        SpellVfx.spawnBeam(
+          world,
+          x: hero.x,
+          y: hero.y,
+          x2: enemy.x,
+          y2: enemy.y,
+          argb: overloadArgb,
+          life: 0.18,
+        );
+      }
+      return;
+    }
+
+    final dealt = CombatRatings.mitigateByArmor(
+      rawDamage: echo,
+      defense: enemy.effectiveDefense,
+      attackerAttack: hero.attack,
+    );
+    SpatialCombat._hurtEnemy(enemy, dealt);
+    SpatialCombat._recordHeroDamage(hero, dealt);
+    SpatialCombat._applyTankSoftThreat(hero, enemy);
+    if (dealt > 0) {
+      SpatialCombat._noteFeelHit(
+        world,
+        SpatialCombat._combatHitSfxFor(hero: hero, style: style),
+        target: enemy,
+      );
+    }
+    SpatialCombat._spawnFloater(
+      world,
+      x: enemy.x,
+      y: enemy.y - 0.55,
+      text: 'OVERLOAD $dealt',
+      argb: overloadArgb,
+      life: 0.5,
+      priority: 1,
+    );
   }
 
   static void _castAoe(

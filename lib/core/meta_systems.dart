@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.136';
+  static const String currentVersion = '1.12.137';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.137',
+      bullets: <String>[
+        'Elemental Shamans can Overload: Lightning Bolt, Lava Burst, and Earth Shock sometimes echo a free second bolt.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.136',
       bullets: <String>[

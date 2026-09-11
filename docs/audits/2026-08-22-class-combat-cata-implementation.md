@@ -91,7 +91,7 @@ flutter test test/class_balance_gate_test.dart → pass
 
 | Gap | Priority |
 |-----|----------|
-| **Elemental Overload** — no duplicate-cast proc in spatial | P1 |
+| **Elemental Overload** — duplicate cast on LB / Lava / Earth Shock | **Shipped 1.12.137** |
 | **Mp5** still on healer loot (`equip_stat_weights`, `GEAR_BUDGET.md`) | P1 |
 | Cast delays on ~21 remaining signature spells | P1 |
 | Hit/expertise, reforge UI | P2 |

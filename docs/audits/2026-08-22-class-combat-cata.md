@@ -30,9 +30,9 @@ Idle Party now runs a **Cata v2 combat motor** on top of the same auto-AI kit la
 | Ability damage formula | AP / SP × coeff | `_abilityPower` × coeff × mastery shape | **Shipped** |
 | Tank avoidance | Dodge/parry/block via mastery | Uncrittable + dodge/parry + mastery block **−30%** + Shield Block CD | **Shipped** — no separate “crit block” proc |
 
-**Biggest remaining gaps:** **Mp5 still on healer loot** (Cata removed it), **Elemental Overload** (and a few proc masteries) not fully wired in sim, **ability crit from rating** still mostly auto-only, **no hit/expertise/reforge**.
+**Biggest remaining gaps:** **Mp5 still on healer loot** (Cata removed it), **cast delays** not on all signatures, **ability crit from rating** still mostly auto-only, **no hit/expertise/reforge**.
 
-**Biggest strength:** SpatialCombat stays single authority; mastery changes **shape** (DoT amp, Deep Healing, block %) without breaking fairness gate; DODGE / PARRY / BLOCK floaters on tanks.
+**Biggest strength:** SpatialCombat stays single authority; mastery changes **shape** (DoT amp, Deep Healing, block %, Elemental Overload echoes) without breaking fairness gate; DODGE / PARRY / BLOCK floaters on tanks.
 
 ---
 
@@ -373,7 +373,7 @@ Top gap = highest-impact **remaining** gap vs Cata 4.0–4.3.
 | blood | Blood Shield | `absorbStrengthMul` | 3 | DS overheal → absorb sim |
 | frostDk | Frozen Power | rooted `damageMul` | 4 | — |
 | unholy | Dreadblade | `dotTickMul` | 4 | — |
-| elemental | Elemental Overload | **label only** | 2 | **Duplicate cast proc** |
+| elemental | Elemental Overload | echo bolt on LB / Lava / Earth Shock | 4 | Tune proc rate |
 | enhancement | Enhanced Elements | elemental `damageMul` | 4 | — |
 | restorationShaman | Deep Healing | missing-HP `healMul` | 3 | **Mp5 on loot** |
 | arcane | Mana Adept | mana% `damageMul` | 4 | — |
@@ -401,7 +401,7 @@ Top gap = highest-impact **remaining** gap vs Cata 4.0–4.3.
 | **P1** | Cast delay + haste-on-cast | Yes | **Partial** (10 abilities) |
 | **P1** | CC diminishing | Yes | **Shipped** |
 | **P1** | Spirit 5SR; remove Mp5 from new loot | Yes | **Half** — 5SR yes, Mp5 still on drops |
-| **P1** | Elemental Overload proc | — | **Open** |
+| **P1** | Elemental Overload proc | — | **Shipped 1.12.137** |
 | **P2** | Hit/expertise | Yes | **Open** |
 | **P2** | Ability crit from rating | Yes | **Open** |
 | **P2** | Reforge-like hub meta | Yes | **Open** |

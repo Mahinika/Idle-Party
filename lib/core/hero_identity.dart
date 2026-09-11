@@ -166,7 +166,7 @@ abstract final class HeroIdentity {
       HeroSpecId.blood => 'Watch self-heals while tanking.',
       HeroSpecId.frostDk => 'Watch Hungering Cold freeze, then shatter.',
       HeroSpecId.unholy => 'Watch diseases and ghoul assists.',
-      HeroSpecId.elemental => 'Watch Lightning / Lava Burst bursts.',
+      HeroSpecId.elemental => 'Watch Lightning / Lava Burst Overload echos.',
       HeroSpecId.enhancement => 'Watch Stormstrike melee swings.',
       HeroSpecId.restorationShaman => 'Watch Riptide / Chain Heal.',
       HeroSpecId.arcane => 'Watch charge stacks then missiles.',

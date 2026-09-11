@@ -102,6 +102,66 @@ void main() {
     );
   });
 
+  test('Elemental Overload proc chance scales with mastery', () {
+    const none = MasteryCombatant(specId: HeroSpecId.elemental);
+    const stacked = MasteryCombatant(
+      specId: HeroSpecId.elemental,
+      masteryPoints: 12,
+    );
+    expect(SpecMastery.elementalOverloadProcChance(none), greaterThan(0.05));
+    expect(
+      SpecMastery.elementalOverloadProcChance(stacked),
+      greaterThan(SpecMastery.elementalOverloadProcChance(none)),
+    );
+    expect(
+      SpecMastery.elementalOverloadProcChance(
+        const MasteryCombatant(specId: HeroSpecId.enhancement),
+      ),
+      0,
+    );
+    expect(SpecMastery.elementalOverloadDamageFrac, lessThan(1.0));
+  });
+
+  test('Elemental Lightning Bolt can tag OVERLOAD floaters', () {
+    final base = GameLogic.createInitialState(now: DateTime(2026, 9, 1));
+    final state = base.withActiveParty([
+      base.heroes.first.copyWith(
+        specId: HeroSpecId.elemental,
+        level: 20,
+      ),
+    ]);
+    var world = SpatialCombat.build(state);
+    final hero = world.heroes.firstWhere((h) => !h.isPet);
+    hero.masteryPoints = 40;
+    hero.rage = 100;
+    var sawOverload = false;
+    for (var i = 0; i < 500 && !sawOverload; i++) {
+      // Keep Lightning Bolt ready every tick.
+      hero.abilityCd.remove(AbilityId.lightningBolt.name);
+      hero.rage = 100;
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      for (final f in world.floaters) {
+        if (f.text.contains('OVERLOAD')) {
+          sawOverload = true;
+          break;
+        }
+      }
+      for (final p in world.projectiles) {
+        if (p.label == 'OVERLOAD') {
+          sawOverload = true;
+          break;
+        }
+      }
+      for (final e in world.enemies) {
+        if (e.hp > 0 && !e.dormant) {
+          e.hp = max(e.hp, 800);
+        }
+      }
+    }
+    expect(sawOverload, isTrue);
+  });
+
   test('Arms white-hit mastery can tag SWING floaters', () {
     final base = GameLogic.createInitialState(now: DateTime(2026, 8, 1));
     final state = base.withActiveParty([

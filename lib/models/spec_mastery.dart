@@ -264,6 +264,15 @@ class SpecMastery {
     return (0.04 + _pt(hero) * 0.005).clamp(0.0, 0.16);
   }
 
+  /// Elemental Overload — free echo bolt on Lightning Bolt / Lava / Earth Shock.
+  static double elementalOverloadProcChance(MasteryCombatant hero) {
+    if (hero.specId != HeroSpecId.elemental) return 0;
+    return (0.08 + _pt(hero) * 0.007).clamp(0.0, 0.22);
+  }
+
+  /// Echo bolt deals a fraction of the original cast (Cata ~75%; idle-tuned).
+  static const double elementalOverloadDamageFrac = 0.55;
+
   /// Absorb strength from Disc / Blood mastery (fraction of heal/absorb).
   static double absorbStrengthMul(MasteryCombatant hero) {
     final kind = kindFor(hero.specId);
