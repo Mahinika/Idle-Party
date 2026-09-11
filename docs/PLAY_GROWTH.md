@@ -30,8 +30,8 @@ Do these in Console when you have 20 minutes:
    **Clicker-rollspel** + **Rollspel**. Max 5. No Idle/Incremental names in
    SV picker — do not invent tags; AFK / Party / Dungeon / Ascend belong in
    description only. Keep Clicker-spel / Rogue-liknande off (dishonest).
-3. **Preview video** — done **2026-09-11**: unlisted YT
-   `https://www.youtube.com/watch?v=fiZjJ9S9l4A` on main listing (in review).
+3. **Preview video** — Cognifox Studio unlisted YT
+   `https://www.youtube.com/watch?v=OMWXbgGBFMA` (relinked **2026-09-11**).
    Rebuild: `py -3 tool/store_listing/build_preview_video.py` → 16:9 + 9:16
    (brief in `TRAILER.md`). Confirm YT ads stay off.
 4. **Reply to reviews** (templates below) — especially 1–2★.
