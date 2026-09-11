@@ -90,13 +90,18 @@ keeps the whole phone UI visible.
   **Cognifox Studio** (`@CognifoxStudio`):
   `https://www.youtube.com/watch?v=OMWXbgGBFMA`
   (relinked **2026-09-11**; old personal upload `fiZjJ9S9l4A` superseded).
+- **Short** (public discovery, same 9:16 clip):
+  `https://www.youtube.com/shorts/0zKNQKg6kaQ`
+  (`youtu.be/0zKNQKg6kaQ`; Cognifox Studio, **2026-09-11**).
 - Channel art helper:
   `py -3 tool/store_listing/build_youtube_channel_art.py`
   → `tool/store_listing/youtube/channel_avatar_800.png` +
   `channel_banner_2560x1440.jpg` (gitignored; upload in Studio → Anpassning).
 - Rebuild from local 16:9 if the clip changes, then replace the YT upload and
-  update the Console field. Keep 9:16 for ads tests (`docs/PLAY_GROWTH.md`).
-- YT must stay public/unlisted, **ads off**, embeddable, not age-restricted.
+  update the Console field. Keep 9:16 for Shorts / ads tests
+  (`docs/PLAY_GROWTH.md`).
+- Play listing YT: public/unlisted, **ads off**, embeddable, not age-restricted.
+  Shorts stay **public** for reach.
 
 ### Do not
 
