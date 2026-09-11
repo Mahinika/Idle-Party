@@ -69,9 +69,19 @@ no “Download now” hard sell if it fights the tone.
 
 ### Export
 
-- Landscape **YouTube** link Play accepts, or Console upload.
-- Also keep a vertical 9:16 cut from the same beats for ads tests later
-  (`docs/PLAY_GROWTH.md`).
+```powershell
+# Needs ffmpeg on PATH (winget install --id Gyan.FFmpeg -e)
+py -3 tool/store_listing/build_preview_video.py
+# → tool/store_listing/preview/idle_party_preview_16x9.mp4  (~30s, Play/YouTube)
+# → tool/store_listing/preview/idle_party_preview_9x16.mp4  (~30s, ads tests)
+```
+
+Music: owned `assets/custom/audio/music/hub.ogg`. Stills: tracked
+`tool/store_listing/marketing/` cards (TRAILER shot order). Preview MP4s are
+gitignored — regenerate locally before Console upload.
+
+- Landscape **YouTube** link Play accepts, or Console upload of the 16:9 file.
+- Keep the vertical 9:16 cut for ads tests later (`docs/PLAY_GROWTH.md`).
 
 ### Do not
 
